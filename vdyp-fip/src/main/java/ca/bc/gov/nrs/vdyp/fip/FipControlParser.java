@@ -13,6 +13,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParser;
 import ca.bc.gov.nrs.vdyp.io.parse.SP0DefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ValueParser;
+import ca.bc.gov.nrs.vdyp.io.parse.VolumeEquationGroupParser;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.SP0Definition;
 
@@ -205,8 +206,8 @@ public class FipControlParser {
 		// Read Groups
 		
 		// RD_VGRP
-		// TODO
-
+		loadData(map, VOLUME_EQN_GROUPS, fileResolver, this::RD_VGRP);
+		
 		// RD_VGRP
 		// TODO
 
@@ -434,6 +435,14 @@ public class FipControlParser {
 	 */
 	private List<SP0Definition> RD_SP0(InputStream data) throws IOException, ResourceParseException {
 		var parser = new SP0DefinitionParser();
+		return parser.parse(data);
+	}
+	
+	/** 
+	 * Loads the information that was in the global array VGRPV in Fortran
+	 */
+	private Object RD_VGRP(InputStream data) throws IOException, ResourceParseException {
+		var parser = new VolumeEquationGroupParser();
 		return parser.parse(data);
 	}
 

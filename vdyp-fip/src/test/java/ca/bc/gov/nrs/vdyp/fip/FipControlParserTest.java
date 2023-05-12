@@ -6,6 +6,7 @@ import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.isA;
 
 import java.util.List;
 import java.util.Map;
@@ -51,5 +52,25 @@ public class FipControlParserTest {
 						instanceOf(List.class),
 						hasItem(
 								instanceOf(SP0Definition.class)))));
+	}
+	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Test
+	public void testParseVGRP() throws Exception {
+		var parser = new FipControlParser();
+		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
+		assertThat(result, (Matcher) 
+			hasEntry(
+				is(FipControlParser.VOLUME_EQN_GROUPS), 
+				allOf(            // Map of SP0 Aliases
+					isA(Map.class), 
+					hasEntry(
+						isA(String.class),
+						allOf(            // Map of BEC aliases
+							isA(Map.class), 
+							hasEntry(
+								isA(String.class),
+								isA(Integer.class) // Equation Identifier
+		))))));
 	}
 }
