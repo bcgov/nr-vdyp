@@ -8,7 +8,7 @@
 001 00999999                                          Max # of Polygons to process (I8)
                                                       (poly's with MODE = -1 NOT counted)
 009 coe/Becdef.dat                                    BEC Zone Definitions		  RD_BECD
-010 coe/SP0DEF_V0.dat                                 Standard SP0 Codes (with order)  RD_SP0
+010 coe/SP0DEF_v0.dat                                 Standard SP0 Codes (with order)  RD_SP0
 
 011 fip_p01.dat                                       FIP YIELD INPUT (poly)    GET_FIPP
 012 fip_l01.dat                                       FIP YIELD INPUT (layer)   GET_FIPL

@@ -178,11 +178,13 @@ public class LineParserTest {
 		assertThat(result, contains(
 				allOf(
 						(Matcher)hasEntry("part1", 42),
-						(Matcher)hasEntry("part2", "Value1")
+						(Matcher)hasEntry("part2", "Value1"),
+						(Matcher)hasEntry(LineParser.LINE_NUMBER_KEY, 1)
 				),
 				allOf(
 						(Matcher)hasEntry("part1", 43),
-						(Matcher)hasEntry("part2", "Value2")
+						(Matcher)hasEntry("part2", "Value2"),
+						(Matcher)hasEntry(LineParser.LINE_NUMBER_KEY, 2)
 				)
 			));
 	}

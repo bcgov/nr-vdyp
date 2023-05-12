@@ -4,14 +4,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 
 import ca.bc.gov.nrs.vdyp.io.parse.BecDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ControlFileParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParser;
+import ca.bc.gov.nrs.vdyp.io.parse.SP0DefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ValueParser;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
+import ca.bc.gov.nrs.vdyp.model.SP0Definition;
 
 /**
  * Parser for FIP control files
@@ -197,7 +200,7 @@ public class FipControlParser {
 		// Read Definitions
 		
 		// RD_SP0
-		// TODO
+		loadData(map, SP0_DEF, fileResolver, this::RD_SP0);
 		
 		// Read Groups
 		
@@ -414,12 +417,23 @@ public class FipControlParser {
 	
 	void loadData(Map<String, Object> map, String key, FileResolver fileResolver, ResourceParser<?> parser) throws IOException, ResourceParseException {
 		try(var is = fileResolver.resolve((String) map.get(key))) {
-			map.put(key, RD_BEC(is));
+			map.put(key, parser.parse(is));
 		}
 	}
 	
+	/** 
+	 * Loads the information that was in the global arrays BECV, BECNM, and BECCOASTAL in Fortran
+	 */
 	private Map<String, BecDefinition> RD_BEC(InputStream data) throws IOException, ResourceParseException {
 		var parser = new BecDefinitionParser();
+		return parser.parse(data);
+	}
+	
+	/** 
+	 * Loads the information that was in the global arrays SP0V, SP0NAMEV in Fortran
+	 */
+	private List<SP0Definition> RD_SP0(InputStream data) throws IOException, ResourceParseException {
+		var parser = new SP0DefinitionParser();
 		return parser.parse(data);
 	}
 

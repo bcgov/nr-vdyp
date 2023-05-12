@@ -1,25 +1,15 @@
 package ca.bc.gov.nrs.vdyp.model;
 
-public class BecDefinition {
+public class BecDefinition extends AbstractSpeciesDefinition {
 	
-	final String alias;
 	final Region region;
-	final String name;
 	
 	public BecDefinition(String alias, Region region, String name) {
-		super();
-		this.alias = alias;
+		super(alias, name);
 		this.region = region;
-		this.name = name;
 	}
 	
-	public String getAlias() {
-		return alias;
-	}
 	public Region getRegion() {
 		return region;
-	}
-	public String getName() {
-		return name;
 	}
 }

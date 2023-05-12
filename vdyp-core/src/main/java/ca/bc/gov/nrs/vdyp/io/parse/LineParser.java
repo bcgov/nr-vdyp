@@ -21,6 +21,7 @@ public class LineParser {
 	
 	private List<LineParserSegment> segments = new ArrayList<>();
 	public static final Charset charset = StandardCharsets.US_ASCII;
+	public static final String LINE_NUMBER_KEY = "_PARSER_LINE_NUMBER";
 	
 	static private abstract class LineParserSegment {
 		int length;
@@ -193,7 +194,7 @@ public class LineParser {
 
 	private Map<String,Object> parse(List<String> segmentStrings) throws ValueParseException {
 		if(segmentStrings.size() != segments.size()) {
-			throw new IllegalStateException("segment strings and segment halders must have the same size");
+			throw new IllegalStateException("segment strings and segment handlers must have the same size");
 		}
 		
 		var result = new HashMap<String, Object>();
@@ -240,6 +241,7 @@ public class LineParser {
 					continue;
 				}
 				var entry = parse(segments);
+				entry.put(LINE_NUMBER_KEY, lineNumber);
 				if(isStopEntry(entry)) {
 					break;
 				}
