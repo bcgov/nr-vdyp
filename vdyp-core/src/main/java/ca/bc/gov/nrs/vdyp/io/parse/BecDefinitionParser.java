@@ -18,6 +18,8 @@ import ca.bc.gov.nrs.vdyp.model.Region;
  */
 public class BecDefinitionParser implements ResourceParser<Map<String, BecDefinition>>{
 	
+	public static final String CONTROL_KEY = "BEC_DEF";
+
 	LineParser lineParser = new LineParser() {
 
 		@Override
@@ -36,7 +38,7 @@ public class BecDefinitionParser implements ResourceParser<Map<String, BecDefini
 		.strippedString("name");
 	
 	@Override
-	public Map<String, BecDefinition> parse(InputStream is) throws IOException, ResourceParseException {
+	public Map<String, BecDefinition> parse(InputStream is, Map<String, Object> control) throws IOException, ResourceParseException {
 		Map<String, BecDefinition> result = new HashMap<>();
 		result = lineParser.parse(is, result, (v, r)->{
 			String alias = (String) v.get("alias");

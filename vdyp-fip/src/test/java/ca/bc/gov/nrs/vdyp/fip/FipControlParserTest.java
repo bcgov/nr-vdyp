@@ -15,7 +15,9 @@ import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 
+import ca.bc.gov.nrs.vdyp.io.parse.BecDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ControlFileParserTest;
+import ca.bc.gov.nrs.vdyp.io.parse.SP0DefinitionParser;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.SP0Definition;
 
@@ -34,7 +36,7 @@ public class FipControlParserTest {
 	public void testParseBec() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
-		assertThat(result, (Matcher) hasEntry(is(FipControlParser.BEC_DEF), 
+		assertThat(result, (Matcher) hasEntry(is(BecDefinitionParser.CONTROL_KEY), 
 				allOf(
 						instanceOf(Map.class),
 						hasEntry(
@@ -47,7 +49,7 @@ public class FipControlParserTest {
 	public void testParseSP0() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
-		assertThat(result, (Matcher) hasEntry(is(FipControlParser.SP0_DEF), 
+		assertThat(result, (Matcher) hasEntry(is(SP0DefinitionParser.CONTROL_KEY), 
 				allOf(
 						instanceOf(List.class),
 						hasItem(

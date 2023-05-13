@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -68,8 +69,8 @@ public class FipControlParser {
 	public static final String MODIFIER_FILE = "MODIFIER_FILE";
 	public static final String DEBUG_SWITCHES = "DEBUG_SWITCHES";
 	public static final String MAX_NUM_POLY = "MAX_NUM_POLY";
-	public static final String BEC_DEF = "BEC_DEF";
-	public static final String SP0_DEF = "SP0_DEF";
+	public static final String BEC_DEF = BecDefinitionParser.CONTROL_KEY;
+	public static final String SP0_DEF = SP0DefinitionParser.CONTROL_KEY;
 
 	static final ValueParser<String> FILENAME = String::strip;
 	
@@ -81,7 +82,7 @@ public class FipControlParser {
 			
 			.record( 11, FIP_YIELD_POLY_INPUT, FILENAME)         // GET_FIPP
 			.record( 12, FIP_YIELD_LAYER_INPUT, FILENAME)        // GET_FIPL
-			.record( 13, FIP_YIELD_LX_SP0_INPUT, FILENAME)        // GET_FIPS
+			.record( 13, FIP_YIELD_LX_SP0_INPUT, FILENAME)       // GET_FIPS
 			
 			.record( 15, VDYP_POLYGON, FILENAME)                 //
 			.record( 16, VDYP_LAYER_BY_SPECIES, FILENAME)        //
@@ -190,10 +191,10 @@ public class FipControlParser {
 	}
 	
 	Map<String, ?> parse(InputStream is, FileResolver fileResolver) throws IOException, ResourceParseException {
-		var map = controlParser.parse(is);
+		var map = controlParser.parse(is, Collections.emptyMap());
 		
 		// RD_BEC
-		loadData(map, BEC_DEF, fileResolver, this::RD_BEC);
+		loadData(map, BecDefinitionParser.CONTROL_KEY, fileResolver, this::RD_BEC);
 		
 		// DEF_BEC
 		// TODO
@@ -418,32 +419,32 @@ public class FipControlParser {
 	
 	void loadData(Map<String, Object> map, String key, FileResolver fileResolver, ResourceParser<?> parser) throws IOException, ResourceParseException {
 		try(var is = fileResolver.resolve((String) map.get(key))) {
-			map.put(key, parser.parse(is));
+			map.put(key, parser.parse(is, map));
 		}
 	}
 	
 	/** 
 	 * Loads the information that was in the global arrays BECV, BECNM, and BECCOASTAL in Fortran
 	 */
-	private Map<String, BecDefinition> RD_BEC(InputStream data) throws IOException, ResourceParseException {
+	private Map<String, BecDefinition> RD_BEC(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
 		var parser = new BecDefinitionParser();
-		return parser.parse(data);
+		return parser.parse(data, control);
 	}
 	
 	/** 
 	 * Loads the information that was in the global arrays SP0V, SP0NAMEV in Fortran
 	 */
-	private List<SP0Definition> RD_SP0(InputStream data) throws IOException, ResourceParseException {
+	private List<SP0Definition> RD_SP0(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
 		var parser = new SP0DefinitionParser();
-		return parser.parse(data);
+		return parser.parse(data, control);
 	}
 	
 	/** 
 	 * Loads the information that was in the global array VGRPV in Fortran
 	 */
-	private Object RD_VGRP(InputStream data) throws IOException, ResourceParseException {
+	private Object RD_VGRP(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
 		var parser = new VolumeEquationGroupParser();
-		return parser.parse(data);
+		return parser.parse(data, control);
 	}
 
 	static interface FileResolver {

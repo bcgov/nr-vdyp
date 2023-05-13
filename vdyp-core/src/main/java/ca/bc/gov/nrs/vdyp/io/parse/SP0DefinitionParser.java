@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import ca.bc.gov.nrs.vdyp.model.SP0Definition;
@@ -17,6 +18,8 @@ import ca.bc.gov.nrs.vdyp.model.SP0Definition;
  */
 public class SP0DefinitionParser implements ResourceParser<List<SP0Definition>>{
 	
+	public static final String CONTROL_KEY = "SP0_DEF";
+
 	private int num_sp0;
 	
 	LineParser lineParser = new LineParser()
@@ -41,7 +44,7 @@ public class SP0DefinitionParser implements ResourceParser<List<SP0Definition>>{
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	public List<SP0Definition> parse(InputStream is) throws IOException, ResourceParseException {
+	public List<SP0Definition> parse(InputStream is, Map<String, Object> control) throws IOException, ResourceParseException {
 		SP0Definition[] result = new SP0Definition[num_sp0];
 		result = lineParser.parse(is, result, (v, r)->{
 			String alias = (String) v.get("alias");

@@ -1,8 +1,11 @@
 package ca.bc.gov.nrs.vdyp.test;
 
+import static org.hamcrest.Matchers.hasProperty;
+
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
 
 import ca.bc.gov.nrs.vdyp.io.parse.ValueParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.ValueParser;
@@ -13,7 +16,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.ValueParser;
  * @author Kevin Smith, Vivid Solutions
  *
  */
-public class VydpMatchers {
+public class VdypMatchers {
 	
 	/**
 	 * Matches a string if when parsed by the parser method it matches the given matcher
@@ -42,4 +45,25 @@ public class VydpMatchers {
 		};
 	}
 	
+	/**
+	 * Matcher for the cause of an exception
+	 * @param causeMatcher
+	 * @return
+	 */
+	public static Matcher<Throwable> causedBy(Matcher<? extends Throwable> causeMatcher) {
+		
+		return new BaseMatcher<Throwable>() {
+
+			@Override
+			public boolean matches(Object actual) {
+				return causeMatcher.matches(((Throwable) actual).getCause());
+			}
+
+			@Override
+			public void describeTo(Description description) {
+				description.appendText("was caused by exception that ").appendDescriptionOf(causeMatcher);
+			}
+			
+		};
+	}
 }

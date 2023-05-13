@@ -1,6 +1,6 @@
 package ca.bc.gov.nrs.vdyp.io.parse;
 
-import static ca.bc.gov.nrs.vdyp.test.VydpMatchers.parseAs;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.parseAs;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.contains;

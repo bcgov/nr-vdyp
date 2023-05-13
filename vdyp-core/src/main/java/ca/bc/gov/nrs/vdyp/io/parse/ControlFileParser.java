@@ -60,7 +60,7 @@ public class ControlFileParser implements ResourceParser<Map<String, Object>> {
 
 	
 	@Override
-	public Map<String, Object> parse(InputStream input) throws IOException, ResourceParseException {
+	public Map<String, Object> parse(InputStream input, Map<String, Object> control) throws IOException, ResourceParseException {
 		Map<String, Object> result = new HashMap<>();
 		return lineParser.parse(input, result, (map,r)->{
 			Integer index = (Integer) map.get("index");
@@ -135,5 +135,10 @@ public class ControlFileParser implements ResourceParser<Map<String, Object>> {
 	public ControlFileParser record(int index, ValueParser<?> parser) {
 		this.valueParsers.put(index, parser);
 		return this;
+	}
+
+
+	public Map<String, Object> parse(InputStream is) throws IOException, ResourceParseException {
+		return this.parse(is, Collections.emptyMap());
 	}
 }

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 /**
  * Parses a string to a value
@@ -74,6 +75,24 @@ public interface ValueParser<T> {
 				result.add(delegate.parse(elementString));
 			}
 			return Collections.unmodifiableList(result);
+		};
+	}
+	
+	/**
+	 * Wrap a parser with an additional validation step
+	 * @param <U>
+	 * @param delegate
+	 * @param validator Function that returns an error string if the parsed value is invalid
+	 * @return
+	 */
+	public static <U> ValueParser<U> validate(ValueParser<U> delegate, Function<U, Optional<String>> validator) {
+		return s-> {
+			var value = delegate.parse(s);
+			var error = validator.apply(value);
+			if(error.isPresent()) {
+				throw new ValueParseException(s, error.get());
+			}
+			return value;
 		};
 	}
 	

@@ -5,6 +5,7 @@ import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasProperty;
 
+import java.util.Collections;
 
 import static org.hamcrest.Matchers.equalTo;
 
@@ -18,7 +19,7 @@ public class BecDefinitionParserTest {
 	public void testParse() throws Exception {
 		var parser = new BecDefinitionParser();
 		
-		var result = parser.parse(ControlFileParserTest.class, "coe/Becdef.dat");
+		var result = parser.parse(ControlFileParserTest.class, "coe/Becdef.dat", Collections.emptyMap());
 		
 		assertThat(result, hasEntry(equalTo("AT"), allOf(
 				hasProperty("alias", equalTo("AT")),
