@@ -32,7 +32,7 @@ public class FipControlParser {
 	public static final String VDYP_POLYGON = "VDYP_POLYGON";
 	public static final String VDYP_LAYER_BY_SPECIES = "VDYP_LAYER_BY_SPECIES";
 	public static final String VDYP_LAYER_BY_SP0_BY_UTIL = "VDYP_LAYER_BY_SP0_BY_UTIL";
-	public static final String VOLUME_EQN_GROUPS = "VOLUME_EQN_GROUPS";
+	public static final String VOLUME_EQN_GROUPS = VolumeEquationGroupParser.CONTROL_KEY;
 	public static final String DECAY_GROUPS = "DECAY_GROUPS";
 	public static final String BREAKAGE_GROUPS = "BREAKAGE_GROUPS";
 	public static final String SITE_CURVE_NUMBERS = "SITE_CURVE_NUMBERS";

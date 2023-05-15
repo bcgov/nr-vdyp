@@ -18,6 +18,8 @@ import ca.bc.gov.nrs.vdyp.model.SP0Definition;
  */
 public class VolumeEquationGroupParser implements ResourceParser<Map<String, Map<String, Integer>>>{
 	
+	public static final String CONTROL_KEY = "VOLUME_EQN_GROUPS";
+	
 	LineParser lineParser = new LineParser() 
 		.strippedString(2, "sp0Alias")
 		.space(1)
