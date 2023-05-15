@@ -134,4 +134,23 @@ public class FipControlParserTest {
 								isA(Integer.class) // Equation Identifier
 		))))));
 	}
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Test
+	public void testParseGMBA1() throws Exception {
+		var parser = new FipControlParser();
+		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
+		assertThat(result, (Matcher) 
+			hasEntry(
+				is(FipControlParser.EQN_MODIFIERS), 
+				allOf(            // Default Equation
+					isA(Map.class), 
+					hasEntry(
+						isA(Integer.class),
+						allOf(            // ITG
+							isA(Map.class), 
+							hasEntry(
+								isA(Integer.class),
+								isA(Integer.class) // Reassigned Equation
+		))))));
+	}
 }

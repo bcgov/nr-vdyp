@@ -15,6 +15,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.ResourceParser;
 import ca.bc.gov.nrs.vdyp.io.parse.SP0DefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ValueParser;
 import ca.bc.gov.nrs.vdyp.io.parse.EquationGroupParser;
+import ca.bc.gov.nrs.vdyp.io.parse.EquationModifierParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.SP0Definition;
@@ -39,7 +40,7 @@ public class FipControlParser {
 	public static final String SITE_CURVE_NUMBERS = "SITE_CURVE_NUMBERS";
 	public static final String SITE_CURVE_AGE_MAX = "SITE_CURVE_AGE_MAX";
 	public static final String DEFAULT_EQ_NUM = EquationGroupParser.DEFAULT_CONTROL_KEY;
-	public static final String EQN_MODIFIERS = "EQN_MODIFIERS";
+	public static final String EQN_MODIFIERS = EquationModifierParser.CONTROL_KEY;
 	public static final String STOCKING_CLASS_FACTORS = "STOCKING_CLASS_FACTORS";
 	public static final String COE_BA = "COE_BA";
 	public static final String COE_DQ = "COE_DQ";
@@ -220,6 +221,7 @@ public class FipControlParser {
 		loadData(map, DEFAULT_EQ_NUM, fileResolver, this::RD_GRBA1);
 
 		// RD_GMBA1
+		loadData(map, EQN_MODIFIERS, fileResolver, this::RD_GMBA1);
 		// TODO
 		
 		int jprogram = 1; // FIPSTART only TODO Track this down
@@ -468,6 +470,14 @@ public class FipControlParser {
 	private Object RD_GRBA1(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
 		var parser = new EquationGroupParser(5);
 		parser.setHiddenBecs(Arrays.asList("BG", "AT"));
+		return parser.parse(data, control);
+	}
+	
+	/** 
+	 * Loads the information that was in the global array BG1MODV in Fortran
+	 */
+	private Object RD_GMBA1(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+		var parser = new EquationModifierParser();
 		return parser.parse(data, control);
 	}
 
