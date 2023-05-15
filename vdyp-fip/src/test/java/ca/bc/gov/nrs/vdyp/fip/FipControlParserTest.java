@@ -75,4 +75,44 @@ public class FipControlParserTest {
 								isA(Integer.class) // Equation Identifier
 		))))));
 	}
+	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Test
+	public void testParseDGRP() throws Exception {
+		var parser = new FipControlParser();
+		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
+		assertThat(result, (Matcher) 
+			hasEntry(
+				is(FipControlParser.DECAY_GROUPS), 
+				allOf(            // Map of SP0 Aliases
+					isA(Map.class), 
+					hasEntry(
+						isA(String.class),
+						allOf(            // Map of BEC aliases
+							isA(Map.class), 
+							hasEntry(
+								isA(String.class),
+								isA(Integer.class) // Equation Identifier
+		))))));
+	}
+	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Test
+	public void testParseBGRP() throws Exception {
+		var parser = new FipControlParser();
+		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
+		assertThat(result, (Matcher) 
+			hasEntry(
+				is(FipControlParser.BREAKAGE_GROUPS), 
+				allOf(            // Map of SP0 Aliases
+					isA(Map.class), 
+					hasEntry(
+						isA(String.class),
+						allOf(            // Map of BEC aliases
+							isA(Map.class), 
+							hasEntry(
+								isA(String.class),
+								isA(Integer.class) // Equation Identifier
+		))))));
+	}
 }

@@ -26,11 +26,11 @@ import ca.bc.gov.nrs.vdyp.model.SP0Definition;
 import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
 
 @SuppressWarnings("unused")
-public class VolumeEquationGroupParserTest {
+public class EquationGroupParserTest {
 	
 	@Test
 	public void testParse() throws Exception {
-		var parser = new VolumeEquationGroupParser();
+		var parser = new EquationGroupParser();
 		
 		var controlMap = makeControlMap();
 		
@@ -42,7 +42,7 @@ public class VolumeEquationGroupParserTest {
 	
 	@Test
 	public void testSP0MustExist() throws Exception {
-		var parser = new VolumeEquationGroupParser();
+		var parser = new EquationGroupParser();
 		
 		var controlMap = makeControlMap();
 		
@@ -57,7 +57,7 @@ public class VolumeEquationGroupParserTest {
 	
 	@Test
 	public void testBecMustExist() throws Exception {
-		var parser = new VolumeEquationGroupParser();
+		var parser = new EquationGroupParser();
 		
 		var controlMap = makeControlMap();
 		
@@ -74,7 +74,7 @@ public class VolumeEquationGroupParserTest {
 	public void testParseOvewrite() throws Exception {
 		// Original Fortran allows subsequent entries to overwrite old ones so don't validate against that
 
-		var parser = new VolumeEquationGroupParser();
+		var parser = new EquationGroupParser();
 		
 		var controlMap = makeControlMap();
 		
@@ -88,7 +88,7 @@ public class VolumeEquationGroupParserTest {
 	public void testParseMultiple() throws Exception {
 		// Original Fortran allows subsequent entries to overwrite old ones so don't validate against that
 
-		var parser = new VolumeEquationGroupParser();
+		var parser = new EquationGroupParser();
 		
 		var controlMap = makeControlMap();
 		

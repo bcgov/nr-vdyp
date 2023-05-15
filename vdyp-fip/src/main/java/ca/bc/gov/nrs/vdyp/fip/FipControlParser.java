@@ -14,7 +14,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParser;
 import ca.bc.gov.nrs.vdyp.io.parse.SP0DefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ValueParser;
-import ca.bc.gov.nrs.vdyp.io.parse.VolumeEquationGroupParser;
+import ca.bc.gov.nrs.vdyp.io.parse.EquationGroupParser;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.SP0Definition;
 
@@ -32,9 +32,9 @@ public class FipControlParser {
 	public static final String VDYP_POLYGON = "VDYP_POLYGON";
 	public static final String VDYP_LAYER_BY_SPECIES = "VDYP_LAYER_BY_SPECIES";
 	public static final String VDYP_LAYER_BY_SP0_BY_UTIL = "VDYP_LAYER_BY_SP0_BY_UTIL";
-	public static final String VOLUME_EQN_GROUPS = VolumeEquationGroupParser.CONTROL_KEY;
-	public static final String DECAY_GROUPS = "DECAY_GROUPS";
-	public static final String BREAKAGE_GROUPS = "BREAKAGE_GROUPS";
+	public static final String VOLUME_EQN_GROUPS = EquationGroupParser.VOLUME_CONTROL_KEY;
+	public static final String DECAY_GROUPS = EquationGroupParser.DECAY_CONTROL_KEY;
+	public static final String BREAKAGE_GROUPS = EquationGroupParser.BREAKAGE_CONTROL_KEY;
 	public static final String SITE_CURVE_NUMBERS = "SITE_CURVE_NUMBERS";
 	public static final String SITE_CURVE_AGE_MAX = "SITE_CURVE_AGE_MAX";
 	public static final String DEFAULT_EQ_NUM = "DEFAULT_EQ_NUM";
@@ -209,14 +209,11 @@ public class FipControlParser {
 		// RD_VGRP
 		loadData(map, VOLUME_EQN_GROUPS, fileResolver, this::RD_VGRP);
 		
-		// RD_VGRP
-		// TODO
-
 		// RD_DGRP
-		// TODO
+		loadData(map, DECAY_GROUPS, fileResolver, this::RD_DGRP);
 
 		// RD_BGRP
-		// TODO
+		loadData(map, BREAKAGE_GROUPS, fileResolver, this::RD_BGRP);
 
 		// RD_GRBA1
 		// TODO
@@ -443,7 +440,23 @@ public class FipControlParser {
 	 * Loads the information that was in the global array VGRPV in Fortran
 	 */
 	private Object RD_VGRP(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
-		var parser = new VolumeEquationGroupParser();
+		var parser = new EquationGroupParser();
+		return parser.parse(data, control);
+	}
+	
+	/** 
+	 * Loads the information that was in the global array DGRPV in Fortran
+	 */
+	private Object RD_DGRP(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+		var parser = new EquationGroupParser();
+		return parser.parse(data, control);
+	}
+	
+	/** 
+	 * Loads the information that was in the global array BG1DEFV in Fortran
+	 */
+	private Object RD_BGRP(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+		var parser = new EquationGroupParser();
 		return parser.parse(data, control);
 	}
 
