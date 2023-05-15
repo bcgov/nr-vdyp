@@ -218,9 +218,9 @@ public class LineParser {
 	 * @param addToResult Add a record from the file to the result object and return it
 	 * @return The result object after parsing
 	 * @throws IOException if an error occurs while reading from the stream
-	 * @throws ResourceParseException if the content of the stream could not be parsed
+	 * @throws ResourceParseLineException if the content of the stream could not be parsed
 	 */
-	public <T> T parse(InputStream is, T result, ParseEntryHandler<Map<String, Object>, T> addToResult) throws IOException, ResourceParseException {
+	public <T> T parse(InputStream is, T result, ParseEntryHandler<Map<String, Object>, T> addToResult) throws IOException, ResourceParseLineException {
 		var reader = new BufferedReader(new InputStreamReader(is, charset));
 		String line;
 		int lineNumber = 0;
@@ -250,7 +250,7 @@ public class LineParser {
 				}
 				result = addToResult.addTo(entry, result);
 			} catch (ValueParseException ex) {
-				throw new ResourceParseException(lineNumber, ex);
+				throw new ResourceParseLineException(lineNumber, ex);
 			}
 		}
 		return result;
@@ -261,9 +261,9 @@ public class LineParser {
 	 * @param is Input stream to parse
 	 * @return A list of maps, one per line of the stream
 	 * @throws IOException if an error occurs while reading from the stream
-	 * @throws ResourceParseException if the content of the stream could not be parsed
+	 * @throws ResourceParseLineException if the content of the stream could not be parsed
 	 */
-	public List<Map<String, Object>> parse (InputStream is) throws IOException, ResourceParseException {
+	public List<Map<String, Object>> parse (InputStream is) throws IOException, ResourceParseLineException {
 		var result = new ArrayList<Map<String, Object>> ();
 		result = this.parse(is, result, (v, r)->{r.add(v); return r;});
 		return result;

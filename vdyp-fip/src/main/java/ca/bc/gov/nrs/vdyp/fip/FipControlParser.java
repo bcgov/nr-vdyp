@@ -4,17 +4,18 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import ca.bc.gov.nrs.vdyp.io.parse.BecDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ControlFileParser;
-import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParser;
 import ca.bc.gov.nrs.vdyp.io.parse.SP0DefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ValueParser;
 import ca.bc.gov.nrs.vdyp.io.parse.EquationGroupParser;
+import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.SP0Definition;
 
@@ -37,7 +38,7 @@ public class FipControlParser {
 	public static final String BREAKAGE_GROUPS = EquationGroupParser.BREAKAGE_CONTROL_KEY;
 	public static final String SITE_CURVE_NUMBERS = "SITE_CURVE_NUMBERS";
 	public static final String SITE_CURVE_AGE_MAX = "SITE_CURVE_AGE_MAX";
-	public static final String DEFAULT_EQ_NUM = "DEFAULT_EQ_NUM";
+	public static final String DEFAULT_EQ_NUM = EquationGroupParser.DEFAULT_CONTROL_KEY;
 	public static final String EQN_MODIFIERS = "EQN_MODIFIERS";
 	public static final String STOCKING_CLASS_FACTORS = "STOCKING_CLASS_FACTORS";
 	public static final String COE_BA = "COE_BA";
@@ -216,7 +217,7 @@ public class FipControlParser {
 		loadData(map, BREAKAGE_GROUPS, fileResolver, this::RD_BGRP);
 
 		// RD_GRBA1
-		// TODO
+		loadData(map, DEFAULT_EQ_NUM, fileResolver, this::RD_GRBA1);
 
 		// RD_GMBA1
 		// TODO
@@ -441,6 +442,7 @@ public class FipControlParser {
 	 */
 	private Object RD_VGRP(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
 		var parser = new EquationGroupParser();
+		parser.setHiddenBecs(Arrays.asList("BG"));
 		return parser.parse(data, control);
 	}
 	
@@ -453,10 +455,19 @@ public class FipControlParser {
 	}
 	
 	/** 
-	 * Loads the information that was in the global array BG1DEFV in Fortran
+	 * Loads the information that was in the global array BGRPV in Fortran
 	 */
 	private Object RD_BGRP(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
 		var parser = new EquationGroupParser();
+		return parser.parse(data, control);
+	}
+	
+	/** 
+	 * Loads the information that was in the global array BG1DEFV in Fortran
+	 */
+	private Object RD_GRBA1(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+		var parser = new EquationGroupParser(5);
+		parser.setHiddenBecs(Arrays.asList("BG", "AT"));
 		return parser.parse(data, control);
 	}
 

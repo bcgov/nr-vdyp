@@ -201,7 +201,7 @@ public class LineParserTest {
 			var is = new ByteArrayInputStream("0042 Value1\r\n004x Value2".getBytes());
 		) {
 			
-			var ex1 = assertThrows(ResourceParseException.class, ()-> parser.parse(is));
+			var ex1 = assertThrows(ResourceParseLineException.class, ()-> parser.parse(is));
 			
 			assertThat(ex1, hasProperty("line", is(2))); // Line numbers indexed from 1 so the error is line 2
 			assertThat(ex1, hasProperty("cause", isA(ValueParseException.class)));

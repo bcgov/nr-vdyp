@@ -197,7 +197,7 @@ public class SP0DefinitionParserTest {
 			var is = new ByteArrayInputStream("AT Aspen                            00\r\nAC Cottonwood                       03".getBytes());
 		) {
 			
-			ex1 = Assertions.assertThrows(ResourceParseException.class, ()->parser.parse(is, Collections.emptyMap()));
+			ex1 = Assertions.assertThrows(ResourceParseLineException.class, ()->parser.parse(is, Collections.emptyMap()));
 		}
 		assertThat(ex1, hasProperty("line", is(2)));
 		assertThat(ex1, hasProperty("message", stringContainsInOrder("line 2", "Preference 3", "larger than 2")));
@@ -212,7 +212,7 @@ public class SP0DefinitionParserTest {
 			var is = new ByteArrayInputStream("AT Aspen                            00\r\nAC Cottonwood                       -1".getBytes());
 		) {
 			
-			ex1 = Assertions.assertThrows(ResourceParseException.class, ()->parser.parse(is, Collections.emptyMap()));
+			ex1 = Assertions.assertThrows(ResourceParseLineException.class, ()->parser.parse(is, Collections.emptyMap()));
 		}
 		assertThat(ex1, hasProperty("line", is(2)));
 		assertThat(ex1, hasProperty("message", stringContainsInOrder("line 2", "Preference -1", "less than 0")));
@@ -227,7 +227,7 @@ public class SP0DefinitionParserTest {
 			var is = new ByteArrayInputStream("AT Aspen                            01\r\nAC Cottonwood                       01".getBytes());
 		) {
 			
-			ex1 = Assertions.assertThrows(ResourceParseException.class, ()->parser.parse(is, Collections.emptyMap()));
+			ex1 = Assertions.assertThrows(ResourceParseLineException.class, ()->parser.parse(is, Collections.emptyMap()));
 		}
 		assertThat(ex1, hasProperty("line", is(2)));
 		assertThat(ex1, hasProperty("message", stringContainsInOrder("line 2", "Preference 1", "set to AT")));

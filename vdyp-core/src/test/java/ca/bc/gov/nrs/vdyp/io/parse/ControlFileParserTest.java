@@ -221,7 +221,7 @@ public class ControlFileParserTest {
 
 		String file = "00X Control 1\n002 Control 2";
 		try (InputStream is = new ByteArrayInputStream(file.getBytes())) {
-			ResourceParseException ex1 = Assertions.assertThrows(ResourceParseException.class, ()->parser.parse(is));
+			ResourceParseLineException ex1 = Assertions.assertThrows(ResourceParseLineException.class, ()->parser.parse(is));
 			
 			assertThat(ex1, hasProperty("line", is(1)));
 			assertThat(ex1, hasProperty("cause", instanceOf(ValueParseException.class)));
@@ -238,7 +238,7 @@ public class ControlFileParserTest {
 		
 		String file = "001 Control 1\n002 Control 2";
 		try (InputStream is = new ByteArrayInputStream(file.getBytes())) {
-			ResourceParseException ex1 = Assertions.assertThrows(ResourceParseException.class, ()->parser.parse(is));
+			ResourceParseLineException ex1 = Assertions.assertThrows(ResourceParseLineException.class, ()->parser.parse(is));
 			
 			assertThat(ex1, hasProperty("line", is(2)));
 			assertThat(ex1, hasProperty("cause", instanceOf(ValueParseException.class)));

@@ -26,7 +26,7 @@
 025                                                   Nullifies above siteCurve #
 026 coe/SIAGEMAX.prm                                  Max ages for ht incr, by SCN   RD_E026
 
-030 coe/grpba1.dat                                    Default Eq # BA=f(CC)     RD_GRBA1
+030 coe/GRPBA1.DAT                                    Default Eq # BA=f(CC)     RD_GRBA1
 031 coe/gmodba1.dat                                   Eqn modifiers for above   RD_GMBA1 
 033 coe/fipstkr.prm                                   Stocking class factors    RD_STK33
 

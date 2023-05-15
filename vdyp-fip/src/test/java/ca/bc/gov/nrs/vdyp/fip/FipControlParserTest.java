@@ -115,4 +115,23 @@ public class FipControlParserTest {
 								isA(Integer.class) // Equation Identifier
 		))))));
 	}
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Test
+	public void testParseGRBA1() throws Exception {
+		var parser = new FipControlParser();
+		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
+		assertThat(result, (Matcher) 
+			hasEntry(
+				is(FipControlParser.DEFAULT_EQ_NUM), 
+				allOf(            // Map of SP0 Aliases
+					isA(Map.class), 
+					hasEntry(
+						isA(String.class),
+						allOf(            // Map of BEC aliases
+							isA(Map.class), 
+							hasEntry(
+								isA(String.class),
+								isA(Integer.class) // Equation Identifier
+		))))));
+	}
 }

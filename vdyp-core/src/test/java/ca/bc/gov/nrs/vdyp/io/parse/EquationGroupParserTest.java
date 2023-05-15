@@ -7,12 +7,15 @@ import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.stringContainsInOrder;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Optional;
 
 
@@ -32,7 +35,7 @@ public class EquationGroupParserTest {
 	public void testParse() throws Exception {
 		var parser = new EquationGroupParser();
 		
-		var controlMap = makeControlMap();
+		var controlMap = makeControlMapSingle();
 		
 		var is = makeStream("S1 B1   001");
 		var result = parser.parse(is, Collections.unmodifiableMap(controlMap));
@@ -44,11 +47,11 @@ public class EquationGroupParserTest {
 	public void testSP0MustExist() throws Exception {
 		var parser = new EquationGroupParser();
 		
-		var controlMap = makeControlMap();
+		var controlMap = makeControlMapSingle();
 		
 		var is = makeStream("SX B1   001");
 		
-		ResourceParseException ex1 = Assertions.assertThrows(ResourceParseException.class, ()->parser.parse(is, Collections.unmodifiableMap(controlMap)));
+		ResourceParseLineException ex1 = Assertions.assertThrows(ResourceParseLineException.class, ()->parser.parse(is, Collections.unmodifiableMap(controlMap)));
 		
 		assertThat(ex1, hasProperty("message", stringContainsInOrder("line 1", "SX", "SP0")));
 		assertThat(ex1, hasProperty("line", is(1)));
@@ -59,11 +62,11 @@ public class EquationGroupParserTest {
 	public void testBecMustExist() throws Exception {
 		var parser = new EquationGroupParser();
 		
-		var controlMap = makeControlMap();
+		var controlMap = makeControlMapSingle();
 		
 		var is = makeStream("S1 BX   001");
 		
-		ResourceParseException ex1 = Assertions.assertThrows(ResourceParseException.class, ()->parser.parse(is, Collections.unmodifiableMap(controlMap)));
+		ResourceParseLineException ex1 = Assertions.assertThrows(ResourceParseLineException.class, ()->parser.parse(is, Collections.unmodifiableMap(controlMap)));
 		
 		assertThat(ex1, hasProperty("message", stringContainsInOrder("line 1", "BX", "BEC")));
 		assertThat(ex1, hasProperty("line", is(1)));
@@ -76,7 +79,7 @@ public class EquationGroupParserTest {
 
 		var parser = new EquationGroupParser();
 		
-		var controlMap = makeControlMap();
+		var controlMap = makeControlMapSingle();
 		
 		var is = makeStream("S1 B1   001", "S1 B1   002");
 		var result = parser.parse(is, Collections.unmodifiableMap(controlMap));
@@ -86,22 +89,122 @@ public class EquationGroupParserTest {
 	
 	@Test
 	public void testParseMultiple() throws Exception {
-		// Original Fortran allows subsequent entries to overwrite old ones so don't validate against that
+		var parser = new EquationGroupParser();
+		
+		var controlMap = makeControlMap();
+		
+		var is = makeStream(
+				"S1 B1   011", 
+				"S1 B2   012", 
+				"S1 B3   013", 
+				"S1 B4   014", 
+				"S2 B1   021", 
+				"S2 B2   022", 
+				"S2 B3   023", 
+				"S2 B4   024");
+		var result = parser.parse(is, Collections.unmodifiableMap(controlMap));
+		
+		assertThat(result, hasEntry(is("S1"), hasEntry(is("B1"), is(11))));
+		assertThat(result, hasEntry(is("S1"), hasEntry(is("B2"), is(12))));
+		assertThat(result, hasEntry(is("S1"), hasEntry(is("B3"), is(13))));
+		assertThat(result, hasEntry(is("S1"), hasEntry(is("B4"), is(14))));
+		assertThat(result, hasEntry(is("S2"), hasEntry(is("B1"), is(21))));
+		assertThat(result, hasEntry(is("S2"), hasEntry(is("B2"), is(22))));
+		assertThat(result, hasEntry(is("S2"), hasEntry(is("B3"), is(23))));
+		assertThat(result, hasEntry(is("S2"), hasEntry(is("B4"), is(24))));
+	}
+	
+	@Test
+	public void testRequireNoMissingSp0() throws Exception {
 
 		var parser = new EquationGroupParser();
 		
 		var controlMap = makeControlMap();
 		
-		var is = makeStream("S1 B1   001", "S1 B2   002", "S2 B1   001", "S2 B3   002", "S2 B4   003");
-		var result = parser.parse(is, Collections.unmodifiableMap(controlMap));
+		List<String> unusedBecs= Arrays.asList("B2", "B4");
 		
-		assertThat(result, hasEntry(is("S1"), hasEntry(is("B1"), is(1))));
-		assertThat(result, hasEntry(is("S1"), hasEntry(is("B2"), is(2))));
-		assertThat(result, hasEntry(is("S2"), hasEntry(is("B1"), is(1))));
-		assertThat(result, hasEntry(is("S2"), hasEntry(is("B3"), is(2))));
-		assertThat(result, hasEntry(is("S2"), hasEntry(is("B4"), is(3))));
+		var is = makeStream(
+				"S1 B1   011", 
+				"S1 B2   012", 
+				"S1 B3   013", 
+				"S1 B4   014"
+				//"S2 B1   021",  // Missing
+				//"S2 B2   022", 
+				//"S2 B3   023", 
+				//"S2 B4   024"
+				);
+		
+		ResourceParseValidException ex1 = assertThrows(ResourceParseValidException.class, ()->parser.parse(is, Collections.unmodifiableMap(controlMap)));
+		
+		assertThat(ex1, hasProperty("message", is("Expected mappings for SP0 S2 but it was missing")));
+		
+	}
+	
+	@Test
+	public void testRequireNoMissingBec() throws Exception {
+
+		var parser = new EquationGroupParser();
+		
+		var controlMap = makeControlMap();
+		
+		List<String> unusedBecs= Arrays.asList("B2", "B4");
+		
+		var is = makeStream(
+				"S1 B1   011", 
+				"S1 B2   012", 
+				// "S1 B3   013",  // Missing 
+				"S1 B4   014",
+				"S2 B1   021", 
+				"S2 B2   022", 
+				"S2 B3   023", 
+				"S2 B4   024");
+		
+		ResourceParseValidException ex1 = assertThrows(ResourceParseValidException.class, ()->parser.parse(is, Collections.unmodifiableMap(controlMap)));
+		
+		assertThat(ex1, hasProperty("message", is("Expected mappings for BEC B3 but it was missing for SP0 S1")));
+		
+	}
+	
+	@Test
+	public void testRequireNoUnexpectedBec() throws Exception {
+
+		var parser = new EquationGroupParser();
+		
+		var controlMap = makeControlMap();
+		
+		List<String> hiddenBecs= Arrays.asList("B3");
+		parser.setHiddenBecs(hiddenBecs);
+		
+		var is = makeStream(
+				"S1 B1   011", 
+				"S1 B2   012", 
+				"S1 B4   014",
+				"S2 B1   021", 
+				"S2 B2   022", 
+				"S2 B3   023", // Unexpected
+				"S2 B4   024");
+		
+		ResourceParseValidException ex1 = assertThrows(ResourceParseValidException.class, ()->parser.parse(is, Collections.unmodifiableMap(controlMap)));
+		
+		assertThat(ex1, hasProperty("message", is("Unexpected mapping for BEC B3 under SP0 S2")));
+		
 	}
 
+	private HashMap<String, Object> makeControlMapSingle() {
+		var controlMap = new HashMap<String, Object>();
+		
+		var becMap = new HashMap<String, BecDefinition>();
+		var sp0List = new ArrayList<SP0Definition>();
+		
+		becMap.put("B1", new BecDefinition("B1", Region.COASTAL, "Test BEC 1"));
+		
+		sp0List.add(new SP0Definition("S1", Optional.empty(), "Test SP0 1"));
+		
+		controlMap.put(BecDefinitionParser.CONTROL_KEY, Collections.unmodifiableMap(becMap));
+		controlMap.put(SP0DefinitionParser.CONTROL_KEY, Collections.unmodifiableList(sp0List));
+		return controlMap;
+	}
+	
 	private HashMap<String, Object> makeControlMap() {
 		var controlMap = new HashMap<String, Object>();
 		
