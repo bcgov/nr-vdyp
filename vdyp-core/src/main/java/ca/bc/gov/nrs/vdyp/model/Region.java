@@ -4,21 +4,20 @@ import java.util.Arrays;
 import java.util.Optional;
 
 public enum Region {
-	COASTAL('C'),
-	INTERIOR('I');
-	
+	COASTAL('C'), INTERIOR('I');
+
 	final char characterAlias;
 
 	private Region(char characterAlias) {
 		this.characterAlias = characterAlias;
 	}
-	
+
 	public static Optional<Region> fromAlias(char alias) {
-		return Arrays.stream(Region.values()).filter(x->x.getCharacterAlias()==alias).findFirst();
+		return Arrays.stream(Region.values()).filter(x -> x.getCharacterAlias() == alias).findFirst();
 	}
 
 	public char getCharacterAlias() {
 		return characterAlias;
 	}
-	
+
 }

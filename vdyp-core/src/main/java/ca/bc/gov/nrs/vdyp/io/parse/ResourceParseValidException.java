@@ -2,7 +2,7 @@ package ca.bc.gov.nrs.vdyp.io.parse;
 
 /**
  * An error parsing resource that is not associated with a particular line
- * 
+ *
  * @author Kevin Smith, Vivid Solutions
  *
  */
@@ -31,6 +31,5 @@ public class ResourceParseValidException extends ResourceParseException {
 	public ResourceParseValidException(Throwable cause) {
 		super(cause);
 	}
-	
-	
+
 }

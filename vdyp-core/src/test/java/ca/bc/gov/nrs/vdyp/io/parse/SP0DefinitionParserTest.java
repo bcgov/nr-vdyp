@@ -24,210 +24,215 @@ import org.junit.jupiter.api.Test;
 import ca.bc.gov.nrs.vdyp.model.SP0Definition;
 
 public class SP0DefinitionParserTest {
-	
+
 	@Test
 	public void testParse() throws Exception {
 		var parser = new SP0DefinitionParser();
-		
+
 		var result = parser.parse(ControlFileParserTest.class, "coe/SP0DEF_v0.dat", Collections.emptyMap());
-		
-		assertThat(result, contains(
-				allOf(
-						Matchers.instanceOf(SP0Definition.class),
-						Matchers.hasProperty("alias", equalTo("AC")),
-						Matchers.hasProperty("name", equalTo("Cottonwood"))
+
+		assertThat(
+				result,
+				contains(
+						allOf(
+								Matchers.instanceOf(SP0Definition.class), Matchers.hasProperty("alias", equalTo("AC")),
+								Matchers.hasProperty("name", equalTo("Cottonwood"))
 						),
-				allOf(
-						Matchers.instanceOf(SP0Definition.class),
-						Matchers.hasProperty("alias", equalTo("AT")),
-						Matchers.hasProperty("name", equalTo("Aspen"))
+						allOf(
+								Matchers.instanceOf(SP0Definition.class), Matchers.hasProperty("alias", equalTo("AT")),
+								Matchers.hasProperty("name", equalTo("Aspen"))
 						),
-				allOf(
-						Matchers.instanceOf(SP0Definition.class),
-						Matchers.hasProperty("alias", equalTo("B")),
-						Matchers.hasProperty("name", equalTo("Balsam"))
+						allOf(
+								Matchers.instanceOf(SP0Definition.class), Matchers.hasProperty("alias", equalTo("B")),
+								Matchers.hasProperty("name", equalTo("Balsam"))
 						),
-				allOf(
-						Matchers.instanceOf(SP0Definition.class),
-						Matchers.hasProperty("alias", equalTo("C")),
-						Matchers.hasProperty("name", equalTo("Cedar (X yellow)"))
+						allOf(
+								Matchers.instanceOf(SP0Definition.class), Matchers.hasProperty("alias", equalTo("C")),
+								Matchers.hasProperty("name", equalTo("Cedar (X yellow)"))
 						),
-				allOf(
-						Matchers.instanceOf(SP0Definition.class),
-						Matchers.hasProperty("alias", equalTo("D")),
-						Matchers.hasProperty("name", equalTo("Alder"))
+						allOf(
+								Matchers.instanceOf(SP0Definition.class), Matchers.hasProperty("alias", equalTo("D")),
+								Matchers.hasProperty("name", equalTo("Alder"))
 						),
-				allOf(
-						Matchers.instanceOf(SP0Definition.class),
-						Matchers.hasProperty("alias", equalTo("E")),
-						Matchers.hasProperty("name", equalTo("Birch"))
+						allOf(
+								Matchers.instanceOf(SP0Definition.class), Matchers.hasProperty("alias", equalTo("E")),
+								Matchers.hasProperty("name", equalTo("Birch"))
 						),
-				allOf(
-						Matchers.instanceOf(SP0Definition.class),
-						Matchers.hasProperty("alias", equalTo("F")),
-						Matchers.hasProperty("name", equalTo("Douglas Fir"))
+						allOf(
+								Matchers.instanceOf(SP0Definition.class), Matchers.hasProperty("alias", equalTo("F")),
+								Matchers.hasProperty("name", equalTo("Douglas Fir"))
 						),
-				allOf(
-						Matchers.instanceOf(SP0Definition.class),
-						Matchers.hasProperty("alias", equalTo("H")),
-						Matchers.hasProperty("name", equalTo("Hemlock"))
+						allOf(
+								Matchers.instanceOf(SP0Definition.class), Matchers.hasProperty("alias", equalTo("H")),
+								Matchers.hasProperty("name", equalTo("Hemlock"))
 						),
-				allOf(
-						Matchers.instanceOf(SP0Definition.class),
-						Matchers.hasProperty("alias", equalTo("L")),
-						Matchers.hasProperty("name", equalTo("Larch"))
+						allOf(
+								Matchers.instanceOf(SP0Definition.class), Matchers.hasProperty("alias", equalTo("L")),
+								Matchers.hasProperty("name", equalTo("Larch"))
 						),
-				allOf(
-						Matchers.instanceOf(SP0Definition.class),
-						Matchers.hasProperty("alias", equalTo("MB")),
-						Matchers.hasProperty("name", equalTo("Maple"))
+						allOf(
+								Matchers.instanceOf(SP0Definition.class), Matchers.hasProperty("alias", equalTo("MB")),
+								Matchers.hasProperty("name", equalTo("Maple"))
 						),
-				allOf(
-						Matchers.instanceOf(SP0Definition.class),
-						Matchers.hasProperty("alias", equalTo("PA")),
-						Matchers.hasProperty("name", equalTo("White-bark pine"))
+						allOf(
+								Matchers.instanceOf(SP0Definition.class), Matchers.hasProperty("alias", equalTo("PA")),
+								Matchers.hasProperty("name", equalTo("White-bark pine"))
 						),
-				allOf(
-						Matchers.instanceOf(SP0Definition.class),
-						Matchers.hasProperty("alias", equalTo("PL")),
-						Matchers.hasProperty("name", equalTo("Lodgepole Pine"))
+						allOf(
+								Matchers.instanceOf(SP0Definition.class), Matchers.hasProperty("alias", equalTo("PL")),
+								Matchers.hasProperty("name", equalTo("Lodgepole Pine"))
 						),
-				allOf(
-						Matchers.instanceOf(SP0Definition.class),
-						Matchers.hasProperty("alias", equalTo("PW")),
-						Matchers.hasProperty("name", equalTo("White pine"))
+						allOf(
+								Matchers.instanceOf(SP0Definition.class), Matchers.hasProperty("alias", equalTo("PW")),
+								Matchers.hasProperty("name", equalTo("White pine"))
 						),
-				allOf(
-						Matchers.instanceOf(SP0Definition.class),
-						Matchers.hasProperty("alias", equalTo("PY")),
-						Matchers.hasProperty("name", equalTo("Yellow pine"))
+						allOf(
+								Matchers.instanceOf(SP0Definition.class), Matchers.hasProperty("alias", equalTo("PY")),
+								Matchers.hasProperty("name", equalTo("Yellow pine"))
 						),
-				allOf(
-						Matchers.instanceOf(SP0Definition.class),
-						Matchers.hasProperty("alias", equalTo("S")),
-						Matchers.hasProperty("name", equalTo("Spruce"))
+						allOf(
+								Matchers.instanceOf(SP0Definition.class), Matchers.hasProperty("alias", equalTo("S")),
+								Matchers.hasProperty("name", equalTo("Spruce"))
 						),
-				allOf(
-						Matchers.instanceOf(SP0Definition.class),
-						Matchers.hasProperty("alias", equalTo("Y")),
-						Matchers.hasProperty("name", equalTo("Yellow cedar"))
+						allOf(
+								Matchers.instanceOf(SP0Definition.class), Matchers.hasProperty("alias", equalTo("Y")),
+								Matchers.hasProperty("name", equalTo("Yellow cedar"))
 						)
-				
-				));
+
+				)
+		);
 	}
-	
+
 	@Test
 	public void testOrderByPreference() throws Exception {
 		var parser = new SP0DefinitionParser(2);
-		
+
 		List<SP0Definition> result;
-		try(
-			var is = new ByteArrayInputStream("AT Aspen                            02\r\nAC Cottonwood                       01".getBytes());
+		try (
+				var is = new ByteArrayInputStream(
+						"AT Aspen                            02\r\nAC Cottonwood                       01".getBytes()
+				);
 		) {
 			result = parser.parse(is, Collections.emptyMap());
 		}
-		assertThat(result, contains(
-				allOf(
-						Matchers.instanceOf(SP0Definition.class),
-						Matchers.hasProperty("alias", equalTo("AC")),
-						Matchers.hasProperty("name", equalTo("Cottonwood"))
+		assertThat(
+				result,
+				contains(
+						allOf(
+								Matchers.instanceOf(SP0Definition.class), Matchers.hasProperty("alias", equalTo("AC")),
+								Matchers.hasProperty("name", equalTo("Cottonwood"))
 						),
-				allOf(
-						Matchers.instanceOf(SP0Definition.class),
-						Matchers.hasProperty("alias", equalTo("AT")),
-						Matchers.hasProperty("name", equalTo("Aspen"))
+						allOf(
+								Matchers.instanceOf(SP0Definition.class), Matchers.hasProperty("alias", equalTo("AT")),
+								Matchers.hasProperty("name", equalTo("Aspen"))
 						)
-				));
+				)
+		);
 	}
-	
+
 	@Test
 	public void testOrderByLinesBlank() throws Exception {
 		var parser = new SP0DefinitionParser(2);
-		
+
 		List<SP0Definition> result;
-		try(
-			var is = new ByteArrayInputStream("AT Aspen                              \r\nAC Cottonwood                         ".getBytes());
+		try (
+				var is = new ByteArrayInputStream(
+						"AT Aspen                              \r\nAC Cottonwood                         ".getBytes()
+				);
 		) {
 			result = parser.parse(is, Collections.emptyMap());
 		}
-		assertThat(result, contains(
-				allOf(
-						Matchers.instanceOf(SP0Definition.class),
-						Matchers.hasProperty("alias", equalTo("AT")),
-						Matchers.hasProperty("name", equalTo("Aspen"))
+		assertThat(
+				result,
+				contains(
+						allOf(
+								Matchers.instanceOf(SP0Definition.class), Matchers.hasProperty("alias", equalTo("AT")),
+								Matchers.hasProperty("name", equalTo("Aspen"))
 						),
-				allOf(
-						Matchers.instanceOf(SP0Definition.class),
-						Matchers.hasProperty("alias", equalTo("AC")),
-						Matchers.hasProperty("name", equalTo("Cottonwood"))
+						allOf(
+								Matchers.instanceOf(SP0Definition.class), Matchers.hasProperty("alias", equalTo("AC")),
+								Matchers.hasProperty("name", equalTo("Cottonwood"))
 						)
-				));
+				)
+		);
 	}
-	
+
 	@Test
 	public void testOrderByLinesZero() throws Exception {
 		var parser = new SP0DefinitionParser(2);
-		
+
 		List<SP0Definition> result;
-		try(
-			var is = new ByteArrayInputStream("AT Aspen                            00\r\nAC Cottonwood                       00".getBytes());
+		try (
+				var is = new ByteArrayInputStream(
+						"AT Aspen                            00\r\nAC Cottonwood                       00".getBytes()
+				);
 		) {
 			result = parser.parse(is, Collections.emptyMap());
 		}
-		assertThat(result, contains(
-				allOf(
-						Matchers.instanceOf(SP0Definition.class),
-						Matchers.hasProperty("alias", equalTo("AT")),
-						Matchers.hasProperty("name", equalTo("Aspen"))
+		assertThat(
+				result,
+				contains(
+						allOf(
+								Matchers.instanceOf(SP0Definition.class), Matchers.hasProperty("alias", equalTo("AT")),
+								Matchers.hasProperty("name", equalTo("Aspen"))
 						),
-				allOf(
-						Matchers.instanceOf(SP0Definition.class),
-						Matchers.hasProperty("alias", equalTo("AC")),
-						Matchers.hasProperty("name", equalTo("Cottonwood"))
+						allOf(
+								Matchers.instanceOf(SP0Definition.class), Matchers.hasProperty("alias", equalTo("AC")),
+								Matchers.hasProperty("name", equalTo("Cottonwood"))
 						)
-				));
+				)
+		);
 	}
-	
+
 	@Test
 	public void testErrorPreferenceOutOfBoundsHigh() throws Exception {
 		var parser = new SP0DefinitionParser(2);
-		
+
 		Exception ex1;
-		try(
-			var is = new ByteArrayInputStream("AT Aspen                            00\r\nAC Cottonwood                       03".getBytes());
+		try (
+				var is = new ByteArrayInputStream(
+						"AT Aspen                            00\r\nAC Cottonwood                       03".getBytes()
+				);
 		) {
-			
-			ex1 = Assertions.assertThrows(ResourceParseLineException.class, ()->parser.parse(is, Collections.emptyMap()));
+
+			ex1 = Assertions
+					.assertThrows(ResourceParseLineException.class, () -> parser.parse(is, Collections.emptyMap()));
 		}
 		assertThat(ex1, hasProperty("line", is(2)));
 		assertThat(ex1, hasProperty("message", stringContainsInOrder("line 2", "Preference 3", "larger than 2")));
 	}
-	
+
 	@Test
 	public void testErrorPreferenceOutOfBoundsLow() throws Exception {
 		var parser = new SP0DefinitionParser(2);
-		
+
 		Exception ex1;
-		try(
-			var is = new ByteArrayInputStream("AT Aspen                            00\r\nAC Cottonwood                       -1".getBytes());
+		try (
+				var is = new ByteArrayInputStream(
+						"AT Aspen                            00\r\nAC Cottonwood                       -1".getBytes()
+				);
 		) {
-			
-			ex1 = Assertions.assertThrows(ResourceParseLineException.class, ()->parser.parse(is, Collections.emptyMap()));
+
+			ex1 = Assertions
+					.assertThrows(ResourceParseLineException.class, () -> parser.parse(is, Collections.emptyMap()));
 		}
 		assertThat(ex1, hasProperty("line", is(2)));
 		assertThat(ex1, hasProperty("message", stringContainsInOrder("line 2", "Preference -1", "less than 0")));
 	}
-	
+
 	@Test
 	public void testErrorPreferenceDuplicate() throws Exception {
 		var parser = new SP0DefinitionParser(2);
-		
+
 		Exception ex1;
-		try(
-			var is = new ByteArrayInputStream("AT Aspen                            01\r\nAC Cottonwood                       01".getBytes());
+		try (
+				var is = new ByteArrayInputStream(
+						"AT Aspen                            01\r\nAC Cottonwood                       01".getBytes()
+				);
 		) {
-			
-			ex1 = Assertions.assertThrows(ResourceParseLineException.class, ()->parser.parse(is, Collections.emptyMap()));
+
+			ex1 = Assertions
+					.assertThrows(ResourceParseLineException.class, () -> parser.parse(is, Collections.emptyMap()));
 		}
 		assertThat(ex1, hasProperty("line", is(2)));
 		assertThat(ex1, hasProperty("message", stringContainsInOrder("line 2", "Preference 1", "set to AT")));

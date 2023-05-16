@@ -13,13 +13,17 @@ import java.util.Map;
 
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.io.parse.BecDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ControlFileParserTest;
 import ca.bc.gov.nrs.vdyp.io.parse.SP0DefinitionParser;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
+import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.SP0Definition;
+import ca.bc.gov.nrs.vdyp.model.SiteCurve;
+import ca.bc.gov.nrs.vdyp.model.StockingClassFactor;
 
 @SuppressWarnings("unused")
 public class FipControlParserTest {
@@ -152,5 +156,53 @@ public class FipControlParserTest {
 								isA(Integer.class),
 								isA(Integer.class) // Reassigned Equation
 		))))));
+	}
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Test
+	public void testParseSTK33() throws Exception {
+		var parser = new FipControlParser();
+		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
+		assertThat(result, (Matcher) 
+			hasEntry(
+				is(FipControlParser.STOCKING_CLASS_FACTORS), 
+				allOf(            // STK
+					isA(Map.class), 
+					hasEntry(
+						isA(Character.class),
+						allOf(            // Region
+							isA(Map.class), 
+							hasEntry(
+								isA(Region.class),
+								isA(StockingClassFactor.class) // Factors
+		))))));
+	}
+	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Test
+	@Disabled
+	public void testParseE025() throws Exception {
+		var parser = new FipControlParser();
+		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
+		assertThat(result, (Matcher) 
+			hasEntry(
+				is(FipControlParser.SITE_CURVE_NUMBERS), 
+				allOf(            // Species
+					isA(Map.class), 
+					hasEntry(
+						isA(String.class),
+						isA(SiteCurve.class)
+		))));
+	}
+	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Test
+	public void testParseE025Empty() throws Exception {
+		var parser = new FipControlParser();
+		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
+		assertThat(result, (Matcher) 
+			hasEntry(
+				is(FipControlParser.SITE_CURVE_NUMBERS), 
+				Matchers.anEmptyMap()
+		));
 	}
 }

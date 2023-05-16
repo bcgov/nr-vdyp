@@ -8,11 +8,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import ca.bc.gov.nrs.vdyp.io.parse.BecDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ControlFileParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParser;
 import ca.bc.gov.nrs.vdyp.io.parse.SP0DefinitionParser;
+import ca.bc.gov.nrs.vdyp.io.parse.SiteCurveParser;
 import ca.bc.gov.nrs.vdyp.io.parse.StockingClassFactorParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ValueParser;
 import ca.bc.gov.nrs.vdyp.io.parse.EquationGroupParser;
@@ -38,7 +40,7 @@ public class FipControlParser {
 	public static final String VOLUME_EQN_GROUPS = EquationGroupParser.VOLUME_CONTROL_KEY;
 	public static final String DECAY_GROUPS = EquationGroupParser.DECAY_CONTROL_KEY;
 	public static final String BREAKAGE_GROUPS = EquationGroupParser.BREAKAGE_CONTROL_KEY;
-	public static final String SITE_CURVE_NUMBERS = "SITE_CURVE_NUMBERS";
+	public static final String SITE_CURVE_NUMBERS = SiteCurveParser.CONTROL_KEY;
 	public static final String SITE_CURVE_AGE_MAX = "SITE_CURVE_AGE_MAX";
 	public static final String DEFAULT_EQ_NUM = EquationGroupParser.DEFAULT_CONTROL_KEY;
 	public static final String EQN_MODIFIERS = EquationModifierParser.CONTROL_KEY;
@@ -95,8 +97,8 @@ public class FipControlParser {
 			.record( 21, DECAY_GROUPS, FILENAME)                 // RD_DGRP
 			.record( 22, BREAKAGE_GROUPS, FILENAME)              // RD_BGRP    IPSJF157
 			
-			.record( 25, SITE_CURVE_NUMBERS, FILENAME)           // RD_E025
-			.record( 26, SITE_CURVE_AGE_MAX, FILENAME)           // RD_E026
+			.record( 25, SITE_CURVE_NUMBERS, ValueParser.optional(FILENAME))  // RD_E025
+			.record( 26, SITE_CURVE_AGE_MAX, FILENAME)                        // RD_E026
 			
 			.record( 30, DEFAULT_EQ_NUM, FILENAME)               // RD_GRBA1
 			.record( 31, EQN_MODIFIERS, FILENAME)                // RD_GMBA1
@@ -240,12 +242,13 @@ public class FipControlParser {
 		// User-assigned SC's (Site Curve Numbers)
 		// 
 		// RD_E025
-		// TODO
+		loadDataOptional(map, SITE_CURVE_NUMBERS, fileResolver, this::RD_E025);
 		
 		//  Max tot ages to apply site curves (by SC)
 		// 
 		// RD_E026
 		// TODO
+		// loadDataOptional(map, SITE_CURVE_AGE_MAX, fileResolver, this::RD_E026);
 		
 		// Coeff for Empirical relationships
 
@@ -422,6 +425,18 @@ public class FipControlParser {
 			map.put(key, parser.parse(is, map));
 		}
 	}
+	void loadDataOptional(Map<String, Object> map, String key, FileResolver fileResolver, ResourceParser<?> parser) throws IOException, ResourceParseException {
+		@SuppressWarnings("unchecked")
+		Optional<String> path = (Optional<String>) map.get(key);
+		if(!path.isPresent()) {
+			// TODO Log
+			map.put(key, Collections.emptyMap());
+			return;
+		}
+		try(var is = fileResolver.resolve(path.get())) {
+			map.put(key, parser.parse(is, map));
+		}
+	}
 	
 	/** 
 	 * Loads the information that was in the global arrays BECV, BECNM, and BECCOASTAL in Fortran
@@ -489,6 +504,21 @@ public class FipControlParser {
 		return parser.parse(data, control);
 	}
 
+	/** 
+	 * Loads the information that was in the global arrays ISCURVE and SP_SCV in Fortran
+	 */
+	private Object RD_E025(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+		var parser = new SiteCurveParser();
+		return parser.parse(data, control);
+	}
+	
+	/** 
+	 * Loads the information that was in the global V7COE026 arrays ASITELIM, T1SITELIM, T2SITELIM in Fortran
+	 */
+	private Object RD_E026(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+		return null;
+	}
+	
 	static interface FileResolver {
 		InputStream resolve(String filename) throws IOException;
 		

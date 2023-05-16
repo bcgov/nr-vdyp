@@ -6,7 +6,7 @@ import java.util.Set;
 
 /**
  * The difference between a set of values and what they are expaected to be
- * 
+ *
  * @author Kevin Smith, Vivid Solutions
  *
  * @param <T>
@@ -14,7 +14,7 @@ import java.util.Set;
 public class ExpectationDifference<T> {
 	final Set<T> missing;
 	final Set<T> unexpected;
-	
+
 	public ExpectationDifference(Set<T> missing, Set<T> unexpected) {
 		super();
 		this.missing = missing;
@@ -23,6 +23,7 @@ public class ExpectationDifference<T> {
 
 	/**
 	 * Find the missing and expected values in a collections of values.
+	 *
 	 * @param <U>
 	 * @param values
 	 * @param expected
@@ -38,6 +39,7 @@ public class ExpectationDifference<T> {
 
 	/**
 	 * Which values are missing
+	 *
 	 * @return
 	 */
 	public Set<T> getMissing() {
@@ -46,18 +48,19 @@ public class ExpectationDifference<T> {
 
 	/**
 	 * Which values were unexpected
+	 *
 	 * @return
 	 */
 	public Set<T> getUnexpected() {
 		return unexpected;
 	}
-	
+
 	/**
 	 * Were the values as expected
+	 *
 	 * @return
 	 */
 	public boolean isSame() {
 		return getMissing().isEmpty() && getUnexpected().isEmpty();
 	}
 }
-
