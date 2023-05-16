@@ -13,6 +13,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.BecDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ControlFileParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParser;
 import ca.bc.gov.nrs.vdyp.io.parse.SP0DefinitionParser;
+import ca.bc.gov.nrs.vdyp.io.parse.StockingClassFactorParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ValueParser;
 import ca.bc.gov.nrs.vdyp.io.parse.EquationGroupParser;
 import ca.bc.gov.nrs.vdyp.io.parse.EquationModifierParser;
@@ -41,7 +42,7 @@ public class FipControlParser {
 	public static final String SITE_CURVE_AGE_MAX = "SITE_CURVE_AGE_MAX";
 	public static final String DEFAULT_EQ_NUM = EquationGroupParser.DEFAULT_CONTROL_KEY;
 	public static final String EQN_MODIFIERS = EquationModifierParser.CONTROL_KEY;
-	public static final String STOCKING_CLASS_FACTORS = "STOCKING_CLASS_FACTORS";
+	public static final String STOCKING_CLASS_FACTORS = StockingClassFactorParser.CONTROL_KEY;
 	public static final String COE_BA = "COE_BA";
 	public static final String COE_DQ = "COE_DQ";
 	public static final String UPPER_BA_BY_CI_S0_P = "UPPER_BA_BY_CI_S0_P";
@@ -222,12 +223,11 @@ public class FipControlParser {
 
 		// RD_GMBA1
 		loadData(map, EQN_MODIFIERS, fileResolver, this::RD_GMBA1);
-		// TODO
 		
 		int jprogram = 1; // FIPSTART only TODO Track this down
 		if(jprogram==1) {
 			// RD_STK33
-			// TODO
+			loadData(map, STOCKING_CLASS_FACTORS, fileResolver, this::RD_STK33);
 
 			// TODO minima?
 			/*
@@ -478,6 +478,14 @@ public class FipControlParser {
 	 */
 	private Object RD_GMBA1(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
 		var parser = new EquationModifierParser();
+		return parser.parse(data, control);
+	}
+	
+	/** 
+	 * Loads the information that was in the global arrays STKV, FACTV, and NPCTAREA in Fortran
+	 */
+	private Object RD_STK33(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+		var parser = new StockingClassFactorParser();
 		return parser.parse(data, control);
 	}
 

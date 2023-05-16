@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
+import ca.bc.gov.nrs.vdyp.model.Region;
+
 /**
  * Parses a string to a value
  * @author Kevin Smith, Vivid Solutions
@@ -66,6 +68,24 @@ public interface ValueParser<T> {
 	 * Parser for single precision floats
 	 */
 	public static final ValueParser<Float> FLOAT = numberParser(Float::parseFloat, Float.class);
+	
+	/**
+	 * Parser for Characters
+	 */
+	public static final ValueParser<Character> CHARACTER = s->{
+		if(s.isBlank()) {
+			throw new ValueParseException("Character is blank");
+		}
+		return s.charAt(0);
+	};
+	
+	
+	/**
+	 * Parser for a region identifier
+	 */
+	public static final ValueParser<Region> REGION = (s)->
+		Region.fromAlias(Character.toUpperCase(s.charAt(0)))
+				.orElseThrow(()->new ValueParseException(s, s+" is not a valid region identifier"));
 	
 	public static <U> ValueParser<List<U>> list(ValueParser<U> delegate) {
 		return s-> {

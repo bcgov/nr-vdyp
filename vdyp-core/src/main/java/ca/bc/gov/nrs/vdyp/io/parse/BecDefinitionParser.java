@@ -30,10 +30,7 @@ public class BecDefinitionParser implements ResourceParser<Map<String, BecDefini
 	}
 		.strippedString(4, "alias")
 		.space(1)
-		.value(1, "region", (s)->{
-			return Region.fromAlias(Character.toUpperCase(s.charAt(0)))
-					.orElseThrow(()->new ValueParseException(s, s+" is not a valid region identifier"));
-		})
+		.value(1, "region", ValueParser.REGION)
 		.space(1)
 		.strippedString("name");
 	
