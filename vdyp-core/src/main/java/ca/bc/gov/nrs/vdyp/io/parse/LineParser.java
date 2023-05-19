@@ -126,6 +126,23 @@ public class LineParser {
 	}
 
 	/**
+	 * Add a multipart segment
+	 *
+	 * @param <T>    type the segment will be parsed too
+	 * @param length length of the segment
+	 * @param name   name of the segment
+	 * @param parser parser to convert the string
+	 */
+	public <T> LineParser multiValue(int number, int length, String name, ValueParser<T> parser) {
+		if (number < 0)
+			throw new IllegalArgumentException("number can not be negative");
+		if (length < 0)
+			throw new IllegalArgumentException("length can not be negative");
+		
+		return doValue(length*number, name, ValueParser.segmentList(length, parser));
+	}
+	
+	/**
 	 * Add a segment
 	 *
 	 * @param <T>    type the segment will be parsed too

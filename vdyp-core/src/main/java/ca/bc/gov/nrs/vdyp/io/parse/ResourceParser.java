@@ -64,7 +64,8 @@ public interface ResourceParser<T> {
 		}
 	}
 
-	static <U> U expectParsedControl(Map<String, Object> control, String key, Class<U> clazz) {
+	@SuppressWarnings("unchecked")
+	static <U> U expectParsedControl(Map<String, Object> control, String key, Class<? super U> clazz) {
 		var value = control.get(key);
 		if (value == null) {
 			throw new IllegalStateException("Expected control map to have " + key);
@@ -80,6 +81,6 @@ public interface ResourceParser<T> {
 							+ value.getClass()
 			);
 		}
-		return clazz.cast(value);
+		return (U) value;
 	}
 }

@@ -12,6 +12,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 import ca.bc.gov.nrs.vdyp.io.parse.BecDefinitionParser;
+import ca.bc.gov.nrs.vdyp.io.parse.CoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ControlFileParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParser;
 import ca.bc.gov.nrs.vdyp.io.parse.SP0DefinitionParser;
@@ -23,7 +24,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.EquationGroupParser;
 import ca.bc.gov.nrs.vdyp.io.parse.EquationModifierParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
-import ca.bc.gov.nrs.vdyp.model.Region;
+import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
 import ca.bc.gov.nrs.vdyp.model.SP0Definition;
 import ca.bc.gov.nrs.vdyp.model.SiteCurveAgeMaximum;
 
@@ -49,8 +50,8 @@ public class FipControlParser {
 	public static final String DEFAULT_EQ_NUM = EquationGroupParser.DEFAULT_CONTROL_KEY;
 	public static final String EQN_MODIFIERS = EquationModifierParser.CONTROL_KEY;
 	public static final String STOCKING_CLASS_FACTORS = StockingClassFactorParser.CONTROL_KEY;
-	public static final String COE_BA = "COE_BA";
-	public static final String COE_DQ = "COE_DQ";
+	public static final String COE_BA = CoefficientParser.BA_CONTROL_KEY;
+	public static final String COE_DQ = CoefficientParser.DQ_CONTROL_KEY;
 	public static final String UPPER_BA_BY_CI_S0_P = "UPPER_BA_BY_CI_S0_P";
 	public static final String HL_PRIMARY_SP_EQN_P1 = "HL_PRIMARY_SP_EQN_P1";
 	public static final String HL_PRIMARY_SP_EQN_P2 = "HL_PRIMARY_SP_EQN_P2";
@@ -258,10 +259,10 @@ public class FipControlParser {
 		// Coeff for Empirical relationships
 
 		// RD_E040
-		// TODO
+		loadData(map, COE_BA, fileResolver, this::RD_E040);
 
 		// RD_E041
-		// TODO
+		loadData(map, COE_DQ, fileResolver, this::RD_E041);
 
 		// RD_E043
 		// TODO
@@ -541,6 +542,30 @@ public class FipControlParser {
 		// Structure: store the age for each region plus t1 and t2 for each site curve.
 
 		var parser = new SiteCurveAgeMaximumParser();
+		return parser.parse(data, control);
+	}
+	
+	/**
+	 * Loads the information that was in the global array COE040 in Fortran
+	 */
+	private MatrixMap3<Integer, String, Integer, Float> RD_E040(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+		// 10 coefficients by species (SP0) by becs
+		// 4 String BEC Alias, 2 gap, 1 int coefficient index, 2 int "Indicate", 16x8 Float coefficient for species  
+		// Blank bec is ignore line
+		
+		// if indicate is 2, map the coefficients in directly
+		// if indicate is 0 write the first coeffecient from the file to all in the array
+		// if the indicate is 1, add the first from the file to each subsequent one.
+		
+		var parser = new CoefficientParser();
+		return parser.parse(data, control);
+	}
+	
+	/**
+	 * Loads the information that was in the global array COE041 in Fortran
+	 */
+	private MatrixMap3<Integer, String, Integer, Float> RD_E041(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {		
+		var parser = new CoefficientParser();
 		return parser.parse(data, control);
 	}
 

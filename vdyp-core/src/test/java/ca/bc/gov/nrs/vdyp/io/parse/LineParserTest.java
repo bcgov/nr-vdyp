@@ -2,6 +2,8 @@ package ca.bc.gov.nrs.vdyp.io.parse;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.array;
+import static org.hamcrest.Matchers.arrayContaining;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasKey;
@@ -17,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 
 public class LineParserTest {
@@ -150,6 +153,18 @@ public class LineParserTest {
 				)
 		);
 
+	}
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testMultiValue() throws Exception {
+		var parser = new LineParser();
+		parser.multiValue(4, 3, "test", ValueParser.INTEGER);
+
+		var result1 = parser.parseLine(
+				" 02 04 06 08"
+		);
+
+		assertThat(result1, hasEntry(is("test"), (Matcher) contains(2,4,6,8)));
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })

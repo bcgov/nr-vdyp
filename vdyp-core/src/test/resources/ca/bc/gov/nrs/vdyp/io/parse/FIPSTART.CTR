@@ -30,8 +30,8 @@
 031 coe/GMODBA1.DAT                                   Eqn modifiers for above   RD_GMBA1 
 033 coe/FIPSTKR.PRM                                   Stocking class factors    RD_STK33
 
-040 coe/regba25.coe                                   Coe BA=f(CC)              RD_E040 IPSJF128
-041 coe/regdq26.coe                                   Coe DQ=f(CC)              RD_E041 IPSJF129
+040 coe/REGBA25.coe                                   Coe BA=f(CC)              RD_E040 IPSJF128
+041 coe/REGDQ26.coe                                   Coe DQ=f(CC)              RD_E041 IPSJF129
 043 coe/upperb02.coe                                  Upper BA by C/I SP0_P     RD_E043 IPSJF128 
 
 050 coe/regyhlp.coe                                    HL, Primary SP, Eqn P1     RD_YHL1 
