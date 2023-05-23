@@ -1,5 +1,7 @@
 package ca.bc.gov.nrs.vdyp.fip;
 
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.mmHasEntry;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.hasEntry;
@@ -237,6 +239,47 @@ public class FipControlParserTest {
 						is(FipControlParser.SITE_CURVE_AGE_MAX), allOf(
 								// Species
 								isA(Map.class), hasEntry(isA(Integer.class), isA(SiteCurveAgeMaximum.class))
+						)
+				)
+		);
+	}
+	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Test
+	public void testParseE040() throws Exception {
+		var parser = new FipControlParser();
+		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
+		assertThat(
+				result, (Matcher) hasEntry(
+						is(FipControlParser.COE_BA), allOf(
+								mmHasEntry(present(is(2.0028f)), 0, "AT", 1)
+						)
+				)
+		);
+	}
+	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Test
+	public void testParseE041() throws Exception {
+		var parser = new FipControlParser();
+		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
+		assertThat(
+				result, (Matcher) hasEntry(
+						is(FipControlParser.COE_DQ), allOf(
+								mmHasEntry(present(is(6.6190f)), 0, "AT", 1)
+						)
+				)
+		);
+	}
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Test
+	public void testParseE043() throws Exception {
+		var parser = new FipControlParser();
+		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
+		assertThat(
+				result, (Matcher) hasEntry(
+						is(FipControlParser.UPPER_BA_BY_CI_S0_P), allOf(
+								mmHasEntry(present(is(109.27f)), Region.COASTAL, "AC", 1)
 						)
 				)
 		);

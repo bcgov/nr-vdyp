@@ -40,8 +40,8 @@ public class CoefficientParser implements ResourceParser<MatrixMap3<Integer, Str
 	}
 	.value(4, BEC_KEY, String::strip)
 	.space(2)
-	.value(1, INDICATOR_KEY, ValueParser.INTEGER)
-	.value(2, COEFFICIENT_INDEX_KEY, ValueParser.INTEGER)
+	.value(1, COEFFICIENT_INDEX_KEY, ValueParser.INTEGER)
+	.value(2, INDICATOR_KEY, ValueParser.INTEGER)
 	.multiValue(NUM_SPECIES, 8, COEFFICIENT_KEY, ValueParser.FLOAT);
 
 	@Override
@@ -58,18 +58,28 @@ public class CoefficientParser implements ResourceParser<MatrixMap3<Integer, Str
 			@SuppressWarnings("unchecked")
 			var coefficients = (List<Float>) v.get(COEFFICIENT_KEY);
 			
+			if( !becAliases.contains(bec)) {
+				throw new ValueParseException(bec, bec+" is not a valid BEC alias");
+			}
+			if( !coeIndecies.contains(index)) {
+				throw new ValueParseException(Integer.toString(index), index+" is not a valid coefficient index");
+			}
+			
 			for(int species = 0; species<NUM_SPECIES; species++) {
 				float c;
 				switch(indicator) {
 				case 0:
-					c=coefficients.get(species);
+				default:
+					c=coefficients.get(0);
 					break;
 				case 1:
-				default:
-					c=coefficients.get(1);
+					c=coefficients.get(species);
 					break;
 				case 2:
-					c=coefficients.get(1)+coefficients.get(species);
+					if(species==0)
+						c=coefficients.get(0);
+					else 
+						c=coefficients.get(0)+coefficients.get(species);
 					break;
 				}
 				r.put(index, bec, species+1, c);

@@ -19,12 +19,14 @@ import ca.bc.gov.nrs.vdyp.io.parse.SP0DefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.SiteCurveAgeMaximumParser;
 import ca.bc.gov.nrs.vdyp.io.parse.SiteCurveParser;
 import ca.bc.gov.nrs.vdyp.io.parse.StockingClassFactorParser;
+import ca.bc.gov.nrs.vdyp.io.parse.UpperCoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ValueParser;
 import ca.bc.gov.nrs.vdyp.io.parse.EquationGroupParser;
 import ca.bc.gov.nrs.vdyp.io.parse.EquationModifierParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
+import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.SP0Definition;
 import ca.bc.gov.nrs.vdyp.model.SiteCurveAgeMaximum;
 
@@ -52,7 +54,7 @@ public class FipControlParser {
 	public static final String STOCKING_CLASS_FACTORS = StockingClassFactorParser.CONTROL_KEY;
 	public static final String COE_BA = CoefficientParser.BA_CONTROL_KEY;
 	public static final String COE_DQ = CoefficientParser.DQ_CONTROL_KEY;
-	public static final String UPPER_BA_BY_CI_S0_P = "UPPER_BA_BY_CI_S0_P";
+	public static final String UPPER_BA_BY_CI_S0_P = UpperCoefficientParser.CONTROL_KEY;
 	public static final String HL_PRIMARY_SP_EQN_P1 = "HL_PRIMARY_SP_EQN_P1";
 	public static final String HL_PRIMARY_SP_EQN_P2 = "HL_PRIMARY_SP_EQN_P2";
 	public static final String HL_PRIMARY_SP_EQN_P3 = "HL_PRIMARY_SP_EQN_P3";
@@ -265,6 +267,7 @@ public class FipControlParser {
 		loadData(map, COE_DQ, fileResolver, this::RD_E041);
 
 		// RD_E043
+		loadData(map, UPPER_BA_BY_CI_S0_P, fileResolver, this::RD_E043);
 		// TODO
 
 		// RD_YHL1
@@ -566,6 +569,17 @@ public class FipControlParser {
 	 */
 	private MatrixMap3<Integer, String, Integer, Float> RD_E041(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {		
 		var parser = new CoefficientParser();
+		return parser.parse(data, control);
+	}
+	
+
+	/**
+	 * Loads the information that was in the global array COE043 in Fortran
+	 */
+	private MatrixMap3<Region, String, Integer, Float> RD_E043(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+		// Species and Region mapped to two coefficients
+		var parser = new UpperCoefficientParser();
+		
 		return parser.parse(data, control);
 	}
 

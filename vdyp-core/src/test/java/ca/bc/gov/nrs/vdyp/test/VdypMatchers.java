@@ -13,6 +13,7 @@ import org.hamcrest.Matchers;
 
 import ca.bc.gov.nrs.vdyp.io.parse.ValueParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.ValueParser;
+import ca.bc.gov.nrs.vdyp.model.MatrixMap;
 
 /**
  * Custom Hamcrest Matchers
@@ -153,4 +154,41 @@ public class VdypMatchers {
 		};
 	}
 
+	public static <T> Matcher<MatrixMap<T>> mmHasEntry(Matcher<Optional<T>> valueMatcher, Object...keys) {
+		return new BaseMatcher<MatrixMap<T>>() {
+
+			@Override
+			public boolean matches(Object actual) {
+				if (! (actual instanceof MatrixMap)) {
+					return false;
+				}
+				return valueMatcher.matches(((MatrixMap<?>)actual).getM(keys));
+			}
+
+			@Override
+			public void describeTo(Description description) {
+				description
+					.appendText("Matrix map with entry ")
+					.appendValueList("[", ", ", "]", keys)
+					.appendText(" that ");
+				valueMatcher.describeTo(description);
+				
+			}
+
+			@Override
+			public void describeMismatch(Object item, Description description) {
+				if (! (item instanceof MatrixMap)) {
+					description.appendText("was not a MatrixMap");
+					return;
+				}
+				// TODO give better feedback if keys don't match the map
+				var value = ((MatrixMap<?>)item).getM(keys);
+				
+				description.appendText("entry ").appendValueList("[", ", ", "]", keys).appendText(" ");
+				valueMatcher.describeMismatch(value, description);
+			}
+
+		};
+
+	}
 }
