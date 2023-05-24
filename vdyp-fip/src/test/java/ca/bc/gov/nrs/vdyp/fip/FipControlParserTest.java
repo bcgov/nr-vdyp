@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.io.parse.BecDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ControlFileParserTest;
+import ca.bc.gov.nrs.vdyp.io.parse.HLNonprimaryCoefficientParserTest;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.SP0DefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.SiteCurveAgeMaximumParserTest;
@@ -332,6 +333,19 @@ public class FipControlParserTest {
 				result, (Matcher) hasEntry(
 						is(FipControlParser.HL_PRIMARY_SP_EQN_P3), allOf(
 								mmHasEntry(present(is(1.04422f)), 1, "AC", Region.COASTAL)
+						)
+				)
+		);
+	}
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Test
+	public void testParseE053() throws Exception {
+		var parser = new FipControlParser();
+		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
+		assertThat(
+				result, (Matcher) hasEntry(
+						is(FipControlParser.HL_NONPRIMARY), allOf(
+								mmHasEntry(present(HLNonprimaryCoefficientParserTest.coe(0.86323f, 1.00505f, 1)), "AC", "AT", Region.COASTAL)
 						)
 				)
 		);

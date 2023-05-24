@@ -11,7 +11,6 @@ import java.util.stream.Stream;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap3Impl;
 import ca.bc.gov.nrs.vdyp.model.Region;
-import ca.bc.gov.nrs.vdyp.model.SP0Definition;
 
 /**
  * Parses an HL Coefficient data file.
@@ -60,7 +59,7 @@ public class HLCoefficientParser implements ResourceParser<MatrixMap3<Integer, S
 			throws IOException, ResourceParseException {
 		final var regionIndicies = Arrays.asList(Region.values());
 		final List<Integer> coeIndicies = Stream.iterate(1, x->x+1).limit(numCoefficients).collect(Collectors.toList());
-		final var speciesIndicies = ResourceParser.<List<SP0Definition>> expectParsedControl(control, SP0DefinitionParser.CONTROL_KEY, List.class).stream().map(SP0Definition::getAlias).collect(Collectors.toList());
+		final var speciesIndicies = SP0DefinitionParser.getSpeciesAliases(control);
 		
 		MatrixMap3<Integer, String, Region, Float> result = new MatrixMap3Impl<Integer, String, Region, Float>(coeIndicies, speciesIndicies, regionIndicies);
 		lineParser.parse(is, result, (v, r) -> {

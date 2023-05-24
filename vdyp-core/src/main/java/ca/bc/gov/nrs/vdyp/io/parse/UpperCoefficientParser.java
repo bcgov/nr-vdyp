@@ -50,7 +50,7 @@ public class UpperCoefficientParser implements ResourceParser<MatrixMap3<Region,
 			throws IOException, ResourceParseException {
 		var regionIndicies = Arrays.asList(Region.values());
 		List<Integer> coeIndicies = Stream.iterate(1, x->x+1).limit(NUM_COEFFICIENTS).collect(Collectors.toList());
-		var speciesIndicies = ResourceParser.<List<SP0Definition>> expectParsedControl(control, SP0DefinitionParser.CONTROL_KEY, List.class).stream().map(SP0Definition::getAlias).collect(Collectors.toList());
+		final var speciesIndicies = SP0DefinitionParser.getSpeciesAliases(control);
 		
 		MatrixMap3<Region, String, Integer, Float> result = new MatrixMap3Impl<Region, String, Integer, Float>(regionIndicies, speciesIndicies, coeIndicies);
 		lineParser.parse(is, result, (v, r) -> {

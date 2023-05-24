@@ -45,10 +45,8 @@ public class SiteCurveParser implements ResourceParser<Map<String, SiteCurve>> {
 
 			return r;
 		});
-		@SuppressWarnings("unchecked")
-		List<String> sp0List = ((List<SP0Definition>) ResourceParser
-				.expectParsedControl(control, SP0DefinitionParser.CONTROL_KEY, List.class)).stream()
-				.map(s -> s.getAlias()).collect(Collectors.toList());
+		final var sp0List = SP0DefinitionParser.getSpeciesAliases(control);
+
 		var missing = ExpectationDifference.difference(result.keySet(), sp0List).getMissing();
 		if (!missing.isEmpty()) {
 			throw new ResourceParseValidException("Missing expected entries for " + String.join(", ", missing));

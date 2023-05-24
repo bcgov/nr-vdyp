@@ -24,9 +24,12 @@ import ca.bc.gov.nrs.vdyp.io.parse.ValueParser;
 import ca.bc.gov.nrs.vdyp.io.parse.EquationGroupParser;
 import ca.bc.gov.nrs.vdyp.io.parse.EquationModifierParser;
 import ca.bc.gov.nrs.vdyp.io.parse.HLCoefficientParser;
+import ca.bc.gov.nrs.vdyp.io.parse.HLNonprimaryCoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
+import ca.bc.gov.nrs.vdyp.model.MatrixMap4;
+import ca.bc.gov.nrs.vdyp.model.NonprimaryHLCoefficients;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.SP0Definition;
 import ca.bc.gov.nrs.vdyp.model.SiteCurveAgeMaximum;
@@ -56,10 +59,10 @@ public class FipControlParser {
 	public static final String COE_BA = CoefficientParser.BA_CONTROL_KEY;
 	public static final String COE_DQ = CoefficientParser.DQ_CONTROL_KEY;
 	public static final String UPPER_BA_BY_CI_S0_P = UpperCoefficientParser.CONTROL_KEY;
-	public static final String HL_PRIMARY_SP_EQN_P1 = "HL_PRIMARY_SP_EQN_P1";
-	public static final String HL_PRIMARY_SP_EQN_P2 = "HL_PRIMARY_SP_EQN_P2";
-	public static final String HL_PRIMARY_SP_EQN_P3 = "HL_PRIMARY_SP_EQN_P3";
-	public static final String HL_NONPRIMARY = "HL_NONPRIMARY";
+	public static final String HL_PRIMARY_SP_EQN_P1 = HLCoefficientParser.CONTROL_KEY_P1;
+	public static final String HL_PRIMARY_SP_EQN_P2 = HLCoefficientParser.CONTROL_KEY_P2;
+	public static final String HL_PRIMARY_SP_EQN_P3 = HLCoefficientParser.CONTROL_KEY_P3;
+	public static final String HL_NONPRIMARY = HLNonprimaryCoefficientParser.CONTROL_KEY;
 	public static final String BY_SPECIES_DQ = "BY_SPECIES_DQ";
 	public static final String SPECIES_COMPONENT_SIZE_LIMIT = "SPECIES_COMPONENT_SIZE_LIMIT";
 	public static final String UTIL_COMP_BA = "UTIL_COMP_BA";
@@ -280,7 +283,7 @@ public class FipControlParser {
 		loadData(map, HL_PRIMARY_SP_EQN_P3, fileResolver, this::RD_YHL3);
 
 		// RD_YHL4
-		// TODO
+		loadData(map, HL_NONPRIMARY, fileResolver, this::RD_YHL4);
 
 		// RD_E060
 		// TODO
@@ -612,6 +615,16 @@ public class FipControlParser {
 	private MatrixMap3<Integer, String, Region, Float> RD_YHL3(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
 		// Species and Region mapped to four coefficients
 		var parser = new HLCoefficientParser(HLCoefficientParser.NUM_COEFFICIENTS_P3);
+		
+		return parser.parse(data, control);
+	}
+	
+	/**
+	 * Loads the information that was in the global array COE053 in Fortran
+	 */
+	private MatrixMap3<String, String, Region, NonprimaryHLCoefficients> RD_YHL4(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+		// Two Species and a Region mapped to 2 coefficients and an equation index
+		var parser = new HLNonprimaryCoefficientParser();
 		
 		return parser.parse(data, control);
 	}

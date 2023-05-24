@@ -47,9 +47,8 @@ public class EquationGroupParser implements ResourceParser<Map<String, Map<Strin
 	public Map<String, Map<String, Integer>> parse(InputStream is, Map<String, Object> control)
 			throws IOException, ResourceParseException {
 
-		@SuppressWarnings("unchecked")
-		List<SP0Definition> sp0List = ResourceParser
-				.expectParsedControl(control, SP0DefinitionParser.CONTROL_KEY, List.class);
+		final var sp0List = SP0DefinitionParser.getSpecies(control);
+
 		@SuppressWarnings("unchecked")
 		Map<String, BecDefinition> becMap = ResourceParser
 				.expectParsedControl(control, BecDefinitionParser.CONTROL_KEY, Map.class);

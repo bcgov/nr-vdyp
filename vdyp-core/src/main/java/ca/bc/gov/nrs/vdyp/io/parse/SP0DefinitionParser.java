@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import ca.bc.gov.nrs.vdyp.model.SP0Definition;
 
@@ -75,6 +76,25 @@ public class SP0DefinitionParser implements ResourceParser<List<SP0Definition>> 
 		});
 
 		return Collections.unmodifiableList(Arrays.asList(result));
+	}
+
+	public static void checkSpecies(final List<String> speciesIndicies, final String sp0) throws ValueParseException {
+		if(!speciesIndicies.contains(sp0)) {
+			throw new ValueParseException(sp0, sp0+" is not a valid species");
+		}
+	}
+	
+	public static void checkSpecies(final Map<String,Object> controlMap, final String sp0) throws ValueParseException {
+		final var speciesIndicies = getSpeciesAliases(controlMap);
+		checkSpecies(speciesIndicies, sp0);
+	}
+
+	public static List<SP0Definition> getSpecies(final Map<String, Object> controlMap) {
+		return ResourceParser.<List<SP0Definition>> expectParsedControl(controlMap, SP0DefinitionParser.CONTROL_KEY, List.class);
+	}
+	
+	public static List<String> getSpeciesAliases(final Map<String, Object> controlMap) {
+		return getSpecies(controlMap).stream().map(SP0Definition::getAlias).collect(Collectors.toList());
 	}
 
 }
