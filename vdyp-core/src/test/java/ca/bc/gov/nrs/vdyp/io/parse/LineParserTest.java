@@ -154,17 +154,16 @@ public class LineParserTest {
 		);
 
 	}
+
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testMultiValue() throws Exception {
 		var parser = new LineParser();
 		parser.multiValue(4, 3, "test", ValueParser.INTEGER);
 
-		var result1 = parser.parseLine(
-				" 02 04 06 08"
-		);
+		var result1 = parser.parseLine(" 02 04 06 08");
 
-		assertThat(result1, hasEntry(is("test"), (Matcher) contains(2,4,6,8)));
+		assertThat(result1, hasEntry(is("test"), (Matcher) contains(2, 4, 6, 8)));
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })

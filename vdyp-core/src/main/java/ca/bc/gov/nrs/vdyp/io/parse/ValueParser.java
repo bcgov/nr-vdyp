@@ -136,19 +136,20 @@ public interface ValueParser<T> {
 			return Optional.empty();
 		};
 	}
-	
+
 	/**
 	 * Parse a string as a set of fixed length chucks.
+	 *
 	 * @param <U>
-	 * @param length length of a chunk
+	 * @param length   length of a chunk
 	 * @param delegate parser for the individual chunks
 	 * @return
 	 */
 	public static <U> ValueParser<List<U>> segmentList(int length, ValueParser<U> delegate) {
 		return s -> {
-			var result = new ArrayList<U>((s.length()+length-1)/length);
+			var result = new ArrayList<U>( (s.length() + length - 1) / length);
 			for (int i = 0; i < s.length(); i += length) {
-				var j = Math.min(i+length, s.length());
+				var j = Math.min(i + length, s.length());
 				result.add(delegate.parse(s.substring(i, j)));
 			}
 			return Collections.unmodifiableList(result);

@@ -154,7 +154,7 @@ public class VdypMatchers {
 		};
 	}
 
-	public static <T> Matcher<MatrixMap<T>> mmHasEntry(Matcher<Optional<T>> valueMatcher, Object...keys) {
+	public static <T> Matcher<MatrixMap<T>> mmHasEntry(Matcher<Optional<T>> valueMatcher, Object... keys) {
 		return new BaseMatcher<MatrixMap<T>>() {
 
 			@Override
@@ -162,17 +162,15 @@ public class VdypMatchers {
 				if (! (actual instanceof MatrixMap)) {
 					return false;
 				}
-				return valueMatcher.matches(((MatrixMap<?>)actual).getM(keys));
+				return valueMatcher.matches( ((MatrixMap<?>) actual).getM(keys));
 			}
 
 			@Override
 			public void describeTo(Description description) {
-				description
-					.appendText("Matrix map with entry ")
-					.appendValueList("[", ", ", "]", keys)
-					.appendText(" that ");
+				description.appendText("Matrix map with entry ").appendValueList("[", ", ", "]", keys)
+						.appendText(" that ");
 				valueMatcher.describeTo(description);
-				
+
 			}
 
 			@Override
@@ -182,8 +180,8 @@ public class VdypMatchers {
 					return;
 				}
 				// TODO give better feedback if keys don't match the map
-				var value = ((MatrixMap<?>)item).getM(keys);
-				
+				var value = ((MatrixMap<?>) item).getM(keys);
+
 				description.appendText("entry ").appendValueList("[", ", ", "]", keys).appendText(" ");
 				valueMatcher.describeMismatch(value, description);
 			}

@@ -247,18 +247,18 @@ public class SP0DefinitionParserTest {
 	public static void populateControlMap(Map<String, Object> controlMap) {
 		populateControlMap(controlMap, "S1", "S2");
 	}
-	
+
 	/**
 	 * Add a mock control map entry for SP0 parse results
 	 */
-	public static void populateControlMap(Map<String, Object> controlMap, String...aliases) {
-		
-		List<SP0Definition> sp0List = new ArrayList<>(); 
-		
-		for (var alias: aliases) {
-			sp0List.add(new SP0Definition(alias, java.util.Optional.empty(), "Test "+alias));
+	public static void populateControlMap(Map<String, Object> controlMap, String... aliases) {
+
+		List<SP0Definition> sp0List = new ArrayList<>();
+
+		for (var alias : aliases) {
+			sp0List.add(new SP0Definition(alias, java.util.Optional.empty(), "Test " + alias));
 		}
-		
+
 		controlMap.put(SP0DefinitionParser.CONTROL_KEY, sp0List);
 	}
 }

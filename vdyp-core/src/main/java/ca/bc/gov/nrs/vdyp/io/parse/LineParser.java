@@ -138,10 +138,10 @@ public class LineParser {
 			throw new IllegalArgumentException("number can not be negative");
 		if (length < 0)
 			throw new IllegalArgumentException("length can not be negative");
-		
-		return doValue(length*number, name, ValueParser.segmentList(length, parser));
+
+		return doValue(length * number, name, ValueParser.segmentList(length, parser));
 	}
-	
+
 	/**
 	 * Add a segment
 	 *

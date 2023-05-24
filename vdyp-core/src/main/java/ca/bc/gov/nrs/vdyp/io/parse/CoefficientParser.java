@@ -28,8 +28,7 @@ public class CoefficientParser implements ResourceParser<MatrixMap3<Integer, Str
 
 	public static final int NUM_COEFFICIENTS = 10;
 	public static final int NUM_SPECIES = 16;
-	
-	
+
 	LineParser lineParser = new LineParser() {
 
 		@Override
@@ -37,52 +36,53 @@ public class CoefficientParser implements ResourceParser<MatrixMap3<Integer, Str
 			return line.startsWith("   ");
 		}
 
-	}
-	.value(4, BEC_KEY, String::strip)
-	.space(2)
-	.value(1, COEFFICIENT_INDEX_KEY, ValueParser.INTEGER)
-	.value(2, INDICATOR_KEY, ValueParser.INTEGER)
-	.multiValue(NUM_SPECIES, 8, COEFFICIENT_KEY, ValueParser.FLOAT);
+	}.value(4, BEC_KEY, String::strip).space(2).value(1, COEFFICIENT_INDEX_KEY, ValueParser.INTEGER)
+			.value(2, INDICATOR_KEY, ValueParser.INTEGER)
+			.multiValue(NUM_SPECIES, 8, COEFFICIENT_KEY, ValueParser.FLOAT);
 
 	@Override
 	public MatrixMap3<Integer, String, Integer, Float> parse(InputStream is, Map<String, Object> control)
 			throws IOException, ResourceParseException {
-		var becAliases = ResourceParser.<Map<String, BecDefinition>>expectParsedControl(control, BecDefinitionParser.CONTROL_KEY, Map.class).keySet();
-		var coeIndecies = Stream.iterate(0, x->x+1).limit(NUM_COEFFICIENTS).collect(Collectors.toList());
-		var speciesIndecies = Stream.iterate(1, x->x+1).limit(NUM_SPECIES).collect(Collectors.toList());
-		MatrixMap3<Integer, String, Integer, Float> result = new MatrixMap3Impl<Integer, String, Integer, Float>(coeIndecies, becAliases, speciesIndecies);
+		var becAliases = ResourceParser
+				.<Map<String, BecDefinition>>expectParsedControl(control, BecDefinitionParser.CONTROL_KEY, Map.class)
+				.keySet();
+		var coeIndecies = Stream.iterate(0, x -> x + 1).limit(NUM_COEFFICIENTS).collect(Collectors.toList());
+		var speciesIndecies = Stream.iterate(1, x -> x + 1).limit(NUM_SPECIES).collect(Collectors.toList());
+		MatrixMap3<Integer, String, Integer, Float> result = new MatrixMap3Impl<Integer, String, Integer, Float>(
+				coeIndecies, becAliases, speciesIndecies
+		);
 		lineParser.parse(is, result, (v, r) -> {
 			var bec = (String) v.get(BEC_KEY);
 			var indicator = (int) v.get(INDICATOR_KEY);
 			var index = (int) v.get(COEFFICIENT_INDEX_KEY);
 			@SuppressWarnings("unchecked")
 			var coefficients = (List<Float>) v.get(COEFFICIENT_KEY);
-			
-			if( !becAliases.contains(bec)) {
-				throw new ValueParseException(bec, bec+" is not a valid BEC alias");
+
+			if (!becAliases.contains(bec)) {
+				throw new ValueParseException(bec, bec + " is not a valid BEC alias");
 			}
-			if( !coeIndecies.contains(index)) {
-				throw new ValueParseException(Integer.toString(index), index+" is not a valid coefficient index");
+			if (!coeIndecies.contains(index)) {
+				throw new ValueParseException(Integer.toString(index), index + " is not a valid coefficient index");
 			}
-			
-			for(int species = 0; species<NUM_SPECIES; species++) {
+
+			for (int species = 0; species < NUM_SPECIES; species++) {
 				float c;
-				switch(indicator) {
+				switch (indicator) {
 				case 0:
 				default:
-					c=coefficients.get(0);
+					c = coefficients.get(0);
 					break;
 				case 1:
-					c=coefficients.get(species);
+					c = coefficients.get(species);
 					break;
 				case 2:
-					if(species==0)
-						c=coefficients.get(0);
-					else 
-						c=coefficients.get(0)+coefficients.get(species);
+					if (species == 0)
+						c = coefficients.get(0);
+					else
+						c = coefficients.get(0) + coefficients.get(species);
 					break;
 				}
-				r.put(index, bec, species+1, c);
+				r.put(index, bec, species + 1, c);
 			}
 			return r;
 		});

@@ -79,20 +79,21 @@ public class SP0DefinitionParser implements ResourceParser<List<SP0Definition>> 
 	}
 
 	public static void checkSpecies(final List<String> speciesIndicies, final String sp0) throws ValueParseException {
-		if(!speciesIndicies.contains(sp0)) {
-			throw new ValueParseException(sp0, sp0+" is not a valid species");
+		if (!speciesIndicies.contains(sp0)) {
+			throw new ValueParseException(sp0, sp0 + " is not a valid species");
 		}
 	}
-	
-	public static void checkSpecies(final Map<String,Object> controlMap, final String sp0) throws ValueParseException {
+
+	public static void checkSpecies(final Map<String, Object> controlMap, final String sp0) throws ValueParseException {
 		final var speciesIndicies = getSpeciesAliases(controlMap);
 		checkSpecies(speciesIndicies, sp0);
 	}
 
 	public static List<SP0Definition> getSpecies(final Map<String, Object> controlMap) {
-		return ResourceParser.<List<SP0Definition>> expectParsedControl(controlMap, SP0DefinitionParser.CONTROL_KEY, List.class);
+		return ResourceParser
+				.<List<SP0Definition>>expectParsedControl(controlMap, SP0DefinitionParser.CONTROL_KEY, List.class);
 	}
-	
+
 	public static List<String> getSpeciesAliases(final Map<String, Object> controlMap) {
 		return getSpecies(controlMap).stream().map(SP0Definition::getAlias).collect(Collectors.toList());
 	}

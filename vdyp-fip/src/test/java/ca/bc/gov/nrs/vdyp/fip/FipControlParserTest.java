@@ -244,6 +244,7 @@ public class FipControlParserTest {
 				)
 		);
 	}
+
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	// @Disabled
@@ -264,93 +265,96 @@ public class FipControlParserTest {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
-				result, (Matcher) hasEntry(
-						is(FipControlParser.COE_BA), allOf(
-								mmHasEntry(present(is(2.0028f)), 0, "AT", 1)
-						)
-				)
+				result,
+				(Matcher) hasEntry(is(FipControlParser.COE_BA), allOf(mmHasEntry(present(is(2.0028f)), 0, "AT", 1)))
 		);
 	}
-	
+
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testParseE041() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
-				result, (Matcher) hasEntry(
-						is(FipControlParser.COE_DQ), allOf(
-								mmHasEntry(present(is(6.6190f)), 0, "AT", 1)
-						)
-				)
+				result,
+				(Matcher) hasEntry(is(FipControlParser.COE_DQ), allOf(mmHasEntry(present(is(6.6190f)), 0, "AT", 1)))
 		);
 	}
+
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testParseE043() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
-				result, (Matcher) hasEntry(
-						is(FipControlParser.UPPER_BA_BY_CI_S0_P), allOf(
-								mmHasEntry(present(is(109.27f)), Region.COASTAL, "AC", 1)
-						)
+				result,
+				(Matcher) hasEntry(
+						is(FipControlParser.UPPER_BA_BY_CI_S0_P),
+						allOf(mmHasEntry(present(is(109.27f)), Region.COASTAL, "AC", 1))
 				)
 		);
 	}
+
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testParseE050() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
-				result, (Matcher) hasEntry(
-						is(FipControlParser.HL_PRIMARY_SP_EQN_P1), allOf(
-								mmHasEntry(present(is(1.00160f)), 1, "AC", Region.COASTAL)
-						)
+				result,
+				(Matcher) hasEntry(
+						is(FipControlParser.HL_PRIMARY_SP_EQN_P1),
+						allOf(mmHasEntry(present(is(1.00160f)), 1, "AC", Region.COASTAL))
 				)
 		);
 	}
+
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testParseE051() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
-				result, (Matcher) hasEntry(
-						is(FipControlParser.HL_PRIMARY_SP_EQN_P2), allOf(
-								mmHasEntry(present(is(0.49722f)), 1, "AC", Region.COASTAL)
-						)
+				result,
+				(Matcher) hasEntry(
+						is(FipControlParser.HL_PRIMARY_SP_EQN_P2),
+						allOf(mmHasEntry(present(is(0.49722f)), 1, "AC", Region.COASTAL))
 				)
 		);
 	}
+
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testParseE052() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
-				result, (Matcher) hasEntry(
-						is(FipControlParser.HL_PRIMARY_SP_EQN_P3), allOf(
-								mmHasEntry(present(is(1.04422f)), 1, "AC", Region.COASTAL)
-						)
+				result,
+				(Matcher) hasEntry(
+						is(FipControlParser.HL_PRIMARY_SP_EQN_P3),
+						allOf(mmHasEntry(present(is(1.04422f)), 1, "AC", Region.COASTAL))
 				)
 		);
 	}
+
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testParseE053() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
-				result, (Matcher) hasEntry(
-						is(FipControlParser.HL_NONPRIMARY), allOf(
-								mmHasEntry(present(HLNonprimaryCoefficientParserTest.coe(0.86323f, 1.00505f, 1)), "AC", "AT", Region.COASTAL)
+				result,
+				(Matcher) hasEntry(
+						is(FipControlParser.HL_NONPRIMARY),
+						allOf(
+								mmHasEntry(
+										present(HLNonprimaryCoefficientParserTest.coe(0.86323f, 1.00505f, 1)), "AC",
+										"AT", Region.COASTAL
+								)
 						)
 				)
 		);
 	}
-
 
 	static InputStream addToEnd(InputStream is, String... lines) {
 		var appendix = new ByteArrayInputStream(String.join("\r\n", lines).getBytes(StandardCharsets.US_ASCII));

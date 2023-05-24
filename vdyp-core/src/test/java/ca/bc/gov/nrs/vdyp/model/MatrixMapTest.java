@@ -18,103 +18,104 @@ public class MatrixMapTest {
 	@Test
 	public void testContruct() {
 		var dim1 = Arrays.asList("a", "b");
-		var dim2 = Arrays.asList(1,2);
+		var dim2 = Arrays.asList(1, 2);
 		var dims = Arrays.asList(dim1, dim2);
 		var result = new MatrixMapImpl<Character>(dims);
 	}
+
 	@Test
 	public void testContructNoDimensionsFails() {
 		List<List<Object>> dims = Collections.emptyList();
-		Assertions.assertThrows(IllegalArgumentException.class,()-> new MatrixMapImpl<Character>(dims));
+		Assertions.assertThrows(IllegalArgumentException.class, () -> new MatrixMapImpl<Character>(dims));
 	}
+
 	@Test
 	public void testContructEmptyDimensionsFails() {
 		var dim1 = Collections.emptyList();
 		var dims = Arrays.asList(dim1);
-		Assertions.assertThrows(IllegalArgumentException.class,()-> new MatrixMapImpl<Character>(dims));
+		Assertions.assertThrows(IllegalArgumentException.class, () -> new MatrixMapImpl<Character>(dims));
 	}
-	
+
 	@Test
 	public void testNewMapIsEmpty() {
 		var dim1 = Arrays.asList("a", "b");
-		var dim2 = Arrays.asList(1,2);
+		var dim2 = Arrays.asList(1, 2);
 		var dims = Arrays.asList(dim1, dim2);
 		var result = new MatrixMapImpl<Character>(dims);
 		assertThat(result, hasProperty("empty", is(true)));
 		assertThat(result, hasProperty("full", is(false)));
 	}
-	
+
 	@Test
 	public void testDefaultIsEmpty() {
 		var dim1 = Arrays.asList("a", "b");
-		var dim2 = Arrays.asList(1,2);
+		var dim2 = Arrays.asList(1, 2);
 		var dims = Arrays.asList(dim1, dim2);
 		var map = new MatrixMapImpl<Character>(dims);
-		
-		var result = map.getM("a",2);
-		
+
+		var result = map.getM("a", 2);
+
 		assertThat(result, notPresent());
 	}
-	
+
 	@Test
 	public void testCanRetrieveAValue() {
 		var dim1 = Arrays.asList("a", "b");
-		var dim2 = Arrays.asList(1,2);
+		var dim2 = Arrays.asList(1, 2);
 		var dims = Arrays.asList(dim1, dim2);
 		var map = new MatrixMapImpl<Character>(dims);
-		
+
 		map.putM('Z', "a", 2);
-		var result = map.getM("a",2);
-		
+		var result = map.getM("a", 2);
+
 		assertThat(result, present(is('Z')));
 	}
-	
+
 	@Test
 	public void testWithOneValueIsNeitherFullNorEmpty() {
 		var dim1 = Arrays.asList("a", "b");
-		var dim2 = Arrays.asList(1,2);
+		var dim2 = Arrays.asList(1, 2);
 		var dims = Arrays.asList(dim1, dim2);
 		var map = new MatrixMapImpl<Character>(dims);
-		
+
 		map.putM('Z', "a", 2);
-		
+
 		assertThat(map, hasProperty("full", is(false)));
 		assertThat(map, hasProperty("empty", is(false)));
 	}
-	
+
 	@Test
 	public void testGetIndex() {
 		var dim1 = Arrays.asList("a", "b");
-		var dim2 = Arrays.asList(1,2);
+		var dim2 = Arrays.asList(1, 2);
 		var dims = Arrays.asList(dim1, dim2);
 		var map = new MatrixMapImpl<Character>(dims);
-		
+
 		assertThat(map.getIndex("a", 1), present(is(0)));
 		assertThat(map.getIndex("b", 1), present(is(1)));
 		assertThat(map.getIndex("a", 2), present(is(2)));
 		assertThat(map.getIndex("b", 2), present(is(3)));
 	}
-	
+
 	@Test
 	public void testFullMap() {
 		var dim1 = Arrays.asList("a", "b");
-		var dim2 = Arrays.asList(1,2);
+		var dim2 = Arrays.asList(1, 2);
 		var dims = Arrays.asList(dim1, dim2);
 		var map = new MatrixMapImpl<Character>(dims);
-		
+
 		map.putM('W', "a", 1);
 		map.putM('X', "a", 2);
 		map.putM('Y', "b", 1);
 		map.putM('Z', "b", 2);
-				
+
 		assertThat(map, hasProperty("full", is(true)));
 		assertThat(map, hasProperty("empty", is(false)));
-		
+
 		assertThat(map.getM("a", 1), present(is('W')));
 		assertThat(map.getM("a", 2), present(is('X')));
 		assertThat(map.getM("b", 1), present(is('Y')));
 		assertThat(map.getM("b", 2), present(is('Z')));
 	}
 
-	
 }

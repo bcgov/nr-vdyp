@@ -550,82 +550,92 @@ public class FipControlParser {
 		var parser = new SiteCurveAgeMaximumParser();
 		return parser.parse(data, control);
 	}
-	
+
 	/**
 	 * Loads the information that was in the global array COE040 in Fortran
 	 */
-	private MatrixMap3<Integer, String, Integer, Float> RD_E040(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+	private MatrixMap3<Integer, String, Integer, Float> RD_E040(InputStream data, Map<String, Object> control)
+			throws IOException, ResourceParseException {
 		// 10 coefficients by species (SP0) by becs
-		// 4 String BEC Alias, 2 gap, 1 int coefficient index, 2 int "Indicate", 16x8 Float coefficient for species  
+		// 4 String BEC Alias, 2 gap, 1 int coefficient index, 2 int "Indicate", 16x8
+		// Float coefficient for species
 		// Blank bec is ignore line
-		
+
 		// if indicate is 2, map the coefficients in directly
-		// if indicate is 0 write the first coeffecient from the file to all in the array
+		// if indicate is 0 write the first coeffecient from the file to all in the
+		// array
 		// if the indicate is 1, add the first from the file to each subsequent one.
-		
+
 		var parser = new CoefficientParser();
 		return parser.parse(data, control);
 	}
-	
+
 	/**
 	 * Loads the information that was in the global array COE041 in Fortran
 	 */
-	private MatrixMap3<Integer, String, Integer, Float> RD_E041(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {		
+	private MatrixMap3<Integer, String, Integer, Float> RD_E041(InputStream data, Map<String, Object> control)
+			throws IOException, ResourceParseException {
 		var parser = new CoefficientParser();
 		return parser.parse(data, control);
 	}
-	
 
 	/**
 	 * Loads the information that was in the global array COE043 in Fortran
 	 */
-	private MatrixMap3<Region, String, Integer, Float> RD_E043(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+	private MatrixMap3<Region, String, Integer, Float> RD_E043(InputStream data, Map<String, Object> control)
+			throws IOException, ResourceParseException {
 		// Species and Region mapped to two coefficients
 		var parser = new UpperCoefficientParser();
-		
+
 		return parser.parse(data, control);
 	}
-	
+
 	/**
 	 * Loads the information that was in the global array COE050 in Fortran
 	 */
-	private MatrixMap3<Integer, String, Region, Float> RD_YHL1(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+	private MatrixMap3<Integer, String, Region, Float> RD_YHL1(InputStream data, Map<String, Object> control)
+			throws IOException, ResourceParseException {
 		// Species and Region mapped to three coefficients
 		// coeIndex from 1
-		// 10    READ(IU_TEMP, 11, ERR=90, END=70) SP0, CI, C1, C2, C3
-		// 11    FORMAT( A2 , 1x, A1, 3f10.0)
+		// 10 READ(IU_TEMP, 11, ERR=90, END=70) SP0, CI, C1, C2, C3
+		// 11 FORMAT( A2 , 1x, A1, 3f10.0)
 
 		var parser = new HLCoefficientParser(HLCoefficientParser.NUM_COEFFICIENTS_P1);
-		
+
 		return parser.parse(data, control);
 	}
+
 	/**
 	 * Loads the information that was in the global array COE051 in Fortran
 	 */
-	private MatrixMap3<Integer, String, Region, Float> RD_YHL2(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+	private MatrixMap3<Integer, String, Region, Float> RD_YHL2(InputStream data, Map<String, Object> control)
+			throws IOException, ResourceParseException {
 		// Species and Region mapped to two coefficients
-		
+
 		var parser = new HLCoefficientParser(HLCoefficientParser.NUM_COEFFICIENTS_P2);
-		
+
 		return parser.parse(data, control);
 	}
+
 	/**
 	 * Loads the information that was in the global array COE052 in Fortran
 	 */
-	private MatrixMap3<Integer, String, Region, Float> RD_YHL3(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+	private MatrixMap3<Integer, String, Region, Float> RD_YHL3(InputStream data, Map<String, Object> control)
+			throws IOException, ResourceParseException {
 		// Species and Region mapped to four coefficients
 		var parser = new HLCoefficientParser(HLCoefficientParser.NUM_COEFFICIENTS_P3);
-		
+
 		return parser.parse(data, control);
 	}
-	
+
 	/**
 	 * Loads the information that was in the global array COE053 in Fortran
 	 */
-	private MatrixMap3<String, String, Region, NonprimaryHLCoefficients> RD_YHL4(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+	private MatrixMap3<String, String, Region, NonprimaryHLCoefficients>
+			RD_YHL4(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
 		// Two Species and a Region mapped to 2 coefficients and an equation index
 		var parser = new HLNonprimaryCoefficientParser();
-		
+
 		return parser.parse(data, control);
 	}
 
