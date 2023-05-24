@@ -34,9 +34,9 @@
 041 coe/REGDQ26.coe                                   Coe DQ=f(CC)              RD_E041 IPSJF129
 043 coe/UPPERB02.COE                                  Upper BA by C/I SP0_P     RD_E043 IPSJF128 
 
-050 coe/regyhlp.coe                                    HL, Primary SP, Eqn P1     RD_YHL1 
-051 coe/regyhlpa.coe                                   HL, Primary SP, Eqn P2     RD_YHL2
-052 coe/regyhlpb.dat                                   HL, Primary SP, Eqn P3     RD_YHL3
+050 coe/REGYHLP.COE                                    HL, Primary SP, Eqn P1     RD_YHL1 
+051 coe/REGYHLPA.COE                                   HL, Primary SP, Eqn P2     RD_YHL2
+052 coe/REGYHLPB.DAT                                   HL, Primary SP, Eqn P3     RD_YHL3
 053 coe/reghl.coe                                      HL, Non-primary Species    RD_YHL4
 
 060 coe/REGDQI04.coe                                   By-species DQ              RD_E060    IPFJF125

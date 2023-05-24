@@ -10,8 +10,11 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.stringContainsInOrder;
 
 import java.io.ByteArrayInputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.easymock.internal.matchers.InstanceOf;
 import org.hamcrest.Matchers;
@@ -238,4 +241,24 @@ public class SP0DefinitionParserTest {
 		assertThat(ex1, hasProperty("message", stringContainsInOrder("line 2", "Preference 1", "set to AT")));
 	}
 
+	/**
+	 * Add a mock control map entry for SP0 parse results with species "S1" and "S2"
+	 */
+	public static void populateControlMap(Map<String, Object> controlMap) {
+		populateControlMap(controlMap, "S1", "S2");
+	}
+	
+	/**
+	 * Add a mock control map entry for SP0 parse results
+	 */
+	public static void populateControlMap(Map<String, Object> controlMap, String...aliases) {
+		
+		List<SP0Definition> sp0List = new ArrayList<>(); 
+		
+		for (var alias: aliases) {
+			sp0List.add(new SP0Definition(alias, java.util.Optional.empty(), "Test "+alias));
+		}
+		
+		controlMap.put(SP0DefinitionParser.CONTROL_KEY, sp0List);
+	}
 }

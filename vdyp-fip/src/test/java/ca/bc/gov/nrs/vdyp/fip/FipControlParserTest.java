@@ -243,7 +243,20 @@ public class FipControlParserTest {
 				)
 		);
 	}
-	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Test
+	// @Disabled
+	public void testParseE026Empty() throws Exception {
+		var parser = new FipControlParser();
+		var result = parseWithAppendix(parser, "026  ");
+		// Map is empty but gives appropriate default values
+		assertThat(result, (Matcher) hasEntry(is(FipControlParser.SITE_CURVE_AGE_MAX), Matchers.anEmptyMap()));
+		assertThat(
+				((Map<Integer, SiteCurveAgeMaximum>) result.get(FipControlParser.SITE_CURVE_AGE_MAX)).get(1),
+				(Matcher) allOf(SiteCurveAgeMaximumParserTest.hasAge(Region.COASTAL, is(140.f)))
+		);
+	}
+
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testParseE040() throws Exception {
@@ -284,20 +297,46 @@ public class FipControlParserTest {
 				)
 		);
 	}
-
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
-	// @Disabled
-	public void testParseE026Empty() throws Exception {
+	public void testParseE050() throws Exception {
 		var parser = new FipControlParser();
-		var result = parseWithAppendix(parser, "026  ");
-		// Map is empty but gives appropriate default values
-		assertThat(result, (Matcher) hasEntry(is(FipControlParser.SITE_CURVE_AGE_MAX), Matchers.anEmptyMap()));
+		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
-				((Map<Integer, SiteCurveAgeMaximum>) result.get(FipControlParser.SITE_CURVE_AGE_MAX)).get(1),
-				(Matcher) allOf(SiteCurveAgeMaximumParserTest.hasAge(Region.COASTAL, is(140.f)))
+				result, (Matcher) hasEntry(
+						is(FipControlParser.HL_PRIMARY_SP_EQN_P1), allOf(
+								mmHasEntry(present(is(1.00160f)), 1, "AC", Region.COASTAL)
+						)
+				)
 		);
 	}
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Test
+	public void testParseE051() throws Exception {
+		var parser = new FipControlParser();
+		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
+		assertThat(
+				result, (Matcher) hasEntry(
+						is(FipControlParser.HL_PRIMARY_SP_EQN_P2), allOf(
+								mmHasEntry(present(is(0.49722f)), 1, "AC", Region.COASTAL)
+						)
+				)
+		);
+	}
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Test
+	public void testParseE052() throws Exception {
+		var parser = new FipControlParser();
+		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
+		assertThat(
+				result, (Matcher) hasEntry(
+						is(FipControlParser.HL_PRIMARY_SP_EQN_P3), allOf(
+								mmHasEntry(present(is(1.04422f)), 1, "AC", Region.COASTAL)
+						)
+				)
+		);
+	}
+
 
 	static InputStream addToEnd(InputStream is, String... lines) {
 		var appendix = new ByteArrayInputStream(String.join("\r\n", lines).getBytes(StandardCharsets.US_ASCII));
