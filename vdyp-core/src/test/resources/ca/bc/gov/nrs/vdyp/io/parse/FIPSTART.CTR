@@ -39,7 +39,7 @@
 052 coe/REGYHLPB.DAT                                   HL, Primary SP, Eqn P3     RD_YHL3
 053 coe/REGHL.COE                                      HL, Non-primary Species    RD_YHL4
 
-060 coe/REGDQI04.coe                                   By-species DQ              RD_E060    IPFJF125
+060 coe/REGDQI04.COE                                   By-species DQ              RD_E060    IPFJF125
 061 coe/complim.coe                                    Species component size limits RD_E061 IPSJF158
 
 070 coe/regbac.dat                                     Util. Comp, BA             RD_UBA1

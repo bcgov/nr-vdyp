@@ -12,6 +12,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 import ca.bc.gov.nrs.vdyp.io.parse.BecDefinitionParser;
+import ca.bc.gov.nrs.vdyp.io.parse.BySpeciesDqCoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.CoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ControlFileParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParser;
@@ -27,8 +28,8 @@ import ca.bc.gov.nrs.vdyp.io.parse.HLCoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.HLNonprimaryCoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
+import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
-import ca.bc.gov.nrs.vdyp.model.MatrixMap4;
 import ca.bc.gov.nrs.vdyp.model.NonprimaryHLCoefficients;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.SP0Definition;
@@ -63,7 +64,7 @@ public class FipControlParser {
 	public static final String HL_PRIMARY_SP_EQN_P2 = HLCoefficientParser.CONTROL_KEY_P2;
 	public static final String HL_PRIMARY_SP_EQN_P3 = HLCoefficientParser.CONTROL_KEY_P3;
 	public static final String HL_NONPRIMARY = HLNonprimaryCoefficientParser.CONTROL_KEY;
-	public static final String BY_SPECIES_DQ = "BY_SPECIES_DQ";
+	public static final String BY_SPECIES_DQ = BySpeciesDqCoefficientParser.CONTROL_KEY;
 	public static final String SPECIES_COMPONENT_SIZE_LIMIT = "SPECIES_COMPONENT_SIZE_LIMIT";
 	public static final String UTIL_COMP_BA = "UTIL_COMP_BA";
 	public static final String UTIL_COMP_DQ = "UTIL_COMP_DQ";
@@ -286,7 +287,7 @@ public class FipControlParser {
 		loadData(map, HL_NONPRIMARY, fileResolver, this::RD_YHL4);
 
 		// RD_E060
-		// TODO
+		loadData(map, BY_SPECIES_DQ, fileResolver, this::RD_E060);
 
 		// Min and max DQ by species
 
@@ -633,6 +634,28 @@ public class FipControlParser {
 	 */
 	private MatrixMap3<String, String, Region, NonprimaryHLCoefficients>
 			RD_YHL4(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+		// Two Species and a Region mapped to 2 coefficients and an equation index
+		var parser = new HLNonprimaryCoefficientParser();
+
+		return parser.parse(data, control);
+	}
+
+	/**
+	 * Loads the information that was in the global array COE060 in Fortran
+	 */
+	private List<Coefficients> RD_E060(InputStream data, Map<String, Object> control)
+			throws IOException, ResourceParseException {
+		// Map from coefficient index to per-species coefficient
+		var parser = new BySpeciesDqCoefficientParser();
+
+		return parser.parse(data, control);
+	}
+
+	/**
+	 * Loads the information that was in the global array COE061 in Fortran
+	 */
+	private MatrixMap3<String, String, Region, NonprimaryHLCoefficients>
+			RD_E061(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
 		// Two Species and a Region mapped to 2 coefficients and an equation index
 		var parser = new HLNonprimaryCoefficientParser();
 

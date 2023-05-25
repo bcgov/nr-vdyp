@@ -4,6 +4,7 @@ import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.mmHasEntry;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.instanceOf;
@@ -350,6 +351,35 @@ public class FipControlParserTest {
 								mmHasEntry(
 										present(HLNonprimaryCoefficientParserTest.coe(0.86323f, 1.00505f, 1)), "AC",
 										"AT", Region.COASTAL
+								)
+						)
+				)
+		);
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Test
+	public void testParseE060() throws Exception {
+		var parser = new FipControlParser();
+		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
+		assertThat(
+				result,
+				(Matcher) hasEntry(
+						is(FipControlParser.BY_SPECIES_DQ),
+						contains(
+								contains(
+										-0.65484f, -0.48275f, -0.75134f, 0.04482f, -0.31195f, -0.53012f, -0.12645f,
+										-0.64668f, -0.43538f, -0.31134f, -0.03435f, -0.27833f, -0.32476f, 0.10819f,
+										-0.38103f, -0.12273f
+								),
+								contains(
+										2.26389f, 0.19886f, -0.25704f, 0.18579f, -0.38547f, -0.14115f, -0.10146f,
+										0.09067f, 0.54304f, -0.02947f, 0.08473f, -0.39934f, 0.02206f, -0.18235f,
+										0.01411f, -0.21683f
+								),
+								contains(
+										0.23162f, 0.23162f, 0.23162f, 0.23162f, 0.23162f, 0.23162f, 0.23162f, 0.23162f,
+										0.23162f, 0.23162f, 0.23162f, 0.23162f, 0.23162f, 0.23162f, 0.23162f, 0.23162f
 								)
 						)
 				)

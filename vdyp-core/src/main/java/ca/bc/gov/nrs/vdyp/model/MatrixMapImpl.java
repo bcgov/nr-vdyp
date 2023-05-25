@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -46,10 +47,12 @@ public class MatrixMapImpl<T> implements MatrixMap<T> {
 	}
 
 	@SuppressWarnings("unchecked")
+	@Override
 	public Optional<T> getM(Object... params) {
 		return (Optional<T>) getIndex(params).flatMap(i -> Optional.ofNullable(matrix[i]));
 	}
 
+	@Override
 	public void putM(T value, Object... params) {
 		matrix[getIndex(params).orElseThrow(() -> new IllegalArgumentException())] = value;
 	}
@@ -76,16 +79,35 @@ public class MatrixMapImpl<T> implements MatrixMap<T> {
 	}
 
 	@SuppressWarnings("unchecked")
+	@Override
 	public boolean all(Predicate<T> pred) {
 		return Arrays.stream(matrix).allMatch((Predicate<? super Object>) pred);
 	}
 
+	@SuppressWarnings("unchecked")
+	@Override
+	public boolean any(Predicate<T> pred) {
+		return Arrays.stream(matrix).anyMatch((Predicate<? super Object>) pred);
+	}
+
+	@Override
 	public boolean isFull() {
 		return all(x -> x != null);
 	}
 
+	@Override
 	public boolean isEmpty() {
 		return all(x -> x == null);
+	}
+
+	@Override
+	public List<Set<?>> getDimensions() {
+		return maps.stream().map(m -> m.keySet()).collect(Collectors.toList());
+	}
+
+	@Override
+	public int getNumDimensions() {
+		return maps.size();
 	}
 
 }
