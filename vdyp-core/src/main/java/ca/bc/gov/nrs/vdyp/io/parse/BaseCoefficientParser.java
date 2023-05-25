@@ -57,12 +57,12 @@ public abstract class BaseCoefficientParser<T extends Coefficients, M extends Ma
 
 	public BaseCoefficientParser<T, M> regionKey() {
 		var regions = Arrays.asList(Region.values());
-		return key(1, REGION_KEY, ValueParser.REGION, regions, "% is not a valid region");
+		return key(1, REGION_KEY, ValueParser.REGION, regions, "%s is not a valid region");
 	}
 
 	public BaseCoefficientParser<T, M> speciesKey(String name, Map<String, Object> controlMap) {
 		var range = SP0DefinitionParser.getSpeciesAliases(controlMap);
-		return key(2, name, String::strip, range, "% is not a valid species");
+		return key(2, name, String::strip, range, "%s is not a valid species");
 	}
 
 	public BaseCoefficientParser<T, M> speciesKey(Map<String, Object> controlMap) {

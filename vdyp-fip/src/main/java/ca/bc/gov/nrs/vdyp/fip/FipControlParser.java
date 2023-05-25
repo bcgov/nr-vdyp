@@ -5,15 +5,18 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import ca.bc.gov.nrs.vdyp.io.parse.BaseCoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.BecDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.BySpeciesDqCoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.CoefficientParser;
+import ca.bc.gov.nrs.vdyp.io.parse.ComponentSizeParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ControlFileParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParser;
 import ca.bc.gov.nrs.vdyp.io.parse.SP0DefinitionParser;
@@ -29,6 +32,8 @@ import ca.bc.gov.nrs.vdyp.io.parse.HLNonprimaryCoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
+import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
+import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
 import ca.bc.gov.nrs.vdyp.model.NonprimaryHLCoefficients;
 import ca.bc.gov.nrs.vdyp.model.Region;
@@ -65,7 +70,7 @@ public class FipControlParser {
 	public static final String HL_PRIMARY_SP_EQN_P3 = HLCoefficientParser.CONTROL_KEY_P3;
 	public static final String HL_NONPRIMARY = HLNonprimaryCoefficientParser.CONTROL_KEY;
 	public static final String BY_SPECIES_DQ = BySpeciesDqCoefficientParser.CONTROL_KEY;
-	public static final String SPECIES_COMPONENT_SIZE_LIMIT = "SPECIES_COMPONENT_SIZE_LIMIT";
+	public static final String SPECIES_COMPONENT_SIZE_LIMIT = ComponentSizeParser.CONTROL_KEY;
 	public static final String UTIL_COMP_BA = "UTIL_COMP_BA";
 	public static final String UTIL_COMP_DQ = "UTIL_COMP_DQ";
 	public static final String SMALL_COMP_PROBABILITY = "SMALL_COMP_PROBABILITY";
@@ -292,7 +297,7 @@ public class FipControlParser {
 		// Min and max DQ by species
 
 		// RD_E061
-		// TODO
+		loadData(map, SPECIES_COMPONENT_SIZE_LIMIT, fileResolver, this::RD_E061);
 
 		// RD_UBA1
 		// TODO
@@ -654,10 +659,10 @@ public class FipControlParser {
 	/**
 	 * Loads the information that was in the global array COE061 in Fortran
 	 */
-	private MatrixMap3<String, String, Region, NonprimaryHLCoefficients>
-			RD_E061(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
-		// Two Species and a Region mapped to 2 coefficients and an equation index
-		var parser = new HLNonprimaryCoefficientParser();
+	private MatrixMap2<String, Region, Coefficients> RD_E061(InputStream data, Map<String, Object> control)
+			throws IOException, ResourceParseException {
+		// Species and Region to 4 floats
+		var parser = new ComponentSizeParser(control);
 
 		return parser.parse(data, control);
 	}
