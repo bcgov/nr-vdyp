@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap;
@@ -26,6 +27,8 @@ public abstract class BaseCoefficientParser<T extends Coefficients, M extends Ma
 	public static final String SP0_KEY = "sp0";
 	public static final String REGION_KEY = "region";
 	public static final String COEFFICIENTS_KEY = "coefficients";
+	public static final String UC_INDEX = "ucIndex";
+	public static final String GROUP_INDEX = "groupIndex";
 
 	int numCoefficients;
 
@@ -37,8 +40,8 @@ public abstract class BaseCoefficientParser<T extends Coefficients, M extends Ma
 		this.lineParser = new LineParser() {
 
 			@Override
-			public boolean isStopLine(String line) {
-				return line.startsWith("   ");
+			public boolean isStopSegment(List<String> segments) {
+				return segments.get(0).isBlank();
 			}
 
 		};
@@ -58,6 +61,21 @@ public abstract class BaseCoefficientParser<T extends Coefficients, M extends Ma
 	public BaseCoefficientParser<T, M> regionKey() {
 		var regions = Arrays.asList(Region.values());
 		return key(1, REGION_KEY, ValueParser.REGION, regions, "%s is not a valid region");
+	}
+
+	public BaseCoefficientParser<T, M> ucIndexKey() {
+		var indicies = Arrays.asList(1, 2, 3, 4);
+		return key(
+				2, UC_INDEX, ValueParser.INTEGER, indicies, "%s is not a valid UC Index, should be 1 to 4 inclusive"
+		);
+	}
+
+	public BaseCoefficientParser<T, M> groupIndexKey(int maxGroups) {
+		var indicies = Stream.iterate(1, x -> x + 1).limit(maxGroups).toList();
+		return key(
+				4, GROUP_INDEX, ValueParser.INTEGER, indicies,
+				"%s is not a valid Group Index, should be 1 to " + maxGroups + " inclusive"
+		);
 	}
 
 	public BaseCoefficientParser<T, M> speciesKey(String name, Map<String, Object> controlMap) {

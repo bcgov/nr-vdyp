@@ -15,6 +15,7 @@ import java.util.function.Supplier;
 import ca.bc.gov.nrs.vdyp.io.parse.BaseCoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.BecDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.BySpeciesDqCoefficientParser;
+import ca.bc.gov.nrs.vdyp.io.parse.CloseUtilVolumeParser;
 import ca.bc.gov.nrs.vdyp.io.parse.CoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ComponentSizeParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ControlFileParser;
@@ -82,7 +83,7 @@ public class FipControlParser {
 	public static final String SMALL_COMP_WS_VOLUME = "SMALL_COMP_WS_VOLUME";
 	public static final String TOTAL_STAND_WHOLE_STEM_VOL = "TOTAL_STAND_WHOLE_STEM_VOL";
 	public static final String UTIL_COMP_WS_VOLUME = "UTIL_COMP_WS_VOLUME";
-	public static final String CLOSE_UTIL_VOLUME = "CLOSE_UTIL_VOLUME";
+	public static final String CLOSE_UTIL_VOLUME = CloseUtilVolumeParser.CONTROL_KEY;
 	public static final String VOLUME_NET_DECAY = "VOLUME_NET_DECAY";
 	public static final String VOLUME_NET_DECAY_WASTE = "VOLUME_NET_DECAY_WASTE";
 	public static final String BREAKAGE = "BREAKAGE";
@@ -900,8 +901,8 @@ public class FipControlParser {
 	 *
 	 * @see CLOSE_UTIL_VOLUME
 	 */
-	private Object RD_YVC1(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
-		// TODO
+	private MatrixMap2<Integer, Integer, Coefficients> RD_YVC1(InputStream data, Map<String, Object> control)
+			throws IOException, ResourceParseException {
 
 		// Uses
 		// PARAMETER (MAXGROUP = 80)
@@ -919,7 +920,8 @@ public class FipControlParser {
 		// UC is 1 indexed
 		// Coefficient is 1 indexed
 
-		return null;
+		var parser = new CloseUtilVolumeParser();
+		return parser.parse(data, control);
 	}
 
 	/**
