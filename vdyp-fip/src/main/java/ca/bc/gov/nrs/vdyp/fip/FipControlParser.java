@@ -95,6 +95,9 @@ public class FipControlParser {
 	public static final String MAX_NUM_POLY = "MAX_NUM_POLY";
 	public static final String BEC_DEF = BecDefinitionParser.CONTROL_KEY;
 	public static final String SP0_DEF = SP0DefinitionParser.CONTROL_KEY;
+	
+	// TODO
+	public static final String TODO = "TODO";
 
 	static final ValueParser<String> FILENAME = String::strip;
 
@@ -305,70 +308,71 @@ public class FipControlParser {
 		loadData(map, UTIL_COMP_BA, fileResolver, this::RD_UBA1);
 
 		// RD_UDQ1
-		// TODO
+		loadData(map, UTIL_COMP_DQ, fileResolver, this::RD_UDQ1);
 
 		// Small Component (4.5 to 7.5 cm)
 
 		// RD_SBA1
-		// TODO
+		loadData(map, SMALL_COMP_PROBABILITY, fileResolver, this::RD_SBA1);
 
 		// RD_SBA2
-		// TODO
-
-		// RD_SDQ1
-		// TODO
+		loadData(map, SMALL_COMP_BA, fileResolver, this::RD_SBA2);
+		
+		// RD_SDQ1 
+		loadData(map, SMALL_COMP_DQ, fileResolver, this::RD_SDQ1);
 
 		// RD_SHL1
-		// TODO
+		loadData(map, SMALL_COMP_HL, fileResolver, this::RD_SHL1);
 
 		// RD_SVT1
-		// TODO
+		loadData(map, SMALL_COMP_WS_VOLUME, fileResolver, this::RD_SVT1);
 
 		// Standard Volume Relationships
 
 		// RD_YVT1
-		// TODO
+		loadData(map, TOTAL_STAND_WHOLE_STEM_VOL, fileResolver, this::RD_YVT1);
 
 		// RD_YVT2
-		// TODO
+		loadData(map, UTIL_COMP_WS_VOLUME, fileResolver, this::RD_YVT2);
 
 		// RD_YVC1
-		// TODO
+		loadData(map, CLOSE_UTIL_VOLUME, fileResolver, this::RD_YVC1);
 
 		// RD_YVD1
-		// TODO
+		loadData(map, VOLUME_NET_DECAY, fileResolver, this::RD_YVD1);
 
 		// RD_YVW1
-		// TODO
+		loadData(map, VOLUME_NET_DECAY_WASTE, fileResolver, this::RD_YVW1);
 
 		// RD_E095
-		// TODO
+		loadData(map, BREAKAGE, fileResolver, this::RD_E095);
 
 		// Veterans
 
 		// RD_YVVET
-		// TODO
+		loadData(map, VETERAN_LAYER_VOLUME_ADJUST, fileResolver, this::RD_YVVET);
 
 		// RD_YDQV
-		// TODO
+		loadData(map, VETERAN_LAYER_DQ, fileResolver, this::RD_YDQV);
 
 		// RD_E098
-		// TODO
+		loadData(map, VETERAN_BQ, fileResolver, this::RD_E098);
 
 		// Initiation items NOT for FIPSTART
-		if (jprogram == 1) {
+		if (jprogram > 1) {
 
 			// RD_E106
-			// TODO
+			loadData(map, TODO, fileResolver, this::RD_E106);
 
 			// RD_E107
-			// TODO
+			loadData(map, TODO, fileResolver, this::RD_E107);
 
 			// RD_E108
-			// TODO
+			loadData(map, TODO, fileResolver, this::RD_E108);
 
 			// Minima again, differently?
 			// TODO
+			
 			/*
 			 * READ(CNTRV(197), 197, ERR= 912 ) VMINH, VMINBA, VMINBAeqn,VMINvetH IF
 			 * (VMINVetH .le. 0.0) VMINVetH=10.0
@@ -384,7 +388,7 @@ public class FipControlParser {
 		// Modifiers, IPSJF155-Appendix XII
 
 		// RD_E198
-		// TODO
+		loadData(map, MODIFIER_FILE, fileResolver, this::RD_E198);
 
 		// Debug switches (normally zero)
 		// TODO
@@ -695,6 +699,158 @@ public class FipControlParser {
 		return parser.parse(data, control);
 	}
 	
+	/**
+	 * TODO UTIL_COMP_DQ
+	 */
+	private Object RD_UDQ1(InputStream data, Map<String, Object> control)
+			throws IOException, ResourceParseException {
+		return null;
+	}
+	
+	/**
+	 * TODO SMALL_COMP_PROBABILITY
+	 */
+	private Object RD_SBA1(InputStream data, Map<String, Object> control)
+			throws IOException, ResourceParseException {
+		return null;
+	}
+	
+	/**
+	 * TODO SMALL_COMP_BA
+	 */
+	private Object RD_SBA2(InputStream data, Map<String, Object> control)
+			throws IOException, ResourceParseException {
+		return null;
+	}
+	
+	/**
+	 * TODO SMALL_COMP_DQ
+	 */
+	private Object RD_SDQ1(InputStream data, Map<String, Object> control)
+			throws IOException, ResourceParseException {
+		return null;
+	}
+	
+	/**
+	 * TODO SMALL_COMP_HL
+	 */
+	private Object RD_SHL1(InputStream data, Map<String, Object> control)
+			throws IOException, ResourceParseException {
+		return null;
+	}
+	
+	/**
+	 * TODO SMALL_COMP_WS_VOLUME
+	 */
+	private Object RD_SVT1(InputStream data, Map<String, Object> control)
+			throws IOException, ResourceParseException {
+		return null;
+	}
+	
+	/**
+	 * TODO TOTAL_STAND_WHOLE_STEM_VOL
+	 */
+	private Object RD_YVT1(InputStream data, Map<String, Object> control)
+			throws IOException, ResourceParseException {
+		return null;
+	}
+	
+	/**
+	 * TODO UTIL_COMP_WS_VOLUME
+	 */
+	private Object RD_YVT2(InputStream data, Map<String, Object> control)
+			throws IOException, ResourceParseException {
+		return null;
+	}
+	
+	/**
+	 * TODO CLOSE_UTIL_VOLUME
+	 */
+	private Object RD_YVC1(InputStream data, Map<String, Object> control)
+			throws IOException, ResourceParseException {
+		return null;
+	}
+	
+	/**
+	 * TODO VOLUME_NET_DECAY
+	 */
+	private Object RD_YVD1(InputStream data, Map<String, Object> control)
+			throws IOException, ResourceParseException {
+		return null;
+	}
+	
+	/**
+	 * TODO VOLUME_NET_DECAY_WASTE
+	 */
+	private Object RD_YVW1(InputStream data, Map<String, Object> control)
+			throws IOException, ResourceParseException {
+		return null;
+	}
+	
+	/**
+	 * TODO BREAKAGE
+	 */
+	// Example FIPSTART.CTR calls this RD_EMP95
+	private Object RD_E095(InputStream data, Map<String, Object> control)
+			throws IOException, ResourceParseException {
+		return null;
+	}
+	
+	/**
+	 * TODO VETERAN_LAYER_VOLUME_ADJUST
+	 */
+	// Example FIPSTART.CTR calls this RD_YVET
+	private Object RD_YVVET(InputStream data, Map<String, Object> control)
+			throws IOException, ResourceParseException {
+		return null;
+	}
+	
+	/**
+	 * TODO VETERAN_LAYER_DQ
+	 */
+	private Object RD_YDQV(InputStream data, Map<String, Object> control)
+			throws IOException, ResourceParseException {
+		return null;
+	}
+	
+	/**
+	 * TODO VETERAN_BQ
+	 */
+	private Object RD_E098(InputStream data, Map<String, Object> control)
+			throws IOException, ResourceParseException {
+		return null;
+	}
+	
+	/**
+	 * TODO MODIFIER_FILE
+	 */
+	private Object RD_E198(InputStream data, Map<String, Object> control)
+			throws IOException, ResourceParseException {
+		return null;
+	}
+	
+	/**
+	 * TODO
+	 */
+	private Object RD_E106(InputStream data, Map<String, Object> control)
+			throws IOException, ResourceParseException {
+		return null;
+	}
+	/**
+	 * TODO
+	 */
+	private Object RD_E107(InputStream data, Map<String, Object> control)
+			throws IOException, ResourceParseException {
+		throw new UnsupportedOperationException();
+	}
+	/**
+	 * TODO
+	 */
+	private Object RD_E108(InputStream data, Map<String, Object> control)
+			throws IOException, ResourceParseException {
+		throw new UnsupportedOperationException();
+	}
+
 	static interface FileResolver {
 		InputStream resolve(String filename) throws IOException;
 
