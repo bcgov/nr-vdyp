@@ -121,10 +121,12 @@ public class VdypMatchers {
 	/**
 	 * Matches an Optional if it is not present
 	 *
+	 * @param <T>
+	 *
 	 * @return
 	 */
-	public static Matcher<Optional<?>> notPresent() {
-		return new BaseMatcher<Optional<?>>() {
+	public static <T> Matcher<Optional<T>> notPresent() {
+		return new BaseMatcher<Optional<T>>() {
 
 			@Override
 			public boolean matches(Object actual) {

@@ -5,13 +5,19 @@ import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasProperty;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.hamcrest.Matchers.equalTo;
 
 import org.junit.jupiter.api.Test;
 
+import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.Region;
+import ca.bc.gov.nrs.vdyp.model.SP0Definition;
 
 public class BecDefinitionParserTest {
 
@@ -161,6 +167,31 @@ public class BecDefinitionParserTest {
 						)
 				)
 		);
+	}
+
+	/**
+	 * Add a mock control map entry for BEC parse results with species "B1" and "B2"
+	 * for Coastal and Interior Regions respectively
+	 */
+	public static void populateControlMap(Map<String, Object> controlMap) {
+		populateControlMap(controlMap, "B1", "B2");
+	}
+
+	/**
+	 * Add a mock control map entry for SP0 parse results. Alternates assigning to
+	 * Coastal and Interior regions, starting with Coastal.
+	 */
+	public static void populateControlMap(Map<String, Object> controlMap, String... aliases) {
+
+		Map<String, BecDefinition> map = new HashMap<>();
+
+		int i = 0;
+		for (var alias : aliases) {
+			map.put(alias, new BecDefinition(alias, Region.values()[i % 2], "Test " + alias));
+			i++;
+		}
+
+		controlMap.put(BecDefinitionParser.CONTROL_KEY, map);
 	}
 
 }

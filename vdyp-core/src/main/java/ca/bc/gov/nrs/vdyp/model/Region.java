@@ -16,6 +16,13 @@ public enum Region {
 		return Arrays.stream(Region.values()).filter(x -> x.getCharacterAlias() == alias).findFirst();
 	}
 
+	public static Optional<Region> fromAlias(String alias) {
+		if (alias.length() == 1) {
+			return fromAlias(alias.charAt(0));
+		}
+		return Optional.empty();
+	}
+
 	public char getCharacterAlias() {
 		return characterAlias;
 	}

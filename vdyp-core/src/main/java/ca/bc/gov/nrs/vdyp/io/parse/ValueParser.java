@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.vdyp.io.parse;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -43,6 +44,24 @@ public interface ValueParser<T> {
 			try {
 				return parser.parse(stripped);
 			} catch (NumberFormatException ex) {
+				throw new ValueParseException(
+						stripped, String.format("\"%s\" is not a valid %s", stripped, klazz.getSimpleName()), ex
+				);
+			}
+		};
+	}
+
+	/**
+	 * Adapts an parsing an Enum
+	 *
+	 * @param klazz the type to parse into
+	 */
+	public static <U extends Enum<U>> ValueParser<U> enumParser(Class<U> klazz) {
+		return s -> {
+			String stripped = s.strip();
+			try {
+				return Enum.valueOf(klazz, s);
+			} catch (IllegalArgumentException ex) {
 				throw new ValueParseException(
 						stripped, String.format("\"%s\" is not a valid %s", stripped, klazz.getSimpleName()), ex
 				);

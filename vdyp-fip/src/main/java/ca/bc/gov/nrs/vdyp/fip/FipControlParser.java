@@ -24,12 +24,14 @@ import ca.bc.gov.nrs.vdyp.io.parse.SiteCurveAgeMaximumParser;
 import ca.bc.gov.nrs.vdyp.io.parse.SiteCurveParser;
 import ca.bc.gov.nrs.vdyp.io.parse.StockingClassFactorParser;
 import ca.bc.gov.nrs.vdyp.io.parse.UpperCoefficientParser;
+import ca.bc.gov.nrs.vdyp.io.parse.UtilComponentBaseAreaParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ValueParser;
 import ca.bc.gov.nrs.vdyp.io.parse.EquationGroupParser;
 import ca.bc.gov.nrs.vdyp.io.parse.EquationModifierParser;
 import ca.bc.gov.nrs.vdyp.io.parse.HLCoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.HLNonprimaryCoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
+import ca.bc.gov.nrs.vdyp.model.BaseAreaCode;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
@@ -71,7 +73,7 @@ public class FipControlParser {
 	public static final String HL_NONPRIMARY = HLNonprimaryCoefficientParser.CONTROL_KEY;
 	public static final String BY_SPECIES_DQ = BySpeciesDqCoefficientParser.CONTROL_KEY;
 	public static final String SPECIES_COMPONENT_SIZE_LIMIT = ComponentSizeParser.CONTROL_KEY;
-	public static final String UTIL_COMP_BA = "UTIL_COMP_BA";
+	public static final String UTIL_COMP_BA = UtilComponentBaseAreaParser.CONTROL_KEY;
 	public static final String UTIL_COMP_DQ = "UTIL_COMP_DQ";
 	public static final String SMALL_COMP_PROBABILITY = "SMALL_COMP_PROBABILITY";
 	public static final String SMALL_COMP_BA = "SMALL_COMP_BA";
@@ -300,7 +302,7 @@ public class FipControlParser {
 		loadData(map, SPECIES_COMPONENT_SIZE_LIMIT, fileResolver, this::RD_E061);
 
 		// RD_UBA1
-		// TODO
+		loadData(map, UTIL_COMP_BA, fileResolver, this::RD_UBA1);
 
 		// RD_UDQ1
 		// TODO
@@ -667,6 +669,32 @@ public class FipControlParser {
 		return parser.parse(data, control);
 	}
 
+	/**
+	 * Loads the information that was in the global array COE070 in Fortran
+	 */
+	private MatrixMap3<BaseAreaCode, String, String, Coefficients>
+			RD_UBA1(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+
+		// Uses
+		// COMMON /BECIgrow/ NBECGROW, IBECGV(14), IBECGIC(14)
+
+		// Sets
+		// C 2 coef BY 3 UC by (16 SP0) by (12 BEC)
+		// COMMON /V7COE070/ COE070( 2 , 3, 16, 12)
+
+		// Parses
+		// 10 READ(IU_TEMP, 11, ERR=90, END=70) CODE, SP0, BECSCOPE,
+		// 1 (C(I),I=1,2)
+		// 11 FORMAT( A4,1x, A2, 1x, A4, 2F10.0)
+
+		// If BECSCOPE is empty, apply to all BECs, if it's I or C, apply to BECs in
+		// that region, otherwise only the one BEC.
+
+		var parser = new UtilComponentBaseAreaParser();
+
+		return parser.parse(data, control);
+	}
+	
 	static interface FileResolver {
 		InputStream resolve(String filename) throws IOException;
 

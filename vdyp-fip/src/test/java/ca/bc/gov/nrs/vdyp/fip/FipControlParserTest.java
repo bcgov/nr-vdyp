@@ -30,6 +30,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.HLNonprimaryCoefficientParserTest;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.SP0DefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.SiteCurveAgeMaximumParserTest;
+import ca.bc.gov.nrs.vdyp.model.BaseAreaCode;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.SP0Definition;
@@ -396,6 +397,20 @@ public class FipControlParserTest {
 				(Matcher) hasEntry(
 						is(FipControlParser.SPECIES_COMPONENT_SIZE_LIMIT),
 						allOf(mmHasEntry(present(contains(49.4f, 153.3f, 0.726f, 3.647f)), "AC", Region.COASTAL))
+				)
+		);
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Test
+	public void testParseUBA1() throws Exception {
+		var parser = new FipControlParser();
+		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
+		assertThat(
+				result,
+				(Matcher) hasEntry(
+						is(FipControlParser.UTIL_COMP_BA),
+						allOf(mmHasEntry(present(contains(-26.68771f, 14.38811f)), BaseAreaCode.BA12, "AT", "ICH"))
 				)
 		);
 	}

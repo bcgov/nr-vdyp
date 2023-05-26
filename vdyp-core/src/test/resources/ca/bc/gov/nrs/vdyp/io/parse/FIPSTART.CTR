@@ -42,29 +42,29 @@
 060 coe/REGDQI04.COE                                   By-species DQ              RD_E060    IPFJF125
 061 coe/COMPLIM.COE                                    Species component size limits RD_E061 IPSJF158
 
-070 coe/regbac.dat                                     Util. Comp, BA             RD_UBA1
-071 coe/regdqc.dat                                     Util. Comp, DQ             RD_UDQ1
+070 coe/REGBAC.DAT                                     Util. Comp, BA             RD_UBA1
+071 coe/REGDQC.DAT                                     Util. Comp, DQ             RD_UDQ1
 
-080 coe/regpr1c.dat                                    Small Comp., Probability   RD_SBA1
-081 coe/regba2c.dat                                    Small Comp., BA            RD_SBA2
-082 coe/regdq4c.dat                                    Small Comp., DQ            RD_SDQ1
-085 coe/reghl1c.dat                                    Small Comp., HL            RD_SHL1
-086 coe/regv1c.dat                                    Small Comp., WS Volume     RD_SVT1
+080 coe/REGPR1C.DAT                                    Small Comp., Probability   RD_SBA1
+081 coe/REGBA2C.DAT                                    Small Comp., BA            RD_SBA2
+082 coe/REGDQ4C.DAT                                    Small Comp., DQ            RD_SDQ1
+085 coe/REGHL1C.DAT                                    Small Comp., HL            RD_SHL1
+086 coe/REGV1C.DAT                                    Small Comp., WS Volume     RD_SVT1
 
-090 coe/VTOTREG4.coe                                  Total stand WholeStem Vol  RD_YVT1  IPSJF117
-091 coe/REGVU.coe                                     Util Comp, WS volume       RD_YVT2  IPSJF121
-092 coe/regvcu.coe                                    Close Utilization Vol      RD_YVC1  IPSJF122
-093 coe/regvdu.coe                                    Vol net of Decay           RD_YVD1  IPSJF123
-094 coe/regvwu.coe                                    Vol net of (Decay+Waste)   RD_YVW1  IPSJF123
-095 coe/regbreak.coe                                  Breakage                   RD_EMP95 IPSJF157
+090 coe/VTOTREG4.COE                                  Total stand WholeStem Vol  RD_YVT1  IPSJF117
+091 coe/REGVU.COE                                     Util Comp, WS volume       RD_YVT2  IPSJF121
+092 coe/REGVCU.COE                                    Close Utilization Vol      RD_YVC1  IPSJF122
+093 coe/REGVDU.COE                                    Vol net of Decay           RD_YVD1  IPSJF123
+094 coe/REGVWU.COE                                    Vol net of (Decay+Waste)   RD_YVW1  IPSJF123
+095 coe/REGBREAK.COE                                  Breakage                   RD_EMP95 IPSJF157
 
-096 coe/vetvol1.dat                                   Vet-layer volume adjust    RD_YVET                         
-097 coe/vetdq2.dat                                    DQ for Vet layer           RD_YDQV
-098 coe/REGBAV01.coe                                  VET BA, IPSJF168.doc       RD_E098
+096 coe/VETVOL1.DAT                                   Vet-layer volume adjust    RD_YVET                         
+097 coe/VETDQ2.DAT                                    DQ for Vet layer           RD_YDQV
+098 coe/REGBAV01.COE                                  VET BA, IPSJF168.doc       RD_E098
 
 197    5.0   0.0   2.0                                Minimum Height, Minimum BA, Min BA fully stocked.
 
-198 coe/MOD19813.prm                                  Modifier file (IPSJF155, XII) RD_E198
+198 coe/mod19813.prm                                  Modifier file (IPSJF155, XII) RD_E198
 199  0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 Debug switches (0 by default) See IPSJF155  App IX                              Debug switches (25) 0=default See IPSJF155, App IX
                                                       1st:  1: Do NOT apply BA limits from SEQ043
                                                       2nd:  1: Do NOT apply DQ limits from SEQ043
