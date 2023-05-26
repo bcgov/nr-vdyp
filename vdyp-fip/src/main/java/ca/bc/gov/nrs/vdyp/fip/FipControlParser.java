@@ -95,7 +95,7 @@ public class FipControlParser {
 	public static final String MAX_NUM_POLY = "MAX_NUM_POLY";
 	public static final String BEC_DEF = BecDefinitionParser.CONTROL_KEY;
 	public static final String SP0_DEF = SP0DefinitionParser.CONTROL_KEY;
-	
+
 	// TODO
 	public static final String TODO = "TODO";
 
@@ -317,8 +317,8 @@ public class FipControlParser {
 
 		// RD_SBA2
 		loadData(map, SMALL_COMP_BA, fileResolver, this::RD_SBA2);
-		
-		// RD_SDQ1 
+
+		// RD_SDQ1
 		loadData(map, SMALL_COMP_DQ, fileResolver, this::RD_SDQ1);
 
 		// RD_SHL1
@@ -372,7 +372,7 @@ public class FipControlParser {
 
 			// Minima again, differently?
 			// TODO
-			
+
 			/*
 			 * READ(CNTRV(197), 197, ERR= 912 ) VMINH, VMINBA, VMINBAeqn,VMINvetH IF
 			 * (VMINVetH .le. 0.0) VMINVetH=10.0
@@ -698,156 +698,139 @@ public class FipControlParser {
 
 		return parser.parse(data, control);
 	}
-	
+
 	/**
 	 * TODO UTIL_COMP_DQ
 	 */
-	private Object RD_UDQ1(InputStream data, Map<String, Object> control)
-			throws IOException, ResourceParseException {
+	private Object RD_UDQ1(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
 		return null;
 	}
-	
+
 	/**
 	 * TODO SMALL_COMP_PROBABILITY
 	 */
-	private Object RD_SBA1(InputStream data, Map<String, Object> control)
-			throws IOException, ResourceParseException {
+	private Object RD_SBA1(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
 		return null;
 	}
-	
+
 	/**
 	 * TODO SMALL_COMP_BA
 	 */
-	private Object RD_SBA2(InputStream data, Map<String, Object> control)
-			throws IOException, ResourceParseException {
+	private Object RD_SBA2(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
 		return null;
 	}
-	
+
 	/**
 	 * TODO SMALL_COMP_DQ
 	 */
-	private Object RD_SDQ1(InputStream data, Map<String, Object> control)
-			throws IOException, ResourceParseException {
+	private Object RD_SDQ1(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
 		return null;
 	}
-	
+
 	/**
 	 * TODO SMALL_COMP_HL
 	 */
-	private Object RD_SHL1(InputStream data, Map<String, Object> control)
-			throws IOException, ResourceParseException {
+	private Object RD_SHL1(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
 		return null;
 	}
-	
+
 	/**
 	 * TODO SMALL_COMP_WS_VOLUME
 	 */
-	private Object RD_SVT1(InputStream data, Map<String, Object> control)
-			throws IOException, ResourceParseException {
+	private Object RD_SVT1(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
 		return null;
 	}
-	
+
 	/**
 	 * TODO TOTAL_STAND_WHOLE_STEM_VOL
 	 */
-	private Object RD_YVT1(InputStream data, Map<String, Object> control)
-			throws IOException, ResourceParseException {
+	private Object RD_YVT1(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
 		return null;
 	}
-	
+
 	/**
 	 * TODO UTIL_COMP_WS_VOLUME
 	 */
-	private Object RD_YVT2(InputStream data, Map<String, Object> control)
-			throws IOException, ResourceParseException {
+	private Object RD_YVT2(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
 		return null;
 	}
-	
+
 	/**
 	 * TODO CLOSE_UTIL_VOLUME
 	 */
-	private Object RD_YVC1(InputStream data, Map<String, Object> control)
-			throws IOException, ResourceParseException {
+	private Object RD_YVC1(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
 		return null;
 	}
-	
+
 	/**
 	 * TODO VOLUME_NET_DECAY
 	 */
-	private Object RD_YVD1(InputStream data, Map<String, Object> control)
-			throws IOException, ResourceParseException {
+	private Object RD_YVD1(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
 		return null;
 	}
-	
+
 	/**
 	 * TODO VOLUME_NET_DECAY_WASTE
 	 */
-	private Object RD_YVW1(InputStream data, Map<String, Object> control)
-			throws IOException, ResourceParseException {
+	private Object RD_YVW1(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
 		return null;
 	}
-	
+
 	/**
 	 * TODO BREAKAGE
 	 */
 	// Example FIPSTART.CTR calls this RD_EMP95
-	private Object RD_E095(InputStream data, Map<String, Object> control)
-			throws IOException, ResourceParseException {
+	private Object RD_E095(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
 		return null;
 	}
-	
+
 	/**
 	 * TODO VETERAN_LAYER_VOLUME_ADJUST
 	 */
 	// Example FIPSTART.CTR calls this RD_YVET
-	private Object RD_YVVET(InputStream data, Map<String, Object> control)
-			throws IOException, ResourceParseException {
+	private Object RD_YVVET(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
 		return null;
 	}
-	
+
 	/**
 	 * TODO VETERAN_LAYER_DQ
 	 */
-	private Object RD_YDQV(InputStream data, Map<String, Object> control)
-			throws IOException, ResourceParseException {
+	private Object RD_YDQV(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
 		return null;
 	}
-	
+
 	/**
 	 * TODO VETERAN_BQ
 	 */
-	private Object RD_E098(InputStream data, Map<String, Object> control)
-			throws IOException, ResourceParseException {
+	private Object RD_E098(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
 		return null;
 	}
-	
+
 	/**
 	 * TODO MODIFIER_FILE
 	 */
-	private Object RD_E198(InputStream data, Map<String, Object> control)
-			throws IOException, ResourceParseException {
+	private Object RD_E198(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
 		return null;
 	}
-	
+
 	/**
 	 * TODO
 	 */
-	private Object RD_E106(InputStream data, Map<String, Object> control)
-			throws IOException, ResourceParseException {
+	private Object RD_E106(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
 		return null;
 	}
+
 	/**
 	 * TODO
 	 */
-	private Object RD_E107(InputStream data, Map<String, Object> control)
-			throws IOException, ResourceParseException {
+	private Object RD_E107(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
 		throw new UnsupportedOperationException();
 	}
+
 	/**
 	 * TODO
 	 */
-	private Object RD_E108(InputStream data, Map<String, Object> control)
-			throws IOException, ResourceParseException {
+	private Object RD_E108(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
 		throw new UnsupportedOperationException();
 	}
 
