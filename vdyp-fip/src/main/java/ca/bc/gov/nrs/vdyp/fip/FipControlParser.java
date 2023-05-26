@@ -678,6 +678,7 @@ public class FipControlParser {
 	 */
 	private MatrixMap3<BaseAreaCode, String, String, Coefficients>
 			RD_UBA1(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+		// TODO
 
 		// Uses
 		// COMMON /BECIgrow/ NBECGROW, IBECGV(14), IBECGIC(14)
@@ -691,6 +692,8 @@ public class FipControlParser {
 		// 1 (C(I),I=1,2)
 		// 11 FORMAT( A4,1x, A2, 1x, A4, 2F10.0)
 
+		// Ignore if first segment is blank
+
 		// If BECSCOPE is empty, apply to all BECs, if it's I or C, apply to BECs in
 		// that region, otherwise only the one BEC.
 
@@ -700,116 +703,382 @@ public class FipControlParser {
 	}
 
 	/**
-	 * TODO UTIL_COMP_DQ
+	 * Loads the information that was in the global array COE071 in Fortran
 	 */
 	private Object RD_UDQ1(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+		// TODO
+
+		// Uses
+		// COMMON /BECIgrow/ NBECGROW, IBECGV(14), IBECGIC(14)
+
+		// Sets
+		// C 4 coef BY 4 UC by (16 SP0) by (12 BEC)
+		// COMMON /V7COE071/ COE071( 4 , 4, 16, 12)
+
+		// Parses
+		// 10 READ(IU_TEMP, 11, ERR=90, END=70) CODE, SP0, BECSCOPE,
+		// 1 (C(I),I=1,4)
+		// 11 FORMAT( A4,9x, A2, 1x, A4, 4F10.0)
+
+		// Ignore if first segment is blank
+
+		// If BECSCOPE is empty, apply to all BECs, if it's I or C, apply to BECs in
+		// that region, otherwise only the one BEC.
+
 		return null;
 	}
 
 	/**
-	 * TODO SMALL_COMP_PROBABILITY
+	 * Loads the information that was in the global array COE080 in Fortran
+	 *
+	 * @see SMALL_COMP_PROBABILITY
 	 */
 	private Object RD_SBA1(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+		// TODO
+
+		// Sets
+		// C 4 coe for each of 16 SP0's
+		// COMMON /V7COE080/ COE080(4, 16)
+
+		// Parses
+		// 10 READ(IU_TEMP, 11, ERR=90, END=70) SP0, (C(I),I=1,4)
+		// 11 FORMAT( A2, 4f10.0)
+
+		// Ignore if first segment is blank
+
+		// Coefficient is 1 indexed
+
 		return null;
 	}
 
 	/**
-	 * TODO SMALL_COMP_BA
+	 * Loads the information that was in the global array COE081 in Fortran
+	 *
+	 * @see SMALL_COMP_BA
 	 */
 	private Object RD_SBA2(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+		// TODO
+
+		// Sets
+		// C 4 coe for each of 16 SP0's
+		// COMMON /V7COE081/ COE081(4, 16)
+
+		// Parses
+		// 10 READ(IU_TEMP, 11, ERR=90, END=70) SP0, (C(I),I=1,4)
+		// 11 FORMAT( A2, 4f10.0)
+
+		// Ignore if first segment is blank
+
+		// Coefficient is 1 indexed
+
 		return null;
 	}
 
 	/**
-	 * TODO SMALL_COMP_DQ
+	 * Loads the information that was in the global array COE082 in Fortran
+	 *
+	 * @see SMALL_COMP_DQ
 	 */
 	private Object RD_SDQ1(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+		// TODO
+
+		// Sets
+		// C 2 coe for each of 16 SP0's
+		// COMMON /V7COE082/ COE082(2, 16)
+
+		// Parses
+		// 10 READ(IU_TEMP, 11, ERR=90, END=70) SP0, (C(I),I=1,2)
+		// 11 FORMAT( A2, 4f10.0)
+
+		// Ignore if first segment is blank
+
+		// Coefficient is 1 indexed
+
 		return null;
 	}
 
 	/**
-	 * TODO SMALL_COMP_HL
+	 * Loads the information that was in the global array COE085 in Fortran
+	 *
+	 * @see SMALL_COMP_HL
 	 */
 	private Object RD_SHL1(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+		// TODO
+
+		// Sets
+		// C 2 coe for each of 16 SP0's
+		// COMMON /V7COE085/ COE085(2, 16)
+
+		// Parses
+		// 10 READ(IU_TEMP, 11, ERR=90, END=70) SP0, (C(I),I=1,2)
+		// 11 FORMAT( A2, 4f10.0)
+
+		// Ignore if first segment is blank
+
+		// Coefficient is 1 indexed
+
 		return null;
 	}
 
 	/**
-	 * TODO SMALL_COMP_WS_VOLUME
+	 * Loads the information that was in the global array COE086 in Fortran
+	 *
+	 * @see SMALL_COMP_WS_VOLUME
 	 */
 	private Object RD_SVT1(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+		// TODO
+
+		// Sets
+		// C 4 coe for each of 16 SP0's
+		// COMMON /V7COE086/ COE086(4, 16)
+
+		// Parses
+		// 10 READ(IU_TEMP, 11, ERR=90, END=70) SP0, (C(I),I=1,4)
+		// 11 FORMAT( A2, 4f10.0)
+
+		// Ignore if first segment is blank
+
+		// Coefficient is 1 indexed
+
 		return null;
 	}
 
 	/**
-	 * TODO TOTAL_STAND_WHOLE_STEM_VOL
+	 * Loads the information that was in the global array V7COE090 in Fortran
+	 *
+	 * @see TOTAL_STAND_WHOLE_STEM_VOL
 	 */
 	private Object RD_YVT1(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+		// TODO
+
+		// Uses
+		// PARAMETER (MAXGROUP = 80)
+
+		// Sets
+		// C 9 coe for each of (Up to 80 groups)
+		// COMMON /V7COE090/ COE090(0:8, MAXGROUP)
+
+		// Parses
+		// 10 READ(IU_TEMP, 11, ERR=90, END=70) VGRP, (C(I),I=0,8)
+		// 11 FORMAT( I3, 9f10.0)
+
+		// Ignore if first segment is 0
+
+		// Coefficient is 0 indexed
+
 		return null;
 	}
 
 	/**
-	 * TODO UTIL_COMP_WS_VOLUME
+	 * Loads the information that was in the global array COE091 in Fortran
+	 *
+	 * @see UTIL_COMP_WS_VOLUME
 	 */
 	private Object RD_YVT2(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+		// TODO
+
+		// Uses
+		// PARAMETER (MAXGROUP = 80)
+
+		// Sets
+		// C 9 coe for each of (Up to 80 groups)
+		// COMMON /V7COE090/ COE090(0:8, MAXGROUP)
+
+		// Parses
+		// 10 READ(IU_TEMP, 11, ERR=90, END=70) VGRP, (C(I),I=0,8)
+		// 11 FORMAT( I3, 9f10.0)
+
+		// Ignore if first segment is 0
+
+		// Coefficient is 0 indexed
+
 		return null;
 	}
 
 	/**
-	 * TODO CLOSE_UTIL_VOLUME
+	 * Loads the information that was in the global array COE092 in Fortran
+	 *
+	 * @see CLOSE_UTIL_VOLUME
 	 */
 	private Object RD_YVC1(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+		// TODO
+
+		// Uses
+		// PARAMETER (MAXGROUP = 80)
+
+		// Sets
+		// C 3 coe for (4 UC's) for (Up to 80 groups)
+		// COMMON /V7COE092/ COE092(3, 4, MAXGROUP)
+
+		// Parses
+		// 10 READ(IU_TEMP, 11, ERR=90, END=70) UC, VGRP, (C(I),I=1,3)
+		// 11 FORMAT( I2, I4, 4f10.0)
+
+		// Ignore if first segment is 0
+
+		// UC is 1 indexed
+		// Coefficient is 1 indexed
+
 		return null;
 	}
 
 	/**
-	 * TODO VOLUME_NET_DECAY
+	 * Loads the information that was in the global array COE093 in Fortran
+	 *
+	 * @see VOLUME_NET_DECAY
 	 */
 	private Object RD_YVD1(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+		// TODO
+
+		// Uses
+		// PARAMETER (MAXGROUP = 80)
+
+		// Sets
+		// C 3 coe for (4 UC's) for (Up to 80 groups)
+		// COMMON /V7COE093/ COE093(3, 4, MAXGROUP)
+
+		// Parses
+		// 10 READ(IU_TEMP, 11, ERR=90, END=70) UC, DGRP, (C(I),I=1,3)
+		// 11 FORMAT( I2, I4, 4f10.0)
+
+		// Ignore if first segment is 0
+
+		// UC is 1 indexed
+		// Coefficient is 1 indexed
+
 		return null;
 	}
 
 	/**
-	 * TODO VOLUME_NET_DECAY_WASTE
+	 * Loads the information that was in the global array COE094 in Fortran
+	 *
+	 * @see VOLUME_NET_DECAY_WASTE
 	 */
 	private Object RD_YVW1(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+		// TODO
+
+		// Uses
+		//
+
+		// Sets
+		// Species to 6 coefficients
+		// COMMON /V7COE094/ COE094(0:5,16)
+
+		// Parses
+		// 10 READ(IU_TEMP, 11, ERR=90, END=70) SP0, A
+		// 11 FORMAT( A2, 6F9.0)
+
+		// Ignore if first segment is blank
+
+		// Coefficient is 0 indexed
+
 		return null;
 	}
 
 	/**
-	 * TODO BREAKAGE
+	 * Loads the information that was in the global array COE095 in Fortran
+	 *
+	 * @see BREAKAGE
 	 */
 	// Example FIPSTART.CTR calls this RD_EMP95
 	private Object RD_E095(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+		// TODO
+
+		// Uses
+		// PARAMETER (MAXBGRP = 40)
+
+		// Sets
+		// C 4 for (Up to 40 groups)
+		// COMMON /V7COE095/ COE095(4, MAXBGRP)
+
+		// Parses
+		// 10 READ(IU_TEMP, 11, ERR=90, END=70) BGRP, A(1), A(2), A(3), A(4)
+		// 11 FORMAT( I2, 4f9.0)
+
+		// Ignore if first segment is 0
+
+		// Coefficient is 1 indexed
+
 		return null;
 	}
 
 	/**
-	 * TODO VETERAN_LAYER_VOLUME_ADJUST
+	 * Loads the information that was in the global array COE096 in Fortran
+	 *
+	 * @see VETERAN_LAYER_VOLUME_ADJUST
 	 */
 	// Example FIPSTART.CTR calls this RD_YVET
 	private Object RD_YVVET(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+		// TODO
+
+		// Sets
+		// COMMON /V7COE096/ COE096( 4, 16)
+
+		// Parses
+		// 10 READ(IU_TEMP, 11, ERR=90, END=70) SP0, C
+		// 11 FORMAT( A2 , 4f9.5)
+
+		// Ignore if first segment is blank
+
+		// Coefficient is 1 indexed
+
 		return null;
 	}
 
 	/**
-	 * TODO VETERAN_LAYER_DQ
+	 * Loads the information that was in the global array COE097 in Fortran
+	 *
+	 * @see VETERAN_LAYER_DQ
 	 */
 	private Object RD_YDQV(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+		// TODO
+
+		// Sets
+		// C 3 coef BY 16 SP0 BY C/I (2)
+		// COMMON /V7COE097/ COE097( 3, 16, 2)
+
+		// Parses
+		// 10 READ(IU_TEMP, 11, ERR=90, END=70) SP0, CI, C1, C2, C3
+		// 11 FORMAT( A2 , 1x, A1, 3f9.0)
+
+		// Ignore if first segment is blank
+
+		// Coefficient is 1 indexed
+
 		return null;
 	}
 
 	/**
-	 * TODO VETERAN_BQ
+	 * Loads the information that was in the global array COE098 in Fortran
+	 *
+	 * @see VETERAN_BQ
 	 */
 	private Object RD_E098(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+		// TODO
+
+		// Sets
+		// C 3 coef BY 16 SP0 BY C/I (2)
+		// COMMON /V7COE098/ COE098( 3, 16, 2)
+
+		// Parses
+		// 10 READ(IU_TEMP, 11, ERR=90, END=70) SP0, CI, C1, C2, C3
+		// 11 FORMAT( A2 , 1x, A1, 3f9.0)
+
+		// Ignore if first segment is blank
+
+		// Coefficient is 1 indexed
+
 		return null;
 	}
 
 	/**
-	 * TODO MODIFIER_FILE
+	 * Modifies loaded data based on modifier file
+	 *
+	 * @see MODIFIER_FILE
 	 */
 	private Object RD_E198(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+		// TODO
+
 		return null;
 	}
 
