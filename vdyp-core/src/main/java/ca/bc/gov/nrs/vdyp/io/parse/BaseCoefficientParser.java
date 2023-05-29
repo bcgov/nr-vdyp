@@ -34,9 +34,11 @@ public abstract class BaseCoefficientParser<T extends Coefficients, M extends Ma
 
 	List<String> metaKeys = new ArrayList<>();
 	List<Collection<?>> keyRanges = new ArrayList<>();
+	private int expectedKeys;
 
-	public BaseCoefficientParser() {
+	public BaseCoefficientParser(int expectedKeys) {
 		super();
+		this.expectedKeys = expectedKeys;
 		this.lineParser = new LineParser() {
 
 			@Override
@@ -47,8 +49,17 @@ public abstract class BaseCoefficientParser<T extends Coefficients, M extends Ma
 		};
 	}
 
+	public BaseCoefficientParser() {
+		this(0);
+	}
+
 	public <K> BaseCoefficientParser<T, M>
 			key(int length, String name, ValueParser<K> parser, Collection<K> range, String errorTemplate) {
+		if (expectedKeys > 0 && metaKeys.size() == expectedKeys) {
+			throw new IllegalStateException(
+					"Expected " + expectedKeys + " keys but " + name + " was key " + expectedKeys + 1
+			);
+		}
 		var validParser = ValueParser.validate(
 				parser, (v) -> range.contains(v) ? Optional.empty() : Optional.of(String.format(errorTemplate, v))
 		);
@@ -102,7 +113,9 @@ public abstract class BaseCoefficientParser<T extends Coefficients, M extends Ma
 
 	@Override
 	public M parse(InputStream is, Map<String, Object> control) throws IOException, ResourceParseException {
-
+		if (expectedKeys > 0 && metaKeys.size() != expectedKeys) {
+			throw new IllegalStateException("Expected " + expectedKeys + " keys but there were " + metaKeys.size());
+		}
 		M result = createMap(keyRanges);
 
 		lineParser.parse(is, result, (v, r) -> {

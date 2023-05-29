@@ -1,0 +1,79 @@
+package ca.bc.gov.nrs.vdyp.io.parse;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+
+import ca.bc.gov.nrs.vdyp.model.Coefficients;
+import ca.bc.gov.nrs.vdyp.model.MatrixMap;
+import ca.bc.gov.nrs.vdyp.model.MatrixMapImpl;
+
+public class SimpleCoefficientParser1<K1> implements ResourceParser<Map<K1, Coefficients>> {
+
+	private int indexFrom;
+
+	Class<K1> keyClass;
+
+	private BaseCoefficientParser<Coefficients, MatrixMap<Coefficients>> delegate = new BaseCoefficientParser<Coefficients, MatrixMap<Coefficients>>(
+			1
+	) {
+
+		@SuppressWarnings("unchecked")
+		@Override
+		protected MatrixMap<Coefficients> createMap(List<Collection<?>> keyRanges) {
+			return new MatrixMapImpl<Coefficients>((Collection<K1>) keyRanges.get(0));
+		}
+
+		@Override
+		protected Coefficients getCoefficients(List<Float> coefficients) {
+			return new Coefficients(coefficients, indexFrom);
+		}
+	};
+
+	public SimpleCoefficientParser1(Class<K1> keyClass, int indexFrom) {
+		super();
+		this.keyClass = keyClass;
+		this.indexFrom = indexFrom;
+	}
+
+	@Override
+	public Map<K1, Coefficients> parse(InputStream is, Map<String, Object> control)
+			throws IOException, ResourceParseException {
+		var matrixMapResult = delegate.parse(is, control);
+		var result = MatrixMap.cast(matrixMapResult, keyClass);
+		return result;
+	}
+
+	public <K> BaseCoefficientParser<Coefficients, MatrixMap<Coefficients>>
+			key(int length, String name, ValueParser<K> parser, Collection<K> range, String errorTemplate) {
+		return delegate.key(length, name, parser, range, errorTemplate);
+	}
+
+	public BaseCoefficientParser<Coefficients, MatrixMap<Coefficients>> regionKey() {
+		return delegate.regionKey();
+	}
+
+	public BaseCoefficientParser<Coefficients, MatrixMap<Coefficients>> ucIndexKey() {
+		return delegate.ucIndexKey();
+	}
+
+	public BaseCoefficientParser<Coefficients, MatrixMap<Coefficients>> groupIndexKey(int maxGroups) {
+		return delegate.groupIndexKey(maxGroups);
+	}
+
+	public BaseCoefficientParser<Coefficients, MatrixMap<Coefficients>>
+			speciesKey(String name, Map<String, Object> controlMap) {
+		return delegate.speciesKey(name, controlMap);
+	}
+
+	public BaseCoefficientParser<Coefficients, MatrixMap<Coefficients>> space(int length) {
+		return delegate.space(length);
+	}
+
+	public <K> BaseCoefficientParser<Coefficients, MatrixMap<Coefficients>> coefficients(int number, int length) {
+		return delegate.coefficients(number, length);
+	}
+
+}

@@ -13,7 +13,7 @@ public class SimpleCoefficientParser2<K1, K2>
 	private int indexFrom;
 
 	public SimpleCoefficientParser2(int indexFrom) {
-		super();
+		super(2);
 		this.indexFrom = indexFrom;
 	}
 

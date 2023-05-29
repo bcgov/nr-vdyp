@@ -23,6 +23,11 @@ import ca.bc.gov.nrs.vdyp.io.parse.ResourceParser;
 import ca.bc.gov.nrs.vdyp.io.parse.SP0DefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.SiteCurveAgeMaximumParser;
 import ca.bc.gov.nrs.vdyp.io.parse.SiteCurveParser;
+import ca.bc.gov.nrs.vdyp.io.parse.SmallComponentBaseAreaParser;
+import ca.bc.gov.nrs.vdyp.io.parse.SmallComponentDQParser;
+import ca.bc.gov.nrs.vdyp.io.parse.SmallComponentHLParser;
+import ca.bc.gov.nrs.vdyp.io.parse.SmallComponentProbabilityParser;
+import ca.bc.gov.nrs.vdyp.io.parse.SmallComponentWSVolumeParser;
 import ca.bc.gov.nrs.vdyp.io.parse.StockingClassFactorParser;
 import ca.bc.gov.nrs.vdyp.io.parse.UpperCoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.UtilComponentBaseAreaParser;
@@ -77,11 +82,11 @@ public class FipControlParser {
 	public static final String SPECIES_COMPONENT_SIZE_LIMIT = ComponentSizeParser.CONTROL_KEY;
 	public static final String UTIL_COMP_BA = UtilComponentBaseAreaParser.CONTROL_KEY;
 	public static final String UTIL_COMP_DQ = "UTIL_COMP_DQ";
-	public static final String SMALL_COMP_PROBABILITY = "SMALL_COMP_PROBABILITY";
-	public static final String SMALL_COMP_BA = "SMALL_COMP_BA";
-	public static final String SMALL_COMP_DQ = "SMALL_COMP_DQ";
-	public static final String SMALL_COMP_HL = "SMALL_COMP_HL";
-	public static final String SMALL_COMP_WS_VOLUME = "SMALL_COMP_WS_VOLUME";
+	public static final String SMALL_COMP_PROBABILITY = SmallComponentProbabilityParser.CONTROL_KEY;
+	public static final String SMALL_COMP_BA = SmallComponentBaseAreaParser.CONTROL_KEY;
+	public static final String SMALL_COMP_DQ = SmallComponentDQParser.CONTROL_KEY;
+	public static final String SMALL_COMP_HL = SmallComponentHLParser.CONTROL_KEY;
+	public static final String SMALL_COMP_WS_VOLUME = SmallComponentWSVolumeParser.CONTROL_KEY;
 	public static final String TOTAL_STAND_WHOLE_STEM_VOL = "TOTAL_STAND_WHOLE_STEM_VOL";
 	public static final String UTIL_COMP_WS_VOLUME = "UTIL_COMP_WS_VOLUME";
 	public static final String CLOSE_UTIL_VOLUME = CloseUtilVolumeParser.CONTROL_KEY;
@@ -736,8 +741,6 @@ public class FipControlParser {
 	 * @see SMALL_COMP_PROBABILITY
 	 */
 	private Object RD_SBA1(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
-		// TODO
-
 		// Sets
 		// C 4 coe for each of 16 SP0's
 		// COMMON /V7COE080/ COE080(4, 16)
@@ -750,7 +753,8 @@ public class FipControlParser {
 
 		// Coefficient is 1 indexed
 
-		return null;
+		var parser = new SmallComponentProbabilityParser(control);
+		return parser.parse(data, control);
 	}
 
 	/**
@@ -759,7 +763,6 @@ public class FipControlParser {
 	 * @see SMALL_COMP_BA
 	 */
 	private Object RD_SBA2(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
-		// TODO
 
 		// Sets
 		// C 4 coe for each of 16 SP0's
@@ -773,7 +776,8 @@ public class FipControlParser {
 
 		// Coefficient is 1 indexed
 
-		return null;
+		var parser = new SmallComponentBaseAreaParser(control);
+		return parser.parse(data, control);
 	}
 
 	/**
@@ -782,7 +786,6 @@ public class FipControlParser {
 	 * @see SMALL_COMP_DQ
 	 */
 	private Object RD_SDQ1(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
-		// TODO
 
 		// Sets
 		// C 2 coe for each of 16 SP0's
@@ -796,7 +799,8 @@ public class FipControlParser {
 
 		// Coefficient is 1 indexed
 
-		return null;
+		var parser = new SmallComponentDQParser(control);
+		return parser.parse(data, control);
 	}
 
 	/**
@@ -805,7 +809,6 @@ public class FipControlParser {
 	 * @see SMALL_COMP_HL
 	 */
 	private Object RD_SHL1(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
-		// TODO
 
 		// Sets
 		// C 2 coe for each of 16 SP0's
@@ -819,7 +822,8 @@ public class FipControlParser {
 
 		// Coefficient is 1 indexed
 
-		return null;
+		var parser = new SmallComponentHLParser(control);
+		return parser.parse(data, control);
 	}
 
 	/**
@@ -828,7 +832,6 @@ public class FipControlParser {
 	 * @see SMALL_COMP_WS_VOLUME
 	 */
 	private Object RD_SVT1(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
-		// TODO
 
 		// Sets
 		// C 4 coe for each of 16 SP0's
@@ -842,7 +845,8 @@ public class FipControlParser {
 
 		// Coefficient is 1 indexed
 
-		return null;
+		var parser = new SmallComponentWSVolumeParser(control);
+		return parser.parse(data, control);
 	}
 
 	/**
@@ -930,7 +934,8 @@ public class FipControlParser {
 	 *
 	 * @see VOLUME_NET_DECAY
 	 */
-	private MatrixMap2<Integer, Integer, Coefficients> RD_YVD1(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+	private MatrixMap2<Integer, Integer, Coefficients> RD_YVD1(InputStream data, Map<String, Object> control)
+			throws IOException, ResourceParseException {
 
 		// Uses
 		// PARAMETER (MAXGROUP = 80)
@@ -947,7 +952,7 @@ public class FipControlParser {
 
 		// UC is 1 indexed
 		// Coefficient is 1 indexed
-		
+
 		var parser = new VolumeNetDecayParser();
 		return parser.parse(data, control);
 	}
