@@ -428,6 +428,20 @@ public class FipControlParserTest {
 				)
 		);
 	}
+	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Test
+	public void testParseYVD1() throws Exception {
+		var parser = new FipControlParser();
+		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
+		assertThat(
+				result,
+				(Matcher) hasEntry(
+						is(FipControlParser.VOLUME_NET_DECAY),
+						allOf(mmHasEntry(present(contains(12.7054f,   0.14984f,  -1.73471f)), 2, 53))
+				)
+		);
+	}
 
 	static InputStream addToEnd(InputStream is, String... lines) {
 		var appendix = new ByteArrayInputStream(String.join("\r\n", lines).getBytes(StandardCharsets.US_ASCII));

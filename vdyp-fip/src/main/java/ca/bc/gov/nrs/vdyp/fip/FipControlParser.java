@@ -27,6 +27,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.StockingClassFactorParser;
 import ca.bc.gov.nrs.vdyp.io.parse.UpperCoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.UtilComponentBaseAreaParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ValueParser;
+import ca.bc.gov.nrs.vdyp.io.parse.VolumeNetDecayParser;
 import ca.bc.gov.nrs.vdyp.io.parse.EquationGroupParser;
 import ca.bc.gov.nrs.vdyp.io.parse.EquationModifierParser;
 import ca.bc.gov.nrs.vdyp.io.parse.HLCoefficientParser;
@@ -929,8 +930,7 @@ public class FipControlParser {
 	 *
 	 * @see VOLUME_NET_DECAY
 	 */
-	private Object RD_YVD1(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
-		// TODO
+	private MatrixMap2<Integer, Integer, Coefficients> RD_YVD1(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
 
 		// Uses
 		// PARAMETER (MAXGROUP = 80)
@@ -947,8 +947,9 @@ public class FipControlParser {
 
 		// UC is 1 indexed
 		// Coefficient is 1 indexed
-
-		return null;
+		
+		var parser = new VolumeNetDecayParser();
+		return parser.parse(data, control);
 	}
 
 	/**
