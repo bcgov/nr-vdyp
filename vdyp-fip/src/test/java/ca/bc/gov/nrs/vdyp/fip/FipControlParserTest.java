@@ -511,6 +511,129 @@ public class FipControlParserTest {
 		);
 	}
 
+	@Disabled
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Test
+	public void testParseYVT1() throws Exception {
+		var parser = new FipControlParser();
+		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
+		assertThat(
+				result,
+				(Matcher) hasEntry(
+						is(FipControlParser.TOTAL_STAND_WHOLE_STEM_VOL),
+						allOf(
+								hasEntry(
+										is(2),
+										contains(
+												-10.41832f, 1.94182f, 0.99414f, 0.000000f, 1.11329f, 0.000000f,
+												0.0000000f, 0.0000000f, 0.19884f
+										)
+								)
+						)
+				)
+		);
+	}
+
+	@Disabled
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Test
+	public void testParseYVT2() throws Exception {
+		var parser = new FipControlParser();
+		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
+		assertThat(
+				result,
+				(Matcher) hasEntry(
+						is(FipControlParser.UTIL_COMP_WS_VOLUME),
+						allOf(mmHasEntry(present(contains(-1.44375f, 1.20115f, 1.14639f, -1.17521f)), 2, 11))
+				)
+		);
+	}
+
+	@Disabled
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Test
+	public void testParseYVW1() throws Exception {
+		var parser = new FipControlParser();
+		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
+		assertThat(
+				result,
+				(Matcher) hasEntry(
+						is(FipControlParser.VOLUME_NET_DECAY_WASTE),
+						allOf(hasEntry(is("B"), contains(-4.2025f, 11.2235f, -33.0270f, 0.1246f, -0.2318f, -0.1259f)))
+				)
+		);
+	}
+
+	@Disabled
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Test
+	public void testParseE095() throws Exception {
+		var parser = new FipControlParser();
+		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
+		assertThat(
+				result,
+				(Matcher) hasEntry(
+						is(FipControlParser.BREAKAGE),
+						allOf(hasEntry(is(10), contains(-0.7153f, 2.0108f, 4.00f, 8.00f)))
+				)
+		);
+	}
+
+	@Disabled
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Test
+	public void testParseYVVET() throws Exception {
+		var parser = new FipControlParser();
+		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
+		assertThat(
+				result,
+				(Matcher) hasEntry(
+						is(FipControlParser.BREAKAGE),
+						allOf(hasEntry(is("B"), contains(0.10881f, -0.09818f, 0.00048f, -0.00295f)))
+				)
+		);
+	}
+
+	@Disabled
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Test
+	public void testParseYDQV() throws Exception {
+		var parser = new FipControlParser();
+		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
+		assertThat(
+				result,
+				(Matcher) hasEntry(
+						is(FipControlParser.UTIL_COMP_WS_VOLUME),
+						allOf(
+								mmHasEntry(present(contains(22.500f, 0.24855f, 1.46089f)), "B", Region.COASTAL),
+								mmHasEntry(present(contains(19.417f, 0.04354f, 1.96395f)), "B", Region.INTERIOR),
+								mmHasEntry(present(contains(22.500f, 0.80260f, 1.00000f)), "D", Region.COASTAL),
+								mmHasEntry(present(contains(22.500f, 0.80260f, 1.00000f)), "D", Region.INTERIOR)
+						)
+				)
+		);
+	}
+
+	@Disabled
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Test
+	public void testParseE098() throws Exception {
+		var parser = new FipControlParser();
+		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
+		assertThat(
+				result,
+				(Matcher) hasEntry(
+						is(FipControlParser.UTIL_COMP_WS_VOLUME),
+						allOf(
+								mmHasEntry(present(contains(0.12874f, 8.00000f, 1.26982f)), "B", Region.COASTAL),
+								mmHasEntry(present(contains(0.70932f, 7.63269f, 0.62545f)), "B", Region.INTERIOR),
+								mmHasEntry(present(contains(0.07962f, 6.60231f, 1.37998f)), "D", Region.COASTAL),
+								mmHasEntry(present(contains(0.07962f, 6.60231f, 1.37998f)), "D", Region.INTERIOR)
+						)
+				)
+		);
+	}
+
 	static InputStream addToEnd(InputStream is, String... lines) {
 		var appendix = new ByteArrayInputStream(String.join("\r\n", lines).getBytes(StandardCharsets.US_ASCII));
 		var result = new SequenceInputStream(is, appendix);

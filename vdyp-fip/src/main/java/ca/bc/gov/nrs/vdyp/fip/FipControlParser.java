@@ -740,7 +740,8 @@ public class FipControlParser {
 	 *
 	 * @see SMALL_COMP_PROBABILITY
 	 */
-	private Object RD_SBA1(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+	private Map<String, Coefficients> RD_SBA1(InputStream data, Map<String, Object> control)
+			throws IOException, ResourceParseException {
 		// Sets
 		// C 4 coe for each of 16 SP0's
 		// COMMON /V7COE080/ COE080(4, 16)
@@ -762,7 +763,8 @@ public class FipControlParser {
 	 *
 	 * @see SMALL_COMP_BA
 	 */
-	private Object RD_SBA2(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+	private Map<String, Coefficients> RD_SBA2(InputStream data, Map<String, Object> control)
+			throws IOException, ResourceParseException {
 
 		// Sets
 		// C 4 coe for each of 16 SP0's
@@ -785,7 +787,8 @@ public class FipControlParser {
 	 *
 	 * @see SMALL_COMP_DQ
 	 */
-	private Object RD_SDQ1(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+	private Map<String, Coefficients> RD_SDQ1(InputStream data, Map<String, Object> control)
+			throws IOException, ResourceParseException {
 
 		// Sets
 		// C 2 coe for each of 16 SP0's
@@ -808,7 +811,8 @@ public class FipControlParser {
 	 *
 	 * @see SMALL_COMP_HL
 	 */
-	private Object RD_SHL1(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+	private Map<String, Coefficients> RD_SHL1(InputStream data, Map<String, Object> control)
+			throws IOException, ResourceParseException {
 
 		// Sets
 		// C 2 coe for each of 16 SP0's
@@ -831,7 +835,8 @@ public class FipControlParser {
 	 *
 	 * @see SMALL_COMP_WS_VOLUME
 	 */
-	private Object RD_SVT1(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+	private Map<String, Coefficients> RD_SVT1(InputStream data, Map<String, Object> control)
+			throws IOException, ResourceParseException {
 
 		// Sets
 		// C 4 coe for each of 16 SP0's
@@ -850,11 +855,12 @@ public class FipControlParser {
 	}
 
 	/**
-	 * Loads the information that was in the global array V7COE090 in Fortran
+	 * Loads the information that was in the global array COE090 in Fortran
 	 *
 	 * @see TOTAL_STAND_WHOLE_STEM_VOL
 	 */
-	private Object RD_YVT1(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+	private Map<Integer, Coefficients> RD_YVT1(InputStream data, Map<String, Object> control)
+			throws IOException, ResourceParseException {
 		// TODO
 
 		// Uses
@@ -871,6 +877,7 @@ public class FipControlParser {
 		// Ignore if first segment is 0
 
 		// Coefficient is 0 indexed
+		// Group is 1 indexed
 
 		return null;
 	}
@@ -880,23 +887,26 @@ public class FipControlParser {
 	 *
 	 * @see UTIL_COMP_WS_VOLUME
 	 */
-	private Object RD_YVT2(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+	private MatrixMap2<Integer, Integer, Coefficients> RD_YVT2(InputStream data, Map<String, Object> control)
+			throws IOException, ResourceParseException {
 		// TODO
 
 		// Uses
 		// PARAMETER (MAXGROUP = 80)
 
 		// Sets
-		// C 9 coe for each of (Up to 80 groups)
-		// COMMON /V7COE090/ COE090(0:8, MAXGROUP)
+		// C 4 coe for (4 UC's) for (Up to 80 groups)
+		// COMMON /V7COE091/ COE091(4, 4, MAXGROUP)
 
 		// Parses
-		// 10 READ(IU_TEMP, 11, ERR=90, END=70) VGRP, (C(I),I=0,8)
-		// 11 FORMAT( I3, 9f10.0)
+		// 10 READ(IU_TEMP, 11, ERR=90, END=70) UC, VGRP, (C(I),I=1,4)
+		// 11 FORMAT( I2, I4, 4f10.0)
 
 		// Ignore if first segment is 0
 
 		// Coefficient is 0 indexed
+		// UC is 1 indexed
+		// Group is 1 indexed
 
 		return null;
 	}
@@ -922,6 +932,7 @@ public class FipControlParser {
 
 		// Ignore if first segment is 0
 
+		// Group is 1 indexed
 		// UC is 1 indexed
 		// Coefficient is 1 indexed
 
@@ -950,6 +961,7 @@ public class FipControlParser {
 
 		// Ignore if first segment is 0
 
+		// Group is 1 indexed
 		// UC is 1 indexed
 		// Coefficient is 1 indexed
 
@@ -962,7 +974,8 @@ public class FipControlParser {
 	 *
 	 * @see VOLUME_NET_DECAY_WASTE
 	 */
-	private Object RD_YVW1(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+	private Map<String, Coefficients> RD_YVW1(InputStream data, Map<String, Object> control)
+			throws IOException, ResourceParseException {
 		// TODO
 
 		// Uses
@@ -989,7 +1002,8 @@ public class FipControlParser {
 	 * @see BREAKAGE
 	 */
 	// Example FIPSTART.CTR calls this RD_EMP95
-	private Object RD_E095(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+	private Map<Integer, Coefficients> RD_E095(InputStream data, Map<String, Object> control)
+			throws IOException, ResourceParseException {
 		// TODO
 
 		// Uses
@@ -1005,6 +1019,7 @@ public class FipControlParser {
 
 		// Ignore if first segment is 0
 
+		// Group is 1 indexed
 		// Coefficient is 1 indexed
 
 		return null;
@@ -1016,7 +1031,8 @@ public class FipControlParser {
 	 * @see VETERAN_LAYER_VOLUME_ADJUST
 	 */
 	// Example FIPSTART.CTR calls this RD_YVET
-	private Object RD_YVVET(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+	private Map<String, Coefficients> RD_YVVET(InputStream data, Map<String, Object> control)
+			throws IOException, ResourceParseException {
 		// TODO
 
 		// Sets
@@ -1038,7 +1054,8 @@ public class FipControlParser {
 	 *
 	 * @see VETERAN_LAYER_DQ
 	 */
-	private Object RD_YDQV(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+	private MatrixMap2<String, Region, Coefficients> RD_YDQV(InputStream data, Map<String, Object> control)
+			throws IOException, ResourceParseException {
 		// TODO
 
 		// Sets
@@ -1053,6 +1070,8 @@ public class FipControlParser {
 
 		// Coefficient is 1 indexed
 
+		// Apply to both Regions if blank
+
 		return null;
 	}
 
@@ -1061,7 +1080,8 @@ public class FipControlParser {
 	 *
 	 * @see VETERAN_BQ
 	 */
-	private Object RD_E098(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+	private MatrixMap2<String, Region, Coefficients> RD_E098(InputStream data, Map<String, Object> control)
+			throws IOException, ResourceParseException {
 		// TODO
 
 		// Sets
