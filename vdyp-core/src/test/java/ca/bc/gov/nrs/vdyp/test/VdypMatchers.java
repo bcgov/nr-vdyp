@@ -194,9 +194,11 @@ public class VdypMatchers {
 		};
 
 	}
-	
+
 	/**
-	 * Equivalent to {@link Matchers.hasEntry} with a simple equality check on the key. Does not show the full map contents on a mismatch, just the requested entry if it's present.
+	 * Equivalent to {@link Matchers.hasEntry} with a simple equality check on the
+	 * key. Does not show the full map contents on a mismatch, just the requested
+	 * entry if it's present.
 	 */
 	public static <K, V> Matcher<Map<K, V>> hasSpecificEntry(K key, Matcher<V> valueMatcher) {
 		return new TypeSafeDiagnosingMatcher<Map<K, V>>() {
@@ -204,11 +206,11 @@ public class VdypMatchers {
 			@Override
 			protected boolean matchesSafely(Map<K, V> map, Description mismatchDescription) {
 				V result = map.get(key);
-				if(Objects.isNull(result)) {
+				if (Objects.isNull(result)) {
 					mismatchDescription.appendText("entry for ").appendValue(key).appendText(" was not present");
 					return false;
 				}
-				if(! valueMatcher.matches(result)) {
+				if (!valueMatcher.matches(result)) {
 					mismatchDescription.appendText("entry for ").appendValue(key).appendText(" was present but ");
 					valueMatcher.describeMismatch(result, mismatchDescription);
 					return false;
@@ -219,7 +221,8 @@ public class VdypMatchers {
 
 			@Override
 			public void describeTo(Description description) {
-				description.appendText("A map with an entry for ").appendValue(key).appendText(" that ").appendDescriptionOf(valueMatcher);
+				description.appendText("A map with an entry for ").appendValue(key).appendText(" that ")
+						.appendDescriptionOf(valueMatcher);
 			}
 
 		};

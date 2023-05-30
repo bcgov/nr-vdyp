@@ -11,4 +11,3 @@ public class TotalStandWholeStemParser extends SimpleCoefficientParser1<Integer>
 	}
 
 }
-

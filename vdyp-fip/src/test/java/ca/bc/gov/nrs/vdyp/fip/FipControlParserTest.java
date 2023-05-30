@@ -39,7 +39,7 @@ import ca.bc.gov.nrs.vdyp.model.SiteCurve;
 import ca.bc.gov.nrs.vdyp.model.SiteCurveAgeMaximum;
 import ca.bc.gov.nrs.vdyp.model.StockingClassFactor;
 
-@SuppressWarnings("unused")
+@SuppressWarnings({ "unused", "unchecked", "rawtypes" })
 public class FipControlParserTest {
 
 	@Test
@@ -49,42 +49,39 @@ public class FipControlParserTest {
 
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testParseBec() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
 				result,
-				(Matcher) hasEntry(
-						is(BecDefinitionParser.CONTROL_KEY),
+				(Matcher) hasSpecificEntry(
+						BecDefinitionParser.CONTROL_KEY,
 						allOf(instanceOf(Map.class), hasEntry(is("AT"), instanceOf(BecDefinition.class)))
 				)
 		);
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testParseSP0() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
 				result,
-				(Matcher) hasEntry(
-						is(SP0DefinitionParser.CONTROL_KEY),
+				(Matcher) hasSpecificEntry(
+						SP0DefinitionParser.CONTROL_KEY,
 						allOf(instanceOf(List.class), hasItem(instanceOf(SP0Definition.class)))
 				)
 		);
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testParseVGRP() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
-				result, (Matcher) hasEntry(
-						is(FipControlParser.VOLUME_EQN_GROUPS), allOf(
+				result, (Matcher) hasSpecificEntry(
+						FipControlParser.VOLUME_EQN_GROUPS, allOf(
 								// Map of SP0 Aliases
 								isA(Map.class), hasEntry(
 										isA(String.class), allOf(
@@ -99,14 +96,13 @@ public class FipControlParserTest {
 		);
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testParseDGRP() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
-				result, (Matcher) hasEntry(
-						is(FipControlParser.DECAY_GROUPS), allOf(
+				result, (Matcher) hasSpecificEntry(
+						FipControlParser.DECAY_GROUPS, allOf(
 								// Map of SP0 Aliases
 								isA(Map.class), hasEntry(
 										isA(String.class), allOf(
@@ -121,14 +117,13 @@ public class FipControlParserTest {
 		);
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testParseBGRP() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
-				result, (Matcher) hasEntry(
-						is(FipControlParser.BREAKAGE_GROUPS), allOf(
+				result, (Matcher) hasSpecificEntry(
+						FipControlParser.BREAKAGE_GROUPS, allOf(
 								// Map of SP0 Aliases
 								isA(Map.class), hasEntry(
 										isA(String.class), allOf(
@@ -143,14 +138,13 @@ public class FipControlParserTest {
 		);
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testParseGRBA1() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
-				result, (Matcher) hasEntry(
-						is(FipControlParser.DEFAULT_EQ_NUM), allOf(
+				result, (Matcher) hasSpecificEntry(
+						FipControlParser.DEFAULT_EQ_NUM, allOf(
 								// Map of SP0 Aliases
 								isA(Map.class), hasEntry(
 										isA(String.class), allOf(
@@ -165,14 +159,13 @@ public class FipControlParserTest {
 		);
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testParseGMBA1() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
-				result, (Matcher) hasEntry(
-						is(FipControlParser.EQN_MODIFIERS), allOf(
+				result, (Matcher) hasSpecificEntry(
+						FipControlParser.EQN_MODIFIERS, allOf(
 								// Default Equation
 								isA(Map.class), hasEntry(
 										isA(Integer.class), allOf(
@@ -187,14 +180,13 @@ public class FipControlParserTest {
 		);
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testParseSTK33() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
-				result, (Matcher) hasEntry(
-						is(FipControlParser.STOCKING_CLASS_FACTORS), allOf(
+				result, (Matcher) hasSpecificEntry(
+						FipControlParser.STOCKING_CLASS_FACTORS, allOf(
 								// STK
 								isA(Map.class), hasEntry(
 										isA(Character.class), allOf(
@@ -210,14 +202,13 @@ public class FipControlParserTest {
 		);
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testParseE025() throws Exception {
 		var parser = new FipControlParser();
 		var result = parseWithAppendix(parser, "025 coe/SIEQN.PRM");
 		assertThat(
-				result, (Matcher) hasEntry(
-						is(FipControlParser.SITE_CURVE_NUMBERS), allOf(
+				result, (Matcher) hasSpecificEntry(
+						FipControlParser.SITE_CURVE_NUMBERS, allOf(
 								// Species
 								isA(Map.class), hasEntry(isA(String.class), isA(SiteCurve.class))
 						)
@@ -225,22 +216,20 @@ public class FipControlParserTest {
 		);
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testParseE025Empty() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
-		assertThat(result, (Matcher) hasEntry(is(FipControlParser.SITE_CURVE_NUMBERS), Matchers.anEmptyMap()));
+		assertThat(result, (Matcher) hasSpecificEntry(FipControlParser.SITE_CURVE_NUMBERS, Matchers.anEmptyMap()));
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testParseE026() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
-				result, (Matcher) hasEntry(
-						is(FipControlParser.SITE_CURVE_AGE_MAX), allOf(
+				result, (Matcher) hasSpecificEntry(
+						FipControlParser.SITE_CURVE_AGE_MAX, allOf(
 								// Species
 								isA(Map.class), hasEntry(isA(Integer.class), isA(SiteCurveAgeMaximum.class))
 						)
@@ -248,107 +237,99 @@ public class FipControlParserTest {
 		);
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	// @Disabled
 	public void testParseE026Empty() throws Exception {
 		var parser = new FipControlParser();
 		var result = parseWithAppendix(parser, "026  ");
 		// Map is empty but gives appropriate default values
-		assertThat(result, (Matcher) hasEntry(is(FipControlParser.SITE_CURVE_AGE_MAX), Matchers.anEmptyMap()));
+		assertThat(result, (Matcher) hasSpecificEntry(FipControlParser.SITE_CURVE_AGE_MAX, Matchers.anEmptyMap()));
 		assertThat(
 				((Map<Integer, SiteCurveAgeMaximum>) result.get(FipControlParser.SITE_CURVE_AGE_MAX)).get(1),
 				(Matcher) allOf(SiteCurveAgeMaximumParserTest.hasAge(Region.COASTAL, is(140.f)))
 		);
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testParseE040() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
 				result,
-				(Matcher) hasEntry(is(FipControlParser.COE_BA), allOf(mmHasEntry(present(is(2.0028f)), 0, "AT", 1)))
+				(Matcher) hasSpecificEntry(FipControlParser.COE_BA, allOf(mmHasEntry(present(is(2.0028f)), 0, "AT", 1)))
 		);
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testParseE041() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
 				result,
-				(Matcher) hasEntry(is(FipControlParser.COE_DQ), allOf(mmHasEntry(present(is(6.6190f)), 0, "AT", 1)))
+				(Matcher) hasSpecificEntry(FipControlParser.COE_DQ, allOf(mmHasEntry(present(is(6.6190f)), 0, "AT", 1)))
 		);
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testParseE043() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
 				result,
-				(Matcher) hasEntry(
-						is(FipControlParser.UPPER_BA_BY_CI_S0_P),
+				(Matcher) hasSpecificEntry(
+						FipControlParser.UPPER_BA_BY_CI_S0_P,
 						allOf(mmHasEntry(present(is(109.27f)), Region.COASTAL, "AC", 1))
 				)
 		);
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testParseE050() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
 				result,
-				(Matcher) hasEntry(
-						is(FipControlParser.HL_PRIMARY_SP_EQN_P1),
+				(Matcher) hasSpecificEntry(
+						FipControlParser.HL_PRIMARY_SP_EQN_P1,
 						allOf(mmHasEntry(present(is(1.00160f)), 1, "AC", Region.COASTAL))
 				)
 		);
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testParseE051() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
 				result,
-				(Matcher) hasEntry(
-						is(FipControlParser.HL_PRIMARY_SP_EQN_P2),
+				(Matcher) hasSpecificEntry(
+						FipControlParser.HL_PRIMARY_SP_EQN_P2,
 						allOf(mmHasEntry(present(is(0.49722f)), 1, "AC", Region.COASTAL))
 				)
 		);
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testParseE052() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
 				result,
-				(Matcher) hasEntry(
-						is(FipControlParser.HL_PRIMARY_SP_EQN_P3),
+				(Matcher) hasSpecificEntry(
+						FipControlParser.HL_PRIMARY_SP_EQN_P3,
 						allOf(mmHasEntry(present(is(1.04422f)), 1, "AC", Region.COASTAL))
 				)
 		);
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testParseE053() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
 				result,
-				(Matcher) hasEntry(
-						is(FipControlParser.HL_NONPRIMARY),
+				(Matcher) hasSpecificEntry(
+						FipControlParser.HL_NONPRIMARY,
 						allOf(
 								mmHasEntry(
 										present(HLNonprimaryCoefficientParserTest.coe(0.86323f, 1.00505f, 1)), "AC",
@@ -359,15 +340,14 @@ public class FipControlParserTest {
 		);
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testParseE060() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
 				result,
-				(Matcher) hasEntry(
-						is(FipControlParser.BY_SPECIES_DQ),
+				(Matcher) hasSpecificEntry(
+						FipControlParser.BY_SPECIES_DQ,
 						contains(
 								contains(
 										-0.65484f, -0.48275f, -0.75134f, 0.04482f, -0.31195f, -0.53012f, -0.12645f,
@@ -388,131 +368,121 @@ public class FipControlParserTest {
 		);
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testParseE061() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
 				result,
-				(Matcher) hasEntry(
-						is(FipControlParser.SPECIES_COMPONENT_SIZE_LIMIT),
+				(Matcher) hasSpecificEntry(
+						FipControlParser.SPECIES_COMPONENT_SIZE_LIMIT,
 						allOf(mmHasEntry(present(contains(49.4f, 153.3f, 0.726f, 3.647f)), "AC", Region.COASTAL))
 				)
 		);
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testParseUBA1() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
 				result,
-				(Matcher) hasEntry(
-						is(FipControlParser.UTIL_COMP_BA),
+				(Matcher) hasSpecificEntry(
+						FipControlParser.UTIL_COMP_BA,
 						allOf(mmHasEntry(present(contains(-26.68771f, 14.38811f)), BaseAreaCode.BA12, "AT", "ICH"))
 				)
 		);
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testParseYVC1() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
 				result,
-				(Matcher) hasEntry(
-						is(FipControlParser.CLOSE_UTIL_VOLUME),
+				(Matcher) hasSpecificEntry(
+						FipControlParser.CLOSE_UTIL_VOLUME,
 						allOf(mmHasEntry(present(contains(-3.249f, 0.2426f, 0.04621f)), 2, 53))
 				)
 		);
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testParseYVD1() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
 				result,
-				(Matcher) hasEntry(
-						is(FipControlParser.VOLUME_NET_DECAY),
+				(Matcher) hasSpecificEntry(
+						FipControlParser.VOLUME_NET_DECAY,
 						allOf(mmHasEntry(present(contains(12.7054f, 0.14984f, -1.73471f)), 2, 53))
 				)
 		);
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testParseSBA1() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
 				result,
-				(Matcher) hasEntry(
-						is(FipControlParser.SMALL_COMP_PROBABILITY),
+				(Matcher) hasSpecificEntry(
+						FipControlParser.SMALL_COMP_PROBABILITY,
 						allOf(hasEntry(is("AT"), contains(-1.76158f, 2.50045f, -0.030447f, -0.11746f)))
 				)
 		);
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testParseSBA2() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
 				result,
-				(Matcher) hasEntry(
-						is(FipControlParser.SMALL_COMP_BA),
+				(Matcher) hasSpecificEntry(
+						FipControlParser.SMALL_COMP_BA,
 						allOf(hasEntry(is("B"), contains(-1.3504f, 9.5806f, 3.35173f, -0.27311f)))
 				)
 		);
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testParseSDQ1() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
 				result,
-				(Matcher) hasEntry(
-						is(FipControlParser.SMALL_COMP_DQ), allOf(hasEntry(is("B"), contains(-0.33485f, 0.02029f)))
+				(Matcher) hasSpecificEntry(
+						FipControlParser.SMALL_COMP_DQ, allOf(hasEntry(is("B"), contains(-0.33485f, 0.02029f)))
 				)
 		);
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testParseSHL1() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
 				result,
-				(Matcher) hasEntry(
-						is(FipControlParser.SMALL_COMP_HL), allOf(hasEntry(is("B"), contains(-8.5269f, -0.20000f)))
+				(Matcher) hasSpecificEntry(
+						FipControlParser.SMALL_COMP_HL, allOf(hasEntry(is("B"), contains(-8.5269f, -0.20000f)))
 				)
 		);
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testParseSVT1() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
 				result,
-				(Matcher) hasEntry(
-						is(FipControlParser.SMALL_COMP_WS_VOLUME),
+				(Matcher) hasSpecificEntry(
+						FipControlParser.SMALL_COMP_WS_VOLUME,
 						allOf(hasEntry(is("B"), contains(-9.6020f, 1.09191f, 1.26171f, 0.10841f)))
 				)
 		);
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testParseYVT1() throws Exception {
 		var parser = new FipControlParser();
@@ -525,7 +495,8 @@ public class FipControlParserTest {
 								hasEntry(
 										is(2),
 										contains(
-												-10.41832f,   1.94182f,   0.99414f,  0.000000f,   1.11329f,  0.000000f, 0.0000000f, 0.0000000f,   0.19884f
+												-10.41832f, 1.94182f, 0.99414f, 0.000000f, 1.11329f, 0.000000f,
+												0.0000000f, 0.0000000f, 0.19884f
 										)
 								)
 						)
@@ -533,76 +504,70 @@ public class FipControlParserTest {
 		);
 	}
 
-	@Disabled
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Disabled // TODO
 	@Test
 	public void testParseYVT2() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
 				result,
-				(Matcher) hasEntry(
-						is(FipControlParser.UTIL_COMP_WS_VOLUME),
+				(Matcher) hasSpecificEntry(
+						FipControlParser.UTIL_COMP_WS_VOLUME,
 						allOf(mmHasEntry(present(contains(-1.44375f, 1.20115f, 1.14639f, -1.17521f)), 2, 11))
 				)
 		);
 	}
 
-	@Disabled
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Disabled // TODO
 	@Test
 	public void testParseYVW1() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
 				result,
-				(Matcher) hasEntry(
-						is(FipControlParser.VOLUME_NET_DECAY_WASTE),
+				(Matcher) hasSpecificEntry(
+						FipControlParser.VOLUME_NET_DECAY_WASTE,
 						allOf(hasEntry(is("B"), contains(-4.2025f, 11.2235f, -33.0270f, 0.1246f, -0.2318f, -0.1259f)))
 				)
 		);
 	}
 
-	@Disabled
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Disabled // TODO
 	@Test
 	public void testParseE095() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
 				result,
-				(Matcher) hasEntry(
-						is(FipControlParser.BREAKAGE),
-						allOf(hasEntry(is(10), contains(-0.7153f, 2.0108f, 4.00f, 8.00f)))
+				(Matcher) hasSpecificEntry(
+						FipControlParser.BREAKAGE, allOf(hasEntry(is(10), contains(-0.7153f, 2.0108f, 4.00f, 8.00f)))
 				)
 		);
 	}
 
-	@Disabled
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Disabled // TODO
 	@Test
 	public void testParseYVVET() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
 				result,
-				(Matcher) hasEntry(
-						is(FipControlParser.BREAKAGE),
+				(Matcher) hasSpecificEntry(
+						FipControlParser.BREAKAGE,
 						allOf(hasEntry(is("B"), contains(0.10881f, -0.09818f, 0.00048f, -0.00295f)))
 				)
 		);
 	}
 
-	@Disabled
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Disabled // TODO
 	@Test
 	public void testParseYDQV() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
 				result,
-				(Matcher) hasEntry(
-						is(FipControlParser.UTIL_COMP_WS_VOLUME),
+				(Matcher) hasSpecificEntry(
+						FipControlParser.UTIL_COMP_WS_VOLUME,
 						allOf(
 								mmHasEntry(present(contains(22.500f, 0.24855f, 1.46089f)), "B", Region.COASTAL),
 								mmHasEntry(present(contains(19.417f, 0.04354f, 1.96395f)), "B", Region.INTERIOR),
@@ -613,16 +578,15 @@ public class FipControlParserTest {
 		);
 	}
 
-	@Disabled
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Disabled // TODO
 	@Test
 	public void testParseE098() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
 				result,
-				(Matcher) hasEntry(
-						is(FipControlParser.UTIL_COMP_WS_VOLUME),
+				(Matcher) hasSpecificEntry(
+						FipControlParser.UTIL_COMP_WS_VOLUME,
 						allOf(
 								mmHasEntry(present(contains(0.12874f, 8.00000f, 1.26982f)), "B", Region.COASTAL),
 								mmHasEntry(present(contains(0.70932f, 7.63269f, 0.62545f)), "B", Region.INTERIOR),

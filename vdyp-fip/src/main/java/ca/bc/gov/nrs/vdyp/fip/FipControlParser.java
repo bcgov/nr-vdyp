@@ -862,7 +862,7 @@ public class FipControlParser {
 	 */
 	private Map<Integer, Coefficients> RD_YVT1(InputStream data, Map<String, Object> control)
 			throws IOException, ResourceParseException {
-		
+
 		// Uses
 		// PARAMETER (MAXGROUP = 80)
 
@@ -878,7 +878,7 @@ public class FipControlParser {
 
 		// Coefficient is 0 indexed
 		// Group is 1 indexed
-		
+
 		var parser = new TotalStandWholeStemParser();
 		return parser.parse(data, control);
 	}
