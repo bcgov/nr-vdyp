@@ -74,7 +74,7 @@ public class HLCoefficientParser implements ResourceParser<MatrixMap3<Integer, S
 				r.put(coeIndex + 1, sp0, region, coefficients.get(coeIndex));
 			}
 			return r;
-		});
+		}, control);
 		return result;
 	}
 

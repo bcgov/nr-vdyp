@@ -85,7 +85,7 @@ public class CoefficientParser implements ResourceParser<MatrixMap3<Integer, Str
 				r.put(index, bec, species + 1, c);
 			}
 			return r;
-		});
+		}, control);
 		return result;
 	}
 

@@ -15,6 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -29,7 +30,7 @@ public class LineParserTest {
 		var parser = new LineParser();
 		parser.string(3, "part1").space(1).string(4, "part2");
 
-		var result1 = parser.parseLine("042 Blah");
+		var result1 = parser.parseLine("042 Blah", Collections.emptyMap());
 
 		assertThat(result1, hasEntry("part1", "042"));
 		assertThat(result1, hasEntry("part2", "Blah"));
@@ -41,7 +42,7 @@ public class LineParserTest {
 		var parser = new LineParser();
 		parser.integer(4, "part1").space(1).floating(5, "part2");
 
-		var result1 = parser.parseLine(" 4   0.5  ");
+		var result1 = parser.parseLine(" 4   0.5  ", Collections.emptyMap());
 
 		assertThat(result1, hasEntry("part1", 4));
 		assertThat(result1, hasEntry("part2", 0.5f));
@@ -53,7 +54,7 @@ public class LineParserTest {
 		var parser = new LineParser();
 		parser.integer(4, "part1").space(1).floating(5, "part2");
 
-		var result1 = parser.parseLine(" 4  ");
+		var result1 = parser.parseLine(" 4  ", Collections.emptyMap());
 
 		assertThat(result1, hasEntry("part1", 4));
 		assertThat(result1, not(hasKey("part2")));
@@ -65,7 +66,7 @@ public class LineParserTest {
 		var parser = new LineParser();
 		parser.integer(4, "part1").space(1).floating(5, "part2");
 
-		var result1 = parser.parseLine(" 4   5.0");
+		var result1 = parser.parseLine(" 4   5.0", Collections.emptyMap());
 
 		assertThat(result1, hasEntry("part1", 4));
 		assertThat(result1, hasEntry("part2", 5.0f));
@@ -77,12 +78,12 @@ public class LineParserTest {
 		var parser = new LineParser();
 		parser.integer(4, "part1").space(1).floating(5, "part2");
 
-		var ex1 = assertThrows(ValueParseException.class, () -> parser.parseLine(" X   0.5  "));
+		var ex1 = assertThrows(ValueParseException.class, () -> parser.parseLine(" X   0.5  ", Collections.emptyMap()));
 
 		assertThat(ex1, hasProperty("value", is("X")));
 		assertThat(ex1, hasProperty("cause", isA(NumberFormatException.class)));
 
-		var ex2 = assertThrows(ValueParseException.class, () -> parser.parseLine(" 4   0.x  "));
+		var ex2 = assertThrows(ValueParseException.class, () -> parser.parseLine(" 4   0.x  ", Collections.emptyMap()));
 
 		assertThat(ex2, hasProperty("value", is("0.x")));
 		assertThat(ex2, hasProperty("cause", isA(NumberFormatException.class)));
@@ -95,7 +96,7 @@ public class LineParserTest {
 		parser.value(4, "part1", (s) -> Integer.valueOf(s.strip()) + 1).space(1)
 				.value("part2", (s) -> Float.valueOf(s.strip()) + 1);
 
-		var result1 = parser.parseLine(" 4   0.5  ");
+		var result1 = parser.parseLine(" 4   0.5  ", Collections.emptyMap());
 
 		assertThat(result1, hasEntry("part1", 5));
 		assertThat(result1, hasEntry("part2", 1.5f));
@@ -109,7 +110,7 @@ public class LineParserTest {
 			throw new ValueParseException(s, "Testing");
 		}).space(1).value(4, "part2", (s) -> Float.valueOf(s.strip()) + 1);
 
-		var ex1 = assertThrows(ValueParseException.class, () -> parser.parseLine(" X   0.5  "));
+		var ex1 = assertThrows(ValueParseException.class, () -> parser.parseLine(" X   0.5  ", Collections.emptyMap()));
 		assertThat(ex1, hasProperty("value", is(" X  ")));
 		assertThat(ex1, hasProperty("message", is("Testing")));
 
@@ -121,7 +122,8 @@ public class LineParserTest {
 		parser.string(4, "part1").string("part2");
 
 		var result1 = parser.parseLine(
-				"123  67890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890 "
+				"123  67890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890 ",
+				Collections.emptyMap()
 		);
 
 		assertThat(result1, hasEntry("part1", "123 "));
@@ -141,7 +143,8 @@ public class LineParserTest {
 		parser.strippedString(4, "part1").strippedString("part2");
 
 		var result1 = parser.parseLine(
-				"123  67890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890 "
+				"123  67890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890 ",
+				Collections.emptyMap()
 		);
 
 		assertThat(result1, hasEntry("part1", "123"));
@@ -161,7 +164,7 @@ public class LineParserTest {
 		var parser = new LineParser();
 		parser.multiValue(4, 3, "test", ValueParser.INTEGER);
 
-		var result1 = parser.parseLine(" 02 04 06 08");
+		var result1 = parser.parseLine(" 02 04 06 08", Collections.emptyMap());
 
 		assertThat(result1, hasEntry(is("test"), (Matcher) contains(2, 4, 6, 8)));
 	}
@@ -174,7 +177,7 @@ public class LineParserTest {
 
 		List<Map<String, Object>> result = new ArrayList<>();
 		try (var is = new ByteArrayInputStream("0042 Value1\r\n0043 Value2".getBytes());) {
-			result = parser.parse(is);
+			result = parser.parse(is, Collections.emptyMap());
 		}
 
 		assertThat(
@@ -199,7 +202,7 @@ public class LineParserTest {
 
 		try (var is = new ByteArrayInputStream("0042 Value1\r\n004x Value2".getBytes());) {
 
-			var ex1 = assertThrows(ResourceParseLineException.class, () -> parser.parse(is));
+			var ex1 = assertThrows(ResourceParseLineException.class, () -> parser.parse(is, Collections.emptyMap()));
 
 			assertThat(ex1, hasProperty("line", is(2))); // Line numbers indexed from 1 so the error is line 2
 			assertThat(ex1, hasProperty("cause", isA(ValueParseException.class)));
@@ -224,7 +227,7 @@ public class LineParserTest {
 
 		List<Map<String, Object>> result = new ArrayList<>();
 		try (var is = new ByteArrayInputStream("0042 Value1\r\n0000\r\n0043 Value2".getBytes());) {
-			result = parser.parse(is);
+			result = parser.parse(is, Collections.emptyMap());
 		}
 
 		assertThat(result, contains(allOf((Matcher) hasEntry("part1", 42), (Matcher) hasEntry("part2", "Value1"))));
@@ -245,7 +248,7 @@ public class LineParserTest {
 
 		List<Map<String, Object>> result = new ArrayList<>();
 		try (var is = new ByteArrayInputStream("0042 Value1\r\n0000X\r\n0043 Value2".getBytes());) {
-			result = parser.parse(is);
+			result = parser.parse(is, Collections.emptyMap());
 		}
 
 		assertThat(result, contains(allOf((Matcher) hasEntry("part1", 42), (Matcher) hasEntry("part2", "Value1"))));
@@ -266,7 +269,7 @@ public class LineParserTest {
 
 		List<Map<String, Object>> result = new ArrayList<>();
 		try (var is = new ByteArrayInputStream("0042 Value1\r\n0000X\r\n0043 Value2".getBytes());) {
-			result = parser.parse(is);
+			result = parser.parse(is, Collections.emptyMap());
 		}
 
 		assertThat(result, contains(allOf((Matcher) hasEntry("part1", 42), (Matcher) hasEntry("part2", "Value1"))));
@@ -287,7 +290,7 @@ public class LineParserTest {
 
 		List<Map<String, Object>> result = new ArrayList<>();
 		try (var is = new ByteArrayInputStream("0042 Value1\r\n0000\r\n0043 Value2".getBytes());) {
-			result = parser.parse(is);
+			result = parser.parse(is, Collections.emptyMap());
 		}
 
 		assertThat(
@@ -314,7 +317,7 @@ public class LineParserTest {
 
 		List<Map<String, Object>> result = new ArrayList<>();
 		try (var is = new ByteArrayInputStream("0042 Value1\r\n0000X\r\n0043 Value2".getBytes());) {
-			result = parser.parse(is);
+			result = parser.parse(is, Collections.emptyMap());
 		}
 
 		assertThat(
@@ -341,7 +344,7 @@ public class LineParserTest {
 
 		List<Map<String, Object>> result = new ArrayList<>();
 		try (var is = new ByteArrayInputStream("0042 Value1\r\n0000X\r\n0043 Value2".getBytes());) {
-			result = parser.parse(is);
+			result = parser.parse(is, Collections.emptyMap());
 		}
 
 		assertThat(

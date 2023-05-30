@@ -69,7 +69,7 @@ public class EquationGroupParser implements ResourceParser<Map<String, Map<Strin
 
 			r.computeIfAbsent(sp0Alias, k -> new HashMap<>()).put(becAlias, vgrpId);
 			return r;
-		});
+		}, control);
 
 		for (var e : result.entrySet()) {
 			result.put(e.getKey(), Collections.unmodifiableMap(e.getValue()));

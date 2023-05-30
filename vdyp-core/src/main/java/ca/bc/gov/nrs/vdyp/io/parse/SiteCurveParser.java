@@ -44,7 +44,7 @@ public class SiteCurveParser implements ResourceParser<Map<String, SiteCurve>> {
 			r.put(species, new SiteCurve(value1, value2));
 
 			return r;
-		});
+		}, control);
 		final var sp0List = SP0DefinitionParser.getSpeciesAliases(control);
 
 		var missing = ExpectationDifference.difference(result.keySet(), sp0List).getMissing();

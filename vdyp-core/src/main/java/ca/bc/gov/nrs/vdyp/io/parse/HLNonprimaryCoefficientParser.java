@@ -71,7 +71,7 @@ public class HLNonprimaryCoefficientParser
 			r.put(sp0_1, sp0_2, region, new NonprimaryHLCoefficients(coefficients, ieqn));
 
 			return r;
-		});
+		}, control);
 		return result;
 	}
 

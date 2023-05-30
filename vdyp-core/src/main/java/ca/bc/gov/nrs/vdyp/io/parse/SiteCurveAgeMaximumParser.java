@@ -82,7 +82,7 @@ public class SiteCurveAgeMaximumParser implements ResourceParser<Map<Integer, Si
 			r.put(sc, new SiteCurveAgeMaximum(ageCoast, ageInt, t1, t2));
 
 			return r;
-		});
+		}, control);
 		return result;
 	}
 

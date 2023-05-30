@@ -64,7 +64,7 @@ public class UpperCoefficientParser implements ResourceParser<MatrixMap3<Region,
 				r.put(region, sp0, coeIndex + 1, coefficients.get(coeIndex));
 			}
 			return r;
-		});
+		}, control);
 		return result;
 	}
 

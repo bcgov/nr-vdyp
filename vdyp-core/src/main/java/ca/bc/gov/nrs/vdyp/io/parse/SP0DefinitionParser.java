@@ -73,7 +73,7 @@ public class SP0DefinitionParser implements ResourceParser<List<SP0Definition>> 
 
 			r[p - 1] = defn;
 			return r;
-		});
+		}, control);
 
 		return Collections.unmodifiableList(Arrays.asList(result));
 	}

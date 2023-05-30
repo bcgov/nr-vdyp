@@ -90,7 +90,7 @@ public class ControlFileParser implements ResourceParser<Map<String, Object>> {
 			r.put(key, value);
 
 			return r;
-		});
+		}, Collections.emptyMap());
 		for (var e : defaultValueGenerators.entrySet()) {
 			result.putIfAbsent(e.getKey(), e.getValue().get());
 		}

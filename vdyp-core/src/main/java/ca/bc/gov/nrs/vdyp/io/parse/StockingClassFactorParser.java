@@ -68,7 +68,7 @@ public class StockingClassFactorParser implements ResourceParser<Map<Character, 
 			r.computeIfAbsent(stk, (c) -> new HashMap<Region, StockingClassFactor>()).put(region, factorEntry);
 
 			return r;
-		});
+		}, control);
 
 		for (var e : result.entrySet()) {
 			result.put(e.getKey(), Collections.unmodifiableMap(e.getValue()));

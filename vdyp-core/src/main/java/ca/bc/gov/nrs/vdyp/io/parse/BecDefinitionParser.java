@@ -42,7 +42,7 @@ public class BecDefinitionParser implements ResourceParser<Map<String, BecDefini
 			var defn = new BecDefinition(alias, region, name);
 			r.put(alias, defn);
 			return r;
-		});
+		}, control);
 
 		return Collections.unmodifiableMap(result);
 	}

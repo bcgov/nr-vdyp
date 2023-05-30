@@ -35,7 +35,8 @@ public class LineParser {
 			this.length = length;
 		}
 
-		public abstract void parseIntoMap(String toParse, Map<String, Object> map) throws ValueParseException;
+		public abstract void parseIntoMap(String toParse, Map<String, Object> control, Map<String, Object> map)
+				throws ValueParseException;
 	}
 
 	static private class LineParserNullSegment extends LineParserSegment {
@@ -45,7 +46,7 @@ public class LineParser {
 		}
 
 		@Override
-		public void parseIntoMap(String toParse, Map<String, Object> map) {
+		public void parseIntoMap(String toParse, Map<String, Object> control, Map<String, Object> map) {
 			// do nothing
 		}
 	}
@@ -53,15 +54,16 @@ public class LineParser {
 	static abstract class LineParserValueSegment<T> extends LineParserSegment {
 		String name;
 
-		abstract T parse(String value) throws ValueParseException;
+		abstract T parse(String value, Map<String, Object> control) throws ValueParseException;
 
 		public String getName() {
 			return name;
 		}
 
 		@Override
-		public void parseIntoMap(String toParse, Map<String, Object> map) throws ValueParseException {
-			var value = this.parse(toParse);
+		public void parseIntoMap(String toParse, Map<String, Object> control, Map<String, Object> map)
+				throws ValueParseException {
+			var value = this.parse(toParse, control);
 			map.put(this.getName(), value);
 		}
 
@@ -174,8 +176,8 @@ public class LineParser {
 		segments.add(new LineParserValueSegment<T>(length, name) {
 
 			@Override
-			T parse(String value) throws ValueParseException {
-				return parser.parse(value);
+			T parse(String value, Map<String, Object> control) throws ValueParseException {
+				return parser.parse(value, control);
 			}
 
 		});
@@ -212,12 +214,13 @@ public class LineParser {
 	 * @return
 	 * @throws ValueParseException
 	 */
-	public Map<String, Object> parseLine(String line) throws ValueParseException {
+	public Map<String, Object> parseLine(String line, Map<String, Object> control) throws ValueParseException {
 		var segments = segmentize(line);
-		return parse(segments);
+		return parse(segments, control);
 	}
 
-	private Map<String, Object> parse(List<String> segmentStrings) throws ValueParseException {
+	private Map<String, Object> parse(List<String> segmentStrings, Map<String, Object> control)
+			throws ValueParseException {
 		if (segmentStrings.size() != segments.size()) {
 			throw new IllegalStateException("segment strings and segment handlers must have the same size");
 		}
@@ -228,7 +231,7 @@ public class LineParser {
 			var segmentHandler = segments.get(i);
 			var segmentString = segmentStrings.get(i);
 			if (segmentString != null) {
-				segmentHandler.parseIntoMap(segmentString, result);
+				segmentHandler.parseIntoMap(segmentString, control, result);
 			}
 		}
 
@@ -249,8 +252,9 @@ public class LineParser {
 	 * @throws ResourceParseLineException if the content of the stream could not be
 	 *                                    parsed
 	 */
-	public <T> T parse(InputStream is, T result, ParseEntryHandler<Map<String, Object>, T> addToResult)
-			throws IOException, ResourceParseLineException {
+	public <T> T parse(
+			InputStream is, T result, ParseEntryHandler<Map<String, Object>, T> addToResult, Map<String, Object> control
+	) throws IOException, ResourceParseLineException {
 		var reader = new BufferedReader(new InputStreamReader(is, charset));
 		String line;
 		int lineNumber = 0;
@@ -270,7 +274,7 @@ public class LineParser {
 				if (isIgnoredSegment(segments)) {
 					continue;
 				}
-				var entry = parse(segments);
+				var entry = parse(segments, control);
 				entry.put(LINE_NUMBER_KEY, lineNumber);
 				if (isStopEntry(entry)) {
 					break;
@@ -296,12 +300,13 @@ public class LineParser {
 	 * @throws ResourceParseLineException if the content of the stream could not be
 	 *                                    parsed
 	 */
-	public List<Map<String, Object>> parse(InputStream is) throws IOException, ResourceParseLineException {
+	public List<Map<String, Object>> parse(InputStream is, Map<String, Object> control)
+			throws IOException, ResourceParseLineException {
 		var result = new ArrayList<Map<String, Object>>();
 		result = this.parse(is, result, (v, r) -> {
 			r.add(v);
 			return r;
-		});
+		}, control);
 		return result;
 	}
 

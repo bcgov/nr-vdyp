@@ -69,7 +69,7 @@ public class BySpeciesDqCoefficientParser implements ResourceParser<List<Coeffic
 			r.set(index, new Coefficients(coefficients, 1));
 
 			return r;
-		});
+		}, control);
 		return result;
 	}
 

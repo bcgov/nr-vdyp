@@ -71,7 +71,7 @@ public class UtilComponentParser implements ResourceParser<MatrixMap3<Integer, S
 			}
 
 			return r;
-		});
+		}, control);
 		return result;
 	}
 

@@ -37,7 +37,7 @@ public class EquationModifierParser implements ResourceParser<Map<Integer, Map<I
 
 			r.computeIfAbsent(defaultId, k -> new HashMap<>()).put(itg, reassignedId);
 			return r;
-		});
+		}, control);
 
 		for (var e : result.entrySet()) {
 			result.put(e.getKey(), Collections.unmodifiableMap(e.getValue()));

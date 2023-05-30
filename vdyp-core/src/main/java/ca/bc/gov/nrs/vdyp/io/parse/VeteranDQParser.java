@@ -64,7 +64,7 @@ public class VeteranDQParser implements ResourceParser<MatrixMap2<String, Region
 			}
 
 			return r;
-		});
+		}, control);
 		return result;
 	}
 

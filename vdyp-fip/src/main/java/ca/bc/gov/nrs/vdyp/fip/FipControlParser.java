@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.BecDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.BreakageParser;
 import ca.bc.gov.nrs.vdyp.io.parse.BySpeciesDqCoefficientParser;
@@ -1131,12 +1132,6 @@ public class FipControlParser {
 	 */
 	private Object RD_E108(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
 		throw new UnsupportedOperationException();
-	}
-
-	static interface FileResolver {
-		InputStream resolve(String filename) throws IOException;
-
-		String toString(String filename) throws IOException;
 	}
 
 }

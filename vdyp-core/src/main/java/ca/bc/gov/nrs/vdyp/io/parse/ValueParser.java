@@ -1,11 +1,10 @@
 package ca.bc.gov.nrs.vdyp.io.parse;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -19,7 +18,7 @@ import ca.bc.gov.nrs.vdyp.model.Region;
  * @param <T>
  */
 @FunctionalInterface
-public interface ValueParser<T> {
+public interface ValueParser<T> extends ControlledValueParser<T> {
 	/**
 	 * Parse a string to a value
 	 *
@@ -28,6 +27,12 @@ public interface ValueParser<T> {
 	 * @throws ValueParseException if the string could not be parsed
 	 */
 	T parse(String string) throws ValueParseException;
+
+	@Override
+	default T parse(String string, Map<String, Object> control) throws ValueParseException {
+		// Ignore the control map
+		return this.parse(string);
+	}
 
 	public static interface JavaNumberParser<U extends Number> {
 		U parse(String s) throws NumberFormatException;
