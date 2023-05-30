@@ -35,6 +35,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.UtilComponentBaseAreaParser;
 import ca.bc.gov.nrs.vdyp.io.parse.UtilComponentWSVolumeParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ValueParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VolumeNetDecayParser;
+import ca.bc.gov.nrs.vdyp.io.parse.VolumeNetDecayWasteParser;
 import ca.bc.gov.nrs.vdyp.io.parse.EquationGroupParser;
 import ca.bc.gov.nrs.vdyp.io.parse.EquationModifierParser;
 import ca.bc.gov.nrs.vdyp.io.parse.HLCoefficientParser;
@@ -93,7 +94,7 @@ public class FipControlParser {
 	public static final String UTIL_COMP_WS_VOLUME = UtilComponentWSVolumeParser.CONTROL_KEY;
 	public static final String CLOSE_UTIL_VOLUME = CloseUtilVolumeParser.CONTROL_KEY;
 	public static final String VOLUME_NET_DECAY = "VOLUME_NET_DECAY";
-	public static final String VOLUME_NET_DECAY_WASTE = "VOLUME_NET_DECAY_WASTE";
+	public static final String VOLUME_NET_DECAY_WASTE = VolumeNetDecayWasteParser.CONTROL_KEY;
 	public static final String BREAKAGE = "BREAKAGE";
 	public static final String VETERAN_LAYER_VOLUME_ADJUST = "VETERAN_LAYER_VOLUME_ADJUST";
 	public static final String VETERAN_LAYER_DQ = "VETERAN_LAYER_DQ";
@@ -977,8 +978,7 @@ public class FipControlParser {
 	 */
 	private Map<String, Coefficients> RD_YVW1(InputStream data, Map<String, Object> control)
 			throws IOException, ResourceParseException {
-		// TODO
-
+		
 		// Uses
 		//
 
@@ -993,8 +993,9 @@ public class FipControlParser {
 		// Ignore if first segment is blank
 
 		// Coefficient is 0 indexed
-
-		return null;
+		
+		var parser = new VolumeNetDecayWasteParser(control);
+		return parser.parse(data, control);
 	}
 
 	/**
