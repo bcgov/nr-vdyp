@@ -12,7 +12,7 @@ public class VolumeNetDecayParser extends SimpleCoefficientParser2<Integer, Inte
 
 	public VolumeNetDecayParser() {
 		super(1);
-		this.ucIndexKey().groupIndexKey(80).coefficients(4, 10);
+		this.ucIndexKey().space(1).groupIndexKey(80).coefficients(4, 10);
 	}
 
 }

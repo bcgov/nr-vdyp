@@ -84,7 +84,7 @@ public abstract class BaseCoefficientParser<T extends Coefficients, M extends Ma
 	public BaseCoefficientParser<T, M> groupIndexKey(int maxGroups) {
 		var indicies = Stream.iterate(1, x -> x + 1).limit(maxGroups).toList();
 		return key(
-				4, GROUP_INDEX, ValueParser.INTEGER, indicies,
+				3, GROUP_INDEX, ValueParser.INTEGER, indicies,
 				"%s is not a valid Group Index, should be 1 to " + maxGroups + " inclusive"
 		);
 	}

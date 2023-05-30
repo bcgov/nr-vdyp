@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.fip;
 
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.hasSpecificEntry;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.mmHasEntry;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -511,7 +512,6 @@ public class FipControlParserTest {
 		);
 	}
 
-	@Disabled
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testParseYVT1() throws Exception {
@@ -519,14 +519,13 @@ public class FipControlParserTest {
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
 				result,
-				(Matcher) hasEntry(
-						is(FipControlParser.TOTAL_STAND_WHOLE_STEM_VOL),
+				(Matcher) hasSpecificEntry(
+						FipControlParser.TOTAL_STAND_WHOLE_STEM_VOL,
 						allOf(
 								hasEntry(
 										is(2),
 										contains(
-												-10.41832f, 1.94182f, 0.99414f, 0.000000f, 1.11329f, 0.000000f,
-												0.0000000f, 0.0000000f, 0.19884f
+												-10.41832f,   1.94182f,   0.99414f,  0.000000f,   1.11329f,  0.000000f, 0.0000000f, 0.0000000f,   0.19884f
 										)
 								)
 						)

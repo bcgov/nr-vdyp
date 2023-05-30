@@ -4,12 +4,15 @@ import static org.hamcrest.Matchers.anything;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.not;
 
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
+import org.hamcrest.TypeSafeDiagnosingMatcher;
 
 import ca.bc.gov.nrs.vdyp.io.parse.ValueParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.ValueParser;
@@ -186,6 +189,37 @@ public class VdypMatchers {
 
 				description.appendText("entry ").appendValueList("[", ", ", "]", keys).appendText(" ");
 				valueMatcher.describeMismatch(value, description);
+			}
+
+		};
+
+	}
+	
+	/**
+	 * Equivalent to {@link Matchers.hasEntry} with a simple equality check on the key. Does not show the full map contents on a mismatch, just the requested entry if it's present.
+	 */
+	public static <K, V> Matcher<Map<K, V>> hasSpecificEntry(K key, Matcher<V> valueMatcher) {
+		return new TypeSafeDiagnosingMatcher<Map<K, V>>() {
+
+			@Override
+			protected boolean matchesSafely(Map<K, V> map, Description mismatchDescription) {
+				V result = map.get(key);
+				if(Objects.isNull(result)) {
+					mismatchDescription.appendText("entry for ").appendValue(key).appendText(" was not present");
+					return false;
+				}
+				if(! valueMatcher.matches(result)) {
+					mismatchDescription.appendText("entry for ").appendValue(key).appendText(" was present but ");
+					valueMatcher.describeMismatch(result, mismatchDescription);
+					return false;
+				}
+
+				return true;
+			}
+
+			@Override
+			public void describeTo(Description description) {
+				description.appendText("A map with an entry for ").appendValue(key).appendText(" that ").appendDescriptionOf(valueMatcher);
 			}
 
 		};

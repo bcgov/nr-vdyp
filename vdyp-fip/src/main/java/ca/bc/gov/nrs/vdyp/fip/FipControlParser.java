@@ -29,6 +29,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.SmallComponentHLParser;
 import ca.bc.gov.nrs.vdyp.io.parse.SmallComponentProbabilityParser;
 import ca.bc.gov.nrs.vdyp.io.parse.SmallComponentWSVolumeParser;
 import ca.bc.gov.nrs.vdyp.io.parse.StockingClassFactorParser;
+import ca.bc.gov.nrs.vdyp.io.parse.TotalStandWholeStemParser;
 import ca.bc.gov.nrs.vdyp.io.parse.UpperCoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.UtilComponentBaseAreaParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ValueParser;
@@ -87,7 +88,7 @@ public class FipControlParser {
 	public static final String SMALL_COMP_DQ = SmallComponentDQParser.CONTROL_KEY;
 	public static final String SMALL_COMP_HL = SmallComponentHLParser.CONTROL_KEY;
 	public static final String SMALL_COMP_WS_VOLUME = SmallComponentWSVolumeParser.CONTROL_KEY;
-	public static final String TOTAL_STAND_WHOLE_STEM_VOL = "TOTAL_STAND_WHOLE_STEM_VOL";
+	public static final String TOTAL_STAND_WHOLE_STEM_VOL = TotalStandWholeStemParser.CONTROL_KEY;
 	public static final String UTIL_COMP_WS_VOLUME = "UTIL_COMP_WS_VOLUME";
 	public static final String CLOSE_UTIL_VOLUME = CloseUtilVolumeParser.CONTROL_KEY;
 	public static final String VOLUME_NET_DECAY = "VOLUME_NET_DECAY";
@@ -861,8 +862,7 @@ public class FipControlParser {
 	 */
 	private Map<Integer, Coefficients> RD_YVT1(InputStream data, Map<String, Object> control)
 			throws IOException, ResourceParseException {
-		// TODO
-
+		
 		// Uses
 		// PARAMETER (MAXGROUP = 80)
 
@@ -878,8 +878,9 @@ public class FipControlParser {
 
 		// Coefficient is 0 indexed
 		// Group is 1 indexed
-
-		return null;
+		
+		var parser = new TotalStandWholeStemParser();
+		return parser.parse(data, control);
 	}
 
 	/**
