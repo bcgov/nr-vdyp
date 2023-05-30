@@ -1,0 +1,19 @@
+# This file provides basic code style configuration for multiple editors to help maintain consistency.
+# See https://editorconfig.org/ for details
+
+# Create a .editorconfig in the parent directory to provide your own configuration.  Setting tab_width will override the indent_size provided here for the size of a tab used for indentation.
+
+root = false
+
+[*]
+end_of_line = lf
+insert_final_newline = true
+charset = utf-8
+
+[*.{java}]
+indent_style = tab
+indent_size = 4
+
+[*.{json,xml}]
+indent_style = tab
+indent_size = 2
