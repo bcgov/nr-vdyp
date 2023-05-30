@@ -5,14 +5,12 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-import ca.bc.gov.nrs.vdyp.io.parse.BaseCoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.BecDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.BreakageParser;
 import ca.bc.gov.nrs.vdyp.io.parse.BySpeciesDqCoefficientParser;
@@ -35,6 +33,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.UpperCoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.UtilComponentBaseAreaParser;
 import ca.bc.gov.nrs.vdyp.io.parse.UtilComponentWSVolumeParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ValueParser;
+import ca.bc.gov.nrs.vdyp.io.parse.VeteranLayerVolumeAdjustParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VolumeNetDecayParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VolumeNetDecayWasteParser;
 import ca.bc.gov.nrs.vdyp.io.parse.EquationGroupParser;
@@ -46,7 +45,6 @@ import ca.bc.gov.nrs.vdyp.model.BaseAreaCode;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
-import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
 import ca.bc.gov.nrs.vdyp.model.NonprimaryHLCoefficients;
 import ca.bc.gov.nrs.vdyp.model.Region;
@@ -94,10 +92,10 @@ public class FipControlParser {
 	public static final String TOTAL_STAND_WHOLE_STEM_VOL = TotalStandWholeStemParser.CONTROL_KEY;
 	public static final String UTIL_COMP_WS_VOLUME = UtilComponentWSVolumeParser.CONTROL_KEY;
 	public static final String CLOSE_UTIL_VOLUME = CloseUtilVolumeParser.CONTROL_KEY;
-	public static final String VOLUME_NET_DECAY = "VOLUME_NET_DECAY";
+	public static final String VOLUME_NET_DECAY = VolumeNetDecayParser.CONTROL_KEY;
 	public static final String VOLUME_NET_DECAY_WASTE = VolumeNetDecayWasteParser.CONTROL_KEY;
-	public static final String BREAKAGE = "BREAKAGE";
-	public static final String VETERAN_LAYER_VOLUME_ADJUST = "VETERAN_LAYER_VOLUME_ADJUST";
+	public static final String BREAKAGE = BreakageParser.CONTROL_KEY;
+	public static final String VETERAN_LAYER_VOLUME_ADJUST = VeteranLayerVolumeAdjustParser.CONTROL_KEY;
 	public static final String VETERAN_LAYER_DQ = "VETERAN_LAYER_DQ";
 	public static final String VETERAN_BQ = "VETERAN_BQ";
 	public static final String MINIMA = "MINIMA";
@@ -1036,7 +1034,6 @@ public class FipControlParser {
 	// Example FIPSTART.CTR calls this RD_YVET
 	private Map<String, Coefficients> RD_YVVET(InputStream data, Map<String, Object> control)
 			throws IOException, ResourceParseException {
-		// TODO
 
 		// Sets
 		// COMMON /V7COE096/ COE096( 4, 16)
@@ -1049,7 +1046,8 @@ public class FipControlParser {
 
 		// Coefficient is 1 indexed
 
-		return null;
+		var parser = new VeteranLayerVolumeAdjustParser(control);
+		return parser.parse(data, control);
 	}
 
 	/**

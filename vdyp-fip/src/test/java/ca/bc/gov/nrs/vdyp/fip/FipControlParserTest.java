@@ -542,7 +542,6 @@ public class FipControlParserTest {
 		);
 	}
 
-	@Disabled // TODO
 	@Test
 	public void testParseYVVET() throws Exception {
 		var parser = new FipControlParser();
@@ -550,7 +549,7 @@ public class FipControlParserTest {
 		assertThat(
 				result,
 				(Matcher) hasSpecificEntry(
-						FipControlParser.BREAKAGE,
+						FipControlParser.VETERAN_LAYER_VOLUME_ADJUST,
 						allOf(hasEntry(is("B"), contains(0.10881f, -0.09818f, 0.00048f, -0.00295f)))
 				)
 		);
