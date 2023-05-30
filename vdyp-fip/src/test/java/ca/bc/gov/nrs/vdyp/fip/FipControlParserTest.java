@@ -504,7 +504,6 @@ public class FipControlParserTest {
 		);
 	}
 
-	@Disabled // TODO
 	@Test
 	public void testParseYVT2() throws Exception {
 		var parser = new FipControlParser();

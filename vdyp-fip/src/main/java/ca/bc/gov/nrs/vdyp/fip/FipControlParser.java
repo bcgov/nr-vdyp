@@ -32,6 +32,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.StockingClassFactorParser;
 import ca.bc.gov.nrs.vdyp.io.parse.TotalStandWholeStemParser;
 import ca.bc.gov.nrs.vdyp.io.parse.UpperCoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.UtilComponentBaseAreaParser;
+import ca.bc.gov.nrs.vdyp.io.parse.UtilComponentWSVolumeParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ValueParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VolumeNetDecayParser;
 import ca.bc.gov.nrs.vdyp.io.parse.EquationGroupParser;
@@ -89,7 +90,7 @@ public class FipControlParser {
 	public static final String SMALL_COMP_HL = SmallComponentHLParser.CONTROL_KEY;
 	public static final String SMALL_COMP_WS_VOLUME = SmallComponentWSVolumeParser.CONTROL_KEY;
 	public static final String TOTAL_STAND_WHOLE_STEM_VOL = TotalStandWholeStemParser.CONTROL_KEY;
-	public static final String UTIL_COMP_WS_VOLUME = "UTIL_COMP_WS_VOLUME";
+	public static final String UTIL_COMP_WS_VOLUME = UtilComponentWSVolumeParser.CONTROL_KEY;
 	public static final String CLOSE_UTIL_VOLUME = CloseUtilVolumeParser.CONTROL_KEY;
 	public static final String VOLUME_NET_DECAY = "VOLUME_NET_DECAY";
 	public static final String VOLUME_NET_DECAY_WASTE = "VOLUME_NET_DECAY_WASTE";
@@ -686,7 +687,6 @@ public class FipControlParser {
 	 */
 	private MatrixMap3<BaseAreaCode, String, String, Coefficients>
 			RD_UBA1(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
-		// TODO
 
 		// Uses
 		// COMMON /BECIgrow/ NBECGROW, IBECGV(14), IBECGIC(14)
@@ -890,7 +890,6 @@ public class FipControlParser {
 	 */
 	private MatrixMap2<Integer, Integer, Coefficients> RD_YVT2(InputStream data, Map<String, Object> control)
 			throws IOException, ResourceParseException {
-		// TODO
 
 		// Uses
 		// PARAMETER (MAXGROUP = 80)
@@ -909,7 +908,8 @@ public class FipControlParser {
 		// UC is 1 indexed
 		// Group is 1 indexed
 
-		return null;
+		var parser = new UtilComponentWSVolumeParser();
+		return parser.parse(data, control);
 	}
 
 	/**
