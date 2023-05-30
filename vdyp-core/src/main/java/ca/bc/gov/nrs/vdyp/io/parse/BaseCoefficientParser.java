@@ -89,7 +89,7 @@ public abstract class BaseCoefficientParser<T extends Coefficients, M extends Ma
 		);
 	}
 
-	public BaseCoefficientParser<T, M> speciesKey(String name, Map<String, Object> controlMap) {
+	public BaseCoefficientParser<T, M> speciesKey(String name) {
 		var range = SP0DefinitionParser.getSpeciesAliases(controlMap);
 		return key(2, name, String::strip, range, "%s is not a valid species");
 	}

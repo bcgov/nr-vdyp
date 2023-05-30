@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.vdyp.io.parse;
+package ca.bc.gov.nrs.vdyp.io.write;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -6,6 +6,8 @@ import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.regex.Pattern;
+
+import ca.bc.gov.nrs.vdyp.io.parse.ControlFileParser;
 
 /**
  * Writer for control files
