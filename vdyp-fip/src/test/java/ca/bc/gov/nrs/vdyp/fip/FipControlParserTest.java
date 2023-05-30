@@ -563,7 +563,7 @@ public class FipControlParserTest {
 		assertThat(
 				result,
 				(Matcher) hasSpecificEntry(
-						FipControlParser.UTIL_COMP_WS_VOLUME,
+						FipControlParser.VETERAN_LAYER_DQ,
 						allOf(
 								mmHasEntry(present(contains(22.500f, 0.24855f, 1.46089f)), "B", Region.COASTAL),
 								mmHasEntry(present(contains(19.417f, 0.04354f, 1.96395f)), "B", Region.INTERIOR),
@@ -574,7 +574,6 @@ public class FipControlParserTest {
 		);
 	}
 
-	@Disabled // TODO
 	@Test
 	public void testParseE098() throws Exception {
 		var parser = new FipControlParser();
@@ -582,7 +581,7 @@ public class FipControlParserTest {
 		assertThat(
 				result,
 				(Matcher) hasSpecificEntry(
-						FipControlParser.UTIL_COMP_WS_VOLUME,
+						FipControlParser.VETERAN_BQ,
 						allOf(
 								mmHasEntry(present(contains(0.12874f, 8.00000f, 1.26982f)), "B", Region.COASTAL),
 								mmHasEntry(present(contains(0.70932f, 7.63269f, 0.62545f)), "B", Region.INTERIOR),

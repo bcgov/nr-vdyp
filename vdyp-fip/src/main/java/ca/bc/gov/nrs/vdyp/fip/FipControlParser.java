@@ -33,6 +33,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.UpperCoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.UtilComponentBaseAreaParser;
 import ca.bc.gov.nrs.vdyp.io.parse.UtilComponentWSVolumeParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ValueParser;
+import ca.bc.gov.nrs.vdyp.io.parse.VeteranBQParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VeteranLayerVolumeAdjustParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VolumeNetDecayParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VolumeNetDecayWasteParser;
@@ -97,7 +98,7 @@ public class FipControlParser {
 	public static final String BREAKAGE = BreakageParser.CONTROL_KEY;
 	public static final String VETERAN_LAYER_VOLUME_ADJUST = VeteranLayerVolumeAdjustParser.CONTROL_KEY;
 	public static final String VETERAN_LAYER_DQ = "VETERAN_LAYER_DQ";
-	public static final String VETERAN_BQ = "VETERAN_BQ";
+	public static final String VETERAN_BQ = VeteranBQParser.CONTROL_KEY;
 	public static final String MINIMA = "MINIMA";
 	public static final String MODIFIER_FILE = "MODIFIER_FILE";
 	public static final String DEBUG_SWITCHES = "DEBUG_SWITCHES";
@@ -1083,7 +1084,6 @@ public class FipControlParser {
 	 */
 	private MatrixMap2<String, Region, Coefficients> RD_E098(InputStream data, Map<String, Object> control)
 			throws IOException, ResourceParseException {
-		// TODO
 
 		// Sets
 		// C 3 coef BY 16 SP0 BY C/I (2)
@@ -1096,8 +1096,8 @@ public class FipControlParser {
 		// Ignore if first segment is blank
 
 		// Coefficient is 1 indexed
-
-		return null;
+		var parser = new VeteranBQParser(control);
+		return parser.parse(data, control);
 	}
 
 	/**
