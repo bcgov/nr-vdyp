@@ -35,6 +35,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.UtilComponentDQParser;
 import ca.bc.gov.nrs.vdyp.io.parse.UtilComponentWSVolumeParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ValueParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VeteranBQParser;
+import ca.bc.gov.nrs.vdyp.io.parse.VeteranDQParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VeteranLayerVolumeAdjustParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VolumeNetDecayParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VolumeNetDecayWasteParser;
@@ -1058,7 +1059,6 @@ public class FipControlParser {
 	 */
 	private MatrixMap2<String, Region, Coefficients> RD_YDQV(InputStream data, Map<String, Object> control)
 			throws IOException, ResourceParseException {
-		// TODO
 
 		// Sets
 		// C 3 coef BY 16 SP0 BY C/I (2)
@@ -1074,7 +1074,8 @@ public class FipControlParser {
 
 		// Apply to both Regions if blank
 
-		return null;
+		var parser = new VeteranDQParser();
+		return parser.parse(data, control);
 	}
 
 	/**
