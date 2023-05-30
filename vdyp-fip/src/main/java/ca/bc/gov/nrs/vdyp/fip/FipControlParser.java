@@ -14,6 +14,7 @@ import java.util.function.Supplier;
 
 import ca.bc.gov.nrs.vdyp.io.parse.BaseCoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.BecDefinitionParser;
+import ca.bc.gov.nrs.vdyp.io.parse.BreakageParser;
 import ca.bc.gov.nrs.vdyp.io.parse.BySpeciesDqCoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.CloseUtilVolumeParser;
 import ca.bc.gov.nrs.vdyp.io.parse.CoefficientParser;
@@ -978,7 +979,7 @@ public class FipControlParser {
 	 */
 	private Map<String, Coefficients> RD_YVW1(InputStream data, Map<String, Object> control)
 			throws IOException, ResourceParseException {
-		
+
 		// Uses
 		//
 
@@ -993,7 +994,7 @@ public class FipControlParser {
 		// Ignore if first segment is blank
 
 		// Coefficient is 0 indexed
-		
+
 		var parser = new VolumeNetDecayWasteParser(control);
 		return parser.parse(data, control);
 	}
@@ -1006,7 +1007,6 @@ public class FipControlParser {
 	// Example FIPSTART.CTR calls this RD_EMP95
 	private Map<Integer, Coefficients> RD_E095(InputStream data, Map<String, Object> control)
 			throws IOException, ResourceParseException {
-		// TODO
 
 		// Uses
 		// PARAMETER (MAXBGRP = 40)
@@ -1024,7 +1024,8 @@ public class FipControlParser {
 		// Group is 1 indexed
 		// Coefficient is 1 indexed
 
-		return null;
+		var parser = new BreakageParser(control);
+		return parser.parse(data, control);
 	}
 
 	/**

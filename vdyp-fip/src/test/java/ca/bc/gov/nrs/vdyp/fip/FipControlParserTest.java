@@ -530,7 +530,6 @@ public class FipControlParserTest {
 		);
 	}
 
-	@Disabled // TODO
 	@Test
 	public void testParseE095() throws Exception {
 		var parser = new FipControlParser();
