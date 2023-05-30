@@ -1,6 +1,8 @@
 package ca.bc.gov.nrs.vdyp.io.parse;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
@@ -66,6 +68,23 @@ public interface ValueParser<T> {
 						stripped, String.format("\"%s\" is not a valid %s", stripped, klazz.getSimpleName()), ex
 				);
 			}
+		};
+	}
+
+	/**
+	 * Parse as index into a sequence of values
+	 */
+	// If an Enum is overkill
+	public static ValueParser<Integer> indexParser(String sequenceName, int indexFrom, String... values) {
+		return s -> {
+			String stripped = s.strip();
+			int index = Arrays.asList(values).indexOf(stripped);
+			if (index < 0) {
+				throw new ValueParseException(
+						stripped, String.format("\"%s\" is not a valid %s", stripped, sequenceName)
+				);
+			}
+			return indexFrom + index;
 		};
 	}
 

@@ -16,7 +16,6 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
-import ca.bc.gov.nrs.vdyp.model.BaseAreaCode;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 public class UtilComponentBaseAreaParserTest {
@@ -35,17 +34,17 @@ public class UtilComponentBaseAreaParserTest {
 
 		var result = parser.parse(is, controlMap);
 
-		assertThat(result, mmHasEntry(present(contains(-23.22790f, 12.60472f)), BaseAreaCode.BA12, "S1", "B1"));
-		assertThat(result, mmHasEntry(notPresent(), BaseAreaCode.BA12, "S1", "B2"));
-		assertThat(result, mmHasEntry(notPresent(), BaseAreaCode.BA12, "S1", "B3"));
-		assertThat(result, mmHasEntry(notPresent(), BaseAreaCode.BA12, "S1", "B4"));
+		assertThat(result, mmHasEntry(present(contains(-23.22790f, 12.60472f)), 2, "S1", "B1"));
+		assertThat(result, mmHasEntry(notPresent(), 2, "S1", "B2"));
+		assertThat(result, mmHasEntry(notPresent(), 2, "S1", "B3"));
+		assertThat(result, mmHasEntry(notPresent(), 2, "S1", "B4"));
 
-		assertThat(result, mmHasEntry(notPresent(), BaseAreaCode.BA12, "S2", "B1"));
-		assertThat(result, mmHasEntry(notPresent(), BaseAreaCode.BA12, "S2", "B2"));
-		assertThat(result, mmHasEntry(notPresent(), BaseAreaCode.BA12, "S2", "B3"));
-		assertThat(result, mmHasEntry(notPresent(), BaseAreaCode.BA12, "S2", "B4"));
+		assertThat(result, mmHasEntry(notPresent(), 2, "S2", "B1"));
+		assertThat(result, mmHasEntry(notPresent(), 2, "S2", "B2"));
+		assertThat(result, mmHasEntry(notPresent(), 2, "S2", "B3"));
+		assertThat(result, mmHasEntry(notPresent(), 2, "S2", "B4"));
 
-		assertThat(result, mmHasEntry(notPresent(), BaseAreaCode.BA17, "S1", "B1"));
+		assertThat(result, mmHasEntry(notPresent(), 3, "S1", "B1"));
 	}
 
 	@Test
@@ -62,17 +61,17 @@ public class UtilComponentBaseAreaParserTest {
 
 		var result = parser.parse(is, controlMap);
 
-		assertThat(result, mmHasEntry(present(contains(-23.22790f, 12.60472f)), BaseAreaCode.BA12, "S1", "B1"));
-		assertThat(result, mmHasEntry(present(contains(-23.22790f, 12.60472f)), BaseAreaCode.BA12, "S1", "B3"));
-		assertThat(result, mmHasEntry(notPresent(), BaseAreaCode.BA12, "S1", "B2"));
-		assertThat(result, mmHasEntry(notPresent(), BaseAreaCode.BA12, "S1", "B4"));
+		assertThat(result, mmHasEntry(present(contains(-23.22790f, 12.60472f)), 2, "S1", "B1"));
+		assertThat(result, mmHasEntry(present(contains(-23.22790f, 12.60472f)), 2, "S1", "B3"));
+		assertThat(result, mmHasEntry(notPresent(), 2, "S1", "B2"));
+		assertThat(result, mmHasEntry(notPresent(), 2, "S1", "B4"));
 
-		assertThat(result, mmHasEntry(notPresent(), BaseAreaCode.BA12, "S2", "B1"));
-		assertThat(result, mmHasEntry(notPresent(), BaseAreaCode.BA12, "S2", "B2"));
-		assertThat(result, mmHasEntry(notPresent(), BaseAreaCode.BA12, "S2", "B3"));
-		assertThat(result, mmHasEntry(notPresent(), BaseAreaCode.BA12, "S2", "B4"));
+		assertThat(result, mmHasEntry(notPresent(), 2, "S2", "B1"));
+		assertThat(result, mmHasEntry(notPresent(), 2, "S2", "B2"));
+		assertThat(result, mmHasEntry(notPresent(), 2, "S2", "B3"));
+		assertThat(result, mmHasEntry(notPresent(), 2, "S2", "B4"));
 
-		assertThat(result, mmHasEntry(notPresent(), BaseAreaCode.BA17, "S1", "B1"));
+		assertThat(result, mmHasEntry(notPresent(), 3, "S1", "B1"));
 	}
 
 	@Test
@@ -89,17 +88,17 @@ public class UtilComponentBaseAreaParserTest {
 
 		var result = parser.parse(is, controlMap);
 
-		assertThat(result, mmHasEntry(present(contains(-23.22790f, 12.60472f)), BaseAreaCode.BA12, "S1", "B1"));
-		assertThat(result, mmHasEntry(present(contains(-23.22790f, 12.60472f)), BaseAreaCode.BA12, "S1", "B2"));
-		assertThat(result, mmHasEntry(present(contains(-23.22790f, 12.60472f)), BaseAreaCode.BA12, "S1", "B3"));
-		assertThat(result, mmHasEntry(present(contains(-23.22790f, 12.60472f)), BaseAreaCode.BA12, "S1", "B4"));
+		assertThat(result, mmHasEntry(present(contains(-23.22790f, 12.60472f)), 2, "S1", "B1"));
+		assertThat(result, mmHasEntry(present(contains(-23.22790f, 12.60472f)), 2, "S1", "B2"));
+		assertThat(result, mmHasEntry(present(contains(-23.22790f, 12.60472f)), 2, "S1", "B3"));
+		assertThat(result, mmHasEntry(present(contains(-23.22790f, 12.60472f)), 2, "S1", "B4"));
 
-		assertThat(result, mmHasEntry(notPresent(), BaseAreaCode.BA12, "S2", "B1"));
-		assertThat(result, mmHasEntry(notPresent(), BaseAreaCode.BA12, "S2", "B2"));
-		assertThat(result, mmHasEntry(notPresent(), BaseAreaCode.BA12, "S2", "B3"));
-		assertThat(result, mmHasEntry(notPresent(), BaseAreaCode.BA12, "S2", "B4"));
+		assertThat(result, mmHasEntry(notPresent(), 2, "S2", "B1"));
+		assertThat(result, mmHasEntry(notPresent(), 2, "S2", "B2"));
+		assertThat(result, mmHasEntry(notPresent(), 2, "S2", "B3"));
+		assertThat(result, mmHasEntry(notPresent(), 2, "S2", "B4"));
 
-		assertThat(result, mmHasEntry(notPresent(), BaseAreaCode.BA17, "S1", "B1"));
+		assertThat(result, mmHasEntry(notPresent(), 3, "S1", "B1"));
 
 	}
 

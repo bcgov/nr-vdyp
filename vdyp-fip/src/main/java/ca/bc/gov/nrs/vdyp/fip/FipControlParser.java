@@ -31,6 +31,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.StockingClassFactorParser;
 import ca.bc.gov.nrs.vdyp.io.parse.TotalStandWholeStemParser;
 import ca.bc.gov.nrs.vdyp.io.parse.UpperCoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.UtilComponentBaseAreaParser;
+import ca.bc.gov.nrs.vdyp.io.parse.UtilComponentDQParser;
 import ca.bc.gov.nrs.vdyp.io.parse.UtilComponentWSVolumeParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ValueParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VeteranBQParser;
@@ -42,7 +43,6 @@ import ca.bc.gov.nrs.vdyp.io.parse.EquationModifierParser;
 import ca.bc.gov.nrs.vdyp.io.parse.HLCoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.HLNonprimaryCoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
-import ca.bc.gov.nrs.vdyp.model.BaseAreaCode;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
@@ -84,7 +84,7 @@ public class FipControlParser {
 	public static final String BY_SPECIES_DQ = BySpeciesDqCoefficientParser.CONTROL_KEY;
 	public static final String SPECIES_COMPONENT_SIZE_LIMIT = ComponentSizeParser.CONTROL_KEY;
 	public static final String UTIL_COMP_BA = UtilComponentBaseAreaParser.CONTROL_KEY;
-	public static final String UTIL_COMP_DQ = "UTIL_COMP_DQ";
+	public static final String UTIL_COMP_DQ = UtilComponentDQParser.CONTROL_KEY;
 	public static final String SMALL_COMP_PROBABILITY = SmallComponentProbabilityParser.CONTROL_KEY;
 	public static final String SMALL_COMP_BA = SmallComponentBaseAreaParser.CONTROL_KEY;
 	public static final String SMALL_COMP_DQ = SmallComponentDQParser.CONTROL_KEY;
@@ -686,8 +686,8 @@ public class FipControlParser {
 	/**
 	 * Loads the information that was in the global array COE070 in Fortran
 	 */
-	private MatrixMap3<BaseAreaCode, String, String, Coefficients>
-			RD_UBA1(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
+	private MatrixMap3<Integer, String, String, Coefficients> RD_UBA1(InputStream data, Map<String, Object> control)
+			throws IOException, ResourceParseException {
 
 		// Uses
 		// COMMON /BECIgrow/ NBECGROW, IBECGV(14), IBECGIC(14)
@@ -715,7 +715,6 @@ public class FipControlParser {
 	 * Loads the information that was in the global array COE071 in Fortran
 	 */
 	private Object RD_UDQ1(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
-		// TODO
 
 		// Uses
 		// COMMON /BECIgrow/ NBECGROW, IBECGV(14), IBECGIC(14)
@@ -734,7 +733,8 @@ public class FipControlParser {
 		// If BECSCOPE is empty, apply to all BECs, if it's I or C, apply to BECs in
 		// that region, otherwise only the one BEC.
 
-		return null;
+		var parser = new UtilComponentDQParser();
+		return parser.parse(data, control);
 	}
 
 	/**
