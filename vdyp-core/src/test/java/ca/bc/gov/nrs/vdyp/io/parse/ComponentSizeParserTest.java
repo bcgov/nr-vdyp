@@ -25,7 +25,7 @@ public class ComponentSizeParserTest {
 
 		SP0DefinitionParserTest.populateControlMap(controlMap);
 
-		var parser = new ComponentSizeParser(controlMap);
+		var parser = new ComponentSizeParser();
 
 		var result = parser.parse(is, controlMap);
 
@@ -41,7 +41,7 @@ public class ComponentSizeParserTest {
 
 		SP0DefinitionParserTest.populateControlMap(controlMap);
 
-		var parser = new ComponentSizeParser(controlMap);
+		var parser = new ComponentSizeParser();
 
 		@SuppressWarnings("unused")
 		var ex = assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
@@ -57,7 +57,7 @@ public class ComponentSizeParserTest {
 
 		SP0DefinitionParserTest.populateControlMap(controlMap);
 
-		var parser = new ComponentSizeParser(controlMap);
+		var parser = new ComponentSizeParser();
 
 		@SuppressWarnings("unused")
 		var ex = assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));

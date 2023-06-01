@@ -11,7 +11,7 @@ public class VolumeNetDecayParser extends SimpleCoefficientParser2<Integer, Inte
 	public static final String CONTROL_KEY = "VOLUME_NET_DECAY";
 
 	public VolumeNetDecayParser() {
-		super(1);
+		super(1, CONTROL_KEY);
 		this.ucIndexKey().space(1).groupIndexKey(80).coefficients(4, 10);
 	}
 

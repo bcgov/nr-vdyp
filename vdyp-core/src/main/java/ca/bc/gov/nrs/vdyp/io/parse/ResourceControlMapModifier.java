@@ -10,7 +10,7 @@ import java.util.Map;
  * @author Kevin Smith, Vivid Solutions
  *
  */
-public interface ResourceControlMapModifier {
+public interface ResourceControlMapModifier extends ControlMapModifier {
 
 	void modify(Map<String, Object> control, InputStream data) throws ResourceParseException, IOException;
 

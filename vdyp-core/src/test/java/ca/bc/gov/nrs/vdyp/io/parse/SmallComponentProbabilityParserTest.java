@@ -26,7 +26,7 @@ public class SmallComponentProbabilityParserTest {
 
 		SP0DefinitionParserTest.populateControlMap(controlMap);
 
-		var parser = new SmallComponentProbabilityParser(controlMap);
+		var parser = new SmallComponentProbabilityParser();
 		var result = parser.parse(is, controlMap);
 
 		assertThat(result, hasEntry(is("S1"), contains(0.48205f, 0.00000f, -0.011862f, -0.10014f)));
@@ -41,7 +41,7 @@ public class SmallComponentProbabilityParserTest {
 
 		SP0DefinitionParserTest.populateControlMap(controlMap);
 
-		var parser = new SmallComponentProbabilityParser(controlMap);
+		var parser = new SmallComponentProbabilityParser();
 
 		var ex = assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
 		assertThat(ex, causedBy(hasProperty("value", is("SX"))));

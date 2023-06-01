@@ -12,7 +12,7 @@ import java.util.Map;
  * @author Kevin Smith, Vivid Solutions
  *
  */
-public class EquationModifierParser implements ResourceParser<Map<Integer, Map<Integer, Integer>>> {
+public class EquationModifierParser implements ControlMapSubResourceParser<Map<Integer, Map<Integer, Integer>>> {
 
 	public static final String CONTROL_KEY = "EQN_MODIFIERS";
 
@@ -44,6 +44,11 @@ public class EquationModifierParser implements ResourceParser<Map<Integer, Map<I
 		}
 
 		return Collections.unmodifiableMap(result);
+	}
+
+	@Override
+	public String getControlKey() {
+		return CONTROL_KEY;
 	}
 
 }

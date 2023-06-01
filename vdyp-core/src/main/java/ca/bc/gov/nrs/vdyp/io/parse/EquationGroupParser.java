@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
-import ca.bc.gov.nrs.vdyp.model.SP0Definition;
 import ca.bc.gov.nrs.vdyp.common.ExpectationDifference;
 
 /**
@@ -20,20 +19,12 @@ import ca.bc.gov.nrs.vdyp.common.ExpectationDifference;
  * @author Kevin Smith, Vivid Solutions
  *
  */
-public class EquationGroupParser implements ResourceParser<Map<String, Map<String, Integer>>> {
-
-	public static final String VOLUME_CONTROL_KEY = "VOLUME_EQN_GROUPS";
-
-	public static final String DECAY_CONTROL_KEY = "DECAY_GROUPS";
-
-	public static final String BREAKAGE_CONTROL_KEY = "BREAKAGE_GROUPS";
-
-	public static final String DEFAULT_CONTROL_KEY = "DEFAULT_EQ_NUM";
+public abstract class EquationGroupParser implements ControlMapSubResourceParser<Map<String, Map<String, Integer>>> {
 
 	LineParser lineParser;
 
 	private Collection<String> hiddenBecs = Collections.emptyList();
-
+	
 	public EquationGroupParser() {
 		this(3);
 	}
@@ -115,5 +106,5 @@ public class EquationGroupParser implements ResourceParser<Map<String, Map<Strin
 	public void setHiddenBecs(Collection<String> hiddenBecs) {
 		this.hiddenBecs = hiddenBecs;
 	}
-
+	
 }

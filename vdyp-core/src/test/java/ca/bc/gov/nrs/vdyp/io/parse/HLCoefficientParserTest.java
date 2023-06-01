@@ -22,7 +22,7 @@ public class HLCoefficientParserTest {
 	@Test
 	public void testParseSimpleP1() throws Exception {
 
-		var parser = new HLCoefficientParser(HLCoefficientParser.NUM_COEFFICIENTS_P1);
+		var parser = new HLCoefficientParser(HLCoefficientParser.NUM_COEFFICIENTS_P1, "TEST");
 
 		var is = TestUtils.makeStream("S1 I   1.00160   0.20508-0.0013743");
 
@@ -43,7 +43,7 @@ public class HLCoefficientParserTest {
 	@Test
 	public void testParseSimpleP2() throws Exception {
 
-		var parser = new HLCoefficientParser(HLCoefficientParser.NUM_COEFFICIENTS_P2);
+		var parser = new HLCoefficientParser(HLCoefficientParser.NUM_COEFFICIENTS_P2, "TEST");
 
 		var is = TestUtils.makeStream("S1 C   0.49722   1.18403");
 
@@ -63,7 +63,7 @@ public class HLCoefficientParserTest {
 	@Test
 	public void testParseSimpleP3() throws Exception {
 
-		var parser = new HLCoefficientParser(HLCoefficientParser.NUM_COEFFICIENTS_P3);
+		var parser = new HLCoefficientParser(HLCoefficientParser.NUM_COEFFICIENTS_P3, "TEST");
 
 		var is = TestUtils.makeStream("S1 I   1.04422   0.93010  -0.05745  -2.50000");
 
@@ -84,7 +84,7 @@ public class HLCoefficientParserTest {
 	@Test
 	public void testParseBadSpecies() throws Exception {
 
-		var parser = new HLCoefficientParser(HLCoefficientParser.NUM_COEFFICIENTS_P1);
+		var parser = new HLCoefficientParser(HLCoefficientParser.NUM_COEFFICIENTS_P1, "TEST");
 
 		var is = TestUtils.makeStream("SX I   1.00160   0.20508-0.0013743");
 
@@ -99,7 +99,7 @@ public class HLCoefficientParserTest {
 	@Test
 	public void testParseBadRegion() throws Exception {
 
-		var parser = new HLCoefficientParser(HLCoefficientParser.NUM_COEFFICIENTS_P1);
+		var parser = new HLCoefficientParser(HLCoefficientParser.NUM_COEFFICIENTS_P1, "TEST");
 
 		var is = TestUtils.makeStream("S1 X   1.00160   0.20508-0.0013743");
 

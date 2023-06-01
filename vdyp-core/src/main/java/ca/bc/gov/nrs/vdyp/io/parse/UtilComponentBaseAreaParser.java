@@ -9,4 +9,9 @@ public class UtilComponentBaseAreaParser extends UtilComponentParser {
 		super(NUM_COEFFICIENTS, 1, "BA07", "BA12", "BA17", "BA22");
 	}
 
+	@Override
+	public String getControlKey() {
+		return CONTROL_KEY;
+	}
+
 }

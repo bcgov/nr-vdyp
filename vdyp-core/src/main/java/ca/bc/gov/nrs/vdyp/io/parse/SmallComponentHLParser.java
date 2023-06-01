@@ -1,13 +1,11 @@
 package ca.bc.gov.nrs.vdyp.io.parse;
 
-import java.util.Map;
-
 public class SmallComponentHLParser extends SimpleCoefficientParser1<String> {
 
 	public static final String CONTROL_KEY = "SMALL_COMP_HL";
 
-	public SmallComponentHLParser(Map<String, Object> control) {
-		super(String.class, 1);
+	public SmallComponentHLParser() {
+		super(String.class, 1, CONTROL_KEY);
 		this.speciesKey();
 		this.coefficients(2, 10);
 	}

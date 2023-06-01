@@ -6,8 +6,8 @@ public class SmallComponentWSVolumeParser extends SimpleCoefficientParser1<Strin
 
 	public static final String CONTROL_KEY = "SMALL_COMP_WS_VOLUME";
 
-	public SmallComponentWSVolumeParser(Map<String, Object> control) {
-		super(String.class, 1);
+	public SmallComponentWSVolumeParser() {
+		super(String.class, 1, CONTROL_KEY);
 		this.speciesKey();
 		this.coefficients(4, 10);
 	}

@@ -9,4 +9,9 @@ public class UtilComponentDQParser extends UtilComponentParser {
 		super(NUM_COEFFICIENTS, 9, "07.5", "12.5", "17.5", "22.5");
 	}
 
+	@Override
+	public String getControlKey() {
+		return CONTROL_KEY;
+	}
+
 }

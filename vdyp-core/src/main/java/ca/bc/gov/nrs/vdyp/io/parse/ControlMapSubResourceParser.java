@@ -12,7 +12,7 @@ import ca.bc.gov.nrs.vdyp.io.FileResolver;
  *
  * @param <T>
  */
-public interface ControlMapSubResource<T> extends ResourceControlMapModifier, ResourceParser<T> {
+public interface ControlMapSubResourceParser<T> extends ResourceControlMapModifier, ResourceParser<T> {
 
 	/**
 	 * The key for this resource's entry in the control map
@@ -37,6 +37,7 @@ public interface ControlMapSubResource<T> extends ResourceControlMapModifier, Re
 	 * @throws IOException
 	 * @throws ResourceParseException
 	 */
+	@Override
 	default void modify(Map<String, Object> control, FileResolver fileResolver)
 			throws IOException, ResourceParseException {
 		var filename = (String) control.get(getControlKey());

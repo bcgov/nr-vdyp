@@ -14,7 +14,7 @@ import ca.bc.gov.nrs.vdyp.model.SiteCurveAgeMaximum;
  * @author Kevin Smith, Vivid Solutions
  *
  */
-public class SiteCurveAgeMaximumParser implements ResourceParser<Map<Integer, SiteCurveAgeMaximum>> {
+public class SiteCurveAgeMaximumParser implements OptionalControlMapSubResourceParser<Map<Integer, SiteCurveAgeMaximum>> {
 	public static final String CONTROL_KEY = "SITE_CURVE_AGE_MAX";
 
 	public static final String SC_KEY = "siteCurve";
@@ -55,7 +55,7 @@ public class SiteCurveAgeMaximumParser implements ResourceParser<Map<Integer, Si
 	};
 
 	@SuppressWarnings("serial")
-	public static Map<Integer, SiteCurveAgeMaximum> defaultMap() {
+	public Map<Integer, SiteCurveAgeMaximum> defaultResult() {
 		return new HashMap<>() {
 			@Override
 			public SiteCurveAgeMaximum get(Object key) {
@@ -68,7 +68,7 @@ public class SiteCurveAgeMaximumParser implements ResourceParser<Map<Integer, Si
 	@Override
 	public Map<Integer, SiteCurveAgeMaximum> parse(InputStream is, Map<String, Object> control)
 			throws IOException, ResourceParseException {
-		Map<Integer, SiteCurveAgeMaximum> result = defaultMap();
+		Map<Integer, SiteCurveAgeMaximum> result = defaultResult();
 		lineParser.parse(is, result, (v, r) -> {
 			var sc = (int) v.get(SC_KEY);
 			var ageCoast = (float) v.get(COASTAL_KEY);
@@ -84,6 +84,11 @@ public class SiteCurveAgeMaximumParser implements ResourceParser<Map<Integer, Si
 			return r;
 		}, control);
 		return result;
+	}
+
+	@Override
+	public String getControlKey() {
+		return CONTROL_KEY;
 	}
 
 }

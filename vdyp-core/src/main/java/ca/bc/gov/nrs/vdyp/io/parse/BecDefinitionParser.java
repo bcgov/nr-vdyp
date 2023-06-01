@@ -18,7 +18,7 @@ import ca.bc.gov.nrs.vdyp.model.Region;
  * @author Kevin Smith, Vivid Solutions
  *
  */
-public class BecDefinitionParser implements ResourceParser<Map<String, BecDefinition>> {
+public class BecDefinitionParser implements ControlMapSubResourceParser<Map<String, BecDefinition>> {
 
 	public static final String CONTROL_KEY = "BEC_DEF";
 
@@ -98,5 +98,10 @@ public class BecDefinitionParser implements ResourceParser<Map<String, BecDefini
 		if (!getBecAliases(control).contains(bec)) {
 			throw new ValueParseException(bec, bec + " is not a valid BEC");
 		}
+	}
+
+	@Override
+	public String getControlKey() {
+		return CONTROL_KEY;
 	}
 }

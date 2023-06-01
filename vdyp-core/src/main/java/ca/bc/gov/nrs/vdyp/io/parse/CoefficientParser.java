@@ -17,7 +17,7 @@ import ca.bc.gov.nrs.vdyp.model.MatrixMap3Impl;
  * @author Kevin Smith, Vivid Solutions
  *
  */
-public class CoefficientParser implements ResourceParser<MatrixMap3<Integer, String, Integer, Float>> {
+public class CoefficientParser implements ControlMapSubResourceParser<MatrixMap3<Integer, String, Integer, Float>> {
 	public static final String BA_CONTROL_KEY = "COE_BA";
 	public static final String DQ_CONTROL_KEY = "COE_DQ";
 
@@ -28,6 +28,12 @@ public class CoefficientParser implements ResourceParser<MatrixMap3<Integer, Str
 
 	public static final int NUM_COEFFICIENTS = 10;
 	public static final int NUM_SPECIES = 16;
+
+	final String controlKey;
+	
+	public CoefficientParser(String controlKey) {
+		this.controlKey = controlKey;
+	}
 
 	LineParser lineParser = new LineParser() {
 
@@ -87,6 +93,11 @@ public class CoefficientParser implements ResourceParser<MatrixMap3<Integer, Str
 			return r;
 		}, control);
 		return result;
+	}
+
+	@Override
+	public String getControlKey() {
+		return controlKey;
 	}
 
 }

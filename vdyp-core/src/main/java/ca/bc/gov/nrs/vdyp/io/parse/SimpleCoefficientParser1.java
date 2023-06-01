@@ -10,14 +10,14 @@ import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap;
 import ca.bc.gov.nrs.vdyp.model.MatrixMapImpl;
 
-public class SimpleCoefficientParser1<K1> implements ResourceParser<Map<K1, Coefficients>> {
+public class SimpleCoefficientParser1<K1> implements ControlMapSubResourceParser<Map<K1, Coefficients>> {
 
 	private int indexFrom;
 
 	Class<K1> keyClass;
 
 	private BaseCoefficientParser<Coefficients, MatrixMap<Coefficients>> delegate = new BaseCoefficientParser<Coefficients, MatrixMap<Coefficients>>(
-			1
+			1, "DUMMY"
 	) {
 
 		@SuppressWarnings("unchecked")
@@ -32,10 +32,13 @@ public class SimpleCoefficientParser1<K1> implements ResourceParser<Map<K1, Coef
 		}
 	};
 
-	public SimpleCoefficientParser1(Class<K1> keyClass, int indexFrom) {
+	private String controlKey;
+
+	public SimpleCoefficientParser1(Class<K1> keyClass, int indexFrom, String controlKey) {
 		super();
 		this.keyClass = keyClass;
 		this.indexFrom = indexFrom;
+		this.controlKey = controlKey;
 	}
 
 	@Override
@@ -77,6 +80,11 @@ public class SimpleCoefficientParser1<K1> implements ResourceParser<Map<K1, Coef
 
 	public <K> BaseCoefficientParser<Coefficients, MatrixMap<Coefficients>> coefficients(int number, int length) {
 		return delegate.coefficients(number, length);
+	}
+
+	@Override
+	public String getControlKey() {
+		return this.controlKey;
 	}
 
 }

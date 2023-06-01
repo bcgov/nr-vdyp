@@ -17,7 +17,7 @@ import ca.bc.gov.nrs.vdyp.model.SP0Definition;
  * @author Kevin Smith, Vivid Solutions
  *
  */
-public class SP0DefinitionParser implements ResourceParser<List<SP0Definition>> {
+public class SP0DefinitionParser implements ControlMapSubResourceParser<List<SP0Definition>> {
 
 	public static final String CONTROL_KEY = "SP0_DEF";
 
@@ -96,6 +96,11 @@ public class SP0DefinitionParser implements ResourceParser<List<SP0Definition>> 
 
 	public static List<String> getSpeciesAliases(final Map<String, Object> controlMap) {
 		return getSpecies(controlMap).stream().map(SP0Definition::getAlias).collect(Collectors.toList());
+	}
+
+	@Override
+	public String getControlKey() {
+		return CONTROL_KEY;
 	}
 
 }

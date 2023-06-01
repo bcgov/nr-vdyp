@@ -13,12 +13,16 @@ import java.util.function.Supplier;
 
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.BecDefinitionParser;
+import ca.bc.gov.nrs.vdyp.io.parse.BreakageEquationGroupParser;
 import ca.bc.gov.nrs.vdyp.io.parse.BreakageParser;
 import ca.bc.gov.nrs.vdyp.io.parse.BySpeciesDqCoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.CloseUtilVolumeParser;
 import ca.bc.gov.nrs.vdyp.io.parse.CoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ComponentSizeParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ControlFileParser;
+import ca.bc.gov.nrs.vdyp.io.parse.ControlMapModifier;
+import ca.bc.gov.nrs.vdyp.io.parse.DecayEquationGroupParser;
+import ca.bc.gov.nrs.vdyp.io.parse.DefaultEquationNumberParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParser;
 import ca.bc.gov.nrs.vdyp.io.parse.SP0DefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.SiteCurveAgeMaximumParser;
@@ -38,12 +42,14 @@ import ca.bc.gov.nrs.vdyp.io.parse.ValueParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VeteranBQParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VeteranDQParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VeteranLayerVolumeAdjustParser;
+import ca.bc.gov.nrs.vdyp.io.parse.VolumeEquationGroupParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VolumeNetDecayParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VolumeNetDecayWasteParser;
 import ca.bc.gov.nrs.vdyp.io.parse.EquationGroupParser;
 import ca.bc.gov.nrs.vdyp.io.parse.EquationModifierParser;
 import ca.bc.gov.nrs.vdyp.io.parse.HLCoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.HLNonprimaryCoefficientParser;
+import ca.bc.gov.nrs.vdyp.io.parse.ResourceControlMapModifier;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
@@ -68,12 +74,12 @@ public class FipControlParser {
 	public static final String VDYP_POLYGON = "VDYP_POLYGON";
 	public static final String VDYP_LAYER_BY_SPECIES = "VDYP_LAYER_BY_SPECIES";
 	public static final String VDYP_LAYER_BY_SP0_BY_UTIL = "VDYP_LAYER_BY_SP0_BY_UTIL";
-	public static final String VOLUME_EQN_GROUPS = EquationGroupParser.VOLUME_CONTROL_KEY;
-	public static final String DECAY_GROUPS = EquationGroupParser.DECAY_CONTROL_KEY;
-	public static final String BREAKAGE_GROUPS = EquationGroupParser.BREAKAGE_CONTROL_KEY;
+	public static final String VOLUME_EQN_GROUPS = VolumeEquationGroupParser.CONTROL_KEY;
+	public static final String DECAY_GROUPS = DecayEquationGroupParser.CONTROL_KEY;
+	public static final String BREAKAGE_GROUPS = BreakageEquationGroupParser.CONTROL_KEY;
 	public static final String SITE_CURVE_NUMBERS = SiteCurveParser.CONTROL_KEY;
 	public static final String SITE_CURVE_AGE_MAX = SiteCurveAgeMaximumParser.CONTROL_KEY;
-	public static final String DEFAULT_EQ_NUM = EquationGroupParser.DEFAULT_CONTROL_KEY;
+	public static final String DEFAULT_EQ_NUM = DefaultEquationNumberParser.CONTROL_KEY;
 	public static final String EQN_MODIFIERS = EquationModifierParser.CONTROL_KEY;
 	public static final String STOCKING_CLASS_FACTORS = StockingClassFactorParser.CONTROL_KEY;
 	public static final String COE_BA = CoefficientParser.BA_CONTROL_KEY;
@@ -107,9 +113,6 @@ public class FipControlParser {
 	public static final String MAX_NUM_POLY = "MAX_NUM_POLY";
 	public static final String BEC_DEF = BecDefinitionParser.CONTROL_KEY;
 	public static final String SP0_DEF = SP0DefinitionParser.CONTROL_KEY;
-
-	// TODO
-	public static final String TODO = "TODO";
 
 	static final ValueParser<String> FILENAME = String::strip;
 
@@ -232,155 +235,184 @@ public class FipControlParser {
 		};
 	}
 
-	Map<String, ?> parse(InputStream is, FileResolver fileResolver) throws IOException, ResourceParseException {
-		var map = controlParser.parse(is, Collections.emptyMap());
+	List<ControlMapModifier> BASIC_DEFINITIONS = Arrays.asList(
 
-		// RD_BEC
-		loadData(map, BecDefinitionParser.CONTROL_KEY, fileResolver, this::RD_BEC);
+			// RD_BEC
+			new BecDefinitionParser(),
 
-		// DEF_BEC
-		// TODO
+			// DEF_BEC
+			// TODO
 
-		// Read Definitions
+			// RD_SP0
+			new SP0DefinitionParser()
+	);
+	
+	List<ControlMapModifier> GROUP_DEFINITIONS = Arrays.asList(
 
-		// RD_SP0
-		loadData(map, SP0_DEF, fileResolver, this::RD_SP0);
+			// RD_VGRP
+			new VolumeEquationGroupParser(),
 
-		// Read Groups
+			// RD_DGRP
+			new DecayEquationGroupParser(),
 
-		// RD_VGRP
-		loadData(map, VOLUME_EQN_GROUPS, fileResolver, this::RD_VGRP);
+			// RD_BGRP
+			new BreakageEquationGroupParser(),
 
-		// RD_DGRP
-		loadData(map, DECAY_GROUPS, fileResolver, this::RD_DGRP);
+			// RD_GRBA1
+			new DefaultEquationNumberParser(),
 
-		// RD_BGRP
-		loadData(map, BREAKAGE_GROUPS, fileResolver, this::RD_BGRP);
+			// RD_GMBA1
+			new EquationModifierParser()
+	);
+	
+	List<ControlMapModifier> FIPSTART_ONLY = Arrays.asList(
 
-		// RD_GRBA1
-		loadData(map, DEFAULT_EQ_NUM, fileResolver, this::RD_GRBA1);
-
-		// RD_GMBA1
-		loadData(map, EQN_MODIFIERS, fileResolver, this::RD_GMBA1);
-
-		int jprogram = 1; // FIPSTART only TODO Track this down
-		if (jprogram == 1) {
 			// RD_STK33
-			loadData(map, STOCKING_CLASS_FACTORS, fileResolver, this::RD_STK33);
+			new StockingClassFactorParser()
 
 			// TODO minima?
 			/*
 			 * READ(CNTRV(197), 197, ERR= 912 ) FMINH, FMINBA, FMINBAF,FMINVetH IF (FMINVetH
 			 * .le. 0.0) FMINVetH=10.0
 			 */
+	);
+	List<ControlMapModifier> SITE_CURVES = Arrays.asList(
+
+			// User-assigned SC's (Site Curve Numbers)
+			//
+			// RD_E025
+			new SiteCurveParser(),
+
+			// Max tot ages to apply site curves (by SC)
+			//
+			// RD_E026
+			new SiteCurveAgeMaximumParser()
+	);
+	
+	List<ControlMapModifier> COEFFICIENTS = Arrays.asList(
+		// RD_E040
+		new CoefficientParser(COE_BA),
+	
+		// RD_E041
+		new CoefficientParser(COE_DQ),
+	
+		// RD_E043
+		new UpperCoefficientParser(),
+	
+		// RD_YHL1
+		new HLCoefficientParser(HLCoefficientParser.NUM_COEFFICIENTS_P1, HL_PRIMARY_SP_EQN_P1),
+	
+		// RD_YHL2
+		new HLCoefficientParser(HLCoefficientParser.NUM_COEFFICIENTS_P2, HL_PRIMARY_SP_EQN_P2),
+	
+		// RD_YHL3
+		new HLCoefficientParser(HLCoefficientParser.NUM_COEFFICIENTS_P3, HL_PRIMARY_SP_EQN_P3),
+	
+		// RD_YHL4
+		new HLNonprimaryCoefficientParser(),
+	
+		// RD_E060
+		new BySpeciesDqCoefficientParser(),
+	
+		// Min and max DQ by species
+	
+		// RD_E061
+		new ComponentSizeParser(),
+	
+		// RD_UBA1
+		new UtilComponentBaseAreaParser(),
+	
+		// RD_UDQ1
+		new UtilComponentDQParser(),
+	
+		// Small Component (4.5 to 7.5 cm)
+	
+		// RD_SBA1
+		new SmallComponentProbabilityParser(),
+		
+		// RD_SBA2
+		new SmallComponentBaseAreaParser(),
+		
+		// RD_SDQ1
+		new SmallComponentDQParser(),
+		
+		// RD_SHL1
+		new SmallComponentHLParser(),
+	
+		// RD_SVT1
+		new SmallComponentWSVolumeParser(),
+	
+		// Standard Volume Relationships
+	
+		// RD_YVT1
+		new TotalStandWholeStemParser(),
+	
+		// RD_YVT2
+		new UtilComponentWSVolumeParser(),
+	
+		// RD_YVC1
+		new CloseUtilVolumeParser(),
+	
+		// RD_YVD1
+		new VolumeNetDecayParser(),
+	
+		// RD_YVW1
+		new VolumeNetDecayWasteParser(),
+	
+		// RD_E095
+		new BreakageParser(),
+	
+		// Veterans
+	
+		// RD_YVVET
+		new VeteranLayerVolumeAdjustParser(),
+	
+		// RD_YDQV
+		new VeteranDQParser(),
+	
+		// RD_E098
+		new VeteranBQParser()
+	);
+	
+	private void applyModifiers(Map<String, Object>control, List<ControlMapModifier> modifiers, FileResolver fileResolver) throws ResourceParseException, IOException {
+		for (var modifier : modifiers) {
+			modifier.modify(control, fileResolver);
+		}
+	}
+
+	Map<String, ?> parse(InputStream is, FileResolver fileResolver) throws IOException, ResourceParseException {
+		var map = controlParser.parse(is, Collections.emptyMap());
+
+		applyModifiers(map, BASIC_DEFINITIONS, fileResolver);
+		
+		// Read Groups
+		
+		applyModifiers(map, GROUP_DEFINITIONS, fileResolver);
+
+		int jprogram = 1; // FIPSTART only TODO Track this down
+		
+		if (jprogram == 1) {
+			applyModifiers(map, FIPSTART_ONLY, fileResolver);
 		}
 
-		// User-assigned SC's (Site Curve Numbers)
-		//
-		// RD_E025
-		loadDataOptional(map, SITE_CURVE_NUMBERS, fileResolver, this::RD_E025, Collections::emptyMap);
-
-		// Max tot ages to apply site curves (by SC)
-		//
-		// RD_E026
-		loadDataOptional(map, SITE_CURVE_AGE_MAX, fileResolver, this::RD_E026, SiteCurveAgeMaximumParser::defaultMap);
+		applyModifiers(map, SITE_CURVES, fileResolver);
 
 		// Coeff for Empirical relationships
-
-		// RD_E040
-		loadData(map, COE_BA, fileResolver, this::RD_E040);
-
-		// RD_E041
-		loadData(map, COE_DQ, fileResolver, this::RD_E041);
-
-		// RD_E043
-		loadData(map, UPPER_BA_BY_CI_S0_P, fileResolver, this::RD_E043);
-
-		// RD_YHL1
-		loadData(map, HL_PRIMARY_SP_EQN_P1, fileResolver, this::RD_YHL1);
-
-		// RD_YHL2
-		loadData(map, HL_PRIMARY_SP_EQN_P2, fileResolver, this::RD_YHL2);
-
-		// RD_YHL3
-		loadData(map, HL_PRIMARY_SP_EQN_P3, fileResolver, this::RD_YHL3);
-
-		// RD_YHL4
-		loadData(map, HL_NONPRIMARY, fileResolver, this::RD_YHL4);
-
-		// RD_E060
-		loadData(map, BY_SPECIES_DQ, fileResolver, this::RD_E060);
-
-		// Min and max DQ by species
-
-		// RD_E061
-		loadData(map, SPECIES_COMPONENT_SIZE_LIMIT, fileResolver, this::RD_E061);
-
-		// RD_UBA1
-		loadData(map, UTIL_COMP_BA, fileResolver, this::RD_UBA1);
-
-		// RD_UDQ1
-		loadData(map, UTIL_COMP_DQ, fileResolver, this::RD_UDQ1);
-
-		// Small Component (4.5 to 7.5 cm)
-
-		// RD_SBA1
-		loadData(map, SMALL_COMP_PROBABILITY, fileResolver, this::RD_SBA1);
-
-		// RD_SBA2
-		loadData(map, SMALL_COMP_BA, fileResolver, this::RD_SBA2);
-
-		// RD_SDQ1
-		loadData(map, SMALL_COMP_DQ, fileResolver, this::RD_SDQ1);
-
-		// RD_SHL1
-		loadData(map, SMALL_COMP_HL, fileResolver, this::RD_SHL1);
-
-		// RD_SVT1
-		loadData(map, SMALL_COMP_WS_VOLUME, fileResolver, this::RD_SVT1);
-
-		// Standard Volume Relationships
-
-		// RD_YVT1
-		loadData(map, TOTAL_STAND_WHOLE_STEM_VOL, fileResolver, this::RD_YVT1);
-
-		// RD_YVT2
-		loadData(map, UTIL_COMP_WS_VOLUME, fileResolver, this::RD_YVT2);
-
-		// RD_YVC1
-		loadData(map, CLOSE_UTIL_VOLUME, fileResolver, this::RD_YVC1);
-
-		// RD_YVD1
-		loadData(map, VOLUME_NET_DECAY, fileResolver, this::RD_YVD1);
-
-		// RD_YVW1
-		loadData(map, VOLUME_NET_DECAY_WASTE, fileResolver, this::RD_YVW1);
-
-		// RD_E095
-		loadData(map, BREAKAGE, fileResolver, this::RD_E095);
-
-		// Veterans
-
-		// RD_YVVET
-		loadData(map, VETERAN_LAYER_VOLUME_ADJUST, fileResolver, this::RD_YVVET);
-
-		// RD_YDQV
-		loadData(map, VETERAN_LAYER_DQ, fileResolver, this::RD_YDQV);
-
-		// RD_E098
-		loadData(map, VETERAN_BQ, fileResolver, this::RD_E098);
+		
+		applyModifiers(map, COEFFICIENTS, fileResolver);
 
 		// Initiation items NOT for FIPSTART
 		if (jprogram > 1) {
-
+			
+			throw new UnsupportedOperationException();
 			// RD_E106
-			loadData(map, TODO, fileResolver, this::RD_E106);
+			// TODO
 
 			// RD_E107
-			loadData(map, TODO, fileResolver, this::RD_E107);
+			// TODO
 
 			// RD_E108
-			loadData(map, TODO, fileResolver, this::RD_E108);
+			// TODO
 
 			// Minima again, differently?
 			// TODO
@@ -400,7 +432,7 @@ public class FipControlParser {
 		// Modifiers, IPSJF155-Appendix XII
 
 		// RD_E198
-		loadData(map, MODIFIER_FILE, fileResolver, this::RD_E198);
+		// TODO
 
 		// Debug switches (normally zero)
 		// TODO
@@ -449,689 +481,6 @@ public class FipControlParser {
 		 */
 
 		return map;
-	}
-
-	void loadData(Map<String, Object> map, String key, FileResolver fileResolver, ResourceParser<?> parser)
-			throws IOException, ResourceParseException {
-		try (var is = fileResolver.resolve((String) map.get(key))) {
-			map.put(key, parser.parse(is, map));
-		}
-	}
-
-	<T> void loadDataOptional(
-			Map<String, Object> map, String key, FileResolver fileResolver, ResourceParser<T> parser,
-			Supplier<T> defaultSupplier
-	) throws IOException, ResourceParseException {
-		@SuppressWarnings("unchecked")
-		Optional<String> path = (Optional<String>) map.get(key);
-		if (!path.isPresent()) {
-			// TODO Log
-			map.put(key, defaultSupplier.get());
-			return;
-		}
-		try (var is = fileResolver.resolve(path.get())) {
-			map.put(key, parser.parse(is, map));
-		}
-	}
-
-	/**
-	 * Loads the information that was in the global arrays BECV, BECNM, and
-	 * BECCOASTAL in Fortran
-	 */
-	private Map<String, BecDefinition> RD_BEC(InputStream data, Map<String, Object> control)
-			throws IOException, ResourceParseException {
-		var parser = new BecDefinitionParser();
-		return parser.parse(data, control);
-	}
-
-	/**
-	 * Loads the information that was in the global arrays SP0V, SP0NAMEV in Fortran
-	 */
-	private List<SP0Definition> RD_SP0(InputStream data, Map<String, Object> control)
-			throws IOException, ResourceParseException {
-		var parser = new SP0DefinitionParser();
-		return parser.parse(data, control);
-	}
-
-	/**
-	 * Loads the information that was in the global array VGRPV in Fortran
-	 */
-	private Object RD_VGRP(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
-		var parser = new EquationGroupParser();
-		parser.setHiddenBecs(Arrays.asList("BG"));
-		return parser.parse(data, control);
-	}
-
-	/**
-	 * Loads the information that was in the global array DGRPV in Fortran
-	 */
-	private Object RD_DGRP(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
-		var parser = new EquationGroupParser();
-		return parser.parse(data, control);
-	}
-
-	/**
-	 * Loads the information that was in the global array BGRPV in Fortran
-	 */
-	private Object RD_BGRP(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
-		var parser = new EquationGroupParser();
-		return parser.parse(data, control);
-	}
-
-	/**
-	 * Loads the information that was in the global array BG1DEFV in Fortran
-	 */
-	private Object RD_GRBA1(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
-		var parser = new EquationGroupParser(5);
-		parser.setHiddenBecs(Arrays.asList("BG", "AT"));
-		return parser.parse(data, control);
-	}
-
-	/**
-	 * Loads the information that was in the global array BG1MODV in Fortran
-	 */
-	private Object RD_GMBA1(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
-		var parser = new EquationModifierParser();
-		return parser.parse(data, control);
-	}
-
-	/**
-	 * Loads the information that was in the global arrays STKV, FACTV, and NPCTAREA
-	 * in Fortran
-	 */
-	private Object RD_STK33(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
-		var parser = new StockingClassFactorParser();
-		return parser.parse(data, control);
-	}
-
-	/**
-	 * Loads the information that was in the global arrays ISCURVE and SP_SCV in
-	 * Fortran
-	 */
-	private Object RD_E025(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
-		var parser = new SiteCurveParser();
-		return parser.parse(data, control);
-	}
-
-	/**
-	 * Loads the information that was in the global V7COE026 arrays ASITELIM,
-	 * T1SITELIM, T2SITELIM in Fortran
-	 */
-	private Map<Integer, SiteCurveAgeMaximum> RD_E026(InputStream data, Map<String, Object> control)
-			throws IOException, ResourceParseException {
-		// ASITELIM for each site curve number and region, the maximum total age that
-		// site curve will increment to.
-		// Defaults to 140.0
-		// Default to all 140.0 if file not specified
-		// integer(3, 'siteCurve').float(7, 'ageCoast').float(7,'ageInt').float(7,
-		// 't1').float(7,'t2')
-		// ages of <=0.0 should be mapped to 1999.0
-		// site curve number 999 is end of data
-		// site curve number <-1 or >40 invalid.
-		// site curve number -1 is special. map to max position in array
-		// Structure: store the age for each region plus t1 and t2 for each site curve.
-
-		var parser = new SiteCurveAgeMaximumParser();
-		return parser.parse(data, control);
-	}
-
-	/**
-	 * Loads the information that was in the global array COE040 in Fortran
-	 */
-	private MatrixMap3<Integer, String, Integer, Float> RD_E040(InputStream data, Map<String, Object> control)
-			throws IOException, ResourceParseException {
-		// 10 coefficients by species (SP0) by becs
-		// 4 String BEC Alias, 2 gap, 1 int coefficient index, 2 int "Indicate", 16x8
-		// Float coefficient for species
-		// Blank bec is ignore line
-
-		// if indicate is 2, map the coefficients in directly
-		// if indicate is 0 write the first coeffecient from the file to all in the
-		// array
-		// if the indicate is 1, add the first from the file to each subsequent one.
-
-		var parser = new CoefficientParser();
-		return parser.parse(data, control);
-	}
-
-	/**
-	 * Loads the information that was in the global array COE041 in Fortran
-	 */
-	private MatrixMap3<Integer, String, Integer, Float> RD_E041(InputStream data, Map<String, Object> control)
-			throws IOException, ResourceParseException {
-		var parser = new CoefficientParser();
-		return parser.parse(data, control);
-	}
-
-	/**
-	 * Loads the information that was in the global array COE043 in Fortran
-	 */
-	private MatrixMap3<Region, String, Integer, Float> RD_E043(InputStream data, Map<String, Object> control)
-			throws IOException, ResourceParseException {
-		// Species and Region mapped to two coefficients
-		var parser = new UpperCoefficientParser();
-
-		return parser.parse(data, control);
-	}
-
-	/**
-	 * Loads the information that was in the global array COE050 in Fortran
-	 */
-	private MatrixMap3<Integer, String, Region, Float> RD_YHL1(InputStream data, Map<String, Object> control)
-			throws IOException, ResourceParseException {
-		// Species and Region mapped to three coefficients
-		// coeIndex from 1
-		// 10 READ(IU_TEMP, 11, ERR=90, END=70) SP0, CI, C1, C2, C3
-		// 11 FORMAT( A2 , 1x, A1, 3f10.0)
-
-		var parser = new HLCoefficientParser(HLCoefficientParser.NUM_COEFFICIENTS_P1);
-
-		return parser.parse(data, control);
-	}
-
-	/**
-	 * Loads the information that was in the global array COE051 in Fortran
-	 */
-	private MatrixMap3<Integer, String, Region, Float> RD_YHL2(InputStream data, Map<String, Object> control)
-			throws IOException, ResourceParseException {
-		// Species and Region mapped to two coefficients
-
-		var parser = new HLCoefficientParser(HLCoefficientParser.NUM_COEFFICIENTS_P2);
-
-		return parser.parse(data, control);
-	}
-
-	/**
-	 * Loads the information that was in the global array COE052 in Fortran
-	 */
-	private MatrixMap3<Integer, String, Region, Float> RD_YHL3(InputStream data, Map<String, Object> control)
-			throws IOException, ResourceParseException {
-		// Species and Region mapped to four coefficients
-		var parser = new HLCoefficientParser(HLCoefficientParser.NUM_COEFFICIENTS_P3);
-
-		return parser.parse(data, control);
-	}
-
-	/**
-	 * Loads the information that was in the global array COE053 in Fortran
-	 */
-	private MatrixMap3<String, String, Region, NonprimaryHLCoefficients>
-			RD_YHL4(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
-		// Two Species and a Region mapped to 2 coefficients and an equation index
-		var parser = new HLNonprimaryCoefficientParser();
-
-		return parser.parse(data, control);
-	}
-
-	/**
-	 * Loads the information that was in the global array COE060 in Fortran
-	 */
-	private List<Coefficients> RD_E060(InputStream data, Map<String, Object> control)
-			throws IOException, ResourceParseException {
-		// Map from coefficient index to per-species coefficient
-		var parser = new BySpeciesDqCoefficientParser();
-
-		return parser.parse(data, control);
-	}
-
-	/**
-	 * Loads the information that was in the global array COE061 in Fortran
-	 */
-	private MatrixMap2<String, Region, Coefficients> RD_E061(InputStream data, Map<String, Object> control)
-			throws IOException, ResourceParseException {
-		// Species and Region to 4 floats
-		var parser = new ComponentSizeParser(control);
-
-		return parser.parse(data, control);
-	}
-
-	/**
-	 * Loads the information that was in the global array COE070 in Fortran
-	 */
-	private MatrixMap3<Integer, String, String, Coefficients> RD_UBA1(InputStream data, Map<String, Object> control)
-			throws IOException, ResourceParseException {
-
-		// Uses
-		// COMMON /BECIgrow/ NBECGROW, IBECGV(14), IBECGIC(14)
-
-		// Sets
-		// C 2 coef BY 3 UC by (16 SP0) by (12 BEC)
-		// COMMON /V7COE070/ COE070( 2 , 3, 16, 12)
-
-		// Parses
-		// 10 READ(IU_TEMP, 11, ERR=90, END=70) CODE, SP0, BECSCOPE,
-		// 1 (C(I),I=1,2)
-		// 11 FORMAT( A4,1x, A2, 1x, A4, 2F10.0)
-
-		// Ignore if first segment is blank
-
-		// If BECSCOPE is empty, apply to all BECs, if it's I or C, apply to BECs in
-		// that region, otherwise only the one BEC.
-
-		var parser = new UtilComponentBaseAreaParser();
-
-		return parser.parse(data, control);
-	}
-
-	/**
-	 * Loads the information that was in the global array COE071 in Fortran
-	 */
-	private Object RD_UDQ1(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
-
-		// Uses
-		// COMMON /BECIgrow/ NBECGROW, IBECGV(14), IBECGIC(14)
-
-		// Sets
-		// C 4 coef BY 4 UC by (16 SP0) by (12 BEC)
-		// COMMON /V7COE071/ COE071( 4 , 4, 16, 12)
-
-		// Parses
-		// 10 READ(IU_TEMP, 11, ERR=90, END=70) CODE, SP0, BECSCOPE,
-		// 1 (C(I),I=1,4)
-		// 11 FORMAT( A4,9x, A2, 1x, A4, 4F10.0)
-
-		// Ignore if first segment is blank
-
-		// If BECSCOPE is empty, apply to all BECs, if it's I or C, apply to BECs in
-		// that region, otherwise only the one BEC.
-
-		var parser = new UtilComponentDQParser();
-		return parser.parse(data, control);
-	}
-
-	/**
-	 * Loads the information that was in the global array COE080 in Fortran
-	 *
-	 * @see SMALL_COMP_PROBABILITY
-	 */
-	private Map<String, Coefficients> RD_SBA1(InputStream data, Map<String, Object> control)
-			throws IOException, ResourceParseException {
-		// Sets
-		// C 4 coe for each of 16 SP0's
-		// COMMON /V7COE080/ COE080(4, 16)
-
-		// Parses
-		// 10 READ(IU_TEMP, 11, ERR=90, END=70) SP0, (C(I),I=1,4)
-		// 11 FORMAT( A2, 4f10.0)
-
-		// Ignore if first segment is blank
-
-		// Coefficient is 1 indexed
-
-		var parser = new SmallComponentProbabilityParser(control);
-		return parser.parse(data, control);
-	}
-
-	/**
-	 * Loads the information that was in the global array COE081 in Fortran
-	 *
-	 * @see SMALL_COMP_BA
-	 */
-	private Map<String, Coefficients> RD_SBA2(InputStream data, Map<String, Object> control)
-			throws IOException, ResourceParseException {
-
-		// Sets
-		// C 4 coe for each of 16 SP0's
-		// COMMON /V7COE081/ COE081(4, 16)
-
-		// Parses
-		// 10 READ(IU_TEMP, 11, ERR=90, END=70) SP0, (C(I),I=1,4)
-		// 11 FORMAT( A2, 4f10.0)
-
-		// Ignore if first segment is blank
-
-		// Coefficient is 1 indexed
-
-		var parser = new SmallComponentBaseAreaParser(control);
-		return parser.parse(data, control);
-	}
-
-	/**
-	 * Loads the information that was in the global array COE082 in Fortran
-	 *
-	 * @see SMALL_COMP_DQ
-	 */
-	private Map<String, Coefficients> RD_SDQ1(InputStream data, Map<String, Object> control)
-			throws IOException, ResourceParseException {
-
-		// Sets
-		// C 2 coe for each of 16 SP0's
-		// COMMON /V7COE082/ COE082(2, 16)
-
-		// Parses
-		// 10 READ(IU_TEMP, 11, ERR=90, END=70) SP0, (C(I),I=1,2)
-		// 11 FORMAT( A2, 4f10.0)
-
-		// Ignore if first segment is blank
-
-		// Coefficient is 1 indexed
-
-		var parser = new SmallComponentDQParser(control);
-		return parser.parse(data, control);
-	}
-
-	/**
-	 * Loads the information that was in the global array COE085 in Fortran
-	 *
-	 * @see SMALL_COMP_HL
-	 */
-	private Map<String, Coefficients> RD_SHL1(InputStream data, Map<String, Object> control)
-			throws IOException, ResourceParseException {
-
-		// Sets
-		// C 2 coe for each of 16 SP0's
-		// COMMON /V7COE085/ COE085(2, 16)
-
-		// Parses
-		// 10 READ(IU_TEMP, 11, ERR=90, END=70) SP0, (C(I),I=1,2)
-		// 11 FORMAT( A2, 4f10.0)
-
-		// Ignore if first segment is blank
-
-		// Coefficient is 1 indexed
-
-		var parser = new SmallComponentHLParser(control);
-		return parser.parse(data, control);
-	}
-
-	/**
-	 * Loads the information that was in the global array COE086 in Fortran
-	 *
-	 * @see SMALL_COMP_WS_VOLUME
-	 */
-	private Map<String, Coefficients> RD_SVT1(InputStream data, Map<String, Object> control)
-			throws IOException, ResourceParseException {
-
-		// Sets
-		// C 4 coe for each of 16 SP0's
-		// COMMON /V7COE086/ COE086(4, 16)
-
-		// Parses
-		// 10 READ(IU_TEMP, 11, ERR=90, END=70) SP0, (C(I),I=1,4)
-		// 11 FORMAT( A2, 4f10.0)
-
-		// Ignore if first segment is blank
-
-		// Coefficient is 1 indexed
-
-		var parser = new SmallComponentWSVolumeParser(control);
-		return parser.parse(data, control);
-	}
-
-	/**
-	 * Loads the information that was in the global array COE090 in Fortran
-	 *
-	 * @see TOTAL_STAND_WHOLE_STEM_VOL
-	 */
-	private Map<Integer, Coefficients> RD_YVT1(InputStream data, Map<String, Object> control)
-			throws IOException, ResourceParseException {
-
-		// Uses
-		// PARAMETER (MAXGROUP = 80)
-
-		// Sets
-		// C 9 coe for each of (Up to 80 groups)
-		// COMMON /V7COE090/ COE090(0:8, MAXGROUP)
-
-		// Parses
-		// 10 READ(IU_TEMP, 11, ERR=90, END=70) VGRP, (C(I),I=0,8)
-		// 11 FORMAT( I3, 9f10.0)
-
-		// Ignore if first segment is 0
-
-		// Coefficient is 0 indexed
-		// Group is 1 indexed
-
-		var parser = new TotalStandWholeStemParser();
-		return parser.parse(data, control);
-	}
-
-	/**
-	 * Loads the information that was in the global array COE091 in Fortran
-	 *
-	 * @see UTIL_COMP_WS_VOLUME
-	 */
-	private MatrixMap2<Integer, Integer, Coefficients> RD_YVT2(InputStream data, Map<String, Object> control)
-			throws IOException, ResourceParseException {
-
-		// Uses
-		// PARAMETER (MAXGROUP = 80)
-
-		// Sets
-		// C 4 coe for (4 UC's) for (Up to 80 groups)
-		// COMMON /V7COE091/ COE091(4, 4, MAXGROUP)
-
-		// Parses
-		// 10 READ(IU_TEMP, 11, ERR=90, END=70) UC, VGRP, (C(I),I=1,4)
-		// 11 FORMAT( I2, I4, 4f10.0)
-
-		// Ignore if first segment is 0
-
-		// Coefficient is 0 indexed
-		// UC is 1 indexed
-		// Group is 1 indexed
-
-		var parser = new UtilComponentWSVolumeParser();
-		return parser.parse(data, control);
-	}
-
-	/**
-	 * Loads the information that was in the global array COE092 in Fortran
-	 *
-	 * @see CLOSE_UTIL_VOLUME
-	 */
-	private MatrixMap2<Integer, Integer, Coefficients> RD_YVC1(InputStream data, Map<String, Object> control)
-			throws IOException, ResourceParseException {
-
-		// Uses
-		// PARAMETER (MAXGROUP = 80)
-
-		// Sets
-		// C 3 coe for (4 UC's) for (Up to 80 groups)
-		// COMMON /V7COE092/ COE092(3, 4, MAXGROUP)
-
-		// Parses
-		// 10 READ(IU_TEMP, 11, ERR=90, END=70) UC, VGRP, (C(I),I=1,3)
-		// 11 FORMAT( I2, I4, 4f10.0)
-
-		// Ignore if first segment is 0
-
-		// Group is 1 indexed
-		// UC is 1 indexed
-		// Coefficient is 1 indexed
-
-		var parser = new CloseUtilVolumeParser();
-		return parser.parse(data, control);
-	}
-
-	/**
-	 * Loads the information that was in the global array COE093 in Fortran
-	 *
-	 * @see VOLUME_NET_DECAY
-	 */
-	private MatrixMap2<Integer, Integer, Coefficients> RD_YVD1(InputStream data, Map<String, Object> control)
-			throws IOException, ResourceParseException {
-
-		// Uses
-		// PARAMETER (MAXGROUP = 80)
-
-		// Sets
-		// C 3 coe for (4 UC's) for (Up to 80 groups)
-		// COMMON /V7COE093/ COE093(3, 4, MAXGROUP)
-
-		// Parses
-		// 10 READ(IU_TEMP, 11, ERR=90, END=70) UC, DGRP, (C(I),I=1,3)
-		// 11 FORMAT( I2, I4, 4f10.0)
-
-		// Ignore if first segment is 0
-
-		// Group is 1 indexed
-		// UC is 1 indexed
-		// Coefficient is 1 indexed
-
-		var parser = new VolumeNetDecayParser();
-		return parser.parse(data, control);
-	}
-
-	/**
-	 * Loads the information that was in the global array COE094 in Fortran
-	 *
-	 * @see VOLUME_NET_DECAY_WASTE
-	 */
-	private Map<String, Coefficients> RD_YVW1(InputStream data, Map<String, Object> control)
-			throws IOException, ResourceParseException {
-
-		// Uses
-		//
-
-		// Sets
-		// Species to 6 coefficients
-		// COMMON /V7COE094/ COE094(0:5,16)
-
-		// Parses
-		// 10 READ(IU_TEMP, 11, ERR=90, END=70) SP0, A
-		// 11 FORMAT( A2, 6F9.0)
-
-		// Ignore if first segment is blank
-
-		// Coefficient is 0 indexed
-
-		var parser = new VolumeNetDecayWasteParser(control);
-		return parser.parse(data, control);
-	}
-
-	/**
-	 * Loads the information that was in the global array COE095 in Fortran
-	 *
-	 * @see BREAKAGE
-	 */
-	// Example FIPSTART.CTR calls this RD_EMP95
-	private Map<Integer, Coefficients> RD_E095(InputStream data, Map<String, Object> control)
-			throws IOException, ResourceParseException {
-
-		// Uses
-		// PARAMETER (MAXBGRP = 40)
-
-		// Sets
-		// C 4 for (Up to 40 groups)
-		// COMMON /V7COE095/ COE095(4, MAXBGRP)
-
-		// Parses
-		// 10 READ(IU_TEMP, 11, ERR=90, END=70) BGRP, A(1), A(2), A(3), A(4)
-		// 11 FORMAT( I2, 4f9.0)
-
-		// Ignore if first segment is 0
-
-		// Group is 1 indexed
-		// Coefficient is 1 indexed
-
-		var parser = new BreakageParser(control);
-		return parser.parse(data, control);
-	}
-
-	/**
-	 * Loads the information that was in the global array COE096 in Fortran
-	 *
-	 * @see VETERAN_LAYER_VOLUME_ADJUST
-	 */
-	// Example FIPSTART.CTR calls this RD_YVET
-	private Map<String, Coefficients> RD_YVVET(InputStream data, Map<String, Object> control)
-			throws IOException, ResourceParseException {
-
-		// Sets
-		// COMMON /V7COE096/ COE096( 4, 16)
-
-		// Parses
-		// 10 READ(IU_TEMP, 11, ERR=90, END=70) SP0, C
-		// 11 FORMAT( A2 , 4f9.5)
-
-		// Ignore if first segment is blank
-
-		// Coefficient is 1 indexed
-
-		var parser = new VeteranLayerVolumeAdjustParser(control);
-		return parser.parse(data, control);
-	}
-
-	/**
-	 * Loads the information that was in the global array COE097 in Fortran
-	 *
-	 * @see VETERAN_LAYER_DQ
-	 */
-	private MatrixMap2<String, Region, Coefficients> RD_YDQV(InputStream data, Map<String, Object> control)
-			throws IOException, ResourceParseException {
-
-		// Sets
-		// C 3 coef BY 16 SP0 BY C/I (2)
-		// COMMON /V7COE097/ COE097( 3, 16, 2)
-
-		// Parses
-		// 10 READ(IU_TEMP, 11, ERR=90, END=70) SP0, CI, C1, C2, C3
-		// 11 FORMAT( A2 , 1x, A1, 3f9.0)
-
-		// Ignore if first segment is blank
-
-		// Coefficient is 1 indexed
-
-		// Apply to both Regions if blank
-
-		var parser = new VeteranDQParser();
-		return parser.parse(data, control);
-	}
-
-	/**
-	 * Loads the information that was in the global array COE098 in Fortran
-	 *
-	 * @see VETERAN_BQ
-	 */
-	private MatrixMap2<String, Region, Coefficients> RD_E098(InputStream data, Map<String, Object> control)
-			throws IOException, ResourceParseException {
-
-		// Sets
-		// C 3 coef BY 16 SP0 BY C/I (2)
-		// COMMON /V7COE098/ COE098( 3, 16, 2)
-
-		// Parses
-		// 10 READ(IU_TEMP, 11, ERR=90, END=70) SP0, CI, C1, C2, C3
-		// 11 FORMAT( A2 , 1x, A1, 3f9.0)
-
-		// Ignore if first segment is blank
-
-		// Coefficient is 1 indexed
-		var parser = new VeteranBQParser(control);
-		return parser.parse(data, control);
-	}
-
-	/**
-	 * Modifies loaded data based on modifier file
-	 *
-	 * @see MODIFIER_FILE
-	 */
-	private Object RD_E198(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
-		// TODO
-
-		return null;
-	}
-
-	/**
-	 * TODO
-	 */
-	private Object RD_E106(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
-		return null;
-	}
-
-	/**
-	 * TODO
-	 */
-	private Object RD_E107(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
-		throw new UnsupportedOperationException();
-	}
-
-	/**
-	 * TODO
-	 */
-	private Object RD_E108(InputStream data, Map<String, Object> control) throws IOException, ResourceParseException {
-		throw new UnsupportedOperationException();
 	}
 
 }

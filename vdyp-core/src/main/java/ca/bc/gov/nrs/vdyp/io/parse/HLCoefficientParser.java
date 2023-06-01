@@ -18,7 +18,7 @@ import ca.bc.gov.nrs.vdyp.model.Region;
  * @author Kevin Smith, Vivid Solutions
  *
  */
-public class HLCoefficientParser implements ResourceParser<MatrixMap3<Integer, String, Region, Float>> {
+public class HLCoefficientParser implements ControlMapSubResourceParser<MatrixMap3<Integer, String, Region, Float>> {
 
 	public static final String CONTROL_KEY_P1 = "HL_PRIMARY_SP_EQN_P1";
 	public static final String CONTROL_KEY_P2 = "HL_PRIMARY_SP_EQN_P2";
@@ -33,8 +33,9 @@ public class HLCoefficientParser implements ResourceParser<MatrixMap3<Integer, S
 	public static final String COEFFICIENT_KEY = "coefficient";
 
 	int numCoefficients;
+	private String controlKey;
 
-	public HLCoefficientParser(int numCoefficients) {
+	public HLCoefficientParser(int numCoefficients, String controlKey) {
 		super();
 		this.numCoefficients = numCoefficients;
 		this.lineParser = new LineParser() {
@@ -46,6 +47,7 @@ public class HLCoefficientParser implements ResourceParser<MatrixMap3<Integer, S
 
 		}.value(2, SP0_KEY, ValueParser.STRING).space(1).value(1, REGION_KEY, ValueParser.REGION)
 				.multiValue(numCoefficients, 10, COEFFICIENT_KEY, ValueParser.FLOAT);
+		this.controlKey = controlKey;
 	}
 
 	LineParser lineParser;
@@ -76,6 +78,11 @@ public class HLCoefficientParser implements ResourceParser<MatrixMap3<Integer, S
 			return r;
 		}, control);
 		return result;
+	}
+
+	@Override
+	public String getControlKey() {
+		return controlKey;
 	}
 
 }

@@ -23,7 +23,7 @@ import ca.bc.gov.nrs.vdyp.model.Region;
  *
  */
 public abstract class BaseCoefficientParser<T extends Coefficients, M extends MatrixMap<T>>
-		implements ResourceParser<M> {
+		implements ControlMapSubResourceParser<M> {
 
 	public static final String SP0_KEY = "sp0";
 	public static final String REGION_KEY = "region";
@@ -36,8 +36,9 @@ public abstract class BaseCoefficientParser<T extends Coefficients, M extends Ma
 	List<String> metaKeys = new ArrayList<>();
 	List<Function<Map<String, Object>, Collection<?>>> keyRanges = new ArrayList<>();
 	private int expectedKeys;
+	private final String controlKey;
 
-	public BaseCoefficientParser(int expectedKeys) {
+	public BaseCoefficientParser(int expectedKeys, String controlKey) {
 		super();
 		this.expectedKeys = expectedKeys;
 		this.lineParser = new LineParser() {
@@ -48,10 +49,11 @@ public abstract class BaseCoefficientParser<T extends Coefficients, M extends Ma
 			}
 
 		};
+		this.controlKey = controlKey;
 	}
 
-	public BaseCoefficientParser() {
-		this(0);
+	public BaseCoefficientParser(String controlKey) {
+		this(0, controlKey);
 	}
 
 	/**
@@ -162,4 +164,8 @@ public abstract class BaseCoefficientParser<T extends Coefficients, M extends Ma
 
 	protected abstract T getCoefficients(List<Float> coefficients);
 
+	@Override
+	public String getControlKey() {
+		return controlKey;
+	}
 }

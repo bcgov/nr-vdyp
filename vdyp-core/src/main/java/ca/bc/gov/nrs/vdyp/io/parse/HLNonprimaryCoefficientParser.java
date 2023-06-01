@@ -18,7 +18,7 @@ import ca.bc.gov.nrs.vdyp.model.Region;
  *
  */
 public class HLNonprimaryCoefficientParser
-		implements ResourceParser<MatrixMap3<String, String, Region, NonprimaryHLCoefficients>> {
+		implements ControlMapSubResourceParser<MatrixMap3<String, String, Region, NonprimaryHLCoefficients>> {
 
 	public static final String CONTROL_KEY = "HL_NONPRIMARY";
 
@@ -73,6 +73,11 @@ public class HLNonprimaryCoefficientParser
 			return r;
 		}, control);
 		return result;
+	}
+
+	@Override
+	public String getControlKey() {
+		return CONTROL_KEY;
 	}
 
 }

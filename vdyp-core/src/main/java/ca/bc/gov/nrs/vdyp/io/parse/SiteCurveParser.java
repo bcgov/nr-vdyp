@@ -2,17 +2,14 @@ package ca.bc.gov.nrs.vdyp.io.parse;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import ca.bc.gov.nrs.vdyp.common.ExpectationDifference;
-import ca.bc.gov.nrs.vdyp.model.SP0Definition;
 import ca.bc.gov.nrs.vdyp.model.SiteCurve;
 
-public class SiteCurveParser implements ResourceParser<Map<String, SiteCurve>> {
+public class SiteCurveParser implements OptionalControlMapSubResourceParser<Map<String, SiteCurve>> {
 	public static final String CONTROL_KEY = "SITE_CURVE_NUMBERS";
 
 	public static final String SPECIES_KEY = "species";
@@ -52,6 +49,16 @@ public class SiteCurveParser implements ResourceParser<Map<String, SiteCurve>> {
 			throw new ResourceParseValidException("Missing expected entries for " + String.join(", ", missing));
 		}
 		return result;
+	}
+
+	@Override
+	public String getControlKey() {
+		return CONTROL_KEY;
+	}
+
+	@Override
+	public Map<String, SiteCurve> defaultResult() {
+		return Collections.emptyMap();
 	}
 
 }

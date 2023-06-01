@@ -11,7 +11,7 @@ public class CloseUtilVolumeParser extends SimpleCoefficientParser2<Integer, Int
 	public static final String CONTROL_KEY = "CLOSE_UTIL_VOLUME";
 
 	public CloseUtilVolumeParser() {
-		super(1);
+		super(1, CONTROL_KEY);
 		this.ucIndexKey().space(1).groupIndexKey(80).coefficients(4, 10);
 	}
 

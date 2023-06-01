@@ -33,7 +33,7 @@ public class EquationGroupParserTest {
 
 	@Test
 	public void testParse() throws Exception {
-		var parser = new EquationGroupParser();
+		var parser = new DefaultEquationNumberParser();
 
 		var controlMap = makeControlMapSingle();
 		String[] lines = { "S1 B1   001" };
@@ -46,7 +46,7 @@ public class EquationGroupParserTest {
 
 	@Test
 	public void testSP0MustExist() throws Exception {
-		var parser = new EquationGroupParser();
+		var parser = new DefaultEquationNumberParser();
 
 		var controlMap = makeControlMapSingle();
 		String[] lines = { "SX B1   001" };
@@ -64,7 +64,7 @@ public class EquationGroupParserTest {
 
 	@Test
 	public void testBecMustExist() throws Exception {
-		var parser = new EquationGroupParser();
+		var parser = new DefaultEquationNumberParser();
 
 		var controlMap = makeControlMapSingle();
 		String[] lines = { "S1 BX   001" };
@@ -85,7 +85,7 @@ public class EquationGroupParserTest {
 		// Original Fortran allows subsequent entries to overwrite old ones so don't
 		// validate against that
 
-		var parser = new EquationGroupParser();
+		var parser = new DefaultEquationNumberParser();
 
 		var controlMap = makeControlMapSingle();
 		String[] lines = { "S1 B1   001", "S1 B1   002" };
@@ -98,7 +98,7 @@ public class EquationGroupParserTest {
 
 	@Test
 	public void testParseMultiple() throws Exception {
-		var parser = new EquationGroupParser();
+		var parser = new DefaultEquationNumberParser();
 
 		var controlMap = makeControlMap();
 		String[] lines = { "S1 B1   011", "S1 B2   012", "S1 B3   013", "S1 B4   014", "S2 B1   021", "S2 B2   022",
@@ -120,7 +120,7 @@ public class EquationGroupParserTest {
 	@Test
 	public void testRequireNoMissingSp0() throws Exception {
 
-		var parser = new EquationGroupParser();
+		var parser = new DefaultEquationNumberParser();
 
 		var controlMap = makeControlMap();
 
@@ -140,7 +140,7 @@ public class EquationGroupParserTest {
 	@Test
 	public void testRequireNoMissingBec() throws Exception {
 
-		var parser = new EquationGroupParser();
+		var parser = new DefaultEquationNumberParser();
 
 		var controlMap = makeControlMap();
 
@@ -161,7 +161,7 @@ public class EquationGroupParserTest {
 	@Test
 	public void testRequireNoUnexpectedBec() throws Exception {
 
-		var parser = new EquationGroupParser();
+		var parser = new DefaultEquationNumberParser();
 
 		var controlMap = makeControlMap();
 

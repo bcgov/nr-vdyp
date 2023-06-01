@@ -12,8 +12,8 @@ public class SimpleCoefficientParser2<K1, K2>
 
 	private int indexFrom;
 
-	public SimpleCoefficientParser2(int indexFrom) {
-		super(2);
+	public SimpleCoefficientParser2(int indexFrom, String controlKey) {
+		super(2, controlKey);
 		this.indexFrom = indexFrom;
 	}
 

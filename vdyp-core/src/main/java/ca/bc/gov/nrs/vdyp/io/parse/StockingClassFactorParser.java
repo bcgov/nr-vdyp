@@ -16,7 +16,7 @@ import ca.bc.gov.nrs.vdyp.model.StockingClassFactor;
  * @author Kevin Smith, Vivid Solutions
  *
  */
-public class StockingClassFactorParser implements ResourceParser<Map<Character, Map<Region, StockingClassFactor>>> {
+public class StockingClassFactorParser implements ControlMapSubResourceParser<Map<Character, Map<Region, StockingClassFactor>>> {
 
 	public static final String CONTROL_KEY = "STOCKING_CLASS_FACTORS";
 
@@ -75,6 +75,11 @@ public class StockingClassFactorParser implements ResourceParser<Map<Character, 
 		}
 
 		return Collections.unmodifiableMap(result);
+	}
+
+	@Override
+	public String getControlKey() {
+		return CONTROL_KEY;
 	}
 
 }

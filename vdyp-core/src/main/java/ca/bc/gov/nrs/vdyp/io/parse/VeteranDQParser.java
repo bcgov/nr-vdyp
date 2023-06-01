@@ -13,7 +13,7 @@ import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
 import ca.bc.gov.nrs.vdyp.model.Region;
 
-public class VeteranDQParser implements ResourceParser<MatrixMap2<String, Region, Coefficients>> {
+public class VeteranDQParser implements ControlMapSubResourceParser<MatrixMap2<String, Region, Coefficients>> {
 	public static final String CONTROL_KEY = "VETERAN_LAYER_DQ";
 
 	public final static int numCoefficients = 3;
@@ -67,6 +67,11 @@ public class VeteranDQParser implements ResourceParser<MatrixMap2<String, Region
 			return r;
 		}, control);
 		return result;
+	}
+
+	@Override
+	public String getControlKey() {
+		return CONTROL_KEY;
 	}
 
 }

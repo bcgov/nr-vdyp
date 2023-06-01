@@ -19,7 +19,7 @@ import ca.bc.gov.nrs.vdyp.model.SP0Definition;
  * @author Kevin Smith, Vivid Solutions
  *
  */
-public class UpperCoefficientParser implements ResourceParser<MatrixMap3<Region, String, Integer, Float>> {
+public class UpperCoefficientParser implements ControlMapSubResourceParser<MatrixMap3<Region, String, Integer, Float>> {
 	public static final int BA = 1;
 	public static final int DQ = 2;
 
@@ -66,6 +66,11 @@ public class UpperCoefficientParser implements ResourceParser<MatrixMap3<Region,
 			return r;
 		}, control);
 		return result;
+	}
+
+	@Override
+	public String getControlKey() {
+		return CONTROL_KEY;
 	}
 
 }

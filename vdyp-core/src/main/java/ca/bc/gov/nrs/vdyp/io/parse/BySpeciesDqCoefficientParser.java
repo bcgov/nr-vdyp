@@ -16,7 +16,7 @@ import ca.bc.gov.nrs.vdyp.model.Coefficients;
  * @author Kevin Smith, Vivid Solutions
  *
  */
-public class BySpeciesDqCoefficientParser implements ResourceParser<List<Coefficients>> {
+public class BySpeciesDqCoefficientParser implements ControlMapSubResourceParser<List<Coefficients>> {
 
 	public static final String CONTROL_KEY = "BY_SPECIES_DQ";
 
@@ -71,6 +71,11 @@ public class BySpeciesDqCoefficientParser implements ResourceParser<List<Coeffic
 			return r;
 		}, control);
 		return result;
+	}
+
+	@Override
+	public String getControlKey() {
+		return CONTROL_KEY;
 	}
 
 }
