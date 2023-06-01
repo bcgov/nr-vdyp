@@ -16,7 +16,7 @@ public class ComponentSizeParser extends SimpleCoefficientParser2<String, Region
 
 	public ComponentSizeParser(Map<String, Object> control) {
 		super(1);
-		this.speciesKey(control).space(1).regionKey().coefficients(4, 6);
+		this.speciesKey().space(1).regionKey().coefficients(4, 6);
 	}
 
 }

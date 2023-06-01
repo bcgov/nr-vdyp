@@ -8,7 +8,7 @@ public class VeteranLayerVolumeAdjustParser extends SimpleCoefficientParser1<Str
 
 	public VeteranLayerVolumeAdjustParser(Map<String, Object> control) {
 		super(String.class, 0);
-		this.speciesKey(BaseCoefficientParser.SP0_KEY, control);
+		this.speciesKey();
 		this.coefficients(4, 9);
 	}
 

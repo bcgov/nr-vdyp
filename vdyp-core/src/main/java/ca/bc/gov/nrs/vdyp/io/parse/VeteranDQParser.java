@@ -31,7 +31,8 @@ public class VeteranDQParser implements ResourceParser<MatrixMap2<String, Region
 				return line.startsWith("    ");
 			}
 
-		}.value(2, SPECIES_KEY, String::strip).space(1).value(1, REGION_KEY, ValueParser.optional(ValueParser.REGION))
+		}.value(2, SPECIES_KEY, ValueParser.STRING).space(1)
+				.value(1, REGION_KEY, ControlledValueParser.optional(ValueParser.REGION))
 				.multiValue(numCoefficients, 10, COEFFICIENT_KEY, ValueParser.FLOAT);
 	}
 

@@ -26,9 +26,9 @@ public class SP0DefinitionParser implements ResourceParser<List<SP0Definition>> 
 	LineParser lineParser = new LineParser().strippedString(2, "alias").space(1).strippedString(32, "name").space(1)
 			.value(
 					2, "preference",
-					s -> ValueParser.optional(ValueParser.INTEGER).parse(s)
+					(s, c) -> ValueParser.optional(ValueParser.INTEGER).parse(s)
 							.flatMap(v -> v == 0 ? Optional.empty() : Optional.of(v))
-			);;
+			);
 
 	public SP0DefinitionParser() {
 		super();

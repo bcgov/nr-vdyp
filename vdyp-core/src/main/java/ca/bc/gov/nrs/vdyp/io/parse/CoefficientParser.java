@@ -36,7 +36,7 @@ public class CoefficientParser implements ResourceParser<MatrixMap3<Integer, Str
 			return line.startsWith("   ");
 		}
 
-	}.value(4, BEC_KEY, String::strip).space(2).value(1, COEFFICIENT_INDEX_KEY, ValueParser.INTEGER)
+	}.value(4, BEC_KEY, ValueParser.STRING).space(2).value(1, COEFFICIENT_INDEX_KEY, ValueParser.INTEGER)
 			.value(2, INDICATOR_KEY, ValueParser.INTEGER)
 			.multiValue(NUM_SPECIES, 8, COEFFICIENT_KEY, ValueParser.FLOAT);
 

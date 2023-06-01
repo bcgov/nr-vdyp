@@ -63,9 +63,12 @@ public class SimpleCoefficientParser1<K1> implements ResourceParser<Map<K1, Coef
 		return delegate.groupIndexKey(maxGroups);
 	}
 
-	public BaseCoefficientParser<Coefficients, MatrixMap<Coefficients>>
-			speciesKey(String name, Map<String, Object> controlMap) {
-		return delegate.speciesKey(name, controlMap);
+	public BaseCoefficientParser<Coefficients, MatrixMap<Coefficients>> speciesKey(String name) {
+		return delegate.speciesKey(name);
+	}
+
+	public BaseCoefficientParser<Coefficients, MatrixMap<Coefficients>> speciesKey() {
+		return delegate.speciesKey();
 	}
 
 	public BaseCoefficientParser<Coefficients, MatrixMap<Coefficients>> space(int length) {

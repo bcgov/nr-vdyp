@@ -42,7 +42,7 @@ public class SiteCurveAgeMaximumParser implements ResourceParser<Map<Integer, Si
 	}.value(3, SC_KEY, PARSE_SC).value(7, COASTAL_KEY, PARSE_AGE).value(7, INTERIOR_KEY, PARSE_AGE)
 			.value(7, T1_KEY, PARSE_AGE).value(7, T2_KEY, PARSE_AGE);
 
-	static ValueParser<Integer> PARSE_SC = ValueParser.validate(ValueParser.INTEGER, v -> {
+	static ControlledValueParser<Integer> PARSE_SC = ControlledValueParser.validate(ValueParser.INTEGER, (v, c) -> {
 		if (v < -1 || v > MAX_SC) {
 			return Optional.of("Site curve number must be in the range -1 to " + MAX_SC + " inclusive");
 		}

@@ -38,7 +38,7 @@ public class UpperCoefficientParser implements ResourceParser<MatrixMap3<Region,
 			return line.startsWith("   ");
 		}
 
-	}.value(2, SP0_KEY, String::strip).space(1).value(1, REGION_KEY, ValueParser.REGION)
+	}.value(2, SP0_KEY, ValueParser.STRING).space(1).value(1, REGION_KEY, ValueParser.REGION)
 			.multiValue(NUM_COEFFICIENTS, 7, COEFFICIENT_KEY, ValueParser.FLOAT);
 
 	@Override

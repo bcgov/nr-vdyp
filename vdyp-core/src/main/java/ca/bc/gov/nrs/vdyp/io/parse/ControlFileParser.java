@@ -29,7 +29,7 @@ public class ControlFileParser implements ResourceParser<Map<String, Object>> {
 	public static final String COMMENT_MARKER = "!";
 
 	private Map<Integer, String> identifiers;
-	private Map<Integer, ValueParser<?>> valueParsers;
+	private Map<Integer, ControlledValueParser<?>> valueParsers;
 	private ValueParser<?> defaultValueParser;
 	private Map<String, Supplier<?>> defaultValueGenerators;
 
@@ -85,7 +85,7 @@ public class ControlFileParser implements ResourceParser<Map<String, Object>> {
 			String controlString = restOfLine.substring(0, controlLength);
 
 			String key = getKeyForIndex(index);
-			Object value = valueParsers.getOrDefault(index, defaultValueParser).parse(controlString);
+			Object value = valueParsers.getOrDefault(index, defaultValueParser).parse(controlString, control);
 
 			r.put(key, value);
 
@@ -131,7 +131,7 @@ public class ControlFileParser implements ResourceParser<Map<String, Object>> {
 	 * @param parser
 	 * @return
 	 */
-	public ControlFileParser optional(int index, String name, ValueParser<?> parser) {
+	public ControlFileParser optional(int index, String name, ControlledValueParser<?> parser) {
 		record(index, name);
 		optional(index, parser);
 		return this;
@@ -158,7 +158,7 @@ public class ControlFileParser implements ResourceParser<Map<String, Object>> {
 	 * @param parser
 	 * @return
 	 */
-	public ControlFileParser record(int index, ValueParser<?> parser) {
+	public ControlFileParser record(int index, ControlledValueParser<?> parser) {
 		this.valueParsers.put(index, parser);
 		return this;
 	}
@@ -171,8 +171,8 @@ public class ControlFileParser implements ResourceParser<Map<String, Object>> {
 	 * @param parser
 	 * @return
 	 */
-	public ControlFileParser optional(int index, ValueParser<?> parser) {
-		record(index, ValueParser.optional(parser));
+	public ControlFileParser optional(int index, ControlledValueParser<?> parser) {
+		record(index, ControlledValueParser.optional(parser));
 		this.defaultValueGenerators.put(getKeyForIndex(index), Optional::empty);
 		return this;
 	}

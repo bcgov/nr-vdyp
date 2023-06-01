@@ -39,7 +39,7 @@ public class HLNonprimaryCoefficientParser
 				return line.startsWith("   ");
 			}
 
-		}.value(2, SPECIES_1_KEY, String::strip).space(1).value(2, SPECIES_2_KEY, String::strip).space(1)
+		}.value(2, SPECIES_1_KEY, ValueParser.STRING).space(1).value(2, SPECIES_2_KEY, ValueParser.STRING).space(1)
 				.value(1, REGION_KEY, ValueParser.REGION).space(1).integer(1, EQUATION_KEY)
 				.multiValue(NUM_COEFFICIENTS, 10, COEFFICIENT_KEY, ValueParser.FLOAT);
 	}

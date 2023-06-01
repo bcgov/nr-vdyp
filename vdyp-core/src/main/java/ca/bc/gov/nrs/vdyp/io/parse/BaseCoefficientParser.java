@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -33,7 +34,7 @@ public abstract class BaseCoefficientParser<T extends Coefficients, M extends Ma
 	int numCoefficients;
 
 	List<String> metaKeys = new ArrayList<>();
-	List<Collection<?>> keyRanges = new ArrayList<>();
+	List<Function<Map<String, Object>, Collection<?>>> keyRanges = new ArrayList<>();
 	private int expectedKeys;
 
 	public BaseCoefficientParser(int expectedKeys) {
@@ -53,20 +54,43 @@ public abstract class BaseCoefficientParser<T extends Coefficients, M extends Ma
 		this(0);
 	}
 
-	public <K> BaseCoefficientParser<T, M>
-			key(int length, String name, ValueParser<K> parser, Collection<K> range, String errorTemplate) {
+	/**
+	 * Add a key for the multimap
+	 *
+	 * @param <K>           type of the key
+	 * @param length        length of the key in the file
+	 * @param name          name of the key
+	 * @param parser        Parser for the
+	 * @param range         Function that returns the set of values based on the
+	 *                      control map
+	 * @param errorTemplate Error message if the parsed value is not in the given
+	 *                      range, it will be formatted (see {@link String.format})
+	 *                      with the erroneous value as a parameter.
+	 * @return
+	 */
+	public <K> BaseCoefficientParser<T, M> key(
+			int length, String name, ControlledValueParser<K> parser,
+			Function<Map<String, Object>, Collection<?>> range, String errorTemplate
+	) {
 		if (expectedKeys > 0 && metaKeys.size() == expectedKeys) {
 			throw new IllegalStateException(
 					"Expected " + expectedKeys + " keys but " + name + " was key " + expectedKeys + 1
 			);
 		}
-		var validParser = ValueParser.validate(
-				parser, (v) -> range.contains(v) ? Optional.empty() : Optional.of(String.format(errorTemplate, v))
+		var validParser = ControlledValueParser.validate(
+				parser,
+				(v, control) -> range.apply(control).contains(v) ? Optional.empty()
+						: Optional.of(String.format(errorTemplate, v))
 		);
 		lineParser.value(length, name, validParser);
 		metaKeys.add(name);
 		keyRanges.add(range);
 		return this;
+	}
+
+	public <K> BaseCoefficientParser<T, M>
+			key(int length, String name, ControlledValueParser<K> parser, Collection<?> range, String errorTemplate) {
+		return key(length, name, parser, (c) -> range, errorTemplate);
 	}
 
 	public BaseCoefficientParser<T, M> regionKey() {
@@ -90,12 +114,14 @@ public abstract class BaseCoefficientParser<T extends Coefficients, M extends Ma
 	}
 
 	public BaseCoefficientParser<T, M> speciesKey(String name) {
-		var range = SP0DefinitionParser.getSpeciesAliases(controlMap);
-		return key(2, name, String::strip, range, "%s is not a valid species");
+		return key(
+				2, name, ControlledValueParser.SPECIES, SP0DefinitionParser::getSpeciesAliases,
+				"%s is not a valid species"
+		);
 	}
 
-	public BaseCoefficientParser<T, M> speciesKey(Map<String, Object> controlMap) {
-		return speciesKey(SP0_KEY, controlMap);
+	public BaseCoefficientParser<T, M> speciesKey() {
+		return speciesKey(SP0_KEY);
 	}
 
 	public BaseCoefficientParser<T, M> space(int length) {
@@ -116,7 +142,9 @@ public abstract class BaseCoefficientParser<T extends Coefficients, M extends Ma
 		if (expectedKeys > 0 && metaKeys.size() != expectedKeys) {
 			throw new IllegalStateException("Expected " + expectedKeys + " keys but there were " + metaKeys.size());
 		}
-		M result = createMap(keyRanges);
+		keyRanges.stream().map(x -> x.apply(control)).toList();
+		@SuppressWarnings({ "unchecked", "rawtypes" })
+		M result = (M) createMap((List) (keyRanges.stream().map(x -> x.apply(control)).toList()));
 
 		lineParser.parse(is, result, (v, r) -> {
 			var key = metaKeys.stream().map(v::get).collect(Collectors.toList()).toArray(Object[]::new);

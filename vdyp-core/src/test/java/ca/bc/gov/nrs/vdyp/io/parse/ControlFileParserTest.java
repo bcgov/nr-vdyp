@@ -226,7 +226,7 @@ public class ControlFileParserTest {
 	@Test
 	void testExceptionInControlValueParser() throws Exception {
 		var parser = makeParser();
-		parser.record(2, s -> {
+		parser.record(2, (s, c) -> {
 			throw new ValueParseException(s, "Test Exception");
 		});
 
@@ -313,7 +313,7 @@ public class ControlFileParserTest {
 	void testParsesOptional() throws Exception {
 		var parser = makeParser();
 
-		parser.optional(1, "x", String::strip);
+		parser.optional(1, "x", ValueParser.STRING);
 
 		String file = "001 Control";
 		try (InputStream is = new ByteArrayInputStream(file.getBytes())) {

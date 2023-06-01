@@ -32,8 +32,8 @@ public class UtilComponentParser implements ResourceParser<MatrixMap3<Integer, S
 				return line.startsWith("    ");
 			}
 
-		}.value(4, UC_KEY, ValueParser.indexParser("UC", 1, ucCodes)).space(gap).value(2, SPECIES_KEY, String::strip)
-				.space(1).value(4, BEC_SCOPE_KEY, String::strip)
+		}.value(4, UC_KEY, ValueParser.indexParser("UC", 1, ucCodes)).space(gap)
+				.value(2, SPECIES_KEY, ValueParser.STRING).space(1).value(4, BEC_SCOPE_KEY, ValueParser.STRING)
 				.multiValue(numCoefficients, 10, COEFFICIENT_KEY, ValueParser.FLOAT);
 	}
 

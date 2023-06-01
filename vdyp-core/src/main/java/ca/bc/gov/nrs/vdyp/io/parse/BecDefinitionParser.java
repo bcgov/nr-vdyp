@@ -93,4 +93,10 @@ public class BecDefinitionParser implements ResourceParser<Map<String, BecDefini
 		return Region.fromAlias(scope).map(region -> getBecsByRegion(control, region))
 				.orElseGet(() -> Utils.singletonOrEmpty(getBecs(control).get(scope)));
 	}
+
+	public static void checkBec(Map<String, Object> control, String bec) throws ValueParseException {
+		if (!getBecAliases(control).contains(bec)) {
+			throw new ValueParseException(bec, bec + " is not a valid BEC");
+		}
+	}
 }

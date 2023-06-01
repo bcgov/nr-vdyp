@@ -8,7 +8,7 @@ public class SmallComponentProbabilityParser extends SimpleCoefficientParser1<St
 
 	public SmallComponentProbabilityParser(Map<String, Object> control) {
 		super(String.class, 1);
-		this.speciesKey(BaseCoefficientParser.SP0_KEY, control);
+		this.speciesKey();
 		this.coefficients(4, 10);
 	}
 

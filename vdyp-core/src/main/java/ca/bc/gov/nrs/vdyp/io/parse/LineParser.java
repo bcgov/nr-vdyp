@@ -102,21 +102,21 @@ public class LineParser {
 	 * A string segment
 	 */
 	public LineParser string(int length, String name) {
-		return this.value(length, name, s -> s);
+		return this.value(length, name, ValueParser.STRING_UNSTRIPPED);
 	}
 
 	/**
 	 * A string segment with no bounds. No further segments may be added.
 	 */
 	public LineParser string(String name) {
-		return this.value(name, s -> s);
+		return this.value(name, ValueParser.STRING_UNSTRIPPED);
 	}
 
 	/**
 	 * A string segment stripped of leading and trailing whitespace.
 	 */
 	public LineParser strippedString(int length, String name) {
-		return this.value(length, name, String::strip);
+		return this.value(length, name, ValueParser.STRING);
 	}
 
 	/**
@@ -124,7 +124,7 @@ public class LineParser {
 	 * No further segments may be added.
 	 */
 	public LineParser strippedString(String name) {
-		return this.value(name, String::strip);
+		return this.value(name, ValueParser.STRING);
 	}
 
 	/**
@@ -152,7 +152,7 @@ public class LineParser {
 	 * @param name   name of the segment
 	 * @param parser parser to convert the string
 	 */
-	public <T> LineParser value(int length, String name, ValueParser<T> parser) {
+	public <T> LineParser value(int length, String name, ControlledValueParser<T> parser) {
 		if (length < 0)
 			throw new IllegalArgumentException("length can not be negative");
 		return doValue(length, name, parser);
@@ -166,11 +166,11 @@ public class LineParser {
 	 * @param name   name of the segment
 	 * @param parser parser to convert the string
 	 */
-	public <T> LineParser value(String name, ValueParser<T> parser) {
+	public <T> LineParser value(String name, ControlledValueParser<T> parser) {
 		return doValue(-1, name, parser);
 	}
 
-	private <T> LineParser doValue(int length, String name, ValueParser<T> parser) {
+	private <T> LineParser doValue(int length, String name, ControlledValueParser<T> parser) {
 		if (segments.size() > 0 && segments.get(segments.size() - 1).length < 0)
 			throw new IllegalStateException("Can not add a segment after an unbounded segment");
 		segments.add(new LineParserValueSegment<T>(length, name) {

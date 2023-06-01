@@ -10,7 +10,7 @@ public class VeteranBQParser extends SimpleCoefficientParser2<String, Region> {
 
 	public VeteranBQParser(Map<String, Object> control) {
 		super(1);
-		this.speciesKey(control).space(1).regionKey().coefficients(3, 9);
+		this.speciesKey().space(1).regionKey().coefficients(3, 9);
 	}
 
 }

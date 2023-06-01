@@ -8,7 +8,7 @@ public class SmallComponentDQParser extends SimpleCoefficientParser1<String> {
 
 	public SmallComponentDQParser(Map<String, Object> control) {
 		super(String.class, 1);
-		this.speciesKey(BaseCoefficientParser.SP0_KEY, control);
+		this.speciesKey();
 		this.coefficients(2, 10);
 	}
 

@@ -129,6 +129,16 @@ public interface ValueParser<T> extends ControlledValueParser<T> {
 	};
 
 	/**
+	 * Parser for strings that does not strip whitespace
+	 */
+	public static final ValueParser<String> STRING_UNSTRIPPED = s -> s;
+
+	/**
+	 * Parser for strings
+	 */
+	public static final ValueParser<String> STRING = String::strip;
+
+	/**
 	 * Parser for a region identifier
 	 */
 	public static final ValueParser<Region> REGION = (s) -> Region.fromAlias(Character.toUpperCase(s.charAt(0)))
@@ -155,14 +165,7 @@ public interface ValueParser<T> extends ControlledValueParser<T> {
 	 * @return
 	 */
 	public static <U> ValueParser<U> validate(ValueParser<U> delegate, Function<U, Optional<String>> validator) {
-		return s -> {
-			var value = delegate.parse(s);
-			var error = validator.apply(value);
-			if (error.isPresent()) {
-				throw new ValueParseException(s, error.get());
-			}
-			return value;
-		};
+		return uncontrolled(ControlledValueParser.validate(delegate, (v, c) -> validator.apply(v)));
 	}
 
 	/**
@@ -172,12 +175,7 @@ public interface ValueParser<T> extends ControlledValueParser<T> {
 	 * @param delegate Parser to use if the string is not blank
 	 */
 	public static <U> ValueParser<Optional<U>> optional(ValueParser<U> delegate) {
-		return (s) -> {
-			if (!s.isBlank()) {
-				return Optional.of(delegate.parse(s));
-			}
-			return Optional.empty();
-		};
+		return uncontrolled(ControlledValueParser.optional(delegate));
 	}
 
 	/**
@@ -197,5 +195,9 @@ public interface ValueParser<T> extends ControlledValueParser<T> {
 			}
 			return Collections.unmodifiableList(result);
 		};
+	}
+
+	static <U> ValueParser<U> uncontrolled(ControlledValueParser<U> delegate) {
+		return s -> delegate.parse(s, Collections.emptyMap());
 	}
 }

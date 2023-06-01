@@ -8,7 +8,7 @@ public class VolumeNetDecayWasteParser extends SimpleCoefficientParser1<String> 
 
 	public VolumeNetDecayWasteParser(Map<String, Object> control) {
 		super(String.class, 0);
-		this.speciesKey(BaseCoefficientParser.SP0_KEY, control);
+		this.speciesKey();
 		this.coefficients(6, 9);
 	}
 }

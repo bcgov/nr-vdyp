@@ -93,8 +93,8 @@ public class LineParserTest {
 	@Test
 	public void testValueParser() throws Exception {
 		var parser = new LineParser();
-		parser.value(4, "part1", (s) -> Integer.valueOf(s.strip()) + 1).space(1)
-				.value("part2", (s) -> Float.valueOf(s.strip()) + 1);
+		parser.value(4, "part1", (s, c) -> Integer.valueOf(s.strip()) + 1).space(1)
+				.value("part2", (s, c) -> Float.valueOf(s.strip()) + 1);
 
 		var result1 = parser.parseLine(" 4   0.5  ", Collections.emptyMap());
 
@@ -106,9 +106,9 @@ public class LineParserTest {
 	@Test
 	public void testValueParserError() throws Exception {
 		var parser = new LineParser();
-		parser.value(4, "part1", (s) -> {
+		parser.value(4, "part1", (s, c) -> {
 			throw new ValueParseException(s, "Testing");
-		}).space(1).value(4, "part2", (s) -> Float.valueOf(s.strip()) + 1);
+		}).space(1).value(4, "part2", (s, c) -> Float.valueOf(s.strip()) + 1);
 
 		var ex1 = assertThrows(ValueParseException.class, () -> parser.parseLine(" X   0.5  ", Collections.emptyMap()));
 		assertThat(ex1, hasProperty("value", is(" X  ")));

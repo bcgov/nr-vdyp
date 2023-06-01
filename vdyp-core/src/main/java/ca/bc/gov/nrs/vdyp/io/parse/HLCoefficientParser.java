@@ -44,7 +44,7 @@ public class HLCoefficientParser implements ResourceParser<MatrixMap3<Integer, S
 				return line.startsWith("   ");
 			}
 
-		}.value(2, SP0_KEY, String::strip).space(1).value(1, REGION_KEY, ValueParser.REGION)
+		}.value(2, SP0_KEY, ValueParser.STRING).space(1).value(1, REGION_KEY, ValueParser.REGION)
 				.multiValue(numCoefficients, 10, COEFFICIENT_KEY, ValueParser.FLOAT);
 	}
 
