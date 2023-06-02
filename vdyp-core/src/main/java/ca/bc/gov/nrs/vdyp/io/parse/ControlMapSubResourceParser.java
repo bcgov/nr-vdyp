@@ -3,7 +3,6 @@ package ca.bc.gov.nrs.vdyp.io.parse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
-import ca.bc.gov.nrs.vdyp.io.FileResolver;
 
 /**
  * A resource that can be loaded as a sub-resource of a control file.
@@ -14,13 +13,6 @@ import ca.bc.gov.nrs.vdyp.io.FileResolver;
  */
 public interface ControlMapSubResourceParser<T> extends ResourceControlMapModifier, ResourceParser<T> {
 
-	/**
-	 * The key for this resource's entry in the control map
-	 *
-	 * @return
-	 */
-	String getControlKey();
-
 	@Override
 	default void modify(Map<String, Object> control, InputStream data) throws IOException, ResourceParseException {
 		var result = this.parse(data, control);
@@ -28,21 +20,4 @@ public interface ControlMapSubResourceParser<T> extends ResourceControlMapModifi
 		control.put(getControlKey(), result);
 	}
 
-	/**
-	 * Replace the entry in the control map containing the filename for a resource
-	 * with the parsed resource
-	 *
-	 * @param control
-	 * @param fileResolver
-	 * @throws IOException
-	 * @throws ResourceParseException
-	 */
-	@Override
-	default void modify(Map<String, Object> control, FileResolver fileResolver)
-			throws IOException, ResourceParseException {
-		var filename = (String) control.get(getControlKey());
-		try (InputStream data = fileResolver.resolve(filename)) {
-			modify(control, data);
-		}
-	}
 }

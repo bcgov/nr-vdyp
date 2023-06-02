@@ -30,7 +30,7 @@ public class CoefficientParser implements ControlMapSubResourceParser<MatrixMap3
 	public static final int NUM_SPECIES = 16;
 
 	final String controlKey;
-	
+
 	public CoefficientParser(String controlKey) {
 		this.controlKey = controlKey;
 	}
@@ -49,9 +49,7 @@ public class CoefficientParser implements ControlMapSubResourceParser<MatrixMap3
 	@Override
 	public MatrixMap3<Integer, String, Integer, Float> parse(InputStream is, Map<String, Object> control)
 			throws IOException, ResourceParseException {
-		var becAliases = ResourceParser
-				.<Map<String, BecDefinition>>expectParsedControl(control, BecDefinitionParser.CONTROL_KEY, Map.class)
-				.keySet();
+		var becAliases = BecDefinitionParser.getBecAliases(control);
 		var coeIndecies = Stream.iterate(0, x -> x + 1).limit(NUM_COEFFICIENTS).collect(Collectors.toList());
 		var speciesIndecies = Stream.iterate(1, x -> x + 1).limit(NUM_SPECIES).collect(Collectors.toList());
 		MatrixMap3<Integer, String, Integer, Float> result = new MatrixMap3Impl<Integer, String, Integer, Float>(

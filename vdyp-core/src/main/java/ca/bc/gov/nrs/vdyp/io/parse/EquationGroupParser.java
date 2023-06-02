@@ -24,7 +24,7 @@ public abstract class EquationGroupParser implements ControlMapSubResourceParser
 	LineParser lineParser;
 
 	private Collection<String> hiddenBecs = Collections.emptyList();
-	
+
 	public EquationGroupParser() {
 		this(3);
 	}
@@ -40,9 +40,7 @@ public abstract class EquationGroupParser implements ControlMapSubResourceParser
 
 		final var sp0List = SP0DefinitionParser.getSpecies(control);
 
-		@SuppressWarnings("unchecked")
-		Map<String, BecDefinition> becMap = ResourceParser
-				.expectParsedControl(control, BecDefinitionParser.CONTROL_KEY, Map.class);
+		var becKeys = BecDefinitionParser.getBecAliases(control);
 
 		Map<String, Map<String, Integer>> result = new HashMap<>();
 		result = lineParser.parse(is, result, (v, r) -> {
@@ -52,7 +50,7 @@ public abstract class EquationGroupParser implements ControlMapSubResourceParser
 			if (!sp0List.stream().anyMatch(def -> def.getAlias().equalsIgnoreCase(sp0Alias))) {
 				throw new ValueParseException(sp0Alias, sp0Alias + " is not an SP0 identifier");
 			}
-			if (!becMap.containsKey(becAlias)) {
+			if (!becKeys.contains(becAlias)) {
 				throw new ValueParseException(becAlias, becAlias + " is not a BEC identifier");
 			}
 
@@ -73,8 +71,9 @@ public abstract class EquationGroupParser implements ControlMapSubResourceParser
 
 		List<String> errors = new ArrayList<>();
 
-		var sp0Keys = sp0List.stream().map(def -> def.getAlias()).collect(Collectors.toSet());
-		var becKeys = becMap.keySet().stream().filter(k -> !hiddenBecs.contains(k)).collect(Collectors.toSet());
+		var sp0Keys = SP0DefinitionParser.getSpeciesAliases(control);
+
+		var restrictedBecKeys = becKeys.stream().filter(k -> !hiddenBecs.contains(k)).toList();
 
 		var sp0Diff = ExpectationDifference.difference(result.keySet(), sp0Keys);
 
@@ -85,7 +84,7 @@ public abstract class EquationGroupParser implements ControlMapSubResourceParser
 				.collect(Collectors.toCollection(() -> errors));
 
 		for (var entry : result.entrySet()) {
-			var becDiff = ExpectationDifference.difference(entry.getValue().keySet(), becKeys);
+			var becDiff = ExpectationDifference.difference(entry.getValue().keySet(), restrictedBecKeys);
 			var sp0Key = entry.getKey();
 			becDiff.getMissing().stream().map(
 					becKey -> String
@@ -106,5 +105,5 @@ public abstract class EquationGroupParser implements ControlMapSubResourceParser
 	public void setHiddenBecs(Collection<String> hiddenBecs) {
 		this.hiddenBecs = hiddenBecs;
 	}
-	
+
 }

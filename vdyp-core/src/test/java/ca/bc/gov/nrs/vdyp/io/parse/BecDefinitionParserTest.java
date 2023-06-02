@@ -1,5 +1,7 @@
 package ca.bc.gov.nrs.vdyp.io.parse;
 
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.hasBec;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.hasEntry;
@@ -16,8 +18,8 @@ import static org.hamcrest.Matchers.equalTo;
 import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
+import ca.bc.gov.nrs.vdyp.model.BecLookup;
 import ca.bc.gov.nrs.vdyp.model.Region;
-import ca.bc.gov.nrs.vdyp.model.SP0Definition;
 
 public class BecDefinitionParserTest {
 
@@ -29,141 +31,183 @@ public class BecDefinitionParserTest {
 
 		assertThat(
 				result,
-				hasEntry(
-						equalTo("AT"),
-						allOf(
-								hasProperty("alias", equalTo("AT")), hasProperty("region", equalTo(Region.INTERIOR)),
-								hasProperty("name", equalTo("Alpine Tundra"))
+				hasBec(
+						"AT",
+						present(
+								allOf(
+										hasProperty("alias", equalTo("AT")),
+										hasProperty("region", equalTo(Region.INTERIOR)),
+										hasProperty("name", equalTo("Alpine Tundra"))
+								)
 						)
 				)
 		);
 		assertThat(
 				result,
-				hasEntry(
-						equalTo("BG"),
-						allOf(
-								hasProperty("alias", equalTo("BG")), hasProperty("region", equalTo(Region.INTERIOR)),
-								hasProperty("name", equalTo("Bunchgrass"))
+				hasBec(
+						"BG",
+						present(
+								allOf(
+										hasProperty("alias", equalTo("BG")),
+										hasProperty("region", equalTo(Region.INTERIOR)),
+										hasProperty("name", equalTo("Bunchgrass"))
+								)
 						)
 				)
 		);
 		assertThat(
 				result,
-				hasEntry(
-						equalTo("BWBS"),
-						allOf(
-								hasProperty("alias", equalTo("BWBS")), hasProperty("region", equalTo(Region.INTERIOR)),
-								hasProperty("name", equalTo("Boreal White and Black Spruce"))
+				hasBec(
+						"BWBS",
+						present(
+								allOf(
+										hasProperty("alias", equalTo("BWBS")),
+										hasProperty("region", equalTo(Region.INTERIOR)),
+										hasProperty("name", equalTo("Boreal White and Black Spruce"))
+								)
 						)
 				)
 		);
 		assertThat(
 				result,
-				hasEntry(
-						equalTo("CDF"),
-						allOf(
-								hasProperty("alias", equalTo("CDF")), hasProperty("region", equalTo(Region.COASTAL)),
-								hasProperty("name", equalTo("Coastal Dougfir"))
+				hasBec(
+						"CDF",
+						present(
+								allOf(
+										hasProperty("alias", equalTo("CDF")),
+										hasProperty("region", equalTo(Region.COASTAL)),
+										hasProperty("name", equalTo("Coastal Dougfir"))
+								)
 						)
 				)
 		);
 		assertThat(
 				result,
-				hasEntry(
-						equalTo("CWH"),
-						allOf(
-								hasProperty("alias", equalTo("CWH")), hasProperty("region", equalTo(Region.COASTAL)),
-								hasProperty("name", equalTo("Coastal Western Hemlock"))
+				hasBec(
+						"CWH",
+						present(
+								allOf(
+										hasProperty("alias", equalTo("CWH")),
+										hasProperty("region", equalTo(Region.COASTAL)),
+										hasProperty("name", equalTo("Coastal Western Hemlock"))
+								)
 						)
 				)
 		);
 		assertThat(
 				result,
-				hasEntry(
-						equalTo("ESSF"),
-						allOf(
-								hasProperty("alias", equalTo("ESSF")), hasProperty("region", equalTo(Region.INTERIOR)),
-								hasProperty("name", equalTo("Englemann Sruce -SubAlpine Fir"))
+				hasBec(
+						"ESSF",
+						present(
+								allOf(
+										hasProperty("alias", equalTo("ESSF")),
+										hasProperty("region", equalTo(Region.INTERIOR)),
+										hasProperty("name", equalTo("Englemann Sruce -SubAlpine Fir"))
+								)
 						)
 				)
 		);
 		assertThat(
 				result,
-				hasEntry(
-						equalTo("ICH"),
-						allOf(
-								hasProperty("alias", equalTo("ICH")), hasProperty("region", equalTo(Region.INTERIOR)),
-								hasProperty("name", equalTo("Interior Cedar-Hemlock"))
+				hasBec(
+						"ICH",
+						present(
+								allOf(
+										hasProperty("alias", equalTo("ICH")),
+										hasProperty("region", equalTo(Region.INTERIOR)),
+										hasProperty("name", equalTo("Interior Cedar-Hemlock"))
+								)
 						)
 				)
 		);
 		assertThat(
 				result,
-				hasEntry(
-						equalTo("IDF"),
-						allOf(
-								hasProperty("alias", equalTo("IDF")), hasProperty("region", equalTo(Region.INTERIOR)),
-								hasProperty("name", equalTo("Interior DougFir"))
+				hasBec(
+						"IDF",
+						present(
+								allOf(
+										hasProperty("alias", equalTo("IDF")),
+										hasProperty("region", equalTo(Region.INTERIOR)),
+										hasProperty("name", equalTo("Interior DougFir"))
+								)
 						)
 				)
 		);
 		assertThat(
 				result,
-				hasEntry(
-						equalTo("MH"),
-						allOf(
-								hasProperty("alias", equalTo("MH")), hasProperty("region", equalTo(Region.COASTAL)),
-								hasProperty("name", equalTo("Mountain Hemlock"))
+				hasBec(
+						"MH",
+						present(
+								allOf(
+										hasProperty("alias", equalTo("MH")),
+										hasProperty("region", equalTo(Region.COASTAL)),
+										hasProperty("name", equalTo("Mountain Hemlock"))
+								)
 						)
 				)
 		);
 		assertThat(
 				result,
-				hasEntry(
-						equalTo("MS"),
-						allOf(
-								hasProperty("alias", equalTo("MS")), hasProperty("region", equalTo(Region.INTERIOR)),
-								hasProperty("name", equalTo("Montane Spruce"))
+				hasBec(
+						"MS",
+						present(
+								allOf(
+										hasProperty("alias", equalTo("MS")),
+										hasProperty("region", equalTo(Region.INTERIOR)),
+										hasProperty("name", equalTo("Montane Spruce"))
+								)
 						)
 				)
 		);
 		assertThat(
 				result,
-				hasEntry(
-						equalTo("PP"),
-						allOf(
-								hasProperty("alias", equalTo("PP")), hasProperty("region", equalTo(Region.INTERIOR)),
-								hasProperty("name", equalTo("Ponderosa Pine"))
+				hasBec(
+						"PP",
+						present(
+								allOf(
+										hasProperty("alias", equalTo("PP")),
+										hasProperty("region", equalTo(Region.INTERIOR)),
+										hasProperty("name", equalTo("Ponderosa Pine"))
+								)
 						)
 				)
 		);
 		assertThat(
 				result,
-				hasEntry(
-						equalTo("SBPS"),
-						allOf(
-								hasProperty("alias", equalTo("SBPS")), hasProperty("region", equalTo(Region.INTERIOR)),
-								hasProperty("name", equalTo("SubBoreal Pine-Spruce"))
+				hasBec(
+						"SBPS",
+						present(
+								allOf(
+										hasProperty("alias", equalTo("SBPS")),
+										hasProperty("region", equalTo(Region.INTERIOR)),
+										hasProperty("name", equalTo("SubBoreal Pine-Spruce"))
+								)
 						)
 				)
 		);
 		assertThat(
 				result,
-				hasEntry(
-						equalTo("SBS"),
-						allOf(
-								hasProperty("alias", equalTo("SBS")), hasProperty("region", equalTo(Region.INTERIOR)),
-								hasProperty("name", equalTo("SubBoreal Spruce"))
+				hasBec(
+						"SBS",
+						present(
+								allOf(
+										hasProperty("alias", equalTo("SBS")),
+										hasProperty("region", equalTo(Region.INTERIOR)),
+										hasProperty("name", equalTo("SubBoreal Spruce"))
+								)
 						)
 				)
 		);
 		assertThat(
 				result,
-				hasEntry(
-						equalTo("SWB"),
-						allOf(
-								hasProperty("alias", equalTo("SWB")), hasProperty("region", equalTo(Region.INTERIOR)),
-								hasProperty("name", equalTo("Spruce-Willow-Birch"))
+				hasBec(
+						"SWB",
+						present(
+								allOf(
+										hasProperty("alias", equalTo("SWB")),
+										hasProperty("region", equalTo(Region.INTERIOR)),
+										hasProperty("name", equalTo("Spruce-Willow-Birch"))
+								)
 						)
 				)
 		);
@@ -183,15 +227,15 @@ public class BecDefinitionParserTest {
 	 */
 	public static void populateControlMap(Map<String, Object> controlMap, String... aliases) {
 
-		Map<String, BecDefinition> map = new HashMap<>();
+		List<BecDefinition> becs = new ArrayList<>();
 
 		int i = 0;
 		for (var alias : aliases) {
-			map.put(alias, new BecDefinition(alias, Region.values()[i % 2], "Test " + alias));
+			becs.add(new BecDefinition(alias, Region.values()[i % 2], "Test " + alias, 2, 2, 2));
 			i++;
 		}
 
-		controlMap.put(BecDefinitionParser.CONTROL_KEY, map);
+		controlMap.put(BecDefinitionParser.CONTROL_KEY, new BecLookup(becs));
 	}
 
 }

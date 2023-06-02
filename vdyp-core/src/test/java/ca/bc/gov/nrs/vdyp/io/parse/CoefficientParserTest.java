@@ -9,7 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
@@ -29,11 +28,7 @@ public class CoefficientParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		Map<String, BecDefinition> becMap = new HashMap<>();
-		becMap.put("B1", new BecDefinition("B1", Region.COASTAL, "Test BEC 1"));
-		becMap.put("B2", new BecDefinition("B2", Region.COASTAL, "Test BEC 2"));
-
-		controlMap.put(BecDefinitionParser.CONTROL_KEY, becMap);
+		BecDefinitionParserTest.populateControlMap(controlMap);
 
 		var result = parser.parse(is, controlMap);
 
@@ -54,11 +49,7 @@ public class CoefficientParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		Map<String, BecDefinition> becMap = new HashMap<>();
-		becMap.put("B1", new BecDefinition("B1", Region.COASTAL, "Test BEC 1"));
-		becMap.put("B2", new BecDefinition("B2", Region.COASTAL, "Test BEC 2"));
-
-		controlMap.put(BecDefinitionParser.CONTROL_KEY, becMap);
+		BecDefinitionParserTest.populateControlMap(controlMap);
 
 		var ex = assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
 
@@ -75,11 +66,7 @@ public class CoefficientParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		Map<String, BecDefinition> becMap = new HashMap<>();
-		becMap.put("B1", new BecDefinition("B1", Region.COASTAL, "Test BEC 1"));
-		becMap.put("B2", new BecDefinition("B2", Region.COASTAL, "Test BEC 2"));
-
-		controlMap.put(BecDefinitionParser.CONTROL_KEY, becMap);
+		BecDefinitionParserTest.populateControlMap(controlMap);
 
 		var ex = assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
 
@@ -96,11 +83,7 @@ public class CoefficientParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		Map<String, BecDefinition> becMap = new HashMap<>();
-		becMap.put("B1", new BecDefinition("B1", Region.COASTAL, "Test BEC 1"));
-		becMap.put("B2", new BecDefinition("B2", Region.COASTAL, "Test BEC 2"));
-
-		controlMap.put(BecDefinitionParser.CONTROL_KEY, becMap);
+		BecDefinitionParserTest.populateControlMap(controlMap);
 
 		var result = parser.parse(is, controlMap);
 
@@ -120,11 +103,7 @@ public class CoefficientParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		Map<String, BecDefinition> becMap = new HashMap<>();
-		becMap.put("B1", new BecDefinition("B1", Region.COASTAL, "Test BEC 1"));
-		becMap.put("B2", new BecDefinition("B2", Region.COASTAL, "Test BEC 2"));
-
-		controlMap.put(BecDefinitionParser.CONTROL_KEY, becMap);
+		BecDefinitionParserTest.populateControlMap(controlMap);
 
 		var result = parser.parse(is, controlMap);
 

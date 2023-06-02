@@ -183,34 +183,16 @@ public class EquationGroupParserTest {
 	private HashMap<String, Object> makeControlMapSingle() {
 		var controlMap = new HashMap<String, Object>();
 
-		var becMap = new HashMap<String, BecDefinition>();
-		var sp0List = new ArrayList<SP0Definition>();
-
-		becMap.put("B1", new BecDefinition("B1", Region.COASTAL, "Test BEC 1"));
-
-		sp0List.add(new SP0Definition("S1", Optional.empty(), "Test SP0 1"));
-
-		controlMap.put(BecDefinitionParser.CONTROL_KEY, Collections.unmodifiableMap(becMap));
-		controlMap.put(SP0DefinitionParser.CONTROL_KEY, Collections.unmodifiableList(sp0List));
+		BecDefinitionParserTest.populateControlMap(controlMap, "B1");
+		SP0DefinitionParserTest.populateControlMap(controlMap, "S1");
 		return controlMap;
 	}
 
 	private HashMap<String, Object> makeControlMap() {
 		var controlMap = new HashMap<String, Object>();
 
-		var becMap = new HashMap<String, BecDefinition>();
-		var sp0List = new ArrayList<SP0Definition>();
-
-		becMap.put("B1", new BecDefinition("B1", Region.COASTAL, "Test BEC 1"));
-		becMap.put("B2", new BecDefinition("B2", Region.INTERIOR, "Test BEC 2"));
-		becMap.put("B3", new BecDefinition("B3", Region.COASTAL, "Test BEC 3"));
-		becMap.put("B4", new BecDefinition("B4", Region.INTERIOR, "Test BEC 4"));
-
-		sp0List.add(new SP0Definition("S1", Optional.empty(), "Test SP0 1"));
-		sp0List.add(new SP0Definition("S2", Optional.empty(), "Test SP0 2"));
-
-		controlMap.put(BecDefinitionParser.CONTROL_KEY, Collections.unmodifiableMap(becMap));
-		controlMap.put(SP0DefinitionParser.CONTROL_KEY, Collections.unmodifiableList(sp0List));
+		BecDefinitionParserTest.populateControlMap(controlMap, "B1", "B2", "B3", "B4");
+		SP0DefinitionParserTest.populateControlMap(controlMap, "S1", "S2");
 		return controlMap;
 	}
 }

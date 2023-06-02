@@ -13,6 +13,7 @@ import java.util.function.Supplier;
 
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.BecDefinitionParser;
+import ca.bc.gov.nrs.vdyp.io.parse.BecModifier;
 import ca.bc.gov.nrs.vdyp.io.parse.BreakageEquationGroupParser;
 import ca.bc.gov.nrs.vdyp.io.parse.BreakageParser;
 import ca.bc.gov.nrs.vdyp.io.parse.BySpeciesDqCoefficientParser;
@@ -241,12 +242,12 @@ public class FipControlParser {
 			new BecDefinitionParser(),
 
 			// DEF_BEC
-			// TODO
+			new BecModifier(),
 
 			// RD_SP0
 			new SP0DefinitionParser()
 	);
-	
+
 	List<ControlMapModifier> GROUP_DEFINITIONS = Arrays.asList(
 
 			// RD_VGRP
@@ -264,17 +265,17 @@ public class FipControlParser {
 			// RD_GMBA1
 			new EquationModifierParser()
 	);
-	
+
 	List<ControlMapModifier> FIPSTART_ONLY = Arrays.asList(
 
 			// RD_STK33
 			new StockingClassFactorParser()
 
-			// TODO minima?
-			/*
-			 * READ(CNTRV(197), 197, ERR= 912 ) FMINH, FMINBA, FMINBAF,FMINVetH IF (FMINVetH
-			 * .le. 0.0) FMINVetH=10.0
-			 */
+	// TODO minima?
+	/*
+	 * READ(CNTRV(197), 197, ERR= 912 ) FMINH, FMINBA, FMINBAF,FMINVetH IF (FMINVetH
+	 * .le. 0.0) FMINVetH=10.0
+	 */
 	);
 	List<ControlMapModifier> SITE_CURVES = Arrays.asList(
 
@@ -288,93 +289,95 @@ public class FipControlParser {
 			// RD_E026
 			new SiteCurveAgeMaximumParser()
 	);
-	
+
 	List<ControlMapModifier> COEFFICIENTS = Arrays.asList(
-		// RD_E040
-		new CoefficientParser(COE_BA),
-	
-		// RD_E041
-		new CoefficientParser(COE_DQ),
-	
-		// RD_E043
-		new UpperCoefficientParser(),
-	
-		// RD_YHL1
-		new HLCoefficientParser(HLCoefficientParser.NUM_COEFFICIENTS_P1, HL_PRIMARY_SP_EQN_P1),
-	
-		// RD_YHL2
-		new HLCoefficientParser(HLCoefficientParser.NUM_COEFFICIENTS_P2, HL_PRIMARY_SP_EQN_P2),
-	
-		// RD_YHL3
-		new HLCoefficientParser(HLCoefficientParser.NUM_COEFFICIENTS_P3, HL_PRIMARY_SP_EQN_P3),
-	
-		// RD_YHL4
-		new HLNonprimaryCoefficientParser(),
-	
-		// RD_E060
-		new BySpeciesDqCoefficientParser(),
-	
-		// Min and max DQ by species
-	
-		// RD_E061
-		new ComponentSizeParser(),
-	
-		// RD_UBA1
-		new UtilComponentBaseAreaParser(),
-	
-		// RD_UDQ1
-		new UtilComponentDQParser(),
-	
-		// Small Component (4.5 to 7.5 cm)
-	
-		// RD_SBA1
-		new SmallComponentProbabilityParser(),
-		
-		// RD_SBA2
-		new SmallComponentBaseAreaParser(),
-		
-		// RD_SDQ1
-		new SmallComponentDQParser(),
-		
-		// RD_SHL1
-		new SmallComponentHLParser(),
-	
-		// RD_SVT1
-		new SmallComponentWSVolumeParser(),
-	
-		// Standard Volume Relationships
-	
-		// RD_YVT1
-		new TotalStandWholeStemParser(),
-	
-		// RD_YVT2
-		new UtilComponentWSVolumeParser(),
-	
-		// RD_YVC1
-		new CloseUtilVolumeParser(),
-	
-		// RD_YVD1
-		new VolumeNetDecayParser(),
-	
-		// RD_YVW1
-		new VolumeNetDecayWasteParser(),
-	
-		// RD_E095
-		new BreakageParser(),
-	
-		// Veterans
-	
-		// RD_YVVET
-		new VeteranLayerVolumeAdjustParser(),
-	
-		// RD_YDQV
-		new VeteranDQParser(),
-	
-		// RD_E098
-		new VeteranBQParser()
+			// RD_E040
+			new CoefficientParser(COE_BA),
+
+			// RD_E041
+			new CoefficientParser(COE_DQ),
+
+			// RD_E043
+			new UpperCoefficientParser(),
+
+			// RD_YHL1
+			new HLCoefficientParser(HLCoefficientParser.NUM_COEFFICIENTS_P1, HL_PRIMARY_SP_EQN_P1),
+
+			// RD_YHL2
+			new HLCoefficientParser(HLCoefficientParser.NUM_COEFFICIENTS_P2, HL_PRIMARY_SP_EQN_P2),
+
+			// RD_YHL3
+			new HLCoefficientParser(HLCoefficientParser.NUM_COEFFICIENTS_P3, HL_PRIMARY_SP_EQN_P3),
+
+			// RD_YHL4
+			new HLNonprimaryCoefficientParser(),
+
+			// RD_E060
+			new BySpeciesDqCoefficientParser(),
+
+			// Min and max DQ by species
+
+			// RD_E061
+			new ComponentSizeParser(),
+
+			// RD_UBA1
+			new UtilComponentBaseAreaParser(),
+
+			// RD_UDQ1
+			new UtilComponentDQParser(),
+
+			// Small Component (4.5 to 7.5 cm)
+
+			// RD_SBA1
+			new SmallComponentProbabilityParser(),
+
+			// RD_SBA2
+			new SmallComponentBaseAreaParser(),
+
+			// RD_SDQ1
+			new SmallComponentDQParser(),
+
+			// RD_SHL1
+			new SmallComponentHLParser(),
+
+			// RD_SVT1
+			new SmallComponentWSVolumeParser(),
+
+			// Standard Volume Relationships
+
+			// RD_YVT1
+			new TotalStandWholeStemParser(),
+
+			// RD_YVT2
+			new UtilComponentWSVolumeParser(),
+
+			// RD_YVC1
+			new CloseUtilVolumeParser(),
+
+			// RD_YVD1
+			new VolumeNetDecayParser(),
+
+			// RD_YVW1
+			new VolumeNetDecayWasteParser(),
+
+			// RD_E095
+			new BreakageParser(),
+
+			// Veterans
+
+			// RD_YVVET
+			new VeteranLayerVolumeAdjustParser(),
+
+			// RD_YDQV
+			new VeteranDQParser(),
+
+			// RD_E098
+			new VeteranBQParser()
 	);
-	
-	private void applyModifiers(Map<String, Object>control, List<ControlMapModifier> modifiers, FileResolver fileResolver) throws ResourceParseException, IOException {
+
+	private void
+			applyModifiers(Map<String, Object> control, List<ControlMapModifier> modifiers, FileResolver fileResolver)
+					throws ResourceParseException, IOException {
 		for (var modifier : modifiers) {
 			modifier.modify(control, fileResolver);
 		}
@@ -384,13 +387,13 @@ public class FipControlParser {
 		var map = controlParser.parse(is, Collections.emptyMap());
 
 		applyModifiers(map, BASIC_DEFINITIONS, fileResolver);
-		
+
 		// Read Groups
-		
+
 		applyModifiers(map, GROUP_DEFINITIONS, fileResolver);
 
 		int jprogram = 1; // FIPSTART only TODO Track this down
-		
+
 		if (jprogram == 1) {
 			applyModifiers(map, FIPSTART_ONLY, fileResolver);
 		}
@@ -398,12 +401,12 @@ public class FipControlParser {
 		applyModifiers(map, SITE_CURVES, fileResolver);
 
 		// Coeff for Empirical relationships
-		
+
 		applyModifiers(map, COEFFICIENTS, fileResolver);
 
 		// Initiation items NOT for FIPSTART
 		if (jprogram > 1) {
-			
+
 			throw new UnsupportedOperationException();
 			// RD_E106
 			// TODO
@@ -432,7 +435,7 @@ public class FipControlParser {
 		// Modifiers, IPSJF155-Appendix XII
 
 		// RD_E198
-		// TODO
+		// new ModifierParser().modify(map, fileResolver); // TODO
 
 		// Debug switches (normally zero)
 		// TODO

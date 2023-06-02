@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.fip;
 
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.hasBec;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.hasSpecificEntry;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.mmHasEntry;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
@@ -32,6 +33,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.SP0DefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.SiteCurveAgeMaximumParserTest;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
+import ca.bc.gov.nrs.vdyp.model.BecLookup;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.SP0Definition;
 import ca.bc.gov.nrs.vdyp.model.SiteCurve;
@@ -56,7 +58,7 @@ public class FipControlParserTest {
 				result,
 				(Matcher) hasSpecificEntry(
 						BecDefinitionParser.CONTROL_KEY,
-						allOf(instanceOf(Map.class), hasEntry(is("AT"), instanceOf(BecDefinition.class)))
+						allOf(instanceOf(BecLookup.class), hasBec("AT", present(instanceOf(BecDefinition.class))))
 				)
 		);
 	}

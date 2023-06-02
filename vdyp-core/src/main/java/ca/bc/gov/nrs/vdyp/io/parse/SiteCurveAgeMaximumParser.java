@@ -14,7 +14,8 @@ import ca.bc.gov.nrs.vdyp.model.SiteCurveAgeMaximum;
  * @author Kevin Smith, Vivid Solutions
  *
  */
-public class SiteCurveAgeMaximumParser implements OptionalControlMapSubResourceParser<Map<Integer, SiteCurveAgeMaximum>> {
+public class SiteCurveAgeMaximumParser
+		implements OptionalControlMapSubResourceParser<Map<Integer, SiteCurveAgeMaximum>> {
 	public static final String CONTROL_KEY = "SITE_CURVE_AGE_MAX";
 
 	public static final String SC_KEY = "siteCurve";
