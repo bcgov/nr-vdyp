@@ -4,10 +4,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 
-import ca.bc.gov.nrs.vdyp.io.parse.ResourceControlMapModifier;
+import ca.bc.gov.nrs.vdyp.io.parse.OptionalResourceControlMapModifier;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
 
-public class ModifierParser implements ResourceControlMapModifier {
+public class ModifierParser implements OptionalResourceControlMapModifier {
 
 	public static final String CONTROL_KEY = "MODIFIERS";
 
@@ -15,13 +15,20 @@ public class ModifierParser implements ResourceControlMapModifier {
 
 	@Override
 	public void modify(Map<String, Object> control, InputStream data) throws ResourceParseException, IOException {
-		// TODO
+		// Modifiers, IPSJF155-Appendix XII
+
+		// RD_E198
 
 	}
 
 	@Override
 	public String getControlKey() {
 		return CONTROL_KEY;
+	}
+
+	@Override
+	public void defaultModify(Map<String, Object> control) {
+		// Do nothing
 	}
 
 }

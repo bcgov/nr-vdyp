@@ -1,33 +1,24 @@
 package ca.bc.gov.nrs.vdyp.io.parse;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Map;
-import java.util.Optional;
 
-import ca.bc.gov.nrs.vdyp.io.FileResolver;
 
-public interface OptionalControlMapSubResourceParser<T> extends ControlMapSubResourceParser<T> {
-
-	@Override
-	default void modify(Map<String, Object> control, FileResolver fileResolver)
-			throws IOException, ResourceParseException {
-		@SuppressWarnings("unchecked")
-		var filename = (Optional<String>) control.get(getControlKey());
-		if (filename.isPresent()) {
-			try (InputStream data = fileResolver.resolve(filename.get())) {
-				modify(control, data);
-			}
-		} else {
-			defaultModify(control);
-		}
-
-	}
+/**
+ * Replace a control map entry referencing a file with a parsed version of that file if it was specified, otherwise initialize that entry with a default.
+ * @author Kevin Smith, Vivid Solutions
+ *
+ * @param <T>
+ */
+public interface OptionalControlMapSubResourceParser<T> extends ControlMapSubResourceParser<T>, OptionalResourceControlMapModifier {
 
 	default void defaultModify(Map<String, Object> control) {
 		control.put(getControlKey(), defaultResult());
 	}
 
+	/**
+	 * The default value
+	 * @return
+	 */
 	T defaultResult();
 
 }

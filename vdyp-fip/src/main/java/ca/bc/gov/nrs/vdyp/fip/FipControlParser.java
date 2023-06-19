@@ -109,7 +109,7 @@ public class FipControlParser {
 	public static final String VETERAN_LAYER_DQ = "VETERAN_LAYER_DQ";
 	public static final String VETERAN_BQ = VeteranBQParser.CONTROL_KEY;
 	public static final String MINIMA = "MINIMA";
-	public static final String MODIFIER_FILE = "MODIFIER_FILE";
+	public static final String MODIFIER_FILE = ModifierParser.CONTROL_KEY;
 	public static final String DEBUG_SWITCHES = "DEBUG_SWITCHES";
 	public static final String MAX_NUM_POLY = "MAX_NUM_POLY";
 	public static final String BEC_DEF = BecDefinitionParser.CONTROL_KEY;
@@ -176,7 +176,7 @@ public class FipControlParser {
 			.record(197, MINIMA, ValueParser.list(ValueParser.FLOAT)) // Minimum Height, Minimum BA, Min BA fully
 																		// stocked.
 
-			.record(198, MODIFIER_FILE, FILENAME) // RD_E198 IPSJF155, XII
+			.record(198, MODIFIER_FILE, ValueParser.optional(FILENAME)) // RD_E198 IPSJF155, XII
 
 			.record(199, DEBUG_SWITCHES, ValueParser.list(ValueParser.INTEGER)) // IPSJF155
 	/*
@@ -374,6 +374,12 @@ public class FipControlParser {
 			// RD_E098
 			new VeteranBQParser()
 	);
+	
+	List<ControlMapModifier> ADDITIONAL_MODIFIERS = Arrays.asList(
+
+			// RD_E198
+			new ModifierParser()
+	);
 
 	private void
 			applyModifiers(Map<String, Object> control, List<ControlMapModifier> modifiers, FileResolver fileResolver)
@@ -435,7 +441,7 @@ public class FipControlParser {
 		// Modifiers, IPSJF155-Appendix XII
 
 		// RD_E198
-		// new ModifierParser().modify(map, fileResolver); // TODO
+		applyModifiers(map, ADDITIONAL_MODIFIERS, fileResolver);
 
 		// Debug switches (normally zero)
 		// TODO
