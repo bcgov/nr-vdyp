@@ -27,7 +27,15 @@ public class ModifierParser implements OptionalResourceControlMapModifier {
 	 * MatrixMap2 of Species ID, Region to Float
 	 */
 	public static final String CONTROL_KEY_MOD200_DQ = "DQ_MODIFIERS";
-	public static final String CONTROL_KEY_MOD301 = "DECAY_WASTE_MODIFIERS";
+	/**
+	 * MatrixMap2 of Species ID, Region to Float
+	 */
+	public static final String CONTROL_KEY_MOD301_DECAY = "DECAY_MODIFIERS";
+	/**
+	 * MatrixMap2 of Species ID, Region to Float
+	 */
+	public static final String CONTROL_KEY_MOD301_WASTE = "WASTE_MODIFIERS";
+	
 	public static final String CONTROL_KEY_MOD400 = "HL_MODIFIERS";
 
 	public static final int MAX_MODS = 60;
@@ -58,6 +66,14 @@ public class ModifierParser implements OptionalResourceControlMapModifier {
 		var dqModifiers = new MatrixMap2Impl<String, Region, Float>(spAliases, regions);
 		dqModifiers.setAll(1.0f);
 		control.put(CONTROL_KEY_MOD200_DQ, dqModifiers);
+		
+		var decayModifiers = new MatrixMap2Impl<String, Region, Float>(spAliases, regions);
+		decayModifiers.setAll(0.0f);
+		control.put(CONTROL_KEY_MOD301_DECAY, decayModifiers);
+		
+		var wasteModifiers = new MatrixMap2Impl<String, Region, Float>(spAliases, regions);
+		wasteModifiers.setAll(0.0f);
+		control.put(CONTROL_KEY_MOD301_WASTE, wasteModifiers);
 	}
 
 }
