@@ -67,6 +67,8 @@ public class ModifierParser implements OptionalResourceControlMapModifier {
 	public static final int MAX_MODS = 60;
 
 	int jprogram;
+	
+	static final int[] ipoint = {1, 0, 2, 0, 0, 3, 4, 5, 0};
 
 	public ModifierParser(int jprogram) {
 		super();
@@ -144,7 +146,9 @@ public class ModifierParser implements OptionalResourceControlMapModifier {
 	boolean modIsForProgram(Map<String, Object> entry) {
 		@SuppressWarnings("unchecked")
 		var programs = (List<Boolean>) entry.get("programs");
-		return programs.get(this.jprogram - 1);
+		var index = ipoint[this.jprogram - 1];
+		if (index<=0) throw new IllegalStateException("JProgram "+this.jprogram + " mapped to "+index);
+		return programs.get(index-1);
 	}
 
 	List<Float> getMods(int num, Map<String, Object> entry) throws ValueParseException {

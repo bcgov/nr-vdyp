@@ -217,7 +217,7 @@ public class ModifierParserTest {
 
 	@Test
 	public void testBaDqSpeciesDifferentProgram() throws Exception {
-		var parser = new ModifierParser(2);
+		var parser = new ModifierParser(3);
 
 		Map<String, Object> controlMap = new HashMap<>();
 		controlMap.put(ModifierParser.CONTROL_KEY, Optional.of("testFilename"));
