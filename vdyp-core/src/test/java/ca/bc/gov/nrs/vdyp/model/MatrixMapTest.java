@@ -117,5 +117,27 @@ public class MatrixMapTest {
 		assertThat(map.getM("b", 1), present(is('Y')));
 		assertThat(map.getM("b", 2), present(is('Z')));
 	}
+	
+	@Test
+	public void testSetAll() {
+		var dim1 = Arrays.asList("a", "b");
+		var dim2 = Arrays.asList(1, 2);
+		var dims = Arrays.asList(dim1, dim2);
+		var map = new MatrixMapImpl<Character>(dims);
+
+		map.putM('W', "a", 1);
+		map.putM('X', "a", 2);
+		map.putM('Y', "b", 1);
+
+		map.setAll('A');
+		
+		assertThat(map, hasProperty("full", is(true)));
+		assertThat(map, hasProperty("empty", is(false)));
+
+		assertThat(map.getM("a", 1), present(is('A')));
+		assertThat(map.getM("a", 2), present(is('A')));
+		assertThat(map.getM("b", 1), present(is('A')));
+		assertThat(map.getM("b", 2), present(is('A')));
+	}
 
 }

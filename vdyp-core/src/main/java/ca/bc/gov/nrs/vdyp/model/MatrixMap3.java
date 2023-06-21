@@ -62,6 +62,11 @@ public interface MatrixMap3<K1, K2, K3, V> extends MatrixMap<V> {
 					return o.any(pred);
 				}
 
+				@Override
+				public void setAll(CV value) {
+					o.setAll(value);
+				}
+
 			};
 		}
 

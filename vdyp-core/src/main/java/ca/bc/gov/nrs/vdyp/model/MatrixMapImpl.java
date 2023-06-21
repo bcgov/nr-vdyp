@@ -2,7 +2,7 @@ package ca.bc.gov.nrs.vdyp.model;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -30,7 +30,7 @@ public class MatrixMapImpl<T> implements MatrixMap<T> {
 			throw new IllegalArgumentException("Each dimension must have at least one value");
 		}
 		maps = dimensions.stream().map(dim -> {
-			var map = new HashMap<Object, Integer>(dim.size());
+			var map = new LinkedHashMap<Object, Integer>(dim.size());
 			int i = 0;
 			for (var o : dim) {
 				map.put(o, i);
@@ -108,6 +108,11 @@ public class MatrixMapImpl<T> implements MatrixMap<T> {
 	@Override
 	public int getNumDimensions() {
 		return maps.size();
+	}
+
+	@Override
+	public void setAll(T value) {
+		Arrays.fill(matrix, value);
 	}
 
 }

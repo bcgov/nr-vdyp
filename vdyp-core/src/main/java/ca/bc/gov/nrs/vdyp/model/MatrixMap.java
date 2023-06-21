@@ -107,4 +107,10 @@ public interface MatrixMap<T> {
 		// Can't cast it if it doesn't have 1 dimensions
 		throw new ClassCastException("MatrixMap did not have 1 dimension");
 	}
+	
+	/**
+	 * Set all cells to the given value
+	 * @param value
+	 */
+	public void setAll(T value);
 }

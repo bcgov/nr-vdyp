@@ -4,9 +4,11 @@ import static org.hamcrest.Matchers.anything;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.not;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
@@ -196,6 +198,74 @@ public class VdypMatchers {
 
 		};
 
+	}
+
+	/**
+	 * Match a MatrixMap if all of its values match the given matcher
+	 * @param <T>
+	 * @param valueMatcher
+	 * @return
+	 */
+	public static <T> Matcher<MatrixMap<T>> mmAll(Matcher<T> valueMatcher) {
+		return new TypeSafeDiagnosingMatcher<MatrixMap<T>>() {
+
+			@Override
+			public void describeTo(Description description) {
+				description.appendText("MatrixMap with all values ").appendDescriptionOf(valueMatcher);
+			}
+
+			@Override
+			protected boolean matchesSafely(MatrixMap<T> item, Description mismatchDescription) {
+				if(item.all(valueMatcher::matches)) {
+					return true;
+				}
+				// TODO This could stand to be more specific
+				mismatchDescription.appendText("Not all values were ").appendDescriptionOf(valueMatcher);
+				return false;
+			}
+			
+		};
+	}
+	
+	/**
+	 * Match a MatrixMap if its dimensions match the given matchers
+	 * @param <T>
+	 * @param <T>
+	 * @param valueMatcher
+	 * @return
+	 */
+	@SafeVarargs
+	public static <T> Matcher<MatrixMap<T>> mmDimensions(Matcher<? super Set<?>>... dimensionMatchers) {
+		return new TypeSafeDiagnosingMatcher<MatrixMap<T>>() {
+
+			@Override
+			public void describeTo(Description description) {
+				description.appendList("MatrixMap with dimensions that ", ", ", "", Arrays.asList(dimensionMatchers));
+			}
+
+			@Override
+			protected boolean matchesSafely(MatrixMap<T> item, Description mismatchDescription) {
+				var dimensions = item.getDimensions();
+				if(dimensionMatchers.length!=dimensions.size()) {
+					mismatchDescription.appendText("Expected ").appendValue(dimensionMatchers.length).appendText(" dimensions but had ").appendValue(dimensions.size());
+					return false;
+				}
+				var result = true;
+				for (int i=0; i<dimensionMatchers.length; i++) {
+					if(!dimensionMatchers[i].matches(dimensions.get(i))) {
+						if(!result) {
+							mismatchDescription.appendText(", ");
+						}
+						result = false;
+						mismatchDescription.appendText("dimension ").appendValue(i).appendText(" ");
+						dimensionMatchers[i].describeMismatch(dimensions.get(i), mismatchDescription);
+					}
+				}
+				
+				return result;
+			}
+			
+		};
 	}
 
 	/**
