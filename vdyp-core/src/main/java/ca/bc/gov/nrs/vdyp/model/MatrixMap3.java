@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.vdyp.model;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public interface MatrixMap3<K1, K2, K3, V> extends MatrixMap<V> {
@@ -65,6 +66,11 @@ public interface MatrixMap3<K1, K2, K3, V> extends MatrixMap<V> {
 				@Override
 				public void setAll(CV value) {
 					o.setAll(value);
+				}
+
+				@Override
+				public void eachKey(Consumer<Object[]> body) {
+					o.eachKey(body);
 				}
 
 			};

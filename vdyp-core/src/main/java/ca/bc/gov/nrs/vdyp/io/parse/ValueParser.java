@@ -119,6 +119,11 @@ public interface ValueParser<T> extends ControlledValueParser<T> {
 	public static final ValueParser<Float> FLOAT = numberParser(Float::parseFloat, Float.class);
 
 	/**
+	 * Parser for integers as booleans
+	 */
+	public static final ValueParser<Boolean> LOGICAL = s -> INTEGER.parse(s) != 0;
+
+	/**
 	 * Parser for Characters
 	 */
 	public static final ValueParser<Character> CHARACTER = s -> {

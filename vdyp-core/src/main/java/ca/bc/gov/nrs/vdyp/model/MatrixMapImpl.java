@@ -1,12 +1,15 @@
 package ca.bc.gov.nrs.vdyp.model;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -115,4 +118,22 @@ public class MatrixMapImpl<T> implements MatrixMap<T> {
 		Arrays.fill(matrix, value);
 	}
 
+	@Override
+	public void eachKey(Consumer<Object[]> body) {
+		var key = new Object[maps.size()];
+		eachKey(key, 0, body);
+	}
+
+	// Recursively compute the cartesian product
+	private void eachKey(Object[] key, int i, Consumer<Object[]> body) {
+		if (i < maps.size()) {
+			var dim = maps.get(i);
+			dim.keySet().forEach(k -> {
+				key[i] = k;
+				eachKey(key, i + 1, body);
+			});
+		} else {
+			body.accept(Arrays.copyOf(key, i));
+		}
+	}
 }

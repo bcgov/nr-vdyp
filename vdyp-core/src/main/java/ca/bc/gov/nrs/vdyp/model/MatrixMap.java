@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -25,6 +26,8 @@ public interface MatrixMap<T> {
 	public boolean all(Predicate<T> pred);
 
 	public boolean any(Predicate<T> pred);
+
+	public void eachKey(Consumer<Object[]> body);
 
 	public List<Set<?>> getDimensions();
 

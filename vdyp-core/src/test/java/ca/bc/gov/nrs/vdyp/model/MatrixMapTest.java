@@ -3,9 +3,12 @@ package ca.bc.gov.nrs.vdyp.model;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.arrayContaining;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.is;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -138,6 +141,24 @@ public class MatrixMapTest {
 		assertThat(map.getM("a", 2), present(is('A')));
 		assertThat(map.getM("b", 1), present(is('A')));
 		assertThat(map.getM("b", 2), present(is('A')));
+	}
+
+	@Test
+	public void testEachKey() {
+		var dim1 = Arrays.asList("a", "b");
+		var dim2 = Arrays.asList(1, 2);
+		var dims = Arrays.asList(dim1, dim2);
+		var map = new MatrixMapImpl<Character>(dims);
+
+		var result = new ArrayList<Object[]>();
+		map.eachKey(result::add);
+		assertThat(
+				result,
+				containsInAnyOrder(
+						arrayContaining("a", 1), arrayContaining("b", 1), arrayContaining("a", 2),
+						arrayContaining("b", 2)
+				)
+		);
 	}
 
 }

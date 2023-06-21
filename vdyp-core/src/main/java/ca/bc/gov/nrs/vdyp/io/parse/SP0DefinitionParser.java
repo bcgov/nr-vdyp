@@ -98,6 +98,18 @@ public class SP0DefinitionParser implements ControlMapSubResourceParser<List<SP0
 		return getSpecies(controlMap).stream().map(SP0Definition::getAlias).collect(Collectors.toList());
 	}
 
+	/**
+	 * Get a species based on its index from 1
+	 *
+	 * @param index
+	 * @param controlMap
+	 * @return
+	 */
+	public static SP0Definition getSpeciesByIndex(final int index, final Map<String, Object> controlMap) {
+
+		return getSpecies(controlMap).get(index - 1);
+	}
+
 	@Override
 	public String getControlKey() {
 		return CONTROL_KEY;

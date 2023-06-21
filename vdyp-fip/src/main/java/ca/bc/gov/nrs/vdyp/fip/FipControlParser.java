@@ -189,6 +189,8 @@ public class FipControlParser {
 
 	;
 
+	int jprogram = 1; // FIPSTART only TODO Track this down
+
 	public FipControlParser() {
 
 	}
@@ -378,7 +380,7 @@ public class FipControlParser {
 	List<ControlMapModifier> ADDITIONAL_MODIFIERS = Arrays.asList(
 
 			// RD_E198
-			new ModifierParser()
+			new ModifierParser(jprogram)
 	);
 
 	private void
@@ -397,8 +399,6 @@ public class FipControlParser {
 		// Read Groups
 
 		applyModifiers(map, GROUP_DEFINITIONS, fileResolver);
-
-		int jprogram = 1; // FIPSTART only TODO Track this down
 
 		if (jprogram == 1) {
 			applyModifiers(map, FIPSTART_ONLY, fileResolver);
