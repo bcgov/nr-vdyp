@@ -117,7 +117,16 @@ public class ModifierParser implements OptionalResourceControlMapModifier {
 			if (!modIsForProgram(entry))
 				return result;
 
-			if (sequence > 200 && sequence <= 299) {
+			if (sequence == 200) {
+				var mods = getMods(4, entry);
+				var sp0Aliases = SP0DefinitionParser.getSpeciesAliases(control);
+				for (var sp0Alias : sp0Aliases) {
+					baMap.put(sp0Alias, Region.COASTAL, mods.get(0));
+					baMap.put(sp0Alias, Region.INTERIOR, mods.get(1));
+					dqMap.put(sp0Alias, Region.COASTAL, mods.get(2));
+					dqMap.put(sp0Alias, Region.INTERIOR, mods.get(3));
+				}
+			} else if (sequence > 200 && sequence <= 299) {
 				var sp0Index = sequence - 200;
 				var sp0Alias = SP0DefinitionParser.getSpeciesByIndex(sp0Index, control).getAlias();
 				var mods = getMods(4, entry);

@@ -246,4 +246,135 @@ public class ModifierParserTest {
 		modifierDefaultAsserts(controlMap);
 	}
 
+	@Test
+	public void testIgnoreAfterStop() throws Exception {
+		var parser = new ModifierParser(1);
+
+		Map<String, Object> controlMap = new HashMap<>();
+		controlMap.put(ModifierParser.CONTROL_KEY, Optional.of("testFilename"));
+		SP0DefinitionParserTest.populateControlMapReal(controlMap);
+
+		var is = TestUtils.makeStream("999", "201 1 0 0 0 0 0 0.000 0.000 0.000 0.000");
+
+		var fileResolver = new FileResolver() {
+
+			@Override
+			public InputStream resolve(String filename) throws IOException {
+				assertThat(filename, is("testFilename"));
+
+				return is;
+			}
+
+			@Override
+			public String toString(String filename) throws IOException {
+				return filename;
+			}
+
+		};
+
+		parser.modify(controlMap, fileResolver);
+
+		modifierDefaultAsserts(controlMap);
+	}
+
+	@Test
+	public void testIgnoreCommentsAndBlanks() throws Exception {
+		var parser = new ModifierParser(1);
+
+		Map<String, Object> controlMap = new HashMap<>();
+		controlMap.put(ModifierParser.CONTROL_KEY, Optional.of("testFilename"));
+		SP0DefinitionParserTest.populateControlMapReal(controlMap);
+
+		var is = TestUtils.makeStream("", "    x", "000 x", "201 1 0 0 0 0 0 2.000 3.000 4.000 5.000");
+
+		var fileResolver = new FileResolver() {
+
+			@Override
+			public InputStream resolve(String filename) throws IOException {
+				assertThat(filename, is("testFilename"));
+
+				return is;
+			}
+
+			@Override
+			public String toString(String filename) throws IOException {
+				return filename;
+			}
+
+		};
+
+		parser.modify(controlMap, fileResolver);
+
+		var baMap = ((MatrixMap<Float>) controlMap.get(ModifierParser.CONTROL_KEY_MOD200_BA));
+		baMap.eachKey(k -> {
+			if (k[0].equals("AC")) {
+				if (k[1].equals(Region.COASTAL)) {
+					assertThat(baMap.getM(k), present(is(2.0f)));
+				} else {
+					assertThat(baMap.getM(k), present(is(3.0f)));
+				}
+			} else {
+				assertThat(baMap.getM(k), present(is(1.0f)));
+			}
+		});
+		var dqMap = ((MatrixMap<Float>) controlMap.get(ModifierParser.CONTROL_KEY_MOD200_DQ));
+		dqMap.eachKey(k -> {
+			if (k[0].equals("AC")) {
+				if (k[1].equals(Region.COASTAL)) {
+					assertThat(dqMap.getM(k), present(is(4.0f)));
+				} else {
+					assertThat(dqMap.getM(k), present(is(5.0f)));
+				}
+			} else {
+				assertThat(dqMap.getM(k), present(is(1.0f)));
+			}
+		});
+	}
+
+	@Test
+	public void testBaDqAllSpecies() throws Exception {
+		var parser = new ModifierParser(1);
+
+		Map<String, Object> controlMap = new HashMap<>();
+		controlMap.put(ModifierParser.CONTROL_KEY, Optional.of("testFilename"));
+		SP0DefinitionParserTest.populateControlMapReal(controlMap);
+
+		var is = TestUtils.makeStream("200 1 0 0 0 0 0 2.000 3.000 4.000 5.000");
+
+		var fileResolver = new FileResolver() {
+
+			@Override
+			public InputStream resolve(String filename) throws IOException {
+				assertThat(filename, is("testFilename"));
+
+				return is;
+			}
+
+			@Override
+			public String toString(String filename) throws IOException {
+				return filename;
+			}
+
+		};
+
+		parser.modify(controlMap, fileResolver);
+
+		var baMap = ((MatrixMap<Float>) controlMap.get(ModifierParser.CONTROL_KEY_MOD200_BA));
+		baMap.eachKey(k -> {
+			if (k[1].equals(Region.COASTAL)) {
+				assertThat(baMap.getM(k), present(is(2.0f)));
+			} else {
+				assertThat(baMap.getM(k), present(is(3.0f)));
+			}
+		});
+		var dqMap = ((MatrixMap<Float>) controlMap.get(ModifierParser.CONTROL_KEY_MOD200_DQ));
+		dqMap.eachKey(k -> {
+			if (k[1].equals(Region.COASTAL)) {
+				assertThat(dqMap.getM(k), present(is(4.0f)));
+			} else {
+				assertThat(dqMap.getM(k), present(is(5.0f)));
+			}
+		});
+	}
+
 }
