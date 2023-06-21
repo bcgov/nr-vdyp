@@ -374,7 +374,7 @@ public class FipControlParser {
 			// RD_E098
 			new VeteranBQParser()
 	);
-	
+
 	List<ControlMapModifier> ADDITIONAL_MODIFIERS = Arrays.asList(
 
 			// RD_E198

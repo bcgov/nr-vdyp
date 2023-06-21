@@ -29,7 +29,6 @@ import ca.bc.gov.nrs.vdyp.test.TestUtils;
 @SuppressWarnings({ "unchecked", "rawtypes" })
 public class ModifierParserTest {
 
-	
 	@Test
 	public void testNoFilenameForControlFile() throws Exception {
 		var parser = new ModifierParser();
@@ -51,14 +50,14 @@ public class ModifierParserTest {
 				fail("Should not call FileResolver::toString");
 				return filename;
 			}
-			
+
 		};
-		
+
 		parser.modify(controlMap, fileResolver);
-		
+
 		assertThat(controlMap, (Matcher) hasSpecificEntry(ModifierParser.CONTROL_KEY, notPresent()));
 	}
-	
+
 	@Test
 	public void testMissingControlFile() throws Exception {
 		var parser = new ModifierParser();
@@ -72,7 +71,7 @@ public class ModifierParserTest {
 			@Override
 			public InputStream resolve(String filename) throws IOException {
 				assertThat(filename, is("testFilename"));
-				
+
 				throw new IOException();
 			}
 
@@ -81,16 +80,15 @@ public class ModifierParserTest {
 				fail("Should not call FileResolver::toString");
 				return filename;
 			}
-			
+
 		};
-		
-		
-		var ex = Assertions.assertThrows(IOException.class, ()->parser.modify(controlMap, fileResolver));
-		
+
+		var ex = Assertions.assertThrows(IOException.class, () -> parser.modify(controlMap, fileResolver));
+
 		assertThat(ex, Matchers.notNullValue());
-		
+
 	}
-	
+
 	@Test
 	public void testLoadEmptyFile() throws Exception {
 		var parser = new ModifierParser();
@@ -98,15 +96,15 @@ public class ModifierParserTest {
 		Map<String, Object> controlMap = new HashMap<>();
 		controlMap.put(ModifierParser.CONTROL_KEY, Optional.of("testFilename"));
 		SP0DefinitionParserTest.populateControlMapReal(controlMap);
-		
+
 		var is = TestUtils.makeStream();
-		
+
 		var fileResolver = new FileResolver() {
 
 			@Override
 			public InputStream resolve(String filename) throws IOException {
 				assertThat(filename, is("testFilename"));
-				
+
 				return is;
 			}
 
@@ -114,28 +112,51 @@ public class ModifierParserTest {
 			public String toString(String filename) throws IOException {
 				return filename;
 			}
-			
+
 		};
-		
-		
+
 		parser.modify(controlMap, fileResolver);
-		
+
 		modifierDefaultAsserts(controlMap);
 	}
-	
+
 	protected void modifierDefaultAsserts(Map<String, Object> controlMap) {
 		var expectedSp0Aliases = SP0DefinitionParserTest.getSpeciesAliases();
 
 		assertThat(controlMap, (Matcher) hasSpecificEntry(ModifierParser.CONTROL_KEY, present(is("testFilename"))));
-		
-		assertThat(controlMap, (Matcher) hasSpecificEntry(ModifierParser.CONTROL_KEY_MOD200_BA, mmDimensions(contains((Object[])expectedSp0Aliases), contains((Object[])Region.values()))));
+
+		assertThat(
+				controlMap,
+				(Matcher) hasSpecificEntry(
+						ModifierParser.CONTROL_KEY_MOD200_BA,
+						mmDimensions(contains((Object[]) expectedSp0Aliases), contains((Object[]) Region.values()))
+				)
+		);
 		assertThat(controlMap, (Matcher) hasSpecificEntry(ModifierParser.CONTROL_KEY_MOD200_BA, mmAll(is(1.0f))));
-		assertThat(controlMap, (Matcher) hasSpecificEntry(ModifierParser.CONTROL_KEY_MOD200_DQ, mmDimensions(contains((Object[])expectedSp0Aliases), contains((Object[])Region.values()))));
+		assertThat(
+				controlMap,
+				(Matcher) hasSpecificEntry(
+						ModifierParser.CONTROL_KEY_MOD200_DQ,
+						mmDimensions(contains((Object[]) expectedSp0Aliases), contains((Object[]) Region.values()))
+				)
+		);
 		assertThat(controlMap, (Matcher) hasSpecificEntry(ModifierParser.CONTROL_KEY_MOD200_DQ, mmAll(is(1.0f))));
-		
-		assertThat(controlMap, (Matcher) hasSpecificEntry(ModifierParser.CONTROL_KEY_MOD301_DECAY, mmDimensions(contains((Object[])expectedSp0Aliases), contains((Object[])Region.values()))));
+
+		assertThat(
+				controlMap,
+				(Matcher) hasSpecificEntry(
+						ModifierParser.CONTROL_KEY_MOD301_DECAY,
+						mmDimensions(contains((Object[]) expectedSp0Aliases), contains((Object[]) Region.values()))
+				)
+		);
 		assertThat(controlMap, (Matcher) hasSpecificEntry(ModifierParser.CONTROL_KEY_MOD301_DECAY, mmAll(is(0.0f))));
-		assertThat(controlMap, (Matcher) hasSpecificEntry(ModifierParser.CONTROL_KEY_MOD301_WASTE, mmDimensions(contains((Object[])expectedSp0Aliases), contains((Object[])Region.values()))));
+		assertThat(
+				controlMap,
+				(Matcher) hasSpecificEntry(
+						ModifierParser.CONTROL_KEY_MOD301_WASTE,
+						mmDimensions(contains((Object[]) expectedSp0Aliases), contains((Object[]) Region.values()))
+				)
+		);
 		assertThat(controlMap, (Matcher) hasSpecificEntry(ModifierParser.CONTROL_KEY_MOD301_WASTE, mmAll(is(0.0f))));
 	}
 }

@@ -117,7 +117,7 @@ public class MatrixMapTest {
 		assertThat(map.getM("b", 1), present(is('Y')));
 		assertThat(map.getM("b", 2), present(is('Z')));
 	}
-	
+
 	@Test
 	public void testSetAll() {
 		var dim1 = Arrays.asList("a", "b");
@@ -130,7 +130,7 @@ public class MatrixMapTest {
 		map.putM('Y', "b", 1);
 
 		map.setAll('A');
-		
+
 		assertThat(map, hasProperty("full", is(true)));
 		assertThat(map, hasProperty("empty", is(false)));
 
