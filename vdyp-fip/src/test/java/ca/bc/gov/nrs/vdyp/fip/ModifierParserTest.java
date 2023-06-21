@@ -36,7 +36,7 @@ public class ModifierParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 		controlMap.put(ModifierParser.CONTROL_KEY, Optional.empty());
-		SP0DefinitionParserTest.populateControlMap(controlMap);
+		SP0DefinitionParserTest.populateControlMapReal(controlMap);
 
 		var fileResolver = new FileResolver() {
 
@@ -57,17 +57,6 @@ public class ModifierParserTest {
 		parser.modify(controlMap, fileResolver);
 		
 		assertThat(controlMap, (Matcher) hasSpecificEntry(ModifierParser.CONTROL_KEY, notPresent()));
-		
-		assertThat(controlMap, (Matcher) hasSpecificEntry(ModifierParser.CONTROL_KEY_MOD200_BA, mmDimensions(contains("S1", "S2"), contains((Object[])Region.values()))));
-		assertThat(controlMap, (Matcher) hasSpecificEntry(ModifierParser.CONTROL_KEY_MOD200_BA, mmAll(is(1.0f))));
-		assertThat(controlMap, (Matcher) hasSpecificEntry(ModifierParser.CONTROL_KEY_MOD200_DQ, mmDimensions(contains("S1", "S2"), contains((Object[])Region.values()))));
-		assertThat(controlMap, (Matcher) hasSpecificEntry(ModifierParser.CONTROL_KEY_MOD200_DQ, mmAll(is(1.0f))));
-		
-		assertThat(controlMap, (Matcher) hasSpecificEntry(ModifierParser.CONTROL_KEY_MOD301_DECAY, mmDimensions(contains("S1", "S2"), contains((Object[])Region.values()))));
-		assertThat(controlMap, (Matcher) hasSpecificEntry(ModifierParser.CONTROL_KEY_MOD301_DECAY, mmAll(is(0.0f))));
-		assertThat(controlMap, (Matcher) hasSpecificEntry(ModifierParser.CONTROL_KEY_MOD301_WASTE, mmDimensions(contains("S1", "S2"), contains((Object[])Region.values()))));
-		assertThat(controlMap, (Matcher) hasSpecificEntry(ModifierParser.CONTROL_KEY_MOD301_WASTE, mmAll(is(0.0f))));
-		
 	}
 	
 	@Test
@@ -108,7 +97,7 @@ public class ModifierParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 		controlMap.put(ModifierParser.CONTROL_KEY, Optional.of("testFilename"));
-		SP0DefinitionParserTest.populateControlMap(controlMap);
+		SP0DefinitionParserTest.populateControlMapReal(controlMap);
 		
 		var is = TestUtils.makeStream();
 		
@@ -131,17 +120,22 @@ public class ModifierParserTest {
 		
 		parser.modify(controlMap, fileResolver);
 		
-		assertThat(controlMap, (Matcher) hasSpecificEntry(ModifierParser.CONTROL_KEY, present(is("testFilename"))));
-		
-		assertThat(controlMap, (Matcher) hasSpecificEntry(ModifierParser.CONTROL_KEY_MOD200_BA, mmDimensions(contains("S1", "S2"), contains((Object[])Region.values()))));
-		assertThat(controlMap, (Matcher) hasSpecificEntry(ModifierParser.CONTROL_KEY_MOD200_BA, mmAll(is(1.0f))));
-		assertThat(controlMap, (Matcher) hasSpecificEntry(ModifierParser.CONTROL_KEY_MOD200_DQ, mmDimensions(contains("S1", "S2"), contains((Object[])Region.values()))));
-		assertThat(controlMap, (Matcher) hasSpecificEntry(ModifierParser.CONTROL_KEY_MOD200_DQ, mmAll(is(1.0f))));
-		
-		assertThat(controlMap, (Matcher) hasSpecificEntry(ModifierParser.CONTROL_KEY_MOD301_DECAY, mmDimensions(contains("S1", "S2"), contains((Object[])Region.values()))));
-		assertThat(controlMap, (Matcher) hasSpecificEntry(ModifierParser.CONTROL_KEY_MOD301_DECAY, mmAll(is(0.0f))));
-		assertThat(controlMap, (Matcher) hasSpecificEntry(ModifierParser.CONTROL_KEY_MOD301_WASTE, mmDimensions(contains("S1", "S2"), contains((Object[])Region.values()))));
-		assertThat(controlMap, (Matcher) hasSpecificEntry(ModifierParser.CONTROL_KEY_MOD301_WASTE, mmAll(is(0.0f))));		
+		modifierDefaultAsserts(controlMap);
 	}
 	
+	protected void modifierDefaultAsserts(Map<String, Object> controlMap) {
+		var expectedSp0Aliases = SP0DefinitionParserTest.getSpeciesAliases();
+
+		assertThat(controlMap, (Matcher) hasSpecificEntry(ModifierParser.CONTROL_KEY, present(is("testFilename"))));
+		
+		assertThat(controlMap, (Matcher) hasSpecificEntry(ModifierParser.CONTROL_KEY_MOD200_BA, mmDimensions(contains((Object[])expectedSp0Aliases), contains((Object[])Region.values()))));
+		assertThat(controlMap, (Matcher) hasSpecificEntry(ModifierParser.CONTROL_KEY_MOD200_BA, mmAll(is(1.0f))));
+		assertThat(controlMap, (Matcher) hasSpecificEntry(ModifierParser.CONTROL_KEY_MOD200_DQ, mmDimensions(contains((Object[])expectedSp0Aliases), contains((Object[])Region.values()))));
+		assertThat(controlMap, (Matcher) hasSpecificEntry(ModifierParser.CONTROL_KEY_MOD200_DQ, mmAll(is(1.0f))));
+		
+		assertThat(controlMap, (Matcher) hasSpecificEntry(ModifierParser.CONTROL_KEY_MOD301_DECAY, mmDimensions(contains((Object[])expectedSp0Aliases), contains((Object[])Region.values()))));
+		assertThat(controlMap, (Matcher) hasSpecificEntry(ModifierParser.CONTROL_KEY_MOD301_DECAY, mmAll(is(0.0f))));
+		assertThat(controlMap, (Matcher) hasSpecificEntry(ModifierParser.CONTROL_KEY_MOD301_WASTE, mmDimensions(contains((Object[])expectedSp0Aliases), contains((Object[])Region.values()))));
+		assertThat(controlMap, (Matcher) hasSpecificEntry(ModifierParser.CONTROL_KEY_MOD301_WASTE, mmAll(is(0.0f))));
+	}
 }

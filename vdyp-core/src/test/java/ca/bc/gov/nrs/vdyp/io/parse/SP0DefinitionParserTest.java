@@ -247,6 +247,20 @@ public class SP0DefinitionParserTest {
 	public static void populateControlMap(Map<String, Object> controlMap) {
 		populateControlMap(controlMap, "S1", "S2");
 	}
+	
+	/**
+	 * Add a mock control map entry for SP0 parse results with 16 species
+	 */
+	public static void populateControlMapReal(Map<String, Object> controlMap) {
+		populateControlMap(controlMap, getSpeciesAliases());
+	}
+	
+	/**
+	 * Get the species aliases expected
+	 */
+	public static String[] getSpeciesAliases() {
+		return new String[]{"AC", "AT", "B", "C", "D", "E", "F", "H", "L", "MB", "PA", "PL", "PW", "PY", "S", "Y"};
+	}
 
 	/**
 	 * Add a mock control map entry for SP0 parse results
