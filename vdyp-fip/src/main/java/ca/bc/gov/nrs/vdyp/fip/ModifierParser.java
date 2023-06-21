@@ -18,6 +18,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.SP0DefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ValueParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.ValueParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VeteranBQParser;
+import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
 import ca.bc.gov.nrs.vdyp.model.Region;
@@ -67,8 +68,8 @@ public class ModifierParser implements OptionalResourceControlMapModifier {
 	public static final int MAX_MODS = 60;
 
 	int jprogram;
-	
-	static final int[] ipoint = {1, 0, 2, 0, 0, 3, 4, 5, 0};
+
+	static final int[] ipoint = { 1, 0, 2, 0, 0, 3, 4, 5, 0 };
 
 	public ModifierParser(int jprogram) {
 		super();
@@ -109,6 +110,8 @@ public class ModifierParser implements OptionalResourceControlMapModifier {
 				.multiValue(10, 6, "mods", ValueParser.optional(ValueParser.FLOAT));
 
 		@SuppressWarnings("unchecked")
+		final var vetBqMap = (MatrixMap2<String, Region, Coefficients>) control.get(VeteranBQParser.CONTROL_KEY);
+		@SuppressWarnings("unchecked")
 		final var baMap = (MatrixMap2<String, Region, Float>) control.get(CONTROL_KEY_MOD200_BA);
 		@SuppressWarnings("unchecked")
 		final var dqMap = (MatrixMap2<String, Region, Float>) control.get(CONTROL_KEY_MOD200_DQ);
@@ -119,7 +122,28 @@ public class ModifierParser implements OptionalResourceControlMapModifier {
 			if (!modIsForProgram(entry))
 				return result;
 
-			if (sequence == 200) {
+			if (sequence == 98) {
+				// If modifiers are per region, for each species, multiply the first coefficient
+				// for veteran BQ by the region appropriate modifier.
+				vetBqMap.get(CONTROL_KEY, null);
+				var mods = getMods(2, entry);
+				var sp0Aliases = SP0DefinitionParser.getSpeciesAliases(control);
+				for (var sp0Alias : sp0Aliases) {
+					final float coastalMod = mods.get(0);
+					final float interiorMod = mods.get(1);
+
+					if (coastalMod != 0.0) {
+						var coe = vetBqMap.get(sp0Alias, Region.COASTAL).get();
+						coe.modifyCoe(1, x -> x * coastalMod);
+					}
+					if (interiorMod != 0.0) {
+						var coe = vetBqMap.get(sp0Alias, Region.INTERIOR).get();
+						coe.modifyCoe(1, x -> x * interiorMod);
+					}
+				}
+			} else if (sequence == 200) {
+				// Modifiers are per region for BA and DQ, for each species, set the modifier
+				// map
 				var mods = getMods(4, entry);
 				var sp0Aliases = SP0DefinitionParser.getSpeciesAliases(control);
 				for (var sp0Alias : sp0Aliases) {
@@ -129,6 +153,8 @@ public class ModifierParser implements OptionalResourceControlMapModifier {
 					dqMap.put(sp0Alias, Region.INTERIOR, mods.get(3));
 				}
 			} else if (sequence > 200 && sequence <= 299) {
+				// Modifiers are per region for BA and DQ, for the specified species, set the
+				// modifier map
 				var sp0Index = sequence - 200;
 				var sp0Alias = SP0DefinitionParser.getSpeciesByIndex(sp0Index, control).getAlias();
 				var mods = getMods(4, entry);
@@ -147,8 +173,9 @@ public class ModifierParser implements OptionalResourceControlMapModifier {
 		@SuppressWarnings("unchecked")
 		var programs = (List<Boolean>) entry.get("programs");
 		var index = ipoint[this.jprogram - 1];
-		if (index<=0) throw new IllegalStateException("JProgram "+this.jprogram + " mapped to "+index);
-		return programs.get(index-1);
+		if (index <= 0)
+			throw new IllegalStateException("JProgram " + this.jprogram + " mapped to " + index);
+		return programs.get(index - 1);
 	}
 
 	List<Float> getMods(int num, Map<String, Object> entry) throws ValueParseException {

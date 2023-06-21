@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.vdyp.model;
 import java.util.AbstractList;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.UnaryOperator;
 
 public class Coefficients extends AbstractList<Float> implements List<Float> {
 	float[] coe;
@@ -34,6 +35,14 @@ public class Coefficients extends AbstractList<Float> implements List<Float> {
 
 	public Float getCoe(int i) {
 		return coe[i - indexFrom];
+	}
+
+	public void modifyCoe(int i, UnaryOperator<Float> op) {
+		setCoe(i, op.apply(getCoe(i)));
+	}
+
+	public Float setCoe(int i, float value) {
+		return coe[i - indexFrom] = value;
 	}
 
 	@Override

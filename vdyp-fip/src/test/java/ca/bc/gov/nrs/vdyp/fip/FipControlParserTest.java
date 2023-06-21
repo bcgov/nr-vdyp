@@ -579,14 +579,22 @@ public class FipControlParserTest {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
-				result,
-				(Matcher) hasSpecificEntry(
+				result, (Matcher) hasSpecificEntry(
 						FipControlParser.VETERAN_BQ,
+						// Includes modifiers from 198
 						allOf(
-								mmHasEntry(present(contains(0.12874f, 8.00000f, 1.26982f)), "B", Region.COASTAL),
-								mmHasEntry(present(contains(0.70932f, 7.63269f, 0.62545f)), "B", Region.INTERIOR),
-								mmHasEntry(present(contains(0.07962f, 6.60231f, 1.37998f)), "D", Region.COASTAL),
-								mmHasEntry(present(contains(0.07962f, 6.60231f, 1.37998f)), "D", Region.INTERIOR)
+								mmHasEntry(
+										present(contains(0.12874f * 0.311f, 8.00000f, 1.26982f)), "B", Region.COASTAL
+								),
+								mmHasEntry(
+										present(contains(0.70932f * 0.374f, 7.63269f, 0.62545f)), "B", Region.INTERIOR
+								),
+								mmHasEntry(
+										present(contains(0.07962f * 0.311f, 6.60231f, 1.37998f)), "D", Region.COASTAL
+								),
+								mmHasEntry(
+										present(contains(0.07962f * 0.374f, 6.60231f, 1.37998f)), "D", Region.INTERIOR
+								)
 						)
 				)
 		);

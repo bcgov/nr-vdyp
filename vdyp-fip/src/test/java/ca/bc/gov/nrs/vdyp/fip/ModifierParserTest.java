@@ -12,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -23,7 +24,11 @@ import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.SP0DefinitionParserTest;
+import ca.bc.gov.nrs.vdyp.io.parse.VeteranBQParser;
+import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap;
+import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
+import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
@@ -373,6 +378,48 @@ public class ModifierParserTest {
 				assertThat(dqMap.getM(k), present(is(4.0f)));
 			} else {
 				assertThat(dqMap.getM(k), present(is(5.0f)));
+			}
+		});
+	}
+
+	@Test
+	public void testVetBq() throws Exception {
+		var parser = new ModifierParser(1);
+
+		Map<String, Object> controlMap = new HashMap<>();
+		controlMap.put(ModifierParser.CONTROL_KEY, Optional.of("testFilename"));
+		MatrixMap2<String, Region, Coefficients> vetBqMap = new MatrixMap2Impl(
+				Arrays.asList(SP0DefinitionParserTest.getSpeciesAliases()), Arrays.asList(Region.values())
+		);
+		vetBqMap.setAll(k -> new Coefficients(Arrays.asList(1.0f, 5.0f, 7.0f), 1));
+		SP0DefinitionParserTest.populateControlMapReal(controlMap);
+		controlMap.put(VeteranBQParser.CONTROL_KEY, vetBqMap);
+
+		var is = TestUtils.makeStream("098 1 0 0 0 0 0 0.200 0.300");
+
+		var fileResolver = new FileResolver() {
+
+			@Override
+			public InputStream resolve(String filename) throws IOException {
+				assertThat(filename, is("testFilename"));
+
+				return is;
+			}
+
+			@Override
+			public String toString(String filename) throws IOException {
+				return filename;
+			}
+
+		};
+
+		parser.modify(controlMap, fileResolver);
+
+		vetBqMap.eachKey(k -> {
+			if (k[1].equals(Region.COASTAL)) {
+				assertThat(vetBqMap.getM(k), present(contains(is(0.2f), is(5.0f), is(7.0f))));
+			} else {
+				assertThat(vetBqMap.getM(k), present(contains(is(0.3f), is(5.0f), is(7.0f))));
 			}
 		});
 	}

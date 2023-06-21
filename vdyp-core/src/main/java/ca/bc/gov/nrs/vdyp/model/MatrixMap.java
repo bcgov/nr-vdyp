@@ -6,7 +6,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -116,5 +118,18 @@ public interface MatrixMap<T> {
 	 *
 	 * @param value
 	 */
-	public void setAll(T value);
+	public default void setAll(T value) {
+		setAll(k -> value);
+	};
+
+	/**
+	 * Set all cells to the generated value
+	 *
+	 * @param value
+	 */
+	public default void setAll(Function<Object[], T> generator) {
+		eachKey((k) -> {
+			putM(generator.apply(k), k);
+		});
+	};
 }
