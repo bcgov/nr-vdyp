@@ -40,6 +40,10 @@ public class ModifierParser implements OptionalResourceControlMapModifier {
 	 */
 	public static final String CONTROL_KEY_MOD200_DQ = "DQ_MODIFIERS";
 	/**
+	 * Boolean indicates HL modifiers are present
+	 */
+	public static final String CONTROL_KEY_MOD301_HL = "HL_MODIFIERS";
+	/**
 	 * MatrixMap2 of Species ID, Region to Float
 	 */
 	public static final String CONTROL_KEY_MOD301_DECAY = "DECAY_MODIFIERS";
@@ -115,6 +119,10 @@ public class ModifierParser implements OptionalResourceControlMapModifier {
 		final var baMap = (MatrixMap2<String, Region, Float>) control.get(CONTROL_KEY_MOD200_BA);
 		@SuppressWarnings("unchecked")
 		final var dqMap = (MatrixMap2<String, Region, Float>) control.get(CONTROL_KEY_MOD200_DQ);
+		@SuppressWarnings("unchecked")
+		final var decayMap = (MatrixMap2<String, Region, Float>) control.get(CONTROL_KEY_MOD301_DECAY);
+		@SuppressWarnings("unchecked")
+		final var wasteMap = (MatrixMap2<String, Region, Float>) control.get(CONTROL_KEY_MOD301_WASTE);
 
 		parser.parse(data, control, (entry, result) -> {
 			int sequence = (int) entry.get("sequence");
@@ -163,6 +171,17 @@ public class ModifierParser implements OptionalResourceControlMapModifier {
 				baMap.put(sp0Alias, Region.INTERIOR, mods.get(1));
 				dqMap.put(sp0Alias, Region.COASTAL, mods.get(2));
 				dqMap.put(sp0Alias, Region.INTERIOR, mods.get(3));
+			} else if (sequence > 300 && sequence <= 399) {
+				// Modifiers are per region for BA and DQ, for the specified species, set the
+				// modifier map
+				var sp0Index = sequence - 300;
+				var sp0Alias = SP0DefinitionParser.getSpeciesByIndex(sp0Index, control).getAlias();
+				var mods = getMods(4, entry);
+
+				decayMap.put(sp0Alias, Region.COASTAL, mods.get(0));
+				decayMap.put(sp0Alias, Region.INTERIOR, mods.get(1));
+				wasteMap.put(sp0Alias, Region.COASTAL, mods.get(2));
+				wasteMap.put(sp0Alias, Region.INTERIOR, mods.get(3));
 			}
 			return result;
 		}, control);

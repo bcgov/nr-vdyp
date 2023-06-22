@@ -424,4 +424,58 @@ public class ModifierParserTest {
 		});
 	}
 
+	@Test
+	public void testHlDecayWaste() throws Exception {
+		var parser = new ModifierParser(1);
+
+		Map<String, Object> controlMap = new HashMap<>();
+		controlMap.put(ModifierParser.CONTROL_KEY, Optional.of("testFilename"));
+		SP0DefinitionParserTest.populateControlMapReal(controlMap);
+
+		var is = TestUtils.makeStream("301 1 0 0 0 0 0 2.000 3.000 4.000 5.000");
+
+		var fileResolver = new FileResolver() {
+
+			@Override
+			public InputStream resolve(String filename) throws IOException {
+				assertThat(filename, is("testFilename"));
+
+				return is;
+			}
+
+			@Override
+			public String toString(String filename) throws IOException {
+				return filename;
+			}
+
+		};
+
+		parser.modify(controlMap, fileResolver);
+
+		var decayMap = ((MatrixMap<Float>) controlMap.get(ModifierParser.CONTROL_KEY_MOD301_DECAY));
+		decayMap.eachKey(k -> {
+			if (k[0].equals("AC")) {
+				if (k[1].equals(Region.COASTAL)) {
+					assertThat(decayMap.getM(k), present(is(2.0f)));
+				} else {
+					assertThat(decayMap.getM(k), present(is(3.0f)));
+				}
+			} else {
+				assertThat(decayMap.getM(k), present(is(0.0f)));
+			}
+		});
+		var wasteMap = ((MatrixMap<Float>) controlMap.get(ModifierParser.CONTROL_KEY_MOD301_WASTE));
+		wasteMap.eachKey(k -> {
+			if (k[0].equals("AC")) {
+				if (k[1].equals(Region.COASTAL)) {
+					assertThat(wasteMap.getM(k), present(is(4.0f)));
+				} else {
+					assertThat(wasteMap.getM(k), present(is(5.0f)));
+				}
+			} else {
+				assertThat(wasteMap.getM(k), present(is(0.0f)));
+			}
+		});
+	}
+
 }
