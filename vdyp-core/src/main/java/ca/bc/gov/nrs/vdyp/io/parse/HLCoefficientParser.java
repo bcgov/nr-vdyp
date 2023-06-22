@@ -8,8 +8,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
-import ca.bc.gov.nrs.vdyp.model.MatrixMap3Impl;
+import ca.bc.gov.nrs.vdyp.model.Coefficients;
+import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
+import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
 import ca.bc.gov.nrs.vdyp.model.Region;
 
 /**
@@ -18,7 +19,7 @@ import ca.bc.gov.nrs.vdyp.model.Region;
  * @author Kevin Smith, Vivid Solutions
  *
  */
-public class HLCoefficientParser implements ControlMapSubResourceParser<MatrixMap3<Integer, String, Region, Float>> {
+public class HLCoefficientParser implements ControlMapSubResourceParser<MatrixMap2<String, Region, Coefficients>> {
 
 	public static final String CONTROL_KEY_P1 = "HL_PRIMARY_SP_EQN_P1";
 	public static final String CONTROL_KEY_P2 = "HL_PRIMARY_SP_EQN_P2";
@@ -53,15 +54,13 @@ public class HLCoefficientParser implements ControlMapSubResourceParser<MatrixMa
 	LineParser lineParser;
 
 	@Override
-	public MatrixMap3<Integer, String, Region, Float> parse(InputStream is, Map<String, Object> control)
+	public MatrixMap2<String, Region, Coefficients> parse(InputStream is, Map<String, Object> control)
 			throws IOException, ResourceParseException {
 		final var regionIndicies = Arrays.asList(Region.values());
-		final List<Integer> coeIndicies = Stream.iterate(1, x -> x + 1).limit(numCoefficients)
-				.collect(Collectors.toList());
 		final var speciesIndicies = SP0DefinitionParser.getSpeciesAliases(control);
 
-		MatrixMap3<Integer, String, Region, Float> result = new MatrixMap3Impl<Integer, String, Region, Float>(
-				coeIndicies, speciesIndicies, regionIndicies
+		MatrixMap2<String, Region, Coefficients> result = new MatrixMap2Impl<String, Region, Coefficients>(
+				speciesIndicies, regionIndicies
 		);
 		lineParser.parse(is, result, (v, r) -> {
 			var sp0 = (String) v.get(SP0_KEY);
@@ -72,9 +71,8 @@ public class HLCoefficientParser implements ControlMapSubResourceParser<MatrixMa
 				throw new ValueParseException(sp0, sp0 + " is not a valid species");
 			}
 
-			for (int coeIndex = 0; coeIndex < numCoefficients; coeIndex++) {
-				r.put(coeIndex + 1, sp0, region, coefficients.get(coeIndex));
-			}
+			r.put(sp0, region, new Coefficients(coefficients, 1));
+
 			return r;
 		}, control);
 		return result;

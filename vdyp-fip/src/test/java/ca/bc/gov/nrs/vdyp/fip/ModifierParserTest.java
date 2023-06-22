@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
+import ca.bc.gov.nrs.vdyp.io.parse.HLCoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.SP0DefinitionParserTest;
 import ca.bc.gov.nrs.vdyp.io.parse.VeteranBQParser;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
@@ -425,7 +426,7 @@ public class ModifierParserTest {
 	}
 
 	@Test
-	public void testHlDecayWaste() throws Exception {
+	public void testDecayWaste() throws Exception {
 		var parser = new ModifierParser(1);
 
 		Map<String, Object> controlMap = new HashMap<>();
@@ -474,6 +475,85 @@ public class ModifierParserTest {
 				}
 			} else {
 				assertThat(wasteMap.getM(k), present(is(0.0f)));
+			}
+		});
+	}
+
+	@Test
+	public void testHL() throws Exception {
+		var parser = new ModifierParser(1);
+
+		Map<String, Object> controlMap = new HashMap<>();
+		controlMap.put(ModifierParser.CONTROL_KEY, Optional.of("testFilename"));
+		MatrixMap2<String, Region, Coefficients> hlP1Map = new MatrixMap2Impl(
+				Arrays.asList(SP0DefinitionParserTest.getSpeciesAliases()), Arrays.asList(Region.values())
+		);
+		hlP1Map.setAll(k -> new Coefficients(Arrays.asList(1.0f, 5.0f, 7.0f), 1));
+		MatrixMap2<String, Region, Coefficients> hlP2Map = new MatrixMap2Impl(
+				Arrays.asList(SP0DefinitionParserTest.getSpeciesAliases()), Arrays.asList(Region.values())
+		);
+		hlP2Map.setAll(k -> new Coefficients(Arrays.asList(1.0f, 5.0f), 1));
+		MatrixMap2<String, Region, Coefficients> hlP3Map = new MatrixMap2Impl(
+				Arrays.asList(SP0DefinitionParserTest.getSpeciesAliases()), Arrays.asList(Region.values())
+		);
+		hlP3Map.setAll(k -> new Coefficients(Arrays.asList(1.0f, 5.0f, 7.0f, 13.0f), 1));
+
+		SP0DefinitionParserTest.populateControlMapReal(controlMap);
+		controlMap.put(HLCoefficientParser.CONTROL_KEY_P1, hlP1Map);
+		controlMap.put(HLCoefficientParser.CONTROL_KEY_P2, hlP2Map);
+		controlMap.put(HLCoefficientParser.CONTROL_KEY_P3, hlP3Map);
+
+		var is = TestUtils.makeStream("401 1 0 0 0 0 0 0.200 0.300 0.500 0.700");
+
+		var fileResolver = new FileResolver() {
+
+			@Override
+			public InputStream resolve(String filename) throws IOException {
+				assertThat(filename, is("testFilename"));
+
+				return is;
+			}
+
+			@Override
+			public String toString(String filename) throws IOException {
+				return filename;
+			}
+
+		};
+
+		parser.modify(controlMap, fileResolver);
+
+		hlP1Map.eachKey(k -> {
+			if (k[0].equals("AC")) {
+				if (k[1].equals(Region.COASTAL)) {
+					assertThat(hlP1Map.getM(k), present(contains(is(0.2f), is(0.2f * 5.0f), is(7.0f))));
+				} else {
+					assertThat(hlP1Map.getM(k), present(contains(is(0.3f), is(0.3f * 5.0f), is(7.0f))));
+				}
+			} else {
+				assertThat(hlP1Map.getM(k), present(contains(is(1.0f), is(5.0f), is(7.0f))));
+			}
+		});
+		hlP2Map.eachKey(k -> {
+			if (k[0].equals("AC")) {
+				if (k[1].equals(Region.COASTAL)) {
+					assertThat(hlP2Map.getM(k), present(contains(is(0.2f), is(5.0f))));
+				} else {
+					assertThat(hlP2Map.getM(k), present(contains(is(0.3f), is(5.0f))));
+				}
+			} else {
+				assertThat(hlP2Map.getM(k), present(contains(is(1.0f), is(5.0f))));
+			}
+		});
+		hlP3Map.eachKey(k -> {
+			if (k[0].equals("AC")) {
+				if (k[1].equals(Region.COASTAL)) {
+					assertThat(hlP3Map.getM(k), present(contains(is(0.2f), is(5.0f), is(7.0f), is(13.0f))));
+				} else {
+					assertThat(hlP3Map.getM(k), present(contains(is(0.3f), is(5.0f), is(7.0f), is(13.0f))));
+				}
+			} else {
+				assertThat(hlP3Map.getM(k), present(contains(is(1.0f), is(5.0f), is(7.0f), is(13.0f))));
 			}
 		});
 	}

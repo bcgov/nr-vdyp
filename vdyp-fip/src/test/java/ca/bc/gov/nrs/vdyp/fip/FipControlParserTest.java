@@ -292,7 +292,7 @@ public class FipControlParserTest {
 				result,
 				(Matcher) hasSpecificEntry(
 						FipControlParser.HL_PRIMARY_SP_EQN_P1,
-						allOf(mmHasEntry(present(is(1.00160f)), 1, "AC", Region.COASTAL))
+						allOf(mmHasEntry(present(contains(1.00160f, 0.20508f, -0.0013743f)), "AC", Region.COASTAL))
 				)
 		);
 	}
@@ -305,7 +305,7 @@ public class FipControlParserTest {
 				result,
 				(Matcher) hasSpecificEntry(
 						FipControlParser.HL_PRIMARY_SP_EQN_P2,
-						allOf(mmHasEntry(present(is(0.49722f)), 1, "AC", Region.COASTAL))
+						allOf(mmHasEntry(present(contains(0.49722f, 1.18403f)), "AC", Region.COASTAL))
 				)
 		);
 	}
@@ -318,7 +318,12 @@ public class FipControlParserTest {
 				result,
 				(Matcher) hasSpecificEntry(
 						FipControlParser.HL_PRIMARY_SP_EQN_P3,
-						allOf(mmHasEntry(present(is(1.04422f)), 1, "AC", Region.COASTAL))
+						allOf(
+								mmHasEntry(
+										present(contains(1.04422f, 0.93010f, -0.05745f, -2.50000f)), "AC",
+										Region.COASTAL
+								)
+						)
 				)
 		);
 	}
