@@ -24,12 +24,16 @@ import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.HLCoefficientParser;
+import ca.bc.gov.nrs.vdyp.io.parse.HLNonprimaryCoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.SP0DefinitionParserTest;
 import ca.bc.gov.nrs.vdyp.io.parse.VeteranBQParser;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
+import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
+import ca.bc.gov.nrs.vdyp.model.MatrixMap3Impl;
+import ca.bc.gov.nrs.vdyp.model.NonprimaryHLCoefficients;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
@@ -103,6 +107,11 @@ public class ModifierParserTest {
 		Map<String, Object> controlMap = new HashMap<>();
 		controlMap.put(ModifierParser.CONTROL_KEY, Optional.of("testFilename"));
 		SP0DefinitionParserTest.populateControlMapReal(controlMap);
+		populateVetBq(controlMap);
+		populateHlP1(controlMap);
+		populateHlP2(controlMap);
+		populateHlP3(controlMap);
+		populateHlNP(controlMap);
 
 		var is = TestUtils.makeStream();
 
@@ -174,6 +183,11 @@ public class ModifierParserTest {
 		Map<String, Object> controlMap = new HashMap<>();
 		controlMap.put(ModifierParser.CONTROL_KEY, Optional.of("testFilename"));
 		SP0DefinitionParserTest.populateControlMapReal(controlMap);
+		populateVetBq(controlMap);
+		populateHlP1(controlMap);
+		populateHlP2(controlMap);
+		populateHlP3(controlMap);
+		populateHlNP(controlMap);
 
 		var is = TestUtils.makeStream("201 1 0 0 0 0 0 2.000 3.000 4.000 5.000");
 
@@ -228,6 +242,11 @@ public class ModifierParserTest {
 		Map<String, Object> controlMap = new HashMap<>();
 		controlMap.put(ModifierParser.CONTROL_KEY, Optional.of("testFilename"));
 		SP0DefinitionParserTest.populateControlMapReal(controlMap);
+		populateVetBq(controlMap);
+		populateHlP1(controlMap);
+		populateHlP2(controlMap);
+		populateHlP3(controlMap);
+		populateHlNP(controlMap);
 
 		var is = TestUtils.makeStream("201 1 0 0 0 0 0 0.000 0.000 0.000 0.000");
 
@@ -259,6 +278,11 @@ public class ModifierParserTest {
 		Map<String, Object> controlMap = new HashMap<>();
 		controlMap.put(ModifierParser.CONTROL_KEY, Optional.of("testFilename"));
 		SP0DefinitionParserTest.populateControlMapReal(controlMap);
+		populateVetBq(controlMap);
+		populateHlP1(controlMap);
+		populateHlP2(controlMap);
+		populateHlP3(controlMap);
+		populateHlNP(controlMap);
 
 		var is = TestUtils.makeStream("999", "201 1 0 0 0 0 0 0.000 0.000 0.000 0.000");
 
@@ -290,6 +314,11 @@ public class ModifierParserTest {
 		Map<String, Object> controlMap = new HashMap<>();
 		controlMap.put(ModifierParser.CONTROL_KEY, Optional.of("testFilename"));
 		SP0DefinitionParserTest.populateControlMapReal(controlMap);
+		populateVetBq(controlMap);
+		populateHlP1(controlMap);
+		populateHlP2(controlMap);
+		populateHlP3(controlMap);
+		populateHlNP(controlMap);
 
 		var is = TestUtils.makeStream("", "    x", "000 x", "201 1 0 0 0 0 0 2.000 3.000 4.000 5.000");
 
@@ -344,6 +373,11 @@ public class ModifierParserTest {
 		Map<String, Object> controlMap = new HashMap<>();
 		controlMap.put(ModifierParser.CONTROL_KEY, Optional.of("testFilename"));
 		SP0DefinitionParserTest.populateControlMapReal(controlMap);
+		populateVetBq(controlMap);
+		populateHlP1(controlMap);
+		populateHlP2(controlMap);
+		populateHlP3(controlMap);
+		populateHlNP(controlMap);
 
 		var is = TestUtils.makeStream("200 1 0 0 0 0 0 2.000 3.000 4.000 5.000");
 
@@ -389,12 +423,12 @@ public class ModifierParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 		controlMap.put(ModifierParser.CONTROL_KEY, Optional.of("testFilename"));
-		MatrixMap2<String, Region, Coefficients> vetBqMap = new MatrixMap2Impl(
-				Arrays.asList(SP0DefinitionParserTest.getSpeciesAliases()), Arrays.asList(Region.values())
-		);
-		vetBqMap.setAll(k -> new Coefficients(Arrays.asList(1.0f, 5.0f, 7.0f), 1));
 		SP0DefinitionParserTest.populateControlMapReal(controlMap);
-		controlMap.put(VeteranBQParser.CONTROL_KEY, vetBqMap);
+		MatrixMap2<String, Region, Coefficients> vetBqMap = populateVetBq(controlMap);
+		populateHlP1(controlMap);
+		populateHlP2(controlMap);
+		populateHlP3(controlMap);
+		populateHlNP(controlMap);
 
 		var is = TestUtils.makeStream("098 1 0 0 0 0 0 0.200 0.300");
 
@@ -425,6 +459,15 @@ public class ModifierParserTest {
 		});
 	}
 
+	private MatrixMap2<String, Region, Coefficients> populateVetBq(Map<String, Object> controlMap) {
+		MatrixMap2<String, Region, Coefficients> vetBqMap = new MatrixMap2Impl(
+				Arrays.asList(SP0DefinitionParserTest.getSpeciesAliases()), Arrays.asList(Region.values())
+		);
+		vetBqMap.setAll(k -> new Coefficients(Arrays.asList(1.0f, 5.0f, 7.0f), 1));
+		controlMap.put(VeteranBQParser.CONTROL_KEY, vetBqMap);
+		return vetBqMap;
+	}
+
 	@Test
 	public void testDecayWaste() throws Exception {
 		var parser = new ModifierParser(1);
@@ -432,6 +475,11 @@ public class ModifierParserTest {
 		Map<String, Object> controlMap = new HashMap<>();
 		controlMap.put(ModifierParser.CONTROL_KEY, Optional.of("testFilename"));
 		SP0DefinitionParserTest.populateControlMapReal(controlMap);
+		populateVetBq(controlMap);
+		populateHlP1(controlMap);
+		populateHlP2(controlMap);
+		populateHlP3(controlMap);
+		populateHlNP(controlMap);
 
 		var is = TestUtils.makeStream("301 1 0 0 0 0 0 2.000 3.000 4.000 5.000");
 
@@ -485,23 +533,13 @@ public class ModifierParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 		controlMap.put(ModifierParser.CONTROL_KEY, Optional.of("testFilename"));
-		MatrixMap2<String, Region, Coefficients> hlP1Map = new MatrixMap2Impl(
-				Arrays.asList(SP0DefinitionParserTest.getSpeciesAliases()), Arrays.asList(Region.values())
-		);
-		hlP1Map.setAll(k -> new Coefficients(Arrays.asList(1.0f, 5.0f, 7.0f), 1));
-		MatrixMap2<String, Region, Coefficients> hlP2Map = new MatrixMap2Impl(
-				Arrays.asList(SP0DefinitionParserTest.getSpeciesAliases()), Arrays.asList(Region.values())
-		);
-		hlP2Map.setAll(k -> new Coefficients(Arrays.asList(1.0f, 5.0f), 1));
-		MatrixMap2<String, Region, Coefficients> hlP3Map = new MatrixMap2Impl(
-				Arrays.asList(SP0DefinitionParserTest.getSpeciesAliases()), Arrays.asList(Region.values())
-		);
-		hlP3Map.setAll(k -> new Coefficients(Arrays.asList(1.0f, 5.0f, 7.0f, 13.0f), 1));
 
 		SP0DefinitionParserTest.populateControlMapReal(controlMap);
-		controlMap.put(HLCoefficientParser.CONTROL_KEY_P1, hlP1Map);
-		controlMap.put(HLCoefficientParser.CONTROL_KEY_P2, hlP2Map);
-		controlMap.put(HLCoefficientParser.CONTROL_KEY_P3, hlP3Map);
+		populateVetBq(controlMap);
+		var hlP1Map = populateHlP1(controlMap);
+		var hlP2Map = populateHlP2(controlMap);
+		var hlP3Map = populateHlP3(controlMap);
+		var hlNPMap = populateHlNP(controlMap);
 
 		var is = TestUtils.makeStream("401 1 0 0 0 0 0 0.200 0.300 0.500 0.700");
 
@@ -556,6 +594,54 @@ public class ModifierParserTest {
 				assertThat(hlP3Map.getM(k), present(contains(is(1.0f), is(5.0f), is(7.0f), is(13.0f))));
 			}
 		});
+		hlNPMap.eachKey(k -> {
+			if (k[0].equals("AC")) {
+				if (k[2].equals(Region.COASTAL)) {
+					assertThat(hlNPMap.getM(k), present(contains(is(0.5f), is(5.0f))));
+				} else {
+					assertThat(hlNPMap.getM(k), present(contains(is(0.7f), is(5.0f))));
+				}
+			} else {
+				assertThat(hlNPMap.getM(k), present(contains(is(1.0f), is(5.0f))));
+			}
+		});
+	}
+
+	private MatrixMap3<String, String, Region, NonprimaryHLCoefficients> populateHlNP(Map<String, Object> controlMap) {
+		MatrixMap3<String, String, Region, NonprimaryHLCoefficients> hlNPMap = new MatrixMap3Impl(
+				Arrays.asList(SP0DefinitionParserTest.getSpeciesAliases()),
+				Arrays.asList(SP0DefinitionParserTest.getSpeciesAliases()), Arrays.asList(Region.values())
+		);
+		hlNPMap.setAll(k -> new NonprimaryHLCoefficients(Arrays.asList(1.0f, 5.0f), 1));
+		controlMap.put(HLNonprimaryCoefficientParser.CONTROL_KEY, hlNPMap);
+		return hlNPMap;
+	}
+
+	private MatrixMap2<String, Region, Coefficients> populateHlP3(Map<String, Object> controlMap) {
+		MatrixMap2<String, Region, Coefficients> hlP3Map = new MatrixMap2Impl(
+				Arrays.asList(SP0DefinitionParserTest.getSpeciesAliases()), Arrays.asList(Region.values())
+		);
+		hlP3Map.setAll(k -> new Coefficients(Arrays.asList(1.0f, 5.0f, 7.0f, 13.0f), 1));
+		controlMap.put(HLCoefficientParser.CONTROL_KEY_P3, hlP3Map);
+		return hlP3Map;
+	}
+
+	private MatrixMap2<String, Region, Coefficients> populateHlP2(Map<String, Object> controlMap) {
+		MatrixMap2<String, Region, Coefficients> hlP2Map = new MatrixMap2Impl(
+				Arrays.asList(SP0DefinitionParserTest.getSpeciesAliases()), Arrays.asList(Region.values())
+		);
+		hlP2Map.setAll(k -> new Coefficients(Arrays.asList(1.0f, 5.0f), 1));
+		controlMap.put(HLCoefficientParser.CONTROL_KEY_P2, hlP2Map);
+		return hlP2Map;
+	}
+
+	private MatrixMap2<String, Region, Coefficients> populateHlP1(Map<String, Object> controlMap) {
+		MatrixMap2<String, Region, Coefficients> hlP1Map = new MatrixMap2Impl(
+				Arrays.asList(SP0DefinitionParserTest.getSpeciesAliases()), Arrays.asList(Region.values())
+		);
+		hlP1Map.setAll(k -> new Coefficients(Arrays.asList(1.0f, 5.0f, 7.0f), 1));
+		controlMap.put(HLCoefficientParser.CONTROL_KEY_P1, hlP1Map);
+		return hlP1Map;
 	}
 
 }

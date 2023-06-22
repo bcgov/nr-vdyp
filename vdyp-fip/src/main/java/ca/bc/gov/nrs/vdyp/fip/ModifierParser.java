@@ -15,6 +15,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.HLNonprimaryCoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.LineParser;
 import ca.bc.gov.nrs.vdyp.io.parse.OptionalResourceControlMapModifier;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
+import ca.bc.gov.nrs.vdyp.io.parse.ResourceParser;
 import ca.bc.gov.nrs.vdyp.io.parse.SP0DefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ValueParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.ValueParser;
@@ -22,6 +23,8 @@ import ca.bc.gov.nrs.vdyp.io.parse.VeteranBQParser;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
+import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
+import ca.bc.gov.nrs.vdyp.model.NonprimaryHLCoefficients;
 import ca.bc.gov.nrs.vdyp.model.Region;
 
 public class ModifierParser implements OptionalResourceControlMapModifier {
@@ -114,25 +117,31 @@ public class ModifierParser implements OptionalResourceControlMapModifier {
 		}.integer(3, "sequence").multiValue(6, 2, "programs", ValueParser.LOGICAL)
 				.multiValue(10, 6, "mods", ValueParser.optional(ValueParser.FLOAT));
 
-		@SuppressWarnings("unchecked")
-		final var vetBqMap = (MatrixMap2<String, Region, Coefficients>) control.get(VeteranBQParser.CONTROL_KEY);
+		final MatrixMap2<String, Region, Coefficients> vetBqMap = ResourceParser
+				.expectParsedControl(control, VeteranBQParser.CONTROL_KEY, MatrixMap2.class);
 
 		@SuppressWarnings("unchecked")
-		final var baMap = (MatrixMap2<String, Region, Float>) control.get(CONTROL_KEY_MOD200_BA);
+		final MatrixMap2<String, Region, Float> baMap = ResourceParser
+				.expectParsedControl(control, CONTROL_KEY_MOD200_BA, MatrixMap2.class);
 		@SuppressWarnings("unchecked")
-		final var dqMap = (MatrixMap2<String, Region, Float>) control.get(CONTROL_KEY_MOD200_DQ);
+		final MatrixMap2<String, Region, Float> dqMap = ResourceParser
+				.expectParsedControl(control, CONTROL_KEY_MOD200_DQ, MatrixMap2.class);
 
 		@SuppressWarnings("unchecked")
-		final var decayMap = (MatrixMap2<String, Region, Float>) control.get(CONTROL_KEY_MOD301_DECAY);
+		final MatrixMap2<String, Region, Float> decayMap = ResourceParser
+				.expectParsedControl(control, CONTROL_KEY_MOD301_DECAY, MatrixMap2.class);
 		@SuppressWarnings("unchecked")
-		final var wasteMap = (MatrixMap2<String, Region, Float>) control.get(CONTROL_KEY_MOD301_WASTE);
+		final MatrixMap2<String, Region, Float> wasteMap = ResourceParser
+				.expectParsedControl(control, CONTROL_KEY_MOD301_WASTE, MatrixMap2.class);
 
-		@SuppressWarnings("unchecked")
-		final var hlP1Map = (MatrixMap2<String, Region, Coefficients>) control.get(CONTROL_KEY_MOD400_P1);
-		@SuppressWarnings("unchecked")
-		final var hlP2Map = (MatrixMap2<String, Region, Coefficients>) control.get(CONTROL_KEY_MOD400_P2);
-		@SuppressWarnings("unchecked")
-		final var hlP3Map = (MatrixMap2<String, Region, Coefficients>) control.get(CONTROL_KEY_MOD400_P3);
+		final MatrixMap2<String, Region, Coefficients> hlP1Map = ResourceParser
+				.expectParsedControl(control, CONTROL_KEY_MOD400_P1, MatrixMap2.class);
+		final MatrixMap2<String, Region, Coefficients> hlP2Map = ResourceParser
+				.expectParsedControl(control, CONTROL_KEY_MOD400_P2, MatrixMap2.class);
+		final MatrixMap2<String, Region, Coefficients> hlP3Map = ResourceParser
+				.expectParsedControl(control, CONTROL_KEY_MOD400_P3, MatrixMap2.class);
+		final MatrixMap3<String, String, Region, NonprimaryHLCoefficients> hlNPMap = ResourceParser
+				.expectParsedControl(control, CONTROL_KEY_MOD400_NONPRIMARY, MatrixMap3.class);
 
 		parser.parse(data, control, (entry, result) -> {
 			int sequence = (int) entry.get("sequence");
@@ -186,7 +195,7 @@ public class ModifierParser implements OptionalResourceControlMapModifier {
 				// coefficients
 				var sp0Index = sequence - 400;
 				var sp0Aliases = getSpeciesByIndex(sp0Index, control);
-				var mods = getMods(2, entry);
+				var mods = getMods(4, entry);
 
 				for (var sp0Alias : sp0Aliases) {
 					modsByRegions(mods, 0, (m, r) -> hlP1Map.get(sp0Alias, r).ifPresent(coe -> {
@@ -204,8 +213,16 @@ public class ModifierParser implements OptionalResourceControlMapModifier {
 							return x;
 						});
 					}));
-
+					for (var primarySp : SP0DefinitionParser.getSpeciesAliases(control)) {
+						modsByRegions(mods, 2, (m, r) -> hlNPMap.get(sp0Alias, primarySp, r).ifPresent(coe -> {
+							if (coe.getEquationIndex() == 1) {
+								coe.modifyCoe(1, x -> x * m);
+							}
+						}));
+					}
 				}
+			} else {
+				// Unexpected sequence in modifier file
 			}
 			return result;
 		}, control);
