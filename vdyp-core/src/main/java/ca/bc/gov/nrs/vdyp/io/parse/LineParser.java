@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Parse a file with records consisting of lines with fixed width fields.
@@ -256,38 +258,90 @@ public class LineParser {
 			InputStream is, T result, ParseEntryHandler<Map<String, Object>, T> addToResult, Map<String, Object> control
 	) throws IOException, ResourceParseLineException {
 		var reader = new BufferedReader(new InputStreamReader(is, charset));
-		String line;
-		int lineNumber = 0;
-		while ( (line = reader.readLine()) != null) {
-			lineNumber++;
+
+		var stream = new LineStream(reader, control);
+		while (stream.hasNext()) {
+			var entry = stream.next();
 			try {
-				if (isStopLine(line)) {
-					break;
-				}
-				if (isIgnoredLine(line)) {
-					continue;
-				}
-				var segments = segmentize(line);
-				if (isStopSegment(segments)) {
-					break;
-				}
-				if (isIgnoredSegment(segments)) {
-					continue;
-				}
-				var entry = parse(segments, control);
-				entry.put(LINE_NUMBER_KEY, lineNumber);
-				if (isStopEntry(entry)) {
-					break;
-				}
-				if (isIgnoredEntry(entry)) {
-					continue;
-				}
 				result = addToResult.addTo(entry, result);
 			} catch (ValueParseException ex) {
-				throw new ResourceParseLineException(lineNumber, ex);
+				stream.handleValueParseException(ex);
 			}
 		}
 		return result;
+	}
+
+	public class LineStream {
+
+		int lineNumber = 0;
+		BufferedReader reader;
+		Map<String, Object> control;
+
+		Optional<Optional<Map<String, Object>>> next = Optional.empty();
+
+		public LineStream(BufferedReader reader, Map<String, Object> control) {
+			this.reader = reader;
+			this.control = control;
+		}
+
+		public Map<String, Object> next() throws IOException, ResourceParseLineException {
+			if (next.isEmpty()) {
+				next = Optional.of(doGetNext());
+			}
+			try {
+				return next.get()
+						.orElseThrow(() -> new IllegalStateException("Tried to get next entry when none exists"));
+			} finally {
+				next = Optional.empty();
+			}
+		}
+
+		public boolean hasNext() throws IOException, ResourceParseLineException {
+			if (next.isEmpty()) {
+				next = Optional.of(doGetNext());
+			}
+			return next.get().isPresent();
+		}
+
+		private Optional<Map<String, Object>> doGetNext() throws IOException, ResourceParseLineException {
+			while (true) {
+				lineNumber++;
+				var line = reader.readLine();
+				if (Objects.isNull(line)) {
+					return Optional.empty();
+				}
+				try {
+					if (isStopLine(line)) {
+						return Optional.empty();
+					}
+					if (isIgnoredLine(line)) {
+						continue;
+					}
+					var segments = segmentize(line);
+					if (isStopSegment(segments)) {
+						return Optional.empty();
+					}
+					if (isIgnoredSegment(segments)) {
+						continue;
+					}
+					var entry = parse(segments, control);
+					entry.put(LINE_NUMBER_KEY, lineNumber);
+					if (isStopEntry(entry)) {
+						return Optional.empty();
+					}
+					if (isIgnoredEntry(entry)) {
+						continue;
+					}
+					return Optional.of(entry);
+				} catch (ValueParseException ex) {
+					handleValueParseException(ex);
+				}
+			}
+		}
+
+		void handleValueParseException(ValueParseException ex) throws ResourceParseLineException {
+			throw new ResourceParseLineException(lineNumber, ex);
+		}
 	}
 
 	/**
