@@ -12,16 +12,9 @@ import ca.bc.gov.nrs.vdyp.io.FileResolver;
  * @author Kevin Smith, Vivid Solutions
  *
  */
-public interface ResourceControlMapModifier extends ControlMapModifier {
+public interface ResourceControlMapModifier extends ControlMapModifier, KeyedControlMapModifier {
 
 	void modify(Map<String, Object> control, InputStream data) throws ResourceParseException, IOException;
-
-	/**
-	 * The key for this resource's entry in the control map
-	 *
-	 * @return
-	 */
-	String getControlKey();
 
 	/**
 	 * Replace the entry in the control map containing the filename for a resource

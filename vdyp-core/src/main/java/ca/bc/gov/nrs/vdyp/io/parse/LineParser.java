@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 /**
  * Parse a file with records consisting of lines with fixed width fields.
@@ -257,9 +259,7 @@ public class LineParser {
 	public <T> T parse(
 			InputStream is, T result, ParseEntryHandler<Map<String, Object>, T> addToResult, Map<String, Object> control
 	) throws IOException, ResourceParseLineException {
-		var reader = new BufferedReader(new InputStreamReader(is, charset));
-
-		var stream = new LineStream(reader, control);
+		var stream = parseAsStream(is, control); // Assume the caller will close the stream so we don't need to close this.
 		while (stream.hasNext()) {
 			var entry = stream.next();
 			try {
@@ -271,7 +271,20 @@ public class LineParser {
 		return result;
 	}
 
-	public class LineStream {
+	/**
+	 * Returns a LineStream of parsed entry maps. Closing it will close the provided stream.
+	 * @param is
+	 * @param control
+	 * @return
+	 */
+	LineStream parseAsStream(InputStream is, Map<String, Object> control) {
+		var reader = new BufferedReader(new InputStreamReader(is, charset));
+
+		var stream = new LineStream(reader, control);
+		return stream;
+	}
+
+	public class LineStream implements AutoCloseable {
 
 		int lineNumber = 0;
 		BufferedReader reader;
@@ -341,6 +354,11 @@ public class LineParser {
 
 		void handleValueParseException(ValueParseException ex) throws ResourceParseLineException {
 			throw new ResourceParseLineException(lineNumber, ex);
+		}
+
+		@Override
+		public void close() throws IOException {
+			this.reader.close();
 		}
 	}
 
