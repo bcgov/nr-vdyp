@@ -1,7 +1,6 @@
 package ca.bc.gov.nrs.vdyp.fip;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Map;
 import java.util.Optional;
 
@@ -9,7 +8,6 @@ import ca.bc.gov.nrs.vdyp.fip.model.FipMode;
 import ca.bc.gov.nrs.vdyp.fip.model.FipPolygon;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.AbstractStreamingParser;
-import ca.bc.gov.nrs.vdyp.io.parse.ControlMapSubResourceParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ControlMapValueReplacer;
 import ca.bc.gov.nrs.vdyp.io.parse.LineParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;

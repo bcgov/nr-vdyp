@@ -10,9 +10,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-
 import static org.hamcrest.Matchers.equalTo;
 
 import org.junit.jupiter.api.Test;
