@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.BecDefinitionParser;
-import ca.bc.gov.nrs.vdyp.io.parse.BecModifier;
 import ca.bc.gov.nrs.vdyp.io.parse.BreakageEquationGroupParser;
 import ca.bc.gov.nrs.vdyp.io.parse.BreakageParser;
 import ca.bc.gov.nrs.vdyp.io.parse.BySpeciesDqCoefficientParser;
@@ -230,7 +229,7 @@ public class FipControlParser {
 			new BecDefinitionParser(),
 
 			// DEF_BEC
-			new BecModifier(),
+			// Superseded by BecLookup.getGrowthBecs
 
 			// RD_SP0
 			new SP0DefinitionParser()
