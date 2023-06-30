@@ -11,8 +11,6 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
-import ca.bc.gov.nrs.vdyp.model.BecDefinition;
-import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 public class CoefficientParserTest {
@@ -51,7 +49,7 @@ public class CoefficientParserTest {
 
 		BecDefinitionParserTest.populateControlMap(controlMap);
 
-		var ex = assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
+		assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
 
 	}
 
@@ -68,7 +66,7 @@ public class CoefficientParserTest {
 
 		BecDefinitionParserTest.populateControlMap(controlMap);
 
-		var ex = assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
+		assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
 
 	}
 

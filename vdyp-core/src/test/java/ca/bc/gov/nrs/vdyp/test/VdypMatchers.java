@@ -1,9 +1,5 @@
 package ca.bc.gov.nrs.vdyp.test;
 
-import static org.hamcrest.Matchers.anything;
-import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.not;
-
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;

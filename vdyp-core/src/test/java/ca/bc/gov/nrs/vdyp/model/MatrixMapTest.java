@@ -23,7 +23,7 @@ public class MatrixMapTest {
 		var dim1 = Arrays.asList("a", "b");
 		var dim2 = Arrays.asList(1, 2);
 		var dims = Arrays.asList(dim1, dim2);
-		var result = new MatrixMapImpl<Character>(dims);
+		new MatrixMapImpl<Character>(dims);
 	}
 
 	@Test

@@ -56,7 +56,7 @@ public class UpperCoefficientParserTest {
 
 		controlMap.put(SP0DefinitionParser.CONTROL_KEY, sp0List);
 
-		var ex = assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
+		assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
 
 	}
 
@@ -76,7 +76,7 @@ public class UpperCoefficientParserTest {
 
 		controlMap.put(SP0DefinitionParser.CONTROL_KEY, sp0List);
 
-		var ex = assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
+		assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
 
 	}
 

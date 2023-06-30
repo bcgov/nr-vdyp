@@ -15,16 +15,10 @@ import static org.hamcrest.Matchers.stringContainsInOrder;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
-
 import org.hamcrest.Matcher;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-
-import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
 
 public class ControlFileParserTest {
 
