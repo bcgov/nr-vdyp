@@ -42,12 +42,15 @@ public class ControlFileParser implements ResourceParser<Map<String, Object>> {
 
 		@Override
 		public boolean isIgnoredSegment(List<String> segments) {
-			return segments.get(0).isBlank();
-		}
-
-		@Override
-		public boolean isIgnoredEntry(Map<String, Object> segments) {
-			return 0 == (Integer) segments.get("index") || COMMENT_FLAGS.contains(segments.get("extend"));
+			try {
+				var sequenceComment = ValueParser.optional(ValueParser.INTEGER).parse(segments.get(0))
+						.map(x -> x.equals(0)).orElse(true);
+				var extendComment = ValueParser.optional(ValueParser.STRING).parse(segments.get(1))
+						.map(COMMENT_FLAGS::contains).orElse(false);
+				return sequenceComment || extendComment;
+			} catch (ValueParseException e) {
+				return false; // Ignore it for now, throw the exception for real when parsing instead.
+			}
 		}
 
 	}.integer(3, "index").string(1, "extend").string("restOfLine");

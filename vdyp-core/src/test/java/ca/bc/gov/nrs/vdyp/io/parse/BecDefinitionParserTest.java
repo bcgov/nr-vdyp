@@ -12,6 +12,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import static org.hamcrest.Matchers.equalTo;
 
@@ -219,6 +221,37 @@ public class BecDefinitionParserTest {
 	 */
 	public static void populateControlMap(Map<String, Object> controlMap) {
 		populateControlMap(controlMap, "B1", "B2");
+	}
+
+	static BecDefinition makeBec(String id, Region region, String name) {
+		return new BecDefinition(
+				id, region, name, BecDefinitionParser.GROWTH_INDEX.get("BG"),
+				BecDefinitionParser.VOLUME_INDEX.get("BG"), BecDefinitionParser.DECAY_INDEX.get("BG")
+		);
+	}
+
+	/**
+	 * Add a mock control map entry for BEC parse results with species "B1" and "B2"
+	 * for Coastal and Interior Regions respectively
+	 */
+	public static void populateControlMapReal(Map<String, Object> controlMap) {
+		List<BecDefinition> becs = new ArrayList<>();
+
+		becs.add(makeBec("BG", Region.INTERIOR, "Bunchgrass"));
+		becs.add(makeBec("BWBS", Region.INTERIOR, "Boreal White and Black Spruce"));
+		becs.add(makeBec("CDF", Region.INTERIOR, "Coastal Dougfir"));
+		becs.add(makeBec("CWH", Region.INTERIOR, "Coastal Western Hemlock"));
+		becs.add(makeBec("ESSF", Region.INTERIOR, "Englemann Sruce -SubAlpine Fir"));
+		becs.add(makeBec("ICH", Region.INTERIOR, "Interior Cedar-Hemlock"));
+		becs.add(makeBec("IDF", Region.INTERIOR, "Interior DougFir"));
+		becs.add(makeBec("MH", Region.INTERIOR, "Mountain Hemlock"));
+		becs.add(makeBec("MS", Region.INTERIOR, "Montane Spruce"));
+		becs.add(makeBec("PP", Region.INTERIOR, "Ponderosa Pine"));
+		becs.add(makeBec("SBPS", Region.INTERIOR, "SubBoreal Pine-Spruce"));
+		becs.add(makeBec("SBS", Region.INTERIOR, "SubBoreal Spruce"));
+		becs.add(makeBec("SWB", Region.INTERIOR, "Spruce-Willow-Birch"));
+
+		controlMap.put(BecDefinitionParser.CONTROL_KEY, new BecLookup(becs));
 	}
 
 	/**

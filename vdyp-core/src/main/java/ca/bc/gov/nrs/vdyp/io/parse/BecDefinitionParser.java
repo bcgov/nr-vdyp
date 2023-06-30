@@ -32,9 +32,9 @@ public class BecDefinitionParser implements ControlMapSubResourceParser<BecLooku
 
 	}.strippedString(4, "alias").space(1).value(1, "region", ValueParser.REGION).space(1).strippedString("name");
 
-	private static final Map<String, Integer> GROWTH_INDEX = new HashMap<>();
-	private static final Map<String, Integer> VOLUME_INDEX = new HashMap<>();
-	private static final Map<String, Integer> DECAY_INDEX = new HashMap<>();
+	static final Map<String, Integer> GROWTH_INDEX = new HashMap<>();
+	static final Map<String, Integer> VOLUME_INDEX = new HashMap<>();
+	static final Map<String, Integer> DECAY_INDEX = new HashMap<>();
 	static {
 		GROWTH_INDEX.put("AT", 0);
 		GROWTH_INDEX.put("BG", 0);

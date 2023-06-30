@@ -6,6 +6,7 @@ public interface StreamingParser<T> extends AutoCloseable {
 
 	/**
 	 * Get the next entry in the resource
+	 *
 	 * @return
 	 * @throws IOException
 	 * @throws ResourceParseException
@@ -14,6 +15,7 @@ public interface StreamingParser<T> extends AutoCloseable {
 
 	/**
 	 * Is there a next resource
+	 *
 	 * @return
 	 * @throws IOException
 	 * @throws ResourceParseException

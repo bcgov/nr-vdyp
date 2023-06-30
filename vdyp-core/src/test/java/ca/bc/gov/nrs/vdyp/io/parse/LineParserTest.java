@@ -2,8 +2,6 @@ package ca.bc.gov.nrs.vdyp.io.parse;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.array;
-import static org.hamcrest.Matchers.arrayContaining;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasKey;
@@ -20,7 +18,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.hamcrest.Matcher;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 
 public class LineParserTest {
@@ -158,7 +155,7 @@ public class LineParserTest {
 
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testMultiValue() throws Exception {
 		var parser = new LineParser();
@@ -214,27 +211,6 @@ public class LineParserTest {
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
-	public void testMultiLineWithStopEntry() throws Exception {
-		var parser = new LineParser() {
-
-			@Override
-			public boolean isStopEntry(Map<String, Object> entry) {
-				return 0 == (int) entry.get("part1");
-			}
-
-		};
-		parser.integer(4, "part1").space(1).string("part2");
-
-		List<Map<String, Object>> result = new ArrayList<>();
-		try (var is = new ByteArrayInputStream("0042 Value1\r\n0000\r\n0043 Value2".getBytes());) {
-			result = parser.parse(is, Collections.emptyMap());
-		}
-
-		assertThat(result, contains(allOf((Matcher) hasEntry("part1", 42), (Matcher) hasEntry("part2", "Value1"))));
-	}
-
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	@Test
 	public void testMultiLineWithStopLine() throws Exception {
 		var parser = new LineParser() {
 
@@ -273,33 +249,6 @@ public class LineParserTest {
 		}
 
 		assertThat(result, contains(allOf((Matcher) hasEntry("part1", 42), (Matcher) hasEntry("part2", "Value1"))));
-	}
-
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	@Test
-	public void testMultiLineWithIgnoredEntry() throws Exception {
-		var parser = new LineParser() {
-
-			@Override
-			public boolean isIgnoredEntry(Map<String, Object> entry) {
-				return 0 == (int) entry.get("part1");
-			}
-
-		};
-		parser.integer(4, "part1").space(1).string("part2");
-
-		List<Map<String, Object>> result = new ArrayList<>();
-		try (var is = new ByteArrayInputStream("0042 Value1\r\n0000\r\n0043 Value2".getBytes());) {
-			result = parser.parse(is, Collections.emptyMap());
-		}
-
-		assertThat(
-				result,
-				contains(
-						allOf((Matcher) hasEntry("part1", 42), (Matcher) hasEntry("part2", "Value1")),
-						allOf((Matcher) hasEntry("part1", 43), (Matcher) hasEntry("part2", "Value2"))
-				)
-		);
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })

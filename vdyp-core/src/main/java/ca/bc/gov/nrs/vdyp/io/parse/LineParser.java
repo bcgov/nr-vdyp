@@ -12,8 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Function;
-import java.util.stream.Stream;
 
 /**
  * Parse a file with records consisting of lines with fixed width fields.
@@ -259,7 +257,8 @@ public class LineParser {
 	public <T> T parse(
 			InputStream is, T result, ParseEntryHandler<Map<String, Object>, T> addToResult, Map<String, Object> control
 	) throws IOException, ResourceParseLineException {
-		var stream = parseAsStream(is, control); // Assume the caller will close the stream so we don't need to close this.
+		var stream = parseAsStream(is, control); // Assume the caller will close the stream so we don't need to close
+													// this.
 		while (stream.hasNext()) {
 			var entry = stream.next();
 			try {
@@ -272,7 +271,9 @@ public class LineParser {
 	}
 
 	/**
-	 * Returns a LineStream of parsed entry maps. Closing it will close the provided stream.
+	 * Returns a LineStream of parsed entry maps. Closing it will close the provided
+	 * stream.
+	 *
 	 * @param is
 	 * @param control
 	 * @return
@@ -290,7 +291,7 @@ public class LineParser {
 		BufferedReader reader;
 		Map<String, Object> control;
 
-		Optional<Optional<Map<String, Object>>> next = Optional.empty();
+		Optional<Optional<String>> nextLine = Optional.empty();
 
 		public LineStream(BufferedReader reader, Map<String, Object> control) {
 			this.reader = reader;
@@ -298,57 +299,57 @@ public class LineParser {
 		}
 
 		public Map<String, Object> next() throws IOException, ResourceParseLineException {
-			if (next.isEmpty()) {
-				next = Optional.of(doGetNext());
+			if (nextLine.isEmpty()) {
+				nextLine = Optional.of(doGetNextLine());
 			}
 			try {
-				return next.get()
+				var line = nextLine.get()
 						.orElseThrow(() -> new IllegalStateException("Tried to get next entry when none exists"));
+				var segments = segmentize(line);
+
+				var entry = parse(segments, control);
+
+				entry.put(LINE_NUMBER_KEY, lineNumber);
+
+				return entry;
+			} catch (ValueParseException ex) {
+				handleValueParseException(ex);
+				return null;
 			} finally {
-				next = Optional.empty();
+				nextLine = Optional.empty();
 			}
 		}
 
 		public boolean hasNext() throws IOException, ResourceParseLineException {
-			if (next.isEmpty()) {
-				next = Optional.of(doGetNext());
+			if (nextLine.isEmpty()) {
+				nextLine = Optional.of(doGetNextLine());
 			}
-			return next.get().isPresent();
+			return nextLine.get().isPresent();
 		}
 
-		private Optional<Map<String, Object>> doGetNext() throws IOException, ResourceParseLineException {
+		private Optional<String> doGetNextLine() throws IOException, ResourceParseLineException {
 			while (true) {
 				lineNumber++;
 				var line = reader.readLine();
 				if (Objects.isNull(line)) {
 					return Optional.empty();
 				}
-				try {
-					if (isStopLine(line)) {
-						return Optional.empty();
-					}
-					if (isIgnoredLine(line)) {
-						continue;
-					}
-					var segments = segmentize(line);
-					if (isStopSegment(segments)) {
-						return Optional.empty();
-					}
-					if (isIgnoredSegment(segments)) {
-						continue;
-					}
-					var entry = parse(segments, control);
-					entry.put(LINE_NUMBER_KEY, lineNumber);
-					if (isStopEntry(entry)) {
-						return Optional.empty();
-					}
-					if (isIgnoredEntry(entry)) {
-						continue;
-					}
-					return Optional.of(entry);
-				} catch (ValueParseException ex) {
-					handleValueParseException(ex);
+				if (isStopLine(line)) {
+					return Optional.empty();
 				}
+				if (isIgnoredLine(line)) {
+					continue;
+				}
+				var segments = segmentize(line);
+				if (isStopSegment(segments)) {
+					return Optional.empty();
+				}
+				if (isIgnoredSegment(segments)) {
+					continue;
+				}
+
+				return Optional.of(line);
+
 			}
 		}
 
@@ -383,14 +384,6 @@ public class LineParser {
 	}
 
 	/**
-	 * If this returns true for a parsed line, parsing will stop and that line will
-	 * not be included in the result.
-	 */
-	protected boolean isStopEntry(Map<String, Object> entry) {
-		return false;
-	}
-
-	/**
 	 * If this returns true for a segmented line, parsing will stop and that line
 	 * will not be included in the result.
 	 */
@@ -403,14 +396,6 @@ public class LineParser {
 	 * will not be included in the result.
 	 */
 	public boolean isStopLine(String line) {
-		return false;
-	}
-
-	/**
-	 * If this returns true for a parsed line, that line will not be included in the
-	 * result.
-	 */
-	public boolean isIgnoredEntry(Map<String, Object> entry) {
 		return false;
 	}
 

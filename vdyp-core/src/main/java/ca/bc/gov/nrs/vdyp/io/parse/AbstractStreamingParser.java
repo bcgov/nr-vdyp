@@ -12,15 +12,15 @@ public abstract class AbstractStreamingParser<T> implements StreamingParser<T> {
 
 	/**
 	 * Create a new streaming parser
-	 * @param is Input stream to read from
-	 * @param lineParser 
+	 *
+	 * @param is         Input stream to read from
+	 * @param lineParser
 	 * @param control
 	 */
-	public AbstractStreamingParser(InputStream is, LineParser lineParser, Map<String, Object> control){
-		
+	public AbstractStreamingParser(InputStream is, LineParser lineParser, Map<String, Object> control) {
+
 		this.lineStream = lineParser.parseAsStream(is, control);
 	}
-	
 
 	@Override
 	public T next() throws IOException, ResourceParseException {
@@ -29,6 +29,7 @@ public abstract class AbstractStreamingParser<T> implements StreamingParser<T> {
 
 	/**
 	 * Set up the line parser to read the resource
+	 *
 	 * @return
 	 */
 	protected abstract T convert(Map<String, Object> entry);
@@ -42,5 +43,5 @@ public abstract class AbstractStreamingParser<T> implements StreamingParser<T> {
 	public void close() throws IOException {
 		lineStream.close();
 	}
-	
+
 }

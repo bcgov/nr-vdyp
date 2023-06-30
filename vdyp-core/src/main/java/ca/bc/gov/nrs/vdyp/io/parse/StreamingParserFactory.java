@@ -1,13 +1,12 @@
 package ca.bc.gov.nrs.vdyp.io.parse;
 
-import java.util.function.Supplier;
+import java.io.IOException;
 
-public interface StreamingParserFactory<T> extends Supplier<StreamingParser<T>>{
+public interface StreamingParserFactory<T> {
 
 	/**
-	 * Open the resource and get a streaming parser for it.  This must be closed.
+	 * Open the resource and get a streaming parser for it. This must be closed.
 	 */
-	@Override
-	StreamingParser<T> get();
-	
+	StreamingParser<T> get() throws IOException;
+
 }
