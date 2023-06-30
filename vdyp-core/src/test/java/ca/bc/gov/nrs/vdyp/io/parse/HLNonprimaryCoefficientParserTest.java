@@ -48,7 +48,7 @@ public class HLNonprimaryCoefficientParserTest {
 
 		SP0DefinitionParserTest.populateControlMap(controlMap);
 
-		var ex = assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
+		assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
 
 	}
 
@@ -63,7 +63,7 @@ public class HLNonprimaryCoefficientParserTest {
 
 		SP0DefinitionParserTest.populateControlMap(controlMap);
 
-		var ex = assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
+		assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
 
 	}
 
@@ -78,7 +78,7 @@ public class HLNonprimaryCoefficientParserTest {
 
 		SP0DefinitionParserTest.populateControlMap(controlMap);
 
-		var ex = assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
+		assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
 
 	}
 
@@ -93,7 +93,7 @@ public class HLNonprimaryCoefficientParserTest {
 
 		SP0DefinitionParserTest.populateControlMap(controlMap);
 
-		var ex = assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
+		assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
 	}
 
 	public static Matcher<NonprimaryHLCoefficients> coe(float c1, float c2, int ieqn) {

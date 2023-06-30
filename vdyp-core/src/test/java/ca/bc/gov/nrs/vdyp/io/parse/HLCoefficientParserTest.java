@@ -77,7 +77,7 @@ public class HLCoefficientParserTest {
 
 		SP0DefinitionParserTest.populateControlMap(controlMap);
 
-		var ex = assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
+		assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
 
 	}
 
@@ -92,7 +92,7 @@ public class HLCoefficientParserTest {
 
 		SP0DefinitionParserTest.populateControlMap(controlMap);
 
-		var ex = assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
+		assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
 
 	}
 

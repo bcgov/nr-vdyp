@@ -49,7 +49,7 @@ public class CoefficientParserTest {
 
 		BecDefinitionParserTest.populateControlMap(controlMap);
 
-		var ex = assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
+		assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
 
 	}
 
@@ -66,7 +66,7 @@ public class CoefficientParserTest {
 
 		BecDefinitionParserTest.populateControlMap(controlMap);
 
-		var ex = assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
+		assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
 
 	}
 
