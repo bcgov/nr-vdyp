@@ -69,7 +69,7 @@ import ca.bc.gov.nrs.vdyp.model.SiteCurveAgeMaximum;
  */
 public class FipControlParser {
 
-	public static final String FIP_YIELD_POLY_INPUT = "FIP_YIELD_POLY_INPUT";
+	public static final String FIP_YIELD_POLY_INPUT = FipPolygonParser.CONTROL_KEY;
 	public static final String FIP_YIELD_LAYER_INPUT = "FIP_YIELD_LAYER_INPUT";
 	public static final String FIP_YIELD_LX_SP0_INPUT = "FIP_YIELD_LxSP0_INPUT";
 	public static final String VDYP_POLYGON = "VDYP_POLYGON";
@@ -238,6 +238,12 @@ public class FipControlParser {
 		};
 	}
 
+	List<ControlMapModifier> DATA_FILES = Arrays.asList(
+
+			// V7O_FIP
+			new FipPolygonParser()
+	);
+
 	List<ControlMapModifier> BASIC_DEFINITIONS = Arrays.asList(
 
 			// RD_BEC
@@ -399,6 +405,10 @@ public class FipControlParser {
 		// Read Groups
 
 		applyModifiers(map, GROUP_DEFINITIONS, fileResolver);
+
+		// Initialize data file parser factories
+
+		applyModifiers(map, DATA_FILES, fileResolver);
 
 		if (jprogram == 1) {
 			applyModifiers(map, FIPSTART_ONLY, fileResolver);

@@ -32,6 +32,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.HLNonprimaryCoefficientParserTest;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.SP0DefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.SiteCurveAgeMaximumParserTest;
+import ca.bc.gov.nrs.vdyp.io.parse.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.BecLookup;
 import ca.bc.gov.nrs.vdyp.model.Region;
@@ -602,6 +603,16 @@ public class FipControlParserTest {
 								)
 						)
 				)
+		);
+	}
+
+	@Test
+	public void testParseV7O_FIP() throws Exception {
+		var parser = new FipControlParser();
+		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
+		assertThat(
+				result,
+				(Matcher) hasSpecificEntry(FipPolygonParser.CONTROL_KEY, instanceOf(StreamingParserFactory.class))
 		);
 	}
 
