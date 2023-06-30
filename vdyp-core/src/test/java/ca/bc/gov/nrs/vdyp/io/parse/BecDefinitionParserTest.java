@@ -4,12 +4,10 @@ import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.hasBec;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasProperty;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 

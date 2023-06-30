@@ -2,8 +2,6 @@ package ca.bc.gov.nrs.vdyp.io.parse;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.array;
-import static org.hamcrest.Matchers.arrayContaining;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasKey;
@@ -20,7 +18,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.hamcrest.Matcher;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 
 public class LineParserTest {

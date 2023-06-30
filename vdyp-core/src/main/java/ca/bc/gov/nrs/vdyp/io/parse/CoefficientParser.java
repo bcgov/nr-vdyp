@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap3Impl;
 

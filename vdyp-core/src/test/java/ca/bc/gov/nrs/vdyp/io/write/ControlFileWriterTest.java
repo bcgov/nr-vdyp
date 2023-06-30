@@ -8,8 +8,6 @@ import java.io.ByteArrayOutputStream;
 
 import org.junit.jupiter.api.Test;
 
-import ca.bc.gov.nrs.vdyp.io.write.ControlFileWriter;
-
 public class ControlFileWriterTest {
 
 	@Test
