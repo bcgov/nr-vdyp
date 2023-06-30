@@ -155,7 +155,7 @@ public class LineParserTest {
 
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testMultiValue() throws Exception {
 		var parser = new LineParser();
