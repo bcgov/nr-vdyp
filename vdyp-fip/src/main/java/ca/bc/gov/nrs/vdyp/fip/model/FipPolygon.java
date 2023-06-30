@@ -1,18 +1,20 @@
 package ca.bc.gov.nrs.vdyp.fip.model;
 
+import java.util.Optional;
+
 public class FipPolygon {
 
 	String polygonIdentifier; // POLYDESC
 	String forestInventoryZone; // FIZ
 	String biogeoclimaticZone; // BEC
-	float percentAvailable; // PCTFLAND
-	int modeFip; // MODEfip // Maybe make this an enum
-	String nonproductiveDescription; // NPDESC
+	Optional<Float> percentAvailable; // PCTFLAND
+	Optional<FipMode> modeFip; // MODEfip
+	Optional<String> nonproductiveDescription; // NPDESC
 	float yieldFactor; // YLDFACT
 
 	public FipPolygon(
-			String polygonIdentifier, String fiz, String becIdentifier, float percentAvailable, int modeFip,
-			String nonproductiveDescription, float yieldFactor
+			String polygonIdentifier, String fiz, String becIdentifier, Optional<Float> percentAvailable,
+			Optional<FipMode> modeFip, Optional<String> nonproductiveDescription, float yieldFactor
 	) {
 		super();
 		this.polygonIdentifier = polygonIdentifier;
@@ -48,27 +50,27 @@ public class FipPolygon {
 		this.biogeoclimaticZone = biogeoclimaticZone;
 	}
 
-	public float getPercentAvailable() {
+	public Optional<Float> getPercentAvailable() {
 		return percentAvailable;
 	}
 
-	public void setPercentAvailable(float percentAvailable) {
+	public void setPercentAvailable(Optional<Float> percentAvailable) {
 		this.percentAvailable = percentAvailable;
 	}
 
-	public int getModeFip() {
+	public Optional<FipMode> getModeFip() {
 		return modeFip;
 	}
 
-	public void setModeFip(int modeFip) {
+	public void setModeFip(Optional<FipMode> modeFip) {
 		this.modeFip = modeFip;
 	}
 
-	public String getNonproductiveDescription() {
+	public Optional<String> getNonproductiveDescription() {
 		return nonproductiveDescription;
 	}
 
-	public void setNonproductiveDescription(String nonproductiveDescription) {
+	public void setNonproductiveDescription(Optional<String> nonproductiveDescription) {
 		this.nonproductiveDescription = nonproductiveDescription;
 	}
 

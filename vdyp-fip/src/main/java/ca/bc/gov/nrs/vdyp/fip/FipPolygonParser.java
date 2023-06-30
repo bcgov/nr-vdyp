@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.util.Map;
 import java.util.Optional;
 
+import ca.bc.gov.nrs.vdyp.fip.model.FipMode;
 import ca.bc.gov.nrs.vdyp.fip.model.FipPolygon;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.AbstractStreamingParser;
@@ -48,6 +49,7 @@ public class FipPolygonParser implements ControlMapValueReplacer<StreamingParser
 
 			return new AbstractStreamingParser<FipPolygon>(is, lineParser, control) {
 
+				@SuppressWarnings("unchecked")
 				@Override
 				protected FipPolygon convert(Map<String, Object> entry) {
 					var polygonId = (String) entry.get(POLYGON_IDENTIFIER);
@@ -58,11 +60,12 @@ public class FipPolygonParser implements ControlMapValueReplacer<StreamingParser
 					var nonproductiveDesc = (Optional<String>) entry.get(NONPRODUCTIVE_DESCRIPTION);
 					var yieldFactor = (Optional<Float>) entry.get(YIELD_FACTOR);
 
+					percentForestLand = percentForestLand.filter(x -> x > 0.0f);
 					yieldFactor = yieldFactor.filter(x -> x > 0.0f);
 
 					return new FipPolygon(
-							polygonId, fizId, becId, percentForestLand.orElse(100.0f), fipMode.orElse(1),
-							nonproductiveDesc.orElse(""), yieldFactor.orElse(1.0f)
+							polygonId, fizId, becId, percentForestLand, fipMode.flatMap(FipMode::getByCode),
+							nonproductiveDesc, yieldFactor.orElse(1.0f)
 					);
 				}
 
