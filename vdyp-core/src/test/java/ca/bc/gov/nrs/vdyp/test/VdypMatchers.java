@@ -1,5 +1,9 @@
 package ca.bc.gov.nrs.vdyp.test;
 
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.hasProperty;
+import static org.hamcrest.Matchers.is;
+
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
@@ -12,6 +16,7 @@ import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
 
+import ca.bc.gov.nrs.vdyp.common.ValueOrMarker;
 import ca.bc.gov.nrs.vdyp.io.parse.ValueParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.ValueParser;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
@@ -343,4 +348,87 @@ public class VdypMatchers {
 		return hasBec(alias, valueMatcher, Substitution.PARTIAL_FILL_OK);
 	}
 
+	/**
+	 * Matches a ValueOrMarker with a value
+	 */
+	public static <V> Matcher<ValueOrMarker<V, ?>> isValue(Matcher<V> valueMatcher) {
+		return new TypeSafeDiagnosingMatcher<ValueOrMarker<V, ?>>() {
+
+			@Override
+			public void describeTo(Description description) {
+
+				description.appendText("ValueOrMarker with a value ").appendDescriptionOf(valueMatcher);
+
+			}
+
+			@Override
+			protected boolean matchesSafely(ValueOrMarker<V, ?> item, Description mismatchDescription) {
+				if (item.isMarker()) {
+					mismatchDescription.appendText("isMarker() was true");
+					return false;
+				}
+				if (!item.isValue()) {
+					mismatchDescription.appendText("isValue() was false");
+					return false;
+				}
+				if (item.getMarker().isPresent()) {
+					mismatchDescription.appendText("getMarker() was present with value ")
+							.appendValue(item.getMarker().get());
+					return false;
+				}
+				if (!item.getValue().isPresent()) {
+					mismatchDescription.appendText("getValue() was not present");
+					return false;
+				}
+				if (valueMatcher.matches(item.getValue().get())) {
+					return true;
+				}
+				mismatchDescription.appendText("Value was present but ");
+				valueMatcher.describeMismatch(item.getValue().get(), mismatchDescription);
+				return false;
+			}
+		};
+	}
+
+	/**
+	 * Matches a ValueOrMarker with a marker
+	 */
+	public static <M> Matcher<ValueOrMarker<?, M>> isMarker(Matcher<M> markerMatcher) {
+		return new TypeSafeDiagnosingMatcher<ValueOrMarker<?, M>>() {
+
+			@Override
+			public void describeTo(Description description) {
+
+				description.appendText("ValueOrMarker with a value ").appendDescriptionOf(markerMatcher);
+
+			}
+
+			@Override
+			protected boolean matchesSafely(ValueOrMarker<?, M> item, Description mismatchDescription) {
+				if (item.isValue()) {
+					mismatchDescription.appendText("isValue() was true");
+					return false;
+				}
+				if (!item.isMarker()) {
+					mismatchDescription.appendText("isMarker() was false");
+					return false;
+				}
+				if (item.getValue().isPresent()) {
+					mismatchDescription.appendText("getValue() was present with value ")
+							.appendValue(item.getValue().get());
+					return false;
+				}
+				if (!item.getMarker().isPresent()) {
+					mismatchDescription.appendText("getMarker() was not present");
+					return false;
+				}
+				if (markerMatcher.matches(item.getMarker().get())) {
+					return true;
+				}
+				mismatchDescription.appendText("Marker was present but ");
+				markerMatcher.describeMismatch(item.getMarker().get(), mismatchDescription);
+				return false;
+			}
+		};
+	}
 }
