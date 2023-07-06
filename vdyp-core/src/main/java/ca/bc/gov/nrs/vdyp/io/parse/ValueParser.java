@@ -7,7 +7,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
+import ca.bc.gov.nrs.vdyp.common.ValueOrMarker;
+import ca.bc.gov.nrs.vdyp.model.Layer;
 import ca.bc.gov.nrs.vdyp.model.Region;
 
 /**
@@ -205,4 +208,57 @@ public interface ValueParser<T> extends ControlledValueParser<T> {
 	static <U> ValueParser<U> uncontrolled(ControlledValueParser<U> delegate) {
 		return s -> delegate.parse(s, Collections.emptyMap());
 	}
+
+	/**
+	 * Attempt to parse as a marker using markerParser. If it returns empty, parse
+	 * as a value with valueParser.
+	 *
+	 * @param valueParser  Parser from String to Value.
+	 * @param markerParser Parser from String to Optional<Marker>. This should
+	 *                     return empty if the string is not a marker.
+	 * @return a ValueOrMarker
+	 */
+	public static <Value, Marker> ValueParser<ValueOrMarker<Value, Marker>>
+			valueOrMarker(ValueParser<Value> valueParser, ValueParser<Optional<Marker>> markerParser) {
+		return s -> {
+			var builder = new ValueOrMarker.Builder<Value, Marker>();
+			var marker = markerParser.parse(s).map(builder::marker);
+			if (marker.isPresent()) {
+				return marker.get();
+			}
+
+			var value = builder.value(valueParser.parse(s));
+			return value;
+		};
+	}
+
+	/**
+	 * Return the given value if the test passes, otherwise empty.
+	 *
+	 * @param <T>
+	 * @param test
+	 * @param value
+	 * @return
+	 */
+	public static <T> ValueParser<Optional<T>> optionalSingleton(Predicate<String> test, T value) {
+		return s -> test.test(s) ? Optional.of(value) : Optional.empty();
+	}
+
+	/**
+	 * Parser for a layer identifier
+	 */
+	public static ValueParser<Optional<Layer>> LAYER = s -> {
+		switch (s.toUpperCase()) {
+		case "1":
+		case "P":
+			return Optional.of(Layer.PRIMARY);
+		case "2":
+		case "S":
+			return Optional.of(Layer.SECONDARY);
+		case "V":
+			return Optional.of(Layer.VETERAN);
+		default:
+			return Optional.empty(); // Unknown
+		}
+	};
 }

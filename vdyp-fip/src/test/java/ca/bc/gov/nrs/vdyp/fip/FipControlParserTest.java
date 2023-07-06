@@ -616,6 +616,15 @@ public class FipControlParserTest {
 		);
 	}
 
+	@Test
+	public void testParseV7O_FIL() throws Exception {
+		var parser = new FipControlParser();
+		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
+		assertThat(
+				result, (Matcher) hasSpecificEntry(FipLayerParser.CONTROL_KEY, instanceOf(StreamingParserFactory.class))
+		);
+	}
+
 	static InputStream addToEnd(InputStream is, String... lines) {
 		var appendix = new ByteArrayInputStream(String.join("\r\n", lines).getBytes(StandardCharsets.US_ASCII));
 		var result = new SequenceInputStream(is, appendix);

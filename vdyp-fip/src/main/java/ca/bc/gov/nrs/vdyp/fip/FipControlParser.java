@@ -55,7 +55,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
 public class FipControlParser {
 
 	public static final String FIP_YIELD_POLY_INPUT = FipPolygonParser.CONTROL_KEY;
-	public static final String FIP_YIELD_LAYER_INPUT = "FIP_YIELD_LAYER_INPUT";
+	public static final String FIP_YIELD_LAYER_INPUT = FipLayerParser.CONTROL_KEY;
 	public static final String FIP_YIELD_LX_SP0_INPUT = "FIP_YIELD_LxSP0_INPUT";
 	public static final String VDYP_POLYGON = "VDYP_POLYGON";
 	public static final String VDYP_LAYER_BY_SPECIES = "VDYP_LAYER_BY_SPECIES";
@@ -226,7 +226,10 @@ public class FipControlParser {
 	List<ControlMapModifier> DATA_FILES = Arrays.asList(
 
 			// V7O_FIP
-			new FipPolygonParser()
+			new FipPolygonParser(),
+
+			// V7O_FIL
+			new FipLayerParser()
 	);
 
 	List<ControlMapModifier> BASIC_DEFINITIONS = Arrays.asList(
