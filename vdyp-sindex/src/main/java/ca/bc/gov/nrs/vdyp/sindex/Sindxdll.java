@@ -8,10 +8,6 @@ import java.util.NoSuchElementException;
 public class Sindxdll {
 /* @formatter:off */
 /*
- * Sindxdll.java
- *
- * Interface Module to the Sindex Library
- *
  * 1998 feb 28 - Initial Implementation (Shawn Brant)
  *      apr 6  - Reworking. (Ken Polsson)
  *          7  - Added lots more functions.
