@@ -42,7 +42,7 @@ public class SiteCurveParser implements OptionalControlMapSubResourceParser<Map<
 
 			return r;
 		}, control);
-		final var sp0List = SP0DefinitionParser.getSpeciesAliases(control);
+		final var sp0List = GenusDefinitionParser.getSpeciesAliases(control);
 
 		var missing = ExpectationDifference.difference(result.keySet(), sp0List).getMissing();
 		if (!missing.isEmpty()) {

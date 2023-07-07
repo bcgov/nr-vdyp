@@ -37,7 +37,7 @@ public abstract class EquationGroupParser implements ControlMapSubResourceParser
 	public Map<String, Map<String, Integer>> parse(InputStream is, Map<String, Object> control)
 			throws IOException, ResourceParseException {
 
-		final var sp0List = SP0DefinitionParser.getSpecies(control);
+		final var sp0List = GenusDefinitionParser.getSpecies(control);
 
 		var becKeys = BecDefinitionParser.getBecAliases(control);
 
@@ -70,7 +70,7 @@ public abstract class EquationGroupParser implements ControlMapSubResourceParser
 
 		List<String> errors = new ArrayList<>();
 
-		var sp0Keys = SP0DefinitionParser.getSpeciesAliases(control);
+		var sp0Keys = GenusDefinitionParser.getSpeciesAliases(control);
 
 		var restrictedBecKeys = becKeys.stream().filter(k -> !hiddenBecs.contains(k)).toList();
 

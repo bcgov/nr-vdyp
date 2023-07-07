@@ -30,7 +30,7 @@ public class HLNonprimaryCoefficientParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		SP0DefinitionParserTest.populateControlMap(controlMap);
+		GenusDefinitionParserTest.populateControlMap(controlMap);
 
 		var result = parser.parse(is, controlMap);
 
@@ -46,7 +46,7 @@ public class HLNonprimaryCoefficientParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		SP0DefinitionParserTest.populateControlMap(controlMap);
+		GenusDefinitionParserTest.populateControlMap(controlMap);
 
 		assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
 
@@ -61,7 +61,7 @@ public class HLNonprimaryCoefficientParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		SP0DefinitionParserTest.populateControlMap(controlMap);
+		GenusDefinitionParserTest.populateControlMap(controlMap);
 
 		assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
 
@@ -76,7 +76,7 @@ public class HLNonprimaryCoefficientParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		SP0DefinitionParserTest.populateControlMap(controlMap);
+		GenusDefinitionParserTest.populateControlMap(controlMap);
 
 		assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
 
@@ -91,7 +91,7 @@ public class HLNonprimaryCoefficientParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		SP0DefinitionParserTest.populateControlMap(controlMap);
+		GenusDefinitionParserTest.populateControlMap(controlMap);
 
 		assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
 	}

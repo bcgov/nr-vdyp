@@ -41,7 +41,7 @@ public class VeteranDQParser implements ControlMapSubResourceParser<MatrixMap2<S
 	@Override
 	public MatrixMap2<String, Region, Coefficients> parse(InputStream is, Map<String, Object> control)
 			throws IOException, ResourceParseException {
-		final var speciesIndicies = SP0DefinitionParser.getSpeciesAliases(control);
+		final var speciesIndicies = GenusDefinitionParser.getSpeciesAliases(control);
 		final var regionIndicies = Arrays.asList(Region.values());
 
 		MatrixMap2<String, Region, Coefficients> result = new MatrixMap2Impl<String, Region, Coefficients>(
@@ -54,7 +54,7 @@ public class VeteranDQParser implements ControlMapSubResourceParser<MatrixMap2<S
 
 			@SuppressWarnings("unchecked")
 			var coefficients = (List<Float>) v.get(COEFFICIENT_KEY);
-			SP0DefinitionParser.checkSpecies(speciesIndicies, sp0);
+			GenusDefinitionParser.checkSpecies(speciesIndicies, sp0);
 
 			if (coefficients.size() < numCoefficients) {
 				throw new ValueParseException(null, "Expected " + numCoefficients + " coefficients");

@@ -50,7 +50,7 @@ public class HLNonprimaryCoefficientParser
 	public MatrixMap3<String, String, Region, NonprimaryHLCoefficients>
 			parse(InputStream is, Map<String, Object> control) throws IOException, ResourceParseException {
 		final var regionIndicies = Arrays.asList(Region.values());
-		final var speciesIndicies = SP0DefinitionParser.getSpeciesAliases(control);
+		final var speciesIndicies = GenusDefinitionParser.getSpeciesAliases(control);
 
 		MatrixMap3<String, String, Region, NonprimaryHLCoefficients> result = new MatrixMap3Impl<String, String, Region, NonprimaryHLCoefficients>(
 				speciesIndicies, speciesIndicies, regionIndicies
@@ -62,8 +62,8 @@ public class HLNonprimaryCoefficientParser
 			var region = (Region) v.get(REGION_KEY);
 			@SuppressWarnings("unchecked")
 			var coefficients = (List<Float>) v.get(COEFFICIENT_KEY);
-			SP0DefinitionParser.checkSpecies(speciesIndicies, sp0_1);
-			SP0DefinitionParser.checkSpecies(speciesIndicies, sp0_2);
+			GenusDefinitionParser.checkSpecies(speciesIndicies, sp0_1);
+			GenusDefinitionParser.checkSpecies(speciesIndicies, sp0_2);
 
 			if (coefficients.size() < NUM_COEFFICIENTS) {
 				throw new ValueParseException(null, "Expected 2 coefficients"); // TODO handle this better

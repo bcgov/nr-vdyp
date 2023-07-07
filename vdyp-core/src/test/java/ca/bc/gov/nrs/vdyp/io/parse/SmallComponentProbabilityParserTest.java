@@ -24,7 +24,7 @@ public class SmallComponentProbabilityParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		SP0DefinitionParserTest.populateControlMap(controlMap);
+		GenusDefinitionParserTest.populateControlMap(controlMap);
 
 		var parser = new SmallComponentProbabilityParser();
 		var result = parser.parse(is, controlMap);
@@ -39,7 +39,7 @@ public class SmallComponentProbabilityParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		SP0DefinitionParserTest.populateControlMap(controlMap);
+		GenusDefinitionParserTest.populateControlMap(controlMap);
 
 		var parser = new SmallComponentProbabilityParser();
 

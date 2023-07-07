@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.Region;
-import ca.bc.gov.nrs.vdyp.model.SP0Definition;
+import ca.bc.gov.nrs.vdyp.model.GenusDefinition;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
 
@@ -184,7 +184,7 @@ public class EquationGroupParserTest {
 		var controlMap = new HashMap<String, Object>();
 
 		BecDefinitionParserTest.populateControlMap(controlMap, "B1");
-		SP0DefinitionParserTest.populateControlMap(controlMap, "S1");
+		GenusDefinitionParserTest.populateControlMap(controlMap, "S1");
 		return controlMap;
 	}
 
@@ -192,7 +192,7 @@ public class EquationGroupParserTest {
 		var controlMap = new HashMap<String, Object>();
 
 		BecDefinitionParserTest.populateControlMap(controlMap, "B1", "B2", "B3", "B4");
-		SP0DefinitionParserTest.populateControlMap(controlMap, "S1", "S2");
+		GenusDefinitionParserTest.populateControlMap(controlMap, "S1", "S2");
 		return controlMap;
 	}
 }

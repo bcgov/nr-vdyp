@@ -15,7 +15,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.LineParser;
 import ca.bc.gov.nrs.vdyp.io.parse.OptionalResourceControlMapModifier;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParser;
-import ca.bc.gov.nrs.vdyp.io.parse.SP0DefinitionParser;
+import ca.bc.gov.nrs.vdyp.io.parse.GenusDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ValueParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.ValueParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VeteranBQParser;
@@ -153,7 +153,7 @@ public class ModifierParser implements OptionalResourceControlMapModifier {
 				// for veteran BQ by the region appropriate modifier.
 				vetBqMap.get(CONTROL_KEY, null);
 				var mods = getMods(2, entry);
-				var sp0Aliases = SP0DefinitionParser.getSpeciesAliases(control);
+				var sp0Aliases = GenusDefinitionParser.getSpeciesAliases(control);
 				for (var sp0Alias : sp0Aliases) {
 					final float coastalMod = mods.get(0);
 					final float interiorMod = mods.get(1);
@@ -212,7 +212,7 @@ public class ModifierParser implements OptionalResourceControlMapModifier {
 							return x;
 						});
 					}));
-					for (var primarySp : SP0DefinitionParser.getSpeciesAliases(control)) {
+					for (var primarySp : GenusDefinitionParser.getSpeciesAliases(control)) {
 						modsByRegions(mods, 2, (m, r) -> hlNPMap.get(sp0Alias, primarySp, r).ifPresent(coe -> {
 							if (coe.getEquationIndex() == 1) {
 								coe.modifyCoe(1, x -> x * m);
@@ -251,9 +251,9 @@ public class ModifierParser implements OptionalResourceControlMapModifier {
 
 	List<String> getSpeciesByIndex(int index, Map<String, Object> control) {
 		if (index == 0) {
-			return SP0DefinitionParser.getSpeciesAliases(control);
+			return GenusDefinitionParser.getSpeciesAliases(control);
 		}
-		return List.of(SP0DefinitionParser.getSpeciesByIndex(index, control).getAlias());
+		return List.of(GenusDefinitionParser.getSpeciesByIndex(index, control).getAlias());
 	}
 
 	List<Float> getMods(int num, Map<String, Object> entry) throws ValueParseException {
@@ -282,7 +282,7 @@ public class ModifierParser implements OptionalResourceControlMapModifier {
 
 	@Override
 	public void defaultModify(Map<String, Object> control) {
-		var spAliases = SP0DefinitionParser.getSpeciesAliases(control);
+		var spAliases = GenusDefinitionParser.getSpeciesAliases(control);
 		var regions = Arrays.asList(Region.values());
 
 		var baModifiers = new MatrixMap2Impl<String, Region, Float>(spAliases, regions);

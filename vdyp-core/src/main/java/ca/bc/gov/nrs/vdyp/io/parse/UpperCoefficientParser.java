@@ -45,7 +45,7 @@ public class UpperCoefficientParser implements ControlMapSubResourceParser<Matri
 			throws IOException, ResourceParseException {
 		var regionIndicies = Arrays.asList(Region.values());
 		List<Integer> coeIndicies = Stream.iterate(1, x -> x + 1).limit(NUM_COEFFICIENTS).collect(Collectors.toList());
-		final var speciesIndicies = SP0DefinitionParser.getSpeciesAliases(control);
+		final var speciesIndicies = GenusDefinitionParser.getSpeciesAliases(control);
 
 		MatrixMap3<Region, String, Integer, Float> result = new MatrixMap3Impl<Region, String, Integer, Float>(
 				regionIndicies, speciesIndicies, coeIndicies

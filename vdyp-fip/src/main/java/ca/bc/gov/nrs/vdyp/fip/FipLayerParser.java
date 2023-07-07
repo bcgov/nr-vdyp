@@ -55,7 +55,7 @@ public class FipLayerParser implements ControlMapValueReplacer<StreamingParserFa
 							ValueParser.LAYER, ValueParser.optionalSingleton("Z"::equals, EndOfRecord.END_OF_RECORD)
 					)
 			).floating(4, AGE_TOTAL).floating(5, HEIGHT).floating(5, SITE_INDEX).floating(5, CROWN_CLOSURE).space(3)
-					.value(2, SITE_SP0, ControlledValueParser.optional(ValueParser.SPECIES))
+					.value(2, SITE_SP0, ControlledValueParser.optional(ValueParser.GENUS))
 					.value(3, SITE_SP64, ControlledValueParser.optional(ValueParser.STRING))
 					.floating(5, YEARS_TO_BREAST_HEIGHT)
 					.value(1, STOCKING_CLASS, ValueParser.optional(ValueParser.STRING)).space(2)
@@ -137,7 +137,10 @@ public class FipLayerParser implements ControlMapValueReplacer<StreamingParserFa
 
 				@Override
 				protected Map<Layer, FipLayer> convert(List<ValueOrMarker<Optional<FipLayer>, EndOfRecord>> children) {
-					return children.stream().map(ValueOrMarker::getValue).map(Optional::get).map(Optional::get)
+					return children.stream().map(ValueOrMarker::getValue).map(Optional::get) // Should never be empty as
+																								// we've filtered out
+																								// markers
+							.flatMap(Optional::stream) // Skip if empty (and unknown layer type)
 							.collect(Collectors.toMap(FipLayer::getLayer, x -> x));
 				}
 

@@ -117,7 +117,7 @@ public abstract class BaseCoefficientParser<T extends Coefficients, M extends Ma
 
 	public BaseCoefficientParser<T, M> speciesKey(String name) {
 		return key(
-				2, name, ControlledValueParser.SPECIES, SP0DefinitionParser::getSpeciesAliases,
+				2, name, ControlledValueParser.GENUS, GenusDefinitionParser::getSpeciesAliases,
 				"%s is not a valid species"
 		);
 	}

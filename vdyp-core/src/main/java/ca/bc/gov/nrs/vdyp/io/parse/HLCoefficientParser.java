@@ -54,7 +54,7 @@ public class HLCoefficientParser implements ControlMapSubResourceParser<MatrixMa
 	public MatrixMap2<String, Region, Coefficients> parse(InputStream is, Map<String, Object> control)
 			throws IOException, ResourceParseException {
 		final var regionIndicies = Arrays.asList(Region.values());
-		final var speciesIndicies = SP0DefinitionParser.getSpeciesAliases(control);
+		final var speciesIndicies = GenusDefinitionParser.getSpeciesAliases(control);
 
 		MatrixMap2<String, Region, Coefficients> result = new MatrixMap2Impl<String, Region, Coefficients>(
 				speciesIndicies, regionIndicies

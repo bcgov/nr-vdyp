@@ -9,15 +9,15 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import ca.bc.gov.nrs.vdyp.model.SP0Definition;
+import ca.bc.gov.nrs.vdyp.model.GenusDefinition;
 
 /**
- * Parser for a SP0 Definition data file
+ * Parser for a Genus (SP0) Definition data file
  *
  * @author Kevin Smith, Vivid Solutions
  *
  */
-public class SP0DefinitionParser implements ControlMapSubResourceParser<List<SP0Definition>> {
+public class GenusDefinitionParser implements ControlMapSubResourceParser<List<GenusDefinition>> {
 
 	public static final String CONTROL_KEY = "SP0_DEF";
 
@@ -30,28 +30,28 @@ public class SP0DefinitionParser implements ControlMapSubResourceParser<List<SP0
 							.flatMap(v -> v == 0 ? Optional.empty() : Optional.of(v))
 			);
 
-	public SP0DefinitionParser() {
+	public GenusDefinitionParser() {
 		super();
 		this.num_sp0 = 16;
 	}
 
-	public SP0DefinitionParser(int num_sp0) {
+	public GenusDefinitionParser(int num_sp0) {
 		super();
 		this.num_sp0 = num_sp0;
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public List<SP0Definition> parse(InputStream is, Map<String, Object> control)
+	public List<GenusDefinition> parse(InputStream is, Map<String, Object> control)
 			throws IOException, ResourceParseException {
-		SP0Definition[] result = new SP0Definition[num_sp0];
+		GenusDefinition[] result = new GenusDefinition[num_sp0];
 		result = lineParser.parse(is, result, (v, r) -> {
 			String alias = (String) v.get("alias");
 			Optional<Integer> preference = (Optional<Integer>) v.get("preference");
 			String name = (String) v.get("name");
 			Integer lineNumber = (Integer) v.get(LineParser.LINE_NUMBER_KEY);
 
-			var defn = new SP0Definition(alias, preference, name);
+			var defn = new GenusDefinition(alias, preference, name);
 			int p = preference.orElse(lineNumber);
 
 			if (p > num_sp0) {
@@ -80,7 +80,7 @@ public class SP0DefinitionParser implements ControlMapSubResourceParser<List<SP0
 
 	public static void checkSpecies(final List<String> speciesIndicies, final String sp0) throws ValueParseException {
 		if (!speciesIndicies.contains(sp0)) {
-			throw new ValueParseException(sp0, sp0 + " is not a valid species");
+			throw new ValueParseException(sp0, sp0 + " is not a valid genus (SP0)");
 		}
 	}
 
@@ -89,13 +89,13 @@ public class SP0DefinitionParser implements ControlMapSubResourceParser<List<SP0
 		checkSpecies(speciesIndicies, sp0);
 	}
 
-	public static List<SP0Definition> getSpecies(final Map<String, Object> controlMap) {
+	public static List<GenusDefinition> getSpecies(final Map<String, Object> controlMap) {
 		return ResourceParser
-				.<List<SP0Definition>>expectParsedControl(controlMap, SP0DefinitionParser.CONTROL_KEY, List.class);
+				.<List<GenusDefinition>>expectParsedControl(controlMap, GenusDefinitionParser.CONTROL_KEY, List.class);
 	}
 
 	public static List<String> getSpeciesAliases(final Map<String, Object> controlMap) {
-		return getSpecies(controlMap).stream().map(SP0Definition::getAlias).collect(Collectors.toList());
+		return getSpecies(controlMap).stream().map(GenusDefinition::getAlias).collect(Collectors.toList());
 	}
 
 	/**
@@ -105,7 +105,7 @@ public class SP0DefinitionParser implements ControlMapSubResourceParser<List<SP0
 	 * @param controlMap
 	 * @return
 	 */
-	public static SP0Definition getSpeciesByIndex(final int index, final Map<String, Object> controlMap) {
+	public static GenusDefinition getSpeciesByIndex(final int index, final Map<String, Object> controlMap) {
 
 		return getSpecies(controlMap).get(index - 1);
 	}

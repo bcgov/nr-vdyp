@@ -30,13 +30,13 @@ import ca.bc.gov.nrs.vdyp.io.parse.BecDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ControlFileParserTest;
 import ca.bc.gov.nrs.vdyp.io.parse.HLNonprimaryCoefficientParserTest;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
-import ca.bc.gov.nrs.vdyp.io.parse.SP0DefinitionParser;
+import ca.bc.gov.nrs.vdyp.io.parse.GenusDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.SiteCurveAgeMaximumParserTest;
 import ca.bc.gov.nrs.vdyp.io.parse.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.BecLookup;
 import ca.bc.gov.nrs.vdyp.model.Region;
-import ca.bc.gov.nrs.vdyp.model.SP0Definition;
+import ca.bc.gov.nrs.vdyp.model.GenusDefinition;
 import ca.bc.gov.nrs.vdyp.model.SiteCurve;
 import ca.bc.gov.nrs.vdyp.model.SiteCurveAgeMaximum;
 import ca.bc.gov.nrs.vdyp.model.StockingClassFactor;
@@ -71,8 +71,8 @@ public class FipControlParserTest {
 		assertThat(
 				result,
 				(Matcher) hasSpecificEntry(
-						SP0DefinitionParser.CONTROL_KEY,
-						allOf(instanceOf(List.class), hasItem(instanceOf(SP0Definition.class)))
+						GenusDefinitionParser.CONTROL_KEY,
+						allOf(instanceOf(List.class), hasItem(instanceOf(GenusDefinition.class)))
 				)
 		);
 	}
@@ -622,6 +622,16 @@ public class FipControlParserTest {
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
 				result, (Matcher) hasSpecificEntry(FipLayerParser.CONTROL_KEY, instanceOf(StreamingParserFactory.class))
+		);
+	}
+
+	@Test
+	public void testParseV7O_FIS() throws Exception {
+		var parser = new FipControlParser();
+		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
+		assertThat(
+				result,
+				(Matcher) hasSpecificEntry(FipSpeciesParser.CONTROL_KEY, instanceOf(StreamingParserFactory.class))
 		);
 	}
 

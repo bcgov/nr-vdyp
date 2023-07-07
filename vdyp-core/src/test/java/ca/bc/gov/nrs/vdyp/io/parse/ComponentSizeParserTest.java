@@ -23,7 +23,7 @@ public class ComponentSizeParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		SP0DefinitionParserTest.populateControlMap(controlMap);
+		GenusDefinitionParserTest.populateControlMap(controlMap);
 
 		var parser = new ComponentSizeParser();
 
@@ -39,7 +39,7 @@ public class ComponentSizeParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		SP0DefinitionParserTest.populateControlMap(controlMap);
+		GenusDefinitionParserTest.populateControlMap(controlMap);
 
 		var parser = new ComponentSizeParser();
 
@@ -55,7 +55,7 @@ public class ComponentSizeParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		SP0DefinitionParserTest.populateControlMap(controlMap);
+		GenusDefinitionParserTest.populateControlMap(controlMap);
 
 		var parser = new ComponentSizeParser();
 

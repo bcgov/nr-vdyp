@@ -122,6 +122,44 @@ public interface ValueParser<T> extends ControlledValueParser<T> {
 	public static final ValueParser<Float> FLOAT = numberParser(Float::parseFloat, Float.class);
 
 	/**
+	 * Parser for percentages
+	 */
+	public static final ValueParser<Float> PERCENTAGE = ValueParser
+			.range(FLOAT, 0.0f, true, 100.0f, true, "Percentage");
+
+	/**
+	 * Validate that a parsed value is within a range
+	 *
+	 * @param parser     underlying parser
+	 * @param min        the lower bound
+	 * @param includeMin is the lower bound inclusive
+	 * @param max        the upper bound
+	 * @param includeMax is the upper bound inclusive
+	 * @param name       Name for the value to use in the parse error if it is out
+	 *                   of the range.
+	 */
+	public static <T extends Comparable<T>> ValueParser<T>
+			range(ValueParser<T> parser, T min, boolean includeMin, T max, boolean includeMax, String name) {
+		return validate(parser, x -> {
+			if (x.compareTo(min) < (includeMin ? 0 : 1)) {
+				return Optional.of(
+						String.format(
+								"%s must be %s %s.", name, includeMin ? "greater than or equal to" : "greater than", min
+						)
+				);
+			}
+			if (x.compareTo(max) > (includeMax ? 0 : -1)) {
+				return Optional.of(
+						String.format(
+								"%s must be %s %s.", name, includeMax ? "less than or equal to" : "less than", max
+						)
+				);
+			}
+			return Optional.empty();
+		});
+	}
+
+	/**
 	 * Parser for integers as booleans
 	 */
 	public static final ValueParser<Boolean> LOGICAL = s -> INTEGER.parse(s) != 0;
@@ -184,6 +222,28 @@ public interface ValueParser<T> extends ControlledValueParser<T> {
 	 */
 	public static <U> ValueParser<Optional<U>> optional(ValueParser<U> delegate) {
 		return uncontrolled(ControlledValueParser.optional(delegate));
+	}
+
+	/**
+	 * Makes a parser that parses if the string passes the test, and returns an
+	 * empty Optional otherwise.
+	 *
+	 * @param delegate Parser to use if the string is not blank
+	 * @param test     Test to apply to the string
+	 */
+	public static <U> ValueParser<Optional<U>> pretestOptional(ValueParser<U> delegate, Predicate<String> test) {
+		return uncontrolled(ControlledValueParser.pretestOptional(delegate, test));
+	}
+
+	/**
+	 * Makes a parser that parses the string, then tests it, and returns empty if it
+	 * fails.
+	 *
+	 * @param delegate Parser to use
+	 * @param test     Test to apply to the parsed result
+	 */
+	public static <U> ValueParser<Optional<U>> posttestOptional(ValueParser<U> delegate, Predicate<U> test) {
+		return uncontrolled(ControlledValueParser.posttestOptional(delegate, test));
 	}
 
 	/**

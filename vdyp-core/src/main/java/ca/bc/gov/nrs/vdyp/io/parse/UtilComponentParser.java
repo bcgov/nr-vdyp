@@ -43,7 +43,7 @@ public abstract class UtilComponentParser
 	public MatrixMap3<Integer, String, String, Coefficients> parse(InputStream is, Map<String, Object> control)
 			throws IOException, ResourceParseException {
 		final var becIndices = BecDefinitionParser.getBecAliases(control);
-		final var speciesIndicies = SP0DefinitionParser.getSpeciesAliases(control);
+		final var speciesIndicies = GenusDefinitionParser.getSpeciesAliases(control);
 		final var ucIndices = Arrays.asList(1, 2, 3, 4);
 
 		MatrixMap3<Integer, String, String, Coefficients> result = new MatrixMap3Impl<Integer, String, String, Coefficients>(
@@ -61,7 +61,7 @@ public abstract class UtilComponentParser
 
 			@SuppressWarnings("unchecked")
 			var coefficients = (List<Float>) v.get(COEFFICIENT_KEY);
-			SP0DefinitionParser.checkSpecies(speciesIndicies, sp0);
+			GenusDefinitionParser.checkSpecies(speciesIndicies, sp0);
 
 			if (coefficients.size() < numCoefficients) {
 				throw new ValueParseException(null, "Expected " + numCoefficients + " coefficients");

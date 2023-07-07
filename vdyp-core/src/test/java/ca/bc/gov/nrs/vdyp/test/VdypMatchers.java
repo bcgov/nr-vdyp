@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -437,42 +438,16 @@ public class VdypMatchers {
 	}
 
 	public static <T> T assertNext(StreamingParser<T> stream) throws IOException, ResourceParseException {
-		assertThat(stream, hasNext(true));
+		var hasNext = assertDoesNotThrow(() -> stream.hasNext());
+		assertThat(hasNext, is(true));
 		var next = assertDoesNotThrow(() -> stream.next());
 		assertThat(next, notNullValue());
 		return next;
 	}
 
 	public static <T> void assertEmpty(StreamingParser<T> stream) throws IOException, ResourceParseException {
-		assertThat(stream, hasNext(false));
+		var hasNext = assertDoesNotThrow(() -> stream.hasNext());
+		assertThat(hasNext, is(false));
 		assertThrows(IllegalStateException.class, () -> stream.next());
-	}
-
-	public static <T> Matcher<StreamingParser<T>> hasNext(boolean value) {
-		return new TypeSafeDiagnosingMatcher<StreamingParser<T>>() {
-
-			@Override
-			public void describeTo(Description description) {
-
-				description.appendText("StreamingParser with hasNext() ").appendValue(value);
-
-			}
-
-			@Override
-			protected boolean matchesSafely(StreamingParser<T> item, Description mismatchDescription) {
-				try {
-					var hasNext = item.hasNext();
-					if (hasNext == value) {
-						return true;
-					}
-					mismatchDescription.appendText("hasNext() returned ").appendValue(hasNext);
-					return false;
-				} catch (IOException | ResourceParseException e) {
-					mismatchDescription.appendText("hasNext() threw ").appendValue(e.getMessage());
-					return false;
-				}
-			}
-
-		};
 	}
 }

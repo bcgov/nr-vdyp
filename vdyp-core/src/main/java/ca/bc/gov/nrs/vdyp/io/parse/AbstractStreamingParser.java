@@ -32,7 +32,7 @@ public abstract class AbstractStreamingParser<T> implements StreamingParser<T> {
 	 *
 	 * @return
 	 */
-	protected abstract T convert(Map<String, Object> entry);
+	protected abstract T convert(Map<String, Object> entry) throws ResourceParseException;
 
 	@Override
 	public boolean hasNext() throws IOException, ResourceParseException {

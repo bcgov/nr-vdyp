@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.HLCoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.HLNonprimaryCoefficientParser;
-import ca.bc.gov.nrs.vdyp.io.parse.SP0DefinitionParserTest;
+import ca.bc.gov.nrs.vdyp.io.parse.GenusDefinitionParserTest;
 import ca.bc.gov.nrs.vdyp.io.parse.VeteranBQParser;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap;
@@ -46,7 +46,7 @@ public class ModifierParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 		controlMap.put(ModifierParser.CONTROL_KEY, Optional.empty());
-		SP0DefinitionParserTest.populateControlMapReal(controlMap);
+		GenusDefinitionParserTest.populateControlMapReal(controlMap);
 
 		var fileResolver = new FileResolver() {
 
@@ -75,7 +75,7 @@ public class ModifierParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 		controlMap.put(ModifierParser.CONTROL_KEY, Optional.of("testFilename"));
-		SP0DefinitionParserTest.populateControlMap(controlMap);
+		GenusDefinitionParserTest.populateControlMap(controlMap);
 
 		var fileResolver = new FileResolver() {
 
@@ -106,7 +106,7 @@ public class ModifierParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 		controlMap.put(ModifierParser.CONTROL_KEY, Optional.of("testFilename"));
-		SP0DefinitionParserTest.populateControlMapReal(controlMap);
+		GenusDefinitionParserTest.populateControlMapReal(controlMap);
 		populateVetBq(controlMap);
 		populateHlP1(controlMap);
 		populateHlP2(controlMap);
@@ -137,7 +137,7 @@ public class ModifierParserTest {
 	}
 
 	protected void modifierDefaultAsserts(Map<String, Object> controlMap) {
-		var expectedSp0Aliases = SP0DefinitionParserTest.getSpeciesAliases();
+		var expectedSp0Aliases = GenusDefinitionParserTest.getSpeciesAliases();
 
 		assertThat(controlMap, (Matcher) hasSpecificEntry(ModifierParser.CONTROL_KEY, present(is("testFilename"))));
 
@@ -182,7 +182,7 @@ public class ModifierParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 		controlMap.put(ModifierParser.CONTROL_KEY, Optional.of("testFilename"));
-		SP0DefinitionParserTest.populateControlMapReal(controlMap);
+		GenusDefinitionParserTest.populateControlMapReal(controlMap);
 		populateVetBq(controlMap);
 		populateHlP1(controlMap);
 		populateHlP2(controlMap);
@@ -241,7 +241,7 @@ public class ModifierParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 		controlMap.put(ModifierParser.CONTROL_KEY, Optional.of("testFilename"));
-		SP0DefinitionParserTest.populateControlMapReal(controlMap);
+		GenusDefinitionParserTest.populateControlMapReal(controlMap);
 		populateVetBq(controlMap);
 		populateHlP1(controlMap);
 		populateHlP2(controlMap);
@@ -277,7 +277,7 @@ public class ModifierParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 		controlMap.put(ModifierParser.CONTROL_KEY, Optional.of("testFilename"));
-		SP0DefinitionParserTest.populateControlMapReal(controlMap);
+		GenusDefinitionParserTest.populateControlMapReal(controlMap);
 		populateVetBq(controlMap);
 		populateHlP1(controlMap);
 		populateHlP2(controlMap);
@@ -313,7 +313,7 @@ public class ModifierParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 		controlMap.put(ModifierParser.CONTROL_KEY, Optional.of("testFilename"));
-		SP0DefinitionParserTest.populateControlMapReal(controlMap);
+		GenusDefinitionParserTest.populateControlMapReal(controlMap);
 		populateVetBq(controlMap);
 		populateHlP1(controlMap);
 		populateHlP2(controlMap);
@@ -372,7 +372,7 @@ public class ModifierParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 		controlMap.put(ModifierParser.CONTROL_KEY, Optional.of("testFilename"));
-		SP0DefinitionParserTest.populateControlMapReal(controlMap);
+		GenusDefinitionParserTest.populateControlMapReal(controlMap);
 		populateVetBq(controlMap);
 		populateHlP1(controlMap);
 		populateHlP2(controlMap);
@@ -423,7 +423,7 @@ public class ModifierParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 		controlMap.put(ModifierParser.CONTROL_KEY, Optional.of("testFilename"));
-		SP0DefinitionParserTest.populateControlMapReal(controlMap);
+		GenusDefinitionParserTest.populateControlMapReal(controlMap);
 		MatrixMap2<String, Region, Coefficients> vetBqMap = populateVetBq(controlMap);
 		populateHlP1(controlMap);
 		populateHlP2(controlMap);
@@ -461,7 +461,7 @@ public class ModifierParserTest {
 
 	private MatrixMap2<String, Region, Coefficients> populateVetBq(Map<String, Object> controlMap) {
 		MatrixMap2<String, Region, Coefficients> vetBqMap = new MatrixMap2Impl(
-				Arrays.asList(SP0DefinitionParserTest.getSpeciesAliases()), Arrays.asList(Region.values())
+				Arrays.asList(GenusDefinitionParserTest.getSpeciesAliases()), Arrays.asList(Region.values())
 		);
 		vetBqMap.setAll(k -> new Coefficients(Arrays.asList(1.0f, 5.0f, 7.0f), 1));
 		controlMap.put(VeteranBQParser.CONTROL_KEY, vetBqMap);
@@ -474,7 +474,7 @@ public class ModifierParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 		controlMap.put(ModifierParser.CONTROL_KEY, Optional.of("testFilename"));
-		SP0DefinitionParserTest.populateControlMapReal(controlMap);
+		GenusDefinitionParserTest.populateControlMapReal(controlMap);
 		populateVetBq(controlMap);
 		populateHlP1(controlMap);
 		populateHlP2(controlMap);
@@ -534,7 +534,7 @@ public class ModifierParserTest {
 		Map<String, Object> controlMap = new HashMap<>();
 		controlMap.put(ModifierParser.CONTROL_KEY, Optional.of("testFilename"));
 
-		SP0DefinitionParserTest.populateControlMapReal(controlMap);
+		GenusDefinitionParserTest.populateControlMapReal(controlMap);
 		populateVetBq(controlMap);
 		var hlP1Map = populateHlP1(controlMap);
 		var hlP2Map = populateHlP2(controlMap);
@@ -609,8 +609,8 @@ public class ModifierParserTest {
 
 	private MatrixMap3<String, String, Region, NonprimaryHLCoefficients> populateHlNP(Map<String, Object> controlMap) {
 		MatrixMap3<String, String, Region, NonprimaryHLCoefficients> hlNPMap = new MatrixMap3Impl(
-				Arrays.asList(SP0DefinitionParserTest.getSpeciesAliases()),
-				Arrays.asList(SP0DefinitionParserTest.getSpeciesAliases()), Arrays.asList(Region.values())
+				Arrays.asList(GenusDefinitionParserTest.getSpeciesAliases()),
+				Arrays.asList(GenusDefinitionParserTest.getSpeciesAliases()), Arrays.asList(Region.values())
 		);
 		hlNPMap.setAll(k -> new NonprimaryHLCoefficients(Arrays.asList(1.0f, 5.0f), 1));
 		controlMap.put(HLNonprimaryCoefficientParser.CONTROL_KEY, hlNPMap);
@@ -619,7 +619,7 @@ public class ModifierParserTest {
 
 	private MatrixMap2<String, Region, Coefficients> populateHlP3(Map<String, Object> controlMap) {
 		MatrixMap2<String, Region, Coefficients> hlP3Map = new MatrixMap2Impl(
-				Arrays.asList(SP0DefinitionParserTest.getSpeciesAliases()), Arrays.asList(Region.values())
+				Arrays.asList(GenusDefinitionParserTest.getSpeciesAliases()), Arrays.asList(Region.values())
 		);
 		hlP3Map.setAll(k -> new Coefficients(Arrays.asList(1.0f, 5.0f, 7.0f, 13.0f), 1));
 		controlMap.put(HLCoefficientParser.CONTROL_KEY_P3, hlP3Map);
@@ -628,7 +628,7 @@ public class ModifierParserTest {
 
 	private MatrixMap2<String, Region, Coefficients> populateHlP2(Map<String, Object> controlMap) {
 		MatrixMap2<String, Region, Coefficients> hlP2Map = new MatrixMap2Impl(
-				Arrays.asList(SP0DefinitionParserTest.getSpeciesAliases()), Arrays.asList(Region.values())
+				Arrays.asList(GenusDefinitionParserTest.getSpeciesAliases()), Arrays.asList(Region.values())
 		);
 		hlP2Map.setAll(k -> new Coefficients(Arrays.asList(1.0f, 5.0f), 1));
 		controlMap.put(HLCoefficientParser.CONTROL_KEY_P2, hlP2Map);
@@ -637,7 +637,7 @@ public class ModifierParserTest {
 
 	private MatrixMap2<String, Region, Coefficients> populateHlP1(Map<String, Object> controlMap) {
 		MatrixMap2<String, Region, Coefficients> hlP1Map = new MatrixMap2Impl(
-				Arrays.asList(SP0DefinitionParserTest.getSpeciesAliases()), Arrays.asList(Region.values())
+				Arrays.asList(GenusDefinitionParserTest.getSpeciesAliases()), Arrays.asList(Region.values())
 		);
 		hlP1Map.setAll(k -> new Coefficients(Arrays.asList(1.0f, 5.0f, 7.0f), 1));
 		controlMap.put(HLCoefficientParser.CONTROL_KEY_P1, hlP1Map);

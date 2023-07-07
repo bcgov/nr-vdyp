@@ -30,7 +30,7 @@ public class VeteranDQParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		SP0DefinitionParserTest.populateControlMap(controlMap);
+		GenusDefinitionParserTest.populateControlMap(controlMap);
 
 		var result = parser.parse(is, controlMap);
 
@@ -48,7 +48,7 @@ public class VeteranDQParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		SP0DefinitionParserTest.populateControlMap(controlMap);
+		GenusDefinitionParserTest.populateControlMap(controlMap);
 
 		var result = parser.parse(is, controlMap);
 
@@ -66,7 +66,7 @@ public class VeteranDQParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		SP0DefinitionParserTest.populateControlMap(controlMap);
+		GenusDefinitionParserTest.populateControlMap(controlMap);
 		BecDefinitionParserTest.populateControlMap(controlMap);
 
 		var ex = assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
@@ -82,7 +82,7 @@ public class VeteranDQParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		SP0DefinitionParserTest.populateControlMap(controlMap);
+		GenusDefinitionParserTest.populateControlMap(controlMap);
 		BecDefinitionParserTest.populateControlMap(controlMap);
 
 		var ex = assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));

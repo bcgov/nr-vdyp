@@ -20,13 +20,13 @@ import static org.hamcrest.Matchers.equalTo;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import ca.bc.gov.nrs.vdyp.model.SP0Definition;
+import ca.bc.gov.nrs.vdyp.model.GenusDefinition;
 
-public class SP0DefinitionParserTest {
+public class GenusDefinitionParserTest {
 
 	@Test
 	public void testParse() throws Exception {
-		var parser = new SP0DefinitionParser();
+		var parser = new GenusDefinitionParser();
 
 		var result = parser.parse(ControlFileParserTest.class, "coe/SP0DEF_v0.dat", Collections.emptyMap());
 
@@ -34,67 +34,74 @@ public class SP0DefinitionParserTest {
 				result,
 				contains(
 						allOf(
-								Matchers.instanceOf(SP0Definition.class), Matchers.hasProperty("alias", equalTo("AC")),
+								Matchers.instanceOf(GenusDefinition.class),
+								Matchers.hasProperty("alias", equalTo("AC")),
 								Matchers.hasProperty("name", equalTo("Cottonwood"))
 						),
 						allOf(
-								Matchers.instanceOf(SP0Definition.class), Matchers.hasProperty("alias", equalTo("AT")),
+								Matchers.instanceOf(GenusDefinition.class),
+								Matchers.hasProperty("alias", equalTo("AT")),
 								Matchers.hasProperty("name", equalTo("Aspen"))
 						),
 						allOf(
-								Matchers.instanceOf(SP0Definition.class), Matchers.hasProperty("alias", equalTo("B")),
+								Matchers.instanceOf(GenusDefinition.class), Matchers.hasProperty("alias", equalTo("B")),
 								Matchers.hasProperty("name", equalTo("Balsam"))
 						),
 						allOf(
-								Matchers.instanceOf(SP0Definition.class), Matchers.hasProperty("alias", equalTo("C")),
+								Matchers.instanceOf(GenusDefinition.class), Matchers.hasProperty("alias", equalTo("C")),
 								Matchers.hasProperty("name", equalTo("Cedar (X yellow)"))
 						),
 						allOf(
-								Matchers.instanceOf(SP0Definition.class), Matchers.hasProperty("alias", equalTo("D")),
+								Matchers.instanceOf(GenusDefinition.class), Matchers.hasProperty("alias", equalTo("D")),
 								Matchers.hasProperty("name", equalTo("Alder"))
 						),
 						allOf(
-								Matchers.instanceOf(SP0Definition.class), Matchers.hasProperty("alias", equalTo("E")),
+								Matchers.instanceOf(GenusDefinition.class), Matchers.hasProperty("alias", equalTo("E")),
 								Matchers.hasProperty("name", equalTo("Birch"))
 						),
 						allOf(
-								Matchers.instanceOf(SP0Definition.class), Matchers.hasProperty("alias", equalTo("F")),
+								Matchers.instanceOf(GenusDefinition.class), Matchers.hasProperty("alias", equalTo("F")),
 								Matchers.hasProperty("name", equalTo("Douglas Fir"))
 						),
 						allOf(
-								Matchers.instanceOf(SP0Definition.class), Matchers.hasProperty("alias", equalTo("H")),
+								Matchers.instanceOf(GenusDefinition.class), Matchers.hasProperty("alias", equalTo("H")),
 								Matchers.hasProperty("name", equalTo("Hemlock"))
 						),
 						allOf(
-								Matchers.instanceOf(SP0Definition.class), Matchers.hasProperty("alias", equalTo("L")),
+								Matchers.instanceOf(GenusDefinition.class), Matchers.hasProperty("alias", equalTo("L")),
 								Matchers.hasProperty("name", equalTo("Larch"))
 						),
 						allOf(
-								Matchers.instanceOf(SP0Definition.class), Matchers.hasProperty("alias", equalTo("MB")),
+								Matchers.instanceOf(GenusDefinition.class),
+								Matchers.hasProperty("alias", equalTo("MB")),
 								Matchers.hasProperty("name", equalTo("Maple"))
 						),
 						allOf(
-								Matchers.instanceOf(SP0Definition.class), Matchers.hasProperty("alias", equalTo("PA")),
+								Matchers.instanceOf(GenusDefinition.class),
+								Matchers.hasProperty("alias", equalTo("PA")),
 								Matchers.hasProperty("name", equalTo("White-bark pine"))
 						),
 						allOf(
-								Matchers.instanceOf(SP0Definition.class), Matchers.hasProperty("alias", equalTo("PL")),
+								Matchers.instanceOf(GenusDefinition.class),
+								Matchers.hasProperty("alias", equalTo("PL")),
 								Matchers.hasProperty("name", equalTo("Lodgepole Pine"))
 						),
 						allOf(
-								Matchers.instanceOf(SP0Definition.class), Matchers.hasProperty("alias", equalTo("PW")),
+								Matchers.instanceOf(GenusDefinition.class),
+								Matchers.hasProperty("alias", equalTo("PW")),
 								Matchers.hasProperty("name", equalTo("White pine"))
 						),
 						allOf(
-								Matchers.instanceOf(SP0Definition.class), Matchers.hasProperty("alias", equalTo("PY")),
+								Matchers.instanceOf(GenusDefinition.class),
+								Matchers.hasProperty("alias", equalTo("PY")),
 								Matchers.hasProperty("name", equalTo("Yellow pine"))
 						),
 						allOf(
-								Matchers.instanceOf(SP0Definition.class), Matchers.hasProperty("alias", equalTo("S")),
+								Matchers.instanceOf(GenusDefinition.class), Matchers.hasProperty("alias", equalTo("S")),
 								Matchers.hasProperty("name", equalTo("Spruce"))
 						),
 						allOf(
-								Matchers.instanceOf(SP0Definition.class), Matchers.hasProperty("alias", equalTo("Y")),
+								Matchers.instanceOf(GenusDefinition.class), Matchers.hasProperty("alias", equalTo("Y")),
 								Matchers.hasProperty("name", equalTo("Yellow cedar"))
 						)
 
@@ -104,9 +111,9 @@ public class SP0DefinitionParserTest {
 
 	@Test
 	public void testOrderByPreference() throws Exception {
-		var parser = new SP0DefinitionParser(2);
+		var parser = new GenusDefinitionParser(2);
 
-		List<SP0Definition> result;
+		List<GenusDefinition> result;
 		try (
 				var is = new ByteArrayInputStream(
 						"AT Aspen                            02\r\nAC Cottonwood                       01".getBytes()
@@ -118,11 +125,13 @@ public class SP0DefinitionParserTest {
 				result,
 				contains(
 						allOf(
-								Matchers.instanceOf(SP0Definition.class), Matchers.hasProperty("alias", equalTo("AC")),
+								Matchers.instanceOf(GenusDefinition.class),
+								Matchers.hasProperty("alias", equalTo("AC")),
 								Matchers.hasProperty("name", equalTo("Cottonwood"))
 						),
 						allOf(
-								Matchers.instanceOf(SP0Definition.class), Matchers.hasProperty("alias", equalTo("AT")),
+								Matchers.instanceOf(GenusDefinition.class),
+								Matchers.hasProperty("alias", equalTo("AT")),
 								Matchers.hasProperty("name", equalTo("Aspen"))
 						)
 				)
@@ -131,9 +140,9 @@ public class SP0DefinitionParserTest {
 
 	@Test
 	public void testOrderByLinesBlank() throws Exception {
-		var parser = new SP0DefinitionParser(2);
+		var parser = new GenusDefinitionParser(2);
 
-		List<SP0Definition> result;
+		List<GenusDefinition> result;
 		try (
 				var is = new ByteArrayInputStream(
 						"AT Aspen                              \r\nAC Cottonwood                         ".getBytes()
@@ -145,11 +154,13 @@ public class SP0DefinitionParserTest {
 				result,
 				contains(
 						allOf(
-								Matchers.instanceOf(SP0Definition.class), Matchers.hasProperty("alias", equalTo("AT")),
+								Matchers.instanceOf(GenusDefinition.class),
+								Matchers.hasProperty("alias", equalTo("AT")),
 								Matchers.hasProperty("name", equalTo("Aspen"))
 						),
 						allOf(
-								Matchers.instanceOf(SP0Definition.class), Matchers.hasProperty("alias", equalTo("AC")),
+								Matchers.instanceOf(GenusDefinition.class),
+								Matchers.hasProperty("alias", equalTo("AC")),
 								Matchers.hasProperty("name", equalTo("Cottonwood"))
 						)
 				)
@@ -158,9 +169,9 @@ public class SP0DefinitionParserTest {
 
 	@Test
 	public void testOrderByLinesZero() throws Exception {
-		var parser = new SP0DefinitionParser(2);
+		var parser = new GenusDefinitionParser(2);
 
-		List<SP0Definition> result;
+		List<GenusDefinition> result;
 		try (
 				var is = new ByteArrayInputStream(
 						"AT Aspen                            00\r\nAC Cottonwood                       00".getBytes()
@@ -172,11 +183,13 @@ public class SP0DefinitionParserTest {
 				result,
 				contains(
 						allOf(
-								Matchers.instanceOf(SP0Definition.class), Matchers.hasProperty("alias", equalTo("AT")),
+								Matchers.instanceOf(GenusDefinition.class),
+								Matchers.hasProperty("alias", equalTo("AT")),
 								Matchers.hasProperty("name", equalTo("Aspen"))
 						),
 						allOf(
-								Matchers.instanceOf(SP0Definition.class), Matchers.hasProperty("alias", equalTo("AC")),
+								Matchers.instanceOf(GenusDefinition.class),
+								Matchers.hasProperty("alias", equalTo("AC")),
 								Matchers.hasProperty("name", equalTo("Cottonwood"))
 						)
 				)
@@ -185,7 +198,7 @@ public class SP0DefinitionParserTest {
 
 	@Test
 	public void testErrorPreferenceOutOfBoundsHigh() throws Exception {
-		var parser = new SP0DefinitionParser(2);
+		var parser = new GenusDefinitionParser(2);
 
 		Exception ex1;
 		try (
@@ -203,7 +216,7 @@ public class SP0DefinitionParserTest {
 
 	@Test
 	public void testErrorPreferenceOutOfBoundsLow() throws Exception {
-		var parser = new SP0DefinitionParser(2);
+		var parser = new GenusDefinitionParser(2);
 
 		Exception ex1;
 		try (
@@ -221,7 +234,7 @@ public class SP0DefinitionParserTest {
 
 	@Test
 	public void testErrorPreferenceDuplicate() throws Exception {
-		var parser = new SP0DefinitionParser(2);
+		var parser = new GenusDefinitionParser(2);
 
 		Exception ex1;
 		try (
@@ -263,12 +276,12 @@ public class SP0DefinitionParserTest {
 	 */
 	public static void populateControlMap(Map<String, Object> controlMap, String... aliases) {
 
-		List<SP0Definition> sp0List = new ArrayList<>();
+		List<GenusDefinition> sp0List = new ArrayList<>();
 
 		for (var alias : aliases) {
-			sp0List.add(new SP0Definition(alias, java.util.Optional.empty(), "Test " + alias));
+			sp0List.add(new GenusDefinition(alias, java.util.Optional.empty(), "Test " + alias));
 		}
 
-		controlMap.put(SP0DefinitionParser.CONTROL_KEY, sp0List);
+		controlMap.put(GenusDefinitionParser.CONTROL_KEY, sp0List);
 	}
 }

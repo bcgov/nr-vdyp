@@ -29,7 +29,7 @@ public class UtilComponentBaseAreaParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		SP0DefinitionParserTest.populateControlMap(controlMap);
+		GenusDefinitionParserTest.populateControlMap(controlMap);
 		BecDefinitionParserTest.populateControlMap(controlMap, "B1", "B2", "B3", "B4");
 
 		var result = parser.parse(is, controlMap);
@@ -56,7 +56,7 @@ public class UtilComponentBaseAreaParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		SP0DefinitionParserTest.populateControlMap(controlMap);
+		GenusDefinitionParserTest.populateControlMap(controlMap);
 		BecDefinitionParserTest.populateControlMap(controlMap, "B1", "B2", "B3", "B4");
 
 		var result = parser.parse(is, controlMap);
@@ -83,7 +83,7 @@ public class UtilComponentBaseAreaParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		SP0DefinitionParserTest.populateControlMap(controlMap);
+		GenusDefinitionParserTest.populateControlMap(controlMap);
 		BecDefinitionParserTest.populateControlMap(controlMap, "B1", "B2", "B3", "B4");
 
 		var result = parser.parse(is, controlMap);
@@ -111,7 +111,7 @@ public class UtilComponentBaseAreaParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		SP0DefinitionParserTest.populateControlMap(controlMap);
+		GenusDefinitionParserTest.populateControlMap(controlMap);
 		BecDefinitionParserTest.populateControlMap(controlMap);
 
 		var ex = assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
@@ -127,7 +127,7 @@ public class UtilComponentBaseAreaParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		SP0DefinitionParserTest.populateControlMap(controlMap);
+		GenusDefinitionParserTest.populateControlMap(controlMap);
 		BecDefinitionParserTest.populateControlMap(controlMap);
 
 		var ex = assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
@@ -143,7 +143,7 @@ public class UtilComponentBaseAreaParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		SP0DefinitionParserTest.populateControlMap(controlMap);
+		GenusDefinitionParserTest.populateControlMap(controlMap);
 		BecDefinitionParserTest.populateControlMap(controlMap);
 
 		var ex = assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
@@ -159,7 +159,7 @@ public class UtilComponentBaseAreaParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		SP0DefinitionParserTest.populateControlMap(controlMap);
+		GenusDefinitionParserTest.populateControlMap(controlMap);
 		BecDefinitionParserTest.populateControlMap(controlMap);
 
 		var ex = assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
