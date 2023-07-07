@@ -6,104 +6,182 @@ import java.util.NoSuchElementException;
  * Sindxdll.java Interface Module to the Sindex Library
  */
 public class Sindxdll {
-	/*
-	 * 1998 feb 28 - Initial Implementation (Shawn Brant) apr 6 - Reworking. (Ken
-	 * Polsson) 7 - Added lots more functions. nov 12 - Added Nigh & Courtin's Dr.
-	 * dec 2 - Bug fix in Sindex_SpecRemap regarding fiz_type. 1999 feb 15 - Bug
-	 * fix: changed si_gi_default array from char to short int. 22 - Changed all
-	 * functions that return doubles to return short ints, returning the double as a
-	 * parameter. mar 11 - Added Sindex_SpecUse(). apr 8 - v1.01 - Added missing
-	 * text for many curves. - Changed default Pli curve from Goudie to
-	 * Thrower/Nigh. 14 - v1.02 - Removed duplicate curve text accidentally added in
-	 * v1.01. - Added Chen's Bl, Pl, Dr, At. 27 - v1.03 - Changed default Dr from
-	 * Harrington to Nigh. 29 - v1.04 - Changed short name of a Pli curve from
-	 * "Thrower (1994) + Nigh (1998)" to "Nigh (1999)". - Changed short name of a
-	 * Pli curve from "Nigh & Love (1998)" to "Nigh & Love (1999)". - Changed "&" to
-	 * "and" in text strings. may 31 - v1.05 - Species remapping was sending all AC
-	 * codes to ACT. It now splits them into ACT and ACB. jun 9 - Temporarily added
-	 * Nigh's new Cwi. 10 - Eliminated need for SI_CURVE_START/END. aug 4 - Added
-	 * "age > 0.5" constraint to Nigh's Dr. 20 - v1.06 - Changed computing age from
-	 * height and site index to always iterate to breast height age, then convert to
-	 * total age if needed. 24 - v1.07 - Added additional error checks within the
-	 * iterate loop of computing age from site index and height. Also added check
-	 * for the case where only error values are available (such as high site and low
-	 * age on some curves) to prevent infinite looping. - Refined the areas of
-	 * operability (eliminating high site, low age) for the following
-	 * species/curves: Hw Wiley, Cw Kurucz, Ba Kurucz, Dr Harrington. sep 22 - v1.08
-	 * - Altered Pli Nigh 1999 to NOT correct age by 0.5 years. 23 - v1.09 - Added
-	 * Sindex_AgeToAge(). 24 - If iterating to get age, and an error results, don't
-	 * try converting age type. 24 - v1.10 - Added Curtis' Bp Noble Fir. 30 - When
-	 * computing height from site and age, if age type is total, and age is 0,
-	 * return error for certain curves. oct 1 - Certain curves "go nuts" at low age
-	 * and high site. In these cases it used to return an error code. Now an
-	 * interpolated value between two good points is returned (computing height from
-	 * site and age). 18 - v1.11 - Added Nigh's Hwc GI, SS GI, Sw GI, Lw GI. - Added
-	 * Sb <-> Pli conversion. - Added Nigh/Love's Sw total age curve. 2000 jan 24 -
-	 * Added new function Sindex_DefCurveEst() to return default curve for species
-	 * and establishment type. - Added citation and notes for the Oct 18 additions.
-	 * 27 - v1.12 - Added Nigh's Cw GI. - Changed default GI for Hwc, Ss, Sw. -
-	 * Removed Nigh's old Sw, Hwc, Ss from NextCurve() list. mar 15 - v1.13 - Bug
-	 * fix in Nigh's 1999 Pli. There was a 0.5 year problem under some
-	 * circumstances. apr 25 - v1.14 - Another bug fix to help Pli Nigh 1999. This
-	 * time a call to age_to_age() had to be added when iterating to solve for age
-	 * or site, when breast height age is specified. jul 25 - v1.15 - Split Cw into
-	 * Cwi and Cwc. - Added spliced Goudie/Nigh Sw for testing. aug 1 - Temporarily
-	 * put Cwi curves back into Cw and - disabled Goudie/Nigh Sw. oct 10 -
-	 * Implemented Cwc/Cwi. - Sw default curve is Goudie/Nigh spliced curve. dec 12
-	 * - Changed Bac-Ker to Bb-Ker, and made it inactive. - Updated notes for
-	 * Bb-Ker, Sb-Ker, Sw-Ker, Fdc-King, Hwc-Farr, Bl-Chen, Pl-Chen, Sw-Nigh/Goudie.
-	 * - Removed Dr-Chen. 2001 jan 4 - v1.16 - If "CW" was passed to the remap
-	 * function, it always returned index for "ACT", due to a missing "break;". - If
-	 * "C" was passed, it returned "CWC", due to missing fix check. 17 - v1.17 -
-	 * Added Se Engelmann spruce, with Chen & Klinka curve. mar 14 - v1.18 - If "S"
-	 * was passed to remap, it would always return "SB" due to a missing "break;".
-	 * apr 9 - v1.19 - Added Fdc Nigh total age curve, and spliced with Bruce. 11 -
-	 * Removed note about y2bh function from Bac Kurucz. may 3 - Added Lw curve by
-	 * Brisco, Klinka, Nigh. jun 12 - Made Chen/Klinka the default for Bl. aug 27 -
-	 * v1.20 Changed default Sw plantation to GOUDNIGH. - Removed some text from
-	 * Ba/Bl curve notes. 2002 jan 29 - v1.21 Added Sindex_CurveToSpecies(). - Added
-	 * Sindex_VDYP_SpecRemap(). feb 5 - Tiny change to notes for LW_NIGH. 12 - Added
-	 * Nigh Sb, making it default. mar 27 - Removed Sindex_VDYP_SpecRemap(). jun 27
-	 * - v1.30 Y2BH now is forced to follow sequence 0.5, 1.5, 2.5, 3.5... oct 8 -
-	 * Change to many coeffs of site index conversions. - Added notes for Fdc
-	 * Bruce/Nigh. 9 - Added At Nigh as default. 31 - Changed si_curve_intend[] for
-	 * SI_BL_KURUCZ82 to say it is intended for Bl, not Ba. nov 29 - Changed BAC to
-	 * BA, PP to PY. - Added many more species. - Added Sindex_SpecMap(). 2003 jan 8
-	 * - Changed Fdc default back to Bruce. jun 13 - v1.31 Copied several curves and
-	 * "corrected" the origin from bhage=0 ht=1.3 to bhage=0.5 ht=1.3. Added "AC" to
-	 * the end of the define. They are now the default for their species:
-	 * ACT_THROWERAC, BA_KURUCZ82AC, BL_CHENAC, BP_CURTISAC, HM_MEANSAC,
-	 * FDI_THROWERAC, ACB_HUANGAC, PW_CURTISAC, HWC_WILEYAC, FDC_BRUCEAC,
-	 * CWC_KURUCZAC, PY_HANNAC, SE_CHENAC. jul 28 - Updated citation of Nigh's 1999
-	 * Pl and 2003 Fdc. aug 7 - v1.32 Added 40 more species. sep 11 - v1.33 Added
-	 * Fd, Pl, Hw, Cw. dec 15 - v1.34 Added more coast/interior designations for
-	 * dozens of codes. 16 - v1.35 Changed Pw location designation to none. 2004 feb
-	 * 10 - v1.36 Changed Cw,Fd,Hw from 0 to 5 in spec_use. - Changed Pl from 0 to 6
-	 * in spec_use. mar 26 - v1.37 Added SW_GOUDIE_NATAC. apr 28 - v1.38 Added
-	 * Nigh's 2002 Py. may 4 - Updated citation and notes for Nigh's Py. 5 - Changed
-	 * default Py to Nigh's. - Changed default Sw natural curve to be
-	 * SW_GOUDIE_NATAC. jun 15 - v1.39 Added Nigh's 2004 Pl/Sw/Se total age curves,
-	 * but not available on their own. - Substituted Nigh's total age curves for the
-	 * 0-1.3m area of Pl Thrower, Sw Goudie Nat & Pla AC, and Se Chen AC. - Changed
-	 * default Sw curve from SW_GOUDNIGH to SW_GOUDIE_PLAAC. - Changed default Pli
-	 * curve from PLI_THROWNIGH to PLI_THROWER. jul 12 - v1.40 Added Pli Thrower to
-	 * Age-to-Age function. - Added check for age-to-age conversion going negative.
-	 * sep 14 - v1.41 Several si2ht.c changes of checking BHage. 2005 feb 18 - v1.42
-	 * Bug fix in Fdc Bruce and Bruce AC, to use total age directly instead of
-	 * converting to breast-height age. oct 20 - Added jack pine (PJ). 2008 feb 28 -
-	 * Added 2004 Sw Nigh GI. jul 4 - v1.43 Release. 2009 may 6 - v1.44 Force pure
-	 * y2bh for Fdc-Bruce. 2009 aug 28 - Added Nigh's 2009 Ep. 2010 mar 4 - v1.45
-	 * Added Nigh's 2009 Ba GI. - Added Nigh's 2009 Ba, as default. apr 14 - Added
-	 * 2010 Sw Hu and Garcia. 2014 apr 25 - v1.47 Added Sindex_AgeSIToHtSmooth().
-	 * sep 2 - Added 2014 Se Nigh GI. 2015 apr 9 - v1.48 Removed SI_SPEC_BV. 23 -
-	 * Updated three "in review"/"in press" citations for Py, Pl, Sw, At. - Updated
-	 * text notes of SI_PY_NIGH. may 13 - v1.49 Added 2015 Se Nigh. 2016 mar 9 -
-	 * v1.50 Added Sindex_Y2BH05() which os now the rounded value, changing
-	 * Sindex_Y2BH() to be the unrounded value. 2017 feb 2 - v1.51 Added Nigh's 2016
-	 * Cwc equation as default.
-	 *
-	 * 2023 jun 1 - Translated from C to Java
-	 */
+/* @formatter:off */
+/*
+ * Sindxdll.java
+ *
+ * Interface Module to the Sindex Library
+ *
+ * 1998 feb 28 - Initial Implementation (Shawn Brant)
+ *      apr 6  - Reworking. (Ken Polsson)
+ *          7  - Added lots more functions.
+ *      nov 12 - Added Nigh & Courtin's Dr.
+ *      dec 2  - Bug fix in Sindex_SpecRemap regarding fiz_type.
+ * 1999 feb 15 - Bug fix: changed si_gi_default array from char to short int.
+ *          22 - Changed all functions that return doubles to return
+ *               short ints, returning the double as a parameter.
+ *      mar 11 - Added Sindex_SpecUse().
+ *      apr 8  - v1.01
+ *             - Added missing text for many curves.
+ *             - Changed default Pli curve from Goudie to Thrower/Nigh.
+ *          14 - v1.02
+ *             - Removed duplicate curve text accidentally added in v1.01.
+ *             - Added Chen's Bl, Pl, Dr, At.
+ *          27 - v1.03
+ *             - Changed default Dr from Harrington to Nigh.
+ *          29 - v1.04
+ *             - Changed short name of a Pli curve from
+ *               "Thrower (1994) + Nigh (1998)" to "Nigh (1999)".
+ *             - Changed short name of a Pli curve from "Nigh & Love (1998)"
+ *               to "Nigh & Love (1999)".
+ *             - Changed "&" to "and" in text strings.
+ *      may 31 - v1.05
+ *             - Species remapping was sending all AC codes to ACT.
+ *               It now splits them into ACT and ACB.
+ *      jun  9 - Temporarily added Nigh's new Cwi.
+ *          10 - Eliminated need for SI_CURVE_START/END.
+ *      aug  4 - Added "age > 0.5" constraint to Nigh's Dr.
+ *          20 - v1.06
+ *             - Changed computing age from height and site index to always
+ *               iterate to breast height age, then convert to total age
+ *               if needed.
+ *          24 - v1.07
+ *             - Added additional error checks within the iterate loop of
+ *               computing age from site index and height.  Also added check
+ *               for the case where only error values are available (such
+ *               as high site and low age on some curves) to prevent infinite
+ *               looping.
+ *             - Refined the areas of operability (eliminating high site,
+ *               low age) for the following species/curves:
+ *               Hw Wiley, Cw Kurucz, Ba Kurucz, Dr Harrington.
+ *      sep 22 - v1.08
+ *             - Altered Pli Nigh 1999 to NOT correct age by 0.5 years.
+ *          23 - v1.09
+ *             - Added Sindex_AgeToAge().
+ *          24 - If iterating to get age, and an error results, don't
+ *               try converting age type.
+ *          24 - v1.10
+ *             - Added Curtis' Bp Noble Fir.
+ *          30 - When computing height from site and age,
+ *               if age type is total, and age is 0, return error for
+ *               certain curves.
+ *      oct  1 - Certain curves "go nuts" at low age and high site.
+ *               In these cases it used to return an error code.
+ *               Now an interpolated value between two good points
+ *               is returned (computing height from site and age).
+ *          18 - v1.11
+ *             - Added Nigh's Hwc GI, SS GI, Sw GI, Lw GI.
+ *             - Added Sb <-> Pli conversion.
+ *             - Added Nigh/Love's Sw total age curve.
+ * 2000 jan 24 - Added new function Sindex_DefCurveEst() to return
+ *               default curve for species and establishment type.
+ *             - Added citation and notes for the Oct 18 additions.
+ *          27 - v1.12
+ *             - Added Nigh's Cw GI.
+ *             - Changed default GI for Hwc, Ss, Sw.
+ *             - Removed Nigh's old Sw, Hwc, Ss from NextCurve() list.
+ *      mar 15 - v1.13
+ *             - Bug fix in Nigh's 1999 Pli. There was a 0.5 year problem
+ *               under some circumstances.
+ *      apr 25 - v1.14
+ *             - Another bug fix to help Pli Nigh 1999. This time a
+ *               call to age_to_age() had to be added when iterating to
+ *               solve for age or site, when breast height age is specified.
+ *      jul 25 - v1.15
+ *             - Split Cw into Cwi and Cwc.
+ *             - Added spliced Goudie/Nigh Sw for testing.
+ *      aug 1  - Temporarily put Cwi curves back into Cw and
+ *             - disabled Goudie/Nigh Sw.
+ *      oct 10 - Implemented Cwc/Cwi.
+ *             - Sw default curve is Goudie/Nigh spliced curve.
+ *      dec 12 - Changed Bac-Ker to Bb-Ker, and made it inactive.
+ *             - Updated notes for Bb-Ker, Sb-Ker, Sw-Ker, Fdc-King, Hwc-Farr,
+ *               Bl-Chen, Pl-Chen, Sw-Nigh/Goudie.
+ *             - Removed Dr-Chen.
+ * 2001 jan 4  - v1.16
+ *             - If "CW" was passed to the remap function, it always
+ *               returned index for "ACT", due to a missing "break;".
+ *             - If "C" was passed, it returned "CWC", due to missing
+ *               fix check.
+ *          17 - v1.17
+ *             - Added Se Engelmann spruce, with Chen & Klinka curve.
+ *      mar 14 - v1.18
+ *             - If "S" was passed to remap, it would always return "SB"
+ *               due to a missing "break;".
+ *      apr 9  - v1.19
+ *             - Added Fdc Nigh total age curve, and spliced with Bruce.
+ *          11 - Removed note about y2bh function from Bac Kurucz.
+ *      may 3  - Added Lw curve by Brisco, Klinka, Nigh.
+ *      jun 12 - Made Chen/Klinka the default for Bl.
+ *      aug 27 - v1.20 Changed default Sw plantation to GOUDNIGH.
+ *             - Removed some text from Ba/Bl curve notes.
+ * 2002 jan 29 - v1.21 Added Sindex_CurveToSpecies().
+ *             - Added Sindex_VDYP_SpecRemap().
+ *      feb 5  - Tiny change to notes for LW_NIGH.
+ *          12 - Added Nigh Sb, making it default.
+ *      mar 27 - Removed Sindex_VDYP_SpecRemap().
+ *      jun 27 - v1.30 Y2BH now is forced to follow sequence
+ *               0.5, 1.5, 2.5, 3.5...
+ *      oct 8  - Change to many coeffs of site index conversions.
+ *             - Added notes for Fdc Bruce/Nigh.
+ *          9  - Added At Nigh as default.
+ *          31 - Changed si_curve_intend[] for SI_BL_KURUCZ82 to say it is
+ *               intended for Bl, not Ba.
+ *      nov 29 - Changed BAC to BA, PP to PY.
+ *             - Added many more species.
+ *             - Added Sindex_SpecMap().
+ * 2003 jan 8  - Changed Fdc default back to Bruce.
+ *      jun 13 - v1.31 Copied several curves and "corrected" the origin from
+ *               bhage=0 ht=1.3 to bhage=0.5 ht=1.3.
+ *               Added "AC" to the end of the define.
+ *               They are now the default for their species:
+ *               ACT_THROWERAC, BA_KURUCZ82AC, BL_CHENAC, BP_CURTISAC,
+ *               HM_MEANSAC, FDI_THROWERAC, ACB_HUANGAC, PW_CURTISAC,
+ *               HWC_WILEYAC, FDC_BRUCEAC, CWC_KURUCZAC, PY_HANNAC,
+ *               SE_CHENAC.
+ *      jul 28 - Updated citation of Nigh's 1999 Pl and 2003 Fdc.
+ *      aug 7  - v1.32 Added 40 more species.
+ *      sep 11 - v1.33 Added Fd, Pl, Hw, Cw.
+ *      dec 15 - v1.34 Added more coast/interior designations for dozens of codes.
+ *          16 - v1.35 Changed Pw location designation to none.
+ * 2004 feb 10 - v1.36 Changed Cw,Fd,Hw from 0 to 5 in spec_use.
+ *             - Changed Pl from 0 to 6 in spec_use.
+ *      mar 26 - v1.37 Added SW_GOUDIE_NATAC.
+ *      apr 28 - v1.38 Added Nigh's 2002 Py.
+ *      may 4  - Updated citation and notes for Nigh's Py.
+ *          5  - Changed default Py to Nigh's.
+ *             - Changed default Sw natural curve to be SW_GOUDIE_NATAC.
+ *      jun 15 - v1.39 Added Nigh's 2004 Pl/Sw/Se total age curves, but not available
+ *               on their own.
+ *             - Substituted Nigh's total age curves for the 0-1.3m area of
+ *               Pl Thrower, Sw Goudie Nat & Pla AC, and Se Chen AC.
+ *             - Changed default Sw curve from SW_GOUDNIGH to SW_GOUDIE_PLAAC.
+ *             - Changed default Pli curve from PLI_THROWNIGH to PLI_THROWER.
+ *      jul 12 - v1.40 Added Pli Thrower to Age-to-Age function.
+ *             - Added check for age-to-age conversion going negative.
+ *      sep 14 - v1.41 Several si2ht.c changes of checking BHage.
+ * 2005 feb 18 - v1.42 Bug fix in Fdc Bruce and Bruce AC, to use total age
+ *               directly instead of converting to breast-height age.
+ *      oct 20 - Added jack pine (PJ).
+ * 2008 feb 28 - Added 2004 Sw Nigh GI.
+ *      jul 4  - v1.43 Release.
+ * 2009 may 6  - v1.44 Force pure y2bh for Fdc-Bruce.
+ * 2009 aug 28 - Added Nigh's 2009 Ep.
+ * 2010 mar 4  - v1.45 Added Nigh's 2009 Ba GI.
+ *             - Added Nigh's 2009 Ba, as default.
+ *      apr 14 - Added 2010 Sw Hu and Garcia.
+ * 2014 apr 25 - v1.47 Added Sindex_AgeSIToHtSmooth().
+ *      sep 2  - Added 2014 Se Nigh GI.
+ * 2015 apr 9  - v1.48 Removed SI_SPEC_BV.
+ *          23 - Updated three "in review"/"in press" citations for Py, Pl, Sw, At.
+ *             - Updated text notes of SI_PY_NIGH.
+ *      may 13 - v1.49 Added 2015 Se Nigh.
+ * 2016 mar 9  - v1.50 Added Sindex_Y2BH05() which os now the rounded value,
+ *               changing Sindex_Y2BH() to be the unrounded value.
+ * 2017 feb 2  - v1.51 Added Nigh's 2016 Cwc equation as default.
+ * 2023 jun 1 - Translated from C to Java
+ */
+/* @formatter:on */
 
 //Taken from sindxdll.h (I have commented out the unused ones and labeled them as such)
 	/*
