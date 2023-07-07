@@ -14,4 +14,22 @@
     <version>0.0.1-SNAPSHOT</version>
   </parent>
 
+  	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>net.revelc.code.formatter</groupId>
+					<artifactId>formatter-maven-plugin</artifactId>
+					<dependencies>
+						<dependency>
+							<groupId>ca.bc.gov.nrs.vdyp</groupId>
+							<artifactId>vdyp-buildtools</artifactId>
+							<version>${project.version}</version>
+						</dependency>
+					</dependencies>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+
 </project>
