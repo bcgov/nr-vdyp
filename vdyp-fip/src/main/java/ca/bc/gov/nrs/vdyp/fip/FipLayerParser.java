@@ -127,7 +127,12 @@ public class FipLayerParser implements ControlMapValueReplacer<StreamingParserFa
 
 				@Override
 				protected boolean skip(ValueOrMarker<Optional<FipLayer>, EndOfRecord> nextChild) {
-					return nextChild.getValue().map(Optional::isEmpty).orElse(false);
+					return nextChild.getValue().map(x -> x.map(layer -> {
+						// TODO log this
+						// If the layer is present but has height or closure that's not positive, ignore
+						return layer.getHeight() <= 0f || layer.getCrownClosure() <= 0f;
+					}).orElse(true)) // If the layer is not present (Unknown layer type) ignore
+							.orElse(false); // If it's a marker, let it through so the stop method can see it.
 				}
 
 				@Override
