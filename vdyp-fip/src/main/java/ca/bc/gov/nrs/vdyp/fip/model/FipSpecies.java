@@ -18,7 +18,7 @@ public class FipSpecies {
 	Map<String, Float> speciesPercent;
 
 	public FipSpecies(
-			String polygonIdentifier, Layer layer, String genus, Float percentGenus, Map<String, Float> speciesPercent
+			String polygonIdentifier, Layer layer, String genus, float percentGenus, Map<String, Float> speciesPercent
 	) {
 		super();
 		this.polygonIdentifier = polygonIdentifier;

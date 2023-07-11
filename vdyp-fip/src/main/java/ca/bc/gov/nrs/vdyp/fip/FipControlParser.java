@@ -388,7 +388,7 @@ public class FipControlParser {
 		}
 	}
 
-	Map<String, ?> parse(InputStream is, FileResolver fileResolver) throws IOException, ResourceParseException {
+	Map<String, Object> parse(InputStream is, FileResolver fileResolver) throws IOException, ResourceParseException {
 		var map = controlParser.parse(is, Collections.emptyMap());
 
 		applyModifiers(map, BASIC_DEFINITIONS, fileResolver);

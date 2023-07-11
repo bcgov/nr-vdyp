@@ -1,5 +1,7 @@
 package ca.bc.gov.nrs.vdyp.fip.model;
 
+import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
 
 import ca.bc.gov.nrs.vdyp.model.Layer;
@@ -24,15 +26,17 @@ public class FipLayer {
 	float height;
 	float siteIndex;
 	float crownClosure;
-	String siteSp0;
-	String siteSp64;
+	String siteGenus;
+	String siteSpecies;
 	float yearsToBreastHeight;
 	Optional<Integer> inventoryTypeGroup;
 	Optional<Float> breastHeightAge;
 
+	Map<String, FipSpecies> species = Collections.emptyMap();
+
 	public FipLayer(
 			String polygonIdentifier, Layer layer, float ageTotal, float height, float siteIndex, float crownClosure,
-			String siteSp0, String siteSp64, float yearsToBreastHeight, Optional<Integer> inventoryTypeGroup,
+			String siteGenus, String siteSpecies, float yearsToBreastHeight, Optional<Integer> inventoryTypeGroup,
 			Optional<Float> breastHeightAge
 	) {
 		super();
@@ -42,8 +46,8 @@ public class FipLayer {
 		this.height = height;
 		this.siteIndex = siteIndex;
 		this.crownClosure = crownClosure;
-		this.siteSp0 = siteSp0;
-		this.siteSp64 = siteSp64;
+		this.siteGenus = siteGenus;
+		this.siteSpecies = siteSpecies;
 		this.yearsToBreastHeight = yearsToBreastHeight;
 		this.inventoryTypeGroup = inventoryTypeGroup;
 		this.breastHeightAge = breastHeightAge;
@@ -74,11 +78,11 @@ public class FipLayer {
 	}
 
 	public String getSiteSp0() {
-		return siteSp0;
+		return siteGenus;
 	}
 
 	public String getSiteSp64() {
-		return siteSp64;
+		return siteSpecies;
 	}
 
 	public float getYearsToBreastHeight() {
@@ -113,12 +117,12 @@ public class FipLayer {
 		this.crownClosure = crownClosure;
 	}
 
-	public void setSireSp0(String sireSp0) {
-		this.siteSp0 = sireSp0;
+	public void setSiteSp0(String sireSp0) {
+		this.siteGenus = sireSp0;
 	}
 
 	public void setSiteSp64(String siteSp64) {
-		this.siteSp64 = siteSp64;
+		this.siteSpecies = siteSp64;
 	}
 
 	public void setYearsToBreastHeight(float yearsToBreastHeight) {
@@ -131,6 +135,14 @@ public class FipLayer {
 
 	public void setBreastHeightAge(Optional<Float> breastHeightAge) {
 		this.breastHeightAge = breastHeightAge;
+	}
+
+	public Map<String, FipSpecies> getSpecies() {
+		return species;
+	}
+
+	public void setSpecies(Map<String, FipSpecies> species) {
+		this.species = species;
 	}
 
 }
