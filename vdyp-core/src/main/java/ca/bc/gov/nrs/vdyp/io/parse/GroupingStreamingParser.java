@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.vdyp.io.parse;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 /**
@@ -52,7 +53,7 @@ public abstract class GroupingStreamingParser<T, U> implements StreamingParser<T
 	public T next() throws IOException, ResourceParseException {
 
 		doGetNext();
-		var children = next.orElseThrow(() -> new IllegalStateException("Requested next group when there is none"));
+		var children = next.orElseThrow(() -> new NoSuchElementException("Requested next group when there is none"));
 		next = Optional.empty();
 		return convert(children);
 	}

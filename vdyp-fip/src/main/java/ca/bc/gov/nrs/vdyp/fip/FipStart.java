@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 
 import org.slf4j.Logger;
@@ -153,7 +154,7 @@ public class FipStart {
 		Map<Layer, FipLayer> layers;
 		try {
 			layers = layerStream.next();
-		} catch (IllegalStateException ex) { // TODO, make a more specific exception for this
+		} catch (NoSuchElementException ex) {
 			throw new ProcessingException("Layers file has fewer records than polygon file.", ex);
 		}
 
@@ -161,7 +162,7 @@ public class FipStart {
 		Collection<FipSpecies> species;
 		try {
 			species = speciesStream.next();
-		} catch (IllegalStateException ex) { // TODO, make a more specific exception for this
+		} catch (NoSuchElementException ex) {
 			throw new ProcessingException("Species file has fewer records than polygon file.", ex);
 		}
 

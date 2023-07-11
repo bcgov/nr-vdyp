@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -448,6 +449,6 @@ public class VdypMatchers {
 	public static <T> void assertEmpty(StreamingParser<T> stream) throws IOException, ResourceParseException {
 		var hasNext = assertDoesNotThrow(() -> stream.hasNext());
 		assertThat(hasNext, is(false));
-		assertThrows(IllegalStateException.class, () -> stream.next());
+		assertThrows(NoSuchElementException.class, () -> stream.next());
 	}
 }

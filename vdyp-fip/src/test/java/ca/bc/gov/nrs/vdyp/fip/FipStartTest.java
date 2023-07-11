@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.vdyp.fip;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.IOException;
@@ -22,8 +23,8 @@ import ca.bc.gov.nrs.vdyp.fip.model.FipLayer;
 import ca.bc.gov.nrs.vdyp.fip.model.FipMode;
 import ca.bc.gov.nrs.vdyp.fip.model.FipPolygon;
 import ca.bc.gov.nrs.vdyp.fip.model.FipSpecies;
+import ca.bc.gov.nrs.vdyp.io.parse.MockStreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
-import ca.bc.gov.nrs.vdyp.io.parse.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.model.Layer;
 
@@ -32,211 +33,157 @@ public class FipStartTest {
 	@Test
 	public void testProcessEmpty() throws Exception {
 
-		var app = new FipStart();
-
-		var controlMap = new HashMap<String, Object>();
-
-		var control = EasyMock.createControl();
-
-		StreamingParser<FipPolygon> polygonStream = mockStream(
-				control, controlMap, FipPolygonParser.CONTROL_KEY, "polygonStream"
-		);
-		StreamingParser<Map<Layer, FipPolygon>> layerStream = mockStream(
-				control, controlMap, FipLayerParser.CONTROL_KEY, "layerStream"
-		);
-		StreamingParser<Collection<FipSpecies>> speciesStream = mockStream(
-				control, controlMap, FipSpeciesParser.CONTROL_KEY, "speciesStream"
-		);
-
-		expectAllEmpty(polygonStream, layerStream, speciesStream);
-
-		expectAllClosed(polygonStream, layerStream, speciesStream);
-
-		app.setControlMap(controlMap);
-
-		control.replay();
-
-		app.process();
-
-		control.verify();
+		testWith(Arrays.asList(), Arrays.asList(), Arrays.asList(), app -> {
+			assertDoesNotThrow(app::process);
+		});
 	}
 
 	@Test
 	public void testProcessSimple() throws Exception {
 
-		var app = new FipStart();
-
-		var controlMap = new HashMap<String, Object>();
-
-		var control = EasyMock.createControl();
-
-		StreamingParser<FipPolygon> polygonStream = mockStream(
-				control, controlMap, FipPolygonParser.CONTROL_KEY, "polygonStream"
-		);
-		StreamingParser<Map<Layer, FipLayer>> layerStream = mockStream(
-				control, controlMap, FipLayerParser.CONTROL_KEY, "layerStream"
-		);
-		StreamingParser<Collection<FipSpecies>> speciesStream = mockStream(
-				control, controlMap, FipSpeciesParser.CONTROL_KEY, "speciesStream"
-		);
-
 		var polygonId = polygonId("Test Polygon", 2023);
 		var layer = Layer.PRIMARY;
 
-		// One polygon with one layer with one species entry
+		// One polygon with one primary layer with one species entry
 
-		mockWith(
-				polygonStream,
-				new FipPolygon(
-						polygonId, "0", "BG", java.util.Optional.empty(), Optional.of(FipMode.FIPSTART),
-						java.util.Optional.empty(), 1.0f
-				)
-		);
-		mockWith(
-				layerStream,
-				Collections.singletonMap(
-						layer,
-						new FipLayer(
-								polygonId, layer, 0, 20f, 0.9f, 0, polygonId, polygonId, 0, java.util.Optional.empty(),
-								java.util.Optional.empty()
+		testWith(
+				Arrays.asList(
+						new FipPolygon(
+								polygonId, "0", "BG", java.util.Optional.empty(), Optional.of(FipMode.FIPSTART),
+								java.util.Optional.empty(), 1.0f
 						)
-				)
+				),
+				Arrays.asList(
+						Collections.singletonMap(
+								layer,
+								new FipLayer(
+										polygonId, layer, 0, 20f, 0.9f, 0, "B", "B", 0, java.util.Optional.empty(),
+										java.util.Optional.empty()
+								)
+						)
+				),
+				Arrays.asList(
+						Collections.singletonList(new FipSpecies(polygonId, layer, "B", 100.0f, Collections.emptyMap()))
+				), app -> {
+					assertDoesNotThrow(app::process);
+				}
 		);
-		mockWith(
-				speciesStream,
-				Collections.singletonList(new FipSpecies(polygonId, layer, "B", 100.0f, Collections.emptyMap()))
-		);
 
-		expectAllClosed(polygonStream, layerStream, speciesStream);
-
-		app.setControlMap(controlMap);
-
-		control.replay();
-
-		app.process();
-
-		control.verify();
 	}
 
 	@Test
-	public void testPolygonWithNoLayers() throws Exception {
-
-		var app = new FipStart();
-
-		var controlMap = new HashMap<String, Object>();
-
-		var control = EasyMock.createControl();
-
-		StreamingParser<FipPolygon> polygonStream = mockStream(
-				control, controlMap, FipPolygonParser.CONTROL_KEY, "polygonStream"
-		);
-		StreamingParser<Map<Layer, FipLayer>> layerStream = mockStream(
-				control, controlMap, FipLayerParser.CONTROL_KEY, "layerStream"
-		);
-		StreamingParser<Collection<FipSpecies>> speciesStream = mockStream(
-				control, controlMap, FipSpeciesParser.CONTROL_KEY, "speciesStream"
-		);
+	public void testPolygonWithNoLayersRecord() throws Exception {
 
 		var polygonId = polygonId("Test Polygon", 2023);
-		var layer = Layer.PRIMARY;
 
-		// One polygon with one layer with one species entry
+		testWith(
+				Arrays.asList(
+						new FipPolygon(
+								polygonId, "0", "BG", java.util.Optional.empty(), Optional.of(FipMode.FIPSTART),
+								java.util.Optional.empty(), 1.0f
+						)
+				), Collections.emptyList(), Collections.emptyList(), app -> {
+					var ex = assertThrows(ProcessingException.class, () -> app.process());
 
-		mockWith(
-				polygonStream,
-				new FipPolygon(
-						polygonId, "0", "BG", java.util.Optional.empty(), Optional.of(FipMode.FIPSTART),
-						java.util.Optional.empty(), 1.0f
-				)
+					assertThat(ex, hasProperty("message", is("Layers file has fewer records than polygon file.")));
+
+				}
 		);
-		EasyMock.expect(layerStream.next()).andThrow(new IllegalStateException());
-
-		expectAllClosed(polygonStream, layerStream, speciesStream);
-
-		app.setControlMap(controlMap);
-
-		control.replay();
-
-		var ex = assertThrows(ProcessingException.class, () -> app.process());
-
-		assertThat(ex, hasProperty("message", is("Layers file has fewer records than polygon file.")));
-
-		control.verify();
 	}
 
 	@Test
 	public void testPolygonWithNoPrimaryLayer() throws Exception {
 
-		var app = new FipStart();
+		var polygonId = polygonId("Test Polygon", 2023);
+		var layer = Layer.VETERAN;
 
-		var controlMap = new HashMap<String, Object>();
+		// One polygon with one layer with one species entry, and type is VETERAN
+		testWith(
+				Arrays.asList(
+						new FipPolygon(
+								polygonId, "0", "BG", java.util.Optional.empty(), Optional.of(FipMode.FIPSTART),
+								java.util.Optional.empty(), 1.0f
+						)
+				),
+				Arrays.asList(
+						Collections.singletonMap(
+								layer,
+								new FipLayer(
+										polygonId, layer, 0, 20f, 0.9f, 0, "B", "B", 0, java.util.Optional.empty(),
+										java.util.Optional.empty()
+								)
+						)
+				),
+				Arrays.asList(
+						Collections.singletonList(new FipSpecies(polygonId, layer, "B", 100.0f, Collections.emptyMap()))
+				), app -> {
+					var ex = assertThrows(ProcessingException.class, () -> app.process());
 
-		var control = EasyMock.createControl();
+					assertThat(
+							ex,
+							hasProperty(
+									"message",
+									is(
+											"Polygon " + polygonId + " has no " + Layer.PRIMARY
+													+ " layer, or that layer has non-positive height or crown closure."
+									)
+							)
+					);
 
-		StreamingParser<FipPolygon> polygonStream = mockStream(
-				control, controlMap, FipPolygonParser.CONTROL_KEY, "polygonStream"
+				}
 		);
-		StreamingParser<Map<Layer, FipLayer>> layerStream = mockStream(
-				control, controlMap, FipLayerParser.CONTROL_KEY, "layerStream"
-		);
-		StreamingParser<Collection<FipSpecies>> speciesStream = mockStream(
-				control, controlMap, FipSpeciesParser.CONTROL_KEY, "speciesStream"
-		);
+
+	}
+
+	@Test
+	public void testPrimaryLayerTotalAgeLessThanYearsToBreastHeight() throws Exception {
 
 		var polygonId = polygonId("Test Polygon", 2023);
 		var layer = Layer.VETERAN;
 
 		// One polygon with one layer with one species entry, and type is VETERAN
 
-		mockWith(
-				polygonStream,
-				new FipPolygon(
-						polygonId, "0", "BG", java.util.Optional.empty(), Optional.of(FipMode.FIPSTART),
-						java.util.Optional.empty(), 1.0f
-				)
-		);
-		mockWith(
-				layerStream,
-				Collections.singletonMap(
-						layer,
-						new FipLayer(
-								polygonId, layer, 0, 20f, 0.9f, 0, polygonId, polygonId, 0, java.util.Optional.empty(),
-								java.util.Optional.empty()
+		testWith(
+				Arrays.asList(
+						new FipPolygon(
+								polygonId, "0", "BG", java.util.Optional.empty(), Optional.of(FipMode.FIPSTART),
+								java.util.Optional.empty(), 1.0f
 						)
-				)
-		);
-		mockWith(
-				speciesStream,
-				Collections.singletonList(new FipSpecies(polygonId, layer, "B", 100.0f, Collections.emptyMap()))
-		);
-
-		expectAllClosed(polygonStream, layerStream, speciesStream);
-
-		app.setControlMap(controlMap);
-
-		control.replay();
-
-		var ex = assertThrows(ProcessingException.class, () -> app.process());
-
-		assertThat(
-				ex,
-				hasProperty(
-						"message",
-						is(
-								"Polygon " + polygonId + " has no " + Layer.PRIMARY
-										+ " layer, or that layer has non-positive height or crown closure."
+				),
+				Arrays.asList(
+						Collections.singletonMap(
+								layer,
+								new FipLayer(
+										polygonId, layer, 0, 20f, 0.9f, 5.0f, "B", "B", 0, java.util.Optional.empty(),
+										java.util.Optional.empty()
+								)
 						)
-				)
+				),
+				Arrays.asList(
+						Collections.singletonList(new FipSpecies(polygonId, layer, "B", 100.0f, Collections.emptyMap()))
+				), app -> {
+					var ex = assertThrows(ProcessingException.class, () -> app.process());
+
+					assertThat(
+							ex,
+							hasProperty(
+									"message",
+									is(
+											"Polygon " + polygonId + " has no " + Layer.PRIMARY
+													+ " layer, or that layer has non-positive height or crown closure."
+									)
+							)
+					);
+				}
 		);
 
-		control.verify();
 	}
 
-	private static <T> StreamingParser<T>
+	private static <T> MockStreamingParser<T>
 			mockStream(IMocksControl control, Map<String, Object> controlMap, String key, String name)
 					throws IOException {
 		StreamingParserFactory<T> streamFactory = control.mock(name + "Factory", StreamingParserFactory.class);
-		StreamingParser<T> stream = control.mock(name, StreamingParser.class);
+		MockStreamingParser<T> stream = new MockStreamingParser<>();
 
 		EasyMock.expect(streamFactory.get()).andReturn(stream);
 
@@ -244,33 +191,67 @@ public class FipStartTest {
 		return stream;
 	}
 
-	private static void expectAllClosed(AutoCloseable... toClose) throws Exception {
+	private static void expectAllClosed(MockStreamingParser<?>... toClose) throws Exception {
 		for (var x : toClose) {
-			x.close();
-			EasyMock.expectLastCall();
+			x.expectClosed();
 		}
 	}
 
-	private static void expectAllEmpty(StreamingParser<?>... toBeEmpty) throws Exception {
-		for (var x : toBeEmpty) {
-			EasyMock.expect(x.hasNext()).andStubReturn(false);
-		}
-	}
-
-	private static <T> void mockWith(StreamingParser<T> stream, List<T> results)
+	private static <T> void mockWith(MockStreamingParser<T> stream, List<T> results)
 			throws IOException, ResourceParseException {
-		var it = results.iterator();
-		EasyMock.expect(stream.hasNext()).andStubAnswer(it::hasNext);
-		EasyMock.expect(stream.next()).andAnswer(it::next).times(results.size());
+		stream.addValues(results);
 	}
 
+	@SuppressWarnings("unused")
 	@SafeVarargs
-	private static <T> void mockWith(StreamingParser<T> stream, T... results)
+	private static <T> void mockWith(MockStreamingParser<T> stream, T... results)
 			throws IOException, ResourceParseException {
-		mockWith(stream, Arrays.asList(results));
+		stream.addValues(results);
 	}
 
 	private String polygonId(String prefix, int year) {
 		return String.format("%-23s%4d", prefix, year);
+	}
+
+	private static final void testWith(
+			List<FipPolygon> polygons, List<Map<Layer, FipLayer>> layers, List<Collection<FipSpecies>> species,
+			TestConsumer<FipStart> test
+	) throws Exception {
+
+		var app = new FipStart();
+
+		var controlMap = new HashMap<String, Object>();
+
+		var control = EasyMock.createControl();
+
+		MockStreamingParser<FipPolygon> polygonStream = mockStream(
+				control, controlMap, FipPolygonParser.CONTROL_KEY, "polygonStream"
+		);
+		MockStreamingParser<Map<Layer, FipLayer>> layerStream = mockStream(
+				control, controlMap, FipLayerParser.CONTROL_KEY, "layerStream"
+		);
+		MockStreamingParser<Collection<FipSpecies>> speciesStream = mockStream(
+				control, controlMap, FipSpeciesParser.CONTROL_KEY, "speciesStream"
+		);
+
+		mockWith(polygonStream, polygons);
+		mockWith(layerStream, layers);
+		mockWith(speciesStream, species);
+
+		app.setControlMap(controlMap);
+
+		control.replay();
+
+		test.accept(app);
+
+		control.verify();
+
+		expectAllClosed(polygonStream, layerStream, speciesStream);
+
+	}
+
+	@FunctionalInterface
+	private static interface TestConsumer<T> {
+		public void accept(T unit) throws Exception;
 	}
 }

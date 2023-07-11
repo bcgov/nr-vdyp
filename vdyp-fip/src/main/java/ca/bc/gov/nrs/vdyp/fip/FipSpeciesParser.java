@@ -20,7 +20,6 @@ import ca.bc.gov.nrs.vdyp.io.parse.LineParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseValidException;
 import ca.bc.gov.nrs.vdyp.io.parse.StreamingParserFactory;
-import ca.bc.gov.nrs.vdyp.io.parse.ValueParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.ValueParser;
 import ca.bc.gov.nrs.vdyp.model.Layer;
 

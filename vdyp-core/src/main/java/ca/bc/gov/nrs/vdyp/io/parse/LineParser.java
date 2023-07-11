@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -304,7 +305,7 @@ public class LineParser {
 			}
 			try {
 				var line = nextLine.get()
-						.orElseThrow(() -> new IllegalStateException("Tried to get next entry when none exists"));
+						.orElseThrow(() -> new NoSuchElementException("Tried to get next entry when none exists"));
 				var segments = segmentize(line);
 
 				var entry = parse(segments, control);
