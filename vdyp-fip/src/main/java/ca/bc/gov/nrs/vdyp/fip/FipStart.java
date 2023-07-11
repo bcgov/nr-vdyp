@@ -120,7 +120,8 @@ public class FipStart {
 				// IP_IN = IP_IN+1
 				// if (IP_IN .gt. MAXPOLY) go to 200
 
-				polygonsRead++; // Don't count polygons we aren't processing. This was the behavior in VDYP7
+				polygonsRead++; // Don't count polygons we aren't processing due to mode. This was the behavior
+								// in VDYP7
 
 				// IPASS = 1
 				// CALL FIP_CHK( IPASS, IER)
@@ -200,7 +201,16 @@ public class FipStart {
 	}
 
 	private void checkPolygon(FipPolygon polygon) throws ProcessingException {
-		// TODO Auto-generated method stub
+
+		if (!polygon.getLayers().containsKey(Layer.PRIMARY)) {
+			throw new ProcessingException(
+					String.format(
+							"Polygon %s has no %s layer, or that layer has non-positive height or crown closure.",
+							polygon.getPolygonIdentifier(), Layer.PRIMARY
+					)
+			);
+		}
+
 	}
 
 }

@@ -97,7 +97,7 @@ public class FipStartTest {
 				Collections.singletonMap(
 						layer,
 						new FipLayer(
-								polygonId, layer, 0, 0, 0, 0, polygonId, polygonId, 0, java.util.Optional.empty(),
+								polygonId, layer, 0, 20f, 0.9f, 0, polygonId, polygonId, 0, java.util.Optional.empty(),
 								java.util.Optional.empty()
 						)
 				)
@@ -160,6 +160,74 @@ public class FipStartTest {
 		var ex = assertThrows(ProcessingException.class, () -> app.process());
 
 		assertThat(ex, hasProperty("message", is("Layers file has fewer records than polygon file.")));
+
+		control.verify();
+	}
+
+	@Test
+	public void testPolygonWithNoPrimaryLayer() throws Exception {
+
+		var app = new FipStart();
+
+		var controlMap = new HashMap<String, Object>();
+
+		var control = EasyMock.createControl();
+
+		StreamingParser<FipPolygon> polygonStream = mockStream(
+				control, controlMap, FipPolygonParser.CONTROL_KEY, "polygonStream"
+		);
+		StreamingParser<Map<Layer, FipLayer>> layerStream = mockStream(
+				control, controlMap, FipLayerParser.CONTROL_KEY, "layerStream"
+		);
+		StreamingParser<Collection<FipSpecies>> speciesStream = mockStream(
+				control, controlMap, FipSpeciesParser.CONTROL_KEY, "speciesStream"
+		);
+
+		var polygonId = polygonId("Test Polygon", 2023);
+		var layer = Layer.VETERAN;
+
+		// One polygon with one layer with one species entry, and type is VETERAN
+
+		mockWith(
+				polygonStream,
+				new FipPolygon(
+						polygonId, "0", "BG", java.util.Optional.empty(), Optional.of(FipMode.FIPSTART),
+						java.util.Optional.empty(), 1.0f
+				)
+		);
+		mockWith(
+				layerStream,
+				Collections.singletonMap(
+						layer,
+						new FipLayer(
+								polygonId, layer, 0, 20f, 0.9f, 0, polygonId, polygonId, 0, java.util.Optional.empty(),
+								java.util.Optional.empty()
+						)
+				)
+		);
+		mockWith(
+				speciesStream,
+				Collections.singletonList(new FipSpecies(polygonId, layer, "B", 100.0f, Collections.emptyMap()))
+		);
+
+		expectAllClosed(polygonStream, layerStream, speciesStream);
+
+		app.setControlMap(controlMap);
+
+		control.replay();
+
+		var ex = assertThrows(ProcessingException.class, () -> app.process());
+
+		assertThat(
+				ex,
+				hasProperty(
+						"message",
+						is(
+								"Polygon " + polygonId + " has no " + Layer.PRIMARY
+										+ " layer, or that layer has non-positive height or crown closure."
+						)
+				)
+		);
 
 		control.verify();
 	}
