@@ -20,6 +20,7 @@ import org.easymock.IMocksControl;
 import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.fip.model.FipLayer;
+import ca.bc.gov.nrs.vdyp.fip.model.FipLayerPrimary;
 import ca.bc.gov.nrs.vdyp.fip.model.FipMode;
 import ca.bc.gov.nrs.vdyp.fip.model.FipPolygon;
 import ca.bc.gov.nrs.vdyp.fip.model.FipSpecies;
@@ -56,8 +57,9 @@ public class FipStartTest {
 				Arrays.asList(
 						Collections.singletonMap(
 								layer,
-								new FipLayer(
-										polygonId, layer, 0, 20f, 0.9f, 0, "B", "B", 0, java.util.Optional.empty(),
+								new FipLayerPrimary(
+										polygonId, 20f, 4.8f, 0.9f, 0, "B", "B", 5f, java.util.Optional.empty(),
+										java.util.Optional.empty(), java.util.Optional.empty(),
 										java.util.Optional.empty()
 								)
 						)
@@ -139,9 +141,13 @@ public class FipStartTest {
 	public void testPrimaryLayerTotalAgeLessThanYearsToBreastHeight() throws Exception {
 
 		var polygonId = polygonId("Test Polygon", 2023);
-		var layer = Layer.VETERAN;
+		var layer = Layer.PRIMARY;
 
 		// One polygon with one layer with one species entry, and type is VETERAN
+
+		// FIXME VDYP7 actually tests if total age - YTBH is less than 0.5 but gives an
+		// error that total age is "less than" YTBH. Replicating that for now but
+		// consider changing it.
 
 		testWith(
 				Arrays.asList(
@@ -153,8 +159,9 @@ public class FipStartTest {
 				Arrays.asList(
 						Collections.singletonMap(
 								layer,
-								new FipLayer(
-										polygonId, layer, 0, 20f, 0.9f, 5.0f, "B", "B", 0, java.util.Optional.empty(),
+								new FipLayerPrimary(
+										polygonId, 7f, 20f, 0.9f, 5.0f, "B", "B", 8f, java.util.Optional.empty(),
+										java.util.Optional.empty(), java.util.Optional.empty(),
 										java.util.Optional.empty()
 								)
 						)
@@ -169,8 +176,8 @@ public class FipStartTest {
 							hasProperty(
 									"message",
 									is(
-											"Polygon " + polygonId + " has no " + Layer.PRIMARY
-													+ " layer, or that layer has non-positive height or crown closure."
+											"Polygon " + polygonId + " has " + Layer.PRIMARY
+													+ " layer where total age is less than YTBH."
 									)
 							)
 					);

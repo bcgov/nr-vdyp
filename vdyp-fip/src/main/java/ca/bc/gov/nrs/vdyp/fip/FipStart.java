@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.fip.model.FipLayer;
+import ca.bc.gov.nrs.vdyp.fip.model.FipLayerPrimary;
 import ca.bc.gov.nrs.vdyp.fip.model.FipMode;
 import ca.bc.gov.nrs.vdyp.fip.model.FipPolygon;
 import ca.bc.gov.nrs.vdyp.fip.model.FipSpecies;
@@ -212,6 +213,20 @@ public class FipStart {
 			);
 		}
 
+		var primaryLayer = (FipLayerPrimary) polygon.getLayers().get(Layer.PRIMARY);
+
+		// FIXME VDYP7 actually tests if total age - YTBH is less than 0.5 but gives an
+		// error that total age is "less than" YTBH. Replicating that for now but
+		// consider changing it.
+
+		if (primaryLayer.getAgeTotal() - primaryLayer.getYearsToBreastHeight() < 0.5f) {
+			throw new ProcessingException(
+					String.format(
+							"Polygon %s has %s layer where total age is less than YTBH.",
+							polygon.getPolygonIdentifier(), Layer.PRIMARY
+					)
+			);
+		}
 	}
 
 }
