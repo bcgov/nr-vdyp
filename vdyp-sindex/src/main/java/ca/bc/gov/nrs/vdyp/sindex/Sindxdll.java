@@ -175,7 +175,7 @@ public class Sindxdll {
  * 2016 mar 9  - v1.50 Added Sindex_Y2BH05() which os now the rounded value,
  *               changing Sindex_Y2BH() to be the unrounded value.
  * 2017 feb 2  - v1.51 Added Nigh's 2016 Cwc equation as default.
- * 2023 jun 1 - Translated from C to Java
+ * 2023 jun 1 - Translated like for like from C to Java
  */
 /* @formatter:on */
 
