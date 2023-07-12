@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.sindex;
 
+import ca.bc.gov.nrs.vdyp.common_calculators.*;
 import java.util.NoSuchElementException;
 
 /**
@@ -175,7 +176,8 @@ public class Sindxdll {
  * 2016 mar 9  - v1.50 Added Sindex_Y2BH05() which os now the rounded value,
  *               changing Sindex_Y2BH() to be the unrounded value.
  * 2017 feb 2  - v1.51 Added Nigh's 2016 Cwc equation as default.
- * 2023 jun 1 - Translated like for like from C to Java
+ * 2023 jun 1  - Translated like for like from C to Java
+ * 		jun 23 - Renamed from sindxdll to Sindxdll
  */
 /* @formatter:on */
 
@@ -3749,7 +3751,7 @@ public class Sindxdll {
 	public static short
 			AgeToAge(short cu_index, double age1, short age_type1, double y2bh, double[] age2, short age_type2)
 					throws IllegalArgumentException {
-		age2[0] = age_to_age(cu_index, age1, age_type1, age_type2, y2bh);
+		age2[0] = Age2Age.age_to_age(cu_index, age1, age_type1, age_type2, y2bh);
 		if (age2[0] < 0) {
 			switch ((short) age2[0]) {
 			case SI_ERR_CURVE:
