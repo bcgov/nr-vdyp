@@ -76,7 +76,7 @@ public class FipStartTest {
 				}
 		);
 	}
-	
+
 	@Test
 	public void testPolygonWithNoSpeciesRecord() throws Exception {
 
@@ -221,6 +221,33 @@ public class FipStartTest {
 											"Polygon " + polygonId + " has " + Layer.PRIMARY
 													+ " layer where total age is less than YTBH."
 									)
+							)
+					);
+				}
+		);
+
+	}
+
+	@Test
+	public void testPolygonWithModeFipYoung() throws Exception {
+
+		var polygonId = polygonId("Test Polygon", 2023);
+		var layer = Layer.PRIMARY;
+
+		testWith(Arrays.asList(getTestPolygon(polygonId, x -> {
+			x.setModeFip(Optional.of(FipMode.FIPYOUNG));
+		})), //
+				Arrays.asList(layerMap(getTestPrimaryLayer(polygonId, valid()))), //
+				Arrays.asList(Collections.singletonList(getTestSpecies(polygonId, layer, valid()))), //
+				app -> {
+
+					var ex = assertThrows(ProcessingException.class, () -> app.process());
+
+					assertThat(
+							ex,
+							hasProperty(
+									"message",
+									is("Polygon " + polygonId + " is using unsupported mode " + FipMode.FIPYOUNG + ".")
 							)
 					);
 				}

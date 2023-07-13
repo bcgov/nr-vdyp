@@ -249,6 +249,13 @@ public class FipStart {
 					)
 			);
 		}
+
+		if (polygon.getModeFip().map(x -> x == FipMode.FIPYOUNG).orElse(false)) {
+			throw validationError(
+					"Polygon %s is using unsupported mode %s.", polygon.getPolygonIdentifier(), FipMode.FIPYOUNG
+			);
+		}
+
 	}
 
 	private static <E extends Throwable> void throwIfPresent(Optional<E> opt) throws E {
