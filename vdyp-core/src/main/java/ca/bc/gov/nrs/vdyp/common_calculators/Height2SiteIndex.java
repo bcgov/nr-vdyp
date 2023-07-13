@@ -2,18 +2,22 @@ package ca.bc.gov.nrs.vdyp.common_calculators;
 
 import java.lang.Math;
 import ca.bc.gov.nrs.vdyp.common_calculators.*;
-
+/* @formatter:off */
 /**
- * ht2si.c - given age and height, computes site index. - if age is total, site
- * index and years to breast height are iterated until stable. - error codes
- * (returned as site index value): SI_ERR_LT13: height < 1.3 for breast height
- * age SI_ERR_GI_MIN: bhage < 0.5 years SI_ERR_GI_MAX: variable height growth
- * intercept formulation; bhage > range SI_ERR_NO_ANS: iteration could not
- * converge (projected site index > 999) SI_ERR_CURVE: unknown curve index
- * SI_ERR_GI_TOT: cannot compute growth intercept when using total age
+ * ht2si.c 
+ *  * - given age and height, computes site index.
+ * - if age is total, site index and years to breast height are iterated until
+ *   stable.
+ * - error codes (returned as site index value):
+ *     SI_ERR_LT13: height < 1.3 for breast height age
+ *     SI_ERR_GI_MIN: bhage < 0.5 years
+ *     SI_ERR_GI_MAX: variable height growth intercept formulation;
+ *         bhage > range
+ *     SI_ERR_NO_ANS: iteration could not converge (projected site index > 999)
+ *     SI_ERR_CURVE: unknown curve index
+ *     SI_ERR_GI_TOT: cannot compute growth intercept when using total age
  */
 public class Height2SiteIndex {
-/* @formatter:off */
 /*
  * 1990 may 31
  *      jun 8  - Added proper height to site index computation for Fdi Vander
@@ -142,7 +146,6 @@ public class Height2SiteIndex {
 	/*
 	 * site index estimation (from height and age) types
 	 */
-	private static final int SI_EST_ITERATE = 0;
 	private static final int SI_EST_DIRECT = 1;
 
 	private static final int SI_ERR_LT13 = -1;
@@ -150,190 +153,16 @@ public class Height2SiteIndex {
 	private static final int SI_ERR_GI_MAX = -3;
 	private static final int SI_ERR_NO_ANS = -4;
 	private static final int SI_ERR_CURVE = -5;
-	private static final int SI_ERR_CLASS = -6;
-	private static final int SI_ERR_FIZ = -7;
-	private static final int SI_ERR_CODE = -8;
 	private static final int SI_ERR_GI_TOT = -9;
-	private static final int SI_ERR_SPEC = -10;
-	private static final int SI_ERR_AGE_TYPE = -11;
 
 	/* define species and equation indices */
-	private static final int SI_SPEC_A = 0;
-	private static final int SI_SPEC_ABAL = 1;
-	private static final int SI_SPEC_ABCO = 2;
-	private static final int SI_SPEC_AC = 3;
-	private static final int SI_SPEC_ACB = 4;
-	private static final int SI_SPEC_ACT = 5;
-	private static final int SI_SPEC_AD = 6;
-	private static final int SI_SPEC_AH = 7;
-	private static final int SI_SPEC_AT = 8;
-	private static final int SI_SPEC_AX = 9;
-	private static final int SI_SPEC_B = 10;
-	private static final int SI_SPEC_BA = 11;
-	private static final int SI_SPEC_BB = 12;
-	private static final int SI_SPEC_BC = 13;
-	private static final int SI_SPEC_BG = 14;
-	private static final int SI_SPEC_BI = 15;
-	private static final int SI_SPEC_BL = 16;
-	private static final int SI_SPEC_BM = 17;
-	private static final int SI_SPEC_BP = 18;
-	private static final int SI_SPEC_C = 19;
-	private static final int SI_SPEC_CI = 20;
-	private static final int SI_SPEC_CP = 21;
-	private static final int SI_SPEC_CW = 22;
-	private static final int SI_SPEC_CWC = 23;
-	private static final int SI_SPEC_CWI = 24;
-	private static final int SI_SPEC_CY = 25;
-	private static final int SI_SPEC_D = 26;
-	private static final int SI_SPEC_DG = 27;
-	private static final int SI_SPEC_DM = 28;
-	private static final int SI_SPEC_DR = 29;
-	private static final int SI_SPEC_E = 30;
-	private static final int SI_SPEC_EA = 31;
-	private static final int SI_SPEC_EB = 32;
-	private static final int SI_SPEC_EE = 33;
-	private static final int SI_SPEC_EP = 34;
-	private static final int SI_SPEC_ES = 35;
-	private static final int SI_SPEC_EW = 36;
-	private static final int SI_SPEC_EXP = 37;
-	private static final int SI_SPEC_FD = 38;
-	private static final int SI_SPEC_FDC = 39;
-	private static final int SI_SPEC_FDI = 40;
-	private static final int SI_SPEC_G = 41;
-	private static final int SI_SPEC_GP = 42;
-	private static final int SI_SPEC_GR = 43;
-	private static final int SI_SPEC_H = 44;
-	private static final int SI_SPEC_HM = 45;
-	private static final int SI_SPEC_HW = 46;
-	private static final int SI_SPEC_HWC = 47;
-	private static final int SI_SPEC_HWI = 48;
-	private static final int SI_SPEC_HXM = 49;
-	private static final int SI_SPEC_IG = 50;
-	private static final int SI_SPEC_IS = 51;
-	private static final int SI_SPEC_J = 52;
-	private static final int SI_SPEC_JR = 53;
-	private static final int SI_SPEC_K = 54;
-	private static final int SI_SPEC_KC = 55;
-	private static final int SI_SPEC_L = 56;
-	private static final int SI_SPEC_LA = 57;
-	private static final int SI_SPEC_LE = 58;
-	private static final int SI_SPEC_LT = 59;
-	private static final int SI_SPEC_LW = 60;
-	private static final int SI_SPEC_M = 61;
-	private static final int SI_SPEC_MB = 62;
-	private static final int SI_SPEC_ME = 63;
-	private static final int SI_SPEC_MN = 64;
-	private static final int SI_SPEC_MR = 65;
-	private static final int SI_SPEC_MS = 66;
-	private static final int SI_SPEC_MV = 67;
-	private static final int SI_SPEC_OA = 68;
-	private static final int SI_SPEC_OB = 69;
-	private static final int SI_SPEC_OC = 70;
-	private static final int SI_SPEC_OD = 71;
-	private static final int SI_SPEC_OE = 72;
-	private static final int SI_SPEC_OF = 73;
-	private static final int SI_SPEC_OG = 74;
-	private static final int SI_SPEC_P = 75;
-	private static final int SI_SPEC_PA = 76;
-	private static final int SI_SPEC_PF = 77;
-	private static final int SI_SPEC_PJ = 78;
-	private static final int SI_SPEC_PL = 79;
-	private static final int SI_SPEC_PLC = 80;
-	private static final int SI_SPEC_PLI = 81;
-	private static final int SI_SPEC_PM = 82;
-	private static final int SI_SPEC_PR = 83;
-	private static final int SI_SPEC_PS = 84;
-	private static final int SI_SPEC_PW = 85;
-	private static final int SI_SPEC_PXJ = 86;
-	private static final int SI_SPEC_PY = 87;
-	private static final int SI_SPEC_Q = 88;
-	private static final int SI_SPEC_QE = 89;
-	private static final int SI_SPEC_QG = 90;
-	private static final int SI_SPEC_R = 91;
-	private static final int SI_SPEC_RA = 92;
-	private static final int SI_SPEC_S = 93;
-	private static final int SI_SPEC_SA = 94;
-	private static final int SI_SPEC_SB = 95;
-	private static final int SI_SPEC_SE = 96;
-	private static final int SI_SPEC_SI = 97;
-	private static final int SI_SPEC_SN = 98;
-	private static final int SI_SPEC_SS = 99;
-	private static final int SI_SPEC_SW = 100;
-	private static final int SI_SPEC_SX = 101;
-	private static final int SI_SPEC_SXB = 102;
-	private static final int SI_SPEC_SXE = 103;
-	private static final int SI_SPEC_SXL = 104;
-	private static final int SI_SPEC_SXS = 105;
-	private static final int SI_SPEC_SXW = 106;
-	private static final int SI_SPEC_SXX = 107;
-	private static final int SI_SPEC_T = 108;
-	private static final int SI_SPEC_TW = 109;
-	private static final int SI_SPEC_U = 110;
-	private static final int SI_SPEC_UA = 111;
-	private static final int SI_SPEC_UP = 112;
-	private static final int SI_SPEC_V = 113;
-	private static final int SI_SPEC_VB = 114;
-	private static final int SI_SPEC_VP = 115;
-	private static final int SI_SPEC_VS = 116;
-	private static final int SI_SPEC_VV = 117;
-	private static final int SI_SPEC_W = 118;
-	private static final int SI_SPEC_WA = 119;
-	private static final int SI_SPEC_WB = 120;
-	private static final int SI_SPEC_WD = 121;
-	private static final int SI_SPEC_WI = 122;
-	private static final int SI_SPEC_WP = 123;
-	private static final int SI_SPEC_WS = 124;
-	private static final int SI_SPEC_WT = 125;
-	private static final int SI_SPEC_X = 126;
-	private static final int SI_SPEC_XC = 127;
-	private static final int SI_SPEC_XH = 128;
-	private static final int SI_SPEC_Y = 129;
-	private static final int SI_SPEC_YC = 130;
-	private static final int SI_SPEC_YP = 131;
-	private static final int SI_SPEC_Z = 132;
-	private static final int SI_SPEC_ZC = 133;
-	private static final int SI_SPEC_ZH = 134;
-	private static final int SI_MAX_SPECIES = 135;
-
-	private static final int SI_ACB_HUANGAC = 97;
-	private static final int SI_ACB_HUANG = 0;
-	private static final int SI_ACT_THROWERAC = 103;
-	private static final int SI_ACT_THROWER = 1;
-	private static final int SI_AT_CHEN = 74;
-	private static final int SI_AT_CIESZEWSKI = 3;
 	private static final int SI_AT_GOUDIE = 4;
-	private static final int SI_AT_HUANG = 2;
-	private static final int SI_AT_NIGH = 92;
 	private static final int SI_BA_DILUCCA = 5;
-	private static final int SI_BA_KURUCZ82AC = 102;
-	private static final int SI_BA_KURUCZ82 = 8;
-	private static final int SI_BA_KURUCZ86 = 7;
 	private static final int SI_BA_NIGHGI = 117;
-	private static final int SI_BA_NIGH = 118;
-	private static final int SI_BL_CHENAC = 93;
-	private static final int SI_BL_CHEN = 73;
-	private static final int SI_BL_KURUCZ82 = 10;
 	private static final int SI_BL_THROWERGI = 9;
-	private static final int SI_BP_CURTISAC = 94;
-	private static final int SI_BP_CURTIS = 78;
-	private static final int SI_CWC_BARKER = 12;
-	private static final int SI_CWC_KURUCZAC = 101;
-	private static final int SI_CWC_KURUCZ = 11;
-	private static final int SI_CWC_NIGH = 122;
-	private static final int SI_CWI_NIGH = 77;
 	private static final int SI_CWI_NIGHGI = 84;
-	private static final int SI_DR_HARRING = 14;
 	private static final int SI_DR_NIGH = 13;
-	private static final int SI_EP_NIGH = 116;
-	private static final int SI_FDC_BRUCEAC = 100;
-	private static final int SI_FDC_BRUCE = 16;
-	private static final int SI_FDC_BRUCENIGH = 89;
-	private static final int SI_FDC_COCHRAN = 17;
-	private static final int SI_FDC_KING = 18;
 	private static final int SI_FDC_NIGHGI = 15;
-	private static final int SI_FDC_NIGHTA = 88;
-	private static final int SI_FDI_HUANG_NAT = 21;
-	private static final int SI_FDI_HUANG_PLA = 20;
 	private static final int SI_FDI_MILNER = 22;
 	private static final int SI_FDI_MONS_DF = 26;
 	private static final int SI_FDI_MONS_GF = 27;
@@ -341,85 +170,31 @@ public class Height2SiteIndex {
 	private static final int SI_FDI_MONS_WH = 29;
 	private static final int SI_FDI_MONS_WRC = 28;
 	private static final int SI_FDI_NIGHGI = 19;
-	private static final int SI_FDI_THROWERAC = 96;
 	private static final int SI_FDI_THROWER = 23;
 	private static final int SI_FDI_VDP_MONT = 24;
 	private static final int SI_FDI_VDP_WASH = 25;
-	private static final int SI_HM_MEANSAC = 95;
 	private static final int SI_HM_MEANS = 86;
-	private static final int SI_HWC_BARKER = 33;
-	private static final int SI_HWC_FARR = 32;
 	private static final int SI_HWC_NIGHGI = 31;
 	private static final int SI_HWC_NIGHGI99 = 79;
-	private static final int SI_HWC_WILEYAC = 99;
-	private static final int SI_HWC_WILEY = 34;
-	private static final int SI_HWC_WILEY_BC = 35;
-	private static final int SI_HWC_WILEY_MB = 36;
-	private static final int SI_HWI_NIGH = 37;
 	private static final int SI_HWI_NIGHGI = 38;
 	private static final int SI_LW_MILNER = 39;
-	private static final int SI_LW_NIGH = 90;
 	private static final int SI_LW_NIGHGI = 82;
-	private static final int SI_PJ_HUANG = 113;
-	private static final int SI_PJ_HUANGAC = 114;
-	private static final int SI_PLI_CIESZEWSKI = 47;
 	private static final int SI_PLI_DEMPSTER = 50;
-	private static final int SI_PLI_GOUDIE_DRY = 48;
-	private static final int SI_PLI_GOUDIE_WET = 49;
-	private static final int SI_PLI_HUANG_NAT = 44;
-	private static final int SI_PLI_HUANG_PLA = 43;
 	private static final int SI_PLI_MILNER = 46;
 	private static final int SI_PLI_NIGHGI97 = 42;
-	private static final int SI_PLI_NIGHTA98 = 41;
 	private static final int SI_PLI_THROWER = 45;
-	private static final int SI_PLI_THROWNIGH = 40;
-	private static final int SI_PL_CHEN = 76;
-	private static final int SI_PW_CURTISAC = 98;
 	private static final int SI_PW_CURTIS = 51;
-	private static final int SI_PY_HANNAC = 104;
-	private static final int SI_PY_HANN = 53;
 	private static final int SI_PY_MILNER = 52;
-	private static final int SI_PY_NIGH = 107;
 	private static final int SI_PY_NIGHGI = 108;
-	private static final int SI_SB_CIESZEWSKI = 55;
 	private static final int SI_SB_DEMPSTER = 57;
-	private static final int SI_SB_HUANG = 54;
-	private static final int SI_SB_KER = 56;
-	private static final int SI_SB_NIGH = 91;
-	private static final int SI_SE_CHENAC = 105;
-	private static final int SI_SE_CHEN = 87;
 	private static final int SI_SE_NIGHGI = 120;
-	private static final int SI_SE_NIGH = 121;
-	private static final int SI_SS_BARKER = 62;
-	private static final int SI_SS_FARR = 61;
-	private static final int SI_SS_GOUDIE = 60;
-	private static final int SI_SS_NIGH = 59;
 	private static final int SI_SS_NIGHGI = 58;
 	private static final int SI_SS_NIGHGI99 = 80;
-	private static final int SI_SW_CIESZEWSKI = 67;
 	private static final int SI_SW_DEMPSTER = 72;
-	private static final int SI_SW_GOUDIE_NAT = 71;
-	private static final int SI_SW_GOUDIE_NATAC = 106;
-	private static final int SI_SW_GOUDIE_PLA = 70;
-	private static final int SI_SW_GOUDIE_PLAAC = 112;
-	private static final int SI_SW_GOUDNIGH = 85;
 	private static final int SI_SW_HU_GARCIA = 119;
-	private static final int SI_SW_HUANG_NAT = 65;
-	private static final int SI_SW_HUANG_PLA = 64;
-	private static final int SI_SW_KER_NAT = 69;
-	private static final int SI_SW_KER_PLA = 68;
 	private static final int SI_SW_NIGHGI = 63;
 	private static final int SI_SW_NIGHGI99 = 81;
 	private static final int SI_SW_NIGHGI2004 = 115;
-	private static final int SI_SW_NIGHTA = 83;
-	private static final int SI_SW_THROWER = 66;
-	private static final int SI_MAX_CURVES = 123;
-	/* not used, but must be defined for array positioning */
-	private static final int SI_BB_KER = 6;
-	private static final int SI_DR_CHEN = 75;
-	private static final int SI_PLI_NIGHTA2004 = 109;
-	private static final int SI_SE_NIGHTA = 110;
-	private static final int SI_SW_NIGHTA2004 = 111;
 
 	public static double ppow(double x, double y) {
 		return (x <= 0) ? 0.0 : Math.pow(x, y);
@@ -524,14 +299,14 @@ public class Height2SiteIndex {
 
 					index = height * x1 / x2;
 					break;
-				// #undef LA_MILNER Removed since never used again?
-				// #define LA_MILNER 1 Removed since never used again?
-				case SI_LA_MILNER:
-					// #undef LT_MILNER
-					// #define LT_MILNER 1
-				case SI_LT_MILNER:
-					// #undef LW_MILNER
-					// #define LW_MILNER 1
+				// #undef LA_MILNER 			Removed since never used again?
+				// #define LA_MILNER 1 			Removed since never used again?
+				//case SI_LA_MILNER:			Couldn't find constant so removed
+					// #undef LT_MILNER 		Removed since never used again?
+					// #define LT_MILNER 1		Removed since never used again?
+				//case SI_LT_MILNER:			Couldn't find constant so removed
+					// #undef LW_MILNER			Removed since never used again?
+					// #define LW_MILNER 1 		Removed since never used again?
 				case SI_LW_MILNER:
 					/* convert to imperial */
 					height /= 0.3048;
@@ -606,15 +381,15 @@ public class Height2SiteIndex {
 					index = 1.3 + 4.9038 + 0.8118 * ht_13 - 0.3638 * log_bhage * log_bhage + 24.0308 * ht_13 / bhage
 							- 0.1021 * ht_13 * llog(ht_13);
 					break;
-				// #undef SI_AT_GOUDIE
-				// #define SI_AT_GOUDIE 1
-				case SI_EA_GOUDIE:
+				// #undef SI_AT_GOUDIE 			Removed since never used again?
+				// #define SI_AT_GOUDIE 1		Removed since never used again?
+				//case SI_EA_GOUDIE:			Couldn't find constant so removed
 
-					// #undef SI_AT_GOUDIE
-					// #define SI_AT_GOUDIE 1
-				case SI_EP_GOUDIE:
-					// #undef SI_AT_GOUDIE
-					// #define SI_AT_GOUDIE 1
+					// #undef SI_AT_GOUDIE		Removed since never used again?
+					// #define SI_AT_GOUDIE 1	Removed since never used again?
+				//case SI_EP_GOUDIE:			Couldn't find constant so removed
+					// #undef SI_AT_GOUDIE		Removed since never used again?
+					// #define SI_AT_GOUDIE 1	Removed since never used again?
 				case SI_AT_GOUDIE:
 					log_bhage = Math.log(bhage);
 
