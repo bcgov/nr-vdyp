@@ -76,6 +76,24 @@ public class FipStartTest {
 				}
 		);
 	}
+	
+	@Test
+	public void testPolygonWithNoSpeciesRecord() throws Exception {
+
+		var polygonId = polygonId("Test Polygon", 2023);
+
+		testWith(
+				Arrays.asList(getTestPolygon(polygonId, valid())), //
+				Arrays.asList(layerMap(getTestPrimaryLayer(polygonId, valid()))), //
+				Collections.emptyList(), //
+				app -> {
+					var ex = assertThrows(ProcessingException.class, () -> app.process());
+
+					assertThat(ex, hasProperty("message", is("Species file has fewer records than polygon file.")));
+
+				}
+		);
+	}
 
 	@Test
 	public void testPolygonWithNoPrimaryLayer() throws Exception {
