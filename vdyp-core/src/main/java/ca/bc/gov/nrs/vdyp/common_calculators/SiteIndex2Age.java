@@ -1,7 +1,6 @@
 package ca.bc.gov.nrs.vdyp.common_calculators;
-
-public class SiteIndex2Age {
-    /*
+/* @formatter:off */
+/**
  * si2age.c
  * - given site index and site height, computes age.
  * - error codes (returned as age value):
@@ -9,7 +8,11 @@ public class SiteIndex2Age {
  *     SI_ERR_NO_ANS: iteration could not converge (or projected age > 999)
  *     SI_ERR_CURVE: unknown curve index
  *     SI_ERR_GI_TOT: cannot compute growth intercept when using total age
- *
+ */
+/* @formatter:on */
+public class SiteIndex2Age {
+/* @formatter:off */
+/* 
  * 1990 aug 15 - Created.
  * 1991 jan 15 - Added check for no convergence.
  *      jul 23 - Added code to compute age directly for Bruce's Fdc,
@@ -63,6 +66,7 @@ public class SiteIndex2Age {
  *      apr 16 - Added 2010 Sw Hu and Garcia.
  * 2016 mar 9  - Added parameter to index_to_height().
  */
+/* @formatter:on */
 
 #include <stdio.h>
 #include <math.h>

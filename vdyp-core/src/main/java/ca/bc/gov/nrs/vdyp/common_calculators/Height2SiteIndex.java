@@ -5,7 +5,7 @@ import ca.bc.gov.nrs.vdyp.common_calculators.*;
 /* @formatter:off */
 /**
  * ht2si.c 
- *  * - given age and height, computes site index.
+ *  - given age and height, computes site index.
  * - if age is total, site index and years to breast height are iterated until
  *   stable.
  * - error codes (returned as site index value):
@@ -17,7 +17,9 @@ import ca.bc.gov.nrs.vdyp.common_calculators.*;
  *     SI_ERR_CURVE: unknown curve index
  *     SI_ERR_GI_TOT: cannot compute growth intercept when using total age
  */
+/* @formatter:on */
 public class Height2SiteIndex {
+/* @formatter:off */
 /*
  * 1990 may 31
  *      jun 8  - Added proper height to site index computation for Fdi Vander
