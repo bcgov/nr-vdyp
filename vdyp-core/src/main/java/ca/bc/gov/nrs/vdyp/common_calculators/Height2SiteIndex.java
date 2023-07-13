@@ -1,4 +1,7 @@
 package ca.bc.gov.nrs.vdyp.common_calculators;
+
+import java.lang.Math;
+import ca.bc.gov.nrs.vdyp.common_calculators.*;
 /**
  * ht2si.c
  * - given age and height, computes site index.
@@ -47,7 +50,7 @@ public class Height2SiteIndex {
  *               when computing site index from height and total age.
  *             - Completely removed ta_height_to_index().  Site_iterate() was
  *               modified to allow it to perform ta_...()'s function.
- *          15 - Crucial bug fix in ending of site_iterate() loop.  Absolute
+ *          15 - Crucial bug fix ig of site_iterate() loop.  Absolute
  *               value of step value must be checked.
  *          16 - Added Fdc, Cwi and Fdi, by Hegyi.
  *             - Added Hw, Cw, and Ss Barker.
@@ -58,7 +61,7 @@ public class Height2SiteIndex {
  *          12 - Added Curtis' Pw.
  *          14 - Bug fix in Curtis' Pw.
  *      mar 15 - Removed Goudie's Pw.
- *      apr 2  - Added care to taking pow() and log() of numbers.
+ *      apr 2  - Added care to taking Math.pow() and log() of numbers.
  *      jun 19 - Split balsam into coast and interior.
  *          21 - Added Ker & Bowling's Bac, Sb, and Sw.
  *      aug 2  - Added direct ht-to-si equation for Thrower's Fdi.
@@ -134,87 +137,366 @@ public class Height2SiteIndex {
  */
 /* @formatter:on */
 
- #define PPOW(x,y) \
-   (((x) <= 0.0) ? 0.0 : pow (x, y))
+  //Taken from sindex.h
+  /*
+	 * age types
+	 */
+  private static final short SI_AT_TOTAL   = 0; 
+  private static final short SI_AT_BREAST  = 1; 
+	/*
+	 * site index estimation (from height and age) types
+	 */
+  private static final int SI_EST_ITERATE = 0; 
+  private static final int SI_EST_DIRECT  = 1; 
+
+  private static final int SI_ERR_LT13 = -1;
+	private static final int SI_ERR_GI_MIN = -2;
+	private static final int SI_ERR_GI_MAX = -3;
+	private static final int SI_ERR_NO_ANS = -4;
+	private static final int SI_ERR_CURVE = -5;
+	private static final int SI_ERR_CLASS = -6;
+	private static final int SI_ERR_FIZ = -7;
+	private static final int SI_ERR_CODE = -8;
+	private static final int SI_ERR_GI_TOT = -9;
+	private static final int SI_ERR_SPEC = -10;
+	private static final int SI_ERR_AGE_TYPE = -11;
+
+  /* define species and equation indices */
+  private static final int SI_SPEC_A     = 0;
+  private static final int SI_SPEC_ABAL  = 1;
+  private static final int SI_SPEC_ABCO  = 2;
+  private static final int SI_SPEC_AC    = 3;
+  private static final int SI_SPEC_ACB   = 4;
+  private static final int SI_SPEC_ACT   = 5;
+  private static final int SI_SPEC_AD    = 6;
+  private static final int SI_SPEC_AH    = 7;
+  private static final int SI_SPEC_AT    = 8;
+  private static final int SI_SPEC_AX    = 9;
+  private static final int SI_SPEC_B    = 10;
+  private static final int SI_SPEC_BA   = 11;
+  private static final int SI_SPEC_BB   = 12;
+  private static final int SI_SPEC_BC   = 13;
+  private static final int SI_SPEC_BG   = 14;
+  private static final int SI_SPEC_BI   = 15;
+  private static final int SI_SPEC_BL   = 16;
+  private static final int SI_SPEC_BM   = 17;
+  private static final int SI_SPEC_BP   = 18;
+  private static final int SI_SPEC_C    = 19;
+  private static final int SI_SPEC_CI   = 20;
+  private static final int SI_SPEC_CP   = 21;
+  private static final int SI_SPEC_CW   = 22;
+  private static final int SI_SPEC_CWC  = 23;
+  private static final int SI_SPEC_CWI  = 24;
+  private static final int SI_SPEC_CY   = 25;
+  private static final int SI_SPEC_D    = 26;
+  private static final int SI_SPEC_DG   = 27;
+  private static final int SI_SPEC_DM   = 28;
+  private static final int SI_SPEC_DR   = 29;
+  private static final int SI_SPEC_E    = 30;
+  private static final int SI_SPEC_EA   = 31;
+  private static final int SI_SPEC_EB   = 32;
+  private static final int SI_SPEC_EE   = 33;
+  private static final int SI_SPEC_EP   = 34;
+  private static final int SI_SPEC_ES   = 35;
+  private static final int SI_SPEC_EW   = 36;
+  private static final int SI_SPEC_EXP  = 37;
+  private static final int SI_SPEC_FD   = 38;
+  private static final int SI_SPEC_FDC  = 39;
+  private static final int SI_SPEC_FDI  = 40;
+  private static final int SI_SPEC_G    = 41;
+  private static final int SI_SPEC_GP   = 42;
+  private static final int SI_SPEC_GR   = 43;
+  private static final int SI_SPEC_H    = 44;
+  private static final int SI_SPEC_HM   = 45;
+  private static final int SI_SPEC_HW   = 46;
+  private static final int SI_SPEC_HWC  = 47;
+  private static final int SI_SPEC_HWI  = 48;
+  private static final int SI_SPEC_HXM  = 49;
+  private static final int SI_SPEC_IG   = 50;
+  private static final int SI_SPEC_IS   = 51;
+  private static final int SI_SPEC_J    = 52;
+  private static final int SI_SPEC_JR   = 53;
+  private static final int SI_SPEC_K    = 54;
+  private static final int SI_SPEC_KC   = 55;
+  private static final int SI_SPEC_L    = 56;
+  private static final int SI_SPEC_LA   = 57;
+  private static final int SI_SPEC_LE   = 58;
+  private static final int SI_SPEC_LT   = 59;
+  private static final int SI_SPEC_LW   = 60;
+  private static final int SI_SPEC_M    = 61;
+  private static final int SI_SPEC_MB   = 62;
+  private static final int SI_SPEC_ME   = 63;
+  private static final int SI_SPEC_MN   = 64;
+  private static final int SI_SPEC_MR   = 65;
+  private static final int SI_SPEC_MS   = 66;
+  private static final int SI_SPEC_MV   = 67;
+  private static final int SI_SPEC_OA   = 68;
+  private static final int SI_SPEC_OB   = 69;
+  private static final int SI_SPEC_OC   = 70;
+  private static final int SI_SPEC_OD   = 71;
+  private static final int SI_SPEC_OE   = 72;
+  private static final int SI_SPEC_OF   = 73;
+  private static final int SI_SPEC_OG   = 74;
+  private static final int SI_SPEC_P    = 75;
+  private static final int SI_SPEC_PA   = 76;
+  private static final int SI_SPEC_PF   = 77;
+  private static final int SI_SPEC_PJ   = 78;
+  private static final int SI_SPEC_PL   = 79;
+  private static final int SI_SPEC_PLC  = 80;
+  private static final int SI_SPEC_PLI  = 81;
+  private static final int SI_SPEC_PM   = 82;
+  private static final int SI_SPEC_PR   = 83;
+  private static final int SI_SPEC_PS   = 84;
+  private static final int SI_SPEC_PW   = 85;
+  private static final int SI_SPEC_PXJ  = 86;
+  private static final int SI_SPEC_PY   = 87;
+  private static final int SI_SPEC_Q    = 88;
+  private static final int SI_SPEC_QE   = 89;
+  private static final int SI_SPEC_QG   = 90;
+  private static final int SI_SPEC_R    = 91;
+  private static final int SI_SPEC_RA   = 92;
+  private static final int SI_SPEC_S    = 93;
+  private static final int SI_SPEC_SA   = 94;
+  private static final int SI_SPEC_SB   = 95;
+  private static final int SI_SPEC_SE   = 96;
+  private static final int SI_SPEC_SI   = 97;
+  private static final int SI_SPEC_SN   = 98;
+  private static final int SI_SPEC_SS   = 99;
+  private static final int SI_SPEC_SW  = 100;
+  private static final int SI_SPEC_SX  = 101;
+  private static final int SI_SPEC_SXB = 102;
+  private static final int SI_SPEC_SXE = 103;
+  private static final int SI_SPEC_SXL = 104;
+  private static final int SI_SPEC_SXS = 105;
+  private static final int SI_SPEC_SXW = 106;
+  private static final int SI_SPEC_SXX = 107;
+  private static final int SI_SPEC_T   = 108;
+  private static final int SI_SPEC_TW  = 109;
+  private static final int SI_SPEC_U   = 110;
+  private static final int SI_SPEC_UA  = 111;
+  private static final int SI_SPEC_UP  = 112;
+  private static final int SI_SPEC_V   = 113;
+  private static final int SI_SPEC_VB  = 114;
+  private static final int SI_SPEC_VP  = 115;
+  private static final int SI_SPEC_VS  = 116;
+  private static final int SI_SPEC_VV  = 117;
+  private static final int SI_SPEC_W   = 118;
+  private static final int SI_SPEC_WA  = 119;
+  private static final int SI_SPEC_WB  = 120;
+  private static final int SI_SPEC_WD  = 121;
+  private static final int SI_SPEC_WI  = 122;
+  private static final int SI_SPEC_WP  = 123;
+  private static final int SI_SPEC_WS  = 124;
+  private static final int SI_SPEC_WT  = 125;
+  private static final int SI_SPEC_X   = 126;
+  private static final int SI_SPEC_XC  = 127;
+  private static final int SI_SPEC_XH  = 128;
+  private static final int SI_SPEC_Y   = 129;
+  private static final int SI_SPEC_YC  = 130;
+  private static final int SI_SPEC_YP  = 131;
+  private static final int SI_SPEC_Z   = 132;
+  private static final int SI_SPEC_ZC  = 133;
+  private static final int SI_SPEC_ZH  = 134;
+  private static final int SI_MAX_SPECIES = 135;
+  
+  private static final int SI_ACB_HUANGAC        = 97;
+  private static final int SI_ACB_HUANG          = 0;
+  private static final int SI_ACT_THROWERAC      = 103;
+  private static final int SI_ACT_THROWER        = 1;
+  private static final int SI_AT_CHEN            = 74;
+  private static final int SI_AT_CIESZEWSKI      =  3;
+  private static final int SI_AT_GOUDIE          =  4;
+  private static final int SI_AT_HUANG           =  2;
+  private static final int SI_AT_NIGH            = 92;
+  private static final int SI_BA_DILUCCA         =   5;
+  private static final int SI_BA_KURUCZ82AC      = 102;
+  private static final int SI_BA_KURUCZ82        =  8;
+  private static final int SI_BA_KURUCZ86        =  7;
+  private static final int SI_BA_NIGHGI          = 117;
+  private static final int SI_BA_NIGH            = 118;
+  private static final int SI_BL_CHENAC          = 93;
+  private static final int SI_BL_CHEN            = 73;
+  private static final int SI_BL_KURUCZ82        = 10;
+  private static final int SI_BL_THROWERGI       =  9;
+  private static final int SI_BP_CURTISAC        = 94;
+  private static final int SI_BP_CURTIS          = 78;
+  private static final int SI_CWC_BARKER         = 12;
+  private static final int SI_CWC_KURUCZAC       = 101;
+  private static final int SI_CWC_KURUCZ         = 11;
+  private static final int SI_CWC_NIGH           = 122;
+  private static final int SI_CWI_NIGH           = 77;
+  private static final int SI_CWI_NIGHGI         = 84;
+  private static final int SI_DR_HARRING         = 14;
+  private static final int SI_DR_NIGH            = 13;
+  private static final int SI_EP_NIGH             = 116;
+  private static final int SI_FDC_BRUCEAC         = 100;
+  private static final int SI_FDC_BRUCE          = 16;
+  private static final int SI_FDC_BRUCENIGH      = 89;
+  private static final int SI_FDC_COCHRAN        = 17;
+  private static final int SI_FDC_KING           = 18;
+  private static final int SI_FDC_NIGHGI         = 15;
+  private static final int SI_FDC_NIGHTA         = 88;
+  private static final int SI_FDI_HUANG_NAT      = 21;
+  private static final int SI_FDI_HUANG_PLA      = 20;
+  private static final int SI_FDI_MILNER         = 22;
+  private static final int SI_FDI_MONS_DF        = 26;
+  private static final int SI_FDI_MONS_GF        = 27;
+  private static final int SI_FDI_MONS_SAF       = 30;
+  private static final int SI_FDI_MONS_WH        = 29;
+  private static final int SI_FDI_MONS_WRC       = 28;
+  private static final int SI_FDI_NIGHGI         = 19;
+  private static final int SI_FDI_THROWERAC      = 96;
+  private static final int SI_FDI_THROWER        = 23;
+  private static final int SI_FDI_VDP_MONT       = 24;
+  private static final int SI_FDI_VDP_WASH       = 25;
+  private static final int SI_HM_MEANSAC         = 95;
+  private static final int SI_HM_MEANS           = 86;
+  private static final int SI_HWC_BARKER         = 33;
+  private static final int SI_HWC_FARR           = 32;
+  private static final int SI_HWC_NIGHGI         = 31;
+  private static final int SI_HWC_NIGHGI99       = 79;
+  private static final int SI_HWC_WILEYAC        = 99;
+  private static final int SI_HWC_WILEY          = 34;
+  private static final int SI_HWC_WILEY_BC       = 35;
+  private static final int SI_HWC_WILEY_MB       = 36;
+  private static final int SI_HWI_NIGH           = 37;
+  private static final int SI_HWI_NIGHGI         = 38;
+  private static final int SI_LW_MILNER          = 39;
+  private static final int SI_LW_NIGH            = 90;
+  private static final int SI_LW_NIGHGI          = 82;
+  private static final int SI_PJ_HUANG           = 113;
+  private static final int SI_PJ_HUANGAC         = 114;
+  private static final int SI_PLI_CIESZEWSKI     = 47;
+  private static final int SI_PLI_DEMPSTER       = 50;
+  private static final int SI_PLI_GOUDIE_DRY     = 48;
+  private static final int SI_PLI_GOUDIE_WET     = 49;
+  private static final int SI_PLI_HUANG_NAT      = 44;
+  private static final int SI_PLI_HUANG_PLA      = 43;
+  private static final int SI_PLI_MILNER         = 46;
+  private static final int SI_PLI_NIGHGI97       = 42;
+  private static final int SI_PLI_NIGHTA98       = 41;
+  private static final int SI_PLI_THROWER        = 45;
+  private static final int SI_PLI_THROWNIGH      = 40;
+  private static final int SI_PL_CHEN            = 76;
+  private static final int SI_PW_CURTISAC        = 98;
+  private static final int SI_PW_CURTIS          = 51;
+  private static final int SI_PY_HANNAC          = 104;
+  private static final int SI_PY_HANN            = 53;
+  private static final int SI_PY_MILNER          = 52;
+  private static final int SI_PY_NIGH            = 107;
+  private static final int SI_PY_NIGHGI          = 108;
+  private static final int SI_SB_CIESZEWSKI      = 55;
+  private static final int SI_SB_DEMPSTER        = 57;
+  private static final int SI_SB_HUANG           = 54;
+  private static final int SI_SB_KER             = 56;
+  private static final int SI_SB_NIGH            = 91;
+  private static final int SI_SE_CHENAC          = 105;
+  private static final int SI_SE_CHEN            = 87;
+  private static final int SI_SE_NIGHGI          = 120;
+  private static final int SI_SE_NIGH            = 121;
+  private static final int SI_SS_BARKER          = 62;
+  private static final int SI_SS_FARR            = 61;
+  private static final int SI_SS_GOUDIE          = 60;
+  private static final int SI_SS_NIGH            = 59;
+  private static final int SI_SS_NIGHGI          = 58;
+  private static final int SI_SS_NIGHGI99        = 80;
+  private static final int SI_SW_CIESZEWSKI      = 67;
+  private static final int SI_SW_DEMPSTER        = 72;
+  private static final int SI_SW_GOUDIE_NAT      = 71;
+  private static final int SI_SW_GOUDIE_NATAC    = 106;
+  private static final int SI_SW_GOUDIE_PLA      = 70;
+  private static final int SI_SW_GOUDIE_PLAAC    = 112;
+  private static final int SI_SW_GOUDNIGH        = 85;
+  private static final int SI_SW_HU_GARCIA       = 119;
+  private static final int SI_SW_HUANG_NAT       = 65;
+  private static final int SI_SW_HUANG_PLA       = 64;
+  private static final int SI_SW_KER_NAT         = 69;
+  private static final int SI_SW_KER_PLA         = 68;
+  private static final int SI_SW_NIGHGI          = 63;
+  private static final int SI_SW_NIGHGI99        = 81;
+  private static final int SI_SW_NIGHGI2004      = 115;
+  private static final int SI_SW_NIGHTA          = 83;
+  private static final int SI_SW_THROWER         = 66;
+  private static final int SI_MAX_CURVES         = 123;
+  /* not used, but must be defined for array positioning */
+  private static final int SI_BB_KER              = 6;
+  private static final int SI_DR_CHEN             = 75;
+  private static final int SI_PLI_NIGHTA2004      = 109;
+  private static final int SI_SE_NIGHTA           = 110;
+  private static final int SI_SW_NIGHTA2004       = 111;
+  
+
+  public static double ppow(double x, double y){
+    return (x <= 0) ? 0.0 : Math.pow(x, y);
+  }
+
+  public static double llog(double x){
+    return ((x) <= 0.0) ? Math.log(.00001) : Math.log(x);
+  }
+
+   
+  double height_to_index (
+    short  cu_index,
+    double age,
+    short  age_type,
+    double height,
+    short  si_est_type)
+    {
+    double index;
+    double x1, x2;
+    
+    
+    /* handle simple cases */
+    if (age_type == SI_AT_BREAST){
+      if (height < 1.3){
+        return SI_ERR_LT13;
+      }
+    }
+    else{
+      if (height <= 0){
+        return SI_ERR_NO_ANS;
+      }
+    }
+    
+    if (age <= 0){
+      return SI_ERR_NO_ANS;
+    }
+
+    if (age_type == SI_AT_BREAST){
+      index = ba_height_to_index(cu_index, age, height, si_est_type);
+    }
+    else{
+      if (si_est_type == SI_EST_DIRECT){
+        switch (cu_index){
+          case SI_FDI_THROWER:
+            if (age <= 4){
+              /* means less than 1.3m, so can't generate site index */
+              /* supposedly this should never happen anyway */
+              index = 1.3;
+            }else{
+              x1 = (age - 4) * (0.39 + 0.3104 * height);
+              x2 = 33.3828 * height + x1 + 99;
+              
+              index = (x2 + Math.sqrt(x2 * x2 - 4 * 99 * x1)) / (2 * (age - 4));
+            }
+            break;
+  
+          default:
+            index = site_iterate(cu_index, age, SI_AT_TOTAL, height);
+            break;
+          }
+      } else
+        index = site_iterate(cu_index, age, SI_AT_TOTAL, height);
+      }
+    return (index);
+    }
  
- #define LLOG(x) \
-   (((x) <= 0.0) ? log (.00001) : log (x))
  
- static double site_iterate (short int, double, short int, double);
- static double ba_height_to_index (short int, double, double, short int);
- static double hu_garcia_q (double, double);
- static double hu_garcia_h (double, double);
-   
-   
- double height_to_index (
-   short int cu_index,
-   double age,
-   short int age_type,
-   double height,
-   short int si_est_type)
-   {
-   double index;
-   double x1, x2;
-   
-   
-   /* handle simple cases */
-   if (age_type == SI_AT_BREAST)
-     {
-     if (height < 1.3)
-       return SI_ERR_LT13;
-     }
-   else
-     {
-     if (height <= 0)
-       return SI_ERR_NO_ANS;
-     }
-   
-   if (age <= 0)
-     return SI_ERR_NO_ANS;
-   
-   if (age_type == SI_AT_BREAST)
-     index = ba_height_to_index (cu_index, age, height, si_est_type);
-   else
-     {
-     if (si_est_type == SI_EST_DIRECT)
-       {
-       switch (cu_index)
-         {
- #ifdef SI_FDI_THROWER
-         case SI_FDI_THROWER:
-           if (age <= 4)
-             {
-             /* means less than 1.3m, so can't generate site index */
-             /* supposedly this should never happen anyway */
-             index = 1.3;
-             }
-           else
-             {
-             x1 = (age - 4) * (0.39 + 0.3104 * height);
-             x2 = 33.3828 * height + x1 + 99;
-             
-             index = (x2 + sqrt (x2 * x2 - 4 * 99 * x1)) / (2 * (age - 4));
-             }
-           break;
- #endif
- 
-         default:
-           index = site_iterate (cu_index, age, SI_AT_TOTAL, height);
-           break;
-         }
-       }
-     else
-       index = site_iterate (cu_index, age, SI_AT_TOTAL, height);
-     }
-   return (index);
-   }
- 
- 
- double ba_height_to_index (
-   short int cu_index,
+ double ba_height_to_index(
+   short  cu_index,
    double bhage,
    double height,
-   short int si_est_type)
+   short  si_est_type)
    {
    double index;
    double x1, x2;
@@ -222,128 +504,91 @@ public class Height2SiteIndex {
    double ht_13;
    
    
-   if (bhage <= 0.5)
+   if (bhage <= 0.5){
      index = SI_ERR_GI_MIN; /* indicator that it can't be done */
-   else
-     {
-     if (si_est_type == SI_EST_DIRECT)
-       {
-       switch (cu_index)
-         {
- #ifdef SI_BA_DILUCCA
+   }else{
+     if (si_est_type == SI_EST_DIRECT){
+       switch (cu_index){
          case SI_BA_DILUCCA:
            index = height *
-             (1 + exp (6.300852572 + 0.85314673 * log (50.0) -
-                       2.533284275 * LLOG (height))) /
-             (1 + exp (6.300852572 + 0.8314673 * log (bhage) -
-                       2.533284275 * LLOG (height)));
+             (1 + Math.exp(6.300852572 + 0.85314673 * Math.log(50.0) -
+                       2.533284275 * (height))) /
+             (1 + Math.exp(6.300852572 + 0.8314673 * Math.log(bhage) -
+                       2.533284275 * llog(height)));
            break;
- #endif
- 
- #ifdef SI_DR_NIGH
          case SI_DR_NIGH:
-           /* first compute si@bhage25 */
+            /* first compute si@bhage25 */
            index = 1.3 + (height - 1.3) *
-             (0.6906 + 21.61 * exp (-1.24 * log (bhage - 0.5)));
+             (0.6906 + 21.61 * Math.exp(-1.24 * Math.log(bhage - 0.5)));
            /* now compute si@bhage50 */
            index = -0.4063 + 1.313 * index;
            break;
- #endif
- 
- #ifdef SI_HM_MEANS
          case SI_HM_MEANS:
            /* computer index at base age 100 */
-           index = 1.37 + 17.22 + (0.58322 + 99.127 * PPOW (bhage, -1.18989)) *
-             (height - 1.37 - 47.926 * PPOW (1 - exp (-0.00574787 * bhage), 1.2416));
+           index = 1.37 + 17.22 + (0.58322 + 99.127 * ppow(bhage, -1.18989)) *
+             (height - 1.37 - 47.926 * ppow(1 - Math.exp(-0.00574787 * bhage), 1.2416));
            
            /* convert to base age 50 */
-           index = PPOW ((index + 1.73) / 3.149, 1.2079);
+           index =ppow((index + 1.73) / 3.149, 1.2079);
            break;
- #endif
- 
- #ifdef SI_FDI_MILNER
          case SI_FDI_MILNER:
            /* convert to imperial */
            height /= 0.3048;
            
            index = 57.3 + (7.06 +
                            0.02275 * bhage -
-                           1.858 * log (bhage) +
+                           1.858 * Math.log(bhage) +
                            5.496 / (bhage * bhage)) *
                           (height - 4.5 -
-                           114.6 * PPOW (1 - exp (-0.01462 * bhage), 1.179));
+                           114.6 *Math.pow(1 - Math.exp(-0.01462 * bhage), 1.179));
    
            /* convert back to metric */
            index *= 0.3048;
            break;
- #endif
- 
- #ifdef SI_FDI_THROWER
          case SI_FDI_THROWER:
            index = 0.39 + 0.3104 * height + 33.3828 * height / bhage;
            break;
- #endif
- 
- #ifdef SI_PLI_THROWER
          case SI_PLI_THROWER:
-           x1 = 1 + exp (6.0925 + 0.7979 * log (50.0) - 2.7338 * log (height));
-           x2 = 1 + exp (6.0925 + 0.7979 * log (bhage) - 2.7338 * log (height));
+           x1 = 1 + Math.exp(6.0925 + 0.7979 * Math.log(50.0) - 2.7338 * Math.log(height));
+           x2 = 1 + Math.exp(6.0925 + 0.7979 * Math.log(bhage) - 2.7338 * Math.log(height));
            
            index = height * x1 /x2;
            break;
- #endif
- 
- #ifdef SI_LA_MILNER
- #undef LA_MILNER
- #define LA_MILNER 1
+          //#undef LA_MILNER     Removed since never used again?
+          //#define LA_MILNER 1  Removed since never used again?
          case SI_LA_MILNER:
- #endif
- 
- #ifdef SI_LT_MILNER
- #undef LT_MILNER
- #define LT_MILNER 1
+         //#undef LT_MILNER
+         //#define LT_MILNER 1
          case SI_LT_MILNER:
- #endif
- 
- #ifdef SI_LW_MILNER
- #undef LW_MILNER
- #define LW_MILNER 1
+         //#undef LW_MILNER
+        //#define LW_MILNER 1
          case SI_LW_MILNER:
- #endif
- 
- #ifdef LW_MILNER
            /* convert to imperial */
            height /= 0.3048;
            
            index = 69.0 + (-0.8019 +
                            17.06 / bhage +
-                           0.4268 * log (bhage) -
+                           0.4268 * Math.log(bhage) -
                            0.00009635 * bhage * bhage) *
                           (height - 4.5 -
-                           127.8 * PPOW (1 - exp (-0.01655 * bhage), 1.196));
+                           127.8 *Math.pow(1 - Math.exp(-0.01655 * bhage), 1.196));
    
            /* convert back to metric */
            index *= 0.3048;
            break;
- #endif
- 
- #ifdef SI_PLI_DEMPSTER
          case SI_PLI_DEMPSTER:
-           log_bhage = log (bhage);
+          log_bhage = Math.log(bhage);
            
-           ht_13 = height - 1.3;
+          ht_13 = height - 1.3;
            
-           index = 1.3 + 
-                   10.9408 +
-                   1.6753 * ht_13 -
-                   0.9322 * log_bhage * log_bhage +
-                   0.0054 * bhage * log_bhage +
-                   8.2281 * ht_13 / bhage -
-                   0.2569 * ht_13 * LLOG (ht_13);
+          index = 1.3 + 
+                  10.9408 +
+                  1.6753 * ht_13 -
+                  0.9322 * log_bhage * log_bhage +
+                  0.0054 * bhage * log_bhage +
+                  8.2281 * ht_13 / bhage -
+                  0.2569 * ht_13 * llog(ht_13);
            break;
- #endif
- 
- #ifdef SI_PLI_MILNER
          case SI_PLI_MILNER:
            /* convert to imperial */
            height /= 0.3048;
@@ -353,60 +598,47 @@ public class Height2SiteIndex {
                            14.82 / bhage -
                            5.212 / (bhage * bhage)) *
                           (height - 4.5 -
-                           96.93 * PPOW (1 - exp (-0.01955 * bhage), 1.216));
+                           96.93 *Math.pow(1 - Math.exp(-0.01955 * bhage), 1.216));
    
            /* convert back to metric */
            index *= 0.3048;
            break;
- #endif
- 
- #ifdef SI_PY_MILNER
          case SI_PY_MILNER:
            /* convert to imperial */
            height /= 0.3048;
            
            index = 59.6 + (4.787 +
                            0.012544 * bhage -
-                           1.141 * log (bhage) +
+                           1.141 * Math.log(bhage) +
                            11.44 / (bhage * bhage)) *
                           (height - 4.5 -
-                           121.4 * PPOW (1 - exp (-0.01756 * bhage), 1.483));
+                           121.4 *Math.pow(1 - Math.exp(-0.01756 * bhage), 1.483));
    
            /* convert back to metric */
            index *= 0.3048;
            break;
- #endif
- 
- #ifdef SI_PW_CURTIS
          case SI_PW_CURTIS:
            /* convert to imperial */
            height /= 0.3048;
            
-           x1 = log (bhage) - log (50.0);
+           x1 = Math.log(bhage) - Math.log(50.0);
            x2 = x1 * x1;
            
-           index =  exp (-2.608801 * x1 - 0.715601 * x2) *
-             PPOW (height, 1.0 + 0.408404 * x1 + 0.138199 * x2);
+           index =  Math.exp(-2.608801 * x1 - 0.715601 * x2) *
+            Math.pow(height, 1.0 + 0.408404 * x1 + 0.138199 * x2);
    
            /* convert back to metric */
            index *= 0.3048;
            break;
- #endif
- 
- #ifdef SI_SW_HU_GARCIA
-     case SI_SW_HU_GARCIA:
-       {
+     case SI_SW_HU_GARCIA:{
        double q;
          
        q = hu_garcia_q (height, bhage);
        index = hu_garcia_h (q, 50.0);
        }
        break;
- #endif
- 
- #ifdef SI_SW_DEMPSTER
          case SI_SW_DEMPSTER:
-           log_bhage = log (bhage);
+           log_bhage = Math.log(bhage);
            
            ht_13 = height - 1.3;
            
@@ -416,13 +648,10 @@ public class Height2SiteIndex {
                    0.006 * bhage * log_bhage -
                    0.838 * log_bhage * log_bhage +
                    27.4874 * ht_13 / bhage +
-                   1.1914 * LLOG (ht_13);
+                   1.1914 * llog(ht_13);
            break;
- #endif
- 
- #ifdef SI_SB_DEMPSTER
          case SI_SB_DEMPSTER:
-           log_bhage = log (bhage);
+           log_bhage = Math.log(bhage);
            
            ht_13 = height - 1.3;
            
@@ -431,41 +660,27 @@ public class Height2SiteIndex {
                    0.8118 * ht_13 -
                    0.3638 * log_bhage * log_bhage +
                    24.0308 * ht_13 / bhage - 
-                   0.1021 * ht_13 * LLOG (ht_13);
+                   0.1021 * ht_13 * llog(ht_13);
            break;
- #endif
- 
- #ifdef SI_EA_GOUDIE
- #undef SI_AT_GOUDIE
- #define SI_AT_GOUDIE 1
+        //#undef SI_AT_GOUDIE
+        //#define SI_AT_GOUDIE 1
          case SI_EA_GOUDIE:
- #endif
-       
- #ifdef SI_EP_GOUDIE
- #undef SI_AT_GOUDIE
- #define SI_AT_GOUDIE 1
-         case SI_EP_GOUDIE:
- #endif
-       
- #ifdef SI_AT_GOUDIE
- #undef SI_AT_GOUDIE
- #define SI_AT_GOUDIE 1
-         case SI_AT_GOUDIE:
- #endif
  
- #ifdef SI_AT_GOUDIE
-           log_bhage = log (bhage);
+        //#undef SI_AT_GOUDIE
+        //#define SI_AT_GOUDIE 1
+         case SI_EP_GOUDIE: 
+        //#undef SI_AT_GOUDIE
+        //#define SI_AT_GOUDIE 1
+         case SI_AT_GOUDIE:
+           log_bhage = Math.log(bhage);
            
            index = 1.3 +
                    17.0101 +
                    0.8784 * (height - 1.3) +
                    1.8364 * log_bhage -
                    1.4018 * log_bhage * log_bhage +
-                   0.4374 * LLOG (height - 1.3) / bhage;
+                   0.4374 * llog(height - 1.3) / bhage;
            break;
- #endif
- 
- #ifdef SI_FDI_VDP_MONT
          case SI_FDI_VDP_MONT:
            /* convert to imperial */
            height /= 0.3048;
@@ -473,16 +688,13 @@ public class Height2SiteIndex {
            index = 4.5 +
                    111.832 +
                    0.721 * (height - 4.5) -
-                   28.2175 * log (bhage) -
+                   28.2175 * Math.log(bhage) -
                    731.551 / (bhage * bhage) +
                    13.164 * (height - 4.5) / bhage;
    
            /* convert back to metric */
            index *= 0.3048;
            break;
- #endif
-   
- #ifdef SI_FDI_VDP_WASH
          case SI_FDI_VDP_WASH:
            /* convert to imperial */
            height /= 0.3048;
@@ -490,88 +702,55 @@ public class Height2SiteIndex {
            index = 4.5 +
                    146.274 +
                    0.809 * (height - 4.5) -
-                   37.218 * log (bhage) -
+                   37.218 * Math.log(bhage) -
                    1064.4055 / (bhage * bhage) +
                    9.511 * (height - 4.5) / bhage;
    
            /* convert back to metric */
            index *= 0.3048;
            break;
- #endif
- 
- #ifdef SI_FDI_MONS_DF
- #undef MONSERUD
- #define MONSERUD 1
+        //#undef MONSERUD
+        //#define MONSERUD 1
          case SI_FDI_MONS_DF:
- #endif
- 
- #ifdef SI_FDI_MONS_GF
- #undef MONSERUD
- #define MONSERUD 1
+ //#undef MONSERUD
+ //#define MONSERUD 1
          case SI_FDI_MONS_GF:
- #endif
- 
- #ifdef SI_FDI_MONS_WRC
- #undef MONSERUD
- #define MONSERUD 1
+ //#undef MONSERUD
+ //#define MONSERUD 1
          case SI_FDI_MONS_WRC:
- #endif
- 
- #ifdef SI_FDI_MONS_WH
- #undef MONSERUD
- #define MONSERUD 1
+//#undef MONSERUD
+//#define MONSERUD 1
          case SI_FDI_MONS_WH:
- #endif
- 
- #ifdef SI_FDI_MONS_SAF
- #undef MONSERUD
- #define MONSERUD 1
+//#undef MONSERUD
+//#define MONSERUD 1
          case SI_FDI_MONS_SAF:
- #endif
- 
- #ifdef MONSERUD
            /* convert to imperial */
            height /= 0.3048;
            
-           switch (cu_index)
-             {
- #ifdef SI_FDI_MONS_DF
-             case SI_FDI_MONS_DF:
-               x1 = 0.4948;
-               x2 = 25.315;
-               break;
- #endif
- 
- #ifdef SI_FDI_MONS_GF
+           switch (cu_index){
+            case SI_FDI_MONS_DF:
+                x1 = 0.4948;
+                x2 = 25.315;
+                break;
              case SI_FDI_MONS_GF:
-               x1 = 0.4305;
-               x2 = 28.415;
-               break;
- #endif
- 
- #ifdef SI_FDI_MONS_WRC
+                x1 = 0.4305;
+                x2 = 28.415;
+                break;
              case SI_FDI_MONS_WRC:
-               x1 = 0.4305;
-               x2 = 28.415;
-               break;
- #endif
- 
- #ifdef SI_FDI_MONS_WH
-             case SI_FDI_MONS_WH:
-               x1 = 0.3964;
-               x2 = 30.008;
-               break;
- #endif
- 
- #ifdef SI_FDI_MONS_SAF
+                x1 = 0.4305;
+                x2 = 28.415;
+                break;
+              case SI_FDI_MONS_WH:
+                x1 = 0.3964;
+                x2 = 30.008;
+                break;
              case SI_FDI_MONS_SAF:
-               x1 = 0.3964;
-               x2 = 30.008;
-               break;
- #endif
+                x1 = 0.3964;
+                x2 = 30.008;
+                break;
              }
            
-           log_bhage = log (bhage);
+           log_bhage = Math.log(bhage);
            
            index = 4.5 +
                    38.787 -
@@ -583,12 +762,8 @@ public class Height2SiteIndex {
            /* convert back to metric */
            index *= 0.3048;
            break;
- #endif
-   
- #ifdef SI_FDI_NIGHGI
-         case SI_FDI_NIGHGI:
-           switch ((short int) bhage)
-             {
+        case SI_FDI_NIGHGI:
+           switch ((short) bhage){
              case  1: x1 = 4.114; x2 = 0.4540; break;
              case  2: x1 = 3.312; x2 = 0.5139; break;
              case  3: x1 = 2.365; x2 = 0.6037; break;
@@ -641,21 +816,17 @@ public class Height2SiteIndex {
              case 50: x1 = 0.4950; x2 = 1.000; break;
              default: x1 = 0    ; x2 = 0     ; break;
                break;
-             }
-           if (x1 == 0)
+            }
+           if (x1 == 0){
              index = SI_ERR_GI_MAX;
-           else
-             {
+           }
+           else{
              index = (height - 1.3) * 100 / (bhage-0.5);
-             index = 1.3 + x1 * PPOW (index, x2);
-             }
+             index = 1.3 + x1 *ppow(index, x2);
+            }
            break;
- #endif
- 
- #ifdef SI_PLI_NIGHGI97
          case SI_PLI_NIGHGI97:
-           switch ((short int) bhage)
-             {
+           switch ((short) bhage){
              case  1: x1 = 3.229; x2 = 0.4774; break;
              case  2: x1 = 2.726; x2 = 0.5081; break;
              case  3: x1 = 2.671; x2 = 0.5095; break;
@@ -709,24 +880,21 @@ public class Height2SiteIndex {
              default: x1 = 0    ; x2 = 0     ; break;
                break;
              }
-           if (x1 == 0)
+           if (x1 == 0){
              index = SI_ERR_GI_MAX;
-           else
-             {
+           }
+           else{
              index = (height - 1.3) * 100 / (bhage-0.5);
-             index = 1.3 + x1 * PPOW (index, x2);
-             }
+             index = 1.3 + x1 *ppow(index, x2);
+            }
            break;
- #endif
- 
- #ifdef SI_PLI_NIGHGI
          case SI_PLI_NIGHGI:
            /* later, we divide by age-0.5, so check it now */
-           if (bhage < 0.5)
+           if (bhage < 0.5){
              return SI_ERR_GI_MIN;
+           }
            
-           switch ((short int) bhage)
-             {
+           switch ((short) bhage){
              case  1: x1 = 3.791; x2 = 0.4338; break;
              case  2: x1 = 3.460; x2 = 0.4592; break;
              case  3: x1 = 3.440; x2 = 0.4615; break;
@@ -760,24 +928,21 @@ public class Height2SiteIndex {
              default: x1 = 0    ; x2 = 0     ; break;
                break;
              }
-           if (x1 == 0)
+           if (x1 == 0){
              index = SI_ERR_GI_MAX;
-           else
-             {
+           }
+           else{
              index = (height - 1.3) * 100 / (bhage-0.5);
-             index = x1 * PPOW (index, x2);
-             }
+             index = x1 *ppow(index, x2);
+            }
            break;
- #endif
- 
- #ifdef SI_SW_NIGHGI
          case SI_SW_NIGHGI:
            /* later, we divide by age-0.5, so check it now */
-           if (bhage < 0.5)
+           if (bhage < 0.5){
              return SI_ERR_GI_MIN;
+           }
            
-           switch ((short int) bhage)
-             {
+           switch ((short) bhage){
              case  1: x1 = 7.867; x2 = 0.3516; break;
              case  2: x1 = 8.125; x2 = 0.3437; break;
              case  3: x1 = 8.155; x2 = 0.3448; break;
@@ -810,25 +975,22 @@ public class Height2SiteIndex {
              case 30: x1 = 2.434; x2 = 0.4349; break;
              default: x1 = 0    ; x2 = 0     ; break;
                break;
-             }
-           if (x1 == 0)
+          }
+           if (x1 == 0){
              index = SI_ERR_GI_MAX;
-           else
-             {
+           }
+           else{
              index = (height - 1.3) * 100 / (bhage-0.5);
              index = x1 + x2 * index;
              }
            break;
- #endif
- 
- #ifdef SI_SW_NIGHGI99
-         case SI_SW_NIGHGI99:
+          case SI_SW_NIGHGI99:
            /* later, we divide by age-0.5, so check it now */
-           if (bhage < 0.5)
+           if (bhage < 0.5){
              return SI_ERR_GI_MIN;
+           }
            
-           switch ((short int) bhage)
-             {
+           switch ((short) bhage){
              case  1: x1 = 4.050; x2 = 0.4630; break;
              case  2: x1 = 3.215; x2 = 0.5222; break;
              case  3: x1 = 2.917; x2 = 0.5509; break;
@@ -881,25 +1043,22 @@ public class Height2SiteIndex {
              case 50: x1 = 0.4934; x2 = 1.001; break;
              default: x1 = 0    ; x2 = 0     ; break;
                break;
-             }
-           if (x1 == 0)
+            }
+           if (x1 == 0){
              index = SI_ERR_GI_MAX;
-           else
-             {
+           }
+           else{
              index = (height - 1.3) * 100 / (bhage-0.5);
-             index = 1.3 + x1 * PPOW (index, x2);
-             }
+             index = 1.3 + x1 *ppow(index, x2);
+            }
            break;
- #endif
- 
- #ifdef SI_SW_NIGHGI2004
          case SI_SW_NIGHGI2004:
            /* later, we divide by age-0.5, so check it now */
-           if (bhage < 0.5)
+           if (bhage < 0.5){
              return SI_ERR_GI_MIN;
+           }
            
-           switch ((short int) bhage)
-             {
+           switch ((short) bhage){
              case  1: x1 = 4.7650; x2 = 0.4102; break;
              case  2: x1 = 4.2040; x2 = 0.4406; break;
              case  3: x1 = 3.8680; x2 = 0.4639; break;
@@ -952,25 +1111,22 @@ public class Height2SiteIndex {
              case 50: x1 = 0.4941; x2 = 1.0010; break;
              default: x1 = 0     ; x2 = 0     ; break;
                break;
-             }
-           if (x1 == 0)
+            }
+           if (x1 == 0){
              index = SI_ERR_GI_MAX;
-           else
-             {
+           }
+           else{
              index = (height - 1.3) * 100 / (bhage-0.5);
-             index = 1.3 + x1 * PPOW (index, x2);
-             }
+             index = 1.3 + x1 *ppow(index, x2);
+            }
            break;
- #endif
- 
- #ifdef SI_HWC_NIGHGI99
          case SI_HWC_NIGHGI99:
            /* later, we divide by age-0.5, so check it now */
-           if (bhage < 0.5)
+           if (bhage < 0.5){
              return SI_ERR_GI_MIN;
+           }
            
-           switch ((short int) bhage)
-             {
+           switch ((short) bhage){
              case  1: x1 = 4.361; x2 = 0.4638; break;
              case  2: x1 = 3.678; x2 = 0.5047; break;
              case  3: x1 = 3.359; x2 = 0.5302; break;
@@ -1023,25 +1179,22 @@ public class Height2SiteIndex {
              case 50: x1 = 0.4914; x2 = 1.002; break;
              default: x1 = 0    ; x2 = 0     ; break;
                break;
-             }
-           if (x1 == 0)
+            }
+           if (x1 == 0){
              index = SI_ERR_GI_MAX;
-           else
-             {
+           }
+           else{
              index = (height - 1.3) * 100 / (bhage-0.5);
-             index = 1.3 + x1 * PPOW (index, x2);
-             }
+             index = 1.3 + x1 *ppow(index, x2);
+            }
            break;
- #endif
- 
- #ifdef SI_HWC_NIGHGI
          case SI_HWC_NIGHGI:
            /* later, we divide by age-0.5, so check it now */
-           if (bhage < 0.5)
+           if (bhage < 0.5){
              return SI_ERR_GI_MIN;
+           }
            
-           switch ((short int) bhage)
-             {
+           switch ((short) bhage) {
              case  1: x1 = 4.957; x2 = 0.4325; break;
              case  2: x1 = 4.413; x2 = 0.4649; break;
              case  3: x1 = 4.002; x2 = 0.4939; break;
@@ -1074,21 +1227,17 @@ public class Height2SiteIndex {
              case 30: x1 = 0.9789; x2 = 0.8235; break;
              default: x1 = 0    ; x2 = 0     ; break;
                break;
-             }
-           if (x1 == 0)
+            }
+           if (x1 == 0){
              index = SI_ERR_GI_MAX;
-           else
-             {
+           }
+           else{
              index = (height - 1.3) * 100 / (bhage-0.5);
-             index = x1 * PPOW (index, x2);
+             index = x1 *ppow(index, x2);
              }
            break;
- #endif
- 
- #ifdef SI_HWI_NIGHGI
          case SI_HWI_NIGHGI:
-           switch ((short int) bhage)
-             {
+           switch ((short) bhage){
              case  1: x1 = 4.309; x2 = 0.4131; break;
              case  2: x1 = 4.535; x2 = 0.3795; break;
              case  3: x1 = 4.337; x2 = 0.3904; break;
@@ -1142,24 +1291,21 @@ public class Height2SiteIndex {
              default: x1 = 0    ; x2 = 0     ; break;
                break;
              }
-           if (x1 == 0)
+           if (x1 == 0){
              index = SI_ERR_GI_MAX;
-           else
-             {
+           }
+           else{
              index = (height - 1.3) * 100 / (bhage-0.5);
-             index = 1.3 + x1 * PPOW (index, x2);
-             }
+             index = 1.3 + x1 *ppow(index, x2);
+            }
            break;
- #endif
- 
- #ifdef SI_FDC_NIGHGI
          case SI_FDC_NIGHGI:
            /* later, we divide by age-0.5, so check it now */
-           if (bhage < 0.5)
+           if (bhage < 0.5){
              return SI_ERR_GI_MIN;
+           }
            
-           switch ((short int) bhage)
-             {
+           switch ((short) bhage){
              case  1: x1 = 3.894 ; x2 = 0.5382; break;
              case  2: x1 = 2.546 ; x2 = 0.6330; break;
              case  3: x1 = 2.449 ; x2 = 0.6328; break;
@@ -1212,21 +1358,17 @@ public class Height2SiteIndex {
              case 50: x1 = 0.4889; x2 = 1.003 ; break;
              default: x1 = 0     ; x2 = 0     ; break;
                break;
-             }
-           if (x1 == 0)
+            }
+           if (x1 == 0){
              index = SI_ERR_GI_MAX;
-           else
-             {
+           }
+           else{
              index = (height - 1.3) * 100 / (bhage-0.5);
-             index = 1.3 + x1 * PPOW (index, x2);
-             }
+             index = 1.3 + x1 *ppow(index, x2);
+            }
            break;
- #endif
- 
- #ifdef SI_SE_NIGHGI
          case SI_SE_NIGHGI:
-           switch ((short int) bhage)
-             {
+           switch ((short) bhage){
              case  1: x1 = 15.0367; x2 = 0.1597; break;
              case  2: x1 = 22.9003; x2 = 0.3805; break;
              case  3: x1 = 25.4585; x2 = 0.4283; break;
@@ -1280,24 +1422,21 @@ public class Height2SiteIndex {
              default: x1 = 0    ; x2 = 0     ; break;
                break;
              }
-           if (x1 == 0)
+           if (x1 == 0){
              index = SI_ERR_GI_MAX;
-           else
-             {
+           }
+           else{
              index = (height - 1.3) / (bhage-0.5);
-             index = 1.3 + x1 * PPOW (index, x2);
+             index = 1.3 + x1 * ppow(index, x2);
              }
            break;
- #endif
- 
- #ifdef SI_SS_NIGHGI
          case SI_SS_NIGHGI:
            /* later, we divide by age-0.5, so check it now */
-           if (bhage < 0.5)
+           if (bhage < 0.5){
              return SI_ERR_GI_MIN;
+           }
            
-           switch ((short int) bhage)
-             {
+           switch ((short) bhage){
              case  1: x1 = 3.317; x2 = 0.5634; break;
              case  2: x1 = 3.277; x2 = 0.5663; break;
              case  3: x1 = 3.287; x2 = 0.5654; break;
@@ -1330,25 +1469,21 @@ public class Height2SiteIndex {
              case 30: x1 = 1.074; x2 = 0.8052; break;
              default: x1 = 0    ; x2 = 0     ; break;
                break;
-             }
-           if (x1 == 0)
+            }
+           if (x1 == 0){
              index = SI_ERR_GI_MAX;
-           else
-             {
+           }
+           else{
              index = (height - 1.3) * 100 / (bhage-0.5);
-             index = x1 * PPOW (index, x2);
-             }
-           break;
- #endif
- 
- #ifdef SI_SS_NIGHGI99
+             index = x1 *ppow(index, x2);
+            }
+           break; 
          case SI_SS_NIGHGI99:
            /* later, we divide by age-0.5, so check it now */
-           if (bhage < 0.5)
+           if (bhage < 0.5){
              return SI_ERR_GI_MIN;
-           
-           switch ((short int) bhage)
-             {
+           }
+           switch ((short) bhage){
              case  1: x1 = 4.367; x2 = 0.5034; break;
              case  2: x1 = 3.164; x2 = 0.5731; break;
              case  3: x1 = 3.008; x2 = 0.5825; break;
@@ -1401,25 +1536,22 @@ public class Height2SiteIndex {
              case 50: x1 = 0.4986; x2 = 0.9987; break;
              default: x1 = 0    ; x2 = 0     ; break;
                break;
-             }
-           if (x1 == 0)
+            }
+           if (x1 == 0){
              index = SI_ERR_GI_MAX;
-           else
-             {
+           }
+           else{
              index = (height - 1.3) * 100 / (bhage-0.5);
-             index = 1.3 + x1 * PPOW (index, x2);
+             index = 1.3 + x1 *ppow(index, x2);
              }
            break;
- #endif
- 
- #ifdef SI_CWI_NIGHGI
          case SI_CWI_NIGHGI:
            /* later, we divide by age-0.5, so check it now */
-           if (bhage < 0.5)
+           if (bhage < 0.5){
              return SI_ERR_GI_MIN;
-           
-           switch ((short int) bhage)
-             {
+           }
+        
+           switch ((short) bhage){
              case  1: x1 = 3.744; x2 = 0.4769; break;
              case  2: x1 = 4.123; x2 = 0.4281; break;
              case  3: x1 = 4.117; x2 = 0.4252; break;
@@ -1472,25 +1604,22 @@ public class Height2SiteIndex {
              case 50: x1 = 0.4945; x2 = 1.001; break;
              default: x1 = 0    ; x2 = 0     ; break;
                break;
-             }
-           if (x1 == 0)
+            }
+           if (x1 == 0){
              index = SI_ERR_GI_MAX;
-           else
-             {
+           }
+           else{
              index = (height - 1.3) * 100 / (bhage-0.5);
-             index = 1.3 + x1 * PPOW (index, x2);
-             }
+             index = 1.3 + x1 *ppow(index, x2);
+            }
            break;
- #endif
- 
- #ifdef SI_LW_NIGHGI
          case SI_LW_NIGHGI:
            /* later, we divide by age-0.5, so check it now */
-           if (bhage < 0.5)
+           if (bhage < 0.5){
              return SI_ERR_GI_MIN;
+           }
            
-           switch ((short int) bhage)
-             {
+           switch ((short) bhage){
              case  1: x1 = 6.347; x2 = 0.2855; break;
              case  2: x1 = 6.427; x2 = 0.2836; break;
              case  3: x1 = 5.871; x2 = 0.3106; break;
@@ -1543,25 +1672,22 @@ public class Height2SiteIndex {
              case 50: x1 = 0.4960; x2 = 0.9998; break;
              default: x1 = 0    ; x2 = 0     ; break;
                break;
-             }
-           if (x1 == 0)
+            }
+           if (x1 == 0){
              index = SI_ERR_GI_MAX;
-           else
-             {
+           }
+           else{
              index = (height - 1.3) * 100 / (bhage-0.5);
-             index = 1.3 + x1 * PPOW (index, x2);
-             }
+             index = 1.3 + x1 *ppow(index, x2);
+            }
            break;
- #endif
- 
- #ifdef SI_PY_NIGHGI
          case SI_PY_NIGHGI:
            /* later, we divide by age-0.5, so check it now */
-           if (bhage < 0.5)
+           if (bhage < 0.5){
              return SI_ERR_GI_MIN;
+           }
            
-           switch ((short int) bhage)
-             {
+           switch ((short) bhage){
              case  1: x1 = 5.631 ;x2 = 0.2745; break;
              case  2: x1 = 4.381 ;x2 = 0.3633; break;
              case  3: x1 = 3.791 ;x2 = 0.4127; break;
@@ -1620,19 +1746,16 @@ public class Height2SiteIndex {
            else
              {
              index = (height - 1.3) * 100 / (bhage-0.5);
-             index = 1.3 + x1 * PPOW (index, x2);
+             index = 1.3 + x1 *ppow(index, x2);
              }
            break;
- #endif
- 
- #ifdef SI_BA_NIGHGI
          case SI_BA_NIGHGI:
            /* later, we divide by age-0.5, so check it now */
-           if (bhage < 0.5)
+           if (bhage < 0.5){
              return SI_ERR_GI_MIN;
-           
-           switch ((short int) bhage)
-             {
+           }
+        
+           switch ((short) bhage){
              case  1: x1 = 12.14 ;x2 = 0.1957; break;
              case  2: x1 = 10.29 ;x2 = 0.2324; break;
              case  3: x1 = 8.348 ;x2 = 0.2829; break;
@@ -1685,25 +1808,22 @@ public class Height2SiteIndex {
              case 50: x1 = 0.4952;x2 = 1.000 ; break;
              default: x1 = 0    ; x2 = 0     ; break;
                break;
-             }
-           if (x1 == 0)
+            }
+           if (x1 == 0){
              index = SI_ERR_GI_MAX;
-           else
-             {
+           }
+           else{
              index = (height - 1.3) * 100 / (bhage-0.5);
-             index = 1.3 + x1 * PPOW (index, x2);
-             }
+             index = 1.3 + x1 * ppow(index, x2);
+            }
            break;
- #endif
- 
- #ifdef SI_BL_THROWERGI
          case SI_BL_THROWERGI:
            /* later, we divide by age-0.5, so check it now */
-           if (bhage < 0.5)
+           if (bhage < 0.5){
              return SI_ERR_GI_MIN;
+           }
            
-           switch ((short int) bhage)
-             {
+           switch ((short) bhage){
              case  1: x1 = 2.4623; x2 = 0.5809; break;
              case  2: x1 = 1.6700; x2 = 0.7080; break;
              case  3: x1 = 1.5688; x2 = 0.7235; break;
@@ -1756,33 +1876,31 @@ public class Height2SiteIndex {
              case 50: x1 = 0.4937; x2 = 1.0012; break;
              default: x1 = 0     ; x2 = 0     ; break;
                break;
-             }
-           if (x1 == 0)
+            }
+           if (x1 == 0){
              index = SI_ERR_GI_MAX;
-           else
-             {
+           }
+           else{
              index = (height - 1.3) * 100 / (bhage-0.5);
-             index = 1.3 + x1 * PPOW (index, x2);
-             }
+             index = 1.3 + x1 *ppow(index, x2);
+            }
            break;
- #endif
- 
          default:
-           index = site_iterate (cu_index, bhage, SI_AT_BREAST, height);
+           index = site_iterate(cu_index, bhage, SI_AT_BREAST, height);
            break;
          }
        }
      else
-       index = site_iterate (cu_index, bhage, SI_AT_BREAST, height);
+       index = site_iterate(cu_index, bhage, SI_AT_BREAST, height);
      }
    return index;
    }
  
  
  static double site_iterate (
-   short int cu_index,
+   short  cu_index,
    double age,
-   short int age_type,
+   short  age_type,
    double height)
    {
    double site;
@@ -1798,143 +1916,135 @@ public class Height2SiteIndex {
    step = site/2.0;
    
    /* loop until real close, or other end condition */
-   do
-     {
+   do{
      /* estimate y2bh */
-     y2bh = si_y2bh (cu_index, site);
+     y2bh = si_y2bh(cu_index, site);
      
-     if (age_type == SI_AT_BREAST)
-       test_top = index_to_height (cu_index, age, SI_AT_BREAST, site, y2bh, 0.5); // 0.5 may have to change
-     else
-       {
-       if (y2bh == SI_ERR_GI_TOT)
-         {
+     if (age_type == SI_AT_BREAST){
+       test_top = index_to_height(cu_index, age, SI_AT_BREAST, site, y2bh, 0.5); // 0.5 may have to change
+     }
+     else{
+       if (y2bh == SI_ERR_GI_TOT){
          /* cannot do this for GI equations */
          site = SI_ERR_GI_TOT;
          break;
-         }
+        }
        /* was age - y2bh */
        test_top = index_to_height (cu_index,
-         age_to_age (cu_index, age, SI_AT_TOTAL, SI_AT_BREAST, y2bh),
-         SI_AT_BREAST, site, y2bh, 0.5); // 0.5 may have to change
+         Age2Age.age_to_age(cu_index, age, SI_AT_TOTAL, SI_AT_BREAST, y2bh),SI_AT_BREAST, site, y2bh, 0.5); // 0.5 may have to change
        }
      
-     if (test_top == SI_ERR_CURVE) /* unknown cu_index */
-       {
+     if (test_top == SI_ERR_CURVE) /* unknown cu_index */{
        site = test_top;
        break;
-       }
-     else if (test_top == SI_ERR_NO_ANS) /* height > 999 */
+      }
+     else if (test_top == SI_ERR_NO_ANS){ /* height > 999 */
        site = 1000; /* should force an error code */
-     else if (test_top == SI_ERR_GI_MAX) /* bhage > range for GI model */
-       {
+     }
+     else if (test_top == SI_ERR_GI_MAX){ /* bhage > range for GI model */
        site = test_top;
        break;
-       }
-     else if (test_top == SI_ERR_GI_MIN) /* bhage < 0.5 for GI model */
-       {
+      }
+     else if (test_top == SI_ERR_GI_MIN){ /* bhage < 0.5 for GI model */
        site = test_top;
        break;
-       }
+      }
      
  /*
- printf ("age=%3.0f, height=%4.1f, test_top=%4.1f, site=%5.2f, step=%9.7f\n",
-   age, height, test_top, site, step);
+System.out.printf("age=%.0f, height=%.1f, test_top=%.1f, site=%.2f, step=%.7f%n",
+        age, height, test_top, site, step);
+
  */
      
-     if ((test_top - height > 0.01) ||
-         (test_top - height < -0.01))
-       {
+     if ((test_top - height > 0.01) ||(test_top - height < -0.01)){
        /* not close enough */
-       if (test_top > height)
-         {
-         if (step > 0)
+       if (test_top > height){
+         if (step > 0){
            step = -step/2.0;
          }
-       else
-         {
-         if (step < 0)
+        }
+       else{
+         if (step < 0){
            step = -step/2.0;
          }
+        }
        site += step;
-       }
-     else
+      }
+     else{
        /* done */
        break;
+     }
  
      /* check for lack of convergence, so we're not here forever */
-     if (step < 0.00001 && step > -0.00001)
-       {
+     if (step < 0.00001 && step > -0.00001){
        /* we have a value, but perhaps not too accurate */
        break;
-       }
-     if (site > 999.0)
-       {
+      }
+     if (site > 999.0){
        site = SI_ERR_NO_ANS;
        break;
-       }
+      }
      /* site index must be at least 1.3 */
-     if (site < 1.3)
-       {
-       if (step > 0)
+     if (site < 1.3) {
+       if (step > 0){
          site += step;
-       else
+       }
+       else{
          site -= step;
        step = step / 2.0;
        }
-     } while (1);
+      }
+  } while (true);
      
    return site;
    }
  
  
- static double hu_garcia_q (double site_index, double bhage)
-   {
+ static double hu_garcia_q (double site_index, double bhage){
    double h, q, step, diff, lastdiff;
- 
  
    q = 0.02;
    step = 0.01;
    lastdiff = 0;
    diff = 0;
  
-   do
-     {
+   do{
      h = hu_garcia_h (q, bhage);
      lastdiff = diff;
      diff = site_index - h;
-     if (diff > 0.0000001)
-       {
-       if (lastdiff < 0)
-         step = step / 2.0;
-       q += step;
+     if (diff > 0.0000001){
+       if (lastdiff < 0){
+          step = step / 2.0;
+          q += step;
        }
-     else if (diff < -0.0000001)
-       {
-       if (lastdiff > 0)
-         step = step / 2.0;
-       q -= step;
-       if (q <= 0)
+      }
+     else if (diff < -0.0000001){
+       if (lastdiff > 0){
+          step = step / 2.0;
+          q -= step;
+       }
+       if (q <= 0){
          q = 0.0000001;
        }
-     else
+      }
+     else{
        break;
-     if (step < 0.0000001)
+     }
+     if (step < 0.0000001){
        break;
-     } while (1);
+      }
+     } while (true);
    
    return q;
    }
  
  
- static double hu_garcia_h (double q, double bhage)
-   {
+ static double hu_garcia_h (double q, double bhage){
    double a, height;
  
- 
-   a = 283.9 * pow (q, 0.5137);
-   height = a * pow (1 - (1 - pow (1.3 / a, 0.5829)) * exp (-q * (bhage - 0.5)), 1.71556);
+   a = 283.9 * Math.pow (q, 0.5137);
+   height = a * Math.pow (1 - (1 - Math.pow (1.3 / a, 0.5829)) * Math.exp(-q * (bhage - 0.5)), 1.71556);
    return height;
-   }
+  }
  
 }
