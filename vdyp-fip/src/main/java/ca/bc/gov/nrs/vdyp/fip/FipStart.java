@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -156,7 +157,7 @@ public class FipStart {
 		try {
 			layers = layerStream.next();
 		} catch (NoSuchElementException ex) {
-			throw new ProcessingException("Layers file has fewer records than polygon file.", ex);
+			throw validationError("Layers file has fewer records than polygon file.", ex);
 		}
 
 		log.trace("Getting species for polygon {}", polygon.getPolygonIdentifier());
@@ -164,17 +165,15 @@ public class FipStart {
 		try {
 			species = speciesStream.next();
 		} catch (NoSuchElementException ex) {
-			throw new ProcessingException("Species file has fewer records than polygon file.", ex);
+			throw validationError("Species file has fewer records than polygon file.", ex);
 		}
 
 		// Validate that layers belong to the correct polygon
 		for (var layer : layers.values()) {
 			if (!layer.getPolygonIdentifier().equals(polygon.getPolygonIdentifier())) {
-				throw new ProcessingException(
-						String.format(
-								"Record in layer file contains layer for polygon %s when expecting one for %s.",
-								layer.getPolygonIdentifier(), polygon.getPolygonIdentifier()
-						)
+				throw validationError(
+						"Record in layer file contains layer for polygon %s when expecting one for %s.",
+						layer.getPolygonIdentifier(), polygon.getPolygonIdentifier()
 				);
 			}
 			layer.setSpecies(new HashMap<>());
@@ -184,15 +183,16 @@ public class FipStart {
 			var layer = layers.get(spec.getLayer());
 			// Validate that species belong to the correct polygon
 			if (!spec.getPolygonIdentifier().equals(polygon.getPolygonIdentifier())) {
-				throw new ProcessingException(
-						String.format(
-								"Record in species file contains species for polygon %s when expecting one for %s.",
-								layer.getPolygonIdentifier(), polygon.getPolygonIdentifier()
-						)
+				throw validationError(
+						"Record in species file contains species for polygon %s when expecting one for %s.",
+						layer.getPolygonIdentifier(), polygon.getPolygonIdentifier()
 				);
 			}
 			if (Objects.isNull(layer)) {
-				throw new ProcessingException("Species entry references layer %s of polygon %s but it is not present.");
+				throw validationError(
+						"Species entry references layer %s of polygon %s but it is not present.", layer,
+						polygon.getPolygonIdentifier()
+				);
 			}
 			layer.getSpecies().put(spec.getGenus(), spec);
 		}
@@ -202,14 +202,25 @@ public class FipStart {
 		return polygon;
 	}
 
+	private Optional<Float> heightMinimum(Layer layer, Map<String, Object> controlMap) {
+		@SuppressWarnings("unchecked")
+		var minima = (Map<String, Float>) controlMap.get(FipControlParser.MINIMA);
+		switch (layer) {
+		case PRIMARY:
+			return Optional.of(minima.get(FipControlParser.MINIMUM_HEIGHT));
+		case VETERAN:
+			return Optional.of(minima.get(FipControlParser.MINIMUM_VETERAN_HEIGHT));
+		default:
+			return Optional.empty();
+		}
+	}
+
 	private void checkPolygon(FipPolygon polygon) throws ProcessingException {
 
 		if (!polygon.getLayers().containsKey(Layer.PRIMARY)) {
-			throw new ProcessingException(
-					String.format(
-							"Polygon %s has no %s layer, or that layer has non-positive height or crown closure.",
-							polygon.getPolygonIdentifier(), Layer.PRIMARY
-					)
+			throw validationError(
+					"Polygon %s has no %s layer, or that layer has non-positive height or crown closure.",
+					polygon.getPolygonIdentifier(), Layer.PRIMARY
 			);
 		}
 
@@ -220,13 +231,33 @@ public class FipStart {
 		// consider changing it.
 
 		if (primaryLayer.getAgeTotal() - primaryLayer.getYearsToBreastHeight() < 0.5f) {
-			throw new ProcessingException(
-					String.format(
-							"Polygon %s has %s layer where total age is less than YTBH.",
-							polygon.getPolygonIdentifier(), Layer.PRIMARY
+			throw validationError(
+					"Polygon %s has %s layer where total age is less than YTBH.", polygon.getPolygonIdentifier(),
+					Layer.PRIMARY
+			);
+		}
+
+		for (var layer : polygon.getLayers().values()) {
+			var height = layer.getHeight();
+
+			throwIfPresent(
+					heightMinimum(layer.getLayer(), controlMap).filter(minimum -> height < minimum).map(
+							minimum -> validationError(
+									"Polygon %s has %s layer where height %.1f is less than minimum %.1f.",
+									polygon.getPolygonIdentifier(), layer.getLayer(), layer.getHeight(), minimum
+							)
 					)
 			);
 		}
 	}
 
+	private static <E extends Throwable> void throwIfPresent(Optional<E> opt) throws E {
+		if (opt.isPresent()) {
+			throw opt.get();
+		}
+	}
+
+	private static ProcessingException validationError(String template, Object... values) {
+		return new ProcessingException(String.format(template, values));
+	};
 }

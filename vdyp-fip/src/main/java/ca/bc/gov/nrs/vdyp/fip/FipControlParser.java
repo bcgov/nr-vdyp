@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.BecDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.BreakageEquationGroupParser;
@@ -102,6 +103,13 @@ public class FipControlParser {
 
 	static final ValueParser<String> FILENAME = String::strip;
 
+	public static final String MINIMUM_HEIGHT = "MINIMUM_HEIGHT";
+	public static final String MINIMUM_BASE_AREA = "MINIMUM_BASE_AREA";
+	public static final String MINIMUM_PREDICTED_BASE_AREA = "MINIMUM_PREDICTED_BASE_AREA";
+	public static final String MINIMUM_VETERAN_HEIGHT = "MINIMUM_VETERAN_HEIGHT";
+
+	public static final float DEFAULT_MINIMUM_VETERAN_HEIGHT = 10.0f;
+
 	ControlFileParser controlParser = new ControlFileParser().record(1, MAX_NUM_POLY, ValueParser.INTEGER)
 
 			.record(9, BEC_DEF, FILENAME) // RD_BECD
@@ -158,8 +166,14 @@ public class FipControlParser {
 			.record(97, VETERAN_LAYER_DQ, FILENAME) // RD_YDQV
 			.record(98, VETERAN_BQ, FILENAME) // RD_E098
 
-			.record(197, MINIMA, ValueParser.list(ValueParser.FLOAT)) // Minimum Height, Minimum BA, Min BA fully
-																		// stocked.
+			.record(
+					197, MINIMA,
+					ValueParser.toMap(
+							ValueParser.list(ValueParser.FLOAT),
+							Collections.singletonMap(MINIMUM_VETERAN_HEIGHT, 10.0f), MINIMUM_HEIGHT, MINIMUM_BASE_AREA,
+							MINIMUM_PREDICTED_BASE_AREA, MINIMUM_VETERAN_HEIGHT
+					)
+			)
 
 			.record(198, MODIFIER_FILE, ValueParser.optional(FILENAME)) // RD_E198 IPSJF155, XII
 

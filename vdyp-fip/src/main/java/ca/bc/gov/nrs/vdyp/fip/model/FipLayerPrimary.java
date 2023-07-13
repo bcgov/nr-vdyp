@@ -14,12 +14,12 @@ public class FipLayerPrimary extends FipLayer {
 	Optional<String> stockingClass;
 
 	public FipLayerPrimary(
-			String polygonIdentifier, float ageTotal, float height, float siteIndex, float crownClosure, String siteSp0,
-			String siteSp64, float yearsToBreastHeight, Optional<String> stockingClass,
+			String polygonIdentifier, float ageTotal, float height, float siteIndex, float crownClosure,
+			String siteGenus, String siteSpecies, float yearsToBreastHeight, Optional<String> stockingClass,
 			Optional<Integer> inventoryTypeGroup, Optional<Float> breastHeightAge, Optional<Integer> siteCurveNumber
 	) {
 		super(
-				polygonIdentifier, Layer.PRIMARY, ageTotal, height, siteIndex, crownClosure, siteSp0, siteSp64,
+				polygonIdentifier, Layer.PRIMARY, ageTotal, height, siteIndex, crownClosure, siteGenus, siteSpecies,
 				yearsToBreastHeight, inventoryTypeGroup, breastHeightAge
 		);
 		this.siteCurveNumber = siteCurveNumber;

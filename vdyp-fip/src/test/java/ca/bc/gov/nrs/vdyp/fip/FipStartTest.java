@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
@@ -48,25 +49,10 @@ public class FipStartTest {
 		// One polygon with one primary layer with one species entry
 
 		testWith(
-				Arrays.asList(
-						new FipPolygon(
-								polygonId, "0", "BG", java.util.Optional.empty(), Optional.of(FipMode.FIPSTART),
-								java.util.Optional.empty(), 1.0f
-						)
-				),
-				Arrays.asList(
-						Collections.singletonMap(
-								layer,
-								new FipLayerPrimary(
-										polygonId, 20f, 4.8f, 0.9f, 0, "B", "B", 5f, java.util.Optional.empty(),
-										java.util.Optional.empty(), java.util.Optional.empty(),
-										java.util.Optional.empty()
-								)
-						)
-				),
-				Arrays.asList(
-						Collections.singletonList(new FipSpecies(polygonId, layer, "B", 100.0f, Collections.emptyMap()))
-				), app -> {
+				Arrays.asList(getTestPolygon(polygonId, valid())), //
+				Arrays.asList(layerMap(getTestPrimaryLayer(polygonId, valid()))), //
+				Arrays.asList(Collections.singletonList(getTestSpecies(polygonId, layer, valid()))), //
+				app -> {
 					assertDoesNotThrow(app::process);
 				}
 		);
@@ -79,12 +65,10 @@ public class FipStartTest {
 		var polygonId = polygonId("Test Polygon", 2023);
 
 		testWith(
-				Arrays.asList(
-						new FipPolygon(
-								polygonId, "0", "BG", java.util.Optional.empty(), Optional.of(FipMode.FIPSTART),
-								java.util.Optional.empty(), 1.0f
-						)
-				), Collections.emptyList(), Collections.emptyList(), app -> {
+				Arrays.asList(getTestPolygon(polygonId, valid())), //
+				Collections.emptyList(), //
+				Collections.emptyList(), //
+				app -> {
 					var ex = assertThrows(ProcessingException.class, () -> app.process());
 
 					assertThat(ex, hasProperty("message", is("Layers file has fewer records than polygon file.")));
@@ -101,24 +85,10 @@ public class FipStartTest {
 
 		// One polygon with one layer with one species entry, and type is VETERAN
 		testWith(
-				Arrays.asList(
-						new FipPolygon(
-								polygonId, "0", "BG", java.util.Optional.empty(), Optional.of(FipMode.FIPSTART),
-								java.util.Optional.empty(), 1.0f
-						)
-				),
-				Arrays.asList(
-						Collections.singletonMap(
-								layer,
-								new FipLayer(
-										polygonId, layer, 0, 20f, 0.9f, 0, "B", "B", 0, java.util.Optional.empty(),
-										java.util.Optional.empty()
-								)
-						)
-				),
-				Arrays.asList(
-						Collections.singletonList(new FipSpecies(polygonId, layer, "B", 100.0f, Collections.emptyMap()))
-				), app -> {
+				Arrays.asList(getTestPolygon(polygonId, valid())), //
+				Arrays.asList(layerMap(getTestVeteranLayer(polygonId, valid()))), //
+				Arrays.asList(Collections.singletonList(getTestSpecies(polygonId, layer, valid()))), //
+				app -> {
 					var ex = assertThrows(ProcessingException.class, () -> app.process());
 
 					assertThat(
@@ -138,37 +108,91 @@ public class FipStartTest {
 	}
 
 	@Test
-	public void testPrimaryLayerTotalAgeLessThanYearsToBreastHeight() throws Exception {
+	public void testPrimaryLayerHeightLessThanMinimum() throws Exception {
 
 		var polygonId = polygonId("Test Polygon", 2023);
 		var layer = Layer.PRIMARY;
 
-		// One polygon with one layer with one species entry, and type is VETERAN
+		testWith(
+				Arrays.asList(getTestPolygon(polygonId, valid())), //
+				Arrays.asList(layerMap(getTestPrimaryLayer(polygonId, x -> {
+					x.setHeight(4f);
+				}))), //
+				Arrays.asList(Collections.singletonList(getTestSpecies(polygonId, layer, valid()))), //
+				app -> {
+					var ex = assertThrows(ProcessingException.class, () -> app.process());
+
+					assertThat(
+							ex,
+							hasProperty(
+									"message",
+									is(
+											"Polygon " + polygonId + " has " + Layer.PRIMARY
+													+ " layer where height 4.0 is less than minimum 5.0."
+									)
+							)
+					);
+
+				}
+		);
+
+	}
+
+	@Test
+	public void testVeteranLayerHeightLessThanMinimum() throws Exception {
+
+		var polygonId = polygonId("Test Polygon", 2023);
+		var layer = Layer.VETERAN;
+
+		testWith(
+				Arrays.asList(getTestPolygon(polygonId, valid())), //
+				Arrays.asList(
+						layerMap(
+								getTestPrimaryLayer(polygonId, valid()), //
+								getTestVeteranLayer(polygonId, x -> {
+									x.setHeight(9f);
+								}) //
+						)
+				), //
+				Arrays.asList(Collections.singletonList(getTestSpecies(polygonId, layer, valid()))), //
+				app -> {
+					var ex = assertThrows(ProcessingException.class, () -> app.process());
+
+					assertThat(
+							ex,
+							hasProperty(
+									"message",
+									is(
+											"Polygon " + polygonId + " has " + Layer.VETERAN
+													+ " layer where height 9.0 is less than minimum 10.0."
+									)
+							)
+					);
+
+				}
+		);
+
+	}
+
+	@Test
+	public void testPrimaryLayerTotalAgeLessThanYearsToBreastHeight() throws Exception {
+
+		var polygonId = polygonId("Test Polygon", 2023);
+		var layer = Layer.PRIMARY;
 
 		// FIXME VDYP7 actually tests if total age - YTBH is less than 0.5 but gives an
 		// error that total age is "less than" YTBH. Replicating that for now but
 		// consider changing it.
 
 		testWith(
-				Arrays.asList(
-						new FipPolygon(
-								polygonId, "0", "BG", java.util.Optional.empty(), Optional.of(FipMode.FIPSTART),
-								java.util.Optional.empty(), 1.0f
-						)
-				),
-				Arrays.asList(
-						Collections.singletonMap(
-								layer,
-								new FipLayerPrimary(
-										polygonId, 7f, 20f, 0.9f, 5.0f, "B", "B", 8f, java.util.Optional.empty(),
-										java.util.Optional.empty(), java.util.Optional.empty(),
-										java.util.Optional.empty()
-								)
-						)
-				),
-				Arrays.asList(
-						Collections.singletonList(new FipSpecies(polygonId, layer, "B", 100.0f, Collections.emptyMap()))
-				), app -> {
+				Arrays.asList(getTestPolygon(polygonId, valid())), //
+				Arrays.asList(layerMap(getTestPrimaryLayer(polygonId, x -> {
+					x.setAgeTotal(7f);
+					x.setYearsToBreastHeight(8f);
+				}))), //
+				Arrays.asList(Collections.singletonList(getTestSpecies(polygonId, layer, valid()))), //
+				app -> {
+
 					var ex = assertThrows(ProcessingException.class, () -> app.process());
 
 					assertThat(
@@ -224,10 +248,28 @@ public class FipStartTest {
 			List<FipPolygon> polygons, List<Map<Layer, FipLayer>> layers, List<Collection<FipSpecies>> species,
 			TestConsumer<FipStart> test
 	) throws Exception {
+		testWith(new HashMap<>(), polygons, layers, species, test);
+	}
+
+	private static final void testWith(
+			Map<String, Object> myControlMap, List<FipPolygon> polygons, List<Map<Layer, FipLayer>> layers,
+			List<Collection<FipSpecies>> species, TestConsumer<FipStart> test
+	) throws Exception {
 
 		var app = new FipStart();
 
-		var controlMap = new HashMap<String, Object>();
+		Map<String, Object> controlMap = new HashMap<>();
+
+		Map<String, Float> minima = new HashMap<>();
+
+		minima.put(FipControlParser.MINIMUM_HEIGHT, 5f);
+		minima.put(FipControlParser.MINIMUM_BASE_AREA, 0f);
+		minima.put(FipControlParser.MINIMUM_PREDICTED_BASE_AREA, 2f);
+		minima.put(FipControlParser.MINIMUM_VETERAN_HEIGHT, 10f);
+
+		controlMap.put(FipControlParser.MINIMA, minima);
+
+		controlMap.putAll(myControlMap);
 
 		var control = EasyMock.createControl();
 
@@ -256,6 +298,85 @@ public class FipStartTest {
 		expectAllClosed(polygonStream, layerStream, speciesStream);
 
 	}
+
+	/**
+	 * Do nothing to mutate valid test data
+	 */
+	static final <T> Consumer<T> valid() {
+		return x -> {
+		};
+	};
+
+	static Map<Layer, FipLayer> layerMap(FipLayer... layers) {
+		Map<Layer, FipLayer> result = new HashMap<>();
+		for (var layer : layers) {
+			result.put(layer.getLayer(), layer);
+		}
+		return result;
+	}
+
+	FipPolygon getTestPolygon(String polygonId, Consumer<FipPolygon> mutator) {
+		var result = new FipPolygon(
+				polygonId, // polygonIdentifier
+				"0", // fiz
+				"BG", // becIdentifier
+				Optional.empty(), // percentAvailable
+				Optional.of(FipMode.FIPSTART), // modeFip
+				Optional.empty(), // nonproductiveDescription
+				1.0f // yieldFactor
+		);
+		mutator.accept(result);
+		return result;
+	};
+
+	FipLayerPrimary getTestPrimaryLayer(String polygonId, Consumer<FipLayerPrimary> mutator) {
+		var result = new FipLayerPrimary(
+				polygonId, // polygonIdentifier
+				8f, // ageTotal
+				6f, // height
+				5.0f, // siteIndex
+				0.9f, // crownClosure
+				"B", // siteGenus
+				"B", // siteSpecies
+				7f, // yearsToBreastHeight
+				Optional.empty(), // stockingClass
+				Optional.empty(), // inventoryTypeGroup
+				Optional.empty(), // breastHeightAge
+				Optional.empty() // siteCurveNumber
+		);
+		mutator.accept(result);
+		return result;
+	};
+
+	FipLayer getTestVeteranLayer(String polygonId, Consumer<FipLayer> mutator) {
+		var result = new FipLayer(
+				polygonId, // polygonIdentifier
+				Layer.VETERAN, // layer
+				8f, // ageTotal
+				6f, // height
+				5.0f, // siteIndex
+				0.9f, // crownClosure
+				"B", // siteGenus
+				"B", // siteSpecies
+				7f, // yearsToBreastHeight
+				Optional.empty(), // inventoryTypeGroup
+				Optional.empty() // breastHeightAge
+		);
+		mutator.accept(result);
+		return result;
+	};
+
+	FipSpecies getTestSpecies(String polygonId, Layer layer, Consumer<FipSpecies> mutator) {
+		var result = new FipSpecies(
+				polygonId, // polygonIdentifier
+				layer, // layer
+				"B", // genus
+				100.0f, // percentGenus
+				Collections.emptyMap() // speciesPercent
+		);
+		mutator.accept(result);
+		return result;
+	};
 
 	@FunctionalInterface
 	private static interface TestConsumer<T> {

@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.vdyp.io.parse;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -321,4 +322,61 @@ public interface ValueParser<T> extends ControlledValueParser<T> {
 			return Optional.empty(); // Unknown
 		}
 	};
+
+	/**
+	 * Make a list parser return a map
+	 *
+	 * @param parser Parser for a list of values
+	 * @param keys   Keys for each position in the list.
+	 */
+	@SafeVarargs
+	public static <K, V> ValueParser<Map<K, V>> toMap(ValueParser<List<V>> parser, K... keys) {
+		return toMap(parser, Collections.emptyMap(), keys);
+	}
+
+	/**
+	 * Make a list parser return a map
+	 *
+	 * @param parser        Parser for a list of values
+	 * @param defaultValues Map of default values. Keys with defaults must follow
+	 *                      those without.
+	 * @param keys          Keys for each position in the list.
+	 */
+	@SafeVarargs
+	public static <K, V> ValueParser<Map<K, V>> toMap(ValueParser<List<V>> parser, Map<K, V> defaultValues, K... keys) {
+
+		boolean defaultSeen = false;
+		int required = 0;
+
+		for (var key : keys) {
+			var isDefault = defaultValues.containsKey(key);
+			defaultSeen |= isDefault;
+			required += isDefault ? 0 : 1;
+			if (defaultSeen != isDefault) {
+				throw new IllegalArgumentException("Keys with defaults must follow those without");
+			}
+		}
+		final int requiredFinal = required;
+		return s -> {
+			var list = parser.parse(s);
+
+			Map<K, V> result = new LinkedHashMap<>();
+			var it = list.iterator();
+			for (int i = 0; i < keys.length; i++) {
+				K key = keys[i];
+				if (it.hasNext()) {
+					result.put(key, it.next());
+				} else {
+					if (!defaultValues.containsKey(key)) {
+						throw new ValueParseException(
+								s, "Expected at least " + requiredFinal + " values but there were only " + list.size()
+						);
+					}
+					result.put(key, defaultValues.get(key)); // should never be null due to preceding checks
+				}
+			}
+			return result;
+		};
+	}
+
 }
