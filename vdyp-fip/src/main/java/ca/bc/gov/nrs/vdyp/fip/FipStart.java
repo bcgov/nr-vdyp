@@ -232,7 +232,8 @@ public class FipStart {
 
 		if (primaryLayer.getAgeTotal() - primaryLayer.getYearsToBreastHeight() < 0.5f) {
 			throw validationError(
-					"Polygon %s has %s layer where total age is less than YTBH.", polygon.getPolygonIdentifier(), Layer.PRIMARY
+					"Polygon %s has %s layer where total age is less than YTBH.", polygon.getPolygonIdentifier(),
+					Layer.PRIMARY
 			);
 		}
 
@@ -265,6 +266,13 @@ public class FipStart {
 			throw validationError(
 					"Polygon %s has %s layer where years to breast height %.1f is less than minimum %.1f years.",
 					polygon.getPolygonIdentifier(), Layer.PRIMARY, primaryLayer.getYearsToBreastHeight(), 0.5f
+			);
+		}
+
+		if (primaryLayer.getSiteIndex() < 0.5) {
+			throw validationError(
+					"Polygon %s has %s layer where site index %.1f is less than minimum %.1f years.",
+					polygon.getPolygonIdentifier(), Layer.PRIMARY, primaryLayer.getSiteIndex(), 0.5f
 			);
 		}
 	}
