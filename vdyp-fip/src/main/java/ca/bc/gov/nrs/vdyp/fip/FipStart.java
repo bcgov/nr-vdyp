@@ -256,6 +256,12 @@ public class FipStart {
 			);
 		}
 
+		if (primaryLayer.getYearsToBreastHeight() < 0.5) {
+			throw validationError(
+					"Polygon %s has %s layer where years to breast height %.1f is less than minimum %.1f years.",
+					polygon.getPolygonIdentifier(), Layer.PRIMARY, primaryLayer.getYearsToBreastHeight(), 0.5f
+			);
+		}
 	}
 
 	private static <E extends Throwable> void throwIfPresent(Optional<E> opt) throws E {

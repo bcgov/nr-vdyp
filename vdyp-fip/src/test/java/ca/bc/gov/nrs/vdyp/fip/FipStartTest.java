@@ -193,6 +193,37 @@ public class FipStartTest {
 	}
 
 	@Test
+	public void testPrimaryLayerYearsToBreastHeightLessThanMinimum() throws Exception {
+
+		var polygonId = polygonId("Test Polygon", 2023);
+		var layer = Layer.PRIMARY;
+
+		testWith(
+				Arrays.asList(getTestPolygon(polygonId, valid())), //
+				Arrays.asList(layerMap(getTestPrimaryLayer(polygonId, x -> {
+					x.setYearsToBreastHeight(0.2f);
+				}))), //
+				Arrays.asList(Collections.singletonList(getTestSpecies(polygonId, layer, valid()))), //
+				app -> {
+					var ex = assertThrows(ProcessingException.class, () -> app.process());
+
+					assertThat(
+							ex,
+							hasProperty(
+									"message",
+									is(
+											"Polygon " + polygonId + " has " + Layer.PRIMARY
+													+ " layer where years to breast height 0.2 is less than minimum 0.5 years."
+									)
+							)
+					);
+
+				}
+		);
+
+	}
+
+	@Test
 	public void testPrimaryLayerTotalAgeLessThanYearsToBreastHeight() throws Exception {
 
 		var polygonId = polygonId("Test Polygon", 2023);
