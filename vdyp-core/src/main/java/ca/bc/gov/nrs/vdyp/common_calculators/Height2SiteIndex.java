@@ -230,22 +230,21 @@ public class Height2SiteIndex {
 		} else {
 			if (si_est_type == SI_EST_DIRECT) {
 				switch (cu_index) {
-				case SI_FDI_THROWER:
-					if (age <= 4) {
-						/* means less than 1.3m, so can't generate site index */
-						/* supposedly this should never happen anyway */
-						index = 1.3;
-					} else {
-						x1 = (age - 4) * (0.39 + 0.3104 * height);
-						x2 = 33.3828 * height + x1 + 99;
+					case SI_FDI_THROWER:
+						if (age <= 4) {
+							/* means less than 1.3m, so can't generate site index */
+							/* supposedly this should never happen anyway */
+							index = 1.3;
+						} else {
+							x1 = (age - 4) * (0.39 + 0.3104 * height);
+							x2 = 33.3828 * height + x1 + 99;
 
-						index = (x2 + Math.sqrt(x2 * x2 - 4 * 99 * x1)) / (2 * (age - 4));
-					}
-					break;
-
-				default:
-					index = site_iterate(cu_index, age, SI_AT_TOTAL, height);
-					break;
+							index = (x2 + Math.sqrt(x2 * x2 - 4 * 99 * x1)) / (2 * (age - 4));
+						}
+						break;
+					default:
+						index = site_iterate(cu_index, age, SI_AT_TOTAL, height);
+						break;
 				}
 			} else
 				index = site_iterate(cu_index, age, SI_AT_TOTAL, height);
@@ -383,16 +382,26 @@ public class Height2SiteIndex {
 					index = 1.3 + 4.9038 + 0.8118 * ht_13 - 0.3638 * log_bhage * log_bhage + 24.0308 * ht_13 / bhage
 							- 0.1021 * ht_13 * llog(ht_13);
 					break;
-				// #undef SI_AT_GOUDIE 			Removed since never used again?
-				// #define SI_AT_GOUDIE 1		Removed since never used again?
-				//case SI_EA_GOUDIE:			Couldn't find constant so removed
 
-					// #undef SI_AT_GOUDIE		Removed since never used again?
-					// #define SI_AT_GOUDIE 1	Removed since never used again?
-				//case SI_EP_GOUDIE:			Couldn't find constant so removed
-					// #undef SI_AT_GOUDIE		Removed since never used again?
-					// #define SI_AT_GOUDIE 1	Removed since never used again?
+				//#ifdef SI_EA_GOUDIE			Couldn't find constant so removed
+				// #undef SI_AT_GOUDIE 			
+				// #define SI_AT_GOUDIE 1		
+				//case SI_EA_GOUDIE:			
+				//#endif
+
+				//#ifdef SI_EP_GOUDIE			Couldn't find constant so removed	
+				// #undef SI_AT_GOUDIE		
+				// #define SI_AT_GOUDIE 1	
+				//case SI_EP_GOUDIE:			
+				//#endif
+
+				//#ifdef SI_AT_GOUDIE
+				// #undef SI_AT_GOUDIE		
+				// #define SI_AT_GOUDIE 1
 				case SI_AT_GOUDIE:
+				//endif
+
+				//#ifdef SI_AT_GOUDIE
 					log_bhage = Math.log(bhage);
 
 					index = 1.3 + 17.0101 + 0.8784 * (height - 1.3) + 1.8364 * log_bhage
@@ -418,45 +427,53 @@ public class Height2SiteIndex {
 					/* convert back to metric */
 					index *= 0.3048;
 					break;
-				// #undef MONSERUD
-				// #define MONSERUD 1
 				case SI_FDI_MONS_DF:
-					// #undef MONSERUD
-					// #define MONSERUD 1
+					/* convert to imperial */
+					height /= 0.3048;
+
+					x1 = 0.4948;
+					x2 = 25.315;
+					break;
 				case SI_FDI_MONS_GF:
-					// #undef MONSERUD
-					// #define MONSERUD 1
+					/* convert to imperial */
+					height /= 0.3048;
+
+					x1 = 0.4305;
+					x2 = 28.415;
+
+					index = 4.5 + 38.787 - 2.805 * log_bhage * log_bhage + 0.0216 * bhage *
+					 		log_bhage + x1 * height + x2 * height / bhage;
+					break;
 				case SI_FDI_MONS_WRC:
-//#undef MONSERUD
-//#define MONSERUD 1
+					/* convert to imperial */
+					height /= 0.3048;
+
+					x1 = 0.4305;
+					x2 = 28.415;
+					break;
 				case SI_FDI_MONS_WH:
-//#undef MONSERUD
-//#define MONSERUD 1
+					/* convert to imperial */
+					height /= 0.3048;
+
+					x1 = 0.3964;
+					x2 = 30.008;
+					break;
 				case SI_FDI_MONS_SAF:
 					/* convert to imperial */
 					height /= 0.3048;
 
 					switch (cu_index) {
-					case SI_FDI_MONS_DF:
-						x1 = 0.4948;
-						x2 = 25.315;
-						break;
-					case SI_FDI_MONS_GF:
-						x1 = 0.4305;
-						x2 = 28.415;
-						break;
-					case SI_FDI_MONS_WRC:
-						x1 = 0.4305;
-						x2 = 28.415;
-						break;
-					case SI_FDI_MONS_WH:
-						x1 = 0.3964;
-						x2 = 30.008;
-						break;
-					case SI_FDI_MONS_SAF:
-						x1 = 0.3964;
-						x2 = 30.008;
-						break;
+						case SI_FDI_MONS_DF:	
+						case SI_FDI_MONS_GF:
+						case SI_FDI_MONS_WRC:
+						case SI_FDI_MONS_WH:
+							x1 = 0.3964;
+							x2 = 30.008;
+							break;
+						case SI_FDI_MONS_SAF:
+							x1 = 0.3964;
+							x2 = 30.008;
+							break;
 					}
 
 					log_bhage = Math.log(bhage);
@@ -673,7 +690,7 @@ public class Height2SiteIndex {
 						x1 = 0;
 						x2 = 0;
 						break;
-						break;
+						//break; Unreachable
 					}
 					if (x1 == 0) {
 						index = SI_ERR_GI_MAX;
@@ -897,9 +914,13 @@ public class Height2SiteIndex {
 						index = 1.3 + x1 * ppow(index, x2);
 					}
 					break;
-				case SI_PLI_NIGHGI:
-					/* later, we divide by age-0.5, so check it now */
-					if (bhage < 0.5) {
+				/*
+				* This section has been commented out since I cannot find the constant anywhere and this was surronded by an ifdef statement
+				* I have thus assumed this code should not trigger
+				*/ 	
+				/* case SI_PLI_NIGHGI:
+					//later, we divide by age-0.5, so check it now */
+				/* 	if (bhage < 0.5) {
 						return SI_ERR_GI_MIN;
 					}
 
@@ -1037,6 +1058,7 @@ public class Height2SiteIndex {
 						index = x1 * ppow(index, x2);
 					}
 					break;
+				*/
 				case SI_SW_NIGHGI:
 					/* later, we divide by age-0.5, so check it now */
 					if (bhage < 0.5) {
