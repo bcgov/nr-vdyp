@@ -433,6 +433,14 @@ public class Height2SiteIndex {
 
 					x1 = 0.4948;
 					x2 = 25.315;
+
+					log_bhage = Math.log(bhage);
+
+					index = 4.5 + 38.787 - 2.805 * log_bhage * log_bhage + 0.0216 * bhage *
+					 		log_bhage + x1 * height + x2 * height / bhage;
+
+					/* convert back to metric */
+					index *= 0.3048;
 					break;
 				case SI_FDI_MONS_GF:
 					/* convert to imperial */
@@ -441,8 +449,13 @@ public class Height2SiteIndex {
 					x1 = 0.4305;
 					x2 = 28.415;
 
+					log_bhage = Math.log(bhage);
+
 					index = 4.5 + 38.787 - 2.805 * log_bhage * log_bhage + 0.0216 * bhage *
 					 		log_bhage + x1 * height + x2 * height / bhage;
+
+					/* convert back to metric */
+					index *= 0.3048;
 					break;
 				case SI_FDI_MONS_WRC:
 					/* convert to imperial */
@@ -450,6 +463,14 @@ public class Height2SiteIndex {
 
 					x1 = 0.4305;
 					x2 = 28.415;
+
+					log_bhage = Math.log(bhage);
+
+					index = 4.5 + 38.787 - 2.805 * log_bhage * log_bhage + 0.0216 * bhage *
+					 		log_bhage + x1 * height + x2 * height / bhage;
+
+					/* convert back to metric */
+					index *= 0.3048;
 					break;
 				case SI_FDI_MONS_WH:
 					/* convert to imperial */
@@ -457,25 +478,22 @@ public class Height2SiteIndex {
 
 					x1 = 0.3964;
 					x2 = 30.008;
+
+					log_bhage = Math.log(bhage);
+
+					index = 4.5 + 38.787 - 2.805 * log_bhage * log_bhage + 0.0216 * bhage *
+					 		log_bhage + x1 * height + x2 * height / bhage;
+
+					/* convert back to metric */
+					index *= 0.3048;
 					break;
 				case SI_FDI_MONS_SAF:
 					/* convert to imperial */
 					height /= 0.3048;
 
-					switch (cu_index) {
-						case SI_FDI_MONS_DF:	
-						case SI_FDI_MONS_GF:
-						case SI_FDI_MONS_WRC:
-						case SI_FDI_MONS_WH:
-							x1 = 0.3964;
-							x2 = 30.008;
-							break;
-						case SI_FDI_MONS_SAF:
-							x1 = 0.3964;
-							x2 = 30.008;
-							break;
-					}
-
+					x1 = 0.3964;
+					x2 = 30.008;
+	
 					log_bhage = Math.log(bhage);
 
 					index = 4.5 + 38.787 - 2.805 * log_bhage * log_bhage + 0.0216 * bhage * log_bhage + x1 * height
@@ -905,7 +923,6 @@ public class Height2SiteIndex {
 						x1 = 0;
 						x2 = 0;
 						break;
-						break;
 					}
 					if (x1 == 0) {
 						index = SI_ERR_GI_MAX;
@@ -1190,7 +1207,6 @@ public class Height2SiteIndex {
 						x1 = 0;
 						x2 = 0;
 						break;
-						break;
 					}
 					if (x1 == 0) {
 						index = SI_ERR_GI_MAX;
@@ -1409,7 +1425,6 @@ public class Height2SiteIndex {
 					default:
 						x1 = 0;
 						x2 = 0;
-						break;
 						break;
 					}
 					if (x1 == 0) {
@@ -1630,7 +1645,6 @@ public class Height2SiteIndex {
 						x1 = 0;
 						x2 = 0;
 						break;
-						break;
 					}
 					if (x1 == 0) {
 						index = SI_ERR_GI_MAX;
@@ -1850,7 +1864,6 @@ public class Height2SiteIndex {
 						x1 = 0;
 						x2 = 0;
 						break;
-						break;
 					}
 					if (x1 == 0) {
 						index = SI_ERR_GI_MAX;
@@ -1990,7 +2003,7 @@ public class Height2SiteIndex {
 						x1 = 0;
 						x2 = 0;
 						break;
-						break;
+						//break;
 					}
 					if (x1 == 0) {
 						index = SI_ERR_GI_MAX;
@@ -2205,7 +2218,7 @@ public class Height2SiteIndex {
 						x1 = 0;
 						x2 = 0;
 						break;
-						break;
+						//break;
 					}
 					if (x1 == 0) {
 						index = SI_ERR_GI_MAX;
@@ -2425,7 +2438,7 @@ public class Height2SiteIndex {
 						x1 = 0;
 						x2 = 0;
 						break;
-						break;
+						//break;
 					}
 					if (x1 == 0) {
 						index = SI_ERR_GI_MAX;
@@ -2640,7 +2653,7 @@ public class Height2SiteIndex {
 						x1 = 0;
 						x2 = 0;
 						break;
-						break;
+						//break;
 					}
 					if (x1 == 0) {
 						index = SI_ERR_GI_MAX;
@@ -2780,7 +2793,7 @@ public class Height2SiteIndex {
 						x1 = 0;
 						x2 = 0;
 						break;
-						break;
+						//break;
 					}
 					if (x1 == 0) {
 						index = SI_ERR_GI_MAX;
@@ -2999,7 +3012,7 @@ public class Height2SiteIndex {
 						x1 = 0;
 						x2 = 0;
 						break;
-						break;
+						//break;
 					}
 					if (x1 == 0) {
 						index = SI_ERR_GI_MAX;
@@ -3219,7 +3232,7 @@ public class Height2SiteIndex {
 						x1 = 0;
 						x2 = 0;
 						break;
-						break;
+						//break;
 					}
 					if (x1 == 0) {
 						index = SI_ERR_GI_MAX;
@@ -3439,7 +3452,7 @@ public class Height2SiteIndex {
 						x1 = 0;
 						x2 = 0;
 						break;
-						break;
+						//break;
 					}
 					if (x1 == 0) {
 						index = SI_ERR_GI_MAX;
@@ -3659,7 +3672,7 @@ public class Height2SiteIndex {
 						x1 = 0;
 						x2 = 0;
 						break;
-						break;
+						//break;
 					}
 					if (x1 == 0)
 						index = SI_ERR_GI_MAX;
@@ -3879,7 +3892,7 @@ public class Height2SiteIndex {
 						x1 = 0;
 						x2 = 0;
 						break;
-						break;
+						//break;
 					}
 					if (x1 == 0) {
 						index = SI_ERR_GI_MAX;
@@ -4099,7 +4112,7 @@ public class Height2SiteIndex {
 						x1 = 0;
 						x2 = 0;
 						break;
-						break;
+						//break;
 					}
 					if (x1 == 0) {
 						index = SI_ERR_GI_MAX;

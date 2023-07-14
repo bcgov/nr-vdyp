@@ -3219,7 +3219,7 @@ public class Sindxdll {
 	public static short
 			HtSIToAge(short curve, double height, short ageType, double siteIndex, double y2bh, double[] age)
 					throws IllegalArgumentException, NoSuchElementException {
-		age[0] = index_to_age(curve, height, ageType, siteIndex, y2bh);
+		age[0] = SiteIndex2Age.index_to_age(curve, height, ageType, siteIndex, y2bh);
 		if (age[0] < 0) {
 			switch ((short) age[0]) {
 			case SI_ERR_CURVE:
