@@ -317,6 +317,172 @@ public class FipStartTest {
 
 	}
 
+	@Test
+	public void testOneSpeciesLessThan100Percent() throws Exception {
+
+		var polygonId = polygonId("Test Polygon", 2023);
+		var layer = Layer.PRIMARY;
+
+		testWith(
+				Arrays.asList(getTestPolygon(polygonId, valid())), //
+				Arrays.asList(layerMap(getTestPrimaryLayer(polygonId, valid()))), //
+				Arrays.asList(Collections.singletonList(getTestSpecies(polygonId, layer, x -> {
+					x.setPercentGenus(99f);
+				}))), //
+				app -> {
+
+					var ex = assertThrows(ProcessingException.class, () -> app.process());
+
+					assertThat(
+							ex,
+							hasProperty(
+									"message",
+									is(
+											"Polygon " + polygonId
+													+ " has PRIMARY layer where species entries have a percentage total that does not sum to 100%."
+									)
+							)
+					);
+				}
+		);
+
+	}
+
+	@Test
+	public void testOneSpeciesMoreThan100Percent() throws Exception {
+
+		var polygonId = polygonId("Test Polygon", 2023);
+		var layer = Layer.PRIMARY;
+
+		testWith(
+				Arrays.asList(getTestPolygon(polygonId, valid())), //
+				Arrays.asList(layerMap(getTestPrimaryLayer(polygonId, valid()))), //
+				Arrays.asList(Collections.singletonList(getTestSpecies(polygonId, layer, x -> {
+					x.setPercentGenus(101f);
+				}))), //
+				app -> {
+
+					var ex = assertThrows(ProcessingException.class, () -> app.process());
+
+					assertThat(
+							ex,
+							hasProperty(
+									"message",
+									is(
+											"Polygon " + polygonId
+													+ " has PRIMARY layer where species entries have a percentage total that does not sum to 100%."
+									)
+							)
+					);
+				}
+		);
+
+	}
+
+	@Test
+	public void testTwoSpeciesSumTo100Percent() throws Exception {
+
+		var polygonId = polygonId("Test Polygon", 2023);
+		var layer = Layer.PRIMARY;
+
+		testWith(
+				Arrays.asList(getTestPolygon(polygonId, valid())), //
+				Arrays.asList(layerMap(getTestPrimaryLayer(polygonId, valid()))), //
+				Arrays.asList(
+						Arrays.asList(
+								//
+								getTestSpecies(polygonId, layer, "B", x -> {
+									x.setPercentGenus(75f);
+								}), getTestSpecies(polygonId, layer, "P", x -> {
+									x.setPercentGenus(25f);
+								})
+						)
+				), //
+				app -> {
+
+					assertDoesNotThrow(() -> app.process());
+
+				}
+		);
+
+	}
+
+	@Test
+	public void testTwoSpeciesSumToLessThan100Percent() throws Exception {
+
+		var polygonId = polygonId("Test Polygon", 2023);
+		var layer = Layer.PRIMARY;
+
+		testWith(
+				Arrays.asList(getTestPolygon(polygonId, valid())), //
+				Arrays.asList(layerMap(getTestPrimaryLayer(polygonId, valid()))), //
+				Arrays.asList(
+						Arrays.asList(
+								//
+								getTestSpecies(polygonId, layer, "B", x -> {
+									x.setPercentGenus(75 - 1f);
+								}), getTestSpecies(polygonId, layer, "P", x -> {
+									x.setPercentGenus(25f);
+								})
+						)
+				), //
+				app -> {
+
+					var ex = assertThrows(ProcessingException.class, () -> app.process());
+
+					assertThat(
+							ex,
+							hasProperty(
+									"message",
+									is(
+											"Polygon " + polygonId
+													+ " has PRIMARY layer where species entries have a percentage total that does not sum to 100%."
+									)
+							)
+					);
+				}
+		);
+
+	}
+
+	@Test
+	public void testTwoSpeciesSumToMoreThan100Percent() throws Exception {
+
+		var polygonId = polygonId("Test Polygon", 2023);
+		var layer = Layer.PRIMARY;
+
+		testWith(
+				Arrays.asList(getTestPolygon(polygonId, valid())), //
+				Arrays.asList(layerMap(getTestPrimaryLayer(polygonId, valid()))), //
+				Arrays.asList(
+						Arrays.asList(
+								//
+								getTestSpecies(polygonId, layer, "B", x -> {
+									x.setPercentGenus(75 + 1f);
+								}), getTestSpecies(polygonId, layer, "P", x -> {
+									x.setPercentGenus(25f);
+								})
+						)
+				), //
+				app -> {
+
+					var ex = assertThrows(ProcessingException.class, () -> app.process());
+
+					assertThat(
+							ex,
+							hasProperty(
+									"message",
+									is(
+											"Polygon " + polygonId
+													+ " has PRIMARY layer where species entries have a percentage total that does not sum to 100%."
+									)
+							)
+					);
+				}
+		);
+
+	}
+
 	private static <T> MockStreamingParser<T>
 			mockStream(IMocksControl control, Map<String, Object> controlMap, String key, String name)
 					throws IOException {
@@ -474,10 +640,14 @@ public class FipStartTest {
 	};
 
 	FipSpecies getTestSpecies(String polygonId, Layer layer, Consumer<FipSpecies> mutator) {
+		return getTestSpecies(polygonId, layer, "B", mutator);
+	};
+
+	FipSpecies getTestSpecies(String polygonId, Layer layer, String genusId, Consumer<FipSpecies> mutator) {
 		var result = new FipSpecies(
 				polygonId, // polygonIdentifier
 				layer, // layer
-				"B", // genus
+				genusId, // genus
 				100.0f, // percentGenus
 				Collections.emptyMap() // speciesPercent
 		);

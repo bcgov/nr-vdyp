@@ -275,6 +275,22 @@ public class FipStart {
 					polygon.getPolygonIdentifier(), Layer.PRIMARY, primaryLayer.getSiteIndex(), 0.5f
 			);
 		}
+
+		// TODO fill in "FR" should be a map of species to volume proportions for the
+		// primary layer, see fip_chk.for:237
+
+		for (var layer : polygon.getLayers().values()) {
+			var percentTotal = layer.getSpecies().values().stream()//
+					.map(FipSpecies::getPercentGenus)//
+					.reduce(0.0f, (x, y) -> x + y);
+			if (Math.abs(percentTotal - 100f) > 0.01f) {
+				throw validationError(
+						"Polygon %s has %s layer where species entries have a percentage total that does not sum to 100%%.",
+						polygon.getPolygonIdentifier(), Layer.PRIMARY
+				);
+			}
+		}
+
 	}
 
 	private static <E extends Throwable> void throwIfPresent(Optional<E> opt) throws E {
