@@ -124,7 +124,7 @@ public class FipStart {
 				// if (IP_IN .gt. MAXPOLY) go to 200
 
 				polygonsRead++; // Don't count polygons we aren't processing due to mode. This was the behavior
-								// in VDYP7
+				// in VDYP7
 
 				// IPASS = 1
 				// CALL FIP_CHK( IPASS, IER)
@@ -232,10 +232,15 @@ public class FipStart {
 
 		if (primaryLayer.getAgeTotal() - primaryLayer.getYearsToBreastHeight() < 0.5f) {
 			throw validationError(
-					"Polygon %s has %s layer where total age is less than YTBH.", polygon.getPolygonIdentifier(),
-					Layer.PRIMARY
+					"Polygon %s has %s layer where total age is less than YTBH.", polygon.getPolygonIdentifier(), Layer.PRIMARY
 			);
 		}
+
+		// TODO This is the only validation step done to non-primary layers, VDYP7 had a
+		// less well defined idea of a layer being present or not and so it may have
+		// skipped validating other layers rather than validating them conditionally on
+		// being present. Consider extending validation of other properties to other
+		// layers.
 
 		for (var layer : polygon.getLayers().values()) {
 			var height = layer.getHeight();
