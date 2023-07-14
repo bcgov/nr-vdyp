@@ -276,9 +276,6 @@ public class FipStart {
 			);
 		}
 
-		// TODO fill in "FR" should be a map of species to volume proportions for the
-		// primary layer, see fip_chk.for:237
-
 		for (var layer : polygon.getLayers().values()) {
 			var percentTotal = layer.getSpecies().values().stream()//
 					.map(FipSpecies::getPercentGenus)//
@@ -288,6 +285,13 @@ public class FipStart {
 						"Polygon %s has %s layer where species entries have a percentage total that does not sum to 100%%.",
 						polygon.getPolygonIdentifier(), Layer.PRIMARY
 				);
+			}
+			// VDYP7 performs this step which should be negligible but might have a small
+			// impact due to the 0.01 percent variation and floating point errors.
+			if (layer.getLayer() == Layer.PRIMARY) {
+				layer.getSpecies().values().forEach(species -> {
+					species.setFractionGenus(species.getPercentGenus() / percentTotal);
+				});
 			}
 		}
 

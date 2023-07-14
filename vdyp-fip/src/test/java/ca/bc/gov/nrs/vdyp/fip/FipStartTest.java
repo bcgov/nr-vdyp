@@ -1,6 +1,8 @@
 package ca.bc.gov.nrs.vdyp.fip;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -35,7 +37,7 @@ public class FipStartTest {
 	@Test
 	public void testProcessEmpty() throws Exception {
 
-		testWith(Arrays.asList(), Arrays.asList(), Arrays.asList(), app -> {
+		testWith(Arrays.asList(), Arrays.asList(), Arrays.asList(), (app, controlMap) -> {
 			assertDoesNotThrow(app::process);
 		});
 	}
@@ -52,7 +54,7 @@ public class FipStartTest {
 				Arrays.asList(getTestPolygon(polygonId, valid())), //
 				Arrays.asList(layerMap(getTestPrimaryLayer(polygonId, valid()))), //
 				Arrays.asList(Collections.singletonList(getTestSpecies(polygonId, layer, valid()))), //
-				app -> {
+				(app, controlMap) -> {
 					assertDoesNotThrow(app::process);
 				}
 		);
@@ -68,7 +70,7 @@ public class FipStartTest {
 				Arrays.asList(getTestPolygon(polygonId, valid())), //
 				Collections.emptyList(), //
 				Collections.emptyList(), //
-				app -> {
+				(app, controlMap) -> {
 					var ex = assertThrows(ProcessingException.class, () -> app.process());
 
 					assertThat(ex, hasProperty("message", is("Layers file has fewer records than polygon file.")));
@@ -86,7 +88,7 @@ public class FipStartTest {
 				Arrays.asList(getTestPolygon(polygonId, valid())), //
 				Arrays.asList(layerMap(getTestPrimaryLayer(polygonId, valid()))), //
 				Collections.emptyList(), //
-				app -> {
+				(app, controlMap) -> {
 					var ex = assertThrows(ProcessingException.class, () -> app.process());
 
 					assertThat(ex, hasProperty("message", is("Species file has fewer records than polygon file.")));
@@ -106,7 +108,7 @@ public class FipStartTest {
 				Arrays.asList(getTestPolygon(polygonId, valid())), //
 				Arrays.asList(layerMap(getTestVeteranLayer(polygonId, valid()))), //
 				Arrays.asList(Collections.singletonList(getTestSpecies(polygonId, layer, valid()))), //
-				app -> {
+				(app, controlMap) -> {
 					var ex = assertThrows(ProcessingException.class, () -> app.process());
 
 					assertThat(
@@ -137,7 +139,7 @@ public class FipStartTest {
 					x.setHeight(4f);
 				}))), //
 				Arrays.asList(Collections.singletonList(getTestSpecies(polygonId, layer, valid()))), //
-				app -> {
+				(app, controlMap) -> {
 					var ex = assertThrows(ProcessingException.class, () -> app.process());
 
 					assertThat(
@@ -173,7 +175,7 @@ public class FipStartTest {
 						)
 				), //
 				Arrays.asList(Collections.singletonList(getTestSpecies(polygonId, layer, valid()))), //
-				app -> {
+				(app, controlMap) -> {
 					var ex = assertThrows(ProcessingException.class, () -> app.process());
 
 					assertThat(
@@ -204,7 +206,7 @@ public class FipStartTest {
 					x.setYearsToBreastHeight(0.2f);
 				}))), //
 				Arrays.asList(Collections.singletonList(getTestSpecies(polygonId, layer, valid()))), //
-				app -> {
+				(app, controlMap) -> {
 					var ex = assertThrows(ProcessingException.class, () -> app.process());
 
 					assertThat(
@@ -240,7 +242,7 @@ public class FipStartTest {
 					x.setYearsToBreastHeight(8f);
 				}))), //
 				Arrays.asList(Collections.singletonList(getTestSpecies(polygonId, layer, valid()))), //
-				app -> {
+				(app, controlMap) -> {
 
 					var ex = assertThrows(ProcessingException.class, () -> app.process());
 
@@ -248,10 +250,7 @@ public class FipStartTest {
 							ex,
 							hasProperty(
 									"message",
-									is(
-											"Polygon " + polygonId + " has " + Layer.PRIMARY
-													+ " layer where total age is less than YTBH."
-									)
+									is("Polygon " + polygonId + " has " + Layer.PRIMARY + " layer where total age is less than YTBH.")
 							)
 					);
 				}
@@ -271,7 +270,7 @@ public class FipStartTest {
 					x.setSiteIndex(0.2f);
 				}))), //
 				Arrays.asList(Collections.singletonList(getTestSpecies(polygonId, layer, valid()))), //
-				app -> {
+				(app, controlMap) -> {
 					var ex = assertThrows(ProcessingException.class, () -> app.process());
 
 					assertThat(
@@ -301,15 +300,14 @@ public class FipStartTest {
 		})), //
 				Arrays.asList(layerMap(getTestPrimaryLayer(polygonId, valid()))), //
 				Arrays.asList(Collections.singletonList(getTestSpecies(polygonId, layer, valid()))), //
-				app -> {
+				(app, controlMap) -> {
 
 					var ex = assertThrows(ProcessingException.class, () -> app.process());
 
 					assertThat(
 							ex,
 							hasProperty(
-									"message",
-									is("Polygon " + polygonId + " is using unsupported mode " + FipMode.FIPYOUNG + ".")
+									"message", is("Polygon " + polygonId + " is using unsupported mode " + FipMode.FIPYOUNG + ".")
 							)
 					);
 				}
@@ -329,7 +327,7 @@ public class FipStartTest {
 				Arrays.asList(Collections.singletonList(getTestSpecies(polygonId, layer, x -> {
 					x.setPercentGenus(99f);
 				}))), //
-				app -> {
+				(app, controlMap) -> {
 
 					var ex = assertThrows(ProcessingException.class, () -> app.process());
 
@@ -360,7 +358,7 @@ public class FipStartTest {
 				Arrays.asList(Collections.singletonList(getTestSpecies(polygonId, layer, x -> {
 					x.setPercentGenus(101f);
 				}))), //
-				app -> {
+				(app, controlMap) -> {
 
 					var ex = assertThrows(ProcessingException.class, () -> app.process());
 
@@ -398,7 +396,7 @@ public class FipStartTest {
 								})
 						)
 				), //
-				app -> {
+				(app, controlMap) -> {
 
 					assertDoesNotThrow(() -> app.process());
 
@@ -426,7 +424,7 @@ public class FipStartTest {
 								})
 						)
 				), //
-				app -> {
+				(app, controlMap) -> {
 
 					var ex = assertThrows(ProcessingException.class, () -> app.process());
 
@@ -464,7 +462,7 @@ public class FipStartTest {
 								})
 						)
 				), //
-				app -> {
+				(app, controlMap) -> {
 
 					var ex = assertThrows(ProcessingException.class, () -> app.process());
 
@@ -483,9 +481,76 @@ public class FipStartTest {
 
 	}
 
+	@Test
+	public void testFractionGenusCalculation() throws Exception {
+
+		var polygonId = polygonId("Test Polygon", 2023);
+		var layer = Layer.PRIMARY;
+
+		final var speciesList = Arrays.asList(
+				//
+				getTestSpecies(polygonId, layer, "B", x -> {
+					x.setPercentGenus(75f);
+				}), getTestSpecies(polygonId, layer, "P", x -> {
+					x.setPercentGenus(25f);
+				})
+		);
+		testWith(
+				Arrays.asList(getTestPolygon(polygonId, valid())), //
+				Arrays.asList(layerMap(getTestPrimaryLayer(polygonId, valid()))), //
+				Arrays.asList(
+						speciesList
+				), //
+				(app, controlMap) -> {
+
+					app.process();
+					
+					// Testing exact floating point equality is intentional
+					assertThat(speciesList, contains( //
+							allOf(hasProperty("genus",is("B")), hasProperty("fractionGenus", is(0.75f))),//
+							allOf(hasProperty("genus",is("P")), hasProperty("fractionGenus", is(0.25f)))//
+							));
+				}
+		);
+
+	}
+	
+	@Test
+	public void testFractionGenusCalculationWithSlightError() throws Exception {
+
+		var polygonId = polygonId("Test Polygon", 2023);
+		var layer = Layer.PRIMARY;
+
+		final var speciesList = Arrays.asList(
+				//
+				getTestSpecies(polygonId, layer, "B", x -> {
+					x.setPercentGenus(75 + 0.009f);
+				}), getTestSpecies(polygonId, layer, "P", x -> {
+					x.setPercentGenus(25f);
+				})
+		);
+		testWith(
+				Arrays.asList(getTestPolygon(polygonId, valid())), //
+				Arrays.asList(layerMap(getTestPrimaryLayer(polygonId, valid()))), //
+				Arrays.asList(
+						speciesList
+				), //
+				(app, controlMap) -> {
+
+					app.process();
+					
+					// Testing exact floating point equality is intentional
+					assertThat(speciesList, contains( //
+							allOf(hasProperty("genus",is("B")), hasProperty("fractionGenus", is(0.75002253f))),//
+							allOf(hasProperty("genus",is("P")), hasProperty("fractionGenus", is(0.2499775f)))//
+							));
+				}
+		);
+
+	}
+
 	private static <T> MockStreamingParser<T>
-			mockStream(IMocksControl control, Map<String, Object> controlMap, String key, String name)
-					throws IOException {
+			mockStream(IMocksControl control, Map<String, Object> controlMap, String key, String name) throws IOException {
 		StreamingParserFactory<T> streamFactory = control.mock(name + "Factory", StreamingParserFactory.class);
 		MockStreamingParser<T> stream = new MockStreamingParser<>();
 
@@ -564,7 +629,7 @@ public class FipStartTest {
 
 		control.replay();
 
-		test.accept(app);
+		test.accept(app, controlMap);
 
 		control.verify();
 
@@ -657,6 +722,6 @@ public class FipStartTest {
 
 	@FunctionalInterface
 	private static interface TestConsumer<T> {
-		public void accept(T unit) throws Exception;
+		public void accept(T unit, Map<String, Object> controlMap) throws Exception;
 	}
 }
