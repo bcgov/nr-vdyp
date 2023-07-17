@@ -3372,7 +3372,7 @@ public class Sindxdll {
 	 *                                  GI curve, or if site index <= 1.3
 	 */
 	public static short Y2BH05(short curve, double siteIndex, double[] y2bh) throws IllegalArgumentException {
-		y2bh[0] = si_y2bh05(curve, siteIndex);
+		y2bh[0] = SiteIndexYears2BreastHeight.si_y2bh05(curve, siteIndex);
 		if (y2bh[0] < 0) {
 			switch ((short) y2bh[0]) {
 			case SI_ERR_CURVE:
@@ -3406,7 +3406,7 @@ public class Sindxdll {
 	 *                                  GI curve, or if site index <= 1.3
 	 */
 	public static short Y2BH(short curve, double siteIndex, double[] y2bh) throws IllegalArgumentException {
-		y2bh[0] = si_y2bh(curve, siteIndex);
+		y2bh[0] = SiteIndexYears2BreastHeight.si_y2bh(curve, siteIndex);
 		if (y2bh[0] < 0) {
 			switch ((short) y2bh[0]) {
 			case SI_ERR_CURVE:

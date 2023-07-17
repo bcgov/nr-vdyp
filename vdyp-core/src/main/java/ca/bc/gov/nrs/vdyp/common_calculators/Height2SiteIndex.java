@@ -1,7 +1,6 @@
 package ca.bc.gov.nrs.vdyp.common_calculators;
 
 import java.lang.Math;
-import ca.bc.gov.nrs.vdyp.common_calculators.*;
 /* @formatter:off */
 /**
  * Height2SiteIndex.java
@@ -4146,7 +4145,7 @@ public class Height2SiteIndex {
 		/* loop until real close, or other end condition */
 		do {
 			/* estimate y2bh */
-			y2bh = si_y2bh(cu_index, site);
+			y2bh = SiteIndexYears2BreastHeight.si_y2bh(cu_index, site);
 
 			if (age_type == SI_AT_BREAST) {
 				test_top = SiteIndex2Height.index_to_height(cu_index, age, SI_AT_BREAST, site, y2bh, 0.5); // 0.5 may have to change
