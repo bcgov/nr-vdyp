@@ -3170,7 +3170,7 @@ public class Sindxdll {
 	public static short HtAgeToSI(short curve, double age, short ageType, double height, short estType, double[] site)
 			throws IllegalArgumentException, NoSuchElementException { // Here the original uses a pointer. I have
 																		// replaced all pointers with arrays.
-		site[0] = height_to_index(curve, age, ageType, height, estType); // This is from ht2si.c
+		site[0] = Height2SiteIndex.height_to_index(curve, age, ageType, height, estType); // This is from ht2si.c
 		if (site[0] < 0) {
 			switch ((short) site[0]) {
 			case SI_ERR_CURVE:
@@ -3273,7 +3273,7 @@ public class Sindxdll {
 	public static short
 			AgeSIToHt(short curve, double age, short ageType, double siteIndex, double y2bh, double[] height)
 					throws IllegalArgumentException, NoSuchElementException {
-		height[0] = index_to_height(curve, age, ageType, siteIndex, y2bh, 0.5);
+		height[0] = SiteIndex2Height.index_to_height(curve, age, ageType, siteIndex, y2bh, 0.5);
 		if (height[0] < 0) {
 			switch ((short) height[0]) {
 			case SI_ERR_CURVE:
@@ -3482,7 +3482,7 @@ public class Sindxdll {
 	 *                                  FIZ code is unknown
 	 */
 	public static short SCToSI(short sp_index, char sitecl, char fiz, double[] site) {
-		site[0] = class_to_index(sp_index, sitecl, fiz);
+		site[0] = SiteClassCode2SiteIndex.class_to_index(sp_index, sitecl, fiz);
 		if (site[0] < 0) {
 			switch ((short) site[0]) {
 			case SI_ERR_SPEC:

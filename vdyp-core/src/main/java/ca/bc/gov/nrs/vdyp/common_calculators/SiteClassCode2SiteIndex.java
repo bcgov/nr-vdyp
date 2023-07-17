@@ -37,6 +37,8 @@ public class SiteClassCode2SiteIndex {
  * 1999 jan 8  - Changed int to short int.
  *             - Changed to take species index as parameter.
  * 2000 jul 24 - Split CW into CWI and CWC.
+ * 2023 jul 14  - Translated like for like from C to Java
+ * 			   -  Renamed from sc2si.c to SiteClassCode2SiteIndex
  */
 /* @formatter:on */
 

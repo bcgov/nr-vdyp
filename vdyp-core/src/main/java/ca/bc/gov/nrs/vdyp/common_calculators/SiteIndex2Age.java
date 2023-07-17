@@ -1,7 +1,6 @@
 package ca.bc.gov.nrs.vdyp.common_calculators;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 
@@ -71,6 +70,9 @@ public class SiteIndex2Age {
  * 2009 may 6  - Forced pure y2bh to be computed for Fdc-Bruce.
  *      apr 16 - Added 2010 Sw Hu and Garcia.
  * 2016 mar 9  - Added parameter to index_to_height().
+ * 2023 jul 14  - Translated like for like from C to Java
+ *              - Renamed from si2age.c to SiteIndex2Age
+ *  
  */
 /* @formatter:on */
 
@@ -260,13 +262,13 @@ public class SiteIndex2Age {
                 if (age < 10 && age > 0){
                     age = iterate (cu_index, site_height, age_type, site_index, y2bh);
                     if(HOOP){
-                        ht5 = index_to_height (cu_index, 5.0, SI_AT_BREAST, site_index, y2bh, 0.5); // 0.5 may have to change
+                        ht5 = SiteIndex2Height.index_to_height (cu_index, 5.0, SI_AT_BREAST, site_index, y2bh, 0.5); // 0.5 may have to change
                         
                         if (site_height <= ht5){
                             site_height -= (1 - ((ht5 - site_height) / ht5)) * 1.5;
                         }
                         else{
-                            ht10 = index_to_height (cu_index, 10.0, SI_AT_BREAST, site_index, y2bh, 0.5); // 0.5 may have to change
+                            ht10 = SiteIndex2Height.index_to_height (cu_index, 10.0, SI_AT_BREAST, site_index, y2bh, 0.5); // 0.5 may have to change
                             site_height -= (((ht10 - site_height) / (ht10 - ht5))) * 1.5;
                         }
                     }
@@ -756,7 +758,7 @@ public class SiteIndex2Age {
         err_count = 0;
             
         /* do a preliminary test to catch some obvious errors */
-        test_ht = index_to_height(cu_index, si2age, SI_AT_TOTAL, site_index, y2bh, 0.5); // 0.5 may have to change
+        test_ht = SiteIndex2Height.index_to_height(cu_index, si2age, SI_AT_TOTAL, site_index, y2bh, 0.5); // 0.5 may have to change
         
         if (test_ht == SI_ERR_CURVE ||
             test_ht == SI_ERR_LT13 ||
@@ -785,7 +787,7 @@ public class SiteIndex2Age {
                 }
             }
 
-            test_ht = index_to_height (cu_index, si2age, SI_AT_TOTAL, site_index, y2bh, 0.5); // 0.5 may have to change
+            test_ht = SiteIndex2Height.index_to_height (cu_index, si2age, SI_AT_TOTAL, site_index, y2bh, 0.5); // 0.5 may have to change
 
             if(TEST){
                 try {
@@ -875,7 +877,7 @@ public class SiteIndex2Age {
     }
 
 
-    static double gi_iterate (
+    public static double gi_iterate (
     short  cu_index,
     double site_height,
     short  age_type,
@@ -912,7 +914,7 @@ public class SiteIndex2Age {
                 }
 
             }
-                test_site = height_to_index (cu_index, age, SI_AT_BREAST, site_height, SI_EST_DIRECT);
+                test_site = Height2SiteIndex.height_to_index (cu_index, age, SI_AT_BREAST, site_height, (short) SI_EST_DIRECT);
 
             if(TEST){
                 try {

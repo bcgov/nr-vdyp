@@ -206,7 +206,7 @@ public class Height2SiteIndex {
 		return ( (x) <= 0.0) ? Math.log(.00001) : Math.log(x);
 	}
 
-	double height_to_index(short cu_index, double age, short age_type, double height, short si_est_type) {
+	public static double height_to_index(short cu_index, double age, short age_type, double height, short si_est_type) {
 		double index;
 		double x1, x2;
 
@@ -252,7 +252,7 @@ public class Height2SiteIndex {
 		return (index);
 	}
 
-	double ba_height_to_index(short cu_index, double bhage, double height, short si_est_type) {
+	public static double ba_height_to_index(short cu_index, double bhage, double height, short si_est_type) {
 		double index;
 		double x1, x2;
 		double log_bhage;
@@ -4131,7 +4131,7 @@ public class Height2SiteIndex {
 		return index;
 	}
 
-	static double site_iterate(short cu_index, double age, short age_type, double height) {
+	public static double site_iterate(short cu_index, double age, short age_type, double height) {
 		double site;
 		double step;
 		double test_top;
@@ -4149,7 +4149,7 @@ public class Height2SiteIndex {
 			y2bh = si_y2bh(cu_index, site);
 
 			if (age_type == SI_AT_BREAST) {
-				test_top = index_to_height(cu_index, age, SI_AT_BREAST, site, y2bh, 0.5); // 0.5 may have to change
+				test_top = SiteIndex2Height.index_to_height(cu_index, age, SI_AT_BREAST, site, y2bh, 0.5); // 0.5 may have to change
 			} else {
 				if (y2bh == SI_ERR_GI_TOT) {
 					/* cannot do this for GI equations */
@@ -4157,7 +4157,7 @@ public class Height2SiteIndex {
 					break;
 				}
 				/* was age - y2bh */
-				test_top = index_to_height(
+				test_top = SiteIndex2Height.index_to_height(
 						cu_index, Age2Age.age_to_age(cu_index, age, SI_AT_TOTAL, SI_AT_BREAST, y2bh), SI_AT_BREAST,
 						site, y2bh, 0.5
 				); // 0.5 may have to change
@@ -4223,7 +4223,7 @@ public class Height2SiteIndex {
 		return site;
 	}
 
-	static double hu_garcia_q(double site_index, double bhage) {
+	public static double hu_garcia_q(double site_index, double bhage) {
 		double h, q, step, diff, lastdiff;
 
 		q = 0.02;
@@ -4259,7 +4259,7 @@ public class Height2SiteIndex {
 		return q;
 	}
 
-	static double hu_garcia_h(double q, double bhage) {
+	public static double hu_garcia_h(double q, double bhage) {
 		double a, height;
 
 		a = 283.9 * Math.pow(q, 0.5137);
