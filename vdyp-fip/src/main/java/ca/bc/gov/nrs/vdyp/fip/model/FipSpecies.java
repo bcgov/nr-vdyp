@@ -9,18 +9,21 @@ public class FipSpecies {
 	static final String POLYGON_IDENTIFIER = "POLYGON_IDENTIFIER"; // POLYDESC
 	static final String LAYER = "LAYER"; // LAYER
 
-	final String polygonIdentifier; // POLYDESC
-	final Layer layer; // LAYER
-	final String genus; // SP0
+	final String polygonIdentifier; // FIP_P/POLYDESC
+	final Layer layer; // This is also represents the distinction between data stored in
+						// FIPL_1(A) and FIP_V(A). Where VDYP7 stores both and looks at certain values
+						// to determine if a layer is "present". VDYP8 stores them in a map keyed by
+						// this value
 
-	float percentGenus;
+	final String genus; // FIPSA/SP0V
 
-	// This is computed from percentGenus, but VDYP7 computes it (RFBASP0/FR) in a
-	// way that might lead to a slight difference so it's stored separately and can
-	// be modified.
-	float fractionGenus;
+	float percentGenus; // FIPS/PCTVOLV
 
-	Map<String, Float> speciesPercent;
+	// This is computed from percentGenus, but VDYP7 computes it in a way that might
+	// lead to a slight difference so it's stored separately and can be modified.
+	float fractionGenus; // RFBASP0/FR
+
+	Map<String, Float> speciesPercent; // Map from
 
 	public FipSpecies(
 			String polygonIdentifier, Layer layer, String genus, float percentGenus, Map<String, Float> speciesPercent

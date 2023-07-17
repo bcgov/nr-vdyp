@@ -250,7 +250,10 @@ public class FipStartTest {
 							ex,
 							hasProperty(
 									"message",
-									is("Polygon " + polygonId + " has " + Layer.PRIMARY + " layer where total age is less than YTBH.")
+									is(
+											"Polygon " + polygonId + " has " + Layer.PRIMARY
+													+ " layer where total age is less than YTBH."
+									)
 							)
 					);
 				}
@@ -307,7 +310,8 @@ public class FipStartTest {
 					assertThat(
 							ex,
 							hasProperty(
-									"message", is("Polygon " + polygonId + " is using unsupported mode " + FipMode.FIPYOUNG + ".")
+									"message",
+									is("Polygon " + polygonId + " is using unsupported mode " + FipMode.FIPYOUNG + ".")
 							)
 					);
 				}
@@ -498,23 +502,24 @@ public class FipStartTest {
 		testWith(
 				Arrays.asList(getTestPolygon(polygonId, valid())), //
 				Arrays.asList(layerMap(getTestPrimaryLayer(polygonId, valid()))), //
-				Arrays.asList(
-						speciesList
-				), //
+				Arrays.asList(speciesList), //
 				(app, controlMap) -> {
 
 					app.process();
-					
+
 					// Testing exact floating point equality is intentional
-					assertThat(speciesList, contains( //
-							allOf(hasProperty("genus",is("B")), hasProperty("fractionGenus", is(0.75f))),//
-							allOf(hasProperty("genus",is("P")), hasProperty("fractionGenus", is(0.25f)))//
-							));
+					assertThat(
+							speciesList, contains(
+								//
+									allOf(hasProperty("genus", is("B")), hasProperty("fractionGenus", is(0.75f))), //
+									allOf(hasProperty("genus", is("P")), hasProperty("fractionGenus", is(0.25f)))//
+							)
+					);
 				}
 		);
 
 	}
-	
+
 	@Test
 	public void testFractionGenusCalculationWithSlightError() throws Exception {
 
@@ -532,25 +537,27 @@ public class FipStartTest {
 		testWith(
 				Arrays.asList(getTestPolygon(polygonId, valid())), //
 				Arrays.asList(layerMap(getTestPrimaryLayer(polygonId, valid()))), //
-				Arrays.asList(
-						speciesList
-				), //
+				Arrays.asList(speciesList), //
 				(app, controlMap) -> {
 
 					app.process();
-					
+
 					// Testing exact floating point equality is intentional
-					assertThat(speciesList, contains( //
-							allOf(hasProperty("genus",is("B")), hasProperty("fractionGenus", is(0.75002253f))),//
-							allOf(hasProperty("genus",is("P")), hasProperty("fractionGenus", is(0.2499775f)))//
-							));
+					assertThat(
+							speciesList, contains(
+								//
+									allOf(hasProperty("genus", is("B")), hasProperty("fractionGenus", is(0.75002253f))), //
+									allOf(hasProperty("genus", is("P")), hasProperty("fractionGenus", is(0.2499775f)))//
+							)
+					);
 				}
 		);
 
 	}
 
 	private static <T> MockStreamingParser<T>
-			mockStream(IMocksControl control, Map<String, Object> controlMap, String key, String name) throws IOException {
+			mockStream(IMocksControl control, Map<String, Object> controlMap, String key, String name)
+					throws IOException {
 		StreamingParserFactory<T> streamFactory = control.mock(name + "Factory", StreamingParserFactory.class);
 		MockStreamingParser<T> stream = new MockStreamingParser<>();
 

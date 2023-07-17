@@ -8,13 +8,13 @@ import ca.bc.gov.nrs.vdyp.model.Layer;
 
 public class FipPolygon {
 
-	String polygonIdentifier; // POLYDESC
-	String forestInventoryZone; // FIZ
-	String biogeoclimaticZone; // BEC
-	Optional<Float> percentAvailable; // PCTFLAND
-	Optional<FipMode> modeFip; // MODEfip
-	Optional<String> nonproductiveDescription; // NPDESC
-	float yieldFactor; // YLDFACT
+	String polygonIdentifier; // FIP_P/POLYDESC
+	String forestInventoryZone; // FIP_P/FIZ
+	String biogeoclimaticZone; // FIP_P/BEC
+	Optional<Float> percentAvailable; // FIP_P2/PCTFLAND
+	Optional<FipMode> modeFip; // FIP_P2/MODE / MODEfip
+	Optional<String> nonproductiveDescription; // FIP_P3/NPDESC
+	float yieldFactor; // FIP_P4/YLDFACT
 
 	Map<Layer, FipLayer> layers = Collections.emptyMap();
 

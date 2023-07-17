@@ -9,9 +9,11 @@ public class FipLayerPrimary extends FipLayer {
 	static final String SITE_CURVE_NUMBER = "SITE_CURVE_NUMBER"; // SCN
 	static final String STOCKING_CLASS = "STOCKING_CLASS"; // STK
 
-	Optional<Integer> siteCurveNumber; // TODO Confirm if these should be required instead of optional if we know it's
-										// a Primary layer.
-	Optional<String> stockingClass;
+	// TODO Confirm if these should be required instead of optional if we know it's
+	// a Primary layer.
+	Optional<Integer> siteCurveNumber; // FIPL_1/SCN_L1
+
+	Optional<String> stockingClass; // FIPL_1ST/STK_L1
 
 	public FipLayerPrimary(
 			String polygonIdentifier, float ageTotal, float height, float siteIndex, float crownClosure,
