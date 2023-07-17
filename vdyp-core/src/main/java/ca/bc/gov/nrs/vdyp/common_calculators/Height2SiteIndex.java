@@ -4,7 +4,7 @@ import java.lang.Math;
 import ca.bc.gov.nrs.vdyp.common_calculators.*;
 /* @formatter:off */
 /**
- * ht2si.c 
+ * Height2SiteIndex.java
  *  - given age and height, computes site index.
  * - if age is total, site index and years to breast height are iterated until
  *   stable.

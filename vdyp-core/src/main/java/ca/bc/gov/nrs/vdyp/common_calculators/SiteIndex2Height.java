@@ -1,7 +1,7 @@
 package ca.bc.gov.nrs.vdyp.common_calculators;
 /* @formatter:off */
 /**
- * si2ht.c
+ * SiteIndex2Height.java
  * - given site index and age, computes site height
  * - age can be given as total age or breast height age
  * - if total age is given, y2bh must be the number of years to breast height
@@ -356,7 +356,7 @@ public class SiteIndex2Height {
     }
 
 
-double index_to_height (
+public static double index_to_height (
   short  cu_index,
   double iage,
   short  age_type,
@@ -2818,7 +2818,7 @@ public static double hu_garcia_q (double site_index, double bhage){
   }
 
 
-static double hu_garcia_h (double q, double bhage)
+public static double hu_garcia_h (double q, double bhage)
   {
   double a, height;
 

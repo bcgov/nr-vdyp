@@ -1,7 +1,7 @@
 package ca.bc.gov.nrs.vdyp.common_calculators;
 /* @formatter:off */
 /**
- * sc2si.c 
+ * SiteClassCode2SiteIndex.java
  * - translates site class code to site index (height in metres) for a
  *   given species, site class, and FIZ. 
  * - the translation is intended to be used where total age is small (under 30 years),

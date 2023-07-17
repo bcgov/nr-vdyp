@@ -1,7 +1,7 @@
 package ca.bc.gov.nrs.vdyp.common_calculators;
 
 /**
- * fizcheck.c - determines whether a given FIZ code represents the coast or
+ * FizCheck.java - determines whether a given FIZ code represents the coast or
  * interior.
  */
 public class FizCheck {

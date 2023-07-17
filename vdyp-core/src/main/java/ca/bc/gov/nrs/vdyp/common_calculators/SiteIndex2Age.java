@@ -6,7 +6,7 @@ import java.io.IOException;
 
 /* @formatter:off */
 /**
- * si2age.c
+ * SiteIndex2Age.java
  * - given site index and site height, computes age.
  * - error codes (returned as age value):
  *     SI_ERR_LT13: site index or height < 1.3m
