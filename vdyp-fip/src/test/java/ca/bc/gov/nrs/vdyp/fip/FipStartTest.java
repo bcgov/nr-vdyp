@@ -510,7 +510,7 @@ public class FipStartTest {
 					// Testing exact floating point equality is intentional
 					assertThat(
 							speciesList, contains(
-								//
+									//
 									allOf(hasProperty("genus", is("B")), hasProperty("fractionGenus", is(0.75f))), //
 									allOf(hasProperty("genus", is("P")), hasProperty("fractionGenus", is(0.25f)))//
 							)
@@ -545,7 +545,7 @@ public class FipStartTest {
 					// Testing exact floating point equality is intentional
 					assertThat(
 							speciesList, contains(
-								//
+									//
 									allOf(hasProperty("genus", is("B")), hasProperty("fractionGenus", is(0.75002253f))), //
 									allOf(hasProperty("genus", is("P")), hasProperty("fractionGenus", is(0.2499775f)))//
 							)

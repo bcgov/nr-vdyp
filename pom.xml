@@ -22,7 +22,7 @@
 	</properties>
 
 	<modules>
-		<module>vdyp-core</module>
+		<module>vdyp-common</module>
 		<module>vdyp-fip</module>
 		<module>vdyp-buildtools</module>
 	</modules>

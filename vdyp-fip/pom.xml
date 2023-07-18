@@ -17,13 +17,13 @@
 	<dependencies>
 		<dependency>
 			<groupId>ca.bc.gov.nrs.vdyp</groupId>
-			<artifactId>vdyp-core</artifactId>
+			<artifactId>vdyp-common</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 	
 		<dependency>
 			<groupId>ca.bc.gov.nrs.vdyp</groupId>
-			<artifactId>vdyp-core</artifactId>
+			<artifactId>vdyp-common</artifactId>
 			<version>${project.version}</version>
 			<type>test-jar</type>
 			<scope>test</scope>
