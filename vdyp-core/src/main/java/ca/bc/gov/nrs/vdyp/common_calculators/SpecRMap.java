@@ -3,7 +3,7 @@ package ca.bc.gov.nrs.vdyp.common_calculators;
 /* @formatter:off */
 /**
  * specrmap.c
- * - determines the default species/curve index for a given species code.
+ * - determines the  species/curve index for a given species code.
  * - initial species code remappings provided by Inventory Branch.
  * - species codes can be 1-3 letters, in upper or lower case.
  * - error codes:
@@ -225,315 +225,481 @@ public class SpecRMap {
 
 		// This could be improved with a switch statement or even an if/else. But I have
 		// left it since it's like 4 like
-		if (sc2.equals("A"))
+		if (sc2.equals("A")) {
 			return SI_SPEC_A;
-		if (sc2.equals("ABAL"))
+		}
+		if (sc2.equals("ABAL")) {
 			return SI_SPEC_ABAL;
-		if (sc2.equals("ABCO"))
+		}
+		if (sc2.equals("ABCO")) {
 			return SI_SPEC_ABCO;
-		if (sc2.equals("AC"))
+		}
+		if (sc2.equals("AC")) {
 			return SI_SPEC_AC;
-		if (sc2.equals("ACB"))
+		}
+		if (sc2.equals("ACB")) {
 			return SI_SPEC_ACB;
-		if (sc2.equals("ACT"))
+		}
+		if (sc2.equals("ACT")) {
 			return SI_SPEC_ACT;
-		if (sc2.equals("AD"))
+		}
+		if (sc2.equals("AD")) {
 			return SI_SPEC_AD;
-		if (sc2.equals("AH"))
+		}
+		if (sc2.equals("AH")) {
 			return SI_SPEC_AH;
-		if (sc2.equals("AT"))
+		}
+		if (sc2.equals("AT")) {
 			return SI_SPEC_AT;
-		if (sc2.equals("AX"))
+		}
+		if (sc2.equals("AX")) {
 			return SI_SPEC_AX;
-		if (sc2.equals("B"))
+		}
+		if (sc2.equals("B")) {
 			return SI_SPEC_B;
-		if (sc2.equals("BA"))
+		}
+		if (sc2.equals("BA")) {
 			return SI_SPEC_BA;
-		if (sc2.equals("BB"))
+		}
+		if (sc2.equals("BB")) {
 			return SI_SPEC_BB;
-		if (sc2.equals("BC"))
+		}
+		if (sc2.equals("BC")) {
 			return SI_SPEC_BC;
-		if (sc2.equals("BG"))
+		}
+		if (sc2.equals("BG")) {
 			return SI_SPEC_BG;
-		if (sc2.equals("BI"))
+		}
+		if (sc2.equals("BI")) {
 			return SI_SPEC_BI;
-		if (sc2.equals("BL"))
+		}
+		if (sc2.equals("BL")) {
 			return SI_SPEC_BL;
-		if (sc2.equals("BM"))
+		}
+		if (sc2.equals("BM")) {
 			return SI_SPEC_BM;
-		if (sc2.equals("BP"))
+		}
+		if (sc2.equals("BP")) {
 			return SI_SPEC_BP;
-		// if (sc2.equals("BV")) return SI_SPEC_BV;
-		if (sc2.equals("C"))
+		}
+		// if (sc2.equals("BV")){ return SI_SPEC_BV;}
+		if (sc2.equals("C")) {
 			return SI_SPEC_C;
-		if (sc2.equals("CI"))
+		}
+		if (sc2.equals("CI")) {
 			return SI_SPEC_CI;
-		if (sc2.equals("CP"))
+		}
+		if (sc2.equals("CP")) {
 			return SI_SPEC_CP;
-		if (sc2.equals("CW"))
+		}
+		if (sc2.equals("CW")) {
 			return SI_SPEC_CW;
-		if (sc2.equals("CWC"))
+		}
+		if (sc2.equals("CWC")) {
 			return SI_SPEC_CWC;
-		if (sc2.equals("CWI"))
+		}
+		if (sc2.equals("CWI")) {
 			return SI_SPEC_CWI;
-		if (sc2.equals("CY"))
+		}
+		if (sc2.equals("CY")) {
 			return SI_SPEC_CY;
-		if (sc2.equals("D"))
+		}
+		if (sc2.equals("D")) {
 			return SI_SPEC_D;
-		if (sc2.equals("DG"))
+		}
+		if (sc2.equals("DG")) {
 			return SI_SPEC_DG;
-		if (sc2.equals("DM"))
+		}
+		if (sc2.equals("DM")) {
 			return SI_SPEC_DM;
-		if (sc2.equals("DR"))
+		}
+		if (sc2.equals("DR")) {
 			return SI_SPEC_DR;
-		if (sc2.equals("E"))
+		}
+		if (sc2.equals("E")) {
 			return SI_SPEC_E;
-		if (sc2.equals("EA"))
+		}
+		if (sc2.equals("EA")) {
 			return SI_SPEC_EA;
-		if (sc2.equals("EB"))
+		}
+		if (sc2.equals("EB")) {
 			return SI_SPEC_EB;
-		if (sc2.equals("EE"))
+		}
+		if (sc2.equals("EE")) {
 			return SI_SPEC_EE;
-		if (sc2.equals("EP"))
+		}
+		if (sc2.equals("EP")) {
 			return SI_SPEC_EP;
-		if (sc2.equals("ES"))
+		}
+		if (sc2.equals("ES")) {
 			return SI_SPEC_ES;
-		if (sc2.equals("EW"))
+		}
+		if (sc2.equals("EW")) {
 			return SI_SPEC_EW;
-		if (sc2.equals("EXP"))
+		}
+		if (sc2.equals("EXP")) {
 			return SI_SPEC_EXP;
-		if (sc2.equals("FD"))
+		}
+		if (sc2.equals("FD")) {
 			return SI_SPEC_FD;
-		if (sc2.equals("FDC"))
+		}
+		if (sc2.equals("FDC")) {
 			return SI_SPEC_FDC;
-		if (sc2.equals("FDI"))
+		}
+		if (sc2.equals("FDI")) {
 			return SI_SPEC_FDI;
-		if (sc2.equals("G"))
+		}
+		if (sc2.equals("G")) {
 			return SI_SPEC_G;
-		if (sc2.equals("GP"))
+		}
+		if (sc2.equals("GP")) {
 			return SI_SPEC_GP;
-		if (sc2.equals("GR"))
+		}
+		if (sc2.equals("GR")) {
 			return SI_SPEC_GR;
-		if (sc2.equals("H"))
+		}
+		if (sc2.equals("H")) {
 			return SI_SPEC_H;
-		if (sc2.equals("HM"))
+		}
+		if (sc2.equals("HM")) {
 			return SI_SPEC_HM;
-		if (sc2.equals("HW"))
+		}
+		if (sc2.equals("HW")) {
 			return SI_SPEC_HW;
-		if (sc2.equals("HWC"))
+		}
+		if (sc2.equals("HWC")) {
 			return SI_SPEC_HWC;
-		if (sc2.equals("HWI"))
+		}
+		if (sc2.equals("HWI")) {
 			return SI_SPEC_HWI;
-		if (sc2.equals("HXM"))
+		}
+		if (sc2.equals("HXM")) {
 			return SI_SPEC_HXM;
-		if (sc2.equals("IG"))
+		}
+		if (sc2.equals("IG")) {
 			return SI_SPEC_IG;
-		if (sc2.equals("IS"))
+		}
+		if (sc2.equals("IS")) {
 			return SI_SPEC_IS;
-		if (sc2.equals("J"))
+		}
+		if (sc2.equals("J")) {
 			return SI_SPEC_J;
-		if (sc2.equals("JR"))
+		}
+		if (sc2.equals("JR")) {
 			return SI_SPEC_JR;
-		if (sc2.equals("K"))
+		}
+		if (sc2.equals("K")) {
 			return SI_SPEC_K;
-		if (sc2.equals("KC"))
+		}
+		if (sc2.equals("KC")) {
 			return SI_SPEC_KC;
-		if (sc2.equals("L"))
+		}
+		if (sc2.equals("L")) {
 			return SI_SPEC_L;
-		if (sc2.equals("LA"))
+		}
+		if (sc2.equals("LA")) {
 			return SI_SPEC_LA;
-		if (sc2.equals("LE"))
+		}
+		if (sc2.equals("LE")) {
 			return SI_SPEC_LE;
-		if (sc2.equals("LT"))
+		}
+		if (sc2.equals("LT")) {
 			return SI_SPEC_LT;
-		if (sc2.equals("LW"))
+		}
+		if (sc2.equals("LW")) {
 			return SI_SPEC_LW;
-		if (sc2.equals("M"))
+		}
+		if (sc2.equals("M")) {
 			return SI_SPEC_M;
-		if (sc2.equals("MB"))
+		}
+		if (sc2.equals("MB")) {
 			return SI_SPEC_MB;
-		if (sc2.equals("ME"))
+		}
+		if (sc2.equals("ME")) {
 			return SI_SPEC_ME;
-		if (sc2.equals("MN"))
+		}
+		if (sc2.equals("MN")) {
 			return SI_SPEC_MN;
-		if (sc2.equals("MR"))
+		}
+		if (sc2.equals("MR")) {
 			return SI_SPEC_MR;
-		if (sc2.equals("MS"))
+		}
+		if (sc2.equals("MS")) {
 			return SI_SPEC_MS;
-		if (sc2.equals("MV"))
+		}
+		if (sc2.equals("MV")) {
 			return SI_SPEC_MV;
-		if (sc2.equals("OA"))
+		}
+		if (sc2.equals("OA")) {
 			return SI_SPEC_OA;
-		if (sc2.equals("OB"))
+		}
+		if (sc2.equals("OB")) {
 			return SI_SPEC_OB;
-		if (sc2.equals("OC"))
+		}
+		if (sc2.equals("OC")) {
 			return SI_SPEC_OC;
-		if (sc2.equals("OD"))
+		}
+		if (sc2.equals("OD")) {
 			return SI_SPEC_OD;
-		if (sc2.equals("OE"))
+		}
+		if (sc2.equals("OE")) {
 			return SI_SPEC_OE;
-		if (sc2.equals("OF"))
+		}
+		if (sc2.equals("OF")) {
 			return SI_SPEC_OF;
-		if (sc2.equals("OG"))
+		}
+		if (sc2.equals("OG")) {
 			return SI_SPEC_OG;
-		if (sc2.equals("P"))
+		}
+		if (sc2.equals("P")) {
 			return SI_SPEC_P;
-		if (sc2.equals("PA"))
+		}
+		if (sc2.equals("PA")) {
 			return SI_SPEC_PA;
-		if (sc2.equals("PF"))
+		}
+		if (sc2.equals("PF")) {
 			return SI_SPEC_PF;
-		if (sc2.equals("PJ"))
+		}
+		if (sc2.equals("PJ")) {
 			return SI_SPEC_PJ;
-		if (sc2.equals("PL"))
+		}
+		if (sc2.equals("PL")) {
 			return SI_SPEC_PL;
-		if (sc2.equals("PLC"))
+		}
+		if (sc2.equals("PLC")) {
 			return SI_SPEC_PLC;
-		if (sc2.equals("PLI"))
+		}
+		if (sc2.equals("PLI")) {
 			return SI_SPEC_PLI;
-		if (sc2.equals("PM"))
+		}
+		if (sc2.equals("PM")) {
 			return SI_SPEC_PM;
-		if (sc2.equals("PR"))
+		}
+		if (sc2.equals("PR")) {
 			return SI_SPEC_PR;
-		if (sc2.equals("PS"))
+		}
+		if (sc2.equals("PS")) {
 			return SI_SPEC_PS;
-		if (sc2.equals("PW"))
+		}
+		if (sc2.equals("PW")) {
 			return SI_SPEC_PW;
-		if (sc2.equals("PXJ"))
+		}
+		if (sc2.equals("PXJ")) {
 			return SI_SPEC_PXJ;
-		if (sc2.equals("PY"))
+		}
+		if (sc2.equals("PY")) {
 			return SI_SPEC_PY;
-		if (sc2.equals("Q"))
+		}
+		if (sc2.equals("Q")) {
 			return SI_SPEC_Q;
-		if (sc2.equals("QE"))
+		}
+		if (sc2.equals("QE")) {
 			return SI_SPEC_QE;
-		if (sc2.equals("QG"))
+		}
+		if (sc2.equals("QG")) {
 			return SI_SPEC_QG;
-		if (sc2.equals("R"))
+		}
+		if (sc2.equals("R")) {
 			return SI_SPEC_R;
-		if (sc2.equals("RA"))
+		}
+		if (sc2.equals("RA")) {
 			return SI_SPEC_RA;
-		if (sc2.equals("S"))
+		}
+		if (sc2.equals("S")) {
 			return SI_SPEC_S;
-		if (sc2.equals("SA"))
+		}
+		if (sc2.equals("SA")) {
 			return SI_SPEC_SA;
-		if (sc2.equals("SB"))
+		}
+		if (sc2.equals("SB")) {
 			return SI_SPEC_SB;
-		if (sc2.equals("SE"))
+		}
+		if (sc2.equals("SE")) {
 			return SI_SPEC_SE;
-		if (sc2.equals("SI"))
+		}
+		if (sc2.equals("SI")) {
 			return SI_SPEC_SI;
-		if (sc2.equals("SN"))
+		}
+		if (sc2.equals("SN")) {
 			return SI_SPEC_SN;
-		if (sc2.equals("SS"))
+		}
+		if (sc2.equals("SS")) {
 			return SI_SPEC_SS;
-		if (sc2.equals("SW"))
+		}
+		if (sc2.equals("SW")) {
 			return SI_SPEC_SW;
-		if (sc2.equals("SX"))
+		}
+		if (sc2.equals("SX")) {
 			return SI_SPEC_SX;
-		if (sc2.equals("SXB"))
+		}
+		if (sc2.equals("SXB")) {
 			return SI_SPEC_SXB;
-		if (sc2.equals("SXE"))
+		}
+		if (sc2.equals("SXE")) {
 			return SI_SPEC_SXE;
-		if (sc2.equals("SXL"))
+		}
+		if (sc2.equals("SXL")) {
 			return SI_SPEC_SXL;
-		if (sc2.equals("SXS"))
+		}
+		if (sc2.equals("SXS")) {
 			return SI_SPEC_SXS;
-		if (sc2.equals("SXW"))
+		}
+		if (sc2.equals("SXW")) {
 			return SI_SPEC_SXW;
-		if (sc2.equals("SXX"))
+		}
+		if (sc2.equals("SXX")) {
 			return SI_SPEC_SXX;
-		if (sc2.equals("T"))
+		}
+		if (sc2.equals("T")) {
 			return SI_SPEC_T;
-		if (sc2.equals("TW"))
+		}
+		if (sc2.equals("TW")) {
 			return SI_SPEC_TW;
-		if (sc2.equals("U"))
+		}
+		if (sc2.equals("U")) {
 			return SI_SPEC_U;
-		if (sc2.equals("UA"))
+		}
+		if (sc2.equals("UA")) {
 			return SI_SPEC_UA;
-		if (sc2.equals("UP"))
+		}
+		if (sc2.equals("UP")) {
 			return SI_SPEC_UP;
-		if (sc2.equals("V"))
+		}
+		if (sc2.equals("V")) {
 			return SI_SPEC_V;
-		if (sc2.equals("VB"))
+		}
+		if (sc2.equals("VB")) {
 			return SI_SPEC_VB;
-		if (sc2.equals("VP"))
+		}
+		if (sc2.equals("VP")) {
 			return SI_SPEC_VP;
-		if (sc2.equals("VS"))
+		}
+		if (sc2.equals("VS")) {
 			return SI_SPEC_VS;
-		if (sc2.equals("VV"))
+		}
+		if (sc2.equals("VV")) {
 			return SI_SPEC_VV;
-		if (sc2.equals("W"))
+		}
+		if (sc2.equals("W")) {
 			return SI_SPEC_W;
-		if (sc2.equals("WA"))
+		}
+		if (sc2.equals("WA")) {
 			return SI_SPEC_WA;
-		if (sc2.equals("WB"))
+		}
+		if (sc2.equals("WB")) {
 			return SI_SPEC_WB;
-		if (sc2.equals("WD"))
+		}
+		if (sc2.equals("WD")) {
 			return SI_SPEC_WD;
-		if (sc2.equals("WI"))
+		}
+		if (sc2.equals("WI")) {
 			return SI_SPEC_WI;
-		if (sc2.equals("WP"))
+		}
+		if (sc2.equals("WP")) {
 			return SI_SPEC_WP;
-		if (sc2.equals("WS"))
+		}
+		if (sc2.equals("WS")) {
 			return SI_SPEC_WS;
-		if (sc2.equals("WT"))
+		}
+		if (sc2.equals("WT")) {
 			return SI_SPEC_WT;
-		if (sc2.equals("X"))
+		}
+		if (sc2.equals("X")) {
 			return SI_SPEC_X;
-		if (sc2.equals("XC"))
+		}
+		if (sc2.equals("XC")) {
 			return SI_SPEC_XC;
-		if (sc2.equals("XH"))
+		}
+		if (sc2.equals("XH")) {
 			return SI_SPEC_XH;
-		if (sc2.equals("Y"))
+		}
+		if (sc2.equals("Y")) {
 			return SI_SPEC_Y;
-		if (sc2.equals("YC"))
+		}
+		if (sc2.equals("YC")) {
 			return SI_SPEC_YC;
-		if (sc2.equals("YP"))
+		}
+		if (sc2.equals("YP")) {
 			return SI_SPEC_YP;
-		if (sc2.equals("Z"))
+		}
+		if (sc2.equals("Z")) {
 			return SI_SPEC_Z;
-		if (sc2.equals("ZC"))
+		}
+		if (sc2.equals("ZC")) {
 			return SI_SPEC_ZC;
-		if (sc2.equals("ZH"))
+		}
+		if (sc2.equals("ZH")) {
 			return SI_SPEC_ZH;
+		}
 
 		return SI_ERR_CODE;
 	}
 
 	public static short species_remap(String sc, char fiz) {
-		short i, i2;
-		char[] sc2 = new char[10];
+		// This can be done more elegantly with Java
+		String sc2 = sc.replaceAll(" ", "").toUpperCase();
 
-		i2 = 0;
-		for (i = 0; i < sc.length() && i < 10; i++) {
-			if (sc.charAt(i) != ' ') {
-				sc2[i2] = Character.toUpperCase(sc.charAt(i));
-				i2++;
+		// Just incase here is a like for like recreation
+		/*
+		 * short i, i2; char[] sc2 = new char[10];
+		 *
+		 * i2 = 0; for (i = 0; i < sc.length && i < 10; i++) { if (sc[i] != ' ') {
+		 * sc2[i2] = Character.toUpperCase(sc[i]); i2++; } } sc2[i2] = '\0';
+		 */
+
+		if (sc2.equals("A")) {
+			return SI_SPEC_AT;
+		}
+		if (sc2.equals("ABAL")) {
+			return SI_SPEC_BA;
+		}
+		if (sc2.equals("ABCO")) {
+			return SI_SPEC_BA;
+		}
+		if (sc2.equals("AC")) {
+			return SI_SPEC_ACB;
+		}
+		if (sc2.equals("ACB")) {
+			return SI_SPEC_ACB;
+		}
+		if (sc2.equals("ACT")) {
+			return SI_SPEC_ACT;
+		}
+		if (sc2.equals("AD")) {
+			return SI_SPEC_ACT;
+		}
+		if (sc2.equals("AH")) {
+			return SI_SPEC_ACT;
+		}
+		if (sc2.equals("AT")) {
+			return SI_SPEC_AT;
+		}
+		if (sc2.equals("AX")) {
+			return SI_SPEC_ACB;
+		}
+		if (sc2.equals("B")) {
+			switch (FizCheck.fiz_check(fiz)) {
+			case FIZ_COAST:
+				return SI_SPEC_BA;
+			case FIZ_INTERIOR:
+				return SI_SPEC_BL;
+			default:
+				return SI_ERR_CODE;
 			}
 		}
-		sc2[i2] = '\0';
-
-		if (sc2.equals("A"))
-			return SI_SPEC_AT;
-		if (sc2.equals("ABAL"))
+		if (sc2.equals("BA")) {
 			return SI_SPEC_BA;
-		if (sc2.equals("ABCO"))
+		}
+		if (sc2.equals("BAC")) {
 			return SI_SPEC_BA;
-		if (sc2.equals("AC"))
-			return SI_SPEC_ACB;
-		if (sc2.equals("ACB"))
-			return SI_SPEC_ACB;
-		if (sc2.equals("ACT"))
-			return SI_SPEC_ACT;
-		if (sc2.equals("AD"))
-			return SI_SPEC_ACT;
-		if (sc2.equals("AH"))
-			return SI_SPEC_ACT;
-		if (sc2.equals("AT"))
-			return SI_SPEC_AT;
-		if (sc2.equals("AX"))
-			return SI_SPEC_ACB;
-		if (sc2.equals("B"))
+		}
+		if (sc2.equals("BAI")) {
+			return SI_SPEC_BA;
+		}
+		if (sc2.equals("BB")) {
+			return SI_SPEC_BL;
+		}
+		if (sc2.equals("BC")) {
 			switch (FizCheck.fiz_check(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_BA;
@@ -542,37 +708,27 @@ public class SpecRMap {
 			default:
 				return SI_ERR_CODE;
 			}
-		if (sc2.equals("BA"))
+		}
+		if (sc2.equals("BG")) {
 			return SI_SPEC_BA;
-		if (sc2.equals("BAC"))
-			return SI_SPEC_BA;
-		if (sc2.equals("BAI"))
-			return SI_SPEC_BA;
-		if (sc2.equals("BB"))
-			return SI_SPEC_BL;
-		if (sc2.equals("BC"))
-			switch (FizCheck.fiz_check(fiz)) {
-			case FIZ_COAST:
-				return SI_SPEC_BA;
-			case FIZ_INTERIOR:
-				return SI_SPEC_BL;
-			default:
-				return SI_ERR_CODE;
-			}
-		if (sc2.equals("BG"))
-			return SI_SPEC_BA;
-		if (sc2.equals("BI"))
+		}
+		if (sc2.equals("BI")) {
 			return SI_SPEC_AT;
-		if (sc2.equals("BL"))
+		}
+		if (sc2.equals("BL")) {
 			return SI_SPEC_BL;
-		if (sc2.equals("BM"))
+		}
+		if (sc2.equals("BM")) {
 			return SI_SPEC_BA;
-		if (sc2.equals("BN"))
+		}
+		if (sc2.equals("BN")) {
 			return SI_SPEC_BP;
-		if (sc2.equals("BP"))
+		}
+		if (sc2.equals("BP")) {
 			return SI_SPEC_BP;
-//  if (sc2.equals("BV" )) return SI_SPEC_AT;
-		if (sc2.equals("C"))
+		}
+//  if (sc2.equals("BV")){ return SI_SPEC_AT;}
+		if (sc2.equals("C")) {
 			switch (FizCheck.fiz_check(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_CWC;
@@ -581,7 +737,8 @@ public class SpecRMap {
 			default:
 				return SI_ERR_CODE;
 			}
-		if (sc2.equals("CI"))
+		}
+		if (sc2.equals("CI")) {
 			switch (FizCheck.fiz_check(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_CWC;
@@ -590,9 +747,11 @@ public class SpecRMap {
 			default:
 				return SI_ERR_CODE;
 			}
-		if (sc2.equals("COT"))
+		}
+		if (sc2.equals("COT")) {
 			return SI_SPEC_ACT;
-		if (sc2.equals("CP"))
+		}
+		if (sc2.equals("CP")) {
 			switch (FizCheck.fiz_check(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_CWC;
@@ -601,9 +760,11 @@ public class SpecRMap {
 			default:
 				return SI_ERR_CODE;
 			}
-		if (sc2.equals("CT"))
+		}
+		if (sc2.equals("CT")) {
 			return SI_SPEC_ACT;
-		if (sc2.equals("CW"))
+		}
+		if (sc2.equals("CW")) {
 			switch (FizCheck.fiz_check(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_CWC;
@@ -612,11 +773,14 @@ public class SpecRMap {
 			default:
 				return SI_ERR_CODE;
 			}
-		if (sc2.equals("CWC"))
+		}
+		if (sc2.equals("CWC")) {
 			return SI_SPEC_CWC;
-		if (sc2.equals("CWI"))
+		}
+		if (sc2.equals("CWI")) {
 			return SI_SPEC_CWI;
-		if (sc2.equals("CY"))
+		}
+		if (sc2.equals("CY")) {
 			switch (FizCheck.fiz_check(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_CWC;
@@ -625,9 +789,11 @@ public class SpecRMap {
 			default:
 				return SI_ERR_CODE;
 			}
-		if (sc2.equals("D"))
+		}
+		if (sc2.equals("D")) {
 			return SI_SPEC_DR;
-		if (sc2.equals("DF"))
+		}
+		if (sc2.equals("DF")) {
 			switch (FizCheck.fiz_check(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_FDC;
@@ -636,29 +802,41 @@ public class SpecRMap {
 			default:
 				return SI_ERR_CODE;
 			}
-		if (sc2.equals("DG"))
+		}
+		if (sc2.equals("DG")) {
 			return SI_SPEC_DR;
-		if (sc2.equals("DM"))
+		}
+		if (sc2.equals("DM")) {
 			return SI_SPEC_DR;
-		if (sc2.equals("DR"))
+		}
+		if (sc2.equals("DR")) {
 			return SI_SPEC_DR;
-		if (sc2.equals("E"))
+		}
+		if (sc2.equals("E")) {
 			return SI_SPEC_EP;
-		if (sc2.equals("EA"))
+		}
+		if (sc2.equals("EA")) {
 			return SI_SPEC_EP;
-		if (sc2.equals("EB"))
+		}
+		if (sc2.equals("EB")) {
 			return SI_SPEC_EP;
-		if (sc2.equals("EE"))
+		}
+		if (sc2.equals("EE")) {
 			return SI_SPEC_EP;
-		if (sc2.equals("EP"))
+		}
+		if (sc2.equals("EP")) {
 			return SI_SPEC_EP;
-		if (sc2.equals("ES"))
+		}
+		if (sc2.equals("ES")) {
 			return SI_SPEC_EP;
-		if (sc2.equals("EW"))
+		}
+		if (sc2.equals("EW")) {
 			return SI_SPEC_EP;
-		if (sc2.equals("EXP"))
+		}
+		if (sc2.equals("EXP")) {
 			return SI_SPEC_EP;
-		if (sc2.equals("F"))
+		}
+		if (sc2.equals("F")) {
 			switch (FizCheck.fiz_check(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_FDC;
@@ -667,7 +845,8 @@ public class SpecRMap {
 			default:
 				return SI_ERR_CODE;
 			}
-		if (sc2.equals("FD"))
+		}
+		if (sc2.equals("FD")) {
 			switch (FizCheck.fiz_check(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_FDC;
@@ -676,17 +855,23 @@ public class SpecRMap {
 			default:
 				return SI_ERR_CODE;
 			}
-		if (sc2.equals("FDC"))
+		}
+		if (sc2.equals("FDC")) {
 			return SI_SPEC_FDC;
-		if (sc2.equals("FDI"))
+		}
+		if (sc2.equals("FDI")) {
 			return SI_SPEC_FDI;
-		if (sc2.equals("G"))
+		}
+		if (sc2.equals("G")) {
 			return SI_SPEC_DR;
-		if (sc2.equals("GP"))
+		}
+		if (sc2.equals("GP")) {
 			return SI_SPEC_DR;
-		if (sc2.equals("GR"))
+		}
+		if (sc2.equals("GR")) {
 			return SI_SPEC_DR;
-		if (sc2.equals("H"))
+		}
+		if (sc2.equals("H")) {
 			switch (FizCheck.fiz_check(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_HWC;
@@ -695,9 +880,11 @@ public class SpecRMap {
 			default:
 				return SI_ERR_CODE;
 			}
-		if (sc2.equals("HM"))
+		}
+		if (sc2.equals("HM")) {
 			return SI_SPEC_HM;
-		if (sc2.equals("HW"))
+		}
+		if (sc2.equals("HW")) {
 			switch (FizCheck.fiz_check(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_HWC;
@@ -706,11 +893,14 @@ public class SpecRMap {
 			default:
 				return SI_ERR_CODE;
 			}
-		if (sc2.equals("HWC"))
+		}
+		if (sc2.equals("HWC")) {
 			return SI_SPEC_HWC;
-		if (sc2.equals("HWI"))
+		}
+		if (sc2.equals("HWI")) {
 			return SI_SPEC_HWI;
-		if (sc2.equals("HXM"))
+		}
+		if (sc2.equals("HXM")) {
 			switch (FizCheck.fiz_check(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_HWC;
@@ -719,7 +909,8 @@ public class SpecRMap {
 			default:
 				return SI_ERR_CODE;
 			}
-		if (sc2.equals("IG"))
+		}
+		if (sc2.equals("IG")) {
 			switch (FizCheck.fiz_check(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_CWC;
@@ -728,7 +919,8 @@ public class SpecRMap {
 			default:
 				return SI_ERR_CODE;
 			}
-		if (sc2.equals("IS"))
+		}
+		if (sc2.equals("IS")) {
 			switch (FizCheck.fiz_check(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_CWC;
@@ -737,7 +929,8 @@ public class SpecRMap {
 			default:
 				return SI_ERR_CODE;
 			}
-		if (sc2.equals("J"))
+		}
+		if (sc2.equals("J")) {
 			switch (FizCheck.fiz_check(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_CWC;
@@ -746,7 +939,8 @@ public class SpecRMap {
 			default:
 				return SI_ERR_CODE;
 			}
-		if (sc2.equals("JR"))
+		}
+		if (sc2.equals("JR")) {
 			switch (FizCheck.fiz_check(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_CWC;
@@ -755,35 +949,50 @@ public class SpecRMap {
 			default:
 				return SI_ERR_CODE;
 			}
-		if (sc2.equals("K"))
+		}
+		if (sc2.equals("K")) {
 			return SI_SPEC_AT;
-		if (sc2.equals("KC"))
+		}
+		if (sc2.equals("KC")) {
 			return SI_SPEC_AT;
-		if (sc2.equals("L"))
+		}
+		if (sc2.equals("L")) {
 			return SI_SPEC_LW;
-		if (sc2.equals("LA"))
+		}
+		if (sc2.equals("LA")) {
 			return SI_SPEC_LW;
-		if (sc2.equals("LE"))
+		}
+		if (sc2.equals("LE")) {
 			return SI_SPEC_LW;
-		if (sc2.equals("LT"))
+		}
+		if (sc2.equals("LT")) {
 			return SI_SPEC_LW;
-		if (sc2.equals("LW"))
+		}
+		if (sc2.equals("LW")) {
 			return SI_SPEC_LW;
-		if (sc2.equals("M"))
+		}
+		if (sc2.equals("M")) {
 			return SI_SPEC_DR;
-		if (sc2.equals("MB"))
+		}
+		if (sc2.equals("MB")) {
 			return SI_SPEC_DR;
-		if (sc2.equals("ME"))
+		}
+		if (sc2.equals("ME")) {
 			return SI_SPEC_DR;
-		if (sc2.equals("MN"))
+		}
+		if (sc2.equals("MN")) {
 			return SI_SPEC_DR;
-		if (sc2.equals("MR"))
+		}
+		if (sc2.equals("MR")) {
 			return SI_SPEC_DR;
-		if (sc2.equals("MS"))
+		}
+		if (sc2.equals("MS")) {
 			return SI_SPEC_DR;
-		if (sc2.equals("MV"))
+		}
+		if (sc2.equals("MV")) {
 			return SI_SPEC_DR;
-		if (sc2.equals("OA"))
+		}
+		if (sc2.equals("OA")) {
 			switch (FizCheck.fiz_check(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_CWC;
@@ -792,7 +1001,8 @@ public class SpecRMap {
 			default:
 				return SI_ERR_CODE;
 			}
-		if (sc2.equals("OB"))
+		}
+		if (sc2.equals("OB")) {
 			switch (FizCheck.fiz_check(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_CWC;
@@ -801,7 +1011,8 @@ public class SpecRMap {
 			default:
 				return SI_ERR_CODE;
 			}
-		if (sc2.equals("OC"))
+		}
+		if (sc2.equals("OC")) {
 			switch (FizCheck.fiz_check(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_CWC;
@@ -810,53 +1021,77 @@ public class SpecRMap {
 			default:
 				return SI_ERR_CODE;
 			}
-		if (sc2.equals("OD"))
+		}
+		if (sc2.equals("OD")) {
 			return SI_SPEC_AT;
-		if (sc2.equals("OE"))
+		}
+		if (sc2.equals("OE")) {
 			return SI_SPEC_AT;
-		if (sc2.equals("OF"))
+		}
+		if (sc2.equals("OF")) {
 			return SI_SPEC_AT;
-		if (sc2.equals("OG"))
+		}
+		if (sc2.equals("OG")) {
 			return SI_SPEC_AT;
-		if (sc2.equals("P"))
+		}
+		if (sc2.equals("P")) {
 			return SI_SPEC_PLI;
-		if (sc2.equals("PA"))
+		}
+		if (sc2.equals("PA")) {
 			return SI_SPEC_PLI;
-		if (sc2.equals("PF"))
+		}
+		if (sc2.equals("PF")) {
 			return SI_SPEC_PLI;
-		if (sc2.equals("PJ"))
+		}
+		if (sc2.equals("PJ")) {
 			return SI_SPEC_PJ;
-		if (sc2.equals("PL"))
+		}
+		if (sc2.equals("PL")) {
 			return SI_SPEC_PLI;
-		if (sc2.equals("PLC"))
+		}
+		if (sc2.equals("PLC")) {
 			return SI_SPEC_PLI;
-		if (sc2.equals("PLI"))
+		}
+		if (sc2.equals("PLI")) {
 			return SI_SPEC_PLI;
-		if (sc2.equals("PM"))
+		}
+		if (sc2.equals("PM")) {
 			return SI_SPEC_PLI;
-		if (sc2.equals("PR"))
+		}
+		if (sc2.equals("PR")) {
 			return SI_SPEC_PLI;
-		if (sc2.equals("PS"))
+		}
+		if (sc2.equals("PS")) {
 			return SI_SPEC_PLI;
-		if (sc2.equals("PV"))
+		}
+		if (sc2.equals("PV")) {
 			return SI_SPEC_PY;
-		if (sc2.equals("PW"))
+		}
+		if (sc2.equals("PW")) {
 			return SI_SPEC_PW;
-		if (sc2.equals("PXJ"))
+		}
+		if (sc2.equals("PXJ")) {
 			return SI_SPEC_PLI;
-		if (sc2.equals("PY"))
+		}
+		if (sc2.equals("PY")) {
 			return SI_SPEC_PY;
-		if (sc2.equals("Q"))
+		}
+		if (sc2.equals("Q")) {
 			return SI_SPEC_AT;
-		if (sc2.equals("QE"))
+		}
+		if (sc2.equals("QE")) {
 			return SI_SPEC_AT;
-		if (sc2.equals("QG"))
+		}
+		if (sc2.equals("QG")) {
 			return SI_SPEC_AT;
-		if (sc2.equals("R"))
+		}
+		if (sc2.equals("R")) {
 			return SI_SPEC_DR;
-		if (sc2.equals("RA"))
+		}
+		if (sc2.equals("RA")) {
 			return SI_SPEC_DR;
-		if (sc2.equals("S"))
+		}
+		if (sc2.equals("S")) {
 			switch (FizCheck.fiz_check(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_SS;
@@ -865,21 +1100,29 @@ public class SpecRMap {
 			default:
 				return SI_ERR_CODE;
 			}
-		if (sc2.equals("SA"))
+		}
+		if (sc2.equals("SA")) {
 			return SI_SPEC_SW;
-		if (sc2.equals("SB"))
+		}
+		if (sc2.equals("SB")) {
 			return SI_SPEC_SB;
-		if (sc2.equals("SE"))
+		}
+		if (sc2.equals("SE")) {
 			return SI_SPEC_SE;
-		if (sc2.equals("SI"))
+		}
+		if (sc2.equals("SI")) {
 			return SI_SPEC_SW;
-		if (sc2.equals("SN"))
+		}
+		if (sc2.equals("SN")) {
 			return SI_SPEC_SW;
-		if (sc2.equals("SS"))
+		}
+		if (sc2.equals("SS")) {
 			return SI_SPEC_SS;
-		if (sc2.equals("SW"))
+		}
+		if (sc2.equals("SW")) {
 			return SI_SPEC_SW;
-		if (sc2.equals("SX"))
+		}
+		if (sc2.equals("SX")) {
 			switch (FizCheck.fiz_check(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_SS;
@@ -888,9 +1131,11 @@ public class SpecRMap {
 			default:
 				return SI_ERR_CODE;
 			}
-		if (sc2.equals("SXB"))
+		}
+		if (sc2.equals("SXB")) {
 			return SI_SPEC_SW;
-		if (sc2.equals("SXE"))
+		}
+		if (sc2.equals("SXE")) {
 			switch (FizCheck.fiz_check(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_SS;
@@ -899,7 +1144,8 @@ public class SpecRMap {
 			default:
 				return SI_ERR_CODE;
 			}
-		if (sc2.equals("SXL"))
+		}
+		if (sc2.equals("SXL")) {
 			switch (FizCheck.fiz_check(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_SS;
@@ -908,7 +1154,8 @@ public class SpecRMap {
 			default:
 				return SI_ERR_CODE;
 			}
-		if (sc2.equals("SXS"))
+		}
+		if (sc2.equals("SXS")) {
 			switch (FizCheck.fiz_check(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_SS;
@@ -917,9 +1164,11 @@ public class SpecRMap {
 			default:
 				return SI_ERR_CODE;
 			}
-		if (sc2.equals("SXW"))
+		}
+		if (sc2.equals("SXW")) {
 			return SI_SPEC_SW;
-		if (sc2.equals("SXX"))
+		}
+		if (sc2.equals("SXX")) {
 			switch (FizCheck.fiz_check(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_SS;
@@ -928,7 +1177,8 @@ public class SpecRMap {
 			default:
 				return SI_ERR_CODE;
 			}
-		if (sc2.equals("T"))
+		}
+		if (sc2.equals("T")) {
 			switch (FizCheck.fiz_check(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_HWC;
@@ -937,7 +1187,8 @@ public class SpecRMap {
 			default:
 				return SI_ERR_CODE;
 			}
-		if (sc2.equals("TW"))
+		}
+		if (sc2.equals("TW")) {
 			switch (FizCheck.fiz_check(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_HWC;
@@ -946,39 +1197,56 @@ public class SpecRMap {
 			default:
 				return SI_ERR_CODE;
 			}
-		if (sc2.equals("U"))
+		}
+		if (sc2.equals("U")) {
 			return SI_SPEC_AT;
-		if (sc2.equals("UA"))
+		}
+		if (sc2.equals("UA")) {
 			return SI_SPEC_AT;
-		if (sc2.equals("UP"))
+		}
+		if (sc2.equals("UP")) {
 			return SI_SPEC_AT;
-		if (sc2.equals("V"))
+		}
+		if (sc2.equals("V")) {
 			return SI_SPEC_AT;
-		if (sc2.equals("VB"))
+		}
+		if (sc2.equals("VB")) {
 			return SI_SPEC_AT;
-		if (sc2.equals("VP"))
+		}
+		if (sc2.equals("VP")) {
 			return SI_SPEC_AT;
-		if (sc2.equals("VS"))
+		}
+		if (sc2.equals("VS")) {
 			return SI_SPEC_AT;
-		if (sc2.equals("VV"))
+		}
+		if (sc2.equals("VV")) {
 			return SI_SPEC_AT;
-		if (sc2.equals("W"))
+		}
+		if (sc2.equals("W")) {
 			return SI_SPEC_AT;
-		if (sc2.equals("WA"))
+		}
+		if (sc2.equals("WA")) {
 			return SI_SPEC_AT;
-		if (sc2.equals("WB"))
+		}
+		if (sc2.equals("WB")) {
 			return SI_SPEC_AT;
-		if (sc2.equals("WD"))
+		}
+		if (sc2.equals("WD")) {
 			return SI_SPEC_AT;
-		if (sc2.equals("WI"))
+		}
+		if (sc2.equals("WI")) {
 			return SI_SPEC_AT;
-		if (sc2.equals("WP"))
+		}
+		if (sc2.equals("WP")) {
 			return SI_SPEC_AT;
-		if (sc2.equals("WS"))
+		}
+		if (sc2.equals("WS")) {
 			return SI_SPEC_AT;
-		if (sc2.equals("WT"))
+		}
+		if (sc2.equals("WT")) {
 			return SI_SPEC_AT;
-		if (sc2.equals("X"))
+		}
+		if (sc2.equals("X")) {
 			switch (FizCheck.fiz_check(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_FDC;
@@ -987,7 +1255,8 @@ public class SpecRMap {
 			default:
 				return SI_ERR_CODE;
 			}
-		if (sc2.equals("XC"))
+		}
+		if (sc2.equals("XC")) {
 			switch (FizCheck.fiz_check(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_FDC;
@@ -996,9 +1265,11 @@ public class SpecRMap {
 			default:
 				return SI_ERR_CODE;
 			}
-		if (sc2.equals("XH"))
+		}
+		if (sc2.equals("XH")) {
 			return SI_SPEC_AT;
-		if (sc2.equals("Y"))
+		}
+		if (sc2.equals("Y")) {
 			switch (FizCheck.fiz_check(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_CWC;
@@ -1007,7 +1278,8 @@ public class SpecRMap {
 			default:
 				return SI_ERR_CODE;
 			}
-		if (sc2.equals("YC"))
+		}
+		if (sc2.equals("YC")) {
 			switch (FizCheck.fiz_check(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_CWC;
@@ -1016,7 +1288,8 @@ public class SpecRMap {
 			default:
 				return SI_ERR_CODE;
 			}
-		if (sc2.equals("YP"))
+		}
+		if (sc2.equals("YP")) {
 			switch (FizCheck.fiz_check(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_CWC;
@@ -1025,7 +1298,8 @@ public class SpecRMap {
 			default:
 				return SI_ERR_CODE;
 			}
-		if (sc2.equals("Z"))
+		}
+		if (sc2.equals("Z")) {
 			switch (FizCheck.fiz_check(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_FDC;
@@ -1034,7 +1308,8 @@ public class SpecRMap {
 			default:
 				return SI_ERR_CODE;
 			}
-		if (sc2.equals("ZC"))
+		}
+		if (sc2.equals("ZC")) {
 			switch (FizCheck.fiz_check(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_FDC;
@@ -1043,8 +1318,10 @@ public class SpecRMap {
 			default:
 				return SI_ERR_CODE;
 			}
-		if (sc2.equals("ZH"))
+		}
+		if (sc2.equals("ZH")) {
 			return SI_SPEC_AT;
+		}
 
 		return SI_ERR_CODE;
 	}
