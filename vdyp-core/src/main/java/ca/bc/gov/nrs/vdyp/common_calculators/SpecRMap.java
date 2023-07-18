@@ -2,8 +2,8 @@ package ca.bc.gov.nrs.vdyp.common_calculators;
 
 /* @formatter:off */
 /**
- * specrmap.c
- * - determines the  species/curve index for a given species code.
+ * SpecRMap.java
+ * - determines the default species/curve index for a given species code.
  * - initial species code remappings provided by Inventory Branch.
  * - species codes can be 1-3 letters, in upper or lower case.
  * - error codes:
