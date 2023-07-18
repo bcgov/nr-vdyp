@@ -1,4 +1,5 @@
 package ca.bc.gov.nrs.vdyp.common_calculators;
+
 /* @formatter:off */
 /**
  * SiteIndex2Height.java
@@ -21,7 +22,7 @@ package ca.bc.gov.nrs.vdyp.common_calculators;
 /* @formatter:on */
 public class SiteIndex2Height {
 /* @formatter:off */
-/* 
+/*
  *
  * 1990 may 31
  *      jun 8  - Added Fdi Monserud's equations.
@@ -204,8 +205,8 @@ public class SiteIndex2Height {
     /*
     * age types
     */
-    private static final short SI_AT_TOTAL   = 0; 
-    private static final short SI_AT_BREAST  = 1; 
+    private static final short SI_AT_TOTAL   = 0;
+    private static final short SI_AT_BREAST  = 1;
 
     /*
     * site index estimation (from height and age) types
@@ -369,14 +370,14 @@ public static double index_to_height (
   double x1, x2, x3, x4, x5;  // equation coefficients
   double tage;    // total age
   double bhage;   // breast-height age
-  
+
   if (site_index < 1.3){
     return SI_ERR_LT13;
   }
-  
+
   // should this line be removed?
   y2bh = ((int) y2bh) + 0.5;
-  
+
   if (age_type == SI_AT_TOTAL){
     tage = iage;
     bhage = Age2Age.age_to_age(cu_index, tage, SI_AT_TOTAL, SI_AT_BREAST, y2bh);
@@ -391,13 +392,13 @@ public static double index_to_height (
   if (tage < 0.00001){
     return 0.0;
   }
-  
+
   switch (cu_index){
     case SI_FDC_COCHRAN:
       if (bhage > 0.0){
         /* convert to imperial */
         site_index /= 0.3048;
-        
+
         x1 = Math.log(bhage);
         x1 = Math.exp (-0.37496 + 1.36164 * x1 - 0.00243434 * ppow(x1, 4));
         x2 = -0.2828 + 1.87947 * ppow(1 - Math.exp (-0.022399 * bhage), 0.966998);
@@ -415,9 +416,9 @@ public static double index_to_height (
       if (bhage > 0.0){
         /* convert to imperial */
         site_index /= 0.3048;
-        
+
         x1 = 2500 / (site_index - 4.5);
-  
+
         x2 = -0.954038    + 0.109757    * x1;
         x3 =  0.0558178   + 0.00792236  * x1;
         x4 = -0.000733819 + 0.000197693 * x1;
@@ -443,7 +444,7 @@ public static double index_to_height (
       if (bhage > 0.0){
         /* convert to imperial */
         site_index /= 0.3048;
-        
+
         x1 = Math.log(bhage);
 
         x2 = 0.3621734 +
@@ -462,7 +463,7 @@ public static double index_to_height (
              1.431925E-26 * ppow(x1, 36.0);
 
         height = 4.5 + Math.exp(x2) - Math.exp(x3) * (83.20 - (site_index - 4.5));
-     
+
         /* convert back to metric */
         height *= 0.3048;
         }
@@ -472,12 +473,12 @@ public static double index_to_height (
       break;
     case SI_HWC_BARKER:{
       double si50t;
-      
+
       /*
        * convert from SI 50b to SI 50t
        */
       si50t = -10.45 + 1.30049 * site_index - 0.0022 * site_index * site_index;
-      
+
       height = Math.exp(4.35753) * ppow(si50t / Math.exp(4.35753), ppow(50.0 / tage, 0.756313));
       }
       break;
@@ -485,7 +486,7 @@ public static double index_to_height (
       if (bhage > 0.0){
         /* convert to base 100 */
         site_index = -1.73 + 3.149 * ppow(site_index, 0.8279);
-        
+
         height = 1.37 + (22.87 + 0.9502 * (site_index - 1.37)) *
           ppow(1 - Math.exp(-0.0020647 * ppow(site_index - 1.37, 0.5) * bhage),
           1.3656 + 2.046 / (site_index - 1.37));
@@ -497,7 +498,7 @@ public static double index_to_height (
       if (bhage > 0.5){
         /* convert to base 100 */
         site_index = -1.73 + 3.149 * ppow(site_index, 0.8279);
-        
+
         height = 1.37 + (22.87 + 0.9502 * (site_index - 1.37)) *
           ppow(1 - Math.exp (-0.0020647 * ppow(site_index - 1.37, 0.5) * (bhage-0.5)),
           1.3656 + 2.046 / (site_index - 1.37));
@@ -511,32 +512,32 @@ public static double index_to_height (
        if (bhage > 0.0){
         if (site_index > 60 + 1.667 * bhage){
           // function starts going nuts at high sites and low ages
-          // evaluate at a safe age, and interpolate 
+          // evaluate at a safe age, and interpolate
           x1 = (site_index - 60) / 1.667 + 0.1;
           x2 = index_to_height (cu_index, x1, SI_AT_BREAST, site_index, y2bh, pi);
           height = 1.37 + (x2-1.37) * bhage / x1;
           break;
           }
-          
-        // convert to imperial 
+
+        // convert to imperial
         site_index /= 0.3048;
-        
+
         x1 = 2500 / (site_index - 4.5);
-  
+
         x2 = -1.7307 + 0.1394 * x1;
         x3 = -0.0616 + 0.0137 * x1;
         x4 = 0.00192428 + 0.00007024 * x1;
-  
+
         height = 4.5 + bhage * bhage / (x2 + x3 * bhage + x4 * bhage * bhage);
-     
+
         if (bhage < 5){
           height += (0.3 * bhage);
         }
         else if (bhage < 10){
           height += (3.0 - 0.3 * bhage);
         }
-     
-        // convert back to metric 
+
+        // convert back to metric
         height *= 0.3048;
 
     }else{
@@ -544,37 +545,37 @@ public static double index_to_height (
         }
       break;
       */
-      
+
     case SI_HWC_WILEY:
         if (bhage > 0.0){
             if (site_index > 60 + 1.667 * bhage){
             // function starts going nuts at high sites and low ages
-            // evaluate at a safe age, and interpolate 
+            // evaluate at a safe age, and interpolate
             x1 = (site_index - 60) / 1.667 + 0.1;
             x2 = index_to_height (cu_index, x1, SI_AT_BREAST, site_index, y2bh, pi);
             height = 1.37 + (x2-1.37) * bhage / x1;
             break;
             }
-            
-            // convert to imperial 
+
+            // convert to imperial
             site_index /= 0.3048;
-            
+
             x1 = 2500 / (site_index - 4.5);
-    
+
             x2 = -1.7307 + 0.1394 * x1;
             x3 = -0.0616 + 0.0137 * x1;
             x4 = 0.00192428 + 0.00007024 * x1;
-    
+
             height = 4.5 + bhage * bhage / (x2 + x3 * bhage + x4 * bhage * bhage);
-        
+
             if (bhage < 5){
             height += (0.3 * bhage);
             }
             else if (bhage < 10){
             height += (3.0 - 0.3 * bhage);
             }
-        
-            // convert back to metric 
+
+            // convert back to metric
             height *= 0.3048;
         } else{
         height = tage * tage * 1.37 / y2bh / y2bh;
@@ -584,32 +585,32 @@ public static double index_to_height (
         if (bhage > 0.0){
             if (site_index > 60 + 1.667 * bhage){
             // function starts going nuts at high sites and low ages
-            // evaluate at a safe age, and interpolate 
+            // evaluate at a safe age, and interpolate
             x1 = (site_index - 60) / 1.667 + 0.1;
             x2 = index_to_height (cu_index, x1, SI_AT_BREAST, site_index, y2bh, pi);
             height = 1.37 + (x2-1.37) * bhage / x1;
             break;
             }
-            
-            // convert to imperial 
+
+            // convert to imperial
             site_index /= 0.3048;
-            
+
             x1 = 2500 / (site_index - 4.5);
-    
+
             x2 = -1.7307 + 0.1394 * x1;
             x3 = -0.0616 + 0.0137 * x1;
             x4 = 0.00192428 + 0.00007024 * x1;
-    
+
             height = 4.5 + bhage * bhage / (x2 + x3 * bhage + x4 * bhage * bhage);
-        
+
             if (bhage < 5){
             height += (0.3 * bhage);
             }
             else if (bhage < 10){
             height += (3.0 - 0.3 * bhage);
             }
-        
-            // convert back to metric 
+
+            // convert back to metric
             height *= 0.3048;
 
             if (cu_index == SI_HWC_WILEY_BC){
@@ -627,32 +628,32 @@ public static double index_to_height (
         if (bhage > 0.0){
             if (site_index > 60 + 1.667 * bhage){
             // function starts going nuts at high sites and low ages
-            // evaluate at a safe age, and interpolate 
+            // evaluate at a safe age, and interpolate
             x1 = (site_index - 60) / 1.667 + 0.1;
             x2 = index_to_height (cu_index, x1, SI_AT_BREAST, site_index, y2bh, pi);
             height = 1.37 + (x2-1.37) * bhage / x1;
             break;
             }
-            
-            // convert to imperial 
+
+            // convert to imperial
             site_index /= 0.3048;
-            
+
             x1 = 2500 / (site_index - 4.5);
-    
+
             x2 = -1.7307 + 0.1394 * x1;
             x3 = -0.0616 + 0.0137 * x1;
             x4 = 0.00192428 + 0.00007024 * x1;
-    
+
             height = 4.5 + bhage * bhage / (x2 + x3 * bhage + x4 * bhage * bhage);
-        
+
             if (bhage < 5){
             height += (0.3 * bhage);
             }
             else if (bhage < 10){
             height += (3.0 - 0.3 * bhage);
             }
-        
-            // convert back to metric 
+
+            // convert back to metric
             height *= 0.3048;
 
             if (cu_index == SI_HWC_WILEY_MB){
@@ -673,44 +674,44 @@ public static double index_to_height (
           height = 1.37 + (x2-1.37) * (bhage-pi) / x1;
           break;
         }
-          
+
         /* convert to imperial */
         site_index /= 0.3048;
-        
+
         x1 = Math.pow (49 + (1 - pi), 2.0) / (site_index - 4.5);
-  
+
         x2 = -1.7307 + 0.1394 * x1;
         x3 = -0.0616 + 0.0137 * x1;
         x4 = 0.00195078 + 0.00007446 * x1;
         x5 = bhage - pi;
         height = 4.5 + x5 * x5 / (x2 + x3 * x5 + x4 * x5 * x5);
-     
+
         if (x5 < 5){
           height += (0.3 * x5);
         }
         else if (x5 < 10){
           height += (3.0 - 0.3 * x5);
         }
-     
+
         /* convert back to metric */
         height *= 0.3048;
         }
       else{
         height = tage * tage * 1.37 / y2bh / y2bh;
       }
-        
+
       break;
     case SI_BP_CURTIS:
       if (bhage > 0.0){
         /* convert to imperial */
         site_index /= 0.3048;
-        
+
         x1 = Math.log (site_index - 4.5) + 1.649871 * (Math.log (bhage) - Math.log (50))
            + 0.147245 * Math.pow (Math.log (bhage) - Math.log(50), 2.0);
-        x2 = 1.0 + 0.164927 * (Math.log(bhage) - Math.log (50)) 
+        x2 = 1.0 + 0.164927 * (Math.log(bhage) - Math.log (50))
            + 0.052467 * Math.pow (Math.log (bhage) - Math.log (50), 2.0);
         height = 4.5 + Math.exp (x1 / x2);
-     
+
         /* convert back to metric */
         height *= 0.3048;
         }
@@ -722,13 +723,13 @@ public static double index_to_height (
       if (bhage > 0.5){
         /* convert to imperial */
         site_index /= 0.3048;
-        
+
         x1 = Math.log (site_index - 4.5) + 1.649871 * (Math.log (bhage-0.5) - Math.log (49.5))
            + 0.147245 * Math.pow (Math.log (bhage-0.5) - Math.log (49.5), 2.0);
-        x2 = 1.0 + 0.164927 * (Math.log (bhage-0.5) - Math.log (49.5)) 
+        x2 = 1.0 + 0.164927 * (Math.log (bhage-0.5) - Math.log (49.5))
            + 0.052467 * Math.pow (Math.log (bhage-0.5) - Math.log (49.5), 2.0);
         height = 4.5 + Math.exp (x1 / x2);
-     
+
         /* convert back to metric */
         height *= 0.3048;
         }
@@ -742,7 +743,7 @@ public static double index_to_height (
           /* Goudie */
           x1 = (1.0 + Math.exp (9.7936 -1.2866 * llog(site_index - 1.3) -1.4661 * Math.log (49.5))) /
                (1.0 + Math.exp (9.7936 -1.2866 * llog(site_index - 1.3) -1.4661 * Math.log (bhage-0.5)));
-        
+
           height = 1.3 + (site_index - 1.3) * x1;
         }
         else{
@@ -761,22 +762,22 @@ public static double index_to_height (
                            - 1.4661 * Math.log (49.5))) /
                (1.0 + Math.exp (9.7936 -1.2866 * llog(site_index - 1.3)
                            - 1.4661 * Math.log (bhage-0.5)));
-          
+
           height = 1.3 + (site_index - 1.3) * x1;
         }
         else{
           /* use Nigh's total age curve */
           x4 = (-0.01666 + 0.001722 * site_index) * ppow(y2bh-0.5, 1.858) *
             ppow(0.9982, y2bh-0.5);
-          
+
           /* use Goudie's breast-height age curve */
           x1 = (1.0 + Math.exp (9.7936 -1.2866 * llog(site_index - 1.3)
                            - 1.4661 * Math.log (49.5))) /
                (1.0 + Math.exp (9.7936 -1.2866 * llog(site_index - 1.3)
                            - 1.4661 * Math.log (2-0.5)));
-          
+
           x5 = 1.3 + (site_index - 1.3) * x1;
-          
+
           height = x4 + (x5 - x4) * bhage / 2.0;
           }
         }
@@ -788,7 +789,7 @@ public static double index_to_height (
                            - 1.3563 * Math.log (49.5))) /
                (1.0 + Math.exp (7.6298 - 0.8940 * llog(site_index - 1.3)
                            - 1.3563 * Math.log (bhage - 0.5)));
-          
+
           height = 1.3 + (site_index - 1.3) * x1;
         }
         else{
@@ -807,22 +808,22 @@ public static double index_to_height (
                            - 1.3563 * Math.log (49.5))) /
                (1.0 + Math.exp (7.6298 - 0.8940 * llog(site_index - 1.3)
                            - 1.3563 * Math.log (bhage-0.5)));
-          
+
           height = 1.3 + (site_index - 1.3) * x1;
         }
         else{
           /* use Nigh's total age curve */
           x4 = (-0.03993 + 0.004828 * site_index) * ppow(y2bh-0.5, 1.902) *
             ppow(0.9645, y2bh-0.5);
-          
+
           /* use Thrower's breast-height age curve */
           x1 = (1.0 + Math.exp (7.6298 - 0.8940 * llog(site_index - 1.3)
                            - 1.3563 * Math.log (49.5))) /
                (1.0 + Math.exp (7.6298 - 0.8940 * llog(site_index - 1.3)
                            - 1.3563 * Math.log (2 - 0.5)));
-          
+
           x5 = 1.3 + (site_index - 1.3) * x1;
-          
+
           height = x4 + (x5 - x4) * bhage / 2.0;
           }
         }
@@ -833,7 +834,7 @@ public static double index_to_height (
                          - 1.3563 * Math.log (50 - pi))) /
              (1.0 + Math.exp (7.6298 - 0.8940 * llog(site_index - 1.3)
                          - 1.3563 * Math.log (bhage - pi)));
-        
+
         height = 1.3 + (site_index - 1.3) * x1;
       }
       else{
@@ -908,15 +909,15 @@ public static double index_to_height (
     case SI_FDC_BRUCE:
       // 2009 may 6: force a non-rounded y2bh
       y2bh = 13.25 - site_index / 6.096;
-      
+
       x1 = site_index / 30.48;
-  
+
       x2 = -0.477762 + x1 * (-0.894427 + x1 * (0.793548 - x1 * 0.171666));
-      
+
       x3 = ppow(50.0+y2bh, x2);
-      
+
       x4 = Math.log (1.372 / site_index) / (ppow(y2bh, x2) - x3);
-      
+
       if (age_type == SI_AT_TOTAL){
         height = site_index * Math.exp (x4 * (ppow(tage, x2) - x3));
       }
@@ -927,15 +928,15 @@ public static double index_to_height (
     case SI_FDC_BRUCEAC:
       // 2009 may 6: force a non-rounded y2bh
       y2bh = 13.25 - site_index / 6.096;
-      
+
       x1 = site_index / 30.48;
-  
+
       x2 = -0.477762 + x1 * (-0.894427 + x1 * (0.793548 - x1 * 0.171666));
-      
+
       x3 = ppow(49 + (1 - pi) + y2bh, x2);
-      
+
       x4 = Math.log (1.372 / site_index) / (ppow(y2bh, x2) - x3);
-      
+
       if (age_type == SI_AT_TOTAL){
         height = site_index * Math.exp (x4 * (ppow(tage, x2) - x3));
       }
@@ -946,7 +947,7 @@ public static double index_to_height (
     case SI_FDC_BRUCENIGH:
       // 2009 may 6: force a non-rounded y2bh
       y2bh = 13.25 - site_index / 6.096;
-      
+
       if (tage < 50){
         /* compute Bruce at age 50 */
         x1 = site_index / 30.48;
@@ -954,10 +955,10 @@ public static double index_to_height (
         x3 = ppow(50.0+y2bh-0.5, x2);
         x4 = Math.log (1.372 / site_index) / (ppow(y2bh-0.5, x2) - x3);
         height = site_index * Math.exp (x4 * (ppow(50, x2) - x3));
-        
+
         /* now smooth it into the Nigh curve */
         x4 = ppow(height * ppow(50, -2.037) / (-0.0123  + 0.00158 * site_index), 1.0 / 50);
-        
+
         height = (-0.0123  + 0.00158 * site_index) * ppow(tage, 2.037) * ppow(x4, tage);
       }
       else{
@@ -973,11 +974,11 @@ public static double index_to_height (
       if (bhage > 0.0){
         /* convert to imperial */
         site_index /= 0.3048;
-        
+
         x1 = 96.93 * ppow(1 - Math.exp (-0.01955 * bhage), 1.216);
         x2 = 1.41  * ppow(1 - Math.exp (-0.02656 * bhage), 1.297);
         height = 4.5 + x1 + x2 * (site_index - 59.6);
-     
+
         /* convert back to metric */
         height *= 0.3048;
       }
@@ -993,7 +994,7 @@ public static double index_to_height (
         x4 = site_index-1.3 +
           Math.sqrt ((site_index-1.3 - x3)*(site_index-1.3 - x3) +
           80*x2*(site_index-1.3) * ppow(50.0, -(1+x1)));
-        
+
         height = 1.3 + (x4 + x3) /
           (2 + 80*x2*ppow(bhage, -(1+x1)) / (x4 - x3));
       }
@@ -1009,7 +1010,7 @@ public static double index_to_height (
         x4 = site_index-1.3 +
           Math.sqrt ((site_index-1.3 - x3)*(site_index-1.3 - x3) +
           80*x2*(site_index-1.3) * ppow(50.0, -(1+x1)));
-        
+
         height = 1.3 + (x4 + x3) /
           (2 + 80*x2*ppow(bhage, -(1+x1)) / (x4 - x3));
       }
@@ -1025,7 +1026,7 @@ public static double index_to_height (
         x4 = site_index-1.3 +
           Math.sqrt ((site_index-1.3 - x3)*(site_index-1.3 - x3) +
           80*x2*(site_index-1.3) * ppow(50.0, -(1+x1)));
-        
+
         height = 1.3 + (x4 + x3) /
           (2 + 80*x2*ppow(bhage, -(1+x1)) / (x4 - x3));
       }else{
@@ -1040,7 +1041,7 @@ public static double index_to_height (
         x4 = site_index-1.3 +
           Math.sqrt ((site_index-1.3 - x3)*(site_index-1.3 - x3) +
           80*x2*(site_index-1.3) * ppow(50.0, -(1+x1)));
-        
+
         height = 1.3 + (x4 + x3) /
           (2 + 80*x2*ppow(bhage, -(1+x1)) / (x4 - x3));
       }
@@ -1057,7 +1058,7 @@ public static double index_to_height (
 
         x1 = (1.0 + Math.exp (x2 + x1 * llog(site_index - 1.3) + x3 * Math.log (50.0))) /
              (1.0 + Math.exp (x2 + x1 * llog(site_index - 1.3) + x3 * Math.log (bhage)));
-        
+
         height = 1.3 + (site_index - 1.3) * x1;
       }
       else{
@@ -1066,7 +1067,7 @@ public static double index_to_height (
       break;
       */
     // Couldn't find constant
-    /* 
+    /*
     case SI_PF_GOUDIE_DRY:
       if (bhage > 0.0){
         x1 = -1.00726;
@@ -1075,7 +1076,7 @@ public static double index_to_height (
 
         x1 = (1.0 + Math.exp (x2 + x1 * llog(site_index - 1.3) + x3 * Math.log (50.0))) /
              (1.0 + Math.exp (x2 + x1 * llog(site_index - 1.3) + x3 * Math.log (bhage)));
-        
+
         height = 1.3 + (site_index - 1.3) * x1;
       }
       else{
@@ -1091,7 +1092,7 @@ public static double index_to_height (
 
         x1 = (1.0 + Math.exp (x2 + x1 * llog(site_index - 1.3) + x3 * Math.log (50.0))) /
              (1.0 + Math.exp (x2 + x1 * llog(site_index - 1.3) + x3 * Math.log (bhage)));
-        
+
         height = 1.3 + (site_index - 1.3) * x1;
       }
       else{
@@ -1106,7 +1107,7 @@ public static double index_to_height (
 
         x1 = (1.0 + Math.exp (x2 + x1 * llog(site_index - 1.3) + x3 * Math.log (50.0))) /
              (1.0 + Math.exp (x2 + x1 * llog(site_index - 1.3) + x3 * Math.log (bhage)));
-        
+
         height = 1.3 + (site_index - 1.3) * x1;
       }
       else{
@@ -1122,7 +1123,7 @@ public static double index_to_height (
 
         x1 = (1.0 + Math.exp (x2 + x1 * llog(site_index - 1.3) + x3 * Math.log (50.0))) /
              (1.0 + Math.exp (x2 + x1 * llog(site_index - 1.3) + x3 * Math.log (bhage)));
-        
+
         height = 1.3 + (site_index - 1.3) * x1;
       }
       else{
@@ -1131,7 +1132,7 @@ public static double index_to_height (
       break;
       */
     // Couldn't find constant
-    /* 
+    /*
     case SI_PA_GOUDIE_DRY:
       if (bhage > 0.0){
         x1 = -1.00726;
@@ -1140,7 +1141,7 @@ public static double index_to_height (
 
         x1 = (1.0 + Math.exp (x2 + x1 * llog(site_index - 1.3) + x3 * Math.log (50.0))) /
              (1.0 + Math.exp (x2 + x1 * llog(site_index - 1.3) + x3 * Math.log (bhage)));
-        
+
         height = 1.3 + (site_index - 1.3) * x1;
       }
       else{
@@ -1156,7 +1157,7 @@ public static double index_to_height (
 
         x1 = (1.0 + Math.exp (x2 + x1 * llog(site_index - 1.3) + x3 * Math.log (50.0))) /
              (1.0 + Math.exp (x2 + x1 * llog(site_index - 1.3) + x3 * Math.log (bhage)));
-        
+
         height = 1.3 + (site_index - 1.3) * x1;
       }
       else{
@@ -1172,7 +1173,7 @@ public static double index_to_height (
 
         x1 = (1.0 + Math.exp (x2 + x1 * llog(site_index - 1.3) + x3 * Math.log (50.0))) /
              (1.0 + Math.exp (x2 + x1 * llog(site_index - 1.3) + x3 * Math.log (bhage)));
-        
+
         height = 1.3 + (site_index - 1.3) * x1;
       }
       else{
@@ -1189,7 +1190,7 @@ public static double index_to_height (
 
         x1 = (1.0 + Math.exp (x2 + x1 * llog(site_index - 1.3) + x3 * Math.log (50.0))) /
              (1.0 + Math.exp (x2 + x1 * llog(site_index - 1.3) + x3 * Math.log (bhage)));
-        
+
         height = 1.3 + (site_index - 1.3) * x1;
       }
       else{
@@ -1205,7 +1206,7 @@ public static double index_to_height (
 
         x1 = (1.0 + Math.exp (x2 + x1 * llog(site_index - 1.3) + x3 * Math.log (50.0))) /
              (1.0 + Math.exp (x2 + x1 * llog(site_index - 1.3) + x3 * Math.log (bhage)));
-        
+
         height = 1.3 + (site_index - 1.3) * x1;
       }
       else{
@@ -1220,7 +1221,7 @@ public static double index_to_height (
 
         x1 = (1.0 + Math.exp (x2 + x1 * llog(site_index - 1.3) + x3 * Math.log (50.0))) /
              (1.0 + Math.exp (x2 + x1 * llog(site_index - 1.3) + x3 * Math.log (bhage)));
-        
+
         height = 1.3 + (site_index - 1.3) * x1;
       }
       else{
@@ -1235,7 +1236,7 @@ public static double index_to_height (
 
         x1 = (1.0 + Math.exp (x2 + x1 * llog(site_index - 1.3) + x3 * Math.log (50.0))) /
              (1.0 + Math.exp (x2 + x1 * llog(site_index - 1.3) + x3 * Math.log (bhage)));
-        
+
         height = 1.3 + (site_index - 1.3) * x1;
       }
       else{
@@ -1250,7 +1251,7 @@ public static double index_to_height (
 
           x1 = (1.0 + Math.exp (x2 + x1 * llog(site_index - 1.3) + x3 * Math.log (50.0))) /
              (1.0 + Math.exp (x2 + x1 * llog(site_index - 1.3) + x3 * Math.log (bhage)));
-        
+
         height = 1.3 + (site_index - 1.3) * x1;
       }
       else{
@@ -1265,7 +1266,7 @@ public static double index_to_height (
 
         x1 = (1.0 + Math.exp (x2 + x1 * llog(site_index - 1.3) + x3 * Math.log (50.0))) /
              (1.0 + Math.exp (x2 + x1 * llog(site_index - 1.3) + x3 * Math.log (bhage)));
-        
+
         height = 1.3 + (site_index - 1.3) * x1;
       }
       else{
@@ -1280,7 +1281,7 @@ public static double index_to_height (
 
         x1 = (1.0 + Math.exp (x2 + x1 * llog(site_index - 1.3) + x3 * Math.log (50.0))) /
              (1.0 + Math.exp (x2 + x1 * llog(site_index - 1.3) + x3 * Math.log (bhage)));
-        
+
         height = 1.3 + (site_index - 1.3) * x1;
       }
       else{
@@ -1295,7 +1296,7 @@ public static double index_to_height (
 
         x1 = (1.0 + Math.exp (x2 + x1 * llog(site_index - 1.3) + x3 * Math.log (50.0))) /
              (1.0 + Math.exp (x2 + x1 * llog(site_index - 1.3) + x3 * Math.log (bhage)));
-        
+
         height = 1.3 + (site_index - 1.3) * x1;
       }
       else{
@@ -1303,7 +1304,7 @@ public static double index_to_height (
       }
       break;
     //Couldn't find constant
-    /* 
+    /*
     case SI_EP_GOUDIE:
       if (bhage > 0.0){
         x1 = -0.618;
@@ -1312,7 +1313,7 @@ public static double index_to_height (
 
         x1 = (1.0 + Math.exp (x2 + x1 * llog(site_index - 1.3) + x3 * Math.log (50.0))) /
              (1.0 + Math.exp (x2 + x1 * llog(site_index - 1.3) + x3 * Math.log (bhage)));
-        
+
         height = 1.3 + (site_index - 1.3) * x1;
       }
       else{
@@ -1329,23 +1330,23 @@ public static double index_to_height (
 
             x1 = (1.0 + Math.exp (x2 + x1 * llog(site_index - 1.3) + x3 * Math.log (50.0))) /
              (1.0 + Math.exp (x2 + x1 * llog(site_index - 1.3) + x3 * Math.log (bhage)));
-        
+
         height = 1.3 + (site_index - 1.3) * x1;
       }
       else{
         height = tage * tage * 1.3 / y2bh / y2bh;
       }
-      break; 
+      break;
       */
     case SI_SW_GOUDIE_NATAC:
       if (bhage > pi){
         x1 = -1.2866;
         x2 = 9.7936;
         x3 = -1.4661;
-        
+
         x1 = (1.0 + Math.exp (x2 + x1 * llog(site_index - 1.3) + x3 * Math.log(50 - pi))) /
              (1.0 + Math.exp (x2 + x1 * llog(site_index - 1.3) + x3 * Math.log(bhage - pi)));
-        
+
         height = 1.3 + (site_index - 1.3) * x1;
       }
       else{
@@ -1358,10 +1359,10 @@ public static double index_to_height (
         x1 = -1.2866;
         x2 = 9.7936;
         x3 = -1.4661;
-        
+
         x1 = (1.0 + Math.exp (x2 + x1 * llog(site_index - 1.3) + x3 * Math.log (50 - pi))) /
              (1.0 + Math.exp (x2 + x1 * llog(site_index - 1.3) + x3 * Math.log (bhage - pi)));
-        
+
         height = 1.3 + (site_index - 1.3) * x1;
       }
       else{
@@ -1375,7 +1376,7 @@ public static double index_to_height (
         x3 = -1.150039266;
         x1 = (1.0 + Math.exp(x2 + x1 * llog(site_index - 1.3) + x3 * Math.log(49.5))) /
              (1.0 + Math.exp(x2 + x1 * llog(site_index - 1.3) + x3 * Math.log(bhage-0.5)));
-        
+
         height = 1.3 + (site_index - 1.3) * x1;
       }
       else{
@@ -1387,7 +1388,7 @@ public static double index_to_height (
         x1 = 8.947;
         x2 = -1.357;
         x3 = -1.013;
-        
+
         x1 = (1.0 + Math.exp (x1 + x2 * Math.log (49.5)      + x3 * llog(site_index - 1.3))) /
              (1.0 + Math.exp (x1 + x2 * Math.log (bhage-0.5) + x3 * llog(site_index - 1.3)));
         height = 1.3 + (site_index - 1.3) * x1;
@@ -1413,7 +1414,7 @@ public static double index_to_height (
         x1 = 9.604;
         x2 = -1.113;
         x3 = -1.849;
-        
+
         x1 = (1.0 + Math.exp (x1 + x2 * Math.log (49.5)      + x3 * llog(site_index - 1.3))) /
              (1.0 + Math.exp (x1 + x2 * Math.log (bhage-0.5) + x3 * llog(site_index - 1.3)));
         height = 1.3 + (site_index - 1.3) * x1;
@@ -1427,7 +1428,7 @@ public static double index_to_height (
         x1 = 9.474;
         x2 = -1.340;
         x3 = -1.244;
-        
+
         x1 = (1.0 + Math.exp (x1 + x2 * Math.log (49.5)      + x3 * llog(site_index - 1.3))) /
              (1.0 + Math.exp(x1 + x2 * Math.log (bhage-0.5) + x3 * llog(site_index - 1.3)));
         height = 1.3 + (site_index - 1.3) * x1;
@@ -1441,7 +1442,7 @@ public static double index_to_height (
         x1 = 8.998;
         x2 = -1.434;
         x3 = -1.051;
-        
+
         x1 = (1.0 + Math.exp (x1 + x2 * Math.log (49.5)      + x3 * llog(site_index - 1.3))) /
              (1.0 + Math.exp (x1 + x2 * Math.log (bhage-0.5) + x3 * llog(site_index - 1.3)));
         height = 1.3 + (site_index - 1.3) * x1;
@@ -1455,7 +1456,7 @@ public static double index_to_height (
         x1 = 8.519;
         x2 = -1.385;
         x3 = -0.8498;
-        
+
         x1 = (1.0 + Math.exp (x1 + x2 * Math.log (49.5)      + x3 * llog(site_index - 1.3))) /
              (1.0 + Math.exp (x1 + x2 * Math.log (bhage-0.5) + x3 * llog(site_index - 1.3)));
         height = 1.3 + (site_index - 1.3) * x1;
@@ -1471,10 +1472,10 @@ public static double index_to_height (
         x1 = -1.3481;
         x2 = 10.3861;
         x3 = -1.6555;
-        
+
         x1 = (1.0 + Math.exp (x2 + x3 * llog(site_index - 1.3) + x1 * Math.log (50.0))) /
              (1.0 + Math.exp (x2 + x3 * llog(site_index - 1.3) + x1 * Math.log (bhage)));
-        
+
         height = 1.3 + (site_index - 1.3) * x1;
       }
       else{
@@ -1486,10 +1487,10 @@ public static double index_to_height (
         x1 = -1.3481;
         x2 = 10.3861;
         x3 = -1.6555;
-        
+
         x1 = (1.0 + Math.exp (x2 + x3 * llog(site_index - 1.3) + x1 * Math.log (49.5))) /
              (1.0 + Math.exp (x2 + x3 * Math.log (site_index - 1.3) + x1 * Math.log (bhage-0.5)));
-        
+
         height = 1.3 + (site_index - 1.3) * x1;
         }
       else
@@ -1528,7 +1529,7 @@ public static double index_to_height (
                          - 1.4482 * Math.log (50.0 - 0.5))) /
              (1.0 + Math.exp (10.1654 - 1.4002 * llog(site_index - 1.3)
                          - 1.4482 * Math.log (bhage - 0.5)));
-        
+
         height = 1.3 + (site_index - 1.3) * x1;
       }
       else{
@@ -1538,7 +1539,7 @@ public static double index_to_height (
     case SI_SW_HU_GARCIA:
       if (bhage > 0.5){
         double q;
-        
+
         q = hu_garcia_q (site_index, 50.0);
         height = hu_garcia_h (q, bhage);
       }
@@ -1550,7 +1551,7 @@ public static double index_to_height (
       if (bhage > 0.0){
         /* convert to imperial */
         site_index /= 0.3048;
-        
+
         x3 = llog(bhage);
 
         x1 = -0.20505 +
@@ -1567,7 +1568,7 @@ public static double index_to_height (
              7.964197E-27 * ppow(x3, 36.0);
 
         height = 4.5 + Math.exp (x1) - Math.exp (x2) * (86.43 - (site_index - 4.5));
-     
+
         /* convert back to metric */
         height *= 0.3048;
       }
@@ -1579,15 +1580,15 @@ public static double index_to_height (
       if (bhage > 0.0){
         /* convert to imperial */
         site_index /= 0.3048;
-        
+
         x1 = 1.0 - Math.exp (-Math.exp (-9.975053 + (1.747353 - 0.38583) * Math.log (bhage) +
           1.119438 * Math.log (site_index)));
-        
+
         x2 = 1.0 - Math.exp (-Math.exp (-9.975053 + 1.747353 * Math.log (50.0) -
           0.38583 * Math.log (bhage) + 1.119438 * Math.log (site_index)));
 
         height = 4.5 + (site_index - 4.5) * x1 / x2;
-     
+
         /* convert back to metric */
         height *= 0.3048;
       }
@@ -1599,15 +1600,15 @@ public static double index_to_height (
       if (bhage > 0.5){
         /* convert to imperial */
         site_index /= 0.3048;
-        
+
         x1 = 1.0 - Math.exp (-Math.exp (-9.975053 + (1.747353 - 0.38583) * Math.log (bhage-0.5) +
           1.119438 * Math.log (site_index)));
-        
+
         x2 = 1.0 - Math.exp (-Math.exp (-9.975053 + 1.747353 * Math.log (49.5) -
           0.38583 * Math.log (bhage-0.5) + 1.119438 * Math.log (site_index)));
 
         height = 4.5 + (site_index - 4.5) * x1 / x2;
-     
+
         /* convert back to metric */
         height *= 0.3048;
       }
@@ -1618,29 +1619,29 @@ public static double index_to_height (
     case SI_SS_BARKER:
     {
       double si50t;
-      
+
       /*
        * convert from SI 50b to SI 50t
        */
       si50t = -10.59 + 1.24 * site_index - 0.001 * site_index * site_index;
-      
+
       height = Math.exp (4.39751) * ppow(si50t / Math.exp (4.39751), ppow(50.0 / tage, 0.792329));
     }
       break;
     case SI_CWC_BARKER:
     {
       double si50t;
-      
+
       /*
        * convert from SI 50b to SI 50t
        */
       si50t = -5.85 + 1.12 * site_index;
-      
+
       height = Math.exp (4.56128) * ppow(si50t / Math.exp (4.56128), ppow(50.0 / tage, 0.584627));
     }
       break;
-    case SI_CWC_KURUCZ:  
-    //case SI_YC_KURUCZ: Cannot find constant 
+    case SI_CWC_KURUCZ:
+    //case SI_YC_KURUCZ: Cannot find constant
       if (bhage > 0.0){
         if (site_index > 43 + 1.667 * bhage){
           /* function starts going nuts at high sites and low ages */
@@ -1650,20 +1651,20 @@ public static double index_to_height (
           height = 1.3 + (x2-1.3) * bhage / x1;
           break;
         }
-   
+
         if (site_index <= 1.3){
           x1 = 99999.0;
         }
         else{
           x1 = 2500.0 / (site_index - 1.3);
         }
-        
+
         x2 = -3.11785 + 0.05027     * x1;
         x3 = -0.02465 + 0.01411     * x1;
         x4 =  0.00174 + 0.000097667 * x1;
-  
+
         height = 1.3 + bhage * bhage / (x2 + x3 * bhage + x4 * bhage * bhage);
-        
+
         if (bhage > 50.0){
           if (bhage > 200){
             /*
@@ -1693,20 +1694,20 @@ public static double index_to_height (
           height = 1.3 + (x2-1.3) * (bhage-0.5) / x1;
           break;
         }
-   
+
         if (site_index <= 1.3){
           x1 = 99999.0;
         }
         else{
           x1 = 2450.25 / (site_index - 1.3);
         }
-        
+
         x2 = -3.11785 + 0.05027     * x1;
         x3 = -0.02465 + 0.01411     * x1;
         x4 =  0.00177044 + 0.000102554 * x1;
         x5 = bhage-0.5;
         height = 1.3 + x5 * x5 / (x2 + x3 * x5 + x4 * x5 * x5);
-        
+
         if (bhage > 50.0){
           if (bhage > 200){
             /*
@@ -1764,9 +1765,9 @@ public static double index_to_height (
     case SI_BA_KURUCZ86:
       if (bhage > 0.0){
         x1 = (site_index - 1.3) * ppow(1.0 - Math.exp (-0.01303 * bhage), 1.024971);
-        
+
         height = 1.3 + x1 / 0.470011;
-        
+
         if (bhage <= 50.0){
           height -= (4 * 0.4 * bhage * (50 - bhage) / 2500);
         }
@@ -1787,20 +1788,20 @@ public static double index_to_height (
           height = 1.3 + (x2-1.3) * bhage / x1;
           break;
         }
-      
+
         if (site_index <= 1.3){
           x1 = 99999.0;
         }
         else{
           x1 = 2500.0 / (site_index - 1.3);
         }
-        
+
         x2 = -2.34655 + 0.0565  * x1;
         x3 = -0.42007 + 0.01687 * x1;
         x4 =  0.00934 + 0.00004 * x1;
-  
+
         height = 1.3 + bhage * bhage / (x2 + x3 * bhage + x4 * bhage * bhage);
-        
+
         if (bhage < 50.0 && bhage * height < 1695.3){
           x1 = 0.45773 - 0.00027 * bhage * height;
           if (x1 > 0.0){
@@ -1810,13 +1811,13 @@ public static double index_to_height (
       }
       else{
         height = tage * tage * 1.3 / y2bh / y2bh;
-        
+
         x1 = 0.45773 - 0.00027 * tage * height;   /* flaw? total vs bh-age */
         if (x1 > 0.0)
           height -= x1;
       }
       break;
-    
+
       case SI_BA_KURUCZ82AC:
       if (bhage >= 0.5){
         if (site_index > 60 + 1.667 * (bhage-0.5)){
@@ -1827,20 +1828,20 @@ public static double index_to_height (
           height = 1.3 + (x2-1.3) * (bhage-0.5) / x1;
           break;
         }
-      
+
         if (site_index <= 1.3){
           x1 = 99999.0;
         }
         else{
           x1 = 2450.25 / (site_index - 1.3);
         }
-        
+
         x2 = -2.09187 + 0.066925  * x1;
         x3 = -0.42007 + 0.01687 * x1;
         x4 =  0.00934 + 0.00004 * x1;
         x5 = bhage-0.5;
         height = 1.3 + x5 * x5 / (x2 + x3 * x5 + x4 * x5 * x5);
-        
+
         if (bhage < 50.0 && bhage * height < 1695.3){
           x1 = 0.45773 - 0.00027 * bhage * height;
           if (x1 > 0.0){
@@ -1850,7 +1851,7 @@ public static double index_to_height (
       }
       else{
         height = tage * tage * 1.3 / y2bh / y2bh;
-        
+
         x1 = 0.45773 - 0.00027 * tage * height;   /* flaw? total vs bh-age */
         if (x1 > 0.0){
           height -= x1;
@@ -1861,11 +1862,11 @@ public static double index_to_height (
       if (bhage > 0.0){
         /* convert to imperial */
         site_index /= 0.3048;
-        
+
         x1 = 114.6 * ppow(1 - Math.exp (-0.01462 * bhage), 1.179);
         x2 = 1.703 * ppow(1 - Math.exp (-0.02214 * bhage), 1.321);
         height = 4.5 + x1 + x2 * (site_index - 57.3);
-     
+
         /* convert back to metric */
         height *= 0.3048;
         }
@@ -1877,10 +1878,10 @@ public static double index_to_height (
       if (bhage > 0.0){
         /* convert to imperial */
         site_index /= 0.3048;
-        
+
         height = 4.5 + (1.9965 * (site_index - 4.5) /
                         (1 + Math.exp (5.479 - 1.4016 * Math.log (bhage))));
-     
+
         /* convert back to metric */
         height *= 0.3048;
       }
@@ -1892,10 +1893,10 @@ public static double index_to_height (
       if (bhage > 0.0){
         /* convert to imperial */
         site_index /= 0.3048;
-        
+
         height = 4.5 + (1.79897 * (site_index - 4.5) /
                         (1 + Math.exp (6.0678 - 1.6085 * Math.log (bhage))));
-     
+
         /* convert back to metric */
         height *= 0.3048;
       }
@@ -1911,9 +1912,9 @@ public static double index_to_height (
         x2 = 1.0232;
 
         x3 = 1.0 + Math.exp (9.7278 - 1.2934 * Math.log (bhage) - x2 * llog(site_index-4.5));
-        
+
         height = 4.5 + 42.397 * ppow(site_index-4.5, x1) / x3;
-     
+
         /* convert back to metric */
         height *= 0.3048;
       }
@@ -1930,9 +1931,9 @@ public static double index_to_height (
         x2 = 0.9779;
 
         x3 = 1.0 + Math.exp (9.7278 - 1.2934 * Math.log (bhage) - x2 * llog(site_index-4.5));
-        
+
         height = 4.5 + 42.397 * ppow(site_index-4.5, x1) / x3;
-     
+
         /* convert back to metric */
         height *= 0.3048;
       }
@@ -1941,7 +1942,7 @@ public static double index_to_height (
       }
       break;
 
-      
+
     case SI_FDI_MONS_WRC:
         if (bhage > 0.0){
         /* convert to imperial */
@@ -1950,9 +1951,9 @@ public static double index_to_height (
         x2 = 0.9779;
 
         x3 = 1.0 + Math.exp (9.7278 - 1.2934 * Math.log (bhage) - x2 * llog(site_index-4.5));
-        
+
         height = 4.5 + 42.397 * ppow(site_index-4.5, x1) / x3;
-     
+
         /* convert back to metric */
         height *= 0.3048;
       }
@@ -1960,7 +1961,7 @@ public static double index_to_height (
         height = tage * tage * 1.37 / y2bh / y2bh;
       }
       break;
-    
+
     case SI_FDI_MONS_WH:
         if (bhage > 0.0){
         /* convert to imperial */
@@ -1969,9 +1970,9 @@ public static double index_to_height (
         x2 = 0.9527;
 
         x3 = 1.0 + Math.exp (9.7278 - 1.2934 * Math.log (bhage) - x2 * llog(site_index-4.5));
-        
+
         height = 4.5 + 42.397 * ppow(site_index-4.5, x1) / x3;
-     
+
         /* convert back to metric */
         height *= 0.3048;
       }
@@ -1987,9 +1988,9 @@ public static double index_to_height (
         x2 = 0.9527;
 
         x3 = 1.0 + Math.exp (9.7278 - 1.2934 * Math.log (bhage) - x2 * llog(site_index-4.5));
-        
+
         height = 4.5 + 42.397 * ppow(site_index-4.5, x1) / x3;
-     
+
         /* convert back to metric */
         height *= 0.3048;
       }
@@ -2007,7 +2008,7 @@ public static double index_to_height (
       }
       else{
         double si20;
-        
+
         si20 = ppow(site_index, 1.5) / 8.0;
         x1 = 18.1622 + 0.7953 * si20;
         x2 = 0.00194 - 0.002441 * si20;
@@ -2018,7 +2019,7 @@ public static double index_to_height (
     case SI_DR_NIGH:
       if (bhage > 0.5){
         double si25;
-        
+
         si25 = 0.3094 + 0.7616 * site_index;
         height = 1.3 + (1.693 * (si25 - 1.3)) /
           (1 + Math.exp (3.6 - 1.24 * Math.log (bhage - 0.5)));
@@ -2030,9 +2031,9 @@ public static double index_to_height (
     // Cannot Find Constant
     /*   case SI_BG_COCHRAN:
       if (bhage > 0.0){
-        // convert to imperial 
+        // convert to imperial
         site_index /= 0.3048;
-        
+
         x1 = Math.log (bhage);
         x2 = -0.30935 +
              1.2383 * x1 +
@@ -2050,8 +2051,8 @@ public static double index_to_height (
                  Math.exp (x2) -
                  84.93 * Math.exp (x3) +
                  (site_index - 4.5) * Math.exp (x3);
-     
-        // convert back to metric 
+
+        // convert back to metric
         height *= 0.3048;
         }
       else{
@@ -2063,11 +2064,11 @@ public static double index_to_height (
       if (bhage > 0.0){
         /* convert to imperial */
         site_index /= 0.3048;
-        
+
         x1 = 121.4 * ppow(1 - Math.exp (-0.01756 * bhage), 1.483);
         x2 = 1.189 * ppow(1 - Math.exp (-0.05799 * bhage), 2.63);
         height = 4.5 + x1 + x2 * (site_index - 59.6);
-     
+
         /* convert back to metric */
         height *= 0.3048;
       }
@@ -2079,11 +2080,11 @@ public static double index_to_height (
       if (bhage > 0.0){
         /* convert to imperial */
         site_index /= 0.3048;
-        
+
         x1 = 1 - Math.exp (-Math.exp (-6.54707 + 0.288169 * llog(site_index - 4.5) + 1.21297 * Math.log (bhage)));
         x2 = 1 - Math.exp (-Math.exp (-6.54707 + 0.288169 * llog(site_index - 4.5) + 1.21297 * Math.log (50.0)));
         height = 4.5 + (site_index - 4.5) * x1 / x2;
-     
+
         /* convert back to metric */
         height *= 0.3048;
       }
@@ -2095,11 +2096,11 @@ public static double index_to_height (
       if (bhage > 0.5){
         /* convert to imperial */
         site_index /= 0.3048;
-        
+
         x1 = 1 - Math.exp (-Math.exp (-6.54707 + 0.288169 * llog(site_index - 4.5) + 1.21297 * Math.log (bhage-0.5)));
         x2 = 1 - Math.exp (-Math.exp (-6.54707 + 0.288169 * llog(site_index - 4.5) + 1.21297 * Math.log (49.5)));
         height = 4.5 + (site_index - 4.5) * x1 / x2;
-     
+
         /* convert back to metric */
         height *= 0.3048;
       }
@@ -2114,11 +2115,11 @@ public static double index_to_height (
       if (bhage > 0.0){
         /* convert to imperial */
         site_index /= 0.3048;
-        
+
         x1 = 127.8 * ppow(1 - Math.exp (-0.01655 * bhage), 1.196);
         x2 = 1.289 * ppow(1 - Math.exp (-0.03211 * bhage), 1.047);
         height = 4.5 + x1 + x2 * (site_index - 69.0);
-     
+
         /* convert back to metric */
         height *= 0.3048;
       }
@@ -2174,12 +2175,12 @@ public static double index_to_height (
     case SI_SW_HUANG_PLA:
       double x0;
       double age_huang; /* used in HUANG's equations */
-      
+
       if (bhage > 0.0){
         x0 =  0.010168;
         x1 =  0.004801;
         x2 =  4.997735;
-        x3 =  0.802776;   
+        x3 =  0.802776;
         x4 = -0.243297;
         x5 =  0.325438;
         age_huang = 50.0;
@@ -2189,7 +2190,7 @@ public static double index_to_height (
         x0 = (1.0 - Math.exp (x0 * bhage)) / (1 - Math.exp (x0 * 50.0));
         x1 = ppow(site_index - 1.3, x4);
         x2 = Math.pow (50.0, x5);
-        
+
         height = 1.3 + (site_index - 1.3) * ppow(x0, x3 * x1 * x2);
       }
       else{
@@ -2212,7 +2213,7 @@ public static double index_to_height (
         x0 = (1.0 - Math.exp (x0 * bhage)) / (1 - Math.exp (x0 * 50.0));
         x1 = ppow(site_index - 1.3, x4);
         x2 = Math.pow (50.0, x5);
-        
+
         height = 1.3 + (site_index - 1.3) * ppow(x0, x3 * x1 * x2);
       }
       else{
@@ -2234,7 +2235,7 @@ public static double index_to_height (
         x0 = (1.0 - Math.exp (x0 * bhage)) / (1 - Math.exp (x0 * 50.0));
         x1 = ppow(site_index - 1.3, x4);
         x2 = Math.pow (50.0, x5);
-        
+
         height = 1.3 + (site_index - 1.3) * ppow(x0, x3 * x1 * x2);
       }
       else{
@@ -2257,7 +2258,7 @@ public static double index_to_height (
         x0 = (1.0 - Math.exp (x0 * bhage)) / (1 - Math.exp (x0 * 50.0));
         x1 = ppow(site_index - 1.3, x4);
         x2 = Math.pow (50.0, x5);
-        
+
         height = 1.3 + (site_index - 1.3) * ppow(x0, x3 * x1 * x2);
       }
       else{
@@ -2267,8 +2268,8 @@ public static double index_to_height (
     // Cannot Find Constant
     /* case SI_PJ_HUANG_PLA:
       double x0;
-      double age_huang; // used in HUANG's equations 
-      
+      double age_huang; // used in HUANG's equations
+
       if (bhage > 0.0){
         x0 =  0.023405;
         x1 = -0.371557;
@@ -2283,7 +2284,7 @@ public static double index_to_height (
         x0 = (1.0 - Math.exp (x0 * bhage)) / (1 - Math.exp (x0 * 50.0));
         x1 = ppow(site_index - 1.3, x4);
         x2 = Math.pow (50.0, x5);
-        
+
         height = 1.3 + (site_index - 1.3) * ppow(x0, x3 * x1 * x2);
       }
       else{
@@ -2294,8 +2295,8 @@ public static double index_to_height (
     // Cannot Find Constant
     /* case SI_PJ_HUANG_NAT:
       double x0;
-      double age_huang; // used in HUANG's equations 
-      
+      double age_huang; // used in HUANG's equations
+
       if (bhage > 0.0){
         x0 =  0.023405;
         x1 = -0.371557;
@@ -2310,7 +2311,7 @@ public static double index_to_height (
         x0 = (1.0 - Math.exp (x0 * bhage)) / (1 - Math.exp (x0 * 50.0));
         x1 = ppow(site_index - 1.3, x4);
         x2 = Math.pow (50.0, x5);
-        
+
         height = 1.3 + (site_index - 1.3) * ppow(x0, x3 * x1 * x2);
       }
       else{
@@ -2335,7 +2336,7 @@ public static double index_to_height (
         x0 = (1.0 - Math.exp (x0 * bhage)) / (1 - Math.exp (x0 * 50.0));
         x1 = ppow(site_index - 1.3, x4);
         x2 = Math.pow (50.0, x5);
-        
+
         height = 1.3 + (site_index - 1.3) * ppow(x0, x3 * x1 * x2);
       }
       else{
@@ -2359,7 +2360,7 @@ public static double index_to_height (
         x0 = (1.0 - Math.exp (x0 * bhage)) / (1 - Math.exp (x0 * 50.0));
         x1 = ppow(site_index - 1.3, x4);
         x2 = Math.pow (50.0, x5);
-        
+
         height = 1.3 + (site_index - 1.3) * ppow(x0, x3 * x1 * x2);
       }
       else{
@@ -2367,7 +2368,7 @@ public static double index_to_height (
       }
       break;
 
- 
+
     case SI_AT_HUANG:
       if (bhage > 0.0){
         x0 =  0.035930;
@@ -2383,7 +2384,7 @@ public static double index_to_height (
         x0 = (1.0 - Math.exp (x0 * bhage)) / (1 - Math.exp (x0 * 50.0));
         x1 = ppow(site_index - 1.3, x4);
         x2 = Math.pow (50.0, x5);
-        
+
         height = 1.3 + (site_index - 1.3) * ppow(x0, x3 * x1 * x2);
       }
       else{
@@ -2406,7 +2407,7 @@ public static double index_to_height (
         x0 = (1.0 - Math.exp (x0 * bhage)) / (1 - Math.exp (x0 * 50.0));
         x1 = ppow(site_index - 1.3, x4);
         x2 = Math.pow (50.0, x5);
-        
+
         height = 1.3 + (site_index - 1.3) * ppow(x0, x3 * x1 * x2);
       }
       else{
@@ -2429,7 +2430,7 @@ public static double index_to_height (
         x0 = (1.0 - Math.exp (x0 * bhage)) / (1 - Math.exp (x0 * 50.0));
         x1 = ppow(site_index - 1.3, x4);
         x2 = Math.pow (50.0, x5);
-        
+
         height = 1.3 + (site_index - 1.3) * ppow(x0, x3 * x1 * x2);
       }
       else{
@@ -2441,8 +2442,8 @@ public static double index_to_height (
     // Cannot Find Constant
     /* case SI_BB_HUANG:
       double x0;
-      double age_huang; // used in HUANG's equations 
-      
+      double age_huang; // used in HUANG's equations
+
       if (bhage > 0.0){
         x0 =  0.010190;
         x1 =  0.013957;
@@ -2457,7 +2458,7 @@ public static double index_to_height (
         x0 = (1.0 - Math.exp (x0 * bhage)) / (1 - Math.exp (x0 * 50.0));
         x1 = ppow(site_index - 1.3, x4);
         x2 = Math.pow (50.0, x5);
-        
+
         height = 1.3 + (site_index - 1.3) * ppow(x0, x3 * x1 * x2);
       }
       else{
@@ -2482,7 +2483,7 @@ public static double index_to_height (
         x0 = (1.0 - Math.exp (x0 * (bhage-0.5))) / (1 - Math.exp (x0 * 49.5));
         x1 = ppow(site_index - 1.3, x4);
         x2 = Math.pow (49.5, x5);
-        
+
         height = 1.3 + (site_index - 1.3) * ppow(x0, x3 * x1 * x2);
         }
       else{
@@ -2498,7 +2499,7 @@ public static double index_to_height (
 
         x4 = (1.0 + Math.exp (x1 + x2 * Math.log (50.0) + x3 * llog(site_index - 1.3))) /
              (1.0 + Math.exp (x1 + x2 * Math.log (bhage)+ x3 * llog(site_index - 1.3)));
-        
+
         height = 1.3 + (site_index - 1.3) * x4;
         }
       else{
@@ -2514,7 +2515,7 @@ public static double index_to_height (
 
         x4 = (1.0 + Math.exp (x1 + x2 * Math.log (50.0) + x3 * llog(site_index - 1.3))) /
              (1.0 + Math.exp (x1 + x2 * Math.log (bhage)+ x3 * llog(site_index - 1.3)));
-        
+
         height = 1.3 + (site_index - 1.3) * x4;
       }
       else{
@@ -2531,7 +2532,7 @@ public static double index_to_height (
 
         x4 = (1.0 + Math.exp (x1 + x2 * Math.log (50.0) + x3 * llog(site_index - 1.3))) /
              (1.0 + Math.exp (x1 + x2 * Math.log (bhage)+ x3 * llog(site_index - 1.3)));
-        
+
         height = 1.3 + (site_index - 1.3) * x4;
       }
       else{
@@ -2539,7 +2540,7 @@ public static double index_to_height (
       }
       break;
     // Couldn't Find Constant
-    /* 
+    /*
     case SI_EP_CHEN:
       if (bhage > 0.0){
         x1 =  9.9045;
@@ -2548,7 +2549,7 @@ public static double index_to_height (
 
         x4 = (1.0 + Math.exp (x1 + x2 * Math.log (50.0) + x3 * llog(site_index - 1.3))) /
              (1.0 + Math.exp (x1 + x2 * Math.log (bhage)+ x3 * llog(site_index - 1.3)));
-        
+
         height = 1.3 + (site_index - 1.3) * x4;
       }
       else{
@@ -2564,7 +2565,7 @@ public static double index_to_height (
 
         x4 = (1.0 + Math.exp (x1 + x2 * Math.log (50.0) + x3 * llog(site_index - 1.3))) /
              (1.0 + Math.exp (x1 + x2 * Math.log (bhage)+ x3 * llog(site_index - 1.3)));
-        
+
         height = 1.3 + (site_index - 1.3) * x4;
       }
       else{
@@ -2577,10 +2578,10 @@ public static double index_to_height (
         x1 =  9.523;
         x2 = -1.4945;
         x3 = -1.2159;
-        
+
         x4 = (1.0 + Math.exp (x1 + x2 * Math.log (49.5) + x3 * llog(site_index - 1.3))) /
              (1.0 + Math.exp (x1 + x2 * Math.log (bhage-0.5)+ x3 * llog(site_index - 1.3)));
-        
+
         height = 1.3 + (site_index - 1.3) * x4;
       }
       else{
@@ -2593,10 +2594,10 @@ public static double index_to_height (
         x1 =  8.6126;
         x2 = -1.5269;
         x3 = -0.7805;
-        
+
         x4 = (1.0 + Math.exp (x1 + x2 * Math.log (49.5) + x3 * llog(site_index - 1.3))) /
              (1.0 + Math.exp (x1 + x2 * Math.log (bhage-0.5)+ x3 * llog(site_index - 1.3)));
-        
+
         height = 1.3 + (site_index - 1.3) * x4;
       }
       else{
@@ -2624,10 +2625,10 @@ public static double index_to_height (
         x2 = 8.770517;
         x3 = -1.334706;
         x4 = 1.719841;
-        
+
         x5 = (1.0 + x1 * (site_index - 1.3) + Math.exp (x2 + x3 * Math.log (   50+x4) - Math.log (site_index - 1.3))) /
              (1.0 + x1 * (site_index - 1.3) + Math.exp (x2 + x3 * Math.log (bhage+x4) - Math.log (site_index - 1.3)));
-        
+
         height = 1.3 + (site_index - 1.3) * x5;
       }
       else{
@@ -2641,10 +2642,10 @@ public static double index_to_height (
         x2 = 8.770517;
         x3 = -1.334706;
         x4 = 1.719841;
-        
+
         x5 = (1.0 + x1 * (site_index - 1.3) + Math.exp (x2 + x3 * Math.log (     49.5+x4) - Math.log (site_index - 1.3))) /
              (1.0 + x1 * (site_index - 1.3) + Math.exp (x2 + x3 * Math.log (bhage-0.5+x4) - Math.log (site_index - 1.3)));
-        
+
         height = 1.3 + (site_index - 1.3) * x5;
       }
       else{
@@ -2702,20 +2703,20 @@ public static double gi_si2ht (
   double si2ht;
   double step;
   double test_site;
-  
-  
+
+
   /* breast height age must be at least 1/2 a year */
   if (age < 0.5){
     return SI_ERR_GI_MIN;
   }
-  
+
   /* initial guess */
   si2ht = site_index;
   if (si2ht < 1.3){
     si2ht = 1.3;
   }
   step = si2ht / 2;
-  
+
   /* loop until real close */
   do
     {
@@ -2724,13 +2725,13 @@ public static double gi_si2ht (
 printf ("age=%3.0f, site=%5.2f, test_site=%5.2f, si2ht=%5.2f, step=%9.7f\n",
   age, site_index, test_site, si2ht, step);
 */
-    
+
     if (test_site < 0) /* error */
       {
       si2ht = test_site;
       break;
       }
-    
+
     if ((test_site - site_index > 0.01) ||
         (test_site - site_index < -0.01)){
       /* not close enough */
@@ -2750,7 +2751,7 @@ printf ("age=%3.0f, site=%5.2f, test_site=%5.2f, si2ht=%5.2f, step=%9.7f\n",
       /* done */
       break;
     }
-    
+
     /* check for lack of convergence, so we're not here forever */
     if (step < 0.00001 && step > -0.00001){
       /* we have a value, but perhaps not too accurate */
@@ -2771,7 +2772,7 @@ printf ("age=%3.0f, site=%5.2f, test_site=%5.2f, si2ht=%5.2f, step=%9.7f\n",
       step = step / 2.0;
       }
     } while (true);
-  
+
   return si2ht;
   }
 
@@ -2813,7 +2814,7 @@ public static double hu_garcia_q (double site_index, double bhage){
       break;
     }
   } while (true);
-  
+
   return q;
   }
 

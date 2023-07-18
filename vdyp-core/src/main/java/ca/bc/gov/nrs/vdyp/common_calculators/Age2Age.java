@@ -1,10 +1,11 @@
 package ca.bc.gov.nrs.vdyp.common_calculators;
+
 /* @formatter:off */
 /**
- * Age2Age.java 
- * - given age and type, converts to other type of age. 
- * 
- * - error codes (returned as age value): 
+ * Age2Age.java
+ * - given age and type, converts to other type of age.
+ *
+ * - error codes (returned as age value):
  * 											SI_ERR_CURVE: unknown curve index
  * 											SI_ERR_AGE_TYPE: unknown age type
  */

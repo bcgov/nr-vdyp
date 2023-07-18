@@ -3334,7 +3334,8 @@ public class Sindxdll {
 			short curve, double age, short ageType, double siteIndex, double y2bh, double seedling_age,
 			double seedling_ht, double[] height
 	) throws IllegalArgumentException, NoSuchElementException {
-		height[0] = SiteIndex2HeightSmoothed.index_to_height_smoothed(curve, age, ageType, siteIndex, y2bh, seedling_age, seedling_ht);
+		height[0] = SiteIndex2HeightSmoothed
+				.index_to_height_smoothed(curve, age, ageType, siteIndex, y2bh, seedling_age, seedling_ht);
 		if (height[0] < 0) {
 			switch ((short) height[0]) {
 			case SI_ERR_CURVE:
@@ -3514,7 +3515,7 @@ public class Sindxdll {
 	 *          ignored.
 	 */
 	public static short SpecMap(String sc) throws IllegalArgumentException {
-		short speciesIndex = species_map(sc);
+		short speciesIndex = SpecRMap.species_map(sc);
 		if (speciesIndex == SI_ERR_CODE) {
 			throw new IllegalArgumentException("Species code is unknown: " + sc);
 		}
@@ -3543,7 +3544,7 @@ public class Sindxdll {
 	 *         "FD".
 	 */
 	public static short SpecRemap(String sc, char fiz) throws IllegalArgumentException {
-		short speciesIndex = species_remap(sc, fiz);
+		short speciesIndex = SpecRMap.species_remap(sc, fiz);
 
 		if (speciesIndex == SI_ERR_CODE) {
 			throw new IllegalArgumentException("Character string species code: " + sc);

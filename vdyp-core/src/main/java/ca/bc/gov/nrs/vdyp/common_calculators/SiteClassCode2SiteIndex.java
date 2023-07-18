@@ -1,17 +1,18 @@
 package ca.bc.gov.nrs.vdyp.common_calculators;
+
 /* @formatter:off */
 /**
  * SiteClassCode2SiteIndex.java
  * - translates site class code to site index (height in metres) for a
- *   given species, site class, and FIZ. 
+ *   given species, site class, and FIZ.
  * - the translation is intended to be used where total age is small (under 30 years),
- *   where site index based on height may not be reliable. 
- * - primarily used by VDYP and FredTab. 
- * - the origin of the values used here is Inventory Branch. 
- * 
- * - error codes: 
- *                  SI_ERR_SPEC: unknown species index 
- *                  SI_ERR_CLASS: unknown site class code  
+ *   where site index based on height may not be reliable.
+ * - primarily used by VDYP and FredTab.
+ * - the origin of the values used here is Inventory Branch.
+ *
+ * - error codes:
+ *                  SI_ERR_SPEC: unknown species index
+ *                  SI_ERR_CLASS: unknown site class code
  *                  SI_ERR_FIZ: unknown FIZ code
  */
 /* @formatter:on */

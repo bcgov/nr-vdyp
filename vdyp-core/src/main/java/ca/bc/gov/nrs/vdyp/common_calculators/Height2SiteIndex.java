@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.common_calculators;
 
 import java.lang.Math;
+
 /* @formatter:off */
 /**
  * Height2SiteIndex.java
@@ -229,21 +230,21 @@ public class Height2SiteIndex {
 		} else {
 			if (si_est_type == SI_EST_DIRECT) {
 				switch (cu_index) {
-					case SI_FDI_THROWER:
-						if (age <= 4) {
-							/* means less than 1.3m, so can't generate site index */
-							/* supposedly this should never happen anyway */
-							index = 1.3;
-						} else {
-							x1 = (age - 4) * (0.39 + 0.3104 * height);
-							x2 = 33.3828 * height + x1 + 99;
+				case SI_FDI_THROWER:
+					if (age <= 4) {
+						/* means less than 1.3m, so can't generate site index */
+						/* supposedly this should never happen anyway */
+						index = 1.3;
+					} else {
+						x1 = (age - 4) * (0.39 + 0.3104 * height);
+						x2 = 33.3828 * height + x1 + 99;
 
-							index = (x2 + Math.sqrt(x2 * x2 - 4 * 99 * x1)) / (2 * (age - 4));
-						}
-						break;
-					default:
-						index = site_iterate(cu_index, age, SI_AT_TOTAL, height);
-						break;
+						index = (x2 + Math.sqrt(x2 * x2 - 4 * 99 * x1)) / (2 * (age - 4));
+					}
+					break;
+				default:
+					index = site_iterate(cu_index, age, SI_AT_TOTAL, height);
+					break;
 				}
 			} else
 				index = site_iterate(cu_index, age, SI_AT_TOTAL, height);
@@ -299,14 +300,14 @@ public class Height2SiteIndex {
 
 					index = height * x1 / x2;
 					break;
-				// #undef LA_MILNER 			Removed since never used again?
-				// #define LA_MILNER 1 			Removed since never used again?
-				//case SI_LA_MILNER:			Couldn't find constant so removed
-					// #undef LT_MILNER 		Removed since never used again?
-					// #define LT_MILNER 1		Removed since never used again?
-				//case SI_LT_MILNER:			Couldn't find constant so removed
-					// #undef LW_MILNER			Removed since never used again?
-					// #define LW_MILNER 1 		Removed since never used again?
+				// #undef LA_MILNER Removed since never used again?
+				// #define LA_MILNER 1 Removed since never used again?
+				// case SI_LA_MILNER: Couldn't find constant so removed
+				// #undef LT_MILNER Removed since never used again?
+				// #define LT_MILNER 1 Removed since never used again?
+				// case SI_LT_MILNER: Couldn't find constant so removed
+				// #undef LW_MILNER Removed since never used again?
+				// #define LW_MILNER 1 Removed since never used again?
 				case SI_LW_MILNER:
 					/* convert to imperial */
 					height /= 0.3048;
@@ -382,25 +383,25 @@ public class Height2SiteIndex {
 							- 0.1021 * ht_13 * llog(ht_13);
 					break;
 
-				//#ifdef SI_EA_GOUDIE			Couldn't find constant so removed
-				// #undef SI_AT_GOUDIE 			
-				// #define SI_AT_GOUDIE 1		
-				//case SI_EA_GOUDIE:			
-				//#endif
+				// #ifdef SI_EA_GOUDIE Couldn't find constant so removed
+				// #undef SI_AT_GOUDIE
+				// #define SI_AT_GOUDIE 1
+				// case SI_EA_GOUDIE:
+				// #endif
 
-				//#ifdef SI_EP_GOUDIE			Couldn't find constant so removed	
-				// #undef SI_AT_GOUDIE		
-				// #define SI_AT_GOUDIE 1	
-				//case SI_EP_GOUDIE:			
-				//#endif
+				// #ifdef SI_EP_GOUDIE Couldn't find constant so removed
+				// #undef SI_AT_GOUDIE
+				// #define SI_AT_GOUDIE 1
+				// case SI_EP_GOUDIE:
+				// #endif
 
-				//#ifdef SI_AT_GOUDIE
-				// #undef SI_AT_GOUDIE		
+				// #ifdef SI_AT_GOUDIE
+				// #undef SI_AT_GOUDIE
 				// #define SI_AT_GOUDIE 1
 				case SI_AT_GOUDIE:
-				//endif
+					// endif
 
-				//#ifdef SI_AT_GOUDIE
+					// #ifdef SI_AT_GOUDIE
 					log_bhage = Math.log(bhage);
 
 					index = 1.3 + 17.0101 + 0.8784 * (height - 1.3) + 1.8364 * log_bhage
@@ -435,8 +436,8 @@ public class Height2SiteIndex {
 
 					log_bhage = Math.log(bhage);
 
-					index = 4.5 + 38.787 - 2.805 * log_bhage * log_bhage + 0.0216 * bhage *
-					 		log_bhage + x1 * height + x2 * height / bhage;
+					index = 4.5 + 38.787 - 2.805 * log_bhage * log_bhage + 0.0216 * bhage * log_bhage + x1 * height
+							+ x2 * height / bhage;
 
 					/* convert back to metric */
 					index *= 0.3048;
@@ -450,8 +451,8 @@ public class Height2SiteIndex {
 
 					log_bhage = Math.log(bhage);
 
-					index = 4.5 + 38.787 - 2.805 * log_bhage * log_bhage + 0.0216 * bhage *
-					 		log_bhage + x1 * height + x2 * height / bhage;
+					index = 4.5 + 38.787 - 2.805 * log_bhage * log_bhage + 0.0216 * bhage * log_bhage + x1 * height
+							+ x2 * height / bhage;
 
 					/* convert back to metric */
 					index *= 0.3048;
@@ -465,8 +466,8 @@ public class Height2SiteIndex {
 
 					log_bhage = Math.log(bhage);
 
-					index = 4.5 + 38.787 - 2.805 * log_bhage * log_bhage + 0.0216 * bhage *
-					 		log_bhage + x1 * height + x2 * height / bhage;
+					index = 4.5 + 38.787 - 2.805 * log_bhage * log_bhage + 0.0216 * bhage * log_bhage + x1 * height
+							+ x2 * height / bhage;
 
 					/* convert back to metric */
 					index *= 0.3048;
@@ -480,8 +481,8 @@ public class Height2SiteIndex {
 
 					log_bhage = Math.log(bhage);
 
-					index = 4.5 + 38.787 - 2.805 * log_bhage * log_bhage + 0.0216 * bhage *
-					 		log_bhage + x1 * height + x2 * height / bhage;
+					index = 4.5 + 38.787 - 2.805 * log_bhage * log_bhage + 0.0216 * bhage * log_bhage + x1 * height
+							+ x2 * height / bhage;
 
 					/* convert back to metric */
 					index *= 0.3048;
@@ -492,7 +493,7 @@ public class Height2SiteIndex {
 
 					x1 = 0.3964;
 					x2 = 30.008;
-	
+
 					log_bhage = Math.log(bhage);
 
 					index = 4.5 + 38.787 - 2.805 * log_bhage * log_bhage + 0.0216 * bhage * log_bhage + x1 * height
@@ -707,7 +708,7 @@ public class Height2SiteIndex {
 						x1 = 0;
 						x2 = 0;
 						break;
-						//break; Unreachable
+					// break; Unreachable
 					}
 					if (x1 == 0) {
 						index = SI_ERR_GI_MAX;
@@ -931,150 +932,36 @@ public class Height2SiteIndex {
 					}
 					break;
 				/*
-				* This section has been commented out since I cannot find the constant anywhere and this was surronded by an ifdef statement
-				* I have thus assumed this code should not trigger
-				*/ 	
-				/* case SI_PLI_NIGHGI:
-					//later, we divide by age-0.5, so check it now */
-				/* 	if (bhage < 0.5) {
-						return SI_ERR_GI_MIN;
-					}
-
-					switch ((short) bhage) {
-					case 1:
-						x1 = 3.791;
-						x2 = 0.4338;
-						break;
-					case 2:
-						x1 = 3.460;
-						x2 = 0.4592;
-						break;
-					case 3:
-						x1 = 3.440;
-						x2 = 0.4615;
-						break;
-					case 4:
-						x1 = 3.083;
-						x2 = 0.4898;
-						break;
-					case 5:
-						x1 = 2.902;
-						x2 = 0.5054;
-						break;
-					case 6:
-						x1 = 2.962;
-						x2 = 0.4989;
-						break;
-					case 7:
-						x1 = 2.802;
-						x2 = 0.5127;
-						break;
-					case 8:
-						x1 = 2.663;
-						x2 = 0.5245;
-						break;
-					case 9:
-						x1 = 2.608;
-						x2 = 0.5288;
-						break;
-					case 10:
-						x1 = 2.534;
-						x2 = 0.5357;
-						break;
-					case 11:
-						x1 = 2.438;
-						x2 = 0.5455;
-						break;
-					case 12:
-						x1 = 2.338;
-						x2 = 0.5563;
-						break;
-					case 13:
-						x1 = 2.232;
-						x2 = 0.5686;
-						break;
-					case 14:
-						x1 = 2.133;
-						x2 = 0.5808;
-						break;
-					case 15:
-						x1 = 2.053;
-						x2 = 0.5912;
-						break;
-					case 16:
-						x1 = 2.093;
-						x2 = 0.5861;
-						break;
-					case 17:
-						x1 = 1.973;
-						x2 = 0.6020;
-						break;
-					case 18:
-						x1 = 1.867;
-						x2 = 0.6170;
-						break;
-					case 19:
-						x1 = 1.769;
-						x2 = 0.6317;
-						break;
-					case 20:
-						x1 = 1.675;
-						x2 = 0.6467;
-						break;
-					case 21:
-						x1 = 1.597;
-						x2 = 0.6601;
-						break;
-					case 22:
-						x1 = 1.522;
-						x2 = 0.6738;
-						break;
-					case 23:
-						x1 = 1.460;
-						x2 = 0.6859;
-						break;
-					case 24:
-						x1 = 1.407;
-						x2 = 0.6968;
-						break;
-					case 25:
-						x1 = 1.353;
-						x2 = 0.7083;
-						break;
-					case 26:
-						x1 = 1.299;
-						x2 = 0.7203;
-						break;
-					case 27:
-						x1 = 1.242;
-						x2 = 0.7334;
-						break;
-					case 28:
-						x1 = 1.195;
-						x2 = 0.7450;
-						break;
-					case 29:
-						x1 = 1.152;
-						x2 = 0.7560;
-						break;
-					case 30:
-						x1 = 1.106;
-						x2 = 0.7682;
-						break;
-					default:
-						x1 = 0;
-						x2 = 0;
-						break;
-						break;
-					}
-					if (x1 == 0) {
-						index = SI_ERR_GI_MAX;
-					} else {
-						index = (height - 1.3) * 100 / (bhage - 0.5);
-						index = x1 * ppow(index, x2);
-					}
-					break;
-				*/
+				 * This section has been commented out since I cannot find the constant anywhere
+				 * and this was surronded by an ifdef statement I have thus assumed this code
+				 * should not trigger
+				 */
+				/*
+				 * case SI_PLI_NIGHGI: //later, we divide by age-0.5, so check it now
+				 */
+				/*
+				 * if (bhage < 0.5) { return SI_ERR_GI_MIN; }
+				 *
+				 * switch ((short) bhage) { case 1: x1 = 3.791; x2 = 0.4338; break; case 2: x1 =
+				 * 3.460; x2 = 0.4592; break; case 3: x1 = 3.440; x2 = 0.4615; break; case 4: x1
+				 * = 3.083; x2 = 0.4898; break; case 5: x1 = 2.902; x2 = 0.5054; break; case 6:
+				 * x1 = 2.962; x2 = 0.4989; break; case 7: x1 = 2.802; x2 = 0.5127; break; case
+				 * 8: x1 = 2.663; x2 = 0.5245; break; case 9: x1 = 2.608; x2 = 0.5288; break;
+				 * case 10: x1 = 2.534; x2 = 0.5357; break; case 11: x1 = 2.438; x2 = 0.5455;
+				 * break; case 12: x1 = 2.338; x2 = 0.5563; break; case 13: x1 = 2.232; x2 =
+				 * 0.5686; break; case 14: x1 = 2.133; x2 = 0.5808; break; case 15: x1 = 2.053;
+				 * x2 = 0.5912; break; case 16: x1 = 2.093; x2 = 0.5861; break; case 17: x1 =
+				 * 1.973; x2 = 0.6020; break; case 18: x1 = 1.867; x2 = 0.6170; break; case 19:
+				 * x1 = 1.769; x2 = 0.6317; break; case 20: x1 = 1.675; x2 = 0.6467; break; case
+				 * 21: x1 = 1.597; x2 = 0.6601; break; case 22: x1 = 1.522; x2 = 0.6738; break;
+				 * case 23: x1 = 1.460; x2 = 0.6859; break; case 24: x1 = 1.407; x2 = 0.6968;
+				 * break; case 25: x1 = 1.353; x2 = 0.7083; break; case 26: x1 = 1.299; x2 =
+				 * 0.7203; break; case 27: x1 = 1.242; x2 = 0.7334; break; case 28: x1 = 1.195;
+				 * x2 = 0.7450; break; case 29: x1 = 1.152; x2 = 0.7560; break; case 30: x1 =
+				 * 1.106; x2 = 0.7682; break; default: x1 = 0; x2 = 0; break; break; } if (x1 ==
+				 * 0) { index = SI_ERR_GI_MAX; } else { index = (height - 1.3) * 100 / (bhage -
+				 * 0.5); index = x1 * ppow(index, x2); } break;
+				 */
 				case SI_SW_NIGHGI:
 					/* later, we divide by age-0.5, so check it now */
 					if (bhage < 0.5) {
@@ -2002,7 +1889,7 @@ public class Height2SiteIndex {
 						x1 = 0;
 						x2 = 0;
 						break;
-						//break;
+					// break;
 					}
 					if (x1 == 0) {
 						index = SI_ERR_GI_MAX;
@@ -2217,7 +2104,7 @@ public class Height2SiteIndex {
 						x1 = 0;
 						x2 = 0;
 						break;
-						//break;
+					// break;
 					}
 					if (x1 == 0) {
 						index = SI_ERR_GI_MAX;
@@ -2437,7 +2324,7 @@ public class Height2SiteIndex {
 						x1 = 0;
 						x2 = 0;
 						break;
-						//break;
+					// break;
 					}
 					if (x1 == 0) {
 						index = SI_ERR_GI_MAX;
@@ -2652,7 +2539,7 @@ public class Height2SiteIndex {
 						x1 = 0;
 						x2 = 0;
 						break;
-						//break;
+					// break;
 					}
 					if (x1 == 0) {
 						index = SI_ERR_GI_MAX;
@@ -2792,7 +2679,7 @@ public class Height2SiteIndex {
 						x1 = 0;
 						x2 = 0;
 						break;
-						//break;
+					// break;
 					}
 					if (x1 == 0) {
 						index = SI_ERR_GI_MAX;
@@ -3011,7 +2898,7 @@ public class Height2SiteIndex {
 						x1 = 0;
 						x2 = 0;
 						break;
-						//break;
+					// break;
 					}
 					if (x1 == 0) {
 						index = SI_ERR_GI_MAX;
@@ -3231,7 +3118,7 @@ public class Height2SiteIndex {
 						x1 = 0;
 						x2 = 0;
 						break;
-						//break;
+					// break;
 					}
 					if (x1 == 0) {
 						index = SI_ERR_GI_MAX;
@@ -3451,7 +3338,7 @@ public class Height2SiteIndex {
 						x1 = 0;
 						x2 = 0;
 						break;
-						//break;
+					// break;
 					}
 					if (x1 == 0) {
 						index = SI_ERR_GI_MAX;
@@ -3671,7 +3558,7 @@ public class Height2SiteIndex {
 						x1 = 0;
 						x2 = 0;
 						break;
-						//break;
+					// break;
 					}
 					if (x1 == 0)
 						index = SI_ERR_GI_MAX;
@@ -3891,7 +3778,7 @@ public class Height2SiteIndex {
 						x1 = 0;
 						x2 = 0;
 						break;
-						//break;
+					// break;
 					}
 					if (x1 == 0) {
 						index = SI_ERR_GI_MAX;
@@ -4111,7 +3998,7 @@ public class Height2SiteIndex {
 						x1 = 0;
 						x2 = 0;
 						break;
-						//break;
+					// break;
 					}
 					if (x1 == 0) {
 						index = SI_ERR_GI_MAX;
@@ -4148,7 +4035,9 @@ public class Height2SiteIndex {
 			y2bh = SiteIndexYears2BreastHeight.si_y2bh(cu_index, site);
 
 			if (age_type == SI_AT_BREAST) {
-				test_top = SiteIndex2Height.index_to_height(cu_index, age, SI_AT_BREAST, site, y2bh, 0.5); // 0.5 may have to change
+				test_top = SiteIndex2Height.index_to_height(cu_index, age, SI_AT_BREAST, site, y2bh, 0.5); // 0.5 may
+																											// have to
+																											// change
 			} else {
 				if (y2bh == SI_ERR_GI_TOT) {
 					/* cannot do this for GI equations */
