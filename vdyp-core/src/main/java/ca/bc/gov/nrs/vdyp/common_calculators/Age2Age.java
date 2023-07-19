@@ -1,11 +1,13 @@
 package ca.bc.gov.nrs.vdyp.common_calculators;
 
+import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.AgeTypeErrorException;
+
 /* @formatter:off */
 /**
  * Age2Age.java
  * given age and type, converts to other type of age.
  *
- * @throws IllegalArgumentException if nnkown age type is provided
+ * @throws AgeTypeErrorException if unnkown age type is provided
  */
 /* @formatter:on */
 public class Age2Age {
@@ -82,7 +84,7 @@ public class Age2Age {
 	private static final int SI_SW_NIGHTA2004 = 111;
 	private static final int SI_PLI_NIGHTA2004 = 109;
 
-	public static double age_to_age(short cu_index, double age1, short age1_type, short age2_type, double y2bh) throws IllegalArgumentException{
+	public static double age_to_age(short cu_index, double age1, short age1_type, short age2_type, double y2bh){
 		double returnValue;
 
 		boolean shouldBranch;
@@ -175,7 +177,7 @@ public class Age2Age {
 					}
 					return returnValue;
 				}
-				throw new IllegalArgumentException("Unkown age type provided");	
+				throw new AgeTypeErrorException("Unkown age type provided");	
 			}
 
 			if (age1_type == SI_AT_TOTAL) {
@@ -187,7 +189,7 @@ public class Age2Age {
 					}
 					return returnValue;
 				}
-				throw new IllegalArgumentException("Unkown age type provided");	
+				throw new AgeTypeErrorException("Unkown age type provided");	
 			}
 		} else {
 			if (age1_type == SI_AT_BREAST) {
@@ -199,7 +201,7 @@ public class Age2Age {
 					}
 					return returnValue;
 				}
-				throw new IllegalArgumentException("Unkown age type provided");	
+				throw new AgeTypeErrorException("Unkown age type provided");	
 			}
 
 			if (age1_type == SI_AT_TOTAL) {
@@ -211,10 +213,10 @@ public class Age2Age {
 					}
 					return returnValue;
 				}
-				throw new IllegalArgumentException("Unkown age type provided");	
+				throw new AgeTypeErrorException("Unkown age type provided");	
 			}
 		}
-		throw new IllegalArgumentException("Unkown age type provided");	
+		throw new AgeTypeErrorException("Unkown age type provided");	
 	}
 
 }
