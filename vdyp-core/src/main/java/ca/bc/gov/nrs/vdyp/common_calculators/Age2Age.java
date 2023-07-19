@@ -84,7 +84,7 @@ public class Age2Age {
 	private static final int SI_SW_NIGHTA2004 = 111;
 	private static final int SI_PLI_NIGHTA2004 = 109;
 
-	public static double age_to_age(short cu_index, double age1, short age1_type, short age2_type, double y2bh){
+	public static double age_to_age(short cu_index, double age1, short age1_type, short age2_type, double y2bh) {
 		double returnValue;
 
 		boolean shouldBranch;
@@ -177,7 +177,7 @@ public class Age2Age {
 					}
 					return returnValue;
 				}
-				throw new AgeTypeErrorException("Unkown age type provided");	
+				throw new AgeTypeErrorException("Unkown age type provided");
 			}
 
 			if (age1_type == SI_AT_TOTAL) {
@@ -189,7 +189,7 @@ public class Age2Age {
 					}
 					return returnValue;
 				}
-				throw new AgeTypeErrorException("Unkown age type provided");	
+				throw new AgeTypeErrorException("Unkown age type provided");
 			}
 		} else {
 			if (age1_type == SI_AT_BREAST) {
@@ -201,7 +201,7 @@ public class Age2Age {
 					}
 					return returnValue;
 				}
-				throw new AgeTypeErrorException("Unkown age type provided");	
+				throw new AgeTypeErrorException("Unkown age type provided");
 			}
 
 			if (age1_type == SI_AT_TOTAL) {
@@ -213,10 +213,10 @@ public class Age2Age {
 					}
 					return returnValue;
 				}
-				throw new AgeTypeErrorException("Unkown age type provided");	
+				throw new AgeTypeErrorException("Unkown age type provided");
 			}
 		}
-		throw new AgeTypeErrorException("Unkown age type provided");	
+		throw new AgeTypeErrorException("Unkown age type provided");
 	}
 
 }

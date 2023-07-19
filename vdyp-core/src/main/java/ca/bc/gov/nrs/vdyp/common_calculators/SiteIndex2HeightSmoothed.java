@@ -6,7 +6,8 @@ import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.NoAnswerException
 /**
  * SiteIndex2HeightSmoothed.java
  *
- * @throws NoAnswerException if iteration could not converge (projected height > 999)
+ * @throws NoAnswerException   if iteration could not converge (projected height
+ *                             > 999)
  * @throws LessThan13Exception if site index < 1.3m
  */
 public class SiteIndex2HeightSmoothed {
@@ -89,14 +90,16 @@ public class SiteIndex2HeightSmoothed {
 			tage = bhage + (int) y2bh;
 			k1 = Math.log( (1.3 - seedling_ht) / (height - seedling_ht))
 					/ Math.log( (y2bh - seedling_age) / (tage - seedling_age));
-			//printf ("%f %f k1\n", tage, height, k1);
+			// printf ("%f %f k1\n", tage, height, k1);
 			if (k1 >= 1) {
 				k0 = (1.3 - seedling_ht) / Math.pow(y2bh - seedling_age, k1);
 				break;
 			}
 			bhage++;
 			if (bhage >= 25) {
-				throw new NoAnswerException("Iteration could not converge (projected height > 999), bhage >= 25: " + bhage);
+				throw new NoAnswerException(
+						"Iteration could not converge (projected height > 999), bhage >= 25: " + bhage
+				);
 			}
 		} while (true);
 

@@ -2695,7 +2695,7 @@ public static double index_to_height (
     if(height == SI_ERR_NO_ANS){
       throw new NoAnswerException("Iteration could not converge (projected height > 999)");
     }
-    
+
   return height;
   }
 
@@ -2723,7 +2723,7 @@ public static double gi_si2ht (
 
   /* loop until real close */
   do
-    { 
+    {
     test_site = Height2SiteIndex.height_to_index(cu_index, age, (short)SI_AT_BREAST, si2ht, (short) SI_EST_DIRECT);
 /*
 printf ("age=%3.0f, site=%5.2f, test_site=%5.2f, si2ht=%5.2f, step=%9.7f\n",

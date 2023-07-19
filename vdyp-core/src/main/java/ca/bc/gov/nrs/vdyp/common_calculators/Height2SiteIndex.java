@@ -144,8 +144,8 @@ public class Height2SiteIndex {
 	private static final int SI_EST_DIRECT = 1;
 
 	/*
- 	* error codes 
- 	*/
+	 * error codes
+	 */
 	private static final int SI_ERR_GI_MIN = -2;
 	private static final int SI_ERR_GI_MAX = -3;
 	private static final int SI_ERR_NO_ANS = -4;
@@ -201,7 +201,7 @@ public class Height2SiteIndex {
 		return ( (x) <= 0.0) ? Math.log(.00001) : Math.log(x);
 	}
 
-	public static double height_to_index(short cu_index, double age, short age_type, double height, short si_est_type){
+	public static double height_to_index(short cu_index, double age, short age_type, double height, short si_est_type) {
 		double index;
 		double x1, x2;
 
@@ -212,7 +212,9 @@ public class Height2SiteIndex {
 			}
 		} else {
 			if (height <= 0) {
-				throw new NoAnswerException("Iteration could not converge (projected site index > 999), Height: " + height);
+				throw new NoAnswerException(
+						"Iteration could not converge (projected site index > 999), Height: " + height
+				);
 			}
 		}
 
@@ -255,7 +257,9 @@ public class Height2SiteIndex {
 
 		if (bhage <= 0.5) {
 			/* indicator that it can't be done */
-			throw new GrowthInterceptMinimumException("Bhage < 0.5 years which indicates that it can't be done, bhage: " + bhage);
+			throw new GrowthInterceptMinimumException(
+					"Bhage < 0.5 years which indicates that it can't be done, bhage: " + bhage
+			);
 		} else {
 			if (si_est_type == SI_EST_DIRECT) {
 				switch (cu_index) {
@@ -707,7 +711,9 @@ public class Height2SiteIndex {
 					// break; Unreachable
 					}
 					if (x1 == 0) {
-						throw new GrowthInterceptMaximumException("Variable height growth intercept formulation, bhage > range: " + x1);
+						throw new GrowthInterceptMaximumException(
+								"Variable height growth intercept formulation, bhage > range: " + x1
+						);
 					} else {
 						index = (height - 1.3) * 100 / (bhage - 0.5);
 						index = 1.3 + x1 * ppow(index, x2);
@@ -921,7 +927,9 @@ public class Height2SiteIndex {
 						break;
 					}
 					if (x1 == 0) {
-						throw new GrowthInterceptMaximumException("Variable height growth intercept formulation, bhage > range: " + x1);
+						throw new GrowthInterceptMaximumException(
+								"Variable height growth intercept formulation, bhage > range: " + x1
+						);
 					} else {
 						index = (height - 1.3) * 100 / (bhage - 0.5);
 						index = 1.3 + x1 * ppow(index, x2);
@@ -961,7 +969,7 @@ public class Height2SiteIndex {
 				case SI_SW_NIGHGI:
 					/* later, we divide by age-0.5, so check it now */
 					if (bhage < 0.5) {
-						throw new GrowthInterceptMinimumException("Bhage < 0.5 years: " +bhage );
+						throw new GrowthInterceptMinimumException("Bhage < 0.5 years: " + bhage);
 					}
 
 					switch ((short) bhage) {
@@ -1091,7 +1099,9 @@ public class Height2SiteIndex {
 						break;
 					}
 					if (x1 == 0) {
-						throw new GrowthInterceptMaximumException("Variable height growth intercept formulation, bhage > range: " + x1);
+						throw new GrowthInterceptMaximumException(
+								"Variable height growth intercept formulation, bhage > range: " + x1
+						);
 					} else {
 						index = (height - 1.3) * 100 / (bhage - 0.5);
 						index = x1 + x2 * index;
@@ -1100,7 +1110,7 @@ public class Height2SiteIndex {
 				case SI_SW_NIGHGI99:
 					/* later, we divide by age-0.5, so check it now */
 					if (bhage < 0.5) {
-						throw new GrowthInterceptMinimumException("Bhage < 0.5 years: " +bhage );
+						throw new GrowthInterceptMinimumException("Bhage < 0.5 years: " + bhage);
 					}
 
 					switch ((short) bhage) {
@@ -1310,7 +1320,9 @@ public class Height2SiteIndex {
 						break;
 					}
 					if (x1 == 0) {
-						throw new GrowthInterceptMaximumException("Variable height growth intercept formulation, bhage > range: " + x1);
+						throw new GrowthInterceptMaximumException(
+								"Variable height growth intercept formulation, bhage > range: " + x1
+						);
 					} else {
 						index = (height - 1.3) * 100 / (bhage - 0.5);
 						index = 1.3 + x1 * ppow(index, x2);
@@ -1319,7 +1331,7 @@ public class Height2SiteIndex {
 				case SI_SW_NIGHGI2004:
 					/* later, we divide by age-0.5, so check it now */
 					if (bhage < 0.5) {
-						throw new GrowthInterceptMinimumException("Bhage < 0.5 years: " +bhage );
+						throw new GrowthInterceptMinimumException("Bhage < 0.5 years: " + bhage);
 					}
 
 					switch ((short) bhage) {
@@ -1529,7 +1541,9 @@ public class Height2SiteIndex {
 						break;
 					}
 					if (x1 == 0) {
-						throw new GrowthInterceptMaximumException("Variable height growth intercept formulation, bhage > range: " + x1);
+						throw new GrowthInterceptMaximumException(
+								"Variable height growth intercept formulation, bhage > range: " + x1
+						);
 					} else {
 						index = (height - 1.3) * 100 / (bhage - 0.5);
 						index = 1.3 + x1 * ppow(index, x2);
@@ -1538,7 +1552,7 @@ public class Height2SiteIndex {
 				case SI_HWC_NIGHGI99:
 					/* later, we divide by age-0.5, so check it now */
 					if (bhage < 0.5) {
-						throw new GrowthInterceptMinimumException("Bhage < 0.5 years: " +bhage );
+						throw new GrowthInterceptMinimumException("Bhage < 0.5 years: " + bhage);
 					}
 
 					switch ((short) bhage) {
@@ -1748,7 +1762,9 @@ public class Height2SiteIndex {
 						break;
 					}
 					if (x1 == 0) {
-						throw new GrowthInterceptMaximumException("Variable height growth intercept formulation, bhage > range: " + x1);
+						throw new GrowthInterceptMaximumException(
+								"Variable height growth intercept formulation, bhage > range: " + x1
+						);
 					} else {
 						index = (height - 1.3) * 100 / (bhage - 0.5);
 						index = 1.3 + x1 * ppow(index, x2);
@@ -1757,7 +1773,7 @@ public class Height2SiteIndex {
 				case SI_HWC_NIGHGI:
 					/* later, we divide by age-0.5, so check it now */
 					if (bhage < 0.5) {
-						throw new GrowthInterceptMinimumException("Bhage < 0.5 years: " +bhage );
+						throw new GrowthInterceptMinimumException("Bhage < 0.5 years: " + bhage);
 					}
 
 					switch ((short) bhage) {
@@ -1888,7 +1904,9 @@ public class Height2SiteIndex {
 					// break;
 					}
 					if (x1 == 0) {
-						throw new GrowthInterceptMaximumException("Variable height growth intercept formulation, bhage > range: " + x1);
+						throw new GrowthInterceptMaximumException(
+								"Variable height growth intercept formulation, bhage > range: " + x1
+						);
 					} else {
 						index = (height - 1.3) * 100 / (bhage - 0.5);
 						index = x1 * ppow(index, x2);
@@ -2103,7 +2121,9 @@ public class Height2SiteIndex {
 					// break;
 					}
 					if (x1 == 0) {
-						throw new GrowthInterceptMaximumException("Variable height growth intercept formulation, bhage > range: " + x1);
+						throw new GrowthInterceptMaximumException(
+								"Variable height growth intercept formulation, bhage > range: " + x1
+						);
 					} else {
 						index = (height - 1.3) * 100 / (bhage - 0.5);
 						index = 1.3 + x1 * ppow(index, x2);
@@ -2112,7 +2132,7 @@ public class Height2SiteIndex {
 				case SI_FDC_NIGHGI:
 					/* later, we divide by age-0.5, so check it now */
 					if (bhage < 0.5) {
-						throw new GrowthInterceptMinimumException("Bhage < 0.5 years: " +bhage );
+						throw new GrowthInterceptMinimumException("Bhage < 0.5 years: " + bhage);
 					}
 
 					switch ((short) bhage) {
@@ -2323,7 +2343,9 @@ public class Height2SiteIndex {
 					// break;
 					}
 					if (x1 == 0) {
-						throw new GrowthInterceptMaximumException("Variable height growth intercept formulation, bhage > range: " + x1);
+						throw new GrowthInterceptMaximumException(
+								"Variable height growth intercept formulation, bhage > range: " + x1
+						);
 					} else {
 						index = (height - 1.3) * 100 / (bhage - 0.5);
 						index = 1.3 + x1 * ppow(index, x2);
@@ -2538,7 +2560,9 @@ public class Height2SiteIndex {
 					// break;
 					}
 					if (x1 == 0) {
-						throw new GrowthInterceptMaximumException("Variable height growth intercept formulation, bhage > range: " + x1);
+						throw new GrowthInterceptMaximumException(
+								"Variable height growth intercept formulation, bhage > range: " + x1
+						);
 					} else {
 						index = (height - 1.3) / (bhage - 0.5);
 						index = 1.3 + x1 * ppow(index, x2);
@@ -2547,7 +2571,7 @@ public class Height2SiteIndex {
 				case SI_SS_NIGHGI:
 					/* later, we divide by age-0.5, so check it now */
 					if (bhage < 0.5) {
-						throw new GrowthInterceptMinimumException("Bhage < 0.5 years: " +bhage );
+						throw new GrowthInterceptMinimumException("Bhage < 0.5 years: " + bhage);
 					}
 
 					switch ((short) bhage) {
@@ -2678,7 +2702,9 @@ public class Height2SiteIndex {
 					// break;
 					}
 					if (x1 == 0) {
-						throw new GrowthInterceptMaximumException("Variable height growth intercept formulation, bhage > range: " + x1);
+						throw new GrowthInterceptMaximumException(
+								"Variable height growth intercept formulation, bhage > range: " + x1
+						);
 					} else {
 						index = (height - 1.3) * 100 / (bhage - 0.5);
 						index = x1 * ppow(index, x2);
@@ -2687,7 +2713,7 @@ public class Height2SiteIndex {
 				case SI_SS_NIGHGI99:
 					/* later, we divide by age-0.5, so check it now */
 					if (bhage < 0.5) {
-						throw new GrowthInterceptMinimumException("Bhage < 0.5 years: " +bhage );
+						throw new GrowthInterceptMinimumException("Bhage < 0.5 years: " + bhage);
 					}
 					switch ((short) bhage) {
 					case 1:
@@ -2897,7 +2923,9 @@ public class Height2SiteIndex {
 					// break;
 					}
 					if (x1 == 0) {
-						throw new GrowthInterceptMaximumException("Variable height growth intercept formulation, bhage > range: " + x1);
+						throw new GrowthInterceptMaximumException(
+								"Variable height growth intercept formulation, bhage > range: " + x1
+						);
 					} else {
 						index = (height - 1.3) * 100 / (bhage - 0.5);
 						index = 1.3 + x1 * ppow(index, x2);
@@ -2906,7 +2934,7 @@ public class Height2SiteIndex {
 				case SI_CWI_NIGHGI:
 					/* later, we divide by age-0.5, so check it now */
 					if (bhage < 0.5) {
-						throw new GrowthInterceptMinimumException("Bhage < 0.5 years: " +bhage );
+						throw new GrowthInterceptMinimumException("Bhage < 0.5 years: " + bhage);
 					}
 
 					switch ((short) bhage) {
@@ -3117,7 +3145,9 @@ public class Height2SiteIndex {
 					// break;
 					}
 					if (x1 == 0) {
-						throw new GrowthInterceptMaximumException("Variable height growth intercept formulation, bhage > range: " + x1);
+						throw new GrowthInterceptMaximumException(
+								"Variable height growth intercept formulation, bhage > range: " + x1
+						);
 					} else {
 						index = (height - 1.3) * 100 / (bhage - 0.5);
 						index = 1.3 + x1 * ppow(index, x2);
@@ -3126,7 +3156,7 @@ public class Height2SiteIndex {
 				case SI_LW_NIGHGI:
 					/* later, we divide by age-0.5, so check it now */
 					if (bhage < 0.5) {
-						throw new GrowthInterceptMinimumException("Bhage < 0.5 years: " +bhage );
+						throw new GrowthInterceptMinimumException("Bhage < 0.5 years: " + bhage);
 					}
 
 					switch ((short) bhage) {
@@ -3337,7 +3367,9 @@ public class Height2SiteIndex {
 					// break;
 					}
 					if (x1 == 0) {
-						throw new GrowthInterceptMaximumException("Variable height growth intercept formulation, bhage > range: " + x1);
+						throw new GrowthInterceptMaximumException(
+								"Variable height growth intercept formulation, bhage > range: " + x1
+						);
 					} else {
 						index = (height - 1.3) * 100 / (bhage - 0.5);
 						index = 1.3 + x1 * ppow(index, x2);
@@ -3346,7 +3378,7 @@ public class Height2SiteIndex {
 				case SI_PY_NIGHGI:
 					/* later, we divide by age-0.5, so check it now */
 					if (bhage < 0.5) {
-						throw new GrowthInterceptMinimumException("Bhage < 0.5 years: " +bhage );
+						throw new GrowthInterceptMinimumException("Bhage < 0.5 years: " + bhage);
 					}
 
 					switch ((short) bhage) {
@@ -3557,7 +3589,9 @@ public class Height2SiteIndex {
 					// break;
 					}
 					if (x1 == 0)
-						throw new GrowthInterceptMaximumException("Variable height growth intercept formulation, bhage > range: " + x1);
+						throw new GrowthInterceptMaximumException(
+								"Variable height growth intercept formulation, bhage > range: " + x1
+						);
 					else {
 						index = (height - 1.3) * 100 / (bhage - 0.5);
 						index = 1.3 + x1 * ppow(index, x2);
@@ -3566,7 +3600,7 @@ public class Height2SiteIndex {
 				case SI_BA_NIGHGI:
 					/* later, we divide by age-0.5, so check it now */
 					if (bhage < 0.5) {
-						throw new GrowthInterceptMinimumException("Bhage < 0.5 years: " +bhage );
+						throw new GrowthInterceptMinimumException("Bhage < 0.5 years: " + bhage);
 					}
 
 					switch ((short) bhage) {
@@ -3777,7 +3811,9 @@ public class Height2SiteIndex {
 					// break;
 					}
 					if (x1 == 0) {
-						throw new GrowthInterceptMaximumException("Variable height growth intercept formulation, bhage > range: " + x1);
+						throw new GrowthInterceptMaximumException(
+								"Variable height growth intercept formulation, bhage > range: " + x1
+						);
 					} else {
 						index = (height - 1.3) * 100 / (bhage - 0.5);
 						index = 1.3 + x1 * ppow(index, x2);
@@ -3786,7 +3822,7 @@ public class Height2SiteIndex {
 				case SI_BL_THROWERGI:
 					/* later, we divide by age-0.5, so check it now */
 					if (bhage < 0.5) {
-						throw new GrowthInterceptMinimumException("Bhage < 0.5 years: " +bhage );
+						throw new GrowthInterceptMinimumException("Bhage < 0.5 years: " + bhage);
 					}
 
 					switch ((short) bhage) {
@@ -3997,7 +4033,9 @@ public class Height2SiteIndex {
 					// break;
 					}
 					if (x1 == 0) {
-						throw new GrowthInterceptMaximumException("Variable height growth intercept formulation, bhage > range: " + x1);
+						throw new GrowthInterceptMaximumException(
+								"Variable height growth intercept formulation, bhage > range: " + x1
+						);
 					} else {
 						index = (height - 1.3) * 100 / (bhage - 0.5);
 						index = 1.3 + x1 * ppow(index, x2);
@@ -4013,7 +4051,7 @@ public class Height2SiteIndex {
 		return index;
 	}
 
-	public static double site_iterate(short cu_index, double age, short age_type, double height){
+	public static double site_iterate(short cu_index, double age, short age_type, double height) {
 		double site;
 		double step;
 		double test_top;
@@ -4104,20 +4142,24 @@ public class Height2SiteIndex {
 			}
 		} while (true);
 
-		if(site == SI_ERR_GI_MIN){
+		if (site == SI_ERR_GI_MIN) {
 			throw new GrowthInterceptMinimumException("Bhage < 0.5 years, site: " + site);
-		} else if (site == SI_ERR_GI_MAX){
-			throw new GrowthInterceptMaximumException("Variable height growth intercept formulation; bhage > range, site: " +site);
-		} else if (site == SI_ERR_NO_ANS){
+		} else if (site == SI_ERR_GI_MAX) {
+			throw new GrowthInterceptMaximumException(
+					"Variable height growth intercept formulation; bhage > range, site: " + site
+			);
+		} else if (site == SI_ERR_NO_ANS) {
 			throw new NoAnswerException("Iteration could not converge (projected site index > 999), site: " + site);
-		} else if (site == SI_ERR_CURVE){
+		} else if (site == SI_ERR_CURVE) {
 			throw new CurveErrorException("Unknown curve index, site: " + site);
-		} else if (site == SI_ERR_GI_TOT){
-			throw new GrowthInterceptTotalException("Cannot compute growth intercept when using total age, site: " + site);
-		} else{
+		} else if (site == SI_ERR_GI_TOT) {
+			throw new GrowthInterceptTotalException(
+					"Cannot compute growth intercept when using total age, site: " + site
+			);
+		} else {
 			return site;
 		}
-		
+
 	}
 
 	public static double hu_garcia_q(double site_index, double bhage) {

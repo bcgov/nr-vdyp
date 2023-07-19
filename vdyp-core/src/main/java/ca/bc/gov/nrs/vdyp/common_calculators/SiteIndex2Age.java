@@ -9,7 +9,7 @@ import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.*;
 /**
  * SiteIndex2Age.java
  * - given site index and site height, computes age.
- * 
+ *
  * @throws LessThan13Exception site index or height < 1.3m
  * @throws NoAnswerException iteration could not converge (or projected age > 999)
  * @throws CurveEroorException unknown curve index
@@ -131,26 +131,26 @@ public class SiteIndex2Age {
 
 	public static final double MAX_AGE = 999.0;
 
-	/*  Wrapped in directives which check if TEST is defined.
-	*	The code that defines TEST as 1 is commented out, so I am assuming this
-	*	wouldn't run
-	*/
+	/*
+	 * Wrapped in directives which check if TEST is defined. The code that defines
+	 * TEST as 1 is commented out, so I am assuming this wouldn't run
+	 */
 	public static final boolean TEST = false;
 
-	/*  #ifdef TEST
-	* File* testFile; 	they test before opening the file so removing the
-	* 					directives should be fine
-	* I have moved the file stuff into the functions where it happens
-	* #endif
-	*/
+	/*
+	 * #ifdef TEST File* testFile; they test before opening the file so removing the
+	 * directives should be fine I have moved the file stuff into the functions
+	 * where it happens #endif
+	 */
 
 	public static double
 			index_to_age(short cu_index, double site_height, short age_type, double site_index, double y2bh) {
 		double x1, x2, x3, x4;
 		double a, b, c;
-		/*  I could not find HOOP, so I am assuming it is not intialized and as such the
-		*   directives wouldn't trigger
-		*/
+		/*
+		 * I could not find HOOP, so I am assuming it is not intialized and as such the
+		 * directives wouldn't trigger
+		 */
 		boolean HOOP = false;
 
 		// #ifdef HOOP
@@ -613,7 +613,7 @@ public class SiteIndex2Age {
 				e.printStackTrace();
 			}
 		}
-		if(age == SI_ERR_NO_ANS){
+		if (age == SI_ERR_NO_ANS) {
 			throw new NoAnswerException("Iteration could not converge (or projected age > 999), age: " + age);
 		}
 		return (age);
@@ -658,33 +658,34 @@ public class SiteIndex2Age {
 					e.printStackTrace();
 				}
 			}
-			
-			try{
-			test_ht = SiteIndex2Height.index_to_height(cu_index, si2age, SI_AT_TOTAL, site_index, y2bh, 0.5); // 0.5 may
-																												// have
-																												// to
-																												// change
 
-			if (TEST) {
-				try {
-					// Open the file for writing
-					File testfile = new File("si2age.tst");
-					FileWriter fileWriter = new FileWriter(testfile, true);
+			try {
+				test_ht = SiteIndex2Height.index_to_height(cu_index, si2age, SI_AT_TOTAL, site_index, y2bh, 0.5); // 0.5
+																													// may
+																													// have
+																													// to
+																													// change
 
-					// Write to the file
-					fileWriter.write(String.format("index_to_height()=%.2f%n", test_ht));
+				if (TEST) {
+					try {
+						// Open the file for writing
+						File testfile = new File("si2age.tst");
+						FileWriter fileWriter = new FileWriter(testfile, true);
 
-					// Close the file
-					fileWriter.close();
-				} catch (IOException e) {
-					e.printStackTrace();
+						// Write to the file
+						fileWriter.write(String.format("index_to_height()=%.2f%n", test_ht));
+
+						// Close the file
+						fileWriter.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
 				}
-			}
-			} catch(NoAnswerException e){ /* height > 999 */
-			/*
-			 * printf ("si2age.c: site_height=%f, test_ht=%f, si2age=%f\n", site_height,
-			 * test_ht, si2age);
-			 */
+			} catch (NoAnswerException e) { /* height > 999 */
+				/*
+				 * printf ("si2age.c: site_height=%f, test_ht=%f, si2age=%f\n", site_height,
+				 * test_ht, si2age);
+				 */
 				test_ht = 1000; /* should eventualy force an error code */
 				err_count++;
 				if (err_count == 100) {
@@ -692,7 +693,6 @@ public class SiteIndex2Age {
 					break;
 				}
 			}
-			
 
 			/* see if we're close enough */
 			if ( (test_ht - site_height > 0.005) || (test_ht - site_height < -0.005)) {
@@ -746,9 +746,10 @@ public class SiteIndex2Age {
 				si2age = Age2Age.age_to_age(cu_index, si2age, SI_AT_TOTAL, SI_AT_BREAST, y2bh);
 			}
 		}
-		if(si2age == SI_ERR_NO_ANS){
-			throw new NoAnswerException("Iteration could not converge (or projected age > 999)," +
-										 "site index 2 age variable: " + si2age);
+		if (si2age == SI_ERR_NO_ANS) {
+			throw new NoAnswerException(
+					"Iteration could not converge (or projected age > 999)," + "site index 2 age variable: " + si2age
+			);
 		}
 		return (si2age);
 	}
@@ -761,7 +762,9 @@ public class SiteIndex2Age {
 		double mindiff;
 
 		if (age_type == SI_AT_TOTAL) {
-			throw new GrowthInterceptTotalException("cannot compute growth intercept when using total age, age type: " + age_type);
+			throw new GrowthInterceptTotalException(
+					"cannot compute growth intercept when using total age, age type: " + age_type
+			);
 		}
 
 		diff = 0;
@@ -825,8 +828,10 @@ public class SiteIndex2Age {
 			/* right answer, or not low enough */
 			if (diff > 1) {
 				/* outside tolerance of 1m */
-				throw new NoAnswerException("Iiteration could not converge (or projected age > 999)," + 
-											"difference outside of 1m tolerance: " + diff);
+				throw new NoAnswerException(
+						"Iiteration could not converge (or projected age > 999),"
+								+ "difference outside of 1m tolerance: " + diff
+				);
 			}
 		}
 
@@ -834,8 +839,10 @@ public class SiteIndex2Age {
 			/* right answer, or not high enough */
 			if (diff > 1) {
 				/* outside tolerance of 1m */
-				throw new NoAnswerException("Iiteration could not converge (or projected age > 999)," + 
-											"difference outside of 1m tolerance: " + diff);
+				throw new NoAnswerException(
+						"Iiteration could not converge (or projected age > 999),"
+								+ "difference outside of 1m tolerance: " + diff
+				);
 			}
 		}
 

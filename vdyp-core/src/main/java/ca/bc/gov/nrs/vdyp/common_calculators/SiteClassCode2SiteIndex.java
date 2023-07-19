@@ -80,9 +80,9 @@ public class SiteClassCode2SiteIndex {
 
 	public static double class_to_index(short sp_index, char sitecl, char fiz) throws IllegalArgumentException {
 		if (sitecl != 'G' && sitecl != 'M' && sitecl != 'P' && sitecl != 'L') {
-			//return SI_ERR_CLASS;
+			// return SI_ERR_CLASS;
 			throw new ClassErrorException("Unknown site class code: " + sitecl);
-			
+
 		}
 
 		switch (sp_index) {
@@ -225,7 +225,7 @@ public class SiteClassCode2SiteIndex {
 				}
 				break;
 			default:
-				throw new ForestInventoryZoneException("Unknown FIZ code: " +fiz);
+				throw new ForestInventoryZoneException("Unknown FIZ code: " + fiz);
 
 			}
 			break;
