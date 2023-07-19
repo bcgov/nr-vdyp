@@ -41,6 +41,12 @@ jobs:
         key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
         restore-keys: ${{ runner.os }}-m2
     - name: Build with Maven
-      run: mvn -B package
-    - name: Analyze with SonarCloud and run tests
-      run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=bcgov_VDYP
+      run: mvn package
+    - name: Run Sonar Analysis
+      run: mvn sonar:sonar
+        -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+        -Dsonar.host.url=https://sonarcloud.io
+        -Dsonar.organization=bcgov-sonarcloud
+        -Dsonar.projectKey=bcgov_VDYP
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
