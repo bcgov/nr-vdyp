@@ -1,8 +1,13 @@
 package ca.bc.gov.nrs.vdyp.common_calculators;
 
+import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.LessThan13Exception;
+import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.NoAnswerException;
+
 /**
  * SiteIndex2HeightSmoothed.java
  *
+ * @throws NoAnswerException if iteration could not converge (projected height > 999)
+ * @throws LessThan13Exception if site index < 1.3m
  */
 public class SiteIndex2HeightSmoothed {
 /* @formatter:off */
@@ -20,12 +25,6 @@ public class SiteIndex2HeightSmoothed {
 	 */
 	private static final short SI_AT_TOTAL = 0;
 	private static final short SI_AT_BREAST = 1;
-
-	/*
-	 * error codes as return values from functions
-	 */
-	private static final int SI_ERR_LT13 = -1;
-	private static final int SI_ERR_NO_ANS = -4;
 
 	/* define species and equation indices */
 	private static final int SI_FDC_BRUCEAC = 100;
@@ -56,11 +55,11 @@ public class SiteIndex2HeightSmoothed {
 					// ages 0 and 1 that occurs below breast height
 
 		if (site_index < 1.3) {
-			return SI_ERR_LT13;
+			throw new LessThan13Exception("Site index < 1.3m: " + site_index);
 		}
 
 		if (y2bh < 0) {
-			return SI_ERR_NO_ANS;
+			throw new NoAnswerException("Iteration could not converge (projected height > 999), y2bh: " + y2bh);
 		}
 
 		itage = iage;
@@ -68,7 +67,7 @@ public class SiteIndex2HeightSmoothed {
 			itage = iage + y2bh;
 		}
 		if (itage < 0.0) {
-			return SI_ERR_NO_ANS;
+			throw new NoAnswerException("Iteration could not converge (projected height > 999), itage: " + itage);
 		}
 		if (itage < 0.00001) {
 			return 0.0;
@@ -90,14 +89,14 @@ public class SiteIndex2HeightSmoothed {
 			tage = bhage + (int) y2bh;
 			k1 = Math.log( (1.3 - seedling_ht) / (height - seedling_ht))
 					/ Math.log( (y2bh - seedling_age) / (tage - seedling_age));
-//printf ("%f %f k1\n", tage, height, k1);
+			//printf ("%f %f k1\n", tage, height, k1);
 			if (k1 >= 1) {
 				k0 = (1.3 - seedling_ht) / Math.pow(y2bh - seedling_age, k1);
 				break;
 			}
 			bhage++;
 			if (bhage >= 25) {
-				return SI_ERR_NO_ANS;
+				throw new NoAnswerException("Iteration could not converge (projected height > 999), bhage >= 25: " + bhage);
 			}
 		} while (true);
 

@@ -1,5 +1,9 @@
 package ca.bc.gov.nrs.vdyp.common_calculators;
 
+import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.ClassErrorException;
+import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.ForestInventoryZoneException;
+import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.SpeciesErrorException;
+
 /* @formatter:off */
 /**
  * SiteClassCode2SiteIndex.java
@@ -77,7 +81,7 @@ public class SiteClassCode2SiteIndex {
 	public static double class_to_index(short sp_index, char sitecl, char fiz) throws IllegalArgumentException {
 		if (sitecl != 'G' && sitecl != 'M' && sitecl != 'P' && sitecl != 'L') {
 			//return SI_ERR_CLASS;
-			throw new IllegalArgumentException("Unknown site class code: " + sitecl);
+			throw new ClassErrorException("Unknown site class code: " + sitecl);
 			
 		}
 
@@ -221,8 +225,7 @@ public class SiteClassCode2SiteIndex {
 				}
 				break;
 			default:
-				//return SI_ERR_FIZ;
-				throw new IllegalArgumentException("Unknown FIZ code: " +fiz);
+				throw new ForestInventoryZoneException("Unknown FIZ code: " +fiz);
 
 			}
 			break;
@@ -317,9 +320,7 @@ public class SiteClassCode2SiteIndex {
 			}
 			break;
 		}
-
-		//return SI_ERR_SPEC;
-		throw new IllegalArgumentException("Unknown species index: " + sitecl);
+		throw new SpeciesErrorException("Unknown species index: " + sitecl);
 	}
 
 }

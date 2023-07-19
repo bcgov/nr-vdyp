@@ -1,5 +1,10 @@
 package ca.bc.gov.nrs.vdyp.common_calculators;
 
+import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.CurveErrorException;
+import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.GrowthInterceptMinimumException;
+import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.LessThan13Exception;
+import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.NoAnswerException;
+
 /* @formatter:off */
 /**
  * SiteIndex2Height.java
@@ -11,10 +16,8 @@ package ca.bc.gov.nrs.vdyp.common_calculators;
  * - where breast height age is less than 0, a quadratic function is used
  * - error codes (returned as height value):
  *     SI_ERR_LT13: site index < 1.3m
- *     SI_ERR_GI_MIN: variable height growth intercept formulation;
- *         bhage < 0.5 years
- *     SI_ERR_GI_MAX: variable height growth intercept formulation;
- *         bhage > range
+ *     SI_ERR_GI_MIN: variable height growth intercept formulation; bhage < 0.5 years
+ *     SI_ERR_GI_MAX: variable height growth intercept formulation; bhage > range
  *     SI_ERR_NO_ANS: iteration could not converge (projected height > 999)
  *     SI_ERR_CURVE: unknown curve index
  *     SI_ERR_GI_TOT: cannot compute growth intercept when using total age
@@ -216,10 +219,7 @@ public class SiteIndex2Height {
     /*
     * error codes as return values from functions
     */
-    private static final int SI_ERR_LT13      = -1;
-    private static final int SI_ERR_GI_MIN    = -2;
     private static final int SI_ERR_NO_ANS    = -4;
-    private static final int SI_ERR_CURVE     = -5;
 
     /* define species and equation indices */
     private static final int SI_ACB_HUANGAC        = 97;
@@ -372,7 +372,7 @@ public static double index_to_height (
   double bhage;   // breast-height age
 
   if (site_index < 1.3){
-    return SI_ERR_LT13;
+    throw new LessThan13Exception("Site index < 1.3m: " + site_index);
   }
 
   // should this line be removed?
@@ -387,7 +387,7 @@ public static double index_to_height (
     tage = Age2Age.age_to_age(cu_index, bhage, SI_AT_BREAST, SI_AT_TOTAL, y2bh);
     }
   if (tage < 0.0){
-    return SI_ERR_NO_ANS;
+    throw new NoAnswerException("Iteration could not converge (projected height > 999), age: " + tage);
   }
   if (tage < 0.00001){
     return 0.0;
@@ -2689,9 +2689,13 @@ public static double index_to_height (
 
 
     default:
-      return SI_ERR_CURVE;
-      //break; Unreachable
+      throw new CurveErrorException("Unknown curve index");
     }
+
+    if(height == SI_ERR_NO_ANS){
+      throw new NoAnswerException("Iteration could not converge (projected height > 999)");
+    }
+    
   return height;
   }
 
@@ -2707,7 +2711,7 @@ public static double gi_si2ht (
 
   /* breast height age must be at least 1/2 a year */
   if (age < 0.5){
-    return SI_ERR_GI_MIN;
+    throw new GrowthInterceptMinimumException("Variable height growth intercept formulation; bhage < 0.5 years. Age: " + age);
   }
 
   /* initial guess */
@@ -2719,13 +2723,14 @@ public static double gi_si2ht (
 
   /* loop until real close */
   do
-    {
+    { 
     test_site = Height2SiteIndex.height_to_index(cu_index, age, (short)SI_AT_BREAST, si2ht, (short) SI_EST_DIRECT);
 /*
 printf ("age=%3.0f, site=%5.2f, test_site=%5.2f, si2ht=%5.2f, step=%9.7f\n",
   age, site_index, test_site, si2ht, step);
 */
 
+    //This code could probably be removed
     if (test_site < 0) /* error */
       {
       si2ht = test_site;
@@ -2773,6 +2778,9 @@ printf ("age=%3.0f, site=%5.2f, test_site=%5.2f, si2ht=%5.2f, step=%9.7f\n",
       }
     } while (true);
 
+    if(si2ht == SI_ERR_NO_ANS){
+      throw new NoAnswerException("Iteration could not converge (projected height > 999)");
+    }
   return si2ht;
   }
 

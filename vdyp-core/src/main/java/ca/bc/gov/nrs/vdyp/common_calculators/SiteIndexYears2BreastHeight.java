@@ -1,5 +1,10 @@
 package ca.bc.gov.nrs.vdyp.common_calculators;
 
+import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.CurveErrorException;
+import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.GrowthInterceptTotalException;
+import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.LessThan13Exception;
+import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.NoAnswerException;
+
 /* @formatter:off */
 /**
  * siy2bh.c
@@ -159,14 +164,6 @@ public class SiteIndexYears2BreastHeight {
 /* @formatter:on */
 
 	// Taken from sindex.h
-	/*
-	 * error codes as return values from functions
-	 */
-	private static final int SI_ERR_LT13 = -1;
-	private static final int SI_ERR_NO_ANS = -4;
-	private static final int SI_ERR_CURVE = -5;
-	private static final int SI_ERR_GI_TOT = -9;
-
 	/* define species and equation indices */
 	private static final int SI_ACB_HUANGAC = 97;
 	private static final int SI_ACB_HUANG = 0;
@@ -307,12 +304,12 @@ public class SiteIndexYears2BreastHeight {
 		double si20;
 
 		if (site_index < 1.3) {
-			return SI_ERR_LT13;
+			throw new LessThan13Exception("Site index < 1.3m: " + site_index);
 		}
 
 		switch (cu_index) {
 		case SI_FDC_NIGHGI:
-			return SI_ERR_GI_TOT;
+			throw new GrowthInterceptTotalException("Cannot use with GI equations, case SI_FDC_NIGHGI" + cu_index);
 		// break; Unreachable code
 
 		case SI_FDC_BRUCE:
@@ -333,7 +330,7 @@ public class SiteIndexYears2BreastHeight {
 
 		case SI_FDC_NIGHTA:
 			if (site_index <= 9.051) {
-				return SI_ERR_NO_ANS;
+				throw new NoAnswerException("Site index out of range, site index <= 9.051: " + site_index);
 			} else {
 				y2bh = 24.44 * Math.pow(site_index - 9.051, -0.394);
 			}
@@ -421,25 +418,25 @@ public class SiteIndexYears2BreastHeight {
 			break;
 
 		case SI_HWI_NIGHGI:
-			return SI_ERR_GI_TOT;
+			throw new GrowthInterceptTotalException("Cannot use with GI equations, case SI_HWI_NIGHGI: " + cu_index);
 
 		case SI_HWC_NIGHGI:
-			return SI_ERR_GI_TOT;
+			throw new GrowthInterceptTotalException("Cannot use with GI equations, case SI_HWC_NIGHGI: " + cu_index);
 
 		case SI_HWC_NIGHGI99:
-			return SI_ERR_GI_TOT;
+			throw new GrowthInterceptTotalException("Cannot use with GI equations, case SI_HWC_NIGHGI99: " + cu_index);
 
 		case SI_SS_NIGHGI99:
-			return SI_ERR_GI_TOT;
+			throw new GrowthInterceptTotalException("Cannot use with GI equations, case SI_SS_NIGHGI99: " + cu_index);
 
 		case SI_SW_NIGHGI99:
-			return SI_ERR_GI_TOT;
+			throw new GrowthInterceptTotalException("Cannot use with GI equations, case SI_SW_NIGHGI99: " + cu_index);
 
 		case SI_SW_NIGHGI2004:
-			return SI_ERR_GI_TOT;
+			throw new GrowthInterceptTotalException("Cannot use with GI equations, case SI_SW_NIGHGI2004: " + cu_index);
 
 		case SI_LW_NIGHGI:
-			return SI_ERR_GI_TOT;
+			throw new GrowthInterceptTotalException("Cannot use with GI equations, case SI_LW_NIGHGI: " + cu_index);
 
 		case SI_HWC_WILEY:
 			/* seed (root collar) */
@@ -509,7 +506,7 @@ public class SiteIndexYears2BreastHeight {
 		 */
 
 		case SI_PLI_NIGHGI97:
-			return SI_ERR_GI_TOT;
+			throw new GrowthInterceptTotalException("Cannot use with GI equations, case SI_PLI_NIGHGI97: " + cu_index);
 
 		case SI_PLI_HUANG_PLA:
 			/* from seed */
@@ -524,7 +521,7 @@ public class SiteIndexYears2BreastHeight {
 		case SI_PLI_NIGHTA2004:
 			/* temporarily copied from PLI_NIGHTA98 */
 			if (site_index < 9.5) {
-				return SI_ERR_NO_ANS;
+				throw new NoAnswerException("Site index out of range, site index < 9.5: " + site_index);
 			} else {
 				y2bh = 21.6623 * ppow(site_index - 9.05671, -0.550762);
 			}
@@ -532,7 +529,7 @@ public class SiteIndexYears2BreastHeight {
 
 		case SI_PLI_NIGHTA98:
 			if (site_index < 9.5) {
-				return SI_ERR_NO_ANS;
+				throw new NoAnswerException("Site index out of range, site index < 9.5: " + site_index);
 			} else {
 				y2bh = 21.6623 * ppow(site_index - 9.05671, -0.550762);
 			}
@@ -597,7 +594,7 @@ public class SiteIndexYears2BreastHeight {
 			break;
 
 		case SI_SE_NIGHGI:
-			return SI_ERR_GI_TOT;
+			throw new GrowthInterceptTotalException("Cannot use with GI equations, case SI_SE_NIGHGI: " + cu_index);
 
 		case SI_PLI_THROWNIGH:
 			if (site_index < 18.5) {
@@ -682,7 +679,7 @@ public class SiteIndexYears2BreastHeight {
 		 */
 
 		case SI_SW_NIGHGI:
-			return SI_ERR_GI_TOT;
+			throw new GrowthInterceptTotalException("Cannot use with GI equations, case SI_SW_NIGHGI: " + cu_index);
 
 		case SI_SW_HUANG_PLA:
 			/* from seed */
@@ -787,7 +784,7 @@ public class SiteIndexYears2BreastHeight {
 			break;
 
 		case SI_SS_NIGHGI:
-			return SI_ERR_GI_TOT;
+			throw new GrowthInterceptTotalException("Cannot use with GI equations, case SI_SS_NIGHGI: " + cu_index);
 
 		case SI_SS_NIGH:
 			/* copied from Ss Goudie */
@@ -815,7 +812,7 @@ public class SiteIndexYears2BreastHeight {
 			break;
 
 		case SI_CWI_NIGHGI:
-			return SI_ERR_GI_TOT;
+			throw new GrowthInterceptTotalException("Cannot use with GI equations, case SI_CWI_NIGHGI: " + cu_index);
 
 		case SI_CWI_NIGH:
 			/* from seed */
@@ -900,7 +897,7 @@ public class SiteIndexYears2BreastHeight {
 			break;
 
 		case SI_BA_NIGHGI:
-			return SI_ERR_GI_TOT;
+			throw new GrowthInterceptTotalException("Cannot use with GI equations, case SI_BA_NIGHGI: " + cu_index);
 
 		case SI_BA_NIGH:
 			/*
@@ -960,7 +957,7 @@ public class SiteIndexYears2BreastHeight {
 			break;
 
 		case SI_BL_THROWERGI:
-			return SI_ERR_GI_TOT;
+			throw new GrowthInterceptTotalException("Cannot use with GI equations, case SI_BL_THROWERGI: " + cu_index);
 
 		case SI_BL_KURUCZ82:
 			/*
@@ -986,7 +983,7 @@ public class SiteIndexYears2BreastHeight {
 		 */
 
 		case SI_FDI_NIGHGI:
-			return SI_ERR_GI_TOT;
+			throw new GrowthInterceptTotalException("Cannot use with GI equations, case SI_FDI_NIGHGI: " + cu_index);
 
 		case SI_FDI_HUANG_PLA:
 			/* from seed */
@@ -1163,7 +1160,7 @@ public class SiteIndexYears2BreastHeight {
 		 */
 
 		case SI_PY_NIGHGI:
-			return SI_ERR_GI_TOT;
+			throw new GrowthInterceptTotalException("Cannot use with GI equations, case SI_PY_NIGHGI: " + cu_index);
 
 		case SI_PY_NIGH:
 			y2bh = 36.35 * Math.pow(0.9318, site_index);
@@ -1292,7 +1289,7 @@ public class SiteIndexYears2BreastHeight {
 		 */
 
 		default:
-			return SI_ERR_CURVE;
+			throw new CurveErrorException("Unknown curve index");
 		}
 
 		return y2bh;

@@ -1,21 +1,19 @@
 package ca.bc.gov.nrs.vdyp.common_calculators;
 
+import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.CodeErrorException;
+
 /* @formatter:off */
 /**
  * SpecRMap.java
  * - determines the default species/curve index for a given species code.
  * - initial species code remappings provided by Inventory Branch.
  * - species codes can be 1-3 letters, in upper or lower case.
- * - error codes:
- *     SI_ERR_FIZ:  unknown FIZ code
- *     SI_ERR_CODE: unknown species code
  */
 /* @formatter:on */
 
 public class SpecRMap {
 /* @formatter:off */
 /*
- *
  * 1994 oct 19 - Moved here from FredTab.
  * 1996 jun 3  - Changed remap of YC to CW.
  *             - Changed remap of EP to AT.
@@ -632,7 +630,7 @@ public class SpecRMap {
 			return SI_SPEC_ZH;
 		}
 
-		return SI_ERR_CODE;
+		throw new CodeErrorException("Unknown species code: " + sc2);
 	}
 
 	public static short species_remap(String sc, char fiz) {
@@ -684,7 +682,7 @@ public class SpecRMap {
 			case FIZ_INTERIOR:
 				return SI_SPEC_BL;
 			default:
-				return SI_ERR_CODE;
+				throw new CodeErrorException("Unknown species code: " + sc2);
 			}
 		}
 		if (sc2.equals("BA")) {
@@ -706,7 +704,7 @@ public class SpecRMap {
 			case FIZ_INTERIOR:
 				return SI_SPEC_BL;
 			default:
-				return SI_ERR_CODE;
+				throw new CodeErrorException("Unknown species code: " + sc2);
 			}
 		}
 		if (sc2.equals("BG")) {
@@ -735,7 +733,7 @@ public class SpecRMap {
 			case FIZ_INTERIOR:
 				return SI_SPEC_CWI;
 			default:
-				return SI_ERR_CODE;
+				throw new CodeErrorException("Unknown species code: " + sc2);
 			}
 		}
 		if (sc2.equals("CI")) {
@@ -745,7 +743,7 @@ public class SpecRMap {
 			case FIZ_INTERIOR:
 				return SI_SPEC_CWI;
 			default:
-				return SI_ERR_CODE;
+				throw new CodeErrorException("Unknown species code: " + sc2);
 			}
 		}
 		if (sc2.equals("COT")) {
@@ -758,7 +756,7 @@ public class SpecRMap {
 			case FIZ_INTERIOR:
 				return SI_SPEC_CWI;
 			default:
-				return SI_ERR_CODE;
+				throw new CodeErrorException("Unknown species code: " + sc2);
 			}
 		}
 		if (sc2.equals("CT")) {
@@ -771,7 +769,7 @@ public class SpecRMap {
 			case FIZ_INTERIOR:
 				return SI_SPEC_CWI;
 			default:
-				return SI_ERR_CODE;
+				throw new CodeErrorException("Unknown species code: " + sc2);
 			}
 		}
 		if (sc2.equals("CWC")) {
@@ -787,7 +785,7 @@ public class SpecRMap {
 			case FIZ_INTERIOR:
 				return SI_SPEC_CWI;
 			default:
-				return SI_ERR_CODE;
+				throw new CodeErrorException("Unknown species code: " + sc2);
 			}
 		}
 		if (sc2.equals("D")) {
@@ -800,7 +798,7 @@ public class SpecRMap {
 			case FIZ_INTERIOR:
 				return SI_SPEC_FDI;
 			default:
-				return SI_ERR_CODE;
+				throw new CodeErrorException("Unknown species code: " + sc2);
 			}
 		}
 		if (sc2.equals("DG")) {
@@ -843,7 +841,7 @@ public class SpecRMap {
 			case FIZ_INTERIOR:
 				return SI_SPEC_FDI;
 			default:
-				return SI_ERR_CODE;
+				throw new CodeErrorException("Unknown species code: " + sc2);
 			}
 		}
 		if (sc2.equals("FD")) {
@@ -853,7 +851,7 @@ public class SpecRMap {
 			case FIZ_INTERIOR:
 				return SI_SPEC_FDI;
 			default:
-				return SI_ERR_CODE;
+				throw new CodeErrorException("Unknown species code: " + sc2);
 			}
 		}
 		if (sc2.equals("FDC")) {
@@ -878,7 +876,7 @@ public class SpecRMap {
 			case FIZ_INTERIOR:
 				return SI_SPEC_HWI;
 			default:
-				return SI_ERR_CODE;
+				throw new CodeErrorException("Unknown species code: " + sc2);
 			}
 		}
 		if (sc2.equals("HM")) {
@@ -891,7 +889,7 @@ public class SpecRMap {
 			case FIZ_INTERIOR:
 				return SI_SPEC_HWI;
 			default:
-				return SI_ERR_CODE;
+				throw new CodeErrorException("Unknown species code: " + sc2);
 			}
 		}
 		if (sc2.equals("HWC")) {
@@ -907,7 +905,7 @@ public class SpecRMap {
 			case FIZ_INTERIOR:
 				return SI_SPEC_HWI;
 			default:
-				return SI_ERR_CODE;
+				throw new CodeErrorException("Unknown species code: " + sc2);
 			}
 		}
 		if (sc2.equals("IG")) {
@@ -917,7 +915,7 @@ public class SpecRMap {
 			case FIZ_INTERIOR:
 				return SI_SPEC_CWI;
 			default:
-				return SI_ERR_CODE;
+				throw new CodeErrorException("Unknown species code: " + sc2);
 			}
 		}
 		if (sc2.equals("IS")) {
@@ -927,7 +925,7 @@ public class SpecRMap {
 			case FIZ_INTERIOR:
 				return SI_SPEC_CWI;
 			default:
-				return SI_ERR_CODE;
+				throw new CodeErrorException("Unknown species code: " + sc2);
 			}
 		}
 		if (sc2.equals("J")) {
@@ -937,7 +935,7 @@ public class SpecRMap {
 			case FIZ_INTERIOR:
 				return SI_SPEC_CWI;
 			default:
-				return SI_ERR_CODE;
+				throw new CodeErrorException("Unknown species code: " + sc2);
 			}
 		}
 		if (sc2.equals("JR")) {
@@ -947,7 +945,7 @@ public class SpecRMap {
 			case FIZ_INTERIOR:
 				return SI_SPEC_CWI;
 			default:
-				return SI_ERR_CODE;
+				throw new CodeErrorException("Unknown species code: " + sc2);
 			}
 		}
 		if (sc2.equals("K")) {
@@ -999,7 +997,7 @@ public class SpecRMap {
 			case FIZ_INTERIOR:
 				return SI_SPEC_CWI;
 			default:
-				return SI_ERR_CODE;
+				throw new CodeErrorException("Unknown species code: " + sc2);
 			}
 		}
 		if (sc2.equals("OB")) {
@@ -1009,7 +1007,7 @@ public class SpecRMap {
 			case FIZ_INTERIOR:
 				return SI_SPEC_CWI;
 			default:
-				return SI_ERR_CODE;
+				throw new CodeErrorException("Unknown species code: " + sc2);
 			}
 		}
 		if (sc2.equals("OC")) {
@@ -1019,7 +1017,7 @@ public class SpecRMap {
 			case FIZ_INTERIOR:
 				return SI_SPEC_CWI;
 			default:
-				return SI_ERR_CODE;
+				throw new CodeErrorException("Unknown species code: " + sc2);
 			}
 		}
 		if (sc2.equals("OD")) {
@@ -1098,7 +1096,7 @@ public class SpecRMap {
 			case FIZ_INTERIOR:
 				return SI_SPEC_SW;
 			default:
-				return SI_ERR_CODE;
+				throw new CodeErrorException("Unknown species code: " + sc2);
 			}
 		}
 		if (sc2.equals("SA")) {
@@ -1129,7 +1127,7 @@ public class SpecRMap {
 			case FIZ_INTERIOR:
 				return SI_SPEC_SW;
 			default:
-				return SI_ERR_CODE;
+				throw new CodeErrorException("Unknown species code: " + sc2);
 			}
 		}
 		if (sc2.equals("SXB")) {
@@ -1142,7 +1140,7 @@ public class SpecRMap {
 			case FIZ_INTERIOR:
 				return SI_SPEC_SE;
 			default:
-				return SI_ERR_CODE;
+				throw new CodeErrorException("Unknown species code: " + sc2);
 			}
 		}
 		if (sc2.equals("SXL")) {
@@ -1152,7 +1150,7 @@ public class SpecRMap {
 			case FIZ_INTERIOR:
 				return SI_SPEC_SW;
 			default:
-				return SI_ERR_CODE;
+				throw new CodeErrorException("Unknown species code: " + sc2);
 			}
 		}
 		if (sc2.equals("SXS")) {
@@ -1162,7 +1160,7 @@ public class SpecRMap {
 			case FIZ_INTERIOR:
 				return SI_SPEC_SW;
 			default:
-				return SI_ERR_CODE;
+				throw new CodeErrorException("Unknown species code: " + sc2);
 			}
 		}
 		if (sc2.equals("SXW")) {
@@ -1175,7 +1173,7 @@ public class SpecRMap {
 			case FIZ_INTERIOR:
 				return SI_SPEC_SW;
 			default:
-				return SI_ERR_CODE;
+				throw new CodeErrorException("Unknown species code: " + sc2);
 			}
 		}
 		if (sc2.equals("T")) {
@@ -1185,7 +1183,7 @@ public class SpecRMap {
 			case FIZ_INTERIOR:
 				return SI_SPEC_HWI;
 			default:
-				return SI_ERR_CODE;
+				throw new CodeErrorException("Unknown species code: " + sc2);
 			}
 		}
 		if (sc2.equals("TW")) {
@@ -1195,7 +1193,7 @@ public class SpecRMap {
 			case FIZ_INTERIOR:
 				return SI_SPEC_HWI;
 			default:
-				return SI_ERR_CODE;
+				throw new CodeErrorException("Unknown species code: " + sc2);
 			}
 		}
 		if (sc2.equals("U")) {
@@ -1253,7 +1251,7 @@ public class SpecRMap {
 			case FIZ_INTERIOR:
 				return SI_SPEC_FDI;
 			default:
-				return SI_ERR_CODE;
+				throw new CodeErrorException("Unknown species code: " + sc2);
 			}
 		}
 		if (sc2.equals("XC")) {
@@ -1263,7 +1261,7 @@ public class SpecRMap {
 			case FIZ_INTERIOR:
 				return SI_SPEC_FDI;
 			default:
-				return SI_ERR_CODE;
+				throw new CodeErrorException("Unknown species code: " + sc2);
 			}
 		}
 		if (sc2.equals("XH")) {
@@ -1276,7 +1274,7 @@ public class SpecRMap {
 			case FIZ_INTERIOR:
 				return SI_SPEC_CWI;
 			default:
-				return SI_ERR_CODE;
+				throw new CodeErrorException("Unknown species code: " + sc2);
 			}
 		}
 		if (sc2.equals("YC")) {
@@ -1286,7 +1284,7 @@ public class SpecRMap {
 			case FIZ_INTERIOR:
 				return SI_SPEC_CWI;
 			default:
-				return SI_ERR_CODE;
+				throw new CodeErrorException("Unknown species code: " + sc2);
 			}
 		}
 		if (sc2.equals("YP")) {
@@ -1296,7 +1294,7 @@ public class SpecRMap {
 			case FIZ_INTERIOR:
 				return SI_SPEC_CWI;
 			default:
-				return SI_ERR_CODE;
+				throw new CodeErrorException("Unknown species code: " + sc2);
 			}
 		}
 		if (sc2.equals("Z")) {
@@ -1306,7 +1304,7 @@ public class SpecRMap {
 			case FIZ_INTERIOR:
 				return SI_SPEC_FDI;
 			default:
-				return SI_ERR_CODE;
+				throw new CodeErrorException("Unknown species code: " + sc2);
 			}
 		}
 		if (sc2.equals("ZC")) {
@@ -1316,14 +1314,14 @@ public class SpecRMap {
 			case FIZ_INTERIOR:
 				return SI_SPEC_FDI;
 			default:
-				return SI_ERR_CODE;
+				throw new CodeErrorException("Unknown species code: " + sc2);
 			}
 		}
 		if (sc2.equals("ZH")) {
 			return SI_SPEC_AT;
 		}
 
-		return SI_ERR_CODE;
+		throw new CodeErrorException("Unknown species code: " + sc2);
 	}
 
 }

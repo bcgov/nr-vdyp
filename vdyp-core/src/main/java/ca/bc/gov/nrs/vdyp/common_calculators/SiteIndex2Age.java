@@ -3,16 +3,17 @@ package ca.bc.gov.nrs.vdyp.common_calculators;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.*;
 
 /* @formatter:off */
 /**
  * SiteIndex2Age.java
  * - given site index and site height, computes age.
- * - error codes (returned as age value):
- *     SI_ERR_LT13: site index or height < 1.3m
- *     SI_ERR_NO_ANS: iteration could not converge (or projected age > 999)
- *     SI_ERR_CURVE: unknown curve index
- *     SI_ERR_GI_TOT: cannot compute growth intercept when using total age
+ * 
+ * @throws LessThan13Exception site index or height < 1.3m
+ * @throws NoAnswerException iteration could not converge (or projected age > 999)
+ * @throws CurveEroorException unknown curve index
+ * @throws GrowthInterceptTotalException cannot compute growth intercept when using total age
  */
 /* @formatter:on */
 public class SiteIndex2Age {
@@ -91,12 +92,8 @@ public class SiteIndex2Age {
 	/*
 	 * error codes as return values from functions
 	 */
-	private static final int SI_ERR_LT13 = -1;
-	private static final int SI_ERR_GI_MIN = -2;
 	private static final int SI_ERR_GI_MAX = -3;
 	private static final int SI_ERR_NO_ANS = -4;
-	private static final int SI_ERR_CURVE = -5;
-	private static final int SI_ERR_GI_TOT = -9;
 
 	/* define species and equation indices */
 	private static final int SI_BL_THROWERGI = 9;
@@ -164,8 +161,7 @@ public class SiteIndex2Age {
 
 		if (site_height < 1.3) {
 			if (age_type == SI_AT_BREAST) {
-				//return SI_ERR_LT13;
-				throw new IllegalArgumentException("Site index or height < 1.3m, site height: " + site_height);
+				throw new LessThan13Exception("Site index or height < 1.3m, site height: " + site_height);
 			}
 
 			if (site_height <= 0.0001) {
@@ -174,8 +170,7 @@ public class SiteIndex2Age {
 		}
 
 		if (site_index < 1.3) {
-			//return SI_ERR_LT13;
-			throw new IllegalArgumentException("Site index or height < 1.3m, site_index: " + site_index);
+			throw new LessThan13Exception("Site index or height < 1.3m, site_index: " + site_index);
 		}
 
 		switch (cu_index) {
@@ -619,7 +614,7 @@ public class SiteIndex2Age {
 			}
 		}
 		if(age == SI_ERR_NO_ANS){
-			throw new IllegalArgumentException("Iteration could not converge (or projected age > 999), age: " + age);
+			throw new NoAnswerException("Iteration could not converge (or projected age > 999), age: " + age);
 		}
 		return (age);
 	}
@@ -663,7 +658,8 @@ public class SiteIndex2Age {
 					e.printStackTrace();
 				}
 			}
-
+			
+			try{
 			test_ht = SiteIndex2Height.index_to_height(cu_index, si2age, SI_AT_TOTAL, site_index, y2bh, 0.5); // 0.5 may
 																												// have
 																												// to
@@ -684,13 +680,11 @@ public class SiteIndex2Age {
 					e.printStackTrace();
 				}
 			}
-
+			} catch(NoAnswerException e){ /* height > 999 */
 			/*
 			 * printf ("si2age.c: site_height=%f, test_ht=%f, si2age=%f\n", site_height,
 			 * test_ht, si2age);
 			 */
-
-			if (test_ht == SI_ERR_NO_ANS) { /* height > 999 */
 				test_ht = 1000; /* should eventualy force an error code */
 				err_count++;
 				if (err_count == 100) {
@@ -698,6 +692,7 @@ public class SiteIndex2Age {
 					break;
 				}
 			}
+			
 
 			/* see if we're close enough */
 			if ( (test_ht - site_height > 0.005) || (test_ht - site_height < -0.005)) {
@@ -751,6 +746,10 @@ public class SiteIndex2Age {
 				si2age = Age2Age.age_to_age(cu_index, si2age, SI_AT_TOTAL, SI_AT_BREAST, y2bh);
 			}
 		}
+		if(si2age == SI_ERR_NO_ANS){
+			throw new NoAnswerException("Iteration could not converge (or projected age > 999)," +
+										 "site index 2 age variable: " + si2age);
+		}
 		return (si2age);
 	}
 
@@ -762,7 +761,7 @@ public class SiteIndex2Age {
 		double mindiff;
 
 		if (age_type == SI_AT_TOTAL) {
-			return SI_ERR_GI_TOT;
+			throw new GrowthInterceptTotalException("cannot compute growth intercept when using total age, age type: " + age_type);
 		}
 
 		diff = 0;
@@ -826,7 +825,8 @@ public class SiteIndex2Age {
 			/* right answer, or not low enough */
 			if (diff > 1) {
 				/* outside tolerance of 1m */
-				return SI_ERR_NO_ANS;
+				throw new NoAnswerException("Iiteration could not converge (or projected age > 999)," + 
+											"difference outside of 1m tolerance: " + diff);
 			}
 		}
 
@@ -834,7 +834,8 @@ public class SiteIndex2Age {
 			/* right answer, or not high enough */
 			if (diff > 1) {
 				/* outside tolerance of 1m */
-				return SI_ERR_NO_ANS;
+				throw new NoAnswerException("Iiteration could not converge (or projected age > 999)," + 
+											"difference outside of 1m tolerance: " + diff);
 			}
 		}
 
