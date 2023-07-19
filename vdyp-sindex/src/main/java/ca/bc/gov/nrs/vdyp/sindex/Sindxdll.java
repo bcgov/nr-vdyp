@@ -1,8 +1,7 @@
 package ca.bc.gov.nrs.vdyp.sindex;
 
 import ca.bc.gov.nrs.vdyp.common_calculators.*;
-import java.util.NoSuchElementException;
-
+import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.*;
 /**
  * Sindxdll.java Interface Module to the Sindex Library
  */
@@ -1898,7 +1897,8 @@ public class Sindxdll {
 			SI_WP_START, SI_WS_START, SI_WT_START, SI_X_START, SI_XC_START, SI_XH_START, SI_Y_START, SI_YC_START,
 			SI_YP_START, SI_Z_START, SI_ZC_START, SI_ZH_START };
 
-	private static final int[] si_curve_default = { SI_ERR_NO_ANS, // A
+	private static final int[] si_curve_default = 
+		{ SI_ERR_NO_ANS, // A
 			SI_ERR_NO_ANS, // ABAL
 			SI_ERR_NO_ANS, // ABCO
 			SI_ERR_NO_ANS, // AC
@@ -2035,7 +2035,8 @@ public class Sindxdll {
 			SI_ERR_NO_ANS, // ZH
 	};
 
-	private static final int[] si_curve_intend = { SI_SPEC_ACB, /* SI_ACB_HUANG */
+	private static final int[] si_curve_intend = 
+		{ 	SI_SPEC_ACB, /* SI_ACB_HUANG */
 			SI_SPEC_ACT, /* SI_ACT_THROWER */
 			SI_SPEC_AT, /* SI_AT_HUANG */
 			SI_SPEC_AT, /* SI_AT_CIESZEWSKI */
@@ -2211,18 +2212,18 @@ public class Sindxdll {
 	 *
 	 * @param sp_index Integer species index
 	 * @return sp_index+1 Integer species index, for use in other Sindex functions.
-	 * @throws IllegalArgumentException if the input parameter is not a valid
+	 * @throws SpeciesErrorException 	if the input parameter is not a valid
 	 *                                  species index.
-	 * @throws NoSuchElementException   if the input parameter is the last defined
+	 * @throws NoAnswerException   		if the input parameter is the last defined
 	 *                                  species index.
 	 *
 	 * @remarks No assumption should be made about the ordering of the species.
 	 */
-	public static short NextSpecies(short sp_index) throws IllegalArgumentException, NoSuchElementException {
+	public static short NextSpecies(short sp_index){
 		if (sp_index < 0 || sp_index >= SI_MAX_SPECIES) {
-			throw new IllegalArgumentException("Input parameter is not a valid species index: " + sp_index);
+			throw new SpeciesErrorException("Input parameter is not a valid species index: " + sp_index);
 		} else if (sp_index == SI_SPEC_END) {
-			throw new NoSuchElementException("Input parameter is the last defined species index: " + sp_index);
+			throw new NoAnswerException("Input parameter is the last defined species index: " + sp_index);
 		}
 
 		return (short) (sp_index + 1); // Added a cast to short, not in sindxdll.c
@@ -2271,16 +2272,15 @@ public class Sindxdll {
 	 *
 	 * @param sp_index Integer species index.
 	 * @return Integer code.
-	 * @throws IllegalArgumentException if input parameter is not a valid species
-	 *                                  index. May return an error code under the
-	 *                                  following conditions:
+	 * @throws SpeciesErrorException	if input parameter is not a valid species
+	 *                                  index. 
 	 *
 	 * @remarks Code bits are set as follows: 1: BC coast 10: BC interior 100:
 	 *          common species in BC (0 means uncommon)
 	 */
-	public static short SpecUse(short sp_index) throws IllegalArgumentException {
+	public static short SpecUse(short sp_index){
 		if (sp_index < 0 || sp_index >= SI_MAX_SPECIES) {
-			throw new IllegalArgumentException("Input parameter is not a valid species index: " + sp_index);
+			throw new SpeciesErrorException("Input parameter is not a valid species index: " + sp_index);
 		}
 
 		/*
@@ -2559,8 +2559,8 @@ public class Sindxdll {
 		case SI_SPEC_ZH:
 			return 0x00;
 		}
-
-		return SI_ERR_SPEC;
+		throw new SpeciesErrorException("Input parameter is not a valid species index: " + sp_index);
+		
 	}
 
 	/**
@@ -2569,16 +2569,16 @@ public class Sindxdll {
 	 * @param sp_index Integer species index.
 	 * @return Integer curve index, for use in other Sindex functions.
 	 *
-	 * @throws IllegalArgumentException if the input parameter is not a valid
+	 * @throws SpeciesErrorException	if the input parameter is not a valid
 	 *                                  species index.
-	 * @throws NoSuchElementException   if the input parameter is the last defined
+	 * @throws NoAnswerException   		if the input parameter is the last defined
 	 *                                  species index.
 	 */
-	public static short DefCurve(short sp_index) throws IllegalArgumentException, NoSuchElementException {
-		if (sp_index < 0 || sp_index >= SI_MAX_SPECIES) {
-			throw new IllegalArgumentException("Input parameter is not a valid species index: " + sp_index);
-		} else if (sp_index == SI_SPEC_END) {
-			throw new NoSuchElementException("Input parameter is the last defined species index: " + sp_index);
+	public static short DefCurve(short sp_index){
+		if (sp_index < 0 || sp_index >= SI_MAX_SPECIES) { //spec
+			throw new SpeciesErrorException("Input parameter is not a valid species index: " + sp_index);
+		} else if (sp_index == SI_SPEC_END) { //none, removE???
+			throw new NoAnswerException("Input parameter is the last defined species index: " + sp_index);
 		}
 
 		return (short) si_curve_default[sp_index];
@@ -2590,13 +2590,13 @@ public class Sindxdll {
 	 * @param sp_index Integer species index.
 	 * @return Integer curve index, for use in other Sindex functions.
 	 *
-	 * @throws IllegalArgumentException if the input parameter is not a valid
+	 * @throws SpeciesErrorException 	if the input parameter is not a valid
 	 *                                  species index.
-	 * @throws NoSuchElementException   No GI equations defined for this species.
+	 * @throws NoAnswerException   		No GI equations defined for this species.
 	 */
-	public static short DefGICurve(short sp_index) throws IllegalArgumentException, NoSuchElementException {
-		if (sp_index < 0 || sp_index >= SI_MAX_SPECIES) {
-			throw new IllegalArgumentException("Input parameter is not a valid species index: " + sp_index);
+	public static short DefGICurve(short sp_index){
+		if (sp_index < 0 || sp_index >= SI_MAX_SPECIES) { //spec
+			throw new SpeciesErrorException("Input parameter is not a valid species index: " + sp_index);
 		}
 
 		switch (sp_index) {
@@ -2627,8 +2627,8 @@ public class Sindxdll {
 		case SI_SPEC_SW:
 			return SI_SW_NIGHGI2004;
 		}
-
-		throw new NoSuchElementException("No GI equations defined for this species: " + sp_index);
+		//no answer
+		throw new NoAnswerException("No GI equations defined for this species: " + sp_index);
 	}
 
 	/**
@@ -2639,18 +2639,17 @@ public class Sindxdll {
 	 * @param estab    Integer establishment type.
 	 * @return Integer curve index, for use in other Sindex functions.
 	 *
-	 * @throws IllegalArgumentException if the input parameter is not a valid
-	 *                                  species index or establishment type.
-	 * @throws NoSuchElementException   if no curves defined for this species.
+	 * @throws SpeciesErrorException if the input parameter is not a valid
+	 * @throws EstablishmentErrorException species index or establishment type.
+	 * @throws NoAnswerException   if no curves defined for this species.
 	 *
 	 * @remarks Orginally said to return SI_ERR_NO_ANS if no curves are defined for
 	 *          the species. I've added an additional check to see if it would
-	 *          return this and thrown the NoSuchElementException there instead.
+	 *          return this and thrown the NoAnswerException there instead.
 	 */
-	public static short DefCurveEst(short sp_index, short estab)
-			throws IllegalArgumentException, NoSuchElementException {
-		if (sp_index < 0 || sp_index >= SI_MAX_SPECIES) {
-			throw new IllegalArgumentException("Input parameter is not a valid species index: " + sp_index);
+	public static short DefCurveEst(short sp_index, short estab){
+		if (sp_index < 0 || sp_index >= SI_MAX_SPECIES) { //spec
+			throw new SpeciesErrorException("Input parameter is not a valid species index: " + sp_index);
 		}
 
 		if (sp_index == SI_SPEC_SW) {
@@ -2662,10 +2661,10 @@ public class Sindxdll {
 				return SI_SW_GOUDIE_PLAAC;
 			// break; This is unreachable not sure why it was included in the C program
 			default:
-				throw new IllegalArgumentException("Input parameter is not a valid establishment type: " + estab);
+				throw new EstablishmentErrorException("Input parameter is not a valid establishment type: " + estab);//estab
 			}
 		} else if (si_curve_default[sp_index] == SI_ERR_NO_ANS) {
-			throw new NoSuchElementException("No curves defined for this species: " + sp_index);
+			throw new NoAnswerException("No curves defined for this species: " + sp_index);
 		} else {
 			return (short) (si_curve_default[sp_index]);
 		}
@@ -2677,20 +2676,20 @@ public class Sindxdll {
 	 * @param sp_index Integer species index.
 	 * @return Integer curve index, for use in other Sindex functions.
 	 *
-	 * @throws IllegalArgumentException if the input parameter is not a valid
+	 * @throws SpeciesErrorException if the input parameter is not a valid
 	 *                                  species index.
-	 * @throws NoSuchElementException   if no curves defined for this species.
+	 * @throws NoAnswerException   if no curves defined for this species.
 	 *
 	 * @remarks No assumption should be made about the ordering of the curves.
 	 * @remarks Orginally said to return SI_ERR_NO_ANS if no curves are defined for
 	 *          the species. I've added an additional check to see if it would
-	 *          return this and thrown the NoSuchElementException there instead.
+	 *          return this and thrown the NoAnswerException there instead.
 	 */
-	public static short FirstCurve(short sp_index) throws IllegalArgumentException, NoSuchElementException {
-		if (sp_index < 0 || sp_index >= SI_MAX_SPECIES) {
-			throw new IllegalArgumentException("Input parameter is not a valid species index: " + sp_index);
-		} else if (si_sclist_start[sp_index] == SI_ERR_NO_ANS) {
-			throw new NoSuchElementException("No curves defined for this species: " + sp_index);
+	public static short FirstCurve(short sp_index){
+		if (sp_index < 0 || sp_index >= SI_MAX_SPECIES) { 
+			throw new SpeciesErrorException("Input parameter is not a valid species index: " + sp_index);
+		} else if (si_sclist_start[sp_index] == SI_ERR_NO_ANS) { 
+			throw new NoAnswerException("No curves defined for this species: " + sp_index);
 		}
 
 		return (short) (si_sclist_start[sp_index]);
@@ -2704,26 +2703,26 @@ public class Sindxdll {
 	 *
 	 * @return Integer curve index, for use in other Sindex functions.
 	 *
-	 * @throws IllegalArgumentException if input species is not a valid species
-	 *                                  index or if input curve is not a valid curve
+	 * @throws SpeciesErrorException if input species is not a valid species
+	 *                                  index or 
+	 * @throws CurveErrorException if input curve is not a valid curve
 	 *                                  index for this species.
-	 * @throws NoSuchElementException   if input parameter is last defined index for
+	 * @throws NoAnswerException   if input parameter is last defined index for
 	 *                                  this species.
 	 *
 	 * @remarks No assumption should be made about the ordering of the curves.
 	 */
-	public static short NextCurve(short sp_index, short cu_index)
-			throws IllegalArgumentException, NoSuchElementException {
+	public static short NextCurve(short sp_index, short cu_index) {
 		if (sp_index < 0 || sp_index >= SI_MAX_SPECIES) {
-			throw new IllegalArgumentException("Input species is not a valid species index: " + sp_index);
+			throw new SpeciesErrorException("Input species is not a valid species index: " + sp_index);
 		}
 
-		if (cu_index < 0 || cu_index >= SI_MAX_CURVES) {
-			throw new IllegalArgumentException("Input curve is not a valid curve index for this species: " + cu_index);
+		if (cu_index < 0 || cu_index >= SI_MAX_CURVES) { 
+			throw new CurveErrorException("Input curve is not a valid curve index for this species: " + cu_index);
 		}
 
-		if (si_curve_intend[cu_index] != sp_index) {
-			throw new IllegalArgumentException("Input curve is not a valid curve index for this species: " + cu_index);
+		if (si_curve_intend[cu_index] != sp_index) { 
+			throw new CurveErrorException("Input curve is not a valid curve index for this species: " + cu_index);
 		}
 
 		switch (cu_index) {
@@ -3089,7 +3088,7 @@ public class Sindxdll {
 		}
 
 		if (cu_index == SI_ERR_NO_ANS) {
-			throw new NoSuchElementException("Input parameter is last defined index for this species: " + sp_index);
+			throw new NoAnswerException("Input parameter is last defined index for this species: " + sp_index);
 		} else {
 			return cu_index;
 		}
@@ -3102,7 +3101,7 @@ public class Sindxdll {
 	 * @param cu_index Integer curve index.
 	 * @return String containing curve author and date.
 	 *
-	 * @throws IllegalArgumentException if input parameter is not a valid curve
+	 * @throws CurveErrorException if input parameter is not a valid curve
 	 *                                  index
 	 *
 	 * @remarks Curve name string examples: "Bruce (1981)", "Nigh (1998)".
@@ -3112,7 +3111,7 @@ public class Sindxdll {
 			return si_curve_name[cu_index];
 		}
 
-		throw new IllegalArgumentException("Input parameter is not a valid curve index: " + cu_index);
+		throw new CurveErrorException("Input parameter is not a valid curve index: " + cu_index);
 	}
 
 	/**
@@ -3122,17 +3121,17 @@ public class Sindxdll {
 	 * @param cu_index Integer curve index.
 	 * @return Integer code.
 	 *
-	 * @throws IllegalArgumentException if input curve is not a valid curve index.
+	 * @throws CurveErrorException if input curve is not a valid curve index.
 	 *
 	 * @remarks Code bits are set as follows: 0001: ht = fn (si, age) 0010: si = fn
 	 *          (ht, age) 0100: y2bh = fn (si) 1000: si = fn (ht, age) growth
 	 *          intercept
 	 */
-	public static short CurveUse(short cu_index) throws IllegalArgumentException {
+	public static short CurveUse(short cu_index){
 		if (cu_index >= 0 && cu_index < SI_MAX_CURVES) {
 			return (short) (si_curve_types[cu_index]);
 		}
-		throw new IllegalArgumentException("If input curve is not a valid curve index: " + cu_index);
+		throw new CurveErrorException("If input curve is not a valid curve index: " + cu_index);
 	}
 
 //These all call other functions from other C files
@@ -3161,28 +3160,27 @@ public class Sindxdll {
 	 *                site index is set to the same as the return value.
 	 * @return 0 or an exception
 	 *
-	 * @throws IllegalArgumentException if input curve is not a valid curve index
-	 * @throws NoSuchElementException   if computed SI > 999
-	 * @throws IllegalArgumentException if bhage < 0.5
-	 * @throws IllegalArgumentException if bhage > GI range
-	 * @throws IllegalArgumentException if total age and GI curve
+	 * @throws CurveErrorException if input curve is not a valid curve index
+	 * @throws NoAnswerException   if computed SI > 999
+	 * @throws GrowthInterceptMinimumException if bhage < 0.5
+	 * @throws GrowthInterceptMaximumException if bhage > GI range
+	 * @throws GrowthInterceptTotalErrorException if total age and GI curve
 	 */
-	public static short HtAgeToSI(short curve, double age, short ageType, double height, short estType, double[] site)
-			throws IllegalArgumentException, NoSuchElementException { // Here the original uses a pointer. I have
-																		// replaced all pointers with arrays.
+	public static short HtAgeToSI(short curve, double age, short ageType, double height, short estType, double[] site){ 
+		// Here the original uses a pointer. I have replaced all pointers with arrays.
 		site[0] = Height2SiteIndex.height_to_index(curve, age, ageType, height, estType); // This is from ht2si.c
 		if (site[0] < 0) {
 			switch ((short) site[0]) {
 			case SI_ERR_CURVE:
-				throw new IllegalArgumentException("Input curve is not a valid curve index.");
+				throw new CurveErrorException("Input curve is not a valid curve index.");
 			case SI_ERR_GI_MIN:
-				throw new IllegalArgumentException("bhage is less than 0.5");
+				throw new GrowthInterceptMinimumException("bhage is less than 0.5");
 			case SI_ERR_GI_MAX:
-				throw new IllegalArgumentException("bhage is greater than GI range");
+				throw new GrowthInterceptMaximumException("Nhage is greater than GI range");
 			case SI_ERR_NO_ANS:
-				throw new NoSuchElementException("Computed site index is greater than 999.");
+				throw new NoAnswerException("Computed site index is greater than 999.");
 			case SI_ERR_GI_TOT:
-				throw new IllegalArgumentException("Total age and GI curve");
+				throw new GrowthInterceptTotalException("Total age and GI curve");
 			}
 		}
 
@@ -3209,31 +3207,30 @@ public class Sindxdll {
 	 *                  is set to the same as the return value.
 	 * @return 0, or an exception
 	 *
-	 * @throws IllegalArgumentException if input curve is not a valid curve index
-	 * @throws IllegalArgumentException if bhage < 0.5
-	 * @throws IllegalArgumentException if bhage > GI range
-	 * @throws NoSuchElementException   if computed SI > 999
-	 * @throws IllegalArgumentException if total age and GI curve
-	 * @throws IllegalArgumentException if site index <= 1.3
+	 * @throws CurveErrorException if input curve is not a valid curve index
+	 * @throws GrowthInterceptMinimumException if bhage < 0.5
+	 * @throws IGrowthInterceptMaximumException if bhage > GI range
+	 * @throws NoAnswerException   if computed SI > 999
+	 * @throws GrowthInterceptTotalException if total age and GI curve
+	 * @throws LessThan13Exception if site index <= 1.3
 	 */
 	public static short
-			HtSIToAge(short curve, double height, short ageType, double siteIndex, double y2bh, double[] age)
-					throws IllegalArgumentException, NoSuchElementException {
+			HtSIToAge(short curve, double height, short ageType, double siteIndex, double y2bh, double[] age){
 		age[0] = SiteIndex2Age.index_to_age(curve, height, ageType, siteIndex, y2bh);
 		if (age[0] < 0) {
 			switch ((short) age[0]) {
 			case SI_ERR_CURVE:
-				throw new IllegalArgumentException("Input curve is not a valid curve index.");
+				throw new CurveErrorException("Input curve is not a valid curve index.");
 			case SI_ERR_GI_MIN:
-				throw new IllegalArgumentException("bhage is less than 0.5");
+				throw new GrowthInterceptMinimumException("bhage is less than 0.5");
 			case SI_ERR_GI_MAX:
-				throw new IllegalArgumentException("bhage is greater than GI range");
+				throw new GrowthInterceptMaximumException("bhage is greater than GI range");
 			case SI_ERR_NO_ANS:
-				throw new NoSuchElementException("Computed site index is greater than 999.");
+				throw new NoAnswerException("Computed site index is greater than 999.");
 			case SI_ERR_GI_TOT:
-				throw new IllegalArgumentException("Total age and GI curve");
+				throw new GrowthInterceptTotalException("Total age and GI curve");
 			case SI_ERR_LT13:
-				throw new IllegalArgumentException("Site index is less than or equal to 1.3");
+				throw new LessThan13Exception("Site index is less than or equal to 1.3");
 			}
 		}
 
@@ -3263,31 +3260,30 @@ public class Sindxdll {
 	 *
 	 * @return 0, or an exception
 	 *
-	 * @throws IllegalArgumentException if input curve is not a valid curve index
-	 * @throws IllegalArgumentException if bhage < 0.5
-	 * @throws IllegalArgumentException if bhage > GI range
-	 * @throws NoSuchElementException   if computed SI > 999
-	 * @throws IllegalArgumentException if total age and GI curve
-	 * @throws IllegalArgumentException if site index <= 1.3
+	 * @throws CurveErrorException if input curve is not a valid curve index
+	 * @throws GrowthInterceptMinimumException if bhage < 0.5
+	 * @throws GrowthInterceptMaximumException if bhage > GI range
+	 * @throws NoAnswerException   if computed SI > 999
+	 * @throws GrowthInterceptTotalException if total age and GI curve
+	 * @throws LessThan13Exception if site index <= 1.3
 	 */
 	public static short
-			AgeSIToHt(short curve, double age, short ageType, double siteIndex, double y2bh, double[] height)
-					throws IllegalArgumentException, NoSuchElementException {
+			AgeSIToHt(short curve, double age, short ageType, double siteIndex, double y2bh, double[] height){
 		height[0] = SiteIndex2Height.index_to_height(curve, age, ageType, siteIndex, y2bh, 0.5);
 		if (height[0] < 0) {
 			switch ((short) height[0]) {
 			case SI_ERR_CURVE:
-				throw new IllegalArgumentException("Input curve is not a valid curve index.");
+				throw new CurveErrorException("Input curve is not a valid curve index.");
 			case SI_ERR_GI_MIN:
-				throw new IllegalArgumentException("bhage is less than 0.5");
+				throw new GrowthInterceptMinimumException("bhage is less than 0.5");
 			case SI_ERR_GI_MAX:
-				throw new IllegalArgumentException("bhage is greater than GI range");
+				throw new GrowthInterceptMaximumException("bhage is greater than GI range");
 			case SI_ERR_NO_ANS:
-				throw new NoSuchElementException("Computed site index is greater than 999.");
+				throw new NoAnswerException("Computed site index is greater than 999.");
 			case SI_ERR_GI_TOT:
-				throw new IllegalArgumentException("Total age and GI curve");
+				throw new GrowthInterceptTotalException("Total age and GI curve");
 			case SI_ERR_LT13:
-				throw new IllegalArgumentException("Site index is less than or equal to 1.3");
+				throw new LessThan13Exception("Site index is less than or equal to 1.3");
 			}
 		}
 
@@ -3323,33 +3319,32 @@ public class Sindxdll {
 	 *
 	 * @return 0 or an exception
 	 *
-	 * @throws IllegalArgumentException if input curve is not a valid curve index
-	 * @throws IllegalArgumentException if bhage < 0.5
-	 * @throws IllegalArgumentException if bhage > GI range
-	 * @throws NoSuchElementException   if computed SI > 999
-	 * @throws IllegalArgumentException if total age and GI curve
-	 * @throws IllegalArgumentException if site index <= 1.3
+	 * @throws CurveErrorException if input curve is not a valid curve index
+	 * @throws GrowthInterceptMinimumException if bhage < 0.5
+	 * @throws GrowthInterceptMaximumException if bhage > GI range
+	 * @throws NoAnswerException   if computed SI > 999
+	 * @throws GrowthInterceptTotalException if total age and GI curve
+	 * @throws LessThan13Exception if site index <= 1.3
 	 */
 	public static short AgeSIToHtSmooth(
 			short curve, double age, short ageType, double siteIndex, double y2bh, double seedling_age,
-			double seedling_ht, double[] height
-	) throws IllegalArgumentException, NoSuchElementException {
+			double seedling_ht, double[] height){
 		height[0] = SiteIndex2HeightSmoothed
 				.index_to_height_smoothed(curve, age, ageType, siteIndex, y2bh, seedling_age, seedling_ht);
 		if (height[0] < 0) {
 			switch ((short) height[0]) {
 			case SI_ERR_CURVE:
-				throw new IllegalArgumentException("Input curve is not a valid curve index.");
+				throw new CurveErrorException("Input curve is not a valid curve index.");
 			case SI_ERR_GI_MIN:
-				throw new IllegalArgumentException("bhage is less than 0.5");
+				throw new GrowthInterceptMinimumException("bhage is less than 0.5");
 			case SI_ERR_GI_MAX:
-				throw new IllegalArgumentException("bhage is greater than GI range");
+				throw new GrowthInterceptMaximumException("bhage is greater than GI range");
 			case SI_ERR_NO_ANS:
-				throw new NoSuchElementException("Computed site index is greater than 999.");
+				throw new NoAnswerException("Computed site index is greater than 999.");
 			case SI_ERR_GI_TOT:
-				throw new IllegalArgumentException("Total age and GI curve");
+				throw new GrowthInterceptTotalException("Total age and GI curve");
 			case SI_ERR_LT13:
-				throw new IllegalArgumentException("Site index is less than or equal to 1.3");
+				throw new LessThan13Exception("Site index is less than or equal to 1.3");
 			}
 		}
 		return 0;
@@ -3369,19 +3364,20 @@ public class Sindxdll {
 	 *
 	 * @return 0, or an exception
 	 *
-	 * @throws IllegalArgumentException input curve is not a valid curve index, if
-	 *                                  GI curve, or if site index <= 1.3
+	 * @throws CurveErrorException input curve is not a valid curve index 
+	 * @throws GrowthInterceptTotalException if GI curve
+	 * @throws LessThan13Exception if site index <= 1.3
 	 */
-	public static short Y2BH05(short curve, double siteIndex, double[] y2bh) throws IllegalArgumentException {
+	public static short Y2BH05(short curve, double siteIndex, double[] y2bh){
 		y2bh[0] = SiteIndexYears2BreastHeight.si_y2bh05(curve, siteIndex);
 		if (y2bh[0] < 0) {
 			switch ((short) y2bh[0]) {
 			case SI_ERR_CURVE:
-				throw new IllegalArgumentException("Input curve is not a valid curve index");
+				throw new CurveErrorException("Input curve is not a valid curve index");
 			case SI_ERR_GI_TOT:
-				throw new IllegalArgumentException("GI curve");
+				throw new GrowthInterceptTotalException("GI curve");
 			case SI_ERR_LT13:
-				throw new IllegalArgumentException("Site index is less than or equal to 1.3");
+				throw new LessThan13Exception("Site index is less than or equal to 1.3");
 			}
 
 		}
@@ -3403,19 +3399,20 @@ public class Sindxdll {
 	 *
 	 * @return 0 or an exception 0, or an error code under the following conditions:
 	 *
-	 * @throws IllegalArgumentException input curve is not a valid curve index, if
-	 *                                  GI curve, or if site index <= 1.3
+	 * @throws CurveErrorException input curve is not a valid curve index 
+	 * @throws LessThan13Exception if site index <= 1.3
+	 * @throws GrowthInterceptTotalException if GI curve
 	 */
-	public static short Y2BH(short curve, double siteIndex, double[] y2bh) throws IllegalArgumentException {
+	public static short Y2BH(short curve, double siteIndex, double[] y2bh){
 		y2bh[0] = SiteIndexYears2BreastHeight.si_y2bh(curve, siteIndex);
 		if (y2bh[0] < 0) {
 			switch ((short) y2bh[0]) {
 			case SI_ERR_CURVE:
-				throw new IllegalArgumentException("Input curve is not a valid curve index");
+				throw new CurveErrorException("Input curve is not a valid curve index");
 			case SI_ERR_GI_TOT:
-				throw new IllegalArgumentException("GI curve");
+				throw new GrowthInterceptTotalException("GI curve");
 			case SI_ERR_LT13:
-				throw new IllegalArgumentException("Site index is less than or equal to 1.3");
+				throw new LessThan13Exception("Site index is less than or equal to 1.3");
 			}
 		}
 
@@ -3435,21 +3432,20 @@ public class Sindxdll {
 	 *
 	 * @return 0, or an exception
 	 *
-	 * @throws IllegalArgumentException source or target species index is not valid.
-	 * @throws NoSuchElementException   there is no conversion defined.
+	 * @throws SpeciesErrorException source or target species index is not valid.
+	 * @throws NoAnswerException   there is no conversion defined.
 	 */
-	public static short SIToSI(short sp_index1, double site, short sp_index2, double[] site2)
-			throws IllegalArgumentException, NoSuchElementException {
+	public static short SIToSI(short sp_index1, double site, short sp_index2, double[] site2) {
 		short i;
 
 		if (sp_index1 < 0 || sp_index1 >= SI_MAX_SPECIES) {
-			site2[0] = SI_ERR_SPEC;
-			throw new IllegalArgumentException("Source or target species index is not valid" + sp_index1);
+			site2[0] = SI_ERR_SPEC; 
+			throw new SpeciesErrorException("Source or target species index is not valid" + sp_index1);
 		}
 
 		if (sp_index2 < 0 || sp_index2 >= SI_MAX_SPECIES) {
-			site2[0] = SI_ERR_SPEC;
-			throw new IllegalArgumentException("Source or target species index is not valid" + sp_index2);
+			site2[0] = SI_ERR_SPEC; 
+			throw new SpeciesErrorException("Source or target species index is not valid" + sp_index2);
 		}
 
 		for (i = 0; i < SI_MAX_CONVERT; i++) {
@@ -3461,7 +3457,7 @@ public class Sindxdll {
 		}
 
 		site2[0] = SI_ERR_NO_ANS;
-		throw new NoSuchElementException("There is no conversion defined");
+		throw new NoAnswerException("There is no conversion defined");
 	}
 
 	/*
@@ -3476,22 +3472,22 @@ public class Sindxdll {
 	 *                 (D,E,F,G,H,I,J,K,L)=interior.
 	 * @param site     Floating point site index. (computed)
 	 *
-	 * @return 0, or an exception
+	 * @return 0, or an exception 
 	 *
-	 * @throws IllegalArgumentException source species index is not valid, or no
-	 *                                  conversion, if site class is unknown, orif
-	 *                                  FIZ code is unknown
+	 *  @throws SpeciesErrorException source species index is not valid, or no conversion 
+	 *  @throws ClassErrorException if site class is unknown
+	 *  @throws ForestInventoryZoneException if FIZ code is unknown
 	 */
 	public static short SCToSI(short sp_index, char sitecl, char fiz, double[] site) {
 		site[0] = SiteClassCode2SiteIndex.class_to_index(sp_index, sitecl, fiz);
 		if (site[0] < 0) {
 			switch ((short) site[0]) {
 			case SI_ERR_SPEC:
-				throw new IllegalArgumentException("Source species index is not valid, or no conversion");
+				throw new SpeciesErrorException("Source species index is not valid, or no conversion");
 			case SI_ERR_CLASS:
-				throw new IllegalArgumentException("Site class is unknown");
+				throw new ClassErrorException("Site class is unknown");
 			case SI_ERR_FIZ:
-				throw new IllegalArgumentException("FIZ code is unknown");
+				throw new ForestInventoryZoneException("FIZ code is unknown");
 			}
 		}
 
@@ -3509,15 +3505,15 @@ public class Sindxdll {
 	 *
 	 * @return Species index.
 	 *
-	 * @throws IllegalArgumentException if species code is unknown
+	 * @throws CodeErrorException if species code is unknown
 	 *
 	 * @remarks Species code string can be 1, 2, or 3 letters; upper/lower case is
 	 *          ignored.
 	 */
-	public static short SpecMap(String sc) throws IllegalArgumentException {
+	public static short SpecMap(String sc){
 		short speciesIndex = SpecRMap.species_map(sc);
 		if (speciesIndex == SI_ERR_CODE) {
-			throw new IllegalArgumentException("Species code is unknown: " + sc);
+			throw new CodeErrorException("Species code is unknown: " + sc);
 		}
 
 		return speciesIndex;
@@ -3536,22 +3532,22 @@ public class Sindxdll {
 	 *
 	 * @return Species index.
 	 *
-	 * @throws IllegalArgumentException if species code is unknown or if FIZ code is
-	 *                                  unknown
+	 * @throws CodeErrorException if species code is unknown
+	 * @throws ForestInventoryZoneException if FIZ code is unknown
 	 *
 	 * @remark Species code string can be 1, 2, or 3 letters; upper/lower case is
 	 *         ignored. FIZ is only used where needed, such as for species code
 	 *         "FD".
 	 */
-	public static short SpecRemap(String sc, char fiz) throws IllegalArgumentException {
+	public static short SpecRemap(String sc, char fiz){
 		short speciesIndex = SpecRMap.species_remap(sc, fiz);
 
 		if (speciesIndex == SI_ERR_CODE) {
-			throw new IllegalArgumentException("Character string species code: " + sc);
+			throw new CodeErrorException("Character string species code: " + sc);
 		}
 
 		if (speciesIndex == SI_ERR_FIZ) {
-			throw new IllegalArgumentException("Character FIZ code (A,B,C)=coast, (D,E,F,G,H,I,J,K,L)=interior" + fiz);
+			throw new ForestInventoryZoneException("Character FIZ code (A,B,C)=coast, (D,E,F,G,H,I,J,K,L)=interior" + fiz);
 		}
 
 		return speciesIndex;
@@ -3746,19 +3742,18 @@ public class Sindxdll {
 	 *
 	 * @return 0 or an exception
 	 *
-	 * @throws IllegalArgumentException input curve is not a valid curve index for
-	 *                                  this species or unknown age type.
+	 * @throws CurveErrorException   input curve is not a valid curve index for this species 
+	 * @throw  AgeTypeErrorException unknown age type.
 	 */
 	public static short
-			AgeToAge(short cu_index, double age1, short age_type1, double y2bh, double[] age2, short age_type2)
-					throws IllegalArgumentException {
+			AgeToAge(short cu_index, double age1, short age_type1, double y2bh, double[] age2, short age_type2){
 		age2[0] = Age2Age.age_to_age(cu_index, age1, age_type1, age_type2, y2bh);
 		if (age2[0] < 0) {
 			switch ((short) age2[0]) {
 			case SI_ERR_CURVE:
-				throw new IllegalArgumentException("Input curve is not a valid curve index for this species");
+				throw new CurveErrorException("Input curve is not a valid curve index for this species");
 			case SI_ERR_AGE_TYPE:
-				throw new IllegalArgumentException("Unknown age type");
+				throw new AgeTypeErrorException("Unknown age type");
 			}
 		}
 
@@ -3776,12 +3771,12 @@ public class Sindxdll {
 	 *
 	 * @return Integer species index, for use in other Sindex functions.
 	 *
-	 * @throws IllegalArgumentException if input curve is not a valid curve index
+	 * @throws CurveErrorException if input curve is not a valid curve index
 	 *                                  for any species.
 	 */
-	public static short CurveToSpecies(short cu_index) throws IllegalArgumentException {
-		if (cu_index < 0 || cu_index >= SI_MAX_CURVES) {
-			throw new IllegalArgumentException("Input curve is not a valid curve index for any species");
+	public static short CurveToSpecies(short cu_index){
+		if (cu_index < 0 || cu_index >= SI_MAX_CURVES) { 
+			throw new CurveErrorException("Input curve is not a valid curve index for any species");
 		}
 
 		return (short) (si_curve_intend[cu_index]); // Cast to short not in the C program

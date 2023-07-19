@@ -9,11 +9,6 @@ package ca.bc.gov.nrs.vdyp.common_calculators;
  *   where site index based on height may not be reliable.
  * - primarily used by VDYP and FredTab.
  * - the origin of the values used here is Inventory Branch.
- *
- * - error codes:
- *                  SI_ERR_SPEC: unknown species index
- *                  SI_ERR_CLASS: unknown site class code
- *                  SI_ERR_FIZ: unknown FIZ code
  */
 /* @formatter:on */
 public class SiteClassCode2SiteIndex {
@@ -44,10 +39,6 @@ public class SiteClassCode2SiteIndex {
 /* @formatter:on */
 
 	// Taken from sindex.h
-	private static final int SI_ERR_CLASS = -6;
-	private static final int SI_ERR_FIZ = -7;
-	private static final int SI_ERR_SPEC = -10;
-
 	/* define species and equation indices */
 	private static final int SI_SPEC_ACT = 5;
 	private static final int SI_SPEC_AT = 8;
@@ -83,9 +74,11 @@ public class SiteClassCode2SiteIndex {
 	private static final int FIZ_COAST = 1;
 	private static final int FIZ_INTERIOR = 2;
 
-	public static double class_to_index(short sp_index, char sitecl, char fiz) {
+	public static double class_to_index(short sp_index, char sitecl, char fiz) throws IllegalArgumentException {
 		if (sitecl != 'G' && sitecl != 'M' && sitecl != 'P' && sitecl != 'L') {
-			return SI_ERR_CLASS;
+			//return SI_ERR_CLASS;
+			throw new IllegalArgumentException("Unknown site class code: " + sitecl);
+			
 		}
 
 		switch (sp_index) {
@@ -228,7 +221,8 @@ public class SiteClassCode2SiteIndex {
 				}
 				break;
 			default:
-				return SI_ERR_FIZ;
+				//return SI_ERR_FIZ;
+				throw new IllegalArgumentException("Unknown FIZ code: " +fiz);
 
 			}
 			break;
@@ -324,7 +318,8 @@ public class SiteClassCode2SiteIndex {
 			break;
 		}
 
-		return SI_ERR_SPEC;
+		//return SI_ERR_SPEC;
+		throw new IllegalArgumentException("Unknown species index: " + sitecl);
 	}
 
 }

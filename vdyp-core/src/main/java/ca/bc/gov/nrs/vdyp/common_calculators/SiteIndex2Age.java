@@ -134,23 +134,26 @@ public class SiteIndex2Age {
 
 	public static final double MAX_AGE = 999.0;
 
-	// Wrapped in directives which check if TEST is defined.
-	// The code that defines TEST as 1 is commented out, so I am assuming this
-	// wouldn't run
+	/*  Wrapped in directives which check if TEST is defined.
+	*	The code that defines TEST as 1 is commented out, so I am assuming this
+	*	wouldn't run
+	*/
 	public static final boolean TEST = false;
 
-	// #ifdef TEST
-	// File* testFile; // they test before opening the file so removing the
-	// directives should be fine
-	// I have moved the file stuff into the functions where it happens
-	// #endif
+	/*  #ifdef TEST
+	* File* testFile; 	they test before opening the file so removing the
+	* 					directives should be fine
+	* I have moved the file stuff into the functions where it happens
+	* #endif
+	*/
 
 	public static double
 			index_to_age(short cu_index, double site_height, short age_type, double site_index, double y2bh) {
 		double x1, x2, x3, x4;
 		double a, b, c;
-		// I could not find HOOP, so I am assuming it is not intialized and as such the
-		// directives wouldn't trigger
+		/*  I could not find HOOP, so I am assuming it is not intialized and as such the
+		*   directives wouldn't trigger
+		*/
 		boolean HOOP = false;
 
 		// #ifdef HOOP
@@ -161,7 +164,8 @@ public class SiteIndex2Age {
 
 		if (site_height < 1.3) {
 			if (age_type == SI_AT_BREAST) {
-				return SI_ERR_LT13;
+				//return SI_ERR_LT13;
+				throw new IllegalArgumentException("Site index or height < 1.3m, site height: " + site_height);
 			}
 
 			if (site_height <= 0.0001) {
@@ -170,7 +174,8 @@ public class SiteIndex2Age {
 		}
 
 		if (site_index < 1.3) {
-			return SI_ERR_LT13;
+			//return SI_ERR_LT13;
+			throw new IllegalArgumentException("Site index or height < 1.3m, site_index: " + site_index);
 		}
 
 		switch (cu_index) {
@@ -613,7 +618,9 @@ public class SiteIndex2Age {
 				e.printStackTrace();
 			}
 		}
-
+		if(age == SI_ERR_NO_ANS){
+			throw new IllegalArgumentException("Iteration could not converge (or projected age > 999), age: " + age);
+		}
 		return (age);
 	}
 
@@ -632,11 +639,7 @@ public class SiteIndex2Age {
 		test_ht = SiteIndex2Height.index_to_height(cu_index, si2age, SI_AT_TOTAL, site_index, y2bh, 0.5); // 0.5 may
 																											// have to
 																											// change
-
-		if (test_ht == SI_ERR_CURVE || test_ht == SI_ERR_LT13 || test_ht == SI_ERR_GI_MIN || test_ht == SI_ERR_GI_MAX
-				|| test_ht == SI_ERR_GI_TOT) {
-			return test_ht;
-		}
+		// This would throw an illegal argument exception and move up the stack
 
 		/* loop until real close, or other end condition */
 		do {

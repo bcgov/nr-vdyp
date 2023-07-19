@@ -3,11 +3,9 @@ package ca.bc.gov.nrs.vdyp.common_calculators;
 /* @formatter:off */
 /**
  * Age2Age.java
- * - given age and type, converts to other type of age.
+ * given age and type, converts to other type of age.
  *
- * - error codes (returned as age value):
- * 											SI_ERR_CURVE: unknown curve index
- * 											SI_ERR_AGE_TYPE: unknown age type
+ * @throws IllegalArgumentException if nnkown age type is provided
  */
 /* @formatter:on */
 public class Age2Age {
@@ -38,7 +36,6 @@ public class Age2Age {
 /* @formatter:on */
 
 //Taken from sindex.h
-
 	/*
 	 * age types
 	 */
@@ -85,10 +82,7 @@ public class Age2Age {
 	private static final int SI_SW_NIGHTA2004 = 111;
 	private static final int SI_PLI_NIGHTA2004 = 109;
 
-// Temporary error code
-	private static final int SI_ERR_AGE_TYPE = -100;
-
-	public static double age_to_age(short cu_index, double age1, short age1_type, short age2_type, double y2bh) {
+	public static double age_to_age(short cu_index, double age1, short age1_type, short age2_type, double y2bh) throws IllegalArgumentException{
 		double returnValue;
 
 		boolean shouldBranch;
@@ -181,8 +175,7 @@ public class Age2Age {
 					}
 					return returnValue;
 				}
-
-				return SI_ERR_AGE_TYPE;
+				throw new IllegalArgumentException("Unkown age type provided");	
 			}
 
 			if (age1_type == SI_AT_TOTAL) {
@@ -194,7 +187,7 @@ public class Age2Age {
 					}
 					return returnValue;
 				}
-				return SI_ERR_AGE_TYPE;
+				throw new IllegalArgumentException("Unkown age type provided");	
 			}
 		} else {
 			if (age1_type == SI_AT_BREAST) {
@@ -206,7 +199,7 @@ public class Age2Age {
 					}
 					return returnValue;
 				}
-				return SI_ERR_AGE_TYPE;
+				throw new IllegalArgumentException("Unkown age type provided");	
 			}
 
 			if (age1_type == SI_AT_TOTAL) {
@@ -218,10 +211,10 @@ public class Age2Age {
 					}
 					return returnValue;
 				}
-				return SI_ERR_AGE_TYPE;
+				throw new IllegalArgumentException("Unkown age type provided");	
 			}
 		}
-		return SI_ERR_AGE_TYPE;
+		throw new IllegalArgumentException("Unkown age type provided");	
 	}
 
 }
