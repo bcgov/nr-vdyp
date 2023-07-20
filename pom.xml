@@ -12,21 +12,26 @@
 	<properties>
 
 		<maven.compiler.release>17</maven.compiler.release>
-
+		
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
 		<junit.version>5.9.2</junit.version>
 		<hamcrest.version>2.2</hamcrest.version>
 		<easymock.version>5.1.0</easymock.version>
-
+		
+		<sonar.coverage.jacoco.xmlReportPaths>
+			${project.basedir}/report-aggregate/target/site/
+      jacoco-aggregate/jacoco.xml
+		</sonar.coverage.jacoco.xmlReportPaths>
 	</properties>
 
 	<modules>
 		<module>vdyp-core</module>
 		<module>vdyp-fip</module>
 		<module>vdyp-buildtools</module>
+		<module>report-aggregate</module>
 	</modules>
-	
+
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
@@ -136,7 +141,39 @@
 			</plugin>
 
 		</plugins>
-
+		
 	</build>
-
+	<profiles>
+		<profile>
+			<id>coverage</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.jacoco</groupId>
+						<artifactId>jacoco-maven-plugin</artifactId>
+						<version>0.8.9</version>
+						<executions>
+							<execution>
+								<id>prepare-agent</id>
+								<goals>
+									<goal>prepare-agent</goal>
+								</goals>
+							</execution>
+							<execution>
+								<id>report</id>
+								<goals>
+									<goal>report</goal>
+								</goals>
+								<configuration>
+									<formats>
+										<format>XML</format>
+									</formats>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 </project>
