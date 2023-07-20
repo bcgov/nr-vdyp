@@ -244,6 +244,66 @@
                                           <Insets bottom="5.0" />
                                        </GridPane.margin>
                                     </RadioButton>
+                                    <Label fx:id="species1Group" GridPane.columnIndex="2" GridPane.rowIndex="2">
+                                       <font>
+                                          <Font size="11.0" />
+                                       </font>
+                                    </Label>
+                                    <Label fx:id="species1Site" GridPane.columnIndex="4" GridPane.rowIndex="2">
+                                       <font>
+                                          <Font size="11.0" />
+                                       </font>
+                                    </Label>
+                                    <Label fx:id="species2Site" GridPane.columnIndex="4" GridPane.rowIndex="4">
+                                       <font>
+                                          <Font size="11.0" />
+                                       </font>
+                                    </Label>
+                                    <Label fx:id="species3Site" GridPane.columnIndex="4" GridPane.rowIndex="6">
+                                       <font>
+                                          <Font size="11.0" />
+                                       </font>
+                                    </Label>
+                                    <Label fx:id="species4Site" GridPane.columnIndex="4" GridPane.rowIndex="8">
+                                       <font>
+                                          <Font size="11.0" />
+                                       </font>
+                                    </Label>
+                                    <Label fx:id="species5Site" GridPane.columnIndex="4" GridPane.rowIndex="10">
+                                       <font>
+                                          <Font size="11.0" />
+                                       </font>
+                                    </Label>
+                                    <Label fx:id="species6Site" GridPane.columnIndex="4" GridPane.rowIndex="12">
+                                       <font>
+                                          <Font size="11.0" />
+                                       </font>
+                                    </Label>
+                                    <Label fx:id="species2Group" GridPane.columnIndex="2" GridPane.rowIndex="4">
+                                       <font>
+                                          <Font size="11.0" />
+                                       </font>
+                                    </Label>
+                                    <Label fx:id="species3Group" GridPane.columnIndex="2" GridPane.rowIndex="6">
+                                       <font>
+                                          <Font size="11.0" />
+                                       </font>
+                                    </Label>
+                                    <Label fx:id="species4Group" GridPane.columnIndex="2" GridPane.rowIndex="8">
+                                       <font>
+                                          <Font size="11.0" />
+                                       </font>
+                                    </Label>
+                                    <Label fx:id="species5Group" GridPane.columnIndex="2" GridPane.rowIndex="10">
+                                       <font>
+                                          <Font size="11.0" />
+                                       </font>
+                                    </Label>
+                                    <Label fx:id="species6Group" GridPane.columnIndex="2" GridPane.rowIndex="12">
+                                       <font>
+                                          <Font size="11.0" />
+                                       </font>
+                                    </Label>
                                  </children>
                                  <VBox.margin>
                                     <Insets />
