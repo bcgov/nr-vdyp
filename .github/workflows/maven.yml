@@ -6,9 +6,14 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-name: Java CI with Maven
+name: Java CI with Maven and SonarCloud
 
-on: [pull_request]
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened]
 
 jobs:
   build:
@@ -23,5 +28,26 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
         cache: maven
+    - name: Cache SonarCloud packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.sonar/cache
+        key: ${{ runner.os }}-sonar
+        restore-keys: ${{ runner.os }}-sonar
+    - name: Cache Maven packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        restore-keys: ${{ runner.os }}-m2
     - name: Build with Maven
-      run: mvn -B package
+      run: mvn -Pcoverage package verify
+    - name: Run Sonar Analysis
+      run: mvn sonar:sonar
+        -Pcoverage
+        -Dsonar.host.url=https://sonarcloud.io
+        -Dsonar.organization=bcgov-sonarcloud
+        -Dsonar.projectKey=bcgov_VDYP
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
