@@ -61,11 +61,6 @@ public class SpecRMap {
  */
 /* @formatter:on */
 //Taken from sindex.h
-	/*
-	 * error codes as return values from functions
-	 */
-	private static final int SI_ERR_CODE = -8;
-
 	/* define species and equation indices */
 	private static final int SI_SPEC_A = 0;
 	private static final int SI_SPEC_ABAL = 1;
