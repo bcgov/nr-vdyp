@@ -19,14 +19,12 @@
 		<hamcrest.version>2.2</hamcrest.version>
 		<easymock.version>5.1.0</easymock.version>
 		
-		<sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/report-aggregate/target/site/jacoco-aggregate/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
 	</properties>
 
 	<modules>
 		<module>vdyp-core</module>
 		<module>vdyp-fip</module>
 		<module>vdyp-buildtools</module>
-		<module>report-aggregate</module>
 	</modules>
 
 	<dependencyManagement>
