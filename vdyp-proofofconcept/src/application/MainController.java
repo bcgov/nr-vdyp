@@ -2,6 +2,7 @@ package application;
 
 import java.io.IOException;
 import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
@@ -14,8 +15,13 @@ import javafx.stage.Stage;
 public class MainController {
 	
     public void handleButtonAction(ActionEvent event) throws IOException {
+    		openSecondaryWindow(event, true);
+    }
+   
+    public void openSecondaryWindow(Event event, Boolean button) throws IOException {
     	// Set up secondary window
-        Parent secondaryLayout = FXMLLoader.load(getClass().getResource("scene.fxml"));
+    	FXMLLoader loader = new FXMLLoader(getClass().getResource("scene.fxml"));
+        Parent secondaryLayout = loader.load();
         Scene secondScene = new Scene(secondaryLayout);
         secondScene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
 
@@ -27,7 +33,13 @@ public class MainController {
         newWindow.setScene(secondScene);
 
         // Load in primary window
-        Stage primaryStage = (Stage) ((javafx.scene.Node) event.getSource()).getScene().getWindow();
+        Stage primaryStage;
+        if(button) { // Conditional based on how it's called
+        	primaryStage = (Stage) ((javafx.scene.Node) event.getSource()).getScene().getWindow();
+
+        } else {
+        	primaryStage = (Stage) ((javafx.scene.Scene) event.getSource()).getWindow();
+        }
         
         // Adjust the size of the second scene based on the primary stage's size
         double scaleFactor = 0.6; // Set the desired scale factor (e.g., 80%)

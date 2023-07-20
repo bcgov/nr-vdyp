@@ -31,12 +31,16 @@ public class SceneController implements Initializable {
 	@FXML
 	private ChoiceBox<String> species_6;
 	
+	// List of speciesChoiceBoxes
+    private List<ChoiceBox<String>> speciesChoiceBoxes = new ArrayList<>();
+	
 	// An array containing the names of different tree species
-	String[] treeSpecies = {"AC - Popular", "AT - Aspen", "B - True Fir", "BA - Amabilis Fir","BG - Grand Fir", "BL - Alpine Fir", "CW - Western Red Cedar", "DR - Red Alder",
-							"E - Birch", "EA - Alaska Paper Birch", "EP - Common Paper Birch", "FD - Douglas Fir", "H - Hemlock", "HM - Mountain Hemlock", "HW - Western Hemlock",
-							"L - Larch","LA - Alpine Larch", "LT - Tamarack", "LW - Western Larch", "MB - Bigleaf Maple","PA - Whitebark Pine", "PF - Limber Pine", "PJ - Jack Pine",
-							"PL - Lodgepole Pine", "PY - Western White Pine", "PY - Ponderosa (Yellow) Pine", "S - Spruce", "SB - Black Spruce","SE - Engelmann Spruce", "SS - Sitka Spruce",
-							"SW - White Spruce", "YC - Yellow Cedar"
+	private final String[] treeSpecies = {
+		"AC - Popular", "AT - Aspen", "B - True Fir", "BA - Amabilis Fir","BG - Grand Fir", "BL - Alpine Fir", "CW - Western Red Cedar", "DR - Red Alder",
+		"E - Birch", "EA - Alaska Paper Birch", "EP - Common Paper Birch", "FD - Douglas Fir", "H - Hemlock", "HM - Mountain Hemlock", "HW - Western Hemlock",
+		"L - Larch","LA - Alpine Larch", "LT - Tamarack", "LW - Western Larch", "MB - Bigleaf Maple","PA - Whitebark Pine", "PF - Limber Pine", "PJ - Jack Pine",
+		"PL - Lodgepole Pine", "PY - Western White Pine", "PY - Ponderosa (Yellow) Pine", "S - Spruce", "SB - Black Spruce","SE - Engelmann Spruce", 
+		"SS - Sitka Spruce","SW - White Spruce", "YC - Yellow Cedar"
 							};
 
 	
@@ -66,11 +70,8 @@ public class SceneController implements Initializable {
     @FXML
     private Label species6Site;
     
-    @FXML
-    private List<ChoiceBox<String>> speciesChoiceBoxes = new ArrayList<>();
-
-    
-    // Labels for display based on choice boxes in an array
+ 
+    // Array of Species Groups and Sites
     @FXML
     private Label[] speciesGroups = new Label[6];
     @FXML
@@ -125,6 +126,8 @@ public class SceneController implements Initializable {
             });
         }
 	}
+	
+	
 }
 
   
