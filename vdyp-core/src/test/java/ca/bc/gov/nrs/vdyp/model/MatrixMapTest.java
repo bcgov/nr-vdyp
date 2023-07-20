@@ -7,12 +7,17 @@ import static org.hamcrest.Matchers.arrayContaining;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.isA;
+import static org.hamcrest.Matchers.nullValue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
+import org.hamcrest.Matcher;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -155,10 +160,47 @@ public class MatrixMapTest {
 		assertThat(
 				result,
 				containsInAnyOrder(
-						arrayContaining("a", 1), arrayContaining("b", 1), arrayContaining("a", 2),
-						arrayContaining("b", 2)
+						arrayContaining("a", 1), arrayContaining("b", 1), arrayContaining("a", 2), arrayContaining("b", 2)
 				)
 		);
+	}
+
+	@Test
+	public void testToMap() {
+		var dim1 = Arrays.asList("a", "b");
+		var dims = Arrays.asList(dim1);
+		var map = new MatrixMapImpl<Character>(dims);
+		
+		map.putM('X', "a");
+		
+		var result = MatrixMap.cast(map, String.class);
+		assertThat(result, isA(Map.class));
+		assertThat(result.size(), is(2));
+		assertThat(result.containsKey("a"), is(true));
+		assertThat(result.containsKey("c"), is(false));
+		assertThat(result.containsValue('X'), is(true));
+		assertThat(result.containsValue('Y'), is(false));
+		assertThat(result.get("a"), is('X'));
+		assertThat(result.get("c"), nullValue());
+		assertThat(result.isEmpty(), is(false));
+		
+		result.put("b", 'Y');
+		assertThat(map.getM("b"), present(is('Y')));
+		
+		result.remove("b");
+		assertThat(map.getM("b"), notPresent());
+		
+	}
+	@Test
+	public void testToMapMultipleDimensions() {
+		var dim1 = Arrays.asList("a", "b");
+		var dim2 = Arrays.asList(1, 2);
+		var dims = Arrays.asList(dim1, dim2);
+		var map = new MatrixMapImpl<Character>(dims);
+		
+		assertThrows(ClassCastException.class, ()->MatrixMap.cast(map, String.class));
+
+		
 	}
 
 }
