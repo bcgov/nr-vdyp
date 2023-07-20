@@ -4,6 +4,14 @@
 	<groupId>ca.bc.gov.nrs.vdyp</groupId>
   <artifactId>report-aggregate</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
+
+	<parent>
+		<groupId>ca.bc.gov.nrs.vdyp</groupId>
+		<artifactId>vdyp-parent</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+	</parent>
+
+	
   <name>Variable Density Yield Project - Report Aggregation</name>
   <description>Aggregate Coverage Report</description>
 
