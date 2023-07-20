@@ -18,10 +18,7 @@
 		<junit.version>5.9.2</junit.version>
 		<hamcrest.version>2.2</hamcrest.version>
 		<easymock.version>5.1.0</easymock.version>
-
-		<sonar.organization>bcgov-sonarcloud</sonar.organization>
-		<sonar.host.url>https://sonarcloud.io</sonar.host.url>
-
+		
 	</properties>
 
 	<modules>
@@ -94,7 +91,11 @@
 					<artifactId>formatter-maven-plugin</artifactId>
 					<version>2.22.0</version>
 				</plugin>
-
+				<plugin>
+					<groupId>org.jacoco</groupId>
+					<artifactId>jacoco-maven-plugin</artifactId>
+					<version>0.8.9</version>
+				</plugin>
 			</plugins>
 		</pluginManagement>
 
@@ -114,9 +115,39 @@
 					</execution>
 				</executions>
 			</plugin>
-
 		</plugins>
 		
 	</build>
-	
+	<profiles>
+		<profile>
+			<id>coverage</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.jacoco</groupId>
+						<artifactId>jacoco-maven-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>prepare-agent</id>
+								<goals>
+									<goal>prepare-agent</goal>
+								</goals>
+							</execution>
+							<execution>
+								<id>report</id>
+								<goals>
+									<goal>report</goal>
+								</goals>
+								<configuration>
+									<formats>
+										<format>XML</format>
+									</formats>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 </project>
