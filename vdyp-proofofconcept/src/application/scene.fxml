@@ -1,0 +1,330 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/20.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.SceneController">
+   <center>
+      <TabPane prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
+        <tabs>
+            <Tab text="Model Parameter Selection">
+              <content>
+                <AnchorPane minHeight="0.0" minWidth="0.0">
+                     <children>
+                        <VBox layoutY="8.0">
+                           <padding>
+                              <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                           </padding>
+                           <children>
+                              <Label text="Species Information" />
+                              <Separator prefHeight="7.0" prefWidth="297.0" />
+                              <GridPane hgap="15.0" prefHeight="276.0" prefWidth="574.0">
+                                <columnConstraints>
+                                  <ColumnConstraints hgrow="SOMETIMES" maxWidth="141.0" minWidth="10.0" prefWidth="117.0" />
+                                  <ColumnConstraints hgrow="SOMETIMES" maxWidth="133.0" minWidth="10.0" prefWidth="102.0" />
+                                    <ColumnConstraints hgrow="SOMETIMES" maxWidth="102.0" minWidth="10.0" prefWidth="85.0" />
+                                    <ColumnConstraints hgrow="SOMETIMES" maxWidth="157.0" minWidth="10.0" prefWidth="141.0" />
+                                    <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                                </columnConstraints>
+                                <rowConstraints>
+                                  <RowConstraints />
+                                  <RowConstraints maxHeight="17.0" minHeight="10.0" prefHeight="15.0" vgrow="SOMETIMES" />
+                                  <RowConstraints maxHeight="37.0" minHeight="10.0" prefHeight="35.0" vgrow="SOMETIMES" />
+                                    <RowConstraints maxHeight="28.0" minHeight="10.0" prefHeight="15.0" vgrow="SOMETIMES" />
+                                    <RowConstraints maxHeight="33.0" minHeight="10.0" prefHeight="35.0" vgrow="SOMETIMES" />
+                                    <RowConstraints maxHeight="20.0" minHeight="0.0" prefHeight="15.0" vgrow="SOMETIMES" />
+                                    <RowConstraints maxHeight="41.0" minHeight="10.0" prefHeight="35.0" vgrow="SOMETIMES" />
+                                    <RowConstraints maxHeight="32.0" minHeight="10.0" prefHeight="15.0" vgrow="SOMETIMES" />
+                                    <RowConstraints maxHeight="48.0" minHeight="10.0" prefHeight="35.0" vgrow="SOMETIMES" />
+                                    <RowConstraints maxHeight="28.0" minHeight="10.0" prefHeight="15.0" vgrow="SOMETIMES" />
+                                    <RowConstraints maxHeight="44.0" minHeight="10.0" prefHeight="35.0" vgrow="SOMETIMES" />
+                                    <RowConstraints maxHeight="43.0" minHeight="10.0" prefHeight="15.0" vgrow="SOMETIMES" />
+                                    <RowConstraints maxHeight="40.0" minHeight="9.0" prefHeight="35.0" vgrow="SOMETIMES" />
+                                    <RowConstraints maxHeight="29.0" minHeight="10.0" prefHeight="15.0" vgrow="SOMETIMES" />
+                                    <RowConstraints maxHeight="29.0" minHeight="10.0" prefHeight="35.0" vgrow="SOMETIMES" />
+                                </rowConstraints>
+                                 <children>
+                                    <Label prefHeight="0.0" prefWidth="124.0" text="Species #1" GridPane.rowIndex="1">
+                                       <font>
+                                          <Font size="10.0" />
+                                       </font>
+                                    </Label>
+                                    <Label prefHeight="0.0" prefWidth="124.0" text="Species #2" GridPane.rowIndex="3">
+                                       <font>
+                                          <Font size="10.0" />
+                                       </font>
+                                    </Label>
+                                    <Label prefHeight="0.0" prefWidth="124.0" text="Species #3" GridPane.rowIndex="5">
+                                       <font>
+                                          <Font size="10.0" />
+                                       </font>
+                                    </Label>
+                                    <Label prefHeight="0.0" prefWidth="124.0" text="Species #4" GridPane.rowIndex="7">
+                                       <font>
+                                          <Font size="10.0" />
+                                       </font>
+                                    </Label>
+                                    <Label prefHeight="0.0" prefWidth="124.0" text="Species #5" GridPane.rowIndex="9">
+                                       <font>
+                                          <Font size="10.0" />
+                                       </font>
+                                    </Label>
+                                    <Label prefHeight="0.0" prefWidth="124.0" text="Species #6" GridPane.rowIndex="11">
+                                       <font>
+                                          <Font size="10.0" />
+                                       </font>
+                                    </Label>
+                                    <Label prefHeight="0.0" prefWidth="124.0" text="Species #1 Percent" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                       <font>
+                                          <Font size="10.0" />
+                                       </font>
+                                    </Label>
+                                    <Label prefHeight="0.0" prefWidth="124.0" text="Species #2 Percent" GridPane.columnIndex="1" GridPane.rowIndex="3">
+                                       <font>
+                                          <Font size="10.0" />
+                                       </font>
+                                       <GridPane.margin>
+                                          <Insets />
+                                       </GridPane.margin>
+                                    </Label>
+                                    <Label prefHeight="0.0" prefWidth="124.0" text="Species #3 Percent" GridPane.columnIndex="1" GridPane.rowIndex="5">
+                                       <font>
+                                          <Font size="10.0" />
+                                       </font>
+                                    </Label>
+                                    <Label prefHeight="0.0" prefWidth="124.0" text="Species #4 Percent" GridPane.columnIndex="1" GridPane.rowIndex="7">
+                                       <font>
+                                          <Font size="10.0" />
+                                       </font>
+                                    </Label>
+                                    <Label prefHeight="0.0" prefWidth="124.0" text="Species #5 Percent" GridPane.columnIndex="1" GridPane.rowIndex="9">
+                                       <font>
+                                          <Font size="10.0" />
+                                       </font>
+                                    </Label>
+                                    <Label prefHeight="15.0" prefWidth="99.0" text="Species #6 Percent" GridPane.columnIndex="1" GridPane.rowIndex="11">
+                                       <font>
+                                          <Font size="10.0" />
+                                       </font>
+                                    </Label>
+                                    <ChoiceBox fx:id="species_1" prefHeight="3.0" prefWidth="139.0" GridPane.rowIndex="2" />
+                                    <ChoiceBox fx:id="species_6" prefHeight="3.0" prefWidth="139.0" GridPane.rowIndex="12" />
+                                    <ChoiceBox fx:id="species_5" prefHeight="3.0" prefWidth="139.0" GridPane.rowIndex="10" />
+                                    <ChoiceBox fx:id="species_4" prefHeight="3.0" prefWidth="139.0" GridPane.rowIndex="8" />
+                                    <ChoiceBox fx:id="species_3" prefHeight="3.0" prefWidth="139.0" GridPane.rowIndex="6" />
+                                    <ChoiceBox fx:id="species_2" prefHeight="3.0" prefWidth="139.0" GridPane.rowIndex="4" />
+                                    <Label prefHeight="0.0" prefWidth="124.0" text="Species Group" GridPane.columnIndex="2" GridPane.rowIndex="1">
+                                       <font>
+                                          <Font size="10.0" />
+                                       </font>
+                                    </Label>
+                                    <Label prefHeight="0.0" prefWidth="124.0" text="Species Group" GridPane.columnIndex="2" GridPane.rowIndex="3">
+                                       <font>
+                                          <Font size="10.0" />
+                                       </font>
+                                    </Label>
+                                    <Label prefHeight="0.0" prefWidth="124.0" text="Species Group" GridPane.columnIndex="2" GridPane.rowIndex="5">
+                                       <font>
+                                          <Font size="10.0" />
+                                       </font>
+                                    </Label>
+                                    <Label prefHeight="0.0" prefWidth="124.0" text="Species Group" GridPane.columnIndex="2" GridPane.rowIndex="7">
+                                       <font>
+                                          <Font size="10.0" />
+                                       </font>
+                                    </Label>
+                                    <Label prefHeight="0.0" prefWidth="124.0" text="Species Group" GridPane.columnIndex="2" GridPane.rowIndex="9">
+                                       <font>
+                                          <Font size="10.0" />
+                                       </font>
+                                    </Label>
+                                    <Label prefHeight="0.0" prefWidth="124.0" text="Species Group" GridPane.columnIndex="2" GridPane.rowIndex="11">
+                                       <font>
+                                          <Font size="10.0" />
+                                       </font>
+                                    </Label>
+                                    <Label prefHeight="0.0" prefWidth="124.0" text="Species Group Percent" GridPane.columnIndex="3" GridPane.rowIndex="1">
+                                       <font>
+                                          <Font size="10.0" />
+                                       </font>
+                                    </Label>
+                                    <Label prefHeight="0.0" prefWidth="124.0" text="Species Group Percent" GridPane.columnIndex="3" GridPane.rowIndex="3">
+                                       <font>
+                                          <Font size="10.0" />
+                                       </font>
+                                    </Label>
+                                    <Label prefHeight="0.0" prefWidth="124.0" text="Species Group Percent" GridPane.columnIndex="3" GridPane.rowIndex="5">
+                                       <font>
+                                          <Font size="10.0" />
+                                       </font>
+                                    </Label>
+                                    <Label prefHeight="0.0" prefWidth="124.0" text="Species Group Percent" GridPane.columnIndex="3" GridPane.rowIndex="7">
+                                       <font>
+                                          <Font size="10.0" />
+                                       </font>
+                                    </Label>
+                                    <Label prefHeight="0.0" prefWidth="124.0" text="Species Group Percent" GridPane.columnIndex="3" GridPane.rowIndex="9">
+                                       <font>
+                                          <Font size="10.0" />
+                                       </font>
+                                    </Label>
+                                    <Label prefHeight="0.0" prefWidth="124.0" text="Species Group Percent" GridPane.columnIndex="3" GridPane.rowIndex="11">
+                                       <font>
+                                          <Font size="10.0" />
+                                       </font>
+                                    </Label>
+                                    <Label prefHeight="0.0" prefWidth="124.0" text="Site Species" GridPane.columnIndex="4" GridPane.rowIndex="1">
+                                       <font>
+                                          <Font size="10.0" />
+                                       </font>
+                                    </Label>
+                                    <Label prefHeight="0.0" prefWidth="124.0" text="Site Species" GridPane.columnIndex="4" GridPane.rowIndex="3">
+                                       <font>
+                                          <Font size="10.0" />
+                                       </font>
+                                    </Label>
+                                    <Label prefHeight="0.0" prefWidth="124.0" text="Site Species" GridPane.columnIndex="4" GridPane.rowIndex="5">
+                                       <font>
+                                          <Font size="10.0" />
+                                       </font>
+                                    </Label>
+                                    <Label prefHeight="0.0" prefWidth="124.0" text="Site Species" GridPane.columnIndex="4" GridPane.rowIndex="7">
+                                       <font>
+                                          <Font size="10.0" />
+                                       </font>
+                                    </Label>
+                                    <Label prefHeight="0.0" prefWidth="124.0" text="Site Species" GridPane.columnIndex="4" GridPane.rowIndex="9">
+                                       <font>
+                                          <Font size="10.0" />
+                                       </font>
+                                    </Label>
+                                    <Label prefHeight="0.0" prefWidth="124.0" text="Site Species" GridPane.columnIndex="4" GridPane.rowIndex="11">
+                                       <font>
+                                          <Font size="10.0" />
+                                       </font>
+                                    </Label>
+                                    <Label prefHeight="0.0" prefWidth="124.0" text="Total Species Percent" GridPane.columnIndex="1" GridPane.rowIndex="13">
+                                       <font>
+                                          <Font size="10.0" />
+                                       </font>
+                                    </Label>
+                                    <Label prefHeight="15.0" prefWidth="107.0" text="Species % Derived By:">
+                                       <font>
+                                          <Font name="System Bold" size="10.0" />
+                                       </font>
+                                       <GridPane.margin>
+                                          <Insets bottom="5.0" />
+                                       </GridPane.margin>
+                                    </Label>
+                                    <RadioButton mnemonicParsing="false" text="Volume" GridPane.columnIndex="1">
+                                       <font>
+                                          <Font name="System Bold" size="10.0" />
+                                       </font>
+                                       <GridPane.margin>
+                                          <Insets bottom="5.0" />
+                                       </GridPane.margin>
+                                    </RadioButton>
+                                    <RadioButton mnemonicParsing="false" text="Basal Area" GridPane.columnIndex="2">
+                                       <font>
+                                          <Font name="System Bold" size="10.0" />
+                                       </font>
+                                       <GridPane.margin>
+                                          <Insets bottom="5.0" />
+                                       </GridPane.margin>
+                                    </RadioButton>
+                                    <Label fx:id="species1Group" GridPane.columnIndex="2" GridPane.rowIndex="2">
+                                       <font>
+                                          <Font size="11.0" />
+                                       </font>
+                                    </Label>
+                                    <Label fx:id="species1Site" GridPane.columnIndex="4" GridPane.rowIndex="2">
+                                       <font>
+                                          <Font size="11.0" />
+                                       </font>
+                                    </Label>
+                                    <Label fx:id="species2Site" GridPane.columnIndex="4" GridPane.rowIndex="4">
+                                       <font>
+                                          <Font size="11.0" />
+                                       </font>
+                                    </Label>
+                                    <Label fx:id="species3Site" GridPane.columnIndex="4" GridPane.rowIndex="6">
+                                       <font>
+                                          <Font size="11.0" />
+                                       </font>
+                                    </Label>
+                                    <Label fx:id="species4Site" GridPane.columnIndex="4" GridPane.rowIndex="8">
+                                       <font>
+                                          <Font size="11.0" />
+                                       </font>
+                                    </Label>
+                                    <Label fx:id="species5Site" GridPane.columnIndex="4" GridPane.rowIndex="10">
+                                       <font>
+                                          <Font size="11.0" />
+                                       </font>
+                                    </Label>
+                                    <Label fx:id="species6Site" GridPane.columnIndex="4" GridPane.rowIndex="12">
+                                       <font>
+                                          <Font size="11.0" />
+                                       </font>
+                                    </Label>
+                                    <Label fx:id="species2Group" GridPane.columnIndex="2" GridPane.rowIndex="4">
+                                       <font>
+                                          <Font size="11.0" />
+                                       </font>
+                                    </Label>
+                                    <Label fx:id="species3Group" GridPane.columnIndex="2" GridPane.rowIndex="6">
+                                       <font>
+                                          <Font size="11.0" />
+                                       </font>
+                                    </Label>
+                                    <Label fx:id="species4Group" GridPane.columnIndex="2" GridPane.rowIndex="8">
+                                       <font>
+                                          <Font size="11.0" />
+                                       </font>
+                                    </Label>
+                                    <Label fx:id="species5Group" GridPane.columnIndex="2" GridPane.rowIndex="10">
+                                       <font>
+                                          <Font size="11.0" />
+                                       </font>
+                                    </Label>
+                                    <Label fx:id="species6Group" GridPane.columnIndex="2" GridPane.rowIndex="12">
+                                       <font>
+                                          <Font size="11.0" />
+                                       </font>
+                                    </Label>
+                                 </children>
+                                 <VBox.margin>
+                                    <Insets />
+                                 </VBox.margin>
+                              </GridPane>
+                           </children>
+                        </VBox>
+                     </children></AnchorPane>
+              </content>
+            </Tab>
+            <Tab text="Model Report">
+              <content>
+                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+              </content>
+            </Tab>
+            <Tab text="View Log File">
+              <content>
+                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+              </content>
+            </Tab>
+        </tabs>
+      </TabPane>
+   </center>
+</BorderPane>
