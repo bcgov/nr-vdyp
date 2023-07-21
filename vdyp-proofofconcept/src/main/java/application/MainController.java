@@ -23,7 +23,7 @@ public class MainController {
     public void handleButtonAction(ActionEvent event) throws IOException {
     		openSecondaryWindow(event, true);
     }
-   
+   //Comment to fix branch
     /**
      * Opens the secondary window based on the given event.
      * The secondary window will be centered within the primary stage and adjusted to fit within the screen bounds.
