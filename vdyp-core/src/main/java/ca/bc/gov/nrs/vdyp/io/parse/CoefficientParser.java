@@ -49,8 +49,8 @@ public class CoefficientParser implements ControlMapSubResourceParser<MatrixMap3
 	public MatrixMap3<Integer, String, Integer, Float> parse(InputStream is, Map<String, Object> control)
 			throws IOException, ResourceParseException {
 		var becAliases = BecDefinitionParser.getBecAliases(control);
-		var coeIndecies = Stream.iterate(0, x -> x + 1).limit(NUM_COEFFICIENTS).collect(Collectors.toList());
-		var speciesIndecies = Stream.iterate(1, x -> x + 1).limit(NUM_SPECIES).collect(Collectors.toList());
+		var coeIndecies = Stream.iterate(0, x -> x + 1).limit(NUM_COEFFICIENTS).toList();
+		var speciesIndecies = Stream.iterate(1, x -> x + 1).limit(NUM_SPECIES).toList();
 		MatrixMap3<Integer, String, Integer, Float> result = new MatrixMap3Impl<Integer, String, Integer, Float>(
 				coeIndecies, becAliases, speciesIndecies
 		);

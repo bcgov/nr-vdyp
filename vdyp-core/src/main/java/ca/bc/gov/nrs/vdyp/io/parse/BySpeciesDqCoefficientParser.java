@@ -59,7 +59,7 @@ public class BySpeciesDqCoefficientParser implements ControlMapSubResourceParser
 
 			if (! (index == 0 || index == 1)) {
 				final var first = coefficients.get(0);
-				coefficients = Stream.generate(() -> first).limit(NUM_SPECIES).collect(Collectors.toList());
+				coefficients = Stream.generate(() -> first).limit(NUM_SPECIES).toList();
 			}
 
 			if (coefficients.size() < NUM_SPECIES) {

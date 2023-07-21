@@ -148,7 +148,7 @@ public abstract class BaseCoefficientParser<T extends Coefficients, M extends Ma
 		M result = (M) createMap((List) (keyRanges.stream().map(x -> x.apply(control)).toList()));
 
 		lineParser.parse(is, result, (v, r) -> {
-			var key = metaKeys.stream().map(v::get).collect(Collectors.toList()).toArray(Object[]::new);
+			var key = metaKeys.stream().map(v::get).toList().toArray(Object[]::new);
 
 			@SuppressWarnings("unchecked")
 			var coe = getCoefficients((List<Float>) v.get(COEFFICIENTS_KEY));

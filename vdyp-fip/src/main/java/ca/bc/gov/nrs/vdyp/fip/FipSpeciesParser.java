@@ -141,7 +141,7 @@ public class FipSpeciesParser
 																								// we've filtered out
 																								// markers
 							.flatMap(Optional::stream) // Skip if empty (and unknown layer type)
-							.collect(Collectors.toList());
+							.toList();
 				}
 
 			};
