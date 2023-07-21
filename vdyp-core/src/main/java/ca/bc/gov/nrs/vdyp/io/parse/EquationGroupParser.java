@@ -24,11 +24,11 @@ public abstract class EquationGroupParser implements ControlMapSubResourceParser
 
 	private Collection<String> hiddenBecs = Collections.emptyList();
 
-	public EquationGroupParser() {
+	protected EquationGroupParser() {
 		this(3);
 	}
 
-	public EquationGroupParser(int identifierLength) {
+	protected EquationGroupParser(int identifierLength) {
 		lineParser = new LineParser().strippedString(2, "sp0Alias").space(1).strippedString(4, "becAlias").space(1)
 				.integer(identifierLength, "grpId");
 	}

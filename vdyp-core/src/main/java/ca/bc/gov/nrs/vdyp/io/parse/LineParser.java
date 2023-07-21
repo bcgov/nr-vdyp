@@ -70,7 +70,7 @@ public class LineParser {
 			map.put(this.getName(), value);
 		}
 
-		public LineParserValueSegment(int length, String name) {
+		protected LineParserValueSegment(int length, String name) {
 			super(length);
 			this.name = name;
 		}

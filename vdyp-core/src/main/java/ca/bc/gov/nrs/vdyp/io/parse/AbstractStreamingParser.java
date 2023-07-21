@@ -17,7 +17,7 @@ public abstract class AbstractStreamingParser<T> implements StreamingParser<T> {
 	 * @param lineParser
 	 * @param control
 	 */
-	public AbstractStreamingParser(InputStream is, LineParser lineParser, Map<String, Object> control) {
+	protected AbstractStreamingParser(InputStream is, LineParser lineParser, Map<String, Object> control) {
 
 		this.lineStream = lineParser.parseAsStream(is, control);
 	}

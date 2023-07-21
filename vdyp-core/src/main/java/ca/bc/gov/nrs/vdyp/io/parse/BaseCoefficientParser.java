@@ -38,7 +38,7 @@ public abstract class BaseCoefficientParser<T extends Coefficients, M extends Ma
 	private int expectedKeys;
 	private final String controlKey;
 
-	public BaseCoefficientParser(int expectedKeys, String controlKey) {
+	protected BaseCoefficientParser(int expectedKeys, String controlKey) {
 		super();
 		this.expectedKeys = expectedKeys;
 		this.lineParser = new LineParser() {
@@ -52,7 +52,7 @@ public abstract class BaseCoefficientParser<T extends Coefficients, M extends Ma
 		this.controlKey = controlKey;
 	}
 
-	public BaseCoefficientParser(String controlKey) {
+	protected BaseCoefficientParser(String controlKey) {
 		this(0, controlKey);
 	}
 
