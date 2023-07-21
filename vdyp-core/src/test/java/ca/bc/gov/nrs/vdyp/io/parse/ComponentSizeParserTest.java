@@ -14,10 +14,10 @@ import org.junit.jupiter.api.Test;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
-public class ComponentSizeParserTest {
+class ComponentSizeParserTest {
 
 	@Test
-	public void testParseSimpleP1() throws Exception {
+	void testParseSimpleP1() throws Exception {
 
 		var is = TestUtils.makeStream("S1 C  49.4 153.3 0.726 3.647");
 
@@ -33,7 +33,7 @@ public class ComponentSizeParserTest {
 	}
 
 	@Test
-	public void testParseBadSpecies() throws Exception {
+	void testParseBadSpecies() throws Exception {
 
 		var is = TestUtils.makeStream("SX C  49.4 153.3 0.726 3.647");
 
@@ -49,7 +49,7 @@ public class ComponentSizeParserTest {
 	}
 
 	@Test
-	public void testParseBadRegion() throws Exception {
+	void testParseBadRegion() throws Exception {
 
 		var is = TestUtils.makeStream("S1 X  49.4 153.3 0.726 3.647");
 

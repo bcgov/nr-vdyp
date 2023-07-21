@@ -31,40 +31,45 @@ public class GenusDefinitionParserTest {
 		var result = parser.parse(ControlFileParserTest.class, "coe/SP0DEF_v0.dat", Collections.emptyMap());
 
 		assertThat(
-				result,
-				contains(
+				result, contains(
 						allOf(
-								Matchers.instanceOf(GenusDefinition.class),
-								Matchers.hasProperty("alias", equalTo("AC")),
+								Matchers.instanceOf(GenusDefinition.class), //
+								Matchers.hasProperty("alias", equalTo("AC")), //
 								Matchers.hasProperty("name", equalTo("Cottonwood"))
 						),
 						allOf(
-								Matchers.instanceOf(GenusDefinition.class),
-								Matchers.hasProperty("alias", equalTo("AT")),
+								Matchers.instanceOf(GenusDefinition.class), //
+								Matchers.hasProperty("alias", equalTo("AT")), //
 								Matchers.hasProperty("name", equalTo("Aspen"))
 						),
 						allOf(
-								Matchers.instanceOf(GenusDefinition.class), Matchers.hasProperty("alias", equalTo("B")),
+								Matchers.instanceOf(GenusDefinition.class), //
+								Matchers.hasProperty("alias", equalTo("B")), //
 								Matchers.hasProperty("name", equalTo("Balsam"))
 						),
 						allOf(
-								Matchers.instanceOf(GenusDefinition.class), Matchers.hasProperty("alias", equalTo("C")),
+								Matchers.instanceOf(GenusDefinition.class), //
+								Matchers.hasProperty("alias", equalTo("C")), //
 								Matchers.hasProperty("name", equalTo("Cedar (X yellow)"))
 						),
 						allOf(
-								Matchers.instanceOf(GenusDefinition.class), Matchers.hasProperty("alias", equalTo("D")),
+								Matchers.instanceOf(GenusDefinition.class), //
+								Matchers.hasProperty("alias", equalTo("D")), //
 								Matchers.hasProperty("name", equalTo("Alder"))
 						),
 						allOf(
-								Matchers.instanceOf(GenusDefinition.class), Matchers.hasProperty("alias", equalTo("E")),
+								Matchers.instanceOf(GenusDefinition.class), //
+								Matchers.hasProperty("alias", equalTo("E")), //
 								Matchers.hasProperty("name", equalTo("Birch"))
 						),
 						allOf(
-								Matchers.instanceOf(GenusDefinition.class), Matchers.hasProperty("alias", equalTo("F")),
+								Matchers.instanceOf(GenusDefinition.class), //
+								Matchers.hasProperty("alias", equalTo("F")), //
 								Matchers.hasProperty("name", equalTo("Douglas Fir"))
 						),
 						allOf(
-								Matchers.instanceOf(GenusDefinition.class), Matchers.hasProperty("alias", equalTo("H")),
+								Matchers.instanceOf(GenusDefinition.class), //
+								Matchers.hasProperty("alias", equalTo("H")), //
 								Matchers.hasProperty("name", equalTo("Hemlock"))
 						),
 						allOf(
@@ -72,36 +77,38 @@ public class GenusDefinitionParserTest {
 								Matchers.hasProperty("name", equalTo("Larch"))
 						),
 						allOf(
-								Matchers.instanceOf(GenusDefinition.class),
-								Matchers.hasProperty("alias", equalTo("MB")),
+								Matchers.instanceOf(GenusDefinition.class), //
+								Matchers.hasProperty("alias", equalTo("MB")), //
 								Matchers.hasProperty("name", equalTo("Maple"))
 						),
 						allOf(
-								Matchers.instanceOf(GenusDefinition.class),
-								Matchers.hasProperty("alias", equalTo("PA")),
+								Matchers.instanceOf(GenusDefinition.class), //
+								Matchers.hasProperty("alias", equalTo("PA")), //
 								Matchers.hasProperty("name", equalTo("White-bark pine"))
 						),
 						allOf(
-								Matchers.instanceOf(GenusDefinition.class),
-								Matchers.hasProperty("alias", equalTo("PL")),
+								Matchers.instanceOf(GenusDefinition.class), //
+								Matchers.hasProperty("alias", equalTo("PL")), //
 								Matchers.hasProperty("name", equalTo("Lodgepole Pine"))
 						),
 						allOf(
-								Matchers.instanceOf(GenusDefinition.class),
-								Matchers.hasProperty("alias", equalTo("PW")),
+								Matchers.instanceOf(GenusDefinition.class), //
+								Matchers.hasProperty("alias", equalTo("PW")), //
 								Matchers.hasProperty("name", equalTo("White pine"))
 						),
 						allOf(
-								Matchers.instanceOf(GenusDefinition.class),
-								Matchers.hasProperty("alias", equalTo("PY")),
+								Matchers.instanceOf(GenusDefinition.class), //
+								Matchers.hasProperty("alias", equalTo("PY")), //
 								Matchers.hasProperty("name", equalTo("Yellow pine"))
 						),
 						allOf(
-								Matchers.instanceOf(GenusDefinition.class), Matchers.hasProperty("alias", equalTo("S")),
+								Matchers.instanceOf(GenusDefinition.class), //
+								Matchers.hasProperty("alias", equalTo("S")), //
 								Matchers.hasProperty("name", equalTo("Spruce"))
 						),
 						allOf(
-								Matchers.instanceOf(GenusDefinition.class), Matchers.hasProperty("alias", equalTo("Y")),
+								Matchers.instanceOf(GenusDefinition.class), //
+								Matchers.hasProperty("alias", equalTo("Y")), //
 								Matchers.hasProperty("name", equalTo("Yellow cedar"))
 						)
 
@@ -110,7 +117,7 @@ public class GenusDefinitionParserTest {
 	}
 
 	@Test
-	public void testOrderByPreference() throws Exception {
+	void testOrderByPreference() throws Exception {
 		var parser = new GenusDefinitionParser(2);
 
 		List<GenusDefinition> result;
@@ -122,16 +129,15 @@ public class GenusDefinitionParserTest {
 			result = parser.parse(is, Collections.emptyMap());
 		}
 		assertThat(
-				result,
-				contains(
+				result, contains(
 						allOf(
-								Matchers.instanceOf(GenusDefinition.class),
-								Matchers.hasProperty("alias", equalTo("AC")),
+								Matchers.instanceOf(GenusDefinition.class), //
+								Matchers.hasProperty("alias", equalTo("AC")), //
 								Matchers.hasProperty("name", equalTo("Cottonwood"))
 						),
 						allOf(
-								Matchers.instanceOf(GenusDefinition.class),
-								Matchers.hasProperty("alias", equalTo("AT")),
+								Matchers.instanceOf(GenusDefinition.class), //
+								Matchers.hasProperty("alias", equalTo("AT")), //
 								Matchers.hasProperty("name", equalTo("Aspen"))
 						)
 				)
@@ -139,7 +145,7 @@ public class GenusDefinitionParserTest {
 	}
 
 	@Test
-	public void testOrderByLinesBlank() throws Exception {
+	void testOrderByLinesBlank() throws Exception {
 		var parser = new GenusDefinitionParser(2);
 
 		List<GenusDefinition> result;
@@ -151,16 +157,15 @@ public class GenusDefinitionParserTest {
 			result = parser.parse(is, Collections.emptyMap());
 		}
 		assertThat(
-				result,
-				contains(
+				result, contains(
 						allOf(
-								Matchers.instanceOf(GenusDefinition.class),
-								Matchers.hasProperty("alias", equalTo("AT")),
+								Matchers.instanceOf(GenusDefinition.class), //
+								Matchers.hasProperty("alias", equalTo("AT")), //
 								Matchers.hasProperty("name", equalTo("Aspen"))
 						),
 						allOf(
-								Matchers.instanceOf(GenusDefinition.class),
-								Matchers.hasProperty("alias", equalTo("AC")),
+								Matchers.instanceOf(GenusDefinition.class), //
+								Matchers.hasProperty("alias", equalTo("AC")), //
 								Matchers.hasProperty("name", equalTo("Cottonwood"))
 						)
 				)
@@ -168,7 +173,7 @@ public class GenusDefinitionParserTest {
 	}
 
 	@Test
-	public void testOrderByLinesZero() throws Exception {
+	void testOrderByLinesZero() throws Exception {
 		var parser = new GenusDefinitionParser(2);
 
 		List<GenusDefinition> result;
@@ -180,16 +185,15 @@ public class GenusDefinitionParserTest {
 			result = parser.parse(is, Collections.emptyMap());
 		}
 		assertThat(
-				result,
-				contains(
+				result, contains(
 						allOf(
-								Matchers.instanceOf(GenusDefinition.class),
-								Matchers.hasProperty("alias", equalTo("AT")),
+								Matchers.instanceOf(GenusDefinition.class), //
+								Matchers.hasProperty("alias", equalTo("AT")), //
 								Matchers.hasProperty("name", equalTo("Aspen"))
 						),
 						allOf(
-								Matchers.instanceOf(GenusDefinition.class),
-								Matchers.hasProperty("alias", equalTo("AC")),
+								Matchers.instanceOf(GenusDefinition.class), //
+								Matchers.hasProperty("alias", equalTo("AC")), //
 								Matchers.hasProperty("name", equalTo("Cottonwood"))
 						)
 				)
@@ -197,7 +201,7 @@ public class GenusDefinitionParserTest {
 	}
 
 	@Test
-	public void testErrorPreferenceOutOfBoundsHigh() throws Exception {
+	void testErrorPreferenceOutOfBoundsHigh() throws Exception {
 		var parser = new GenusDefinitionParser(2);
 
 		Exception ex1;
@@ -215,7 +219,7 @@ public class GenusDefinitionParserTest {
 	}
 
 	@Test
-	public void testErrorPreferenceOutOfBoundsLow() throws Exception {
+	void testErrorPreferenceOutOfBoundsLow() throws Exception {
 		var parser = new GenusDefinitionParser(2);
 
 		Exception ex1;
@@ -233,7 +237,7 @@ public class GenusDefinitionParserTest {
 	}
 
 	@Test
-	public void testErrorPreferenceDuplicate() throws Exception {
+	void testErrorPreferenceDuplicate() throws Exception {
 		var parser = new GenusDefinitionParser(2);
 
 		Exception ex1;

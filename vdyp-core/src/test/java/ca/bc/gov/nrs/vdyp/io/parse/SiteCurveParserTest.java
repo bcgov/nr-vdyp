@@ -17,10 +17,10 @@ import org.junit.jupiter.api.Test;
 import ca.bc.gov.nrs.vdyp.model.GenusDefinition;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
-public class SiteCurveParserTest {
+class SiteCurveParserTest {
 
 	@Test
-	public void testSimple() throws Exception {
+	void testSimple() throws Exception {
 		var parser = new SiteCurveParser();
 		var is = TestUtils.makeStream("S1 001002");
 
@@ -37,7 +37,7 @@ public class SiteCurveParserTest {
 	}
 
 	@Test
-	public void testExtraSpecies() throws Exception {
+	void testExtraSpecies() throws Exception {
 		var parser = new SiteCurveParser();
 		var is = TestUtils.makeStream("S1 001002", "X2 003004");
 
@@ -55,7 +55,7 @@ public class SiteCurveParserTest {
 	}
 
 	@Test
-	public void testMissingSpecies() throws Exception {
+	void testMissingSpecies() throws Exception {
 		var parser = new SiteCurveParser();
 		var is = TestUtils.makeStream("S1 001002");
 
@@ -73,7 +73,7 @@ public class SiteCurveParserTest {
 	}
 
 	@Test
-	public void testHashComment() throws Exception {
+	void testHashComment() throws Exception {
 		var parser = new SiteCurveParser();
 		var is = TestUtils.makeStream("# Foo", "S1 001002");
 
@@ -90,7 +90,7 @@ public class SiteCurveParserTest {
 	}
 
 	@Test
-	public void testSpaceComment() throws Exception {
+	void testSpaceComment() throws Exception {
 		var parser = new SiteCurveParser();
 		var is = TestUtils.makeStream("  Foo", "S1 001002");
 
@@ -107,7 +107,7 @@ public class SiteCurveParserTest {
 	}
 
 	@Test
-	public void testEndFileLine() throws Exception {
+	void testEndFileLine() throws Exception {
 		var parser = new SiteCurveParser();
 		var is = TestUtils.makeStream("S1 001002", "##", "S2 003004");
 

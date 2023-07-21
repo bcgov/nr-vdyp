@@ -20,7 +20,7 @@ public abstract class GroupingStreamingParser<T, U> implements StreamingParser<T
 
 	Optional<List<U>> next = Optional.empty();
 
-	public GroupingStreamingParser(StreamingParser<U> delegate) {
+	protected GroupingStreamingParser(StreamingParser<U> delegate) {
 		super();
 		this.delegate = delegate;
 	}
@@ -65,7 +65,7 @@ public abstract class GroupingStreamingParser<T, U> implements StreamingParser<T
 
 			var nextChild = safeNextChild();
 			while (nextChild.map(x -> !stop(x)).orElse(false)) {
-				nextResult.add(nextChild.get());
+				nextChild.ifPresent(nextResult::add); // Should always be present due to loop condition
 				nextChild = safeNextChild();
 			}
 			if (nextChild.isEmpty()) {

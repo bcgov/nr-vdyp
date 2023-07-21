@@ -17,10 +17,10 @@ import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.model.BecLookup.Substitution;
 
-public class BecLookupTest {
+class BecLookupTest {
 
 	@Test
-	public void testSimpleGet() throws Exception {
+	void testSimpleGet() throws Exception {
 		var lookup = new BecLookup(Arrays.asList(new BecDefinition("ESSF", Region.INTERIOR, "ESSF Test", 4, 5, 6)));
 		var result = lookup.get("ESSF", Substitution.PARTIAL_FILL_OK);
 
@@ -28,7 +28,7 @@ public class BecLookupTest {
 	}
 
 	@Test
-	public void testGetMissing() throws Exception {
+	void testGetMissing() throws Exception {
 		var lookup = new BecLookup(Arrays.asList(new BecDefinition("ESSF", Region.INTERIOR, "ESSF Test", 4, 5, 6)));
 		var result = lookup.get("XX", Substitution.PARTIAL_FILL_OK);
 
@@ -36,7 +36,7 @@ public class BecLookupTest {
 	}
 
 	@Test
-	public void testWithSubstitution() throws Exception {
+	void testWithSubstitution() throws Exception {
 		var lookup = new BecLookup(
 				Arrays.asList(
 						new BecDefinition("BG", Region.INTERIOR, "BG Test", 0, 0, 1),
@@ -57,7 +57,7 @@ public class BecLookupTest {
 	}
 
 	@Test
-	public void testWithSubstitutionButNoneNeeded() throws Exception {
+	void testWithSubstitutionButNoneNeeded() throws Exception {
 		var lookup = new BecLookup(
 				Arrays.asList(
 						new BecDefinition("BWBS", Region.INTERIOR, "BWBS Test", 1, 2, 3),
@@ -78,7 +78,7 @@ public class BecLookupTest {
 	}
 
 	@Test
-	public void testWithPartialAllowed() throws Exception {
+	void testWithPartialAllowed() throws Exception {
 		var lookup = new BecLookup(
 				Arrays.asList(
 						new BecDefinition("BG", Region.INTERIOR, "BG Test", 0, 0, 1),
@@ -99,7 +99,7 @@ public class BecLookupTest {
 	}
 
 	@Test
-	public void testWithNoSubstitution() throws Exception {
+	void testWithNoSubstitution() throws Exception {
 		var lookup = new BecLookup(
 				Arrays.asList(
 						new BecDefinition("BG", Region.INTERIOR, "BG Test", 0, 0, 1),
@@ -112,7 +112,7 @@ public class BecLookupTest {
 	}
 
 	@Test
-	public void testWithSubstitutionButDefaultIsMissing() throws Exception {
+	void testWithSubstitutionButDefaultIsMissing() throws Exception {
 		var lookup = new BecLookup(Arrays.asList(new BecDefinition("BG", Region.INTERIOR, "BG Test", 0, 0, 1)));
 		var ex = assertThrows(IllegalStateException.class, () -> lookup.get("BG", Substitution.SUBSTITUTE));
 
@@ -121,7 +121,7 @@ public class BecLookupTest {
 	}
 
 	@Test
-	public void testWithSubstitutionButDefaultIsIncomplete() throws Exception {
+	void testWithSubstitutionButDefaultIsIncomplete() throws Exception {
 		var lookup = new BecLookup(
 				Arrays.asList(
 						new BecDefinition("BG", Region.INTERIOR, "BG Test", 0, 0, 1),
@@ -135,7 +135,7 @@ public class BecLookupTest {
 	}
 
 	@Test
-	public void testGetBecsWithSubstitution() throws Exception {
+	void testGetBecsWithSubstitution() throws Exception {
 		var lookup = new BecLookup(
 				Arrays.asList(
 						new BecDefinition("BG", Region.INTERIOR, "BG Test", 0, 0, 1),
@@ -161,7 +161,7 @@ public class BecLookupTest {
 	}
 
 	@Test
-	public void testGetBecsAllowingPartial() throws Exception {
+	void testGetBecsAllowingPartial() throws Exception {
 		var lookup = new BecLookup(
 				Arrays.asList(
 						new BecDefinition("BG", Region.INTERIOR, "BG Test", 0, 0, 1),
@@ -187,7 +187,7 @@ public class BecLookupTest {
 	}
 
 	@Test
-	public void testGetGrowthBecs() throws Exception {
+	void testGetGrowthBecs() throws Exception {
 		var lookup = new BecLookup(
 				Arrays.asList(
 						new BecDefinition("AT", Region.INTERIOR, "AT Test", 0, 1, 1),
@@ -210,7 +210,7 @@ public class BecLookupTest {
 	}
 
 	@Test
-	public void testGetCoastalBecs() throws Exception {
+	void testGetCoastalBecs() throws Exception {
 		var lookup = new BecLookup(
 				Arrays.asList(
 						new BecDefinition("CDF", Region.COASTAL, "CDF Test", 1, 2, 3),
@@ -238,7 +238,7 @@ public class BecLookupTest {
 	}
 
 	@Test
-	public void testGetInteriorBecs() throws Exception {
+	void testGetInteriorBecs() throws Exception {
 		var lookup = new BecLookup(
 				Arrays.asList(
 						new BecDefinition("CDF", Region.COASTAL, "CDF Test", 1, 2, 3),
@@ -266,7 +266,7 @@ public class BecLookupTest {
 	}
 
 	@Test
-	public void testGetByBlankScope() throws Exception {
+	void testGetByBlankScope() throws Exception {
 		var lookup = new BecLookup(
 				Arrays.asList(
 						new BecDefinition("CDF", Region.COASTAL, "CDF Test", 1, 2, 3),
@@ -302,7 +302,7 @@ public class BecLookupTest {
 	}
 
 	@Test
-	public void testGetByRegionScope() throws Exception {
+	void testGetByRegionScope() throws Exception {
 		var lookup = new BecLookup(
 				Arrays.asList(
 						new BecDefinition("CDF", Region.COASTAL, "CDF Test", 1, 2, 3),
@@ -330,7 +330,7 @@ public class BecLookupTest {
 	}
 
 	@Test
-	public void testGetByBecScope() throws Exception {
+	void testGetByBecScope() throws Exception {
 		var lookup = new BecLookup(
 				Arrays.asList(
 						new BecDefinition("CDF", Region.COASTAL, "CDF Test", 1, 2, 3),
@@ -354,7 +354,7 @@ public class BecLookupTest {
 	}
 
 	@Test
-	public void testGetByMissingScope() throws Exception {
+	void testGetByMissingScope() throws Exception {
 		var lookup = new BecLookup(
 				Arrays.asList(
 						new BecDefinition("CDF", Region.COASTAL, "CDF Test", 1, 2, 3),

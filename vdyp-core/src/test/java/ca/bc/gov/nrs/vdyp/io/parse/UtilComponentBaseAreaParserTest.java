@@ -18,10 +18,10 @@ import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
-public class UtilComponentBaseAreaParserTest {
+class UtilComponentBaseAreaParserTest {
 
 	@Test
-	public void testParseSingleBec() throws Exception {
+	void testParseSingleBec() throws Exception {
 
 		var parser = new UtilComponentBaseAreaParser();
 
@@ -48,7 +48,7 @@ public class UtilComponentBaseAreaParserTest {
 	}
 
 	@Test
-	public void testParseSingleRegion() throws Exception {
+	void testParseSingleRegion() throws Exception {
 
 		var parser = new UtilComponentBaseAreaParser();
 
@@ -75,7 +75,7 @@ public class UtilComponentBaseAreaParserTest {
 	}
 
 	@Test
-	public void testParseAllBecs() throws Exception {
+	void testParseAllBecs() throws Exception {
 
 		var parser = new UtilComponentBaseAreaParser();
 
@@ -103,7 +103,7 @@ public class UtilComponentBaseAreaParserTest {
 	}
 
 	@Test
-	public void testParseBadSpecies() throws Exception {
+	void testParseBadSpecies() throws Exception {
 
 		var parser = new UtilComponentBaseAreaParser();
 
@@ -119,7 +119,7 @@ public class UtilComponentBaseAreaParserTest {
 	}
 
 	@Test
-	public void testParseBadBec() throws Exception {
+	void testParseBadBec() throws Exception {
 
 		var parser = new UtilComponentBaseAreaParser();
 
@@ -135,7 +135,7 @@ public class UtilComponentBaseAreaParserTest {
 	}
 
 	@Test
-	public void testParseBadBau() throws Exception {
+	void testParseBadBau() throws Exception {
 
 		var parser = new UtilComponentBaseAreaParser();
 
@@ -151,7 +151,7 @@ public class UtilComponentBaseAreaParserTest {
 	}
 
 	@Test
-	public void testParseMissingCoefficient() throws Exception {
+	void testParseMissingCoefficient() throws Exception {
 
 		var parser = new UtilComponentBaseAreaParser();
 

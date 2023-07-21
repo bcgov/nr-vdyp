@@ -22,7 +22,7 @@ import ca.bc.gov.nrs.vdyp.test.TestUtils;
 public class SiteCurveAgeMaximumParserTest {
 
 	@Test
-	public void testSimple() throws Exception {
+	void testSimple() throws Exception {
 		var parser = new SiteCurveAgeMaximumParser();
 		var is = TestUtils.makeStream(" 16  150.0  150.0   20.0   60.0");
 
@@ -43,7 +43,7 @@ public class SiteCurveAgeMaximumParserTest {
 	}
 
 	@Test
-	public void testDefault() throws Exception {
+	void testDefault() throws Exception {
 		var parser = new SiteCurveAgeMaximumParser();
 		var is = TestUtils.makeStream(" -1  150.0  150.0   20.0   60.0");
 
@@ -64,7 +64,7 @@ public class SiteCurveAgeMaximumParserTest {
 	}
 
 	@Test
-	public void testEndLine() throws Exception {
+	void testEndLine() throws Exception {
 		var parser = new SiteCurveAgeMaximumParser();
 		var is = TestUtils.makeStream(
 				" -1  150.0  150.0   20.0   60.0", "999                                End of usuable info",
@@ -90,7 +90,7 @@ public class SiteCurveAgeMaximumParserTest {
 	}
 
 	@Test
-	public void testDefaultValue() throws Exception {
+	void testDefaultValue() throws Exception {
 		var parser = new SiteCurveAgeMaximumParser();
 		var is = TestUtils.makeStream(" 16  150.0  150.0   20.0   60.0");
 
