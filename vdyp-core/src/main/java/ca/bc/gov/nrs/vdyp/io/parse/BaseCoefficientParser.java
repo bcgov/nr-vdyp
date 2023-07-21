@@ -144,7 +144,6 @@ public abstract class BaseCoefficientParser<T extends Coefficients, M extends Ma
 		if (expectedKeys > 0 && metaKeys.size() != expectedKeys) {
 			throw new IllegalStateException("Expected " + expectedKeys + " keys but there were " + metaKeys.size());
 		}
-		keyRanges.stream().map(x -> x.apply(control)).toList();
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		M result = (M) createMap((List) (keyRanges.stream().map(x -> x.apply(control)).toList()));
 
