@@ -3,7 +3,6 @@ package application;
 import java.io.IOException;
 
 import javafx.application.Application;
-import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.stage.Stage;
 import javafx.scene.Scene;
@@ -18,37 +17,18 @@ public class Main extends Application {
 	@Override
 	public void start(Stage primaryStage) {
 		try {
-			//Set root nodes, scene and controller using FXMLLoader
+			// Load the FXML file and create the scene and controller
 			FXMLLoader loader = new FXMLLoader(getClass().getResource("MainWindow.fxml"));
 			Parent root = loader.load();
 			MainController controller = loader.getController();
 			Scene scene = new Scene(root,1000,700);
 			scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
-			
-			
-			// Set up event handler to trigger on shortcut button presses
-			scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
 
-				@Override
-				public void handle(KeyEvent event) {
-					// Check if "Control" key is held down and the key pressed is "T"
-					if(event.isControlDown() && event.getCode() == KeyCode.T) {
-						try {
-							controller.openSecondaryWindow(event, false); //Open the secondary window
-						} catch (IOException e) {
-							e.printStackTrace();
-						}
-					}
-					
-				
-				}
-				
-			});
+			// Set up event handler to trigger on shortcut button presses
+	        setupEventHandlers(scene, controller);
 			
-			// Add Icon Image and Title
-			Image icon = new Image("icon.png");
-			primaryStage.getIcons().add(icon);
-			primaryStage.setTitle("WinVDYP7.9 POC");
+	        // Add icon image and title to the primary stage
+	        setStageIconAndTitle(primaryStage);
 			
 			// Show the scene
 			primaryStage.setScene(scene);
@@ -58,6 +38,40 @@ public class Main extends Application {
 		}
 	}
 	
+	/**
+     * Sets up the event handlers for the specified scene and controller.
+     * The event handler listens for "Ctrl + T" key press to trigger the opening of a secondary window.
+     * 
+     *
+     * @param scene The scene to which the event handler will be attached.
+     * @param controller The MainController instance responsible for handling events.
+     */
+	private void setupEventHandlers(Scene scene, MainController controller) {
+	    scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
+	        @Override
+	        public void handle(KeyEvent event) {
+	            if (event.isControlDown() && event.getCode() == KeyCode.T) {
+	                try {
+	                    controller.openSecondaryWindow(event, false); //Setting to false since not trigger by button push
+	                } catch (IOException e) {
+	                    e.printStackTrace();
+	                }
+	            }
+	        }
+	    });
+	}
+	
+	/**
+     * Sets the icon image and title for the given stage.
+     *
+     * @param stage The stage to which the icon image and title will be set.
+     */
+	private void setStageIconAndTitle(Stage stage) {
+	    Image icon = new Image("icon.png");
+	    stage.getIcons().add(icon);
+	    stage.setTitle("WinVDYP7.9 POC");
+	}
+
 	public static void main(String[] args) {
 		launch(args);
 	}

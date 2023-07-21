@@ -50,7 +50,7 @@
       </MenuBar>
    </top>
    <center>
-      <Button mnemonicParsing="false" onAction="#handleButtonAction" prefHeight="65.0" prefWidth="213.0" text="Run" BorderPane.alignment="CENTER">
+      <Button mnemonicParsing="false" onAction="#handleButtonAction" prefHeight="65.0" prefWidth="213.0" text="Create a new Table" BorderPane.alignment="CENTER">
          <font>
             <Font size="18.0" />
          </font>
