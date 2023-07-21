@@ -23,14 +23,6 @@ import org.junit.jupiter.api.Test;
 class MatrixMapTest {
 
 	@Test
-	void testContruct() {
-		var dim1 = Arrays.asList("a", "b");
-		var dim2 = Arrays.asList(1, 2);
-		var dims = Arrays.asList(dim1, dim2);
-		new MatrixMapImpl<Character>(dims);
-	}
-
-	@Test
 	void testContructNoDimensionsFails() {
 		List<List<Object>> dims = Collections.emptyList();
 		Assertions.assertThrows(IllegalArgumentException.class, () -> new MatrixMapImpl<Character>(dims));

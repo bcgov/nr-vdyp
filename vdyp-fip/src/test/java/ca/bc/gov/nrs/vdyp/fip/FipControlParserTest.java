@@ -44,13 +44,6 @@ import ca.bc.gov.nrs.vdyp.model.StockingClassFactor;
 class FipControlParserTest {
 
 	@Test
-	void testParse() throws Exception {
-		var parser = new FipControlParser();
-		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
-
-	}
-
-	@Test
 	void testParseBec() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
