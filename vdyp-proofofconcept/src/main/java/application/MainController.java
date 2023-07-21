@@ -42,7 +42,7 @@ public class MainController {
         // New window (Stage)
         Stage newWindow = new Stage();
         newWindow.setTitle("Model 1");
-        Image icon = new Image("icon.png");
+        Image icon = new Image(getClass().getResource("icon.png").toExternalForm()); //This had to be changed??
 		newWindow.getIcons().add(icon);
         newWindow.setScene(secondScene);
 

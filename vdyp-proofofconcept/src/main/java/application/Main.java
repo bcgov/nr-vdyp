@@ -67,7 +67,7 @@ public class Main extends Application {
      * @param stage The stage to which the icon image and title will be set.
      */
 	private void setStageIconAndTitle(Stage stage) {
-	    Image icon = new Image("icon.png");
+	    Image icon = new Image(getClass().getResource("icon.png").toExternalForm());
 	    stage.getIcons().add(icon);
 	    stage.setTitle("WinVDYP7.9 POC");
 	}
