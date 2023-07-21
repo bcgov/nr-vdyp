@@ -29,10 +29,10 @@ import ca.bc.gov.nrs.vdyp.test.TestUtils;
 import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
 
 @SuppressWarnings("unused")
-public class EquationGroupParserTest {
+class EquationGroupParserTest {
 
 	@Test
-	public void testParse() throws Exception {
+	void testParse() throws Exception {
 		var parser = new DefaultEquationNumberParser();
 
 		var controlMap = makeControlMapSingle();
@@ -45,7 +45,7 @@ public class EquationGroupParserTest {
 	}
 
 	@Test
-	public void testSP0MustExist() throws Exception {
+	void testSP0MustExist() throws Exception {
 		var parser = new DefaultEquationNumberParser();
 
 		var controlMap = makeControlMapSingle();
@@ -63,7 +63,7 @@ public class EquationGroupParserTest {
 	}
 
 	@Test
-	public void testBecMustExist() throws Exception {
+	void testBecMustExist() throws Exception {
 		var parser = new DefaultEquationNumberParser();
 
 		var controlMap = makeControlMapSingle();
@@ -81,7 +81,7 @@ public class EquationGroupParserTest {
 	}
 
 	@Test
-	public void testParseOvewrite() throws Exception {
+	void testParseOvewrite() throws Exception {
 		// Original Fortran allows subsequent entries to overwrite old ones so don't
 		// validate against that
 
@@ -97,7 +97,7 @@ public class EquationGroupParserTest {
 	}
 
 	@Test
-	public void testParseMultiple() throws Exception {
+	void testParseMultiple() throws Exception {
 		var parser = new DefaultEquationNumberParser();
 
 		var controlMap = makeControlMap();
@@ -118,7 +118,7 @@ public class EquationGroupParserTest {
 	}
 
 	@Test
-	public void testRequireNoMissingSp0() throws Exception {
+	void testRequireNoMissingSp0() throws Exception {
 
 		var parser = new DefaultEquationNumberParser();
 
@@ -138,7 +138,7 @@ public class EquationGroupParserTest {
 	}
 
 	@Test
-	public void testRequireNoMissingBec() throws Exception {
+	void testRequireNoMissingBec() throws Exception {
 
 		var parser = new DefaultEquationNumberParser();
 
@@ -159,7 +159,7 @@ public class EquationGroupParserTest {
 	}
 
 	@Test
-	public void testRequireNoUnexpectedBec() throws Exception {
+	void testRequireNoUnexpectedBec() throws Exception {
 
 		var parser = new DefaultEquationNumberParser();
 

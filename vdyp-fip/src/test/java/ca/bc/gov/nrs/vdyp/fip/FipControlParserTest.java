@@ -42,17 +42,10 @@ import ca.bc.gov.nrs.vdyp.model.SiteCurveAgeMaximum;
 import ca.bc.gov.nrs.vdyp.model.StockingClassFactor;
 
 @SuppressWarnings({ "unused", "unchecked", "rawtypes" })
-public class FipControlParserTest {
+class FipControlParserTest {
 
 	@Test
-	public void testParse() throws Exception {
-		var parser = new FipControlParser();
-		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
-
-	}
-
-	@Test
-	public void testParseBec() throws Exception {
+	void testParseBec() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
@@ -65,7 +58,7 @@ public class FipControlParserTest {
 	}
 
 	@Test
-	public void testParseSP0() throws Exception {
+	void testParseSP0() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
@@ -78,7 +71,7 @@ public class FipControlParserTest {
 	}
 
 	@Test
-	public void testParseVGRP() throws Exception {
+	void testParseVGRP() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
@@ -99,7 +92,7 @@ public class FipControlParserTest {
 	}
 
 	@Test
-	public void testParseDGRP() throws Exception {
+	void testParseDGRP() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
@@ -120,7 +113,7 @@ public class FipControlParserTest {
 	}
 
 	@Test
-	public void testParseBGRP() throws Exception {
+	void testParseBGRP() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
@@ -141,7 +134,7 @@ public class FipControlParserTest {
 	}
 
 	@Test
-	public void testParseGRBA1() throws Exception {
+	void testParseGRBA1() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
@@ -162,7 +155,7 @@ public class FipControlParserTest {
 	}
 
 	@Test
-	public void testParseGMBA1() throws Exception {
+	void testParseGMBA1() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
@@ -183,7 +176,7 @@ public class FipControlParserTest {
 	}
 
 	@Test
-	public void testParseSTK33() throws Exception {
+	void testParseSTK33() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
@@ -205,7 +198,7 @@ public class FipControlParserTest {
 	}
 
 	@Test
-	public void testParseE025() throws Exception {
+	void testParseE025() throws Exception {
 		var parser = new FipControlParser();
 		var result = parseWithAppendix(parser, "025 coe/SIEQN.PRM");
 		assertThat(
@@ -219,14 +212,14 @@ public class FipControlParserTest {
 	}
 
 	@Test
-	public void testParseE025Empty() throws Exception {
+	void testParseE025Empty() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(result, (Matcher) hasSpecificEntry(FipControlParser.SITE_CURVE_NUMBERS, Matchers.anEmptyMap()));
 	}
 
 	@Test
-	public void testParseE026() throws Exception {
+	void testParseE026() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
@@ -241,7 +234,7 @@ public class FipControlParserTest {
 
 	@Test
 	// @Disabled
-	public void testParseE026Empty() throws Exception {
+	void testParseE026Empty() throws Exception {
 		var parser = new FipControlParser();
 		var result = parseWithAppendix(parser, "026  ");
 		// Map is empty but gives appropriate default values
@@ -253,7 +246,7 @@ public class FipControlParserTest {
 	}
 
 	@Test
-	public void testParseE040() throws Exception {
+	void testParseE040() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
@@ -263,7 +256,7 @@ public class FipControlParserTest {
 	}
 
 	@Test
-	public void testParseE041() throws Exception {
+	void testParseE041() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
@@ -273,7 +266,7 @@ public class FipControlParserTest {
 	}
 
 	@Test
-	public void testParseE043() throws Exception {
+	void testParseE043() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
@@ -286,7 +279,7 @@ public class FipControlParserTest {
 	}
 
 	@Test
-	public void testParseE050() throws Exception {
+	void testParseE050() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
@@ -299,7 +292,7 @@ public class FipControlParserTest {
 	}
 
 	@Test
-	public void testParseE051() throws Exception {
+	void testParseE051() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
@@ -312,7 +305,7 @@ public class FipControlParserTest {
 	}
 
 	@Test
-	public void testParseE052() throws Exception {
+	void testParseE052() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
@@ -330,7 +323,7 @@ public class FipControlParserTest {
 	}
 
 	@Test
-	public void testParseE053() throws Exception {
+	void testParseE053() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
@@ -348,7 +341,7 @@ public class FipControlParserTest {
 	}
 
 	@Test
-	public void testParseE060() throws Exception {
+	void testParseE060() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
@@ -376,7 +369,7 @@ public class FipControlParserTest {
 	}
 
 	@Test
-	public void testParseE061() throws Exception {
+	void testParseE061() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
@@ -389,7 +382,7 @@ public class FipControlParserTest {
 	}
 
 	@Test
-	public void testParseUBA1() throws Exception {
+	void testParseUBA1() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
@@ -402,7 +395,7 @@ public class FipControlParserTest {
 	}
 
 	@Test
-	public void testParseYVC1() throws Exception {
+	void testParseYVC1() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
@@ -415,7 +408,7 @@ public class FipControlParserTest {
 	}
 
 	@Test
-	public void testParseYVD1() throws Exception {
+	void testParseYVD1() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
@@ -428,7 +421,7 @@ public class FipControlParserTest {
 	}
 
 	@Test
-	public void testParseSBA1() throws Exception {
+	void testParseSBA1() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
@@ -441,7 +434,7 @@ public class FipControlParserTest {
 	}
 
 	@Test
-	public void testParseSBA2() throws Exception {
+	void testParseSBA2() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
@@ -454,7 +447,7 @@ public class FipControlParserTest {
 	}
 
 	@Test
-	public void testParseSDQ1() throws Exception {
+	void testParseSDQ1() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
@@ -466,7 +459,7 @@ public class FipControlParserTest {
 	}
 
 	@Test
-	public void testParseSHL1() throws Exception {
+	void testParseSHL1() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
@@ -478,7 +471,7 @@ public class FipControlParserTest {
 	}
 
 	@Test
-	public void testParseSVT1() throws Exception {
+	void testParseSVT1() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
@@ -491,7 +484,7 @@ public class FipControlParserTest {
 	}
 
 	@Test
-	public void testParseYVT1() throws Exception {
+	void testParseYVT1() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
@@ -512,7 +505,7 @@ public class FipControlParserTest {
 	}
 
 	@Test
-	public void testParseYVT2() throws Exception {
+	void testParseYVT2() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
@@ -525,7 +518,7 @@ public class FipControlParserTest {
 	}
 
 	@Test
-	public void testParseYVW1() throws Exception {
+	void testParseYVW1() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
@@ -538,7 +531,7 @@ public class FipControlParserTest {
 	}
 
 	@Test
-	public void testParseE095() throws Exception {
+	void testParseE095() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
@@ -550,7 +543,7 @@ public class FipControlParserTest {
 	}
 
 	@Test
-	public void testParseYVVET() throws Exception {
+	void testParseYVVET() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
@@ -563,7 +556,7 @@ public class FipControlParserTest {
 	}
 
 	@Test
-	public void testParseYDQV() throws Exception {
+	void testParseYDQV() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
@@ -581,7 +574,7 @@ public class FipControlParserTest {
 	}
 
 	@Test
-	public void testParseE098() throws Exception {
+	void testParseE098() throws Exception {
 		var parser = new FipControlParser();
 		var result = parser.parse(ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(

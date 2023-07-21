@@ -38,10 +38,10 @@ import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
-public class ModifierParserTest {
+class ModifierParserTest {
 
 	@Test
-	public void testNoFilenameForControlFile() throws Exception {
+	void testNoFilenameForControlFile() throws Exception {
 		var parser = new ModifierParser(1);
 
 		Map<String, Object> controlMap = new HashMap<>();
@@ -70,7 +70,7 @@ public class ModifierParserTest {
 	}
 
 	@Test
-	public void testMissingControlFile() throws Exception {
+	void testMissingControlFile() throws Exception {
 		var parser = new ModifierParser(1);
 
 		Map<String, Object> controlMap = new HashMap<>();
@@ -101,7 +101,7 @@ public class ModifierParserTest {
 	}
 
 	@Test
-	public void testLoadEmptyFile() throws Exception {
+	void testLoadEmptyFile() throws Exception {
 		var parser = new ModifierParser(1);
 
 		Map<String, Object> controlMap = new HashMap<>();
@@ -177,7 +177,7 @@ public class ModifierParserTest {
 	}
 
 	@Test
-	public void testBaDqSpecies() throws Exception {
+	void testBaDqSpecies() throws Exception {
 		var parser = new ModifierParser(1);
 
 		Map<String, Object> controlMap = new HashMap<>();
@@ -236,7 +236,7 @@ public class ModifierParserTest {
 	}
 
 	@Test
-	public void testBaDqSpeciesDifferentProgram() throws Exception {
+	void testBaDqSpeciesDifferentProgram() throws Exception {
 		var parser = new ModifierParser(3);
 
 		Map<String, Object> controlMap = new HashMap<>();
@@ -272,7 +272,7 @@ public class ModifierParserTest {
 	}
 
 	@Test
-	public void testIgnoreAfterStop() throws Exception {
+	void testIgnoreAfterStop() throws Exception {
 		var parser = new ModifierParser(1);
 
 		Map<String, Object> controlMap = new HashMap<>();
@@ -308,7 +308,7 @@ public class ModifierParserTest {
 	}
 
 	@Test
-	public void testIgnoreCommentsAndBlanks() throws Exception {
+	void testIgnoreCommentsAndBlanks() throws Exception {
 		var parser = new ModifierParser(1);
 
 		Map<String, Object> controlMap = new HashMap<>();
@@ -367,7 +367,7 @@ public class ModifierParserTest {
 	}
 
 	@Test
-	public void testBaDqAllSpecies() throws Exception {
+	void testBaDqAllSpecies() throws Exception {
 		var parser = new ModifierParser(1);
 
 		Map<String, Object> controlMap = new HashMap<>();
@@ -418,7 +418,7 @@ public class ModifierParserTest {
 	}
 
 	@Test
-	public void testVetBq() throws Exception {
+	void testVetBq() throws Exception {
 		var parser = new ModifierParser(1);
 
 		Map<String, Object> controlMap = new HashMap<>();

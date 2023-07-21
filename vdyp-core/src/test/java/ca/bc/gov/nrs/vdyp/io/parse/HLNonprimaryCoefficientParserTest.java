@@ -22,7 +22,7 @@ import ca.bc.gov.nrs.vdyp.test.TestUtils;
 public class HLNonprimaryCoefficientParserTest {
 
 	@Test
-	public void testParseSimple() throws Exception {
+	void testParseSimple() throws Exception {
 
 		var parser = new HLNonprimaryCoefficientParser();
 
@@ -38,7 +38,7 @@ public class HLNonprimaryCoefficientParserTest {
 	}
 
 	@Test
-	public void testParseBadSpecies1() throws Exception {
+	void testParseBadSpecies1() throws Exception {
 
 		var parser = new HLNonprimaryCoefficientParser();
 
@@ -53,7 +53,7 @@ public class HLNonprimaryCoefficientParserTest {
 	}
 
 	@Test
-	public void testParseBadSpecies2() throws Exception {
+	void testParseBadSpecies2() throws Exception {
 
 		var parser = new HLNonprimaryCoefficientParser();
 
@@ -68,7 +68,7 @@ public class HLNonprimaryCoefficientParserTest {
 	}
 
 	@Test
-	public void testParseBadRegion() throws Exception {
+	void testParseBadRegion() throws Exception {
 
 		var parser = new HLNonprimaryCoefficientParser();
 
@@ -83,7 +83,7 @@ public class HLNonprimaryCoefficientParserTest {
 	}
 
 	@Test
-	public void testParseMissingCoefficient() throws Exception {
+	void testParseMissingCoefficient() throws Exception {
 
 		var parser = new HLNonprimaryCoefficientParser();
 

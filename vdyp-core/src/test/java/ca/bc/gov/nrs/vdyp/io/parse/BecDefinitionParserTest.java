@@ -21,7 +21,7 @@ import ca.bc.gov.nrs.vdyp.model.Region;
 public class BecDefinitionParserTest {
 
 	@Test
-	public void testParse() throws Exception {
+	void testParse() throws Exception {
 		var parser = new BecDefinitionParser();
 
 		var result = parser.parse(ControlFileParserTest.class, "coe/Becdef.dat", Collections.emptyMap());

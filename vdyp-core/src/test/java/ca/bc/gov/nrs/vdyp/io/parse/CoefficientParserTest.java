@@ -13,10 +13,10 @@ import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
-public class CoefficientParserTest {
+class CoefficientParserTest {
 
 	@Test
-	public void testParseSimple() throws Exception {
+	void testParseSimple() throws Exception {
 
 		var parser = new CoefficientParser("TEST");
 
@@ -37,7 +37,7 @@ public class CoefficientParserTest {
 	}
 
 	@Test
-	public void testBadBec() throws Exception {
+	void testBadBec() throws Exception {
 
 		var parser = new CoefficientParser("TEST");
 
@@ -54,7 +54,7 @@ public class CoefficientParserTest {
 	}
 
 	@Test
-	public void testBadIndex() throws Exception {
+	void testBadIndex() throws Exception {
 
 		var parser = new CoefficientParser("TEST");
 
@@ -71,7 +71,7 @@ public class CoefficientParserTest {
 	}
 
 	@Test
-	public void testParseDelta() throws Exception {
+	void testParseDelta() throws Exception {
 
 		var parser = new CoefficientParser("TEST");
 
@@ -91,7 +91,7 @@ public class CoefficientParserTest {
 	}
 
 	@Test
-	public void testParseFixed() throws Exception {
+	void testParseFixed() throws Exception {
 
 		var parser = new CoefficientParser("TEST");
 
