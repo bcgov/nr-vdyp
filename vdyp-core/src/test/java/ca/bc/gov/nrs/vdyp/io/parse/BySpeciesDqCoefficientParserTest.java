@@ -10,10 +10,10 @@ import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
-public class BySpeciesDqCoefficientParserTest {
+class BySpeciesDqCoefficientParserTest {
 
 	@Test
-	public void testParseSimple() throws Exception {
+	void testParseSimple() throws Exception {
 
 		var parser = new BySpeciesDqCoefficientParser();
 

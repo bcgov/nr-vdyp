@@ -19,10 +19,10 @@ import org.junit.jupiter.api.Test;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
-public class VeteranDQParserTest {
+class VeteranDQParserTest {
 
 	@Test
-	public void testParseSingleRegion() throws Exception {
+	void testParseSingleRegion() throws Exception {
 
 		var parser = new VeteranDQParser();
 
@@ -40,7 +40,7 @@ public class VeteranDQParserTest {
 	}
 
 	@Test
-	public void testParseAllRegions() throws Exception {
+	void testParseAllRegions() throws Exception {
 
 		var parser = new VeteranDQParser();
 
@@ -58,7 +58,7 @@ public class VeteranDQParserTest {
 	}
 
 	@Test
-	public void testParseBadSpecies() throws Exception {
+	void testParseBadSpecies() throws Exception {
 
 		var parser = new VeteranDQParser();
 
@@ -74,7 +74,7 @@ public class VeteranDQParserTest {
 	}
 
 	@Test
-	public void testParseMissingCoefficient() throws Exception {
+	void testParseMissingCoefficient() throws Exception {
 
 		var parser = new VeteranDQParser();
 

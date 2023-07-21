@@ -14,10 +14,10 @@ import org.junit.jupiter.api.Test;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
-public class HLCoefficientParserTest {
+class HLCoefficientParserTest {
 
 	@Test
-	public void testParseSimpleP1() throws Exception {
+	void testParseSimpleP1() throws Exception {
 
 		var parser = new HLCoefficientParser(HLCoefficientParser.NUM_COEFFICIENTS_P1, "TEST");
 
@@ -33,7 +33,7 @@ public class HLCoefficientParserTest {
 	}
 
 	@Test
-	public void testParseSimpleP2() throws Exception {
+	void testParseSimpleP2() throws Exception {
 
 		var parser = new HLCoefficientParser(HLCoefficientParser.NUM_COEFFICIENTS_P2, "TEST");
 
@@ -49,7 +49,7 @@ public class HLCoefficientParserTest {
 	}
 
 	@Test
-	public void testParseSimpleP3() throws Exception {
+	void testParseSimpleP3() throws Exception {
 
 		var parser = new HLCoefficientParser(HLCoefficientParser.NUM_COEFFICIENTS_P3, "TEST");
 
@@ -67,7 +67,7 @@ public class HLCoefficientParserTest {
 	}
 
 	@Test
-	public void testParseBadSpecies() throws Exception {
+	void testParseBadSpecies() throws Exception {
 
 		var parser = new HLCoefficientParser(HLCoefficientParser.NUM_COEFFICIENTS_P1, "TEST");
 
@@ -82,7 +82,7 @@ public class HLCoefficientParserTest {
 	}
 
 	@Test
-	public void testParseBadRegion() throws Exception {
+	void testParseBadRegion() throws Exception {
 
 		var parser = new HLCoefficientParser(HLCoefficientParser.NUM_COEFFICIENTS_P1, "TEST");
 

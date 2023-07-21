@@ -14,10 +14,10 @@ import org.junit.jupiter.api.Test;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
-public class StockingClassFactorParserTest {
+class StockingClassFactorParserTest {
 
 	@Test
-	public void testEmpty() throws Exception {
+	void testEmpty() throws Exception {
 		var parser = new StockingClassFactorParser();
 		var is = TestUtils.makeStream("");
 
@@ -27,7 +27,7 @@ public class StockingClassFactorParserTest {
 	}
 
 	@Test
-	public void testSimple() throws Exception {
+	void testSimple() throws Exception {
 		var parser = new StockingClassFactorParser();
 		var is = TestUtils.makeStream("R I P  0  1.00  100", "Z Z P  0  1.00  100");
 
@@ -46,7 +46,7 @@ public class StockingClassFactorParserTest {
 	}
 
 	@Test
-	public void testMultiple() throws Exception {
+	void testMultiple() throws Exception {
 		var parser = new StockingClassFactorParser();
 		try (var is = StockingClassFactorParserTest.class.getResourceAsStream("coe/FIPSTKR.PRM")) {
 

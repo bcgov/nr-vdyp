@@ -15,10 +15,10 @@ import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
-public class SmallComponentProbabilityParserTest {
+class SmallComponentProbabilityParserTest {
 
 	@Test
-	public void testParseSimpleP1() throws Exception {
+	void testParseSimpleP1() throws Exception {
 
 		var is = TestUtils.makeStream("S1   0.48205   0.00000 -0.011862  -0.10014");
 
@@ -33,7 +33,7 @@ public class SmallComponentProbabilityParserTest {
 	}
 
 	@Test
-	public void testParseBadSpecies() throws Exception {
+	void testParseBadSpecies() throws Exception {
 
 		var is = TestUtils.makeStream("SX   0.48205   0.00000 -0.011862  -0.10014");
 

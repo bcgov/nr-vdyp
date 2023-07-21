@@ -25,7 +25,7 @@ import ca.bc.gov.nrs.vdyp.model.SP0Definition;
 public class SP0DefinitionParserTest {
 
 	@Test
-	public void testParse() throws Exception {
+	void testParse() throws Exception {
 		var parser = new SP0DefinitionParser();
 
 		var result = parser.parse(ControlFileParserTest.class, "coe/SP0DEF_v0.dat", Collections.emptyMap());
@@ -103,7 +103,7 @@ public class SP0DefinitionParserTest {
 	}
 
 	@Test
-	public void testOrderByPreference() throws Exception {
+	void testOrderByPreference() throws Exception {
 		var parser = new SP0DefinitionParser(2);
 
 		List<SP0Definition> result;
@@ -130,7 +130,7 @@ public class SP0DefinitionParserTest {
 	}
 
 	@Test
-	public void testOrderByLinesBlank() throws Exception {
+	void testOrderByLinesBlank() throws Exception {
 		var parser = new SP0DefinitionParser(2);
 
 		List<SP0Definition> result;
@@ -157,7 +157,7 @@ public class SP0DefinitionParserTest {
 	}
 
 	@Test
-	public void testOrderByLinesZero() throws Exception {
+	void testOrderByLinesZero() throws Exception {
 		var parser = new SP0DefinitionParser(2);
 
 		List<SP0Definition> result;
@@ -184,7 +184,7 @@ public class SP0DefinitionParserTest {
 	}
 
 	@Test
-	public void testErrorPreferenceOutOfBoundsHigh() throws Exception {
+	void testErrorPreferenceOutOfBoundsHigh() throws Exception {
 		var parser = new SP0DefinitionParser(2);
 
 		Exception ex1;
@@ -202,7 +202,7 @@ public class SP0DefinitionParserTest {
 	}
 
 	@Test
-	public void testErrorPreferenceOutOfBoundsLow() throws Exception {
+	void testErrorPreferenceOutOfBoundsLow() throws Exception {
 		var parser = new SP0DefinitionParser(2);
 
 		Exception ex1;
@@ -220,7 +220,7 @@ public class SP0DefinitionParserTest {
 	}
 
 	@Test
-	public void testErrorPreferenceDuplicate() throws Exception {
+	void testErrorPreferenceDuplicate() throws Exception {
 		var parser = new SP0DefinitionParser(2);
 
 		Exception ex1;

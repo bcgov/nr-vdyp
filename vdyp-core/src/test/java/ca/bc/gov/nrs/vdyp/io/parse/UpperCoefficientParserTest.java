@@ -17,10 +17,10 @@ import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.SP0Definition;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
-public class UpperCoefficientParserTest {
+class UpperCoefficientParserTest {
 
 	@Test
-	public void testParseSimple() throws Exception {
+	void testParseSimple() throws Exception {
 
 		var parser = new UpperCoefficientParser();
 
@@ -41,7 +41,7 @@ public class UpperCoefficientParserTest {
 	}
 
 	@Test
-	public void testParseBadSpecies() throws Exception {
+	void testParseBadSpecies() throws Exception {
 
 		var parser = new UpperCoefficientParser();
 
@@ -61,7 +61,7 @@ public class UpperCoefficientParserTest {
 	}
 
 	@Test
-	public void testParseBadRegion() throws Exception {
+	void testParseBadRegion() throws Exception {
 
 		var parser = new UpperCoefficientParser();
 
