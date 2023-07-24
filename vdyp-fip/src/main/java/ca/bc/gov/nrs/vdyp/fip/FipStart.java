@@ -3,11 +3,14 @@ package ca.bc.gov.nrs.vdyp.fip;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +25,10 @@ import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.StreamingParserFactory;
+import ca.bc.gov.nrs.vdyp.model.BaseVdypLayer;
 import ca.bc.gov.nrs.vdyp.model.Layer;
+import ca.bc.gov.nrs.vdyp.model.VdypLayer;
+import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 
 public class FipStart {
 
@@ -138,10 +144,98 @@ public class FipStart {
 				// CALL FIPCALCV( BAV, IER)
 				// CALL FIPCALC1( BAV, BA_TOTL1, IER)
 
+				Map<Layer, VdypLayer> processedLayers = new HashMap<>();
+
+				for (FipLayer fipLayer : polygon.getLayers().values()) {
+					switch (fipLayer.getLayer()) {
+					case PRIMARY:
+						assert fipLayer instanceof FipLayerPrimary;
+						var primaryLayer = processLayerAsPrimary(polygon, (FipLayerPrimary) fipLayer);
+						processedLayers.put(Layer.PRIMARY, primaryLayer);
+						break;
+					case VETERAN:
+						var veteranLayer = processLayerAsVeteran(polygon, fipLayer);
+						processedLayers.put(Layer.VETERAN, veteranLayer);
+						break;
+					default:
+						throw new UnsupportedOperationException();
+					}
+				}
+
 			}
 		} catch (IOException | ResourceParseException ex) {
 			throw new ProcessingException("Error while reading or writing data.", ex);
 		}
+	}
+
+	private VdypLayer processLayerAsPrimary(FipPolygon fipPolygon, FipLayerPrimary fipLayerPrimary) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	/**
+	 * Creates a Comparator that compares two objects by applying the given accessor
+	 * function to get comparable values that are then compared.
+	 *
+	 * @param <T>      type to be compared with the Comparator
+	 * @param <V>      Comparable type
+	 * @param accessor Function getting a V from a T
+	 */
+	static <T, V extends Comparable<V>> Comparator<T> compareUsing(Function<T, V> accessor) {
+		return (x, y) -> accessor.apply(x).compareTo(accessor.apply(y));
+	}
+
+	VdypLayer processLayerAsVeteran(FipPolygon fipPolygon, FipLayer fipLayer) {
+
+		var polygonIdentifier = fipLayer.getPolygonIdentifier();
+
+		assert fipLayer.getLayer().equals(Layer.VETERAN) : "Layer must be VETERAN";
+		assert fipPolygon.getPolygonIdentifier().equals(fipLayer.getPolygonIdentifier()) : String.format(
+				"Polygon polygonIdentifier '%s' doesn't match that of layer '%s'", fipPolygon.getPolygonIdentifier(),
+				fipLayer.getPolygonIdentifier()
+		);
+
+		var layer = Layer.VETERAN;
+
+		// find Primary genus (highest percentage) ISPPVET
+
+		var primaryGenus = fipLayer.getSpecies().values().stream() //
+				.max(compareUsing(FipSpecies::getPercentGenus)) //
+				.orElseThrow(() -> new IllegalStateException("No primarty genus (SP0) found. This should not happen."))
+				.getGenus();
+
+		// ageTotal copy, LVCOM3/AGETOTLV copied from FIPL_V/AGETOT_LV
+		var ageTotal = fipLayer.getAgeTotal();
+
+		// yearsToBreastHeight copy, minimum 6.0, LVCOM3/YTBHLV copied from
+		// FIPL_V/YTBH_L
+		var yearsToBreastHeight = Math.max(fipLayer.getYearsToBreastHeight(), 6.0f);
+
+		// breastHeightAge LVCOM3/AGEBHLV ageTotal-yearsToBreastHeight
+		var breastHeightAge = ageTotal - yearsToBreastHeight;
+
+		// height? copy LVCOM3/HDLV = FIPL_V/HT_LV
+		var height = fipLayer.getHeight();
+
+		// Call EMP098 to get Veteran Basal Area, store in LVCOM1/BA array at positions
+		// 0,0 and 0,4
+		// TODO
+
+		// Copy over Species entries.
+		// LVCOM/ISPLV=ISPV
+		// LVCOM4/SP0LV=FIPSA/SP0V
+		// LVCOM4/SP64DISTLV=FIPSA/VDISTRV
+		// LVCOM1/PCLTV=FIPS/PCTVOLV
+		// LVCOM1/HL=FIPL_V/HT_LV
+		var vdypSpecies = fipLayer.getSpecies().values().stream() //
+				.map(fipSpec -> new VdypSpecies(fipSpec, height)) //
+				.collect(Collectors.toMap(VdypSpecies::getGenus, Function.identity()));
+
+		var vdypLayer = new VdypLayer(
+				polygonIdentifier, layer, ageTotal, height, yearsToBreastHeight, breastHeightAge, vdypSpecies
+		);
+
+		return vdypLayer;
 	}
 
 	private FipPolygon getPolygon(
@@ -169,7 +263,7 @@ public class FipStart {
 		}
 
 		// Validate that layers belong to the correct polygon
-		for (var layer : layers.values()) {
+		for (BaseVdypLayer layer : layers.values()) {
 			if (!layer.getPolygonIdentifier().equals(polygon.getPolygonIdentifier())) {
 				throw validationError(
 						"Record in layer file contains layer for polygon %s when expecting one for %s.",
@@ -243,7 +337,7 @@ public class FipStart {
 		// being present. Consider extending validation of other properties to other
 		// layers.
 
-		for (var layer : polygon.getLayers().values()) {
+		for (FipLayer layer : polygon.getLayers().values()) {
 			var height = layer.getHeight();
 
 			throwIfPresent(
@@ -276,7 +370,7 @@ public class FipStart {
 			);
 		}
 
-		for (var layer : polygon.getLayers().values()) {
+		for (FipLayer layer : polygon.getLayers().values()) {
 			var percentTotal = layer.getSpecies().values().stream()//
 					.map(FipSpecies::getPercentGenus)//
 					.reduce(0.0f, (x, y) -> x + y);

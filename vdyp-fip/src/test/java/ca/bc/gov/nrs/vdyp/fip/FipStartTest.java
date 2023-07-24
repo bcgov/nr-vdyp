@@ -5,6 +5,7 @@ import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -32,10 +33,10 @@ import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.model.Layer;
 
-public class FipStartTest {
+class FipStartTest {
 
 	@Test
-	public void testProcessEmpty() throws Exception {
+	void testProcessEmpty() throws Exception {
 
 		testWith(Arrays.asList(), Arrays.asList(), Arrays.asList(), (app, controlMap) -> {
 			assertDoesNotThrow(app::process);
@@ -43,7 +44,7 @@ public class FipStartTest {
 	}
 
 	@Test
-	public void testProcessSimple() throws Exception {
+	void testProcessSimple() throws Exception {
 
 		var polygonId = polygonId("Test Polygon", 2023);
 		var layer = Layer.PRIMARY;
@@ -62,7 +63,7 @@ public class FipStartTest {
 	}
 
 	@Test
-	public void testPolygonWithNoLayersRecord() throws Exception {
+	void testPolygonWithNoLayersRecord() throws Exception {
 
 		var polygonId = polygonId("Test Polygon", 2023);
 
@@ -80,7 +81,7 @@ public class FipStartTest {
 	}
 
 	@Test
-	public void testPolygonWithNoSpeciesRecord() throws Exception {
+	void testPolygonWithNoSpeciesRecord() throws Exception {
 
 		var polygonId = polygonId("Test Polygon", 2023);
 
@@ -98,7 +99,7 @@ public class FipStartTest {
 	}
 
 	@Test
-	public void testPolygonWithNoPrimaryLayer() throws Exception {
+	void testPolygonWithNoPrimaryLayer() throws Exception {
 
 		var polygonId = polygonId("Test Polygon", 2023);
 		var layer = Layer.VETERAN;
@@ -128,7 +129,7 @@ public class FipStartTest {
 	}
 
 	@Test
-	public void testPrimaryLayerHeightLessThanMinimum() throws Exception {
+	void testPrimaryLayerHeightLessThanMinimum() throws Exception {
 
 		var polygonId = polygonId("Test Polygon", 2023);
 		var layer = Layer.PRIMARY;
@@ -159,7 +160,7 @@ public class FipStartTest {
 	}
 
 	@Test
-	public void testVeteranLayerHeightLessThanMinimum() throws Exception {
+	void testVeteranLayerHeightLessThanMinimum() throws Exception {
 
 		var polygonId = polygonId("Test Polygon", 2023);
 		var layer = Layer.VETERAN;
@@ -195,7 +196,7 @@ public class FipStartTest {
 	}
 
 	@Test
-	public void testPrimaryLayerYearsToBreastHeightLessThanMinimum() throws Exception {
+	void testPrimaryLayerYearsToBreastHeightLessThanMinimum() throws Exception {
 
 		var polygonId = polygonId("Test Polygon", 2023);
 		var layer = Layer.PRIMARY;
@@ -226,7 +227,7 @@ public class FipStartTest {
 	}
 
 	@Test
-	public void testPrimaryLayerTotalAgeLessThanYearsToBreastHeight() throws Exception {
+	void testPrimaryLayerTotalAgeLessThanYearsToBreastHeight() throws Exception {
 
 		var polygonId = polygonId("Test Polygon", 2023);
 		var layer = Layer.PRIMARY;
@@ -262,7 +263,7 @@ public class FipStartTest {
 	}
 
 	@Test
-	public void testPrimaryLayerSiteIndexLessThanMinimum() throws Exception {
+	void testPrimaryLayerSiteIndexLessThanMinimum() throws Exception {
 
 		var polygonId = polygonId("Test Polygon", 2023);
 		var layer = Layer.PRIMARY;
@@ -293,7 +294,7 @@ public class FipStartTest {
 	}
 
 	@Test
-	public void testPolygonWithModeFipYoung() throws Exception {
+	void testPolygonWithModeFipYoung() throws Exception {
 
 		var polygonId = polygonId("Test Polygon", 2023);
 		var layer = Layer.PRIMARY;
@@ -320,7 +321,7 @@ public class FipStartTest {
 	}
 
 	@Test
-	public void testOneSpeciesLessThan100Percent() throws Exception {
+	void testOneSpeciesLessThan100Percent() throws Exception {
 
 		var polygonId = polygonId("Test Polygon", 2023);
 		var layer = Layer.PRIMARY;
@@ -351,7 +352,7 @@ public class FipStartTest {
 	}
 
 	@Test
-	public void testOneSpeciesMoreThan100Percent() throws Exception {
+	void testOneSpeciesMoreThan100Percent() throws Exception {
 
 		var polygonId = polygonId("Test Polygon", 2023);
 		var layer = Layer.PRIMARY;
@@ -382,7 +383,7 @@ public class FipStartTest {
 	}
 
 	@Test
-	public void testTwoSpeciesSumTo100Percent() throws Exception {
+	void testTwoSpeciesSumTo100Percent() throws Exception {
 
 		var polygonId = polygonId("Test Polygon", 2023);
 		var layer = Layer.PRIMARY;
@@ -410,7 +411,7 @@ public class FipStartTest {
 	}
 
 	@Test
-	public void testTwoSpeciesSumToLessThan100Percent() throws Exception {
+	void testTwoSpeciesSumToLessThan100Percent() throws Exception {
 
 		var polygonId = polygonId("Test Polygon", 2023);
 		var layer = Layer.PRIMARY;
@@ -448,7 +449,7 @@ public class FipStartTest {
 	}
 
 	@Test
-	public void testTwoSpeciesSumToMoreThan100Percent() throws Exception {
+	void testTwoSpeciesSumToMoreThan100Percent() throws Exception {
 
 		var polygonId = polygonId("Test Polygon", 2023);
 		var layer = Layer.PRIMARY;
@@ -486,7 +487,7 @@ public class FipStartTest {
 	}
 
 	@Test
-	public void testFractionGenusCalculation() throws Exception {
+	void testFractionGenusCalculation() throws Exception {
 
 		var polygonId = polygonId("Test Polygon", 2023);
 		var layer = Layer.PRIMARY;
@@ -521,7 +522,7 @@ public class FipStartTest {
 	}
 
 	@Test
-	public void testFractionGenusCalculationWithSlightError() throws Exception {
+	void testFractionGenusCalculationWithSlightError() throws Exception {
 
 		var polygonId = polygonId("Test Polygon", 2023);
 		var layer = Layer.PRIMARY;
@@ -553,6 +554,39 @@ public class FipStartTest {
 				}
 		);
 
+	}
+
+	@Test
+	void testProcessVeteran() throws Exception {
+
+		var polygonId = polygonId("Test Polygon", 2023);
+
+		var fipPolygon = getTestPolygon(polygonId, valid());
+		var fipLayer = getTestVeteranLayer(polygonId, valid());
+		var fipSpecies = getTestSpecies(polygonId, Layer.VETERAN, valid());
+		fipPolygon.setLayers(Collections.singletonMap(Layer.VETERAN, fipLayer));
+		fipLayer.setSpecies(Collections.singletonMap(fipSpecies.getGenus(), fipSpecies));
+
+		var app = new FipStart();
+
+		var result = app.processLayerAsVeteran(fipPolygon, fipLayer);
+
+		assertThat(result, notNullValue());
+
+		// Keys
+		assertThat(result, hasProperty("polygonIdentifier", is(polygonId)));
+		assertThat(result, hasProperty("layer", is(Layer.VETERAN)));
+
+		// Direct Copy
+		assertThat(result, hasProperty("ageTotal", is(8f)));
+		assertThat(result, hasProperty("height", is(6f)));
+		assertThat(result, hasProperty("yearsToBreastHeight", is(7f)));
+
+		// Computed
+		assertThat(result, hasProperty("breastHeightAge", is(1f)));
+
+		// Remap species
+		assertThat(result, hasProperty("species"));
 	}
 
 	private static <T> MockStreamingParser<T>
