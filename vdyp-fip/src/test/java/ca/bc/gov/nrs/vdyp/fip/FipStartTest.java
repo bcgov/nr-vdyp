@@ -1,9 +1,13 @@
 package ca.bc.gov.nrs.vdyp.fip;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.aMapWithSize;
 import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.anEmptyMap;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasProperty;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -32,6 +36,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.MockStreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.model.Layer;
+import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 
 class FipStartTest {
 
@@ -586,16 +591,35 @@ class FipStartTest {
 		assertThat(result, hasProperty("breastHeightAge", is(1f)));
 
 		// Remap species
-		assertThat(result, hasProperty("species"));
+		assertThat(
+				result, hasProperty(
+						"species", allOf(
+								aMapWithSize(1), //
+								hasEntry(is("B"), instanceOf(VdypSpecies.class))//
+						)
+				)
+		);
+		var speciesResult = result.getSpecies().get("B");
+
+		// Keys
+		assertThat(speciesResult, hasProperty("polygonIdentifier", is(polygonId)));
+		assertThat(speciesResult, hasProperty("layer", is(Layer.VETERAN)));
+		assertThat(speciesResult, hasProperty("genus", is("B")));
+
+		// Copied
+		assertThat(speciesResult, hasProperty("percentGenus", is(100f)));
+
+		// Species distribution
+		assertThat(speciesResult, hasProperty("speciesPercent", anEmptyMap())); // Test map was empty
 	}
-	
+
 	@Test
 	void testProcessVeteranYearsToBreastHeightLessThanMinimum() throws Exception {
 
 		var polygonId = polygonId("Test Polygon", 2023);
 
 		var fipPolygon = getTestPolygon(polygonId, valid());
-		var fipLayer = getTestVeteranLayer(polygonId, (l)->{
+		var fipLayer = getTestVeteranLayer(polygonId, (l) -> {
 			l.setYearsToBreastHeight(5.0f);
 		});
 		var fipSpecies = getTestSpecies(polygonId, Layer.VETERAN, valid());
@@ -608,11 +632,12 @@ class FipStartTest {
 
 		assertThat(result, notNullValue());
 
+		// Set minimum
 		assertThat(result, hasProperty("yearsToBreastHeight", is(6f)));
 
-		// Computed
+		// Computed based on minimum
 		assertThat(result, hasProperty("breastHeightAge", is(2f)));
-	
+
 	}
 
 	private static <T> MockStreamingParser<T>

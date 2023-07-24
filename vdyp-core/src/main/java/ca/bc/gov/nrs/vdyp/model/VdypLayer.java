@@ -12,6 +12,7 @@ public class VdypLayer extends BaseVdypLayer<VdypSpecies> {
 	) {
 		super(polygonIdentifier, layer, ageTotal, height, yearsToBreastHeight);
 		this.breastHeightAge = breastHeightAge;
+		setSpecies(species);
 	}
 
 	public float getBreastHeightAge() {
