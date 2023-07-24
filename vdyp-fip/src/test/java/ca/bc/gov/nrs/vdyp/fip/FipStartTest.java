@@ -18,6 +18,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -637,6 +638,57 @@ class FipStartTest {
 
 		// Computed based on minimum
 		assertThat(result, hasProperty("breastHeightAge", is(2f)));
+
+	}
+
+	@Test
+	void testProcessVeteranWithSpeciesDistribution() throws Exception {
+
+		var polygonId = polygonId("Test Polygon", 2023);
+
+		var fipPolygon = getTestPolygon(polygonId, valid());
+		var fipLayer = getTestVeteranLayer(polygonId, valid());
+		var fipSpecies = getTestSpecies(polygonId, Layer.VETERAN, x -> {
+			var map = new LinkedHashMap<String, Float>();
+			map.put("S1", 75f);
+			map.put("S2", 25f);
+			x.setSpeciesPercent(map);
+		});
+		fipPolygon.setLayers(Collections.singletonMap(Layer.VETERAN, fipLayer));
+		fipLayer.setSpecies(Collections.singletonMap(fipSpecies.getGenus(), fipSpecies));
+
+		var app = new FipStart();
+
+		var result = app.processLayerAsVeteran(fipPolygon, fipLayer);
+
+		assertThat(result, notNullValue());
+
+		// Remap species
+		assertThat(
+				result, hasProperty(
+						"species", allOf(
+								aMapWithSize(1), //
+								hasEntry(is("B"), instanceOf(VdypSpecies.class))//
+						)
+				)
+		);
+		var speciesResult = result.getSpecies().get("B");
+
+		// Keys
+		assertThat(speciesResult, hasProperty("polygonIdentifier", is(polygonId)));
+		assertThat(speciesResult, hasProperty("layer", is(Layer.VETERAN)));
+		assertThat(speciesResult, hasProperty("genus", is("B")));
+
+		// Copied
+		assertThat(speciesResult, hasProperty("percentGenus", is(100f)));
+
+		// Species distribution
+		assertThat(speciesResult, hasProperty("speciesPercent", aMapWithSize(2)));
+
+		var distributionResult = speciesResult.getSpeciesPercent();
+
+		assertThat(distributionResult, hasEntry("S1", 75f));
+		assertThat(distributionResult, hasEntry("S2", 25f));
 
 	}
 
