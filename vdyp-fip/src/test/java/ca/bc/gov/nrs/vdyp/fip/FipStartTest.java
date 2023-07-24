@@ -588,6 +588,32 @@ class FipStartTest {
 		// Remap species
 		assertThat(result, hasProperty("species"));
 	}
+	
+	@Test
+	void testProcessVeteranYearsToBreastHeightLessThanMinimum() throws Exception {
+
+		var polygonId = polygonId("Test Polygon", 2023);
+
+		var fipPolygon = getTestPolygon(polygonId, valid());
+		var fipLayer = getTestVeteranLayer(polygonId, (l)->{
+			l.setYearsToBreastHeight(5.0f);
+		});
+		var fipSpecies = getTestSpecies(polygonId, Layer.VETERAN, valid());
+		fipPolygon.setLayers(Collections.singletonMap(Layer.VETERAN, fipLayer));
+		fipLayer.setSpecies(Collections.singletonMap(fipSpecies.getGenus(), fipSpecies));
+
+		var app = new FipStart();
+
+		var result = app.processLayerAsVeteran(fipPolygon, fipLayer);
+
+		assertThat(result, notNullValue());
+
+		assertThat(result, hasProperty("yearsToBreastHeight", is(6f)));
+
+		// Computed
+		assertThat(result, hasProperty("breastHeightAge", is(2f)));
+	
+	}
 
 	private static <T> MockStreamingParser<T>
 			mockStream(IMocksControl control, Map<String, Object> controlMap, String key, String name)
