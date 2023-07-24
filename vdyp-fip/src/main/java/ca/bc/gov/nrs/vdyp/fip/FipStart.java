@@ -232,7 +232,8 @@ public class FipStart {
 				.collect(Collectors.toMap(VdypSpecies::getGenus, Function.identity()));
 
 		var vdypLayer = new VdypLayer(
-				polygonIdentifier, layer, ageTotal, height, yearsToBreastHeight, breastHeightAge, vdypSpecies
+				polygonIdentifier, layer, ageTotal, height, yearsToBreastHeight, breastHeightAge, vdypSpecies,
+				primaryGenus
 		);
 
 		return vdypLayer;

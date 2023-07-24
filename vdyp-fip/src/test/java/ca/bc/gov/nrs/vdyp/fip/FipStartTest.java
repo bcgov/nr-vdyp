@@ -692,6 +692,41 @@ class FipStartTest {
 
 	}
 
+	@Test
+	void testProcessVeteranSoleSpeciesIsPrimary() throws Exception {
+
+		var polygonId = polygonId("Test Polygon", 2023);
+
+		var fipPolygon = getTestPolygon(polygonId, valid());
+		var fipLayer = getTestVeteranLayer(polygonId, valid());
+		var fipSpecies = getTestSpecies(polygonId, Layer.VETERAN, x -> {
+			var map = new LinkedHashMap<String, Float>();
+			map.put("S1", 75f);
+			map.put("S2", 25f);
+			x.setSpeciesPercent(map);
+		});
+		fipPolygon.setLayers(Collections.singletonMap(Layer.VETERAN, fipLayer));
+		fipLayer.setSpecies(Collections.singletonMap(fipSpecies.getGenus(), fipSpecies));
+
+		var app = new FipStart();
+
+		var result = app.processLayerAsVeteran(fipPolygon, fipLayer);
+
+		assertThat(result, notNullValue());
+
+		assertThat(result, hasProperty("primaryGenus", is("B")));
+		assertThat(
+				result, hasProperty(
+						"primarySpeciesRecord", is(
+								allOf(
+										hasProperty("genus", is("B")) //
+								)
+						)
+				)
+		);
+
+	}
+
 	private static <T> MockStreamingParser<T>
 			mockStream(IMocksControl control, Map<String, Object> controlMap, String key, String name)
 					throws IOException {
