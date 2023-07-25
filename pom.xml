@@ -26,7 +26,6 @@
 		<module>vdyp-fip</module>
 		<module>vdyp-buildtools</module>
 		<module>vdyp-sindex</module>
-		<module>vdyp-proofofconcept</module>
 	</modules>
 
 	<dependencyManagement>
