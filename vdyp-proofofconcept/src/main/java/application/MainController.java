@@ -28,7 +28,7 @@ public class MainController {
 		// Set up secondary window
 		FXMLLoader loader = new FXMLLoader(getClass().getResource("scene.fxml"));
 		Parent secondaryLayout = loader.load();
-		Scene secondScene = new Scene(secondaryLayout);
+		Scene secondScene = new Scene(secondaryLayout);			
 		secondScene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
 
 		// New window (Stage)

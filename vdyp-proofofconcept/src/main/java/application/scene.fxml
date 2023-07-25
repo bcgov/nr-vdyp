@@ -7,6 +7,7 @@
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.ToggleGroup?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
@@ -228,15 +229,18 @@
                                           <Insets bottom="5.0" />
                                        </GridPane.margin>
                                     </Label>
-                                    <RadioButton mnemonicParsing="false" text="Volume" GridPane.columnIndex="1">
+                                    <RadioButton mnemonicParsing="false" selected="true" text="Volume" GridPane.columnIndex="1">
                                        <font>
                                           <Font name="System Bold" size="10.0" />
                                        </font>
                                        <GridPane.margin>
                                           <Insets bottom="5.0" />
                                        </GridPane.margin>
+                                       <toggleGroup>
+                                          <ToggleGroup fx:id="speciespercent" />
+                                       </toggleGroup>
                                     </RadioButton>
-                                    <RadioButton mnemonicParsing="false" text="Basal Area" GridPane.columnIndex="2">
+                                    <RadioButton mnemonicParsing="false" text="Basal Area" toggleGroup="$speciespercent" GridPane.columnIndex="2">
                                        <font>
                                           <Font name="System Bold" size="10.0" />
                                        </font>
