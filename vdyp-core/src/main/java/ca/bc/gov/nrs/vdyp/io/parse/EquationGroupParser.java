@@ -11,6 +11,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import ca.bc.gov.nrs.vdyp.common.ExpectationDifference;
+import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
+import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
 
 /**
  * Parser for a Volume Equation Group data file
@@ -18,7 +20,7 @@ import ca.bc.gov.nrs.vdyp.common.ExpectationDifference;
  * @author Kevin Smith, Vivid Solutions
  *
  */
-public abstract class EquationGroupParser implements ControlMapSubResourceParser<Map<String, Map<String, Integer>>> {
+public abstract class EquationGroupParser implements ControlMapSubResourceParser<MatrixMap2<String, String, Integer>> {
 
 	LineParser lineParser;
 
@@ -34,33 +36,33 @@ public abstract class EquationGroupParser implements ControlMapSubResourceParser
 	}
 
 	@Override
-	public Map<String, Map<String, Integer>> parse(InputStream is, Map<String, Object> control)
+	public MatrixMap2<String, String, Integer> parse(InputStream is, Map<String, Object> control)
 			throws IOException, ResourceParseException {
 
-		final var sp0List = GenusDefinitionParser.getSpecies(control);
+		final var sp0Keys = GenusDefinitionParser.getSpeciesAliases(control);
 
-		var becKeys = BecDefinitionParser.getBecAliases(control);
+		final var becKeys = BecDefinitionParser.getBecAliases(control);
 
-		Map<String, Map<String, Integer>> result = new HashMap<>();
-		result = lineParser.parse(is, result, (v, r) -> {
+		Map<String, Map<String, Integer>> resultMap = new HashMap<>();
+		resultMap = lineParser.parse(is, resultMap, (v, r) -> {
 			final String sp0Alias = (String) v.get("sp0Alias");
 			final String becAlias = (String) v.get("becAlias");
 
-			if (!sp0List.stream().anyMatch(def -> def.getAlias().equalsIgnoreCase(sp0Alias))) {
+			if (!sp0Keys.contains(sp0Alias)) {
 				throw new ValueParseException(sp0Alias, sp0Alias + " is not an SP0 identifier");
 			}
 			if (!becKeys.contains(becAlias)) {
 				throw new ValueParseException(becAlias, becAlias + " is not a BEC identifier");
 			}
 
-			int vgrpId = (Integer) v.get("grpId");
+			int grpId = (Integer) v.get("grpId");
 
-			r.computeIfAbsent(sp0Alias, k -> new HashMap<>()).put(becAlias, vgrpId);
+			r.computeIfAbsent(sp0Alias, k -> new HashMap<>()).put(becAlias, grpId);
 			return r;
 		}, control);
 
-		for (var e : result.entrySet()) {
-			result.put(e.getKey(), Collections.unmodifiableMap(e.getValue()));
+		for (var e : resultMap.entrySet()) {
+			resultMap.put(e.getKey(), Collections.unmodifiableMap(e.getValue()));
 		}
 
 		// Validate that the cartesian product of SP0 and BEC values has been provided,
@@ -70,11 +72,9 @@ public abstract class EquationGroupParser implements ControlMapSubResourceParser
 
 		List<String> errors = new ArrayList<>();
 
-		var sp0Keys = GenusDefinitionParser.getSpeciesAliases(control);
-
 		var restrictedBecKeys = becKeys.stream().filter(k -> !hiddenBecs.contains(k)).toList();
 
-		var sp0Diff = ExpectationDifference.difference(result.keySet(), sp0Keys);
+		var sp0Diff = ExpectationDifference.difference(resultMap.keySet(), sp0Keys);
 
 		sp0Diff.getMissing().stream()
 				.map(sp0Key -> String.format("Expected mappings for SP0 %s but it was missing", sp0Key))
@@ -82,7 +82,7 @@ public abstract class EquationGroupParser implements ControlMapSubResourceParser
 		sp0Diff.getUnexpected().stream().map(sp0Key -> String.format("Unexpected mapping for SP0 %s", sp0Key))
 				.collect(Collectors.toCollection(() -> errors));
 
-		for (var entry : result.entrySet()) {
+		for (var entry : resultMap.entrySet()) {
 			var becDiff = ExpectationDifference.difference(entry.getValue().keySet(), restrictedBecKeys);
 			var sp0Key = entry.getKey();
 			becDiff.getMissing().stream().map(
@@ -97,8 +97,13 @@ public abstract class EquationGroupParser implements ControlMapSubResourceParser
 		if (!errors.isEmpty()) {
 			throw new ResourceParseValidException(String.join(System.lineSeparator(), errors));
 		}
-
-		return Collections.unmodifiableMap(result);
+		
+		// convert nested Map to a MatrixMap.  Building as the nested map first makes validation easier.
+		
+		var resultMatrix = new MatrixMap2Impl<String, String, Integer>(sp0Keys, becKeys);
+		resultMatrix.addAll(resultMap);
+		
+		return resultMatrix;
 	}
 
 	public void setHiddenBecs(Collection<String> hiddenBecs) {

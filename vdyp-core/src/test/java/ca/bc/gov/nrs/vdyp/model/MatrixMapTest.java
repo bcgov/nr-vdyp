@@ -14,6 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -195,4 +196,21 @@ class MatrixMapTest {
 
 	}
 
+	@Test
+	void testBuildFromMapOfMaps() {
+		var dim1 = Arrays.asList("a", "b");
+		var dim2 = Arrays.asList(1, 2);
+		var map = new MatrixMap2Impl<String, Integer, Character>(dim1, dim2);
+		
+		var nestedMap = new HashMap<String, Map<Integer, Character>>();
+		nestedMap.put("a", Collections.singletonMap(1, 'X'));
+		nestedMap.put("b", Collections.singletonMap(2, 'Y'));
+		
+		map.addAll(nestedMap);
+		
+		assertThat(map.getM("a", 1), present(is('X')));
+		assertThat(map.getM("a", 2), notPresent());
+		assertThat(map.getM("b", 1), notPresent());
+		assertThat(map.getM("b", 2), present(is('Y')));
+	}
 }

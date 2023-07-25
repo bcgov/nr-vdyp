@@ -8,5 +8,4 @@ public class MatrixMap2Impl<K1, K2, V> extends MatrixMapImpl<V> implements Matri
 	public MatrixMap2Impl(Collection<K1> dimension1, Collection<K2> dimension2) {
 		super(Arrays.asList(dimension1, dimension2));
 	}
-
 }

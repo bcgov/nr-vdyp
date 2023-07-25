@@ -250,7 +250,11 @@ public class FipStart {
 					return vs;
 				}) //
 				.collect(Collectors.toMap(VdypSpecies::getGenus, Function.identity()));
-
+		
+		// Lookup volume group, Decay Group, and B group? for each species.
+		
+		
+		
 		var vdypLayer = new VdypLayer(polygonIdentifier, layer);
 		vdypLayer.setAgeTotal(ageTotal);
 		vdypLayer.setHeight(height);
