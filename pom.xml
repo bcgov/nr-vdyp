@@ -18,7 +18,7 @@
 		<junit.version>5.9.2</junit.version>
 		<hamcrest.version>2.2</hamcrest.version>
 		<easymock.version>5.1.0</easymock.version>
-		
+
 	</properties>
 
 	<modules>
@@ -31,10 +31,22 @@
 
 	<dependencyManagement>
 		<dependencies>
+			<dependency>
+				<groupId>com.google.code.findbugs</groupId>
+				<artifactId>jsr305</artifactId>
+				<version>3.0.2</version>
+			</dependency>
 
 			<dependency>
 				<groupId>org.junit.jupiter</groupId>
 				<artifactId>junit-jupiter-engine</artifactId>
+				<version>${junit.version}</version>
+				<scope>test</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>org.junit.jupiter</groupId>
+				<artifactId>junit-jupiter-api</artifactId>
 				<version>${junit.version}</version>
 				<scope>test</scope>
 			</dependency>
@@ -117,6 +129,7 @@
 					</execution>
 				</executions>
 			</plugin>
+
 		</plugins>
 		
 	</build>
