@@ -244,7 +244,11 @@ public class FipStart {
 		// LVCOM1/PCLTV=FIPS/PCTVOLV
 		// LVCOM1/HL=FIPL_V/HT_LV
 		var vdypSpecies = fipLayer.getSpecies().values().stream() //
-				.map(fipSpec -> new VdypSpecies(fipSpec, height)) //
+				.map(fipSpec -> {
+					var vs = new VdypSpecies(fipSpec);
+					vs.setLoreyHeightByUtilization(new Coefficients(new float[] {0f, height}, -1));
+					return vs;
+				}) //
 				.collect(Collectors.toMap(VdypSpecies::getGenus, Function.identity()));
 
 		var vdypLayer = new VdypLayer(polygonIdentifier, layer);
@@ -284,7 +288,7 @@ public class FipStart {
 		}
 
 		// Validate that layers belong to the correct polygon
-		for (BaseVdypLayer layer : layers.values()) {
+		for (FipLayer layer : layers.values()) {
 			if (!layer.getPolygonIdentifier().equals(polygon.getPolygonIdentifier())) {
 				throw validationError(
 						"Record in layer file contains layer for polygon %s when expecting one for %s.",
@@ -347,8 +351,7 @@ public class FipStart {
 
 		if (primaryLayer.getAgeTotal() - primaryLayer.getYearsToBreastHeight() < 0.5f) {
 			throw validationError(
-					"Polygon %s has %s layer where total age is less than YTBH.", polygon.getPolygonIdentifier(),
-					Layer.PRIMARY
+					"Polygon %s has %s layer where total age is less than YTBH.", polygon.getPolygonIdentifier(), Layer.PRIMARY
 			);
 		}
 
@@ -418,8 +421,7 @@ public class FipStart {
 		var coefficients = ((MatrixMap2<String, Region, Coefficients>) controlMap.get(VeteranBQParser.CONTROL_KEY))
 				.getM(genus, region).orElseThrow(
 						() -> new ProcessingException(
-								"Could not find Veteran Base Area Coefficients for genus " + genus + " and region "
-										+ region
+								"Could not find Veteran Base Area Coefficients for genus " + genus + " and region " + region
 						)
 				);
 

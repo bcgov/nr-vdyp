@@ -865,6 +865,44 @@ class FipStartTest {
 		);
 
 	}
+	
+	@Test
+	void testVeteranLayerLoreyHeight() throws Exception {
+
+		var polygonId = polygonId("Test Polygon", 2023);
+
+		var fipPolygon = getTestPolygon(polygonId, valid());
+		var fipLayer = getTestVeteranLayer(polygonId, valid());
+		var fipSpecies = getTestSpecies(polygonId, Layer.VETERAN, x -> {
+			var map = new LinkedHashMap<String, Float>();
+			map.put("S1", 100f);
+			x.setSpeciesPercent(map);
+		});
+		fipPolygon.setLayers(Collections.singletonMap(Layer.VETERAN, fipLayer));
+		fipLayer.setSpecies(Collections.singletonMap(fipSpecies.getGenus(), fipSpecies));
+
+		var controlMap = new HashMap<String, Object>();
+		BecDefinitionParserTest.populateControlMapReal(controlMap);
+		GenusDefinitionParserTest.populateControlMapReal(controlMap);
+		populateVeteranBqMap(controlMap);
+
+		var app = new FipStart();
+		app.setControlMap(controlMap);
+
+		var result = app.processLayerAsVeteran(fipPolygon, fipLayer).getPrimarySpeciesRecord();
+
+		Matcher<Float> heightMatcher = asFloat(closeTo(6f, 0.000001));
+		Matcher<Float> zeroMatcher = is(0.0f);
+		// Expect the estimated HL in 0 (-1 to 0)
+		assertThat(
+				result,
+				hasProperty(
+						"loreyHeightByUtilization",
+						contains(zeroMatcher, heightMatcher)
+				)
+		);
+
+	}
 
 	private static <T> MockStreamingParser<T>
 			mockStream(IMocksControl control, Map<String, Object> controlMap, String key, String name)
@@ -1024,10 +1062,10 @@ class FipStartTest {
 		var result = new FipSpecies(
 				polygonId, // polygonIdentifier
 				layer, // layer
-				genusId, // genus
-				100.0f, // percentGenus
-				Collections.emptyMap() // speciesPercent
+				genusId // genus
 		);
+		result.setPercentGenus(100.0f);
+		result.setSpeciesPercent(Collections.emptyMap());
 		mutator.accept(result);
 		return result;
 	};

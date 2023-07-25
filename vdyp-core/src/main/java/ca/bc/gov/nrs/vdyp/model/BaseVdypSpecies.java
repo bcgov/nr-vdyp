@@ -2,6 +2,8 @@ package ca.bc.gov.nrs.vdyp.model;
 
 import java.util.Map;
 
+import ca.bc.gov.nrs.vdyp.common.Computed;
+
 public abstract class BaseVdypSpecies {
 	final String polygonIdentifier; // FIP_P/POLYDESC
 	final Layer layer; // This is also represents the distinction between data stored in
@@ -15,30 +17,28 @@ public abstract class BaseVdypSpecies {
 
 	// This is computed from percentGenus, but VDYP7 computes it in a way that might
 	// lead to a slight difference so it's stored separately and can be modified.
+	@Computed
 	float fractionGenus; // RFBASP0/FR
 
 	Map<String, Float> speciesPercent; // Map from
 
 	protected BaseVdypSpecies(
-			String polygonIdentifier, Layer layer, String genus, float percentGenus, Map<String, Float> speciesPercent
+			String polygonIdentifier, Layer layer, String genus
 	) {
 		this.polygonIdentifier = polygonIdentifier;
 		this.layer = layer;
 		this.genus = genus;
 
-		this.setPercentGenus(percentGenus);
-
-		this.speciesPercent = speciesPercent;
 	}
 
 	protected BaseVdypSpecies(BaseVdypSpecies toCopy) {
 		this(
 				toCopy.getPolygonIdentifier(), //
 				toCopy.getLayer(), //
-				toCopy.getGenus(), //
-				toCopy.getPercentGenus(), //
-				toCopy.getSpeciesPercent() //
+				toCopy.getGenus() //
 		);
+		setPercentGenus(toCopy.getPercentGenus());
+		setSpeciesPercent(toCopy.getSpeciesPercent());
 	}
 
 	public String getPolygonIdentifier() {
@@ -53,6 +53,7 @@ public abstract class BaseVdypSpecies {
 		return percentGenus;
 	}
 
+	@Computed
 	public float getFractionGenus() {
 		return fractionGenus;
 	}
@@ -62,6 +63,7 @@ public abstract class BaseVdypSpecies {
 		this.fractionGenus = percentGenus / 100f;
 	}
 
+	@Computed
 	public void setFractionGenus(float fractionGenus) {
 		this.fractionGenus = fractionGenus;
 	}

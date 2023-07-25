@@ -6,7 +6,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import ca.bc.gov.nrs.vdyp.common.ValueOrMarker;
 import ca.bc.gov.nrs.vdyp.fip.model.FipSpecies;
@@ -102,20 +101,19 @@ public class FipSpeciesParser
 					var percentSpecies4 = (Float) entry.get(PERCENT_SPECIES_4);
 
 					var builder = new ValueOrMarker.Builder<Optional<FipSpecies>, EndOfRecord>();
-					var result = layer.handle(l -> {
+					return layer.handle(l -> {
 						return builder.value(l.map(layerType -> {
 							Map<String, Float> speciesPercent = new LinkedHashMap<>();
 							species1.ifPresent((sp) -> speciesPercent.put(sp, percentSpecies1));
 							species2.ifPresent((sp) -> speciesPercent.put(sp, percentSpecies2));
 							species3.ifPresent((sp) -> speciesPercent.put(sp, percentSpecies3));
 							species4.ifPresent((sp) -> speciesPercent.put(sp, percentSpecies4));
-							var species = new FipSpecies(polygonId, layerType, genus, percentGenus, speciesPercent);
+							var species = new FipSpecies(polygonId, layerType, genus);
+							species.setPercentGenus(percentGenus);
+							species.setSpeciesPercent(speciesPercent);
 							return species;
 						}));
-					}, m -> {
-						return builder.marker(m);
-					});
-					return result;
+					}, builder::marker);
 				}
 
 			};
