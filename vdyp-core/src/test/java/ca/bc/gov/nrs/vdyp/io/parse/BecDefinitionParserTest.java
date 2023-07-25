@@ -220,8 +220,10 @@ public class BecDefinitionParserTest {
 
 	static BecDefinition makeBec(String id, Region region, String name) {
 		return new BecDefinition(
-				id, region, name, BecDefinitionParser.GROWTH_INDEX.get("BG"),
-				BecDefinitionParser.VOLUME_INDEX.get("BG"), BecDefinitionParser.DECAY_INDEX.get("BG")
+				id, region, name, //
+				BecDefinitionParser.GROWTH_INDEX.get(id), //
+				BecDefinitionParser.VOLUME_INDEX.get(id), //
+				BecDefinitionParser.DECAY_INDEX.get(id)
 		);
 	}
 

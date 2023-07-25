@@ -87,36 +87,39 @@ public class FipLayerParser implements ControlMapValueReplacer<StreamingParserFa
 					var siteCurveNumber = (Optional<Integer>) entry.get(SITE_CURVE_NUMBER);
 
 					var builder = new ValueOrMarker.Builder<Optional<FipLayer>, EndOfRecord>();
-					var result = layer.handle(l -> {
+					return layer.handle(l -> {
 						switch (l.orElse(null)) {
 						case PRIMARY:
-							return builder.value(
-									Optional.of(
-											new FipLayerPrimary(
-													polygonId, ageTotal, height, siteIndex, crownClosure, siteSp0.get(),
-													siteSp64.get(), yearsToBreastHeight, stockingClass,
-													inventoryTypeGroup, breastHeightAge, siteCurveNumber
-											)
-									)
-							);
+							FipLayerPrimary fipLayerPrimary = new FipLayerPrimary(polygonId);
+							fipLayerPrimary.setAgeTotal(ageTotal);
+							fipLayerPrimary.setHeight(height);
+							fipLayerPrimary.setSiteIndex(siteIndex);
+							fipLayerPrimary.setCrownClosure(crownClosure);
+							fipLayerPrimary.setSiteGenus(siteSp0.get());
+							fipLayerPrimary.setSiteSpecies(siteSp64.get());
+							fipLayerPrimary.setYearsToBreastHeight(yearsToBreastHeight);
+							fipLayerPrimary.setStockingClass(stockingClass);
+							fipLayerPrimary.setInventoryTypeGroup(inventoryTypeGroup);
+							fipLayerPrimary.setBreastHeightAge(breastHeightAge);
+							fipLayerPrimary.setSiteCurveNumber(siteCurveNumber);
+							return builder.value(Optional.of(fipLayerPrimary));
 						case VETERAN:
-							return builder.value(
-									Optional.of(
-											new FipLayer(
-													polygonId, Layer.VETERAN, ageTotal, height, siteIndex, crownClosure,
-													siteSp0.get(), siteSp64.get(), yearsToBreastHeight,
-													inventoryTypeGroup, breastHeightAge
-											)
-									)
-							);
+							FipLayer fipLayerVeteran = new FipLayer(polygonId, Layer.VETERAN);
+							fipLayerVeteran.setAgeTotal(ageTotal);
+							fipLayerVeteran.setHeight(height);
+							fipLayerVeteran.setSiteIndex(siteIndex);
+							fipLayerVeteran.setCrownClosure(crownClosure);
+							fipLayerVeteran.setSiteGenus(siteSp0.get());
+							fipLayerVeteran.setSiteSpecies(siteSp64.get());
+							fipLayerVeteran.setYearsToBreastHeight(yearsToBreastHeight);
+							fipLayerVeteran.setInventoryTypeGroup(inventoryTypeGroup);
+							fipLayerVeteran.setBreastHeightAge(breastHeightAge);
+							return builder.value(Optional.of(fipLayerVeteran));
 
 						default:
 							return builder.value(Optional.empty());
 						}
-					}, m -> {
-						return builder.marker(m);
-					});
-					return result;
+					}, builder::marker);
 				}
 
 			};

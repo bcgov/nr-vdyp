@@ -4,6 +4,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.aMapWithSize;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.anEmptyMap;
+import static org.hamcrest.Matchers.closeTo;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasProperty;
@@ -26,6 +27,10 @@ import java.util.function.Consumer;
 
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
+import org.hamcrest.Description;
+import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
+import org.hamcrest.TypeSafeDiagnosingMatcher;
 import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.fip.model.FipLayer;
@@ -33,10 +38,17 @@ import ca.bc.gov.nrs.vdyp.fip.model.FipLayerPrimary;
 import ca.bc.gov.nrs.vdyp.fip.model.FipMode;
 import ca.bc.gov.nrs.vdyp.fip.model.FipPolygon;
 import ca.bc.gov.nrs.vdyp.fip.model.FipSpecies;
+import ca.bc.gov.nrs.vdyp.io.parse.BecDefinitionParserTest;
+import ca.bc.gov.nrs.vdyp.io.parse.GenusDefinitionParser;
+import ca.bc.gov.nrs.vdyp.io.parse.GenusDefinitionParserTest;
 import ca.bc.gov.nrs.vdyp.io.parse.MockStreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.StreamingParserFactory;
+import ca.bc.gov.nrs.vdyp.io.parse.VeteranBQParser;
+import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.Layer;
+import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
+import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 
 class FipStartTest {
@@ -573,7 +585,13 @@ class FipStartTest {
 		fipPolygon.setLayers(Collections.singletonMap(Layer.VETERAN, fipLayer));
 		fipLayer.setSpecies(Collections.singletonMap(fipSpecies.getGenus(), fipSpecies));
 
+		var controlMap = new HashMap<String, Object>();
+		BecDefinitionParserTest.populateControlMapReal(controlMap);
+		GenusDefinitionParserTest.populateControlMapReal(controlMap);
+		populateVeteranBqMap(controlMap);
+
 		var app = new FipStart();
+		app.setControlMap(controlMap);
 
 		var result = app.processLayerAsVeteran(fipPolygon, fipLayer);
 
@@ -614,6 +632,16 @@ class FipStartTest {
 		assertThat(speciesResult, hasProperty("speciesPercent", anEmptyMap())); // Test map was empty
 	}
 
+	void populateVeteranBqMap(HashMap<String, Object> controlMap) {
+		var speciesDim = GenusDefinitionParser.getSpeciesAliases(controlMap);
+
+		var vetBqMap = new MatrixMap2Impl<>(speciesDim, Arrays.asList(Region.values()));
+
+		vetBqMap.put("B", Region.INTERIOR, new Coefficients(Arrays.asList(0.70932f, 7.63269f, 0.62545f), 1));
+
+		controlMap.put(VeteranBQParser.CONTROL_KEY, vetBqMap);
+	}
+
 	@Test
 	void testProcessVeteranYearsToBreastHeightLessThanMinimum() throws Exception {
 
@@ -627,7 +655,13 @@ class FipStartTest {
 		fipPolygon.setLayers(Collections.singletonMap(Layer.VETERAN, fipLayer));
 		fipLayer.setSpecies(Collections.singletonMap(fipSpecies.getGenus(), fipSpecies));
 
+		var controlMap = new HashMap<String, Object>();
+		BecDefinitionParserTest.populateControlMapReal(controlMap);
+		GenusDefinitionParserTest.populateControlMapReal(controlMap);
+		populateVeteranBqMap(controlMap);
+
 		var app = new FipStart();
+		app.setControlMap(controlMap);
 
 		var result = app.processLayerAsVeteran(fipPolygon, fipLayer);
 
@@ -657,7 +691,13 @@ class FipStartTest {
 		fipPolygon.setLayers(Collections.singletonMap(Layer.VETERAN, fipLayer));
 		fipLayer.setSpecies(Collections.singletonMap(fipSpecies.getGenus(), fipSpecies));
 
+		var controlMap = new HashMap<String, Object>();
+		BecDefinitionParserTest.populateControlMapReal(controlMap);
+		GenusDefinitionParserTest.populateControlMapReal(controlMap);
+		populateVeteranBqMap(controlMap);
+
 		var app = new FipStart();
+		app.setControlMap(controlMap);
 
 		var result = app.processLayerAsVeteran(fipPolygon, fipLayer);
 
@@ -708,7 +748,13 @@ class FipStartTest {
 		fipPolygon.setLayers(Collections.singletonMap(Layer.VETERAN, fipLayer));
 		fipLayer.setSpecies(Collections.singletonMap(fipSpecies.getGenus(), fipSpecies));
 
+		var controlMap = new HashMap<String, Object>();
+		BecDefinitionParserTest.populateControlMapReal(controlMap);
+		GenusDefinitionParserTest.populateControlMapReal(controlMap);
+		populateVeteranBqMap(controlMap);
+
 		var app = new FipStart();
+		app.setControlMap(controlMap);
 
 		var result = app.processLayerAsVeteran(fipPolygon, fipLayer);
 
@@ -722,6 +768,99 @@ class FipStartTest {
 										hasProperty("genus", is("B")) //
 								)
 						)
+				)
+		);
+
+	}
+
+	@Test
+	void testProcessVeteranBiggestSpeciesIsPrimary() throws Exception {
+
+		var polygonId = polygonId("Test Polygon", 2023);
+
+		var fipPolygon = getTestPolygon(polygonId, valid());
+		var fipLayer = getTestVeteranLayer(polygonId, valid());
+		var fipSpecies1 = getTestSpecies(polygonId, Layer.VETERAN, "B", x -> {
+			var map = new LinkedHashMap<String, Float>();
+			map.put("S1", 75f);
+			map.put("S2", 25f);
+			x.setSpeciesPercent(map);
+			x.setPercentGenus(60f);
+		});
+		var fipSpecies2 = getTestSpecies(polygonId, Layer.VETERAN, "C", x -> {
+			var map = new LinkedHashMap<String, Float>();
+			map.put("S3", 75f);
+			map.put("S4", 25f);
+			x.setSpeciesPercent(map);
+			x.setPercentGenus(40f);
+		});
+		fipPolygon.setLayers(Collections.singletonMap(Layer.VETERAN, fipLayer));
+		var speciesMap = new HashMap<String, FipSpecies>();
+		speciesMap.put("B", fipSpecies1);
+		speciesMap.put("C", fipSpecies2);
+		fipLayer.setSpecies(speciesMap);
+
+		var controlMap = new HashMap<String, Object>();
+		BecDefinitionParserTest.populateControlMapReal(controlMap);
+		GenusDefinitionParserTest.populateControlMapReal(controlMap);
+		populateVeteranBqMap(controlMap);
+
+		var app = new FipStart();
+		app.setControlMap(controlMap);
+
+		var result = app.processLayerAsVeteran(fipPolygon, fipLayer);
+
+		assertThat(result, notNullValue());
+
+		assertThat(result, hasProperty("primaryGenus", is("B")));
+		assertThat(
+				result, hasProperty(
+						"primarySpeciesRecord", is(
+								allOf(
+										hasProperty("genus", is("B")) //
+								)
+						)
+				)
+		);
+
+	}
+
+	@Test
+	void testEstimateVeteranLayerBaseArea() throws Exception {
+
+		var polygonId = polygonId("Test Polygon", 2023);
+
+		var fipPolygon = getTestPolygon(polygonId, valid());
+		var fipLayer = getTestVeteranLayer(polygonId, x -> {
+			x.setHeight(10f);
+		});
+		var fipSpecies = getTestSpecies(polygonId, Layer.VETERAN, x -> {
+			var map = new LinkedHashMap<String, Float>();
+			map.put("S1", 100f);
+			x.setSpeciesPercent(map);
+		});
+		fipPolygon.setLayers(Collections.singletonMap(Layer.VETERAN, fipLayer));
+		fipLayer.setSpecies(Collections.singletonMap(fipSpecies.getGenus(), fipSpecies));
+
+		var controlMap = new HashMap<String, Object>();
+		BecDefinitionParserTest.populateControlMapReal(controlMap);
+		GenusDefinitionParserTest.populateControlMapReal(controlMap);
+		populateVeteranBqMap(controlMap);
+
+		var app = new FipStart();
+		app.setControlMap(controlMap);
+
+		var result = app.processLayerAsVeteran(fipPolygon, fipLayer);
+		var expectedBaseArea = 0.70932f * (float) Math.pow(10f - 7.63269f, 0.62545f) * 0.9f / 4.0f;
+
+		Matcher<Float> baMatcher = asFloat(closeTo(expectedBaseArea, 0.000001));
+		Matcher<Float> zeroMatcher = is(0.0f);
+		// Expect the estimated BA in 0 and 4 (-1 to 4)
+		assertThat(
+				result,
+				hasProperty(
+						"baseAreaByUtilization",
+						contains(zeroMatcher, baMatcher, zeroMatcher, zeroMatcher, zeroMatcher, baMatcher)
 				)
 		);
 
@@ -847,20 +986,15 @@ class FipStartTest {
 	};
 
 	FipLayerPrimary getTestPrimaryLayer(String polygonId, Consumer<FipLayerPrimary> mutator) {
-		var result = new FipLayerPrimary(
-				polygonId, // polygonIdentifier
-				8f, // ageTotal
-				6f, // height
-				5.0f, // siteIndex
-				0.9f, // crownClosure
-				"B", // siteGenus
-				"B", // siteSpecies
-				7f, // yearsToBreastHeight
-				Optional.empty(), // stockingClass
-				Optional.empty(), // inventoryTypeGroup
-				Optional.empty(), // breastHeightAge
-				Optional.empty() // siteCurveNumber
-		);
+		var result = new FipLayerPrimary(polygonId);
+		result.setAgeTotal(8f);
+		result.setHeight(6f);
+		result.setSiteIndex(5f);
+		result.setCrownClosure(0.9f);
+		result.setSiteGenus("B");
+		result.setSiteSpecies("B");
+		result.setYearsToBreastHeight(7f);
+
 		mutator.accept(result);
 		return result;
 	};
@@ -868,17 +1002,16 @@ class FipStartTest {
 	FipLayer getTestVeteranLayer(String polygonId, Consumer<FipLayer> mutator) {
 		var result = new FipLayer(
 				polygonId, // polygonIdentifier
-				Layer.VETERAN, // layer
-				8f, // ageTotal
-				6f, // height
-				5.0f, // siteIndex
-				0.9f, // crownClosure
-				"B", // siteGenus
-				"B", // siteSpecies
-				7f, // yearsToBreastHeight
-				Optional.empty(), // inventoryTypeGroup
-				Optional.empty() // breastHeightAge
+				Layer.VETERAN // layer
 		);
+		result.setAgeTotal(8f);
+		result.setHeight(6f);
+		result.setSiteIndex(5f);
+		result.setCrownClosure(0.9f);
+		result.setSiteGenus("B");
+		result.setSiteSpecies("B");
+		result.setYearsToBreastHeight(7f);
+
 		mutator.accept(result);
 		return result;
 	};
@@ -902,5 +1035,25 @@ class FipStartTest {
 	@FunctionalInterface
 	private static interface TestConsumer<T> {
 		public void accept(T unit, Map<String, Object> controlMap) throws Exception;
+	}
+
+	Matcher<Float> asFloat(Matcher<Double> doubleMatcher) {
+		return new TypeSafeDiagnosingMatcher<Float>() {
+
+			@Override
+			public void describeTo(Description description) {
+				doubleMatcher.describeTo(description);
+			}
+
+			@Override
+			protected boolean matchesSafely(Float item, Description mismatchDescription) {
+				if (!doubleMatcher.matches((double) item)) {
+					doubleMatcher.describeMismatch(item, mismatchDescription);
+					return false;
+				}
+				return true;
+			}
+
+		};
 	}
 }

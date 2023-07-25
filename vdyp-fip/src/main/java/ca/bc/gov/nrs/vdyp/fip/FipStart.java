@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.fip;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -22,11 +23,17 @@ import ca.bc.gov.nrs.vdyp.fip.model.FipPolygon;
 import ca.bc.gov.nrs.vdyp.fip.model.FipSpecies;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
+import ca.bc.gov.nrs.vdyp.io.parse.BecDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.StreamingParserFactory;
+import ca.bc.gov.nrs.vdyp.io.parse.VeteranBQParser;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypLayer;
+import ca.bc.gov.nrs.vdyp.model.BecLookup.Substitution;
+import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.Layer;
+import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
+import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 
@@ -185,7 +192,7 @@ public class FipStart {
 		return (x, y) -> accessor.apply(x).compareTo(accessor.apply(y));
 	}
 
-	VdypLayer processLayerAsVeteran(FipPolygon fipPolygon, FipLayer fipLayer) {
+	VdypLayer processLayerAsVeteran(FipPolygon fipPolygon, FipLayer fipLayer) throws ProcessingException {
 
 		var polygonIdentifier = fipLayer.getPolygonIdentifier();
 
@@ -217,10 +224,19 @@ public class FipStart {
 		// height? copy LVCOM3/HDLV = FIPL_V/HT_LV
 		var height = fipLayer.getHeight();
 
+		var crownClosure = fipLayer.getCrownClosure();
+
+		var becId = fipPolygon.getBiogeoclimaticZone();
+		var bec = BecDefinitionParser.getBecs(controlMap).get(becId, Substitution.SUBSTITUTE)
+				.orElseThrow(() -> new ProcessingException("Could not find BEC " + becId));
+		var region = bec.getRegion();
+
 		// Call EMP098 to get Veteran Basal Area, store in LVCOM1/BA array at positions
 		// 0,0 and 0,4
-		// TODO
-
+		var estimatedBaseArea = estimateVeteranBaseArea(height, crownClosure, primaryGenus, region);
+		var baseAreaByUtilization = new Coefficients(
+				new float[] { 0.0f, estimatedBaseArea, 0.0f, 0.0f, 0.0f, estimatedBaseArea }, -1
+		);
 		// Copy over Species entries.
 		// LVCOM/ISPLV=ISPV
 		// LVCOM4/SP0LV=FIPSA/SP0V
@@ -231,10 +247,14 @@ public class FipStart {
 				.map(fipSpec -> new VdypSpecies(fipSpec, height)) //
 				.collect(Collectors.toMap(VdypSpecies::getGenus, Function.identity()));
 
-		var vdypLayer = new VdypLayer(
-				polygonIdentifier, layer, ageTotal, height, yearsToBreastHeight, breastHeightAge, vdypSpecies,
-				primaryGenus
-		);
+		var vdypLayer = new VdypLayer(polygonIdentifier, layer);
+		vdypLayer.setAgeTotal(ageTotal);
+		vdypLayer.setHeight(height);
+		vdypLayer.setYearsToBreastHeight(yearsToBreastHeight);
+		vdypLayer.setBreastHeightAge(breastHeightAge);
+		vdypLayer.setSpecies(vdypSpecies);
+		vdypLayer.setPrimaryGenus(primaryGenus);
+		vdypLayer.setBaseAreaByUtilization(baseAreaByUtilization);
 
 		return vdypLayer;
 	}
@@ -297,7 +317,7 @@ public class FipStart {
 		return polygon;
 	}
 
-	private Optional<Float> heightMinimum(Layer layer, Map<String, Object> controlMap) {
+	private Optional<Float> heightMinimum(Layer layer) {
 		@SuppressWarnings("unchecked")
 		var minima = (Map<String, Float>) controlMap.get(FipControlParser.MINIMA);
 		switch (layer) {
@@ -342,7 +362,7 @@ public class FipStart {
 			var height = layer.getHeight();
 
 			throwIfPresent(
-					heightMinimum(layer.getLayer(), controlMap).filter(minimum -> height < minimum).map(
+					heightMinimum(layer.getLayer()).filter(minimum -> height < minimum).map(
 							minimum -> validationError(
 									"Polygon %s has %s layer where height %.1f is less than minimum %.1f.",
 									polygon.getPolygonIdentifier(), layer.getLayer(), layer.getHeight(), minimum
@@ -390,6 +410,31 @@ public class FipStart {
 			}
 		}
 
+	}
+
+	float estimateVeteranBaseArea(float height, float crownClosure, String genus, Region region)
+			throws ProcessingException {
+		@SuppressWarnings("unchecked")
+		var coefficients = ((MatrixMap2<String, Region, Coefficients>) controlMap.get(VeteranBQParser.CONTROL_KEY))
+				.getM(genus, region).orElseThrow(
+						() -> new ProcessingException(
+								"Could not find Veteran Base Area Coefficients for genus " + genus + " and region "
+										+ region
+						)
+				);
+
+		// mismatched index is copied from VDYP7
+		float a0 = coefficients.getCoe(1);
+		float a1 = coefficients.getCoe(2);
+		float a2 = coefficients.getCoe(3);
+
+		float baseArea = a0 * (float) Math.pow(Math.max(height - a1, 0.0f), a2);
+
+		baseArea *= crownClosure / 4.0f;
+
+		baseArea = Math.max(baseArea, 0.01f);
+
+		return baseArea;
 	}
 
 	private static <E extends Throwable> void throwIfPresent(Optional<E> opt) throws E {

@@ -11,21 +11,12 @@ public class FipLayerPrimary extends FipLayer {
 
 	// TODO Confirm if these should be required instead of optional if we know it's
 	// a Primary layer.
-	Optional<Integer> siteCurveNumber; // FIPL_1/SCN_L1
+	Optional<Integer> siteCurveNumber = Optional.empty(); // FIPL_1/SCN_L1
 
-	Optional<String> stockingClass; // FIPL_1ST/STK_L1
+	Optional<String> stockingClass = Optional.empty(); // FIPL_1ST/STK_L1
 
-	public FipLayerPrimary(
-			String polygonIdentifier, float ageTotal, float height, float siteIndex, float crownClosure,
-			String siteGenus, String siteSpecies, float yearsToBreastHeight, Optional<String> stockingClass,
-			Optional<Integer> inventoryTypeGroup, Optional<Float> breastHeightAge, Optional<Integer> siteCurveNumber
-	) {
-		super(
-				polygonIdentifier, Layer.PRIMARY, ageTotal, height, siteIndex, crownClosure, siteGenus, siteSpecies,
-				yearsToBreastHeight, inventoryTypeGroup, breastHeightAge
-		);
-		this.siteCurveNumber = siteCurveNumber;
-		this.stockingClass = stockingClass;
+	public FipLayerPrimary(String polygonIdentifier) {
+		super(polygonIdentifier, Layer.PRIMARY);
 	}
 
 	public Optional<Integer> getSiteCurveNumber() {

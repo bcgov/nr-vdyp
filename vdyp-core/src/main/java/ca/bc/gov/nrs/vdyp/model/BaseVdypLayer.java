@@ -12,15 +12,10 @@ public class BaseVdypLayer<S extends BaseVdypSpecies> {
 	protected float yearsToBreastHeight;
 	Map<String, S> species = Collections.emptyMap();
 
-	public BaseVdypLayer(
-			String polygonIdentifier, Layer layer, float ageTotal, float height, float yearsToBreastHeight
-	) {
+	public BaseVdypLayer(String polygonIdentifier, Layer layer) {
 		super();
 		this.polygonIdentifier = polygonIdentifier;
 		this.layer = layer;
-		this.ageTotal = ageTotal;
-		this.height = height;
-		this.yearsToBreastHeight = yearsToBreastHeight;
 	}
 
 	public String getPolygonIdentifier() {
