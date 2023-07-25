@@ -16,7 +16,7 @@
          <menus>
             <Menu mnemonicParsing="false" text="File">
                <items>
-                  <MenuItem mnemonicParsing="false" text="New Table">
+                  <MenuItem mnemonicParsing="false" onAction="#handleMenuNewFileClick" text="New Table">
                      <accelerator>
                         <KeyCodeCombination alt="UP" code="T" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                      </accelerator>
