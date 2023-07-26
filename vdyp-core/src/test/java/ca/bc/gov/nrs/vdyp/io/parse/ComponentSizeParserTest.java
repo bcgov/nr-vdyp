@@ -23,7 +23,7 @@ class ComponentSizeParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		GenusDefinitionParserTest.populateControlMap(controlMap);
+		TestUtils.populateControlMapGenus(controlMap);
 
 		var parser = new ComponentSizeParser();
 
@@ -39,7 +39,7 @@ class ComponentSizeParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		GenusDefinitionParserTest.populateControlMap(controlMap);
+		TestUtils.populateControlMapGenus(controlMap);
 
 		var parser = new ComponentSizeParser();
 
@@ -55,7 +55,7 @@ class ComponentSizeParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		GenusDefinitionParserTest.populateControlMap(controlMap);
+		TestUtils.populateControlMapGenus(controlMap);
 
 		var parser = new ComponentSizeParser();
 

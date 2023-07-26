@@ -30,7 +30,7 @@ class VeteranDQParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		GenusDefinitionParserTest.populateControlMap(controlMap);
+		TestUtils.populateControlMapGenus(controlMap);
 
 		var result = parser.parse(is, controlMap);
 
@@ -48,7 +48,7 @@ class VeteranDQParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		GenusDefinitionParserTest.populateControlMap(controlMap);
+		TestUtils.populateControlMapGenus(controlMap);
 
 		var result = parser.parse(is, controlMap);
 
@@ -66,8 +66,8 @@ class VeteranDQParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		GenusDefinitionParserTest.populateControlMap(controlMap);
-		BecDefinitionParserTest.populateControlMap(controlMap);
+		TestUtils.populateControlMapGenus(controlMap);
+		TestUtils.populateControlMapBec(controlMap);
 
 		var ex = assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
 		assertThat(ex, causedBy(hasProperty("value", is("SX"))));
@@ -82,8 +82,8 @@ class VeteranDQParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		GenusDefinitionParserTest.populateControlMap(controlMap);
-		BecDefinitionParserTest.populateControlMap(controlMap);
+		TestUtils.populateControlMapGenus(controlMap);
+		TestUtils.populateControlMapBec(controlMap);
 
 		var ex = assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
 		assertThat(ex, causedBy(hasProperty("value", nullValue()))); // TODO Do this better

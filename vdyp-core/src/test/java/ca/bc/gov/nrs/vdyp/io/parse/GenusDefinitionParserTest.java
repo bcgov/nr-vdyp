@@ -22,10 +22,10 @@ import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.model.GenusDefinition;
 
-public class GenusDefinitionParserTest {
+class GenusDefinitionParserTest {
 
 	@Test
-	public void testParse() throws Exception {
+	void testParse() throws Exception {
 		var parser = new GenusDefinitionParser();
 
 		var result = parser.parse(ControlFileParserTest.class, "coe/SP0DEF_v0.dat", Collections.emptyMap());
@@ -252,40 +252,5 @@ public class GenusDefinitionParserTest {
 		}
 		assertThat(ex1, hasProperty("line", is(2)));
 		assertThat(ex1, hasProperty("message", stringContainsInOrder("line 2", "Preference 1", "set to AT")));
-	}
-
-	/**
-	 * Add a mock control map entry for SP0 parse results with species "S1" and "S2"
-	 */
-	public static void populateControlMap(Map<String, Object> controlMap) {
-		populateControlMap(controlMap, "S1", "S2");
-	}
-
-	/**
-	 * Add a mock control map entry for SP0 parse results with 16 species
-	 */
-	public static void populateControlMapReal(Map<String, Object> controlMap) {
-		populateControlMap(controlMap, getSpeciesAliases());
-	}
-
-	/**
-	 * Get the species aliases expected
-	 */
-	public static String[] getSpeciesAliases() {
-		return new String[] { "AC", "AT", "B", "C", "D", "E", "F", "H", "L", "MB", "PA", "PL", "PW", "PY", "S", "Y" };
-	}
-
-	/**
-	 * Add a mock control map entry for SP0 parse results
-	 */
-	public static void populateControlMap(Map<String, Object> controlMap, String... aliases) {
-
-		List<GenusDefinition> sp0List = new ArrayList<>();
-
-		for (var alias : aliases) {
-			sp0List.add(new GenusDefinition(alias, java.util.Optional.empty(), "Test " + alias));
-		}
-
-		controlMap.put(GenusDefinitionParser.CONTROL_KEY, sp0List);
 	}
 }

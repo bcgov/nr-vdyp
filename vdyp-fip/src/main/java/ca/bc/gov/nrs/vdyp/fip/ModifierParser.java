@@ -14,7 +14,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.HLNonprimaryCoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.LineParser;
 import ca.bc.gov.nrs.vdyp.io.parse.OptionalResourceControlMapModifier;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
-import ca.bc.gov.nrs.vdyp.io.parse.ResourceParser;
+import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.io.parse.GenusDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ValueParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.ValueParser;
@@ -116,30 +116,30 @@ public class ModifierParser implements OptionalResourceControlMapModifier {
 		}.integer(3, "sequence").multiValue(6, 2, "programs", ValueParser.LOGICAL)
 				.multiValue(10, 6, "mods", ValueParser.optional(ValueParser.FLOAT));
 
-		final MatrixMap2<String, Region, Coefficients> vetBqMap = ResourceParser
+		final MatrixMap2<String, Region, Coefficients> vetBqMap = Utils
 				.expectParsedControl(control, VeteranBQParser.CONTROL_KEY, MatrixMap2.class);
 
 		@SuppressWarnings("unchecked")
-		final MatrixMap2<String, Region, Float> baMap = ResourceParser
+		final MatrixMap2<String, Region, Float> baMap = Utils
 				.expectParsedControl(control, CONTROL_KEY_MOD200_BA, MatrixMap2.class);
 		@SuppressWarnings("unchecked")
-		final MatrixMap2<String, Region, Float> dqMap = ResourceParser
+		final MatrixMap2<String, Region, Float> dqMap = Utils
 				.expectParsedControl(control, CONTROL_KEY_MOD200_DQ, MatrixMap2.class);
 
 		@SuppressWarnings("unchecked")
-		final MatrixMap2<String, Region, Float> decayMap = ResourceParser
+		final MatrixMap2<String, Region, Float> decayMap = Utils
 				.expectParsedControl(control, CONTROL_KEY_MOD301_DECAY, MatrixMap2.class);
 		@SuppressWarnings("unchecked")
-		final MatrixMap2<String, Region, Float> wasteMap = ResourceParser
+		final MatrixMap2<String, Region, Float> wasteMap = Utils
 				.expectParsedControl(control, CONTROL_KEY_MOD301_WASTE, MatrixMap2.class);
 
-		final MatrixMap2<String, Region, Coefficients> hlP1Map = ResourceParser
+		final MatrixMap2<String, Region, Coefficients> hlP1Map = Utils
 				.expectParsedControl(control, CONTROL_KEY_MOD400_P1, MatrixMap2.class);
-		final MatrixMap2<String, Region, Coefficients> hlP2Map = ResourceParser
+		final MatrixMap2<String, Region, Coefficients> hlP2Map = Utils
 				.expectParsedControl(control, CONTROL_KEY_MOD400_P2, MatrixMap2.class);
-		final MatrixMap2<String, Region, Coefficients> hlP3Map = ResourceParser
+		final MatrixMap2<String, Region, Coefficients> hlP3Map = Utils
 				.expectParsedControl(control, CONTROL_KEY_MOD400_P3, MatrixMap2.class);
-		final MatrixMap3<String, String, Region, NonprimaryHLCoefficients> hlNPMap = ResourceParser
+		final MatrixMap3<String, String, Region, NonprimaryHLCoefficients> hlNPMap = Utils
 				.expectParsedControl(control, CONTROL_KEY_MOD400_NONPRIMARY, MatrixMap3.class);
 
 		parser.parse(data, control, (entry, result) -> {

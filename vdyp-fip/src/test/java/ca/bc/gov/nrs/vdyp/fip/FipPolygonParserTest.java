@@ -16,7 +16,6 @@ import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.fip.model.FipMode;
 import ca.bc.gov.nrs.vdyp.fip.model.FipPolygon;
-import ca.bc.gov.nrs.vdyp.io.parse.BecDefinitionParserTest;
 import ca.bc.gov.nrs.vdyp.io.parse.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
@@ -32,7 +31,7 @@ public class FipPolygonParserTest {
 		Map<String, Object> controlMap = new HashMap<>();
 
 		controlMap.put(FipPolygonParser.CONTROL_KEY, "test.dat");
-		BecDefinitionParserTest.populateControlMapReal(controlMap);
+		TestUtils.populateControlMapReal(controlMap);
 
 		var fileResolver = TestUtils.fileResolver("test.dat", TestUtils.makeStream(/* empty */));
 
@@ -58,7 +57,7 @@ public class FipPolygonParserTest {
 		Map<String, Object> controlMap = new HashMap<>();
 
 		controlMap.put(FipPolygonParser.CONTROL_KEY, "test.dat");
-		BecDefinitionParserTest.populateControlMapReal(controlMap);
+		TestUtils.populateControlMapReal(controlMap);
 
 		var fileResolver = TestUtils
 				.fileResolver("test.dat", TestUtils.makeStream("Test Polygon              A CWH  90.0  2 BLAH  0.95"));
@@ -95,7 +94,7 @@ public class FipPolygonParserTest {
 		Map<String, Object> controlMap = new HashMap<>();
 
 		controlMap.put(FipPolygonParser.CONTROL_KEY, "test.dat");
-		BecDefinitionParserTest.populateControlMapReal(controlMap);
+		TestUtils.populateControlMapReal(controlMap);
 
 		var fileResolver = TestUtils
 				.fileResolver("test.dat", TestUtils.makeStream("01002 S000001 00     1970 A CWH                    "));
@@ -132,7 +131,7 @@ public class FipPolygonParserTest {
 		Map<String, Object> controlMap = new HashMap<>();
 
 		controlMap.put(FipPolygonParser.CONTROL_KEY, "test.dat");
-		BecDefinitionParserTest.populateControlMapReal(controlMap);
+		TestUtils.populateControlMapReal(controlMap);
 
 		var fileResolver = TestUtils.fileResolver(
 				"test.dat",
@@ -272,7 +271,7 @@ public class FipPolygonParserTest {
 		Map<String, Object> controlMap = new HashMap<>();
 
 		controlMap.put(FipPolygonParser.CONTROL_KEY, "test.dat");
-		BecDefinitionParserTest.populateControlMapReal(controlMap);
+		TestUtils.populateControlMapReal(controlMap);
 
 		var fileResolver = TestUtils
 				.fileResolver("test.dat", TestUtils.makeStream("01002 S000001 00     1970 A CWH   0.0  0       0.00"));
@@ -309,7 +308,7 @@ public class FipPolygonParserTest {
 		Map<String, Object> controlMap = new HashMap<>();
 
 		controlMap.put(FipPolygonParser.CONTROL_KEY, "test.dat");
-		BecDefinitionParserTest.populateControlMapReal(controlMap);
+		TestUtils.populateControlMapReal(controlMap);
 
 		var fileResolver = TestUtils
 				.fileResolver("test.dat", TestUtils.makeStream("01002 S000001 00     1970 A CWH  -1.0         -1.00"));

@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.model.GenusDefinition;
 
 /**
@@ -90,7 +91,7 @@ public class GenusDefinitionParser implements ControlMapSubResourceParser<List<G
 	}
 
 	public static List<GenusDefinition> getSpecies(final Map<String, Object> controlMap) {
-		return ResourceParser
+		return Utils
 				.<List<GenusDefinition>>expectParsedControl(controlMap, GenusDefinitionParser.CONTROL_KEY, List.class);
 	}
 

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -25,13 +26,21 @@ public interface MatrixMap2<K1, K2, V> extends MatrixMap<V> {
 		});
 	}
 
+	@SuppressWarnings("unchecked")
+	public default void setAll(BiFunction<K1, K2, V> mapper) {
+		setAll(key -> {
+			K1 key1 = (K1) key[0];
+			K2 key2 = (K2) key[1];
+			return mapper.apply(key1, key2);
+		});
+	}
+
 	/**
 	 * Cast a 2 dimension MatrixMap to MatrixMap2, wrapping it if it has 2
 	 * dimensions but does not implement the interface.
 	 */
 	@SuppressWarnings("unchecked")
-	public static <K1, K2, V> MatrixMap2<K1, K2, V>
-			cast(MatrixMap<V> o, Class<K1> keyClass1, Class<K2> keyClass2) {
+	public static <K1, K2, V> MatrixMap2<K1, K2, V> cast(MatrixMap<V> o, Class<K1> keyClass1, Class<K2> keyClass2) {
 		// TODO check compatibility of range types
 
 		// Pass through if it's already a MatrixMap2

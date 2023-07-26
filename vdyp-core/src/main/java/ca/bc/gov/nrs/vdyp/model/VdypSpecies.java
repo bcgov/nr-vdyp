@@ -7,13 +7,14 @@ public class VdypSpecies extends BaseVdypSpecies {
 	Coefficients baseAreaByUtilization = new Coefficients(Arrays.asList(0f, 0f, 0f, 0f, 0f, 0f), -1);
 	Coefficients loreyHeightByUtilization = new Coefficients(Arrays.asList(0f, 0f), -1); // LVCOM/HL
 
-	public VdypSpecies(
-			String polygonIdentifier, Layer layer, String genus
-	) {
+	int volumeGroup;
+	int decayGroup;
+	int breakageGroup;
+
+	public VdypSpecies(String polygonIdentifier, Layer layer, String genus) {
 		super(polygonIdentifier, layer, genus);
 	}
-	
-	
+
 	public VdypSpecies(BaseVdypSpecies toCopy) {
 		super(toCopy);
 	}
@@ -48,6 +49,30 @@ public class VdypSpecies extends BaseVdypSpecies {
 		assert loreyHeightByUtilization.indexFrom == -1 : "loreyHeightByUtilization must be indexed from -1";
 		assert loreyHeightByUtilization.size() == 2 : "loreyHeightByUtilization must have index -1 - 0";
 		this.loreyHeightByUtilization = loreyHeightByUtilization;
+	}
+
+	public int getVolumeGroup() {
+		return volumeGroup;
+	}
+
+	public void setVolumeGroup(int volumeGroup) {
+		this.volumeGroup = volumeGroup;
+	}
+
+	public int getDecayGroup() {
+		return decayGroup;
+	}
+
+	public void setDecayGroup(int decayGroup) {
+		this.decayGroup = decayGroup;
+	}
+
+	public int getBreakageGroup() {
+		return breakageGroup;
+	}
+
+	public void setBreakageGroup(int breakageGroup) {
+		this.breakageGroup = breakageGroup;
 	}
 
 }

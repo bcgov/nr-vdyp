@@ -18,8 +18,6 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.fip.model.FipLayer;
-import ca.bc.gov.nrs.vdyp.io.parse.BecDefinitionParserTest;
-import ca.bc.gov.nrs.vdyp.io.parse.GenusDefinitionParserTest;
 import ca.bc.gov.nrs.vdyp.io.parse.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.model.Layer;
@@ -35,7 +33,7 @@ public class FipLayerParserTest {
 		Map<String, Object> controlMap = new HashMap<>();
 
 		controlMap.put(FipLayerParser.CONTROL_KEY, "test.dat");
-		BecDefinitionParserTest.populateControlMapReal(controlMap);
+		TestUtils.populateControlMapReal(controlMap);
 
 		var fileResolver = TestUtils.fileResolver("test.dat", TestUtils.makeStream(/* empty */));
 
@@ -61,7 +59,7 @@ public class FipLayerParserTest {
 		Map<String, Object> controlMap = new HashMap<>();
 
 		controlMap.put(FipLayerParser.CONTROL_KEY, "test.dat");
-		GenusDefinitionParserTest.populateControlMapReal(controlMap);
+		TestUtils.populateControlMapGensuReal(controlMap);
 
 		var fileResolver = TestUtils.fileResolver(
 				"test.dat",
@@ -115,7 +113,7 @@ public class FipLayerParserTest {
 		Map<String, Object> controlMap = new HashMap<>();
 
 		controlMap.put(FipLayerParser.CONTROL_KEY, "test.dat");
-		GenusDefinitionParserTest.populateControlMapReal(controlMap);
+		TestUtils.populateControlMapGensuReal(controlMap);
 
 		var fileResolver = TestUtils.fileResolver(
 				"test.dat",
@@ -187,7 +185,7 @@ public class FipLayerParserTest {
 		Map<String, Object> controlMap = new HashMap<>();
 
 		controlMap.put(FipLayerParser.CONTROL_KEY, "test.dat");
-		GenusDefinitionParserTest.populateControlMapReal(controlMap);
+		TestUtils.populateControlMapGensuReal(controlMap);
 
 		var fileResolver = TestUtils.fileResolver(
 				"test.dat",
@@ -242,7 +240,7 @@ public class FipLayerParserTest {
 		Map<String, Object> controlMap = new HashMap<>();
 
 		controlMap.put(FipLayerParser.CONTROL_KEY, "test.dat");
-		GenusDefinitionParserTest.populateControlMapReal(controlMap);
+		TestUtils.populateControlMapGensuReal(controlMap);
 
 		var fileResolver = TestUtils.fileResolver(
 				"test.dat",

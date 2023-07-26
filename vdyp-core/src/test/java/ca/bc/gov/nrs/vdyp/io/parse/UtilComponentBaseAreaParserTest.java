@@ -29,8 +29,8 @@ class UtilComponentBaseAreaParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		GenusDefinitionParserTest.populateControlMap(controlMap);
-		BecDefinitionParserTest.populateControlMap(controlMap, "B1", "B2", "B3", "B4");
+		TestUtils.populateControlMapGenus(controlMap);
+		TestUtils.populateControlMapBec(controlMap, "B1", "B2", "B3", "B4");
 
 		var result = parser.parse(is, controlMap);
 
@@ -56,8 +56,8 @@ class UtilComponentBaseAreaParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		GenusDefinitionParserTest.populateControlMap(controlMap);
-		BecDefinitionParserTest.populateControlMap(controlMap, "B1", "B2", "B3", "B4");
+		TestUtils.populateControlMapGenus(controlMap);
+		TestUtils.populateControlMapBec(controlMap, "B1", "B2", "B3", "B4");
 
 		var result = parser.parse(is, controlMap);
 
@@ -83,8 +83,8 @@ class UtilComponentBaseAreaParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		GenusDefinitionParserTest.populateControlMap(controlMap);
-		BecDefinitionParserTest.populateControlMap(controlMap, "B1", "B2", "B3", "B4");
+		TestUtils.populateControlMapGenus(controlMap);
+		TestUtils.populateControlMapBec(controlMap, "B1", "B2", "B3", "B4");
 
 		var result = parser.parse(is, controlMap);
 
@@ -111,8 +111,8 @@ class UtilComponentBaseAreaParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		GenusDefinitionParserTest.populateControlMap(controlMap);
-		BecDefinitionParserTest.populateControlMap(controlMap);
+		TestUtils.populateControlMapGenus(controlMap);
+		TestUtils.populateControlMapBec(controlMap);
 
 		var ex = assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
 		assertThat(ex, causedBy(hasProperty("value", is("SX"))));
@@ -127,8 +127,8 @@ class UtilComponentBaseAreaParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		GenusDefinitionParserTest.populateControlMap(controlMap);
-		BecDefinitionParserTest.populateControlMap(controlMap);
+		TestUtils.populateControlMapGenus(controlMap);
+		TestUtils.populateControlMapBec(controlMap);
 
 		var ex = assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
 		assertThat(ex, causedBy(hasProperty("value", is("BX"))));
@@ -143,8 +143,8 @@ class UtilComponentBaseAreaParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		GenusDefinitionParserTest.populateControlMap(controlMap);
-		BecDefinitionParserTest.populateControlMap(controlMap);
+		TestUtils.populateControlMapGenus(controlMap);
+		TestUtils.populateControlMapBec(controlMap);
 
 		var ex = assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
 		assertThat(ex, causedBy(hasProperty("value", is("BAXX"))));
@@ -159,8 +159,8 @@ class UtilComponentBaseAreaParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		GenusDefinitionParserTest.populateControlMap(controlMap);
-		BecDefinitionParserTest.populateControlMap(controlMap);
+		TestUtils.populateControlMapGenus(controlMap);
+		TestUtils.populateControlMapBec(controlMap);
 
 		var ex = assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
 		assertThat(ex, causedBy(hasProperty("value", nullValue()))); // TODO Do this better

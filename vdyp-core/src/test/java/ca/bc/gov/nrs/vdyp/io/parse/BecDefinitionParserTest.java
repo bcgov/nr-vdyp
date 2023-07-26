@@ -6,19 +6,15 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.hasProperty;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+
 import static org.hamcrest.Matchers.equalTo;
 
 import org.junit.jupiter.api.Test;
 
-import ca.bc.gov.nrs.vdyp.model.BecDefinition;
-import ca.bc.gov.nrs.vdyp.model.BecLookup;
 import ca.bc.gov.nrs.vdyp.model.Region;
 
-public class BecDefinitionParserTest {
+class BecDefinitionParserTest {
 
 	@Test
 	void testParse() throws Exception {
@@ -208,64 +204,6 @@ public class BecDefinitionParserTest {
 						)
 				)
 		);
-	}
-
-	/**
-	 * Add a mock control map entry for BEC parse results with species "B1" and "B2"
-	 * for Coastal and Interior Regions respectively
-	 */
-	public static void populateControlMap(Map<String, Object> controlMap) {
-		populateControlMap(controlMap, "B1", "B2");
-	}
-
-	static BecDefinition makeBec(String id, Region region, String name) {
-		return new BecDefinition(
-				id, region, name, //
-				BecDefinitionParser.GROWTH_INDEX.get(id), //
-				BecDefinitionParser.VOLUME_INDEX.get(id), //
-				BecDefinitionParser.DECAY_INDEX.get(id)
-		);
-	}
-
-	/**
-	 * Add a mock control map entry for BEC parse results with species "B1" and "B2"
-	 * for Coastal and Interior Regions respectively
-	 */
-	public static void populateControlMapReal(Map<String, Object> controlMap) {
-		List<BecDefinition> becs = new ArrayList<>();
-
-		becs.add(makeBec("BG", Region.INTERIOR, "Bunchgrass"));
-		becs.add(makeBec("BWBS", Region.INTERIOR, "Boreal White and Black Spruce"));
-		becs.add(makeBec("CDF", Region.INTERIOR, "Coastal Dougfir"));
-		becs.add(makeBec("CWH", Region.INTERIOR, "Coastal Western Hemlock"));
-		becs.add(makeBec("ESSF", Region.INTERIOR, "Englemann Sruce -SubAlpine Fir"));
-		becs.add(makeBec("ICH", Region.INTERIOR, "Interior Cedar-Hemlock"));
-		becs.add(makeBec("IDF", Region.INTERIOR, "Interior DougFir"));
-		becs.add(makeBec("MH", Region.INTERIOR, "Mountain Hemlock"));
-		becs.add(makeBec("MS", Region.INTERIOR, "Montane Spruce"));
-		becs.add(makeBec("PP", Region.INTERIOR, "Ponderosa Pine"));
-		becs.add(makeBec("SBPS", Region.INTERIOR, "SubBoreal Pine-Spruce"));
-		becs.add(makeBec("SBS", Region.INTERIOR, "SubBoreal Spruce"));
-		becs.add(makeBec("SWB", Region.INTERIOR, "Spruce-Willow-Birch"));
-
-		controlMap.put(BecDefinitionParser.CONTROL_KEY, new BecLookup(becs));
-	}
-
-	/**
-	 * Add a mock control map entry for SP0 parse results. Alternates assigning to
-	 * Coastal and Interior regions, starting with Coastal.
-	 */
-	public static void populateControlMap(Map<String, Object> controlMap, String... aliases) {
-
-		List<BecDefinition> becs = new ArrayList<>();
-
-		int i = 0;
-		for (var alias : aliases) {
-			becs.add(new BecDefinition(alias, Region.values()[i % 2], "Test " + alias, 2, 2, 2));
-			i++;
-		}
-
-		controlMap.put(BecDefinitionParser.CONTROL_KEY, new BecLookup(becs));
 	}
 
 }

@@ -97,12 +97,13 @@ public abstract class EquationGroupParser implements ControlMapSubResourceParser
 		if (!errors.isEmpty()) {
 			throw new ResourceParseValidException(String.join(System.lineSeparator(), errors));
 		}
-		
-		// convert nested Map to a MatrixMap.  Building as the nested map first makes validation easier.
-		
+
+		// convert nested Map to a MatrixMap. Building as the nested map first makes
+		// validation easier.
+
 		var resultMatrix = new MatrixMap2Impl<String, String, Integer>(sp0Keys, becKeys);
 		resultMatrix.addAll(resultMap);
-		
+
 		return resultMatrix;
 	}
 

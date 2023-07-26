@@ -22,9 +22,7 @@ public abstract class BaseVdypSpecies {
 
 	Map<String, Float> speciesPercent; // Map from
 
-	protected BaseVdypSpecies(
-			String polygonIdentifier, Layer layer, String genus
-	) {
+	protected BaseVdypSpecies(String polygonIdentifier, Layer layer, String genus) {
 		this.polygonIdentifier = polygonIdentifier;
 		this.layer = layer;
 		this.genus = genus;

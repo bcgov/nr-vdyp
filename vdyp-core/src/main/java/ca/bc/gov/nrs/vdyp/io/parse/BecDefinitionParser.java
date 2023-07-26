@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.BecLookup;
 import ca.bc.gov.nrs.vdyp.model.Region;
@@ -32,9 +33,9 @@ public class BecDefinitionParser implements ControlMapSubResourceParser<BecLooku
 
 	}.strippedString(4, "alias").space(1).value(1, "region", ValueParser.REGION).space(1).strippedString("name");
 
-	static final Map<String, Integer> GROWTH_INDEX = new HashMap<>();
-	static final Map<String, Integer> VOLUME_INDEX = new HashMap<>();
-	static final Map<String, Integer> DECAY_INDEX = new HashMap<>();
+	public static final Map<String, Integer> GROWTH_INDEX = new HashMap<>();
+	public static final Map<String, Integer> VOLUME_INDEX = new HashMap<>();
+	public static final Map<String, Integer> DECAY_INDEX = new HashMap<>();
 	static {
 		GROWTH_INDEX.put("AT", 0);
 		GROWTH_INDEX.put("BG", 0);
@@ -106,7 +107,7 @@ public class BecDefinitionParser implements ControlMapSubResourceParser<BecLooku
 	 * @return
 	 */
 	public static BecLookup getBecs(Map<String, Object> control) {
-		return ResourceParser.expectParsedControl(control, CONTROL_KEY, BecLookup.class);
+		return Utils.expectParsedControl(control, CONTROL_KEY, BecLookup.class);
 	}
 
 	/**

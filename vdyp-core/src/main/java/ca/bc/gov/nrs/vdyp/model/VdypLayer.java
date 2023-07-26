@@ -51,5 +51,5 @@ public class VdypLayer extends BaseVdypLayer<VdypSpecies> {
 		assert baseAreaByUtilization.size() == 6 : "baseAreaByUtilization must have index -1 - 4";
 		this.baseAreaByUtilization = baseAreaByUtilization;
 	}
-	
+
 }

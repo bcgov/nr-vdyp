@@ -1,7 +1,6 @@
 package ca.bc.gov.nrs.vdyp.fip;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -16,6 +15,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.fip.model.FipLayer;
 import ca.bc.gov.nrs.vdyp.fip.model.FipLayerPrimary;
 import ca.bc.gov.nrs.vdyp.fip.model.FipMode;
@@ -24,11 +24,13 @@ import ca.bc.gov.nrs.vdyp.fip.model.FipSpecies;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.BecDefinitionParser;
+import ca.bc.gov.nrs.vdyp.io.parse.BreakageEquationGroupParser;
+import ca.bc.gov.nrs.vdyp.io.parse.DecayEquationGroupParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.io.parse.VeteranBQParser;
-import ca.bc.gov.nrs.vdyp.model.BaseVdypLayer;
+import ca.bc.gov.nrs.vdyp.io.parse.VolumeEquationGroupParser;
 import ca.bc.gov.nrs.vdyp.model.BecLookup.Substitution;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.Layer;
@@ -246,15 +248,26 @@ public class FipStart {
 		var vdypSpecies = fipLayer.getSpecies().values().stream() //
 				.map(fipSpec -> {
 					var vs = new VdypSpecies(fipSpec);
-					vs.setLoreyHeightByUtilization(new Coefficients(new float[] {0f, height}, -1));
+					vs.setLoreyHeightByUtilization(new Coefficients(new float[] { 0f, height }, -1));
 					return vs;
 				}) //
 				.collect(Collectors.toMap(VdypSpecies::getGenus, Function.identity()));
-		
-		// Lookup volume group, Decay Group, and B group? for each species.
-		
-		
-		
+
+		// Lookup volume group, Decay Group, and Breakage group for each species.
+
+		var volumeGroupMap = getGroupMap(VolumeEquationGroupParser.CONTROL_KEY);
+		var decayGroupMap = getGroupMap(DecayEquationGroupParser.CONTROL_KEY);
+		var breakageGroupMap = getGroupMap(BreakageEquationGroupParser.CONTROL_KEY);
+		for (var vSpec : vdypSpecies.values()) {
+			var volumeGroup = getGroup(fipPolygon, volumeGroupMap, vSpec);
+			var decayGroup = getGroup(fipPolygon, decayGroupMap, vSpec);
+			var breakageGroup = getGroup(fipPolygon, breakageGroupMap, vSpec);
+
+			vSpec.setVolumeGroup(volumeGroup);
+			vSpec.setDecayGroup(decayGroup);
+			vSpec.setBreakageGroup(breakageGroup);
+		}
+
 		var vdypLayer = new VdypLayer(polygonIdentifier, layer);
 		vdypLayer.setAgeTotal(ageTotal);
 		vdypLayer.setHeight(height);
@@ -265,6 +278,15 @@ public class FipStart {
 		vdypLayer.setBaseAreaByUtilization(baseAreaByUtilization);
 
 		return vdypLayer;
+	}
+
+	int getGroup(FipPolygon fipPolygon, MatrixMap2<String, String, Integer> volumeGroupMap, VdypSpecies vSpec) {
+		return volumeGroupMap.get(vSpec.getGenus(), fipPolygon.getBiogeoclimaticZone())
+				.orElseThrow(() -> new AssertionError("Equation Group map should not return empty"));
+	}
+
+	MatrixMap2<String, String, Integer> getGroupMap(String key) {
+		return Utils.expectParsedControl(controlMap, key, MatrixMap2.class);
 	}
 
 	private FipPolygon getPolygon(
@@ -326,8 +348,7 @@ public class FipStart {
 	}
 
 	private Optional<Float> heightMinimum(Layer layer) {
-		@SuppressWarnings("unchecked")
-		var minima = (Map<String, Float>) controlMap.get(FipControlParser.MINIMA);
+		var minima = Utils.<Map<String, Float>>expectParsedControl(controlMap, FipControlParser.MINIMA, Map.class);
 		switch (layer) {
 		case PRIMARY:
 			return Optional.of(minima.get(FipControlParser.MINIMUM_HEIGHT));
@@ -355,7 +376,8 @@ public class FipStart {
 
 		if (primaryLayer.getAgeTotal() - primaryLayer.getYearsToBreastHeight() < 0.5f) {
 			throw validationError(
-					"Polygon %s has %s layer where total age is less than YTBH.", polygon.getPolygonIdentifier(), Layer.PRIMARY
+					"Polygon %s has %s layer where total age is less than YTBH.", polygon.getPolygonIdentifier(),
+					Layer.PRIMARY
 			);
 		}
 
@@ -411,9 +433,8 @@ public class FipStart {
 			// VDYP7 performs this step which should be negligible but might have a small
 			// impact due to the 0.01 percent variation and floating point errors.
 			if (layer.getLayer() == Layer.PRIMARY) {
-				layer.getSpecies().values().forEach(species -> {
-					species.setFractionGenus(species.getPercentGenus() / percentTotal);
-				});
+				layer.getSpecies().values()
+						.forEach(species -> species.setFractionGenus(species.getPercentGenus() / percentTotal));
 			}
 		}
 
@@ -425,7 +446,8 @@ public class FipStart {
 		var coefficients = ((MatrixMap2<String, Region, Coefficients>) controlMap.get(VeteranBQParser.CONTROL_KEY))
 				.getM(genus, region).orElseThrow(
 						() -> new ProcessingException(
-								"Could not find Veteran Base Area Coefficients for genus " + genus + " and region " + region
+								"Could not find Veteran Base Area Coefficients for genus " + genus + " and region "
+										+ region
 						)
 				);
 

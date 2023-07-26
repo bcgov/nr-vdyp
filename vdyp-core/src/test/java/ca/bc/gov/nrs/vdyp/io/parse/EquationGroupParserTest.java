@@ -117,7 +117,7 @@ class EquationGroupParserTest {
 		assertThat(result, mmHasEntry(present(is(22)), "S2", "B2"));
 		assertThat(result, mmHasEntry(present(is(23)), "S2", "B3"));
 		assertThat(result, mmHasEntry(present(is(24)), "S2", "B4"));
-		
+
 	}
 
 	@Test
@@ -186,16 +186,16 @@ class EquationGroupParserTest {
 	private HashMap<String, Object> makeControlMapSingle() {
 		var controlMap = new HashMap<String, Object>();
 
-		BecDefinitionParserTest.populateControlMap(controlMap, "B1");
-		GenusDefinitionParserTest.populateControlMap(controlMap, "S1");
+		TestUtils.populateControlMapBec(controlMap, "B1");
+		TestUtils.populateControlMapGenus(controlMap, "S1");
 		return controlMap;
 	}
 
 	private HashMap<String, Object> makeControlMap() {
 		var controlMap = new HashMap<String, Object>();
 
-		BecDefinitionParserTest.populateControlMap(controlMap, "B1", "B2", "B3", "B4");
-		GenusDefinitionParserTest.populateControlMap(controlMap, "S1", "S2");
+		TestUtils.populateControlMapBec(controlMap, "B1", "B2", "B3", "B4");
+		TestUtils.populateControlMapGenus(controlMap, "S1", "S2");
 		return controlMap;
 	}
 }

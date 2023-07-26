@@ -25,7 +25,7 @@ class HLCoefficientParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		GenusDefinitionParserTest.populateControlMap(controlMap);
+		TestUtils.populateControlMapGenus(controlMap);
 
 		var result = parser.parse(is, controlMap);
 
@@ -41,7 +41,7 @@ class HLCoefficientParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		GenusDefinitionParserTest.populateControlMap(controlMap);
+		TestUtils.populateControlMapGenus(controlMap);
 
 		var result = parser.parse(is, controlMap);
 
@@ -57,7 +57,7 @@ class HLCoefficientParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		GenusDefinitionParserTest.populateControlMap(controlMap);
+		TestUtils.populateControlMapGenus(controlMap);
 
 		var result = parser.parse(is, controlMap);
 
@@ -75,7 +75,7 @@ class HLCoefficientParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		GenusDefinitionParserTest.populateControlMap(controlMap);
+		TestUtils.populateControlMapGenus(controlMap);
 
 		assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
 
@@ -90,7 +90,7 @@ class HLCoefficientParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		GenusDefinitionParserTest.populateControlMap(controlMap);
+		TestUtils.populateControlMapGenus(controlMap);
 
 		assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
 

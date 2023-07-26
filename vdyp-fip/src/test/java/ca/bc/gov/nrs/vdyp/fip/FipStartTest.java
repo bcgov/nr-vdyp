@@ -38,18 +38,12 @@ import ca.bc.gov.nrs.vdyp.fip.model.FipLayerPrimary;
 import ca.bc.gov.nrs.vdyp.fip.model.FipMode;
 import ca.bc.gov.nrs.vdyp.fip.model.FipPolygon;
 import ca.bc.gov.nrs.vdyp.fip.model.FipSpecies;
-import ca.bc.gov.nrs.vdyp.io.parse.BecDefinitionParserTest;
-import ca.bc.gov.nrs.vdyp.io.parse.GenusDefinitionParser;
-import ca.bc.gov.nrs.vdyp.io.parse.GenusDefinitionParserTest;
 import ca.bc.gov.nrs.vdyp.io.parse.MockStreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.StreamingParserFactory;
-import ca.bc.gov.nrs.vdyp.io.parse.VeteranBQParser;
-import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.Layer;
-import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
-import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
+import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 class FipStartTest {
 
@@ -586,9 +580,10 @@ class FipStartTest {
 		fipLayer.setSpecies(Collections.singletonMap(fipSpecies.getGenus(), fipSpecies));
 
 		var controlMap = new HashMap<String, Object>();
-		BecDefinitionParserTest.populateControlMapReal(controlMap);
-		GenusDefinitionParserTest.populateControlMapReal(controlMap);
-		populateVeteranBqMap(controlMap);
+		TestUtils.populateControlMapReal(controlMap);
+		TestUtils.populateControlMapGensuReal(controlMap);
+		TestUtils.populateControlMapVeteranBq(controlMap);
+		TestUtils.populateControlMapEquationGroups(controlMap, (s, b) -> new int[] { 0, 0, 0 });
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -632,16 +627,6 @@ class FipStartTest {
 		assertThat(speciesResult, hasProperty("speciesPercent", anEmptyMap())); // Test map was empty
 	}
 
-	void populateVeteranBqMap(HashMap<String, Object> controlMap) {
-		var speciesDim = GenusDefinitionParser.getSpeciesAliases(controlMap);
-
-		var vetBqMap = new MatrixMap2Impl<>(speciesDim, Arrays.asList(Region.values()));
-
-		vetBqMap.put("B", Region.INTERIOR, new Coefficients(Arrays.asList(0.70932f, 7.63269f, 0.62545f), 1));
-
-		controlMap.put(VeteranBQParser.CONTROL_KEY, vetBqMap);
-	}
-
 	@Test
 	void testProcessVeteranYearsToBreastHeightLessThanMinimum() throws Exception {
 
@@ -656,9 +641,10 @@ class FipStartTest {
 		fipLayer.setSpecies(Collections.singletonMap(fipSpecies.getGenus(), fipSpecies));
 
 		var controlMap = new HashMap<String, Object>();
-		BecDefinitionParserTest.populateControlMapReal(controlMap);
-		GenusDefinitionParserTest.populateControlMapReal(controlMap);
-		populateVeteranBqMap(controlMap);
+		TestUtils.populateControlMapReal(controlMap);
+		TestUtils.populateControlMapGensuReal(controlMap);
+		TestUtils.populateControlMapVeteranBq(controlMap);
+		TestUtils.populateControlMapEquationGroups(controlMap, (s, b) -> new int[] { 0, 0, 0 });
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -692,9 +678,10 @@ class FipStartTest {
 		fipLayer.setSpecies(Collections.singletonMap(fipSpecies.getGenus(), fipSpecies));
 
 		var controlMap = new HashMap<String, Object>();
-		BecDefinitionParserTest.populateControlMapReal(controlMap);
-		GenusDefinitionParserTest.populateControlMapReal(controlMap);
-		populateVeteranBqMap(controlMap);
+		TestUtils.populateControlMapReal(controlMap);
+		TestUtils.populateControlMapGensuReal(controlMap);
+		TestUtils.populateControlMapVeteranBq(controlMap);
+		TestUtils.populateControlMapEquationGroups(controlMap, (s, b) -> new int[] { 0, 0, 0 });
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -749,9 +736,10 @@ class FipStartTest {
 		fipLayer.setSpecies(Collections.singletonMap(fipSpecies.getGenus(), fipSpecies));
 
 		var controlMap = new HashMap<String, Object>();
-		BecDefinitionParserTest.populateControlMapReal(controlMap);
-		GenusDefinitionParserTest.populateControlMapReal(controlMap);
-		populateVeteranBqMap(controlMap);
+		TestUtils.populateControlMapReal(controlMap);
+		TestUtils.populateControlMapGensuReal(controlMap);
+		TestUtils.populateControlMapVeteranBq(controlMap);
+		TestUtils.populateControlMapEquationGroups(controlMap, (s, b) -> new int[] { 0, 0, 0 });
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -801,9 +789,10 @@ class FipStartTest {
 		fipLayer.setSpecies(speciesMap);
 
 		var controlMap = new HashMap<String, Object>();
-		BecDefinitionParserTest.populateControlMapReal(controlMap);
-		GenusDefinitionParserTest.populateControlMapReal(controlMap);
-		populateVeteranBqMap(controlMap);
+		TestUtils.populateControlMapReal(controlMap);
+		TestUtils.populateControlMapGensuReal(controlMap);
+		TestUtils.populateControlMapVeteranBq(controlMap);
+		TestUtils.populateControlMapEquationGroups(controlMap, (s, b) -> new int[] { 0, 0, 0 });
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -843,9 +832,10 @@ class FipStartTest {
 		fipLayer.setSpecies(Collections.singletonMap(fipSpecies.getGenus(), fipSpecies));
 
 		var controlMap = new HashMap<String, Object>();
-		BecDefinitionParserTest.populateControlMapReal(controlMap);
-		GenusDefinitionParserTest.populateControlMapReal(controlMap);
-		populateVeteranBqMap(controlMap);
+		TestUtils.populateControlMapReal(controlMap);
+		TestUtils.populateControlMapGensuReal(controlMap);
+		TestUtils.populateControlMapEquationGroups(controlMap, (s, b) -> new int[] { 0, 0, 0 });
+		TestUtils.populateControlMapVeteranBq(controlMap);
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -865,7 +855,7 @@ class FipStartTest {
 		);
 
 	}
-	
+
 	@Test
 	void testVeteranLayerLoreyHeight() throws Exception {
 
@@ -882,9 +872,10 @@ class FipStartTest {
 		fipLayer.setSpecies(Collections.singletonMap(fipSpecies.getGenus(), fipSpecies));
 
 		var controlMap = new HashMap<String, Object>();
-		BecDefinitionParserTest.populateControlMapReal(controlMap);
-		GenusDefinitionParserTest.populateControlMapReal(controlMap);
-		populateVeteranBqMap(controlMap);
+		TestUtils.populateControlMapReal(controlMap);
+		TestUtils.populateControlMapGensuReal(controlMap);
+		TestUtils.populateControlMapVeteranBq(controlMap);
+		TestUtils.populateControlMapEquationGroups(controlMap, (s, b) -> new int[] { 0, 0, 0 });
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -894,13 +885,41 @@ class FipStartTest {
 		Matcher<Float> heightMatcher = asFloat(closeTo(6f, 0.000001));
 		Matcher<Float> zeroMatcher = is(0.0f);
 		// Expect the estimated HL in 0 (-1 to 0)
-		assertThat(
-				result,
-				hasProperty(
-						"loreyHeightByUtilization",
-						contains(zeroMatcher, heightMatcher)
-				)
+		assertThat(result, hasProperty("loreyHeightByUtilization", contains(zeroMatcher, heightMatcher)));
+
+	}
+
+	@Test
+	void testVeteranLayerEquationGroups() throws Exception {
+
+		var polygonId = polygonId("Test Polygon", 2023);
+
+		var fipPolygon = getTestPolygon(polygonId, valid());
+		var fipLayer = getTestVeteranLayer(polygonId, valid());
+		var fipSpecies = getTestSpecies(polygonId, Layer.VETERAN, x -> {
+			var map = new LinkedHashMap<String, Float>();
+			map.put("S1", 100f);
+			x.setSpeciesPercent(map);
+		});
+		fipPolygon.setLayers(Collections.singletonMap(Layer.VETERAN, fipLayer));
+		fipLayer.setSpecies(Collections.singletonMap(fipSpecies.getGenus(), fipSpecies));
+
+		var controlMap = new HashMap<String, Object>();
+		TestUtils.populateControlMapReal(controlMap);
+		TestUtils.populateControlMapGensuReal(controlMap);
+		TestUtils.populateControlMapVeteranBq(controlMap);
+		TestUtils.populateControlMapEquationGroups(
+				controlMap, (s, b) -> s.equals("B") && b.equals("BG") ? new int[] { 1, 2, 3 } : new int[] { 0, 0, 0 }
 		);
+
+		var app = new FipStart();
+		app.setControlMap(controlMap);
+
+		var result = app.processLayerAsVeteran(fipPolygon, fipLayer).getPrimarySpeciesRecord();
+
+		assertThat(result, hasProperty("volumeGroup", is(1)));
+		assertThat(result, hasProperty("decayGroup", is(2)));
+		assertThat(result, hasProperty("breakageGroup", is(3)));
 
 	}
 

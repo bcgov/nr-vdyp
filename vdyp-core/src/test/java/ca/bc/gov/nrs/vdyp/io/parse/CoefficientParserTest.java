@@ -26,7 +26,7 @@ class CoefficientParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		BecDefinitionParserTest.populateControlMap(controlMap);
+		TestUtils.populateControlMapBec(controlMap);
 
 		var result = parser.parse(is, controlMap);
 
@@ -47,7 +47,7 @@ class CoefficientParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		BecDefinitionParserTest.populateControlMap(controlMap);
+		TestUtils.populateControlMapBec(controlMap);
 
 		assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
 
@@ -64,7 +64,7 @@ class CoefficientParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		BecDefinitionParserTest.populateControlMap(controlMap);
+		TestUtils.populateControlMapBec(controlMap);
 
 		assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
 
@@ -81,7 +81,7 @@ class CoefficientParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		BecDefinitionParserTest.populateControlMap(controlMap);
+		TestUtils.populateControlMapBec(controlMap);
 
 		var result = parser.parse(is, controlMap);
 
@@ -101,7 +101,7 @@ class CoefficientParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 
-		BecDefinitionParserTest.populateControlMap(controlMap);
+		TestUtils.populateControlMapBec(controlMap);
 
 		var result = parser.parse(is, controlMap);
 
