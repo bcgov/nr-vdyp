@@ -268,6 +268,17 @@ public class FipStart {
 			vSpec.setBreakageGroup(breakageGroup);
 		}
 
+		/*
+		 * c At this point we SHOULD invoke a root finding procedure C sets species
+		 * percents and adjusts DQ by species. C fills in main components, through
+		 * whole-stem volume c INSTEAD, I will assume %volumes apply to % BA's
+		 */
+
+		for (var vSpec : vdypSpecies.values()) {
+			vSpec.getBaseAreaByUtilization()
+					.setCoe(4, baseAreaByUtilization.getCoe(4) * vSpec.getPercentGenus() / 100f);
+		}
+
 		var vdypLayer = new VdypLayer(polygonIdentifier, layer);
 		vdypLayer.setAgeTotal(ageTotal);
 		vdypLayer.setHeight(height);

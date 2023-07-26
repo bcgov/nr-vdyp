@@ -4,7 +4,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.aMapWithSize;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.anEmptyMap;
-import static org.hamcrest.Matchers.closeTo;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasProperty;
@@ -46,6 +45,8 @@ import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 class FipStartTest {
+
+	static final float EPSILON = 0.000001f;
 
 	@Test
 	void testProcessEmpty() throws Exception {
@@ -823,13 +824,25 @@ class FipStartTest {
 		var fipLayer = getTestVeteranLayer(polygonId, x -> {
 			x.setHeight(10f);
 		});
-		var fipSpecies = getTestSpecies(polygonId, Layer.VETERAN, x -> {
+		var fipSpecies1 = getTestSpecies(polygonId, Layer.VETERAN, "B", x -> {
 			var map = new LinkedHashMap<String, Float>();
-			map.put("S1", 100f);
+			map.put("S1", 75f);
+			map.put("S2", 25f);
 			x.setSpeciesPercent(map);
+			x.setPercentGenus(60f);
+		});
+		var fipSpecies2 = getTestSpecies(polygonId, Layer.VETERAN, "C", x -> {
+			var map = new LinkedHashMap<String, Float>();
+			map.put("S3", 75f);
+			map.put("S4", 25f);
+			x.setSpeciesPercent(map);
+			x.setPercentGenus(40f);
 		});
 		fipPolygon.setLayers(Collections.singletonMap(Layer.VETERAN, fipLayer));
-		fipLayer.setSpecies(Collections.singletonMap(fipSpecies.getGenus(), fipSpecies));
+		var speciesMap = new HashMap<String, FipSpecies>();
+		speciesMap.put("B", fipSpecies1);
+		speciesMap.put("C", fipSpecies2);
+		fipLayer.setSpecies(speciesMap);
 
 		var controlMap = new HashMap<String, Object>();
 		TestUtils.populateControlMapReal(controlMap);
@@ -843,7 +856,7 @@ class FipStartTest {
 		var result = app.processLayerAsVeteran(fipPolygon, fipLayer);
 		var expectedBaseArea = 0.70932f * (float) Math.pow(10f - 7.63269f, 0.62545f) * 0.9f / 4.0f;
 
-		Matcher<Float> baMatcher = asFloat(closeTo(expectedBaseArea, 0.000001));
+		Matcher<Float> baMatcher = closeTo(expectedBaseArea);
 		Matcher<Float> zeroMatcher = is(0.0f);
 		// Expect the estimated BA in 0 and 4 (-1 to 4)
 		assertThat(
@@ -854,6 +867,38 @@ class FipStartTest {
 				)
 		);
 
+		assertThat(
+				result,
+				hasProperty(
+						"species",
+						hasEntry(
+								is("B"),
+								hasProperty(
+										"baseAreaByUtilization",
+										contains(
+												zeroMatcher, zeroMatcher, zeroMatcher, zeroMatcher, zeroMatcher,
+												closeTo(expectedBaseArea * 0.6f)
+										)
+								)
+						)
+				)
+		);
+		assertThat(
+				result,
+				hasProperty(
+						"species",
+						hasEntry(
+								is("C"),
+								hasProperty(
+										"baseAreaByUtilization",
+										contains(
+												zeroMatcher, zeroMatcher, zeroMatcher, zeroMatcher, zeroMatcher,
+												closeTo(expectedBaseArea * 0.4f)
+										)
+								)
+						)
+				)
+		);
 	}
 
 	@Test
@@ -882,7 +927,7 @@ class FipStartTest {
 
 		var result = app.processLayerAsVeteran(fipPolygon, fipLayer).getPrimarySpeciesRecord();
 
-		Matcher<Float> heightMatcher = asFloat(closeTo(6f, 0.000001));
+		Matcher<Float> heightMatcher = closeTo(6f);
 		Matcher<Float> zeroMatcher = is(0.0f);
 		// Expect the estimated HL in 0 (-1 to 0)
 		assertThat(result, hasProperty("loreyHeightByUtilization", contains(zeroMatcher, heightMatcher)));
@@ -1112,5 +1157,9 @@ class FipStartTest {
 			}
 
 		};
+	}
+
+	Matcher<Float> closeTo(float expected) {
+		return asFloat(Matchers.closeTo(expected, EPSILON));
 	}
 }
