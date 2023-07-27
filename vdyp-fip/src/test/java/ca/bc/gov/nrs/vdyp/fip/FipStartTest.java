@@ -1030,36 +1030,35 @@ class FipStartTest {
 		var expectedDqB = 19.417f + 0.04354f * (float) Math.pow(10f, 1.96395f);
 		var expectedDqC = 22.500f + 0.00157f * (float) Math.pow(10f, 2.96382);
 
+		var resultB = result.getSpecies().get("B");
+
 		assertThat(
-				result,
+				resultB,
 				hasProperty(
-						"species",
-						hasEntry(
-								is("B"),
-								hasProperty(
-										"quadraticMeanDiameterByUtilization",
-										contains(
-												zeroMatcher, zeroMatcher, zeroMatcher, zeroMatcher, zeroMatcher,
-												closeTo(expectedDqB)
-										)
-								)
-						)
+						"quadraticMeanDiameterByUtilization",
+						contains(zeroMatcher, zeroMatcher, zeroMatcher, zeroMatcher, zeroMatcher, closeTo(expectedDqB))
 				)
 		);
 		assertThat(
-				result,
+				resultB,
 				hasProperty(
-						"species",
-						hasEntry(
-								is("C"),
-								hasProperty(
-										"quadraticMeanDiameterByUtilization",
-										contains(
-												zeroMatcher, zeroMatcher, zeroMatcher, zeroMatcher, zeroMatcher,
-												closeTo(expectedDqC)
-										)
-								)
-						)
+						"treesPerHectareByUtilization",
+						contains(zeroMatcher, zeroMatcher, zeroMatcher, zeroMatcher, zeroMatcher, closeTo(3.8092144f))
+				)
+		);
+		var resultC = result.getSpecies().get("C");
+		assertThat(
+				resultC,
+				hasProperty(
+						"quadraticMeanDiameterByUtilization",
+						contains(zeroMatcher, zeroMatcher, zeroMatcher, zeroMatcher, zeroMatcher, closeTo(expectedDqC))
+				)
+		);
+		assertThat(
+				resultC,
+				hasProperty(
+						"treesPerHectareByUtilization",
+						contains(zeroMatcher, zeroMatcher, zeroMatcher, zeroMatcher, zeroMatcher, closeTo(2.430306f))
 				)
 		);
 	}

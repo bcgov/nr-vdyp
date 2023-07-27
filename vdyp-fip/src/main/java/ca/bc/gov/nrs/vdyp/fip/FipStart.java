@@ -47,6 +47,8 @@ public class FipStart {
 	public static final int CONFIG_LOAD_ERROR = 1; // TODO check what Fortran FIPStart would exit with.
 	public static final int PROCESSING_ERROR = 2; // TODO check what Fortran FIPStart would exit with.
 
+	public static final float PI_40K = 0.78539816E-04f;
+
 	private Map<String, Object> controlMap = Collections.emptyMap();
 
 	/**
@@ -300,6 +302,8 @@ public class FipStart {
 			float hl = vSpec.getLoreyHeightByUtilization().getCoe(0);
 			float dq = Math.max(a0 + a1 * (float) Math.pow(hl, a2), 22.5f);
 			vSpec.getQuadraticMeanDiameterByUtilization().setCoe(4, dq);
+			vSpec.getTreesPerHectareByUtilization()
+					.setCoe(4, treesPerHectare(vSpec.getBaseAreaByUtilization().getCoe(4), dq));
 
 		}
 
@@ -498,6 +502,13 @@ public class FipStart {
 		baseArea = Math.max(baseArea, 0.01f);
 
 		return baseArea;
+	}
+
+	static float treesPerHectare(float baseArea, float quadraticMeanDiameter) {
+		if (baseArea != 0) {
+			return baseArea / PI_40K / (quadraticMeanDiameter * quadraticMeanDiameter);
+		}
+		return 0f;
 	}
 
 	private static <E extends Throwable> void throwIfPresent(Optional<E> opt) throws E {

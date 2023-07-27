@@ -7,6 +7,7 @@ public class VdypSpecies extends BaseVdypSpecies {
 	Coefficients baseAreaByUtilization = new Coefficients(Arrays.asList(0f, 0f, 0f, 0f, 0f, 0f), -1); // LVCOM/BA
 	Coefficients loreyHeightByUtilization = new Coefficients(Arrays.asList(0f, 0f), -1); // LVCOM/HL
 	Coefficients quadraticMeanDiameterByUtilization = new Coefficients(Arrays.asList(0f, 0f, 0f, 0f, 0f, 0f), -1); // LVCOM/DQ
+	Coefficients treesPerHectareByUtilization = new Coefficients(Arrays.asList(0f, 0f, 0f, 0f, 0f, 0f), -1); // LVCOM/TPH
 
 	int volumeGroup;
 	int decayGroup;
@@ -31,8 +32,6 @@ public class VdypSpecies extends BaseVdypSpecies {
 	 * Base area for utilization index -1 through 4
 	 */
 	public void setBaseAreaByUtilization(Coefficients baseAreaByUtilization) {
-		assert baseAreaByUtilization.indexFrom == -1 : "baseAreaByUtilization must be indexed from -1";
-		assert baseAreaByUtilization.size() == 6 : "baseAreaByUtilization must have index -1 - 4";
 		this.baseAreaByUtilization = baseAreaByUtilization;
 	}
 
@@ -47,8 +46,6 @@ public class VdypSpecies extends BaseVdypSpecies {
 	 * Lorey height for utilization index -1 through 0
 	 */
 	public void setLoreyHeightByUtilization(Coefficients loreyHeightByUtilization) {
-		assert loreyHeightByUtilization.indexFrom == -1 : "loreyHeightByUtilization must be indexed from -1";
-		assert loreyHeightByUtilization.size() == 2 : "loreyHeightByUtilization must have index -1 - 0";
 		this.loreyHeightByUtilization = loreyHeightByUtilization;
 	}
 
@@ -81,9 +78,15 @@ public class VdypSpecies extends BaseVdypSpecies {
 	}
 
 	public void setQuadraticMeanDiameterByUtilization(Coefficients quadraticMeanDiameterByUtilization) {
-		assert loreyHeightByUtilization.indexFrom == -1 : "quadraticMeanDiameterByUtilization must be indexed from -1";
-		assert loreyHeightByUtilization.size() == 6 : "quadraticMeanDiameterByUtilization must have index -1 - 4";
 		this.quadraticMeanDiameterByUtilization = quadraticMeanDiameterByUtilization;
+	}
+
+	public Coefficients getTreesPerHectareByUtilization() {
+		return treesPerHectareByUtilization;
+	}
+
+	public void setTreesPerHectareByUtilization(Coefficients treesPerHectareByUtilization) {
+		this.treesPerHectareByUtilization = treesPerHectareByUtilization;
 	}
 
 }
