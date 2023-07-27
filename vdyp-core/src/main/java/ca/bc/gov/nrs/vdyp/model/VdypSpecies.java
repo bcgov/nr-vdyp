@@ -4,8 +4,9 @@ import java.util.Arrays;
 
 public class VdypSpecies extends BaseVdypSpecies {
 
-	Coefficients baseAreaByUtilization = new Coefficients(Arrays.asList(0f, 0f, 0f, 0f, 0f, 0f), -1);
+	Coefficients baseAreaByUtilization = new Coefficients(Arrays.asList(0f, 0f, 0f, 0f, 0f, 0f), -1); // LVCOM/BA
 	Coefficients loreyHeightByUtilization = new Coefficients(Arrays.asList(0f, 0f), -1); // LVCOM/HL
+	Coefficients quadraticMeanDiameterByUtilization = new Coefficients(Arrays.asList(0f, 0f, 0f, 0f, 0f, 0f), -1); // LVCOM/DQ
 
 	int volumeGroup;
 	int decayGroup;
@@ -31,7 +32,7 @@ public class VdypSpecies extends BaseVdypSpecies {
 	 */
 	public void setBaseAreaByUtilization(Coefficients baseAreaByUtilization) {
 		assert baseAreaByUtilization.indexFrom == -1 : "baseAreaByUtilization must be indexed from -1";
-		assert baseAreaByUtilization.size() == 2 : "baseAreaByUtilization must have index -1 - 0";
+		assert baseAreaByUtilization.size() == 6 : "baseAreaByUtilization must have index -1 - 4";
 		this.baseAreaByUtilization = baseAreaByUtilization;
 	}
 
@@ -73,6 +74,16 @@ public class VdypSpecies extends BaseVdypSpecies {
 
 	public void setBreakageGroup(int breakageGroup) {
 		this.breakageGroup = breakageGroup;
+	}
+
+	public Coefficients getQuadraticMeanDiameterByUtilization() {
+		return quadraticMeanDiameterByUtilization;
+	}
+
+	public void setQuadraticMeanDiameterByUtilization(Coefficients quadraticMeanDiameterByUtilization) {
+		assert loreyHeightByUtilization.indexFrom == -1 : "quadraticMeanDiameterByUtilization must be indexed from -1";
+		assert loreyHeightByUtilization.size() == 6 : "quadraticMeanDiameterByUtilization must have index -1 - 4";
+		this.quadraticMeanDiameterByUtilization = quadraticMeanDiameterByUtilization;
 	}
 
 }

@@ -19,6 +19,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.BreakageEquationGroupParser;
 import ca.bc.gov.nrs.vdyp.io.parse.DecayEquationGroupParser;
 import ca.bc.gov.nrs.vdyp.io.parse.GenusDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VeteranBQParser;
+import ca.bc.gov.nrs.vdyp.io.parse.VeteranDQParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VolumeEquationGroupParser;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.BecLookup;
@@ -185,7 +186,7 @@ public class TestUtils {
 	/**
 	 * Add mock control map entry for VeteranBQ Map
 	 */
-	public static void populateControlMapVeteranBq(HashMap<String, Object> controlMap) {
+	public static void populateControlMapVeteranBq(Map<String, Object> controlMap) {
 		var speciesDim = GenusDefinitionParser.getSpeciesAliases(controlMap);
 
 		var vetBqMap = new MatrixMap2Impl<>(speciesDim, Arrays.asList(Region.values()));
@@ -193,5 +194,15 @@ public class TestUtils {
 		vetBqMap.put("B", Region.INTERIOR, new Coefficients(Arrays.asList(0.70932f, 7.63269f, 0.62545f), 1));
 
 		controlMap.put(VeteranBQParser.CONTROL_KEY, vetBqMap);
+	}
+
+	public static void
+			populateControlMapVeteranDq(Map<String, Object> controlMap, BiFunction<String, Region, float[]> mapper) {
+		var regions = Arrays.asList(Region.values());
+		var genusAliases = GenusDefinitionParser.getSpeciesAliases(controlMap);
+
+		var result = new MatrixMap2Impl<String, Region, Coefficients>(genusAliases, regions);
+		result.setAll(mapper.andThen(x -> new Coefficients(x, 1)));
+		controlMap.put(VeteranDQParser.CONTROL_KEY, result);
 	}
 }

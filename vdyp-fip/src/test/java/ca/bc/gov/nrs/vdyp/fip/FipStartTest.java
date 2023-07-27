@@ -41,6 +41,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.MockStreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.model.Layer;
+import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
@@ -585,6 +586,7 @@ class FipStartTest {
 		TestUtils.populateControlMapGensuReal(controlMap);
 		TestUtils.populateControlMapVeteranBq(controlMap);
 		TestUtils.populateControlMapEquationGroups(controlMap, (s, b) -> new int[] { 0, 0, 0 });
+		TestUtils.populateControlMapVeteranDq(controlMap, (s, r) -> new float[] { 0f, 0f, 0f });
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -646,6 +648,7 @@ class FipStartTest {
 		TestUtils.populateControlMapGensuReal(controlMap);
 		TestUtils.populateControlMapVeteranBq(controlMap);
 		TestUtils.populateControlMapEquationGroups(controlMap, (s, b) -> new int[] { 0, 0, 0 });
+		TestUtils.populateControlMapVeteranDq(controlMap, (s, r) -> new float[] { 0f, 0f, 0f });
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -683,6 +686,7 @@ class FipStartTest {
 		TestUtils.populateControlMapGensuReal(controlMap);
 		TestUtils.populateControlMapVeteranBq(controlMap);
 		TestUtils.populateControlMapEquationGroups(controlMap, (s, b) -> new int[] { 0, 0, 0 });
+		TestUtils.populateControlMapVeteranDq(controlMap, (s, r) -> new float[] { 0f, 0f, 0f });
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -741,6 +745,7 @@ class FipStartTest {
 		TestUtils.populateControlMapGensuReal(controlMap);
 		TestUtils.populateControlMapVeteranBq(controlMap);
 		TestUtils.populateControlMapEquationGroups(controlMap, (s, b) -> new int[] { 0, 0, 0 });
+		TestUtils.populateControlMapVeteranDq(controlMap, (s, r) -> new float[] { 0f, 0f, 0f });
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -794,6 +799,7 @@ class FipStartTest {
 		TestUtils.populateControlMapGensuReal(controlMap);
 		TestUtils.populateControlMapVeteranBq(controlMap);
 		TestUtils.populateControlMapEquationGroups(controlMap, (s, b) -> new int[] { 0, 0, 0 });
+		TestUtils.populateControlMapVeteranDq(controlMap, (s, r) -> new float[] { 0f, 0f, 0f });
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -849,6 +855,7 @@ class FipStartTest {
 		TestUtils.populateControlMapGensuReal(controlMap);
 		TestUtils.populateControlMapEquationGroups(controlMap, (s, b) -> new int[] { 0, 0, 0 });
 		TestUtils.populateControlMapVeteranBq(controlMap);
+		TestUtils.populateControlMapVeteranDq(controlMap, (s, r) -> new float[] { 0f, 0f, 0f });
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -921,6 +928,7 @@ class FipStartTest {
 		TestUtils.populateControlMapGensuReal(controlMap);
 		TestUtils.populateControlMapVeteranBq(controlMap);
 		TestUtils.populateControlMapEquationGroups(controlMap, (s, b) -> new int[] { 0, 0, 0 });
+		TestUtils.populateControlMapVeteranDq(controlMap, (s, r) -> new float[] { 0f, 0f, 0f });
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -956,6 +964,7 @@ class FipStartTest {
 		TestUtils.populateControlMapEquationGroups(
 				controlMap, (s, b) -> s.equals("B") && b.equals("BG") ? new int[] { 1, 2, 3 } : new int[] { 0, 0, 0 }
 		);
+		TestUtils.populateControlMapVeteranDq(controlMap, (s, r) -> new float[] { 0f, 0f, 0f });
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -966,6 +975,93 @@ class FipStartTest {
 		assertThat(result, hasProperty("decayGroup", is(2)));
 		assertThat(result, hasProperty("breakageGroup", is(3)));
 
+	}
+
+	@Test
+	void testEstimateVeteranLayerDQ() throws Exception {
+
+		var polygonId = polygonId("Test Polygon", 2023);
+
+		var fipPolygon = getTestPolygon(polygonId, valid());
+		var fipLayer = getTestVeteranLayer(polygonId, x -> {
+			x.setHeight(10f);
+		});
+		var fipSpecies1 = getTestSpecies(polygonId, Layer.VETERAN, "B", x -> {
+			var map = new LinkedHashMap<String, Float>();
+			map.put("S1", 75f);
+			map.put("S2", 25f);
+			x.setSpeciesPercent(map);
+			x.setPercentGenus(60f);
+		});
+		var fipSpecies2 = getTestSpecies(polygonId, Layer.VETERAN, "C", x -> {
+			var map = new LinkedHashMap<String, Float>();
+			map.put("S3", 75f);
+			map.put("S4", 25f);
+			x.setSpeciesPercent(map);
+			x.setPercentGenus(40f);
+		});
+		fipPolygon.setLayers(Collections.singletonMap(Layer.VETERAN, fipLayer));
+		var speciesMap = new HashMap<String, FipSpecies>();
+		speciesMap.put("B", fipSpecies1);
+		speciesMap.put("C", fipSpecies2);
+		fipLayer.setSpecies(speciesMap);
+
+		var controlMap = new HashMap<String, Object>();
+		TestUtils.populateControlMapReal(controlMap);
+		TestUtils.populateControlMapGensuReal(controlMap);
+		TestUtils.populateControlMapEquationGroups(controlMap, (s, b) -> new int[] { 0, 0, 0 });
+		TestUtils.populateControlMapVeteranBq(controlMap);
+		TestUtils.populateControlMapVeteranDq(controlMap, (s, r) -> {
+			if (s.equals("B") && r == Region.INTERIOR)
+				return new float[] { 19.417f, 0.04354f, 1.96395f };
+			else if (s.equals("C") && r == Region.INTERIOR)
+				return new float[] { 22.500f, 0.00157f, 2.96382f };
+			return new float[] { 0f, 0f, 0f };
+		});
+
+		var app = new FipStart();
+		app.setControlMap(controlMap);
+
+		var result = app.processLayerAsVeteran(fipPolygon, fipLayer);
+
+		Matcher<Float> zeroMatcher = is(0.0f);
+		// Expect the estimated DQ in 4 (-1 to 4)
+
+		var expectedDqB = 19.417f + 0.04354f * (float) Math.pow(10f, 1.96395f);
+		var expectedDqC = 22.500f + 0.00157f * (float) Math.pow(10f, 2.96382);
+
+		assertThat(
+				result,
+				hasProperty(
+						"species",
+						hasEntry(
+								is("B"),
+								hasProperty(
+										"quadraticMeanDiameterByUtilization",
+										contains(
+												zeroMatcher, zeroMatcher, zeroMatcher, zeroMatcher, zeroMatcher,
+												closeTo(expectedDqB)
+										)
+								)
+						)
+				)
+		);
+		assertThat(
+				result,
+				hasProperty(
+						"species",
+						hasEntry(
+								is("C"),
+								hasProperty(
+										"quadraticMeanDiameterByUtilization",
+										contains(
+												zeroMatcher, zeroMatcher, zeroMatcher, zeroMatcher, zeroMatcher,
+												closeTo(expectedDqC)
+										)
+								)
+						)
+				)
+		);
 	}
 
 	private static <T> MockStreamingParser<T>

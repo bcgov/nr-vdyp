@@ -16,7 +16,7 @@ import ca.bc.gov.nrs.vdyp.model.Region;
 public class VeteranDQParser implements ControlMapSubResourceParser<MatrixMap2<String, Region, Coefficients>> {
 	public static final String CONTROL_KEY = "VETERAN_LAYER_DQ";
 
-	public final static int numCoefficients = 3;
+	public static final int NUM_COEFFICIENTS = 3;
 
 	public static final String SPECIES_KEY = "species";
 	public static final String REGION_KEY = "region";
@@ -33,7 +33,7 @@ public class VeteranDQParser implements ControlMapSubResourceParser<MatrixMap2<S
 
 		}.value(2, SPECIES_KEY, ValueParser.STRING).space(1)
 				.value(1, REGION_KEY, ControlledValueParser.optional(ValueParser.REGION))
-				.multiValue(numCoefficients, 10, COEFFICIENT_KEY, ValueParser.FLOAT);
+				.multiValue(NUM_COEFFICIENTS, 10, COEFFICIENT_KEY, ValueParser.FLOAT);
 	}
 
 	LineParser lineParser;
@@ -44,9 +44,7 @@ public class VeteranDQParser implements ControlMapSubResourceParser<MatrixMap2<S
 		final var speciesIndicies = GenusDefinitionParser.getSpeciesAliases(control);
 		final var regionIndicies = Arrays.asList(Region.values());
 
-		MatrixMap2<String, Region, Coefficients> result = new MatrixMap2Impl<String, Region, Coefficients>(
-				speciesIndicies, regionIndicies
-		);
+		MatrixMap2<String, Region, Coefficients> result = new MatrixMap2Impl<>(speciesIndicies, regionIndicies);
 		lineParser.parse(is, result, (v, r) -> {
 			var sp0 = (String) v.get(SPECIES_KEY);
 			@SuppressWarnings("unchecked")
@@ -56,8 +54,8 @@ public class VeteranDQParser implements ControlMapSubResourceParser<MatrixMap2<S
 			var coefficients = (List<Float>) v.get(COEFFICIENT_KEY);
 			GenusDefinitionParser.checkSpecies(speciesIndicies, sp0);
 
-			if (coefficients.size() < numCoefficients) {
-				throw new ValueParseException(null, "Expected " + numCoefficients + " coefficients");
+			if (coefficients.size() < NUM_COEFFICIENTS) {
+				throw new ValueParseException(null, "Expected " + NUM_COEFFICIENTS + " coefficients");
 			}
 
 			for (var region : regions) {

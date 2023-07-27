@@ -30,6 +30,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.io.parse.VeteranBQParser;
+import ca.bc.gov.nrs.vdyp.io.parse.VeteranDQParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VolumeEquationGroupParser;
 import ca.bc.gov.nrs.vdyp.model.BecLookup.Substitution;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
@@ -269,14 +270,37 @@ public class FipStart {
 		}
 
 		/*
-		 * c At this point we SHOULD invoke a root finding procedure C sets species
-		 * percents and adjusts DQ by species. C fills in main components, through
-		 * whole-stem volume c INSTEAD, I will assume %volumes apply to % BA's
+		 * From VDYP7
+		 *
+		 * At this point we SHOULD invoke a root finding procedure sets species percents
+		 * and adjusts DQ by species. fills in main components, through whole-stem
+		 * volume INSTEAD, I will assume %volumes apply to % BA's
 		 */
 
 		for (var vSpec : vdypSpecies.values()) {
 			vSpec.getBaseAreaByUtilization()
 					.setCoe(4, baseAreaByUtilization.getCoe(4) * vSpec.getPercentGenus() / 100f);
+		}
+
+		var vetDqMap = Utils.<MatrixMap2<String, Region, Coefficients>>expectParsedControl(
+				controlMap, VeteranDQParser.CONTROL_KEY, MatrixMap2.class
+		);
+
+		for (var vSpec : vdypSpecies.values()) {
+			var genus = vSpec.getGenus();
+			var coe = vetDqMap.get(genus, region).orElseThrow(
+					() -> new ProcessingException(
+							"Could not find Veteran Quadratic Mean Diameter Coefficients for genus " + genus
+									+ " and region " + region
+					)
+			);
+			var a0 = coe.getCoe(1);
+			var a1 = coe.getCoe(2);
+			var a2 = coe.getCoe(3);
+			float hl = vSpec.getLoreyHeightByUtilization().getCoe(0);
+			float dq = Math.max(a0 + a1 * (float) Math.pow(hl, a2), 22.5f);
+			vSpec.getQuadraticMeanDiameterByUtilization().setCoe(4, dq);
+
 		}
 
 		var vdypLayer = new VdypLayer(polygonIdentifier, layer);
