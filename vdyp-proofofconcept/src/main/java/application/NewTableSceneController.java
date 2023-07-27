@@ -14,7 +14,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
 
-public class SceneController implements Initializable {
+public class NewTableSceneController implements Initializable {
 
 	// Set up species choice boxes
 	@FXML
@@ -135,8 +135,8 @@ public class SceneController implements Initializable {
 		}
 		
 		SpinnerValueFactory<Integer> valueFactory =
-						new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 100);
-		
+				new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 100);
+
 		valueFactory.setValue(0);
 		
 		species1Percent.setValueFactory(valueFactory);
@@ -145,6 +145,16 @@ public class SceneController implements Initializable {
 		
 		species1GroupPercent.setText(Integer.toString(currentValue));
 		
+		species1Percent.valueProperty().addListener(new ChangeListener<Integer>() {
+		
+			@Override
+			public void changed(ObservableValue<? extends Integer> arg0, Integer arg1, Integer arg2) {
+				currentValue = species1Percent.getValue();
+				
+				species1GroupPercent.setText(Integer.toString(currentValue));
+			}
+			
+		});
 	}
 
 }

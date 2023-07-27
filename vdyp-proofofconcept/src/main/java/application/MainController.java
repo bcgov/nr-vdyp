@@ -26,7 +26,7 @@ public class MainController {
 	
 	public void handleMenuNewFileClick(ActionEvent event) throws IOException {
 		// Set up secondary window
-		FXMLLoader loader = new FXMLLoader(getClass().getResource("scene.fxml"));
+		FXMLLoader loader = new FXMLLoader(getClass().getResource("NewTableScene.fxml"));
 		Parent secondaryLayout = loader.load();
 		Scene secondScene = new Scene(secondaryLayout);			
 		secondScene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
@@ -55,7 +55,7 @@ public class MainController {
 	 */
 	public void openSecondaryWindow(Event event, Boolean fromButton) throws IOException {
 		// Set up secondary window
-		FXMLLoader loader = new FXMLLoader(getClass().getResource("scene.fxml"));
+		FXMLLoader loader = new FXMLLoader(getClass().getResource("NewTableScene.fxml"));
 		Parent secondaryLayout = loader.load();
 		Scene secondScene = new Scene(secondaryLayout);
 		secondScene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
