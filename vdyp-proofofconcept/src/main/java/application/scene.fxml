@@ -5,6 +5,7 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.RadioButton?>
 <?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Spinner?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.ToggleGroup?>
@@ -308,6 +309,8 @@
                                           <Font size="11.0" />
                                        </font>
                                     </Label>
+                                    <Spinner fx:id="species1Percent" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                    <Label fx:id="species1GroupPercent" alignment="CENTER" prefHeight="17.0" prefWidth="143.0" text="Label" GridPane.columnIndex="3" GridPane.rowIndex="2" />
                                  </children>
                                  <VBox.margin>
                                     <Insets />

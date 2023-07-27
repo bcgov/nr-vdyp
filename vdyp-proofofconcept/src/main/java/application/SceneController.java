@@ -11,6 +11,8 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.Spinner;
+import javafx.scene.control.SpinnerValueFactory;
 
 public class SceneController implements Initializable {
 
@@ -73,6 +75,15 @@ public class SceneController implements Initializable {
 	@FXML
 	private Label[] speciesSites = new Label[6];
 
+	
+	// Add species percent and species group percent labels
+	@FXML
+	private Spinner<Integer> species1Percent;
+	
+	@FXML 
+	private Label species1GroupPercent;
+	
+	int currentValue;
 	@Override
 	public void initialize(URL arg0, ResourceBundle arg1) {
 		// Add species choice boxes to the array
@@ -122,6 +133,18 @@ public class SceneController implements Initializable {
 						}
 					});
 		}
+		
+		SpinnerValueFactory<Integer> valueFactory =
+						new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 100);
+		
+		valueFactory.setValue(0);
+		
+		species1Percent.setValueFactory(valueFactory);
+		
+		currentValue = species1Percent.getValue();
+		
+		species1GroupPercent.setText(Integer.toString(currentValue));
+		
 	}
 
 }
