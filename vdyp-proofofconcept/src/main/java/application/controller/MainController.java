@@ -1,4 +1,4 @@
-package application;
+package application.controller;
 
 import java.io.IOException;
 import javafx.event.ActionEvent;
@@ -26,15 +26,15 @@ public class MainController {
 	
 	public void handleMenuNewFileClick(ActionEvent event) throws IOException {
 		// Set up secondary window
-		FXMLLoader loader = new FXMLLoader(getClass().getResource("NewTableScene.fxml"));
+		FXMLLoader loader = new FXMLLoader(getClass().getResource("../view/NewTableScene.fxml"));
 		Parent secondaryLayout = loader.load();
 		Scene secondScene = new Scene(secondaryLayout);			
-		secondScene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
+		secondScene.getStylesheets().add(getClass().getResource("../resources/application.css").toExternalForm());
 
 		// New window (Stage)
 		Stage newWindow = new Stage();
 		newWindow.setTitle("Model 1");
-		Image icon = new Image(getClass().getResource("icon.png").toExternalForm()); // This had to be changed??
+		Image icon = new Image(getClass().getResource("../resources/icon.png").toExternalForm()); 
 		newWindow.getIcons().add(icon);
 		newWindow.setScene(secondScene);
 
@@ -55,15 +55,15 @@ public class MainController {
 	 */
 	public void openSecondaryWindow(Event event, Boolean fromButton) throws IOException {
 		// Set up secondary window
-		FXMLLoader loader = new FXMLLoader(getClass().getResource("NewTableScene.fxml"));
+		FXMLLoader loader = new FXMLLoader(getClass().getResource("../view/NewTableScene.fxml"));
 		Parent secondaryLayout = loader.load();
 		Scene secondScene = new Scene(secondaryLayout);
-		secondScene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
+		secondScene.getStylesheets().add(getClass().getResource("../resources/application.css").toExternalForm());
 
 		// New window (Stage)
 		Stage newWindow = new Stage();
 		newWindow.setTitle("Model 1");
-		Image icon = new Image(getClass().getResource("icon.png").toExternalForm()); // This had to be changed??
+		Image icon = new Image(getClass().getResource("../resources/icon.png").toExternalForm()); 
 		newWindow.getIcons().add(icon);
 		newWindow.setScene(secondScene);
 

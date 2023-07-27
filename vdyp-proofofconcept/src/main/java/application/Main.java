@@ -2,6 +2,7 @@ package application;
 
 import java.io.IOException;
 
+import application.controller.*;
 import javafx.application.Application;
 import javafx.event.EventHandler;
 import javafx.stage.Stage;
@@ -17,11 +18,11 @@ public class Main extends Application {
 	public void start(Stage primaryStage) {
 		try {
 			// Load the FXML file and create the scene and controller
-			FXMLLoader loader = new FXMLLoader(getClass().getResource("MainWindow.fxml"));
+			FXMLLoader loader = new FXMLLoader(getClass().getResource("view/MainWindow.fxml"));
 			Parent root = loader.load();
 			MainController controller = loader.getController();
 			Scene scene = new Scene(root, 1000, 700);
-			scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
+			scene.getStylesheets().add(getClass().getResource("resources/application.css").toExternalForm());
 
 			// Set up event handler to trigger on shortcut button presses
 			setupEventHandlers(scene, controller);
@@ -69,7 +70,7 @@ public class Main extends Application {
 	 * @param stage The stage to which the icon image and title will be set.
 	 */
 	private void setStageIconAndTitle(Stage stage) {
-		Image icon = new Image(getClass().getResource("icon.png").toExternalForm());
+		Image icon = new Image(getClass().getResource("resources/icon.png").toExternalForm());
 		stage.getIcons().add(icon);
 		stage.setTitle("WinVDYP7.9 POC");
 	}
