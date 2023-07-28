@@ -333,7 +333,7 @@
                               </GridPane>
                            </children>
                         </VBox>
-                        <Button layoutX="233.0" layoutY="329.0" mnemonicParsing="false" text="Set as Default" />
+                        <Button layoutX="233.0" layoutY="329.0" mnemonicParsing="false" onAction="#defaultButtonAction" text="Set as Default" />
                         <Button layoutX="511.0" layoutY="329.0" mnemonicParsing="false" text="Run Model" />
                         <Button layoutX="333.0" layoutY="329.0" mnemonicParsing="false" onAction="#cancelButtonAction" text="Cancel" />
                      </children></AnchorPane>

@@ -156,12 +156,22 @@ public class NewTableSceneController implements Initializable {
 	    speciesGroupPercentLabels[4] = species5GroupPercent;
 	    speciesGroupPercentLabels[5] = species6GroupPercent;
 	    
-
-		// Add "Select species" as the default item for each ChoiceBox and set items
+	    
+		// Add "Select species" as the item for each ChoiceBox and set items
 		for (ChoiceBox<String> choiceBox : speciesChoiceBoxes) {
 			choiceBox.getItems().addAll(treeSpecies);
 			choiceBox.setValue("Select species");
 		}
+		
+		// Set up spinner value factories and set up values
+		for(Spinner<Integer> spinner : speciesPercentSpinners) {
+			IncrementByFiveSpinnerValueFactory valueFactory = new IncrementByFiveSpinnerValueFactory(0, 100);
+			valueFactory.setValue(0);
+			spinner.setValueFactory(valueFactory);
+		}
+				
+		// Set Default values
+		setDefaults(); // Initially the code above was within this method but this lead to slower execution
 
 		// Set up listeners for each choice box
 		for (int i = 0; i < speciesChoiceBoxes.size(); i++) {
@@ -181,14 +191,7 @@ public class NewTableSceneController implements Initializable {
 						}
 					});
 		}
-		
-		// Set up spinner value factories and set default values
-		for(Spinner<Integer> spinner : speciesPercentSpinners) {
-			IncrementByFiveSpinnerValueFactory valueFactory = new IncrementByFiveSpinnerValueFactory(0, 100);
-			valueFactory.setValue(0);
-			spinner.setValueFactory(valueFactory);
-		}
-		
+	
 
 		// Set up listeners for each spinner
 	    for (int i = 0; i < speciesPercentSpinners.size(); i++) {
@@ -288,4 +291,52 @@ public class NewTableSceneController implements Initializable {
 		MainController.getNewWindow().close(); //two ways to close, during memo ask if one is better?
         //MainController.closeSecondaryWindow();
 	}
+	
+	public void defaultButtonAction(ActionEvent event) {
+		setDefaults();
+	}
+
+
+	private void setDefaults() {
+		 // Set the default species and percentage for species 1-4
+	    species_1.setValue("PL - Lodgepole Pine");
+	    species1Percent.getValueFactory().setValue(30);
+	    
+	    species_2.setValue("AC - Poplar");
+	    species2Percent.getValueFactory().setValue(30);
+	    
+	    species_3.setValue("H - Hemlock");
+	    species3Percent.getValueFactory().setValue(30);
+	    
+	    species_4.setValue("S - Spruce");
+	    species4Percent.getValueFactory().setValue(10);
+
+	    // Clear the selection and reset percentages for other species (species 2 to species 6)
+	    for (int i = 5; i < speciesChoiceBoxes.size(); i++) {
+	        speciesChoiceBoxes.get(i).setValue("Select species");
+	        speciesPercentSpinners.get(i).getValueFactory().setValue(0);
+	    }
+
+	    // Update the labels to display the selected item and reset percentage labels for species 1
+	    species1Group.setText("PL");
+	    species1Site.setText("PL");
+	    species1GroupPercent.setText("30");
+	    
+	    species2Group.setText("AC");
+	    species2Site.setText("AC");
+	    species2GroupPercent.setText("30");
+	    
+	    species3Group.setText("H");
+	    species3Site.setText("H");
+	    species3GroupPercent.setText("30");
+	    
+	    species4Group.setText("S");
+	    species4Site.setText("S");
+	    species4GroupPercent.setText("10");
+	    
+	    // Update the total label after setting the default values
+	    updateTotalLabel(); 
+	}
+		
+	
 }
