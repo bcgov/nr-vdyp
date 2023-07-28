@@ -31,6 +31,8 @@ public class MainController {
 	    }
 		return newWindow;
 	}
+	
+	
 	/**
 	 * Handles the button action event. This method is triggered when a button is
 	 * clicked in the main window.
@@ -43,26 +45,6 @@ public class MainController {
 		openSecondaryWindow(event, true);
 	}
 	
-	
-
-	public void handleMenuNewFileClick() throws IOException {
-		newWindowCount++;
-		// Set up secondary window
-		FXMLLoader loader = new FXMLLoader(getClass().getResource("../view/NewTableScene.fxml"));
-		Parent secondaryLayout = loader.load();
-		Scene secondScene = new Scene(secondaryLayout);			
-		secondScene.getStylesheets().add(getClass().getResource("../resources/application.css").toExternalForm());
-
-		// Create new stage and icon
-		newWindow = new Stage();
-		Image icon = new Image(getClass().getResource("../resources/icon.png").toExternalForm()); 
-
-		
-		Main.setStageIconAndTitle(newWindow, "Model 1", icon);
-		
-		newWindow.setScene(secondScene);
-		newWindow.show();
-	}
 
 	/**
 	 * Opens the secondary window based on the given event. The secondary window
@@ -77,7 +59,7 @@ public class MainController {
 	 *                     window.
 	 */
 	public void openSecondaryWindow(Event event, Boolean fromButton) throws IOException {
-		newWindowCount++;
+		newWindowCount++; // used for title
 		
 		// Set up secondary window
 		FXMLLoader loader = new FXMLLoader(getClass().getResource("../view/NewTableScene.fxml"));
@@ -108,6 +90,7 @@ public class MainController {
 		newWindow.show();
 	}
 
+	
 	/**
 	 * Sets the position of the secondary window relative to the primary stage. The
 	 * secondary window will be centered within the primary stage and adjusted to
@@ -174,6 +157,27 @@ public class MainController {
 	 *
 	 * @throws IllegalStateException if newWindow is null when attempting to close it.
 	 */
+	
+	//Temporary method to handle if new table is created from menu
+	public void handleMenuNewFileClick() throws IOException {
+		newWindowCount++;
+		// Set up secondary window
+		FXMLLoader loader = new FXMLLoader(getClass().getResource("../view/NewTableScene.fxml"));
+		Parent secondaryLayout = loader.load();
+		Scene secondScene = new Scene(secondaryLayout);			
+		secondScene.getStylesheets().add(getClass().getResource("../resources/application.css").toExternalForm());
+
+		// Create new stage and icon
+		newWindow = new Stage();
+		Image icon = new Image(getClass().getResource("../resources/icon.png").toExternalForm()); 
+
+		
+		Main.setStageIconAndTitle(newWindow, "Model " + newWindowCount, icon);
+		
+		newWindow.setScene(secondScene);
+		newWindow.show();
+	}
+	
 	public static void closeSecondaryWindow() {
 		if (newWindow != null) {
 	        newWindow.close();

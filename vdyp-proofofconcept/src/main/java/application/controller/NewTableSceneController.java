@@ -194,107 +194,13 @@ public class NewTableSceneController implements Initializable {
 	        speciesPercentSpinners.get(i).valueProperty().addListener(new ChangeListener<Integer>() {
 	            public void changed(ObservableValue<? extends Integer> arg0, Integer arg1, Integer arg2) {
 	                int currentValue = speciesPercentSpinners.get(index).getValue();
-	              
-	           try {
-	           updateTotalLabel(); // Update the total label when a spinner value changes
-	           speciesGroupPercentLabels[index].setText(Integer.toString(currentValue));
-	           } catch(ArithmeticException e) {
-	        	   System.out.println("OOOOHWE");
-	        	   showErrorPopup(e.getMessage());
-	           }
-	                
-	                
-	          }
-	            
+	                updateTotalLabel(); // Update the total label when a spinner value changes
+	                speciesGroupPercentLabels[index].setText(Integer.toString(currentValue));    
+	            }
 	        });
 	    } 
 	}
 	
-	
-	/**
-	 * Updates the total label with the sum of all species percent values from the spinners.
-	 * 
-	 * This method iterates through a list of species percent spinners and calculates the total sum of their values.
-	 * The resulting total is displayed in the totalPercentLabel. If the total exceeds 100%, an error popup is shown.
-	 * 
-	 * If the total exceeds 100%, the method shows an error popup and does not proceed with further calculations.
-	 * 
-	 */
-	private void updateTotalLabel() throws ArithmeticException {
-		int total = getTotalPercent();
-		
-		if(total > 100) {
-			System.out.println("This extends past 100% in updateTotal");
-			throw new ArithmeticException("This extends past 100% in updateTotalLabel");
-		} else {
-			totalPercentLabel.setText(Integer.toString(total));
-		}
-	}
-	
-	/**
-	 * Displays an error popup with the specified error message.
-	 * 
-	 * This method creates an Alert dialog of type ERROR to display an error message to the user.
-	 * The title of the dialog is set to "Error", and the header text is set to null.
-	 * The error message passed as the 'message' parameter is displayed as the content of the dialog.
-	 *
-	 * @param message The error message to be shown in the error popup.
-	 */
-	private static boolean isAlertShown = false;
-	private static void showErrorPopup(String message) {
-	    if (!isAlertShown) {
-	        isAlertShown = true;
-
-	        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-	        alert.setTitle("Error");
-	        alert.setHeaderText("An error has occurred.");
-	        alert.setContentText(message);
-
-	        alert.setOnHidden(event -> isAlertShown = false);
-	        alert.showAndWait();
-	    }
-	}
-
-
-	/**
-	 * Method to calculate the total percentage from all the spinners.
-	 *
-	 * @return The total percentage calculated from the spinners.
-	 * @throws ArithmeticException if the total percentage exceeds 100%.
-	 */
-	private int getTotalPercent() {
-	    int total = 0;
-	    for (Spinner<Integer> spinner : speciesPercentSpinners) {
-	        total += spinner.getValue();
-	        if(total > 100) {
-	        	System.out.println("This extends past 100% in getTotal " + total);
-	        	throw new ArithmeticException("This extends past 100% in updateTotalLabel");
-	        }
-	    }
-	    return total;
-	}
-	
-	/**
-	 * Handles the cancel button action event. This method is triggered when the cancel button is clicked in the new table window.
-	 * It closes this new table window.
-	 *
-	 * @param event The ActionEvent triggered by the cancel button click.
-	 */
-	public void cancelButtonAction(ActionEvent event) {
-		MainController.getNewWindow().close(); //two ways to close, during memo ask if one is better?
-        //MainController.closeSecondaryWindow();
-	}
-	
-	/**
-	 * Handles the default button action event. This method is triggered when the default button is clicked in the new table window.
-	 * It sets default values for species and percentages.
-	 *
-	 * @param event The ActionEvent triggered by the default button click.
-	 */
-	public void defaultButtonAction(ActionEvent event) {
-		setDefaults();
-	}
-
 	/**
 	 * Sets default values for species and percentages in the new table window.
 	 * The default values are:
@@ -352,6 +258,90 @@ public class NewTableSceneController implements Initializable {
 	    // Update the total label after setting the default values
 	    updateTotalLabel(); 
 	}
-		
+
 	
+	/**
+	 * Updates the total label with the sum of all species percent values from the spinners.
+	 * 
+	 * This method iterates through a list of species percent spinners and calculates the total sum of their values.
+	 * The resulting total is displayed in the totalPercentLabel. If the total exceeds 100%, an error popup is shown.
+	 * 
+	 * If the total exceeds 100%, the method shows an error popup and does not proceed with further calculations.
+	 * 
+	 */
+	private void updateTotalLabel() throws ArithmeticException {
+		int total = getTotalPercent();
+		totalPercentLabel.setText(Integer.toString(total));		
+	}
+	
+
+	/**
+	 * Method to calculate the total percentage from all the spinners.
+	 *
+	 * @return The total percentage calculated from the spinners.
+	 * @throws ArithmeticException if the total percentage exceeds 100%.
+	 */
+	private int getTotalPercent() {
+	    int total = 0;
+	    for (Spinner<Integer> spinner : speciesPercentSpinners) {
+	        total += spinner.getValue();
+	    }
+	    return total;
+	}
+	
+	/**
+	 * Handles the cancel button action event. This method is triggered when the cancel button is clicked in the new table window.
+	 * It closes this new table window.
+	 *
+	 * @param event The ActionEvent triggered by the cancel button click.
+	 */
+	public void cancelButtonAction(ActionEvent event) {
+		MainController.getNewWindow().close(); //two ways to close, during memo ask if one is better?
+        //MainController.closeSecondaryWindow();
+	}
+	
+	/**
+	 * Handles the default button action event. This method is triggered when the default button is clicked in the new table window.
+	 * It sets default values for species and percentages.
+	 *
+	 * @param event The ActionEvent triggered by the default button click.
+	 */
+	public void defaultButtonAction(ActionEvent event) {
+		setDefaults();
+	}
+	
+	/**
+	 * Handles the run button action event. This method is triggered when the run model button is clicked in the table window.
+	 * It checks if the total percentage from all the spinners is equal to 100%.
+	 * If the total percentage is not 100%, an error popup is displayed to notify the user.
+	 *
+	 * @param event The ActionEvent triggered by the run button click.
+	 */
+	public void runButtonAction(ActionEvent event) {
+		int total = getTotalPercent();
+		
+		if(total != 100) {
+			showErrorPopup("Total percent does not total 100%");
+		} else {
+			//Code to run the model goes here
+		}
+	}
+	
+	/**
+	 * Displays an error popup with the specified error message.
+	 * 
+	 * This method creates an Alert dialog of type INFORMATION to display an error message to the user.
+	 * The title of the dialog is set to "Error", and the header text is set to null.
+	 * The error message passed as the 'message' parameter is displayed as the content of the dialog.
+	 *
+	 * @param message The error message to be shown in the error popup.
+	 */
+	private static void showErrorPopup(String message) {
+	        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+	        alert.setTitle("Error");
+	        alert.setHeaderText("An error has occurred.");
+	        alert.setContentText(message);
+
+	        alert.showAndWait();    
+	}
 }
