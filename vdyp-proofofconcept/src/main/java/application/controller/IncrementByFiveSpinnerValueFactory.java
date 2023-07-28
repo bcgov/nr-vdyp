@@ -14,18 +14,12 @@ public class IncrementByFiveSpinnerValueFactory extends SpinnerValueFactory.Inte
 
     @Override
     public void increment(int steps) {
-        int currentValue = getValue() + 5 * steps;
-        if(currentValue < 100) {
-        	setValue(currentValue);
-        } else {
-        	setValue(100);
-        }
+        setValue(getValue() + 5 * steps);
     }
 
     @Override
     public void decrement(int steps) {
-        int currentValue = getValue() - 5 * steps;
-        setValue(currentValue);
+    	setValue(getValue() - 5 * steps);
     }
 
 }
