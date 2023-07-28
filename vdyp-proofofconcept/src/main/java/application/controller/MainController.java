@@ -14,7 +14,9 @@ import javafx.stage.Stage;
 
 public class MainController {
 	
-	private static Stage newWindow;
+	private static Stage newWindow; // to pass into NewTableSceneController
+	
+	public static int newWindowCount = 0; // to track amount of new windows made
 	
 	/**
 	 * Getter method to access the newWindow from other files. 
@@ -44,6 +46,7 @@ public class MainController {
 	
 
 	public void handleMenuNewFileClick() throws IOException {
+		newWindowCount++;
 		// Set up secondary window
 		FXMLLoader loader = new FXMLLoader(getClass().getResource("../view/NewTableScene.fxml"));
 		Parent secondaryLayout = loader.load();
@@ -74,6 +77,8 @@ public class MainController {
 	 *                     window.
 	 */
 	public void openSecondaryWindow(Event event, Boolean fromButton) throws IOException {
+		newWindowCount++;
+		
 		// Set up secondary window
 		FXMLLoader loader = new FXMLLoader(getClass().getResource("../view/NewTableScene.fxml"));
 		Parent secondaryLayout = loader.load();
@@ -84,7 +89,7 @@ public class MainController {
 		newWindow = new Stage();
 		Image icon = new Image(getClass().getResource("../resources/icon.png").toExternalForm()); 
 
-		Main.setStageIconAndTitle(newWindow, "Model 1", icon);
+		Main.setStageIconAndTitle(newWindow, "Model " + newWindowCount, icon);
 		
 
 		// Load in primary window
