@@ -13,6 +13,16 @@ import javafx.stage.Screen;
 import javafx.stage.Stage;
 
 public class MainController {
+	
+	private static Stage newWindow;
+	
+	//Getter method so newWindow can be accessed from other files
+	public static Stage getNewWindow() {
+		if (newWindow == null) {
+			throw new IllegalStateException("newWindow is not set yet. Make sure to initialize it before accessing.");
+	    }
+		return newWindow;
+	}
 	/**
 	 * Handles the button action event. This method is triggered when a button is
 	 * clicked in the main window.
@@ -35,7 +45,7 @@ public class MainController {
 		secondScene.getStylesheets().add(getClass().getResource("../resources/application.css").toExternalForm());
 
 		// Create new stage and icon
-		Stage newWindow = new Stage();
+		newWindow = new Stage();
 		Image icon = new Image(getClass().getResource("../resources/icon.png").toExternalForm()); 
 
 		
@@ -65,10 +75,11 @@ public class MainController {
 		secondScene.getStylesheets().add(getClass().getResource("../resources/application.css").toExternalForm());
 
 		// Create new stage and icon
-		Stage newWindow = new Stage();
+		newWindow = new Stage();
 		Image icon = new Image(getClass().getResource("../resources/icon.png").toExternalForm()); 
 
 		Main.setStageIconAndTitle(newWindow, "Model 1", icon);
+		
 
 		// Load in primary window
 		Stage primaryStage;
@@ -143,5 +154,10 @@ public class MainController {
 		// Set the size of the secondary window
 		newWindow.setWidth(secondaryWidth);
 		newWindow.setHeight(secondaryHeight);
+	}
+	
+	
+	public static void closeSecondaryWindow() {
+		newWindow.close();
 	}
 }

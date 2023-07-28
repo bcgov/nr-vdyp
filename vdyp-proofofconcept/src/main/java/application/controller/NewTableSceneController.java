@@ -1,13 +1,17 @@
 package application.controller;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
+
+import application.Main;
+
 import java.util.ArrayList;
 import java.util.List;
 
-
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ChoiceBox;
@@ -110,11 +114,8 @@ public class NewTableSceneController implements Initializable {
 	// Spinner labels 
 	@FXML
 	private Label[] speciesGroupPercentLabels = new Label[6];
-	
-	
 	@FXML
 	private Label totalPercentLabel;
-
 
 	
 	@Override
@@ -186,7 +187,7 @@ public class NewTableSceneController implements Initializable {
 		
 		// Set up spinner value factories and set default values
 		for(Spinner<Integer> spinner : speciesPercentSpinners) {
-			IncrementByFiveSpinnerValueFactory valueFactory = new IncrementByFiveSpinnerValueFactory(0, 100, speciesPercentSpinners);
+			IncrementByFiveSpinnerValueFactory valueFactory = new IncrementByFiveSpinnerValueFactory(0, 100);
 			valueFactory.setValue(0);
 			spinner.setValueFactory(valueFactory);
 		}
@@ -194,18 +195,23 @@ public class NewTableSceneController implements Initializable {
 
 		// Set up listeners for each spinner
 	    for (int i = 0; i < speciesPercentSpinners.size(); i++) {
+	    	
 	        int index = i;
 
 	        speciesPercentSpinners.get(i).valueProperty().addListener(new ChangeListener<Integer>() {
 	            public void changed(ObservableValue<? extends Integer> arg0, Integer arg1, Integer arg2) {
 	                int currentValue = speciesPercentSpinners.get(index).getValue();
 	              
-	               // Update the total label when a spinner value changes
-	            updateTotalLabel(); 
+	           try {
+	           updateTotalLabel(); // Update the total label when a spinner value changes
 	           speciesGroupPercentLabels[index].setText(Integer.toString(currentValue));
+	           } catch(ArithmeticException e) {
+	        	   System.out.println("OOOOHWE");
+	        	   showErrorPopup(e.getMessage());
+	           }
 	                
 	                
-	               }
+	          }
 	            
 	        });
 	    } 
@@ -225,9 +231,11 @@ public class NewTableSceneController implements Initializable {
 		int total = getTotalPercent();
 		
 		if(total > 100) {
-			//Throw error
+			System.out.println("This extends past 100% in updateTotal");
+			throw new ArithmeticException("This extends past 100% in updateTotalLabel");
+		} else {
+			totalPercentLabel.setText(Integer.toString(total));
 		}
-	    totalPercentLabel.setText(Integer.toString(total));
 	}
 	
 	/**
@@ -239,25 +247,38 @@ public class NewTableSceneController implements Initializable {
 	 *
 	 * @param message The error message to be shown in the error popup.
 	 */
-	private void showErrorPopup(String message) {
-	        Alert alert = new Alert(Alert.AlertType.ERROR);
+	private static boolean isAlertShown = false;
+	private static void showErrorPopup(String message) {
+	    if (!isAlertShown) {
+	        isAlertShown = true;
+
+	        Alert alert = new Alert(Alert.AlertType.INFORMATION);
 	        alert.setTitle("Error");
-	        alert.setHeaderText(null);
+	        alert.setHeaderText("An error has occurred.");
 	        alert.setContentText(message);
-	        alert.show();
-	        
-	        alert.setOnHidden(event -> {
-	        	return;
-	        });
+
+	        alert.setOnHidden(event -> isAlertShown = false);
+	        alert.showAndWait();
+	    }
 	}
 
 
-	// Add this method to calculate the total percentage from all the spinners
+	// Method to calculate the total percentage from all the spinners
 	private int getTotalPercent() {
 	    int total = 0;
 	    for (Spinner<Integer> spinner : speciesPercentSpinners) {
 	        total += spinner.getValue();
+	        if(total > 100) {
+	        	System.out.println("This extends past 100% in getTotal " + total);
+	        	throw new ArithmeticException("This extends past 100% in updateTotalLabel");
+	        }
 	    }
 	    return total;
+	}
+	
+
+	public void cancelButtonAction(ActionEvent event) throws IOException {
+		MainController.getNewWindow().close();
+        //MainController.closeSecondaryWindow();
 	}
 }

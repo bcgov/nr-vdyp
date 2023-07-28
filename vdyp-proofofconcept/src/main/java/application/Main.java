@@ -7,6 +7,7 @@ import javafx.application.Application;
 import javafx.event.EventHandler;
 import javafx.stage.Stage;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -55,9 +56,9 @@ public class Main extends Application {
 			public void handle(KeyEvent event) {
 				if (event.isControlDown() && event.getCode() == KeyCode.T) {
 					try {
-						controller.openSecondaryWindow(event, false); // Setting to false since not trigger by button
-																		// push
-					} catch (IOException e) { //remove this eventually
+						controller.openSecondaryWindow(event, false); // Setting to false since not trigger by button push
+																		
+					} catch (IOException e) { 
 						e.printStackTrace();
 					}
 				}
@@ -75,6 +76,7 @@ public class Main extends Application {
 		stage.getIcons().add(icon);
 		stage.setTitle(title);
 	}
+    
 
 	public static void main(String[] args) {
 		launch(args);
