@@ -1,9 +1,8 @@
 package application.controller;
-import	application.Main;
+
+import application.Main;
 
 import java.io.IOException;
-import javafx.event.ActionEvent;
-import javafx.event.Event;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
@@ -13,38 +12,26 @@ import javafx.stage.Screen;
 import javafx.stage.Stage;
 
 public class MainController {
-	
+
 	private static Stage newWindow; // to pass into NewTableSceneController
-	
+
 	public static int newWindowCount = 0; // to track amount of new windows made
-	
+
 	/**
-	 * Getter method to access the newWindow from other files. 
-	 * Returns the Stage object representing the new window.
+	 * Getter method to access the newWindow from other files. Returns the Stage
+	 * object representing the new window.
 	 *
 	 * @return The Stage object representing the new window.
-	 * @throws IllegalStateException if newWindow is not set yet. Make sure to initialize it before accessing.
+	 * @throws IllegalStateException if newWindow is not set yet. Make sure to
+	 *                               initialize it before accessing.
 	 */
-	public static Stage getNewWindow(){
+	public static Stage getNewWindow() {
 		if (newWindow == null) {
 			throw new IllegalStateException("newWindow is not set yet. Make sure to initialize it before accessing.");
-	    }
+		}
 		return newWindow;
 	}
-	
-	
-	/**
-	 * Handles the button action event. This method is triggered when a button is
-	 * clicked in the main window.
-	 *
-	 * @param event The ActionEvent triggered by the button click.
-	 * @throws IOException if an I/O error occurs while opening the secondary
-	 *                     window.
-	 */
-	public void handleButtonAction(ActionEvent event) throws IOException {
-		openSecondaryWindow(event, true);
-	}
-	
+
 
 	/**
 	 * Opens the secondary window based on the given event. The secondary window
@@ -58,9 +45,9 @@ public class MainController {
 	 * @throws IOException if an I/O error occurs while opening the secondary
 	 *                     window.
 	 */
-	public void openSecondaryWindow(Event event, Boolean fromButton) throws IOException {
+	public void openSecondaryWindow() throws IOException {
 		newWindowCount++; // used for title
-		
+
 		// Set up secondary window
 		FXMLLoader loader = new FXMLLoader(getClass().getResource("../view/NewTableScene.fxml"));
 		Parent secondaryLayout = loader.load();
@@ -69,28 +56,21 @@ public class MainController {
 
 		// Create new stage and icon
 		newWindow = new Stage();
-		Image icon = new Image(getClass().getResource("../resources/icon.png").toExternalForm()); 
+		Image icon = new Image(getClass().getResource("../resources/icon.png").toExternalForm());
 
 		Main.setStageIconAndTitle(newWindow, "Model " + newWindowCount, icon);
-		
 
 		// Load in primary window
-		Stage primaryStage;
-		if (fromButton) { // Conditional based on how it's called
-			primaryStage = (Stage) ((javafx.scene.Node) event.getSource()).getScene().getWindow();
-		} else {
-			primaryStage = (Stage) ((javafx.scene.Scene) event.getSource()).getWindow();
-		}
+		Stage primaryStage = Main.getPrimaryStage();
 
 		// Set position and relative size
 		setSecondaryWindowPosition(newWindow, primaryStage);
 		setSecondaryWindowSize(newWindow, primaryStage);
-		
+
 		newWindow.setScene(secondScene);
 		newWindow.show();
 	}
 
-	
 	/**
 	 * Sets the position of the secondary window relative to the primary stage. The
 	 * secondary window will be centered within the primary stage and adjusted to
@@ -149,40 +129,5 @@ public class MainController {
 		newWindow.setWidth(secondaryWidth);
 		newWindow.setHeight(secondaryHeight);
 	}
-	
-	/**
-	 * Closes the secondary window.
-	 * If the secondary window (newWindow) is open, this method will close it.
-	 * If the secondary window is not open or is null, this method will have no effect.
-	 *
-	 * @throws IllegalStateException if newWindow is null when attempting to close it.
-	 */
-	
-	//Temporary method to handle if new table is created from menu
-	public void handleMenuNewFileClick() throws IOException {
-		newWindowCount++;
-		// Set up secondary window
-		FXMLLoader loader = new FXMLLoader(getClass().getResource("../view/NewTableScene.fxml"));
-		Parent secondaryLayout = loader.load();
-		Scene secondScene = new Scene(secondaryLayout);			
-		secondScene.getStylesheets().add(getClass().getResource("../resources/application.css").toExternalForm());
 
-		// Create new stage and icon
-		newWindow = new Stage();
-		Image icon = new Image(getClass().getResource("../resources/icon.png").toExternalForm()); 
-
-		
-		Main.setStageIconAndTitle(newWindow, "Model " + newWindowCount, icon);
-		
-		newWindow.setScene(secondScene);
-		newWindow.show();
-	}
-	
-	public static void closeSecondaryWindow() {
-		if (newWindow != null) {
-	        newWindow.close();
-	    } else {
-	        throw new IllegalStateException("Cannot close the secondary window. newWindow is null or not initialized.");
-	    }
-	}
 }

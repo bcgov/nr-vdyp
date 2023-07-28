@@ -108,13 +108,12 @@ public class NewTableSceneController implements Initializable {
 	// List of speciesPercentSpinners
 	private List<Spinner<Integer>> speciesPercentSpinners = new ArrayList<>();
 
-	// Spinner labels 
+	// Spinner labels
 	@FXML
 	private Label[] speciesGroupPercentLabels = new Label[6];
 	@FXML
 	private Label totalPercentLabel;
 
-	
 	@Override
 	public void initialize(URL arg0, ResourceBundle arg1) {
 		// Add species choice boxes to the List
@@ -139,36 +138,36 @@ public class NewTableSceneController implements Initializable {
 		speciesSites[3] = species4Site;
 		speciesSites[4] = species5Site;
 		speciesSites[5] = species6Site;
-		
-		// Add species percent spinners to the array 
-	    speciesPercentSpinners.add(species1Percent);
-	    speciesPercentSpinners.add(species2Percent);
-	    speciesPercentSpinners.add(species3Percent);
-	    speciesPercentSpinners.add(species4Percent);
-	    speciesPercentSpinners.add(species5Percent);
-	    speciesPercentSpinners.add(species6Percent);
-	    
-	    //Add labels to array
-	    speciesGroupPercentLabels[0] = species1GroupPercent;
-	    speciesGroupPercentLabels[1] = species2GroupPercent;
-	    speciesGroupPercentLabels[2] = species3GroupPercent;
-	    speciesGroupPercentLabels[3] = species4GroupPercent;
-	    speciesGroupPercentLabels[4] = species5GroupPercent;
-	    speciesGroupPercentLabels[5] = species6GroupPercent;
-	    
-	    
+
+		// Add species percent spinners to the array
+		speciesPercentSpinners.add(species1Percent);
+		speciesPercentSpinners.add(species2Percent);
+		speciesPercentSpinners.add(species3Percent);
+		speciesPercentSpinners.add(species4Percent);
+		speciesPercentSpinners.add(species5Percent);
+		speciesPercentSpinners.add(species6Percent);
+
+		// Add labels to array
+		speciesGroupPercentLabels[0] = species1GroupPercent;
+		speciesGroupPercentLabels[1] = species2GroupPercent;
+		speciesGroupPercentLabels[2] = species3GroupPercent;
+		speciesGroupPercentLabels[3] = species4GroupPercent;
+		speciesGroupPercentLabels[4] = species5GroupPercent;
+		speciesGroupPercentLabels[5] = species6GroupPercent;
+
 		// Add "Select species" as the item for each ChoiceBox and set items
 		for (ChoiceBox<String> choiceBox : speciesChoiceBoxes) {
 			choiceBox.getItems().addAll(treeSpecies);
 			choiceBox.setValue("Select species");
 		}
-				
+
 		// Set Default values
-		setDefaults(); // Initially the code above was within this method but this lead to slower execution
+		setDefaults(); // Initially the code above was within this method but this lead to slower
+						// execution
 
 		// Set up listeners for each choice box
 		for (int i = 0; i < speciesChoiceBoxes.size(); i++) {
-			final int index = i; 
+			final int index = i;
 
 			speciesChoiceBoxes.get(i).getSelectionModel().selectedItemProperty()
 					.addListener(new ChangeListener<String>() {
@@ -184,96 +183,97 @@ public class NewTableSceneController implements Initializable {
 						}
 					});
 		}
-	
 
 		// Set up listeners for each spinner
-	    for (int i = 0; i < speciesPercentSpinners.size(); i++) {
-	    	
-	        int index = i;
+		for (int i = 0; i < speciesPercentSpinners.size(); i++) {
 
-	        speciesPercentSpinners.get(i).valueProperty().addListener(new ChangeListener<Integer>() {
-	            public void changed(ObservableValue<? extends Integer> arg0, Integer arg1, Integer arg2) {
-	                int currentValue = speciesPercentSpinners.get(index).getValue();
-	                updateTotalLabel(); // Update the total label when a spinner value changes
-	                speciesGroupPercentLabels[index].setText(Integer.toString(currentValue));    
-	            }
-	        });
-	    } 
+			int index = i;
+
+			speciesPercentSpinners.get(i).valueProperty().addListener(new ChangeListener<Integer>() {
+				public void changed(ObservableValue<? extends Integer> arg0, Integer arg1, Integer arg2) {
+					int currentValue = speciesPercentSpinners.get(index).getValue();
+					updateTotalLabel(); // Update the total label when a spinner value changes
+					speciesGroupPercentLabels[index].setText(Integer.toString(currentValue));
+				}
+			});
+		}
 	}
-	
+
 	/**
-	 * Sets default values for species and percentages in the new table window.
-	 * The default values are:
-	 * - Species 1: "PL - Lodgepole Pine" with 30%.
-	 * - Species 2: "AC - Poplar" with 30%.
-	 * - Species 3: "H - Hemlock" with 30%.
-	 * - Species 4: "S - Spruce" with 10%.
-	 * For Species 5 to Species 6, the selection is cleared, and percentages are reset to 0.
-	 * It updates the labels to display the selected item and percentage.
-	 * After setting the default values, it updates the total label.
+	 * Sets default values for species and percentages in the new table window. The
+	 * default values are: - Species 1: "PL - Lodgepole Pine" with 30%. - Species 2:
+	 * "AC - Poplar" with 30%. - Species 3: "H - Hemlock" with 30%. - Species 4: "S
+	 * - Spruce" with 10%. For Species 5 to Species 6, the selection is cleared, and
+	 * percentages are reset to 0. It updates the labels to display the selected
+	 * item and percentage. After setting the default values, it updates the total
+	 * label.
 	 */
 	private void setDefaults() {
-		// Set all percent values to 0, this avoids totalPercent from exceeding 100% and causing errors
-		for(Spinner<Integer> spinner : speciesPercentSpinners) {
+		// Set all percent values to 0, this avoids totalPercent from exceeding 100% and
+		// causing errors
+		for (Spinner<Integer> spinner : speciesPercentSpinners) {
 			IncrementByFiveSpinnerValueFactory valueFactory = new IncrementByFiveSpinnerValueFactory(0, 100);
 			valueFactory.setValue(0);
 			spinner.setValueFactory(valueFactory);
 		}
-		 // Set the default species and percentage for species 1-4
-	    species_1.setValue("PL - Lodgepole Pine");
-	    species1Percent.getValueFactory().setValue(30);
-	    
-	    species_2.setValue("AC - Poplar");
-	    species2Percent.getValueFactory().setValue(30);
-	    
-	    species_3.setValue("H - Hemlock");
-	    species3Percent.getValueFactory().setValue(30);
-	    
-	    species_4.setValue("S - Spruce");
-	    species4Percent.getValueFactory().setValue(10);
+		// Set the default species and percentage for species 1-4
+		species_1.setValue("PL - Lodgepole Pine");
+		species1Percent.getValueFactory().setValue(30);
 
-	    // Clear the selection and reset percentages for other species (species 5 to species 6)
-	    for (int i = 5; i < speciesChoiceBoxes.size(); i++) {
-	        speciesChoiceBoxes.get(i).setValue("Select species");
-	        speciesPercentSpinners.get(i).getValueFactory().setValue(0);
-	    }
+		species_2.setValue("AC - Poplar");
+		species2Percent.getValueFactory().setValue(30);
 
-	    // Update the labels to display the selected item and percentage labels for species 1-4
-	    species1Group.setText("PL");
-	    species1Site.setText("PL");
-	    species1GroupPercent.setText("30");
-	    
-	    species2Group.setText("AC");
-	    species2Site.setText("AC");
-	    species2GroupPercent.setText("30");
-	    
-	    species3Group.setText("H");
-	    species3Site.setText("H");
-	    species3GroupPercent.setText("30");
-	    
-	    species4Group.setText("S");
-	    species4Site.setText("S");
-	    species4GroupPercent.setText("10");
-	    
-	    // Update the total label after setting the default values
-	    updateTotalLabel(); 
+		species_3.setValue("H - Hemlock");
+		species3Percent.getValueFactory().setValue(30);
+
+		species_4.setValue("S - Spruce");
+		species4Percent.getValueFactory().setValue(10);
+
+		// Clear the selection and reset percentages for other species (species 5 to
+		// species 6)
+		for (int i = 5; i < speciesChoiceBoxes.size(); i++) {
+			speciesChoiceBoxes.get(i).setValue("Select species");
+			speciesPercentSpinners.get(i).getValueFactory().setValue(0);
+		}
+
+		// Update the labels to display the selected item and percentage labels for
+		// species 1-4
+		species1Group.setText("PL");
+		species1Site.setText("PL");
+		species1GroupPercent.setText("30");
+
+		species2Group.setText("AC");
+		species2Site.setText("AC");
+		species2GroupPercent.setText("30");
+
+		species3Group.setText("H");
+		species3Site.setText("H");
+		species3GroupPercent.setText("30");
+
+		species4Group.setText("S");
+		species4Site.setText("S");
+		species4GroupPercent.setText("10");
+
+		// Update the total label after setting the default values
+		updateTotalLabel();
 	}
 
-	
 	/**
-	 * Updates the total label with the sum of all species percent values from the spinners.
-	 * 
-	 * This method iterates through a list of species percent spinners and calculates the total sum of their values.
-	 * The resulting total is displayed in the totalPercentLabel. If the total exceeds 100%, an error popup is shown.
-	 * 
-	 * If the total exceeds 100%, the method shows an error popup and does not proceed with further calculations.
-	 * 
+	 * Updates the total label with the sum of all species percent values from the
+	 * spinners.
+	 *
+	 * This method iterates through a list of species percent spinners and
+	 * calculates the total sum of their values. The resulting total is displayed in
+	 * the totalPercentLabel. If the total exceeds 100%, an error popup is shown.
+	 *
+	 * If the total exceeds 100%, the method shows an error popup and does not
+	 * proceed with further calculations.
+	 *
 	 */
 	private void updateTotalLabel() throws ArithmeticException {
 		int total = getTotalPercent();
-		totalPercentLabel.setText(Integer.toString(total));		
+		totalPercentLabel.setText(Integer.toString(total));
 	}
-	
 
 	/**
 	 * Method to calculate the total percentage from all the spinners.
@@ -282,66 +282,69 @@ public class NewTableSceneController implements Initializable {
 	 * @throws ArithmeticException if the total percentage exceeds 100%.
 	 */
 	private int getTotalPercent() {
-	    int total = 0;
-	    for (Spinner<Integer> spinner : speciesPercentSpinners) {
-	        total += spinner.getValue();
-	    }
-	    return total;
+		int total = 0;
+		for (Spinner<Integer> spinner : speciesPercentSpinners) {
+			total += spinner.getValue();
+		}
+		return total;
 	}
-	
+
 	/**
-	 * Handles the cancel button action event. This method is triggered when the cancel button is clicked in the new table window.
-	 * It closes this new table window.
+	 * Handles the cancel button action event. This method is triggered when the
+	 * cancel button is clicked in the new table window. It closes this new table
+	 * window.
 	 *
 	 * @param event The ActionEvent triggered by the cancel button click.
 	 */
 	public void cancelButtonAction(ActionEvent event) {
-		MainController.getNewWindow().close(); //two ways to close, during memo ask if one is better?
-        //MainController.closeSecondaryWindow();
+		MainController.getNewWindow().close(); 
 	}
-	
+
 	/**
-	 * Handles the default button action event. This method is triggered when the default button is clicked in the new table window.
-	 * It sets default values for species and percentages.
+	 * Handles the default button action event. This method is triggered when the
+	 * default button is clicked in the new table window. It sets default values for
+	 * species and percentages.
 	 *
 	 * @param event The ActionEvent triggered by the default button click.
 	 */
 	public void defaultButtonAction(ActionEvent event) {
 		setDefaults();
 	}
-	
+
 	/**
-	 * Handles the run button action event. This method is triggered when the run model button is clicked in the table window.
-	 * It checks if the total percentage from all the spinners is equal to 100%.
-	 * If the total percentage is not 100%, an error popup is displayed to notify the user.
+	 * Handles the run button action event. This method is triggered when the run
+	 * model button is clicked in the table window. It checks if the total
+	 * percentage from all the spinners is equal to 100%. If the total percentage is
+	 * not 100%, an error popup is displayed to notify the user.
 	 *
 	 * @param event The ActionEvent triggered by the run button click.
 	 */
 	public void runButtonAction(ActionEvent event) {
 		int total = getTotalPercent();
-		
-		if(total != 100) {
+
+		if (total != 100) {
 			showErrorPopup("Total percent does not total 100%");
 		} else {
-			//Code to run the model goes here
+			// Code to run the model goes here
 		}
 	}
-	
+
 	/**
 	 * Displays an error popup with the specified error message.
-	 * 
-	 * This method creates an Alert dialog of type INFORMATION to display an error message to the user.
-	 * The title of the dialog is set to "Error", and the header text is set to null.
-	 * The error message passed as the 'message' parameter is displayed as the content of the dialog.
+	 *
+	 * This method creates an Alert dialog of type INFORMATION to display an error
+	 * message to the user. The title of the dialog is set to "Error", and the
+	 * header text is set to null. The error message passed as the 'message'
+	 * parameter is displayed as the content of the dialog.
 	 *
 	 * @param message The error message to be shown in the error popup.
 	 */
 	private static void showErrorPopup(String message) {
-	        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-	        alert.setTitle("Error");
-	        alert.setHeaderText("An error has occurred.");
-	        alert.setContentText(message);
+		Alert alert = new Alert(Alert.AlertType.INFORMATION);
+		alert.setTitle("Error");
+		alert.setHeaderText("An error has occurred.");
+		alert.setContentText(message);
 
-	        alert.showAndWait();    
+		alert.showAndWait();
 	}
 }

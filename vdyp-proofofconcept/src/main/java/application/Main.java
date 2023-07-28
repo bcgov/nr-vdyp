@@ -14,9 +14,28 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 
 public class Main extends Application {
+	private static Stage primaryStage;
+	
+	/**
+	 * Getter method to access the primaryStage from other files. Returns the Stage
+	 * object representing the primary stage.
+	 *
+	 * @return The Stage object representing the new window.
+	 * @throws IllegalStateException if newWindow is not set yet. Make sure to
+	 *                               initialize it before accessing.
+	 */
+	public static  Stage getPrimaryStage() {
+		if (primaryStage == null) {
+			throw new IllegalStateException("primaryStage is not set yet. Make sure to initialize it before accessing.");
+		}
+		return primaryStage;
+	}
+	
 	@Override
 	public void start(Stage primaryStage) {
 		try {
+			Main.primaryStage = primaryStage;
+			
 			// Load the FXML file and create the scene and controller
 			FXMLLoader loader = new FXMLLoader(getClass().getResource("view/MainWindow.fxml"));
 			Parent root = loader.load();
@@ -55,9 +74,8 @@ public class Main extends Application {
 			public void handle(KeyEvent event) {
 				if (event.isControlDown() && event.getCode() == KeyCode.T) {
 					try {
-						controller.openSecondaryWindow(event, false); // Setting to false since not trigger by button push
-																		
-					} catch (IOException e) { 
+						controller.openSecondaryWindow();
+					} catch (IOException e) {
 						e.printStackTrace();
 					}
 				}
@@ -75,7 +93,6 @@ public class Main extends Application {
 		stage.getIcons().add(icon);
 		stage.setTitle(title);
 	}
-    
 
 	public static void main(String[] args) {
 		launch(args);
