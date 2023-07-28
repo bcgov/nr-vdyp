@@ -68,13 +68,14 @@ public class Main extends Application {
 	 * @param controller The MainController instance responsible for handling
 	 *                   events.
 	 */
-	private void setupEventHandlers(Scene scene, MainController controller) {
+	private static void setupEventHandlers(Scene scene, MainController controller) {
 		scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
 			@Override
 			public void handle(KeyEvent event) {
 				if (event.isControlDown() && event.getCode() == KeyCode.T) {
 					try {
 						controller.openSecondaryWindow();
+						event.consume(); // Consume the event to prevent it from reaching the event handler again
 					} catch (IOException e) {
 						e.printStackTrace();
 					}

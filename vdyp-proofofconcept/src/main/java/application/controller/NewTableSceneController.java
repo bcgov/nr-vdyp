@@ -297,7 +297,7 @@ public class NewTableSceneController implements Initializable {
 	 * @param event The ActionEvent triggered by the cancel button click.
 	 */
 	public void cancelButtonAction(ActionEvent event) {
-		MainController.getNewWindow().close(); 
+		MainController.getNewWindow().close();
 	}
 
 	/**
