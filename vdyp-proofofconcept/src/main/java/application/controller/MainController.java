@@ -16,8 +16,14 @@ public class MainController {
 	
 	private static Stage newWindow;
 	
-	//Getter method so newWindow can be accessed from other files
-	public static Stage getNewWindow() {
+	/**
+	 * Getter method to access the newWindow from other files. 
+	 * Returns the Stage object representing the new window.
+	 *
+	 * @return The Stage object representing the new window.
+	 * @throws IllegalStateException if newWindow is not set yet. Make sure to initialize it before accessing.
+	 */
+	public static Stage getNewWindow(){
 		if (newWindow == null) {
 			throw new IllegalStateException("newWindow is not set yet. Make sure to initialize it before accessing.");
 	    }
@@ -156,8 +162,18 @@ public class MainController {
 		newWindow.setHeight(secondaryHeight);
 	}
 	
-	
+	/**
+	 * Closes the secondary window.
+	 * If the secondary window (newWindow) is open, this method will close it.
+	 * If the secondary window is not open or is null, this method will have no effect.
+	 *
+	 * @throws IllegalStateException if newWindow is null when attempting to close it.
+	 */
 	public static void closeSecondaryWindow() {
-		newWindow.close();
+		if (newWindow != null) {
+	        newWindow.close();
+	    } else {
+	        throw new IllegalStateException("Cannot close the secondary window. newWindow is null or not initialized.");
+	    }
 	}
 }

@@ -263,7 +263,12 @@ public class NewTableSceneController implements Initializable {
 	}
 
 
-	// Method to calculate the total percentage from all the spinners
+	/**
+	 * Method to calculate the total percentage from all the spinners.
+	 *
+	 * @return The total percentage calculated from the spinners.
+	 * @throws ArithmeticException if the total percentage exceeds 100%.
+	 */
 	private int getTotalPercent() {
 	    int total = 0;
 	    for (Spinner<Integer> spinner : speciesPercentSpinners) {
@@ -276,9 +281,14 @@ public class NewTableSceneController implements Initializable {
 	    return total;
 	}
 	
-
-	public void cancelButtonAction(ActionEvent event) throws IOException {
-		MainController.getNewWindow().close();
+	/**
+	 * Handles the cancel button action event. This method is triggered when the cancel button is clicked in the new table window.
+	 * It closes this new table window.
+	 *
+	 * @param event The ActionEvent triggered by the cancel button click.
+	 */
+	public void cancelButtonAction(ActionEvent event) {
+		MainController.getNewWindow().close(); //two ways to close, during memo ask if one is better?
         //MainController.closeSecondaryWindow();
 	}
 }
