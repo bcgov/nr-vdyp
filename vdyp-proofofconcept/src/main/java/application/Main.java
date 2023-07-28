@@ -28,7 +28,8 @@ public class Main extends Application {
 			setupEventHandlers(scene, controller);
 
 			// Add icon image and title to the primary stage
-			setStageIconAndTitle(primaryStage);
+			Image icon = new Image(getClass().getResource("resources/icon.png").toExternalForm());
+			setStageIconAndTitle(primaryStage, "WinVDYP7.9 POC", icon);
 
 			// Show the scene
 			primaryStage.setScene(scene);
@@ -56,7 +57,7 @@ public class Main extends Application {
 					try {
 						controller.openSecondaryWindow(event, false); // Setting to false since not trigger by button
 																		// push
-					} catch (IOException e) {
+					} catch (IOException e) { //remove this eventually
 						e.printStackTrace();
 					}
 				}
@@ -68,11 +69,11 @@ public class Main extends Application {
 	 * Sets the icon image and title for the given stage.
 	 *
 	 * @param stage The stage to which the icon image and title will be set.
+	 * @param title The tile of the window
 	 */
-	private void setStageIconAndTitle(Stage stage) {
-		Image icon = new Image(getClass().getResource("resources/icon.png").toExternalForm());
+	public static void setStageIconAndTitle(Stage stage, String title, Image icon) {
 		stage.getIcons().add(icon);
-		stage.setTitle("WinVDYP7.9 POC");
+		stage.setTitle(title);
 	}
 
 	public static void main(String[] args) {

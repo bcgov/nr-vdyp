@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?import application.controller.NewTableSceneController?>
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.ChoiceBox?>
@@ -312,6 +311,20 @@
                                     </Label>
                                     <Spinner fx:id="species1Percent" prefHeight="3.0" prefWidth="96.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                                     <Label fx:id="species1GroupPercent" prefHeight="17.0" prefWidth="143.0" GridPane.columnIndex="3" GridPane.rowIndex="2" />
+                                    <Spinner fx:id="species2Percent" prefHeight="3.0" prefWidth="96.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                                    <Spinner fx:id="species3Percent" prefHeight="3.0" prefWidth="96.0" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+                                    <Spinner fx:id="species4Percent" prefHeight="3.0" prefWidth="96.0" GridPane.columnIndex="1" GridPane.rowIndex="8" />
+                                    <Spinner fx:id="species5Percent" prefHeight="3.0" prefWidth="96.0" GridPane.columnIndex="1" GridPane.rowIndex="10" />
+                                    <Spinner fx:id="species6Percent" prefHeight="3.0" prefWidth="96.0" GridPane.columnIndex="1" GridPane.rowIndex="12" />
+                                    <Label fx:id="species2GroupPercent" prefHeight="17.0" prefWidth="143.0" GridPane.columnIndex="3" GridPane.rowIndex="4" />
+                                    <Label fx:id="species3GroupPercent" prefHeight="17.0" prefWidth="143.0" GridPane.columnIndex="3" GridPane.rowIndex="6" />
+                                    <Label fx:id="species4GroupPercent" prefHeight="17.0" prefWidth="143.0" GridPane.columnIndex="3" GridPane.rowIndex="8" />
+                                    <Label fx:id="species4GroupPercent" prefHeight="17.0" prefWidth="143.0" GridPane.columnIndex="3" GridPane.rowIndex="8" />
+                                    <Label fx:id="species4GroupPercent" prefHeight="17.0" prefWidth="143.0" GridPane.columnIndex="3" GridPane.rowIndex="8" />
+                                    <Label fx:id="species5GroupPercent" prefHeight="17.0" prefWidth="143.0" GridPane.columnIndex="3" GridPane.rowIndex="10" />
+                                    <Label fx:id="species6GroupPercent" prefHeight="17.0" prefWidth="143.0" GridPane.columnIndex="3" GridPane.rowIndex="12" />
+                                    <Label fx:id="species6GroupPercent1" layoutX="340.0" layoutY="232.0" prefHeight="17.0" prefWidth="143.0" />
+                                    <Label fx:id="totalPercentLabel" prefHeight="17.0" prefWidth="95.0" GridPane.columnIndex="1" GridPane.rowIndex="14" />
                                  </children>
                                  <VBox.margin>
                                     <Insets />

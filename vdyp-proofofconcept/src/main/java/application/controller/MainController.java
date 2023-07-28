@@ -1,4 +1,5 @@
 package application.controller;
+import	application.Main;
 
 import java.io.IOException;
 import javafx.event.ActionEvent;
@@ -24,20 +25,23 @@ public class MainController {
 		openSecondaryWindow(event, true);
 	}
 	
-	public void handleMenuNewFileClick(ActionEvent event) throws IOException {
+	
+
+	public void handleMenuNewFileClick() throws IOException {
 		// Set up secondary window
 		FXMLLoader loader = new FXMLLoader(getClass().getResource("../view/NewTableScene.fxml"));
 		Parent secondaryLayout = loader.load();
 		Scene secondScene = new Scene(secondaryLayout);			
 		secondScene.getStylesheets().add(getClass().getResource("../resources/application.css").toExternalForm());
 
-		// New window (Stage)
+		// Create new stage and icon
 		Stage newWindow = new Stage();
-		newWindow.setTitle("Model 1");
 		Image icon = new Image(getClass().getResource("../resources/icon.png").toExternalForm()); 
-		newWindow.getIcons().add(icon);
-		newWindow.setScene(secondScene);
 
+		
+		Main.setStageIconAndTitle(newWindow, "Model 1", icon);
+		
+		newWindow.setScene(secondScene);
 		newWindow.show();
 	}
 
@@ -60,31 +64,25 @@ public class MainController {
 		Scene secondScene = new Scene(secondaryLayout);
 		secondScene.getStylesheets().add(getClass().getResource("../resources/application.css").toExternalForm());
 
-		// New window (Stage)
+		// Create new stage and icon
 		Stage newWindow = new Stage();
-		newWindow.setTitle("Model 1");
 		Image icon = new Image(getClass().getResource("../resources/icon.png").toExternalForm()); 
-		newWindow.getIcons().add(icon);
-		newWindow.setScene(secondScene);
+
+		Main.setStageIconAndTitle(newWindow, "Model 1", icon);
 
 		// Load in primary window
 		Stage primaryStage;
 		if (fromButton) { // Conditional based on how it's called
 			primaryStage = (Stage) ((javafx.scene.Node) event.getSource()).getScene().getWindow();
-			
-
 		} else {
 			primaryStage = (Stage) ((javafx.scene.Scene) event.getSource()).getWindow();
 		}
-		/*
-		 * Could be encapsulated further : Stage primaryStage = fromButton ?
-		 * getPrimaryStageFromButtonEvent(event) : getPrimaryStageFromSceneEvent(event);
-		 */
 
 		// Set position and relative size
 		setSecondaryWindowPosition(newWindow, primaryStage);
 		setSecondaryWindowSize(newWindow, primaryStage);
-
+		
+		newWindow.setScene(secondScene);
 		newWindow.show();
 	}
 
