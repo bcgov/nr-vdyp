@@ -162,13 +162,6 @@ public class NewTableSceneController implements Initializable {
 			choiceBox.getItems().addAll(treeSpecies);
 			choiceBox.setValue("Select species");
 		}
-		
-		// Set up spinner value factories and set up values
-		for(Spinner<Integer> spinner : speciesPercentSpinners) {
-			IncrementByFiveSpinnerValueFactory valueFactory = new IncrementByFiveSpinnerValueFactory(0, 100);
-			valueFactory.setValue(0);
-			spinner.setValueFactory(valueFactory);
-		}
 				
 		// Set Default values
 		setDefaults(); // Initially the code above was within this method but this lead to slower execution
@@ -292,12 +285,34 @@ public class NewTableSceneController implements Initializable {
         //MainController.closeSecondaryWindow();
 	}
 	
+	/**
+	 * Handles the default button action event. This method is triggered when the default button is clicked in the new table window.
+	 * It sets default values for species and percentages.
+	 *
+	 * @param event The ActionEvent triggered by the default button click.
+	 */
 	public void defaultButtonAction(ActionEvent event) {
 		setDefaults();
 	}
 
-
+	/**
+	 * Sets default values for species and percentages in the new table window.
+	 * The default values are:
+	 * - Species 1: "PL - Lodgepole Pine" with 30%.
+	 * - Species 2: "AC - Poplar" with 30%.
+	 * - Species 3: "H - Hemlock" with 30%.
+	 * - Species 4: "S - Spruce" with 10%.
+	 * For Species 5 to Species 6, the selection is cleared, and percentages are reset to 0.
+	 * It updates the labels to display the selected item and percentage.
+	 * After setting the default values, it updates the total label.
+	 */
 	private void setDefaults() {
+		// Set all percent values to 0, this avoids totalPercent from exceeding 100% and causing errors
+		for(Spinner<Integer> spinner : speciesPercentSpinners) {
+			IncrementByFiveSpinnerValueFactory valueFactory = new IncrementByFiveSpinnerValueFactory(0, 100);
+			valueFactory.setValue(0);
+			spinner.setValueFactory(valueFactory);
+		}
 		 // Set the default species and percentage for species 1-4
 	    species_1.setValue("PL - Lodgepole Pine");
 	    species1Percent.getValueFactory().setValue(30);
@@ -311,13 +326,13 @@ public class NewTableSceneController implements Initializable {
 	    species_4.setValue("S - Spruce");
 	    species4Percent.getValueFactory().setValue(10);
 
-	    // Clear the selection and reset percentages for other species (species 2 to species 6)
+	    // Clear the selection and reset percentages for other species (species 5 to species 6)
 	    for (int i = 5; i < speciesChoiceBoxes.size(); i++) {
 	        speciesChoiceBoxes.get(i).setValue("Select species");
 	        speciesPercentSpinners.get(i).getValueFactory().setValue(0);
 	    }
 
-	    // Update the labels to display the selected item and reset percentage labels for species 1
+	    // Update the labels to display the selected item and percentage labels for species 1-4
 	    species1Group.setText("PL");
 	    species1Site.setText("PL");
 	    species1GroupPercent.setText("30");
