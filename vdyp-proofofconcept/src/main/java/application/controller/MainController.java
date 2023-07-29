@@ -12,7 +12,6 @@ import javafx.stage.Screen;
 import javafx.stage.Stage;
 
 public class MainController {
-
 	private static Stage newWindow; // to pass into NewTableSceneController
 
 	private static int newWindowCount = 0; // to track amount of new windows made
