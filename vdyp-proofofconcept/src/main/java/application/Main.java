@@ -15,7 +15,7 @@ import javafx.scene.Parent;
 
 public class Main extends Application {
 	private static Stage primaryStage;
-	
+
 	/**
 	 * Getter method to access the primaryStage from other files. Returns the Stage
 	 * object representing the primary stage.
@@ -24,18 +24,20 @@ public class Main extends Application {
 	 * @throws IllegalStateException if newWindow is not set yet. Make sure to
 	 *                               initialize it before accessing.
 	 */
-	public static  Stage getPrimaryStage() {
+	public static Stage getPrimaryStage() {
 		if (primaryStage == null) {
-			throw new IllegalStateException("primaryStage is not set yet. Make sure to initialize it before accessing.");
+			throw new IllegalStateException(
+					"primaryStage is not set yet. Make sure to initialize it before accessing."
+			);
 		}
 		return primaryStage;
 	}
-	
+
 	@Override
 	public void start(Stage primaryStage) {
 		try {
 			Main.primaryStage = primaryStage;
-			
+
 			// Load the FXML file and create the scene and controller
 			FXMLLoader loader = new FXMLLoader(getClass().getResource("view/MainWindow.fxml"));
 			Parent root = loader.load();

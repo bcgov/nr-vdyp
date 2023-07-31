@@ -18,7 +18,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.7" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.controller.NewTableSceneController">
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/20.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.controller.NewTableSceneController">
    <center>
       <TabPane prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
         <tabs>
@@ -331,11 +331,37 @@
                                     <Insets />
                                  </VBox.margin>
                               </GridPane>
+                              <Separator prefHeight="0.0" prefWidth="574.0" />
                            </children>
                         </VBox>
-                        <Button layoutX="233.0" layoutY="329.0" mnemonicParsing="false" onAction="#defaultButtonAction" text="Set as Default" />
-                        <Button layoutX="511.0" layoutY="329.0" mnemonicParsing="false" onAction="#runButtonAction" text="Run Model" />
-                        <Button layoutX="333.0" layoutY="329.0" mnemonicParsing="false" onAction="#cancelButtonAction" text="Cancel" />
+                        <Button layoutX="253.0" layoutY="329.0" mnemonicParsing="false" onAction="#defaultButtonAction" text="Set as Default" />
+                        <Button layoutX="505.0" layoutY="328.0" mnemonicParsing="false" onAction="#runButtonAction" text="Run Model" />
+                        <Button layoutX="348.0" layoutY="328.0" mnemonicParsing="false" onAction="#cancelButtonAction" text="Cancel" />
+                        <Button fx:id="nextPageButton" layoutX="476.0" layoutY="330.0" mnemonicParsing="false" onAction="#switchToScene2" prefHeight="21.0" prefWidth="8.0" text="&gt;">
+                           <font>
+                              <Font size="10.0" />
+                           </font>
+                        </Button>
+                        <Button layoutX="416.0" layoutY="330.0" mnemonicParsing="false" prefHeight="22.0" prefWidth="21.0" text="&lt;" textFill="#000000bb">
+                           <font>
+                              <Font size="10.0" />
+                           </font>
+                        </Button>
+                        <Label layoutX="407.0" layoutY="350.0" text="Previous">
+                           <font>
+                              <Font size="10.0" />
+                           </font>
+                        </Label>
+                        <Label layoutX="437.0" layoutY="333.0" prefHeight="16.0" prefWidth="36.0" text="  1 of 5">
+                           <font>
+                              <Font size="11.0" />
+                           </font>
+                        </Label>
+                        <Label layoutX="476.0" layoutY="350.0" text="Next">
+                           <font>
+                              <Font size="10.0" />
+                           </font>
+                        </Label>
                      </children></AnchorPane>
               </content>
             </Tab>

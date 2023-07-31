@@ -15,7 +15,7 @@ public class MainController {
 	private static Stage newWindow; // to pass into NewTableSceneController
 
 	private static int newWindowCount = 0; // to track amount of new windows made
-	
+
 	/**
 	 * Getter method to access the newWindow from other files. Returns the Stage
 	 * object representing the new window.
@@ -44,31 +44,30 @@ public class MainController {
 	 *                     window.
 	 */
 	public void openSecondaryWindow() throws IOException {
-			newWindowCount++; // used for title
-	
-			// Set up secondary window
-			FXMLLoader loader = new FXMLLoader(getClass().getResource("../view/NewTableScene.fxml"));
-			Parent secondaryLayout = loader.load();
-			Scene secondScene = new Scene(secondaryLayout);
-			secondScene.getStylesheets().add(getClass().getResource("../resources/application.css").toExternalForm());
-	
-			// Create new stage and icon
-			newWindow = new Stage();
-			Image icon = new Image(getClass().getResource("../resources/icon.png").toExternalForm());
-	
-			Main.setStageIconAndTitle(newWindow, "Model " + newWindowCount, icon);
-	
-			// Load in primary window
-			Stage primaryStage = Main.getPrimaryStage();
-	
-			// Set position and relative size
-			setSecondaryWindowPosition(newWindow, primaryStage);
-			setSecondaryWindowSize(newWindow, primaryStage);
-	
-			newWindow.setScene(secondScene);
-			newWindow.show();
-	}
+		newWindowCount++; // used for title
 
+		// Set up secondary window
+		FXMLLoader loader = new FXMLLoader(getClass().getResource("../view/NewTableScene.fxml"));
+		Parent secondaryLayout = loader.load();
+		Scene secondScene = new Scene(secondaryLayout);
+		secondScene.getStylesheets().add(getClass().getResource("../resources/application.css").toExternalForm());
+
+		// Create new stage and icon
+		newWindow = new Stage();
+		Image icon = new Image(getClass().getResource("../resources/icon.png").toExternalForm());
+
+		Main.setStageIconAndTitle(newWindow, "Model " + newWindowCount, icon);
+
+		// Load in primary window
+		Stage primaryStage = Main.getPrimaryStage();
+
+		// Set position and relative size
+		setSecondaryWindowPosition(newWindow, primaryStage);
+		setSecondaryWindowSize(newWindow, primaryStage);
+
+		newWindow.setScene(secondScene);
+		newWindow.show();
+	}
 
 	/**
 	 * Sets the position of the secondary window relative to the primary stage. The
