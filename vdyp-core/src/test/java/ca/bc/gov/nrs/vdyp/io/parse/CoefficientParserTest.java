@@ -1,7 +1,6 @@
 package ca.bc.gov.nrs.vdyp.io.parse;
 
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.mmHasEntry;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -30,9 +29,9 @@ class CoefficientParserTest {
 
 		var result = parser.parse(is, controlMap);
 
-		assertThat(result, mmHasEntry(present(is(2.0028f)), 0, "B1", (Integer) 1)); // COEs are 0 indexed, species are 1
+		assertThat(result, mmHasEntry(is(2.0028f), 0, "B1", (Integer) 1)); // COEs are 0 indexed, species are 1
 																					// indexed
-		assertThat(result, mmHasEntry(present(is(-0.5343f)), 0, "B1", (Integer) 2));
+		assertThat(result, mmHasEntry(is(-0.5343f), 0, "B1", (Integer) 2));
 
 	}
 
@@ -85,8 +84,8 @@ class CoefficientParserTest {
 
 		var result = parser.parse(is, controlMap);
 
-		assertThat(result, mmHasEntry(present(is(2.0028f)), 0, "B1", (Integer) 1));
-		assertThat(result, mmHasEntry(present(is(2.0028f - 0.5343f)), 0, "B1", (Integer) 2));
+		assertThat(result, mmHasEntry(is(2.0028f), 0, "B1", (Integer) 1));
+		assertThat(result, mmHasEntry(is(2.0028f - 0.5343f), 0, "B1", (Integer) 2));
 
 	}
 
@@ -105,8 +104,8 @@ class CoefficientParserTest {
 
 		var result = parser.parse(is, controlMap);
 
-		assertThat(result, mmHasEntry(present(is(2.0028f)), 0, "B1", (Integer) 1));
-		assertThat(result, mmHasEntry(present(is(2.0028f)), 0, "B1", (Integer) 2));
+		assertThat(result, mmHasEntry(is(2.0028f), 0, "B1", (Integer) 1));
+		assertThat(result, mmHasEntry(is(2.0028f), 0, "B1", (Integer) 2));
 
 	}
 

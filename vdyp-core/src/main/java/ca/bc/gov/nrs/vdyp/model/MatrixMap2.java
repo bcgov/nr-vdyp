@@ -2,10 +2,10 @@ package ca.bc.gov.nrs.vdyp.model;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 public interface MatrixMap2<K1, K2, V> extends MatrixMap<V> {
@@ -14,14 +14,18 @@ public interface MatrixMap2<K1, K2, V> extends MatrixMap<V> {
 		putM(value, key1, key2);
 	}
 
-	public default Optional<V> get(K1 key1, K2 key2) {
+	public default V get(K1 key1, K2 key2) {
 		return getM(key1, key2);
 	}
 
 	public default void addAll(Map<K1, Map<K2, V>> nestedMap) {
+		addAll(nestedMap, x->x);
+	}
+	
+	public default <T> void addAll(Map<K1, Map<K2, T>> nestedMap, Function<T,V> valueMapper) {
 		nestedMap.entrySet().forEach(entry1 -> {
 			entry1.getValue().entrySet().forEach(entry2 -> {
-				put(entry1.getKey(), entry2.getKey(), entry2.getValue());
+				put(entry1.getKey(), entry2.getKey(), valueMapper.apply(entry2.getValue()));
 			});
 		});
 	}
@@ -52,7 +56,7 @@ public interface MatrixMap2<K1, K2, V> extends MatrixMap<V> {
 			return new MatrixMap2<K1, K2, V>() {
 
 				@Override
-				public Optional<V> getM(Object... params) {
+				public V getM(Object... params) {
 					return o.getM(params);
 				}
 
@@ -89,6 +93,11 @@ public interface MatrixMap2<K1, K2, V> extends MatrixMap<V> {
 				@Override
 				public void eachKey(Consumer<Object[]> body) {
 					o.eachKey(body);
+				}
+
+				@Override
+				public V remove(Object... params) {
+					return o.remove(params);
 				}
 			};
 		}

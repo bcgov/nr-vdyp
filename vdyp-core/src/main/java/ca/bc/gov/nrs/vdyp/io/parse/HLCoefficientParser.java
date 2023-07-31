@@ -5,6 +5,8 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
@@ -16,7 +18,7 @@ import ca.bc.gov.nrs.vdyp.model.Region;
  * @author Kevin Smith, Vivid Solutions
  *
  */
-public class HLCoefficientParser implements ControlMapSubResourceParser<MatrixMap2<String, Region, Coefficients>> {
+public class HLCoefficientParser implements ControlMapSubResourceParser<MatrixMap2<String, Region, Optional<Coefficients>>> {
 
 	public static final String CONTROL_KEY_P1 = "HL_PRIMARY_SP_EQN_P1";
 	public static final String CONTROL_KEY_P2 = "HL_PRIMARY_SP_EQN_P2";
@@ -51,13 +53,13 @@ public class HLCoefficientParser implements ControlMapSubResourceParser<MatrixMa
 	LineParser lineParser;
 
 	@Override
-	public MatrixMap2<String, Region, Coefficients> parse(InputStream is, Map<String, Object> control)
+	public MatrixMap2<String, Region, Optional<Coefficients>> parse(InputStream is, Map<String, Object> control)
 			throws IOException, ResourceParseException {
 		final var regionIndicies = Arrays.asList(Region.values());
 		final var speciesIndicies = GenusDefinitionParser.getSpeciesAliases(control);
 
-		MatrixMap2<String, Region, Coefficients> result = new MatrixMap2Impl<String, Region, Coefficients>(
-				speciesIndicies, regionIndicies
+		MatrixMap2<String, Region, Optional<Coefficients>> result = new MatrixMap2Impl<>(
+				speciesIndicies, regionIndicies, MatrixMap2Impl.emptyDefault()
 		);
 		lineParser.parse(is, result, (v, r) -> {
 			var sp0 = (String) v.get(SP0_KEY);
@@ -68,7 +70,7 @@ public class HLCoefficientParser implements ControlMapSubResourceParser<MatrixMa
 				throw new ValueParseException(sp0, sp0 + " is not a valid species");
 			}
 
-			r.put(sp0, region, new Coefficients(coefficients, 1));
+			r.put(sp0, region, Optional.of(new Coefficients(coefficients, 1)));
 
 			return r;
 		}, control);

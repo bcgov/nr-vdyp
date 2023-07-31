@@ -1,9 +1,8 @@
 package ca.bc.gov.nrs.vdyp.io.parse;
 
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.causedBy;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.coe;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.mmHasEntry;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasProperty;
@@ -34,17 +33,17 @@ class UtilComponentBaseAreaParserTest {
 
 		var result = parser.parse(is, controlMap);
 
-		assertThat(result, mmHasEntry(present(contains(-23.22790f, 12.60472f)), 2, "S1", "B1"));
-		assertThat(result, mmHasEntry(notPresent(), 2, "S1", "B2"));
-		assertThat(result, mmHasEntry(notPresent(), 2, "S1", "B3"));
-		assertThat(result, mmHasEntry(notPresent(), 2, "S1", "B4"));
+		assertThat(result, mmHasEntry(coe(1, contains(-23.22790f, 12.60472f)), 2, "S1", "B1"));
+		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 2, "S1", "B2"));
+		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 2, "S1", "B3"));
+		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 2, "S1", "B4"));
 
-		assertThat(result, mmHasEntry(notPresent(), 2, "S2", "B1"));
-		assertThat(result, mmHasEntry(notPresent(), 2, "S2", "B2"));
-		assertThat(result, mmHasEntry(notPresent(), 2, "S2", "B3"));
-		assertThat(result, mmHasEntry(notPresent(), 2, "S2", "B4"));
+		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 2, "S2", "B1"));
+		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 2, "S2", "B2"));
+		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 2, "S2", "B3"));
+		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 2, "S2", "B4"));
 
-		assertThat(result, mmHasEntry(notPresent(), 3, "S1", "B1"));
+		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 3, "S1", "B1"));
 	}
 
 	@Test
@@ -61,17 +60,17 @@ class UtilComponentBaseAreaParserTest {
 
 		var result = parser.parse(is, controlMap);
 
-		assertThat(result, mmHasEntry(present(contains(-23.22790f, 12.60472f)), 2, "S1", "B1"));
-		assertThat(result, mmHasEntry(present(contains(-23.22790f, 12.60472f)), 2, "S1", "B3"));
-		assertThat(result, mmHasEntry(notPresent(), 2, "S1", "B2"));
-		assertThat(result, mmHasEntry(notPresent(), 2, "S1", "B4"));
+		assertThat(result, mmHasEntry(coe(1, contains(-23.22790f, 12.60472f)), 2, "S1", "B1"));
+		assertThat(result, mmHasEntry(coe(1, contains(-23.22790f, 12.60472f)), 2, "S1", "B3"));
+		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 2, "S1", "B2"));
+		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 2, "S1", "B4"));
 
-		assertThat(result, mmHasEntry(notPresent(), 2, "S2", "B1"));
-		assertThat(result, mmHasEntry(notPresent(), 2, "S2", "B2"));
-		assertThat(result, mmHasEntry(notPresent(), 2, "S2", "B3"));
-		assertThat(result, mmHasEntry(notPresent(), 2, "S2", "B4"));
+		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 2, "S2", "B1"));
+		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 2, "S2", "B2"));
+		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 2, "S2", "B3"));
+		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 2, "S2", "B4"));
 
-		assertThat(result, mmHasEntry(notPresent(), 3, "S1", "B1"));
+		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 3, "S1", "B1"));
 	}
 
 	@Test
@@ -88,17 +87,17 @@ class UtilComponentBaseAreaParserTest {
 
 		var result = parser.parse(is, controlMap);
 
-		assertThat(result, mmHasEntry(present(contains(-23.22790f, 12.60472f)), 2, "S1", "B1"));
-		assertThat(result, mmHasEntry(present(contains(-23.22790f, 12.60472f)), 2, "S1", "B2"));
-		assertThat(result, mmHasEntry(present(contains(-23.22790f, 12.60472f)), 2, "S1", "B3"));
-		assertThat(result, mmHasEntry(present(contains(-23.22790f, 12.60472f)), 2, "S1", "B4"));
+		assertThat(result, mmHasEntry(coe(1, contains(-23.22790f, 12.60472f)), 2, "S1", "B1"));
+		assertThat(result, mmHasEntry(coe(1, contains(-23.22790f, 12.60472f)), 2, "S1", "B2"));
+		assertThat(result, mmHasEntry(coe(1, contains(-23.22790f, 12.60472f)), 2, "S1", "B3"));
+		assertThat(result, mmHasEntry(coe(1, contains(-23.22790f, 12.60472f)), 2, "S1", "B4"));
 
-		assertThat(result, mmHasEntry(notPresent(), 2, "S2", "B1"));
-		assertThat(result, mmHasEntry(notPresent(), 2, "S2", "B2"));
-		assertThat(result, mmHasEntry(notPresent(), 2, "S2", "B3"));
-		assertThat(result, mmHasEntry(notPresent(), 2, "S2", "B4"));
+		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 2, "S2", "B1"));
+		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 2, "S2", "B2"));
+		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 2, "S2", "B3"));
+		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 2, "S2", "B4"));
 
-		assertThat(result, mmHasEntry(notPresent(), 3, "S1", "B1"));
+		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 3, "S1", "B1"));
 
 	}
 

@@ -1,13 +1,18 @@
 package ca.bc.gov.nrs.vdyp.test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.describedAs;
+import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.isA;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
@@ -28,6 +33,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.ValueParser;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.BecLookup;
 import ca.bc.gov.nrs.vdyp.model.BecLookup.Substitution;
+import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap;
 
 /**
@@ -158,6 +164,10 @@ public class VdypMatchers {
 
 			@Override
 			public void describeMismatch(Object item, Description description) {
+				if (item == null) {
+					description.appendText("was null");
+					return;
+				}
 				if (! (item instanceof Optional)) {
 					description.appendText("was not an Optional");
 					return;
@@ -171,7 +181,7 @@ public class VdypMatchers {
 		};
 	}
 
-	public static <T> Matcher<MatrixMap<T>> mmHasEntry(Matcher<Optional<T>> valueMatcher, Object... keys) {
+	public static <T> Matcher<MatrixMap<T>> mmHasEntry(Matcher<T> valueMatcher, Object... keys) {
 		return new BaseMatcher<MatrixMap<T>>() {
 
 			@Override
@@ -184,8 +194,7 @@ public class VdypMatchers {
 
 			@Override
 			public void describeTo(Description description) {
-				description.appendText("Matrix map with entry ").appendValueList("[", ", ", "]", keys)
-						.appendText(" that ");
+				description.appendText("Matrix map with entry ").appendValueList("[", ", ", "]", keys).appendText(" that ");
 				valueMatcher.describeTo(description);
 
 			}
@@ -378,8 +387,7 @@ public class VdypMatchers {
 					return false;
 				}
 				if (item.getMarker().isPresent()) {
-					mismatchDescription.appendText("getMarker() was present with value ")
-							.appendValue(item.getMarker().get());
+					mismatchDescription.appendText("getMarker() was present with value ").appendValue(item.getMarker().get());
 					return false;
 				}
 				if (!item.getValue().isPresent()) {
@@ -420,8 +428,7 @@ public class VdypMatchers {
 					return false;
 				}
 				if (item.getValue().isPresent()) {
-					mismatchDescription.appendText("getValue() was present with value ")
-							.appendValue(item.getValue().get());
+					mismatchDescription.appendText("getValue() was present with value ").appendValue(item.getValue().get());
 					return false;
 				}
 				if (!item.getMarker().isPresent()) {
@@ -450,5 +457,18 @@ public class VdypMatchers {
 		var hasNext = assertDoesNotThrow(() -> stream.hasNext());
 		assertThat(hasNext, is(false));
 		assertThrows(NoSuchElementException.class, () -> stream.next());
+	}
+
+	public static Matcher<Coefficients> coe(int indexFrom, Matcher<? super List<Float>> contentsMatcher) {
+		return describedAs(
+				"A Coefficients indexed from %0 that %1", //
+				allOf(
+						isA(Coefficients.class), //
+						hasProperty("indexFrom", is(indexFrom)), //
+						contentsMatcher
+				), //
+				indexFrom, //
+				contentsMatcher
+		);
 	}
 }

@@ -19,6 +19,8 @@ import ca.bc.gov.nrs.vdyp.model.Region;
  *
  */
 public class UpperCoefficientParser implements ControlMapSubResourceParser<MatrixMap3<Region, String, Integer, Float>> {
+	// TODO use a Coefficients object
+	
 	public static final int BA = 1;
 	public static final int DQ = 2;
 
@@ -48,7 +50,7 @@ public class UpperCoefficientParser implements ControlMapSubResourceParser<Matri
 		final var speciesIndicies = GenusDefinitionParser.getSpeciesAliases(control);
 
 		MatrixMap3<Region, String, Integer, Float> result = new MatrixMap3Impl<Region, String, Integer, Float>(
-				regionIndicies, speciesIndicies, coeIndicies
+				regionIndicies, speciesIndicies, coeIndicies, (k1,k2,k3)->0f
 		);
 		lineParser.parse(is, result, (v, r) -> {
 			var sp0 = (String) v.get(SP0_KEY);

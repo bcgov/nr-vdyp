@@ -22,7 +22,7 @@ public abstract class UtilComponentParser
 	public static final String BEC_SCOPE_KEY = "becScope";
 	public static final String COEFFICIENT_KEY = "coefficient";
 
-	public UtilComponentParser(int numCoefficients, int gap, String... ucCodes) {
+	protected UtilComponentParser(int numCoefficients, int gap, String... ucCodes) {
 		super();
 		this.numCoefficients = numCoefficients;
 		this.lineParser = new LineParser() {
@@ -46,8 +46,8 @@ public abstract class UtilComponentParser
 		final var speciesIndicies = GenusDefinitionParser.getSpeciesAliases(control);
 		final var ucIndices = Arrays.asList(1, 2, 3, 4);
 
-		MatrixMap3<Integer, String, String, Coefficients> result = new MatrixMap3Impl<Integer, String, String, Coefficients>(
-				ucIndices, speciesIndicies, becIndices
+		MatrixMap3<Integer, String, String, Coefficients> result = new MatrixMap3Impl<>(
+				ucIndices, speciesIndicies, becIndices, (k1,k2,k3)->Coefficients.empty(numCoefficients,1)
 		);
 		lineParser.parse(is, result, (v, r) -> {
 			var uc = (Integer) v.get(UC_KEY);

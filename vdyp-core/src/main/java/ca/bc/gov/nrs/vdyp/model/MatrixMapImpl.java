@@ -5,11 +5,10 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 /**
  * A mapping from the cartesian product of a set of arbitrary identifiers to a
@@ -20,10 +19,12 @@ import java.util.stream.Collectors;
  * @param <T>
  */
 public class MatrixMapImpl<T> implements MatrixMap<T> {
-	List<Map<?, Integer>> maps;
+	List<Map<Object, Integer>> maps;
 	Object[] matrix;
+	Function<Object[], T> defaultMapper;
 
-	public MatrixMapImpl(Collection<? extends Collection<?>> dimensions) {
+	public MatrixMapImpl(Function<Object[], T> defaultMapper, Collection<? extends Collection<?>> dimensions) {
+		this.defaultMapper=defaultMapper;
 		if (dimensions.isEmpty()) {
 			throw new IllegalArgumentException("Must have at least one dimension");
 		}
@@ -31,34 +32,37 @@ public class MatrixMapImpl<T> implements MatrixMap<T> {
 			throw new IllegalArgumentException("Each dimension must have at least one value");
 		}
 		maps = dimensions.stream().map(dim -> {
-			var map = new LinkedHashMap<Object, Integer>(dim.size());
+			Map<Object, Integer> map = new LinkedHashMap<>(dim.size());
 			int i = 0;
 			for (var o : dim) {
 				map.put(o, i);
 				i++;
 			}
 			return map;
-		}).collect(Collectors.toList());
+		}).toList();
 		var matrixSize = maps.stream().map(Map::size).reduce(1, (x, y) -> x * y);
 		matrix = new Object[matrixSize];
+		eachKey(k->{
+			putM(defaultMapper.apply(k), k);
+		});
 	}
 
-	public MatrixMapImpl(Collection<?>... dimensions) {
-		this(Arrays.asList(dimensions));
+	public MatrixMapImpl(Function<Object[], T> defaultValues, Collection<?>... dimensions) {
+		this(defaultValues, Arrays.asList(dimensions));
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public Optional<T> getM(Object... params) {
-		return (Optional<T>) getIndex(params).flatMap(i -> Optional.ofNullable(matrix[i]));
+	public T getM(Object... params) {
+		return (T) matrix[getIndex(params)];
 	}
 
 	@Override
 	public void putM(T value, Object... params) {
-		matrix[getIndex(params).orElseThrow(() -> new IllegalArgumentException())] = value;
+		matrix[getIndex(params)] = value;
 	}
 
-	protected Optional<Integer> getIndex(Object... params) {
+	protected int getIndex(Object... params) {
 		if (params.length != maps.size()) {
 			throw new IllegalArgumentException("MatrixMap requires parameters to equal the number of dimensions");
 		}
@@ -69,14 +73,14 @@ public class MatrixMapImpl<T> implements MatrixMap<T> {
 			var dim = maps.get(i);
 			Integer dimIndex = dim.get(o);
 			if (dimIndex == null) {
-				return Optional.empty();
+				throw new IllegalArgumentException("Key is invalid for this MatrixMap");
 			}
 			index += step * dimIndex;
 
 			step *= dim.size();
 			i++;
 		}
-		return Optional.of(index);
+		return index;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -101,9 +105,10 @@ public class MatrixMapImpl<T> implements MatrixMap<T> {
 		return all(x -> x == null);
 	}
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	public List<Set<?>> getDimensions() {
-		return maps.stream().map(m -> m.keySet()).collect(Collectors.toList());
+		return (List) maps.stream().map(Map::keySet).map(Set.class::cast).toList();
 	}
 
 	@Override
@@ -133,5 +138,13 @@ public class MatrixMapImpl<T> implements MatrixMap<T> {
 		} else {
 			body.accept(Arrays.copyOf(key, i));
 		}
+	}
+
+	@Override
+	public T remove(Object... params) {
+		@SuppressWarnings("unchecked")
+		var old = (T) matrix[getIndex(params)];
+		matrix[getIndex(params)]=defaultMapper.apply(params);
+		return old;
 	}
 }

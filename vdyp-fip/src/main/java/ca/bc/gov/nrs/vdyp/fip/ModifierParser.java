@@ -151,7 +151,6 @@ public class ModifierParser implements OptionalResourceControlMapModifier {
 			if (sequence == 98) {
 				// If modifiers are per region, for each species, multiply the first coefficient
 				// for veteran BQ by the region appropriate modifier.
-				vetBqMap.get(CONTROL_KEY, null);
 				var mods = getMods(2, entry);
 				var sp0Aliases = GenusDefinitionParser.getSpeciesAliases(control);
 				for (var sp0Alias : sp0Aliases) {
@@ -159,11 +158,11 @@ public class ModifierParser implements OptionalResourceControlMapModifier {
 					final float interiorMod = mods.get(1);
 
 					if (coastalMod != 0.0) {
-						var coe = vetBqMap.get(sp0Alias, Region.COASTAL).get();
+						var coe = vetBqMap.get(sp0Alias, Region.COASTAL);
 						coe.modifyCoe(1, x -> x * coastalMod);
 					}
 					if (interiorMod != 0.0) {
-						var coe = vetBqMap.get(sp0Alias, Region.INTERIOR).get();
+						var coe = vetBqMap.get(sp0Alias, Region.INTERIOR);
 						coe.modifyCoe(1, x -> x * interiorMod);
 					}
 				}
@@ -197,27 +196,32 @@ public class ModifierParser implements OptionalResourceControlMapModifier {
 				var mods = getMods(4, entry);
 
 				for (var sp0Alias : sp0Aliases) {
-					modsByRegions(mods, 0, (m, r) -> hlP1Map.get(sp0Alias, r).ifPresent(coe -> {
+
+					modsByRegions(mods, 0, (m, r) -> {
+						var coe = hlP1Map.get(sp0Alias, r);
 						coe.modifyCoe(1, x -> x * m);
 						coe.modifyCoe(2, x -> x * m);
-					}));
-					modsByRegions(mods, 0, (m, r) -> hlP2Map.get(sp0Alias, r).ifPresent(coe -> {
+					});
+					modsByRegions(mods, 0, (m, r) -> {
+						var coe = hlP2Map.get(sp0Alias, r);
 						coe.modifyCoe(1, x -> x * m);
-					}));
-					modsByRegions(mods, 0, (m, r) -> hlP3Map.get(sp0Alias, r).ifPresent(coe -> {
+					});
+					modsByRegions(mods, 0, (m, r) -> {
+						var coe = hlP3Map.get(sp0Alias, r);
 						coe.modifyCoe(1, x -> {
 							if (x > 0.0f && x < 1.0e06f) {
 								return x * m;
 							}
 							return x;
 						});
-					}));
+					});
 					for (var primarySp : GenusDefinitionParser.getSpeciesAliases(control)) {
-						modsByRegions(mods, 2, (m, r) -> hlNPMap.get(sp0Alias, primarySp, r).ifPresent(coe -> {
+						modsByRegions(mods, 2, (m, r) -> {
+							var coe = hlNPMap.get(sp0Alias, primarySp, r);
 							if (coe.getEquationIndex() == 1) {
 								coe.modifyCoe(1, x -> x * m);
 							}
-						}));
+						});
 					}
 				}
 			} else {
@@ -267,9 +271,7 @@ public class ModifierParser implements OptionalResourceControlMapModifier {
 
 		var result = new ArrayList<T>(num);
 		for (int i = 0; i < num; i++) {
-			result.add(
-					it.next().orElseThrow(() -> new ValueParseException("", "Expected " + num + " modifier values"))
-			);
+			result.add(it.next().orElseThrow(() -> new ValueParseException("", "Expected " + num + " modifier values")));
 		}
 		// Possibly log a warning if there are extra unused values
 		return result;
@@ -285,20 +287,16 @@ public class ModifierParser implements OptionalResourceControlMapModifier {
 		var spAliases = GenusDefinitionParser.getSpeciesAliases(control);
 		var regions = Arrays.asList(Region.values());
 
-		var baModifiers = new MatrixMap2Impl<String, Region, Float>(spAliases, regions);
-		baModifiers.setAll(1.0f);
+		var baModifiers = new MatrixMap2Impl<String, Region, Float>(spAliases, regions, (k1, k2) -> 1f);
 		control.put(CONTROL_KEY_MOD200_BA, baModifiers);
 
-		var dqModifiers = new MatrixMap2Impl<String, Region, Float>(spAliases, regions);
-		dqModifiers.setAll(1.0f);
+		var dqModifiers = new MatrixMap2Impl<String, Region, Float>(spAliases, regions, (k1, k2) -> 1f);
 		control.put(CONTROL_KEY_MOD200_DQ, dqModifiers);
 
-		var decayModifiers = new MatrixMap2Impl<String, Region, Float>(spAliases, regions);
-		decayModifiers.setAll(0.0f);
+		var decayModifiers = new MatrixMap2Impl<String, Region, Float>(spAliases, regions, (k1, k2) -> 0f);
 		control.put(CONTROL_KEY_MOD301_DECAY, decayModifiers);
 
-		var wasteModifiers = new MatrixMap2Impl<String, Region, Float>(spAliases, regions);
-		wasteModifiers.setAll(0.0f);
+		var wasteModifiers = new MatrixMap2Impl<String, Region, Float>(spAliases, regions, (k1, k2) -> 0f);
 		control.put(CONTROL_KEY_MOD301_WASTE, wasteModifiers);
 	}
 

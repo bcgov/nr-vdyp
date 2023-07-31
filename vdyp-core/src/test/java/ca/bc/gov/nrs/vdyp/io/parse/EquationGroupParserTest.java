@@ -43,7 +43,7 @@ class EquationGroupParserTest {
 		var is = TestUtils.makeStream(lines);
 		var result = parser.parse(is, Collections.unmodifiableMap(controlMap));
 
-		assertThat(result, mmHasEntry(present(is(1)), "S1", "B1"));
+		assertThat(result, mmHasEntry(is(1), "S1", "B1"));
 	}
 
 	@Test
@@ -95,7 +95,7 @@ class EquationGroupParserTest {
 		var is = TestUtils.makeStream(lines);
 		var result = parser.parse(is, Collections.unmodifiableMap(controlMap));
 
-		assertThat(result, mmHasEntry(present(is(2)), "S1", "B1"));
+		assertThat(result, mmHasEntry(is(2), "S1", "B1"));
 	}
 
 	@Test
@@ -109,14 +109,14 @@ class EquationGroupParserTest {
 		var is = TestUtils.makeStream(lines);
 		var result = parser.parse(is, Collections.unmodifiableMap(controlMap));
 
-		assertThat(result, mmHasEntry(present(is(11)), "S1", "B1"));
-		assertThat(result, mmHasEntry(present(is(12)), "S1", "B2"));
-		assertThat(result, mmHasEntry(present(is(13)), "S1", "B3"));
-		assertThat(result, mmHasEntry(present(is(14)), "S1", "B4"));
-		assertThat(result, mmHasEntry(present(is(21)), "S2", "B1"));
-		assertThat(result, mmHasEntry(present(is(22)), "S2", "B2"));
-		assertThat(result, mmHasEntry(present(is(23)), "S2", "B3"));
-		assertThat(result, mmHasEntry(present(is(24)), "S2", "B4"));
+		assertThat(result, mmHasEntry(is(11), "S1", "B1"));
+		assertThat(result, mmHasEntry(is(12), "S1", "B2"));
+		assertThat(result, mmHasEntry(is(13), "S1", "B3"));
+		assertThat(result, mmHasEntry(is(14), "S1", "B4"));
+		assertThat(result, mmHasEntry(is(21), "S2", "B1"));
+		assertThat(result, mmHasEntry(is(22), "S2", "B2"));
+		assertThat(result, mmHasEntry(is(23), "S2", "B3"));
+		assertThat(result, mmHasEntry(is(24), "S2", "B4"));
 
 	}
 

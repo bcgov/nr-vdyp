@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
@@ -22,7 +21,7 @@ import ca.bc.gov.nrs.vdyp.model.Region;
  * @author Kevin Smith, Vivid Solutions
  *
  */
-public abstract class BaseCoefficientParser<T extends Coefficients, M extends MatrixMap<T>>
+public abstract class BaseCoefficientParser<T extends Coefficients, W, M extends MatrixMap<W>>
 		implements ControlMapSubResourceParser<M> {
 
 	public static final String SP0_KEY = "sp0";
@@ -70,7 +69,7 @@ public abstract class BaseCoefficientParser<T extends Coefficients, M extends Ma
 	 *                      with the erroneous value as a parameter.
 	 * @return
 	 */
-	public <K> BaseCoefficientParser<T, M> key(
+	public <K> BaseCoefficientParser<T, W, M> key(
 			int length, String name, ControlledValueParser<K> parser,
 			Function<Map<String, Object>, Collection<?>> range, String errorTemplate
 	) {
@@ -90,24 +89,24 @@ public abstract class BaseCoefficientParser<T extends Coefficients, M extends Ma
 		return this;
 	}
 
-	public <K> BaseCoefficientParser<T, M>
+	public <K> BaseCoefficientParser<T, W, M>
 			key(int length, String name, ControlledValueParser<K> parser, Collection<?> range, String errorTemplate) {
-		return key(length, name, parser, (c) -> range, errorTemplate);
+		return key(length, name, parser, c -> range, errorTemplate);
 	}
 
-	public BaseCoefficientParser<T, M> regionKey() {
+	public BaseCoefficientParser<T, W, M> regionKey() {
 		var regions = Arrays.asList(Region.values());
 		return key(1, REGION_KEY, ValueParser.REGION, regions, "%s is not a valid region");
 	}
 
-	public BaseCoefficientParser<T, M> ucIndexKey() {
+	public BaseCoefficientParser<T, W, M> ucIndexKey() {
 		var indicies = Arrays.asList(1, 2, 3, 4);
 		return key(
 				2, UC_INDEX, ValueParser.INTEGER, indicies, "%s is not a valid UC Index, should be 1 to 4 inclusive"
 		);
 	}
 
-	public BaseCoefficientParser<T, M> groupIndexKey(int maxGroups) {
+	public BaseCoefficientParser<T, W, M> groupIndexKey(int maxGroups) {
 		var indicies = Stream.iterate(1, x -> x + 1).limit(maxGroups).toList();
 		return key(
 				3, GROUP_INDEX, ValueParser.INTEGER, indicies,
@@ -115,23 +114,23 @@ public abstract class BaseCoefficientParser<T extends Coefficients, M extends Ma
 		);
 	}
 
-	public BaseCoefficientParser<T, M> speciesKey(String name) {
+	public BaseCoefficientParser<T, W, M> speciesKey(String name) {
 		return key(
 				2, name, ControlledValueParser.GENUS, GenusDefinitionParser::getSpeciesAliases,
 				"%s is not a valid species"
 		);
 	}
 
-	public BaseCoefficientParser<T, M> speciesKey() {
+	public BaseCoefficientParser<T, W, M> speciesKey() {
 		return speciesKey(SP0_KEY);
 	}
 
-	public BaseCoefficientParser<T, M> space(int length) {
+	public BaseCoefficientParser<T, W, M> space(int length) {
 		lineParser.space(length);
 		return this;
 	}
 
-	public <K> BaseCoefficientParser<T, M> coefficients(int number, int length) {
+	public <K> BaseCoefficientParser<T, W, M> coefficients(int number, int length) {
 		lineParser.multiValue(number, length, COEFFICIENTS_KEY, ValueParser.FLOAT);
 		numCoefficients = number;
 		return this;
@@ -153,7 +152,7 @@ public abstract class BaseCoefficientParser<T extends Coefficients, M extends Ma
 			@SuppressWarnings("unchecked")
 			var coe = getCoefficients((List<Float>) v.get(COEFFICIENTS_KEY));
 
-			r.putM(coe, key);
+			r.putM(wrapCoefficients(coe), key);
 			return r;
 		}, control);
 		return result;
@@ -162,6 +161,12 @@ public abstract class BaseCoefficientParser<T extends Coefficients, M extends Ma
 	protected abstract M createMap(List<Collection<?>> keyRanges);
 
 	protected abstract T getCoefficients(List<Float> coefficients);
+	
+	protected abstract W wrapCoefficients(T coefficients);
+	
+	protected T getCoefficients() {
+		return getCoefficients(Coefficients.sameSize(numCoefficients, 0f));
+	};
 
 	@Override
 	public String getControlKey() {

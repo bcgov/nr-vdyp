@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.fip;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -11,6 +12,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,8 +32,10 @@ import ca.bc.gov.nrs.vdyp.io.parse.DecayEquationGroupParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.StreamingParserFactory;
+import ca.bc.gov.nrs.vdyp.io.parse.UtilComponentWSVolumeParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VeteranBQParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VeteranDQParser;
+import ca.bc.gov.nrs.vdyp.io.parse.VeteranLayerVolumeAdjustParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VolumeEquationGroupParser;
 import ca.bc.gov.nrs.vdyp.model.BecLookup.Substitution;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
@@ -280,8 +285,7 @@ public class FipStart {
 		 */
 
 		for (var vSpec : vdypSpecies.values()) {
-			vSpec.getBaseAreaByUtilization()
-					.setCoe(4, baseAreaByUtilization.getCoe(4) * vSpec.getPercentGenus() / 100f);
+			vSpec.getBaseAreaByUtilization().setCoe(4, baseAreaByUtilization.getCoe(4) * vSpec.getPercentGenus() / 100f);
 		}
 
 		var vetDqMap = Utils.<MatrixMap2<String, Region, Coefficients>>expectParsedControl(
@@ -290,12 +294,7 @@ public class FipStart {
 
 		for (var vSpec : vdypSpecies.values()) {
 			var genus = vSpec.getGenus();
-			var coe = vetDqMap.get(genus, region).orElseThrow(
-					() -> new ProcessingException(
-							"Could not find Veteran Quadratic Mean Diameter Coefficients for genus " + genus
-									+ " and region " + region
-					)
-			);
+			var coe = vetDqMap.get(genus, region);
 			var a0 = coe.getCoe(1);
 			var a1 = coe.getCoe(2);
 			var a2 = coe.getCoe(3);
@@ -304,7 +303,6 @@ public class FipStart {
 			vSpec.getQuadraticMeanDiameterByUtilization().setCoe(4, dq);
 			vSpec.getTreesPerHectareByUtilization()
 					.setCoe(4, treesPerHectare(vSpec.getBaseAreaByUtilization().getCoe(4), dq));
-
 		}
 
 		var vdypLayer = new VdypLayer(polygonIdentifier, layer);
@@ -316,12 +314,110 @@ public class FipStart {
 		vdypLayer.setPrimaryGenus(primaryGenus);
 		vdypLayer.setBaseAreaByUtilization(baseAreaByUtilization);
 
+		computeUtilizationComponentsVeteran(vdypLayer);
+
 		return vdypLayer;
 	}
 
+	private Coefficients utilizationVector() {
+		return new Coefficients(new float[] { 0f, 0f, 0f, 0f, 0f }, 0);
+	}
+
+	private void computeUtilizationComponentsVeteran(VdypLayer vdypLayer) throws ProcessingException {
+
+		var volumeAdjustMap = Utils.<Map<String, Coefficients>>expectParsedControl(
+				controlMap, VeteranLayerVolumeAdjustParser.CONTROL_KEY, Map.class
+		);
+
+		for (var vdypSpecies : vdypLayer.getSpecies().values()) {
+
+			var treesPerHectareUtil = utilizationVector();
+			var quadMeanDiameterUtil = utilizationVector();
+			var baseAreaUtil = utilizationVector();
+			var wholeStemVolumeUtil = utilizationVector();
+
+			var hlSp = vdypSpecies.getLoreyHeightByUtilization().getCoe(0);
+			{
+				var baSp = vdypSpecies.getBaseAreaByUtilization().getCoe(4);
+				var tphSp = vdypSpecies.getTreesPerHectareByUtilization().getCoe(4);
+				var dqSp = vdypSpecies.getQuadraticMeanDiameterByUtilization().getCoe(4);
+
+				treesPerHectareUtil.setCoe(0, tphSp);
+				quadMeanDiameterUtil.setCoe(0, dqSp);
+				baseAreaUtil.setCoe(0, baSp);
+				wholeStemVolumeUtil.setCoe(0, 0f);
+
+				treesPerHectareUtil.setCoe(4, tphSp);
+				quadMeanDiameterUtil.setCoe(4, dqSp);
+				baseAreaUtil.setCoe(4, baSp);
+				wholeStemVolumeUtil.setCoe(4, 0f);
+			}
+			var volumeAdjustCoe = volumeAdjustMap.get(vdypSpecies.getGenus());
+
+			var utilizationClass = 4; // IUC_VET
+
+			var adjust = new float[] { 0f, 0f, 0f, 0f };
+
+			estimateWholeStemVolume(
+					adjust.length /* ? */, volumeAdjustCoe.getCoe(1), vdypSpecies.getVolumeGroup(), hlSp, quadMeanDiameterUtil,
+					baseAreaUtil, wholeStemVolumeUtil
+			);
+		}
+	}
+
+	// EMP091
+	/**
+	 * Updates wholeStemVolumeUtil with estimated values.
+	 */
+	private void estimateWholeStemVolume(
+			int utilizationClass, Float aAdjust, int volumeGroup, Float hlSp, Coefficients quadMeanDiameterUtil,
+			Coefficients baseAreaUtil, Coefficients wholeStemVolumeUtil
+	) throws ProcessingException {
+		var dqSp = quadMeanDiameterUtil.getCoe(0);
+		final var wholeStemUtilizationComponentMap = Utils.<MatrixMap2<Integer, Integer, Coefficients>>expectParsedControl(
+				controlMap, UtilComponentWSVolumeParser.CONTROL_KEY, MatrixMap2.class
+		);
+		for (int i = 1; i < 4; i++) {
+			if (baseAreaUtil.getCoe(i) < 0f) {
+				wholeStemVolumeUtil.setCoe(i, 0f);
+				continue;
+			}
+			if (utilizationClass != 0 && utilizationClass != i) {
+				continue;
+			}
+			Coefficients wsCoe = wholeStemUtilizationComponentMap.get(i, volumeGroup);
+			var a0 = wsCoe.getCoe(1);
+			var a1 = wsCoe.getCoe(2);
+			var a2 = wsCoe.getCoe(3);
+			var a3 = wsCoe.getCoe(4);
+
+			var arg = a0 + a1 * (float)Math.log(hlSp) + a2 * (float)Math.log(quadMeanDiameterUtil.getCoe(i))
+					+ ( (i < 3) ? a3 * (float)Math.log(dqSp) : a3 * dqSp);
+			
+			if (i==utilizationClass) {
+				arg+=aAdjust;
+			}
+			
+			var vbaruc  = (float) Math.exp(arg); // volume base area ?? utilization class?
+			
+			wholeStemVolumeUtil.setCoe(i, baseAreaUtil.getCoe(i)*vbaruc);
+		}
+		
+		if (utilizationClass == 0) {
+			var totalVolume = (float)IntStream.of(1,2,3,4) //
+					.mapToDouble(wholeStemVolumeUtil::getCoe) //
+					.sum();
+			if(totalVolume<=0f) {
+				throw new ProcessingException("Total volume "+totalVolume+" was not positive.");
+			}
+			final var k = wholeStemVolumeUtil.getCoe(0);
+			IntStream.of(1,2,3,4).forEach(i->wholeStemVolumeUtil.setCoe(i, k*wholeStemVolumeUtil.getCoe(i)));
+		}
+		
+	}
+
 	int getGroup(FipPolygon fipPolygon, MatrixMap2<String, String, Integer> volumeGroupMap, VdypSpecies vSpec) {
-		return volumeGroupMap.get(vSpec.getGenus(), fipPolygon.getBiogeoclimaticZone())
-				.orElseThrow(() -> new AssertionError("Equation Group map should not return empty"));
+		return volumeGroupMap.get(vSpec.getGenus(), fipPolygon.getBiogeoclimaticZone());
 	}
 
 	MatrixMap2<String, String, Integer> getGroupMap(String key) {
@@ -415,8 +511,7 @@ public class FipStart {
 
 		if (primaryLayer.getAgeTotal() - primaryLayer.getYearsToBreastHeight() < 0.5f) {
 			throw validationError(
-					"Polygon %s has %s layer where total age is less than YTBH.", polygon.getPolygonIdentifier(),
-					Layer.PRIMARY
+					"Polygon %s has %s layer where total age is less than YTBH.", polygon.getPolygonIdentifier(), Layer.PRIMARY
 			);
 		}
 
@@ -483,12 +578,7 @@ public class FipStart {
 			throws ProcessingException {
 		@SuppressWarnings("unchecked")
 		var coefficients = ((MatrixMap2<String, Region, Coefficients>) controlMap.get(VeteranBQParser.CONTROL_KEY))
-				.getM(genus, region).orElseThrow(
-						() -> new ProcessingException(
-								"Could not find Veteran Base Area Coefficients for genus " + genus + " and region "
-										+ region
-						)
-				);
+				.getM(genus, region);
 
 		// mismatched index is copied from VDYP7
 		float a0 = coefficients.getCoe(1);

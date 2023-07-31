@@ -16,19 +16,24 @@ public class SimpleCoefficientParser1<K1> implements ControlMapSubResourceParser
 
 	Class<K1> keyClass;
 
-	private BaseCoefficientParser<Coefficients, MatrixMap<Coefficients>> delegate = new BaseCoefficientParser<Coefficients, MatrixMap<Coefficients>>(
+	private BaseCoefficientParser<Coefficients, Coefficients, MatrixMap<Coefficients>> delegate = new BaseCoefficientParser<Coefficients, Coefficients, MatrixMap<Coefficients>>(
 			1, "DUMMY"
 	) {
 
 		@SuppressWarnings("unchecked")
 		@Override
 		protected MatrixMap<Coefficients> createMap(List<Collection<?>> keyRanges) {
-			return new MatrixMapImpl<Coefficients>((Collection<K1>) keyRanges.get(0));
+			return new MatrixMapImpl<>(k->getCoefficients(), (Collection<K1>) keyRanges.get(0));
 		}
 
 		@Override
 		protected Coefficients getCoefficients(List<Float> coefficients) {
 			return new Coefficients(coefficients, indexFrom);
+		}
+
+		@Override
+		protected Coefficients wrapCoefficients(Coefficients coefficients) {
+			return coefficients;
 		}
 	};
 
@@ -45,40 +50,39 @@ public class SimpleCoefficientParser1<K1> implements ControlMapSubResourceParser
 	public Map<K1, Coefficients> parse(InputStream is, Map<String, Object> control)
 			throws IOException, ResourceParseException {
 		var matrixMapResult = delegate.parse(is, control);
-		var result = MatrixMap.cast(matrixMapResult, keyClass);
-		return result;
+		return MatrixMap.cast(matrixMapResult);
 	}
 
-	public <K> BaseCoefficientParser<Coefficients, MatrixMap<Coefficients>>
+	public <K> BaseCoefficientParser<Coefficients, Coefficients, MatrixMap<Coefficients>>
 			key(int length, String name, ValueParser<K> parser, Collection<K> range, String errorTemplate) {
 		return delegate.key(length, name, parser, range, errorTemplate);
 	}
 
-	public BaseCoefficientParser<Coefficients, MatrixMap<Coefficients>> regionKey() {
+	public BaseCoefficientParser<Coefficients, Coefficients, MatrixMap<Coefficients>> regionKey() {
 		return delegate.regionKey();
 	}
 
-	public BaseCoefficientParser<Coefficients, MatrixMap<Coefficients>> ucIndexKey() {
+	public BaseCoefficientParser<Coefficients, Coefficients, MatrixMap<Coefficients>> ucIndexKey() {
 		return delegate.ucIndexKey();
 	}
 
-	public BaseCoefficientParser<Coefficients, MatrixMap<Coefficients>> groupIndexKey(int maxGroups) {
+	public BaseCoefficientParser<Coefficients, Coefficients, MatrixMap<Coefficients>> groupIndexKey(int maxGroups) {
 		return delegate.groupIndexKey(maxGroups);
 	}
 
-	public BaseCoefficientParser<Coefficients, MatrixMap<Coefficients>> speciesKey(String name) {
+	public BaseCoefficientParser<Coefficients, Coefficients, MatrixMap<Coefficients>> speciesKey(String name) {
 		return delegate.speciesKey(name);
 	}
 
-	public BaseCoefficientParser<Coefficients, MatrixMap<Coefficients>> speciesKey() {
+	public BaseCoefficientParser<Coefficients, Coefficients, MatrixMap<Coefficients>> speciesKey() {
 		return delegate.speciesKey();
 	}
 
-	public BaseCoefficientParser<Coefficients, MatrixMap<Coefficients>> space(int length) {
+	public BaseCoefficientParser<Coefficients, Coefficients, MatrixMap<Coefficients>> space(int length) {
 		return delegate.space(length);
 	}
 
-	public <K> BaseCoefficientParser<Coefficients, MatrixMap<Coefficients>> coefficients(int number, int length) {
+	public <K> BaseCoefficientParser<Coefficients, Coefficients, MatrixMap<Coefficients>> coefficients(int number, int length) {
 		return delegate.coefficients(number, length);
 	}
 

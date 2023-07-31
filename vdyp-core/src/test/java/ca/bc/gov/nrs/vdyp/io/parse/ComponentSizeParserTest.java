@@ -1,7 +1,7 @@
 package ca.bc.gov.nrs.vdyp.io.parse;
 
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.coe;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.mmHasEntry;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -29,7 +29,7 @@ class ComponentSizeParserTest {
 
 		var result = parser.parse(is, controlMap);
 
-		assertThat(result, mmHasEntry(present(contains(49.4f, 153.3f, 0.726f, 3.647f)), "S1", Region.COASTAL));
+		assertThat(result, mmHasEntry(coe(1, contains(49.4f, 153.3f, 0.726f, 3.647f)), "S1", Region.COASTAL));
 	}
 
 	@Test

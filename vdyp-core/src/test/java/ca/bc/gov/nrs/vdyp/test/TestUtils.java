@@ -10,7 +10,11 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
@@ -18,8 +22,10 @@ import ca.bc.gov.nrs.vdyp.io.parse.BecDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.BreakageEquationGroupParser;
 import ca.bc.gov.nrs.vdyp.io.parse.DecayEquationGroupParser;
 import ca.bc.gov.nrs.vdyp.io.parse.GenusDefinitionParser;
+import ca.bc.gov.nrs.vdyp.io.parse.UtilComponentWSVolumeParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VeteranBQParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VeteranDQParser;
+import ca.bc.gov.nrs.vdyp.io.parse.VeteranLayerVolumeAdjustParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VolumeEquationGroupParser;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.BecLookup;
@@ -170,16 +176,13 @@ public class TestUtils {
 		var becAliases = BecDefinitionParser.getBecAliases(controlMap);
 		var genusAliases = GenusDefinitionParser.getSpeciesAliases(controlMap);
 
-		var volume = new MatrixMap2Impl<String, String, Integer>(genusAliases, becAliases);
-		volume.setAll(mapper.andThen(x -> x[0]));
+		var volume = new MatrixMap2Impl<String, String, Integer>(genusAliases, becAliases, mapper.andThen(x -> x[0]));
 		controlMap.put(VolumeEquationGroupParser.CONTROL_KEY, volume);
 
-		var decay = new MatrixMap2Impl<String, String, Integer>(genusAliases, becAliases);
-		decay.setAll(mapper.andThen(x -> x[1]));
+		var decay = new MatrixMap2Impl<String, String, Integer>(genusAliases, becAliases, mapper.andThen(x -> x[1]));
 		controlMap.put(DecayEquationGroupParser.CONTROL_KEY, decay);
 
-		var breakage = new MatrixMap2Impl<String, String, Integer>(genusAliases, becAliases);
-		breakage.setAll(mapper.andThen(x -> x[2]));
+		var breakage = new MatrixMap2Impl<String, String, Integer>(genusAliases, becAliases, mapper.andThen(x -> x[2]));
 		controlMap.put(BreakageEquationGroupParser.CONTROL_KEY, breakage);
 	}
 
@@ -189,7 +192,9 @@ public class TestUtils {
 	public static void populateControlMapVeteranBq(Map<String, Object> controlMap) {
 		var speciesDim = GenusDefinitionParser.getSpeciesAliases(controlMap);
 
-		var vetBqMap = new MatrixMap2Impl<>(speciesDim, Arrays.asList(Region.values()));
+		var vetBqMap = new MatrixMap2Impl<>(
+				speciesDim, Arrays.asList(Region.values()), (k1, k2) -> Coefficients.empty(3, -1)
+		);
 
 		vetBqMap.put("B", Region.INTERIOR, new Coefficients(Arrays.asList(0.70932f, 7.63269f, 0.62545f), 1));
 
@@ -201,8 +206,31 @@ public class TestUtils {
 		var regions = Arrays.asList(Region.values());
 		var genusAliases = GenusDefinitionParser.getSpeciesAliases(controlMap);
 
-		var result = new MatrixMap2Impl<String, Region, Coefficients>(genusAliases, regions);
-		result.setAll(mapper.andThen(x -> new Coefficients(x, 1)));
+		var result = new MatrixMap2Impl<String, Region, Coefficients>(
+				genusAliases, regions, mapper.andThen(x -> new Coefficients(x, 1))
+		);
 		controlMap.put(VeteranDQParser.CONTROL_KEY, result);
+	}
+
+	public static void
+			populateControlMapVeteranVolAdjust(Map<String, Object> controlMap, Function<String, float[]> mapper) {
+
+		var genusAliases = GenusDefinitionParser.getSpeciesAliases(controlMap);
+
+		var result = genusAliases.stream().collect(Collectors.toMap(x -> x, mapper.andThen(x -> new Coefficients(x, 0))));
+
+		controlMap.put(VeteranLayerVolumeAdjustParser.CONTROL_KEY, result);
+	}
+
+	public static void populateControlMapUtilComponentWSVolumeParser(
+			Map<String, Object> controlMap, BiFunction<Integer, Integer, Optional<Coefficients>> mapper
+	) {
+
+		var groupIndicies = IntStream.rangeClosed(1, UtilComponentWSVolumeParser.MAX_GROUPS).mapToObj(x -> x).toList();
+		var utilClasses = IntStream.rangeClosed(-1, 4).mapToObj(x -> x).toList();
+
+		var result = new MatrixMap2Impl<Integer, Integer, Optional<Coefficients>>(utilClasses, groupIndicies, mapper);
+
+		controlMap.put(UtilComponentWSVolumeParser.CONTROL_KEY, result);
 	}
 }

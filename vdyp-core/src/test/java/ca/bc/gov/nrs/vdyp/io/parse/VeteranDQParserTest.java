@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.io.parse;
 
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.causedBy;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.coe;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.mmHasEntry;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
@@ -34,9 +35,9 @@ class VeteranDQParserTest {
 
 		var result = parser.parse(is, controlMap);
 
-		assertThat(result, mmHasEntry(present(contains(22.500f, 0.24855f, 1.46089f)), "S1", Region.COASTAL));
-		assertThat(result, mmHasEntry(notPresent(), "S1", Region.INTERIOR));
-		assertThat(result, mmHasEntry(notPresent(), "S2", Region.COASTAL));
+		assertThat(result, mmHasEntry(coe(1, contains(22.500f, 0.24855f, 1.46089f)), "S1", Region.COASTAL));
+		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f, 0f)), "S1", Region.INTERIOR));
+		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f, 0f)), "S2", Region.COASTAL));
 	}
 
 	@Test
@@ -52,9 +53,9 @@ class VeteranDQParserTest {
 
 		var result = parser.parse(is, controlMap);
 
-		assertThat(result, mmHasEntry(present(contains(22.500f, 0.24855f, 1.46089f)), "S1", Region.COASTAL));
-		assertThat(result, mmHasEntry(present(contains(22.500f, 0.24855f, 1.46089f)), "S1", Region.INTERIOR));
-		assertThat(result, mmHasEntry(notPresent(), "S2", Region.COASTAL));
+		assertThat(result, mmHasEntry(coe(1, contains(22.500f, 0.24855f, 1.46089f)), "S1", Region.COASTAL));
+		assertThat(result, mmHasEntry(coe(1, contains(22.500f, 0.24855f, 1.46089f)), "S1", Region.INTERIOR));
+		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f, 0f)), "S2", Region.COASTAL));
 	}
 
 	@Test

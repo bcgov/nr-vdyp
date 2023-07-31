@@ -3,7 +3,6 @@ package ca.bc.gov.nrs.vdyp.model;
 import java.util.AbstractMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -20,7 +19,7 @@ import java.util.stream.Collectors;
  */
 public interface MatrixMap<T> {
 
-	public Optional<T> getM(Object... params);
+	public T getM(Object... params);
 
 	public void putM(T value, Object... params);
 
@@ -32,33 +31,41 @@ public interface MatrixMap<T> {
 
 	public List<Set<?>> getDimensions();
 
-	default public int getNumDimensions() {
+	public default int getNumDimensions() {
 		return getDimensions().size();
 	}
 
-	default public boolean isFull() {
+	public default boolean isFull() {
 		return all(x -> x != null);
 	}
 
-	default public boolean isEmpty() {
+	public default boolean isEmpty() {
 		return all(x -> x == null);
 	}
 
+	public T remove(Object... params);
+	
 	/**
 	 * Wraps a 1 dimensional MatrixMap as a regular Java Map.
 	 */
-	public static <CK1, CV> Map<CK1, CV> cast(MatrixMap<CV> o, Class<CK1> keyClass1) {
+	public static <K1, V> Map<K1, V> cast(MatrixMap<V> o) {
+		return cast(o, x->x, x->x);
+	}
+	/**
+	 * Wraps a 1 dimensional MatrixMap as a regular Java Map.
+	 */
+	public static <K1, V, T> Map<K1, T> cast(MatrixMap<V> o, Function<V, T> toMapValue, Function<T, V> toMatrixValue) {
 		// TODO check compatibility of range types
 
 		// Wrap it if it's not a MatrixMap3 but has 1 dimension
 		if (o.getNumDimensions() == 1) {
-			return new AbstractMap<CK1, CV>() {
+			return new AbstractMap<K1, T>() {
 
 				@SuppressWarnings({ "unchecked", "rawtypes" })
 				@Override
-				public Set<Entry<CK1, CV>> entrySet() {
-					return (Set) o.getDimensions().get(0).stream().filter(k -> o.getM(k).isPresent())
-							.collect(Collectors.toMap(k -> k, k -> o.getM(k).get())).entrySet();
+				public Set<Entry<K1, T>> entrySet() {
+					return (Set) o.getDimensions().get(0).stream().filter(k -> o.getM(k)!=null)
+							.collect(Collectors.toMap(k -> k, k -> o.getM(k))).entrySet();
 				}
 
 				@Override
@@ -73,7 +80,9 @@ public interface MatrixMap<T> {
 
 				@Override
 				public boolean containsValue(Object value) {
-					return o.any(v -> value.equals(v));
+					@SuppressWarnings("unchecked")
+					var expected = toMatrixValue.apply((T)value);
+					return o.any(expected::equals);
 				}
 
 				@Override
@@ -82,27 +91,29 @@ public interface MatrixMap<T> {
 				}
 
 				@Override
-				public CV get(Object key) {
-					return o.getM(key).orElseGet(() -> null);
+				public T get(Object key) {
+					if(o.getDimensions().get(0).contains(key)) {
+						return toMapValue.apply(o.getM(key));
+					}
+					return null;
 				}
 
 				@Override
-				public CV put(CK1 key, CV value) {
+				public T put(K1 key, T value) {
 					var old = get(key);
-					o.putM(value, key);
+					o.putM(toMatrixValue.apply(value), key);
 					return old;
 				}
 
-				@SuppressWarnings("unchecked")
 				@Override
-				public CV remove(Object key) {
-					return put((CK1) key, null);
+				public T remove(Object key) {
+					return toMapValue.apply(o.remove(key));
 				}
 
 				@SuppressWarnings("unchecked")
 				@Override
-				public Set<CK1> keySet() {
-					return (Set<CK1>) o.getDimensions().get(0);
+				public Set<K1> keySet() {
+					return (Set<K1>) o.getDimensions().get(0);
 				}
 
 			};

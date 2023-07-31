@@ -37,7 +37,7 @@ class UpperCoefficientParserTest {
 
 		var result = parser.parse(is, controlMap);
 
-		assertThat(result, mmHasEntry(present(is(2.0028f)), Region.INTERIOR, "S1", (Integer) 1));
+		assertThat(result, mmHasEntry(is(2.0028f), Region.INTERIOR, "S1", (Integer) 1));
 	}
 
 	@Test
