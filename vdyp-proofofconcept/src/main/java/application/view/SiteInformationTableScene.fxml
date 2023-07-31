@@ -7,6 +7,7 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.RadioButton?>
 <?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Spinner?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.ToggleGroup?>
@@ -14,6 +15,7 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
@@ -57,7 +59,7 @@
                                           <Font size="10.0" />
                                        </font>
                                     </Label>
-                                    <ChoiceBox prefHeight="15.0" prefWidth="150.0" GridPane.rowIndex="1" />
+                                    <ChoiceBox fx:id="becZone" prefHeight="15.0" prefWidth="150.0" GridPane.rowIndex="1" />
                                     <ChoiceBox fx:id="ecoZone" prefHeight="15.0" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                                     <CheckBox mnemonicParsing="false" prefHeight="0.0" prefWidth="287.0" text="Include Secondary Dominant Height in Yield Table" GridPane.rowIndex="2">
                                        <font>
@@ -89,29 +91,22 @@
                                     </Label>
                                  </children>
                               </GridPane>
-                              <GridPane prefHeight="135.0" prefWidth="574.0">
-                                <columnConstraints>
-                                  <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                                    <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                                  <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                                </columnConstraints>
-                                <rowConstraints>
-                                    <RowConstraints minHeight="10.0" prefHeight="15.0" />
-                                    <RowConstraints minHeight="10.0" prefHeight="15.0" vgrow="SOMETIMES" />
-                                    <RowConstraints minHeight="10.0" prefHeight="10.0" vgrow="SOMETIMES" />
-                                    <RowConstraints minHeight="10.0" prefHeight="35.0" vgrow="SOMETIMES" />
-                                    <RowConstraints minHeight="10.0" prefHeight="15.0" vgrow="SOMETIMES" />
-                                  <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                                  <RowConstraints minHeight="10.0" prefHeight="15.0" vgrow="SOMETIMES" />
-                                  <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                                </rowConstraints>
+                              <HBox prefHeight="26.0" prefWidth="574.0" spacing="15.0">
                                  <children>
                                     <Label text="Site Species Values:">
                                        <font>
                                           <Font size="10.0" />
                                        </font>
                                     </Label>
-                                    <RadioButton mnemonicParsing="false" text="Computed" GridPane.columnIndex="1">
+                                    <RadioButton mnemonicParsing="false" text="Computed">
+                                       <font>
+                                          <Font size="10.0" />
+                                       </font>
+                                       <toggleGroup>
+                                          <ToggleGroup fx:id="sitespeciesvalues1" />
+                                       </toggleGroup>
+                                    </RadioButton>
+                                    <RadioButton mnemonicParsing="false" text="Supplied">
                                        <font>
                                           <Font size="10.0" />
                                        </font>
@@ -119,11 +114,31 @@
                                           <ToggleGroup fx:id="sitespeciesvalues" />
                                        </toggleGroup>
                                     </RadioButton>
-                                    <ChoiceBox prefHeight="15.0" prefWidth="150.0" GridPane.rowIndex="3" />
-                                    <ChoiceBox prefHeight="15.0" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-                                    <ChoiceBox prefHeight="15.0" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="5" />
-                                    <ChoiceBox prefHeight="15.0" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="7" />
-                                    <RadioButton mnemonicParsing="false" text="Float" GridPane.columnIndex="2" GridPane.rowIndex="3">
+                                 </children>
+                                 <padding>
+                                    <Insets right="15.0" />
+                                 </padding>
+                                 <VBox.margin>
+                                    <Insets />
+                                 </VBox.margin>
+                              </HBox>
+                              <GridPane prefHeight="135.0" prefWidth="574.0">
+                                <columnConstraints>
+                                  <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                                    <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                                  <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                                </columnConstraints>
+                                <rowConstraints>
+                                    <RowConstraints minHeight="10.0" prefHeight="10.0" vgrow="SOMETIMES" />
+                                    <RowConstraints minHeight="10.0" prefHeight="35.0" vgrow="SOMETIMES" />
+                                    <RowConstraints minHeight="10.0" prefHeight="15.0" vgrow="SOMETIMES" />
+                                  <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                  <RowConstraints minHeight="10.0" prefHeight="15.0" vgrow="SOMETIMES" />
+                                    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                </rowConstraints>
+                                 <children>
+                                    <ChoiceBox fx:id="ageType" prefHeight="15.0" prefWidth="150.0" GridPane.rowIndex="1" />
+                                    <RadioButton mnemonicParsing="false" text="Float" GridPane.columnIndex="2" GridPane.rowIndex="1">
                                        <font>
                                           <Font size="10.0" />
                                        </font>
@@ -131,41 +146,39 @@
                                           <ToggleGroup fx:id="floatgroup" />
                                        </toggleGroup>
                                     </RadioButton>
-                                    <Label text="Age Type" GridPane.rowIndex="2">
+                                    <Label text="Age Type">
                                        <font>
                                           <Font size="10.0" />
                                        </font>
                                     </Label>
-                                    <Label text="Age (years)" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                                    <Label text="Age (years)" GridPane.columnIndex="1">
                                        <font>
                                           <Font size="10.0" />
                                        </font>
                                     </Label>
-                                    <Label text="Height (meters)" GridPane.columnIndex="1" GridPane.rowIndex="4">
+                                    <Label text="Height (meters)" GridPane.columnIndex="1" GridPane.rowIndex="2">
                                        <font>
                                           <Font size="10.0" />
                                        </font>
                                     </Label>
-                                    <Label text="BHA 50 Site Index" GridPane.columnIndex="1" GridPane.rowIndex="6">
+                                    <Label text="BHA 50 Site Index" GridPane.columnIndex="1" GridPane.rowIndex="4">
                                        <font>
                                           <Font size="10.0" />
                                        </font>
                                     </Label>
+                                    <RadioButton mnemonicParsing="false" text="Float" toggleGroup="$floatgroup" GridPane.columnIndex="2" GridPane.rowIndex="3">
+                                       <font>
+                                          <Font size="10.0" />
+                                       </font>
+                                    </RadioButton>
                                     <RadioButton mnemonicParsing="false" text="Float" toggleGroup="$floatgroup" GridPane.columnIndex="2" GridPane.rowIndex="5">
                                        <font>
                                           <Font size="10.0" />
                                        </font>
                                     </RadioButton>
-                                    <RadioButton mnemonicParsing="false" text="Float" toggleGroup="$floatgroup" GridPane.columnIndex="2" GridPane.rowIndex="7">
-                                       <font>
-                                          <Font size="10.0" />
-                                       </font>
-                                    </RadioButton>
-                                    <RadioButton mnemonicParsing="false" text="Supplied" toggleGroup="$sitespeciesvalues" GridPane.columnIndex="2">
-                                       <font>
-                                          <Font size="10.0" />
-                                       </font>
-                                    </RadioButton>
+                                    <Spinner GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                    <Spinner GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                    <Spinner GridPane.columnIndex="1" GridPane.rowIndex="5" />
                                  </children>
                               </GridPane>
                               <Separator prefHeight="13.0" prefWidth="574.0">

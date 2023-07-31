@@ -127,10 +127,6 @@ public class NewTableSceneController implements Initializable {
 	private Parent root;
 	private static int sceneNumber = 1;
 	
-	//Choice boxes for scene #2
-	@FXML
-	private ChoiceBox<String> ecoZone;
-	
 	@Override
 	public void initialize(URL arg0, ResourceBundle arg1) {
 		if(sceneNumber == 1) {
@@ -216,6 +212,14 @@ public class NewTableSceneController implements Initializable {
 				});
 			}
 		} else if (sceneNumber == 2) {
+				// Add choice box options and set defaults
+				becZone.getItems().addAll(becZones);
+				ecoZone.getItems().addAll(ecoZones);
+				ageType.getItems().addAll(ageTypes);
+				
+				becZone.setValue("IDF - Interior Douglas Fir");
+				ecoZone.setValue("Select species");
+				ageType.setValue("Total");
 			
 		}
 	}
@@ -372,8 +376,14 @@ public class NewTableSceneController implements Initializable {
 		alert.showAndWait();
 	}
 
+	/**
+	 * Switches the application to Scene 2 - SiteInformationTableScene.
+	 *
+	 * @param event The ActionEvent triggering the scene switch.
+	 * @throws IOException If an I/O error occurs during scene loading.
+	 */
 	public void switchToScene2(ActionEvent event) throws IOException {
-		sceneNumber = 2;
+		sceneNumber = 2; // to differentiate for the controller file
 		FXMLLoader loader = new FXMLLoader(getClass().getResource("../view/SiteInformationTableScene.fxml"));
 		root = loader.load();
 		stage = (Stage)((Node)event.getSource()).getScene().getWindow();
@@ -383,6 +393,34 @@ public class NewTableSceneController implements Initializable {
 	}
 	
 // Below until switchToScene3 this is relevant to scene#2 from SiteInformationTableScene 
+	
+	//Choice boxes for scene #2
+	@FXML
+	private ChoiceBox<String> ecoZone;
+	@FXML
+	private ChoiceBox<String> becZone;
+	@FXML
+	private ChoiceBox<String> ageType;
+	
+	// An array containing the options for different Bec Zones
+	private final String[] becZones = {"AT - Alpine Tundra", "BG - Bunch Grass", "BWBS - Boreal White and Black Spruce", "CDF - Coastal Douglas Fir", 
+										"CWH - Coastal Western Hemlock", "ESSF - Engelmann Spruce", "ICH - Interior Cedar Hemlock", "IDF - Interior Douglas Fir",
+										"MH - Mountain Hemlock", "MS - Montane Spruce", "pp = Ponderosa Pine", "SBPS - Sub-Boreal Pine-Spruce",
+										"SBS - Sub-Boreal Spruce", "SWB - Spruce-Willow-Birch"
+										};
+
+	// An array containing the options for different ECO zones
+	private final String[] ecoZones = {"Boreal Cordillera", "Boreal Plains", "Montane Cordillera", "Pacific Maritime", "Taiga Plains"};
+	
+	// An array containing the optins for AgeType
+	private final String[] ageTypes = {"Total", "Breast"};
+		
+	/**
+	 * Switches the application to Scene 1 - NewTableScene.
+	 *
+	 * @param event The ActionEvent triggering the scene switch.
+	 * @throws IOException If an I/O error occurs during scene loading.
+	 */
 	public void switchToScene1(ActionEvent event) throws IOException {
 		sceneNumber = 1;
 		FXMLLoader loader = new FXMLLoader(getClass().getResource("../view/NewTableScene.fxml"));
@@ -392,4 +430,6 @@ public class NewTableSceneController implements Initializable {
 		stage.setScene(scene);
 		stage.show();
 	}
+
+	
 }
