@@ -7,7 +7,6 @@ import java.util.ResourceBundle;
 import java.util.ArrayList;
 import java.util.List;
 
-import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -188,32 +187,24 @@ public class NewTableSceneController implements Initializable {
 			for (int i = 0; i < speciesChoiceBoxes.size(); i++) {
 				final int index = i;
 	
-				speciesChoiceBoxes.get(i).getSelectionModel().selectedItemProperty()
-						.addListener(new ChangeListener<String>() {
-							@Override
-							public void changed(ObservableValue<? extends String> arg0, String arg1, String arg2) {
-								// Get the selected item from the choice box at the current index
-								String currentSpecies = speciesChoiceBoxes.get(index).getSelectionModel().getSelectedItem()
-										.substring(0, 2);
-	
-								// Update the labels to display the selected item
-								speciesGroups[index].setText(currentSpecies);
-								speciesSites[index].setText(currentSpecies);
-							}
-						});
+				speciesChoiceBoxes.get(i).getSelectionModel().selectedItemProperty().addListener((ObservableValue<? extends String> args0, String args1, String arg2) -> {
+				    // Get the selected item from the choice box at the current index
+				    String currentSpecies = speciesChoiceBoxes.get(index).getSelectionModel().getSelectedItem().substring(0, 2);
+				    
+				    // Update the labels to display the selected item
+				    speciesGroups[index].setText(currentSpecies);
+				    speciesSites[index].setText(currentSpecies);
+				});
 			}
 	
 			// Set up listeners for each spinner
 			for (int i = 0; i < speciesPercentSpinners.size(); i++) {
-	
 				int index = i;
 	
-				speciesPercentSpinners.get(i).valueProperty().addListener(new ChangeListener<Integer>() {
-					public void changed(ObservableValue<? extends Integer> arg0, Integer arg1, Integer arg2) {
+				speciesPercentSpinners.get(i).valueProperty().addListener((ObservableValue<? extends Integer> args0, Integer args1, Integer arg2) -> {
 						int currentValue = speciesPercentSpinners.get(index).getValue();
 						updateTotalLabel(); // Update the total label when a spinner value changes
 						speciesGroupPercentLabels[index].setText(Integer.toString(currentValue));
-					}
 				});
 			}
 		} else if (sceneNumber == 2) {
@@ -259,7 +250,7 @@ public class NewTableSceneController implements Initializable {
 			// Clear the selection and reset percentages for other species (species 5 to
 			// species 6)
 			for (int i = 5; i < speciesChoiceBoxes.size(); i++) {
-				speciesChoiceBoxes.get(i).setValue("Select species");
+				speciesChoiceBoxes.get(i).setValue(DEFAULT_SPECIES_SELECTION);
 				speciesPercentSpinners.get(i).getValueFactory().setValue(0);
 			}
 	
@@ -406,13 +397,19 @@ public class NewTableSceneController implements Initializable {
 	 * @throws IOException If an I/O error occurs during scene loading.
 	 */
 	public void switchToScene2(ActionEvent event) throws IOException {
-		sceneNumber = 2; // to differentiate for the controller file
-		FXMLLoader loader = new FXMLLoader(getClass().getResource("../view/SiteInformationTableScene.fxml"));
-		root = loader.load();
-		stage = (Stage)((Node)event.getSource()).getScene().getWindow();
-		scene = new Scene(root);
-		stage.setScene(scene);
-		stage.show();
+		int total = getTotalPercent();
+		
+		if(total != 100) {
+			showErrorPopup("Total percent does not total 100%");
+		} else {
+			sceneNumber = 2; // to differentiate for the controller file
+			FXMLLoader loader = new FXMLLoader(getClass().getResource("../view/SiteInformationTableScene.fxml"));
+			root = loader.load();
+			stage = (Stage)((Node)event.getSource()).getScene().getWindow();
+			scene = new Scene(root);
+			stage.setScene(scene);
+			stage.show();
+		}
 	}
 	
 // Below until switchToScene3 this is relevant to scene#2 from SiteInformationTableScene 

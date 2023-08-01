@@ -4,12 +4,10 @@ import java.io.IOException;
 
 import application.controller.*;
 import javafx.application.Application;
-import javafx.event.EventHandler;
 import javafx.stage.Stage;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 
@@ -71,9 +69,7 @@ public class Main extends Application {
 	 *                   events.
 	 */
 	private static void setupEventHandlers(Scene scene, MainController controller) {
-		scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
-			@Override
-			public void handle(KeyEvent event) {
+		scene.setOnKeyPressed(event -> {
 				if (event.isControlDown() && event.getCode() == KeyCode.T) {
 					try {
 						controller.openSecondaryWindow();
@@ -82,8 +78,7 @@ public class Main extends Application {
 						e.printStackTrace();
 					}
 				}
-			}
-		});
+			});
 	}
 
 	/**
