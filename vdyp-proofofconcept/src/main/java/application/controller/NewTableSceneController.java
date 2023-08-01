@@ -16,6 +16,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Spinner;
+import javafx.scene.control.SpinnerValueFactory;
 import javafx.stage.Stage;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -127,6 +128,7 @@ public class NewTableSceneController implements Initializable {
 	private Parent root;
 	private static int sceneNumber = 1;
 	
+	//The functions up and including showErrorPopup are used by all or multiple scenes
 	@Override
 	public void initialize(URL arg0, ResourceBundle arg1) {
 		if(sceneNumber == 1) {
@@ -212,19 +214,11 @@ public class NewTableSceneController implements Initializable {
 				});
 			}
 		} else if (sceneNumber == 2) {
-				// Add choice box options and set defaults
-				becZone.getItems().addAll(becZones);
-				ecoZone.getItems().addAll(ecoZones);
-				ageType.getItems().addAll(ageTypes);
-				
-				becZone.setValue("IDF - Interior Douglas Fir");
-				ecoZone.setValue("Select species");
-				ageType.setValue("Total");
+				setDefaults();
 			
 		}
 	}
 
-// Below until switchToScene2 this is relevant to scene#1 from NewTableScene which is triggered when a new table opens
 	/**
 	 * Sets default values for species and percentages in the new table window.
 	 * @formatter:off
@@ -239,80 +233,79 @@ public class NewTableSceneController implements Initializable {
 	 * @formatter:on
 	 */
 	private void setDefaults() {
-		// Set all percent values to 0, this avoids totalPercent from exceeding 100% and
-		// causing errors
-		for (Spinner<Integer> spinner : speciesPercentSpinners) {
-			IncrementByFiveSpinnerValueFactory valueFactory = new IncrementByFiveSpinnerValueFactory(0, 100);
-			valueFactory.setValue(0);
-			spinner.setValueFactory(valueFactory);
+		if(sceneNumber == 1) {
+			// Set all percent values to 0, this avoids totalPercent from exceeding 100% and
+			// causing errors
+			for (Spinner<Integer> spinner : speciesPercentSpinners) {
+				SpinnerValueFactory<Integer> valueFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 100, 0, 5); //min, max, default, increment
+				spinner.setValueFactory(valueFactory);
+			}
+			// Set the default species and percentage for species 1-4
+			species_1.setValue("PL - Lodgepole Pine");
+			species1Percent.getValueFactory().setValue(30);
+	
+			species_2.setValue("AC - Poplar");
+			species2Percent.getValueFactory().setValue(30);
+	
+			species_3.setValue("H - Hemlock");
+			species3Percent.getValueFactory().setValue(30);
+	
+			species_4.setValue("S - Spruce");
+			species4Percent.getValueFactory().setValue(10);
+	
+			// Clear the selection and reset percentages for other species (species 5 to
+			// species 6)
+			for (int i = 5; i < speciesChoiceBoxes.size(); i++) {
+				speciesChoiceBoxes.get(i).setValue("Select species");
+				speciesPercentSpinners.get(i).getValueFactory().setValue(0);
+			}
+	
+			// Update the labels to display the selected item and percentage labels for
+			// species 1-4
+			species1Group.setText("PL");
+			species1Site.setText("PL");
+			species1GroupPercent.setText("30");
+	
+			species2Group.setText("AC");
+			species2Site.setText("AC");
+			species2GroupPercent.setText("30");
+	
+			species3Group.setText("H");
+			species3Site.setText("H");
+			species3GroupPercent.setText("30");
+	
+			species4Group.setText("S");
+			species4Site.setText("S");
+			species4GroupPercent.setText("10");
+	
+			// Update the total label after setting the default values
+			updateTotalLabel();
+		} else if (sceneNumber == 2) {
+			// Add choice box options and set defaults
+			becZone.getItems().addAll(becZones); // these are defined below in the scene#2 section
+			ecoZone.getItems().addAll(ecoZones);
+			ageType.getItems().addAll(ageTypes);
+			
+			becZone.setValue("IDF - Interior Douglas Fir");
+			ecoZone.setValue("Select species");
+			ageType.setValue("Total");
+			
+			//private Spinner<Integer> standAge; 60
+			//private Spinner<Integer> bha50SiteIndex;
+			SpinnerValueFactory<Double> standAgeValueFactory =
+					new SpinnerValueFactory.DoubleSpinnerValueFactory(0.00, 500.00, 60.00, 10); //min, max, default, increment
+			//Currently the default when WinVDYP is opened is 60
+			standAge.setValueFactory(standAgeValueFactory);
+			
+			SpinnerValueFactory<Double> standHeightValueFactory =
+						new SpinnerValueFactory.DoubleSpinnerValueFactory(0.00, 99.9, 17.00, 1); //min, max, default, increment
+			standHeight.setValueFactory(standHeightValueFactory);
+			
+			SpinnerValueFactory<Double> bha50SiteIndexValueFactory = 
+					new SpinnerValueFactory.DoubleSpinnerValueFactory(0.00, 60.0, 16.30, 1); //min, max, default, increment
+			bha50SiteIndex.setValueFactory(bha50SiteIndexValueFactory);
+			bha50SiteIndex.setDisable(true); //Real WinVDYP uses the other two to calculate this, so it should be disable by default
 		}
-		// Set the default species and percentage for species 1-4
-		species_1.setValue("PL - Lodgepole Pine");
-		species1Percent.getValueFactory().setValue(30);
-
-		species_2.setValue("AC - Poplar");
-		species2Percent.getValueFactory().setValue(30);
-
-		species_3.setValue("H - Hemlock");
-		species3Percent.getValueFactory().setValue(30);
-
-		species_4.setValue("S - Spruce");
-		species4Percent.getValueFactory().setValue(10);
-
-		// Clear the selection and reset percentages for other species (species 5 to
-		// species 6)
-		for (int i = 5; i < speciesChoiceBoxes.size(); i++) {
-			speciesChoiceBoxes.get(i).setValue("Select species");
-			speciesPercentSpinners.get(i).getValueFactory().setValue(0);
-		}
-
-		// Update the labels to display the selected item and percentage labels for
-		// species 1-4
-		species1Group.setText("PL");
-		species1Site.setText("PL");
-		species1GroupPercent.setText("30");
-
-		species2Group.setText("AC");
-		species2Site.setText("AC");
-		species2GroupPercent.setText("30");
-
-		species3Group.setText("H");
-		species3Site.setText("H");
-		species3GroupPercent.setText("30");
-
-		species4Group.setText("S");
-		species4Site.setText("S");
-		species4GroupPercent.setText("10");
-
-		// Update the total label after setting the default values
-		updateTotalLabel();
-	}
-
-	/**
-	 * Updates the total label with the sum of all species percent values from the
-	 * spinners.
-	 *
-	 * This method iterates through a list of species percent spinners and
-	 * calculates the total sum of their values. The resulting total is displayed in
-	 * the totalPercentLabel. 
-	 *
-	 */
-	private void updateTotalLabel() throws ArithmeticException {
-		int total = getTotalPercent();
-		totalPercentLabel.setText(Integer.toString(total));
-	}
-
-	/**
-	 * Method to calculate the total percentage from all the spinners.
-	 *
-	 * @return The total percentage calculated from the spinners.
-	 */
-	private int getTotalPercent() {
-		int total = 0;
-		for (Spinner<Integer> spinner : speciesPercentSpinners) {
-			total += spinner.getValue();
-		}
-		return total;
 	}
 
 	/**
@@ -348,14 +341,15 @@ public class NewTableSceneController implements Initializable {
 	 * @param event The ActionEvent triggered by the run button click.
 	 */
 	public void runButtonAction(ActionEvent event) {
-		int total = getTotalPercent();
+		if(sceneNumber == 1) {
+			int total = getTotalPercent();
+			if (total != 100) {
+				showErrorPopup("Total percent does not total 100%");
+			}
+		} //No error handling for scene 2 needed since the value factory prohibits invalid entries and numbers aren't calculated in this POC
 
-		if (total != 100) {
-			showErrorPopup("Total percent does not total 100%");
-		} else {
-			// Code to run the model goes here
+		// Code to run the model goes here
 		}
-	}
 
 	/**
 	 * Displays an error popup with the specified error message.
@@ -376,6 +370,34 @@ public class NewTableSceneController implements Initializable {
 		alert.showAndWait();
 	}
 
+	// Below until switchToScene2 this is relevant to scene#1 from NewTableScene which is triggered when a new table opens
+	/**
+	 * Updates the total label with the sum of all species percent values from the
+	 * spinners.
+	 *
+	 * This method iterates through a list of species percent spinners and
+	 * calculates the total sum of their values. The resulting total is displayed in
+	 * the totalPercentLabel. 
+	 *
+	 */
+	private void updateTotalLabel() throws ArithmeticException {
+		int total = getTotalPercent();
+		totalPercentLabel.setText(Integer.toString(total));
+	}
+
+	/**
+	 * Method to calculate the total percentage from all the spinners.
+	 *
+	 * @return The total percentage calculated from the spinners.
+	 */
+	private int getTotalPercent() {
+		int total = 0;
+		for (Spinner<Integer> spinner : speciesPercentSpinners) {
+			total += spinner.getValue();
+		}
+		return total;
+	}
+
 	/**
 	 * Switches the application to Scene 2 - SiteInformationTableScene.
 	 *
@@ -393,7 +415,6 @@ public class NewTableSceneController implements Initializable {
 	}
 	
 // Below until switchToScene3 this is relevant to scene#2 from SiteInformationTableScene 
-	
 	//Choice boxes for scene #2
 	@FXML
 	private ChoiceBox<String> ecoZone;
@@ -402,19 +423,63 @@ public class NewTableSceneController implements Initializable {
 	@FXML
 	private ChoiceBox<String> ageType;
 	
-	// An array containing the options for different Bec Zones
+	// Arrays containing the options for different Bec & Eco Zones
 	private final String[] becZones = {"AT - Alpine Tundra", "BG - Bunch Grass", "BWBS - Boreal White and Black Spruce", "CDF - Coastal Douglas Fir", 
 										"CWH - Coastal Western Hemlock", "ESSF - Engelmann Spruce", "ICH - Interior Cedar Hemlock", "IDF - Interior Douglas Fir",
 										"MH - Mountain Hemlock", "MS - Montane Spruce", "pp = Ponderosa Pine", "SBPS - Sub-Boreal Pine-Spruce",
 										"SBS - Sub-Boreal Spruce", "SWB - Spruce-Willow-Birch"
 										};
-
-	// An array containing the options for different ECO zones
 	private final String[] ecoZones = {"Boreal Cordillera", "Boreal Plains", "Montane Cordillera", "Pacific Maritime", "Taiga Plains"};
 	
-	// An array containing the optins for AgeType
+	// An array containing the options for AgeType
 	private final String[] ageTypes = {"Total", "Breast"};
 		
+	// Spinners for scene #2
+	@FXML
+	private Spinner<Double> standAge;
+	@FXML
+	private Spinner<Double> standHeight;
+	@FXML
+	private Spinner<Double> bha50SiteIndex;
+	
+	/**
+	 * Handles the action event when the "Age (years)" option is selected in the float radiobutton.
+	 * Disables the standAge choicebox and enables the bha50SiteIndex and standHeight choiceboxes.
+	 *
+	 * @param event The ActionEvent generated by the user action.
+	 */
+	public void standAgeSelected(ActionEvent event) {
+		standAge.setDisable(true);
+		bha50SiteIndex.setDisable(false);
+		standHeight.setDisable(false); //since we don't know from where it's being called
+	}
+	
+	/**
+	 * Handles the action event when the "Height (meters)" option is selected in the float radiobutton.
+	 * Disables the standHeight choicebox and enables the standAge and bha50SiteIndex choiceboxes.
+	 *
+	 * @param event The ActionEvent generated by the user action.
+	 */ 
+	public void standHeightSelected(ActionEvent event) {
+		standHeight.setDisable(true);
+		standAge.setDisable(false); //since we don't know from where it's being called
+		bha50SiteIndex.setDisable(false);
+	}
+	
+	/**
+	 * Handles the action event when the "BHA 50 Site Index" option is selected in the float radiobutton.
+	 * Disables the bha50SiteIndex choicebox and enables the standAge and standHeight choiceboxes .
+	 *
+	 * @param event The ActionEvent generated by the user action.
+	 */
+	public void siteIndexSelected(ActionEvent event) {
+		 bha50SiteIndex.setDisable(true);
+		 standAge.setDisable(false);
+		 standHeight.setDisable(false); //since we don't know from where it's being called
+	}
+	
+	//TODO Implement passing information from screen 1
+	
 	/**
 	 * Switches the application to Scene 1 - NewTableScene.
 	 *
@@ -423,6 +488,22 @@ public class NewTableSceneController implements Initializable {
 	 */
 	public void switchToScene1(ActionEvent event) throws IOException {
 		sceneNumber = 1;
+		FXMLLoader loader = new FXMLLoader(getClass().getResource("../view/NewTableScene.fxml"));
+		root = loader.load();
+		stage = (Stage)((Node)event.getSource()).getScene().getWindow();
+		scene = new Scene(root);
+		stage.setScene(scene);
+		stage.show();
+	}
+	
+	/**
+	 * Switches the application to Scene 1 - NewTableScene.
+	 *
+	 * @param event The ActionEvent triggering the scene switch.
+	 * @throws IOException If an I/O error occurs during scene loading.
+	 */
+	public void switchToScene3(ActionEvent event) throws IOException {
+		sceneNumber = 3;
 		FXMLLoader loader = new FXMLLoader(getClass().getResource("../view/NewTableScene.fxml"));
 		root = loader.load();
 		stage = (Stage)((Node)event.getSource()).getScene().getWindow();

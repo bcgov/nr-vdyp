@@ -103,7 +103,7 @@
                                           <Font size="10.0" />
                                        </font>
                                        <toggleGroup>
-                                          <ToggleGroup fx:id="sitespeciesvalues1" />
+                                          <ToggleGroup fx:id="sitespeciesvalues" />
                                        </toggleGroup>
                                     </RadioButton>
                                     <RadioButton mnemonicParsing="false" text="Supplied">
@@ -138,7 +138,7 @@
                                 </rowConstraints>
                                  <children>
                                     <ChoiceBox fx:id="ageType" prefHeight="15.0" prefWidth="150.0" GridPane.rowIndex="1" />
-                                    <RadioButton mnemonicParsing="false" text="Float" GridPane.columnIndex="2" GridPane.rowIndex="1">
+                                    <RadioButton mnemonicParsing="false" onAction="#standAgeSelected" text="Float" GridPane.columnIndex="2" GridPane.rowIndex="1">
                                        <font>
                                           <Font size="10.0" />
                                        </font>
@@ -166,19 +166,19 @@
                                           <Font size="10.0" />
                                        </font>
                                     </Label>
-                                    <RadioButton mnemonicParsing="false" text="Float" toggleGroup="$floatgroup" GridPane.columnIndex="2" GridPane.rowIndex="3">
+                                    <RadioButton mnemonicParsing="false" onAction="#standHeightSelected" text="Float" toggleGroup="$floatgroup" GridPane.columnIndex="2" GridPane.rowIndex="3">
                                        <font>
                                           <Font size="10.0" />
                                        </font>
                                     </RadioButton>
-                                    <RadioButton mnemonicParsing="false" text="Float" toggleGroup="$floatgroup" GridPane.columnIndex="2" GridPane.rowIndex="5">
+                                    <RadioButton mnemonicParsing="false" onAction="#siteIndexSelected" selected="true" text="Float" toggleGroup="$floatgroup" GridPane.columnIndex="2" GridPane.rowIndex="5">
                                        <font>
                                           <Font size="10.0" />
                                        </font>
                                     </RadioButton>
-                                    <Spinner GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                                    <Spinner GridPane.columnIndex="1" GridPane.rowIndex="3" />
-                                    <Spinner GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                                    <Spinner fx:id="standAge" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                    <Spinner fx:id="standHeight" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                    <Spinner fx:id="bha50SiteIndex" GridPane.columnIndex="1" GridPane.rowIndex="5" />
                                  </children>
                               </GridPane>
                               <Separator prefHeight="13.0" prefWidth="574.0">
