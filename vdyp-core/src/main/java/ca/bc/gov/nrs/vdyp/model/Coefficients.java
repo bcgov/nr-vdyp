@@ -41,7 +41,7 @@ public class Coefficients extends AbstractList<Float> implements List<Float> {
 	}
 
 	public Float getCoe(int i) {
-		return coe[i - indexFrom];
+		return coe[getRealIndex(i)];
 	}
 
 	public void modifyCoe(int i, UnaryOperator<Float> op) {
@@ -49,7 +49,7 @@ public class Coefficients extends AbstractList<Float> implements List<Float> {
 	}
 
 	public Float setCoe(int i, float value) {
-		return coe[i - indexFrom] = value;
+		return coe[getRealIndex(i)] = value;
 	}
 
 	@Override
@@ -91,4 +91,11 @@ public class Coefficients extends AbstractList<Float> implements List<Float> {
 		return indexFrom;
 	}
 
+	private int getRealIndex(int i) {
+		var max = coe.length+indexFrom-1;
+		if(i<indexFrom || i>max) {
+			throw new ArrayIndexOutOfBoundsException("Coefficient index "+i+" out of bounds for ["+indexFrom+":"+max+"]");
+		}
+		return i - indexFrom;
+	}
 }

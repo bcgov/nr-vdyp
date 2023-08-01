@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.fip;
 
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.coe;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.aMapWithSize;
 import static org.hamcrest.Matchers.allOf;
@@ -931,7 +932,7 @@ class FipStartTest {
 
 	void populateControlMapVeteranVolumeAdjust(HashMap<String, Object> controlMap, Function<String, float[]> mapper) {
 		var map = GenusDefinitionParser.getSpeciesAliases(controlMap).stream()
-				.collect(Collectors.toMap(x -> x, mapper.andThen(x -> new Coefficients(x, 0))));
+				.collect(Collectors.toMap(x -> x, mapper.andThen(x -> new Coefficients(x, 1))));
 
 		controlMap.put(VeteranLayerVolumeAdjustParser.CONTROL_KEY, map);
 	}
@@ -1096,7 +1097,57 @@ class FipStartTest {
 				)
 		);
 	}
+	
+	@Test
+	void testEstimateVeteranWholeStemVolume() throws Exception {
+		var polygonId = polygonId("Test Polygon", 2023);
 
+		var fipPolygon = getTestPolygon(polygonId, valid());
+		var fipLayer = getTestVeteranLayer(polygonId, valid());
+		var fipSpecies = getTestSpecies(polygonId, Layer.VETERAN, valid());
+		fipPolygon.setLayers(Collections.singletonMap(Layer.VETERAN, fipLayer));
+		fipLayer.setSpecies(Collections.singletonMap(fipSpecies.getGenus(), fipSpecies));
+
+		var controlMap = new HashMap<String, Object>();
+		TestUtils.populateControlMapReal(controlMap);
+		TestUtils.populateControlMapGensuReal(controlMap);
+		TestUtils.populateControlMapVeteranBq(controlMap);
+		TestUtils.populateControlMapEquationGroups(controlMap, (s, b) -> new int[] { 0, 0, 0 });
+		TestUtils.populateControlMapVeteranDq(controlMap, (s, r) -> new float[] { 0f, 0f, 0f });
+		TestUtils.populateControlMapVeteranVolAdjust(controlMap, s-> new float[] {0f, 0f, 0f, 0f});
+		TestUtils.populateControlMapUtilComponentWSVolumeParser(controlMap, (u,g)->{
+			if(g==12) {
+				switch (u) {
+				case 1:
+					return Optional.of(new Coefficients(new float[] {-1.20775998f, 0.670000017f, 1.43023002f, -0.886789978f}, 1));
+				case 2:
+					return Optional.of(new Coefficients(new float[] {-1.58211005f, 0.677200019f, 1.36449003f, -0.781769991f}, 1));
+				case 3:
+					return Optional.of(new Coefficients(new float[] {-1.61995006f, 0.651030004f, 1.17782998f, -0.607379973f}, 1));
+				case 4:
+					return Optional.of(new Coefficients(new float[] {-0.172529995f, 0.932619989f, -0.0697899982f, -0.00362000009f}, 1));
+				}
+			}
+			return Optional.empty();
+		});
+		
+		var app = new FipStart();
+		app.setControlMap(controlMap);
+
+		var utilizationClass = 4;
+		var aAdjust = 0.10881f;
+		var volumeGroup = 12;
+		var lorieHeight = 26.2000008f;
+		var quadMeanDiameterUtil = new Coefficients(new float[] {51.8356705f, 0f, 0f, 0f, 51.8356705f}, 0);
+		var baseAreaUtil = new Coefficients(new float[] {0.492921442f, 0f, 0f, 0f, 0.492921442f}, 0);
+		var wholeStemVolumeUtil = new Coefficients(new float[] {0f, 0f, 0f, 0f, 0f}, 0);
+		
+		app.estimateWholeStemVolume(utilizationClass, aAdjust, volumeGroup, lorieHeight, quadMeanDiameterUtil, baseAreaUtil, wholeStemVolumeUtil);
+		
+		assertThat(wholeStemVolumeUtil, coe(0, contains(0f, 0f, 0f, 0f, 6.11904192f)));
+		
+	}
+	
 	private static <T> MockStreamingParser<T>
 			mockStream(IMocksControl control, Map<String, Object> controlMap, String key, String name) throws IOException {
 		StreamingParserFactory<T> streamFactory = control.mock(name + "Factory", StreamingParserFactory.class);

@@ -217,7 +217,7 @@ public class TestUtils {
 
 		var genusAliases = GenusDefinitionParser.getSpeciesAliases(controlMap);
 
-		var result = genusAliases.stream().collect(Collectors.toMap(x -> x, mapper.andThen(x -> new Coefficients(x, 0))));
+		var result = genusAliases.stream().collect(Collectors.toMap(x -> x, mapper.andThen(x -> new Coefficients(x, 1))));
 
 		controlMap.put(VeteranLayerVolumeAdjustParser.CONTROL_KEY, result);
 	}

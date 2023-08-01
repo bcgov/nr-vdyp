@@ -54,6 +54,8 @@ public class FipStart {
 
 	public static final float PI_40K = 0.78539816E-04f;
 
+	static final Collection<Integer> UTIL_CLASS_INDICES = IntStream.rangeClosed(1, 4).mapToObj(x -> x).toList();
+
 	private Map<String, Object> controlMap = Collections.emptyMap();
 
 	/**
@@ -336,6 +338,8 @@ public class FipStart {
 			var baseAreaUtil = utilizationVector();
 			var wholeStemVolumeUtil = utilizationVector();
 
+			var closeUtilizationVolumeUtil = utilizationVector(); // TODO where does this get initialized?
+
 			var hlSp = vdypSpecies.getLoreyHeightByUtilization().getCoe(0);
 			{
 				var baSp = vdypSpecies.getBaseAreaByUtilization().getCoe(4);
@@ -352,16 +356,34 @@ public class FipStart {
 				baseAreaUtil.setCoe(4, baSp);
 				wholeStemVolumeUtil.setCoe(4, 0f);
 			}
+			// AADJUSTV
 			var volumeAdjustCoe = volumeAdjustMap.get(vdypSpecies.getGenus());
 
 			var utilizationClass = 4; // IUC_VET
 
-			var adjust = new float[] { 0f, 0f, 0f, 0f };
+			// ADJ
+			var adjust = new Coefficients(new float[] { 0f, 0f, 0f, 0f }, 1);
 
+			// EMP091
 			estimateWholeStemVolume(
-					adjust.length /* ? */, volumeAdjustCoe.getCoe(1), vdypSpecies.getVolumeGroup(), hlSp, quadMeanDiameterUtil,
+					utilizationClass, volumeAdjustCoe.getCoe(1), vdypSpecies.getVolumeGroup(), hlSp, quadMeanDiameterUtil,
 					baseAreaUtil, wholeStemVolumeUtil
 			);
+
+			adjust.setCoe(4, volumeAdjustCoe.getCoe(2));
+			// EMP092
+			estimateCloseUtilizationVolume(
+					utilizationClass, adjust, vdypSpecies.getVolumeGroup(), hlSp, quadMeanDiameterUtil, wholeStemVolumeUtil,
+					closeUtilizationVolumeUtil
+			);
+
+			adjust.setCoe(4, volumeAdjustCoe.getCoe(3));
+			// EMP093
+			// TODO
+
+			adjust.setCoe(4, volumeAdjustCoe.getCoe(4));
+			// EMP094
+			// TODO
 		}
 	}
 
@@ -369,15 +391,16 @@ public class FipStart {
 	/**
 	 * Updates wholeStemVolumeUtil with estimated values.
 	 */
-	private void estimateWholeStemVolume(
-			int utilizationClass, Float aAdjust, int volumeGroup, Float hlSp, Coefficients quadMeanDiameterUtil,
+	void estimateWholeStemVolume(
+			int utilizationClass, float aAdjust, int volumeGroup, Float hlSp, Coefficients quadMeanDiameterUtil,
 			Coefficients baseAreaUtil, Coefficients wholeStemVolumeUtil
 	) throws ProcessingException {
 		var dqSp = quadMeanDiameterUtil.getCoe(0);
-		final var wholeStemUtilizationComponentMap = Utils.<MatrixMap2<Integer, Integer, Coefficients>>expectParsedControl(
-				controlMap, UtilComponentWSVolumeParser.CONTROL_KEY, MatrixMap2.class
-		);
-		for (int i = 1; i < 4; i++) {
+		final var wholeStemUtilizationComponentMap = Utils
+				.<MatrixMap2<Integer, Integer, Optional<Coefficients>>>expectParsedControl(
+						controlMap, UtilComponentWSVolumeParser.CONTROL_KEY, MatrixMap2.class
+				);
+		for (int i : UTIL_CLASS_INDICES) {
 			if (baseAreaUtil.getCoe(i) < 0f) {
 				wholeStemVolumeUtil.setCoe(i, 0f);
 				continue;
@@ -385,35 +408,48 @@ public class FipStart {
 			if (utilizationClass != 0 && utilizationClass != i) {
 				continue;
 			}
-			Coefficients wsCoe = wholeStemUtilizationComponentMap.get(i, volumeGroup);
+			Coefficients wsCoe = wholeStemUtilizationComponentMap.get(i, volumeGroup).orElseThrow(
+					() -> new ProcessingException("Could not find whole stem utilization coefficients for group " + volumeGroup)
+			);
 			var a0 = wsCoe.getCoe(1);
 			var a1 = wsCoe.getCoe(2);
 			var a2 = wsCoe.getCoe(3);
 			var a3 = wsCoe.getCoe(4);
 
-			var arg = a0 + a1 * (float)Math.log(hlSp) + a2 * (float)Math.log(quadMeanDiameterUtil.getCoe(i))
-					+ ( (i < 3) ? a3 * (float)Math.log(dqSp) : a3 * dqSp);
-			
-			if (i==utilizationClass) {
-				arg+=aAdjust;
+			var arg = a0 + a1 * (float) Math.log(hlSp) + a2 * (float) Math.log(quadMeanDiameterUtil.getCoe(i))
+					+ ( (i < 3) ? a3 * (float) Math.log(dqSp) : a3 * dqSp);
+
+			if (i == utilizationClass) {
+				arg += aAdjust;
 			}
-			
-			var vbaruc  = (float) Math.exp(arg); // volume base area ?? utilization class?
-			
-			wholeStemVolumeUtil.setCoe(i, baseAreaUtil.getCoe(i)*vbaruc);
+
+			var vbaruc = (float) Math.exp(arg); // volume base area ?? utilization class?
+
+			wholeStemVolumeUtil.setCoe(i, baseAreaUtil.getCoe(i) * vbaruc);
 		}
-		
+
 		if (utilizationClass == 0) {
-			var totalVolume = (float)IntStream.of(1,2,3,4) //
+			var totalVolume = (float) UTIL_CLASS_INDICES.stream() //
 					.mapToDouble(wholeStemVolumeUtil::getCoe) //
 					.sum();
-			if(totalVolume<=0f) {
-				throw new ProcessingException("Total volume "+totalVolume+" was not positive.");
+			if (totalVolume <= 0f) {
+				throw new ProcessingException("Total volume " + totalVolume + " was not positive.");
 			}
 			final var k = wholeStemVolumeUtil.getCoe(0);
-			IntStream.of(1,2,3,4).forEach(i->wholeStemVolumeUtil.setCoe(i, k*wholeStemVolumeUtil.getCoe(i)));
+			IntStream.of(1, 2, 3, 4).forEach(i -> wholeStemVolumeUtil.setCoe(i, k * wholeStemVolumeUtil.getCoe(i)));
 		}
-		
+
+	}
+
+	// EMP092
+	/**
+	 * Updates closeUtilizationVolumeUtil with estimated values.
+	 */
+	private void estimateCloseUtilizationVolume(
+			int utilizationClass, Coefficients aAdjust, int volumeGroup, Float hlSp, Coefficients quadMeanDiameterUtil,
+			Coefficients wholeStemVolumeUtil, Coefficients closeUtilizationVolumeUtil
+	) {
+		// TODO
 	}
 
 	int getGroup(FipPolygon fipPolygon, MatrixMap2<String, String, Integer> volumeGroupMap, VdypSpecies vSpec) {
