@@ -122,12 +122,12 @@
                                           <Font size="10.0" />
                                        </font>
                                     </Label>
-                                    <ChoiceBox fx:id="species_1" prefHeight="3.0" prefWidth="139.0" GridPane.rowIndex="2" />
-                                    <ChoiceBox fx:id="species_6" prefHeight="3.0" prefWidth="139.0" GridPane.rowIndex="12" />
-                                    <ChoiceBox fx:id="species_5" prefHeight="3.0" prefWidth="139.0" GridPane.rowIndex="10" />
-                                    <ChoiceBox fx:id="species_4" prefHeight="3.0" prefWidth="139.0" GridPane.rowIndex="8" />
-                                    <ChoiceBox fx:id="species_3" prefHeight="3.0" prefWidth="139.0" GridPane.rowIndex="6" />
-                                    <ChoiceBox fx:id="species_2" prefHeight="3.0" prefWidth="139.0" GridPane.rowIndex="4" />
+                                    <ChoiceBox fx:id="species1" prefHeight="3.0" prefWidth="139.0" GridPane.rowIndex="2" />
+                                    <ChoiceBox fx:id="species6" prefHeight="3.0" prefWidth="139.0" GridPane.rowIndex="12" />
+                                    <ChoiceBox fx:id="species5" prefHeight="3.0" prefWidth="139.0" GridPane.rowIndex="10" />
+                                    <ChoiceBox fx:id="species4" prefHeight="3.0" prefWidth="139.0" GridPane.rowIndex="8" />
+                                    <ChoiceBox fx:id="species3" prefHeight="3.0" prefWidth="139.0" GridPane.rowIndex="6" />
+                                    <ChoiceBox fx:id="species2" prefHeight="3.0" prefWidth="139.0" GridPane.rowIndex="4" />
                                     <Label prefHeight="0.0" prefWidth="124.0" text="Species Group" GridPane.columnIndex="2" GridPane.rowIndex="1">
                                        <font>
                                           <Font size="10.0" />

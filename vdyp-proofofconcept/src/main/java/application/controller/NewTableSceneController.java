@@ -28,17 +28,17 @@ public class NewTableSceneController implements Initializable {
 	
 	// Set up species choice boxes
 	@FXML
-	private ChoiceBox<String> species_1;
+	private ChoiceBox<String> species1;
 	@FXML
-	private ChoiceBox<String> species_2;
+	private ChoiceBox<String> species2;
 	@FXML
-	private ChoiceBox<String> species_3;
+	private ChoiceBox<String> species3;
 	@FXML
-	private ChoiceBox<String> species_4;
+	private ChoiceBox<String> species4;
 	@FXML
-	private ChoiceBox<String> species_5;
+	private ChoiceBox<String> species5;
 	@FXML
-	private ChoiceBox<String> species_6;
+	private ChoiceBox<String> species6;
 
 	// List of speciesChoiceBoxes
 	private List<ChoiceBox<String>> speciesChoiceBoxes = new ArrayList<>();
@@ -52,7 +52,10 @@ public class NewTableSceneController implements Initializable {
 			"PL - Lodgepole Pine", "PY - Western White Pine", "PY - Ponderosa (Yellow) Pine", "S - Spruce",
 			"SB - Black Spruce", "SE - Engelmann Spruce", "SS - Sitka Spruce", "SW - White Spruce",
 			"YC - Yellow Cedar" };
-
+	
+	// Define a constant for the default selection of tree species
+	private static final String DEFAULT_SPECIES_SELECTION = "Select species";
+	
 	// Labels for display based on choice boxes
 	@FXML
 	private Label species1Group;
@@ -133,12 +136,12 @@ public class NewTableSceneController implements Initializable {
 	public void initialize(URL arg0, ResourceBundle arg1) {
 		if(sceneNumber == 1) {
 			// Add species choice boxes to the List
-			speciesChoiceBoxes.add(species_1);
-			speciesChoiceBoxes.add(species_2);
-			speciesChoiceBoxes.add(species_3);
-			speciesChoiceBoxes.add(species_4);
-			speciesChoiceBoxes.add(species_5);
-			speciesChoiceBoxes.add(species_6);
+			speciesChoiceBoxes.add(species1);
+			speciesChoiceBoxes.add(species2);
+			speciesChoiceBoxes.add(species3);
+			speciesChoiceBoxes.add(species4);
+			speciesChoiceBoxes.add(species5);
+			speciesChoiceBoxes.add(species6);
 	
 			// Add the labels to the arrays
 			speciesGroups[0] = species1Group;
@@ -174,7 +177,7 @@ public class NewTableSceneController implements Initializable {
 			// Add "Select species" as the item for each ChoiceBox and set items
 			for (ChoiceBox<String> choiceBox : speciesChoiceBoxes) {
 				choiceBox.getItems().addAll(treeSpecies);
-				choiceBox.setValue("Select species");
+				choiceBox.setValue(DEFAULT_SPECIES_SELECTION);
 			}
 	
 			// Set Default values
@@ -241,16 +244,16 @@ public class NewTableSceneController implements Initializable {
 				spinner.setValueFactory(valueFactory);
 			}
 			// Set the default species and percentage for species 1-4
-			species_1.setValue("PL - Lodgepole Pine");
+			species1.setValue("PL - Lodgepole Pine");
 			species1Percent.getValueFactory().setValue(30);
 	
-			species_2.setValue("AC - Poplar");
+			species2.setValue("AC - Poplar");
 			species2Percent.getValueFactory().setValue(30);
 	
-			species_3.setValue("H - Hemlock");
+			species3.setValue("H - Hemlock");
 			species3Percent.getValueFactory().setValue(30);
 	
-			species_4.setValue("S - Spruce");
+			species4.setValue("S - Spruce");
 			species4Percent.getValueFactory().setValue(10);
 	
 			// Clear the selection and reset percentages for other species (species 5 to
@@ -290,8 +293,6 @@ public class NewTableSceneController implements Initializable {
 			ecoZone.setValue("Select species");
 			ageType.setValue("Total");
 			
-			//private Spinner<Integer> standAge; 60
-			//private Spinner<Integer> bha50SiteIndex;
 			SpinnerValueFactory<Double> standAgeValueFactory =
 					new SpinnerValueFactory.DoubleSpinnerValueFactory(0.00, 500.00, 60.00, 10); //min, max, default, increment
 			//Currently the default when WinVDYP is opened is 60
