@@ -25,8 +25,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 
 public class NewTableSceneController implements Initializable {
-
-	
 	// Set up species choice boxes
 	@FXML
 	private ChoiceBox<String> species1;
@@ -213,6 +211,8 @@ public class NewTableSceneController implements Initializable {
 				setDefaults();
 		} else if (sceneNumber == 3) {
 				setDefaults();
+		} else if (sceneNumber == 4) {
+				setDefaults();
 		}
 	}
 
@@ -338,6 +338,41 @@ public class NewTableSceneController implements Initializable {
 
 			SpinnerValueFactory<String> basalAreaValueFactory = new SpinnerValueFactory.ListSpinnerValueFactory<>(stringValues);
 			basalArea.setValueFactory(basalAreaValueFactory);
+		} else if (sceneNumber == 4) {
+			SpinnerValueFactory<Double> loreyHeightValueFactory =
+					new SpinnerValueFactory.DoubleSpinnerValueFactory(0.00, 99.90, 21.83, 1);
+			loreyHeight.setValueFactory(loreyHeightValueFactory);
+			loreyHeight.setDisable(true);
+			
+			SpinnerValueFactory<Double> basalArea12ValueFactory = 
+					new SpinnerValueFactory.DoubleSpinnerValueFactory(0.10, 250.00, 39.3337, 1);
+			basalArea12.setValueFactory(basalArea12ValueFactory);
+			basalArea12.setDisable(true);
+			
+			SpinnerValueFactory<Double> cuVolumeValueFactory = 
+					new SpinnerValueFactory.DoubleSpinnerValueFactory(0.0, 2500.00, 39.3337, 1);
+			cuVolume.setValueFactory(cuVolumeValueFactory);
+			cuVolume.setDisable(true);
+			
+			SpinnerValueFactory<Double> cuNetDecayWasteVolumeValueFactory = 
+					new SpinnerValueFactory.DoubleSpinnerValueFactory(0.0, 2500.00, 245.5, 1);
+			cuNetDecayWasteVolume.setValueFactory(cuNetDecayWasteVolumeValueFactory);
+			cuNetDecayWasteVolume.setDisable(true);
+			
+			SpinnerValueFactory<Double> wholeStemVolume7ValueFactory = 
+					new SpinnerValueFactory.DoubleSpinnerValueFactory(0.0, 2500.00, 332.4, 1);
+			wholeStemVolume7.setValueFactory(wholeStemVolume7ValueFactory);
+			wholeStemVolume7.setDisable(true);
+			
+			SpinnerValueFactory<Double> wholeStemVolume12ValueFactory = 
+					new SpinnerValueFactory.DoubleSpinnerValueFactory(0.0, 2500.00, 332.4, 1);
+			wholeStemVolume12.setValueFactory(wholeStemVolume12ValueFactory);
+			wholeStemVolume12.setDisable(true);
+			
+			SpinnerValueFactory<Double> cuNetDecayVolumeValueFactory = 
+					new SpinnerValueFactory.DoubleSpinnerValueFactory(0.0, 2500.00, 245.5, 1);
+			cuNetDecayVolume.setValueFactory(cuNetDecayVolumeValueFactory);
+			cuNetDecayVolume.setDisable(true);
 		}
 	}
 
@@ -559,11 +594,66 @@ public class NewTableSceneController implements Initializable {
 	 */
 	public void switchToScene4(ActionEvent event) throws IOException {
 		sceneNumber = 4;
-		FXMLLoader loader = new FXMLLoader(getClass().getResource("../view/StandDensityTableScene.fxml"));
+		FXMLLoader loader = new FXMLLoader(getClass().getResource("../view/AdditionalStandAttributesTableScene.fxml"));
 		root = loader.load();
 		stage = (Stage)((Node)event.getSource()).getScene().getWindow();
 		scene = new Scene(root);
 		stage.setScene(scene);
 		stage.show();
 	}
+	
+	//SCENE #4
+	@FXML
+	Spinner<Double> loreyHeight;
+	@FXML
+	Spinner<Double> basalArea12;
+	@FXML
+	Spinner<Double> cuVolume; // cu = Close Utilization
+	@FXML
+	Spinner<Double> cuNetDecayWasteVolume;
+	@FXML
+	Spinner<Double> wholeStemVolume7;
+	@FXML
+	Spinner<Double> wholeStemVolume12;
+	@FXML
+	Spinner<Double> cuNetDecayVolume;
+
+	public void useComputedValues(ActionEvent event) {
+		loreyHeight.setDisable(true);
+		basalArea12.setDisable(true);
+		cuVolume.setDisable(true);
+		cuNetDecayWasteVolume.setDisable(true);
+		wholeStemVolume7.setDisable(true);
+		wholeStemVolume12.setDisable(true);
+		cuNetDecayVolume.setDisable(true);
+	}
+	
+	public void modifyComputedValues(ActionEvent event) {
+		loreyHeight.setDisable(false);
+		basalArea12.setDisable(false);
+		cuVolume.setDisable(false);
+		cuNetDecayWasteVolume.setDisable(false);
+		wholeStemVolume7.setDisable(false);
+		wholeStemVolume12.setDisable(false);
+		cuNetDecayVolume.setDisable(false);
+	}
+	
+	//TODO implement overflow exceptions when model is "run"
+	
+	/**
+	 * Switches the application to Scene 5 - ReportInformationTableScene.
+	 *
+	 * @param event The ActionEvent triggering the scene switch.
+	 * @throws IOException If an I/O error occurs during scene loading.
+	 */
+	public void switchToScene5(ActionEvent event) throws IOException {
+		sceneNumber = 5;
+		FXMLLoader loader = new FXMLLoader(getClass().getResource("../view/ReportInformationTableScene.fxml"));
+		root = loader.load();
+		stage = (Stage)((Node)event.getSource()).getScene().getWindow();
+		scene = new Scene(root);
+		stage.setScene(scene);
+		stage.show();
+	}
+	
 }
