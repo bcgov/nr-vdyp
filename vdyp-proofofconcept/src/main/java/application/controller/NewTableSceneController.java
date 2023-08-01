@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -209,7 +211,8 @@ public class NewTableSceneController implements Initializable {
 			}
 		} else if (sceneNumber == 2) {
 				setDefaults();
-			
+		} else if (sceneNumber == 3) {
+				setDefaults();
 		}
 	}
 
@@ -275,6 +278,17 @@ public class NewTableSceneController implements Initializable {
 			// Update the total label after setting the default values
 			updateTotalLabel();
 		} else if (sceneNumber == 2) {
+			// Arrays containing the options for different Bec & Eco Zones
+			final String[] becZones = {"AT - Alpine Tundra", "BG - Bunch Grass", "BWBS - Boreal White and Black Spruce", "CDF - Coastal Douglas Fir", 
+												"CWH - Coastal Western Hemlock", "ESSF - Engelmann Spruce", "ICH - Interior Cedar Hemlock", "IDF - Interior Douglas Fir",
+												"MH - Mountain Hemlock", "MS - Montane Spruce", "pp = Ponderosa Pine", "SBPS - Sub-Boreal Pine-Spruce",
+												"SBS - Sub-Boreal Spruce", "SWB - Spruce-Willow-Birch"
+												};
+			final String[] ecoZones = {"Boreal Cordillera", "Boreal Plains", "Montane Cordillera", "Pacific Maritime", "Taiga Plains"};
+			
+			// An array containing the options for AgeType
+			final String[] ageTypes = {"Total", "Breast"};
+			
 			// Add choice box options and set defaults
 			becZone.getItems().addAll(becZones); // these are defined below in the scene#2 section
 			ecoZone.getItems().addAll(ecoZones);
@@ -290,13 +304,40 @@ public class NewTableSceneController implements Initializable {
 			standAge.setValueFactory(standAgeValueFactory);
 			
 			SpinnerValueFactory<Double> standHeightValueFactory =
-						new SpinnerValueFactory.DoubleSpinnerValueFactory(0.00, 99.9, 17.00, 1); //min, max, default, increment
+						new SpinnerValueFactory.DoubleSpinnerValueFactory(0.00, 99.9, 17.00, 1); 
 			standHeight.setValueFactory(standHeightValueFactory);
 			
 			SpinnerValueFactory<Double> bha50SiteIndexValueFactory = 
-					new SpinnerValueFactory.DoubleSpinnerValueFactory(0.00, 60.0, 16.30, 1); //min, max, default, increment
+					new SpinnerValueFactory.DoubleSpinnerValueFactory(0.00, 60.0, 16.30, 1); 
 			bha50SiteIndex.setValueFactory(bha50SiteIndexValueFactory);
 			bha50SiteIndex.setDisable(true); //Real WinVDYP uses the other two to calculate this, so it should be disable by default
+		} else if (sceneNumber == 3){
+			minimumDBHLimit.setValue("7.5 cm+");
+			minimumDBHLimit.setDisable(true); //in Balsamiq mock ups
+			
+			SpinnerValueFactory<Integer> percentStockableAreaValueFactory =
+					new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 100, 55, 1); //min, max, default, increment
+			percentStockableArea.setValueFactory(percentStockableAreaValueFactory);
+			
+			SpinnerValueFactory<Integer> percentCrownClosureValueFactory =
+					new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 100, 50, 1); 
+			percentCrownClosure.setValueFactory(percentCrownClosureValueFactory);
+
+			
+			// Create an array to hold the sequence of integers from 1 to 100 cast to strings
+			ObservableList<String> stringValues = FXCollections.observableArrayList();
+			stringValues.add("N/A"); // add this so it's the first option. ie spinner is N/A,0,1,...,100
+			int[] intValues = new int[100];
+			for (int i = 1; i <= 100; i++) {
+			    intValues[i - 1] = i;
+			    stringValues.add(Integer.toString(intValues[i - 1])); // Corrected index from i to i - 1
+			}
+			
+			SpinnerValueFactory<String> treesPerHectareValueFactory = new SpinnerValueFactory.ListSpinnerValueFactory<>(stringValues);
+			treesPerHectare.setValueFactory(treesPerHectareValueFactory);
+
+			SpinnerValueFactory<String> basalAreaValueFactory = new SpinnerValueFactory.ListSpinnerValueFactory<>(stringValues);
+			basalArea.setValueFactory(basalAreaValueFactory);
 		}
 	}
 
@@ -413,26 +454,13 @@ public class NewTableSceneController implements Initializable {
 	}
 	
 // Below until switchToScene3 this is relevant to scene#2 from SiteInformationTableScene 
-	//Choice boxes for scene #2
+	//Choice boxes and spinners for scene #2
 	@FXML
 	private ChoiceBox<String> ecoZone;
 	@FXML
 	private ChoiceBox<String> becZone;
 	@FXML
 	private ChoiceBox<String> ageType;
-	
-	// Arrays containing the options for different Bec & Eco Zones
-	private final String[] becZones = {"AT - Alpine Tundra", "BG - Bunch Grass", "BWBS - Boreal White and Black Spruce", "CDF - Coastal Douglas Fir", 
-										"CWH - Coastal Western Hemlock", "ESSF - Engelmann Spruce", "ICH - Interior Cedar Hemlock", "IDF - Interior Douglas Fir",
-										"MH - Mountain Hemlock", "MS - Montane Spruce", "pp = Ponderosa Pine", "SBPS - Sub-Boreal Pine-Spruce",
-										"SBS - Sub-Boreal Spruce", "SWB - Spruce-Willow-Birch"
-										};
-	private final String[] ecoZones = {"Boreal Cordillera", "Boreal Plains", "Montane Cordillera", "Pacific Maritime", "Taiga Plains"};
-	
-	// An array containing the options for AgeType
-	private final String[] ageTypes = {"Total", "Breast"};
-		
-	// Spinners for scene #2
 	@FXML
 	private Spinner<Double> standAge;
 	@FXML
@@ -495,14 +523,14 @@ public class NewTableSceneController implements Initializable {
 	}
 	
 	/**
-	 * Switches the application to Scene 1 - NewTableScene.
+	 * Switches the application to Scene 3 - StandDensityTableScene.
 	 *
 	 * @param event The ActionEvent triggering the scene switch.
 	 * @throws IOException If an I/O error occurs during scene loading.
 	 */
 	public void switchToScene3(ActionEvent event) throws IOException {
 		sceneNumber = 3;
-		FXMLLoader loader = new FXMLLoader(getClass().getResource("../view/NewTableScene.fxml"));
+		FXMLLoader loader = new FXMLLoader(getClass().getResource("../view/StandDensityTableScene.fxml"));
 		root = loader.load();
 		stage = (Stage)((Node)event.getSource()).getScene().getWindow();
 		scene = new Scene(root);
@@ -510,5 +538,32 @@ public class NewTableSceneController implements Initializable {
 		stage.show();
 	}
 
+	// Below until switchToScene4 this is relevant to scene#3 from StandDensityTableScene
+	//Spinners and choice boxes for scene 3
+	@FXML
+	private Spinner<Integer> percentStockableArea;
+	@FXML
+	private Spinner<String> treesPerHectare;
+	@FXML
+	private Spinner<Integer> percentCrownClosure;
+	@FXML
+	private Spinner<String> basalArea;
+	@FXML
+	private ChoiceBox<String> minimumDBHLimit;
 	
+	/**
+	 * Switches the application to Scene 4 - NewTableScene.
+	 *
+	 * @param event The ActionEvent triggering the scene switch.
+	 * @throws IOException If an I/O error occurs during scene loading.
+	 */
+	public void switchToScene4(ActionEvent event) throws IOException {
+		sceneNumber = 4;
+		FXMLLoader loader = new FXMLLoader(getClass().getResource("../view/StandDensityTableScene.fxml"));
+		root = loader.load();
+		stage = (Stage)((Node)event.getSource()).getScene().getWindow();
+		scene = new Scene(root);
+		stage.setScene(scene);
+		stage.show();
+	}
 }
