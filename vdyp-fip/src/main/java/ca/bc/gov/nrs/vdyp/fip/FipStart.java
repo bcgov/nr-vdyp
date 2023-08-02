@@ -28,6 +28,7 @@ import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.BecDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.BreakageEquationGroupParser;
+import ca.bc.gov.nrs.vdyp.io.parse.CloseUtilVolumeParser;
 import ca.bc.gov.nrs.vdyp.io.parse.DecayEquationGroupParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.StreamingParser;
@@ -287,7 +288,8 @@ public class FipStart {
 		 */
 
 		for (var vSpec : vdypSpecies.values()) {
-			vSpec.getBaseAreaByUtilization().setCoe(4, baseAreaByUtilization.getCoe(4) * vSpec.getPercentGenus() / 100f);
+			vSpec.getBaseAreaByUtilization()
+					.setCoe(4, baseAreaByUtilization.getCoe(4) * vSpec.getPercentGenus() / 100f);
 		}
 
 		var vetDqMap = Utils.<MatrixMap2<String, Region, Coefficients>>expectParsedControl(
@@ -366,15 +368,15 @@ public class FipStart {
 
 			// EMP091
 			estimateWholeStemVolume(
-					utilizationClass, volumeAdjustCoe.getCoe(1), vdypSpecies.getVolumeGroup(), hlSp, quadMeanDiameterUtil,
-					baseAreaUtil, wholeStemVolumeUtil
+					utilizationClass, volumeAdjustCoe.getCoe(1), vdypSpecies.getVolumeGroup(), hlSp,
+					quadMeanDiameterUtil, baseAreaUtil, wholeStemVolumeUtil
 			);
 
 			adjust.setCoe(4, volumeAdjustCoe.getCoe(2));
 			// EMP092
 			estimateCloseUtilizationVolume(
-					utilizationClass, adjust, vdypSpecies.getVolumeGroup(), hlSp, quadMeanDiameterUtil, wholeStemVolumeUtil,
-					closeUtilizationVolumeUtil
+					utilizationClass, adjust, vdypSpecies.getVolumeGroup(), hlSp, quadMeanDiameterUtil,
+					wholeStemVolumeUtil, closeUtilizationVolumeUtil
 			);
 
 			adjust.setCoe(4, volumeAdjustCoe.getCoe(3));
@@ -408,13 +410,15 @@ public class FipStart {
 			if (utilizationClass != 0 && utilizationClass != i) {
 				continue;
 			}
-			Coefficients wsCoe = wholeStemUtilizationComponentMap.get(i, volumeGroup).orElseThrow(
-					() -> new ProcessingException("Could not find whole stem utilization coefficients for group " + volumeGroup)
+			Coefficients wholeStemCoe = wholeStemUtilizationComponentMap.get(i, volumeGroup).orElseThrow(
+					() -> new ProcessingException(
+							"Could not find whole stem utilization coefficients for group " + volumeGroup
+					)
 			);
-			var a0 = wsCoe.getCoe(1);
-			var a1 = wsCoe.getCoe(2);
-			var a2 = wsCoe.getCoe(3);
-			var a3 = wsCoe.getCoe(4);
+			var a0 = wholeStemCoe.getCoe(1);
+			var a1 = wholeStemCoe.getCoe(2);
+			var a2 = wholeStemCoe.getCoe(3);
+			var a3 = wholeStemCoe.getCoe(4);
 
 			var arg = a0 + a1 * (float) Math.log(hlSp) + a2 * (float) Math.log(quadMeanDiameterUtil.getCoe(i))
 					+ ( (i < 3) ? a3 * (float) Math.log(dqSp) : a3 * dqSp);
@@ -436,7 +440,7 @@ public class FipStart {
 				throw new ProcessingException("Total volume " + totalVolume + " was not positive.");
 			}
 			final var k = wholeStemVolumeUtil.getCoe(0);
-			IntStream.of(1, 2, 3, 4).forEach(i -> wholeStemVolumeUtil.setCoe(i, k * wholeStemVolumeUtil.getCoe(i)));
+			UTIL_CLASS_INDICES.forEach(i -> wholeStemVolumeUtil.setCoe(i, k * wholeStemVolumeUtil.getCoe(i)));
 		}
 
 	}
@@ -444,12 +448,44 @@ public class FipStart {
 	// EMP092
 	/**
 	 * Updates closeUtilizationVolumeUtil with estimated values.
+	 *
+	 * @throws ProcessingException
 	 */
-	private void estimateCloseUtilizationVolume(
-			int utilizationClass, Coefficients aAdjust, int volumeGroup, Float hlSp, Coefficients quadMeanDiameterUtil,
+	void estimateCloseUtilizationVolume(
+			int utilizationClass, Coefficients aAdjust, int volumeGroup, float hlSp, Coefficients quadMeanDiameterUtil,
 			Coefficients wholeStemVolumeUtil, Coefficients closeUtilizationVolumeUtil
-	) {
-		// TODO
+	) throws ProcessingException {
+		var dqSp = quadMeanDiameterUtil.getCoe(0);
+		final var closeUtilizationCoeMap = Utils
+				.<MatrixMap2<Integer, Integer, Optional<Coefficients>>>expectParsedControl(
+						controlMap, CloseUtilVolumeParser.CONTROL_KEY, MatrixMap2.class
+				);
+		for (var i : UTIL_CLASS_INDICES) {
+			if (utilizationClass != 0 && utilizationClass != i) {
+				continue;
+			}
+			Coefficients closeUtilCoe = closeUtilizationCoeMap.get(i, volumeGroup).orElseThrow(
+					() -> new ProcessingException(
+							"Could not find whole stem utilization coefficients for group " + volumeGroup
+					)
+			);
+			var a0 = closeUtilCoe.getCoe(1);
+			var a1 = closeUtilCoe.getCoe(2);
+			var a2 = closeUtilCoe.getCoe(3);
+
+			var arg = a0 + a1 * quadMeanDiameterUtil.getCoe(i) + a2 * hlSp + aAdjust.getCoe(i);
+
+			float ratio;
+			if (arg < -7.0f) {
+				ratio = 0.0f;
+			} else if (arg > 7.0) {
+				ratio = 1.0f;
+			} else {
+				ratio = (float) Math.exp(arg) / (float) (1.0f + Math.exp(arg));
+			}
+
+			closeUtilizationVolumeUtil.setCoe(i, wholeStemVolumeUtil.getCoe(i) * ratio);
+		}
 	}
 
 	int getGroup(FipPolygon fipPolygon, MatrixMap2<String, String, Integer> volumeGroupMap, VdypSpecies vSpec) {

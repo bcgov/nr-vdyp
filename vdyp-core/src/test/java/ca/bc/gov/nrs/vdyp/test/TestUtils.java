@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +21,7 @@ import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.BecDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.BreakageEquationGroupParser;
+import ca.bc.gov.nrs.vdyp.io.parse.CloseUtilVolumeParser;
 import ca.bc.gov.nrs.vdyp.io.parse.DecayEquationGroupParser;
 import ca.bc.gov.nrs.vdyp.io.parse.GenusDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.UtilComponentWSVolumeParser;
@@ -217,20 +219,53 @@ public class TestUtils {
 
 		var genusAliases = GenusDefinitionParser.getSpeciesAliases(controlMap);
 
-		var result = genusAliases.stream().collect(Collectors.toMap(x -> x, mapper.andThen(x -> new Coefficients(x, 1))));
+		var result = genusAliases.stream()
+				.collect(Collectors.toMap(x -> x, mapper.andThen(x -> new Coefficients(x, 1))));
 
 		controlMap.put(VeteranLayerVolumeAdjustParser.CONTROL_KEY, result);
 	}
 
-	public static void populateControlMapUtilComponentWSVolumeParser(
+	public static void populateControlMapWholeStemVolume(
 			Map<String, Object> controlMap, BiFunction<Integer, Integer, Optional<Coefficients>> mapper
 	) {
 
-		var groupIndicies = IntStream.rangeClosed(1, UtilComponentWSVolumeParser.MAX_GROUPS).mapToObj(x -> x).toList();
-		var utilClasses = IntStream.rangeClosed(-1, 4).mapToObj(x -> x).toList();
+		var groupIndicies = groupIndices(UtilComponentWSVolumeParser.MAX_GROUPS);
 
-		var result = new MatrixMap2Impl<Integer, Integer, Optional<Coefficients>>(utilClasses, groupIndicies, mapper);
-
-		controlMap.put(UtilComponentWSVolumeParser.CONTROL_KEY, result);
+		populateControlMap2(controlMap, UtilComponentWSVolumeParser.CONTROL_KEY, UTIL_CLASSES, groupIndicies, mapper);
 	}
+
+	public static void populateControlMapCloseUtilization(
+			Map<String, Object> controlMap, BiFunction<Integer, Integer, Optional<Coefficients>> mapper
+	) {
+
+		var groupIndicies = groupIndices(CloseUtilVolumeParser.MAX_GROUPS);
+
+		populateControlMap2(controlMap, CloseUtilVolumeParser.CONTROL_KEY, UTIL_CLASSES, groupIndicies, mapper);
+	}
+
+	public static <K1, K2, V> void populateControlMap2(
+			Map<String, Object> controlMap, String key, Collection<K1> keys1, Collection<K2> keys2,
+			BiFunction<K1, K2, V> mapper
+	) {
+
+		var result = new MatrixMap2Impl<>(keys1, keys2, mapper);
+
+		controlMap.put(key, result);
+	}
+
+	public static <K, V> void populateControlMap1(
+			Map<String, Object> controlMap, String key, Collection<K> keys1, Function<K, V> mapper
+	) {
+
+		var result = keys1.stream().collect(Collectors.toMap(k -> k, mapper));
+
+		controlMap.put(key, result);
+	}
+
+	static final Collection<Integer> UTIL_CLASSES = IntStream.rangeClosed(-1, 4).mapToObj(x -> x).toList();
+
+	static Collection<Integer> groupIndices(int max) {
+		return IntStream.rangeClosed(1, max).mapToObj(x -> x).toList();
+	}
+
 }

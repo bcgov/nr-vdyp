@@ -23,6 +23,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -593,11 +594,11 @@ class FipStartTest {
 		TestUtils.populateControlMapReal(controlMap);
 		TestUtils.populateControlMapGensuReal(controlMap);
 		TestUtils.populateControlMapVeteranBq(controlMap);
-		TestUtils.populateControlMapEquationGroups(controlMap, (s, b) -> new int[] { 0, 0, 0 });
+		TestUtils.populateControlMapEquationGroups(controlMap, (s, b) -> new int[] { 1, 1, 1 });
 		TestUtils.populateControlMapVeteranDq(controlMap, (s, r) -> new float[] { 0f, 0f, 0f });
-		TestUtils.populateControlMapVeteranVolAdjust(controlMap, s-> new float[] {0f, 0f, 0f, 0f});
-		TestUtils.populateControlMapUtilComponentWSVolumeParser(controlMap, (u,g)->Optional.empty());
-		
+		TestUtils.populateControlMapVeteranVolAdjust(controlMap, s -> new float[] { 0f, 0f, 0f, 0f });
+		TestUtils.populateControlMapWholeStemVolume(controlMap, wholeStemMap(1));
+		TestUtils.populateControlMapCloseUtilization(controlMap, closeUtilMap(1));
 		var app = new FipStart();
 		app.setControlMap(controlMap);
 
@@ -657,10 +658,11 @@ class FipStartTest {
 		TestUtils.populateControlMapReal(controlMap);
 		TestUtils.populateControlMapGensuReal(controlMap);
 		TestUtils.populateControlMapVeteranBq(controlMap);
-		TestUtils.populateControlMapEquationGroups(controlMap, (s, b) -> new int[] { 0, 0, 0 });
+		TestUtils.populateControlMapEquationGroups(controlMap, (s, b) -> new int[] { 1, 1, 1 });
 		TestUtils.populateControlMapVeteranDq(controlMap, (s, r) -> new float[] { 0f, 0f, 0f });
-		TestUtils.populateControlMapVeteranVolAdjust(controlMap, s-> new float[] {0f, 0f, 0f, 0f});
-		TestUtils.populateControlMapUtilComponentWSVolumeParser(controlMap, (u,g)->Optional.empty());
+		TestUtils.populateControlMapVeteranVolAdjust(controlMap, s -> new float[] { 0f, 0f, 0f, 0f });
+		TestUtils.populateControlMapWholeStemVolume(controlMap, (wholeStemMap(1)));
+		TestUtils.populateControlMapCloseUtilization(controlMap, closeUtilMap(1));
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -697,10 +699,11 @@ class FipStartTest {
 		TestUtils.populateControlMapReal(controlMap);
 		TestUtils.populateControlMapGensuReal(controlMap);
 		TestUtils.populateControlMapVeteranBq(controlMap);
-		TestUtils.populateControlMapEquationGroups(controlMap, (s, b) -> new int[] { 0, 0, 0 });
+		TestUtils.populateControlMapEquationGroups(controlMap, (s, b) -> new int[] { 1, 1, 1 });
 		TestUtils.populateControlMapVeteranDq(controlMap, (s, r) -> new float[] { 0f, 0f, 0f });
-		TestUtils.populateControlMapVeteranVolAdjust(controlMap, s-> new float[] {0f, 0f, 0f, 0f});
-		TestUtils.populateControlMapUtilComponentWSVolumeParser(controlMap, (u,g)->Optional.empty());
+		TestUtils.populateControlMapVeteranVolAdjust(controlMap, s -> new float[] { 0f, 0f, 0f, 0f });
+		TestUtils.populateControlMapWholeStemVolume(controlMap, (wholeStemMap(1)));
+		TestUtils.populateControlMapCloseUtilization(controlMap, closeUtilMap(1));
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -758,10 +761,11 @@ class FipStartTest {
 		TestUtils.populateControlMapReal(controlMap);
 		TestUtils.populateControlMapGensuReal(controlMap);
 		TestUtils.populateControlMapVeteranBq(controlMap);
-		TestUtils.populateControlMapEquationGroups(controlMap, (s, b) -> new int[] { 0, 0, 0 });
+		TestUtils.populateControlMapEquationGroups(controlMap, (s, b) -> new int[] { 1, 1, 1 });
 		TestUtils.populateControlMapVeteranDq(controlMap, (s, r) -> new float[] { 0f, 0f, 0f });
-		TestUtils.populateControlMapVeteranVolAdjust(controlMap, s-> new float[] {0f, 0f, 0f, 0f});
-		TestUtils.populateControlMapUtilComponentWSVolumeParser(controlMap, (u,g)->Optional.empty());
+		TestUtils.populateControlMapVeteranVolAdjust(controlMap, s -> new float[] { 0f, 0f, 0f, 0f });
+		TestUtils.populateControlMapWholeStemVolume(controlMap, (wholeStemMap(1)));
+		TestUtils.populateControlMapCloseUtilization(controlMap, closeUtilMap(1));
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -814,10 +818,11 @@ class FipStartTest {
 		TestUtils.populateControlMapReal(controlMap);
 		TestUtils.populateControlMapGensuReal(controlMap);
 		TestUtils.populateControlMapVeteranBq(controlMap);
-		TestUtils.populateControlMapEquationGroups(controlMap, (s, b) -> new int[] { 0, 0, 0 });
+		TestUtils.populateControlMapEquationGroups(controlMap, (s, b) -> new int[] { 1, 1, 1 });
 		TestUtils.populateControlMapVeteranDq(controlMap, (s, r) -> new float[] { 0f, 0f, 0f });
-		TestUtils.populateControlMapVeteranVolAdjust(controlMap, s-> new float[] {0f, 0f, 0f, 0f});
-		TestUtils.populateControlMapUtilComponentWSVolumeParser(controlMap, (u,g)->Optional.empty());
+		TestUtils.populateControlMapVeteranVolAdjust(controlMap, s -> new float[] { 0f, 0f, 0f, 0f });
+		TestUtils.populateControlMapWholeStemVolume(controlMap, (wholeStemMap(1)));
+		TestUtils.populateControlMapCloseUtilization(controlMap, closeUtilMap(1));
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -871,18 +876,12 @@ class FipStartTest {
 		var controlMap = new HashMap<String, Object>();
 		TestUtils.populateControlMapReal(controlMap);
 		TestUtils.populateControlMapGensuReal(controlMap);
-		TestUtils.populateControlMapEquationGroups(controlMap, (s, b) -> new int[] { 0, 0, 0 });
+		TestUtils.populateControlMapEquationGroups(controlMap, (s, b) -> new int[] { 1, 1, 1 });
 		TestUtils.populateControlMapVeteranBq(controlMap);
 		TestUtils.populateControlMapVeteranDq(controlMap, (s, r) -> new float[] { 0f, 0f, 0f });
+		TestUtils.populateControlMapWholeStemVolume(controlMap, (wholeStemMap(1)));
 		populateControlMapVeteranVolumeAdjust(controlMap, s -> new float[] { 0f, 0f, 0f, 0f });
-		controlMap.put(
-				UtilComponentWSVolumeParser.CONTROL_KEY,
-				new MatrixMap2Impl<Integer, Integer, Optional<Coefficients>>(
-						Arrays.asList(1, 2, 3, 4), //
-						Arrays.asList(1, 2, 3, 4), // TODO
-						(k1, k2) -> Optional.empty()
-				)
-		);
+		TestUtils.populateControlMapCloseUtilization(controlMap, closeUtilMap(1));
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -896,7 +895,8 @@ class FipStartTest {
 		assertThat(
 				result,
 				hasProperty(
-						"baseAreaByUtilization", contains(zeroMatcher, baMatcher, zeroMatcher, zeroMatcher, zeroMatcher, baMatcher)
+						"baseAreaByUtilization",
+						contains(zeroMatcher, baMatcher, zeroMatcher, zeroMatcher, zeroMatcher, baMatcher)
 				)
 		);
 
@@ -960,10 +960,11 @@ class FipStartTest {
 		TestUtils.populateControlMapReal(controlMap);
 		TestUtils.populateControlMapGensuReal(controlMap);
 		TestUtils.populateControlMapVeteranBq(controlMap);
-		TestUtils.populateControlMapEquationGroups(controlMap, (s, b) -> new int[] { 0, 0, 0 });
+		TestUtils.populateControlMapEquationGroups(controlMap, (s, b) -> new int[] { 1, 1, 1 });
 		TestUtils.populateControlMapVeteranDq(controlMap, (s, r) -> new float[] { 0f, 0f, 0f });
-		TestUtils.populateControlMapVeteranVolAdjust(controlMap, s-> new float[] {0f, 0f, 0f, 0f});
-		TestUtils.populateControlMapUtilComponentWSVolumeParser(controlMap, (u,g)->Optional.empty());
+		TestUtils.populateControlMapVeteranVolAdjust(controlMap, s -> new float[] { 0f, 0f, 0f, 0f });
+		TestUtils.populateControlMapWholeStemVolume(controlMap, (wholeStemMap(1)));
+		TestUtils.populateControlMapCloseUtilization(controlMap, closeUtilMap(1));
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -1000,8 +1001,9 @@ class FipStartTest {
 				controlMap, (s, b) -> s.equals("B") && b.equals("BG") ? new int[] { 1, 2, 3 } : new int[] { 0, 0, 0 }
 		);
 		TestUtils.populateControlMapVeteranDq(controlMap, (s, r) -> new float[] { 0f, 0f, 0f });
-		TestUtils.populateControlMapVeteranVolAdjust(controlMap, s-> new float[] {0f, 0f, 0f, 0f});
-		TestUtils.populateControlMapUtilComponentWSVolumeParser(controlMap, (u,g)->Optional.empty());
+		TestUtils.populateControlMapVeteranVolAdjust(controlMap, s -> new float[] { 0f, 0f, 0f, 0f });
+		TestUtils.populateControlMapWholeStemVolume(controlMap, (wholeStemMap(1)));
+		TestUtils.populateControlMapCloseUtilization(controlMap, closeUtilMap(1));
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -1046,7 +1048,7 @@ class FipStartTest {
 		var controlMap = new HashMap<String, Object>();
 		TestUtils.populateControlMapReal(controlMap);
 		TestUtils.populateControlMapGensuReal(controlMap);
-		TestUtils.populateControlMapEquationGroups(controlMap, (s, b) -> new int[] { 0, 0, 0 });
+		TestUtils.populateControlMapEquationGroups(controlMap, (s, b) -> new int[] { 1, 1, 1 });
 		TestUtils.populateControlMapVeteranBq(controlMap);
 		TestUtils.populateControlMapVeteranDq(controlMap, (s, r) -> {
 			if (s.equals("B") && r == Region.INTERIOR)
@@ -1055,8 +1057,9 @@ class FipStartTest {
 				return new float[] { 22.500f, 0.00157f, 2.96382f };
 			return new float[] { 0f, 0f, 0f };
 		});
-		TestUtils.populateControlMapVeteranVolAdjust(controlMap, s-> new float[] {0f, 0f, 0f, 0f});
-		TestUtils.populateControlMapUtilComponentWSVolumeParser(controlMap, (u,g)->Optional.empty());
+		TestUtils.populateControlMapVeteranVolAdjust(controlMap, s -> new float[] { 0f, 0f, 0f, 0f });
+		TestUtils.populateControlMapWholeStemVolume(controlMap, (wholeStemMap(1)));
+		TestUtils.populateControlMapCloseUtilization(controlMap, closeUtilMap(1));
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -1101,7 +1104,56 @@ class FipStartTest {
 				)
 		);
 	}
-	
+
+	static BiFunction<Integer, Integer, Optional<Coefficients>> wholeStemMap(int group) {
+		return (u, g) -> {
+			if (g == group) {
+				switch (u) {
+				case 1:
+					return Optional.of(
+							new Coefficients(new float[] { -1.20775998f, 0.670000017f, 1.43023002f, -0.886789978f }, 1)
+					);
+				case 2:
+					return Optional.of(
+							new Coefficients(new float[] { -1.58211005f, 0.677200019f, 1.36449003f, -0.781769991f }, 1)
+					);
+				case 3:
+					return Optional.of(
+							new Coefficients(new float[] { -1.61995006f, 0.651030004f, 1.17782998f, -0.607379973f }, 1)
+					);
+				case 4:
+					return Optional
+							.of(
+									new Coefficients(
+											new float[] { -0.172529995f, 0.932619989f, -0.0697899982f,
+													-0.00362000009f },
+											1
+									)
+							);
+				}
+			}
+			return Optional.empty();
+		};
+	}
+
+	static BiFunction<Integer, Integer, Optional<Coefficients>> closeUtilMap(int group) {
+		return (u, g) -> {
+			if (g == group) {
+				switch (u) {
+				case 1:
+					return Optional.of(new Coefficients(new float[] { -10.6339998f, 0.835500002f, 0f }, 1));
+				case 2:
+					return Optional.of(new Coefficients(new float[] { -4.44999981f, 0.373400003f, 0f }, 1));
+				case 3:
+					return Optional.of(new Coefficients(new float[] { -0.796000004f, 0.141299993f, 0.0033499999f }, 1));
+				case 4:
+					return Optional.of(new Coefficients(new float[] { 2.35400009f, 0.00419999985f, 0.0247699991f }, 1));
+				}
+			}
+			return Optional.empty();
+		};
+	}
+
 	@Test
 	void testEstimateVeteranWholeStemVolume() throws Exception {
 		var polygonId = polygonId("Test Polygon", 2023);
@@ -1113,28 +1165,8 @@ class FipStartTest {
 		fipLayer.setSpecies(Collections.singletonMap(fipSpecies.getGenus(), fipSpecies));
 
 		var controlMap = new HashMap<String, Object>();
-		TestUtils.populateControlMapReal(controlMap);
-		TestUtils.populateControlMapGensuReal(controlMap);
-		TestUtils.populateControlMapVeteranBq(controlMap);
-		TestUtils.populateControlMapEquationGroups(controlMap, (s, b) -> new int[] { 0, 0, 0 });
-		TestUtils.populateControlMapVeteranDq(controlMap, (s, r) -> new float[] { 0f, 0f, 0f });
-		TestUtils.populateControlMapVeteranVolAdjust(controlMap, s-> new float[] {0f, 0f, 0f, 0f});
-		TestUtils.populateControlMapUtilComponentWSVolumeParser(controlMap, (u,g)->{
-			if(g==12) {
-				switch (u) {
-				case 1:
-					return Optional.of(new Coefficients(new float[] {-1.20775998f, 0.670000017f, 1.43023002f, -0.886789978f}, 1));
-				case 2:
-					return Optional.of(new Coefficients(new float[] {-1.58211005f, 0.677200019f, 1.36449003f, -0.781769991f}, 1));
-				case 3:
-					return Optional.of(new Coefficients(new float[] {-1.61995006f, 0.651030004f, 1.17782998f, -0.607379973f}, 1));
-				case 4:
-					return Optional.of(new Coefficients(new float[] {-0.172529995f, 0.932619989f, -0.0697899982f, -0.00362000009f}, 1));
-				}
-			}
-			return Optional.empty();
-		});
-		
+		TestUtils.populateControlMapWholeStemVolume(controlMap, wholeStemMap(12));
+
 		var app = new FipStart();
 		app.setControlMap(controlMap);
 
@@ -1142,18 +1174,56 @@ class FipStartTest {
 		var aAdjust = 0.10881f;
 		var volumeGroup = 12;
 		var lorieHeight = 26.2000008f;
-		var quadMeanDiameterUtil = new Coefficients(new float[] {51.8356705f, 0f, 0f, 0f, 51.8356705f}, 0);
-		var baseAreaUtil = new Coefficients(new float[] {0.492921442f, 0f, 0f, 0f, 0.492921442f}, 0);
-		var wholeStemVolumeUtil = new Coefficients(new float[] {0f, 0f, 0f, 0f, 0f}, 0);
-		
-		app.estimateWholeStemVolume(utilizationClass, aAdjust, volumeGroup, lorieHeight, quadMeanDiameterUtil, baseAreaUtil, wholeStemVolumeUtil);
-		
-		assertThat(wholeStemVolumeUtil, coe(0, contains(0f, 0f, 0f, 0f, 6.11904192f)));
-		
+		var quadMeanDiameterUtil = new Coefficients(new float[] { 51.8356705f, 0f, 0f, 0f, 51.8356705f }, 0);
+		var baseAreaUtil = new Coefficients(new float[] { 0.492921442f, 0f, 0f, 0f, 0.492921442f }, 0);
+		var wholeStemVolumeUtil = new Coefficients(new float[] { 0f, 0f, 0f, 0f, 0f }, 0);
+
+		app.estimateWholeStemVolume(
+				utilizationClass, aAdjust, volumeGroup, lorieHeight, quadMeanDiameterUtil, baseAreaUtil,
+				wholeStemVolumeUtil
+		);
+
+		assertThat(wholeStemVolumeUtil, coe(0, contains(is(0f), is(0f), is(0f), is(0f), closeTo(6.11904192f))));
+
 	}
-	
+
+	@Test
+	void testEstimateVeteranCloseUtilization() throws Exception {
+		var polygonId = polygonId("Test Polygon", 2023);
+
+		var fipPolygon = getTestPolygon(polygonId, valid());
+		var fipLayer = getTestVeteranLayer(polygonId, valid());
+		var fipSpecies = getTestSpecies(polygonId, Layer.VETERAN, valid());
+		fipPolygon.setLayers(Collections.singletonMap(Layer.VETERAN, fipLayer));
+		fipLayer.setSpecies(Collections.singletonMap(fipSpecies.getGenus(), fipSpecies));
+
+		var controlMap = new HashMap<String, Object>();
+		TestUtils.populateControlMapCloseUtilization(controlMap, closeUtilMap(12));
+
+		var app = new FipStart();
+		app.setControlMap(controlMap);
+
+		var utilizationClass = 4;
+		var aAdjust = new Coefficients(new float[] { 0f, 0f, 0f, -0.0981800035f }, 1);
+		var volumeGroup = 12;
+		var lorieHeight = 26.2000008f;
+		var quadMeanDiameterUtil = new Coefficients(new float[] { 51.8356705f, 0f, 0f, 0f, 51.8356705f }, 0);
+		var wholeStemVolumeUtil = new Coefficients(new float[] { 0f, 0f, 0f, 0f, 6.11904192f }, 0);
+
+		var closeUtilizationUtil = new Coefficients(new float[] { 0f, 0f, 0f, 0f, 0f }, 0);
+
+		app.estimateCloseUtilizationVolume(
+				utilizationClass, aAdjust, volumeGroup, lorieHeight, quadMeanDiameterUtil, wholeStemVolumeUtil,
+				closeUtilizationUtil
+		);
+
+		assertThat(closeUtilizationUtil, coe(0, contains(is(0f), is(0f), is(0f), is(0f), closeTo(5.86088896f))));
+
+	}
+
 	private static <T> MockStreamingParser<T>
-			mockStream(IMocksControl control, Map<String, Object> controlMap, String key, String name) throws IOException {
+			mockStream(IMocksControl control, Map<String, Object> controlMap, String key, String name)
+					throws IOException {
 		StreamingParserFactory<T> streamFactory = control.mock(name + "Factory", StreamingParserFactory.class);
 		MockStreamingParser<T> stream = new MockStreamingParser<>();
 
