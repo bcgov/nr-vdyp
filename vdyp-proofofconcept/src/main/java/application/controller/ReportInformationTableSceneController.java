@@ -12,8 +12,9 @@ public class ReportInformationTableSceneController implements Initializable {
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		// TODO Auto-generated method stub
-		
+
 	}
+
 	/**
 	 * Switches the application to Scene 4 - StandDensityTableScene.
 	 *
@@ -24,8 +25,8 @@ public class ReportInformationTableSceneController implements Initializable {
 		StandDensityTableSceneController standDensityTableSceneController = new StandDensityTableSceneController();
 		standDensityTableSceneController.switchToScene4(event);
 	}
-	
-	//Bottom Menu Bar functionality 	
+
+	// Bottom Menu Bar functionality
 	/**
 	 * Handles the cancel button action event. This method is triggered when the
 	 * cancel button is clicked in the new table window. It closes this new table
@@ -49,12 +50,12 @@ public class ReportInformationTableSceneController implements Initializable {
 	}
 
 	/**
-	 * Handles the run button action event. 
-	 * 
-	 * This method is triggered when the run model button is clicked in the 
-	 * table window. It checks if the total percentage from all the spinners 
-	 * is equal to 100%. If the total percentage is not 100%, an error popup
-	 *  is displayed to notify the user.
+	 * Handles the run button action event.
+	 *
+	 * This method is triggered when the run model button is clicked in the table
+	 * window. It checks if the total percentage from all the spinners is equal to
+	 * 100%. If the total percentage is not 100%, an error popup is displayed to
+	 * notify the user.
 	 *
 	 * @param event The ActionEvent triggered by the run button click.
 	 */

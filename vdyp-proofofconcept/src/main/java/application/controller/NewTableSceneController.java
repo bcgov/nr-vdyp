@@ -39,10 +39,10 @@ public class NewTableSceneController implements Initializable {
 
 	// List of speciesChoiceBoxes
 	private List<ChoiceBox<String>> speciesChoiceBoxes = new ArrayList<>();
-	
+
 	// Define a constant for the default selection of tree species
 	private static final String DEFAULT_SPECIES_SELECTION = "Select species";
-	
+
 	// Labels for display based on choice boxes
 	@FXML
 	private Label species1Group;
@@ -111,69 +111,74 @@ public class NewTableSceneController implements Initializable {
 	private Label[] speciesGroupPercentLabels = new Label[6];
 	@FXML
 	private Label totalPercentLabel;
-	
+
 	// Needed to switch to the next scene
-	public static Stage stage; //TODO TEMPORARY find better method for switching scenes or implement getter methods
+	public static Stage stage; // TODO TEMPORARY find better method for switching scenes or implement getter
+								// methods
 	public static Scene scene;
 	public static Parent root;
 	private static int sceneNumber = 1;
 
 	/**
-	 * Initializes the window by setting up the species choice boxes, spinners, and listeners.
+	 * Initializes the window by setting up the species choice boxes, spinners, and
+	 * listeners.
 	 *
-	 * @param arg0     The URL of the FXML file.
-	 * @param arg1     The ResourceBundle containing locale-specific resources.
+	 * @param arg0 The URL of the FXML file.
+	 * @param arg1 The ResourceBundle containing locale-specific resources.
 	 */
 	@Override
 	public void initialize(URL arg0, ResourceBundle arg1) {
-			setUpSpecies();
-	
-			// An array containing the names of different tree species
-			final String[] treeSpecies = { "AC - Popular", "AT - Aspen", "B - True Fir", "BA - Amabilis Fir",
-					"BG - Grand Fir", "BL - Alpine Fir", "CW - Western Red Cedar", "DR - Red Alder", "E - Birch",
-					"EA - Alaska Paper Birch", "EP - Common Paper Birch", "FD - Douglas Fir", "H - Hemlock",
-					"HM - Mountain Hemlock", "HW - Western Hemlock", "L - Larch", "LA - Alpine Larch", "LT - Tamarack",
-					"LW - Western Larch", "MB - Bigleaf Maple", "PA - Whitebark Pine", "PF - Limber Pine", "PJ - Jack Pine",
-					"PL - Lodgepole Pine", "PY - Western White Pine", "PY - Ponderosa (Yellow) Pine", "S - Spruce",
-					"SB - Black Spruce", "SE - Engelmann Spruce", "SS - Sitka Spruce", "SW - White Spruce",
-					"YC - Yellow Cedar" };
-			
-			
-			// Add "Select species" as the item for each ChoiceBox and set items
-			for (ChoiceBox<String> choiceBox : speciesChoiceBoxes) {
-				choiceBox.getItems().addAll(treeSpecies);
-			}
-			// Set Default values
-			setDefaults(); 
-			
-			// Set up listeners for each choice box
-			for (int i = 0; i < speciesChoiceBoxes.size(); i++) {
-				final int index = i;
-	
-				speciesChoiceBoxes.get(i).getSelectionModel().selectedItemProperty().addListener((ObservableValue<? extends String> args0, String args1, String arg2) -> {
-				    // Get the selected item from the choice box at the current index
-				    String currentSpecies = speciesChoiceBoxes.get(index).getSelectionModel().getSelectedItem().substring(0, 2);
-				    
-				    // Update the labels to display the selected item
-				    speciesGroups[index].setText(currentSpecies);
-				    speciesSites[index].setText(currentSpecies);
-				});
-			}
-	
-			// Set up listeners for each spinner
-			for (int i = 0; i < speciesPercentSpinners.size(); i++) {
-				int index = i;
-	
-				speciesPercentSpinners.get(i).valueProperty().addListener((ObservableValue<? extends Integer> args0, Integer args1, Integer arg2) -> {
+		setUpSpecies();
+
+		// An array containing the names of different tree species
+		final String[] treeSpecies = { "AC - Popular", "AT - Aspen", "B - True Fir", "BA - Amabilis Fir",
+				"BG - Grand Fir", "BL - Alpine Fir", "CW - Western Red Cedar", "DR - Red Alder", "E - Birch",
+				"EA - Alaska Paper Birch", "EP - Common Paper Birch", "FD - Douglas Fir", "H - Hemlock",
+				"HM - Mountain Hemlock", "HW - Western Hemlock", "L - Larch", "LA - Alpine Larch", "LT - Tamarack",
+				"LW - Western Larch", "MB - Bigleaf Maple", "PA - Whitebark Pine", "PF - Limber Pine", "PJ - Jack Pine",
+				"PL - Lodgepole Pine", "PY - Western White Pine", "PY - Ponderosa (Yellow) Pine", "S - Spruce",
+				"SB - Black Spruce", "SE - Engelmann Spruce", "SS - Sitka Spruce", "SW - White Spruce",
+				"YC - Yellow Cedar" };
+
+		// Add "Select species" as the item for each ChoiceBox and set items
+		for (ChoiceBox<String> choiceBox : speciesChoiceBoxes) {
+			choiceBox.getItems().addAll(treeSpecies);
+		}
+		// Set Default values
+		setDefaults();
+
+		// Set up listeners for each choice box
+		for (int i = 0; i < speciesChoiceBoxes.size(); i++) {
+			final int index = i;
+
+			speciesChoiceBoxes.get(i).getSelectionModel().selectedItemProperty()
+					.addListener((ObservableValue<? extends String> args0, String args1, String arg2) -> {
+						// Get the selected item from the choice box at the current index
+						String currentSpecies = speciesChoiceBoxes.get(index).getSelectionModel().getSelectedItem()
+								.substring(0, 2);
+
+						// Update the labels to display the selected item
+						speciesGroups[index].setText(currentSpecies);
+						speciesSites[index].setText(currentSpecies);
+					});
+		}
+
+		// Set up listeners for each spinner
+		for (int i = 0; i < speciesPercentSpinners.size(); i++) {
+			int index = i;
+
+			speciesPercentSpinners.get(i).valueProperty()
+					.addListener((ObservableValue<? extends Integer> args0, Integer args1, Integer arg2) -> {
 						int currentValue = speciesPercentSpinners.get(index).getValue();
 						updateTotalLabel(); // Update the total label when a spinner value changes
 						speciesGroupPercentLabels[index].setText(Integer.toString(currentValue));
-				});
-			}
+					});
+		}
 	}
 
 	/**
-	 * Sets up the species choice boxes and spinners by adding them to the corresponding lists and arrays.
+	 * Sets up the species choice boxes and spinners by adding them to the
+	 * corresponding lists and arrays.
 	 */
 	private void setUpSpecies() {
 		// Add species choice boxes to the List
@@ -183,7 +188,7 @@ public class NewTableSceneController implements Initializable {
 		speciesChoiceBoxes.add(species4);
 		speciesChoiceBoxes.add(species5);
 		speciesChoiceBoxes.add(species6);
-			
+
 		// Add the labels to the arrays
 		speciesGroups[0] = species1Group;
 		speciesGroups[1] = species2Group;
@@ -191,14 +196,14 @@ public class NewTableSceneController implements Initializable {
 		speciesGroups[3] = species4Group;
 		speciesGroups[4] = species5Group;
 		speciesGroups[5] = species6Group;
-			
+
 		speciesSites[0] = species1Site;
 		speciesSites[1] = species2Site;
 		speciesSites[2] = species3Site;
 		speciesSites[3] = species4Site;
 		speciesSites[4] = species5Site;
 		speciesSites[5] = species6Site;
-		
+
 		// Add species percent spinners to the array
 		speciesPercentSpinners.add(species1Percent);
 		speciesPercentSpinners.add(species2Percent);
@@ -206,14 +211,14 @@ public class NewTableSceneController implements Initializable {
 		speciesPercentSpinners.add(species4Percent);
 		speciesPercentSpinners.add(species5Percent);
 		speciesPercentSpinners.add(species6Percent);
-			
+
 		// Add labels to array
 		speciesGroupPercentLabels[0] = species1GroupPercent;
 		speciesGroupPercentLabels[1] = species2GroupPercent;
 		speciesGroupPercentLabels[2] = species3GroupPercent;
 		speciesGroupPercentLabels[3] = species4GroupPercent;
 		speciesGroupPercentLabels[4] = species5GroupPercent;
-		speciesGroupPercentLabels[5] = species6GroupPercent;			
+		speciesGroupPercentLabels[5] = species6GroupPercent;
 	}
 
 	/**
@@ -230,60 +235,64 @@ public class NewTableSceneController implements Initializable {
 	 * Also called from Set as Default button
 	 * @formatter:on
 	 */
-	public void setDefaults() {			
-		// Set all percent values to 0, this avoids totalPercent from exceeding 100% and causing errors
+	public void setDefaults() {
+		// Set all percent values to 0, this avoids totalPercent from exceeding 100% and
+		// causing errors
 		for (Spinner<Integer> spinner : speciesPercentSpinners) {
-			SpinnerValueFactory<Integer> valueFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 100, 0, 5); //min, max, default, increment
+			SpinnerValueFactory<Integer> valueFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(
+					0, 100, 0, 5
+			); // min, max, default, increment
 			spinner.setValueFactory(valueFactory);
 		}
-		
+
 		// Set the default species and percentage for species 1-4
 		species1.setValue("PL - Lodgepole Pine");
 		species1Percent.getValueFactory().setValue(30);
-	
+
 		species2.setValue("AC - Poplar");
 		species2Percent.getValueFactory().setValue(30);
-	
+
 		species3.setValue("H - Hemlock");
 		species3Percent.getValueFactory().setValue(30);
-	
+
 		species4.setValue("S - Spruce");
 		species4Percent.getValueFactory().setValue(10);
-	
-		// Clear the selection and reset percentages for other species (species 5 to species 6)
+
+		// Clear the selection and reset percentages for other species (species 5 to
+		// species 6)
 		for (int i = 4; i < speciesChoiceBoxes.size(); i++) {
 			speciesChoiceBoxes.get(i).setValue(DEFAULT_SPECIES_SELECTION);
 			speciesPercentSpinners.get(i).getValueFactory().setValue(0);
 		}
-	
+
 		// Update the labels to display the selected item and percentage labels for
 		// species 1-6
 		species1Group.setText("PL");
 		species1Site.setText("PL");
 		species1GroupPercent.setText("30");
-	
+
 		species2Group.setText("AC");
 		species2Site.setText("AC");
 		species2GroupPercent.setText("30");
-	
+
 		species3Group.setText("H");
 		species3Site.setText("H");
 		species3GroupPercent.setText("30");
-		
+
 		species4Group.setText("S");
 		species4Site.setText("S");
 		species4GroupPercent.setText("10");
-		
+
 		species5Group.setText("");
 		species5Site.setText("");
 		species5GroupPercent.setText("");
-		
+
 		species6Group.setText("");
 		species6Site.setText("");
 		species6GroupPercent.setText("");
-	
+
 		// Update the total label after setting the default values
-		updateTotalLabel();	
+		updateTotalLabel();
 	}
 
 	/**
@@ -292,7 +301,7 @@ public class NewTableSceneController implements Initializable {
 	 *
 	 * This method iterates through a list of species percent spinners and
 	 * calculates the total sum of their values. The resulting total is displayed in
-	 * the totalPercentLabel. 
+	 * the totalPercentLabel.
 	 *
 	 */
 	private void updateTotalLabel() throws ArithmeticException {
@@ -312,7 +321,7 @@ public class NewTableSceneController implements Initializable {
 		}
 		return total;
 	}
- 	
+
 	/**
 	 * Handles the cancel button action event. This method is triggered when the
 	 * cancel button is clicked in the new table window. It closes this new table
@@ -325,12 +334,12 @@ public class NewTableSceneController implements Initializable {
 	}
 
 	/**
-	 * Handles the run button action event. 
-	 * 
-	 * This method is triggered when the run model button is clicked in the 
-	 * table window. It checks if the total percentage from all the spinners 
-	 * is equal to 100%. If the total percentage is not 100%, an error popup
-	 *  is displayed to notify the user.
+	 * Handles the run button action event.
+	 *
+	 * This method is triggered when the run model button is clicked in the table
+	 * window. It checks if the total percentage from all the spinners is equal to
+	 * 100%. If the total percentage is not 100%, an error popup is displayed to
+	 * notify the user.
 	 *
 	 * @param event The ActionEvent triggered by the run button click.
 	 */
@@ -363,29 +372,29 @@ public class NewTableSceneController implements Initializable {
 
 	/**
 	 * Switches the application to Scene 2 - SiteInformationTableScene.
-	 * 		 
+	 *
 	 * @param event The ActionEvent triggering the scene switch.
-	 *  @throws IOException If an I/O error occurs during scene loading.
+	 * @throws IOException If an I/O error occurs during scene loading.
 	 */
 	public void switchToScene2(ActionEvent event) throws IOException {
 		int total = getTotalPercent();
-				
-		if(total != 100 && sceneNumber == 1) {
+
+		if (total != 100 && sceneNumber == 1) {
 			showErrorPopup("Total percent does not total 100%");
 		} else {
 			sceneNumber = 2; // to differentiate for the controller file
-			FXMLLoader loader = new FXMLLoader(getClass().getResource("../view/SiteInformationTableScene.fxml"));			
-				
+			FXMLLoader loader = new FXMLLoader(getClass().getResource("../view/SiteInformationTableScene.fxml"));
+
 			SiteInformationTableSceneController controller = new SiteInformationTableSceneController();
-		    loader.setController(controller);
-		        
+			loader.setController(controller);
+
 			root = loader.load();
-			stage = (Stage)((Node)event.getSource()).getScene().getWindow();
+			stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
 			scene = new Scene(root);
 			stage.setScene(scene);
 			stage.show();
 		}
 	}
-		
-	//TODO implement overflow exceptions when model is "run"
-	}
+
+	// TODO implement overflow exceptions when model is "run"
+}
