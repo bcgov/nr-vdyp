@@ -342,12 +342,12 @@
                               <Font size="10.0" />
                            </font>
                         </Button>
-                        <Button layoutX="416.0" layoutY="330.0" mnemonicParsing="false" prefHeight="22.0" prefWidth="21.0" text="&lt;" textFill="#000000bb">
+                        <Button fx:id="previousPageButton" layoutX="416.0" layoutY="330.0" mnemonicParsing="false" prefHeight="22.0" prefWidth="21.0" text="&lt;" textFill="#000000bb">
                            <font>
                               <Font size="10.0" />
                            </font>
                         </Button>
-                        <Label layoutX="407.0" layoutY="350.0" text="Previous">
+                        <Label fx:id="previousLabel" layoutX="407.0" layoutY="350.0" text="Previous">
                            <font>
                               <Font size="10.0" />
                            </font>

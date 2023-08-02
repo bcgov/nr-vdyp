@@ -1,1 +1,9 @@
-
+.roundButton {
+    -fx-shape: "M 25 25 m -25 0 a 25 25 0 1 1 50 0 a 25 25 0 1 1 -50 0"; /* Circle path */
+    -fx-background-color: #007bff; /* Change this to set the button's background color */
+    -fx-background-radius: 25px; /* Half of the circle's radius */
+    -fx-pref-width: 50px; /* Set the preferred width and height of the button */
+    -fx-pref-height: 50px;
+    -fx-text-fill: white; /* Set the text color */
+    -fx-font-size: 16px; /* Set the font size */
+}

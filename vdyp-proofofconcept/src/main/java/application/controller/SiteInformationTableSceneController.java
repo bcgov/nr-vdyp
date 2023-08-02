@@ -32,7 +32,7 @@ public class SiteInformationTableSceneController implements Initializable {
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		setDefaults2();
+		setDefaults();
 
 	}
 
@@ -75,7 +75,7 @@ public class SiteInformationTableSceneController implements Initializable {
 		standHeight.setDisable(false); // since we don't know from where it's being called
 	}
 
-	private void setDefaults2() {
+	private void setDefaults() {
 		// Arrays containing the options for different Bec & Eco Zones
 		final String[] becZones = { "AT - Alpine Tundra", "BG - Bunch Grass", "BWBS - Boreal White and Black Spruce",
 				"CDF - Coastal Douglas Fir", "CWH - Coastal Western Hemlock", "ESSF - Engelmann Spruce",
@@ -136,7 +136,7 @@ public class SiteInformationTableSceneController implements Initializable {
 	 * @param event The ActionEvent triggered by the default button click.
 	 */
 	public void defaultButtonAction(ActionEvent event) {
-
+		
 	}
 
 	/**

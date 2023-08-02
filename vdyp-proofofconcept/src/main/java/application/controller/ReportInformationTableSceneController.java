@@ -5,16 +5,57 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Button;
+import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.Spinner;
+import javafx.scene.control.SpinnerValueFactory;
 
 public class ReportInformationTableSceneController implements Initializable {
-
+	
+	@FXML
+	private Spinner<Integer> startingAge;
+	@FXML
+	private Spinner<Integer> finishingAge;
+	@FXML
+	private Spinner<Integer> ageIncrement;
+	@FXML 
+	private ChoiceBox<String> projectionType;
+	@FXML
+	private Button nextPageButton;
+	@FXML
+	private Label nextLabel;
+	
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		// TODO Auto-generated method stub
-
+		setDefaults();
 	}
 
+	public void setDefaults() {
+		SpinnerValueFactory<Integer> startingAgeValueFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(
+				0, 500, 0, 10
+		); // min, max, default, increment
+		startingAge.setValueFactory(startingAgeValueFactory);
+		
+		SpinnerValueFactory<Integer>finishingAgeValueFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(
+				1, 460, 250, 10
+		); // min, max, default, increment
+		finishingAge.setValueFactory(finishingAgeValueFactory);
+		
+		SpinnerValueFactory<Integer>ageIncrementValueFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(
+				1, 350, 25, 5
+		); // min, max, default, increment
+		ageIncrement.setValueFactory(ageIncrementValueFactory);
+		
+		projectionType.getItems().addAll("Volume", "CFS Biomass");
+		projectionType.setValue("Volume");
+		
+		nextPageButton.setDisable(true);
+		nextLabel.setDisable(true);
+	}
+	
 	/**
 	 * Switches the application to Scene 4 - StandDensityTableScene.
 	 *
@@ -25,7 +66,6 @@ public class ReportInformationTableSceneController implements Initializable {
 		StandDensityTableSceneController standDensityTableSceneController = new StandDensityTableSceneController();
 		standDensityTableSceneController.switchToScene4(event);
 	}
-
 	// Bottom Menu Bar functionality
 	/**
 	 * Handles the cancel button action event. This method is triggered when the

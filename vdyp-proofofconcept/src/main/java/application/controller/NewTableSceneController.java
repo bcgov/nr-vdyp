@@ -21,6 +21,7 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 
 public class NewTableSceneController implements Initializable {
 	// Set up species choice boxes
@@ -112,6 +113,11 @@ public class NewTableSceneController implements Initializable {
 	@FXML
 	private Label totalPercentLabel;
 
+	@FXML
+	private Button previousPageButton;
+	@FXML
+	private Label previousLabel;
+	
 	// Needed to switch to the next scene
 	public static Stage stage; // TODO TEMPORARY find better method for switching scenes or implement getter
 								// methods
@@ -178,7 +184,8 @@ public class NewTableSceneController implements Initializable {
 
 	/**
 	 * Sets up the species choice boxes and spinners by adding them to the
-	 * corresponding lists and arrays.
+	 * corresponding lists and arrays. Disables previous button since this is 
+	 * the first page
 	 */
 	private void setUpSpecies() {
 		// Add species choice boxes to the List
@@ -219,6 +226,9 @@ public class NewTableSceneController implements Initializable {
 		speciesGroupPercentLabels[3] = species4GroupPercent;
 		speciesGroupPercentLabels[4] = species5GroupPercent;
 		speciesGroupPercentLabels[5] = species6GroupPercent;
+		
+		previousPageButton.setDisable(true);
+		previousLabel.setDisable(true);
 	}
 
 	/**
@@ -293,6 +303,7 @@ public class NewTableSceneController implements Initializable {
 
 		// Update the total label after setting the default values
 		updateTotalLabel();
+	
 	}
 
 	/**

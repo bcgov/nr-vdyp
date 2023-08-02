@@ -1,5 +1,6 @@
 package application;
 
+import java.awt.Button;
 import java.io.IOException;
 
 import application.controller.*;
@@ -8,6 +9,7 @@ import javafx.stage.Stage;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
+import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 
@@ -30,18 +32,20 @@ public class Main extends Application {
 		}
 		return primaryStage;
 	}
-
+	
 	@Override
 	public void start(Stage primaryStage) {
 		try {
 			Main.primaryStage = primaryStage;
 
+			 
 			// Load the FXML file and create the scene and controller
 			FXMLLoader loader = new FXMLLoader(getClass().getResource("view/MainWindow.fxml"));
 			Parent root = loader.load();
 			MainController controller = loader.getController();
 			Scene scene = new Scene(root, 1000, 700);
 			scene.getStylesheets().add(getClass().getResource("resources/application.css").toExternalForm());
+			
 
 			// Set up event handler to trigger on shortcut button presses
 			setupEventHandlers(scene, controller);
