@@ -271,7 +271,9 @@ public class ModifierParser implements OptionalResourceControlMapModifier {
 
 		var result = new ArrayList<T>(num);
 		for (int i = 0; i < num; i++) {
-			result.add(it.next().orElseThrow(() -> new ValueParseException("", "Expected " + num + " modifier values")));
+			result.add(
+					it.next().orElseThrow(() -> new ValueParseException("", "Expected " + num + " modifier values"))
+			);
 		}
 		// Possibly log a warning if there are extra unused values
 		return result;

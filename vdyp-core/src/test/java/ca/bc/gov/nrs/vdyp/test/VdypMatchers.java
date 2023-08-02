@@ -194,7 +194,8 @@ public class VdypMatchers {
 
 			@Override
 			public void describeTo(Description description) {
-				description.appendText("Matrix map with entry ").appendValueList("[", ", ", "]", keys).appendText(" that ");
+				description.appendText("Matrix map with entry ").appendValueList("[", ", ", "]", keys)
+						.appendText(" that ");
 				valueMatcher.describeTo(description);
 
 			}
@@ -387,7 +388,8 @@ public class VdypMatchers {
 					return false;
 				}
 				if (item.getMarker().isPresent()) {
-					mismatchDescription.appendText("getMarker() was present with value ").appendValue(item.getMarker().get());
+					mismatchDescription.appendText("getMarker() was present with value ")
+							.appendValue(item.getMarker().get());
 					return false;
 				}
 				if (!item.getValue().isPresent()) {
@@ -428,7 +430,8 @@ public class VdypMatchers {
 					return false;
 				}
 				if (item.getValue().isPresent()) {
-					mismatchDescription.appendText("getValue() was present with value ").appendValue(item.getValue().get());
+					mismatchDescription.appendText("getValue() was present with value ")
+							.appendValue(item.getValue().get());
 					return false;
 				}
 				if (!item.getMarker().isPresent()) {

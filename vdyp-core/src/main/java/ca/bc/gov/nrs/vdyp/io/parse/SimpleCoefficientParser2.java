@@ -21,7 +21,7 @@ public class SimpleCoefficientParser2<K1, K2>
 	@Override
 	protected MatrixMap2<K1, K2, Coefficients> createMap(List<Collection<?>> keyRanges) {
 		return new MatrixMap2Impl<>(
-				(Collection<K1>) keyRanges.get(0), (Collection<K2>) keyRanges.get(1), (k1,k2) -> getCoefficients()
+				(Collection<K1>) keyRanges.get(0), (Collection<K2>) keyRanges.get(1), (k1, k2) -> getCoefficients()
 		);
 	}
 

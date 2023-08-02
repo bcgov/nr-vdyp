@@ -23,7 +23,7 @@ public class SimpleCoefficientParser1<K1> implements ControlMapSubResourceParser
 		@SuppressWarnings("unchecked")
 		@Override
 		protected MatrixMap<Coefficients> createMap(List<Collection<?>> keyRanges) {
-			return new MatrixMapImpl<>(k->getCoefficients(), (Collection<K1>) keyRanges.get(0));
+			return new MatrixMapImpl<>(k -> getCoefficients(), (Collection<K1>) keyRanges.get(0));
 		}
 
 		@Override
@@ -82,7 +82,8 @@ public class SimpleCoefficientParser1<K1> implements ControlMapSubResourceParser
 		return delegate.space(length);
 	}
 
-	public <K> BaseCoefficientParser<Coefficients, Coefficients, MatrixMap<Coefficients>> coefficients(int number, int length) {
+	public <K> BaseCoefficientParser<Coefficients, Coefficients, MatrixMap<Coefficients>>
+			coefficients(int number, int length) {
 		return delegate.coefficients(number, length);
 	}
 

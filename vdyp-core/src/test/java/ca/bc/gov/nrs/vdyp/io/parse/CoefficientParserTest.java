@@ -30,7 +30,7 @@ class CoefficientParserTest {
 		var result = parser.parse(is, controlMap);
 
 		assertThat(result, mmHasEntry(is(2.0028f), 0, "B1", (Integer) 1)); // COEs are 0 indexed, species are 1
-																					// indexed
+																			// indexed
 		assertThat(result, mmHasEntry(is(-0.5343f), 0, "B1", (Integer) 2));
 
 	}

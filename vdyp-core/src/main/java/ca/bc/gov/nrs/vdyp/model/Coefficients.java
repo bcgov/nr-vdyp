@@ -8,7 +8,7 @@ import java.util.stream.DoubleStream;
 
 /**
  * Fixed length list of floats that can be accessed using an offset index
- * 
+ *
  * @author Kevin Smith, Vivid Solutions
  *
  */
@@ -64,7 +64,7 @@ public class Coefficients extends AbstractList<Float> implements List<Float> {
 
 	/**
 	 * Create a list of all the same float value
-	 * 
+	 *
 	 * @param size  number of elements
 	 * @param value the value to repeat
 	 * @return
@@ -75,7 +75,7 @@ public class Coefficients extends AbstractList<Float> implements List<Float> {
 
 	/**
 	 * Create an empty (all 0.0) Coefficents object
-	 * 
+	 *
 	 * @param size
 	 * @param indexFrom
 	 * @return
@@ -92,9 +92,11 @@ public class Coefficients extends AbstractList<Float> implements List<Float> {
 	}
 
 	private int getRealIndex(int i) {
-		var max = coe.length+indexFrom-1;
-		if(i<indexFrom || i>max) {
-			throw new ArrayIndexOutOfBoundsException("Coefficient index "+i+" out of bounds for ["+indexFrom+":"+max+"]");
+		var max = coe.length + indexFrom - 1;
+		if (i < indexFrom || i > max) {
+			throw new ArrayIndexOutOfBoundsException(
+					"Coefficient index " + i + " out of bounds for [" + indexFrom + ":" + max + "]"
+			);
 		}
 		return i - indexFrom;
 	}

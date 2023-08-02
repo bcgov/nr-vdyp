@@ -47,7 +47,7 @@ public abstract class UtilComponentParser
 		final var ucIndices = Arrays.asList(1, 2, 3, 4);
 
 		MatrixMap3<Integer, String, String, Coefficients> result = new MatrixMap3Impl<>(
-				ucIndices, speciesIndicies, becIndices, (k1,k2,k3)->Coefficients.empty(numCoefficients,1)
+				ucIndices, speciesIndicies, becIndices, (k1, k2, k3) -> Coefficients.empty(numCoefficients, 1)
 		);
 		lineParser.parse(is, result, (v, r) -> {
 			var uc = (Integer) v.get(UC_KEY);

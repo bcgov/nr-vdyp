@@ -19,10 +19,10 @@ public interface MatrixMap2<K1, K2, V> extends MatrixMap<V> {
 	}
 
 	public default void addAll(Map<K1, Map<K2, V>> nestedMap) {
-		addAll(nestedMap, x->x);
+		addAll(nestedMap, x -> x);
 	}
-	
-	public default <T> void addAll(Map<K1, Map<K2, T>> nestedMap, Function<T,V> valueMapper) {
+
+	public default <T> void addAll(Map<K1, Map<K2, T>> nestedMap, Function<T, V> valueMapper) {
 		nestedMap.entrySet().forEach(entry1 -> {
 			entry1.getValue().entrySet().forEach(entry2 -> {
 				put(entry1.getKey(), entry2.getKey(), valueMapper.apply(entry2.getValue()));

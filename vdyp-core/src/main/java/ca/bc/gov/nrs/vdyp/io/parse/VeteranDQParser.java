@@ -44,7 +44,9 @@ public class VeteranDQParser implements ControlMapSubResourceParser<MatrixMap2<S
 		final var speciesIndicies = GenusDefinitionParser.getSpeciesAliases(control);
 		final var regionIndicies = Arrays.asList(Region.values());
 
-		MatrixMap2<String, Region, Coefficients> result = new MatrixMap2Impl<>(speciesIndicies, regionIndicies, (k1,k2)->Coefficients.empty(NUM_COEFFICIENTS, 1));
+		MatrixMap2<String, Region, Coefficients> result = new MatrixMap2Impl<>(
+				speciesIndicies, regionIndicies, (k1, k2) -> Coefficients.empty(NUM_COEFFICIENTS, 1)
+		);
 		lineParser.parse(is, result, (v, r) -> {
 			var sp0 = (String) v.get(SPECIES_KEY);
 			@SuppressWarnings("unchecked")

@@ -8,8 +8,8 @@ import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
 
-public class OptionalCoefficientParser2<K1, K2>
-		extends BaseCoefficientParser<Coefficients, Optional<Coefficients>, MatrixMap2<K1, K2, Optional<Coefficients>>> {
+public class OptionalCoefficientParser2<K1, K2> extends
+		BaseCoefficientParser<Coefficients, Optional<Coefficients>, MatrixMap2<K1, K2, Optional<Coefficients>>> {
 
 	private int indexFrom;
 
@@ -22,7 +22,7 @@ public class OptionalCoefficientParser2<K1, K2>
 	@Override
 	protected MatrixMap2<K1, K2, Optional<Coefficients>> createMap(List<Collection<?>> keyRanges) {
 		return new MatrixMap2Impl<>(
-				(Collection<K1>) keyRanges.get(0), (Collection<K2>) keyRanges.get(1), (k1,k2) -> Optional.empty()
+				(Collection<K1>) keyRanges.get(0), (Collection<K2>) keyRanges.get(1), (k1, k2) -> Optional.empty()
 		);
 	}
 

@@ -24,7 +24,7 @@ public class MatrixMapImpl<T> implements MatrixMap<T> {
 	Function<Object[], T> defaultMapper;
 
 	public MatrixMapImpl(Function<Object[], T> defaultMapper, Collection<? extends Collection<?>> dimensions) {
-		this.defaultMapper=defaultMapper;
+		this.defaultMapper = defaultMapper;
 		if (dimensions.isEmpty()) {
 			throw new IllegalArgumentException("Must have at least one dimension");
 		}
@@ -42,7 +42,7 @@ public class MatrixMapImpl<T> implements MatrixMap<T> {
 		}).toList();
 		var matrixSize = maps.stream().map(Map::size).reduce(1, (x, y) -> x * y);
 		matrix = new Object[matrixSize];
-		eachKey(k->{
+		eachKey(k -> {
 			putM(defaultMapper.apply(k), k);
 		});
 	}
@@ -144,7 +144,7 @@ public class MatrixMapImpl<T> implements MatrixMap<T> {
 	public T remove(Object... params) {
 		@SuppressWarnings("unchecked")
 		var old = (T) matrix[getIndex(params)];
-		matrix[getIndex(params)]=defaultMapper.apply(params);
+		matrix[getIndex(params)] = defaultMapper.apply(params);
 		return old;
 	}
 }

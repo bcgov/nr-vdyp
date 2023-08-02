@@ -18,7 +18,8 @@ import ca.bc.gov.nrs.vdyp.model.Region;
  * @author Kevin Smith, Vivid Solutions
  *
  */
-public class HLCoefficientParser implements ControlMapSubResourceParser<MatrixMap2<String, Region, Optional<Coefficients>>> {
+public class HLCoefficientParser
+		implements ControlMapSubResourceParser<MatrixMap2<String, Region, Optional<Coefficients>>> {
 
 	public static final String CONTROL_KEY_P1 = "HL_PRIMARY_SP_EQN_P1";
 	public static final String CONTROL_KEY_P2 = "HL_PRIMARY_SP_EQN_P2";

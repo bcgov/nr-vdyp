@@ -84,9 +84,10 @@ public abstract class EquationGroupParser implements ControlMapSubResourceParser
 		for (var entry : resultMap.entrySet()) {
 			var becDiff = ExpectationDifference.difference(entry.getValue().keySet(), restrictedBecKeys);
 			var sp0Key = entry.getKey();
-			becDiff.getMissing().stream()
-					.map(becKey -> String.format("Expected mappings for BEC %s but it was missing for SP0 %s", becKey, sp0Key))
-					.collect(Collectors.toCollection(() -> errors));
+			becDiff.getMissing().stream().map(
+					becKey -> String
+							.format("Expected mappings for BEC %s but it was missing for SP0 %s", becKey, sp0Key)
+			).collect(Collectors.toCollection(() -> errors));
 			becDiff.getUnexpected().stream()
 					.map(becKey -> String.format("Unexpected mapping for BEC %s under SP0 %s", becKey, sp0Key))
 					.collect(Collectors.toCollection(() -> errors));
@@ -99,10 +100,8 @@ public abstract class EquationGroupParser implements ControlMapSubResourceParser
 		// convert nested Map to a MatrixMap. Building as the nested map first makes
 		// validation easier.
 
-		return new MatrixMap2Impl<>(
-				sp0Keys, becKeys, (k1, k2) -> resultMap.get(k1).get(k2)
-		);
-		
+		return new MatrixMap2Impl<>(sp0Keys, becKeys, (k1, k2) -> resultMap.get(k1).get(k2));
+
 	}
 
 	public void setHiddenBecs(Collection<String> hiddenBecs) {

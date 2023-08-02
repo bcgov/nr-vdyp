@@ -161,9 +161,9 @@ public abstract class BaseCoefficientParser<T extends Coefficients, W, M extends
 	protected abstract M createMap(List<Collection<?>> keyRanges);
 
 	protected abstract T getCoefficients(List<Float> coefficients);
-	
+
 	protected abstract W wrapCoefficients(T coefficients);
-	
+
 	protected T getCoefficients() {
 		return getCoefficients(Coefficients.sameSize(numCoefficients, 0f));
 	};

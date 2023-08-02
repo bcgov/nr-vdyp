@@ -273,7 +273,10 @@ class FipStartTest {
 							ex,
 							hasProperty(
 									"message",
-									is("Polygon " + polygonId + " has " + Layer.PRIMARY + " layer where total age is less than YTBH.")
+									is(
+											"Polygon " + polygonId + " has " + Layer.PRIMARY
+													+ " layer where total age is less than YTBH."
+									)
 							)
 					);
 				}
@@ -330,7 +333,8 @@ class FipStartTest {
 					assertThat(
 							ex,
 							hasProperty(
-									"message", is("Polygon " + polygonId + " is using unsupported mode " + FipMode.FIPYOUNG + ".")
+									"message",
+									is("Polygon " + polygonId + " is using unsupported mode " + FipMode.FIPYOUNG + ".")
 							)
 					);
 				}

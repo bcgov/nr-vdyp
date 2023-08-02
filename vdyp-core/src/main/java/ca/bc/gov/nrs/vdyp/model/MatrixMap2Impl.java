@@ -9,18 +9,18 @@ public class MatrixMap2Impl<K1, K2, V> extends MatrixMapImpl<V> implements Matri
 
 	@SuppressWarnings("unchecked")
 	public MatrixMap2Impl(Collection<K1> dimension1, Collection<K2> dimension2, BiFunction<K1, K2, V> defaultMapper) {
-		
-		super(k->{
+
+		super(k -> {
 			var k1 = (K1) k[0];
 			var k2 = (K2) k[1];
 			return defaultMapper.apply(k1, k2);
 		}, Arrays.asList(dimension1, dimension2));
 	}
-	
+
 	/**
 	 * Default mapper function that maps all keys to an empty Optional
 	 */
 	public static <K1, K2, V> BiFunction<K1, K2, Optional<V>> emptyDefault() {
-		return (k1, k2)->Optional.empty();
+		return (k1, k2) -> Optional.empty();
 	}
 }

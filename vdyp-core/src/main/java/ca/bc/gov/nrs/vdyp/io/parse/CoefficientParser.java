@@ -17,7 +17,7 @@ import ca.bc.gov.nrs.vdyp.model.MatrixMap3Impl;
  */
 public class CoefficientParser implements ControlMapSubResourceParser<MatrixMap3<Integer, String, Integer, Float>> {
 	// TODO use a Coefficients object
-	
+
 	public static final String BA_CONTROL_KEY = "COE_BA";
 	public static final String DQ_CONTROL_KEY = "COE_DQ";
 
@@ -53,7 +53,7 @@ public class CoefficientParser implements ControlMapSubResourceParser<MatrixMap3
 		var coeIndecies = Stream.iterate(0, x -> x + 1).limit(NUM_COEFFICIENTS).toList();
 		var speciesIndecies = Stream.iterate(1, x -> x + 1).limit(NUM_SPECIES).toList();
 		MatrixMap3<Integer, String, Integer, Float> result = new MatrixMap3Impl<>(
-				coeIndecies, becAliases, speciesIndecies, (k1, k2, k3)->0f
+				coeIndecies, becAliases, speciesIndecies, (k1, k2, k3) -> 0f
 		);
 		lineParser.parse(is, result, (v, r) -> {
 			var bec = (String) v.get(BEC_KEY);

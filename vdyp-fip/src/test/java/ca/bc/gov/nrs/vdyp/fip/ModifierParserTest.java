@@ -462,7 +462,7 @@ class ModifierParserTest {
 	private MatrixMap2<String, Region, Coefficients> populateVetBq(Map<String, Object> controlMap) {
 		MatrixMap2<String, Region, Coefficients> vetBqMap = new MatrixMap2Impl(
 				Arrays.asList(TestUtils.getSpeciesAliases()), Arrays.asList(Region.values()),
-				(k1,k2)->new Coefficients(Arrays.asList(1.0f, 5.0f, 7.0f), 1)
+				(k1, k2) -> new Coefficients(Arrays.asList(1.0f, 5.0f, 7.0f), 1)
 		);
 		controlMap.put(VeteranBQParser.CONTROL_KEY, vetBqMap);
 		return vetBqMap;
@@ -564,34 +564,34 @@ class ModifierParserTest {
 		hlP1Map.eachKey(k -> {
 			if (k[0].equals("AC")) {
 				if (k[1].equals(Region.COASTAL)) {
-					assertThat(hlP1Map.getM(k), coe(1,contains(is(0.2f), is(0.2f * 5.0f), is(7.0f))));
+					assertThat(hlP1Map.getM(k), coe(1, contains(is(0.2f), is(0.2f * 5.0f), is(7.0f))));
 				} else {
-					assertThat(hlP1Map.getM(k), coe(1,contains(is(0.3f), is(0.3f * 5.0f), is(7.0f))));
+					assertThat(hlP1Map.getM(k), coe(1, contains(is(0.3f), is(0.3f * 5.0f), is(7.0f))));
 				}
 			} else {
-				assertThat(hlP1Map.getM(k), coe(1,contains(is(1.0f), is(5.0f), is(7.0f))));
+				assertThat(hlP1Map.getM(k), coe(1, contains(is(1.0f), is(5.0f), is(7.0f))));
 			}
 		});
 		hlP2Map.eachKey(k -> {
 			if (k[0].equals("AC")) {
 				if (k[1].equals(Region.COASTAL)) {
-					assertThat(hlP2Map.getM(k), coe(1,contains(is(0.2f), is(5.0f))));
+					assertThat(hlP2Map.getM(k), coe(1, contains(is(0.2f), is(5.0f))));
 				} else {
-					assertThat(hlP2Map.getM(k), coe(1,contains(is(0.3f), is(5.0f))));
+					assertThat(hlP2Map.getM(k), coe(1, contains(is(0.3f), is(5.0f))));
 				}
 			} else {
-				assertThat(hlP2Map.getM(k), coe(1,contains(is(1.0f), is(5.0f))));
+				assertThat(hlP2Map.getM(k), coe(1, contains(is(1.0f), is(5.0f))));
 			}
 		});
 		hlP3Map.eachKey(k -> {
 			if (k[0].equals("AC")) {
 				if (k[1].equals(Region.COASTAL)) {
-					assertThat(hlP3Map.getM(k), coe(1,contains(is(0.2f), is(5.0f), is(7.0f), is(13.0f))));
+					assertThat(hlP3Map.getM(k), coe(1, contains(is(0.2f), is(5.0f), is(7.0f), is(13.0f))));
 				} else {
-					assertThat(hlP3Map.getM(k), coe(1,contains(is(0.3f), is(5.0f), is(7.0f), is(13.0f))));
+					assertThat(hlP3Map.getM(k), coe(1, contains(is(0.3f), is(5.0f), is(7.0f), is(13.0f))));
 				}
 			} else {
-				assertThat(hlP3Map.getM(k), coe(1,contains(is(1.0f), is(5.0f), is(7.0f), is(13.0f))));
+				assertThat(hlP3Map.getM(k), coe(1, contains(is(1.0f), is(5.0f), is(7.0f), is(13.0f))));
 			}
 		});
 		hlNPMap.eachKey(k -> {
@@ -609,7 +609,7 @@ class ModifierParserTest {
 
 	private MatrixMap3<String, String, Region, NonprimaryHLCoefficients> populateHlNP(Map<String, Object> controlMap) {
 		MatrixMap3<String, String, Region, NonprimaryHLCoefficients> hlNPMap = new MatrixMap3Impl(
-				Arrays.asList(TestUtils.getSpeciesAliases()), // 
+				Arrays.asList(TestUtils.getSpeciesAliases()), //
 				Arrays.asList(TestUtils.getSpeciesAliases()), //
 				Arrays.asList(Region.values()), //
 				MatrixMap3Impl.emptyDefault()

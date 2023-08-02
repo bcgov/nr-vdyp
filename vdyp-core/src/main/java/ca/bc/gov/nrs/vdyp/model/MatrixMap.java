@@ -44,13 +44,14 @@ public interface MatrixMap<T> {
 	}
 
 	public T remove(Object... params);
-	
+
 	/**
 	 * Wraps a 1 dimensional MatrixMap as a regular Java Map.
 	 */
 	public static <K1, V> Map<K1, V> cast(MatrixMap<V> o) {
-		return cast(o, x->x, x->x);
+		return cast(o, x -> x, x -> x);
 	}
+
 	/**
 	 * Wraps a 1 dimensional MatrixMap as a regular Java Map.
 	 */
@@ -64,7 +65,7 @@ public interface MatrixMap<T> {
 				@SuppressWarnings({ "unchecked", "rawtypes" })
 				@Override
 				public Set<Entry<K1, T>> entrySet() {
-					return (Set) o.getDimensions().get(0).stream().filter(k -> o.getM(k)!=null)
+					return (Set) o.getDimensions().get(0).stream().filter(k -> o.getM(k) != null)
 							.collect(Collectors.toMap(k -> k, k -> o.getM(k))).entrySet();
 				}
 
@@ -81,7 +82,7 @@ public interface MatrixMap<T> {
 				@Override
 				public boolean containsValue(Object value) {
 					@SuppressWarnings("unchecked")
-					var expected = toMatrixValue.apply((T)value);
+					var expected = toMatrixValue.apply((T) value);
 					return o.any(expected::equals);
 				}
 
@@ -92,7 +93,7 @@ public interface MatrixMap<T> {
 
 				@Override
 				public T get(Object key) {
-					if(o.getDimensions().get(0).contains(key)) {
+					if (o.getDimensions().get(0).contains(key)) {
 						return toMapValue.apply(o.getM(key));
 					}
 					return null;
