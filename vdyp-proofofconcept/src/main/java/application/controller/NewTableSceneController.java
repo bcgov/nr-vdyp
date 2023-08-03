@@ -118,7 +118,8 @@ public class NewTableSceneController implements Initializable {
 	@FXML
 	private Label previousLabel;
 	@FXML
-	private Button runButton;
+	private Button runButton; //main page
+
 
 	/**
 	 * Initializes the window by setting up the species choice boxes, spinners, and

@@ -33,7 +33,8 @@ public class AdditionalStandAtrributesTableSceneController implements Initializa
 	@FXML
 	Spinner<Double> cuNetDecayVolume;
 	@FXML
-	Button runButton;
+	private Button runButton;
+
 
 	/**
 	 * Initializes the window by setting default values for various controls.

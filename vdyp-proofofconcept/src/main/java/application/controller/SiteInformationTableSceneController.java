@@ -31,7 +31,8 @@ public class SiteInformationTableSceneController implements Initializable {
 	@FXML
 	private Spinner<Double> bha50SiteIndex;
 	@FXML
-	Button runButton;
+	private Button runButton;
+
 
 	/**
 	 * Initializes the SiteInformationTableScene with default values and

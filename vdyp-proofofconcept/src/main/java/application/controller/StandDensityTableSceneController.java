@@ -32,7 +32,9 @@ public class StandDensityTableSceneController implements Initializable {
 	@FXML
 	private ChoiceBox<String> minimumDBHLimit;
 	@FXML
-	Button runButton;
+	private Button runButton;
+
+
 	
 	/**
 	 * Initializes the window by setting default values for various controls.
