@@ -32,15 +32,14 @@ public class StandDensityTableSceneController implements Initializable {
 	@FXML
 	private ChoiceBox<String> minimumDBHLimit;
 	@FXML
-	private Button runButton;
-	@FXML
-	private Button runButtonReport;
-	@FXML
 	private ChoiceBox<String> loggingOn;
 	@FXML
 	private ChoiceBox<String> loggingType;
+	@FXML
+	private Button runButton;
+	@FXML
+	private Button runButtonReport;
 
-	
 	/**
 	 * Initializes the window by setting default values for various controls.
 	 *
@@ -56,18 +55,19 @@ public class StandDensityTableSceneController implements Initializable {
 	}
 
 	/**
-	 * Sets default values for various controls in the window.
-	 * Also, disables certain controls as specified in the Balsamiq mock-ups.
-	 * The default values and control states are as follows:
-	 *   	- minimumDBHLimit: "7.5 cm+" with the control disabled.
-	 *   	- percentStockableArea: Default value set to 55, with a range from 0 to 100 and an increment of 1.
-	 *   	- percentCrownClosure: Default value set to 50, with a range from 0 to 100 and an increment of 1.
-	 *   	- treesPerHectare: Spinner values range from "N/A" to "100", representing the sequence of integers from 0 to 100.
-	 *   	- basalArea: Spinner values range from "N/A" to "100", representing the sequence of integers from 0 to 100.
-	 *   	- runButton: The runButton control is disabled by default.
-	 * 		- runButtonReport: Disabled by default- loggingOn: Sets the choices Yes and No. Yes by default
-	 * 		- loggingType: Set the choices as Basic,Intermediate and Advanced. Basic by Default
-	 * 		- loggingOn: Sets the choices Yes and No. Yes by default
+	 * Sets default values for various controls in the window. Also, disables
+	 * certain controls as specified in the Balsamiq mock-ups. The default values
+	 * and control states are as follows: - minimumDBHLimit: "7.5 cm+" with the
+	 * control disabled. - percentStockableArea: Default value set to 55, with a
+	 * range from 0 to 100 and an increment of 1. - percentCrownClosure: Default
+	 * value set to 50, with a range from 0 to 100 and an increment of 1. -
+	 * treesPerHectare: Spinner values range from "N/A" to "100", representing the
+	 * sequence of integers from 0 to 100. - basalArea: Spinner values range from
+	 * "N/A" to "100", representing the sequence of integers from 0 to 100. -
+	 * runButton: The runButton control is disabled by default. - runButtonReport:
+	 * Disabled by default- loggingOn: Sets the choices Yes and No. Yes by default -
+	 * loggingType: Set the choices as Basic,Intermediate and Advanced. Basic by
+	 * Default - loggingOn: Sets the choices Yes and No. Yes by default
 	 */
 	public void setDefaults() {
 		minimumDBHLimit.setValue("7.5 cm+");
@@ -105,7 +105,7 @@ public class StandDensityTableSceneController implements Initializable {
 
 		runButton.setDisable(true);
 		loggingOn.setValue("Yes");
-		
+
 		loggingType.getItems().addAll("Basic", "Intermediate", "Advanced");
 		loggingType.setValue("Basic");
 	}

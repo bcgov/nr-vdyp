@@ -42,7 +42,6 @@ public class AdditionalStandAtrributesTableSceneController implements Initializa
 	@FXML
 	private ChoiceBox<String> loggingType;
 
-
 	/**
 	 * Initializes the window by setting default values for various controls.
 	 *
@@ -54,6 +53,34 @@ public class AdditionalStandAtrributesTableSceneController implements Initializa
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		setDefaults();
+	}
+
+	/**
+	 * Enables computed values for various controls. Method is called when you want
+	 * to enable the computed values and the appropriate checkbox is selected.
+	 */
+	public void useComputedValues() {
+		loreyHeight.setDisable(true);
+		basalArea12.setDisable(true);
+		cuVolume.setDisable(true);
+		cuNetDecayWasteVolume.setDisable(true);
+		wholeStemVolume7.setDisable(true);
+		wholeStemVolume12.setDisable(true);
+		cuNetDecayVolume.setDisable(true);
+	}
+
+	/**
+	 * Disables computed values for various controls. Method is called when you want
+	 * to modify the computed values and the appropriate checkbox is selected.
+	 */
+	public void modifyComputedValues() {
+		loreyHeight.setDisable(false);
+		basalArea12.setDisable(false);
+		cuVolume.setDisable(false);
+		cuNetDecayWasteVolume.setDisable(false);
+		wholeStemVolume7.setDisable(false);
+		wholeStemVolume12.setDisable(false);
+		cuNetDecayVolume.setDisable(false);
 	}
 
 	/**
@@ -118,40 +145,12 @@ public class AdditionalStandAtrributesTableSceneController implements Initializa
 
 		runButton.setDisable(true);
 		runButtonReport.setDisable(true);
-		
+
 		loggingOn.getItems().addAll("Yes", "No");
 		loggingOn.setValue("Yes");
-		
+
 		loggingType.getItems().addAll("Basic", "Intermediate", "Advanced");
 		loggingType.setValue("Basic");
-	}
-
-	/**
-	 * Enables computed values for various controls. Method is called when you want
-	 * to enable the computed values and the appropriate checkbox is selected.
-	 */
-	public void useComputedValues() {
-		loreyHeight.setDisable(true);
-		basalArea12.setDisable(true);
-		cuVolume.setDisable(true);
-		cuNetDecayWasteVolume.setDisable(true);
-		wholeStemVolume7.setDisable(true);
-		wholeStemVolume12.setDisable(true);
-		cuNetDecayVolume.setDisable(true);
-	}
-
-	/**
-	 * Disables computed values for various controls. Method is called when you want
-	 * to modify the computed values and the appropriate checkbox is selected.
-	 */
-	public void modifyComputedValues() {
-		loreyHeight.setDisable(false);
-		basalArea12.setDisable(false);
-		cuVolume.setDisable(false);
-		cuNetDecayWasteVolume.setDisable(false);
-		wholeStemVolume7.setDisable(false);
-		wholeStemVolume12.setDisable(false);
-		cuNetDecayVolume.setDisable(false);
 	}
 
 	// Bottom Menu Bar functionality

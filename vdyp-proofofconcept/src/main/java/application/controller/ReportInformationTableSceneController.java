@@ -2,6 +2,9 @@ package application.controller;
 
 import java.io.IOException;
 import java.net.URL;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ResourceBundle;
 
 import javafx.event.ActionEvent;
@@ -11,6 +14,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.Slider;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.TabPane;
@@ -34,8 +38,6 @@ public class ReportInformationTableSceneController implements Initializable {
 	@FXML
 	private TabPane tabPane;
 	@FXML
-	private TextArea modelReportText;
-	@FXML 
 	private Button runButton;
 	@FXML
 	private Button runButtonReport;
@@ -61,8 +63,15 @@ public class ReportInformationTableSceneController implements Initializable {
 	private CheckBox culminationValues;
 	@FXML
 	private GridPane dbhSliders;
-	
-	
+	@FXML
+	private Slider dbhSpecies2Slider;
+	@FXML
+	private Slider dbhSpecies4Slider;
+	@FXML
+	private TextArea modelReportText;
+	@FXML
+	private TextArea logFileText;
+
 	/**
 	 * Initializes the window by setting default values for various controls.
 	 *
@@ -74,9 +83,9 @@ public class ReportInformationTableSceneController implements Initializable {
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		setDefaults();
-		
+
 		projectionType.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-			if("Volume".equals(newValue)) {
+			if ("Volume".equals(newValue)) {
 				volumeSelected();
 			} else {
 				cfsBiomassSelected();
@@ -84,6 +93,12 @@ public class ReportInformationTableSceneController implements Initializable {
 		});
 	}
 
+	/**
+	 * Handles the action event when the "CFS Biomass" option is selected in the
+	 * checkbox. Disables most of the Volumes Reported and Include in Report options
+	 * as well as the minimum DBH sliders
+	 *
+	 */
 	private void cfsBiomassSelected() {
 		wholeStem.setDisable(true);
 		closeUtilization.setDisable(true);
@@ -91,11 +106,16 @@ public class ReportInformationTableSceneController implements Initializable {
 		netDecayWaste.setDisable(true);
 		netDecayWasteBreakage.setDisable(true);
 		computedMAI.setDisable(true);
-		culminationValues.setDisable(true);
 		dbhSliders.setDisable(true);
-		
+
 	}
 
+	/**
+	 * Handles the action event when the "Volume" option is selected in the
+	 * checkbox. Enables most of the Volumes Reported and Include in Report options
+	 * as well as the minimum DBH sliders
+	 *
+	 */
 	private void volumeSelected() {
 		wholeStem.setDisable(false);
 		closeUtilization.setDisable(false);
@@ -103,9 +123,8 @@ public class ReportInformationTableSceneController implements Initializable {
 		netDecayWaste.setDisable(false);
 		netDecayWasteBreakage.setDisable(false);
 		computedMAI.setDisable(false);
-		culminationValues.setDisable(true);
 		dbhSliders.setDisable(false);
-		
+
 	}
 
 	/**
@@ -120,6 +139,9 @@ public class ReportInformationTableSceneController implements Initializable {
 	 * 		- nextLabel: The nextLabel control is disabled by default.
 	 * 		- loggingOn: Sets the choices Yes and No. Yes by default
 	 * 		- loggingType: Set the choices as Basic,Intermediate and Advanced. Basic by Default
+	 * 		- dbhSpecies2Slider - Sets the spot of the slider to 7.5cm+
+	 * 		- dbhSpecies4Slider - Sets the spot of the slider to 12.5cm+
+	 * 		- culminationValues - Set to disabled by default
 	 * @formatter:on
 	 */
 	public void setDefaults() {
@@ -143,12 +165,19 @@ public class ReportInformationTableSceneController implements Initializable {
 
 		nextPageButton.setDisable(true);
 		nextLabel.setDisable(true);
-		
+
 		loggingOn.getItems().addAll("Yes", "No");
 		loggingOn.setValue("Yes");
-		
+
 		loggingType.getItems().addAll("Basic", "Intermediate", "Advanced");
 		loggingType.setValue("Basic");
+
+		dbhSpecies2Slider.setValue(10); // the labels don't line up since the distance isn't even. Instead the slider is
+										// split by 5 from 0-20
+
+		dbhSpecies4Slider.setValue(15);
+
+		culminationValues.setDisable(true);// always disabled in WinVDYP
 	}
 
 	// Bottom menu bar
@@ -181,71 +210,79 @@ public class ReportInformationTableSceneController implements Initializable {
 	 * window.
 	 *
 	 * @param event The ActionEvent triggered by the run button click.
-	 * @throws IOException 
+	 * @throws IOException
 	 */
 	public void runButtonAction(ActionEvent event) {
-		String text = """
-	                                 VDYP7 Yield Table
-	             Lodgepole Pine 30.0%, Poplar 30.0%, Hemlock 30.0%, Spruce 10.0%
+		String modelRunText = """
+				                                 VDYP7 Yield Table
+				             Lodgepole Pine 30.0%, Poplar 30.0%, Hemlock 30.0%, Spruce 10.0%
 
-	                Quad                      |   Whole   
-	    Site Lorey  Stnd                      |    Stem   
-	TOT   HT    HT    DIA     BA        TPH    |  VOLUME   
-	-------------------------------------------+-----------
-	                                           |           
-	  0   0.0                                  |           
-	 25   7.7                                  |           
-	 50  15.0  10.9  12.3      10.6        895 |       44.2
-	 75  19.4  16.3  17.8      26.1       1054 |      165.0
-	100  22.0  20.1  20.6      32.0        959 |      253.2
-	125  23.8  23.0  23.6      35.8        815 |      325.7
-	150  25.0  25.3  27.4      37.1        631 |      369.5
-	175  25.8  26.6  30.4      36.7        507 |      382.2
-	200  26.5  27.2  32.4      36.5        444 |      385.7
-	225  26.9  27.2  33.5      36.6        416 |      385.8
-	250  27.3  27.3  34.4      36.7        394 |      386.3
+				                Quad                      |   Whole
+				    Site Lorey  Stnd                      |    Stem
+				TOT   HT    HT    DIA     BA        TPH    |  VOLUME
+				-------------------------------------------+-----------
+				                                           |
+				  0   0.0                                  |
+				 25   7.7                                  |
+				 50  15.0  10.9  12.3      10.6        895 |       44.2
+				 75  19.4  16.3  17.8      26.1       1054 |      165.0
+				100  22.0  20.1  20.6      32.0        959 |      253.2
+				125  23.8  23.0  23.6      35.8        815 |      325.7
+				150  25.0  25.3  27.4      37.1        631 |      369.5
+				175  25.8  26.6  30.4      36.7        507 |      382.2
+				200  26.5  27.2  32.4      36.5        444 |      385.7
+				225  26.9  27.2  33.5      36.6        416 |      385.8
+				250  27.3  27.3  34.4      36.7        394 |      386.3
 
-	NOTE: Height 7.7 at Projection Age 25.0 is too short to generate yields for species 'PL'
-	NOTE: Projected data for species 'PL' was not generated at stand age 25.0
-	NOTE: Basal Area and Trees per HA computed using Default CC of 50%
-	NOTE: Yields are not predicted prior to age 50.
+				NOTE: Height 7.7 at Projection Age 25.0 is too short to generate yields for species 'PL'
+				NOTE: Projected data for species 'PL' was not generated at stand age 25.0
+				NOTE: Basal Area and Trees per HA computed using Default CC of 50%
+				NOTE: Yields are not predicted prior to age 50.
 
-	TABLE PROPERTIES:
+				TABLE PROPERTIES:
 
-	WinVDYP Version Number... 7.33b         % Stockable Area Supplied 55
-	VDYP7 Core DLL Version... 7.19h         CFS Eco Zone............. 
-	VDYP SI Version Number... 7.13c         Trees Per Hectare........ <Not Used>
-	SINDEX Version Number.... 1.51          Measured Basal Area...... <Not Used>
-	Species 1................ PL (30.0%)    Starting Total Age....... 0
-	Species 2................ AC (30.0%)    Finishing Total Age...... 250
-	Species 3................ H  (30.0%)    Age Increment............ 25
-	Species 4................ S  (10.0%)    Projected Values......... Volume
-	FIP Calc Mode............ 1             Min DBH Limit: PL........ 7.5 cm+
-	BEC Zone................. IDF           Min DBH Limit: AC........ 7.5 cm+
-	Incl Second Species Ht... N/A           Min DBH Limit: H ........ 7.5 cm+
-	% Crown Closure Supplied. 0             Min DBH Limit: S ........ 7.5 cm+
+				WinVDYP Version Number... 7.33b         % Stockable Area Supplied 55
+				VDYP7 Core DLL Version... 7.19h         CFS Eco Zone.............
+				VDYP SI Version Number... 7.13c         Trees Per Hectare........ <Not Used>
+				SINDEX Version Number.... 1.51          Measured Basal Area...... <Not Used>
+				Species 1................ PL (30.0%)    Starting Total Age....... 0
+				Species 2................ AC (30.0%)    Finishing Total Age...... 250
+				Species 3................ H  (30.0%)    Age Increment............ 25
+				Species 4................ S  (10.0%)    Projected Values......... Volume
+				FIP Calc Mode............ 1             Min DBH Limit: PL........ 7.5 cm+
+				BEC Zone................. IDF           Min DBH Limit: AC........ 7.5 cm+
+				Incl Second Species Ht... N/A           Min DBH Limit: H ........ 7.5 cm+
+				% Crown Closure Supplied. 0             Min DBH Limit: S ........ 7.5 cm+
 
-	Species Parameters...
-	 Species |  % Comp | Tot Age |  BH Age |  Height |    SI   |  YTBH   
-	 --------+---------+---------+---------+---------+---------+---------
-	    PL   |  30.0   |    60   |    54   |  17.00  |  16.30  |  6.80   
-	    AC   |  30.0   |   N/A   |   N/A   |   N/A   |   N/A   |   N/A   
-	     H   |  30.0   |   N/A   |   N/A   |   N/A   |  12.52  |  8.80   
-	     S   |  10.0   |   N/A   |   N/A   |   N/A   |   N/A   |   N/A   
+				Species Parameters...
+				 Species |  % Comp | Tot Age |  BH Age |  Height |    SI   |  YTBH
+				 --------+---------+---------+---------+---------+---------+---------
+				    PL   |  30.0   |    60   |    54   |  17.00  |  16.30  |  6.80
+				    AC   |  30.0   |   N/A   |   N/A   |   N/A   |   N/A   |   N/A
+				     H   |  30.0   |   N/A   |   N/A   |   N/A   |  12.52  |  8.80
+				     S   |  10.0   |   N/A   |   N/A   |   N/A   |   N/A   |   N/A
 
-	Site Index Curves Used... 
-	  Age Range | Species | SI Curve Name                                     
-	 -----------+---------+-------------------------------------------------
-	   50 -  250|   Hwi   | 37 - Nigh (1998)
+				Site Index Curves Used...
+				  Age Range | Species | SI Curve Name
+				 -----------+---------+-------------------------------------------------
+				   50 -  250|   Hwi   | 37 - Nigh (1998)
 
 
-	Additional Stand Attributes:
-	----------------------------
+				Additional Stand Attributes:
+				----------------------------
 
-	None Applied.""";
-		
-		runButtonReport.setDisable(true); //TODO make this dynamic where it checks pane
-		modelReportText.setText(text);
+				None Applied.""";
+
+		LocalDateTime currentTime = LocalDateTime.now();
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss dd-MM-yyyy ");
+		String formattedTime = currentTime.format(formatter);
+
+		String logFile = formattedTime + ": Model run and report generated" + "\n";
+
+		runButtonReport.setDisable(true); // TODO make this dynamic where it checks pane
+		modelReportText.setText(modelRunText);
+		logFileText.appendText(logFile);
+
 		tabPane.getSelectionModel().selectNext();
 	}
 }

@@ -39,7 +39,6 @@ public class SiteInformationTableSceneController implements Initializable {
 	@FXML
 	private ChoiceBox<String> loggingType;
 
-
 	/**
 	 * Initializes the SiteInformationTableScene with default values and
 	 * configurations. This method is automatically called when the associated FXML
@@ -113,10 +112,10 @@ public class SiteInformationTableSceneController implements Initializable {
 
 		runButton.setDisable(true);
 		runButtonReport.setDisable(true);
-		
+
 		loggingOn.getItems().addAll("Yes", "No");
 		loggingOn.setValue("Yes");
-		
+
 		loggingType.getItems().addAll("Basic", "Intermediate", "Advanced");
 		loggingType.setValue("Basic");
 	}

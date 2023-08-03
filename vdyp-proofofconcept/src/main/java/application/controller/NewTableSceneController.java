@@ -118,14 +118,13 @@ public class NewTableSceneController implements Initializable {
 	@FXML
 	private Label previousLabel;
 	@FXML
-	private Button runButton; //main page
+	private Button runButton; // main page
 	@FXML
 	private Button runButtonReport;
 	@FXML
 	private ChoiceBox<String> loggingOn;
 	@FXML
 	private ChoiceBox<String> loggingType;
-
 
 	/**
 	 * Initializes the window by setting up the species choice boxes, spinners, and
@@ -312,12 +311,12 @@ public class NewTableSceneController implements Initializable {
 
 		// Update the total label after setting the default values
 		updateTotalLabel();
-		
+
 		runButtonReport.setDisable(true);
-		
+
 		loggingOn.getItems().addAll("Yes", "No");
 		loggingOn.setValue("Yes");
-		
+
 		loggingType.getItems().addAll("Basic", "Intermediate", "Advanced");
 		loggingType.setValue("Basic");
 

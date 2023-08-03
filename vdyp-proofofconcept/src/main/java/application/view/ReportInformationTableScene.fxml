@@ -230,9 +230,9 @@
                                           <Font size="10.0" />
                                        </font>
                                     </Label>
-                                    <Slider blockIncrement="5.0" majorTickUnit="5.0" max="25.0" maxWidth="260.0" min="5.0" minorTickCount="0" prefHeight="24.0" prefWidth="205.0" showTickMarks="true" snapToTicks="true" GridPane.columnIndex="1" GridPane.rowIndex="4" />
-                                    <Slider blockIncrement="5.0" majorTickUnit="5.0" max="25.0" maxWidth="260.0" min="5.0" minorTickCount="0" prefHeight="24.0" prefWidth="205.0" showTickMarks="true" snapToTicks="true" GridPane.columnIndex="1" GridPane.rowIndex="6" />
-                                    <Slider blockIncrement="5.0" majorTickUnit="5.0" max="25.0" maxWidth="260.0" min="5.0" minorTickCount="0" prefHeight="24.0" prefWidth="205.0" showTickMarks="true" snapToTicks="true" GridPane.columnIndex="1" GridPane.rowIndex="8" />
+                                    <Slider fx:id="dbhSpecies2Slider" blockIncrement="5.0" majorTickUnit="5.0" max="25.0" maxWidth="260.0" min="5.0" minorTickCount="0" prefHeight="24.0" prefWidth="205.0" showTickMarks="true" snapToTicks="true" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                                    <Slider fx:id="dbhSpecies3Slider" blockIncrement="5.0" majorTickUnit="5.0" max="20.0" maxWidth="260.0" minorTickCount="0" prefHeight="24.0" prefWidth="205.0" showTickMarks="true" snapToTicks="true" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+                                    <Slider fx:id="dbhSpecies4Slider" blockIncrement="5.0" majorTickUnit="5.0" max="25.0" maxWidth="260.0" min="5.0" minorTickCount="0" prefHeight="24.0" prefWidth="205.0" showTickMarks="true" snapToTicks="true" GridPane.columnIndex="1" GridPane.rowIndex="8" />
                                     <Label prefHeight="17.0" prefWidth="286.0" text="4.0 cm+       7.5 cm+         12.5 cm+       17.5 cm+     22.5 cm+" GridPane.columnIndex="1" GridPane.rowIndex="3">
                                        <font>
                                           <Font size="10.0" />
@@ -331,7 +331,7 @@
                               <ChoiceBox fx:id="loggingType" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                            </children>
                         </GridPane>
-                        <TextArea layoutX="26.0" layoutY="84.0" prefHeight="237.0" prefWidth="549.0" />
+                        <TextArea fx:id="logFileText" layoutX="26.0" layoutY="84.0" prefHeight="237.0" prefWidth="549.0" />
                         <Button layoutX="389.0" layoutY="332.0" mnemonicParsing="false" text="Print Log File" />
                         <Button layoutX="490.0" layoutY="332.0" mnemonicParsing="false" text="Save Log File" />
                      </children></AnchorPane>
