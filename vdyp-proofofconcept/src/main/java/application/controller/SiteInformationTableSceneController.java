@@ -32,6 +32,12 @@ public class SiteInformationTableSceneController implements Initializable {
 	private Spinner<Double> bha50SiteIndex;
 	@FXML
 	private Button runButton;
+	@FXML
+	private Button runButtonReport;
+	@FXML
+	private ChoiceBox<String> loggingOn;
+	@FXML
+	private ChoiceBox<String> loggingType;
 
 
 	/**
@@ -60,6 +66,9 @@ public class SiteInformationTableSceneController implements Initializable {
 	 * 		- bha50SiteIndex: Default value set to 16.30, with a range from 0.00 to 60.0 and an increment of 1.0.
 	 * 						  The control is disabled by default.
 	 * 		- runButton: The runButton control is disabled by default.
+	 * 		- runButtonReport: Disabled by default- loggingOn: Sets the choices Yes and No. Yes by default
+	 * 		- loggingType: Set the choices as Basic,Intermediate and Advanced. Basic by Default
+	 * 		- loggingOn: Sets the choices Yes and No. Yes by default
 	 * @formatter:on
 	 */
 	public void setDefaults() {
@@ -103,6 +112,13 @@ public class SiteInformationTableSceneController implements Initializable {
 											// by default
 
 		runButton.setDisable(true);
+		runButtonReport.setDisable(true);
+		
+		loggingOn.getItems().addAll("Yes", "No");
+		loggingOn.setValue("Yes");
+		
+		loggingType.getItems().addAll("Basic", "Intermediate", "Advanced");
+		loggingType.setValue("Basic");
 	}
 
 	// Radio button selections

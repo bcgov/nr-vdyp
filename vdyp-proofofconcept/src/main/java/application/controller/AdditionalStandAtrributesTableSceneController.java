@@ -12,6 +12,7 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
 import javafx.stage.Stage;
@@ -34,6 +35,12 @@ public class AdditionalStandAtrributesTableSceneController implements Initializa
 	Spinner<Double> cuNetDecayVolume;
 	@FXML
 	private Button runButton;
+	@FXML
+	private Button runButtonReport;
+	@FXML
+	private ChoiceBox<String> loggingOn;
+	@FXML
+	private ChoiceBox<String> loggingType;
 
 
 	/**
@@ -61,6 +68,9 @@ public class AdditionalStandAtrributesTableSceneController implements Initializa
 	 * 		- wholeStemVolume12: Default value set to 332.4, with a range from 0.0 to 2500.0 and an increment of 1.00. Disabled by default.
 	 * 		- cuNetDecayVolume: Default value set to 245.5, with a range from 0.0 to 2500.0 and an increment of 1.00. Disabled by default.
 	 * 		- runButton: The runButton control is disabled by default.
+	 * 		- runButtonReport: Disabled by default- loggingOn: Sets the choices Yes and No. Yes by default
+	 * 		- loggingType: Set the choices as Basic,Intermediate and Advanced. Basic by Default
+	 * 		- loggingOn: Sets the choices Yes and No. Yes by default
 	 * @formatter:on
 	 */
 	public void setDefaults() {
@@ -107,6 +117,13 @@ public class AdditionalStandAtrributesTableSceneController implements Initializa
 		cuNetDecayVolume.setDisable(true);
 
 		runButton.setDisable(true);
+		runButtonReport.setDisable(true);
+		
+		loggingOn.getItems().addAll("Yes", "No");
+		loggingOn.setValue("Yes");
+		
+		loggingType.getItems().addAll("Basic", "Intermediate", "Advanced");
+		loggingType.setValue("Basic");
 	}
 
 	/**

@@ -119,6 +119,12 @@ public class NewTableSceneController implements Initializable {
 	private Label previousLabel;
 	@FXML
 	private Button runButton; //main page
+	@FXML
+	private Button runButtonReport;
+	@FXML
+	private ChoiceBox<String> loggingOn;
+	@FXML
+	private ChoiceBox<String> loggingType;
 
 
 	/**
@@ -241,6 +247,10 @@ public class NewTableSceneController implements Initializable {
 	 * For Species 5 to Species 6, the selection is cleared, and percentages are reset to 0.
 	 * It updates the labels to display the selected item and percentage. After setting the
 	 * default values, it updates the total label.
+	 * 		- runButton: The runButton control is disabled by default.
+	 * 		- runButtonReport: Disabled by default- loggingOn: Sets the choices Yes and No. Yes by default
+	 * 		- loggingType: Set the choices as Basic,Intermediate and Advanced. Basic by Default
+	 * 		- loggingOn: Sets the choices Yes and No. Yes by default
 	 * Also called from Set as Default button
 	 * @formatter:on
 	 */
@@ -302,6 +312,14 @@ public class NewTableSceneController implements Initializable {
 
 		// Update the total label after setting the default values
 		updateTotalLabel();
+		
+		runButtonReport.setDisable(true);
+		
+		loggingOn.getItems().addAll("Yes", "No");
+		loggingOn.setValue("Yes");
+		
+		loggingType.getItems().addAll("Basic", "Intermediate", "Advanced");
+		loggingType.setValue("Basic");
 
 	}
 

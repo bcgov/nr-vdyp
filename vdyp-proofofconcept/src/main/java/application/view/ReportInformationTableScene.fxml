@@ -327,8 +327,8 @@
                                     <Font size="10.0" />
                                  </font>
                               </Label>
-                              <ChoiceBox prefWidth="150.0" GridPane.rowIndex="1" />
-                              <ChoiceBox prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                              <ChoiceBox fx:id="loggingOn" prefWidth="150.0" GridPane.rowIndex="1" />
+                              <ChoiceBox fx:id="loggingType" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                            </children>
                         </GridPane>
                         <TextArea layoutX="26.0" layoutY="84.0" prefHeight="237.0" prefWidth="549.0" />

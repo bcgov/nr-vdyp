@@ -33,7 +33,12 @@ public class StandDensityTableSceneController implements Initializable {
 	private ChoiceBox<String> minimumDBHLimit;
 	@FXML
 	private Button runButton;
-
+	@FXML
+	private Button runButtonReport;
+	@FXML
+	private ChoiceBox<String> loggingOn;
+	@FXML
+	private ChoiceBox<String> loggingType;
 
 	
 	/**
@@ -61,6 +66,9 @@ public class StandDensityTableSceneController implements Initializable {
 	 *   	- treesPerHectare: Spinner values range from "N/A" to "100", representing the sequence of integers from 0 to 100.
 	 *   	- basalArea: Spinner values range from "N/A" to "100", representing the sequence of integers from 0 to 100.
 	 *   	- runButton: The runButton control is disabled by default.
+	 * 		- runButtonReport: Disabled by default- loggingOn: Sets the choices Yes and No. Yes by default
+	 * 		- loggingType: Set the choices as Basic,Intermediate and Advanced. Basic by Default
+	 * 		- loggingOn: Sets the choices Yes and No. Yes by default
 	 * @formatter:on
 	 */
 	public void setDefaults() {
@@ -98,6 +106,10 @@ public class StandDensityTableSceneController implements Initializable {
 		basalArea.setValueFactory(basalAreaValueFactory);
 
 		runButton.setDisable(true);
+		loggingOn.setValue("Yes");
+		
+		loggingType.getItems().addAll("Basic", "Intermediate", "Advanced");
+		loggingType.setValue("Basic");
 	}
 
 	// Bottom Menu Bar functionality
