@@ -120,12 +120,6 @@ public class NewTableSceneController implements Initializable {
 	@FXML
 	private Button runButton;
 
-	// Needed to switch to the next scene
-	public static Stage stage; // TODO TEMPORARY find better method for switching scenes or implement getter
-								// methods
-	public static Scene scene;
-	public static Parent root;
-
 	/**
 	 * Initializes the window by setting up the species choice boxes, spinners, and
 	 * listeners.
@@ -362,13 +356,9 @@ public class NewTableSceneController implements Initializable {
 			showErrorPopup("Total percent does not total 100%");
 		} else {
 			FXMLLoader loader = new FXMLLoader(getClass().getResource("../view/SiteInformationTableScene.fxml"));
-
-			SiteInformationTableSceneController controller = new SiteInformationTableSceneController();
-			loader.setController(controller);
-
-			root = loader.load();
-			stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-			scene = new Scene(root);
+			Parent root = loader.load();
+			Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+			Scene scene = new Scene(root);
 			stage.setScene(scene);
 			stage.show();
 		}

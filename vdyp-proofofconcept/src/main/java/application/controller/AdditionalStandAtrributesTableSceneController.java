@@ -9,6 +9,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Spinner;
@@ -166,15 +167,11 @@ public class AdditionalStandAtrributesTableSceneController implements Initializa
 	 */
 	public void switchToScene5(ActionEvent event) throws IOException {
 		FXMLLoader loader = new FXMLLoader(getClass().getResource("../view/ReportInformationTableScene.fxml"));
-
-		ReportInformationTableSceneController controller = new ReportInformationTableSceneController();
-		loader.setController(controller);
-
-		NewTableSceneController.root = loader.load();
-		NewTableSceneController.stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-		NewTableSceneController.scene = new Scene(NewTableSceneController.root);
-		NewTableSceneController.stage.setScene(NewTableSceneController.scene);
-		NewTableSceneController.stage.show();
+		Parent root = loader.load();
+		Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+		Scene scene = new Scene(root);
+		stage.setScene(scene);
+		stage.show();
 	}
 	// End of bottom menu bar
 }

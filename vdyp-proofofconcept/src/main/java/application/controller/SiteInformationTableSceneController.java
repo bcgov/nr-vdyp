@@ -9,6 +9,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
@@ -164,11 +165,11 @@ public class SiteInformationTableSceneController implements Initializable {
 	 */
 	public void switchToScene1(ActionEvent event) throws IOException {
 		FXMLLoader loader = new FXMLLoader(getClass().getResource("../view/NewTableScene.fxml"));
-		NewTableSceneController.root = loader.load();
-		NewTableSceneController.stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-		NewTableSceneController.scene = new Scene(NewTableSceneController.root);
-		NewTableSceneController.stage.setScene(NewTableSceneController.scene);
-		NewTableSceneController.stage.show();
+		Parent root = loader.load();
+		Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+		Scene scene = new Scene(root);
+		stage.setScene(scene);
+		stage.show();
 	}
 
 	/**
@@ -179,15 +180,11 @@ public class SiteInformationTableSceneController implements Initializable {
 	 */
 	public void switchToScene3(ActionEvent event) throws IOException {
 		FXMLLoader loader = new FXMLLoader(getClass().getResource("../view/StandDensityTableScene.fxml"));
-		NewTableSceneController.root = loader.load();
-
-		StandDensityTableSceneController controller = new StandDensityTableSceneController();
-		loader.setController(controller);
-
-		NewTableSceneController.stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-		NewTableSceneController.scene = new Scene(NewTableSceneController.root);
-		NewTableSceneController.stage.setScene(NewTableSceneController.scene);
-		NewTableSceneController.stage.show();
+		Parent root = loader.load();
+		Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+		Scene scene = new Scene(root);
+		stage.setScene(scene);
+		stage.show();
 	}
 	// Bottom Menu bar end
 

@@ -11,6 +11,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
@@ -32,7 +33,7 @@ public class StandDensityTableSceneController implements Initializable {
 	private ChoiceBox<String> minimumDBHLimit;
 	@FXML
 	Button runButton;
-
+	
 	/**
 	 * Initializes the window by setting default values for various controls.
 	 *
@@ -129,11 +130,11 @@ public class StandDensityTableSceneController implements Initializable {
 	 */
 	public void switchToScene4(ActionEvent event) throws IOException {
 		FXMLLoader loader = new FXMLLoader(getClass().getResource("../view/AdditionalStandAttributesTableScene.fxml"));
-		NewTableSceneController.root = loader.load();
-		NewTableSceneController.stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-		NewTableSceneController.scene = new Scene(NewTableSceneController.root);
-		NewTableSceneController.stage.setScene(NewTableSceneController.scene);
-		NewTableSceneController.stage.show();
+		Parent root = loader.load();
+		Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+		Scene scene = new Scene(root);
+		stage.setScene(scene);
+		stage.show();
 	}
 	// End of bottom menu bar
 
