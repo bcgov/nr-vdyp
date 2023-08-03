@@ -90,27 +90,27 @@
                                           <Insets bottom="3.0" />
                                        </padding>
                                     </Label>
-                                    <CheckBox mnemonicParsing="false" text="Whole Stem" GridPane.rowIndex="1">
+                                    <CheckBox fx:id="wholeStem" mnemonicParsing="false" text="Whole Stem" GridPane.rowIndex="1">
                                        <font>
                                           <Font size="10.0" />
                                        </font>
                                     </CheckBox>
-                                    <CheckBox mnemonicParsing="false" text="Close Utilization" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                    <CheckBox fx:id="closeUtilization" mnemonicParsing="false" text="Close Utilization" GridPane.columnIndex="1" GridPane.rowIndex="1">
                                        <font>
                                           <Font size="10.0" />
                                        </font>
                                     </CheckBox>
-                                    <CheckBox mnemonicParsing="false" text="Net Decay" GridPane.columnIndex="2" GridPane.rowIndex="1">
+                                    <CheckBox fx:id="netDecay" mnemonicParsing="false" text="Net Decay" GridPane.columnIndex="2" GridPane.rowIndex="1">
                                        <font>
                                           <Font size="10.0" />
                                        </font>
                                     </CheckBox>
-                                    <CheckBox mnemonicParsing="false" text="Net Decay and Waste" GridPane.columnIndex="3" GridPane.rowIndex="1">
+                                    <CheckBox fx:id="netDecayWaste" mnemonicParsing="false" text="Net Decay and Waste" GridPane.columnIndex="3" GridPane.rowIndex="1">
                                        <font>
                                           <Font size="10.0" />
                                        </font>
                                     </CheckBox>
-                                    <CheckBox mnemonicParsing="false" prefHeight="28.0" prefWidth="165.0" text="Net Decay, Waste and Breakage" wrapText="true" GridPane.columnIndex="4" GridPane.rowIndex="1">
+                                    <CheckBox fx:id="netDecayWasteBreakage" mnemonicParsing="false" prefHeight="28.0" prefWidth="165.0" text="Net Decay, Waste and Breakage" wrapText="true" GridPane.columnIndex="4" GridPane.rowIndex="1">
                                        <font>
                                           <Font size="10.0" />
                                        </font>
@@ -133,12 +133,12 @@
                                     <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                  </rowConstraints>
                                  <children>
-                                    <CheckBox mnemonicParsing="false" text="Computed MAI" GridPane.rowIndex="1">
+                                    <CheckBox fx:id="computedMAI" mnemonicParsing="false" text="Computed MAI" GridPane.rowIndex="1">
                                        <font>
                                           <Font size="10.0" />
                                        </font>
                                     </CheckBox>
-                                    <CheckBox mnemonicParsing="false" text="Species Compostion" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                    <CheckBox fx:id="speciesCompostion" mnemonicParsing="false" text="Species Compostion" GridPane.columnIndex="1" GridPane.rowIndex="1">
                                        <font>
                                           <Font size="10.0" />
                                        </font>
@@ -154,7 +154,7 @@
                                           <Insets bottom="8.0" />
                                        </padding>
                                     </Label>
-                                    <CheckBox mnemonicParsing="false" text="Culmination Values" GridPane.columnIndex="2" GridPane.rowIndex="1">
+                                    <CheckBox fx:id="culminationValues" mnemonicParsing="false" text="Culmination Values" GridPane.columnIndex="2" GridPane.rowIndex="1">
                                        <font>
                                           <Font size="10.0" />
                                        </font>
@@ -181,13 +181,13 @@
                                           <Insets />
                                        </GridPane.margin>
                                     </ChoiceBox>
-                                    <TextField maxHeight="10.0" prefHeight="0.0" prefWidth="143.0" GridPane.columnIndex="4" GridPane.rowIndex="1" />
+                                    <TextField maxHeight="10.0" prefHeight="0.0" prefWidth="143.0" text="A Sample Report Title" GridPane.columnIndex="4" GridPane.rowIndex="1" />
                                  </children>
                                  <padding>
                                     <Insets bottom="10.0" top="5.0" />
                                  </padding>
                               </GridPane>
-                              <GridPane maxWidth="579.0" prefHeight="170.0" prefWidth="574.0">
+                              <GridPane fx:id="dbhSliders" maxWidth="579.0" prefHeight="170.0" prefWidth="574.0">
                                 <columnConstraints>
                                     <ColumnConstraints hgrow="SOMETIMES" maxWidth="282.0" minWidth="10.0" prefWidth="181.0" />
                                   <ColumnConstraints hgrow="SOMETIMES" maxWidth="398.0" minWidth="10.0" prefWidth="398.0" />

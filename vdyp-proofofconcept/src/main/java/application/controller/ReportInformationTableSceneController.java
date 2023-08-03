@@ -8,12 +8,14 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextArea;
+import javafx.scene.layout.GridPane;
 
 public class ReportInformationTableSceneController implements Initializable {
 
@@ -41,6 +43,26 @@ public class ReportInformationTableSceneController implements Initializable {
 	private ChoiceBox<String> loggingOn;
 	@FXML
 	private ChoiceBox<String> loggingType;
+	@FXML
+	private CheckBox wholeStem;
+	@FXML
+	private CheckBox closeUtilization;
+	@FXML
+	private CheckBox netDecay;
+	@FXML
+	private CheckBox netDecayWaste;
+	@FXML
+	private CheckBox netDecayWasteBreakage;
+	@FXML
+	private CheckBox computedMAI;
+	@FXML
+	private CheckBox speciesCompostion;
+	@FXML
+	private CheckBox culminationValues;
+	@FXML
+	private GridPane dbhSliders;
+	
+	
 	/**
 	 * Initializes the window by setting default values for various controls.
 	 *
@@ -52,6 +74,38 @@ public class ReportInformationTableSceneController implements Initializable {
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		setDefaults();
+		
+		projectionType.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+			if("Volume".equals(newValue)) {
+				volumeSelected();
+			} else {
+				cfsBiomassSelected();
+			}
+		});
+	}
+
+	private void cfsBiomassSelected() {
+		wholeStem.setDisable(true);
+		closeUtilization.setDisable(true);
+		netDecay.setDisable(true);
+		netDecayWaste.setDisable(true);
+		netDecayWasteBreakage.setDisable(true);
+		computedMAI.setDisable(true);
+		culminationValues.setDisable(true);
+		dbhSliders.setDisable(true);
+		
+	}
+
+	private void volumeSelected() {
+		wholeStem.setDisable(false);
+		closeUtilization.setDisable(false);
+		netDecay.setDisable(false);
+		netDecayWaste.setDisable(false);
+		netDecayWasteBreakage.setDisable(false);
+		computedMAI.setDisable(false);
+		culminationValues.setDisable(true);
+		dbhSliders.setDisable(false);
+		
 	}
 
 	/**
@@ -129,7 +183,7 @@ public class ReportInformationTableSceneController implements Initializable {
 	 * @param event The ActionEvent triggered by the run button click.
 	 * @throws IOException 
 	 */
-	public void runButtonAction(ActionEvent event) throws IOException {
+	public void runButtonAction(ActionEvent event) {
 		String text = """
 	                                 VDYP7 Yield Table
 	             Lodgepole Pine 30.0%, Poplar 30.0%, Hemlock 30.0%, Spruce 10.0%
