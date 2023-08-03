@@ -51,7 +51,7 @@
       </MenuBar>
    </top>
    <bottom>
-      <Button minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#openSecondaryWindow" prefHeight="60.0" prefWidth="60.0" text="+" BorderPane.alignment="BOTTOM_RIGHT">
+      <Button fx:id="roundButton" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#openSecondaryWindow" prefHeight="60.0" prefWidth="60.0" styleClass="round-button" text="+" BorderPane.alignment="BOTTOM_RIGHT">
          <BorderPane.margin>
             <Insets bottom="30.0" right="30.0" />
          </BorderPane.margin>

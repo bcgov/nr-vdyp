@@ -10,13 +10,13 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
 import javafx.stage.Stage;
 
 public class SiteInformationTableSceneController implements Initializable {
-	// Choice boxes and spinners for scene #2
 	@FXML
 	private ChoiceBox<String> ecoZone;
 	@FXML
@@ -29,13 +29,81 @@ public class SiteInformationTableSceneController implements Initializable {
 	private Spinner<Double> standHeight;
 	@FXML
 	private Spinner<Double> bha50SiteIndex;
+	@FXML
+	Button runButton;
 
+	/**
+	 * Initializes the SiteInformationTableScene with default values and
+	 * configurations. This method is automatically called when the associated FXML
+	 * is loaded.
+	 *
+	 * @param location  The URL location used to resolve relative paths.
+	 * @param resources The ResourceBundle containing localizable resources.
+	 */
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		setDefaults();
+		setDefaults(); // this is a function so it can also be called from menu button
 
 	}
 
+	/**
+	 * Sets default values for various controls in the window and disables certain controls as specified in the Balsamiq mock-ups.
+	 * The default values and control states are as follows:
+	 * @formatter:off
+	 * 		- becZone: Default value set to "IDF - Interior Douglas Fir" with options from predefined BEC Zones.
+	 * 		- ecoZone: Default value set to "Select Species" with options from predefined Eco Zones.
+	 * 		- ageType: Default value set to "Total" with options "Total" and "Breast".
+	 * 		- standAge: Default value set to 60.0, with a range from 0.00 to 500.00 and an increment of 10.0.
+	 * 		- standHeight: Default value set to 17.00, with a range from 0.00 to 99.9 and an increment of 1.0.
+	 * 		- bha50SiteIndex: Default value set to 16.30, with a range from 0.00 to 60.0 and an increment of 1.0.
+	 * 						  The control is disabled by default.
+	 * 		- runButton: The runButton control is disabled by default.
+	 * @formatter:on
+	 */
+	public void setDefaults() {
+		// Arrays containing the options for different Bec & Eco Zones
+		final String[] becZones = { "AT - Alpine Tundra", "BG - Bunch Grass", "BWBS - Boreal White and Black Spruce",
+				"CDF - Coastal Douglas Fir", "CWH - Coastal Western Hemlock", "ESSF - Engelmann Spruce",
+				"ICH - Interior Cedar Hemlock", "IDF - Interior Douglas Fir", "MH - Mountain Hemlock",
+				"MS - Montane Spruce", "pp = Ponderosa Pine", "SBPS - Sub-Boreal Pine-Spruce",
+				"SBS - Sub-Boreal Spruce", "SWB - Spruce-Willow-Birch" };
+		final String[] ecoZones = { "Boreal Cordillera", "Boreal Plains", "Montane Cordillera", "Pacific Maritime",
+				"Taiga Plains" };
+
+		// An array containing the options for AgeType
+		final String[] ageTypes = { "Total", "Breast" };
+
+		// Add choice box options and set defaults
+		becZone.getItems().addAll(becZones); // these are defined below in the scene#2 section
+		ecoZone.getItems().addAll(ecoZones);
+		ageType.getItems().addAll(ageTypes);
+
+		becZone.setValue("IDF - Interior Douglas Fir");
+		ecoZone.setValue("Select Species");
+		ageType.setValue("Total");
+
+		SpinnerValueFactory<Double> standAgeValueFactory = new SpinnerValueFactory.DoubleSpinnerValueFactory(
+				0.00, 500.00, 60.00, 10
+		); // min, max, default, increment
+			// Currently the default when WinVDYP is opened is 60
+		standAge.setValueFactory(standAgeValueFactory);
+
+		SpinnerValueFactory<Double> standHeightValueFactory = new SpinnerValueFactory.DoubleSpinnerValueFactory(
+				0.00, 99.9, 17.00, 1
+		);
+		standHeight.setValueFactory(standHeightValueFactory);
+
+		SpinnerValueFactory<Double> bha50SiteIndexValueFactory = new SpinnerValueFactory.DoubleSpinnerValueFactory(
+				0.00, 60.0, 16.30, 1
+		);
+		bha50SiteIndex.setValueFactory(bha50SiteIndexValueFactory);
+		bha50SiteIndex.setDisable(true); // Real WinVDYP uses the other two to calculate this, so it should be disable
+											// by default
+
+		runButton.setDisable(true);
+	}
+
+	// Radio button selections
 	/**
 	 * Handles the action event when the "Age (years)" option is selected in the
 	 * float radiobutton. Disables the standAge choicebox and enables the
@@ -74,52 +142,12 @@ public class SiteInformationTableSceneController implements Initializable {
 		standAge.setDisable(false);
 		standHeight.setDisable(false); // since we don't know from where it's being called
 	}
-
-	private void setDefaults() {
-		// Arrays containing the options for different Bec & Eco Zones
-		final String[] becZones = { "AT - Alpine Tundra", "BG - Bunch Grass", "BWBS - Boreal White and Black Spruce",
-				"CDF - Coastal Douglas Fir", "CWH - Coastal Western Hemlock", "ESSF - Engelmann Spruce",
-				"ICH - Interior Cedar Hemlock", "IDF - Interior Douglas Fir", "MH - Mountain Hemlock",
-				"MS - Montane Spruce", "pp = Ponderosa Pine", "SBPS - Sub-Boreal Pine-Spruce",
-				"SBS - Sub-Boreal Spruce", "SWB - Spruce-Willow-Birch" };
-		final String[] ecoZones = { "Boreal Cordillera", "Boreal Plains", "Montane Cordillera", "Pacific Maritime",
-				"Taiga Plains" };
-
-		// An array containing the options for AgeType
-		final String[] ageTypes = { "Total", "Breast" };
-
-		// Add choice box options and set defaults
-		becZone.getItems().addAll(becZones); // these are defined below in the scene#2 section
-		ecoZone.getItems().addAll(ecoZones);
-		ageType.getItems().addAll(ageTypes);
-
-		becZone.setValue("IDF - Interior Douglas Fir");
-		ecoZone.setValue("Select Species");
-		ageType.setValue("Total");
-
-		SpinnerValueFactory<Double> standAgeValueFactory = new SpinnerValueFactory.DoubleSpinnerValueFactory(
-				0.00, 500.00, 60.00, 10
-		); // min, max, default, increment
-		// Currently the default when WinVDYP is opened is 60
-		standAge.setValueFactory(standAgeValueFactory);
-
-		SpinnerValueFactory<Double> standHeightValueFactory = new SpinnerValueFactory.DoubleSpinnerValueFactory(
-				0.00, 99.9, 17.00, 1
-		);
-		standHeight.setValueFactory(standHeightValueFactory);
-
-		SpinnerValueFactory<Double> bha50SiteIndexValueFactory = new SpinnerValueFactory.DoubleSpinnerValueFactory(
-				0.00, 60.0, 16.30, 1
-		);
-		bha50SiteIndex.setValueFactory(bha50SiteIndexValueFactory);
-		bha50SiteIndex.setDisable(true); // Real WinVDYP uses the other two to calculate this, so it should be disable
-											// by default
-	}
+	// End of radio button selections
 
 	// Bottom Menu Bar functionality
 	/**
 	 * Handles the cancel button action event. This method is triggered when the
-	 * cancel button is clicked in the new table window. It closes this new table
+	 * cancel button is clicked in the site information table window. It closes this
 	 * window.
 	 *
 	 * @param event The ActionEvent triggered by the cancel button click.
@@ -127,32 +155,6 @@ public class SiteInformationTableSceneController implements Initializable {
 	public void cancelButtonAction(ActionEvent event) {
 		MainController.getNewWindow().close();
 	}
-
-	/**
-	 * Handles the default button action event. This method is triggered when the
-	 * default button is clicked in the new table window. It sets default values for
-	 * species and percentages.
-	 *
-	 * @param event The ActionEvent triggered by the default button click.
-	 */
-	public void defaultButtonAction(ActionEvent event) {
-		
-	}
-
-	/**
-	 * Handles the run button action event.
-	 *
-	 * This method is triggered when the run model button is clicked in the table
-	 * window. It checks if the total percentage from all the spinners is equal to
-	 * 100%. If the total percentage is not 100%, an error popup is displayed to
-	 * notify the user.
-	 *
-	 * @param event The ActionEvent triggered by the run button click.
-	 */
-	public void runButtonAction(ActionEvent event) {
-		// Code to run the model goes here
-	}
-//Bottom Menu bar
 
 	/**
 	 * Switches the application to Scene 1 - NewTableScene.
@@ -187,6 +189,8 @@ public class SiteInformationTableSceneController implements Initializable {
 		NewTableSceneController.stage.setScene(NewTableSceneController.scene);
 		NewTableSceneController.stage.show();
 	}
+	// Bottom Menu bar end
+
 	// TODO Implement passing information from screen 1
 
 }

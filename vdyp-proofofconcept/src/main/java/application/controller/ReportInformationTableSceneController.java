@@ -14,48 +14,69 @@ import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
 
 public class ReportInformationTableSceneController implements Initializable {
-	
+
 	@FXML
 	private Spinner<Integer> startingAge;
 	@FXML
 	private Spinner<Integer> finishingAge;
 	@FXML
 	private Spinner<Integer> ageIncrement;
-	@FXML 
+	@FXML
 	private ChoiceBox<String> projectionType;
 	@FXML
 	private Button nextPageButton;
 	@FXML
 	private Label nextLabel;
-	
+
+	/**
+	 * Initializes the window by setting default values for various controls.
+	 *
+	 *
+	 * @param location  The URL of the FXML file. Unused in this method.
+	 * @param resources The ResourceBundle containing locale-specific resources.
+	 *                  Unused in this method.
+	 */
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		setDefaults();
 	}
 
+	/**
+	 * Sets default values for various controls in the window.
+	 * The default values and control states are as follows:
+	 * @formatter:off
+	 * 		- startingAge: Default value set to 0, with a range from 0 to 500 and an increment of 10.
+	 * 		- finishingAge: Default value set to 250, with a range from 1 to 460 and an increment of 10.
+	 * 		- ageIncrement: Default value set to 25, with a range from 1 to 350 and an increment of 5.
+	 * 		- projectionType: Default value set to "Volume" with options "Volume" and "CFS Biomass".
+	 * 		- nextPageButton: The nextPageButton control is disabled by default.
+	 * 		- nextLabel: The nextLabel control is disabled by default.
+	 * @formatter:on
+	 */
 	public void setDefaults() {
 		SpinnerValueFactory<Integer> startingAgeValueFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(
 				0, 500, 0, 10
 		); // min, max, default, increment
 		startingAge.setValueFactory(startingAgeValueFactory);
-		
-		SpinnerValueFactory<Integer>finishingAgeValueFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(
+
+		SpinnerValueFactory<Integer> finishingAgeValueFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(
 				1, 460, 250, 10
 		); // min, max, default, increment
 		finishingAge.setValueFactory(finishingAgeValueFactory);
-		
-		SpinnerValueFactory<Integer>ageIncrementValueFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(
+
+		SpinnerValueFactory<Integer> ageIncrementValueFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(
 				1, 350, 25, 5
 		); // min, max, default, increment
 		ageIncrement.setValueFactory(ageIncrementValueFactory);
-		
+
 		projectionType.getItems().addAll("Volume", "CFS Biomass");
 		projectionType.setValue("Volume");
-		
+
 		nextPageButton.setDisable(true);
 		nextLabel.setDisable(true);
 	}
-	
+
+	// Bottom menu bar
 	/**
 	 * Switches the application to Scene 4 - StandDensityTableScene.
 	 *
@@ -66,7 +87,7 @@ public class ReportInformationTableSceneController implements Initializable {
 		StandDensityTableSceneController standDensityTableSceneController = new StandDensityTableSceneController();
 		standDensityTableSceneController.switchToScene4(event);
 	}
-	// Bottom Menu Bar functionality
+
 	/**
 	 * Handles the cancel button action event. This method is triggered when the
 	 * cancel button is clicked in the new table window. It closes this new table
@@ -79,23 +100,10 @@ public class ReportInformationTableSceneController implements Initializable {
 	}
 
 	/**
-	 * Handles the default button action event. This method is triggered when the
-	 * default button is clicked in the new table window. It sets default values for
-	 * species and percentages.
-	 *
-	 * @param event The ActionEvent triggered by the default button click.
-	 */
-	public void defaultButtonAction(ActionEvent event) {
-
-	}
-
-	/**
 	 * Handles the run button action event.
 	 *
 	 * This method is triggered when the run model button is clicked in the table
-	 * window. It checks if the total percentage from all the spinners is equal to
-	 * 100%. If the total percentage is not 100%, an error popup is displayed to
-	 * notify the user.
+	 * window.
 	 *
 	 * @param event The ActionEvent triggered by the run button click.
 	 */

@@ -84,8 +84,8 @@
                               </Separator>
                            </children>
                         </VBox>
-                        <Button layoutX="253.0" layoutY="328.0" mnemonicParsing="false" onAction="#setDefaults" text="Set as Default" />
-                        <Button layoutX="505.0" layoutY="328.0" mnemonicParsing="false" onAction="#runButtonAction" text="Run Model" />
+                        <Button fx:id="runButton" layoutX="253.0" layoutY="328.0" mnemonicParsing="false" onAction="#setDefaults" text="Set as Default" />
+                        <Button fx:id="runButton" layoutX="505.0" layoutY="328.0" mnemonicParsing="false" text="Run Model" />
                         <Button layoutX="348.0" layoutY="328.0" mnemonicParsing="false" onAction="#cancelButtonAction" text="Cancel" />
                         <Button fx:id="nextPageButton" layoutX="476.0" layoutY="330.0" mnemonicParsing="false" onAction="#switchToScene4" prefHeight="21.0" prefWidth="8.0" text="&gt;">
                            <font>

@@ -117,13 +117,14 @@ public class NewTableSceneController implements Initializable {
 	private Button previousPageButton;
 	@FXML
 	private Label previousLabel;
-	
+	@FXML
+	private Button runButton;
+
 	// Needed to switch to the next scene
 	public static Stage stage; // TODO TEMPORARY find better method for switching scenes or implement getter
 								// methods
 	public static Scene scene;
 	public static Parent root;
-	private static int sceneNumber = 1;
 
 	/**
 	 * Initializes the window by setting up the species choice boxes, spinners, and
@@ -184,8 +185,9 @@ public class NewTableSceneController implements Initializable {
 
 	/**
 	 * Sets up the species choice boxes and spinners by adding them to the
-	 * corresponding lists and arrays. Disables previous button since this is 
-	 * the first page
+	 * corresponding lists and arrays. Disables previous button since this is the
+	 * first page as well as the run model since it can only be run from the last
+	 * page
 	 */
 	private void setUpSpecies() {
 		// Add species choice boxes to the List
@@ -226,9 +228,11 @@ public class NewTableSceneController implements Initializable {
 		speciesGroupPercentLabels[3] = species4GroupPercent;
 		speciesGroupPercentLabels[4] = species5GroupPercent;
 		speciesGroupPercentLabels[5] = species6GroupPercent;
-		
+
 		previousPageButton.setDisable(true);
 		previousLabel.setDisable(true);
+
+		runButton.setDisable(true);
 	}
 
 	/**
@@ -303,7 +307,7 @@ public class NewTableSceneController implements Initializable {
 
 		// Update the total label after setting the default values
 		updateTotalLabel();
-	
+
 	}
 
 	/**
@@ -333,6 +337,7 @@ public class NewTableSceneController implements Initializable {
 		return total;
 	}
 
+	// Bottom Menu button functions
 	/**
 	 * Handles the cancel button action event. This method is triggered when the
 	 * cancel button is clicked in the new table window. It closes this new table
@@ -345,22 +350,30 @@ public class NewTableSceneController implements Initializable {
 	}
 
 	/**
-	 * Handles the run button action event.
+	 * Switches the application to Scene 2 - SiteInformationTableScene.
 	 *
-	 * This method is triggered when the run model button is clicked in the table
-	 * window. It checks if the total percentage from all the spinners is equal to
-	 * 100%. If the total percentage is not 100%, an error popup is displayed to
-	 * notify the user.
-	 *
-	 * @param event The ActionEvent triggered by the run button click.
+	 * @param event The ActionEvent triggering the scene switch.
+	 * @throws IOException If an I/O error occurs during scene loading.
 	 */
-	public void runButtonAction(ActionEvent event) {
+	public void switchToScene2(ActionEvent event) throws IOException {
 		int total = getTotalPercent();
-		if (total != 100) {
+
+		if (total != 100 && total != 0) {
 			showErrorPopup("Total percent does not total 100%");
+		} else {
+			FXMLLoader loader = new FXMLLoader(getClass().getResource("../view/SiteInformationTableScene.fxml"));
+
+			SiteInformationTableSceneController controller = new SiteInformationTableSceneController();
+			loader.setController(controller);
+
+			root = loader.load();
+			stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+			scene = new Scene(root);
+			stage.setScene(scene);
+			stage.show();
 		}
-		// Code to run the model goes here
 	}
+	// End of bottom menu buttons
 
 	/**
 	 * Displays an error popup with the specified error message.
@@ -380,32 +393,4 @@ public class NewTableSceneController implements Initializable {
 
 		alert.showAndWait();
 	}
-
-	/**
-	 * Switches the application to Scene 2 - SiteInformationTableScene.
-	 *
-	 * @param event The ActionEvent triggering the scene switch.
-	 * @throws IOException If an I/O error occurs during scene loading.
-	 */
-	public void switchToScene2(ActionEvent event) throws IOException {
-		int total = getTotalPercent();
-
-		if (total != 100 && sceneNumber == 1) {
-			showErrorPopup("Total percent does not total 100%");
-		} else {
-			sceneNumber = 2; // to differentiate for the controller file
-			FXMLLoader loader = new FXMLLoader(getClass().getResource("../view/SiteInformationTableScene.fxml"));
-
-			SiteInformationTableSceneController controller = new SiteInformationTableSceneController();
-			loader.setController(controller);
-
-			root = loader.load();
-			stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-			scene = new Scene(root);
-			stage.setScene(scene);
-			stage.show();
-		}
-	}
-
-	// TODO implement overflow exceptions when model is "run"
 }

@@ -12,6 +12,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
@@ -29,9 +30,12 @@ public class StandDensityTableSceneController implements Initializable {
 	private Spinner<String> basalArea;
 	@FXML
 	private ChoiceBox<String> minimumDBHLimit;
+	@FXML
+	Button runButton;
 
 	/**
 	 * Initializes the window by setting default values for various controls.
+	 *
 	 *
 	 * @param location  The URL of the FXML file. Unused in this method.
 	 * @param resources The ResourceBundle containing locale-specific resources.
@@ -53,6 +57,7 @@ public class StandDensityTableSceneController implements Initializable {
 	 *   	- percentCrownClosure: Default value set to 50, with a range from 0 to 100 and an increment of 1.
 	 *   	- treesPerHectare: Spinner values range from "N/A" to "100", representing the sequence of integers from 0 to 100.
 	 *   	- basalArea: Spinner values range from "N/A" to "100", representing the sequence of integers from 0 to 100.
+	 *   	- runButton: The runButton control is disabled by default.
 	 * @formatter:on
 	 */
 	public void setDefaults() {
@@ -88,6 +93,32 @@ public class StandDensityTableSceneController implements Initializable {
 				stringValues
 		);
 		basalArea.setValueFactory(basalAreaValueFactory);
+
+		runButton.setDisable(true);
+	}
+
+	// Bottom Menu Bar functionality
+	/**
+	 * Handles the cancel button action event. This method is triggered when the
+	 * cancel button is clicked in the new table window. It closes this new table
+	 * window.
+	 *
+	 * @param event The ActionEvent triggered by the cancel button click.
+	 */
+	public void cancelButtonAction(ActionEvent event) {
+		MainController.getNewWindow().close();
+	}
+
+	/**
+	 * Switches the application to Scene 2 - SiteInformationTableScene. Calls the
+	 * appropriate function in NewTableSceneController
+	 *
+	 * @param event The ActionEvent triggering the scene switch.
+	 * @throws IOException If an I/O error occurs during scene loading.
+	 */
+	public void switchToScene2(ActionEvent event) throws IOException {
+		NewTableSceneController newTableSceneController = new NewTableSceneController();
+		newTableSceneController.switchToScene2(event);
 	}
 
 	/**
@@ -104,54 +135,6 @@ public class StandDensityTableSceneController implements Initializable {
 		NewTableSceneController.stage.setScene(NewTableSceneController.scene);
 		NewTableSceneController.stage.show();
 	}
-
-	/**
-	 * Switches the application to Scene 2 - SiteInformationTableScene. Calls the
-	 * appropriate function in NewTableSceneController
-	 *
-	 * @param event The ActionEvent triggering the scene switch.
-	 * @throws IOException If an I/O error occurs during scene loading.
-	 */
-	public void switchToScene2(ActionEvent event) throws IOException {
-		NewTableSceneController newTableSceneController = new NewTableSceneController();
-		newTableSceneController.switchToScene2(event);
-	}
-
-//Bottom Menu Bar functionality
-	/**
-	 * Handles the cancel button action event. This method is triggered when the
-	 * cancel button is clicked in the new table window. It closes this new table
-	 * window.
-	 *
-	 * @param event The ActionEvent triggered by the cancel button click.
-	 */
-	public void cancelButtonAction(ActionEvent event) {
-		MainController.getNewWindow().close();
-	}
-
-	/**
-	 * Handles the default button action event. This method is triggered when the
-	 * default button is clicked in the new table window. It sets default values for
-	 * species and percentages.
-	 *
-	 * @param event The ActionEvent triggered by the default button click.
-	 */
-	public void defaultButtonAction(ActionEvent event) {
-
-	}
-
-	/**
-	 * Handles the run button action event.
-	 *
-	 * This method is triggered when the run model button is clicked in the table
-	 * window. It checks if the total percentage from all the spinners is equal to
-	 * 100%. If the total percentage is not 100%, an error popup is displayed to
-	 * notify the user.
-	 *
-	 * @param event The ActionEvent triggered by the run button click.
-	 */
-	public void runButtonAction(ActionEvent event) {
-		// Code to run the model goes here
-	}
+	// End of bottom menu bar
 
 }
