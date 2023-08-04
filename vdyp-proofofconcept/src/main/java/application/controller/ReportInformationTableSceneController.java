@@ -3,7 +3,6 @@ package application.controller;
 import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ResourceBundle;
 
@@ -17,6 +16,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
+import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.GridPane;
@@ -279,10 +279,14 @@ public class ReportInformationTableSceneController implements Initializable {
 
 		String logFile = formattedTime + ": Model run and report generated" + "\n";
 
-		runButtonReport.setDisable(true); // TODO make this dynamic where it checks pane
 		modelReportText.setText(modelRunText);
 		logFileText.appendText(logFile);
 
-		tabPane.getSelectionModel().selectNext();
+		Tab selectedTab = tabPane.getSelectionModel().getSelectedItem();
+
+		if (selectedTab.getText().equals("Model Parameter Selection")) {
+			tabPane.getSelectionModel().selectNext();
+		}
+
 	}
 }

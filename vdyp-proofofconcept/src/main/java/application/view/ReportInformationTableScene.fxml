@@ -24,7 +24,7 @@
    <center>
       <TabPane fx:id="tabPane" prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
         <tabs>
-            <Tab text="Model Parameter Selection">
+            <Tab fx:id="modelParameterSelection" text="Model Parameter Selection">
               <content>
                 <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="338.0" prefWidth="600.0">
                      <children>

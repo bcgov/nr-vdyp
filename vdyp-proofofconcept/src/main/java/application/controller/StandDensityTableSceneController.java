@@ -57,17 +57,18 @@ public class StandDensityTableSceneController implements Initializable {
 	/**
 	 * Sets default values for various controls in the window. Also, disables
 	 * certain controls as specified in the Balsamiq mock-ups. The default values
-	 * and control states are as follows: - minimumDBHLimit: "7.5 cm+" with the
-	 * control disabled. - percentStockableArea: Default value set to 55, with a
-	 * range from 0 to 100 and an increment of 1. - percentCrownClosure: Default
-	 * value set to 50, with a range from 0 to 100 and an increment of 1. -
-	 * treesPerHectare: Spinner values range from "N/A" to "100", representing the
-	 * sequence of integers from 0 to 100. - basalArea: Spinner values range from
-	 * "N/A" to "100", representing the sequence of integers from 0 to 100. -
-	 * runButton: The runButton control is disabled by default. - runButtonReport:
-	 * Disabled by default- loggingOn: Sets the choices Yes and No. Yes by default -
-	 * loggingType: Set the choices as Basic,Intermediate and Advanced. Basic by
-	 * Default - loggingOn: Sets the choices Yes and No. Yes by default
+	 * and control states are as follows:
+	 * @formatter:off
+	 * 		- minimumDBHLimit: "7.5 cm+" with the control disabled.
+	 * 		- percentStockableArea: Default value set to 55, with a range from 0 to 100 and an increment of 1.
+	 * 		- percentCrownClosure: Default value set to 50, with a range from 0 to 100 and an increment of 1.
+	 * 		- treesPerHectare: Spinner values range from "N/A" to "100", representing the sequence of integers from 0 to 100.
+	 * 		- basalArea: Spinner values range from "N/A" to "100", representing the sequence of integers from 0 to 100.
+	 * 		- runButton: The runButton control is disabled by default.
+	 * 		- runButtonReport: Disabled by default- loggingOn: Sets the choices Yes and No. Yes by default
+	 * 		- loggingType: Set the choices as Basic,Intermediate and Advanced. Basic by default
+	 * 		- loggingOn: Sets the choices Yes and No. Yes by default
+	 * @formatter:on
 	 */
 	public void setDefaults() {
 		minimumDBHLimit.setValue("7.5 cm+");
