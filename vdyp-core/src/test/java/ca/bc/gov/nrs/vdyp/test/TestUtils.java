@@ -29,6 +29,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.VeteranBQParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VeteranDQParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VeteranLayerVolumeAdjustParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VolumeEquationGroupParser;
+import ca.bc.gov.nrs.vdyp.io.parse.VolumeNetDecayParser;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.BecLookup;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
@@ -241,6 +242,15 @@ public class TestUtils {
 		var groupIndicies = groupIndices(CloseUtilVolumeParser.MAX_GROUPS);
 
 		populateControlMap2(controlMap, CloseUtilVolumeParser.CONTROL_KEY, UTIL_CLASSES, groupIndicies, mapper);
+	}
+
+	public static void populateControlMapNetDecay(
+			Map<String, Object> controlMap, BiFunction<Integer, Integer, Optional<Coefficients>> mapper
+	) {
+
+		var groupIndicies = groupIndices(VolumeNetDecayParser.MAX_GROUPS);
+
+		populateControlMap2(controlMap, VolumeNetDecayParser.CONTROL_KEY, UTIL_CLASSES, groupIndicies, mapper);
 	}
 
 	public static <K1, K2, V> void populateControlMap2(

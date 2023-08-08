@@ -41,6 +41,7 @@ import ca.bc.gov.nrs.vdyp.fip.model.FipLayerPrimary;
 import ca.bc.gov.nrs.vdyp.fip.model.FipMode;
 import ca.bc.gov.nrs.vdyp.fip.model.FipPolygon;
 import ca.bc.gov.nrs.vdyp.fip.model.FipSpecies;
+import ca.bc.gov.nrs.vdyp.fip.test.FipTestUtils;
 import ca.bc.gov.nrs.vdyp.io.parse.GenusDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.MockStreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
@@ -599,6 +600,9 @@ class FipStartTest {
 		TestUtils.populateControlMapVeteranVolAdjust(controlMap, s -> new float[] { 0f, 0f, 0f, 0f });
 		TestUtils.populateControlMapWholeStemVolume(controlMap, wholeStemMap(1));
 		TestUtils.populateControlMapCloseUtilization(controlMap, closeUtilMap(1));
+		TestUtils.populateControlMapNetDecay(controlMap, closeUtilMap(1));
+		FipTestUtils.populateControlMapDecayModifiers(controlMap, (s, r) -> 0f);
+
 		var app = new FipStart();
 		app.setControlMap(controlMap);
 
@@ -663,6 +667,8 @@ class FipStartTest {
 		TestUtils.populateControlMapVeteranVolAdjust(controlMap, s -> new float[] { 0f, 0f, 0f, 0f });
 		TestUtils.populateControlMapWholeStemVolume(controlMap, (wholeStemMap(1)));
 		TestUtils.populateControlMapCloseUtilization(controlMap, closeUtilMap(1));
+		TestUtils.populateControlMapNetDecay(controlMap, closeUtilMap(1));
+		FipTestUtils.populateControlMapDecayModifiers(controlMap, (s, r) -> 0f);
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -704,6 +710,8 @@ class FipStartTest {
 		TestUtils.populateControlMapVeteranVolAdjust(controlMap, s -> new float[] { 0f, 0f, 0f, 0f });
 		TestUtils.populateControlMapWholeStemVolume(controlMap, (wholeStemMap(1)));
 		TestUtils.populateControlMapCloseUtilization(controlMap, closeUtilMap(1));
+		TestUtils.populateControlMapNetDecay(controlMap, closeUtilMap(1));
+		FipTestUtils.populateControlMapDecayModifiers(controlMap, (s, r) -> 0f);
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -766,6 +774,8 @@ class FipStartTest {
 		TestUtils.populateControlMapVeteranVolAdjust(controlMap, s -> new float[] { 0f, 0f, 0f, 0f });
 		TestUtils.populateControlMapWholeStemVolume(controlMap, (wholeStemMap(1)));
 		TestUtils.populateControlMapCloseUtilization(controlMap, closeUtilMap(1));
+		TestUtils.populateControlMapNetDecay(controlMap, closeUtilMap(1));
+		FipTestUtils.populateControlMapDecayModifiers(controlMap, (s, r) -> 0f);
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -823,6 +833,8 @@ class FipStartTest {
 		TestUtils.populateControlMapVeteranVolAdjust(controlMap, s -> new float[] { 0f, 0f, 0f, 0f });
 		TestUtils.populateControlMapWholeStemVolume(controlMap, (wholeStemMap(1)));
 		TestUtils.populateControlMapCloseUtilization(controlMap, closeUtilMap(1));
+		TestUtils.populateControlMapNetDecay(controlMap, closeUtilMap(1));
+		FipTestUtils.populateControlMapDecayModifiers(controlMap, (s, r) -> 0f);
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -882,6 +894,8 @@ class FipStartTest {
 		TestUtils.populateControlMapWholeStemVolume(controlMap, (wholeStemMap(1)));
 		populateControlMapVeteranVolumeAdjust(controlMap, s -> new float[] { 0f, 0f, 0f, 0f });
 		TestUtils.populateControlMapCloseUtilization(controlMap, closeUtilMap(1));
+		TestUtils.populateControlMapNetDecay(controlMap, closeUtilMap(1));
+		FipTestUtils.populateControlMapDecayModifiers(controlMap, (s, r) -> 0f);
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -965,6 +979,8 @@ class FipStartTest {
 		TestUtils.populateControlMapVeteranVolAdjust(controlMap, s -> new float[] { 0f, 0f, 0f, 0f });
 		TestUtils.populateControlMapWholeStemVolume(controlMap, (wholeStemMap(1)));
 		TestUtils.populateControlMapCloseUtilization(controlMap, closeUtilMap(1));
+		TestUtils.populateControlMapNetDecay(controlMap, closeUtilMap(1));
+		FipTestUtils.populateControlMapDecayModifiers(controlMap, (s, r) -> 0f);
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -1004,6 +1020,8 @@ class FipStartTest {
 		TestUtils.populateControlMapVeteranVolAdjust(controlMap, s -> new float[] { 0f, 0f, 0f, 0f });
 		TestUtils.populateControlMapWholeStemVolume(controlMap, (wholeStemMap(1)));
 		TestUtils.populateControlMapCloseUtilization(controlMap, closeUtilMap(1));
+		TestUtils.populateControlMapNetDecay(controlMap, closeUtilMap(2));
+		FipTestUtils.populateControlMapDecayModifiers(controlMap, (s, r) -> 0f);
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -1060,6 +1078,8 @@ class FipStartTest {
 		TestUtils.populateControlMapVeteranVolAdjust(controlMap, s -> new float[] { 0f, 0f, 0f, 0f });
 		TestUtils.populateControlMapWholeStemVolume(controlMap, (wholeStemMap(1)));
 		TestUtils.populateControlMapCloseUtilization(controlMap, closeUtilMap(1));
+		TestUtils.populateControlMapNetDecay(controlMap, closeUtilMap(1));
+		FipTestUtils.populateControlMapDecayModifiers(controlMap, (s, r) -> 0f);
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -1154,6 +1174,24 @@ class FipStartTest {
 		};
 	}
 
+	static BiFunction<Integer, Integer, Optional<Coefficients>> netDecayMap(int group) {
+		return (u, g) -> {
+			if (g == group) {
+				switch (u) {
+				case 1:
+					return Optional.of(new Coefficients(new float[] { 9.84819984f, -0.224209994f, -0.814949989f }, 1));
+				case 2:
+					return Optional.of(new Coefficients(new float[] { 9.61330032f, -0.224209994f, -0.814949989f }, 1));
+				case 3:
+					return Optional.of(new Coefficients(new float[] { 9.40579987f, -0.224209994f, -0.814949989f }, 1));
+				case 4:
+					return Optional.of(new Coefficients(new float[] { 10.7090998f, -0.952880025f, -0.808309972f }, 1));
+				}
+			}
+			return Optional.empty();
+		};
+	}
+
 	@Test
 	void testEstimateVeteranWholeStemVolume() throws Exception {
 		var polygonId = polygonId("Test Polygon", 2023);
@@ -1218,6 +1256,47 @@ class FipStartTest {
 		);
 
 		assertThat(closeUtilizationUtil, coe(0, contains(is(0f), is(0f), is(0f), is(0f), closeTo(5.86088896f))));
+
+	}
+
+	@Test
+	void testEstimateVeteranNetDecay() throws Exception {
+		var polygonId = polygonId("Test Polygon", 2023);
+
+		var fipPolygon = getTestPolygon(polygonId, valid());
+		var fipLayer = getTestVeteranLayer(polygonId, valid());
+		var fipSpecies = getTestSpecies(polygonId, Layer.VETERAN, s -> {
+		});
+		fipPolygon.setLayers(Collections.singletonMap(Layer.VETERAN, fipLayer));
+		fipLayer.setSpecies(Collections.singletonMap(fipSpecies.getGenus(), fipSpecies));
+
+		var controlMap = new HashMap<String, Object>();
+		TestUtils.populateControlMapNetDecay(controlMap, netDecayMap(7));
+		FipTestUtils.populateControlMapDecayModifiers(
+				controlMap, (s, r) -> s.equals("B") && r == Region.INTERIOR ? 0f : 0f
+		);
+
+		var app = new FipStart();
+		app.setControlMap(controlMap);
+
+		var utilizationClass = 4;
+		var aAdjust = new Coefficients(new float[] { 0f, 0f, 0f, 0.000479999988f }, 1);
+		var decayGroup = 7;
+		var lorieHeight = 26.2000008f;
+		var breastHeightAge = 97.9000015f;
+		var quadMeanDiameterUtil = new Coefficients(new float[] { 51.8356705f, 0f, 0f, 0f, 51.8356705f }, 0);
+		var closeUtilizationUtil = new Coefficients(new float[] { 0f, 0f, 0f, 0f, 5.86088896f }, 0);
+
+		var closeUtilizationNetOfDecayUtil = new Coefficients(new float[] { 0f, 0f, 0f, 0f, 0f }, 0);
+
+		app.estimateNetDecayVolume(
+				fipSpecies.getGenus(), Region.INTERIOR, utilizationClass, aAdjust, decayGroup, lorieHeight,
+				breastHeightAge, quadMeanDiameterUtil, closeUtilizationUtil, closeUtilizationNetOfDecayUtil
+		);
+
+		assertThat(
+				closeUtilizationNetOfDecayUtil, coe(0, contains(is(0f), is(0f), is(0f), is(0f), closeTo(5.64048958f)))
+		);
 
 	}
 

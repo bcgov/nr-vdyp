@@ -11,6 +11,7 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -38,6 +39,8 @@ import ca.bc.gov.nrs.vdyp.io.parse.VeteranBQParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VeteranDQParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VeteranLayerVolumeAdjustParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VolumeEquationGroupParser;
+import ca.bc.gov.nrs.vdyp.io.parse.VolumeNetDecayParser;
+import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.BecLookup.Substitution;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.Layer;
@@ -318,7 +321,7 @@ public class FipStart {
 		vdypLayer.setPrimaryGenus(primaryGenus);
 		vdypLayer.setBaseAreaByUtilization(baseAreaByUtilization);
 
-		computeUtilizationComponentsVeteran(vdypLayer);
+		computeUtilizationComponentsVeteran(vdypLayer, bec);
 
 		return vdypLayer;
 	}
@@ -327,7 +330,8 @@ public class FipStart {
 		return new Coefficients(new float[] { 0f, 0f, 0f, 0f, 0f }, 0);
 	}
 
-	private void computeUtilizationComponentsVeteran(VdypLayer vdypLayer) throws ProcessingException {
+	private void computeUtilizationComponentsVeteran(VdypLayer vdypLayer, BecDefinition bec)
+			throws ProcessingException {
 
 		var volumeAdjustMap = Utils.<Map<String, Coefficients>>expectParsedControl(
 				controlMap, VeteranLayerVolumeAdjustParser.CONTROL_KEY, Map.class
@@ -341,6 +345,7 @@ public class FipStart {
 			var wholeStemVolumeUtil = utilizationVector();
 
 			var closeUtilizationVolumeUtil = utilizationVector(); // TODO where does this get initialized?
+			var closeUtilizationNetOfDecayUtil = utilizationVector();
 
 			var hlSp = vdypSpecies.getLoreyHeightByUtilization().getCoe(0);
 			{
@@ -381,7 +386,11 @@ public class FipStart {
 
 			adjust.setCoe(4, volumeAdjustCoe.getCoe(3));
 			// EMP093
-			// TODO
+			estimateNetDecayVolume(
+					vdypSpecies.getGenus(), bec.getRegion(), utilizationClass, adjust, vdypSpecies.getDecayGroup(),
+					hlSp, vdypLayer.getBreastHeightAge(), quadMeanDiameterUtil, closeUtilizationVolumeUtil,
+					closeUtilizationNetOfDecayUtil
+			);
 
 			adjust.setCoe(4, volumeAdjustCoe.getCoe(4));
 			// EMP094
@@ -402,14 +411,7 @@ public class FipStart {
 				.<MatrixMap2<Integer, Integer, Optional<Coefficients>>>expectParsedControl(
 						controlMap, UtilComponentWSVolumeParser.CONTROL_KEY, MatrixMap2.class
 				);
-		for (int i : UTIL_CLASS_INDICES) {
-			if (baseAreaUtil.getCoe(i) < 0f) {
-				wholeStemVolumeUtil.setCoe(i, 0f);
-				continue;
-			}
-			if (utilizationClass != 0 && utilizationClass != i) {
-				continue;
-			}
+		estimateUtilization(baseAreaUtil, wholeStemVolumeUtil, utilizationClass, (i, ba) -> {
 			Coefficients wholeStemCoe = wholeStemUtilizationComponentMap.get(i, volumeGroup).orElseThrow(
 					() -> new ProcessingException(
 							"Could not find whole stem utilization coefficients for group " + volumeGroup
@@ -429,18 +431,11 @@ public class FipStart {
 
 			var vbaruc = (float) Math.exp(arg); // volume base area ?? utilization class?
 
-			wholeStemVolumeUtil.setCoe(i, baseAreaUtil.getCoe(i) * vbaruc);
-		}
+			return ba * vbaruc;
+		}, x -> x < 0f, 0f);
 
 		if (utilizationClass == 0) {
-			var totalVolume = (float) UTIL_CLASS_INDICES.stream() //
-					.mapToDouble(wholeStemVolumeUtil::getCoe) //
-					.sum();
-			if (totalVolume <= 0f) {
-				throw new ProcessingException("Total volume " + totalVolume + " was not positive.");
-			}
-			final var k = wholeStemVolumeUtil.getCoe(0);
-			UTIL_CLASS_INDICES.forEach(i -> wholeStemVolumeUtil.setCoe(i, k * wholeStemVolumeUtil.getCoe(i)));
+			normalizeUtilizationComponents(wholeStemVolumeUtil);
 		}
 
 	}
@@ -460,10 +455,7 @@ public class FipStart {
 				.<MatrixMap2<Integer, Integer, Optional<Coefficients>>>expectParsedControl(
 						controlMap, CloseUtilVolumeParser.CONTROL_KEY, MatrixMap2.class
 				);
-		for (var i : UTIL_CLASS_INDICES) {
-			if (utilizationClass != 0 && utilizationClass != i) {
-				continue;
-			}
+		estimateUtilization(wholeStemVolumeUtil, closeUtilizationVolumeUtil, utilizationClass, (i, ws) -> {
 			Coefficients closeUtilCoe = closeUtilizationCoeMap.get(i, volumeGroup).orElseThrow(
 					() -> new ProcessingException(
 							"Could not find whole stem utilization coefficients for group " + volumeGroup
@@ -475,17 +467,174 @@ public class FipStart {
 
 			var arg = a0 + a1 * quadMeanDiameterUtil.getCoe(i) + a2 * hlSp + aAdjust.getCoe(i);
 
-			float ratio;
-			if (arg < -7.0f) {
-				ratio = 0.0f;
-			} else if (arg > 7.0) {
-				ratio = 1.0f;
-			} else {
-				ratio = (float) Math.exp(arg) / (float) (1.0f + Math.exp(arg));
+			float ratio = ratio(arg, 7.0f);
+
+			return ws * ratio;
+		});
+
+		if (utilizationClass == 0) {
+			storeSumUtilizationComponents(closeUtilizationVolumeUtil);
+		}
+	}
+
+	@FunctionalInterface
+	static interface UtilizationProcessor {
+		float apply(int utilizationClass, float inputValue) throws ProcessingException;
+	}
+
+	/**
+	 * Estimate values for one utilization vector from another
+	 *
+	 * @param input            source utilization
+	 * @param output           result utilization
+	 * @param utilizationClass the utilization class for which to do the
+	 *                         computation, 0 for all of them.
+	 * @param processor        Given a utilization class, and the source utilization
+	 *                         for that class, return the result utilization
+	 * @throws ProcessingException
+	 */
+	static void estimateUtilization(
+			Coefficients input, Coefficients output, int utilizationClass, UtilizationProcessor processor
+	) throws ProcessingException {
+		estimateUtilization(input, output, utilizationClass, processor, x -> false, 0f);
+	}
+
+	/**
+	 * Estimate values for one utilization vector from another
+	 *
+	 * @param input            source utilization
+	 * @param output           result utilization
+	 * @param utilizationClass the utilization class for which to do the
+	 *                         computation, 0 for all of them.
+	 * @param processor        Given a utilization class, and the source utilization
+	 *                         for that class, return the result utilization
+	 * @param skip             a utilization class will be skipped and the result
+	 *                         set to the default value if this is true for the
+	 *                         value of the source utilization
+	 * @param defaultValue     the default value
+	 * @throws ProcessingException
+	 */
+	static void estimateUtilization(
+			Coefficients input, Coefficients output, int utilizationClass, UtilizationProcessor processor,
+			Predicate<Float> skip, float defaultValue
+	) throws ProcessingException {
+		for (var i : UTIL_CLASS_INDICES) {
+			var inputValue = input.getCoe(i);
+
+			// it seems like this should be done after checking i against utilizationClass,
+			// which could just be done as part of the processor definition, but this is how
+			// VDYP7 did it.
+			if (skip.test(inputValue)) {
+				output.setCoe(i, defaultValue);
+				continue;
 			}
 
-			closeUtilizationVolumeUtil.setCoe(i, wholeStemVolumeUtil.getCoe(i) * ratio);
+			if (utilizationClass != 0 && utilizationClass != i) {
+				continue;
+			}
+
+			var result = processor.apply(i, input.getCoe(i));
+			output.setCoe(i, result);
 		}
+	}
+
+	/**
+	 * Estimate volume NET OF DECAY by (DBH) utilization classes
+	 *
+	 * @param utilizationClass
+	 * @param aAdjust
+	 * @param decayGroup
+	 * @param lorieHeight
+	 * @param ageBreastHeight
+	 * @param quadMeanDiameterUtil
+	 * @param closeUtilizationUtil
+	 * @param closeUtilizationNetOfDecayUtil
+	 * @throws ProcessingException
+	 */
+	void estimateNetDecayVolume(
+			String genus, Region region, int utilizationClass, Coefficients aAdjust, int decayGroup, float lorieHeight,
+			float ageBreastHeight, Coefficients quadMeanDiameterUtil, Coefficients closeUtilizationUtil,
+			Coefficients closeUtilizationNetOfDecayUtil
+	) throws ProcessingException {
+		var dqSp = quadMeanDiameterUtil.getCoe(0);
+		final var netDecayCoeMap = Utils.<MatrixMap2<Integer, Integer, Optional<Coefficients>>>expectParsedControl(
+				controlMap, VolumeNetDecayParser.CONTROL_KEY, MatrixMap2.class
+		);
+		final var decayModifierMap = Utils.<MatrixMap2<String, Region, Float>>expectParsedControl(
+				controlMap, ModifierParser.CONTROL_KEY_MOD301_DECAY, MatrixMap2.class
+		);
+
+		final var ageTr = (float) Math.log(Math.max(20.0, ageBreastHeight));
+
+		estimateUtilization(closeUtilizationUtil, closeUtilizationNetOfDecayUtil, utilizationClass, (i, cu) -> {
+			Coefficients netDecayCoe = netDecayCoeMap.get(i, decayGroup).orElseThrow(
+					() -> new ProcessingException("Could not find net decay coefficients for group " + decayGroup)
+			);
+			var a0 = netDecayCoe.getCoe(1);
+			var a1 = netDecayCoe.getCoe(2);
+			var a2 = netDecayCoe.getCoe(3);
+
+			float arg;
+			if (i <= 3) {
+				arg = a0 + a1 * (float) Math.log(dqSp) + a2 * ageTr;
+			} else {
+				arg = a0 + a1 * (float) Math.log(quadMeanDiameterUtil.getCoe(i)) + a2 * ageTr;
+			}
+
+			arg += aAdjust.getCoe(i) + decayModifierMap.get(genus, region);
+
+			float ratio = ratio(arg, 8.0f);
+
+			return cu * ratio;
+		});
+
+		if (utilizationClass == 0) {
+			storeSumUtilizationComponents(closeUtilizationNetOfDecayUtil);
+		}
+	}
+
+	static float ratio(float arg, float radius) {
+		if (arg < -radius) {
+			return 0.0f;
+		} else if (arg > radius) {
+			return 1.0f;
+		}
+		return (float) Math.exp(arg) / (float) (1.0f + Math.exp(arg));
+	}
+
+	/**
+	 * Sums the individual utilization components (1-4)
+	 */
+	float sumUtilizationComponents(Coefficients components) {
+		return (float) UTIL_CLASS_INDICES.stream().mapToDouble(components::getCoe).sum();
+	}
+
+	/**
+	 * Sums the individual utilization components (1-4) and stores the results in
+	 * coefficient 0
+	 */
+	float storeSumUtilizationComponents(Coefficients components) {
+		var sum = sumUtilizationComponents(components);
+		components.setCoe(0, sum);
+		return sum;
+	}
+
+	/**
+	 * Normalizes the utilization components 1-4 so they sum to the value of
+	 * component 0
+	 *
+	 * @throws ProcessingException if the sum is not positive
+	 */
+	float normalizeUtilizationComponents(Coefficients components) throws ProcessingException {
+		var sum = sumUtilizationComponents(components);
+		var k = components.getCoe(0) / sum;
+		if (sum <= 0f) {
+			throw new ProcessingException("Total volume " + sum + " was not positive.");
+		}
+		UTIL_CLASS_INDICES.forEach(i -> {
+			components.setCoe(i, components.getCoe(i) * k);
+		});
+		return k;
 	}
 
 	int getGroup(FipPolygon fipPolygon, MatrixMap2<String, String, Integer> volumeGroupMap, VdypSpecies vSpec) {
@@ -682,5 +831,6 @@ public class FipStart {
 
 	private static ProcessingException validationError(String template, Object... values) {
 		return new ProcessingException(String.format(template, values));
-	};
+	}
+
 }
