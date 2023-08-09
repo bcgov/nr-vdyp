@@ -1,7 +1,6 @@
 package ca.bc.gov.nrs.vdyp.fip;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -14,7 +13,9 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
+
+import static java.lang.Math.min;
+import static java.lang.Math.max;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +41,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.VeteranDQParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VeteranLayerVolumeAdjustParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VolumeEquationGroupParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VolumeNetDecayParser;
+import ca.bc.gov.nrs.vdyp.io.parse.VolumeNetDecayWasteParser;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.BecLookup.Substitution;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
@@ -306,7 +308,7 @@ public class FipStart {
 			var a1 = coe.getCoe(2);
 			var a2 = coe.getCoe(3);
 			float hl = vSpec.getLoreyHeightByUtilization().getCoe(0);
-			float dq = Math.max(a0 + a1 * (float) Math.pow(hl, a2), 22.5f);
+			float dq = max(a0 + a1 * pow(hl, a2), 22.5f);
 			vSpec.getQuadraticMeanDiameterByUtilization().setCoe(4, dq);
 			vSpec.getTreesPerHectareByUtilization()
 					.setCoe(4, treesPerHectare(vSpec.getBaseAreaByUtilization().getCoe(4), dq));
@@ -346,6 +348,7 @@ public class FipStart {
 
 			var closeUtilizationVolumeUtil = utilizationVector(); // TODO where does this get initialized?
 			var closeUtilizationNetOfDecayUtil = utilizationVector();
+			var closeUtilizationNetOfDecayAndWasteUtil = utilizationVector();
 
 			var hlSp = vdypSpecies.getLoreyHeightByUtilization().getCoe(0);
 			{
@@ -394,7 +397,11 @@ public class FipStart {
 
 			adjust.setCoe(4, volumeAdjustCoe.getCoe(4));
 			// EMP094
-			// TODO
+			estimateNetDecayAndWasteVolume(
+					bec.getRegion(), utilizationClass, adjust, vdypSpecies.getGenus(), hlSp,
+					vdypLayer.getBreastHeightAge(), quadMeanDiameterUtil, closeUtilizationVolumeUtil,
+					closeUtilizationNetOfDecayUtil, closeUtilizationNetOfDecayAndWasteUtil
+			);
 		}
 	}
 
@@ -422,14 +429,14 @@ public class FipStart {
 			var a2 = wholeStemCoe.getCoe(3);
 			var a3 = wholeStemCoe.getCoe(4);
 
-			var arg = a0 + a1 * (float) Math.log(hlSp) + a2 * (float) Math.log(quadMeanDiameterUtil.getCoe(i))
-					+ ( (i < 3) ? a3 * (float) Math.log(dqSp) : a3 * dqSp);
+			var arg = a0 + a1 * log(hlSp) + a2 * log(quadMeanDiameterUtil.getCoe(i))
+					+ ( (i < 3) ? a3 * log(dqSp) : a3 * dqSp);
 
 			if (i == utilizationClass) {
 				arg += aAdjust;
 			}
 
-			var vbaruc = (float) Math.exp(arg); // volume base area ?? utilization class?
+			var vbaruc = exp(arg); // volume base area ?? utilization class?
 
 			return ba * vbaruc;
 		}, x -> x < 0f, 0f);
@@ -576,9 +583,9 @@ public class FipStart {
 
 			float arg;
 			if (i <= 3) {
-				arg = a0 + a1 * (float) Math.log(dqSp) + a2 * ageTr;
+				arg = a0 + a1 * log(dqSp) + a2 * ageTr;
 			} else {
-				arg = a0 + a1 * (float) Math.log(quadMeanDiameterUtil.getCoe(i)) + a2 * ageTr;
+				arg = a0 + a1 * log(quadMeanDiameterUtil.getCoe(i)) + a2 * ageTr;
 			}
 
 			arg += aAdjust.getCoe(i) + decayModifierMap.get(genus, region);
@@ -593,13 +600,79 @@ public class FipStart {
 		}
 	}
 
-	static float ratio(float arg, float radius) {
-		if (arg < -radius) {
-			return 0.0f;
-		} else if (arg > radius) {
-			return 1.0f;
+	/**
+	 * Estimate utilization net of decay and waste
+	 */
+	void estimateNetDecayAndWasteVolume(
+			Region region, int utilizationClass, Coefficients aAdjust, String genus, float lorieHeight,
+			float ageBreastHeight, Coefficients quadMeanDiameterUtil, Coefficients closeUtilizationUtil,
+			Coefficients closeUtilizationNetOfDecayUtil, Coefficients closeUtilizationNetOfDecayAndWasteUtil
+	) throws ProcessingException {
+		final var netDecayCoeMap = Utils.<Map<String, Coefficients>>expectParsedControl(
+				controlMap, VolumeNetDecayWasteParser.CONTROL_KEY, Map.class
+		);
+		final var wasteModifierMap = Utils.<MatrixMap2<String, Region, Float>>expectParsedControl(
+				controlMap, ModifierParser.CONTROL_KEY_MOD301_WASTE, MatrixMap2.class
+		);
+
+		final var ageTr = (float) Math.log(Math.max(20.0, ageBreastHeight));
+
+		estimateUtilization(
+				closeUtilizationNetOfDecayUtil, closeUtilizationNetOfDecayAndWasteUtil, utilizationClass,
+				(i, netDecay) -> {
+					if (Float.isNaN(netDecay) || netDecay <= 0f) {
+						return 0f;
+					}
+
+					Coefficients netWasteCoe = netDecayCoeMap.get(genus);
+					if (netWasteCoe == null) {
+						throw new ProcessingException("Could not find net decay coefficients for genus " + genus);
+					}
+					;
+					var a0 = netWasteCoe.getCoe(0);
+					var a1 = netWasteCoe.getCoe(1);
+					var a2 = netWasteCoe.getCoe(2);
+					var a3 = netWasteCoe.getCoe(3);
+					var a4 = netWasteCoe.getCoe(4);
+					var a5 = netWasteCoe.getCoe(5);
+
+					if (i == 4) {
+						a0 += a5;
+					}
+					var frd = 1.0f - netDecay / closeUtilizationUtil.getCoe(i);
+
+					float arg = a0 + a1 * frd + a3 * log(quadMeanDiameterUtil.getCoe(i)) + a4 * log(lorieHeight);
+
+					arg += wasteModifierMap.get(genus, region);
+
+					arg = clamp(arg, -10f, 10f);
+
+					var frw = (1.0f - exp(a2 * frd)) * exp(arg) / (1f + exp(arg)) * (1f - frd);
+					frw = min(frd, frw);
+
+					float result = closeUtilizationUtil.getCoe(i) * (1f - frd - frw);
+
+					/*
+					 * Check for an apply adjustments. This is done after computing the result above
+					 * to allow for clamping frw to frd
+					 */
+					if (aAdjust.getCoe(i) != 0f) {
+						var ratio = result / netDecay;
+						if (ratio < 1f && ratio > 0f) {
+							arg = log(ratio / (1f - ratio));
+							arg += aAdjust.getCoe(i);
+							arg = clamp(arg, -10f, 10f);
+							result = exp(arg) / (1f + exp(arg)) * netDecay;
+						}
+					}
+
+					return result;
+				}
+		);
+
+		if (utilizationClass == 0) {
+			storeSumUtilizationComponents(closeUtilizationNetOfDecayAndWasteUtil);
 		}
-		return (float) Math.exp(arg) / (float) (1.0f + Math.exp(arg));
 	}
 
 	/**
@@ -807,11 +880,11 @@ public class FipStart {
 		float a1 = coefficients.getCoe(2);
 		float a2 = coefficients.getCoe(3);
 
-		float baseArea = a0 * (float) Math.pow(Math.max(height - a1, 0.0f), a2);
+		float baseArea = a0 * pow(max(height - a1, 0.0f), a2);
 
 		baseArea *= crownClosure / 4.0f;
 
-		baseArea = Math.max(baseArea, 0.01f);
+		baseArea = max(baseArea, 0.01f);
 
 		return baseArea;
 	}
@@ -833,4 +906,40 @@ public class FipStart {
 		return new ProcessingException(String.format(template, values));
 	}
 
+	// wrap standard library double math functions to work with floats so equations
+	// aren't littered with explicit casts
+
+	static float log(float f) {
+		return (float) Math.log(f);
+	}
+
+	static float exp(float f) {
+		return (float) Math.exp(f);
+	}
+
+	static float pow(float b, float e) {
+		return (float) Math.pow(b, e);
+	}
+
+	static float abs(float f) {
+		return Math.abs(f);
+	}
+
+	static float clamp(float x, float min, float max) {
+		assert max > min;
+		if (x < min)
+			return min;
+		if (x > max)
+			return max;
+		return x;
+	}
+
+	static float ratio(float arg, float radius) {
+		if (arg < -radius) {
+			return 0.0f;
+		} else if (arg > radius) {
+			return 1.0f;
+		}
+		return exp(arg) / (1.0f + exp(arg));
+	}
 }
