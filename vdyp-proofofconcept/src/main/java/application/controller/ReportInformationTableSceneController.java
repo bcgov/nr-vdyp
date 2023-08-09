@@ -8,6 +8,7 @@ import java.util.ResourceBundle;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
@@ -20,6 +21,7 @@ import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.GridPane;
+import javafx.scene.Parent;
 
 public class ReportInformationTableSceneController implements Initializable {
 
@@ -71,6 +73,16 @@ public class ReportInformationTableSceneController implements Initializable {
 	private TextArea modelReportText;
 	@FXML
 	private TextArea logFileText;
+	@FXML
+	private Label dbhSpecies1;
+	@FXML
+	private Label dbhSpecies2;
+	@FXML
+	private Label dbhSpecies3;
+	@FXML
+	private Label dbhSpecies4;
+	
+	private static final String VOLUME = "Volume";
 
 	/**
 	 * Initializes the window by setting default values for various controls.
@@ -85,7 +97,7 @@ public class ReportInformationTableSceneController implements Initializable {
 		setDefaults();
 
 		projectionType.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-			if ("Volume".equals(newValue)) {
+			if (VOLUME.equals(newValue)) {
 				volumeSelected();
 			} else {
 				cfsBiomassSelected();
@@ -160,8 +172,8 @@ public class ReportInformationTableSceneController implements Initializable {
 		); // min, max, default, increment
 		ageIncrement.setValueFactory(ageIncrementValueFactory);
 
-		projectionType.getItems().addAll("Volume", "CFS Biomass");
-		projectionType.setValue("Volume");
+		projectionType.getItems().addAll(VOLUME, "CFS Biomass");
+		projectionType.setValue(VOLUME);
 
 		nextPageButton.setDisable(true);
 		nextLabel.setDisable(true);
@@ -178,6 +190,22 @@ public class ReportInformationTableSceneController implements Initializable {
 		dbhSpecies4Slider.setValue(15);
 
 		culminationValues.setDisable(true);// always disabled in WinVDYP
+		
+		FXMLLoader loader = new FXMLLoader(getClass().getResource("../view/NewTableScene.fxml"));
+		try {
+			Parent root = loader.load();
+			NewTableSceneController newTableSceneController = loader.getController();
+			displayChoicesPassedIn(newTableSceneController.getDBHLabels());
+		} catch (IOException e) {
+			String[] errorMessages = new String[4];
+
+	        for (int i = 0; i < errorMessages.length; i++) {
+	            errorMessages[i] = "Error loading species";
+	        }
+	        
+	        displayChoicesPassedIn(errorMessages);
+		}
+		
 	}
 
 	// Bottom menu bar
@@ -217,8 +245,8 @@ public class ReportInformationTableSceneController implements Initializable {
 				                                 VDYP7 Yield Table
 				             Lodgepole Pine 30.0%, Poplar 30.0%, Hemlock 30.0%, Spruce 10.0%
 
-				                Quad                      |   Whole
-				    Site Lorey  Stnd                      |    Stem
+				                Quad                       |  Whole
+				    Site Lorey  Stnd                       |  Stem
 				TOT   HT    HT    DIA     BA        TPH    |  VOLUME
 				-------------------------------------------+-----------
 				                                           |
@@ -288,5 +316,12 @@ public class ReportInformationTableSceneController implements Initializable {
 			tabPane.getSelectionModel().selectNext();
 		}
 
+	}
+
+	public void displayChoicesPassedIn(String[] dbhLabels) {
+	    dbhSpecies1.setText(dbhLabels[0]);
+	    dbhSpecies2.setText(dbhLabels[1]);
+	    dbhSpecies3.setText(dbhLabels[2]);
+	    dbhSpecies4.setText(dbhLabels[3]);
 	}
 }

@@ -191,4 +191,5 @@ public class AdditionalStandAtrributesTableSceneController implements Initializa
 		stage.show();
 	}
 	// End of bottom menu bar
+
 }

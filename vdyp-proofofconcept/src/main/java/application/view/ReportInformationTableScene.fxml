@@ -248,6 +248,10 @@
                                           <Font size="10.0" />
                                        </font>
                                     </Label>
+                                    <Label fx:id="dbhSpecies1" prefHeight="17.0" prefWidth="181.0" GridPane.rowIndex="2" />
+                                    <Label fx:id="dbhSpecies2" prefHeight="17.0" prefWidth="181.0" GridPane.rowIndex="4" />
+                                    <Label fx:id="dbhSpecies3" prefHeight="17.0" prefWidth="181.0" GridPane.rowIndex="6" />
+                                    <Label fx:id="dbhSpecies4" prefHeight="17.0" prefWidth="181.0" GridPane.rowIndex="8" />
                                  </children>
                                  <padding>
                                     <Insets top="10.0" />

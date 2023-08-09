@@ -2,6 +2,7 @@ package application.controller;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.List;
 import java.util.ResourceBundle;
 
 import javafx.event.ActionEvent;
@@ -38,7 +39,9 @@ public class SiteInformationTableSceneController implements Initializable {
 	private ChoiceBox<String> loggingOn;
 	@FXML
 	private ChoiceBox<String> loggingType;
-
+	@FXML
+	private ChoiceBox<String> siteSpecies;
+	
 	/**
 	 * Initializes the SiteInformationTableScene with default values and
 	 * configurations. This method is automatically called when the associated FXML
@@ -204,6 +207,21 @@ public class SiteInformationTableSceneController implements Initializable {
 	}
 	// Bottom Menu bar end
 
-	// TODO Implement passing information from screen 1
+
+	public void displayChoicesPassedIn(List<ChoiceBox<String>> speciesChoiceBoxes) throws IOException {
+		if(speciesChoiceBoxes.isEmpty()) {
+			return;
+		}
+		 for(ChoiceBox<String> species : speciesChoiceBoxes) {
+			String speciesText = species.getValue();
+			
+			if(!speciesText.equals("Select Species")) {
+				siteSpecies.getItems().add(speciesText.substring(0,2)); //add to choicebox in this scene
+			}
+		}
+		siteSpecies.setValue(speciesChoiceBoxes.get(0).getValue().substring(0,2)); //set default
+	}
+
+
 
 }

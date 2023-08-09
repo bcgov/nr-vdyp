@@ -39,10 +39,10 @@ public class NewTableSceneController implements Initializable {
 	private ChoiceBox<String> species6;
 
 	// List of speciesChoiceBoxes
-	private List<ChoiceBox<String>> speciesChoiceBoxes = new ArrayList<>();
+	private static List<ChoiceBox<String>> speciesChoiceBoxes = new ArrayList<>();
 
 	// Define a constant for the default selection of tree species
-	private static final String DEFAULT_SPECIES_SELECTION = "Select species";
+	private static final String DEFAULT_SPECIES_SELECTION = "Select Species";
 
 	// Labels for display based on choice boxes
 	@FXML
@@ -369,12 +369,17 @@ public class NewTableSceneController implements Initializable {
 	 */
 	public void switchToScene2(ActionEvent event) throws IOException {
 		int total = getTotalPercent();
-
+		
 		if (total != 100 && total != 0) {
 			showErrorPopup("Total percent does not total 100%");
 		} else {
 			FXMLLoader loader = new FXMLLoader(getClass().getResource("../view/SiteInformationTableScene.fxml"));
 			Parent root = loader.load();
+			
+			SiteInformationTableSceneController siteInformationTableSceneController = loader.getController();
+			siteInformationTableSceneController.displayChoicesPassedIn(speciesChoiceBoxes);  //pass in selection to next page
+		
+			
 			Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
 			Scene scene = new Scene(root);
 			stage.setScene(scene);
@@ -400,5 +405,16 @@ public class NewTableSceneController implements Initializable {
 		alert.setContentText(message);
 
 		alert.showAndWait();
+	}
+	
+	
+	public  String[] getDBHLabels() {
+		String[] dbhLabels = new String[4];
+		
+		for(int i = 0; i < 4; i++) {
+			dbhLabels[i] = speciesChoiceBoxes.get(i).getValue();
+		}
+	
+		return dbhLabels;
 	}
 }
