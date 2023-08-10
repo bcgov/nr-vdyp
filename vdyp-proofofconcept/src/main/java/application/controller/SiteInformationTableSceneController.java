@@ -42,6 +42,35 @@ public class SiteInformationTableSceneController implements Initializable {
 	@FXML
 	private ChoiceBox<String> siteSpecies;
 	
+	
+	private static String[] dbhLabels;
+	
+	/**
+     * Gets the DBH labels array.
+     *
+     * @return The array of DBH labels.
+     * @throws IllegalStateException if the DBH labels are not set yet. Initialize them before accessing.
+     */
+	public static String[] getDBHLabels() {
+		if (dbhLabels == null) {
+			throw new IllegalStateException("newWindow is not set yet. Make sure to initialize it before accessing.");
+		}
+		return dbhLabels;
+	}
+	
+	/**
+     * Sets the DBH labels array.
+     *
+     * @param labels The array of DBH labels to set.
+     * @throws IllegalArgumentException if the provided labels array is null.
+     */
+	public static void setDBHLabels(String[] labels) {
+	    if (labels == null) {
+	        throw new IllegalArgumentException("Labels array cannot be null.");
+	    }
+	    dbhLabels = labels;
+	}
+	
 	/**
 	 * Initializes the SiteInformationTableScene with default values and
 	 * configurations. This method is automatically called when the associated FXML
@@ -207,7 +236,12 @@ public class SiteInformationTableSceneController implements Initializable {
 	}
 	// Bottom Menu bar end
 
-
+	/**
+	 * Displays the choices passed in through a list of species choice boxes.
+	 *
+	 * @param speciesChoiceBoxes A list of ChoiceBox instances containing species choices.
+	 * @throws IOException if an I/O error occurs.
+	 */
 	public void displayChoicesPassedIn(List<ChoiceBox<String>> speciesChoiceBoxes) throws IOException {
 		if(speciesChoiceBoxes.isEmpty()) {
 			return;
@@ -229,20 +263,7 @@ public class SiteInformationTableSceneController implements Initializable {
 		}
 		siteSpecies.setValue(speciesChoiceBoxes.get(0).getValue().substring(0,2)); //set default
 		
-
-      
-        this.dbhLabels = dbhLabels; //TODO make this better :)
+       setDBHLabels(dbhLabels); 
 
 	}
-
-	private static String[] dbhLabels;
-	
-	public static String[] getdbhLabels() {
-		if (dbhLabels == null) {
-			throw new IllegalStateException("newWindow is not set yet. Make sure to initialize it before accessing.");
-		}
-		return dbhLabels;
-	}
-
-
 }

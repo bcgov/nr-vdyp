@@ -22,7 +22,6 @@ import javafx.scene.control.TextArea;
 import javafx.scene.layout.GridPane;
 
 public class ReportInformationTableSceneController implements Initializable {
-
 	@FXML
 	private Spinner<Integer> startingAge;
 	@FXML
@@ -79,16 +78,7 @@ public class ReportInformationTableSceneController implements Initializable {
 	private Label dbhSpecies3;
 	@FXML
 	private Label dbhSpecies4;
-	
-
-	private void updateDBHLabels() {
-			String[] dbhLabels = SiteInformationTableSceneController.getdbhLabels();
-	        dbhSpecies1.setText(dbhLabels[0]);
-	        dbhSpecies2.setText(dbhLabels[1]);
-	        dbhSpecies3.setText(dbhLabels[2]);
-	        dbhSpecies4.setText(dbhLabels[3]);
-	}
-	
+		
 	private static final String VOLUME = "Volume";
 
 	/**
@@ -143,7 +133,6 @@ public class ReportInformationTableSceneController implements Initializable {
 		netDecayWasteBreakage.setDisable(false);
 		computedMAI.setDisable(false);
 		dbhSliders.setDisable(false);
-
 	}
 
 	/**
@@ -204,6 +193,17 @@ public class ReportInformationTableSceneController implements Initializable {
 		
 	}
 
+	/**
+	 * Updates the DBH labels on the user interface.
+	 */
+	private void updateDBHLabels() {
+		String[] dbhLabels = SiteInformationTableSceneController.getDBHLabels();
+        dbhSpecies1.setText(dbhLabels[0]);
+        dbhSpecies2.setText(dbhLabels[1]);
+        dbhSpecies3.setText(dbhLabels[2]);
+        dbhSpecies4.setText(dbhLabels[3]);
+	}
+	
 	// Bottom menu bar
 	/**
 	 * Switches the application to Scene 4 - StandDensityTableScene.
@@ -227,6 +227,7 @@ public class ReportInformationTableSceneController implements Initializable {
 		MainController.getNewWindow().close();
 	}
 
+	
 	/**
 	 * Handles the run button action event.
 	 *

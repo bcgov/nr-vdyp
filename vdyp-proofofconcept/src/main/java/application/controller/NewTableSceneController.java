@@ -408,7 +408,11 @@ public class NewTableSceneController implements Initializable {
 		alert.showAndWait();
 	}
 	
-	
+	/**
+	 * Retrieves the DBH labels from the species choice boxes.
+	 *
+	 * @return An array of DBH labels retrieved from the species choice boxes.
+	 */
 	public  String[] getDBHLabels() {
 		String[] dbhLabels = new String[4];
 		
