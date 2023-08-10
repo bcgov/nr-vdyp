@@ -17,6 +17,7 @@ import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
 import javafx.stage.Stage;
+import javafx.scene.text.Text;
 
 public class SiteInformationTableSceneController implements Initializable {
 	@FXML
@@ -84,8 +85,32 @@ public class SiteInformationTableSceneController implements Initializable {
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		setDefaults(); // this is a function so it can also be called from menu button
+		
+		final String[] siteIndexCurves = { "AC - Huang, Titus, and Lakusta (1994ac)", "AT - Nigh, Krestov, and Klinka 2002",
+				"B  - Chen and Klinka (200ac)", "BA - Nigh (2009)",
+				"BG - Nigh (2009)", "BL - Chen and Klinka (2000ac)", "CW - Nigh (2000)", "DR - Nigh and Courtin (1998)", "E  - Nigh (2009)",
+				"EA - Thrower (1994)", "EP - Nigh (2009)", "FD - Thrower and Goudie (1992ac)", "H  - Nigh (1998)",
+				"HM - Means, Campbell, Johnson (1988ac)", "HW - Nigh (1998)", "L  - Briscon, Klinka, and Nigh 2002", "LA - Thrower (1994)",
+				"LT - Thrower (1994)",
+				"LW - Briscon, Klinka, and Nigh 2002", "MB - Nigh and Courtin (1998)", "PA - Thrower (1994)", "PF - Thrower (1994)", 
+				"PJ - Thrower (1994)",
+				"PL - Thrower (1994)", "PW - Thrower (1994)", "PY - Thrower (1994)", "S  - Goudie (1984ac)(natural)",
+				"SB - Nigh, Krestov, and Klinka 2002", "SE - Nigh 2015", "SS - Nigh 1997", "SW - Goudie (1984ac)(natural)",
+				"YC - Nigh (2000)" };
+		
+		siteSpecies.setOnAction((ActionEvent event) -> {
+		    String selectedSpecies = siteSpecies.getValue();
+
+		    for (String curve : siteIndexCurves) {
+		        if (curve.startsWith(selectedSpecies)) {
+		            String curveLabel = curve.substring(selectedSpecies.length() + 3); // Removing the identifier and " - " part
+		            siteIndexCurve.setValue(curveLabel);
+		        }
+		    }
+		});
 
 	}
+	
 
 	/**
 	 * Sets default values for various controls in the window and disables certain controls as specified in the Balsamiq mock-ups.
@@ -152,6 +177,8 @@ public class SiteInformationTableSceneController implements Initializable {
 
 		loggingType.getItems().addAll("Basic", "Intermediate", "Advanced");
 		loggingType.setValue("Basic");
+		
+		siteIndexCurve.setDisable(true);
 	}
 
 	// Radio button selections
@@ -249,18 +276,6 @@ public class SiteInformationTableSceneController implements Initializable {
 			return;
 		}
 		
-		final String[] siteIndexCurves = { "AC - Huang, Titus, and Lakusta (1994ac)", "AT - Nigh, Krestov, and Klinka 2002",
-				"B  - Chen and Klinka (200ac)", "BA - Nigh (2009)",
-				"BG - Nigh (2009)", "BL - Chen and Klinka (2000ac)", "CW - Nigh (2000)", "DR - Nigh and Courtin (1998)", "E  - Nigh (2009)",
-				"EA - Thrower (1994)", "EP - Nigh (2009)", "FD - Thrower and Goudie (1992ac)", "H  - Nigh (1998)",
-				"HM - Means, Campbell, Johnson (1988ac)", "HW - Nigh (1998)", "L  - Briscon, Klinka, and Nigh 2002", "LA - Thrower (1994)",
-				"LT - Thrower (1994)",
-				"LW - Briscon, Klinka, and Nigh 2002", "MB - Nigh and Courtin (1998)", "PA - Thrower (1994)", "PF - Thrower (1994)", 
-				"PJ - Thrower (1994)",
-				"PL - Thrower (1994)", "PW - Thrower (1994)", "PY - Thrower (1994)", "S  - Goudie (1984ac)(natural)",
-				"SB - Nigh, Krestov, and Klinka 2002", "SE - Nigh 2015", "SS - Nigh 1997", "SW - Goudie (1984ac)(natural)",
-				"YC - Nigh (2000)" };
-		
 		String[] dbhLabels = new String[4]; // for passing labels into ReportInformation
 		int i = 0;
 		 for(ChoiceBox<String> species : speciesChoiceBoxes) {
@@ -271,19 +286,12 @@ public class SiteInformationTableSceneController implements Initializable {
 					dbhLabels[i] = speciesText;
 					i++;
 				}
-				
 				speciesText = speciesText.substring(0,2); // we only need the two letter identifier
 				siteSpecies.getItems().add(speciesText.substring(0,2)); //add to choicebox in this scene
-				
-				for(int k = 0; k< siteIndexCurves.length; k++) {
-					if(siteIndexCurves[k].substring(0,2).equals(speciesText)) {
-						 siteIndexCurve.getItems().add(siteIndexCurves[k].substring(speciesText.length() + 3)); // Removing the identifier and " - " part
-					}
-				}
-				
 			}
 		}
 		siteSpecies.setValue(speciesChoiceBoxes.get(0).getValue().substring(0,2)); //set default
+		
 		
        setDBHLabels(dbhLabels); 
 
