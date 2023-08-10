@@ -116,7 +116,12 @@ public class SiteInformationTableSceneController implements Initializable {
 
 	}
 	
-	// Helper method to compute the width of text
+	/**
+	 * A helper method to compute the width of a given text using a Text object.
+	 *
+	 * @param text The text for which the width needs to be computed.
+	 * @return double The width of the provided text.
+	 */
 	private double computeTextWidth(String text) {
 		    Text helper = new Text();
 		    
@@ -288,14 +293,14 @@ public class SiteInformationTableSceneController implements Initializable {
 			return;
 		}
 		
-		String[] dbhLabels = new String[4]; // for passing labels into ReportInformation
+		String[] passDBHLabels = new String[4]; // for passing labels into ReportInformation
 		int i = 0;
 		 for(ChoiceBox<String> species : speciesChoiceBoxes) {
 			String speciesText = species.getValue();
 			
 			if(!speciesText.equals("Select Species")) {
 				if(i < 4) { //add first 4 pass to ReportInformation scene
-					dbhLabels[i] = speciesText;
+					passDBHLabels[i] = speciesText;
 					i++;
 				}
 				speciesText = speciesText.substring(0,2); // we only need the two letter identifier
@@ -305,7 +310,7 @@ public class SiteInformationTableSceneController implements Initializable {
 		siteSpecies.setValue(speciesChoiceBoxes.get(0).getValue().substring(0,2)); //set default
 		
 		
-       setDBHLabels(dbhLabels); 
+       setDBHLabels(passDBHLabels); 
 
 	}
 

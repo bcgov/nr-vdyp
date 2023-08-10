@@ -39,7 +39,7 @@ public class NewTableSceneController implements Initializable {
 	private ChoiceBox<String> species6;
 
 	// List of speciesChoiceBoxes
-	public List<ChoiceBox<String>> speciesChoiceBoxes = new ArrayList<>();
+	private List<ChoiceBox<String>> speciesChoiceBoxes = new ArrayList<>();
 
 	// Define a constant for the default selection of tree species
 	private static final String DEFAULT_SPECIES_SELECTION = "Select Species";
