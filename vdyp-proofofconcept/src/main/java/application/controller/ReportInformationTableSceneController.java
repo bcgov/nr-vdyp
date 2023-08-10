@@ -8,7 +8,6 @@ import java.util.ResourceBundle;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
@@ -21,7 +20,6 @@ import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.GridPane;
-import javafx.scene.Parent;
 
 public class ReportInformationTableSceneController implements Initializable {
 
@@ -74,13 +72,22 @@ public class ReportInformationTableSceneController implements Initializable {
 	@FXML
 	private TextArea logFileText;
 	@FXML
-	private Label dbhSpecies1;
+	public Label dbhSpecies1;
 	@FXML
-	private Label dbhSpecies2;
+	public Label dbhSpecies2;
 	@FXML
 	private Label dbhSpecies3;
 	@FXML
 	private Label dbhSpecies4;
+	
+
+	private void updateDBHLabels() {
+			String[] dbhLabels = SiteInformationTableSceneController.getdbhLabels();
+	        dbhSpecies1.setText(dbhLabels[0]);
+	        dbhSpecies2.setText(dbhLabels[1]);
+	        dbhSpecies3.setText(dbhLabels[2]);
+	        dbhSpecies4.setText(dbhLabels[3]);
+	}
 	
 	private static final String VOLUME = "Volume";
 
@@ -190,21 +197,10 @@ public class ReportInformationTableSceneController implements Initializable {
 		dbhSpecies4Slider.setValue(15);
 
 		culminationValues.setDisable(true);// always disabled in WinVDYP
-		
-		FXMLLoader loader = new FXMLLoader(getClass().getResource("../view/NewTableScene.fxml"));
-		try {
-			Parent root = loader.load();
-			NewTableSceneController newTableSceneController = loader.getController();
-			displayChoicesPassedIn(newTableSceneController.getDBHLabels());
-		} catch (IOException e) {
-			String[] errorMessages = new String[4];
 
-	        for (int i = 0; i < errorMessages.length; i++) {
-	            errorMessages[i] = "Error loading species";
-	        }
-	        
-	        displayChoicesPassedIn(errorMessages);
-		}
+		updateDBHLabels();
+		
+	
 		
 	}
 
@@ -318,10 +314,5 @@ public class ReportInformationTableSceneController implements Initializable {
 
 	}
 
-	public void displayChoicesPassedIn(String[] dbhLabels) {
-	    dbhSpecies1.setText(dbhLabels[0]);
-	    dbhSpecies2.setText(dbhLabels[1]);
-	    dbhSpecies3.setText(dbhLabels[2]);
-	    dbhSpecies4.setText(dbhLabels[3]);
-	}
+
 }

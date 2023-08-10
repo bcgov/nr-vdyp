@@ -212,16 +212,37 @@ public class SiteInformationTableSceneController implements Initializable {
 		if(speciesChoiceBoxes.isEmpty()) {
 			return;
 		}
+		
+		String[] dbhLabels = new String[4];
+		int i = 0;
 		 for(ChoiceBox<String> species : speciesChoiceBoxes) {
 			String speciesText = species.getValue();
 			
 			if(!speciesText.equals("Select Species")) {
 				siteSpecies.getItems().add(speciesText.substring(0,2)); //add to choicebox in this scene
+				
+				if(i < 4) {
+					dbhLabels[i] = speciesText;
+					i++;
+				}
 			}
 		}
 		siteSpecies.setValue(speciesChoiceBoxes.get(0).getValue().substring(0,2)); //set default
+		
+
+      
+        this.dbhLabels = dbhLabels; //TODO make this better :)
+
 	}
 
+	private static String[] dbhLabels;
+	
+	public static String[] getdbhLabels() {
+		if (dbhLabels == null) {
+			throw new IllegalStateException("newWindow is not set yet. Make sure to initialize it before accessing.");
+		}
+		return dbhLabels;
+	}
 
 
 }
