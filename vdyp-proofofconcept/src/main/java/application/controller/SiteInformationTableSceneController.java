@@ -105,13 +105,25 @@ public class SiteInformationTableSceneController implements Initializable {
 		        if (curve.startsWith(selectedSpecies)) {
 		            String curveLabel = curve.substring(selectedSpecies.length() + 3); // Removing the identifier and " - " part
 		            siteIndexCurve.setValue(curveLabel);
+		            
+		            double preferredWidth = computeTextWidth(curveLabel) + 30; // Calculate choicebox width and add a bit of padding
+		            siteIndexCurve.setPrefWidth(preferredWidth);
+
+		            break;
 		        }
 		    }
 		});
 
 	}
 	
-
+	// Helper method to compute the width of text
+	private double computeTextWidth(String text) {
+		    Text helper = new Text();
+		    
+		    helper.setText(text);
+		    return helper.getLayoutBounds().getWidth();
+	}
+	
 	/**
 	 * Sets default values for various controls in the window and disables certain controls as specified in the Balsamiq mock-ups.
 	 * The default values and control states are as follows:
