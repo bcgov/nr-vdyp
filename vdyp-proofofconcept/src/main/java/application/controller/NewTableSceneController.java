@@ -143,9 +143,10 @@ public class NewTableSceneController implements Initializable {
 				"EA - Alaska Paper Birch", "EP - Common Paper Birch", "FD - Douglas Fir", "H - Hemlock",
 				"HM - Mountain Hemlock", "HW - Western Hemlock", "L - Larch", "LA - Alpine Larch", "LT - Tamarack",
 				"LW - Western Larch", "MB - Bigleaf Maple", "PA - Whitebark Pine", "PF - Limber Pine", "PJ - Jack Pine",
-				"PL - Lodgepole Pine", "PY - Western White Pine", "PY - Ponderosa (Yellow) Pine", "S - Spruce",
+				"PL - Lodgepole Pine", "PW - Western White Pine", "PY - Ponderosa (Yellow) Pine", "S - Spruce",
 				"SB - Black Spruce", "SE - Engelmann Spruce", "SS - Sitka Spruce", "SW - White Spruce",
 				"YC - Yellow Cedar" };
+		
 
 		// Add "Select species" as the item for each ChoiceBox and set items
 		for (ChoiceBox<String> choiceBox : speciesChoiceBoxes) {

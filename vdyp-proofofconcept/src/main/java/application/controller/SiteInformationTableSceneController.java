@@ -41,6 +41,8 @@ public class SiteInformationTableSceneController implements Initializable {
 	private ChoiceBox<String> loggingType;
 	@FXML
 	private ChoiceBox<String> siteSpecies;
+	@FXML
+	private ChoiceBox<String> siteIndexCurve;
 	
 	
 	private static String[] dbhLabels;
@@ -247,18 +249,38 @@ public class SiteInformationTableSceneController implements Initializable {
 			return;
 		}
 		
-		String[] dbhLabels = new String[4];
+		final String[] siteIndexCurves = { "AC - Huang, Titus, and Lakusta (1994ac)", "AT - Nigh, Krestov, and Klinka 2002",
+				"B  - Chen and Klinka (200ac)", "BA - Nigh (2009)",
+				"BG - Nigh (2009)", "BL - Chen and Klinka (2000ac)", "CW - Nigh (2000)", "DR - Nigh and Courtin (1998)", "E  - Nigh (2009)",
+				"EA - Thrower (1994)", "EP - Nigh (2009)", "FD - Thrower and Goudie (1992ac)", "H  - Nigh (1998)",
+				"HM - Means, Campbell, Johnson (1988ac)", "HW - Nigh (1998)", "L  - Briscon, Klinka, and Nigh 2002", "LA - Thrower (1994)",
+				"LT - Thrower (1994)",
+				"LW - Briscon, Klinka, and Nigh 2002", "MB - Nigh and Courtin (1998)", "PA - Thrower (1994)", "PF - Thrower (1994)", 
+				"PJ - Thrower (1994)",
+				"PL - Thrower (1994)", "PW - Thrower (1994)", "PY - Thrower (1994)", "S  - Goudie (1984ac)(natural)",
+				"SB - Nigh, Krestov, and Klinka 2002", "SE - Nigh 2015", "SS - Nigh 1997", "SW - Goudie (1984ac)(natural)",
+				"YC - Nigh (2000)" };
+		
+		String[] dbhLabels = new String[4]; // for passing labels into ReportInformation
 		int i = 0;
 		 for(ChoiceBox<String> species : speciesChoiceBoxes) {
 			String speciesText = species.getValue();
 			
 			if(!speciesText.equals("Select Species")) {
-				siteSpecies.getItems().add(speciesText.substring(0,2)); //add to choicebox in this scene
-				
-				if(i < 4) {
+				if(i < 4) { //add first 4 pass to ReportInformation scene
 					dbhLabels[i] = speciesText;
 					i++;
 				}
+				
+				speciesText = speciesText.substring(0,2); // we only need the two letter identifier
+				siteSpecies.getItems().add(speciesText.substring(0,2)); //add to choicebox in this scene
+				
+				for(int k = 0; k< siteIndexCurves.length; k++) {
+					if(siteIndexCurves[k].substring(0,2).equals(speciesText)) {
+						 siteIndexCurve.getItems().add(siteIndexCurves[k].substring(speciesText.length() + 3)); // Removing the identifier and " - " part
+					}
+				}
+				
 			}
 		}
 		siteSpecies.setValue(speciesChoiceBoxes.get(0).getValue().substring(0,2)); //set default
@@ -266,4 +288,5 @@ public class SiteInformationTableSceneController implements Initializable {
        setDBHLabels(dbhLabels); 
 
 	}
+
 }

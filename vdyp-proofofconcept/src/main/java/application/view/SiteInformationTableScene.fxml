@@ -78,7 +78,7 @@
                                        </font>
                                     </Label>
                                     <ChoiceBox fx:id="siteSpecies" prefHeight="15.0" prefWidth="150.0" GridPane.rowIndex="4" />
-                                    <ChoiceBox prefHeight="15.0" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                                    <ChoiceBox fx:id="siteIndexCurve" prefHeight="15.0" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
                                     <Label text="*Ministry Default Curve for this Species" GridPane.columnIndex="1" GridPane.rowIndex="5">
                                        <font>
                                           <Font size="10.0" />
