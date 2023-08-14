@@ -21,9 +21,13 @@ import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.BecDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.BreakageEquationGroupParser;
+import ca.bc.gov.nrs.vdyp.io.parse.BreakageParser;
 import ca.bc.gov.nrs.vdyp.io.parse.CloseUtilVolumeParser;
+import ca.bc.gov.nrs.vdyp.io.parse.ControlFileParserTest;
 import ca.bc.gov.nrs.vdyp.io.parse.DecayEquationGroupParser;
 import ca.bc.gov.nrs.vdyp.io.parse.GenusDefinitionParser;
+import ca.bc.gov.nrs.vdyp.io.parse.ResourceControlMapModifier;
+import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.UtilComponentWSVolumeParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VeteranBQParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VeteranDQParser;
@@ -77,27 +81,10 @@ public class TestUtils {
 	}
 
 	/**
-	 * Add a mock control map entry for BEC parse results with species "B1" and "B2"
-	 * for Coastal and Interior Regions respectively
+	 * Add a mock control map entry for BEC parse results
 	 */
-	public static void populateControlMapReal(Map<String, Object> controlMap) {
-		List<BecDefinition> becs = new ArrayList<>();
-
-		becs.add(makeBec("BG", Region.INTERIOR, "Bunchgrass"));
-		becs.add(makeBec("BWBS", Region.INTERIOR, "Boreal White and Black Spruce"));
-		becs.add(makeBec("CDF", Region.INTERIOR, "Coastal Dougfir"));
-		becs.add(makeBec("CWH", Region.INTERIOR, "Coastal Western Hemlock"));
-		becs.add(makeBec("ESSF", Region.INTERIOR, "Englemann Sruce -SubAlpine Fir"));
-		becs.add(makeBec("ICH", Region.INTERIOR, "Interior Cedar-Hemlock"));
-		becs.add(makeBec("IDF", Region.INTERIOR, "Interior DougFir"));
-		becs.add(makeBec("MH", Region.INTERIOR, "Mountain Hemlock"));
-		becs.add(makeBec("MS", Region.INTERIOR, "Montane Spruce"));
-		becs.add(makeBec("PP", Region.INTERIOR, "Ponderosa Pine"));
-		becs.add(makeBec("SBPS", Region.INTERIOR, "SubBoreal Pine-Spruce"));
-		becs.add(makeBec("SBS", Region.INTERIOR, "SubBoreal Spruce"));
-		becs.add(makeBec("SWB", Region.INTERIOR, "Spruce-Willow-Birch"));
-
-		controlMap.put(BecDefinitionParser.CONTROL_KEY, new BecLookup(becs));
+	public static void populateControlMapBecReal(Map<String, Object> controlMap) {
+		populateControlMapFromResource(controlMap, new BecDefinitionParser(), "Becdef.dat");
 	}
 
 	/**
@@ -144,8 +131,8 @@ public class TestUtils {
 	/**
 	 * Add a mock control map entry for SP0 parse results with 16 species
 	 */
-	public static void populateControlMapGensuReal(Map<String, Object> controlMap) {
-		populateControlMapGenus(controlMap, getSpeciesAliases());
+	public static void populateControlMapGenusReal(Map<String, Object> controlMap) {
+		populateControlMapFromResource(controlMap, new GenusDefinitionParser(), "SP0DEF_v0.dat");
 	}
 
 	/**
@@ -194,15 +181,7 @@ public class TestUtils {
 	 * Add mock control map entry for VeteranBQ Map
 	 */
 	public static void populateControlMapVeteranBq(Map<String, Object> controlMap) {
-		var speciesDim = GenusDefinitionParser.getSpeciesAliases(controlMap);
-
-		var vetBqMap = new MatrixMap2Impl<>(
-				speciesDim, Arrays.asList(Region.values()), (k1, k2) -> Coefficients.empty(3, -1)
-		);
-
-		vetBqMap.put("B", Region.INTERIOR, new Coefficients(Arrays.asList(0.70932f, 7.63269f, 0.62545f), 1));
-
-		controlMap.put(VeteranBQParser.CONTROL_KEY, vetBqMap);
+		populateControlMapFromResource(controlMap, new VeteranBQParser(), "REGBAV01.COE");
 	}
 
 	public static void
@@ -261,6 +240,13 @@ public class TestUtils {
 		populateControlMap1(controlMap, VolumeNetDecayWasteParser.CONTROL_KEY, speciesDim, mapper);
 	}
 
+	public static void
+			populateControlMapNetBreakage(HashMap<String, Object> controlMap, Function<Integer, Coefficients> mapper) {
+		var groupIndicies = groupIndices(BreakageParser.MAX_GROUPS);
+
+		populateControlMap1(controlMap, BreakageParser.CONTROL_KEY, groupIndicies, mapper);
+	}
+
 	public static <K1, K2, V> void populateControlMap2(
 			Map<String, Object> controlMap, String key, Collection<K1> keys1, Collection<K2> keys2,
 			BiFunction<K1, K2, V> mapper
@@ -286,4 +272,13 @@ public class TestUtils {
 		return IntStream.rangeClosed(1, max).mapToObj(x -> x).toList();
 	}
 
+	public static void populateControlMapFromResource(
+			Map<String, Object> controlMap, ResourceControlMapModifier parser, String resource
+	) {
+		try (var is = ControlFileParserTest.class.getResourceAsStream("coe/" + resource)) {
+			parser.modify(controlMap, is);
+		} catch (IOException | ResourceParseException ex) {
+			fail(ex);
+		}
+	}
 }

@@ -33,7 +33,7 @@ public class FipLayerParserTest {
 		Map<String, Object> controlMap = new HashMap<>();
 
 		controlMap.put(FipLayerParser.CONTROL_KEY, "test.dat");
-		TestUtils.populateControlMapReal(controlMap);
+		TestUtils.populateControlMapBecReal(controlMap);
 
 		var fileResolver = TestUtils.fileResolver("test.dat", TestUtils.makeStream(/* empty */));
 
@@ -59,7 +59,7 @@ public class FipLayerParserTest {
 		Map<String, Object> controlMap = new HashMap<>();
 
 		controlMap.put(FipLayerParser.CONTROL_KEY, "test.dat");
-		TestUtils.populateControlMapGensuReal(controlMap);
+		TestUtils.populateControlMapGenusReal(controlMap);
 
 		var fileResolver = TestUtils.fileResolver(
 				"test.dat",
@@ -113,7 +113,7 @@ public class FipLayerParserTest {
 		Map<String, Object> controlMap = new HashMap<>();
 
 		controlMap.put(FipLayerParser.CONTROL_KEY, "test.dat");
-		TestUtils.populateControlMapGensuReal(controlMap);
+		TestUtils.populateControlMapGenusReal(controlMap);
 
 		var fileResolver = TestUtils.fileResolver(
 				"test.dat",
@@ -185,7 +185,7 @@ public class FipLayerParserTest {
 		Map<String, Object> controlMap = new HashMap<>();
 
 		controlMap.put(FipLayerParser.CONTROL_KEY, "test.dat");
-		TestUtils.populateControlMapGensuReal(controlMap);
+		TestUtils.populateControlMapGenusReal(controlMap);
 
 		var fileResolver = TestUtils.fileResolver(
 				"test.dat",
@@ -240,7 +240,7 @@ public class FipLayerParserTest {
 		Map<String, Object> controlMap = new HashMap<>();
 
 		controlMap.put(FipLayerParser.CONTROL_KEY, "test.dat");
-		TestUtils.populateControlMapGensuReal(controlMap);
+		TestUtils.populateControlMapGenusReal(controlMap);
 
 		var fileResolver = TestUtils.fileResolver(
 				"test.dat",

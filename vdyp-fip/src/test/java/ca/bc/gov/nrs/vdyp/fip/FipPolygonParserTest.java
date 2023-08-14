@@ -31,7 +31,7 @@ public class FipPolygonParserTest {
 		Map<String, Object> controlMap = new HashMap<>();
 
 		controlMap.put(FipPolygonParser.CONTROL_KEY, "test.dat");
-		TestUtils.populateControlMapReal(controlMap);
+		TestUtils.populateControlMapBecReal(controlMap);
 
 		var fileResolver = TestUtils.fileResolver("test.dat", TestUtils.makeStream(/* empty */));
 
@@ -57,7 +57,7 @@ public class FipPolygonParserTest {
 		Map<String, Object> controlMap = new HashMap<>();
 
 		controlMap.put(FipPolygonParser.CONTROL_KEY, "test.dat");
-		TestUtils.populateControlMapReal(controlMap);
+		TestUtils.populateControlMapBecReal(controlMap);
 
 		var fileResolver = TestUtils
 				.fileResolver("test.dat", TestUtils.makeStream("Test Polygon              A CWH  90.0  2 BLAH  0.95"));
@@ -94,7 +94,7 @@ public class FipPolygonParserTest {
 		Map<String, Object> controlMap = new HashMap<>();
 
 		controlMap.put(FipPolygonParser.CONTROL_KEY, "test.dat");
-		TestUtils.populateControlMapReal(controlMap);
+		TestUtils.populateControlMapBecReal(controlMap);
 
 		var fileResolver = TestUtils
 				.fileResolver("test.dat", TestUtils.makeStream("01002 S000001 00     1970 A CWH                    "));
@@ -131,7 +131,7 @@ public class FipPolygonParserTest {
 		Map<String, Object> controlMap = new HashMap<>();
 
 		controlMap.put(FipPolygonParser.CONTROL_KEY, "test.dat");
-		TestUtils.populateControlMapReal(controlMap);
+		TestUtils.populateControlMapBecReal(controlMap);
 
 		var fileResolver = TestUtils.fileResolver(
 				"test.dat",
@@ -271,7 +271,7 @@ public class FipPolygonParserTest {
 		Map<String, Object> controlMap = new HashMap<>();
 
 		controlMap.put(FipPolygonParser.CONTROL_KEY, "test.dat");
-		TestUtils.populateControlMapReal(controlMap);
+		TestUtils.populateControlMapBecReal(controlMap);
 
 		var fileResolver = TestUtils
 				.fileResolver("test.dat", TestUtils.makeStream("01002 S000001 00     1970 A CWH   0.0  0       0.00"));
@@ -308,7 +308,7 @@ public class FipPolygonParserTest {
 		Map<String, Object> controlMap = new HashMap<>();
 
 		controlMap.put(FipPolygonParser.CONTROL_KEY, "test.dat");
-		TestUtils.populateControlMapReal(controlMap);
+		TestUtils.populateControlMapBecReal(controlMap);
 
 		var fileResolver = TestUtils
 				.fileResolver("test.dat", TestUtils.makeStream("01002 S000001 00     1970 A CWH  -1.0         -1.00"));

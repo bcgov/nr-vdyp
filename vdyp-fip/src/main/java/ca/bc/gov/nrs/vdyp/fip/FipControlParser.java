@@ -212,31 +212,6 @@ public class FipControlParser {
 		}
 	}
 
-	Map<String, ?> parse(Class<?> klazz, String resourceName) throws IOException, ResourceParseException {
-		try (var is = klazz.getResourceAsStream(resourceName)) {
-
-			return parse(is, fileResolver(klazz));
-		}
-	}
-
-	static FileResolver fileResolver(Class<?> klazz) {
-		return new FileResolver() {
-
-			@Override
-			public InputStream resolve(String filename) throws IOException {
-				InputStream resourceAsStream = klazz.getResourceAsStream(filename);
-				if (resourceAsStream == null)
-					throw new IOException("Could not load " + filename);
-				return resourceAsStream;
-			}
-
-			@Override
-			public String toString(String filename) throws IOException {
-				return klazz.getResource(filename).toString();
-			}
-		};
-	}
-
 	List<ControlMapModifier> DATA_FILES = Arrays.asList(
 
 			// V7O_FIP
@@ -402,7 +377,8 @@ public class FipControlParser {
 		}
 	}
 
-	Map<String, Object> parse(InputStream is, FileResolver fileResolver) throws IOException, ResourceParseException {
+	public Map<String, Object> parse(InputStream is, FileResolver fileResolver)
+			throws IOException, ResourceParseException {
 		var map = controlParser.parse(is, Collections.emptyMap());
 
 		applyModifiers(map, BASIC_DEFINITIONS, fileResolver);

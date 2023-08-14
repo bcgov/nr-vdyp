@@ -46,11 +46,9 @@ import ca.bc.gov.nrs.vdyp.io.parse.GenusDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.MockStreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.StreamingParserFactory;
-import ca.bc.gov.nrs.vdyp.io.parse.UtilComponentWSVolumeParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VeteranLayerVolumeAdjustParser;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.Layer;
-import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
@@ -592,8 +590,8 @@ class FipStartTest {
 		fipLayer.setSpecies(Collections.singletonMap(fipSpecies.getGenus(), fipSpecies));
 
 		var controlMap = new HashMap<String, Object>();
-		TestUtils.populateControlMapReal(controlMap);
-		TestUtils.populateControlMapGensuReal(controlMap);
+		TestUtils.populateControlMapBecReal(controlMap);
+		TestUtils.populateControlMapGenusReal(controlMap);
 		TestUtils.populateControlMapVeteranBq(controlMap);
 		TestUtils.populateControlMapEquationGroups(controlMap, (s, b) -> new int[] { 1, 1, 1 });
 		TestUtils.populateControlMapVeteranDq(controlMap, (s, r) -> new float[] { 0f, 0f, 0f });
@@ -606,6 +604,8 @@ class FipStartTest {
 				controlMap, s -> new Coefficients(new float[] { 0f, 0f, 0f, 0f, 0f, 0f }, 0)
 		);
 		FipTestUtils.populateControlMapWasteModifiers(controlMap, (s, r) -> 0f);
+		TestUtils
+				.populateControlMapNetBreakage(controlMap, bgrp -> new Coefficients(new float[] { 0f, 0f, 0f, 0f }, 1));
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -663,8 +663,8 @@ class FipStartTest {
 		fipLayer.setSpecies(Collections.singletonMap(fipSpecies.getGenus(), fipSpecies));
 
 		var controlMap = new HashMap<String, Object>();
-		TestUtils.populateControlMapReal(controlMap);
-		TestUtils.populateControlMapGensuReal(controlMap);
+		TestUtils.populateControlMapBecReal(controlMap);
+		TestUtils.populateControlMapGenusReal(controlMap);
 		TestUtils.populateControlMapVeteranBq(controlMap);
 		TestUtils.populateControlMapEquationGroups(controlMap, (s, b) -> new int[] { 1, 1, 1 });
 		TestUtils.populateControlMapVeteranDq(controlMap, (s, r) -> new float[] { 0f, 0f, 0f });
@@ -677,6 +677,8 @@ class FipStartTest {
 				controlMap, s -> new Coefficients(new float[] { 0f, 0f, 0f, 0f, 0f, 0f }, 0)
 		);
 		FipTestUtils.populateControlMapWasteModifiers(controlMap, (s, r) -> 0f);
+		TestUtils
+				.populateControlMapNetBreakage(controlMap, bgrp -> new Coefficients(new float[] { 0f, 0f, 0f, 0f }, 1));
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -710,8 +712,8 @@ class FipStartTest {
 		fipLayer.setSpecies(Collections.singletonMap(fipSpecies.getGenus(), fipSpecies));
 
 		var controlMap = new HashMap<String, Object>();
-		TestUtils.populateControlMapReal(controlMap);
-		TestUtils.populateControlMapGensuReal(controlMap);
+		TestUtils.populateControlMapBecReal(controlMap);
+		TestUtils.populateControlMapGenusReal(controlMap);
 		TestUtils.populateControlMapVeteranBq(controlMap);
 		TestUtils.populateControlMapEquationGroups(controlMap, (s, b) -> new int[] { 1, 1, 1 });
 		TestUtils.populateControlMapVeteranDq(controlMap, (s, r) -> new float[] { 0f, 0f, 0f });
@@ -724,6 +726,8 @@ class FipStartTest {
 				controlMap, s -> new Coefficients(new float[] { 0f, 0f, 0f, 0f, 0f, 0f }, 0)
 		);
 		FipTestUtils.populateControlMapWasteModifiers(controlMap, (s, r) -> 0f);
+		TestUtils
+				.populateControlMapNetBreakage(controlMap, bgrp -> new Coefficients(new float[] { 0f, 0f, 0f, 0f }, 1));
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -778,8 +782,8 @@ class FipStartTest {
 		fipLayer.setSpecies(Collections.singletonMap(fipSpecies.getGenus(), fipSpecies));
 
 		var controlMap = new HashMap<String, Object>();
-		TestUtils.populateControlMapReal(controlMap);
-		TestUtils.populateControlMapGensuReal(controlMap);
+		TestUtils.populateControlMapBecReal(controlMap);
+		TestUtils.populateControlMapGenusReal(controlMap);
 		TestUtils.populateControlMapVeteranBq(controlMap);
 		TestUtils.populateControlMapEquationGroups(controlMap, (s, b) -> new int[] { 1, 1, 1 });
 		TestUtils.populateControlMapVeteranDq(controlMap, (s, r) -> new float[] { 0f, 0f, 0f });
@@ -792,6 +796,8 @@ class FipStartTest {
 				controlMap, s -> new Coefficients(new float[] { 0f, 0f, 0f, 0f, 0f, 0f }, 0)
 		);
 		FipTestUtils.populateControlMapWasteModifiers(controlMap, (s, r) -> 0f);
+		TestUtils
+				.populateControlMapNetBreakage(controlMap, bgrp -> new Coefficients(new float[] { 0f, 0f, 0f, 0f }, 1));
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -841,8 +847,8 @@ class FipStartTest {
 		fipLayer.setSpecies(speciesMap);
 
 		var controlMap = new HashMap<String, Object>();
-		TestUtils.populateControlMapReal(controlMap);
-		TestUtils.populateControlMapGensuReal(controlMap);
+		TestUtils.populateControlMapBecReal(controlMap);
+		TestUtils.populateControlMapGenusReal(controlMap);
 		TestUtils.populateControlMapVeteranBq(controlMap);
 		TestUtils.populateControlMapEquationGroups(controlMap, (s, b) -> new int[] { 1, 1, 1 });
 		TestUtils.populateControlMapVeteranDq(controlMap, (s, r) -> new float[] { 0f, 0f, 0f });
@@ -855,6 +861,8 @@ class FipStartTest {
 				controlMap, s -> new Coefficients(new float[] { 0f, 0f, 0f, 0f, 0f, 0f }, 0)
 		);
 		FipTestUtils.populateControlMapWasteModifiers(controlMap, (s, r) -> 0f);
+		TestUtils
+				.populateControlMapNetBreakage(controlMap, bgrp -> new Coefficients(new float[] { 0f, 0f, 0f, 0f }, 1));
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -879,97 +887,14 @@ class FipStartTest {
 	@Test
 	void testEstimateVeteranLayerBaseArea() throws Exception {
 
-		var polygonId = polygonId("Test Polygon", 2023);
-
-		var fipPolygon = getTestPolygon(polygonId, valid());
-		var fipLayer = getTestVeteranLayer(polygonId, x -> {
-			x.setHeight(10f);
-		});
-		var fipSpecies1 = getTestSpecies(polygonId, Layer.VETERAN, "B", x -> {
-			var map = new LinkedHashMap<String, Float>();
-			map.put("S1", 75f);
-			map.put("S2", 25f);
-			x.setSpeciesPercent(map);
-			x.setPercentGenus(60f);
-		});
-		var fipSpecies2 = getTestSpecies(polygonId, Layer.VETERAN, "C", x -> {
-			var map = new LinkedHashMap<String, Float>();
-			map.put("S3", 75f);
-			map.put("S4", 25f);
-			x.setSpeciesPercent(map);
-			x.setPercentGenus(40f);
-		});
-		fipPolygon.setLayers(Collections.singletonMap(Layer.VETERAN, fipLayer));
-		var speciesMap = new HashMap<String, FipSpecies>();
-		speciesMap.put("B", fipSpecies1);
-		speciesMap.put("C", fipSpecies2);
-		fipLayer.setSpecies(speciesMap);
-
-		var controlMap = new HashMap<String, Object>();
-		TestUtils.populateControlMapReal(controlMap);
-		TestUtils.populateControlMapGensuReal(controlMap);
-		TestUtils.populateControlMapEquationGroups(controlMap, (s, b) -> new int[] { 1, 1, 1 });
-		TestUtils.populateControlMapVeteranBq(controlMap);
-		TestUtils.populateControlMapVeteranDq(controlMap, (s, r) -> new float[] { 0f, 0f, 0f });
-		TestUtils.populateControlMapWholeStemVolume(controlMap, (wholeStemMap(1)));
-		populateControlMapVeteranVolumeAdjust(controlMap, s -> new float[] { 0f, 0f, 0f, 0f });
-		TestUtils.populateControlMapCloseUtilization(controlMap, closeUtilMap(1));
-		TestUtils.populateControlMapNetDecay(controlMap, closeUtilMap(1));
-		FipTestUtils.populateControlMapDecayModifiers(controlMap, (s, r) -> 0f);
-		TestUtils.populateControlMapNetWaste(
-				controlMap, s -> new Coefficients(new float[] { 0f, 0f, 0f, 0f, 0f, 0f }, 0)
-		);
-		FipTestUtils.populateControlMapWasteModifiers(controlMap, (s, r) -> 0f);
+		var controlMap = FipTestUtils.loadControlMap();
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
 
-		var result = app.processLayerAsVeteran(fipPolygon, fipLayer);
-		var expectedBaseArea = 0.70932f * (float) Math.pow(10f - 7.63269f, 0.62545f) * 0.9f / 4.0f;
+		var result = app.estimateVeteranBaseArea(26.2000008f, 4f, "H", Region.COASTAL);
 
-		Matcher<Float> baMatcher = closeTo(expectedBaseArea);
-		Matcher<Float> zeroMatcher = is(0.0f);
-		// Expect the estimated BA in 0 and 4 (-1 to 4)
-		assertThat(
-				result,
-				hasProperty(
-						"baseAreaByUtilization",
-						contains(zeroMatcher, baMatcher, zeroMatcher, zeroMatcher, zeroMatcher, baMatcher)
-				)
-		);
-
-		assertThat(
-				result,
-				hasProperty(
-						"species",
-						hasEntry(
-								is("B"),
-								hasProperty(
-										"baseAreaByUtilization",
-										contains(
-												zeroMatcher, zeroMatcher, zeroMatcher, zeroMatcher, zeroMatcher,
-												closeTo(expectedBaseArea * 0.6f)
-										)
-								)
-						)
-				)
-		);
-		assertThat(
-				result,
-				hasProperty(
-						"species",
-						hasEntry(
-								is("C"),
-								hasProperty(
-										"baseAreaByUtilization",
-										contains(
-												zeroMatcher, zeroMatcher, zeroMatcher, zeroMatcher, zeroMatcher,
-												closeTo(expectedBaseArea * 0.4f)
-										)
-								)
-						)
-				)
-		);
+		assertThat(result, closeTo(2.24055195f));
 	}
 
 	void populateControlMapVeteranVolumeAdjust(HashMap<String, Object> controlMap, Function<String, float[]> mapper) {
@@ -995,8 +920,8 @@ class FipStartTest {
 		fipLayer.setSpecies(Collections.singletonMap(fipSpecies.getGenus(), fipSpecies));
 
 		var controlMap = new HashMap<String, Object>();
-		TestUtils.populateControlMapReal(controlMap);
-		TestUtils.populateControlMapGensuReal(controlMap);
+		TestUtils.populateControlMapBecReal(controlMap);
+		TestUtils.populateControlMapGenusReal(controlMap);
 		TestUtils.populateControlMapVeteranBq(controlMap);
 		TestUtils.populateControlMapEquationGroups(controlMap, (s, b) -> new int[] { 1, 1, 1 });
 		TestUtils.populateControlMapVeteranDq(controlMap, (s, r) -> new float[] { 0f, 0f, 0f });
@@ -1009,6 +934,8 @@ class FipStartTest {
 				controlMap, s -> new Coefficients(new float[] { 0f, 0f, 0f, 0f, 0f, 0f }, 0)
 		);
 		FipTestUtils.populateControlMapWasteModifiers(controlMap, (s, r) -> 0f);
+		TestUtils
+				.populateControlMapNetBreakage(controlMap, bgrp -> new Coefficients(new float[] { 0f, 0f, 0f, 0f }, 1));
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -1038,8 +965,8 @@ class FipStartTest {
 		fipLayer.setSpecies(Collections.singletonMap(fipSpecies.getGenus(), fipSpecies));
 
 		var controlMap = new HashMap<String, Object>();
-		TestUtils.populateControlMapReal(controlMap);
-		TestUtils.populateControlMapGensuReal(controlMap);
+		TestUtils.populateControlMapBecReal(controlMap);
+		TestUtils.populateControlMapGenusReal(controlMap);
 		TestUtils.populateControlMapVeteranBq(controlMap);
 		TestUtils.populateControlMapEquationGroups(
 				controlMap, (s, b) -> s.equals("B") && b.equals("BG") ? new int[] { 1, 2, 3 } : new int[] { 0, 0, 0 }
@@ -1054,6 +981,8 @@ class FipStartTest {
 				controlMap, s -> new Coefficients(new float[] { 0f, 0f, 0f, 0f, 0f, 0f }, 0)
 		);
 		FipTestUtils.populateControlMapWasteModifiers(controlMap, (s, r) -> 0f);
+		TestUtils
+				.populateControlMapNetBreakage(controlMap, bgrp -> new Coefficients(new float[] { 0f, 0f, 0f, 0f }, 1));
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -1096,8 +1025,8 @@ class FipStartTest {
 		fipLayer.setSpecies(speciesMap);
 
 		var controlMap = new HashMap<String, Object>();
-		TestUtils.populateControlMapReal(controlMap);
-		TestUtils.populateControlMapGensuReal(controlMap);
+		TestUtils.populateControlMapBecReal(controlMap);
+		TestUtils.populateControlMapGenusReal(controlMap);
 		TestUtils.populateControlMapEquationGroups(controlMap, (s, b) -> new int[] { 1, 1, 1 });
 		TestUtils.populateControlMapVeteranBq(controlMap);
 		TestUtils.populateControlMapVeteranDq(controlMap, (s, r) -> {
@@ -1116,6 +1045,8 @@ class FipStartTest {
 				controlMap, s -> new Coefficients(new float[] { 0f, 0f, 0f, 0f, 0f, 0f }, 0)
 		);
 		FipTestUtils.populateControlMapWasteModifiers(controlMap, (s, r) -> 0f);
+		TestUtils
+				.populateControlMapNetBreakage(controlMap, bgrp -> new Coefficients(new float[] { 0f, 0f, 0f, 0f }, 1));
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -1134,14 +1065,20 @@ class FipStartTest {
 				resultB,
 				hasProperty(
 						"quadraticMeanDiameterByUtilization",
-						contains(zeroMatcher, zeroMatcher, zeroMatcher, zeroMatcher, zeroMatcher, closeTo(expectedDqB))
+						contains(
+								zeroMatcher, closeTo(expectedDqB), zeroMatcher, zeroMatcher, zeroMatcher,
+								closeTo(expectedDqB)
+						)
 				)
 		);
 		assertThat(
 				resultB,
 				hasProperty(
 						"treesPerHectareByUtilization",
-						contains(zeroMatcher, zeroMatcher, zeroMatcher, zeroMatcher, zeroMatcher, closeTo(3.8092144f))
+						contains(
+								zeroMatcher, closeTo(3.8092144f), zeroMatcher, zeroMatcher, zeroMatcher,
+								closeTo(3.8092144f)
+						)
 				)
 		);
 		var resultC = result.getSpecies().get("C");
@@ -1149,14 +1086,20 @@ class FipStartTest {
 				resultC,
 				hasProperty(
 						"quadraticMeanDiameterByUtilization",
-						contains(zeroMatcher, zeroMatcher, zeroMatcher, zeroMatcher, zeroMatcher, closeTo(expectedDqC))
+						contains(
+								zeroMatcher, closeTo(expectedDqC), zeroMatcher, zeroMatcher, zeroMatcher,
+								closeTo(expectedDqC)
+						)
 				)
 		);
 		assertThat(
 				resultC,
 				hasProperty(
 						"treesPerHectareByUtilization",
-						contains(zeroMatcher, zeroMatcher, zeroMatcher, zeroMatcher, zeroMatcher, closeTo(2.430306f))
+						contains(
+								zeroMatcher, closeTo(2.430306f), zeroMatcher, zeroMatcher, zeroMatcher,
+								closeTo(2.430306f)
+						)
 				)
 		);
 	}
@@ -1381,6 +1324,46 @@ class FipStartTest {
 		assertThat(
 				closeUtilizationNetOfDecayAndWasteUtil,
 				coe(0, contains(is(0f), is(0f), is(0f), is(0f), closeTo(5.57935333f)))
+		);
+
+	}
+
+	@Test
+	void testEstimateVeteranNetBreakage() throws Exception {
+		var polygonId = polygonId("Test Polygon", 2023);
+
+		var fipPolygon = getTestPolygon(polygonId, valid());
+		var fipLayer = getTestVeteranLayer(polygonId, valid());
+		var fipSpecies = getTestSpecies(polygonId, Layer.VETERAN, s -> {
+		});
+		fipPolygon.setLayers(Collections.singletonMap(Layer.VETERAN, fipLayer));
+		fipLayer.setSpecies(Collections.singletonMap(fipSpecies.getGenus(), fipSpecies));
+
+		var controlMap = new HashMap<String, Object>();
+		TestUtils.populateControlMapNetBreakage(controlMap, bgrp -> bgrp == 5 ? //
+				new Coefficients(new float[] { 2.2269001f, 0.75059998f, 4f, 6f }, 1) : //
+				new Coefficients(new float[] { 0f, 0f, 0f, 0f }, 1)
+		);
+
+		var app = new FipStart();
+		app.setControlMap(controlMap);
+
+		var utilizationClass = 4;
+		var breakageGroup = 5;
+		var quadMeanDiameterUtil = new Coefficients(new float[] { 51.8356705f, 0f, 0f, 0f, 51.8356705f }, 0);
+		var closeUtilizationUtil = new Coefficients(new float[] { 0f, 0f, 0f, 0f, 5.86088896f }, 0);
+		var closeUtilizationNetOfDecayAndWasteUtil = new Coefficients(new float[] { 0f, 0f, 0f, 0f, 5.57935333f }, 0);
+
+		var closeUtilizationNetOfDecayWasteAndBreakageUtil = new Coefficients(new float[] { 0f, 0f, 0f, 0f, 0f }, 0);
+
+		app.estimateNetDecayWasteAndBreakageVolume(
+				utilizationClass, breakageGroup, quadMeanDiameterUtil, closeUtilizationUtil,
+				closeUtilizationNetOfDecayAndWasteUtil, closeUtilizationNetOfDecayWasteAndBreakageUtil
+		);
+
+		assertThat(
+				closeUtilizationNetOfDecayWasteAndBreakageUtil,
+				coe(0, contains(is(0f), is(0f), is(0f), is(0f), closeTo(5.27515411f)))
 		);
 
 	}

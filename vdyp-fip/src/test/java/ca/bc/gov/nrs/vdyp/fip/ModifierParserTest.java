@@ -46,7 +46,7 @@ class ModifierParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 		controlMap.put(ModifierParser.CONTROL_KEY, Optional.empty());
-		TestUtils.populateControlMapGensuReal(controlMap);
+		TestUtils.populateControlMapGenusReal(controlMap);
 
 		var fileResolver = new FileResolver() {
 
@@ -106,7 +106,7 @@ class ModifierParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 		controlMap.put(ModifierParser.CONTROL_KEY, Optional.of("testFilename"));
-		TestUtils.populateControlMapGensuReal(controlMap);
+		TestUtils.populateControlMapGenusReal(controlMap);
 		populateVetBq(controlMap);
 		populateHlP1(controlMap);
 		populateHlP2(controlMap);
@@ -182,7 +182,7 @@ class ModifierParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 		controlMap.put(ModifierParser.CONTROL_KEY, Optional.of("testFilename"));
-		TestUtils.populateControlMapGensuReal(controlMap);
+		TestUtils.populateControlMapGenusReal(controlMap);
 		populateVetBq(controlMap);
 		populateHlP1(controlMap);
 		populateHlP2(controlMap);
@@ -241,7 +241,7 @@ class ModifierParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 		controlMap.put(ModifierParser.CONTROL_KEY, Optional.of("testFilename"));
-		TestUtils.populateControlMapGensuReal(controlMap);
+		TestUtils.populateControlMapGenusReal(controlMap);
 		populateVetBq(controlMap);
 		populateHlP1(controlMap);
 		populateHlP2(controlMap);
@@ -277,7 +277,7 @@ class ModifierParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 		controlMap.put(ModifierParser.CONTROL_KEY, Optional.of("testFilename"));
-		TestUtils.populateControlMapGensuReal(controlMap);
+		TestUtils.populateControlMapGenusReal(controlMap);
 		populateVetBq(controlMap);
 		populateHlP1(controlMap);
 		populateHlP2(controlMap);
@@ -313,7 +313,7 @@ class ModifierParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 		controlMap.put(ModifierParser.CONTROL_KEY, Optional.of("testFilename"));
-		TestUtils.populateControlMapGensuReal(controlMap);
+		TestUtils.populateControlMapGenusReal(controlMap);
 		populateVetBq(controlMap);
 		populateHlP1(controlMap);
 		populateHlP2(controlMap);
@@ -372,7 +372,7 @@ class ModifierParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 		controlMap.put(ModifierParser.CONTROL_KEY, Optional.of("testFilename"));
-		TestUtils.populateControlMapGensuReal(controlMap);
+		TestUtils.populateControlMapGenusReal(controlMap);
 		populateVetBq(controlMap);
 		populateHlP1(controlMap);
 		populateHlP2(controlMap);
@@ -423,7 +423,7 @@ class ModifierParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 		controlMap.put(ModifierParser.CONTROL_KEY, Optional.of("testFilename"));
-		TestUtils.populateControlMapGensuReal(controlMap);
+		TestUtils.populateControlMapGenusReal(controlMap);
 		MatrixMap2<String, Region, Coefficients> vetBqMap = populateVetBq(controlMap);
 		populateHlP1(controlMap);
 		populateHlP2(controlMap);
@@ -474,7 +474,7 @@ class ModifierParserTest {
 
 		Map<String, Object> controlMap = new HashMap<>();
 		controlMap.put(ModifierParser.CONTROL_KEY, Optional.of("testFilename"));
-		TestUtils.populateControlMapGensuReal(controlMap);
+		TestUtils.populateControlMapGenusReal(controlMap);
 		populateVetBq(controlMap);
 		populateHlP1(controlMap);
 		populateHlP2(controlMap);
@@ -534,7 +534,7 @@ class ModifierParserTest {
 		Map<String, Object> controlMap = new HashMap<>();
 		controlMap.put(ModifierParser.CONTROL_KEY, Optional.of("testFilename"));
 
-		TestUtils.populateControlMapGensuReal(controlMap);
+		TestUtils.populateControlMapGenusReal(controlMap);
 		populateVetBq(controlMap);
 		var hlP1Map = populateHlP1(controlMap);
 		var hlP2Map = populateHlP2(controlMap);

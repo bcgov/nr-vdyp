@@ -2,12 +2,24 @@ package ca.bc.gov.nrs.vdyp.model;
 
 import java.util.Arrays;
 
-public class VdypSpecies extends BaseVdypSpecies {
+public class VdypSpecies extends BaseVdypSpecies implements VdypUtilizationHolder {
 
 	Coefficients baseAreaByUtilization = new Coefficients(Arrays.asList(0f, 0f, 0f, 0f, 0f, 0f), -1); // LVCOM/BA
 	Coefficients loreyHeightByUtilization = new Coefficients(Arrays.asList(0f, 0f), -1); // LVCOM/HL
 	Coefficients quadraticMeanDiameterByUtilization = new Coefficients(Arrays.asList(0f, 0f, 0f, 0f, 0f, 0f), -1); // LVCOM/DQ
 	Coefficients treesPerHectareByUtilization = new Coefficients(Arrays.asList(0f, 0f, 0f, 0f, 0f, 0f), -1); // LVCOM/TPH
+
+	Coefficients wholeStemVolumeByUtilization = new Coefficients(Arrays.asList(0f, 0f, 0f, 0f, 0f, 0f), -1); // LVCOM/VOLWS
+	Coefficients closeUtilizationVolumeByUtilization = new Coefficients(Arrays.asList(0f, 0f, 0f, 0f, 0f, 0f), -1); // LVCOM/VOLCU
+	Coefficients closeUtilizationNetVolumeOfDecayByUtilization = new Coefficients(
+			Arrays.asList(0f, 0f, 0f, 0f, 0f, 0f), -1
+	); // LVCOM/VOL_D
+	Coefficients closeUtilizationVolumeNetOfDecayAndWasteByUtilization = new Coefficients(
+			Arrays.asList(0f, 0f, 0f, 0f, 0f, 0f), -1
+	); // LVCOM/VOL_DW
+	Coefficients closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization = new Coefficients(
+			Arrays.asList(0f, 0f, 0f, 0f, 0f, 0f), -1
+	); // LVCOM/VOL_DWB
 
 	int volumeGroup;
 	int decayGroup;
@@ -24,6 +36,7 @@ public class VdypSpecies extends BaseVdypSpecies {
 	/**
 	 * Base area for utilization index -1 through 4
 	 */
+	@Override
 	public Coefficients getBaseAreaByUtilization() {
 		return baseAreaByUtilization;
 	}
@@ -31,6 +44,7 @@ public class VdypSpecies extends BaseVdypSpecies {
 	/**
 	 * Base area for utilization index -1 through 4
 	 */
+	@Override
 	public void setBaseAreaByUtilization(Coefficients baseAreaByUtilization) {
 		this.baseAreaByUtilization = baseAreaByUtilization;
 	}
@@ -38,6 +52,7 @@ public class VdypSpecies extends BaseVdypSpecies {
 	/**
 	 * Lorey height for utilization index -1 through 0
 	 */
+	@Override
 	public Coefficients getLoreyHeightByUtilization() {
 		return loreyHeightByUtilization;
 	}
@@ -45,6 +60,7 @@ public class VdypSpecies extends BaseVdypSpecies {
 	/**
 	 * Lorey height for utilization index -1 through 0
 	 */
+	@Override
 	public void setLoreyHeightByUtilization(Coefficients loreyHeightByUtilization) {
 		this.loreyHeightByUtilization = loreyHeightByUtilization;
 	}
@@ -73,20 +89,80 @@ public class VdypSpecies extends BaseVdypSpecies {
 		this.breakageGroup = breakageGroup;
 	}
 
+	@Override
 	public Coefficients getQuadraticMeanDiameterByUtilization() {
 		return quadraticMeanDiameterByUtilization;
 	}
 
+	@Override
 	public void setQuadraticMeanDiameterByUtilization(Coefficients quadraticMeanDiameterByUtilization) {
 		this.quadraticMeanDiameterByUtilization = quadraticMeanDiameterByUtilization;
 	}
 
+	@Override
 	public Coefficients getTreesPerHectareByUtilization() {
 		return treesPerHectareByUtilization;
 	}
 
+	@Override
 	public void setTreesPerHectareByUtilization(Coefficients treesPerHectareByUtilization) {
 		this.treesPerHectareByUtilization = treesPerHectareByUtilization;
+	}
+
+	@Override
+	public Coefficients getWholeStemVolumeByUtilization() {
+		return wholeStemVolumeByUtilization;
+	}
+
+	@Override
+	public void setWholeStemVolumeByUtilization(Coefficients wholeStemVolumeByUtilization) {
+		this.wholeStemVolumeByUtilization = wholeStemVolumeByUtilization;
+	}
+
+	@Override
+	public Coefficients getCloseUtilizationVolumeByUtilization() {
+		return closeUtilizationVolumeByUtilization;
+	}
+
+	@Override
+	public void setCloseUtilizationVolumeByUtilization(Coefficients closeUtilizationVolumeByUtilization) {
+		this.closeUtilizationVolumeByUtilization = closeUtilizationVolumeByUtilization;
+	}
+
+	@Override
+	public Coefficients getCloseUtilizationNetVolumeOfDecayByUtilization() {
+		return closeUtilizationNetVolumeOfDecayByUtilization;
+	}
+
+	@Override
+	public void setCloseUtilizationNetVolumeOfDecayByUtilization(
+			Coefficients closeUtilizationNetVolumeOfDecayByUtilization
+	) {
+		this.closeUtilizationNetVolumeOfDecayByUtilization = closeUtilizationNetVolumeOfDecayByUtilization;
+	}
+
+	@Override
+	public Coefficients getCloseUtilizationVolumeNetOfDecayAndWasteByUtilization() {
+		return closeUtilizationVolumeNetOfDecayAndWasteByUtilization;
+	}
+
+	@Override
+	public void setCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(
+			Coefficients closeUtilizationVolumeNetOfDecayAndWasteByUtilization
+	) {
+		this.closeUtilizationVolumeNetOfDecayAndWasteByUtilization = closeUtilizationVolumeNetOfDecayAndWasteByUtilization;
+	}
+
+	@Override
+	public Coefficients getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization() {
+		return closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization;
+	}
+
+	@Override
+	public void setCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(
+			Coefficients closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization
+	) {
+		this.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization = closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization;
 	}
 
 }

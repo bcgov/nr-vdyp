@@ -1,6 +1,8 @@
 package ca.bc.gov.nrs.vdyp.fip;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -9,12 +11,19 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static java.lang.Math.min;
+
+import java.beans.BeanDescriptor;
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
+
 import static java.lang.Math.max;
 
 import org.slf4j.Logger;
@@ -30,6 +39,7 @@ import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.BecDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.BreakageEquationGroupParser;
+import ca.bc.gov.nrs.vdyp.io.parse.BreakageParser;
 import ca.bc.gov.nrs.vdyp.io.parse.CloseUtilVolumeParser;
 import ca.bc.gov.nrs.vdyp.io.parse.DecayEquationGroupParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
@@ -50,6 +60,7 @@ import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
+import ca.bc.gov.nrs.vdyp.model.VdypUtilizationHolder;
 
 public class FipStart {
 
@@ -57,6 +68,8 @@ public class FipStart {
 
 	public static final int CONFIG_LOAD_ERROR = 1; // TODO check what Fortran FIPStart would exit with.
 	public static final int PROCESSING_ERROR = 2; // TODO check what Fortran FIPStart would exit with.
+
+	int jprogram = 1; // FIPSTART only TODO Track this down
 
 	public static final float PI_40K = 0.78539816E-04f;
 
@@ -329,7 +342,7 @@ public class FipStart {
 	}
 
 	private Coefficients utilizationVector() {
-		return new Coefficients(new float[] { 0f, 0f, 0f, 0f, 0f }, 0);
+		return new Coefficients(new float[] { 0f, 0f, 0f, 0f, 0f, 0f }, -1);
 	}
 
 	private void computeUtilizationComponentsVeteran(VdypLayer vdypLayer, BecDefinition bec)
@@ -346,9 +359,10 @@ public class FipStart {
 			var baseAreaUtil = utilizationVector();
 			var wholeStemVolumeUtil = utilizationVector();
 
-			var closeUtilizationVolumeUtil = utilizationVector(); // TODO where does this get initialized?
+			var closeUtilizationVolumeUtil = utilizationVector();
 			var closeUtilizationNetOfDecayUtil = utilizationVector();
 			var closeUtilizationNetOfDecayAndWasteUtil = utilizationVector();
+			var closeUtilizationNetOfDecayWasteAndBreakageUtil = utilizationVector();
 
 			var hlSp = vdypSpecies.getLoreyHeightByUtilization().getCoe(0);
 			{
@@ -402,6 +416,86 @@ public class FipStart {
 					vdypLayer.getBreastHeightAge(), quadMeanDiameterUtil, closeUtilizationVolumeUtil,
 					closeUtilizationNetOfDecayUtil, closeUtilizationNetOfDecayAndWasteUtil
 			);
+
+			if (jprogram < 6) {
+				// EMP095
+				estimateNetDecayWasteAndBreakageVolume(
+						utilizationClass, vdypSpecies.getBreakageGroup(), quadMeanDiameterUtil,
+						closeUtilizationVolumeUtil, closeUtilizationNetOfDecayAndWasteUtil,
+						closeUtilizationNetOfDecayWasteAndBreakageUtil
+				);
+			}
+
+			vdypSpecies.setBaseAreaByUtilization(baseAreaUtil);
+			vdypSpecies.setTreesPerHectareByUtilization(treesPerHectareUtil);
+			vdypSpecies.setQuadraticMeanDiameterByUtilization(quadMeanDiameterUtil);
+			vdypSpecies.setCloseUtilizationVolumeByUtilization(closeUtilizationVolumeUtil);
+			vdypSpecies.setCloseUtilizationNetVolumeOfDecayByUtilization(closeUtilizationNetOfDecayUtil);
+			vdypSpecies
+					.setCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(closeUtilizationNetOfDecayAndWasteUtil);
+			vdypSpecies.setCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(
+					closeUtilizationNetOfDecayWasteAndBreakageUtil
+			);
+
+			for (var accessors : UTILIZATION_VECTOR_ACCESSORS.entrySet()) {
+				var utilVector = accessors.getKey().apply(vdypSpecies);
+
+				// Set all components other than 4 to 0.0
+				for (var i = -1; i < 4; i++) {
+					utilVector.setCoe(i, 0f);
+				}
+
+				// Set component 0 to equal component 4.
+				utilVector.setCoe(0, utilVector.getCoe(4));
+
+				accessors.getValue().accept(vdypSpecies, utilVector);
+			}
+		}
+
+		// Layer utilization vectors are the pairwise sums of those of their species
+		for (var accessors : UTILIZATION_VECTOR_ACCESSORS.entrySet()) {
+			var utilVector = accessors.getKey().apply(vdypLayer);
+			vdypLayer.getSpecies().values().stream().map(accessors.getKey()::apply)
+					.forEach(speciesVector -> utilVector.pairwiseInPlace(speciesVector, (x, y) -> x + y));
+			accessors.getValue().accept(vdypLayer, utilVector);
+		}
+
+	}
+
+	/**
+	 * Accessor methods for utilization vectors, except for Lorey Height, on Layer
+	 * and Species objects.
+	 */
+	static final Map<Function<VdypUtilizationHolder, Coefficients>, BiConsumer<VdypUtilizationHolder, Coefficients>> UTILIZATION_VECTOR_ACCESSORS;
+
+	static {
+		try {
+			var bean = Introspector.getBeanInfo(VdypUtilizationHolder.class);
+			UTILIZATION_VECTOR_ACCESSORS = Arrays.stream(bean.getPropertyDescriptors()) //
+					.filter(p -> p.getName().endsWith("ByUtilization")) //
+					.filter(p -> !p.getName().startsWith("loreyHeight")) //
+					.filter(p -> p.getPropertyType() == Coefficients.class) //
+					.collect(Collectors.toMap(p -> {
+						var method = p.getReadMethod();
+						return holder -> {
+							try {
+								return (Coefficients) method.invoke(holder);
+							} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+								throw new IllegalStateException(e);
+							}
+						};
+					}, p -> {
+						var method = p.getWriteMethod();
+						return (holder, value) -> {
+							try {
+								method.invoke(holder, value);
+							} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+								throw new IllegalStateException(e);
+							}
+						};
+					}));
+		} catch (IntrospectionException e) {
+			throw new IllegalStateException(e);
 		}
 	}
 
@@ -626,7 +720,7 @@ public class FipStart {
 
 					Coefficients netWasteCoe = netDecayCoeMap.get(genus);
 					if (netWasteCoe == null) {
-						throw new ProcessingException("Could not find net decay coefficients for genus " + genus);
+						throw new ProcessingException("Could not find net waste coefficients for genus " + genus);
 					}
 					;
 					var a0 = netWasteCoe.getCoe(0);
@@ -673,6 +767,48 @@ public class FipStart {
 		if (utilizationClass == 0) {
 			storeSumUtilizationComponents(closeUtilizationNetOfDecayAndWasteUtil);
 		}
+	}
+
+	/**
+	 * Estimate utilization net of decay, waste, and breakage
+	 *
+	 * @throws ProcessingException
+	 */
+	void estimateNetDecayWasteAndBreakageVolume(
+			int utilizationClass, int breakageGroup, Coefficients quadMeanDiameterUtil,
+			Coefficients closeUtilizationUtil, Coefficients closeUtilizationNetOfDecayAndWasteUtil,
+			Coefficients closeUtilizationNetOfDecayWasteAndBreakageUtil
+	) throws ProcessingException {
+		final var netBreakageCoeMap = Utils
+				.<Map<Integer, Coefficients>>expectParsedControl(controlMap, BreakageParser.CONTROL_KEY, Map.class);
+		final var coefficients = netBreakageCoeMap.get(breakageGroup);
+		if (coefficients == null) {
+			throw new ProcessingException("Could not find net breakage coefficients for group " + breakageGroup);
+		}
+
+		final var a1 = coefficients.getCoe(1);
+		final var a2 = coefficients.getCoe(2);
+		final var a3 = coefficients.getCoe(3);
+		final var a4 = coefficients.getCoe(4);
+
+		estimateUtilization(
+				closeUtilizationNetOfDecayAndWasteUtil, closeUtilizationNetOfDecayWasteAndBreakageUtil,
+				utilizationClass, (i, netWaste) -> {
+
+					if (netWaste <= 0f) {
+						return 0f;
+					}
+					var percentBroken = a1 + a2 * log(quadMeanDiameterUtil.getCoe(i));
+					percentBroken = clamp(percentBroken, a3, a4);
+					var broken = min(percentBroken / 100 * closeUtilizationUtil.getCoe(i), netWaste);
+					return netWaste - broken;
+				}
+		);
+
+		if (utilizationClass == 0) {
+			storeSumUtilizationComponents(closeUtilizationNetOfDecayAndWasteUtil);
+		}
+
 	}
 
 	/**
@@ -926,7 +1062,7 @@ public class FipStart {
 	}
 
 	static float clamp(float x, float min, float max) {
-		assert max > min;
+		assert max >= min;
 		if (x < min)
 			return min;
 		if (x > max)
@@ -942,4 +1078,5 @@ public class FipStart {
 		}
 		return exp(arg) / (1.0f + exp(arg));
 	}
+
 }
