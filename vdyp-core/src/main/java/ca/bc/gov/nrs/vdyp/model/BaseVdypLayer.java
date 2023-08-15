@@ -5,11 +5,13 @@ import java.util.Map;
 
 public class BaseVdypLayer<S extends BaseVdypSpecies> {
 
+	// TODO I think polygonidentifier and layer might be FIP specific so possibly
+	// push them down to FipLayer?
 	protected final String polygonIdentifier;
 	protected final Layer layer;
-	protected float ageTotal;
-	protected float height;
-	protected float yearsToBreastHeight;
+	protected float ageTotal; // LVCOM3/AGETOTLV +
+	protected float height; // LVCOM3/HDLV +
+	protected float yearsToBreastHeight; // LVCOM3/YTBHLV +
 	Map<String, S> species = Collections.emptyMap();
 
 	public BaseVdypLayer(String polygonIdentifier, Layer layer) {

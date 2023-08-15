@@ -6,8 +6,9 @@ import ca.bc.gov.nrs.vdyp.common.Computed;
 
 public class VdypLayer extends BaseVdypLayer<VdypSpecies> implements VdypUtilizationHolder {
 
-	float breastHeightAge;
-	String primaryGenus;
+	float breastHeightAge; // LVCOM3/AGEBHLV +
+	String primaryGenus; // ISPPVET TODO Possibly can remove this and just pass it as a parameter inside
+							// processLayerAsVeteran
 
 	Coefficients baseAreaByUtilization = new Coefficients(
 			Arrays.asList(0f, 0f, 0f, 0f, 0f, 0f), -1 //

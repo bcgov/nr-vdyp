@@ -383,7 +383,7 @@ class FipControlParserTest {
 				result,
 				(Matcher) hasSpecificEntry(
 						FipControlParser.VOLUME_NET_DECAY,
-						allOf(mmHasEntry(coe(1, contains(12.7054f, 0.14984f, -1.73471f)), 2, 53))
+						allOf(mmHasEntry(present(coe(1, contains(12.7054f, 0.14984f, -1.73471f))), 2, 53))
 				)
 		);
 	}

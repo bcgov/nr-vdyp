@@ -130,4 +130,17 @@ public class Coefficients extends AbstractList<Float> implements List<Float> {
 			);
 		}
 	}
+
+	/**
+	 * Performs a pairwise operation with a compatible Coefficients object and
+	 * returns the result.
+	 *
+	 * @param coe2 must have the same size and index offset
+	 * @param op   operation to perform for each pair of coefficients
+	 */
+	public Coefficients pairwise(Coefficients coe2, FloatBinaryOperator op) {
+		var result = new Coefficients(this, this.getIndexFrom());
+		result.pairwiseInPlace(coe2, op);
+		return result;
+	}
 }

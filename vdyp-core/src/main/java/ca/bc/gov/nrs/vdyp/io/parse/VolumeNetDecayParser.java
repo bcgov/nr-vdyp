@@ -6,7 +6,7 @@ package ca.bc.gov.nrs.vdyp.io.parse;
  * @author Kevin Smith, Vivid Solutions
  *
  */
-public class VolumeNetDecayParser extends SimpleCoefficientParser2<Integer, Integer> {
+public class VolumeNetDecayParser extends OptionalCoefficientParser2<Integer, Integer> {
 
 	public static final String CONTROL_KEY = "VOLUME_NET_DECAY";
 	public static final int MAX_GROUPS = 80;

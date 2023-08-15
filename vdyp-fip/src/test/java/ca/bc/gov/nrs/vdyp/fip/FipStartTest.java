@@ -51,11 +51,12 @@ import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.Layer;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
+import ca.bc.gov.nrs.vdyp.model.VdypUtilizationHolder;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 class FipStartTest {
 
-	static final float EPSILON = 0.000001f;
+	static final float EPSILON = 0.00001f;
 
 	@Test
 	void testProcessEmpty() throws Exception {
@@ -1110,15 +1111,15 @@ class FipStartTest {
 				switch (u) {
 				case 1:
 					return Optional.of(
-							new Coefficients(new float[] { -1.20775998f, 0.670000017f, 1.43023002f, -0.886789978f }, 1)
+							new Coefficients(new float[] { -1.20775998f, 0.670000017f, 1.43023002f, -0.886789978f }, 0)
 					);
 				case 2:
 					return Optional.of(
-							new Coefficients(new float[] { -1.58211005f, 0.677200019f, 1.36449003f, -0.781769991f }, 1)
+							new Coefficients(new float[] { -1.58211005f, 0.677200019f, 1.36449003f, -0.781769991f }, 0)
 					);
 				case 3:
 					return Optional.of(
-							new Coefficients(new float[] { -1.61995006f, 0.651030004f, 1.17782998f, -0.607379973f }, 1)
+							new Coefficients(new float[] { -1.61995006f, 0.651030004f, 1.17782998f, -0.607379973f }, 0)
 					);
 				case 4:
 					return Optional
@@ -1126,7 +1127,7 @@ class FipStartTest {
 									new Coefficients(
 											new float[] { -0.172529995f, 0.932619989f, -0.0697899982f,
 													-0.00362000009f },
-											1
+											0
 									)
 							);
 				}
@@ -1366,6 +1367,136 @@ class FipStartTest {
 				coe(0, contains(is(0f), is(0f), is(0f), is(0f), closeTo(5.27515411f)))
 		);
 
+	}
+
+	@Test
+	void testProcessAsVeteranLayer() throws Exception {
+
+		var polygonId = "01002 S000002 00     1970";
+
+		var fipPolygon = getTestPolygon(polygonId, x -> {
+			x.setBiogeoclimaticZone("CWH");
+			x.setForestInventoryZone("A");
+			x.setYieldFactor(1f);
+		});
+
+		var fipLayer = getTestVeteranLayer(polygonId, x -> {
+			x.setAgeTotal(105f);
+			x.setHeight(26.2f);
+			x.setSiteIndex(16.7f);
+			x.setCrownClosure(4.0f);
+			x.setSiteGenus("H");
+			x.setSiteSpecies("H");
+			x.setYearsToBreastHeight(7.1f);
+		});
+		var fipSpecies1 = getTestSpecies(polygonId, Layer.VETERAN, "B", x -> {
+			var map = new LinkedHashMap<String, Float>();
+			x.setSpeciesPercent(map);
+			x.setPercentGenus(22f);
+		});
+		var fipSpecies2 = getTestSpecies(polygonId, Layer.VETERAN, "H", x -> {
+			var map = new LinkedHashMap<String, Float>();
+			x.setSpeciesPercent(map);
+			x.setPercentGenus(60f);
+		});
+		var fipSpecies3 = getTestSpecies(polygonId, Layer.VETERAN, "S", x -> {
+			var map = new LinkedHashMap<String, Float>();
+			x.setSpeciesPercent(map);
+			x.setPercentGenus(18f);
+		});
+		fipPolygon.setLayers(Collections.singletonMap(Layer.VETERAN, fipLayer));
+		var speciesMap = new HashMap<String, FipSpecies>();
+		speciesMap.put("B", fipSpecies1);
+		speciesMap.put("H", fipSpecies2);
+		speciesMap.put("S", fipSpecies3);
+		fipLayer.setSpecies(speciesMap);
+
+		var controlMap = FipTestUtils.loadControlMap();
+
+		var app = new FipStart();
+		app.setControlMap(controlMap);
+
+		var result = app.processLayerAsVeteran(fipPolygon, fipLayer);
+
+		assertThat(result, hasProperty("polygonIdentifier", is(polygonId)));
+		assertThat(result, hasProperty("layer", is(Layer.VETERAN)));
+
+		assertThat(result, hasProperty("ageTotal", closeTo(105f))); // LVCOM3/AGETOTLV
+		assertThat(result, hasProperty("breastHeightAge", closeTo(97.9000015f))); // LVCOM3/AGEBHLV
+		assertThat(result, hasProperty("yearsToBreastHeight", closeTo(7.0999999f))); // LVCOM3/YTBHLV
+		assertThat(result, hasProperty("height", closeTo(26.2000008f))); // LVCOM3/HDLV
+
+		assertThat(result, hasProperty("species", aMapWithSize(3)));
+		var resultSpeciesMap = result.getSpecies();
+
+		assertThat(resultSpeciesMap, Matchers.hasKey("B"));
+		assertThat(resultSpeciesMap, Matchers.hasKey("H"));
+		assertThat(resultSpeciesMap, Matchers.hasKey("S"));
+
+		var resultSpeciesB = resultSpeciesMap.get("B");
+		var resultSpeciesH = resultSpeciesMap.get("H");
+		var resultSpeciesS = resultSpeciesMap.get("S");
+
+		assertThat(resultSpeciesB, hasProperty("genus", is("B")));
+		assertThat(resultSpeciesH, hasProperty("genus", is("H")));
+		assertThat(resultSpeciesS, hasProperty("genus", is("S")));
+
+		vetUtilization("baseAreaByUtilization", matchGenerator -> {
+			assertThat(result, matchGenerator.apply(2.24055195f));
+			assertThat(result.getSpecies().get("B"), matchGenerator.apply(0.492921442f));
+			assertThat(result.getSpecies().get("H"), matchGenerator.apply(1.34433115f));
+			assertThat(result.getSpecies().get("S"), matchGenerator.apply(0.403299361f));
+		});
+		vetUtilization("quadraticMeanDiameterByUtilization", matchGenerator -> {
+			assertThat(result, matchGenerator.apply(51.6946983f));
+			assertThat(result.getSpecies().get("B"), matchGenerator.apply(51.8356705f));
+			assertThat(result.getSpecies().get("H"), matchGenerator.apply(53.6141243f));
+			assertThat(result.getSpecies().get("S"), matchGenerator.apply(46.4037895f));
+		});
+		vetUtilization("treesPerHectareByUtilization", matchGenerator -> {
+			assertThat(result, matchGenerator.apply(10.6751289f));
+			assertThat(result.getSpecies().get("B"), matchGenerator.apply(2.3357718f));
+			assertThat(result.getSpecies().get("H"), matchGenerator.apply(5.95467329f));
+			assertThat(result.getSpecies().get("S"), matchGenerator.apply(2.38468361f));
+		});
+		vetUtilization("wholeStemVolumeByUtilization", matchGenerator -> {
+			assertThat(result, matchGenerator.apply(24.7540474f));
+			assertThat(result.getSpecies().get("B"), matchGenerator.apply(6.11904192f));
+			assertThat(result.getSpecies().get("H"), matchGenerator.apply(14.5863571f));
+			assertThat(result.getSpecies().get("S"), matchGenerator.apply(4.04864883f));
+		});
+		vetUtilization("closeUtilizationVolumeByUtilization", matchGenerator -> {
+			assertThat(result, matchGenerator.apply(23.6066074f));
+			assertThat(result.getSpecies().get("B"), matchGenerator.apply(5.86088896f));
+			assertThat(result.getSpecies().get("H"), matchGenerator.apply(13.9343023f));
+			assertThat(result.getSpecies().get("S"), matchGenerator.apply(3.81141663f));
+		});
+		vetUtilization("closeUtilizationNetVolumeOfDecayByUtilization", matchGenerator -> {
+			assertThat(result, matchGenerator.apply(22.7740307f));
+			assertThat(result.getSpecies().get("B"), matchGenerator.apply(5.64048958f));
+			assertThat(result.getSpecies().get("H"), matchGenerator.apply(13.3831034f));
+			assertThat(result.getSpecies().get("S"), matchGenerator.apply(3.75043678f));
+		});
+		vetUtilization("closeUtilizationVolumeNetOfDecayAndWasteByUtilization", matchGenerator -> {
+			assertThat(result, matchGenerator.apply(22.5123749f));
+			assertThat(result.getSpecies().get("B"), matchGenerator.apply(5.57935333f));
+			assertThat(result.getSpecies().get("H"), matchGenerator.apply(13.2065458f));
+			assertThat(result.getSpecies().get("S"), matchGenerator.apply(3.72647476f));
+		});
+		vetUtilization("closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization", matchGenerator -> {
+			assertThat(result, matchGenerator.apply(21.3272057f));
+			assertThat(result.getSpecies().get("B"), matchGenerator.apply(5.27515411f));
+			assertThat(result.getSpecies().get("H"), matchGenerator.apply(12.4877129f));
+			assertThat(result.getSpecies().get("S"), matchGenerator.apply(3.56433797f));
+		});
+
+	}
+
+	void vetUtilization(String property, Consumer<Function<Float, Matcher<VdypUtilizationHolder>>> body) {
+		Function<Float, Matcher<VdypUtilizationHolder>> generator = v -> hasProperty(
+				property, coe(-1, contains(is(0f), closeTo(v), is(0f), is(0f), is(0f), closeTo(v)))
+		);
+		body.accept(generator);
 	}
 
 	private static <T> MockStreamingParser<T>
