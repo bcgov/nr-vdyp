@@ -275,7 +275,10 @@ class FipStartTest {
 							ex,
 							hasProperty(
 									"message",
-									is("Polygon " + polygonId + " has " + Layer.PRIMARY + " layer where total age is less than YTBH.")
+									is(
+											"Polygon " + polygonId + " has " + Layer.PRIMARY
+													+ " layer where total age is less than YTBH."
+									)
 							)
 					);
 				}
@@ -332,7 +335,8 @@ class FipStartTest {
 					assertThat(
 							ex,
 							hasProperty(
-									"message", is("Polygon " + polygonId + " is using unsupported mode " + FipMode.FIPYOUNG + ".")
+									"message",
+									is("Polygon " + polygonId + " is using unsupported mode " + FipMode.FIPYOUNG + ".")
 							)
 					);
 				}
@@ -598,9 +602,12 @@ class FipStartTest {
 		TestUtils.populateControlMapCloseUtilization(controlMap, closeUtilMap(1));
 		TestUtils.populateControlMapNetDecay(controlMap, closeUtilMap(1));
 		FipTestUtils.populateControlMapDecayModifiers(controlMap, (s, r) -> 0f);
-		TestUtils.populateControlMapNetWaste(controlMap, s -> new Coefficients(new float[] { 0f, 0f, 0f, 0f, 0f, 0f }, 0));
+		TestUtils.populateControlMapNetWaste(
+				controlMap, s -> new Coefficients(new float[] { 0f, 0f, 0f, 0f, 0f, 0f }, 0)
+		);
 		FipTestUtils.populateControlMapWasteModifiers(controlMap, (s, r) -> 0f);
-		TestUtils.populateControlMapNetBreakage(controlMap, bgrp -> new Coefficients(new float[] { 0f, 0f, 0f, 0f }, 1));
+		TestUtils
+				.populateControlMapNetBreakage(controlMap, bgrp -> new Coefficients(new float[] { 0f, 0f, 0f, 0f }, 1));
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -668,9 +675,12 @@ class FipStartTest {
 		TestUtils.populateControlMapCloseUtilization(controlMap, closeUtilMap(1));
 		TestUtils.populateControlMapNetDecay(controlMap, closeUtilMap(1));
 		FipTestUtils.populateControlMapDecayModifiers(controlMap, (s, r) -> 0f);
-		TestUtils.populateControlMapNetWaste(controlMap, s -> new Coefficients(new float[] { 0f, 0f, 0f, 0f, 0f, 0f }, 0));
+		TestUtils.populateControlMapNetWaste(
+				controlMap, s -> new Coefficients(new float[] { 0f, 0f, 0f, 0f, 0f, 0f }, 0)
+		);
 		FipTestUtils.populateControlMapWasteModifiers(controlMap, (s, r) -> 0f);
-		TestUtils.populateControlMapNetBreakage(controlMap, bgrp -> new Coefficients(new float[] { 0f, 0f, 0f, 0f }, 1));
+		TestUtils
+				.populateControlMapNetBreakage(controlMap, bgrp -> new Coefficients(new float[] { 0f, 0f, 0f, 0f }, 1));
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -714,9 +724,12 @@ class FipStartTest {
 		TestUtils.populateControlMapCloseUtilization(controlMap, closeUtilMap(1));
 		TestUtils.populateControlMapNetDecay(controlMap, closeUtilMap(1));
 		FipTestUtils.populateControlMapDecayModifiers(controlMap, (s, r) -> 0f);
-		TestUtils.populateControlMapNetWaste(controlMap, s -> new Coefficients(new float[] { 0f, 0f, 0f, 0f, 0f, 0f }, 0));
+		TestUtils.populateControlMapNetWaste(
+				controlMap, s -> new Coefficients(new float[] { 0f, 0f, 0f, 0f, 0f, 0f }, 0)
+		);
 		FipTestUtils.populateControlMapWasteModifiers(controlMap, (s, r) -> 0f);
-		TestUtils.populateControlMapNetBreakage(controlMap, bgrp -> new Coefficients(new float[] { 0f, 0f, 0f, 0f }, 1));
+		TestUtils
+				.populateControlMapNetBreakage(controlMap, bgrp -> new Coefficients(new float[] { 0f, 0f, 0f, 0f }, 1));
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -781,9 +794,12 @@ class FipStartTest {
 		TestUtils.populateControlMapCloseUtilization(controlMap, closeUtilMap(1));
 		TestUtils.populateControlMapNetDecay(controlMap, closeUtilMap(1));
 		FipTestUtils.populateControlMapDecayModifiers(controlMap, (s, r) -> 0f);
-		TestUtils.populateControlMapNetWaste(controlMap, s -> new Coefficients(new float[] { 0f, 0f, 0f, 0f, 0f, 0f }, 0));
+		TestUtils.populateControlMapNetWaste(
+				controlMap, s -> new Coefficients(new float[] { 0f, 0f, 0f, 0f, 0f, 0f }, 0)
+		);
 		FipTestUtils.populateControlMapWasteModifiers(controlMap, (s, r) -> 0f);
-		TestUtils.populateControlMapNetBreakage(controlMap, bgrp -> new Coefficients(new float[] { 0f, 0f, 0f, 0f }, 1));
+		TestUtils
+				.populateControlMapNetBreakage(controlMap, bgrp -> new Coefficients(new float[] { 0f, 0f, 0f, 0f }, 1));
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -843,9 +859,12 @@ class FipStartTest {
 		TestUtils.populateControlMapCloseUtilization(controlMap, closeUtilMap(1));
 		TestUtils.populateControlMapNetDecay(controlMap, closeUtilMap(1));
 		FipTestUtils.populateControlMapDecayModifiers(controlMap, (s, r) -> 0f);
-		TestUtils.populateControlMapNetWaste(controlMap, s -> new Coefficients(new float[] { 0f, 0f, 0f, 0f, 0f, 0f }, 0));
+		TestUtils.populateControlMapNetWaste(
+				controlMap, s -> new Coefficients(new float[] { 0f, 0f, 0f, 0f, 0f, 0f }, 0)
+		);
 		FipTestUtils.populateControlMapWasteModifiers(controlMap, (s, r) -> 0f);
-		TestUtils.populateControlMapNetBreakage(controlMap, bgrp -> new Coefficients(new float[] { 0f, 0f, 0f, 0f }, 1));
+		TestUtils
+				.populateControlMapNetBreakage(controlMap, bgrp -> new Coefficients(new float[] { 0f, 0f, 0f, 0f }, 1));
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -913,9 +932,12 @@ class FipStartTest {
 		TestUtils.populateControlMapCloseUtilization(controlMap, closeUtilMap(1));
 		TestUtils.populateControlMapNetDecay(controlMap, closeUtilMap(1));
 		FipTestUtils.populateControlMapDecayModifiers(controlMap, (s, r) -> 0f);
-		TestUtils.populateControlMapNetWaste(controlMap, s -> new Coefficients(new float[] { 0f, 0f, 0f, 0f, 0f, 0f }, 0));
+		TestUtils.populateControlMapNetWaste(
+				controlMap, s -> new Coefficients(new float[] { 0f, 0f, 0f, 0f, 0f, 0f }, 0)
+		);
 		FipTestUtils.populateControlMapWasteModifiers(controlMap, (s, r) -> 0f);
-		TestUtils.populateControlMapNetBreakage(controlMap, bgrp -> new Coefficients(new float[] { 0f, 0f, 0f, 0f }, 1));
+		TestUtils
+				.populateControlMapNetBreakage(controlMap, bgrp -> new Coefficients(new float[] { 0f, 0f, 0f, 0f }, 1));
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -957,9 +979,12 @@ class FipStartTest {
 		TestUtils.populateControlMapCloseUtilization(controlMap, closeUtilMap(1));
 		TestUtils.populateControlMapNetDecay(controlMap, closeUtilMap(2));
 		FipTestUtils.populateControlMapDecayModifiers(controlMap, (s, r) -> 0f);
-		TestUtils.populateControlMapNetWaste(controlMap, s -> new Coefficients(new float[] { 0f, 0f, 0f, 0f, 0f, 0f }, 0));
+		TestUtils.populateControlMapNetWaste(
+				controlMap, s -> new Coefficients(new float[] { 0f, 0f, 0f, 0f, 0f, 0f }, 0)
+		);
 		FipTestUtils.populateControlMapWasteModifiers(controlMap, (s, r) -> 0f);
-		TestUtils.populateControlMapNetBreakage(controlMap, bgrp -> new Coefficients(new float[] { 0f, 0f, 0f, 0f }, 1));
+		TestUtils
+				.populateControlMapNetBreakage(controlMap, bgrp -> new Coefficients(new float[] { 0f, 0f, 0f, 0f }, 1));
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -1018,9 +1043,12 @@ class FipStartTest {
 		TestUtils.populateControlMapCloseUtilization(controlMap, closeUtilMap(1));
 		TestUtils.populateControlMapNetDecay(controlMap, closeUtilMap(1));
 		FipTestUtils.populateControlMapDecayModifiers(controlMap, (s, r) -> 0f);
-		TestUtils.populateControlMapNetWaste(controlMap, s -> new Coefficients(new float[] { 0f, 0f, 0f, 0f, 0f, 0f }, 0));
+		TestUtils.populateControlMapNetWaste(
+				controlMap, s -> new Coefficients(new float[] { 0f, 0f, 0f, 0f, 0f, 0f }, 0)
+		);
 		FipTestUtils.populateControlMapWasteModifiers(controlMap, (s, r) -> 0f);
-		TestUtils.populateControlMapNetBreakage(controlMap, bgrp -> new Coefficients(new float[] { 0f, 0f, 0f, 0f }, 1));
+		TestUtils
+				.populateControlMapNetBreakage(controlMap, bgrp -> new Coefficients(new float[] { 0f, 0f, 0f, 0f }, 1));
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -1039,14 +1067,20 @@ class FipStartTest {
 				resultB,
 				hasProperty(
 						"quadraticMeanDiameterByUtilization",
-						contains(zeroMatcher, closeTo(expectedDqB), zeroMatcher, zeroMatcher, zeroMatcher, closeTo(expectedDqB))
+						contains(
+								zeroMatcher, closeTo(expectedDqB), zeroMatcher, zeroMatcher, zeroMatcher,
+								closeTo(expectedDqB)
+						)
 				)
 		);
 		assertThat(
 				resultB,
 				hasProperty(
 						"treesPerHectareByUtilization",
-						contains(zeroMatcher, closeTo(3.8092144f), zeroMatcher, zeroMatcher, zeroMatcher, closeTo(3.8092144f))
+						contains(
+								zeroMatcher, closeTo(3.8092144f), zeroMatcher, zeroMatcher, zeroMatcher,
+								closeTo(3.8092144f)
+						)
 				)
 		);
 		var resultC = result.getSpecies().get("C");
@@ -1054,14 +1088,20 @@ class FipStartTest {
 				resultC,
 				hasProperty(
 						"quadraticMeanDiameterByUtilization",
-						contains(zeroMatcher, closeTo(expectedDqC), zeroMatcher, zeroMatcher, zeroMatcher, closeTo(expectedDqC))
+						contains(
+								zeroMatcher, closeTo(expectedDqC), zeroMatcher, zeroMatcher, zeroMatcher,
+								closeTo(expectedDqC)
+						)
 				)
 		);
 		assertThat(
 				resultC,
 				hasProperty(
 						"treesPerHectareByUtilization",
-						contains(zeroMatcher, closeTo(2.430306f), zeroMatcher, zeroMatcher, zeroMatcher, closeTo(2.430306f))
+						contains(
+								zeroMatcher, closeTo(2.430306f), zeroMatcher, zeroMatcher, zeroMatcher,
+								closeTo(2.430306f)
+						)
 				)
 		);
 	}
@@ -1071,17 +1111,26 @@ class FipStartTest {
 			if (g == group) {
 				switch (u) {
 				case 1:
-					return Optional
-							.of(new Coefficients(new float[] { -1.20775998f, 0.670000017f, 1.43023002f, -0.886789978f }, 0));
+					return Optional.of(
+							new Coefficients(new float[] { -1.20775998f, 0.670000017f, 1.43023002f, -0.886789978f }, 0)
+					);
 				case 2:
-					return Optional
-							.of(new Coefficients(new float[] { -1.58211005f, 0.677200019f, 1.36449003f, -0.781769991f }, 0));
+					return Optional.of(
+							new Coefficients(new float[] { -1.58211005f, 0.677200019f, 1.36449003f, -0.781769991f }, 0)
+					);
 				case 3:
-					return Optional
-							.of(new Coefficients(new float[] { -1.61995006f, 0.651030004f, 1.17782998f, -0.607379973f }, 0));
+					return Optional.of(
+							new Coefficients(new float[] { -1.61995006f, 0.651030004f, 1.17782998f, -0.607379973f }, 0)
+					);
 				case 4:
 					return Optional
-							.of(new Coefficients(new float[] { -0.172529995f, 0.932619989f, -0.0697899982f, -0.00362000009f }, 0));
+							.of(
+									new Coefficients(
+											new float[] { -0.172529995f, 0.932619989f, -0.0697899982f,
+													-0.00362000009f },
+											0
+									)
+							);
 				}
 			}
 			return Optional.empty();
@@ -1149,7 +1198,8 @@ class FipStartTest {
 		var wholeStemVolumeUtil = new Coefficients(new float[] { 0f, 0f, 0f, 0f, 0f }, 0);
 
 		app.estimateWholeStemVolume(
-				utilizationClass, aAdjust, volumeGroup, lorieHeight, quadMeanDiameterUtil, baseAreaUtil, wholeStemVolumeUtil
+				utilizationClass, aAdjust, volumeGroup, lorieHeight, quadMeanDiameterUtil, baseAreaUtil,
+				wholeStemVolumeUtil
 		);
 
 		assertThat(wholeStemVolumeUtil, coe(0, contains(is(0f), is(0f), is(0f), is(0f), closeTo(6.11904192f))));
@@ -1203,8 +1253,9 @@ class FipStartTest {
 
 		var controlMap = new HashMap<String, Object>();
 		TestUtils.populateControlMapNetDecay(controlMap, netDecayMap(7));
-		FipTestUtils
-				.populateControlMapDecayModifiers(controlMap, (s, r) -> s.equals("B") && r == Region.INTERIOR ? 0f : 0f);
+		FipTestUtils.populateControlMapDecayModifiers(
+				controlMap, (s, r) -> s.equals("B") && r == Region.INTERIOR ? 0f : 0f
+		);
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -1220,11 +1271,13 @@ class FipStartTest {
 		var closeUtilizationNetOfDecayUtil = new Coefficients(new float[] { 0f, 0f, 0f, 0f, 0f }, 0);
 
 		app.estimateNetDecayVolume(
-				fipSpecies.getGenus(), Region.INTERIOR, utilizationClass, aAdjust, decayGroup, lorieHeight, breastHeightAge,
-				quadMeanDiameterUtil, closeUtilizationUtil, closeUtilizationNetOfDecayUtil
+				fipSpecies.getGenus(), Region.INTERIOR, utilizationClass, aAdjust, decayGroup, lorieHeight,
+				breastHeightAge, quadMeanDiameterUtil, closeUtilizationUtil, closeUtilizationNetOfDecayUtil
 		);
 
-		assertThat(closeUtilizationNetOfDecayUtil, coe(0, contains(is(0f), is(0f), is(0f), is(0f), closeTo(5.64048958f))));
+		assertThat(
+				closeUtilizationNetOfDecayUtil, coe(0, contains(is(0f), is(0f), is(0f), is(0f), closeTo(5.64048958f)))
+		);
 
 	}
 
@@ -1242,12 +1295,14 @@ class FipStartTest {
 		var controlMap = new HashMap<String, Object>();
 		TestUtils.populateControlMapNetWaste(controlMap, s -> s.equals("B") ? //
 				new Coefficients(
-						new float[] { -4.20249987f, 11.2235003f, -33.0270004f, 0.124600001f, -0.231800005f, -0.1259f }, 0
+						new float[] { -4.20249987f, 11.2235003f, -33.0270004f, 0.124600001f, -0.231800005f, -0.1259f },
+						0
 				) : //
 				new Coefficients(new float[] { 0f, 0f, 0f, 0f, 0f, 0f }, 0)
 		);
-		FipTestUtils
-				.populateControlMapWasteModifiers(controlMap, (s, r) -> s.equals("B") && r == Region.INTERIOR ? 0f : 0f);
+		FipTestUtils.populateControlMapWasteModifiers(
+				controlMap, (s, r) -> s.equals("B") && r == Region.INTERIOR ? 0f : 0f
+		);
 
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -1269,7 +1324,8 @@ class FipStartTest {
 		);
 
 		assertThat(
-				closeUtilizationNetOfDecayAndWasteUtil, coe(0, contains(is(0f), is(0f), is(0f), is(0f), closeTo(5.57935333f)))
+				closeUtilizationNetOfDecayAndWasteUtil,
+				coe(0, contains(is(0f), is(0f), is(0f), is(0f), closeTo(5.57935333f)))
 		);
 
 	}
@@ -1443,7 +1499,7 @@ class FipStartTest {
 		var app = new FipStart();
 		app.setControlMap(controlMap);
 
-		Collection<FipSpecies> allSpecies = Collections.emptyList();
+		Map<String, FipSpecies> allSpecies = Collections.emptyMap();
 		assertThrows(IllegalArgumentException.class, () -> app.findPrimarySpecies(allSpecies));
 	}
 
@@ -1454,12 +1510,58 @@ class FipStartTest {
 		app.setControlMap(controlMap);
 
 		var spec = this.getTestSpecies("test polygon", Layer.PRIMARY, "B", valid());
-		
-		Collection<FipSpecies> allSpecies = Collections.singletonList(spec);
+
+		Map<String, FipSpecies> allSpecies = Collections.singletonMap("B", spec);
 		var result = app.findPrimarySpecies(allSpecies);
-		
+
 		assertThat(result, hasSize(1));
-		assertThat(result, contains(spec));
+		assertThat(result, contains(allOf(hasProperty("genus", is("B")), hasProperty("percentGenus", closeTo(100f)))));
+	}
+
+	@Test
+	void testFindPrimaryCombinePAIntoPL() throws Exception {
+		var controlMap = FipTestUtils.loadControlMap();
+		var app = new FipStart();
+		app.setControlMap(controlMap);
+
+		var spec1 = this.getTestSpecies("test polygon", Layer.PRIMARY, "PA", spec -> {
+			spec.setPercentGenus(25);
+		});
+		var spec2 = this.getTestSpecies("test polygon", Layer.PRIMARY, "PL", spec -> {
+			spec.setPercentGenus(75);
+		});
+
+		Map<String, FipSpecies> allSpecies = new HashMap<>();
+		allSpecies.put(spec1.getGenus(), spec1);
+		allSpecies.put(spec2.getGenus(), spec2);
+
+		var result = app.findPrimarySpecies(allSpecies);
+
+		assertThat(result, hasSize(1));
+		assertThat(result, contains(allOf(hasProperty("genus", is("PL")), hasProperty("percentGenus", closeTo(100f)))));
+	}
+
+	@Test
+	void testFindPrimaryCombinePLIntoPA() throws Exception {
+		var controlMap = FipTestUtils.loadControlMap();
+		var app = new FipStart();
+		app.setControlMap(controlMap);
+
+		var spec1 = this.getTestSpecies("test polygon", Layer.PRIMARY, "PA", spec -> {
+			spec.setPercentGenus(75);
+		});
+		var spec2 = this.getTestSpecies("test polygon", Layer.PRIMARY, "PL", spec -> {
+			spec.setPercentGenus(25);
+		});
+
+		Map<String, FipSpecies> allSpecies = new HashMap<>();
+		allSpecies.put(spec1.getGenus(), spec1);
+		allSpecies.put(spec2.getGenus(), spec2);
+
+		var result = app.findPrimarySpecies(allSpecies);
+
+		assertThat(result, hasSize(1));
+		assertThat(result, contains(allOf(hasProperty("genus", is("PA")), hasProperty("percentGenus", closeTo(100f)))));
 	}
 
 	void vetUtilization(String property, Consumer<Function<Float, Matcher<VdypUtilizationHolder>>> body) {
@@ -1470,7 +1572,8 @@ class FipStartTest {
 	}
 
 	private static <T> MockStreamingParser<T>
-			mockStream(IMocksControl control, Map<String, Object> controlMap, String key, String name) throws IOException {
+			mockStream(IMocksControl control, Map<String, Object> controlMap, String key, String name)
+					throws IOException {
 		StreamingParserFactory<T> streamFactory = control.mock(name + "Factory", StreamingParserFactory.class);
 		MockStreamingParser<T> stream = new MockStreamingParser<>();
 

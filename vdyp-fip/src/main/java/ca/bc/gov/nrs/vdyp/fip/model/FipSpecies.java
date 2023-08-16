@@ -12,4 +12,7 @@ public class FipSpecies extends BaseVdypSpecies {
 		super(polygonIdentifier, layer, genus);
 	}
 
+	public FipSpecies(FipSpecies toCopy) {
+		super(toCopy);
+	}
 }
