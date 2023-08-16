@@ -2,11 +2,13 @@ package ca.bc.gov.nrs.vdyp.fip;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
@@ -306,8 +308,7 @@ public class FipStart {
 		 */
 
 		for (var vSpec : vdypSpecies.values()) {
-			vSpec.getBaseAreaByUtilization()
-					.setCoe(4, baseAreaByUtilization.getCoe(4) * vSpec.getPercentGenus() / 100f);
+			vSpec.getBaseAreaByUtilization().setCoe(4, baseAreaByUtilization.getCoe(4) * vSpec.getPercentGenus() / 100f);
 		}
 
 		var vetDqMap = Utils.<MatrixMap2<String, Region, Coefficients>>expectParsedControl(
@@ -345,8 +346,7 @@ public class FipStart {
 		return new Coefficients(new float[] { 0f, 0f, 0f, 0f, 0f, 0f }, -1);
 	}
 
-	private void computeUtilizationComponentsVeteran(VdypLayer vdypLayer, BecDefinition bec)
-			throws ProcessingException {
+	private void computeUtilizationComponentsVeteran(VdypLayer vdypLayer, BecDefinition bec) throws ProcessingException {
 
 		var volumeAdjustMap = Utils.<Map<String, Coefficients>>expectParsedControl(
 				controlMap, VeteranLayerVolumeAdjustParser.CONTROL_KEY, Map.class
@@ -390,39 +390,38 @@ public class FipStart {
 
 				// EMP091
 				estimateWholeStemVolume(
-						utilizationClass, volumeAdjustCoe.getCoe(1), vdypSpecies.getVolumeGroup(), hlSp,
-						quadMeanDiameterUtil, baseAreaUtil, wholeStemVolumeUtil
+						utilizationClass, volumeAdjustCoe.getCoe(1), vdypSpecies.getVolumeGroup(), hlSp, quadMeanDiameterUtil,
+						baseAreaUtil, wholeStemVolumeUtil
 				);
 
 				adjust.setCoe(4, volumeAdjustCoe.getCoe(2));
 				// EMP092
 				estimateCloseUtilizationVolume(
-						utilizationClass, adjust, vdypSpecies.getVolumeGroup(), hlSp, quadMeanDiameterUtil,
-						wholeStemVolumeUtil, closeUtilizationVolumeUtil
+						utilizationClass, adjust, vdypSpecies.getVolumeGroup(), hlSp, quadMeanDiameterUtil, wholeStemVolumeUtil,
+						closeUtilizationVolumeUtil
 				);
 
 				adjust.setCoe(4, volumeAdjustCoe.getCoe(3));
 				// EMP093
 				estimateNetDecayVolume(
-						vdypSpecies.getGenus(), bec.getRegion(), utilizationClass, adjust, vdypSpecies.getDecayGroup(),
-						hlSp, vdypLayer.getBreastHeightAge(), quadMeanDiameterUtil, closeUtilizationVolumeUtil,
+						vdypSpecies.getGenus(), bec.getRegion(), utilizationClass, adjust, vdypSpecies.getDecayGroup(), hlSp,
+						vdypLayer.getBreastHeightAge(), quadMeanDiameterUtil, closeUtilizationVolumeUtil,
 						closeUtilizationNetOfDecayUtil
 				);
 
 				adjust.setCoe(4, volumeAdjustCoe.getCoe(4));
 				// EMP094
 				estimateNetDecayAndWasteVolume(
-						bec.getRegion(), utilizationClass, adjust, vdypSpecies.getGenus(), hlSp,
-						vdypLayer.getBreastHeightAge(), quadMeanDiameterUtil, closeUtilizationVolumeUtil,
-						closeUtilizationNetOfDecayUtil, closeUtilizationNetOfDecayAndWasteUtil
+						bec.getRegion(), utilizationClass, adjust, vdypSpecies.getGenus(), hlSp, vdypLayer.getBreastHeightAge(),
+						quadMeanDiameterUtil, closeUtilizationVolumeUtil, closeUtilizationNetOfDecayUtil,
+						closeUtilizationNetOfDecayAndWasteUtil
 				);
 
 				if (jprogram < 6) {
 					// EMP095
 					estimateNetDecayWasteAndBreakageVolume(
-							utilizationClass, vdypSpecies.getBreakageGroup(), quadMeanDiameterUtil,
-							closeUtilizationVolumeUtil, closeUtilizationNetOfDecayAndWasteUtil,
-							closeUtilizationNetOfDecayWasteAndBreakageUtil
+							utilizationClass, vdypSpecies.getBreakageGroup(), quadMeanDiameterUtil, closeUtilizationVolumeUtil,
+							closeUtilizationNetOfDecayAndWasteUtil, closeUtilizationNetOfDecayWasteAndBreakageUtil
 					);
 				}
 
@@ -432,9 +431,7 @@ public class FipStart {
 				vdypSpecies.setWholeStemVolumeByUtilization(wholeStemVolumeUtil);
 				vdypSpecies.setCloseUtilizationVolumeByUtilization(closeUtilizationVolumeUtil);
 				vdypSpecies.setCloseUtilizationNetVolumeOfDecayByUtilization(closeUtilizationNetOfDecayUtil);
-				vdypSpecies.setCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(
-						closeUtilizationNetOfDecayAndWasteUtil
-				);
+				vdypSpecies.setCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(closeUtilizationNetOfDecayAndWasteUtil);
 				vdypSpecies.setCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(
 						closeUtilizationNetOfDecayWasteAndBreakageUtil
 				);
@@ -476,6 +473,27 @@ public class FipStart {
 		} catch (IllegalAccessException | InvocationTargetException ex) {
 			throw new IllegalStateException(ex);
 		}
+	}
+
+	/**
+	 * Returns the primary, and secondary if present species records as a one or two
+	 * element list.
+	 */
+	List<FipSpecies> findPrimarySpecies(Collection<FipSpecies> allSpecies) {
+		if (allSpecies.isEmpty()) {
+			throw new IllegalArgumentException("Can not find primary species as there are no species");
+		}
+		var result = new ArrayList<FipSpecies>();
+
+		if (allSpecies.size() == 1) {
+			result.addAll(allSpecies);
+		} else {
+
+		}
+
+		assert !result.isEmpty();
+		assert result.size() <= 2;
+		return result;
 	}
 
 	/**
@@ -522,9 +540,7 @@ public class FipStart {
 				);
 		estimateUtilization(baseAreaUtil, wholeStemVolumeUtil, utilizationClass, (i, ba) -> {
 			Coefficients wholeStemCoe = wholeStemUtilizationComponentMap.get(i, volumeGroup).orElseThrow(
-					() -> new ProcessingException(
-							"Could not find whole stem utilization coefficients for group " + volumeGroup
-					)
+					() -> new ProcessingException("Could not find whole stem utilization coefficients for group " + volumeGroup)
 			);
 
 			// Fortran code uses 1 index into array when reading it here, but 0 index when
@@ -563,15 +579,12 @@ public class FipStart {
 			Coefficients wholeStemVolumeUtil, Coefficients closeUtilizationVolumeUtil
 	) throws ProcessingException {
 		var dqSp = quadMeanDiameterUtil.getCoe(0);
-		final var closeUtilizationCoeMap = Utils
-				.<MatrixMap2<Integer, Integer, Optional<Coefficients>>>expectParsedControl(
-						controlMap, CloseUtilVolumeParser.CONTROL_KEY, MatrixMap2.class
-				);
+		final var closeUtilizationCoeMap = Utils.<MatrixMap2<Integer, Integer, Optional<Coefficients>>>expectParsedControl(
+				controlMap, CloseUtilVolumeParser.CONTROL_KEY, MatrixMap2.class
+		);
 		estimateUtilization(wholeStemVolumeUtil, closeUtilizationVolumeUtil, utilizationClass, (i, ws) -> {
 			Coefficients closeUtilCoe = closeUtilizationCoeMap.get(i, volumeGroup).orElseThrow(
-					() -> new ProcessingException(
-							"Could not find whole stem utilization coefficients for group " + volumeGroup
-					)
+					() -> new ProcessingException("Could not find whole stem utilization coefficients for group " + volumeGroup)
 			);
 			var a0 = closeUtilCoe.getCoe(1);
 			var a1 = closeUtilCoe.getCoe(2);
@@ -605,9 +618,9 @@ public class FipStart {
 	 *                         for that class, return the result utilization
 	 * @throws ProcessingException
 	 */
-	static void estimateUtilization(
-			Coefficients input, Coefficients output, int utilizationClass, UtilizationProcessor processor
-	) throws ProcessingException {
+	static void
+			estimateUtilization(Coefficients input, Coefficients output, int utilizationClass, UtilizationProcessor processor)
+					throws ProcessingException {
 		estimateUtilization(input, output, utilizationClass, processor, x -> false, 0f);
 	}
 
@@ -679,9 +692,8 @@ public class FipStart {
 		final var ageTr = (float) Math.log(Math.max(20.0, ageBreastHeight));
 
 		estimateUtilization(closeUtilizationUtil, closeUtilizationNetOfDecayUtil, utilizationClass, (i, cu) -> {
-			Coefficients netDecayCoe = netDecayCoeMap.get(i, decayGroup).orElseThrow(
-					() -> new ProcessingException("Could not find net decay coefficients for group " + decayGroup)
-			);
+			Coefficients netDecayCoe = netDecayCoeMap.get(i, decayGroup)
+					.orElseThrow(() -> new ProcessingException("Could not find net decay coefficients for group " + decayGroup));
 			var a0 = netDecayCoe.getCoe(1);
 			var a1 = netDecayCoe.getCoe(2);
 			var a2 = netDecayCoe.getCoe(3);
@@ -709,13 +721,12 @@ public class FipStart {
 	 * Estimate utilization net of decay and waste
 	 */
 	void estimateNetDecayAndWasteVolume(
-			Region region, int utilizationClass, Coefficients aAdjust, String genus, float lorieHeight,
-			float ageBreastHeight, Coefficients quadMeanDiameterUtil, Coefficients closeUtilizationUtil,
-			Coefficients closeUtilizationNetOfDecayUtil, Coefficients closeUtilizationNetOfDecayAndWasteUtil
+			Region region, int utilizationClass, Coefficients aAdjust, String genus, float lorieHeight, float ageBreastHeight,
+			Coefficients quadMeanDiameterUtil, Coefficients closeUtilizationUtil, Coefficients closeUtilizationNetOfDecayUtil,
+			Coefficients closeUtilizationNetOfDecayAndWasteUtil
 	) throws ProcessingException {
-		final var netDecayCoeMap = Utils.<Map<String, Coefficients>>expectParsedControl(
-				controlMap, VolumeNetDecayWasteParser.CONTROL_KEY, Map.class
-		);
+		final var netDecayCoeMap = Utils
+				.<Map<String, Coefficients>>expectParsedControl(controlMap, VolumeNetDecayWasteParser.CONTROL_KEY, Map.class);
 		final var wasteModifierMap = Utils.<MatrixMap2<String, Region, Float>>expectParsedControl(
 				controlMap, ModifierParser.CONTROL_KEY_MOD301_WASTE, MatrixMap2.class
 		);
@@ -723,8 +734,7 @@ public class FipStart {
 		final var ageTr = (float) Math.log(Math.max(20.0, ageBreastHeight));
 
 		estimateUtilization(
-				closeUtilizationNetOfDecayUtil, closeUtilizationNetOfDecayAndWasteUtil, utilizationClass,
-				(i, netDecay) -> {
+				closeUtilizationNetOfDecayUtil, closeUtilizationNetOfDecayAndWasteUtil, utilizationClass, (i, netDecay) -> {
 					if (Float.isNaN(netDecay) || netDecay <= 0f) {
 						return 0f;
 					}
@@ -786,9 +796,8 @@ public class FipStart {
 	 * @throws ProcessingException
 	 */
 	void estimateNetDecayWasteAndBreakageVolume(
-			int utilizationClass, int breakageGroup, Coefficients quadMeanDiameterUtil,
-			Coefficients closeUtilizationUtil, Coefficients closeUtilizationNetOfDecayAndWasteUtil,
-			Coefficients closeUtilizationNetOfDecayWasteAndBreakageUtil
+			int utilizationClass, int breakageGroup, Coefficients quadMeanDiameterUtil, Coefficients closeUtilizationUtil,
+			Coefficients closeUtilizationNetOfDecayAndWasteUtil, Coefficients closeUtilizationNetOfDecayWasteAndBreakageUtil
 	) throws ProcessingException {
 		final var netBreakageCoeMap = Utils
 				.<Map<Integer, Coefficients>>expectParsedControl(controlMap, BreakageParser.CONTROL_KEY, Map.class);
@@ -803,8 +812,8 @@ public class FipStart {
 		final var a4 = coefficients.getCoe(4);
 
 		estimateUtilization(
-				closeUtilizationNetOfDecayAndWasteUtil, closeUtilizationNetOfDecayWasteAndBreakageUtil,
-				utilizationClass, (i, netWaste) -> {
+				closeUtilizationNetOfDecayAndWasteUtil, closeUtilizationNetOfDecayWasteAndBreakageUtil, utilizationClass,
+				(i, netWaste) -> {
 
 					if (netWaste <= 0f) {
 						return 0f;
@@ -952,8 +961,7 @@ public class FipStart {
 
 		if (primaryLayer.getAgeTotal() - primaryLayer.getYearsToBreastHeight() < 0.5f) {
 			throw validationError(
-					"Polygon %s has %s layer where total age is less than YTBH.", polygon.getPolygonIdentifier(),
-					Layer.PRIMARY
+					"Polygon %s has %s layer where total age is less than YTBH.", polygon.getPolygonIdentifier(), Layer.PRIMARY
 			);
 		}
 
