@@ -1564,6 +1564,84 @@ class FipStartTest {
 		assertThat(result, contains(allOf(hasProperty("genus", is("PA")), hasProperty("percentGenus", closeTo(100f)))));
 	}
 
+	@Test
+	void testFindPrimaryCombineCIntoY() throws Exception {
+		var controlMap = FipTestUtils.loadControlMap();
+		var app = new FipStart();
+		app.setControlMap(controlMap);
+
+		var spec1 = this.getTestSpecies("test polygon", Layer.PRIMARY, "C", spec -> {
+			spec.setPercentGenus(25);
+		});
+		var spec2 = this.getTestSpecies("test polygon", Layer.PRIMARY, "Y", spec -> {
+			spec.setPercentGenus(75);
+		});
+
+		Map<String, FipSpecies> allSpecies = new HashMap<>();
+		allSpecies.put(spec1.getGenus(), spec1);
+		allSpecies.put(spec2.getGenus(), spec2);
+
+		var result = app.findPrimarySpecies(allSpecies);
+
+		assertThat(result, hasSize(1));
+		assertThat(result, contains(allOf(hasProperty("genus", is("Y")), hasProperty("percentGenus", closeTo(100f)))));
+	}
+
+	@Test
+	void testFindPrimaryCombineYIntoC() throws Exception {
+		var controlMap = FipTestUtils.loadControlMap();
+		var app = new FipStart();
+		app.setControlMap(controlMap);
+
+		var spec1 = this.getTestSpecies("test polygon", Layer.PRIMARY, "C", spec -> {
+			spec.setPercentGenus(75);
+		});
+		var spec2 = this.getTestSpecies("test polygon", Layer.PRIMARY, "Y", spec -> {
+			spec.setPercentGenus(25);
+		});
+
+		Map<String, FipSpecies> allSpecies = new HashMap<>();
+		allSpecies.put(spec1.getGenus(), spec1);
+		allSpecies.put(spec2.getGenus(), spec2);
+
+		var result = app.findPrimarySpecies(allSpecies);
+
+		assertThat(result, hasSize(1));
+		assertThat(result, contains(allOf(hasProperty("genus", is("C")), hasProperty("percentGenus", closeTo(100f)))));
+	}
+
+	@Test
+	void testFindPrimarySort() throws Exception {
+		var controlMap = FipTestUtils.loadControlMap();
+		var app = new FipStart();
+		app.setControlMap(controlMap);
+
+		var spec1 = this.getTestSpecies("test polygon", Layer.PRIMARY, "B", spec -> {
+			spec.setPercentGenus(20);
+		});
+		var spec2 = this.getTestSpecies("test polygon", Layer.PRIMARY, "H", spec -> {
+			spec.setPercentGenus(70);
+		});
+		var spec3 = this.getTestSpecies("test polygon", Layer.PRIMARY, "MB", spec -> {
+			spec.setPercentGenus(10);
+		});
+
+		Map<String, FipSpecies> allSpecies = new HashMap<>();
+		allSpecies.put(spec1.getGenus(), spec1);
+		allSpecies.put(spec2.getGenus(), spec2);
+		allSpecies.put(spec3.getGenus(), spec3);
+
+		var result = app.findPrimarySpecies(allSpecies);
+
+		assertThat(
+				result,
+				contains(
+						allOf(hasProperty("genus", is("H")), hasProperty("percentGenus", closeTo(70f))),
+						allOf(hasProperty("genus", is("B")), hasProperty("percentGenus", closeTo(20f)))
+				)
+		);
+	}
+
 	void vetUtilization(String property, Consumer<Function<Float, Matcher<VdypUtilizationHolder>>> body) {
 		Function<Float, Matcher<VdypUtilizationHolder>> generator = v -> hasProperty(
 				property, coe(-1, contains(is(0f), closeTo(v), is(0f), is(0f), is(0f), closeTo(v)))

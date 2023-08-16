@@ -1,9 +1,11 @@
 package ca.bc.gov.nrs.vdyp.common;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 
 import javax.annotation.Nullable;
 
@@ -42,5 +44,17 @@ public class Utils {
 			);
 		}
 		return (U) value;
+	}
+
+	/**
+	 * Creates a Comparator that compares two objects by applying the given accessor
+	 * function to get comparable values that are then compared.
+	 *
+	 * @param <T>      type to be compared with the Comparator
+	 * @param <V>      Comparable type
+	 * @param accessor Function getting a V from a T
+	 */
+	public static <T, V extends Comparable<V>> Comparator<T> compareUsing(Function<T, V> accessor) {
+		return (x, y) -> accessor.apply(x).compareTo(accessor.apply(y));
 	}
 }

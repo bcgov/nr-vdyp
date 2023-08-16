@@ -67,8 +67,8 @@ import ca.bc.gov.nrs.vdyp.model.VdypUtilizationHolder;
 
 public class FipStart {
 
-	private static final Comparator<FipSpecies> PERCENT_GENUS_DESCENDING = compareUsing(FipSpecies::getPercentGenus)
-			.reversed();
+	private static final Comparator<FipSpecies> PERCENT_GENUS_DESCENDING = Utils
+			.compareUsing(FipSpecies::getPercentGenus).reversed();
 
 	static private final Logger log = LoggerFactory.getLogger(FipStart.class);
 
@@ -223,18 +223,6 @@ public class FipStart {
 		return null;
 	}
 
-	/**
-	 * Creates a Comparator that compares two objects by applying the given accessor
-	 * function to get comparable values that are then compared.
-	 *
-	 * @param <T>      type to be compared with the Comparator
-	 * @param <V>      Comparable type
-	 * @param accessor Function getting a V from a T
-	 */
-	static <T, V extends Comparable<V>> Comparator<T> compareUsing(Function<T, V> accessor) {
-		return (x, y) -> accessor.apply(x).compareTo(accessor.apply(y));
-	}
-
 	VdypLayer processLayerAsVeteran(FipPolygon fipPolygon, FipLayer fipLayer) throws ProcessingException {
 
 		var polygonIdentifier = fipLayer.getPolygonIdentifier();
@@ -250,7 +238,7 @@ public class FipStart {
 		// find Primary genus (highest percentage) ISPPVET
 
 		var primaryGenus = fipLayer.getSpecies().values().stream() //
-				.max(compareUsing(FipSpecies::getPercentGenus)) //
+				.max(Utils.compareUsing(FipSpecies::getPercentGenus)) //
 				.orElseThrow(() -> new IllegalStateException("No primarty genus (SP0) found. This should not happen."))
 				.getGenus();
 
@@ -519,7 +507,10 @@ public class FipStart {
 			combined.put(groupPrimary.getGenus(), groupPrimary);
 		}
 
+		assert !combined.isEmpty();
+
 		if (combined.size() == 1) {
+			// There's only one
 			result.addAll(combined.values());
 		} else {
 			var NDEBUG_22 = false;
