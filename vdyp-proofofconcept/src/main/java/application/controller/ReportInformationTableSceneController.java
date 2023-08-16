@@ -137,6 +137,7 @@ public class ReportInformationTableSceneController implements Initializable {
 
 	/**
 	 * Sets default values for various controls in the window.
+	 * 
 	 * The default values and control states are as follows:
 	 * @formatter:off
 	 * 		- startingAge: Default value set to 0, with a range from 0 to 500 and an increment of 10.
@@ -150,6 +151,7 @@ public class ReportInformationTableSceneController implements Initializable {
 	 * 		- dbhSpecies2Slider - Sets the spot of the slider to 7.5cm+
 	 * 		- dbhSpecies4Slider - Sets the spot of the slider to 12.5cm+
 	 * 		- culminationValues - Set to disabled by default
+	 * 		- updates dbh labels by calling the updateDBHLabels function
 	 * @formatter:on
 	 */
 	public void setDefaults() {
@@ -187,14 +189,12 @@ public class ReportInformationTableSceneController implements Initializable {
 
 		culminationValues.setDisable(true);// always disabled in WinVDYP
 
-		updateDBHLabels();
-		
-	
-		
+		updateDBHLabels();	
 	}
 
 	/**
-	 * Updates the DBH labels on the user interface.
+	 * Gets the dbh labels from SiteInformationTableSceneController and
+	 * updates the DBH labels on the user interface.
 	 */
 	private void updateDBHLabels() {
 		String[] dbhLabels = SiteInformationTableSceneController.getDBHLabels();
@@ -232,7 +232,7 @@ public class ReportInformationTableSceneController implements Initializable {
 	 * Handles the run button action event.
 	 *
 	 * This method is triggered when the run model button is clicked in the table
-	 * window.
+	 * window. It adds the text and creates an entry in the log file
 	 *
 	 * @param event The ActionEvent triggered by the run button click.
 	 * @throws IOException

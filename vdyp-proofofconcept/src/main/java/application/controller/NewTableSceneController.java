@@ -365,6 +365,7 @@ public class NewTableSceneController implements Initializable {
 
 	/**
 	 * Switches the application to Scene 2 - SiteInformationTableScene.
+	 * Also passes the speciesChoiceBoxes to the next scene
 	 *
 	 * @param event The ActionEvent triggering the scene switch.
 	 * @throws IOException If an I/O error occurs during scene loading.
@@ -408,19 +409,5 @@ public class NewTableSceneController implements Initializable {
 
 		alert.showAndWait();
 	}
-	
-	/**
-	 * Retrieves the DBH labels from the species choice boxes.
-	 *
-	 * @return An array of DBH labels retrieved from the species choice boxes.
-	 */
-	public  String[] getDBHLabels() {
-		String[] dbhLabels = new String[4];
-		
-		for(int i = 0; i < 4; i++) {
-			dbhLabels[i] = speciesChoiceBoxes.get(i).getValue();
-		}
-	
-		return dbhLabels;
-	}
+
 }

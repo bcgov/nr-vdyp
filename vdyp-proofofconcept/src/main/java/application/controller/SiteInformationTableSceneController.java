@@ -116,18 +116,6 @@ public class SiteInformationTableSceneController implements Initializable {
 
 	}
 	
-	/**
-	 * A helper method to compute the width of a given text using a Text object.
-	 *
-	 * @param text The text for which the width needs to be computed.
-	 * @return double The width of the provided text.
-	 */
-	private double computeTextWidth(String text) {
-		    Text helper = new Text();
-		    
-		    helper.setText(text);
-		    return helper.getLayoutBounds().getWidth();
-	}
 	
 	/**
 	 * Sets default values for various controls in the window and disables certain controls as specified in the Balsamiq mock-ups.
@@ -144,6 +132,7 @@ public class SiteInformationTableSceneController implements Initializable {
 	 * 		- runButtonReport: Disabled by default- loggingOn: Sets the choices Yes and No. Yes by default
 	 * 		- loggingType: Set the choices as Basic,Intermediate and Advanced. Basic by Default
 	 * 		- loggingOn: Sets the choices Yes and No. Yes by default
+	 * 		- siteIndexCurve: Disabled since it updates based on siteSpecies choice 
 	 * @formatter:on
 	 */
 	public void setDefaults() {
@@ -283,7 +272,21 @@ public class SiteInformationTableSceneController implements Initializable {
 	// Bottom Menu bar end
 
 	/**
+	 * A helper method to compute the width of a given text using a Text object.
+	 *
+	 * @param text The text for which the width needs to be computed.
+	 * @return double The width of the provided text.
+	 */
+	private double computeTextWidth(String text) {
+		    Text helper = new Text();
+		    
+		    helper.setText(text);
+		    return helper.getLayoutBounds().getWidth();
+	}
+	
+	/**
 	 * Displays the choices passed in through a list of species choice boxes.
+	 * It also saves the passed in labels so they can be accessed later
 	 *
 	 * @param speciesChoiceBoxes A list of ChoiceBox instances containing species choices.
 	 * @throws IOException if an I/O error occurs.
@@ -293,14 +296,14 @@ public class SiteInformationTableSceneController implements Initializable {
 			return;
 		}
 		
-		String[] passDBHLabels = new String[4]; // for passing labels into ReportInformation
+		String[] passedDBHLabels = new String[4]; // for passing labels into ReportInformation
 		int i = 0;
 		 for(ChoiceBox<String> species : speciesChoiceBoxes) {
 			String speciesText = species.getValue();
 			
 			if(!speciesText.equals("Select Species")) {
 				if(i < 4) { //add first 4 pass to ReportInformation scene
-					passDBHLabels[i] = speciesText;
+					passedDBHLabels[i] = speciesText;
 					i++;
 				}
 				speciesText = speciesText.substring(0,2); // we only need the two letter identifier
@@ -310,7 +313,7 @@ public class SiteInformationTableSceneController implements Initializable {
 		siteSpecies.setValue(speciesChoiceBoxes.get(0).getValue().substring(0,2)); //set default
 		
 		
-       setDBHLabels(passDBHLabels); 
+       setDBHLabels(passedDBHLabels); 
 
 	}
 
