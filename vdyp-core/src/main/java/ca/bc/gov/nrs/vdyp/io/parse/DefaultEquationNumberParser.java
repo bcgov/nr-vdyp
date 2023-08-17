@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.vdyp.io.parse;
 import java.util.Arrays;
 
 public class DefaultEquationNumberParser extends EquationGroupParser {
+	// C_BAGRP1/BG1DEFV
 
 	public static final String CONTROL_KEY = "DEFAULT_EQ_NUM";
 

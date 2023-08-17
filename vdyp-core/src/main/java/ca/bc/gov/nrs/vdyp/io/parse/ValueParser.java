@@ -216,6 +216,27 @@ public interface ValueParser<T> extends ControlledValueParser<T> {
 	}
 
 	/**
+	 * Creates a validator function for an inclusive range. See {@link validate}.
+	 *
+	 * @param <U>  A comparable type
+	 * @param min  Minimum value allowed
+	 * @param max  Maximum value allowed
+	 * @param name Name of the field being validated to use in errors
+	 */
+	public static <U extends Comparable<U>> Function<U, Optional<String>>
+			validateRangeInclusive(U min, U max, String name) {
+		if (min.compareTo(max) > 0) {
+			throw new IllegalArgumentException("min " + min + " is greater than max " + max);
+		}
+		return value -> {
+			if (min.compareTo(value) > 0 || max.compareTo(value) < 0) {
+				return Optional.of(name + " is expected to be between " + min + " and " + max + " but was " + value);
+			}
+			return Optional.empty();
+		};
+	}
+
+	/**
 	 * Makes a parser that parses if the string is not blank, and returns an empty
 	 * Optional otherwise.
 	 *

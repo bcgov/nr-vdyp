@@ -45,6 +45,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.BreakageEquationGroupParser;
 import ca.bc.gov.nrs.vdyp.io.parse.BreakageParser;
 import ca.bc.gov.nrs.vdyp.io.parse.CloseUtilVolumeParser;
 import ca.bc.gov.nrs.vdyp.io.parse.DecayEquationGroupParser;
+import ca.bc.gov.nrs.vdyp.io.parse.DefaultEquationNumberParser;
 import ca.bc.gov.nrs.vdyp.io.parse.GenusDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.StreamingParser;
@@ -245,7 +246,11 @@ public class FipStart {
 
 		var primarySpecies = findPrimarySpecies(fipLayerPrimary.getSpecies());
 
+		// VDYP7 stores this in the common FIPL_1C/ITGL1 but only seems to use it
+		// locally
 		var itg = findItg(primarySpecies);
+
+		fipPolygon.getBiogeoclimaticZone();
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -509,6 +514,7 @@ public class FipStart {
 	 * Returns the primary, and secondary if present species records as a one or two
 	 * element list.
 	 */
+	// PRIMFIND
 	List<FipSpecies> findPrimarySpecies(Map<String, FipSpecies> allSpecies) {
 		if (allSpecies.isEmpty()) {
 			throw new IllegalArgumentException("Can not find primary species as there are no species");
@@ -554,6 +560,14 @@ public class FipStart {
 		return result;
 	}
 
+	/**
+	 * Find Inventory type group (ITG)
+	 *
+	 * @param primarySecondary
+	 * @return
+	 * @throws ProcessingException
+	 */
+	// ITGFIND
 	int findItg(List<FipSpecies> primarySecondary) throws ProcessingException {
 		var primary = primarySecondary.get(0);
 
@@ -659,6 +673,17 @@ public class FipStart {
 		default:
 			throw new ProcessingException("Unexpected primary species: " + primary.getGenus());
 		}
+	}
+
+	// GRPBA1FD
+	int findEquationGroup() {
+		final var defaultGroupsMap = Utils.<MatrixMap2<String, String, Integer>>expectParsedControl(
+				controlMap, DefaultEquationNumberParser.CONTROL_KEY, MatrixMap2.class
+		);
+		final var modifierMap = Utils.<MatrixMap2<String, String, Integer>>expectParsedControl(
+				controlMap, DefaultEquationNumberParser.CONTROL_KEY, MatrixMap2.class
+		);
+		return 0;
 	}
 
 	/**

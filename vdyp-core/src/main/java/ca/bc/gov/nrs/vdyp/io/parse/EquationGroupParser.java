@@ -22,6 +22,9 @@ import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
  */
 public abstract class EquationGroupParser implements ControlMapSubResourceParser<MatrixMap2<String, String, Integer>> {
 
+	public static final int MIN_GROUP = 1;
+	public static final int MAX_GROUP = 180;
+
 	LineParser lineParser;
 
 	private Collection<String> hiddenBecs = Collections.emptyList();
@@ -32,7 +35,12 @@ public abstract class EquationGroupParser implements ControlMapSubResourceParser
 
 	protected EquationGroupParser(int identifierLength) {
 		lineParser = new LineParser().strippedString(2, "sp0Alias").space(1).strippedString(4, "becAlias").space(1)
-				.integer(identifierLength, "grpId");
+				.value(
+						identifierLength, "grpId",
+						ValueParser.validate(
+								ValueParser.INTEGER, ValueParser.validateRangeInclusive(MIN_GROUP, MAX_GROUP, "grpId")
+						)
+				);
 	}
 
 	@Override

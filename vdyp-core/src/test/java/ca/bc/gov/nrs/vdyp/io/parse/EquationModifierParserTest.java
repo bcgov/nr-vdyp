@@ -1,7 +1,8 @@
 package ca.bc.gov.nrs.vdyp.io.parse;
 
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.mmHasEntry;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.is;
 
 import java.util.HashMap;
@@ -24,7 +25,7 @@ class EquationModifierParserTest {
 
 		var result = parser.parse(is, controlMap);
 
-		assertThat(result, hasEntry(is(25), hasEntry(is(18), is(26))));
+		assertThat(result, mmHasEntry(present(is(26)), 25, 18));
 		// indexed
 	}
 

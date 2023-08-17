@@ -129,14 +129,7 @@ class FipControlParserTest {
 				result, (Matcher) hasSpecificEntry(
 						FipControlParser.EQN_MODIFIERS, allOf(
 								// Default Equation
-								isA(Map.class), hasEntry(
-										isA(Integer.class), allOf(
-												// ITG
-												isA(Map.class), hasEntry(
-														isA(Integer.class), isA(Integer.class) // Reassigned Equation
-												)
-										)
-								)
+								isA(MatrixMap2.class), mmHasEntry(present(is(34)), 33, 9)
 						)
 				)
 		);
