@@ -2,9 +2,11 @@ package ca.bc.gov.nrs.vdyp.common;
 
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import javax.annotation.Nullable;
@@ -56,5 +58,19 @@ public class Utils {
 	 */
 	public static <T, V extends Comparable<V>> Comparator<T> compareUsing(Function<T, V> accessor) {
 		return (x, y) -> accessor.apply(x).compareTo(accessor.apply(y));
+	}
+
+	/**
+	 * Create map, allow it to be modified, then return an unmodifiable view of it.
+	 *
+	 * @param <K>
+	 * @param <V>
+	 * @param body
+	 * @return
+	 */
+	public static <K, V> Map<K, V> constMap(Consumer<Map<K, V>> body) {
+		var map = new HashMap<K, V>();
+		body.accept(map);
+		return Collections.unmodifiableMap(map);
 	}
 }

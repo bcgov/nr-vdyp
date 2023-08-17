@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -80,6 +81,27 @@ public class FipStart {
 	public static final float PI_40K = 0.78539816E-04f;
 
 	static final Collection<Integer> UTIL_CLASS_INDICES = IntStream.rangeClosed(1, 4).mapToObj(x -> x).toList();
+
+	static final Map<String, Integer> ITG_PURE = Utils.constMap(map -> {
+		map.put("AC", 36);
+		map.put("AT", 42);
+		map.put("B", 18);
+		map.put("C", 9);
+		map.put("D", 38);
+		map.put("E", 40);
+		map.put("F", 1);
+		map.put("H", 12);
+		map.put("L", 34);
+		map.put("MB", 39);
+		map.put("PA", 28);
+		map.put("PL", 28);
+		map.put("PW", 27);
+		map.put("PY", 32);
+		map.put("S", 21);
+		map.put("Y", 9);
+	});
+
+	static final Set<String> HARDWOODS = Set.of("AC", "AT", "D", "E", "MB");
 
 	/**
 	 * When finding primary species these genera should be combined
@@ -218,7 +240,12 @@ public class FipStart {
 		}
 	}
 
-	private VdypLayer processLayerAsPrimary(FipPolygon fipPolygon, FipLayerPrimary fipLayerPrimary) {
+	private VdypLayer processLayerAsPrimary(FipPolygon fipPolygon, FipLayerPrimary fipLayerPrimary)
+			throws ProcessingException {
+
+		var primarySpecies = findPrimarySpecies(fipLayerPrimary.getSpecies());
+
+		var itg = findItg(primarySpecies);
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -525,6 +552,113 @@ public class FipStart {
 		assert !result.isEmpty();
 		assert result.size() <= 2;
 		return result;
+	}
+
+	int findItg(List<FipSpecies> primarySecondary) throws ProcessingException {
+		var primary = primarySecondary.get(0);
+
+		if (primary.getPercentGenus() > 79.999) { // Copied from VDYP7
+			return ITG_PURE.get(primary.getGenus());
+		}
+		assert primarySecondary.size() == 2;
+
+		var secondary = primarySecondary.get(1);
+
+		assert !primary.getGenus().equals(secondary.getGenus());
+
+		switch (primary.getGenus()) {
+		case "F":
+			switch (secondary.getGenus()) {
+			case "C", "Y":
+				return 2;
+			case "B", "H":
+				return 3;
+			case "S":
+				return 4;
+			case "PL", "PA":
+				return 5;
+			case "PY":
+				return 6;
+			case "L", "PW":
+				return 7;
+			default:
+				return 8;
+			}
+		case "C", "Y":
+			switch (secondary.getGenus()) {
+			case "C", "Y":
+				return 10;
+			case "H", "B", "S":
+				return 11;
+			default:
+				return 10;
+			}
+		case "B":
+			switch (secondary.getGenus()) {
+			case "C", "Y", "H":
+				return 19;
+			default:
+				return 20;
+			}
+		case "S":
+			switch (secondary.getGenus()) {
+			case "C", "Y", "H":
+				return 23;
+			case "B":
+				return 24;
+			case "PL":
+				return 25;
+			default:
+				if (HARDWOODS.contains(secondary.getGenus())) {
+					return 26;
+				}
+				return 22;
+			}
+		case "PW":
+			return 27;
+		case "PL", "PA":
+			switch (secondary.getGenus()) {
+			case "PL", "PA":
+				return 28;
+			case "F", "PW", "L", "PY":
+				return 29;
+			default:
+				if (HARDWOODS.contains(secondary.getGenus())) {
+					return 31;
+				}
+				return 30;
+			}
+		case "PY":
+			return 32;
+		case "L":
+			switch (secondary.getGenus()) {
+			case "F":
+				return 33;
+			default:
+				return 34;
+			}
+		case "AC":
+			if (HARDWOODS.contains(secondary.getGenus())) {
+				return 36;
+			}
+			return 35;
+		case "D":
+			if (HARDWOODS.contains(secondary.getGenus())) {
+				return 38;
+			}
+			return 37;
+		case "MB":
+			return 39;
+		case "E":
+			return 40;
+		case "AT":
+			if (HARDWOODS.contains(secondary.getGenus())) {
+				return 42;
+			}
+			return 41;
+		default:
+			throw new ProcessingException("Unexpected primary species: " + primary.getGenus());
+		}
 	}
 
 	/**
