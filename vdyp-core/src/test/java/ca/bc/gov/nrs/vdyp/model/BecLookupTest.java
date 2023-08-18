@@ -12,359 +12,150 @@ import static org.hamcrest.Matchers.stringContainsInOrder;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
-
-import ca.bc.gov.nrs.vdyp.model.BecLookup.Substitution;
 
 class BecLookupTest {
 
 	@Test
 	void testSimpleGet() throws Exception {
-		var lookup = new BecLookup(Arrays.asList(new BecDefinition("ESSF", Region.INTERIOR, "ESSF Test", 4, 5, 6)));
-		var result = lookup.get("ESSF", Substitution.PARTIAL_FILL_OK);
+		BecDefinition essf = new BecDefinition("ESSF", Region.INTERIOR, "ESSF Test");
+		var lookup = new BecLookup(Arrays.asList(essf));
+		var result = lookup.get("ESSF");
 
 		assertThat(result, present(hasProperty("alias", is("ESSF"))));
 	}
 
 	@Test
 	void testGetMissing() throws Exception {
-		var lookup = new BecLookup(Arrays.asList(new BecDefinition("ESSF", Region.INTERIOR, "ESSF Test", 4, 5, 6)));
-		var result = lookup.get("XX", Substitution.PARTIAL_FILL_OK);
+		List<BecDefinition> essf = Arrays.asList(new BecDefinition("ESSF", Region.INTERIOR, "ESSF Test"));
+		var lookup = new BecLookup(essf);
+		var result = lookup.get("XX");
 
 		assertThat(result, notPresent());
 	}
 
 	@Test
-	void testWithSubstitution() throws Exception {
-		var lookup = new BecLookup(
-				Arrays.asList(
-						new BecDefinition("BG", Region.INTERIOR, "BG Test", 0, 0, 1),
-						new BecDefinition("ESSF", Region.INTERIOR, "ESSF Test", 4, 5, 6)
-				)
-		);
-		var result = lookup.get("BG", Substitution.SUBSTITUTE);
+	void testGetBecs() throws Exception {
+		BecDefinition bg = new BecDefinition("BG", Region.INTERIOR, "BG Test");
+		BecDefinition essf = new BecDefinition("ESSF", Region.INTERIOR, "ESSF Test");
+		var lookup = new BecLookup(Arrays.asList(bg, essf));
+
+		var result = lookup.getBecs();
 
 		assertThat(
 				result,
-				present(
-						allOf(
-								hasProperty("alias", is("BG")), hasProperty("growthIndex", is(4)),
-								hasProperty("volumeIndex", is(5)), hasProperty("decayIndex", is(1))
-						)
-				)
-		);
-	}
-
-	@Test
-	void testWithSubstitutionButNoneNeeded() throws Exception {
-		var lookup = new BecLookup(
-				Arrays.asList(
-						new BecDefinition("BWBS", Region.INTERIOR, "BWBS Test", 1, 2, 3),
-						new BecDefinition("ESSF", Region.INTERIOR, "ESSF Test", 4, 5, 6)
-				)
-		);
-		var result = lookup.get("BWBS", Substitution.SUBSTITUTE);
-
-		assertThat(
-				result,
-				present(
-						allOf(
-								hasProperty("alias", is("BWBS")), hasProperty("growthIndex", is(1)),
-								hasProperty("volumeIndex", is(2)), hasProperty("decayIndex", is(3))
-						)
-				)
-		);
-	}
-
-	@Test
-	void testWithPartialAllowed() throws Exception {
-		var lookup = new BecLookup(
-				Arrays.asList(
-						new BecDefinition("BG", Region.INTERIOR, "BG Test", 0, 0, 1),
-						new BecDefinition("ESSF", Region.INTERIOR, "ESSF Test", 4, 5, 6)
-				)
-		);
-		var result = lookup.get("BG", Substitution.PARTIAL_FILL_OK);
-
-		assertThat(
-				result,
-				present(
-						allOf(
-								hasProperty("alias", is("BG")), hasProperty("growthIndex", is(0)),
-								hasProperty("volumeIndex", is(0)), hasProperty("decayIndex", is(1))
-						)
-				)
-		);
-	}
-
-	@Test
-	void testWithNoSubstitution() throws Exception {
-		var lookup = new BecLookup(
-				Arrays.asList(
-						new BecDefinition("BG", Region.INTERIOR, "BG Test", 0, 0, 1),
-						new BecDefinition("ESSF", Region.INTERIOR, "ESSF Test", 4, 5, 6)
-				)
-		);
-		var ex = assertThrows(IllegalArgumentException.class, () -> lookup.get("BG", Substitution.NONE));
-
-		assertThat(ex, hasProperty("message", stringContainsInOrder("Substitution needed", "BEC BG")));
-	}
-
-	@Test
-	void testWithSubstitutionButDefaultIsMissing() throws Exception {
-		var lookup = new BecLookup(Arrays.asList(new BecDefinition("BG", Region.INTERIOR, "BG Test", 0, 0, 1)));
-		var ex = assertThrows(IllegalStateException.class, () -> lookup.get("BG", Substitution.SUBSTITUTE));
-
-		assertThat(ex, hasProperty("message", stringContainsInOrder("Could not find default BEC", "ESSF")));
-
-	}
-
-	@Test
-	void testWithSubstitutionButDefaultIsIncomplete() throws Exception {
-		var lookup = new BecLookup(
-				Arrays.asList(
-						new BecDefinition("BG", Region.INTERIOR, "BG Test", 0, 0, 1),
-						new BecDefinition("ESSF", Region.INTERIOR, "ESSF Test", 0, 5, 6)
-				)
-		);
-		var ex = assertThrows(IllegalStateException.class, () -> lookup.get("BG", Substitution.SUBSTITUTE));
-
-		assertThat(ex, hasProperty("message", stringContainsInOrder("substitute", "BG", "default", "ESSF")));
-
-	}
-
-	@Test
-	void testGetBecsWithSubstitution() throws Exception {
-		var lookup = new BecLookup(
-				Arrays.asList(
-						new BecDefinition("BG", Region.INTERIOR, "BG Test", 0, 0, 1),
-						new BecDefinition("ESSF", Region.INTERIOR, "ESSF Test", 4, 5, 6)
-				)
-		);
-
-		var result = lookup.getBecs(Substitution.SUBSTITUTE);
-
-		assertThat(
-				result,
-				containsInAnyOrder(
-						allOf(
-								hasProperty("alias", is("BG")), hasProperty("growthIndex", is(4)),
-								hasProperty("volumeIndex", is(5)), hasProperty("decayIndex", is(1))
-						),
-						allOf(
-								hasProperty("alias", is("ESSF")), hasProperty("growthIndex", is(4)),
-								hasProperty("volumeIndex", is(5)), hasProperty("decayIndex", is(6))
-						)
-				)
-		);
-	}
-
-	@Test
-	void testGetBecsAllowingPartial() throws Exception {
-		var lookup = new BecLookup(
-				Arrays.asList(
-						new BecDefinition("BG", Region.INTERIOR, "BG Test", 0, 0, 1),
-						new BecDefinition("ESSF", Region.INTERIOR, "ESSF Test", 4, 5, 6)
-				)
-		);
-
-		var result = lookup.getBecs(Substitution.PARTIAL_FILL_OK);
-
-		assertThat(
-				result,
-				containsInAnyOrder(
-						allOf(
-								hasProperty("alias", is("BG")), hasProperty("growthIndex", is(0)),
-								hasProperty("volumeIndex", is(0)), hasProperty("decayIndex", is(1))
-						),
-						allOf(
-								hasProperty("alias", is("ESSF")), hasProperty("growthIndex", is(4)),
-								hasProperty("volumeIndex", is(5)), hasProperty("decayIndex", is(6))
-						)
-				)
+				containsInAnyOrder(allOf(hasProperty("alias", is("BG"))), allOf(hasProperty("alias", is("ESSF"))))
 		);
 	}
 
 	@Test
 	void testGetGrowthBecs() throws Exception {
-		var lookup = new BecLookup(
-				Arrays.asList(
-						new BecDefinition("AT", Region.INTERIOR, "AT Test", 0, 1, 1),
-						new BecDefinition("BG", Region.INTERIOR, "BG Test", 0, 0, 1),
-						new BecDefinition("ESSF", Region.INTERIOR, "ESSF Test", 4, 5, 6)
-				)
+		BecDefinition essf = new BecDefinition("ESSF", Region.INTERIOR, "ESSF Test");
+		BecDefinition at = new BecDefinition(
+				"AT", Region.INTERIOR, "AT Test", Optional.of(essf), Optional.empty(), Optional.empty()
 		);
-
-		var result = lookup.getGrowthBecs(Substitution.PARTIAL_FILL_OK);
-
-		assertThat(
-				result,
-				containsInAnyOrder(
-						allOf(
-								hasProperty("alias", is("ESSF")), hasProperty("growthIndex", is(4)),
-								hasProperty("volumeIndex", is(5)), hasProperty("decayIndex", is(6))
-						)
-				)
+		BecDefinition bg = new BecDefinition(
+				"BG", Region.INTERIOR, "BG Test", Optional.of(essf), Optional.of(essf), Optional.empty()
 		);
+		var lookup = new BecLookup(Arrays.asList(at, bg, essf));
+
+		var result = lookup.getGrowthBecs();
+
+		assertThat(result, containsInAnyOrder(allOf(hasProperty("alias", is("ESSF")))));
 	}
 
 	@Test
 	void testGetCoastalBecs() throws Exception {
-		var lookup = new BecLookup(
-				Arrays.asList(
-						new BecDefinition("CDF", Region.COASTAL, "CDF Test", 1, 2, 3),
-						new BecDefinition("CWH", Region.COASTAL, "CWH Test", 2, 3, 4),
-						new BecDefinition("BG", Region.INTERIOR, "BG Test", 0, 0, 1),
-						new BecDefinition("ESSF", Region.INTERIOR, "ESSF Test", 4, 5, 6)
-				)
-		);
+		BecDefinition cdf = new BecDefinition("CDF", Region.COASTAL, "CDF Test");
+		BecDefinition cwh = new BecDefinition("CWH", Region.COASTAL, "CWH Test");
+		BecDefinition bg = new BecDefinition("BG", Region.INTERIOR, "BG Test");
+		BecDefinition essf = new BecDefinition("ESSF", Region.INTERIOR, "ESSF Test");
+		var lookup = new BecLookup(Arrays.asList(cdf, cwh, bg, essf));
 
-		var result = lookup.getBecsForRegion(Region.COASTAL, Substitution.PARTIAL_FILL_OK);
+		var result = lookup.getBecsForRegion(Region.COASTAL);
 
 		assertThat(
 				result,
-				containsInAnyOrder(
-						allOf(
-								hasProperty("alias", is("CDF")), hasProperty("growthIndex", is(1)),
-								hasProperty("volumeIndex", is(2)), hasProperty("decayIndex", is(3))
-						),
-						allOf(
-								hasProperty("alias", is("CWH")), hasProperty("growthIndex", is(2)),
-								hasProperty("volumeIndex", is(3)), hasProperty("decayIndex", is(4))
-						)
-				)
+				containsInAnyOrder(allOf(hasProperty("alias", is("CDF"))), allOf(hasProperty("alias", is("CWH"))))
 		);
 	}
 
 	@Test
 	void testGetInteriorBecs() throws Exception {
-		var lookup = new BecLookup(
-				Arrays.asList(
-						new BecDefinition("CDF", Region.COASTAL, "CDF Test", 1, 2, 3),
-						new BecDefinition("CWH", Region.COASTAL, "CWH Test", 2, 3, 4),
-						new BecDefinition("BG", Region.INTERIOR, "BG Test", 0, 0, 1),
-						new BecDefinition("ESSF", Region.INTERIOR, "ESSF Test", 4, 5, 6)
-				)
-		);
+		BecDefinition cdf = new BecDefinition("CDF", Region.COASTAL, "CDF Test");
+		BecDefinition cwh = new BecDefinition("CWH", Region.COASTAL, "CWH Test");
+		BecDefinition bg = new BecDefinition("BG", Region.INTERIOR, "BG Test");
+		BecDefinition essf = new BecDefinition("ESSF", Region.INTERIOR, "ESSF Test");
+		var lookup = new BecLookup(Arrays.asList(cdf, cwh, bg, essf));
 
-		var result = lookup.getBecsForRegion(Region.INTERIOR, Substitution.PARTIAL_FILL_OK);
+		var result = lookup.getBecsForRegion(Region.INTERIOR);
 
 		assertThat(
 				result,
-				containsInAnyOrder(
-						allOf(
-								hasProperty("alias", is("BG")), hasProperty("growthIndex", is(0)),
-								hasProperty("volumeIndex", is(0)), hasProperty("decayIndex", is(1))
-						),
-						allOf(
-								hasProperty("alias", is("ESSF")), hasProperty("growthIndex", is(4)),
-								hasProperty("volumeIndex", is(5)), hasProperty("decayIndex", is(6))
-						)
-				)
+				containsInAnyOrder(allOf(hasProperty("alias", is("BG"))), allOf(hasProperty("alias", is("ESSF"))))
 		);
 	}
 
 	@Test
 	void testGetByBlankScope() throws Exception {
-		var lookup = new BecLookup(
-				Arrays.asList(
-						new BecDefinition("CDF", Region.COASTAL, "CDF Test", 1, 2, 3),
-						new BecDefinition("CWH", Region.COASTAL, "CWH Test", 2, 3, 4),
-						new BecDefinition("BG", Region.INTERIOR, "BG Test", 0, 0, 1),
-						new BecDefinition("ESSF", Region.INTERIOR, "ESSF Test", 4, 5, 6)
-				)
-		);
+		BecDefinition cdf = new BecDefinition("CDF", Region.COASTAL, "CDF Test");
+		BecDefinition cwh = new BecDefinition("CWH", Region.COASTAL, "CWH Test");
+		BecDefinition bg = new BecDefinition("BG", Region.INTERIOR, "BG Test");
+		BecDefinition essf = new BecDefinition("ESSF", Region.INTERIOR, "ESSF Test");
+		var lookup = new BecLookup(Arrays.asList(cdf, cwh, bg, essf));
 
-		var result = lookup.getBecsForScope("", Substitution.PARTIAL_FILL_OK);
+		var result = lookup.getBecsForScope("");
 
 		assertThat(
 				result,
 				containsInAnyOrder(
-						allOf(
-								hasProperty("alias", is("CDF")), hasProperty("growthIndex", is(1)),
-								hasProperty("volumeIndex", is(2)), hasProperty("decayIndex", is(3))
-						),
-						allOf(
-								hasProperty("alias", is("CWH")), hasProperty("growthIndex", is(2)),
-								hasProperty("volumeIndex", is(3)), hasProperty("decayIndex", is(4))
-						),
-						allOf(
-								hasProperty("alias", is("BG")), hasProperty("growthIndex", is(0)),
-								hasProperty("volumeIndex", is(0)), hasProperty("decayIndex", is(1))
-						),
-						allOf(
-								hasProperty("alias", is("ESSF")), hasProperty("growthIndex", is(4)),
-								hasProperty("volumeIndex", is(5)), hasProperty("decayIndex", is(6))
-						)
+						allOf(hasProperty("alias", is("CDF"))), allOf(hasProperty("alias", is("CWH"))),
+						allOf(hasProperty("alias", is("BG"))), allOf(hasProperty("alias", is("ESSF")))
 				)
 		);
 	}
 
 	@Test
 	void testGetByRegionScope() throws Exception {
-		var lookup = new BecLookup(
-				Arrays.asList(
-						new BecDefinition("CDF", Region.COASTAL, "CDF Test", 1, 2, 3),
-						new BecDefinition("CWH", Region.COASTAL, "CWH Test", 2, 3, 4),
-						new BecDefinition("BG", Region.INTERIOR, "BG Test", 0, 0, 1),
-						new BecDefinition("ESSF", Region.INTERIOR, "ESSF Test", 4, 5, 6)
-				)
-		);
+		BecDefinition cdf = new BecDefinition("CDF", Region.COASTAL, "CDF Test");
+		BecDefinition cwh = new BecDefinition("CWH", Region.COASTAL, "CWH Test");
+		BecDefinition bg = new BecDefinition("BG", Region.INTERIOR, "BG Test");
+		BecDefinition essf = new BecDefinition("ESSF", Region.INTERIOR, "ESSF Test");
+		var lookup = new BecLookup(Arrays.asList(cdf, cwh, bg, essf));
 
-		var result = lookup.getBecsForScope("I", Substitution.PARTIAL_FILL_OK);
+		var result = lookup.getBecsForScope("I");
 
 		assertThat(
 				result,
-				containsInAnyOrder(
-						allOf(
-								hasProperty("alias", is("BG")), hasProperty("growthIndex", is(0)),
-								hasProperty("volumeIndex", is(0)), hasProperty("decayIndex", is(1))
-						),
-						allOf(
-								hasProperty("alias", is("ESSF")), hasProperty("growthIndex", is(4)),
-								hasProperty("volumeIndex", is(5)), hasProperty("decayIndex", is(6))
-						)
-				)
+				containsInAnyOrder(allOf(hasProperty("alias", is("BG"))), allOf(hasProperty("alias", is("ESSF"))))
 		);
 	}
 
 	@Test
 	void testGetByBecScope() throws Exception {
-		var lookup = new BecLookup(
-				Arrays.asList(
-						new BecDefinition("CDF", Region.COASTAL, "CDF Test", 1, 2, 3),
-						new BecDefinition("CWH", Region.COASTAL, "CWH Test", 2, 3, 4),
-						new BecDefinition("BG", Region.INTERIOR, "BG Test", 0, 0, 1),
-						new BecDefinition("ESSF", Region.INTERIOR, "ESSF Test", 4, 5, 6)
-				)
-		);
+		BecDefinition cdf = new BecDefinition("CDF", Region.COASTAL, "CDF Test");
+		BecDefinition cwh = new BecDefinition("CWH", Region.COASTAL, "CWH Test");
+		BecDefinition bg = new BecDefinition("BG", Region.INTERIOR, "BG Test");
+		BecDefinition essf = new BecDefinition("ESSF", Region.INTERIOR, "ESSF Test");
+		var lookup = new BecLookup(Arrays.asList(cdf, cwh, bg, essf));
 
-		var result = lookup.getBecsForScope("CDF", Substitution.PARTIAL_FILL_OK);
+		var result = lookup.getBecsForScope("CDF");
 
-		assertThat(
-				result,
-				containsInAnyOrder(
-						allOf(
-								hasProperty("alias", is("CDF")), hasProperty("growthIndex", is(1)),
-								hasProperty("volumeIndex", is(2)), hasProperty("decayIndex", is(3))
-						)
-				)
-		);
+		assertThat(result, containsInAnyOrder(allOf(hasProperty("alias", is("CDF")))));
 	}
 
 	@Test
 	void testGetByMissingScope() throws Exception {
-		var lookup = new BecLookup(
-				Arrays.asList(
-						new BecDefinition("CDF", Region.COASTAL, "CDF Test", 1, 2, 3),
-						new BecDefinition("CWH", Region.COASTAL, "CWH Test", 2, 3, 4),
-						new BecDefinition("BG", Region.INTERIOR, "BG Test", 0, 0, 1),
-						new BecDefinition("ESSF", Region.INTERIOR, "ESSF Test", 4, 5, 6)
-				)
-		);
+		BecDefinition cdf = new BecDefinition("CDF", Region.COASTAL, "CDF Test");
+		BecDefinition cwh = new BecDefinition("CWH", Region.COASTAL, "CWH Test");
+		BecDefinition bg = new BecDefinition("BG", Region.INTERIOR, "BG Test");
+		BecDefinition essf = new BecDefinition("ESSF", Region.INTERIOR, "ESSF Test");
+		var lookup = new BecLookup(Arrays.asList(cdf, cwh, bg, essf));
 
-		var result = lookup.getBecsForScope("X", Substitution.PARTIAL_FILL_OK);
+		var result = lookup.getBecsForScope("X");
 
 		assertThat(result, empty());
 	}

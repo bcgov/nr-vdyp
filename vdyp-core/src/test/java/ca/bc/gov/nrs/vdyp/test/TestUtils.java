@@ -97,7 +97,7 @@ public class TestUtils {
 
 		int i = 0;
 		for (var alias : aliases) {
-			becs.add(new BecDefinition(alias, Region.values()[i % 2], "Test " + alias, 2, 2, 2));
+			becs.add(new BecDefinition(alias, Region.values()[i % 2], "Test " + alias));
 			i++;
 		}
 
@@ -113,12 +113,7 @@ public class TestUtils {
 	}
 
 	private static BecDefinition makeBec(String id, Region region, String name) {
-		return new BecDefinition(
-				id, region, name, //
-				BecDefinitionParser.GROWTH_INDEX.get(id), //
-				BecDefinitionParser.VOLUME_INDEX.get(id), //
-				BecDefinitionParser.DECAY_INDEX.get(id)
-		);
+		return new BecDefinition(id, region, name);
 	}
 
 	/**

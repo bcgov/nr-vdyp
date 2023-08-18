@@ -19,6 +19,8 @@ import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
 public class EquationModifierParser
 		implements ControlMapSubResourceParser<MatrixMap2<Integer, Integer, Optional<Integer>>> {
 
+	// C_BAGRP1/BG1MODV
+
 	public static final String CONTROL_KEY = "EQN_MODIFIERS";
 
 	private static final String DEFAULT_KEY = "default";

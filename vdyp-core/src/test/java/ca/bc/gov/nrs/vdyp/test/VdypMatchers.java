@@ -32,7 +32,6 @@ import ca.bc.gov.nrs.vdyp.io.parse.ValueParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.ValueParser;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.BecLookup;
-import ca.bc.gov.nrs.vdyp.model.BecLookup.Substitution;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap;
 
@@ -326,13 +325,12 @@ public class VdypMatchers {
 	 * Matches a BecLookup that contains a bec with the specified alias that matches
 	 * the given matcher.
 	 */
-	public static Matcher<BecLookup>
-			hasBec(String alias, Matcher<Optional<BecDefinition>> valueMatcher, Substitution sub) {
+	public static Matcher<BecLookup> hasBec(String alias, Matcher<Optional<BecDefinition>> valueMatcher) {
 		return new TypeSafeDiagnosingMatcher<BecLookup>() {
 
 			@Override
 			protected boolean matchesSafely(BecLookup map, Description mismatchDescription) {
-				var result = map.get(alias, sub);
+				var result = map.get(alias);
 				if (Objects.isNull(result)) {
 					mismatchDescription.appendText("entry for ").appendValue(alias).appendText(" was not present");
 					return false;
@@ -354,14 +352,6 @@ public class VdypMatchers {
 
 		};
 
-	}
-
-	/**
-	 * Matches a BecLookup that contains a bec with the specified alias that matches
-	 * the given matcher.
-	 */
-	public static Matcher<BecLookup> hasBec(String alias, Matcher<Optional<BecDefinition>> valueMatcher) {
-		return hasBec(alias, valueMatcher, Substitution.PARTIAL_FILL_OK);
 	}
 
 	/**

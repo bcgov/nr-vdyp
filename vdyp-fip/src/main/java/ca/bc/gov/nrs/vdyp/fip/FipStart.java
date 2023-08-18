@@ -46,6 +46,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.BreakageParser;
 import ca.bc.gov.nrs.vdyp.io.parse.CloseUtilVolumeParser;
 import ca.bc.gov.nrs.vdyp.io.parse.DecayEquationGroupParser;
 import ca.bc.gov.nrs.vdyp.io.parse.DefaultEquationNumberParser;
+import ca.bc.gov.nrs.vdyp.io.parse.EquationModifierParser;
 import ca.bc.gov.nrs.vdyp.io.parse.GenusDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.StreamingParser;
@@ -58,7 +59,6 @@ import ca.bc.gov.nrs.vdyp.io.parse.VolumeEquationGroupParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VolumeNetDecayParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VolumeNetDecayWasteParser;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
-import ca.bc.gov.nrs.vdyp.model.BecLookup.Substitution;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.Layer;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
@@ -290,7 +290,7 @@ public class FipStart {
 		var crownClosure = fipLayer.getCrownClosure();
 
 		var becId = fipPolygon.getBiogeoclimaticZone();
-		var bec = BecDefinitionParser.getBecs(controlMap).get(becId, Substitution.SUBSTITUTE)
+		var bec = BecDefinitionParser.getBecs(controlMap).get(becId)
 				.orElseThrow(() -> new ProcessingException("Could not find BEC " + becId));
 		var region = bec.getRegion();
 
@@ -676,12 +676,13 @@ public class FipStart {
 	}
 
 	// GRPBA1FD
-	int findEquationGroup() {
+	int findEquationGroup(FipSpecies fipSpecies, BecDefinition bec) {
+		var growthBec = bec.getGrowthBec();
 		final var defaultGroupsMap = Utils.<MatrixMap2<String, String, Integer>>expectParsedControl(
 				controlMap, DefaultEquationNumberParser.CONTROL_KEY, MatrixMap2.class
 		);
-		final var modifierMap = Utils.<MatrixMap2<String, String, Integer>>expectParsedControl(
-				controlMap, DefaultEquationNumberParser.CONTROL_KEY, MatrixMap2.class
+		final var modifierMap = Utils.<MatrixMap2<Integer, Integer, Integer>>expectParsedControl(
+				controlMap, EquationModifierParser.CONTROL_KEY, MatrixMap2.class
 		);
 		return 0;
 	}
