@@ -219,21 +219,23 @@ public class FipStart {
 
 				Map<Layer, VdypLayer> processedLayers = new HashMap<>();
 
-				for (FipLayer fipLayer : polygon.getLayers().values()) {
-					switch (fipLayer.getLayer()) {
-					case PRIMARY:
-						assert fipLayer instanceof FipLayerPrimary;
-						var primaryLayer = processLayerAsPrimary(polygon, (FipLayerPrimary) fipLayer);
-						processedLayers.put(Layer.PRIMARY, primaryLayer);
-						break;
-					case VETERAN:
-						var veteranLayer = processLayerAsVeteran(polygon, fipLayer);
-						processedLayers.put(Layer.VETERAN, veteranLayer);
-						break;
-					default:
-						throw new UnsupportedOperationException();
-					}
+				var fipLayers = polygon.getLayers();
+				var fipVetLayer = Optional.ofNullable(fipLayers.get(Layer.VETERAN));
+				Optional<VdypLayer> resultVetLayer;
+				if (fipVetLayer.isPresent()) {
+					resultVetLayer = Optional.of(processLayerAsVeteran(polygon, fipVetLayer.get()));
+				} else {
+					resultVetLayer = Optional.empty();
 				}
+				resultVetLayer.ifPresent(layer -> processedLayers.put(Layer.VETERAN, layer));
+
+				FipLayerPrimary fipPrimeLayer = (FipLayerPrimary) fipLayers.get(Layer.PRIMARY);
+				assert fipPrimeLayer != null;
+				var resultPrimeLayer = processLayerAsPrimary(
+						polygon, fipPrimeLayer,
+						resultVetLayer.map(VdypLayer::getBaseAreaByUtilization).map(coe -> coe.get(0)).orElse(0f)
+				);
+				processedLayers.put(Layer.PRIMARY, resultPrimeLayer);
 
 			}
 		} catch (IOException | ResourceParseException ex) {
@@ -241,11 +243,11 @@ public class FipStart {
 		}
 	}
 
-	private VdypLayer processLayerAsPrimary(FipPolygon fipPolygon, FipLayerPrimary fipLayerPrimary)
+	private VdypLayer processLayerAsPrimary(FipPolygon fipPolygon, FipLayerPrimary fipLayer, float baseAreaOverstory)
 			throws ProcessingException {
 
 		var lookup = BecDefinitionParser.getBecs(controlMap);
-		var primarySpecies = findPrimarySpecies(fipLayerPrimary.getSpecies());
+		var primarySpecies = findPrimarySpecies(fipLayer.getSpecies());
 		// VDYP7 stores this in the common FIPL_1C/ITGL1 but only seems to use it
 		// locally
 		var itg = findItg(primarySpecies);
@@ -254,7 +256,18 @@ public class FipStart {
 				() -> new IllegalStateException("Could not find BEC " + fipPolygon.getBiogeoclimaticZone())
 		);
 
-		findEquationGroup(primarySpecies.get(0), bec, itg);
+		var baseAreaGroup = findBaseAreaGroup(primarySpecies.get(0), bec, itg);
+
+		var result = new VdypLayer(fipLayer.getPolygonIdentifier(), fipLayer.getLayer());
+
+		result.setAgeTotal(fipLayer.getAgeTotal());
+		result.setYearsToBreastHeight(fipLayer.getYearsToBreastHeight());
+		result.setBreastHeightAge(fipLayer.getAgeTotal() - fipLayer.getYearsToBreastHeight());
+		result.setHeight(fipLayer.getHeight());
+
+		var baseArea = estimatePrimaryBaseArea(
+				result.getHeight(), result.getBreastHeightAge(), baseAreaOverstory, fipLayer.getCrownClosure()
+		); // EMP040
 
 		return null; // TODO
 	}
@@ -680,7 +693,7 @@ public class FipStart {
 	}
 
 	// GRPBA1FD
-	int findEquationGroup(FipSpecies fipSpecies, BecDefinition bec, int itg) {
+	int findBaseAreaGroup(FipSpecies fipSpecies, BecDefinition bec, int itg) {
 		var growthBec = bec.getGrowthBec();
 		final var defaultGroupsMap = Utils.<MatrixMap2<String, String, Integer>>expectParsedControl(
 				controlMap, DefaultEquationNumberParser.CONTROL_KEY, MatrixMap2.class
@@ -1230,6 +1243,14 @@ public class FipStart {
 
 	}
 
+	// EMP040
+	private float
+			estimatePrimaryBaseArea(float height, float breastHeightAge, float baseAreaOverstory, float crownClosure) {
+		// TODO Auto-generated method stub
+		return 0f;
+	}
+
+	// EMP098
 	float estimateVeteranBaseArea(float height, float crownClosure, String genus, Region region)
 			throws ProcessingException {
 		@SuppressWarnings("unchecked")

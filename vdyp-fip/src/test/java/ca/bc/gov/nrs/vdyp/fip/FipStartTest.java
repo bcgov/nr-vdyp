@@ -1796,7 +1796,7 @@ class FipStartTest {
 
 		var spec1 = this.getTestSpecies("test polygon", Layer.PRIMARY, "F", valid());
 
-		var result = app.findEquationGroup(spec1, bec, 3);
+		var result = app.findBaseAreaGroup(spec1, bec, 3);
 
 		assertThat(result, is(55));
 	}
@@ -1812,7 +1812,7 @@ class FipStartTest {
 
 		var spec1 = this.getTestSpecies("test polygon", Layer.PRIMARY, "F", valid());
 
-		var result = app.findEquationGroup(spec1, bec, 2);
+		var result = app.findBaseAreaGroup(spec1, bec, 2);
 
 		assertThat(result, is(61)); // Modified from 57
 	}
