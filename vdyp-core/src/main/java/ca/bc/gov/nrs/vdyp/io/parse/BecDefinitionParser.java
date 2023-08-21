@@ -55,14 +55,29 @@ public class BecDefinitionParser implements ControlMapSubResourceParser<BecLooku
 		}, control);
 		var defaultBec = result.stream().filter(bec -> bec.getAlias().equals(DEFAULT_BEC)).findAny()
 				.orElseThrow(() -> new IllegalStateException("Could not find default BEC " + DEFAULT_BEC));
+		if (NON_GROWTH_BECS.contains(defaultBec.getAlias())) {
+			throw new IllegalStateException("Default BEC " + defaultBec + " is not a growth BEC.");
+		}
+		if (NON_DECAY_BECS.contains(defaultBec.getAlias())) {
+			throw new IllegalStateException("Default BEC " + defaultBec + " is not a decay BEC.");
+		}
+		if (NON_VOLUME_BECS.contains(defaultBec.getAlias())) {
+			throw new IllegalStateException("Default BEC " + defaultBec + " is not a volume BEC.");
+		}
 
 		// Map the BECs so they know what their contextual alternate BECs are
-		result = result.stream().map(
-				baseBec -> new BecDefinition(
-						baseBec, defaultBec, NON_GROWTH_BECS.contains(baseBec.getAlias()),
-						NON_VOLUME_BECS.contains(baseBec.getAlias()), NON_DECAY_BECS.contains(baseBec.getAlias())
-				)
-		).toList();
+		result = result.stream().map(baseBec -> {
+			var isGrowth = !NON_GROWTH_BECS.contains(baseBec.getAlias());
+			var isDecay = !NON_VOLUME_BECS.contains(baseBec.getAlias());
+			var isVolume = !NON_DECAY_BECS.contains(baseBec.getAlias());
+			if (isGrowth && isDecay && isVolume) {
+				return baseBec;
+			}
+			return new BecDefinition(
+					baseBec, defaultBec, !NON_GROWTH_BECS.contains(baseBec.getAlias()),
+					!NON_VOLUME_BECS.contains(baseBec.getAlias()), !NON_DECAY_BECS.contains(baseBec.getAlias())
+			);
+		}).toList();
 		return new BecLookup(result);
 	}
 

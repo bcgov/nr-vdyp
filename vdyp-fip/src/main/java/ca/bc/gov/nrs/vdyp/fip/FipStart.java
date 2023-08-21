@@ -244,15 +244,19 @@ public class FipStart {
 	private VdypLayer processLayerAsPrimary(FipPolygon fipPolygon, FipLayerPrimary fipLayerPrimary)
 			throws ProcessingException {
 
+		var lookup = BecDefinitionParser.getBecs(controlMap);
 		var primarySpecies = findPrimarySpecies(fipLayerPrimary.getSpecies());
-
 		// VDYP7 stores this in the common FIPL_1C/ITGL1 but only seems to use it
 		// locally
 		var itg = findItg(primarySpecies);
 
-		fipPolygon.getBiogeoclimaticZone();
-		// TODO Auto-generated method stub
-		return null;
+		var bec = lookup.get(fipPolygon.getBiogeoclimaticZone()).orElseThrow(
+				() -> new IllegalStateException("Could not find BEC " + fipPolygon.getBiogeoclimaticZone())
+		);
+
+		findEquationGroup(primarySpecies.get(0), bec, itg);
+
+		return null; // TODO
 	}
 
 	VdypLayer processLayerAsVeteran(FipPolygon fipPolygon, FipLayer fipLayer) throws ProcessingException {
@@ -676,15 +680,16 @@ public class FipStart {
 	}
 
 	// GRPBA1FD
-	int findEquationGroup(FipSpecies fipSpecies, BecDefinition bec) {
+	int findEquationGroup(FipSpecies fipSpecies, BecDefinition bec, int itg) {
 		var growthBec = bec.getGrowthBec();
 		final var defaultGroupsMap = Utils.<MatrixMap2<String, String, Integer>>expectParsedControl(
 				controlMap, DefaultEquationNumberParser.CONTROL_KEY, MatrixMap2.class
 		);
-		final var modifierMap = Utils.<MatrixMap2<Integer, Integer, Integer>>expectParsedControl(
+		final var modifierMap = Utils.<MatrixMap2<Integer, Integer, Optional<Integer>>>expectParsedControl(
 				controlMap, EquationModifierParser.CONTROL_KEY, MatrixMap2.class
 		);
-		return 0;
+		var defaultGroup = defaultGroupsMap.get(fipSpecies.getGenus(), growthBec.getAlias());
+		return modifierMap.getM(defaultGroup, itg).orElse(defaultGroup);
 	}
 
 	/**

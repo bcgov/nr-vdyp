@@ -4,7 +4,7 @@ import java.util.Optional;
 
 import ca.bc.gov.nrs.vdyp.common.Computed;
 
-public class BecDefinition extends AbstractSpeciesDefinition {
+public class BecDefinition extends AliasedEntity {
 
 	final Region region;
 
@@ -33,8 +33,8 @@ public class BecDefinition extends AbstractSpeciesDefinition {
 		this(
 				baseBec.getAlias(), baseBec.region, baseBec.name,
 				isGrowth ? baseBec.growthBec : Optional.of(defaultBec),
-				isGrowth ? baseBec.volumeBec : Optional.of(defaultBec),
-				isGrowth ? baseBec.decayBec : Optional.of(defaultBec)
+				isVolume ? baseBec.volumeBec : Optional.of(defaultBec),
+				isDecay ? baseBec.decayBec : Optional.of(defaultBec)
 		);
 	}
 

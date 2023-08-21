@@ -79,9 +79,8 @@ class FipStartTest {
 		var layer = Layer.PRIMARY;
 
 		// One polygon with one primary layer with one species entry
-
 		testWith(
-				Arrays.asList(getTestPolygon(polygonId, valid())), //
+				FipTestUtils.loadControlMap(), Arrays.asList(getTestPolygon(polygonId, valid())), //
 				Arrays.asList(layerMap(getTestPrimaryLayer(polygonId, valid()))), //
 				Arrays.asList(Collections.singletonList(getTestSpecies(polygonId, layer, valid()))), //
 				(app, controlMap) -> {
@@ -418,7 +417,7 @@ class FipStartTest {
 		var layer = Layer.PRIMARY;
 
 		testWith(
-				Arrays.asList(getTestPolygon(polygonId, valid())), //
+				FipTestUtils.loadControlMap(), Arrays.asList(getTestPolygon(polygonId, valid())), //
 				Arrays.asList(layerMap(getTestPrimaryLayer(polygonId, valid()))), //
 				Arrays.asList(
 						Arrays.asList(
@@ -530,7 +529,7 @@ class FipStartTest {
 				})
 		);
 		testWith(
-				Arrays.asList(getTestPolygon(polygonId, valid())), //
+				FipTestUtils.loadControlMap(), Arrays.asList(getTestPolygon(polygonId, valid())), //
 				Arrays.asList(layerMap(getTestPrimaryLayer(polygonId, valid()))), //
 				Arrays.asList(speciesList), //
 				(app, controlMap) -> {
@@ -565,7 +564,7 @@ class FipStartTest {
 				})
 		);
 		testWith(
-				Arrays.asList(getTestPolygon(polygonId, valid())), //
+				FipTestUtils.loadControlMap(), Arrays.asList(getTestPolygon(polygonId, valid())), //
 				Arrays.asList(layerMap(getTestPrimaryLayer(polygonId, valid()))), //
 				Arrays.asList(speciesList), //
 				(app, controlMap) -> {
@@ -1786,23 +1785,36 @@ class FipStartTest {
 
 	}
 
-	@Disabled
 	@Test
-	void testFindEquationGroup() throws Exception {
+	void testFindEquationGroupDefault() throws Exception {
 		var controlMap = FipTestUtils.loadControlMap();
 		var app = new FipStart();
 		app.setControlMap(controlMap);
 
 		var becLookup = BecDefinitionParser.getBecs(controlMap);
-		var essf = becLookup.get("ESSF").get();
+		var bec = becLookup.get("ESSF").get();
 
-		var spec1 = this.getTestSpecies("test polygon", Layer.PRIMARY, "F", spec -> {
-			spec.setPercentGenus(100);
-		});
+		var spec1 = this.getTestSpecies("test polygon", Layer.PRIMARY, "F", valid());
 
-		var result = app.findEquationGroup(spec1, essf);
+		var result = app.findEquationGroup(spec1, bec, 3);
 
-		fail(); // TODO add assertions
+		assertThat(result, is(55));
+	}
+
+	@Test
+	void testFindEquationGroupModified() throws Exception {
+		var controlMap = FipTestUtils.loadControlMap();
+		var app = new FipStart();
+		app.setControlMap(controlMap);
+
+		var becLookup = BecDefinitionParser.getBecs(controlMap);
+		var bec = becLookup.get("PP").get();
+
+		var spec1 = this.getTestSpecies("test polygon", Layer.PRIMARY, "F", valid());
+
+		var result = app.findEquationGroup(spec1, bec, 2);
+
+		assertThat(result, is(61)); // Modified from 57
 	}
 
 	void vetUtilization(String property, Consumer<Function<Float, Matcher<VdypUtilizationHolder>>> body) {

@@ -5,11 +5,13 @@ import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.hasProperty;
+import static org.hamcrest.Matchers.sameInstance;
 
 import java.util.Collections;
 
 import static org.hamcrest.Matchers.equalTo;
 
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.model.Region;
@@ -35,6 +37,9 @@ class BecDefinitionParserTest {
 						)
 				)
 		);
+		assertThat(result.get("AT").get().getGrowthBec(), sameInstance(result.get("ESSF").get()));
+		assertThat(result.get("AT").get().getDecayBec(), sameInstance(result.get("AT").get()));
+		assertThat(result.get("AT").get().getVolumeBec(), sameInstance(result.get("AT").get()));
 		assertThat(
 				result,
 				hasBec(
@@ -48,6 +53,9 @@ class BecDefinitionParserTest {
 						)
 				)
 		);
+		assertThat(result.get("BG").get().getGrowthBec(), sameInstance(result.get("ESSF").get()));
+		assertThat(result.get("BG").get().getDecayBec(), sameInstance(result.get("BG").get()));
+		assertThat(result.get("BG").get().getVolumeBec(), sameInstance(result.get("ESSF").get()));
 		assertThat(
 				result,
 				hasBec(
@@ -61,6 +69,9 @@ class BecDefinitionParserTest {
 						)
 				)
 		);
+		assertThat(result.get("BWBS").get().getGrowthBec(), sameInstance(result.get("BWBS").get()));
+		assertThat(result.get("BWBS").get().getDecayBec(), sameInstance(result.get("BWBS").get()));
+		assertThat(result.get("BWBS").get().getVolumeBec(), sameInstance(result.get("BWBS").get()));
 		assertThat(
 				result,
 				hasBec(
@@ -74,6 +85,9 @@ class BecDefinitionParserTest {
 						)
 				)
 		);
+		assertThat(result.get("CDF").get().getGrowthBec(), sameInstance(result.get("CDF").get()));
+		assertThat(result.get("CDF").get().getDecayBec(), sameInstance(result.get("CDF").get()));
+		assertThat(result.get("CDF").get().getVolumeBec(), sameInstance(result.get("CDF").get()));
 		assertThat(
 				result,
 				hasBec(
@@ -87,6 +101,9 @@ class BecDefinitionParserTest {
 						)
 				)
 		);
+		assertThat(result.get("CWH").get().getGrowthBec(), sameInstance(result.get("CWH").get()));
+		assertThat(result.get("CWH").get().getDecayBec(), sameInstance(result.get("CWH").get()));
+		assertThat(result.get("CWH").get().getVolumeBec(), sameInstance(result.get("CWH").get()));
 		assertThat(
 				result,
 				hasBec(
@@ -100,6 +117,9 @@ class BecDefinitionParserTest {
 						)
 				)
 		);
+		assertThat(result.get("ESSF").get().getGrowthBec(), sameInstance(result.get("ESSF").get()));
+		assertThat(result.get("ESSF").get().getDecayBec(), sameInstance(result.get("ESSF").get()));
+		assertThat(result.get("ESSF").get().getVolumeBec(), sameInstance(result.get("ESSF").get()));
 		assertThat(
 				result,
 				hasBec(
@@ -113,6 +133,9 @@ class BecDefinitionParserTest {
 						)
 				)
 		);
+		assertThat(result.get("ICH").get().getGrowthBec(), sameInstance(result.get("ICH").get()));
+		assertThat(result.get("ICH").get().getDecayBec(), sameInstance(result.get("ICH").get()));
+		assertThat(result.get("ICH").get().getVolumeBec(), sameInstance(result.get("ICH").get()));
 		assertThat(
 				result,
 				hasBec(
@@ -126,6 +149,9 @@ class BecDefinitionParserTest {
 						)
 				)
 		);
+		assertThat(result.get("IDF").get().getGrowthBec(), sameInstance(result.get("IDF").get()));
+		assertThat(result.get("IDF").get().getDecayBec(), sameInstance(result.get("IDF").get()));
+		assertThat(result.get("IDF").get().getVolumeBec(), sameInstance(result.get("IDF").get()));
 		assertThat(
 				result,
 				hasBec(
@@ -139,6 +165,9 @@ class BecDefinitionParserTest {
 						)
 				)
 		);
+		assertThat(result.get("MH").get().getGrowthBec(), sameInstance(result.get("MH").get()));
+		assertThat(result.get("MH").get().getDecayBec(), sameInstance(result.get("MH").get()));
+		assertThat(result.get("MH").get().getVolumeBec(), sameInstance(result.get("MH").get()));
 		assertThat(
 				result,
 				hasBec(
@@ -152,6 +181,9 @@ class BecDefinitionParserTest {
 						)
 				)
 		);
+		assertThat(result.get("MS").get().getGrowthBec(), sameInstance(result.get("MS").get()));
+		assertThat(result.get("MS").get().getDecayBec(), sameInstance(result.get("MS").get()));
+		assertThat(result.get("MS").get().getVolumeBec(), sameInstance(result.get("MS").get()));
 		assertThat(
 				result,
 				hasBec(
@@ -165,6 +197,9 @@ class BecDefinitionParserTest {
 						)
 				)
 		);
+		assertThat(result.get("PP").get().getGrowthBec(), sameInstance(result.get("PP").get()));
+		assertThat(result.get("PP").get().getDecayBec(), sameInstance(result.get("PP").get()));
+		assertThat(result.get("PP").get().getVolumeBec(), sameInstance(result.get("PP").get()));
 		assertThat(
 				result,
 				hasBec(
@@ -178,6 +213,9 @@ class BecDefinitionParserTest {
 						)
 				)
 		);
+		assertThat(result.get("SBPS").get().getGrowthBec(), sameInstance(result.get("SBPS").get()));
+		assertThat(result.get("SBPS").get().getDecayBec(), sameInstance(result.get("SBPS").get()));
+		assertThat(result.get("SBPS").get().getVolumeBec(), sameInstance(result.get("SBPS").get()));
 		assertThat(
 				result,
 				hasBec(
@@ -191,6 +229,9 @@ class BecDefinitionParserTest {
 						)
 				)
 		);
+		assertThat(result.get("SBS").get().getGrowthBec(), sameInstance(result.get("SBS").get()));
+		assertThat(result.get("SBS").get().getDecayBec(), sameInstance(result.get("SBS").get()));
+		assertThat(result.get("SBS").get().getVolumeBec(), sameInstance(result.get("SBS").get()));
 		assertThat(
 				result,
 				hasBec(
@@ -204,6 +245,9 @@ class BecDefinitionParserTest {
 						)
 				)
 		);
+		assertThat(result.get("SWB").get().getGrowthBec(), sameInstance(result.get("SWB").get()));
+		assertThat(result.get("SWB").get().getDecayBec(), sameInstance(result.get("SWB").get()));
+		assertThat(result.get("SWB").get().getVolumeBec(), sameInstance(result.get("SWB").get()));
 	}
 
 }

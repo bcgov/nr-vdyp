@@ -2,7 +2,7 @@ package ca.bc.gov.nrs.vdyp.model;
 
 import java.util.Optional;
 
-public class GenusDefinition extends AbstractSpeciesDefinition {
+public class GenusDefinition extends AliasedEntity {
 
 	final Optional<Integer> preference;
 
