@@ -296,25 +296,34 @@ public class SiteInformationTableSceneController implements Initializable {
 			return;
 		}
 		
-		String[] passedDBHLabels = new String[4]; // for passing labels into ReportInformation
+		String[] passedDBHLabels = new String[6]; // impossible to be longer than 6
 		int i = 0;
 		 for(ChoiceBox<String> species : speciesChoiceBoxes) {
 			String speciesText = species.getValue();
 			
 			if(!speciesText.equals("Select Species")) {
-				if(i < 4) { //add first 4 pass to ReportInformation scene
-					passedDBHLabels[i] = speciesText;
-					i++;
-				}
-				speciesText = speciesText.substring(0,2); // we only need the two letter identifier
-				siteSpecies.getItems().add(speciesText.substring(0,2)); //add to choicebox in this scene
+				passedDBHLabels[i] = speciesText;
+				i++;
 			}
 		}
-		siteSpecies.setValue(speciesChoiceBoxes.get(0).getValue().substring(0,2)); //set default
-		
-		
+				
        setDBHLabels(passedDBHLabels); 
+       
+       //displayChoices();
 
+	}
+	
+	public void displayChoices() {
+		String[] choices = getDBHLabels();
+		
+		for(int i = 0; i < choices.length; i++) {
+			if(choices[i] == null) {
+				break;
+			} else {
+				siteSpecies.getItems().add(choices[i].substring(0,2));
+			}
+		}
+		siteSpecies.setValue(choices[0].substring(0,2)); //set default
 	}
 
 }

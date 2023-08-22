@@ -133,6 +133,14 @@ public class StandDensityTableSceneController implements Initializable {
 	public void switchToScene2(ActionEvent event) throws IOException {
 		NewTableSceneController newTableSceneController = new NewTableSceneController();
 		newTableSceneController.switchToScene2(event);
+		
+		/*FXMLLoader loader = new FXMLLoader(getClass().getResource("../view/SiteInformationTableScene.fxml"));
+		Parent root = loader.load();
+		
+		Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+		Scene scene = new Scene(root);
+		stage.setScene(scene);
+		stage.show(); */
 	}
 
 	/**

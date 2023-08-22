@@ -381,7 +381,7 @@ public class NewTableSceneController implements Initializable {
 			
 			SiteInformationTableSceneController siteInformationTableSceneController = loader.getController();
 			siteInformationTableSceneController.displayChoicesPassedIn(speciesChoiceBoxes);  //pass in selection to next page
-		
+			siteInformationTableSceneController.displayChoices();
 			
 			Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
 			Scene scene = new Scene(root);
