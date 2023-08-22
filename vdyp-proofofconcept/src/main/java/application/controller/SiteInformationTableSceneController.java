@@ -285,13 +285,13 @@ public class SiteInformationTableSceneController implements Initializable {
 	}
 	
 	/**
-	 * Displays the choices passed in through a list of species choice boxes.
+	 * Saves the choices passed in through a list of species choice boxes.
 	 * It also saves the passed in labels so they can be accessed later
 	 *
 	 * @param speciesChoiceBoxes A list of ChoiceBox instances containing species choices.
 	 * @throws IOException if an I/O error occurs.
 	 */
-	public void displayChoicesPassedIn(List<ChoiceBox<String>> speciesChoiceBoxes) throws IOException {
+	public void saveChoicesPassedIn(List<ChoiceBox<String>> speciesChoiceBoxes) throws IOException {
 		if(speciesChoiceBoxes.isEmpty()) {
 			return;
 		}
@@ -308,11 +308,11 @@ public class SiteInformationTableSceneController implements Initializable {
 		}
 				
        setDBHLabels(passedDBHLabels); 
-       
-       //displayChoices();
-
 	}
 	
+	/**
+	 * This displays the selected choices from the NewTableScene and adds them to the site species choice box in this scene
+	 */
 	public void displayChoices() {
 		String[] choices = getDBHLabels();
 		

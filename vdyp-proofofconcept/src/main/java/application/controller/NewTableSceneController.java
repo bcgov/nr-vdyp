@@ -380,7 +380,7 @@ public class NewTableSceneController implements Initializable {
 			Parent root = loader.load();
 			
 			SiteInformationTableSceneController siteInformationTableSceneController = loader.getController();
-			siteInformationTableSceneController.displayChoicesPassedIn(speciesChoiceBoxes);  //pass in selection to next page
+			siteInformationTableSceneController.saveChoicesPassedIn(speciesChoiceBoxes);  //pass in selection to next page
 			siteInformationTableSceneController.displayChoices();
 			
 			Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
