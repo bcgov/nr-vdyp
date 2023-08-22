@@ -210,7 +210,21 @@ class FipControlParserTest {
 		var parser = new FipControlParser();
 		var result = parse(parser, ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
-				result, (Matcher) hasSpecificEntry(FipControlParser.COE_BA, allOf(mmHasEntry(is(2.0028f), 0, "AT", 1)))
+				result,
+				(Matcher) hasSpecificEntry(
+						FipControlParser.COE_BA,
+						allOf(
+								mmHasEntry(
+										coe(
+												0,
+												contains(
+														2.0028f, 0.2426f, 10.1668f, -0.9042f, -5.0012f, -0.0068f,
+														-0.0095f, 1.1938f, -0.2749f, 0f
+												)
+										), "AT", "AC"
+								)
+						)
+				)
 		);
 	}
 
@@ -219,7 +233,21 @@ class FipControlParserTest {
 		var parser = new FipControlParser();
 		var result = parse(parser, ControlFileParserTest.class, "FIPSTART.CTR");
 		assertThat(
-				result, (Matcher) hasSpecificEntry(FipControlParser.COE_DQ, allOf(mmHasEntry(is(6.6190f), 0, "AT", 1)))
+				result,
+				(Matcher) hasSpecificEntry(
+						FipControlParser.COE_DQ,
+						allOf(
+								mmHasEntry(
+										coe(
+												0,
+												contains(
+														6.6190f, -0.5579f, -1.9421f, -0.7092f, -5.2290f, 4.8473f,
+														0.2629f, -0.0062f, 0f, 0f
+												)
+										), "AT", "AC"
+								)
+						)
+				)
 		);
 	}
 

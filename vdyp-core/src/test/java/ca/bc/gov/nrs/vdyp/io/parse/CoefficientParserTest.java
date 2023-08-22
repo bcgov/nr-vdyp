@@ -1,7 +1,9 @@
 package ca.bc.gov.nrs.vdyp.io.parse;
 
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.coe;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.mmHasEntry;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -26,12 +28,12 @@ class CoefficientParserTest {
 		Map<String, Object> controlMap = new HashMap<>();
 
 		TestUtils.populateControlMapBec(controlMap);
+		TestUtils.populateControlMapGenus(controlMap);
 
 		var result = parser.parse(is, controlMap);
 
-		assertThat(result, mmHasEntry(is(2.0028f), 0, "B1", (Integer) 1)); // COEs are 0 indexed, species are 1
-																			// indexed
-		assertThat(result, mmHasEntry(is(-0.5343f), 0, "B1", (Integer) 2));
+		assertThat(result, mmHasEntry(coe(0, contains(2.0028f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f)), "B1", "S1"));
+		assertThat(result, mmHasEntry(coe(0, contains(-0.5343f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f)), "B1", "S2"));
 
 	}
 
@@ -47,6 +49,7 @@ class CoefficientParserTest {
 		Map<String, Object> controlMap = new HashMap<>();
 
 		TestUtils.populateControlMapBec(controlMap);
+		TestUtils.populateControlMapGenus(controlMap);
 
 		assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
 
@@ -64,6 +67,7 @@ class CoefficientParserTest {
 		Map<String, Object> controlMap = new HashMap<>();
 
 		TestUtils.populateControlMapBec(controlMap);
+		TestUtils.populateControlMapGenus(controlMap);
 
 		assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
 
@@ -81,12 +85,14 @@ class CoefficientParserTest {
 		Map<String, Object> controlMap = new HashMap<>();
 
 		TestUtils.populateControlMapBec(controlMap);
+		TestUtils.populateControlMapGenus(controlMap);
 
 		var result = parser.parse(is, controlMap);
 
-		assertThat(result, mmHasEntry(is(2.0028f), 0, "B1", (Integer) 1));
-		assertThat(result, mmHasEntry(is(2.0028f - 0.5343f), 0, "B1", (Integer) 2));
-
+		assertThat(result, mmHasEntry(coe(0, contains(2.0028f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f)), "B1", "S1"));
+		assertThat(
+				result, mmHasEntry(coe(0, contains(2.0028f - 0.5343f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f)), "B1", "S2")
+		);
 	}
 
 	@Test
@@ -101,11 +107,12 @@ class CoefficientParserTest {
 		Map<String, Object> controlMap = new HashMap<>();
 
 		TestUtils.populateControlMapBec(controlMap);
+		TestUtils.populateControlMapGenus(controlMap);
 
 		var result = parser.parse(is, controlMap);
 
-		assertThat(result, mmHasEntry(is(2.0028f), 0, "B1", (Integer) 1));
-		assertThat(result, mmHasEntry(is(2.0028f), 0, "B1", (Integer) 2));
+		assertThat(result, mmHasEntry(coe(0, contains(2.0028f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f)), "B1", "S1"));
+		assertThat(result, mmHasEntry(coe(0, contains(2.0028f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f)), "B1", "S2"));
 
 	}
 

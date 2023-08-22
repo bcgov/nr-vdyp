@@ -265,9 +265,7 @@ public class FipStart {
 		result.setBreastHeightAge(fipLayer.getAgeTotal() - fipLayer.getYearsToBreastHeight());
 		result.setHeight(fipLayer.getHeight());
 
-		var baseArea = estimatePrimaryBaseArea(
-				result.getHeight(), result.getBreastHeightAge(), baseAreaOverstory, fipLayer.getCrownClosure()
-		); // EMP040
+		var baseArea = estimatePrimaryBaseArea(fipLayer, result.getBreastHeightAge(), baseAreaOverstory); // EMP040
 
 		return null; // TODO
 	}
@@ -717,6 +715,8 @@ public class FipStart {
 	 * where the values for the layer are the sum of those for its species.
 	 */
 	static final Collection<PropertyDescriptor> SUMMABLE_UTILIZATION_VECTOR_ACCESSORS;
+
+	private static final float LOW_CROWN_CLOSURE = 10f;
 
 	static {
 		try {
@@ -1244,9 +1244,13 @@ public class FipStart {
 	}
 
 	// EMP040
-	private float
-			estimatePrimaryBaseArea(float height, float breastHeightAge, float baseAreaOverstory, float crownClosure) {
-		// TODO Auto-generated method stub
+	float estimatePrimaryBaseArea(FipLayer fipLayer, float breastHeightAge, float baseAreaOverstory) {
+		var leadSpecies = fipLayer.getSpecies().values().stream()
+				.sorted(Utils.compareUsing(FipSpecies::getFractionGenus)).findFirst().orElseThrow();
+
+		boolean lowCrownClosure = fipLayer.getCrownClosure() < LOW_CROWN_CLOSURE;
+		float crownClosure = lowCrownClosure ? LOW_CROWN_CLOSURE : fipLayer.getCrownClosure();
+
 		return 0f;
 	}
 

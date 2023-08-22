@@ -18,7 +18,7 @@ public abstract class BaseVdypSpecies {
 	// This is computed from percentGenus, but VDYP7 computes it in a way that might
 	// lead to a slight difference so it's stored separately and can be modified.
 	@Computed
-	float fractionGenus; // RFBASP0/FR
+	float fractionGenus; // FRBASP0/FR
 
 	Map<String, Float> speciesPercent; // Map from
 
