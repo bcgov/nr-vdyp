@@ -7,6 +7,7 @@ import java.util.function.UnaryOperator;
 import java.util.stream.DoubleStream;
 
 import ca.bc.gov.nrs.vdyp.common.FloatBinaryOperator;
+import ca.bc.gov.nrs.vdyp.common.FloatUnaryOperator;
 
 /**
  * Fixed length list of floats that can be accessed using an offset index
@@ -143,4 +144,30 @@ public class Coefficients extends AbstractList<Float> implements List<Float> {
 		result.pairwiseInPlace(coe2, op);
 		return result;
 	}
+
+	/**
+	 * Perform the operation on each coefficient in place
+	 *
+	 * @param op
+	 */
+	public void scalarInPlace(FloatUnaryOperator op) {
+		int max = getIndexFrom() + size();
+		for (int i = getIndexFrom(); i < max; i++) {
+			setCoe(i, op.applyAsFloat(getCoe(i)));
+		}
+	}
+
+	/**
+	 * Perform the operation on each coefficient and return the result
+	 *
+	 * @param op
+	 * @return
+	 */
+	public Coefficients scalar(FloatUnaryOperator op) {
+		var result = new Coefficients(this, this.getIndexFrom());
+		result.scalarInPlace(op);
+		return result;
+
+	}
+
 }

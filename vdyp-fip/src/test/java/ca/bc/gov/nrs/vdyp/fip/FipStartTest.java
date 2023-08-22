@@ -424,7 +424,7 @@ class FipStartTest {
 								//
 								getTestSpecies(polygonId, layer, "B", x -> {
 									x.setPercentGenus(75f);
-								}), getTestSpecies(polygonId, layer, "P", x -> {
+								}), getTestSpecies(polygonId, layer, "C", x -> {
 									x.setPercentGenus(25f);
 								})
 						)
@@ -452,7 +452,7 @@ class FipStartTest {
 								//
 								getTestSpecies(polygonId, layer, "B", x -> {
 									x.setPercentGenus(75 - 1f);
-								}), getTestSpecies(polygonId, layer, "P", x -> {
+								}), getTestSpecies(polygonId, layer, "C", x -> {
 									x.setPercentGenus(25f);
 								})
 						)
@@ -524,7 +524,7 @@ class FipStartTest {
 				//
 				getTestSpecies(polygonId, layer, "B", x -> {
 					x.setPercentGenus(75f);
-				}), getTestSpecies(polygonId, layer, "P", x -> {
+				}), getTestSpecies(polygonId, layer, "C", x -> {
 					x.setPercentGenus(25f);
 				})
 		);
@@ -541,7 +541,7 @@ class FipStartTest {
 							speciesList, contains(
 									//
 									allOf(hasProperty("genus", is("B")), hasProperty("fractionGenus", is(0.75f))), //
-									allOf(hasProperty("genus", is("P")), hasProperty("fractionGenus", is(0.25f)))//
+									allOf(hasProperty("genus", is("C")), hasProperty("fractionGenus", is(0.25f)))//
 							)
 					);
 				}
@@ -559,7 +559,7 @@ class FipStartTest {
 				//
 				getTestSpecies(polygonId, layer, "B", x -> {
 					x.setPercentGenus(75 + 0.009f);
-				}), getTestSpecies(polygonId, layer, "P", x -> {
+				}), getTestSpecies(polygonId, layer, "C", x -> {
 					x.setPercentGenus(25f);
 				})
 		);
@@ -576,7 +576,7 @@ class FipStartTest {
 							speciesList, contains(
 									//
 									allOf(hasProperty("genus", is("B")), hasProperty("fractionGenus", is(0.75002253f))), //
-									allOf(hasProperty("genus", is("P")), hasProperty("fractionGenus", is(0.2499775f)))//
+									allOf(hasProperty("genus", is("C")), hasProperty("fractionGenus", is(0.2499775f)))//
 							)
 					);
 				}
