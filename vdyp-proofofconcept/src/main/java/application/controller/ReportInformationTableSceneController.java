@@ -78,7 +78,7 @@ public class ReportInformationTableSceneController implements Initializable {
 	private Label dbhSpecies3;
 	@FXML
 	private Label dbhSpecies4;
-		
+
 	private static final String VOLUME = "Volume";
 
 	/**
@@ -137,7 +137,7 @@ public class ReportInformationTableSceneController implements Initializable {
 
 	/**
 	 * Sets default values for various controls in the window.
-	 * 
+	 *
 	 * The default values and control states are as follows:
 	 * @formatter:off
 	 * 		- startingAge: Default value set to 0, with a range from 0 to 500 and an increment of 10.
@@ -189,21 +189,21 @@ public class ReportInformationTableSceneController implements Initializable {
 
 		culminationValues.setDisable(true);// always disabled in WinVDYP
 
-		updateDBHLabels();	
+		updateDBHLabels();
 	}
 
 	/**
-	 * Gets the dbh labels from SiteInformationTableSceneController and
-	 * updates the DBH labels on the user interface.
+	 * Gets the dbh labels from SiteInformationTableSceneController and updates the
+	 * DBH labels on the user interface.
 	 */
 	private void updateDBHLabels() {
 		String[] dbhLabels = SiteInformationTableSceneController.getDBHLabels();
-        dbhSpecies1.setText(dbhLabels[0]);
-        dbhSpecies2.setText(dbhLabels[1]);
-        dbhSpecies3.setText(dbhLabels[2]);
-        dbhSpecies4.setText(dbhLabels[3]);
+		dbhSpecies1.setText(dbhLabels[0]);
+		dbhSpecies2.setText(dbhLabels[1]);
+		dbhSpecies3.setText(dbhLabels[2]);
+		dbhSpecies4.setText(dbhLabels[3]);
 	}
-	
+
 	// Bottom menu bar
 	/**
 	 * Switches the application to Scene 4 - StandDensityTableScene.
@@ -227,7 +227,6 @@ public class ReportInformationTableSceneController implements Initializable {
 		MainController.getNewWindow().close();
 	}
 
-	
 	/**
 	 * Handles the run button action event.
 	 *
@@ -314,6 +313,5 @@ public class ReportInformationTableSceneController implements Initializable {
 		}
 
 	}
-
 
 }

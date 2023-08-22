@@ -64,9 +64,9 @@ public class MainController {
 		// Set position and relative size
 		setSecondaryWindowPosition(newWindow, primaryStage);
 		setSecondaryWindowSize(newWindow, primaryStage);
-		
-		 // Set main window as owner and set modality
-	    newWindow.initOwner(primaryStage);
+
+		// Set main window as owner and set modality
+		newWindow.initOwner(primaryStage);
 
 		newWindow.setScene(secondScene);
 		newWindow.show();

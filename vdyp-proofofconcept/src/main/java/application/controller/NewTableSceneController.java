@@ -146,13 +146,12 @@ public class NewTableSceneController implements Initializable {
 				"PL - Lodgepole Pine", "PW - Western White Pine", "PY - Ponderosa (Yellow) Pine", "S - Spruce",
 				"SB - Black Spruce", "SE - Engelmann Spruce", "SS - Sitka Spruce", "SW - White Spruce",
 				"YC - Yellow Cedar" };
-		
 
 		// Add "Select species" as the item for each ChoiceBox and set items
 		for (ChoiceBox<String> choiceBox : speciesChoiceBoxes) {
 			choiceBox.getItems().addAll(treeSpecies);
 		}
-		
+
 		// Set Default values
 		setDefaults();
 
@@ -364,25 +363,26 @@ public class NewTableSceneController implements Initializable {
 	}
 
 	/**
-	 * Switches the application to Scene 2 - SiteInformationTableScene.
-	 * Also passes the speciesChoiceBoxes to the next scene
+	 * Switches the application to Scene 2 - SiteInformationTableScene. Also passes
+	 * the speciesChoiceBoxes to the next scene
 	 *
 	 * @param event The ActionEvent triggering the scene switch.
 	 * @throws IOException If an I/O error occurs during scene loading.
 	 */
 	public void switchToScene2(ActionEvent event) throws IOException {
 		int total = getTotalPercent();
-		
+
 		if (total != 100 && total != 0) {
 			showErrorPopup("Total percent does not total 100%");
 		} else {
 			FXMLLoader loader = new FXMLLoader(getClass().getResource("../view/SiteInformationTableScene.fxml"));
 			Parent root = loader.load();
-			
+
 			SiteInformationTableSceneController siteInformationTableSceneController = loader.getController();
-			siteInformationTableSceneController.saveChoicesPassedIn(speciesChoiceBoxes);  //pass in selection to next page
+			siteInformationTableSceneController.saveChoicesPassedIn(speciesChoiceBoxes); // pass in selection to next
+																							// page
 			siteInformationTableSceneController.displayChoices();
-			
+
 			Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
 			Scene scene = new Scene(root);
 			stage.setScene(scene);
