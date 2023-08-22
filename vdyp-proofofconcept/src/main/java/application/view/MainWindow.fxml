@@ -11,7 +11,7 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane prefHeight="400.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/20.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.controller.MainController">
+<BorderPane prefHeight="400.0" prefWidth="700.0" xmlns="http://javafx.com/javafx/17.0.7" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.controller.MainController">
    <top>
       <MenuBar prefHeight="25.0" prefWidth="1000.0" BorderPane.alignment="CENTER">
          <menus>

@@ -392,7 +392,7 @@ public class NewTableSceneController implements Initializable {
 	// End of bottom menu buttons
 
 	/**
-	 * Displays an error popup with the specified error message.
+	 * Displays an error pop up with the specified error message.
 	 *
 	 * This method creates an Alert dialog of type INFORMATION to display an error
 	 * message to the user. The title of the dialog is set to "Error", and the

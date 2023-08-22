@@ -68,7 +68,7 @@ public class MainController {
 		
 		 // Set main window as owner and set modality
 	    newWindow.initOwner(primaryStage);
-	    newWindow.initModality(Modality.WINDOW_MODAL);
+	    newWindow.initModality(Modality.NONE);
 
 		newWindow.setScene(secondScene);
 		newWindow.show();
