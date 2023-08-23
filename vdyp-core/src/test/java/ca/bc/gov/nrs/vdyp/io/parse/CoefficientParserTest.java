@@ -22,7 +22,7 @@ class CoefficientParserTest {
 		var parser = new CoefficientParser("TEST");
 
 		var is = TestUtils.makeStream(
-				"B1   A0 1  2.0028 -0.5343  1.3949 -0.3683 -0.3343  0.5699  0.2314  0.0528  0.2366 -0.3343  0.5076  0.5076  0.6680 -0.1353  1.2445 -0.4507"
+				"B1   A0 2  2.0028 -0.5343  1.3949 -0.3683 -0.3343  0.5699  0.2314  0.0528  0.2366 -0.3343  0.5076  0.5076  0.6680 -0.1353  1.2445 -0.4507"
 		);
 
 		Map<String, Object> controlMap = new HashMap<>();
@@ -79,7 +79,7 @@ class CoefficientParserTest {
 		var parser = new CoefficientParser("TEST");
 
 		var is = TestUtils.makeStream(
-				"B1   A0 2  2.0028 -0.5343  1.3949 -0.3683 -0.3343  0.5699  0.2314  0.0528  0.2366 -0.3343  0.5076  0.5076  0.6680 -0.1353  1.2445 -0.4507"
+				"B1   A0 1  2.0028 -0.5343  1.3949 -0.3683 -0.3343  0.5699  0.2314  0.0528  0.2366 -0.3343  0.5076  0.5076  0.6680 -0.1353  1.2445 -0.4507"
 		);
 
 		Map<String, Object> controlMap = new HashMap<>();

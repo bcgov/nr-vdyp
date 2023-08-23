@@ -1817,6 +1817,46 @@ class FipStartTest {
 		assertThat(result, is(61)); // Modified from 57
 	}
 
+	@Test
+	void testEstimatePrimaryBaseArea() throws Exception {
+		var controlMap = FipTestUtils.loadControlMap();
+		var app = new FipStart();
+		app.setControlMap(controlMap);
+
+		var becLookup = BecDefinitionParser.getBecs(controlMap);
+		var bec = becLookup.get("CWH").get();
+
+		var layer = this.getTestPrimaryLayer("test polygon", l -> {
+			l.setAgeTotal(85f);
+			l.setHeight(38.2999992f);
+			l.setSiteIndex(28.6000004f);
+			l.setCrownClosure(82.8000031f);
+			l.setYearsToBreastHeight(5.4000001f);
+			l.setSiteCurveNumber(Optional.of(34));
+			l.setSiteGenus("H");
+			l.setSiteSpecies("H");
+		});
+
+		var spec1 = this.getTestSpecies("test polygon", Layer.PRIMARY, "B", s -> {
+			s.setPercentGenus(33f);
+			s.setFractionGenus(0.330000013f);
+		});
+		var spec2 = this.getTestSpecies("test polygon", Layer.PRIMARY, "H", s -> {
+			s.setPercentGenus(67f);
+			s.setFractionGenus(0.670000017f);
+		});
+
+		Map<String, FipSpecies> allSpecies = new HashMap<>();
+		allSpecies.put(spec1.getGenus(), spec1);
+		allSpecies.put(spec2.getGenus(), spec2);
+
+		layer.setSpecies(allSpecies);
+
+		var result = app.estimatePrimaryBaseArea(layer, bec, 1f, 79.5999985f, 3.13497972f);
+
+		assertThat(result, closeTo(62.6653595f));
+	}
+
 	void vetUtilization(String property, Consumer<Function<Float, Matcher<VdypUtilizationHolder>>> body) {
 		Function<Float, Matcher<VdypUtilizationHolder>> generator = v -> hasProperty(
 				property, coe(-1, contains(is(0f), closeTo(v), is(0f), is(0f), is(0f), closeTo(v)))

@@ -23,7 +23,7 @@ import ca.bc.gov.nrs.vdyp.model.MatrixMap3Impl;
 public class CoefficientParser implements ControlMapSubResourceParser<MatrixMap2<String, String, Coefficients>> {
 
 	public static final String BA_CONTROL_KEY = "COE_BA"; // V7COE040/COE040
-	public static final String DQ_CONTROL_KEY = "COE_DQ";
+	public static final String DQ_CONTROL_KEY = "COE_DQ"; // V7COE040/COE041
 
 	public static final String BEC_KEY = "bec";
 	public static final String COEFFICIENT_INDEX_KEY = "index";
@@ -81,10 +81,10 @@ public class CoefficientParser implements ControlMapSubResourceParser<MatrixMap2
 				default:
 					c = coefficients.get(0);
 					break;
-				case 1:
+				case 2:
 					c = coefficients.get(species);
 					break;
-				case 2:
+				case 1:
 					if (species == 0)
 						c = coefficients.get(0);
 					else

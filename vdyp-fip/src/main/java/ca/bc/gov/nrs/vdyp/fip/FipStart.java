@@ -1259,8 +1259,6 @@ public class FipStart {
 	float estimatePrimaryBaseArea(
 			FipLayer fipLayer, BecDefinition bec, float yieldFactor, float breastHeightAge, float baseAreaOverstory
 	) throws LowValueException {
-		var leadSpecies = fipLayer.getSpecies().values().stream()
-				.sorted(Utils.compareUsing(FipSpecies::getFractionGenus)).findFirst().orElseThrow();
 
 		boolean lowCrownClosure = fipLayer.getCrownClosure() < LOW_CROWN_CLOSURE;
 		float crownClosure = lowCrownClosure ? LOW_CROWN_CLOSURE : fipLayer.getCrownClosure();
@@ -1275,8 +1273,8 @@ public class FipStart {
 				controlMap, UpperCoefficientParser.CONTROL_KEY, MatrixMap3.class
 		);
 
-		var leadGenus = fipLayer.getSpecies().values().stream().sorted(Utils.compareUsing(FipSpecies::getFractionGenus))
-				.findFirst().orElseThrow();
+		var leadGenus = fipLayer.getSpecies().values().stream()
+				.sorted(Utils.compareUsing(FipSpecies::getFractionGenus).reversed()).findFirst().orElseThrow();
 
 		Coefficients coe = Coefficients.empty(9, 0);
 		{
@@ -1346,7 +1344,7 @@ public class FipStart {
 			if (NDEBUG_1 <= 0) {
 				// See ISPSJF128
 				var upperBound = upperBoundMap.get(bec.getRegion(), leadGenus.getGenus(), UpperCoefficientParser.BA);
-				baseArea = max(baseArea, upperBound);
+				baseArea = min(baseArea, upperBound);
 			}
 
 			if (lowCrownClosure) {
