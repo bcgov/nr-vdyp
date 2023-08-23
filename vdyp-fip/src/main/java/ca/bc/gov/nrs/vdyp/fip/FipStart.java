@@ -1293,8 +1293,8 @@ public class FipStart {
 			}
 			// Fill in 6-8 by copying from any species in the same BEC.
 			var anyCoe = coeMap.get(bec.getDecayBec().getAlias(), "AC"); // Choice of species is arbitrary, they should
-																			// all be
-																			// the same
+			// all be
+			// the same
 			for (int i = 6; i < 9; i++) {
 				coe.setCoe(i, anyCoe.getCoe(i));
 			}
@@ -1327,7 +1327,8 @@ public class FipStart {
 			//      FHD = HD-A(2)
 			//  end if
 			/* @formatter:on */
-			var fHeight = height <= coe.getCoe(2) + 3f ? pow(height - (coe.getCoe(2) - 3), 2) / 12f
+			var fHeight = height <= coe.getCoe(2) + 3f ? //
+					pow(height - (coe.getCoe(2) - 3), 2) / 12f //
 					: height - coe.getCoe(2);
 
 			/* @formatter:off */
