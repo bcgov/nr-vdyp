@@ -15,8 +15,12 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.DoubleFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.ToDoubleBiFunction;
+import java.util.function.ToDoubleFunction;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -278,6 +282,13 @@ public class FipStart {
 		var baseArea = estimatePrimaryBaseArea(
 				fipLayer, bec, fipPolygon.getYieldFactor(), result.getBreastHeightAge(), baseAreaOverstory
 		);
+
+		result.getBaseAreaByUtilization().set(0, baseArea);
+
+		/*
+		 * var quadMeanDiameter = estimatePrimaryQuadMeanDiameter( fipLayer, bec,
+		 * result.getBreastHeightAge(), baseAreaOverstory );
+		 */
 
 		return null; // TODO
 	}
@@ -1273,32 +1284,13 @@ public class FipStart {
 				controlMap, UpperCoefficientParser.CONTROL_KEY, MatrixMap3.class
 		);
 
-		var leadGenus = fipLayer.getSpecies().values().stream()
-				.sorted(Utils.compareUsing(FipSpecies::getFractionGenus).reversed()).findFirst().orElseThrow();
+		var leadGenus = leadGenus(fipLayer);
 
-		Coefficients coe = Coefficients.empty(9, 0);
-		{
-			// Do the summation in double precision
-			var coeWorking = new double[] { 0f, 0f, 0f, 0f, 0f, 0f };
-			for (var spec : fipLayer.getSpecies().values()) {
-				var specCoe = coeMap.get(bec.getDecayBec().getAlias(), spec.getGenus());
-				double fraction = spec.getFractionGenus();
-				for (int i = 0; i < 6; i++) {
-					coeWorking[i] += (specCoe.getCoe(i)) * fraction;
-				}
-			}
-			// Reduce back to float
-			for (int i = 0; i < 6; i++) {
-				coe.setCoe(i, (float) coeWorking[i]);
-			}
-			// Fill in 6-8 by copying from any species in the same BEC.
-			var anyCoe = coeMap.get(bec.getDecayBec().getAlias(), "AC"); // Choice of species is arbitrary, they should
-			// all be
-			// the same
-			for (int i = 6; i < 9; i++) {
-				coe.setCoe(i, anyCoe.getCoe(i));
-			}
-		}
+		var decayBecAlias = bec.getDecayBec().getAlias();
+		Coefficients coe = weightedCoefficientSum(
+				List.of(0, 1, 2, 3, 4, 5), 9, 0, fipLayer.getSpecies().values(), FipSpecies::getFractionGenus,
+				s -> coeMap.get(decayBecAlias, s.getGenus())
+		);
 
 		var ageToUse = clamp(breastHeightAge, 5f, 350f);
 		var trAge = log(ageToUse);
@@ -1363,6 +1355,61 @@ public class FipStart {
 		return baseArea;
 	}
 
+	/**
+	 * Create a coefficients object where its values are either a weighted sum of
+	 * those for each of the given entities, or the value from one arbitrarily chose
+	 * entity.
+	 *
+	 * @param <T>             The type of entity
+	 * @param weighted        the indicies of the coefficients that should be
+	 *                        weighted sums, those that are not included are assumed
+	 *                        to be constant across all entities and one is choses
+	 *                        arbitrarily.
+	 * @param size            Size of the resulting coefficients object
+	 * @param indexFrom       index from of the resulting coefficients object
+	 * @param entities        the entities to do weighted sums over
+	 * @param weight          the weight for a given entity
+	 * @param getCoefficients the coefficients for a given entity
+	 */
+	<T> Coefficients weightedCoefficientSum(
+			Collection<Integer> weighted, int size, int indexFrom, Collection<T> entities, ToDoubleFunction<T> weight,
+			Function<T, Coefficients> getCoefficients
+	) {
+		Coefficients coe = Coefficients.empty(size, indexFrom);
+
+		// Do the summation in double precision
+		var coeWorking = new double[size];
+		Arrays.fill(coeWorking, 0.0);
+
+		for (var entity : entities) {
+			var entityCoe = getCoefficients.apply(entity);
+			double fraction = weight.applyAsDouble(entity);
+			for (int i : weighted) {
+				coeWorking[i - indexFrom] += (entityCoe.getCoe(i)) * fraction;
+			}
+		}
+		// Reduce back to float once done
+		for (int i : weighted) {
+			coe.setCoe(i, (float) coeWorking[i - indexFrom]);
+		}
+
+		// Pick one entity to fill in the fixed coefficients
+		// Choice is arbitrary, they should all be the same
+		var anyCoe = getCoefficients.apply(entities.iterator().next());
+
+		for (int i = indexFrom; i < size + indexFrom; i++) {
+			if (weighted.contains(i))
+				continue;
+			coe.setCoe(i, anyCoe.getCoe(i));
+		}
+		return coe;
+	}
+
+	FipSpecies leadGenus(FipLayer fipLayer) {
+		return fipLayer.getSpecies().values().stream()
+				.sorted(Utils.compareUsing(FipSpecies::getFractionGenus).reversed()).findFirst().orElseThrow();
+	}
+
 	// EMP098
 	float estimateVeteranBaseArea(float height, float crownClosure, String genus, Region region)
 			throws ProcessingException {
@@ -1382,6 +1429,70 @@ public class FipStart {
 		baseArea = max(baseArea, 0.01f);
 
 		return baseArea;
+	}
+
+	// EMP041
+	float estimatePrimaryQuadMeanDiameter(
+			FipLayerPrimary fipLayer, BecDefinition bec, float breastHeightAge, float baseAreaOverstory
+	) {
+		var coeMap = Utils.<MatrixMap2<String, String, Coefficients>>expectParsedControl(
+				controlMap, CoefficientParser.DQ_CONTROL_KEY, MatrixMap2.class
+		);
+		var modMap = Utils.<MatrixMap2<String, Region, Float>>expectParsedControl(
+				controlMap, ModifierParser.CONTROL_KEY_MOD200_DQ, MatrixMap2.class
+		);
+		var upperBoundMap = Utils.<MatrixMap3<Region, String, Integer, Float>>expectParsedControl(
+				controlMap, UpperCoefficientParser.CONTROL_KEY, MatrixMap3.class
+		);
+
+		var leadGenus = leadGenus(fipLayer);
+
+		var decayBecAlias = bec.getDecayBec().getAlias();
+		Coefficients coe = weightedCoefficientSum(
+				List.of(0, 1, 2, 3, 4), 9, 0, fipLayer.getSpecies().values(), FipSpecies::getFractionGenus,
+				s -> coeMap.get(decayBecAlias, s.getGenus())
+		);
+
+		var trAge = log(clamp(breastHeightAge, 5f, 350f));
+		var height = fipLayer.getHeight();
+
+		if (height <= coe.getCoe(5)) {
+			return 7.6f;
+		}
+
+		/* @formatter:off */
+		//    C0 = A(0)
+		//    C1 = EXP(A(1)) + EXP(A(2)) * TR_AGE
+		//    C2 = EXP(A(3)) + EXP(A(4)) * TR_AGE
+		/* @formatter:on */
+		var c0 = coe.get(0);
+		var c1 = exp(coe.getCoe(1)) + exp(coe.getCoe(2)) * trAge;
+		var c2 = exp(coe.getCoe(3)) + exp(coe.getCoe(4)) * trAge;
+
+		/* @formatter:off */
+		//      DQ = C0 + ( C1*(HD - A(5))**C2 )**2 * exp(A(7)*BAV)
+		//     &        * (1.0 - A(6)*CC/100.0)
+		/* @formatter:on */
+
+		var quadMeanDiameter = c0 + pow(c1 * pow(height - coe.getCoe(5), c2), 2)
+				* exp(coe.getCoe(7) * baseAreaOverstory) * (1f - coe.getCoe(6) * fipLayer.getCrownClosure() / 100f);
+
+		/* @formatter:off */
+		//      DQ = DQ * DQMOD200(JLEAD, INDEX_IC)
+		/* @formatter:on */
+		quadMeanDiameter *= modMap.get(leadGenus.getGenus(), bec.getRegion());
+
+		quadMeanDiameter = max(quadMeanDiameter, 7.6f);
+
+		// TODO
+		var NDEBUG_2 = 0;
+		if (NDEBUG_2 <= 0) {
+			// See ISPSJF129
+			var upperBound = upperBoundMap.get(bec.getRegion(), leadGenus.getGenus(), UpperCoefficientParser.DQ);
+			quadMeanDiameter = min(quadMeanDiameter, upperBound);
+		}
+
+		return quadMeanDiameter;
 	}
 
 	static float treesPerHectare(float baseArea, float quadraticMeanDiameter) {
