@@ -27,8 +27,6 @@ public class FipLayer extends BaseVdypLayer<FipSpecies> {
 	// In VDYP7 These are read but not stored in common variables.
 	// Marked as Deprecated for now but I think we can just remove them.
 	@Deprecated
-	Optional<Integer> inventoryTypeGroup = Optional.empty();
-	@Deprecated
 	Optional<Float> breastHeightAge = Optional.empty();
 
 	public FipLayer(String polygonIdentifier, Layer layer) {
@@ -52,11 +50,6 @@ public class FipLayer extends BaseVdypLayer<FipSpecies> {
 	}
 
 	@Deprecated
-	public Optional<Integer> getInventoryTypeGroup() {
-		return inventoryTypeGroup;
-	}
-
-	@Deprecated
 	public Optional<Float> getBreastHeightAge() {
 		return breastHeightAge;
 	}
@@ -75,11 +68,6 @@ public class FipLayer extends BaseVdypLayer<FipSpecies> {
 
 	public void setSiteSpecies(String siteSp64) {
 		this.siteSpecies = siteSp64;
-	}
-
-	@Deprecated
-	public void setInventoryTypeGroup(Optional<Integer> inventoryTypeGroup) {
-		this.inventoryTypeGroup = inventoryTypeGroup;
 	}
 
 	@Deprecated

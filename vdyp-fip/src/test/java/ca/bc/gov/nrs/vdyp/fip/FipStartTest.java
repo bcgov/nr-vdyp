@@ -56,6 +56,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.VeteranLayerVolumeAdjustParser;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.Layer;
 import ca.bc.gov.nrs.vdyp.model.Region;
+import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.VdypUtilizationHolder;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
@@ -772,125 +773,6 @@ class FipStartTest {
 	}
 
 	@Test
-	void testProcessVeteranSoleSpeciesIsPrimary() throws Exception {
-
-		var polygonId = polygonId("Test Polygon", 2023);
-
-		var fipPolygon = getTestPolygon(polygonId, valid());
-		var fipLayer = getTestVeteranLayer(polygonId, valid());
-		var fipSpecies = getTestSpecies(polygonId, Layer.VETERAN, x -> {
-			var map = new LinkedHashMap<String, Float>();
-			map.put("S1", 75f);
-			map.put("S2", 25f);
-			x.setSpeciesPercent(map);
-		});
-		fipPolygon.setLayers(Collections.singletonMap(Layer.VETERAN, fipLayer));
-		fipLayer.setSpecies(Collections.singletonMap(fipSpecies.getGenus(), fipSpecies));
-
-		var controlMap = new HashMap<String, Object>();
-		TestUtils.populateControlMapBecReal(controlMap);
-		TestUtils.populateControlMapGenusReal(controlMap);
-		TestUtils.populateControlMapVeteranBq(controlMap);
-		TestUtils.populateControlMapEquationGroups(controlMap, (s, b) -> new int[] { 1, 1, 1 });
-		TestUtils.populateControlMapVeteranDq(controlMap, (s, r) -> new float[] { 0f, 0f, 0f });
-		TestUtils.populateControlMapVeteranVolAdjust(controlMap, s -> new float[] { 0f, 0f, 0f, 0f });
-		TestUtils.populateControlMapWholeStemVolume(controlMap, (wholeStemMap(1)));
-		TestUtils.populateControlMapCloseUtilization(controlMap, closeUtilMap(1));
-		TestUtils.populateControlMapNetDecay(controlMap, closeUtilMap(1));
-		FipTestUtils.populateControlMapDecayModifiers(controlMap, (s, r) -> 0f);
-		TestUtils.populateControlMapNetWaste(
-				controlMap, s -> new Coefficients(new float[] { 0f, 0f, 0f, 0f, 0f, 0f }, 0)
-		);
-		FipTestUtils.populateControlMapWasteModifiers(controlMap, (s, r) -> 0f);
-		TestUtils
-				.populateControlMapNetBreakage(controlMap, bgrp -> new Coefficients(new float[] { 0f, 0f, 0f, 0f }, 1));
-
-		var app = new FipStart();
-		app.setControlMap(controlMap);
-
-		var result = app.processLayerAsVeteran(fipPolygon, fipLayer);
-
-		assertThat(result, notNullValue());
-
-		assertThat(result, hasProperty("primaryGenus", is("B")));
-		assertThat(
-				result, hasProperty(
-						"primarySpeciesRecord", is(
-								allOf(
-										hasProperty("genus", is("B")) //
-								)
-						)
-				)
-		);
-
-	}
-
-	@Test
-	void testProcessVeteranBiggestSpeciesIsPrimary() throws Exception {
-
-		var polygonId = polygonId("Test Polygon", 2023);
-
-		var fipPolygon = getTestPolygon(polygonId, valid());
-		var fipLayer = getTestVeteranLayer(polygonId, valid());
-		var fipSpecies1 = getTestSpecies(polygonId, Layer.VETERAN, "B", x -> {
-			var map = new LinkedHashMap<String, Float>();
-			map.put("S1", 75f);
-			map.put("S2", 25f);
-			x.setSpeciesPercent(map);
-			x.setPercentGenus(60f);
-		});
-		var fipSpecies2 = getTestSpecies(polygonId, Layer.VETERAN, "C", x -> {
-			var map = new LinkedHashMap<String, Float>();
-			map.put("S3", 75f);
-			map.put("S4", 25f);
-			x.setSpeciesPercent(map);
-			x.setPercentGenus(40f);
-		});
-		fipPolygon.setLayers(Collections.singletonMap(Layer.VETERAN, fipLayer));
-		var speciesMap = new HashMap<String, FipSpecies>();
-		speciesMap.put("B", fipSpecies1);
-		speciesMap.put("C", fipSpecies2);
-		fipLayer.setSpecies(speciesMap);
-
-		var controlMap = new HashMap<String, Object>();
-		TestUtils.populateControlMapBecReal(controlMap);
-		TestUtils.populateControlMapGenusReal(controlMap);
-		TestUtils.populateControlMapVeteranBq(controlMap);
-		TestUtils.populateControlMapEquationGroups(controlMap, (s, b) -> new int[] { 1, 1, 1 });
-		TestUtils.populateControlMapVeteranDq(controlMap, (s, r) -> new float[] { 0f, 0f, 0f });
-		TestUtils.populateControlMapVeteranVolAdjust(controlMap, s -> new float[] { 0f, 0f, 0f, 0f });
-		TestUtils.populateControlMapWholeStemVolume(controlMap, (wholeStemMap(1)));
-		TestUtils.populateControlMapCloseUtilization(controlMap, closeUtilMap(1));
-		TestUtils.populateControlMapNetDecay(controlMap, closeUtilMap(1));
-		FipTestUtils.populateControlMapDecayModifiers(controlMap, (s, r) -> 0f);
-		TestUtils.populateControlMapNetWaste(
-				controlMap, s -> new Coefficients(new float[] { 0f, 0f, 0f, 0f, 0f, 0f }, 0)
-		);
-		FipTestUtils.populateControlMapWasteModifiers(controlMap, (s, r) -> 0f);
-		TestUtils
-				.populateControlMapNetBreakage(controlMap, bgrp -> new Coefficients(new float[] { 0f, 0f, 0f, 0f }, 1));
-
-		var app = new FipStart();
-		app.setControlMap(controlMap);
-
-		var result = app.processLayerAsVeteran(fipPolygon, fipLayer);
-
-		assertThat(result, notNullValue());
-
-		assertThat(result, hasProperty("primaryGenus", is("B")));
-		assertThat(
-				result, hasProperty(
-						"primarySpeciesRecord", is(
-								allOf(
-										hasProperty("genus", is("B")) //
-								)
-						)
-				)
-		);
-
-	}
-
-	@Test
 	void testEstimateVeteranLayerBaseArea() throws Exception {
 
 		var controlMap = FipTestUtils.loadControlMap();
@@ -919,7 +801,7 @@ class FipStartTest {
 		var fipLayer = getTestVeteranLayer(polygonId, valid());
 		var fipSpecies = getTestSpecies(polygonId, Layer.VETERAN, x -> {
 			var map = new LinkedHashMap<String, Float>();
-			map.put("S1", 100f);
+			map.put("B", 100f);
 			x.setSpeciesPercent(map);
 		});
 		fipPolygon.setLayers(Collections.singletonMap(Layer.VETERAN, fipLayer));
@@ -946,12 +828,12 @@ class FipStartTest {
 		var app = new FipStart();
 		app.setControlMap(controlMap);
 
-		var result = app.processLayerAsVeteran(fipPolygon, fipLayer).getPrimarySpeciesRecord();
+		var result = app.processLayerAsVeteran(fipPolygon, fipLayer);
 
 		Matcher<Float> heightMatcher = closeTo(6f);
 		Matcher<Float> zeroMatcher = is(0.0f);
 		// Expect the estimated HL in 0 (-1 to 0)
-		assertThat(result, hasProperty("loreyHeightByUtilization", contains(zeroMatcher, heightMatcher)));
+		assertThat(result, hasProperty("species", hasEntry(is("B"),hasProperty("loreyHeightByUtilization", contains(zeroMatcher, heightMatcher)))));
 
 	}
 
@@ -964,7 +846,7 @@ class FipStartTest {
 		var fipLayer = getTestVeteranLayer(polygonId, valid());
 		var fipSpecies = getTestSpecies(polygonId, Layer.VETERAN, x -> {
 			var map = new LinkedHashMap<String, Float>();
-			map.put("S1", 100f);
+			map.put("B", 100f);
 			x.setSpeciesPercent(map);
 		});
 		fipPolygon.setLayers(Collections.singletonMap(Layer.VETERAN, fipLayer));
@@ -993,7 +875,7 @@ class FipStartTest {
 		var app = new FipStart();
 		app.setControlMap(controlMap);
 
-		var result = app.processLayerAsVeteran(fipPolygon, fipLayer).getPrimarySpeciesRecord();
+		var result = app.processLayerAsVeteran(fipPolygon, fipLayer).getSpecies().get("B");
 
 		assertThat(result, hasProperty("volumeGroup", is(1)));
 		assertThat(result, hasProperty("decayGroup", is(2)));
@@ -2101,12 +1983,69 @@ class FipStartTest {
 		assertThat(result, closeTo(61.1f)); // Clamp to the COE043/UPPER_BA_BY_CI_S0_P DQ value for this species and
 											// region
 	}
+	
+	@Test
+	void testEstimatePrimaryLayerNonPrimarySpeciesHeightEqn1() throws Exception {
+		var controlMap = FipTestUtils.loadControlMap();
+		var app = new FipStart();
+		app.setControlMap(controlMap);
 
+		var becLookup = BecDefinitionParser.getBecs(controlMap);
+		var bec = becLookup.get("CWH").get();
+
+		var spec = new VdypSpecies("Test", Layer.PRIMARY, "B");
+		var specPrime = new VdypSpecies("Test", Layer.PRIMARY, "H");
+
+		var result = app.estimateNonPrimaryLoreyHeight(spec, specPrime, bec, 24.2999992f, 20.5984688f);
+
+		assertThat(result, closeTo(21.5356998f));
+	}
+	
+	@Test
+	void testEstimatePrimaryLayerNonPrimarySpeciesHeightEqn2() throws Exception {
+		var controlMap = FipTestUtils.loadControlMap();
+		var app = new FipStart();
+		app.setControlMap(controlMap);
+
+		var becLookup = BecDefinitionParser.getBecs(controlMap);
+		var bec = becLookup.get("ESSF").get();
+
+		var spec = new VdypSpecies("Test", Layer.PRIMARY, "B");
+		var specPrime = new VdypSpecies("Test", Layer.PRIMARY, "D");
+
+		var result = app.estimateNonPrimaryLoreyHeight(spec, specPrime, bec, 35.2999992f, 33.6889763f);
+
+		assertThat(result, closeTo(38.7456512f));
+	}
+	
 	void vetUtilization(String property, Consumer<Function<Float, Matcher<VdypUtilizationHolder>>> body) {
 		Function<Float, Matcher<VdypUtilizationHolder>> generator = v -> hasProperty(
 				property, coe(-1, contains(is(0f), closeTo(v), is(0f), is(0f), is(0f), closeTo(v)))
 		);
 		body.accept(generator);
+	}
+	
+	@Test
+	void testFindRootsForPrimaryLayerDiameterAndAreaOneSpecies() throws Exception {
+		var controlMap = FipTestUtils.loadControlMap();
+		var app = new FipStart();
+		app.setControlMap(controlMap);
+		
+		var spec = new VdypSpecies("Test", Layer.PRIMARY, "Y");
+		var layer = new VdypLayer("Test", Layer.PRIMARY);
+		var fipLayer = this.getTestPrimaryLayer("Test", l->{
+			l.setInventoryTypeGroup(9);
+			l.setPrimaryGenus("Y");
+		});
+
+		layer.setSpecies(Collections.singletonMap("Y", spec));
+		layer.setLoreyHeightByUtilization(new Coefficients(new float[] {6.28920984f, 21.5320797f}, -1));
+		
+		spec.setLoreyHeightByUtilization(new Coefficients(new float[] {5.70007992f, 19.9850883f}, -1));
+		
+		app.findRootsForDiameterAndBaseArea(layer);
+
+		fail("TODO");
 	}
 
 	private static <T> MockStreamingParser<T>

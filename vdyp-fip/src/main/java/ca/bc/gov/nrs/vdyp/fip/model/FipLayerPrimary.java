@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.vdyp.fip.model;
 
 import java.util.Optional;
 
+import ca.bc.gov.nrs.vdyp.common.Computed;
 import ca.bc.gov.nrs.vdyp.model.Layer;
 
 public class FipLayerPrimary extends FipLayer {
@@ -14,6 +15,10 @@ public class FipLayerPrimary extends FipLayer {
 	Optional<Integer> siteCurveNumber = Optional.empty(); // FIPL_1/SCN_L1
 
 	Optional<String> stockingClass = Optional.empty(); // FIPL_1ST/STK_L1
+	
+	private String primaryGenus; // FIPL_1C/JPRIME
+	
+	private int inventoryTypeGroup = 0;
 
 	public FipLayerPrimary(String polygonIdentifier) {
 		super(polygonIdentifier, Layer.PRIMARY);
@@ -34,5 +39,25 @@ public class FipLayerPrimary extends FipLayer {
 	public void setStockingClass(Optional<String> stockingClass) {
 		this.stockingClass = stockingClass;
 	}
+	
+	public String getPrimaryGenus() {
+		return primaryGenus;
+	}
 
+	public void setPrimaryGenus(String primaryGenus) {
+		this.primaryGenus = primaryGenus;
+	}
+
+	@Computed
+	public FipSpecies getPrimarySpeciesRecord() {
+		return getSpecies().get(primaryGenus);
+	}
+	
+	public int getInventoryTypeGroup() {
+		return inventoryTypeGroup;
+	}
+
+	public void setInventoryTypeGroup(int inventoryTypeGroup) {
+		this.inventoryTypeGroup = inventoryTypeGroup;
+	}
 }

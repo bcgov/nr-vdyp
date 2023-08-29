@@ -16,8 +16,8 @@ import ca.bc.gov.nrs.vdyp.common.FloatUnaryOperator;
  *
  */
 public class Coefficients extends AbstractList<Float> implements List<Float> {
-	float[] coe;
-	int indexFrom;
+	private float[] coe;
+	private int indexFrom;
 
 	public Coefficients(float[] coe, int indexFrom) {
 		this.coe = coe;
@@ -170,4 +170,10 @@ public class Coefficients extends AbstractList<Float> implements List<Float> {
 
 	}
 
+	/**
+	 * Returns a view of this coefficients object indexed from the given value.
+	 */
+	public Coefficients reindex(int indexFrom) {
+		return new Coefficients(this.coe, indexFrom);
+	}
 }

@@ -2,13 +2,9 @@ package ca.bc.gov.nrs.vdyp.model;
 
 import java.util.Arrays;
 
-import ca.bc.gov.nrs.vdyp.common.Computed;
-
 public class VdypLayer extends BaseVdypLayer<VdypSpecies> implements VdypUtilizationHolder {
 
 	float breastHeightAge; // LVCOM3/AGEBHLV +
-	String primaryGenus; // ISPPVET TODO Possibly can remove this and just pass it as a parameter inside
-							// processLayerAsVeteran
 
 	Coefficients baseAreaByUtilization = new Coefficients(
 			Arrays.asList(0f, 0f, 0f, 0f, 0f, 0f), -1 //
@@ -49,19 +45,6 @@ public class VdypLayer extends BaseVdypLayer<VdypSpecies> implements VdypUtiliza
 
 	public void setBreastHeightAge(float breastHeightAge) {
 		this.breastHeightAge = breastHeightAge;
-	}
-
-	public String getPrimaryGenus() {
-		return primaryGenus;
-	}
-
-	public void setPrimaryGenus(String primaryGenus) {
-		this.primaryGenus = primaryGenus;
-	}
-
-	@Computed
-	public VdypSpecies getPrimarySpeciesRecord() {
-		return getSpecies().get(primaryGenus);
 	}
 
 	@Override
