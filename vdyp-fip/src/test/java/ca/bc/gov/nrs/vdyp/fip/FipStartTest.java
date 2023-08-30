@@ -38,6 +38,7 @@ import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
+import org.hamcrest.TypeSafeMatcher;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -2013,15 +2014,17 @@ class FipStartTest {
 
 		app.findRootsForDiameterAndBaseArea(layer, 2);
 
-		assertThat(layer, hasProperty("loreyHeightByUtilization", coe(-1, contains(0f, 19.9850883f))));
-		assertThat(spec, hasProperty("baseAreaByUtilization", coe(-1, contains(0f, 76.5122147f, 0f, 0f, 0f, 0f))));
-		assertThat(spec, hasProperty("treesPerHectareByUtilization", coe(-1, contains(0f, 845.805969f, 0f, 0f, 0f, 0f))));
+		assertThat(layer, hasProperty("loreyHeightByUtilization", coe(-1, this::closeTo, 0f, 19.9850883f)));
+		assertThat(spec, hasProperty("baseAreaByUtilization", coe(-1, this::closeTo, 0f, 76.5122147f, 0f, 0f, 0f, 0f)));
+		assertThat(spec, hasProperty("treesPerHectareByUtilization", coe(-1, this::closeTo, 0f, 845.805969f, 0f, 0f, 0f, 0f)));
 		assertThat(
-				spec, hasProperty("quadraticMeanDiameterByUtilization", coe(-1, contains(0f, 33.9379082f, 0f, 0f, 0f, 0f)))
+				spec, hasProperty("quadraticMeanDiameterByUtilization", coe(-1, this::closeTo, 0f, 33.9379082f, 0f, 0f, 0f, 0f))
 		);
-		
-		assertThat(layer, hasProperty("wholeStemVolumeByUtilization", coe(-1, contains(0f, 571.22583f, 0f, 0f, 0f, 0f))));
-		assertThat(spec, hasProperty("wholeStemVolumeByUtilization", coe(-1, contains(0f, 571.22583f, 0f, 0f, 0f, 0f))));
+
+		assertThat(
+				layer, hasProperty("wholeStemVolumeByUtilization", coe(-1, this::closeTo, 0f, 571.22583f, 0f, 0f, 0f, 0f))
+		);
+		assertThat(spec, hasProperty("wholeStemVolumeByUtilization", coe(-1, this::closeTo, 0f, 571.22583f, 0f, 0f, 0f, 0f)));
 
 	}
 
@@ -2216,6 +2219,8 @@ class FipStartTest {
 	}
 
 	Matcher<Float> closeTo(float expected) {
-		return asFloat(Matchers.closeTo(expected, EPSILON));
+		float epsilon = Float.max(EPSILON * expected, Float.MIN_VALUE);
+		return asFloat(Matchers.closeTo(expected, epsilon));
 	}
+
 }

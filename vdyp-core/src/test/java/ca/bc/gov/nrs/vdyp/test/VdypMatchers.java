@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.vdyp.test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.describedAs;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.is;
@@ -18,6 +19,7 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
@@ -463,5 +465,14 @@ public class VdypMatchers {
 				indexFrom, //
 				contentsMatcher
 		);
+	}
+	
+	public static Matcher<Coefficients> coe(int indexFrom, Matcher<Float>...contentsMatchers) {
+		return coe(indexFrom, contains(contentsMatchers));
+	}
+	
+	public static Matcher<Coefficients> coe(int indexFrom, Function<Float, Matcher<? super Float>> matcherGenerator, Float...contents) {
+		List<Matcher<? super Float>> contentsMatchers=Arrays.stream(contents).map(matcherGenerator).toList();
+		return coe(indexFrom, contains(contentsMatchers));
 	}
 }
