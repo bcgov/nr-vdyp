@@ -3,11 +3,15 @@ package ca.bc.gov.nrs.vdyp.io.parse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import ca.bc.gov.nrs.vdyp.common.HoldFirst;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 
 /**
@@ -16,7 +20,7 @@ import ca.bc.gov.nrs.vdyp.model.Coefficients;
  * @author Kevin Smith, Vivid Solutions
  *
  */
-public class BySpeciesDqCoefficientParser implements ControlMapSubResourceParser<List<Coefficients>> {
+public class BySpeciesDqCoefficientParser implements ControlMapSubResourceParser<Map<String, Coefficients>> {
 
 	public static final String CONTROL_KEY = "BY_SPECIES_DQ";
 
@@ -43,34 +47,40 @@ public class BySpeciesDqCoefficientParser implements ControlMapSubResourceParser
 	LineParser lineParser;
 
 	@Override
-	public List<Coefficients> parse(InputStream is, Map<String, Object> control)
+	public Map<String, Coefficients> parse(InputStream is, Map<String, Object> control)
 			throws IOException, ResourceParseException {
 
-		List<Coefficients> result = new ArrayList<>(NUM_COEFFICIENTS);
+		Map<String, Coefficients> result = new HashMap<>();
 
-		result.add(null);
-		result.add(null);
-		result.add(null);
+		var sp0Aliases = GenusDefinitionParser.getSpeciesAliases(control);
 
 		lineParser.parse(is, result, (v, r) -> {
 			var index = (int) v.get(COEFFICIENT_INDEX_KEY);
 			@SuppressWarnings("unchecked")
-			var coefficients = (List<Float>) v.get(COEFFICIENTS_KEY);
+			var specCoefficients = (List<Float>) v.get(COEFFICIENTS_KEY);
 
-			if (! (index == 0 || index == 1)) {
-				final var first = coefficients.get(0);
-				coefficients = Stream.generate(() -> first).limit(NUM_SPECIES).toList();
+			var specIt = sp0Aliases.iterator();
+			var coeIt = specCoefficients.iterator();
+			HoldFirst<Float> firstSpecCoe = new HoldFirst<>();
+			while (specIt.hasNext()) {
+				var specAlias = specIt.next();
+				float coe;
+				if (! (index == 0 || index == 1)) {
+					coe = firstSpecCoe.get(() -> coeIt.next());
+				} else {
+					try {
+						coe = coeIt.next();
+					} catch (NoSuchElementException ex) {
+						throw new ValueParseException(null, "Expected " + NUM_SPECIES + " coefficients", ex);
+					}
+				}
+				result.computeIfAbsent(specAlias, (x) -> Coefficients.empty(NUM_COEFFICIENTS, 0)).setCoe(index, coe);
 			}
-
-			if (coefficients.size() < NUM_SPECIES) {
-				throw new ValueParseException(null, "Expected " + NUM_SPECIES + " coefficients"); // TODO handle this
-																									// better
-			}
-			r.set(index, new Coefficients(coefficients, 1));
 
 			return r;
 		}, control);
 		return result;
+
 	}
 
 	@Override

@@ -10,7 +10,7 @@ public class BaseVdypLayer<S extends BaseVdypSpecies> {
 	protected final String polygonIdentifier;
 	protected final Layer layer;
 	protected float ageTotal; // LVCOM3/AGETOTLV, L1COM3/AGETOTL1
-	protected float height; // LVCOM3/HDLV, L1COM3/HDL1 
+	protected float height; // LVCOM3/HDLV, L1COM3/HDL1
 	protected float yearsToBreastHeight; // LVCOM3/YTBHLV, L1COM3/YTBHL1
 	Map<String, S> species = Collections.emptyMap();
 

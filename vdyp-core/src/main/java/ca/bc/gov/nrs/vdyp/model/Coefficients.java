@@ -158,6 +158,15 @@ public class Coefficients extends AbstractList<Float> implements List<Float> {
 	}
 
 	/**
+	 * Perform the operation on one particular coefficient in place
+	 *
+	 * @param op
+	 */
+	public void scalarInPlace(int i, FloatUnaryOperator op) {
+		setCoe(i, op.applyAsFloat(getCoe(i)));
+	}
+
+	/**
 	 * Perform the operation on each coefficient and return the result
 	 *
 	 * @param op

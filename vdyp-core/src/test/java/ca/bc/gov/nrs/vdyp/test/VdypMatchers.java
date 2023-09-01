@@ -45,6 +45,8 @@ import ca.bc.gov.nrs.vdyp.model.MatrixMap;
  */
 public class VdypMatchers {
 
+	static final float EPSILON = 0.00001f;
+
 	/**
 	 * Matches a string if when parsed by the parser method it matches the given
 	 * matcher
@@ -466,13 +468,43 @@ public class VdypMatchers {
 				contentsMatcher
 		);
 	}
-	
-	public static Matcher<Coefficients> coe(int indexFrom, Matcher<Float>...contentsMatchers) {
+
+	public static Matcher<Coefficients> coe(int indexFrom, Matcher<Float>... contentsMatchers) {
 		return coe(indexFrom, contains(contentsMatchers));
 	}
-	
-	public static Matcher<Coefficients> coe(int indexFrom, Function<Float, Matcher<? super Float>> matcherGenerator, Float...contents) {
-		List<Matcher<? super Float>> contentsMatchers=Arrays.stream(contents).map(matcherGenerator).toList();
+
+	public static Matcher<Coefficients>
+			coe(int indexFrom, Function<Float, Matcher<? super Float>> matcherGenerator, Float... contents) {
+		List<Matcher<? super Float>> contentsMatchers = Arrays.stream(contents).map(matcherGenerator).toList();
 		return coe(indexFrom, contains(contentsMatchers));
+	}
+
+	public static Matcher<Coefficients> coe(int indexFrom, Float... contents) {
+		return coe(indexFrom, VdypMatchers::closeTo, contents);
+	}
+
+	public static Matcher<Float> asFloat(Matcher<Double> doubleMatcher) {
+		return new TypeSafeDiagnosingMatcher<Float>() {
+
+			@Override
+			public void describeTo(Description description) {
+				doubleMatcher.describeTo(description);
+			}
+
+			@Override
+			protected boolean matchesSafely(Float item, Description mismatchDescription) {
+				if (!doubleMatcher.matches((double) item)) {
+					doubleMatcher.describeMismatch(item, mismatchDescription);
+					return false;
+				}
+				return true;
+			}
+
+		};
+	}
+
+	public static Matcher<Float> closeTo(float expected) {
+		float epsilon = Float.max(EPSILON * expected, Float.MIN_VALUE);
+		return asFloat(Matchers.closeTo(expected, epsilon));
 	}
 }

@@ -1,11 +1,16 @@
 package ca.bc.gov.nrs.vdyp.io.parse;
 
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.coe;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.aMapWithSize;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.hasEntry;
+import static org.hamcrest.Matchers.is;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
@@ -24,26 +29,24 @@ class BySpeciesDqCoefficientParserTest {
 		);
 
 		Map<String, Object> controlMap = new HashMap<>();
+		TestUtils.populateControlMapGenusReal(controlMap);
 
 		var result = parser.parse(is, controlMap);
 
-		assertThat(
-				result,
-				contains(
-						contains(
-								-0.65484f, -0.48275f, -0.75134f, 0.04482f, -0.31195f, -0.53012f, -0.12645f, -0.64668f,
-								-0.43538f, -0.31134f, -0.03435f, -0.27833f, -0.32476f, 0.10819f, -0.38103f, -0.12273f
-						),
-						contains(
-								2.26389f, 0.19886f, -0.25704f, 0.18579f, -0.38547f, -0.14115f, -0.10146f, 0.09067f,
-								0.54304f, -0.02947f, 0.08473f, -0.39934f, 0.02206f, -0.18235f, 0.01411f, -0.21683f
-						),
-						contains(
-								0.23162f, 0.23162f, 0.23162f, 0.23162f, 0.23162f, 0.23162f, 0.23162f, 0.23162f,
-								0.23162f, 0.23162f, 0.23162f, 0.23162f, 0.23162f, 0.23162f, 0.23162f, 0.23162f
-						)
-				)
-		);
+		// "AC", "AT", "B", "C", "D", "E", "F", "H", "L", "MB", "PA", "PL", "PW", "PY",
+		// "S", "Y"
+
+		assertThat(result, aMapWithSize(16));
+
+		// TODO: This is what VDYP7 does (confirmed with Debugger) but it looks wrong,
+		// the much large value of A1 for the first species suggests those for other
+		// species should be considered modifiers. Possibly the test data file I'm using
+		// is just old and newer ones
+		// take this into account
+
+		assertThat(result, hasEntry(is("AC"), coe(0, -0.65484f, 2.26389f, 0.23162f)));
+		assertThat(result, hasEntry(is("AT"), coe(0, -0.48275f, 0.19886f, 0.23162f)));
+
 	}
 
 }

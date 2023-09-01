@@ -15,9 +15,9 @@ public class FipLayerPrimary extends FipLayer {
 	Optional<Integer> siteCurveNumber = Optional.empty(); // FIPL_1/SCN_L1
 
 	Optional<String> stockingClass = Optional.empty(); // FIPL_1ST/STK_L1
-	
+
 	private String primaryGenus; // FIPL_1C/JPRIME
-	
+
 	private int inventoryTypeGroup = 0;
 
 	public FipLayerPrimary(String polygonIdentifier) {
@@ -39,7 +39,7 @@ public class FipLayerPrimary extends FipLayer {
 	public void setStockingClass(Optional<String> stockingClass) {
 		this.stockingClass = stockingClass;
 	}
-	
+
 	public String getPrimaryGenus() {
 		return primaryGenus;
 	}
@@ -52,7 +52,7 @@ public class FipLayerPrimary extends FipLayer {
 	public FipSpecies getPrimarySpeciesRecord() {
 		return getSpecies().get(primaryGenus);
 	}
-	
+
 	public int getInventoryTypeGroup() {
 		return inventoryTypeGroup;
 	}

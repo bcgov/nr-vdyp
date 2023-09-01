@@ -46,6 +46,11 @@
 			<artifactId>easymock</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+				<groupId>ca.bc.gov.nrs.vdyp</groupId>
+				<artifactId>vdyp-buildtools</artifactId>
+				<version>0.0.1-SNAPSHOT</version>
+		</dependency>
 	</dependencies>
 
 	<build>
