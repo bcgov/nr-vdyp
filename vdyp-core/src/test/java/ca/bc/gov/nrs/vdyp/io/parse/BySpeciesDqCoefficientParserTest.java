@@ -3,14 +3,12 @@ package ca.bc.gov.nrs.vdyp.io.parse;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.coe;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.aMapWithSize;
-import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.is;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
@@ -39,7 +37,7 @@ class BySpeciesDqCoefficientParserTest {
 		assertThat(result, aMapWithSize(16));
 
 		// TODO: This is what VDYP7 does (confirmed with Debugger) but it looks wrong,
-		// the much large value of A1 for the first species suggests those for other
+		// the much larger value of A1 for the first species suggests those for other
 		// species should be considered modifiers. Possibly the test data file I'm using
 		// is just old and newer ones
 		// take this into account

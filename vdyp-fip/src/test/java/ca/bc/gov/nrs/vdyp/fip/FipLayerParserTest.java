@@ -95,8 +95,7 @@ public class FipLayerParserTest {
 								hasProperty("crownClosure", is(87.4f)), hasProperty("siteSp0", is("D")),
 								hasProperty("siteSp64", is("D")), hasProperty("yearsToBreastHeight", is(1.0f)),
 								hasProperty("stockingClass", present(is("0"))),
-								hasProperty("inventoryTypeGroup", notPresent()),
-								hasProperty("breastHeightAge", notPresent()),
+								hasProperty("inventoryTypeGroup", is(0)), hasProperty("breastHeightAge", notPresent()),
 								hasProperty("siteCurveNumber", present(is(13)))
 						)
 				)
@@ -150,8 +149,7 @@ public class FipLayerParserTest {
 								hasProperty("crownClosure", is(82.8f)), hasProperty("siteSp0", is("H")),
 								hasProperty("siteSp64", is("H")), hasProperty("yearsToBreastHeight", is(4.9f)),
 								hasProperty("stockingClass", present(is("0"))),
-								hasProperty("inventoryTypeGroup", notPresent()),
-								hasProperty("breastHeightAge", notPresent()),
+								hasProperty("inventoryTypeGroup", is(0)), hasProperty("breastHeightAge", notPresent()),
 								hasProperty("siteCurveNumber", present(is(34)))
 						)
 				)
@@ -167,7 +165,6 @@ public class FipLayerParserTest {
 								hasProperty("crownClosure", is(4.0f)), hasProperty("siteSp0", is("B")),
 								hasProperty("siteSp64", is("B")), hasProperty("yearsToBreastHeight", is(9.4f)),
 								// hasProperty("stockingClass", present(is("2"))),
-								hasProperty("inventoryTypeGroup", notPresent()),
 								hasProperty("breastHeightAge", notPresent())
 								// hasProperty("siteCurveNumber", present(is(8)))
 						)
@@ -222,8 +219,7 @@ public class FipLayerParserTest {
 								hasProperty("crownClosure", is(82.8f)), hasProperty("siteSp0", is("H")),
 								hasProperty("siteSp64", is("H")), hasProperty("yearsToBreastHeight", is(4.9f)),
 								hasProperty("stockingClass", present(is("0"))),
-								hasProperty("inventoryTypeGroup", notPresent()),
-								hasProperty("breastHeightAge", notPresent()),
+								hasProperty("inventoryTypeGroup", is(0)), hasProperty("breastHeightAge", notPresent()),
 								hasProperty("siteCurveNumber", present(is(34)))
 						)
 				)
@@ -277,8 +273,7 @@ public class FipLayerParserTest {
 								hasProperty("crownClosure", is(82.8f)), hasProperty("siteSp0", is("H")),
 								hasProperty("siteSp64", is("H")), hasProperty("yearsToBreastHeight", is(4.9f)),
 								hasProperty("stockingClass", present(is("0"))),
-								hasProperty("inventoryTypeGroup", notPresent()),
-								hasProperty("breastHeightAge", notPresent()),
+								hasProperty("inventoryTypeGroup", is(0)), hasProperty("breastHeightAge", notPresent()),
 								hasProperty("siteCurveNumber", present(is(34)))
 						)
 				)

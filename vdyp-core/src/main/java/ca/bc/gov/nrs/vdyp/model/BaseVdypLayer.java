@@ -1,6 +1,6 @@
 package ca.bc.gov.nrs.vdyp.model;
 
-import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class BaseVdypLayer<S extends BaseVdypSpecies> {
@@ -12,7 +12,7 @@ public class BaseVdypLayer<S extends BaseVdypSpecies> {
 	protected float ageTotal; // LVCOM3/AGETOTLV, L1COM3/AGETOTL1
 	protected float height; // LVCOM3/HDLV, L1COM3/HDL1
 	protected float yearsToBreastHeight; // LVCOM3/YTBHLV, L1COM3/YTBHL1
-	Map<String, S> species = Collections.emptyMap();
+	LinkedHashMap<String, S> species = new LinkedHashMap<>();
 
 	public BaseVdypLayer(String polygonIdentifier, Layer layer) {
 		super();
@@ -52,12 +52,13 @@ public class BaseVdypLayer<S extends BaseVdypSpecies> {
 		this.yearsToBreastHeight = yearsToBreastHeight;
 	}
 
-	public Map<String, S> getSpecies() {
+	public LinkedHashMap<String, S> getSpecies() {
 		return species;
 	}
 
 	public void setSpecies(Map<String, S> species) {
-		this.species = species;
+		this.species.clear();
+		this.species.putAll(species);
 	}
 
 }

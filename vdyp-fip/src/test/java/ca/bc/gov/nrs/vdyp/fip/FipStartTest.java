@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.fip;
 
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.coe;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.aMapWithSize;
@@ -61,6 +62,7 @@ import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.VdypUtilizationHolder;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
+import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
 
 class FipStartTest {
 
@@ -1733,7 +1735,7 @@ class FipStartTest {
 			s.setFractionGenus(0.670000017f);
 		});
 
-		Map<String, FipSpecies> allSpecies = new HashMap<>();
+		Map<String, FipSpecies> allSpecies = new LinkedHashMap<>();
 		allSpecies.put(spec1.getGenus(), spec1);
 		allSpecies.put(spec2.getGenus(), spec2);
 
@@ -1773,7 +1775,7 @@ class FipStartTest {
 			s.setFractionGenus(0.670000017f);
 		});
 
-		Map<String, FipSpecies> allSpecies = new HashMap<>();
+		Map<String, FipSpecies> allSpecies = new LinkedHashMap<>();
 		allSpecies.put(spec1.getGenus(), spec1);
 		allSpecies.put(spec2.getGenus(), spec2);
 
@@ -1813,7 +1815,7 @@ class FipStartTest {
 			s.setFractionGenus(0.670000017f);
 		});
 
-		Map<String, FipSpecies> allSpecies = new HashMap<>();
+		Map<String, FipSpecies> allSpecies = new LinkedHashMap<>();
 		allSpecies.put(spec1.getGenus(), spec1);
 		allSpecies.put(spec2.getGenus(), spec2);
 
@@ -1853,7 +1855,7 @@ class FipStartTest {
 			s.setFractionGenus(0.670000017f);
 		});
 
-		Map<String, FipSpecies> allSpecies = new HashMap<>();
+		Map<String, FipSpecies> allSpecies = new LinkedHashMap<>();
 		allSpecies.put(spec1.getGenus(), spec1);
 		allSpecies.put(spec2.getGenus(), spec2);
 
@@ -1896,7 +1898,7 @@ class FipStartTest {
 			s.setFractionGenus(0.670000017f);
 		});
 
-		Map<String, FipSpecies> allSpecies = new HashMap<>();
+		Map<String, FipSpecies> allSpecies = new LinkedHashMap<>();
 		allSpecies.put(spec1.getGenus(), spec1);
 		allSpecies.put(spec2.getGenus(), spec2);
 
@@ -1936,7 +1938,7 @@ class FipStartTest {
 			s.setFractionGenus(0.670000017f);
 		});
 
-		Map<String, FipSpecies> allSpecies = new HashMap<>();
+		Map<String, FipSpecies> allSpecies = new LinkedHashMap<>();
 		allSpecies.put(spec1.getGenus(), spec1);
 		allSpecies.put(spec2.getGenus(), spec2);
 
@@ -1977,7 +1979,7 @@ class FipStartTest {
 			s.setFractionGenus(0.670000017f);
 		});
 
-		Map<String, FipSpecies> allSpecies = new HashMap<>();
+		Map<String, FipSpecies> allSpecies = new LinkedHashMap<>();
 		allSpecies.put(spec1.getGenus(), spec1);
 		allSpecies.put(spec2.getGenus(), spec2);
 
@@ -2064,38 +2066,38 @@ class FipStartTest {
 		assertThat(
 				layer, hasProperty(
 						"loreyHeightByUtilization", //
-						coe(-1, this::closeTo, 0f, 19.9850883f)
+						coe(-1, 0f, 19.9850883f)
 				)
 		);
 		assertThat(
 				spec, hasProperty(
 						"baseAreaByUtilization", //
-						coe(-1, this::closeTo, 0f, 76.5122147f, 0f, 0f, 0f, 0f)
+						coe(-1, 0f, 76.5122147f, 0f, 0f, 0f, 0f)
 				)
 		);
 		assertThat(
 				spec, hasProperty(
 						"treesPerHectareByUtilization", //
-						coe(-1, this::closeTo, 0f, 845.805969f, 0f, 0f, 0f, 0f)
+						coe(-1, 0f, 845.805969f, 0f, 0f, 0f, 0f)
 				)
 		);
 		assertThat(
 				spec, hasProperty(
 						"quadraticMeanDiameterByUtilization", //
-						coe(-1, this::closeTo, 0f, 33.9379082f, 0f, 0f, 0f, 0f)
+						coe(-1, 0f, 33.9379082f, 0f, 0f, 0f, 0f)
 				)
 		);
 
 		assertThat(
 				layer, hasProperty(
 						"wholeStemVolumeByUtilization", //
-						coe(-1, this::closeTo, 0f, 571.22583f, 0f, 0f, 0f, 0f)
+						coe(-1, 0f, 571.22583f, 0f, 0f, 0f, 0f)
 				)
 		);
 		assertThat(
 				spec, hasProperty(
 						"wholeStemVolumeByUtilization", //
-						coe(-1, this::closeTo, 0f, 571.22583f, 0f, 0f, 0f, 0f)
+						coe(-1, 0f, 571.22583f, 0f, 0f, 0f, 0f)
 				)
 		);
 
@@ -2157,95 +2159,95 @@ class FipStartTest {
 		assertThat(
 				layer, hasProperty(
 						"loreyHeightByUtilization", //
-						coe(-1, this::closeTo, 0f, 34.2643242f)
+						coe(-1, 0f, 34.2643242f)
 				)
 		);
 		assertThat(
 				spec1, hasProperty(
 						"loreyHeightByUtilization", //
-						coe(-1, this::closeTo, 0f, 33.6480446f)
+						coe(-1, 0f, 33.6480446f)
 				)
 		);
 		assertThat(
 				spec2, hasProperty(
 						"loreyHeightByUtilization", //
-						coe(-1, this::closeTo, 0f, 34.5648079f)
+						coe(-1, 0f, 34.5648079f)
 				)
 		);
 
 		assertThat(
 				layer, hasProperty(
 						"baseAreaByUtilization", //
-						coe(-1, this::closeTo, 0f, 62.6653595f, 0f, 0f, 0f, 0f)
+						coe(-1, 0f, 62.6653595f, 0f, 0f, 0f, 0f)
 				)
 		);
 		assertThat(
 				spec1, hasProperty(
 						"baseAreaByUtilization", //
-						coe(-1, this::closeTo, 0f, 20.5394173f, 0f, 0f, 0f, 0f)
+						coe(-1, 0f, 20.5394173f, 0f, 0f, 0f, 0f)
 				)
 		);
 		assertThat(
 				spec2, hasProperty(
 						"baseAreaByUtilization", //
-						coe(-1, this::closeTo, 0f, 42.1259422f, 0f, 0f, 0f, 0f)
+						coe(-1, 0f, 42.1259422f, 0f, 0f, 0f, 0f)
 				)
 		);
 
 		assertThat(
 				layer, hasProperty(
 						"treesPerHectareByUtilization", //
-						coe(-1, this::closeTo, 0f, 753.553711f, 0f, 0f, 0f, 0f)
+						coe(-1, 0f, 753.553711f, 0f, 0f, 0f, 0f)
 				)
 		);
 		assertThat(
 				spec1, hasProperty(
 						"treesPerHectareByUtilization", //
-						coe(-1, this::closeTo, 0f, 267.196503f, 0f, 0f, 0f, 0f)
+						coe(-1, 0f, 267.196503f, 0f, 0f, 0f, 0f)
 				)
 		);
 		assertThat(
 				spec2, hasProperty(
 						"treesPerHectareByUtilization", //
-						coe(-1, this::closeTo, 0f, 486.357208f, 0f, 0f, 0f, 0f)
+						coe(-1, 0f, 486.357208f, 0f, 0f, 0f, 0f)
 				)
 		);
 
 		assertThat(
 				layer, hasProperty(
 						"quadraticMeanDiameterByUtilization", //
-						coe(-1, this::closeTo, 0f, 32.5395622f, 0f, 0f, 0f, 0f)
+						coe(-1, 0f, 32.5395622f, 0f, 0f, 0f, 0f)
 				)
 		);
 		assertThat(
 				spec1, hasProperty(
 						"quadraticMeanDiameterByUtilization", //
-						coe(-1, this::closeTo, 0f, 31.2848263f, 0f, 0f, 0f, 0f)
+						coe(-1, 0f, 31.2848263f, 0f, 0f, 0f, 0f)
 				)
 		);
 		assertThat(
 				spec2, hasProperty(
 						"quadraticMeanDiameterByUtilization", //
-						coe(-1, this::closeTo, 0f, 33.208725f, 0f, 0f, 0f, 0f)
+						coe(-1, 0f, 33.208725f, 0f, 0f, 0f, 0f)
 				)
 		);
 
 		assertThat(
 				layer, hasProperty(
 						"wholeStemVolumeByUtilization", //
-						coe(-1, this::closeTo, 0f, 892.221252f, 0f, 0f, 0f, 0f)
+						coe(-1, 0f, 892.221252f, 0f, 0f, 0f, 0f)
 				)
 		);
 		assertThat(
 				spec1, hasProperty(
 						"wholeStemVolumeByUtilization", //
-						coe(-1, this::closeTo, 0f, 294.432587f, 0f, 0f, 0f, 0f)
+						coe(-1, 0f, 294.432587f, 0f, 0f, 0f, 0f)
 				)
 		);
 		assertThat(
 				spec2, hasProperty(
 						"wholeStemVolumeByUtilization", //
-						coe(-1, this::closeTo, 0f, 597.788635f, 0f, 0f, 0f, 0f)
+						coe(-1, 0f, 597.788635f, 0f, 0f, 0f, 0f)
 				)
 		);
 

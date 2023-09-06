@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -385,10 +386,11 @@ public class FipStart {
 	void findRootsForDiameterAndBaseArea(VdypLayer result, FipLayerPrimary fipLayer, BecDefinition bec, int source)
 			throws ProcessingException {
 
-		var quadMeanDiameterTotal = result.getQuadraticMeanDiameterByUtilization().getCoe(UTIL_ALL);
-		var baseAreaTotal = result.getBaseAreaByUtilization().getCoe(UTIL_ALL);
-		var treesPerHectareTotal = result.getTreesPerHectareByUtilization().getCoe(UTIL_ALL);
-		Map<String, Float> goal = new HashMap<>();
+		var quadMeanDiameterTotal = result.getQuadraticMeanDiameterByUtilization().getCoe(UTIL_ALL); // DQ_TOT
+		var baseAreaTotal = result.getBaseAreaByUtilization().getCoe(UTIL_ALL); // BA_TOT
+		var treesPerHectareTotal = result.getTreesPerHectareByUtilization().getCoe(UTIL_ALL); // TPH_TOT
+		Map<String, Float> goal = new LinkedHashMap<>(); // GOAL
+		Map<String, Float> xMap = new LinkedHashMap<>(); // X
 
 		float treesPerHectareSum;
 
@@ -444,15 +446,16 @@ public class FipStart {
 					)
 			);
 
+			// HL_TOT
 			float loreyHeightTotal = (float) fractionMap.entrySet().stream().mapToDouble(
-					e -> e.getValue() * result.getSpecies().get(e.getValue()).getLoreyHeightByUtilization().getCoe(0)
+					e -> e.getValue() * result.getSpecies().get(e.getKey()).getLoreyHeightByUtilization().getCoe(0)
 			).sum();
 			// FRJ(ISP) = FRJ(J) // We aren't using the remapping between global species
 			// index and index for the species within the layer, so we can probably assign
 			// directly to the fraction attribute on the species object.
 			fractionMap.entrySet().forEach(e -> result.getSpecies().get(e.getKey()).setFractionGenus(e.getValue()));
 
-			Map<String, Float> quadMeanDiameterBase = new HashMap<>();
+			Map<String, Float> quadMeanDiameterBase = new HashMap<>(); //DQspbase
 
 			for (var spec : result.getSpecies().values()) {
 
@@ -465,12 +468,20 @@ public class FipStart {
 								spec, result.getSpecies().values(), quadMeanDiameterTotal, baseAreaTotal,
 								treesPerHectareTotal, loreyHeightTotal
 						), //
-						limitCoe.getCoe(2), limitCoe.getCoe(3)
+						limitCoe.getCoe(3), limitCoe.getCoe(4)
 				);
 
 				quadMeanDiameterBase.put(spec.getGenus(), quadMeanDiameter);
 			}
 
+			// VDYP7 checks the number of species here, but this is already inside a branch that must be more than 1
+			// Fill in goal and 
+			result.getSpecies().values().stream().limit(result.getSpecies().size()-1).forEachOrdered(spec->{
+				goal.put(spec.getGenus(), spec.getPercentGenus());
+				xMap.put(spec.getGenus(), spec.getPercentGenus());
+			});
+			result.getSpecies().values()
+			
 			// TODO
 			treesPerHectareSum = 0; // To make it compile, set correctly when this branch is implemented.
 		}
@@ -534,8 +545,8 @@ public class FipStart {
 			return standQuadMeanDiameter;
 		}
 
-		var coeMap = Utils.<MatrixMap2<String, Region, Coefficients>>expectParsedControl(
-				controlMap, BySpeciesDqCoefficientParser.CONTROL_KEY, MatrixMap2.class
+		var coeMap = Utils.<Map<String, Coefficients>>expectParsedControl(
+				controlMap, BySpeciesDqCoefficientParser.CONTROL_KEY, Map.class
 		);
 
 		// TODO Auto-generated method stub
@@ -1922,7 +1933,7 @@ public class FipStart {
 	}
 
 	static float clamp(float x, float min, float max) {
-		assert max >= min;
+		assert max >= min: "Maximum "+max+" was less than minimum "+min;
 		if (x < min)
 			return min;
 		if (x > max)
