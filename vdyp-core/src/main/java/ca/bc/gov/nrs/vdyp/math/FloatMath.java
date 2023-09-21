@@ -3,12 +3,12 @@ package ca.bc.gov.nrs.vdyp.math;
 import java.io.IOException;
 
 public class FloatMath {
-	
+
 	// wrap standard library double math functions to work with floats so equations
 	// aren't littered with explicit casts
-	
+
 	public static float log(float f) {
-	
+
 		return (float) Math.log(f);
 	}
 
@@ -45,17 +45,17 @@ public class FloatMath {
 		}
 		return exp(arg) / (1.0f + exp(arg));
 	}
-	
+
 	public static String toString(float[] vector) {
 		var builder = new StringBuilder();
 		try {
 			toString(vector, builder);
 		} catch (IOException e) {
-			throw new IllegalStateException("StringBuilder should not throw IOException",e);
+			throw new IllegalStateException("StringBuilder should not throw IOException", e);
 		}
 		return builder.toString();
 	}
-	
+
 	public static void toString(float[] vector, Appendable builder) throws IOException {
 		builder.append("[");
 		var first = true;

@@ -41,6 +41,14 @@ import static ca.bc.gov.nrs.vdyp.math.FloatMath.ratio;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.sqrt;
 import static java.lang.Math.max;
 
+import org.apache.commons.math3.analysis.MultivariateMatrixFunction;
+import org.apache.commons.math3.analysis.MultivariateVectorFunction;
+import org.apache.commons.math3.fitting.leastsquares.LeastSquaresFactory;
+import org.apache.commons.math3.fitting.leastsquares.LeastSquaresProblem;
+import org.apache.commons.math3.fitting.leastsquares.LevenbergMarquardtOptimizer;
+import org.apache.commons.math3.linear.DiagonalMatrix;
+import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.RealVector;
 import org.apache.commons.math3.util.FastMath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -92,8 +100,8 @@ import ca.bc.gov.nrs.vdyp.model.VdypUtilizationHolder;
 
 public class FipStart {
 
-	private static final Comparator<FipSpecies> PERCENT_GENUS_DESCENDING = Utils.compareUsing(FipSpecies::getPercentGenus)
-			.reversed();
+	private static final Comparator<FipSpecies> PERCENT_GENUS_DESCENDING = Utils
+			.compareUsing(FipSpecies::getPercentGenus).reversed();
 
 	static private final Logger log = LoggerFactory.getLogger(FipStart.class);
 
@@ -260,7 +268,8 @@ public class FipStart {
 					assert fipPrimeLayer != null;
 					var resultPrimeLayer = processLayerAsPrimary(
 							polygon, fipPrimeLayer,
-							resultVetLayer.map(VdypLayer::getBaseAreaByUtilization).map(coe -> coe.get(UTIL_ALL)).orElse(0f)
+							resultVetLayer.map(VdypLayer::getBaseAreaByUtilization).map(coe -> coe.get(UTIL_ALL))
+									.orElse(0f)
 					);
 					processedLayers.put(Layer.PRIMARY, resultPrimeLayer);
 
@@ -286,8 +295,9 @@ public class FipStart {
 		// locally
 		var itg = findItg(primarySpecies);
 
-		BecDefinition bec = lookup.get(fipPolygon.getBiogeoclimaticZone())
-				.orElseThrow(() -> new IllegalStateException("Could not find BEC " + fipPolygon.getBiogeoclimaticZone()));
+		BecDefinition bec = lookup.get(fipPolygon.getBiogeoclimaticZone()).orElseThrow(
+				() -> new IllegalStateException("Could not find BEC " + fipPolygon.getBiogeoclimaticZone())
+		);
 
 		var baseAreaGroup = findBaseAreaGroup(primarySpecies.get(0), bec, itg);
 
@@ -361,7 +371,9 @@ public class FipStart {
 						leadHeight, vdypPrimarySpecies.getGenus(), bec.getRegion(), tphTotal
 				);
 			} else if (iPass == 1) {
-				primaryHeight = primaryHeightFromLeadHeightInitial(leadHeight, vdypPrimarySpecies.getGenus(), bec.getRegion());
+				primaryHeight = primaryHeightFromLeadHeightInitial(
+						leadHeight, vdypPrimarySpecies.getGenus(), bec.getRegion()
+				);
 			} else {
 				primaryHeight = primaryHeightFromLeadHeight(
 						leadHeight, vdypPrimarySpecies.getGenus(), bec.getRegion(),
@@ -375,8 +387,10 @@ public class FipStart {
 					continue;
 
 				// EMP053
-				vspec.getLoreyHeightByUtilization()
-						.setCoe(UTIL_ALL, estimateNonPrimaryLoreyHeight(vspec, vdypPrimarySpecies, bec, leadHeight, primaryHeight));
+				vspec.getLoreyHeightByUtilization().setCoe(
+						UTIL_ALL,
+						estimateNonPrimaryLoreyHeight(vspec, vdypPrimarySpecies, bec, leadHeight, primaryHeight)
+				);
 			}
 
 			findRootsForDiameterAndBaseArea(result, fipLayer, bec, iPass + 1);
@@ -444,13 +458,15 @@ public class FipStart {
 
 			// FRJ
 			var fractionMap = result.getSpecies().values().stream().collect(
-					Collectors.toMap(VdypSpecies::getGenus, spec -> (float) (accessor.applyAsDouble(spec) / sumSourceArea))
+					Collectors.toMap(
+							VdypSpecies::getGenus, spec -> (float) (accessor.applyAsDouble(spec) / sumSourceArea)
+					)
 			);
 
 			// HL_TOT
-			float loreyHeightTotal = (float) fractionMap.entrySet().stream()
-					.mapToDouble(e -> e.getValue() * result.getSpecies().get(e.getKey()).getLoreyHeightByUtilization().getCoe(0))
-					.sum();
+			float loreyHeightTotal = (float) fractionMap.entrySet().stream().mapToDouble(
+					e -> e.getValue() * result.getSpecies().get(e.getKey()).getLoreyHeightByUtilization().getCoe(0)
+			).sum();
 			// FRJ(ISP) = FRJ(J) // We aren't using the remapping between global species
 			// index and index for the species within the layer, so we can probably assign
 			// directly to the fraction attribute on the species object.
@@ -466,8 +482,8 @@ public class FipStart {
 				// EMP060
 				float quadMeanDiameter = clamp(
 						estimateQuadMeanDiameterForSpecies(
-								spec, result.getSpecies().values(), quadMeanDiameterTotal, baseAreaTotal, treesPerHectareTotal,
-								loreyHeightTotal
+								spec, result.getSpecies().values(), quadMeanDiameterTotal, baseAreaTotal,
+								treesPerHectareTotal, loreyHeightTotal
 						), //
 						limitCoe.getCoe(3), limitCoe.getCoe(4)
 				);
@@ -505,10 +521,11 @@ public class FipStart {
 
 		for (var spec : result.getSpecies().values()) {
 			// EMP090
-			var wholeStemVolume = spec.getTreesPerHectareByUtilization().getCoe(UTIL_ALL) * estimateWholeStemVolumePerTree(
-					spec.getVolumeGroup(), spec.getLoreyHeightByUtilization().getCoe(UTIL_ALL),
-					spec.getQuadraticMeanDiameterByUtilization().getCoe(UTIL_ALL)
-			);
+			var wholeStemVolume = spec.getTreesPerHectareByUtilization().getCoe(UTIL_ALL)
+					* estimateWholeStemVolumePerTree(
+							spec.getVolumeGroup(), spec.getLoreyHeightByUtilization().getCoe(UTIL_ALL),
+							spec.getQuadraticMeanDiameterByUtilization().getCoe(UTIL_ALL)
+					);
 			spec.getWholeStemVolumeByUtilization().setCoe(UTIL_ALL, wholeStemVolume);
 			volumeSum += wholeStemVolume;
 		}
@@ -530,7 +547,8 @@ public class FipStart {
 
 		if (result.getSpecies().size() > 1) {
 			for (var spec : result.getSpecies().values()) {
-				if (spec.getWholeStemVolumeByUtilization().getCoe(UTIL_ALL) / volumeSum - goal.get(spec.getGenus()) > 0.1) {
+				if (spec.getWholeStemVolumeByUtilization().getCoe(UTIL_ALL) / volumeSum
+						- goal.get(spec.getGenus()) > 0.1) {
 					throw new ProcessingException("TODO");
 				}
 			}
@@ -577,8 +595,9 @@ public class FipStart {
 	}
 
 	private float estimateWholeStemVolumePerTree(int volumeGroup, float loreyHeight, float quadMeanDiameter) {
-		var coeMap = Utils
-				.<Map<Integer, Coefficients>>expectParsedControl(controlMap, TotalStandWholeStemParser.CONTROL_KEY, Map.class);
+		var coeMap = Utils.<Map<Integer, Coefficients>>expectParsedControl(
+				controlMap, TotalStandWholeStemParser.CONTROL_KEY, Map.class
+		);
 		var coe = coeMap.get(volumeGroup).reindex(0);
 
 		var logMeanVolume = coe.getCoe(UTIL_ALL) + //
@@ -745,7 +764,8 @@ public class FipStart {
 		return new Coefficients(new float[] { 0f, 0f, 0f, 0f, 0f, 0f }, -1);
 	}
 
-	private void computeUtilizationComponentsVeteran(VdypLayer vdypLayer, BecDefinition bec) throws ProcessingException {
+	private void computeUtilizationComponentsVeteran(VdypLayer vdypLayer, BecDefinition bec)
+			throws ProcessingException {
 
 		var volumeAdjustMap = Utils.<Map<String, Coefficients>>expectParsedControl(
 				controlMap, VeteranLayerVolumeAdjustParser.CONTROL_KEY, Map.class
@@ -789,38 +809,39 @@ public class FipStart {
 
 				// EMP091
 				estimateWholeStemVolume(
-						utilizationClass, volumeAdjustCoe.getCoe(1), vdypSpecies.getVolumeGroup(), hlSp, quadMeanDiameterUtil,
-						baseAreaUtil, wholeStemVolumeUtil
+						utilizationClass, volumeAdjustCoe.getCoe(1), vdypSpecies.getVolumeGroup(), hlSp,
+						quadMeanDiameterUtil, baseAreaUtil, wholeStemVolumeUtil
 				);
 
 				adjust.setCoe(4, volumeAdjustCoe.getCoe(2));
 				// EMP092
 				estimateCloseUtilizationVolume(
-						utilizationClass, adjust, vdypSpecies.getVolumeGroup(), hlSp, quadMeanDiameterUtil, wholeStemVolumeUtil,
-						closeUtilizationVolumeUtil
+						utilizationClass, adjust, vdypSpecies.getVolumeGroup(), hlSp, quadMeanDiameterUtil,
+						wholeStemVolumeUtil, closeUtilizationVolumeUtil
 				);
 
 				adjust.setCoe(4, volumeAdjustCoe.getCoe(3));
 				// EMP093
 				estimateNetDecayVolume(
-						vdypSpecies.getGenus(), bec.getRegion(), utilizationClass, adjust, vdypSpecies.getDecayGroup(), hlSp,
-						vdypLayer.getBreastHeightAge(), quadMeanDiameterUtil, closeUtilizationVolumeUtil,
+						vdypSpecies.getGenus(), bec.getRegion(), utilizationClass, adjust, vdypSpecies.getDecayGroup(),
+						hlSp, vdypLayer.getBreastHeightAge(), quadMeanDiameterUtil, closeUtilizationVolumeUtil,
 						closeUtilizationNetOfDecayUtil
 				);
 
 				adjust.setCoe(4, volumeAdjustCoe.getCoe(4));
 				// EMP094
 				estimateNetDecayAndWasteVolume(
-						bec.getRegion(), utilizationClass, adjust, vdypSpecies.getGenus(), hlSp, vdypLayer.getBreastHeightAge(),
-						quadMeanDiameterUtil, closeUtilizationVolumeUtil, closeUtilizationNetOfDecayUtil,
-						closeUtilizationNetOfDecayAndWasteUtil
+						bec.getRegion(), utilizationClass, adjust, vdypSpecies.getGenus(), hlSp,
+						vdypLayer.getBreastHeightAge(), quadMeanDiameterUtil, closeUtilizationVolumeUtil,
+						closeUtilizationNetOfDecayUtil, closeUtilizationNetOfDecayAndWasteUtil
 				);
 
 				if (jprogram < 6) {
 					// EMP095
 					estimateNetDecayWasteAndBreakageVolume(
-							utilizationClass, vdypSpecies.getBreakageGroup(), quadMeanDiameterUtil, closeUtilizationVolumeUtil,
-							closeUtilizationNetOfDecayAndWasteUtil, closeUtilizationNetOfDecayWasteAndBreakageUtil
+							utilizationClass, vdypSpecies.getBreakageGroup(), quadMeanDiameterUtil,
+							closeUtilizationVolumeUtil, closeUtilizationNetOfDecayAndWasteUtil,
+							closeUtilizationNetOfDecayWasteAndBreakageUtil
 					);
 				}
 
@@ -830,7 +851,9 @@ public class FipStart {
 				vdypSpecies.setWholeStemVolumeByUtilization(wholeStemVolumeUtil);
 				vdypSpecies.setCloseUtilizationVolumeByUtilization(closeUtilizationVolumeUtil);
 				vdypSpecies.setCloseUtilizationNetVolumeOfDecayByUtilization(closeUtilizationNetOfDecayUtil);
-				vdypSpecies.setCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(closeUtilizationNetOfDecayAndWasteUtil);
+				vdypSpecies.setCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(
+						closeUtilizationNetOfDecayAndWasteUtil
+				);
 				vdypSpecies.setCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(
 						closeUtilizationNetOfDecayWasteAndBreakageUtil
 				);
@@ -1166,7 +1189,9 @@ public class FipStart {
 				);
 		estimateUtilization(baseAreaUtil, wholeStemVolumeUtil, utilizationClass, (i, ba) -> {
 			Coefficients wholeStemCoe = wholeStemUtilizationComponentMap.get(i, volumeGroup).orElseThrow(
-					() -> new ProcessingException("Could not find whole stem utilization coefficients for group " + volumeGroup)
+					() -> new ProcessingException(
+							"Could not find whole stem utilization coefficients for group " + volumeGroup
+					)
 			);
 
 			// Fortran code uses 1 index into array when reading it here, but 0 index when
@@ -1205,12 +1230,15 @@ public class FipStart {
 			Coefficients wholeStemVolumeUtil, Coefficients closeUtilizationVolumeUtil
 	) throws ProcessingException {
 		var dqSp = quadMeanDiameterUtil.getCoe(UTIL_ALL);
-		final var closeUtilizationCoeMap = Utils.<MatrixMap2<Integer, Integer, Optional<Coefficients>>>expectParsedControl(
-				controlMap, CloseUtilVolumeParser.CONTROL_KEY, MatrixMap2.class
-		);
+		final var closeUtilizationCoeMap = Utils
+				.<MatrixMap2<Integer, Integer, Optional<Coefficients>>>expectParsedControl(
+						controlMap, CloseUtilVolumeParser.CONTROL_KEY, MatrixMap2.class
+				);
 		estimateUtilization(wholeStemVolumeUtil, closeUtilizationVolumeUtil, utilizationClass, (i, ws) -> {
 			Coefficients closeUtilCoe = closeUtilizationCoeMap.get(i, volumeGroup).orElseThrow(
-					() -> new ProcessingException("Could not find whole stem utilization coefficients for group " + volumeGroup)
+					() -> new ProcessingException(
+							"Could not find whole stem utilization coefficients for group " + volumeGroup
+					)
 			);
 			var a0 = closeUtilCoe.getCoe(1);
 			var a1 = closeUtilCoe.getCoe(2);
@@ -1244,9 +1272,9 @@ public class FipStart {
 	 *                         for that class, return the result utilization
 	 * @throws ProcessingException
 	 */
-	static void
-			estimateUtilization(Coefficients input, Coefficients output, int utilizationClass, UtilizationProcessor processor)
-					throws ProcessingException {
+	static void estimateUtilization(
+			Coefficients input, Coefficients output, int utilizationClass, UtilizationProcessor processor
+	) throws ProcessingException {
 		estimateUtilization(input, output, utilizationClass, processor, x -> false, 0f);
 	}
 
@@ -1318,8 +1346,9 @@ public class FipStart {
 		final var ageTr = (float) Math.log(Math.max(20.0, ageBreastHeight));
 
 		estimateUtilization(closeUtilizationUtil, closeUtilizationNetOfDecayUtil, utilizationClass, (i, cu) -> {
-			Coefficients netDecayCoe = netDecayCoeMap.get(i, decayGroup)
-					.orElseThrow(() -> new ProcessingException("Could not find net decay coefficients for group " + decayGroup));
+			Coefficients netDecayCoe = netDecayCoeMap.get(i, decayGroup).orElseThrow(
+					() -> new ProcessingException("Could not find net decay coefficients for group " + decayGroup)
+			);
 			var a0 = netDecayCoe.getCoe(1);
 			var a1 = netDecayCoe.getCoe(2);
 			var a2 = netDecayCoe.getCoe(3);
@@ -1347,12 +1376,13 @@ public class FipStart {
 	 * Estimate utilization net of decay and waste
 	 */
 	void estimateNetDecayAndWasteVolume(
-			Region region, int utilizationClass, Coefficients aAdjust, String genus, float lorieHeight, float ageBreastHeight,
-			Coefficients quadMeanDiameterUtil, Coefficients closeUtilizationUtil, Coefficients closeUtilizationNetOfDecayUtil,
-			Coefficients closeUtilizationNetOfDecayAndWasteUtil
+			Region region, int utilizationClass, Coefficients aAdjust, String genus, float lorieHeight,
+			float ageBreastHeight, Coefficients quadMeanDiameterUtil, Coefficients closeUtilizationUtil,
+			Coefficients closeUtilizationNetOfDecayUtil, Coefficients closeUtilizationNetOfDecayAndWasteUtil
 	) throws ProcessingException {
-		final var netDecayCoeMap = Utils
-				.<Map<String, Coefficients>>expectParsedControl(controlMap, VolumeNetDecayWasteParser.CONTROL_KEY, Map.class);
+		final var netDecayCoeMap = Utils.<Map<String, Coefficients>>expectParsedControl(
+				controlMap, VolumeNetDecayWasteParser.CONTROL_KEY, Map.class
+		);
 		final var wasteModifierMap = Utils.<MatrixMap2<String, Region, Float>>expectParsedControl(
 				controlMap, ModifierParser.CONTROL_KEY_MOD301_WASTE, MatrixMap2.class
 		);
@@ -1360,7 +1390,8 @@ public class FipStart {
 		final var ageTr = (float) Math.log(Math.max(20.0, ageBreastHeight));
 
 		estimateUtilization(
-				closeUtilizationNetOfDecayUtil, closeUtilizationNetOfDecayAndWasteUtil, utilizationClass, (i, netDecay) -> {
+				closeUtilizationNetOfDecayUtil, closeUtilizationNetOfDecayAndWasteUtil, utilizationClass,
+				(i, netDecay) -> {
 					if (Float.isNaN(netDecay) || netDecay <= 0f) {
 						return 0f;
 					}
@@ -1422,8 +1453,9 @@ public class FipStart {
 	 * @throws ProcessingException
 	 */
 	void estimateNetDecayWasteAndBreakageVolume(
-			int utilizationClass, int breakageGroup, Coefficients quadMeanDiameterUtil, Coefficients closeUtilizationUtil,
-			Coefficients closeUtilizationNetOfDecayAndWasteUtil, Coefficients closeUtilizationNetOfDecayWasteAndBreakageUtil
+			int utilizationClass, int breakageGroup, Coefficients quadMeanDiameterUtil,
+			Coefficients closeUtilizationUtil, Coefficients closeUtilizationNetOfDecayAndWasteUtil,
+			Coefficients closeUtilizationNetOfDecayWasteAndBreakageUtil
 	) throws ProcessingException {
 		final var netBreakageCoeMap = Utils
 				.<Map<Integer, Coefficients>>expectParsedControl(controlMap, BreakageParser.CONTROL_KEY, Map.class);
@@ -1438,8 +1470,8 @@ public class FipStart {
 		final var a4 = coefficients.getCoe(4);
 
 		estimateUtilization(
-				closeUtilizationNetOfDecayAndWasteUtil, closeUtilizationNetOfDecayWasteAndBreakageUtil, utilizationClass,
-				(i, netWaste) -> {
+				closeUtilizationNetOfDecayAndWasteUtil, closeUtilizationNetOfDecayWasteAndBreakageUtil,
+				utilizationClass, (i, netWaste) -> {
 
 					if (netWaste <= 0f) {
 						return 0f;
@@ -1587,7 +1619,8 @@ public class FipStart {
 
 		if (primaryLayer.getAgeTotal() - primaryLayer.getYearsToBreastHeight() < 0.5f) {
 			throw validationError(
-					"Polygon %s has %s layer where total age is less than YTBH.", polygon.getPolygonIdentifier(), Layer.PRIMARY
+					"Polygon %s has %s layer where total age is less than YTBH.", polygon.getPolygonIdentifier(),
+					Layer.PRIMARY
 			);
 		}
 
@@ -1790,8 +1823,8 @@ public class FipStart {
 	}
 
 	FipSpecies leadGenus(FipLayer fipLayer) {
-		return fipLayer.getSpecies().values().stream().sorted(Utils.compareUsing(FipSpecies::getFractionGenus).reversed())
-				.findFirst().orElseThrow();
+		return fipLayer.getSpecies().values().stream()
+				.sorted(Utils.compareUsing(FipSpecies::getFractionGenus).reversed()).findFirst().orElseThrow();
 	}
 
 	// EMP098
@@ -1858,8 +1891,8 @@ public class FipStart {
 		//     &        * (1.0 - A(6)*CC/100.0)
 		/* @formatter:on */
 
-		var quadMeanDiameter = c0 + pow(c1 * pow(height - coe.getCoe(5), c2), 2) * exp(coe.getCoe(7) * baseAreaOverstory)
-				* (1f - coe.getCoe(6) * fipLayer.getCrownClosure() / 100f);
+		var quadMeanDiameter = c0 + pow(c1 * pow(height - coe.getCoe(5), c2), 2)
+				* exp(coe.getCoe(7) * baseAreaOverstory) * (1f - coe.getCoe(6) * fipLayer.getCrownClosure() / 100f);
 
 		/* @formatter:off */
 		//      DQ = DQ * DQMOD200(JLEAD, INDEX_IC)
@@ -1909,18 +1942,18 @@ public class FipStart {
 	}
 
 	/**
-	 * estimate mean volume per tree For a species, for trees with dbh >=
-	 * 7.5 CM Using eqn in jf117.doc
-	 * 
+	 * estimate mean volume per tree For a species, for trees with dbh >= 7.5 CM
+	 * Using eqn in jf117.doc
+	 *
 	 * @param volumeGroup
 	 * @param loreyHeight
 	 * @param quadMeanDiameter
 	 * @return
 	 */
-	public float
-			estimateMeanVolume(int volumeGroup, float loreyHeight, float quadMeanDiameter) {
-		var coeMap = Utils
-				.<Map<Integer, Coefficients>>expectParsedControl(controlMap, TotalStandWholeStemParser.CONTROL_KEY, Map.class);
+	public float estimateMeanVolume(int volumeGroup, float loreyHeight, float quadMeanDiameter) {
+		var coeMap = Utils.<Map<Integer, Coefficients>>expectParsedControl(
+				controlMap, TotalStandWholeStemParser.CONTROL_KEY, Map.class
+		);
 
 		var coe = coeMap.get(volumeGroup);
 
@@ -1938,8 +1971,7 @@ public class FipStart {
 		return exp(lvMean);
 	}
 
-	
-	double[] rootFinderFunction(double[] point, VdypLayer layer, double[] diameterBase, double[] goal) {
+	double[] rootFinderFunction(double[] point, VdypLayer layer, double[] diameterBase) {
 
 		var percentL1 = new double[point.length];
 		double percentSum = 0;
@@ -1995,10 +2027,87 @@ public class FipStart {
 			for (int i = 0; it.hasNext(); i++) {
 				var spec = it.next();
 
-				y[i] = 100d * spec.getWholeStemVolumeByUtilization().getCoe(UTIL_ALL) / volumeSum - goal[i];
+				y[i] = 100d * spec.getWholeStemVolumeByUtilization().getCoe(UTIL_ALL) / volumeSum;
 			}
 		}
-		y[y.length - 1] = dqFinal - goal[y.length - 1];
+		y[y.length - 1] = dqFinal;
 		return y;
 	}
+
+	/**
+	 * Estimate the Jacobian Matrix of a function using forward difference
+	 *
+	 * @param x
+	 * @param func
+	 * @return
+	 */
+	double[][] estimateJacobian(double[] x, MultivariateVectorFunction func) {
+		return estimateJacobian(x, func.value(x), func);
+	}
+
+	/**
+	 * Estimate the Jacobian Matrix of a function using forward difference
+	 *
+	 * @param x
+	 * @param y
+	 * @param func
+	 * @return
+	 */
+	double[][] estimateJacobian(double[] x, double[] y, MultivariateVectorFunction func) {
+		// TODO
+		final double machineEpsilon = 2.22e-16;
+		final double functionEpsilon = 1.19e-07;
+
+		double epsilon = FastMath.sqrt(FastMath.max(functionEpsilon, machineEpsilon));
+
+		double[] x2 = Arrays.copyOf(x, x.length);
+
+		double[][] result = new double[x.length][x.length];
+
+		for (int j = 0; j < x.length; j++) {
+			double temp = x[j];
+			double h = epsilon * FastMath.abs(temp);
+			if (h == 0) {
+				h = epsilon;
+			}
+			x2[j] = temp + h;
+			double[] y2 = func.value(x2);
+			x2[j] = temp;
+			for (int i = 0; i < x.length; i++) {
+				result[i][j] = (y2[i] - y[i]) / h;
+			}
+		}
+		return result;
+	}
+
+	RealMatrix identityMatrix(int n) {
+		var diag = new double[n];
+		Arrays.fill(diag, n);
+		return new DiagonalMatrix(diag);
+
+	}
+
+	RealVector findRoot(double[] diameterBase, double[] goal, double[] x, VdypLayer layer) {
+		MultivariateVectorFunction func = (point) -> rootFinderFunction(point, layer, diameterBase);
+
+		MultivariateMatrixFunction jacFunc = (point) -> estimateJacobian(point, func);
+
+		LevenbergMarquardtOptimizer optimizer = new LevenbergMarquardtOptimizer();
+		optimizer.withCostRelativeTolerance(2.0E-03);
+		LeastSquaresProblem leastSquaresProblem = LeastSquaresFactory.create(
+				func, //
+				jacFunc, //
+				goal, //
+				x, //
+				identityMatrix(x.length), //
+				null, //
+				200, //
+				1000 //
+		);
+
+		var result = optimizer.optimize(leastSquaresProblem);
+
+		return result.getPoint();
+	}
+
 }

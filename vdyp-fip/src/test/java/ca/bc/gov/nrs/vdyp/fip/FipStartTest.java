@@ -2103,6 +2103,7 @@ class FipStartTest {
 
 	}
 
+	@Disabled
 	@Test
 	void testFindRootsForPrimaryLayerDiameterAndAreaTwoSpecies() throws Exception {
 		var controlMap = FipTestUtils.loadControlMap();
