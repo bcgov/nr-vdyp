@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -2103,9 +2104,8 @@ class FipStartTest {
 
 	}
 
-	@Disabled
 	@Test
-	void testFindRootsForPrimaryLayerDiameterAndAreaTwoSpecies() throws Exception {
+	void testFindRootsForPrimaryLayerDiameterAndAreaMultipleSpecies() throws Exception {
 		var controlMap = FipTestUtils.loadControlMap();
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -2121,32 +2121,54 @@ class FipStartTest {
 		 * AGEBHL1 layer YTBH hdl1
 		 *
 		 */
-		// sp 3,8
+		// sp  3,  4,  5,  8, 15
+		// sp  B,  C,  D,  H,  S
 		var spec1 = new VdypSpecies("Test", Layer.PRIMARY, "B");
 		spec1.setVolumeGroup(12);
 		spec1.setDecayGroup(7);
 		spec1.setBreakageGroup(5);
-		spec1.getLoreyHeightByUtilization().setCoe(0, 21.1241722f);
-		spec1.setPercentGenus(33f);
-		var spec2 = new VdypSpecies("Test", Layer.PRIMARY, "H");
-		spec2.setVolumeGroup(37);
-		spec2.setDecayGroup(31);
-		spec2.setBreakageGroup(17);
-		spec2.getLoreyHeightByUtilization().setCoe(0, 33.6480446f);
-		spec2.setPercentGenus(67f);
+		spec1.getLoreyHeightByUtilization().setCoe(0, 38.7456512f);
+		spec1.setPercentGenus(1f);
+		var spec2 = new VdypSpecies("Test", Layer.PRIMARY, "C");
+		spec2.setVolumeGroup(20);
+		spec2.setDecayGroup(14);
+		spec2.setBreakageGroup(6);
+		spec2.getLoreyHeightByUtilization().setCoe(0, 22.8001652f);
+		spec2.setPercentGenus(7f);
+		var spec3 = new VdypSpecies("Test", Layer.PRIMARY, "D");
+		spec3.setVolumeGroup(25);
+		spec3.setDecayGroup(19);
+		spec3.setBreakageGroup(12);
+		spec3.getLoreyHeightByUtilization().setCoe(0, 33.6889763f);
+		spec3.setPercentGenus(74f);
+		var spec4 = new VdypSpecies("Test", Layer.PRIMARY, "H");
+		spec4.setVolumeGroup(37);
+		spec4.setDecayGroup(31);
+		spec4.setBreakageGroup(17);
+		spec4.getLoreyHeightByUtilization().setCoe(0, 24.3451157f);
+		spec4.setPercentGenus(9f);
+		var spec5 = new VdypSpecies("Test", Layer.PRIMARY, "S");
+		spec5.setVolumeGroup(66);
+		spec5.setDecayGroup(54);
+		spec5.setBreakageGroup(28);
+		spec5.getLoreyHeightByUtilization().setCoe(0, 34.6888771f);
+		spec5.setPercentGenus(9f);
 
-		Map<String, VdypSpecies> specs = new HashMap<>();
-		specs.put("B", spec1);
-		specs.put("H", spec2);
+		Collection<VdypSpecies> specs = new ArrayList<>(5);
+		specs.add(spec1);
+		specs.add(spec2);
+		specs.add(spec3);
+		specs.add(spec4);
+		specs.add(spec5);
 
 		var layer = new VdypLayer("Test", Layer.PRIMARY);
-		layer.getBaseAreaByUtilization().setCoe(0, 62.6653595f);
-		layer.getTreesPerHectareByUtilization().setCoe(0, 753.57959f);
-		layer.getQuadraticMeanDiameterByUtilization().setCoe(0, 32.5390053f);
-		layer.setAgeTotal(85f);
-		layer.setBreastHeightAge(79.5999985f);
-		layer.setYearsToBreastHeight(5.4000001f);
-		layer.setHeight(38.2999992f);
+		layer.getBaseAreaByUtilization().setCoe(0, 44.6249847f);
+		layer.getTreesPerHectareByUtilization().setCoe(0, 620.504883f);
+		layer.getQuadraticMeanDiameterByUtilization().setCoe(0, 30.2601795f);
+		layer.setAgeTotal(55f);
+		layer.setBreastHeightAge(54f);
+		layer.setYearsToBreastHeight(1f);
+		layer.setHeight(35.2999992f);
 
 		layer.setSpecies(specs);
 
@@ -2252,6 +2274,63 @@ class FipStartTest {
 				)
 		);
 
+	}
+	
+	@Test
+	void testEstimateQuadMeanDiameterForSpecies() throws Exception {
+		var controlMap = FipTestUtils.loadControlMap();
+		var app = new FipStart();
+		app.setControlMap(controlMap);
+
+		
+		// sp  3,  4,  5,  8, 15
+		// sp  B,  C,  D,  H,  S
+		var spec1 = new VdypSpecies("Test", Layer.PRIMARY, "B");
+		spec1.setVolumeGroup(12);
+		spec1.setDecayGroup(7);
+		spec1.setBreakageGroup(5);
+		spec1.getLoreyHeightByUtilization().setCoe(0, 38.7456512f);
+		spec1.setPercentGenus(1f);
+		spec1.setFractionGenus(0.00817133673f);
+		var spec2 = new VdypSpecies("Test", Layer.PRIMARY, "C");
+		spec2.setVolumeGroup(20);
+		spec2.setDecayGroup(14);
+		spec2.setBreakageGroup(6);
+		spec2.getLoreyHeightByUtilization().setCoe(0, 22.8001652f);
+		spec2.setPercentGenus(7f);
+		spec2.setFractionGenus(0.0972022042f);
+		var spec3 = new VdypSpecies("Test", Layer.PRIMARY, "D");
+		spec3.setVolumeGroup(25);
+		spec3.setDecayGroup(19);
+		spec3.setBreakageGroup(12);
+		spec3.getLoreyHeightByUtilization().setCoe(0, 33.6889763f);
+		spec3.setPercentGenus(74f);
+		spec3.setFractionGenus(0.695440531f);
+		var spec4 = new VdypSpecies("Test", Layer.PRIMARY, "H");
+		spec4.setVolumeGroup(37);
+		spec4.setDecayGroup(31);
+		spec4.setBreakageGroup(17);
+		spec4.getLoreyHeightByUtilization().setCoe(0, 24.3451157f);
+		spec4.setPercentGenus(9f);
+		spec4.setFractionGenus(0.117043354f);
+		var spec5 = new VdypSpecies("Test", Layer.PRIMARY, "S");
+		spec5.setVolumeGroup(66);
+		spec5.setDecayGroup(54);
+		spec5.setBreakageGroup(28);
+		spec5.getLoreyHeightByUtilization().setCoe(0, 34.6888771f);
+		spec5.setPercentGenus(9f);
+		spec5.setFractionGenus(0.082142584f);
+
+		Map<String, VdypSpecies> specs = new HashMap<>();
+		specs.put(spec1.getGenus(),spec1);
+		specs.put(spec2.getGenus(),spec2);
+		specs.put(spec3.getGenus(),spec3);
+		specs.put(spec4.getGenus(),spec4);
+		specs.put(spec5.getGenus(),spec5);
+		
+		float dq = app.estimateQuadMeanDiameterForSpecies(spec1, specs, Region.COASTAL, 30.2601795f, 44.6249847f, 620.504883f, 31.6603775f);
+		
+		assertThat(dq, closeTo(31.7022133f));
 	}
 
 	private static <T> MockStreamingParser<T>

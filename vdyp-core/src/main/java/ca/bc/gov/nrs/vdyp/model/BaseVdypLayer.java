@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.model;
 
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -59,6 +60,11 @@ public class BaseVdypLayer<S extends BaseVdypSpecies> {
 	public void setSpecies(Map<String, S> species) {
 		this.species.clear();
 		this.species.putAll(species);
+	}
+	
+	public void setSpecies(Collection<S> species) {
+		this.species.clear();
+		species.forEach(spec->this.species.put(spec.getGenus(), spec));
 	}
 
 }

@@ -114,7 +114,7 @@ public class RootFinderTest {
 
 		var layer = mockLayer1(control);
 
-		var point = app.findRoot(diameterBase, goal, x, layer);
+		var point = app.findRoot(diameterBase, goal, x, layer, 2.0e-3f);
 
 		assertThat(
 				point,
