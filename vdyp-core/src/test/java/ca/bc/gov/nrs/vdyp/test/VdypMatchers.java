@@ -45,7 +45,7 @@ import ca.bc.gov.nrs.vdyp.model.MatrixMap;
  */
 public class VdypMatchers {
 
-	static final float EPSILON = 0.00001f;
+	static final float EPSILON = 0.001f;
 
 	/**
 	 * Matches a string if when parsed by the parser method it matches the given
