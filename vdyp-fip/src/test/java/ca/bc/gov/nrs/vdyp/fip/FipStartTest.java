@@ -2121,8 +2121,8 @@ class FipStartTest {
 		 * AGEBHL1 layer YTBH hdl1
 		 *
 		 */
-		// sp  3,  4,  5,  8, 15
-		// sp  B,  C,  D,  H,  S
+		// sp 3, 4, 5, 8, 15
+		// sp B, C, D, H, S
 		var spec1 = new VdypSpecies("Test", Layer.PRIMARY, "B");
 		spec1.setVolumeGroup(12);
 		spec1.setDecayGroup(7);
@@ -2365,16 +2365,15 @@ class FipStartTest {
 		);
 
 	}
-	
+
 	@Test
 	void testEstimateQuadMeanDiameterForSpecies() throws Exception {
 		var controlMap = FipTestUtils.loadControlMap();
 		var app = new FipStart();
 		app.setControlMap(controlMap);
 
-		
-		// sp  3,  4,  5,  8, 15
-		// sp  B,  C,  D,  H,  S
+		// sp 3, 4, 5, 8, 15
+		// sp B, C, D, H, S
 		var spec1 = new VdypSpecies("Test", Layer.PRIMARY, "B");
 		spec1.setVolumeGroup(12);
 		spec1.setDecayGroup(7);
@@ -2412,14 +2411,16 @@ class FipStartTest {
 		spec5.setFractionGenus(0.082142584f);
 
 		Map<String, VdypSpecies> specs = new HashMap<>();
-		specs.put(spec1.getGenus(),spec1);
-		specs.put(spec2.getGenus(),spec2);
-		specs.put(spec3.getGenus(),spec3);
-		specs.put(spec4.getGenus(),spec4);
-		specs.put(spec5.getGenus(),spec5);
-		
-		float dq = app.estimateQuadMeanDiameterForSpecies(spec1, specs, Region.COASTAL, 30.2601795f, 44.6249847f, 620.504883f, 31.6603775f);
-		
+		specs.put(spec1.getGenus(), spec1);
+		specs.put(spec2.getGenus(), spec2);
+		specs.put(spec3.getGenus(), spec3);
+		specs.put(spec4.getGenus(), spec4);
+		specs.put(spec5.getGenus(), spec5);
+
+		float dq = app.estimateQuadMeanDiameterForSpecies(
+				spec1, specs, Region.COASTAL, 30.2601795f, 44.6249847f, 620.504883f, 31.6603775f
+		);
+
 		assertThat(dq, closeTo(31.7022133f));
 	}
 

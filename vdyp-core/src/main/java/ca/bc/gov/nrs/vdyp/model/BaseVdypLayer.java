@@ -61,10 +61,10 @@ public class BaseVdypLayer<S extends BaseVdypSpecies> {
 		this.species.clear();
 		this.species.putAll(species);
 	}
-	
+
 	public void setSpecies(Collection<S> species) {
 		this.species.clear();
-		species.forEach(spec->this.species.put(spec.getGenus(), spec));
+		species.forEach(spec -> this.species.put(spec.getGenus(), spec));
 	}
 
 }
