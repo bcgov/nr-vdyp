@@ -2182,95 +2182,185 @@ class FipStartTest {
 		assertThat(
 				layer, hasProperty(
 						"loreyHeightByUtilization", //
-						coe(-1, 0f, 34.2643242f)
+						coe(-1, 0f, 31.4222546f)
 				)
 		);
 		assertThat(
 				spec1, hasProperty(
 						"loreyHeightByUtilization", //
-						coe(-1, 0f, 33.6480446f)
+						coe(-1, 0f, 38.7456512f)
 				)
 		);
 		assertThat(
 				spec2, hasProperty(
 						"loreyHeightByUtilization", //
-						coe(-1, 0f, 34.5648079f)
+						coe(-1, 0f, 22.8001652f)
+				)
+		);
+		assertThat(
+				spec3, hasProperty(
+						"loreyHeightByUtilization", //
+						coe(-1, 0f, 33.6889763f)
+				)
+		);
+		assertThat(
+				spec4, hasProperty(
+						"loreyHeightByUtilization", //
+						coe(-1, 0f, 24.3451157f)
+				)
+		);
+		assertThat(
+				spec5, hasProperty(
+						"loreyHeightByUtilization", //
+						coe(-1, 0f, 34.6888771f)
 				)
 		);
 
 		assertThat(
 				layer, hasProperty(
 						"baseAreaByUtilization", //
-						coe(-1, 0f, 62.6653595f, 0f, 0f, 0f, 0f)
+						coe(-1, 0f, 44.6249847f, 0f, 0f, 0f, 0f)
 				)
 		);
 		assertThat(
 				spec1, hasProperty(
 						"baseAreaByUtilization", //
-						coe(-1, 0f, 20.5394173f, 0f, 0f, 0f, 0f)
+						coe(-1, 0f, 0.398000091f, 0f, 0f, 0f, 0f)
 				)
 		);
 		assertThat(
 				spec2, hasProperty(
 						"baseAreaByUtilization", //
-						coe(-1, 0f, 42.1259422f, 0f, 0f, 0f, 0f)
+						coe(-1, 0f, 5.10918713f, 0f, 0f, 0f, 0f)
+				)
+		);
+		assertThat(
+				spec3, hasProperty(
+						"baseAreaByUtilization", //
+						coe(-1, 0f, 29.478117f, 0f, 0f, 0f, 0f)
+				)
+		);
+		assertThat(
+				spec4, hasProperty(
+						"baseAreaByUtilization", //
+						coe(-1, 0f, 5.52707148f, 0f, 0f, 0f, 0f)
+				)
+		);
+		assertThat(
+				spec5, hasProperty(
+						"baseAreaByUtilization", //
+						coe(-1, 0f, 4.11260939f, 0f, 0f, 0f, 0f)
 				)
 		);
 
 		assertThat(
 				layer, hasProperty(
 						"treesPerHectareByUtilization", //
-						coe(-1, 0f, 753.553711f, 0f, 0f, 0f, 0f)
+						coe(-1, 0f, 620.497803f, 0f, 0f, 0f, 0f)
 				)
 		);
 		assertThat(
 				spec1, hasProperty(
 						"treesPerHectareByUtilization", //
-						coe(-1, 0f, 267.196503f, 0f, 0f, 0f, 0f)
+						coe(-1, 0f, 5.04042435f, 0f, 0f, 0f, 0f)
 				)
 		);
 		assertThat(
 				spec2, hasProperty(
 						"treesPerHectareByUtilization", //
-						coe(-1, 0f, 486.357208f, 0f, 0f, 0f, 0f)
+						coe(-1, 0f, 92.9547882f, 0f, 0f, 0f, 0f)
+				)
+		);
+		assertThat(
+				spec3, hasProperty(
+						"treesPerHectareByUtilization", //
+						coe(-1, 0f, 325.183502f, 0f, 0f, 0f, 0f)
+				)
+		);
+		assertThat(
+				spec4, hasProperty(
+						"treesPerHectareByUtilization", //
+						coe(-1, 0f, 153.230591f, 0f, 0f, 0f, 0f)
+				)
+		);
+		assertThat(
+				spec5, hasProperty(
+						"treesPerHectareByUtilization", //
+						coe(-1, 0f, 44.0884819f, 0f, 0f, 0f, 0f)
 				)
 		);
 
 		assertThat(
 				layer, hasProperty(
 						"quadraticMeanDiameterByUtilization", //
-						coe(-1, 0f, 32.5395622f, 0f, 0f, 0f, 0f)
+						coe(-1, 0f, 30.2603531f, 0f, 0f, 0f, 0f)
 				)
 		);
 		assertThat(
 				spec1, hasProperty(
 						"quadraticMeanDiameterByUtilization", //
-						coe(-1, 0f, 31.2848263f, 0f, 0f, 0f, 0f)
+						coe(-1, 0f, 31.7075806f, 0f, 0f, 0f, 0f)
 				)
 		);
 		assertThat(
 				spec2, hasProperty(
 						"quadraticMeanDiameterByUtilization", //
-						coe(-1, 0f, 33.208725f, 0f, 0f, 0f, 0f)
+						coe(-1, 0f, 26.4542274f, 0f, 0f, 0f, 0f)
+				)
+		);
+		assertThat(
+				spec3, hasProperty(
+						"quadraticMeanDiameterByUtilization", //
+						coe(-1, 0f, 33.9735298f, 0f, 0f, 0f, 0f)
+				)
+		);
+		assertThat(
+				spec4, hasProperty(
+						"quadraticMeanDiameterByUtilization", //
+						coe(-1, 0f, 21.4303799f, 0f, 0f, 0f, 0f)
+				)
+		);
+		assertThat(
+				spec5, hasProperty(
+						"quadraticMeanDiameterByUtilization", //
+						coe(-1, 0f, 34.4628525f, 0f, 0f, 0f, 0f)
 				)
 		);
 
 		assertThat(
 				layer, hasProperty(
 						"wholeStemVolumeByUtilization", //
-						coe(-1, 0f, 892.221252f, 0f, 0f, 0f, 0f)
+						coe(-1, 0f, 638.572754f, 0f, 0f, 0f, 0f)
 				)
 		);
 		assertThat(
 				spec1, hasProperty(
 						"wholeStemVolumeByUtilization", //
-						coe(-1, 0f, 294.432587f, 0f, 0f, 0f, 0f)
+						coe(-1, 0f, 6.38573837f, 0f, 0f, 0f, 0f)
 				)
 		);
 		assertThat(
 				spec2, hasProperty(
 						"wholeStemVolumeByUtilization", //
-						coe(-1, 0f, 597.788635f, 0f, 0f, 0f, 0f)
+						coe(-1, 0f, 44.7000046f, 0f, 0f, 0f, 0f)
+				)
+		);
+		assertThat(
+				spec3, hasProperty(
+						"wholeStemVolumeByUtilization", //
+						coe(-1, 0f, 472.54422f, 0f, 0f, 0f, 0f)
+				)
+		);
+		assertThat(
+				spec4, hasProperty(
+						"wholeStemVolumeByUtilization", //
+						coe(-1, 0f, 57.471405f, 0f, 0f, 0f, 0f)
+				)
+		);
+		assertThat(
+				spec5, hasProperty(
+						"wholeStemVolumeByUtilization", //
+						coe(-1, 0f, 57.4714355f, 0f, 0f, 0f, 0f)
 				)
 		);
 
