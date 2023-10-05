@@ -478,6 +478,9 @@ public class FipStart {
 
 					// EMP061
 					Coefficients limitCoe = getLimitsForHeightAndDiameter(spec.getGenus(), bec.getRegion());
+					
+					var dqMin = limitCoe.getCoe(3) * spec.getLoreyHeightByUtilization().getCoe(UTIL_ALL);
+					var dqMax = max(limitCoe.getCoe(2), limitCoe.getCoe(4) * spec.getLoreyHeightByUtilization().getCoe(UTIL_ALL));
 
 					// EMP060
 					float quadMeanDiameter = clamp(
@@ -485,7 +488,7 @@ public class FipStart {
 									spec, result.getSpecies(), bec.getRegion(), quadMeanDiameterTotal, baseAreaTotal, treesPerHectareTotal,
 									loreyHeightTotal
 							), //
-							limitCoe.getCoe(3), limitCoe.getCoe(4)
+							dqMin, dqMax
 					);
 
 					quadMeanDiameterBase[i++] = quadMeanDiameter;
@@ -533,7 +536,7 @@ public class FipStart {
 				int i = 0;
 				for (var spec : result.getSpecies().values()) {
 					float dqBase = (float) quadMeanDiameterBase[i++];
-					float dq = 7.5f + (dqBase - 7.5f) * exp(rootMap.get(spec.getGenus()) / 20f);
+					float dq = 7.5f + (dqBase - 7.5f) * exp((float) rootVec.getEntry(rootVec.getDimension()-1) / 20f);
 					assert dq >= 0;
 					float ba = baseAreaTotal * spec.getPercentGenus() / 100f;
 					assert ba >= 0;
