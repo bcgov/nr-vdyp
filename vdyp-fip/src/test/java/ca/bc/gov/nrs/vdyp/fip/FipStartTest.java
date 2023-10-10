@@ -2424,6 +2424,94 @@ class FipStartTest {
 		assertThat(dq, closeTo(31.7022133f));
 	}
 
+	@Test
+	void testEstimateSmallComponents() {
+		var controlMap = FipTestUtils.loadControlMap();
+		var app = new FipStart();
+		app.setControlMap(controlMap);
+
+		FipPolygon fPoly = new FipPolygon("Test", "A", "CWH", Optional.empty(), Optional.empty(), Optional.empty(), 0);
+		VdypLayer layer = new VdypLayer("Test", Layer.PRIMARY);
+
+		layer.setBreastHeightAge(54f);
+
+		layer.getLoreyHeightByUtilization().setCoe(FipStart.UTIL_ALL, 31.3307209f);
+		layer.getBaseAreaByUtilization().setCoe(FipStart.UTIL_ALL, 44.6249847f);
+		layer.getTreesPerHectareByUtilization().setCoe(FipStart.UTIL_ALL, 620.484802f);
+		layer.getQuadraticMeanDiameterByUtilization().setCoe(FipStart.UTIL_ALL, 30.2606697f);
+		layer.getWholeStemVolumeByUtilization().setCoe(FipStart.UTIL_ALL, 635.659668f);
+
+		var spec1 = new VdypSpecies("Test", Layer.PRIMARY, "B");
+		spec1.getLoreyHeightByUtilization().setCoe(FipStart.UTIL_ALL, 38.6004372f);
+		spec1.getBaseAreaByUtilization().setCoe(FipStart.UTIL_ALL, 0.397305071f);
+		spec1.getTreesPerHectareByUtilization().setCoe(FipStart.UTIL_ALL, 5.04602766f);
+		spec1.getQuadraticMeanDiameterByUtilization().setCoe(FipStart.UTIL_ALL, 31.6622887f);
+		spec1.getWholeStemVolumeByUtilization().setCoe(FipStart.UTIL_ALL, 635.659668f);
+		var spec2 = new VdypSpecies("Test", Layer.PRIMARY, "C");
+		spec2.getLoreyHeightByUtilization().setCoe(FipStart.UTIL_ALL, 22.8001652f);
+		spec2.getBaseAreaByUtilization().setCoe(FipStart.UTIL_ALL, 5.08774281f);
+		spec2.getTreesPerHectareByUtilization().setCoe(FipStart.UTIL_ALL, 92.4298019f);
+		spec2.getQuadraticMeanDiameterByUtilization().setCoe(FipStart.UTIL_ALL, 26.4735165f);
+		spec2.getWholeStemVolumeByUtilization().setCoe(FipStart.UTIL_ALL, 6.35662031f);
+		var spec3 = new VdypSpecies("Test", Layer.PRIMARY, "D");
+		spec3.getLoreyHeightByUtilization().setCoe(FipStart.UTIL_ALL, 33.5375252f);
+		spec3.getBaseAreaByUtilization().setCoe(FipStart.UTIL_ALL, 29.5411568f);
+		spec3.getTreesPerHectareByUtilization().setCoe(FipStart.UTIL_ALL, 326.800781f);
+		spec3.getQuadraticMeanDiameterByUtilization().setCoe(FipStart.UTIL_ALL, 33.9255791f);
+		spec3.getWholeStemVolumeByUtilization().setCoe(FipStart.UTIL_ALL, 44.496151f);
+		var spec4 = new VdypSpecies("Test", Layer.PRIMARY, "H");
+		spec4.getLoreyHeightByUtilization().setCoe(FipStart.UTIL_ALL, 24.3451157f);
+		spec4.getBaseAreaByUtilization().setCoe(FipStart.UTIL_ALL, 5.50214148f);
+		spec4.getTreesPerHectareByUtilization().setCoe(FipStart.UTIL_ALL, 152.482513f);
+		spec4.getQuadraticMeanDiameterByUtilization().setCoe(FipStart.UTIL_ALL, 21.4343796f);
+		spec4.getWholeStemVolumeByUtilization().setCoe(FipStart.UTIL_ALL, 470.388489f);
+		var spec5 = new VdypSpecies("Test", Layer.PRIMARY, "S");
+		spec5.getLoreyHeightByUtilization().setCoe(FipStart.UTIL_ALL, 34.6888771f);
+		spec5.getBaseAreaByUtilization().setCoe(FipStart.UTIL_ALL, 4.0966382f);
+		spec5.getTreesPerHectareByUtilization().setCoe(FipStart.UTIL_ALL, 43.7256737f);
+		spec5.getQuadraticMeanDiameterByUtilization().setCoe(FipStart.UTIL_ALL, 34.5382729f);
+		spec5.getWholeStemVolumeByUtilization().setCoe(FipStart.UTIL_ALL, 57.2091446f);
+
+		layer.setSpecies(Arrays.asList(spec1, spec2, spec3, spec4, spec5));
+
+		app.estimateSmallComponents(fPoly, layer);
+
+		assertThat(layer.getLoreyHeightByUtilization().getCoe(FipStart.UTIL_SMALL), closeTo(7.14446497f));
+		assertThat(spec1.getLoreyHeightByUtilization().getCoe(FipStart.UTIL_SMALL), closeTo(8.39441967f));
+		assertThat(spec2.getLoreyHeightByUtilization().getCoe(FipStart.UTIL_SMALL), closeTo(6.61517191f));
+		assertThat(spec3.getLoreyHeightByUtilization().getCoe(FipStart.UTIL_SMALL), closeTo(10.8831682f));
+		assertThat(spec4.getLoreyHeightByUtilization().getCoe(FipStart.UTIL_SMALL), closeTo(7.93716192f));
+		assertThat(spec5.getLoreyHeightByUtilization().getCoe(FipStart.UTIL_SMALL), closeTo(8.63455391f));
+
+		assertThat(layer.getBaseAreaByUtilization().getCoe(FipStart.UTIL_SMALL), closeTo(0.0153773092f));
+		assertThat(spec1.getBaseAreaByUtilization().getCoe(FipStart.UTIL_SMALL), closeTo(0f));
+		assertThat(spec2.getBaseAreaByUtilization().getCoe(FipStart.UTIL_SMALL), closeTo(0.0131671466f));
+		assertThat(spec3.getBaseAreaByUtilization().getCoe(FipStart.UTIL_SMALL), closeTo(0.00163476227f));
+		assertThat(spec4.getBaseAreaByUtilization().getCoe(FipStart.UTIL_SMALL), closeTo(0f));
+		assertThat(spec5.getBaseAreaByUtilization().getCoe(FipStart.UTIL_SMALL), closeTo(0.000575399841f));
+
+		assertThat(layer.getTreesPerHectareByUtilization().getCoe(FipStart.UTIL_SMALL), closeTo(5.34804487f));
+		assertThat(spec1.getTreesPerHectareByUtilization().getCoe(FipStart.UTIL_SMALL), closeTo(0f));
+		assertThat(spec2.getTreesPerHectareByUtilization().getCoe(FipStart.UTIL_SMALL), closeTo(4.67143154f));
+		assertThat(spec3.getTreesPerHectareByUtilization().getCoe(FipStart.UTIL_SMALL), closeTo(0.498754263f));
+		assertThat(spec4.getTreesPerHectareByUtilization().getCoe(FipStart.UTIL_SMALL), closeTo(0f));
+		assertThat(spec5.getTreesPerHectareByUtilization().getCoe(FipStart.UTIL_SMALL), closeTo(0.17785944f));
+
+		assertThat(layer.getQuadraticMeanDiameterByUtilization().getCoe(FipStart.UTIL_SMALL), closeTo(6.05059004f));
+		assertThat(spec1.getQuadraticMeanDiameterByUtilization().getCoe(FipStart.UTIL_SMALL), closeTo(6.13586617f));
+		assertThat(spec2.getQuadraticMeanDiameterByUtilization().getCoe(FipStart.UTIL_SMALL), closeTo(5.99067688f));
+		assertThat(spec3.getQuadraticMeanDiameterByUtilization().getCoe(FipStart.UTIL_SMALL), closeTo(6.46009731f));
+		assertThat(spec4.getQuadraticMeanDiameterByUtilization().getCoe(FipStart.UTIL_SMALL), closeTo(6.03505516f));
+		assertThat(spec5.getQuadraticMeanDiameterByUtilization().getCoe(FipStart.UTIL_SMALL), closeTo(6.41802597f));
+
+		assertThat(layer.getWholeStemVolumeByUtilization().getCoe(FipStart.UTIL_SMALL), closeTo(0.0666879341f));
+		assertThat(spec1.getWholeStemVolumeByUtilization().getCoe(FipStart.UTIL_SMALL), closeTo(0f));
+		assertThat(spec2.getWholeStemVolumeByUtilization().getCoe(FipStart.UTIL_SMALL), closeTo(0.0556972362f));
+		assertThat(spec3.getWholeStemVolumeByUtilization().getCoe(FipStart.UTIL_SMALL), closeTo(0.0085867513f));
+		assertThat(spec4.getWholeStemVolumeByUtilization().getCoe(FipStart.UTIL_SMALL), closeTo(0f));
+		assertThat(spec5.getWholeStemVolumeByUtilization().getCoe(FipStart.UTIL_SMALL), closeTo(0.00240394124f));
+	}
+
 	private static <T> MockStreamingParser<T>
 			mockStream(IMocksControl control, Map<String, Object> controlMap, String key, String name)
 					throws IOException {

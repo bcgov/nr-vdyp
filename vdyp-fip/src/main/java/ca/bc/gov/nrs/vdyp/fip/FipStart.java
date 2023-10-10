@@ -76,6 +76,11 @@ import ca.bc.gov.nrs.vdyp.io.parse.GenusDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.HLCoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.HLNonprimaryCoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
+import ca.bc.gov.nrs.vdyp.io.parse.SmallComponentBaseAreaParser;
+import ca.bc.gov.nrs.vdyp.io.parse.SmallComponentDQParser;
+import ca.bc.gov.nrs.vdyp.io.parse.SmallComponentHLParser;
+import ca.bc.gov.nrs.vdyp.io.parse.SmallComponentProbabilityParser;
+import ca.bc.gov.nrs.vdyp.io.parse.SmallComponentWSVolumeParser;
 import ca.bc.gov.nrs.vdyp.io.parse.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.io.parse.TotalStandWholeStemParser;
@@ -111,6 +116,7 @@ public class FipStart {
 
 	public final static int UTIL_ALL = 0;
 	public final static int UTIL_LARGEST = 4;
+	public final static int UTIL_SMALL = -1;
 
 	public final static float TOLERANCE = 2.0e-3f;
 
@@ -2196,6 +2202,176 @@ public class FipStart {
 		}
 		y[y.length - 1] = dqFinal;
 		return y;
+	}
+
+	// YSMALL
+	// TODO move to shared location as it's used elsewhere and implement
+	// compatibility variables
+	/**
+	 * Estimate small components for primary layer
+	 */
+	public void estimateSmallComponents(FipPolygon fPoly, VdypLayer layer) {
+		float loreyHeightSum = 0f;
+		float baseAreaSum = 0f;
+		float treesPerHectareSum = 0f;
+		float volumeSum = 0f;
+
+		Region region = BecDefinitionParser.getBecs(controlMap).get(fPoly.getBiogeoclimaticZone()).get().getRegion();
+
+		for (VdypSpecies spec : layer.getSpecies().values()) {
+			float loreyHeightSpec = spec.getLoreyHeightByUtilization().getCoe(UTIL_ALL); // HLsp
+			float baseAreaSpec = spec.getBaseAreaByUtilization().getCoe(UTIL_ALL); // BAsp
+			float quadMeanDiameterSpec = spec.getBaseAreaByUtilization().getCoe(UTIL_ALL); // DQsp
+
+			// EMP080
+			float smallComponentProbability = smallComponentProbability(layer, spec, region); // PROBsp
+
+			// this WHOLE operation on Actual BA's, not 100% occupancy.
+			float fractionAvailable = fPoly.getPercentAvailable().map(p -> p / 100f).orElse(1f);
+			baseAreaSpec *= fractionAvailable;
+			// EMP081
+			float conditionalExpectedBaseArea = conditionalExpectedBaseArea(spec, baseAreaSpec, region); // BACONDsp
+			conditionalExpectedBaseArea /= fractionAvailable;
+
+			float baseAreaSpecSmall = smallComponentProbability * conditionalExpectedBaseArea;
+
+			// EMP082
+			float quadMeanDiameterSpecSmall = smallComponentQuadMeanDiameter(spec); // DQSMsp
+
+			// EMP085
+			float loreyHeightSpecSmall = smallComponentLoreyHeight(spec, quadMeanDiameterSpecSmall); // HLSMsp
+
+			// EMP086
+			float meanVolumeSmall = meanVolumeSmall(spec, quadMeanDiameterSpecSmall, loreyHeightSpecSmall); // VMEANSMs
+
+			// TODO Apply Compatibility Variables, not needed for FIPSTART
+
+			spec.getLoreyHeightByUtilization().setCoe(UTIL_SMALL, loreyHeightSpecSmall);
+			float treesPerHectareSpecSmall = treesPerHectare(baseAreaSpecSmall, quadMeanDiameterSpecSmall); // TPHSMsp
+			spec.getBaseAreaByUtilization().setCoe(UTIL_SMALL, baseAreaSpecSmall);
+			spec.getTreesPerHectareByUtilization().setCoe(UTIL_SMALL, treesPerHectareSpecSmall);
+			spec.getQuadraticMeanDiameterByUtilization().setCoe(UTIL_SMALL, quadMeanDiameterSpecSmall);
+			float wholeStemVolumeSpecSmall = treesPerHectareSpecSmall * meanVolumeSmall; // VOLWS(I,-1)
+			spec.getWholeStemVolumeByUtilization().setCoe(UTIL_SMALL, wholeStemVolumeSpecSmall);
+
+			loreyHeightSum += baseAreaSpecSmall * loreyHeightSpecSmall;
+			baseAreaSum += baseAreaSpecSmall;
+			treesPerHectareSum += treesPerHectareSpecSmall;
+			volumeSum += wholeStemVolumeSpecSmall;
+		}
+
+		if (baseAreaSum > 0f) {
+			layer.getLoreyHeightByUtilization().setCoe(UTIL_SMALL, loreyHeightSum / baseAreaSum);
+		} else {
+			layer.getLoreyHeightByUtilization().setCoe(UTIL_SMALL, 0f);
+		}
+		layer.getBaseAreaByUtilization().setCoe(UTIL_SMALL, baseAreaSum);
+		layer.getTreesPerHectareByUtilization().setCoe(UTIL_SMALL, treesPerHectareSum);
+		layer.getQuadraticMeanDiameterByUtilization()
+				.setCoe(UTIL_SMALL, quadMeanDiameter(baseAreaSum, treesPerHectareSum));
+		layer.getWholeStemVolumeByUtilization().setCoe(UTIL_SMALL, volumeSum);
+	}
+
+	// EMP086
+	private float meanVolumeSmall(VdypSpecies spec, float quadMeanDiameterSpecSmall, float loreyHeightSpecSmall) {
+		Coefficients coe = getCoeForSpec(spec, SmallComponentWSVolumeParser.CONTROL_KEY);
+
+		// EQN 1 in IPSJF119.doc
+
+		float a0 = coe.getCoe(1);
+		float a1 = coe.getCoe(2);
+		float a2 = coe.getCoe(3);
+		float a3 = coe.getCoe(4);
+
+		return exp(
+				a0 + a1 * log(quadMeanDiameterSpecSmall) + a2 * log(loreyHeightSpecSmall)
+						+ a3 * quadMeanDiameterSpecSmall
+		);
+	}
+
+	// EMP085
+	private float smallComponentLoreyHeight(VdypSpecies spec, float quadMeanDiameterSpecSmall) {
+		Coefficients coe = getCoeForSpec(spec, SmallComponentHLParser.CONTROL_KEY);
+
+		// EQN 1 in IPSJF119.doc
+
+		float a0 = coe.getCoe(1);
+		float a1 = coe.getCoe(2);
+
+		return 1.3f + (spec.getLoreyHeightByUtilization().getCoe(FipStart.UTIL_ALL) - 1.3f) * exp(
+				a0 * (pow(quadMeanDiameterSpecSmall, a1)
+						- pow(spec.getQuadraticMeanDiameterByUtilization().getCoe(UTIL_ALL), a1))
+		);
+	}
+
+	// EMP082
+	private float smallComponentQuadMeanDiameter(VdypSpecies spec) {
+		Coefficients coe = getCoeForSpec(spec, SmallComponentDQParser.CONTROL_KEY);
+
+		// EQN 5 in IPSJF118.doc
+
+		float a0 = coe.getCoe(1);
+		float a1 = coe.getCoe(2);
+
+		float logit = //
+				a0 + a1 * spec.getLoreyHeightByUtilization().getCoe(FipStart.UTIL_ALL);
+
+		return 4.0f + 3.5f * exp(logit) / (1.0f + exp(logit));
+	}
+
+	// EMP081
+	private float conditionalExpectedBaseArea(VdypSpecies spec, float baseAreaSpec, Region region) {
+		Coefficients coe = getCoeForSpec(spec, SmallComponentBaseAreaParser.CONTROL_KEY);
+
+		// EQN 3 in IPSJF118.doc
+
+		float a0 = coe.getCoe(1);
+		float a1 = coe.getCoe(2);
+		float a2 = coe.getCoe(3);
+		float a3 = coe.getCoe(4);
+
+		float coast = region == Region.COASTAL ? 1.0f : 0.0f;
+
+		// FIXME due to a bug in VDYP7 it always treats this as interior. Replicating
+		// that for now.
+		coast = 0f;
+
+		float arg = //
+				(a0 + //
+						a1 * coast + //
+						a2 * spec.getBaseAreaByUtilization().getCoe(FipStart.UTIL_ALL)//
+				) * exp(a3 * spec.getLoreyHeightByUtilization().getCoe(FipStart.UTIL_ALL));
+		arg = max(arg, 0f);
+
+		return arg;
+	}
+
+	// EMP080
+	private float smallComponentProbability(VdypLayer layer, VdypSpecies spec, Region region) {
+		Coefficients coe = getCoeForSpec(spec, SmallComponentProbabilityParser.CONTROL_KEY);
+
+		// EQN 1 in IPSJF118.doc
+
+		float a0 = coe.getCoe(1);
+		float a1 = coe.getCoe(2);
+		float a2 = coe.getCoe(3);
+		float a3 = coe.getCoe(4);
+
+		float coast = region == Region.COASTAL ? 1.0f : 0.0f;
+
+		float logit = //
+				a0 + //
+						a1 * coast + //
+						a2 * layer.getBreastHeightAge() + //
+						a3 * spec.getLoreyHeightByUtilization().getCoe(FipStart.UTIL_ALL);
+
+		return exp(logit) / (1.0f + exp(logit));
+	}
+
+	Coefficients getCoeForSpec(VdypSpecies spec, String controlKey) {
+		var coeMap = Utils.<Map<String, Coefficients>>expectParsedControl(controlMap, controlKey, Map.class);
+		Coefficients coe = coeMap.get(spec.getGenus());
+		return coe;
 	}
 
 	/**
