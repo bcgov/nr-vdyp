@@ -85,6 +85,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.io.parse.TotalStandWholeStemParser;
 import ca.bc.gov.nrs.vdyp.io.parse.UpperCoefficientParser;
+import ca.bc.gov.nrs.vdyp.io.parse.UtilComponentDQParser;
 import ca.bc.gov.nrs.vdyp.io.parse.UtilComponentWSVolumeParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VeteranBQParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VeteranDQParser;
@@ -124,8 +125,41 @@ public class FipStart {
 
 	public static final float PI_40K = 0.78539816E-04f;
 
+	enum UtilityClass {
+		SMALL(-1, "<7.5 cm", 0f, 7.5f), //
+		ALL(0, ">7.5 cm", 7.5f, Float.POSITIVE_INFINITY), //
+		U75TO125(1, "7.5 - 12.5 cm", 7.5f, 12.5f), //
+		U125TO175(2, "12.5 - 17.5 cm", 12.5f, 17.5f), //
+		U175TO225(3, "17.5 - 22.5 cm", 17.5f, 22.5f), //
+		OVER225(4, ">22.5 cm", 22.5f, Float.POSITIVE_INFINITY);
+
+		public final int index;
+		public final String name;
+		public final float lowBound;
+		public final float highBound;
+
+		UtilityClass(int index, String name, float lowBound, float highBound) {
+			this.index = index;
+			this.name = name;
+			this.lowBound = lowBound;
+			this.highBound = highBound;
+		}
+	}
+
 	static final Collection<Integer> UTIL_CLASS_INDICES = IntStream.rangeClosed(1, UTIL_LARGEST).mapToObj(x -> x)
 			.toList();
+
+	static final Collection<UtilityClass> UTIL_CLASSES = List
+			.of(UtilityClass.U75TO125, UtilityClass.U125TO175, UtilityClass.U175TO225, UtilityClass.OVER225);
+
+	static final Map<Integer, String> UTIL_CLASS_NAMES = Utils.constMap(map -> {
+		map.put(-1, "<7.5cm");
+		map.put(0, ">=7.5 cm");
+		map.put(1, "7.5 - 12.5 cm");
+		map.put(2, "12.5 - 17.5 cm");
+		map.put(3, "17.5 - 22.5 cm");
+		map.put(4, "> 22.5 cm");
+	});
 
 	static final Map<String, Integer> ITG_PURE = Utils.constMap(map -> {
 		map.put("AC", 36);
@@ -295,6 +329,7 @@ public class FipStart {
 		}
 	}
 
+	// FIPCALC1
 	VdypLayer processLayerAsPrimary(FipPolygon fipPolygon, FipLayerPrimary fipLayer, float baseAreaOverstory)
 			throws ProcessingException {
 
@@ -405,7 +440,12 @@ public class FipStart {
 			findRootsForDiameterAndBaseArea(result, fipLayer, bec, iPass + 1);
 		}
 
-		return null; // TODO
+		estimateSmallComponents(fipPolygon, result);
+
+		// YUC1
+		computeUtilizationComponentsPrimary(bec, result, VolumeComputeMode.ZERO, CompatibilityVariableMode.NONE);
+
+		return result;
 	}
 
 	// ROOTF01
@@ -926,12 +966,98 @@ public class FipStart {
 		return vdypLayer;
 	}
 
-	private Coefficients utilizationVector() {
+	static Coefficients utilizationVector() {
 		return new Coefficients(new float[] { 0f, 0f, 0f, 0f, 0f, 0f }, -1);
 	}
 
+	enum VolumeComputeMode {
+		/**
+		 * set volume components to zero
+		 */
+		ZERO, // 0
+		/**
+		 * compute volumes by utilization component
+		 */
+		BY_UTIL, // 1
+		/**
+		 * As BY_UTIL but also compute Whole Stem Volume for every species
+		 */
+		BY_UTIL_WITH_WHOLE_STEM_BY_SPEC // 2
+	}
+
+	enum CompatibilityVariableMode {
+		/**
+		 * Don't apply compatibility variables
+		 */
+		NONE, // 0
+		/**
+		 * Apply compatibility variables to all but volume
+		 */
+		NO_VOLUME, // 1
+		/**
+		 * Apply compatibility variables to all components
+		 */
+		ALL // 2
+	}
+
+	// YUC1
+	void computeUtilizationComponentsPrimary(
+			BecDefinition bec, VdypLayer vdypLayer, VolumeComputeMode volumeComputeMode,
+			CompatibilityVariableMode compatibilityVariableMode
+	) throws ProcessingException {
+		log.atTrace().setMessage("computeUtilizationComponentsPrimary for {}, stand total age is {}")
+				.addArgument(vdypLayer.getPolygonIdentifier()).addArgument(vdypLayer.getAgeTotal()).log();
+		log.atDebug().setMessage("Primary layer for {} has {} species/genera: {}")
+				.addArgument(vdypLayer::getPolygonIdentifier) //
+				.addArgument(() -> vdypLayer.getSpecies().size()) //
+				.addArgument(() -> vdypLayer.getSpecies().keySet().stream().collect(Collectors.joining(", "))) //
+				.log();
+
+		for (VdypSpecies spec : vdypLayer.getSpecies().values()) {
+			float loreyHeightSpec = spec.getLoreyHeightByUtilization().getCoe(UTIL_ALL);
+			float baseAreaSpec = spec.getBaseAreaByUtilization().getCoe(UTIL_ALL);
+			float quadMeanDiameterSpec = spec.getQuadraticMeanDiameterByUtilization().getCoe(UTIL_ALL);
+			float treesPerHectareSpec = spec.getTreesPerHectareByUtilization().getCoe(UTIL_ALL);
+
+			log.atDebug().setMessage("Working with species {}  LH: {}  DQ: {}  BA: {}  TPH: {}")
+					.addArgument(spec.getClass()).addArgument(loreyHeightSpec).addArgument(quadMeanDiameterSpec)
+					.addArgument(baseAreaSpec).addArgument(treesPerHectareSpec);
+
+			if (volumeComputeMode == VolumeComputeMode.BY_UTIL_WITH_WHOLE_STEM_BY_SPEC) {
+				log.atDebug().log("Estimating tree volume");
+
+				// EMP090
+				throw new UnsupportedOperationException("TODO"); // Not used yet
+
+				// log.atDebug().setMessage("Species WS stand volume {}")
+				// .addArgument(() -> spec.getWholeStemVolumeByUtilization().getCoe(UTIL_ALL));
+
+			}
+			float wholeStemVolumeSpec = spec.getWholeStemVolumeByUtilization().getCoe(UTIL_ALL);
+
+			var baseAreaUtil = utilizationVector();
+			var quadMeanDiameterUtil = utilizationVector();
+			var treesPerHectareUtil = utilizationVector();
+			var wholeStemVolumeUtil = utilizationVector();
+
+			baseAreaUtil.setCoe(UTIL_ALL, baseAreaSpec); // BAU
+			quadMeanDiameterUtil.setCoe(UTIL_ALL, quadMeanDiameterSpec); // DQU
+			treesPerHectareUtil.setCoe(UTIL_ALL, treesPerHectareSpec); // TPHU
+			wholeStemVolumeUtil.setCoe(UTIL_ALL, wholeStemVolumeSpec); // WSU
+
+			// EMP071
+
+			estimateQuadMeanDiameterByUtilization(bec, quadMeanDiameterUtil, spec);
+		}
+	}
+
+	// YUCV
 	private void computeUtilizationComponentsVeteran(VdypLayer vdypLayer, BecDefinition bec)
 			throws ProcessingException {
+		log.trace(
+				"computeUtilizationComponentsVeterany for {}, stand total age is {}", vdypLayer.getPolygonIdentifier(),
+				vdypLayer.getAgeTotal()
+		);
 
 		var volumeAdjustMap = Utils.<Map<String, Coefficients>>expectParsedControl(
 				controlMap, VeteranLayerVolumeAdjustParser.CONTROL_KEY, Map.class
@@ -1061,6 +1187,103 @@ public class FipStart {
 		} catch (IllegalAccessException | InvocationTargetException ex) {
 			throw new IllegalStateException(ex);
 		}
+	}
+
+	/**
+	 * Estimate DQ by utilization class, see ipsjf120.doc
+	 *
+	 * @param bec
+	 * @param quadMeanDiameterUtil
+	 * @param spec
+	 * @throws ProcessingException
+	 */
+	// EMP071
+	void estimateQuadMeanDiameterByUtilization(BecDefinition bec, Coefficients quadMeanDiameterUtil, VdypSpecies spec)
+			throws ProcessingException {
+		// TODO Auto-generated method stub
+		var growthBec = bec.getGrowthBec();
+		log.atTrace().setMessage("Estimate DQ by utilization class for {} in BEC {}.  DQ for all >7.5 is {}")
+				.addArgument(spec.getGenus()).addArgument(bec.getName())
+				.addArgument(quadMeanDiameterUtil.getCoe(UTIL_ALL));
+
+		float quadMeanDiameter07 = quadMeanDiameterUtil.getCoe(UTIL_ALL);
+
+		for (var uc : UTIL_CLASSES) {
+			log.atDebug().setMessage("For util level {}").addArgument(uc.name);
+			final var coeMap = Utils.<MatrixMap3<Integer, String, String, Coefficients>>expectParsedControl(
+					controlMap, UtilComponentDQParser.CONTROL_KEY, MatrixMap3.class
+			);
+			var coe = coeMap.get(uc.index, spec.getGenus(), bec.getAlias());
+
+			float a0 = coe.getCoe(1);
+			float a1 = coe.getCoe(2);
+			float a2 = coe.getCoe(3);
+
+			log.atDebug().setMessage("a0={}, a1={}, a3={}").addArgument(a0).addArgument(a1).addArgument(a2);
+
+			float logit;
+
+			switch (uc) {
+			case U75TO125:
+				if (quadMeanDiameter07 < 7.5001f) {
+					quadMeanDiameterUtil.setCoe(UTIL_ALL, 7.5f);
+				} else {
+					log.atDebug().setMessage("DQ = 7.5 + a0 * (1 - exp(a1 / a0*(DQ07 - 7.5) ))**a2' )");
+
+					logit = a1 / a0 * (quadMeanDiameter07 - 7.5f);
+
+					quadMeanDiameterUtil
+							.setCoe(uc.index, min(7.5f + a0 * pow(1 - safeExponent(logit), a2), quadMeanDiameter07));
+				}
+				break;
+			case U125TO175, U175TO225:
+				log.atDebug().setMessage(
+						"LOGIT = a0 + a1*(SQ07 / 7.5)**a2,  DQ = (12.5 or 17.5) + 5 * exp(LOGIT) / (1 + exp(LOGIT))"
+				);
+				logit = a0 + a1 * pow(quadMeanDiameter07 / 7.5f, a2);
+
+				quadMeanDiameterUtil.setCoe(uc.index, uc.lowBound + 5f * exponentRatio(logit));
+				break;
+			case OVER225:
+				float a3 = coe.getCoe(4);
+
+				log.atDebug().setMessage(
+						"Coeff A3 {}, LOGIT = a2 + a1*DQ07**a3,  DQ = DQ07 + a0 * (1 - exp(LOGIT) / (1 + exp(LOGIT)) )"
+				);
+
+				logit = a2 + a1 * pow(quadMeanDiameter07, a3);
+
+				quadMeanDiameterUtil
+						.setCoe(uc.index, max(22.5f, quadMeanDiameter07 + a0 * (1f - exponentRatio(logit))));
+				break;
+			case ALL, SMALL:
+				throw new IllegalStateException(
+						"Should not be attempting to process small component or all large components"
+				);
+			}
+
+			log.atDebug().setMessage("Util DQ for class {} is {}").addArgument(uc.name)
+					.addArgument(quadMeanDiameterUtil.getCoe(uc.index));
+		}
+
+		log.atTrace().setMessage("Estimated Diameters {}").addArgument(
+				() -> UTIL_CLASSES.stream()
+						.map(uc -> String.format("%s: %d", uc.name, quadMeanDiameterUtil.getCoe(uc.index)))
+		);
+
+	}
+
+	static float exponentRatio(float logit) throws ProcessingException {
+		float exp = safeExponent(logit);
+		return exp / (1f + exp);
+	}
+
+	static float safeExponent(float logit) throws ProcessingException {
+		if (logit > 88f) {
+			throw new ProcessingException("logit " + logit + " exceeds 88");
+		}
+		float exp = exp(logit);
+		return exp;
 	}
 
 	/**

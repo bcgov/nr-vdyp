@@ -2512,6 +2512,24 @@ class FipStartTest {
 		assertThat(spec5.getWholeStemVolumeByUtilization().getCoe(FipStart.UTIL_SMALL), closeTo(0.00240394124f));
 	}
 
+	@Test
+	void testEstimateQuadMeanDiameterByUtilization() throws ProcessingException {
+		var controlMap = FipTestUtils.loadControlMap();
+		var app = new FipStart();
+		app.setControlMap(controlMap);
+
+		var coe = FipStart.utilizationVector();
+		coe.setCoe(FipStart.UTIL_ALL, 31.6622887f);
+
+		var bec = BecDefinitionParser.getBecs(controlMap).get("CWH").get();
+
+		var spec1 = new VdypSpecies("Test", Layer.PRIMARY, "B");
+
+		app.estimateQuadMeanDiameterByUtilization(bec, coe, spec1);
+
+		assertThat(coe, coe(-1, contains(0f, 31.6622887f, 10.0594692f, 14.966774f, 19.9454956f, 46.1699982f)));
+	}
+
 	private static <T> MockStreamingParser<T>
 			mockStream(IMocksControl control, Map<String, Object> controlMap, String key, String name)
 					throws IOException {
