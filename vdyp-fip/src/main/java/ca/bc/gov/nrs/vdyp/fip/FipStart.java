@@ -85,6 +85,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.io.parse.TotalStandWholeStemParser;
 import ca.bc.gov.nrs.vdyp.io.parse.UpperCoefficientParser;
+import ca.bc.gov.nrs.vdyp.io.parse.UtilComponentBaseAreaParser;
 import ca.bc.gov.nrs.vdyp.io.parse.UtilComponentDQParser;
 import ca.bc.gov.nrs.vdyp.io.parse.UtilComponentWSVolumeParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VeteranBQParser;
@@ -1046,8 +1047,10 @@ public class FipStart {
 			wholeStemVolumeUtil.setCoe(UTIL_ALL, wholeStemVolumeSpec); // WSU
 
 			// EMP071
-
 			estimateQuadMeanDiameterByUtilization(bec, quadMeanDiameterUtil, spec);
+
+			// EMP070
+			estimateBaseAreaByUtilization(bec, quadMeanDiameterUtil, baseAreaUtil, spec);
 		}
 	}
 
@@ -1187,6 +1190,44 @@ public class FipStart {
 		} catch (IllegalAccessException | InvocationTargetException ex) {
 			throw new IllegalStateException(ex);
 		}
+	}
+
+	// EMP070
+	void estimateBaseAreaByUtilization(
+			BecDefinition bec, Coefficients quadMeanDiameterUtil, Coefficients baseAreaUtil, VdypSpecies spec
+	) throws ProcessingException {
+		final var coeMap = Utils.<MatrixMap3<Integer, String, String, Coefficients>>expectParsedControl(
+				controlMap, UtilComponentBaseAreaParser.CONTROL_KEY, MatrixMap3.class
+		);
+
+		float dq = quadMeanDiameterUtil.getCoe(UTIL_ALL);
+		var b = utilizationVector();
+		b.setCoe(0, baseAreaUtil.getCoe(UTIL_ALL));
+		for (int i = 1; i < UTIL_LARGEST; i++) {
+			var coe = coeMap.get(i, spec.getGenus(), bec.getGrowthBec().getAlias());
+
+			float a0 = coe.getCoe(1);
+			float a1 = coe.getCoe(2);
+
+			float logit;
+			if (i == 1) {
+				logit = a0 + a1 * pow(dq, 0.25f);
+			} else {
+				logit = a0 + a1 * dq;
+			}
+			b.setCoe(i, b.getCoe(i - 1) * exponentRatio(logit));
+			if (i == 1 && quadMeanDiameterUtil.getCoe(UTIL_ALL) < 12.5f) {
+				float ba12Max = (1f - pow(
+						(quadMeanDiameterUtil.getCoe(1) - 7.4f) / (quadMeanDiameterUtil.getCoe(UTIL_ALL) - 7.4f), 2f
+				)) * b.getCoe(0);
+				b.scalarInPlace(1, x -> min(x, ba12Max));
+			}
+		}
+
+		baseAreaUtil.setCoe(1, baseAreaUtil.getCoe(UTIL_ALL) - b.getCoe(1));
+		baseAreaUtil.setCoe(2, b.getCoe(1) - b.getCoe(2));
+		baseAreaUtil.setCoe(3, b.getCoe(2) - b.getCoe(3));
+		baseAreaUtil.setCoe(4, b.getCoe(3));
 	}
 
 	/**

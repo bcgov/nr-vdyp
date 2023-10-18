@@ -6,7 +6,7 @@ public class UtilComponentBaseAreaParser extends UtilComponentParser {
 	public static final int NUM_COEFFICIENTS = 2;
 
 	public UtilComponentBaseAreaParser() {
-		super(NUM_COEFFICIENTS, 1, "BA07", "BA12", "BA17", "BA22");
+		super(NUM_COEFFICIENTS, 1, "BA12", "BA17", "BA22");
 	}
 
 	@Override

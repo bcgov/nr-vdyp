@@ -8,6 +8,7 @@ import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.anEmptyMap;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.describedAs;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.hasSize;
@@ -2527,7 +2528,32 @@ class FipStartTest {
 
 		app.estimateQuadMeanDiameterByUtilization(bec, coe, spec1);
 
-		assertThat(coe, coe(-1, contains(0f, 31.6622887f, 10.0594692f, 14.966774f, 19.9454956f, 46.1699982f)));
+		assertThat(coe, utilization(0f, 31.6622887f, 10.0594692f, 14.966774f, 19.9454956f, 46.1699982f));
+	}
+
+	@Test
+	void testEstimateBaseAreaByUtilization() throws ProcessingException {
+		var controlMap = FipTestUtils.loadControlMap();
+		var app = new FipStart();
+		app.setControlMap(controlMap);
+
+		var dq = FipStart.utilizationVector();
+		var ba = FipStart.utilizationVector();
+		dq.setCoe(0, 31.6622887f);
+		dq.setCoe(1, 10.0594692f);
+		dq.setCoe(2, 14.966774f);
+		dq.setCoe(3, 19.9454956f);
+		dq.setCoe(4, 46.1699982f);
+
+		ba.setCoe(0, 0.397305071f);
+
+		var bec = BecDefinitionParser.getBecs(controlMap).get("CWH").get();
+
+		var spec1 = new VdypSpecies("Test", Layer.PRIMARY, "B");
+
+		app.estimateBaseAreaByUtilization(bec, dq, ba, spec1);
+
+		assertThat(ba, utilization(0f, 0.397305071f, 0.00485289097f, 0.0131751001f, 0.0221586525f, 0.357118428f));
 	}
 
 	private static <T> MockStreamingParser<T>
@@ -2701,4 +2727,10 @@ class FipStartTest {
 		public void accept(T unit, Map<String, Object> controlMap) throws Exception;
 	}
 
+	Matcher<Coefficients> utilization(float small, float all, float util1, float util2, float util3, float util4) {
+		return coe(
+				-1,
+				contains(closeTo(small), closeTo(all), closeTo(util1), closeTo(util2), closeTo(util3), closeTo(util4))
+		);
+	}
 }

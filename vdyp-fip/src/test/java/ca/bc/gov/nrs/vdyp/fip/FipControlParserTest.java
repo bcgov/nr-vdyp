@@ -362,7 +362,7 @@ class FipControlParserTest {
 				result,
 				(Matcher) hasSpecificEntry(
 						FipControlParser.UTIL_COMP_BA,
-						allOf(mmHasEntry(coe(1, contains(-26.68771f, 14.38811f)), 2, "AT", "ICH"))
+						allOf(mmHasEntry(coe(1, contains(-26.68771f, 14.38811f)), 1, "AT", "ICH"))
 				)
 		);
 	}

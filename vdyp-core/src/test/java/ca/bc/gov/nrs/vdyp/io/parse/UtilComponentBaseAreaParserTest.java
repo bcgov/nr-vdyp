@@ -33,17 +33,17 @@ class UtilComponentBaseAreaParserTest {
 
 		var result = parser.parse(is, controlMap);
 
-		assertThat(result, mmHasEntry(coe(1, contains(-23.22790f, 12.60472f)), 2, "S1", "B1"));
-		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 2, "S1", "B2"));
-		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 2, "S1", "B3"));
-		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 2, "S1", "B4"));
+		assertThat(result, mmHasEntry(coe(1, contains(-23.22790f, 12.60472f)), 1, "S1", "B1"));
+		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 1, "S1", "B2"));
+		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 1, "S1", "B3"));
+		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 1, "S1", "B4"));
 
-		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 2, "S2", "B1"));
-		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 2, "S2", "B2"));
-		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 2, "S2", "B3"));
-		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 2, "S2", "B4"));
+		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 1, "S2", "B1"));
+		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 1, "S2", "B2"));
+		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 1, "S2", "B3"));
+		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 1, "S2", "B4"));
 
-		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 3, "S1", "B1"));
+		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 2, "S1", "B1"));
 	}
 
 	@Test
@@ -60,17 +60,17 @@ class UtilComponentBaseAreaParserTest {
 
 		var result = parser.parse(is, controlMap);
 
-		assertThat(result, mmHasEntry(coe(1, contains(-23.22790f, 12.60472f)), 2, "S1", "B1"));
-		assertThat(result, mmHasEntry(coe(1, contains(-23.22790f, 12.60472f)), 2, "S1", "B3"));
-		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 2, "S1", "B2"));
-		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 2, "S1", "B4"));
+		assertThat(result, mmHasEntry(coe(1, contains(-23.22790f, 12.60472f)), 1, "S1", "B1"));
+		assertThat(result, mmHasEntry(coe(1, contains(-23.22790f, 12.60472f)), 1, "S1", "B3"));
+		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 1, "S1", "B2"));
+		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 1, "S1", "B4"));
 
-		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 2, "S2", "B1"));
-		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 2, "S2", "B2"));
-		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 2, "S2", "B3"));
-		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 2, "S2", "B4"));
+		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 1, "S2", "B1"));
+		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 1, "S2", "B2"));
+		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 1, "S2", "B3"));
+		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 1, "S2", "B4"));
 
-		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 3, "S1", "B1"));
+		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 2, "S1", "B1"));
 	}
 
 	@Test
@@ -87,17 +87,17 @@ class UtilComponentBaseAreaParserTest {
 
 		var result = parser.parse(is, controlMap);
 
-		assertThat(result, mmHasEntry(coe(1, contains(-23.22790f, 12.60472f)), 2, "S1", "B1"));
-		assertThat(result, mmHasEntry(coe(1, contains(-23.22790f, 12.60472f)), 2, "S1", "B2"));
-		assertThat(result, mmHasEntry(coe(1, contains(-23.22790f, 12.60472f)), 2, "S1", "B3"));
-		assertThat(result, mmHasEntry(coe(1, contains(-23.22790f, 12.60472f)), 2, "S1", "B4"));
+		assertThat(result, mmHasEntry(coe(1, contains(-23.22790f, 12.60472f)), 1, "S1", "B1"));
+		assertThat(result, mmHasEntry(coe(1, contains(-23.22790f, 12.60472f)), 1, "S1", "B2"));
+		assertThat(result, mmHasEntry(coe(1, contains(-23.22790f, 12.60472f)), 1, "S1", "B3"));
+		assertThat(result, mmHasEntry(coe(1, contains(-23.22790f, 12.60472f)), 1, "S1", "B4"));
 
-		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 2, "S2", "B1"));
-		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 2, "S2", "B2"));
-		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 2, "S2", "B3"));
-		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 2, "S2", "B4"));
+		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 1, "S2", "B1"));
+		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 1, "S2", "B2"));
+		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 1, "S2", "B3"));
+		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 1, "S2", "B4"));
 
-		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 3, "S1", "B1"));
+		assertThat(result, mmHasEntry(coe(1, contains(0f, 0f)), 2, "S1", "B1"));
 
 	}
 
