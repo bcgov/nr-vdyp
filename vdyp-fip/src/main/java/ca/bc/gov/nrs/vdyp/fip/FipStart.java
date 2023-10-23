@@ -128,22 +128,40 @@ public class FipStart {
 
 	enum UtilityClass {
 		SMALL(-1, "<7.5 cm", 0f, 7.5f), //
-		ALL(0, ">7.5 cm", 7.5f, Float.POSITIVE_INFINITY), //
+		ALL(0, ">7.5 cm", 7.5f, 10000f), //
 		U75TO125(1, "7.5 - 12.5 cm", 7.5f, 12.5f), //
 		U125TO175(2, "12.5 - 17.5 cm", 12.5f, 17.5f), //
 		U175TO225(3, "17.5 - 22.5 cm", 17.5f, 22.5f), //
-		OVER225(4, ">22.5 cm", 22.5f, Float.POSITIVE_INFINITY);
+		OVER225(4, ">22.5 cm", 22.5f, 10000f);
 
 		public final int index;
 		public final String name;
 		public final float lowBound;
 		public final float highBound;
 
+		private Optional<UtilityClass> next = Optional.empty();
+		private Optional<UtilityClass> previous = Optional.empty();
+
+		static {
+			for (int i = 1; i < UtilityClass.values().length; i++) {
+				UtilityClass.values()[i].previous = Optional.of(UtilityClass.values()[i - 1]);
+				UtilityClass.values()[i - 1].next = Optional.of(UtilityClass.values()[i]);
+			}
+		}
+
 		UtilityClass(int index, String name, float lowBound, float highBound) {
 			this.index = index;
 			this.name = name;
 			this.lowBound = lowBound;
 			this.highBound = highBound;
+		}
+
+		Optional<UtilityClass> next() {
+			return this.next;
+		}
+
+		Optional<UtilityClass> previous() {
+			return this.previous;
 		}
 	}
 
@@ -1051,6 +1069,19 @@ public class FipStart {
 
 			// EMP070
 			estimateBaseAreaByUtilization(bec, quadMeanDiameterUtil, baseAreaUtil, spec);
+
+			// Calculate tree density components
+			for (var uc : UTIL_CLASSES) {
+				treesPerHectareUtil.setCoe(
+						uc.index, treesPerHectare(baseAreaUtil.getCoe(uc.index), quadMeanDiameterUtil.getCoe(uc.index))
+				);
+			}
+
+			// reconcile components with totals
+
+			// YUC1R
+			reconcileComponents(baseAreaUtil, treesPerHectareUtil, quadMeanDiameterUtil);
+
 		}
 	}
 
@@ -1190,6 +1221,228 @@ public class FipStart {
 		} catch (IllegalAccessException | InvocationTargetException ex) {
 			throw new IllegalStateException(ex);
 		}
+	}
+
+	/**
+	 * Implements the two reconciliation modes for layer 1 as described in
+	 * ipsjf120.doc
+	 *
+	 * @param baseAreaUtil
+	 * @param treesPerHectareUtil
+	 * @param quadMeanDiameterUtil
+	 * @throws ProcessingException
+	 */
+	// YUC1R
+	void reconcileComponents(
+			Coefficients baseAreaUtil, Coefficients treesPerHectareUtil, Coefficients quadMeanDiameterUtil
+	) throws ProcessingException {
+		if (baseAreaUtil.getCoe(UTIL_ALL) == 0f) {
+			UTIL_CLASSES.forEach(uc -> {
+				treesPerHectareUtil.setCoe(uc.index, 0f);
+				baseAreaUtil.setCoe(uc.index, 0f);
+			});
+			return;
+		}
+
+		float tphSum = 0f;
+		float baSum = 0f;
+		for (var uc : UTIL_CLASSES) {
+			tphSum += treesPerHectareUtil.getCoe(uc.index);
+			baSum += baseAreaUtil.getCoe(uc.index);
+		}
+
+		if (abs(baSum - baseAreaUtil.getCoe(UTIL_ALL)) / baSum > 0.00003) {
+			throw new ProcessingException("Computed base areas for 7.5+ components do not sum to expected total");
+		}
+
+		float dq0 = quadMeanDiameter(baseAreaUtil.getCoe(UTIL_ALL), treesPerHectareUtil.getCoe(UTIL_ALL));
+
+		if (dq0 < 7.5f) {
+			throw new ProcessingException(
+					"Quadratic mean diameter computed from total base area and trees per hectare is less than 7.5 cm"
+			);
+		}
+
+		float tphSumHigh = (float) UTIL_CLASSES.stream()
+				.mapToDouble(uc -> treesPerHectare(baseAreaUtil.getCoe(uc.index), uc.lowBound)).sum();
+
+		if (tphSumHigh < treesPerHectareUtil.getCoe(UTIL_ALL)) {
+			reconcileComponentsMode1(baseAreaUtil, treesPerHectareUtil, quadMeanDiameterUtil, tphSumHigh);
+		} else {
+			reconcileComponentsMode2or3(baseAreaUtil, treesPerHectareUtil, quadMeanDiameterUtil);
+		}
+
+	}
+
+	private final static List<UtilityClass> MODE_1_RECONCILE_AVAILABILITY_CLASSES = List
+			.of(UtilityClass.OVER225, UtilityClass.U175TO225, UtilityClass.U125TO175);
+
+	void reconcileComponentsMode1(
+			Coefficients baseAreaUtil, Coefficients treesPerHectareUtil, Coefficients quadMeanDiameterUtil,
+			float tphSumHigh
+	) {
+		// MODE 1
+
+		// the high sum of TPH's is too low. Need MODE 1 reconciliation MUST set DQU's
+		// to lowest allowable values AND must move BA from upper classes to lower
+		// classes.
+
+		float tphNeed = treesPerHectareUtil.getCoe(UTIL_ALL) - tphSumHigh;
+
+		UTIL_CLASSES.forEach(uc -> quadMeanDiameterUtil.setCoe(uc.index, uc.lowBound));
+
+		for (var uc : MODE_1_RECONCILE_AVAILABILITY_CLASSES) {
+			float tphAvail = treesPerHectare(baseAreaUtil.getCoe(uc.index), uc.previous().get().lowBound)
+					- treesPerHectare(baseAreaUtil.getCoe(uc.index), uc.lowBound);
+
+			if (tphAvail < tphNeed) {
+				baseAreaUtil.scalarInPlace(uc.previous().get().index, x -> x + baseAreaUtil.getCoe(uc.index));
+				baseAreaUtil.setCoe(uc.index, 0f);
+				tphNeed -= tphAvail;
+			} else {
+				float baseAreaMove = baseAreaUtil.getCoe(uc.index) * tphNeed / tphAvail;
+				baseAreaUtil.scalarInPlace(uc.previous().get().index, x -> x + baseAreaMove);
+				baseAreaUtil.scalarInPlace(uc.index, x -> x - baseAreaMove);
+				break;
+			}
+		}
+		UTIL_CLASSES.forEach(
+				uc -> treesPerHectareUtil.setCoe(
+						uc.index, treesPerHectare(baseAreaUtil.getCoe(uc.index), quadMeanDiameterUtil.getCoe(uc.index))
+				)
+		);
+	}
+
+	void reconcileComponentsMode2or3(
+			Coefficients baseAreaUtil, Coefficients treesPerHectareUtil, Coefficients quadMeanDiameterUtil
+	) throws ProcessingException {
+		// Before entering mode 2, check to see if reconciliation is already adequate
+
+		float tphSum = (float) UTIL_CLASSES.stream().mapToDouble(uc -> treesPerHectareUtil.getCoe(uc.index)).sum();
+
+		if (abs(tphSum - treesPerHectareUtil.getCoe(UTIL_ALL) / tphSum) > 0.00001) {
+			reconcileComponentsMode2(baseAreaUtil, treesPerHectareUtil, quadMeanDiameterUtil);
+			return;
+		}
+		for (var uc : UTIL_CLASSES) {
+			if (baseAreaUtil.getCoe(uc.index) > 0f) {
+				if (treesPerHectareUtil.getCoe(uc.index) <= 0f) {
+					reconcileComponentsMode2(baseAreaUtil, treesPerHectareUtil, quadMeanDiameterUtil);
+					return;
+				}
+				float dWant = quadMeanDiameter(baseAreaUtil.getCoe(uc.index), treesPerHectareUtil.getCoe(uc.index));
+				float dqI = quadMeanDiameterUtil.getCoe(uc.index);
+				if (dqI >= uc.lowBound && dqI <= uc.highBound && abs(dWant - dqI) < 0.00001) {
+					reconcileComponentsMode3(baseAreaUtil, treesPerHectareUtil, quadMeanDiameterUtil);
+					return;
+				}
+			}
+		}
+
+	}
+
+	private void reconcileComponentsMode2(
+			Coefficients baseAreaUtil, Coefficients treesPerHectareUtil, Coefficients quadMeanDiameterUtil
+	) throws ProcessingException {
+		int n = 0;
+		float baseAreaFixed = 0f;
+		float treesPerHectareFixed = 0f;
+		var quadMeanDiameterLimit = new boolean[] { false, false, false, false, false };
+		Coefficients dqTrial = utilizationVector();
+
+		while (true) {
+			n++;
+
+			if (n > 4) {
+				throw new ProcessingException("Mode 2 component reconciliation iterations exceeded 4");
+			}
+
+			float sum = (float) UTIL_CLASSES.stream().mapToDouble(uc -> {
+				float baI = baseAreaUtil.getCoe(uc.index);
+				float dqI = quadMeanDiameterUtil.getCoe(uc.index);
+				if (baI != 0 && !quadMeanDiameterLimit[uc.index]) {
+					return baI / (dqI * dqI);
+				}
+				return 0;
+			}).sum();
+
+			float baAll = baseAreaUtil.getCoe(UTIL_ALL) - baseAreaFixed;
+			float tphAll = treesPerHectareUtil.getCoe(UTIL_ALL) - treesPerHectareFixed;
+
+			if (baAll <= 0f || tphAll <= 0f) {
+				reconcileComponentsMode3(baseAreaUtil, treesPerHectareUtil, quadMeanDiameterUtil);
+				return;
+			}
+
+			float dqAll = quadMeanDiameter(baAll, tphAll);
+
+			float k = dqAll * dqAll / baAll * sum;
+			float sqrtK = sqrt(k);
+
+			for (var uc : UTIL_CLASSES) {
+				if (!quadMeanDiameterLimit[uc.index] && baseAreaUtil.getCoe(uc.index) > 0f) {
+					dqTrial.setCoe(uc.index, quadMeanDiameterUtil.getCoe(uc.index) * sqrtK);
+				}
+			}
+
+			UtilityClass violateClass = null;
+			float violate = 0f;
+			boolean violateLow = false;
+
+			for (var uc : UTIL_CLASSES) {
+				if (baseAreaUtil.getCoe(uc.index) > 0f) {
+					if (dqTrial.getCoe(uc.index) < uc.lowBound) {
+						float vi = 1f - dqTrial.getCoe(uc.index) / uc.lowBound;
+						if (vi > violate) {
+							violate = vi;
+							violateClass = uc;
+							violateLow = true;
+						}
+					}
+				}
+				if (dqTrial.getCoe(uc.index) > uc.highBound) {
+					float vi = dqTrial.getCoe(uc.index) / uc.highBound - 1f;
+					if (vi > violate) {
+						violate = vi;
+						violateClass = uc;
+						violateLow = false;
+					}
+				}
+			}
+			if (violateClass == null)
+				break;
+			// Move the worst offending DQ to its limit
+			dqTrial.setCoe(violateClass.index, violateLow ? violateClass.lowBound : violateClass.highBound);
+
+			quadMeanDiameterLimit[violateClass.index] = true;
+			baseAreaFixed += baseAreaUtil.getCoe(violateClass.index);
+			treesPerHectareFixed += treesPerHectare(
+					baseAreaUtil.getCoe(violateClass.index), dqTrial.getCoe(violateClass.index)
+			);
+		}
+
+		// Make BA's agree with DQ's and TPH's
+		for (var uc : UTIL_CLASSES) {
+			quadMeanDiameterUtil.setCoe(uc.index, dqTrial.getCoe(uc.index));
+			treesPerHectareUtil.setCoe(
+					uc.index, treesPerHectare(baseAreaUtil.getCoe(uc.index), quadMeanDiameterUtil.getCoe(uc.index))
+			);
+		}
+		// RE VERIFY That sums are correct
+		float baSum = (float) UTIL_CLASSES.stream().mapToDouble(uc -> baseAreaUtil.getCoe(uc.index)).sum();
+		float tphSum = (float) UTIL_CLASSES.stream().mapToDouble(uc -> treesPerHectareUtil.getCoe(uc.index)).sum();
+		if (abs(baSum - baseAreaUtil.getCoe(UTIL_ALL)) / baSum > 0.0002) {
+			throw new ProcessingException("Failed to reconcile Base Area");
+		}
+		if (abs(tphSum - treesPerHectareUtil.getCoe(UTIL_ALL)) / tphSum > 0.0002) {
+			throw new ProcessingException("Failed to reconcile Trees per Hectare");
+		}
+	}
+
+	void reconcileComponentsMode3(
+			Coefficients baseAreaUtil, Coefficients treesPerHectareUtil, Coefficients quadMeanDiameterUtil
+	) {
+		// TODO
 	}
 
 	// EMP070

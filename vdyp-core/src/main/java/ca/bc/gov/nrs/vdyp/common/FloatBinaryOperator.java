@@ -7,7 +7,7 @@ package ca.bc.gov.nrs.vdyp.common;
  *
  */
 @FunctionalInterface
-public interface FloatBinaryOperator {
+public interface FloatBinaryOperator extends IndexedFloatBinaryOperator {
 	/**
 	 * Applies this operator to the given operands.
 	 *
@@ -16,4 +16,9 @@ public interface FloatBinaryOperator {
 	 * @return the operator result
 	 */
 	float applyAsFloat(float left, float right);
+
+	@Override
+	default float applyAsFloatWithIndex(float left, float right, int index) {
+		return applyAsFloat(left, right);
+	}
 }

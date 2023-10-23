@@ -8,6 +8,8 @@ import java.util.stream.DoubleStream;
 
 import ca.bc.gov.nrs.vdyp.common.FloatBinaryOperator;
 import ca.bc.gov.nrs.vdyp.common.FloatUnaryOperator;
+import ca.bc.gov.nrs.vdyp.common.IndexedFloatBinaryOperator;
+import ca.bc.gov.nrs.vdyp.common.IndexedFloatUnaryOperator;
 
 /**
  * Fixed length list of floats that can be accessed using an offset index
@@ -111,10 +113,20 @@ public class Coefficients extends AbstractList<Float> implements List<Float> {
 	 * @param op   operation to perform for each pair of coefficients
 	 */
 	public void pairwiseInPlace(Coefficients coe2, FloatBinaryOperator op) {
+		pairwiseInPlace(coe2, (IndexedFloatBinaryOperator) op);
+	}
+
+	/**
+	 * Performs a pairwise operation in place with a compatible Coefficients object
+	 *
+	 * @param coe2 must have the same size and index offset
+	 * @param op   operation to perform for each pair of coefficients
+	 */
+	public void pairwiseInPlace(Coefficients coe2, IndexedFloatBinaryOperator op) {
 		checkCompatible(coe2);
 		int max = getIndexFrom() + size();
 		for (int i = getIndexFrom(); i < max; i++) {
-			setCoe(i, op.applyAsFloat(getCoe(i), coe2.getCoe(i)));
+			setCoe(i, op.applyAsFloatWithIndex(getCoe(i), coe2.getCoe(i), i));
 		}
 	}
 
@@ -140,6 +152,17 @@ public class Coefficients extends AbstractList<Float> implements List<Float> {
 	 * @param op   operation to perform for each pair of coefficients
 	 */
 	public Coefficients pairwise(Coefficients coe2, FloatBinaryOperator op) {
+		return pairwise(coe2, (IndexedFloatBinaryOperator) op);
+	}
+
+	/**
+	 * Performs a pairwise operation with a compatible Coefficients object and
+	 * returns the result.
+	 *
+	 * @param coe2 must have the same size and index offset
+	 * @param op   operation to perform for each pair of coefficients
+	 */
+	public Coefficients pairwise(Coefficients coe2, IndexedFloatBinaryOperator op) {
 		var result = new Coefficients(this, this.getIndexFrom());
 		result.pairwiseInPlace(coe2, op);
 		return result;
@@ -151,9 +174,27 @@ public class Coefficients extends AbstractList<Float> implements List<Float> {
 	 * @param op
 	 */
 	public void scalarInPlace(FloatUnaryOperator op) {
+		scalarInPlace((IndexedFloatUnaryOperator) op);
+	}
+
+	/**
+	 * Perform the operation on one particular coefficient in place
+	 *
+	 * @param op
+	 */
+	public void scalarInPlace(int i, IndexedFloatUnaryOperator op) {
+		setCoe(i, op.applyAsFloatWithIndex(getCoe(i), i));
+	}
+
+	/**
+	 * Perform the operation on each coefficient in place
+	 *
+	 * @param op
+	 */
+	public void scalarInPlace(IndexedFloatUnaryOperator op) {
 		int max = getIndexFrom() + size();
 		for (int i = getIndexFrom(); i < max; i++) {
-			setCoe(i, op.applyAsFloat(getCoe(i)));
+			scalarInPlace(i, op);
 		}
 	}
 
@@ -172,11 +213,20 @@ public class Coefficients extends AbstractList<Float> implements List<Float> {
 	 * @param op
 	 * @return
 	 */
-	public Coefficients scalar(FloatUnaryOperator op) {
+	public Coefficients scalar(IndexedFloatUnaryOperator op) {
 		var result = new Coefficients(this, this.getIndexFrom());
 		result.scalarInPlace(op);
 		return result;
+	}
 
+	/**
+	 * Perform the operation on each coefficient and return the result
+	 *
+	 * @param op
+	 * @return
+	 */
+	public Coefficients scalar(FloatUnaryOperator op) {
+		return scalar((IndexedFloatUnaryOperator) op);
 	}
 
 	/**
