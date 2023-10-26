@@ -1269,7 +1269,7 @@ public class FipStart {
 		if (tphSumHigh < treesPerHectareUtil.getCoe(UTIL_ALL)) {
 			reconcileComponentsMode1(baseAreaUtil, treesPerHectareUtil, quadMeanDiameterUtil, tphSumHigh);
 		} else {
-			reconcileComponentsMode2or3(baseAreaUtil, treesPerHectareUtil, quadMeanDiameterUtil);
+			reconcileComponentsMode2Check(baseAreaUtil, treesPerHectareUtil, quadMeanDiameterUtil);
 		}
 
 	}
@@ -1313,14 +1313,14 @@ public class FipStart {
 		);
 	}
 
-	void reconcileComponentsMode2or3(
+	void reconcileComponentsMode2Check(
 			Coefficients baseAreaUtil, Coefficients treesPerHectareUtil, Coefficients quadMeanDiameterUtil
 	) throws ProcessingException {
 		// Before entering mode 2, check to see if reconciliation is already adequate
 
 		float tphSum = (float) UTIL_CLASSES.stream().mapToDouble(uc -> treesPerHectareUtil.getCoe(uc.index)).sum();
 
-		if (abs(tphSum - treesPerHectareUtil.getCoe(UTIL_ALL) / tphSum) > 0.00001) {
+		if (abs(tphSum - treesPerHectareUtil.getCoe(UTIL_ALL)) / tphSum > 0.00001) {
 			reconcileComponentsMode2(baseAreaUtil, treesPerHectareUtil, quadMeanDiameterUtil);
 			return;
 		}
@@ -1333,7 +1333,6 @@ public class FipStart {
 				float dWant = quadMeanDiameter(baseAreaUtil.getCoe(uc.index), treesPerHectareUtil.getCoe(uc.index));
 				float dqI = quadMeanDiameterUtil.getCoe(uc.index);
 				if (dqI >= uc.lowBound && dqI <= uc.highBound && abs(dWant - dqI) < 0.00001) {
-					reconcileComponentsMode3(baseAreaUtil, treesPerHectareUtil, quadMeanDiameterUtil);
 					return;
 				}
 			}
@@ -1442,7 +1441,29 @@ public class FipStart {
 	void reconcileComponentsMode3(
 			Coefficients baseAreaUtil, Coefficients treesPerHectareUtil, Coefficients quadMeanDiameterUtil
 	) {
-		// TODO
+
+		/*
+		 * Reconciliation mode 3 NOT IN THE ORIGINAL DESIGN The primary motivation for
+		 * this mode is an example where all trees were in a signle utilization class
+		 * and had a DQ of 12.4 cm. BUT the true DQ for the stand was slightly over
+		 * 12.5. In this case the best solution is to simply reassign all trees to the
+		 * single most appropriate class.
+		 *
+		 * Note, "original design" means something pre-VDYP 7. This was added to the
+		 * Fortran some time before the port to Java including the comment above.
+		 */
+		UTIL_CLASSES.forEach(uc -> {
+			baseAreaUtil.setCoe(uc.index, 0f);
+			treesPerHectareUtil.setCoe(uc.index, 0f);
+			quadMeanDiameterUtil.setCoe(uc.index, uc.lowBound + 2.5f);
+		});
+
+		var ucToUpdate = UTIL_CLASSES.stream().filter(uc -> quadMeanDiameterUtil.getCoe(UTIL_ALL) < uc.highBound)
+				.findFirst().get();
+
+		baseAreaUtil.setCoe(ucToUpdate.index, baseAreaUtil.getCoe(UTIL_ALL));
+		treesPerHectareUtil.setCoe(ucToUpdate.index, treesPerHectareUtil.getCoe(UTIL_ALL));
+		quadMeanDiameterUtil.setCoe(ucToUpdate.index, quadMeanDiameterUtil.getCoe(UTIL_ALL));
 	}
 
 	// EMP070

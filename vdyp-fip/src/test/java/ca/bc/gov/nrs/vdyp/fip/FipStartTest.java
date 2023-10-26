@@ -2628,6 +2628,43 @@ class FipStartTest {
 		assertThat(dq, utilization(0f, 31.6622887f, 9.17939758f, 13.6573782f, 18.2005272f, 42.1307297f));
 	}
 
+	@Test
+	void testReconcileComponentsMode3() throws ProcessingException {
+		var controlMap = FipTestUtils.loadControlMap();
+		var app = new FipStart();
+		app.setControlMap(controlMap);
+
+		var dq = FipStart.utilizationVector();
+		var ba = FipStart.utilizationVector();
+		var tph = FipStart.utilizationVector();
+
+		// Set of inputs that cause mode 2 to fail over into mode 3
+
+		dq.setCoe(0, 12.51f);
+		dq.setCoe(1, 12.4f);
+		dq.setCoe(2, 0f);
+		dq.setCoe(3, 0f);
+		dq.setCoe(4, 0f);
+
+		ba.setCoe(0, 2.20898318f);
+		ba.setCoe(1, 2.20898318f);
+		ba.setCoe(2, 0f);
+		ba.setCoe(3, 0f);
+		ba.setCoe(4, 0f);
+
+		tph.setCoe(0, 179.71648f);
+		tph.setCoe(1, 182.91916f);
+		tph.setCoe(2, 0f);
+		tph.setCoe(3, 0f);
+		tph.setCoe(4, 0f);
+
+		app.reconcileComponents(ba, tph, dq);
+
+		assertThat(ba, utilization(0f, 2.20898318f, 0f, 2.20898318f, 0f, 0f));
+		assertThat(tph, utilization(0f, 179.71648f, 0f, 179.71648f, 0f, 0f));
+		assertThat(dq, utilization(0f, 12.51f, 10, 12.51f, 20f, 25f));
+	}
+
 	private static <T> MockStreamingParser<T>
 			mockStream(IMocksControl control, Map<String, Object> controlMap, String key, String name)
 					throws IOException {
