@@ -1082,6 +1082,12 @@ public class FipStart {
 			// YUC1R
 			reconcileComponents(baseAreaUtil, treesPerHectareUtil, quadMeanDiameterUtil);
 
+			if (volumeComputeMode == VolumeComputeMode.ZERO) {
+				throw new UnsupportedOperationException("TODO");
+			} else {
+				// EMP091
+				
+			}
 		}
 	}
 
@@ -1271,7 +1277,7 @@ public class FipStart {
 		} else {
 			reconcileComponentsMode2Check(baseAreaUtil, treesPerHectareUtil, quadMeanDiameterUtil);
 		}
-
+		
 	}
 
 	private final static List<UtilityClass> MODE_1_RECONCILE_AVAILABILITY_CLASSES = List
