@@ -45,6 +45,8 @@ import org.hamcrest.TypeSafeMatcher;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+import ca.bc.gov.nrs.vdyp.fip.FipStart.CompatibilityVariableMode;
+import ca.bc.gov.nrs.vdyp.fip.FipStart.VolumeComputeMode;
 import ca.bc.gov.nrs.vdyp.fip.model.FipLayer;
 import ca.bc.gov.nrs.vdyp.fip.model.FipLayerPrimary;
 import ca.bc.gov.nrs.vdyp.fip.model.FipMode;
@@ -2664,6 +2666,128 @@ class FipStartTest {
 		assertThat(tph, utilization(0f, 179.71648f, 0f, 179.71648f, 0f, 0f));
 		assertThat(dq, utilization(0f, 12.51f, 10, 12.51f, 20f, 25f));
 	}
+
+	@Test
+	public void testEstimateWholeStemVolumeByUtilizationClass() throws ProcessingException {
+		var controlMap = FipTestUtils.loadControlMap();
+		var app = new FipStart();
+		app.setControlMap(controlMap);
+		
+		var bec = BecDefinitionParser.getBecs(controlMap).get("MH").get();
+
+		var dq = FipStart.utilizationVector();
+		var ba = FipStart.utilizationVector();
+		var wsv = FipStart.utilizationVector();
+
+		dq.setCoe(0, 13.4943399f);
+		dq.setCoe(1, 10.2402296f);
+		dq.setCoe(2, 14.6183214f);
+		dq.setCoe(3, 19.3349762f);
+		dq.setCoe(4, 25.6280651f);
+
+		ba.setCoe(0, 2.20898318f);
+		ba.setCoe(1, 0.691931725f);
+		ba.setCoe(2, 0.862404406f);
+		ba.setCoe(3, 0.433804274f);
+		ba.setCoe(4, 0.220842764f);
+		
+		wsv.setCoe(FipStart.UTIL_ALL, 11.7993851f);
+		
+		app.estimateWholeStemVolumeByUtilizationClass(bec, 46, 14.2597857f, dq, ba, wsv);
+		
+		assertThat(wsv, utilization(0f,11.7993851f, 3.13278913f, 4.76524019f, 2.63645673f, 1.26489878f));
+	}
+	
+	@Test
+	public void testComputeUtilizationComponentsPrimaryZeroNone() throws ProcessingException {
+		var controlMap = FipTestUtils.loadControlMap();
+		var app = new FipStart();
+		app.setControlMap(controlMap);
+		
+		var bec = BecDefinitionParser.getBecs(controlMap).get("MH").get();
+		
+		var layer = new VdypLayer("Test", Layer.PRIMARY);
+		
+		layer.setBreastHeightAge(54f);
+
+		layer.getLoreyHeightByUtilization().setCoe(FipStart.UTIL_ALL, 13.0660105f);
+		layer.getBaseAreaByUtilization().setCoe(FipStart.UTIL_ALL, 19.9786701f);
+		layer.getTreesPerHectareByUtilization().setCoe(FipStart.UTIL_ALL, 1485.8208f);
+		layer.getQuadraticMeanDiameterByUtilization().setCoe(FipStart.UTIL_ALL, 13.0844402f);
+		layer.getWholeStemVolumeByUtilization().setCoe(FipStart.UTIL_ALL, 117.993797f);
+		
+		layer.getLoreyHeightByUtilization().setCoe(FipStart.UTIL_SMALL, 7.83768177f);
+		layer.getBaseAreaByUtilization().setCoe(FipStart.UTIL_SMALL, 0.0286490358f);
+		layer.getTreesPerHectareByUtilization().setCoe(FipStart.UTIL_SMALL, 9.29024601f);
+		layer.getQuadraticMeanDiameterByUtilization().setCoe(FipStart.UTIL_SMALL, 6.26608753f);
+		layer.getWholeStemVolumeByUtilization().setCoe(FipStart.UTIL_SMALL, 0.107688069f);
+
+		var spec1 = new VdypSpecies("Test", Layer.PRIMARY, "B");
+		spec1.getLoreyHeightByUtilization().setCoe(FipStart.UTIL_ALL, 14.2597857f);
+		spec1.getBaseAreaByUtilization().setCoe(FipStart.UTIL_ALL, 2.20898318f);
+		spec1.getTreesPerHectareByUtilization().setCoe(FipStart.UTIL_ALL, 154.454025f);
+		spec1.getQuadraticMeanDiameterByUtilization().setCoe(FipStart.UTIL_ALL, 13.4943399f);
+		spec1.getWholeStemVolumeByUtilization().setCoe(FipStart.UTIL_ALL, 11.7993851f);
+		
+		spec1.getLoreyHeightByUtilization().setCoe(FipStart.UTIL_SMALL, 7.86393309f);
+		spec1.getBaseAreaByUtilization().setCoe(FipStart.UTIL_SMALL, 0.012636207f);
+		spec1.getTreesPerHectareByUtilization().setCoe(FipStart.UTIL_SMALL, 3.68722916f);
+		spec1.getQuadraticMeanDiameterByUtilization().setCoe(FipStart.UTIL_SMALL, 6.60561657f);
+		spec1.getWholeStemVolumeByUtilization().setCoe(FipStart.UTIL_SMALL, 0.0411359742f);
+		
+		var spec2 = new VdypSpecies("Test", Layer.PRIMARY, "C");
+		spec2.getLoreyHeightByUtilization().setCoe(FipStart.UTIL_ALL, 12.9176102f);
+		spec2.getBaseAreaByUtilization().setCoe(FipStart.UTIL_ALL, 17.7696857f);
+		spec2.getTreesPerHectareByUtilization().setCoe(FipStart.UTIL_ALL, 1331.36682f);
+		spec2.getQuadraticMeanDiameterByUtilization().setCoe(FipStart.UTIL_ALL, 13.0360518f);
+		spec2.getWholeStemVolumeByUtilization().setCoe(FipStart.UTIL_ALL, 106.194412f);
+		
+		spec2.getLoreyHeightByUtilization().setCoe(FipStart.UTIL_SMALL, 7.81696558f);
+		spec2.getBaseAreaByUtilization().setCoe(FipStart.UTIL_SMALL, 0.0160128288f);
+		spec2.getTreesPerHectareByUtilization().setCoe(FipStart.UTIL_SMALL, 5.60301685f);
+		spec2.getQuadraticMeanDiameterByUtilization().setCoe(FipStart.UTIL_SMALL, 6.03223324f);
+		spec2.getWholeStemVolumeByUtilization().setCoe(FipStart.UTIL_SMALL, 0.0665520951f);
+
+		layer.setSpecies(Arrays.asList(spec1, spec2));
+
+		app.computeUtilizationComponentsPrimary(bec, layer, VolumeComputeMode.ZERO, CompatibilityVariableMode.NONE);
+
+		assertThat(layer.getLoreyHeightByUtilization(), coe(-1 , contains(closeTo(7.83768177f), closeTo(13.0660114f))));
+		assertThat(spec1.getLoreyHeightByUtilization(), coe(-1 , contains(closeTo(7.86393309f), closeTo(14.2597857f))));
+		assertThat(spec2.getLoreyHeightByUtilization(), coe(-1 , contains(closeTo(7.81696558f), closeTo(12.9176102f))));
+
+		assertThat(layer.getBaseAreaByUtilization(), utilization(0.0286490358f, 19.9786682f, 6.79730701f, 8.54689693f, 3.63577318f, 0.998692036f));
+		assertThat(spec1.getBaseAreaByUtilization(), utilization(0.012636207f, 2.20898318f, 0.691931725f, 0.862404406f, 0.433804274f, 0.220842764f));
+		assertThat(spec2.getBaseAreaByUtilization(), utilization(0.0160128288f, 17.7696857f, 6.10537529f, 7.68449211f, 3.20196891f, 0.777849257f));
+
+		assertThat(layer.getTreesPerHectareByUtilization(), utilization(9.29024601f, 1485.8208f, 834.253357f, 509.088287f, 123.560303f, 18.9189682f));
+		assertThat(spec1.getTreesPerHectareByUtilization(), utilization(3.68722916f, 154.454025f, 84.0144501f, 51.3837852f, 14.7746315f, 4.28116179f));
+		assertThat(spec2.getTreesPerHectareByUtilization(), utilization(5.60301685f, 1331.36682f, 750.238892f, 457.704498f, 108.785675f, 14.6378069f));
+
+		assertThat(layer.getQuadraticMeanDiameterByUtilization(), utilization(6.26608753f, 13.0844393f, 10.1853161f, 14.6205177f, 19.3559265f, 25.9252014f));
+		assertThat(spec1.getQuadraticMeanDiameterByUtilization(), utilization(6.60561657f, 13.4943399f, 10.2402296f, 14.6183214f, 19.3349762f, 25.6280651f));
+		assertThat(spec2.getQuadraticMeanDiameterByUtilization(), utilization(6.03223324f, 13.0360518f, 10.1791487f, 14.6207638f, 19.3587704f, 26.0114632f));
+
+		assertThat(layer.getWholeStemVolumeByUtilization(), utilization(0.107688069f, 117.993797f, 33.3679581f, 52.4308395f, 25.2295609f, 6.96543789f));
+		assertThat(spec1.getWholeStemVolumeByUtilization(), utilization(0.0411359742f, 11.7993851f, 3.13278913f, 4.76524019f, 2.63645673f, 1.26489878f));
+		assertThat(spec2.getWholeStemVolumeByUtilization(), utilization(0.0665520951f, 106.194412f, 30.2351704f, 47.6655998f, 22.5931034f, 5.70053911f));
+		
+		assertThat(layer.getCloseUtilizationVolumeByUtilization(), utilization(0f, 67.7539444f, 2.41736674f, 36.8750687f, 22.0155602f, 6.44594717f));
+		assertThat(spec1.getCloseUtilizationVolumeByUtilization(), utilization(0f, 6.41845179f, 0.0353721268f, 2.99654913f, 2.23212862f, 1.1544019f));
+		assertThat(spec2.getCloseUtilizationVolumeByUtilization(), utilization(0f, 61.335495f, 2.38199472f, 33.878521f, 19.783432f, 5.29154539f));
+		
+		assertThat(layer.getCloseUtilizationNetVolumeOfDecayByUtilization(), utilization(0f, 67.0664597f, 2.39902258f, 36.5664368f, 21.7930279f, 6.30796671f));
+		assertThat(spec1.getCloseUtilizationNetVolumeOfDecayByUtilization(), utilization(0f, 6.26433992f, 0.0349677317f, 2.95546484f, 2.18952441f, 1.08438313f));
+		assertThat(spec2.getCloseUtilizationNetVolumeOfDecayByUtilization(), utilization(0f, 60.8021164f, 2.36405492f, 33.6109734f, 19.6035042f, 5.2235837f));
+		
+		assertThat(layer.getCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(), utilization(0f, 66.8413391f, 2.39506769f, 36.4802933f, 21.7218285f, 6.24415016f));
+		assertThat(spec1.getCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(), utilization(0f, 6.18276405f, 0.0347718038f, 2.93580461f, 2.16927385f, 1.04291379f));
+		assertThat(spec2.getCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(), utilization(0f, 60.6585732f, 2.36029577f, 33.544487f, 19.5525551f, 5.20123625f));
+
+		assertThat(layer.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(), utilization(0f, 65.4214401f, 2.34636664f, 35.7128258f, 21.2591972f, 6.10304976f));
+		assertThat(spec1.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(), utilization(0f, 5.989573f, 0.0337106399f, 2.84590816f, 2.10230994f, 1.00764418f));
+		assertThat(spec2.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(), utilization(0f, 59.4318657f, 2.31265593f, 32.8669167f, 19.1568871f, 5.09540558f));
+}
 
 	private static <T> MockStreamingParser<T>
 			mockStream(IMocksControl control, Map<String, Object> controlMap, String key, String name)

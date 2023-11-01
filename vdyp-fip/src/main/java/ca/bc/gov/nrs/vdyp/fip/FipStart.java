@@ -1086,7 +1086,10 @@ public class FipStart {
 				throw new UnsupportedOperationException("TODO");
 			} else {
 				// EMP091
-				
+				estimateWholeStemVolumeByUtilizationClass(
+						bec.getVolumeBec(), spec.getVolumeGroup(), loreyHeightSpec, quadMeanDiameterUtil, baseAreaUtil,
+						wholeStemVolumeUtil
+				);
 			}
 		}
 	}
@@ -1277,7 +1280,7 @@ public class FipStart {
 		} else {
 			reconcileComponentsMode2Check(baseAreaUtil, treesPerHectareUtil, quadMeanDiameterUtil);
 		}
-		
+
 	}
 
 	private final static List<UtilityClass> MODE_1_RECONCILE_AVAILABILITY_CLASSES = List
@@ -2024,6 +2027,69 @@ public class FipStart {
 
 			var result = processor.apply(i, input.getCoe(i));
 			output.setCoe(i, result);
+		}
+	}
+
+	/**
+	 * Estimate the whole stem volume by utilization components
+	 * 
+	 * @param volumeBec
+	 * @param loreyHeightSpec
+	 * @param quadMeanDiameterUtil
+	 * @param baseAreaUtil
+	 * @param wholeStemVolumeUtil
+	 * @throws ProcessingException
+	 */
+	void estimateWholeStemVolumeByUtilizationClass(
+			BecDefinition bec, int volumeGroup, float loreyHeightSpec, Coefficients quadMeanDiameterUtil,
+			Coefficients baseAreaUtil, Coefficients wholeStemVolumeUtil
+	) throws ProcessingException {
+		final var wholeStemCoeMap = Utils.<MatrixMap2<Integer, Integer, Optional<Coefficients>>>expectParsedControl(
+				controlMap, UtilComponentWSVolumeParser.CONTROL_KEY, MatrixMap2.class
+		);
+
+		float quadMeanDiameterSpec = quadMeanDiameterUtil.getCoe(UTIL_ALL);
+		for (var uc : UTIL_CLASSES) {
+			if (baseAreaUtil.getCoe(uc.index) <= 0f) {
+				wholeStemVolumeUtil.setCoe(uc.index, 0f);
+				continue;
+			}
+			Coefficients coe = wholeStemCoeMap.get(uc.index, volumeGroup).orElseThrow(
+					() -> new ProcessingException(
+							"Whole stem utilization component coefficients were not available for volume group "
+									+ volumeGroup
+					)
+			);
+
+			float a0 = coe.getCoe(0);
+			float a1 = coe.getCoe(1);
+			float a2 = coe.getCoe(2);
+			float a3 = coe.getCoe(3);
+
+			float arg;
+			if (uc.index < UtilityClass.OVER225.index) {
+				arg = a0 + a1 * log(loreyHeightSpec) + a2 * log(quadMeanDiameterUtil.getCoe(uc.index))
+						+ a3 * log(quadMeanDiameterSpec);
+			} else {
+				arg = a0 + a1 * log(loreyHeightSpec) + a2 * log(quadMeanDiameterUtil.getCoe(uc.index))
+						+ a3 * quadMeanDiameterSpec;
+			}
+			// TODO adjustment Conditional on IUSEUC
+
+			float vbrauc = exp(arg);
+			wholeStemVolumeUtil.setCoe(uc.index, baseAreaUtil.getCoe(uc.index) * vbrauc);
+		}
+
+		// TODO Conditional on IUSEUC
+		if (true) {
+			// Reconcile
+			float volSum = (float) UTIL_CLASSES.stream()
+					.mapToDouble(uc -> (double) wholeStemVolumeUtil.getCoe(uc.index)).sum();
+			if (volSum <= 0) {
+				throw new ProcessingException("Sum of component whole stem volumes was not positive.");
+			}
+			float k = wholeStemVolumeUtil.getCoe(UTIL_ALL) / volSum;
+			UTIL_CLASSES.forEach(uc -> wholeStemVolumeUtil.scalarInPlace(uc.index, x -> x * k));
 		}
 	}
 
