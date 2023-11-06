@@ -1108,10 +1108,10 @@ public class FipStart {
 			if (volumeComputeMode == VolumeComputeMode.ZERO) {
 				throw new UnsupportedOperationException("TODO");
 			} else {
-				
+
 				// EMP091
 				estimateWholeStemVolume(
-						0, adjustCloseUtil.getCoe(4), spec.getVolumeGroup(), loreyHeightSpec, quadMeanDiameterUtil,
+						UtilizationClass.ALL, adjustCloseUtil.getCoe(4), spec.getVolumeGroup(), loreyHeightSpec, quadMeanDiameterUtil,
 						baseAreaUtil, wholeStemVolumeUtil
 				);
 
@@ -1174,7 +1174,7 @@ public class FipStart {
 				// AADJUSTV
 				var volumeAdjustCoe = volumeAdjustMap.get(vdypSpecies.getGenus());
 
-				var utilizationClass = UTIL_LARGEST; // IUC_VET
+				var utilizationClass = UtilizationClass.OVER225; // IUC_VET
 
 				// ADJ
 				var adjust = new Coefficients(new float[] { 0f, 0f, 0f, 0f }, 1);
@@ -1929,16 +1929,16 @@ public class FipStart {
 	 * Updates wholeStemVolumeUtil with estimated values.
 	 */
 	void estimateWholeStemVolume(
-			int utilizationClass, float adjustCloseUtil, int volumeGroup, Float hlSp, Coefficients quadMeanDiameterUtil,
-			Coefficients baseAreaUtil, Coefficients wholeStemVolumeUtil
+			UtilizationClass utilizationClass, float adjustCloseUtil, int volumeGroup, Float hlSp,
+			Coefficients quadMeanDiameterUtil, Coefficients baseAreaUtil, Coefficients wholeStemVolumeUtil
 	) throws ProcessingException {
 		var dqSp = quadMeanDiameterUtil.getCoe(UTIL_ALL);
 		final var wholeStemUtilizationComponentMap = Utils
 				.<MatrixMap2<Integer, Integer, Optional<Coefficients>>>expectParsedControl(
 						controlMap, UtilComponentWSVolumeParser.CONTROL_KEY, MatrixMap2.class
 				);
-		estimateUtilization(baseAreaUtil, wholeStemVolumeUtil, utilizationClass, (i, ba) -> {
-			Coefficients wholeStemCoe = wholeStemUtilizationComponentMap.get(i, volumeGroup).orElseThrow(
+		estimateUtilization(baseAreaUtil, wholeStemVolumeUtil, utilizationClass, (uc, ba) -> {
+			Coefficients wholeStemCoe = wholeStemUtilizationComponentMap.get(uc.index, volumeGroup).orElseThrow(
 					() -> new ProcessingException(
 							"Could not find whole stem utilization coefficients for group " + volumeGroup
 					)
@@ -1951,10 +1951,10 @@ public class FipStart {
 			var a2 = wholeStemCoe.getCoe(2);
 			var a3 = wholeStemCoe.getCoe(3);
 
-			var arg = a0 + a1 * log(hlSp) + a2 * log(quadMeanDiameterUtil.getCoe(i))
-					+ ( (i <= 3) ? a3 * log(dqSp) : a3 * dqSp);
+			var arg = a0 + a1 * log(hlSp) + a2 * log(quadMeanDiameterUtil.getCoe(uc.index))
+					+ ( (uc != UtilizationClass.OVER225) ? a3 * log(dqSp) : a3 * dqSp);
 
-			if (i == utilizationClass) {
+			if (uc == utilizationClass) {
 				arg += adjustCloseUtil;
 			}
 
@@ -1963,7 +1963,7 @@ public class FipStart {
 			return ba * vbaruc;
 		}, x -> x < 0f, 0f);
 
-		if (utilizationClass == UTIL_ALL) {
+		if (utilizationClass == UtilizationClass.ALL) {
 			normalizeUtilizationComponents(wholeStemVolumeUtil);
 		}
 
@@ -1976,16 +1976,16 @@ public class FipStart {
 	 * @throws ProcessingException
 	 */
 	void estimateCloseUtilizationVolume(
-			int utilizationClass, Coefficients aAdjust, int volumeGroup, float hlSp, Coefficients quadMeanDiameterUtil,
-			Coefficients wholeStemVolumeUtil, Coefficients closeUtilizationVolumeUtil
+			UtilizationClass utilizationClass, Coefficients aAdjust, int volumeGroup, float hlSp,
+			Coefficients quadMeanDiameterUtil, Coefficients wholeStemVolumeUtil, Coefficients closeUtilizationVolumeUtil
 	) throws ProcessingException {
 		var dqSp = quadMeanDiameterUtil.getCoe(UTIL_ALL);
 		final var closeUtilizationCoeMap = Utils
 				.<MatrixMap2<Integer, Integer, Optional<Coefficients>>>expectParsedControl(
 						controlMap, CloseUtilVolumeParser.CONTROL_KEY, MatrixMap2.class
 				);
-		estimateUtilization(wholeStemVolumeUtil, closeUtilizationVolumeUtil, utilizationClass, (i, ws) -> {
-			Coefficients closeUtilCoe = closeUtilizationCoeMap.get(i, volumeGroup).orElseThrow(
+		estimateUtilization(wholeStemVolumeUtil, closeUtilizationVolumeUtil, utilizationClass, (uc, ws) -> {
+			Coefficients closeUtilCoe = closeUtilizationCoeMap.get(uc.index, volumeGroup).orElseThrow(
 					() -> new ProcessingException(
 							"Could not find whole stem utilization coefficients for group " + volumeGroup
 					)
@@ -1994,21 +1994,21 @@ public class FipStart {
 			var a1 = closeUtilCoe.getCoe(2);
 			var a2 = closeUtilCoe.getCoe(3);
 
-			var arg = a0 + a1 * quadMeanDiameterUtil.getCoe(i) + a2 * hlSp + aAdjust.getCoe(i);
+			var arg = a0 + a1 * quadMeanDiameterUtil.getCoe(uc.index) + a2 * hlSp + aAdjust.getCoe(uc.index);
 
 			float ratio = ratio(arg, 7.0f);
 
 			return ws * ratio;
 		});
 
-		if (utilizationClass == UTIL_ALL) {
+		if (utilizationClass == UtilizationClass.ALL) {
 			storeSumUtilizationComponents(closeUtilizationVolumeUtil);
 		}
 	}
 
 	@FunctionalInterface
 	static interface UtilizationProcessor {
-		float apply(int utilizationClass, float inputValue) throws ProcessingException;
+		float apply(UtilizationClass utilizationClass, float inputValue) throws ProcessingException;
 	}
 
 	/**
@@ -2023,7 +2023,7 @@ public class FipStart {
 	 * @throws ProcessingException
 	 */
 	static void estimateUtilization(
-			Coefficients input, Coefficients output, int utilizationClass, UtilizationProcessor processor
+			Coefficients input, Coefficients output, UtilizationClass utilizationClass, UtilizationProcessor processor
 	) throws ProcessingException {
 		estimateUtilization(input, output, utilizationClass, processor, x -> false, 0f);
 	}
@@ -2044,26 +2044,26 @@ public class FipStart {
 	 * @throws ProcessingException
 	 */
 	static void estimateUtilization(
-			Coefficients input, Coefficients output, int utilizationClass, UtilizationProcessor processor,
+			Coefficients input, Coefficients output, UtilizationClass utilizationClass, UtilizationProcessor processor,
 			Predicate<Float> skip, float defaultValue
 	) throws ProcessingException {
-		for (var i : UTIL_CLASS_INDICES) {
-			var inputValue = input.getCoe(i);
+		for (var uc : UTIL_CLASSES) {
+			var inputValue = input.getCoe(uc.index);
 
 			// it seems like this should be done after checking i against utilizationClass,
 			// which could just be done as part of the processor definition, but this is how
 			// VDYP7 did it.
 			if (skip.test(inputValue)) {
-				output.setCoe(i, defaultValue);
+				output.setCoe(uc.index, defaultValue);
 				continue;
 			}
 
-			if (utilizationClass != UTIL_ALL && utilizationClass != i) {
+			if (utilizationClass != UtilizationClass.ALL && utilizationClass != uc) {
 				continue;
 			}
 
-			var result = processor.apply(i, input.getCoe(i));
-			output.setCoe(i, result);
+			var result = processor.apply(uc, input.getCoe(uc.index));
+			output.setCoe(uc.index, result);
 		}
 	}
 
@@ -2082,7 +2082,7 @@ public class FipStart {
 	 */
 	// EMP093
 	void estimateNetDecayVolume(
-			String genus, Region region, int utilizationClass, Coefficients aAdjust, int decayGroup, float lorieHeight,
+			String genus, Region region, UtilizationClass utilizationClass, Coefficients aAdjust, int decayGroup, float lorieHeight,
 			float ageBreastHeight, Coefficients quadMeanDiameterUtil, Coefficients closeUtilizationUtil,
 			Coefficients closeUtilizationNetOfDecayUtil
 	) throws ProcessingException {
@@ -2096,8 +2096,8 @@ public class FipStart {
 
 		final var ageTr = (float) Math.log(Math.max(20.0, ageBreastHeight));
 
-		estimateUtilization(closeUtilizationUtil, closeUtilizationNetOfDecayUtil, utilizationClass, (i, cu) -> {
-			Coefficients netDecayCoe = netDecayCoeMap.get(i, decayGroup).orElseThrow(
+		estimateUtilization(closeUtilizationUtil, closeUtilizationNetOfDecayUtil, utilizationClass, (uc, cu) -> {
+			Coefficients netDecayCoe = netDecayCoeMap.get(uc.index, decayGroup).orElseThrow(
 					() -> new ProcessingException("Could not find net decay coefficients for group " + decayGroup)
 			);
 			var a0 = netDecayCoe.getCoe(1);
@@ -2105,20 +2105,20 @@ public class FipStart {
 			var a2 = netDecayCoe.getCoe(3);
 
 			float arg;
-			if (i <= 3) {
+			if (uc != UtilizationClass.OVER225) {
 				arg = a0 + a1 * log(dqSp) + a2 * ageTr;
 			} else {
-				arg = a0 + a1 * log(quadMeanDiameterUtil.getCoe(i)) + a2 * ageTr;
+				arg = a0 + a1 * log(quadMeanDiameterUtil.getCoe(uc.index)) + a2 * ageTr;
 			}
 
-			arg += aAdjust.getCoe(i) + decayModifierMap.get(genus, region);
+			arg += aAdjust.getCoe(uc.index) + decayModifierMap.get(genus, region);
 
 			float ratio = ratio(arg, 8.0f);
 
 			return cu * ratio;
 		});
 
-		if (utilizationClass == 0) {
+		if (utilizationClass == UtilizationClass.ALL) {
 			storeSumUtilizationComponents(closeUtilizationNetOfDecayUtil);
 		}
 	}
@@ -2128,7 +2128,7 @@ public class FipStart {
 	 */
 	// EMP094
 	void estimateNetDecayAndWasteVolume(
-			Region region, int utilizationClass, Coefficients aAdjust, String genus, float lorieHeight,
+			Region region, UtilizationClass utilizationClass, Coefficients aAdjust, String genus, float lorieHeight,
 			float ageBreastHeight, Coefficients quadMeanDiameterUtil, Coefficients closeUtilizationUtil,
 			Coefficients closeUtilizationNetOfDecayUtil, Coefficients closeUtilizationNetOfDecayAndWasteUtil
 	) throws ProcessingException {
@@ -2160,12 +2160,12 @@ public class FipStart {
 					var a4 = netWasteCoe.getCoe(4);
 					var a5 = netWasteCoe.getCoe(5);
 
-					if (i == 4) {
+					if (i == UtilizationClass.OVER225) {
 						a0 += a5;
 					}
-					var frd = 1.0f - netDecay / closeUtilizationUtil.getCoe(i);
+					var frd = 1.0f - netDecay / closeUtilizationUtil.getCoe(i.index);
 
-					float arg = a0 + a1 * frd + a3 * log(quadMeanDiameterUtil.getCoe(i)) + a4 * log(lorieHeight);
+					float arg = a0 + a1 * frd + a3 * log(quadMeanDiameterUtil.getCoe(i.index)) + a4 * log(lorieHeight);
 
 					arg += wasteModifierMap.get(genus, region);
 
@@ -2174,17 +2174,17 @@ public class FipStart {
 					var frw = (1.0f - exp(a2 * frd)) * exp(arg) / (1f + exp(arg)) * (1f - frd);
 					frw = min(frd, frw);
 
-					float result = closeUtilizationUtil.getCoe(i) * (1f - frd - frw);
+					float result = closeUtilizationUtil.getCoe(i.index) * (1f - frd - frw);
 
 					/*
 					 * Check for an apply adjustments. This is done after computing the result above
 					 * to allow for clamping frw to frd
 					 */
-					if (aAdjust.getCoe(i) != 0f) {
+					if (aAdjust.getCoe(i.index) != 0f) {
 						var ratio = result / netDecay;
 						if (ratio < 1f && ratio > 0f) {
 							arg = log(ratio / (1f - ratio));
-							arg += aAdjust.getCoe(i);
+							arg += aAdjust.getCoe(i.index);
 							arg = clamp(arg, -10f, 10f);
 							result = exp(arg) / (1f + exp(arg)) * netDecay;
 						}
@@ -2194,7 +2194,7 @@ public class FipStart {
 				}
 		);
 
-		if (utilizationClass == UTIL_ALL) {
+		if (utilizationClass == UtilizationClass.ALL) {
 			storeSumUtilizationComponents(closeUtilizationNetOfDecayAndWasteUtil);
 		}
 	}
@@ -2205,7 +2205,7 @@ public class FipStart {
 	 * @throws ProcessingException
 	 */
 	void estimateNetDecayWasteAndBreakageVolume(
-			int utilizationClass, int breakageGroup, Coefficients quadMeanDiameterUtil,
+			UtilizationClass utilizationClass, int breakageGroup, Coefficients quadMeanDiameterUtil,
 			Coefficients closeUtilizationUtil, Coefficients closeUtilizationNetOfDecayAndWasteUtil,
 			Coefficients closeUtilizationNetOfDecayWasteAndBreakageUtil
 	) throws ProcessingException {
@@ -2223,19 +2223,19 @@ public class FipStart {
 
 		estimateUtilization(
 				closeUtilizationNetOfDecayAndWasteUtil, closeUtilizationNetOfDecayWasteAndBreakageUtil,
-				utilizationClass, (i, netWaste) -> {
+				utilizationClass, (uc, netWaste) -> {
 
 					if (netWaste <= 0f) {
 						return 0f;
 					}
-					var percentBroken = a1 + a2 * log(quadMeanDiameterUtil.getCoe(i));
+					var percentBroken = a1 + a2 * log(quadMeanDiameterUtil.getCoe(uc.index));
 					percentBroken = clamp(percentBroken, a3, a4);
-					var broken = min(percentBroken / 100 * closeUtilizationUtil.getCoe(i), netWaste);
+					var broken = min(percentBroken / 100 * closeUtilizationUtil.getCoe(uc.index), netWaste);
 					return netWaste - broken;
 				}
 		);
 
-		if (utilizationClass == UTIL_ALL) {
+		if (utilizationClass == UtilizationClass.ALL) {
 			storeSumUtilizationComponents(closeUtilizationNetOfDecayAndWasteUtil);
 		}
 

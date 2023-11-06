@@ -46,6 +46,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.fip.FipStart.CompatibilityVariableMode;
+import ca.bc.gov.nrs.vdyp.fip.FipStart.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.fip.FipStart.VolumeComputeMode;
 import ca.bc.gov.nrs.vdyp.fip.model.FipLayer;
 import ca.bc.gov.nrs.vdyp.fip.model.FipLayerPrimary;
@@ -1086,7 +1087,7 @@ class FipStartTest {
 		var app = new FipStart();
 		app.setControlMap(controlMap);
 
-		var utilizationClass = 4;
+		var utilizationClass = UtilizationClass.OVER225;
 		var aAdjust = 0.10881f;
 		var volumeGroup = 12;
 		var lorieHeight = 26.2000008f;
@@ -1119,7 +1120,7 @@ class FipStartTest {
 		var app = new FipStart();
 		app.setControlMap(controlMap);
 
-		var utilizationClass = 4;
+		var utilizationClass = UtilizationClass.OVER225;
 		var aAdjust = new Coefficients(new float[] { 0f, 0f, 0f, -0.0981800035f }, 1);
 		var volumeGroup = 12;
 		var lorieHeight = 26.2000008f;
@@ -1157,7 +1158,7 @@ class FipStartTest {
 		var app = new FipStart();
 		app.setControlMap(controlMap);
 
-		var utilizationClass = 4;
+		var utilizationClass = UtilizationClass.OVER225;
 		var aAdjust = new Coefficients(new float[] { 0f, 0f, 0f, 0.000479999988f }, 1);
 		var decayGroup = 7;
 		var lorieHeight = 26.2000008f;
@@ -1204,7 +1205,7 @@ class FipStartTest {
 		var app = new FipStart();
 		app.setControlMap(controlMap);
 
-		var utilizationClass = 4;
+		var utilizationClass = UtilizationClass.OVER225;
 		var aAdjust = new Coefficients(new float[] { 0f, 0f, 0f, -0.00295000011f }, 1);
 		var lorieHeight = 26.2000008f;
 		var breastHeightAge = 97.9000015f;
@@ -1247,7 +1248,7 @@ class FipStartTest {
 		var app = new FipStart();
 		app.setControlMap(controlMap);
 
-		var utilizationClass = 4;
+		var utilizationClass = UtilizationClass.OVER225;
 		var breakageGroup = 5;
 		var quadMeanDiameterUtil = new Coefficients(new float[] { 51.8356705f, 0f, 0f, 0f, 51.8356705f }, 0);
 		var closeUtilizationUtil = new Coefficients(new float[] { 0f, 0f, 0f, 0f, 5.86088896f }, 0);
@@ -2692,13 +2693,13 @@ class FipStartTest {
 		wsv.setCoe(FipStart.UTIL_ALL, 11.7993851f);
 
 		// app.estimateWholeStemVolumeByUtilizationClass(46, 14.2597857f, dq, ba, wsv);
-		app.estimateWholeStemVolume(FipStart.UTIL_ALL, 0f, 46, 14.2597857f, dq, ba, wsv);
+		app.estimateWholeStemVolume(UtilizationClass.ALL, 0f, 46, 14.2597857f, dq, ba, wsv);
 
 		assertThat(wsv, utilization(0f, 11.7993851f, 3.13278913f, 4.76524019f, 2.63645673f, 1.26489878f));
 	}
 
 	@Test
-	public void testComputeUtilizationComponentsPrimaryZeroNone() throws ProcessingException {
+	public void testComputeUtilizationComponentsPrimaryByUtilNoCV() throws ProcessingException {
 		var controlMap = FipTestUtils.loadControlMap();
 		var app = new FipStart();
 		app.setControlMap(controlMap);
@@ -2749,7 +2750,7 @@ class FipStartTest {
 
 		layer.setSpecies(Arrays.asList(spec1, spec2));
 
-		app.computeUtilizationComponentsPrimary(bec, layer, VolumeComputeMode.ZERO, CompatibilityVariableMode.NONE);
+		app.computeUtilizationComponentsPrimary(bec, layer, VolumeComputeMode.BY_UTIL, CompatibilityVariableMode.NONE);
 
 		assertThat(layer.getLoreyHeightByUtilization(), coe(-1, contains(closeTo(7.83768177f), closeTo(13.0660114f))));
 		assertThat(spec1.getLoreyHeightByUtilization(), coe(-1, contains(closeTo(7.86393309f), closeTo(14.2597857f))));
