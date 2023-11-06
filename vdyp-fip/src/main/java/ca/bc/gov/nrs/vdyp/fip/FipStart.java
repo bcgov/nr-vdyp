@@ -126,7 +126,7 @@ public class FipStart {
 
 	public static final float PI_40K = 0.78539816E-04f;
 
-	enum UtilityClass {
+	enum UtilizationClass {
 		SMALL(-1, "<7.5 cm", 0f, 7.5f), //
 		ALL(0, ">7.5 cm", 7.5f, 10000f), //
 		U75TO125(1, "7.5 - 12.5 cm", 7.5f, 12.5f), //
@@ -139,28 +139,28 @@ public class FipStart {
 		public final float lowBound;
 		public final float highBound;
 
-		private Optional<UtilityClass> next = Optional.empty();
-		private Optional<UtilityClass> previous = Optional.empty();
+		private Optional<UtilizationClass> next = Optional.empty();
+		private Optional<UtilizationClass> previous = Optional.empty();
 
 		static {
-			for (int i = 1; i < UtilityClass.values().length; i++) {
-				UtilityClass.values()[i].previous = Optional.of(UtilityClass.values()[i - 1]);
-				UtilityClass.values()[i - 1].next = Optional.of(UtilityClass.values()[i]);
+			for (int i = 1; i < UtilizationClass.values().length; i++) {
+				UtilizationClass.values()[i].previous = Optional.of(UtilizationClass.values()[i - 1]);
+				UtilizationClass.values()[i - 1].next = Optional.of(UtilizationClass.values()[i]);
 			}
 		}
 
-		UtilityClass(int index, String name, float lowBound, float highBound) {
+		UtilizationClass(int index, String name, float lowBound, float highBound) {
 			this.index = index;
 			this.name = name;
 			this.lowBound = lowBound;
 			this.highBound = highBound;
 		}
 
-		Optional<UtilityClass> next() {
+		Optional<UtilizationClass> next() {
 			return this.next;
 		}
 
-		Optional<UtilityClass> previous() {
+		Optional<UtilizationClass> previous() {
 			return this.previous;
 		}
 	}
@@ -168,8 +168,9 @@ public class FipStart {
 	static final Collection<Integer> UTIL_CLASS_INDICES = IntStream.rangeClosed(1, UTIL_LARGEST).mapToObj(x -> x)
 			.toList();
 
-	static final Collection<UtilityClass> UTIL_CLASSES = List
-			.of(UtilityClass.U75TO125, UtilityClass.U125TO175, UtilityClass.U175TO225, UtilityClass.OVER225);
+	static final Collection<UtilizationClass> UTIL_CLASSES = List.of(
+			UtilizationClass.U75TO125, UtilizationClass.U125TO175, UtilizationClass.U175TO225, UtilizationClass.OVER225
+	);
 
 	static final Map<Integer, String> UTIL_CLASS_NAMES = Utils.constMap(map -> {
 		map.put(-1, "<7.5cm");
@@ -1064,6 +1065,10 @@ public class FipStart {
 			treesPerHectareUtil.setCoe(UTIL_ALL, treesPerHectareSpec); // TPHU
 			wholeStemVolumeUtil.setCoe(UTIL_ALL, wholeStemVolumeSpec); // WSU
 
+			var adjustCloseUtil = utilizationVector(); // ADJVCU
+			var adjustDecayUtil = utilizationVector(); // ADJVD
+			var adjustDecayWasteUtil = utilizationVector(); // ADJVDW
+
 			// EMP071
 			estimateQuadMeanDiameterByUtilization(bec, quadMeanDiameterUtil, spec);
 
@@ -1082,15 +1087,47 @@ public class FipStart {
 			// YUC1R
 			reconcileComponents(baseAreaUtil, treesPerHectareUtil, quadMeanDiameterUtil);
 
+			if (compatibilityVariableMode != CompatibilityVariableMode.NONE) {
+				throw new UnsupportedOperationException("TODO");
+			}
+
+			// Recalculate TPH's
+
+			for (var uc : UTIL_CLASSES) {
+				treesPerHectareUtil.setCoe(
+						uc.index, treesPerHectare(baseAreaUtil.getCoe(uc.index), quadMeanDiameterUtil.getCoe(uc.index))
+				);
+			}
+
+			// Since DQ's may have changed, MUST RECONCILE AGAIN
+			// Seems this might only be needed when compatibilityVariableMode is not NONE?
+
+			// YUC1R
+			reconcileComponents(baseAreaUtil, treesPerHectareUtil, quadMeanDiameterUtil);
+
 			if (volumeComputeMode == VolumeComputeMode.ZERO) {
 				throw new UnsupportedOperationException("TODO");
 			} else {
+				
 				// EMP091
-				estimateWholeStemVolumeByUtilizationClass(
-						bec.getVolumeBec(), spec.getVolumeGroup(), loreyHeightSpec, quadMeanDiameterUtil, baseAreaUtil,
-						wholeStemVolumeUtil
+				estimateWholeStemVolume(
+						0, adjustCloseUtil.getCoe(4), spec.getVolumeGroup(), loreyHeightSpec, quadMeanDiameterUtil,
+						baseAreaUtil, wholeStemVolumeUtil
 				);
+
+				if (compatibilityVariableMode == CompatibilityVariableMode.ALL) {
+					// apply compatibity variables to WS volume
+					throw new UnsupportedOperationException("TODO");
+				}
+				// TODO Combine this with IF above
+				if (compatibilityVariableMode == CompatibilityVariableMode.ALL) {
+					// Set the adjustment factors for next three volume types
+					throw new UnsupportedOperationException("TODO");
+				} else {
+					// Do nothing as the adjustment vectors are already set to 0
+				}
 			}
+
 		}
 	}
 
@@ -1283,8 +1320,8 @@ public class FipStart {
 
 	}
 
-	private final static List<UtilityClass> MODE_1_RECONCILE_AVAILABILITY_CLASSES = List
-			.of(UtilityClass.OVER225, UtilityClass.U175TO225, UtilityClass.U125TO175);
+	private final static List<UtilizationClass> MODE_1_RECONCILE_AVAILABILITY_CLASSES = List
+			.of(UtilizationClass.OVER225, UtilizationClass.U175TO225, UtilizationClass.U125TO175);
 
 	void reconcileComponentsMode1(
 			Coefficients baseAreaUtil, Coefficients treesPerHectareUtil, Coefficients quadMeanDiameterUtil,
@@ -1393,7 +1430,7 @@ public class FipStart {
 				}
 			}
 
-			UtilityClass violateClass = null;
+			UtilizationClass violateClass = null;
 			float violate = 0f;
 			boolean violateLow = false;
 
@@ -1892,7 +1929,7 @@ public class FipStart {
 	 * Updates wholeStemVolumeUtil with estimated values.
 	 */
 	void estimateWholeStemVolume(
-			int utilizationClass, float aAdjust, int volumeGroup, Float hlSp, Coefficients quadMeanDiameterUtil,
+			int utilizationClass, float adjustCloseUtil, int volumeGroup, Float hlSp, Coefficients quadMeanDiameterUtil,
 			Coefficients baseAreaUtil, Coefficients wholeStemVolumeUtil
 	) throws ProcessingException {
 		var dqSp = quadMeanDiameterUtil.getCoe(UTIL_ALL);
@@ -1915,10 +1952,10 @@ public class FipStart {
 			var a3 = wholeStemCoe.getCoe(3);
 
 			var arg = a0 + a1 * log(hlSp) + a2 * log(quadMeanDiameterUtil.getCoe(i))
-					+ ( (i < 3) ? a3 * log(dqSp) : a3 * dqSp);
+					+ ( (i <= 3) ? a3 * log(dqSp) : a3 * dqSp);
 
 			if (i == utilizationClass) {
-				arg += aAdjust;
+				arg += adjustCloseUtil;
 			}
 
 			var vbaruc = exp(arg); // volume base area ?? utilization class?
@@ -2031,69 +2068,6 @@ public class FipStart {
 	}
 
 	/**
-	 * Estimate the whole stem volume by utilization components
-	 * 
-	 * @param volumeBec
-	 * @param loreyHeightSpec
-	 * @param quadMeanDiameterUtil
-	 * @param baseAreaUtil
-	 * @param wholeStemVolumeUtil
-	 * @throws ProcessingException
-	 */
-	void estimateWholeStemVolumeByUtilizationClass(
-			BecDefinition bec, int volumeGroup, float loreyHeightSpec, Coefficients quadMeanDiameterUtil,
-			Coefficients baseAreaUtil, Coefficients wholeStemVolumeUtil
-	) throws ProcessingException {
-		final var wholeStemCoeMap = Utils.<MatrixMap2<Integer, Integer, Optional<Coefficients>>>expectParsedControl(
-				controlMap, UtilComponentWSVolumeParser.CONTROL_KEY, MatrixMap2.class
-		);
-
-		float quadMeanDiameterSpec = quadMeanDiameterUtil.getCoe(UTIL_ALL);
-		for (var uc : UTIL_CLASSES) {
-			if (baseAreaUtil.getCoe(uc.index) <= 0f) {
-				wholeStemVolumeUtil.setCoe(uc.index, 0f);
-				continue;
-			}
-			Coefficients coe = wholeStemCoeMap.get(uc.index, volumeGroup).orElseThrow(
-					() -> new ProcessingException(
-							"Whole stem utilization component coefficients were not available for volume group "
-									+ volumeGroup
-					)
-			);
-
-			float a0 = coe.getCoe(0);
-			float a1 = coe.getCoe(1);
-			float a2 = coe.getCoe(2);
-			float a3 = coe.getCoe(3);
-
-			float arg;
-			if (uc.index < UtilityClass.OVER225.index) {
-				arg = a0 + a1 * log(loreyHeightSpec) + a2 * log(quadMeanDiameterUtil.getCoe(uc.index))
-						+ a3 * log(quadMeanDiameterSpec);
-			} else {
-				arg = a0 + a1 * log(loreyHeightSpec) + a2 * log(quadMeanDiameterUtil.getCoe(uc.index))
-						+ a3 * quadMeanDiameterSpec;
-			}
-			// TODO adjustment Conditional on IUSEUC
-
-			float vbrauc = exp(arg);
-			wholeStemVolumeUtil.setCoe(uc.index, baseAreaUtil.getCoe(uc.index) * vbrauc);
-		}
-
-		// TODO Conditional on IUSEUC
-		if (true) {
-			// Reconcile
-			float volSum = (float) UTIL_CLASSES.stream()
-					.mapToDouble(uc -> (double) wholeStemVolumeUtil.getCoe(uc.index)).sum();
-			if (volSum <= 0) {
-				throw new ProcessingException("Sum of component whole stem volumes was not positive.");
-			}
-			float k = wholeStemVolumeUtil.getCoe(UTIL_ALL) / volSum;
-			UTIL_CLASSES.forEach(uc -> wholeStemVolumeUtil.scalarInPlace(uc.index, x -> x * k));
-		}
-	}
-
-	/**
 	 * Estimate volume NET OF DECAY by (DBH) utilization classes
 	 *
 	 * @param utilizationClass
@@ -2106,6 +2080,7 @@ public class FipStart {
 	 * @param closeUtilizationNetOfDecayUtil
 	 * @throws ProcessingException
 	 */
+	// EMP093
 	void estimateNetDecayVolume(
 			String genus, Region region, int utilizationClass, Coefficients aAdjust, int decayGroup, float lorieHeight,
 			float ageBreastHeight, Coefficients quadMeanDiameterUtil, Coefficients closeUtilizationUtil,
@@ -2151,6 +2126,7 @@ public class FipStart {
 	/**
 	 * Estimate utilization net of decay and waste
 	 */
+	// EMP094
 	void estimateNetDecayAndWasteVolume(
 			Region region, int utilizationClass, Coefficients aAdjust, String genus, float lorieHeight,
 			float ageBreastHeight, Coefficients quadMeanDiameterUtil, Coefficients closeUtilizationUtil,
