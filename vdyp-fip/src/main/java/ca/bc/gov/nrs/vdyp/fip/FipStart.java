@@ -54,6 +54,7 @@ import org.apache.commons.math3.util.FastMath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ca.bc.gov.nrs.vdyp.common.IndexedFloatBinaryOperator;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.fip.model.FipLayer;
 import ca.bc.gov.nrs.vdyp.fip.model.FipLayerPrimary;
@@ -1059,6 +1060,10 @@ public class FipStart {
 			var quadMeanDiameterUtil = utilizationVector();
 			var treesPerHectareUtil = utilizationVector();
 			var wholeStemVolumeUtil = utilizationVector();
+			var closeVolumeUtil = utilizationVector();
+			var closeVolumeNetDecayUtil = utilizationVector();
+			var closeVolumeNetDecayWasteUtil = utilizationVector();
+			var closeVolumeNetDecayWasteBreakUtil = utilizationVector();
 
 			baseAreaUtil.setCoe(UTIL_ALL, baseAreaSpec); // BAU
 			quadMeanDiameterUtil.setCoe(UTIL_ALL, quadMeanDiameterSpec); // DQU
@@ -1111,8 +1116,8 @@ public class FipStart {
 
 				// EMP091
 				estimateWholeStemVolume(
-						UtilizationClass.ALL, adjustCloseUtil.getCoe(4), spec.getVolumeGroup(), loreyHeightSpec, quadMeanDiameterUtil,
-						baseAreaUtil, wholeStemVolumeUtil
+						UtilizationClass.ALL, adjustCloseUtil.getCoe(4), spec.getVolumeGroup(), loreyHeightSpec,
+						quadMeanDiameterUtil, baseAreaUtil, wholeStemVolumeUtil
 				);
 
 				if (compatibilityVariableMode == CompatibilityVariableMode.ALL) {
@@ -1126,10 +1131,53 @@ public class FipStart {
 				} else {
 					// Do nothing as the adjustment vectors are already set to 0
 				}
+				
+				// EMP092
+				estimateCloseUtilizationVolume(
+						UtilizationClass.ALL, adjustCloseUtil, spec.getVolumeGroup(), loreyHeightSpec, quadMeanDiameterUtil,
+						wholeStemVolumeUtil, closeVolumeUtil
+				);
+
+				// EMP093
+				estimateNetDecayVolume(
+						spec.getGenus(), bec.getRegion(), UtilizationClass.ALL, adjustCloseUtil, spec.getDecayGroup(),
+						loreyHeightSpec, vdypLayer.getBreastHeightAge(), quadMeanDiameterUtil, closeVolumeUtil,
+						closeVolumeNetDecayUtil
+				);
+
+				// EMP094
+				estimateNetDecayAndWasteVolume(
+						bec.getRegion(), UtilizationClass.ALL, adjustCloseUtil, spec.getGenus(), loreyHeightSpec,
+						vdypLayer.getBreastHeightAge(), quadMeanDiameterUtil, closeVolumeUtil,
+						closeVolumeNetDecayUtil, closeVolumeNetDecayWasteUtil
+				);
+
+				if (jprogram < 6) {
+					// EMP095
+					estimateNetDecayWasteAndBreakageVolume(
+							UtilizationClass.ALL, spec.getBreakageGroup(), quadMeanDiameterUtil,
+							closeVolumeUtil, closeVolumeNetDecayWasteUtil,
+							closeVolumeNetDecayWasteBreakUtil
+					);
+				}
 			}
 
+			spec.getBaseAreaByUtilization().pairwiseInPlace(baseAreaUtil, COPY_IF_BAND);
+			spec.getTreesPerHectareByUtilization().pairwiseInPlace(treesPerHectareUtil, COPY_IF_BAND);
+			spec.getQuadraticMeanDiameterByUtilization().pairwiseInPlace(quadMeanDiameterUtil, COPY_IF_BAND);
+
+			spec.getWholeStemVolumeByUtilization().pairwiseInPlace(wholeStemVolumeUtil, COPY_IF_NOT_TOTAL);
+			spec.getCloseUtilizationVolumeByUtilization().pairwiseInPlace(closeVolumeUtil, COPY_IF_NOT_TOTAL);
+			spec.getCloseUtilizationNetVolumeOfDecayByUtilization().pairwiseInPlace(closeVolumeNetDecayUtil, COPY_IF_NOT_TOTAL);
+			spec.getCloseUtilizationVolumeNetOfDecayAndWasteByUtilization().pairwiseInPlace(closeVolumeNetDecayWasteUtil, COPY_IF_NOT_TOTAL);
+			spec.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization().pairwiseInPlace(closeVolumeNetDecayWasteBreakUtil, COPY_IF_NOT_TOTAL);
+
 		}
+		sumSpeciesUtilizationVectorsToLayer(vdypLayer);
 	}
+
+	private final IndexedFloatBinaryOperator COPY_IF_BAND = (oldX, newX, i) -> i <= UTIL_ALL ? oldX : newX;
+	private final IndexedFloatBinaryOperator COPY_IF_NOT_TOTAL = (oldX, newX, i) -> i < UTIL_ALL ? oldX : newX;
 
 	// YUCV
 	private void computeUtilizationComponentsVeteran(VdypLayer vdypLayer, BecDefinition bec)
@@ -1247,14 +1295,7 @@ public class FipStart {
 
 			// Layer utilization vectors other than quadratic mean diameter are the pairwise
 			// sums of those of their species
-			for (var accessors : SUMMABLE_UTILIZATION_VECTOR_ACCESSORS) {
-				var utilVector = utilizationVector();
-				for (var vdypSpecies : vdypLayer.getSpecies().values()) {
-					var speciesVector = (Coefficients) accessors.getReadMethod().invoke(vdypSpecies);
-					utilVector.pairwiseInPlace(speciesVector, (x, y) -> x + y);
-				}
-				accessors.getWriteMethod().invoke(vdypLayer, utilVector);
-			}
+			sumSpeciesUtilizationVectorsToLayer(vdypLayer);
 
 			// Quadratic mean diameter for the layer is computed from the BA and TPH after
 			// they have been found from the species
@@ -1264,6 +1305,22 @@ public class FipStart {
 				vdypLayer.setQuadraticMeanDiameterByUtilization(utilVector);
 			}
 
+		} catch (IllegalAccessException | InvocationTargetException ex) {
+			throw new IllegalStateException(ex);
+		}
+	}
+
+	// TODO De-reflectify this when we want to make it work in GralVM
+	private void sumSpeciesUtilizationVectorsToLayer(VdypLayer vdypLayer) throws IllegalStateException {
+		try {
+			for (var accessors : SUMMABLE_UTILIZATION_VECTOR_ACCESSORS) {
+				var utilVector = utilizationVector();
+				for (var vdypSpecies : vdypLayer.getSpecies().values()) {
+					var speciesVector = (Coefficients) accessors.getReadMethod().invoke(vdypSpecies);
+					utilVector.pairwiseInPlace(speciesVector, (x, y) -> x + y);
+				}
+				accessors.getWriteMethod().invoke(vdypLayer, utilVector);
+			}
 		} catch (IllegalAccessException | InvocationTargetException ex) {
 			throw new IllegalStateException(ex);
 		}
@@ -2082,9 +2139,9 @@ public class FipStart {
 	 */
 	// EMP093
 	void estimateNetDecayVolume(
-			String genus, Region region, UtilizationClass utilizationClass, Coefficients aAdjust, int decayGroup, float lorieHeight,
-			float ageBreastHeight, Coefficients quadMeanDiameterUtil, Coefficients closeUtilizationUtil,
-			Coefficients closeUtilizationNetOfDecayUtil
+			String genus, Region region, UtilizationClass utilizationClass, Coefficients aAdjust, int decayGroup,
+			float lorieHeight, float ageBreastHeight, Coefficients quadMeanDiameterUtil,
+			Coefficients closeUtilizationUtil, Coefficients closeUtilizationNetOfDecayUtil
 	) throws ProcessingException {
 		var dqSp = quadMeanDiameterUtil.getCoe(UTIL_ALL);
 		final var netDecayCoeMap = Utils.<MatrixMap2<Integer, Integer, Optional<Coefficients>>>expectParsedControl(

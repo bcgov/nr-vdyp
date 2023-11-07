@@ -60,6 +60,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.MockStreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.io.parse.VeteranLayerVolumeAdjustParser;
+import ca.bc.gov.nrs.vdyp.math.FloatMath;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.Layer;
 import ca.bc.gov.nrs.vdyp.model.Region;
@@ -2729,6 +2730,10 @@ class FipStartTest {
 		spec1.getQuadraticMeanDiameterByUtilization().setCoe(FipStart.UTIL_ALL, 13.4943399f);
 		spec1.getWholeStemVolumeByUtilization().setCoe(FipStart.UTIL_ALL, 11.7993851f);
 
+		spec1.setVolumeGroup(46);
+		spec1.setDecayGroup(38);
+		spec1.setBreakageGroup(20);
+
 		spec1.getLoreyHeightByUtilization().setCoe(FipStart.UTIL_SMALL, 7.86393309f);
 		spec1.getBaseAreaByUtilization().setCoe(FipStart.UTIL_SMALL, 0.012636207f);
 		spec1.getTreesPerHectareByUtilization().setCoe(FipStart.UTIL_SMALL, 3.68722916f);
@@ -2741,6 +2746,10 @@ class FipStartTest {
 		spec2.getTreesPerHectareByUtilization().setCoe(FipStart.UTIL_ALL, 1331.36682f);
 		spec2.getQuadraticMeanDiameterByUtilization().setCoe(FipStart.UTIL_ALL, 13.0360518f);
 		spec2.getWholeStemVolumeByUtilization().setCoe(FipStart.UTIL_ALL, 106.194412f);
+
+		spec2.setVolumeGroup(54);
+		spec2.setDecayGroup(42);
+		spec2.setBreakageGroup(24);
 
 		spec2.getLoreyHeightByUtilization().setCoe(FipStart.UTIL_SMALL, 7.81696558f);
 		spec2.getBaseAreaByUtilization().setCoe(FipStart.UTIL_SMALL, 0.0160128288f);
@@ -3033,9 +3042,46 @@ class FipStartTest {
 	}
 
 	Matcher<Coefficients> utilization(float small, float all, float util1, float util2, float util3, float util4) {
-		return coe(
-				-1,
-				contains(closeTo(small), closeTo(all), closeTo(util1), closeTo(util2), closeTo(util3), closeTo(util4))
-		);
+		return new TypeSafeDiagnosingMatcher<Coefficients>() {
+
+			boolean matchesComponent(Description description, float expected, float result) {
+				boolean matches = closeTo(expected).matches(result);
+				description.appendText(String.format(matches ? "%f" : "[[%f]]", result));
+				return matches;
+			}
+
+			@Override
+			public void describeTo(Description description) {
+				String utilizationRep = String.format(
+						"[Small: %f, All: %f, 7.5cm: %f, 12.5cm: %f, 17.5cm: %f, 22.5cm: %f]", small, all, util1, util2,
+						util3, util4
+				);
+				description.appendText("A utilization vector ").appendValue(utilizationRep);
+			}
+
+			@Override
+			protected boolean matchesSafely(Coefficients item, Description mismatchDescription) {
+				if (item.size() != 6 || item.getIndexFrom() != -1) {
+					mismatchDescription.appendText("Was not a utilization vector");
+					return false;
+				}
+				boolean matches = true;
+				mismatchDescription.appendText("Was [Small: ");
+				matches &= matchesComponent(mismatchDescription, small, item.getCoe(UtilizationClass.SMALL.index));
+				mismatchDescription.appendText(", All: ");
+				matches &= matchesComponent(mismatchDescription, all, item.getCoe(UtilizationClass.ALL.index));
+				mismatchDescription.appendText(", 7.5cm: ");
+				matches &= matchesComponent(mismatchDescription, util1, item.getCoe(UtilizationClass.U75TO125.index));
+				mismatchDescription.appendText(", 12.5cm: ");
+				matches &= matchesComponent(mismatchDescription, util2, item.getCoe(UtilizationClass.U125TO175.index));
+				mismatchDescription.appendText(", 17.5cm: ");
+				matches &= matchesComponent(mismatchDescription, util3, item.getCoe(UtilizationClass.U175TO225.index));
+				mismatchDescription.appendText(", 22.5cm: ");
+				matches &= matchesComponent(mismatchDescription, util4, item.getCoe(UtilizationClass.OVER225.index));
+				mismatchDescription.appendText("]");
+				return matches;
+			}
+
+		};
 	}
 }
