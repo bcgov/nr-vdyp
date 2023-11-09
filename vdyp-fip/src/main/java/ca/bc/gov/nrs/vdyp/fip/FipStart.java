@@ -1131,11 +1131,11 @@ public class FipStart {
 				} else {
 					// Do nothing as the adjustment vectors are already set to 0
 				}
-				
+
 				// EMP092
 				estimateCloseUtilizationVolume(
-						UtilizationClass.ALL, adjustCloseUtil, spec.getVolumeGroup(), loreyHeightSpec, quadMeanDiameterUtil,
-						wholeStemVolumeUtil, closeVolumeUtil
+						UtilizationClass.ALL, adjustCloseUtil, spec.getVolumeGroup(), loreyHeightSpec,
+						quadMeanDiameterUtil, wholeStemVolumeUtil, closeVolumeUtil
 				);
 
 				// EMP093
@@ -1148,16 +1148,15 @@ public class FipStart {
 				// EMP094
 				estimateNetDecayAndWasteVolume(
 						bec.getRegion(), UtilizationClass.ALL, adjustCloseUtil, spec.getGenus(), loreyHeightSpec,
-						vdypLayer.getBreastHeightAge(), quadMeanDiameterUtil, closeVolumeUtil,
-						closeVolumeNetDecayUtil, closeVolumeNetDecayWasteUtil
+						vdypLayer.getBreastHeightAge(), quadMeanDiameterUtil, closeVolumeUtil, closeVolumeNetDecayUtil,
+						closeVolumeNetDecayWasteUtil
 				);
 
 				if (jprogram < 6) {
 					// EMP095
 					estimateNetDecayWasteAndBreakageVolume(
-							UtilizationClass.ALL, spec.getBreakageGroup(), quadMeanDiameterUtil,
-							closeVolumeUtil, closeVolumeNetDecayWasteUtil,
-							closeVolumeNetDecayWasteBreakUtil
+							UtilizationClass.ALL, spec.getBreakageGroup(), quadMeanDiameterUtil, closeVolumeUtil,
+							closeVolumeNetDecayWasteUtil, closeVolumeNetDecayWasteBreakUtil
 					);
 				}
 			}
@@ -1168,12 +1167,69 @@ public class FipStart {
 
 			spec.getWholeStemVolumeByUtilization().pairwiseInPlace(wholeStemVolumeUtil, COPY_IF_NOT_TOTAL);
 			spec.getCloseUtilizationVolumeByUtilization().pairwiseInPlace(closeVolumeUtil, COPY_IF_NOT_TOTAL);
-			spec.getCloseUtilizationNetVolumeOfDecayByUtilization().pairwiseInPlace(closeVolumeNetDecayUtil, COPY_IF_NOT_TOTAL);
-			spec.getCloseUtilizationVolumeNetOfDecayAndWasteByUtilization().pairwiseInPlace(closeVolumeNetDecayWasteUtil, COPY_IF_NOT_TOTAL);
-			spec.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization().pairwiseInPlace(closeVolumeNetDecayWasteBreakUtil, COPY_IF_NOT_TOTAL);
+			spec.getCloseUtilizationNetVolumeOfDecayByUtilization()
+					.pairwiseInPlace(closeVolumeNetDecayUtil, COPY_IF_NOT_TOTAL);
+			spec.getCloseUtilizationVolumeNetOfDecayAndWasteByUtilization()
+					.pairwiseInPlace(closeVolumeNetDecayWasteUtil, COPY_IF_NOT_TOTAL);
+			spec.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization()
+					.pairwiseInPlace(closeVolumeNetDecayWasteBreakUtil, COPY_IF_NOT_TOTAL);
 
 		}
-		sumSpeciesUtilizationVectorsToLayer(vdypLayer);
+		computeLayerUtilizationComponentsFromSpecies(vdypLayer);
+
+		for (VdypSpecies spec : vdypLayer.getSpecies().values()) {
+			if (vdypLayer.getBaseAreaByUtilization().getCoe(UTIL_ALL) > 0f) {
+				spec.setFractionGenus(
+						spec.getBaseAreaByUtilization().getCoe(UTIL_ALL)
+								/ vdypLayer.getBaseAreaByUtilization().getCoe(UTIL_ALL)
+				);
+			}
+			log.atDebug().addArgument(spec.getGenus()).addArgument(spec.getFractionGenus())
+					.setMessage("Species {} base area {}%").log();
+		}
+
+		log.atDebug().setMessage("Calculating Stand Lorey Height").log();
+
+		vdypLayer.getLoreyHeightByUtilization().setCoe(UTIL_SMALL, 0f);
+		vdypLayer.getLoreyHeightByUtilization().setCoe(UTIL_ALL, 0f);
+
+		for (VdypSpecies spec : vdypLayer.getSpecies().values()) {
+			log.atDebug() //
+					.addArgument(spec.getGenus()) //
+					.addArgument(() -> spec.getLoreyHeightByUtilization().getCoe(UTIL_ALL))
+					.addArgument(() -> spec.getBaseAreaByUtilization().getCoe(UTIL_ALL))
+					.addArgument(
+							() -> spec.getLoreyHeightByUtilization().getCoe(UTIL_ALL)
+									* spec.getBaseAreaByUtilization().getCoe(UTIL_ALL)
+					)
+					.setMessage(
+							"For species {}, Species LH (7.5cm+): {}, Species BA (7.5cm+): {}, Weighted LH (7.5cm+): {}"
+					).log();
+			vdypLayer.getLoreyHeightByUtilization().scalarInPlace(
+					UTIL_SMALL,
+					x -> x + spec.getLoreyHeightByUtilization().getCoe(UTIL_SMALL)
+							* spec.getBaseAreaByUtilization().getCoe(UTIL_SMALL)
+			);
+			vdypLayer.getLoreyHeightByUtilization().scalarInPlace(
+					UTIL_ALL,
+					x -> x + spec.getLoreyHeightByUtilization().getCoe(UTIL_ALL)
+							* spec.getBaseAreaByUtilization().getCoe(UTIL_ALL)
+			);
+		}
+		{
+			float baSmall = vdypLayer.getBaseAreaByUtilization().getCoe(UTIL_SMALL);
+			float baAll = vdypLayer.getBaseAreaByUtilization().getCoe(UTIL_ALL);
+			
+			if(baSmall>0) {
+				vdypLayer.getLoreyHeightByUtilization().scalarInPlace(UTIL_SMALL, x->x/baSmall);
+			}
+			if(baAll>0) {
+				vdypLayer.getLoreyHeightByUtilization().scalarInPlace(UTIL_ALL, x->x/baAll);
+			}
+			
+			
+		}
+
 	}
 
 	private final IndexedFloatBinaryOperator COPY_IF_BAND = (oldX, newX, i) -> i <= UTIL_ALL ? oldX : newX;
@@ -1293,20 +1349,24 @@ public class FipStart {
 				}
 			}
 
-			// Layer utilization vectors other than quadratic mean diameter are the pairwise
-			// sums of those of their species
-			sumSpeciesUtilizationVectorsToLayer(vdypLayer);
-
-			// Quadratic mean diameter for the layer is computed from the BA and TPH after
-			// they have been found from the species
-			{
-				var utilVector = vdypLayer.getBaseAreaByUtilization()
-						.pairwise(vdypLayer.getTreesPerHectareByUtilization(), FipStart::quadMeanDiameter);
-				vdypLayer.setQuadraticMeanDiameterByUtilization(utilVector);
-			}
+			computeLayerUtilizationComponentsFromSpecies(vdypLayer);
 
 		} catch (IllegalAccessException | InvocationTargetException ex) {
 			throw new IllegalStateException(ex);
+		}
+	}
+
+	private void computeLayerUtilizationComponentsFromSpecies(VdypLayer vdypLayer) {
+		// Layer utilization vectors other than quadratic mean diameter are the pairwise
+		// sums of those of their species
+		sumSpeciesUtilizationVectorsToLayer(vdypLayer);
+
+		// Quadratic mean diameter for the layer is computed from the BA and TPH after
+		// they have been found from the species
+		{
+			var utilVector = vdypLayer.getBaseAreaByUtilization()
+					.pairwise(vdypLayer.getTreesPerHectareByUtilization(), FipStart::quadMeanDiameter);
+			vdypLayer.setQuadraticMeanDiameterByUtilization(utilVector);
 		}
 	}
 
@@ -1618,8 +1678,6 @@ public class FipStart {
 	// EMP071
 	void estimateQuadMeanDiameterByUtilization(BecDefinition bec, Coefficients quadMeanDiameterUtil, VdypSpecies spec)
 			throws ProcessingException {
-		// TODO Auto-generated method stub
-		var growthBec = bec.getGrowthBec();
 		log.atTrace().setMessage("Estimate DQ by utilization class for {} in BEC {}.  DQ for all >7.5 is {}")
 				.addArgument(spec.getGenus()).addArgument(bec.getName())
 				.addArgument(quadMeanDiameterUtil.getCoe(UTIL_ALL));
@@ -1631,7 +1689,7 @@ public class FipStart {
 			final var coeMap = Utils.<MatrixMap3<Integer, String, String, Coefficients>>expectParsedControl(
 					controlMap, UtilComponentDQParser.CONTROL_KEY, MatrixMap3.class
 			);
-			var coe = coeMap.get(uc.index, spec.getGenus(), bec.getAlias());
+			var coe = coeMap.get(uc.index, spec.getGenus(), bec.getGrowthBec().getAlias());
 
 			float a0 = coe.getCoe(1);
 			float a1 = coe.getCoe(2);
@@ -2293,7 +2351,7 @@ public class FipStart {
 		);
 
 		if (utilizationClass == UtilizationClass.ALL) {
-			storeSumUtilizationComponents(closeUtilizationNetOfDecayAndWasteUtil);
+			storeSumUtilizationComponents(closeUtilizationNetOfDecayWasteAndBreakageUtil);
 		}
 
 	}

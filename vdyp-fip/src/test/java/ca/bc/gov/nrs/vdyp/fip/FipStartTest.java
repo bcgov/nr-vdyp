@@ -1270,6 +1270,39 @@ class FipStartTest {
 	}
 
 	@Test
+	void testEstimatePrimaryNetBreakage() throws Exception {
+		var controlMap = FipTestUtils.loadControlMap();
+
+		var app = new FipStart();
+		app.setControlMap(controlMap);
+
+		var utilizationClass = UtilizationClass.ALL;
+		var breakageGroup = 20;
+		var quadMeanDiameterUtil = new Coefficients(
+				new float[] { 0f, 13.4943399f, 10.2402296f, 14.6183214f, 19.3349762f, 25.6280651f }, -1
+		);
+		var closeUtilizationUtil = new Coefficients(
+				new float[] { 0f, 6.41845179f, 0.0353721268f, 2.99654913f, 2.23212862f, 1.1544019f }, -1
+		);
+		var closeUtilizationNetOfDecayAndWasteUtil = new Coefficients(
+				new float[] { 0f, 6.18276405f, 0.0347718038f, 2.93580461f, 2.169273853f, 1.04291379f }, -1
+		);
+
+		var closeUtilizationNetOfDecayWasteAndBreakageUtil = FipStart.utilizationVector();
+
+		app.estimateNetDecayWasteAndBreakageVolume(
+				utilizationClass, breakageGroup, quadMeanDiameterUtil, closeUtilizationUtil,
+				closeUtilizationNetOfDecayAndWasteUtil, closeUtilizationNetOfDecayWasteAndBreakageUtil
+		);
+
+		assertThat(
+				closeUtilizationNetOfDecayWasteAndBreakageUtil,
+				utilization(0f, 5.989573f, 0.0337106399f, 2.84590816f, 2.10230994f, 1.00764418f)
+		);
+
+	}
+
+	@Test
 	void testProcessAsVeteranLayer() throws Exception {
 
 		var polygonId = "01002 S000002 00     1970";
@@ -2536,6 +2569,24 @@ class FipStartTest {
 	}
 
 	@Test
+	void testEstimateQuadMeanDiameterByUtilization2() throws ProcessingException {
+		var controlMap = FipTestUtils.loadControlMap();
+		var app = new FipStart();
+		app.setControlMap(controlMap);
+
+		var coe = FipStart.utilizationVector();
+		coe.setCoe(FipStart.UTIL_ALL, 13.4943399f);
+
+		var bec = BecDefinitionParser.getBecs(controlMap).get("MH").get();
+
+		var spec1 = new VdypSpecies("Test", Layer.PRIMARY, "L");
+
+		app.estimateQuadMeanDiameterByUtilization(bec, coe, spec1);
+
+		assertThat(coe, utilization(0f, 13.4943399f, 10.2766619f, 14.67033f, 19.4037666f, 25.719244f));
+	}
+
+	@Test
 	void testEstimateBaseAreaByUtilization() throws ProcessingException {
 		var controlMap = FipTestUtils.loadControlMap();
 		var app = new FipStart();
@@ -2705,7 +2756,7 @@ class FipStartTest {
 		var app = new FipStart();
 		app.setControlMap(controlMap);
 
-		var bec = BecDefinitionParser.getBecs(controlMap).get("MH").get();
+		var bec = BecDefinitionParser.getBecs(controlMap).get("IDF").get();
 
 		var layer = new VdypLayer("Test", Layer.PRIMARY);
 
@@ -2723,7 +2774,7 @@ class FipStartTest {
 		layer.getQuadraticMeanDiameterByUtilization().setCoe(FipStart.UTIL_SMALL, 6.26608753f);
 		layer.getWholeStemVolumeByUtilization().setCoe(FipStart.UTIL_SMALL, 0.107688069f);
 
-		var spec1 = new VdypSpecies("Test", Layer.PRIMARY, "B");
+		var spec1 = new VdypSpecies("Test", Layer.PRIMARY, "L");
 		spec1.getLoreyHeightByUtilization().setCoe(FipStart.UTIL_ALL, 14.2597857f);
 		spec1.getBaseAreaByUtilization().setCoe(FipStart.UTIL_ALL, 2.20898318f);
 		spec1.getTreesPerHectareByUtilization().setCoe(FipStart.UTIL_ALL, 154.454025f);
@@ -2734,13 +2785,15 @@ class FipStartTest {
 		spec1.setDecayGroup(38);
 		spec1.setBreakageGroup(20);
 
+		spec1.setPercentGenus(11.0567074f);
+
 		spec1.getLoreyHeightByUtilization().setCoe(FipStart.UTIL_SMALL, 7.86393309f);
 		spec1.getBaseAreaByUtilization().setCoe(FipStart.UTIL_SMALL, 0.012636207f);
 		spec1.getTreesPerHectareByUtilization().setCoe(FipStart.UTIL_SMALL, 3.68722916f);
 		spec1.getQuadraticMeanDiameterByUtilization().setCoe(FipStart.UTIL_SMALL, 6.60561657f);
 		spec1.getWholeStemVolumeByUtilization().setCoe(FipStart.UTIL_SMALL, 0.0411359742f);
 
-		var spec2 = new VdypSpecies("Test", Layer.PRIMARY, "C");
+		var spec2 = new VdypSpecies("Test", Layer.PRIMARY, "PL");
 		spec2.getLoreyHeightByUtilization().setCoe(FipStart.UTIL_ALL, 12.9176102f);
 		spec2.getBaseAreaByUtilization().setCoe(FipStart.UTIL_ALL, 17.7696857f);
 		spec2.getTreesPerHectareByUtilization().setCoe(FipStart.UTIL_ALL, 1331.36682f);
@@ -2750,6 +2803,8 @@ class FipStartTest {
 		spec2.setVolumeGroup(54);
 		spec2.setDecayGroup(42);
 		spec2.setBreakageGroup(24);
+
+		spec2.setPercentGenus(88.9432907f);
 
 		spec2.getLoreyHeightByUtilization().setCoe(FipStart.UTIL_SMALL, 7.81696558f);
 		spec2.getBaseAreaByUtilization().setCoe(FipStart.UTIL_SMALL, 0.0160128288f);
@@ -2761,14 +2816,12 @@ class FipStartTest {
 
 		app.computeUtilizationComponentsPrimary(bec, layer, VolumeComputeMode.BY_UTIL, CompatibilityVariableMode.NONE);
 
+		// TODO test percent for each species
+
 		assertThat(layer.getLoreyHeightByUtilization(), coe(-1, contains(closeTo(7.83768177f), closeTo(13.0660114f))));
 		assertThat(spec1.getLoreyHeightByUtilization(), coe(-1, contains(closeTo(7.86393309f), closeTo(14.2597857f))));
 		assertThat(spec2.getLoreyHeightByUtilization(), coe(-1, contains(closeTo(7.81696558f), closeTo(12.9176102f))));
 
-		assertThat(
-				layer.getBaseAreaByUtilization(),
-				utilization(0.0286490358f, 19.9786682f, 6.79730701f, 8.54689693f, 3.63577318f, 0.998692036f)
-		);
 		assertThat(
 				spec1.getBaseAreaByUtilization(),
 				utilization(0.012636207f, 2.20898318f, 0.691931725f, 0.862404406f, 0.433804274f, 0.220842764f)
@@ -2777,11 +2830,11 @@ class FipStartTest {
 				spec2.getBaseAreaByUtilization(),
 				utilization(0.0160128288f, 17.7696857f, 6.10537529f, 7.68449211f, 3.20196891f, 0.777849257f)
 		);
-
 		assertThat(
-				layer.getTreesPerHectareByUtilization(),
-				utilization(9.29024601f, 1485.8208f, 834.253357f, 509.088287f, 123.560303f, 18.9189682f)
+				layer.getBaseAreaByUtilization(),
+				utilization(0.0286490358f, 19.9786682f, 6.79730701f, 8.54689693f, 3.63577318f, 0.998692036f)
 		);
+
 		assertThat(
 				spec1.getTreesPerHectareByUtilization(),
 				utilization(3.68722916f, 154.454025f, 84.0144501f, 51.3837852f, 14.7746315f, 4.28116179f)
@@ -2790,11 +2843,11 @@ class FipStartTest {
 				spec2.getTreesPerHectareByUtilization(),
 				utilization(5.60301685f, 1331.36682f, 750.238892f, 457.704498f, 108.785675f, 14.6378069f)
 		);
-
 		assertThat(
-				layer.getQuadraticMeanDiameterByUtilization(),
-				utilization(6.26608753f, 13.0844393f, 10.1853161f, 14.6205177f, 19.3559265f, 25.9252014f)
+				layer.getTreesPerHectareByUtilization(),
+				utilization(9.29024601f, 1485.8208f, 834.253357f, 509.088287f, 123.560303f, 18.9189682f)
 		);
+
 		assertThat(
 				spec1.getQuadraticMeanDiameterByUtilization(),
 				utilization(6.60561657f, 13.4943399f, 10.2402296f, 14.6183214f, 19.3349762f, 25.6280651f)
@@ -2803,11 +2856,11 @@ class FipStartTest {
 				spec2.getQuadraticMeanDiameterByUtilization(),
 				utilization(6.03223324f, 13.0360518f, 10.1791487f, 14.6207638f, 19.3587704f, 26.0114632f)
 		);
-
 		assertThat(
-				layer.getWholeStemVolumeByUtilization(),
-				utilization(0.107688069f, 117.993797f, 33.3679581f, 52.4308395f, 25.2295609f, 6.96543789f)
+				layer.getQuadraticMeanDiameterByUtilization(),
+				utilization(6.26608753f, 13.0844393f, 10.1853161f, 14.6205177f, 19.3559265f, 25.9252014f)
 		);
+
 		assertThat(
 				spec1.getWholeStemVolumeByUtilization(),
 				utilization(0.0411359742f, 11.7993851f, 3.13278913f, 4.76524019f, 2.63645673f, 1.26489878f)
@@ -2816,11 +2869,11 @@ class FipStartTest {
 				spec2.getWholeStemVolumeByUtilization(),
 				utilization(0.0665520951f, 106.194412f, 30.2351704f, 47.6655998f, 22.5931034f, 5.70053911f)
 		);
-
 		assertThat(
-				layer.getCloseUtilizationVolumeByUtilization(),
-				utilization(0f, 67.7539444f, 2.41736674f, 36.8750687f, 22.0155602f, 6.44594717f)
+				layer.getWholeStemVolumeByUtilization(),
+				utilization(0.107688069f, 117.993797f, 33.3679581f, 52.4308395f, 25.2295609f, 6.96543789f)
 		);
+
 		assertThat(
 				spec1.getCloseUtilizationVolumeByUtilization(),
 				utilization(0f, 6.41845179f, 0.0353721268f, 2.99654913f, 2.23212862f, 1.1544019f)
@@ -2829,11 +2882,11 @@ class FipStartTest {
 				spec2.getCloseUtilizationVolumeByUtilization(),
 				utilization(0f, 61.335495f, 2.38199472f, 33.878521f, 19.783432f, 5.29154539f)
 		);
-
 		assertThat(
-				layer.getCloseUtilizationNetVolumeOfDecayByUtilization(),
-				utilization(0f, 67.0664597f, 2.39902258f, 36.5664368f, 21.7930279f, 6.30796671f)
+				layer.getCloseUtilizationVolumeByUtilization(),
+				utilization(0f, 67.7539444f, 2.41736674f, 36.8750687f, 22.0155602f, 6.44594717f)
 		);
+
 		assertThat(
 				spec1.getCloseUtilizationNetVolumeOfDecayByUtilization(),
 				utilization(0f, 6.26433992f, 0.0349677317f, 2.95546484f, 2.18952441f, 1.08438313f)
@@ -2842,11 +2895,11 @@ class FipStartTest {
 				spec2.getCloseUtilizationNetVolumeOfDecayByUtilization(),
 				utilization(0f, 60.8021164f, 2.36405492f, 33.6109734f, 19.6035042f, 5.2235837f)
 		);
-
 		assertThat(
-				layer.getCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(),
-				utilization(0f, 66.8413391f, 2.39506769f, 36.4802933f, 21.7218285f, 6.24415016f)
+				layer.getCloseUtilizationNetVolumeOfDecayByUtilization(),
+				utilization(0f, 67.0664597f, 2.39902258f, 36.5664368f, 21.7930279f, 6.30796671f)
 		);
+
 		assertThat(
 				spec1.getCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(),
 				utilization(0f, 6.18276405f, 0.0347718038f, 2.93580461f, 2.16927385f, 1.04291379f)
@@ -2855,11 +2908,11 @@ class FipStartTest {
 				spec2.getCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(),
 				utilization(0f, 60.6585732f, 2.36029577f, 33.544487f, 19.5525551f, 5.20123625f)
 		);
-
 		assertThat(
-				layer.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(),
-				utilization(0f, 65.4214401f, 2.34636664f, 35.7128258f, 21.2591972f, 6.10304976f)
+				layer.getCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(),
+				utilization(0f, 66.8413391f, 2.39506769f, 36.4802933f, 21.7218285f, 6.24415016f)
 		);
+
 		assertThat(
 				spec1.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(),
 				utilization(0f, 5.989573f, 0.0337106399f, 2.84590816f, 2.10230994f, 1.00764418f)
@@ -2867,6 +2920,10 @@ class FipStartTest {
 		assertThat(
 				spec2.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(),
 				utilization(0f, 59.4318657f, 2.31265593f, 32.8669167f, 19.1568871f, 5.09540558f)
+		);
+		assertThat(
+				layer.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(),
+				utilization(0f, 65.4214401f, 2.34636664f, 35.7128258f, 21.2591972f, 6.10304976f)
 		);
 	}
 
