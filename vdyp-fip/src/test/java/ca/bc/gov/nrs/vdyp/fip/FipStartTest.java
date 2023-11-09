@@ -2760,7 +2760,7 @@ class FipStartTest {
 
 		var layer = new VdypLayer("Test", Layer.PRIMARY);
 
-		layer.setBreastHeightAge(54f);
+		layer.setBreastHeightAge(51.5f);
 
 		layer.getLoreyHeightByUtilization().setCoe(FipStart.UTIL_ALL, 13.0660105f);
 		layer.getBaseAreaByUtilization().setCoe(FipStart.UTIL_ALL, 19.9786701f);

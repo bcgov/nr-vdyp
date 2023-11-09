@@ -1219,15 +1219,14 @@ public class FipStart {
 		{
 			float baSmall = vdypLayer.getBaseAreaByUtilization().getCoe(UTIL_SMALL);
 			float baAll = vdypLayer.getBaseAreaByUtilization().getCoe(UTIL_ALL);
-			
-			if(baSmall>0) {
-				vdypLayer.getLoreyHeightByUtilization().scalarInPlace(UTIL_SMALL, x->x/baSmall);
+
+			if (baSmall > 0) {
+				vdypLayer.getLoreyHeightByUtilization().scalarInPlace(UTIL_SMALL, x -> x / baSmall);
 			}
-			if(baAll>0) {
-				vdypLayer.getLoreyHeightByUtilization().scalarInPlace(UTIL_ALL, x->x/baAll);
+			if (baAll > 0) {
+				vdypLayer.getLoreyHeightByUtilization().scalarInPlace(UTIL_ALL, x -> x / baAll);
 			}
-			
-			
+
 		}
 
 	}
