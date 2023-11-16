@@ -2927,6 +2927,156 @@ class FipStartTest {
 		);
 	}
 
+	@Test
+	public void testCreateVdypPolygon() throws ProcessingException {
+		var controlMap = FipTestUtils.loadControlMap();
+		var app = new FipStart();
+		app.setControlMap(controlMap);
+
+		var fipPolygon = new FipPolygon(
+				"Test", // FIP_P/FIZ
+				"D", // FIP_P/FIZ
+				"IDF", // FIP_P/BEC
+				Optional.empty(), // FIP_P2/PCTFLAND = 0
+				Optional.of(FipMode.FIPSTART), // FIP_P2/MODE = 1
+				Optional.empty(), // FIP_P3/NPDESC = ' '
+				1f // FIP_P4/YLDFACT
+		);
+
+		// var fipVeteranLayer = new FipLayer("Test", Layer.VETERAN);
+		var fipPrimaryLayer = new FipLayerPrimary("Test");
+
+		// fipPolygon.getLayers().put(Layer.VETERAN, fipVeteranLayer);
+		fipPolygon.setLayers(new HashMap<>());
+		fipPolygon.getLayers().put(Layer.PRIMARY, fipPrimaryLayer);
+
+		var processedLayers = new HashMap<Layer, VdypLayer>();
+		processedLayers.put(Layer.PRIMARY, new VdypLayer("Test", Layer.PRIMARY));
+
+		fipPrimaryLayer.setAgeTotal(60f);
+		fipPrimaryLayer.setHeight(15f);
+		fipPrimaryLayer.setCrownClosure(60f);
+		fipPrimaryLayer.setYearsToBreastHeight(8.5f);
+
+		var spec1 = new FipSpecies("Test", Layer.PRIMARY, "L");
+		spec1.setFractionGenus(0.1f);
+		var spec2 = new FipSpecies("Test", Layer.PRIMARY, "PL");
+		spec2.setFractionGenus(0.9f);
+		fipPrimaryLayer.getSpecies().put("L", spec1);
+		fipPrimaryLayer.getSpecies().put("PL", spec2);
+
+		processedLayers.get(Layer.PRIMARY).setAgeTotal(60f);
+		processedLayers.get(Layer.PRIMARY).setHeight(15f);
+		// processedLayers.get(Layer.PRIMARY).setCrownClosure(60f);
+		processedLayers.get(Layer.PRIMARY).setYearsToBreastHeight(8.5f);
+
+		var vdypPolygon = app.createVdypPolygon(fipPolygon, processedLayers);
+
+		assertThat(vdypPolygon, notNullValue());
+		assertThat(vdypPolygon, hasProperty("layers", equalTo(processedLayers)));
+		assertThat(vdypPolygon, hasProperty("percentAvailable", closeTo(90f)));
+	}
+	
+	@Test
+	public void testCreateVdypPolygonPercentForestLandGiven() throws ProcessingException {
+		var controlMap = FipTestUtils.loadControlMap();
+		var app = new FipStart();
+		app.setControlMap(controlMap);
+
+		var fipPolygon = new FipPolygon(
+				"Test", // FIP_P/FIZ
+				"D", // FIP_P/FIZ
+				"IDF", // FIP_P/BEC
+				Optional.of(42f), // FIP_P2/PCTFLAND = 42
+				Optional.of(FipMode.FIPSTART), // FIP_P2/MODE = 1
+				Optional.empty(), // FIP_P3/NPDESC = ' '
+				1f // FIP_P4/YLDFACT
+		);
+
+		// var fipVeteranLayer = new FipLayer("Test", Layer.VETERAN);
+		var fipPrimaryLayer = new FipLayerPrimary("Test");
+
+		// fipPolygon.getLayers().put(Layer.VETERAN, fipVeteranLayer);
+		fipPolygon.setLayers(new HashMap<>());
+		fipPolygon.getLayers().put(Layer.PRIMARY, fipPrimaryLayer);
+
+		var processedLayers = new HashMap<Layer, VdypLayer>();
+		processedLayers.put(Layer.PRIMARY, new VdypLayer("Test", Layer.PRIMARY));
+
+		fipPrimaryLayer.setAgeTotal(60f);
+		fipPrimaryLayer.setHeight(15f);
+		fipPrimaryLayer.setCrownClosure(60f);
+		fipPrimaryLayer.setYearsToBreastHeight(8.5f);
+
+		var spec1 = new FipSpecies("Test", Layer.PRIMARY, "L");
+		spec1.setFractionGenus(0.1f);
+		var spec2 = new FipSpecies("Test", Layer.PRIMARY, "PL");
+		spec2.setFractionGenus(0.9f);
+		fipPrimaryLayer.getSpecies().put("L", spec1);
+		fipPrimaryLayer.getSpecies().put("PL", spec2);
+
+		processedLayers.get(Layer.PRIMARY).setAgeTotal(60f);
+		processedLayers.get(Layer.PRIMARY).setHeight(15f);
+		// processedLayers.get(Layer.PRIMARY).setCrownClosure(60f);
+		processedLayers.get(Layer.PRIMARY).setYearsToBreastHeight(8.5f);
+
+		var vdypPolygon = app.createVdypPolygon(fipPolygon, processedLayers);
+
+		assertThat(vdypPolygon, notNullValue());
+		assertThat(vdypPolygon, hasProperty("layers", equalTo(processedLayers)));
+		assertThat(vdypPolygon, hasProperty("percentAvailable", closeTo(42f)));
+	}
+	
+	@Test
+	public void testCreateVdypPolygonFipYoung() throws ProcessingException {
+		var controlMap = FipTestUtils.loadControlMap();
+		var app = new FipStart();
+		app.setControlMap(controlMap);
+
+		var fipPolygon = new FipPolygon(
+				"Test", // FIP_P/FIZ
+				"D", // FIP_P/FIZ
+				"IDF", // FIP_P/BEC
+				Optional.empty(), // FIP_P2/PCTFLAND = 0
+				Optional.of(FipMode.FIPYOUNG), // FIP_P2/MODE = 2
+				Optional.empty(), // FIP_P3/NPDESC = ' '
+				1f // FIP_P4/YLDFACT
+		);
+
+		// var fipVeteranLayer = new FipLayer("Test", Layer.VETERAN);
+		var fipPrimaryLayer = new FipLayerPrimary("Test");
+
+		// fipPolygon.getLayers().put(Layer.VETERAN, fipVeteranLayer);
+		fipPolygon.setLayers(new HashMap<>());
+		fipPolygon.getLayers().put(Layer.PRIMARY, fipPrimaryLayer);
+
+		var processedLayers = new HashMap<Layer, VdypLayer>();
+		processedLayers.put(Layer.PRIMARY, new VdypLayer("Test", Layer.PRIMARY));
+
+		fipPrimaryLayer.setAgeTotal(60f);
+		fipPrimaryLayer.setHeight(15f);
+		fipPrimaryLayer.setCrownClosure(60f);
+		fipPrimaryLayer.setYearsToBreastHeight(8.5f);
+
+		var spec1 = new FipSpecies("Test", Layer.PRIMARY, "L");
+		spec1.setFractionGenus(0.1f);
+		var spec2 = new FipSpecies("Test", Layer.PRIMARY, "PL");
+		spec2.setFractionGenus(0.9f);
+		fipPrimaryLayer.getSpecies().put("L", spec1);
+		fipPrimaryLayer.getSpecies().put("PL", spec2);
+
+		processedLayers.get(Layer.PRIMARY).setAgeTotal(60f);
+		processedLayers.get(Layer.PRIMARY).setHeight(15f);
+		// processedLayers.get(Layer.PRIMARY).setCrownClosure(60f);
+		processedLayers.get(Layer.PRIMARY).setYearsToBreastHeight(8.5f);
+
+		var vdypPolygon = app.createVdypPolygon(fipPolygon, processedLayers);
+
+		assertThat(vdypPolygon, notNullValue());
+		assertThat(vdypPolygon, hasProperty("layers", equalTo(processedLayers)));
+		assertThat(vdypPolygon, hasProperty("percentAvailable", closeTo(100f)));
+	}
+
 	private static <T> MockStreamingParser<T>
 			mockStream(IMocksControl control, Map<String, Object> controlMap, String key, String name)
 					throws IOException {

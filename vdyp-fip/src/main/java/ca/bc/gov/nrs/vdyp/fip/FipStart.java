@@ -36,6 +36,7 @@ import java.beans.PropertyDescriptor;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.abs;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.clamp;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.exp;
+import static ca.bc.gov.nrs.vdyp.math.FloatMath.floor;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.log;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.pow;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.ratio;
@@ -104,6 +105,7 @@ import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
 import ca.bc.gov.nrs.vdyp.model.NonprimaryHLCoefficients;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
+import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.VdypUtilizationHolder;
 
@@ -270,6 +272,8 @@ public class FipStart {
 		}
 	}
 
+	// FIP_SUB
+
 	void process() throws ProcessingException {
 		try (
 				var polyStream = this.<FipPolygon>getStreamingParser(FipPolygonParser.CONTROL_KEY);
@@ -337,6 +341,8 @@ public class FipStart {
 					);
 					processedLayers.put(Layer.PRIMARY, resultPrimeLayer);
 
+					VdypPolygon resultPoly = createVdypPolygon(polygon, processedLayers);
+
 				} catch (LowValueException ex) {
 					// TODO include other exceptions that cause a polygon to be bypassed
 					// TODO include some sort of hook for different forms of user output
@@ -347,6 +353,96 @@ public class FipStart {
 			}
 		} catch (IOException | ResourceParseException ex) {
 			throw new ProcessingException("Error while reading or writing data.", ex);
+		}
+	}
+
+	VdypPolygon createVdypPolygon(FipPolygon fipPolygon, Map<Layer, VdypLayer> processedLayers)
+			throws ProcessingException {
+		var fipVetLayer = fipPolygon.getLayers().get(Layer.VETERAN);
+		var fipPrimaryLayer = (FipLayerPrimary) fipPolygon.getLayers().get(Layer.PRIMARY);
+
+		float percentAvailable = estimatePercentForestLand(fipPolygon, fipVetLayer, fipPrimaryLayer);
+
+		var vdypPolygon = new VdypPolygon(fipPolygon.getPolygonIdentifier(), percentAvailable);
+		vdypPolygon.setLayers(processedLayers);
+		return vdypPolygon;
+	}
+
+	// FIPLAND
+	float estimatePercentForestLand(FipPolygon fipPolygon, FipLayer fipVetLayer, FipLayerPrimary fipPrimaryLayer)
+			throws ProcessingException, LowValueException {
+		if (fipPolygon.getPercentAvailable().isPresent()) {
+			return fipPolygon.getPercentAvailable().get();
+		} else {
+
+			boolean veteran = fipVetLayer != null && fipVetLayer.getHeight() > 0f && fipVetLayer.getCrownClosure() > 0f; // LAYERV
+
+			if (jprogram == 1 && fipPolygon.getModeFip().map(mode -> mode == FipMode.FIPYOUNG).orElse(false)) {
+				return 100f;
+			}
+			if (jprogram == 3) {
+				veteran = fipVetLayer != null;
+			}
+
+			assert fipPrimaryLayer != null;
+
+			float crownClosure = fipPrimaryLayer.getCrownClosure();
+
+			// Assume crown closure linear with age, to 25.
+			if (fipPrimaryLayer.getAgeTotal() < 25f) {
+				crownClosure *= 25f / fipPrimaryLayer.getAgeTotal();
+			}
+			// define crown closure as the SUM of two layers
+			if (veteran) {
+				crownClosure += fipVetLayer.getCrownClosure();
+			}
+			crownClosure = clamp(crownClosure, 0, 100);
+
+			/*
+			 * assume that CC occurs at age 25 and that most land goes to 90% occupancy but
+			 * that occupancy increases only 1% /yr with no increases after ages 25. });
+			 */
+
+			// Obtain the percent yield (in comparison with CC = 90%)
+
+			float crownClosureTop = 90f;
+			float breastHeightAge = fipPrimaryLayer.getAgeTotal() - fipPrimaryLayer.getYearsToBreastHeight();
+
+			float yieldFactor = fipPolygon.getYieldFactor();
+
+			var bec = BecDefinitionParser.getBecs(controlMap).get(fipPolygon.getBiogeoclimaticZone()).orElseThrow(
+					() -> new ProcessingException("Could not find BEC " + fipPolygon.getBiogeoclimaticZone())
+			);
+
+			breastHeightAge = max(5.0f, breastHeightAge);
+			// EMP040
+			float baseAreaTop = estimatePrimaryBaseArea(
+					fipPrimaryLayer, bec, yieldFactor, breastHeightAge, 0f, crownClosureTop
+			);
+			// EMP040
+			float baseAreaHat = estimatePrimaryBaseArea(
+					fipPrimaryLayer, bec, yieldFactor, breastHeightAge, 0f, crownClosure
+			);
+
+			float percentYield;
+			if (baseAreaTop > 0f && baseAreaHat > 0f) {
+				percentYield = min(100f, 100f * baseAreaHat / baseAreaTop);
+			} else {
+				percentYield = 90f;
+			}
+
+			float gainMax;
+			if (fipPrimaryLayer.getAgeTotal() > 125f) {
+				gainMax = 0f;
+			} else if (fipPrimaryLayer.getAgeTotal() < 25f) {
+				gainMax = max(90f - percentYield, 0);
+			} else {
+				gainMax = max(90f - percentYield, 0);
+				gainMax = min(gainMax, 125 - fipPrimaryLayer.getAgeTotal());
+			}
+
+			return floor(min(percentYield + gainMax, 100f));
+
 		}
 	}
 
@@ -2468,6 +2564,7 @@ public class FipStart {
 		}
 	}
 
+	// FIP_CHK
 	private void checkPolygon(FipPolygon polygon) throws ProcessingException {
 
 		if (!polygon.getLayers().containsKey(Layer.PRIMARY)) {
@@ -2551,11 +2648,11 @@ public class FipStart {
 
 	// EMP040
 	float estimatePrimaryBaseArea(
-			FipLayer fipLayer, BecDefinition bec, float yieldFactor, float breastHeightAge, float baseAreaOverstory
+			FipLayer fipLayer, BecDefinition bec, float yieldFactor, float breastHeightAge, float baseAreaOverstory,
+			float crownClosure
 	) throws LowValueException {
-
 		boolean lowCrownClosure = fipLayer.getCrownClosure() < LOW_CROWN_CLOSURE;
-		float crownClosure = lowCrownClosure ? LOW_CROWN_CLOSURE : fipLayer.getCrownClosure();
+		crownClosure = lowCrownClosure ? LOW_CROWN_CLOSURE : crownClosure;
 
 		var coeMap = Utils.<MatrixMap2<String, String, Coefficients>>expectParsedControl(
 				controlMap, CoefficientParser.BA_CONTROL_KEY, MatrixMap2.class
@@ -2636,6 +2733,15 @@ public class FipStart {
 			throw new LowValueException("Estimated base area", baseArea, 0.05f);
 		}
 		return baseArea;
+	}
+
+	// EMP040
+	float estimatePrimaryBaseArea(
+			FipLayer fipLayer, BecDefinition bec, float yieldFactor, float breastHeightAge, float baseAreaOverstory
+	) throws LowValueException {
+		return estimatePrimaryBaseArea(
+				fipLayer, bec, yieldFactor, breastHeightAge, baseAreaOverstory, fipLayer.getCrownClosure()
+		);
 	}
 
 	/**
