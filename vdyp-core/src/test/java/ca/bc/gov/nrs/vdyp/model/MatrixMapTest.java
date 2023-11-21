@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 class MatrixMapTest {
@@ -35,6 +36,7 @@ class MatrixMapTest {
 	}
 
 	@Test
+	@Disabled("No longer enforce this restriction as empty maps have a use")
 	void testContructEmptyDimensionsFails() {
 		var dim1 = Collections.emptyList();
 		var dims = Arrays.asList(dim1);

@@ -1,9 +1,10 @@
 package ca.bc.gov.nrs.vdyp.io.parse;
 
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.mmEmpty;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.mmHasEntry;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.anEmptyMap;
-import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.is;
 
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
+import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
 
 class StockingClassFactorParserTest {
 
@@ -23,7 +25,7 @@ class StockingClassFactorParserTest {
 
 		var result = parser.parse(is, Collections.emptyMap());
 
-		assertThat(result, anEmptyMap());
+		assertThat(result, mmEmpty());
 	}
 
 	@Test
@@ -35,12 +37,9 @@ class StockingClassFactorParserTest {
 
 		assertThat(
 				result,
-				hasEntry(
-						is('R'),
-						hasEntry(
-								is(Region.INTERIOR),
-								allOf(hasProperty("factor", is(1.0f)), allOf(hasProperty("npctArea", is(100))))
-						)
+				mmHasEntry(
+						present(allOf(hasProperty("factor", is(1.0f)), allOf(hasProperty("npctArea", is(100))))), 'R',
+						Region.INTERIOR
 				)
 		);
 	}
@@ -54,32 +53,24 @@ class StockingClassFactorParserTest {
 
 			assertThat(
 					result,
-					hasEntry(
-							is('R'),
-							hasEntry(
-									is(Region.INTERIOR),
-									allOf(hasProperty("factor", is(1.0f)), allOf(hasProperty("npctArea", is(100))))
-							)
+					mmHasEntry(
+							present(allOf(hasProperty("factor", is(1.0f)), allOf(hasProperty("npctArea", is(100))))),
+							'R', Region.INTERIOR
+
 					)
 			);
 			assertThat(
-					result,
-					hasEntry(
-							is('R'),
-							hasEntry(
-									is(Region.COASTAL),
-									allOf(hasProperty("factor", is(1.0f)), allOf(hasProperty("npctArea", is(100))))
-							)
+					result, mmHasEntry(
+
+							present(allOf(hasProperty("factor", is(1.0f)), allOf(hasProperty("npctArea", is(100))))),
+							'R', Region.COASTAL
 					)
 			);
 			assertThat(
-					result,
-					hasEntry(
-							is('4'),
-							hasEntry(
-									is(Region.COASTAL),
-									allOf(hasProperty("factor", is(1.0f)), allOf(hasProperty("npctArea", is(100))))
-							)
+					result, mmHasEntry(
+
+							present(allOf(hasProperty("factor", is(1.0f)), allOf(hasProperty("npctArea", is(100))))),
+							'4', Region.COASTAL
 					)
 			);
 		}

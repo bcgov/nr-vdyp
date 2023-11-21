@@ -25,7 +25,7 @@ public class VdypLayer extends BaseVdypLayer<VdypSpecies> implements VdypUtiliza
 	Coefficients closeUtilizationVolumeByUtilization = new Coefficients(
 			Arrays.asList(0f, 0f, 0f, 0f, 0f, 0f), -1 //
 	); // LVCOM/VOLCU species 0
-	Coefficients closeUtilizationNetVolumeOfDecayByUtilization = new Coefficients(
+	Coefficients closeUtilizationVolumeNetOfDecayByUtilization = new Coefficients(
 			Arrays.asList(0f, 0f, 0f, 0f, 0f, 0f), -1 //
 	); // LVCOM/VOL_D species 0
 	Coefficients closeUtilizationVolumeNetOfDecayAndWasteByUtilization = new Coefficients(
@@ -108,15 +108,15 @@ public class VdypLayer extends BaseVdypLayer<VdypSpecies> implements VdypUtiliza
 	}
 
 	@Override
-	public Coefficients getCloseUtilizationNetVolumeOfDecayByUtilization() {
-		return closeUtilizationNetVolumeOfDecayByUtilization;
+	public Coefficients getCloseUtilizationVolumeNetOfDecayByUtilization() {
+		return closeUtilizationVolumeNetOfDecayByUtilization;
 	}
 
 	@Override
-	public void setCloseUtilizationNetVolumeOfDecayByUtilization(
+	public void setCloseUtilizationVolumeNetOfDecayByUtilization(
 			Coefficients closeUtilizationNetVolumeOfDecayByUtilization
 	) {
-		this.closeUtilizationNetVolumeOfDecayByUtilization = closeUtilizationNetVolumeOfDecayByUtilization;
+		this.closeUtilizationVolumeNetOfDecayByUtilization = closeUtilizationNetVolumeOfDecayByUtilization;
 	}
 
 	@Override

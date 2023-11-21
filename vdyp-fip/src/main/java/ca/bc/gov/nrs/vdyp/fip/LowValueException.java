@@ -6,7 +6,7 @@ package ca.bc.gov.nrs.vdyp.fip;
  * @author Kevin Smith, Vivid Solutions
  *
  */
-public class LowValueException extends ProcessingException {
+public class LowValueException extends StandProcessingException {
 
 	private static final long serialVersionUID = 4242156378933396508L;
 	final private float value;

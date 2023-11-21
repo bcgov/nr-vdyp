@@ -94,7 +94,7 @@ public class FipLayerParserTest {
 								hasProperty("height", is(35.3f)), hasProperty("siteIndex", is(35.0f)),
 								hasProperty("crownClosure", is(87.4f)), hasProperty("siteSp0", is("D")),
 								hasProperty("siteSp64", is("D")), hasProperty("yearsToBreastHeight", is(1.0f)),
-								hasProperty("stockingClass", present(is("0"))),
+								hasProperty("stockingClass", present(is('0'))),
 								hasProperty("inventoryTypeGroup", is(0)), hasProperty("breastHeightAge", notPresent()),
 								hasProperty("siteCurveNumber", present(is(13)))
 						)
@@ -148,7 +148,7 @@ public class FipLayerParserTest {
 								hasProperty("height", is(42.3f)), hasProperty("siteIndex", is(31.9f)),
 								hasProperty("crownClosure", is(82.8f)), hasProperty("siteSp0", is("H")),
 								hasProperty("siteSp64", is("H")), hasProperty("yearsToBreastHeight", is(4.9f)),
-								hasProperty("stockingClass", present(is("0"))),
+								hasProperty("stockingClass", present(is('0'))),
 								hasProperty("inventoryTypeGroup", is(0)), hasProperty("breastHeightAge", notPresent()),
 								hasProperty("siteCurveNumber", present(is(34)))
 						)
@@ -218,7 +218,7 @@ public class FipLayerParserTest {
 								hasProperty("height", is(42.3f)), hasProperty("siteIndex", is(31.9f)),
 								hasProperty("crownClosure", is(82.8f)), hasProperty("siteSp0", is("H")),
 								hasProperty("siteSp64", is("H")), hasProperty("yearsToBreastHeight", is(4.9f)),
-								hasProperty("stockingClass", present(is("0"))),
+								hasProperty("stockingClass", present(is('0'))),
 								hasProperty("inventoryTypeGroup", is(0)), hasProperty("breastHeightAge", notPresent()),
 								hasProperty("siteCurveNumber", present(is(34)))
 						)
@@ -272,7 +272,7 @@ public class FipLayerParserTest {
 								hasProperty("height", is(42.3f)), hasProperty("siteIndex", is(31.9f)),
 								hasProperty("crownClosure", is(82.8f)), hasProperty("siteSp0", is("H")),
 								hasProperty("siteSp64", is("H")), hasProperty("yearsToBreastHeight", is(4.9f)),
-								hasProperty("stockingClass", present(is("0"))),
+								hasProperty("stockingClass", present(is('0'))),
 								hasProperty("inventoryTypeGroup", is(0)), hasProperty("breastHeightAge", notPresent()),
 								hasProperty("siteCurveNumber", present(is(34)))
 						)

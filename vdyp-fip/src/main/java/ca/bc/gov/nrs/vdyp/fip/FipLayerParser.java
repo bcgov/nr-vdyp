@@ -66,7 +66,7 @@ public class FipLayerParser implements ControlMapValueReplacer<StreamingParserFa
 					.value(2, SITE_SP0, ControlledValueParser.optional(ValueParser.GENUS)) //
 					.value(3, SITE_SP64, ControlledValueParser.optional(ValueParser.STRING)) //
 					.floating(5, YEARS_TO_BREAST_HEIGHT) //
-					.value(1, STOCKING_CLASS, ValueParser.optional(ValueParser.STRING)) //
+					.value(1, STOCKING_CLASS, ValueParser.optional(ValueParser.CHARACTER)) //
 					.space(2) //
 					.value(4, INVENTORY_TYPE_GROUP, ValueParser.optional(ValueParser.INTEGER)) //
 					.space(1) //
@@ -91,7 +91,7 @@ public class FipLayerParser implements ControlMapValueReplacer<StreamingParserFa
 					var siteSp0 = (Optional<String>) entry.get(SITE_SP0);
 					var siteSp64 = (Optional<String>) entry.get(SITE_SP64);
 					var yearsToBreastHeight = (float) entry.get(YEARS_TO_BREAST_HEIGHT);
-					var stockingClass = (Optional<String>) entry.get(STOCKING_CLASS);
+					var stockingClass = (Optional<Character>) entry.get(STOCKING_CLASS);
 					var inventoryTypeGroup = (Optional<Integer>) entry.get(INVENTORY_TYPE_GROUP);
 					var breastHeightAge = (Optional<Float>) entry.get(BREAST_HEIGHT_AGE);
 					var siteCurveNumber = (Optional<Integer>) entry.get(SITE_CURVE_NUMBER);

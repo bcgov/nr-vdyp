@@ -143,15 +143,8 @@ class FipControlParserTest {
 				result, (Matcher) hasSpecificEntry(
 						FipControlParser.STOCKING_CLASS_FACTORS, allOf(
 								// STK
-								isA(Map.class), hasEntry(
-										isA(Character.class), allOf(
-												// Region
-												isA(Map.class),
-												hasEntry(
-														isA(Region.class), isA(StockingClassFactor.class) // Factors
-												)
-										)
-								)
+								isA(MatrixMap2.class),
+								mmHasEntry(present(isA(StockingClassFactor.class)), 'R', Region.COASTAL)
 						)
 				)
 		);

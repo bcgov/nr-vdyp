@@ -39,12 +39,12 @@ public interface VdypUtilizationHolder {
 	/**
 	 * Close utilization volume net of decay for utilization index -1 through 0
 	 */
-	void setCloseUtilizationNetVolumeOfDecayByUtilization(Coefficients closeUtilizationNetVolumeOfDecayByUtilization);
+	void setCloseUtilizationVolumeNetOfDecayByUtilization(Coefficients closeUtilizationNetVolumeOfDecayByUtilization);
 
 	/**
 	 * Close utilization volume net of decay for utilization index -1 through 0
 	 */
-	Coefficients getCloseUtilizationNetVolumeOfDecayByUtilization();
+	Coefficients getCloseUtilizationVolumeNetOfDecayByUtilization();
 
 	/**
 	 * Close utilization volume for utilization index -1 through 0

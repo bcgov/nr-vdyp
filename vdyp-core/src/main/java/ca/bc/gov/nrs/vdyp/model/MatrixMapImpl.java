@@ -28,9 +28,6 @@ public class MatrixMapImpl<T> implements MatrixMap<T> {
 		if (dimensions.isEmpty()) {
 			throw new IllegalArgumentException("Must have at least one dimension");
 		}
-		if (dimensions.stream().anyMatch(dim -> dim.isEmpty())) {
-			throw new IllegalArgumentException("Each dimension must have at least one value");
-		}
 		maps = dimensions.stream().map(dim -> {
 			Map<Object, Integer> map = new LinkedHashMap<>(dim.size());
 			int i = 0;

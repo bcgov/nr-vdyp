@@ -14,7 +14,7 @@ public class FipLayerPrimary extends FipLayer {
 	// a Primary layer.
 	Optional<Integer> siteCurveNumber = Optional.empty(); // FIPL_1/SCN_L1
 
-	Optional<String> stockingClass = Optional.empty(); // FIPL_1ST/STK_L1
+	Optional<Character> stockingClass = Optional.empty(); // FIPL_1ST/STK_L1
 
 	private String primaryGenus; // FIPL_1C/JPRIME
 
@@ -32,11 +32,11 @@ public class FipLayerPrimary extends FipLayer {
 		this.siteCurveNumber = siteCurveNumber;
 	}
 
-	public Optional<String> getStockingClass() {
+	public Optional<Character> getStockingClass() {
 		return stockingClass;
 	}
 
-	public void setStockingClass(Optional<String> stockingClass) {
+	public void setStockingClass(Optional<Character> stockingClass) {
 		this.stockingClass = stockingClass;
 	}
 

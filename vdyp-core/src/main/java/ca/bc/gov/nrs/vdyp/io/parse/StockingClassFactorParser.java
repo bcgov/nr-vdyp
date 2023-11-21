@@ -2,22 +2,29 @@ package ca.bc.gov.nrs.vdyp.io.parse;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
+import ca.bc.gov.nrs.vdyp.model.Layer;
+import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
+import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
+import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
+import ca.bc.gov.nrs.vdyp.model.MatrixMap3Impl;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.StockingClassFactor;
 
 /**
- * Parser for an stcking class factor data file
+ * Parser for an stocking class factor data file
  *
  * @author Kevin Smith, Vivid Solutions
  *
  */
-public class StockingClassFactorParser
-		implements ControlMapSubResourceParser<Map<Character, Map<Region, StockingClassFactor>>> {
+public class StockingClassFactorParser implements
+		ControlMapSubResourceParser<MatrixMap2<Character /* Stocking class */, Region, Optional<StockingClassFactor>>> {
 
 	public static final String CONTROL_KEY = "STOCKING_CLASS_FACTORS";
 
@@ -52,11 +59,10 @@ public class StockingClassFactorParser
 	}
 
 	@Override
-	public Map<Character, Map<Region, StockingClassFactor>> parse(InputStream is, Map<String, Object> control)
-			throws IOException, ResourceParseException {
+	public MatrixMap2<Character /* Stocking class */, Region, Optional<StockingClassFactor>>
+			parse(InputStream is, Map<String, Object> control) throws IOException, ResourceParseException {
 
-		Map<Character, Map<Region, StockingClassFactor>> result = new HashMap<>();
-		result = lineParser.parse(is, result, (v, r) -> {
+		Map<Character, Map<Region, StockingClassFactor>> result1 = lineParser.parse(is, new HashMap<>(), (v, r) -> {
 			char stk = (char) v.get(STK_KEY);
 			Region region = (Region) v.get(REGION_KEY);
 			float factor = (float) v.get(FACTOR_KEY);
@@ -71,11 +77,19 @@ public class StockingClassFactorParser
 			return r;
 		}, control);
 
-		for (var e : result.entrySet()) {
-			result.put(e.getKey(), Collections.unmodifiableMap(e.getValue()));
-		}
+		Collection<Region> regions = List.of(Region.values());
+		Collection<Character> classes = result1.keySet();
+		var result = new MatrixMap2Impl<Character, Region, Optional<StockingClassFactor>>(
+				classes, regions, (k1, k2) -> {
+					var subMap = result1.get(k1);
+					if (subMap == null) {
+						return Optional.empty();
+					}
+					return Optional.ofNullable(subMap.get(k2));
+				}
+		);
 
-		return Collections.unmodifiableMap(result);
+		return result;
 	}
 
 	@Override

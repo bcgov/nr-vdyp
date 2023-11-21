@@ -58,13 +58,17 @@ import ca.bc.gov.nrs.vdyp.io.parse.BecDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.GenusDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.MockStreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
+import ca.bc.gov.nrs.vdyp.io.parse.StockingClassFactorParser;
 import ca.bc.gov.nrs.vdyp.io.parse.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.io.parse.VeteranLayerVolumeAdjustParser;
 import ca.bc.gov.nrs.vdyp.math.FloatMath;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.Layer;
+import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.Region;
+import ca.bc.gov.nrs.vdyp.model.StockingClassFactor;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
+import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.VdypUtilizationHolder;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
@@ -1404,7 +1408,7 @@ class FipStartTest {
 			assertThat(result.getSpecies().get("H"), matchGenerator.apply(13.9343023f));
 			assertThat(result.getSpecies().get("S"), matchGenerator.apply(3.81141663f));
 		});
-		vetUtilization("closeUtilizationNetVolumeOfDecayByUtilization", matchGenerator -> {
+		vetUtilization("closeUtilizationVolumeNetOfDecayByUtilization", matchGenerator -> {
 			assertThat(result, matchGenerator.apply(22.7740307f));
 			assertThat(result.getSpecies().get("B"), matchGenerator.apply(5.64048958f));
 			assertThat(result.getSpecies().get("H"), matchGenerator.apply(13.3831034f));
@@ -2888,15 +2892,15 @@ class FipStartTest {
 		);
 
 		assertThat(
-				spec1.getCloseUtilizationNetVolumeOfDecayByUtilization(),
+				spec1.getCloseUtilizationVolumeNetOfDecayByUtilization(),
 				utilization(0f, 6.26433992f, 0.0349677317f, 2.95546484f, 2.18952441f, 1.08438313f)
 		);
 		assertThat(
-				spec2.getCloseUtilizationNetVolumeOfDecayByUtilization(),
+				spec2.getCloseUtilizationVolumeNetOfDecayByUtilization(),
 				utilization(0f, 60.8021164f, 2.36405492f, 33.6109734f, 19.6035042f, 5.2235837f)
 		);
 		assertThat(
-				layer.getCloseUtilizationNetVolumeOfDecayByUtilization(),
+				layer.getCloseUtilizationVolumeNetOfDecayByUtilization(),
 				utilization(0f, 67.0664597f, 2.39902258f, 36.5664368f, 21.7930279f, 6.30796671f)
 		);
 
@@ -2976,7 +2980,7 @@ class FipStartTest {
 		assertThat(vdypPolygon, hasProperty("layers", equalTo(processedLayers)));
 		assertThat(vdypPolygon, hasProperty("percentAvailable", closeTo(90f)));
 	}
-	
+
 	@Test
 	public void testCreateVdypPolygonPercentForestLandGiven() throws ProcessingException {
 		var controlMap = FipTestUtils.loadControlMap();
@@ -3026,7 +3030,7 @@ class FipStartTest {
 		assertThat(vdypPolygon, hasProperty("layers", equalTo(processedLayers)));
 		assertThat(vdypPolygon, hasProperty("percentAvailable", closeTo(42f)));
 	}
-	
+
 	@Test
 	public void testCreateVdypPolygonFipYoung() throws ProcessingException {
 		var controlMap = FipTestUtils.loadControlMap();
@@ -3075,6 +3079,336 @@ class FipStartTest {
 		assertThat(vdypPolygon, notNullValue());
 		assertThat(vdypPolygon, hasProperty("layers", equalTo(processedLayers)));
 		assertThat(vdypPolygon, hasProperty("percentAvailable", closeTo(100f)));
+	}
+
+	@Test
+	public void testApplyStockingFactor() throws ProcessingException {
+		var controlMap = FipTestUtils.loadControlMap();
+		@SuppressWarnings("unchecked")
+		var stockingClassMap = (MatrixMap2<Character, Region, Optional<StockingClassFactor>>) controlMap
+				.get(StockingClassFactorParser.CONTROL_KEY);
+
+		stockingClassMap
+				.put('R', Region.INTERIOR, Optional.of(new StockingClassFactor('R', Region.INTERIOR, 0.42f, 100)));
+
+		var app = new FipStart();
+		app.setControlMap(controlMap);
+
+		// var fipVeteranLayer = new FipLayer("Test", Layer.VETERAN);
+		var fipPrimaryLayer = new FipLayerPrimary("Test");
+
+		var processedLayers = new HashMap<Layer, VdypLayer>();
+		processedLayers.put(Layer.PRIMARY, new VdypLayer("Test", Layer.PRIMARY));
+
+		fipPrimaryLayer.setStockingClass(Optional.of('R'));
+
+		var vdypLayer = new VdypLayer("Test", Layer.PRIMARY);
+
+		vdypLayer.setLoreyHeightByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f, 1f));
+		vdypLayer.setQuadraticMeanDiameterByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f, 1f));
+
+		vdypLayer.setBaseAreaByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f));
+		vdypLayer.setTreesPerHectareByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f));
+		vdypLayer.setWholeStemVolumeByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f));
+		vdypLayer.setCloseUtilizationVolumeByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f));
+		vdypLayer.setCloseUtilizationVolumeNetOfDecayByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f));
+		vdypLayer.setCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(
+				FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f)
+		);
+		vdypLayer.setCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(
+				FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f)
+		);
+
+		var spec1 = new VdypSpecies("Test", Layer.PRIMARY, "L");
+
+		spec1.setLoreyHeightByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f, 1f));
+		spec1.setQuadraticMeanDiameterByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f, 1f));
+
+		spec1.setBaseAreaByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f));
+		spec1.setTreesPerHectareByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f));
+		spec1.setWholeStemVolumeByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f));
+		spec1.setCloseUtilizationVolumeNetOfDecayByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f));
+		spec1.setCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f));
+		spec1.setCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(
+				FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f)
+		);
+
+		var spec2 = new VdypSpecies("Test", Layer.PRIMARY, "PL");
+
+		spec2.setLoreyHeightByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f, 1f));
+		spec2.setQuadraticMeanDiameterByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f, 1f));
+
+		spec2.setBaseAreaByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f));
+		spec2.setTreesPerHectareByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f));
+		spec2.setWholeStemVolumeByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f));
+		spec2.setCloseUtilizationVolumeNetOfDecayByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f));
+		spec2.setCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f));
+		spec2.setCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(
+				FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f)
+		);
+
+		vdypLayer.setSpecies(List.of(spec1, spec2));
+
+		app.adjustForStocking(vdypLayer, fipPrimaryLayer, BecDefinitionParser.getBecs(controlMap).get("IDF").get());
+
+		final var MODIFIED = utilization(0.42f, 4 * 0.42f, 0.42f, 0.42f, 0.42f, 0.42f);
+		final var NEVER_MODIFIED = utilization(1f, 1f, 1f, 1f, 1f, 1f);
+
+		assertThat(vdypLayer, hasProperty("loreyHeightByUtilization", NEVER_MODIFIED));
+		assertThat(vdypLayer, hasProperty("quadraticMeanDiameterByUtilization", NEVER_MODIFIED));
+
+		assertThat(vdypLayer, hasProperty("baseAreaByUtilization", MODIFIED));
+		assertThat(vdypLayer, hasProperty("treesPerHectareByUtilization", MODIFIED));
+		assertThat(vdypLayer, hasProperty("closeUtilizationVolumeNetOfDecayByUtilization", MODIFIED));
+		assertThat(vdypLayer, hasProperty("closeUtilizationVolumeNetOfDecayAndWasteByUtilization", MODIFIED));
+		assertThat(vdypLayer, hasProperty("closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization", MODIFIED));
+
+		assertThat(spec1, hasProperty("loreyHeightByUtilization", NEVER_MODIFIED));
+		assertThat(spec1, hasProperty("quadraticMeanDiameterByUtilization", NEVER_MODIFIED));
+
+		assertThat(spec1, hasProperty("baseAreaByUtilization", MODIFIED));
+		assertThat(spec1, hasProperty("treesPerHectareByUtilization", MODIFIED));
+		assertThat(spec1, hasProperty("closeUtilizationVolumeNetOfDecayByUtilization", MODIFIED));
+		assertThat(spec1, hasProperty("closeUtilizationVolumeNetOfDecayAndWasteByUtilization", MODIFIED));
+		assertThat(spec1, hasProperty("closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization", MODIFIED));
+
+		assertThat(spec2, hasProperty("loreyHeightByUtilization", NEVER_MODIFIED));
+		assertThat(spec2, hasProperty("quadraticMeanDiameterByUtilization", NEVER_MODIFIED));
+
+		assertThat(spec2, hasProperty("baseAreaByUtilization", MODIFIED));
+		assertThat(spec2, hasProperty("treesPerHectareByUtilization", MODIFIED));
+		assertThat(spec2, hasProperty("closeUtilizationVolumeNetOfDecayByUtilization", MODIFIED));
+		assertThat(spec2, hasProperty("closeUtilizationVolumeNetOfDecayAndWasteByUtilization", MODIFIED));
+		assertThat(spec2, hasProperty("closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization", MODIFIED));
+
+	}
+
+	@Test
+	public void testApplyStockingFactorNoFactorForLayer() throws ProcessingException {
+		var controlMap = FipTestUtils.loadControlMap();
+		@SuppressWarnings("unchecked")
+		var stockingClassMap = (MatrixMap2<Character, Region, StockingClassFactor>) controlMap
+				.get(StockingClassFactorParser.CONTROL_KEY);
+
+		stockingClassMap.put('R', Region.INTERIOR, new StockingClassFactor('R', Region.INTERIOR, 0.42f, 100));
+
+		var app = new FipStart();
+		app.setControlMap(controlMap);
+
+		// var fipVeteranLayer = new FipLayer("Test", Layer.VETERAN);
+		var fipPrimaryLayer = new FipLayerPrimary("Test");
+
+		var processedLayers = new HashMap<Layer, VdypLayer>();
+		processedLayers.put(Layer.PRIMARY, new VdypLayer("Test", Layer.PRIMARY));
+
+		fipPrimaryLayer.setStockingClass(Optional.empty());
+
+		var vdypLayer = new VdypLayer("Test", Layer.PRIMARY);
+
+		vdypLayer.setLoreyHeightByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f, 1f));
+		vdypLayer.setQuadraticMeanDiameterByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f, 1f));
+
+		vdypLayer.setBaseAreaByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f));
+		vdypLayer.setTreesPerHectareByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f));
+		vdypLayer.setWholeStemVolumeByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f));
+		vdypLayer.setCloseUtilizationVolumeByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f));
+		vdypLayer.setCloseUtilizationVolumeNetOfDecayByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f));
+		vdypLayer.setCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(
+				FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f)
+		);
+		vdypLayer.setCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(
+				FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f)
+		);
+
+		var spec1 = new VdypSpecies("Test", Layer.PRIMARY, "L");
+
+		spec1.setLoreyHeightByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f, 1f));
+		spec1.setQuadraticMeanDiameterByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f, 1f));
+
+		spec1.setBaseAreaByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f));
+		spec1.setTreesPerHectareByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f));
+		spec1.setWholeStemVolumeByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f));
+		spec1.setCloseUtilizationVolumeNetOfDecayByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f));
+		spec1.setCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f));
+		spec1.setCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(
+				FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f)
+		);
+
+		var spec2 = new VdypSpecies("Test", Layer.PRIMARY, "PL");
+
+		spec2.setLoreyHeightByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f, 1f));
+		spec2.setQuadraticMeanDiameterByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f, 1f));
+
+		spec2.setBaseAreaByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f));
+		spec2.setTreesPerHectareByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f));
+		spec2.setWholeStemVolumeByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f));
+		spec2.setCloseUtilizationVolumeNetOfDecayByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f));
+		spec2.setCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f));
+		spec2.setCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(
+				FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f)
+		);
+
+		vdypLayer.setSpecies(List.of(spec1, spec2));
+
+		app.adjustForStocking(vdypLayer, fipPrimaryLayer, BecDefinitionParser.getBecs(controlMap).get("IDF").get());
+
+		final var MOFIIABLE_NOT_MODIFIED = utilization(1f, 4f, 1f, 1f, 1f, 1f);
+		final var NEVER_MODIFIED = utilization(1f, 1f, 1f, 1f, 1f, 1f);
+
+		assertThat(vdypLayer, hasProperty("loreyHeightByUtilization", NEVER_MODIFIED));
+		assertThat(vdypLayer, hasProperty("quadraticMeanDiameterByUtilization", NEVER_MODIFIED));
+
+		assertThat(vdypLayer, hasProperty("baseAreaByUtilization", MOFIIABLE_NOT_MODIFIED));
+		assertThat(vdypLayer, hasProperty("treesPerHectareByUtilization", MOFIIABLE_NOT_MODIFIED));
+		assertThat(vdypLayer, hasProperty("closeUtilizationVolumeNetOfDecayByUtilization", MOFIIABLE_NOT_MODIFIED));
+		assertThat(
+				vdypLayer, hasProperty("closeUtilizationVolumeNetOfDecayAndWasteByUtilization", MOFIIABLE_NOT_MODIFIED)
+		);
+		assertThat(
+				vdypLayer,
+				hasProperty("closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization", MOFIIABLE_NOT_MODIFIED)
+		);
+
+		assertThat(spec1, hasProperty("loreyHeightByUtilization", NEVER_MODIFIED));
+		assertThat(spec1, hasProperty("quadraticMeanDiameterByUtilization", NEVER_MODIFIED));
+
+		assertThat(spec1, hasProperty("baseAreaByUtilization", MOFIIABLE_NOT_MODIFIED));
+		assertThat(spec1, hasProperty("treesPerHectareByUtilization", MOFIIABLE_NOT_MODIFIED));
+		assertThat(spec1, hasProperty("closeUtilizationVolumeNetOfDecayByUtilization", MOFIIABLE_NOT_MODIFIED));
+		assertThat(spec1, hasProperty("closeUtilizationVolumeNetOfDecayAndWasteByUtilization", MOFIIABLE_NOT_MODIFIED));
+		assertThat(
+				spec1,
+				hasProperty("closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization", MOFIIABLE_NOT_MODIFIED)
+		);
+
+		assertThat(spec2, hasProperty("loreyHeightByUtilization", NEVER_MODIFIED));
+		assertThat(spec2, hasProperty("quadraticMeanDiameterByUtilization", NEVER_MODIFIED));
+
+		assertThat(spec2, hasProperty("baseAreaByUtilization", MOFIIABLE_NOT_MODIFIED));
+		assertThat(spec2, hasProperty("treesPerHectareByUtilization", MOFIIABLE_NOT_MODIFIED));
+		assertThat(spec2, hasProperty("closeUtilizationVolumeNetOfDecayByUtilization", MOFIIABLE_NOT_MODIFIED));
+		assertThat(spec2, hasProperty("closeUtilizationVolumeNetOfDecayAndWasteByUtilization", MOFIIABLE_NOT_MODIFIED));
+		assertThat(
+				spec2,
+				hasProperty("closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization", MOFIIABLE_NOT_MODIFIED)
+		);
+
+	}
+
+	@Test
+	public void testApplyStockingFactorNoFactorForClass() throws ProcessingException {
+		var controlMap = FipTestUtils.loadControlMap();
+		@SuppressWarnings("unchecked")
+		var stockingClassMap = (MatrixMap2<Character, Region, StockingClassFactor>) controlMap
+				.get(StockingClassFactorParser.CONTROL_KEY);
+
+		stockingClassMap.remove('R', Region.INTERIOR);
+
+		var app = new FipStart();
+		app.setControlMap(controlMap);
+
+		// var fipVeteranLayer = new FipLayer("Test", Layer.VETERAN);
+		var fipPrimaryLayer = new FipLayerPrimary("Test");
+
+		var processedLayers = new HashMap<Layer, VdypLayer>();
+		processedLayers.put(Layer.PRIMARY, new VdypLayer("Test", Layer.PRIMARY));
+
+		fipPrimaryLayer.setStockingClass(Optional.of('R'));
+
+		var vdypLayer = new VdypLayer("Test", Layer.PRIMARY);
+
+		vdypLayer.setLoreyHeightByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f, 1f));
+		vdypLayer.setQuadraticMeanDiameterByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f, 1f));
+
+		vdypLayer.setBaseAreaByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f));
+		vdypLayer.setTreesPerHectareByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f));
+		vdypLayer.setWholeStemVolumeByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f));
+		vdypLayer.setCloseUtilizationVolumeByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f));
+		vdypLayer.setCloseUtilizationVolumeNetOfDecayByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f));
+		vdypLayer.setCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(
+				FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f)
+		);
+		vdypLayer.setCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(
+				FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f)
+		);
+
+		var spec1 = new VdypSpecies("Test", Layer.PRIMARY, "L");
+
+		spec1.setLoreyHeightByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f, 1f));
+		spec1.setQuadraticMeanDiameterByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f, 1f));
+
+		spec1.setBaseAreaByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f));
+		spec1.setTreesPerHectareByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f));
+		spec1.setWholeStemVolumeByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f));
+		spec1.setCloseUtilizationVolumeNetOfDecayByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f));
+		spec1.setCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f));
+		spec1.setCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(
+				FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f)
+		);
+
+		var spec2 = new VdypSpecies("Test", Layer.PRIMARY, "PL");
+
+		spec2.setLoreyHeightByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f, 1f));
+		spec2.setQuadraticMeanDiameterByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f, 1f));
+
+		spec2.setBaseAreaByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f));
+		spec2.setTreesPerHectareByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f));
+		spec2.setWholeStemVolumeByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f));
+		spec2.setCloseUtilizationVolumeNetOfDecayByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f));
+		spec2.setCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f));
+		spec2.setCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(
+				FipStart.utilizationVector(1f, 1f, 1f, 1f, 1f)
+		);
+
+		vdypLayer.setSpecies(List.of(spec1, spec2));
+
+		app.adjustForStocking(vdypLayer, fipPrimaryLayer, BecDefinitionParser.getBecs(controlMap).get("IDF").get());
+
+		final var MODIFIABLE_NOT_MODIFIED = utilization(1f, 4f, 1f, 1f, 1f, 1f);
+		final var NEVER_MODIFIED = utilization(1f, 1f, 1f, 1f, 1f, 1f);
+
+		assertThat(vdypLayer, hasProperty("loreyHeightByUtilization", NEVER_MODIFIED));
+		assertThat(vdypLayer, hasProperty("quadraticMeanDiameterByUtilization", NEVER_MODIFIED));
+
+		assertThat(vdypLayer, hasProperty("baseAreaByUtilization", MODIFIABLE_NOT_MODIFIED));
+		assertThat(vdypLayer, hasProperty("treesPerHectareByUtilization", MODIFIABLE_NOT_MODIFIED));
+		assertThat(vdypLayer, hasProperty("closeUtilizationVolumeNetOfDecayByUtilization", MODIFIABLE_NOT_MODIFIED));
+		assertThat(
+				vdypLayer, hasProperty("closeUtilizationVolumeNetOfDecayAndWasteByUtilization", MODIFIABLE_NOT_MODIFIED)
+		);
+		assertThat(
+				vdypLayer,
+				hasProperty("closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization", MODIFIABLE_NOT_MODIFIED)
+		);
+
+		assertThat(spec1, hasProperty("loreyHeightByUtilization", NEVER_MODIFIED));
+		assertThat(spec1, hasProperty("quadraticMeanDiameterByUtilization", NEVER_MODIFIED));
+
+		assertThat(spec1, hasProperty("baseAreaByUtilization", MODIFIABLE_NOT_MODIFIED));
+		assertThat(spec1, hasProperty("treesPerHectareByUtilization", MODIFIABLE_NOT_MODIFIED));
+		assertThat(spec1, hasProperty("closeUtilizationVolumeNetOfDecayByUtilization", MODIFIABLE_NOT_MODIFIED));
+		assertThat(
+				spec1, hasProperty("closeUtilizationVolumeNetOfDecayAndWasteByUtilization", MODIFIABLE_NOT_MODIFIED)
+		);
+		assertThat(
+				spec1,
+				hasProperty("closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization", MODIFIABLE_NOT_MODIFIED)
+		);
+
+		assertThat(spec2, hasProperty("loreyHeightByUtilization", NEVER_MODIFIED));
+		assertThat(spec2, hasProperty("quadraticMeanDiameterByUtilization", NEVER_MODIFIED));
+
+		assertThat(spec2, hasProperty("baseAreaByUtilization", MODIFIABLE_NOT_MODIFIED));
+		assertThat(spec2, hasProperty("treesPerHectareByUtilization", MODIFIABLE_NOT_MODIFIED));
+		assertThat(spec2, hasProperty("closeUtilizationVolumeNetOfDecayByUtilization", MODIFIABLE_NOT_MODIFIED));
+		assertThat(
+				spec2, hasProperty("closeUtilizationVolumeNetOfDecayAndWasteByUtilization", MODIFIABLE_NOT_MODIFIED)
+		);
+		assertThat(
+				spec2,
+				hasProperty("closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization", MODIFIABLE_NOT_MODIFIED)
+		);
+
 	}
 
 	private static <T> MockStreamingParser<T>

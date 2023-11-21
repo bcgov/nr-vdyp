@@ -55,6 +55,7 @@ import org.apache.commons.math3.util.FastMath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ca.bc.gov.nrs.vdyp.common.FloatUnaryOperator;
 import ca.bc.gov.nrs.vdyp.common.IndexedFloatBinaryOperator;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.fip.model.FipLayer;
@@ -83,6 +84,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.SmallComponentDQParser;
 import ca.bc.gov.nrs.vdyp.io.parse.SmallComponentHLParser;
 import ca.bc.gov.nrs.vdyp.io.parse.SmallComponentProbabilityParser;
 import ca.bc.gov.nrs.vdyp.io.parse.SmallComponentWSVolumeParser;
+import ca.bc.gov.nrs.vdyp.io.parse.StockingClassFactorParser;
 import ca.bc.gov.nrs.vdyp.io.parse.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.io.parse.TotalStandWholeStemParser;
@@ -104,6 +106,7 @@ import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
 import ca.bc.gov.nrs.vdyp.model.NonprimaryHLCoefficients;
 import ca.bc.gov.nrs.vdyp.model.Region;
+import ca.bc.gov.nrs.vdyp.model.StockingClassFactor;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
@@ -273,7 +276,6 @@ public class FipStart {
 	}
 
 	// FIP_SUB
-
 	void process() throws ProcessingException {
 		try (
 				var polyStream = this.<FipPolygon>getStreamingParser(FipPolygonParser.CONTROL_KEY);
@@ -289,6 +291,7 @@ public class FipStart {
 				// FIP_GET
 				log.info("Getting polygon {}", polygonsRead + 1);
 				var polygon = getPolygon(polyStream, layerStream, speciesStream);
+				VdypPolygon resultPoly;
 				try {
 
 					log.info("Read polygon {}, preparing to process", polygon.getPolygonIdentifier());
@@ -341,19 +344,76 @@ public class FipStart {
 					);
 					processedLayers.put(Layer.PRIMARY, resultPrimeLayer);
 
-					VdypPolygon resultPoly = createVdypPolygon(polygon, processedLayers);
+					resultPoly = createVdypPolygon(polygon, processedLayers);
 
-				} catch (LowValueException ex) {
+					float baseAreaTotalPrime = resultPrimeLayer.getBaseAreaByUtilization().getCoe(UTIL_ALL); // BA_TOTL1
+
+					// if (FIPPASS(6) .eq. 0 .or. FIPPASS(6) .eq. 2) then
+					if (true /* TODO */) {
+						@SuppressWarnings("unchecked")
+						var minima = (Map<String, Float>) controlMap.get(FipControlParser.MINIMA);
+						float minimumBaseArea = minima.get(FipControlParser.MINIMUM_BASE_AREA);
+						float minimumPredictedBaseArea = minima.get(FipControlParser.MINIMUM_PREDICTED_BASE_AREA);
+						if (baseAreaTotalPrime < minimumBaseArea) {
+							throw new LowValueException("Base area", baseAreaTotalPrime, minimumBaseArea);
+						}
+						float predictedBaseArea = baseAreaTotalPrime * (100f / resultPoly.getPercentAvailable());
+						if (predictedBaseArea < minimumPredictedBaseArea) {
+							throw new LowValueException(
+									"Predicted base area", predictedBaseArea, minimumPredictedBaseArea
+							);
+						}
+					}
+					BecDefinition bec = BecDefinitionParser.getBecs(controlMap).get(polygon.getBiogeoclimaticZone())
+							.orElseThrow(
+									() -> new ProcessingException("Missing Bec " + polygon.getBiogeoclimaticZone())
+							);
+					// FIPSTK
+					adjustForStocking(resultPoly.getLayers().get(Layer.PRIMARY), fipPrimeLayer, bec);
+				} catch (StandProcessingException ex) {
 					// TODO include other exceptions that cause a polygon to be bypassed
 					// TODO include some sort of hook for different forms of user output
+					// TODO Implement single stand mode that propagates the exception
 
 					// TODO fip_sub:241-250
 					log.warn(String.format("Polygon %s bypassed", polygon.getPolygonIdentifier()), ex);
+					continue;
 				}
+
 			}
 		} catch (IOException | ResourceParseException ex) {
 			throw new ProcessingException("Error while reading or writing data.", ex);
 		}
+	}
+
+	// FIPSTK
+	void adjustForStocking(VdypLayer vdypLayer, FipLayerPrimary fipLayerPrimary, BecDefinition bec) {
+
+		if (!fipLayerPrimary.getStockingClass().isPresent()) {
+			return;
+		}
+		var stockingClass = fipLayerPrimary.getStockingClass().get();
+
+		@SuppressWarnings("unchecked")
+		var stockingClassMap = (MatrixMap2<Character, Region, Optional<StockingClassFactor>>) controlMap
+				.get(StockingClassFactorParser.CONTROL_KEY);
+
+		Region region = bec.getRegion();
+
+		var factorEntry = stockingClassMap.get(stockingClass, region);
+
+		if (!factorEntry.isPresent()) {
+			return;
+		}
+
+		float factor = factorEntry.get().getFactor();
+
+		scaleAllSummableUtilization(vdypLayer, factor);
+		vdypLayer.getSpecies().values().forEach(spec -> scaleAllSummableUtilization(spec, factor));
+
+		log.atInfo().addArgument(stockingClass).addArgument(factor).setMessage(
+				"Foregoing Primary Layer has stocking class {} Yield values will be multiplied by {}  before being written to output file."
+		);
 	}
 
 	VdypPolygon createVdypPolygon(FipPolygon fipPolygon, Map<Layer, VdypLayer> processedLayers)
@@ -1087,6 +1147,14 @@ public class FipStart {
 		return new Coefficients(new float[] { 0f, 0f, 0f, 0f, 0f, 0f }, -1);
 	}
 
+	static Coefficients utilizationVector(float small, float all, float u1, float u2, float u3, float u4) {
+		return new Coefficients(new float[] { small, all, u1, u2, u3, u4 }, -1);
+	}
+
+	static Coefficients utilizationVector(float small, float u1, float u2, float u3, float u4) {
+		return new Coefficients(new float[] { small, u1 + u2 + u3 + u4, u1, u2, u3, u4 }, -1);
+	}
+
 	enum VolumeComputeMode {
 		/**
 		 * set volume components to zero
@@ -1263,7 +1331,7 @@ public class FipStart {
 
 			spec.getWholeStemVolumeByUtilization().pairwiseInPlace(wholeStemVolumeUtil, COPY_IF_NOT_TOTAL);
 			spec.getCloseUtilizationVolumeByUtilization().pairwiseInPlace(closeVolumeUtil, COPY_IF_NOT_TOTAL);
-			spec.getCloseUtilizationNetVolumeOfDecayByUtilization()
+			spec.getCloseUtilizationVolumeNetOfDecayByUtilization()
 					.pairwiseInPlace(closeVolumeNetDecayUtil, COPY_IF_NOT_TOTAL);
 			spec.getCloseUtilizationVolumeNetOfDecayAndWasteByUtilization()
 					.pairwiseInPlace(closeVolumeNetDecayWasteUtil, COPY_IF_NOT_TOTAL);
@@ -1421,7 +1489,7 @@ public class FipStart {
 				vdypSpecies.setQuadraticMeanDiameterByUtilization(quadMeanDiameterUtil);
 				vdypSpecies.setWholeStemVolumeByUtilization(wholeStemVolumeUtil);
 				vdypSpecies.setCloseUtilizationVolumeByUtilization(closeUtilizationVolumeUtil);
-				vdypSpecies.setCloseUtilizationNetVolumeOfDecayByUtilization(closeUtilizationNetOfDecayUtil);
+				vdypSpecies.setCloseUtilizationVolumeNetOfDecayByUtilization(closeUtilizationNetOfDecayUtil);
 				vdypSpecies.setCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(
 						closeUtilizationNetOfDecayAndWasteUtil
 				);
@@ -1475,6 +1543,17 @@ public class FipStart {
 					utilVector.pairwiseInPlace(speciesVector, (x, y) -> x + y);
 				}
 				accessors.getWriteMethod().invoke(vdypLayer, utilVector);
+			}
+		} catch (IllegalAccessException | InvocationTargetException ex) {
+			throw new IllegalStateException(ex);
+		}
+	}
+
+	// TODO De-reflectify this when we want to make it work in GralVM
+	private void scaleAllSummableUtilization(VdypUtilizationHolder holder, float factor) throws IllegalStateException {
+		try {
+			for (var accessors : SUMMABLE_UTILIZATION_VECTOR_ACCESSORS) {
+				((Coefficients) accessors.getReadMethod().invoke(holder)).scalarInPlace(x -> x * factor);
 			}
 		} catch (IllegalAccessException | InvocationTargetException ex) {
 			throw new IllegalStateException(ex);

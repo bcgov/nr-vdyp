@@ -220,6 +220,10 @@ public class VdypMatchers {
 
 	}
 
+	public static <T> Matcher<MatrixMap<Optional<T>>> mmEmpty() {
+		return mmAll(notPresent());
+	}
+
 	/**
 	 * Match a MatrixMap if all of its values match the given matcher
 	 *

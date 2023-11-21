@@ -130,12 +130,12 @@ public class VdypSpecies extends BaseVdypSpecies implements VdypUtilizationHolde
 	}
 
 	@Override
-	public Coefficients getCloseUtilizationNetVolumeOfDecayByUtilization() {
+	public Coefficients getCloseUtilizationVolumeNetOfDecayByUtilization() {
 		return closeUtilizationNetVolumeOfDecayByUtilization;
 	}
 
 	@Override
-	public void setCloseUtilizationNetVolumeOfDecayByUtilization(
+	public void setCloseUtilizationVolumeNetOfDecayByUtilization(
 			Coefficients closeUtilizationNetVolumeOfDecayByUtilization
 	) {
 		this.closeUtilizationNetVolumeOfDecayByUtilization = closeUtilizationNetVolumeOfDecayByUtilization;
