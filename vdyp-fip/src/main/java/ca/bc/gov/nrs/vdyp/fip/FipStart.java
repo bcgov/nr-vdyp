@@ -15,20 +15,14 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
-import java.util.function.DoubleFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.ToDoubleBiFunction;
 import java.util.function.ToDoubleFunction;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import static java.lang.Math.min;
 
-import java.beans.BeanDescriptor;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
@@ -55,7 +49,6 @@ import org.apache.commons.math3.util.FastMath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ca.bc.gov.nrs.vdyp.common.FloatUnaryOperator;
 import ca.bc.gov.nrs.vdyp.common.IndexedFloatBinaryOperator;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.fip.model.FipLayer;
@@ -98,7 +91,6 @@ import ca.bc.gov.nrs.vdyp.io.parse.VeteranLayerVolumeAdjustParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VolumeEquationGroupParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VolumeNetDecayParser;
 import ca.bc.gov.nrs.vdyp.io.parse.VolumeNetDecayWasteParser;
-import ca.bc.gov.nrs.vdyp.math.FloatMath;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.Layer;
@@ -122,9 +114,9 @@ public class FipStart {
 	public static final int CONFIG_LOAD_ERROR = 1; // TODO check what Fortran FIPStart would exit with.
 	public static final int PROCESSING_ERROR = 2; // TODO check what Fortran FIPStart would exit with.
 
-	public final static int UTIL_ALL = 0;
-	public final static int UTIL_LARGEST = 4;
-	public final static int UTIL_SMALL = -1;
+	public final static int UTIL_ALL = UtilizationClass.ALL.index;
+	public final static int UTIL_LARGEST = UtilizationClass.OVER225.index;
+	public final static int UTIL_SMALL = UtilizationClass.SMALL.index;
 
 	public final static float TOLERANCE = 2.0e-3f;
 
@@ -132,60 +124,9 @@ public class FipStart {
 
 	public static final float PI_40K = 0.78539816E-04f;
 
-	enum UtilizationClass {
-		SMALL(-1, "<7.5 cm", 0f, 7.5f), //
-		ALL(0, ">7.5 cm", 7.5f, 10000f), //
-		U75TO125(1, "7.5 - 12.5 cm", 7.5f, 12.5f), //
-		U125TO175(2, "12.5 - 17.5 cm", 12.5f, 17.5f), //
-		U175TO225(3, "17.5 - 22.5 cm", 17.5f, 22.5f), //
-		OVER225(4, ">22.5 cm", 22.5f, 10000f);
-
-		public final int index;
-		public final String name;
-		public final float lowBound;
-		public final float highBound;
-
-		private Optional<UtilizationClass> next = Optional.empty();
-		private Optional<UtilizationClass> previous = Optional.empty();
-
-		static {
-			for (int i = 1; i < UtilizationClass.values().length; i++) {
-				UtilizationClass.values()[i].previous = Optional.of(UtilizationClass.values()[i - 1]);
-				UtilizationClass.values()[i - 1].next = Optional.of(UtilizationClass.values()[i]);
-			}
-		}
-
-		UtilizationClass(int index, String name, float lowBound, float highBound) {
-			this.index = index;
-			this.name = name;
-			this.lowBound = lowBound;
-			this.highBound = highBound;
-		}
-
-		Optional<UtilizationClass> next() {
-			return this.next;
-		}
-
-		Optional<UtilizationClass> previous() {
-			return this.previous;
-		}
-	}
-
-	static final Collection<Integer> UTIL_CLASS_INDICES = IntStream.rangeClosed(1, UTIL_LARGEST).mapToObj(x -> x)
-			.toList();
-
 	static final Collection<UtilizationClass> UTIL_CLASSES = List.of(
 			UtilizationClass.U75TO125, UtilizationClass.U125TO175, UtilizationClass.U175TO225, UtilizationClass.OVER225
 	);
-
-	static final Map<Integer, String> UTIL_CLASS_NAMES = Utils.constMap(map -> {
-		map.put(-1, "<7.5cm");
-		map.put(0, ">=7.5 cm");
-		map.put(1, "7.5 - 12.5 cm");
-		map.put(2, "12.5 - 17.5 cm");
-		map.put(3, "17.5 - 22.5 cm");
-		map.put(4, "> 22.5 cm");
-	});
 
 	static final Map<String, Integer> ITG_PURE = Utils.constMap(map -> {
 		map.put("AC", 36);
@@ -276,32 +217,36 @@ public class FipStart {
 	}
 
 	// FIP_SUB
+	// TODO Fortran takes a vector of flags (FIPPASS) controlling which stages are
+	// implemented. FIPSTART always uses the same vector so far now that's not
+	// implemented.
 	void process() throws ProcessingException {
 		try (
 				var polyStream = this.<FipPolygon>getStreamingParser(FipPolygonParser.CONTROL_KEY);
 				var layerStream = this.<Map<Layer, FipLayer>>getStreamingParser(FipLayerParser.CONTROL_KEY);
 				var speciesStream = this.<Collection<FipSpecies>>getStreamingParser(FipSpeciesParser.CONTROL_KEY);
 		) {
-
+			log.atDebug().setMessage("Start Stand processing").log();
 			int polygonsRead = 0;
 			int polygonsWritten = 0;
 
 			while (polyStream.hasNext()) {
 
 				// FIP_GET
-				log.info("Getting polygon {}", polygonsRead + 1);
+				log.atInfo().setMessage("Getting polygon {}").addArgument(polygonsRead + 1).log();
 				var polygon = getPolygon(polyStream, layerStream, speciesStream);
 				VdypPolygon resultPoly;
 				try {
 
-					log.info("Read polygon {}, preparing to process", polygon.getPolygonIdentifier());
+					log.atInfo().setMessage("Read polygon {}, preparing to process")
+							.addArgument(polygon.getPolygonIdentifier()).log();
 
 					// if (MODE .eq. -1) go to 100
 
 					final var mode = polygon.getModeFip().orElse(FipMode.DONT_PROCESS);
 
 					if (mode == FipMode.DONT_PROCESS) {
-						log.info("Skipping polygon with mode {}", mode);
+						log.atInfo().setMessage("Skipping polygon with mode {}").addArgument(mode).log();
 						continue;
 					}
 
@@ -317,7 +262,8 @@ public class FipStart {
 					//
 					// if (IPASS .le. 0) GO TO 120
 
-					log.info("Checking validity of polygon {}:{}", polygonsRead, polygon.getPolygonIdentifier());
+					log.atInfo().setMessage("Checking validity of polygon {}:{}").addArgument(polygonsRead)
+							.addArgument(polygon.getPolygonIdentifier()).log();
 					checkPolygon(polygon);
 
 					// CALL FIPCALCV( BAV, IER)
@@ -371,12 +317,11 @@ public class FipStart {
 					// FIPSTK
 					adjustForStocking(resultPoly.getLayers().get(Layer.PRIMARY), fipPrimeLayer, bec);
 				} catch (StandProcessingException ex) {
-					// TODO include other exceptions that cause a polygon to be bypassed
 					// TODO include some sort of hook for different forms of user output
 					// TODO Implement single stand mode that propagates the exception
 
-					// TODO fip_sub:241-250
-					log.warn(String.format("Polygon %s bypassed", polygon.getPolygonIdentifier()), ex);
+					log.atWarn().setMessage("Polygon {} bypassed").addArgument(polygon.getPolygonIdentifier())
+							.setCause(ex);
 					continue;
 				}
 
@@ -977,6 +922,7 @@ public class FipStart {
 		return coeMap.get(genus, region);
 	}
 
+	// EMP090
 	private float estimateWholeStemVolumePerTree(int volumeGroup, float loreyHeight, float quadMeanDiameter) {
 		var coeMap = Utils.<Map<Integer, Coefficients>>expectParsedControl(
 				controlMap, TotalStandWholeStemParser.CONTROL_KEY, Map.class
@@ -1519,6 +1465,11 @@ public class FipStart {
 		}
 	}
 
+	/**
+	 * Sets the Layer's utilization components based on those of its species.
+	 *
+	 * @param vdypLayer
+	 */
 	private void computeLayerUtilizationComponentsFromSpecies(VdypLayer vdypLayer) {
 		// Layer utilization vectors other than quadratic mean diameter are the pairwise
 		// sums of those of their species
@@ -1561,7 +1512,7 @@ public class FipStart {
 	}
 
 	/**
-	 * Implements the two reconciliation modes for layer 1 as described in
+	 * Implements the three reconciliation modes for layer 1 as described in
 	 * ipsjf120.doc
 	 *
 	 * @param baseAreaUtil
@@ -2534,7 +2485,7 @@ public class FipStart {
 	 * Sums the individual utilization components (1-4)
 	 */
 	float sumUtilizationComponents(Coefficients components) {
-		return (float) UTIL_CLASS_INDICES.stream().mapToDouble(components::getCoe).sum();
+		return (float) UTIL_CLASSES.stream().mapToInt(x -> x.index).mapToDouble(components::getCoe).sum();
 	}
 
 	/**
@@ -2559,8 +2510,8 @@ public class FipStart {
 		if (sum <= 0f) {
 			throw new ProcessingException("Total volume " + sum + " was not positive.");
 		}
-		UTIL_CLASS_INDICES.forEach(i -> {
-			components.setCoe(i, components.getCoe(i) * k);
+		UTIL_CLASSES.forEach(uc -> {
+			components.setCoe(uc.index, components.getCoe(uc.index) * k);
 		});
 		return k;
 	}
@@ -2573,6 +2524,7 @@ public class FipStart {
 		return Utils.expectParsedControl(controlMap, key, MatrixMap2.class);
 	}
 
+	// FIP_GET
 	private FipPolygon getPolygon(
 			StreamingParser<FipPolygon> polyStream, StreamingParser<Map<Layer, FipLayer>> layerStream,
 			StreamingParser<Collection<FipSpecies>> speciesStream
@@ -2644,7 +2596,13 @@ public class FipStart {
 	}
 
 	// FIP_CHK
-	private void checkPolygon(FipPolygon polygon) throws ProcessingException {
+	void checkPolygon(FipPolygon polygon) throws ProcessingException {
+
+		// Fortran did debug logging when a polygon is found to be invalid. Attaching
+		// messages to exceptions fills that need.
+
+		// TODO finding all the things that are wrong rather than failing on just the
+		// first would be a good idea.
 
 		if (!polygon.getLayers().containsKey(Layer.PRIMARY)) {
 			throw validationError(
@@ -2988,8 +2946,8 @@ public class FipStart {
 		}
 	}
 
-	private static ProcessingException validationError(String template, Object... values) {
-		return new ProcessingException(String.format(template, values));
+	private static StandProcessingException validationError(String template, Object... values) {
+		return new StandProcessingException(String.format(template, values));
 	}
 
 	/**

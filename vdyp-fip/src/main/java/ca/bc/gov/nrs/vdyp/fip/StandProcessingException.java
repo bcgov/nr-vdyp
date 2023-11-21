@@ -1,0 +1,30 @@
+package ca.bc.gov.nrs.vdyp.fip;
+
+/*
+ * An exception preventing a particular stand from being processed, but which should not affect other stands
+ */
+public class StandProcessingException extends ProcessingException {
+
+	public StandProcessingException() {
+		super();
+	}
+
+	public StandProcessingException(
+			String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace
+	) {
+		super(message, cause, enableSuppression, writableStackTrace);
+	}
+
+	public StandProcessingException(String message, Throwable cause) {
+		super(message, cause);
+	}
+
+	public StandProcessingException(String message) {
+		super(message);
+	}
+
+	public StandProcessingException(Throwable cause) {
+		super(cause);
+	}
+
+}

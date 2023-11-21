@@ -18,7 +18,6 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -41,12 +40,9 @@ import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
-import org.hamcrest.TypeSafeMatcher;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.fip.FipStart.CompatibilityVariableMode;
-import ca.bc.gov.nrs.vdyp.fip.FipStart.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.fip.FipStart.VolumeComputeMode;
 import ca.bc.gov.nrs.vdyp.fip.model.FipLayer;
 import ca.bc.gov.nrs.vdyp.fip.model.FipLayerPrimary;
@@ -61,14 +57,12 @@ import ca.bc.gov.nrs.vdyp.io.parse.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.StockingClassFactorParser;
 import ca.bc.gov.nrs.vdyp.io.parse.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.io.parse.VeteranLayerVolumeAdjustParser;
-import ca.bc.gov.nrs.vdyp.math.FloatMath;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.Layer;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.StockingClassFactor;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
-import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.VdypUtilizationHolder;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
@@ -141,96 +135,87 @@ class FipStartTest {
 	@Test
 	void testPolygonWithNoPrimaryLayer() throws Exception {
 
-		var polygonId = polygonId("Test Polygon", 2023);
-		var layer = Layer.VETERAN;
-
 		// One polygon with one layer with one species entry, and type is VETERAN
-		testWith(
-				Arrays.asList(getTestPolygon(polygonId, valid())), //
-				Arrays.asList(layerMap(getTestVeteranLayer(polygonId, valid()))), //
-				Arrays.asList(Collections.singletonList(getTestSpecies(polygonId, layer, valid()))), //
-				(app, controlMap) -> {
-					var ex = assertThrows(ProcessingException.class, () -> app.process());
 
-					assertThat(
-							ex,
-							hasProperty(
-									"message",
-									is(
-											"Polygon " + polygonId + " has no " + Layer.PRIMARY
-													+ " layer, or that layer has non-positive height or crown closure."
-									)
-							)
-					);
+		var controlMap = FipTestUtils.loadControlMap();
+		var app = new FipStart();
+		app.setControlMap(controlMap);
 
-				}
+		var polygonId = polygonId("Test Polygon", 2023);
+
+		var polygon = getTestPolygon(polygonId, valid());
+		var layer2 = getTestVeteranLayer(polygonId, x -> {
+			x.setHeight(9f);
+		});
+		polygon.setLayers(List.of(layer2));
+
+		var ex = assertThrows(StandProcessingException.class, () -> app.checkPolygon(polygon));
+		assertThat(
+				ex,
+				hasProperty(
+						"message",
+						is(
+								"Polygon " + polygonId + " has no " + Layer.PRIMARY
+										+ " layer, or that layer has non-positive height or crown closure."
+						)
+				)
 		);
-
 	}
 
 	@Test
 	void testPrimaryLayerHeightLessThanMinimum() throws Exception {
 
+		var controlMap = FipTestUtils.loadControlMap();
+		var app = new FipStart();
+		app.setControlMap(controlMap);
+
 		var polygonId = polygonId("Test Polygon", 2023);
-		var layer = Layer.PRIMARY;
 
-		testWith(
-				Arrays.asList(getTestPolygon(polygonId, valid())), //
-				Arrays.asList(layerMap(getTestPrimaryLayer(polygonId, x -> {
-					x.setHeight(4f);
-				}))), //
-				Arrays.asList(Collections.singletonList(getTestSpecies(polygonId, layer, valid()))), //
-				(app, controlMap) -> {
-					var ex = assertThrows(ProcessingException.class, () -> app.process());
+		var polygon = getTestPolygon(polygonId, valid());
+		var layer = this.getTestPrimaryLayer("Test Polygon", x -> {
+			x.setHeight(4f);
+		});
+		polygon.setLayers(Collections.singletonMap(Layer.PRIMARY, layer));
 
-					assertThat(
-							ex,
-							hasProperty(
-									"message",
-									is(
-											"Polygon " + polygonId + " has " + Layer.PRIMARY
-													+ " layer where height 4.0 is less than minimum 5.0."
-									)
-							)
-					);
-
-				}
+		var ex = assertThrows(StandProcessingException.class, () -> app.checkPolygon(polygon));
+		assertThat(
+				ex,
+				hasProperty(
+						"message",
+						is(
+								"Polygon " + polygonId + " has " + Layer.PRIMARY
+										+ " layer where height 4.0 is less than minimum 5.0."
+						)
+				)
 		);
 
 	}
 
 	@Test
 	void testVeteranLayerHeightLessThanMinimum() throws Exception {
+		var controlMap = FipTestUtils.loadControlMap();
+		var app = new FipStart();
+		app.setControlMap(controlMap);
 
 		var polygonId = polygonId("Test Polygon", 2023);
-		var layer = Layer.VETERAN;
 
-		testWith(
-				Arrays.asList(getTestPolygon(polygonId, valid())), //
-				Arrays.asList(
-						layerMap(
-								getTestPrimaryLayer(polygonId, valid()), //
-								getTestVeteranLayer(polygonId, x -> {
-									x.setHeight(9f);
-								}) //
+		var polygon = getTestPolygon(polygonId, valid());
+		var layer1 = getTestPrimaryLayer(polygonId, valid());
+		var layer2 = getTestVeteranLayer(polygonId, x -> {
+			x.setHeight(9f);
+		});
+		polygon.setLayers(List.of(layer1, layer2));
+
+		var ex = assertThrows(StandProcessingException.class, () -> app.checkPolygon(polygon));
+		assertThat(
+				ex,
+				hasProperty(
+						"message",
+						is(
+								"Polygon " + polygonId + " has " + Layer.VETERAN
+										+ " layer where height 9.0 is less than minimum 10.0."
 						)
-				), //
-				Arrays.asList(Collections.singletonList(getTestSpecies(polygonId, layer, valid()))), //
-				(app, controlMap) -> {
-					var ex = assertThrows(ProcessingException.class, () -> app.process());
-
-					assertThat(
-							ex,
-							hasProperty(
-									"message",
-									is(
-											"Polygon " + polygonId + " has " + Layer.VETERAN
-													+ " layer where height 9.0 is less than minimum 10.0."
-									)
-							)
-					);
-
-				}
+				)
 		);
 
 	}
@@ -238,124 +223,113 @@ class FipStartTest {
 	@Test
 	void testPrimaryLayerYearsToBreastHeightLessThanMinimum() throws Exception {
 
+		var controlMap = FipTestUtils.loadControlMap();
+		var app = new FipStart();
+		app.setControlMap(controlMap);
+
 		var polygonId = polygonId("Test Polygon", 2023);
-		var layer = Layer.PRIMARY;
 
-		testWith(
-				Arrays.asList(getTestPolygon(polygonId, valid())), //
-				Arrays.asList(layerMap(getTestPrimaryLayer(polygonId, x -> {
-					x.setYearsToBreastHeight(0.2f);
-				}))), //
-				Arrays.asList(Collections.singletonList(getTestSpecies(polygonId, layer, valid()))), //
-				(app, controlMap) -> {
-					var ex = assertThrows(ProcessingException.class, () -> app.process());
+		var polygon = getTestPolygon(polygonId, valid());
+		var layer1 = getTestPrimaryLayer(polygonId, x -> {
+			x.setYearsToBreastHeight(0.2f);
+		});
+		polygon.setLayers(List.of(layer1));
 
-					assertThat(
-							ex,
-							hasProperty(
-									"message",
-									is(
-											"Polygon " + polygonId + " has " + Layer.PRIMARY
-													+ " layer where years to breast height 0.2 is less than minimum 0.5 years."
-									)
-							)
-					);
-
-				}
+		var ex = assertThrows(StandProcessingException.class, () -> app.checkPolygon(polygon));
+		assertThat(
+				ex,
+				hasProperty(
+						"message",
+						is(
+								"Polygon " + polygonId + " has " + Layer.PRIMARY
+										+ " layer where years to breast height 0.2 is less than minimum 0.5 years."
+						)
+				)
 		);
-
 	}
 
 	@Test
 	void testPrimaryLayerTotalAgeLessThanYearsToBreastHeight() throws Exception {
 
-		var polygonId = polygonId("Test Polygon", 2023);
-		var layer = Layer.PRIMARY;
-
 		// FIXME VDYP7 actually tests if total age - YTBH is less than 0.5 but gives an
 		// error that total age is "less than" YTBH. Replicating that for now but
 		// consider changing it.
 
-		testWith(
-				Arrays.asList(getTestPolygon(polygonId, valid())), //
-				Arrays.asList(layerMap(getTestPrimaryLayer(polygonId, x -> {
-					x.setAgeTotal(7f);
-					x.setYearsToBreastHeight(8f);
-				}))), //
-				Arrays.asList(Collections.singletonList(getTestSpecies(polygonId, layer, valid()))), //
-				(app, controlMap) -> {
+		var controlMap = FipTestUtils.loadControlMap();
+		var app = new FipStart();
+		app.setControlMap(controlMap);
 
-					var ex = assertThrows(ProcessingException.class, () -> app.process());
+		var polygonId = polygonId("Test Polygon", 2023);
 
-					assertThat(
-							ex,
-							hasProperty(
-									"message",
-									is(
-											"Polygon " + polygonId + " has " + Layer.PRIMARY
-													+ " layer where total age is less than YTBH."
-									)
-							)
-					);
-				}
+		var polygon = getTestPolygon(polygonId, valid());
+		var layer1 = getTestPrimaryLayer(polygonId, x -> {
+			x.setAgeTotal(7f);
+			x.setYearsToBreastHeight(8f);
+		});
+		polygon.setLayers(List.of(layer1));
+
+		var ex = assertThrows(StandProcessingException.class, () -> app.checkPolygon(polygon));
+		assertThat(
+				ex,
+				hasProperty(
+						"message",
+						is(
+								"Polygon " + polygonId + " has " + Layer.PRIMARY
+										+ " layer where total age is less than YTBH."
+						)
+				)
 		);
-
 	}
 
 	@Test
 	void testPrimaryLayerSiteIndexLessThanMinimum() throws Exception {
 
+		var controlMap = FipTestUtils.loadControlMap();
+		var app = new FipStart();
+		app.setControlMap(controlMap);
+
 		var polygonId = polygonId("Test Polygon", 2023);
-		var layer = Layer.PRIMARY;
 
-		testWith(
-				Arrays.asList(getTestPolygon(polygonId, valid())), //
-				Arrays.asList(layerMap(getTestPrimaryLayer(polygonId, x -> {
-					x.setSiteIndex(0.2f);
-				}))), //
-				Arrays.asList(Collections.singletonList(getTestSpecies(polygonId, layer, valid()))), //
-				(app, controlMap) -> {
-					var ex = assertThrows(ProcessingException.class, () -> app.process());
+		var polygon = getTestPolygon(polygonId, valid());
+		var layer = this.getTestPrimaryLayer("Test Polygon", x -> {
+			x.setSiteIndex(0.2f);
+		});
+		polygon.setLayers(Collections.singletonMap(Layer.PRIMARY, layer));
 
-					assertThat(
-							ex,
-							hasProperty(
-									"message",
-									is(
-											"Polygon " + polygonId + " has " + Layer.PRIMARY
-													+ " layer where site index 0.2 is less than minimum 0.5 years."
-									)
-							)
-					);
-
-				}
+		var ex = assertThrows(StandProcessingException.class, () -> app.checkPolygon(polygon));
+		assertThat(
+				ex,
+				hasProperty(
+						"message",
+						is(
+								"Polygon " + polygonId + " has " + Layer.PRIMARY
+										+ " layer where site index 0.2 is less than minimum 0.5 years."
+						)
+				)
 		);
-
 	}
 
 	@Test
 	void testPolygonWithModeFipYoung() throws Exception {
 
+		var controlMap = FipTestUtils.loadControlMap();
+		var app = new FipStart();
+		app.setControlMap(controlMap);
+
 		var polygonId = polygonId("Test Polygon", 2023);
-		var layer = Layer.PRIMARY;
 
-		testWith(Arrays.asList(getTestPolygon(polygonId, x -> {
+		var polygon = getTestPolygon(polygonId, x -> {
 			x.setModeFip(Optional.of(FipMode.FIPYOUNG));
-		})), //
-				Arrays.asList(layerMap(getTestPrimaryLayer(polygonId, valid()))), //
-				Arrays.asList(Collections.singletonList(getTestSpecies(polygonId, layer, valid()))), //
-				(app, controlMap) -> {
+		});
+		var layer = this.getTestPrimaryLayer("Test Polygon", valid());
+		polygon.setLayers(List.of(layer));
 
-					var ex = assertThrows(ProcessingException.class, () -> app.process());
-
-					assertThat(
-							ex,
-							hasProperty(
-									"message",
-									is("Polygon " + polygonId + " is using unsupported mode " + FipMode.FIPYOUNG + ".")
-							)
-					);
-				}
+		var ex = assertThrows(StandProcessingException.class, () -> app.checkPolygon(polygon));
+		assertThat(
+				ex,
+				hasProperty(
+						"message", is("Polygon " + polygonId + " is using unsupported mode " + FipMode.FIPYOUNG + ".")
+				)
 		);
 
 	}
@@ -363,30 +337,30 @@ class FipStartTest {
 	@Test
 	void testOneSpeciesLessThan100Percent() throws Exception {
 
+		var controlMap = FipTestUtils.loadControlMap();
+		var app = new FipStart();
+		app.setControlMap(controlMap);
+
 		var polygonId = polygonId("Test Polygon", 2023);
-		var layer = Layer.PRIMARY;
 
-		testWith(
-				Arrays.asList(getTestPolygon(polygonId, valid())), //
-				Arrays.asList(layerMap(getTestPrimaryLayer(polygonId, valid()))), //
-				Arrays.asList(Collections.singletonList(getTestSpecies(polygonId, layer, x -> {
-					x.setPercentGenus(99f);
-				}))), //
-				(app, controlMap) -> {
+		var polygon = getTestPolygon(polygonId, valid());
+		var layer = this.getTestPrimaryLayer(polygonId, valid());
+		var spec = getTestSpecies(polygonId, Layer.PRIMARY, x -> {
+			x.setPercentGenus(99f);
+		});
+		layer.setSpecies(List.of(spec));
+		polygon.setLayers(List.of(layer));
 
-					var ex = assertThrows(ProcessingException.class, () -> app.process());
-
-					assertThat(
-							ex,
-							hasProperty(
-									"message",
-									is(
-											"Polygon " + polygonId
-													+ " has PRIMARY layer where species entries have a percentage total that does not sum to 100%."
-									)
-							)
-					);
-				}
+		var ex = assertThrows(StandProcessingException.class, () -> app.checkPolygon(polygon));
+		assertThat(
+				ex,
+				hasProperty(
+						"message",
+						is(
+								"Polygon " + polygonId
+										+ " has PRIMARY layer where species entries have a percentage total that does not sum to 100%."
+						)
+				)
 		);
 
 	}
@@ -394,30 +368,30 @@ class FipStartTest {
 	@Test
 	void testOneSpeciesMoreThan100Percent() throws Exception {
 
+		var controlMap = FipTestUtils.loadControlMap();
+		var app = new FipStart();
+		app.setControlMap(controlMap);
+
 		var polygonId = polygonId("Test Polygon", 2023);
-		var layer = Layer.PRIMARY;
 
-		testWith(
-				Arrays.asList(getTestPolygon(polygonId, valid())), //
-				Arrays.asList(layerMap(getTestPrimaryLayer(polygonId, valid()))), //
-				Arrays.asList(Collections.singletonList(getTestSpecies(polygonId, layer, x -> {
-					x.setPercentGenus(101f);
-				}))), //
-				(app, controlMap) -> {
+		var polygon = getTestPolygon(polygonId, valid());
+		var layer = this.getTestPrimaryLayer(polygonId, valid());
+		var spec = getTestSpecies(polygonId, Layer.PRIMARY, x -> {
+			x.setPercentGenus(101f);
+		});
+		layer.setSpecies(List.of(spec));
+		polygon.setLayers(List.of(layer));
 
-					var ex = assertThrows(ProcessingException.class, () -> app.process());
-
-					assertThat(
-							ex,
-							hasProperty(
-									"message",
-									is(
-											"Polygon " + polygonId
-													+ " has PRIMARY layer where species entries have a percentage total that does not sum to 100%."
-									)
-							)
-					);
-				}
+		var ex = assertThrows(StandProcessingException.class, () -> app.checkPolygon(polygon));
+		assertThat(
+				ex,
+				hasProperty(
+						"message",
+						is(
+								"Polygon " + polygonId
+										+ " has PRIMARY layer where species entries have a percentage total that does not sum to 100%."
+						)
+				)
 		);
 
 	}
@@ -425,65 +399,56 @@ class FipStartTest {
 	@Test
 	void testTwoSpeciesSumTo100Percent() throws Exception {
 
+		var controlMap = FipTestUtils.loadControlMap();
+		var app = new FipStart();
+		app.setControlMap(controlMap);
+
 		var polygonId = polygonId("Test Polygon", 2023);
-		var layer = Layer.PRIMARY;
 
-		testWith(
-				FipTestUtils.loadControlMap(), Arrays.asList(getTestPolygon(polygonId, valid())), //
-				Arrays.asList(layerMap(getTestPrimaryLayer(polygonId, valid()))), //
-				Arrays.asList(
-						Arrays.asList(
-								//
-								getTestSpecies(polygonId, layer, "B", x -> {
-									x.setPercentGenus(75f);
-								}), getTestSpecies(polygonId, layer, "C", x -> {
-									x.setPercentGenus(25f);
-								})
-						)
-				), //
-				(app, controlMap) -> {
+		var polygon = getTestPolygon(polygonId, valid());
+		var layer = this.getTestPrimaryLayer(polygonId, valid());
+		var spec1 = getTestSpecies(polygonId, Layer.PRIMARY, "B", x -> {
+			x.setPercentGenus(75f);
+		});
+		var spec2 = getTestSpecies(polygonId, Layer.PRIMARY, "C", x -> {
+			x.setPercentGenus(25f);
+		});
+		layer.setSpecies(List.of(spec1, spec2));
+		polygon.setLayers(List.of(layer));
 
-					assertDoesNotThrow(() -> app.process());
-
-				}
-		);
-
+		assertDoesNotThrow(() -> app.checkPolygon(polygon));
 	}
 
 	@Test
 	void testTwoSpeciesSumToLessThan100Percent() throws Exception {
 
+		var controlMap = FipTestUtils.loadControlMap();
+		var app = new FipStart();
+		app.setControlMap(controlMap);
+
 		var polygonId = polygonId("Test Polygon", 2023);
-		var layer = Layer.PRIMARY;
 
-		testWith(
-				Arrays.asList(getTestPolygon(polygonId, valid())), //
-				Arrays.asList(layerMap(getTestPrimaryLayer(polygonId, valid()))), //
-				Arrays.asList(
-						Arrays.asList(
-								//
-								getTestSpecies(polygonId, layer, "B", x -> {
-									x.setPercentGenus(75 - 1f);
-								}), getTestSpecies(polygonId, layer, "C", x -> {
-									x.setPercentGenus(25f);
-								})
+		var polygon = getTestPolygon(polygonId, valid());
+		var layer = this.getTestPrimaryLayer(polygonId, valid());
+		var spec1 = getTestSpecies(polygonId, Layer.PRIMARY, "B", x -> {
+			x.setPercentGenus(75f - 1f);
+		});
+		var spec2 = getTestSpecies(polygonId, Layer.PRIMARY, "C", x -> {
+			x.setPercentGenus(25f);
+		});
+		layer.setSpecies(List.of(spec1, spec2));
+		polygon.setLayers(List.of(layer));
+
+		var ex = assertThrows(StandProcessingException.class, () -> app.checkPolygon(polygon));
+		assertThat(
+				ex,
+				hasProperty(
+						"message",
+						is(
+								"Polygon " + polygonId
+										+ " has PRIMARY layer where species entries have a percentage total that does not sum to 100%."
 						)
-				), //
-				(app, controlMap) -> {
-
-					var ex = assertThrows(ProcessingException.class, () -> app.process());
-
-					assertThat(
-							ex,
-							hasProperty(
-									"message",
-									is(
-											"Polygon " + polygonId
-													+ " has PRIMARY layer where species entries have a percentage total that does not sum to 100%."
-									)
-							)
-					);
-				}
+				)
 		);
 
 	}
@@ -491,37 +456,33 @@ class FipStartTest {
 	@Test
 	void testTwoSpeciesSumToMoreThan100Percent() throws Exception {
 
+		var controlMap = FipTestUtils.loadControlMap();
+		var app = new FipStart();
+		app.setControlMap(controlMap);
+
 		var polygonId = polygonId("Test Polygon", 2023);
-		var layer = Layer.PRIMARY;
 
-		testWith(
-				Arrays.asList(getTestPolygon(polygonId, valid())), //
-				Arrays.asList(layerMap(getTestPrimaryLayer(polygonId, valid()))), //
-				Arrays.asList(
-						Arrays.asList(
-								//
-								getTestSpecies(polygonId, layer, "B", x -> {
-									x.setPercentGenus(75 + 1f);
-								}), getTestSpecies(polygonId, layer, "P", x -> {
-									x.setPercentGenus(25f);
-								})
+		var polygon = getTestPolygon(polygonId, valid());
+		var layer = this.getTestPrimaryLayer(polygonId, valid());
+		var spec1 = getTestSpecies(polygonId, Layer.PRIMARY, "B", x -> {
+			x.setPercentGenus(75f + 1f);
+		});
+		var spec2 = getTestSpecies(polygonId, Layer.PRIMARY, "C", x -> {
+			x.setPercentGenus(25f);
+		});
+		layer.setSpecies(List.of(spec1, spec2));
+		polygon.setLayers(List.of(layer));
+
+		var ex = assertThrows(StandProcessingException.class, () -> app.checkPolygon(polygon));
+		assertThat(
+				ex,
+				hasProperty(
+						"message",
+						is(
+								"Polygon " + polygonId
+										+ " has PRIMARY layer where species entries have a percentage total that does not sum to 100%."
 						)
-				), //
-				(app, controlMap) -> {
-
-					var ex = assertThrows(ProcessingException.class, () -> app.process());
-
-					assertThat(
-							ex,
-							hasProperty(
-									"message",
-									is(
-											"Polygon " + polygonId
-													+ " has PRIMARY layer where species entries have a percentage total that does not sum to 100%."
-									)
-							)
-					);
-				}
+				)
 		);
 
 	}
