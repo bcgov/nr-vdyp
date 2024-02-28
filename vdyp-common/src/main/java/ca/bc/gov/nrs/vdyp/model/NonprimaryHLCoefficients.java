@@ -19,5 +19,18 @@ public class NonprimaryHLCoefficients extends Coefficients {
 	public int getEquationIndex() {
 		return equationIndex;
 	}
-
+	
+	@Override
+	public boolean equals(Object other) {
+		if (other instanceof NonprimaryHLCoefficients that) {
+			return this.equationIndex == that.equationIndex && super.equals(that);
+		} else {
+			return false;
+		}
+	}
+	
+	@Override
+	public int hashCode() {
+		return super.hashCode() * 17 + equationIndex;
+	}
 }

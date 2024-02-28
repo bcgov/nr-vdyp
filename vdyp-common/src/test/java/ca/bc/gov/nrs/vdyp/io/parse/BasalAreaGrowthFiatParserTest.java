@@ -17,7 +17,7 @@ import ca.bc.gov.nrs.vdyp.model.GrowthFiatDetails;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
-public class BasalAreaGrowthFiatParserTest {
+class BasalAreaGrowthFiatParserTest {
 
 	@Test
 	void testParseSimple() throws Exception {

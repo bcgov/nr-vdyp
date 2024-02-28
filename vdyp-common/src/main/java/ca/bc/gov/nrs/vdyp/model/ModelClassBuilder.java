@@ -60,5 +60,5 @@ public abstract class ModelClassBuilder<T> {
 	 */
 	protected void postProcess(T result) {
 		// Do nothing
-	};
+	}
 }

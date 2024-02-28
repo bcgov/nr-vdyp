@@ -3,7 +3,7 @@ package ca.bc.gov.nrs.vdyp.io.parse.coe.base;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.MessageFormat;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
@@ -20,7 +20,7 @@ public abstract class GrowthFiatParser implements ControlMapSubResourceParser<Ma
 	public static final String REGION_ID_KEY = "RegionId";
 	public static final String COEFFICIENTS_KEY = "Coefficients";
 
-	public GrowthFiatParser() {
+	protected GrowthFiatParser() {
 		
 		this.lineParser = new LineParser() {
 				@Override
@@ -38,14 +38,14 @@ public abstract class GrowthFiatParser implements ControlMapSubResourceParser<Ma
 	public Map<Region, GrowthFiatDetails> parse(InputStream is, Map<String, Object> control)
 			throws IOException, ResourceParseException {
 
-		Map<Region, GrowthFiatDetails> result = new HashMap<>();
+		Map<Region, GrowthFiatDetails> result = new EnumMap<>(Region.class);
 		
 		lineParser.parse(is, result, (value, r, lineNumber) -> {
 			var regionId = (Integer) value.get(REGION_ID_KEY);
 			
 			if (regionId != 1 && regionId != 2) {
 				throw new ValueParseException(
-						MessageFormat.format("Line {0}: region id is not recognized; the value must be 1 or 2"
+						MessageFormat.format("Line {0}: region id {1} is not recognized; the value must be 1 or 2"
 								, lineNumber, regionId));
 			}
 			

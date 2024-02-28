@@ -95,7 +95,7 @@ public class VdypPolygonParser implements ControlMapValueReplacer<StreamingParse
 					BecDefinition bec = becLookup.get(becAlias)
 							.orElseThrow(() -> new ResourceParseException(becAlias + " is not a recognized BEC alias"));
 
-					if (FizCheck.fiz_check(fizId) == FizCheck.FIZ_UNKNOWN) {
+					if (FizCheck.fizCheck(fizId) == FizCheck.FIZ_UNKNOWN) {
 						throw new ResourceParseException(
 								"Forest Inventory Zone " + fizId
 										+ " is not a recognized FIZ (only 'A' ... 'L' are supported)"

@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.vdyp.common_calculators;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.MessageFormat;
 
 import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.GrowthInterceptTotalException;
 import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.LessThan13Exception;
@@ -19,6 +20,7 @@ import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.NoAnswerException
  * @throws GrowthInterceptTotalException cannot compute growth intercept when using total age
  */
 /* @formatter:on */
+@SuppressWarnings({ "java:S125", "java:S112", "java:S1118" })
 public class SiteIndex2Age {
 /* @formatter:off */
 /*
@@ -80,6 +82,9 @@ public class SiteIndex2Age {
  */
 /* @formatter:on */
 
+	private static final String SI2AGE_TST = "si2age.tst";
+	private static final String FILE_WRITE_ERROR_MESSAGE = "An error occurred while writing to the file.";
+	
 	// Taken from sindex.h
 	/*
 	 * age types
@@ -146,58 +151,66 @@ public class SiteIndex2Age {
 	 * where it happens #endif
 	 */
 
-	public static double
-			index_to_age(short cu_index, double site_height, short age_type, double site_index, double y2bh) {
-		double x1, x2, x3, x4;
-		double a, b, c;
+	@SuppressWarnings({ "java:S6541", "java:S3776" })
+	public static double indexToAge(short cuIndex, double siteHeight, short ageType, double siteIndex, double y2bh) {
+		
+		double x1;
+		double x2;
+		double x3;
+		double x4;
+		double a;
+		double b;
+		double c;
+		
 		/*
-		 * I could not find HOOP, so I am assuming it is not intialized and as such the
+		 * I could not find HOOP, so I am assuming it is not initialized and as such the
 		 * directives wouldn't trigger
 		 */
 		boolean HOOP = false;
 
 		// #ifdef HOOP
-		double ht5, ht10;
-		// This is intialzied because otherwise it will cause issues later.
+		double ht5;
+		double ht10;
+		// This is initialized because otherwise it will cause issues later.
 		// #endif
 		double age;
 
-		if (site_height < 1.3) {
-			if (age_type == SI_AT_BREAST) {
-				throw new LessThan13Exception("Site index or height < 1.3m, site height: " + site_height);
+		if (siteHeight < 1.3) {
+			if (ageType == SI_AT_BREAST) {
+				throw new LessThan13Exception("Site index or height < 1.3m, site height: " + siteHeight);
 			}
 
-			if (site_height <= 0.0001) {
+			if (siteHeight <= 0.0001) {
 				return 0;
 			}
 		}
 
-		if (site_index < 1.3) {
-			throw new LessThan13Exception("Site index or height < 1.3m, site_index: " + site_index);
+		if (siteIndex < 1.3) {
+			throw new LessThan13Exception("Site index or height < 1.3m, site_index: " + siteIndex);
 		}
 
-		switch (cu_index) {
+		switch (cuIndex) {
 		case SI_FDC_BRUCE:
 			// 2009 may 6: force a non-rounded y2bh
-			y2bh = 13.25 - site_index / 6.096;
+			y2bh = 13.25 - siteIndex / 6.096;
 
-			x1 = site_index / 30.48;
+			x1 = siteIndex / 30.48;
 			x2 = -0.477762 + x1 * (-0.894427 + x1 * (0.793548 - x1 * 0.171666));
 			x3 = ppow(50.0 + y2bh, x2);
 			double x4Denominator = ppow(y2bh, x2) - x3;
 			if (x4Denominator == 0) {
 				throw new ArithmeticException("Attempted Division by zero");
 			}
-			x4 = llog(1.372 / site_index) / x4Denominator;
+			x4 = llog(1.372 / siteIndex) / x4Denominator;
 
-			x1 = llog(site_height / site_index) / x4 + x3;
+			x1 = llog(siteHeight / siteIndex) / x4 + x3;
 
 			if (x1 < 0) {
 				age = SI_ERR_NO_ANS;
 			} else {
 				age = ppow(x1, 1 / x2);
 
-				if (age_type == SI_AT_BREAST) {
+				if (ageType == SI_AT_BREAST) {
 					age -= y2bh;
 				}
 
@@ -211,18 +224,18 @@ public class SiteIndex2Age {
 		case SI_SW_HU_GARCIA: {
 			double q;
 
-			q = hu_garcia_q(site_index, 50.0);
-			age = hu_garcia_bha(q, site_height);
-			if (age_type == SI_AT_TOTAL) {
+			q = huGarciaA(siteIndex, 50.0);
+			age = huGarciaBha(q, siteHeight);
+			if (ageType == SI_AT_TOTAL) {
 				age += y2bh;
 			}
 		}
 			break;
 		case SI_HWC_WILEY:
-			if (site_height / 0.3048 < 4.5) {
-				age = y2bh * ppow(site_height / 1.37, 0.5);
+			if (siteHeight / 0.3048 < 4.5) {
+				age = y2bh * ppow(siteHeight / 1.37, 0.5);
 
-				if (age_type == SI_AT_BREAST) {
+				if (ageType == SI_AT_BREAST) {
 					age -= y2bh;
 				}
 
@@ -230,12 +243,12 @@ public class SiteIndex2Age {
 					age = 0.0;
 				}
 			} else {
-				x1 = 2500 / (site_index / 0.3048 - 4.5);
+				x1 = 2500 / (siteIndex / 0.3048 - 4.5);
 				x2 = -1.7307 + 0.1394 * x1;
 				x3 = -0.0616 + 0.0137 * x1;
 				x4 = 0.00192428 + 0.00007024 * x1;
 
-				x1 = (4.5 - site_height / 0.3048);
+				x1 = (4.5 - siteHeight / 0.3048);
 				a = 1 + x1 * x4;
 				b = x1 * x3;
 				c = x1 * x2;
@@ -246,75 +259,96 @@ public class SiteIndex2Age {
 				} else {
 					age = (-b + x1) / (2 * a);
 
-					if (age_type == SI_AT_TOTAL) {
+					if (ageType == SI_AT_TOTAL) {
 						age += y2bh;
 					}
 
-					if (age < 0) {
-						age = SI_ERR_NO_ANS;
-					} else if (age > MAX_AGE) {
+					if (age < 0 || age > MAX_AGE) {
 						age = SI_ERR_NO_ANS;
 					}
 				}
 			}
 
 			if (age < 10 && age > 0) {
-				age = iterate(cu_index, site_height, age_type, site_index, y2bh);
+				age = iterate(cuIndex, siteHeight, ageType, siteIndex, y2bh);
 				if (HOOP) {
-					ht5 = SiteIndex2Height.index_to_height(cu_index, 5.0, SI_AT_BREAST, site_index, y2bh, 0.5); // 0.5
-																												// may
-																												// have
-																												// to
-																												// change
+					// 0.5 may have to change
+					ht5 = SiteIndex2Height.index_to_height(cuIndex, 5.0, SI_AT_BREAST, siteIndex, y2bh, 0.5);
 
-					if (site_height <= ht5) {
-						site_height -= (1 - ( (ht5 - site_height) / ht5)) * 1.5;
+					if (siteHeight <= ht5) {
+						siteHeight -= (1 - ( (ht5 - siteHeight) / ht5)) * 1.5;
 					} else {
-						ht10 = SiteIndex2Height.index_to_height(cu_index, 10.0, SI_AT_BREAST, site_index, y2bh, 0.5); // 0.5
-																														// may
-																														// have
-																														// to
-																														// change
-						site_height -= ( ( (ht10 - site_height) / (ht10 - ht5))) * 1.5;
+						// 0.5 may have to change
+						ht10 = SiteIndex2Height.index_to_height(cuIndex, 10.0, SI_AT_BREAST, siteIndex, y2bh, 0.5);
+						siteHeight -= ((ht10 - siteHeight) / (ht10 - ht5)) * 1.5;
 					}
 				}
 			}
 			break;
-		// Cannot find constant
+		// Cannot find constant SI_HM_WILEY
 		/*
-		 * case SI_HM_WILEY: if (site_height / 0.3048 < 4.5){ age = y2bh * ppow
-		 * (site_height / 1.37, 0.5);
+		 * case SI_HM_WILEY: 
+		 * 	   if (site_height / 0.3048 < 4.5) {
+		 *         age = y2bh * ppow * (site_height / 1.37, 0.5);
 		 *
-		 * if (age_type == SI_AT_BREAST){ age -= y2bh; }
+		 *         if (age_type == SI_AT_BREAST) {
+		 *             age -= y2bh; 
+		 *         }
+		 *         if (age < 0.0) {
+		 *             age = 0.0; 
+		 *         } 
+		 *     } else { 
+		 *         x1 = 2500 / (site_index / 0.3048 - 4.5);
+		 *         x2 = -1.7307 + 0.1394 * x1;
+		 *         x3 = -0.0616 + 0.0137 * x1; 
+		 *         x4 = 0.00192428 + 0.00007024 * x1;
 		 *
-		 * if (age < 0.0){ age = 0.0; } } else{ x1 = 2500 / (site_index / 0.3048 - 4.5);
-		 * x2 = -1.7307 + 0.1394 * x1; x3 = -0.0616 + 0.0137 * x1; x4 = 0.00192428 +
-		 * 0.00007024 * x1;
+		 *         x1 = (4.5 - site_height / 0.3048); 
+		 *         a = 1 + x1 * x4; 
+		 *         b = x1 * x3; 
+		 *         c = x1 * x2;
 		 *
-		 * x1 = (4.5 - site_height / 0.3048); a = 1 + x1 * x4; b = x1 * x3; c = x1 * x2;
+		 *         x1 = ppow (b * b - 4 * a * c, 0.5); 
+		 *         
+		 *         if (x1 == 0.0) {
+		 *             age = SI_ERR_NO_ANS;
+		 *         } else { 
+		 *             age = (-b + x1) / (2 * a);
 		 *
-		 * x1 = ppow (b * b - 4 * a * c, 0.5); if (x1 == 0.0){ age = SI_ERR_NO_ANS; }
-		 * else{ age = (-b + x1) / (2 * a);
+		 *             if (age_type == SI_AT_TOTAL) {
+		 *                 age += y2bh;
+		 *             }
 		 *
-		 * if (age_type == SI_AT_TOTAL){ age += y2bh; }
+		 *             if (age < 0) { 
+		 *                 age = SI_ERR_NO_ANS; 
+		 *             } else if (age > MAX_AGE) { 
+		 *                 age = SI_ERR_NO_ANS; 
+		 *             } 
+		 *         }
+		 *     }
 		 *
-		 * if (age < 0){ age = SI_ERR_NO_ANS; } else if (age > MAX_AGE){ age =
-		 * SI_ERR_NO_ANS; } } }
+		 *     if (age < 10 && age > 0) {
+		 *         age = iterate(cu_index, site_height, age_type, site_index, y2bh); 
+		 *         if (HOOP) {
+		 *             // 0.5 may have to change
+		 *             ht5 = index_to_height(cu_index, 5.0, SI_AT_BREAST, site_index, y2bh, 0.5);
 		 *
-		 * if (age < 10 && age > 0){ age = iterate (cu_index, site_height, age_type,
-		 * site_index, y2bh); if(HOOP){ ht5 = index_to_height (cu_index, 5.0,
-		 * SI_AT_BREAST, site_index, y2bh, 0.5); // 0.5 may have to change
-		 *
-		 * if (site_height <= ht5){ site_height -= (1 - ((ht5 - site_height) / ht5)) *
-		 * 1.5; } else{ ht10 = index_to_height (cu_index, 10.0, SI_AT_BREAST,
-		 * site_index, y2bh, 0.5); // 0.5 may have to change site_height -= (((ht10 -
-		 * site_height) / (ht10 - ht5))) * 1.5; } } } break;
+		 *             if (site_height <= ht5) {
+		 *                 site_height -= (1 - ((ht5 - site_height) / ht5)) * 1.5; 
+		 *             } else { 
+		 *                 // 0.5 may have to change 
+		 *                 ht10 = index_to_height(cu_index, 10.0, SI_AT_BREAST, site_index, y2bh, 0.5); 
+		 *                 site_height -= (((ht10 - site_height) / (ht10 - ht5))) * 1.5; 
+		 *             } 
+		 *         } 
+		 *     }
+		 *     break;
 		 */
 		case SI_PLI_GOUDIE_DRY:
-			if (site_height < 1.3) {
-				age = y2bh * ppow(site_height / 1.3, 0.5);
+			if (siteHeight < 1.3) {
+				age = y2bh * ppow(siteHeight / 1.3, 0.5);
 
-				if (age_type == SI_AT_BREAST) {
+				if (ageType == SI_AT_BREAST) {
 					age -= y2bh;
 				}
 
@@ -326,12 +360,12 @@ public class SiteIndex2Age {
 				x2 = 7.81498;
 				x3 = -1.28517;
 
-				a = (site_index - 1.3) * (1 + Math.exp(x2 + x1 * llog(site_index - 1.3) + x3 * Math.log(50.0)));
-				b = x2 + x1 * llog(site_index - 1.3);
+				a = (siteIndex - 1.3) * (1 + Math.exp(x2 + x1 * llog(siteIndex - 1.3) + x3 * Math.log(50.0)));
+				b = x2 + x1 * llog(siteIndex - 1.3);
 
-				age = Math.exp( (llog(a / (site_height - 1.3) - 1) - b) / x3);
+				age = Math.exp( (llog(a / (siteHeight - 1.3) - 1) - b) / x3);
 
-				if (age_type == SI_AT_TOTAL) {
+				if (ageType == SI_AT_TOTAL) {
 					age += y2bh;
 				}
 
@@ -343,10 +377,10 @@ public class SiteIndex2Age {
 			}
 			break;
 		case SI_PLI_GOUDIE_WET:
-			if (site_height < 1.3) {
-				age = y2bh * ppow(site_height / 1.3, 0.5);
+			if (siteHeight < 1.3) {
+				age = y2bh * ppow(siteHeight / 1.3, 0.5);
 
-				if (age_type == SI_AT_BREAST) {
+				if (ageType == SI_AT_BREAST) {
 					age -= y2bh;
 				}
 
@@ -358,12 +392,12 @@ public class SiteIndex2Age {
 				x2 = 7.81498;
 				x3 = -1.28517;
 
-				a = (site_index - 1.3) * (1 + Math.exp(x2 + x1 * llog(site_index - 1.3) + x3 * Math.log(50.0)));
-				b = x2 + x1 * llog(site_index - 1.3);
+				a = (siteIndex - 1.3) * (1 + Math.exp(x2 + x1 * llog(siteIndex - 1.3) + x3 * Math.log(50.0)));
+				b = x2 + x1 * llog(siteIndex - 1.3);
 
-				age = Math.exp( (llog(a / (site_height - 1.3) - 1) - b) / x3);
+				age = Math.exp( (llog(a / (siteHeight - 1.3) - 1) - b) / x3);
 
-				if (age_type == SI_AT_TOTAL) {
+				if (ageType == SI_AT_TOTAL) {
 					age += y2bh;
 				}
 
@@ -374,7 +408,7 @@ public class SiteIndex2Age {
 				}
 			}
 			break;
-		// Couldn't find constant
+		// Cannot find constant SI_PF_GOUDIE_DRY
 		/*
 		 * case SI_PF_GOUDIE_DRY: if (site_height < 1.3){ age = y2bh * ppow (site_height
 		 * / 1.3, 0.5);
@@ -413,10 +447,10 @@ public class SiteIndex2Age {
 		 * if (age < 0){ age = 0; } else if (age > MAX_AGE){ age = SI_ERR_NO_ANS; } }
 		 */
 		case SI_SS_GOUDIE:
-			if (site_height < 1.3) {
-				age = y2bh * ppow(site_height / 1.3, 0.5);
+			if (siteHeight < 1.3) {
+				age = y2bh * ppow(siteHeight / 1.3, 0.5);
 
-				if (age_type == SI_AT_BREAST) {
+				if (ageType == SI_AT_BREAST) {
 					age -= y2bh;
 				}
 
@@ -428,12 +462,12 @@ public class SiteIndex2Age {
 				x2 = 11.0605;
 				x3 = -1.5108;
 
-				a = (site_index - 1.3) * (1 + Math.exp(x2 + x1 * llog(site_index - 1.3) + x3 * Math.log(50.0)));
-				b = x2 + x1 * llog(site_index - 1.3);
+				a = (siteIndex - 1.3) * (1 + Math.exp(x2 + x1 * llog(siteIndex - 1.3) + x3 * Math.log(50.0)));
+				b = x2 + x1 * llog(siteIndex - 1.3);
 
-				age = Math.exp( (llog(a / (site_height - 1.3) - 1) - b) / x3);
+				age = Math.exp( (llog(a / (siteHeight - 1.3) - 1) - b) / x3);
 
-				if (age_type == SI_AT_TOTAL) {
+				if (ageType == SI_AT_TOTAL) {
 					age += y2bh;
 				}
 
@@ -481,10 +515,10 @@ public class SiteIndex2Age {
 		 * if (age < 0){ age = 0; } else if (age > MAX_AGE){ age = SI_ERR_NO_ANS; } }
 		 */
 		case SI_SW_GOUDIE_PLA:
-			if (site_height < 1.3) {
-				age = y2bh * ppow(site_height / 1.3, 0.5);
+			if (siteHeight < 1.3) {
+				age = y2bh * ppow(siteHeight / 1.3, 0.5);
 
-				if (age_type == SI_AT_BREAST) {
+				if (ageType == SI_AT_BREAST) {
 					age -= y2bh;
 				}
 
@@ -496,12 +530,12 @@ public class SiteIndex2Age {
 				x2 = 9.7936;
 				x3 = -1.4661;
 
-				a = (site_index - 1.3) * (1 + Math.exp(x2 + x1 * llog(site_index - 1.3) + x3 * Math.log(50.0)));
-				b = x2 + x1 * llog(site_index - 1.3);
+				a = (siteIndex - 1.3) * (1 + Math.exp(x2 + x1 * llog(siteIndex - 1.3) + x3 * Math.log(50.0)));
+				b = x2 + x1 * llog(siteIndex - 1.3);
 
-				age = Math.exp( (llog(a / (site_height - 1.3) - 1) - b) / x3);
+				age = Math.exp( (llog(a / (siteHeight - 1.3) - 1) - b) / x3);
 
-				if (age_type == SI_AT_TOTAL) {
+				if (ageType == SI_AT_TOTAL) {
 					age += y2bh;
 				}
 
@@ -514,10 +548,10 @@ public class SiteIndex2Age {
 			break;
 
 		case SI_SW_GOUDIE_NAT:
-			if (site_height < 1.3) {
-				age = y2bh * ppow(site_height / 1.3, 0.5);
+			if (siteHeight < 1.3) {
+				age = y2bh * ppow(siteHeight / 1.3, 0.5);
 
-				if (age_type == SI_AT_BREAST) {
+				if (ageType == SI_AT_BREAST) {
 					age -= y2bh;
 				}
 
@@ -529,12 +563,12 @@ public class SiteIndex2Age {
 				x2 = 9.7936;
 				x3 = -1.4661;
 
-				a = (site_index - 1.3) * (1 + Math.exp(x2 + x1 * llog(site_index - 1.3) + x3 * Math.log(50.0)));
-				b = x2 + x1 * llog(site_index - 1.3);
+				a = (siteIndex - 1.3) * (1 + Math.exp(x2 + x1 * llog(siteIndex - 1.3) + x3 * Math.log(50.0)));
+				b = x2 + x1 * llog(siteIndex - 1.3);
 
-				age = Math.exp( (llog(a / (site_height - 1.3) - 1) - b) / x3);
+				age = Math.exp( (llog(a / (siteHeight - 1.3) - 1) - b) / x3);
 
-				if (age_type == SI_AT_TOTAL) {
+				if (ageType == SI_AT_TOTAL) {
 					age += y2bh;
 				}
 
@@ -546,28 +580,28 @@ public class SiteIndex2Age {
 			}
 			break;
 		case SI_BL_THROWERGI:
-			age = gi_iterate(cu_index, site_height, age_type, site_index);
+			age = giIterate(cuIndex, siteHeight, ageType, siteIndex);
 			break;
 		case SI_CWI_NIGHGI:
-			age = gi_iterate(cu_index, site_height, age_type, site_index);
+			age = giIterate(cuIndex, siteHeight, ageType, siteIndex);
 			break;
 		case SI_FDC_NIGHGI:
-			age = gi_iterate(cu_index, site_height, age_type, site_index);
+			age = giIterate(cuIndex, siteHeight, ageType, siteIndex);
 			break;
 		case SI_FDI_NIGHGI:
-			age = gi_iterate(cu_index, site_height, age_type, site_index);
+			age = giIterate(cuIndex, siteHeight, ageType, siteIndex);
 			break;
 		case SI_HWC_NIGHGI:
-			age = gi_iterate(cu_index, site_height, age_type, site_index);
+			age = giIterate(cuIndex, siteHeight, ageType, siteIndex);
 			break;
 		case SI_HWC_NIGHGI99:
-			age = gi_iterate(cu_index, site_height, age_type, site_index);
+			age = giIterate(cuIndex, siteHeight, ageType, siteIndex);
 			break;
 		case SI_HWI_NIGHGI:
-			age = gi_iterate(cu_index, site_height, age_type, site_index);
+			age = giIterate(cuIndex, siteHeight, ageType, siteIndex);
 			break;
 		case SI_LW_NIGHGI:
-			age = gi_iterate(cu_index, site_height, age_type, site_index);
+			age = giIterate(cuIndex, siteHeight, ageType, siteIndex);
 			break;
 		// Couldn't find constant
 		/*
@@ -575,58 +609,52 @@ public class SiteIndex2Age {
 		 * site_index); break;
 		 */
 		case SI_PLI_NIGHGI97:
-			age = gi_iterate(cu_index, site_height, age_type, site_index);
+			age = giIterate(cuIndex, siteHeight, ageType, siteIndex);
 			break;
 		case SI_SS_NIGHGI:
-			age = gi_iterate(cu_index, site_height, age_type, site_index);
+			age = giIterate(cuIndex, siteHeight, ageType, siteIndex);
 			break;
 		case SI_SS_NIGHGI99:
-			age = gi_iterate(cu_index, site_height, age_type, site_index);
+			age = giIterate(cuIndex, siteHeight, ageType, siteIndex);
 			break;
 		case SI_SW_NIGHGI:
-			age = gi_iterate(cu_index, site_height, age_type, site_index);
+			age = giIterate(cuIndex, siteHeight, ageType, siteIndex);
 			break;
 		case SI_SW_NIGHGI99:
-			age = gi_iterate(cu_index, site_height, age_type, site_index);
+			age = giIterate(cuIndex, siteHeight, ageType, siteIndex);
 			break;
 
 		default:
 			if (TEST) {
 				try {
 					// Open the file for writing
-					File testfile = new File("si2age.tst");
+					File testfile = new File(SI2AGE_TST);
 
 					try (FileWriter fileWriter = new FileWriter(testfile)) {
 
 						// Write to the file
 						fileWriter.write("before iterate()\n");
-
-						// Close the file
-						fileWriter.close();
 					}
 				} catch (IOException e) {
-					throw new RuntimeException("An error occurred while writing to the file.", e);
+					throw new RuntimeException(FILE_WRITE_ERROR_MESSAGE, e);
 				}
 			}
-			age = iterate(cu_index, site_height, age_type, site_index, y2bh);
+			age = iterate(cuIndex, siteHeight, ageType, siteIndex, y2bh);
 			break;
 		}
 
 		if (TEST) {
 			try {
-				File testfile = new File("si2age.tst");
+				File testfile = new File(SI2AGE_TST);
 
 				// Open the file for writing
 				try (FileWriter fileWriter = new FileWriter(testfile, true)) {
 
 					// Write the final age to the file
 					fileWriter.write("final age: " + age);
-
-					// Close the file
-					fileWriter.close();
 				}
 			} catch (IOException e) {
-				throw new RuntimeException("An error occurred while writing to the file.", e);
+				throw new RuntimeException(FILE_WRITE_ERROR_MESSAGE, e);
 			}
 		}
 		if (age == SI_ERR_NO_ANS) {
@@ -635,21 +663,23 @@ public class SiteIndex2Age {
 		return (age);
 	}
 
-	public static double iterate(short cu_index, double site_height, short age_type, double site_index, double y2bh) {
+	@SuppressWarnings({ "java:S3776", "java:S6541", "java:S135", "java:S1141"})
+	public static double iterate(short cuIndex, double siteHeight, short ageType, double siteIndex, double y2bh) {
 		double si2age;
 		double step;
-		double test_ht;
-		short err_count;
+		double testHeight;
+		short errorCount;
 
 		/* initial guess */
 		si2age = 25;
 		step = si2age / 2;
-		err_count = 0;
+		errorCount = 0;
 
 		/* do a preliminary test to catch some obvious errors */
-		test_ht = SiteIndex2Height.index_to_height(cu_index, si2age, SI_AT_TOTAL, site_index, y2bh, 0.5); // 0.5 may
-																											// have to
-																											// change
+
+		// 0.5 may have to change
+		testHeight = SiteIndex2Height.index_to_height(cuIndex, si2age, SI_AT_TOTAL, siteIndex, y2bh, 0.5); 
+		
 		// This would throw an illegal argument exception and move up the stack
 
 		/* loop until real close, or other end condition */
@@ -657,7 +687,7 @@ public class SiteIndex2Age {
 			if (TEST) {
 				try {
 					// Open the file for writing
-					File testfile = new File("si2age.tst");
+					File testfile = new File(SI2AGE_TST);
 
 					try (FileWriter fileWriter = new FileWriter(testfile, true)) {
 
@@ -665,58 +695,50 @@ public class SiteIndex2Age {
 						fileWriter.write(
 								String.format(
 										"before index_to_height(age=%.2f, age_type=%d, site_index=%.2f, y2bh=%.2f)%n",
-										si2age, age_type, site_index, y2bh
+										si2age, ageType, siteIndex, y2bh
 								)
 						);
-
-						// Close the file
-						fileWriter.close();
 					}
 				} catch (IOException e) {
-					throw new RuntimeException("An error occurred while writing to the file.", e);
+					throw new RuntimeException(FILE_WRITE_ERROR_MESSAGE, e);
 				}
 			}
 
 			try {
-				test_ht = SiteIndex2Height.index_to_height(cu_index, si2age, SI_AT_TOTAL, site_index, y2bh, 0.5); // 0.5
-																													// may
-																													// have
-																													// to
-																													// change
+				// 0.5 may have to change
+				testHeight = SiteIndex2Height.index_to_height(cuIndex, si2age, SI_AT_TOTAL, siteIndex, y2bh, 0.5); 
 
 				if (TEST) {
 					try {
 						// Open the file for writing
-						File testfile = new File("si2age.tst");
+						File testfile = new File(SI2AGE_TST);
 						try (FileWriter fileWriter = new FileWriter(testfile, true)) {
 
 							// Write to the file
-							fileWriter.write(String.format("index_to_height()=%.2f%n", test_ht));
-
-							// Close the file
-							fileWriter.close();
+							fileWriter.write(String.format("index_to_height()=%.2f%n", testHeight));
 						}
 					} catch (IOException e) {
-						throw new RuntimeException("An error occurred while writing to the file.", e);
+						throw new RuntimeException(FILE_WRITE_ERROR_MESSAGE, e);
 					}
 				}
-			} catch (NoAnswerException e) { /* height > 999 */
+			} catch (NoAnswerException e) { 
+				/* height > 999 */
 				/*
 				 * printf ("si2age.c: site_height=%f, test_ht=%f, si2age=%f\n", site_height,
 				 * test_ht, si2age);
 				 */
-				test_ht = 1000; /* should eventualy force an error code */
-				err_count++;
-				if (err_count == 100) {
+				testHeight = 1000; /* should eventually force an error code */
+				errorCount++;
+				if (errorCount == 100) {
 					si2age = SI_ERR_NO_ANS;
 					break;
 				}
 			}
 
 			/* see if we're close enough */
-			if ( (test_ht - site_height > 0.005) || (test_ht - site_height < -0.005)) {
+			if ( (testHeight - siteHeight > 0.005) || (testHeight - siteHeight < -0.005)) {
 				/* not close enough */
-				if (test_ht > site_height) {
+				if (testHeight > siteHeight) {
 					if (step > 0) {
 						step = -step / 2.0;
 					}
@@ -741,49 +763,42 @@ public class SiteIndex2Age {
 				if (TEST) {
 					try {
 						// Open the file for writing
-						File testfile = new File("si2age.tst");
+						File testfile = new File(SI2AGE_TST);
 						try (FileWriter fileWriter = new FileWriter(testfile, true)) {
 
 							// Write to the file
-							fileWriter.write(String.format("Failed due to age too high (> 999).\n"));
-
-							// Close the file
-							fileWriter.close();
+							fileWriter.write("Failed due to age too high (> 999).\n");
 						}
 					} catch (IOException e) {
-						throw new RuntimeException("An error occurred while writing to the file.", e);
+						throw new RuntimeException(FILE_WRITE_ERROR_MESSAGE, e);
 					}
 				}
 				break;
 			}
 		} while (true);
 
-		if (si2age >= 0) {
-			if (age_type == SI_AT_BREAST) {
-				/*
-				 * was si2age -= y2bh;
-				 */
-				si2age = Age2Age.age_to_age(cu_index, si2age, SI_AT_TOTAL, SI_AT_BREAST, y2bh);
-			}
+		if (si2age >= 0 && ageType == SI_AT_BREAST) {
+			/* was si2age -= y2bh; */
+			si2age = Age2Age.age_to_age(cuIndex, si2age, SI_AT_TOTAL, SI_AT_BREAST, y2bh);
 		}
 		if (si2age == SI_ERR_NO_ANS) {
 			throw new NoAnswerException(
-					"Iteration could not converge (or projected age > 999)," + "site index 2 age variable: " + si2age
-			);
+					MessageFormat.format("Iteration could not converge (or projected age > 999), site index 2 age variable: {}", si2age));
 		}
 		return (si2age);
 	}
 
-	public static double gi_iterate(short cu_index, double site_height, short age_type, double site_index) {
+	@SuppressWarnings({ "java:S3776" })
+	public static double giIterate(short cuIndex, double siteHeight, short ageType, double siteIndex) {
 		double age;
 		double si2age;
-		double test_site;
+		double testSite;
 		double diff;
 		double mindiff;
 
-		if (age_type == SI_AT_TOTAL) {
+		if (ageType == SI_AT_TOTAL) {
 			throw new GrowthInterceptTotalException(
-					"cannot compute growth intercept when using total age, age type: " + age_type
+					"cannot compute growth intercept when using total age, age type: " + ageType
 			);
 		}
 
@@ -795,50 +810,44 @@ public class SiteIndex2Age {
 			if (TEST) {
 				try {
 					// Open the file for writing
-					File testfile = new File("si2age.tst");
+					File testfile = new File(SI2AGE_TST);
 					try (FileWriter fileWriter = new FileWriter(testfile, true)) {
 
 						// Write to the file
 						fileWriter.write(
-								String.format("before height_to_index(age=%f, site_height=%f)\n", age, site_height)
+								MessageFormat.format("before height_to_index(age={}, site_height={})\n", age, siteHeight)
 						);
-
-						// Close the file
-						fileWriter.close();
 					}
 				} catch (IOException e) {
-					throw new RuntimeException("An error occurred while writing to the file.", e);
+					throw new RuntimeException(FILE_WRITE_ERROR_MESSAGE, e);
 				}
 
 			}
-			test_site = Height2SiteIndex
-					.height_to_index(cu_index, age, SI_AT_BREAST, site_height, (short) SI_EST_DIRECT);
+			testSite = Height2SiteIndex
+					.heightToIndex(cuIndex, age, SI_AT_BREAST, siteHeight, (short) SI_EST_DIRECT);
 
 			if (TEST) {
 				try {
 					// Open the file for writing
-					File testfile = new File("si2age.tst");
+					File testfile = new File(SI2AGE_TST);
 					try (FileWriter fileWriter = new FileWriter(testfile, true)) {
 
 						// Write to the file
-						fileWriter.write(String.format("height_to_index()=%f\n", test_site));
-
-						// Close the file
-						fileWriter.close();
+						fileWriter.write(MessageFormat.format("height_to_index()={}\n", testSite));
 					}
 				} catch (IOException e) {
-					throw new RuntimeException("An error occurred while writing to the file.", e);
+					throw new RuntimeException(FILE_WRITE_ERROR_MESSAGE, e);
 				}
 			}
 
-			if (test_site == SI_ERR_GI_MAX) {
+			if (testSite == SI_ERR_GI_MAX) {
 				break;
 			}
 
-			if (test_site > site_index) {
-				diff = test_site - site_index;
+			if (testSite > siteIndex) {
+				diff = testSite - siteIndex;
 			} else {
-				diff = site_index - test_site;
+				diff = siteIndex - testSite;
 			}
 
 			if (diff < mindiff) {
@@ -847,43 +856,31 @@ public class SiteIndex2Age {
 			}
 		}
 
-		if (si2age == 1) {
-			/* right answer, or not low enough */
-			if (diff > 1) {
-				/* outside tolerance of 1m */
-				throw new NoAnswerException(
-						"Iiteration could not converge (or projected age > 999),"
-								+ "difference outside of 1m tolerance: " + diff
-				);
-			}
-		}
-
-		else if (si2age == age - 1) {
-			/* right answer, or not high enough */
-			if (diff > 1) {
-				/* outside tolerance of 1m */
-				throw new NoAnswerException(
-						"Iiteration could not converge (or projected age > 999),"
-								+ "difference outside of 1m tolerance: " + diff
-				);
-			}
+		if ((si2age == 1 || si2age == age - 1) && diff > 1) {
+			/* right answer, or not low enough && outside tolerance of 1m */
+			throw new NoAnswerException(
+					MessageFormat.format("Iteration could not converge (or projected age > 999), difference outside of 1m tolerance: {}", diff));
 		}
 
 		return si2age;
 	}
 
-	public static double hu_garcia_q(double site_index, double bhage) {
-		double h, q, step, diff, lastdiff;
+	@SuppressWarnings({ "java:S3776", "java:S135" })
+	public static double huGarciaA(double siteIndex, double bhage) {
+		double h;
+		double q; 
+		double step;
+		double diff;
+		double lastdiff;
 
 		q = 0.02;
 		step = 0.01;
-		lastdiff = 0;
 		diff = 0;
 
 		do {
-			h = hu_garcia_h(q, bhage);
+			h = huGarciaH(q, bhage);
 			lastdiff = diff;
-			diff = site_index - h;
+			diff = siteIndex - h;
 			if (diff > 0.0000001) {
 				if (lastdiff < 0) {
 					step = step / 2.0;
@@ -908,19 +905,23 @@ public class SiteIndex2Age {
 		return q;
 	}
 
-	public static double hu_garcia_h(double q, double bhage) {
-		double a, height;
+	public static double huGarciaH(double q, double bhage) {
+		double a;
+		double height;
 
 		a = 283.9 * Math.pow(q, 0.5137);
 		height = a * Math.pow(1 - (1 - Math.pow(1.3 / a, 0.5829)) * Math.exp(-q * (bhage - 0.5)), 1.71556);
+		
 		return height;
 	}
 
-	public static double hu_garcia_bha(double q, double height) {
-		double a, bhage;
+	public static double huGarciaBha(double q, double height) {
+		double a;
+		double bhage;
 
 		a = 283.9 * Math.pow(q, 0.5137);
 		bhage = 0.5 - 1 / q * Math.log( (1 - Math.pow(height / a, 0.5829)) / (1 - Math.pow(1.3 / a, 0.5829)));
+		
 		return bhage;
 	}
 

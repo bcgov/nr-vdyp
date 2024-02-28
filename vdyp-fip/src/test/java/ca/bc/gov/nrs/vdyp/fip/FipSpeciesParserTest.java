@@ -24,10 +24,10 @@ import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
-public class FipSpeciesParserTest {
+class FipSpeciesParserTest {
 
 	@Test
-	public void testParseEmpty() throws Exception {
+	void testParseEmpty() throws Exception {
 
 		var parser = new FipSpeciesParser();
 
@@ -53,7 +53,7 @@ public class FipSpeciesParserTest {
 	}
 
 	@Test
-	public void testParseOneGenus() throws Exception {
+	void testParseOneGenus() throws Exception {
 
 		var parser = new FipSpeciesParser();
 
@@ -99,7 +99,7 @@ public class FipSpeciesParserTest {
 	}
 
 	@Test
-	public void testParseTwoGenera() throws Exception {
+	void testParseTwoGenera() throws Exception {
 
 		var parser = new FipSpeciesParser();
 
@@ -153,7 +153,7 @@ public class FipSpeciesParserTest {
 	}
 
 	@Test
-	public void testParseTwoLayers() throws Exception {
+	void testParseTwoLayers() throws Exception {
 
 		var parser = new FipSpeciesParser();
 
@@ -206,7 +206,7 @@ public class FipSpeciesParserTest {
 	}
 
 	@Test
-	public void testParseTwoPolygons() throws Exception {
+	void testParseTwoPolygons() throws Exception {
 
 		var parser = new FipSpeciesParser();
 
@@ -268,7 +268,7 @@ public class FipSpeciesParserTest {
 	}
 
 	@Test
-	public void testParseMutipleSpecies() throws Exception {
+	void testParseMutipleSpecies() throws Exception {
 
 		var parser = new FipSpeciesParser();
 

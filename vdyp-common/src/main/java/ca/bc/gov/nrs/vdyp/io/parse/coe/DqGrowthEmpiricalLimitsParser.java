@@ -72,7 +72,7 @@ public class DqGrowthEmpiricalLimitsParser implements ControlMapSubResourceParse
 								, lineNumber, basalAreaGroupId, MAX_BASAL_AREA_GROUP_ID));
 			}
 			
-			List<Float> coefficientList = new ArrayList<Float>();
+			List<Float> coefficientList = new ArrayList<>();
 			@SuppressWarnings("unchecked")
 			var coefficient9List = (List<Float>) value.get(COEFFICIENTS_9_KEY);
 			@SuppressWarnings("unchecked")

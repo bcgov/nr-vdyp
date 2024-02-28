@@ -23,11 +23,11 @@ public interface MatrixMap2<K1, K2, V> extends MatrixMap<V> {
 	}
 
 	public default <T> void addAll(Map<K1, Map<K2, T>> nestedMap, Function<T, V> valueMapper) {
-		nestedMap.entrySet().forEach(entry1 -> {
-			entry1.getValue().entrySet().forEach(entry2 -> {
-				put(entry1.getKey(), entry2.getKey(), valueMapper.apply(entry2.getValue()));
-			});
-		});
+		nestedMap.entrySet().forEach(entry1 ->
+			entry1.getValue().entrySet().forEach(entry2 ->
+				put(entry1.getKey(), entry2.getKey(), valueMapper.apply(entry2.getValue()))
+			)
+		);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -43,7 +43,7 @@ public interface MatrixMap2<K1, K2, V> extends MatrixMap<V> {
 	 * Cast a 2 dimension MatrixMap to MatrixMap2, wrapping it if it has 2
 	 * dimensions but does not implement the interface.
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "java:S1172" })
 	public static <K1, K2, V> MatrixMap2<K1, K2, V> cast(MatrixMap<V> o, Class<K1> keyClass1, Class<K2> keyClass2) {
 		// TODO check compatibility of range types
 
@@ -102,7 +102,6 @@ public interface MatrixMap2<K1, K2, V> extends MatrixMap<V> {
 
 				@Override
 				public boolean hasM(Object... params) {
-					// TODO Auto-generated method stub
 					return o.hasM(params);
 				}
 			};

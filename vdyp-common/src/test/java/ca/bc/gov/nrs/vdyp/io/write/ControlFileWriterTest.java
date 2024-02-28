@@ -8,10 +8,10 @@ import java.io.ByteArrayOutputStream;
 
 import org.junit.jupiter.api.Test;
 
-public class ControlFileWriterTest {
+class ControlFileWriterTest {
 
 	@Test
-	public void testWriteEntry() throws Exception {
+	void testWriteEntry() throws Exception {
 
 		try (var output = new ByteArrayOutputStream(); var writer = new ControlFileWriter(output);) {
 
@@ -26,7 +26,7 @@ public class ControlFileWriterTest {
 	}
 
 	@Test
-	public void testWriteEntryWithComment() throws Exception {
+	void testWriteEntryWithComment() throws Exception {
 
 		try (var output = new ByteArrayOutputStream(); var writer = new ControlFileWriter(output);) {
 
@@ -41,7 +41,7 @@ public class ControlFileWriterTest {
 	}
 
 	@Test
-	public void testWriteExtendedEntry() throws Exception {
+	void testWriteExtendedEntry() throws Exception {
 
 		try (var output = new ByteArrayOutputStream(); var writer = new ControlFileWriter(output);) {
 
@@ -58,7 +58,7 @@ public class ControlFileWriterTest {
 	}
 
 	@Test
-	public void testWriteExtendedEntryWithComment() throws Exception {
+	void testWriteExtendedEntryWithComment() throws Exception {
 
 		try (var output = new ByteArrayOutputStream(); var writer = new ControlFileWriter(output);) {
 
@@ -75,7 +75,7 @@ public class ControlFileWriterTest {
 	}
 
 	@Test
-	public void testWriteComment() throws Exception {
+	void testWriteComment() throws Exception {
 
 		try (var output = new ByteArrayOutputStream(); var writer = new ControlFileWriter(output);) {
 
@@ -87,7 +87,7 @@ public class ControlFileWriterTest {
 	}
 
 	@Test
-	public void testValidateIndex() throws Exception {
+	void testValidateIndex() throws Exception {
 
 		try (var output = new ByteArrayOutputStream(); var writer = new ControlFileWriter(output);) {
 
@@ -114,7 +114,7 @@ public class ControlFileWriterTest {
 	}
 
 	@Test
-	public void testValidateValue() throws Exception {
+	void testValidateValue() throws Exception {
 
 		try (var output = new ByteArrayOutputStream(); var writer = new ControlFileWriter(output);) {
 
@@ -150,7 +150,7 @@ public class ControlFileWriterTest {
 	}
 
 	@Test
-	public void testValidateComment() throws Exception {
+	void testValidateComment() throws Exception {
 
 		try (var output = new ByteArrayOutputStream(); var writer = new ControlFileWriter(output);) {
 

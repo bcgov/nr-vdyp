@@ -15,10 +15,10 @@ import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.*;
 
-public class NonPrimarySpeciesDqGrowthParserTest {
+class NonPrimarySpeciesDqGrowthParserTest {
 
 	@Test
-	public void readAllTest() {
+	void readAllTest() {
 		var parser = new NonPrimarySpeciesDqGrowthParser();
 	
 		Map<String, Object> controlMap = new HashMap<>();

@@ -13,6 +13,7 @@ public class FipLayer extends BaseVdypLayer<FipSpecies> {
 	private float crownClosure; // FIPL_1/CC_L1 or FIP:_V/CC_V1
 	private String siteSpecies; // FIPL_1A/SITESP64_L1 or FIPL_VA/SITESP64_L1
 
+	@SuppressWarnings("java:S107")
 	public FipLayer(
 			String polygonIdentifier, LayerType layer, Optional<Float> ageTotal, Optional<Float> height,
 			Optional<Float> yearsToBreastHeight, Optional<Float> siteIndex, Optional<Integer> siteCurveNumber,
@@ -44,17 +45,17 @@ public class FipLayer extends BaseVdypLayer<FipSpecies> {
 
 	@Computed
 	public float getAgeTotalSafe() {
-		return super.getAgeTotal().orElseThrow(() -> new IllegalStateException());
+		return super.getAgeTotal().orElseThrow(IllegalStateException::new);
 	}
 
 	@Computed
 	public float getHeightSafe() {
-		return super.getHeight().orElseThrow(() -> new IllegalStateException());
+		return super.getHeight().orElseThrow(IllegalStateException::new);
 	}
 
 	@Computed
 	public float getYearsToBreastHeightSafe() {
-		return super.getYearsToBreastHeight().orElseThrow(() -> new IllegalStateException());
+		return super.getYearsToBreastHeight().orElseThrow(IllegalStateException::new);
 	}
 
 	@Computed

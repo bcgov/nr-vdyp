@@ -13,12 +13,14 @@ public class FizCheck {
  */
 /* @formatter:on */
 
+	private FizCheck() {}
+	
 	// From sindex.h
 	public static final short FIZ_UNKNOWN = 0;
 	public static final short FIZ_COAST = 1;
 	public static final short FIZ_INTERIOR = 2;
 
-	public static short fiz_check(char fiz) {
+	public static short fizCheck(char fiz) {
 		switch (fiz) {
 		case 'A', 'B', 'C':
 			return FIZ_COAST;

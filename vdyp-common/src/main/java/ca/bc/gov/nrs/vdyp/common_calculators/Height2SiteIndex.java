@@ -13,6 +13,7 @@ import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.NoAnswerException
  *   stable.
  */
 /* @formatter:on */
+@SuppressWarnings("java:S1118")
 public class Height2SiteIndex {
 /* @formatter:off */
 /*
@@ -134,6 +135,7 @@ public class Height2SiteIndex {
  */
 /* @formatter:on */
 
+	private static final String VARIABLE_HEIGHT_GROWTH_INTERCEPT_FORMULATION_BHAGE_RANGE = "Variable height growth intercept formulation, bhage > range: ";
 	// Taken from sindex.h
 	/*
 	 * age types
@@ -199,12 +201,14 @@ public class Height2SiteIndex {
 		return ( (x) <= 0.0) ? Math.log(.00001) : Math.log(x);
 	}
 
-	public static double height_to_index(short cu_index, double age, short age_type, double height, short si_est_type) {
+	@SuppressWarnings({ "java:S3776", "java:S1301" })
+	public static double heightToIndex(short cuIndex, double age, short ageType, double height, short siEstType) {
 		double index;
-		double x1, x2;
+		double x1;
+		double x2;
 
 		/* handle simple cases */
-		if (age_type == SI_AT_BREAST) {
+		if (ageType == SI_AT_BREAST) {
 			if (height < 1.3) {
 				throw new LessThan13Exception("Height < 1.3 for breast height age: " + height);
 			}
@@ -220,11 +224,11 @@ public class Height2SiteIndex {
 			throw new NoAnswerException("Iteration could not converge (projected site index > 999), Age: " + age);
 		}
 
-		if (age_type == SI_AT_BREAST) {
-			index = ba_height_to_index(cu_index, age, height, si_est_type);
+		if (ageType == SI_AT_BREAST) {
+			index = baHeightToIndex(cuIndex, age, height, siEstType);
 		} else {
-			if (si_est_type == SI_EST_DIRECT) {
-				switch (cu_index) {
+			if (siEstType == SI_EST_DIRECT) {
+				switch (cuIndex) {
 				case SI_FDI_THROWER:
 					if (age <= 4) {
 						/* means less than 1.3m, so can't generate site index */
@@ -238,20 +242,22 @@ public class Height2SiteIndex {
 					}
 					break;
 				default:
-					index = site_iterate(cu_index, age, SI_AT_TOTAL, height);
+					index = siteIterate(cuIndex, age, SI_AT_TOTAL, height);
 					break;
 				}
 			} else
-				index = site_iterate(cu_index, age, SI_AT_TOTAL, height);
+				index = siteIterate(cuIndex, age, SI_AT_TOTAL, height);
 		}
 		return (index);
 	}
 
-	public static double ba_height_to_index(short cu_index, double bhage, double height, short si_est_type) {
+	@SuppressWarnings({"java:S6541", "java:S3776", "java:S1479"})
+	public static double baHeightToIndex(short cuIndex, double bhage, double height, short siEstType) {
 		double index;
-		double x1, x2;
-		double log_bhage;
-		double ht_13;
+		double x1;
+		double x2;
+		double logBHage;
+		double ht13;
 
 		if (bhage <= 0.5) {
 			/* indicator that it can't be done */
@@ -259,8 +265,8 @@ public class Height2SiteIndex {
 					"Bhage < 0.5 years which indicates that it can't be done, bhage: " + bhage
 			);
 		} else {
-			if (si_est_type == SI_EST_DIRECT) {
-				switch (cu_index) {
+			if (siEstType == SI_EST_DIRECT) {
+				switch (cuIndex) {
 				case SI_BA_DILUCCA:
 					index = height * (1 + Math.exp(6.300852572 + 0.85314673 * Math.log(50.0) - 2.533284275 * (height)))
 							/ (1 + Math.exp(6.300852572 + 0.8314673 * Math.log(bhage) - 2.533284275 * llog(height)));
@@ -317,12 +323,12 @@ public class Height2SiteIndex {
 					index *= 0.3048;
 					break;
 				case SI_PLI_DEMPSTER:
-					log_bhage = Math.log(bhage);
+					logBHage = Math.log(bhage);
 
-					ht_13 = height - 1.3;
+					ht13 = height - 1.3;
 
-					index = 1.3 + 10.9408 + 1.6753 * ht_13 - 0.9322 * log_bhage * log_bhage + 0.0054 * bhage * log_bhage
-							+ 8.2281 * ht_13 / bhage - 0.2569 * ht_13 * llog(ht_13);
+					index = 1.3 + 10.9408 + 1.6753 * ht13 - 0.9322 * logBHage * logBHage + 0.0054 * bhage * logBHage
+							+ 8.2281 * ht13 / bhage - 0.2569 * ht13 * llog(ht13);
 					break;
 				case SI_PLI_MILNER:
 					/* convert to imperial */
@@ -360,25 +366,25 @@ public class Height2SiteIndex {
 				case SI_SW_HU_GARCIA: {
 					double q;
 
-					q = hu_garcia_q(height, bhage);
-					index = hu_garcia_h(q, 50.0);
+					q = huGarciaQ(height, bhage);
+					index = huGarciaH(q, 50.0);
 				}
 					break;
 				case SI_SW_DEMPSTER:
-					log_bhage = Math.log(bhage);
+					logBHage = Math.log(bhage);
 
-					ht_13 = height - 1.3;
+					ht13 = height - 1.3;
 
-					index = 1.3 + 10.3981 + 0.3244 * ht_13 + 0.006 * bhage * log_bhage - 0.838 * log_bhage * log_bhage
-							+ 27.4874 * ht_13 / bhage + 1.1914 * llog(ht_13);
+					index = 1.3 + 10.3981 + 0.3244 * ht13 + 0.006 * bhage * logBHage - 0.838 * logBHage * logBHage
+							+ 27.4874 * ht13 / bhage + 1.1914 * llog(ht13);
 					break;
 				case SI_SB_DEMPSTER:
-					log_bhage = Math.log(bhage);
+					logBHage = Math.log(bhage);
 
-					ht_13 = height - 1.3;
+					ht13 = height - 1.3;
 
-					index = 1.3 + 4.9038 + 0.8118 * ht_13 - 0.3638 * log_bhage * log_bhage + 24.0308 * ht_13 / bhage
-							- 0.1021 * ht_13 * llog(ht_13);
+					index = 1.3 + 4.9038 + 0.8118 * ht13 - 0.3638 * logBHage * logBHage + 24.0308 * ht13 / bhage
+							- 0.1021 * ht13 * llog(ht13);
 					break;
 
 				// #ifdef SI_EA_GOUDIE Couldn't find constant so removed
@@ -400,10 +406,10 @@ public class Height2SiteIndex {
 					// endif
 
 					// #ifdef SI_AT_GOUDIE
-					log_bhage = Math.log(bhage);
+					logBHage = Math.log(bhage);
 
-					index = 1.3 + 17.0101 + 0.8784 * (height - 1.3) + 1.8364 * log_bhage
-							- 1.4018 * log_bhage * log_bhage + 0.4374 * llog(height - 1.3) / bhage;
+					index = 1.3 + 17.0101 + 0.8784 * (height - 1.3) + 1.8364 * logBHage
+							- 1.4018 * logBHage * logBHage + 0.4374 * llog(height - 1.3) / bhage;
 					break;
 				case SI_FDI_VDP_MONT:
 					/* convert to imperial */
@@ -432,69 +438,39 @@ public class Height2SiteIndex {
 					x1 = 0.4948;
 					x2 = 25.315;
 
-					log_bhage = Math.log(bhage);
+					logBHage = Math.log(bhage);
 
-					index = 4.5 + 38.787 - 2.805 * log_bhage * log_bhage + 0.0216 * bhage * log_bhage + x1 * height
+					index = 4.5 + 38.787 - 2.805 * logBHage * logBHage + 0.0216 * bhage * logBHage + x1 * height
 							+ x2 * height / bhage;
 
 					/* convert back to metric */
 					index *= 0.3048;
 					break;
-				case SI_FDI_MONS_GF:
+				case SI_FDI_MONS_GF, SI_FDI_MONS_WRC:
 					/* convert to imperial */
 					height /= 0.3048;
 
 					x1 = 0.4305;
 					x2 = 28.415;
 
-					log_bhage = Math.log(bhage);
+					logBHage = Math.log(bhage);
 
-					index = 4.5 + 38.787 - 2.805 * log_bhage * log_bhage + 0.0216 * bhage * log_bhage + x1 * height
+					index = 4.5 + 38.787 - 2.805 * logBHage * logBHage + 0.0216 * bhage * logBHage + x1 * height
 							+ x2 * height / bhage;
 
 					/* convert back to metric */
 					index *= 0.3048;
 					break;
-				case SI_FDI_MONS_WRC:
-					/* convert to imperial */
-					height /= 0.3048;
-
-					x1 = 0.4305;
-					x2 = 28.415;
-
-					log_bhage = Math.log(bhage);
-
-					index = 4.5 + 38.787 - 2.805 * log_bhage * log_bhage + 0.0216 * bhage * log_bhage + x1 * height
-							+ x2 * height / bhage;
-
-					/* convert back to metric */
-					index *= 0.3048;
-					break;
-				case SI_FDI_MONS_WH:
+				case SI_FDI_MONS_WH, SI_FDI_MONS_SAF:
 					/* convert to imperial */
 					height /= 0.3048;
 
 					x1 = 0.3964;
 					x2 = 30.008;
 
-					log_bhage = Math.log(bhage);
+					logBHage = Math.log(bhage);
 
-					index = 4.5 + 38.787 - 2.805 * log_bhage * log_bhage + 0.0216 * bhage * log_bhage + x1 * height
-							+ x2 * height / bhage;
-
-					/* convert back to metric */
-					index *= 0.3048;
-					break;
-				case SI_FDI_MONS_SAF:
-					/* convert to imperial */
-					height /= 0.3048;
-
-					x1 = 0.3964;
-					x2 = 30.008;
-
-					log_bhage = Math.log(bhage);
-
-					index = 4.5 + 38.787 - 2.805 * log_bhage * log_bhage + 0.0216 * bhage * log_bhage + x1 * height
+					index = 4.5 + 38.787 - 2.805 * logBHage * logBHage + 0.0216 * bhage * logBHage + x1 * height
 							+ x2 * height / bhage;
 
 					/* convert back to metric */
@@ -708,9 +684,7 @@ public class Height2SiteIndex {
 						break;
 					}
 					if (x1 == 0) {
-						throw new GrowthInterceptMaximumException(
-								"Variable height growth intercept formulation, bhage > range: " + x1
-						);
+						throw new GrowthInterceptMaximumException(VARIABLE_HEIGHT_GROWTH_INTERCEPT_FORMULATION_BHAGE_RANGE + x1);
 					} else {
 						index = (height - 1.3) * 100 / (bhage - 0.5);
 						index = 1.3 + x1 * ppow(index, x2);
@@ -925,7 +899,7 @@ public class Height2SiteIndex {
 					}
 					if (x1 == 0) {
 						throw new GrowthInterceptMaximumException(
-								"Variable height growth intercept formulation, bhage > range: " + x1
+								VARIABLE_HEIGHT_GROWTH_INTERCEPT_FORMULATION_BHAGE_RANGE + x1
 						);
 					} else {
 						index = (height - 1.3) * 100 / (bhage - 0.5);
@@ -1092,7 +1066,7 @@ public class Height2SiteIndex {
 					}
 					if (x1 == 0) {
 						throw new GrowthInterceptMaximumException(
-								"Variable height growth intercept formulation, bhage > range: " + x1
+								VARIABLE_HEIGHT_GROWTH_INTERCEPT_FORMULATION_BHAGE_RANGE + x1
 						);
 					} else {
 						index = (height - 1.3) * 100 / (bhage - 0.5);
@@ -1308,7 +1282,7 @@ public class Height2SiteIndex {
 					}
 					if (x1 == 0) {
 						throw new GrowthInterceptMaximumException(
-								"Variable height growth intercept formulation, bhage > range: " + x1
+								VARIABLE_HEIGHT_GROWTH_INTERCEPT_FORMULATION_BHAGE_RANGE + x1
 						);
 					} else {
 						index = (height - 1.3) * 100 / (bhage - 0.5);
@@ -1524,7 +1498,7 @@ public class Height2SiteIndex {
 					}
 					if (x1 == 0) {
 						throw new GrowthInterceptMaximumException(
-								"Variable height growth intercept formulation, bhage > range: " + x1
+								VARIABLE_HEIGHT_GROWTH_INTERCEPT_FORMULATION_BHAGE_RANGE + x1
 						);
 					} else {
 						index = (height - 1.3) * 100 / (bhage - 0.5);
@@ -1740,7 +1714,7 @@ public class Height2SiteIndex {
 					}
 					if (x1 == 0) {
 						throw new GrowthInterceptMaximumException(
-								"Variable height growth intercept formulation, bhage > range: " + x1
+								VARIABLE_HEIGHT_GROWTH_INTERCEPT_FORMULATION_BHAGE_RANGE + x1
 						);
 					} else {
 						index = (height - 1.3) * 100 / (bhage - 0.5);
@@ -1877,7 +1851,7 @@ public class Height2SiteIndex {
 					}
 					if (x1 == 0) {
 						throw new GrowthInterceptMaximumException(
-								"Variable height growth intercept formulation, bhage > range: " + x1
+								VARIABLE_HEIGHT_GROWTH_INTERCEPT_FORMULATION_BHAGE_RANGE + x1
 						);
 					} else {
 						index = (height - 1.3) * 100 / (bhage - 0.5);
@@ -2094,7 +2068,7 @@ public class Height2SiteIndex {
 					}
 					if (x1 == 0) {
 						throw new GrowthInterceptMaximumException(
-								"Variable height growth intercept formulation, bhage > range: " + x1
+								VARIABLE_HEIGHT_GROWTH_INTERCEPT_FORMULATION_BHAGE_RANGE + x1
 						);
 					} else {
 						index = (height - 1.3) * 100 / (bhage - 0.5);
@@ -2310,7 +2284,7 @@ public class Height2SiteIndex {
 					}
 					if (x1 == 0) {
 						throw new GrowthInterceptMaximumException(
-								"Variable height growth intercept formulation, bhage > range: " + x1
+								VARIABLE_HEIGHT_GROWTH_INTERCEPT_FORMULATION_BHAGE_RANGE + x1
 						);
 					} else {
 						index = (height - 1.3) * 100 / (bhage - 0.5);
@@ -2526,7 +2500,7 @@ public class Height2SiteIndex {
 					}
 					if (x1 == 0) {
 						throw new GrowthInterceptMaximumException(
-								"Variable height growth intercept formulation, bhage > range: " + x1
+								VARIABLE_HEIGHT_GROWTH_INTERCEPT_FORMULATION_BHAGE_RANGE + x1
 						);
 					} else {
 						index = (height - 1.3) / (bhage - 0.5);
@@ -2663,7 +2637,7 @@ public class Height2SiteIndex {
 					}
 					if (x1 == 0) {
 						throw new GrowthInterceptMaximumException(
-								"Variable height growth intercept formulation, bhage > range: " + x1
+								VARIABLE_HEIGHT_GROWTH_INTERCEPT_FORMULATION_BHAGE_RANGE + x1
 						);
 					} else {
 						index = (height - 1.3) * 100 / (bhage - 0.5);
@@ -2879,7 +2853,7 @@ public class Height2SiteIndex {
 					}
 					if (x1 == 0) {
 						throw new GrowthInterceptMaximumException(
-								"Variable height growth intercept formulation, bhage > range: " + x1
+								VARIABLE_HEIGHT_GROWTH_INTERCEPT_FORMULATION_BHAGE_RANGE + x1
 						);
 					} else {
 						index = (height - 1.3) * 100 / (bhage - 0.5);
@@ -3095,7 +3069,7 @@ public class Height2SiteIndex {
 					}
 					if (x1 == 0) {
 						throw new GrowthInterceptMaximumException(
-								"Variable height growth intercept formulation, bhage > range: " + x1
+								VARIABLE_HEIGHT_GROWTH_INTERCEPT_FORMULATION_BHAGE_RANGE + x1
 						);
 					} else {
 						index = (height - 1.3) * 100 / (bhage - 0.5);
@@ -3311,7 +3285,7 @@ public class Height2SiteIndex {
 					}
 					if (x1 == 0) {
 						throw new GrowthInterceptMaximumException(
-								"Variable height growth intercept formulation, bhage > range: " + x1
+								VARIABLE_HEIGHT_GROWTH_INTERCEPT_FORMULATION_BHAGE_RANGE + x1
 						);
 					} else {
 						index = (height - 1.3) * 100 / (bhage - 0.5);
@@ -3527,7 +3501,7 @@ public class Height2SiteIndex {
 					}
 					if (x1 == 0)
 						throw new GrowthInterceptMaximumException(
-								"Variable height growth intercept formulation, bhage > range: " + x1
+								VARIABLE_HEIGHT_GROWTH_INTERCEPT_FORMULATION_BHAGE_RANGE + x1
 						);
 					else {
 						index = (height - 1.3) * 100 / (bhage - 0.5);
@@ -3743,7 +3717,7 @@ public class Height2SiteIndex {
 					}
 					if (x1 == 0) {
 						throw new GrowthInterceptMaximumException(
-								"Variable height growth intercept formulation, bhage > range: " + x1
+								VARIABLE_HEIGHT_GROWTH_INTERCEPT_FORMULATION_BHAGE_RANGE + x1
 						);
 					} else {
 						index = (height - 1.3) * 100 / (bhage - 0.5);
@@ -3959,7 +3933,7 @@ public class Height2SiteIndex {
 					}
 					if (x1 == 0) {
 						throw new GrowthInterceptMaximumException(
-								"Variable height growth intercept formulation, bhage > range: " + x1
+								VARIABLE_HEIGHT_GROWTH_INTERCEPT_FORMULATION_BHAGE_RANGE + x1
 						);
 					} else {
 						index = (height - 1.3) * 100 / (bhage - 0.5);
@@ -3967,19 +3941,21 @@ public class Height2SiteIndex {
 					}
 					break;
 				default:
-					index = site_iterate(cu_index, bhage, SI_AT_BREAST, height);
+					index = siteIterate(cuIndex, bhage, SI_AT_BREAST, height);
 					break;
 				}
 			} else
-				index = site_iterate(cu_index, bhage, SI_AT_BREAST, height);
+				index = siteIterate(cuIndex, bhage, SI_AT_BREAST, height);
 		}
 		return index;
 	}
+	
+	@SuppressWarnings({ "java:S3776", "java:S135" })
+	public static double siteIterate(short cuIndex, double age, short ageType, double height) {
 
-	public static double site_iterate(short cu_index, double age, short age_type, double height) {
 		double site;
 		double step;
-		double test_top;
+		double testTop;
 		double y2bh;
 
 		/* initial guess */
@@ -3993,16 +3969,16 @@ public class Height2SiteIndex {
 		do {
 
 			/* estimate y2bh */
-			y2bh = SiteIndexYears2BreastHeight.si_y2bh(cu_index, site);
+			y2bh = SiteIndexYears2BreastHeight.si_y2bh(cuIndex, site);
 
-			if (age_type == SI_AT_BREAST) {
-				test_top = SiteIndex2Height.index_to_height(cu_index, age, SI_AT_BREAST, site, y2bh, 0.5); // 0.5 may
+			if (ageType == SI_AT_BREAST) {
+				testTop = SiteIndex2Height.index_to_height(cuIndex, age, SI_AT_BREAST, site, y2bh, 0.5); // 0.5 may
 																											// have to
 																											// change
 			} else {
 				/* was age - y2bh */
-				test_top = SiteIndex2Height.index_to_height(
-						cu_index, Age2Age.age_to_age(cu_index, age, SI_AT_TOTAL, SI_AT_BREAST, y2bh), SI_AT_BREAST,
+				testTop = SiteIndex2Height.index_to_height(
+						cuIndex, Age2Age.age_to_age(cuIndex, age, SI_AT_TOTAL, SI_AT_BREAST, y2bh), SI_AT_BREAST,
 						site, y2bh, 0.5
 				); // 0.5 may have to change
 			}
@@ -4014,9 +3990,9 @@ public class Height2SiteIndex {
 			 *
 			 */
 
-			if ( (test_top - height > 0.01) || (test_top - height < -0.01)) {
+			if ( (testTop - height > 0.01) || (testTop - height < -0.01)) {
 				/* not close enough */
-				if (test_top > height) {
+				if (testTop > height) {
 					if (step > 0) {
 						step = -step / 2.0;
 					}
@@ -4059,26 +4035,30 @@ public class Height2SiteIndex {
 
 	}
 
-	public static double hu_garcia_q(double site_index, double bhage) {
-		double h, q, step, diff, lastdiff;
+	@SuppressWarnings("java:S3776")
+	public static double huGarciaQ(double siteIndex, double bhage) {
+		double h;
+		double q;
+		double step;
+		double diff;
+		double lastDiff;
 
 		q = 0.02;
 		step = 0.01;
-		lastdiff = 0;
 		diff = 0;
 
 		do {
-			h = hu_garcia_h(q, bhage);
-			lastdiff = diff;
-			diff = site_index - h;
+			h = huGarciaH(q, bhage);
+			lastDiff = diff;
+			diff = siteIndex - h;
 			if (diff > 0.0000001) {
-				if (lastdiff < 0) {
+				if (lastDiff < 0) {
 					step = step / 2.0;
 				}
 				q += step;
 
 			} else if (diff < -0.0000001) {
-				if (lastdiff > 0) {
+				if (lastDiff > 0) {
 					step = step / 2.0;
 				}
 				q -= step;
@@ -4089,16 +4069,14 @@ public class Height2SiteIndex {
 			} else {
 				break;
 			}
-			if (step < 0.0000001) {
-				break;
-			}
-		} while (true);
+		} while (step >= 0.0000001);
 
 		return q;
 	}
 
-	public static double hu_garcia_h(double q, double bhage) {
-		double a, height;
+	public static double huGarciaH(double q, double bhage) {
+		double a;
+		double height;
 
 		a = 283.9 * Math.pow(q, 0.5137);
 		height = a * Math.pow(1 - (1 - Math.pow(1.3 / a, 0.5829)) * Math.exp(-q * (bhage - 0.5)), 1.71556);

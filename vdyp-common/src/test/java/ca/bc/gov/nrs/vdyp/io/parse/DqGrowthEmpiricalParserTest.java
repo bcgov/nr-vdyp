@@ -14,7 +14,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.coe.DqGrowthEmpiricalParser;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
-public class DqGrowthEmpiricalParserTest {
+class DqGrowthEmpiricalParserTest {
 
 	@Test
 	void testParseSimple() throws Exception {

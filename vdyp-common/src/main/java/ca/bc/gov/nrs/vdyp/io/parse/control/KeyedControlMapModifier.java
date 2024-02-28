@@ -11,7 +11,7 @@ public interface KeyedControlMapModifier extends ControlMapModifier {
 	 */
 	default String getControlKeyName() {
 		return getControlKey().name();
-	};
+	}
 
 	/**
 	 * The key for this resource's entry in the control map

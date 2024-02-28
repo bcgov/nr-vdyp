@@ -99,7 +99,7 @@ public class FipStart implements Closeable {
 
 	public static final float TOLERANCE = 2.0e-3f;
 
-	JProgram jprogram = JProgram.FIP_START; // FIPSTART only TODO Track this down
+	JProgram jprogram = JProgram.FIP_START;
 
 	VriAdjustInputWriter vriWriter;
 
@@ -265,8 +265,9 @@ public class FipStart implements Closeable {
 		}
 	}
 
+	@SuppressWarnings("java:S125")
 	Optional<VdypPolygon> processPolygon(int polygonsRead, FipPolygon polygon)
-			throws ProcessingException, LowValueException {
+			throws ProcessingException {
 		VdypPolygon resultPoly;
 		log.atInfo().setMessage("Read polygon {}, preparing to process").addArgument(polygon.getPolygonIdentifier())
 				.log();
@@ -846,8 +847,7 @@ public class FipStart implements Closeable {
 				.<Map<String, Coefficients>>expectParsedControl(controlMap, ControlKey.BY_SPECIES_DQ, Map.class);
 		var specAliases = GenusDefinitionParser.getSpeciesAliases(controlMap);
 
-		// TODO we can probably remove these as they seem to only be used for debugging
-		// in VDYP7
+		// TODO we can probably remove these as they seem to only be used for debugging in VDYP7
 		Map<String, Float> adjust = new HashMap<>(coeMap.size());
 		Map<String, Float> mult = new HashMap<>(coeMap.size());
 

@@ -1,6 +1,5 @@
 package ca.bc.gov.nrs.vdyp.io.parse.coe;
 
-import java.util.Arrays;
 import java.util.Optional;
 
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
@@ -29,14 +28,14 @@ public class DqGrowthEmpiricalParser extends SimpleCoefficientParser1<Integer> {
 	
 	public static final int MAX_GROUPS = 40;
 	
-	public static final Coefficients defaultCoefficients = new Coefficients(
+	protected static final Coefficients defaultCoefficients = new Coefficients(
 			new float[] { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f }, 1);
 			
 	public DqGrowthEmpiricalParser() {
 		super(Integer.class, 1, ControlKey.DQ_GROWTH_EMPIRICAL);
 		
 		this.groupIndexKey(MAX_GROUPS).coefficients(10, 9
-				, Optional.of((index) -> defaultCoefficients)
-				, Optional.of((index) -> 0.0f));
+				, Optional.of(index -> defaultCoefficients)
+				, Optional.of(index -> 0.0f));
 	}
 }

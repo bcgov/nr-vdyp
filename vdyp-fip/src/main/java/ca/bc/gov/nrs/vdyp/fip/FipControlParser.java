@@ -73,63 +73,63 @@ public class FipControlParser {
 	public static final float DEFAULT_MINIMUM_VETERAN_HEIGHT = 10.0f;
 
 	ControlFileParser controlParser = new ControlFileParser() //
-			.record(ControlKey.MAX_NUM_POLY, ValueParser.INTEGER)
+			.doRecord(ControlKey.MAX_NUM_POLY, ValueParser.INTEGER)
 
-			.record(ControlKey.BEC_DEF, FILENAME) // RD_BECD
-			.record(ControlKey.SP0_DEF, FILENAME) // RD_SP0
+			.doRecord(ControlKey.BEC_DEF, FILENAME) // RD_BECD
+			.doRecord(ControlKey.SP0_DEF, FILENAME) // RD_SP0
 
-			.record(ControlKey.FIP_YIELD_POLY_INPUT, FILENAME) // GET_FIPP
-			.record(ControlKey.FIP_YIELD_LAYER_INPUT, FILENAME) // GET_FIPL
-			.record(ControlKey.FIP_YIELD_LX_SP0_INPUT, FILENAME) // GET_FIPS
+			.doRecord(ControlKey.FIP_YIELD_POLY_INPUT, FILENAME) // GET_FIPP
+			.doRecord(ControlKey.FIP_YIELD_LAYER_INPUT, FILENAME) // GET_FIPL
+			.doRecord(ControlKey.FIP_YIELD_LX_SP0_INPUT, FILENAME) // GET_FIPS
 
-			.record(ControlKey.VDYP_POLYGON, FILENAME) //
-			.record(ControlKey.VDYP_LAYER_BY_SPECIES, FILENAME) //
-			.record(ControlKey.VDYP_LAYER_BY_SP0_BY_UTIL, FILENAME) //
+			.doRecord(ControlKey.VDYP_POLYGON, FILENAME) //
+			.doRecord(ControlKey.VDYP_LAYER_BY_SPECIES, FILENAME) //
+			.doRecord(ControlKey.VDYP_LAYER_BY_SP0_BY_UTIL, FILENAME) //
 
-			.record(ControlKey.VOLUME_EQN_GROUPS, FILENAME) // RD_VGRP
-			.record(ControlKey.DECAY_GROUPS, FILENAME) // RD_DGRP
-			.record(ControlKey.BREAKAGE_GROUPS, FILENAME) // RD_BGRP IPSJF157
+			.doRecord(ControlKey.VOLUME_EQN_GROUPS, FILENAME) // RD_VGRP
+			.doRecord(ControlKey.DECAY_GROUPS, FILENAME) // RD_DGRP
+			.doRecord(ControlKey.BREAKAGE_GROUPS, FILENAME) // RD_BGRP IPSJF157
 
-			.record(ControlKey.SITE_CURVE_NUMBERS, ValueParser.optional(FILENAME)) // RD_E025
-			.record(ControlKey.SITE_CURVE_AGE_MAX, ValueParser.optional(FILENAME)) // RD_E026
+			.doRecord(ControlKey.SITE_CURVE_NUMBERS, ValueParser.optional(FILENAME)) // RD_E025
+			.doRecord(ControlKey.SITE_CURVE_AGE_MAX, ValueParser.optional(FILENAME)) // RD_E026
 
-			.record(ControlKey.DEFAULT_EQ_NUM, FILENAME) // RD_GRBA1
-			.record(ControlKey.EQN_MODIFIERS, FILENAME) // RD_GMBA1
-			.record(ControlKey.STOCKING_CLASS_FACTORS, FILENAME) // RD_STK33
+			.doRecord(ControlKey.DEFAULT_EQ_NUM, FILENAME) // RD_GRBA1
+			.doRecord(ControlKey.EQN_MODIFIERS, FILENAME) // RD_GMBA1
+			.doRecord(ControlKey.STOCKING_CLASS_FACTORS, FILENAME) // RD_STK33
 
-			.record(ControlKey.COE_BA, FILENAME) // RD_E040 IPSJF128
-			.record(ControlKey.COE_DQ, FILENAME) // RD_E041 IPSJF129
-			.record(ControlKey.UPPER_BA_BY_CI_S0_P, FILENAME) // RD_E043 IPSJF128
+			.doRecord(ControlKey.COE_BA, FILENAME) // RD_E040 IPSJF128
+			.doRecord(ControlKey.COE_DQ, FILENAME) // RD_E041 IPSJF129
+			.doRecord(ControlKey.UPPER_BA_BY_CI_S0_P, FILENAME) // RD_E043 IPSJF128
 
-			.record(ControlKey.HL_PRIMARY_SP_EQN_P1, FILENAME) // RD_YHL1
-			.record(ControlKey.HL_PRIMARY_SP_EQN_P2, FILENAME) // RD_YHL2
-			.record(ControlKey.HL_PRIMARY_SP_EQN_P3, FILENAME) // RD_YHL3
-			.record(ControlKey.HL_NONPRIMARY, FILENAME) // RD_YHL4
+			.doRecord(ControlKey.HL_PRIMARY_SP_EQN_P1, FILENAME) // RD_YHL1
+			.doRecord(ControlKey.HL_PRIMARY_SP_EQN_P2, FILENAME) // RD_YHL2
+			.doRecord(ControlKey.HL_PRIMARY_SP_EQN_P3, FILENAME) // RD_YHL3
+			.doRecord(ControlKey.HL_NONPRIMARY, FILENAME) // RD_YHL4
 
-			.record(ControlKey.BY_SPECIES_DQ, FILENAME) // RD_E060 IPFJF125
-			.record(ControlKey.SPECIES_COMPONENT_SIZE_LIMIT, FILENAME) // RD_E061 IPSJF158
+			.doRecord(ControlKey.BY_SPECIES_DQ, FILENAME) // RD_E060 IPFJF125
+			.doRecord(ControlKey.SPECIES_COMPONENT_SIZE_LIMIT, FILENAME) // RD_E061 IPSJF158
 
-			.record(ControlKey.UTIL_COMP_BA, FILENAME) // RD_UBA1
-			.record(ControlKey.UTIL_COMP_DQ, FILENAME) // RD_UDQ1
+			.doRecord(ControlKey.UTIL_COMP_BA, FILENAME) // RD_UBA1
+			.doRecord(ControlKey.UTIL_COMP_DQ, FILENAME) // RD_UDQ1
 
-			.record(ControlKey.SMALL_COMP_PROBABILITY, FILENAME) // RD_SBA1
-			.record(ControlKey.SMALL_COMP_BA, FILENAME) // RD_SBA2
-			.record(ControlKey.SMALL_COMP_DQ, FILENAME) // RD_SDQ1
-			.record(ControlKey.SMALL_COMP_HL, FILENAME) // RD_SHL1
-			.record(ControlKey.SMALL_COMP_WS_VOLUME, FILENAME) // RD_SVT1
+			.doRecord(ControlKey.SMALL_COMP_PROBABILITY, FILENAME) // RD_SBA1
+			.doRecord(ControlKey.SMALL_COMP_BA, FILENAME) // RD_SBA2
+			.doRecord(ControlKey.SMALL_COMP_DQ, FILENAME) // RD_SDQ1
+			.doRecord(ControlKey.SMALL_COMP_HL, FILENAME) // RD_SHL1
+			.doRecord(ControlKey.SMALL_COMP_WS_VOLUME, FILENAME) // RD_SVT1
 
-			.record(ControlKey.TOTAL_STAND_WHOLE_STEM_VOL, FILENAME) // RD_YVT1 IPSJF117
-			.record(ControlKey.UTIL_COMP_WS_VOLUME, FILENAME) // RD_YVT2 IPSJF121
-			.record(ControlKey.CLOSE_UTIL_VOLUME, FILENAME) // RD_YVC1 IPSJF122
-			.record(ControlKey.VOLUME_NET_DECAY, FILENAME) // RD_YVD1 IPSJF123
-			.record(ControlKey.VOLUME_NET_DECAY_WASTE, FILENAME) // RD_YVW1 IPSJF123
-			.record(ControlKey.BREAKAGE, FILENAME) // RD_EMP95 IPSJF157
+			.doRecord(ControlKey.TOTAL_STAND_WHOLE_STEM_VOL, FILENAME) // RD_YVT1 IPSJF117
+			.doRecord(ControlKey.UTIL_COMP_WS_VOLUME, FILENAME) // RD_YVT2 IPSJF121
+			.doRecord(ControlKey.CLOSE_UTIL_VOLUME, FILENAME) // RD_YVC1 IPSJF122
+			.doRecord(ControlKey.VOLUME_NET_DECAY, FILENAME) // RD_YVD1 IPSJF123
+			.doRecord(ControlKey.VOLUME_NET_DECAY_WASTE, FILENAME) // RD_YVW1 IPSJF123
+			.doRecord(ControlKey.BREAKAGE, FILENAME) // RD_EMP95 IPSJF157
 
-			.record(ControlKey.VETERAN_LAYER_VOLUME_ADJUST, FILENAME) // RD_YVET
-			.record(ControlKey.VETERAN_LAYER_DQ, FILENAME) // RD_YDQV
-			.record(ControlKey.VETERAN_BQ, FILENAME) // RD_E098
+			.doRecord(ControlKey.VETERAN_LAYER_VOLUME_ADJUST, FILENAME) // RD_YVET
+			.doRecord(ControlKey.VETERAN_LAYER_DQ, FILENAME) // RD_YDQV
+			.doRecord(ControlKey.VETERAN_BQ, FILENAME) // RD_E098
 
-			.record(
+			.doRecord(
 					ControlKey.MINIMA,
 					ValueParser.toMap(
 							ValueParser.list(ValueParser.FLOAT),
@@ -138,9 +138,9 @@ public class FipControlParser {
 					)
 			)
 
-			.record(ControlKey.MODIFIER_FILE, ValueParser.optional(FILENAME)) // RD_E198 IPSJF155, XII
+			.doRecord(ControlKey.MODIFIER_FILE, ValueParser.optional(FILENAME)) // RD_E198 IPSJF155, XII
 
-			.record(ControlKey.DEBUG_SWITCHES, ValueParser.list(ValueParser.INTEGER)) // IPSJF155
+			.doRecord(ControlKey.DEBUG_SWITCHES, ValueParser.list(ValueParser.INTEGER)) // IPSJF155
 	/*
 	 * Debug switches (25) 0=default See IPSJF155, App IX 1st: 1: Do NOT apply BA
 	 * limits from SEQ043 2nd: 1: Do NOT apply DQ limits from SEQ043 4th: Future
@@ -148,16 +148,15 @@ public class FipControlParser {
 	 * messages. 1: show some MATH77 errors; 2: show all. 22nd 1: extra preference
 	 * for preferred sp (SEQ 010).
 	 */
-
 	;
 
-	JProgram jprogram = JProgram.FIP_START; // FIPSTART only TODO Track this down
+	private static final JProgram jprogram = JProgram.FIP_START;
 
 	public FipControlParser() {
-
+		// Nothing to do
 	}
 
-	List<ControlMapModifier> DATA_FILES = Arrays.asList(
+	private static final List<ControlMapModifier> DATA_FILES = Arrays.asList(
 
 			// V7O_FIP
 			new FipPolygonParser(),
@@ -169,7 +168,7 @@ public class FipControlParser {
 			new FipSpeciesParser()
 	);
 
-	List<ControlMapModifier> BASIC_DEFINITIONS = Arrays.asList(
+	private static final List<ControlMapModifier> BASIC_DEFINITIONS = Arrays.asList(
 
 			// RD_BEC
 			new BecDefinitionParser(),
@@ -181,7 +180,7 @@ public class FipControlParser {
 			new GenusDefinitionParser()
 	);
 
-	List<ControlMapModifier> GROUP_DEFINITIONS = Arrays.asList(
+	private static final List<ControlMapModifier> GROUP_DEFINITIONS = Arrays.asList(
 
 			// RD_VGRP
 			new VolumeEquationGroupParser(),
@@ -199,7 +198,7 @@ public class FipControlParser {
 			new EquationModifierParser()
 	);
 
-	List<ControlMapModifier> FIPSTART_ONLY = Arrays.asList(
+	private static final List<ControlMapModifier> FIPSTART_ONLY = Arrays.asList(
 
 			// RD_STK33
 			new StockingClassFactorParser()
@@ -210,7 +209,7 @@ public class FipControlParser {
 	 * .le. 0.0) FMINVetH=10.0
 	 */
 	);
-	List<ControlMapModifier> SITE_CURVES = Arrays.asList(
+	private static final List<ControlMapModifier> SITE_CURVES = Arrays.asList(
 
 			// User-assigned SC's (Site Curve Numbers)
 			//
@@ -223,7 +222,7 @@ public class FipControlParser {
 			new SiteCurveAgeMaximumParser()
 	);
 
-	List<ControlMapModifier> COEFFICIENTS = Arrays.asList(
+	private static final List<ControlMapModifier> COEFFICIENTS = Arrays.asList(
 			new BaseAreaCoefficientParser(),
 
 			new QuadMeanDiameterCoefficientParser(),
@@ -303,7 +302,7 @@ public class FipControlParser {
 			new VeteranBAParser()
 	);
 
-	List<ControlMapModifier> ADDITIONAL_MODIFIERS = Arrays.asList(
+	private static final List<ControlMapModifier> ADDITIONAL_MODIFIERS = Arrays.asList(
 
 			// RD_E198
 			new ModifierParser(jprogram)

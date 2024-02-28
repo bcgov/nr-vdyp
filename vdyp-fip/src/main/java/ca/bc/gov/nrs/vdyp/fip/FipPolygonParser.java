@@ -12,6 +12,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ControlMapValueReplacer;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.AbstractStreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
+import ca.bc.gov.nrs.vdyp.io.parse.value.ControlledValueParser;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParser;
 import ca.bc.gov.nrs.vdyp.model.FipMode;
 
@@ -36,7 +37,7 @@ public class FipPolygonParser implements ControlMapValueReplacer<StreamingParser
 					throws IOException, ResourceParseException {
 		return () -> {
 			var lineParser = new LineParser().strippedString(25, POLYGON_IDENTIFIER).space(1)
-					.strippedString(1, FOREST_INVENTORY_ZONE).space(1).value(4, BIOGEOGRAPHIC_ZONE, ValueParser.BEC)
+					.strippedString(1, FOREST_INVENTORY_ZONE).space(1).value(4, BIOGEOGRAPHIC_ZONE, ControlledValueParser.BEC)
 					.space(1).value(4, PERCENT_FOREST_LAND, ValueParser.optional(ValueParser.FLOAT)).space(1)
 					.value(2, FIP_MODE, ValueParser.optional(ValueParser.INTEGER)).space(1)
 					.value(5, NONPRODUCTIVE_DESCRIPTION, ValueParser.optional(ValueParser.STRING))

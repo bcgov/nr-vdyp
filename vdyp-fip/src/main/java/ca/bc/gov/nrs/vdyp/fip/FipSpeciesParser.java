@@ -53,15 +53,15 @@ public class FipSpeciesParser
 					ValueParser.valueOrMarker(
 							ValueParser.LAYER, ValueParser.optionalSingleton("Z"::equals, EndOfRecord.END_OF_RECORD)
 					)
-			).space(1).value(2, GENUS, ControlledValueParser.optional(ValueParser.GENUS))
+			).space(1).value(2, GENUS, ControlledValueParser.optional(ControlledValueParser.GENUS))
 					.value(6, PERCENT_GENUS, ValueParser.PERCENTAGE)
-					.value(3, SPECIES_1, ControlledValueParser.optional(ValueParser.SPECIES))
+					.value(3, SPECIES_1, ControlledValueParser.optional(ControlledValueParser.SPECIES))
 					.value(5, PERCENT_SPECIES_1, ValueParser.PERCENTAGE)
-					.value(3, SPECIES_2, ControlledValueParser.optional(ValueParser.SPECIES))
+					.value(3, SPECIES_2, ControlledValueParser.optional(ControlledValueParser.SPECIES))
 					.value(5, PERCENT_SPECIES_2, ValueParser.PERCENTAGE)
-					.value(3, SPECIES_3, ControlledValueParser.optional(ValueParser.SPECIES))
+					.value(3, SPECIES_3, ControlledValueParser.optional(ControlledValueParser.SPECIES))
 					.value(5, PERCENT_SPECIES_3, ValueParser.PERCENTAGE)
-					.value(3, SPECIES_4, ControlledValueParser.optional(ValueParser.SPECIES))
+					.value(3, SPECIES_4, ControlledValueParser.optional(ControlledValueParser.SPECIES))
 					.value(5, PERCENT_SPECIES_4, ValueParser.PERCENTAGE);
 
 			var is = fileResolver.resolveForInput(fileName);
@@ -97,13 +97,13 @@ public class FipSpeciesParser
 					var percentSpecies4 = (Float) entry.get(PERCENT_SPECIES_4);
 
 					var layerBuilder = new ValueOrMarker.Builder<Optional<FipSpecies>, EndOfRecord>();
-					return layer.handle(l -> {
-						return layerBuilder.value(l.map(layerType -> {
+					return layer.handle(l -> 
+						layerBuilder.value(l.map(layerType -> {
 							Map<String, Float> speciesPercent = new LinkedHashMap<>();
-							species1.ifPresent((sp) -> speciesPercent.put(sp, percentSpecies1));
-							species2.ifPresent((sp) -> speciesPercent.put(sp, percentSpecies2));
-							species3.ifPresent((sp) -> speciesPercent.put(sp, percentSpecies3));
-							species4.ifPresent((sp) -> speciesPercent.put(sp, percentSpecies4));
+							species1.ifPresent(sp -> speciesPercent.put(sp, percentSpecies1));
+							species2.ifPresent(sp -> speciesPercent.put(sp, percentSpecies2));
+							species3.ifPresent(sp -> speciesPercent.put(sp, percentSpecies3));
+							species4.ifPresent(sp -> speciesPercent.put(sp, percentSpecies4));
 							return FipSpecies.build(specBuilder -> {
 								specBuilder.polygonIdentifier(polygonId);
 								specBuilder.layerType(layerType);
@@ -111,8 +111,8 @@ public class FipSpeciesParser
 								specBuilder.percentGenus(percentGenus);
 								specBuilder.addSpecies(speciesPercent);
 							});
-						}));
-					}, layerBuilder::marker);
+						}))
+					, layerBuilder::marker);
 				}
 
 			};

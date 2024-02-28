@@ -16,10 +16,10 @@ import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
-public class NonPrimarySpeciesBasalAreaGrowthParserTest {
+class NonPrimarySpeciesBasalAreaGrowthParserTest {
 
 	@Test
-	public void readAllTest() {
+	void readAllTest() {
 		var parser = new NonPrimarySpeciesBasalAreaGrowthParser();
 	
 		Map<String, Object> controlMap = new HashMap<>();

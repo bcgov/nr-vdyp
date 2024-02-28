@@ -222,8 +222,8 @@ public class LineParser {
 	 * @throws ValueParseException
 	 */
 	public Map<String, Object> parseLine(String line, Map<String, Object> control) throws ValueParseException {
-		var segments = segmentize(line);
-		return parse(segments, control);
+		var lineSegments = segmentize(line);
+		return parse(lineSegments, control);
 	}
 
 	private Map<String, Object> parse(List<String> segmentStrings, Map<String, Object> control)
@@ -309,9 +309,9 @@ public class LineParser {
 			try {
 				var line = nextLine.get()
 						.orElseThrow(() -> new NoSuchElementException("Tried to get next entry when none exists"));
-				var segments = segmentize(line);
+				var lineSegments = segmentize(line);
 
-				var entry = parse(segments, control);
+				var entry = parse(lineSegments, control);
 
 				entry.put(LINE_NUMBER_KEY, lineNumber);
 
@@ -323,13 +323,14 @@ public class LineParser {
 			}
 		}
 
-		public boolean hasNext() throws IOException, ResourceParseLineException {
+		public boolean hasNext() throws IOException {
 			if (nextLine.isEmpty()) {
 				nextLine = Optional.of(doGetNextLine());
 			}
 			return nextLine.get().isPresent();
 		}
 
+		@SuppressWarnings("java:S135")
 		private Optional<String> doGetNextLine() throws IOException {
 			while (true) {
 				lineNumber++;
@@ -343,16 +344,15 @@ public class LineParser {
 				if (isIgnoredLine(line)) {
 					continue;
 				}
-				var segments = segmentize(line);
-				if (isStopSegment(segments)) {
+				var lineSegments = segmentize(line);
+				if (isStopSegment(lineSegments)) {
 					return Optional.empty();
 				}
-				if (isIgnoredSegment(segments)) {
+				if (isIgnoredSegment(lineSegments)) {
 					continue;
 				}
 
 				return Optional.of(line);
-
 			}
 		}
 
@@ -392,6 +392,8 @@ public class LineParser {
 	/**
 	 * If this returns true for a segmented line, parsing will stop and that line
 	 * will not be included in the result.
+	 * 
+	 * @param entry the segments of a given line
 	 */
 	public boolean isStopSegment(List<String> entry) {
 		return false;
@@ -400,6 +402,8 @@ public class LineParser {
 	/**
 	 * If this returns true for an unparsed line, parsing will stop and that line
 	 * will not be included in the result.
+	 * 
+	 * @param line the given line
 	 */
 	public boolean isStopLine(String line) {
 		return false;
@@ -408,6 +412,8 @@ public class LineParser {
 	/**
 	 * If this returns true for a segmented line, that line will not be included in
 	 * the result.
+	 * 
+	 * @param entry the segments of a given line
 	 */
 	public boolean isIgnoredSegment(List<String> entry) {
 		return false;
@@ -416,6 +422,8 @@ public class LineParser {
 	/**
 	 * If this returns true for an unparsed line, that line will not be included in
 	 * the result.
+	 * 
+	 * @param line the given line
 	 */
 	public boolean isIgnoredLine(String line) {
 		return false;

@@ -41,9 +41,7 @@ public class MatrixMapImpl<T> implements MatrixMap<T> {
 		}).toList();
 		var matrixSize = maps.stream().map(Map::size).reduce(1, (x, y) -> x * y);
 		matrix = new Object[matrixSize];
-		eachKey(k -> {
-			putM(defaultMapper.apply(k), k);
-		});
+		eachKey(k -> putM(defaultMapper.apply(k), k));
 	}
 
 	public MatrixMapImpl(Function<Object[], T> defaultValues, Collection<?>... dimensions) {

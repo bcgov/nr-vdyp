@@ -21,9 +21,10 @@ import ca.bc.gov.nrs.vdyp.test.TestUtils;
  * 
  * @author Michael Junkin, Vivid Solutions
  */
-public class CompVarAdjustmentsParserTest {
+class CompVarAdjustmentsParserTest {
 
 	@Test
+	@SuppressWarnings("java:S5961")
 	void testParseSimple() throws Exception {
 
 		var parser = new CompVarAdjustmentsParser();

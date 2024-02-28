@@ -76,77 +76,77 @@ public class VdypForwardControlParser {
 
 	ControlFileParser controlParser = new ControlFileParser()
 
-			.record(ControlKey.MAX_NUM_POLY, ValueParser.INTEGER)
+			.doRecord(ControlKey.MAX_NUM_POLY, ValueParser.INTEGER)
 
-			.record(ControlKey.BEC_DEF, FILENAME) // RD_BECD
-			.record(ControlKey.SP0_DEF, FILENAME) // RD_SP0
+			.doRecord(ControlKey.BEC_DEF, FILENAME) // RD_BECD
+			.doRecord(ControlKey.SP0_DEF, FILENAME) // RD_SP0
 
-			.record(ControlKey.VDYP_POLYGON, FILENAME) //
-			.record(ControlKey.VDYP_LAYER_BY_SPECIES, FILENAME) //
-			.record(ControlKey.VDYP_LAYER_BY_SP0_BY_UTIL, FILENAME) //
+			.doRecord(ControlKey.VDYP_POLYGON, FILENAME) //
+			.doRecord(ControlKey.VDYP_LAYER_BY_SPECIES, FILENAME) //
+			.doRecord(ControlKey.VDYP_LAYER_BY_SP0_BY_UTIL, FILENAME) //
 
-			.record(ControlKey.VOLUME_EQN_GROUPS, FILENAME) // RD_VGRP
-			.record(ControlKey.DECAY_GROUPS, FILENAME) // RD_DGRP
-			.record(ControlKey.BREAKAGE_GROUPS, FILENAME) // RD_BGRP IPSJF157
+			.doRecord(ControlKey.VOLUME_EQN_GROUPS, FILENAME) // RD_VGRP
+			.doRecord(ControlKey.DECAY_GROUPS, FILENAME) // RD_DGRP
+			.doRecord(ControlKey.BREAKAGE_GROUPS, FILENAME) // RD_BGRP IPSJF157
 
-			.record(ControlKey.SITE_CURVE_NUMBERS, ValueParser.optional(FILENAME)) // RD_E025
-			.record(ControlKey.SITE_CURVE_AGE_MAX, ValueParser.optional(FILENAME)) // RD_E026
+			.doRecord(ControlKey.SITE_CURVE_NUMBERS, ValueParser.optional(FILENAME)) // RD_E025
+			.doRecord(ControlKey.SITE_CURVE_AGE_MAX, ValueParser.optional(FILENAME)) // RD_E026
 
-			.record(ControlKey.PARAM_ADJUSTMENTS, ValueParser.optional(FILENAME)) // RD_E028
+			.doRecord(ControlKey.PARAM_ADJUSTMENTS, ValueParser.optional(FILENAME)) // RD_E028
 
-			.record(ControlKey.DEFAULT_EQ_NUM, FILENAME) // RD_GRBA1
-			.record(ControlKey.EQN_MODIFIERS, FILENAME) // RD_GMBA1
+			.doRecord(ControlKey.DEFAULT_EQ_NUM, FILENAME) // RD_GRBA1
+			.doRecord(ControlKey.EQN_MODIFIERS, FILENAME) // RD_GMBA1
 
-			.record(ControlKey.UPPER_BA_BY_CI_S0_P, FILENAME) // RD_E043 IPSJF128
+			.doRecord(ControlKey.UPPER_BA_BY_CI_S0_P, FILENAME) // RD_E043 IPSJF128
 
-			.record(ControlKey.HL_PRIMARY_SP_EQN_P1, FILENAME) // RD_YHL1
-			.record(ControlKey.HL_PRIMARY_SP_EQN_P2, FILENAME) // RD_YHL2
-			.record(ControlKey.HL_PRIMARY_SP_EQN_P3, FILENAME) // RD_YHL3
-			.record(ControlKey.HL_NONPRIMARY, FILENAME) // RD_YHL4
+			.doRecord(ControlKey.HL_PRIMARY_SP_EQN_P1, FILENAME) // RD_YHL1
+			.doRecord(ControlKey.HL_PRIMARY_SP_EQN_P2, FILENAME) // RD_YHL2
+			.doRecord(ControlKey.HL_PRIMARY_SP_EQN_P3, FILENAME) // RD_YHL3
+			.doRecord(ControlKey.HL_NONPRIMARY, FILENAME) // RD_YHL4
 
-			.record(ControlKey.BY_SPECIES_DQ, FILENAME) // RD_E060 IPFJF125
-			.record(ControlKey.SPECIES_COMPONENT_SIZE_LIMIT, FILENAME) // RD_E061 IPSJF158
+			.doRecord(ControlKey.BY_SPECIES_DQ, FILENAME) // RD_E060 IPFJF125
+			.doRecord(ControlKey.SPECIES_COMPONENT_SIZE_LIMIT, FILENAME) // RD_E061 IPSJF158
 
-			.record(ControlKey.UTIL_COMP_BA, FILENAME) // RD_UBA1
-			.record(ControlKey.UTIL_COMP_DQ, FILENAME) // RD_UDQ1
+			.doRecord(ControlKey.UTIL_COMP_BA, FILENAME) // RD_UBA1
+			.doRecord(ControlKey.UTIL_COMP_DQ, FILENAME) // RD_UDQ1
 
-			.record(ControlKey.SMALL_COMP_PROBABILITY, FILENAME) // RD_SBA1
-			.record(ControlKey.SMALL_COMP_BA, FILENAME) // RD_SBA2
-			.record(ControlKey.SMALL_COMP_DQ, FILENAME) // RD_SDQ1
-			.record(ControlKey.SMALL_COMP_HL, FILENAME) // RD_SHL1
-			.record(ControlKey.SMALL_COMP_WS_VOLUME, FILENAME) // RD_SVT1
+			.doRecord(ControlKey.SMALL_COMP_PROBABILITY, FILENAME) // RD_SBA1
+			.doRecord(ControlKey.SMALL_COMP_BA, FILENAME) // RD_SBA2
+			.doRecord(ControlKey.SMALL_COMP_DQ, FILENAME) // RD_SDQ1
+			.doRecord(ControlKey.SMALL_COMP_HL, FILENAME) // RD_SHL1
+			.doRecord(ControlKey.SMALL_COMP_WS_VOLUME, FILENAME) // RD_SVT1
 
-			.record(ControlKey.TOTAL_STAND_WHOLE_STEM_VOL, FILENAME) // RD_YVT1 IPSJF117
-			.record(ControlKey.UTIL_COMP_WS_VOLUME, FILENAME) // RD_YVT2 IPSJF121
-			.record(ControlKey.CLOSE_UTIL_VOLUME, FILENAME) // RD_YVC1 IPSJF122
-			.record(ControlKey.VOLUME_NET_DECAY, FILENAME) // RD_YVD1 IPSJF123
-			.record(ControlKey.VOLUME_NET_DECAY_WASTE, FILENAME) // RD_YVW1 IPSJF123
-			.record(ControlKey.BREAKAGE, FILENAME) // RD_EMP95 IPSJF157
+			.doRecord(ControlKey.TOTAL_STAND_WHOLE_STEM_VOL, FILENAME) // RD_YVT1 IPSJF117
+			.doRecord(ControlKey.UTIL_COMP_WS_VOLUME, FILENAME) // RD_YVT2 IPSJF121
+			.doRecord(ControlKey.CLOSE_UTIL_VOLUME, FILENAME) // RD_YVC1 IPSJF122
+			.doRecord(ControlKey.VOLUME_NET_DECAY, FILENAME) // RD_YVD1 IPSJF123
+			.doRecord(ControlKey.VOLUME_NET_DECAY_WASTE, FILENAME) // RD_YVW1 IPSJF123
+			.doRecord(ControlKey.BREAKAGE, FILENAME) // RD_EMP95 IPSJF157
 
-			.record(ControlKey.VETERAN_LAYER_VOLUME_ADJUST, FILENAME) // RD_YVET
-			.record(ControlKey.VETERAN_LAYER_DQ, FILENAME) // RD_YDQV
+			.doRecord(ControlKey.VETERAN_LAYER_VOLUME_ADJUST, FILENAME) // RD_YVET
+			.doRecord(ControlKey.VETERAN_LAYER_DQ, FILENAME) // RD_YDQV
 
-			.record(ControlKey.VTROL, new VdypVtrolParser())
+			.doRecord(ControlKey.VTROL, new VdypVtrolParser())
 
-			.record(ControlKey.BA_YIELD, FILENAME) // RD_E106
-			.record(ControlKey.DQ_YIELD, FILENAME) // RD_E107
-			.record(ControlKey.BA_DQ_UPPER_BOUNDS, FILENAME) // RD_E108
+			.doRecord(ControlKey.BA_YIELD, FILENAME) // RD_E106
+			.doRecord(ControlKey.DQ_YIELD, FILENAME) // RD_E107
+			.doRecord(ControlKey.BA_DQ_UPPER_BOUNDS, FILENAME) // RD_E108
 
-			.record(ControlKey.BA_GROWTH_FIAT, FILENAME) // RD_E111
-			.record(ControlKey.DQ_GROWTH_FIAT, FILENAME) // RD_E117
+			.doRecord(ControlKey.BA_GROWTH_FIAT, FILENAME) // RD_E111
+			.doRecord(ControlKey.DQ_GROWTH_FIAT, FILENAME) // RD_E117
 
-			.record(ControlKey.BA_GROWTH_EMPIRICAL, FILENAME) // RD_E121
-			.record(ControlKey.DQ_GROWTH_EMPIRICAL, FILENAME) // RD_E122
-			.record(ControlKey.DQ_GROWTH_EMPIRICAL_LIMITS, FILENAME) // RD_E123
+			.doRecord(ControlKey.BA_GROWTH_EMPIRICAL, FILENAME) // RD_E121
+			.doRecord(ControlKey.DQ_GROWTH_EMPIRICAL, FILENAME) // RD_E122
+			.doRecord(ControlKey.DQ_GROWTH_EMPIRICAL_LIMITS, FILENAME) // RD_E123
 
-			.record(ControlKey.PRIMARY_SP_BA_GROWTH, FILENAME) // RD_E148
-			.record(ControlKey.NON_PRIMARY_SP_BA_GROWTH, FILENAME) // RD_E149
-			.record(ControlKey.PRIMARY_SP_DQ_GROWTH, FILENAME) // RD_E150
-			.record(ControlKey.NON_PRIMARY_SP_DQ_GROWTH, FILENAME) // RD_E151
+			.doRecord(ControlKey.PRIMARY_SP_BA_GROWTH, FILENAME) // RD_E148
+			.doRecord(ControlKey.NON_PRIMARY_SP_BA_GROWTH, FILENAME) // RD_E149
+			.doRecord(ControlKey.PRIMARY_SP_DQ_GROWTH, FILENAME) // RD_E150
+			.doRecord(ControlKey.NON_PRIMARY_SP_DQ_GROWTH, FILENAME) // RD_E151
 
-			.record(ControlKey.MODIFIER_FILE, ValueParser.optional(FILENAME)) // RD_E198 IPSJF155, XII
+			.doRecord(ControlKey.MODIFIER_FILE, ValueParser.optional(FILENAME)) // RD_E198 IPSJF155, XII
 
-			.record(ControlKey.DEBUG_SWITCHES, ValueParser.list(ValueParser.INTEGER));
+			.doRecord(ControlKey.DEBUG_SWITCHES, ValueParser.list(ValueParser.INTEGER));
 				//	Debug switches (25) 
 				//     0 is the default value. See IPSJF155, App. IX
 				//    (1) = 1 to DIASABLE species dynamics

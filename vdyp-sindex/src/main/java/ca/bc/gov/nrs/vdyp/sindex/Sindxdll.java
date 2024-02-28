@@ -3176,7 +3176,7 @@ public class Sindxdll {
 	 */
 	public static short HtAgeToSI(short curve, double age, short ageType, double height, short estType, double[] site) {
 		// Here the original uses a pointer. I have replaced all pointers with arrays.
-		site[0] = Height2SiteIndex.height_to_index(curve, age, ageType, height, estType);
+		site[0] = Height2SiteIndex.heightToIndex(curve, age, ageType, height, estType);
 
 		return 0;
 	}
@@ -3211,7 +3211,7 @@ public class Sindxdll {
 	 */
 	public static short
 			HtSIToAge(short curve, double height, short ageType, double siteIndex, double y2bh, double[] age) {
-		age[0] = SiteIndex2Age.index_to_age(curve, height, ageType, siteIndex, y2bh);
+		age[0] = SiteIndex2Age.indexToAge(curve, height, ageType, siteIndex, y2bh);
 
 		return 0;
 	}
@@ -3410,7 +3410,7 @@ public class Sindxdll {
 	 * @throws ForestInventoryZoneException if FIZ code is unknown
 	 */
 	public static short SCToSI(short sp_index, char sitecl, char fiz, double[] site) {
-		site[0] = SiteClassCode2SiteIndex.class_to_index(sp_index, sitecl, fiz);
+		site[0] = SiteClassCode2SiteIndex.classToIndex(sp_index, sitecl, fiz);
 
 		return 0;
 	}

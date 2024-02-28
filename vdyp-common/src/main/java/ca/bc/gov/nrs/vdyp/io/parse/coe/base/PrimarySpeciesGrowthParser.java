@@ -44,7 +44,7 @@ public abstract class PrimarySpeciesGrowthParser
 	public static final String MODEL_NUMBER_KEY = "Model";
 	public static final String COEFFICIENTS_KEY = "Coefficients";
 
-	public PrimarySpeciesGrowthParser() {
+	protected PrimarySpeciesGrowthParser() {
 
 		this.lineParser = new LineParser() {
 					@Override

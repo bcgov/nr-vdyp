@@ -6,6 +6,7 @@ package ca.bc.gov.nrs.vdyp.application;
  *
  * @author Michael Junkin, Vivid Solutions
  */
+@SuppressWarnings("java:S115")
 public enum VdypApplicationIdentifier {
 	
 	FIPStart(1),

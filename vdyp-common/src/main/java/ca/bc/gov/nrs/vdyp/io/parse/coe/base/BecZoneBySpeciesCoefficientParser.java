@@ -38,7 +38,7 @@ public abstract class BecZoneBySpeciesCoefficientParser implements ControlMapSub
 	private final int nCoefficients;
 	private static final int NUM_SPECIES = 16;
 
-	public BecZoneBySpeciesCoefficientParser(int nCoefficients) {
+	protected BecZoneBySpeciesCoefficientParser(int nCoefficients) {
 
 		this.nCoefficients = nCoefficients;
 
@@ -95,9 +95,9 @@ public abstract class BecZoneBySpeciesCoefficientParser implements ControlMapSub
 				);
 			}
 
-			BecDefinitionParser.getBecs(control).get(becZoneId).orElseThrow(
-					() -> new ValueParseException("BEC Zone Id " + becZoneId + " is not a recognized BEC Zone")
-			);
+			if (BecDefinitionParser.getBecs(control).get(becZoneId).isEmpty()) {
+				throw new ValueParseException(MessageFormat.format("Line {0}: BEC Zone Id {1} is not a recognized BEC Zone", lineNumber, becZoneId));
+			}
 
 			var specIt = sp0Aliases.iterator();
 

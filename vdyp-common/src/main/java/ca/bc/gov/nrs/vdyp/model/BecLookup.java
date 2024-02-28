@@ -90,7 +90,7 @@ public class BecLookup {
 		if (scope.isBlank()) {
 			return this.getBecs();
 		}
-		return Region.fromAlias(scope).map(region -> this.getBecsForRegion(region))
+		return Region.fromAlias(scope).map(this::getBecsForRegion)
 				.orElseGet(() -> this.get(scope).map(Collections::singletonList).orElseGet(Collections::emptyList));
 	}
 

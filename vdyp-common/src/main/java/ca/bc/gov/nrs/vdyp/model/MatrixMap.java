@@ -69,7 +69,7 @@ public interface MatrixMap<T> {
 				@Override
 				public Set<Entry<K1, T>> entrySet() {
 					return (Set) o.getDimensions().get(0).stream().filter(k -> o.getM(k) != null)
-							.collect(Collectors.toMap(k -> k, k -> o.getM(k))).entrySet();
+							.collect(Collectors.toMap(k -> k, o::getM)).entrySet();
 				}
 
 				@Override
@@ -142,9 +142,7 @@ public interface MatrixMap<T> {
 	 * @param value
 	 */
 	public default void setAll(Function<Object[], T> generator) {
-		eachKey((k) -> {
-			putM(generator.apply(k), k);
-		});
+		eachKey(k -> putM(generator.apply(k), k));
 	}
 
 	public static <U> Optional<U> safeGet(MatrixMap<Optional<U>> map, Object... params) {

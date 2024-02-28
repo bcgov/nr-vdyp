@@ -62,7 +62,7 @@ public class FipLayerParser
 					.floating(5, SITE_INDEX) //
 					.floating(5, CROWN_CLOSURE) //
 					.space(3) //
-					.value(2, SITE_SP0, ControlledValueParser.optional(ValueParser.GENUS)) //
+					.value(2, SITE_SP0, ControlledValueParser.optional(ControlledValueParser.GENUS)) //
 					.value(3, SITE_SP64, ControlledValueParser.optional(ValueParser.STRING)) //
 					.floating(5, YEARS_TO_BREAST_HEIGHT) //
 					.value(1, STOCKING_CLASS, ValueParser.optional(ValueParser.CHARACTER)) //
@@ -144,11 +144,11 @@ public class FipLayerParser
 
 				@Override
 				protected boolean skip(ValueOrMarker<Optional<FipLayer>, EndOfRecord> nextChild) {
-					return nextChild.getValue().map(x -> x.map(layer -> {
+					return nextChild.getValue().map(x -> x.map(layer ->
 						// TODO log this
 						// If the layer is present but has height or closure that's not positive, ignore
-						return layer.getHeightSafe() <= 0f || layer.getCrownClosure() <= 0f;
-					}).orElse(true)) // If the layer is not present (Unknown layer type) ignore
+						layer.getHeightSafe() <= 0f || layer.getCrownClosure() <= 0f
+					).orElse(true)) // If the layer is not present (Unknown layer type) ignore
 							.orElse(false); // If it's a marker, let it through so the stop method can see it.
 				}
 

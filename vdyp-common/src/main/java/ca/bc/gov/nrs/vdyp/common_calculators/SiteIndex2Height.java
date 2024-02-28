@@ -2707,7 +2707,7 @@ public static double gi_si2ht (
   /* loop until real close */
   do
     {
-    test_site = Height2SiteIndex.height_to_index(cu_index, age, (short)SI_AT_BREAST, si2ht, (short) SI_EST_DIRECT);
+    test_site = Height2SiteIndex.heightToIndex(cu_index, age, (short)SI_AT_BREAST, si2ht, (short) SI_EST_DIRECT);
 /*
 printf ("age=%3.0f, site=%5.2f, test_site=%5.2f, si2ht=%5.2f, step=%9.7f\n",
   age, site_index, test_site, si2ht, step);

@@ -671,7 +671,7 @@ public class SpecRMap {
 			return SI_SPEC_ACB;
 		}
 		if (sc2.equals("B")) {
-			switch (FizCheck.fiz_check(fiz)) {
+			switch (FizCheck.fizCheck(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_BA;
 			case FIZ_INTERIOR:
@@ -693,7 +693,7 @@ public class SpecRMap {
 			return SI_SPEC_BL;
 		}
 		if (sc2.equals("BC")) {
-			switch (FizCheck.fiz_check(fiz)) {
+			switch (FizCheck.fizCheck(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_BA;
 			case FIZ_INTERIOR:
@@ -722,7 +722,7 @@ public class SpecRMap {
 		}
 //  if (sc2.equals("BV")){ return SI_SPEC_AT;}
 		if (sc2.equals("C")) {
-			switch (FizCheck.fiz_check(fiz)) {
+			switch (FizCheck.fizCheck(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_CWC;
 			case FIZ_INTERIOR:
@@ -732,7 +732,7 @@ public class SpecRMap {
 			}
 		}
 		if (sc2.equals("CI")) {
-			switch (FizCheck.fiz_check(fiz)) {
+			switch (FizCheck.fizCheck(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_CWC;
 			case FIZ_INTERIOR:
@@ -745,7 +745,7 @@ public class SpecRMap {
 			return SI_SPEC_ACT;
 		}
 		if (sc2.equals("CP")) {
-			switch (FizCheck.fiz_check(fiz)) {
+			switch (FizCheck.fizCheck(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_CWC;
 			case FIZ_INTERIOR:
@@ -758,7 +758,7 @@ public class SpecRMap {
 			return SI_SPEC_ACT;
 		}
 		if (sc2.equals("CW")) {
-			switch (FizCheck.fiz_check(fiz)) {
+			switch (FizCheck.fizCheck(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_CWC;
 			case FIZ_INTERIOR:
@@ -774,7 +774,7 @@ public class SpecRMap {
 			return SI_SPEC_CWI;
 		}
 		if (sc2.equals("CY")) {
-			switch (FizCheck.fiz_check(fiz)) {
+			switch (FizCheck.fizCheck(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_CWC;
 			case FIZ_INTERIOR:
@@ -787,7 +787,7 @@ public class SpecRMap {
 			return SI_SPEC_DR;
 		}
 		if (sc2.equals("DF")) {
-			switch (FizCheck.fiz_check(fiz)) {
+			switch (FizCheck.fizCheck(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_FDC;
 			case FIZ_INTERIOR:
@@ -830,7 +830,7 @@ public class SpecRMap {
 			return SI_SPEC_EP;
 		}
 		if (sc2.equals("F")) {
-			switch (FizCheck.fiz_check(fiz)) {
+			switch (FizCheck.fizCheck(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_FDC;
 			case FIZ_INTERIOR:
@@ -840,7 +840,7 @@ public class SpecRMap {
 			}
 		}
 		if (sc2.equals("FD")) {
-			switch (FizCheck.fiz_check(fiz)) {
+			switch (FizCheck.fizCheck(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_FDC;
 			case FIZ_INTERIOR:
@@ -865,7 +865,7 @@ public class SpecRMap {
 			return SI_SPEC_DR;
 		}
 		if (sc2.equals("H")) {
-			switch (FizCheck.fiz_check(fiz)) {
+			switch (FizCheck.fizCheck(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_HWC;
 			case FIZ_INTERIOR:
@@ -878,7 +878,7 @@ public class SpecRMap {
 			return SI_SPEC_HM;
 		}
 		if (sc2.equals("HW")) {
-			switch (FizCheck.fiz_check(fiz)) {
+			switch (FizCheck.fizCheck(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_HWC;
 			case FIZ_INTERIOR:
@@ -894,7 +894,7 @@ public class SpecRMap {
 			return SI_SPEC_HWI;
 		}
 		if (sc2.equals("HXM")) {
-			switch (FizCheck.fiz_check(fiz)) {
+			switch (FizCheck.fizCheck(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_HWC;
 			case FIZ_INTERIOR:
@@ -904,7 +904,7 @@ public class SpecRMap {
 			}
 		}
 		if (sc2.equals("IG")) {
-			switch (FizCheck.fiz_check(fiz)) {
+			switch (FizCheck.fizCheck(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_CWC;
 			case FIZ_INTERIOR:
@@ -914,7 +914,7 @@ public class SpecRMap {
 			}
 		}
 		if (sc2.equals("IS")) {
-			switch (FizCheck.fiz_check(fiz)) {
+			switch (FizCheck.fizCheck(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_CWC;
 			case FIZ_INTERIOR:
@@ -924,7 +924,7 @@ public class SpecRMap {
 			}
 		}
 		if (sc2.equals("J")) {
-			switch (FizCheck.fiz_check(fiz)) {
+			switch (FizCheck.fizCheck(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_CWC;
 			case FIZ_INTERIOR:
@@ -934,7 +934,7 @@ public class SpecRMap {
 			}
 		}
 		if (sc2.equals("JR")) {
-			switch (FizCheck.fiz_check(fiz)) {
+			switch (FizCheck.fizCheck(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_CWC;
 			case FIZ_INTERIOR:
@@ -986,7 +986,7 @@ public class SpecRMap {
 			return SI_SPEC_DR;
 		}
 		if (sc2.equals("OA")) {
-			switch (FizCheck.fiz_check(fiz)) {
+			switch (FizCheck.fizCheck(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_CWC;
 			case FIZ_INTERIOR:
@@ -996,7 +996,7 @@ public class SpecRMap {
 			}
 		}
 		if (sc2.equals("OB")) {
-			switch (FizCheck.fiz_check(fiz)) {
+			switch (FizCheck.fizCheck(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_CWC;
 			case FIZ_INTERIOR:
@@ -1006,7 +1006,7 @@ public class SpecRMap {
 			}
 		}
 		if (sc2.equals("OC")) {
-			switch (FizCheck.fiz_check(fiz)) {
+			switch (FizCheck.fizCheck(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_CWC;
 			case FIZ_INTERIOR:
@@ -1085,7 +1085,7 @@ public class SpecRMap {
 			return SI_SPEC_DR;
 		}
 		if (sc2.equals("S")) { // Duplicate case? Unreachable
-			switch (FizCheck.fiz_check(fiz)) {
+			switch (FizCheck.fizCheck(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_SS;
 			case FIZ_INTERIOR:
@@ -1116,7 +1116,7 @@ public class SpecRMap {
 			return SI_SPEC_SW;
 		}
 		if (sc2.equals("SX")) {
-			switch (FizCheck.fiz_check(fiz)) {
+			switch (FizCheck.fizCheck(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_SS;
 			case FIZ_INTERIOR:
@@ -1129,7 +1129,7 @@ public class SpecRMap {
 			return SI_SPEC_SW;
 		}
 		if (sc2.equals("SXE")) {
-			switch (FizCheck.fiz_check(fiz)) {
+			switch (FizCheck.fizCheck(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_SS;
 			case FIZ_INTERIOR:
@@ -1139,7 +1139,7 @@ public class SpecRMap {
 			}
 		}
 		if (sc2.equals("SXL")) {
-			switch (FizCheck.fiz_check(fiz)) {
+			switch (FizCheck.fizCheck(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_SS;
 			case FIZ_INTERIOR:
@@ -1149,7 +1149,7 @@ public class SpecRMap {
 			}
 		}
 		if (sc2.equals("SXS")) {
-			switch (FizCheck.fiz_check(fiz)) {
+			switch (FizCheck.fizCheck(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_SS;
 			case FIZ_INTERIOR:
@@ -1162,7 +1162,7 @@ public class SpecRMap {
 			return SI_SPEC_SW;
 		}
 		if (sc2.equals("SXX")) {
-			switch (FizCheck.fiz_check(fiz)) {
+			switch (FizCheck.fizCheck(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_SS;
 			case FIZ_INTERIOR:
@@ -1172,7 +1172,7 @@ public class SpecRMap {
 			}
 		}
 		if (sc2.equals("T")) {
-			switch (FizCheck.fiz_check(fiz)) {
+			switch (FizCheck.fizCheck(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_HWC;
 			case FIZ_INTERIOR:
@@ -1182,7 +1182,7 @@ public class SpecRMap {
 			}
 		}
 		if (sc2.equals("TW")) {
-			switch (FizCheck.fiz_check(fiz)) {
+			switch (FizCheck.fizCheck(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_HWC;
 			case FIZ_INTERIOR:
@@ -1240,7 +1240,7 @@ public class SpecRMap {
 			return SI_SPEC_AT;
 		}
 		if (sc2.equals("X")) {
-			switch (FizCheck.fiz_check(fiz)) {
+			switch (FizCheck.fizCheck(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_FDC;
 			case FIZ_INTERIOR:
@@ -1250,7 +1250,7 @@ public class SpecRMap {
 			}
 		}
 		if (sc2.equals("XC")) {
-			switch (FizCheck.fiz_check(fiz)) {
+			switch (FizCheck.fizCheck(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_FDC;
 			case FIZ_INTERIOR:
@@ -1263,7 +1263,7 @@ public class SpecRMap {
 			return SI_SPEC_AT;
 		}
 		if (sc2.equals("Y")) {
-			switch (FizCheck.fiz_check(fiz)) {
+			switch (FizCheck.fizCheck(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_CWC;
 			case FIZ_INTERIOR:
@@ -1273,7 +1273,7 @@ public class SpecRMap {
 			}
 		}
 		if (sc2.equals("YC")) {
-			switch (FizCheck.fiz_check(fiz)) {
+			switch (FizCheck.fizCheck(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_CWC;
 			case FIZ_INTERIOR:
@@ -1283,7 +1283,7 @@ public class SpecRMap {
 			}
 		}
 		if (sc2.equals("YP")) {
-			switch (FizCheck.fiz_check(fiz)) {
+			switch (FizCheck.fizCheck(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_CWC;
 			case FIZ_INTERIOR:
@@ -1293,7 +1293,7 @@ public class SpecRMap {
 			}
 		}
 		if (sc2.equals("Z")) {
-			switch (FizCheck.fiz_check(fiz)) {
+			switch (FizCheck.fizCheck(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_FDC;
 			case FIZ_INTERIOR:
@@ -1303,7 +1303,7 @@ public class SpecRMap {
 			}
 		}
 		if (sc2.equals("ZC")) {
-			switch (FizCheck.fiz_check(fiz)) {
+			switch (FizCheck.fizCheck(fiz)) {
 			case FIZ_COAST:
 				return SI_SPEC_FDC;
 			case FIZ_INTERIOR:

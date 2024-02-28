@@ -167,7 +167,7 @@ public abstract class BaseCoefficientParser<T extends Coefficients, W, M extends
 		return this;
 	}
 
-	public <K> BaseCoefficientParser<T, W, M> coefficients(int number, int length) {
+	public BaseCoefficientParser<T, W, M> coefficients(int number, int length) {
 		lineParser.multiValue(number, length, COEFFICIENTS_KEY, ValueParser.FLOAT);
 		this.numCoefficients = number;
 		this.defaultEntryValuator = Optional.empty();
@@ -175,7 +175,7 @@ public abstract class BaseCoefficientParser<T extends Coefficients, W, M extends
 		return this;
 	}
 
-	public <K> BaseCoefficientParser<T, W, M> coefficients(
+	public BaseCoefficientParser<T, W, M> coefficients(
 			int number, int length, Optional<Function<Void, T>> defaultEntryValuator,
 			Optional<IntFunction<Float>> defaultCoefficientValuator
 	) {

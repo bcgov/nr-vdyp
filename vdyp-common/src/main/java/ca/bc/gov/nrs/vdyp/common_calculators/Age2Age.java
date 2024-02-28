@@ -83,12 +83,17 @@ public class Age2Age {
 	private static final int SI_SE_NIGHTA = 110;
 	private static final int SI_SW_NIGHTA2004 = 111;
 	private static final int SI_PLI_NIGHTA2004 = 109;
+	
+	private static final String UNKNOWN_AGE_TYPE_PROVIDED = "Unknown age type provided";
 
-	public static double age_to_age(short cu_index, double age1, short age1_type, short age2_type, double y2bh) {
+	private Age2Age() {}
+	
+	@SuppressWarnings({"java:S6541", "java:S3776", "java:S100", "java:S1479"})
+	public static double age_to_age(short cuIndex, double age1, short age1Type, short age2Type, double y2bh) {
 		double returnValue;
 
 		boolean shouldBranch;
-		switch (cu_index) {
+		switch (cuIndex) {
 		case SI_ACB_HUANGAC:
 			shouldBranch = true;
 			break;
@@ -205,8 +210,8 @@ public class Age2Age {
 		}
 
 		if (shouldBranch) {
-			if (age1_type == SI_AT_BREAST) {
-				if (age2_type == SI_AT_TOTAL) {
+			if (age1Type == SI_AT_BREAST) {
+				if (age2Type == SI_AT_TOTAL) {
 					/* convert to total age */
 					returnValue = age1 + y2bh - 0.5;
 					if (returnValue < 0) {
@@ -214,11 +219,11 @@ public class Age2Age {
 					}
 					return returnValue;
 				}
-				throw new AgeTypeErrorException("Unkown age type provided");
+				throw new AgeTypeErrorException(UNKNOWN_AGE_TYPE_PROVIDED);
 			}
 
-			if (age1_type == SI_AT_TOTAL) {
-				if (age2_type == SI_AT_BREAST) {
+			if (age1Type == SI_AT_TOTAL) {
+				if (age2Type == SI_AT_BREAST) {
 					/* convert to breast-height age */
 					returnValue = age1 - y2bh + 0.5;
 					if (returnValue < 0) {
@@ -226,11 +231,11 @@ public class Age2Age {
 					}
 					return returnValue;
 				}
-				throw new AgeTypeErrorException("Unkown age type provided");
+				throw new AgeTypeErrorException(UNKNOWN_AGE_TYPE_PROVIDED);
 			}
 		} else {
-			if (age1_type == SI_AT_BREAST) {
-				if (age2_type == SI_AT_TOTAL) {
+			if (age1Type == SI_AT_BREAST) {
+				if (age2Type == SI_AT_TOTAL) {
 					/* convert to total age */
 					returnValue = age1 + y2bh;
 					if (returnValue < 0) {
@@ -238,11 +243,11 @@ public class Age2Age {
 					}
 					return returnValue;
 				}
-				throw new AgeTypeErrorException("Unkown age type provided");
+				throw new AgeTypeErrorException(UNKNOWN_AGE_TYPE_PROVIDED);
 			}
 
-			if (age1_type == SI_AT_TOTAL) {
-				if (age2_type == SI_AT_BREAST) {
+			if (age1Type == SI_AT_TOTAL) {
+				if (age2Type == SI_AT_BREAST) {
 					/* convert to breast-height age */
 					returnValue = age1 - y2bh;
 					if (returnValue < 0) {
@@ -250,10 +255,10 @@ public class Age2Age {
 					}
 					return returnValue;
 				}
-				throw new AgeTypeErrorException("Unkown age type provided");
+				throw new AgeTypeErrorException(UNKNOWN_AGE_TYPE_PROVIDED);
 			}
 		}
-		throw new AgeTypeErrorException("Unkown age type provided");
+		throw new AgeTypeErrorException(UNKNOWN_AGE_TYPE_PROVIDED);
 	}
 
 }

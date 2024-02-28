@@ -13,6 +13,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.fip.model.FipPolygon;
@@ -22,10 +24,10 @@ import ca.bc.gov.nrs.vdyp.model.FipMode;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
 
-public class FipPolygonParserTest {
+class FipPolygonParserTest {
 
 	@Test
-	public void testParseEmpty() throws Exception {
+	void testParseEmpty() throws Exception {
 
 		var parser = new FipPolygonParser();
 
@@ -51,7 +53,7 @@ public class FipPolygonParserTest {
 	}
 
 	@Test
-	public void testParsePolygon() throws Exception {
+	void testParsePolygon() throws Exception {
 
 		var parser = new FipPolygonParser();
 
@@ -89,45 +91,8 @@ public class FipPolygonParserTest {
 	}
 
 	@Test
-	public void testParsePolygonWithBlanks() throws Exception {
-
-		var parser = new FipPolygonParser();
-
-		Map<String, Object> controlMap = new HashMap<>();
-
-		controlMap.put(ControlKey.FIP_YIELD_POLY_INPUT.name(), "test.dat");
-		TestUtils.populateControlMapBecReal(controlMap);
-
-		var fileResolver = TestUtils.fileResolver(
-				"test.dat", TestUtils.makeInputStream("01002 S000001 00     1970 A CWH                    ")
-		);
-
-		parser.modify(controlMap, fileResolver);
-
-		var parserFactory = controlMap.get(ControlKey.FIP_YIELD_POLY_INPUT.name());
-
-		assertThat(parserFactory, instanceOf(StreamingParserFactory.class));
-
-		@SuppressWarnings("unchecked")
-		var stream = ((StreamingParserFactory<FipPolygon>) parserFactory).get();
-
-		assertThat(stream, instanceOf(StreamingParser.class));
-
-		var poly = assertNext(stream);
-
-		assertThat(poly, hasProperty("polygonIdentifier", is("01002 S000001 00     1970")));
-		assertThat(poly, hasProperty("forestInventoryZone", is("A")));
-		assertThat(poly, hasProperty("biogeoclimaticZone", is("CWH")));
-		assertThat(poly, hasProperty("percentAvailable", notPresent()));
-		assertThat(poly, hasProperty("modeFip", notPresent()));
-		assertThat(poly, hasProperty("nonproductiveDescription", notPresent()));
-		assertThat(poly, hasProperty("yieldFactor", is(1.0f)));
-
-		VdypMatchers.assertEmpty(stream);
-	}
-
-	@Test
-	public void testParseMultiple() throws Exception {
+	@SuppressWarnings("java:S5961")
+	void testParseMultiple() throws Exception {
 
 		var parser = new FipPolygonParser();
 
@@ -266,8 +231,13 @@ public class FipPolygonParserTest {
 		VdypMatchers.assertEmpty(stream);
 	}
 
-	@Test
-	public void testParsePolygonZeroAsDefault() throws Exception {
+	@ParameterizedTest
+	@ValueSource(strings = { 
+			"01002 S000001 00     1970 A CWH                    ", // WithBlanks
+			"01002 S000001 00     1970 A CWH   0.0  0       0.00", // ZeroAsDefault
+			"01002 S000001 00     1970 A CWH  -1.0         -1.00"  // NegativeAsDefault
+			})	
+	void testParsePolygons(String comment) throws Exception {
 
 		var parser = new FipPolygonParser();
 
@@ -277,45 +247,7 @@ public class FipPolygonParserTest {
 		TestUtils.populateControlMapBecReal(controlMap);
 
 		var fileResolver = TestUtils.fileResolver(
-				"test.dat", TestUtils.makeInputStream("01002 S000001 00     1970 A CWH   0.0  0       0.00")
-		);
-
-		parser.modify(controlMap, fileResolver);
-
-		var parserFactory = controlMap.get(ControlKey.FIP_YIELD_POLY_INPUT.name());
-
-		assertThat(parserFactory, instanceOf(StreamingParserFactory.class));
-
-		@SuppressWarnings("unchecked")
-		var stream = ((StreamingParserFactory<FipPolygon>) parserFactory).get();
-
-		assertThat(stream, instanceOf(StreamingParser.class));
-
-		var poly = assertNext(stream);
-
-		assertThat(poly, hasProperty("polygonIdentifier", is("01002 S000001 00     1970")));
-		assertThat(poly, hasProperty("forestInventoryZone", is("A")));
-		assertThat(poly, hasProperty("biogeoclimaticZone", is("CWH")));
-		assertThat(poly, hasProperty("percentAvailable", notPresent()));
-		assertThat(poly, hasProperty("modeFip", notPresent()));
-		assertThat(poly, hasProperty("nonproductiveDescription", notPresent()));
-		assertThat(poly, hasProperty("yieldFactor", is(1.0f)));
-
-		VdypMatchers.assertEmpty(stream);
-	}
-
-	@Test
-	public void testParsePolygonNegativeAsDefault() throws Exception {
-
-		var parser = new FipPolygonParser();
-
-		Map<String, Object> controlMap = new HashMap<>();
-
-		controlMap.put(ControlKey.FIP_YIELD_POLY_INPUT.name(), "test.dat");
-		TestUtils.populateControlMapBecReal(controlMap);
-
-		var fileResolver = TestUtils.fileResolver(
-				"test.dat", TestUtils.makeInputStream("01002 S000001 00     1970 A CWH  -1.0         -1.00")
+				"test.dat", TestUtils.makeInputStream("01002 S000001 00     1970 A CWH                    ")
 		);
 
 		parser.modify(controlMap, fileResolver);

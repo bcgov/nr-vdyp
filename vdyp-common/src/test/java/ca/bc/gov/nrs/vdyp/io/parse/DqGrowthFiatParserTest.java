@@ -19,7 +19,7 @@ import ca.bc.gov.nrs.vdyp.test.TestUtils;
  * 
  * @author Michael Junkin, Vivid Solutions
  */
-public class DqGrowthFiatParserTest {
+class DqGrowthFiatParserTest {
 
 	@Test
 	void testParseSimple() throws Exception {

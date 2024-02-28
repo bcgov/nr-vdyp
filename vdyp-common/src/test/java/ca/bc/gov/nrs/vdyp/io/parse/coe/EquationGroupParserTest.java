@@ -15,6 +15,8 @@ import java.util.List;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseLineException;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseValidException;
@@ -91,8 +93,9 @@ class EquationGroupParserTest {
 		assertThat(result, mmHasEntry(is(2), "S1", "B1"));
 	}
 
-	@Test
-	void testParseIgnoreBlankSpecies() throws Exception {
+	@ParameterizedTest
+	@ValueSource(strings = { "   B1   003", "S1      003", "" })
+	void testParseIgnoreBlankFields(String p) throws Exception {
 		// Original Fortran allows subsequent entries to overwrite old ones so don't
 		// validate against that
 
@@ -103,44 +106,6 @@ class EquationGroupParserTest {
 		var is = TestUtils.makeInputStream(
 				"S1 B1   001", //
 				"   B1   003", //
-				"S1 B1   002"
-		);
-		var result = parser.parse(is, Collections.unmodifiableMap(controlMap));
-
-		assertThat(result, mmHasEntry(is(2), "S1", "B1"));
-	}
-
-	@Test
-	void testParseIgnoreBlankBec() throws Exception {
-		// Original Fortran allows subsequent entries to overwrite old ones so don't
-		// validate against that
-
-		var parser = new DefaultEquationNumberParser();
-
-		var controlMap = makeControlMapSingle();
-
-		var is = TestUtils.makeInputStream(
-				"S1 B1   001", //
-				"S1      003", //
-				"S1 B1   002"
-		);
-		var result = parser.parse(is, Collections.unmodifiableMap(controlMap));
-
-		assertThat(result, mmHasEntry(is(2), "S1", "B1"));
-	}
-
-	@Test
-	void testParseIgnoreBlankLine() throws Exception {
-		// Original Fortran allows subsequent entries to overwrite old ones so don't
-		// validate against that
-
-		var parser = new DefaultEquationNumberParser();
-
-		var controlMap = makeControlMapSingle();
-
-		var is = TestUtils.makeInputStream(
-				"S1 B1   001", //
-				"", //
 				"S1 B1   002"
 		);
 		var result = parser.parse(is, Collections.unmodifiableMap(controlMap));

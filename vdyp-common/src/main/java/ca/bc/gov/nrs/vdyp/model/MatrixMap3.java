@@ -19,7 +19,7 @@ public interface MatrixMap3<K1, K2, K3, V> extends MatrixMap<V> {
 	 * Cast a 3 dimension MatrixMap to MatrixMap3, wrapping it if it has 3
 	 * dimensions but does not implement the interface.
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "java:1172" })
 	public static <K1, K2, K3, V> MatrixMap3<K1, K2, K3, V>
 			cast(MatrixMap<V> o, Class<K1> keyClass1, Class<K2> keyClass2, Class<K3> keyClass3) {
 		// TODO check compatibility of range types

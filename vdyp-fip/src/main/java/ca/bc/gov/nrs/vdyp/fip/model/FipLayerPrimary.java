@@ -12,6 +12,7 @@ public class FipLayerPrimary extends FipLayer {
 
 	private Optional<String> primaryGenus; // FIPL_1C/JPRIME
 
+	@SuppressWarnings("java:S107")
 	public FipLayerPrimary(
 			String polygonIdentifier, Optional<Float> ageTotal, Optional<Float> height,
 			Optional<Float> yearsToBreastHeight, Optional<Float> siteIndex, Optional<Integer> siteCurveNumber,

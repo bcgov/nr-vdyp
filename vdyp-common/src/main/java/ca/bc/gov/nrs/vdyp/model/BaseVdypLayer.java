@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+@SuppressWarnings("java:S107")
 public class BaseVdypLayer<S extends BaseVdypSpecies> {
 
 	private final String polygonIdentifier;
@@ -70,7 +71,7 @@ public class BaseVdypLayer<S extends BaseVdypSpecies> {
 		this.yearsToBreastHeight = yearsToBreastHeight;
 	}
 
-	public LinkedHashMap<String, S> getSpecies() {
+	public Map<String, S> getSpecies() {
 		return species;
 	}
 

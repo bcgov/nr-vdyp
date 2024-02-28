@@ -148,9 +148,9 @@ public class ControlFileParser implements ResourceParser<Map<String, Object>> {
 	 * @param parser
 	 * @return
 	 */
-	public ControlFileParser record(ControlKey key, ValueParser<?> parser) {
-		record(key);
-		record(key.sequence.orElseThrow(), parser);
+	public ControlFileParser doRecord(ControlKey key, ValueParser<?> parser) {
+		doRecord(key);
+		doRecord(key.sequence.orElseThrow(), parser);
 		return this;
 	}
 
@@ -164,7 +164,7 @@ public class ControlFileParser implements ResourceParser<Map<String, Object>> {
 	 * @return
 	 */
 	public ControlFileParser optional(ControlKey key, ControlledValueParser<?> parser) {
-		record(key);
+		doRecord(key);
 		optional(key.sequence.orElseThrow(), parser);
 		return this;
 	}
@@ -177,7 +177,7 @@ public class ControlFileParser implements ResourceParser<Map<String, Object>> {
 	 * @param parser
 	 * @return
 	 */
-	public ControlFileParser record(ControlKey key) {
+	public ControlFileParser doRecord(ControlKey key) {
 		this.identifiers.put(key.sequence.orElseThrow(), key.name());
 		return this;
 	}
@@ -190,7 +190,7 @@ public class ControlFileParser implements ResourceParser<Map<String, Object>> {
 	 * @param parser
 	 * @return
 	 */
-	public ControlFileParser record(int index, ControlledValueParser<?> parser) {
+	public ControlFileParser doRecord(int index, ControlledValueParser<?> parser) {
 		this.valueParsers.put(index, parser);
 		return this;
 	}
@@ -204,7 +204,7 @@ public class ControlFileParser implements ResourceParser<Map<String, Object>> {
 	 * @return
 	 */
 	public ControlFileParser optional(int index, ControlledValueParser<?> parser) {
-		record(index, ControlledValueParser.optional(parser));
+		doRecord(index, ControlledValueParser.optional(parser));
 		this.defaultValueGenerators.put(getKeyForIndex(index), Optional::empty);
 		return this;
 	}

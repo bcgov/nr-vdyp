@@ -24,6 +24,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseValidException;
 import ca.bc.gov.nrs.vdyp.model.GenusDefinition;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
+@SuppressWarnings("java:S5976")
 public class GenusDefinitionParserTest {
 
 	@Test

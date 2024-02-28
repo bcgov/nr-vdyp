@@ -10,6 +10,7 @@ import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.Collections;
+import java.util.Map;
 
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
@@ -20,6 +21,7 @@ import ca.bc.gov.nrs.vdyp.test.TestUtils;
 class BecDefinitionParserTest {
 
 	@Test
+	@SuppressWarnings("java:S5961")
 	void testParse() throws Exception {
 		var parser = new BecDefinitionParser();
 
@@ -255,7 +257,8 @@ class BecDefinitionParserTest {
 	void testParseNoDefault() throws Exception {
 		var parser = new BecDefinitionParser();
 		try (var is = TestUtils.makeInputStream("")) {
-			var ex = assertThrows(IllegalStateException.class, () -> parser.parse(is, Collections.emptyMap()));
+			Map<String, Object> emptyMap = Collections.emptyMap();
+			var ex = assertThrows(IllegalStateException.class, () -> parser.parse(is, emptyMap));
 			assertThat(ex, hasProperty("message", Matchers.is("Could not find default BEC ESSF")));
 		}
 	}

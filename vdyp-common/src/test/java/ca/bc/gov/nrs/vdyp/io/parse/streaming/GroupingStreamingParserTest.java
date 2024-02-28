@@ -11,10 +11,10 @@ import java.util.List;
 import org.easymock.EasyMock;
 import org.junit.jupiter.api.Test;
 
-public class GroupingStreamingParserTest {
+class GroupingStreamingParserTest {
 
 	@Test
-	public void testEmpty() throws Exception {
+	void testEmpty() throws Exception {
 		var control = EasyMock.createControl();
 
 		StreamingParser<Integer> delegate = control.createMock("delegate", StreamingParser.class);
@@ -48,7 +48,7 @@ public class GroupingStreamingParserTest {
 	}
 
 	@Test
-	public void testOneEntry() throws Exception {
+	void testOneEntry() throws Exception {
 		var control = EasyMock.createControl();
 
 		var mock = Arrays.asList(1, 5).iterator();
@@ -88,7 +88,7 @@ public class GroupingStreamingParserTest {
 	}
 
 	@Test
-	public void testMultipleEntries() throws Exception {
+	void testMultipleEntries() throws Exception {
 		var control = EasyMock.createControl();
 
 		var mock = Arrays.asList(1, 2, 5).iterator();
@@ -129,7 +129,7 @@ public class GroupingStreamingParserTest {
 	}
 
 	@Test
-	public void testMultipleGroups() throws Exception {
+	void testMultipleGroups() throws Exception {
 		var control = EasyMock.createControl();
 
 		var mock = Arrays.asList(1, 5, 2, 5).iterator();
@@ -173,7 +173,7 @@ public class GroupingStreamingParserTest {
 	}
 
 	@Test
-	public void testSkip() throws Exception {
+	void testSkip() throws Exception {
 		var control = EasyMock.createControl();
 
 		var mock = Arrays.asList(3, 1, 5).iterator();

@@ -6,7 +6,7 @@ import java.util.Map;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 
-public interface ControlMapValueReplacer<Result, Raw> extends KeyedControlMapModifier {
+public interface ControlMapValueReplacer<R, W> extends KeyedControlMapModifier {
 
 	/**
 	 * Remap a raw control value
@@ -16,7 +16,7 @@ public interface ControlMapValueReplacer<Result, Raw> extends KeyedControlMapMod
 	 * @throws ResourceParseException
 	 * @throws IOException
 	 */
-	public Result map(Raw rawValue, FileResolver fileResolver, Map<String, Object> control)
+	public R map(W rawValue, FileResolver fileResolver, Map<String, Object> control)
 			throws ResourceParseException, IOException;
 
 	@SuppressWarnings("unchecked")
@@ -24,7 +24,7 @@ public interface ControlMapValueReplacer<Result, Raw> extends KeyedControlMapMod
 	default void modify(Map<String, Object> control, FileResolver fileResolver)
 			throws ResourceParseException, IOException {
 
-		control.put(getControlKeyName(), this.map((Raw) control.get(this.getControlKeyName()), fileResolver, control));
+		control.put(getControlKeyName(), this.map((W) control.get(this.getControlKeyName()), fileResolver, control));
 
 	}
 

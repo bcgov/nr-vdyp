@@ -45,6 +45,7 @@ public abstract class SimpleCoefficientParser1<K1> implements ControlMapSubResou
 
 	private ControlKey controlKey;
 
+	@SuppressWarnings("java:S1172")
 	protected SimpleCoefficientParser1(Class<K1> keyClass, int indexFrom, ControlKey controlKey) {
 		this.indexFrom = indexFrom;
 		this.controlKey = controlKey;
@@ -88,12 +89,12 @@ public abstract class SimpleCoefficientParser1<K1> implements ControlMapSubResou
 		return delegate.space(length);
 	}
 
-	public <K> BaseCoefficientParser<Coefficients, Coefficients, MatrixMap<Coefficients>>
+	public BaseCoefficientParser<Coefficients, Coefficients, MatrixMap<Coefficients>>
 			coefficients(int number, int length) {
 		return delegate.coefficients(number, length);
 	}
 
-	public <K> BaseCoefficientParser<Coefficients, Coefficients, MatrixMap<Coefficients>>
+	public BaseCoefficientParser<Coefficients, Coefficients, MatrixMap<Coefficients>>
 			coefficients(int number, int length
 					, Optional<Function<Void, Coefficients>> defaultEntryValuator
 					, Optional<IntFunction<Float>> defaultCoefficientValuator) {

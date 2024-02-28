@@ -13,7 +13,7 @@ class FizCheckTest {
 	@Test
 	void testCoastalFiz() {
 		for (char fiz = 'A'; fiz <= 'C'; fiz++) {
-			short result = FizCheck.fiz_check(fiz);
+			short result = FizCheck.fizCheck(fiz);
 			assertEquals(FIZ_COAST, result);
 		}
 	}
@@ -21,7 +21,7 @@ class FizCheckTest {
 	@Test
 	void testInteriorFiz() {
 		for (char fiz = 'D'; fiz <= 'L'; fiz++) {
-			short result = FizCheck.fiz_check(fiz);
+			short result = FizCheck.fizCheck(fiz);
 			assertEquals(FIZ_INTERIOR, result);
 		}
 	}
@@ -29,7 +29,7 @@ class FizCheckTest {
 	@Test
 	void testUnknownFiz() {
 		char fiz = 'X'; // Replace with any unknown fiz value
-		short result = FizCheck.fiz_check(fiz);
+		short result = FizCheck.fizCheck(fiz);
 		assertEquals(FIZ_UNKNOWN, result);
 	}
 }

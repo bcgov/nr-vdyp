@@ -20,6 +20,8 @@ import java.util.Map;
 import org.hamcrest.Matcher;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseLineException;
@@ -140,47 +142,16 @@ class ControlFileParserTest {
 		}
 	}
 
-	@Test
-	void testParsesEntriesIgnoreCommentLinesByExtendedMarker() throws Exception {
+	@ParameterizedTest
+	@ValueSource(strings = { 
+			"001CComment", 
+			"000 Comment",
+			"    Comment",
+			"\n \n  \n   \n    "
+			})
+	void testParsesEntriesIgnoreCommentLines(String file) throws Exception {
 		var parser = makeParser();
 
-		String file = "001CComment";
-		try (InputStream is = new ByteArrayInputStream(file.getBytes())) {
-			var result = parser.parse(is);
-
-			assertThat(result.entrySet(), empty());
-		}
-	}
-
-	@Test
-	void testParsesEntriesIgnoreCommentLinesByZeroIndex() throws Exception {
-		var parser = makeParser();
-
-		String file = "000 Comment";
-		try (InputStream is = new ByteArrayInputStream(file.getBytes())) {
-			var result = parser.parse(is);
-
-			assertThat(result.entrySet(), empty());
-		}
-	}
-
-	@Test
-	void testParsesEntriesIgnoreCommentLinesByNullIndex() throws Exception {
-		var parser = makeParser();
-
-		String file = "    Comment";
-		try (InputStream is = new ByteArrayInputStream(file.getBytes())) {
-			var result = parser.parse(is);
-
-			assertThat(result.entrySet(), empty());
-		}
-	}
-
-	@Test
-	void testParsesEntriesIgnoreEmptyLines() throws Exception {
-		var parser = makeParser();
-
-		String file = "\n \n  \n   \n    ";
 		try (InputStream is = new ByteArrayInputStream(file.getBytes())) {
 			var result = parser.parse(is);
 
@@ -226,7 +197,7 @@ class ControlFileParserTest {
 	@Test
 	void testExceptionInControlValueParser() throws Exception {
 		var parser = makeParser();
-		parser.record(2, (s, c) -> {
+		parser.doRecord(2, (s, c) -> {
 			throw new ValueParseException(s, "Test Exception");
 		});
 
@@ -337,9 +308,9 @@ class ControlFileParserTest {
 		var parser = makeParser();
 
 		parser //
-				.record(ControlKey.MINIMA, ValueParser.list(ValueParser.FLOAT))//
-				.record(ControlKey.MODIFIER_FILE)//
-				.record(ControlKey.DEBUG_SWITCHES, ValueParser.list(ValueParser.INTEGER));
+				.doRecord(ControlKey.MINIMA, ValueParser.list(ValueParser.FLOAT))//
+				.doRecord(ControlKey.MODIFIER_FILE)//
+				.doRecord(ControlKey.DEBUG_SWITCHES, ValueParser.list(ValueParser.INTEGER));
 
 		return parser;
 	}

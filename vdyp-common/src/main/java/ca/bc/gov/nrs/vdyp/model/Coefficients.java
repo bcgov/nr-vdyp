@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.model;
 
 import java.util.AbstractList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.DoubleStream;
@@ -230,5 +231,30 @@ public class Coefficients extends AbstractList<Float> implements List<Float> {
 	 */
 	public Coefficients reindex(int indexFrom) {
 		return new Coefficients(this.coe, indexFrom);
+	}
+	
+	@Override
+	public boolean equals(Object other) {
+		if (other instanceof Coefficients that) {
+			if (this.indexFrom != that.indexFrom)
+				return false;
+			if (this.coe == that.coe)
+				return true;
+			if (this.coe == null || that.coe == null)
+				return false;
+			if (this.coe.length != that.coe.length)
+				return false;
+			for (int i = 0; i < this.coe.length; i++)
+				if (this.coe[i] != that.coe[i])
+					return false;
+			return true;
+		}
+		else
+			return false;
+	}
+	
+	@Override
+	public int hashCode() {
+		return Arrays.hashCode(coe) + indexFrom;
 	}
 }

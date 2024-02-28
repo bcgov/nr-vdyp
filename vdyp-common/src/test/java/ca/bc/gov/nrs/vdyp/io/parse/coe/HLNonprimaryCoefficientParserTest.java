@@ -10,6 +10,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseLineException;
 import ca.bc.gov.nrs.vdyp.model.Region;
@@ -33,12 +35,13 @@ class HLNonprimaryCoefficientParserTest {
 		assertThat(result, mmHasEntry(present(coe(1, 0.86323f, 1.00505f)), "S1", "S2", Region.COASTAL));
 	}
 
-	@Test
-	void testParseBadSpecies1() throws Exception {
+	@ParameterizedTest
+	@ValueSource(strings = "SX S2 C 1   0.86323   1.00505, S1 SX C 1   0.86323   1.00505, S1 S2 X 1   0.86323   1.00505, S1 S2 C 1   0.86323")
+	void testParseBadSpecies1(String line) throws Exception {
 
 		var parser = new HLNonprimaryCoefficientParser();
 
-		var is = TestUtils.makeInputStream("SX S2 C 1   0.86323   1.00505");
+		var is = TestUtils.makeInputStream(line);
 
 		Map<String, Object> controlMap = new HashMap<>();
 
@@ -46,50 +49,6 @@ class HLNonprimaryCoefficientParserTest {
 
 		assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
 
-	}
-
-	@Test
-	void testParseBadSpecies2() throws Exception {
-
-		var parser = new HLNonprimaryCoefficientParser();
-
-		var is = TestUtils.makeInputStream("S1 SX C 1   0.86323   1.00505");
-
-		Map<String, Object> controlMap = new HashMap<>();
-
-		TestUtils.populateControlMapGenus(controlMap);
-
-		assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
-
-	}
-
-	@Test
-	void testParseBadRegion() throws Exception {
-
-		var parser = new HLNonprimaryCoefficientParser();
-
-		var is = TestUtils.makeInputStream("S1 S2 X 1   0.86323   1.00505");
-
-		Map<String, Object> controlMap = new HashMap<>();
-
-		TestUtils.populateControlMapGenus(controlMap);
-
-		assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
-
-	}
-
-	@Test
-	void testParseMissingCoefficient() throws Exception {
-
-		var parser = new HLNonprimaryCoefficientParser();
-
-		var is = TestUtils.makeInputStream("S1 S2 C 1   0.86323");
-
-		Map<String, Object> controlMap = new HashMap<>();
-
-		TestUtils.populateControlMapGenus(controlMap);
-
-		assertThrows(ResourceParseLineException.class, () -> parser.parse(is, controlMap));
 	}
 
 	@Test
