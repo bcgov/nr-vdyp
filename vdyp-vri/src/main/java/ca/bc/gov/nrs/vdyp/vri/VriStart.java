@@ -137,14 +137,14 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			// Validate that species belong to the correct polygon
 			if (!spec.getPolygonIdentifier().equals(polygon.getPolygonIdentifier())) {
 				throw validationError(
-						"Record in species file contains species for polygon %s when expecting one for %s.",
-						spec.getPolygonIdentifier(), polygon.getPolygonIdentifier()
+						"Record in species file contains species for polygon %s when expecting one for %s.", spec
+								.getPolygonIdentifier(), polygon.getPolygonIdentifier()
 				);
 			}
 			if (Objects.isNull(layerBuilder)) {
 				throw validationError(
-						"Species entry references layer %s of polygon %s but it is not present.", spec.getLayerType(),
-						polygon.getPolygonIdentifier()
+						"Species entry references layer %s of polygon %s but it is not present.", spec
+								.getLayerType(), polygon.getPolygonIdentifier()
 				);
 			}
 			layerBuilder.addSpecies(spec);
@@ -163,14 +163,14 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			// Validate that species belong to the correct polygon
 			if (!site.getPolygonIdentifier().equals(polygon.getPolygonIdentifier())) {
 				throw validationError(
-						"Record in site file contains site for polygon %s when expecting one for %s.",
-						site.getPolygonIdentifier(), polygon.getPolygonIdentifier()
+						"Record in site file contains site for polygon %s when expecting one for %s.", site
+								.getPolygonIdentifier(), polygon.getPolygonIdentifier()
 				);
 			}
 			if (Objects.isNull(layerBuilder)) {
 				throw validationError(
-						"Site entry references layer %s of polygon %s but it is not present.", site.getLayerType(),
-						polygon.getPolygonIdentifier()
+						"Site entry references layer %s of polygon %s but it is not present.", site
+								.getLayerType(), polygon.getPolygonIdentifier()
 				);
 			}
 			layerBuilder.addSite(site);
@@ -182,8 +182,8 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		for (var layer : layers.values()) {
 			if (!layer.getPolygonIdentifier().equals(polygon.getPolygonIdentifier())) {
 				throw validationError(
-						"Record in layer file contains layer for polygon %s when expecting one for %s.",
-						layer.getPolygonIdentifier(), polygon.getPolygonIdentifier()
+						"Record in layer file contains layer for polygon %s when expecting one for %s.", layer
+								.getPolygonIdentifier(), polygon.getPolygonIdentifier()
 				);
 			}
 			layer.setSpecies(new HashMap<>());
@@ -255,8 +255,8 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			float crownClosure = builder.getCrownClosure().filter(x -> x > 0f).orElseThrow(
 					() -> new RuntimeStandProcessingException(
 							validationError(
-									"Expected a positive crown closure for veteran layer but was %s",
-									Utils.optNa(builder.getCrownClosure())
+									"Expected a positive crown closure for veteran layer but was %s", Utils
+											.optNa(builder.getCrownClosure())
 							)
 					)
 			);
@@ -396,9 +396,8 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			PolygonMode mode = polygon.getMode().orElseGet(() -> {
 				try {
 					return findDefaultPolygonMode(
-							ageTotal, yearsToBreastHeight, height, baseArea, treesPerHectare, percentForest,
-							primaryLayer.getSpecies().values(), bec,
-							primaryLayer.getEmpericalRelationshipParameterIndex()
+							ageTotal, yearsToBreastHeight, height, baseArea, treesPerHectare, percentForest, primaryLayer
+									.getSpecies().values(), bec, primaryLayer.getEmpericalRelationshipParameterIndex()
 					);
 				} catch (StandProcessingException e) {
 					throw new RuntimeStandProcessingException(e);
@@ -406,8 +405,8 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			});
 			polygon.setMode(Optional.of(mode));
 			Optional<Float> primaryBreastHeightAge = Utils.mapBoth(
-					primaryLayer.getPrimarySite().flatMap(VriSite::getAgeTotal),
-					primaryLayer.getPrimarySite().flatMap(VriSite::getYearsToBreastHeight), (at, ytbh) -> at - ytbh
+					primaryLayer.getPrimarySite().flatMap(VriSite::getAgeTotal), primaryLayer.getPrimarySite()
+							.flatMap(VriSite::getYearsToBreastHeight), (at, ytbh) -> at - ytbh
 			);
 			log.atDebug().setMessage("Polygon mode {} checks").addArgument(mode);
 			switch (mode) {
@@ -456,8 +455,8 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			throws StandProcessingException {
 		if (value < minimum || (value == minimum && !inclusive))
 			throw validationError(
-					"%s %s should be %s %s", fieldName, value, inclusive ? "greater than or equal to" : "greater than",
-					minimum
+					"%s %s should be %s %s", fieldName, value, inclusive ? "greater than or equal to"
+							: "greater than", minimum
 			);
 	}
 

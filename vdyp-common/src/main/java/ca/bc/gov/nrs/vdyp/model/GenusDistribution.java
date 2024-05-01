@@ -21,9 +21,12 @@ public class GenusDistribution implements Comparable<GenusDistribution> {
 			throw new IllegalArgumentException(MessageFormat.format("Genus for index {0} is missing", genus));
 		}
 		if (percentage == null || percentage < 0 || percentage > 100) {
-			throw new IllegalArgumentException(MessageFormat.format("Percentage value {0} for index {1} must be between 0 and 100", index, percentage));
+			throw new IllegalArgumentException(
+					MessageFormat
+							.format("Percentage value {0} for index {1} must be between 0 and 100", index, percentage)
+			);
 		}
-	
+
 		this.index = index;
 		this.genus = genus;
 		this.percentage = percentage;
@@ -53,7 +56,7 @@ public class GenusDistribution implements Comparable<GenusDistribution> {
 
 	@Override
 	public int hashCode() {
-		return ((index * 17) + genus.hashCode()) * 17 + Float.valueOf(percentage).hashCode();
+		return ( (index * 17) + genus.hashCode()) * 17 + Float.valueOf(percentage).hashCode();
 	}
 
 	@Override
@@ -65,7 +68,7 @@ public class GenusDistribution implements Comparable<GenusDistribution> {
 				if (cr == 0)
 					cr = ObjectUtils.compare(this.percentage, that.percentage);
 			}
-			
+
 			return cr;
 		} else {
 			return 1 /* null is always less than not null */;

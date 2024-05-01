@@ -66,10 +66,8 @@ public class VdypForwardUtilizationParserTest {
 		TestUtils.populateControlMapGenusReal(controlMap);
 
 		var fileResolver = TestUtils.fileResolver(
-				"test.dat",
-				TestUtils.makeInputStream(
-						"01002 S000001 00     1970 P  0    -1  0.01513     5.24   7.0166   0.0630   0.0000   0.0000   0.0000   0.0000   6.1",
-						"01002 S000001 00     1970"
+				"test.dat", TestUtils.makeInputStream(
+						"01002 S000001 00     1970 P  0    -1  0.01513     5.24   7.0166   0.0630   0.0000   0.0000   0.0000   0.0000   6.1", "01002 S000001 00     1970"
 				)
 		);
 
@@ -89,20 +87,23 @@ public class VdypForwardUtilizationParserTest {
 		assertThat(utilizations, Matchers.hasSize(1));
 
 		assertThat(
-				utilizations,
-				hasItem(
+				utilizations, hasItem(
 						allOf(
-								hasProperty("polygonId", hasProperty("description", is("01002 S000001 00     1970"))),
-								hasProperty("layerType", is(LayerType.PRIMARY)),
-								hasProperty("genus", is(Optional.empty())),
-								hasProperty("ucIndex", is(UtilizationClass.SMALL)),
-								hasProperty("basalArea", is(0.01513f)), hasProperty("liveTreesPerHectare", is(5.24f)),
-								hasProperty("loreyHeight", is(7.0166f)), hasProperty("wholeStemVolume", is(0.0630f)),
-								hasProperty("closeUtilizationVolume", is(0.0f)),
-								hasProperty("cuVolumeMinusDecay", is(0.0f)),
-								hasProperty("cuVolumeMinusDecayWastage", is(0.0f)),
-								hasProperty("cuVolumeMinusDecayWastageBreakage", is(0.0f)),
-								hasProperty("genusIndex", is(0)), hasProperty("quadraticMeanDiameterAtBH", is(6.1f))
+								hasProperty(
+										"polygonId", hasProperty("description", is("01002 S000001 00     1970"))
+								), hasProperty("layerType", is(LayerType.PRIMARY)), hasProperty(
+										"genus", is(Optional.empty())
+								), hasProperty("ucIndex", is(UtilizationClass.SMALL)), hasProperty(
+										"basalArea", is(0.01513f)
+								), hasProperty("liveTreesPerHectare", is(5.24f)), hasProperty(
+										"loreyHeight", is(7.0166f)
+								), hasProperty(
+										"wholeStemVolume", is(0.0630f)
+								), hasProperty("closeUtilizationVolume", is(0.0f)), hasProperty(
+										"cuVolumeMinusDecay", is(0.0f)
+								), hasProperty("cuVolumeMinusDecayWastage", is(0.0f)), hasProperty(
+										"cuVolumeMinusDecayWastageBreakage", is(0.0f)
+								), hasProperty("genusIndex", is(0)), hasProperty("quadraticMeanDiameterAtBH", is(6.1f))
 						)
 				)
 		);
@@ -121,11 +122,8 @@ public class VdypForwardUtilizationParserTest {
 		TestUtils.populateControlMapGenusReal(controlMap);
 
 		var fileResolver = TestUtils.fileResolver(
-				"test.dat",
-				TestUtils.makeInputStream(
-						"01002 S000001 00     1970 P  0    -1  0.01513     5.24   7.0166   0.0630   0.0000   0.0000   0.0000   0.0000   6.1",
-						"01002 S000001 00     1970 P  0    -1  0.01513     5.24   7.0166   0.0630   1.2343   0.0000   0.0000   0.0000   6.1",
-						"01002 S000001 00     1970"
+				"test.dat", TestUtils.makeInputStream(
+						"01002 S000001 00     1970 P  0    -1  0.01513     5.24   7.0166   0.0630   0.0000   0.0000   0.0000   0.0000   6.1", "01002 S000001 00     1970 P  0    -1  0.01513     5.24   7.0166   0.0630   1.2343   0.0000   0.0000   0.0000   6.1", "01002 S000001 00     1970"
 				)
 		);
 
@@ -145,33 +143,39 @@ public class VdypForwardUtilizationParserTest {
 		assertThat(utilizations, Matchers.hasSize(2));
 
 		assertThat(
-				utilizations,
-				hasItems(
+				utilizations, hasItems(
 						allOf(
-								hasProperty("polygonId", hasProperty("description", is("01002 S000001 00     1970"))),
-								hasProperty("layerType", is(LayerType.PRIMARY)),
-								hasProperty("genus", is(Optional.empty())),
-								hasProperty("ucIndex", is(UtilizationClass.SMALL)),
-								hasProperty("basalArea", is(0.01513f)), hasProperty("liveTreesPerHectare", is(5.24f)),
-								hasProperty("loreyHeight", is(7.0166f)), hasProperty("wholeStemVolume", is(0.0630f)),
-								hasProperty("closeUtilizationVolume", is(0.0f)),
-								hasProperty("cuVolumeMinusDecay", is(0.0f)),
-								hasProperty("cuVolumeMinusDecayWastage", is(0.0f)),
-								hasProperty("cuVolumeMinusDecayWastageBreakage", is(0.0f)),
-								hasProperty("genusIndex", is(0)), hasProperty("quadraticMeanDiameterAtBH", is(6.1f))
-						),
-						allOf(
-								hasProperty("polygonId", hasProperty("description", is("01002 S000001 00     1970"))),
-								hasProperty("layerType", is(LayerType.PRIMARY)),
-								hasProperty("genus", is(Optional.empty())),
-								hasProperty("ucIndex", is(UtilizationClass.SMALL)),
-								hasProperty("basalArea", is(0.01513f)), hasProperty("liveTreesPerHectare", is(5.24f)),
-								hasProperty("loreyHeight", is(7.0166f)), hasProperty("wholeStemVolume", is(0.0630f)),
-								hasProperty("closeUtilizationVolume", is(1.2343f)),
-								hasProperty("cuVolumeMinusDecay", is(0.0f)),
-								hasProperty("cuVolumeMinusDecayWastage", is(0.0f)),
-								hasProperty("cuVolumeMinusDecayWastageBreakage", is(0.0f)),
-								hasProperty("genusIndex", is(0)), hasProperty("quadraticMeanDiameterAtBH", is(6.1f))
+								hasProperty(
+										"polygonId", hasProperty("description", is("01002 S000001 00     1970"))
+								), hasProperty("layerType", is(LayerType.PRIMARY)), hasProperty(
+										"genus", is(Optional.empty())
+								), hasProperty("ucIndex", is(UtilizationClass.SMALL)), hasProperty(
+										"basalArea", is(0.01513f)
+								), hasProperty("liveTreesPerHectare", is(5.24f)), hasProperty(
+										"loreyHeight", is(7.0166f)
+								), hasProperty("wholeStemVolume", is(0.0630f)), hasProperty(
+										"closeUtilizationVolume", is(0.0f)
+								), hasProperty("cuVolumeMinusDecay", is(0.0f)), hasProperty(
+										"cuVolumeMinusDecayWastage", is(0.0f)
+								), hasProperty(
+										"cuVolumeMinusDecayWastageBreakage", is(0.0f)
+								), hasProperty("genusIndex", is(0)), hasProperty("quadraticMeanDiameterAtBH", is(6.1f))
+						), allOf(
+								hasProperty(
+										"polygonId", hasProperty("description", is("01002 S000001 00     1970"))
+								), hasProperty("layerType", is(LayerType.PRIMARY)), hasProperty(
+										"genus", is(Optional.empty())
+								), hasProperty("ucIndex", is(UtilizationClass.SMALL)), hasProperty(
+										"basalArea", is(0.01513f)
+								), hasProperty("liveTreesPerHectare", is(5.24f)), hasProperty(
+										"loreyHeight", is(7.0166f)
+								), hasProperty(
+										"wholeStemVolume", is(0.0630f)
+								), hasProperty("closeUtilizationVolume", is(1.2343f)), hasProperty(
+										"cuVolumeMinusDecay", is(0.0f)
+								), hasProperty("cuVolumeMinusDecayWastage", is(0.0f)), hasProperty(
+										"cuVolumeMinusDecayWastageBreakage", is(0.0f)
+								), hasProperty("genusIndex", is(0)), hasProperty("quadraticMeanDiameterAtBH", is(6.1f))
 						)
 				)
 		);

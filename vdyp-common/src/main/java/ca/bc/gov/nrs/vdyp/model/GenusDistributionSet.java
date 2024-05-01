@@ -12,22 +12,22 @@ import java.util.Set;
 import ca.bc.gov.nrs.vdyp.io.parse.common.InvalidGenusDistributionSet;
 
 public class GenusDistributionSet implements Comparable<GenusDistributionSet> {
-	
+
 	private Map<Integer, GenusDistribution> genusDistributionMap = new HashMap<>();
 	private int maxIndex;
-	
+
 	public GenusDistributionSet(int maxIndex, List<GenusDistribution> sdList) {
-		
+
 		try {
 			validate(maxIndex, sdList);
 		} catch (InvalidGenusDistributionSet e) {
 			throw new IllegalArgumentException(e);
 		}
-		
-		for (GenusDistribution sd: sdList) {
+
+		for (GenusDistribution sd : sdList) {
 			genusDistributionMap.put(sd.getIndex(), sd);
 		}
-		
+
 		this.maxIndex = maxIndex;
 	}
 
@@ -48,10 +48,12 @@ public class GenusDistributionSet implements Comparable<GenusDistributionSet> {
 	public Map<Integer, GenusDistribution> getSpeciesDistributionMap() {
 		return Collections.unmodifiableMap(genusDistributionMap);
 	}
-	
+
 	public Optional<GenusDistribution> getSpeciesDistribution(int index) {
 		if (index > maxIndex) {
-			throw new IllegalArgumentException(MessageFormat.format("Index {0} exceeds the maximum value {1}", index, maxIndex));
+			throw new IllegalArgumentException(
+					MessageFormat.format("Index {0} exceeds the maximum value {1}", index, maxIndex)
+			);
 		}
 		if (genusDistributionMap.containsKey(index))
 			return Optional.of(genusDistributionMap.get(index));
@@ -71,7 +73,7 @@ public class GenusDistributionSet implements Comparable<GenusDistributionSet> {
 
 		Set<GenusDefinition> generaSeen = new HashSet<>();
 		Set<Integer> indicesSeen = new HashSet<>();
-		
+
 		float distributionTotal = 0.0f;
 
 		for (GenusDistribution gd : gdList) {
@@ -87,14 +89,15 @@ public class GenusDistributionSet implements Comparable<GenusDistributionSet> {
 						MessageFormat.format(
 								"Index {0} appears more than once in GenusDistributionSet", gd.getIndex()
 						)
-				);				
+				);
 			}
 			if (gd.getIndex() < 0 || gd.getIndex() > maxIndex) {
 				throw new InvalidGenusDistributionSet(
 						MessageFormat.format(
-								"Index {0} is out of range - acceptable values are between 0 and {1}, inclusive", gd.getIndex(), maxIndex
+								"Index {0} is out of range - acceptable values are between 0 and {1}, inclusive", gd
+										.getIndex(), maxIndex
 						)
-				);								
+				);
 			}
 			generaSeen.add(gd.getGenus());
 			indicesSeen.add(gd.getIndex());
@@ -113,7 +116,7 @@ public class GenusDistributionSet implements Comparable<GenusDistributionSet> {
 	public int hashCode() {
 		return genusDistributionMap.hashCode() * 17 + maxIndex;
 	}
-	
+
 	@Override
 	public boolean equals(Object other) {
 		if (other instanceof GenusDistributionSet that) {
@@ -130,7 +133,7 @@ public class GenusDistributionSet implements Comparable<GenusDistributionSet> {
 				return genusDistributionMap.size() - that.genusDistributionMap.size();
 			}
 
-			for (GenusDistribution sd: this.genusDistributionMap.values()) {
+			for (GenusDistribution sd : this.genusDistributionMap.values()) {
 				if (that.genusDistributionMap.containsKey(sd.getIndex())) {
 					var result = sd.compareTo(that.genusDistributionMap.get(sd.getIndex()));
 					if (result != 0) {

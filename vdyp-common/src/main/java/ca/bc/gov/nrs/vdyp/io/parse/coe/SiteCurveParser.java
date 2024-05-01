@@ -67,7 +67,7 @@ public class SiteCurveParser implements OptionalControlMapSubResourceParser<Map<
 			var species = (String) value.get(SPECIES_KEY);
 			var value1 = (int) value.get(VALUE_1_KEY);
 			var value2 = (int) value.get(VALUE_2_KEY);
-			
+
 			var coastalSiteIndexEquation = SiteIndexEquation.getByIndex(value1);
 			var interiorSiteIndexEquation = SiteIndexEquation.getByIndex(value2);
 			r.put(species, new SiteCurve(coastalSiteIndexEquation, interiorSiteIndexEquation));

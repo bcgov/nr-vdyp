@@ -77,7 +77,7 @@ public enum CfsTreeSpecies implements SI32Enum<CfsTreeSpecies> {
 	HEMLOCK_WESTERN(41, 402, "Western hemlock", CfsTreeGenus.HEMLOCK),
 	HEMLOCK_MOUNTAIN(42, 403, "Mountain hemlock", CfsTreeGenus.HEMLOCK),
 	HEMLOCK_WESTERN_AND_MOUNTAIN(43, 404, "Western and mountain hemlock", CfsTreeGenus.HEMLOCK),
-	FIR_DOUGLAS_AND_ROCKY_MOUNTAIN(44, 500,  "Douglas-fir and Rocky Mountain Douglas-fir", CfsTreeGenus.DOUGLAS_FIR),
+	FIR_DOUGLAS_AND_ROCKY_MOUNTAIN(44, 500, "Douglas-fir and Rocky Mountain Douglas-fir", CfsTreeGenus.DOUGLAS_FIR),
 	TAMARACK_LARCH(45, 600, "Tamarack/Larch", CfsTreeGenus.LARCH),
 	LARCH_EUROPEAN(46, 601, "European larch", CfsTreeGenus.LARCH),
 	TAMARACK(47, 602, "Tamarack", CfsTreeGenus.LARCH),
@@ -112,7 +112,9 @@ public enum CfsTreeSpecies implements SI32Enum<CfsTreeSpecies> {
 	POPLAR_LOMBARDY(73, 1208, "Lombardy poplar", CfsTreeGenus.POPLAR),
 	POPLAR_HYBRID(74, 1209, "Hybrid poplar", CfsTreeGenus.POPLAR),
 	POPLAR_OTHER(75, 1210, "Other poplar", CfsTreeGenus.POPLAR),
-	POPLAR_BALSAM_LARGETOOTH_EASTERN(76, 1211, "Balsam poplar, largetooth aspen and eastern cottonwood", CfsTreeGenus.POPLAR),
+	POPLAR_BALSAM_LARGETOOTH_EASTERN(
+			76, 1211, "Balsam poplar, largetooth aspen and eastern cottonwood", CfsTreeGenus.POPLAR
+	),
 	POPLAR_BALSAM_BLACKCOTTONWOOD(77, 1212, "Balsam poplar and black cottonwood", CfsTreeGenus.POPLAR),
 	BIRCH(78, 1300, "Birch", CfsTreeGenus.BIRCH),
 	BIRCH_YELLOW(79, 1301, "Yellow birch", CfsTreeGenus.BIRCH),
@@ -141,13 +143,15 @@ public enum CfsTreeSpecies implements SI32Enum<CfsTreeSpecies> {
 	/* 100 */
 	MAPLE_MOUNTAIN(100, 1411, "Mountain maple", CfsTreeGenus.MAPLE),
 	MAPLE_SILVER_AND_RED(101, 1412, "Silver and red maple", CfsTreeGenus.MAPLE),
-	HARDWOOD_OTHER_BROADLEAFOTHER(102, 1500,	"Other hardwoods/other broad-leaved species", CfsTreeGenus.OTHER_BROAD_LEAVES),
-	HARDWOOD_UNSPECIFIED(103, 1550, "Unspecified hardwood species",	CfsTreeGenus.UNSPECIFIED_BROAD_LEAVES),
+	HARDWOOD_OTHER_BROADLEAFOTHER(
+			102, 1500, "Other hardwoods/other broad-leaved species", CfsTreeGenus.OTHER_BROAD_LEAVES
+	),
+	HARDWOOD_UNSPECIFIED(103, 1550, "Unspecified hardwood species", CfsTreeGenus.UNSPECIFIED_BROAD_LEAVES),
 	HICKORY(104, 1600, "Hickory", CfsTreeGenus.OTHER_BROAD_LEAVES),
 	HICKORY_BITTERNUT(105, 1601, "Bitternut hickory", CfsTreeGenus.OTHER_BROAD_LEAVES),
 	HICKORY_RED(106, 1602, "Red hickory (Pignut hickory)", CfsTreeGenus.OTHER_BROAD_LEAVES),
 	HICKORY_SHAGBARK(107, 1603, "Shagbark hickory", CfsTreeGenus.OTHER_BROAD_LEAVES),
-	HICKORY_SHELLBARK(108, 1604,	"Shellbark hickory", CfsTreeGenus.OTHER_BROAD_LEAVES),
+	HICKORY_SHELLBARK(108, 1604, "Shellbark hickory", CfsTreeGenus.OTHER_BROAD_LEAVES),
 	WALNUT(109, 1700, "Walnut", CfsTreeGenus.OTHER_BROAD_LEAVES),
 	/* 110 */
 	BUTTERNUT(110, 1701, "Butternut", CfsTreeGenus.OTHER_BROAD_LEAVES),
@@ -235,7 +239,7 @@ public enum CfsTreeSpecies implements SI32Enum<CfsTreeSpecies> {
 	private final int cfsSpeciesNumber;
 	private final String cfsSpeciesName;
 	private final CfsTreeGenus cfsTreeGenus;
-	
+
 	private CfsTreeSpecies(int index, int cfsSpeciesNumber, String cfsSpeciesName, CfsTreeGenus cfsTreeGenus) {
 		this.index = index;
 		this.cfsSpeciesNumber = cfsSpeciesNumber;
@@ -247,7 +251,7 @@ public enum CfsTreeSpecies implements SI32Enum<CfsTreeSpecies> {
 	public int getIndex() {
 		return index;
 	}
-	
+
 	public int getNumber() {
 		return cfsSpeciesNumber;
 	}
@@ -263,18 +267,22 @@ public enum CfsTreeSpecies implements SI32Enum<CfsTreeSpecies> {
 	@Override
 	public int getOffset() {
 		if (this.equals(UNKNOWN)) {
-			throw new UnsupportedOperationException(MessageFormat.format("Cannot call getIndex on {0} as it's not a standard member of the enumeration", this));
+			throw new UnsupportedOperationException(
+					MessageFormat.format(
+							"Cannot call getIndex on {0} as it's not a standard member of the enumeration", this
+					)
+			);
 		}
-		
+
 		return index;
 	}
-	
+
 	@Override
 	public String getText() {
 		if (this.equals(UNKNOWN)) {
 			return "";
 		}
-		
+
 		return this.toString();
 	}
 
@@ -285,11 +293,11 @@ public enum CfsTreeSpecies implements SI32Enum<CfsTreeSpecies> {
 	 * 	   <code>index</code> in which case <code>null</code> is returned.
 	 */
 	public static CfsTreeSpecies forIndex(int index) {
-		for (CfsTreeSpecies e: CfsTreeSpecies.values()) {
+		for (CfsTreeSpecies e : CfsTreeSpecies.values()) {
 			if (index == e.index)
 				return e;
 		}
-		
+
 		return null;
 	}
 

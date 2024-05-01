@@ -17,7 +17,7 @@ public enum ParamLookupFallback implements SI32Enum<ParamLookupFallback> {
 	public int getIndex() {
 		return this.ordinal();
 	}
-	
+
 	@Override
 	public String getText() {
 		return toString();

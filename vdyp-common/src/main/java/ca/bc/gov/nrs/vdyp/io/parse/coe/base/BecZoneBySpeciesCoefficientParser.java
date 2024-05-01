@@ -54,8 +54,8 @@ public abstract class BecZoneBySpeciesCoefficientParser
 				.value(4, BEC_ZONE_ID_KEY, ControlledValueParser.BEC) //
 				.space(2) //
 				.value(
-						1, INDEX_KEY,
-						ValueParser.range(ValueParser.INTEGER, 0, true, nCoefficients, false, "Index value")
+						1, INDEX_KEY, ValueParser
+								.range(ValueParser.INTEGER, 0, true, nCoefficients, false, "Index value")
 				) //
 				.value(2, INDICATOR_KEY, ValueParser.LOGICAL_0_1) //
 				.multiValue(NUM_SPECIES, 8, COEFFICIENTS_KEY, ValueParser.FLOAT);

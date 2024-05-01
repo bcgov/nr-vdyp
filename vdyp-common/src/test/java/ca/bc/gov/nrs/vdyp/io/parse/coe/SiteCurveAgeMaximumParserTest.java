@@ -31,12 +31,11 @@ public class SiteCurveAgeMaximumParserTest {
 		var result = parser.parse(is, controlMap);
 
 		assertThat(
-				result,
-				hasEntry(
-						is(16),
-						allOf(
-								hasAge(Region.COASTAL, is(150.0f)), hasAge(Region.INTERIOR, is(150.0f)),
-								hasProperty("t1", is(20.0f)), hasProperty("t2", is(60.0f))
+				result, hasEntry(
+						is(16), allOf(
+								hasAge(Region.COASTAL, is(150.0f)), hasAge(Region.INTERIOR, is(150.0f)), hasProperty(
+										"t1", is(20.0f)
+								), hasProperty("t2", is(60.0f))
 						)
 				)
 		);
@@ -52,12 +51,11 @@ public class SiteCurveAgeMaximumParserTest {
 		var result = parser.parse(is, controlMap);
 
 		assertThat(
-				result,
-				hasEntry(
-						is(SiteCurveAgeMaximumParser.DEFAULT_SC),
-						allOf(
-								hasAge(Region.COASTAL, is(150.0f)), hasAge(Region.INTERIOR, is(150.0f)),
-								hasProperty("t1", is(20.0f)), hasProperty("t2", is(60.0f))
+				result, hasEntry(
+						is(SiteCurveAgeMaximumParser.DEFAULT_SC), allOf(
+								hasAge(Region.COASTAL, is(150.0f)), hasAge(Region.INTERIOR, is(150.0f)), hasProperty(
+										"t1", is(20.0f)
+								), hasProperty("t2", is(60.0f))
 						)
 				)
 		);
@@ -67,8 +65,7 @@ public class SiteCurveAgeMaximumParserTest {
 	void testEndLine() throws Exception {
 		var parser = new SiteCurveAgeMaximumParser();
 		var is = TestUtils.makeInputStream(
-				" -1  150.0  150.0   20.0   60.0", "999                                End of usuable info",
-				" 42  160.0  145.0   25.0   65.0"
+				" -1  150.0  150.0   20.0   60.0", "999                                End of usuable info", " 42  160.0  145.0   25.0   65.0"
 		);
 
 		Map<String, Object> controlMap = new HashMap<>();
@@ -76,12 +73,11 @@ public class SiteCurveAgeMaximumParserTest {
 		var result = parser.parse(is, controlMap);
 
 		assertThat(
-				result,
-				hasEntry(
-						is(SiteCurveAgeMaximumParser.DEFAULT_SC),
-						allOf(
-								hasAge(Region.COASTAL, is(150.0f)), hasAge(Region.INTERIOR, is(150.0f)),
-								hasProperty("t1", is(20.0f)), hasProperty("t2", is(60.0f))
+				result, hasEntry(
+						is(SiteCurveAgeMaximumParser.DEFAULT_SC), allOf(
+								hasAge(Region.COASTAL, is(150.0f)), hasAge(Region.INTERIOR, is(150.0f)), hasProperty(
+										"t1", is(20.0f)
+								), hasProperty("t2", is(60.0f))
 						)
 				)
 		);
@@ -101,10 +97,10 @@ public class SiteCurveAgeMaximumParserTest {
 		var result = map.get(27);
 
 		assertThat(
-				result,
-				allOf(
-						hasAge(Region.COASTAL, is(140.0f)), hasAge(Region.INTERIOR, is(140.0f)),
-						hasProperty("t1", is(0.0f)), hasProperty("t2", is(0.0f))
+				result, allOf(
+						hasAge(Region.COASTAL, is(140.0f)), hasAge(Region.INTERIOR, is(140.0f)), hasProperty(
+								"t1", is(0.0f)
+						), hasProperty("t2", is(0.0f))
 				)
 		);
 	}

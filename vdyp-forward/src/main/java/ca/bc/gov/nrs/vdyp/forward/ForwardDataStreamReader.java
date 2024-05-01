@@ -28,7 +28,7 @@ import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 
 public class ForwardDataStreamReader {
-	
+
 	private static final Logger logger = LoggerFactory.getLogger(ForwardDataStreamReader.class);
 
 	private final GenusDefinitionMap genusDefinitionMap;
@@ -38,8 +38,7 @@ public class ForwardDataStreamReader {
 	private final StreamingParser<Collection<VdypSpeciesUtilization>> speciesUtilizationStream;
 
 	@SuppressWarnings("unchecked")
-	public ForwardDataStreamReader(Map<String, Object> controlMap) throws IOException 
-	{
+	public ForwardDataStreamReader(Map<String, Object> controlMap) throws IOException {
 		genusDefinitionMap = new GenusDefinitionMap((List<GenusDefinition>) controlMap.get(ControlKey.SP0_DEF.name()));
 
 		var polygonStreamFactory = controlMap.get(ControlKey.FORWARD_INPUT_VDYP_POLY.name());
@@ -54,8 +53,8 @@ public class ForwardDataStreamReader {
 		speciesUtilizationStream = ((StreamingParserFactory<Collection<VdypSpeciesUtilization>>) speciesUtilizationStreamFactory)
 				.get();
 	}
-	
-	public VdypPolygon readNextPolygon(VdypPolygonDescription polygonDescription) 
+
+	public VdypPolygon readNextPolygon(VdypPolygonDescription polygonDescription)
 			throws ProcessingException {
 
 		// Advance all the streams until the definition for the polygon is found.
@@ -103,8 +102,8 @@ public class ForwardDataStreamReader {
 							species.getGenus().orElseThrow(
 									() -> new ProcessingException(
 											MessageFormat.format(
-													"Genus missing for species {} of polygon {}",
-													species.getGenusIndex(), polygon.getDescription()
+													"Genus missing for species {} of polygon {}", species
+															.getGenusIndex(), polygon.getDescription()
 											)
 									)
 							)
@@ -116,8 +115,8 @@ public class ForwardDataStreamReader {
 					} else {
 						throw new IllegalStateException(
 								MessageFormat.format(
-										"Unrecognized layer type {} for species {} of polygon {}",
-										species.getLayerType(), species.getGenusIndex(), polygon.getDescription()
+										"Unrecognized layer type {} for species {} of polygon {}", species
+												.getLayerType(), species.getGenusIndex(), polygon.getDescription()
 								)
 						);
 					}
@@ -175,7 +174,7 @@ public class ForwardDataStreamReader {
 
 		return thePolygon.get();
 	}
-	
+
 	private class UtilizationBySpeciesKey {
 		private final LayerType layerType;
 		private final Integer genusIndex;

@@ -26,7 +26,7 @@ class GenusDefinitionMapTest {
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@BeforeEach
 	void before() throws IOException, ResourceParseException {
-		
+
 		parser = new ForwardControlParser();
 		controlMap = VdypForwardTestUtils.parse(parser, "VDYP.CTR");
 		assertThat(
@@ -41,7 +41,7 @@ class GenusDefinitionMapTest {
 	void test() {
 		@SuppressWarnings("unchecked")
 		var gdMap = new GenusDefinitionMap((List<GenusDefinition>) controlMap.get(ControlKey.SP0_DEF.name()));
-		
+
 		assertThat(gdMap.contains("AC"), is(true));
 		assertThat(gdMap.get("AC"), hasProperty("alias", is("AC")));
 		assertThat(gdMap.getByIndex(3), hasProperty("alias", is("B")));

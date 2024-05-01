@@ -1,7 +1,6 @@
 package ca.bc.gov.nrs.vdyp.si32;
 
-public final class SI32Errors
-{
+public final class SI32Errors {
 	public static final int SI_ERR_LT13 = -1;
 	public static final int SI_ERR_GI_MIN = -2;
 	public static final int SI_ERR_GI_MAX = -3;

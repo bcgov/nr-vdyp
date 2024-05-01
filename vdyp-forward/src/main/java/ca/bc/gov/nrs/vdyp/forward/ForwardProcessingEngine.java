@@ -82,7 +82,7 @@ public class ForwardProcessingEngine {
 			if (pps.siteCurveNumber[i] == VdypEntity.MISSING_INTEGER_VALUE) {
 
 				Optional<SiteIndexEquation> scIndex = Optional.empty();
-				
+
 				Optional<GenusDistribution> sp0Dist = pps.sp64Distribution[i].getSpeciesDistribution(0);
 
 				if (sp0Dist.isPresent()) {
@@ -90,16 +90,20 @@ public class ForwardProcessingEngine {
 						SiteCurve sc = siteCurveMap.get(sp0Dist.get().getGenus().getAlias());
 						scIndex = Optional.of(sc.getValue(becZone.getRegion()));
 					} else {
-						scIndex = Optional.of(SiteTool.getSICurve(pps.speciesName[i], becZone.getRegion().equals(Region.COASTAL)));
+						scIndex = Optional.of(
+								SiteTool.getSICurve(pps.speciesName[i], becZone.getRegion().equals(Region.COASTAL))
+						);
 					}
 				}
-				
+
 				if (scIndex.isEmpty()) {
 					if (siteCurveMap.size() > 0) {
 						SiteCurve sc = siteCurveMap.get(pps.speciesName[i]);
 						scIndex = Optional.of(sc.getValue(becZone.getRegion()));
 					} else {
-						scIndex = Optional.of(SiteTool.getSICurve(pps.speciesName[i], becZone.getRegion().equals(Region.COASTAL)));
+						scIndex = Optional.of(
+								SiteTool.getSICurve(pps.speciesName[i], becZone.getRegion().equals(Region.COASTAL))
+						);
 					}
 				}
 			}
@@ -112,8 +116,8 @@ public class ForwardProcessingEngine {
 
 			throw new ProcessingException(
 					MessageFormat.format(
-							"Polygon {}'s year value {} is < 1900", 101, polygon.getDescription().getName(),
-							polygon.getDescription().getYear()
+							"Polygon {}'s year value {} is < 1900", 101, polygon.getDescription().getName(), polygon
+									.getDescription().getYear()
 					)
 			);
 		}
@@ -126,14 +130,14 @@ public class ForwardProcessingEngine {
 		PolygonProcessingState pps = fps.getBank(LayerType.PRIMARY, 0);
 
 		pps.removeSpecies(i -> pps.basalArea[i][UtilizationClass.ALL.ordinal()] < MIN_BASAL_AREA);
-		
+
 		if (pps.getNSpecies() == 0) {
-				throw new ProcessingException(
-						MessageFormat.format(
-								"Polygon {0} layer 0 has no species with basal area above {1}",
-								polygon.getDescription().getName(), MIN_BASAL_AREA
-						)
-				);
+			throw new ProcessingException(
+					MessageFormat.format(
+							"Polygon {0} layer 0 has no species with basal area above {1}", polygon.getDescription()
+									.getName(), MIN_BASAL_AREA
+					)
+			);
 		}
 	}
 }

@@ -91,8 +91,8 @@ public class VdypPolygonParser implements ControlMapValueReplacer<Object, String
 						// VDYPGETP.for lines 146 - 154
 						logger.warn(
 								MessageFormat.format(
-										"Polygon {0} percent-forested-land value {1} is <= 0.0; replacing with default {2}",
-										description.getName(), percentForestLand, DEFAULT_FORESTED_LAND_PERCENTAGE
+										"Polygon {0} percent-forested-land value {1} is <= 0.0; replacing with default {2}", description
+												.getName(), percentForestLand, DEFAULT_FORESTED_LAND_PERCENTAGE
 								)
 						);
 						percentForestLand = DEFAULT_FORESTED_LAND_PERCENTAGE;

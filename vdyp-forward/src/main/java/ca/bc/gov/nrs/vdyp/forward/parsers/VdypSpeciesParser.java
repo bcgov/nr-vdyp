@@ -140,7 +140,7 @@ public class VdypSpeciesParser implements ControlMapValueReplacer<Object, String
 									MessageFormat.format("Genus {0} is not known a known genus", genusNameText0)
 							);
 						}
-						
+
 						gdList.add(new GenusDistribution(0, genusDefinitionMap.get(genusNameText0), percentGenus0));
 
 						Utils.ifBothPresent(

@@ -163,7 +163,7 @@ public class VdypLayer extends SingleSiteLayer<VdypSpecies, VdypSite> implements
 	 * VdypLayer myLayer = VdypLayer.build(builder-&gt; {
 			builder.polygonIdentifier(polygonId);
 			builder.layerType(LayerType.VETERAN);
-
+	
 			builder.crownClosure(0.9f);
 	 * })
 	 * </pre>

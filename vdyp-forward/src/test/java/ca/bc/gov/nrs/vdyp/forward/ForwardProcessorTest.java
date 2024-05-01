@@ -30,11 +30,11 @@ class ForwardProcessorTest {
 
 	@Test
 	void test() throws IOException, ResourceParseException, ProcessingException {
-		
+
 		ForwardProcessor fp = new ForwardProcessor();
-		
+
 		FileResolver fileResolver = TestUtils.fileResolver(TestUtils.class);
-		
+
 		fp.run(fileResolver, List.of("VDYP.CTR"), vdypPassSet);
 	}
 }

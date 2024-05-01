@@ -37,9 +37,9 @@ public class SpecRMap {
 	public static SiteIndexSpecies species_remap(String sc, char fiz) throws CodeErrorException {
 
 		if (sc != null) {
-			
+
 			String sc2 = sc.replaceAll(" ", "").toUpperCase();
-	
+
 			if (sc2.equals("A")) {
 				return SI_SPEC_AT;
 			}
@@ -473,12 +473,13 @@ public class SpecRMap {
 				return SI_SPEC_AT;
 			}
 		}
-	
+
 		throw new CodeErrorException("Unknown species code: " + sc);
 	}
 
-	private static SiteIndexSpecies speciesByFizCategory(char fiz, SiteIndexSpecies coastalSpecies, SiteIndexSpecies interiorSpecies)
-			throws CodeErrorException {
+	private static SiteIndexSpecies
+			speciesByFizCategory(char fiz, SiteIndexSpecies coastalSpecies, SiteIndexSpecies interiorSpecies)
+					throws CodeErrorException {
 		switch (ForestInventoryZone.toRegion(fiz)) {
 		case FIZ_COAST:
 			return coastalSpecies;

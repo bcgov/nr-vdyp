@@ -31,8 +31,8 @@ class UtilsTest {
 	@Test
 	void testExpectParsedControlMissing() {
 		var ex = assertThrows(
-				IllegalStateException.class,
-				() -> Utils.expectParsedControl(Collections.emptyMap(), "NOT_PRESENT", Integer.class)
+				IllegalStateException.class, () -> Utils
+						.expectParsedControl(Collections.emptyMap(), "NOT_PRESENT", Integer.class)
 		);
 		assertThat(ex, hasProperty("message", stringContainsInOrder("Expected control map to have", "NOT_PRESENT")));
 	}
@@ -40,14 +40,12 @@ class UtilsTest {
 	@Test
 	void testExpectParsedControlWrongType() {
 		var ex = assertThrows(
-				IllegalStateException.class,
-				() -> Utils.expectParsedControl(Collections.singletonMap("WRONG_TYPE", 2d), "WRONG_TYPE", Integer.class)
+				IllegalStateException.class, () -> Utils
+						.expectParsedControl(Collections.singletonMap("WRONG_TYPE", 2d), "WRONG_TYPE", Integer.class)
 		);
 		assertThat(
-				ex,
-				hasProperty(
-						"message",
-						stringContainsInOrder(
+				ex, hasProperty(
+						"message", stringContainsInOrder(
 								"Expected control map entry", "WRONG_TYPE", "to be", "Integer", "was", "Double"
 						)
 				)
@@ -57,16 +55,13 @@ class UtilsTest {
 	@Test
 	void testExpectParsedControlStillString() {
 		var ex = assertThrows(
-				IllegalStateException.class,
-				() -> Utils.expectParsedControl(
+				IllegalStateException.class, () -> Utils.expectParsedControl(
 						Collections.singletonMap("WRONG_TYPE", "UNPARSED"), "WRONG_TYPE", Integer.class
 				)
 		);
 		assertThat(
-				ex,
-				hasProperty(
-						"message",
-						stringContainsInOrder(
+				ex, hasProperty(
+						"message", stringContainsInOrder(
 								"Expected control map entry", "WRONG_TYPE", "to be parsed but was still a String"
 						)
 				)

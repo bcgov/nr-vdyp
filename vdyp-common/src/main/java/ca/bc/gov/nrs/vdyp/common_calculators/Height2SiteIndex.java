@@ -13,7 +13,7 @@ import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.LessThan13Excepti
 import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.NoAnswerException;
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexAgeType;
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
-import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEstimationType; 
+import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEstimationType;
 
 /**
  * Height2SiteIndex.java - given age and height, computes site index. - if age is total, site index and years to breast
@@ -27,8 +27,10 @@ public class Height2SiteIndex {
 	private static final int SI_ERR_NO_ANS = -4;
 
 	@SuppressWarnings("java:S3776, java:S6541")
-	public static double heightToIndex(SiteIndexEquation cuIndex, double age, SiteIndexAgeType ageType, 
-			double height, SiteIndexEstimationType siEstType)
+	public static double heightToIndex(
+			SiteIndexEquation cuIndex, double age, SiteIndexAgeType ageType,
+			double height, SiteIndexEstimationType siEstType
+	)
 			throws CommonCalculatorException {
 		double index;
 		double x1, x2;
@@ -41,7 +43,7 @@ public class Height2SiteIndex {
 		if (ageType == null) {
 			ageType = SI_AT_TOTAL;
 		}
-		
+
 		/* handle simple cases */
 		if (ageType == SI_AT_BREAST) {
 			if (height < 1.3) {
@@ -83,13 +85,14 @@ public class Height2SiteIndex {
 			} else
 				index = siteIterate(cuIndex, age, SI_AT_TOTAL, height);
 		}
-		
+
 		return index;
 	}
 
 	@SuppressWarnings("java:S3776, java:S6541")
-	public static double baHeightToIndex(SiteIndexEquation cuIndex, double bhage, double height, SiteIndexEstimationType siEstType)
-			throws CommonCalculatorException {
+	public static double
+			baHeightToIndex(SiteIndexEquation cuIndex, double bhage, double height, SiteIndexEstimationType siEstType)
+					throws CommonCalculatorException {
 		double index;
 		double x1, x2;
 		double logBhAge;
@@ -3839,12 +3842,13 @@ public class Height2SiteIndex {
 			y2bh = SiteIndexYears2BreastHeight.y2bh(cuIndex, site);
 
 			if (ageType == SI_AT_BREAST) {
-				testTop = SiteIndex2Height.indexToHeight(cuIndex, age, SI_AT_BREAST, site, y2bh, 0.5 /* may have to change */); 
+				testTop = SiteIndex2Height
+						.indexToHeight(cuIndex, age, SI_AT_BREAST, site, y2bh, 0.5 /* may have to change */);
 			} else {
 				/* was age - y2bh */
 				testTop = SiteIndex2Height.indexToHeight(
-						cuIndex, Age2Age.ageToAge(cuIndex, age, SI_AT_TOTAL, SI_AT_BREAST, y2bh), SI_AT_BREAST,
-						site, y2bh, 0.5
+						cuIndex, AgeToAge
+								.ageToAge(cuIndex, age, SI_AT_TOTAL, SI_AT_BREAST, y2bh), SI_AT_BREAST, site, y2bh, 0.5
 				); // 0.5 may have to change
 			}
 

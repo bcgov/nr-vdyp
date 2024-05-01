@@ -29,7 +29,7 @@ import ca.bc.gov.nrs.vdyp.si32.enumerations.SI32Enum;
  * </ol>
  */
 public enum CfsBiomassConversionSupportedEcoZone implements SI32Enum<CfsBiomassConversionSupportedEcoZone> {
-	UNKNOWN(-1), 
+	UNKNOWN(-1),
 
 	/* 4 */
 	TAIGA_PLAINS(0),
@@ -56,20 +56,24 @@ public enum CfsBiomassConversionSupportedEcoZone implements SI32Enum<CfsBiomassC
 	@Override
 	public int getOffset() {
 		if (this.equals(UNKNOWN)) {
-			throw new UnsupportedOperationException(MessageFormat
-					.format("Cannot call getIndex on {} as it's not a standard member of the enumeration", this));
+			throw new UnsupportedOperationException(
+					MessageFormat
+							.format("Cannot call getIndex on {} as it's not a standard member of the enumeration", this)
+			);
 		}
-		
+
 		return index;
 	}
-	
+
 	@Override
 	public String getText() {
 		if (this.equals(UNKNOWN)) {
-			throw new UnsupportedOperationException(MessageFormat
-					.format("Cannot call getText on {} as it's not a standard member of the enumeration", this));
+			throw new UnsupportedOperationException(
+					MessageFormat
+							.format("Cannot call getText on {} as it's not a standard member of the enumeration", this)
+			);
 		}
-		
+
 		return this.toString();
 	}
 

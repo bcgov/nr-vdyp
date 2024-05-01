@@ -8,7 +8,7 @@ import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.CurveErrorExcepti
 import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.GrowthInterceptTotalException;
 import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.LessThan13Exception;
 import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.NoAnswerException;
-import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation; 
+import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
 
 /**
  * SiteIndexYears2BreastHeight - computes number of years from seed to breast height.
@@ -35,7 +35,7 @@ public class SiteIndexYears2BreastHeight {
 		if (cuIndex == null) {
 			throw new CurveErrorException("cuIndex is null");
 		}
-		
+
 		switch (cuIndex) {
 		case SI_FDC_NIGHGI:
 			throw new GrowthInterceptTotalException("Cannot use with GI equations, case SI_FDC_NIGHGI: " + cuIndex);
@@ -909,7 +909,7 @@ public class SiteIndexYears2BreastHeight {
 	 * @throws CommonCalculatorException
 	 */
 	public static double y2bh05(SiteIndexEquation cuIndex, double siteIndex) throws CommonCalculatorException {
-		
+
 		double y2bh = y2bh(cuIndex, siteIndex);
 
 		/* force answer to be in steps 0.5, 1.5, 2.5, etc. */

@@ -36,19 +36,21 @@ public class DqGrowthFiatParserTest {
 
 		assertThat(m, Matchers.aMapWithSize(2));
 		assertThat(
-				m.get(Region.COASTAL),
-				Matchers.allOf(
-						Matchers.hasProperty("ages", Matchers.arrayContaining(1.0f, 0.02f, 100.0f, 0.01f)),
-						Matchers.hasProperty("coefficients", Matchers.arrayContaining(200f, 0.0f, 0.0f, 0.0f)),
-						Matchers.hasProperty("mixedCoefficients", Matchers.arrayContaining(100.0f, 150.0f, 1.0f))
+				m.get(Region.COASTAL), Matchers.allOf(
+						Matchers.hasProperty(
+								"ages", Matchers.arrayContaining(1.0f, 0.02f, 100.0f, 0.01f)
+						), Matchers.hasProperty(
+								"coefficients", Matchers.arrayContaining(200f, 0.0f, 0.0f, 0.0f)
+						), Matchers.hasProperty("mixedCoefficients", Matchers.arrayContaining(100.0f, 150.0f, 1.0f))
 				)
 		);
 		assertThat(
-				m.get(Region.INTERIOR),
-				Matchers.allOf(
-						Matchers.hasProperty("ages", Matchers.arrayContaining(1.0f, 0.02f, 100.0f, 0.01f)),
-						Matchers.hasProperty("coefficients", Matchers.arrayContaining(200f, 0.0f, 0.0f, 0.0f)),
-						Matchers.hasProperty("mixedCoefficients", Matchers.arrayContaining(100.0f, 150.0f, 1.0f))
+				m.get(Region.INTERIOR), Matchers.allOf(
+						Matchers.hasProperty(
+								"ages", Matchers.arrayContaining(1.0f, 0.02f, 100.0f, 0.01f)
+						), Matchers.hasProperty(
+								"coefficients", Matchers.arrayContaining(200f, 0.0f, 0.0f, 0.0f)
+						), Matchers.hasProperty("mixedCoefficients", Matchers.arrayContaining(100.0f, 150.0f, 1.0f))
 				)
 		);
 	}

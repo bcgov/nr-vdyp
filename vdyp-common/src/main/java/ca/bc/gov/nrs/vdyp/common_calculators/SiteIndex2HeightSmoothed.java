@@ -33,7 +33,8 @@ public class SiteIndex2HeightSmoothed {
 	 * @throws NoAnswerException when the iteration will not converge
 	 */
 	public static double indexToHeightSmoothed(
-			SiteIndexEquation cuIndex, double age, SiteIndexAgeType ageType, double siteIndex, double yearsToBreastHeight, 
+			SiteIndexEquation cuIndex, double age, SiteIndexAgeType ageType, double siteIndex,
+			double yearsToBreastHeight,
 			double seedlingAge, double seedlingHeight
 	) throws CommonCalculatorException {
 
@@ -68,7 +69,7 @@ public class SiteIndex2HeightSmoothed {
 		if (cuIndex == null) {
 			throw new NoAnswerException("cuIndex is null");
 		}
-		
+
 		if (cuIndex == SI_PLI_THROWER || cuIndex == SI_SW_GOUDIE_PLAAC || cuIndex == SI_SW_GOUDIE_NATAC
 				|| cuIndex == SI_FDC_BRUCEAC || cuIndex == SI_HWC_WILEYAC) {
 			pi = yearsToBreastHeight - (int) yearsToBreastHeight;

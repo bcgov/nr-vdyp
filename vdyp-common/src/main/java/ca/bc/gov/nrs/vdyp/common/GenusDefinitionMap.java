@@ -17,13 +17,13 @@ public class GenusDefinitionMap {
 
 		if (genusDefinitionList != null) {
 			nSpecies = genusDefinitionList.size();
-	
+
 			int currentIndex = 1;
 			for (GenusDefinition g : genusDefinitionList) {
 				genusByAliasMap.put(g.getAlias(), g);
 				indexByAliasMap.put(g.getAlias(), g.getPreference().orElse(currentIndex));
 				genusByIndexMap.put(g.getPreference().orElse(currentIndex), g);
-	
+
 				currentIndex += 1;
 			}
 		} else {

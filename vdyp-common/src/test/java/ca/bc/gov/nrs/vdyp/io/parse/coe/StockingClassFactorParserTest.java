@@ -35,10 +35,10 @@ class StockingClassFactorParserTest {
 		var result = parser.parse(is, Collections.emptyMap());
 
 		assertThat(
-				result,
-				mmHasEntry(
-						present(allOf(hasProperty("factor", is(1.0f)), allOf(hasProperty("npctArea", is(100))))), 'R',
-						Region.INTERIOR
+				result, mmHasEntry(
+						present(
+								allOf(hasProperty("factor", is(1.0f)), allOf(hasProperty("npctArea", is(100))))
+						), 'R', Region.INTERIOR
 				)
 		);
 	}
@@ -51,25 +51,27 @@ class StockingClassFactorParserTest {
 			var result = parser.parse(is, Collections.emptyMap());
 
 			assertThat(
-					result,
-					mmHasEntry(
-							present(allOf(hasProperty("factor", is(1.0f)), allOf(hasProperty("npctArea", is(100))))),
-							'R', Region.INTERIOR
+					result, mmHasEntry(
+							present(
+									allOf(hasProperty("factor", is(1.0f)), allOf(hasProperty("npctArea", is(100))))
+							), 'R', Region.INTERIOR
 
 					)
 			);
 			assertThat(
 					result, mmHasEntry(
 
-							present(allOf(hasProperty("factor", is(1.0f)), allOf(hasProperty("npctArea", is(100))))),
-							'R', Region.COASTAL
+							present(
+									allOf(hasProperty("factor", is(1.0f)), allOf(hasProperty("npctArea", is(100))))
+							), 'R', Region.COASTAL
 					)
 			);
 			assertThat(
 					result, mmHasEntry(
 
-							present(allOf(hasProperty("factor", is(1.0f)), allOf(hasProperty("npctArea", is(100))))),
-							'4', Region.COASTAL
+							present(
+									allOf(hasProperty("factor", is(1.0f)), allOf(hasProperty("npctArea", is(100))))
+							), '4', Region.COASTAL
 					)
 			);
 		}

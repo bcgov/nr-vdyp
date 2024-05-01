@@ -44,8 +44,9 @@ public class FipControlParser extends StartApplicationControlParser {
 	protected ValueParser<Map<String, Float>> minimaParser() {
 		return ValueParser.callback(
 				ValueParser.toMap(
-						ValueParser.list(ValueParser.FLOAT), Collections.singletonMap(MINIMUM_VETERAN_HEIGHT, 10.0f),
-						MINIMUM_HEIGHT, MINIMUM_BASE_AREA, MINIMUM_FULLY_STOCKED_AREA, MINIMUM_VETERAN_HEIGHT
+						ValueParser.list(ValueParser.FLOAT), Collections.singletonMap(
+								MINIMUM_VETERAN_HEIGHT, 10.0f
+						), MINIMUM_HEIGHT, MINIMUM_BASE_AREA, MINIMUM_FULLY_STOCKED_AREA, MINIMUM_VETERAN_HEIGHT
 				), minima -> {
 					log.atDebug().setMessage(
 							"Minima read from FIPSTART Control at line {}\n  Minimum Height: {}\n  Minimum BA: {}\n  Minimum  BA Fully Stocked: {}\n  Minimum Veteran Height: {}"
@@ -125,8 +126,7 @@ public class FipControlParser extends StartApplicationControlParser {
 	@Override
 	protected List<ControlKey> outputFileParsers() {
 		return List.of(
-				ControlKey.VRI_OUTPUT_VDYP_POLYGON, ControlKey.VRI_OUTPUT_VDYP_LAYER_BY_SPECIES,
-				ControlKey.VRI_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL
+				ControlKey.VRI_OUTPUT_VDYP_POLYGON, ControlKey.VRI_OUTPUT_VDYP_LAYER_BY_SPECIES, ControlKey.VRI_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL
 		);
 	}
 

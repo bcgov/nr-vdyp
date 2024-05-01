@@ -131,7 +131,7 @@ public enum SiteIndexEquation {
 	SI_SE_NIGHGI(120),
 	SI_SE_NIGH(121),
 	SI_CWC_NIGH(122);
-	
+
 	private static Map<Integer, SiteIndexEquation> byIndex = new HashMap<>();
 
 	private final int n;
@@ -139,30 +139,30 @@ public enum SiteIndexEquation {
 	SiteIndexEquation(int n) {
 		this.n = n;
 	}
-	
+
 	public static EnumIterator<SiteIndexEquation> getIterator() {
 		return new EnumIterator<SiteIndexEquation>(values(), SI_ACB_HUANG, SI_CWC_NIGH);
 	}
-	
+
 	public static SiteIndexEquation getByIndex(int n) {
 		var e = byIndex.get(n);
-		
+
 		if (e == null) {
-			for (SiteIndexEquation v: values()) {
+			for (SiteIndexEquation v : values()) {
 				if (v.n == n) {
 					byIndex.put(n, e = v);
 					break;
 				}
 			}
 		}
-		
+
 		if (e == null) {
 			throw new IllegalArgumentException(MessageFormat.format("Index {} doesn't exist in SiteIndexEquation", n));
 		} else {
 			return e;
 		}
 	}
-	
+
 	public int n() {
 		return n;
 	}

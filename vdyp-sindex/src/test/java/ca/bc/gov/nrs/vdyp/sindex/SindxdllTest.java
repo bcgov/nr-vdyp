@@ -31,7 +31,7 @@ import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexSpecies;
 class SindxdllTest {
 
 	private static final int SI_ERR_SPEC = -10;
-	
+
 	private static final String[][] si_curve_notes = { {
 			/* SI_ACB_HUANG */
 			"Huang Shongming, Stephen J. Titus and Tom W. Lakusta. 1994."
@@ -234,7 +234,8 @@ class SindxdllTest {
 					/* SI_FDI_HUANG_PLA */
 					"", /* see ACB_HUANG */
 					"", /* see FDI_HUANG_PLA */
-			}, {
+			},
+			{
 					/* SI_FDI_HUANG_NAT */
 					"", /* see ACB_HUANG */
 					"The height-age (site index) curves were developed from stem analysis of 66 "
@@ -274,7 +275,8 @@ class SindxdllTest {
 					/* SI_FDI_VDP_WASH */
 					"", /* see FDI_VDP_MONT */
 					"", /* see FDI_VDP_MONT */
-			}, {
+			},
+			{
 					/* SI_FDI_MONS_DF */
 					"Monserud, Robert A. 1984. Height growth and site index curves for inland "
 							+ "Douglas-fir based on stem analysis data and forest habitat type. For. Sci."
@@ -287,19 +289,23 @@ class SindxdllTest {
 					/* SI_FDI_MONS_GF */
 					"", /* see FDI_MONS_DF */
 					"", /* see FDI_MONS_DF */
-			}, {
+			},
+			{
 					/* SI_FDI_MONS_WRC */
 					"", /* see FDI_MONS_DF */
 					"", /* see FDI_MONS_DF */
-			}, {
+			},
+			{
 					/* SI_FDI_MONS_WH */
 					"", /* see FDI_MONS_DF */
 					"", /* see FDI_MONS_DF */
-			}, {
+			},
+			{
 					/* SI_FDI_MONS_SAF */
 					"", /* see FDI_MONS_DF */
 					"", /* see FDI_MONS_DF */
-			}, {
+			},
+			{
 					/* SI_HWC_NIGHGI */
 					"Nigh, Gordon D. 1996. Growth intercept models for species without distinct "
 							+ "annual branch whorls: western hemlock. Can. J. For. Res. 26: 1407-1415 (1996).",
@@ -423,7 +429,8 @@ class SindxdllTest {
 					/* SI_PLI_HUANG_NAT */
 					"", /* see ACB_HUANG */
 					"", /* see PLI_HUANG_PLA */
-			}, {
+			},
+			{
 					/* SI_PLI_THROWER */
 					"J.S. Thrower and Associates Ltd. 1994. Revised height-age curves for lodgepole "
 							+ "pine and interior spruce in British Columbia. Report to the Res. Br., B.C. "
@@ -461,7 +468,8 @@ class SindxdllTest {
 					/* SI_PLI_GOUDIE_WET */
 					"", /* see PLI_GOUDIE_DRY */
 					"", /* see PLI_GOUDIE_DRY */
-			}, {
+			},
+			{
 					/* SI_PLI_DEMPSTER */
 					"", /* see AT_GOUDIE */
 					"The height-age (site index) curves were developed from stem analysis of 1433 "
@@ -571,7 +579,8 @@ class SindxdllTest {
 					/* SI_SW_HUANG_NAT */
 					"", /* see ACB_HUANG */
 					"", /* see SW_HUANG_PLA */
-			}, {
+			},
+			{
 					/* SI_SW_THROWER */
 					"", /* see PLI_THROWER */
 					"", },
@@ -595,7 +604,8 @@ class SindxdllTest {
 					/* SI_SW_KER_NAT */
 					"", /* see SB_KER */
 					"", /* see SW_KER_PLA */
-			}, {
+			},
+			{
 					/* SI_SW_GOUDIE_PLA */
 					"", /* see PLI_GOUDIE_DRY */
 					"The height-age (site index) curves were developed from stem analysis of 157 "
@@ -606,7 +616,8 @@ class SindxdllTest {
 					/* SI_SW_GOUDIE_NAT */
 					"", /* see PLI_GOUDIE_DRY */
 					"", /* see SW_GOUDIE_PLA */
-			}, {
+			},
+			{
 					/* SI_SW_DEMPSTER */
 					"", /* see AT_GOUDIE */
 					"Notes: The height-age (site index) curves were developed from stem analysis of "
@@ -721,7 +732,8 @@ class SindxdllTest {
 					/* SI_CWI_NIGHGI */
 					"", /* see CWI_NIGH */
 					"", /* see CWI_NIGH */
-			}, {
+			},
+			{
 					/* SI_SW_GOUDNIGH */
 					"Nigh, G.D. and B.A. Love. 2000. Juvenile height development in interior "
 							+ "spruce stands of British Columbia. West. J. Appl. For. 15: 117-121."
@@ -1171,16 +1183,17 @@ class SindxdllTest {
 		@Test
 		void testNullIndex() throws CommonCalculatorException {
 			assertThrows(
-					SpeciesErrorException.class, () -> Sindxdll.NextSpecies(null),
-					"NextSpecies should throw SpeciesErrorException for invalid index"
+					SpeciesErrorException.class, () -> Sindxdll
+							.NextSpecies(null), "NextSpecies should throw SpeciesErrorException for invalid index"
 			);
 		}
 
 		@Test
 		void testLastIndex() throws CommonCalculatorException {
 			assertThrows(
-					NoAnswerException.class, () -> Sindxdll.NextSpecies(SiteIndexSpecies.getLastSpecies()),
-					"NextSpecies should throw NoAnswerException for last defined species index"
+					NoAnswerException.class, () -> Sindxdll.NextSpecies(
+							SiteIndexSpecies.getLastSpecies()
+					), "NextSpecies should throw NoAnswerException for last defined species index"
 			);
 		}
 	}
@@ -1190,8 +1203,8 @@ class SindxdllTest {
 		@Test
 		void testNullIndex() throws CommonCalculatorException {
 			assertThrows(
-					IllegalArgumentException.class, () -> Sindxdll.SpecCode(null),
-					"SpecCode should throw IllegalArgumentException for invalid index"
+					IllegalArgumentException.class, () -> Sindxdll
+							.SpecCode(null), "SpecCode should throw IllegalArgumentException for invalid index"
 			);
 		}
 
@@ -1210,8 +1223,8 @@ class SindxdllTest {
 		@Test
 		void testNullIndex() throws CommonCalculatorException {
 			assertThrows(
-					IllegalArgumentException.class, () -> Sindxdll.SpecName(null),
-					"SpecName should throw IllegalArgumentException for invalid index"
+					IllegalArgumentException.class, () -> Sindxdll
+							.SpecName(null), "SpecName should throw IllegalArgumentException for invalid index"
 			);
 		}
 
@@ -1230,8 +1243,8 @@ class SindxdllTest {
 		@Test
 		void testNullIndex() throws CommonCalculatorException {
 			assertThrows(
-					SpeciesErrorException.class, () -> Sindxdll.SpecUse(null),
-					"SpecUse should throw SpeciesErrorException for invalid index"
+					SpeciesErrorException.class, () -> Sindxdll
+							.SpecUse(null), "SpecUse should throw SpeciesErrorException for invalid index"
 			);
 		}
 
@@ -1922,16 +1935,17 @@ class SindxdllTest {
 		@Test
 		void testNullIndex() throws CommonCalculatorException {
 			assertThrows(
-					SpeciesErrorException.class, () -> Sindxdll.DefCurve(null),
-					"DefCurve should throw SpeciesErrorException for invalid index"
+					SpeciesErrorException.class, () -> Sindxdll
+							.DefCurve(null), "DefCurve should throw SpeciesErrorException for invalid index"
 			);
 		}
 
 		@Test
 		void testLastSpeciesIndex() throws CommonCalculatorException {
 			assertThrows(
-					NoAnswerException.class, () -> Sindxdll.DefCurve(SiteIndexSpecies.getLastSpecies()),
-					"DefCurve should throw NoAnswerException for last index"
+					NoAnswerException.class, () -> Sindxdll.DefCurve(
+							SiteIndexSpecies.getLastSpecies()
+					), "DefCurve should throw NoAnswerException for last index"
 			);
 		}
 
@@ -1946,12 +1960,13 @@ class SindxdllTest {
 		@Test
 		void testNullIndex() throws CommonCalculatorException {
 			assertThrows(
-					SpeciesErrorException.class, () -> Sindxdll.DefGICurve(null),
-					"DefGICurve should throw SpeciesErrorException for invalid index"
+					SpeciesErrorException.class, () -> Sindxdll
+							.DefGICurve(null), "DefGICurve should throw SpeciesErrorException for invalid index"
 			);
 		}
 
-		private void testHelper(SiteIndexSpecies spIndex, SiteIndexEquation expectedValue) throws SpeciesErrorException, NoAnswerException {
+		private void testHelper(SiteIndexSpecies spIndex, SiteIndexEquation expectedValue)
+				throws SpeciesErrorException, NoAnswerException {
 			// helper function to reduce repetitive code
 			SiteIndexEquation actualValue = Sindxdll.DefGICurve(spIndex);
 			assertEquals(actualValue, expectedValue);
@@ -2025,8 +2040,8 @@ class SindxdllTest {
 		@Test
 		void testIndexNotInSwitch() throws CommonCalculatorException {
 			assertThrows(
-					NoAnswerException.class, () -> Sindxdll.DefGICurve(SI_SPEC_B),
-					"DefGICurve should throw NoAnswerException for invalid index"
+					NoAnswerException.class, () -> Sindxdll
+							.DefGICurve(SI_SPEC_B), "DefGICurve should throw NoAnswerException for invalid index"
 			);
 		}
 	}
@@ -2046,8 +2061,9 @@ class SindxdllTest {
 		@Test
 		void testEstNullIndex() throws CommonCalculatorException {
 			assertThrows(
-					SpeciesErrorException.class, () -> Sindxdll.DefCurveEst(null, SI_ESTAB_NAT),
-					"DefCurveEst should throw SpeciesErrorException for invalid index"
+					SpeciesErrorException.class, () -> Sindxdll.DefCurveEst(
+							null, SI_ESTAB_NAT
+					), "DefCurveEst should throw SpeciesErrorException for invalid index"
 			);
 		}
 
@@ -2089,16 +2105,16 @@ class SindxdllTest {
 		@Test
 		void testNullIndex() throws CommonCalculatorException {
 			assertThrows(
-					SpeciesErrorException.class, () -> Sindxdll.FirstCurve(null),
-					"FirstCurve should throw SpeciesErrorException for invalid index"
+					SpeciesErrorException.class, () -> Sindxdll
+							.FirstCurve(null), "FirstCurve should throw SpeciesErrorException for invalid index"
 			);
 		}
 
 		@Test
 		void testNoCurvesDefined() throws CommonCalculatorException {
 			assertThrows(
-					NoAnswerException.class, () -> Sindxdll.FirstCurve(SI_SPEC_A),
-					"FirstCurve should throw NoAnswerException for invalid index"
+					NoAnswerException.class, () -> Sindxdll
+							.FirstCurve(SI_SPEC_A), "FirstCurve should throw NoAnswerException for invalid index"
 			);
 		}
 
@@ -2114,16 +2130,16 @@ class SindxdllTest {
 		@Test
 		void testNullSPIndex() throws CommonCalculatorException {
 			assertThrows(
-					SpeciesErrorException.class, () -> Sindxdll.NextCurve(null, null),
-					"NextCurve should throw SpeciesErrorException for invalid index"
+					SpeciesErrorException.class, () -> Sindxdll
+							.NextCurve(null, null), "NextCurve should throw SpeciesErrorException for invalid index"
 			);
 		}
 
 		@Test
 		void testTooNullIndex() throws CommonCalculatorException {
 			assertThrows(
-					CurveErrorException.class, () -> Sindxdll.NextCurve(SI_SPEC_A, null),
-					"NextCurve should throw CurveErrorException for invalid index"
+					CurveErrorException.class, () -> Sindxdll
+							.NextCurve(SI_SPEC_A, null), "NextCurve should throw CurveErrorException for invalid index"
 			);
 		}
 
@@ -3301,8 +3317,9 @@ class SindxdllTest {
 		void testInvalidIndex() throws CommonCalculatorException {
 			SiteIndexEquation invalidIndex = null; // Choose an invalid index for testing
 			assertThrows(
-					CurveErrorException.class, () -> Sindxdll.CurveName(invalidIndex),
-					"CurveName should throw IllegalArgumentException for invalid index"
+					CurveErrorException.class, () -> Sindxdll.CurveName(
+							invalidIndex
+					), "CurveName should throw IllegalArgumentException for invalid index"
 			);
 		}
 
@@ -3322,8 +3339,8 @@ class SindxdllTest {
 		void testInvalidIndex() throws CommonCalculatorException {
 			SiteIndexEquation invalidIndex = null; // Choose an invalid index for testing
 			assertThrows(
-					CurveErrorException.class, () -> Sindxdll.CurveUse(invalidIndex),
-					"CurveUse should throw IllegalArgumentException for invalid index"
+					CurveErrorException.class, () -> Sindxdll
+							.CurveUse(invalidIndex), "CurveUse should throw IllegalArgumentException for invalid index"
 			);
 		}
 
@@ -3343,7 +3360,8 @@ class SindxdllTest {
 		void testHtAgeToSIError() throws CommonCalculatorException {
 			Reference<Double> site = new Reference<>();
 			assertThrows(
-					LessThan13Exception.class, () -> Sindxdll.HtAgeToSI(null, 0.0, SI_AT_BREAST, 1.2, SI_EST_ITERATE, site)
+					LessThan13Exception.class, () -> Sindxdll
+							.HtAgeToSI(null, 0.0, SI_AT_BREAST, 1.2, SI_EST_ITERATE, site)
 			);
 		}
 
@@ -3423,8 +3441,8 @@ class SindxdllTest {
 		void testAgeSIToHtError() throws CommonCalculatorException {
 			Reference<Double> height = new Reference<>();
 			assertThrows(
-					LessThan13Exception.class,
-					() -> Sindxdll.AgeSIToHtSmooth(null, 0.0, SI_AT_TOTAL, 1.2, 0.0, 0.0, 0.0, height)
+					LessThan13Exception.class, () -> Sindxdll
+							.AgeSIToHtSmooth(null, 0.0, SI_AT_TOTAL, 1.2, 0.0, 0.0, 0.0, height)
 			);
 		}
 
@@ -3433,7 +3451,8 @@ class SindxdllTest {
 			Reference<Double> height = new Reference<>();
 
 			double expectedHeightValue = 1.3 / 3.1 * 3;
-			double actualResult = Sindxdll.AgeSIToHtSmooth(SI_FDI_HUANG_NAT, 3.0, SI_AT_TOTAL, 16.0, 4.0, 3.1, 1.3, height);
+			double actualResult = Sindxdll
+					.AgeSIToHtSmooth(SI_FDI_HUANG_NAT, 3.0, SI_AT_TOTAL, 16.0, 4.0, 3.1, 1.3, height);
 			double expectedResult = 0;
 
 			assertEquals(actualResult, expectedResult);
@@ -3616,7 +3635,8 @@ class SindxdllTest {
 
 		@Test
 		void testSI_AT_HUANG() throws CommonCalculatorException {
-			SiteIndexEquation[] cu_indices = { SI_AT_HUANG, SI_SB_HUANG, SI_FDI_HUANG_PLA, SI_FDI_HUANG_NAT, SI_PLI_HUANG_PLA,
+			SiteIndexEquation[] cu_indices = { SI_AT_HUANG, SI_SB_HUANG, SI_FDI_HUANG_PLA, SI_FDI_HUANG_NAT,
+					SI_PLI_HUANG_PLA,
 					SI_PLI_HUANG_NAT, SI_SW_HUANG_PLA, SI_SW_HUANG_NAT };
 			SiteIndexEquation cuIndex = SI_ACB_HUANG;
 			for (SiteIndexEquation index : cu_indices) {
@@ -3841,8 +3861,8 @@ class SindxdllTest {
 		void testAgeToAgeError() throws CommonCalculatorException {
 			Reference<Double> age = new Reference<>();
 			assertThrows(
-					AgeTypeErrorException.class,
-					() -> Sindxdll.AgeToAge(SI_ACB_HUANGAC, 0.0, SI_AT_BREAST, 0.0, age, SI_AT_BREAST)
+					AgeTypeErrorException.class, () -> Sindxdll
+							.AgeToAge(SI_ACB_HUANGAC, 0.0, SI_AT_BREAST, 0.0, age, SI_AT_BREAST)
 			);
 		}
 

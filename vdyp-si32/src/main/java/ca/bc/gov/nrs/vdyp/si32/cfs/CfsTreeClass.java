@@ -68,23 +68,27 @@ public enum CfsTreeClass implements SI32Enum<CfsTreeClass> {
 	@Override
 	public int getOffset() {
 		if (this.equals(UNKNOWN)) {
-			throw new UnsupportedOperationException(MessageFormat
-					.format("Cannot call getIndex on {} as it's not a standard member of the enumeration", this));
+			throw new UnsupportedOperationException(
+					MessageFormat
+							.format("Cannot call getIndex on {} as it's not a standard member of the enumeration", this)
+			);
 		}
-		
+
 		return index;
 	}
-	
+
 	@Override
 	public String getText() {
 		if (this.equals(UNKNOWN)) {
-			throw new UnsupportedOperationException(MessageFormat
-					.format("Cannot call getText on {} as it's not a standard member of the enumeration", this));
+			throw new UnsupportedOperationException(
+					MessageFormat
+							.format("Cannot call getText on {} as it's not a standard member of the enumeration", this)
+			);
 		}
-		
+
 		return this.toString();
 	}
-	
+
 	public String getDescription() {
 		return this.description;
 	}
@@ -96,12 +100,12 @@ public enum CfsTreeClass implements SI32Enum<CfsTreeClass> {
 	 * 	   <code>index</code> in which case <code>null</code> is returned.
 	 */
 	public static CfsTreeClass forIndex(int index) {
-		
-		for (CfsTreeClass e: CfsTreeClass.values()) {
+
+		for (CfsTreeClass e : CfsTreeClass.values()) {
 			if (index == e.index)
 				return e;
 		}
-		
+
 		return null;
 	}
 

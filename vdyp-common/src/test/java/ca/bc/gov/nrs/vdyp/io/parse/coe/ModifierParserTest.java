@@ -100,35 +100,35 @@ class ModifierParserTest {
 		assertThat(controlMap, (Matcher) controlMapHasEntry(ControlKey.MODIFIER_FILE, present(is("testFilename"))));
 
 		assertThat(
-				controlMap,
-				(Matcher) controlMapHasEntry(
-						ControlKey.BA_MODIFIERS,
-						mmDimensions(contains((Object[]) expectedSp0Aliases), contains((Object[]) Region.values()))
+				controlMap, (Matcher) controlMapHasEntry(
+						ControlKey.BA_MODIFIERS, mmDimensions(
+								contains((Object[]) expectedSp0Aliases), contains((Object[]) Region.values())
+						)
 				)
 		);
 		assertThat(controlMap, (Matcher) controlMapHasEntry(ControlKey.BA_MODIFIERS, mmAll(is(1.0f))));
 		assertThat(
-				controlMap,
-				(Matcher) controlMapHasEntry(
-						ControlKey.DQ_MODIFIERS,
-						mmDimensions(contains((Object[]) expectedSp0Aliases), contains((Object[]) Region.values()))
+				controlMap, (Matcher) controlMapHasEntry(
+						ControlKey.DQ_MODIFIERS, mmDimensions(
+								contains((Object[]) expectedSp0Aliases), contains((Object[]) Region.values())
+						)
 				)
 		);
 		assertThat(controlMap, (Matcher) controlMapHasEntry(ControlKey.DQ_MODIFIERS, mmAll(is(1.0f))));
 
 		assertThat(
-				controlMap,
-				(Matcher) controlMapHasEntry(
-						ModifierParser.CONTROL_KEY_MOD301_DECAY,
-						mmDimensions(contains((Object[]) expectedSp0Aliases), contains((Object[]) Region.values()))
+				controlMap, (Matcher) controlMapHasEntry(
+						ModifierParser.CONTROL_KEY_MOD301_DECAY, mmDimensions(
+								contains((Object[]) expectedSp0Aliases), contains((Object[]) Region.values())
+						)
 				)
 		);
 		assertThat(controlMap, (Matcher) controlMapHasEntry(ModifierParser.CONTROL_KEY_MOD301_DECAY, mmAll(is(0.0f))));
 		assertThat(
-				controlMap,
-				(Matcher) controlMapHasEntry(
-						ModifierParser.CONTROL_KEY_MOD301_WASTE,
-						mmDimensions(contains((Object[]) expectedSp0Aliases), contains((Object[]) Region.values()))
+				controlMap, (Matcher) controlMapHasEntry(
+						ModifierParser.CONTROL_KEY_MOD301_WASTE, mmDimensions(
+								contains((Object[]) expectedSp0Aliases), contains((Object[]) Region.values())
+						)
 				)
 		);
 		assertThat(controlMap, (Matcher) controlMapHasEntry(ModifierParser.CONTROL_KEY_MOD301_WASTE, mmAll(is(0.0f))));

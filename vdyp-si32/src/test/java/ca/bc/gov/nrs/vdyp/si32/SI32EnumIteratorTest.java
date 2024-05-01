@@ -14,45 +14,49 @@ class SI32EnumIteratorTest {
 	@Test
 	void testFullIteration() {
 		EnumIterator<CfsTreeSpecies> i = new EnumIterator<>(CfsTreeSpecies.values());
-		
+
 		int numberSeen = 0;
 		while (i.hasNext()) {
 			i.next();
 			numberSeen += 1;
 		}
-		
+
 		assertThat(numberSeen, is(CfsTreeSpecies.values().length));
 	}
 
 	@Test
 	void testPartialIteration() {
-		EnumIterator<CfsTreeSpecies> i = new EnumIterator<>(CfsTreeSpecies.values(), CfsTreeSpecies.forIndex(3), CfsTreeSpecies.forIndex(5));
-		
+		EnumIterator<CfsTreeSpecies> i = new EnumIterator<>(
+				CfsTreeSpecies.values(), CfsTreeSpecies.forIndex(3), CfsTreeSpecies.forIndex(5)
+		);
+
 		int numberSeen = 0;
 		while (i.hasNext()) {
 			i.next();
 			numberSeen += 1;
 		}
-		
+
 		assertThat(numberSeen, is(3));
 	}
 
 	@Test
 	void testEmptyIteration() {
-		EnumIterator<CfsTreeSpecies> i = new EnumIterator<>(CfsTreeSpecies.values(), CfsTreeSpecies.ALDER_RED, CfsTreeSpecies.ALDER);
-		
+		EnumIterator<CfsTreeSpecies> i = new EnumIterator<>(
+				CfsTreeSpecies.values(), CfsTreeSpecies.ALDER_RED, CfsTreeSpecies.ALDER
+		);
+
 		int numberSeen = 0;
 		while (i.hasNext()) {
 			i.next();
 			numberSeen += 1;
 		}
-		
+
 		assertThat(numberSeen, is(0));
 	}
 
 	@Test
 	void testErrors() {
-		
+
 		try {
 			new EnumIterator<>(null, CfsTreeSpecies.ALDER_RED, CfsTreeSpecies.ALDER);
 			fail();

@@ -13,7 +13,7 @@ import ca.bc.gov.nrs.vdyp.model.EnumIterator;
  * </ul>
  */
 public enum SpeciesRegion implements SI32Enum<SpeciesRegion> {
-	
+
 	COAST(0), // 
 	INTERIOR(1);
 
@@ -42,7 +42,7 @@ public enum SpeciesRegion implements SI32Enum<SpeciesRegion> {
 	public int getOffset() {
 		return index;
 	}
-	
+
 	@Override
 	public String getText() {
 		return this.toString();

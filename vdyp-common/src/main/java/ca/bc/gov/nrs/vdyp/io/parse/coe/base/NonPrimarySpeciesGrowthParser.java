@@ -27,9 +27,10 @@ public abstract class NonPrimarySpeciesGrowthParser extends OptionalCoefficientP
 		super(1, controlKey);
 		this.speciesKey()
 				.key(
-						3, BASAL_AREA_GROUP_ID_KEY, ValueParser.INTEGER,
-						IntStream.rangeClosed(0, MAX_BASAL_AREA_GROUP_ID).boxed().collect(Collectors.toList()),
-						"%s is not a valid basal area group id", k -> Utils.nullOrBlank(k)
+						3, BASAL_AREA_GROUP_ID_KEY, ValueParser.INTEGER, IntStream
+								.rangeClosed(0, MAX_BASAL_AREA_GROUP_ID).boxed().collect(
+										Collectors.toList()
+								), "%s is not a valid basal area group id", k -> Utils.nullOrBlank(k)
 				).coefficients(3, 10);
 	}
 

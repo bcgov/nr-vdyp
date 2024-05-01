@@ -16,12 +16,12 @@ import ca.bc.gov.nrs.vdyp.si32.vdyp.SpeciesTable;
 class SpeciesTableTest {
 
 	private static SpeciesTable speciesTable;
-	
+
 	@BeforeAll
 	static void beforeAll() {
 		speciesTable = new SpeciesTable();
 	}
-	
+
 	@Test
 	void testSpeciesTable() {
 		assertThat(speciesTable.getByCode(SP64Name.ABAL.name()).details().codeName(), is(SP64Name.ABAL.name()));
@@ -32,7 +32,7 @@ class SpeciesTableTest {
 	void testSpeciesDetails() {
 		SpeciesDetails abalDetails = speciesTable.getByCode(SP64Name.ABAL.name()).details();
 		SpeciesDetails hwcDetails = speciesTable.getByCode(SP64Name.HWC.name()).details();
-		
+
 		assertTrue(hwcDetails.hashCode() == hwcDetails.hashCode());
 		assertThat(abalDetails.toString(), Matchers.notNullValue());
 		assertTrue(hwcDetails.equals(hwcDetails));

@@ -27,7 +27,7 @@ import ca.bc.gov.nrs.vdyp.si32.enumerations.SI32Enum;
  * </ol>
  */
 public enum CfsDeadConversionParams implements SI32Enum<CfsDeadConversionParams> {
-	UNKNOWN(-1, "Dead", "??"), 
+	UNKNOWN(-1, "Dead", "??"),
 
 	PROP1(0, "Dead", "P1"),
 	PROP2(1, "Dead", "P2"),
@@ -42,7 +42,7 @@ public enum CfsDeadConversionParams implements SI32Enum<CfsDeadConversionParams>
 	private final int index;
 	private final String shortName;
 	private final String category;
-	
+
 	private CfsDeadConversionParams(int index, String category, String shortName) {
 		this.index = index;
 		this.shortName = shortName;
@@ -53,35 +53,39 @@ public enum CfsDeadConversionParams implements SI32Enum<CfsDeadConversionParams>
 	public int getIndex() {
 		return index;
 	}
-	
+
 	public String getShortName() {
 		return shortName;
 	}
-	
+
 	public String getCategory() {
 		return category;
 	}
-	
+
 	@Override
 	public int getOffset() {
 		if (this.equals(UNKNOWN)) {
-			throw new UnsupportedOperationException(MessageFormat
-					.format("Cannot call getIndex on {} as it's not a standard member of the enumeration", this));
+			throw new UnsupportedOperationException(
+					MessageFormat
+							.format("Cannot call getIndex on {} as it's not a standard member of the enumeration", this)
+			);
 		}
-		
+
 		return index;
 	}
-	
+
 	@Override
 	public String getText() {
 		if (this.equals(UNKNOWN)) {
-			throw new UnsupportedOperationException(MessageFormat
-					.format("Cannot call getText on {} as it's not a standard member of the enumeration", this));
+			throw new UnsupportedOperationException(
+					MessageFormat
+							.format("Cannot call getText on {} as it's not a standard member of the enumeration", this)
+			);
 		}
-		
+
 		return this.toString();
 	}
-	
+
 	/**
 	 * @return the number of non-housekeeping entries in the enumeration
 	 */

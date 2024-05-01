@@ -17,16 +17,16 @@ public class EnumIterator<T extends Enum<T>> implements Iterator<T> {
 	private final T[] valueArray;
 
 	public EnumIterator(T[] values) {
-		
+
 		this(values, values[0], values[values.length - 1]);
 	}
 
 	public EnumIterator(T[] values, T first, T last) {
-		
+
 		if (values == null) {
-			throw new IllegalArgumentException("values parameter to SI32EnumIterator may not be null");
+			throw new IllegalArgumentException("values parameter to EnumIterator may not be null");
 		}
-		
+
 		this.valueArray = values;
 		this.currentIndex = first.ordinal();
 		this.lastIndex = last.ordinal() + 1;
@@ -43,9 +43,9 @@ public class EnumIterator<T extends Enum<T>> implements Iterator<T> {
 			throw new NoSuchElementException();
 		} else {
 			T result = valueArray[currentIndex];
-			
+
 			currentIndex += 1;
-			
+
 			return result;
 		}
 	}

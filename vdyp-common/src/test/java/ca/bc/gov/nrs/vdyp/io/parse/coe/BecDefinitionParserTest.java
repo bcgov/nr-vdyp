@@ -26,14 +26,12 @@ class BecDefinitionParserTest {
 		var result = parser.parse(TestUtils.class, "coe/Becdef.dat", Collections.emptyMap());
 
 		assertThat(
-				result,
-				hasBec(
-						"AT",
-						present(
+				result, hasBec(
+						"AT", present(
 								allOf(
-										hasProperty("alias", equalTo("AT")),
-										hasProperty("region", equalTo(Region.INTERIOR)),
-										hasProperty("name", equalTo("Alpine Tundra"))
+										hasProperty("alias", equalTo("AT")), hasProperty(
+												"region", equalTo(Region.INTERIOR)
+										), hasProperty("name", equalTo("Alpine Tundra"))
 								)
 						)
 				)
@@ -42,14 +40,12 @@ class BecDefinitionParserTest {
 		assertThat(result.get("AT").get().getDecayBec(), sameInstance(result.get("AT").get()));
 		assertThat(result.get("AT").get().getVolumeBec(), sameInstance(result.get("AT").get()));
 		assertThat(
-				result,
-				hasBec(
-						"BG",
-						present(
+				result, hasBec(
+						"BG", present(
 								allOf(
-										hasProperty("alias", equalTo("BG")),
-										hasProperty("region", equalTo(Region.INTERIOR)),
-										hasProperty("name", equalTo("Bunchgrass"))
+										hasProperty("alias", equalTo("BG")), hasProperty(
+												"region", equalTo(Region.INTERIOR)
+										), hasProperty("name", equalTo("Bunchgrass"))
 								)
 						)
 				)
@@ -58,14 +54,12 @@ class BecDefinitionParserTest {
 		assertThat(result.get("BG").get().getDecayBec(), sameInstance(result.get("BG").get()));
 		assertThat(result.get("BG").get().getVolumeBec(), sameInstance(result.get("ESSF").get()));
 		assertThat(
-				result,
-				hasBec(
-						"BWBS",
-						present(
+				result, hasBec(
+						"BWBS", present(
 								allOf(
-										hasProperty("alias", equalTo("BWBS")),
-										hasProperty("region", equalTo(Region.INTERIOR)),
-										hasProperty("name", equalTo("Boreal White and Black Spruce"))
+										hasProperty("alias", equalTo("BWBS")), hasProperty(
+												"region", equalTo(Region.INTERIOR)
+										), hasProperty("name", equalTo("Boreal White and Black Spruce"))
 								)
 						)
 				)
@@ -74,14 +68,12 @@ class BecDefinitionParserTest {
 		assertThat(result.get("BWBS").get().getDecayBec(), sameInstance(result.get("BWBS").get()));
 		assertThat(result.get("BWBS").get().getVolumeBec(), sameInstance(result.get("BWBS").get()));
 		assertThat(
-				result,
-				hasBec(
-						"CDF",
-						present(
+				result, hasBec(
+						"CDF", present(
 								allOf(
-										hasProperty("alias", equalTo("CDF")),
-										hasProperty("region", equalTo(Region.COASTAL)),
-										hasProperty("name", equalTo("Coastal Dougfir"))
+										hasProperty("alias", equalTo("CDF")), hasProperty(
+												"region", equalTo(Region.COASTAL)
+										), hasProperty("name", equalTo("Coastal Dougfir"))
 								)
 						)
 				)
@@ -90,14 +82,12 @@ class BecDefinitionParserTest {
 		assertThat(result.get("CDF").get().getDecayBec(), sameInstance(result.get("CDF").get()));
 		assertThat(result.get("CDF").get().getVolumeBec(), sameInstance(result.get("CDF").get()));
 		assertThat(
-				result,
-				hasBec(
-						"CWH",
-						present(
+				result, hasBec(
+						"CWH", present(
 								allOf(
-										hasProperty("alias", equalTo("CWH")),
-										hasProperty("region", equalTo(Region.COASTAL)),
-										hasProperty("name", equalTo("Coastal Western Hemlock"))
+										hasProperty("alias", equalTo("CWH")), hasProperty(
+												"region", equalTo(Region.COASTAL)
+										), hasProperty("name", equalTo("Coastal Western Hemlock"))
 								)
 						)
 				)
@@ -106,14 +96,12 @@ class BecDefinitionParserTest {
 		assertThat(result.get("CWH").get().getDecayBec(), sameInstance(result.get("CWH").get()));
 		assertThat(result.get("CWH").get().getVolumeBec(), sameInstance(result.get("CWH").get()));
 		assertThat(
-				result,
-				hasBec(
-						"ESSF",
-						present(
+				result, hasBec(
+						"ESSF", present(
 								allOf(
-										hasProperty("alias", equalTo("ESSF")),
-										hasProperty("region", equalTo(Region.INTERIOR)),
-										hasProperty("name", equalTo("Englemann Sruce -SubAlpine Fir"))
+										hasProperty("alias", equalTo("ESSF")), hasProperty(
+												"region", equalTo(Region.INTERIOR)
+										), hasProperty("name", equalTo("Englemann Sruce -SubAlpine Fir"))
 								)
 						)
 				)
@@ -122,14 +110,12 @@ class BecDefinitionParserTest {
 		assertThat(result.get("ESSF").get().getDecayBec(), sameInstance(result.get("ESSF").get()));
 		assertThat(result.get("ESSF").get().getVolumeBec(), sameInstance(result.get("ESSF").get()));
 		assertThat(
-				result,
-				hasBec(
-						"ICH",
-						present(
+				result, hasBec(
+						"ICH", present(
 								allOf(
-										hasProperty("alias", equalTo("ICH")),
-										hasProperty("region", equalTo(Region.INTERIOR)),
-										hasProperty("name", equalTo("Interior Cedar-Hemlock"))
+										hasProperty("alias", equalTo("ICH")), hasProperty(
+												"region", equalTo(Region.INTERIOR)
+										), hasProperty("name", equalTo("Interior Cedar-Hemlock"))
 								)
 						)
 				)
@@ -138,14 +124,12 @@ class BecDefinitionParserTest {
 		assertThat(result.get("ICH").get().getDecayBec(), sameInstance(result.get("ICH").get()));
 		assertThat(result.get("ICH").get().getVolumeBec(), sameInstance(result.get("ICH").get()));
 		assertThat(
-				result,
-				hasBec(
-						"IDF",
-						present(
+				result, hasBec(
+						"IDF", present(
 								allOf(
-										hasProperty("alias", equalTo("IDF")),
-										hasProperty("region", equalTo(Region.INTERIOR)),
-										hasProperty("name", equalTo("Interior DougFir"))
+										hasProperty("alias", equalTo("IDF")), hasProperty(
+												"region", equalTo(Region.INTERIOR)
+										), hasProperty("name", equalTo("Interior DougFir"))
 								)
 						)
 				)
@@ -154,14 +138,12 @@ class BecDefinitionParserTest {
 		assertThat(result.get("IDF").get().getDecayBec(), sameInstance(result.get("IDF").get()));
 		assertThat(result.get("IDF").get().getVolumeBec(), sameInstance(result.get("IDF").get()));
 		assertThat(
-				result,
-				hasBec(
-						"MH",
-						present(
+				result, hasBec(
+						"MH", present(
 								allOf(
-										hasProperty("alias", equalTo("MH")),
-										hasProperty("region", equalTo(Region.COASTAL)),
-										hasProperty("name", equalTo("Mountain Hemlock"))
+										hasProperty("alias", equalTo("MH")), hasProperty(
+												"region", equalTo(Region.COASTAL)
+										), hasProperty("name", equalTo("Mountain Hemlock"))
 								)
 						)
 				)
@@ -170,14 +152,12 @@ class BecDefinitionParserTest {
 		assertThat(result.get("MH").get().getDecayBec(), sameInstance(result.get("MH").get()));
 		assertThat(result.get("MH").get().getVolumeBec(), sameInstance(result.get("MH").get()));
 		assertThat(
-				result,
-				hasBec(
-						"MS",
-						present(
+				result, hasBec(
+						"MS", present(
 								allOf(
-										hasProperty("alias", equalTo("MS")),
-										hasProperty("region", equalTo(Region.INTERIOR)),
-										hasProperty("name", equalTo("Montane Spruce"))
+										hasProperty("alias", equalTo("MS")), hasProperty(
+												"region", equalTo(Region.INTERIOR)
+										), hasProperty("name", equalTo("Montane Spruce"))
 								)
 						)
 				)
@@ -186,14 +166,12 @@ class BecDefinitionParserTest {
 		assertThat(result.get("MS").get().getDecayBec(), sameInstance(result.get("MS").get()));
 		assertThat(result.get("MS").get().getVolumeBec(), sameInstance(result.get("MS").get()));
 		assertThat(
-				result,
-				hasBec(
-						"PP",
-						present(
+				result, hasBec(
+						"PP", present(
 								allOf(
-										hasProperty("alias", equalTo("PP")),
-										hasProperty("region", equalTo(Region.INTERIOR)),
-										hasProperty("name", equalTo("Ponderosa Pine"))
+										hasProperty("alias", equalTo("PP")), hasProperty(
+												"region", equalTo(Region.INTERIOR)
+										), hasProperty("name", equalTo("Ponderosa Pine"))
 								)
 						)
 				)
@@ -202,14 +180,12 @@ class BecDefinitionParserTest {
 		assertThat(result.get("PP").get().getDecayBec(), sameInstance(result.get("PP").get()));
 		assertThat(result.get("PP").get().getVolumeBec(), sameInstance(result.get("PP").get()));
 		assertThat(
-				result,
-				hasBec(
-						"SBPS",
-						present(
+				result, hasBec(
+						"SBPS", present(
 								allOf(
-										hasProperty("alias", equalTo("SBPS")),
-										hasProperty("region", equalTo(Region.INTERIOR)),
-										hasProperty("name", equalTo("SubBoreal Pine-Spruce"))
+										hasProperty("alias", equalTo("SBPS")), hasProperty(
+												"region", equalTo(Region.INTERIOR)
+										), hasProperty("name", equalTo("SubBoreal Pine-Spruce"))
 								)
 						)
 				)
@@ -218,14 +194,12 @@ class BecDefinitionParserTest {
 		assertThat(result.get("SBPS").get().getDecayBec(), sameInstance(result.get("SBPS").get()));
 		assertThat(result.get("SBPS").get().getVolumeBec(), sameInstance(result.get("SBPS").get()));
 		assertThat(
-				result,
-				hasBec(
-						"SBS",
-						present(
+				result, hasBec(
+						"SBS", present(
 								allOf(
-										hasProperty("alias", equalTo("SBS")),
-										hasProperty("region", equalTo(Region.INTERIOR)),
-										hasProperty("name", equalTo("SubBoreal Spruce"))
+										hasProperty("alias", equalTo("SBS")), hasProperty(
+												"region", equalTo(Region.INTERIOR)
+										), hasProperty("name", equalTo("SubBoreal Spruce"))
 								)
 						)
 				)
@@ -234,14 +208,12 @@ class BecDefinitionParserTest {
 		assertThat(result.get("SBS").get().getDecayBec(), sameInstance(result.get("SBS").get()));
 		assertThat(result.get("SBS").get().getVolumeBec(), sameInstance(result.get("SBS").get()));
 		assertThat(
-				result,
-				hasBec(
-						"SWB",
-						present(
+				result, hasBec(
+						"SWB", present(
 								allOf(
-										hasProperty("alias", equalTo("SWB")),
-										hasProperty("region", equalTo(Region.INTERIOR)),
-										hasProperty("name", equalTo("Spruce-Willow-Birch"))
+										hasProperty("alias", equalTo("SWB")), hasProperty(
+												"region", equalTo(Region.INTERIOR)
+										), hasProperty("name", equalTo("Spruce-Willow-Birch"))
 								)
 						)
 				)

@@ -86,7 +86,7 @@ public class CfsMethods {
 	 *    Values comes from Tabl6 found in 'Volume_to_Biomass.doc located in
 	 *    'Documents/CFS-Biomass'Volume_to_Biomass.doc'
 	 */
-	
+
 	public static float cfsSP0DensityMin(SP0Name sp0Index) {
 		return CfsSP0Densities.getValue(sp0Index, CfsDensity.MIN_DENSITY_INDEX);
 	}
@@ -123,7 +123,7 @@ public class CfsMethods {
 	 * @return The CFS Genus code corresponding to the supplied CFS Species.
 	 *    UNKNOWN if the 'cfsSpcs' code was not recognized.
 	 */
-	
+
 	public static CfsTreeGenus cfsSpcsNumToCFSGenus(CfsTreeSpecies cfsSpcs) {
 		return CfsSpeciesMethods.getGenusBySpecies(cfsSpcs);
 	}
@@ -163,7 +163,7 @@ public class CfsMethods {
 	 *    Remarks, warnings, special conditions to be aware of, etc.
 	 *
 	 */
-	
+
 	public static void logConfiguration() {
 		// TODO
 	}

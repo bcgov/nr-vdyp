@@ -34,8 +34,9 @@ class VdypPolygonTest {
 		var ex = assertThrows(IllegalStateException.class, () -> VdypPolygon.build(builder -> {
 		}));
 		assertThat(
-				ex,
-				hasProperty("message", allOf(containsString("polygonIdentifier"), containsString("percentAvailable")))
+				ex, hasProperty(
+						"message", allOf(containsString("polygonIdentifier"), containsString("percentAvailable"))
+				)
 		);
 	}
 

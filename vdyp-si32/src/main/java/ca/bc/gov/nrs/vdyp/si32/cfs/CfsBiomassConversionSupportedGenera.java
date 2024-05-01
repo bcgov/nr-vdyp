@@ -68,23 +68,27 @@ public enum CfsBiomassConversionSupportedGenera implements SI32Enum<CfsBiomassCo
 	@Override
 	public int getOffset() {
 		if (this.equals(INVALID)) {
-			throw new UnsupportedOperationException(MessageFormat
-					.format("Cannot call getIndex on {} as it's not a standard member of the enumeration", this));
+			throw new UnsupportedOperationException(
+					MessageFormat
+							.format("Cannot call getIndex on {} as it's not a standard member of the enumeration", this)
+			);
 		}
-		
+
 		return index;
 	}
-	
+
 	@Override
 	public String getText() {
 		if (this.equals(INVALID)) {
-			throw new UnsupportedOperationException(MessageFormat
-					.format("Cannot call getText on {} as it's not a standard member of the enumeration", this));
+			throw new UnsupportedOperationException(
+					MessageFormat
+							.format("Cannot call getText on {} as it's not a standard member of the enumeration", this)
+			);
 		}
-		
+
 		return this.toString();
 	}
-	
+
 	/**
 	 * Returns the enumeration constant with the given index.
 	 * @param index the value in question
@@ -92,11 +96,11 @@ public enum CfsBiomassConversionSupportedGenera implements SI32Enum<CfsBiomassCo
 	 * 	   <code>index</code> in which case <code>null</code> is returned.
 	 */
 	public static CfsBiomassConversionSupportedGenera forIndex(int index) {
-		for (CfsBiomassConversionSupportedGenera e: CfsBiomassConversionSupportedGenera.values()) {
+		for (CfsBiomassConversionSupportedGenera e : CfsBiomassConversionSupportedGenera.values()) {
 			if (index == e.index)
 				return e;
 		}
-		
+
 		return null;
 	}
 

@@ -341,12 +341,14 @@ public class SiteTool {
 	 * </ul>
 	 * @return the site index of the pure species stand given the height and age.
 	 */
-	public static double heightAndAgeToSiteIndex(SiteIndexEquation curve, double age, SiteIndexAgeType ageType, 
-			double height, SiteIndexEstimationType estType)
+	public static double heightAndAgeToSiteIndex(
+			SiteIndexEquation curve, double age, SiteIndexAgeType ageType,
+			double height, SiteIndexEstimationType estType
+	)
 			throws CommonCalculatorException {
 
 		Reference<Double> siRef = new Reference<>();
-		
+
 		// This method always returns 0; in the event of an error, an exception is thrown.
 		Sindxdll.HtAgeToSI(curve, age, ageType, height, estType, siRef);
 
@@ -433,7 +435,8 @@ public class SiteTool {
 	 * @return the number of years to grow from seed to breast height.
 	 * @throws CommonCalculatorException in the event of an error
 	 */
-	public static double yearsToBreastHeight(SiteIndexEquation curve, double siteIndex) throws CommonCalculatorException {
+	public static double yearsToBreastHeight(SiteIndexEquation curve, double siteIndex)
+			throws CommonCalculatorException {
 		double rtrn = 0.0;
 
 		Reference<Double> tempRef_rtrn = new Reference<>(rtrn);

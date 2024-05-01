@@ -85,18 +85,22 @@ public enum CfsLiveConversionParams implements SI32Enum<CfsLiveConversionParams>
 	@Override
 	public int getOffset() {
 		if (this.equals(UNKNOWN)) {
-			throw new UnsupportedOperationException(MessageFormat.format("Cannot call getIndex on {0} as it's not a standard member of the enumeration", this));
+			throw new UnsupportedOperationException(
+					MessageFormat.format(
+							"Cannot call getIndex on {0} as it's not a standard member of the enumeration", this
+					)
+			);
 		}
-		
+
 		return index;
 	}
-	
+
 	@Override
 	public String getText() {
 		if (this.equals(UNKNOWN)) {
 			return "";
 		}
-		
+
 		return this.toString();
 	}
 
@@ -107,11 +111,11 @@ public enum CfsLiveConversionParams implements SI32Enum<CfsLiveConversionParams>
 	 * 	   <code>index</code> in which case <code>null</code> is returned.
 	 */
 	public static CfsLiveConversionParams forIndex(int index) {
-		for (CfsLiveConversionParams e: CfsLiveConversionParams.values()) {
+		for (CfsLiveConversionParams e : CfsLiveConversionParams.values()) {
 			if (index == e.index)
 				return e;
 		}
-		
+
 		return null;
 	}
 

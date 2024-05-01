@@ -22,23 +22,23 @@ class ForwardProcessingEngineTest {
 
 	@Test
 	void test() throws IOException, ResourceParseException, ProcessingException {
-		
+
 		var parser = new ForwardControlParser();
 		var controlMap = VdypForwardTestUtils.parse(parser, "VDYP.CTR");
 
 		ForwardProcessingEngine fpe = new ForwardProcessingEngine(controlMap);
-		
+
 		assertThat(fpe.getBecLookup(), notNullValue());
 		assertThat(fpe.getGenusDefinitionMap(), notNullValue());
 		assertThat(fpe.getSiteCurveMap(), notNullValue());
-		
+
 		@SuppressWarnings("unchecked")
 		var polygonDescriptionStreamFactory = (StreamingParserFactory<VdypPolygonDescription>) controlMap
 				.get(ControlKey.FORWARD_INPUT_GROWTO.name());
 		var polygonDescriptionStream = polygonDescriptionStreamFactory.get();
 
 		var forwardDataStreamReader = new ForwardDataStreamReader(controlMap);
-		
+
 		// Fetch the next polygon to process.
 		int nPolygonsProcessed = 0;
 		while (polygonDescriptionStream.hasNext()) {
@@ -51,7 +51,7 @@ class ForwardProcessingEngineTest {
 
 			nPolygonsProcessed += 1;
 		}
-		
+
 		logger.info("{} polygons processed", nPolygonsProcessed);
 	}
 }

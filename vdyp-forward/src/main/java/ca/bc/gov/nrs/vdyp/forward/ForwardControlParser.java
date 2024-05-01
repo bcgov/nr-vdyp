@@ -107,10 +107,10 @@ public class ForwardControlParser extends BaseControlParser {
 	protected ValueParser<Map<String, Float>> minimaParser() {
 		return ValueParser.callback(
 				ValueParser.toMap(
-						ValueParser.list(ValueParser.FLOAT), Collections.singletonMap(MINIMUM_VETERAN_HEIGHT, 10.0f),
-						MINIMUM_HEIGHT, MINIMUM_BASE_AREA, MINIMUM_PREDICTED_BASE_AREA, MINIMUM_VETERAN_HEIGHT
-				),
-				minima -> logger.atDebug().setMessage(
+						ValueParser.list(ValueParser.FLOAT), Collections.singletonMap(
+								MINIMUM_VETERAN_HEIGHT, 10.0f
+						), MINIMUM_HEIGHT, MINIMUM_BASE_AREA, MINIMUM_PREDICTED_BASE_AREA, MINIMUM_VETERAN_HEIGHT
+				), minima -> logger.atDebug().setMessage(
 						"Minima read from VRISTART Control at line {}\n  Minimum Height: {}\n  Minimum BA: {}\n  Minimum Predicted BA: {}\n  Minimum Veteran Height: {}"
 				) //
 						.addArgument(ControlKey.MINIMA.sequence.map(i -> Integer.toString(i)).orElse("N/A"))
@@ -301,8 +301,8 @@ public class ForwardControlParser extends BaseControlParser {
 			if (m != null) {
 				// m is a configuration file parser.
 				logger.debug(
-						"Parsing configuration file {}[{}] using {}", m.getControlKeyName(), key.sequence.get(),
-						m.getClass().getName()
+						"Parsing configuration file {}[{}] using {}", m.getControlKeyName(), key.sequence.get(), m
+								.getClass().getName()
 				);
 				m.modify(map, fileResolver);
 			}
@@ -311,8 +311,8 @@ public class ForwardControlParser extends BaseControlParser {
 			if (r != null) {
 				// r is an input file parser.
 				logger.debug(
-						"Parsing input file {}[{}] using {}", r.getControlKeyName(), key.sequence.get(),
-						r.getClass().getName()
+						"Parsing input file {}[{}] using {}", r.getControlKeyName(), key.sequence.get(), r.getClass()
+								.getName()
 				);
 				r.modify(map, fileResolver);
 			}

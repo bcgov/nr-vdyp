@@ -34,7 +34,7 @@ public class SiteClassCode2SiteIndex {
 		if (siteClass != 'G' && siteClass != 'M' && siteClass != 'P' && siteClass != 'L') {
 			throw new ClassErrorException("Unknown site class code: " + siteClass);
 		}
-		
+
 		if (spIndex != null) {
 
 			switch (spIndex) {
@@ -180,7 +180,7 @@ public class SiteClassCode2SiteIndex {
 						break;
 					}
 					break;
-	
+
 				case FIZ_INTERIOR:
 					switch (siteClass) {
 					case 'G':
@@ -195,11 +195,11 @@ public class SiteClassCode2SiteIndex {
 						break;
 					}
 					break;
-	
+
 				default:
 					throw new ForestInventoryZoneException("Unknown FIZ code: " + forestInventoryZone);
 				}
-	
+
 			case SI_SPEC_HWI:
 				switch (siteClass) {
 				case 'G':
@@ -284,7 +284,7 @@ public class SiteClassCode2SiteIndex {
 					break;
 				}
 				break;
-	
+
 			case SI_SPEC_SB, SI_SPEC_SW, SI_SPEC_SE:
 				switch (siteClass) {
 				case 'G':
@@ -299,7 +299,7 @@ public class SiteClassCode2SiteIndex {
 					break;
 				}
 				break;
-	
+
 			default:
 				break /* fall through */;
 			}

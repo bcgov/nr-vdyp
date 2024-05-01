@@ -145,7 +145,7 @@ public class BecZoneMethods {
 					)
 			);
 		}
-	
+
 		for (int i = 0; i < mofBiomassCoeffs.length; i++) {
 			if (mofBiomassCoeffs[i].length != BecZone.size()) {
 				throw new IllegalStateException(
@@ -167,22 +167,22 @@ public class BecZoneMethods {
 	 * @return as described. If either parameter doesn't identify an entity of the expected type, -1.0 is returned.
 	 */
 	public static float mofBiomassCoefficient(String becZoneName, String sp64CodeName) {
-	
+
 		float result = -1.0f;
-		
+
 		if (becZoneName != null && sp64CodeName != null) {
 			BecZone becZone = BecZoneMethods.becZoneToIndex(becZoneName);
-		
+
 			if (becZone != BecZone.UNKNOWN && VdypMethods.isValidSpecies(sp64CodeName)) {
 				String sp0Name = VdypMethods.getVDYP7Species(sp64CodeName);
 				int sp0Index = VdypMethods.getVDYP7SpeciesIndex(sp0Name).getIndex();
-		
+
 				if (sp0Index != SP0Name.UNKNOWN.getIndex()) {
 					result = mofBiomassCoeffs[sp0Index][becZone.getOffset()];
 				}
 			}
 		}
-	
+
 		return result;
 	}
 }

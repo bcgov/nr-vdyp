@@ -26,7 +26,7 @@ import static ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexSpecie
 import static ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexSpecies.SI_SPEC_SS;
 import static ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexSpecies.SI_SPEC_SW;
 
-import ca.bc.gov.nrs.vdyp.common_calculators.Age2Age;
+import ca.bc.gov.nrs.vdyp.common_calculators.AgeToAge;
 import ca.bc.gov.nrs.vdyp.common_calculators.Height2SiteIndex;
 import ca.bc.gov.nrs.vdyp.common_calculators.SiteClassCode2SiteIndex;
 import ca.bc.gov.nrs.vdyp.common_calculators.SiteIndex2Age;
@@ -238,7 +238,7 @@ public class Sindxdll {
 	private static final int SI_ERR_NO_ANS = -4;
 	private static final int SI_ERR_SPEC = -10;
 
-//These are taken from sindex.h (since it was missing everywhere else). These were not defined in the orginal sindxdll.c
+	//These are taken from sindex.h (since it was missing everywhere else). These were not defined in the orginal sindxdll.c
 
 	public static final int SI_MAX_SPECIES = 135;
 
@@ -592,7 +592,8 @@ public class Sindxdll {
 					/* SI_FDI_HUANG_PLA */
 					"", /* see ACB_HUANG */
 					"", /* see FDI_HUANG_PLA */
-			}, {
+			},
+			{
 					/* SI_FDI_HUANG_NAT */
 					"", /* see ACB_HUANG */
 					"The height-age (site index) curves were developed from stem analysis of 66 "
@@ -632,7 +633,8 @@ public class Sindxdll {
 					/* SI_FDI_VDP_WASH */
 					"", /* see FDI_VDP_MONT */
 					"", /* see FDI_VDP_MONT */
-			}, {
+			},
+			{
 					/* SI_FDI_MONS_DF */
 					"Monserud, Robert A. 1984. Height growth and site index curves for inland "
 							+ "Douglas-fir based on stem analysis data and forest habitat type. For. Sci."
@@ -645,19 +647,23 @@ public class Sindxdll {
 					/* SI_FDI_MONS_GF */
 					"", /* see FDI_MONS_DF */
 					"", /* see FDI_MONS_DF */
-			}, {
+			},
+			{
 					/* SI_FDI_MONS_WRC */
 					"", /* see FDI_MONS_DF */
 					"", /* see FDI_MONS_DF */
-			}, {
+			},
+			{
 					/* SI_FDI_MONS_WH */
 					"", /* see FDI_MONS_DF */
 					"", /* see FDI_MONS_DF */
-			}, {
+			},
+			{
 					/* SI_FDI_MONS_SAF */
 					"", /* see FDI_MONS_DF */
 					"", /* see FDI_MONS_DF */
-			}, {
+			},
+			{
 					/* SI_HWC_NIGHGI */
 					"Nigh, Gordon D. 1996. Growth intercept models for species without distinct "
 							+ "annual branch whorls: western hemlock. Can. J. For. Res. 26: 1407-1415 (1996).",
@@ -781,7 +787,8 @@ public class Sindxdll {
 					/* SI_PLI_HUANG_NAT */
 					"", /* see ACB_HUANG */
 					"", /* see PLI_HUANG_PLA */
-			}, {
+			},
+			{
 					/* SI_PLI_THROWER */
 					"J.S. Thrower and Associates Ltd. 1994. Revised height-age curves for lodgepole "
 							+ "pine and interior spruce in British Columbia. Report to the Res. Br., B.C. "
@@ -819,7 +826,8 @@ public class Sindxdll {
 					/* SI_PLI_GOUDIE_WET */
 					"", /* see PLI_GOUDIE_DRY */
 					"", /* see PLI_GOUDIE_DRY */
-			}, {
+			},
+			{
 					/* SI_PLI_DEMPSTER */
 					"", /* see AT_GOUDIE */
 					"The height-age (site index) curves were developed from stem analysis of 1433 "
@@ -929,7 +937,8 @@ public class Sindxdll {
 					/* SI_SW_HUANG_NAT */
 					"", /* see ACB_HUANG */
 					"", /* see SW_HUANG_PLA */
-			}, {
+			},
+			{
 					/* SI_SW_THROWER */
 					"", /* see PLI_THROWER */
 					"", },
@@ -953,7 +962,8 @@ public class Sindxdll {
 					/* SI_SW_KER_NAT */
 					"", /* see SB_KER */
 					"", /* see SW_KER_PLA */
-			}, {
+			},
+			{
 					/* SI_SW_GOUDIE_PLA */
 					"", /* see PLI_GOUDIE_DRY */
 					"The height-age (site index) curves were developed from stem analysis of 157 "
@@ -964,7 +974,8 @@ public class Sindxdll {
 					/* SI_SW_GOUDIE_NAT */
 					"", /* see PLI_GOUDIE_DRY */
 					"", /* see SW_GOUDIE_PLA */
-			}, {
+			},
+			{
 					/* SI_SW_DEMPSTER */
 					"", /* see AT_GOUDIE */
 					"Notes: The height-age (site index) curves were developed from stem analysis of "
@@ -1079,7 +1090,8 @@ public class Sindxdll {
 					/* SI_CWI_NIGHGI */
 					"", /* see CWI_NIGH */
 					"", /* see CWI_NIGH */
-			}, {
+			},
+			{
 					/* SI_SW_GOUDNIGH */
 					"Nigh, G.D. and B.A. Love. 2000. Juvenile height development in interior "
 							+ "spruce stands of British Columbia. West. J. Appl. For. 15: 117-121."
@@ -1498,7 +1510,8 @@ public class Sindxdll {
 							+ "Brunswick. The trees ranged in age from 51 to 175 years at breast height and "
 							+ "ranged in site index from 7.2 m to 21.0 m at 50 years breast height age." } };
 
-	private static final SiteIndexEquation[] si_sclist_start = { SI_A_START, SI_ABAL_START, SI_ABCO_START, SI_AC_START, SI_ACB_START,
+	private static final SiteIndexEquation[] si_sclist_start = { SI_A_START, SI_ABAL_START, SI_ABCO_START, SI_AC_START,
+			SI_ACB_START,
 			SI_ACT_START, SI_AD_START, SI_AH_START, SI_AT_START, SI_AX_START, SI_B_START, SI_BA_START, SI_BB_START,
 			SI_BC_START, SI_BG_START, SI_BI_START, SI_BL_START, SI_BM_START, SI_BP_START, SI_C_START, SI_CI_START,
 			SI_CP_START, SI_CW_START, SI_CWC_START, SI_CWI_START, SI_CY_START, SI_D_START, SI_DG_START, SI_DM_START,
@@ -1517,7 +1530,7 @@ public class Sindxdll {
 			SI_WT_START, SI_X_START, SI_XC_START, SI_XH_START, SI_Y_START, SI_YC_START, SI_YP_START, SI_Z_START,
 			SI_ZC_START, SI_ZH_START };
 
-	private static final SiteIndexEquation[] siCurveDefault = { 
+	private static final SiteIndexEquation[] siCurveDefault = {
 			SI_NO_EQUATION, // A
 			SI_NO_EQUATION, // ABAL
 			SI_NO_EQUATION, // ABCO
@@ -1655,7 +1668,7 @@ public class Sindxdll {
 			SI_NO_EQUATION, // ZH
 	};
 
-	private static final SiteIndexSpecies[] siCurveIntend = { 
+	private static final SiteIndexSpecies[] siCurveIntend = {
 			SI_SPEC_ACB, /* SI_ACB_HUANG */
 			SI_SPEC_ACT, /* SI_ACT_THROWER */
 			SI_SPEC_AT, /* SI_AT_HUANG */
@@ -1816,7 +1829,8 @@ public class Sindxdll {
 	 * @throws SpeciesErrorException when the input parameter is not a valid species index
 	 * @throws NoAnswerException     when the input parameter is the last defined species index
 	 */
-	public static SiteIndexSpecies NextSpecies(SiteIndexSpecies spIndex) throws SpeciesErrorException, NoAnswerException {
+	public static SiteIndexSpecies NextSpecies(SiteIndexSpecies spIndex)
+			throws SpeciesErrorException, NoAnswerException {
 
 		if (spIndex == null) {
 			throw new SpeciesErrorException("Input parameter is not a valid species index: " + spIndex);
@@ -2189,7 +2203,8 @@ public class Sindxdll {
 	 * @throws SpeciesErrorException when the input parameter is not a valid species index
 	 * @throws NoAnswerException     when no GI equations defined for this species
 	 */
-	public static SiteIndexEquation DefGICurve(SiteIndexSpecies spIndex) throws SpeciesErrorException, NoAnswerException {
+	public static SiteIndexEquation DefGICurve(SiteIndexSpecies spIndex)
+			throws SpeciesErrorException, NoAnswerException {
 		if (spIndex == null) { // spec
 			throw new SpeciesErrorException("Input parameter is not a valid species index: " + spIndex);
 		}
@@ -2225,7 +2240,7 @@ public class Sindxdll {
 			/* fall through */
 			break;
 		}
-		
+
 		// no answer
 		throw new NoAnswerException("No GI equations defined for this species: " + spIndex);
 	}
@@ -2249,7 +2264,7 @@ public class Sindxdll {
 		if (spIndex == null) { // spec
 			throw new SpeciesErrorException("Input parameter is not a valid species index: " + spIndex);
 		}
-		if (estab == null) { 
+		if (estab == null) {
 			throw new EstablishmentErrorException("Input parameter is not a valid establishment type: " + estab);
 		}
 
@@ -2283,7 +2298,8 @@ public class Sindxdll {
 	 * @throws SpeciesErrorException when the input parameter is not a valid species index
 	 * @throws NoAnswerException     when no curves defined for this species
 	 */
-	public static SiteIndexEquation FirstCurve(SiteIndexSpecies spIndex) throws SpeciesErrorException, NoAnswerException {
+	public static SiteIndexEquation FirstCurve(SiteIndexSpecies spIndex)
+			throws SpeciesErrorException, NoAnswerException {
 		if (spIndex == null) {
 			throw new SpeciesErrorException("Input parameter is not a valid species index: " + spIndex);
 		} else if (si_sclist_start[spIndex.n()] == SI_NO_EQUATION) {
@@ -2757,9 +2773,11 @@ public class Sindxdll {
 	 * @throws GrowthInterceptMaximumException    when bhage > GI range
 	 * @throws GrowthInterceptTotalErrorException when total age and GI curve
 	 */
-	public static int HtAgeToSI(SiteIndexEquation curve, double age, SiteIndexAgeType ageType, double height, 
-			SiteIndexEstimationType estType, Reference<Double> site)
-		throws CommonCalculatorException {
+	public static int HtAgeToSI(
+			SiteIndexEquation curve, double age, SiteIndexAgeType ageType, double height,
+			SiteIndexEstimationType estType, Reference<Double> site
+	)
+			throws CommonCalculatorException {
 
 		site.set(Height2SiteIndex.heightToIndex(curve, age, ageType, height, estType));
 
@@ -2785,9 +2803,11 @@ public class Sindxdll {
 	 * @throws IGrowthInterceptMaximumException when bhage > GI range
 	 * @throws GrowthInterceptTotalException    when total age and GI curve
 	 */
-	public static int HtSIToAge(SiteIndexEquation curve, double height, SiteIndexAgeType ageType, double siteIndex, 
-			double y2bh, Reference<Double> age)
-		throws CommonCalculatorException {
+	public static int HtSIToAge(
+			SiteIndexEquation curve, double height, SiteIndexAgeType ageType, double siteIndex,
+			double y2bh, Reference<Double> age
+	)
+			throws CommonCalculatorException {
 
 		age.set(SiteIndex2Age.indexToAge(curve, height, ageType, siteIndex, y2bh));
 
@@ -2818,7 +2838,10 @@ public class Sindxdll {
 	 * @throws LessThan13Exception             when site index <= 1.3
 	 */
 	public static int
-			AgeSIToHt(SiteIndexEquation curve, double age, SiteIndexAgeType ageType, double siteIndex, double y2bh, Reference<Double> height)
+			AgeSIToHt(
+					SiteIndexEquation curve, double age, SiteIndexAgeType ageType, double siteIndex, double y2bh,
+					Reference<Double> height
+			)
 					throws CommonCalculatorException {
 
 		height.set(SiteIndex2Height.indexToHeight(curve, age, ageType, siteIndex, y2bh, 0.5));
@@ -2853,7 +2876,8 @@ public class Sindxdll {
 	 * @throws LessThan13Exception             when site index <= 1.3
 	 */
 	public static int AgeSIToHtSmooth(
-			SiteIndexEquation curve, double age, SiteIndexAgeType ageType, double siteIndex, double y2bh, double seedling_age, double seedling_ht,
+			SiteIndexEquation curve, double age, SiteIndexAgeType ageType, double siteIndex, double y2bh,
+			double seedling_age, double seedling_ht,
 			Reference<Double> height
 	) throws CommonCalculatorException {
 		height.set(
@@ -2880,7 +2904,8 @@ public class Sindxdll {
 	 * @throws GrowthInterceptTotalException when GI curve
 	 * @throws LessThan13Exception           when site index <= 1.3
 	 */
-	public static int Y2BH05(SiteIndexEquation curve, double siteIndex, Reference<Double> y2bh) throws CommonCalculatorException {
+	public static int Y2BH05(SiteIndexEquation curve, double siteIndex, Reference<Double> y2bh)
+			throws CommonCalculatorException {
 
 		y2bh.set(SiteIndexYears2BreastHeight.y2bh05(curve, siteIndex));
 
@@ -2900,7 +2925,8 @@ public class Sindxdll {
 	 * @throws LessThan13Exception           when site index <= 1.3
 	 * @throws GrowthInterceptTotalException when GI curve
 	 */
-	public static int Y2BH(SiteIndexEquation curve, double siteIndex, Reference<Double> y2bh) throws CommonCalculatorException {
+	public static int Y2BH(SiteIndexEquation curve, double siteIndex, Reference<Double> y2bh)
+			throws CommonCalculatorException {
 
 		y2bh.set(SiteIndexYears2BreastHeight.y2bh(curve, siteIndex));
 
@@ -2920,8 +2946,9 @@ public class Sindxdll {
 	 * @throws SpeciesErrorException when source or target species index is not valid
 	 * @throws NoAnswerException     when there is no conversion defined
 	 */
-	public static int SIToSI(SiteIndexSpecies spIndex1, double siteIndex, SiteIndexSpecies spIndex2, Reference<Double> result)
-			throws SpeciesErrorException, NoAnswerException {
+	public static int
+			SIToSI(SiteIndexSpecies spIndex1, double siteIndex, SiteIndexSpecies spIndex2, Reference<Double> result)
+					throws SpeciesErrorException, NoAnswerException {
 		int i;
 
 		if (spIndex1 == null) {
@@ -2935,8 +2962,12 @@ public class Sindxdll {
 		}
 
 		for (i = 0; i < SI_MAX_CONVERT; i++) {
-			if (SiteIndexNames.siSpeciesConversionParameters[i].sourceSpecies() == spIndex1 && SiteIndexNames.siSpeciesConversionParameters[i].targetSpecies() == spIndex2) {
-				result.set(SiteIndexNames.siSpeciesConversionParameters[i].param1() + SiteIndexNames.siSpeciesConversionParameters[i].param2() * siteIndex);
+			if (SiteIndexNames.siSpeciesConversionParameters[i].sourceSpecies() == spIndex1
+					&& SiteIndexNames.siSpeciesConversionParameters[i].targetSpecies() == spIndex2) {
+				result.set(
+						SiteIndexNames.siSpeciesConversionParameters[i].param1()
+								+ SiteIndexNames.siSpeciesConversionParameters[i].param2() * siteIndex
+				);
 				return 0;
 			}
 		}
@@ -2992,7 +3023,8 @@ public class Sindxdll {
 	 * @throws CodeErrorException           when species code is unknown
 	 * @throws ForestInventoryZoneException when FIZ code is unknown
 	 */
-	public static SiteIndexSpecies SpecRemap(String sc, char fiz) throws CodeErrorException, ForestInventoryZoneException {
+	public static SiteIndexSpecies SpecRemap(String sc, char fiz)
+			throws CodeErrorException, ForestInventoryZoneException {
 		return SpecRMap.species_remap(sc, fiz);
 	}
 
@@ -3009,7 +3041,7 @@ public class Sindxdll {
 		if (cuIndex == null) {
 			throw new IllegalArgumentException("cuIndex is null");
 		}
-		
+
 		switch (cuIndex) {
 		case SI_BA_NIGH:
 			cuIndex = SI_BA_NIGHGI;
@@ -3071,7 +3103,7 @@ public class Sindxdll {
 		case SI_PLI_GOUDIE_WET, SI_SW_GOUDIE_PLA, SI_SW_GOUDIE_NAT:
 			cuIndex = SI_PLI_GOUDIE_DRY;
 			break;
-			
+
 		default:
 			/* fall through */
 			break;
@@ -3161,11 +3193,13 @@ public class Sindxdll {
 	 * @throws CurveErrorException   input curve is not a valid curve index for this species
 	 * @throw AgeTypeErrorException when age type is unknown
 	 */
-	public static int AgeToAge(SiteIndexEquation cu_index, double age1, SiteIndexAgeType age_type1, double y2bh, 
-			Reference<Double> result, SiteIndexAgeType age_type2)
-		throws AgeTypeErrorException {
+	public static int AgeToAge(
+			SiteIndexEquation cu_index, double age1, SiteIndexAgeType age_type1, double y2bh,
+			Reference<Double> result, SiteIndexAgeType age_type2
+	)
+			throws AgeTypeErrorException {
 
-		result.set(Age2Age.ageToAge(cu_index, age1, age_type1, age_type2, y2bh));
+		result.set(AgeToAge.ageToAge(cu_index, age1, age_type1, age_type2, y2bh));
 		return 0;
 	}
 

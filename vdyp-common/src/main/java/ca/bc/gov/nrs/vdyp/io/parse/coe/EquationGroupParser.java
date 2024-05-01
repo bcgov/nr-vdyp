@@ -53,8 +53,7 @@ public abstract class EquationGroupParser implements ControlMapSubResourceParser
 			}
 
 		}.strippedString(2, SP0_ALIAS_KEY).space(1).strippedString(4, BEC_ALIAS_KEY).space(1).value(
-				identifierLength, GROUP_ID_KEY,
-				ValueParser.validate(
+				identifierLength, GROUP_ID_KEY, ValueParser.validate(
 						ValueParser.INTEGER, ValueParser.validateRangeInclusive(MIN_GROUP, MAX_GROUP, GROUP_ID_KEY)
 				)
 		);

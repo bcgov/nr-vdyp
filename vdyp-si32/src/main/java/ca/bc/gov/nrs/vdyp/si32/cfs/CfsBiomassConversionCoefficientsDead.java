@@ -1,16 +1,26 @@
 package ca.bc.gov.nrs.vdyp.si32.cfs;
 
 /**
- * An two-dimensional array indexed by {@link CfsBiomassConversionSupportedEcoZone} and 
+ * A two-dimensional array indexed by {@link CfsBiomassConversionSupportedEcoZone} and 
  * then {@link CfsBiomassConversionSupportedGenera} giving the dead biomass conversion 
  * coefficients for that Eco Zone and Genus. Each array element is a record indicating 
  * whether it "contains data" - that is, has meaningful values and, if so, an array of 
  * floats indexed by {@link CfsDeadConversionParams}.
+ * <p>
+ * The values are derived from
+ * <ul>
+ * <li>'C Conversion Factors Initializers' column of the 
+ * <li>'DeadBiomassParams' table found on the 
+ * <li>'Derived C Species Table' tab in the
+ * <li>'BC_Inventory_updates_by_CBMv2bs.xlsx' located in the
+ * <li>'Documents/CFS-Biomass' folder.
+ * </ul>
  */
 public class CfsBiomassConversionCoefficientsDead {
 
-	public static CfsBiomassConversionCoefficientsDetails get(int i, int j) {
-		return array[i][j];
+	public static CfsBiomassConversionCoefficientsDetails
+			get(int cfsSupportedEcoZoneIndex, int cfsSupportedGeneraIndex) {
+		return array[cfsSupportedEcoZoneIndex][cfsSupportedGeneraIndex];
 	}
 
 	private static final CfsBiomassConversionCoefficientsDetails[][] array = new CfsBiomassConversionCoefficientsDetails[][] {

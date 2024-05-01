@@ -306,7 +306,8 @@ class SiteToolTest {
 	@Test
 	void test_setSICurve() {
 		SiteIndexEquation oldCurve = SiteTool.getSICurve("ABAL", true);
-		SiteIndexEquation newCurve = oldCurve == SiteIndexEquation.SI_AT_CHEN ? SiteIndexEquation.SI_AT_NIGH : SiteIndexEquation.SI_AT_CHEN;
+		SiteIndexEquation newCurve = oldCurve == SiteIndexEquation.SI_AT_CHEN ? SiteIndexEquation.SI_AT_NIGH
+				: SiteIndexEquation.SI_AT_CHEN;
 		assertThat(SiteTool.setSICurve("ABAL", true, newCurve), is(oldCurve));
 		assertThat(SiteTool.getSICurve("ABAL", true), is(newCurve));
 	}
@@ -337,19 +338,19 @@ class SiteToolTest {
 		Reference<Double> rTotalAge = new Reference<>();
 		Reference<Double> rBreastHeightAge = new Reference<>();
 		Reference<Double> rYTBH = new Reference<>();
-		
+
 		rTotalAge.set(10.0);
 		rBreastHeightAge.set(5.0);
 		rYTBH.set(-9.0);
 		SiteTool.fillInAgeTriplet(rTotalAge, rBreastHeightAge, rYTBH);
 		assertThat(rYTBH.get(), is(5.5));
-		
+
 		rTotalAge.set(-9.0);
 		rBreastHeightAge.set(5.0);
 		rYTBH.set(6.0);
 		SiteTool.fillInAgeTriplet(rTotalAge, rBreastHeightAge, rYTBH);
 		assertThat(rTotalAge.get(), is(10.5));
-		
+
 		rTotalAge.set(10.0);
 		rBreastHeightAge.set(-9.0);
 		rYTBH.set(7.0);

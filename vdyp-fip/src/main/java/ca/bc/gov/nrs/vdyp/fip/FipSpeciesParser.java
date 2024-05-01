@@ -49,8 +49,7 @@ public class FipSpeciesParser
 					throws IOException, ResourceParseException {
 		return () -> {
 			var lineParser = new LineParser().strippedString(25, FipPolygonParser.POLYGON_IDENTIFIER).space(1).value(
-					1, FipLayerParser.LAYER,
-					ValueParser.valueOrMarker(
+					1, FipLayerParser.LAYER, ValueParser.valueOrMarker(
 							ValueParser.LAYER, ValueParser.optionalSingleton("Z"::equals, EndOfRecord.END_OF_RECORD)
 					)
 			).space(1).value(2, GENUS, ControlledValueParser.optional(ValueParser.GENUS))
@@ -135,8 +134,8 @@ public class FipSpeciesParser
 				protected Collection<FipSpecies>
 						convert(List<ValueOrMarker<Optional<FipSpecies>, EndOfRecord>> children) {
 					return children.stream().map(ValueOrMarker::getValue).map(Optional::get) // Should never be empty as
-																								// we've filtered out
-																								// markers
+							// we've filtered out
+							// markers
 							.flatMap(Optional::stream) // Skip if empty (and unknown layer type)
 							.toList();
 				}

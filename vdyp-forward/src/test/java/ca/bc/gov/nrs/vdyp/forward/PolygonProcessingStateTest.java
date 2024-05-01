@@ -43,7 +43,7 @@ class PolygonProcessingStateTest {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@BeforeEach
 	void before() throws IOException, ResourceParseException {
-		
+
 		parser = new ForwardControlParser();
 		controlMap = VdypForwardTestUtils.parse(parser, "VDYP.CTR");
 		assertThat(
@@ -65,14 +65,14 @@ class PolygonProcessingStateTest {
 
 		assertThat(polygonDescriptionStream.hasNext(), is(true));
 		var polygonDescription = polygonDescriptionStream.next();
-		
+
 		ForwardDataStreamReader reader = new ForwardDataStreamReader(controlMap);
-		
+
 		var polygon = reader.readNextPolygon(polygonDescription);
 
 		VdypPolygonLayer pLayer = polygon.getPrimaryLayer();
 		assertThat(pLayer, notNullValue());
-		
+
 		PolygonProcessingState pps = new PolygonProcessingState(gdMap, pLayer);
 
 		int nSpecies = gdMap.getNSpecies();
@@ -129,44 +129,44 @@ class PolygonProcessingStateTest {
 
 		assertThat(polygonDescriptionStream.hasNext(), is(true));
 		var polygonDescription = polygonDescriptionStream.next();
-		
+
 		ForwardDataStreamReader reader = new ForwardDataStreamReader(controlMap);
-		
+
 		var polygon = reader.readNextPolygon(polygonDescription);
 
 		VdypPolygonLayer pLayer = polygon.getPrimaryLayer();
 		assertThat(pLayer, notNullValue());
-		
+
 		PolygonProcessingState pps = new PolygonProcessingState(gdMap, pLayer);
-		
+
 		verifyProcessingStateMatchesLayer(pps, pLayer);
-		
+
 		PolygonProcessingState ppsCopy = pps.copy();
-		
+
 		verifyProcessingStateMatchesLayer(ppsCopy, pLayer);
 	}
-	
+
 	@Test
 	void testReplace() throws IOException, ResourceParseException, ProcessingException {
 
 		assertThat(polygonDescriptionStream.hasNext(), is(true));
 		var polygonDescription = polygonDescriptionStream.next();
 		ForwardDataStreamReader reader = new ForwardDataStreamReader(controlMap);
-		
+
 		var polygon = reader.readNextPolygon(polygonDescription);
 
 		VdypPolygonLayer pLayer = polygon.getPrimaryLayer();
 		assertThat(pLayer, notNullValue());
-		
+
 		PolygonProcessingState pps = new PolygonProcessingState(gdMap, pLayer);
 		verifyProcessingStateMatchesLayer(pps, pLayer);
-	
+
 		PolygonProcessingState ppsCopy = new PolygonProcessingState(pps);
 		verifyProcessingStateMatchesLayer(ppsCopy, pLayer);
 
 		Set<Integer> speciesToRemove = new HashSet<>(List.of(2));
 		ppsCopy.removeSpecies(i -> speciesToRemove.contains(i));
-		
+
 		int nSpeciesRemoved = 0;
 		for (int i = 0; i < ppsCopy.getNSpecies(); i++) {
 			if (speciesToRemove.contains(i)) {
@@ -176,7 +176,8 @@ class PolygonProcessingStateTest {
 		}
 	}
 
-	private void verifyProcessingStateIndicesEquals(PolygonProcessingState pps1, int i, PolygonProcessingState pps2, int j) {
+	private void
+			verifyProcessingStateIndicesEquals(PolygonProcessingState pps1, int i, PolygonProcessingState pps2, int j) {
 		if (i != j) {
 			assertThat(pps1.ageBreastHeight[i], is(pps2.ageBreastHeight[j]));
 			assertThat(pps1.ageTotal[i], is(pps2.ageTotal[j]));
@@ -186,12 +187,18 @@ class PolygonProcessingStateTest {
 			assertThat(pps1.speciesIndex[i], is(pps2.speciesIndex[j]));
 			assertThat(pps1.speciesName[i], is(pps2.speciesName[j]));
 			assertThat(pps1.yearsToBreastHeight[i], is(pps2.yearsToBreastHeight[j]));
-			
-			for (UtilizationClass uc: UtilizationClass.values()) {
+
+			for (UtilizationClass uc : UtilizationClass.values()) {
 				assertThat(pps1.basalArea[i][uc.index + 1], is(pps2.basalArea[j][uc.index + 1]));
-				assertThat(pps1.closeUtilizationVolume[i][uc.index + 1], is(pps2.closeUtilizationVolume[j][uc.index + 1]));
+				assertThat(
+						pps1.closeUtilizationVolume[i][uc.index + 1], is(pps2.closeUtilizationVolume[j][uc.index + 1])
+				);
 				assertThat(pps1.cuVolumeMinusDecay[i][uc.index + 1], is(pps2.cuVolumeMinusDecay[j][uc.index + 1]));
-				assertThat(pps1.cuVolumeMinusDecayWastage[i][uc.index + 1], is(pps2.cuVolumeMinusDecayWastage[j][uc.index + 1]));
+				assertThat(
+						pps1.cuVolumeMinusDecayWastage[i][uc.index + 1], is(
+								pps2.cuVolumeMinusDecayWastage[j][uc.index + 1]
+						)
+				);
 				if (uc.index <= 0) {
 					assertThat(pps1.loreyHeight[i][uc.index + 1], is(pps2.loreyHeight[j][uc.index + 1]));
 				}
@@ -208,40 +215,44 @@ class PolygonProcessingStateTest {
 		assertThat(polygonDescriptionStream.hasNext(), is(true));
 		var polygonDescription = polygonDescriptionStream.next();
 		ForwardDataStreamReader reader = new ForwardDataStreamReader(controlMap);
-		
+
 		var polygon = reader.readNextPolygon(polygonDescription);
 
 		VdypPolygonLayer pLayer = polygon.getPrimaryLayer();
 		assertThat(pLayer, notNullValue());
-		
+
 		PolygonProcessingState pps = new PolygonProcessingState(gdMap, pLayer);
-		
+
 		PolygonProcessingState ppsCopy = new PolygonProcessingState(pps);
-		
+
 		verifyProcessingStateMatchesLayer(ppsCopy, pLayer);
 	}
 
 	private void verifyProcessingStateMatchesLayer(PolygonProcessingState pps, VdypPolygonLayer layer) {
-		for (var se: layer.getGenus().entrySet()) {
+		for (var se : layer.getGenus().entrySet()) {
 			int spIndex = gdMap.getIndex(se.getKey().getAlias());
-			
+
 			verifyProcessingStateSpeciesMatchesSpecies(pps, spIndex, se.getKey(), se.getValue());
 
 			if (se.getValue().getUtilizations().isPresent()) {
-				verifyProcessingStateSpeciesUtilizationsMatchesUtilizations(pps, spIndex, se.getValue().getUtilizations().get());
+				verifyProcessingStateSpeciesUtilizationsMatchesUtilizations(
+						pps, spIndex, se.getValue().getUtilizations().get()
+				);
 			}
 		}
-		
+
 		if (layer.getDefaultUtilizationMap().isPresent()) {
 			verifyProcessingStateSpeciesUtilizationsMatchesUtilizations(pps, 0, layer.getDefaultUtilizationMap().get());
 		}
 	}
-	
-	private void verifyProcessingStateSpeciesUtilizationsMatchesUtilizations(PolygonProcessingState pps, int spIndex, Map<UtilizationClass, VdypSpeciesUtilization> map) {
-		
-		for (UtilizationClass uc: UtilizationClass.values()) {
+
+	private void verifyProcessingStateSpeciesUtilizationsMatchesUtilizations(
+			PolygonProcessingState pps, int spIndex, Map<UtilizationClass, VdypSpeciesUtilization> map
+	) {
+
+		for (UtilizationClass uc : UtilizationClass.values()) {
 			VdypSpeciesUtilization u = map.get(uc);
-			
+
 			assertThat(pps.basalArea[spIndex][uc.index + 1], is(u.getBasalArea()));
 			assertThat(pps.closeUtilizationVolume[spIndex][uc.index + 1], is(u.getCloseUtilizationVolume()));
 			assertThat(pps.cuVolumeMinusDecay[spIndex][uc.index + 1], is(u.getCuVolumeMinusDecay()));
@@ -254,8 +265,10 @@ class PolygonProcessingStateTest {
 			assertThat(pps.wholeStemVolume[spIndex][uc.index + 1], is(u.getWholeStemVolume()));
 		}
 	}
-	
-	private void verifyProcessingStateSpeciesMatchesSpecies(PolygonProcessingState pps, int spIndex, GenusDefinition genus, VdypLayerSpecies species) {
+
+	private void verifyProcessingStateSpeciesMatchesSpecies(
+			PolygonProcessingState pps, int spIndex, GenusDefinition genus, VdypLayerSpecies species
+	) {
 		assertThat(pps.ageBreastHeight[spIndex], is(species.getAgeAtBreastHeight()));
 		assertThat(pps.ageTotal[spIndex], is(species.getAgeTotal()));
 		assertThat(pps.dominantHeight[spIndex], is(species.getDominantHeight()));

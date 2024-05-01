@@ -35,7 +35,7 @@ public abstract class AliasedEntity {
 	public int hashCode() {
 		return alias.hashCode() * 17 + name.hashCode();
 	}
-	
+
 	@Override
 	public boolean equals(Object o) {
 		if (o instanceof AliasedEntity that) {

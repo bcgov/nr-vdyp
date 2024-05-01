@@ -139,8 +139,8 @@ public class VriAdjustInputWriter implements Closeable {
 
 		// Ensure we have a list of 4 distribution entries
 		var specDistributionEntries = Stream.concat(
-				spec.getSpeciesPercent().entrySet().stream().sorted(Utils.compareUsing(Entry::getValue)),
-				Stream.generate(() -> new AbstractMap.SimpleEntry<String, Float>("", 0f))
+				spec.getSpeciesPercent().entrySet().stream().sorted(Utils.compareUsing(Entry::getValue)), Stream
+						.generate(() -> new AbstractMap.SimpleEntry<String, Float>("", 0f))
 		).limit(4).toList();
 		// 082E004 615 1988 P 9 L LW 100.0 0.0 0.0 0.0 -9.00 -9.00 -9.0 -9.0 -9.0 0 -9
 		var specIndex = GenusDefinitionParser.getIndex(spec.getGenus(), controlMap);
@@ -202,8 +202,8 @@ public class VriAdjustInputWriter implements Closeable {
 			if (utils.getBaseAreaByUtilization().getCoe(uc.index) > 0) {
 				quadMeanDiameter = Optional.of(
 						BaseAreaTreeDensityDiameter.quadMeanDiameter(
-								utils.getBaseAreaByUtilization().getCoe(uc.index),
-								utils.getTreesPerHectareByUtilization().getCoe(uc.index)
+								utils.getBaseAreaByUtilization().getCoe(uc.index), utils
+										.getTreesPerHectareByUtilization().getCoe(uc.index)
 						)
 				);
 			}

@@ -677,12 +677,12 @@ class VdypStartApplicationTest {
 		var mockControl = EasyMock.createControl();
 
 		controlMap.put(
-				ControlKey.DEFAULT_EQ_NUM.name(),
-				new MatrixMap2Impl(Collections.singletonList("D"), Collections.singletonList("CDF"), (x, y) -> 42)
+				ControlKey.DEFAULT_EQ_NUM.name(), new MatrixMap2Impl(
+						Collections.singletonList("D"), Collections.singletonList("CDF"), (x, y) -> 42
+				)
 		);
 		controlMap.put(
-				ControlKey.EQN_MODIFIERS.name(),
-				new MatrixMap2Impl(
+				ControlKey.EQN_MODIFIERS.name(), new MatrixMap2Impl(
 						Collections.singletonList(42), Collections.singletonList(37), (x, y) -> Optional.of(64)
 				)
 		);
@@ -708,12 +708,12 @@ class VdypStartApplicationTest {
 		var mockControl = EasyMock.createControl();
 
 		controlMap.put(
-				ControlKey.DEFAULT_EQ_NUM.name(),
-				new MatrixMap2Impl(Collections.singletonList("D"), Collections.singletonList("CDF"), (x, y) -> 42)
+				ControlKey.DEFAULT_EQ_NUM.name(), new MatrixMap2Impl(
+						Collections.singletonList("D"), Collections.singletonList("CDF"), (x, y) -> 42
+				)
 		);
 		controlMap.put(
-				ControlKey.EQN_MODIFIERS.name(),
-				new MatrixMap2Impl(
+				ControlKey.EQN_MODIFIERS.name(), new MatrixMap2Impl(
 						Collections.singletonList(42), Collections.singletonList(37), (x, y) -> Optional.empty()
 				)
 		);
@@ -762,10 +762,9 @@ class VdypStartApplicationTest {
 				});
 
 		assertThat(
-				result,
-				coe(
-						1, 2f, 2f + 0.3f + 0.3f, 7f, 6f * 0.4f - 3f * 0.1f + 0.3f * 1f, 9f,
-						4f * 0.4f + 3f * 0.1f + 0.3f * 1f
+				result, coe(
+						1, 2f, 2f + 0.3f + 0.3f, 7f, 6f * 0.4f - 3f * 0.1f + 0.3f * 1f, 9f, 4f * 0.4f + 3f * 0.1f
+								+ 0.3f * 1f
 				)
 		);
 	}
@@ -785,10 +784,8 @@ class VdypStartApplicationTest {
 			assertThat(result, is(layer));
 			var ex = assertThrows(StandProcessingException.class, () -> app.requireLayer(poly, LayerType.VETERAN));
 			assertThat(
-					ex,
-					hasProperty(
-							"message",
-							is(
+					ex, hasProperty(
+							"message", is(
 									"Polygon TestPoly has no VETERAN layer, or that layer has non-positive height or crown closure."
 							)
 					)

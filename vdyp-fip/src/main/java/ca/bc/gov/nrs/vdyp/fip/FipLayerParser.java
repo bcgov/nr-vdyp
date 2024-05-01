@@ -51,10 +51,9 @@ public class FipLayerParser
 			var lineParser = new LineParser() //
 					.strippedString(25, FipPolygonParser.POLYGON_IDENTIFIER).space(1) //
 					.value(
-							1, LAYER,
-							ValueParser.valueOrMarker(
-									ValueParser.LAYER,
-									ValueParser.optionalSingleton("Z"::equals, EndOfRecord.END_OF_RECORD)
+							1, LAYER, ValueParser.valueOrMarker(
+									ValueParser.LAYER, ValueParser
+											.optionalSingleton("Z"::equals, EndOfRecord.END_OF_RECORD)
 							)
 					) //
 					.floating(4, AGE_TOTAL) //

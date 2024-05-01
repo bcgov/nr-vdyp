@@ -30,8 +30,9 @@ class MatrixMapTest {
 	void testContructNoDimensionsFails() {
 		List<List<Object>> dims = Collections.emptyList();
 		Assertions.assertThrows(
-				IllegalArgumentException.class,
-				() -> new MatrixMapImpl<Optional<Character>>(k -> Optional.empty(), dims)
+				IllegalArgumentException.class, () -> new MatrixMapImpl<Optional<Character>>(
+						k -> Optional.empty(), dims
+				)
 		);
 	}
 
@@ -41,8 +42,9 @@ class MatrixMapTest {
 		var dim1 = Collections.emptyList();
 		var dims = Arrays.asList(dim1);
 		Assertions.assertThrows(
-				IllegalArgumentException.class,
-				() -> new MatrixMapImpl<Optional<Character>>(k -> Optional.empty(), dims)
+				IllegalArgumentException.class, () -> new MatrixMapImpl<Optional<Character>>(
+						k -> Optional.empty(), dims
+				)
 		);
 	}
 
@@ -150,10 +152,10 @@ class MatrixMapTest {
 		var result = new ArrayList<Object[]>();
 		map.eachKey(result::add);
 		assertThat(
-				result,
-				containsInAnyOrder(
-						arrayContaining("a", 1), arrayContaining("b", 1), arrayContaining("a", 2),
-						arrayContaining("b", 2)
+				result, containsInAnyOrder(
+						arrayContaining("a", 1), arrayContaining("b", 1), arrayContaining("a", 2), arrayContaining(
+								"b", 2
+						)
 				)
 		);
 	}

@@ -55,7 +55,6 @@ class PolygonProcessingState {
 	public float treesPerHectare[/* nSpecies + 1, including 0 */][/* all ucs */]; // BANK1 TPHB
 	public float wholeStemVolume[/* nSpecies + 1, including 0 */][/* all ucs */]; // BANK1 VOLWSB
 
-
 	public PolygonProcessingState(GenusDefinitionMap genusDefinitionMap, VdypPolygonLayer layer) {
 
 		this.nSpecies = genusDefinitionMap.getNSpecies();
@@ -225,7 +224,7 @@ class PolygonProcessingState {
 					)
 			);
 		}
-		
+
 		if (toIndex < fromIndex) {
 
 			speciesName[toIndex] = speciesName[fromIndex];

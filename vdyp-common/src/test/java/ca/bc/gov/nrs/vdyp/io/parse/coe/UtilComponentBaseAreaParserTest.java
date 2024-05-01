@@ -199,8 +199,7 @@ class UtilComponentBaseAreaParserTest {
 		var parser = new UtilComponentBaseAreaParser();
 
 		var is = TestUtils.makeInputStream(
-				"BA12 S1 B1   -23.22790  12.60472", "     S1 B2   -77.22790  77.60472",
-				"BA12 S1 B2   -42.22790  64.60472"
+				"BA12 S1 B1   -23.22790  12.60472", "     S1 B2   -77.22790  77.60472", "BA12 S1 B2   -42.22790  64.60472"
 		);
 
 		Map<String, Object> controlMap = new HashMap<>();

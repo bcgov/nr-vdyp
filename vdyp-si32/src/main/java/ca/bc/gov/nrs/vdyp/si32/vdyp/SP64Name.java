@@ -172,18 +172,22 @@ public enum SP64Name implements SI32Enum<SP64Name> {
 	@Override
 	public int getOffset() {
 		if (this.equals(UNKNOWN)) {
-			throw new UnsupportedOperationException(MessageFormat.format("Cannot call getIndex on {0} as it's not a standard member of the enumeration", this));
+			throw new UnsupportedOperationException(
+					MessageFormat.format(
+							"Cannot call getIndex on {0} as it's not a standard member of the enumeration", this
+					)
+			);
 		}
-		
+
 		return index - 1;
 	}
-	
+
 	@Override
 	public String getText() {
 		if (this.equals(UNKNOWN)) {
 			return "";
 		}
-		
+
 		return this.toString();
 	}
 
@@ -194,7 +198,7 @@ public enum SP64Name implements SI32Enum<SP64Name> {
 	 * @return as described
 	 */
 	public static SP64Name forText(String text) {
-		
+
 		if (text != null) {
 			try {
 				return valueOf(SP64Name.class, text.toUpperCase());
@@ -213,11 +217,11 @@ public enum SP64Name implements SI32Enum<SP64Name> {
 	 * 	   <code>index</code> in which case <code>null</code> is returned.
 	 */
 	public static SP64Name forIndex(int index) {
-		for (SP64Name e: SP64Name.values()) {
+		for (SP64Name e : SP64Name.values()) {
 			if (index == e.index)
 				return e;
 		}
-		
+
 		return null;
 	}
 

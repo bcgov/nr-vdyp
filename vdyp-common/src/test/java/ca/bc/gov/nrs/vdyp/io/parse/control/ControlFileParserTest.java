@@ -61,11 +61,11 @@ class ControlFileParserTest {
 			var result = parser.parse(is);
 
 			assertThat(
-					result.entrySet(),
-					contains(
+					result.entrySet(), contains(
 							controlEntry(
-									equalTo(1), equalTo("X"),
-									equalTo("Control that is longer than 50 characters. Blah Blah Blah Blah.")
+									equalTo(1), equalTo("X"), equalTo(
+											"Control that is longer than 50 characters. Blah Blah Blah Blah."
+									)
 							)
 					)
 			);
@@ -81,11 +81,11 @@ class ControlFileParserTest {
 			var result = parser.parse(is);
 
 			assertThat(
-					result.entrySet(),
-					contains(
+					result.entrySet(), contains(
 							controlEntry(
-									equalTo(1), equalTo(">"),
-									equalTo("Control that is longer than 50 characters. Blah Blah Blah Blah.")
+									equalTo(1), equalTo(">"), equalTo(
+											"Control that is longer than 50 characters. Blah Blah Blah Blah."
+									)
 							)
 					)
 			);
@@ -197,10 +197,10 @@ class ControlFileParserTest {
 			var result = parser.parse(is);
 
 			assertThat(
-					result.entrySet(),
-					contains(
-							controlEntry(equalTo(1), equalTo(" "), equalTo("Control 1")),
-							controlEntry(equalTo(2), equalTo(" "), equalTo("Control 2"))
+					result.entrySet(), contains(
+							controlEntry(equalTo(1), equalTo(" "), equalTo("Control 1")), controlEntry(
+									equalTo(2), equalTo(" "), equalTo("Control 2")
+							)
 					)
 			);
 		}
@@ -286,10 +286,8 @@ class ControlFileParserTest {
 			assertThat(result, hasEntry(equalTo("MINIMA"), (Matcher) contains(5.0f, 0.0f, 2.0f)));
 			assertThat(result, hasEntry(equalTo("MODIFIER_FILE"), equalTo("coe\\MOD19813.prm")));
 			assertThat(
-					result,
-					hasEntry(
-							equalTo("DEBUG_SWITCHES"),
-							(Matcher) contains(
+					result, hasEntry(
+							equalTo("DEBUG_SWITCHES"), (Matcher) contains(
 									0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0
 							)
 					)

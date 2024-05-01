@@ -51,12 +51,10 @@ public class VdypUtilizationParser implements ControlMapValueReplacer<Object, St
 		return () -> {
 			var lineParser = new LineParser().strippedString(25, DESCRIPTION).space(1)
 					.value(
-							1, LAYER_TYPE,
-							ValueParser.valueOrMarker(
-									ValueParser.LAYER,
-									ValueParser.optionalSingleton(
-											x -> x == null || x.trim().length() == 0 || x.trim().equals("Z"),
-											EndOfRecord.END_OF_RECORD
+							1, LAYER_TYPE, ValueParser.valueOrMarker(
+									ValueParser.LAYER, ValueParser.optionalSingleton(
+											x -> x == null || x.trim().length() == 0
+													|| x.trim().equals("Z"), EndOfRecord.END_OF_RECORD
 									)
 							)
 					).value(3, GENUS_INDEX, ValueParser.INTEGER).space(1)
@@ -91,15 +89,15 @@ public class VdypUtilizationParser implements ControlMapValueReplacer<Object, St
 					var genusIndex = (Integer) entry.get(GENUS_INDEX);
 					var genus = (Optional<String>) entry.get(GENUS);
 					var utilizationClass = (UtilizationClass) entry.get(UTILIZATION_CLASS_INDEX);
-					var basalArea = (Float)(entry.get(BASAL_AREA));
-					var liveTreesPerHectare = (Float)(entry.get(LIVE_TREES_PER_HECTARE));
-					var loreyHeight = (Float)(entry.get(LOREY_HEIGHT));
-					var wholeStemVolume = (Float)(entry.get(WHOLE_STEM_VOLUME));
-					var closeUtilVolume = (Float)(entry.get(CLOSE_UTIL_VOLUME));
-					var cuVolumeLessDecay = (Float)(entry.get(CU_VOLUME_LESS_DECAY));
-					var cuVolumeLessDecayWastage = (Float)(entry.get(CU_VOLUME_LESS_DECAY_WASTAGE));
-					var cuVolumeLessDecayWastageBreakage = (Float)(entry.get(CU_VOLUME_LESS_DECAY_WASTAGE_BREAKAGE));
-					var quadraticMeanDBH = (Float)(entry.get(QUADRATIC_MEAN_DIAMETER_BREAST_HEIGHT));
+					var basalArea = (Float) (entry.get(BASAL_AREA));
+					var liveTreesPerHectare = (Float) (entry.get(LIVE_TREES_PER_HECTARE));
+					var loreyHeight = (Float) (entry.get(LOREY_HEIGHT));
+					var wholeStemVolume = (Float) (entry.get(WHOLE_STEM_VOLUME));
+					var closeUtilVolume = (Float) (entry.get(CLOSE_UTIL_VOLUME));
+					var cuVolumeLessDecay = (Float) (entry.get(CU_VOLUME_LESS_DECAY));
+					var cuVolumeLessDecayWastage = (Float) (entry.get(CU_VOLUME_LESS_DECAY_WASTAGE));
+					var cuVolumeLessDecayWastageBreakage = (Float) (entry.get(CU_VOLUME_LESS_DECAY_WASTAGE_BREAKAGE));
+					var quadraticMeanDBH = (Float) (entry.get(QUADRATIC_MEAN_DIAMETER_BREAST_HEIGHT));
 
 					var builder = new ValueOrMarker.Builder<Optional<VdypSpeciesUtilization>, EndOfRecord>();
 					return layerType.handle(l -> {

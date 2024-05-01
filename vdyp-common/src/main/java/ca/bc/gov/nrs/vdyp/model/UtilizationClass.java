@@ -22,7 +22,7 @@ public enum UtilizationClass {
 	private Optional<UtilizationClass> next = Optional.empty();
 	private Optional<UtilizationClass> previous = Optional.empty();
 
-	public static final List<UtilizationClass> allButSmall = Collections
+	public static final List<UtilizationClass> ALL_BUT_SMALL = Collections
 			.unmodifiableList(new ArrayList<>(Arrays.asList(U75TO125, U125TO175, U175TO225, OVER225)));
 
 	static {

@@ -12,7 +12,7 @@ import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.GrowthInterceptMi
 import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.LessThan13Exception;
 import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.NoAnswerException;
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexAgeType;
-import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation; 
+import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
 
 /**
  * SiteIndex2Height.java - given site index and age, computes site height.
@@ -42,9 +42,9 @@ public class SiteIndex2Height {
 	 * error codes (returned as height value):
 	 */
 	public static double indexToHeight(
-			SiteIndexEquation cuIndex, double age, SiteIndexAgeType ageType, double siteIndex, double years2BreastHeight, double pi 
-	) throws CommonCalculatorException
-	{
+			SiteIndexEquation cuIndex, double age, SiteIndexAgeType ageType, double siteIndex,
+			double years2BreastHeight, double pi
+	) throws CommonCalculatorException {
 		double height; // return value
 		double x1, x2, x3, x4, x5; // equation coefficients
 		double totalAge; // total age
@@ -59,10 +59,10 @@ public class SiteIndex2Height {
 
 		if (ageType == SI_AT_TOTAL) {
 			totalAge = age;
-			breastHeightAge = Age2Age.ageToAge(cuIndex, totalAge, SI_AT_TOTAL, SI_AT_BREAST, years2BreastHeight);
+			breastHeightAge = AgeToAge.ageToAge(cuIndex, totalAge, SI_AT_TOTAL, SI_AT_BREAST, years2BreastHeight);
 		} else {
 			breastHeightAge = age;
-			totalAge = Age2Age.ageToAge(cuIndex, breastHeightAge, SI_AT_BREAST, SI_AT_TOTAL, years2BreastHeight);
+			totalAge = AgeToAge.ageToAge(cuIndex, breastHeightAge, SI_AT_BREAST, SI_AT_TOTAL, years2BreastHeight);
 		}
 		if (totalAge < 0.0) {
 			throw new NoAnswerException("Iteration could not converge (projected height > 999), age: " + totalAge);
@@ -104,7 +104,8 @@ public class SiteIndex2Height {
 				x3 = 0.0558178 + 0.00792236 * x1;
 				x4 = -0.000733819 + 0.000197693 * x1;
 
-				height = 4.5 + breastHeightAge * breastHeightAge / (x2 + x3 * breastHeightAge + x4 * breastHeightAge * breastHeightAge);
+				height = 4.5 + breastHeightAge * breastHeightAge
+						/ (x2 + x3 * breastHeightAge + x4 * breastHeightAge * breastHeightAge);
 
 				if (breastHeightAge < 5) {
 					height += (0.22 * breastHeightAge);
@@ -158,8 +159,8 @@ public class SiteIndex2Height {
 				siteIndex = -1.73 + 3.149 * ppow(siteIndex, 0.8279);
 
 				height = 1.37 + (22.87 + 0.9502 * (siteIndex - 1.37)) * ppow(
-						1 - Math.exp(-0.0020647 * ppow(siteIndex - 1.37, 0.5) * breastHeightAge),
-						1.3656 + 2.046 / (siteIndex - 1.37)
+						1 - Math.exp(-0.0020647 * ppow(siteIndex - 1.37, 0.5) * breastHeightAge), 1.3656
+								+ 2.046 / (siteIndex - 1.37)
 				);
 			} else
 				height = totalAge * totalAge * 1.37 / years2BreastHeight / years2BreastHeight;
@@ -170,8 +171,8 @@ public class SiteIndex2Height {
 				siteIndex = -1.73 + 3.149 * ppow(siteIndex, 0.8279);
 
 				height = 1.37 + (22.87 + 0.9502 * (siteIndex - 1.37)) * ppow(
-						1 - Math.exp(-0.0020647 * ppow(siteIndex - 1.37, 0.5) * (breastHeightAge - 0.5)),
-						1.3656 + 2.046 / (siteIndex - 1.37)
+						1 - Math.exp(-0.0020647 * ppow(siteIndex - 1.37, 0.5) * (breastHeightAge - 0.5)), 1.3656
+								+ 2.046 / (siteIndex - 1.37)
 				);
 			} else {
 				height = totalAge * totalAge * 1.37 / years2BreastHeight / years2BreastHeight;
@@ -219,7 +220,8 @@ public class SiteIndex2Height {
 				x3 = -0.0616 + 0.0137 * x1;
 				x4 = 0.00192428 + 0.00007024 * x1;
 
-				height = 4.5 + breastHeightAge * breastHeightAge / (x2 + x3 * breastHeightAge + x4 * breastHeightAge * breastHeightAge);
+				height = 4.5 + breastHeightAge * breastHeightAge
+						/ (x2 + x3 * breastHeightAge + x4 * breastHeightAge * breastHeightAge);
 
 				if (breastHeightAge < 5) {
 					height += (0.3 * breastHeightAge);
@@ -253,7 +255,8 @@ public class SiteIndex2Height {
 				x3 = -0.0616 + 0.0137 * x1;
 				x4 = 0.00192428 + 0.00007024 * x1;
 
-				height = 4.5 + breastHeightAge * breastHeightAge / (x2 + x3 * breastHeightAge + x4 * breastHeightAge * breastHeightAge);
+				height = 4.5 + breastHeightAge * breastHeightAge
+						/ (x2 + x3 * breastHeightAge + x4 * breastHeightAge * breastHeightAge);
 
 				if (breastHeightAge < 5) {
 					height += (0.3 * breastHeightAge);
@@ -295,7 +298,8 @@ public class SiteIndex2Height {
 				x3 = -0.0616 + 0.0137 * x1;
 				x4 = 0.00192428 + 0.00007024 * x1;
 
-				height = 4.5 + breastHeightAge * breastHeightAge / (x2 + x3 * breastHeightAge + x4 * breastHeightAge * breastHeightAge);
+				height = 4.5 + breastHeightAge * breastHeightAge
+						/ (x2 + x3 * breastHeightAge + x4 * breastHeightAge * breastHeightAge);
 
 				if (breastHeightAge < 5) {
 					height += (0.3 * breastHeightAge);
@@ -388,7 +392,9 @@ public class SiteIndex2Height {
 				if (breastHeightAge > 0.5) {
 					/* Goudie */
 					x1 = (1.0 + Math.exp(9.7936 - 1.2866 * llog(siteIndex - 1.3) - 1.4661 * Math.log(49.5))) / (1.0
-							+ Math.exp(9.7936 - 1.2866 * llog(siteIndex - 1.3) - 1.4661 * Math.log(breastHeightAge - 0.5)));
+							+ Math.exp(
+									9.7936 - 1.2866 * llog(siteIndex - 1.3) - 1.4661 * Math.log(breastHeightAge - 0.5)
+							));
 
 					height = 1.3 + (siteIndex - 1.3) * x1;
 				} else {
@@ -401,12 +407,15 @@ public class SiteIndex2Height {
 				} else if (totalAge > years2BreastHeight + 2 - 0.5) {
 					/* use Goudie's breast-height age curve */
 					x1 = (1.0 + Math.exp(9.7936 - 1.2866 * llog(siteIndex - 1.3) - 1.4661 * Math.log(49.5))) / (1.0
-							+ Math.exp(9.7936 - 1.2866 * llog(siteIndex - 1.3) - 1.4661 * Math.log(breastHeightAge - 0.5)));
+							+ Math.exp(
+									9.7936 - 1.2866 * llog(siteIndex - 1.3) - 1.4661 * Math.log(breastHeightAge - 0.5)
+							));
 
 					height = 1.3 + (siteIndex - 1.3) * x1;
 				} else {
 					/* use Nigh's total age curve */
-					x4 = (-0.01666 + 0.001722 * siteIndex) * ppow(years2BreastHeight - 0.5, 1.858) * ppow(0.9982, years2BreastHeight - 0.5);
+					x4 = (-0.01666 + 0.001722 * siteIndex) * ppow(years2BreastHeight - 0.5, 1.858)
+							* ppow(0.9982, years2BreastHeight - 0.5);
 
 					/* use Goudie's breast-height age curve */
 					x1 = (1.0 + Math.exp(9.7936 - 1.2866 * llog(siteIndex - 1.3) - 1.4661 * Math.log(49.5)))
@@ -422,7 +431,9 @@ public class SiteIndex2Height {
 			if (siteIndex < 18.5) {
 				if (breastHeightAge > 0.5) {
 					x1 = (1.0 + Math.exp(7.6298 - 0.8940 * llog(siteIndex - 1.3) - 1.3563 * Math.log(49.5))) / (1.0
-							+ Math.exp(7.6298 - 0.8940 * llog(siteIndex - 1.3) - 1.3563 * Math.log(breastHeightAge - 0.5)));
+							+ Math.exp(
+									7.6298 - 0.8940 * llog(siteIndex - 1.3) - 1.3563 * Math.log(breastHeightAge - 0.5)
+							));
 
 					height = 1.3 + (siteIndex - 1.3) * x1;
 				} else {
@@ -435,12 +446,15 @@ public class SiteIndex2Height {
 				} else if (totalAge > years2BreastHeight + 2 - 0.5) {
 					/* use Thrower's breast-height age curve */
 					x1 = (1.0 + Math.exp(7.6298 - 0.8940 * llog(siteIndex - 1.3) - 1.3563 * Math.log(49.5))) / (1.0
-							+ Math.exp(7.6298 - 0.8940 * llog(siteIndex - 1.3) - 1.3563 * Math.log(breastHeightAge - 0.5)));
+							+ Math.exp(
+									7.6298 - 0.8940 * llog(siteIndex - 1.3) - 1.3563 * Math.log(breastHeightAge - 0.5)
+							));
 
 					height = 1.3 + (siteIndex - 1.3) * x1;
 				} else {
 					/* use Nigh's total age curve */
-					x4 = (-0.03993 + 0.004828 * siteIndex) * ppow(years2BreastHeight - 0.5, 1.902) * ppow(0.9645, years2BreastHeight - 0.5);
+					x4 = (-0.03993 + 0.004828 * siteIndex) * ppow(years2BreastHeight - 0.5, 1.902)
+							* ppow(0.9645, years2BreastHeight - 0.5);
 
 					/* use Thrower's breast-height age curve */
 					x1 = (1.0 + Math.exp(7.6298 - 0.8940 * llog(siteIndex - 1.3) - 1.3563 * Math.log(49.5)))
@@ -455,19 +469,23 @@ public class SiteIndex2Height {
 		case SI_PLI_THROWER:
 			if (breastHeightAge > pi) {
 				x1 = (1.0 + Math.exp(7.6298 - 0.8940 * llog(siteIndex - 1.3) - 1.3563 * Math.log(50 - pi)))
-						/ (1.0 + Math.exp(7.6298 - 0.8940 * llog(siteIndex - 1.3) - 1.3563 * Math.log(breastHeightAge - pi)));
+						/ (1.0 + Math.exp(
+								7.6298 - 0.8940 * llog(siteIndex - 1.3) - 1.3563 * Math.log(breastHeightAge - pi)
+						));
 
 				height = 1.3 + (siteIndex - 1.3) * x1;
 			} else {
 				/*
 				 * height = tage * tage * 1.3 / y2bh / y2bh;
 				 */
-				height = 1.3 * Math.pow(totalAge / years2BreastHeight, 1.77 - 0.1028 * years2BreastHeight) * Math.pow(1.179, totalAge - years2BreastHeight);
+				height = 1.3 * Math.pow(totalAge / years2BreastHeight, 1.77 - 0.1028 * years2BreastHeight)
+						* Math.pow(1.179, totalAge - years2BreastHeight);
 			}
 			break;
 		case SI_PLI_NIGHTA2004:
 			if (totalAge <= 15) {
-				height = 1.3 * Math.pow(totalAge / years2BreastHeight, 1.77 - 0.1028 * years2BreastHeight) * Math.pow(1.179, totalAge - years2BreastHeight);
+				height = 1.3 * Math.pow(totalAge / years2BreastHeight, 1.77 - 0.1028 * years2BreastHeight)
+						* Math.pow(1.179, totalAge - years2BreastHeight);
 			} else {
 				throw new NoAnswerException("Iteration could not converge (projected height > 999)");
 			}
@@ -481,7 +499,8 @@ public class SiteIndex2Height {
 			break;
 		case SI_SW_NIGHTA2004:
 			if (totalAge <= 20) {
-				height = 1.3 * Math.pow(totalAge / years2BreastHeight, 1.628 - 0.05991 * years2BreastHeight) * Math.pow(1.127, totalAge - years2BreastHeight);
+				height = 1.3 * Math.pow(totalAge / years2BreastHeight, 1.628 - 0.05991 * years2BreastHeight)
+						* Math.pow(1.127, totalAge - years2BreastHeight);
 			} else {
 				throw new NoAnswerException("Iteration could not converge (projected height > 999)");
 			}
@@ -506,14 +525,16 @@ public class SiteIndex2Height {
 				// 45.3824 = -4 * 11.6209 * log (1 - exp (-0.00955 * 49.5))
 				x1 = 0.5 * ( (Math.log(siteIndex - 1.3) - 1.71635)
 						+ Math.sqrt(Math.pow(Math.log(siteIndex - 1.3) - 1.71635, 2.0) + 45.3824));
-				height = 1.3 + Math.exp(x1) * Math.pow(1 - Math.exp(-0.00955 * (breastHeightAge - 0.5)), -1.758 + 11.6209 / x1);
+				height = 1.3 + Math.exp(x1)
+						* Math.pow(1 - Math.exp(-0.00955 * (breastHeightAge - 0.5)), -1.758 + 11.6209 / x1);
 			} else {
 				height = totalAge * totalAge * 1.3 / years2BreastHeight / years2BreastHeight;
 			}
 			break;
 		case SI_SE_NIGHTA:
 			if (totalAge <= 20) {
-				height = 1.3 * Math.pow(totalAge / years2BreastHeight, 1.628 - 0.05991 * years2BreastHeight) * Math.pow(1.127, totalAge - years2BreastHeight);
+				height = 1.3 * Math.pow(totalAge / years2BreastHeight, 1.628 - 0.05991 * years2BreastHeight)
+						* Math.pow(1.127, totalAge - years2BreastHeight);
 			} else {
 				throw new NoAnswerException("Iteration could not converge (projected height > 999)");
 			}
@@ -881,7 +902,8 @@ public class SiteIndex2Height {
 
 				height = 1.3 + (siteIndex - 1.3) * x1;
 			} else {
-				height = 1.3 * Math.pow(totalAge / years2BreastHeight, 1.628 - 0.05991 * years2BreastHeight) * Math.pow(1.127, totalAge - years2BreastHeight);
+				height = 1.3 * Math.pow(totalAge / years2BreastHeight, 1.628 - 0.05991 * years2BreastHeight)
+						* Math.pow(1.127, totalAge - years2BreastHeight);
 			}
 			break;
 
@@ -896,7 +918,8 @@ public class SiteIndex2Height {
 
 				height = 1.3 + (siteIndex - 1.3) * x1;
 			} else {
-				height = 1.3 * Math.pow(totalAge / years2BreastHeight, 1.628 - 0.05991 * years2BreastHeight) * Math.pow(1.127, totalAge - years2BreastHeight);
+				height = 1.3 * Math.pow(totalAge / years2BreastHeight, 1.628 - 0.05991 * years2BreastHeight)
+						* Math.pow(1.127, totalAge - years2BreastHeight);
 			}
 			break;
 		case SI_FDI_THROWERAC:
@@ -1044,7 +1067,9 @@ public class SiteIndex2Height {
 		case SI_SW_THROWER:
 			if (breastHeightAge > 0.5) {
 				x1 = (1.0 + Math.exp(10.1654 - 1.4002 * llog(siteIndex - 1.3) - 1.4482 * Math.log(50.0 - 0.5)))
-						/ (1.0 + Math.exp(10.1654 - 1.4002 * llog(siteIndex - 1.3) - 1.4482 * Math.log(breastHeightAge - 0.5)));
+						/ (1.0 + Math.exp(
+								10.1654 - 1.4002 * llog(siteIndex - 1.3) - 1.4482 * Math.log(breastHeightAge - 0.5)
+						));
 
 				height = 1.3 + (siteIndex - 1.3) * x1;
 			} else {
@@ -1088,7 +1113,10 @@ public class SiteIndex2Height {
 				siteIndex /= 0.3048;
 
 				x1 = 1.0 - Math.exp(
-						-Math.exp(-9.975053 + (1.747353 - 0.38583) * Math.log(breastHeightAge) + 1.119438 * Math.log(siteIndex))
+						-Math.exp(
+								-9.975053 + (1.747353 - 0.38583) * Math.log(breastHeightAge)
+										+ 1.119438 * Math.log(siteIndex)
+						)
 				);
 
 				x2 = 1.0 - Math.exp(
@@ -1177,7 +1205,8 @@ public class SiteIndex2Height {
 				x3 = -0.02465 + 0.01411 * x1;
 				x4 = 0.00174 + 0.000097667 * x1;
 
-				height = 1.3 + breastHeightAge * breastHeightAge / (x2 + x3 * breastHeightAge + x4 * breastHeightAge * breastHeightAge);
+				height = 1.3 + breastHeightAge * breastHeightAge
+						/ (x2 + x3 * breastHeightAge + x4 * breastHeightAge * breastHeightAge);
 
 				if (breastHeightAge > 50.0) {
 					if (breastHeightAge > 200) {
@@ -1245,7 +1274,8 @@ public class SiteIndex2Height {
 		case SI_BA_DILUCCA:
 			if (breastHeightAge > 0.0) {
 				x1 = 1 + Math.exp(8.377148582 - 1.27351813 * Math.log(50.0) - 0.975226632 * Math.log(siteIndex));
-				x2 = 1 + Math.exp(8.377148582 - 1.27351813 * Math.log(breastHeightAge) - 0.975226632 * Math.log(siteIndex));
+				x2 = 1 + Math
+						.exp(8.377148582 - 1.27351813 * Math.log(breastHeightAge) - 0.975226632 * Math.log(siteIndex));
 				height = 1.3 + (siteIndex - 1.3) * x1 / x2;
 			} else {
 				height = totalAge * totalAge * 1.3 / years2BreastHeight / years2BreastHeight;
@@ -1298,7 +1328,8 @@ public class SiteIndex2Height {
 				x3 = -0.42007 + 0.01687 * x1;
 				x4 = 0.00934 + 0.00004 * x1;
 
-				height = 1.3 + breastHeightAge * breastHeightAge / (x2 + x3 * breastHeightAge + x4 * breastHeightAge * breastHeightAge);
+				height = 1.3 + breastHeightAge * breastHeightAge
+						/ (x2 + x3 * breastHeightAge + x4 * breastHeightAge * breastHeightAge);
 
 				if (breastHeightAge < 50.0 && breastHeightAge * height < 1695.3) {
 					x1 = 0.45773 - 0.00027 * breastHeightAge * height;
@@ -1373,7 +1404,8 @@ public class SiteIndex2Height {
 				/* convert to imperial */
 				siteIndex /= 0.3048;
 
-				height = 4.5 + (1.9965 * (siteIndex - 4.5) / (1 + Math.exp(5.479 - 1.4016 * Math.log(breastHeightAge))));
+				height = 4.5
+						+ (1.9965 * (siteIndex - 4.5) / (1 + Math.exp(5.479 - 1.4016 * Math.log(breastHeightAge))));
 
 				/* convert back to metric */
 				height *= 0.3048;
@@ -1386,7 +1418,8 @@ public class SiteIndex2Height {
 				/* convert to imperial */
 				siteIndex /= 0.3048;
 
-				height = 4.5 + (1.79897 * (siteIndex - 4.5) / (1 + Math.exp(6.0678 - 1.6085 * Math.log(breastHeightAge))));
+				height = 4.5
+						+ (1.79897 * (siteIndex - 4.5) / (1 + Math.exp(6.0678 - 1.6085 * Math.log(breastHeightAge))));
 
 				/* convert back to metric */
 				height *= 0.3048;
@@ -1540,7 +1573,9 @@ public class SiteIndex2Height {
 				/* convert to imperial */
 				siteIndex /= 0.3048;
 
-				x1 = 1 - Math.exp(-Math.exp(-6.54707 + 0.288169 * llog(siteIndex - 4.5) + 1.21297 * Math.log(breastHeightAge)));
+				x1 = 1 - Math.exp(
+						-Math.exp(-6.54707 + 0.288169 * llog(siteIndex - 4.5) + 1.21297 * Math.log(breastHeightAge))
+				);
 				x2 = 1 - Math.exp(-Math.exp(-6.54707 + 0.288169 * llog(siteIndex - 4.5) + 1.21297 * Math.log(50.0)));
 				height = 4.5 + (siteIndex - 4.5) * x1 / x2;
 
@@ -1556,7 +1591,12 @@ public class SiteIndex2Height {
 				siteIndex /= 0.3048;
 
 				x1 = 1 - Math
-						.exp(-Math.exp(-6.54707 + 0.288169 * llog(siteIndex - 4.5) + 1.21297 * Math.log(breastHeightAge - 0.5)));
+						.exp(
+								-Math.exp(
+										-6.54707 + 0.288169 * llog(siteIndex - 4.5)
+												+ 1.21297 * Math.log(breastHeightAge - 0.5)
+								)
+						);
 				x2 = 1 - Math.exp(-Math.exp(-6.54707 + 0.288169 * llog(siteIndex - 4.5) + 1.21297 * Math.log(49.5)));
 				height = 4.5 + (siteIndex - 4.5) * x1 / x2;
 
@@ -1970,14 +2010,16 @@ public class SiteIndex2Height {
 				/*
 				 * height = tage * tage * 1.3 / y2bh / y2bh;
 				 */
-				height = 1.3 * Math.pow(totalAge / years2BreastHeight, 1.628 - 0.05991 * years2BreastHeight) * Math.pow(1.127, totalAge - years2BreastHeight);
+				height = 1.3 * Math.pow(totalAge / years2BreastHeight, 1.628 - 0.05991 * years2BreastHeight)
+						* Math.pow(1.127, totalAge - years2BreastHeight);
 			}
 			break;
 
 		case SI_AT_CHEN:
 			if (breastHeightAge > 0.0) {
 				x1 = llog(ppow(siteIndex - 1.3, -0.076) / 1.418) / llog(1 - Math.exp(-0.017 * 50));
-				height = 1.3 + 1.418 * (ppow(siteIndex - 1.3, 1.076) * ppow(1 - Math.exp(-0.017 * breastHeightAge), x1));
+				height = 1.3
+						+ 1.418 * (ppow(siteIndex - 1.3, 1.076) * ppow(1 - Math.exp(-0.017 * breastHeightAge), x1));
 			} else {
 				height = totalAge * totalAge * 1.3 / years2BreastHeight / years2BreastHeight;
 			}
@@ -2039,7 +2081,8 @@ public class SiteIndex2Height {
 		return height;
 	}
 
-	public static double giSi2Ht(SiteIndexEquation cuIndex, double age, double siteIndex) throws CommonCalculatorException {
+	public static double giSi2Ht(SiteIndexEquation cuIndex, double age, double siteIndex)
+			throws CommonCalculatorException {
 		double si2ht;
 		double step;
 		double test_site;

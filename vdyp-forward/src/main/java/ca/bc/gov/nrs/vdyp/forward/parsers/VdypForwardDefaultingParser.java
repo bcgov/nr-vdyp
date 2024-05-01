@@ -37,10 +37,13 @@ public interface VdypForwardDefaultingParser extends ValueParser<Float> {
 	 * @param name       Name for the value to use in the parse error if it is out of the range.
 	 */
 	public static <T extends Comparable<T>> ValueParser<T>
-			rangeSilentWithDefaulting(ValueParser<T> parser, T min, boolean includeMin, T max, boolean includeMax, T missingIndicator, T defaultValue, String name) {
+			rangeSilentWithDefaulting(
+					ValueParser<T> parser, T min, boolean includeMin, T max, boolean includeMax, T missingIndicator,
+					T defaultValue, String name
+			) {
 		return ValueParser.validate(s -> {
 			var result = defaultValue;
-			if (! StringUtils.isEmpty(s)) {
+			if (!StringUtils.isEmpty(s)) {
 				result = parser.parse(s);
 				if (missingIndicator.equals(result)) {
 					result = defaultValue;
@@ -48,15 +51,15 @@ public interface VdypForwardDefaultingParser extends ValueParser<Float> {
 			}
 			return result;
 		}, result -> {
-			if (!defaultValue.equals(result) && (
-					   result.compareTo(max) > (includeMax ? 0 : -1)
+			if (!defaultValue.equals(result) && (result.compareTo(max) > (includeMax ? 0 : -1)
 					|| result.compareTo(min) < (includeMin ? 0 : 1))) {
-				return Optional.of(String
-							.format(
-									"{} must be between {} ({}) and {} ({})", name
-									, min, includeMin ? "inclusive" : "exclusive"
-									, max, includeMax ? "inclusive" : "exclusive"
-							));
+				return Optional.of(
+						String
+								.format(
+										"{} must be between {} ({}) and {} ({})", name, min, includeMin ? "inclusive"
+												: "exclusive", max, includeMax ? "inclusive" : "exclusive"
+								)
+				);
 			}
 			return Optional.empty();
 		});

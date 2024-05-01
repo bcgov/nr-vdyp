@@ -39,13 +39,13 @@ class VdypSpeciesTest {
 		var ex = assertThrows(IllegalStateException.class, () -> VdypSpecies.build(builder -> {
 		}));
 		assertThat(
-				ex,
-				hasProperty(
-						"message",
-						allOf(
-								containsString("polygonIdentifier"), containsString("layer"), containsString("genus"),
-								containsString("percentGenus"), containsString("volumeGroup"),
-								containsString("decayGroup")
+				ex, hasProperty(
+						"message", allOf(
+								containsString("polygonIdentifier"), containsString("layer"), containsString(
+										"genus"
+								), containsString(
+										"percentGenus"
+								), containsString("volumeGroup"), containsString("decayGroup")
 						)
 				)
 		);

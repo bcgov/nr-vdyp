@@ -1,7 +1,7 @@
 package ca.bc.gov.nrs.vdyp.common_calculators;
 
 public interface SiteIndexUtilities {
-	
+
 	public static double ppow(double x, double y) {
 		return (x <= 0) ? 0.0 : Math.pow(x, y);
 	}

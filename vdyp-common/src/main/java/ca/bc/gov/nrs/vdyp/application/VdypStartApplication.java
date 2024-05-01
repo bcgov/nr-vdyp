@@ -191,8 +191,8 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	protected L requireLayer(P polygon, LayerType type) throws ProcessingException {
 		if (!polygon.getLayers().containsKey(type)) {
 			throw validationError(
-					"Polygon %s has no %s layer, or that layer has non-positive height or crown closure.",
-					polygon.getPolygonIdentifier(), type
+					"Polygon %s has no %s layer, or that layer has non-positive height or crown closure.", polygon
+							.getPolygonIdentifier(), type
 			);
 		}
 
@@ -213,8 +213,8 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 				.sum();
 		if (Math.abs(percentTotal - 100f) > 0.01f) {
 			throw validationError(
-					"Polygon %s has %s layer where species entries have a percentage total that does not sum to 100%%.",
-					layer.getPolygonIdentifier(), LayerType.PRIMARY
+					"Polygon %s has %s layer where species entries have a percentage total that does not sum to 100%%.", layer
+							.getPolygonIdentifier(), LayerType.PRIMARY
 			);
 		}
 		return percentTotal;

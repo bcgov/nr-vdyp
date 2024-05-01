@@ -207,8 +207,8 @@ class SiteClassCode2SiteIndexTest {
 		assertEquals(actualResult, (double) 4);
 
 		assertThrows(
-				ForestInventoryZoneException.class,
-				() -> SiteClassCode2SiteIndex.classToIndex(SI_SPEC_HWC, validSiteCl[3], 'X')
+				ForestInventoryZoneException.class, () -> SiteClassCode2SiteIndex
+						.classToIndex(SI_SPEC_HWC, validSiteCl[3], 'X')
 		);
 	}
 
@@ -320,8 +320,7 @@ class SiteClassCode2SiteIndexTest {
 	@Test
 	void testSpeciesErrorException() throws CommonCalculatorException {
 		assertThrows(
-				SpeciesErrorException.class,
-				() -> SiteClassCode2SiteIndex.classToIndex(null, validSiteCl[3], 'X')
+				SpeciesErrorException.class, () -> SiteClassCode2SiteIndex.classToIndex(null, validSiteCl[3], 'X')
 		);
 	}
 }

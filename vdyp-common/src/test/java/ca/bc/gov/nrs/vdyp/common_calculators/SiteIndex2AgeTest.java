@@ -47,8 +47,8 @@ class SiteIndex2AgeTest {
 		void testSiteHeightLessTooSmall() throws CommonCalculatorException {
 			// Test where SiteHeight < 1.3, AgeType = 1 (SI_AT_BREAST)
 			assertThrows(
-					LessThan13Exception.class,
-					() -> SiteIndex2Age.indexToAge(SI_BL_THROWERGI, 0.0, SI_AT_BREAST, 1.0, 0.0)
+					LessThan13Exception.class, () -> SiteIndex2Age
+							.indexToAge(SI_BL_THROWERGI, 0.0, SI_AT_BREAST, 1.0, 0.0)
 			);
 
 			// Test where SiteHeight <= 0.0001
@@ -61,8 +61,8 @@ class SiteIndex2AgeTest {
 		void testSiteIndexLessTooSmall() {
 			// Test where SiteHeight < 1.3, AgeType = 1 (SI_AT_BREAST)
 			assertThrows(
-					LessThan13Exception.class,
-					() -> SiteIndex2Age.indexToAge(SI_BL_THROWERGI, 1.4, SI_AT_BREAST, 1.0, 0.0)
+					LessThan13Exception.class, () -> SiteIndex2Age
+							.indexToAge(SI_BL_THROWERGI, 1.4, SI_AT_BREAST, 1.0, 0.0)
 			);
 		}
 
@@ -90,8 +90,8 @@ class SiteIndex2AgeTest {
 			double site_height = 0.00011;
 
 			assertThrows(
-					ArithmeticException.class,
-					() -> SiteIndex2Age.indexToAge(SI_FDC_BRUCE, site_height, null, site_index, 12)
+					ArithmeticException.class, () -> SiteIndex2Age
+							.indexToAge(SI_FDC_BRUCE, site_height, null, site_index, 12)
 			);
 		}
 
@@ -101,8 +101,8 @@ class SiteIndex2AgeTest {
 			double site_height = 1.31;
 
 			assertThrows(
-					NoAnswerException.class,
-					() -> SiteIndex2Age.indexToAge(SI_FDC_BRUCE, site_height, SI_AT_BREAST, site_index, 12.0)
+					NoAnswerException.class, () -> SiteIndex2Age
+							.indexToAge(SI_FDC_BRUCE, site_height, SI_AT_BREAST, site_index, 12.0)
 			);
 		}
 
@@ -112,8 +112,8 @@ class SiteIndex2AgeTest {
 			double site_height = 1.6;
 
 			assertThrows(
-					NoAnswerException.class,
-					() -> SiteIndex2Age.indexToAge(SI_FDC_BRUCE, site_height, SI_AT_BREAST, site_index, 12.0)
+					NoAnswerException.class, () -> SiteIndex2Age
+							.indexToAge(SI_FDC_BRUCE, site_height, SI_AT_BREAST, site_index, 12.0)
 			);
 		}
 

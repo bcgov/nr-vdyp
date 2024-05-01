@@ -57,7 +57,7 @@ public class FipLayer extends SingleSiteLayer<FipSpecies, FipSite> {
 			builder.ageTotal(8f);
 			builder.yearsToBreastHeight(7f);
 			builder.height(6f);
-
+	
 			builder.siteIndex(5f);
 			builder.crownClosure(0.9f);
 			builder.siteGenus("B");

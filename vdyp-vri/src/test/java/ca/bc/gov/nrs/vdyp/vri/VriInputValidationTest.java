@@ -1651,10 +1651,10 @@ class VriInputValidationTest {
 
 		var ex = assertThrows(StandProcessingException.class, () -> app.checkPolygon(poly));
 		assertThat(
-				ex,
-				hasProperty(
-						"message",
-						is("Veteran layer primary species height 34.0 should be greater than or equal to 36.0")
+				ex, hasProperty(
+						"message", is(
+								"Veteran layer primary species height 34.0 should be greater than or equal to 36.0"
+						)
 				)
 		);
 

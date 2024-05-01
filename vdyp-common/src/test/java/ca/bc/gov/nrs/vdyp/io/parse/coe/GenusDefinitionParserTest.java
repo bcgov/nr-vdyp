@@ -38,77 +38,63 @@ public class GenusDefinitionParserTest {
 								Matchers.instanceOf(GenusDefinition.class), //
 								Matchers.hasProperty("alias", equalTo("AC")), //
 								Matchers.hasProperty("name", equalTo("Cottonwood"))
-						),
-						allOf(
+						), allOf(
 								Matchers.instanceOf(GenusDefinition.class), //
 								Matchers.hasProperty("alias", equalTo("AT")), //
 								Matchers.hasProperty("name", equalTo("Aspen"))
-						),
-						allOf(
+						), allOf(
 								Matchers.instanceOf(GenusDefinition.class), //
 								Matchers.hasProperty("alias", equalTo("B")), //
 								Matchers.hasProperty("name", equalTo("Balsam"))
-						),
-						allOf(
+						), allOf(
 								Matchers.instanceOf(GenusDefinition.class), //
 								Matchers.hasProperty("alias", equalTo("C")), //
 								Matchers.hasProperty("name", equalTo("Cedar (X yellow)"))
-						),
-						allOf(
+						), allOf(
 								Matchers.instanceOf(GenusDefinition.class), //
 								Matchers.hasProperty("alias", equalTo("D")), //
 								Matchers.hasProperty("name", equalTo("Alder"))
-						),
-						allOf(
+						), allOf(
 								Matchers.instanceOf(GenusDefinition.class), //
 								Matchers.hasProperty("alias", equalTo("E")), //
 								Matchers.hasProperty("name", equalTo("Birch"))
-						),
-						allOf(
+						), allOf(
 								Matchers.instanceOf(GenusDefinition.class), //
 								Matchers.hasProperty("alias", equalTo("F")), //
 								Matchers.hasProperty("name", equalTo("Douglas Fir"))
-						),
-						allOf(
+						), allOf(
 								Matchers.instanceOf(GenusDefinition.class), //
 								Matchers.hasProperty("alias", equalTo("H")), //
 								Matchers.hasProperty("name", equalTo("Hemlock"))
-						),
-						allOf(
-								Matchers.instanceOf(GenusDefinition.class), Matchers.hasProperty("alias", equalTo("L")),
-								Matchers.hasProperty("name", equalTo("Larch"))
-						),
-						allOf(
+						), allOf(
+								Matchers.instanceOf(GenusDefinition.class), Matchers.hasProperty(
+										"alias", equalTo("L")
+								), Matchers.hasProperty("name", equalTo("Larch"))
+						), allOf(
 								Matchers.instanceOf(GenusDefinition.class), //
 								Matchers.hasProperty("alias", equalTo("MB")), //
 								Matchers.hasProperty("name", equalTo("Maple"))
-						),
-						allOf(
+						), allOf(
 								Matchers.instanceOf(GenusDefinition.class), //
 								Matchers.hasProperty("alias", equalTo("PA")), //
 								Matchers.hasProperty("name", equalTo("White-bark pine"))
-						),
-						allOf(
+						), allOf(
 								Matchers.instanceOf(GenusDefinition.class), //
 								Matchers.hasProperty("alias", equalTo("PL")), //
 								Matchers.hasProperty("name", equalTo("Lodgepole Pine"))
-						),
-						allOf(
+						), allOf(
 								Matchers.instanceOf(GenusDefinition.class), //
 								Matchers.hasProperty("alias", equalTo("PW")), //
 								Matchers.hasProperty("name", equalTo("White pine"))
-						),
-						allOf(
+						), allOf(
 								Matchers.instanceOf(GenusDefinition.class), //
 								Matchers.hasProperty("alias", equalTo("PY")), //
 								Matchers.hasProperty("name", equalTo("Yellow pine"))
-						),
-						allOf(
+						), allOf(
 								Matchers.instanceOf(GenusDefinition.class), //
 								Matchers.hasProperty("alias", equalTo("S")), //
 								Matchers.hasProperty("name", equalTo("Spruce"))
-						),
-						allOf(
+						), allOf(
 								Matchers.instanceOf(GenusDefinition.class), //
 								Matchers.hasProperty("alias", equalTo("Y")), //
 								Matchers.hasProperty("name", equalTo("Yellow cedar"))
@@ -136,8 +122,7 @@ public class GenusDefinitionParserTest {
 								Matchers.instanceOf(GenusDefinition.class), //
 								Matchers.hasProperty("alias", equalTo("AC")), //
 								Matchers.hasProperty("name", equalTo("Cottonwood"))
-						),
-						allOf(
+						), allOf(
 								Matchers.instanceOf(GenusDefinition.class), //
 								Matchers.hasProperty("alias", equalTo("AT")), //
 								Matchers.hasProperty("name", equalTo("Aspen"))
@@ -164,8 +149,7 @@ public class GenusDefinitionParserTest {
 								Matchers.instanceOf(GenusDefinition.class), //
 								Matchers.hasProperty("alias", equalTo("AT")), //
 								Matchers.hasProperty("name", equalTo("Aspen"))
-						),
-						allOf(
+						), allOf(
 								Matchers.instanceOf(GenusDefinition.class), //
 								Matchers.hasProperty("alias", equalTo("AC")), //
 								Matchers.hasProperty("name", equalTo("Cottonwood"))
@@ -192,8 +176,7 @@ public class GenusDefinitionParserTest {
 								Matchers.instanceOf(GenusDefinition.class), //
 								Matchers.hasProperty("alias", equalTo("AT")), //
 								Matchers.hasProperty("name", equalTo("Aspen"))
-						),
-						allOf(
+						), allOf(
 								Matchers.instanceOf(GenusDefinition.class), //
 								Matchers.hasProperty("alias", equalTo("AC")), //
 								Matchers.hasProperty("name", equalTo("Cottonwood"))
@@ -292,7 +275,7 @@ public class GenusDefinitionParserTest {
 		assertThat(ex1, hasProperty("message", stringContainsInOrder("line 3", "Preference 3", "larger than 2")));
 	}
 
-// TODO Confirm if following methods are still needed after merge
+	// TODO Confirm if following methods are still needed after merge
 	/**
 	 * Add a mock control map entry for SP0 parse results with species "S1" and "S2"
 	 */

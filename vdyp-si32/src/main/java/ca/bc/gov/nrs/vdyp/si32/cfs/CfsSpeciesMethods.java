@@ -9,7 +9,7 @@ import java.util.Map;
 public class CfsSpeciesMethods {
 
 	private static Map<String, CfsTreeSpecies> speciesByName = new HashMap<>();
-	
+
 	/**
 	 * Perform a case-insensitive search for the attributes of the species with
 	 * the given name. If the parameter is null or doesn't match any species,
@@ -19,14 +19,14 @@ public class CfsSpeciesMethods {
 	 * @return as described
 	 */
 	public static CfsTreeSpecies getSpeciesBySpeciesName(String cfsSpeciesName) {
-		
+
 		if (cfsSpeciesName != null) {
 			String cfsSpeciesNameUpperCase = cfsSpeciesName.toUpperCase();
 			if (speciesByName.containsKey(cfsSpeciesNameUpperCase)) {
 				return speciesByName.get(cfsSpeciesNameUpperCase);
 			}
 		}
-		
+
 		return CfsTreeSpecies.UNKNOWN;
 	}
 
@@ -38,14 +38,14 @@ public class CfsSpeciesMethods {
 	 * @return as described
 	 */
 	public static CfsTreeGenus getGenusBySpecies(CfsTreeSpecies cfsSpecies) {
-		
+
 		if (cfsSpecies != null) {
 			return cfsSpecies.getCfsTreeGenus();
 		} else {
 			return CfsTreeGenus.UNKNOWN;
 		}
 	}
-	
+
 	/**
 	 * Returns the species index for the given CFS species, or that of <code>UNKNOWN</code> if null.
 	 * 
@@ -53,7 +53,7 @@ public class CfsSpeciesMethods {
 	 * @return as described
 	 */
 	public static int getSpeciesIndexBySpecies(CfsTreeSpecies cfsSpecies) {
-		
+
 		if (cfsSpecies != null) {
 			return cfsSpecies.getNumber();
 		} else {
@@ -63,7 +63,7 @@ public class CfsSpeciesMethods {
 
 	static {
 		// Build the lookup assistance maps
-		for (CfsTreeSpecies s: CfsTreeSpecies.values()) {
+		for (CfsTreeSpecies s : CfsTreeSpecies.values()) {
 			speciesByName.put(s.getName().toUpperCase(), s);
 		}
 	}

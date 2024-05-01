@@ -65,20 +65,20 @@ class ParsersTogetherTest {
 		resolver.addStream("DUMMY3", (OutputStream) new ByteArrayOutputStream());
 
 		controlMap.put(
-				ControlKey.BEC_DEF.name(),
-				new BecDefinitionParser().parse(TestUtils.class, "coe/Becdef.dat", controlMap)
+				ControlKey.BEC_DEF.name(), new BecDefinitionParser()
+						.parse(TestUtils.class, "coe/Becdef.dat", controlMap)
 		);
 		controlMap.put(
-				ControlKey.SP0_DEF.name(),
-				new GenusDefinitionParser().parse(TestUtils.class, "coe/SP0DEF_v0.dat", controlMap)
+				ControlKey.SP0_DEF.name(), new GenusDefinitionParser()
+						.parse(TestUtils.class, "coe/SP0DEF_v0.dat", controlMap)
 		);
 		controlMap.put(
-				ControlKey.DEFAULT_EQ_NUM.name(),
-				new DefaultEquationNumberParser().parse(TestUtils.class, "coe/GRPBA1.DAT", controlMap)
+				ControlKey.DEFAULT_EQ_NUM.name(), new DefaultEquationNumberParser()
+						.parse(TestUtils.class, "coe/GRPBA1.DAT", controlMap)
 		);
 		controlMap.put(
-				ControlKey.EQN_MODIFIERS.name(),
-				new EquationModifierParser().parse(TestUtils.class, "coe/GMODBA1.DAT", controlMap)
+				ControlKey.EQN_MODIFIERS.name(), new EquationModifierParser()
+						.parse(TestUtils.class, "coe/GMODBA1.DAT", controlMap)
 		);
 	}
 
@@ -540,18 +540,18 @@ class ParsersTogetherTest {
 		{ //
 				"20.0, 200.0, 88.0, 25.0, 20.0, 200.0", // If BA and TPH are present for Veteran layer, do nothing
 				",     200.0, 88.0, 25.0, 22.0,   0.0", // If BA is missing, set TPH to 0 and BA ot the BA of the
-														// primary layer times the CC
+				// primary layer times the CC
 				",     200.0, 88.0,     , 44.0,   0.0", // If BA is missing for vet and prime, set BA to half the CC
 				"20.0,      , 88.0, 25.0, 22.0,   0.0", // If TPH is missing, set TPH to 0 and BA ot the BA of the
-														// primary layer times the CC
+				// primary layer times the CC
 				"20.0,      , 88.0,     , 44.0,   0.0", // If TPH is missing for vet and prime, set BA to half the
-														// CC
+				// CC
 				"0.0,  200.0, 88.0, 25.0, 22.0,   0.0", // If BA is not positive, set TPH to 0 and BA ot the BA of
-														// the primary layer times the CC
+				// the primary layer times the CC
 				"0.0,  200.0, 88.0,     , 44.0,   0.0", // If BA is not positive for vet and prime, set BA to half
-														// the CC
+				// the CC
 				"20.0,   0.0, 88.0, 25.0, 22.0,   0.0", // If TPH is not positive, set TPH to 0 and BA ot the BA of
-														// the primary layer times the CC
+				// the primary layer times the CC
 				"20.0,   0.0, 88.0,     , 44.0,   0.0", // If TPH is not positive for vet and prime, set BA to half
 														// the CC
 		}
@@ -624,8 +624,9 @@ class ParsersTogetherTest {
 						hasProperty("layerType", is(LayerType.VETERAN)), //
 						hasProperty("crownClosure", is(88f)), //
 						hasProperty("utilization", is(8f)), //
-						hasProperty("baseArea", present(closeTo(expectedBaseArea))),
-						hasProperty("treesPerHectare", present(closeTo(expectedTreesPerHectare)))
+						hasProperty("baseArea", present(closeTo(expectedBaseArea))), hasProperty(
+								"treesPerHectare", present(closeTo(expectedTreesPerHectare))
+						)
 				)
 		);
 

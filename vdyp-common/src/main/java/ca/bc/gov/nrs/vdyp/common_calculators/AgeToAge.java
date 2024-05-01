@@ -14,16 +14,19 @@ import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
  *
  * @throws AgeTypeErrorException if unnkown age type is provided
  */
-public class Age2Age {
+public class AgeToAge {
 
 	@SuppressWarnings("java:S3776, java:S6541, java:S1479")
-	public static double ageToAge(SiteIndexEquation cuIndex, double sourceAge, SiteIndexAgeType sourceAgeType, SiteIndexAgeType targetAgeType, double years2BreastHeight)
+	public static double ageToAge(
+			SiteIndexEquation cuIndex, double sourceAge, SiteIndexAgeType sourceAgeType, SiteIndexAgeType targetAgeType,
+			double years2BreastHeight
+	)
 			throws AgeTypeErrorException {
-		
+
 		double returnValue;
 
 		boolean shouldBranch;
-		
+
 		if (cuIndex == null) {
 			shouldBranch = true;
 		} else {
@@ -143,7 +146,7 @@ public class Age2Age {
 				shouldBranch = false;
 			}
 		}
-		
+
 		if (shouldBranch) {
 			if (sourceAgeType == SI_AT_BREAST) {
 				if (targetAgeType == SI_AT_TOTAL) {
@@ -154,7 +157,9 @@ public class Age2Age {
 					}
 					return returnValue;
 				}
-				throw new AgeTypeErrorException(MessageFormat.format("Unknown target age type provided; expecting \"{0}\"", SI_AT_TOTAL));
+				throw new AgeTypeErrorException(
+						MessageFormat.format("Unknown target age type provided; expecting \"{0}\"", SI_AT_TOTAL)
+				);
 			}
 
 			if (sourceAgeType == SI_AT_TOTAL) {
@@ -166,7 +171,9 @@ public class Age2Age {
 					}
 					return returnValue;
 				}
-				throw new AgeTypeErrorException(MessageFormat.format("Unknown target age type provided; expecting \"{0}\"", SI_AT_BREAST));
+				throw new AgeTypeErrorException(
+						MessageFormat.format("Unknown target age type provided; expecting \"{0}\"", SI_AT_BREAST)
+				);
 			}
 		} else {
 			if (sourceAgeType == SI_AT_BREAST) {
@@ -178,7 +185,9 @@ public class Age2Age {
 					}
 					return returnValue;
 				}
-				throw new AgeTypeErrorException(MessageFormat.format("Unknown target age type provided; expecting \"{0}\"", SI_AT_TOTAL));
+				throw new AgeTypeErrorException(
+						MessageFormat.format("Unknown target age type provided; expecting \"{0}\"", SI_AT_TOTAL)
+				);
 			}
 
 			if (sourceAgeType == SI_AT_TOTAL) {
@@ -190,9 +199,13 @@ public class Age2Age {
 					}
 					return returnValue;
 				}
-				throw new AgeTypeErrorException(MessageFormat.format("Unknown target age type provided; expecting \"{0}\"", SI_AT_BREAST));
+				throw new AgeTypeErrorException(
+						MessageFormat.format("Unknown target age type provided; expecting \"{0}\"", SI_AT_BREAST)
+				);
 			}
 		}
-		throw new AgeTypeErrorException(MessageFormat.format("Unknown source age type provided \"{0}\"", sourceAgeType));
+		throw new AgeTypeErrorException(
+				MessageFormat.format("Unknown source age type provided \"{0}\"", sourceAgeType)
+		);
 	}
 }

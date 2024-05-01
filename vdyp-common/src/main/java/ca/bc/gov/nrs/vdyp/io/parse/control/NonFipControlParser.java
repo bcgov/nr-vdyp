@@ -40,10 +40,9 @@ public abstract class NonFipControlParser extends StartApplicationControlParser 
 				.record(ControlKey.BA_DQ_UPPER_BOUNDS, FILENAME) // COE108
 
 				.record(
-						ControlKey.MINIMA,
-						ValueParser.toMap(
-								ValueParser.list(ValueParser.FLOAT),
-								Collections.singletonMap(MINIMUM_VETERAN_HEIGHT, 10.0f), MINIMUM_HEIGHT, // VMINH
+						ControlKey.MINIMA, ValueParser.toMap(
+								ValueParser.list(ValueParser.FLOAT), Collections
+										.singletonMap(MINIMUM_VETERAN_HEIGHT, 10.0f), MINIMUM_HEIGHT, // VMINH
 								MINIMUM_BASE_AREA, // VMINBA
 								MINIMUM_PREDICTED_BASE_AREA, // VMINBAeqn
 								MINIMUM_VETERAN_HEIGHT // VMINVetH
@@ -85,8 +84,9 @@ public abstract class NonFipControlParser extends StartApplicationControlParser 
 	protected ValueParser<Map<String, Float>> minimaParser() {
 		return ValueParser.callback(
 				ValueParser.toMap(
-						ValueParser.list(ValueParser.FLOAT), Collections.singletonMap(MINIMUM_VETERAN_HEIGHT, 10.0f),
-						MINIMUM_HEIGHT, MINIMUM_BASE_AREA, MINIMUM_PREDICTED_BASE_AREA, MINIMUM_VETERAN_HEIGHT
+						ValueParser.list(ValueParser.FLOAT), Collections.singletonMap(
+								MINIMUM_VETERAN_HEIGHT, 10.0f
+						), MINIMUM_HEIGHT, MINIMUM_BASE_AREA, MINIMUM_PREDICTED_BASE_AREA, MINIMUM_VETERAN_HEIGHT
 				), minima -> {
 					log.atDebug().setMessage(
 							"Minima read from VRISTART Control at line {}\n  Minimum Height: {}\n  Minimum BA: {}\n  Minimum Predicted BA: {}\n  Minimum Veteran Height: {}"

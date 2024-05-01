@@ -42,12 +42,16 @@ public enum SP0Name implements SI32Enum<SP0Name> {
 	@Override
 	public int getOffset() {
 		if (this.equals(UNKNOWN)) {
-			throw new UnsupportedOperationException(MessageFormat.format("Cannot call getOffset on {0} as it's not a standard member of the enumeration", this));
+			throw new UnsupportedOperationException(
+					MessageFormat.format(
+							"Cannot call getOffset on {0} as it's not a standard member of the enumeration", this
+					)
+			);
 		}
-		
+
 		return index;
 	}
-	
+
 	@Override
 	public String getText() {
 		if (this.equals(UNKNOWN)) {
@@ -78,14 +82,14 @@ public enum SP0Name implements SI32Enum<SP0Name> {
 	 * 	   <code>index</code> in which case <code>null</code> is returned.
 	 */
 	public static SP0Name forIndex(int index) {
-		for (SP0Name e: SP0Name.values()) {
+		for (SP0Name e : SP0Name.values()) {
 			if (index == e.index)
 				return e;
 		}
-		
+
 		return null;
 	}
-	
+
 	/**
 	 * @return the number of non-housekeeping entries in the enumeration
 	 */

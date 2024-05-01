@@ -49,10 +49,12 @@ public class SiteIndex2Age {
 	 * @throws CurveEroorException           unknown curve index
 	 * @throws GrowthInterceptTotalException cannot compute growth intercept when using total age
 	 */
-	public static double indexToAge(SiteIndexEquation cuIndex, double siteHeight, SiteIndexAgeType ageType, double siteIndex, 
-			double yearsToBreastHeight)
-		throws CommonCalculatorException {
-		
+	public static double indexToAge(
+			SiteIndexEquation cuIndex, double siteHeight, SiteIndexAgeType ageType, double siteIndex,
+			double yearsToBreastHeight
+	)
+			throws CommonCalculatorException {
+
 		double x1, x2, x3, x4;
 		double a, b, c;
 		/*
@@ -522,10 +524,12 @@ public class SiteIndex2Age {
 		return (age);
 	}
 
-	public static double iterate(SiteIndexEquation cuIndex, double siteHeight, SiteIndexAgeType ageType, double siteIndex
-			, double yearsToBreastHeight)
-		throws CommonCalculatorException {
-		
+	public static double iterate(
+			SiteIndexEquation cuIndex, double siteHeight, SiteIndexAgeType ageType, double siteIndex,
+			double yearsToBreastHeight
+	)
+			throws CommonCalculatorException {
+
 		double si2age;
 		double step;
 		double test_ht;
@@ -555,7 +559,8 @@ public class SiteIndex2Age {
 						// Write to the file
 						fileWriter.write(
 								String.format(
-										"before index_to_height(age=%.2f, age_type=%s, site_index=%.2f, y2bh=%.2f)%n", si2age, ageType.toString(), siteIndex, yearsToBreastHeight
+										"before index_to_height(age=%.2f, age_type=%s, site_index=%.2f, y2bh=%.2f)%n", si2age, ageType
+												.toString(), siteIndex, yearsToBreastHeight
 								)
 						);
 
@@ -650,7 +655,7 @@ public class SiteIndex2Age {
 				/*
 				 * was si2age -= y2bh;
 				 */
-				si2age = Age2Age.ageToAge(cuIndex, si2age, SI_AT_TOTAL, SI_AT_BREAST, yearsToBreastHeight);
+				si2age = AgeToAge.ageToAge(cuIndex, si2age, SI_AT_TOTAL, SI_AT_BREAST, yearsToBreastHeight);
 			}
 		}
 		if (si2age == SI_ERR_NO_ANS) {
@@ -661,8 +666,9 @@ public class SiteIndex2Age {
 		return (si2age);
 	}
 
-	public static double giIterate(SiteIndexEquation cuIndex, double siteHeight, SiteIndexAgeType ageType, double siteIndex)
-			throws CommonCalculatorException {
+	public static double
+			giIterate(SiteIndexEquation cuIndex, double siteHeight, SiteIndexAgeType ageType, double siteIndex)
+					throws CommonCalculatorException {
 		double age;
 		double si2age;
 		double testSite;

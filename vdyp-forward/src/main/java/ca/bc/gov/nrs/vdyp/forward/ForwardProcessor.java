@@ -133,8 +133,7 @@ public class ForwardProcessor {
 
 					if (nPolygonsProcessed == maxPoly) {
 						logger.info(
-								"Prematurely terminating polygon processing since MAX_POLY ({}) polygons have been processed",
-								maxPoly
+								"Prematurely terminating polygon processing since MAX_POLY ({}) polygons have been processed", maxPoly
 						);
 					}
 

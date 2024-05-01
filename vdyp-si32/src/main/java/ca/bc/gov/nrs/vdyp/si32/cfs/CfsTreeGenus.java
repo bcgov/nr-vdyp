@@ -35,10 +35,10 @@ import ca.bc.gov.nrs.vdyp.si32.enumerations.SI32Enum;
  */
 public enum CfsTreeGenus implements SI32Enum<CfsTreeGenus> {
 	UNKNOWN(-1, "UNKNOWN"), //
-	
+
 	NOT_APPLICABLE(-9, "Not applicable"), //
 	MISSING_VALUE(-8, "Missing Value"), //
-	
+
 	SPRUCE(1, "Spruce"), //
 	PINE(2, "Pine"), //
 	FIR(3, "Fir"), //
@@ -55,7 +55,7 @@ public enum CfsTreeGenus implements SI32Enum<CfsTreeGenus> {
 
 	private final int index;
 	private final String genusName;
-	
+
 	private CfsTreeGenus(int index, String genusName) {
 		this.index = index;
 		this.genusName = genusName;
@@ -65,7 +65,7 @@ public enum CfsTreeGenus implements SI32Enum<CfsTreeGenus> {
 	public int getIndex() {
 		return index;
 	}
-	
+
 	public String getGenusName() {
 		return genusName;
 	}
@@ -73,19 +73,25 @@ public enum CfsTreeGenus implements SI32Enum<CfsTreeGenus> {
 	@Override
 	public int getOffset() {
 		if (this.equals(UNKNOWN) || this.equals(NOT_APPLICABLE) || this.equals(MISSING_VALUE)) {
-			throw new UnsupportedOperationException(MessageFormat.format("Cannot call getIndex on {0} as it's not a standard member of the enumeration", this));
+			throw new UnsupportedOperationException(
+					MessageFormat.format(
+							"Cannot call getIndex on {0} as it's not a standard member of the enumeration", this
+					)
+			);
 		}
-		
+
 		return index - 1;
 	}
-	
+
 	@Override
 	public String getText() {
 		if (this.equals(UNKNOWN)) {
-			throw new UnsupportedOperationException(MessageFormat
-					.format("Cannot call getText on {0} as it's not a standard member of the enumeration", this));
+			throw new UnsupportedOperationException(
+					MessageFormat
+							.format("Cannot call getText on {0} as it's not a standard member of the enumeration", this)
+			);
 		}
-		
+
 		return this.toString();
 	}
 
@@ -96,11 +102,11 @@ public enum CfsTreeGenus implements SI32Enum<CfsTreeGenus> {
 	 * 	   <code>index</code> in which case <code>null</code> is returned.
 	 */
 	public static CfsTreeGenus forIndex(int index) {
-		for (CfsTreeGenus e: CfsTreeGenus.values()) {
+		for (CfsTreeGenus e : CfsTreeGenus.values()) {
 			if (index == e.index)
 				return e;
 		}
-		
+
 		return null;
 	}
 

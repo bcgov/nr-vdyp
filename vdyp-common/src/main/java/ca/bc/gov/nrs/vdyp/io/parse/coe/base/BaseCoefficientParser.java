@@ -109,8 +109,7 @@ public abstract class BaseCoefficientParser<T extends Coefficients, W, M extends
 			);
 		}
 		var validParser = ControlledValueParser.validate(
-				parser,
-				(v, control) -> range.apply(control).contains(v) ? Optional.empty()
+				parser, (v, control) -> range.apply(control).contains(v) ? Optional.empty()
 						: Optional.of(String.format(errorTemplate, v))
 		);
 		lineParser.value(length, name, validParser);
@@ -135,23 +134,22 @@ public abstract class BaseCoefficientParser<T extends Coefficients, W, M extends
 	public BaseCoefficientParser<T, W, M> ucIndexKey() {
 		var indicies = Arrays.asList(1, 2, 3, 4);
 		return key(
-				2, UC_INDEX, ValueParser.INTEGER, indicies, "%s is not a valid UC Index, should be 1 to 4 inclusive",
-				BLANK_OR_ZERO.asPredicate()
+				2, UC_INDEX, ValueParser.INTEGER, indicies, "%s is not a valid UC Index, should be 1 to 4 inclusive", BLANK_OR_ZERO
+						.asPredicate()
 		);
 	}
 
 	public BaseCoefficientParser<T, W, M> groupIndexKey(int maxGroups) {
 		var indicies = Stream.iterate(1, x -> x + 1).limit(maxGroups).toList();
 		return key(
-				3, GROUP_INDEX, ValueParser.INTEGER, indicies,
-				"%s is not a valid Group Index, should be 1 to " + maxGroups + " inclusive", BLANK_OR_ZERO.asPredicate()
+				3, GROUP_INDEX, ValueParser.INTEGER, indicies, "%s is not a valid Group Index, should be 1 to "
+						+ maxGroups + " inclusive", BLANK_OR_ZERO.asPredicate()
 		);
 	}
 
 	public BaseCoefficientParser<T, W, M> speciesKey(String name) {
 		return key(
-				2, name, ControlledValueParser.GENUS, GenusDefinitionParser::getSpeciesAliases,
-				"%s is not a valid species", String::isBlank
+				2, name, ControlledValueParser.GENUS, GenusDefinitionParser::getSpeciesAliases, "%s is not a valid species", String::isBlank
 		);
 	}
 

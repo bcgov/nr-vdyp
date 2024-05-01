@@ -1,4 +1,5 @@
 package ca.bc.gov.nrs.vdyp.common_calculators;
+
 import static ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexSpecies.SI_SPEC_AT;
 import static ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexSpecies.SI_SPEC_BA;
 import static ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexSpecies.SI_SPEC_BL;
@@ -872,14 +873,16 @@ public class SiteIndexNames {
 	 * <p>
 	 * Target_SI = coeff_a + coeff_b * Reference_SI
 	 */
-	
+
 	public record SpeciesConversionParametersDetails(
 			SiteIndexSpecies sourceSpecies,
 			SiteIndexSpecies targetSpecies,
 			double param1,
-			double param2) {}
-	
-	public static final SpeciesConversionParametersDetails[] siSpeciesConversionParameters = { 
+			double param2
+	) {
+	}
+
+	public static final SpeciesConversionParametersDetails[] siSpeciesConversionParameters = {
 			new SpeciesConversionParametersDetails(SI_SPEC_AT, SI_SPEC_SW, 3.804, 0.7978), //
 			new SpeciesConversionParametersDetails(SI_SPEC_BA, SI_SPEC_HWC, 2.005, 1.014), //
 			new SpeciesConversionParametersDetails(SI_SPEC_CWC, SI_SPEC_HWC, 1.256, 1.048), //
@@ -908,7 +911,7 @@ public class SiteIndexNames {
 			new SpeciesConversionParametersDetails(SI_SPEC_BL, SI_SPEC_SW, -1.95348837, 1.1627907), // 
 			new SpeciesConversionParametersDetails(SI_SPEC_LW, SI_SPEC_PLI, -2, 1.04), //
 			new SpeciesConversionParametersDetails(SI_SPEC_LW, SI_SPEC_FDI, -0.69, 0.983)
-		};
+	};
 
 	/**
 	 * Indicates what equations are available (these are additive):
@@ -1794,6 +1797,6 @@ public class SiteIndexNames {
 			1.3,
 
 			// SI_CWC_NIGH
-			1.3 
-		};
+			1.3
+	};
 }

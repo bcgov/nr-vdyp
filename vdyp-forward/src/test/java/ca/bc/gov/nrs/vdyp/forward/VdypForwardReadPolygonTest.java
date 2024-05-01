@@ -44,7 +44,7 @@ class VdypForwardReadPolygonTest {
 					.get();
 
 			ForwardDataStreamReader reader = new ForwardDataStreamReader(controlMap);
-					
+
 			// Fetch the next polygon to process.
 			List<VdypPolygon> polygons = new ArrayList<>();
 

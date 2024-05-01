@@ -51,8 +51,7 @@ class SiteIndexYears2BreastHeightTest {
 		@Test
 		void testSI_FDC_NIGHGI() throws CommonCalculatorException {
 			assertThrows(
-					GrowthInterceptTotalException.class,
-					() -> SiteIndexYears2BreastHeight.y2bh(SI_FDC_NIGHGI, 2)
+					GrowthInterceptTotalException.class, () -> SiteIndexYears2BreastHeight.y2bh(SI_FDC_NIGHGI, 2)
 			);
 		}
 
@@ -242,56 +241,49 @@ class SiteIndexYears2BreastHeightTest {
 		@Test
 		void testSI_HWI_NIGHGI() throws CommonCalculatorException {
 			assertThrows(
-					GrowthInterceptTotalException.class,
-					() -> SiteIndexYears2BreastHeight.y2bh(SI_HWI_NIGHGI, 2)
+					GrowthInterceptTotalException.class, () -> SiteIndexYears2BreastHeight.y2bh(SI_HWI_NIGHGI, 2)
 			);
 		}
 
 		@Test
 		void testSI_HWC_NIGHGI() throws CommonCalculatorException {
 			assertThrows(
-					GrowthInterceptTotalException.class,
-					() -> SiteIndexYears2BreastHeight.y2bh(SI_HWC_NIGHGI, 2)
+					GrowthInterceptTotalException.class, () -> SiteIndexYears2BreastHeight.y2bh(SI_HWC_NIGHGI, 2)
 			);
 		}
 
 		@Test
 		void testSI_HWC_NIGHGI99() throws CommonCalculatorException {
 			assertThrows(
-					GrowthInterceptTotalException.class,
-					() -> SiteIndexYears2BreastHeight.y2bh(SI_HWC_NIGHGI99, 2)
+					GrowthInterceptTotalException.class, () -> SiteIndexYears2BreastHeight.y2bh(SI_HWC_NIGHGI99, 2)
 			);
 		}
 
 		@Test
 		void testSI_SS_NIGHGI99() throws CommonCalculatorException {
 			assertThrows(
-					GrowthInterceptTotalException.class,
-					() -> SiteIndexYears2BreastHeight.y2bh(SI_SS_NIGHGI99, 2)
+					GrowthInterceptTotalException.class, () -> SiteIndexYears2BreastHeight.y2bh(SI_SS_NIGHGI99, 2)
 			);
 		}
 
 		@Test
 		void testSI_SW_NIGHGI99() throws CommonCalculatorException {
 			assertThrows(
-					GrowthInterceptTotalException.class,
-					() -> SiteIndexYears2BreastHeight.y2bh(SI_SW_NIGHGI99, 2)
+					GrowthInterceptTotalException.class, () -> SiteIndexYears2BreastHeight.y2bh(SI_SW_NIGHGI99, 2)
 			);
 		}
 
 		@Test
 		void testSI_SW_NIGHGI2004() throws CommonCalculatorException {
 			assertThrows(
-					GrowthInterceptTotalException.class,
-					() -> SiteIndexYears2BreastHeight.y2bh(SI_SW_NIGHGI2004, 2)
+					GrowthInterceptTotalException.class, () -> SiteIndexYears2BreastHeight.y2bh(SI_SW_NIGHGI2004, 2)
 			);
 		}
 
 		@Test
 		void testSI_LW_NIGHGI() throws CommonCalculatorException {
 			assertThrows(
-					GrowthInterceptTotalException.class,
-					() -> SiteIndexYears2BreastHeight.y2bh(SI_LW_NIGHGI, 2)
+					GrowthInterceptTotalException.class, () -> SiteIndexYears2BreastHeight.y2bh(SI_LW_NIGHGI, 2)
 			);
 		}
 
