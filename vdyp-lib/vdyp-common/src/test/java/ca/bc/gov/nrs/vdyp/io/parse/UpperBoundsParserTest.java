@@ -44,7 +44,8 @@ class UpperBoundsParserTest {
 		Map<String, Object> controlMap = new HashMap<>();
 
 		InputStream is = TestUtils.makeInputStream(
-				"  1   74.78   76.10    AC", "", "0 ", " 00", " 0 ", "000", " ", "  ", "   ", "    xxx", " 11   50.77   34.70    AT"
+				"  1   74.78   76.10    AC", "", "0 ", " 00", " 0 ", "000", " ", "  ", "   ", "    xxx",
+				" 11   50.77   34.70    AT"
 		);
 		TestUtils.populateControlMapFromStream(controlMap, parser, is);
 

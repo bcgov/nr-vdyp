@@ -87,7 +87,8 @@ public class GenusDefinitionParser implements ControlMapSubResourceParser<GenusD
 				throw new ValueParseException(
 						Integer.toString(index),
 						String.format(
-								"preference values must be between %d and %d (inclusive); saw value %d", 1, numSp0, index
+								"preference values must be between %d and %d (inclusive); saw value %d", 1, numSp0,
+								index
 						)
 				);
 			}

@@ -134,7 +134,8 @@ public abstract class BaseCoefficientParser<T extends Coefficients, W, M extends
 	public BaseCoefficientParser<T, W, M> ucIndexKey() {
 		var indicies = Arrays.asList(1, 2, 3, 4);
 		return key(
-				2, UC_INDEX, ValueParser.INTEGER, indicies, "%s is not a valid UC Index, should be 1 to 4 inclusive", BLANK_OR_ZERO
+				2, UC_INDEX, ValueParser.INTEGER, indicies, "%s is not a valid UC Index, should be 1 to 4 inclusive",
+				BLANK_OR_ZERO
 						.asPredicate()
 		);
 	}
@@ -149,7 +150,8 @@ public abstract class BaseCoefficientParser<T extends Coefficients, W, M extends
 
 	public BaseCoefficientParser<T, W, M> speciesKey(String name) {
 		return key(
-				2, name, ControlledValueParser.GENUS, GenusDefinitionParser::getSpeciesAliases, "%s is not a valid species", String::isBlank
+				2, name, ControlledValueParser.GENUS, GenusDefinitionParser::getSpeciesAliases,
+				"%s is not a valid species", String::isBlank
 		);
 	}
 

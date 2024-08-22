@@ -77,7 +77,8 @@ public class UpperBoundsParser implements ControlMapSubResourceParser<Map<Intege
 			if (baGroupId < 0 || baGroupId >= LAST_BA_GROUP_ID) {
 				throw new ValueParseException(
 						MessageFormat.format(
-								"Line {0}: Basal Area Group Id {0} is out of range; expecting a value from 1 to {1}", lineNumber, baGroupId, LAST_BA_GROUP_ID
+								"Line {0}: Basal Area Group Id {0} is out of range; expecting a value from 1 to {1}",
+								lineNumber, baGroupId, LAST_BA_GROUP_ID
 						)
 				);
 			}

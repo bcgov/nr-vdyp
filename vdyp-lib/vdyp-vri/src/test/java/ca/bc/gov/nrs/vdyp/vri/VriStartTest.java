@@ -261,7 +261,8 @@ class VriStartTest {
 			var bec = new BecDefinition("IDF", Region.INTERIOR, "Interior Douglas Fir");
 
 			var result = app.findDefaultPolygonMode(
-					ageTotal, yearsToBreastHeight, height, baseArea, treesPerHectare, percentForest, species, bec, Optional
+					ageTotal, yearsToBreastHeight, height, baseArea, treesPerHectare, percentForest, species, bec,
+					Optional
 							.of(76)
 			);
 
@@ -314,7 +315,8 @@ class VriStartTest {
 			var bec = new BecDefinition("IDF", Region.INTERIOR, "Interior Douglas Fir");
 
 			var result = app.findDefaultPolygonMode(
-					ageTotal, yearsToBreastHeight, height, baseArea, treesPerHectare, percentForest, species, bec, Optional
+					ageTotal, yearsToBreastHeight, height, baseArea, treesPerHectare, percentForest, species, bec,
+					Optional
 							.of(76)
 			);
 
@@ -367,7 +369,8 @@ class VriStartTest {
 			var bec = new BecDefinition("IDF", Region.INTERIOR, "Interior Douglas Fir");
 
 			var result = app.findDefaultPolygonMode(
-					ageTotal, yearsToBreastHeight, height, baseArea, treesPerHectare, percentForest, species, bec, Optional
+					ageTotal, yearsToBreastHeight, height, baseArea, treesPerHectare, percentForest, species, bec,
+					Optional
 							.of(76)
 			);
 
@@ -420,7 +423,8 @@ class VriStartTest {
 			var bec = new BecDefinition("IDF", Region.INTERIOR, "Interior Douglas Fir");
 
 			var result = app.findDefaultPolygonMode(
-					ageTotal, yearsToBreastHeight, height, baseArea, treesPerHectare, percentForest, species, bec, Optional
+					ageTotal, yearsToBreastHeight, height, baseArea, treesPerHectare, percentForest, species, bec,
+					Optional
 							.of(76)
 			);
 
@@ -473,7 +477,8 @@ class VriStartTest {
 			var bec = new BecDefinition("IDF", Region.INTERIOR, "Interior Douglas Fir");
 
 			var result = app.findDefaultPolygonMode(
-					ageTotal, yearsToBreastHeight, height, baseArea, treesPerHectare, percentForest, species, bec, Optional
+					ageTotal, yearsToBreastHeight, height, baseArea, treesPerHectare, percentForest, species, bec,
+					Optional
 							.of(76)
 			);
 
@@ -526,7 +531,8 @@ class VriStartTest {
 			var bec = new BecDefinition("IDF", Region.INTERIOR, "Interior Douglas Fir");
 
 			var result = app.findDefaultPolygonMode(
-					ageTotal, yearsToBreastHeight, height, baseArea, treesPerHectare, percentForest, species, bec, Optional
+					ageTotal, yearsToBreastHeight, height, baseArea, treesPerHectare, percentForest, species, bec,
+					Optional
 							.of(76)
 			);
 
@@ -1477,7 +1483,8 @@ class VriStartTest {
 				Map<String, Float> maxPerSpecies = new HashMap<>(5);
 
 				app.getDqBySpeciesInitial(
-						layer, region, quadMeanDiameterTotal, baseAreaTotal, treeDensityTotal, loreyHeightTotal, initialDqs, baseAreaPerSpecies, minPerSpecies, maxPerSpecies
+						layer, region, quadMeanDiameterTotal, baseAreaTotal, treeDensityTotal, loreyHeightTotal,
+						initialDqs, baseAreaPerSpecies, minPerSpecies, maxPerSpecies
 				);
 
 				assertThat(

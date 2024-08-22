@@ -69,7 +69,8 @@ class VriSiteParserTest {
 
 		var fileResolver = TestUtils.fileResolver(
 				"test.dat", TestUtils.makeInputStream(
-						"082F074/0071         2001 P 200 28.0 14.3        C CW 10.9          189.1 11", "082F074/0071         2001 Z   0  0.0  0.0"
+						"082F074/0071         2001 P 200 28.0 14.3        C CW 10.9          189.1 11",
+						"082F074/0071         2001 Z   0  0.0  0.0"
 				)
 		);
 
@@ -115,7 +116,9 @@ class VriSiteParserTest {
 
 		var fileResolver = TestUtils.fileResolver(
 				"test.dat", TestUtils.makeInputStream(
-						"082F074/0071         2001 X 100 28.0 14.3        C CW 10.9          189.1 11", "082F074/0071         2001 P 200 28.0 14.3        C CW 10.9          189.1 11", "082F074/0071         2001 Z   0  0.0  0.0"
+						"082F074/0071         2001 X 100 28.0 14.3        C CW 10.9          189.1 11",
+						"082F074/0071         2001 P 200 28.0 14.3        C CW 10.9          189.1 11",
+						"082F074/0071         2001 Z   0  0.0  0.0"
 				)
 		);
 
@@ -163,7 +166,9 @@ class VriSiteParserTest {
 
 		var fileResolver = TestUtils.fileResolver(
 				"test.dat", TestUtils.makeInputStream(
-						"082F074/0071         2001 P 200 28.0 14.3        C CW 10.9          189.1 11", "082F074/0071         2001 P 200 32.0 14.6        H HW  9.7          190.3 37", "082F074/0071         2001 Z   0  0.0  0.0"
+						"082F074/0071         2001 P 200 28.0 14.3        C CW 10.9          189.1 11",
+						"082F074/0071         2001 P 200 32.0 14.6        H HW  9.7          190.3 37",
+						"082F074/0071         2001 Z   0  0.0  0.0"
 				)
 		);
 
@@ -220,7 +225,9 @@ class VriSiteParserTest {
 
 		var fileResolver = TestUtils.fileResolver(
 				"test.dat", TestUtils.makeInputStream(
-						"082F074/0071         2001 P 200 28.0 14.3        C CW 10.9          189.1 11", "082F074/0071         2001 S 200 32.0 14.6        H HW  9.7          190.3 37", "082F074/0071         2001 Z   0  0.0  0.0"
+						"082F074/0071         2001 P 200 28.0 14.3        C CW 10.9          189.1 11",
+						"082F074/0071         2001 S 200 32.0 14.6        H HW  9.7          190.3 37",
+						"082F074/0071         2001 Z   0  0.0  0.0"
 				)
 		);
 
@@ -278,7 +285,10 @@ class VriSiteParserTest {
 
 		var fileResolver = TestUtils.fileResolver(
 				"test.dat", TestUtils.makeInputStream(
-						"082F074/0072         2002 P 200 28.0 14.3        C CW 10.9          189.1 11", "082F074/0072         2002 Z   0  0.0  0.0", "082F074/0071         2001 P 200 32.0 14.6        H HW  9.7          190.3 37", "082F074/0071         2001 Z   0  0.0  0.0"
+						"082F074/0072         2002 P 200 28.0 14.3        C CW 10.9          189.1 11",
+						"082F074/0072         2002 Z   0  0.0  0.0",
+						"082F074/0071         2001 P 200 32.0 14.6        H HW  9.7          190.3 37",
+						"082F074/0071         2001 Z   0  0.0  0.0"
 				)
 		);
 
@@ -345,7 +355,8 @@ class VriSiteParserTest {
 
 		var fileResolver = TestUtils.fileResolver(
 				"test.dat", TestUtils.makeInputStream(
-						"082F074/0071         2001 P  -9 28.0 14.3        C CW 10.9            0.0 11", "082F074/0071         2001 Z   0  0.0  0.0"
+						"082F074/0071         2001 P  -9 28.0 14.3        C CW 10.9            0.0 11",
+						"082F074/0071         2001 Z   0  0.0  0.0"
 				)
 		);
 
@@ -386,7 +397,8 @@ class VriSiteParserTest {
 		var fileResolver = TestUtils.fileResolver(
 				"test.dat", TestUtils.makeInputStream(
 						// YTBH differs from Age Total by more than 0.5
-						"082F074/0071         2001 P  20 28.0 14.3        C CW 19.4            0.0 11", "082F074/0071         2001 Z   0  0.0  0.0"
+						"082F074/0071         2001 P  20 28.0 14.3        C CW 19.4            0.0 11",
+						"082F074/0071         2001 Z   0  0.0  0.0"
 				)
 		);
 
@@ -427,7 +439,8 @@ class VriSiteParserTest {
 		var fileResolver = TestUtils.fileResolver(
 				"test.dat", TestUtils.makeInputStream(
 						// YTBH differs from Age Total by less than 0.5
-						"082F074/0071         2001 P  20 28.0 14.3        C CW 19.6            0.0 11", "082F074/0071         2001 Z   0  0.0  0.0"
+						"082F074/0071         2001 P  20 28.0 14.3        C CW 19.6            0.0 11",
+						"082F074/0071         2001 Z   0  0.0  0.0"
 				)
 		);
 
@@ -468,7 +481,8 @@ class VriSiteParserTest {
 		var fileResolver = TestUtils.fileResolver(
 				"test.dat", TestUtils.makeInputStream(
 						// height empty, ageTotal within 0.6 of 1, siteIndex >=3
-						"082F074/0071         2001 P   1 -9.0 14.3        C CW 19.6            0.0 11", "082F074/0071         2001 Z   0  0.0  0.0"
+						"082F074/0071         2001 P   1 -9.0 14.3        C CW 19.6            0.0 11",
+						"082F074/0071         2001 Z   0  0.0  0.0"
 				)
 		);
 
@@ -511,7 +525,8 @@ class VriSiteParserTest {
 
 		var fileResolver = TestUtils.fileResolver(
 				"test.dat", TestUtils.makeInputStream(
-						"082F074/0071         2001 P 1.7 -9.0 14.3        C CW 19.6            0.0 11", "082F074/0071         2001 Z   0  0.0  0.0"
+						"082F074/0071         2001 P 1.7 -9.0 14.3        C CW 19.6            0.0 11",
+						"082F074/0071         2001 Z   0  0.0  0.0"
 				)
 		);
 

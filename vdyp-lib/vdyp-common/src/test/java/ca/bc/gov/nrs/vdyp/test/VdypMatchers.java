@@ -597,7 +597,8 @@ public class VdypMatchers {
 			@Override
 			public void describeTo(Description description) {
 				String utilizationRep = String.format(
-						"[Small: %f, All: %f, 7.5cm: %f, 12.5cm: %f, 17.5cm: %f, 22.5cm: %f]", small, all, util1, util2, util3, util4
+						"[Small: %f, All: %f, 7.5cm: %f, 12.5cm: %f, 17.5cm: %f, 22.5cm: %f]", small, all, util1, util2,
+						util3, util4
 				);
 				description.appendText("A utilization vector ").appendValue(utilizationRep);
 			}

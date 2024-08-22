@@ -198,7 +198,8 @@ public class EstimationMethods {
 		var coe = coeMap.get(vspec, vspecPrime, bec.getRegion()).orElseThrow(
 				() -> new ProcessingException(
 						String.format(
-								"Could not find Lorey Height Nonprimary Coefficients for %s %s %s", vspec, vspecPrime, bec
+								"Could not find Lorey Height Nonprimary Coefficients for %s %s %s", vspec, vspecPrime,
+								bec
 										.getRegion()
 						)
 				)
@@ -324,7 +325,8 @@ public class EstimationMethods {
 		var limits = getLimitsForHeightAndDiameter(species, region);
 
 		quadMeanDiameter1 = estimateQuadMeanDiameterClampResult(
-				limits, standTreesPerHectare, minQuadMeanDiameter, loreyHeightSpec, baseArea1, baseArea2, quadMeanDiameter1, treesPerHectare2, quadMeanDiameter2
+				limits, standTreesPerHectare, minQuadMeanDiameter, loreyHeightSpec, baseArea1, baseArea2,
+				quadMeanDiameter1, treesPerHectare2, quadMeanDiameter2
 		);
 		return quadMeanDiameter1;
 	}
@@ -680,7 +682,8 @@ public class EstimationMethods {
 	) throws ProcessingException {
 
 		estimateWholeStemVolume(
-				controlMap, utilizationClass, adjustCloseUtil, volumeGroup, hlSp, quadMeanDiameterUtil, baseAreaUtil, wholeStemVolumeUtil
+				controlMap, utilizationClass, adjustCloseUtil, volumeGroup, hlSp, quadMeanDiameterUtil, baseAreaUtil,
+				wholeStemVolumeUtil
 		);
 	}
 
@@ -709,7 +712,8 @@ public class EstimationMethods {
 				);
 
 		estimateWholeStemVolume(
-				utilizationClass, adjustCloseUtil, volumeGroup, hlSp, wholeStemUtilizationComponentMap, quadMeanDiameterUtil, baseAreaUtil, wholeStemVolumeUtil
+				utilizationClass, adjustCloseUtil, volumeGroup, hlSp, wholeStemUtilizationComponentMap,
+				quadMeanDiameterUtil, baseAreaUtil, wholeStemVolumeUtil
 		);
 	}
 
@@ -783,7 +787,8 @@ public class EstimationMethods {
 			UtilizationVector closeUtilizationVolumeUtil
 	) throws ProcessingException {
 		estimateCloseUtilizationVolume(
-				controlMap, utilizationClass, aAdjust, volumeGroup, hlSp, quadMeanDiameterUtil, wholeStemVolumeUtil, closeUtilizationVolumeUtil
+				controlMap, utilizationClass, aAdjust, volumeGroup, hlSp, quadMeanDiameterUtil, wholeStemVolumeUtil,
+				closeUtilizationVolumeUtil
 		);
 	}
 
@@ -810,7 +815,8 @@ public class EstimationMethods {
 						controlMap, ControlKey.CLOSE_UTIL_VOLUME, MatrixMap2.class
 				);
 		estimateCloseUtilizationVolume(
-				utilizationClass, aAdjust, volumeGroup, hlSp, closeUtilizationCoeMap, quadMeanDiameterUtil, wholeStemVolumeUtil, closeUtilizationVolumeUtil
+				utilizationClass, aAdjust, volumeGroup, hlSp, closeUtilizationCoeMap, quadMeanDiameterUtil,
+				wholeStemVolumeUtil, closeUtilizationVolumeUtil
 		);
 	}
 
@@ -876,7 +882,8 @@ public class EstimationMethods {
 	) throws ProcessingException {
 
 		estimateNetDecayVolume(
-				controlMap, genus, region, utilizationClass, aAdjust, decayGroup, ageBreastHeight, quadMeanDiameterUtil, closeUtilizationUtil, closeUtilizationNetOfDecayUtil
+				controlMap, genus, region, utilizationClass, aAdjust, decayGroup, ageBreastHeight, quadMeanDiameterUtil,
+				closeUtilizationUtil, closeUtilizationNetOfDecayUtil
 		);
 	}
 
@@ -907,7 +914,8 @@ public class EstimationMethods {
 				controlMap, ModifierParser.CONTROL_KEY_MOD301_DECAY, MatrixMap2.class
 		);
 		estimateNetDecayVolume(
-				genus, region, utilizationClass, aAdjust, decayGroup, ageBreastHeight, netDecayCoeMap, decayModifierMap, quadMeanDiameterUtil, closeUtilizationUtil, closeUtilizationNetOfDecayUtil
+				genus, region, utilizationClass, aAdjust, decayGroup, ageBreastHeight, netDecayCoeMap, decayModifierMap,
+				quadMeanDiameterUtil, closeUtilizationUtil, closeUtilizationNetOfDecayUtil
 		);
 	}
 
@@ -986,7 +994,8 @@ public class EstimationMethods {
 	) throws ProcessingException {
 
 		estimateNetDecayAndWasteVolume(
-				controlMap, region, utilizationClass, aAdjust, genus, loreyHeight, quadMeanDiameterUtil, closeUtilizationUtil, closeUtilizationNetOfDecayUtil, closeUtilizationNetOfDecayAndWasteUtil
+				controlMap, region, utilizationClass, aAdjust, genus, loreyHeight, quadMeanDiameterUtil,
+				closeUtilizationUtil, closeUtilizationNetOfDecayUtil, closeUtilizationNetOfDecayAndWasteUtil
 		);
 	}
 
@@ -1019,7 +1028,9 @@ public class EstimationMethods {
 		);
 
 		estimateNetDecayAndWasteVolume(
-				region, utilizationClass, aAdjust, genus, loreyHeight, netDecayWasteCoeMap, wasteModifierMap, quadMeanDiameterUtil, closeUtilizationUtil, closeUtilizationNetOfDecayUtil, closeUtilizationNetOfDecayAndWasteUtil
+				region, utilizationClass, aAdjust, genus, loreyHeight, netDecayWasteCoeMap, wasteModifierMap,
+				quadMeanDiameterUtil, closeUtilizationUtil, closeUtilizationNetOfDecayUtil,
+				closeUtilizationNetOfDecayAndWasteUtil
 		);
 	}
 
@@ -1123,7 +1134,8 @@ public class EstimationMethods {
 	) throws ProcessingException {
 
 		estimateNetDecayWasteAndBreakageVolume(
-				controlMap, utilizationClass, breakageGroup, quadMeanDiameterUtil, closeUtilizationUtil, closeUtilizationNetOfDecayAndWasteUtil, closeUtilizationNetOfDecayWasteAndBreakageUtil
+				controlMap, utilizationClass, breakageGroup, quadMeanDiameterUtil, closeUtilizationUtil,
+				closeUtilizationNetOfDecayAndWasteUtil, closeUtilizationNetOfDecayWasteAndBreakageUtil
 		);
 	}
 
@@ -1149,7 +1161,8 @@ public class EstimationMethods {
 				.<Map<Integer, Coefficients>>expectParsedControl(controlMap, ControlKey.BREAKAGE, Map.class);
 
 		estimateNetDecayWasteAndBreakageVolume(
-				utilizationClass, breakageGroup, netBreakageCoeMap, quadMeanDiameterUtil, closeUtilizationUtil, closeUtilizationNetOfDecayAndWasteUtil, closeUtilizationNetOfDecayWasteAndBreakageUtil
+				utilizationClass, breakageGroup, netBreakageCoeMap, quadMeanDiameterUtil, closeUtilizationUtil,
+				closeUtilizationNetOfDecayAndWasteUtil, closeUtilizationNetOfDecayWasteAndBreakageUtil
 		);
 	}
 
@@ -1182,7 +1195,8 @@ public class EstimationMethods {
 		final var a4 = coefficients.getCoe(4);
 
 		estimateUtilization(
-				closeUtilizationNetOfDecayAndWasteUtil, closeUtilizationNetOfDecayWasteAndBreakageUtil, utilizationClass, (
+				closeUtilizationNetOfDecayAndWasteUtil, closeUtilizationNetOfDecayWasteAndBreakageUtil,
+				utilizationClass, (
 						uc, netWaste
 				) -> {
 

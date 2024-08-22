@@ -196,7 +196,8 @@ class FipControlParserTest {
 								mmHasEntry(
 										coe(
 												0, contains(
-														2.0028f, 0.2426f, 10.1668f, -0.9042f, -5.0012f, -0.0068f, -0.0095f, 1.1938f, -0.2749f, 0f
+														2.0028f, 0.2426f, 10.1668f, -0.9042f, -5.0012f, -0.0068f,
+														-0.0095f, 1.1938f, -0.2749f, 0f
 												)
 										), "AT", "AC"
 								)
@@ -215,7 +216,8 @@ class FipControlParserTest {
 								mmHasEntry(
 										coe(
 												0, contains(
-														6.6190f, -0.5579f, -1.9421f, -0.7092f, -5.2290f, 4.8473f, 0.2629f, -0.0062f, 0f, 0f
+														6.6190f, -0.5579f, -1.9421f, -0.7092f, -5.2290f, 4.8473f,
+														0.2629f, -0.0062f, 0f, 0f
 												)
 										), "AT", "AC"
 								)
@@ -422,7 +424,8 @@ class FipControlParserTest {
 						ControlKey.TOTAL_STAND_WHOLE_STEM_VOL, allOf(
 								hasEntry(
 										is(2), contains(
-												-10.41832f, 1.94182f, 0.99414f, 0.000000f, 1.11329f, 0.000000f, 0.0000000f, 0.0000000f, 0.19884f
+												-10.41832f, 1.94182f, 0.99414f, 0.000000f, 1.11329f, 0.000000f,
+												0.0000000f, 0.0000000f, 0.19884f
 										)
 								)
 						)

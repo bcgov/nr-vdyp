@@ -45,7 +45,8 @@ public abstract class GrowthFiatParser implements ControlMapSubResourceParser<Ma
 			if (regionId != 1 && regionId != 2) {
 				throw new ValueParseException(
 						MessageFormat.format(
-								"Line {0}: region id {1} is not recognized; the value must be 1 or 2", lineNumber, regionId
+								"Line {0}: region id {1} is not recognized; the value must be 1 or 2", lineNumber,
+								regionId
 						)
 				);
 			}

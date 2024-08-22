@@ -1160,7 +1160,8 @@ class FipStartTest {
 									"loreyHeightByUtilization", VdypMatchers.utilizationHeight(7.14446497f, 31.3307228f)
 							), hasProperty(
 									"baseAreaByUtilization", VdypMatchers.utilization(
-											0.0153773092f, 44.6249809f, 0.513127923f, 1.26773751f, 2.5276401f, 40.3164787f
+											0.0153773092f, 44.6249809f, 0.513127923f, 1.26773751f, 2.5276401f,
+											40.3164787f
 									)
 							), hasProperty(
 									"quadraticMeanDiameterByUtilization", VdypMatchers.utilization(
@@ -1172,7 +1173,8 @@ class FipStartTest {
 									)
 							), hasProperty(
 									"wholeStemVolumeByUtilization", VdypMatchers.utilization(
-											0.0666879341f, 635.659668f, 2.66822577f, 9.68201256f, 26.5469246f, 596.762512f
+											0.0666879341f, 635.659668f, 2.66822577f, 9.68201256f, 26.5469246f,
+											596.762512f
 									)
 							),
 
@@ -1247,7 +1249,8 @@ class FipStartTest {
 							hasProperty(
 									"closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization", VdypMatchers
 											.utilization(
-													0f, 5.65764236f, 0.000855736958f, 0.046797853f, 0.143031254f, 5.46695757f
+													0f, 5.65764236f, 0.000855736958f, 0.046797853f, 0.143031254f,
+													5.46695757f
 											)
 							)
 
@@ -1272,7 +1275,8 @@ class FipStartTest {
 					speciesResult, allOf(
 							hasProperty("loreyHeightByUtilization", coe(-1, 6.61517191f, 22.8001652f)), hasProperty(
 									"baseAreaByUtilization", VdypMatchers.utilization(
-											0.0131671466f, 5.08774281f, 0.157695293f, 0.365746498f, 0.565057278f, 3.99924374f
+											0.0131671466f, 5.08774281f, 0.157695293f, 0.365746498f, 0.565057278f,
+											3.99924374f
 									)
 							), hasProperty(
 									"quadraticMeanDiameterByUtilization", VdypMatchers.utilization(
@@ -1284,7 +1288,8 @@ class FipStartTest {
 									)
 							), hasProperty(
 									"wholeStemVolumeByUtilization", VdypMatchers.utilization(
-											0.0556972362f, 44.496151f, 0.78884691f, 2.40446854f, 4.43335152f, 36.8694839f
+											0.0556972362f, 44.496151f, 0.78884691f, 2.40446854f, 4.43335152f,
+											36.8694839f
 									)
 							),
 
@@ -1320,7 +1325,8 @@ class FipStartTest {
 					speciesResult, allOf(
 							hasProperty("loreyHeightByUtilization", coe(-1, 10.8831682f, 33.5375252f)), hasProperty(
 									"baseAreaByUtilization", VdypMatchers.utilization(
-											0.00163476227f, 29.5411568f, 0.0225830078f, 0.0963115692f, 0.748186111f, 28.6740761f
+											0.00163476227f, 29.5411568f, 0.0225830078f, 0.0963115692f, 0.748186111f,
+											28.6740761f
 									)
 							), hasProperty(
 									"quadraticMeanDiameterByUtilization", VdypMatchers.utilization(
@@ -1328,11 +1334,13 @@ class FipStartTest {
 									)
 							), hasProperty(
 									"treesPerHectareByUtilization", VdypMatchers.utilization(
-											0.498754263f, 326.800781f, 2.61875916f, 5.05783129f, 22.7109661f, 296.413239f
+											0.498754263f, 326.800781f, 2.61875916f, 5.05783129f, 22.7109661f,
+											296.413239f
 									)
 							), hasProperty(
 									"wholeStemVolumeByUtilization", VdypMatchers.utilization(
-											0.0085867513f, 470.388489f, 0.182312608f, 1.08978188f, 10.1118069f, 459.004578f
+											0.0085867513f, 470.388489f, 0.182312608f, 1.08978188f, 10.1118069f,
+											459.004578f
 									)
 							),
 
@@ -1343,7 +1351,8 @@ class FipStartTest {
 							hasProperty(
 									"closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization", VdypMatchers
 											.utilization(
-													0f, 424.163849f, 0.0895428956f, 0.929004371f, 8.9712553f, 414.174042f
+													0f, 424.163849f, 0.0895428956f, 0.929004371f, 8.9712553f,
+													414.174042f
 											)
 							)
 
@@ -1416,7 +1425,8 @@ class FipStartTest {
 					speciesResult, allOf(
 							hasProperty("loreyHeightByUtilization", coe(-1, 8.63455391f, 34.6888771f)), hasProperty(
 									"baseAreaByUtilization", VdypMatchers.utilization(
-											0.000575399841f, 4.0966382f, 0.0161881447f, 0.0564579964f, 0.203255415f, 3.82073665f
+											0.000575399841f, 4.0966382f, 0.0161881447f, 0.0564579964f, 0.203255415f,
+											3.82073665f
 									)
 							), hasProperty(
 									"quadraticMeanDiameterByUtilization", VdypMatchers.utilization(
@@ -1428,7 +1438,8 @@ class FipStartTest {
 									)
 							), hasProperty(
 									"wholeStemVolumeByUtilization", VdypMatchers.utilization(
-											0.00240394124f, 57.2092552f, 0.0989032984f, 0.517220974f, 2.29273605f, 54.300396f
+											0.00240394124f, 57.2092552f, 0.0989032984f, 0.517220974f, 2.29273605f,
+											54.300396f
 									)
 							),
 
@@ -1439,7 +1450,8 @@ class FipStartTest {
 							hasProperty(
 									"closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization", VdypMatchers
 											.utilization(
-													0f, 51.6610985f, 0.0169961192f, 0.401893795f, 1.95581412f, 49.286396f
+													0f, 51.6610985f, 0.0169961192f, 0.401893795f, 1.95581412f,
+													49.286396f
 											)
 							)
 
@@ -1557,7 +1569,8 @@ class FipStartTest {
 					result, allOf(
 							hasProperty("loreyHeightByUtilization", coe(-1, 7.01034021f, 21.1241722f)), hasProperty(
 									"baseAreaByUtilization", VdypMatchers.utilization(
-											0.553745031f, 44.9531403f, 2.83213019f, 6.17823505f, 8.11753464f, 27.8252392f
+											0.553745031f, 44.9531403f, 2.83213019f, 6.17823505f, 8.11753464f,
+											27.8252392f
 									)
 							), hasProperty(
 									"quadraticMeanDiameterByUtilization", VdypMatchers.utilization(

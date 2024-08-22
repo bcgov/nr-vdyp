@@ -308,7 +308,8 @@ public class SiteClassCode2SiteIndex {
 
 		throw new SpeciesErrorException(
 				MessageFormat.format(
-						"classToIndex: not found: spIndex {0}, sitecl {1}, fiz {2}", spIndex, siteClass, forestInventoryZone
+						"classToIndex: not found: spIndex {0}, sitecl {1}, fiz {2}", spIndex, siteClass,
+						forestInventoryZone
 				)
 		);
 	}

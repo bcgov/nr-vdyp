@@ -193,7 +193,8 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			// Validate that species belong to the correct polygon
 			if (!specWithSite.getPolygonIdentifier().equals(polygon.getPolygonIdentifier())) {
 				throw validationError(
-						"Record in species file contains species for polygon %s when expecting one for %s.", specWithSite
+						"Record in species file contains species for polygon %s when expecting one for %s.",
+						specWithSite
 								.getPolygonIdentifier(), polygon.getPolygonIdentifier()
 				);
 			}
@@ -209,7 +210,8 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			var specNames = sites.stream().map(site -> site.getSiteGenus()).collect(Collectors.joining(", "));
 			var layerType = sites.iterator().next().getLayerType();
 			throw validationError(
-					"Site entries reference species %s of layer %s of polygon %s but they are not present.", specNames, layerType, polygon
+					"Site entries reference species %s of layer %s of polygon %s but they are not present.", specNames,
+					layerType, polygon
 							.getPolygonIdentifier()
 			);
 		}
@@ -400,7 +402,8 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 					estimateSmallComponents(polygon, resultPrimaryLayer);
 
 					computeUtilizationComponentsPrimary(
-							bec, resultPrimaryLayer, VolumeComputeMode.BY_UTIL_WITH_WHOLE_STEM_BY_SPEC, CompatibilityVariableMode.NONE
+							bec, resultPrimaryLayer, VolumeComputeMode.BY_UTIL_WITH_WHOLE_STEM_BY_SPEC,
+							CompatibilityVariableMode.NONE
 					);
 
 				} catch (ProcessingException e) {
@@ -545,7 +548,8 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		}
 
 		findRootForQuadMeanDiameterFractionalError(
-				-0.6f, 0.5f, resultsPerSpecies, initialDqEstimate, baseAreaPerSpecies, minPerSpecies, maxPerSpecies, treeDensityTotal
+				-0.6f, 0.5f, resultsPerSpecies, initialDqEstimate, baseAreaPerSpecies, minPerSpecies, maxPerSpecies,
+				treeDensityTotal
 		);
 
 		applyDqBySpecies(layer, baseAreaTotal, baseAreaPerSpecies, resultsPerSpecies);
@@ -580,7 +584,8 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			// EMP060
 			float specDq = estimationMethods.estimateQuadMeanDiameterForSpecies(
 					spec, layer
-							.getSpecies(), region, quadMeanDiameterTotal, baseAreaTotal, treeDensityTotal, loreyHeightTotal
+							.getSpecies(), region, quadMeanDiameterTotal, baseAreaTotal, treeDensityTotal,
+					loreyHeightTotal
 			);
 
 			var limits = getLimitsForSpecies(spec, region);
@@ -717,7 +722,8 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			PolygonMode mode = polygon.getMode().orElseGet(() -> {
 				try {
 					return findDefaultPolygonMode(
-							ageTotal, yearsToBreastHeight, height, baseArea, treesPerHectare, percentForest, primaryLayer
+							ageTotal, yearsToBreastHeight, height, baseArea, treesPerHectare, percentForest,
+							primaryLayer
 									.getSpecies().values(), bec, primaryLayer.getEmpericalRelationshipParameterIndex()
 					);
 				} catch (StandProcessingException e) {
@@ -1072,7 +1078,8 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			float primaryHeight = primarySite.getHeight().orElseThrow(); // HT_L1
 
 			final Increase inc = findIncreaseForYoungMode(
-					bec, primaryLayer, siteCurve, primaryBreastHeightAge0, siteIndex, yeastToBreastHeight, baseAreaTarget, heightTarget, ageTarget, dominantHeight0, moreYears, primaryHeight
+					bec, primaryLayer, siteCurve, primaryBreastHeightAge0, siteIndex, yeastToBreastHeight,
+					baseAreaTarget, heightTarget, ageTarget, dominantHeight0, moreYears, primaryHeight
 			);
 
 			return VriPolygon.build(pBuilder -> {

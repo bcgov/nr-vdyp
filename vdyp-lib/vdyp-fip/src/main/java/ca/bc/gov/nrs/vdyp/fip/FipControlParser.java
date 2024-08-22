@@ -126,7 +126,8 @@ public class FipControlParser extends StartApplicationControlParser {
 	@Override
 	protected List<ControlKey> outputFileParsers() {
 		return List.of(
-				ControlKey.VRI_OUTPUT_VDYP_POLYGON, ControlKey.VRI_OUTPUT_VDYP_LAYER_BY_SPECIES, ControlKey.VRI_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL
+				ControlKey.VRI_OUTPUT_VDYP_POLYGON, ControlKey.VRI_OUTPUT_VDYP_LAYER_BY_SPECIES,
+				ControlKey.VRI_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL
 		);
 	}
 

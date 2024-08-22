@@ -165,7 +165,8 @@ public abstract class BaseVdypSpecies<I extends BaseVdypSite> {
 
 		/**
 		 * Set both the genus, and at the same time calculates genusIndex from the given controlMap.
-		 * @param genus the species genus
+		 *
+		 * @param genus      the species genus
 		 * @param controlMap the control map defining the configuration
 		 * @return this builder
 		 */
@@ -176,12 +177,11 @@ public abstract class BaseVdypSpecies<I extends BaseVdypSite> {
 		}
 
 		/**
-		 * Set both the genus and its index. It is the responsibility of the caller to ensure 
-		 * that the index is correct for the given genus. Use of this method is appropriate 
-		 * only when logic dictates the given genusIndex is correct or in those unit tests 
-		 * where correctness isn't critical.
-		 * 
-		 * @param genus the species genus
+		 * Set both the genus and its index. It is the responsibility of the caller to ensure that the index is correct
+		 * for the given genus. Use of this method is appropriate only when logic dictates the given genusIndex is
+		 * correct or in those unit tests where correctness isn't critical.
+		 *
+		 * @param genus      the species genus
 		 * @param genusIndex the index of the genus in the configuration (control map entry 10)
 		 * @return this builder
 		 */

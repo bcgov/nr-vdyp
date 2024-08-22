@@ -477,7 +477,8 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 					float quadMeanDiameter = clamp(
 							estimationMethods.estimateQuadMeanDiameterForSpecies(
 									spec, result.getSpecies(), bec
-											.getRegion(), quadMeanDiameterTotal, baseAreaTotal, treesPerHectareTotal, loreyHeightTotal
+											.getRegion(), quadMeanDiameterTotal, baseAreaTotal, treesPerHectareTotal,
+									loreyHeightTotal
 							), //
 							dqMin, dqMax
 					);
@@ -739,7 +740,8 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 				// EMP092
 				EstimationMethods.estimateCloseUtilizationVolume(
 						controlMap, utilizationClass, adjust, vdypSpecies
-								.getVolumeGroup(), hlSp, quadMeanDiameterUtil, wholeStemVolumeUtil, closeUtilizationVolumeUtil
+								.getVolumeGroup(), hlSp, quadMeanDiameterUtil, wholeStemVolumeUtil,
+						closeUtilizationVolumeUtil
 				);
 
 				adjust.setCoe(4, volumeAdjustCoe.getCoe(3));
@@ -761,14 +763,17 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 				);
 				EstimationMethods.estimateNetDecayAndWasteVolume(
 						bec.getRegion(), utilizationClass, adjust, vdypSpecies
-								.getGenus(), hlSp, netDecayCoeMap, wasteModifierMap, quadMeanDiameterUtil, closeUtilizationVolumeUtil, closeUtilizationNetOfDecayUtil, closeUtilizationNetOfDecayAndWasteUtil
+								.getGenus(), hlSp, netDecayCoeMap, wasteModifierMap, quadMeanDiameterUtil,
+						closeUtilizationVolumeUtil, closeUtilizationNetOfDecayUtil,
+						closeUtilizationNetOfDecayAndWasteUtil
 				);
 
 				if (getId().isStart()) {
 					// EMP095
 					EstimationMethods.estimateNetDecayWasteAndBreakageVolume(
 							controlMap, utilizationClass, vdypSpecies
-									.getBreakageGroup(), quadMeanDiameterUtil, closeUtilizationVolumeUtil, closeUtilizationNetOfDecayAndWasteUtil, closeUtilizationNetOfDecayWasteAndBreakageUtil
+									.getBreakageGroup(), quadMeanDiameterUtil, closeUtilizationVolumeUtil,
+							closeUtilizationNetOfDecayAndWasteUtil, closeUtilizationNetOfDecayWasteAndBreakageUtil
 					);
 				}
 
@@ -936,7 +941,8 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 
 		if (primaryLayer.getYearsToBreastHeight().orElse(0f) < 0.5) {
 			throw validationError(
-					"Polygon %s has %s layer where years to breast height %.1f is less than minimum %.1f years.", polygon
+					"Polygon %s has %s layer where years to breast height %.1f is less than minimum %.1f years.",
+					polygon
 							.getPolygonIdentifier(), LayerType.PRIMARY, primaryLayer.getYearsToBreastHeightSafe(), 0.5f
 			);
 		}

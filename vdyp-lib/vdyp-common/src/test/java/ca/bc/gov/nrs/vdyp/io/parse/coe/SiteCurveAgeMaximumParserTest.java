@@ -65,7 +65,8 @@ public class SiteCurveAgeMaximumParserTest {
 	void testEndLine() throws Exception {
 		var parser = new SiteCurveAgeMaximumParser();
 		var is = TestUtils.makeInputStream(
-				" -1  150.0  150.0   20.0   60.0", "999                                End of usuable info", " 42  160.0  145.0   25.0   65.0"
+				" -1  150.0  150.0   20.0   60.0", "999                                End of usuable info",
+				" 42  160.0  145.0   25.0   65.0"
 		);
 
 		Map<String, Object> controlMap = new HashMap<>();

@@ -293,7 +293,8 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 				.sum();
 		if (Math.abs(percentTotal - 100f) > 0.01f) {
 			throw validationError(
-					"Polygon \"%s\" has %s layer where species entries have a percentage total that does not sum to 100%%.", layer
+					"Polygon \"%s\" has %s layer where species entries have a percentage total that does not sum to 100%%.",
+					layer
 							.getPolygonIdentifier(), LayerType.PRIMARY
 			);
 		}
@@ -1229,7 +1230,8 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 				estimationMethods.estimateWholeStemVolume(
 						UtilizationClass.ALL, adjustCloseUtil.getCoe(
 								4
-						), spec.getVolumeGroup(), loreyHeightSpec, quadMeanDiameterUtil, baseAreaUtil, wholeStemVolumeUtil
+						), spec.getVolumeGroup(), loreyHeightSpec, quadMeanDiameterUtil, baseAreaUtil,
+						wholeStemVolumeUtil
 				);
 
 				if (compatibilityVariableMode == CompatibilityVariableMode.ALL) {
@@ -1245,7 +1247,8 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 				// EMP092
 				estimationMethods.estimateCloseUtilizationVolume(
 						UtilizationClass.ALL, adjustCloseUtil, spec
-								.getVolumeGroup(), loreyHeightSpec, quadMeanDiameterUtil, wholeStemVolumeUtil, closeVolumeUtil
+								.getVolumeGroup(), loreyHeightSpec, quadMeanDiameterUtil, wholeStemVolumeUtil,
+						closeVolumeUtil
 				);
 
 				// EMP093
@@ -1258,14 +1261,16 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 				// EMP094
 				estimationMethods.estimateNetDecayAndWasteVolume(
 						bec.getRegion(), UtilizationClass.ALL, adjustCloseUtil, spec
-								.getGenus(), loreyHeightSpec, quadMeanDiameterUtil, closeVolumeUtil, closeVolumeNetDecayUtil, closeVolumeNetDecayWasteUtil
+								.getGenus(), loreyHeightSpec, quadMeanDiameterUtil, closeVolumeUtil,
+						closeVolumeNetDecayUtil, closeVolumeNetDecayWasteUtil
 				);
 
 				if (this.getId().isStart()) {
 					// EMP095
 					estimationMethods.estimateNetDecayWasteAndBreakageVolume(
 							UtilizationClass.ALL, spec
-									.getBreakageGroup(), quadMeanDiameterUtil, closeVolumeUtil, closeVolumeNetDecayWasteUtil, closeVolumeNetDecayWasteBreakUtil
+									.getBreakageGroup(), quadMeanDiameterUtil, closeVolumeUtil,
+							closeVolumeNetDecayWasteUtil, closeVolumeNetDecayWasteBreakUtil
 					);
 				}
 			}

@@ -73,7 +73,8 @@ public abstract class PrimarySpeciesGrowthParser
 			if (basalAreaGroupId < 1 || basalAreaGroupId > MAX_BASAL_AREA_GROUP_NUMBER) {
 				throw new ValueParseException(
 						MessageFormat.format(
-								"Line {0}: basal area group id {1} is out of range; expecting a value from 1 to {2}", lineNumber, basalAreaGroupId, MAX_BASAL_AREA_GROUP_NUMBER
+								"Line {0}: basal area group id {1} is out of range; expecting a value from 1 to {2}",
+								lineNumber, basalAreaGroupId, MAX_BASAL_AREA_GROUP_NUMBER
 						)
 				);
 			}
