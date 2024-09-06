@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.vdyp.common;
+package ca.bc.gov.nrs.vdyp.forward;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -66,7 +66,7 @@ public class UtilizationOperations {
 	 *
 	 * @param scalingFactor the factor by which the <code>uh</code> is to be scaled
 	 */
-	public static void scale(VdypUtilizationHolder uh, float scalingFactor) {
+	private static void scale(VdypUtilizationHolder uh, float scalingFactor) {
 
 		for (UtilizationClass uc : UtilizationClass.values()) {
 			float basalArea = uh.getBaseAreaByUtilization().get(uc);
@@ -77,8 +77,9 @@ public class UtilizationOperations {
 			if (treesPerHectare > 0) {
 				uh.getTreesPerHectareByUtilization().set(uc, treesPerHectare * scalingFactor);
 			}
-			// lorey height is not a per-hectare value and therefore
-			// is excluded from scaling.
+
+			// lorey height is not a per-hectare value and therefore is excluded from scaling.
+
 			float wholeStemVolume = uh.getWholeStemVolumeByUtilization().get(uc);
 			if (wholeStemVolume > 0) {
 				uh.getWholeStemVolumeByUtilization().set(uc, wholeStemVolume * scalingFactor);
@@ -102,8 +103,8 @@ public class UtilizationOperations {
 				uh.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization()
 						.set(uc, cuVolumeMinusDecayWastageBreakage * scalingFactor);
 			}
-			// quadratic mean diameter is not a per-hectare value and
-			// therefore not scaled.
+
+			// quadratic mean diameter is not a per-hectare value and therefore not scaled.
 		}
 	}
 

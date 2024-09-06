@@ -19,9 +19,10 @@ public abstract class BaseVdypLayer<S extends BaseVdypSpecies<I>, I extends Base
 
 	private final PolygonIdentifier polygonIdentifier;
 	private final LayerType layerType;
+	private Optional<Integer> inventoryTypeGroup = Optional.empty();
+
 	private LinkedHashMap<String, S> speciesBySp0 = new LinkedHashMap<>();
 	private HashMap<Integer, S> speciesByIndex = new HashMap<>();
-	private Optional<Integer> inventoryTypeGroup = Optional.empty();
 
 	protected BaseVdypLayer(
 			PolygonIdentifier polygonIdentifier, LayerType layerType, Optional<Integer> inventoryTypeGroup
@@ -108,7 +109,7 @@ public abstract class BaseVdypLayer<S extends BaseVdypSpecies<I>, I extends Base
 	public int hashCode() {
 		return polygonIdentifier.hashCode() * 17 + layerType.hashCode();
 	}
-	
+
 	public abstract static class Builder<T extends BaseVdypLayer<S, I>, S extends BaseVdypSpecies<I>, I extends BaseVdypSite, SB extends BaseVdypSpecies.Builder<S, I, IB>, IB extends BaseVdypSite.Builder<I>>
 			extends ModelClassBuilder<T> {
 		protected Optional<PolygonIdentifier> polygonIdentifier = Optional.empty();
@@ -168,21 +169,21 @@ public abstract class BaseVdypLayer<S extends BaseVdypSpecies<I>, I extends Base
 			return this;
 		}
 
-		public Builder<T, S, I, SB, IB> adapt(BaseVdypLayer<?, ?> toCopy) {
-			polygonIdentifier(toCopy.getPolygonIdentifier());
-			layerType(toCopy.getLayerType());
-			inventoryTypeGroup(toCopy.getInventoryTypeGroup());
+		public Builder<T, S, I, SB, IB> adapt(BaseVdypLayer<?, ?> source) {
+			polygonIdentifier(source.getPolygonIdentifier());
+			layerType(source.getLayerType());
+			inventoryTypeGroup(source.getInventoryTypeGroup());
 			return this;
 		}
 
-		public Builder<T, S, I, SB, IB> copy(T toCopy) {
-			adapt(toCopy);
+		public Builder<T, S, I, SB, IB> copy(T source) {
+			adapt(source);
 			return this;
 		}
 
 		public <S2 extends BaseVdypSpecies<I2>, I2 extends BaseVdypSite> Builder<T, S, I, SB, IB>
-				adaptSpecies(BaseVdypLayer<S2, ?> toCopy, BiConsumer<SB, S2> config) {
-			toCopy.getSpecies().values().forEach(speciesToCopy -> {
+				adaptSpecies(BaseVdypLayer<S2, ?> source, BiConsumer<SB, S2> config) {
+			source.getSpecies().values().forEach(speciesToCopy -> {
 				this.addSpecies(builder -> {
 					builder.adapt(speciesToCopy);
 					builder.polygonIdentifier = Optional.empty();
@@ -193,8 +194,8 @@ public abstract class BaseVdypLayer<S extends BaseVdypSpecies<I>, I extends Base
 			return this;
 		}
 
-		public Builder<T, S, I, SB, IB> copySpecies(T toCopy, BiConsumer<SB, S> config) {
-			toCopy.getSpecies().values().forEach(speciesToCopy -> {
+		public Builder<T, S, I, SB, IB> copySpecies(T source, BiConsumer<SB, S> config) {
+			source.getSpecies().values().forEach(speciesToCopy -> {
 				this.addSpecies(builder -> {
 					builder.copy(speciesToCopy);
 					builder.polygonIdentifier = Optional.empty();

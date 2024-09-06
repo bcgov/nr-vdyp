@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
+import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
 
 class VdypLayerTest {
 
@@ -48,8 +49,8 @@ class VdypLayerTest {
 					siteBuilder.siteCurveNumber(0);
 				});
 			});
-
 		});
+
 		assertThat(result, hasProperty("polygonIdentifier", isPolyId("Test", 2024)));
 		assertThat(result, hasProperty("layerType", is(LayerType.PRIMARY)));
 		assertThat(result, hasProperty("ageTotal", present(is(42f))));
@@ -97,7 +98,6 @@ class VdypLayerTest {
 					siteBuilder.siteCurveNumber(0);
 				});
 			});
-
 		});
 
 		assertThat(result, hasProperty("polygonIdentifier", isPolyId("Test", 2024)));
@@ -168,7 +168,6 @@ class VdypLayerTest {
 		assertThat(result, hasProperty("inventoryTypeGroup", present(is(12))));
 
 		control.verify();
-
 	}
 
 	@Test
@@ -230,7 +229,6 @@ class VdypLayerTest {
 		);
 
 		control.verify();
-
 	}
 
 	@Test
@@ -299,4 +297,131 @@ class VdypLayerTest {
 		);
 	}
 
+	@Test
+	void testAdditionalBuildMethods() {
+		Map<String, Object> controlMap = new HashMap<>();
+		TestUtils.populateControlMapBecReal(controlMap);
+
+		var poly = VdypPolygon.build(builder -> {
+			builder.polygonIdentifier("Test", 2024);
+			builder.percentAvailable(50f);
+
+			builder.forestInventoryZone("?");
+			builder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+		});
+
+		var layer1 = VdypLayer.build(poly, builder -> {
+			builder.inventoryTypeGroup(1);
+			builder.empiricalRelationshipParameterIndex(1);
+			builder.layerType(LayerType.PRIMARY);
+
+			builder.closeUtilizationVolumeByUtilization(1.0f);
+			builder.closeUtilizationVolumeNetOfDecayByUtilization(1.0f);
+			builder.closeUtilizationVolumeNetOfDecayAndWasteByUtilization(1.0f);
+			builder.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(1.0f);
+			builder.wholeStemVolumeByUtilization(1.0f);
+			builder.baseAreaByUtilization(1.0f);
+			builder.loreyHeightByUtilization(1.0f, 1.0f);
+			builder.quadraticMeanDiameterByUtilization(1.0f);
+			builder.treesPerHectareByUtilization(1.0f);
+		});
+
+		assertThat(poly.getLayers(), hasEntry(LayerType.PRIMARY, layer1));
+
+		assertThat(layer1, hasProperty("polygonIdentifier", isPolyId("Test", 2024)));
+		assertThat(layer1, hasProperty("layerType", is(LayerType.PRIMARY)));
+		assertThat(layer1, hasProperty("species", aMapWithSize(0)));
+		assertThat(layer1, hasProperty("empiricalRelationshipParameterIndex", VdypMatchers.present(is(1))));
+		assertThat(layer1, hasProperty("inventoryTypeGroup", VdypMatchers.present(is(1))));
+		assertThat(layer1, hasProperty("closeUtilizationVolumeByUtilization", is(Utils.utilizationVector(1.0f))));
+		assertThat(
+				layer1, hasProperty("closeUtilizationVolumeNetOfDecayByUtilization", is(Utils.utilizationVector(1.0f)))
+		);
+		assertThat(
+				layer1,
+				hasProperty("closeUtilizationVolumeNetOfDecayAndWasteByUtilization", is(Utils.utilizationVector(1.0f)))
+		);
+		assertThat(
+				layer1,
+				hasProperty(
+						"closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization",
+						is(Utils.utilizationVector(1.0f))
+				)
+		);
+		assertThat(layer1, hasProperty("wholeStemVolumeByUtilization", is(Utils.utilizationVector(1.0f))));
+		assertThat(layer1, hasProperty("baseAreaByUtilization", is(Utils.utilizationVector(1.0f))));
+		assertThat(layer1, hasProperty("loreyHeightByUtilization", is(new UtilizationVector(1.0f, 1.0f))));
+		assertThat(layer1, hasProperty("quadraticMeanDiameterByUtilization", is(Utils.utilizationVector(1.0f))));
+		assertThat(layer1, hasProperty("treesPerHectareByUtilization", is(Utils.utilizationVector(1.0f))));
+
+		var layer2 = VdypLayer.build(poly, builder -> {
+			builder.inventoryTypeGroup(2);
+			builder.empiricalRelationshipParameterIndex(2);
+			builder.layerType(LayerType.PRIMARY);
+
+			builder.closeUtilizationVolumeByUtilization(2.0f, 2.0f, 2.0f, 2.0f, 2.0f);
+			builder.closeUtilizationVolumeNetOfDecayByUtilization(2.0f, 2.0f, 2.0f, 2.0f, 2.0f);
+			builder.closeUtilizationVolumeNetOfDecayAndWasteByUtilization(2.0f, 2.0f, 2.0f, 2.0f, 2.0f);
+			builder.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(2.0f, 2.0f, 2.0f, 2.0f, 2.0f);
+			builder.wholeStemVolumeByUtilization(2.0f, 2.0f, 2.0f, 2.0f, 2.0f);
+			builder.baseAreaByUtilization(2.0f, 2.0f, 2.0f, 2.0f, 2.0f);
+			builder.loreyHeightByUtilization(2.0f, 2.0f);
+			builder.quadraticMeanDiameterByUtilization(2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f);
+			builder.treesPerHectareByUtilization(2.0f, 2.0f, 2.0f, 2.0f, 2.0f);
+		});
+
+		assertThat(poly.getLayers(), hasEntry(LayerType.PRIMARY, layer2));
+
+		assertThat(layer2, hasProperty("polygonIdentifier", isPolyId("Test", 2024)));
+		assertThat(layer2, hasProperty("layerType", is(LayerType.PRIMARY)));
+		assertThat(layer2, hasProperty("species", aMapWithSize(0)));
+		assertThat(layer2, hasProperty("empiricalRelationshipParameterIndex", VdypMatchers.present(is(2))));
+		assertThat(layer2, hasProperty("inventoryTypeGroup", VdypMatchers.present(is(2))));
+		assertThat(
+				layer2,
+				hasProperty(
+						"closeUtilizationVolumeByUtilization", is(Utils.utilizationVector(2.0f, 2.0f, 2.0f, 2.0f, 2.0f))
+				)
+		);
+		assertThat(
+				layer2,
+				hasProperty(
+						"closeUtilizationVolumeNetOfDecayByUtilization",
+						is(Utils.utilizationVector(2.0f, 2.0f, 2.0f, 2.0f, 2.0f))
+				)
+		);
+		assertThat(
+				layer2,
+				hasProperty(
+						"closeUtilizationVolumeNetOfDecayAndWasteByUtilization",
+						is(Utils.utilizationVector(2.0f, 2.0f, 2.0f, 2.0f, 2.0f))
+				)
+		);
+		assertThat(
+				layer2,
+				hasProperty(
+						"closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization",
+						is(Utils.utilizationVector(2.0f, 2.0f, 2.0f, 2.0f, 2.0f))
+				)
+		);
+		assertThat(
+				layer2,
+				hasProperty("wholeStemVolumeByUtilization", is(Utils.utilizationVector(2.0f, 2.0f, 2.0f, 2.0f, 2.0f)))
+		);
+		assertThat(
+				layer2, hasProperty("baseAreaByUtilization", is(Utils.utilizationVector(2.0f, 2.0f, 2.0f, 2.0f, 2.0f)))
+		);
+		assertThat(layer2, hasProperty("loreyHeightByUtilization", is(new UtilizationVector(2.0f, 2.0f))));
+		assertThat(
+				layer2,
+				hasProperty(
+						"quadraticMeanDiameterByUtilization",
+						is(Utils.utilizationVector(2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f))
+				)
+		);
+		assertThat(
+				layer2,
+				hasProperty("treesPerHectareByUtilization", is(Utils.utilizationVector(2.0f, 2.0f, 2.0f, 2.0f, 2.0f)))
+		);
+	}
 }

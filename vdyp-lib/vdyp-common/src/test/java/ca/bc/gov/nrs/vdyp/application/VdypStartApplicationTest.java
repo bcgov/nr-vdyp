@@ -1279,11 +1279,11 @@ class VdypStartApplicationTest {
 						sb.wholeStemVolume(57.2091446f);
 					});
 
-					lb.loreyHeight(31.3307209f);
-					lb.baseArea(44.6249847f);
-					lb.treesPerHectare(620.484802f);
-					lb.quadMeanDiameter(30.2606697f);
-					lb.wholeStemVolume(635.659668f);
+					lb.loreyHeightByUtilization(31.3307209f);
+					lb.baseAreaByUtilization(44.6249847f);
+					lb.treesPerHectareByUtilization(620.484802f);
+					lb.quadraticMeanDiameterByUtilization(30.2606697f);
+					lb.wholeStemVolumeByUtilization(635.659668f);
 				});
 
 				app.estimateSmallComponents(fPoly, layer);

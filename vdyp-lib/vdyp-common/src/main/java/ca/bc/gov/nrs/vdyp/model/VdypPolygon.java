@@ -30,14 +30,14 @@ public class VdypPolygon extends BaseVdypPolygon<VdypLayer, Float, VdypSpecies, 
 	 *
 	 * @param <O>                     Type of the polygon to copy
 	 * @param <U>                     Type of percent available in the other polygon
-	 * @param toCopy                  The polygon to copy
+	 * @param source                  The polygon to copy
 	 * @param convertPercentAvailable Function to convert
 	 */
 	public <O extends BaseVdypPolygon<?, U, ?, ?>, U> VdypPolygon(
-			O toCopy, Function<U, Float> convertPercentAvailable
+			O source, Function<U, Float> convertPercentAvailable
 	) {
-		super(toCopy, convertPercentAvailable);
-		if (toCopy instanceof VdypPolygon vdypPolygonToCopy) {
+		super(source, convertPercentAvailable);
+		if (source instanceof VdypPolygon vdypPolygonToCopy) {
 			this.targetYear = vdypPolygonToCopy.getTargetYear();
 		} else {
 			this.targetYear = Optional.empty();

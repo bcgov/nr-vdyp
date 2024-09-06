@@ -56,11 +56,11 @@ class Grow6TreesPerHectareTest {
 		VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
 		fpe.processPolygon(polygon, ExecutionStep.GROW_6_LAYER_TPH2);
-		
+
 		LayerProcessingState lps = fpe.fps.getLayerProcessingState();
 
 		var calculatedLayerTph = lps.getBank().treesPerHectare[0][UtilizationClass.ALL.ordinal()];
-				
+
 		// VDYP7 value is 594.113811
 		assertThat(calculatedLayerTph, is(601.3333f));
 	}

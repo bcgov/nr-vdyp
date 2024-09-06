@@ -1633,10 +1633,10 @@ class VriStartTest {
 				VdypLayer layer = VdypLayer.build((lb) -> {
 					lb.polygonIdentifier("Test", 2024);
 					lb.layerType(LayerType.PRIMARY);
-					lb.baseArea(6.34290648f);
-					lb.treesPerHectare(748.402222f);
-					lb.quadMeanDiameter(10.3879938f);
-					lb.loreyHeight(6.61390257f);
+					lb.baseAreaByUtilization(6.34290648f);
+					lb.treesPerHectareByUtilization(748.402222f);
+					lb.quadraticMeanDiameterByUtilization(10.3879938f);
+					lb.loreyHeightByUtilization(6.61390257f);
 					lb.addSpecies(sb -> {
 						sb.genus("B", controlMap);
 						sb.percentGenus(10);

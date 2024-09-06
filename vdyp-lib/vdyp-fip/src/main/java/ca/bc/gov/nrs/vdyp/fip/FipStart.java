@@ -467,11 +467,11 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 					// EMP061
 					var limits = estimationMethods.getLimitsForHeightAndDiameter(spec.getGenus(), bec.getRegion());
 
-					var dqMin = limits.minQuadMeanDiameterLoreyHeightRatio() * spec.getLoreyHeightByUtilization()
-							.getAll();
+					var dqMin = limits.minQuadMeanDiameterLoreyHeightRatio()
+							* spec.getLoreyHeightByUtilization().getAll();
 					var dqMax = max(
-							limits.quadMeanDiameterMaximum(), limits.maxQuadMeanDiameterLoreyHeightRatio()
-									* spec.getLoreyHeightByUtilization().getAll()
+							limits.quadMeanDiameterMaximum(),
+							limits.maxQuadMeanDiameterLoreyHeightRatio() * spec.getLoreyHeightByUtilization().getAll()
 					);
 
 					// EMP060

@@ -422,14 +422,17 @@ public class TestUtils {
 	}
 
 	public static Map<String, Object> loadControlMap() {
+		return loadControlMap(Path.of("VRISTART.CTR"));
+	}
+
+	public static Map<String, Object> loadControlMap(Path controlMapPath) {
 		BaseControlParser parser = new TestNonFipControlParser();
 		try {
-			return TestUtils.loadControlMap(parser, TestUtils.class, "VRISTART.CTR");
+			return TestUtils.loadControlMap(parser, TestUtils.class, controlMapPath.toString());
 		} catch (IOException | ResourceParseException ex) {
 			fail(ex);
 			return null;
 		}
-
 	}
 
 	public static PolygonIdentifier polygonId(String name, int year) {

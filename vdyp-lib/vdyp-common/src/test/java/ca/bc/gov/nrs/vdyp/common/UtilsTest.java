@@ -142,7 +142,7 @@ class UtilsTest {
 				lb.polygonIdentifier("Test", 2024);
 				lb.layerType(LayerType.PRIMARY);
 
-				lb.baseArea(0.7f, 0.9f, 1.1f, 1.3f, 1.5f);
+				lb.baseAreaByUtilization(0.7f, 0.9f, 1.1f, 1.3f, 1.5f);
 
 				lb.addSpecies(sb -> {
 					sb.genus("B", 3);

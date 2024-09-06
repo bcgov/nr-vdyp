@@ -90,7 +90,7 @@ public abstract class BaseVdypSpecies<I extends BaseVdypSite> {
 
 	@Override
 	public String toString() {
-		return MessageFormat.format("{0} {1} {2}", polygonIdentifier, layerType, genus);
+		return MessageFormat.format("{0}-{1}-{2}", polygonIdentifier.toStringCompact(), layerType, genus);
 	}
 
 	@Override
@@ -235,8 +235,8 @@ public abstract class BaseVdypSpecies<I extends BaseVdypSite> {
 			return this;
 		}
 
-		public Builder<T, I, IB> copy(T toCopy) {
-			return this.adapt(toCopy);
+		public Builder<T, I, IB> copy(T source) {
+			return this.adapt(source);
 		}
 
 		public Builder<T, I, IB> addSite(Consumer<IB> config) {
@@ -296,48 +296,48 @@ public abstract class BaseVdypSpecies<I extends BaseVdypSite> {
 			);
 		}
 
-		public Builder<T, I, IB> adapt(BaseVdypSpecies<?> toCopy) {
-			polygonIdentifier(toCopy.getPolygonIdentifier());
-			layerType(toCopy.getLayerType());
-			genus(toCopy.getGenus(), toCopy.getGenusIndex());
-			percentGenus(toCopy.getPercentGenus());
+		public Builder<T, I, IB> adapt(BaseVdypSpecies<?> source) {
+			polygonIdentifier(source.getPolygonIdentifier());
+			layerType(source.getLayerType());
+			genus(source.getGenus(), source.getGenusIndex());
+			percentGenus(source.getPercentGenus());
 
-			fractionGenus(toCopy.getFractionGenus());
+			fractionGenus(source.getFractionGenus());
 
-			sp64DistributionList(toCopy.getSp64DistributionSet().getSp64DistributionList());
+			sp64DistributionList(source.getSp64DistributionSet().getSp64DistributionList());
 
 			return this;
 		}
 
-		public <I2 extends BaseVdypSite> Builder<T, I, IB> adaptSite(I2 toCopy, BiConsumer<IB, I2> config) {
+		public <I2 extends BaseVdypSite> Builder<T, I, IB> adaptSite(I2 source, BiConsumer<IB, I2> config) {
 			this.addSite(builder -> {
-				builder.adapt(toCopy);
+				builder.adapt(source);
 				builder.polygonIdentifier = Optional.empty();
 				builder.layerType = Optional.empty();
-				config.accept(builder, toCopy);
+				config.accept(builder, source);
 			});
 			return this;
 		}
 
 		public <S2 extends BaseVdypSpecies<I2>, I2 extends BaseVdypSite> Builder<T, I, IB>
 				adaptSiteFrom(S2 specToCopy, BiConsumer<IB, I2> config) {
-			specToCopy.getSite().ifPresent(toCopy -> this.adaptSite(toCopy, config));
+			specToCopy.getSite().ifPresent(source -> this.adaptSite(source, config));
 			return this;
 		}
 
-		public Builder<T, I, IB> copySite(I toCopy, BiConsumer<IB, I> config) {
+		public Builder<T, I, IB> copySite(I source, BiConsumer<IB, I> config) {
 			this.addSite(builder -> {
-				builder.copy(toCopy);
+				builder.copy(source);
 				builder.siteGenus = Optional.empty();
 				builder.polygonIdentifier = Optional.empty();
 				builder.layerType = Optional.empty();
-				config.accept(builder, toCopy);
+				config.accept(builder, source);
 			});
 			return this;
 		}
 
 		public Builder<T, I, IB> copySiteFrom(T specToCopy, BiConsumer<IB, I> config) {
-			specToCopy.getSite().ifPresent(toCopy -> this.copySite(toCopy, config));
+			specToCopy.getSite().ifPresent(source -> this.copySite(source, config));
 			return this;
 		}
 

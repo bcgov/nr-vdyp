@@ -1108,7 +1108,7 @@ class SindxdllTest {
 							+ "Engelmann Spruce Growth Intercept Models. For. Anal. Inv. Br., B.C."
 							+ "Min. For., Lands, Nat. Resour. Oper., Victoria, B.C. Tech. Rep. 084. ",
 					"The growth intercept models were developed from 84 stem analysis plots "
-							+ "located throughout the range of the Engelmann Spruce � Subalpine Fir "
+							+ "located throughout the range of the Engelmann Spruce - Subalpine Fir "
 							+ "(ESSF) biogeoclimatic zone of British Columbia. Plots ranged in site "
 							+ "index from about 6 to 24 m. The models can be used to estimate site index "
 							+ "throughout the ESSF zone in British Columbia.", },

@@ -2,6 +2,11 @@ package ca.bc.gov.nrs.vdyp.model;
 
 import java.util.Optional;
 
+/**
+ * Instance of this class are parsed out of the Utilization input files supplied to Forward and other applications. They
+ * are used to solely for the purpose of transporting this information into code that builds the UtilizationHolders
+ * (that is, VdypLayer and VdypSpecies) from sets of them (each set will contain one entry per UtilizationClass.)
+ */
 public class VdypUtilization implements VdypEntity {
 
 	// See IPSJF155.doc

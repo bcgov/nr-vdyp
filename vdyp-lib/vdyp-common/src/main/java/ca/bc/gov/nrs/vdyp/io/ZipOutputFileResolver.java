@@ -15,7 +15,7 @@ import java.util.zip.ZipOutputStream;
 public class ZipOutputFileResolver implements FileResolver {
 
 	private record OutputStreamDetails(Path outputStreamLocation, OutputStream outputStream) {
-	};
+	}
 
 	private Map<String, OutputStreamDetails> entryOutputStreams = new HashMap<>();
 

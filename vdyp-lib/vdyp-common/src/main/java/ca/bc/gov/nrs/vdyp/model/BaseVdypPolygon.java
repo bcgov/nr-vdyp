@@ -41,16 +41,16 @@ public abstract class BaseVdypPolygon<L extends BaseVdypLayer<SP, SI>, PA, SP ex
 	 *
 	 * @param <O>                     Type of the polygon to copy
 	 * @param <U>                     Type of percent available in the other polygon
-	 * @param toCopy                  The polygon to copy
+	 * @param source                  The polygon to copy
 	 * @param convertPercentAvailable Function to convert
 	 */
 	protected <O extends BaseVdypPolygon<?, U, ?, ?>, U> BaseVdypPolygon(
-			O toCopy, Function<U, PA> convertPercentAvailable
+			O source, Function<U, PA> convertPercentAvailable
 	) {
 		this(
-				toCopy.getPolygonIdentifier(), convertPercentAvailable.apply(toCopy.getPercentAvailable()),
-				toCopy.getForestInventoryZone(), toCopy.getBiogeoclimaticZone(), toCopy.getMode(),
-				toCopy.getInventoryTypeGroup()
+				source.getPolygonIdentifier(), convertPercentAvailable.apply(source.getPercentAvailable()),
+				source.getForestInventoryZone(), source.getBiogeoclimaticZone(), source.getMode(),
+				source.getInventoryTypeGroup()
 		);
 	}
 
@@ -229,27 +229,27 @@ public abstract class BaseVdypPolygon<L extends BaseVdypLayer<SP, SI>, PA, SP ex
 		protected abstract LB getLayerBuilder();
 
 		public <PA2> Builder<T, L, PA, SP, SI, LB, SPB, SIB>
-				adapt(BaseVdypPolygon<?, PA2, ?, ?> toCopy, Function<PA2, PA> paConvert) {
-			polygonIdentifier(toCopy.getPolygonIdentifier());
-			percentAvailable(paConvert.apply(toCopy.getPercentAvailable()));
-			biogeoclimaticZone(toCopy.getBiogeoclimaticZone());
-			forestInventoryZone(toCopy.getForestInventoryZone());
-			mode(toCopy.getMode());
+				adapt(BaseVdypPolygon<?, PA2, ?, ?> source, Function<PA2, PA> paConvert) {
+			polygonIdentifier(source.getPolygonIdentifier());
+			percentAvailable(paConvert.apply(source.getPercentAvailable()));
+			biogeoclimaticZone(source.getBiogeoclimaticZone());
+			forestInventoryZone(source.getForestInventoryZone());
+			mode(source.getMode());
 			return this;
 		}
 
-		public <PA2> Builder<T, L, PA, SP, SI, LB, SPB, SIB> copy(T toCopy) {
-			polygonIdentifier(toCopy.getPolygonIdentifier());
-			percentAvailable(toCopy.getPercentAvailable());
-			biogeoclimaticZone(toCopy.getBiogeoclimaticZone());
-			forestInventoryZone(toCopy.getForestInventoryZone());
-			mode(toCopy.getMode());
+		public <PA2> Builder<T, L, PA, SP, SI, LB, SPB, SIB> copy(T source) {
+			polygonIdentifier(source.getPolygonIdentifier());
+			percentAvailable(source.getPercentAvailable());
+			biogeoclimaticZone(source.getBiogeoclimaticZone());
+			forestInventoryZone(source.getForestInventoryZone());
+			mode(source.getMode());
 			return this;
 		}
 
 		public <PA2, L2 extends BaseVdypLayer<?, ?>> Builder<T, L, PA, SP, SI, LB, SPB, SIB>
-				adaptLayers(BaseVdypPolygon<L2, PA2, ?, ?> toCopy, BiConsumer<LB, L2> layerConfig) {
-			toCopy.getLayers().values().forEach(layer -> {
+				adaptLayers(BaseVdypPolygon<L2, PA2, ?, ?> source, BiConsumer<LB, L2> layerConfig) {
+			source.getLayers().values().forEach(layer -> {
 				this.addLayer(lBuilder -> {
 					lBuilder.adapt(layer);
 					lBuilder.polygonIdentifier = Optional.empty();
@@ -259,8 +259,8 @@ public abstract class BaseVdypPolygon<L extends BaseVdypLayer<SP, SI>, PA, SP ex
 			return this;
 		}
 
-		public <PA2> Builder<T, L, PA, SP, SI, LB, SPB, SIB> copyLayers(T toCopy, BiConsumer<LB, L> layerConfig) {
-			toCopy.getLayers().values().forEach(layer -> {
+		public <PA2> Builder<T, L, PA, SP, SI, LB, SPB, SIB> copyLayers(T source, BiConsumer<LB, L> layerConfig) {
+			source.getLayers().values().forEach(layer -> {
 				this.addLayer(lBuilder -> {
 					lBuilder.copy(layer);
 					lBuilder.polygonIdentifier = Optional.empty();

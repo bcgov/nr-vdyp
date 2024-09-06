@@ -502,7 +502,9 @@ public class ForwardProcessingEngine {
 			throw new ProcessingException(
 					MessageFormat.format(
 							"During processing of {0}, trees-per-hectare was calculated to be negative ({1})",
-							lps.getPolygon().getLayers().get(LayerType.PRIMARY), tphEndSum));
+							lps.getPolygon().getLayers().get(LayerType.PRIMARY), tphEndSum
+					)
+			);
 		}
 
 		bank.treesPerHectare[0][UC_ALL_INDEX] = tphEndSum;

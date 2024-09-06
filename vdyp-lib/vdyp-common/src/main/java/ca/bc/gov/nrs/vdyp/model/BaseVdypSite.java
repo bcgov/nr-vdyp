@@ -74,7 +74,7 @@ public abstract class BaseVdypSite {
 
 	@Override
 	public String toString() {
-		return polygonIdentifier.toStringCompact() + "-" + layerType + "-" + siteGenus;
+		return MessageFormat.format("{0}-{1}-{2}", polygonIdentifier.toStringCompact(), layerType, siteGenus);
 	}
 
 	@Override
@@ -180,20 +180,20 @@ public abstract class BaseVdypSite {
 			return yearsToBreastHeight(Optional.of(yearsToBreastHeight));
 		}
 
-		public Builder<T> adapt(BaseVdypSite toCopy) {
-			polygonIdentifier(toCopy.getPolygonIdentifier());
-			layerType(toCopy.getLayerType());
-			ageTotal(toCopy.getAgeTotal());
-			yearsToBreastHeight(toCopy.getYearsToBreastHeight());
-			height(toCopy.getHeight());
-			siteIndex(toCopy.getSiteIndex());
-			siteCurveNumber(toCopy.getSiteCurveNumber());
-			siteGenus(toCopy.getSiteGenus());
+		public Builder<T> adapt(BaseVdypSite source) {
+			polygonIdentifier(source.getPolygonIdentifier());
+			layerType(source.getLayerType());
+			ageTotal(source.getAgeTotal());
+			yearsToBreastHeight(source.getYearsToBreastHeight());
+			height(source.getHeight());
+			siteIndex(source.getSiteIndex());
+			siteCurveNumber(source.getSiteCurveNumber());
+			siteGenus(source.getSiteGenus());
 			return this;
 		}
 
-		public Builder<T> copy(T toCopy) {
-			return adapt(toCopy);
+		public Builder<T> copy(T source) {
+			return adapt(source);
 		}
 
 		@Override

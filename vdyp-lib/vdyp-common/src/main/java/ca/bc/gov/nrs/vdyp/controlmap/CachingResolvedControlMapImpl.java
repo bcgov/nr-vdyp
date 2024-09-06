@@ -19,36 +19,36 @@ import ca.bc.gov.nrs.vdyp.model.SiteCurveAgeMaximum;
 
 public class CachingResolvedControlMapImpl implements ResolvedControlMap {
 
-	final BecLookup becLookup;
-	final GenusDefinitionMap genusDefinitionMap;
-	final Map<String, Coefficients> netDecayWasteCoeMap;
-	final MatrixMap2<Integer, Integer, Optional<Coefficients>> netDecayCoeMap;
-	final MatrixMap2<String, Region, Float> wasteModifierMap;
-	final MatrixMap2<String, Region, Float> decayModifierMap;
-	final MatrixMap2<Integer, Integer, Optional<Coefficients>> closeUtilizationCoeMap;
-	final Map<Integer, Coefficients> totalStandWholeStepVolumeCoeMap;
-	final MatrixMap2<Integer, Integer, Optional<Coefficients>> wholeStemUtilizationComponentMap;
-	final MatrixMap3<Integer, String, String, Coefficients> quadMeanDiameterUtilizationComponentMap;
-	final MatrixMap3<Integer, String, String, Coefficients> basalAreaDiameterUtilizationComponentMap;
-	final Map<String, Coefficients> smallComponentWholeStemVolumeCoefficients;
-	final Map<String, Coefficients> smallComponentLoreyHeightCoefficients;
-	final Map<String, Coefficients> smallComponentQuadMeanDiameterCoefficients;
-	final Map<String, Coefficients> smallComponentBasalAreaCoefficients;
-	final Map<String, Coefficients> smallComponentProbabilityCoefficients;
-	final Map<Integer, SiteCurveAgeMaximum> maximumAgeBySiteCurveNumber;
-	final Map<Integer, Coefficients> upperBounds;
-	final MatrixMap2<String, String, Integer> defaultEquationGroup;
-	final MatrixMap2<Integer, Integer, Optional<Integer>> equationModifierGroup;
-	final MatrixMap2<String, Region, Coefficients> hl1Coefficients;
-	final MatrixMap2<String, Region, Coefficients> hl2Coefficients;
-	final MatrixMap2<String, Region, Coefficients> hl3Coefficients;
-	final MatrixMap3<String, String, Region, Optional<NonprimaryHLCoefficients>> hlNonPrimaryCoefficients;
-	final MatrixMap2<String, Region, ComponentSizeLimits> componentSizeLimitCoefficients;
-	final Map<Integer, Coefficients> breakageMap;
-	final MatrixMap2<String, String, Integer> volumeEquationGroups;
-	final MatrixMap2<String, String, Integer> decayEquationGroups;
-	final MatrixMap2<String, String, Integer> breakageEquationGroups;
-	final Map<String, Coefficients> quadMeanDiameterBySpeciesCoefficients;
+	private final BecLookup becLookup;
+	private final GenusDefinitionMap genusDefinitionMap;
+	private final Map<String, Coefficients> netDecayWasteCoeMap;
+	private final MatrixMap2<Integer, Integer, Optional<Coefficients>> netDecayCoeMap;
+	private final MatrixMap2<String, Region, Float> wasteModifierMap;
+	private final MatrixMap2<String, Region, Float> decayModifierMap;
+	private final MatrixMap2<Integer, Integer, Optional<Coefficients>> closeUtilizationCoeMap;
+	private final Map<Integer, Coefficients> totalStandWholeStepVolumeCoeMap;
+	private final MatrixMap2<Integer, Integer, Optional<Coefficients>> wholeStemUtilizationComponentMap;
+	private final MatrixMap3<Integer, String, String, Coefficients> quadMeanDiameterUtilizationComponentMap;
+	private final MatrixMap3<Integer, String, String, Coefficients> basalAreaDiameterUtilizationComponentMap;
+	private final Map<String, Coefficients> smallComponentWholeStemVolumeCoefficients;
+	private final Map<String, Coefficients> smallComponentLoreyHeightCoefficients;
+	private final Map<String, Coefficients> smallComponentQuadMeanDiameterCoefficients;
+	private final Map<String, Coefficients> smallComponentBasalAreaCoefficients;
+	private final Map<String, Coefficients> smallComponentProbabilityCoefficients;
+	private final Map<Integer, SiteCurveAgeMaximum> maximumAgeBySiteCurveNumber;
+	private final Map<Integer, Coefficients> upperBounds;
+	private final MatrixMap2<String, String, Integer> defaultEquationGroup;
+	private final MatrixMap2<Integer, Integer, Optional<Integer>> equationModifierGroup;
+	private final MatrixMap2<String, Region, Coefficients> hl1Coefficients;
+	private final MatrixMap2<String, Region, Coefficients> hl2Coefficients;
+	private final MatrixMap2<String, Region, Coefficients> hl3Coefficients;
+	private final MatrixMap3<String, String, Region, Optional<NonprimaryHLCoefficients>> hlNonPrimaryCoefficients;
+	private final MatrixMap2<String, Region, ComponentSizeLimits> componentSizeLimitCoefficients;
+	private final Map<Integer, Coefficients> breakageMap;
+	private final MatrixMap2<String, String, Integer> volumeEquationGroups;
+	private final MatrixMap2<String, String, Integer> decayEquationGroups;
+	private final MatrixMap2<String, String, Integer> breakageEquationGroups;
+	private final Map<String, Coefficients> quadMeanDiameterBySpeciesCoefficients;
 
 	private final Map<String, Object> controlMap;
 
@@ -219,10 +219,6 @@ public class CachingResolvedControlMapImpl implements ResolvedControlMap {
 	@Override
 	public MatrixMap3<String, String, Region, Optional<NonprimaryHLCoefficients>> getHlNonPrimaryCoefficients() {
 		return hlNonPrimaryCoefficients;
-	}
-
-	public Map<Integer, Coefficients> getBreakageMap() {
-		return breakageMap;
 	}
 
 	@Override

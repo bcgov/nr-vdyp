@@ -258,19 +258,14 @@ public class VriLayer extends BaseVdypLayer<VriSpecies, VriSite> implements Inpu
 		@Override
 		public <S2 extends BaseVdypSpecies<I2>, I2 extends BaseVdypSite>
 				BaseVdypLayer.Builder<VriLayer, VriSpecies, VriSite, VriSpecies.Builder, VriSite.Builder>
-				adaptSpecies(
-						BaseVdypLayer<S2, ?> toCopy,
-						BiConsumer<VriSpecies.Builder, S2> config
-				) {
+				adaptSpecies(BaseVdypLayer<S2, ?> toCopy, BiConsumer<VriSpecies.Builder, S2> config) {
 			this.primaryGenus(toCopy.getPrimaryGenus());
 			return super.adaptSpecies(toCopy, config);
 		}
 
 		@Override
 		public BaseVdypLayer.Builder<VriLayer, VriSpecies, VriSite, VriSpecies.Builder, VriSite.Builder>
-				copySpecies(
-						VriLayer toCopy, BiConsumer<VriSpecies.Builder, VriSpecies> config
-				) {
+				copySpecies(VriLayer toCopy, BiConsumer<VriSpecies.Builder, VriSpecies> config) {
 			this.primaryGenus(toCopy.getPrimaryGenus());
 			return super.copySpecies(toCopy, config);
 		}

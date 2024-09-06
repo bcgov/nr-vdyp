@@ -21,24 +21,24 @@ import ca.bc.gov.nrs.vdyp.model.Region;
 
 public class ForwardResolvedControlMapImpl extends CachingResolvedControlMapImpl implements ForwardResolvedControlMap {
 
-	final ForwardDebugSettings debugSettings;
-	final ForwardControlVariables forwardControlVariables;
-	final MatrixMap2<String, Region, SiteIndexEquation> siteCurveMap;
-	final CompVarAdjustments compVarAdjustments;
-	final MatrixMap2<String, String, Coefficients> basalAreaYieldCoefficients;
-	final Map<Region, GrowthFiatDetails> basalAreaGrowthFiatDetails;
-	final MatrixMap2<String, String, Coefficients> basalAreaGrowthEmpiricalCoefficients;
-	final MatrixMap3<Region, String, Integer, Float> upperBoundCoefficients;
-	final MatrixMap2<String, String, Coefficients> quadMeanDiameterYieldCoefficients;
-	final Map<Region, GrowthFiatDetails> quadMeanDiameterGrowthFiatDetails;
-	final Map<Integer, Coefficients> quadMeanDiameterGrowthEmpiricalCoefficients;
-	final Map<Integer, Coefficients> quadMeanDiameterGrowthEmpiricalLimits;
-	final MatrixMap2<String, Region, Coefficients> loreyHeightPrimarySpeciesEquationP1Coefficients;
-	final MatrixMap3<String, String, Region, Optional<NonprimaryHLCoefficients>> loreyHeightNonPrimaryCoefficients;
-	final Map<Integer, ModelCoefficients> primarySpeciesBasalAreaGrowthCoefficients;
-	final MatrixMap2<String, Integer, Optional<Coefficients>> nonPrimarySpeciesBasalAreaGrowthCoefficients;
-	final Map<Integer, ModelCoefficients> primaryQuadMeanDiameterGrowthCoefficients;
-	final MatrixMap2<String, Integer, Optional<Coefficients>> nonPrimaryQuadMeanDiameterGrowthCoefficients;
+	private final ForwardDebugSettings debugSettings;
+	private final ForwardControlVariables forwardControlVariables;
+	private final MatrixMap2<String, Region, SiteIndexEquation> siteCurveMap;
+	private final CompVarAdjustments compVarAdjustments;
+	private final MatrixMap2<String, String, Coefficients> basalAreaYieldCoefficients;
+	private final Map<Region, GrowthFiatDetails> basalAreaGrowthFiatDetails;
+	private final MatrixMap2<String, String, Coefficients> basalAreaGrowthEmpiricalCoefficients;
+	private final MatrixMap3<Region, String, Integer, Float> upperBoundCoefficients;
+	private final MatrixMap2<String, String, Coefficients> quadMeanDiameterYieldCoefficients;
+	private final Map<Region, GrowthFiatDetails> quadMeanDiameterGrowthFiatDetails;
+	private final Map<Integer, Coefficients> quadMeanDiameterGrowthEmpiricalCoefficients;
+	private final Map<Integer, Coefficients> quadMeanDiameterGrowthEmpiricalLimits;
+	private final MatrixMap2<String, Region, Coefficients> loreyHeightPrimarySpeciesEquationP1Coefficients;
+	private final MatrixMap3<String, String, Region, Optional<NonprimaryHLCoefficients>> loreyHeightNonPrimaryCoefficients;
+	private final Map<Integer, ModelCoefficients> primarySpeciesBasalAreaGrowthCoefficients;
+	private final MatrixMap2<String, Integer, Optional<Coefficients>> nonPrimarySpeciesBasalAreaGrowthCoefficients;
+	private final Map<Integer, ModelCoefficients> primaryQuadMeanDiameterGrowthCoefficients;
+	private final MatrixMap2<String, Integer, Optional<Coefficients>> nonPrimaryQuadMeanDiameterGrowthCoefficients;
 
 	public ForwardResolvedControlMapImpl(Map<String, Object> controlMap) {
 
