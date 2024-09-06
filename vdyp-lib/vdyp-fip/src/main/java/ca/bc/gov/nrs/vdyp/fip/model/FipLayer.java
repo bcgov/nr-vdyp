@@ -7,6 +7,7 @@ import java.util.function.Consumer;
 
 import ca.bc.gov.nrs.vdyp.common.Computed;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypLayer;
+import ca.bc.gov.nrs.vdyp.model.BaseVdypSite;
 import ca.bc.gov.nrs.vdyp.model.InputLayer;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
@@ -57,7 +58,7 @@ public class FipLayer extends SingleSiteLayer<FipSpecies, FipSite> implements In
 
 	@Override
 	public Optional<FipSite> getSite() {
-		return siteWithoutSpecies.or(() -> super.getSite());
+		return siteWithoutSpecies.or(super::getSite);
 	}
 
 	// This is a bit of a hack. The Layer holds on to a site until populated with Species at which point the site is
@@ -88,6 +89,11 @@ public class FipLayer extends SingleSiteLayer<FipSpecies, FipSite> implements In
 	public void setSpecies(Collection<FipSpecies> species) {
 		super.setSpecies(species);
 		applySiteWithoutSpecies();
+	}
+
+	@Override
+	public Optional<String> getPrimaryGenus() {
+		return getSite().map(BaseVdypSite::getSiteGenus);
 	}
 
 	/**

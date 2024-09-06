@@ -139,6 +139,8 @@ class VriAdjustInputWriterTest {
 				builder.polygonIdentifier("082E004    615       1988");
 				builder.layerType(LayerType.PRIMARY);
 
+				builder.primaryGenus("PL");
+
 				builder.addSpecies(specBuilder -> {
 					specBuilder.genus("PL", controlMap);
 					specBuilder.percentGenus(100);
@@ -338,10 +340,13 @@ class VriAdjustInputWriterTest {
 				builder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
 				builder.forestInventoryZone("D");
 				builder.mode(PolygonMode.START);
+
 			});
 
 			var layer = VdypLayer.build(polygon, builder -> {
 				builder.layerType(LayerType.PRIMARY);
+
+				builder.primaryGenus("PL");
 
 				builder.addSpecies(specBuilder -> {
 					specBuilder.genus("PL", controlMap);

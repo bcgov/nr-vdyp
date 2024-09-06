@@ -21,6 +21,7 @@ import ca.bc.gov.nrs.vdyp.model.Sp64Distribution;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
+import ca.bc.gov.nrs.vdyp.model.VdypSite;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.VdypUtilizationHolder;
 
@@ -175,7 +176,6 @@ public class VdypOutputWriter implements Closeable {
 				Stream.generate(() -> new Sp64Distribution(0, "", 0f))
 		).limit(4).toList();
 		// 082E004 615 1988 P 9 L LW 100.0 0.0 0.0 0.0 -9.00 -9.00 -9.0 -9.0 -9.0 0 -9
-		boolean isSiteSpec = layer.getSiteGenus().map(spec.getGenus()::equals).orElse(false);
 		writeFormat(
 				speciesFile, //
 				SPEC_FORMAT, //
@@ -195,14 +195,13 @@ public class VdypOutputWriter implements Closeable {
 				specDistributionEntries.get(3).getGenusAlias(), //
 				specDistributionEntries.get(3).getPercentage(), //
 
-				layer.getSiteIndex().filter(x -> isSiteSpec).orElse(EMPTY_FLOAT), //
-				layer.getHeight().filter(x -> isSiteSpec).orElse(EMPTY_FLOAT), //
-				layer.getAgeTotal().filter(x -> isSiteSpec).orElse(EMPTY_FLOAT), //
-				layer.getBreastHeightAge().filter(x -> isSiteSpec).orElse(EMPTY_FLOAT), //
-				layer.getYearsToBreastHeight().filter(x -> isSiteSpec).orElse(EMPTY_FLOAT), //
-				layer.getSiteGenus().filter(x -> isSiteSpec).map(id -> id.equals(spec.getGenus())).orElse(false) ? 1
-						: 0, //
-				layer.getSiteCurveNumber().filter(x -> isSiteSpec).orElse(EMPTY_INT)
+				spec.getSite().flatMap(VdypSite::getSiteIndex).orElse(EMPTY_FLOAT),
+				spec.getSite().flatMap(VdypSite::getHeight).orElse(EMPTY_FLOAT),
+				spec.getSite().flatMap(VdypSite::getAgeTotal).orElse(EMPTY_FLOAT),
+				spec.getSite().flatMap(VdypSite::getYearsAtBreastHeight).orElse(EMPTY_FLOAT),
+				spec.getSite().flatMap(VdypSite::getYearsToBreastHeight).orElse(EMPTY_FLOAT),
+				layer.getPrimaryGenus().map(spec.getGenus()::equals).orElse(false) ? 1 : 0,
+				spec.getSite().flatMap(VdypSite::getSiteCurveNumber).orElse(EMPTY_INT)
 
 		);
 

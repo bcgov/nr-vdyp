@@ -280,6 +280,7 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 			builder.adapt(fipLayer);
 			builder.inventoryTypeGroup(itg);
 			builder.empiricalRelationshipParameterIndex(empiricalRelationshipParameterIndex);
+			builder.primaryGenus(primarySpecies.get(0).getGenus());
 		});
 
 		var breastHeightAge = fipLayer.getSite()
@@ -466,11 +467,11 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 					// EMP061
 					var limits = estimationMethods.getLimitsForHeightAndDiameter(spec.getGenus(), bec.getRegion());
 
-					var dqMin = limits.minQuadMeanDiameterLoreyHeightRatio()
-							* spec.getLoreyHeightByUtilization().getAll();
+					var dqMin = limits.minQuadMeanDiameterLoreyHeightRatio() * spec.getLoreyHeightByUtilization()
+							.getAll();
 					var dqMax = max(
-							limits.quadMeanDiameterMaximum(),
-							limits.maxQuadMeanDiameterLoreyHeightRatio() * spec.getLoreyHeightByUtilization().getAll()
+							limits.quadMeanDiameterMaximum(), limits.maxQuadMeanDiameterLoreyHeightRatio()
+									* spec.getLoreyHeightByUtilization().getAll()
 					);
 
 					// EMP060
