@@ -120,7 +120,7 @@ public class ForwardProcessingEngine {
 		GROW_7_LAYER_DQ2, //
 		GROW_8_SPECIES_LH, //
 		GROW_9_SPECIES_PCT, //
-		GROW_10_PRIMARY_SPECIES_DETAILS, //
+		GROW_10_STORE_SPECIES_DETAILS, //
 		GROW_11_COMPATIBILITY_VARS, //
 		GROW_12_SPECIES_UC, //
 		GROW_13_SPECIES_UC_SMALL, //
@@ -540,7 +540,7 @@ public class ForwardProcessingEngine {
 		if (ExecutionStep.GROW_9_SPECIES_PCT.eq(lastStepInclusive))
 			return;
 
-		// (10) Update the running values. TODO: why isn't siteIndex being updated?
+		// (10) Update the running values.
 		lps.updatePrimarySpeciesDetailsAfterGrowth(dhEnd);
 
 		for (int i = 1; i < bank.getNSpecies(); i++) {
@@ -568,7 +568,7 @@ public class ForwardProcessingEngine {
 			}
 		}
 
-		if (ExecutionStep.GROW_10_PRIMARY_SPECIES_DETAILS.eq(lastStepInclusive))
+		if (ExecutionStep.GROW_10_STORE_SPECIES_DETAILS.eq(lastStepInclusive))
 			return;
 
 		// (11) update the compatibility variables to reflect the changes during the growth period
