@@ -23,9 +23,9 @@ import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 
-class CalculateLoreyHeightEstimatesTest {
+public class Grow4CalculateLoreyHeightEstimatesTest {
 
-	protected static final Logger logger = LoggerFactory.getLogger(CalculateLoreyHeightEstimatesTest.class);
+	protected static final Logger logger = LoggerFactory.getLogger(Grow4CalculateLoreyHeightEstimatesTest.class);
 
 	protected static ForwardControlParser parser;
 	protected static Map<String, Object> controlMap;
@@ -56,7 +56,7 @@ class CalculateLoreyHeightEstimatesTest {
 		// Select the first polygon - 01002 S000001 00(1970)
 		VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
-		fpe.processPolygon(polygon, ExecutionStep.GROW_5A_LH_EST.predecessor());
+		fpe.processPolygon(polygon, ExecutionStep.GROW_4_LAYER_BA_AND_DQTPH_EST);
 		LayerProcessingState lps = fpe.fps.getLayerProcessingState();
 
 		float dhStart = 35.3f;
@@ -84,7 +84,7 @@ class CalculateLoreyHeightEstimatesTest {
 		// Select the first polygon - 01002 S000001 00(1970)
 		VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
-		fpe.processPolygon(polygon, ExecutionStep.GROW_5A_LH_EST.predecessor());
+		fpe.processPolygon(polygon, ExecutionStep.GROW_4_LAYER_BA_AND_DQTPH_EST);
 		LayerProcessingState lps = fpe.fps.getLayerProcessingState();
 
 		float dhStart = 35.3f;

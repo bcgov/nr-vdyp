@@ -35,9 +35,9 @@ import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 
-class CalculateDominantHeightDeltaTest {
+class Grow1CalculateDominantHeightDeltaTest {
 
-	protected static final Logger logger = LoggerFactory.getLogger(CalculateDominantHeightDeltaTest.class);
+	protected static final Logger logger = LoggerFactory.getLogger(Grow1CalculateDominantHeightDeltaTest.class);
 
 	protected static ForwardControlParser parser;
 	protected static Map<String, Object> controlMap;
