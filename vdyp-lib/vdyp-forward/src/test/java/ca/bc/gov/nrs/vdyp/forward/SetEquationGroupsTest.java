@@ -16,13 +16,13 @@ public class SetEquationGroupsTest extends AbstractForwardProcessingEngineTest {
 
 	@Test
 	void testSetEquationGroups() throws ResourceParseException, IOException, ProcessingException {
-	
+
 		var reader = new ForwardDataStreamReader(controlMap);
 		var polygon = reader.readNextPolygon().get();
-	
+
 		ForwardProcessingState fps = new ForwardProcessingState(controlMap);
 		fps.setPolygonLayer(polygon, LayerType.PRIMARY);
-	
+
 		assertThat(
 				fps.getLayerProcessingState().getVolumeEquationGroups(),
 				Matchers.is(new int[] { VdypEntity.MISSING_INTEGER_VALUE, 12, 20, 25, 37, 66 })

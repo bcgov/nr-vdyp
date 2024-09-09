@@ -22,23 +22,23 @@ public class FindInventoryTypeGroupsTest {
 	static int findInventoryTypeGroup(
 			String primaryGenus, Optional<String> optionalSecondaryGenus, float primaryPercentage
 	) throws ProcessingException {
-	
+
 		if (primaryPercentage > 79.999 /* Copied from VDYP7 */) {
-	
+
 			Integer recordedInventoryTypeGroup = CommonData.ITG_PURE.get(primaryGenus);
 			if (recordedInventoryTypeGroup == null) {
 				throw new ProcessingException("Unrecognized primary species: " + primaryGenus);
 			}
-	
+
 			return recordedInventoryTypeGroup;
 		}
-	
+
 		String secondaryGenus = optionalSecondaryGenus.isPresent() ? optionalSecondaryGenus.get() : "";
-	
+
 		if (primaryGenus.equals(secondaryGenus)) {
 			throw new IllegalArgumentException("The primary and secondary genera are the same");
 		}
-	
+
 		switch (primaryGenus) {
 		case "F":
 			switch (secondaryGenus) {

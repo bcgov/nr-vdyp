@@ -74,8 +74,8 @@ class PreliminaryForwardProcessingEngineStepsTest extends AbstractForwardProcess
 	/** CALCULATE_COVERAGES */
 	void testFindPrimarySpecies() throws IOException, ResourceParseException, ProcessingException {
 
-		 // This tests ExecutionStep.CALCULATE_COVERAGES, but that code is stand-alone and can be
-		 // tested independently.
+		// This tests ExecutionStep.CALCULATE_COVERAGES, but that code is stand-alone and can be
+		// tested independently.
 
 		var polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
@@ -122,7 +122,8 @@ class PreliminaryForwardProcessingEngineStepsTest extends AbstractForwardProcess
 		// We want the
 		// "equationModifierGroup.isPresent()"
 		// and the
-		// " Region.INTERIOR.equals(lps.wallet.getBecZone().getRegion()) && exceptedSpeciesIndicies.contains(primarySpeciesIndex)"
+		// " Region.INTERIOR.equals(lps.wallet.getBecZone().getRegion()) &&
+		// exceptedSpeciesIndicies.contains(primarySpeciesIndex)"
 		// cases in determinePolygonRankings.
 
 		buildPolygonParserForStream(
@@ -262,7 +263,7 @@ class PreliminaryForwardProcessingEngineStepsTest extends AbstractForwardProcess
 	}
 
 	@Test
-	/** ESTIMATE_MISSING_SITE_INDICES, step 2*/
+	/** ESTIMATE_MISSING_SITE_INDICES, step 2 */
 	void testEstimateMissingSiteIndicesStep2() throws ProcessingException, IOException, ResourceParseException,
 			CurveErrorException, SpeciesErrorException, NoAnswerException {
 
@@ -405,7 +406,7 @@ class PreliminaryForwardProcessingEngineStepsTest extends AbstractForwardProcess
 		assertThat(fpe.fps.getLayerProcessingState().getPrimarySpeciesAgeAtBreastHeight(), is(Float.NaN));
 		assertThat(fpe.fps.getLayerProcessingState().getPrimarySpeciesAgeToBreastHeight(), is(4.7f));
 	}
-	
+
 	@Test
 	/** SET_COMPATIBILITY_VARIABLES */
 	void testSetCompatibilityVariables() throws ResourceParseException, IOException, ProcessingException {
