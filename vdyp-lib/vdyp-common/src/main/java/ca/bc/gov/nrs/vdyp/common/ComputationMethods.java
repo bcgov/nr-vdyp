@@ -66,14 +66,6 @@ public class ComputationMethods {
 				.filter(x -> !x.getName().contains("Volume")).toList();
 	}
 
-	private final static UtilizationVector quadMeanDiameterLowerBounds = new UtilizationVector(
-			0f, 0f, 7.5f, 12.5f, 17.5f, 22.5f
-	);
-
-	private final static UtilizationVector quadMeanDiameterUpperBounds = new UtilizationVector(
-			0f, 0f, 12.5f, 17.5f, 22.5f, 10000f
-	);
-
 	private final EstimationMethods estimationMethods;
 
 	private final VdypApplicationIdentifier context;
@@ -172,12 +164,7 @@ public class ComputationMethods {
 
 					float newDqValue = quadMeanDiameterUtil.get(uc)
 							+ spec.getCvQuadraticMeanDiameter(uc, spec.getLayerType());
-					quadMeanDiameterUtil.set(
-							uc,
-							FloatMath.clamp(
-									newDqValue, quadMeanDiameterLowerBounds.get(uc), quadMeanDiameterUpperBounds.get(uc)
-							)
-					);
+					quadMeanDiameterUtil.set(uc, FloatMath.clamp(newDqValue, uc.lowBound, uc.highBound));
 				}
 
 				if (basalAreaSumForSpecies > 0.0f) {

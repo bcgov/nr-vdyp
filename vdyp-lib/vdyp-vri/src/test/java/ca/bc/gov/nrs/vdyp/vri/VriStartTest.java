@@ -102,9 +102,9 @@ class VriStartTest {
 	ByteArrayOutputStream utilOut;
 
 	private MockFileResolver dummyInput() {
-		controlMap.put(ControlKey.VRI_OUTPUT_VDYP_POLYGON.name(), "DUMMY1");
-		controlMap.put(ControlKey.VRI_OUTPUT_VDYP_LAYER_BY_SPECIES.name(), "DUMMY2");
-		controlMap.put(ControlKey.VRI_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name(), "DUMMY3");
+		controlMap.put(ControlKey.VDYP_OUTPUT_VDYP_POLYGON.name(), "DUMMY1");
+		controlMap.put(ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SPECIES.name(), "DUMMY2");
+		controlMap.put(ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name(), "DUMMY3");
 		TestUtils.populateControlMapGenusReal(controlMap);
 
 		MockFileResolver resolver = new MockFileResolver("Test");
@@ -2081,7 +2081,7 @@ class VriStartTest {
 			assertThat(resultLayer, hasProperty("breastHeightAge", present(closeTo(15))));
 			assertThat(resultLayer, hasProperty("yearsToBreastHeight", present(closeTo(9))));
 
-			assertThat(resultLayer, hasProperty("siteGenus", present(is("F"))));
+			assertThat(resultLayer, hasProperty("primaryGenus", present(is("F"))));
 
 			assertThat(resultLayer, hasProperty("height", present(closeTo(7.6f))));
 			assertThat(resultLayer, hasProperty("inventoryTypeGroup", present(is(3))));
@@ -2338,7 +2338,7 @@ class VriStartTest {
 			assertThat(primaryLayer, hasProperty("breastHeightAge", present(closeTo(89.1f))));
 			assertThat(primaryLayer, hasProperty("yearsToBreastHeight", present(closeTo(10.9f))));
 
-			assertThat(primaryLayer, hasProperty("siteGenus", present(is("C"))));
+			assertThat(primaryLayer, hasProperty("primaryGenus", present(is("C"))));
 
 			assertThat(primaryLayer, hasProperty("height", present(closeTo(20f))));
 			assertThat(primaryLayer, hasProperty("inventoryTypeGroup", present(is(14))));
@@ -2418,7 +2418,7 @@ class VriStartTest {
 			assertThat(veteranLayer, hasProperty("breastHeightAge", present(closeTo(190.3f))));
 			assertThat(veteranLayer, hasProperty("yearsToBreastHeight", present(closeTo(9.7f))));
 
-			assertThat(veteranLayer, hasProperty("siteGenus", present(is("H"))));
+			assertThat(veteranLayer, hasProperty("primaryGenus", present(is("H"))));
 
 			assertThat(veteranLayer, hasProperty("height", present(closeTo(34f))));
 			assertThat(veteranLayer, hasProperty("inventoryTypeGroup", present(is(14)))); // ?

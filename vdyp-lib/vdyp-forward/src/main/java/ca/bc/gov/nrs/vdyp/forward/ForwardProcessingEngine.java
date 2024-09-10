@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.application.ProcessingException;
+import ca.bc.gov.nrs.vdyp.application.RuntimeProcessingException;
 import ca.bc.gov.nrs.vdyp.application.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.EstimationMethods;
@@ -968,8 +969,8 @@ public class ForwardProcessingEngine {
 	}
 
 	/**
-	 * Calculate the overall per-species basal area, trees-per-hectare and quad-mean-diameter growth during the growth
-	 * period. The result is stored in <code>end</code>, Utilization Class ALL.
+	 * GRSPBT - Calculate the overall per-species basal area, trees-per-hectare and quad-mean-diameter growth during the
+	 * growth period. The result is stored in <code>end</code>, Utilization Class ALL.
 	 *
 	 * @param baStart  per-layer basal area at start of growth period
 	 * @param baDelta  per-layer change in basal area during growth period
@@ -1125,7 +1126,10 @@ public class ForwardProcessingEngine {
 						totalBasalAreaSkipped += bank.basalAreas[i][UC_ALL_INDEX];
 					}
 
-					float spDqMinimum = Math.max(7.6f, csl.minQuadMeanDiameterLoreyHeightRatio() * spLhAllStart);
+					float spDqMinimum = Math.max(
+							UtilizationClass.U75TO125.lowBound + 1.0f,
+							csl.minQuadMeanDiameterLoreyHeightRatio() * spLhAllStart
+					);
 
 					if (spDqStart + spDqDelta < spDqMinimum) {
 						spDqDelta = spDqMinimum - spDqStart;
@@ -1298,7 +1302,7 @@ public class ForwardProcessingEngine {
 		float a1 = mc.getCoe(2);
 		float a2 = mc.getCoe(3);
 
-		final float dqBase = 7.45f;
+		final float dqBase = UtilizationClass.U75TO125.lowBound - 0.05f;
 
 		float dqRateStart = (spDqStart - dqBase) / (dqStart - dqBase);
 		float logDqRateStart = FloatMath.log(dqRateStart);
@@ -1306,8 +1310,8 @@ public class ForwardProcessingEngine {
 		float dqRateEnd = FloatMath.exp(logDqRateStart + logDqRateDelta);
 
 		float spDqEnd = dqRateEnd * (dqStart + dqDelta - dqBase) + dqBase;
-		if (spDqEnd < 7.51f) {
-			spDqEnd = 7.51f;
+		if (spDqEnd < UtilizationClass.U75TO125.lowBound + 0.01f) {
+			spDqEnd = UtilizationClass.U75TO125.lowBound + 0.01f;
 		}
 
 		float spDqDelta = spDqEnd - spDqStart;
@@ -1503,11 +1507,8 @@ public class ForwardProcessingEngine {
 					spBaSmall = 0.0f;
 				}
 				spDqSmall += lps.getCVSmall(speciesIndex, UtilizationClassVariable.QUAD_MEAN_DIAMETER);
-				if (spDqSmall < 4.01f) {
-					spDqSmall = 4.01f;
-				} else if (spDqSmall > 7.49) {
-					spDqSmall = 7.49f;
-				}
+				FloatMath.clamp(spDqSmall, 4.01f, 7.49f);
+
 				spLhSmall = 1.3f * (spLhSmall - 1.3f)
 						* FloatMath.exp(lps.getCVSmall(speciesIndex, UtilizationClassVariable.LOREY_HEIGHT));
 
@@ -2343,7 +2344,7 @@ public class ForwardProcessingEngine {
 					break;
 				}
 				default:
-					throw new LambdaProcessingException(
+					throw new RuntimeProcessingException(
 							new ProcessingException(
 									MessageFormat
 											.format("Invalid value for control variable 4: {0}", controlVariable4Value)
@@ -2355,10 +2356,10 @@ public class ForwardProcessingEngine {
 					o.setPolygonYear(currentYear);
 					o.writePolygonWithSpeciesAndUtilization(polygon);
 				} catch (IOException e) {
-					throw new LambdaProcessingException(new ProcessingException(e));
+					throw new RuntimeProcessingException(new ProcessingException(e));
 				}
 			});
-		} catch (LambdaProcessingException e) {
+		} catch (RuntimeProcessingException e) {
 			throw e.getCause();
 		}
 	}
@@ -3289,11 +3290,7 @@ public class ForwardProcessingEngine {
 			int defaultEquationGroup = fps.fcm.getDefaultEquationGroup().get(primarySpeciesName, becZoneAlias);
 			Optional<Integer> equationModifierGroup = fps.fcm.getEquationModifierGroup()
 					.get(defaultEquationGroup, inventoryTypeGroup);
-			if (equationModifierGroup.isPresent()) {
-				basalAreaGroup1 = equationModifierGroup.get();
-			} else {
-				basalAreaGroup1 = defaultEquationGroup;
-			}
+			basalAreaGroup1 = equationModifierGroup.orElse(defaultEquationGroup);
 
 			int primarySpeciesIndex = bank.speciesIndices[highestPercentageIndex];
 			int basalAreaGroup3 = defaultEquationGroups[primarySpeciesIndex];

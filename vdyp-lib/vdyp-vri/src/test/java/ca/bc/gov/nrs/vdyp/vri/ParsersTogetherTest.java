@@ -55,9 +55,9 @@ class ParsersTogetherTest {
 
 	@BeforeEach
 	void setUp() throws IOException, ResourceParseException {
-		controlMap.put(ControlKey.VRI_OUTPUT_VDYP_POLYGON.name(), "DUMMY1");
-		controlMap.put(ControlKey.VRI_OUTPUT_VDYP_LAYER_BY_SPECIES.name(), "DUMMY2");
-		controlMap.put(ControlKey.VRI_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name(), "DUMMY3");
+		controlMap.put(ControlKey.VDYP_OUTPUT_VDYP_POLYGON.name(), "DUMMY1");
+		controlMap.put(ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SPECIES.name(), "DUMMY2");
+		controlMap.put(ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name(), "DUMMY3");
 
 		resolver = new MockFileResolver("Test");
 
@@ -530,7 +530,7 @@ class ParsersTogetherTest {
 		assertThat(result, hasProperty("layers", Matchers.aMapWithSize(1)));
 		var primaryResult = result.getLayers().get(LayerType.PRIMARY);
 		var veteranResult = result.getLayers().get(LayerType.VETERAN);
-		assertThat(primaryResult, allOf(hasProperty("empericalRelationshipParameterIndex", present(is(27)))));
+		assertThat(primaryResult, allOf(hasProperty("empiricalRelationshipParameterIndex", present(is(27)))));
 		assertThat(veteranResult, nullValue());
 
 		app.close();

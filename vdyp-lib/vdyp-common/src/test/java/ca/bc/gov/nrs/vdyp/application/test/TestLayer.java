@@ -12,18 +12,25 @@ import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
 public class TestLayer extends BaseVdypLayer<TestSpecies, TestSite> implements InputLayer {
 
 	final float crownClosure;
+	final Optional<String> primarySp0;
 
 	protected TestLayer(
 			PolygonIdentifier polygonIdentifier, LayerType layerType, Optional<Integer> inventoryTypeGroup,
-			float crownClosure
+			float crownClosure, Optional<String> primarySp0
 	) {
 		super(polygonIdentifier, layerType, inventoryTypeGroup);
 		this.crownClosure = crownClosure;
+		this.primarySp0 = primarySp0;
 	}
 
 	@Override
 	public float getCrownClosure() {
 		return crownClosure;
+	}
+
+	@Override
+	public Optional<String> getPrimaryGenus() {
+		return primarySp0;
 	}
 
 	public static TestLayer build(Consumer<TestLayer.Builder> config) {
@@ -42,6 +49,13 @@ public class TestLayer extends BaseVdypLayer<TestSpecies, TestSite> implements I
 			return this;
 		}
 
+		protected Optional<String> primarySp0 = Optional.empty();
+
+		public TestLayer.Builder primaryGenus(String primarySp0) {
+			this.primarySp0 = Optional.of(primarySp0);
+			return this;
+		}
+
 		@Override
 		protected void check(Collection<String> errors) {
 			super.check(errors);
@@ -55,7 +69,8 @@ public class TestLayer extends BaseVdypLayer<TestSpecies, TestSite> implements I
 					polygonIdentifier.get(), //
 					layerType.get(), //
 					inventoryTypeGroup, //
-					crownClosure.get() //
+					crownClosure.get(), //
+					primarySp0
 			));
 		}
 

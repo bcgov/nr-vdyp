@@ -111,9 +111,9 @@ class VdypStartApplicationTest {
 	}
 
 	private MockFileResolver dummyIo() {
-		controlMap.put(ControlKey.VRI_OUTPUT_VDYP_POLYGON.name(), "DUMMY1");
-		controlMap.put(ControlKey.VRI_OUTPUT_VDYP_LAYER_BY_SPECIES.name(), "DUMMY2");
-		controlMap.put(ControlKey.VRI_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name(), "DUMMY3");
+		controlMap.put(ControlKey.VDYP_OUTPUT_VDYP_POLYGON.name(), "DUMMY1");
+		controlMap.put(ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SPECIES.name(), "DUMMY2");
+		controlMap.put(ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name(), "DUMMY3");
 
 		MockFileResolver resolver = new MockFileResolver("Test");
 		resolver.addStream("DUMMY1", (OutputStream) new ByteArrayOutputStream());
@@ -1208,6 +1208,9 @@ class VdypStartApplicationTest {
 				var layer = VdypLayer.build(lb -> {
 					lb.polygonIdentifier("Test", 2024);
 					lb.layerType(LayerType.PRIMARY);
+
+					lb.primaryGenus("H");
+
 					lb.addSpecies(sb -> {
 						sb.genus("B", controlMap);
 						sb.percentGenus(20f);
@@ -1344,6 +1347,7 @@ class VdypStartApplicationTest {
 					lb.polygonIdentifier("Test", 2024);
 					lb.layerType(LayerType.VETERAN);
 					lb.inventoryTypeGroup(14);
+					lb.primaryGenus("H");
 					lb.addSpecies(sb -> {
 						sb.genus("B", controlMap);
 						sb.percentGenus(20f);
@@ -1447,7 +1451,7 @@ class VdypStartApplicationTest {
 				assertThat(layer, hasProperty("breastHeightAge", present(closeTo(190.3f))));
 				assertThat(layer, hasProperty("yearsToBreastHeight", present(closeTo(9.7f))));
 
-				assertThat(layer, hasProperty("siteGenus", present(is("H"))));
+				assertThat(layer, hasProperty("primaryGenus", present(is("H"))));
 
 				assertThat(layer, hasProperty("height", present(closeTo(34f))));
 				assertThat(layer, hasProperty("inventoryTypeGroup", present(is(14)))); // ?
@@ -1623,6 +1627,7 @@ class VdypStartApplicationTest {
 			var layer = VdypLayer.build(builder -> {
 				builder.polygonIdentifier("Test", 2024);
 				builder.layerType(LayerType.PRIMARY);
+				builder.primaryGenus("PL");
 			});
 
 			layer.getLoreyHeightByUtilization().setAll(13.0660105f);

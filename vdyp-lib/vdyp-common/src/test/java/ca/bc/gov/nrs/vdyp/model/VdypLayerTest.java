@@ -34,6 +34,8 @@ class VdypLayerTest {
 			builder.polygonIdentifier("Test", 2024);
 			builder.layerType(LayerType.PRIMARY);
 
+			builder.primaryGenus("PL");
+
 			builder.addSpecies(specBuilder -> {
 				specBuilder.genus("PL", 12);
 				specBuilder.percentGenus(100);
@@ -80,6 +82,9 @@ class VdypLayerTest {
 
 		var result = VdypLayer.build(poly, builder -> {
 			builder.layerType(LayerType.PRIMARY);
+
+			builder.primaryGenus("PL");
+
 			builder.addSpecies(specBuilder -> {
 				specBuilder.genus("PL", 12);
 				specBuilder.percentGenus(100);
@@ -187,6 +192,7 @@ class VdypLayerTest {
 		EasyMock.expect(speciesToCopy.getSp64DistributionSet()).andStubReturn(
 				new Sp64DistributionSet(List.of(new Sp64Distribution(1, "BL", 75f), new Sp64Distribution(2, "BX", 25f)))
 		);
+		EasyMock.expect(toCopy.getPrimaryGenus()).andStubReturn(Optional.of("B"));
 
 		control.replay();
 
@@ -201,6 +207,7 @@ class VdypLayerTest {
 
 		});
 		assertThat(result, hasProperty("species", hasEntry(is("B"), hasProperty("genus", is("B")))));
+		assertThat(result, hasProperty("primaryGenus", present(is("B"))));
 		var resultSpecies = result.getSpecies().get("B");
 		assertThat(resultSpecies, hasProperty("polygonIdentifier", isPolyId("Test", 2024)));
 		assertThat(resultSpecies, hasProperty("layerType", is(LayerType.PRIMARY)));

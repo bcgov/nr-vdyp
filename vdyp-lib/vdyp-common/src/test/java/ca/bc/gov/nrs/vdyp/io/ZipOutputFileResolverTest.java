@@ -15,8 +15,12 @@ import java.util.zip.ZipFile;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 public class ZipOutputFileResolverTest {
+
+	@TempDir
+	Path outputLocation;
 
 	@Test
 	void testZipOutputFileResolver() throws IOException {
@@ -34,48 +38,44 @@ public class ZipOutputFileResolverTest {
 			os.write(String.format("%d", i).getBytes());
 		}
 
-		Path zipFileFromFile = Files.createTempFile(this.getClass().getName(), ".zip");
-		Path zipFileFromStream = Files.createTempFile(this.getClass().getName(), "-from-stream.zip");
-		try {
-			resolver.generate(zipFileFromFile);
+		Path zipFileFromFile = outputLocation.resolve(this.getClass().getSimpleName() + ".zip");
+		Path zipFileFromStream = outputLocation.resolve(this.getClass().getSimpleName() + "-from-stream.zip");
 
-			System.out.println("Output zip file written to " + zipFileFromFile.toString());
+		resolver.generate(zipFileFromFile);
 
-			try (ZipFile zip = new ZipFile(zipFileFromFile.toFile())) {
-				var entries = zip.entries();
+		System.out.println("Output zip file written to " + zipFileFromFile.toString());
 
-				byte[] buffer = new byte[16];
-				while (entries.hasMoreElements()) {
-					ZipEntry e = entries.nextElement();
+		try (ZipFile zip = new ZipFile(zipFileFromFile.toFile())) {
+			var entries = zip.entries();
 
-					InputStream is = zip.getInputStream(e);
-					int nBytesRead = is.read(buffer, 0, 10);
-					assertTrue(nBytesRead == 1);
-					String fileNumber = e.getName().substring(e.getName().length() - 1, e.getName().length());
-					assertTrue(new String(Arrays.copyOf(buffer, nBytesRead)).equals(fileNumber));
-				}
+			byte[] buffer = new byte[16];
+			while (entries.hasMoreElements()) {
+				ZipEntry e = entries.nextElement();
+
+				InputStream is = zip.getInputStream(e);
+				int nBytesRead = is.read(buffer, 0, 10);
+				assertTrue(nBytesRead == 1);
+				String fileNumber = e.getName().substring(e.getName().length() - 1, e.getName().length());
+				assertTrue(new String(Arrays.copyOf(buffer, nBytesRead)).equals(fileNumber));
 			}
+		}
 
-			InputStream zipByteStream = resolver.generateStream();
-			Files.write(zipFileFromStream, zipByteStream.readAllBytes());
+		InputStream zipByteStream = resolver.generateStream();
+		Files.write(zipFileFromStream, zipByteStream.readAllBytes());
 
-			try (ZipFile zip = new ZipFile(zipFileFromStream.toFile())) {
-				var entries = zip.entries();
+		try (ZipFile zip = new ZipFile(zipFileFromStream.toFile())) {
+			var entries = zip.entries();
 
-				byte[] buffer = new byte[16];
-				while (entries.hasMoreElements()) {
-					ZipEntry e = entries.nextElement();
+			byte[] buffer = new byte[16];
+			while (entries.hasMoreElements()) {
+				ZipEntry e = entries.nextElement();
 
-					InputStream is = zip.getInputStream(e);
-					int nBytesRead = is.read(buffer, 0, 10);
-					assertTrue(nBytesRead == 1);
-					String fileNumber = e.getName().substring(e.getName().length() - 1, e.getName().length());
-					assertTrue(new String(Arrays.copyOf(buffer, nBytesRead)).equals(fileNumber));
-				}
+				InputStream is = zip.getInputStream(e);
+				int nBytesRead = is.read(buffer, 0, 10);
+				assertTrue(nBytesRead == 1);
+				String fileNumber = e.getName().substring(e.getName().length() - 1, e.getName().length());
+				assertTrue(new String(Arrays.copyOf(buffer, nBytesRead)).equals(fileNumber));
 			}
-		} finally {
-			Files.delete(zipFileFromFile);
-			Files.delete(zipFileFromStream);
 		}
 	}
 }

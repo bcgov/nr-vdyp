@@ -20,6 +20,7 @@ import java.util.Set;
 import java.util.zip.ZipFile;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +36,9 @@ class ForwardProcessorTest {
 
 	private static Set<ForwardPass> vdypPassSet = new HashSet<>(Arrays.asList(PASS_1, PASS_2, PASS_3, PASS_4, PASS_5));
 
+	@TempDir
+	Path outputFilesLocation;
+
 	@Test
 	void test() throws IOException, ResourceParseException, ProcessingException {
 
@@ -49,47 +53,39 @@ class ForwardProcessorTest {
 		Path resourceDirectory = Paths.get("src", "test", "resources", "output");
 		Files.createDirectories(resourceDirectory);
 
-		Path zipFilePath = Paths.get(resourceDirectory.toString(), this.getClass().getSimpleName() + ".zip");
-		Files.deleteIfExists(zipFilePath);
+		Path zipFilePath = outputFilesLocation.resolve(this.getClass().getSimpleName() + ".zip");
+		Path zipFileFromStreamPath = outputFilesLocation.resolve(this.getClass().getSimpleName() + "-fromtream.zip");
 
-		Path zipFileFromStreamPath = Paths
-				.get(resourceDirectory.toString(), this.getClass().getSimpleName() + "FromStream.zip");
+		System.out.println("Writing output to " + outputFilesLocation.toString());
 
-		try {
-			outputResolver.generate(zipFilePath);
-			byte[] zipFileBytes = Files.readAllBytes(zipFilePath);
+		outputResolver.generate(zipFilePath);
+		byte[] zipFileBytes = Files.readAllBytes(zipFilePath);
 
-			InputStream is = outputResolver.generateStream();
-			byte[] zipStreamBytes = is.readAllBytes();
-			Files.write(zipFileFromStreamPath, zipStreamBytes);
+		InputStream is = outputResolver.generateStream();
+		byte[] zipStreamBytes = is.readAllBytes();
+		Files.write(zipFileFromStreamPath, zipStreamBytes);
 
-			assertTrue(zipFileBytes.length == zipStreamBytes.length);
+		assertTrue(zipFileBytes.length == zipStreamBytes.length);
 
-			try (ZipFile zipFileFromStream = new ZipFile(zipFileFromStreamPath.toFile())) {
-				try (ZipFile zipFileFromFile = new ZipFile(zipFilePath.toFile())) {
+		try (ZipFile zipFileFromStream = new ZipFile(zipFileFromStreamPath.toFile())) {
+			try (ZipFile zipFileFromFile = new ZipFile(zipFilePath.toFile())) {
 
-					var streamEntries = zipFileFromStream.entries().asIterator();
-					var fileEntries = zipFileFromFile.entries().asIterator();
+				var streamEntries = zipFileFromStream.entries().asIterator();
+				var fileEntries = zipFileFromFile.entries().asIterator();
 
-					while (streamEntries.hasNext()) {
-						assertTrue(fileEntries.hasNext());
+				while (streamEntries.hasNext()) {
+					assertTrue(fileEntries.hasNext());
 
-						var streamEntry = streamEntries.next();
-						var fileEntry = fileEntries.next();
+					var streamEntry = streamEntries.next();
+					var fileEntry = fileEntries.next();
 
-						logger.info(
-								"Saw file entry {} and stream entry {}", fileEntry.getName(), streamEntry.getName()
-						);
-						assertTrue(streamEntry.hashCode() == fileEntry.hashCode());
-						assertTrue(streamEntry.getName().equals(fileEntry.getName()));
-					}
-
-					assertFalse(fileEntries.hasNext());
+					logger.info("Saw file entry {} and stream entry {}", fileEntry.getName(), streamEntry.getName());
+					assertTrue(streamEntry.hashCode() == fileEntry.hashCode());
+					assertTrue(streamEntry.getName().equals(fileEntry.getName()));
 				}
+
+				assertFalse(fileEntries.hasNext());
 			}
-		} finally {
-			Files.delete(zipFilePath);
-			Files.delete(zipFileFromStreamPath);
 		}
 	}
 }

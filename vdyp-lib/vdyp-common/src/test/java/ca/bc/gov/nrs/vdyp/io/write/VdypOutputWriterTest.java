@@ -23,7 +23,7 @@ import ca.bc.gov.nrs.vdyp.test.TestUtils;
 import ca.bc.gov.nrs.vdyp.test.TestUtils.MockOutputStream;
 import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
 
-class VriAdjustInputWriterTest {
+class VdypOutputWriterTest {
 
 	MockOutputStream polyStream;
 	MockOutputStream specStream;
@@ -43,21 +43,20 @@ class VriAdjustInputWriterTest {
 		specStream = new TestUtils.MockOutputStream("species");
 		utilStream = new TestUtils.MockOutputStream("utilization");
 
-		controlMap.put(ControlKey.VRI_OUTPUT_VDYP_POLYGON.name(), "testPolygonFile");
-		controlMap.put(ControlKey.VRI_OUTPUT_VDYP_LAYER_BY_SPECIES.name(), "testSpeciesFile");
-		controlMap.put(ControlKey.VRI_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name(), "testUtilizationFile");
+		controlMap.put(ControlKey.VDYP_OUTPUT_VDYP_POLYGON.name(), "testPolygonFile");
+		controlMap.put(ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SPECIES.name(), "testSpeciesFile");
+		controlMap.put(ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name(), "testUtilizationFile");
 
 		fileResolver = new MockFileResolver("TEST");
 		fileResolver.addStream("testPolygonFile", polyStream);
 		fileResolver.addStream("testSpeciesFile", specStream);
 		fileResolver.addStream("testUtilizationFile", utilStream);
-
 	}
 
 	@Test
 	void testClosesGivenStreams() throws IOException {
 
-		var unit = new VriAdjustInputWriter(polyStream, specStream, utilStream, controlMap);
+		var unit = new VdypOutputWriter(polyStream, specStream, utilStream);
 
 		unit.close();
 
@@ -73,7 +72,7 @@ class VriAdjustInputWriterTest {
 	@Test
 	void testClosesOpenedStreams() throws IOException {
 
-		var unit = new VriAdjustInputWriter(controlMap, fileResolver);
+		var unit = new VdypOutputWriter(controlMap, fileResolver);
 
 		unit.close();
 
@@ -88,7 +87,7 @@ class VriAdjustInputWriterTest {
 
 	@Test
 	void testWritePolygon() throws IOException {
-		try (var unit = new VriAdjustInputWriter(controlMap, fileResolver);) {
+		try (var unit = new VdypOutputWriter(controlMap, fileResolver);) {
 
 			VdypPolygon polygon = VdypPolygon.build(builder -> {
 
@@ -120,7 +119,7 @@ class VriAdjustInputWriterTest {
 			});
 
 			// FIXME Add to builder
-			layer.setEmpericalRelationshipParameterIndex(Optional.of(119));
+			layer.setEmpiricalRelationshipParameterIndex(Optional.of(119));
 			layer.setInventoryTypeGroup(Optional.of(28));
 
 			unit.writePolygon(polygon);
@@ -133,11 +132,13 @@ class VriAdjustInputWriterTest {
 
 	@Test
 	void testWriteSpecies() throws IOException {
-		try (var unit = new VriAdjustInputWriter(controlMap, fileResolver);) {
+		try (var unit = new VdypOutputWriter(controlMap, fileResolver);) {
 
 			var layer = VdypLayer.build(builder -> {
 				builder.polygonIdentifier("082E004    615       1988");
 				builder.layerType(LayerType.PRIMARY);
+
+				builder.primaryGenus("PL");
 
 				builder.addSpecies(specBuilder -> {
 					specBuilder.genus("PL", controlMap);
@@ -170,7 +171,7 @@ class VriAdjustInputWriterTest {
 
 	@Test
 	void testWriteUtilizationForLayer() throws IOException {
-		try (var unit = new VriAdjustInputWriter(controlMap, fileResolver);) {
+		try (var unit = new VdypOutputWriter(controlMap, fileResolver);) {
 
 			var layer = VdypLayer.build(builder -> {
 				builder.polygonIdentifier("082E004    615       1988");
@@ -250,7 +251,7 @@ class VriAdjustInputWriterTest {
 
 	@Test
 	void testWriteUtilizationZeroBaseArea() throws IOException {
-		try (var unit = new VriAdjustInputWriter(controlMap, fileResolver);) {
+		try (var unit = new VdypOutputWriter(controlMap, fileResolver);) {
 
 			var layer = VdypLayer.build(builder -> {
 				builder.polygonIdentifier("082E004    615       1988");
@@ -329,7 +330,7 @@ class VriAdjustInputWriterTest {
 
 	@Test
 	void testWritePolygonWithChildren() throws IOException {
-		try (var unit = new VriAdjustInputWriter(controlMap, fileResolver)) {
+		try (var unit = new VdypOutputWriter(controlMap, fileResolver)) {
 
 			VdypPolygon polygon = VdypPolygon.build(builder -> {
 
@@ -338,10 +339,13 @@ class VriAdjustInputWriterTest {
 				builder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
 				builder.forestInventoryZone("D");
 				builder.mode(PolygonMode.START);
+
 			});
 
 			var layer = VdypLayer.build(polygon, builder -> {
 				builder.layerType(LayerType.PRIMARY);
+
+				builder.primaryGenus("PL");
 
 				builder.addSpecies(specBuilder -> {
 					specBuilder.genus("PL", controlMap);
@@ -364,7 +368,7 @@ class VriAdjustInputWriterTest {
 			var species = layer.getSpecies().get("PL");
 
 			// fixme add to builder
-			layer.setEmpericalRelationshipParameterIndex(Optional.of(119));
+			layer.setEmpiricalRelationshipParameterIndex(Optional.of(119));
 			layer.setInventoryTypeGroup(Optional.of(28));
 
 			layer.setBaseAreaByUtilization(

@@ -48,7 +48,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.control.BaseControlParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
-import ca.bc.gov.nrs.vdyp.io.write.VriAdjustInputWriter;
+import ca.bc.gov.nrs.vdyp.io.write.VdypOutputWriter;
 import ca.bc.gov.nrs.vdyp.math.FloatMath;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypLayer;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypPolygon;
@@ -165,7 +165,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 				.filter(x -> !x.getName().contains("Volume")).toList();
 	}
 
-	protected VriAdjustInputWriter vriWriter;
+	protected VdypOutputWriter vriWriter;
 
 	protected Map<String, Object> controlMap = new HashMap<>();
 
@@ -227,7 +227,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 		setControlMap(controlMap);
 		closeVriWriter();
-		vriWriter = new VriAdjustInputWriter(controlMap, resolver);
+		vriWriter = new VdypOutputWriter(controlMap, resolver);
 	}
 
 	protected abstract BaseControlParser getControlFileParser();
@@ -508,7 +508,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		return group;
 	}
 
-	protected VriAdjustInputWriter getVriWriter() {
+	protected VdypOutputWriter getVriWriter() {
 		return vriWriter;
 	}
 
