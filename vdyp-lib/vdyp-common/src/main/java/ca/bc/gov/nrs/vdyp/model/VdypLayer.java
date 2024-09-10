@@ -161,8 +161,8 @@ public class VdypLayer extends BaseVdypLayer<VdypSpecies, VdypSite> implements V
 		return empiricalRelationshipParameterIndex;
 	}
 
-	public void setEmpericalRelationshipParameterIndex(Optional<Integer> empericalRelationshipParameterIndex) {
-		this.empiricalRelationshipParameterIndex = empericalRelationshipParameterIndex;
+	public void setEmpiricalRelationshipParameterIndex(Optional<Integer> empiricalRelationshipParameterIndex) {
+		this.empiricalRelationshipParameterIndex = empiricalRelationshipParameterIndex;
 	}
 
 	@Override
@@ -410,6 +410,5 @@ public class VdypLayer extends BaseVdypLayer<VdypSpecies, VdypSite> implements V
 			this.primaryGenus(toCopy.getPrimaryGenus());
 			return super.copySpecies(toCopy, config);
 		}
-
 	}
 }

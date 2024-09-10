@@ -527,7 +527,8 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 				int i = 0;
 				for (var spec : result.getSpecies().values()) {
 					float dqBase = (float) quadMeanDiameterBase[i++];
-					float dq = 7.5f + (dqBase - 7.5f) * exp((float) rootVec.getEntry(rootVec.getDimension() - 1) / 20f);
+					float dq = UtilizationClass.U75TO125.lowBound + (dqBase - UtilizationClass.U75TO125.lowBound)
+							* exp((float) rootVec.getEntry(rootVec.getDimension() - 1) / 20f);
 					assert dq >= 0;
 					float ba = baseAreaTotal * spec.getPercentGenus() / 100f;
 					assert ba >= 0;
@@ -662,7 +663,7 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 			var a1 = coe.getCoe(2);
 			var a2 = coe.getCoe(3);
 			float hl = vSpec.getLoreyHeightByUtilization().getCoe(0);
-			float dq = max(a0 + a1 * pow(hl, a2), 22.5f);
+			float dq = max(a0 + a1 * pow(hl, a2), UtilizationClass.OVER225.lowBound);
 			vSpec.getQuadraticMeanDiameterByUtilization().setLarge(dq);
 			vSpec.getTreesPerHectareByUtilization().setLarge(
 					BaseAreaTreeDensityDiameter.treesPerHectare(vSpec.getBaseAreaByUtilization().getLarge(), dq)
@@ -914,8 +915,9 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 
 				// These side effects are evil but that's how VDYP7 works.
 
-				final float quadMeanDiameter = (float) (7.5
-						+ (diameterBase[j] - 7.5) * FastMath.exp(point[point.length - 1] / 20d));
+				final float quadMeanDiameter = (float) (UtilizationClass.U75TO125.lowBound
+						+ (diameterBase[j] - UtilizationClass.U75TO125.lowBound)
+								* FastMath.exp(point[point.length - 1] / 20d));
 				spec.getQuadraticMeanDiameterByUtilization().setAll(quadMeanDiameter);
 
 				final float baseArea = (float) (layerBa * percentL1[j] / 100d);

@@ -30,9 +30,9 @@ import ca.bc.gov.nrs.vdyp.model.VdypUtilizationHolder;
  */
 public class VdypOutputWriter implements Closeable {
 
-	private OutputStream polygonFile;
-	private OutputStream speciesFile;
-	private OutputStream utilizationFile;
+	protected final OutputStream polygonFile;
+	protected final OutputStream speciesFile;
+	protected final OutputStream utilizationFile;
 	@SuppressWarnings("unused")
 	private Optional<OutputStream> compatibilityVariablesFile;
 
@@ -113,9 +113,9 @@ public class VdypOutputWriter implements Closeable {
 				getOutputStream(controlMap, resolver, ControlKey.VDYP_OUTPUT_VDYP_POLYGON.name()),
 				getOutputStream(controlMap, resolver, ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SPECIES.name()),
 				getOutputStream(controlMap, resolver, ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name()),
-				Optional.of(
+				controlMap.containsKey(ControlKey.VDYP_OUTPUT_COMPATIBILITY_VARIABLES.name()) ? Optional.of(
 						getOutputStream(controlMap, resolver, ControlKey.VDYP_OUTPUT_COMPATIBILITY_VARIABLES.name())
-				)
+				) : Optional.empty()
 		);
 	}
 
@@ -195,14 +195,13 @@ public class VdypOutputWriter implements Closeable {
 				specDistributionEntries.get(3).getGenusAlias(), //
 				specDistributionEntries.get(3).getPercentage(), //
 
-				spec.getSite().flatMap(VdypSite::getSiteIndex).orElse(EMPTY_FLOAT),
-				spec.getSite().flatMap(VdypSite::getHeight).orElse(EMPTY_FLOAT),
-				spec.getSite().flatMap(VdypSite::getAgeTotal).orElse(EMPTY_FLOAT),
-				spec.getSite().flatMap(VdypSite::getYearsAtBreastHeight).orElse(EMPTY_FLOAT),
-				spec.getSite().flatMap(VdypSite::getYearsToBreastHeight).orElse(EMPTY_FLOAT),
-				layer.getPrimaryGenus().map(spec.getGenus()::equals).orElse(false) ? 1 : 0,
-				spec.getSite().flatMap(VdypSite::getSiteCurveNumber).orElse(EMPTY_INT)
-
+				spec.getSite().flatMap(VdypSite::getSiteIndex).orElse(EMPTY_FLOAT), //
+				spec.getSite().flatMap(VdypSite::getHeight).orElse(EMPTY_FLOAT), //
+				spec.getSite().flatMap(VdypSite::getAgeTotal).orElse(EMPTY_FLOAT), //
+				spec.getSite().flatMap(VdypSite::getYearsAtBreastHeight).orElse(EMPTY_FLOAT), //
+				spec.getSite().flatMap(VdypSite::getYearsToBreastHeight).orElse(EMPTY_FLOAT), //
+				layer.getPrimaryGenus().map(spec.getGenus()::equals).orElse(false) ? 1 : 0, //
+				spec.getSite().flatMap(VdypSite::getSiteCurveNumber).orElse(EMPTY_INT) //
 		);
 
 	}

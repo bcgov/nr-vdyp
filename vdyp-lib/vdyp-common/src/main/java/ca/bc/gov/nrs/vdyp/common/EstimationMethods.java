@@ -396,7 +396,8 @@ public class EstimationMethods {
 				logit = a0 + a1 * dq;
 			}
 			b.set(uc, b.get(uc.previous().get()) * exponentRatio(logit));
-			if (uc == UtilizationClass.U75TO125 && quadMeanDiameterUtil.getAll() < 12.5f) {
+			if (uc == UtilizationClass.U75TO125
+					&& quadMeanDiameterUtil.getAll() < UtilizationClass.U125TO175.lowBound) {
 				float ba12Max = (1f
 						- pow( (quadMeanDiameterUtil.getCoe(1) - 7.4f) / (quadMeanDiameterUtil.getAll() - 7.4f), 2f))
 						* b.getCoe(0);
@@ -421,8 +422,9 @@ public class EstimationMethods {
 	public void estimateQuadMeanDiameterByUtilization(
 			BecDefinition bec, UtilizationVector quadMeanDiameterUtil, String genus
 	) throws ProcessingException {
-		log.atTrace().setMessage("Estimate DQ by utilization class for {} in BEC {}.  DQ for all >7.5 is {}")
-				.addArgument(genus).addArgument(bec.getName()).addArgument(quadMeanDiameterUtil.getAll());
+		log.atTrace().setMessage("Estimate DQ by utilization class for {} in BEC {}.  DQ for all >{} is {}")
+				.addArgument(genus).addArgument(bec.getName()).addArgument(UtilizationClass.U75TO125.lowBound)
+				.addArgument(quadMeanDiameterUtil.getAll());
 
 		var coeMap = controlMap.getQuadMeanDiameterUtilizationComponentMap();
 
@@ -442,22 +444,29 @@ public class EstimationMethods {
 
 			switch (uc) {
 			case U75TO125:
-				if (quadMeanDiameter07 < 7.5001f) {
-					quadMeanDiameterUtil.setAll(7.5f);
+				if (quadMeanDiameter07 < UtilizationClass.U75TO125.lowBound + 0.0001f) {
+					quadMeanDiameterUtil.setAll(UtilizationClass.U75TO125.lowBound);
 				} else {
-					log.atDebug().setMessage("DQ = 7.5 + a0 * (1 - exp(a1 / a0*(DQ07 - 7.5) ))**a2' )");
+					log.atDebug().setMessage("DQ = {} + a0 * (1 - exp(a1 / a0*(DQ07 - {}) ))**a2' )")
+							.addArgument(UtilizationClass.U75TO125.lowBound)
+							.addArgument(UtilizationClass.U75TO125.lowBound);
 
-					logit = a1 / a0 * (quadMeanDiameter07 - 7.5f);
+					logit = a1 / a0 * (quadMeanDiameter07 - UtilizationClass.U75TO125.lowBound);
 
-					quadMeanDiameterUtil
-							.setCoe(uc.index, min(7.5f + a0 * pow(1 - safeExponent(logit), a2), quadMeanDiameter07));
+					quadMeanDiameterUtil.setCoe(
+							uc.index,
+							min(
+									UtilizationClass.U75TO125.lowBound + a0 * pow(1 - safeExponent(logit), a2),
+									quadMeanDiameter07
+							)
+					);
 				}
 				break;
 			case U125TO175, U175TO225:
 				log.atDebug().setMessage(
 						"LOGIT = a0 + a1*(SQ07 / 7.5)**a2,  DQ = (12.5 or 17.5) + 5 * exp(LOGIT) / (1 + exp(LOGIT))"
 				);
-				logit = a0 + a1 * pow(quadMeanDiameter07 / 7.5f, a2);
+				logit = a0 + a1 * pow(quadMeanDiameter07 / UtilizationClass.U75TO125.lowBound, a2);
 
 				quadMeanDiameterUtil.setCoe(uc.index, uc.lowBound + 5f * exponentRatio(logit));
 				break;
@@ -470,8 +479,10 @@ public class EstimationMethods {
 
 				logit = a2 + a1 * pow(quadMeanDiameter07, a3);
 
-				quadMeanDiameterUtil
-						.setCoe(uc.index, max(22.5f, quadMeanDiameter07 + a0 * (1f - exponentRatio(logit))));
+				quadMeanDiameterUtil.setCoe(
+						uc.index,
+						max(UtilizationClass.OVER225.lowBound, quadMeanDiameter07 + a0 * (1f - exponentRatio(logit)))
+				);
 				break;
 			case ALL, SMALL:
 				throw new IllegalStateException(

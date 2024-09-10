@@ -1,10 +1,10 @@
 package ca.bc.gov.nrs.vdyp.model;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+
 import java.util.Optional;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import org.hamcrest.Matchers;
-import static org.hamcrest.Matchers.is;
 import org.junit.jupiter.api.Test;
 
 class VdypUtilizationTest {

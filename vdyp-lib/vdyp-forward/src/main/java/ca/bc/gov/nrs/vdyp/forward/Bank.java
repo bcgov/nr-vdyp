@@ -21,10 +21,6 @@ import ca.bc.gov.nrs.vdyp.model.VdypUtilizationHolder;
 
 class Bank {
 
-	enum CopyMode {
-		CopyAll, CopyStructure
-	};
-
 	@SuppressWarnings("unused")
 	private static final Logger logger = LoggerFactory.getLogger(Bank.class);
 
@@ -108,7 +104,7 @@ class Bank {
 		}
 	}
 
-	public Bank(Bank source, CopyMode copyMode) {
+	public Bank(Bank source) {
 
 		this.becZone = source.becZone;
 		this.layer = source.layer;
@@ -121,60 +117,21 @@ class Bank {
 		this.siteCurveNumbers = copy(source.siteCurveNumbers);
 		this.sp64Distributions = copy(source.sp64Distributions);
 
-		if (copyMode == CopyMode.CopyAll) {
-			this.ageTotals = copy(source.ageTotals);
-			this.dominantHeights = copy(source.dominantHeights);
-			this.percentagesOfForestedLand = copy(source.percentagesOfForestedLand);
-			this.siteIndices = copy(source.siteIndices);
-			this.yearsAtBreastHeight = copy(source.yearsAtBreastHeight);
-			this.yearsToBreastHeight = copy(source.yearsToBreastHeight);
+		this.ageTotals = copy(source.ageTotals);
+		this.dominantHeights = copy(source.dominantHeights);
+		this.percentagesOfForestedLand = copy(source.percentagesOfForestedLand);
+		this.siteIndices = copy(source.siteIndices);
+		this.yearsAtBreastHeight = copy(source.yearsAtBreastHeight);
+		this.yearsToBreastHeight = copy(source.yearsToBreastHeight);
 
-			this.basalAreas = copy(source.basalAreas);
-			this.closeUtilizationVolumes = copy(source.closeUtilizationVolumes);
-			this.cuVolumesMinusDecay = copy(source.cuVolumesMinusDecay);
-			this.cuVolumesMinusDecayAndWastage = copy(source.cuVolumesMinusDecayAndWastage);
-			this.loreyHeights = copy(source.loreyHeights);
-			this.quadMeanDiameters = copy(source.quadMeanDiameters);
-			this.treesPerHectare = copy(source.treesPerHectare);
-			this.wholeStemVolumes = copy(source.wholeStemVolumes);
-		} else {
-			this.ageTotals = buildShell(nSpecies);
-			this.dominantHeights = buildShell(nSpecies);
-			this.percentagesOfForestedLand = buildShell(nSpecies);
-			this.siteIndices = buildShell(nSpecies);
-			this.yearsAtBreastHeight = buildShell(nSpecies);
-			this.yearsToBreastHeight = buildShell(nSpecies);
-
-			int nUtilizationClasses = UtilizationClass.values().length;
-			this.basalAreas = buildShell(nSpecies, nUtilizationClasses);
-			this.closeUtilizationVolumes = buildShell(nSpecies, nUtilizationClasses);
-			this.cuVolumesMinusDecay = buildShell(nSpecies, nUtilizationClasses);
-			this.cuVolumesMinusDecayAndWastage = buildShell(nSpecies, nUtilizationClasses);
-			this.loreyHeights = buildShell(nSpecies, nUtilizationClasses);
-			this.quadMeanDiameters = buildShell(nSpecies, nUtilizationClasses);
-			this.treesPerHectare = buildShell(nSpecies, nUtilizationClasses);
-			this.wholeStemVolumes = buildShell(nSpecies, nUtilizationClasses);
-		}
-	}
-
-	private float[] buildShell(int n) {
-
-		float[] result = new float[nSpecies + 1];
-		Arrays.fill(result, Float.NaN);
-		return result;
-	}
-
-	private float[][] buildShell(int n, int m) {
-
-		float[][] result = new float[nSpecies + 1][];
-
-		for (int i = 0; i <= n; i++) {
-			float[] row = new float[m];
-			Arrays.fill(row, Float.NaN);
-			result[i] = row;
-		}
-
-		return result;
+		this.basalAreas = copy(source.basalAreas);
+		this.closeUtilizationVolumes = copy(source.closeUtilizationVolumes);
+		this.cuVolumesMinusDecay = copy(source.cuVolumesMinusDecay);
+		this.cuVolumesMinusDecayAndWastage = copy(source.cuVolumesMinusDecayAndWastage);
+		this.loreyHeights = copy(source.loreyHeights);
+		this.quadMeanDiameters = copy(source.quadMeanDiameters);
+		this.treesPerHectare = copy(source.treesPerHectare);
+		this.wholeStemVolumes = copy(source.wholeStemVolumes);
 	}
 
 	public int getNSpecies() {
@@ -326,8 +283,7 @@ class Bank {
 	}
 
 	public Bank copy() {
-		return new Bank(this, CopyMode.CopyAll);
-
+		return new Bank(this);
 	}
 
 	private String[] copy(String[] a) {

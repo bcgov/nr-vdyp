@@ -59,9 +59,9 @@ class LayerProcessingState {
 	// L1COM2 - equation groups. From the configuration, narrowed to the
 	// polygon's BEC zone.
 
-	int[] volumeEquationGroups;
-	int[] decayEquationGroups;
-	int[] breakageEquationGroups;
+	private int[] volumeEquationGroups;
+	private int[] decayEquationGroups;
+	private int[] breakageEquationGroups;
 
 	// L1COM3 - just shadows of fields of L1COM5
 	// AGETOTL1 = wallet.ageTotals[primarySpeciesIndex]
@@ -201,54 +201,6 @@ class LayerProcessingState {
 			throw new IllegalStateException(UNSET_INVENTORY_TYPE_GROUP);
 		}
 		return inventoryTypeGroup;
-	}
-
-	public static String getCompatibilityVariablesSetCanBeSetOnceOnly() {
-		return COMPATIBILITY_VARIABLES_SET_CAN_BE_SET_ONCE_ONLY;
-	}
-
-	public static String getPrimarySpeciesDetailsCanBeSetOnceOnly() {
-		return PRIMARY_SPECIES_DETAILS_CAN_BE_SET_ONCE_ONLY;
-	}
-
-	public static String getSiteCurveNumbersCanBeSetOnceOnly() {
-		return SITE_CURVE_NUMBERS_CAN_BE_SET_ONCE_ONLY;
-	}
-
-	public static String getSpeciesRankingDetailsCanBeSetOnceOnly() {
-		return SPECIES_RANKING_DETAILS_CAN_BE_SET_ONCE_ONLY;
-	}
-
-	public static String getUnsetPrimarySpeciesAgeToBreastHeight() {
-		return UNSET_PRIMARY_SPECIES_AGE_TO_BREAST_HEIGHT;
-	}
-
-	public static String getUnsetPrimarySpeciesAgeAtBreastHeight() {
-		return UNSET_PRIMARY_SPECIES_AGE_AT_BREAST_HEIGHT;
-	}
-
-	public static String getUnsetPrimarySpeciesDominantHeight() {
-		return UNSET_PRIMARY_SPECIES_DOMINANT_HEIGHT;
-	}
-
-	public static String getUnsetCvVolumes() {
-		return UNSET_CV_VOLUMES;
-	}
-
-	public static String getUnsetCvBasalAreas() {
-		return UNSET_CV_BASAL_AREAS;
-	}
-
-	public static String getUnsetRankingDetails() {
-		return UNSET_RANKING_DETAILS;
-	}
-
-	public static String getUnsetSiteCurveNumbers() {
-		return UNSET_SITE_CURVE_NUMBERS;
-	}
-
-	public static String getUnsetInventoryTypeGroup() {
-		return UNSET_INVENTORY_TYPE_GROUP;
 	}
 
 	public static Logger getLogger() {

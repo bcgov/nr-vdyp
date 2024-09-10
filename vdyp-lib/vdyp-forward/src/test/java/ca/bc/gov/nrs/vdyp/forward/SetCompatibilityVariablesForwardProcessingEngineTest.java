@@ -40,15 +40,15 @@ class SetCompatibilityVariablesForwardProcessingEngineTest extends AbstractForwa
 		// platform-specific differences.
 
 		assertThat(
-				fpe.fps.getLayerProcessingState().volumeEquationGroups,
+				fpe.fps.getLayerProcessingState().getVolumeEquationGroups(),
 				Matchers.is(new int[] { VdypEntity.MISSING_INTEGER_VALUE, 12, 20, 25, 37, 66 })
 		);
 		assertThat(
-				fpe.fps.getLayerProcessingState().decayEquationGroups,
+				fpe.fps.getLayerProcessingState().getDecayEquationGroups(),
 				Matchers.is(new int[] { VdypEntity.MISSING_INTEGER_VALUE, 7, 14, 19, 31, 54 })
 		);
 		assertThat(
-				fpe.fps.getLayerProcessingState().breakageEquationGroups,
+				fpe.fps.getLayerProcessingState().getBreakageEquationGroups(),
 				Matchers.is(new int[] { VdypEntity.MISSING_INTEGER_VALUE, 5, 6, 12, 17, 28 })
 		);
 

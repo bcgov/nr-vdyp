@@ -47,9 +47,7 @@ public abstract class BaseVdypLayer<S extends BaseVdypSpecies<I>, I extends Base
 	}
 
 	public void setSpecies(Map<String, S> species) {
-		this.speciesBySp0.clear();
-		this.speciesByIndex.clear();
-		this.speciesBySp0.putAll(species);
+		setSpecies(species.values());
 	}
 
 	public void setSpecies(Collection<S> species) {
@@ -84,6 +82,11 @@ public abstract class BaseVdypLayer<S extends BaseVdypSpecies<I>, I extends Base
 	}
 
 	public abstract Optional<String> getPrimaryGenus();
+
+	@Computed
+	public Optional<S> getPrimarySpeciesRecord() {
+		return getPrimaryGenus().map(this.getSpecies()::get);
+	}
 
 	@Computed
 	public Optional<I> getPrimarySite() {
@@ -244,7 +247,5 @@ public abstract class BaseVdypLayer<S extends BaseVdypSpecies<I>, I extends Base
 					layerType.map(Object::toString).orElse("N/A") //
 			);
 		}
-
 	}
-
 }

@@ -500,15 +500,15 @@ class GeneralForwardProcessingEngineTest extends AbstractForwardProcessingEngine
 		fps.setPolygonLayer(polygon, LayerType.PRIMARY);
 
 		assertThat(
-				fps.getLayerProcessingState().volumeEquationGroups,
+				fps.getLayerProcessingState().getVolumeEquationGroups(),
 				Matchers.is(new int[] { VdypEntity.MISSING_INTEGER_VALUE, 12, 20, 25, 37, 66 })
 		);
 		assertThat(
-				fps.getLayerProcessingState().decayEquationGroups,
+				fps.getLayerProcessingState().getDecayEquationGroups(),
 				Matchers.is(new int[] { VdypEntity.MISSING_INTEGER_VALUE, 7, 14, 19, 31, 54 })
 		);
 		assertThat(
-				fps.getLayerProcessingState().breakageEquationGroups,
+				fps.getLayerProcessingState().getBreakageEquationGroups(),
 				Matchers.is(new int[] { VdypEntity.MISSING_INTEGER_VALUE, 5, 6, 12, 17, 28 })
 		);
 	}

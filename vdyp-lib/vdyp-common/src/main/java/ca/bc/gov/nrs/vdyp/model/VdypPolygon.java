@@ -49,6 +49,16 @@ public class VdypPolygon extends BaseVdypPolygon<VdypLayer, Float, VdypSpecies, 
 		return super.getPolygonIdentifier().toString();
 	}
 
+	@Override
+	public boolean equals(Object other) {
+		return super.equals(other);
+	}
+
+	@Override
+	public int hashCode() {
+		return super.hashCode();
+	}
+
 	public Optional<Integer> getTargetYear() {
 		return targetYear;
 	}

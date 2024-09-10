@@ -16,7 +16,6 @@ import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.application.ProcessingException;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
-import ca.bc.gov.nrs.vdyp.forward.Bank.CopyMode;
 import ca.bc.gov.nrs.vdyp.forward.test.VdypForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.model.GenusDefinitionMap;
@@ -163,7 +162,7 @@ class BankTest {
 
 		Bank bank = new Bank(pLayer, polygon.getBiogeoclimaticZone(), s -> true);
 
-		Bank bankCopy = new Bank(bank, CopyMode.CopyAll);
+		Bank bankCopy = new Bank(bank);
 
 		verifyBankMatchesLayer(bankCopy, pLayer);
 	}

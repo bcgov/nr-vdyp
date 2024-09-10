@@ -30,18 +30,62 @@ class VdypPolygonTest {
 		Map<String, Object> controlMap = new HashMap<>();
 		TestUtils.populateControlMapBecReal(controlMap);
 
-		var result = VdypPolygon.build(builder -> {
+		var poly1 = VdypPolygon.build(builder -> {
 			builder.polygonIdentifier("Test", 2024);
 			builder.percentAvailable(90f);
-
 			builder.forestInventoryZone("?");
 			builder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
 			builder.targetYear(Optional.of(2024));
 		});
-		assertThat(result, hasProperty("polygonIdentifier", isPolyId("Test", 2024)));
-		assertThat(result, hasProperty("percentAvailable", is(90f)));
-		assertThat(result, hasProperty("layers", anEmptyMap()));
-		assertThat(result.getTargetYear(), present(is(2024)));
+		assertThat(poly1, hasProperty("polygonIdentifier", isPolyId("Test", 2024)));
+		assertThat(poly1, hasProperty("percentAvailable", is(90f)));
+		assertThat(poly1, hasProperty("forestInventoryZone", is("?")));
+		assertThat(poly1, hasProperty("biogeoclimaticZone", is(Utils.getBec("IDF", controlMap))));
+
+		assertThat(poly1, hasProperty("layers", anEmptyMap()));
+
+		assertThat(poly1, hasProperty("targetYear", present(is(2024))));
+
+		var poly2 = new VdypPolygon(poly1, x -> x);
+		assertThat(poly2, hasProperty("targetYear", present(is(2024))));
+
+		assertThat(poly1.toString(), is("Test                 2024"));
+
+		assertThrows(IllegalArgumentException.class, () -> poly1.setTargetYear(2025));
+	}
+
+	@Test
+	void construct() throws Exception {
+		Map<String, Object> controlMap = new HashMap<>();
+		TestUtils.populateControlMapBecReal(controlMap);
+
+		var poly1 = new VdypPolygon(
+				new PolygonIdentifier("Test", 2024), 90f, "?", Utils.getBec("IDF", controlMap),
+				Optional.of(PolygonMode.START), Optional.of(1)
+		);
+
+		assertThat(poly1, hasProperty("polygonIdentifier", isPolyId("Test", 2024)));
+		assertThat(poly1, hasProperty("percentAvailable", is(90f)));
+		assertThat(poly1, hasProperty("targetYear", notPresent()));
+		assertThat(poly1, hasProperty("forestInventoryZone", is("?")));
+		assertThat(poly1, hasProperty("biogeoclimaticZone", is(Utils.getBec("IDF", controlMap))));
+		assertThat(poly1, hasProperty("mode", present(is(PolygonMode.START))));
+		assertThat(poly1, hasProperty("inventoryTypeGroup", present(is(1))));
+		assertThat(poly1, hasProperty("layers", anEmptyMap()));
+
+		var poly2 = new VdypPolygon(poly1, x -> x);
+		assertThat(poly2, hasProperty("polygonIdentifier", isPolyId("Test", 2024)));
+		assertThat(poly2, hasProperty("percentAvailable", is(90f)));
+		assertThat(poly2, hasProperty("targetYear", notPresent()));
+		assertThat(poly2, hasProperty("forestInventoryZone", is("?")));
+		assertThat(poly2, hasProperty("biogeoclimaticZone", is(Utils.getBec("IDF", controlMap))));
+		assertThat(poly2, hasProperty("mode", present(is(PolygonMode.START))));
+		assertThat(poly2, hasProperty("inventoryTypeGroup", present(is(1))));
+		assertThat(poly2, hasProperty("layers", anEmptyMap()));
+
+		poly1.setTargetYear(2025);
+		assertThat(poly1, hasProperty("targetYear", present(is(2025))));
+
 	}
 
 	@Test

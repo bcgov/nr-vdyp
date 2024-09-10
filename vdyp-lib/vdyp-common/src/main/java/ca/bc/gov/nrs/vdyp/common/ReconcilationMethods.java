@@ -3,12 +3,13 @@ package ca.bc.gov.nrs.vdyp.common;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.abs;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.sqrt;
 
+import java.text.MessageFormat;
 import java.util.List;
 
 import ca.bc.gov.nrs.vdyp.application.ProcessingException;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
-import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
+import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
 
 public class ReconcilationMethods {
 
@@ -47,14 +48,23 @@ public class ReconcilationMethods {
 		}
 
 		if (abs(baSum - baseAreaUtil.getAll()) > 0.00003 * baSum) {
-			throw new ProcessingException("Computed base areas for 7.5+ components do not sum to expected total");
+			throw new ProcessingException(
+					MessageFormat.format(
+							"Computed base areas for {}+ components do not sum to expected total",
+							UtilizationClass.U75TO125.lowBound
+					)
+			);
 		}
 
 		float dq0 = BaseAreaTreeDensityDiameter.quadMeanDiameter(baseAreaUtil.getAll(), treesPerHectareUtil.getAll());
 
-		if (dq0 < 7.5f) {
+		if (dq0 < UtilizationClass.U75TO125.lowBound) {
 			throw new ProcessingException(
-					"Quadratic mean diameter computed from total base area and trees per hectare is less than 7.5 cm"
+					MessageFormat.format(
+							"Quadratic mean diameter computed from total"
+									+ " base area and trees per hectare is less than {0} cm",
+							UtilizationClass.U75TO125.lowBound
+					)
 			);
 		}
 
