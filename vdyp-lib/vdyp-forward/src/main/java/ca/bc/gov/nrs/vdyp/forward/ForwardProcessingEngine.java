@@ -193,7 +193,9 @@ public class ForwardProcessingEngine {
 
 		fps.setPolygonLayer(polygon, LayerType.PRIMARY);
 
-		// All of BANKCHK1 that we need
+		// All of BANKCHK1 that we need. Note that setting UC ALL (METH_CHK == 1) in BANKCHK1 is
+		// performed when the Bank instance is created in setPolygonLayer, above.
+
 		validatePolygon(polygon);
 
 		// Determine the target year of the growth
@@ -235,7 +237,7 @@ public class ForwardProcessingEngine {
 			veteranLayer = Optional.empty();
 		}
 
-		// BANKCHK1, simplified for the parameters METH_CHK = 4, LayerI = 1, and INSTANCE = 1
+		// BANKCHK1, simplified for the parameters METH_IN = 4, LayerI = 1, and INSTANCE = 1
 		if (lastStepInclusive.ge(ExecutionStep.CHECK_FOR_WORK)) {
 			stopIfNoWork(lps);
 		}
@@ -274,7 +276,7 @@ public class ForwardProcessingEngine {
 		}
 
 		// VGROW1
-		if (lastStepInclusive.ge(ExecutionStep.GROW)) {
+		if (lastStepInclusive.gt(ExecutionStep.SET_COMPATIBILITY_VARIABLES)) {
 			int startingYear = lps.getPolygon().getPolygonIdentifier().getYear();
 
 			VdypPolygon vdypPolygon = lps.getPolygon();
@@ -298,6 +300,13 @@ public class ForwardProcessingEngine {
 				);
 
 				grow(lps, currentYear, veteranLayer, lastStepInclusive);
+
+				// Some unit tests require only some of the grow steps to be executed (and, by
+				// implication, only for the first growth year. If this is the case, stop
+				// processing now.
+				if (ExecutionStep.ALL.gt(lastStepInclusive)) {
+					break;
+				}
 
 				// If update-during-growth is set, update the context prior to output
 				if (doRecalculateGroupsPriorToOutput) {
@@ -551,6 +560,13 @@ public class ForwardProcessingEngine {
 				bank.siteIndices[i] = lps.getPrimarySpeciesSiteIndex();
 				bank.yearsAtBreastHeight[i] = lps.getPrimarySpeciesAgeAtBreastHeight();
 			} else {
+				if (bank.ageTotals[i] > 0.0f) {
+					bank.ageTotals[i] += 1;
+				}
+				if (bank.yearsAtBreastHeight[i] > 0.0) {
+					bank.yearsAtBreastHeight[i] += 1;
+				}
+
 				float spSiStart = bank.siteIndices[i];
 				float spDhStart = bank.dominantHeights[i];
 				float spYtbhStart = bank.yearsToBreastHeight[i];
@@ -2397,6 +2413,7 @@ public class ForwardProcessingEngine {
 		var cvQuadraticMeanDiameter = new MatrixMap2[lps.getNSpecies() + 1];
 		var cvSmall = new HashMap[lps.getNSpecies() + 1];
 
+		System.out.println("Polygon: " + lps.getPolygon());
 		for (int s : lps.getIndices()) {
 
 			String genusName = bank.speciesNames[s];
@@ -3201,7 +3218,7 @@ public class ForwardProcessingEngine {
 	private static void stopIfNoWork(LayerProcessingState lps) throws ProcessingException {
 
 		// The following is extracted from BANKCHK1, simplified for the parameters
-		// METH_CHK = 4, LayerI = 1, and INSTANCE = 1. So IR = 1, which is the first
+		// METH_IN = 4, LayerI = 1, and INSTANCE = 1. So IR = 1, which is the first
 		// bank, numbered 0.
 
 		// => all that is done is that an exception is thrown if there are no species to
@@ -3374,33 +3391,32 @@ public class ForwardProcessingEngine {
 	/**
 	 * Find Inventory type group (ITG) for the given primary and secondary (if given) genera.
 	 *
-	 * @param primaryGenus           the genus of the primary species
-	 * @param optionalSecondaryGenus the genus of the primary species, which may be empty
-	 * @param primaryPercentage      the percentage covered by the primary species
+	 * @param primarySp0           the genus of the primary species
+	 * @param optionalSecondarySp0 the genus of the primary species, which may be empty
+	 * @param primaryPercentage    the percentage covered by the primary species
 	 * @return as described
 	 * @throws ProcessingException if primaryGenus is not a known genus
 	 */
-	static int findInventoryTypeGroup(
-			String primaryGenus, Optional<String> optionalSecondaryGenus, float primaryPercentage
-	) throws ProcessingException {
+	static int findInventoryTypeGroup(String primarySp0, Optional<String> optionalSecondarySp0, float primaryPercentage)
+			throws ProcessingException {
 
 		if (primaryPercentage > 79.999 /* Copied from VDYP7 */) {
 
-			Integer recordedInventoryTypeGroup = CommonData.ITG_PURE.get(primaryGenus);
+			Integer recordedInventoryTypeGroup = CommonData.ITG_PURE.get(primarySp0);
 			if (recordedInventoryTypeGroup == null) {
-				throw new ProcessingException("Unrecognized primary species: " + primaryGenus);
+				throw new ProcessingException("Unrecognized primary species: " + primarySp0);
 			}
 
 			return recordedInventoryTypeGroup;
 		}
 
-		String secondaryGenus = optionalSecondaryGenus.isPresent() ? optionalSecondaryGenus.get() : "";
+		String secondaryGenus = optionalSecondarySp0.isPresent() ? optionalSecondarySp0.get() : "";
 
-		if (primaryGenus.equals(secondaryGenus)) {
+		if (primarySp0.equals(secondaryGenus)) {
 			throw new IllegalArgumentException("The primary and secondary genera are the same");
 		}
 
-		switch (primaryGenus) {
+		switch (primarySp0) {
 		case "F":
 			switch (secondaryGenus) {
 			case "C", "Y":
@@ -3500,7 +3516,7 @@ public class ForwardProcessingEngine {
 			}
 			return 41;
 		default:
-			throw new ProcessingException("Unrecognized primary species: " + primaryGenus);
+			throw new ProcessingException("Unrecognized primary species: " + primarySp0);
 		}
 	}
 }

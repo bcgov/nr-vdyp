@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 import ca.bc.gov.nrs.vdyp.application.ProcessingException;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.ExecutionStep;
-import ca.bc.gov.nrs.vdyp.forward.test.VdypForwardTestUtils;
+import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
@@ -38,7 +38,7 @@ class Grow7QuadMeanDiameterTest {
 	@BeforeEach
 	void beforeTest() throws IOException, ResourceParseException, ProcessingException {
 		parser = new ForwardControlParser();
-		controlMap = VdypForwardTestUtils.parse(parser, "VDYP.CTR");
+		controlMap = ForwardTestUtils.parse(parser, "VDYP.CTR");
 
 		polygonDescriptionStreamFactory = (StreamingParserFactory<PolygonIdentifier>) controlMap
 				.get(ControlKey.FORWARD_INPUT_GROWTO.name());
@@ -62,6 +62,6 @@ class Grow7QuadMeanDiameterTest {
 		var calculatedLayerDq = lps.getBank().quadMeanDiameters[0][UtilizationClass.ALL.ordinal()];
 
 		// VDYP7 value is 31.3084507
-		assertThat(calculatedLayerDq, is(30.999918f));
+		assertThat(calculatedLayerDq, is(31.308355f));
 	}
 }

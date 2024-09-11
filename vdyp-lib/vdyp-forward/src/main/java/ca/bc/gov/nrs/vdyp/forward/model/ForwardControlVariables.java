@@ -147,6 +147,18 @@ public class ForwardControlVariables {
 		return controlVariables[controlVariable.ordinal()];
 	}
 
+	/**
+	 * Explicitly set a control variable value. To be used by unit tests only.
+	 *
+	 * @param controlVariable the variable to set
+	 * @param value           its new value
+	 * @throws ValueParseException
+	 */
+	public void setControlVariable(ControlVariable controlVariable, int value) throws ValueParseException {
+		controlVariables[controlVariable.ordinal()] = value;
+		validate();
+	}
+
 	int getControlVariable(int elementNumber) {
 
 		if (elementNumber < 1 || elementNumber > MAX_CONTROL_VARIABLE_VALUES) {

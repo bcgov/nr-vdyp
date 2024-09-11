@@ -19,7 +19,7 @@ import ca.bc.gov.nrs.vdyp.common.Reference;
 import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.ExecutionStep;
 import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings;
 import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings.Vars;
-import ca.bc.gov.nrs.vdyp.forward.test.VdypForwardTestUtils;
+import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
@@ -42,7 +42,7 @@ class Grow3CalculateQuadMeanDiameterDeltaTest {
 	@BeforeEach
 	void beforeTest() throws IOException, ResourceParseException, ProcessingException {
 		parser = new ForwardControlParser();
-		controlMap = VdypForwardTestUtils.parse(parser, "VDYP.CTR");
+		controlMap = ForwardTestUtils.parse(parser, "VDYP.CTR");
 
 		polygonDescriptionStreamFactory = (StreamingParserFactory<PolygonIdentifier>) controlMap
 				.get(ControlKey.FORWARD_INPUT_GROWTO.name());
@@ -108,7 +108,7 @@ class Grow3CalculateQuadMeanDiameterDeltaTest {
 				yabh, ba, hd, dq, v_ba_start, v_ba_end, growthInHd, dqGrowthLimitApplied
 		);
 
-		assertThat(gba, is(0.3194551f));
+		assertThat(gba, is(0.3194644f));
 		assertTrue(dqGrowthLimitApplied.isPresent());
 		assertThat(dqGrowthLimitApplied.get(), is(false));
 	}
@@ -170,7 +170,7 @@ class Grow3CalculateQuadMeanDiameterDeltaTest {
 				yabh, ba, hd, dq, v_ba_start, v_ba_end, growthInHd, dqGrowthLimitApplied
 		);
 
-		assertThat(gba, is(0.28309992f));
+		assertThat(gba, is(0.2830987f));
 		assertTrue(dqGrowthLimitApplied.isPresent());
 		assertThat(dqGrowthLimitApplied.get(), is(false));
 	}

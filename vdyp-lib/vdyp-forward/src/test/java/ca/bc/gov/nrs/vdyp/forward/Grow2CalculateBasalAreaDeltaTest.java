@@ -16,7 +16,7 @@ import ca.bc.gov.nrs.vdyp.application.ProcessingException;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.ExecutionStep;
 import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings.Vars;
-import ca.bc.gov.nrs.vdyp.forward.test.VdypForwardTestUtils;
+import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
@@ -39,7 +39,7 @@ class Grow2CalculateBasalAreaDeltaTest {
 	@BeforeEach
 	void beforeTest() throws IOException, ResourceParseException, ProcessingException {
 		parser = new ForwardControlParser();
-		controlMap = VdypForwardTestUtils.parse(parser, "VDYP.CTR");
+		controlMap = ForwardTestUtils.parse(parser, "VDYP.CTR");
 
 		polygonDescriptionStreamFactory = (StreamingParserFactory<PolygonIdentifier>) controlMap
 				.get(ControlKey.FORWARD_INPUT_GROWTO.name());
@@ -65,7 +65,7 @@ class Grow2CalculateBasalAreaDeltaTest {
 
 		float gba = fpe.calculateBasalAreaDelta(yabh, hd, ba, Optional.empty(), growthInHd);
 
-		assertThat(gba, is(0.35185286f));
+		assertThat(gba, is(0.35185215f));
 	}
 
 	@Test
@@ -107,6 +107,6 @@ class Grow2CalculateBasalAreaDeltaTest {
 
 		float gba = fpe.calculateBasalAreaDelta(yabh, hd, ba, Optional.empty(), hdDelta);
 
-		assertThat(gba, is(-0.10392746f));
+		assertThat(gba, is(-0.10392387f));
 	}
 }

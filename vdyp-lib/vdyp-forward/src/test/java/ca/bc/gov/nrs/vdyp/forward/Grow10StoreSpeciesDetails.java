@@ -5,8 +5,6 @@ import static org.hamcrest.Matchers.arrayContaining;
 import static org.hamcrest.Matchers.is;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -17,10 +15,11 @@ import org.slf4j.LoggerFactory;
 import ca.bc.gov.nrs.vdyp.application.ProcessingException;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.ExecutionStep;
-import ca.bc.gov.nrs.vdyp.forward.test.VdypForwardTestUtils;
+import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
+import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 
@@ -40,7 +39,7 @@ class Grow10StoreSpeciesDetails {
 	@BeforeEach
 	void beforeTest() throws IOException, ResourceParseException, ProcessingException {
 		parser = new ForwardControlParser();
-		controlMap = VdypForwardTestUtils.parse(parser, "VDYP.CTR");
+		controlMap = ForwardTestUtils.parse(parser, "VDYP.CTR");
 
 		polygonDescriptionStreamFactory = (StreamingParserFactory<PolygonIdentifier>) controlMap
 				.get(ControlKey.FORWARD_INPUT_GROWTO.name());
@@ -50,7 +49,7 @@ class Grow10StoreSpeciesDetails {
 	}
 
 	@Test
-	void testStandardPath() throws ProcessingException {
+	void testStandardPath() throws ProcessingException, ValueParseException {
 
 		ForwardProcessingEngine fpe = new ForwardProcessingEngine(controlMap);
 
@@ -58,7 +57,27 @@ class Grow10StoreSpeciesDetails {
 		VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
 		fpe.processPolygon(polygon, ExecutionStep.GROW_10_STORE_SPECIES_DETAILS);
-		
-		// TBD
+
+		// VDYP7 reports [], -9, -9, 35.473381, -9, -9)
+		Bank bank = fpe.fps.getLayerProcessingState().getBank();
+		assertThat(
+				ForwardTestUtils.toFloatArray(bank.dominantHeights),
+				is(arrayContaining(0.0f, Float.NaN, Float.NaN, 35.47338f, Float.NaN, Float.NaN))
+		);
+		// VDYP7 reports [], -9, -9, 35, -9, -9)
+		assertThat(
+				ForwardTestUtils.toFloatArray(bank.ageTotals),
+				is(arrayContaining(0.0f, Float.NaN, Float.NaN, 56.0f, Float.NaN, Float.NaN))
+		);
+		// VDYP7 reports [], -9, -9, 56, -9, -9)
+		assertThat(
+				ForwardTestUtils.toFloatArray(bank.siteIndices),
+				is(arrayContaining(35.0f, Float.NaN, Float.NaN, 35.0f, Float.NaN, Float.NaN))
+		);
+		// VDYP7 reports [], -9, -9, 55, -9, -9)
+		assertThat(
+				ForwardTestUtils.toFloatArray(bank.yearsAtBreastHeight),
+				is(arrayContaining(0.0f, Float.NaN, Float.NaN, 55.0f, Float.NaN, Float.NaN))
+		);
 	}
 }

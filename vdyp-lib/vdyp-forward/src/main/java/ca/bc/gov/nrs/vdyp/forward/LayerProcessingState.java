@@ -124,7 +124,7 @@ class LayerProcessingState {
 
 		BecDefinition becZone = polygon.getBiogeoclimaticZone();
 
-		this.bank = new Bank(
+		bank = new Bank(
 				polygon.getLayers().get(subjectLayerType), becZone,
 				s -> s.getBaseAreaByUtilization().get(UtilizationClass.ALL) >= ForwardProcessingEngine.MIN_BASAL_AREA
 		);
@@ -133,24 +133,24 @@ class LayerProcessingState {
 		var decayEquationGroupMatrix = this.fps.fcm.getDecayEquationGroups();
 		var breakageEquationGroupMatrix = this.fps.fcm.getBreakageEquationGroups();
 
-		this.volumeEquationGroups = new int[this.bank.getNSpecies() + 1];
-		this.decayEquationGroups = new int[this.bank.getNSpecies() + 1];
-		this.breakageEquationGroups = new int[this.bank.getNSpecies() + 1];
+		volumeEquationGroups = new int[bank.getNSpecies() + 1];
+		decayEquationGroups = new int[bank.getNSpecies() + 1];
+		breakageEquationGroups = new int[bank.getNSpecies() + 1];
 
-		this.volumeEquationGroups[0] = VdypEntity.MISSING_INTEGER_VALUE;
-		this.decayEquationGroups[0] = VdypEntity.MISSING_INTEGER_VALUE;
-		this.breakageEquationGroups[0] = VdypEntity.MISSING_INTEGER_VALUE;
+		volumeEquationGroups[0] = VdypEntity.MISSING_INTEGER_VALUE;
+		decayEquationGroups[0] = VdypEntity.MISSING_INTEGER_VALUE;
+		breakageEquationGroups[0] = VdypEntity.MISSING_INTEGER_VALUE;
 
-		String becZoneAlias = this.getBecZone().getAlias();
-		for (int i = 1; i < this.bank.getNSpecies() + 1; i++) {
-			String speciesName = this.bank.speciesNames[i];
-			this.volumeEquationGroups[i] = volumeEquationGroupMatrix.get(speciesName, becZoneAlias);
+		String becZoneAlias = getBecZone().getAlias();
+		for (int i = 1; i < bank.getNSpecies() + 1; i++) {
+			String speciesName = bank.speciesNames[i];
+			volumeEquationGroups[i] = volumeEquationGroupMatrix.get(speciesName, becZoneAlias);
 			// From VGRPFIND, volumeEquationGroup 10 is mapped to 11.
-			if (this.volumeEquationGroups[i] == 10) {
-				this.volumeEquationGroups[i] = 11;
+			if (volumeEquationGroups[i] == 10) {
+				volumeEquationGroups[i] = 11;
 			}
-			this.decayEquationGroups[i] = decayEquationGroupMatrix.get(speciesName, becZoneAlias);
-			this.breakageEquationGroups[i] = breakageEquationGroupMatrix.get(speciesName, becZoneAlias);
+			decayEquationGroups[i] = decayEquationGroupMatrix.get(speciesName, becZoneAlias);
+			breakageEquationGroups[i] = breakageEquationGroupMatrix.get(speciesName, becZoneAlias);
 		}
 	}
 
@@ -313,21 +313,21 @@ class LayerProcessingState {
 	}
 
 	public void setSpeciesRankingDetails(SpeciesRankingDetails rankingDetails) {
-		if (this.areRankingDetailsSet) {
+		if (areRankingDetailsSet) {
 			throw new IllegalStateException(SPECIES_RANKING_DETAILS_CAN_BE_SET_ONCE_ONLY);
 		}
 
-		this.primarySpeciesIndex = rankingDetails.primarySpeciesIndex();
-		this.secondarySpeciesIndex = rankingDetails.secondarySpeciesIndex();
-		this.inventoryTypeGroup = rankingDetails.inventoryTypeGroup();
-		this.primarySpeciesGroupNumber = rankingDetails.basalAreaGroup1();
-		this.primarySpeciesStratumNumber = rankingDetails.basalAreaGroup3();
+		primarySpeciesIndex = rankingDetails.primarySpeciesIndex();
+		secondarySpeciesIndex = rankingDetails.secondarySpeciesIndex();
+		inventoryTypeGroup = rankingDetails.inventoryTypeGroup();
+		primarySpeciesGroupNumber = rankingDetails.basalAreaGroup1();
+		primarySpeciesStratumNumber = rankingDetails.basalAreaGroup3();
 
-		this.areRankingDetailsSet = true;
+		areRankingDetailsSet = true;
 	}
 
 	public void setSiteCurveNumbers(int[] siteCurveNumbers) {
-		if (this.areSiteCurveNumbersSet) {
+		if (areSiteCurveNumbersSet) {
 			throw new IllegalStateException(SITE_CURVE_NUMBERS_CAN_BE_SET_ONCE_ONLY);
 		}
 
@@ -340,35 +340,35 @@ class LayerProcessingState {
 
 		// Normally, these values may only be set only once. However, during grow(), if the
 		// control variable UPDATE_DURING_GROWTH_6 has value "1" then updates are allowed.
-		if (this.arePrimarySpeciesDetailsSet && fps.fcm.getForwardControlVariables()
+		if (arePrimarySpeciesDetailsSet && fps.fcm.getForwardControlVariables()
 				.getControlVariable(ControlVariable.UPDATE_DURING_GROWTH_6) != 1) {
 			throw new IllegalStateException(PRIMARY_SPECIES_DETAILS_CAN_BE_SET_ONCE_ONLY);
 		}
 
-		this.primarySpeciesDominantHeight = details.primarySpeciesDominantHeight();
-		this.primarySpeciesSiteIndex = details.primarySpeciesSiteIndex();
-		this.primarySpeciesTotalAge = details.primarySpeciesTotalAge();
-		this.primarySpeciesAgeAtBreastHeight = details.primarySpeciesAgeAtBreastHeight();
-		this.primarySpeciesAgeToBreastHeight = details.primarySpeciesAgeToBreastHeight();
+		primarySpeciesDominantHeight = details.primarySpeciesDominantHeight();
+		primarySpeciesSiteIndex = details.primarySpeciesSiteIndex();
+		primarySpeciesTotalAge = details.primarySpeciesTotalAge();
+		primarySpeciesAgeAtBreastHeight = details.primarySpeciesAgeAtBreastHeight();
+		primarySpeciesAgeToBreastHeight = details.primarySpeciesAgeToBreastHeight();
 
 		// Store these values into bank if not already set - VHDOM1 lines 182 - 186
 		if (bank.dominantHeights[primarySpeciesIndex] <= 0.0) {
-			bank.dominantHeights[primarySpeciesIndex] = this.primarySpeciesDominantHeight;
+			bank.dominantHeights[primarySpeciesIndex] = primarySpeciesDominantHeight;
 		}
 		if (bank.siteIndices[primarySpeciesIndex] <= 0.0) {
-			bank.siteIndices[primarySpeciesIndex] = this.primarySpeciesSiteIndex;
+			bank.siteIndices[primarySpeciesIndex] = primarySpeciesSiteIndex;
 		}
 		if (bank.ageTotals[primarySpeciesIndex] <= 0.0) {
-			bank.ageTotals[primarySpeciesIndex] = this.primarySpeciesTotalAge;
+			bank.ageTotals[primarySpeciesIndex] = primarySpeciesTotalAge;
 		}
 		if (bank.yearsAtBreastHeight[primarySpeciesIndex] <= 0.0) {
-			bank.yearsAtBreastHeight[primarySpeciesIndex] = this.primarySpeciesAgeAtBreastHeight;
+			bank.yearsAtBreastHeight[primarySpeciesIndex] = primarySpeciesAgeAtBreastHeight;
 		}
 		if (bank.yearsToBreastHeight[primarySpeciesIndex] <= 0.0) {
-			bank.yearsToBreastHeight[primarySpeciesIndex] = this.primarySpeciesAgeToBreastHeight;
+			bank.yearsToBreastHeight[primarySpeciesIndex] = primarySpeciesAgeToBreastHeight;
 		}
 
-		this.arePrimarySpeciesDetailsSet = true;
+		arePrimarySpeciesDetailsSet = true;
 	}
 
 	/**
@@ -381,8 +381,8 @@ class LayerProcessingState {
 	public void updatePrimarySpeciesDetailsAfterGrowth(float newPrimarySpeciesDominantHeight) {
 
 		this.primarySpeciesDominantHeight = newPrimarySpeciesDominantHeight;
-		this.primarySpeciesTotalAge += 1;
-		this.primarySpeciesAgeAtBreastHeight += 1;
+		primarySpeciesTotalAge += 1;
+		primarySpeciesAgeAtBreastHeight += 1;
 
 		// primarySpeciesSiteIndex - does this change?
 		// primarySpeciesAgeToBreastHeight of course doesn't change.
@@ -394,7 +394,7 @@ class LayerProcessingState {
 			MatrixMap2<UtilizationClass, LayerType, Float>[] cvQuadraticMeanDiameter,
 			Map<UtilizationClassVariable, Float>[] cvPrimaryLayerSmall
 	) {
-		if (this.areCompatibilityVariablesSet) {
+		if (areCompatibilityVariablesSet) {
 			throw new IllegalStateException(COMPATIBILITY_VARIABLES_SET_CAN_BE_SET_ONCE_ONLY);
 		}
 
@@ -403,7 +403,7 @@ class LayerProcessingState {
 		this.cvQuadraticMeanDiameter = cvQuadraticMeanDiameter;
 		this.cvPrimaryLayerSmall = cvPrimaryLayerSmall;
 
-		this.areCompatibilityVariablesSet = true;
+		areCompatibilityVariablesSet = true;
 	}
 
 	/**
@@ -444,7 +444,7 @@ class LayerProcessingState {
 
 	public float
 			getCVVolume(int speciesIndex, UtilizationClass uc, VolumeVariable volumeVariable, LayerType layerType) {
-		if (!this.areCompatibilityVariablesSet) {
+		if (!areCompatibilityVariablesSet) {
 			throw new IllegalStateException(UNSET_CV_VOLUMES);
 		}
 
@@ -452,7 +452,7 @@ class LayerProcessingState {
 	}
 
 	public float getCVBasalArea(int speciesIndex, UtilizationClass uc, LayerType layerType) {
-		if (!this.areCompatibilityVariablesSet) {
+		if (!areCompatibilityVariablesSet) {
 			throw new IllegalStateException(UNSET_CV_BASAL_AREAS);
 		}
 
@@ -460,7 +460,7 @@ class LayerProcessingState {
 	}
 
 	public float getCVQuadraticMeanDiameter(int speciesIndex, UtilizationClass uc, LayerType layerType) {
-		if (!this.areCompatibilityVariablesSet) {
+		if (!areCompatibilityVariablesSet) {
 			throw new IllegalStateException(UNSET_CV_BASAL_AREAS);
 		}
 
@@ -468,7 +468,7 @@ class LayerProcessingState {
 	}
 
 	public float getCVSmall(int speciesIndex, UtilizationClassVariable variable) {
-		if (!this.areCompatibilityVariablesSet) {
+		if (!areCompatibilityVariablesSet) {
 			throw new IllegalStateException(UNSET_CV_BASAL_AREAS);
 		}
 

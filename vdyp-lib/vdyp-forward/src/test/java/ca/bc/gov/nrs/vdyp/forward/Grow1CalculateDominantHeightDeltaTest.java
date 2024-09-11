@@ -27,7 +27,8 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.application.ProcessingException;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
-import ca.bc.gov.nrs.vdyp.forward.test.VdypForwardTestUtils;
+import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.ExecutionStep;
+import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
@@ -51,7 +52,7 @@ class Grow1CalculateDominantHeightDeltaTest {
 	@BeforeEach
 	void beforeTest() throws IOException, ResourceParseException, ProcessingException {
 		parser = new ForwardControlParser();
-		controlMap = VdypForwardTestUtils.parse(parser, "VDYP.CTR");
+		controlMap = ForwardTestUtils.parse(parser, "VDYP.CTR");
 
 		polygonDescriptionStreamFactory = (StreamingParserFactory<PolygonIdentifier>) controlMap
 				.get(ControlKey.FORWARD_INPUT_GROWTO.name());
@@ -65,8 +66,10 @@ class Grow1CalculateDominantHeightDeltaTest {
 
 		ForwardProcessingEngine fpe = new ForwardProcessingEngine(controlMap);
 
+		var polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
+
 		// Select the first polygon - 01002 S000001 00(1970)
-		fpe.fps.setPolygonLayer(forwardDataStreamReader.readNextPolygon().orElseThrow(), LayerType.PRIMARY);
+		fpe.fps.setPolygonLayer(polygon, LayerType.PRIMARY);
 
 		float hd = 35.2999992f;
 		int sc = 13;
@@ -113,6 +116,8 @@ class Grow1CalculateDominantHeightDeltaTest {
 		} while (!polygon.getPolygonIdentifier().getName().equals("01003AS000001 00"));
 
 		fpe.fps.setPolygonLayer(polygon, LayerType.PRIMARY);
+
+		fpe.processPolygon(polygon, ExecutionStep.GROW_1_LAYER_DHDELTA.predecessor());
 
 		float hd = 26.5f;
 		int sc = 11;

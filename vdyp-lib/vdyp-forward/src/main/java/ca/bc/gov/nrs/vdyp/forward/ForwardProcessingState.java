@@ -11,10 +11,10 @@ import ca.bc.gov.nrs.vdyp.forward.controlmap.ForwardResolvedControlMapImpl;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 
-class ForwardProcessingState {
+public class ForwardProcessingState {
 
 	/** The control map defining the context of the execution */
-	final ForwardResolvedControlMap fcm;
+	public final ForwardResolvedControlMap fcm;
 
 	/** The estimators instance used by this engine */
 	final EstimationMethods estimators;
