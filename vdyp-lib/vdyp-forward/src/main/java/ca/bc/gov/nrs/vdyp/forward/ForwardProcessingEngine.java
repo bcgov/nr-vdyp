@@ -88,15 +88,20 @@ public class ForwardProcessingEngine {
 
 	/** The entity to which result information is written */
 	private Optional<VdypOutputWriter> outputWriter = Optional.empty();
+	
+	private final boolean doCheckpoint;
 
 	public ForwardProcessingEngine(Map<String, Object> controlMap, Optional<VdypOutputWriter> outputWriter)
 			throws ProcessingException {
 		this.fps = new ForwardProcessingState(controlMap);
 		this.outputWriter = outputWriter;
+		
+		int cv7Value = this.fps.fcm.getForwardControlVariables().getControlVariable(ControlVariable.CHECKPOINT_7);
+		doCheckpoint = cv7Value == 1;
 	}
 
 	public ForwardProcessingEngine(Map<String, Object> controlMap) throws ProcessingException {
-		this.fps = new ForwardProcessingState(controlMap);
+		this(controlMap, Optional.empty());
 	}
 
 	public enum ExecutionStep {
@@ -353,6 +358,7 @@ public class ForwardProcessingEngine {
 		assert lastStepInclusive.ge(ExecutionStep.GROW_1_LAYER_DHDELTA);
 
 		Bank bank = lps.getBank();
+		VdypPolygon polygon = lps.getPolygon();
 
 		float dhStart = lps.getPrimarySpeciesDominantHeight();
 		int pspSiteCurveNumber = lps.getSiteCurveNumber(lps.getPrimarySpeciesIndex());
@@ -363,6 +369,8 @@ public class ForwardProcessingEngine {
 		// (1) Calculate change in dominant height (layer)
 
 		float dhDelta = calculateDominantHeightDelta(dhStart, pspSiteCurveNumber, pspSiteIndex, pspYtbhStart);
+
+		writeCheckpoint(polygon, currentYear);
 
 		if (ExecutionStep.GROW_1_LAYER_DHDELTA.eq(lastStepInclusive))
 			return;
@@ -378,6 +386,8 @@ public class ForwardProcessingEngine {
 		float lhStart = bank.loreyHeights[0][UC_ALL_INDEX];
 
 		float baDelta = calculateBasalAreaDelta(pspYabhStart, dhStart, baStart, veteranLayerBasalArea, dhDelta);
+
+		writeCheckpoint(polygon, currentYear);
 
 		if (ExecutionStep.GROW_2_LAYER_BADELTA.eq(lastStepInclusive))
 			return;
@@ -401,6 +411,8 @@ public class ForwardProcessingEngine {
 
 		float baChangeRate = baDelta / baStart;
 
+		writeCheckpoint(polygon, currentYear);
+
 		if (ExecutionStep.GROW_3_LAYER_DQDELTA.eq(lastStepInclusive))
 			return;
 
@@ -420,6 +432,8 @@ public class ForwardProcessingEngine {
 		bank.quadMeanDiameters[0][UC_ALL_INDEX] = dqEnd;
 		bank.basalAreas[0][UC_ALL_INDEX] = baEnd;
 		bank.treesPerHectare[0][UC_ALL_INDEX] = tphEnd;
+
+		writeCheckpoint(polygon, currentYear);
 
 		if (ExecutionStep.GROW_4_LAYER_BA_AND_DQTPH_EST.eq(lastStepInclusive))
 			return;
@@ -464,6 +478,8 @@ public class ForwardProcessingEngine {
 
 			bank.loreyHeights[0][UC_ALL_INDEX] = sum1 / sum2;
 
+			writeCheckpoint(polygon, currentYear);
+
 			if (ExecutionStep.GROW_5A_LH_EST.eq(lastStepInclusive))
 				return;
 
@@ -496,6 +512,8 @@ public class ForwardProcessingEngine {
 			}
 		}
 
+		writeCheckpoint(polygon, currentYear);
+
 		if (ExecutionStep.GROW_5_SPECIES_BADQTPH.eq(lastStepInclusive))
 			return;
 
@@ -519,6 +537,8 @@ public class ForwardProcessingEngine {
 
 		bank.treesPerHectare[0][UC_ALL_INDEX] = tphEndSum;
 
+		writeCheckpoint(polygon, currentYear);
+
 		if (ExecutionStep.GROW_6_LAYER_TPH2.eq(lastStepInclusive))
 			return;
 
@@ -526,6 +546,8 @@ public class ForwardProcessingEngine {
 
 		bank.quadMeanDiameters[0][UC_ALL_INDEX] = BaseAreaTreeDensityDiameter
 				.quadMeanDiameter(bank.basalAreas[0][UC_ALL_INDEX], bank.treesPerHectare[0][UC_ALL_INDEX]);
+
+		writeCheckpoint(polygon, currentYear);
 
 		if (ExecutionStep.GROW_7_LAYER_DQ2.eq(lastStepInclusive))
 			return;
@@ -538,6 +560,8 @@ public class ForwardProcessingEngine {
 		// We now have site (layer) level predications for basal area, quad-mean-diameter,
 		// trees-per-hectare and Lorey height. Proceed to per-species estimates.
 
+		writeCheckpoint(polygon, currentYear);
+
 		if (ExecutionStep.GROW_8_SPECIES_LH.eq(lastStepInclusive))
 			return;
 
@@ -546,6 +570,8 @@ public class ForwardProcessingEngine {
 			bank.percentagesOfForestedLand[i] = 100.0f * bank.basalAreas[i][UC_ALL_INDEX]
 					/ bank.basalAreas[0][UC_ALL_INDEX];
 		}
+
+		writeCheckpoint(polygon, currentYear);
 
 		if (ExecutionStep.GROW_9_SPECIES_PCT.eq(lastStepInclusive))
 			return;
@@ -585,11 +611,15 @@ public class ForwardProcessingEngine {
 			}
 		}
 
+		writeCheckpoint(polygon, currentYear);
+
 		if (ExecutionStep.GROW_10_STORE_SPECIES_DETAILS.eq(lastStepInclusive))
 			return;
 
 		// (11) update the compatibility variables to reflect the changes during the growth period
 		lps.updateCompatibilityVariablesAfterGrowth();
+
+		writeCheckpoint(polygon, currentYear);
 
 		if (ExecutionStep.GROW_11_COMPATIBILITY_VARS.eq(lastStepInclusive))
 			return;
@@ -609,6 +639,8 @@ public class ForwardProcessingEngine {
 
 		bank.refreshBank(primaryLayer);
 
+		writeCheckpoint(polygon, currentYear);
+
 		if (ExecutionStep.GROW_12_SPECIES_UC.eq(lastStepInclusive))
 			return;
 
@@ -618,6 +650,18 @@ public class ForwardProcessingEngine {
 
 		if (ExecutionStep.GROW_13_SPECIES_UC_SMALL.eq(lastStepInclusive))
 			return;
+	}
+	
+	private void writeCheckpoint(VdypPolygon polygon, int year) {
+		if (doCheckpoint) {
+			outputWriter.ifPresent(o -> {
+				try {
+					o.writePolygonWithSpeciesAndUtilizationForYear(polygon, year);
+				} catch (IOException e) {
+					throw new RuntimeProcessingException(new ProcessingException(e));
+				}
+			});
+		}
 	}
 
 	/**
@@ -1525,7 +1569,7 @@ public class ForwardProcessingEngine {
 				spDqSmall += lps.getCVSmall(speciesIndex, UtilizationClassVariable.QUAD_MEAN_DIAMETER);
 				FloatMath.clamp(spDqSmall, 4.01f, 7.49f);
 
-				spLhSmall = 1.3f * (spLhSmall - 1.3f)
+				spLhSmall = 1.3f + (spLhSmall - 1.3f)
 						* FloatMath.exp(lps.getCVSmall(speciesIndex, UtilizationClassVariable.LOREY_HEIGHT));
 
 				if (controlVar3Value >= 2 && meanVolumeSmall > 0.0f) {
@@ -2369,8 +2413,7 @@ public class ForwardProcessingEngine {
 				}
 
 				try {
-					o.setPolygonYear(currentYear);
-					o.writePolygonWithSpeciesAndUtilization(polygon);
+					o.writePolygonWithSpeciesAndUtilizationForYear(polygon, currentYear);
 				} catch (IOException e) {
 					throw new RuntimeProcessingException(new ProcessingException(e));
 				}
@@ -2379,7 +2422,7 @@ public class ForwardProcessingEngine {
 			throw e.getCause();
 		}
 	}
-
+	
 	private static final float[] DEFAULT_QUAD_MEAN_DIAMETERS = new float[] { Float.NaN, 10.0f, 15.0f, 20.0f, 25.0f };
 	private static final float V_BASE_MIN = 0.1f;
 	private static final float B_BASE_MIN = 0.01f;
@@ -3142,8 +3185,8 @@ public class ForwardProcessingEngine {
 
 	/**
 	 * Calculate the siteCurve number of all species for which one was not supplied. All calculations are done in the
-	 * given bank, but the resulting site curve vector is stored in the given PolygonProcessingState.
-	 *
+	 * given bank but the result is also stored in the LayerProcessingState.
+	 * <p>
 	 * FORTRAN notes: the original SXINXSET function set both INXSC/INXSCV and BANK3/SCNB, except for index 0 of SCNB.
 	 *
 	 * @param bank         the bank in which the calculations are done.

@@ -1,7 +1,9 @@
 package ca.bc.gov.nrs.vdyp.forward;
 
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.IntStream;
@@ -232,15 +234,23 @@ class Bank {
 		}
 	}
 
+	/**
+	 * For each species, set uc All to the sum of the UC values, UC 7.5 and above only, 
+	 * for the summable values, and calculate quad-mean-diameter from these values.
+	 * <p>
+	 * For the layer, set uc All values (for summable types) to the sum of those of the
+ 	 * individual species and set the other uc values to the sum of those of the
+ 	 * individual species. Calculate the uc All value for quad-mean-diameter, and the
+ 	 * uc All and Small value for lorey-height.
+	 */
 	private void setCalculateUtilizationClassAllValues() {
-
-		// Set uc All to the sum of the UC values, UC 7.5 and above only, for the summable
-		// values, and calculate quad-mean-diameter from these values.
 
 		int layerIndex = 0;
 		int ucAllIndex = UtilizationClass.ALL.ordinal();
 		int ucSmallIndex = UtilizationClass.SMALL.ordinal();
 
+		// Each species
+		
 		for (int sp0Index : indices) {
 
 			basalAreas[sp0Index][ucAllIndex] = sumUtilizationClassValues(
@@ -267,9 +277,8 @@ class Bank {
 						.quadMeanDiameter(basalAreas[sp0Index][ucAllIndex], treesPerHectare[sp0Index][ucAllIndex]);
 			}
 		}
-
-		// Set the layer's uc All values (for summable types) to the sum of those of the
-		// individual species.
+		
+		// Layer
 
 		basalAreas[layerIndex][ucAllIndex] = sumSpeciesUtilizationClassValues(basalAreas, UtilizationClass.ALL);
 		treesPerHectare[layerIndex][ucAllIndex] = sumSpeciesUtilizationClassValues(
@@ -361,20 +370,22 @@ class Bank {
 
 		transferUtilizationsFromBank(0, layer);
 
+		Collection<VdypSpecies> newSpecies = new ArrayList<>();
 		for (int i : indices) {
-			transferSpeciesFromBank(i, layer.getSpecies().get(speciesNames[i]));
+			newSpecies.add(transferSpeciesFromBank(i, layer.getSpecies().get(speciesNames[i])));
 		}
-
+		layer.setSpecies(newSpecies);
+		
 		return layer;
 	}
 
 	private VdypSpecies transferSpeciesFromBank(int index, VdypSpecies species) {
 
 		VdypSpecies newSpecies = VdypSpecies.build(speciesBuilder -> {
-			speciesBuilder.adapt(species);
+			speciesBuilder.copy(species);
 			speciesBuilder.percentGenus(this.percentagesOfForestedLand[index]);
 			species.getSite().ifPresent(site -> speciesBuilder.addSite(VdypSite.build(siteBuilder -> {
-				siteBuilder.adapt(site);
+				siteBuilder.copy(site);
 				siteBuilder.ageTotal(this.ageTotals[index]);
 				siteBuilder.height(this.dominantHeights[index]);
 				siteBuilder.siteCurveNumber(this.siteCurveNumbers[index]);

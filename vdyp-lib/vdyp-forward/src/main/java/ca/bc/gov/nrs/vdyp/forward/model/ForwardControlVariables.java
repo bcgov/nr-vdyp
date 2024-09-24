@@ -46,6 +46,13 @@ import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
  * <li>0: No
  * <li>1: Yes (normal)
  * </ul>
+ * 7th: Checkpoint growth. Polygons are written to the output files after
+ * each step of the grow process. The final write for a given year is the 
+ * result of growth for that year; the others are all intermediate.
+ * <ul>
+ * <li>0: No
+ * <li>1: Yes (normal)
+ * </ul>
  */
 public class ForwardControlVariables {
 

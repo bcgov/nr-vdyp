@@ -61,7 +61,9 @@ public class VdypSpeciesParser implements ControlMapValueReplacer<Object, String
 			map(String fileName, FileResolver fileResolver, Map<String, Object> controlMap)
 					throws IOException, ResourceParseException {
 		return () -> {
-			var lineParser = new LineParser().strippedString(25, DESCRIPTION).space(1)
+			var lineParser = new LineParser()
+					.strippedString(25, DESCRIPTION) //
+					.space(1) //
 					.value(
 							1, LAYER_TYPE,
 							ValueParser.valueOrMarker(
@@ -70,9 +72,12 @@ public class VdypSpeciesParser implements ControlMapValueReplacer<Object, String
 											x -> x == null || x.trim().length() == 0 || x.trim().equals("Z"),
 											EndOfRecord.END_OF_RECORD
 									)
-							)
-					).space(1).value(2, GENUS_INDEX, ValueParser.INTEGER).space(1)
-					.value(2, GENUS, ControlledValueParser.optional(ControlledValueParser.GENUS)).space(1)
+							)) //
+					.space(1) //
+					.value(2, GENUS_INDEX, ValueParser.INTEGER) //
+					.space(1) //
+					.value(2, GENUS, ControlledValueParser.optional(ControlledValueParser.GENUS)) //
+					.space(1) //
 					.value(3, SPECIES_0, ControlledValueParser.optional(ControlledValueParser.SPECIES))
 					.value(5, PERCENT_SPECIES_0, ControlledValueParser.optional(ValueParser.PERCENTAGE))
 					.value(3, SPECIES_1, ControlledValueParser.optional(ControlledValueParser.SPECIES))

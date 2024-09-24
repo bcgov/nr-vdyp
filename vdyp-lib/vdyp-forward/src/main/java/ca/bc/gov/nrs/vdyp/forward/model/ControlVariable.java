@@ -56,7 +56,15 @@ public enum ControlVariable {
 	 * <li>1 => yes (standard behaviour)
 	 * </ul>
 	 */
-	UPDATE_DURING_GROWTH_6(6);
+	UPDATE_DURING_GROWTH_6(6),
+	/**
+	 * 7th 4 col: Checkpoint polygon growth after each growth step
+	 * <ul>
+	 * <li>0 => no (standard behaviour)
+	 * <li>1 => yes
+	 * </ul>
+	 */
+	CHECKPOINT_7(7);
 
 	public final int variableNumber;
 

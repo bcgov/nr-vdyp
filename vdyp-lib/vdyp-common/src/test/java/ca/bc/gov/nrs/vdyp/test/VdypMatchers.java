@@ -53,6 +53,12 @@ import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 public class VdypMatchers {
 
 	static final float EPSILON = 0.001f;
+	
+	private static float currentEpsilon = EPSILON;
+	
+	public static void setEpsilon(float newValue) {
+		currentEpsilon = newValue;
+	}
 
 	/**
 	 * Matches a string if when parsed by the parser method it matches the given matcher
@@ -521,7 +527,7 @@ public class VdypMatchers {
 	}
 
 	public static Matcher<Float> closeTo(float expected) {
-		return closeTo(expected, EPSILON);
+		return closeTo(expected, currentEpsilon);
 	}
 
 	public static Matcher<Float> closeTo(float expected, float threshold) {

@@ -16,6 +16,7 @@ import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingState;
 import ca.bc.gov.nrs.vdyp.forward.model.ControlVariable;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.ModifierParser;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
+import ca.bc.gov.nrs.vdyp.io.parse.control.BaseControlParser;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
@@ -85,7 +86,7 @@ public class ForwardTestUtils {
 		}
 	}
 
-	public static Map<String, Object> parse(ForwardControlParser parser, String resourceName)
+	public static Map<String, Object> parse(BaseControlParser parser, String resourceName)
 			throws IOException, ResourceParseException {
 
 		Class<?> klazz = TestUtils.class;
