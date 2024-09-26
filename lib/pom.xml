@@ -34,6 +34,7 @@
 		<module>vdyp-sindex</module>
 		<module>vdyp-si32</module>
 		<module>vdyp-forward</module>
+		<module>vdyp-back</module>
 	</modules>
 
 	<build>

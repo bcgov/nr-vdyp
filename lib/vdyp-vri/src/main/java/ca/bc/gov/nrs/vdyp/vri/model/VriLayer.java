@@ -213,6 +213,7 @@ public class VriLayer extends BaseVdypLayer<VriSpecies, VriSite> implements Inpu
 
 		@Override
 		protected VriLayer doBuild() {
+			// We want the reciprocal of the forest fraction.  When we output at the other end the derived values are multiplied by the forest fraction canceling this out.
 			float multiplier = 100f / percentAvailable.orElse(100f);
 			VriLayer result = new VriLayer(
 					polygonIdentifier.get(), //
