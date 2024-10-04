@@ -46,6 +46,12 @@ import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
  * <li>0: No
  * <li>1: Yes (normal)
  * </ul>
+ * 7th: Checkpoint growth. Polygons are written to the output files after each step of the grow process. The final write
+ * for a given year is the result of growth for that year; the others are all intermediate.
+ * <ul>
+ * <li>0: No
+ * <li>1: Yes (normal)
+ * </ul>
  */
 public class ForwardControlVariables {
 
@@ -145,6 +151,18 @@ public class ForwardControlVariables {
 
 		assert controlVariable.ordinal() == controlVariable.variableNumber - 1;
 		return controlVariables[controlVariable.ordinal()];
+	}
+
+	/**
+	 * Explicitly set a control variable value. To be used by unit tests only.
+	 *
+	 * @param controlVariable the variable to set
+	 * @param value           its new value
+	 * @throws ValueParseException
+	 */
+	public void setControlVariable(ControlVariable controlVariable, int value) throws ValueParseException {
+		controlVariables[controlVariable.ordinal()] = value;
+		validate();
 	}
 
 	int getControlVariable(int elementNumber) {

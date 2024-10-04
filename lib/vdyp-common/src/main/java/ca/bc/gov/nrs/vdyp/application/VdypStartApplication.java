@@ -383,13 +383,6 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	 * @return
 	 * @throws ProcessingException
 	 */
-	@SuppressWarnings(
-		{ //
-				"java:S1301", // Using switch instead of if for consistency
-				"java:S3776" // Inherently a lot of branching in a consistent manner, breaking into more
-								// functions would make it less comprehensible
-		}
-	)
 	protected int findItg(List<S> primarySecondary) throws StandProcessingException {
 		var primary = primarySecondary.get(0);
 
@@ -747,7 +740,6 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	}
 
 	// FIPLAND
-	@SuppressWarnings("java:S3655")
 	public float estimatePercentForestLand(P polygon, Optional<L> vetLayer, L primaryLayer) throws ProcessingException {
 		if (polygon.getPercentAvailable().isPresent()) {
 			return polygon.getPercentAvailable().get();

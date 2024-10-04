@@ -119,14 +119,54 @@ public class VdypOutputWriter implements Closeable {
 		);
 	}
 
+	public void setPolygonYear(int currentYear) {
+		this.currentYear = Optional.of(currentYear);
+	}
+
+	/**
+	 * Write the given polygon record for the given year to the polygon file.
+	 *
+	 * @param polygon the polygon to be written
+	 * @param year    the year of the polygon
+	 * @throws IOException
+	 */
+	public void writePolygonWithSpeciesAndUtilizationForYear(VdypPolygon polygon, int year) throws IOException {
+		setPolygonYear(year);
+		writePolygonWithSpeciesAndUtilization(polygon);
+	}
+
+	/**
+	 * Output a polygon and its children.
+	 *
+	 * @param polygon
+	 * @throws IOException
+	 */
+	// VDYP_OUT when JPROGRAM = 1 (FIPSTART) or 3 (VRISTART)
+	public void writePolygonWithSpeciesAndUtilization(VdypPolygon polygon) throws IOException {
+
+		writePolygon(polygon);
+
+		// Primary then Veteran (if present)
+		var sortedLayers = polygon.getLayers().values().stream()
+				.sorted((l1, l2) -> l1.getLayerType().getIndex() - l2.getLayerType().getIndex()).toList();
+		for (var layer : sortedLayers) {
+			writeUtilization(polygon, layer, layer);
+			List<VdypSpecies> specs = new ArrayList<>(layer.getSpecies().size());
+			specs.addAll(layer.getSpecies().values());
+			specs.sort(Utils.compareUsing(BaseVdypSpecies::getGenus));
+			for (var species : specs) {
+				writeSpecies(layer, species);
+				writeUtilization(polygon, layer, species);
+			}
+		}
+		writeSpeciesEndRecord(polygon);
+		writeUtilizationEndRecord(polygon);
+	}
+
 	static OutputStream getOutputStream(Map<String, Object> controlMap, FileResolver resolver, String key)
 			throws IOException {
 		String fileName = Utils.expectParsedControl(controlMap, key, String.class);
 		return resolver.resolveForOutput(fileName);
-	}
-
-	public void setPolygonYear(int currentYear) {
-		this.currentYear = Optional.of(currentYear);
 	}
 
 	private PolygonIdentifier getCurrentPolygonDescriptor(PolygonIdentifier originalIdentifier) {
@@ -137,9 +177,8 @@ public class VdypOutputWriter implements Closeable {
 		}
 	}
 
-	// V7W_AIP
 	/**
-	 * Write a polygon record to the polygon file
+	 * V7W_AIP - Write the given polygon record to the polygon file
 	 *
 	 * @param polygon
 	 * @throws IOException
@@ -295,30 +334,6 @@ public class VdypOutputWriter implements Closeable {
 					) // FIXME: VDYP7 is being inconsistent. Should consider using -9 for both.
 			);
 		}
-	}
-
-	/**
-	 * Output a polygon and its children.
-	 *
-	 * @param polygon
-	 * @throws IOException
-	 */
-	// VDYP_OUT when JPROGRAM = 1 (FIPSTART) or 3 (VRISTART)
-	public void writePolygonWithSpeciesAndUtilization(VdypPolygon polygon) throws IOException {
-
-		writePolygon(polygon);
-		for (var layer : polygon.getLayers().values()) {
-			writeUtilization(polygon, layer, layer);
-			List<VdypSpecies> specs = new ArrayList<>(layer.getSpecies().size());
-			specs.addAll(layer.getSpecies().values());
-			specs.sort(Utils.compareUsing(BaseVdypSpecies::getGenus));
-			for (var species : specs) {
-				writeSpecies(layer, species);
-				writeUtilization(polygon, layer, species);
-			}
-		}
-		writeSpeciesEndRecord(polygon);
-		writeUtilizationEndRecord(polygon);
 	}
 
 	private void writeEndRecord(OutputStream os, VdypPolygon polygon) throws IOException {

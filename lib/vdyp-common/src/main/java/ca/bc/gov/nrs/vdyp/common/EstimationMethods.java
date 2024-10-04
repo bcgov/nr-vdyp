@@ -133,6 +133,7 @@ public class EstimationMethods {
 	 *
 	 * @param vspec         The species.
 	 * @param vspecPrime    The primary species.
+	 * @param bec           The BEC zone containing the species.
 	 * @param leadHeight    lead height of the layer
 	 * @param primaryHeight height of the primary species
 	 * @throws ProcessingException
@@ -888,7 +889,7 @@ public class EstimationMethods {
 	 * @throws StandProcessingException in the event of a processing error
 	 */
 	public float estimateQuadMeanDiameterYield(
-			Coefficients coefficients, int controlVariable2Setting, float dominantHeight, float breastHeightAge,
+			Coefficients coefficients, int debugVariable2Value, float dominantHeight, float breastHeightAge,
 			Optional<Float> veteranBaseArea, float upperBoundQuadMeanDiameter
 	) throws StandProcessingException {
 
@@ -896,7 +897,10 @@ public class EstimationMethods {
 			return 7.6f;
 		}
 
-		final float ageUse = breastHeightAge;
+		float ageUse = breastHeightAge;
+		if (debugVariable2Value > 0) {
+			ageUse = Math.min(ageUse, debugVariable2Value * 100.0f);
+		}
 
 		if (ageUse <= 0f) {
 			throw new StandProcessingException("Primary breast height age must be positive but was " + ageUse);
@@ -908,8 +912,8 @@ public class EstimationMethods {
 		final float c1 = Math.max(coefficients.getCoe(1) + coefficients.getCoe(2) * trAge, 0f);
 		final float c2 = Math.max(coefficients.getCoe(3) + coefficients.getCoe(4) * trAge, 0f);
 
-		float dq = c0 + c1 * FloatMath.pow(dominantHeight - 5f, c2);
-
+		float dq = c0 + c1 * FloatMath.pow(dominantHeight - 5f, c2)
+				* FloatMath.exp(veteranBaseArea.orElse(0.0f) * coefficients.getCoe(5));
 		return FloatMath.clamp(dq, 7.6f, upperBoundQuadMeanDiameter);
 	}
 
