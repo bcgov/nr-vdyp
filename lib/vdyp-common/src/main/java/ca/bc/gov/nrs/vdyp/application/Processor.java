@@ -75,7 +75,7 @@ public abstract class Processor {
 	 */
 	protected Set<Pass> getAllPasses() {
 		return EnumSet.allOf(Pass.class);
-	};
+	}
 
 	/**
 	 * Log the settings of the pass set

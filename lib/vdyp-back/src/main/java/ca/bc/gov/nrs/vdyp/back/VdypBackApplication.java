@@ -3,11 +3,10 @@ package ca.bc.gov.nrs.vdyp.back;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ca.bc.gov.nrs.vdyp.application.Processor;
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.application.VdypProcessingApplication;
 
-public class VdypBackApplication extends VdypProcessingApplication {
+public class VdypBackApplication extends VdypProcessingApplication<BackProcessor> {
 
 	static {
 		initLogging(VdypBackApplication.class);
@@ -24,7 +23,7 @@ public class VdypBackApplication extends VdypProcessingApplication {
 	}
 
 	@Override
-	protected Processor getProcessor() {
+	protected BackProcessor getProcessor() {
 		return null; // TODO
 	}
 

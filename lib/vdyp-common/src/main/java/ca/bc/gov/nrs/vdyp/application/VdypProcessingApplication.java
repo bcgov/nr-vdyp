@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
 
-public abstract class VdypProcessingApplication extends VdypApplication {
+public abstract class VdypProcessingApplication<P extends Processor> extends VdypApplication {
 
 	@SuppressWarnings("java:S106")
 	protected static void initLogging(Class<?> klazz) {
@@ -35,7 +35,7 @@ public abstract class VdypProcessingApplication extends VdypApplication {
 
 	public abstract String getDefaultControlFileName();
 
-	protected abstract Processor getProcessor();
+	protected abstract P getProcessor();
 
 	public static final int CONFIG_LOAD_ERROR_EXIT = 1;
 	public static final int PROCESSING_ERROR_EXIT = 2;
