@@ -34,6 +34,13 @@
 			<type>test-jar</type>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>ca.bc.gov.nrs.vdyp</groupId>
+			<artifactId>vdyp-forward</artifactId>
+			<version>${project.version}</version>
+			<type>test-jar</type>
+			<scope>test</scope>
+		</dependency>
 
 		<dependency>
 			<groupId>org.apache.commons</groupId>

@@ -187,7 +187,7 @@ class VdypProcessingApplicationTest {
 			var outBytes = new ByteArrayOutputStream();
 			var outPrint = new PrintStream(outBytes);
 			var input = new ByteArrayInputStream("\n".getBytes());
-			var result = app.getControlFileNamesFromUser(outPrint, input);
+			List<String> result = app.getControlFileNamesFromUser(outPrint, input);
 			assertThat(result, Matchers.contains("default.ctl"));
 		}
 
@@ -196,7 +196,7 @@ class VdypProcessingApplicationTest {
 			var outBytes = new ByteArrayOutputStream();
 			var outPrint = new PrintStream(outBytes);
 			var input = new ByteArrayInputStream("alternate.ctl\n".getBytes());
-			var result = app.getControlFileNamesFromUser(outPrint, input);
+			List<String> result = app.getControlFileNamesFromUser(outPrint, input);
 			assertThat(result, Matchers.contains("alternate.ctl"));
 		}
 
@@ -205,7 +205,7 @@ class VdypProcessingApplicationTest {
 			var outBytes = new ByteArrayOutputStream();
 			var outPrint = new PrintStream(outBytes);
 			var input = new ByteArrayInputStream("alternate1.ctl alternate2.ctl\n".getBytes());
-			var result = app.getControlFileNamesFromUser(outPrint, input);
+			List<String> result = app.getControlFileNamesFromUser(outPrint, input);
 			assertThat(result, Matchers.contains("alternate1.ctl", "alternate2.ctl"));
 		}
 
@@ -214,7 +214,7 @@ class VdypProcessingApplicationTest {
 			var outBytes = new ByteArrayOutputStream();
 			var outPrint = new PrintStream(outBytes);
 			var input = new ByteArrayInputStream("*alternate.ctl\n".getBytes());
-			var result = app.getControlFileNamesFromUser(outPrint, input);
+			List<String> result = app.getControlFileNamesFromUser(outPrint, input);
 			assertThat(result, Matchers.contains("default.ctl", "alternate.ctl"));
 		}
 
@@ -223,7 +223,7 @@ class VdypProcessingApplicationTest {
 			var outBytes = new ByteArrayOutputStream();
 			var outPrint = new PrintStream(outBytes);
 			var input = new ByteArrayInputStream("*alternate1.ctl alternate2.ctl\n".getBytes());
-			var result = app.getControlFileNamesFromUser(outPrint, input);
+			List<String> result = app.getControlFileNamesFromUser(outPrint, input);
 			assertThat(result, Matchers.contains("default.ctl", "alternate1.ctl", "alternate2.ctl"));
 		}
 	}

@@ -20,9 +20,9 @@ public class BackProcessor extends Processor<ForwardDebugSettings> {
 	}
 
 	@Override
-	public void process(
-			Set<Pass> vdypPassSet, Map<String, Object> controlMap, Optional<FileResolver> outputFileResolver
-	) throws ProcessingException {
+	public void
+			process(Set<Pass> vdypPassSet, Map<String, Object> controlMap, Optional<FileResolver> outputFileResolver)
+					throws ProcessingException {
 		// TODO Auto-generated method stub
 
 	}
