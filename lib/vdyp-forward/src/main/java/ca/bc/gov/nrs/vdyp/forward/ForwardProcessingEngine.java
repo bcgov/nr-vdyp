@@ -127,10 +127,10 @@ public class ForwardProcessingEngine {
 		GROW_7_LAYER_DQ2, //
 		GROW_8_SPECIES_LH, //
 		GROW_9_SPECIES_PCT, //
-		GROW_10_STORE_SPECIES_DETAILS, //
-		GROW_11_COMPATIBILITY_VARS, //
-		GROW_12_SPECIES_UC, //
-		GROW_13_SPECIES_UC_SMALL, //
+		GROW_10_COMPATIBILITY_VARS, //
+		GROW_11_SPECIES_UC, //
+		GROW_12_SPECIES_UC_SMALL, //
+		GROW_13_STORE_SPECIES_DETAILS, //
 		GROW, //
 
 		// Must be last
@@ -482,7 +482,7 @@ public class ForwardProcessingEngine {
 			// Restore the Lorey Heights back to the values at the beginning of the period.
 			// They will be updated below using the new estimate of TPH-primary species.
 
-			for (int i = 0; i < bank.getNSpecies(); i++) {
+			for (int i = 0; i <= bank.getNSpecies(); i++) {
 				bank.loreyHeights[i][UC_ALL_INDEX] = lhAtStart[i];
 			}
 		}
@@ -566,7 +566,45 @@ public class ForwardProcessingEngine {
 		if (ExecutionStep.GROW_9_SPECIES_PCT.eq(lastStepInclusive))
 			return;
 
-		// (10) Update the running values.
+		// (10) update the compatibility variables to reflect the changes during the growth period
+		lps.updateCompatibilityVariablesAfterGrowth();
+
+		writeCheckpoint(currentYear);
+
+		if (ExecutionStep.GROW_10_COMPATIBILITY_VARS.eq(lastStepInclusive))
+			return;
+
+		// (11) calculate All and the large component volumes to reflect the changes in growth
+
+		VdypLayer primaryLayer = fps.updatePolygon().getLayers().get(LayerType.PRIMARY);
+
+		VolumeComputeMode volumeComputationMode = VolumeComputeMode.BY_UTIL_WITH_WHOLE_STEM_BY_SPEC;
+		int controlVariable3Value = fps.fcm.getForwardControlVariables()
+				.getControlVariable(ControlVariable.COMPAT_VAR_APPLICATION_3);
+		CompatibilityVariableMode compatibilityVariableMode = CompatibilityVariableMode
+				.getByInteger(controlVariable3Value);
+		lps.getFps().computers.computeUtilizationComponentsPrimary(
+				lps.getBecZone(), primaryLayer, volumeComputationMode, compatibilityVariableMode
+		);
+
+		bank.refreshBank(primaryLayer);
+
+		writeCheckpoint(currentYear);
+
+		if (ExecutionStep.GROW_11_SPECIES_UC.eq(lastStepInclusive))
+			return;
+
+		// (12) calculate the small component volumes to reflect the changes in growth
+
+		calculateSmallComponentYields(lps);
+
+		writeCheckpoint(currentYear);
+
+		if (ExecutionStep.GROW_12_SPECIES_UC_SMALL.eq(lastStepInclusive))
+			return;
+
+		// (13) Update the running values.
+		
 		lps.updatePrimarySpeciesDetailsAfterGrowth(dhEnd);
 
 		for (int i : lps.getIndices()) {
@@ -585,15 +623,13 @@ public class ForwardProcessingEngine {
 
 				float spSiStart = bank.siteIndices[i];
 				float spDhStart = bank.dominantHeights[i];
-				float spYtbhStart = bank.yearsToBreastHeight[i];
-				float spYabhStart = bank.yearsAtBreastHeight[i];
+				float spYtbh = bank.yearsToBreastHeight[i];
+				float spYabhEnd = bank.yearsAtBreastHeight[i];
 
-				if (!Float.isNaN(spSiStart) && !Float.isNaN(spDhStart) && !Float.isNaN(spYtbhStart)
-						&& !Float.isNaN(spYabhStart)) {
+				if (!Float.isNaN(spSiStart) && !Float.isNaN(spDhStart) && !Float.isNaN(spYtbh)
+						&& !Float.isNaN(spYabhEnd)) {
 
-					float dhGrowth = calculateDominantHeightDelta(
-							spDhStart, pspSiteCurveNumber, spSiStart, spYtbhStart
-					);
+					float dhGrowth = calculateDominantHeightDelta(spDhStart, pspSiteCurveNumber, spSiStart, spYtbh);
 					bank.dominantHeights[i] += dhGrowth;
 				} else {
 					bank.dominantHeights[i] = Float.NaN;
@@ -608,44 +644,7 @@ public class ForwardProcessingEngine {
 
 		writeCheckpoint(currentYear);
 
-		if (ExecutionStep.GROW_10_STORE_SPECIES_DETAILS.eq(lastStepInclusive))
-			return;
-
-		// (11) update the compatibility variables to reflect the changes during the growth period
-		lps.updateCompatibilityVariablesAfterGrowth();
-
-		writeCheckpoint(currentYear);
-
-		if (ExecutionStep.GROW_11_COMPATIBILITY_VARS.eq(lastStepInclusive))
-			return;
-
-		// (12) calculate All and the large component volumes to reflect the changes in growth
-
-		VdypLayer primaryLayer = fps.updatePolygon().getLayers().get(LayerType.PRIMARY);
-
-		VolumeComputeMode volumeComputationMode = VolumeComputeMode.BY_UTIL_WITH_WHOLE_STEM_BY_SPEC;
-		int controlVariable3Value = fps.fcm.getForwardControlVariables()
-				.getControlVariable(ControlVariable.COMPAT_VAR_APPLICATION_3);
-		CompatibilityVariableMode compatibilityVariableMode = CompatibilityVariableMode
-				.getByInteger(controlVariable3Value);
-		lps.getFps().computers.computeUtilizationComponentsPrimary(
-				lps.getBecZone(), primaryLayer, volumeComputationMode, compatibilityVariableMode
-		);
-
-		bank.refreshBank(primaryLayer);
-
-		writeCheckpoint(currentYear);
-
-		if (ExecutionStep.GROW_12_SPECIES_UC.eq(lastStepInclusive))
-			return;
-
-		// (13) calculate the small component volumes to reflect the changes in growth
-
-		calculateSmallComponentYields(lps);
-
-		writeCheckpoint(currentYear);
-
-		if (ExecutionStep.GROW_13_SPECIES_UC_SMALL.eq(lastStepInclusive))
+		if (ExecutionStep.GROW_13_STORE_SPECIES_DETAILS.eq(lastStepInclusive))
 			return;
 	}
 
@@ -737,13 +736,13 @@ public class ForwardProcessingEngine {
 	 * GRSPpart - calculate, using the "no species dynamics" algorithm, the basal area, trees-per-hectare and
 	 * quad-mean-diameter at the end of the growth period for all species in the current layer of the polygon.
 	 *
-	 * @param baStart   overall basal area at start of growth period
-	 * @param baDelta   change in overall basal area during the growth period
-	 * @param dqStart   overall quad-mean-diameter at start of growth period
-	 * @param dqDelta   change in overall quad-mean-diameter during the growth period
-	 * @param tphStart  overall trees-per-hectare value at the start of growth period
-	 * @param hlStart   stand and per-species (UC All) Lorey heights at the start of the growth period index 0 - stand;
-	 *                  indices 1 - # species for the individual species
+	 * @param baStart  overall basal area at start of growth period
+	 * @param baDelta  change in overall basal area during the growth period
+	 * @param dqStart  overall quad-mean-diameter at start of growth period
+	 * @param dqDelta  change in overall quad-mean-diameter during the growth period
+	 * @param tphStart overall trees-per-hectare value at the start of growth period
+	 * @param hlStart  stand and per-species (UC All) Lorey heights at the start of the growth period index 0 - stand;
+	 *                 indices 1 - # species for the individual species
 	 *
 	 * @return true if and only if a solution was found.
 	 * @throws ProcessingException
@@ -791,13 +790,13 @@ public class ForwardProcessingEngine {
 
 			spDqStartEsts[i] = fps.estimators.estimateQuadMeanDiameterForSpecies(
 					bank.speciesNames[i], hlStart[i], bank.quadMeanDiameters[i][UC_ALL_INDEX],
-					basalAreaPercentagesPerSpecies, lps.getBecZone().getRegion(), dqStart, baStart, tphStart,
-					hlStart[0]
+					basalAreaPercentagesPerSpecies, lps.getBecZone().getRegion(), dqStart, baStart, tphStart, hlStart[0]
 			);
 
 			spDqEndEsts[i] = fps.estimators.estimateQuadMeanDiameterForSpecies(
-					bank.speciesNames[i], bank.loreyHeights[i][UC_ALL_INDEX], dqEndAll[0], basalAreaPercentagesPerSpecies,
-					lps.getBecZone().getRegion(), dqEndAll[0], baEndAll[0], tphEndAll[0], bank.loreyHeights[0][UC_ALL_INDEX]
+					bank.speciesNames[i], bank.loreyHeights[i][UC_ALL_INDEX], dqEndAll[0],
+					basalAreaPercentagesPerSpecies, lps.getBecZone().getRegion(), dqEndAll[0], baEndAll[0],
+					tphEndAll[0], bank.loreyHeights[0][UC_ALL_INDEX]
 			);
 		}
 
@@ -1005,7 +1004,8 @@ public class ForwardProcessingEngine {
 
 			for (int i : lps.getIndices()) {
 				if (bank.basalAreas[i][UC_ALL_INDEX] >= 0.0f) {
-					tphEndAll[i] = tphLowerBoundBySpecies[i] + k * (tphUpperBoundBySpecies[i] - tphLowerBoundBySpecies[i]);
+					tphEndAll[i] = tphLowerBoundBySpecies[i]
+							+ k * (tphUpperBoundBySpecies[i] - tphLowerBoundBySpecies[i]);
 					dqEndAll[i] = BaseAreaTreeDensityDiameter.quadMeanDiameter(baEndAll[i], tphEndAll[i]);
 				} else {
 					baEndAll[i] = 0.0f;
@@ -1513,7 +1513,7 @@ public class ForwardProcessingEngine {
 	}
 
 	/**
-	 * YSMALL - records in <code>end</code> the small component utilization values for current layer.
+	 * YSMALL - records in bank the small component utilization values for current layer.
 	 *
 	 * @throws ProcessingException
 	 */
@@ -1546,7 +1546,7 @@ public class ForwardProcessingEngine {
 			}
 
 			// EMP081
-			float conditionalExpectedBasalArea = calculateConditionalExpectedBasalArea(
+			float conditionalExpectedBasalArea = calculateSmallComponentConditionalExpectedBasalArea(
 					speciesName, spBaAll, spLhAll, region
 			);
 
@@ -1597,7 +1597,7 @@ public class ForwardProcessingEngine {
 			bank.cuVolumesMinusDecay[speciesIndex][UC_SMALL_INDEX] = 0.0f;
 			bank.cuVolumesMinusDecayAndWastage[speciesIndex][UC_SMALL_INDEX] = 0.0f;
 
-			lhSum += spBaSmall * spDqSmall;
+			lhSum += spBaSmall * spLhSmall;
 			baSum += spBaSmall;
 			tphSum += spTphSmall;
 			wsVolumeSum += spWsVolumeSmall;
@@ -1981,11 +1981,10 @@ public class ForwardProcessingEngine {
 		var baUpperBound = growBasalAreaUpperBound();
 
 		boolean isFullOccupancy = true;
-		int controlVariable2Value = fps.fcm.getForwardControlVariables()
-				.getControlVariable(ControlVariable.COMPAT_VAR_OUTPUT_2);
+		int debugSetting2Value = fps.fcm.getDebugSettings().getValue(Vars.MAX_BREAST_HEIGHT_AGE_2);
 
 		float baYieldStart = fps.estimators.estimateBaseAreaYield(
-				estimateBasalAreaYieldCoefficients, controlVariable2Value, pspDhStart, pspYabhStart,
+				estimateBasalAreaYieldCoefficients, debugSetting2Value, pspDhStart, pspYabhStart,
 				veteranLayerBaStart, isFullOccupancy, baUpperBound
 		);
 
@@ -1993,7 +1992,7 @@ public class ForwardProcessingEngine {
 		float pspYabhEnd = pspYabhStart + 1.0f;
 
 		float baYieldEnd = fps.estimators.estimateBaseAreaYield(
-				estimateBasalAreaYieldCoefficients, controlVariable2Value, pspDhEnd, pspYabhEnd, veteranLayerBaStart,
+				estimateBasalAreaYieldCoefficients, debugSetting2Value, pspDhEnd, pspYabhEnd, veteranLayerBaStart,
 				isFullOccupancy, baUpperBound
 		);
 
@@ -2665,58 +2664,58 @@ public class ForwardProcessingEngine {
 		float smallProbability = smallComponentProbability(speciesName, spLoreyHeight_All, region); // PROBsp
 
 		// EMP081
-		float conditionalExpectedBaseArea = calculateConditionalExpectedBasalArea(
+		float conditionalExpectedBaseArea = calculateSmallComponentConditionalExpectedBasalArea(
 				speciesName, spBaseArea_All, spLoreyHeight_All, region
 		); // BACONDsp
 
 		// TODO (see previous TODO): conditionalExpectedBaseArea /= fractionAvailable;
 
-		float baSmall = smallProbability * conditionalExpectedBaseArea;
+		float spBaSmall = smallProbability * conditionalExpectedBaseArea;
 
 		// EMP082
-		float qmdSmall = smallComponentQuadMeanDiameter(speciesName, spLoreyHeight_All); // DQSMsp
+		float spDqSmall = smallComponentQuadMeanDiameter(speciesName, spLoreyHeight_All); // DQSMsp
 
 		// EMP085
-		float lhSmall = smallComponentLoreyHeight(speciesName, spLoreyHeight_All, qmdSmall, spQuadMeanDiameter_All); // HLSMsp
+		float spLhSmall = smallComponentLoreyHeight(speciesName, spLoreyHeight_All, spDqSmall, spQuadMeanDiameter_All); // HLSMsp
 
 		// EMP086
-		float meanVolumeSmall = meanVolumeSmall(speciesName, qmdSmall, lhSmall); // VMEANSMs
+		float spMeanVolumeSmall = meanVolumeSmall(speciesName, spLhSmall, spDqSmall); // VMEANSMs
 
-		var cvSmall = new HashMap<UtilizationClassVariable, Float>();
+		var spCvSmall = new HashMap<UtilizationClassVariable, Float>();
 
 		float spInputBasalArea_Small = bank.basalAreas[speciesIndex][UC_SMALL_INDEX];
-		cvSmall.put(UtilizationClassVariable.BASAL_AREA, spInputBasalArea_Small - baSmall);
+		spCvSmall.put(UtilizationClassVariable.BASAL_AREA, spInputBasalArea_Small - spBaSmall);
 
 		if (forwardControlVariables.allowCalculation(spInputBasalArea_Small, B_BASE_MIN, (l, r) -> l > r)) {
 			float spInputQuadMeanDiameter_Small = bank.quadMeanDiameters[speciesIndex][UC_SMALL_INDEX];
-			cvSmall.put(UtilizationClassVariable.QUAD_MEAN_DIAMETER, spInputQuadMeanDiameter_Small - qmdSmall);
+			spCvSmall.put(UtilizationClassVariable.QUAD_MEAN_DIAMETER, spInputQuadMeanDiameter_Small - spDqSmall);
 		} else {
-			cvSmall.put(UtilizationClassVariable.QUAD_MEAN_DIAMETER, 0.0f);
+			spCvSmall.put(UtilizationClassVariable.QUAD_MEAN_DIAMETER, 0.0f);
 		}
 
 		float spInputLoreyHeight_Small = bank.loreyHeights[speciesIndex][UC_SMALL_INDEX];
-		if (spInputLoreyHeight_Small > 1.3f && lhSmall > 1.3f && spInputBasalArea_Small > 0.0f) {
-			float cvLoreyHeight = FloatMath.log( (spInputLoreyHeight_Small - 1.3f) / (lhSmall - 1.3f));
-			cvSmall.put(UtilizationClassVariable.LOREY_HEIGHT, cvLoreyHeight);
+		if (spInputLoreyHeight_Small > 1.3f && spLhSmall > 1.3f && spInputBasalArea_Small > 0.0f) {
+			float cvLoreyHeight = FloatMath.log( (spInputLoreyHeight_Small - 1.3f) / (spLhSmall - 1.3f));
+			spCvSmall.put(UtilizationClassVariable.LOREY_HEIGHT, cvLoreyHeight);
 		} else {
-			cvSmall.put(UtilizationClassVariable.LOREY_HEIGHT, 0.0f);
+			spCvSmall.put(UtilizationClassVariable.LOREY_HEIGHT, 0.0f);
 		}
 
 		float spInputWholeStemVolume_Small = bank.wholeStemVolumes[speciesIndex][UC_SMALL_INDEX];
-		if (spInputWholeStemVolume_Small > 0.0f && meanVolumeSmall > 0.0f
+		if (spInputWholeStemVolume_Small > 0.0f && spMeanVolumeSmall > 0.0f
 				&& forwardControlVariables.allowCalculation(spInputBasalArea_Small, B_BASE_MIN, (l, r) -> l >= r)) {
 
 			float spInputTreePerHectare_Small = bank.treesPerHectare[speciesIndex][UC_SMALL_INDEX];
 
-			var wsVolumeSmall = FloatMath
-					.log(spInputWholeStemVolume_Small / spInputTreePerHectare_Small / meanVolumeSmall);
-			cvSmall.put(UtilizationClassVariable.WHOLE_STEM_VOLUME, wsVolumeSmall);
+			var spWsVolumeSmall = FloatMath
+					.log(spInputWholeStemVolume_Small / spInputTreePerHectare_Small / spMeanVolumeSmall);
+			spCvSmall.put(UtilizationClassVariable.WHOLE_STEM_VOLUME, spWsVolumeSmall);
 
 		} else {
-			cvSmall.put(UtilizationClassVariable.WHOLE_STEM_VOLUME, 0.0f);
+			spCvSmall.put(UtilizationClassVariable.WHOLE_STEM_VOLUME, 0.0f);
 		}
 
-		return cvSmall;
+		return spCvSmall;
 	}
 
 	/**
@@ -2747,24 +2746,24 @@ public class ForwardProcessingEngine {
 				a2 * lps.getBank().yearsAtBreastHeight[lps.getPrimarySpeciesIndex()] + //
 				a3 * loreyHeight;
 
-		return exp(logit) / (1.0f + exp(logit));
+		float result = exp(logit) / (1.0f + exp(logit));
+
+		return result;
 	}
 
-	// EMP081
 	/**
-	 *
-	 * @param speciesName
-	 * @param basalArea
-	 * @param loreyHeight
-	 * @param region
-	 * @return
+	 * EMP081 - calculate the conditional expected small component basal area. See IPSJF118.doc, equation 3.
+	 * 
+	 * @param sp0Name the species group name
+	 * @param spBaEnd the species UC 0 (all) basal area
+	 * @param spLhEnd the species UC 0 (all) Lorey height
+	 * @param region  the region in which the calculation is occurring
+	 * @return as described
 	 */
-	private float calculateConditionalExpectedBasalArea(
-			String speciesName, float basalArea, float loreyHeight, Region region
+	private float calculateSmallComponentConditionalExpectedBasalArea(
+			String sp0Name, float spBaEnd, float spLhEnd, Region region
 	) {
-		Coefficients coe = fps.fcm.getSmallComponentBasalAreaCoefficients().get(speciesName);
-
-		// EQN 3 in IPSJF118.doc
+		Coefficients coe = fps.fcm.getSmallComponentBasalAreaCoefficients().get(sp0Name);
 
 		float a0 = coe.getCoe(1);
 		float a1 = coe.getCoe(2);
@@ -2777,7 +2776,7 @@ public class ForwardProcessingEngine {
 		// that for now.
 		regionMultiplier = 0f;
 
-		float result = (a0 + a1 * regionMultiplier + a2 * basalArea) * exp(a3 * loreyHeight);
+		float result = (a0 + a1 * regionMultiplier + a2 * spBaEnd) * exp(a3 * spLhEnd);
 		result = max(result, 0f);
 
 		return result;
@@ -2809,12 +2808,14 @@ public class ForwardProcessingEngine {
 		float a0 = coe.getCoe(1);
 		float a1 = coe.getCoe(2);
 
-		return 1.3f + (speciesLoreyHeight_All - 1.3f) //
+		var result = 1.3f + (speciesLoreyHeight_All - 1.3f) //
 				* exp(a0 * (pow(quadMeanDiameterSpecSmall, a1) - pow(speciesQuadMeanDiameter_All, a1)));
+
+		return result;
 	}
 
 	// EMP086
-	private float meanVolumeSmall(String speciesName, float quadMeanDiameterSpecSmall, float loreyHeightSpecSmall) {
+	private float meanVolumeSmall(String speciesName, float spHlSmall, float spDqSmall) {
 		Coefficients coe = fps.fcm.getSmallComponentWholeStemVolumeCoefficients().get(speciesName);
 
 		// EQN 1 in IPSJF119.doc
@@ -2824,10 +2825,7 @@ public class ForwardProcessingEngine {
 		float a2 = coe.getCoe(3);
 		float a3 = coe.getCoe(4);
 
-		return exp(
-				a0 + a1 * log(quadMeanDiameterSpecSmall) + a2 * log(loreyHeightSpecSmall)
-						+ a3 * quadMeanDiameterSpecSmall
-		);
+		return exp(a0 + a1 * log(spDqSmall) + a2 * log(spHlSmall) + a3 * spDqSmall);
 	}
 
 	private static float calculateCompatibilityVariable(float actualVolume, float baseVolume, float staticVolume) {
@@ -3188,7 +3186,7 @@ public class ForwardProcessingEngine {
 					* 100.0f;
 
 			logger.atDebug().addArgument(i).addArgument(bank.speciesIndices[i]).addArgument(bank.speciesNames[i])
-					.addArgument(bank.basalAreas[i][0]).addArgument(bank.percentagesOfForestedLand[i])
+					.addArgument(bank.basalAreas[i][UC_ALL_INDEX]).addArgument(bank.percentagesOfForestedLand[i])
 					.log("Species {}: SP0 {}, Name {}, Species 7.5cm+ BA {}, Calculated Percent {}");
 		}
 	}

@@ -56,7 +56,7 @@ class VdypOutputWriterTest {
 	@Test
 	void testClosesGivenStreams() throws IOException {
 
-		var unit = new VdypOutputWriter(polyStream, specStream, utilStream);
+		var unit = new VdypOutputWriter(controlMap, polyStream, specStream, utilStream);
 
 		unit.close();
 

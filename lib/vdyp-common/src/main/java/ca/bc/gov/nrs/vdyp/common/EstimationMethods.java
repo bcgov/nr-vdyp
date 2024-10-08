@@ -548,7 +548,7 @@ public class EstimationMethods {
 			UtilizationVector wholeStemVolumeUtil
 	) throws ProcessingException {
 		var wholeStemUtilizationComponentMap = controlMap.getWholeStemUtilizationComponentMap();
-		var dqSp = quadMeanDiameterUtil.getAll();
+		var spDqAll = quadMeanDiameterUtil.getAll();
 
 		estimateUtilization(baseAreaUtil, wholeStemVolumeUtil, utilizationClass, (uc, ba) -> {
 			Coefficients wholeStemCoe = wholeStemUtilizationComponentMap.get(uc.index, volumeGroup).orElseThrow(
@@ -565,7 +565,7 @@ public class EstimationMethods {
 			var a3 = wholeStemCoe.getCoe(3);
 
 			var arg = a0 + a1 * log(hlSp) + a2 * log(quadMeanDiameterUtil.getCoe(uc.index))
-					+ ( (uc != UtilizationClass.OVER225) ? a3 * log(dqSp) : a3 * dqSp);
+					+ ( (uc != UtilizationClass.OVER225) ? a3 * log(spDqAll) : a3 * spDqAll);
 
 			if (uc == utilizationClass) {
 				arg += adjustCloseUtil;
@@ -806,7 +806,7 @@ public class EstimationMethods {
 	 * EMP106 - estimate basal area yield for the primary layer (from IPSJF160.doc)
 	 *
 	 * @param estimateBasalAreaYieldCoefficients estimate basal area yield coefficients
-	 * @param controlVariable2Setting            the value of control variable 2
+	 * @param debugSetting2Value           	     the value of debug setting 2
 	 * @param dominantHeight                     dominant height (m)
 	 * @param breastHeightAge                    breast height age (years)
 	 * @param veteranBaseArea                    basal area of overstory (>= 0)
@@ -817,7 +817,7 @@ public class EstimationMethods {
 	 * @throws StandProcessingException
 	 */
 	public float estimateBaseAreaYield(
-			Coefficients estimateBasalAreaYieldCoefficients, int controlVariable2Setting, float dominantHeight,
+			Coefficients estimateBasalAreaYieldCoefficients, int debugSetting2Value, float dominantHeight,
 			float breastHeightAge, Optional<Float> veteranBasalArea, boolean fullOccupancy, float upperBoundBasalArea
 	) throws StandProcessingException {
 
@@ -839,8 +839,8 @@ public class EstimationMethods {
 
 		float ageToUse = breastHeightAge;
 
-		if (controlVariable2Setting > 0) {
-			ageToUse = Math.min(ageToUse, controlVariable2Setting * 100f);
+		if (debugSetting2Value > 0) {
+			ageToUse = Math.min(ageToUse, debugSetting2Value * 100f);
 		}
 
 		if (ageToUse <= 0f) {

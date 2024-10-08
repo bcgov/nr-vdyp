@@ -139,7 +139,7 @@ public class ForwardControlVariables {
 
 	public boolean allowCalculation(float value, float limit, BiFunction<Float, Float, Boolean> p) {
 		int cvValue = controlVariables[ControlVariable.ALLOW_COMPAT_VAR_CALCS_5.ordinal()];
-		return cvValue == 0 && value > 0 || cvValue == 1 && p.apply(value, limit);
+		return cvValue == 0 && value > 0 || cvValue > 0 && p.apply(value, limit);
 	}
 
 	public boolean allowCalculation(BooleanSupplier p) {

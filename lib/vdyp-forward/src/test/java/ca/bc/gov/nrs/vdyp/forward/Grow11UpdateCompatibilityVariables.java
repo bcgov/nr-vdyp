@@ -56,7 +56,7 @@ class Grow11UpdateCompatibilityVariables {
 		// Select the first polygon - 01002 S000001 00(1970)
 		VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
-		fpe.processPolygon(polygon, ExecutionStep.GROW_11_COMPATIBILITY_VARS);
+		fpe.processPolygon(polygon, ExecutionStep.GROW_10_COMPATIBILITY_VARS);
 
 		// VDYP7 reports [], -9, -9, 35.473381, -9, -9)
 		LayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();

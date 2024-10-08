@@ -48,4 +48,22 @@ class ForwardProcessorCheckpointGenerationTest {
 
 		assertTrue(true);
 	}
+
+	// @Test
+	void testForSpecificPolygon() throws IOException, ResourceParseException, ProcessingException {
+
+		ForwardProcessor fp = new ForwardProcessor();
+
+		FileResolver inputFileResolver = TestUtils.fileResolver(TestUtils.class);
+
+		Path vdyp7OutputPath = Path.of(System.getenv().get("HOME"), "tmp", "vdyp-deltas", "vdyp8");
+		Files.createDirectories(vdyp7OutputPath);
+
+		var outputResolver = new FileSystemFileResolver(vdyp7OutputPath);
+
+		fp.run(inputFileResolver, outputResolver, List.of("VDYP-Checkpoint.CTR"), vdypPassSet,
+				p -> p.getPolygonIdentifier().getBase().indexOf("01002 S000004 00") >= 0);
+
+		assertTrue(true);
+	}
 }

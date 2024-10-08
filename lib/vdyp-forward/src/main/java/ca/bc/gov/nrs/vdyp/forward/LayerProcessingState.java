@@ -133,7 +133,7 @@ class LayerProcessingState {
 		breakageEquationGroups[0] = VdypEntity.MISSING_INTEGER_VALUE;
 
 		String becZoneAlias = getBecZone().getAlias();
-		for (int i = 1; i < bank.getNSpecies() + 1; i++) {
+		for (int i : bank.getIndices()) {
 			String speciesName = bank.speciesNames[i];
 			volumeEquationGroups[i] = volumeEquationGroupMatrix.get(speciesName, becZoneAlias);
 			// From VGRPFIND, volumeEquationGroup 10 is mapped to 11.
