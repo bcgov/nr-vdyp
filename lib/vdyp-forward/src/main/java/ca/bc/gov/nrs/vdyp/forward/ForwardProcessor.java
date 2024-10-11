@@ -70,7 +70,7 @@ public class ForwardProcessor {
 	) throws IOException, ResourceParseException, ProcessingException {
 		run(inputFileResolver, outputFileResolver, controlFileNames, vdypPassSet, (p) -> true);
 	}
-	
+
 	/**
 	 * Initialize VdypForwardProcessor
 	 *
@@ -117,8 +117,8 @@ public class ForwardProcessor {
 	/**
 	 * Implements VDYP_SUB.
 	 *
-	 * @param vdypPassSet the set of stages (passes) to be executed
-	 * @param controlMap parsed control map
+	 * @param vdypPassSet        the set of stages (passes) to be executed
+	 * @param controlMap         parsed control map
 	 * @param outputFileResolver optional file resolver that, if present, locates output files.
 	 *
 	 * @throws ProcessingException
@@ -128,15 +128,15 @@ public class ForwardProcessor {
 	) throws ProcessingException {
 		process(vdypPassSet, controlMap, outputFileResolver, (p) -> true);
 	}
-	
+
 	/**
 	 * Implements VDYP_SUB, excluding all polygons that don't pass the given <code>polygonFilter</code>.
-	 * 
-	 * @param vdypPassSet the set of stages (passes) to be executed
-	 * @param controlMap parsed control map
+	 *
+	 * @param vdypPassSet        the set of stages (passes) to be executed
+	 * @param controlMap         parsed control map
 	 * @param outputFileResolver optional file resolver that, if present, locates output files.
-	 * @param polygonFilter a given polygon is processed only if this predicate returns <code>true</code> for it.
-	 * 
+	 * @param polygonFilter      a given polygon is processed only if this predicate returns <code>true</code> for it.
+	 *
 	 * @throws ProcessingException
 	 */
 	public void process(
@@ -198,7 +198,7 @@ public class ForwardProcessor {
 				if (polygonFilter.test(polygon)) {
 					fpe.processPolygon(polygon);
 					nPolygonsProcessed += 1;
-				}				
+				}
 			}
 
 			outputWriter.ifPresent(ow -> {

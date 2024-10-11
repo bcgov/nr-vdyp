@@ -383,6 +383,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	 * @return
 	 * @throws ProcessingException
 	 */
+	@SuppressWarnings("java:S3776")
 	protected int findItg(List<S> primarySecondary) throws StandProcessingException {
 		var primary = primarySecondary.get(0);
 

@@ -80,6 +80,7 @@ public class ReconcilationMethods {
 		}
 	}
 
+	@SuppressWarnings("java:S3655")
 	public static void reconcileComponentsMode1(
 			UtilizationVector baseAreaUtil, UtilizationVector treesPerHectareUtil,
 			UtilizationVector quadMeanDiameterUtil, float tphSumHigh
@@ -249,6 +250,7 @@ public class ReconcilationMethods {
 		}
 	}
 
+	@SuppressWarnings("java:S3655")
 	public static void reconcileComponentsMode3(
 			UtilizationVector baseAreaUtil, UtilizationVector treesPerHectareUtil,
 			UtilizationVector quadMeanDiameterUtil

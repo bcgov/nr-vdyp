@@ -5,14 +5,17 @@ import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.PASS_2;
 import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.PASS_3;
 import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.PASS_4;
 import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.PASS_5;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
@@ -20,9 +23,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.application.ProcessingException;
+import ca.bc.gov.nrs.vdyp.common.ControlKey;
+import ca.bc.gov.nrs.vdyp.forward.parsers.VdypPolygonParser;
+import ca.bc.gov.nrs.vdyp.forward.parsers.VdypSpeciesParser;
+import ca.bc.gov.nrs.vdyp.forward.parsers.VdypUtilizationParser;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
+import ca.bc.gov.nrs.vdyp.io.parse.coe.BecDefinitionParser;
+import ca.bc.gov.nrs.vdyp.io.parse.coe.GenusDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
+import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 class ForwardProcessorCheckpointGenerationTest {
@@ -39,31 +49,56 @@ class ForwardProcessorCheckpointGenerationTest {
 
 		FileResolver inputFileResolver = TestUtils.fileResolver(TestUtils.class);
 
-		Path vdyp7OutputPath = Path.of(System.getenv().get("HOME"), "tmp", "vdyp-deltas", "vdyp8");
-		Files.createDirectories(vdyp7OutputPath);
+		Path vdyp8OutputPath = Path.of(System.getenv().get("HOME"), "tmp", "vdyp-deltas", "vdyp8");
+		Files.createDirectories(vdyp8OutputPath);
 
-		var outputResolver = new FileSystemFileResolver(vdyp7OutputPath);
+		var vdyp8OutputResolver = new FileSystemFileResolver(vdyp8OutputPath);
 
-		fp.run(inputFileResolver, outputResolver, List.of("VDYP-Checkpoint.CTR"), vdypPassSet);
+		fp.run(inputFileResolver, vdyp8OutputResolver, List.of("VDYP-Checkpoint.CTR"), vdypPassSet);
 
-		assertTrue(true);
-	}
+		var vdyp8InputResolver = new FileSystemFileResolver(vdyp8OutputPath);
 
-	// @Test
-	void testForSpecificPolygon() throws IOException, ResourceParseException, ProcessingException {
+		// Verify that polygons are output 14 times for each year of growth.
 
-		ForwardProcessor fp = new ForwardProcessor();
+		Map<String, Object> controlMap = new HashMap<>();
+		var polygonParser = new VdypPolygonParser();
+		controlMap.put(
+				ControlKey.FORWARD_INPUT_VDYP_POLY.name(),
+				polygonParser.map("vp_grow2.dat", vdyp8InputResolver, controlMap)
+		);
+		var speciesParser = new VdypSpeciesParser();
+		controlMap.put(
+				ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SPECIES.name(),
+				speciesParser.map("vs_grow2.dat", vdyp8InputResolver, controlMap)
+		);
+		var utilizationParser = new VdypUtilizationParser();
+		controlMap.put(
+				ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name(),
+				utilizationParser.map("vu_grow2.dat", vdyp8InputResolver, controlMap)
+		);
+		var becDefinitionParser = new BecDefinitionParser();
+		controlMap.put(
+				ControlKey.BEC_DEF.name(),
+				becDefinitionParser.parse(TestUtils.class, "coe/Becdef.dat", Collections.emptyMap())
+		);
+		var genusDefinitionParser = new GenusDefinitionParser();
+		controlMap.put(
+				ControlKey.SP0_DEF.name(),
+				genusDefinitionParser.parse(TestUtils.class, "coe/SP0DEF_v0.dat", Collections.emptyMap())
+		);
 
-		FileResolver inputFileResolver = TestUtils.fileResolver(TestUtils.class);
+		var reader = new ForwardDataStreamReader(controlMap);
+		Optional<VdypPolygon> polygon = reader.readNextPolygon();
+		var polygonName = polygon.orElseThrow().getPolygonIdentifier().getBase();
 
-		Path vdyp7OutputPath = Path.of(System.getenv().get("HOME"), "tmp", "vdyp-deltas", "vdyp8");
-		Files.createDirectories(vdyp7OutputPath);
+		int count = 0;
+		var nextPolygonIdentifier = reader.readNextPolygon().get().getPolygonIdentifier();
+		var year = nextPolygonIdentifier.getYear();
+		while (nextPolygonIdentifier.getYear() == year && nextPolygonIdentifier.getBase().equals(polygonName)) {
+			count += 1;
+			nextPolygonIdentifier = reader.readNextPolygon().get().getPolygonIdentifier();
+		}
 
-		var outputResolver = new FileSystemFileResolver(vdyp7OutputPath);
-
-		fp.run(inputFileResolver, outputResolver, List.of("VDYP-Checkpoint.CTR"), vdypPassSet,
-				p -> p.getPolygonIdentifier().getBase().indexOf("01002 S000004 00") >= 0);
-
-		assertTrue(true);
+		assert (count == 14);
 	}
 }

@@ -76,20 +76,20 @@ class Grow5SpeciesBaDqTphTest {
 				// Results from VDYP7:
 				// Matchers.arrayContaining(45.7382965f, 0.410145015f, 5.13646269f, 29.8279209f, 5.91424417f,
 				// 4.44952154f)
-				Matchers.arrayContaining(45.738297f, 0.40698984f, 5.096949f, 29.598465f, 5.8687477f, 4.4152927f)
+				Matchers.arrayContaining(45.738297f, 0.41014498f, 5.136462f, 29.827923f, 5.914244f, 4.4495215f)
 		);
 		assertThat(
 				slice(lps.getBank().treesPerHectare, UtilizationClass.ALL),
 				// Results from VDYP7:
 				// Matchers.arrayContaining(594.113831f, 5.14728308f, 84.0494843f, 286.714783f, 167.523376f,
 				// 50.6789017f)
-				Matchers.arrayContaining(594.1138f, 5.156134f, 83.67636f, 287.08746f, 167.45839f, 50.735443f)
+				Matchers.arrayContaining(594.1138f, 5.1511745f, 84.04451f, 286.7145f, 167.52345f, 50.680126f)
 		);
 		assertThat(
 				slice(lps.getBank().quadMeanDiameters, UtilizationClass.ALL),
 				// Results from VDYP7:
 				// Matchers.arrayContaining(31.3083534f, 31.8518562f, 27.8945656f, 36.3949814f, 21.201519f, 33.4347534f)
-				Matchers.arrayContaining(31.308353f, 31.701859f, 27.84895f, 36.231186f, 21.12391f, 33.28734f)
+				Matchers.arrayContaining(31.308353f, 31.83982f, 27.89539f, 36.395f, 21.201513f, 33.43435f)
 		);
 	}
 

@@ -806,7 +806,7 @@ public class EstimationMethods {
 	 * EMP106 - estimate basal area yield for the primary layer (from IPSJF160.doc)
 	 *
 	 * @param estimateBasalAreaYieldCoefficients estimate basal area yield coefficients
-	 * @param debugSetting2Value           	     the value of debug setting 2
+	 * @param debugSetting2Value                 the value of debug setting 2
 	 * @param dominantHeight                     dominant height (m)
 	 * @param breastHeightAge                    breast height age (years)
 	 * @param veteranBaseArea                    basal area of overstory (>= 0)

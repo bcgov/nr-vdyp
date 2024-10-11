@@ -281,6 +281,8 @@ public class ForwardTestUtils {
 			case "BaseArea":
 				sum += species.getBaseAreaByUtilization().get(uc);
 				break;
+			default:
+				throw new IllegalStateException(uvName + " is not a known utilization vector name");
 			}
 		}
 

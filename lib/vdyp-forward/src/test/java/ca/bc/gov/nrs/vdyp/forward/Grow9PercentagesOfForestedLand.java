@@ -63,7 +63,7 @@ class Grow9PercentagesOfForestedLand {
 		// VDYP7 value is 0.892216682f, 11.5443392f, 64.3765259f, 13.3774729f, 9.80944252f
 		assertThat(
 				ForwardTestUtils.toFloatArray(lps.getBank().percentagesOfForestedLand),
-				is(arrayContaining(0.0f, 0.88982296f, 11.1437235f, 64.712654f, 12.831146f, 9.653382f))
+				is(arrayContaining(0.0f, 0.8967212f, 11.230113f, 65.214325f, 12.930618f, 9.728219f))
 		);
 	}
 }

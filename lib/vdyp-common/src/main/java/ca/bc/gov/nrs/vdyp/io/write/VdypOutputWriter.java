@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -75,7 +76,7 @@ public class VdypOutputWriter implements Closeable {
 	/**
 	 * Create a writer for Vdyp output files using provided OutputStreams. The Streams will be closed when the writer is
 	 * closed.
-	 * 
+	 *
 	 * @param controlMap
 	 * @param polygonFile
 	 * @param speciesFile
@@ -92,7 +93,7 @@ public class VdypOutputWriter implements Closeable {
 	/**
 	 * Create a writer for Vdyp output files using provided OutputStreams. The Streams will be closed when the writer is
 	 * closed.
-	 * 
+	 *
 	 * @param controlMap
 	 * @param polygonFile
 	 * @param speciesFile
@@ -165,7 +166,7 @@ public class VdypOutputWriter implements Closeable {
 		// a separate COMMON. Here, we store the result in the Polygon, knowing that the originally
 		// calculated values are not being used.
 		sortedLayers.stream()
-				.forEach(l -> calculateCuVolumeLessDecayWastageBreakage(l, polygon.getBiogeoclimaticZone()));
+				.forEach(l -> calculateCuVolumeLessDecayWastageBreakage(controlMap, l, polygon.getBiogeoclimaticZone()));
 
 		for (var layer : sortedLayers) {
 			writeUtilization(polygon, layer, layer);
@@ -181,55 +182,63 @@ public class VdypOutputWriter implements Closeable {
 		writeUtilizationEndRecord(polygon);
 	}
 
-	private void calculateCuVolumeLessDecayWastageBreakage(VdypLayer layer, BecDefinition bec) {
+	static void calculateCuVolumeLessDecayWastageBreakage(ResolvedControlMap controlMap, VdypLayer layer, BecDefinition bec) {
 
-		for (VdypSpecies s : layer.getSpecies().values()) {
+		// Technically, BreakageEquationGroups are not required. If missing, it will not be
+		// possible for this method to do its work; but, it's still not an error.
+		try {
+			var beg = controlMap.getBreakageEquationGroups();
 
-			String sp0 = s.getGenus();
-			var breakageEquationGroup = controlMap.getBreakageEquationGroups().get(sp0, bec.getAlias());
-
-			var breakageCoefficients = controlMap.getNetBreakageMap().get(breakageEquationGroup);
-			var a1 = breakageCoefficients.getCoe(1);
-			var a2 = breakageCoefficients.getCoe(2);
-			var a3 = breakageCoefficients.getCoe(3);
-			var a4 = breakageCoefficients.getCoe(4);
-
-			var speciesCuVolumeLessDWBByUtilization = s
-					.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization();
-
-			var speciesCuVolumeLessDWBSum = 0.0f;
-			for (UtilizationClass uc : UtilizationClass.UTIL_CLASSES) {
-				var ba = s.getBaseAreaByUtilization().get(uc);
-				var tph = s.getTreesPerHectareByUtilization().get(uc);
-				var dq = (ba > 0) ? BaseAreaTreeDensityDiameter.quadMeanDiameter(ba, tph) : 0.0f;
-				var cuVolume = s.getCloseUtilizationVolumeByUtilization().get(uc);
-				var cuVolumeLessDW = s.getCloseUtilizationVolumeNetOfDecayAndWasteByUtilization().get(uc);
-
-				var breakagePercent = FloatMath.clamp(a1 + a2 * FloatMath.log(dq), a3, a4);
-				var breakage = Math.min(breakagePercent / 100.0f * cuVolume, cuVolumeLessDW);
-				if (cuVolumeLessDW <= 0.0f) {
-					speciesCuVolumeLessDWBByUtilization.set(uc, 0.0f);
-				} else {
-					var cuVolumeLessDWBforUc = cuVolumeLessDW - breakage;
-					speciesCuVolumeLessDWBByUtilization.set(uc, cuVolumeLessDWBforUc);
-					speciesCuVolumeLessDWBSum += cuVolumeLessDWBforUc;
-				}
-			}
-
-			speciesCuVolumeLessDWBByUtilization.set(UtilizationClass.SMALL, 0.0f);
-			speciesCuVolumeLessDWBByUtilization.set(UtilizationClass.ALL, speciesCuVolumeLessDWBSum);
-		}
-
-		var layerCuVolumeLessDWBByUtilization = layer
-				.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization();
-		for (UtilizationClass uc : UtilizationClass.values()) {
-			var layerCuVolumeLessDWBSum = 0.0f;
 			for (VdypSpecies s : layer.getSpecies().values()) {
+
+				String sp0 = s.getGenus();
+				int breakageEquationGroup = beg.get(sp0, bec.getAlias());
+
+				var breakageCoefficients = controlMap.getNetBreakageMap().get(breakageEquationGroup);
+				var a1 = breakageCoefficients.getCoe(1);
+				var a2 = breakageCoefficients.getCoe(2);
+				var a3 = breakageCoefficients.getCoe(3);
+				var a4 = breakageCoefficients.getCoe(4);
+
 				var speciesCuVolumeLessDWBByUtilization = s
 						.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization();
-				layerCuVolumeLessDWBSum += speciesCuVolumeLessDWBByUtilization.get(uc);
+
+				var speciesCuVolumeLessDWBSum = 0.0f;
+				for (UtilizationClass uc : UtilizationClass.UTIL_CLASSES) {
+					var ba = s.getBaseAreaByUtilization().get(uc);
+					var tph = s.getTreesPerHectareByUtilization().get(uc);
+					var dq = (ba > 0) ? BaseAreaTreeDensityDiameter.quadMeanDiameter(ba, tph) : 0.0f;
+					var cuVolume = s.getCloseUtilizationVolumeByUtilization().get(uc);
+					var cuVolumeLessDW = s.getCloseUtilizationVolumeNetOfDecayAndWasteByUtilization().get(uc);
+
+					var breakagePercent = FloatMath.clamp(a1 + a2 * FloatMath.log(dq), a3, a4);
+					var breakage = Math.min(breakagePercent / 100.0f * cuVolume, cuVolumeLessDW);
+					if (cuVolumeLessDW <= 0.0f) {
+						speciesCuVolumeLessDWBByUtilization.set(uc, 0.0f);
+					} else {
+						var cuVolumeLessDWBforUc = cuVolumeLessDW - breakage;
+						speciesCuVolumeLessDWBByUtilization.set(uc, cuVolumeLessDWBforUc);
+						speciesCuVolumeLessDWBSum += cuVolumeLessDWBforUc;
+					}
+				}
+
+				speciesCuVolumeLessDWBByUtilization.set(UtilizationClass.SMALL, 0.0f);
+				speciesCuVolumeLessDWBByUtilization.set(UtilizationClass.ALL, speciesCuVolumeLessDWBSum);
 			}
-			layerCuVolumeLessDWBByUtilization.set(uc, layerCuVolumeLessDWBSum);
+
+			var layerCuVolumeLessDWBByUtilization = layer
+					.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization();
+			for (UtilizationClass uc : UtilizationClass.values()) {
+				var layerCuVolumeLessDWBSum = 0.0f;
+				for (VdypSpecies s : layer.getSpecies().values()) {
+					var speciesCuVolumeLessDWBByUtilization = s
+							.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization();
+					layerCuVolumeLessDWBSum += speciesCuVolumeLessDWBByUtilization.get(uc);
+				}
+				layerCuVolumeLessDWBByUtilization.set(uc, layerCuVolumeLessDWBSum);
+			}
+		} catch (NoSuchElementException e) {
+			// continue
 		}
 	}
 

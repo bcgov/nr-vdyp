@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import org.slf4j.Logger;
@@ -259,20 +260,32 @@ public class ForwardDataStreamReader {
 	protected void applyGroups(BecDefinition bec, String genus, VdypSpecies species) {
 		// Look up Volume group, Decay Group, and Breakage group for each species.
 
-		var volumeGroupMap = resolvedControlMap.getVolumeEquationGroups();
-		var decayGroupMap = resolvedControlMap.getDecayEquationGroups();
-		var breakageGroupMap = resolvedControlMap.getBreakageEquationGroups();
+		try {
+			// VGRPFIND
+			var volumeGroupMap = resolvedControlMap.getVolumeEquationGroups();
+			var volumeGroup = volumeGroupMap.get(genus, bec.getVolumeBec().getAlias());
+			species.setVolumeGroup(volumeGroup);
+		} catch (NoSuchElementException e) {
+			// group will remain undefined
+		}
 
-		// VGRPFIND
-		var volumeGroup = volumeGroupMap.get(genus, bec.getVolumeBec().getAlias());
-		// DGRPFIND
-		var decayGroup = decayGroupMap.get(genus, bec.getDecayBec().getAlias());
-		// BGRPFIND (Breakage uses decay BEC)
-		var breakageGroup = breakageGroupMap.get(genus, bec.getDecayBec().getAlias());
+		try {
+			// DGRPFIND
+			var decayGroupMap = resolvedControlMap.getDecayEquationGroups();
+			var decayGroup = decayGroupMap.get(genus, bec.getDecayBec().getAlias());
+			species.setDecayGroup(decayGroup);
+		} catch (NoSuchElementException e) {
+			// group will remain undefined
+		}
 
-		species.setVolumeGroup(volumeGroup);
-		species.setDecayGroup(decayGroup);
-		species.setBreakageGroup(breakageGroup);
+		try {
+			// BGRPFIND (Breakage uses decay BEC)
+			var breakageGroupMap = resolvedControlMap.getBreakageEquationGroups();
+			var breakageGroup = breakageGroupMap.get(genus, bec.getDecayBec().getAlias());
+			species.setBreakageGroup(breakageGroup);
+		} catch (NoSuchElementException e) {
+			// group will remain undefined
+		}
 	}
 
 	private void setUtilizations(VdypUtilizationHolder u, Map<UtilizationClass, VdypUtilization> speciesUtilizations) {

@@ -604,7 +604,7 @@ public class ForwardProcessingEngine {
 			return;
 
 		// (13) Update the running values.
-		
+
 		lps.updatePrimarySpeciesDetailsAfterGrowth(dhEnd);
 
 		for (int i : lps.getIndices()) {
@@ -1984,8 +1984,8 @@ public class ForwardProcessingEngine {
 		int debugSetting2Value = fps.fcm.getDebugSettings().getValue(Vars.MAX_BREAST_HEIGHT_AGE_2);
 
 		float baYieldStart = fps.estimators.estimateBaseAreaYield(
-				estimateBasalAreaYieldCoefficients, debugSetting2Value, pspDhStart, pspYabhStart,
-				veteranLayerBaStart, isFullOccupancy, baUpperBound
+				estimateBasalAreaYieldCoefficients, debugSetting2Value, pspDhStart, pspYabhStart, veteranLayerBaStart,
+				isFullOccupancy, baUpperBound
 		);
 
 		float pspDhEnd = pspDhStart + dhDelta;
@@ -2371,6 +2371,7 @@ public class ForwardProcessingEngine {
 		}
 	}
 
+	@SuppressWarnings("java:S3776")
 	private void writeCurrentPolygon(int startYear, int currentYear, int endYear) throws ProcessingException {
 
 		try {
@@ -2753,7 +2754,7 @@ public class ForwardProcessingEngine {
 
 	/**
 	 * EMP081 - calculate the conditional expected small component basal area. See IPSJF118.doc, equation 3.
-	 * 
+	 *
 	 * @param sp0Name the species group name
 	 * @param spBaEnd the species UC 0 (all) basal area
 	 * @param spLhEnd the species UC 0 (all) Lorey height
@@ -3448,6 +3449,7 @@ public class ForwardProcessingEngine {
 	 * @return as described
 	 * @throws ProcessingException if primaryGenus is not a known genus
 	 */
+	@SuppressWarnings("java:S3776")
 	static int findInventoryTypeGroup(String primarySp0, Optional<String> optionalSecondarySp0, float primaryPercentage)
 			throws ProcessingException {
 
@@ -3462,10 +3464,6 @@ public class ForwardProcessingEngine {
 		}
 
 		String secondaryGenus = optionalSecondarySp0.isPresent() ? optionalSecondarySp0.get() : "";
-
-		if (primarySp0.equals(secondaryGenus)) {
-			throw new IllegalArgumentException("The primary and secondary genera are the same");
-		}
 
 		switch (primarySp0) {
 		case "F":
