@@ -54,6 +54,29 @@ public class VdypMatchers {
 
 	static final float EPSILON = 0.001f;
 
+	private static float currentEpsilon = EPSILON;
+
+	/**
+	 * Change the <code>closeTo</code> tolerance. Recommended usage:
+	 *
+	 * <pre>
+	 * float originalValue = VdypMatchers.setEpsilon(... new value ...);
+	 * try {
+	 *     ... closeTo invocations use the new value ...
+	 * } finally {
+	 *     VdypMatchers.setEpsilon(originalValue);
+	 * }
+	 * </pre>
+	 *
+	 * @param newValue the new tolerance value
+	 * @return the tolerance value at the time this method was called
+	 */
+	public static float setEpsilon(float newValue) {
+		var originalValue = currentEpsilon;
+		currentEpsilon = newValue;
+		return originalValue;
+	}
+
 	/**
 	 * Matches a string if when parsed by the parser method it matches the given matcher
 	 *
@@ -521,7 +544,7 @@ public class VdypMatchers {
 	}
 
 	public static Matcher<Float> closeTo(float expected) {
-		return closeTo(expected, EPSILON);
+		return closeTo(expected, currentEpsilon);
 	}
 
 	public static Matcher<Float> closeTo(float expected, float threshold) {
