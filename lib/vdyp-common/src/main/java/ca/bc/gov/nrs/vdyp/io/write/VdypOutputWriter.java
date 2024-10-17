@@ -165,8 +165,9 @@ public class VdypOutputWriter implements Closeable {
 		// The original VDYP7 system performs this task at this location, storing the result in
 		// a separate COMMON. Here, we store the result in the Polygon, knowing that the originally
 		// calculated values are not being used.
-		sortedLayers.stream()
-				.forEach(l -> calculateCuVolumeLessDecayWastageBreakage(controlMap, l, polygon.getBiogeoclimaticZone()));
+		sortedLayers.stream().forEach(
+				l -> calculateCuVolumeLessDecayWastageBreakage(controlMap, l, polygon.getBiogeoclimaticZone())
+		);
 
 		for (var layer : sortedLayers) {
 			writeUtilization(polygon, layer, layer);
@@ -182,7 +183,9 @@ public class VdypOutputWriter implements Closeable {
 		writeUtilizationEndRecord(polygon);
 	}
 
-	static void calculateCuVolumeLessDecayWastageBreakage(ResolvedControlMap controlMap, VdypLayer layer, BecDefinition bec) {
+	static void calculateCuVolumeLessDecayWastageBreakage(
+			ResolvedControlMap controlMap, VdypLayer layer, BecDefinition bec
+	) {
 
 		// Technically, BreakageEquationGroups are not required. If missing, it will not be
 		// possible for this method to do its work; but, it's still not an error.

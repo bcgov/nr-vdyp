@@ -11,8 +11,8 @@ import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.processing_state.LayerProcessingState;
 import ca.bc.gov.nrs.vdyp.processing_state.ProcessingState;
 
-public class BackLayerProcessingState extends
-		LayerProcessingState<ForwardResolvedControlMap, BackLayerProcessingState> {
+public class BackLayerProcessingState
+		extends LayerProcessingState<ForwardResolvedControlMap, BackLayerProcessingState> {
 
 	protected BackLayerProcessingState(
 			ProcessingState<ForwardResolvedControlMap, BackLayerProcessingState> ps, VdypPolygon polygon,

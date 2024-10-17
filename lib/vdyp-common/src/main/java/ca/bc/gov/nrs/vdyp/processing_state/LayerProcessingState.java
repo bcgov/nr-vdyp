@@ -61,10 +61,7 @@ public abstract class LayerProcessingState<RCM extends ResolvedControlMap, Self 
 
 		BecDefinition becZone = polygon.getBiogeoclimaticZone();
 
-		this.bank = new Bank(
-				polygon.getLayers().get(subjectLayerType), becZone,
-				getBankFilter()
-		);
+		this.bank = new Bank(polygon.getLayers().get(subjectLayerType), becZone, getBankFilter());
 
 	}
 
@@ -81,7 +78,6 @@ public abstract class LayerProcessingState<RCM extends ResolvedControlMap, Self 
 	public BecDefinition getBecZone() {
 		return bank.getBecZone();
 	}
-
 
 	public static Logger getLogger() {
 		return logger;

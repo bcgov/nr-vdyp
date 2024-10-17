@@ -23,9 +23,8 @@ public abstract class VdypProcessingApplication<P extends Processor> extends Vdy
 	@SuppressWarnings("java:S106")
 	protected static void initLogging(Class<?> klazz) {
 		try {
-			LogManager.getLogManager().readConfiguration(
-					klazz.getClassLoader().getResourceAsStream("logging.properties")
-			);
+			LogManager.getLogManager()
+					.readConfiguration(klazz.getClassLoader().getResourceAsStream("logging.properties"));
 		} catch (SecurityException | IOException e) {
 			System.err.println("Unable to configure logging system");
 		}
@@ -90,10 +89,8 @@ public abstract class VdypProcessingApplication<P extends Processor> extends Vdy
 		final String defaultFilename = getDefaultControlFileName();
 		List<String> controlFileNames;
 		os.print(
-				MessageFormat.format(
-						"Enter name of control file (or RETURN for {1}) or *name for both): ",
-						defaultFilename
-				)
+				MessageFormat
+						.format("Enter name of control file (or RETURN for {1}) or *name for both): ", defaultFilename)
 		);
 
 		controlFileNames = new ArrayList<>();

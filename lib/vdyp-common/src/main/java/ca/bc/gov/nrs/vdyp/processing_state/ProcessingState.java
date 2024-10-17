@@ -8,7 +8,6 @@ import ca.bc.gov.nrs.vdyp.application.RuntimeProcessingException;
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.common.ComputationMethods;
 import ca.bc.gov.nrs.vdyp.common.EstimationMethods;
-import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
@@ -22,6 +21,14 @@ public abstract class ProcessingState<RCM extends ResolvedControlMap, LS extends
 
 	/** The estimators instance used by this engine */
 	final EstimationMethods estimators;
+
+	public EstimationMethods getEstimators() {
+		return estimators;
+	}
+
+	public ComputationMethods getComputers() {
+		return computers;
+	}
 
 	/** The computation instance used by this engine */
 	final ComputationMethods computers;
@@ -62,12 +69,10 @@ public abstract class ProcessingState<RCM extends ResolvedControlMap, LS extends
 		this.polygon = polygon;
 
 		this.plps = createLayerState(
-				polygon, getLayer(LayerType.PRIMARY)
-						.orElseThrow(() -> new IllegalStateException("No primary layer"))
+				polygon, getLayer(LayerType.PRIMARY).orElseThrow(() -> new IllegalStateException("No primary layer"))
 		);
 		try {
-			this.vlps = getLayer(LayerType.VETERAN)
-					.map(layer -> createLayerStateSafe(polygon, layer));
+			this.vlps = getLayer(LayerType.VETERAN).map(layer -> createLayerStateSafe(polygon, layer));
 		} catch (RuntimeProcessingException e) {
 			throw e.getCause();
 		}

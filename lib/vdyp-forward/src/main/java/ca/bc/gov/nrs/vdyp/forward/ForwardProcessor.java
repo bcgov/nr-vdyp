@@ -1,9 +1,6 @@
 package ca.bc.gov.nrs.vdyp.forward;
 
 import java.io.IOException;
-import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -12,11 +9,12 @@ import java.util.function.Predicate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ca.bc.gov.nrs.vdyp.application.Pass;
 import ca.bc.gov.nrs.vdyp.application.ProcessingException;
+import ca.bc.gov.nrs.vdyp.application.Processor;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
-import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
-import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
+import ca.bc.gov.nrs.vdyp.io.parse.control.BaseControlParser;
 import ca.bc.gov.nrs.vdyp.io.write.VdypOutputWriter;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 
@@ -48,86 +46,11 @@ import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
  * </ol>
  *
  * @author Michael Junkin, Vivid Solutions
+ * @author Kevin Smith, Vivid Solutions
  */
-public class ForwardProcessor {
+public class ForwardProcessor extends Processor {
 
 	private static final Logger logger = LoggerFactory.getLogger(ForwardProcessor.class);
-
-	/**
-	 * Initialize VdypForwardProcessor
-	 *
-	 * @param inputFileResolver
-	 * @param outputFileResolver
-	 * @param controlFileNames
-	 *
-	 * @throws IOException
-	 * @throws ResourceParseException
-	 * @throws ProcessingException
-	 */
-	void run(
-			FileResolver inputFileResolver, FileResolver outputFileResolver, List<String> controlFileNames,
-			Set<ForwardPass> vdypPassSet
-	) throws IOException, ResourceParseException, ProcessingException {
-		run(inputFileResolver, outputFileResolver, controlFileNames, vdypPassSet, (p) -> true);
-	}
-
-	/**
-	 * Initialize VdypForwardProcessor
-	 *
-	 * @param inputFileResolver
-	 * @param outputFileResolver
-	 * @param controlFileNames
-	 *
-	 * @throws IOException
-	 * @throws ResourceParseException
-	 * @throws ProcessingException
-	 */
-	void run(
-			FileResolver inputFileResolver, FileResolver outputFileResolver, List<String> controlFileNames,
-			Set<ForwardPass> vdypPassSet, Predicate<VdypPolygon> polygonFilter
-	) throws IOException, ResourceParseException, ProcessingException {
-
-		logger.info("VDYPPASS: {}", vdypPassSet);
-		logger.debug("VDYPPASS(1): Perform Initiation activities?");
-		logger.debug("VDYPPASS(2): Open the stand data files");
-		logger.debug("VDYPPASS(3): Process stands");
-		logger.debug("VDYPPASS(4): Allow multiple polygons");
-		logger.debug("VDYPPASS(5): Close data files");
-		logger.debug(" ");
-
-		// Load the control map
-		Map<String, Object> controlMap = new HashMap<>();
-
-		var parser = new ForwardControlParser();
-
-		for (var controlFileName : controlFileNames) {
-			logger.info("Resolving and parsing {}", controlFileName);
-
-			try (var is = inputFileResolver.resolveForInput(controlFileName)) {
-				Path controlFilePath = inputFileResolver.toPath(controlFileName).getParent();
-				FileSystemFileResolver relativeResolver = new FileSystemFileResolver(controlFilePath);
-
-				parser.parse(is, relativeResolver, controlMap);
-			}
-		}
-
-		process(vdypPassSet, controlMap, Optional.of(outputFileResolver), polygonFilter);
-	}
-
-	/**
-	 * Implements VDYP_SUB.
-	 *
-	 * @param vdypPassSet        the set of stages (passes) to be executed
-	 * @param controlMap         parsed control map
-	 * @param outputFileResolver optional file resolver that, if present, locates output files.
-	 *
-	 * @throws ProcessingException
-	 */
-	public void process(
-			Set<ForwardPass> vdypPassSet, Map<String, Object> controlMap, Optional<FileResolver> outputFileResolver
-	) throws ProcessingException {
-		process(vdypPassSet, controlMap, outputFileResolver, (p) -> true);
-	}
 
 	/**
 	 * Implements VDYP_SUB, excluding all polygons that don't pass the given <code>polygonFilter</code>.
@@ -139,15 +62,17 @@ public class ForwardProcessor {
 	 *
 	 * @throws ProcessingException
 	 */
+	@Override
+
 	public void process(
-			Set<ForwardPass> vdypPassSet, Map<String, Object> controlMap, Optional<FileResolver> outputFileResolver,
+			Set<Pass> vdypPassSet, Map<String, Object> controlMap, Optional<FileResolver> outputFileResolver,
 			Predicate<VdypPolygon> polygonFilter
 	) throws ProcessingException {
 
 		logger.info("Beginning processing with given configuration");
 
 		int maxPoly = 0;
-		if (vdypPassSet.contains(ForwardPass.PASS_1)) {
+		if (vdypPassSet.contains(Pass.INITIALIZE)) {
 			Object maxPolyValue = controlMap.get(ControlKey.MAX_NUM_POLY.name());
 			if (maxPolyValue != null) {
 				maxPoly = (Integer) maxPolyValue;
@@ -156,12 +81,12 @@ public class ForwardProcessor {
 
 		logger.debug("MaxPoly: {}", maxPoly);
 
-		if (vdypPassSet.contains(ForwardPass.PASS_2)) {
+		if (vdypPassSet.contains(Pass.OPEN_FILES)) {
 			// input files are already opened
 			// TODO: open output files
 		}
 
-		if (vdypPassSet.contains(ForwardPass.PASS_3)) {
+		if (vdypPassSet.contains(Pass.PROCESS_STANDS)) {
 
 			Optional<VdypOutputWriter> outputWriter = Optional.empty();
 
@@ -209,5 +134,10 @@ public class ForwardProcessor {
 				}
 			});
 		}
+	}
+
+	@Override
+	protected BaseControlParser getControlFileParser() {
+		return new ForwardControlParser();
 	}
 }

@@ -59,10 +59,8 @@ class VdypProcessingApplicationTest {
 			var input = new ByteArrayInputStream("\n".getBytes());
 
 			processor.run(
-					EasyMock.isA(FileResolver.class),
-					EasyMock.isA(FileResolver.class),
-					EasyMock.eq(List.of("argument.ctl")),
-					EasyMock.eq(EnumSet.allOf(Pass.class))
+					EasyMock.isA(FileResolver.class), EasyMock.isA(FileResolver.class),
+					EasyMock.eq(List.of("argument.ctl")), EasyMock.eq(EnumSet.allOf(Pass.class))
 			);
 			EasyMock.expectLastCall().once();
 
@@ -82,10 +80,8 @@ class VdypProcessingApplicationTest {
 			var input = new ByteArrayInputStream("\n".getBytes());
 
 			processor.run(
-					EasyMock.isA(FileResolver.class),
-					EasyMock.isA(FileResolver.class),
-					EasyMock.eq(List.of("argument1.ctl", "argument2.ctl")),
-					EasyMock.eq(EnumSet.allOf(Pass.class))
+					EasyMock.isA(FileResolver.class), EasyMock.isA(FileResolver.class),
+					EasyMock.eq(List.of("argument1.ctl", "argument2.ctl")), EasyMock.eq(EnumSet.allOf(Pass.class))
 			);
 			EasyMock.expectLastCall().once();
 
@@ -105,10 +101,8 @@ class VdypProcessingApplicationTest {
 			var input = new ByteArrayInputStream("alternate1.ctl alternate2.ctl\n".getBytes());
 
 			processor.run(
-					EasyMock.isA(FileResolver.class),
-					EasyMock.isA(FileResolver.class),
-					EasyMock.eq(List.of("alternate1.ctl", "alternate2.ctl")),
-					EasyMock.eq(EnumSet.allOf(Pass.class))
+					EasyMock.isA(FileResolver.class), EasyMock.isA(FileResolver.class),
+					EasyMock.eq(List.of("alternate1.ctl", "alternate2.ctl")), EasyMock.eq(EnumSet.allOf(Pass.class))
 			);
 			EasyMock.expectLastCall().once();
 
@@ -142,10 +136,8 @@ class VdypProcessingApplicationTest {
 			var input = new ByteArrayInputStream("\n".getBytes());
 
 			processor.run(
-					EasyMock.isA(FileResolver.class),
-					EasyMock.isA(FileResolver.class),
-					EasyMock.eq(List.of("argument.ctl")),
-					EasyMock.eq(EnumSet.allOf(Pass.class))
+					EasyMock.isA(FileResolver.class), EasyMock.isA(FileResolver.class),
+					EasyMock.eq(List.of("argument.ctl")), EasyMock.eq(EnumSet.allOf(Pass.class))
 			);
 			EasyMock.expectLastCall().andThrow(new ProcessingException("Test")).once();
 
