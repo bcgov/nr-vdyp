@@ -146,11 +146,11 @@ public class Bank {
 		return nSpecies;
 	}
 
-	int[] getIndices() {
+	public int[] getIndices() {
 		return indices;
 	}
 
-	BecDefinition getBecZone() {
+	public BecDefinition getBecZone() {
 		return becZone;
 	}
 
@@ -162,7 +162,7 @@ public class Bank {
 	 * @param layer a (presumably modified) version of the layer.
 	 * @throws ProcessingException
 	 */
-	void refreshBank(VdypLayer layer) throws ProcessingException {
+	public void refreshBank(VdypLayer layer) throws ProcessingException {
 
 		if (!this.layer.equals(layer)) {
 			throw new IllegalArgumentException(
@@ -365,7 +365,7 @@ public class Bank {
 	 *
 	 * @return as described
 	 */
-	VdypLayer buildLayerFromBank() {
+	public VdypLayer buildLayerFromBank() {
 
 		transferUtilizationsFromBank(0, layer);
 
