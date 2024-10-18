@@ -27,15 +27,4 @@ export default createVuetify({
       defaultTheme,
     },
   },
-  defaults: {
-    VTabs: {
-      color: 'white darken-1',
-      sliderColor: '#fcc219',
-      centerActive: true,
-      showArrows: true,
-      alignWithTitle: true,
-      fixedTabs: false,
-      bgColor: '#38598a',
-    },
-  },
 })

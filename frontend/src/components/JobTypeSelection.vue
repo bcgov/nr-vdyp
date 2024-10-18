@@ -1,25 +1,44 @@
 <template>
-  <v-container fluid class="no-padding">
+  <div>
     <v-row>
-      <v-col cols="4 no-padding-bottom" sm="4" md="4">
+      <v-col cols="3" sm="3" md="3">
+        <span class="search-label">Model</span>
         <v-select
           v-model="modelType"
           :items="modelTypes"
-          label="Select Model Type"
+          hide-details
+          dense
+          density="compact"
+          variant="outlined"
+          style="background-color: white !important"
         ></v-select>
       </v-col>
-      <v-col cols="4 no-padding-bottom" sm="4" md="4">
+      <v-col cols="2" sm="2" md="2">
+        <span class="search-label">Version</span>
         <v-select
           v-model="modelName"
           :items="modelNames"
-          label="Select Model Name"
+          hide-details
+          dense
+          density="compact"
+          variant="outlined"
+          style="background-color: white !important"
         ></v-select>
       </v-col>
-      <v-col cols="4 no-padding-bottom" sm="4" md="4">
-        <v-text-field v-model="jobName" label="Job Name"></v-text-field>
+      <v-col cols="2" sm="2" md="2">
+        <span class="search-label">Job ID</span>
+        <v-text-field
+          v-model="jobName"
+          hide-details
+          placeholder="Search Job Name..."
+          density="compact"
+          dense
+          variant="outlined"
+          style="background-color: white !important"
+        ></v-text-field>
       </v-col>
     </v-row>
-  </v-container>
+  </div>
 </template>
 <script setup lang="ts">
 import { ref } from 'vue'

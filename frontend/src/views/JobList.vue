@@ -1,8 +1,8 @@
 <template>
   <div class="joblist-container">
-    <div class="joblist-header">
-      <h1 class="joblist-header-title">Projects</h1>
-      <span class="joblist-header-year">Year: 2024/2025</span>
+    <div class="top-project-year">
+      <h1 class="top-project">Projects</h1>
+      <span class="top-year">Year: 2024/2025</span>
     </div>
     <div class="joblist-search-container">
       <v-row class="mb-4">
@@ -343,25 +343,6 @@ const navigateTo = (index: number) => {
 <style scoped>
 .joblist-container {
   padding: 20px 15px 10px 15px;
-}
-
-.joblist-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-  padding-bottom: 60px;
-  border-bottom: 2px solid #dfdcdc;
-}
-
-.joblist-header-title {
-  font-size: 24px;
-  font-weight: bold;
-}
-
-.joblist-header-year {
-  font-size: 24px;
-  font-weight: bold;
 }
 
 .joblist-search-container {
