@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.vdyp.forward.parsers;
+package ca.bc.gov.nrs.vdyp.io.parse.model;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -86,13 +86,13 @@ public class VdypSpeciesParser implements ControlMapValueReplacer<Object, String
 					.value(5, PERCENT_SPECIES_2, ControlledValueParser.optional(ValueParser.PERCENTAGE))
 					.value(3, SPECIES_3, ControlledValueParser.optional(ControlledValueParser.SPECIES))
 					.value(5, PERCENT_SPECIES_3, ControlledValueParser.optional(ValueParser.PERCENTAGE))
-					.value(6, SITE_INDEX, VdypForwardDefaultingParser.FLOAT_WITH_DEFAULT)
-					.value(6, DOMINANT_HEIGHT, VdypForwardDefaultingParser.FLOAT_WITH_DEFAULT)
-					.value(6, TOTAL_AGE, VdypForwardDefaultingParser.FLOAT_WITH_DEFAULT)
-					.value(6, AGE_AT_BREAST_HEIGHT, VdypForwardDefaultingParser.FLOAT_WITH_DEFAULT)
-					.value(6, YEARS_TO_BREAST_HEIGHT, VdypForwardDefaultingParser.FLOAT_WITH_DEFAULT)
+					.value(6, SITE_INDEX, ValueParser.FLOAT_WITH_DEFAULT)
+					.value(6, DOMINANT_HEIGHT, ValueParser.FLOAT_WITH_DEFAULT)
+					.value(6, TOTAL_AGE, ValueParser.FLOAT_WITH_DEFAULT)
+					.value(6, AGE_AT_BREAST_HEIGHT, ValueParser.FLOAT_WITH_DEFAULT)
+					.value(6, YEARS_TO_BREAST_HEIGHT, ValueParser.FLOAT_WITH_DEFAULT)
 					.value(2, IS_PRIMARY_SPECIES, ControlledValueParser.optional(ValueParser.LOGICAL_0_1))
-					.value(3, SITE_CURVE_NUMBER, VdypForwardDefaultingParser.INTEGER_WITH_DEFAULT);
+					.value(3, SITE_CURVE_NUMBER, ValueParser.INTEGER_WITH_DEFAULT);
 
 			var is = fileResolver.resolveForInput(fileName);
 

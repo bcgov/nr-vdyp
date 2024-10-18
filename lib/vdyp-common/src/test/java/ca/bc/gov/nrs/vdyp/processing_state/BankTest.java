@@ -8,11 +8,15 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import org.hamcrest.Description;
+import org.hamcrest.Matcher;
+import org.hamcrest.TypeSafeDiagnosingMatcher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.application.ProcessingException;
 import ca.bc.gov.nrs.vdyp.common.Utils;
+import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
@@ -79,8 +83,27 @@ class BankTest {
 						ib.siteIndex(0.6f);
 						ib.height(20f);
 					});
+
+					sb.quadMeanDiameter(25);
+					sb.baseArea(26);
+					sb.treesPerHectare(BaseAreaTreeDensityDiameter.treesPerHectare(26, 25));
+					sb.loreyHeight(227);
+					sb.closeUtilizationVolumeByUtilization(42);
+					sb.closeUtilizationVolumeNetOfDecayByUtilization(41);
+					sb.closeUtilizationVolumeNetOfDecayAndWasteByUtilization(40);
+					sb.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(39);
 				});
+
+				lb.quadraticMeanDiameterByUtilization(21);
+				lb.baseAreaByUtilization(22);
+				lb.treesPerHectareByUtilization(BaseAreaTreeDensityDiameter.treesPerHectare(22, 21));
+				lb.loreyHeightByUtilization(24);
+				lb.closeUtilizationVolumeByUtilization(42);
+				lb.closeUtilizationVolumeNetOfDecayByUtilization(41);
+				lb.closeUtilizationVolumeNetOfDecayAndWasteByUtilization(40);
+				lb.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(39);
 			});
+
 		});
 
 	}
@@ -290,4 +313,5 @@ class BankTest {
 			assertThat(bank.siteCurveNumbers[index], is(VdypEntity.MISSING_INTEGER_VALUE));
 		});
 	}
+
 }

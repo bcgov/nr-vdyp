@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.vdyp.forward.parsers;
+package ca.bc.gov.nrs.vdyp.io.parse.model;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -66,15 +66,15 @@ public class VdypUtilizationParser implements ControlMapValueReplacer<Object, St
 					.space(1) //
 					.value(2, GENUS, ControlledValueParser.optional(ValueParser.GENUS))
 					.value(3, UTILIZATION_CLASS_INDEX, ControlledValueParser.UTILIZATION_CLASS)
-					.value(9, BASAL_AREA, VdypForwardDefaultingParser.FLOAT_WITH_DEFAULT)
-					.value(9, LIVE_TREES_PER_HECTARE, VdypForwardDefaultingParser.FLOAT_WITH_DEFAULT)
-					.value(9, LOREY_HEIGHT, VdypForwardDefaultingParser.FLOAT_WITH_DEFAULT)
-					.value(9, WHOLE_STEM_VOLUME, VdypForwardDefaultingParser.FLOAT_WITH_DEFAULT)
-					.value(9, CLOSE_UTIL_VOLUME, VdypForwardDefaultingParser.FLOAT_WITH_DEFAULT)
-					.value(9, CU_VOLUME_LESS_DECAY, VdypForwardDefaultingParser.FLOAT_WITH_DEFAULT)
-					.value(9, CU_VOLUME_LESS_DECAY_WASTAGE, VdypForwardDefaultingParser.FLOAT_WITH_DEFAULT)
-					.value(9, CU_VOLUME_LESS_DECAY_WASTAGE_BREAKAGE, VdypForwardDefaultingParser.FLOAT_WITH_DEFAULT)
-					.value(6, QUADRATIC_MEAN_DIAMETER_BREAST_HEIGHT, VdypForwardDefaultingParser.FLOAT_WITH_DEFAULT);
+					.value(9, BASAL_AREA, ValueParser.FLOAT_WITH_DEFAULT)
+					.value(9, LIVE_TREES_PER_HECTARE, ValueParser.FLOAT_WITH_DEFAULT)
+					.value(9, LOREY_HEIGHT, ValueParser.FLOAT_WITH_DEFAULT)
+					.value(9, WHOLE_STEM_VOLUME, ValueParser.FLOAT_WITH_DEFAULT)
+					.value(9, CLOSE_UTIL_VOLUME, ValueParser.FLOAT_WITH_DEFAULT)
+					.value(9, CU_VOLUME_LESS_DECAY, ValueParser.FLOAT_WITH_DEFAULT)
+					.value(9, CU_VOLUME_LESS_DECAY_WASTAGE, ValueParser.FLOAT_WITH_DEFAULT)
+					.value(9, CU_VOLUME_LESS_DECAY_WASTAGE_BREAKAGE, ValueParser.FLOAT_WITH_DEFAULT)
+					.value(6, QUADRATIC_MEAN_DIAMETER_BREAST_HEIGHT, ValueParser.FLOAT_WITH_DEFAULT);
 
 			var is = fileResolver.resolveForInput(fileName);
 
