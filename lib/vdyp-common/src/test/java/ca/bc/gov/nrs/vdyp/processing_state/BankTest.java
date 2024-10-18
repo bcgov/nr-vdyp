@@ -62,7 +62,7 @@ class BankTest {
 				lb.addSpecies(sb -> {
 					sb.genus("H", controlMap);
 					sb.baseArea(50f);
-					sb.addSite(ib->{
+					sb.addSite(ib -> {
 						ib.ageTotal(100);
 						ib.yearsToBreastHeight(5);
 						ib.siteIndex(0.6f);
@@ -73,11 +73,11 @@ class BankTest {
 				lb.addSpecies(sb -> {
 					sb.genus("S", controlMap);
 					sb.baseArea(99.9f);
-					sb.addSite(ib->{
+					sb.addSite(ib -> {
 						ib.ageTotal(100);
 						ib.yearsToBreastHeight(5);
 						ib.siteIndex(0.6f);
-						ib.height(20f);					
+						ib.height(20f);
 					});
 				});
 			});
