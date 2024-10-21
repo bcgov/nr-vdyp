@@ -2,8 +2,8 @@ package ca.bc.gov.nrs.vdyp.back.processing_state;
 
 import java.util.function.Predicate;
 
+import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
-import ca.bc.gov.nrs.vdyp.forward.controlmap.ForwardResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
@@ -11,11 +11,10 @@ import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.processing_state.LayerProcessingState;
 import ca.bc.gov.nrs.vdyp.processing_state.ProcessingState;
 
-public class BackLayerProcessingState
-		extends LayerProcessingState<ForwardResolvedControlMap, BackLayerProcessingState> {
+public class BackLayerProcessingState extends LayerProcessingState<ResolvedControlMap, BackLayerProcessingState> {
 
 	protected BackLayerProcessingState(
-			ProcessingState<ForwardResolvedControlMap, BackLayerProcessingState> ps, VdypPolygon polygon,
+			ProcessingState<ResolvedControlMap, BackLayerProcessingState> ps, VdypPolygon polygon,
 			LayerType subjectLayerType
 	) throws ProcessingException {
 		super(ps, polygon, subjectLayerType);
