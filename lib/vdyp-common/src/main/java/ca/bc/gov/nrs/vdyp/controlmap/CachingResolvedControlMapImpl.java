@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.vdyp.controlmap;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
@@ -103,151 +104,162 @@ public class CachingResolvedControlMapImpl implements ResolvedControlMap {
 
 	@Override
 	public BecLookup getBecLookup() {
-		return becLookup.orElseThrow();
+		return becLookup.orElseThrow(() -> new NoSuchElementException("becLookup"));
 	}
 
 	@Override
 	public GenusDefinitionMap getGenusDefinitionMap() {
-		return genusDefinitionMap.orElseThrow();
+		return genusDefinitionMap.orElseThrow(() -> new NoSuchElementException("genusDefinitionMap"));
 	}
 
 	@Override
 	public Map<String, Coefficients> getNetDecayWasteCoeMap() {
-		return netDecayWasteCoeMap.orElseThrow();
+		return netDecayWasteCoeMap.orElseThrow(() -> new NoSuchElementException("netDecayWasteCoeMap"));
 	}
 
 	@Override
 	public MatrixMap2<Integer, Integer, Optional<Coefficients>> getNetDecayCoeMap() {
-		return netDecayCoeMap.orElseThrow();
+		return netDecayCoeMap.orElseThrow(() -> new NoSuchElementException("netDecayCoeMap"));
 	}
 
 	@Override
 	public MatrixMap2<String, Region, Float> getWasteModifierMap() {
-		return wasteModifierMap.orElseThrow();
+		return wasteModifierMap.orElseThrow(() -> new NoSuchElementException("wasteModifierMap"));
 	}
 
 	@Override
 	public MatrixMap2<String, Region, Float> getDecayModifierMap() {
-		return decayModifierMap.orElseThrow();
+		return decayModifierMap.orElseThrow(() -> new NoSuchElementException("decayModifierMap"));
 	}
 
 	@Override
 	public MatrixMap2<Integer, Integer, Optional<Coefficients>> getCloseUtilizationCoeMap() {
-		return closeUtilizationCoeMap.orElseThrow();
+		return closeUtilizationCoeMap.orElseThrow(() -> new NoSuchElementException("closeUtilizationCoeMap"));
 	}
 
 	@Override
 	public Map<Integer, Coefficients> getTotalStandWholeStepVolumeCoeMap() {
-		return totalStandWholeStepVolumeCoeMap.orElseThrow();
+		return totalStandWholeStepVolumeCoeMap
+				.orElseThrow(() -> new NoSuchElementException("totalStandWholeStepVolumeCoeMap"));
 	}
 
 	@Override
 	public MatrixMap2<Integer, Integer, Optional<Coefficients>> getWholeStemUtilizationComponentMap() {
-		return wholeStemUtilizationComponentMap.orElseThrow();
+		return wholeStemUtilizationComponentMap
+				.orElseThrow(() -> new NoSuchElementException("wholeStemUtilizationComponentMap"));
 	}
 
 	@Override
 	public MatrixMap3<Integer, String, String, Coefficients> getQuadMeanDiameterUtilizationComponentMap() {
-		return quadMeanDiameterUtilizationComponentMap.orElseThrow();
+		return quadMeanDiameterUtilizationComponentMap
+				.orElseThrow(() -> new NoSuchElementException("quadMeanDiameterUtilizationComponentMap"));
 	}
 
 	@Override
 	public MatrixMap3<Integer, String, String, Coefficients> getBasalAreaDiameterUtilizationComponentMap() {
-		return basalAreaDiameterUtilizationComponentMap.orElseThrow();
+		return basalAreaDiameterUtilizationComponentMap
+				.orElseThrow(() -> new NoSuchElementException("basalAreaDiameterUtilizationComponentMap"));
 	}
 
 	@Override
 	public Map<String, Coefficients> getSmallComponentWholeStemVolumeCoefficients() {
-		return smallComponentWholeStemVolumeCoefficients.orElseThrow();
+		return smallComponentWholeStemVolumeCoefficients
+				.orElseThrow(() -> new NoSuchElementException("smallComponentWholeStemVolumeCoefficients"));
 	}
 
 	@Override
 	public Map<String, Coefficients> getSmallComponentLoreyHeightCoefficients() {
-		return smallComponentLoreyHeightCoefficients.orElseThrow();
+		return smallComponentLoreyHeightCoefficients
+				.orElseThrow(() -> new NoSuchElementException("smallComponentLoreyHeightCoefficients"));
 	}
 
 	@Override
 	public Map<String, Coefficients> getSmallComponentQuadMeanDiameterCoefficients() {
-		return smallComponentQuadMeanDiameterCoefficients.orElseThrow();
+		return smallComponentQuadMeanDiameterCoefficients
+				.orElseThrow(() -> new NoSuchElementException("smallComponentQuadMeanDiameterCoefficients"));
 	}
 
 	@Override
 	public Map<String, Coefficients> getSmallComponentBasalAreaCoefficients() {
-		return smallComponentBasalAreaCoefficients.orElseThrow();
+		return smallComponentBasalAreaCoefficients
+				.orElseThrow(() -> new NoSuchElementException("smallComponentBasalAreaCoefficients"));
 	}
 
 	@Override
 	public Map<String, Coefficients> getSmallComponentProbabilityCoefficients() {
-		return smallComponentProbabilityCoefficients.orElseThrow();
+		return smallComponentProbabilityCoefficients
+				.orElseThrow(() -> new NoSuchElementException("smallComponentProbabilityCoefficients"));
 	}
 
 	@Override
 	public Map<Integer, SiteCurveAgeMaximum> getMaximumAgeBySiteCurveNumber() {
-		return maximumAgeBySiteCurveNumber.orElseThrow();
+		return maximumAgeBySiteCurveNumber.orElseThrow(() -> new NoSuchElementException("maximumAgeBySiteCurveNumber"));
 	}
 
 	@Override
 	public Map<Integer, Coefficients> getUpperBounds() {
-		return upperBounds.orElseThrow();
+		return upperBounds.orElseThrow(() -> new NoSuchElementException("upperBounds"));
 	}
 
 	@Override
 	public MatrixMap2<String, String, Integer> getDefaultEquationGroup() {
-		return defaultEquationGroup.orElseThrow();
+		return defaultEquationGroup.orElseThrow(() -> new NoSuchElementException("defaultEquationGroup"));
 	}
 
 	@Override
 	public MatrixMap2<Integer, Integer, Optional<Integer>> getEquationModifierGroup() {
-		return equationModifierGroup.orElseThrow();
+		return equationModifierGroup.orElseThrow(() -> new NoSuchElementException("equationModifierGroup"));
 	}
 
 	@Override
 	public MatrixMap2<String, Region, Coefficients> getHl1Coefficients() {
-		return hl1Coefficients.orElseThrow();
+		return hl1Coefficients.orElseThrow(() -> new NoSuchElementException("hl1Coefficients"));
 	}
 
 	@Override
 	public MatrixMap2<String, Region, Coefficients> getHl2Coefficients() {
-		return hl2Coefficients.orElseThrow();
+		return hl2Coefficients.orElseThrow(() -> new NoSuchElementException("hl2Coefficients"));
 	}
 
 	@Override
 	public MatrixMap2<String, Region, Coefficients> getHl3Coefficients() {
-		return hl3Coefficients.orElseThrow();
+		return hl3Coefficients.orElseThrow(() -> new NoSuchElementException("hl3Coefficients"));
 	}
 
 	@Override
 	public MatrixMap3<String, String, Region, Optional<NonprimaryHLCoefficients>> getHlNonPrimaryCoefficients() {
-		return hlNonPrimaryCoefficients.orElseThrow();
+		return hlNonPrimaryCoefficients.orElseThrow(() -> new NoSuchElementException("hlNonPrimaryCoefficients"));
 	}
 
 	@Override
 	public MatrixMap2<String, Region, ComponentSizeLimits> getComponentSizeLimits() {
-		return componentSizeLimitCoefficients.orElseThrow();
+		return componentSizeLimitCoefficients
+				.orElseThrow(() -> new NoSuchElementException("componentSizeLimitCoefficients"));
 	}
 
 	@Override
 	public Map<Integer, Coefficients> getNetBreakageMap() {
-		return breakageMap.orElseThrow();
+		return breakageMap.orElseThrow(() -> new NoSuchElementException("breakageMap"));
 	}
 
 	@Override
 	public MatrixMap2<String, String, Integer> getVolumeEquationGroups() {
-		return volumeEquationGroups.orElseThrow();
+		return volumeEquationGroups.orElseThrow(() -> new NoSuchElementException("volumeEquationGroups"));
 	}
 
 	@Override
 	public MatrixMap2<String, String, Integer> getDecayEquationGroups() {
-		return decayEquationGroups.orElseThrow();
+		return decayEquationGroups.orElseThrow(() -> new NoSuchElementException("decayEquationGroups"));
 	}
 
 	@Override
 	public MatrixMap2<String, String, Integer> getBreakageEquationGroups() {
-		return breakageEquationGroups.orElseThrow();
+		return breakageEquationGroups.orElseThrow(() -> new NoSuchElementException("breakageEquationGroups"));
 	}
 
 	@Override
 	public Map<String, Coefficients> getQuadMeanDiameterBySpeciesCoefficients() {
-		return quadMeanDiameterBySpeciesCoefficients.orElseThrow();
+		return quadMeanDiameterBySpeciesCoefficients
+				.orElseThrow(() -> new NoSuchElementException("quadMeanDiameterBySpeciesCoefficients"));
 	}
 }

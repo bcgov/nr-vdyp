@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.forward.controlmap;
 
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
@@ -68,93 +69,104 @@ public class ForwardResolvedControlMapImpl extends CachingResolvedControlMapImpl
 
 	@Override
 	public ForwardDebugSettings getDebugSettings() {
-		return debugSettings.orElseThrow();
+		return debugSettings.orElseThrow(() -> new NoSuchElementException("debugSettings"));
 	}
 
 	@Override
 	public ForwardControlVariables getForwardControlVariables() {
-		return forwardControlVariables.orElseThrow();
+		return forwardControlVariables.orElseThrow(() -> new NoSuchElementException("forwardControlVariables"));
 	}
 
 	@Override
 	public MatrixMap2<String, Region, SiteIndexEquation> getSiteCurveMap() {
-		return siteCurveMap.orElseThrow();
+		return siteCurveMap.orElseThrow(() -> new NoSuchElementException("siteCurveMap"));
 	}
 
 	@Override
 	public CompVarAdjustments getCompVarAdjustments() {
-		return compVarAdjustments.orElseThrow();
+		return compVarAdjustments.orElseThrow(() -> new NoSuchElementException("compVarAdjustments"));
 	}
 
 	@Override
 	public MatrixMap2<String, String, Coefficients> getBasalAreaYieldCoefficients() {
-		return basalAreaYieldCoefficients.orElseThrow();
+		return basalAreaYieldCoefficients.orElseThrow(() -> new NoSuchElementException("basalAreaYieldCoefficients"));
 	}
 
 	@Override
 	public MatrixMap2<String, String, Coefficients> getQuadMeanDiameterYieldCoefficients() {
-		return quadMeanDiameterYieldCoefficients.orElseThrow();
+		return quadMeanDiameterYieldCoefficients
+				.orElseThrow(() -> new NoSuchElementException("quadMeanDiameterYieldCoefficients"));
 	}
 
 	@Override
 	public Map<Region, GrowthFiatDetails> getBasalAreaGrowthFiatDetails() {
-		return basalAreaGrowthFiatDetails.orElseThrow();
+		return basalAreaGrowthFiatDetails.orElseThrow(() -> new NoSuchElementException("basalAreaGrowthFiatDetails"));
 	}
 
 	@Override
 	public MatrixMap2<String, String, Coefficients> getBasalAreaGrowthEmpiricalCoefficients() {
-		return basalAreaGrowthEmpiricalCoefficients.orElseThrow();
+		return basalAreaGrowthEmpiricalCoefficients
+				.orElseThrow(() -> new NoSuchElementException("basalAreaGrowthEmpiricalCoefficients"));
 	}
 
 	@Override
 	public MatrixMap3<Region, String, Integer, Float> getUpperBoundsCoefficients() {
-		return upperBoundCoefficients.orElseThrow();
+		return upperBoundCoefficients.orElseThrow(() -> new NoSuchElementException("upperBoundCoefficients"));
 	}
 
 	@Override
 	public Map<Region, GrowthFiatDetails> getQuadMeanDiameterGrowthFiatDetails() {
-		return quadMeanDiameterGrowthFiatDetails.orElseThrow();
+		return quadMeanDiameterGrowthFiatDetails
+				.orElseThrow(() -> new NoSuchElementException("quadMeanDiameterGrowthFiatDetails"));
 	}
 
 	@Override
 	public Map<Integer, Coefficients> getQuadMeanDiameterGrowthEmpiricalCoefficients() {
-		return quadMeanDiameterGrowthEmpiricalCoefficients.orElseThrow();
+		return quadMeanDiameterGrowthEmpiricalCoefficients
+				.orElseThrow(() -> new NoSuchElementException("quadMeanDiameterGrowthEmpiricalCoefficients"));
 	}
 
 	@Override
 	public Map<Integer, Coefficients> getQuadMeanDiameterGrowthEmpiricalLimits() {
-		return quadMeanDiameterGrowthEmpiricalLimits.orElseThrow();
+		return quadMeanDiameterGrowthEmpiricalLimits
+				.orElseThrow(() -> new NoSuchElementException("quadMeanDiameterGrowthEmpiricalLimits"));
 	}
 
 	@Override
 	public MatrixMap2<String, Region, Coefficients> getLoreyHeightPrimarySpeciesEquationP1Coefficients() {
-		return loreyHeightPrimarySpeciesEquationP1Coefficients.orElseThrow();
+		return loreyHeightPrimarySpeciesEquationP1Coefficients
+				.orElseThrow(() -> new NoSuchElementException("loreyHeightPrimarySpeciesEquationP1Coefficients"));
 	}
 
 	@Override
 	public MatrixMap3<String, String, Region, Optional<NonprimaryHLCoefficients>>
 			getLoreyHeightNonPrimaryCoefficients() {
-		return loreyHeightNonPrimaryCoefficients.orElseThrow();
+		return loreyHeightNonPrimaryCoefficients
+				.orElseThrow(() -> new NoSuchElementException("loreyHeightNonPrimaryCoefficients"));
 	}
 
 	@Override
 	public Map<Integer, ModelCoefficients> getPrimarySpeciesBasalAreaGrowthCoefficients() {
-		return primarySpeciesBasalAreaGrowthCoefficients.orElseThrow();
+		return primarySpeciesBasalAreaGrowthCoefficients
+				.orElseThrow(() -> new NoSuchElementException("primarySpeciesBasalAreaGrowthCoefficients"));
 	}
 
 	@Override
 	public MatrixMap2<String, Integer, Optional<Coefficients>> getNonPrimarySpeciesBasalAreaGrowthCoefficients() {
-		return nonPrimarySpeciesBasalAreaGrowthCoefficients.orElseThrow();
+		return nonPrimarySpeciesBasalAreaGrowthCoefficients
+				.orElseThrow(() -> new NoSuchElementException("nonPrimarySpeciesBasalAreaGrowthCoefficients"));
 	}
 
 	@Override
 	public Map<Integer, ModelCoefficients> getPrimarySpeciesQuadMeanDiameterGrowthCoefficients() {
-		return primaryQuadMeanDiameterGrowthCoefficients.orElseThrow();
+		return primaryQuadMeanDiameterGrowthCoefficients
+				.orElseThrow(() -> new NoSuchElementException("primaryQuadMeanDiameterGrowthCoefficients"));
 	}
 
 	@Override
 	public MatrixMap2<String, Integer, Optional<Coefficients>>
 			getNonPrimarySpeciesQuadMeanDiameterGrowthCoefficients() {
-		return nonPrimaryQuadMeanDiameterGrowthCoefficients.orElseThrow();
+		return nonPrimaryQuadMeanDiameterGrowthCoefficients
+				.orElseThrow(() -> new NoSuchElementException("nonPrimaryQuadMeanDiameterGrowthCoefficients"));
 	}
 }

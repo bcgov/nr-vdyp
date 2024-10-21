@@ -68,4 +68,8 @@ const cancel = () => {
 header.v-toolbar.v-toolbar--flat.v-toolbar--density-default.v-theme--defaultTheme.v-locale--is-ltr {
   height: 48px !important;
 }
+
+.v-card-text {
+  padding: 1rem !important;
+}
 </style>

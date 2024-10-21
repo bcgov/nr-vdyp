@@ -6,7 +6,9 @@
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn color="primary" @click="closeDialog">Save</v-btn>
-        <v-btn color="primary" variant="outlined" @click="closeDialog">Close</v-btn>
+        <v-btn color="primary" variant="outlined" @click="closeDialog"
+          >Close</v-btn
+        >
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -43,3 +45,8 @@ watch(localShow, (newVal) => {
   }
 })
 </script>
+<style scoped>
+.v-card-text {
+  padding: 1rem !important;
+}
+</style>

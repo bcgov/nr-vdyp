@@ -104,20 +104,23 @@ class GrowAllStepsTest {
 
 	private static void comparePolygons(VdypPolygon a, VdypPolygon b, float tolerance) {
 
-		VdypMatchers.setEpsilon(tolerance);
+		Float originalEpsilon = VdypMatchers.setEpsilon(tolerance);
+		try {
+			assertThat(a.getPolygonIdentifier().forYear(a.getTargetYear().get()), is(b.getPolygonIdentifier()));
+			assertThat(a.getBiogeoclimaticZone(), is(b.getBiogeoclimaticZone()));
+			assertThat(a.getForestInventoryZone(), is(b.getForestInventoryZone()));
+			assertThat(a.getInventoryTypeGroup(), is(b.getInventoryTypeGroup()));
+			// assertThat(a.getMode(), is(b.getMode())); -- comparison polys don't have modes
+			assertThat(a.getPercentAvailable(), is(b.getPercentAvailable()));
+			assertThat(a.getTargetYear().get(), is(b.getPolygonIdentifier().getYear()));
 
-		assertThat(a.getPolygonIdentifier().forYear(a.getTargetYear().get()), is(b.getPolygonIdentifier()));
-		assertThat(a.getBiogeoclimaticZone(), is(b.getBiogeoclimaticZone()));
-		assertThat(a.getForestInventoryZone(), is(b.getForestInventoryZone()));
-		assertThat(a.getInventoryTypeGroup(), is(b.getInventoryTypeGroup()));
-		// assertThat(a.getMode(), is(b.getMode())); -- comparison polys don't have modes
-		assertThat(a.getPercentAvailable(), is(b.getPercentAvailable()));
-		assertThat(a.getTargetYear().get(), is(b.getPolygonIdentifier().getYear()));
+			assertThat(a.getLayers().size(), is(b.getLayers().size()));
 
-		assertThat(a.getLayers().size(), is(b.getLayers().size()));
-
-		compareLayers(a.getLayers().get(LayerType.PRIMARY), b.getLayers().get(LayerType.PRIMARY));
-		// compareLayers(a.getLayers().get(LayerType.VETERAN), b.getLayers().get(LayerType.VETERAN));
+			compareLayers(a.getLayers().get(LayerType.PRIMARY), b.getLayers().get(LayerType.PRIMARY));
+			// compareLayers(a.getLayers().get(LayerType.VETERAN), b.getLayers().get(LayerType.VETERAN));
+		} finally {
+			VdypMatchers.setEpsilon(originalEpsilon);
+		}
 	}
 
 	private static void compareLayers(VdypLayer aLayer, VdypLayer bLayer) {

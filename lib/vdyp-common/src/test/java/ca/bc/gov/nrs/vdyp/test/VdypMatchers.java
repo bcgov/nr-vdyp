@@ -56,8 +56,25 @@ public class VdypMatchers {
 
 	private static float currentEpsilon = EPSILON;
 
-	public static void setEpsilon(float newValue) {
+	/**
+	 * Change the <code>closeTo</code> tolerance. Recommended usage:
+	 *
+	 * <pre>
+	 * float originalValue = VdypMatchers.setEpsilon(... new value ...);
+	 * try {
+	 *     ... closeTo invocations use the new value ...
+	 * } finally {
+	 *     VdypMatchers.setEpsilon(originalValue);
+	 * }
+	 * </pre>
+	 *
+	 * @param newValue the new tolerance value
+	 * @return the tolerance value at the time this method was called
+	 */
+	public static float setEpsilon(float newValue) {
+		var originalValue = currentEpsilon;
 		currentEpsilon = newValue;
+		return originalValue;
 	}
 
 	/**

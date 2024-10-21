@@ -16,6 +16,25 @@ body {
   text-transform: none; // Disabled V-BTN text from being capitalized
 }
 
+.blue-btn {
+  background: #003366;
+  color: #ffffff !important;
+  letter-spacing: 0.25px;
+  padding-left: 25px;
+  padding-right: 25px;
+  font-weight: 500;
+}
+
+.white-btn {
+  background: #ffffff;
+  color: #003366 !important;
+  letter-spacing: 0.25px;
+  border: 1px solid #003366;
+  padding-left: 25px;
+  padding-right: 25px;
+  font-weight: 500;
+}
+
 /* Data Table */
 .v-data-table-footer {
   padding-top: 20px; // Increased the spacing between table and pagination
@@ -38,6 +57,27 @@ body {
   background-color: #ffffff;
 }
 
+/* EXPANSION PANEL */
+.expansion-panel-title {
+  display: flex;
+  align-items: center;
+}
+
+.expansion-panel-icon-col {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 16px; /* adjusting between icon and title */
+}
+
+.expansion-panel-icon {
+  font-size: 24px;
+}
+
+.expansion-panel-text {
+  padding-left: 40px; /*  apply padding to match the first character of the title */
+}
+
 /* LINK */
 .link-no-decoration {
   // no decoration on link
@@ -54,6 +94,11 @@ body {
   color: inherit;
 }
 
+/* CARD */
+.v-card-text {
+  padding: 0rem !important; // due to Species Information v-card
+}
+
 .v-card-title {
   color: white;
   background: #44608d;
@@ -61,36 +106,132 @@ body {
   padding: 1rem !important;
 }
 
-// only for color='primary'
+/* //only for color='primary'
 .v-card-actions {
   .text-primary.v-btn--variant-text {
     background: #003366;
     color: white !important;
   }
+}*/
+
+/* TABS */
+// tab
+.v-tab.v-tab.v-btn {
+  height: var(--v-tabs-height);
+  border-top-left-radius: 5px !important;
+  border-top-right-radius: 5px !important;
+  min-width: 90px;
+  border: 0.1rem solid #a3a3a3;
+  color: rgb(118, 118, 118);
+  background-color: #f6f6f6;
+  box-shadow:
+    0px 2px 4px -1px rgba(0, 0, 0, 0.2),
+    0px 4px 5px 0px rgba(0, 0, 0, 0.14),
+    0px 1px 10px 0px rgba(0, 0, 0, 0.12); /* elevation-4 */
+}
+
+// first tab
+.first-tab {
+  margin-left: 50px !important;
+}
+
+// tab window
+.v-window.v-theme--defaultTheme.v-tabs-window {
+  box-shadow:
+    0px 2px 4px -1px rgba(0, 0, 0, 0.2),
+    0px 4px 5px 0px rgba(0, 0, 0, 0.14),
+    0px 1px 10px 0px rgba(0, 0, 0, 0.12); /* elevation-4 */
+}
+
+// Selected tab
+.v-btn.v-tab-item--selected.v-tab--selected.v-theme--defaultTheme.v-btn--density-default.v-btn--size-default.v-btn--variant-text.v-tab {
+  background-color: #ffffff;
+  z-index: 1;
+  border-bottom: none !important;
+  color: rgba(0, 0, 0, 0.87);
+}
+
+/* CHECK-BOX / RADIO */
+// label
+.v-label.v-label--clickable {
+  font-size: 14px;
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.87);
+}
+
+/* RADIO */
+.v-selection-control-group--inline {
+  height: 30px; // reduce the height of an inline radio group containing an error message because it is too tall
+}
+
+/* input TEXT-FIELD */
+// input number field spin(arrows) button */
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  /* always show the spin (arrows) button */
+  display: block;
+  opacity: 1;
+  width: 20px;
+  height: 20px;
+}
+.v-text-field .v-field--no-label input,
+.v-text-field .v-field--active input {
+  background-color: #ffffff; // apply text field background color
+}
+
+/* SELECT box */
+/* v-select 컴포넌트의 입력 슬롯 배경색을 흰색으로 설정 */
+.v-field--variant-filled .v-field__overlay {
+  background-color: #ffffff;
 }
 
 /* etc */
 
-.fieldset {
-  border: 2px solid #39598b;
-  border-radius: 8px;
-  padding: 16px;
-  margin-bottom: 16px;
+// .fieldset {
+//   border: 2px solid #39598b;
+//   border-radius: 8px;
+//   padding: 16px;
+//   margin-bottom: 16px;
+// }
+
+// .legend {
+//   padding: 0 8px;
+//   font-weight: bold;
+//   color: #39598b;
+// }
+
+.top-project-year {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-bottom: 60px;
+  border-bottom: 2px solid #dfdcdc;
 }
 
-.legend {
-  padding: 0 8px;
+.top-project {
+  font-size: 24px;
   font-weight: bold;
-  color: #39598b;
 }
 
-.readonly__text {
+.top-year {
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.input-field-label {
+  font-size: 12px;
+  color: #747474;
+  padding-left: 15px;
+}
+
+.readonly-text {
   color: black;
   font-size: 18px;
 }
 
-.readonly__label {
-  font-size: 13px;
+.readonly-label {
+  font-size: 12px;
   color: #747474;
 }
 
@@ -106,8 +247,14 @@ body {
   border-top: 2px dotted #000;
 }
 
-.species-row {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 10px;
+.hr-line {
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.col-space-3 {
+  max-width: 3%;
+}
+
+.col-space-6 {
+  max-width: 6%;
 }

@@ -64,9 +64,6 @@ export const initializeKeycloak = async (): Promise<Keycloak | undefined> => {
       return keycloakInstance
     }
 
-    console.info(
-      `SSO initialization Options - pkceMethod : ${initOptions.pkceMethod}, checkLoginIframe : ${initOptions.checkLoginIframe}, onLoad : ${initOptions.onLoad}, silentCheckSsoRedirectUri : ${initOptions.silentCheckSsoRedirectUri}, enableLogging : ${initOptions.enableLogging}`,
-    )
     const auth = await keycloakInstance.init(initOptions)
     console.info(`SSO initialization complete : ${auth}`)
     if (
