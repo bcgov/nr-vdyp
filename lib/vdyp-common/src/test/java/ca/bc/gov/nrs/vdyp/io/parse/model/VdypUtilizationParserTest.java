@@ -97,8 +97,6 @@ class VdypUtilizationParserTest {
 
 			assertThat(result, hasSize(6 * UtilizationClass.values().length));
 
-			result.get(0);
-
 			assertThat(
 					result.get(1),
 					allOf(
@@ -107,11 +105,29 @@ class VdypUtilizationParserTest {
 							hasProperty("basalArea", closeTo(44.93259f)),
 							hasProperty("liveTreesPerHectare", closeTo(595.32f)),
 							hasProperty("loreyHeight", closeTo(30.9724f)),
-							hasProperty("closeUtilizationVolume", closeTo(620.9775f))
+							hasProperty("wholeStemVolume", closeTo(620.9775f)),
+							hasProperty("closeUtilizationVolume", closeTo(592.2023f)),
+							hasProperty("cuVolumeMinusDecay", closeTo(580.1681f)),
+							hasProperty("cuVolumeMinusDecayWastage", closeTo(577.6229f)),
+							hasProperty("cuVolumeMinusDecayWastageBreakage", closeTo(549.0159f))
 					)
 			);
 
-			assertTrue(!stream.hasNext(), "stream is empty");
+			assertThat(
+					result.get(32),
+					allOf(
+							hasProperty("genus", present(is("S"))), hasProperty("genusIndex", is(15)),
+							hasProperty("ucIndex", is(UtilizationClass.U75TO125)),
+							hasProperty("basalArea", closeTo(0.02225f)),
+							hasProperty("liveTreesPerHectare", closeTo(2.73f)),
+							hasProperty("loreyHeight", is(Float.NaN)), hasProperty("wholeStemVolume", closeTo(0.1291f)),
+							hasProperty("closeUtilizationVolume", closeTo(0.0213f)),
+							hasProperty("cuVolumeMinusDecay", closeTo(0.0212f)),
+							hasProperty("cuVolumeMinusDecayWastage", closeTo(0.0212f)),
+							hasProperty("cuVolumeMinusDecayWastageBreakage", closeTo(0.0204f))
+					)
+			);
+			assertTrue(!stream.hasNext(), "stream is not empty");
 
 			assertThrows(NoSuchElementException.class, () -> stream.next());
 
