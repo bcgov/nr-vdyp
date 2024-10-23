@@ -33,6 +33,10 @@ public class VdypPolygonDescriptionParser implements ControlMapValueReplacer<Obj
 		Integer year;
 		String name;
 
+		if (description.length() != PolygonIdentifier.ID_LENGTH) {
+			throw new ResourceParseException("Polygon description " + description + " was not 25 characters long");
+		}
+
 		if (matcher.matches() && matcher.group(2) != null) {
 			year = Integer.parseInt(matcher.group(2));
 			name = matcher.group(1).trim();
