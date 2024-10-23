@@ -136,25 +136,17 @@ public class VdypSpeciesParser implements ControlMapValueReplacer<Object, String
 
 						List<Sp64Distribution> gdList = new ArrayList<>();
 
-						Utils.ifBothPresent(
-								genusNameText0.filter(t -> genusDefinitionMap.contains(t)), percentGenus0,
-								(s, p) -> gdList.add(new Sp64Distribution(1, s, p))
-						);
+						speciesDistribution(genusDefinitionMap, genusNameText0, percentGenus0, 1)
+								.ifPresent(gdList::add);
 
-						Utils.ifBothPresent(
-								genusNameText1.filter(t -> genusDefinitionMap.contains(t)), percentGenus1,
-								(s, p) -> gdList.add(new Sp64Distribution(2, s, p))
-						);
+						speciesDistribution(genusDefinitionMap, genusNameText1, percentGenus1, 2)
+								.ifPresent(gdList::add);
 
-						Utils.ifBothPresent(
-								genusNameText2.filter(t -> genusDefinitionMap.contains(t)), percentGenus2,
-								(s, p) -> gdList.add(new Sp64Distribution(3, s, p))
-						);
+						speciesDistribution(genusDefinitionMap, genusNameText2, percentGenus2, 3)
+								.ifPresent(gdList::add);
 
-						Utils.ifBothPresent(
-								genusNameText3.filter(t -> genusDefinitionMap.contains(t)), percentGenus3,
-								(s, p) -> gdList.add(new Sp64Distribution(4, s, p))
-						);
+						speciesDistribution(genusDefinitionMap, genusNameText3, percentGenus3, 4)
+								.ifPresent(gdList::add);
 
 						Sp64DistributionSet speciesDistributionSet = new Sp64DistributionSet(4, gdList);
 
@@ -181,7 +173,7 @@ public class VdypSpeciesParser implements ControlMapValueReplacer<Object, String
 							speciesBuilder.layerType(lt);
 							speciesBuilder.genus(genus, controlMap);
 
-							if (isPrimarySpecies.isPresent() && isPrimarySpecies.get() == true) {
+							if (isPrimarySpecies.orElse(false)) {
 								speciesBuilder.addSite(siteBuilder -> {
 									siteBuilder.ageTotal(inferredTotalAge);
 									siteBuilder.height(dominantHeight);
@@ -195,6 +187,16 @@ public class VdypSpeciesParser implements ControlMapValueReplacer<Object, String
 							}
 						});
 					})), builder::marker);
+				}
+
+				private Optional<Sp64Distribution> speciesDistribution(
+						GenusDefinitionMap genusDefinitionMap, Optional<String> genusNameText0,
+						Optional<Float> percentGenus0, int index
+				) {
+					return Utils.mapBoth(
+							genusNameText0.filter(genusDefinitionMap::contains), percentGenus0,
+							(s, p) -> new Sp64Distribution(index, s, p)
+					);
 				}
 			};
 
