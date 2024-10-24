@@ -51,6 +51,8 @@ public class VdypSpeciesParser implements ControlMapValueReplacer<Object, String
 	private static final String IS_PRIMARY_SPECIES = "IS_PRIMARY_SPECIES"; // INSITESP
 	private static final String SITE_CURVE_NUMBER = "SITE_CURVE_NUMBER"; // SCN
 
+	private static final ValueOrMarker.Builder<Optional<LayerType>, EndOfRecord> LAYER_TYPE_EOR_BUILDER = new ValueOrMarker.Builder<>();
+
 	@Override
 	public ControlKey getControlKey() {
 		return ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SPECIES;
@@ -107,11 +109,8 @@ public class VdypSpeciesParser implements ControlMapValueReplacer<Object, String
 						throws ResourceParseException {
 
 					var polygonId = VdypPolygonDescriptionParser.parse((String) entry.get(DESCRIPTION));
-					var layerType = (ValueOrMarker<Optional<LayerType>, EndOfRecord>) entry.get(LAYER_TYPE);
-					if (layerType == null) {
-						var builder = new ValueOrMarker.Builder<Optional<LayerType>, EndOfRecord>();
-						layerType = builder.marker(EndOfRecord.END_OF_RECORD);
-					}
+					var layerType = (ValueOrMarker<Optional<LayerType>, EndOfRecord>) entry
+							.getOrDefault(LAYER_TYPE, LAYER_TYPE_EOR_BUILDER.marker(EndOfRecord.END_OF_RECORD));
 					var genusIndex = (Integer) entry.get(GENUS_INDEX);
 					var optionalGenus = (Optional<String>) entry.get(GENUS);
 					var genusNameText0 = (Optional<String>) entry.get(SPECIES_0);
@@ -152,20 +151,10 @@ public class VdypSpeciesParser implements ControlMapValueReplacer<Object, String
 
 						var genus = optionalGenus.orElse(genusDefinitionMap.getByIndex(genusIndex).getAlias());
 
-						var iTotalAge = totalAge;
-						var iYearsToBreastHeight = yearsToBreastHeight;
+						var inferredAges = inferAges(new Ages(totalAge, yearsAtBreastHeight, yearsToBreastHeight));
 
-						// From VDYPGETS.FOR, lines 235 to 255.
-						if (Float.isNaN(totalAge)) {
-							if (yearsAtBreastHeight > 0.0 && yearsToBreastHeight > 0.0)
-								iTotalAge = yearsAtBreastHeight + yearsToBreastHeight;
-						} else if (Float.isNaN(yearsToBreastHeight)) {
-							if (yearsAtBreastHeight > 0.0 && totalAge > yearsAtBreastHeight)
-								iYearsToBreastHeight = totalAge - yearsAtBreastHeight;
-						}
-
-						var inferredTotalAge = iTotalAge;
-						var inferredYearsToBreastHeight = iYearsToBreastHeight;
+						var inferredTotalAge = inferredAges.totalAge;
+						var inferredYearsToBreastHeight = inferredAges.yearsAtBreastHeight;
 
 						return VdypSpecies.build(speciesBuilder -> {
 							speciesBuilder.sp64DistributionSet(speciesDistributionSet);
@@ -222,6 +211,31 @@ public class VdypSpeciesParser implements ControlMapValueReplacer<Object, String
 				}
 			};
 		};
+	}
+
+	record Ages(float totalAge, float yearsAtBreastHeight, float yearsToBreastHeight) {
+	}
+
+	/**
+	 * Fills in NaN value for one of totalAge or yearsToBreastHeight if the other values are valid numbers
+	 *
+	 * @param givenAges
+	 * @return An ages object with the NaN value filled in.
+	 */
+	static Ages inferAges(final Ages givenAges) {
+		var iTotalAge = givenAges.totalAge;
+		var iYearsToBreastHeight = givenAges.yearsToBreastHeight;
+
+		// From VDYPGETS.FOR, lines 235 to 255.
+		if (Float.isNaN(givenAges.totalAge)) {
+			if (givenAges.yearsAtBreastHeight > 0.0 && givenAges.yearsToBreastHeight > 0.0)
+				iTotalAge = givenAges.yearsAtBreastHeight + givenAges.yearsToBreastHeight;
+		} else if (Float.isNaN(givenAges.yearsToBreastHeight)) {
+			if (givenAges.yearsAtBreastHeight > 0.0 && givenAges.totalAge > givenAges.yearsAtBreastHeight)
+				iYearsToBreastHeight = givenAges.totalAge - givenAges.yearsAtBreastHeight;
+		}
+
+		return new Ages(iTotalAge, givenAges.yearsAtBreastHeight, iYearsToBreastHeight);
 	}
 
 	@Override

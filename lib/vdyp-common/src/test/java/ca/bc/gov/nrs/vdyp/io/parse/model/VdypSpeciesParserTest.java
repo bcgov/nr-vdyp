@@ -8,9 +8,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.NoSuchElementException;
 
+import org.hamcrest.Matchers;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
 
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
+import ca.bc.gov.nrs.vdyp.io.parse.model.VdypSpeciesParser.Ages;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.test.MockFileResolver;
@@ -179,4 +183,71 @@ class VdypSpeciesParserTest {
 		}
 	}
 
+	@Nested
+	class InferAges {
+
+		@Test
+		void testNoNan() {
+			var result = VdypSpeciesParser.inferAges(new Ages(60, 50, 10));
+			assertThat(result, equalTo(new Ages(60, 50, 10))); // Leave as is
+		}
+
+		@Test
+		void testTotalNaN() {
+			var result = VdypSpeciesParser.inferAges(new Ages(Float.NaN, 50, 10));
+			assertThat(result, equalTo(new Ages(60, 50, 10))); // Fill in total
+		}
+
+		@Test
+		void testYtbNaN() {
+			var result = VdypSpeciesParser.inferAges(new Ages(60, 50, Float.NaN));
+			assertThat(result, equalTo(new Ages(60, 50, 10))); // Fill Years to Breast Height
+		}
+
+		// TODO maybe implement this the same as the other two
+		@Test
+		void testYabNaN() {
+			var result = VdypSpeciesParser.inferAges(new Ages(60, Float.NaN, 10));
+			assertThat(result, equalTo(new Ages(60, Float.NaN, 10))); // Leave as is
+		}
+
+		// TODO maybe we should log a warning for these cases?
+
+		@Test
+		void testDontAddUp() {
+			var result = VdypSpeciesParser.inferAges(new Ages(60, 50, 5));
+			assertThat(result, equalTo(new Ages(60, 50, 5))); // Leave as is
+		}
+
+		@Test
+		void testTotalAbndYabBothNaN() {
+			var result = VdypSpeciesParser.inferAges(new Ages(Float.NaN, Float.NaN, 10));
+			assertThat(result, equalTo(new Ages(Float.NaN, Float.NaN, 10))); // Leave as is
+		}
+
+		@Test
+		void testTotalNaNYtbZero() {
+			var result = VdypSpeciesParser.inferAges(new Ages(Float.NaN, 50, 0));
+			assertThat(result, equalTo(new Ages(Float.NaN, 50, 0))); // Leave as is
+		}
+
+		@Test
+		void testTotalNaNYabZero() {
+			var result = VdypSpeciesParser.inferAges(new Ages(Float.NaN, 0, 10));
+			assertThat(result, equalTo(new Ages(Float.NaN, 0, 10))); // Leave as is
+		}
+
+		@Test
+		void testYtbNaNTotalZero() {
+			var result = VdypSpeciesParser.inferAges(new Ages(0, 50, Float.NaN));
+			assertThat(result, equalTo(new Ages(0, 50, Float.NaN))); // Leave as is
+		}
+
+		@Test
+		void testYtbNaNYabZero() {
+			var result = VdypSpeciesParser.inferAges(new Ages(60, 0, Float.NaN));
+			assertThat(result, equalTo(new Ages(60, 0, Float.NaN))); // Leave as is
+		}
+
+	}
 }
