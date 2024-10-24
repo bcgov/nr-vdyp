@@ -69,7 +69,7 @@ public abstract class Processor {
 				Path controlFilePath = inputFileResolver.toPath(controlFileName).getParent();
 				FileSystemFileResolver relativeResolver = new FileSystemFileResolver(controlFilePath);
 
-				parser.parse(is, relativeResolver, controlMap);
+				controlMap = parser.parse(is, relativeResolver, controlMap);
 			}
 		}
 
