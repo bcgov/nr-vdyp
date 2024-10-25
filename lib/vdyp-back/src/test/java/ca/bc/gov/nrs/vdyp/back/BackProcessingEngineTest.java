@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.back;
 
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.compatibilityVariable;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -37,6 +38,7 @@ import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
+import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
 
 class BackProcessingEngineTest {
 
@@ -332,55 +334,11 @@ class BackProcessingEngineTest {
 
 		};
 	}
-
 	static Matcher<BackProcessingState> backCV(String name, Object p1, Object p2, Matcher<Float> expected) {
 		return compatibilityVariable(name, expected, BackProcessingState.class, p1, p2);
 	}
 
 	static Matcher<BackProcessingState> backCV(String name, Object p1, Matcher<Float> expected) {
 		return compatibilityVariable(name, expected, BackProcessingState.class, p1);
-	}
-
-	static <T> Matcher<T>
-			compatibilityVariable(String name, Matcher<Float> expected, Class<T> klazz, Object... params) {
-		return new TypeSafeDiagnosingMatcher<>(klazz) {
-
-			@Override
-			public void describeTo(Description description) {
-				description.appendText(name).appendValueList("(", ", ", ") ", params);
-				description.appendDescriptionOf(expected);
-			}
-
-			@Override
-			protected boolean matchesSafely(T item, Description mismatchDescription) {
-				Method method;
-				try {
-					method = klazz.getMethod(
-							name,
-							(Class<?>[]) Arrays.stream(params)
-									.map(o -> o instanceof Integer ? Integer.TYPE : o.getClass()).toArray(Class[]::new)
-					);
-				} catch (NoSuchMethodException e) {
-					mismatchDescription.appendText("Method " + name + " does not exist");
-					return false;
-				}
-
-				float result;
-				try {
-					result = (float) method.invoke(item, params);
-				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-					mismatchDescription.appendText(e.getMessage());
-					return false;
-				}
-
-				if (expected.matches(result)) {
-					return true;
-				}
-
-				expected.describeMismatch(result, mismatchDescription);
-				return false;
-			}
-
-		};
 	}
 }
