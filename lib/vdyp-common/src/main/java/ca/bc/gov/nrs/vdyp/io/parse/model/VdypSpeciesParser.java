@@ -154,7 +154,7 @@ public class VdypSpeciesParser implements ControlMapValueReplacer<Object, String
 						var inferredAges = inferAges(new Ages(totalAge, yearsAtBreastHeight, yearsToBreastHeight));
 
 						var inferredTotalAge = inferredAges.totalAge;
-						var inferredYearsToBreastHeight = inferredAges.yearsAtBreastHeight;
+						var inferredYearsToBreastHeight = inferredAges.yearsToBreastHeight;
 
 						return VdypSpecies.build(speciesBuilder -> {
 							speciesBuilder.sp64DistributionSet(speciesDistributionSet);

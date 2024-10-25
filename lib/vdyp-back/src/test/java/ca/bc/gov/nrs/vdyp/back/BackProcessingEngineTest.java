@@ -334,6 +334,7 @@ class BackProcessingEngineTest {
 
 		};
 	}
+
 	static Matcher<BackProcessingState> backCV(String name, Object p1, Object p2, Matcher<Float> expected) {
 		return compatibilityVariable(name, expected, BackProcessingState.class, p1, p2);
 	}
