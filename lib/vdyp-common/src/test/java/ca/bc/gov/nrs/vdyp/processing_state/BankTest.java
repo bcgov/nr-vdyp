@@ -55,6 +55,7 @@ class BankTest {
 				lb.addSpecies(sb -> {
 					sb.genus("B", controlMap);
 					sb.baseArea(0.4f);
+					sb.percentGenus(10);
 					sb.addSite(ib -> {
 						ib.ageTotal(100);
 						ib.yearsToBreastHeight(5);
@@ -67,18 +68,22 @@ class BankTest {
 				lb.addSpecies(sb -> {
 					sb.genus("C", controlMap);
 					sb.baseArea(0.6f);
+					sb.percentGenus(10);
 				});
 				lb.addSpecies(sb -> {
 					sb.genus("D", controlMap);
 					sb.baseArea(10f);
+					sb.percentGenus(10);
 				});
 				lb.addSpecies(sb -> {
 					sb.genus("H", controlMap);
 					sb.baseArea(50f);
+					sb.percentGenus(60);
 				});
 				lb.addSpecies(sb -> {
 					sb.genus("S", controlMap);
 					sb.baseArea(99.9f);
+					sb.percentGenus(10);
 					sb.addSite(ib -> {
 						ib.ageTotal(100);
 						ib.yearsToBreastHeight(5);
@@ -106,6 +111,7 @@ class BankTest {
 				lb.closeUtilizationVolumeNetOfDecayAndWasteByUtilization(40);
 				lb.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(39);
 			});
+
 		});
 
 	}
@@ -429,6 +435,46 @@ class BankTest {
 		verifyBankMatchesLayer(bank, pLayer);
 	}
 
+	@Test
+	void testBuildLayerFromBank() throws IOException, ResourceParseException, ProcessingException {
+
+		VdypLayer pLayer = polygon.getLayers().get(LayerType.PRIMARY);
+		assertThat(pLayer, notNullValue());
+
+		Bank bank = new Bank(pLayer, polygon.getBiogeoclimaticZone(), s -> true);
+
+		pLayer = ProcessingTestUtils.normalizeLayer(pLayer);
+
+		verifyBankMatchesLayer(bank, pLayer);
+
+		var bankPart2 = new float[][][] { bank.loreyHeights, bank.basalAreas, bank.quadMeanDiameters,
+				bank.treesPerHectare, bank.wholeStemVolumes, bank.closeUtilizationVolumes, bank.cuVolumesMinusDecay,
+				bank.cuVolumesMinusDecayAndWastage };
+
+		var bankPart1 = new float[][] { bank.ageTotals, bank.dominantHeights,
+				// bank.percentagesOfForestedLand,
+				bank.siteIndices, bank.yearsAtBreastHeight
+				// bank.yearsToBreastHeight //
+		};
+
+		for (int i = 0; i < bankPart1.length; i++) {
+			for (int j = 0; j < bankPart1[i].length; j++) {
+				bankPart1[i][j] += 1;
+			}
+		}
+		for (int i = 0; i < bankPart2.length; i++) {
+			for (int j = 0; j < bankPart2[i].length; j++) {
+				for (int k = 0; k < bankPart2[i][j].length; k++) {
+					bankPart2[i][j][k] += 1;
+				}
+			}
+		}
+
+		var result = bank.buildLayerFromBank();
+
+		verifyBankMatchesLayer(bank, result);
+	}
+
 	private void verifyBankMatchesLayer(Bank lps, VdypLayer layer) {
 
 		List<Integer> sortedSpIndices = layer.getSpecies().values().stream().map(s -> s.getGenusIndex()).sorted()
@@ -480,11 +526,17 @@ class BankTest {
 		assertThat(bank.speciesNames[index], is(species.getGenus()));
 
 		species.getSite().ifPresentOrElse(site -> {
-			assertThat(bank.yearsAtBreastHeight[index], is(site.getYearsAtBreastHeight().get()));
-			assertThat(bank.ageTotals[index], is(site.getAgeTotal().get()));
-			assertThat(bank.dominantHeights[index], is(site.getHeight().get()));
-			assertThat(bank.siteIndices[index], is(site.getSiteIndex().get()));
-			assertThat(bank.yearsToBreastHeight[index], is(site.getYearsToBreastHeight().get()));
+			assertThat(
+					bank.yearsAtBreastHeight[index],
+					is(site.getYearsAtBreastHeight().orElse(VdypEntity.MISSING_FLOAT_VALUE))
+			);
+			assertThat(bank.ageTotals[index], is(site.getAgeTotal().orElse(VdypEntity.MISSING_FLOAT_VALUE)));
+			assertThat(bank.dominantHeights[index], is(site.getHeight().orElse(VdypEntity.MISSING_FLOAT_VALUE)));
+			assertThat(bank.siteIndices[index], is(site.getSiteIndex().orElse(VdypEntity.MISSING_FLOAT_VALUE)));
+			assertThat(
+					bank.yearsToBreastHeight[index],
+					is(site.getYearsToBreastHeight().orElse(VdypEntity.MISSING_FLOAT_VALUE))
+			);
 			site.getSiteCurveNumber().ifPresentOrElse(scn -> {
 				assertThat(bank.siteCurveNumbers[index], is(scn));
 			}, () -> {
@@ -500,4 +552,5 @@ class BankTest {
 			assertThat(bank.siteCurveNumbers[index], is(VdypEntity.MISSING_INTEGER_VALUE));
 		});
 	}
+
 }
