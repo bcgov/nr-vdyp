@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.io.parse.value;
 
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -71,7 +72,7 @@ public interface ValueParser<T> extends ControlledValueParser<T> {
 			if (!defaultValue.equals(result) && (result.compareTo(max) > (includeMax ? 0 : -1)
 					|| result.compareTo(min) < (includeMin ? 0 : 1))) {
 				return Optional.of(
-						String.format(
+						MessageFormat.format(
 								"{} must be between {} ({}) and {} ({})", name, min,
 								includeMin ? "inclusive" : "exclusive", max, includeMax ? "inclusive" : "exclusive"
 						)

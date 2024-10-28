@@ -24,14 +24,14 @@ class VdypProcessingApplicationTest {
 	@Nested
 	class Run {
 
-		VdypProcessingApplication app;
+		VdypProcessingApplication<?> app;
 		Processor processor;
 
 		@BeforeEach
 		void init() {
 			processor = EasyMock.createMock(Processor.class);
 
-			app = new VdypProcessingApplication() {
+			app = new VdypProcessingApplication<Processor>() {
 
 				@Override
 				public String getDefaultControlFileName() {
@@ -154,11 +154,11 @@ class VdypProcessingApplicationTest {
 	@Nested
 	class GetControlFileNamesFromUser {
 
-		VdypProcessingApplication app;
+		VdypProcessingApplication<Processor> app;
 
 		@BeforeEach
 		void init() {
-			app = new VdypProcessingApplication() {
+			app = new VdypProcessingApplication<Processor>() {
 
 				@Override
 				public String getDefaultControlFileName() {

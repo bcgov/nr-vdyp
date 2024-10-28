@@ -20,6 +20,7 @@ import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 class ProcessorTest {
 
+	@SuppressWarnings("unchecked")
 	@Test
 	void test() throws IOException, ResourceParseException, ProcessingException {
 

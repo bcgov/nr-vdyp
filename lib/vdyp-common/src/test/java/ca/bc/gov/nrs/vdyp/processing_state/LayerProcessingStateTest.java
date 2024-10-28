@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.vdyp.application;
+package ca.bc.gov.nrs.vdyp.processing_state;
 
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.compatibilityVariable;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -14,11 +14,12 @@ import java.util.function.Predicate;
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
 import org.hamcrest.Matcher;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import ca.bc.gov.nrs.vdyp.application.ProcessingException;
 import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
@@ -31,8 +32,6 @@ import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
-import ca.bc.gov.nrs.vdyp.processing_state.LayerProcessingState;
-import ca.bc.gov.nrs.vdyp.processing_state.ProcessingState;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 class LayerProcessingStateTest {
@@ -139,7 +138,7 @@ class LayerProcessingStateTest {
 		@BeforeEach
 		@SuppressWarnings("unchecked")
 		void setup() throws ProcessingException {
-			var em = EasyMock.createStrictControl();
+			em = EasyMock.createStrictControl();
 			ProcessingState<ResolvedControlMap, TestLayerProcessingState> parent = em
 					.createMock("parent", ProcessingState.class);
 			var polygon = VdypPolygon.build(pb -> {
@@ -183,6 +182,11 @@ class LayerProcessingStateTest {
 				cvSm[1].put(uc, uc.ordinal() * 7f);
 			}
 
+		}
+
+		@AfterEach
+		void cleanup() {
+			em.verify();
 		}
 
 		@Test

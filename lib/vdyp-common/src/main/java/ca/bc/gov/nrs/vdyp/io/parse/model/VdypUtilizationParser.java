@@ -64,7 +64,7 @@ public class VdypUtilizationParser implements ControlMapValueReplacer<Object, St
 							)
 					).value(3, GENUS_INDEX, ValueParser.INTEGER) //
 					.space(1) //
-					.value(2, GENUS, ControlledValueParser.optional(ValueParser.GENUS))
+					.value(2, GENUS, ControlledValueParser.optional(ControlledValueParser.GENUS))
 					.value(3, UTILIZATION_CLASS_INDEX, ControlledValueParser.UTILIZATION_CLASS)
 					.value(9, BASAL_AREA, ValueParser.FLOAT_WITH_DEFAULT)
 					.value(9, LIVE_TREES_PER_HECTARE, ValueParser.FLOAT_WITH_DEFAULT)
