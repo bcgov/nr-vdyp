@@ -18,6 +18,7 @@ import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
+import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
 import ca.bc.gov.nrs.vdyp.processing_state.Bank;
 
@@ -116,6 +117,12 @@ public class BackProcessingEngine extends ProcessingEngine {
 		}
 		state.setLimits(limits);
 		state.setFinalQuadMeanDiameters(finalDiameters);
+
+	}
+
+	@Override
+	public void processPolygon(VdypPolygon polygon, ExecutionStep lastStepInclusive) throws ProcessingException {
+		// TODO Auto-generated method stub
 
 	}
 }

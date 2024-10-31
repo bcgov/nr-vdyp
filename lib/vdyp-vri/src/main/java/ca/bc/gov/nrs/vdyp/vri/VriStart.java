@@ -1517,7 +1517,8 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 
 		// Note, this function has side effects in that it modifies resultPerSpecies. This is intentional, the goal is
 		// to apply adjustment factor x to the values in initialDqs until the combination of their values has minimal
-		// error then use those adjusted values.
+		// error then use those adjusted values. x is computed such that it is 0 when the sum of TPH for the species
+		// is equal to the expected TPH for the layer and the root finder tries to bring it to 0.
 
 		// Keeping track of the recent X values tied can be used to make some sort of guess if it doesn't converge.
 		double[] lastXes = new double[2];
