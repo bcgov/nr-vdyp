@@ -75,9 +75,9 @@ import ca.bc.gov.nrs.vdyp.si32.site.SiteTool;
  * <code>processPolygon</code> for each polygon to be processed. All calls to <code>processPolygon</code> are entirely
  * independent of one another, allowing (different) polygons to the processed in parallel.
  */
-public class ForwardProcessingEngine extends ProcessingEngine {
+public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingEngine.ForwardExecutionStep> {
 
-	private static final Logger logger = LoggerFactory.getLogger(ForwardProcessor.class);
+	private static final Logger logger = LoggerFactory.getLogger(ForwardProcessingEngine.class);
 
 	private static final int UC_ALL_INDEX = UtilizationClass.ALL.ordinal();
 	private static final int UC_SMALL_INDEX = UtilizationClass.SMALL.ordinal();
@@ -86,6 +86,49 @@ public class ForwardProcessingEngine extends ProcessingEngine {
 
 	/** π/4/10⁴ */
 	public static final float PI_40K = (float) (Math.PI / 40_000);
+
+	public enum ForwardExecutionStep implements ProcessingEngine.ExecutionStep<ForwardExecutionStep> {
+		// Must be first
+		NONE, //
+
+		CHECK_FOR_WORK, //
+		CALCULATE_MISSING_SITE_CURVES, //
+		CALCULATE_COVERAGES, //
+		DETERMINE_POLYGON_RANKINGS, //
+		ESTIMATE_MISSING_SITE_INDICES, //
+		ESTIMATE_MISSING_YEARS_TO_BREAST_HEIGHT_VALUES, //
+		CALCULATE_DOMINANT_HEIGHT_AGE_SITE_INDEX, //
+		SET_COMPATIBILITY_VARIABLES, //
+		GROW_1_LAYER_DHDELTA, //
+		GROW_2_LAYER_BADELTA, //
+		GROW_3_LAYER_DQDELTA, //
+		GROW_4_LAYER_BA_AND_DQTPH_EST, //
+		GROW_5A_LH_EST, //
+		GROW_5_SPECIES_BADQTPH, //
+		GROW_6_LAYER_TPH2, //
+		GROW_7_LAYER_DQ2, //
+		GROW_8_SPECIES_LH, //
+		GROW_9_SPECIES_PCT, //
+		GROW_10_COMPATIBILITY_VARS, //
+		GROW_11_SPECIES_UC, //
+		GROW_12_SPECIES_UC_SMALL, //
+		GROW_13_STORE_SPECIES_DETAILS, //
+		GROW, //
+
+		// Must be last
+		ALL; //
+
+		@Override
+		public ForwardExecutionStep predecessor() throws IllegalStateException {
+			return Utils.predecessorOrThrow(this, ForwardExecutionStep.values());
+		}
+
+		@Override
+		public ForwardExecutionStep successor() {
+			return Utils.successorOrThrow(this, ForwardExecutionStep.values());
+		}
+
+	}
 
 	/* pp */ final ForwardProcessingState fps;
 
@@ -116,7 +159,7 @@ public class ForwardProcessingEngine extends ProcessingEngine {
 	 * @throws ProcessingException should an error with the data occur during processing
 	 */
 	@Override
-	public void processPolygon(VdypPolygon polygon, ExecutionStep lastStepInclusive) throws ProcessingException {
+	public void processPolygon(VdypPolygon polygon, ForwardExecutionStep lastStepInclusive) throws ProcessingException {
 
 		logger.info("Starting processing of the primary layer of polygon {}", polygon.getPolygonIdentifier());
 
@@ -133,14 +176,14 @@ public class ForwardProcessingEngine extends ProcessingEngine {
 		int growTargetControlVariableValue = fps.fcm.getForwardControlVariables()
 				.getControlVariable(ControlVariable.GROW_TARGET_1);
 		if (growTargetControlVariableValue == -1) {
-			if (polygon.getTargetYear().isEmpty()) {
-				throw new ProcessingException(
-						"Control Variable 1 has the value -1, indicating that the grow-to years are"
-								+ " to be read from a grow-to-year file (at " + ControlKey.FORWARD_INPUT_GROWTO.name()
-								+ " in the control file), but no such file was specified."
-				);
-			}
-			targetYear = polygon.getTargetYear().get();
+			targetYear = polygon.getTargetYear().orElseThrow(
+					() -> new ProcessingException(
+							"Control Variable 1 has the value -1, indicating that the grow-to years are"
+									+ " to be read from a grow-to-year file (at "
+									+ ControlKey.FORWARD_INPUT_GROWTO.name()
+									+ " in the control file), but no such file was specified."
+					)
+			);
 		} else {
 			if (growTargetControlVariableValue <= 400) {
 				targetYear = polygon.getPolygonIdentifier().getYear() + growTargetControlVariableValue;
@@ -154,7 +197,7 @@ public class ForwardProcessingEngine extends ProcessingEngine {
 		executeForwardAlgorithm(lastStepInclusive, targetYear);
 	}
 
-	private void executeForwardAlgorithm(ExecutionStep lastStepInclusive, int stoppingYearInclusive)
+	private void executeForwardAlgorithm(ForwardExecutionStep lastStepInclusive, int stoppingYearInclusive)
 			throws ProcessingException {
 
 		LayerProcessingState plps = fps.getPrimaryLayerProcessingState();
@@ -162,12 +205,12 @@ public class ForwardProcessingEngine extends ProcessingEngine {
 		Optional<VdypLayer> veteranLayer = Optional
 				.ofNullable(fps.getCurrentPolygon().getLayers().get(LayerType.VETERAN));
 
-		if (lastStepInclusive.ge(ExecutionStep.CHECK_FOR_WORK)) {
+		if (lastStepInclusive.ge(ForwardExecutionStep.CHECK_FOR_WORK)) {
 			stopIfNoWork(fps);
 		}
 
 		// SCINXSET
-		if (lastStepInclusive.ge(ExecutionStep.CALCULATE_MISSING_SITE_CURVES)) {
+		if (lastStepInclusive.ge(ForwardExecutionStep.CALCULATE_MISSING_SITE_CURVES)) {
 			calculateMissingSiteCurves(plps, fps.fcm.getSiteCurveMap());
 
 			fps.getVeteranLayerProcessingState().ifPresent(vlps -> {
@@ -177,35 +220,35 @@ public class ForwardProcessingEngine extends ProcessingEngine {
 		}
 
 		// VPRIME1, method == 1
-		if (lastStepInclusive.ge(ExecutionStep.CALCULATE_COVERAGES)) {
+		if (lastStepInclusive.ge(ForwardExecutionStep.CALCULATE_COVERAGES)) {
 			calculateCoverages(plps);
 		}
 
-		if (lastStepInclusive.ge(ExecutionStep.DETERMINE_POLYGON_RANKINGS)) {
+		if (lastStepInclusive.ge(ForwardExecutionStep.DETERMINE_POLYGON_RANKINGS)) {
 			determinePolygonRankings(CommonData.PRIMARY_SPECIES_TO_COMBINE);
 		}
 
 		// SITEADD (TODO: SITEADDU when NDEBUG 11 > 0)
-		if (lastStepInclusive.ge(ExecutionStep.ESTIMATE_MISSING_SITE_INDICES)) {
+		if (lastStepInclusive.ge(ForwardExecutionStep.ESTIMATE_MISSING_SITE_INDICES)) {
 			estimateMissingSiteIndices(plps);
 		}
 
-		if (lastStepInclusive.ge(ExecutionStep.ESTIMATE_MISSING_YEARS_TO_BREAST_HEIGHT_VALUES)) {
+		if (lastStepInclusive.ge(ForwardExecutionStep.ESTIMATE_MISSING_YEARS_TO_BREAST_HEIGHT_VALUES)) {
 			estimateMissingYearsToBreastHeightValues(plps);
 		}
 
 		// VHDOM1 METH_H = 2, METH_A = 2, METH_SI = 2
-		if (lastStepInclusive.ge(ExecutionStep.CALCULATE_DOMINANT_HEIGHT_AGE_SITE_INDEX)) {
+		if (lastStepInclusive.ge(ForwardExecutionStep.CALCULATE_DOMINANT_HEIGHT_AGE_SITE_INDEX)) {
 			calculateDominantHeightAgeSiteIndex(plps, fps.fcm.getHl1Coefficients());
 		}
 
 		// CVSET1
-		if (lastStepInclusive.ge(ExecutionStep.SET_COMPATIBILITY_VARIABLES)) {
+		if (lastStepInclusive.ge(ForwardExecutionStep.SET_COMPATIBILITY_VARIABLES)) {
 			setCompatibilityVariables();
 		}
 
 		// VGROW1
-		if (lastStepInclusive.gt(ExecutionStep.SET_COMPATIBILITY_VARIABLES)) {
+		if (lastStepInclusive.gt(ForwardExecutionStep.SET_COMPATIBILITY_VARIABLES)) {
 			int startingYear = fps.getCurrentStartingYear();
 
 			writeCurrentPolygon(startingYear, startingYear, stoppingYearInclusive);
@@ -228,7 +271,7 @@ public class ForwardProcessingEngine extends ProcessingEngine {
 				// Some unit tests require only some of the grow steps to be executed (and, by
 				// implication, only for the first growth year.) If this is the case, stop
 				// processing now.
-				if (ExecutionStep.ALL.gt(lastStepInclusive)) {
+				if (ForwardExecutionStep.ALL.gt(lastStepInclusive)) {
 					break;
 				}
 
@@ -266,10 +309,11 @@ public class ForwardProcessingEngine extends ProcessingEngine {
 	 * @throws ProcessingException
 	 */
 	private void grow(
-			LayerProcessingState lps, int currentYear, Optional<VdypLayer> veteranLayer, ExecutionStep lastStepInclusive
+			LayerProcessingState lps, int currentYear, Optional<VdypLayer> veteranLayer,
+			ForwardExecutionStep lastStepInclusive
 	) throws ProcessingException {
 
-		assert lastStepInclusive.ge(ExecutionStep.GROW_1_LAYER_DHDELTA);
+		assert lastStepInclusive.ge(ForwardExecutionStep.GROW_1_LAYER_DHDELTA);
 
 		Bank bank = lps.getBank();
 
@@ -285,7 +329,7 @@ public class ForwardProcessingEngine extends ProcessingEngine {
 
 		writeCheckpoint(currentYear);
 
-		if (ExecutionStep.GROW_1_LAYER_DHDELTA.eq(lastStepInclusive))
+		if (ForwardExecutionStep.GROW_1_LAYER_DHDELTA.eq(lastStepInclusive))
 			return;
 
 		// (2) Calculate change in basal area (layer)
@@ -302,7 +346,7 @@ public class ForwardProcessingEngine extends ProcessingEngine {
 
 		writeCheckpoint(currentYear);
 
-		if (ExecutionStep.GROW_2_LAYER_BADELTA.eq(lastStepInclusive))
+		if (ForwardExecutionStep.GROW_2_LAYER_BADELTA.eq(lastStepInclusive))
 			return;
 
 		// (3) Calculate change in quad-mean-diameter (layer)
@@ -315,7 +359,7 @@ public class ForwardProcessingEngine extends ProcessingEngine {
 
 		writeCheckpoint(currentYear);
 
-		if (ExecutionStep.GROW_3_LAYER_DQDELTA.eq(lastStepInclusive))
+		if (ForwardExecutionStep.GROW_3_LAYER_DQDELTA.eq(lastStepInclusive))
 			return;
 
 		int debugSetting9Value = fps.fcm.getDebugSettings()
@@ -348,7 +392,7 @@ public class ForwardProcessingEngine extends ProcessingEngine {
 
 		writeCheckpoint(currentYear);
 
-		if (ExecutionStep.GROW_4_LAYER_BA_AND_DQTPH_EST.eq(lastStepInclusive))
+		if (ForwardExecutionStep.GROW_4_LAYER_BA_AND_DQTPH_EST.eq(lastStepInclusive))
 			return;
 
 		// (5) Now calculate per-species (UC All only) end values for basal area, quad-mean-diameter
@@ -393,7 +437,7 @@ public class ForwardProcessingEngine extends ProcessingEngine {
 
 			writeCheckpoint(currentYear);
 
-			if (ExecutionStep.GROW_5A_LH_EST.eq(lastStepInclusive))
+			if (ForwardExecutionStep.GROW_5A_LH_EST.eq(lastStepInclusive))
 				return;
 
 			// Now do the actual per-species updates of ba, qmd and tph, based in part
@@ -427,7 +471,7 @@ public class ForwardProcessingEngine extends ProcessingEngine {
 
 		writeCheckpoint(currentYear);
 
-		if (ExecutionStep.GROW_5_SPECIES_BADQTPH.eq(lastStepInclusive))
+		if (ForwardExecutionStep.GROW_5_SPECIES_BADQTPH.eq(lastStepInclusive))
 			return;
 
 		// (6) Calculate layer trees-per-hectare, UC All
@@ -452,7 +496,7 @@ public class ForwardProcessingEngine extends ProcessingEngine {
 
 		writeCheckpoint(currentYear);
 
-		if (ExecutionStep.GROW_6_LAYER_TPH2.eq(lastStepInclusive))
+		if (ForwardExecutionStep.GROW_6_LAYER_TPH2.eq(lastStepInclusive))
 			return;
 
 		// (7) Calculate layer quad-mean-diameter, uc All
@@ -462,7 +506,7 @@ public class ForwardProcessingEngine extends ProcessingEngine {
 
 		writeCheckpoint(currentYear);
 
-		if (ExecutionStep.GROW_7_LAYER_DQ2.eq(lastStepInclusive))
+		if (ForwardExecutionStep.GROW_7_LAYER_DQ2.eq(lastStepInclusive))
 			return;
 
 		// (8) Calculate per-species Lorey heights, uc All
@@ -475,7 +519,7 @@ public class ForwardProcessingEngine extends ProcessingEngine {
 
 		writeCheckpoint(currentYear);
 
-		if (ExecutionStep.GROW_8_SPECIES_LH.eq(lastStepInclusive))
+		if (ForwardExecutionStep.GROW_8_SPECIES_LH.eq(lastStepInclusive))
 			return;
 
 		// (9) Calculate basal area percentages per species, uc UC_ALL_INDEX
@@ -486,7 +530,7 @@ public class ForwardProcessingEngine extends ProcessingEngine {
 
 		writeCheckpoint(currentYear);
 
-		if (ExecutionStep.GROW_9_SPECIES_PCT.eq(lastStepInclusive))
+		if (ForwardExecutionStep.GROW_9_SPECIES_PCT.eq(lastStepInclusive))
 			return;
 
 		// (10) update the compatibility variables to reflect the changes during the growth period
@@ -494,7 +538,7 @@ public class ForwardProcessingEngine extends ProcessingEngine {
 
 		writeCheckpoint(currentYear);
 
-		if (ExecutionStep.GROW_10_COMPATIBILITY_VARS.eq(lastStepInclusive))
+		if (ForwardExecutionStep.GROW_10_COMPATIBILITY_VARS.eq(lastStepInclusive))
 			return;
 
 		// (11) calculate All and the large component volumes to reflect the changes in growth
@@ -514,7 +558,7 @@ public class ForwardProcessingEngine extends ProcessingEngine {
 
 		writeCheckpoint(currentYear);
 
-		if (ExecutionStep.GROW_11_SPECIES_UC.eq(lastStepInclusive))
+		if (ForwardExecutionStep.GROW_11_SPECIES_UC.eq(lastStepInclusive))
 			return;
 
 		// (12) calculate the small component volumes to reflect the changes in growth
@@ -523,7 +567,7 @@ public class ForwardProcessingEngine extends ProcessingEngine {
 
 		writeCheckpoint(currentYear);
 
-		if (ExecutionStep.GROW_12_SPECIES_UC_SMALL.eq(lastStepInclusive))
+		if (ForwardExecutionStep.GROW_12_SPECIES_UC_SMALL.eq(lastStepInclusive))
 			return;
 
 		// (13) Update the running values.
@@ -567,7 +611,7 @@ public class ForwardProcessingEngine extends ProcessingEngine {
 
 		writeCheckpoint(currentYear);
 
-		if (ExecutionStep.GROW_13_STORE_SPECIES_DETAILS.eq(lastStepInclusive))
+		if (ForwardExecutionStep.GROW_13_STORE_SPECIES_DETAILS.eq(lastStepInclusive))
 			return;
 	}
 
@@ -3490,5 +3534,15 @@ public class ForwardProcessingEngine extends ProcessingEngine {
 		default:
 			throw new ProcessingException("Unrecognized primary species: " + primarySp0);
 		}
+	}
+
+	@Override
+	protected ForwardExecutionStep getFirstStep() {
+		return ForwardExecutionStep.NONE;
+	}
+
+	@Override
+	protected ForwardExecutionStep getLastStep() {
+		return ForwardExecutionStep.ALL;
 	}
 }

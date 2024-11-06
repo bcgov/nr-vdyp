@@ -75,7 +75,7 @@ public class FipSpecies extends BaseVdypSpecies<FipSite> {
 		@Override
 		protected FipSite buildSite(Consumer<FipSite.Builder> config) {
 			return FipSite.build(builder -> {
-				builder.siteGenus(this.genus.get());
+				builder.genus(this.genus.get());
 				builder.polygonIdentifier(this.polygonIdentifier.get());
 				builder.layerType(this.layerType.get());
 				config.accept(builder);

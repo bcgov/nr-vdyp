@@ -11,9 +11,13 @@ import java.util.function.Consumer;
 
 import ca.bc.gov.nrs.vdyp.application.InitializationIncompleteException;
 import ca.bc.gov.nrs.vdyp.common.Computed;
+import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.GenusDefinitionParser;
+import ca.bc.gov.nrs.vdyp.model.builders.ModelClassBuilder;
+import ca.bc.gov.nrs.vdyp.model.builders.SpeciesGroupIdentifiedBuilder;
 
 public abstract class BaseVdypSpecies<I extends BaseVdypSite> {
+
 	private final PolygonIdentifier polygonIdentifier; // FIP_P/POLYDESC
 
 	// This is also represents the distinction between data stored in
@@ -156,7 +160,7 @@ public abstract class BaseVdypSpecies<I extends BaseVdypSite> {
 	}
 
 	public abstract static class Builder<T extends BaseVdypSpecies<I>, I extends BaseVdypSite, IB extends BaseVdypSite.Builder<I>>
-			extends ModelClassBuilder<T> {
+			extends ModelClassBuilder<T> implements SpeciesGroupIdentifiedBuilder {
 		protected Optional<PolygonIdentifier> polygonIdentifier = Optional.empty();
 		protected Optional<LayerType> layerType = Optional.empty();
 		protected Optional<String> genus = Optional.empty();
@@ -166,53 +170,29 @@ public abstract class BaseVdypSpecies<I extends BaseVdypSite> {
 		protected Sp64DistributionSet sp64DistributionSet = new Sp64DistributionSet();
 		protected Optional<Consumer<IB>> siteBuilder = Optional.empty();
 		protected Optional<I> site = Optional.empty();
+		protected Optional<GenusDefinitionMap> speciesGroupMap = Optional.empty();
 
-		public Builder<T, I, IB> polygonIdentifier(PolygonIdentifier polygonIdentifier) {
+		@Override
+		public void polygonIdentifier(PolygonIdentifier polygonIdentifier) {
 			this.polygonIdentifier = Optional.of(polygonIdentifier);
-			return this;
 		}
 
-		public Builder<T, I, IB> polygonIdentifier(String polygonIdentifier) {
-			this.polygonIdentifier = Optional.of(PolygonIdentifier.split(polygonIdentifier));
-			return this;
-		}
-
-		public Builder<T, I, IB> polygonIdentifier(String base, int year) {
-			this.polygonIdentifier = Optional.of(new PolygonIdentifier(base, year));
-			return this;
-		}
-
-		public Builder<T, I, IB> layerType(LayerType layer) {
+		@Override
+		public void layerType(LayerType layer) {
 			this.layerType = Optional.of(layer);
-			return this;
 		}
 
-		/**
-		 * Set both the genus, and at the same time calculates genusIndex from the given controlMap.
-		 *
-		 * @param genus      the species genus
-		 * @param controlMap the control map defining the configuration
-		 * @return this builder
-		 */
-		public Builder<T, I, IB> genus(String genus, Map<String, Object> controlMap) {
-			this.genus = Optional.of(genus);
-			this.genusIndex = Optional.of(GenusDefinitionParser.getIndex(genus, controlMap));
-			return this;
+		public void controlMap(Map<String, Object> controlMap) {
+			this.speciesGroupMap = Optional.of(GenusDefinitionParser.getSpecies(controlMap));
 		}
 
-		/**
-		 * Set both the genus and its index. It is the responsibility of the caller to ensure that the index is correct
-		 * for the given genus. Use of this method is appropriate only when logic dictates the given genusIndex is
-		 * correct or in those unit tests where correctness isn't critical.
-		 *
-		 * @param genus      the species genus
-		 * @param genusIndex the index of the genus in the configuration (control map entry 10)
-		 * @return this builder
-		 */
-		public Builder<T, I, IB> genus(String genus, int genusIndex) {
+		@Override
+		public void genus(String genus) {
 			this.genus = Optional.of(genus);
-			this.genusIndex = Optional.of(genusIndex);
-			return this;
+		}
+
+		public void genus(int index) {
+			this.genusIndex = Optional.of(index);
 		}
 
 		public Builder<T, I, IB> percentGenus(float percentGenus) {
@@ -283,6 +263,17 @@ public abstract class BaseVdypSpecies<I extends BaseVdypSite> {
 		@Override
 		protected void preProcess() {
 			super.preProcess();
+
+			// If we have a map between alias and index, fill in the one from the other if necessary.
+			speciesGroupMap.ifPresent(map -> {
+				GenusDefinition def = genus.map(map::getByAlias).or(() -> genusIndex.map(map::getByIndex)).get();
+
+				genus = Optional.of(genus.orElse(def.getAlias()));
+				genusIndex = Optional.of(genusIndex.orElse(def.getIndex()));
+
+			});
+
+			// Build the site if present
 			site = siteBuilder.map(this::buildSite).or(() -> site);
 		}
 
@@ -299,7 +290,8 @@ public abstract class BaseVdypSpecies<I extends BaseVdypSite> {
 		public Builder<T, I, IB> adapt(BaseVdypSpecies<?> source) {
 			polygonIdentifier(source.getPolygonIdentifier());
 			layerType(source.getLayerType());
-			genus(source.getGenus(), source.getGenusIndex());
+			this.genus(source.getGenus());
+			this.genus(source.getGenusIndex());
 			percentGenus(source.getPercentGenus());
 
 			fractionGenus(source.getFractionGenus());

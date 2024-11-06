@@ -42,9 +42,9 @@ import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.BecLookup;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap;
-import ca.bc.gov.nrs.vdyp.model.ModelClassBuilder;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
+import ca.bc.gov.nrs.vdyp.model.builders.ModelClassBuilder;
 
 /**
  * Custom Hamcrest Matchers

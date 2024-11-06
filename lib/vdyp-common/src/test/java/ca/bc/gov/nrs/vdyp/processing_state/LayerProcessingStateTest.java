@@ -109,7 +109,8 @@ class LayerProcessingStateTest {
 					lb.layerType(LayerType.PRIMARY);
 
 					lb.addSpecies(sb -> {
-						sb.genus("A", 1);
+						sb.genus("A");
+						sb.genus(1);
 					});
 				});
 			});
@@ -151,7 +152,8 @@ class LayerProcessingStateTest {
 					lb.layerType(LayerType.PRIMARY);
 
 					lb.addSpecies(sb -> {
-						sb.genus("A", 1);
+						sb.genus("A");
+						sb.genus(1);
 					});
 				});
 			});

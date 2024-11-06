@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.application.ProcessingException;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
-import ca.bc.gov.nrs.vdyp.application.ProcessingEngine.ExecutionStep;
 import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
@@ -55,7 +54,7 @@ class Grow6TreesPerHectareTest {
 		// Select the first polygon - 01002 S000001 00(1970)
 		VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
-		fpe.processPolygon(polygon, ExecutionStep.GROW_6_LAYER_TPH2);
+		fpe.processPolygon(polygon, ForwardProcessingEngine.ForwardExecutionStep.GROW_6_LAYER_TPH2);
 
 		LayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
 

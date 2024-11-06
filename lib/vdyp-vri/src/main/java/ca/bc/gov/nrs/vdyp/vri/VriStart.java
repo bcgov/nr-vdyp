@@ -50,13 +50,13 @@ import ca.bc.gov.nrs.vdyp.math.FloatMath;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSite;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies.Builder;
+import ca.bc.gov.nrs.vdyp.model.builders.ModelClassBuilder;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.CompatibilityVariableMode;
 import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
-import ca.bc.gov.nrs.vdyp.model.ModelClassBuilder;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
 import ca.bc.gov.nrs.vdyp.model.PolygonMode;
 import ca.bc.gov.nrs.vdyp.model.Region;
@@ -471,9 +471,9 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		);
 
 		float layerQuadMeanDiameter = quadMeanDiameter(primaryBaseArea, primaryLayerDensity);
-		lBuilder.quadraticMeanDiameterByUtilization(layerQuadMeanDiameter);
-		lBuilder.baseAreaByUtilization(primaryBaseArea);
-		lBuilder.treesPerHectareByUtilization(primaryLayerDensity);
+		lBuilder.quadMeanDiameter(layerQuadMeanDiameter);
+		lBuilder.baseArea(primaryBaseArea);
+		lBuilder.treesPerHectare(primaryLayerDensity);
 		lBuilder.empiricalRelationshipParameterIndex(primaryLayer.getEmpiricalRelationshipParameterIndex());
 
 		lBuilder.adaptSpecies(primaryLayer, (sBuilder, vriSpec) -> {
@@ -545,7 +545,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			}
 		}
 
-		lBuilder.loreyHeightByUtilization(sumBaseAreaLoreyHeight / primaryBaseArea);
+		lBuilder.loreyHeight(sumBaseAreaLoreyHeight / primaryBaseArea);
 
 	}
 

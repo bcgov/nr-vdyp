@@ -385,7 +385,7 @@ public class Bank {
 			speciesBuilder.percentGenus(this.percentagesOfForestedLand[index]);
 			species.getSite().ifPresentOrElse(site -> speciesBuilder.addSite(VdypSite.build(siteBuilder -> {
 				siteBuilder.copy(site);
-				siteBuilder.siteGenus(this.speciesNames[index]);
+				siteBuilder.genus(this.speciesNames[index]);
 				siteBuilder.ageTotal(Utils.optFloat(ageTotals[index]));
 				siteBuilder.height(Utils.optFloat(this.dominantHeights[index]));
 				siteBuilder.siteCurveNumber(Utils.optInt(this.siteCurveNumbers[index]));
@@ -395,7 +395,7 @@ public class Bank {
 				VdypSite site = VdypSite.build(siteBuilder -> {
 					siteBuilder.polygonIdentifier(species.getPolygonIdentifier());
 					siteBuilder.layerType(species.getLayerType());
-					siteBuilder.siteGenus(this.speciesNames[index]);
+					siteBuilder.genus(this.speciesNames[index]);
 					siteBuilder.ageTotal(Utils.optFloat(this.ageTotals[index]));
 					siteBuilder.height(Utils.optFloat(this.dominantHeights[index]));
 					siteBuilder.siteCurveNumber(Utils.optInt(this.siteCurveNumbers[index]));

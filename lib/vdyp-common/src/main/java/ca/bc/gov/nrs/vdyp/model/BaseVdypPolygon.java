@@ -13,6 +13,9 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import ca.bc.gov.nrs.vdyp.model.builders.ModelClassBuilder;
+import ca.bc.gov.nrs.vdyp.model.builders.PolygonIdentifiedBuilder;
+
 public abstract class BaseVdypPolygon<L extends BaseVdypLayer<SP, SI>, PA, SP extends BaseVdypSpecies<SI>, SI extends BaseVdypSite> {
 
 	private PolygonIdentifier polygonIdentifier; // FIP_P/POLYDESC
@@ -145,7 +148,7 @@ public abstract class BaseVdypPolygon<L extends BaseVdypLayer<SP, SI>, PA, SP ex
 			SPB extends BaseVdypSpecies.Builder<SP, SI, SIB>, //
 			SIB extends BaseVdypSite.Builder<SI>> //
 
-			extends ModelClassBuilder<T> {
+			extends ModelClassBuilder<T> implements PolygonIdentifiedBuilder {
 		protected Optional<PolygonIdentifier> polygonIdentifier = Optional.empty();
 		protected Optional<PA> percentAvailable = Optional.empty();
 		protected Optional<BecDefinition> biogeoclimaticZone = Optional.empty();
@@ -156,19 +159,9 @@ public abstract class BaseVdypPolygon<L extends BaseVdypLayer<SP, SI>, PA, SP ex
 		protected List<L> layers = new LinkedList<>();
 		protected List<Consumer<LB>> layersBuilders = new LinkedList<>();
 
-		public Builder<T, L, PA, SP, SI, LB, SPB, SIB> polygonIdentifier(PolygonIdentifier polygonIdentifier) {
+		@Override
+		public void polygonIdentifier(PolygonIdentifier polygonIdentifier) {
 			this.polygonIdentifier = Optional.of(polygonIdentifier);
-			return this;
-		}
-
-		public Builder<T, L, PA, SP, SI, LB, SPB, SIB> polygonIdentifier(String polygonIdentifier) {
-			this.polygonIdentifier = Optional.of(PolygonIdentifier.split(polygonIdentifier));
-			return this;
-		}
-
-		public Builder<T, L, PA, SP, SI, LB, SPB, SIB> polygonIdentifier(String base, int year) {
-			this.polygonIdentifier = Optional.of(new PolygonIdentifier(base, year));
-			return this;
 		}
 
 		public Builder<T, L, PA, SP, SI, LB, SPB, SIB> percentAvailable(PA pa) {

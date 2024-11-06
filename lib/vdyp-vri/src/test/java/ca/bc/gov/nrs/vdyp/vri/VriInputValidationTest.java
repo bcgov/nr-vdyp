@@ -72,7 +72,8 @@ class VriInputValidationTest {
 
 				// Species
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("B", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("B");
 					sBuilder.percentGenus(3f);
 					sBuilder.addSp64Distribution("BL", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -81,7 +82,8 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("C", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("C");
 					sBuilder.percentGenus(30f);
 					sBuilder.addSp64Distribution("CW", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -95,7 +97,8 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("H", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("H");
 					sBuilder.percentGenus(48.9f);
 					sBuilder.addSp64Distribution("HW", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -109,7 +112,8 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("S", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("S");
 					sBuilder.percentGenus(18.1f);
 					sBuilder.addSp64Distribution("SE", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -130,7 +134,8 @@ class VriInputValidationTest {
 
 				// Species
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("H", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("H");
 					sBuilder.percentGenus(100f);
 					sBuilder.addSp64Distribution("HW", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -176,7 +181,8 @@ class VriInputValidationTest {
 
 				// Species
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("B", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("B");
 					sBuilder.percentGenus(3f);
 					sBuilder.addSp64Distribution("BL", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -185,7 +191,8 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("C", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("C");
 					sBuilder.percentGenus(30f);
 					sBuilder.addSp64Distribution("CW", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -199,7 +206,8 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("H", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("H");
 					sBuilder.percentGenus(48.7f);
 					sBuilder.addSp64Distribution("HW", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -213,7 +221,8 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("S", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("S");
 					sBuilder.percentGenus(18.1f);
 					sBuilder.addSp64Distribution("SE", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -254,7 +263,8 @@ class VriInputValidationTest {
 
 				// Species
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("B", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("B");
 					sBuilder.percentGenus(3f);
 					sBuilder.addSp64Distribution("BL", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -263,7 +273,8 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("C", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("C");
 					sBuilder.percentGenus(30f);
 					sBuilder.addSp64Distribution("CW", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -277,7 +288,8 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("H", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("H");
 					sBuilder.percentGenus(48.7f);
 					sBuilder.addSp64Distribution("HW", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -291,7 +303,8 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("S", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("S");
 					sBuilder.percentGenus(18.1f);
 					sBuilder.addSp64Distribution("SE", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -350,7 +363,8 @@ class VriInputValidationTest {
 
 				// Species
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("B", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("B");
 					sBuilder.percentGenus(3f);
 					sBuilder.addSp64Distribution("BL", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -359,7 +373,8 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("C", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("C");
 					sBuilder.percentGenus(30f);
 					sBuilder.addSp64Distribution("CW", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -373,7 +388,8 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("H", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("H");
 					sBuilder.percentGenus(48.9f);
 					sBuilder.addSp64Distribution("HW", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -387,7 +403,8 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("S", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("S");
 					sBuilder.percentGenus(18.1f);
 					sBuilder.addSp64Distribution("SE", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -435,7 +452,8 @@ class VriInputValidationTest {
 
 				// Species
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("B", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("B");
 					sBuilder.percentGenus(3f);
 					sBuilder.addSp64Distribution("BL", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -444,7 +462,8 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("C", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("C");
 					sBuilder.percentGenus(30f);
 					sBuilder.addSp64Distribution("CW", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -457,7 +476,8 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("H", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("H");
 					sBuilder.percentGenus(48.9f);
 					sBuilder.addSp64Distribution("HW", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -470,7 +490,8 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("S", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("S");
 					sBuilder.percentGenus(18.1f);
 					sBuilder.addSp64Distribution("SE", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -520,7 +541,8 @@ class VriInputValidationTest {
 
 				// Species
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("B", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("B");
 					sBuilder.percentGenus(3f);
 					sBuilder.addSp64Distribution("BL", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -529,7 +551,8 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("C", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("C");
 					sBuilder.percentGenus(30f);
 					sBuilder.addSp64Distribution("CW", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -543,7 +566,8 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("H", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("H");
 					sBuilder.percentGenus(48.9f);
 					sBuilder.addSp64Distribution("HW", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -557,7 +581,8 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("S", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("S");
 					sBuilder.percentGenus(18.1f);
 					sBuilder.addSp64Distribution("SE", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -607,7 +632,8 @@ class VriInputValidationTest {
 
 				// Species
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("B", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("B");
 					sBuilder.percentGenus(3f);
 					sBuilder.addSp64Distribution("BL", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -616,7 +642,8 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("C", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("C");
 					sBuilder.percentGenus(30f);
 					sBuilder.addSp64Distribution("CW", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -630,7 +657,8 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("H", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("H");
 					sBuilder.percentGenus(48.9f);
 					sBuilder.addSp64Distribution("HW", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -644,7 +672,8 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("S", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("S");
 					sBuilder.percentGenus(18.1f);
 					sBuilder.addSp64Distribution("SE", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -693,7 +722,8 @@ class VriInputValidationTest {
 
 				// Species
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("B", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("B");
 					sBuilder.percentGenus(3f);
 					sBuilder.addSp64Distribution("BL", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -702,7 +732,8 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("C", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("C");
 					sBuilder.percentGenus(30f);
 					sBuilder.addSp64Distribution("CW", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -716,7 +747,8 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("H", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("H");
 					sBuilder.percentGenus(48.9f);
 					sBuilder.addSp64Distribution("HW", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -730,7 +762,8 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("S", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("S");
 					sBuilder.percentGenus(18.1f);
 					sBuilder.addSp64Distribution("SE", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -782,7 +815,8 @@ class VriInputValidationTest {
 
 				// Species
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("B", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("B");
 					sBuilder.percentGenus(100f);
 					sBuilder.addSp64Distribution("BL", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -844,7 +878,8 @@ class VriInputValidationTest {
 
 				// Species
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("B", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("B");
 					sBuilder.percentGenus(100f);
 					sBuilder.addSp64Distribution("BL", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -908,7 +943,8 @@ class VriInputValidationTest {
 
 				// Species
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("B", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("B");
 					sBuilder.percentGenus(100f);
 					sBuilder.addSp64Distribution("BL", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -971,7 +1007,8 @@ class VriInputValidationTest {
 
 				// Species
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("B", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("B");
 					sBuilder.percentGenus(100f);
 					sBuilder.addSp64Distribution("BL", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -1034,7 +1071,8 @@ class VriInputValidationTest {
 
 				// Species
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("B", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("B");
 					sBuilder.percentGenus(100f);
 					sBuilder.addSp64Distribution("BL", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -1100,7 +1138,8 @@ class VriInputValidationTest {
 
 				// Species
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("B", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("B");
 					sBuilder.percentGenus(100f);
 					sBuilder.addSp64Distribution("BL", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -1173,7 +1212,8 @@ class VriInputValidationTest {
 
 				// Species
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("B", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("B");
 					sBuilder.percentGenus(100f);
 					sBuilder.addSp64Distribution("BL", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -1237,7 +1277,8 @@ class VriInputValidationTest {
 
 				// Species
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("B", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("B");
 					sBuilder.percentGenus(100f);
 					sBuilder.addSp64Distribution("BL", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -1304,7 +1345,8 @@ class VriInputValidationTest {
 
 				// Species
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("B", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("B");
 					sBuilder.percentGenus(100f);
 					sBuilder.addSp64Distribution("BL", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -1368,7 +1410,8 @@ class VriInputValidationTest {
 
 				// Species
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("B", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("B");
 					sBuilder.percentGenus(100f);
 					sBuilder.addSp64Distribution("BL", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -1432,7 +1475,8 @@ class VriInputValidationTest {
 
 				// Species
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("B", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("B");
 					sBuilder.percentGenus(100f);
 					sBuilder.addSp64Distribution("BL", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -1492,7 +1536,8 @@ class VriInputValidationTest {
 
 				// Species
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("B", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("B");
 					sBuilder.percentGenus(3f);
 					sBuilder.addSp64Distribution("BL", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -1501,7 +1546,8 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("C", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("C");
 					sBuilder.percentGenus(30f);
 					sBuilder.addSp64Distribution("CW", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -1515,7 +1561,8 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("H", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("H");
 					sBuilder.percentGenus(48.9f);
 					sBuilder.addSp64Distribution("HW", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -1529,7 +1576,8 @@ class VriInputValidationTest {
 					});
 				});
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("S", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("S");
 					sBuilder.percentGenus(18.1f);
 					sBuilder.addSp64Distribution("SE", 100);
 					sBuilder.addSite(iBuilder -> {
@@ -1552,7 +1600,8 @@ class VriInputValidationTest {
 
 				// Species
 				lBuilder.addSpecies(sBuilder -> {
-					sBuilder.genus("H", controlMap);
+					sBuilder.controlMap(controlMap);
+					sBuilder.genus("H");
 					sBuilder.percentGenus(100f);
 					sBuilder.addSp64Distribution("HW", 100);
 					sBuilder.addSite(iBuilder -> {

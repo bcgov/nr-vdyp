@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.common;
 
+import java.text.MessageFormat;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -533,5 +534,70 @@ public class Utils {
 	 */
 	public static double computeInFeet(double value, DoubleUnaryOperator operation) {
 		return operation.applyAsDouble(value / METRES_PER_FOOT) * METRES_PER_FOOT;
+	}
+
+	/**
+	 * Given a particular Enum value, and an ordered array of all values of that enum could take on (the result of
+	 * calling values()) Gives the next Enum.
+	 *
+	 * @param <T>
+	 * @param current
+	 * @param values
+	 * @return
+	 * @throws IllegalStateException If the given Enum value is the last one
+	 */
+	public static <T extends Enum<T>> T successorOrThrow(T current, T[] values) {
+		return successor(current, values)
+				.orElseThrow(() -> new IllegalStateException(MessageFormat.format("{} has no successor", current)));
+	}
+
+	/**
+	 * Given a particular Enum value, and an ordered array of all values of that enum could take on (the result of
+	 * calling values()) Gives the precious Enum.
+	 *
+	 * @param <T>
+	 * @param current
+	 * @param values
+	 * @return
+	 * @throws IllegalStateException If the given Enum value is the first one
+	 */
+	public static <T extends Enum<T>> T predecessorOrThrow(T current, T[] values) {
+		return successor(current, values)
+				.orElseThrow(() -> new IllegalStateException(MessageFormat.format("{} has no predecessor", current)));
+	}
+
+	/**
+	 * Given a particular Enum value, and an ordered array of all values of that enum could take on (the result of
+	 * calling values()) Gives the next Enum.
+	 *
+	 * @param <T>
+	 * @param current
+	 * @param values
+	 * @return
+	 */
+	public static <T extends Enum<T>> Optional<T> successor(T current, T[] values) {
+		int i = current.ordinal();
+		if (i <= 0) {
+			return Optional.empty();
+		}
+		return Optional.of(values[i + 1]);
+	}
+
+	/**
+	 * Given a particular Enum value, and an ordered array of all values of that enum could take on (the result of
+	 * calling values()) Gives the next Enum.
+	 *
+	 * @param <T>
+	 * @param current
+	 * @param values
+	 * @return
+	 * @throws IllegalStateException If the given Enum value is the first one
+	 */
+	public static <T extends Enum<T>> Optional<T> predecessor(T current, T[] values) {
+		int i = current.ordinal();
+		if (i <= 0) {
+			return Optional.empty();
+		}
+		return Optional.of(values[i - 1]);
 	}
 }

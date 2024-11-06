@@ -41,7 +41,7 @@ class PreliminarySetCompatibilityVariablesTest extends AbstractForwardProcessing
 		var polygon = reader.readNextPolygon().orElseThrow();
 
 		ForwardProcessingEngine fpe = new ForwardProcessingEngine(controlMap);
-		fpe.processPolygon(polygon, ProcessingEngine.ExecutionStep.SET_COMPATIBILITY_VARIABLES);
+		fpe.processPolygon(polygon, ForwardProcessingEngine.ForwardExecutionStep.SET_COMPATIBILITY_VARIABLES);
 
 		// These values have been verified against the FORTRAN implementation, allowing for minor
 		// platform-specific differences.

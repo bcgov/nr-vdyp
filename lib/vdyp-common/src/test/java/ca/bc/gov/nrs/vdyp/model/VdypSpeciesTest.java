@@ -27,7 +27,8 @@ class VdypSpeciesTest {
 		var species1 = VdypSpecies.build(builder -> {
 			builder.polygonIdentifier("Test", 2024);
 			builder.layerType(LayerType.PRIMARY);
-			builder.genus("B", 3);
+			builder.genus("B");
+			builder.genus(3);
 			builder.percentGenus(50f);
 			builder.volumeGroup(1);
 			builder.decayGroup(2);
@@ -48,7 +49,8 @@ class VdypSpeciesTest {
 		var species2 = VdypSpecies.build(builder -> {
 			builder.polygonIdentifier("Test2", 2024);
 			builder.layerType(LayerType.PRIMARY);
-			builder.genus("B", 3);
+			builder.genus("B");
+			builder.genus(3);
 			builder.percentGenus(50f);
 			builder.volumeGroup(1);
 			builder.decayGroup(2);
@@ -60,7 +62,8 @@ class VdypSpeciesTest {
 		var species3 = VdypSpecies.build(builder -> {
 			builder.polygonIdentifier("Test", 2024);
 			builder.layerType(LayerType.PRIMARY);
-			builder.genus("D", 5);
+			builder.genus("D");
+			builder.genus(5);
 			builder.percentGenus(50f);
 			builder.volumeGroup(1);
 			builder.decayGroup(2);
@@ -72,7 +75,8 @@ class VdypSpeciesTest {
 		var species4 = VdypSpecies.build(builder -> {
 			builder.polygonIdentifier("Test", 2024);
 			builder.layerType(LayerType.VETERAN);
-			builder.genus("B", 3);
+			builder.genus("B");
+			builder.genus(3);
 			builder.percentGenus(50f);
 			builder.volumeGroup(1);
 			builder.decayGroup(2);
@@ -88,7 +92,8 @@ class VdypSpeciesTest {
 			sb.polygonIdentifier(new PolygonIdentifier("Poly1", 2024));
 			sb.layerType(LayerType.PRIMARY);
 			sb.percentGenus(100.0f);
-			sb.genus("Species1", 5);
+			sb.genus("Species1");
+			sb.genus(5);
 			sb.baseArea(0.00155f, 0.01412f, 0.05128f, 0.45736f, 28.77972f);
 			sb.treesPerHectare(0.47f, 1.64f, 2.69f, 13.82f, 269.56f);
 			sb.loreyHeight(10.6033f, 33.7440f);
@@ -156,7 +161,8 @@ class VdypSpeciesTest {
 
 		var result = VdypSpecies.build(layer, builder -> {
 			builder.polygonIdentifier("Test", 2024);
-			builder.genus("B", 3);
+			builder.genus("B");
+			builder.genus(3);
 			builder.percentGenus(50f);
 			builder.volumeGroup(1);
 			builder.decayGroup(2);
@@ -186,7 +192,8 @@ class VdypSpeciesTest {
 		var result = VdypSpecies.build(builder -> {
 			builder.polygonIdentifier("Test", 2024);
 			builder.layerType(LayerType.PRIMARY);
-			builder.genus("B", 3);
+			builder.genus("B");
+			builder.genus(3);
 			builder.percentGenus(50f);
 			builder.volumeGroup(1);
 			builder.decayGroup(2);
@@ -213,7 +220,8 @@ class VdypSpeciesTest {
 		var toCopy = VdypSpecies.build(builder -> {
 			builder.polygonIdentifier("Test", 2024);
 			builder.layerType(LayerType.PRIMARY);
-			builder.genus("B", 3);
+			builder.genus("B");
+			builder.genus(3);
 			builder.percentGenus(50f);
 			builder.volumeGroup(1);
 			builder.decayGroup(2);

@@ -32,7 +32,7 @@ class ProcessPolygonBasicTest extends AbstractForwardProcessingEngineTest {
 		var polygon = forwardDataStreamReader.readNextPolygon();
 
 		if (polygon.isPresent()) {
-			fpe.processPolygon(polygon.get(), ExecutionStep.GROW);
+			fpe.processPolygon(polygon.get(), ForwardProcessingEngine.ForwardExecutionStep.GROW);
 			nPolygonsProcessed += 1;
 		}
 

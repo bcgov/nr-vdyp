@@ -62,6 +62,7 @@ import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
 import ca.bc.gov.nrs.vdyp.model.Region;
+import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 
 public class TestUtils {
 
@@ -637,5 +638,94 @@ public class TestUtils {
 
 	public static BecDefinition mockBec() {
 		return new BecDefinition("T", Region.COASTAL, "Test");
+	}
+
+	public static void writeToTest(VdypPolygon poly, Appendable out) {
+		var result = VdypPolygon.build(pb -> {
+			pb.polygonIdentifier(poly.getPolygonIdentifier().getBase(), poly.getPolygonIdentifier().getYear());
+			pb.biogeoclimaticZone(poly.getBiogeoclimaticZone());
+			pb.forestInventoryZone(poly.getForestInventoryZone());
+
+			pb.inventoryTypeGroup(poly.getInventoryTypeGroup());
+			pb.targetYear(poly.getTargetYear());
+
+			pb.mode(poly.getMode());
+			pb.percentAvailable(poly.getPercentAvailable());
+
+			for (var layer : poly.getLayers().values()) {
+				pb.addLayer(lb -> {
+					lb.layerType(layer.getLayerType());
+
+					lb.empiricalRelationshipParameterIndex(layer.getEmpiricalRelationshipParameterIndex());
+
+					lb.inventoryTypeGroup(layer.getInventoryTypeGroup());
+
+					lb.loreyHeight(layer.getLoreyHeightByUtilization());
+					lb.treesPerHectare(layer.getTreesPerHectareByUtilization());
+					lb.quadMeanDiameter(layer.getQuadraticMeanDiameterByUtilization());
+					lb.baseArea(layer.getBaseAreaByUtilization());
+
+					lb.wholeStemVolume(layer.getWholeStemVolumeByUtilization());
+					lb.closeUtilizationVolumeByUtilization(layer.getCloseUtilizationVolumeByUtilization());
+					lb.closeUtilizationVolumeNetOfDecayByUtilization(layer.getCloseUtilizationVolumeByUtilization());
+					lb.closeUtilizationVolumeNetOfDecayAndWasteByUtilization(
+							layer.getCloseUtilizationVolumeNetOfDecayByUtilization()
+					);
+					lb.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(
+							layer.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization()
+					);
+
+					for (var spec : layer.getSpecies().values()) {
+						lb.addSpecies(sb -> {
+							sb.genus(spec.getGenus());
+							sb.genus(spec.getGenusIndex());
+
+							sb.breakageGroup(spec.getBreakageGroup());
+							sb.volumeGroup(spec.getVolumeGroup());
+							sb.decayGroup(spec.getDecayGroup());
+
+							sb.percentGenus(spec.getPercentGenus());
+
+							spec.getCvBasalArea(null, null);
+
+							sb.loreyHeight(layer.getLoreyHeightByUtilization());
+							sb.treesPerHectare(layer.getTreesPerHectareByUtilization());
+							sb.quadMeanDiameter(layer.getQuadraticMeanDiameterByUtilization());
+							sb.baseArea(layer.getBaseAreaByUtilization());
+
+							sb.wholeStemVolume(layer.getWholeStemVolumeByUtilization());
+							sb.closeUtilizationVolumeByUtilization(layer.getCloseUtilizationVolumeByUtilization());
+							sb.closeUtilizationVolumeNetOfDecayByUtilization(
+									layer.getCloseUtilizationVolumeByUtilization()
+							);
+							sb.closeUtilizationVolumeNetOfDecayAndWasteByUtilization(
+									layer.getCloseUtilizationVolumeNetOfDecayByUtilization()
+							);
+							sb.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(
+									layer.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization()
+							);
+
+							// TODO Compatibility Variables
+
+							spec.getSite().ifPresent(site -> {
+
+								sb.addSite(ib -> {
+									ib.ageTotal(site.getAgeTotal());
+									ib.height(site.getHeight());
+									ib.siteCurveNumber(site.getSiteCurveNumber());
+									ib.siteIndex(site.getSiteIndex());
+									ib.yearsToBreastHeight(site.getYearsToBreastHeight());
+								});
+
+							});
+
+						});
+					}
+
+					lb.primaryGenus(layer.getPrimaryGenus());
+				});
+			}
+		});
+
 	}
 }

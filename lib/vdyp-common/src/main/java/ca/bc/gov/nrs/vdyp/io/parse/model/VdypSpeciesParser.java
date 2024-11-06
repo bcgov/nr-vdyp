@@ -160,7 +160,8 @@ public class VdypSpeciesParser implements ControlMapValueReplacer<Object, String
 							speciesBuilder.sp64DistributionSet(speciesDistributionSet);
 							speciesBuilder.polygonIdentifier(polygonId);
 							speciesBuilder.layerType(lt);
-							speciesBuilder.genus(genus, controlMap);
+							speciesBuilder.controlMap(controlMap);
+							speciesBuilder.genus(genus);
 
 							if (isPrimarySpecies.orElse(false)) {
 								speciesBuilder.addSite(siteBuilder -> {
@@ -169,7 +170,7 @@ public class VdypSpeciesParser implements ControlMapValueReplacer<Object, String
 									siteBuilder.polygonIdentifier(polygonId);
 									siteBuilder.siteCurveNumber(siteCurveNumber);
 									siteBuilder.layerType(lt);
-									siteBuilder.siteGenus(genus);
+									siteBuilder.genus(genus);
 									siteBuilder.siteIndex(siteIndex);
 									siteBuilder.yearsToBreastHeight(inferredYearsToBreastHeight);
 								});

@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.application.ProcessingException;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
-import ca.bc.gov.nrs.vdyp.application.ProcessingEngine.ExecutionStep;
 import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings.Vars;
 import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
@@ -57,7 +56,7 @@ class Grow8PerSpeciesLoreyHeightTest {
 		VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
 		fpe.fps.fcm.getDebugSettings().setValue(Vars.LOREY_HEIGHT_CHANGE_STRATEGY_8, 0);
-		fpe.processPolygon(polygon, ExecutionStep.GROW_8_SPECIES_LH);
+		fpe.processPolygon(polygon, ForwardProcessingEngine.ForwardExecutionStep.GROW_8_SPECIES_LH);
 
 		LayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
 
@@ -76,7 +75,7 @@ class Grow8PerSpeciesLoreyHeightTest {
 		VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
 		fpe.fps.fcm.getDebugSettings().setValue(Vars.LOREY_HEIGHT_CHANGE_STRATEGY_8, 2);
-		fpe.processPolygon(polygon, ExecutionStep.GROW_8_SPECIES_LH);
+		fpe.processPolygon(polygon, ForwardProcessingEngine.ForwardExecutionStep.GROW_8_SPECIES_LH);
 
 		LayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
 

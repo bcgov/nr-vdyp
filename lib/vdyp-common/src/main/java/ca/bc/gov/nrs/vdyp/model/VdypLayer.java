@@ -210,7 +210,8 @@ public class VdypLayer extends BaseVdypLayer<VdypSpecies, VdypSite> implements V
 	}
 
 	public static class Builder
-			extends BaseVdypLayer.Builder<VdypLayer, VdypSpecies, VdypSite, VdypSpecies.Builder, VdypSite.Builder> {
+			extends BaseVdypLayer.Builder<VdypLayer, VdypSpecies, VdypSite, VdypSpecies.Builder, VdypSite.Builder>
+			implements VdypUtilizationHolder.Builder {
 
 		Optional<Integer> empiricalRelationshipParameterIndex = Optional.empty();
 
@@ -235,101 +236,68 @@ public class VdypLayer extends BaseVdypLayer<VdypSpecies, VdypSite> implements V
 
 		UtilizationVector loreyHeightByUtilization = VdypUtilizationHolder.emptyLoreyHeightUtilization();
 
-		public void loreyHeightByUtilization(float height) {
-			this.loreyHeightByUtilization = Utils.heightVector(0, height);
-		}
-
-		public void loreyHeightByUtilization(float small, float height) {
-			this.loreyHeightByUtilization = Utils.heightVector(small, height);
+		@Override
+		public void loreyHeight(UtilizationVector vector) {
+			this.loreyHeightByUtilization = vector;
 		}
 
 		protected UtilizationVector baseAreaByUtilization = VdypUtilizationHolder.emptyUtilization();
 
-		public void baseAreaByUtilization(float small, float u1, float u2, float u3, float u4) {
-			this.baseAreaByUtilization = Utils.utilizationVector(small, u1, u2, u3, u4);
-		}
-
-		public void baseAreaByUtilization(float height) {
-			this.baseAreaByUtilization = Utils.utilizationVector(height);
+		@Override
+		public void baseArea(UtilizationVector vector) {
+			this.baseAreaByUtilization = vector;
 		}
 
 		protected UtilizationVector treesPerHectareByUtilization = VdypUtilizationHolder.emptyUtilization();
 
-		public void treesPerHectareByUtilization(float small, float u1, float u2, float u3, float u4) {
-			this.treesPerHectareByUtilization = Utils.utilizationVector(small, u1, u2, u3, u4);
-		}
-
-		public void treesPerHectareByUtilization(float height) {
-			this.treesPerHectareByUtilization = Utils.utilizationVector(height);
+		@Override
+		public void treesPerHectare(UtilizationVector vector) {
+			this.treesPerHectareByUtilization = vector;
 		}
 
 		protected UtilizationVector quadraticMeanDiameterByUtilization = VdypUtilizationHolder.emptyUtilization();
 
-		public void
-				quadraticMeanDiameterByUtilization(float small, float uAll, float u1, float u2, float u3, float u4) {
-			this.quadraticMeanDiameterByUtilization = Utils.utilizationVector(small, uAll, u1, u2, u3, u4);
-		}
-
-		public void quadraticMeanDiameterByUtilization(float height) {
-			this.quadraticMeanDiameterByUtilization = Utils.utilizationVector(height);
+		@Override
+		public void quadMeanDiameter(UtilizationVector vector) {
+			this.quadraticMeanDiameterByUtilization = vector;
 		}
 
 		protected UtilizationVector wholeStemVolumeByUtilization = VdypUtilizationHolder.emptyUtilization();
 
-		public void wholeStemVolumeByUtilization(float small, float u1, float u2, float u3, float u4) {
-			this.wholeStemVolumeByUtilization = Utils.utilizationVector(small, u1, u2, u3, u4);
-		}
-
-		public void wholeStemVolumeByUtilization(float volume) {
-			this.wholeStemVolumeByUtilization = Utils.utilizationVector(volume);
+		@Override
+		public void wholeStemVolume(UtilizationVector vector) {
+			this.wholeStemVolumeByUtilization = vector;
 		}
 
 		protected UtilizationVector closeUtilizationVolumeByUtilization = VdypUtilizationHolder.emptyUtilization();
 
-		public void closeUtilizationVolumeByUtilization(float small, float u1, float u2, float u3, float u4) {
-			this.closeUtilizationVolumeByUtilization = Utils.utilizationVector(small, u1, u2, u3, u4);
-		}
-
-		public void closeUtilizationVolumeByUtilization(float volume) {
-			this.closeUtilizationVolumeByUtilization = Utils.utilizationVector(volume);
+		@Override
+		public void closeUtilizationVolumeByUtilization(UtilizationVector vector) {
+			this.closeUtilizationVolumeByUtilization = vector;
 		}
 
 		protected UtilizationVector closeUtilizationVolumeNetOfDecayByUtilization = VdypUtilizationHolder
 				.emptyUtilization();
 
-		public void closeUtilizationVolumeNetOfDecayByUtilization(float small, float u1, float u2, float u3, float u4) {
-			this.closeUtilizationVolumeNetOfDecayByUtilization = Utils.utilizationVector(small, u1, u2, u3, u4);
-		}
-
-		public void closeUtilizationVolumeNetOfDecayByUtilization(float volume) {
-			this.closeUtilizationVolumeNetOfDecayByUtilization = Utils.utilizationVector(volume);
+		@Override
+		public void closeUtilizationVolumeNetOfDecayByUtilization(UtilizationVector vector) {
+			this.closeUtilizationVolumeNetOfDecayByUtilization = vector;
 		}
 
 		protected UtilizationVector closeUtilizationVolumeNetOfDecayAndWasteByUtilization = VdypUtilizationHolder
 				.emptyUtilization();
 
-		public void closeUtilizationVolumeNetOfDecayAndWasteByUtilization(
-				float small, float u1, float u2, float u3, float u4
-		) {
-			this.closeUtilizationVolumeNetOfDecayAndWasteByUtilization = Utils.utilizationVector(small, u1, u2, u3, u4);
-		}
-
-		public void closeUtilizationVolumeNetOfDecayAndWasteByUtilization(float volume) {
-			this.closeUtilizationVolumeNetOfDecayAndWasteByUtilization = Utils.utilizationVector(volume);
+		@Override
+		public void closeUtilizationVolumeNetOfDecayAndWasteByUtilization(UtilizationVector vector) {
+			this.closeUtilizationVolumeNetOfDecayAndWasteByUtilization = vector;
 		}
 
 		protected UtilizationVector closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization = VdypUtilizationHolder
 				.emptyUtilization();
 
-		public void closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(
-				float small, float u1, float u2, float u3, float u4
-		) {
-			this.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization = Utils
-					.utilizationVector(small, u1, u2, u3, u4);
-		}
-
-		public void closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(float volume) {
-			this.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization = Utils.utilizationVector(volume);
+		@Override
+		public void closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(UtilizationVector vector) {
+			this.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization = vector;
 		}
 
 		@Override

@@ -11,6 +11,7 @@ import ca.bc.gov.nrs.vdyp.application.ProcessingEngine;
 import ca.bc.gov.nrs.vdyp.application.ProcessingException;
 import ca.bc.gov.nrs.vdyp.application.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.back.processing_state.BackProcessingState;
+import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
@@ -22,7 +23,28 @@ import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
 import ca.bc.gov.nrs.vdyp.processing_state.Bank;
 
-public class BackProcessingEngine extends ProcessingEngine {
+public class BackProcessingEngine extends ProcessingEngine<BackProcessingEngine.BackExecutionStep> {
+
+	public enum BackExecutionStep implements ProcessingEngine.ExecutionStep<BackExecutionStep> {
+		// Must be first
+		NONE, //
+
+		GROW, //
+
+		// Must be last
+		ALL; //
+
+		@Override
+		public BackExecutionStep predecessor() throws IllegalStateException {
+			return Utils.predecessorOrThrow(this, BackExecutionStep.values());
+		}
+
+		@Override
+		public BackExecutionStep successor() {
+			return Utils.successorOrThrow(this, BackExecutionStep.values());
+		}
+
+	}
 
 	/**
 	 *
@@ -121,8 +143,18 @@ public class BackProcessingEngine extends ProcessingEngine {
 	}
 
 	@Override
-	public void processPolygon(VdypPolygon polygon, ExecutionStep lastStepInclusive) throws ProcessingException {
+	public void processPolygon(VdypPolygon polygon, BackExecutionStep lastStepInclusive) throws ProcessingException {
 		// TODO Auto-generated method stub
 
+	}
+
+	@Override
+	protected BackExecutionStep getFirstStep() {
+		return BackExecutionStep.NONE;
+	}
+
+	@Override
+	protected BackExecutionStep getLastStep() {
+		return BackExecutionStep.ALL;
 	}
 }

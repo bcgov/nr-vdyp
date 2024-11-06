@@ -74,17 +74,18 @@ class BackProcessingEngineTest {
 					final float dq = 31.5006275f;
 					final float tph = BaseAreaTreeDensityDiameter.treesPerHectare(ba, dq);
 					lb.addSpecies(sb -> {
-						sb.genus("F", controlMap);
+						sb.controlMap(controlMap);
+						sb.genus("F");
 						sb.baseArea(ba);
 						sb.loreyHeight(hl);
 						sb.quadMeanDiameter(dq);
 						sb.treesPerHectare(tph);
 					});
 
-					lb.baseAreaByUtilization(ba);
-					lb.loreyHeightByUtilization(hl);
-					lb.quadraticMeanDiameterByUtilization(dq);
-					lb.treesPerHectareByUtilization(tph);
+					lb.baseArea(ba);
+					lb.loreyHeight(hl);
+					lb.quadMeanDiameter(dq);
+					lb.treesPerHectare(tph);
 				});
 			});
 
@@ -139,10 +140,11 @@ class BackProcessingEngineTest {
 				});
 				pb.addLayer(lb -> {
 					lb.layerType(LayerType.VETERAN);
-					lb.baseAreaByUtilization(20f);
+					lb.baseArea(20f);
 
 					lb.addSpecies(sb -> {
-						sb.genus("F", controlMap);
+						sb.controlMap(controlMap);
+						sb.genus("F");
 						sb.baseArea(20f);
 					});
 				});
@@ -184,9 +186,10 @@ class BackProcessingEngineTest {
 					});
 					pb.addLayer(lb -> {
 						lb.layerType(LayerType.VETERAN);
-						lb.baseAreaByUtilization(42f); // Not the sum of the base areas of the species
+						lb.baseArea(42f); // Not the sum of the base areas of the species
 						lb.addSpecies(sb -> {
-							sb.genus("F", controlMap);
+							sb.controlMap(controlMap);
+							sb.genus("F");
 							sb.baseArea(20f);
 						});
 					});
