@@ -9,7 +9,7 @@ RUN mkdir ./parent
 COPY --chown=quarkus:quarkus . ./
 COPY --chown=quarkus:quarkus ../pom.xml ./parent/pom.xml
 
-RUN chmod +x ./mvnw && ./mvnw package -Pnative -DskipTests
+RUN cat pom.xml && chmod +x ./mvnw && ./mvnw package -Pnative -DskipTests
 
 # "A base image to run Quarkus native application using UBI Micro"
 FROM quay.io/quarkus/quarkus-micro-image:2.0
