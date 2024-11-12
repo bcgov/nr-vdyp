@@ -23,7 +23,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - run: cp pom.xml ${{matrix.package}}/parent-pom.xml
+      - run: |
+          cp pom.xml ${{matrix.package}}/parent-pom.xml &&
+          head -10 pom.xml &&
+          head -10 ${{matrix.package}}/parent-pom.xml
     
       - uses: bcgov-nr/action-builder-ghcr@v2.2.0
         with:
