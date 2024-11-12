@@ -3,11 +3,12 @@
 
 # "Provides the native-image executable. Used by the Maven and Gradle plugin from Quarkus to build linux64 executables"
 FROM quay.io/quarkus/ubi-quarkus-graalvmce-builder-image:jdk-21 AS build
+RUN mkdir ./parent
 
 # Image defaults to /project; copy controlled by .dockerignore
 COPY --chown=quarkus:quarkus . ./
-COPY --chown=quarkus:quarkus ../pom.xml ./parent-pom.xml
-RUN pwd && ls -la && cat parent-pom.xml
+COPY --chown=quarkus:quarkus ../pom.xml ./parent/pom.xml
+
 RUN chmod +x ./mvnw && ./mvnw package -Pnative -DskipTests
 
 # "A base image to run Quarkus native application using UBI Micro"
