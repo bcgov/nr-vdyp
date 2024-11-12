@@ -23,7 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - run: echo "CURRENT WORKING DIRECTORY IS $(pwd)/${{matrix.package}}" && "TOP OF POM.XML IS " && head -30 $(pwd)/${{matrix.package}}/pom.xml
+      - run: echo "CURRENT WORKING DIRECTORY IS $(pwd)/${{matrix.package}}" && echo "TOP OF POM.XML IS " && head -30 $(pwd)/${{matrix.package}}/pom.xml
     
       - uses: bcgov-nr/action-builder-ghcr@v2.2.0
         with:
