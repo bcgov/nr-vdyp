@@ -7,7 +7,7 @@ RUN mkdir ./parent
 
 # Image defaults to /project; copy controlled by .dockerignore
 COPY --chown=quarkus:quarkus . ./
-COPY --chown=quarkus:quarkus ../pom.xml ./parent/pom.xml
+COPY --chown=quarkus:quarkus ./parent-pom.xml ./parent/pom.xml
 
 RUN cat pom.xml && cat ./parent/pom.xml && chmod +x ./mvnw && ./mvnw package -Pnative -DskipTests
 
