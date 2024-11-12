@@ -7,7 +7,7 @@ FROM quay.io/quarkus/ubi-quarkus-graalvmce-builder-image:jdk-21 AS build
 # Image defaults to /project; copy controlled by .dockerignore
 COPY --chown=quarkus:quarkus . ./
 COPY --chown=quarkus:quarkus ../pom.xml ./parent-pom.xml
-RUN pwd && ls -la
+RUN pwd && ls -la && cat parent-pom.xml
 RUN chmod +x ./mvnw && ./mvnw package -Pnative -DskipTests
 
 # "A base image to run Quarkus native application using UBI Micro"
