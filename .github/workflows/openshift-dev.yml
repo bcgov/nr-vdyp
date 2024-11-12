@@ -21,6 +21,8 @@ jobs:
         package: [backend, frontend]
     timeout-minutes: 10
     steps:
+      - uses: actions/checkout@v4
+    
       - uses: bcgov-nr/action-builder-ghcr@v2.2.0
         with:
           keep_versions: 50
