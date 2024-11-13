@@ -18,10 +18,12 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.common.Utils;
+import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap3Impl;
+import ca.bc.gov.nrs.vdyp.model.VdypSite;
 
 class VdypMatchersTest {
 
@@ -44,6 +46,155 @@ class VdypMatchersTest {
 		var description = new StringDescription();
 		unit.describeMismatch(item, description);
 		assertFalse(result, "Expected match to pass but it failed with description: " + description.toString());
+	}
+
+	@Nested
+	class deepEquals {
+		@Nested
+		class testVdypSite {
+			VdypSite expected;
+			Matcher<VdypSite> unit;
+
+			@BeforeEach
+			void setup() {
+				expected = VdypSite.build(ib -> {
+					ib.polygonIdentifier("Test", 2024);
+					ib.layerType(LayerType.PRIMARY);
+					ib.genus("MB");
+					ib.ageTotal(40);
+					ib.yearsToBreastHeight(5);
+					ib.height(15);
+					ib.siteCurveNumber(42);
+					ib.siteIndex(4);
+				});
+
+				unit = VdypMatchers.deepEquals(expected);
+			}
+
+			@Test
+			void testPass() {
+				var actual = VdypSite.build(ib -> {
+					ib.copy(expected);
+				});
+
+				assertMatch(actual, unit);
+			}
+
+			@Test
+			void testPolyIdDifferent() {
+				var actual = VdypSite.build(ib -> {
+					ib.copy(expected);
+					ib.polygonIdentifier("Different", 2025);
+				});
+
+				assertMismatch(
+						actual, unit, equalTo(
+								"PolygonIdentifier was <Different            2025> but expected <Test                 2024>"
+						)
+				);
+			}
+
+			@Test
+			void testLayerTypeDifferent() {
+				var actual = VdypSite.build(ib -> {
+					ib.copy(expected);
+					ib.layerType(LayerType.VETERAN);
+				});
+
+				assertMismatch(
+						actual, unit, equalTo(
+								"LayerType was <VETERAN> but expected <PRIMARY>"
+						)
+				);
+			}
+
+			@Test
+			void testSpeciesGroupDifferent() {
+				var actual = VdypSite.build(ib -> {
+					ib.copy(expected);
+					ib.genus("B");
+				});
+
+				assertMismatch(
+						actual, unit, equalTo(
+								"SpeciesGroup was \"B\" but expected \"MB\""
+						)
+				);
+			}
+
+			@Test
+			void testHeightDifferent() {
+				var actual = VdypSite.build(ib -> {
+					ib.copy(expected);
+					ib.height(16);
+				});
+
+				assertMismatch(
+						actual, unit, equalTo(
+								"Height was <Optional[16.0]> but expected <Optional[15.0]>"
+						)
+				);
+			}
+
+			@Test
+			void testAgeTotalDifferent() {
+				var actual = VdypSite.build(ib -> {
+					ib.copy(expected);
+					ib.ageTotal(45);
+				});
+
+				// Years at breast height is computed from AgeTotal and YearstToBreastHeight
+				assertMismatch(
+						actual, unit, equalTo(
+								"AgeTotal was <Optional[45.0]> but expected <Optional[40.0]>, YearsAtBreastHeight was <Optional[40.0]> but expected <Optional[35.0]>"
+						)
+				);
+			}
+
+			@Test
+			void testYearsToBreastHeightDifferent() {
+				var actual = VdypSite.build(ib -> {
+					ib.copy(expected);
+					ib.yearsToBreastHeight(4);
+				});
+
+				// Years at breast height is computed from AgeTotal and YearstToBreastHeight
+				assertMismatch(
+						actual, unit, equalTo(
+								"YearsToBreastHeight was <Optional[4.0]> but expected <Optional[5.0]>, YearsAtBreastHeight was <Optional[36.0]> but expected <Optional[35.0]>"
+						)
+				);
+			}
+
+			@Test
+			void testSiteCurveNumberDifferent() {
+				var actual = VdypSite.build(ib -> {
+					ib.copy(expected);
+					ib.siteCurveNumber(41);
+				});
+
+				assertMismatch(
+						actual, unit, equalTo(
+								"SiteCurveNumber was <Optional[41]> but expected <Optional[42]>"
+						)
+				);
+			}
+
+			@Test
+			void testSiteIndexDifferent() {
+				var actual = VdypSite.build(ib -> {
+					ib.copy(expected);
+					ib.siteIndex(3);
+				});
+
+				assertMismatch(
+						actual, unit, equalTo(
+								"SiteIndex was <Optional[3.0]> but expected <Optional[4.0]>"
+						)
+				);
+			}
+
+		}
 	}
 
 	@Nested

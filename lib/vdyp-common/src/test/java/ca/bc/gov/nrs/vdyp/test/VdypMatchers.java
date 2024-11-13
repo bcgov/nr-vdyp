@@ -760,14 +760,14 @@ public class VdypMatchers {
 	}
 
 	static private boolean sep(boolean match, Description mismatchDescription) {
-		if (match) {
+		if (!match) {
 			mismatchDescription.appendText(", ");
 		}
 		return false;
 	}
 
 	static private <T> boolean matchValue(
-			boolean match, String name, T value, T expected, Description mismatchDescription
+			boolean match, String name, T expected, T value, Description mismatchDescription
 	) {
 		if (!expected.equals(value)) {
 			match = sep(match, mismatchDescription);
@@ -782,14 +782,14 @@ public class VdypMatchers {
 	}
 
 	static private boolean matchValue(
-			boolean match, String name, UtilizationVector value, UtilizationVector expected,
+			boolean match, String name, UtilizationVector expected, UtilizationVector value,
 			Description mismatchDescription
 	) {
 		return matchValue(match, name, value, utilization(expected), mismatchDescription);
 	}
 
 	static private <T> boolean matchValue(
-			boolean match, String name, T value, Matcher<T> expected, Description mismatchDescription
+			boolean match, String name, Matcher<T> expected, T value, Description mismatchDescription
 	) {
 		if (!expected.matches(value)) {
 			match = sep(match, mismatchDescription);
@@ -815,49 +815,57 @@ public class VdypMatchers {
 
 				match = matchValue(
 						match, "PolygonIdentifier",
-						expected.getPolygonIdentifier(), item.getPolygonIdentifier(),
+						expected.getPolygonIdentifier(),
+						item.getPolygonIdentifier(),
 						mismatchDescription
 				);
 
 				match = matchValue(
 						match, "BiogeoclimaticZone",
-						expected.getBiogeoclimaticZone(), item.getBiogeoclimaticZone(),
+						expected.getBiogeoclimaticZone(),
+						item.getBiogeoclimaticZone(),
 						mismatchDescription
 				);
 
 				match = matchValue(
 						match, "ForestInventoryZone",
-						expected.getForestInventoryZone(), item.getForestInventoryZone(),
+						expected.getForestInventoryZone(),
+						item.getForestInventoryZone(),
 						mismatchDescription
 				);
 
 				match = matchValue(
 						match, "InventoryTypeGroup",
-						expected.getInventoryTypeGroup(), item.getInventoryTypeGroup(),
+						expected.getInventoryTypeGroup(),
+						item.getInventoryTypeGroup(),
 						mismatchDescription
 				);
 
 				match = matchValue(
 						match, "Mode",
-						expected.getMode(), item.getMode(),
+						expected.getMode(),
+						item.getMode(),
 						mismatchDescription
 				);
 
 				match = matchValue(
 						match, "PercentAvailable",
-						expected.getPercentAvailable(), item.getPercentAvailable(),
+						expected.getPercentAvailable(),
+						item.getPercentAvailable(),
 						mismatchDescription
 				);
 
 				match = matchValue(
 						match, "TargetYear",
-						expected.getTargetYear(), item.getTargetYear(),
+						expected.getTargetYear(),
+						item.getTargetYear(),
 						mismatchDescription
 				);
 
 				match = matchValue(
 						match, "Layers",
-						expected.getLayers().keySet(), item.getLayers().keySet(),
+						expected.getLayers().keySet(),
+						item.getLayers().keySet(),
 						mismatchDescription
 				);
 
@@ -899,29 +907,33 @@ public class VdypMatchers {
 
 				match = matchValue(
 						match, "PolygonIdentifier",
-						expected.getPolygonIdentifier(), item.getPolygonIdentifier(),
+						expected.getPolygonIdentifier(),
+						item.getPolygonIdentifier(),
 						mismatchDescription
 				);
 				match = matchValue(
 						match, "LayerType",
-						expected.getLayerType(), item.getLayerType(),
+						expected.getLayerType(),
+						item.getLayerType(),
 						mismatchDescription
 				);
 
 				match = matchValue(
 						match, "InventoryTypeGroup",
-						expected.getInventoryTypeGroup(), item.getInventoryTypeGroup(),
+						expected.getInventoryTypeGroup(),
+						item.getInventoryTypeGroup(),
 						mismatchDescription
 				);
 				match = matchValue(
 						match, "PrimaryGenus",
-						expected.getPrimaryGenus(), item.getPrimaryGenus(),
+						expected.getPrimaryGenus(),
+						item.getPrimaryGenus(),
 						mismatchDescription
 				);
 				match = matchValue(
 						match, "EmpiricalRelationshipParameterIndex",
-						expected.getEmpiricalRelationshipParameterIndex(), item
-								.getEmpiricalRelationshipParameterIndex(),
+						expected.getEmpiricalRelationshipParameterIndex(),
+						item.getEmpiricalRelationshipParameterIndex(),
 						mismatchDescription
 				);
 
@@ -1151,26 +1163,26 @@ public class VdypMatchers {
 
 				match = matchValue(
 						match, "CvBasalArea",
-						item.getCvVolume(),
 						mmEquals(expected.getCvVolume(), VdypMatchers::closeTo),
+						item.getCvVolume(),
 						mismatchDescription
 				);
 				match = matchValue(
 						match, "CvBasalArea",
-						item.getCvBasalArea(),
 						mmEquals(expected.getCvBasalArea(), VdypMatchers::closeTo),
+						item.getCvBasalArea(),
 						mismatchDescription
 				);
 				match = matchValue(
 						match, "CvBasalArea",
-						item.getCvQuadraticMeanDiameter(),
 						mmEquals(expected.getCvQuadraticMeanDiameter(), VdypMatchers::closeTo),
+						item.getCvQuadraticMeanDiameter(),
 						mismatchDescription
 				);
 				match = matchValue(
 						match, "CvBasalArea",
-						item.getCvPrimaryLayerSmall(),
 						mapEquals(expected.getCvPrimaryLayerSmall(), VdypMatchers::closeTo),
+						item.getCvPrimaryLayerSmall(),
 						mismatchDescription
 				);
 
@@ -1341,16 +1353,9 @@ public class VdypMatchers {
 						mismatchDescription
 				);
 				match = matchValue(
-						match, "Genus",
+						match, "SpeciesGroup",
 						expected.getSiteGenus(),
 						item.getSiteGenus(),
-						mismatchDescription
-				);
-
-				match = matchValue(
-						match, "LayerType",
-						expected.getLayerType(),
-						item.getLayerType(),
 						mismatchDescription
 				);
 
@@ -1379,15 +1384,15 @@ public class VdypMatchers {
 						mismatchDescription
 				);
 				match = matchValue(
-						match, "YearsAtBreastHeight",
-						expected.getYearsAtBreastHeight(),
-						item.getYearsAtBreastHeight(),
-						mismatchDescription
-				);
-				match = matchValue(
 						match, "YearsToBreastHeight",
 						expected.getYearsToBreastHeight(),
 						item.getYearsToBreastHeight(),
+						mismatchDescription
+				);
+				match = matchValue(
+						match, "YearsAtBreastHeight",
+						expected.getYearsAtBreastHeight(),
+						item.getYearsAtBreastHeight(),
 						mismatchDescription
 				);
 
