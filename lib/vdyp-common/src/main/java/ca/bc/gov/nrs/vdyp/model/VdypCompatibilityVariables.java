@@ -45,6 +45,22 @@ public class VdypCompatibilityVariables {
 		return cvPrimaryLayerSmall;
 	}
 
+	public float getCvVolume(UtilizationClass uc, VolumeVariable vv, LayerType lt) {
+		return getCvVolume().get(uc, vv, lt);
+	}
+
+	public float getCvBasalArea(UtilizationClass uc, LayerType lt) {
+		return getCvBasalArea().get(uc, lt);
+	}
+
+	public float getCvQuadraticMeanDiameter(UtilizationClass uc, LayerType lt) {
+		return getCvQuadraticMeanDiameter().get(uc, lt);
+	}
+
+	public float getCvPrimaryLayerSmall(UtilizationClassVariable ucv) {
+		return getCvPrimaryLayerSmall().get(ucv);
+	}
+
 	/**
 	 * Accepts a configuration function that accepts a builder to configure.
 	 *
@@ -153,6 +169,10 @@ public class VdypCompatibilityVariables {
 		@Override
 		public void genus(String speciesGroup) {
 			this.speciesGroup = Optional.of(speciesGroup);
+		}
+
+		public void genus(Optional<String> speciesGroup) {
+			this.speciesGroup = speciesGroup;
 		}
 
 	}

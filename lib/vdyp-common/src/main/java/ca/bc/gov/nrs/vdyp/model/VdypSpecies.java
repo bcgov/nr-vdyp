@@ -211,24 +211,16 @@ public class VdypSpecies extends BaseVdypSpecies<VdypSite> implements VdypUtiliz
 		}));
 	}
 
-	public float getCvVolume(UtilizationClass uc, VolumeVariable vv, LayerType lt) {
-		return requireCompatibilityVariables().getCvVolume().get(uc, vv, lt);
+	public Optional<VdypCompatibilityVariables> getCompatibilityVariables() {
+		return this.compatibilityVariables;
 	}
 
-	public float getCvBasalArea(UtilizationClass uc, LayerType lt) {
-		return requireCompatibilityVariables().getCvBasalArea().get(uc, lt);
-	}
-
-	public float getCvQuadraticMeanDiameter(UtilizationClass uc, LayerType lt) {
-		return requireCompatibilityVariables().getCvQuadraticMeanDiameter().get(uc, lt);
-	}
-
-	public float getCvPrimaryLayerSmall(UtilizationClassVariable ucv) {
-		return requireCompatibilityVariables().getCvPrimaryLayerSmall().get(ucv);
-	}
-
-	protected VdypCompatibilityVariables requireCompatibilityVariables() {
-		return this.compatibilityVariables.orElseThrow(
+	/**
+	 * @return the compatibility variables if they are present
+	 * @throws InitializationIncompleteException if there are no compatibility variables
+	 */
+	public VdypCompatibilityVariables requireCompatibilityVariables() throws InitializationIncompleteException {
+		return getCompatibilityVariables().orElseThrow(
 				() -> new InitializationIncompleteException(
 						MessageFormat.format("Species {0}: compatibilityVariables", this)
 				)
@@ -342,6 +334,9 @@ public class VdypSpecies extends BaseVdypSpecies<VdypSite> implements VdypUtiliz
 		protected UtilizationVector closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization = VdypUtilizationHolder
 				.emptyUtilization();
 
+		private Optional<Consumer<VdypCompatibilityVariables.Builder>> compatibilityVariablesBuilder;
+		private Optional<VdypCompatibilityVariables> compatibilityVariables;
+
 		@Override
 		public void closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(UtilizationVector vector) {
 			this.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization = vector;
@@ -449,5 +444,41 @@ public class VdypSpecies extends BaseVdypSpecies<VdypSite> implements VdypUtiliz
 			this.breakageGroup = Optional.of(i);
 			return this;
 		}
+
+		public void addCompatibilityVariables(Consumer<VdypCompatibilityVariables.Builder> config) {
+			this.compatibilityVariablesBuilder = Optional.of(config);
+			this.compatibilityVariables = Optional.empty();
+		}
+
+		public void addCompatibilityVariables(VdypCompatibilityVariables cvs) {
+			this.addCompatibilityVariables(Optional.of(cvs));
+		}
+
+		public void addCompatibilityVariables(Optional<VdypCompatibilityVariables> cvs) {
+			this.compatibilityVariablesBuilder = Optional.empty();
+			this.compatibilityVariables = cvs;
+		}
+
+		@Override
+		protected void preProcess() {
+			super.preProcess();
+
+			compatibilityVariables = compatibilityVariablesBuilder.map(this::buildCompatibilityVariables).or(
+					() -> compatibilityVariables
+			);
+
+		}
+
+		protected VdypCompatibilityVariables buildCompatibilityVariables(
+				Consumer<VdypCompatibilityVariables.Builder> config
+		) {
+			return VdypCompatibilityVariables.build(builder -> {
+				config.accept(builder);
+				builder.polygonIdentifier(polygonIdentifier.get());
+				builder.layerType(layerType.get());
+				builder.genus(genus);
+			});
+		}
+
 	}
 }

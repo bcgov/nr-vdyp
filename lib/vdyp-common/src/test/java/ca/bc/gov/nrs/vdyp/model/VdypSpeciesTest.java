@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.model;
 
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.isPolyId;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
@@ -19,6 +20,7 @@ import java.util.NoSuchElementException;
 import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.application.InitializationIncompleteException;
+import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
 
 class VdypSpeciesTest {
 
@@ -123,10 +125,8 @@ class VdypSpeciesTest {
 		List<VolumeVariable> vvs = Arrays.asList(VolumeVariable.values());
 		List<LayerType> lts = Arrays.asList(LayerType.values());
 
-		assertThrows(InitializationIncompleteException.class, () -> sp.getCvVolume(null, null, null));
-		assertThrows(InitializationIncompleteException.class, () -> sp.getCvBasalArea(null, null));
-		assertThrows(InitializationIncompleteException.class, () -> sp.getCvQuadraticMeanDiameter(null, null));
-		assertThrows(InitializationIncompleteException.class, () -> sp.getCvPrimaryLayerSmall(null));
+		assertThrows(InitializationIncompleteException.class, () -> sp.requireCompatibilityVariables());
+		assertThat(sp, hasProperty("compatibilityVariables", notPresent()));
 
 		var cvVolume = new MatrixMap3Impl<UtilizationClass, VolumeVariable, LayerType, Float>(
 				ucs, vvs, lts, (x, y, z) -> 1.0f

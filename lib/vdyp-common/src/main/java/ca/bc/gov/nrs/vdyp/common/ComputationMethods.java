@@ -21,6 +21,7 @@ import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.CompatibilityVariableMode;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
+import ca.bc.gov.nrs.vdyp.model.VdypCompatibilityVariables;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.VdypUtilizationHolder;
@@ -159,12 +160,13 @@ public class ComputationMethods {
 			ReconcilationMethods.reconcileComponents(basalAreaUtil, treesPerHectareUtil, quadMeanDiameterUtil);
 
 			if (compatibilityVariableMode != CompatibilityVariableMode.NONE) {
+				final VdypCompatibilityVariables compatibilityVariables = spec.requireCompatibilityVariables();
 
 				float basalAreaSumForSpecies = 0.0f;
 				for (var uc : VdypStartApplication.UTIL_CLASSES) {
 
 					float currentUcBasalArea = basalAreaUtil.get(uc);
-					basalAreaUtil.set(uc, currentUcBasalArea + spec.getCvBasalArea(uc, spec.getLayerType()));
+					basalAreaUtil.set(uc, currentUcBasalArea + compatibilityVariables.getCvBasalArea(uc, spec.getLayerType()));
 					if (basalAreaUtil.get(uc) < 0.0f) {
 						basalAreaUtil.set(uc, 0.0f);
 					}
@@ -172,7 +174,7 @@ public class ComputationMethods {
 					basalAreaSumForSpecies += basalAreaUtil.get(uc);
 
 					float newDqValue = quadMeanDiameterUtil.get(uc)
-							+ spec.getCvQuadraticMeanDiameter(uc, spec.getLayerType());
+							+ compatibilityVariables.getCvQuadraticMeanDiameter(uc, spec.getLayerType());
 					quadMeanDiameterUtil.set(uc, FloatMath.clamp(newDqValue, uc.lowBound, uc.highBound));
 				}
 
@@ -213,13 +215,14 @@ public class ComputationMethods {
 
 				if (compatibilityVariableMode == CompatibilityVariableMode.ALL) {
 					// apply compatibility variables to WS volume
+					final VdypCompatibilityVariables compatibilityVariables = spec.requireCompatibilityVariables();
 
 					float wholeStemVolumeSum = 0.0f;
 					for (UtilizationClass uc : UtilizationClass.UTIL_CLASSES) {
 						wholeStemVolumeUtil.set(
 								uc,
 								wholeStemVolumeUtil.get(uc) * FloatMath
-										.exp(spec.getCvVolume(uc, VolumeVariable.WHOLE_STEM_VOL, spec.getLayerType()))
+										.exp(compatibilityVariables.getCvVolume(uc, VolumeVariable.WHOLE_STEM_VOL, spec.getLayerType()))
 						);
 						wholeStemVolumeSum += wholeStemVolumeUtil.get(uc);
 					}
@@ -228,15 +231,13 @@ public class ComputationMethods {
 					// Set the adjustment factors for next three volume types
 					for (UtilizationClass uc : UtilizationClass.UTIL_CLASSES) {
 						adjustCloseUtil
-								.set(uc, spec.getCvVolume(uc, VolumeVariable.CLOSE_UTIL_VOL, spec.getLayerType()));
+								.set(uc, compatibilityVariables.getCvVolume(uc, VolumeVariable.CLOSE_UTIL_VOL, spec.getLayerType()));
 						adjustDecayUtil.set(
-								uc, spec.getCvVolume(uc, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, spec.getLayerType())
+								uc, compatibilityVariables.getCvVolume(uc, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, spec.getLayerType())
 						);
 						adjustDecayWasteUtil.set(
 								uc,
-								spec.getCvVolume(
-										uc, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, spec.getLayerType()
-								)
+								compatibilityVariables.getCvVolume(uc, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, spec.getLayerType())
 						);
 					}
 				} else {

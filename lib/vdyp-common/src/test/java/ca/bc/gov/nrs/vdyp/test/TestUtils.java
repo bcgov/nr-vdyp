@@ -6,6 +6,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -15,6 +16,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UncheckedIOException;
+import java.io.Writer;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,11 +33,13 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
+import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BecDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BreakageParser;
@@ -60,9 +65,15 @@ import ca.bc.gov.nrs.vdyp.model.GenusDefinition;
 import ca.bc.gov.nrs.vdyp.model.GenusDefinitionMap;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
+import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
+import ca.bc.gov.nrs.vdyp.model.MatrixMap3Impl;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
 import ca.bc.gov.nrs.vdyp.model.Region;
+import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
+import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
+import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
+import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
 
 public class TestUtils {
 
@@ -640,7 +651,7 @@ public class TestUtils {
 		return new BecDefinition("T", Region.COASTAL, "Test");
 	}
 
-	public static void writeToTest(VdypPolygon poly, Appendable out) {
+	public static VdypPolygon deepCopy(VdypPolygon poly) {
 		var result = VdypPolygon.build(pb -> {
 			pb.polygonIdentifier(poly.getPolygonIdentifier().getBase(), poly.getPolygonIdentifier().getYear());
 			pb.biogeoclimaticZone(poly.getBiogeoclimaticZone());
@@ -686,8 +697,6 @@ public class TestUtils {
 
 							sb.percentGenus(spec.getPercentGenus());
 
-							spec.getCvBasalArea(null, null);
-
 							sb.loreyHeight(layer.getLoreyHeightByUtilization());
 							sb.treesPerHectare(layer.getTreesPerHectareByUtilization());
 							sb.quadMeanDiameter(layer.getQuadraticMeanDiameterByUtilization());
@@ -705,7 +714,57 @@ public class TestUtils {
 									layer.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization()
 							);
 
-							// TODO Compatibility Variables
+							spec.getCompatibilityVariables().ifPresent(cv -> {
+
+								sb.addCompatibilityVariables(cvb -> {
+
+									MatrixMap3Impl<UtilizationClass, VolumeVariable, LayerType, Float> cvVolume = new MatrixMap3Impl<>(
+											UtilizationClass.UTIL_CLASSES,
+											VolumeVariable.ALL,
+											LayerType.ALL_USED,
+											(uc, vv, lt) -> cv.getCvVolume(uc, vv, lt)
+									);
+									MatrixMap2Impl<UtilizationClass, LayerType, Float> cvBasalArea = new MatrixMap2Impl<>(
+											UtilizationClass.UTIL_CLASSES,
+											LayerType.ALL_USED,
+											(uc, lt) -> cv.getCvBasalArea(uc, lt)
+									);
+									MatrixMap2Impl<UtilizationClass, LayerType, Float> cvQuadraticMeanDiameter = new MatrixMap2Impl<>(
+											UtilizationClass.UTIL_CLASSES,
+											LayerType.ALL_USED,
+											(uc, lt) -> cv.getCvQuadraticMeanDiameter(uc, lt)
+									);
+									Map<UtilizationClassVariable, Float> cvPrimaryLayerSmall = new HashMap<>();
+									for (var uc : UtilizationClass.UTIL_CLASSES) {
+										for (var vv : VolumeVariable.ALL) {
+											for (var lt : LayerType.ALL_USED) {
+												cvVolume.put(uc, vv, lt, cv.getCvVolume(uc, vv, lt));
+											}
+										}
+									}
+
+									for (var uc : UtilizationClass.UTIL_CLASSES) {
+										for (var lt : LayerType.ALL_USED) {
+											cvBasalArea.put(uc, lt, cv.getCvBasalArea(uc, lt));
+										}
+									}
+
+									for (var uc : UtilizationClass.UTIL_CLASSES) {
+										for (var lt : LayerType.ALL_USED) {
+											cvQuadraticMeanDiameter.put(uc, lt, cv.getCvQuadraticMeanDiameter(uc, lt));
+										}
+									}
+									for (var ucv : UtilizationClassVariable.ALL) {
+										cvPrimaryLayerSmall.put(ucv, cv.getCvPrimaryLayerSmall(ucv));
+									}
+
+									cvb.cvVolume(cvVolume);
+									cvb.cvBasalArea(cvBasalArea);
+									cvb.cvQuadraticMeanDiameter(cvQuadraticMeanDiameter);
+									cvb.cvPrimaryLayerSmall(cvPrimaryLayerSmall);
+								});
+
+							});
 
 							spec.getSite().ifPresent(site -> {
 
@@ -726,6 +785,310 @@ public class TestUtils {
 				});
 			}
 		});
+		return result;
+	}
+
+	private static void line(Appendable out, String line, Object... args) throws UncheckedIOException {
+		try {
+			out.append(String.format(line, args)).append("\n");
+		} catch (IOException e) {
+			new UncheckedIOException(e);
+		}
+	}
+
+	private static String stringLiteral(String s) {
+		return String.format("\"%s\"", StringEscapeUtils.escapeJava(s));
+	}
+
+	private static String utilVectorLiteral(UtilizationVector uv) {
+		if (uv.size() == 2) {
+			return String.format("Utils.heightVector(%f, %f)", uv.getSmall(), uv.getAll());
+		}
+		if (uv.get(UtilizationClass.SMALL) == 0 &&
+				uv.get(UtilizationClass.U75TO125) == 0 &&
+				uv.get(UtilizationClass.U125TO175) == 0 &&
+				uv.get(UtilizationClass.U175TO225) == 0 &&
+				uv.getAll() == uv.getLarge()) {
+			return String.format("Utils.utilizationVector(%f)", uv.getAll());
+		}
+		if (Math.abs(UtilizationClass.ALL_CLASSES.stream().mapToDouble(uv::get).sum() - uv.getAll()) < 0.00001) {
+			return String.format(
+					"Utils.utilizationVector(%f, %f, %f, %f, %f)",
+					uv.getSmall(),
+					uv.get(UtilizationClass.U75TO125),
+					uv.get(UtilizationClass.U125TO175),
+					uv.get(UtilizationClass.U175TO225),
+					uv.get(UtilizationClass.OVER225)
+			);
+		}
+		return String.format(
+				"Utils.utilizationVector(%f, %f, %f, %f, %f, %f) /* ALL does not match sum of bands */",
+				uv.getSmall(),
+				uv.getAll(),
+				uv.get(UtilizationClass.U75TO125),
+				uv.get(UtilizationClass.U125TO175),
+				uv.get(UtilizationClass.U175TO225),
+				uv.get(UtilizationClass.OVER225)
+		);
 
 	}
+
+	private static String enumLiteral(Enum<?> e) {
+		e.getClass().getName();
+		return String.format("%s.%s", e.getClass().getName(), e.toString());
+	}
+
+	private static <T> String optionalLiteral(Optional<T> opt, Function<T, String> valueLiteral) {
+		return opt.map(valueLiteral).map(s -> String.format("Optional.of(%s)", s)).orElse("Optional.empty()");
+	}
+
+	/**
+	 * Serializes a VdypPolygon as Java code that can be executed to recreate it. Meant to be used to aid in creating
+	 * unit tests.
+	 */
+	public static void write(VdypPolygon poly, Appendable out) throws IOException {
+		try {
+			line(out, "/* the following Polygon definition was generated */");
+			line(out, "");
+			line(out, "var result = VdypPolygon.build(pb -> {");
+
+			line(
+					out, "	pb.polygonIdentifier(%s, %d);", stringLiteral(poly.getPolygonIdentifier().getBase()), poly
+							.getPolygonIdentifier().getYear()
+			);
+
+			line(out, "");
+			line(out, "	pb.biogeoclimaticZone(getBec(%s));", stringLiteral(poly.getBiogeoclimaticZone().getAlias()));
+			line(out, "	pb.forestInventoryZone(%s);", stringLiteral(poly.getForestInventoryZone()));
+			line(out, "");
+			line(out, "	pb.inventoryTypeGroup(%d);", poly.getInventoryTypeGroup());
+			line(out, "	pb.targetYear(%d);", poly.getTargetYear());
+			line(out, "");
+			line(out, "	pb.mode(%s);", optionalLiteral(poly.getMode(), TestUtils::enumLiteral));
+			line(out, "	pb.percentAvailable(%f);", poly.getPercentAvailable());
+			line(out, "");
+			for (var layer : poly.getLayers().values()) {
+				line(out, "	pb.addLayer(lb -> {");
+				line(out, "		lb.layerType(%s);", enumLiteral(layer.getLayerType()));
+				line(out, "");
+				line(
+						out,
+						"		lb.empiricalRelationshipParameterIndex(%s);",
+						optionalLiteral(layer.getEmpiricalRelationshipParameterIndex(), i -> Integer.toString(i))
+				);
+				line(out, "");
+				line(
+						out,
+						"		lb.inventoryTypeGroup(%s);",
+						optionalLiteral(layer.getInventoryTypeGroup(), i -> Integer.toString(i))
+				);
+				line(out, "");
+				line(
+						out,
+						"		lb.loreyHeight(%s);",
+						utilVectorLiteral(layer.getLoreyHeightByUtilization())
+				);
+				line(
+						out,
+						"		lb.treesPerHectare(%s);",
+						utilVectorLiteral(layer.getTreesPerHectareByUtilization())
+				);
+				line(
+						out,
+						"		lb.quadMeanDiameter(%s);",
+						utilVectorLiteral(layer.getQuadraticMeanDiameterByUtilization())
+				);
+				line(
+						out,
+						"		lb.baseArea(%s);",
+						utilVectorLiteral(layer.getBaseAreaByUtilization())
+				);
+				line(out, "");
+				line(
+						out,
+						"		lb.wholeStemVolume(%s);",
+						utilVectorLiteral(layer.getWholeStemVolumeByUtilization())
+				);
+				line(
+						out,
+						"		lb.closeUtilizationVolumeByUtilization(%s);",
+						utilVectorLiteral(layer.getCloseUtilizationVolumeByUtilization())
+				);
+				line(
+						out,
+						"		lb.closeUtilizationVolumeNetOfDecayByUtilization(%s);",
+						utilVectorLiteral(layer.getCloseUtilizationVolumeNetOfDecayByUtilization())
+				);
+				line(
+						out,
+						"		lb.closeUtilizationVolumeNetOfDecayAndWasteByUtilization(%s);",
+						utilVectorLiteral(layer.getCloseUtilizationVolumeNetOfDecayAndWasteByUtilization())
+				);
+				line(
+						out,
+						"		lb.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(%s);",
+						utilVectorLiteral(layer.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization())
+				);
+				line(out, "");
+				for (var spec : layer.getSpecies().values()) {
+					line(out, "		lb.addSpecies(sb -> {");
+					line(out, "			sb.genus(%s);", spec.getGenus());
+					line(out, "			sb.genus(%d);", spec.getGenusIndex());
+					line(out, "");
+					line(out, "			sb.breakageGroup(%d);", spec.getBreakageGroup());
+					line(out, "			sb.volumeGroup(%d);", spec.getVolumeGroup());
+					line(out, "			sb.decayGroup(%d);", spec.getDecayGroup());
+					line(out, "");
+					line(out, "			sb.percentGenus(%f);", spec.getPercentGenus());
+					line(out, "");
+					line(out, "			sb.loreyHeight(%s);", utilVectorLiteral(layer.getLoreyHeightByUtilization()));
+					line(
+							out, "			sb.treesPerHectare(%s);", utilVectorLiteral(
+									layer.getTreesPerHectareByUtilization()
+							)
+					);
+					line(
+							out, "			sb.quadMeanDiameter(%s);", utilVectorLiteral(
+									layer.getQuadraticMeanDiameterByUtilization()
+							)
+					);
+					line(out, "			sb.baseArea(%s);", utilVectorLiteral(layer.getBaseAreaByUtilization()));
+					line(out, "");
+					line(
+							out, "			sb.wholeStemVolume(%s);", utilVectorLiteral(
+									layer.getWholeStemVolumeByUtilization()
+							)
+					);
+					line(
+							out,
+							"			sb.closeUtilizationVolumeByUtilization(%s);",
+							utilVectorLiteral(layer.getCloseUtilizationVolumeByUtilization())
+					);
+					line(
+							out,
+							"			sb.closeUtilizationVolumeNetOfDecayByUtilization(%s));",
+							utilVectorLiteral(layer.getCloseUtilizationVolumeByUtilization())
+					);
+					line(
+							out,
+							"			sb.closeUtilizationVolumeNetOfDecayAndWasteByUtilization(%s);",
+							utilVectorLiteral(layer.getCloseUtilizationVolumeNetOfDecayByUtilization())
+					);
+					line(
+							out,
+							"			sb.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(%s);",
+							utilVectorLiteral(layer.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization())
+					);
+					line(out, "");
+					spec.getCompatibilityVariables().ifPresent(cv -> {
+						line(out, "			sb.addCompatibilityVariables(cvb -> {");
+						line(out, "");
+
+						line(
+								out,
+								"				MatrixMap3Impl<UtilizationClass, VolumeVariable, LayerType, Float> cvVolume = new MatrixMap3Impl<>("
+						);
+						line(out, "						UtilizationClass.UTIL_CLASSES, ");
+						line(out, "						VolumeVariable.ALL, ");
+						line(out, "						LayerType.ALL_USED,");
+						line(out, "						(uc, vv, lt) -> 0f");
+						line(out, "				);");
+						for (var uc : UtilizationClass.UTIL_CLASSES) {
+							for (var vv : VolumeVariable.ALL) {
+								for (var lt : LayerType.ALL_USED) {
+									line(
+											out,
+											"				cvVolume.put(uc, vv, lt, %f);",
+											cv.getCvVolume(uc, vv, lt)
+									);
+								}
+							}
+						}
+						line(out, "				);");
+						line(
+								out,
+								"				MatrixMap2Impl<UtilizationClass, LayerType, Float> cvBasalArea = new MatrixMap2Impl<>("
+						);
+						line(out, "						UtilizationClass.UTIL_CLASSES, ");
+						line(out, "						LayerType.ALL_USED,");
+						line(out, "						(uc, lt) -> 0f");
+						line(out, "				);");
+
+						for (var uc : UtilizationClass.UTIL_CLASSES) {
+							for (var lt : LayerType.ALL_USED) {
+								line(
+										out, "				cvBasalArea.put(uc, lt, %f);",
+										cv.getCvBasalArea(uc, lt)
+								);
+							}
+						}
+						line(out, "				);");
+
+						line(
+								out,
+								"				MatrixMap2Impl<UtilizationClass, LayerType, Float> cvQuadraticMeanDiameter = new MatrixMap2Impl<>("
+						);
+						line(out, "						UtilizationClass.UTIL_CLASSES, ");
+						line(out, "						LayerType.ALL_USED,");
+						line(out, "						(uc, lt) -> 0f");
+						line(out, "				);");
+						line(out, "");
+						for (var uc : UtilizationClass.UTIL_CLASSES) {
+							for (var lt : LayerType.ALL_USED) {
+								line(
+										out,
+										"				cvQuadraticMeanDiameter.put(uc, lt, %f);",
+										cv.getCvQuadraticMeanDiameter(uc, lt)
+								);
+							}
+						}
+						line(out, "				);");
+						line(out, "");
+						line(
+								out,
+								"				Map<UtilizationClassVariable, Float> cvPrimaryLayerSmall = new HashMap<>();"
+						);
+						line(out, "");
+						for (var ucv : UtilizationClassVariable.ALL) {
+							line(out, "				cvPrimaryLayerSmall.put(ucv, cv.getCvPrimaryLayerSmall(ucv));");
+						}
+						line(out, "");
+						line(out, "				cvb.cvVolume(cvVolume);");
+						line(out, "				cvb.cvBasalArea(cvBasalArea);");
+						line(out, "				cvb.cvQuadraticMeanDiameter(cvQuadraticMeanDiameter);");
+						line(out, "				cvb.cvPrimaryLayerSmall(cvPrimaryLayerSmall);");
+						line(out, "			});");
+						line(out, "");
+					});
+					line(out, "");
+					spec.getSite().ifPresent(site -> {
+						line(out, "");
+
+						line(out, "			sb.addSite(ib -> {");
+						line(out, "				ib.ageTotal(%f);", site.getAgeTotal());
+						line(out, "				ib.height(%f);", site.getHeight());
+						line(out, "				ib.siteCurveNumber(%d);", site.getSiteCurveNumber());
+						line(out, "				ib.siteIndex(%f);", site.getSiteIndex());
+						line(out, "				ib.yearsToBreastHeight(%f);", site.getYearsToBreastHeight());
+						line(out, "			});");
+						line(out, "");
+					});
+					line(out, "");
+					line(out, "	});");
+				}
+				line(out, "");
+				line(out, "lb.primaryGenus(%s);", optionalLiteral(layer.getPrimaryGenus(), TestUtils::stringLiteral));
+				line(out, "});");
+			}
+			line(out, "});");
+
+			line(out, "");
+
+			line(out, "/* End of generated polygon Definition */");
+
+		} catch (UncheckedIOException e) {
+			throw new IOException(e);
+		}
+	}
+
 }
