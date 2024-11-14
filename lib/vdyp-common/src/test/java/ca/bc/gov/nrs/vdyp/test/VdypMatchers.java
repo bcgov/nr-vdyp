@@ -795,8 +795,8 @@ public class VdypMatchers {
 			match = sep(match, mismatchDescription);
 			mismatchDescription
 					.appendText(name)
-					.appendText(" was ");
-			expected.describeMismatch(expected, mismatchDescription);
+					.appendText(" ");
+			expected.describeMismatch(value, mismatchDescription);
 		}
 		return match;
 	}
@@ -1162,7 +1162,7 @@ public class VdypMatchers {
 				boolean match = true;
 
 				match = matchValue(
-						match, "CvBasalArea",
+						match, "CvVolume",
 						mmEquals(expected.getCvVolume(), VdypMatchers::closeTo),
 						item.getCvVolume(),
 						mismatchDescription
@@ -1174,13 +1174,13 @@ public class VdypMatchers {
 						mismatchDescription
 				);
 				match = matchValue(
-						match, "CvBasalArea",
+						match, "CvQuadraticMeanDiameter",
 						mmEquals(expected.getCvQuadraticMeanDiameter(), VdypMatchers::closeTo),
 						item.getCvQuadraticMeanDiameter(),
 						mismatchDescription
 				);
 				match = matchValue(
-						match, "CvBasalArea",
+						match, "CvPrimaryLayerSmall",
 						mapEquals(expected.getCvPrimaryLayerSmall(), VdypMatchers::closeTo),
 						item.getCvPrimaryLayerSmall(),
 						mismatchDescription

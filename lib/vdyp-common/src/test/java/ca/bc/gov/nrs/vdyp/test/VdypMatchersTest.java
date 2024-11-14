@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
@@ -23,7 +24,11 @@ import ca.bc.gov.nrs.vdyp.model.MatrixMap;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap3Impl;
+import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
+import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
+import ca.bc.gov.nrs.vdyp.model.VdypCompatibilityVariables;
 import ca.bc.gov.nrs.vdyp.model.VdypSite;
+import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
 
 class VdypMatchersTest {
 
@@ -39,17 +44,117 @@ class VdypMatchersTest {
 
 	static <T> void assertMatch(T item, Matcher<T> unit) {
 		var result = unit.matches(item);
-		if (result) {
-			return;
-		}
 
 		var description = new StringDescription();
 		unit.describeMismatch(item, description);
-		assertFalse(result, "Expected match to pass but it failed with description: " + description.toString());
+		assertTrue(result, "Expected match to pass but it failed with description: " + description.toString());
 	}
 
 	@Nested
 	class deepEquals {
+
+		@Nested
+		class testVdypCompatibilityVariables {
+			VdypCompatibilityVariables expected;
+			Matcher<VdypCompatibilityVariables> unit;
+
+			@BeforeEach
+			void setup() {
+				// Use a fixed seed so the random numbers are the same across runs.
+				Random rand = new Random(42);
+
+				expected = VdypCompatibilityVariables.build(ib -> {
+					ib.polygonIdentifier("Test", 2024);
+					ib.layerType(LayerType.PRIMARY);
+					ib.genus("MB");
+					ib.cvVolume((k1, k2, k3) -> rand.nextFloat() * 10);
+					ib.cvBasalArea((k1, k2) -> rand.nextFloat() * 10);
+					ib.cvQuadraticMeanDiameter((k1, k2) -> rand.nextFloat() * 10);
+					ib.cvPrimaryLayerSmall(k1 -> rand.nextFloat() * 10);
+				});
+
+				unit = VdypMatchers.deepEquals(expected);
+			}
+
+			@Test
+			void testPass() {
+				var actual = VdypCompatibilityVariables.build(ib -> {
+					ib.copy(expected);
+				});
+
+				assertMatch(actual, unit);
+			}
+
+			@Test
+			void testOneVolumeEntryDifferent() {
+				var actual = VdypCompatibilityVariables.build(ib -> {
+					ib.copy(expected);
+				});
+
+				actual.getCvVolume().put(
+						UtilizationClass.U125TO175, VolumeVariable.CLOSE_UTIL_VOL, LayerType.PRIMARY, 20f
+				);
+
+				assertMismatch(
+						actual, unit, matchesRegex(
+								"CvVolume at \\[<U125TO175>, <CLOSE_UTIL_VOL>, <PRIMARY>\\] expected <\\d\\.\\d+F> but it was a java.lang.Float \\(<20.0F>\\)"
+						)
+				);
+			}
+
+			@Test
+			void testOneBaEntryDifferent() {
+				var actual = VdypCompatibilityVariables.build(ib -> {
+					ib.copy(expected);
+				});
+
+				actual.getCvBasalArea().put(
+						UtilizationClass.U125TO175, LayerType.PRIMARY, 20f
+				);
+
+				assertMismatch(
+						actual, unit, matchesRegex(
+								"CvBasalArea at \\[<U125TO175>, <PRIMARY>\\] expected <\\d\\.\\d+F> but it was a java.lang.Float \\(<20.0F>\\)"
+						)
+				);
+			}
+
+			@Test
+			void testOneDqEntryDifferent() {
+				var actual = VdypCompatibilityVariables.build(ib -> {
+					ib.copy(expected);
+				});
+
+				actual.getCvQuadraticMeanDiameter().put(
+						UtilizationClass.U125TO175, LayerType.PRIMARY, 20f
+				);
+
+				assertMismatch(
+						actual, unit, matchesRegex(
+								"CvQuadraticMeanDiameter at \\[<U125TO175>, <PRIMARY>\\] expected <\\d\\.\\d+F> but it was a java.lang.Float \\(<20.0F>\\)"
+						)
+				);
+			}
+
+			@Test
+			void testOneSmallEntryDifferent() {
+				var actual = VdypCompatibilityVariables.build(ib -> {
+					ib.copy(expected);
+				});
+
+				actual.getCvPrimaryLayerSmall().put(
+						UtilizationClassVariable.BASAL_AREA, 20f
+				);
+
+				assertMismatch(
+						actual, unit, matchesRegex(
+								"CvPrimaryLayerSmall at <BASAL_AREA> expected <\\d\\.\\d+F> but it was a java.lang.Float \\(<20.0F>\\)"
+						)
+				);
+			}
+
+		}
+
 		@Nested
 		class testVdypSite {
 			VdypSite expected;
