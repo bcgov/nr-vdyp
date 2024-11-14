@@ -5,10 +5,12 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import ca.bc.gov.nrs.vdyp.application.InitializationIncompleteException;
 import ca.bc.gov.nrs.vdyp.common.Utils;
+import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies.Builder;
 
 public class VdypSpecies extends BaseVdypSpecies<VdypSite> implements VdypUtilizationHolder {
 
@@ -194,6 +196,11 @@ public class VdypSpecies extends BaseVdypSpecies<VdypSite> implements VdypUtiliz
 		this.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization = closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization;
 	}
 
+	public void setCompatibilityVariables(VdypCompatibilityVariables cv) {
+		this.compatibilityVariables = Optional.of(cv);
+
+	}
+
 	public void setCompatibilityVariables(
 			MatrixMap3<UtilizationClass, VolumeVariable, LayerType, Float> cvVolume,
 			MatrixMap2<UtilizationClass, LayerType, Float> cvBasalArea,
@@ -201,7 +208,7 @@ public class VdypSpecies extends BaseVdypSpecies<VdypSite> implements VdypUtiliz
 			Map<UtilizationClassVariable, Float> cvPrimaryLayerSmall
 	) {
 
-		this.compatibilityVariables = Optional.of(VdypCompatibilityVariables.build(this, cvb -> {
+		this.setCompatibilityVariables(VdypCompatibilityVariables.build(this, cvb -> {
 
 			cvb.cvVolume(cvVolume);
 			cvb.cvBasalArea(cvBasalArea);
@@ -334,8 +341,8 @@ public class VdypSpecies extends BaseVdypSpecies<VdypSite> implements VdypUtiliz
 		protected UtilizationVector closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization = VdypUtilizationHolder
 				.emptyUtilization();
 
-		private Optional<Consumer<VdypCompatibilityVariables.Builder>> compatibilityVariablesBuilder;
-		private Optional<VdypCompatibilityVariables> compatibilityVariables;
+		private Optional<Consumer<VdypCompatibilityVariables.Builder>> compatibilityVariablesBuilder = Optional.empty();
+		private Optional<VdypCompatibilityVariables> compatibilityVariables = Optional.empty();
 
 		@Override
 		public void closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(UtilizationVector vector) {
@@ -400,7 +407,8 @@ public class VdypSpecies extends BaseVdypSpecies<VdypSite> implements VdypUtiliz
 			spec.setCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(
 					closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization
 			);
-			;
+
+			compatibilityVariables.ifPresent(spec::setCompatibilityVariables);
 		}
 
 		@Override
@@ -459,14 +467,31 @@ public class VdypSpecies extends BaseVdypSpecies<VdypSite> implements VdypUtiliz
 			this.compatibilityVariables = cvs;
 		}
 
+		public void copyCompatibilityVariables(
+				VdypCompatibilityVariables source,
+				BiConsumer<VdypCompatibilityVariables.Builder, VdypCompatibilityVariables> config
+		) {
+			this.addCompatibilityVariables(builder -> {
+				builder.copy(source);
+				config.accept(builder, source);
+			});
+		}
+
+		public void copyCompatibilityVariablesFrom(
+				VdypSpecies specToCopy,
+				BiConsumer<VdypCompatibilityVariables.Builder, VdypCompatibilityVariables> config
+		) {
+			specToCopy.getCompatibilityVariables().ifPresent(source -> this.copyCompatibilityVariables(source, config));
+		}
+
 		@Override
 		protected void preProcess() {
 			super.preProcess();
 
-			compatibilityVariables = compatibilityVariablesBuilder.map(this::buildCompatibilityVariables).or(
-					() -> compatibilityVariables
-			);
-
+			compatibilityVariables = compatibilityVariablesBuilder
+					.map(this::buildCompatibilityVariables)
+					.or(() -> compatibilityVariables);
+			compatibilityVariablesBuilder = Optional.empty();
 		}
 
 		protected VdypCompatibilityVariables buildCompatibilityVariables(

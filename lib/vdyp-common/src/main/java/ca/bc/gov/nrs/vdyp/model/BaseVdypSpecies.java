@@ -290,8 +290,8 @@ public abstract class BaseVdypSpecies<I extends BaseVdypSite> {
 		public Builder<T, I, IB> adapt(BaseVdypSpecies<?> source) {
 			polygonIdentifier(source.getPolygonIdentifier());
 			layerType(source.getLayerType());
-			this.genus(source.getGenus());
-			this.genus(source.getGenusIndex());
+			genus(source.getGenus());
+			genus(source.getGenusIndex());
 			percentGenus(source.getPercentGenus());
 
 			fractionGenus(source.getFractionGenus());
@@ -330,6 +330,11 @@ public abstract class BaseVdypSpecies<I extends BaseVdypSite> {
 
 		public Builder<T, I, IB> copySiteFrom(T specToCopy, BiConsumer<IB, I> config) {
 			specToCopy.getSite().ifPresent(source -> this.copySite(source, config));
+			return this;
+		}
+
+		public Builder<T, I, IB> copySp64DistributionFrom(T specToCopy) {
+			this.sp64DistributionSet(specToCopy.getSp64DistributionSet());
 			return this;
 		}
 

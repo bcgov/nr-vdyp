@@ -1122,7 +1122,7 @@ public class VdypMatchers {
 					mismatchDescription.appendText("expected to have Compatibility Variables but none were present");
 				}
 
-				Utils.flatMapBoth(
+				match = match && Utils.flatMapBoth(
 						expected.getCompatibilityVariables(), item.getCompatibilityVariables(), (
 								expectedCv, itemCv
 						) -> {
@@ -1138,8 +1138,14 @@ public class VdypMatchers {
 							return Optional.empty();
 
 						}
+				).orElse(true);
+
+				match = matchValue(
+						match, "Sp64DistributionSet",
+						expected.getSp64DistributionSet(),
+						item.getSp64DistributionSet(),
+						mismatchDescription
 				);
-				expected.getSp64DistributionSet();
 
 				return match;
 

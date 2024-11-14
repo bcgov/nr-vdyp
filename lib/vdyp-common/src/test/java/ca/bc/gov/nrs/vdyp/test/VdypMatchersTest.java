@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.vdyp.test;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.matchesRegex;
+import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -26,8 +27,10 @@ import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap3Impl;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
+import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
 import ca.bc.gov.nrs.vdyp.model.VdypCompatibilityVariables;
 import ca.bc.gov.nrs.vdyp.model.VdypSite;
+import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
 
 class VdypMatchersTest {
@@ -50,8 +53,272 @@ class VdypMatchersTest {
 		assertTrue(result, "Expected match to pass but it failed with description: " + description.toString());
 	}
 
+	Random rand = new Random(42);
+
+	UtilizationVector mockUtilVector(float multiplier) {
+		return Utils.utilizationVector(
+				rand.nextFloat() * multiplier,
+				rand.nextFloat() * multiplier,
+				rand.nextFloat() * multiplier,
+				rand.nextFloat() * multiplier,
+				rand.nextFloat() * multiplier
+		);
+	}
+
+	UtilizationVector mockHeightVector() {
+		return Utils.heightVector(
+				rand.nextFloat() * 5,
+				rand.nextFloat() * 20
+		);
+	}
+
 	@Nested
 	class deepEquals {
+
+		@Nested
+		class testVdypSpecies {
+			VdypSpecies expected;
+			Matcher<VdypSpecies> unit;
+
+			@BeforeEach
+			void setup() {
+				Random rand = new Random(42);
+				var controlMap = TestUtils.loadControlMap();
+
+				// The numbers don't add up, we are just using them to test comparison
+
+				expected = VdypSpecies.build(sb -> {
+					sb.polygonIdentifier("Test", 2024);
+					sb.layerType(LayerType.PRIMARY);
+					sb.genus("MB");
+					sb.controlMap(controlMap);
+
+					sb.percentGenus(90);
+
+					sb.breakageGroup(12);
+					sb.decayGroup(13);
+					sb.volumeGroup(14);
+
+					sb.addSp64Distribution("MB", 100);
+
+					sb.addCompatibilityVariables(cvb -> {
+						cvb.cvVolume((k1, k2, k3) -> rand.nextFloat() * 10);
+						cvb.cvBasalArea((k1, k2) -> rand.nextFloat() * 10);
+						cvb.cvQuadraticMeanDiameter((k1, k2) -> rand.nextFloat() * 10);
+						cvb.cvPrimaryLayerSmall(k1 -> rand.nextFloat() * 10);
+					});
+
+					sb.addSite(ib -> {
+						ib.ageTotal(40);
+						ib.yearsToBreastHeight(5);
+						ib.height(15);
+						ib.siteCurveNumber(42);
+						ib.siteIndex(4);
+					});
+
+					sb.loreyHeight(mockHeightVector());
+
+					sb.baseArea(mockUtilVector(2));
+					sb.quadMeanDiameter(mockUtilVector(10));
+					sb.treesPerHectare(mockUtilVector(300));
+
+					sb.wholeStemVolume(mockUtilVector(7));
+					sb.closeUtilizationVolumeByUtilization(mockUtilVector(6));
+					sb.closeUtilizationVolumeNetOfDecayByUtilization(mockUtilVector(5));
+					sb.closeUtilizationVolumeNetOfDecayAndWasteByUtilization(mockUtilVector(4));
+					sb.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(mockUtilVector(3));
+				});
+
+				unit = VdypMatchers.deepEquals(expected);
+			}
+
+			@Test
+			void testPass() {
+				var actual = VdypSpecies.build(sb -> {
+					sb.copy(expected);
+					sb.copySiteFrom(expected, (ib, i) -> {
+					});
+					sb.copyCompatibilityVariablesFrom(expected, (ib, cv) -> {
+					});
+				});
+
+				assertMatch(actual, unit);
+			}
+
+			// Changing the key properties also causes mismatches on the children that share those key properties so use startsWith
+
+			@Test
+			void testPolyIdDifferent() {
+				var actual = VdypSpecies.build(sb -> {
+					sb.copy(expected);
+					sb.copySiteFrom(expected, (ib, i) -> {
+					});
+					sb.copyCompatibilityVariablesFrom(expected, (cvb, cv) -> {
+					});
+
+					sb.polygonIdentifier("Different", 2025);
+				});
+
+				assertMismatch(
+						actual, unit, startsWith(
+								"PolygonIdentifier was <Different            2025> but expected <Test                 2024>"
+						)
+				);
+			}
+
+			@Test
+			void testLayerDifferent() {
+				var actual = VdypSpecies.build(sb -> {
+					sb.copy(expected);
+					sb.copySiteFrom(expected, (ib, i) -> {
+					});
+					sb.copyCompatibilityVariablesFrom(expected, (cvb, cv) -> {
+					});
+
+					sb.layerType(LayerType.VETERAN);
+				});
+
+				assertMismatch(
+						actual, unit, startsWith(
+								"LayerType was <VETERAN> but expected <PRIMARY>"
+						)
+				);
+			}
+
+			@Test
+			void testSpeciesGroupDifferent() {
+				var actual = VdypSpecies.build(sb -> {
+					sb.copy(expected);
+					sb.copySiteFrom(expected, (ib, i) -> {
+					});
+					sb.copyCompatibilityVariablesFrom(expected, (cvb, cv) -> {
+					});
+
+					sb.genus("S");
+				});
+
+				assertMismatch(
+						actual, unit, startsWith(
+								"Genus was \"S\" but expected \"MB\""
+						)
+				);
+			}
+
+			@Test
+			void testPercentDifferent() {
+				var actual = VdypSpecies.build(sb -> {
+					sb.copy(expected);
+					sb.copySiteFrom(expected, (ib, i) -> {
+					});
+					sb.copyCompatibilityVariablesFrom(expected, (cvb, cv) -> {
+					});
+
+					sb.percentGenus(89);
+				});
+
+				assertMismatch(
+						actual, unit, equalTo(
+								"PercentGenus was <89.0F> but expected <90.0F>"
+						)
+				);
+			}
+
+			@Test
+			void testBreakageGroupDifferent() {
+				var actual = VdypSpecies.build(sb -> {
+					sb.copy(expected);
+					sb.copySiteFrom(expected, (ib, i) -> {
+					});
+					sb.copyCompatibilityVariablesFrom(expected, (cvb, cv) -> {
+					});
+
+					sb.breakageGroup(22);
+				});
+
+				assertMismatch(
+						actual, unit, equalTo(
+								"BreakageGroup was <22> but expected <12>"
+						)
+				);
+			}
+
+			@Test
+			void testDecayGroupDifferent() {
+				var actual = VdypSpecies.build(sb -> {
+					sb.copy(expected);
+					sb.copySiteFrom(expected, (ib, i) -> {
+					});
+					sb.copyCompatibilityVariablesFrom(expected, (cvb, cv) -> {
+					});
+
+					sb.decayGroup(23);
+				});
+
+				assertMismatch(
+						actual, unit, equalTo(
+								"DecayGroup was <23> but expected <13>"
+						)
+				);
+			}
+
+			@Test
+			void testVolumeGroupDifferent() {
+				var actual = VdypSpecies.build(sb -> {
+					sb.copy(expected);
+					sb.copySiteFrom(expected, (ib, i) -> {
+					});
+					sb.copyCompatibilityVariablesFrom(expected, (cvb, cv) -> {
+					});
+
+					sb.volumeGroup(24);
+				});
+
+				assertMismatch(
+						actual, unit, equalTo(
+								"VolumeGroup was <24> but expected <14>"
+						)
+				);
+			}
+
+			@Test
+			void testSp64DistributionDifferent() {
+				var actual = VdypSpecies.build(sb -> {
+					sb.copy(expected);
+					sb.copySiteFrom(expected, (ib, i) -> {
+					});
+					sb.copyCompatibilityVariablesFrom(expected, (cvb, cv) -> {
+					});
+					sb.sp64DistributionList(List.of());
+					sb.addSp64Distribution("S", 70);
+					sb.addSp64Distribution("F", 30);
+				});
+
+				assertMismatch(
+						actual, unit, equalTo(
+								"Sp64DistributionSet was <[S[1]:70.0, F[2]:30.0]> but expected <[MB[1]:100.0]>"
+						)
+				);
+			}
+
+			@Test
+			void testCompatibilityVariablesDifferent() {
+				var actual = VdypSpecies.build(sb -> {
+					sb.copy(expected);
+					sb.copySiteFrom(expected, (ib, i) -> {
+					});
+					sb.copyCompatibilityVariablesFrom(expected, (cvb, cv) -> {
+						cvb.cvBasalArea((k1, k2) -> cv.getCvBasalArea(k1, k2) + 1);
+					});
+				});
+
+				assertMismatch(
+						actual, unit, Matchers.matchesRegex(
+								"mismatch in Compatibility Variables \"MB\": CvBasalArea at \\[<U75TO125>, <PRIMARY>\\] expected <\\d\\.\\d+F> but it was a java.lang.Float \\(<\\d\\.\\d+F>\\) and there were \\d+ other mismatches"
+						)
+				);
+			}
+
+		}
 
 		@Nested
 		class testVdypCompatibilityVariables {
@@ -63,14 +330,14 @@ class VdypMatchersTest {
 				// Use a fixed seed so the random numbers are the same across runs.
 				Random rand = new Random(42);
 
-				expected = VdypCompatibilityVariables.build(ib -> {
-					ib.polygonIdentifier("Test", 2024);
-					ib.layerType(LayerType.PRIMARY);
-					ib.genus("MB");
-					ib.cvVolume((k1, k2, k3) -> rand.nextFloat() * 10);
-					ib.cvBasalArea((k1, k2) -> rand.nextFloat() * 10);
-					ib.cvQuadraticMeanDiameter((k1, k2) -> rand.nextFloat() * 10);
-					ib.cvPrimaryLayerSmall(k1 -> rand.nextFloat() * 10);
+				expected = VdypCompatibilityVariables.build(cvb -> {
+					cvb.polygonIdentifier("Test", 2024);
+					cvb.layerType(LayerType.PRIMARY);
+					cvb.genus("MB");
+					cvb.cvVolume((k1, k2, k3) -> rand.nextFloat() * 10);
+					cvb.cvBasalArea((k1, k2) -> rand.nextFloat() * 10);
+					cvb.cvQuadraticMeanDiameter((k1, k2) -> rand.nextFloat() * 10);
+					cvb.cvPrimaryLayerSmall(k1 -> rand.nextFloat() * 10);
 				});
 
 				unit = VdypMatchers.deepEquals(expected);
@@ -78,8 +345,8 @@ class VdypMatchersTest {
 
 			@Test
 			void testPass() {
-				var actual = VdypCompatibilityVariables.build(ib -> {
-					ib.copy(expected);
+				var actual = VdypCompatibilityVariables.build(cvb -> {
+					cvb.copy(expected);
 				});
 
 				assertMatch(actual, unit);
@@ -87,8 +354,8 @@ class VdypMatchersTest {
 
 			@Test
 			void testOneVolumeEntryDifferent() {
-				var actual = VdypCompatibilityVariables.build(ib -> {
-					ib.copy(expected);
+				var actual = VdypCompatibilityVariables.build(cvb -> {
+					cvb.copy(expected);
 				});
 
 				actual.getCvVolume().put(
@@ -104,8 +371,8 @@ class VdypMatchersTest {
 
 			@Test
 			void testOneBaEntryDifferent() {
-				var actual = VdypCompatibilityVariables.build(ib -> {
-					ib.copy(expected);
+				var actual = VdypCompatibilityVariables.build(cvb -> {
+					cvb.copy(expected);
 				});
 
 				actual.getCvBasalArea().put(
@@ -121,8 +388,8 @@ class VdypMatchersTest {
 
 			@Test
 			void testOneDqEntryDifferent() {
-				var actual = VdypCompatibilityVariables.build(ib -> {
-					ib.copy(expected);
+				var actual = VdypCompatibilityVariables.build(cvb -> {
+					cvb.copy(expected);
 				});
 
 				actual.getCvQuadraticMeanDiameter().put(
@@ -138,8 +405,8 @@ class VdypMatchersTest {
 
 			@Test
 			void testOneSmallEntryDifferent() {
-				var actual = VdypCompatibilityVariables.build(ib -> {
-					ib.copy(expected);
+				var actual = VdypCompatibilityVariables.build(cvb -> {
+					cvb.copy(expected);
 				});
 
 				actual.getCvPrimaryLayerSmall().put(
@@ -152,6 +419,7 @@ class VdypMatchersTest {
 						)
 				);
 			}
+
 
 		}
 
