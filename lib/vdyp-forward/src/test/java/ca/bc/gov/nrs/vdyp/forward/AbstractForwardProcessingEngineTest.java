@@ -9,11 +9,11 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.application.ProcessingException;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
-import ca.bc.gov.nrs.vdyp.forward.parsers.VdypPolygonParser;
-import ca.bc.gov.nrs.vdyp.forward.parsers.VdypSpeciesParser;
-import ca.bc.gov.nrs.vdyp.forward.parsers.VdypUtilizationParser;
 import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
+import ca.bc.gov.nrs.vdyp.io.parse.model.VdypPolygonParser;
+import ca.bc.gov.nrs.vdyp.io.parse.model.VdypSpeciesParser;
+import ca.bc.gov.nrs.vdyp.io.parse.model.VdypUtilizationParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
