@@ -18,6 +18,8 @@ import org.hamcrest.StringDescription;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
@@ -71,7 +73,7 @@ class VdypMatchersTest {
 				rand.nextFloat() * 20
 		);
 	}
-
+	
 	@Nested
 	class deepEquals {
 
@@ -312,11 +314,55 @@ class VdypMatchersTest {
 				});
 
 				assertMismatch(
-						actual, unit, Matchers.matchesRegex(
+						actual, unit, matchesRegex(
 								"mismatch in Compatibility Variables \"MB\": CvBasalArea at \\[<U75TO125>, <PRIMARY>\\] expected <\\d\\.\\d+F> but it was a java.lang.Float \\(<\\d\\.\\d+F>\\) and there were \\d+ other mismatches"
 						)
 				);
 			}
+
+			@Test
+			void testSiteDifferent() {
+				var actual = VdypSpecies.build(sb -> {
+					sb.copy(expected);
+					sb.copySiteFrom(expected, (ib, i) -> {
+						ib.height(22);
+					});
+					sb.copyCompatibilityVariablesFrom(expected, (cvb, cv) -> {
+					});
+				});
+
+				assertMismatch(
+						actual, unit, equalTo(
+								"mismatch in site \"MB\": Height was <Optional[22.0]> but expected <Optional[15.0]>"
+						)
+				);
+			}
+			
+			@ParameterizedTest
+			@ValueSource(strings={"LoreyHeight", "BaseArea", "QuadraticMeanDiameter", "TreesPerHectare"})
+			void testUtilizationDifferent(String property) throws Exception {
+				var actual = VdypSpecies.build(sb -> {
+					sb.copy(expected);
+					sb.copySiteFrom(expected, (ib, i) -> {
+					});
+					sb.copyCompatibilityVariablesFrom(expected, (cvb, cv) -> {
+					});
+				});
+
+				// Make a change to one entry (SMALL) in the utilization vector for the specified field
+				
+				TestUtils.getUtilization(actual, property).scalarInPlace(UtilizationClass.SMALL, x->x+1);
+				
+				assertMismatch(
+						actual, unit, equalTo(
+								""
+						)
+				);
+	
+				
+			}
+			
+			
 
 		}
 

@@ -18,6 +18,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
 import java.io.Writer;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -73,6 +75,7 @@ import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
 import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
+import ca.bc.gov.nrs.vdyp.model.VdypUtilizationHolder;
 import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
 
 public class TestUtils {
@@ -1089,6 +1092,23 @@ public class TestUtils {
 		} catch (UncheckedIOException e) {
 			throw new IOException(e);
 		}
+	}
+
+	/**
+	 * Get the utilization vector for a specified field
+	 * @param holder VdypUtilizationHolder
+	 * @param property The field to get, do not include "ByUtilization"
+	 * @return The UtilizationVector for the named field
+	 * @throws NoSuchMethodException
+	 * @throws SecurityException
+	 * @throws IllegalAccessException
+	 * @throws IllegalArgumentException
+	 * @throws InvocationTargetException
+	 */
+	public static UtilizationVector getUtilization(VdypUtilizationHolder holder, String property) throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+		var accessor = VdypUtilizationHolder.class.getMethod("get"+property+"ByUtilization");
+		var vector = (UtilizationVector) accessor.invoke(holder);
+		return vector;
 	}
 
 }
