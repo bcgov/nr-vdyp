@@ -69,8 +69,7 @@ public class BackProcessingState extends ProcessingState<ForwardResolvedControlM
 
 	public void setCompatibilityVariableDetails(
 			MatrixMap2<UtilizationClass, UtilizationClassVariable, Float>[] cvVolume,
-			Map<UtilizationClass, Float>[] cvBasalArea,
-			Map<UtilizationClass, Float>[] cvQuadraticMeanDiameter,
+			Map<UtilizationClass, Float>[] cvBasalArea, Map<UtilizationClass, Float>[] cvQuadraticMeanDiameter,
 			Map<UtilizationClassVariable, Float>[] cvPrimaryLayerSmall
 	) {
 		if (areCompatibilityVariablesSet) {

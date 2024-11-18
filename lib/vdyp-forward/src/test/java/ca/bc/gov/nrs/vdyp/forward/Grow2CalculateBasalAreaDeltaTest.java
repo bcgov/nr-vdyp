@@ -102,7 +102,7 @@ class Grow2CalculateBasalAreaDeltaTest {
 		float ba = 45.3864441f;
 		float hdDelta = 0.173380271f;
 
-		fpe.fps.fcm.getDebugSettings().setValue(Vars.BASAL_AREA_GROWTH_MODEL_3, 0);
+		fpe.fps.getControlMap().getDebugSettings().setValue(Vars.BASAL_AREA_GROWTH_MODEL_3, 0);
 
 		float gba = fpe.calculateBasalAreaDelta(yabh, hd, ba, Optional.empty(), hdDelta);
 

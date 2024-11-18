@@ -51,8 +51,7 @@ public abstract class LayerProcessingState<RCM extends ResolvedControlMap, Self 
 	private MatrixMap2<UtilizationClass, LayerType, Float>[] cvQuadraticMeanDiameter;
 	private Map<UtilizationClassVariable, Float>[] cvPrimaryLayerSmall;
 
-	protected LayerProcessingState(ProcessingState<RCM, Self> ps, VdypPolygon polygon, LayerType subjectLayerType)
-			throws ProcessingException {
+	protected LayerProcessingState(ProcessingState<RCM, Self> ps, VdypPolygon polygon, LayerType subjectLayerType) {
 
 		this.ps = ps;
 		this.polygon = polygon;
@@ -89,8 +88,6 @@ public abstract class LayerProcessingState<RCM extends ResolvedControlMap, Self 
 	public Bank getBank() {
 		return bank;
 	}
-
-	protected abstract void applyCompatibilityVariables(VdypSpecies species, int i);
 
 	public int getNSpecies() {
 		return bank.getNSpecies();
@@ -148,6 +145,22 @@ public abstract class LayerProcessingState<RCM extends ResolvedControlMap, Self 
 		}
 
 		return cvPrimaryLayerSmall[speciesIndex].get(variable);
+	}
+
+	public MatrixMap3<UtilizationClass, UtilizationClassVariable, LayerType, Float>[] getCvVolume() {
+		return cvVolume;
+	}
+
+	public MatrixMap2<UtilizationClass, LayerType, Float>[] getCvBasalArea() {
+		return cvBasalArea;
+	}
+
+	public MatrixMap2<UtilizationClass, LayerType, Float>[] getCvQuadraticMeanDiameter() {
+		return cvQuadraticMeanDiameter;
+	}
+
+	public Map<UtilizationClassVariable, Float>[] getCvPrimaryLayerSmall() {
+		return cvPrimaryLayerSmall;
 	}
 
 }

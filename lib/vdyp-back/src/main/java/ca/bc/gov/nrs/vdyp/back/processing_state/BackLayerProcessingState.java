@@ -29,12 +29,6 @@ public class BackLayerProcessingState
 	}
 
 	@Override
-	protected void applyCompatibilityVariables(VdypSpecies species, int i) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
 	protected VdypLayer updateLayerFromBank() {
 		// TODO Auto-generated method stub
 		return null;

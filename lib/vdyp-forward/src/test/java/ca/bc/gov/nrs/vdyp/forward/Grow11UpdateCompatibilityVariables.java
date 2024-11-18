@@ -58,7 +58,7 @@ class Grow11UpdateCompatibilityVariables {
 		fpe.processPolygon(polygon, ForwardProcessingEngine.ForwardExecutionStep.GROW_10_COMPATIBILITY_VARS);
 
 		// VDYP7 reports [], -9, -9, 35.473381, -9, -9)
-		LayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
+		ForwardLayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
 		assertThat(
 				// VDYP7 reports BASAL_AREA = -2.13947629e-07, all others 0.0
 				lps.getCvPrimaryLayerSmall()[1],

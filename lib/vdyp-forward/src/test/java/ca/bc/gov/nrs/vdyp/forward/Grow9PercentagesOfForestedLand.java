@@ -57,7 +57,7 @@ class Grow9PercentagesOfForestedLand {
 
 		fpe.processPolygon(polygon, ForwardProcessingEngine.ForwardExecutionStep.GROW_9_SPECIES_PCT);
 
-		LayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
+		ForwardLayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
 
 		// VDYP7 value is 0.892216682f, 11.5443392f, 64.3765259f, 13.3774729f, 9.80944252f
 		assertThat(

@@ -31,7 +31,7 @@ public abstract class ProcessingState<RCM extends ResolvedControlMap, LS extends
 	}
 
 	/** The computation instance used by this engine */
-	final ComputationMethods computers;
+	private final ComputationMethods computers;
 
 	/** The polygon on which the Processor is currently operating */
 	private VdypPolygon polygon;
@@ -113,4 +113,9 @@ public abstract class ProcessingState<RCM extends ResolvedControlMap, LS extends
 
 		return polygon;
 	}
+
+	public RCM getControlMap() {
+		return controlMap;
+	}
+
 }

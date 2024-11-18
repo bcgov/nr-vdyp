@@ -56,7 +56,7 @@ class Grow7QuadMeanDiameterTest {
 
 		fpe.processPolygon(polygon, ForwardProcessingEngine.ForwardExecutionStep.GROW_7_LAYER_DQ2);
 
-		LayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
+		ForwardLayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
 
 		var calculatedLayerDq = lps.getBank().quadMeanDiameters[0][UtilizationClass.ALL.ordinal()];
 

@@ -56,7 +56,7 @@ class Grow6TreesPerHectareTest {
 
 		fpe.processPolygon(polygon, ForwardProcessingEngine.ForwardExecutionStep.GROW_6_LAYER_TPH2);
 
-		LayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
+		ForwardLayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
 
 		var calculatedLayerTph = lps.getBank().treesPerHectare[0][UtilizationClass.ALL.ordinal()];
 

@@ -100,7 +100,7 @@ public class ForwardProcessor extends Processor {
 
 			var fpe = new ForwardProcessingEngine(controlMap, outputWriter);
 
-			var forwardDataStreamReader = new ForwardDataStreamReader(fpe.fps.fcm);
+			var forwardDataStreamReader = new ForwardDataStreamReader(fpe.fps.getControlMap());
 
 			// Fetch the next polygon to process.
 			int nPolygonsProcessed = 0;

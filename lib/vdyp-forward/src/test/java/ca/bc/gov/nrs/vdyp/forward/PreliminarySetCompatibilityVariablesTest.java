@@ -45,7 +45,7 @@ class PreliminarySetCompatibilityVariablesTest extends AbstractForwardProcessing
 		// These values have been verified against the FORTRAN implementation, allowing for minor
 		// platform-specific differences.
 
-		LayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
+		ForwardLayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
 
 		assertThat(
 				lps.getVolumeEquationGroups(),

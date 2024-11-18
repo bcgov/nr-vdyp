@@ -38,9 +38,9 @@ class PreliminaryForwardProcessingEngineStepsTest extends AbstractForwardProcess
 
 		ForwardProcessingEngine fpe = new ForwardProcessingEngine(controlMap);
 
-		assertThat(fpe.fps.fcm.getBecLookup(), notNullValue());
-		assertThat(fpe.fps.fcm.getGenusDefinitionMap(), notNullValue());
-		assertThat(fpe.fps.fcm.getSiteCurveMap(), notNullValue());
+		assertThat(fpe.fps.getControlMap().getBecLookup(), notNullValue());
+		assertThat(fpe.fps.getControlMap().getGenusDefinitionMap(), notNullValue());
+		assertThat(fpe.fps.getControlMap().getSiteCurveMap(), notNullValue());
 
 		int nPolygonsProcessed = 0;
 		while (true) {
@@ -70,7 +70,7 @@ class PreliminaryForwardProcessingEngineStepsTest extends AbstractForwardProcess
 			ForwardProcessingEngine fpe = new ForwardProcessingEngine(controlMap);
 			fpe.fps.setPolygon(polygon);
 
-			LayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
+			ForwardLayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
 
 			ForwardProcessingEngine.calculateCoverages(lps);
 			fpe.determinePolygonRankings(CommonData.PRIMARY_SPECIES_TO_COMBINE);
@@ -84,7 +84,7 @@ class PreliminaryForwardProcessingEngineStepsTest extends AbstractForwardProcess
 		{
 			ForwardProcessingEngine fpe = new ForwardProcessingEngine(controlMap);
 			fpe.fps.setPolygon(polygon);
-			LayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
+			ForwardLayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
 
 			var speciesToCombine = Arrays
 					.asList(Arrays.asList(lps.getBank().speciesNames[3], lps.getBank().speciesNames[4]));

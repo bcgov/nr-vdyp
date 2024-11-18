@@ -60,7 +60,7 @@ class Grow3CalculateQuadMeanDiameterDeltaTest {
 
 		fpe.processPolygon(polygon, ForwardProcessingEngine.ForwardExecutionStep.GROW_3_LAYER_DQDELTA.predecessor());
 
-		ForwardDebugSettings debugSettings = fpe.fps.fcm.getDebugSettings();
+		ForwardDebugSettings debugSettings = fpe.fps.getControlMap().getDebugSettings();
 		debugSettings.setValue(Vars.DQ_GROWTH_MODEL_6, 2);
 
 		float yabh = 54.0f;
@@ -91,7 +91,7 @@ class Grow3CalculateQuadMeanDiameterDeltaTest {
 
 		fpe.processPolygon(polygon, ForwardProcessingEngine.ForwardExecutionStep.GROW_3_LAYER_DQDELTA.predecessor());
 
-		ForwardDebugSettings debugSettings = fpe.fps.fcm.getDebugSettings();
+		ForwardDebugSettings debugSettings = fpe.fps.getControlMap().getDebugSettings();
 		debugSettings.setValue(Vars.DQ_GROWTH_MODEL_6, 0); /* this value will force the fiat only calculations. */
 
 		float yabh = 54.0f;
@@ -122,7 +122,7 @@ class Grow3CalculateQuadMeanDiameterDeltaTest {
 
 		fpe.processPolygon(polygon, ForwardProcessingEngine.ForwardExecutionStep.GROW_3_LAYER_DQDELTA.predecessor());
 
-		ForwardDebugSettings debugSettings = fpe.fps.fcm.getDebugSettings();
+		ForwardDebugSettings debugSettings = fpe.fps.getControlMap().getDebugSettings();
 		debugSettings.setValue(Vars.DQ_GROWTH_MODEL_6, 1); /* this value will force the empirical only calculations. */
 
 		float yabh = 54.0f;
@@ -153,7 +153,7 @@ class Grow3CalculateQuadMeanDiameterDeltaTest {
 
 		fpe.processPolygon(polygon, ForwardProcessingEngine.ForwardExecutionStep.GROW_3_LAYER_DQDELTA.predecessor());
 
-		ForwardDebugSettings debugSettings = fpe.fps.fcm.getDebugSettings();
+		ForwardDebugSettings debugSettings = fpe.fps.getControlMap().getDebugSettings();
 		debugSettings.setValue(Vars.DQ_GROWTH_MODEL_6, 2);
 
 		float yabh = 104.0f; /* this value will force interpolation. */
@@ -184,7 +184,7 @@ class Grow3CalculateQuadMeanDiameterDeltaTest {
 
 		fpe.processPolygon(polygon, ForwardProcessingEngine.ForwardExecutionStep.GROW_3_LAYER_DQDELTA.predecessor());
 
-		ForwardDebugSettings debugSettings = fpe.fps.fcm.getDebugSettings();
+		ForwardDebugSettings debugSettings = fpe.fps.getControlMap().getDebugSettings();
 		debugSettings.setValue(Vars.DQ_GROWTH_MODEL_6, 0);
 
 		float yabh = 54.0f;
@@ -215,7 +215,7 @@ class Grow3CalculateQuadMeanDiameterDeltaTest {
 
 		fpe.processPolygon(polygon, ForwardProcessingEngine.ForwardExecutionStep.GROW_3_LAYER_DQDELTA.predecessor());
 
-		ForwardDebugSettings debugSettings = fpe.fps.fcm.getDebugSettings();
+		ForwardDebugSettings debugSettings = fpe.fps.getControlMap().getDebugSettings();
 		debugSettings.setValue(Vars.DQ_GROWTH_MODEL_6, 0);
 
 		float yabh = 54.0f;
