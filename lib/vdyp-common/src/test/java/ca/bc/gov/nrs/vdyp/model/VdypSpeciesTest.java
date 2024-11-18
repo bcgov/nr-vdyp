@@ -16,10 +16,12 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.application.InitializationIncompleteException;
+import ca.bc.gov.nrs.vdyp.model.variables.UtilizationClassVariable;
 import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
 
 class VdypSpeciesTest {
@@ -122,13 +124,13 @@ class VdypSpeciesTest {
 		assertThrows(IllegalStateException.class, () -> sp.setBreakageGroup(1));
 
 		List<UtilizationClass> ucs = Arrays.asList(UtilizationClass.values());
-		List<VolumeVariable> vvs = Arrays.asList(VolumeVariable.values());
+		Set<UtilizationClassVariable> vvs = VdypCompatibilityVariables.VOLUME_UTILIZATION_VARIABLES;
 		List<LayerType> lts = Arrays.asList(LayerType.values());
 
 		assertThrows(InitializationIncompleteException.class, () -> sp.requireCompatibilityVariables());
 		assertThat(sp, hasProperty("compatibilityVariables", notPresent()));
 
-		var cvVolume = new MatrixMap3Impl<UtilizationClass, VolumeVariable, LayerType, Float>(
+		var cvVolume = new MatrixMap3Impl<UtilizationClass, UtilizationClassVariable, LayerType, Float>(
 				ucs, vvs, lts, (x, y, z) -> 1.0f
 		);
 		var cvBasalArea = new MatrixMap2Impl<UtilizationClass, LayerType, Float>(ucs, lts, (x, y) -> 1.0f);

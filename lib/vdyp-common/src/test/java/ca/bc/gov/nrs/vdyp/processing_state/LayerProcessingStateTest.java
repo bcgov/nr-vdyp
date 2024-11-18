@@ -27,11 +27,11 @@ import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap3Impl;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
-import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
+import ca.bc.gov.nrs.vdyp.model.VdypCompatibilityVariables;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
-import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
+import ca.bc.gov.nrs.vdyp.model.variables.UtilizationClassVariable;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 class LayerProcessingStateTest {
@@ -131,7 +131,7 @@ class LayerProcessingStateTest {
 		IMocksControl em;
 		LayerProcessingState<?, ?> unit;
 
-		MatrixMap3<UtilizationClass, VolumeVariable, LayerType, Float>[] cvVolume;
+		MatrixMap3<UtilizationClass, UtilizationClassVariable, LayerType, Float>[] cvVolume;
 		MatrixMap2<UtilizationClass, LayerType, Float>[] cvBa;
 		MatrixMap2<UtilizationClass, LayerType, Float>[] cvDq;
 		Map<UtilizationClassVariable, Float>[] cvSm;
@@ -162,10 +162,12 @@ class LayerProcessingStateTest {
 
 			unit = new TestLayerProcessingState(parent, polygon, LayerType.PRIMARY);
 
-			cvVolume = new MatrixMap3[] { null, new MatrixMap3Impl<UtilizationClass, VolumeVariable, LayerType, Float>(
-					List.of(UtilizationClass.values()), List.of(VolumeVariable.values()), List.of(LayerType.values()),
-					(uc, vv, lt) -> 11f + vv.ordinal() * 2f + uc.ordinal() * 3f + lt.ordinal() * 5f
-			) };
+			cvVolume = new MatrixMap3[] { null,
+					new MatrixMap3Impl<UtilizationClass, UtilizationClassVariable, LayerType, Float>(
+							List.of(UtilizationClass.values()), VdypCompatibilityVariables.VOLUME_UTILIZATION_VARIABLES,
+							List.of(LayerType.values()),
+							(uc, vv, lt) -> 11f + vv.ordinal() * 2f + uc.ordinal() * 3f + lt.ordinal() * 5f
+					) };
 
 			cvBa = new MatrixMap2[] { null,
 					new MatrixMap2Impl<UtilizationClass, LayerType, Float>(
@@ -195,8 +197,9 @@ class LayerProcessingStateTest {
 		void testFailBeforeSet() throws ProcessingException {
 			assertThrows(
 					IllegalStateException.class,
-					() -> unit.getCVVolume(1, UtilizationClass.ALL, VolumeVariable.CLOSE_UTIL_VOL, LayerType.PRIMARY),
-					"getCVVolume"
+					() -> unit.getCVVolume(
+							1, UtilizationClass.ALL, UtilizationClassVariable.CLOSE_UTIL_VOL, LayerType.PRIMARY
+					), "getCVVolume"
 			);
 			assertThrows(
 					IllegalStateException.class, () -> unit.getCVBasalArea(1, UtilizationClass.ALL, LayerType.PRIMARY),
@@ -219,16 +222,35 @@ class LayerProcessingStateTest {
 			assertThat(
 					unit,
 					testCV(
-							"getCVVolume", 1, UtilizationClass.ALL, VolumeVariable.CLOSE_UTIL_VOL, LayerType.PRIMARY,
-							is(16f)
+							"getCVVolume", 1, UtilizationClass.ALL, UtilizationClassVariable.CLOSE_UTIL_VOL,
+							LayerType.PRIMARY,
+							is(
+									11f + UtilizationClassVariable.CLOSE_UTIL_VOL.ordinal() * 2f
+											+ UtilizationClass.ALL.ordinal() * 3f + LayerType.PRIMARY.ordinal() * 5f
+							)
 					)
 			);
-			assertThat(unit, testCV("getCVBasalArea", 1, UtilizationClass.ALL, LayerType.PRIMARY, is(16f)));
 			assertThat(
 					unit,
-					testCV("getCVQuadraticMeanDiameter", 1, UtilizationClass.U125TO175, LayerType.PRIMARY, is(26f))
+					testCV(
+							"getCVBasalArea", 1, UtilizationClass.ALL, LayerType.PRIMARY,
+							is(13f + UtilizationClass.ALL.ordinal() * 3f + LayerType.PRIMARY.ordinal() * 5f)
+					)
 			);
-			assertThat(unit, testCV("getCVSmall", 1, UtilizationClassVariable.QUAD_MEAN_DIAMETER, is(7f)));
+			assertThat(
+					unit,
+					testCV(
+							"getCVQuadraticMeanDiameter", 1, UtilizationClass.U125TO175, LayerType.PRIMARY,
+							is(17f + UtilizationClass.U125TO175.ordinal() * 3f + LayerType.PRIMARY.ordinal() * 5f)
+					)
+			);
+			assertThat(
+					unit,
+					testCV(
+							"getCVSmall", 1, UtilizationClassVariable.QUAD_MEAN_DIAMETER,
+							is(UtilizationClassVariable.QUAD_MEAN_DIAMETER.ordinal() * 7f)
+					)
+			);
 		}
 
 		@Test

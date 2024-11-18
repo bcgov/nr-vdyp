@@ -13,11 +13,10 @@ import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
-import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
-import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
+import ca.bc.gov.nrs.vdyp.model.variables.UtilizationClassVariable;
 
 public abstract class LayerProcessingState<RCM extends ResolvedControlMap, Self extends LayerProcessingState<RCM, Self>> {
 
@@ -47,7 +46,7 @@ public abstract class LayerProcessingState<RCM extends ResolvedControlMap, Self 
 	// Compatibility Variables - LCV1 & LCVS
 	private boolean areCompatibilityVariablesSet = false;
 
-	private MatrixMap3<UtilizationClass, VolumeVariable, LayerType, Float>[] cvVolume;
+	private MatrixMap3<UtilizationClass, UtilizationClassVariable, LayerType, Float>[] cvVolume;
 	private MatrixMap2<UtilizationClass, LayerType, Float>[] cvBasalArea;
 	private MatrixMap2<UtilizationClass, LayerType, Float>[] cvQuadraticMeanDiameter;
 	private Map<UtilizationClassVariable, Float>[] cvPrimaryLayerSmall;
@@ -100,7 +99,7 @@ public abstract class LayerProcessingState<RCM extends ResolvedControlMap, Self 
 	protected abstract VdypLayer updateLayerFromBank();
 
 	public void setCompatibilityVariableDetails(
-			MatrixMap3<UtilizationClass, VolumeVariable, LayerType, Float>[] cvVolume,
+			MatrixMap3<UtilizationClass, UtilizationClassVariable, LayerType, Float>[] cvVolume,
 			MatrixMap2<UtilizationClass, LayerType, Float>[] cvBasalArea,
 			MatrixMap2<UtilizationClass, LayerType, Float>[] cvQuadraticMeanDiameter,
 			Map<UtilizationClassVariable, Float>[] cvPrimaryLayerSmall
@@ -117,8 +116,9 @@ public abstract class LayerProcessingState<RCM extends ResolvedControlMap, Self 
 		areCompatibilityVariablesSet = true;
 	}
 
-	public float
-			getCVVolume(int speciesIndex, UtilizationClass uc, VolumeVariable volumeVariable, LayerType layerType) {
+	public float getCVVolume(
+			int speciesIndex, UtilizationClass uc, UtilizationClassVariable volumeVariable, LayerType layerType
+	) {
 		if (!areCompatibilityVariablesSet) {
 			throw new IllegalStateException(UNSET_CV_VOLUMES);
 		}

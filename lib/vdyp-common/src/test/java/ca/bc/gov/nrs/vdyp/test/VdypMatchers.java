@@ -24,7 +24,6 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import org.hamcrest.BaseMatcher;
@@ -54,8 +53,8 @@ import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VdypSite;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
-import ca.bc.gov.nrs.vdyp.model.VdypUtilizationHolder;
 import ca.bc.gov.nrs.vdyp.model.builders.ModelClassBuilder;
+import ca.bc.gov.nrs.vdyp.model.variables.UtilizationClassVariable;
 
 /**
  * Custom Hamcrest Matchers
@@ -624,8 +623,7 @@ public class VdypMatchers {
 		return allOf(instanceOf(BecDefinition.class), hasProperty("alias", is(alias)));
 	}
 
-	public static Matcher<Coefficients>
-			utilization(Coefficients expected) {
+	public static Matcher<Coefficients> utilization(Coefficients expected) {
 		if (expected.size() == 2) {
 			return utilizationHeight(expected.get(0), expected.get(1));
 		}
@@ -650,17 +648,17 @@ public class VdypMatchers {
 						"[Small: %f, All: %f, 7.5cm: %f, 12.5cm: %f, 17.5cm: %f, 22.5cm: %f]", small, all, util1, util2,
 						util3, util4
 				);
-				description.appendText("A utilization vector ").appendValue(utilizationRep);
+				description.appendText("a utilization vector ").appendValue(utilizationRep);
 			}
 
 			@Override
 			protected boolean matchesSafely(Coefficients item, Description mismatchDescription) {
 				if (item.size() != 6 || item.getIndexFrom() != -1) {
-					mismatchDescription.appendText("Was not a utilization vector");
+					mismatchDescription.appendText("was not a utilization vector");
 					return false;
 				}
 				boolean matches = true;
-				mismatchDescription.appendText("Was [Small: ");
+				mismatchDescription.appendText("was [Small: ");
 				matches &= matchesComponent(mismatchDescription, small, item.getCoe(UtilizationClass.SMALL.index));
 				mismatchDescription.appendText(", All: ");
 				matches &= matchesComponent(mismatchDescription, all, item.getCoe(UtilizationClass.ALL.index));
@@ -695,17 +693,17 @@ public class VdypMatchers {
 			@Override
 			public void describeTo(Description description) {
 				String utilizationRep = String.format("[Small: %f, All: %f]", small, all);
-				description.appendText("A lorey height vector ").appendValue(utilizationRep);
+				description.appendText("a lorey height vector ").appendValue(utilizationRep);
 			}
 
 			@Override
 			protected boolean matchesSafely(Coefficients item, Description mismatchDescription) {
 				if (item.size() != 2 || item.getIndexFrom() != -1) {
-					mismatchDescription.appendText("Was not a lorey height vector");
+					mismatchDescription.appendText("was not a lorey height vector");
 					return false;
 				}
 				boolean matches = true;
-				mismatchDescription.appendText("Was [Small: ");
+				mismatchDescription.appendText("was [Small: ");
 				matches &= matchesComponent(mismatchDescription, small, item.getCoe(UtilizationClass.SMALL.index));
 				mismatchDescription.appendText(", All: ");
 				matches &= matchesComponent(mismatchDescription, all, item.getCoe(UtilizationClass.ALL.index));
@@ -766,16 +764,11 @@ public class VdypMatchers {
 		return false;
 	}
 
-	static private <T> boolean matchValue(
-			boolean match, String name, T expected, T value, Description mismatchDescription
-	) {
+	static private <T> boolean
+			matchValue(boolean match, String name, T expected, T value, Description mismatchDescription) {
 		if (!expected.equals(value)) {
 			match = sep(match, mismatchDescription);
-			mismatchDescription
-					.appendText(name)
-					.appendText(" was ")
-					.appendValue(value)
-					.appendText(" but expected ")
+			mismatchDescription.appendText(name).appendText(" was ").appendValue(value).appendText(" but expected ")
 					.appendValue(expected);
 		}
 		return match;
@@ -785,17 +778,27 @@ public class VdypMatchers {
 			boolean match, String name, UtilizationVector expected, UtilizationVector value,
 			Description mismatchDescription
 	) {
-		return matchValue(match, name, value, utilization(expected), mismatchDescription);
+		return matchValueShowExpected(match, name, utilization(expected), value, mismatchDescription);
 	}
 
-	static private <T> boolean matchValue(
+	static private <T> boolean
+			matchValue(boolean match, String name, Matcher<T> expected, T value, Description mismatchDescription) {
+		if (!expected.matches(value)) {
+			match = sep(match, mismatchDescription);
+			mismatchDescription.appendText(name).appendText(" ");
+			expected.describeMismatch(value, mismatchDescription);
+		}
+		return match;
+	}
+
+	static private <T> boolean matchValueShowExpected(
 			boolean match, String name, Matcher<T> expected, T value, Description mismatchDescription
 	) {
 		if (!expected.matches(value)) {
 			match = sep(match, mismatchDescription);
-			mismatchDescription
-					.appendText(name)
-					.appendText(" ");
+			mismatchDescription.appendText(name).appendText(" expected ");
+			expected.describeTo(mismatchDescription);
+			mismatchDescription.appendText(" but ");
 			expected.describeMismatch(value, mismatchDescription);
 		}
 		return match;
@@ -814,59 +817,38 @@ public class VdypMatchers {
 				boolean match = true;
 
 				match = matchValue(
-						match, "PolygonIdentifier",
-						expected.getPolygonIdentifier(),
-						item.getPolygonIdentifier(),
+						match, "PolygonIdentifier", expected.getPolygonIdentifier(), item.getPolygonIdentifier(),
 						mismatchDescription
 				);
 
 				match = matchValue(
-						match, "BiogeoclimaticZone",
-						expected.getBiogeoclimaticZone(),
-						item.getBiogeoclimaticZone(),
+						match, "BiogeoclimaticZone", expected.getBiogeoclimaticZone(), item.getBiogeoclimaticZone(),
 						mismatchDescription
 				);
 
 				match = matchValue(
-						match, "ForestInventoryZone",
-						expected.getForestInventoryZone(),
-						item.getForestInventoryZone(),
+						match, "ForestInventoryZone", expected.getForestInventoryZone(), item.getForestInventoryZone(),
 						mismatchDescription
 				);
 
 				match = matchValue(
-						match, "InventoryTypeGroup",
-						expected.getInventoryTypeGroup(),
-						item.getInventoryTypeGroup(),
+						match, "InventoryTypeGroup", expected.getInventoryTypeGroup(), item.getInventoryTypeGroup(),
+						mismatchDescription
+				);
+
+				match = matchValue(match, "Mode", expected.getMode(), item.getMode(), mismatchDescription);
+
+				match = matchValue(
+						match, "PercentAvailable", expected.getPercentAvailable(), item.getPercentAvailable(),
 						mismatchDescription
 				);
 
 				match = matchValue(
-						match, "Mode",
-						expected.getMode(),
-						item.getMode(),
-						mismatchDescription
+						match, "TargetYear", expected.getTargetYear(), item.getTargetYear(), mismatchDescription
 				);
 
 				match = matchValue(
-						match, "PercentAvailable",
-						expected.getPercentAvailable(),
-						item.getPercentAvailable(),
-						mismatchDescription
-				);
-
-				match = matchValue(
-						match, "TargetYear",
-						expected.getTargetYear(),
-						item.getTargetYear(),
-						mismatchDescription
-				);
-
-				match = matchValue(
-						match, "Layers",
-						expected.getLayers().keySet(),
-						item.getLayers().keySet(),
-						mismatchDescription
+						match, "Layers", expected.getLayers().keySet(), item.getLayers().keySet(), mismatchDescription
 				);
 
 				for (var layerType : expected.getLayers().keySet()) {
@@ -896,9 +878,8 @@ public class VdypMatchers {
 
 			@Override
 			public void describeTo(Description description) {
-				description.appendText("matches VDYPLayer ").appendValue(expected.getPolygonIdentifier()).appendValue(
-						expected.getLayerType()
-				);
+				description.appendText("matches VDYPLayer ").appendValue(expected.getPolygonIdentifier())
+						.appendValue(expected.getLayerType());
 			}
 
 			@Override
@@ -906,40 +887,27 @@ public class VdypMatchers {
 				boolean match = true;
 
 				match = matchValue(
-						match, "PolygonIdentifier",
-						expected.getPolygonIdentifier(),
-						item.getPolygonIdentifier(),
+						match, "PolygonIdentifier", expected.getPolygonIdentifier(), item.getPolygonIdentifier(),
 						mismatchDescription
 				);
 				match = matchValue(
-						match, "LayerType",
-						expected.getLayerType(),
-						item.getLayerType(),
-						mismatchDescription
+						match, "LayerType", expected.getLayerType(), item.getLayerType(), mismatchDescription
 				);
 
 				match = matchValue(
-						match, "InventoryTypeGroup",
-						expected.getInventoryTypeGroup(),
-						item.getInventoryTypeGroup(),
+						match, "InventoryTypeGroup", expected.getInventoryTypeGroup(), item.getInventoryTypeGroup(),
 						mismatchDescription
 				);
 				match = matchValue(
-						match, "PrimaryGenus",
-						expected.getPrimaryGenus(),
-						item.getPrimaryGenus(),
-						mismatchDescription
+						match, "PrimaryGenus", expected.getPrimaryGenus(), item.getPrimaryGenus(), mismatchDescription
 				);
 				match = matchValue(
-						match, "EmpiricalRelationshipParameterIndex",
-						expected.getEmpiricalRelationshipParameterIndex(),
-						item.getEmpiricalRelationshipParameterIndex(),
-						mismatchDescription
+						match, "EmpiricalRelationshipParameterIndex", expected.getEmpiricalRelationshipParameterIndex(),
+						item.getEmpiricalRelationshipParameterIndex(), mismatchDescription
 				);
 
 				match = matchValue(
-						match, "Species Groups",
-						expected.getSpecies().keySet(), item.getSpecies().keySet(),
+						match, "Species Groups", expected.getSpecies().keySet(), item.getSpecies().keySet(),
 						mismatchDescription
 				);
 
@@ -960,58 +928,45 @@ public class VdypMatchers {
 				}
 
 				match = matchValue(
-						match, "getLoreyHeightByUtilization",
-						expected.getLoreyHeightByUtilization(),
-						item.getLoreyHeightByUtilization(),
-						mismatchDescription
+						match, "getLoreyHeightByUtilization", expected.getLoreyHeightByUtilization(),
+						item.getLoreyHeightByUtilization(), mismatchDescription
 				);
 				match = matchValue(
-						match, "getBaseAreaByUtilization",
-						expected.getBaseAreaByUtilization(),
-						item.getBaseAreaByUtilization(),
-						mismatchDescription
+						match, "getBaseAreaByUtilization", expected.getBaseAreaByUtilization(),
+						item.getBaseAreaByUtilization(), mismatchDescription
 				);
 				match = matchValue(
 						match, "getQuadraticMeanDiameterByUtilization",
-						expected.getQuadraticMeanDiameterByUtilization(),
-						item.getQuadraticMeanDiameterByUtilization(),
+						expected.getQuadraticMeanDiameterByUtilization(), item.getQuadraticMeanDiameterByUtilization(),
 						mismatchDescription
 				);
 				match = matchValue(
-						match, "getTreesPerHectareByUtilization",
-						expected.getTreesPerHectareByUtilization(),
-						item.getTreesPerHectareByUtilization(),
-						mismatchDescription
+						match, "getTreesPerHectareByUtilization", expected.getTreesPerHectareByUtilization(),
+						item.getTreesPerHectareByUtilization(), mismatchDescription
 				);
 				match = matchValue(
-						match, "getWholeStemVolumeByUtilization",
-						expected.getWholeStemVolumeByUtilization(),
-						item.getWholeStemVolumeByUtilization(),
-						mismatchDescription
+						match, "getWholeStemVolumeByUtilization", expected.getWholeStemVolumeByUtilization(),
+						item.getWholeStemVolumeByUtilization(), mismatchDescription
 				);
 				match = matchValue(
 						match, "getCloseUtilizationVolumeByUtilization",
 						expected.getCloseUtilizationVolumeByUtilization(),
-						item.getCloseUtilizationVolumeByUtilization(),
-						mismatchDescription
+						item.getCloseUtilizationVolumeByUtilization(), mismatchDescription
 				);
 				match = matchValue(
 						match, "getCloseUtilizationVolumeNetOfDecayByUtilization",
 						expected.getCloseUtilizationVolumeNetOfDecayByUtilization(),
-						item.getCloseUtilizationVolumeNetOfDecayByUtilization(),
-						mismatchDescription
+						item.getCloseUtilizationVolumeNetOfDecayByUtilization(), mismatchDescription
 				);
 				match = matchValue(
 						match, "getCloseUtilizationVolumeNetOfDecayAndWasteByUtilization",
 						expected.getCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(),
-						item.getCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(),
-						mismatchDescription
+						item.getCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(), mismatchDescription
 				);
 				match = matchValue(
 						match, "getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization",
 						expected.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(),
-						item.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(),
-						mismatchDescription
+						item.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(), mismatchDescription
 				);
 
 				return match;
@@ -1026,10 +981,8 @@ public class VdypMatchers {
 			@Override
 			public void describeTo(Description description) {
 
-				description.appendText("matches VDYPSpecies ")
-						.appendValue(expected.getPolygonIdentifier())
-						.appendValue(expected.getLayerType())
-						.appendValue(expected.getGenus());
+				description.appendText("matches VDYPSpecies ").appendValue(expected.getPolygonIdentifier())
+						.appendValue(expected.getLayerType()).appendValue(expected.getGenus());
 			}
 
 			@Override
@@ -1037,59 +990,33 @@ public class VdypMatchers {
 				boolean match = true;
 
 				match = matchValue(
-						match, "PolygonIdentifier",
-						expected.getPolygonIdentifier(),
-						item.getPolygonIdentifier(),
+						match, "PolygonIdentifier", expected.getPolygonIdentifier(), item.getPolygonIdentifier(),
 						mismatchDescription
 				);
 				match = matchValue(
-						match, "LayerType",
-						expected.getLayerType(),
-						item.getLayerType(),
-						mismatchDescription
+						match, "LayerType", expected.getLayerType(), item.getLayerType(), mismatchDescription
 				);
+				match = matchValue(match, "Genus", expected.getGenus(), item.getGenus(), mismatchDescription);
 				match = matchValue(
-						match, "Genus",
-						expected.getGenus(),
-						item.getGenus(),
-						mismatchDescription
-				);
-				match = matchValue(
-						match, "GenusIndex",
-						expected.getGenusIndex(),
-						item.getGenusIndex(),
-						mismatchDescription
+						match, "GenusIndex", expected.getGenusIndex(), item.getGenusIndex(), mismatchDescription
 				);
 
 				match = matchValue(
-						match, "BreakageGroup",
-						expected.getBreakageGroup(),
-						item.getBreakageGroup(),
+						match, "BreakageGroup", expected.getBreakageGroup(), item.getBreakageGroup(),
 						mismatchDescription
 				);
 				match = matchValue(
-						match, "VolumeGroup",
-						expected.getVolumeGroup(),
-						item.getVolumeGroup(),
-						mismatchDescription
+						match, "VolumeGroup", expected.getVolumeGroup(), item.getVolumeGroup(), mismatchDescription
 				);
 				match = matchValue(
-						match, "DecayGroup",
-						expected.getDecayGroup(),
-						item.getDecayGroup(),
-						mismatchDescription
+						match, "DecayGroup", expected.getDecayGroup(), item.getDecayGroup(), mismatchDescription
 				);
 
 				match = matchValue(
-						match, "PercentGenus",
-						expected.getPercentGenus(),
-						item.getPercentGenus(),
-						mismatchDescription
+						match, "PercentGenus", expected.getPercentGenus(), item.getPercentGenus(), mismatchDescription
 				);
 				match = matchValue(
-						match, "FractionGenus",
-						expected.getFractionGenus(),
-						item.getFractionGenus(),
+						match, "FractionGenus", expected.getFractionGenus(), item.getFractionGenus(),
 						mismatchDescription
 				);
 
@@ -1114,18 +1041,16 @@ public class VdypMatchers {
 
 				if (expected.getSite().isEmpty() && item.getSite().isPresent()) {
 					match = sep(match, mismatchDescription);
-					mismatchDescription.appendText(
-							"expected not to have Compatibility Variables but they were present"
-					);
+					mismatchDescription
+							.appendText("expected not to have Compatibility Variables but they were present");
 				} else if (expected.getSite().isPresent() && item.getSite().isEmpty()) {
 					match = sep(match, mismatchDescription);
 					mismatchDescription.appendText("expected to have Compatibility Variables but none were present");
 				}
 
 				match = match && Utils.flatMapBoth(
-						expected.getCompatibilityVariables(), item.getCompatibilityVariables(), (
-								expectedCv, itemCv
-						) -> {
+						expected.getCompatibilityVariables(), item.getCompatibilityVariables(),
+						(expectedCv, itemCv) -> {
 							var cvMatcher = deepEquals(expectedCv);
 
 							if (!cvMatcher.matches(itemCv)) {
@@ -1141,11 +1066,16 @@ public class VdypMatchers {
 				).orElse(true);
 
 				match = matchValue(
-						match, "Sp64DistributionSet",
-						expected.getSp64DistributionSet(),
-						item.getSp64DistributionSet(),
+						match, "Sp64DistributionSet", expected.getSp64DistributionSet(), item.getSp64DistributionSet(),
 						mismatchDescription
 				);
+
+				for (var ucv : UtilizationClassVariable.values()) {
+					var expectedVector = ucv.get(expected);
+					var actualVector = ucv.get(item);
+
+					match = matchValue(match, ucv.getShortName(), expectedVector, actualVector, mismatchDescription);
+				}
 
 				return match;
 
@@ -1168,28 +1098,22 @@ public class VdypMatchers {
 				boolean match = true;
 
 				match = matchValue(
-						match, "CvVolume",
-						mmEquals(expected.getCvVolume(), VdypMatchers::closeTo),
-						item.getCvVolume(),
+						match, "CvVolume", mmEquals(expected.getCvVolume(), VdypMatchers::closeTo), item.getCvVolume(),
 						mismatchDescription
 				);
 				match = matchValue(
-						match, "CvBasalArea",
-						mmEquals(expected.getCvBasalArea(), VdypMatchers::closeTo),
-						item.getCvBasalArea(),
-						mismatchDescription
+						match, "CvBasalArea", mmEquals(expected.getCvBasalArea(), VdypMatchers::closeTo),
+						item.getCvBasalArea(), mismatchDescription
 				);
 				match = matchValue(
 						match, "CvQuadraticMeanDiameter",
 						mmEquals(expected.getCvQuadraticMeanDiameter(), VdypMatchers::closeTo),
-						item.getCvQuadraticMeanDiameter(),
-						mismatchDescription
+						item.getCvQuadraticMeanDiameter(), mismatchDescription
 				);
 				match = matchValue(
 						match, "CvPrimaryLayerSmall",
 						mapEquals(expected.getCvPrimaryLayerSmall(), VdypMatchers::closeTo),
-						item.getCvPrimaryLayerSmall(),
-						mismatchDescription
+						item.getCvPrimaryLayerSmall(), mismatchDescription
 				);
 
 				return match;
@@ -1197,9 +1121,8 @@ public class VdypMatchers {
 		};
 	}
 
-	public static <K, V> Matcher<Map<? extends K, ? extends V>> mapEquals(
-			Map<K, V> expected, Function<V, Matcher<V>> valueMatcherGenerator
-	) {
+	public static <K, V> Matcher<Map<? extends K, ? extends V>>
+			mapEquals(Map<K, V> expected, Function<V, Matcher<V>> valueMatcherGenerator) {
 		if (expected.isEmpty()) {
 			return Matchers.anEmptyMap();
 		}
@@ -1213,17 +1136,14 @@ public class VdypMatchers {
 			}
 
 			@Override
-			protected boolean matchesSafely(
-					Map<? extends K, ? extends V> item, Description mismatchDescription
-			) {
+			protected boolean matchesSafely(Map<? extends K, ? extends V> item, Description mismatchDescription) {
 				if (item.isEmpty()) {
 					mismatchDescription.appendText("map was empty");
 					return false;
 				}
 				if (!expected.keySet().equals(item.keySet())) {
-					mismatchDescription.appendText("expected keys ").appendValue(expected.keySet()).appendText(
-							" but were "
-					).appendValue(item.keySet());
+					mismatchDescription.appendText("expected keys ").appendValue(expected.keySet())
+							.appendText(" but were ").appendValue(item.keySet());
 					return false;
 				}
 				List<String> failures = new LinkedList<>();
@@ -1248,10 +1168,8 @@ public class VdypMatchers {
 					mismatchDescription.appendText(first);
 
 					if (failures.size() > 1) {
-						mismatchDescription
-								.appendText(" and there were ")
-								.appendText(Integer.toString(failures.size() - 1))
-								.appendText(" other mismatches");
+						mismatchDescription.appendText(" and there were ")
+								.appendText(Integer.toString(failures.size() - 1)).appendText(" other mismatches");
 					}
 					return false;
 				}
@@ -1262,9 +1180,8 @@ public class VdypMatchers {
 		};
 	}
 
-	public static <M extends MatrixMap<T>, T> Matcher<M> mmEquals(
-			M expected, Function<T, Matcher<T>> valueMatcherGenerator
-	) {
+	public static <M extends MatrixMap<T>, T> Matcher<M>
+			mmEquals(M expected, Function<T, Matcher<T>> valueMatcherGenerator) {
 		return new TypeSafeDiagnosingMatcher<M>() {
 
 			@Override
@@ -1275,8 +1192,7 @@ public class VdypMatchers {
 			@Override
 			protected boolean matchesSafely(M item, Description mismatchDescription) {
 				if (item.getNumDimensions() != expected.getNumDimensions()) {
-					mismatchDescription
-							.appendText("matrix map had ")
+					mismatchDescription.appendText("matrix map had ")
 							.appendText(Integer.toString(item.getNumDimensions()))
 							.appendText(" dimensions but expected ")
 							.appendText(Integer.toString(expected.getNumDimensions()));
@@ -1284,10 +1200,8 @@ public class VdypMatchers {
 					return false;
 				}
 				if (!item.getDimensions().equals(expected.getDimensions())) {
-					mismatchDescription
-							.appendText("matrix map had dimensions ")
-							.appendText(item.getDimensions().toString())
-							.appendText(" but expected ")
+					mismatchDescription.appendText("matrix map had dimensions ")
+							.appendText(item.getDimensions().toString()).appendText(" but expected ")
 							.appendText(expected.getDimensions().toString());
 
 					return false;
@@ -1317,10 +1231,8 @@ public class VdypMatchers {
 					mismatchDescription.appendText(first);
 
 					if (failures.size() > 1) {
-						mismatchDescription
-								.appendText(" and there were ")
-								.appendText(Integer.toString(failures.size() - 1))
-								.appendText(" other mismatches");
+						mismatchDescription.appendText(" and there were ")
+								.appendText(Integer.toString(failures.size() - 1)).appendText(" other mismatches");
 					}
 					return false;
 				}
@@ -1337,68 +1249,39 @@ public class VdypMatchers {
 			@Override
 			public void describeTo(Description description) {
 
-				description.appendText("matches VDYPSite ")
-						.appendValue(expected.getPolygonIdentifier())
-						.appendValue(expected.getLayerType())
-						.appendValue(expected.getSiteGenus());
+				description.appendText("matches VDYPSite ").appendValue(expected.getPolygonIdentifier())
+						.appendValue(expected.getLayerType()).appendValue(expected.getSiteGenus());
 			}
 
 			@Override
 			protected boolean matchesSafely(VdypSite item, Description mismatchDescription) {
 				boolean match = true;
 				match = matchValue(
-						match, "PolygonIdentifier",
-						expected.getPolygonIdentifier(),
-						item.getPolygonIdentifier(),
+						match, "PolygonIdentifier", expected.getPolygonIdentifier(), item.getPolygonIdentifier(),
 						mismatchDescription
 				);
 				match = matchValue(
-						match, "LayerType",
-						expected.getLayerType(),
-						item.getLayerType(),
-						mismatchDescription
+						match, "LayerType", expected.getLayerType(), item.getLayerType(), mismatchDescription
 				);
 				match = matchValue(
-						match, "SpeciesGroup",
-						expected.getSiteGenus(),
-						item.getSiteGenus(),
-						mismatchDescription
+						match, "SpeciesGroup", expected.getSiteGenus(), item.getSiteGenus(), mismatchDescription
 				);
 
+				match = matchValue(match, "AgeTotal", expected.getAgeTotal(), item.getAgeTotal(), mismatchDescription);
+				match = matchValue(match, "Height", expected.getHeight(), item.getHeight(), mismatchDescription);
 				match = matchValue(
-						match, "AgeTotal",
-						expected.getAgeTotal(),
-						item.getAgeTotal(),
+						match, "SiteCurveNumber", expected.getSiteCurveNumber(), item.getSiteCurveNumber(),
 						mismatchDescription
 				);
 				match = matchValue(
-						match, "Height",
-						expected.getHeight(),
-						item.getHeight(),
+						match, "SiteIndex", expected.getSiteIndex(), item.getSiteIndex(), mismatchDescription
+				);
+				match = matchValue(
+						match, "YearsToBreastHeight", expected.getYearsToBreastHeight(), item.getYearsToBreastHeight(),
 						mismatchDescription
 				);
 				match = matchValue(
-						match, "SiteCurveNumber",
-						expected.getSiteCurveNumber(),
-						item.getSiteCurveNumber(),
-						mismatchDescription
-				);
-				match = matchValue(
-						match, "SiteIndex",
-						expected.getSiteIndex(),
-						item.getSiteIndex(),
-						mismatchDescription
-				);
-				match = matchValue(
-						match, "YearsToBreastHeight",
-						expected.getYearsToBreastHeight(),
-						item.getYearsToBreastHeight(),
-						mismatchDescription
-				);
-				match = matchValue(
-						match, "YearsAtBreastHeight",
-						expected.getYearsAtBreastHeight(),
-						item.getYearsAtBreastHeight(),
+						match, "YearsAtBreastHeight", expected.getYearsAtBreastHeight(), item.getYearsAtBreastHeight(),
 						mismatchDescription
 				);
 

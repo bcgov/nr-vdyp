@@ -11,10 +11,9 @@ import ca.bc.gov.nrs.vdyp.forward.controlmap.ForwardResolvedControlMapImpl;
 import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
-import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
-import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
+import ca.bc.gov.nrs.vdyp.model.variables.UtilizationClassVariable;
 import ca.bc.gov.nrs.vdyp.processing_state.ProcessingState;
 
 public class BackProcessingState extends ProcessingState<ForwardResolvedControlMap, BackLayerProcessingState> {
@@ -32,7 +31,7 @@ public class BackProcessingState extends ProcessingState<ForwardResolvedControlM
 	// Compatibility Variables - LCV1 & LCVS
 	private boolean areCompatibilityVariablesSet = false;
 
-	private MatrixMap2<UtilizationClass, VolumeVariable, Float>[] cvVolume;
+	private MatrixMap2<UtilizationClass, UtilizationClassVariable, Float>[] cvVolume;
 	private Map<UtilizationClass, Float>[] cvBasalArea;
 	private Map<UtilizationClass, Float>[] cvQuadraticMeanDiameter;
 	private Map<UtilizationClassVariable, Float>[] cvPrimaryLayerSmall;
@@ -69,7 +68,8 @@ public class BackProcessingState extends ProcessingState<ForwardResolvedControlM
 	}
 
 	public void setCompatibilityVariableDetails(
-			MatrixMap2<UtilizationClass, VolumeVariable, Float>[] cvVolume, Map<UtilizationClass, Float>[] cvBasalArea,
+			MatrixMap2<UtilizationClass, UtilizationClassVariable, Float>[] cvVolume,
+			Map<UtilizationClass, Float>[] cvBasalArea,
 			Map<UtilizationClass, Float>[] cvQuadraticMeanDiameter,
 			Map<UtilizationClassVariable, Float>[] cvPrimaryLayerSmall
 	) {
@@ -85,7 +85,7 @@ public class BackProcessingState extends ProcessingState<ForwardResolvedControlM
 		areCompatibilityVariablesSet = true;
 	}
 
-	public float getCVVolume(int speciesIndex, UtilizationClass uc, VolumeVariable volumeVariable) {
+	public float getCVVolume(int speciesIndex, UtilizationClass uc, UtilizationClassVariable volumeVariable) {
 		if (!areCompatibilityVariablesSet) {
 			throw UNSET_CV_VOLUMES.get();
 		}

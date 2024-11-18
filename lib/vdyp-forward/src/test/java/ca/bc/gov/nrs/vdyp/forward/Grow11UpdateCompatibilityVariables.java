@@ -19,8 +19,8 @@ import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
-import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
+import ca.bc.gov.nrs.vdyp.model.variables.UtilizationClassVariable;
 
 class Grow11UpdateCompatibilityVariables {
 
@@ -66,7 +66,7 @@ class Grow11UpdateCompatibilityVariables {
 						Matchers.hasEntry(UtilizationClassVariable.BASAL_AREA, -2.1394816e-07f),
 						Matchers.hasEntry(UtilizationClassVariable.QUAD_MEAN_DIAMETER, 0.0f),
 						Matchers.hasEntry(UtilizationClassVariable.LOREY_HEIGHT, 0.0f),
-						Matchers.hasEntry(UtilizationClassVariable.WHOLE_STEM_VOLUME, 0.0f)
+						Matchers.hasEntry(UtilizationClassVariable.WHOLE_STEM_VOL, 0.0f)
 				)
 		);
 		assertThat(
@@ -77,7 +77,7 @@ class Grow11UpdateCompatibilityVariables {
 						Matchers.hasEntry(UtilizationClassVariable.BASAL_AREA, -4.406223e-5f),
 						Matchers.hasEntry(UtilizationClassVariable.QUAD_MEAN_DIAMETER, 0.0023196794f),
 						Matchers.hasEntry(UtilizationClassVariable.LOREY_HEIGHT, 1.2850753e-6f),
-						Matchers.hasEntry(UtilizationClassVariable.WHOLE_STEM_VOLUME, 0.0010083826f)
+						Matchers.hasEntry(UtilizationClassVariable.WHOLE_STEM_VOL, 0.0010083826f)
 				)
 		);
 		assertThat(
@@ -88,7 +88,7 @@ class Grow11UpdateCompatibilityVariables {
 						Matchers.hasEntry(UtilizationClassVariable.BASAL_AREA, 4.8476713e-6f),
 						Matchers.hasEntry(UtilizationClassVariable.QUAD_MEAN_DIAMETER, 0.0f),
 						Matchers.hasEntry(UtilizationClassVariable.LOREY_HEIGHT, -1.5245796e-5f),
-						Matchers.hasEntry(UtilizationClassVariable.WHOLE_STEM_VOLUME, 0.0f)
+						Matchers.hasEntry(UtilizationClassVariable.WHOLE_STEM_VOL, 0.0f)
 				)
 		);
 		assertThat(
@@ -98,7 +98,7 @@ class Grow11UpdateCompatibilityVariables {
 						Matchers.hasEntry(UtilizationClassVariable.BASAL_AREA, 0.0f),
 						Matchers.hasEntry(UtilizationClassVariable.QUAD_MEAN_DIAMETER, 0.0f),
 						Matchers.hasEntry(UtilizationClassVariable.LOREY_HEIGHT, 0.0f),
-						Matchers.hasEntry(UtilizationClassVariable.WHOLE_STEM_VOLUME, 0.0f)
+						Matchers.hasEntry(UtilizationClassVariable.WHOLE_STEM_VOL, 0.0f)
 				)
 		);
 		assertThat(
@@ -108,7 +108,7 @@ class Grow11UpdateCompatibilityVariables {
 						Matchers.hasEntry(UtilizationClassVariable.BASAL_AREA, 3.352447e-6f),
 						Matchers.hasEntry(UtilizationClassVariable.QUAD_MEAN_DIAMETER, 0.0f),
 						Matchers.hasEntry(UtilizationClassVariable.LOREY_HEIGHT, -5.6603396e-5f),
-						Matchers.hasEntry(UtilizationClassVariable.WHOLE_STEM_VOLUME, 0.0f)
+						Matchers.hasEntry(UtilizationClassVariable.WHOLE_STEM_VOL, 0.0f)
 				)
 		);
 	}

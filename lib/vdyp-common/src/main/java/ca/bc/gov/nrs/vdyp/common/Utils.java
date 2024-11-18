@@ -4,6 +4,7 @@ import java.text.MessageFormat;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -16,6 +17,7 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
@@ -215,7 +217,32 @@ public class Utils {
 	 * @return
 	 */
 	public static <K, V> Map<K, V> constMap(Consumer<Map<K, V>> body) {
-		var map = new HashMap<K, V>();
+		return constMap(HashMap::new, body);
+	}
+
+	/**
+	 * Create a map, allow it to be modified, then return an unmodifiable view of it.
+	 *
+	 * @param <K>
+	 * @param <V>
+	 * @param body
+	 * @return
+	 */
+	public static <K extends Enum<K>, V> Map<K, V> constMap(Class<K> keyEnum, Consumer<Map<K, V>> body) {
+		return constMap(() -> new EnumMap<K, V>(keyEnum), body);
+	}
+
+	/**
+	 * Create map, allow it to be modified, then return an unmodifiable view of it.
+	 *
+	 * @param <K>
+	 * @param <V>
+	 * @param body
+	 * @param constructor
+	 * @return
+	 */
+	public static <K, V> Map<K, V> constMap(Supplier<Map<K, V>> constructor, Consumer<Map<K, V>> body) {
+		var map = constructor.get();
 		body.accept(map);
 		return Collections.unmodifiableMap(map);
 	}

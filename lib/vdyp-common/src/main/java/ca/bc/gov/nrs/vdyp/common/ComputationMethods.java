@@ -26,7 +26,7 @@ import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.VdypUtilizationHolder;
 import ca.bc.gov.nrs.vdyp.model.VolumeComputeMode;
-import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
+import ca.bc.gov.nrs.vdyp.model.variables.UtilizationClassVariable;
 
 public class ComputationMethods {
 
@@ -166,7 +166,9 @@ public class ComputationMethods {
 				for (var uc : VdypStartApplication.UTIL_CLASSES) {
 
 					float currentUcBasalArea = basalAreaUtil.get(uc);
-					basalAreaUtil.set(uc, currentUcBasalArea + compatibilityVariables.getCvBasalArea(uc, spec.getLayerType()));
+					basalAreaUtil.set(
+							uc, currentUcBasalArea + compatibilityVariables.getCvBasalArea(uc, spec.getLayerType())
+					);
 					if (basalAreaUtil.get(uc) < 0.0f) {
 						basalAreaUtil.set(uc, 0.0f);
 					}
@@ -221,8 +223,11 @@ public class ComputationMethods {
 					for (UtilizationClass uc : UtilizationClass.UTIL_CLASSES) {
 						wholeStemVolumeUtil.set(
 								uc,
-								wholeStemVolumeUtil.get(uc) * FloatMath
-										.exp(compatibilityVariables.getCvVolume(uc, VolumeVariable.WHOLE_STEM_VOL, spec.getLayerType()))
+								wholeStemVolumeUtil.get(uc) * FloatMath.exp(
+										compatibilityVariables.getCvVolume(
+												uc, UtilizationClassVariable.WHOLE_STEM_VOL, spec.getLayerType()
+										)
+								)
 						);
 						wholeStemVolumeSum += wholeStemVolumeUtil.get(uc);
 					}
@@ -230,14 +235,23 @@ public class ComputationMethods {
 
 					// Set the adjustment factors for next three volume types
 					for (UtilizationClass uc : UtilizationClass.UTIL_CLASSES) {
-						adjustCloseUtil
-								.set(uc, compatibilityVariables.getCvVolume(uc, VolumeVariable.CLOSE_UTIL_VOL, spec.getLayerType()));
+						adjustCloseUtil.set(
+								uc,
+								compatibilityVariables
+										.getCvVolume(uc, UtilizationClassVariable.CLOSE_UTIL_VOL, spec.getLayerType())
+						);
 						adjustDecayUtil.set(
-								uc, compatibilityVariables.getCvVolume(uc, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, spec.getLayerType())
+								uc,
+								compatibilityVariables.getCvVolume(
+										uc, UtilizationClassVariable.CLOSE_UTIL_VOL_LESS_DECAY, spec.getLayerType()
+								)
 						);
 						adjustDecayWasteUtil.set(
 								uc,
-								compatibilityVariables.getCvVolume(uc, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, spec.getLayerType())
+								compatibilityVariables.getCvVolume(
+										uc, UtilizationClassVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
+										spec.getLayerType()
+								)
 						);
 					}
 				} else {

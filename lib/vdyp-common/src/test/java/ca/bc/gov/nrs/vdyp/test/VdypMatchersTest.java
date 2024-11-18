@@ -15,10 +15,12 @@ import java.util.Random;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.hamcrest.StringDescription;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import ca.bc.gov.nrs.vdyp.common.Utils;
@@ -28,12 +30,11 @@ import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap3Impl;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
-import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
 import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
 import ca.bc.gov.nrs.vdyp.model.VdypCompatibilityVariables;
 import ca.bc.gov.nrs.vdyp.model.VdypSite;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
-import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
+import ca.bc.gov.nrs.vdyp.model.variables.UtilizationClassVariable;
 
 class VdypMatchersTest {
 
@@ -41,10 +42,7 @@ class VdypMatchersTest {
 		assertFalse(unit.matches(item), "expected match to fail but it passed");
 		var description = new StringDescription();
 		unit.describeMismatch(item, description);
-		assertThat(
-				"Mismatch description not as expected",
-				description.toString(), descriptionMatcher
-		);
+		assertThat("Mismatch description not as expected", description.toString(), descriptionMatcher);
 	}
 
 	static <T> void assertMatch(T item, Matcher<T> unit) {
@@ -59,21 +57,15 @@ class VdypMatchersTest {
 
 	UtilizationVector mockUtilVector(float multiplier) {
 		return Utils.utilizationVector(
-				rand.nextFloat() * multiplier,
-				rand.nextFloat() * multiplier,
-				rand.nextFloat() * multiplier,
-				rand.nextFloat() * multiplier,
-				rand.nextFloat() * multiplier
+				rand.nextFloat() * multiplier, rand.nextFloat() * multiplier, rand.nextFloat() * multiplier,
+				rand.nextFloat() * multiplier, rand.nextFloat() * multiplier
 		);
 	}
 
 	UtilizationVector mockHeightVector() {
-		return Utils.heightVector(
-				rand.nextFloat() * 5,
-				rand.nextFloat() * 20
-		);
+		return Utils.heightVector(rand.nextFloat() * 5, rand.nextFloat() * 20);
 	}
-	
+
 	@Nested
 	class deepEquals {
 
@@ -147,7 +139,8 @@ class VdypMatchersTest {
 				assertMatch(actual, unit);
 			}
 
-			// Changing the key properties also causes mismatches on the children that share those key properties so use startsWith
+			// Changing the key properties also causes mismatches on the children that share those key properties so use
+			// startsWith
 
 			@Test
 			void testPolyIdDifferent() {
@@ -162,7 +155,8 @@ class VdypMatchersTest {
 				});
 
 				assertMismatch(
-						actual, unit, startsWith(
+						actual, unit,
+						startsWith(
 								"PolygonIdentifier was <Different            2025> but expected <Test                 2024>"
 						)
 				);
@@ -180,11 +174,7 @@ class VdypMatchersTest {
 					sb.layerType(LayerType.VETERAN);
 				});
 
-				assertMismatch(
-						actual, unit, startsWith(
-								"LayerType was <VETERAN> but expected <PRIMARY>"
-						)
-				);
+				assertMismatch(actual, unit, startsWith("LayerType was <VETERAN> but expected <PRIMARY>"));
 			}
 
 			@Test
@@ -199,11 +189,7 @@ class VdypMatchersTest {
 					sb.genus("S");
 				});
 
-				assertMismatch(
-						actual, unit, startsWith(
-								"Genus was \"S\" but expected \"MB\""
-						)
-				);
+				assertMismatch(actual, unit, startsWith("Genus was \"S\" but expected \"MB\""));
 			}
 
 			@Test
@@ -218,11 +204,7 @@ class VdypMatchersTest {
 					sb.percentGenus(89);
 				});
 
-				assertMismatch(
-						actual, unit, equalTo(
-								"PercentGenus was <89.0F> but expected <90.0F>"
-						)
-				);
+				assertMismatch(actual, unit, equalTo("PercentGenus was <89.0F> but expected <90.0F>"));
 			}
 
 			@Test
@@ -237,11 +219,7 @@ class VdypMatchersTest {
 					sb.breakageGroup(22);
 				});
 
-				assertMismatch(
-						actual, unit, equalTo(
-								"BreakageGroup was <22> but expected <12>"
-						)
-				);
+				assertMismatch(actual, unit, equalTo("BreakageGroup was <22> but expected <12>"));
 			}
 
 			@Test
@@ -256,11 +234,7 @@ class VdypMatchersTest {
 					sb.decayGroup(23);
 				});
 
-				assertMismatch(
-						actual, unit, equalTo(
-								"DecayGroup was <23> but expected <13>"
-						)
-				);
+				assertMismatch(actual, unit, equalTo("DecayGroup was <23> but expected <13>"));
 			}
 
 			@Test
@@ -275,11 +249,7 @@ class VdypMatchersTest {
 					sb.volumeGroup(24);
 				});
 
-				assertMismatch(
-						actual, unit, equalTo(
-								"VolumeGroup was <24> but expected <14>"
-						)
-				);
+				assertMismatch(actual, unit, equalTo("VolumeGroup was <24> but expected <14>"));
 			}
 
 			@Test
@@ -296,9 +266,8 @@ class VdypMatchersTest {
 				});
 
 				assertMismatch(
-						actual, unit, equalTo(
-								"Sp64DistributionSet was <[S[1]:70.0, F[2]:30.0]> but expected <[MB[1]:100.0]>"
-						)
+						actual, unit,
+						equalTo("Sp64DistributionSet was <[S[1]:70.0, F[2]:30.0]> but expected <[MB[1]:100.0]>")
 				);
 			}
 
@@ -314,7 +283,8 @@ class VdypMatchersTest {
 				});
 
 				assertMismatch(
-						actual, unit, matchesRegex(
+						actual, unit,
+						matchesRegex(
 								"mismatch in Compatibility Variables \"MB\": CvBasalArea at \\[<U75TO125>, <PRIMARY>\\] expected <\\d\\.\\d+F> but it was a java.lang.Float \\(<\\d\\.\\d+F>\\) and there were \\d+ other mismatches"
 						)
 				);
@@ -332,15 +302,15 @@ class VdypMatchersTest {
 				});
 
 				assertMismatch(
-						actual, unit, equalTo(
-								"mismatch in site \"MB\": Height was <Optional[22.0]> but expected <Optional[15.0]>"
-						)
+						actual, unit,
+						equalTo("mismatch in site \"MB\": Height was <Optional[22.0]> but expected <Optional[15.0]>")
 				);
 			}
-			
+
 			@ParameterizedTest
-			@ValueSource(strings={"LoreyHeight", "BaseArea", "QuadraticMeanDiameter", "TreesPerHectare"})
-			void testUtilizationDifferent(String property) throws Exception {
+			@EnumSource(UtilizationClassVariable.class)
+			void testUtilizationDifferent(UtilizationClassVariable ucv) throws Exception {
+
 				var actual = VdypSpecies.build(sb -> {
 					sb.copy(expected);
 					sb.copySiteFrom(expected, (ib, i) -> {
@@ -350,19 +320,33 @@ class VdypMatchersTest {
 				});
 
 				// Make a change to one entry (SMALL) in the utilization vector for the specified field
-				
-				TestUtils.getUtilization(actual, property).scalarInPlace(UtilizationClass.SMALL, x->x+1);
-				
+
+				ucv.get(actual).scalarInPlace(UtilizationClass.SMALL, x -> x + 1);
+
+				String name = ucv.getShortName();
+				String type = "a utilization vector";
+				String floatPattern = "(\\d+\\.\\d+)";
+				String expectedVectorPattern = "\\[Small: " + floatPattern + ", All: " + floatPattern + ", 7.5cm: "
+						+ floatPattern + ", 12.5cm: " + floatPattern + ", 17.5cm: " + floatPattern + ", 22.5cm: "
+						+ floatPattern + "\\]";
+
+				String actualVectorPattern = "\\[Small: \\[\\[" + floatPattern
+						+ "\\]\\], All: \\2, 7.5cm: \\3, 12.5cm: \\4, 17.5cm: \\5, 22.5cm: \\6\\]";
+
+				if (UtilizationClassVariable.LOREY_HEIGHT == ucv) {
+					type = "a lorey height vector";
+					expectedVectorPattern = "\\[Small: " + floatPattern + ", All: " + floatPattern + "\\]";
+					actualVectorPattern = "\\[Small: \\[\\[" + floatPattern + "\\]\\], All: \\2\\]";
+				}
+
 				assertMismatch(
-						actual, unit, equalTo(
-								""
+						actual, unit,
+						matchesRegex(
+								"^" + name + " expected " + type + " \"" + expectedVectorPattern + "\" but was "
+										+ actualVectorPattern + "$"
 						)
 				);
-	
-				
 			}
-			
-			
 
 		}
 
@@ -405,11 +389,12 @@ class VdypMatchersTest {
 				});
 
 				actual.getCvVolume().put(
-						UtilizationClass.U125TO175, VolumeVariable.CLOSE_UTIL_VOL, LayerType.PRIMARY, 20f
+						UtilizationClass.U125TO175, UtilizationClassVariable.CLOSE_UTIL_VOL, LayerType.PRIMARY, 20f
 				);
 
 				assertMismatch(
-						actual, unit, matchesRegex(
+						actual, unit,
+						matchesRegex(
 								"CvVolume at \\[<U125TO175>, <CLOSE_UTIL_VOL>, <PRIMARY>\\] expected <\\d\\.\\d+F> but it was a java.lang.Float \\(<20.0F>\\)"
 						)
 				);
@@ -421,12 +406,11 @@ class VdypMatchersTest {
 					cvb.copy(expected);
 				});
 
-				actual.getCvBasalArea().put(
-						UtilizationClass.U125TO175, LayerType.PRIMARY, 20f
-				);
+				actual.getCvBasalArea().put(UtilizationClass.U125TO175, LayerType.PRIMARY, 20f);
 
 				assertMismatch(
-						actual, unit, matchesRegex(
+						actual, unit,
+						matchesRegex(
 								"CvBasalArea at \\[<U125TO175>, <PRIMARY>\\] expected <\\d\\.\\d+F> but it was a java.lang.Float \\(<20.0F>\\)"
 						)
 				);
@@ -438,12 +422,11 @@ class VdypMatchersTest {
 					cvb.copy(expected);
 				});
 
-				actual.getCvQuadraticMeanDiameter().put(
-						UtilizationClass.U125TO175, LayerType.PRIMARY, 20f
-				);
+				actual.getCvQuadraticMeanDiameter().put(UtilizationClass.U125TO175, LayerType.PRIMARY, 20f);
 
 				assertMismatch(
-						actual, unit, matchesRegex(
+						actual, unit,
+						matchesRegex(
 								"CvQuadraticMeanDiameter at \\[<U125TO175>, <PRIMARY>\\] expected <\\d\\.\\d+F> but it was a java.lang.Float \\(<20.0F>\\)"
 						)
 				);
@@ -455,17 +438,15 @@ class VdypMatchersTest {
 					cvb.copy(expected);
 				});
 
-				actual.getCvPrimaryLayerSmall().put(
-						UtilizationClassVariable.BASAL_AREA, 20f
-				);
+				actual.getCvPrimaryLayerSmall().put(UtilizationClassVariable.BASAL_AREA, 20f);
 
 				assertMismatch(
-						actual, unit, matchesRegex(
+						actual, unit,
+						matchesRegex(
 								"CvPrimaryLayerSmall at <BASAL_AREA> expected <\\d\\.\\d+F> but it was a java.lang.Float \\(<20.0F>\\)"
 						)
 				);
 			}
-
 
 		}
 
@@ -507,7 +488,8 @@ class VdypMatchersTest {
 				});
 
 				assertMismatch(
-						actual, unit, equalTo(
+						actual, unit,
+						equalTo(
 								"PolygonIdentifier was <Different            2025> but expected <Test                 2024>"
 						)
 				);
@@ -520,11 +502,7 @@ class VdypMatchersTest {
 					ib.layerType(LayerType.VETERAN);
 				});
 
-				assertMismatch(
-						actual, unit, equalTo(
-								"LayerType was <VETERAN> but expected <PRIMARY>"
-						)
-				);
+				assertMismatch(actual, unit, equalTo("LayerType was <VETERAN> but expected <PRIMARY>"));
 			}
 
 			@Test
@@ -534,11 +512,7 @@ class VdypMatchersTest {
 					ib.genus("B");
 				});
 
-				assertMismatch(
-						actual, unit, equalTo(
-								"SpeciesGroup was \"B\" but expected \"MB\""
-						)
-				);
+				assertMismatch(actual, unit, equalTo("SpeciesGroup was \"B\" but expected \"MB\""));
 			}
 
 			@Test
@@ -548,11 +522,7 @@ class VdypMatchersTest {
 					ib.height(16);
 				});
 
-				assertMismatch(
-						actual, unit, equalTo(
-								"Height was <Optional[16.0]> but expected <Optional[15.0]>"
-						)
-				);
+				assertMismatch(actual, unit, equalTo("Height was <Optional[16.0]> but expected <Optional[15.0]>"));
 			}
 
 			@Test
@@ -564,7 +534,8 @@ class VdypMatchersTest {
 
 				// Years at breast height is computed from AgeTotal and YearstToBreastHeight
 				assertMismatch(
-						actual, unit, equalTo(
+						actual, unit,
+						equalTo(
 								"AgeTotal was <Optional[45.0]> but expected <Optional[40.0]>, YearsAtBreastHeight was <Optional[40.0]> but expected <Optional[35.0]>"
 						)
 				);
@@ -579,7 +550,8 @@ class VdypMatchersTest {
 
 				// Years at breast height is computed from AgeTotal and YearstToBreastHeight
 				assertMismatch(
-						actual, unit, equalTo(
+						actual, unit,
+						equalTo(
 								"YearsToBreastHeight was <Optional[4.0]> but expected <Optional[5.0]>, YearsAtBreastHeight was <Optional[36.0]> but expected <Optional[35.0]>"
 						)
 				);
@@ -592,11 +564,7 @@ class VdypMatchersTest {
 					ib.siteCurveNumber(41);
 				});
 
-				assertMismatch(
-						actual, unit, equalTo(
-								"SiteCurveNumber was <Optional[41]> but expected <Optional[42]>"
-						)
-				);
+				assertMismatch(actual, unit, equalTo("SiteCurveNumber was <Optional[41]> but expected <Optional[42]>"));
 			}
 
 			@Test
@@ -606,11 +574,7 @@ class VdypMatchersTest {
 					ib.siteIndex(3);
 				});
 
-				assertMismatch(
-						actual, unit, equalTo(
-								"SiteIndex was <Optional[3.0]> but expected <Optional[4.0]>"
-						)
-				);
+				assertMismatch(actual, unit, equalTo("SiteIndex was <Optional[3.0]> but expected <Optional[4.0]>"));
 			}
 
 		}
@@ -650,9 +614,8 @@ class VdypMatchersTest {
 			test.put(2, 5, "DIFFERENT");
 			var unit = VdypMatchers.mmEquals(expected, s -> Matchers.equalTo(s));
 			assertMismatch(
-					test, unit, equalTo(
-							"at [<1>, <4>] expected \"1:4\" but it was \"DIFFERENT\" and there were 1 other mismatches"
-					)
+					test, unit,
+					equalTo("at [<1>, <4>] expected \"1:4\" but it was \"DIFFERENT\" and there were 1 other mismatches")
 			);
 		}
 
@@ -662,11 +625,7 @@ class VdypMatchersTest {
 					List.of(1), List.of(2), List.of(3), (k1, k2, k3) -> "TEST"
 			);
 			var unit = VdypMatchers.mmEquals((MatrixMap<String>) expected, s -> Matchers.equalTo(s));
-			assertMismatch(
-					test3, unit, equalTo(
-							"matrix map had 3 dimensions but expected 2"
-					)
-			);
+			assertMismatch(test3, unit, equalTo("matrix map had 3 dimensions but expected 2"));
 		}
 
 		@Test
@@ -675,9 +634,8 @@ class VdypMatchersTest {
 
 			var unit = VdypMatchers.mmEquals((MatrixMap<String>) expected, s -> Matchers.equalTo(s));
 			assertMismatch(
-					test, unit, equalTo(
-							"matrix map had dimensions [[1, 2], [4, 5, 6]] but expected [[1, 2, 3], [4, 5, 6]]"
-					)
+					test, unit,
+					equalTo("matrix map had dimensions [[1, 2], [4, 5, 6]] but expected [[1, 2, 3], [4, 5, 6]]")
 			);
 		}
 
@@ -689,9 +647,8 @@ class VdypMatchersTest {
 
 			var unit = VdypMatchers.mmEquals((MatrixMap<String>) expected, s -> Matchers.equalTo(s));
 			assertMismatch(
-					test, unit, equalTo(
-							"matrix map had dimensions [[0, 1, 2, 3], [4, 5, 6]] but expected [[1, 2, 3], [4, 5, 6]]"
-					)
+					test, unit,
+					equalTo("matrix map had dimensions [[0, 1, 2, 3], [4, 5, 6]] but expected [[1, 2, 3], [4, 5, 6]]")
 			);
 		}
 
@@ -732,7 +689,8 @@ class VdypMatchersTest {
 			test.put(2, "DIFFERENT");
 			var unit = VdypMatchers.mapEquals(expected, s -> Matchers.equalTo(s));
 			assertMismatch(
-					test, unit, matchesRegex(
+					test, unit,
+					matchesRegex(
 							"at <\\d> expected \"Value \\d\" but it was \"DIFFERENT\" and there were 1 other mismatches"
 					)
 			);
@@ -743,11 +701,7 @@ class VdypMatchersTest {
 			test.remove(1);
 
 			var unit = VdypMatchers.mapEquals(expected, s -> Matchers.equalTo(s));
-			assertMismatch(
-					test, unit, equalTo(
-							"expected keys <[1, 2]> but were <[2]>"
-					)
-			);
+			assertMismatch(test, unit, equalTo("expected keys <[1, 2]> but were <[2]>"));
 		}
 
 		@Test
@@ -755,11 +709,7 @@ class VdypMatchersTest {
 			test.put(42, "EXTRA");
 
 			var unit = VdypMatchers.mapEquals(expected, s -> Matchers.equalTo(s));
-			assertMismatch(
-					test, unit, equalTo(
-							"expected keys <[1, 2]> but were <[1, 2, 42]>"
-					)
-			);
+			assertMismatch(test, unit, equalTo("expected keys <[1, 2]> but were <[1, 2, 42]>"));
 		}
 
 		@Test
@@ -767,27 +717,21 @@ class VdypMatchersTest {
 			expected = new HashMap<>();
 			test = new HashMap<>();
 			var unit = VdypMatchers.mapEquals(expected, s -> Matchers.equalTo(s));
-			assertMatch(
-					test, unit
-			);
+			assertMatch(test, unit);
 		}
 
 		@Test
 		void testExpectedEmpty() {
 			expected = new HashMap<>();
 			var unit = VdypMatchers.mapEquals(expected, s -> Matchers.equalTo(s));
-			assertMismatch(
-					test, unit, equalTo("map size was <2>")
-			);
+			assertMismatch(test, unit, equalTo("map size was <2>"));
 		}
 
 		@Test
 		void testActualEmpty() {
 			test = new HashMap<>();
 			var unit = VdypMatchers.mapEquals(expected, s -> Matchers.equalTo(s));
-			assertMismatch(
-					test, unit, equalTo("map was empty")
-			);
+			assertMismatch(test, unit, equalTo("map was empty"));
 		}
 
 	}

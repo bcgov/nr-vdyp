@@ -11,6 +11,7 @@ import java.util.function.Consumer;
 import ca.bc.gov.nrs.vdyp.application.InitializationIncompleteException;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies.Builder;
+import ca.bc.gov.nrs.vdyp.model.variables.UtilizationClassVariable;
 
 public class VdypSpecies extends BaseVdypSpecies<VdypSite> implements VdypUtilizationHolder {
 
@@ -202,7 +203,7 @@ public class VdypSpecies extends BaseVdypSpecies<VdypSite> implements VdypUtiliz
 	}
 
 	public void setCompatibilityVariables(
-			MatrixMap3<UtilizationClass, VolumeVariable, LayerType, Float> cvVolume,
+			MatrixMap3<UtilizationClass, UtilizationClassVariable, LayerType, Float> cvVolume,
 			MatrixMap2<UtilizationClass, LayerType, Float> cvBasalArea,
 			MatrixMap2<UtilizationClass, LayerType, Float> cvQuadraticMeanDiameter,
 			Map<UtilizationClassVariable, Float> cvPrimaryLayerSmall
@@ -488,15 +489,13 @@ public class VdypSpecies extends BaseVdypSpecies<VdypSite> implements VdypUtiliz
 		protected void preProcess() {
 			super.preProcess();
 
-			compatibilityVariables = compatibilityVariablesBuilder
-					.map(this::buildCompatibilityVariables)
+			compatibilityVariables = compatibilityVariablesBuilder.map(this::buildCompatibilityVariables)
 					.or(() -> compatibilityVariables);
 			compatibilityVariablesBuilder = Optional.empty();
 		}
 
-		protected VdypCompatibilityVariables buildCompatibilityVariables(
-				Consumer<VdypCompatibilityVariables.Builder> config
-		) {
+		protected VdypCompatibilityVariables
+				buildCompatibilityVariables(Consumer<VdypCompatibilityVariables.Builder> config) {
 			return VdypCompatibilityVariables.build(builder -> {
 				config.accept(builder);
 				builder.polygonIdentifier(polygonIdentifier.get());

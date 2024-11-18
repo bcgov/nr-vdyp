@@ -2,9 +2,11 @@ package ca.bc.gov.nrs.vdyp.model;
 
 import java.text.MessageFormat;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -12,16 +14,27 @@ import java.util.function.Function;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap3Impl.TriFunction;
 import ca.bc.gov.nrs.vdyp.model.builders.ModelClassBuilder;
 import ca.bc.gov.nrs.vdyp.model.builders.SpeciesGroupIdentifiedBuilder;
+import ca.bc.gov.nrs.vdyp.model.variables.UtilizationClassVariable;
 
 public class VdypCompatibilityVariables {
 
-	private final MatrixMap3<UtilizationClass, VolumeVariable, LayerType, Float> cvVolume;
+	private final MatrixMap3<UtilizationClass, UtilizationClassVariable, LayerType, Float> cvVolume;
 	private final MatrixMap2<UtilizationClass, LayerType, Float> cvBasalArea;
 	private final MatrixMap2<UtilizationClass, LayerType, Float> cvQuadraticMeanDiameter;
 	private final Map<UtilizationClassVariable, Float> cvPrimaryLayerSmall;
 
+	public static final Set<UtilizationClassVariable> VOLUME_UTILIZATION_VARIABLES = EnumSet.of(
+			UtilizationClassVariable.WHOLE_STEM_VOL, UtilizationClassVariable.CLOSE_UTIL_VOL,
+			UtilizationClassVariable.CLOSE_UTIL_VOL_LESS_DECAY,
+			UtilizationClassVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE
+	);
+	public static final Set<UtilizationClassVariable> SMALL_UTILIZATION_VARIABLES = EnumSet.of(
+			UtilizationClassVariable.BASAL_AREA, UtilizationClassVariable.QUAD_MEAN_DIAMETER,
+			UtilizationClassVariable.LOREY_HEIGHT, UtilizationClassVariable.WHOLE_STEM_VOL
+	);
+
 	public VdypCompatibilityVariables(
-			MatrixMap3<UtilizationClass, VolumeVariable, LayerType, Float> cvVolume,
+			MatrixMap3<UtilizationClass, UtilizationClassVariable, LayerType, Float> cvVolume,
 			MatrixMap2<UtilizationClass, LayerType, Float> cvBasalArea,
 			MatrixMap2<UtilizationClass, LayerType, Float> cvQuadraticMeanDiameter,
 			Map<UtilizationClassVariable, Float> cvPrimaryLayerSmall
@@ -33,7 +46,7 @@ public class VdypCompatibilityVariables {
 		this.cvPrimaryLayerSmall = cvPrimaryLayerSmall;
 	}
 
-	public MatrixMap3<UtilizationClass, VolumeVariable, LayerType, Float> getCvVolume() {
+	public MatrixMap3<UtilizationClass, UtilizationClassVariable, LayerType, Float> getCvVolume() {
 		return cvVolume;
 	}
 
@@ -49,7 +62,7 @@ public class VdypCompatibilityVariables {
 		return cvPrimaryLayerSmall;
 	}
 
-	public float getCvVolume(UtilizationClass uc, VolumeVariable vv, LayerType lt) {
+	public float getCvVolume(UtilizationClass uc, UtilizationClassVariable vv, LayerType lt) {
 		return getCvVolume().get(uc, vv, lt);
 	}
 
@@ -107,30 +120,26 @@ public class VdypCompatibilityVariables {
 			this.polygonIndentifier(polyId);
 		}
 
-		private Optional<MatrixMap3<UtilizationClass, VolumeVariable, LayerType, Float>> cvVolume = Optional.empty();
+		private Optional<MatrixMap3<UtilizationClass, UtilizationClassVariable, LayerType, Float>> cvVolume = Optional
+				.empty();
 		private Optional<MatrixMap2<UtilizationClass, LayerType, Float>> cvBasalArea = Optional.empty();
 		private Optional<MatrixMap2<UtilizationClass, LayerType, Float>> cvQuadraticMeanDiameter = Optional.empty();
 		private Optional<Map<UtilizationClassVariable, Float>> cvPrimaryLayerSmall = Optional.empty();
 
-		public void cvVolume(TriFunction<UtilizationClass, VolumeVariable, LayerType, Float> init) {
-			MatrixMap3Impl<UtilizationClass, VolumeVariable, LayerType, Float> cvVolume = new MatrixMap3Impl<>(
-					UtilizationClass.UTIL_CLASSES,
-					VolumeVariable.ALL,
-					LayerType.ALL_USED,
-					init
+		public void cvVolume(TriFunction<UtilizationClass, UtilizationClassVariable, LayerType, Float> init) {
+			MatrixMap3Impl<UtilizationClass, UtilizationClassVariable, LayerType, Float> cvVolume = new MatrixMap3Impl<>(
+					UtilizationClass.UTIL_CLASSES, VOLUME_UTILIZATION_VARIABLES, LayerType.ALL_USED, init
 			);
 			cvVolume(cvVolume);
 		}
 
-		public void cvVolume(MatrixMap3<UtilizationClass, VolumeVariable, LayerType, Float> cvVolume) {
+		public void cvVolume(MatrixMap3<UtilizationClass, UtilizationClassVariable, LayerType, Float> cvVolume) {
 			this.cvVolume = Optional.of(cvVolume);
 		}
 
 		public void cvBasalArea(BiFunction<UtilizationClass, LayerType, Float> init) {
 			MatrixMap2Impl<UtilizationClass, LayerType, Float> cvBasalArea = new MatrixMap2Impl<>(
-					UtilizationClass.UTIL_CLASSES,
-					LayerType.ALL_USED,
-					init
+					UtilizationClass.UTIL_CLASSES, LayerType.ALL_USED, init
 			);
 			cvBasalArea(cvBasalArea);
 		}
@@ -141,9 +150,7 @@ public class VdypCompatibilityVariables {
 
 		public void cvQuadraticMeanDiameter(BiFunction<UtilizationClass, LayerType, Float> init) {
 			MatrixMap2Impl<UtilizationClass, LayerType, Float> cvQuadraticMeanDiameter = new MatrixMap2Impl<>(
-					UtilizationClass.UTIL_CLASSES,
-					LayerType.ALL_USED,
-					init
+					UtilizationClass.UTIL_CLASSES, LayerType.ALL_USED, init
 			);
 			cvQuadraticMeanDiameter(cvQuadraticMeanDiameter);
 		}
@@ -154,7 +161,7 @@ public class VdypCompatibilityVariables {
 
 		public void cvPrimaryLayerSmall(Function<UtilizationClassVariable, Float> init) {
 			var cvPrimaryLayerSmall = new HashMap<UtilizationClassVariable, Float>();
-			for (var ucv : UtilizationClassVariable.ALL) {
+			for (var ucv : SMALL_UTILIZATION_VARIABLES) {
 				cvPrimaryLayerSmall.put(ucv, init.apply(ucv));
 			}
 			cvPrimaryLayerSmall(cvPrimaryLayerSmall);

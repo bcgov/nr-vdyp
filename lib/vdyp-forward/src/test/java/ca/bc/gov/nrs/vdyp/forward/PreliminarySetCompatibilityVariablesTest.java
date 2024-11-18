@@ -4,14 +4,13 @@ import static ca.bc.gov.nrs.vdyp.model.UtilizationClass.OVER225;
 import static ca.bc.gov.nrs.vdyp.model.UtilizationClass.U125TO175;
 import static ca.bc.gov.nrs.vdyp.model.UtilizationClass.U175TO225;
 import static ca.bc.gov.nrs.vdyp.model.UtilizationClass.U75TO125;
-import static ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable.BASAL_AREA;
-import static ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable.LOREY_HEIGHT;
-import static ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable.QUAD_MEAN_DIAMETER;
-import static ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable.WHOLE_STEM_VOLUME;
-import static ca.bc.gov.nrs.vdyp.model.VolumeVariable.CLOSE_UTIL_VOL;
-import static ca.bc.gov.nrs.vdyp.model.VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY;
-import static ca.bc.gov.nrs.vdyp.model.VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE;
-import static ca.bc.gov.nrs.vdyp.model.VolumeVariable.WHOLE_STEM_VOL;
+import static ca.bc.gov.nrs.vdyp.model.variables.UtilizationClassVariable.BASAL_AREA;
+import static ca.bc.gov.nrs.vdyp.model.variables.UtilizationClassVariable.LOREY_HEIGHT;
+import static ca.bc.gov.nrs.vdyp.model.variables.UtilizationClassVariable.QUAD_MEAN_DIAMETER;
+import static ca.bc.gov.nrs.vdyp.model.variables.UtilizationClassVariable.WHOLE_STEM_VOL;
+import static ca.bc.gov.nrs.vdyp.model.variables.UtilizationClassVariable.CLOSE_UTIL_VOL;
+import static ca.bc.gov.nrs.vdyp.model.variables.UtilizationClassVariable.CLOSE_UTIL_VOL_LESS_DECAY;
+import static ca.bc.gov.nrs.vdyp.model.variables.UtilizationClassVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
@@ -248,26 +247,26 @@ class PreliminarySetCompatibilityVariablesTest extends AbstractForwardProcessing
 		assertThat(lps.getCVSmall(1, BASAL_AREA), is(-2.1831444E-7f));
 		assertThat(lps.getCVSmall(1, QUAD_MEAN_DIAMETER), is(0.0f));
 		assertThat(lps.getCVSmall(1, LOREY_HEIGHT), is(0.0f));
-		assertThat(lps.getCVSmall(1, WHOLE_STEM_VOLUME), is(0.0f));
+		assertThat(lps.getCVSmall(1, WHOLE_STEM_VOL), is(0.0f));
 
 		assertThat(lps.getCVSmall(2, BASAL_AREA), is(-4.496146E-5f));
 		assertThat(lps.getCVSmall(2, QUAD_MEAN_DIAMETER), is(0.0023670197f));
 		assertThat(lps.getCVSmall(2, LOREY_HEIGHT), is(1.3113013E-6f));
-		assertThat(lps.getCVSmall(2, WHOLE_STEM_VOLUME), is(0.0010289619f));
+		assertThat(lps.getCVSmall(2, WHOLE_STEM_VOL), is(0.0010289619f));
 
 		assertThat(lps.getCVSmall(3, BASAL_AREA), is(4.9466034E-6f));
 		assertThat(lps.getCVSmall(3, QUAD_MEAN_DIAMETER), is(0.0f));
 		assertThat(lps.getCVSmall(3, LOREY_HEIGHT), is(-1.5556934E-5f));
-		assertThat(lps.getCVSmall(3, WHOLE_STEM_VOLUME), is(0.0f));
+		assertThat(lps.getCVSmall(3, WHOLE_STEM_VOL), is(0.0f));
 
 		assertThat(lps.getCVSmall(4, BASAL_AREA), is(0.0f));
 		assertThat(lps.getCVSmall(4, QUAD_MEAN_DIAMETER), is(0.0f));
 		assertThat(lps.getCVSmall(4, LOREY_HEIGHT), is(0.0f));
-		assertThat(lps.getCVSmall(4, WHOLE_STEM_VOLUME), is(0.0f));
+		assertThat(lps.getCVSmall(4, WHOLE_STEM_VOL), is(0.0f));
 
 		assertThat(lps.getCVSmall(5, BASAL_AREA), is(3.4208642E-6f));
 		assertThat(lps.getCVSmall(5, QUAD_MEAN_DIAMETER), is(0.0f));
 		assertThat(lps.getCVSmall(5, LOREY_HEIGHT), is(-5.7758567E-5f));
-		assertThat(lps.getCVSmall(5, WHOLE_STEM_VOLUME), is(0.0f));
+		assertThat(lps.getCVSmall(5, WHOLE_STEM_VOL), is(0.0f));
 	}
 }

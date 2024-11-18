@@ -18,9 +18,9 @@ import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
-import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
+import ca.bc.gov.nrs.vdyp.model.VdypCompatibilityVariables;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
-import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
+import ca.bc.gov.nrs.vdyp.model.variables.UtilizationClassVariable;
 import ca.bc.gov.nrs.vdyp.processing_state.Bank;
 
 public class BackProcessingEngine extends ProcessingEngine<BackProcessingEngine.BackExecutionStep> {
@@ -66,7 +66,7 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingEngine.
 		int specCount = primaryState.getNSpecies();
 
 		@SuppressWarnings("unchecked")
-		MatrixMap2<UtilizationClass, VolumeVariable, Float>[] cvVolume = new MatrixMap2[specCount + 1];
+		MatrixMap2<UtilizationClass, UtilizationClassVariable, Float>[] cvVolume = new MatrixMap2[specCount + 1];
 		@SuppressWarnings("unchecked")
 		Map<UtilizationClass, Float>[] cvBasalArea = new Map[specCount + 1];
 		@SuppressWarnings("unchecked")
@@ -77,7 +77,7 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingEngine.
 		for (int i = 0; i < primaryState.getNSpecies(); i++) {
 			final int specIndex = i + 1;
 			cvVolume[specIndex] = new MatrixMap2Impl<>(
-					List.of(UtilizationClass.values()), List.of(VolumeVariable.values()),
+					List.of(UtilizationClass.values()), VdypCompatibilityVariables.VOLUME_UTILIZATION_VARIABLES,
 					(uc, vv) -> primaryState.getCVVolume(specIndex, uc, vv, LayerType.PRIMARY)
 			);
 

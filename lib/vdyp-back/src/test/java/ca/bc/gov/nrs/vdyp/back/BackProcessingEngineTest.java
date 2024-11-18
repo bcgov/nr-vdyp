@@ -31,9 +31,9 @@ import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap3Impl;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
-import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
+import ca.bc.gov.nrs.vdyp.model.VdypCompatibilityVariables;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
-import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
+import ca.bc.gov.nrs.vdyp.model.variables.UtilizationClassVariable;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 class BackProcessingEngineTest {
@@ -94,9 +94,10 @@ class BackProcessingEngineTest {
 			state.setPolygon(polygon);
 
 			@SuppressWarnings("unchecked")
-			MatrixMap3<UtilizationClass, VolumeVariable, LayerType, Float>[] cvVolume = new MatrixMap3[] { null,
-					new MatrixMap3Impl<UtilizationClass, VolumeVariable, LayerType, Float>(
-							List.of(UtilizationClass.values()), List.of(VolumeVariable.values()),
+			MatrixMap3<UtilizationClass, UtilizationClassVariable, LayerType, Float>[] cvVolume = new MatrixMap3[] {
+					null,
+					new MatrixMap3Impl<UtilizationClass, UtilizationClassVariable, LayerType, Float>(
+							List.of(UtilizationClass.values()), VdypCompatibilityVariables.VOLUME_UTILIZATION_VARIABLES,
 							List.of(LayerType.values()),
 							(uc, vv, lt) -> 11f + vv.ordinal() * 2f + uc.ordinal() * 3f + lt.ordinal() * 5f
 					) };
@@ -118,7 +119,7 @@ class BackProcessingEngineTest {
 			Map<UtilizationClassVariable, Float>[] cvSm = new EnumMap[] { null,
 					new EnumMap<UtilizationClassVariable, Float>(UtilizationClassVariable.class) };
 
-			for (var uc : UtilizationClassVariable.values()) {
+			for (var uc : VdypCompatibilityVariables.SMALL_UTILIZATION_VARIABLES) {
 				cvSm[1].put(uc, uc.ordinal() * 7f);
 			}
 

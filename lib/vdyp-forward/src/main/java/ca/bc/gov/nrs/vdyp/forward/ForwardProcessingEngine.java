@@ -60,13 +60,13 @@ import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.SiteCurveAgeMaximum;
 import ca.bc.gov.nrs.vdyp.model.Sp64Distribution;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
-import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
 import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
+import ca.bc.gov.nrs.vdyp.model.VdypCompatibilityVariables;
 import ca.bc.gov.nrs.vdyp.model.VdypEntity;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VolumeComputeMode;
-import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
+import ca.bc.gov.nrs.vdyp.model.variables.UtilizationClassVariable;
 import ca.bc.gov.nrs.vdyp.processing_state.Bank;
 import ca.bc.gov.nrs.vdyp.si32.site.SiteTool;
 
@@ -1548,7 +1548,7 @@ public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingE
 
 				if (controlVar3Value >= 2 && meanVolumeSmall > 0.0f) {
 					meanVolumeSmall *= FloatMath
-							.exp(lps.getCVSmall(speciesIndex, UtilizationClassVariable.WHOLE_STEM_VOLUME));
+							.exp(lps.getCVSmall(speciesIndex, UtilizationClassVariable.WHOLE_STEM_VOL));
 				}
 			}
 
@@ -2443,8 +2443,9 @@ public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingE
 			UtilizationVector quadMeanDiameters = Utils.utilizationVector();
 			UtilizationVector treesPerHectare = Utils.utilizationVector();
 
-			cvVolume[s] = new MatrixMap3Impl<UtilizationClass, VolumeVariable, LayerType, Float>(
-					UtilizationClass.UTIL_CLASSES, VolumeVariable.ALL, LayerType.ALL_USED, (k1, k2, k3) -> 0f
+			cvVolume[s] = new MatrixMap3Impl<UtilizationClass, UtilizationClassVariable, LayerType, Float>(
+					UtilizationClass.UTIL_CLASSES, VdypCompatibilityVariables.VOLUME_UTILIZATION_VARIABLES,
+					LayerType.ALL_USED, (k1, k2, k3) -> 0f
 			);
 			cvBasalArea[s] = new MatrixMap2Impl<UtilizationClass, LayerType, Float>(
 					UtilizationClass.UTIL_CLASSES, LayerType.ALL_USED, (k1, k2) -> 0f
@@ -2491,8 +2492,10 @@ public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingE
 					adjustment = calculateCompatibilityVariable(actualVolume, baseVolume, staticVolume);
 				}
 
-				cvVolume[s]
-						.put(uc, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, LayerType.PRIMARY, adjustment);
+				cvVolume[s].put(
+						uc, UtilizationClassVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, LayerType.PRIMARY,
+						adjustment
+				);
 
 				// Volume less decay
 				adjustment = 0.0f;
@@ -2513,7 +2516,7 @@ public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingE
 					adjustment = calculateCompatibilityVariable(actualVolume, baseVolume, staticVolume);
 				}
 
-				cvVolume[s].put(uc, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY, adjustment);
+				cvVolume[s].put(uc, UtilizationClassVariable.CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY, adjustment);
 
 				// Volume
 				adjustment = 0.0f;
@@ -2533,7 +2536,7 @@ public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingE
 					adjustment = calculateCompatibilityVariable(actualVolume, baseVolume, staticVolume);
 				}
 
-				cvVolume[s].put(uc, VolumeVariable.CLOSE_UTIL_VOL, LayerType.PRIMARY, adjustment);
+				cvVolume[s].put(uc, UtilizationClassVariable.CLOSE_UTIL_VOL, LayerType.PRIMARY, adjustment);
 			}
 
 			int primarySpeciesVolumeGroup = lps.getVolumeEquationGroups()[s];
@@ -2557,7 +2560,7 @@ public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingE
 					);
 				}
 
-				cvVolume[s].put(uc, VolumeVariable.WHOLE_STEM_VOL, LayerType.PRIMARY, adjustment);
+				cvVolume[s].put(uc, UtilizationClassVariable.WHOLE_STEM_VOL, LayerType.PRIMARY, adjustment);
 			}
 
 			fps.estimators.estimateQuadMeanDiameterByUtilization(lps.getBecZone(), quadMeanDiameters, genusName);
@@ -2677,10 +2680,10 @@ public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingE
 
 			var spWsVolumeSmall = FloatMath
 					.log(spInputWholeStemVolume_Small / spInputTreePerHectare_Small / spMeanVolumeSmall);
-			spCvSmall.put(UtilizationClassVariable.WHOLE_STEM_VOLUME, spWsVolumeSmall);
+			spCvSmall.put(UtilizationClassVariable.WHOLE_STEM_VOL, spWsVolumeSmall);
 
 		} else {
-			spCvSmall.put(UtilizationClassVariable.WHOLE_STEM_VOLUME, 0.0f);
+			spCvSmall.put(UtilizationClassVariable.WHOLE_STEM_VOL, 0.0f);
 		}
 
 		return spCvSmall;

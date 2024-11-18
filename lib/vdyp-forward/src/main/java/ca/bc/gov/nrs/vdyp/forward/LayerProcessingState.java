@@ -13,11 +13,11 @@ import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
-import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
+import ca.bc.gov.nrs.vdyp.model.VdypCompatibilityVariables;
 import ca.bc.gov.nrs.vdyp.model.VdypEntity;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
-import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
+import ca.bc.gov.nrs.vdyp.model.variables.UtilizationClassVariable;
 import ca.bc.gov.nrs.vdyp.processing_state.Bank;
 
 class LayerProcessingState {
@@ -100,7 +100,7 @@ class LayerProcessingState {
 	// Compatibility Variables - LCV1 & LCVS
 	private boolean areCompatibilityVariablesSet = false;
 
-	private MatrixMap3<UtilizationClass, VolumeVariable, LayerType, Float>[] cvVolume;
+	private MatrixMap3<UtilizationClass, UtilizationClassVariable, LayerType, Float>[] cvVolume;
 	private MatrixMap2<UtilizationClass, LayerType, Float>[] cvBasalArea;
 	private MatrixMap2<UtilizationClass, LayerType, Float>[] cvQuadraticMeanDiameter;
 	private Map<UtilizationClassVariable, Float>[] cvPrimaryLayerSmall;
@@ -231,7 +231,7 @@ class LayerProcessingState {
 		return siteCurveNumbers;
 	}
 
-	public MatrixMap3<UtilizationClass, VolumeVariable, LayerType, Float>[] getCvVolume() {
+	public MatrixMap3<UtilizationClass, UtilizationClassVariable, LayerType, Float>[] getCvVolume() {
 		return cvVolume;
 	}
 
@@ -377,7 +377,7 @@ class LayerProcessingState {
 	}
 
 	public void setCompatibilityVariableDetails(
-			MatrixMap3<UtilizationClass, VolumeVariable, LayerType, Float>[] cvVolume,
+			MatrixMap3<UtilizationClass, UtilizationClassVariable, LayerType, Float>[] cvVolume,
 			MatrixMap2<UtilizationClass, LayerType, Float>[] cvBasalArea,
 			MatrixMap2<UtilizationClass, LayerType, Float>[] cvQuadraticMeanDiameter,
 			Map<UtilizationClassVariable, Float>[] cvPrimaryLayerSmall
@@ -420,7 +420,7 @@ class LayerProcessingState {
 								* compVarAdjustments.getValue(uc, UtilizationClassVariable.QUAD_MEAN_DIAMETER)
 				);
 
-				for (VolumeVariable vv : VolumeVariable.ALL) {
+				for (UtilizationClassVariable vv : VdypCompatibilityVariables.VOLUME_UTILIZATION_VARIABLES) {
 					cvVolume[i].put(
 							uc, vv, LayerType.PRIMARY,
 							cvVolume[i].get(uc, vv, LayerType.PRIMARY) * compVarAdjustments.getVolumeValue(uc, vv)
@@ -430,8 +430,9 @@ class LayerProcessingState {
 		}
 	}
 
-	public float
-			getCVVolume(int speciesIndex, UtilizationClass uc, VolumeVariable volumeVariable, LayerType layerType) {
+	public float getCVVolume(
+			int speciesIndex, UtilizationClass uc, UtilizationClassVariable volumeVariable, LayerType layerType
+	) {
 		if (!areCompatibilityVariablesSet) {
 			throw new IllegalStateException(UNSET_CV_VOLUMES);
 		}

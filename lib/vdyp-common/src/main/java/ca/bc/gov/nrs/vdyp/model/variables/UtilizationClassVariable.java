@@ -22,7 +22,7 @@ public enum UtilizationClassVariable implements Property<VdypUtilizationHolder, 
 	BASAL_AREA("BaseArea", VdypUtilizationHolder::getBaseAreaByUtilization),
 	QUAD_MEAN_DIAMETER("QuadraticMeanDiameter", VdypUtilizationHolder::getQuadraticMeanDiameterByUtilization),
 	TREES_PER_HECTARE("TreesPerHectare", VdypUtilizationHolder::getTreesPerHectareByUtilization),
-	
+
 	WHOLE_STEM_VOL("WholeStemVolume", VdypUtilizationHolder::getWholeStemVolumeByUtilization),
 	CLOSE_UTIL_VOL("CloseUtilizationVolume", VdypUtilizationHolder::getCloseUtilizationVolumeByUtilization),
 	CLOSE_UTIL_VOL_LESS_DECAY(
@@ -35,15 +35,12 @@ public enum UtilizationClassVariable implements Property<VdypUtilizationHolder, 
 	CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE_LESS_BREAKAGE(
 			"CloseUtilizationVolumeNetOfDecayWasteAndBreakage",
 			VdypUtilizationHolder::getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization
-	)
-	;
+	);
 
 	static private final Set<UtilizationClass> STANDARD_CLASSES = EnumSet.allOf(UtilizationClass.class);
 	static private final Set<UtilizationClass> HEIGHT_CLASSES = EnumSet
 			.of(UtilizationClass.SMALL, UtilizationClass.ALL);
 
-	
-	
 	private final String shortName;
 	private final String longName;
 	private final Function<VdypUtilizationHolder, UtilizationVector> getter;
@@ -62,6 +59,7 @@ public enum UtilizationClassVariable implements Property<VdypUtilizationHolder, 
 
 	/**
 	 * Short name of the property without "ByUtilization"
+	 *
 	 * @return
 	 */
 	public String getShortName() {
@@ -75,7 +73,7 @@ public enum UtilizationClassVariable implements Property<VdypUtilizationHolder, 
 
 	/**
 	 * The UtilizationClasses this field covers
-	 * 
+	 *
 	 * @return
 	 */
 	public Set<UtilizationClass> getClasses() {
