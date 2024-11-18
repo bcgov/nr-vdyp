@@ -402,7 +402,7 @@ class LayerProcessingState {
 		var compVarAdjustments = fps.fcm.getCompVarAdjustments();
 
 		for (int i : getIndices()) {
-			for (UtilizationClassVariable sucv : UtilizationClassVariable.values()) {
+			for (UtilizationClassVariable sucv : VdypCompatibilityVariables.SMALL_UTILIZATION_VARIABLES) {
 				cvPrimaryLayerSmall[i].put(
 						sucv,
 						cvPrimaryLayerSmall[i].get(sucv) * compVarAdjustments.getValue(UtilizationClass.SMALL, sucv)

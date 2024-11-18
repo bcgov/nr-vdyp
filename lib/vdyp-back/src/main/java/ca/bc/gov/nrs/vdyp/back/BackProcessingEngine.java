@@ -91,7 +91,7 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingEngine.
 						.put(uc, primaryState.getCVQuadraticMeanDiameter(specIndex, uc, LayerType.PRIMARY));
 			}
 
-			for (var ucv : UtilizationClassVariable.values()) {
+			for (var ucv : VdypCompatibilityVariables.SMALL_UTILIZATION_VARIABLES) {
 				cvPrimaryLayerSmall[specIndex].put(ucv, primaryState.getCVSmall(specIndex, ucv));
 			}
 
