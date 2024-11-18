@@ -589,7 +589,7 @@ public class Utils {
 	 * @throws IllegalStateException If the given Enum value is the first one
 	 */
 	public static <T extends Enum<T>> T predecessorOrThrow(T current, T[] values) {
-		return successor(current, values)
+		return predecessor(current, values)
 				.orElseThrow(() -> new IllegalStateException(MessageFormat.format("{} has no predecessor", current)));
 	}
 
