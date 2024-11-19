@@ -1,7 +1,11 @@
 package ca.bc.gov.nrs.vdyp.processing_state;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.stream.IntStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +17,7 @@ import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
+import ca.bc.gov.nrs.vdyp.model.VdypCompatibilityVariables;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
@@ -44,12 +49,7 @@ public abstract class LayerProcessingState<RCM extends ResolvedControlMap, Self 
 	private Bank bank;
 
 	// Compatibility Variables - LCV1 & LCVS
-	private boolean areCompatibilityVariablesSet = false;
-
-	private MatrixMap3<UtilizationClass, UtilizationClassVariable, LayerType, Float>[] cvVolume;
-	private MatrixMap2<UtilizationClass, LayerType, Float>[] cvBasalArea;
-	private MatrixMap2<UtilizationClass, LayerType, Float>[] cvQuadraticMeanDiameter;
-	private Map<UtilizationClassVariable, Float>[] cvPrimaryLayerSmall;
+	private Optional<List<VdypCompatibilityVariables>> compatibilityVariables = Optional.empty();
 
 	protected LayerProcessingState(ProcessingState<RCM, Self> ps, VdypPolygon polygon, LayerType subjectLayerType) {
 
@@ -101,66 +101,84 @@ public abstract class LayerProcessingState<RCM extends ResolvedControlMap, Self 
 			MatrixMap2<UtilizationClass, LayerType, Float>[] cvQuadraticMeanDiameter,
 			Map<UtilizationClassVariable, Float>[] cvPrimaryLayerSmall
 	) {
-		if (areCompatibilityVariablesSet) {
+		if (compatibilityVariables.isPresent()) {
 			throw new IllegalStateException(COMPATIBILITY_VARIABLES_SET_CAN_BE_SET_ONCE_ONLY);
 		}
+		int n = cvVolume.length;
 
-		this.cvVolume = cvVolume;
-		this.cvBasalArea = cvBasalArea;
-		this.cvQuadraticMeanDiameter = cvQuadraticMeanDiameter;
-		this.cvPrimaryLayerSmall = cvPrimaryLayerSmall;
+		compatibilityVariables = Optional.of(
+				IntStream.range(0, n)
+						.mapToObj(i -> {
+							if (cvVolume[i] == null)
+								return null;
+							return VdypCompatibilityVariables.build(cvb -> {
 
-		areCompatibilityVariablesSet = true;
+								cvb.cvVolume(cvVolume[i]);
+								cvb.cvBasalArea(cvBasalArea[i]);
+								cvb.cvQuadraticMeanDiameter(cvQuadraticMeanDiameter[i]);
+								cvb.cvPrimaryLayerSmall(cvPrimaryLayerSmall[i]);
+							});
+						}).toList()
+		);
 	}
 
 	public float getCVVolume(
 			int speciesIndex, UtilizationClass uc, UtilizationClassVariable volumeVariable, LayerType layerType
 	) {
-		if (!areCompatibilityVariablesSet) {
-			throw new IllegalStateException(UNSET_CV_VOLUMES);
-		}
-
-		return cvVolume[speciesIndex].get(uc, volumeVariable, layerType);
+		return compatibilityVariables
+				.orElseThrow(() -> new IllegalStateException(UNSET_CV_VOLUMES))
+				.get(speciesIndex)
+				.getCvVolume(uc, volumeVariable, layerType);
 	}
 
 	public float getCVBasalArea(int speciesIndex, UtilizationClass uc, LayerType layerType) {
-		if (!areCompatibilityVariablesSet) {
-			throw new IllegalStateException(UNSET_CV_BASAL_AREAS);
-		}
-
-		return cvBasalArea[speciesIndex].get(uc, layerType);
+		return compatibilityVariables
+				.orElseThrow(() -> new IllegalStateException(UNSET_CV_VOLUMES))
+				.get(speciesIndex)
+				.getCvBasalArea(uc, layerType);
 	}
 
 	public float getCVQuadraticMeanDiameter(int speciesIndex, UtilizationClass uc, LayerType layerType) {
-		if (!areCompatibilityVariablesSet) {
-			throw new IllegalStateException(UNSET_CV_BASAL_AREAS);
-		}
-
-		return cvQuadraticMeanDiameter[speciesIndex].get(uc, layerType);
+		return compatibilityVariables
+				.orElseThrow(() -> new IllegalStateException(UNSET_CV_VOLUMES))
+				.get(speciesIndex)
+				.getCvQuadraticMeanDiameter(uc, layerType);
 	}
 
 	public float getCVSmall(int speciesIndex, UtilizationClassVariable variable) {
-		if (!areCompatibilityVariablesSet) {
-			throw new IllegalStateException(UNSET_CV_BASAL_AREAS);
-		}
-
-		return cvPrimaryLayerSmall[speciesIndex].get(variable);
+		return compatibilityVariables
+				.orElseThrow(() -> new IllegalStateException(UNSET_CV_VOLUMES))
+				.get(speciesIndex)
+				.getCvPrimaryLayerSmall(variable);
 	}
 
-	public MatrixMap3<UtilizationClass, UtilizationClassVariable, LayerType, Float>[] getCvVolume() {
-		return cvVolume;
+	public MatrixMap3<UtilizationClass, UtilizationClassVariable, LayerType, Float> getCvVolume(int speciesIndex) {
+		return compatibilityVariables
+				.orElseThrow(() -> new IllegalStateException(UNSET_CV_VOLUMES))
+				.get(speciesIndex)
+				.getCvVolume();
 	}
 
-	public MatrixMap2<UtilizationClass, LayerType, Float>[] getCvBasalArea() {
-		return cvBasalArea;
+	public MatrixMap2<UtilizationClass, LayerType, Float> getCvBasalArea(int speciesIndex) {
+		return compatibilityVariables
+				.orElseThrow(() -> new IllegalStateException(UNSET_CV_VOLUMES))
+				.get(speciesIndex)
+				.getCvBasalArea();
 	}
 
-	public MatrixMap2<UtilizationClass, LayerType, Float>[] getCvQuadraticMeanDiameter() {
-		return cvQuadraticMeanDiameter;
+	public MatrixMap2<UtilizationClass, LayerType, Float> getCvQuadraticMeanDiameter(int speciesIndex) {
+		return compatibilityVariables
+				.orElseThrow(() -> new IllegalStateException(UNSET_CV_VOLUMES))
+				.get(speciesIndex)
+				.getCvQuadraticMeanDiameter();
 	}
 
-	public Map<UtilizationClassVariable, Float>[] getCvPrimaryLayerSmall() {
-		return cvPrimaryLayerSmall;
+	public Map<UtilizationClassVariable, Float> getCvPrimaryLayerSmall(int speciesIndex) {
+		return compatibilityVariables
+				.orElseThrow(() -> new IllegalStateException(UNSET_CV_VOLUMES))
+				.get(speciesIndex)
+				.getCvPrimaryLayerSmall();
+
 	}
 
 }

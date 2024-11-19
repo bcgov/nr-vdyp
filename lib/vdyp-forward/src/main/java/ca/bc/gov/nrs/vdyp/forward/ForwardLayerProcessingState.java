@@ -322,28 +322,28 @@ class ForwardLayerProcessingState extends LayerProcessingState<ForwardResolvedCo
 
 		for (int i : getIndices()) {
 			for (UtilizationClassVariable sucv : VdypCompatibilityVariables.SMALL_UTILIZATION_VARIABLES) {
-				getCvPrimaryLayerSmall()[i].put(
+				getCvPrimaryLayerSmall(i).put(
 						sucv,
-						getCvPrimaryLayerSmall()[i].get(sucv)
+						getCvPrimaryLayerSmall(i).get(sucv)
 								* compVarAdjustments.getValue(UtilizationClass.SMALL, sucv)
 				);
 			}
 			for (UtilizationClass uc : UtilizationClass.UTIL_CLASSES) {
-				getCvBasalArea()[i].put(
+				getCvBasalArea(i).put(
 						uc, LayerType.PRIMARY,
-						getCvBasalArea()[i].get(uc, LayerType.PRIMARY)
+						getCvBasalArea(i).get(uc, LayerType.PRIMARY)
 								* compVarAdjustments.getValue(uc, UtilizationClassVariable.BASAL_AREA)
 				);
-				getCvQuadraticMeanDiameter()[i].put(
+				getCvQuadraticMeanDiameter(i).put(
 						uc, LayerType.PRIMARY,
-						getCvQuadraticMeanDiameter()[i].get(uc, LayerType.PRIMARY)
+						getCvQuadraticMeanDiameter(i).get(uc, LayerType.PRIMARY)
 								* compVarAdjustments.getValue(uc, UtilizationClassVariable.QUAD_MEAN_DIAMETER)
 				);
 
 				for (UtilizationClassVariable vv : VdypCompatibilityVariables.VOLUME_UTILIZATION_VARIABLES) {
-					getCvVolume()[i].put(
+					getCvVolume(i).put(
 							uc, vv, LayerType.PRIMARY,
-							getCvVolume()[i].get(uc, vv, LayerType.PRIMARY) * compVarAdjustments.getVolumeValue(uc, vv)
+							getCvVolume(i).get(uc, vv, LayerType.PRIMARY) * compVarAdjustments.getVolumeValue(uc, vv)
 					);
 				}
 			}
@@ -361,8 +361,8 @@ class ForwardLayerProcessingState extends LayerProcessingState<ForwardResolvedCo
 				VdypSpecies species = updatedLayer.getSpeciesBySp0(getBank().speciesNames[i]);
 
 				species.setCompatibilityVariables(
-						getCvVolume()[i], getCvBasalArea()[i], getCvQuadraticMeanDiameter()[i],
-						getCvPrimaryLayerSmall()[i]
+						getCvVolume(i), getCvBasalArea(i), getCvQuadraticMeanDiameter(i),
+						getCvPrimaryLayerSmall(i)
 				);
 			}
 		}

@@ -10,7 +10,6 @@ import java.util.function.Consumer;
 
 import ca.bc.gov.nrs.vdyp.application.InitializationIncompleteException;
 import ca.bc.gov.nrs.vdyp.common.Utils;
-import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies.Builder;
 import ca.bc.gov.nrs.vdyp.model.variables.UtilizationClassVariable;
 
 public class VdypSpecies extends BaseVdypSpecies<VdypSite> implements VdypUtilizationHolder {
