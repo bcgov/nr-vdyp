@@ -804,7 +804,7 @@ public class VdypMatchers {
 		return match;
 	}
 
-	Matcher<VdypPolygon> deepEquals(final VdypPolygon expected) {
+	public static Matcher<VdypPolygon> deepEquals(final VdypPolygon expected) {
 		return new TypeSafeDiagnosingMatcher<VdypPolygon>() {
 
 			@Override
