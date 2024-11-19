@@ -378,5 +378,13 @@ public class VdypLayer extends BaseVdypLayer<VdypSpecies, VdypSite> implements V
 			this.primaryGenus(toCopy.getPrimaryGenus());
 			return super.copySpecies(toCopy, config);
 		}
+
+		@Override
+		public Builder copy(VdypLayer source) {
+			super.copy(source);
+			this.empiricalRelationshipParameterIndex(source.getEmpiricalRelationshipParameterIndex());
+			return this;
+		}
+
 	}
 }

@@ -926,48 +926,12 @@ public class VdypMatchers {
 						}
 					}
 				}
+				for (var ucv : UtilizationClassVariable.values()) {
+					var expectedVector = ucv.get(expected);
+					var actualVector = ucv.get(item);
 
-				match = matchValue(
-						match, "getLoreyHeightByUtilization", expected.getLoreyHeightByUtilization(),
-						item.getLoreyHeightByUtilization(), mismatchDescription
-				);
-				match = matchValue(
-						match, "getBaseAreaByUtilization", expected.getBaseAreaByUtilization(),
-						item.getBaseAreaByUtilization(), mismatchDescription
-				);
-				match = matchValue(
-						match, "getQuadraticMeanDiameterByUtilization",
-						expected.getQuadraticMeanDiameterByUtilization(), item.getQuadraticMeanDiameterByUtilization(),
-						mismatchDescription
-				);
-				match = matchValue(
-						match, "getTreesPerHectareByUtilization", expected.getTreesPerHectareByUtilization(),
-						item.getTreesPerHectareByUtilization(), mismatchDescription
-				);
-				match = matchValue(
-						match, "getWholeStemVolumeByUtilization", expected.getWholeStemVolumeByUtilization(),
-						item.getWholeStemVolumeByUtilization(), mismatchDescription
-				);
-				match = matchValue(
-						match, "getCloseUtilizationVolumeByUtilization",
-						expected.getCloseUtilizationVolumeByUtilization(),
-						item.getCloseUtilizationVolumeByUtilization(), mismatchDescription
-				);
-				match = matchValue(
-						match, "getCloseUtilizationVolumeNetOfDecayByUtilization",
-						expected.getCloseUtilizationVolumeNetOfDecayByUtilization(),
-						item.getCloseUtilizationVolumeNetOfDecayByUtilization(), mismatchDescription
-				);
-				match = matchValue(
-						match, "getCloseUtilizationVolumeNetOfDecayAndWasteByUtilization",
-						expected.getCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(),
-						item.getCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(), mismatchDescription
-				);
-				match = matchValue(
-						match, "getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization",
-						expected.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(),
-						item.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(), mismatchDescription
-				);
+					match = matchValue(match, ucv.getShortName(), expectedVector, actualVector, mismatchDescription);
+				}
 
 				return match;
 			}

@@ -32,6 +32,7 @@ import ca.bc.gov.nrs.vdyp.model.MatrixMap3Impl;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
 import ca.bc.gov.nrs.vdyp.model.VdypCompatibilityVariables;
+import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypSite;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.variables.UtilizationClassVariable;
@@ -68,6 +69,246 @@ class VdypMatchersTest {
 
 	@Nested
 	class deepEquals {
+
+		@Nested
+		class testVdypLayer {
+			VdypLayer expected;
+			Matcher<VdypLayer> unit;
+
+			@BeforeEach
+			void setup() {
+
+				Random rand = new Random(42);
+				var controlMap = TestUtils.loadControlMap();
+
+				// The numbers don't add up, we are just using them to test comparison
+
+				expected = VdypLayer.build(lb -> {
+					lb.polygonIdentifier("Test", 2024);
+					lb.layerType(LayerType.PRIMARY);
+
+					lb.empiricalRelationshipParameterIndex(21);
+					lb.inventoryTypeGroup(34);
+					lb.primaryGenus("MB");
+
+					lb.addSpecies(sb -> {
+						sb.genus("MB");
+						sb.controlMap(controlMap);
+
+						sb.percentGenus(90);
+
+						sb.breakageGroup(12);
+						sb.decayGroup(13);
+						sb.volumeGroup(14);
+
+						sb.addSp64Distribution("MB", 100);
+
+						sb.addCompatibilityVariables(cvb -> {
+							cvb.cvVolume((k1, k2, k3) -> rand.nextFloat() * 10);
+							cvb.cvBasalArea((k1, k2) -> rand.nextFloat() * 10);
+							cvb.cvQuadraticMeanDiameter((k1, k2) -> rand.nextFloat() * 10);
+							cvb.cvPrimaryLayerSmall(k1 -> rand.nextFloat() * 10);
+						});
+
+						sb.addSite(ib -> {
+							ib.ageTotal(40);
+							ib.yearsToBreastHeight(5);
+							ib.height(15);
+							ib.siteCurveNumber(42);
+							ib.siteIndex(4);
+						});
+
+						sb.loreyHeight(mockHeightVector());
+
+						sb.baseArea(mockUtilVector(2));
+						sb.quadMeanDiameter(mockUtilVector(10));
+						sb.treesPerHectare(mockUtilVector(300));
+
+						sb.wholeStemVolume(mockUtilVector(7));
+						sb.closeUtilizationVolumeByUtilization(mockUtilVector(6));
+						sb.closeUtilizationVolumeNetOfDecayByUtilization(mockUtilVector(5));
+						sb.closeUtilizationVolumeNetOfDecayAndWasteByUtilization(mockUtilVector(4));
+						sb.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(mockUtilVector(3));
+					});
+
+					lb.loreyHeight(mockHeightVector());
+
+					lb.baseArea(mockUtilVector(2));
+					lb.quadMeanDiameter(mockUtilVector(10));
+					lb.treesPerHectare(mockUtilVector(300));
+
+					lb.wholeStemVolume(mockUtilVector(7));
+					lb.closeUtilizationVolumeByUtilization(mockUtilVector(6));
+					lb.closeUtilizationVolumeNetOfDecayByUtilization(mockUtilVector(5));
+					lb.closeUtilizationVolumeNetOfDecayAndWasteByUtilization(mockUtilVector(4));
+					lb.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(mockUtilVector(3));
+				});
+
+				unit = VdypMatchers.deepEquals(expected);
+
+			}
+
+			@Test
+			void testPass() {
+				var actual = VdypLayer.build(lb -> {
+					lb.copy(expected);
+					lb.copySpecies(expected, (sb, expectedSpec) -> {
+						sb.copy(expectedSpec);
+						sb.copySiteFrom(expectedSpec, (ib, i) -> {
+						});
+						sb.copyCompatibilityVariablesFrom(expectedSpec, (ib, cv) -> {
+						});
+					});
+				});
+
+				assertMatch(actual, unit);
+			}
+
+			// Changing the key properties also causes mismatches on the children that share those key properties so use
+			// startsWith
+
+			@Test
+			void testPolyIdDifferent() {
+				var actual = VdypLayer.build(lb -> {
+					lb.copy(expected);
+					lb.copySpecies(expected, (sb, expectedSpec) -> {
+						sb.copy(expectedSpec);
+						sb.copySiteFrom(expectedSpec, (ib, i) -> {
+						});
+						sb.copyCompatibilityVariablesFrom(expectedSpec, (ib, cv) -> {
+						});
+					});
+					lb.polygonIdentifier("Different", 2025);
+				});
+				assertMismatch(
+						actual, unit,
+						startsWith(
+								"PolygonIdentifier was <Different            2025> but expected <Test                 2024>"
+						)
+				);
+			}
+
+			@Test
+			void testLayerTypeDifferent() {
+				var actual = VdypLayer.build(lb -> {
+					lb.copy(expected);
+					lb.copySpecies(expected, (sb, expectedSpec) -> {
+						sb.copy(expectedSpec);
+						sb.copySiteFrom(expectedSpec, (ib, i) -> {
+						});
+						sb.copyCompatibilityVariablesFrom(expectedSpec, (ib, cv) -> {
+						});
+					});
+					lb.layerType(LayerType.VETERAN);
+				});
+				assertMismatch(actual, unit, startsWith("LayerType was <VETERAN> but expected <PRIMARY>"));
+			}
+
+			@Test
+			void testEmpericalIndexDifferent() {
+				var actual = VdypLayer.build(lb -> {
+					lb.copy(expected);
+					lb.copySpecies(expected, (sb, expectedSpec) -> {
+						sb.copy(expectedSpec);
+						sb.copySiteFrom(expectedSpec, (ib, i) -> {
+						});
+						sb.copyCompatibilityVariablesFrom(expectedSpec, (ib, cv) -> {
+						});
+					});
+					lb.empiricalRelationshipParameterIndex(23);
+				});
+				assertMismatch(
+						actual, unit,
+						startsWith("EmpiricalRelationshipParameterIndex was <Optional[23]> but expected <Optional[21]>")
+				);
+			}
+
+			@Test
+			void testInventoryTypeGroup() {
+				var actual = VdypLayer.build(lb -> {
+					lb.copy(expected);
+					lb.copySpecies(expected, (sb, expectedSpec) -> {
+						sb.copy(expectedSpec);
+						sb.copySiteFrom(expectedSpec, (ib, i) -> {
+						});
+						sb.copyCompatibilityVariablesFrom(expectedSpec, (ib, cv) -> {
+						});
+					});
+					lb.inventoryTypeGroup(65);
+				});
+				assertMismatch(
+						actual, unit, startsWith("InventoryTypeGroup was <Optional[65]> but expected <Optional[34]>")
+				);
+			}
+
+			@Test
+			void testSpeciesDifferent() {
+				var actual = VdypLayer.build(lb -> {
+					lb.copy(expected);
+					lb.copySpecies(expected, (sb, expectedSpec) -> {
+						sb.copy(expectedSpec);
+
+						if (expectedSpec.getGenus().equals("MB")) {
+							sb.decayGroup(3);
+						}
+
+						sb.copySiteFrom(expectedSpec, (ib, i) -> {
+						});
+						sb.copyCompatibilityVariablesFrom(expectedSpec, (ib, cv) -> {
+						});
+					});
+				});
+				assertMismatch(
+						actual, unit,
+						startsWith("mismatch in species group \"MB\": DecayGroup was <3> but expected <13>")
+				);
+			}
+
+			@ParameterizedTest
+			@EnumSource(UtilizationClassVariable.class)
+			void testUtilizationDifferent(UtilizationClassVariable ucv) throws Exception {
+
+				var actual = VdypLayer.build(lb -> {
+					lb.copy(expected);
+					lb.copySpecies(expected, (sb, expectedSpec) -> {
+						sb.copy(expectedSpec);
+
+						sb.copySiteFrom(expectedSpec, (ib, i) -> {
+						});
+						sb.copyCompatibilityVariablesFrom(expectedSpec, (ib, cv) -> {
+						});
+					});
+				});
+
+				// Make a change to one entry (SMALL) in the utilization vector for the specified field
+
+				ucv.get(actual).scalarInPlace(UtilizationClass.SMALL, x -> x + 1);
+
+				String name = ucv.getShortName();
+				String type = "a utilization vector";
+				String floatPattern = "(\\d+\\.\\d+)";
+				String expectedVectorPattern = "\\[Small: " + floatPattern + ", All: " + floatPattern + ", 7.5cm: "
+						+ floatPattern + ", 12.5cm: " + floatPattern + ", 17.5cm: " + floatPattern + ", 22.5cm: "
+						+ floatPattern + "\\]";
+
+				String actualVectorPattern = "\\[Small: \\[\\[" + floatPattern
+						+ "\\]\\], All: \\2, 7.5cm: \\3, 12.5cm: \\4, 17.5cm: \\5, 22.5cm: \\6\\]";
+
+				if (UtilizationClassVariable.LOREY_HEIGHT == ucv) {
+					type = "a lorey height vector";
+					expectedVectorPattern = "\\[Small: " + floatPattern + ", All: " + floatPattern + "\\]";
+					actualVectorPattern = "\\[Small: \\[\\[" + floatPattern + "\\]\\], All: \\2\\]";
+				}
+
+				assertMismatch(
+						actual, unit,
+						matchesRegex(
+								"^" + name + " expected " + type + " \"" + expectedVectorPattern + "\" but was "
+										+ actualVectorPattern + "$"
+						)
+				);
+			}
+		}
 
 		@Nested
 		class testVdypSpecies {
