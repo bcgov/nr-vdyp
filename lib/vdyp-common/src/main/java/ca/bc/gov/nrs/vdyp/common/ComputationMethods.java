@@ -382,7 +382,7 @@ public class ComputationMethods {
 	/**
 	 * For those utilization fields that can be summed, add together the vectors for each species in the given layer and
 	 * store the result on the layer.
-	 * 
+	 *
 	 * @param vdypLayer
 	 */
 	public static void sumSpeciesUtilizationVectorsToLayer(VdypLayer vdypLayer) {
@@ -398,7 +398,7 @@ public class ComputationMethods {
 
 	/**
 	 * For those utilization fields that can be summed, scale them by the given value.
-	 * 
+	 *
 	 * @param holder
 	 * @param factor
 	 */

@@ -1428,8 +1428,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 			// EMP094
 			estimationMethods.estimateNetDecayAndWasteVolume(
 					bec.getRegion(), utilizationClass, adjust, vdypSpecies.getGenus(), hlSp, quadMeanDiameterUtil,
-					closeUtilizationVolumeUtil, closeUtilizationNetOfDecayUtil,
-					closeUtilizationNetOfDecayAndWasteUtil
+					closeUtilizationVolumeUtil, closeUtilizationNetOfDecayUtil, closeUtilizationNetOfDecayAndWasteUtil
 			);
 
 			if (getId().isStart()) {
@@ -1447,9 +1446,8 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 			vdypSpecies.setWholeStemVolumeByUtilization(wholeStemVolumeUtil);
 			vdypSpecies.setCloseUtilizationVolumeByUtilization(closeUtilizationVolumeUtil);
 			vdypSpecies.setCloseUtilizationVolumeNetOfDecayByUtilization(closeUtilizationNetOfDecayUtil);
-			vdypSpecies.setCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(
-					closeUtilizationNetOfDecayAndWasteUtil
-			);
+			vdypSpecies
+					.setCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(closeUtilizationNetOfDecayAndWasteUtil);
 			vdypSpecies.setCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(
 					closeUtilizationNetOfDecayWasteAndBreakageUtil
 			);

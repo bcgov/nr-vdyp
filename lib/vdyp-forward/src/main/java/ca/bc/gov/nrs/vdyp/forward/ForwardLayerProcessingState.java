@@ -324,8 +324,7 @@ class ForwardLayerProcessingState extends LayerProcessingState<ForwardResolvedCo
 			for (UtilizationClassVariable sucv : VdypCompatibilityVariables.SMALL_UTILIZATION_VARIABLES) {
 				getCvPrimaryLayerSmall(i).put(
 						sucv,
-						getCvPrimaryLayerSmall(i).get(sucv)
-								* compVarAdjustments.getValue(UtilizationClass.SMALL, sucv)
+						getCvPrimaryLayerSmall(i).get(sucv) * compVarAdjustments.getValue(UtilizationClass.SMALL, sucv)
 				);
 			}
 			for (UtilizationClass uc : UtilizationClass.UTIL_CLASSES) {
@@ -361,8 +360,7 @@ class ForwardLayerProcessingState extends LayerProcessingState<ForwardResolvedCo
 				VdypSpecies species = updatedLayer.getSpeciesBySp0(getBank().speciesNames[i]);
 
 				species.setCompatibilityVariables(
-						getCvVolume(i), getCvBasalArea(i), getCvQuadraticMeanDiameter(i),
-						getCvPrimaryLayerSmall(i)
+						getCvVolume(i), getCvBasalArea(i), getCvQuadraticMeanDiameter(i), getCvPrimaryLayerSmall(i)
 				);
 			}
 		}

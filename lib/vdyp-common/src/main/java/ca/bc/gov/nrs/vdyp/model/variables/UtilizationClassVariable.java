@@ -14,8 +14,7 @@ import ca.bc.gov.nrs.vdyp.model.VdypUtilizationHolder;
  */
 public enum UtilizationClassVariable implements Variable<VdypUtilizationHolder, UtilizationVector> {
 	LOREY_HEIGHT(
-			"LoreyHeight",
-			VdypUtilizationHolder::getLoreyHeightByUtilization,
+			"LoreyHeight", VdypUtilizationHolder::getLoreyHeightByUtilization,
 			VdypUtilizationHolder::setLoreyHeightByUtilization
 	) {
 		// Lorey Height only has 2 classes instead of the usual 6
@@ -25,34 +24,27 @@ public enum UtilizationClassVariable implements Variable<VdypUtilizationHolder, 
 		}
 	},
 	BASAL_AREA(
-			"BaseArea",
-			VdypUtilizationHolder::getBaseAreaByUtilization,
-			VdypUtilizationHolder::setBaseAreaByUtilization
+			"BaseArea", VdypUtilizationHolder::getBaseAreaByUtilization, VdypUtilizationHolder::setBaseAreaByUtilization
 	),
 	QUAD_MEAN_DIAMETER(
-			"QuadraticMeanDiameter",
-			VdypUtilizationHolder::getQuadraticMeanDiameterByUtilization,
+			"QuadraticMeanDiameter", VdypUtilizationHolder::getQuadraticMeanDiameterByUtilization,
 			VdypUtilizationHolder::setQuadraticMeanDiameterByUtilization
 	),
 	TREES_PER_HECTARE(
-			"TreesPerHectare",
-			VdypUtilizationHolder::getTreesPerHectareByUtilization,
+			"TreesPerHectare", VdypUtilizationHolder::getTreesPerHectareByUtilization,
 			VdypUtilizationHolder::setTreesPerHectareByUtilization
 	),
 
 	WHOLE_STEM_VOL(
-			"WholeStemVolume",
-			VdypUtilizationHolder::getWholeStemVolumeByUtilization,
+			"WholeStemVolume", VdypUtilizationHolder::getWholeStemVolumeByUtilization,
 			VdypUtilizationHolder::setWholeStemVolumeByUtilization
 	),
 	CLOSE_UTIL_VOL(
-			"CloseUtilizationVolume",
-			VdypUtilizationHolder::getCloseUtilizationVolumeByUtilization,
+			"CloseUtilizationVolume", VdypUtilizationHolder::getCloseUtilizationVolumeByUtilization,
 			VdypUtilizationHolder::setCloseUtilizationVolumeByUtilization
 	),
 	CLOSE_UTIL_VOL_LESS_DECAY(
-			"CloseUtilizationVolumeNetOfDecay",
-			VdypUtilizationHolder::getCloseUtilizationVolumeNetOfDecayByUtilization,
+			"CloseUtilizationVolumeNetOfDecay", VdypUtilizationHolder::getCloseUtilizationVolumeNetOfDecayByUtilization,
 			VdypUtilizationHolder::setCloseUtilizationVolumeNetOfDecayByUtilization
 	),
 	CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE(
@@ -68,19 +60,12 @@ public enum UtilizationClassVariable implements Variable<VdypUtilizationHolder, 
 
 	private static final Set<UtilizationClass> STANDARD_CLASSES = EnumSet.allOf(UtilizationClass.class);
 	private static final Set<UtilizationClass> HEIGHT_CLASSES = EnumSet
-			.of(
-					UtilizationClass.SMALL,
-					UtilizationClass.ALL
-			);
+			.of(UtilizationClass.SMALL, UtilizationClass.ALL);
 
-	public static final Set<UtilizationClassVariable> VOLUME_VARIABLES = EnumSet
-			.of(
-					WHOLE_STEM_VOL,
-					CLOSE_UTIL_VOL,
-					CLOSE_UTIL_VOL_LESS_DECAY,
-					CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
-					CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE_LESS_BREAKAGE
-			);
+	public static final Set<UtilizationClassVariable> VOLUME_VARIABLES = EnumSet.of(
+			WHOLE_STEM_VOL, CLOSE_UTIL_VOL, CLOSE_UTIL_VOL_LESS_DECAY, CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
+			CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE_LESS_BREAKAGE
+	);
 
 	private final String shortName;
 	private final String longName;

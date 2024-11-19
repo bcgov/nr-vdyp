@@ -5,7 +5,6 @@ import java.util.Map;
 import ca.bc.gov.nrs.vdyp.application.ProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.controlmap.ForwardResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.forward.controlmap.ForwardResolvedControlMapImpl;
-import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.processing_state.ProcessingState;
@@ -24,7 +23,7 @@ public class ForwardProcessingState extends ProcessingState<ForwardResolvedContr
 	@Override
 	protected ForwardLayerProcessingState createLayerState(VdypPolygon polygon, VdypLayer layer)
 			throws ProcessingException {
-		return new ForwardLayerProcessingState(this, polygon, polygon.getLayers().get(LayerType.PRIMARY));
+		return new ForwardLayerProcessingState(this, polygon, layer);
 	}
 
 }

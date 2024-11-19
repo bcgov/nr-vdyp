@@ -106,77 +106,58 @@ public abstract class LayerProcessingState<RCM extends ResolvedControlMap, Self 
 		}
 		int n = cvVolume.length;
 
-		compatibilityVariables = Optional.of(
-				IntStream.range(0, n)
-						.mapToObj(i -> {
-							if (cvVolume[i] == null)
-								return null;
-							return VdypCompatibilityVariables.build(cvb -> {
+		compatibilityVariables = Optional.of(IntStream.range(0, n).mapToObj(i -> {
+			if (cvVolume[i] == null)
+				return null;
+			return VdypCompatibilityVariables.build(cvb -> {
 
-								cvb.cvVolume(cvVolume[i]);
-								cvb.cvBasalArea(cvBasalArea[i]);
-								cvb.cvQuadraticMeanDiameter(cvQuadraticMeanDiameter[i]);
-								cvb.cvPrimaryLayerSmall(cvPrimaryLayerSmall[i]);
-							});
-						}).toList()
-		);
+				cvb.cvVolume(cvVolume[i]);
+				cvb.cvBasalArea(cvBasalArea[i]);
+				cvb.cvQuadraticMeanDiameter(cvQuadraticMeanDiameter[i]);
+				cvb.cvPrimaryLayerSmall(cvPrimaryLayerSmall[i]);
+			});
+		}).toList());
 	}
 
 	public float getCVVolume(
 			int speciesIndex, UtilizationClass uc, UtilizationClassVariable volumeVariable, LayerType layerType
 	) {
-		return compatibilityVariables
-				.orElseThrow(() -> new IllegalStateException(UNSET_CV_VOLUMES))
-				.get(speciesIndex)
+		return compatibilityVariables.orElseThrow(() -> new IllegalStateException(UNSET_CV_VOLUMES)).get(speciesIndex)
 				.getCvVolume(uc, volumeVariable, layerType);
 	}
 
 	public float getCVBasalArea(int speciesIndex, UtilizationClass uc, LayerType layerType) {
-		return compatibilityVariables
-				.orElseThrow(() -> new IllegalStateException(UNSET_CV_VOLUMES))
-				.get(speciesIndex)
+		return compatibilityVariables.orElseThrow(() -> new IllegalStateException(UNSET_CV_VOLUMES)).get(speciesIndex)
 				.getCvBasalArea(uc, layerType);
 	}
 
 	public float getCVQuadraticMeanDiameter(int speciesIndex, UtilizationClass uc, LayerType layerType) {
-		return compatibilityVariables
-				.orElseThrow(() -> new IllegalStateException(UNSET_CV_VOLUMES))
-				.get(speciesIndex)
+		return compatibilityVariables.orElseThrow(() -> new IllegalStateException(UNSET_CV_VOLUMES)).get(speciesIndex)
 				.getCvQuadraticMeanDiameter(uc, layerType);
 	}
 
 	public float getCVSmall(int speciesIndex, UtilizationClassVariable variable) {
-		return compatibilityVariables
-				.orElseThrow(() -> new IllegalStateException(UNSET_CV_VOLUMES))
-				.get(speciesIndex)
+		return compatibilityVariables.orElseThrow(() -> new IllegalStateException(UNSET_CV_VOLUMES)).get(speciesIndex)
 				.getCvPrimaryLayerSmall(variable);
 	}
 
 	public MatrixMap3<UtilizationClass, UtilizationClassVariable, LayerType, Float> getCvVolume(int speciesIndex) {
-		return compatibilityVariables
-				.orElseThrow(() -> new IllegalStateException(UNSET_CV_VOLUMES))
-				.get(speciesIndex)
+		return compatibilityVariables.orElseThrow(() -> new IllegalStateException(UNSET_CV_VOLUMES)).get(speciesIndex)
 				.getCvVolume();
 	}
 
 	public MatrixMap2<UtilizationClass, LayerType, Float> getCvBasalArea(int speciesIndex) {
-		return compatibilityVariables
-				.orElseThrow(() -> new IllegalStateException(UNSET_CV_VOLUMES))
-				.get(speciesIndex)
+		return compatibilityVariables.orElseThrow(() -> new IllegalStateException(UNSET_CV_VOLUMES)).get(speciesIndex)
 				.getCvBasalArea();
 	}
 
 	public MatrixMap2<UtilizationClass, LayerType, Float> getCvQuadraticMeanDiameter(int speciesIndex) {
-		return compatibilityVariables
-				.orElseThrow(() -> new IllegalStateException(UNSET_CV_VOLUMES))
-				.get(speciesIndex)
+		return compatibilityVariables.orElseThrow(() -> new IllegalStateException(UNSET_CV_VOLUMES)).get(speciesIndex)
 				.getCvQuadraticMeanDiameter();
 	}
 
 	public Map<UtilizationClassVariable, Float> getCvPrimaryLayerSmall(int speciesIndex) {
-		return compatibilityVariables
-				.orElseThrow(() -> new IllegalStateException(UNSET_CV_VOLUMES))
-				.get(speciesIndex)
+		return compatibilityVariables.orElseThrow(() -> new IllegalStateException(UNSET_CV_VOLUMES)).get(speciesIndex)
 				.getCvPrimaryLayerSmall();
 
 	}
