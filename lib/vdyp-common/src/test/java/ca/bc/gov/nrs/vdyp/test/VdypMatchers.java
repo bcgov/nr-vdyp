@@ -3,8 +3,10 @@ package ca.bc.gov.nrs.vdyp.test;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.anything;
+import static org.hamcrest.Matchers.arrayContaining;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.describedAs;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
@@ -14,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -25,6 +28,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
@@ -32,6 +36,7 @@ import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.hamcrest.StringDescription;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
+import org.junit.platform.commons.util.ReflectionUtils;
 
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
@@ -46,6 +51,7 @@ import ca.bc.gov.nrs.vdyp.model.BecLookup;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
+import ca.bc.gov.nrs.vdyp.model.Sp64DistributionSet;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
 import ca.bc.gov.nrs.vdyp.model.VdypCompatibilityVariables;
@@ -55,14 +61,16 @@ import ca.bc.gov.nrs.vdyp.model.VdypSite;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.builders.ModelClassBuilder;
 import ca.bc.gov.nrs.vdyp.model.variables.UtilizationClassVariable;
+import ca.bc.gov.nrs.vdyp.processing_state.Bank;
 
 /**
  * Custom Hamcrest Matchers
  *
  * @author Kevin Smith, Vivid Solutions
+ * @param <V>
  *
  */
-public class VdypMatchers {
+public class VdypMatchers<V> {
 
 	static final float EPSILON = 0.001f;
 
@@ -1252,5 +1260,102 @@ public class VdypMatchers {
 				return match;
 			}
 		};
+	}
+
+	public static <T, V> Matcher<T> hasField(String name, Matcher<V> valueMatcher) {
+		return new TypeSafeDiagnosingMatcher<T>() {
+
+			@Override
+			public void describeTo(Description description) {
+
+				description.appendText("has field named ").appendValue(name).appendText(" that ");
+				valueMatcher.describeTo(description);
+			}
+
+			@Override
+			protected boolean matchesSafely(T item, Description mismatchDescription) {
+				try {
+					var field = item.getClass().getField(name);
+					var value = ReflectionUtils.tryToReadFieldValue(field, item);
+					if (!valueMatcher.matches(value)) {
+						mismatchDescription.appendText("field ").appendValue(name).appendText(" ");
+						return false;
+					}
+					return true;
+				} catch (NoSuchFieldException e) {
+					mismatchDescription.appendText("field ").appendValue(name).appendText(" does not exist.");
+					return false;
+				} catch (SecurityException e) {
+					mismatchDescription.appendText("field ").appendValue(name).appendText(" is not accessible.");
+					return false;
+				}
+			}
+		};
+	}
+
+	@SuppressWarnings("unchecked")
+	private static <V> V getField(String name, Object item) {
+		Field field;
+		try {
+			field = item.getClass().getField(name);
+			return (V) field.get(item);
+		} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
+			throw new IllegalStateException(e);
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public static Matcher<Float[]> arrayCloseTo1D(Float[] expected) {
+		@SuppressWarnings("rawtypes")
+		final List list = Arrays.stream(expected).map(f -> closeTo(f)).toList();
+		return Matchers.<Float>arrayContaining(list);
+	}
+
+	@SuppressWarnings("unchecked")
+	public static Matcher<Float[][]> arrayCloseTo2D(Float[][] expected) {
+		@SuppressWarnings("rawtypes")
+		final List list = Arrays.stream(expected).map(VdypMatchers::arrayCloseTo1D).toList();
+		return arrayContaining(list);
+	}
+
+	@SuppressWarnings("unchecked")
+	public static Matcher<Float[][]> arrayCloseTo3D(Float[][][] expected) {
+		@SuppressWarnings("rawtypes")
+		final List list = Arrays.stream(expected).map(VdypMatchers::arrayCloseTo2D).toList();
+		return arrayContaining(list);
+	}
+
+	public static Matcher<Bank> deepEquals(Bank expected) {
+
+		Stream<Matcher<Object>> otherArrays = Stream.of(
+				"speciesNames",
+				"sp64Distributions",
+				"siteCurveNumbers",
+				"speciesIndices"
+		).map(name -> hasField(name, equalTo(getField(name, expected))));
+
+		Stream<Matcher<Object>> floatArrayMatchers1d = Stream.of(
+				"siteIndices",
+				"dominantHeights",
+				"ageTotals",
+				"yearsAtBreastHeight",
+				"yearsToBreastHeight",
+				"percentagesOfForestedLand"
+		).map(name -> hasField(name, arrayCloseTo1D(getField(name, expected))));
+
+		Stream<Matcher<Object>> floatArrayMatchers2d = Stream.of(
+				"loreyHeights",
+				"basalAreas",
+				"closeUtilizationVolumes",
+				"cuVolumesMinusDecay",
+				"cuVolumesMinusDecayAndWastage",
+				"quadMeanDiameters",
+				"treesPerHectare",
+				"wholeStemVolumes"
+		).map(name -> hasField(name, arrayCloseTo2D(getField(name, expected))));
+
+		Stream<Matcher<Object>> floatArrayMatchers = Stream.concat(floatArrayMatchers1d, floatArrayMatchers1d);
+
+		return allOf((List) floatArrayMatchers.toList());
 	}
 }

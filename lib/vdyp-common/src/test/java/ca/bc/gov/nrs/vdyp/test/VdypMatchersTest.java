@@ -15,13 +15,11 @@ import java.util.Random;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.hamcrest.StringDescription;
-import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
-import org.junit.jupiter.params.provider.ValueSource;
 
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
@@ -55,7 +53,12 @@ class VdypMatchersTest {
 		assertTrue(result, "Expected match to pass but it failed with description: " + description.toString());
 	}
 
-	Random rand = new Random(42);
+	Random rand;
+
+	@BeforeEach
+	void setup() {
+		rand = new Random(42);
+	}
 
 	UtilizationVector mockUtilVector(float multiplier) {
 		return Utils.utilizationVector(
@@ -78,7 +81,6 @@ class VdypMatchersTest {
 
 			@BeforeEach
 			void setup() {
-				Random rand = new Random(42);
 				controlMap = TestUtils.loadControlMap();
 
 				expected = VdypPolygon.build(pb -> {
@@ -283,7 +285,6 @@ class VdypMatchersTest {
 			@BeforeEach
 			void setup() {
 
-				Random rand = new Random(42);
 				var controlMap = TestUtils.loadControlMap();
 
 				// The numbers don't add up, we are just using them to test comparison
@@ -522,7 +523,6 @@ class VdypMatchersTest {
 
 			@BeforeEach
 			void setup() {
-				Random rand = new Random(42);
 				var controlMap = TestUtils.loadControlMap();
 
 				// The numbers don't add up, we are just using them to test comparison
@@ -803,8 +803,6 @@ class VdypMatchersTest {
 
 			@BeforeEach
 			void setup() {
-				// Use a fixed seed so the random numbers are the same across runs.
-				Random rand = new Random(42);
 
 				expected = VdypCompatibilityVariables.build(cvb -> {
 					cvb.polygonIdentifier("Test", 2024);
