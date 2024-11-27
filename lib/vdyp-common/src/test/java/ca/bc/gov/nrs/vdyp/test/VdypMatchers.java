@@ -30,6 +30,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -1268,7 +1269,7 @@ public class VdypMatchers<V> {
 			@Override
 			public void describeTo(Description description) {
 
-				description.appendText("has field named ").appendValue(name).appendText(" that ");
+				description.appendText("has field named ").appendValue(name).appendText(" that is ");
 				valueMatcher.describeTo(description);
 			}
 
@@ -1276,16 +1277,36 @@ public class VdypMatchers<V> {
 			protected boolean matchesSafely(T item, Description mismatchDescription) {
 				try {
 					var field = item.getClass().getField(name);
-					var value = ReflectionUtils.tryToReadFieldValue(field, item);
+					var value = field.get(item);
+					var arrayComponentType = value.getClass().componentType();
+
+					// Hamcrest does not behave nicely with arrays of primitive types so we need to convert to arrays of boxed types
+					if (arrayComponentType == int.class) {
+						value = ArrayUtils.toObject((int[]) value);
+					} else if (arrayComponentType == float.class) {
+						value = ArrayUtils.toObject((float[]) value);
+					} else if (arrayComponentType.isPrimitive()) {
+						throw new IllegalStateException("Don't know how to unbox an array of " + arrayComponentType);
+					} else if (arrayComponentType.isArray()) {
+						if (arrayComponentType.getComponentType() == float.class) {
+							value = Arrays.stream((float[][]) value).map(ArrayUtils::toObject).toArray();
+						} else if (arrayComponentType.getComponentType().isPrimitive()) {
+							throw new IllegalStateException(
+									"Don't know how to unbox a 2D array of " + arrayComponentType
+							);
+						}
+					}
+
 					if (!valueMatcher.matches(value)) {
 						mismatchDescription.appendText("field ").appendValue(name).appendText(" ");
+						valueMatcher.describeMismatch(value, mismatchDescription);
 						return false;
 					}
 					return true;
 				} catch (NoSuchFieldException e) {
 					mismatchDescription.appendText("field ").appendValue(name).appendText(" does not exist.");
 					return false;
-				} catch (SecurityException e) {
+				} catch (IllegalAccessException e) {
 					mismatchDescription.appendText("field ").appendValue(name).appendText(" is not accessible.");
 					return false;
 				}
@@ -1294,7 +1315,7 @@ public class VdypMatchers<V> {
 	}
 
 	@SuppressWarnings("unchecked")
-	private static <V> V getField(String name, Object item) {
+	static <V> V getField(String name, Object item) {
 		Field field;
 		try {
 			field = item.getClass().getField(name);
@@ -1304,22 +1325,30 @@ public class VdypMatchers<V> {
 		}
 	}
 
+
 	@SuppressWarnings("unchecked")
-	public static Matcher<Float[]> arrayCloseTo1D(Float[] expected) {
+	public static Matcher<float[]> array1D(int[] expected) {
 		@SuppressWarnings("rawtypes")
-		final List list = Arrays.stream(expected).map(f -> closeTo(f)).toList();
-		return Matchers.<Float>arrayContaining(list);
+		final List list = Arrays.stream(ArrayUtils.toObject(expected)).map(i -> equalTo(i)).toList();
+		return arrayContaining(list);
 	}
 
 	@SuppressWarnings("unchecked")
-	public static Matcher<Float[][]> arrayCloseTo2D(Float[][] expected) {
+	public static Matcher<float[]> arrayCloseTo1D(float[] expected) {
+		@SuppressWarnings("rawtypes")
+		final List list = Arrays.stream(ArrayUtils.toObject(expected)).map(f -> closeTo(f)).toList();
+		return arrayContaining(list);
+	}
+
+	@SuppressWarnings("unchecked")
+	public static Matcher<float[][]> arrayCloseTo2D(float[][] expected) {
 		@SuppressWarnings("rawtypes")
 		final List list = Arrays.stream(expected).map(VdypMatchers::arrayCloseTo1D).toList();
 		return arrayContaining(list);
 	}
 
 	@SuppressWarnings("unchecked")
-	public static Matcher<Float[][]> arrayCloseTo3D(Float[][][] expected) {
+	public static Matcher<float[][]> arrayCloseTo3D(float[][][] expected) {
 		@SuppressWarnings("rawtypes")
 		final List list = Arrays.stream(expected).map(VdypMatchers::arrayCloseTo2D).toList();
 		return arrayContaining(list);
@@ -1327,23 +1356,44 @@ public class VdypMatchers<V> {
 
 	public static Matcher<Bank> deepEquals(Bank expected) {
 
-		Stream<Matcher<Object>> otherArrays = Stream.of(
-				"speciesNames",
-				"sp64Distributions",
+		List<Matcher<? super Bank>> matchers = new LinkedList<>();
+		Stream.of(
 				"siteCurveNumbers",
 				"speciesIndices"
-		).map(name -> hasField(name, equalTo(getField(name, expected))));
+		)
+				.map(
+						name -> hasField(
+								name, array1D(VdypMatchers.getField(name, expected))
+						)
 
-		Stream<Matcher<Object>> floatArrayMatchers1d = Stream.of(
+				)
+				.forEach(matchers::add);
+
+		Stream.of(
+				"speciesNames",
+				"sp64Distributions"
+		)
+				.map(
+						name -> hasField(
+								name, Matchers.arrayContaining(
+										(Object[]) getField(name, expected)
+								)
+						)
+				)
+				.forEach(matchers::add);
+
+		Stream.of(
 				"siteIndices",
 				"dominantHeights",
 				"ageTotals",
 				"yearsAtBreastHeight",
 				"yearsToBreastHeight",
 				"percentagesOfForestedLand"
-		).map(name -> hasField(name, arrayCloseTo1D(getField(name, expected))));
+		)
+				.map(name -> hasField(name, arrayCloseTo1D(getField(name, expected))))
+				.forEach(matchers::add);
 
-		Stream<Matcher<Object>> floatArrayMatchers2d = Stream.of(
+		Stream.of(
 				"loreyHeights",
 				"basalAreas",
 				"closeUtilizationVolumes",
@@ -1352,10 +1402,10 @@ public class VdypMatchers<V> {
 				"quadMeanDiameters",
 				"treesPerHectare",
 				"wholeStemVolumes"
-		).map(name -> hasField(name, arrayCloseTo2D(getField(name, expected))));
+		)
+				.map(name -> hasField(name, arrayCloseTo2D(getField(name, expected))))
+				.forEach(matchers::add);
 
-		Stream<Matcher<Object>> floatArrayMatchers = Stream.concat(floatArrayMatchers1d, floatArrayMatchers1d);
-
-		return allOf((List) floatArrayMatchers.toList());
+		return allOf(matchers);
 	}
 }

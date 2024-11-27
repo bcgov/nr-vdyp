@@ -20,8 +20,10 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import ca.bc.gov.nrs.vdyp.common.Utils;
+import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
@@ -35,6 +37,7 @@ import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VdypSite;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.variables.UtilizationClassVariable;
+import ca.bc.gov.nrs.vdyp.processing_state.Bank;
 
 class VdypMatchersTest {
 
@@ -73,6 +76,229 @@ class VdypMatchersTest {
 
 	@Nested
 	class deepEquals {
+		@Nested
+		class testBank {
+			Bank expected;
+			VdypLayer expectedLayer;
+			BecDefinition expectedBec;
+			Matcher<Bank> unit;
+			Map<String, Object> controlMap;
+
+			@BeforeEach
+			void setup() {
+				controlMap = TestUtils.loadControlMap();
+				expectedBec = Utils.getBec("CDF", controlMap);
+				expectedLayer = VdypLayer.build(lb -> {
+					lb.polygonIdentifier("Test", 2024);
+					lb.layerType(LayerType.PRIMARY);
+
+					lb.empiricalRelationshipParameterIndex(21);
+					lb.inventoryTypeGroup(34);
+					lb.primaryGenus("MB");
+
+					lb.addSpecies(sb -> {
+						sb.genus("MB");
+						sb.controlMap(controlMap);
+
+						sb.percentGenus(90);
+
+						sb.breakageGroup(12);
+						sb.decayGroup(13);
+						sb.volumeGroup(14);
+
+						sb.addSp64Distribution("MB", 100);
+
+						sb.addCompatibilityVariables(cvb -> {
+							cvb.cvVolume((k1, k2, k3) -> rand.nextFloat() * 10);
+							cvb.cvBasalArea((k1, k2) -> rand.nextFloat() * 10);
+							cvb.cvQuadraticMeanDiameter((k1, k2) -> rand.nextFloat() * 10);
+							cvb.cvPrimaryLayerSmall(k1 -> rand.nextFloat() * 10);
+						});
+
+						sb.addSite(ib -> {
+							ib.ageTotal(40);
+							ib.yearsToBreastHeight(5);
+							ib.height(15);
+							ib.siteCurveNumber(42);
+							ib.siteIndex(4);
+						});
+
+						sb.loreyHeight(mockHeightVector());
+
+						sb.baseArea(mockUtilVector(2));
+						sb.quadMeanDiameter(mockUtilVector(10));
+						sb.treesPerHectare(mockUtilVector(300));
+
+						sb.wholeStemVolume(mockUtilVector(7));
+						sb.closeUtilizationVolumeByUtilization(mockUtilVector(6));
+						sb.closeUtilizationVolumeNetOfDecayByUtilization(mockUtilVector(5));
+						sb.closeUtilizationVolumeNetOfDecayAndWasteByUtilization(mockUtilVector(4));
+						sb.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(mockUtilVector(3));
+					});
+
+					lb.loreyHeight(mockHeightVector());
+
+					lb.baseArea(mockUtilVector(2));
+					lb.quadMeanDiameter(mockUtilVector(10));
+					lb.treesPerHectare(mockUtilVector(300));
+
+					lb.wholeStemVolume(mockUtilVector(7));
+					lb.closeUtilizationVolumeByUtilization(mockUtilVector(6));
+					lb.closeUtilizationVolumeNetOfDecayByUtilization(mockUtilVector(5));
+					lb.closeUtilizationVolumeNetOfDecayAndWasteByUtilization(mockUtilVector(4));
+					lb.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(mockUtilVector(3));
+				});
+
+				expected = new Bank(expectedLayer, expectedBec, x -> true);
+
+				expected.percentagesOfForestedLand[1] = 70;
+
+				unit = VdypMatchers.deepEquals(expected);
+			}
+
+			@Test
+			void testPass() {
+				var actual = new Bank(expected);
+
+				assertMatch(actual, unit);
+			}
+
+			@Test
+			void testAgeDifferent() {
+				var actual = new Bank(expected);
+				actual.ageTotals[1] += 1;
+
+				assertMismatch(
+						actual, unit, matchesRegex(
+								"has field named \\\"ageTotals\\\" that is \\[a numeric value within <[^>]+> of <0.0>, a numeric value within <[^>]+> of <40.0>\\]  field \\\"ageTotals\\\" item 1: was a java.lang.Float \\(<41.0F>\\)"
+						)
+				);
+			}
+
+			@Test
+			void testDomHeightDifferent() {
+				var actual = new Bank(expected);
+				actual.dominantHeights[1] += 1;
+
+				assertMismatch(
+						actual, unit, matchesRegex(
+								"has field named \\\"dominantHeights\\\" that is \\[a numeric value within <[^>]+> of <0.0>, a numeric value within <[^>]+> of <15.0>\\]  field \\\"dominantHeights\\\" item 1: was a java.lang.Float \\(<16.0F>\\)"
+						)
+				);
+			}
+
+			@Test
+			void testPercentForestDifferent() {
+				var actual = new Bank(expected);
+				actual.percentagesOfForestedLand[1] += 1;
+
+				assertMismatch(
+						actual, unit, matchesRegex(
+								"has field named \\\"percentagesOfForestedLand\\\" that is \\[a numeric value within <[^>]+> of <0.0>, a numeric value within <[^>]+> of <70.0>\\]  field \\\"percentagesOfForestedLand\\\" item 1: was a java.lang.Float \\(<71.0F>\\)"
+						)
+				);
+			}
+
+			@Test
+			void testSIDifferent() {
+				var actual = new Bank(expected);
+				actual.siteIndices[1] += 1;
+
+				assertMismatch(
+						actual, unit, matchesRegex(
+								"has field named \\\"siteIndices\\\" that is \\[a numeric value within <[^>]+> of <0.0>, a numeric value within <[^>]+> of <4.0>\\]  field \\\"siteIndices\\\" item 1: was a java.lang.Float \\(<5.0F>\\)"
+						)
+				);
+			}
+
+			@Test
+			void testYearsAtBHDifferent() {
+				var actual = new Bank(expected);
+				actual.yearsAtBreastHeight[1] += 1;
+
+				assertMismatch(
+						actual, unit, matchesRegex(
+								"has field named \\\"yearsAtBreastHeight\\\" that is \\[a numeric value within <[^>]+> of <0.0>, a numeric value within <[^>]+> of <35.0>\\]  field \\\"yearsAtBreastHeight\\\" item 1: was a java.lang.Float \\(<36.0F>\\)"
+						)
+				);
+			}
+
+			@Test
+			void testYearsToBHDifferent() {
+				var actual = new Bank(expected);
+				actual.yearsToBreastHeight[1] += 1;
+
+				assertMismatch(
+						actual, unit, matchesRegex(
+								"has field named \\\"yearsToBreastHeight\\\" that is \\[a numeric value within <[^>]+> of <0.0>, a numeric value within <[^>]+> of <5.0>\\]  field \\\"yearsToBreastHeight\\\" item 1: was a java.lang.Float \\(<6.0F>\\)"
+						)
+				);
+			}
+
+			@Test
+			void testSCNDifferent() {
+				var actual = new Bank(expected);
+				actual.siteCurveNumbers[1] += 1;
+
+				assertMismatch(
+						actual, unit, matchesRegex(
+								"has field named \\\"siteCurveNumbers\\\" that is \\[<0>, <42>\\]  field \\\"siteCurveNumbers\\\" item 1: was <43>"
+						)
+				);
+			}
+
+			@Test
+			void testSpecIndexDifferent() {
+				var actual = new Bank(expected);
+				actual.speciesIndices[1] += 1;
+
+				assertMismatch(
+						actual, unit, matchesRegex(
+								"has field named \\\"speciesIndices\\\" that is \\[<0>, <10>\\]  field \\\"speciesIndices\\\" item 1: was <11>"
+						)
+				);
+			}
+
+			@Test
+			void testSpecNameDifferent() {
+				var actual = new Bank(expected);
+				actual.speciesNames[1] = "X";
+
+				assertMismatch(
+						actual, unit, equalTo(
+								"has field named \"speciesNames\" that is [null, \"MB\"]  field \"speciesNames\" item 1: was \"X\""
+						)
+				);
+			}
+
+			@ParameterizedTest
+			@ValueSource(
+					strings = {
+							"loreyHeights",
+							"basalAreas",
+							"closeUtilizationVolumes",
+							"cuVolumesMinusDecay",
+							"cuVolumesMinusDecayAndWastage",
+							"quadMeanDiameters",
+							"treesPerHectare",
+							"wholeStemVolumes" }
+			)
+			void testUtilizationDifferent(String name) throws Exception {
+				var actual = new Bank(expected);
+				var field = Bank.class.getField(name);
+
+				((float[][]) field.get(actual))[1][1] += 1;
+
+				assertMismatch(
+						actual, unit, matchesRegex(
+								"has field named \"" + name + "\" that is .+?  field \"" + name
+										+ "\" item 1: item 1: was a java\\.lang\\.Float \\(<\\d+\\.\\d+F>\\)"
+						)
+				);
+			}
+
+		}
+
 		@Nested
 		class testVdypPolygon {
 			VdypPolygon expected;
