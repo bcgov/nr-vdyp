@@ -22,7 +22,10 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import ca.bc.gov.nrs.vdyp.application.ProcessingException;
 import ca.bc.gov.nrs.vdyp.common.Utils;
+import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMap;
+import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMapImpl;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap;
@@ -38,6 +41,9 @@ import ca.bc.gov.nrs.vdyp.model.VdypSite;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.variables.UtilizationClassVariable;
 import ca.bc.gov.nrs.vdyp.processing_state.Bank;
+import ca.bc.gov.nrs.vdyp.processing_state.LayerProcessingState;
+import ca.bc.gov.nrs.vdyp.processing_state.TestLayerProcessingState;
+import ca.bc.gov.nrs.vdyp.processing_state.TestProcessingState;
 
 class VdypMatchersTest {
 
@@ -169,7 +175,8 @@ class VdypMatchersTest {
 				actual.ageTotals[1] += 1;
 
 				assertMismatch(
-						actual, unit, matchesRegex(
+						actual, unit,
+						matchesRegex(
 								"has field named \\\"ageTotals\\\" that is \\[a numeric value within <[^>]+> of <0.0>, a numeric value within <[^>]+> of <40.0>\\]  field \\\"ageTotals\\\" item 1: was a java.lang.Float \\(<41.0F>\\)"
 						)
 				);
@@ -181,7 +188,8 @@ class VdypMatchersTest {
 				actual.dominantHeights[1] += 1;
 
 				assertMismatch(
-						actual, unit, matchesRegex(
+						actual, unit,
+						matchesRegex(
 								"has field named \\\"dominantHeights\\\" that is \\[a numeric value within <[^>]+> of <0.0>, a numeric value within <[^>]+> of <15.0>\\]  field \\\"dominantHeights\\\" item 1: was a java.lang.Float \\(<16.0F>\\)"
 						)
 				);
@@ -193,7 +201,8 @@ class VdypMatchersTest {
 				actual.percentagesOfForestedLand[1] += 1;
 
 				assertMismatch(
-						actual, unit, matchesRegex(
+						actual, unit,
+						matchesRegex(
 								"has field named \\\"percentagesOfForestedLand\\\" that is \\[a numeric value within <[^>]+> of <0.0>, a numeric value within <[^>]+> of <70.0>\\]  field \\\"percentagesOfForestedLand\\\" item 1: was a java.lang.Float \\(<71.0F>\\)"
 						)
 				);
@@ -205,7 +214,8 @@ class VdypMatchersTest {
 				actual.siteIndices[1] += 1;
 
 				assertMismatch(
-						actual, unit, matchesRegex(
+						actual, unit,
+						matchesRegex(
 								"has field named \\\"siteIndices\\\" that is \\[a numeric value within <[^>]+> of <0.0>, a numeric value within <[^>]+> of <4.0>\\]  field \\\"siteIndices\\\" item 1: was a java.lang.Float \\(<5.0F>\\)"
 						)
 				);
@@ -217,7 +227,8 @@ class VdypMatchersTest {
 				actual.yearsAtBreastHeight[1] += 1;
 
 				assertMismatch(
-						actual, unit, matchesRegex(
+						actual, unit,
+						matchesRegex(
 								"has field named \\\"yearsAtBreastHeight\\\" that is \\[a numeric value within <[^>]+> of <0.0>, a numeric value within <[^>]+> of <35.0>\\]  field \\\"yearsAtBreastHeight\\\" item 1: was a java.lang.Float \\(<36.0F>\\)"
 						)
 				);
@@ -229,7 +240,8 @@ class VdypMatchersTest {
 				actual.yearsToBreastHeight[1] += 1;
 
 				assertMismatch(
-						actual, unit, matchesRegex(
+						actual, unit,
+						matchesRegex(
 								"has field named \\\"yearsToBreastHeight\\\" that is \\[a numeric value within <[^>]+> of <0.0>, a numeric value within <[^>]+> of <5.0>\\]  field \\\"yearsToBreastHeight\\\" item 1: was a java.lang.Float \\(<6.0F>\\)"
 						)
 				);
@@ -241,7 +253,8 @@ class VdypMatchersTest {
 				actual.siteCurveNumbers[1] += 1;
 
 				assertMismatch(
-						actual, unit, matchesRegex(
+						actual, unit,
+						matchesRegex(
 								"has field named \\\"siteCurveNumbers\\\" that is \\[<0>, <42>\\]  field \\\"siteCurveNumbers\\\" item 1: was <43>"
 						)
 				);
@@ -253,7 +266,8 @@ class VdypMatchersTest {
 				actual.speciesIndices[1] += 1;
 
 				assertMismatch(
-						actual, unit, matchesRegex(
+						actual, unit,
+						matchesRegex(
 								"has field named \\\"speciesIndices\\\" that is \\[<0>, <10>\\]  field \\\"speciesIndices\\\" item 1: was <11>"
 						)
 				);
@@ -265,7 +279,8 @@ class VdypMatchersTest {
 				actual.speciesNames[1] = "X";
 
 				assertMismatch(
-						actual, unit, equalTo(
+						actual, unit,
+						equalTo(
 								"has field named \"speciesNames\" that is [null, \"MB\"]  field \"speciesNames\" item 1: was \"X\""
 						)
 				);
@@ -273,14 +288,8 @@ class VdypMatchersTest {
 
 			@ParameterizedTest
 			@ValueSource(
-					strings = {
-							"loreyHeights",
-							"basalAreas",
-							"closeUtilizationVolumes",
-							"cuVolumesMinusDecay",
-							"cuVolumesMinusDecayAndWastage",
-							"quadMeanDiameters",
-							"treesPerHectare",
+					strings = { "loreyHeights", "basalAreas", "closeUtilizationVolumes", "cuVolumesMinusDecay",
+							"cuVolumesMinusDecayAndWastage", "quadMeanDiameters", "treesPerHectare",
 							"wholeStemVolumes" }
 			)
 			void testUtilizationDifferent(String name) throws Exception {
@@ -290,7 +299,8 @@ class VdypMatchersTest {
 				((float[][]) field.get(actual))[1][1] += 1;
 
 				assertMismatch(
-						actual, unit, matchesRegex(
+						actual, unit,
+						matchesRegex(
 								"has field named \"" + name + "\" that is .+?  field \"" + name
 										+ "\" item 1: item 1: was a java\\.lang\\.Float \\(<\\d+\\.\\d+F>\\)"
 						)
@@ -1247,6 +1257,214 @@ class VdypMatchersTest {
 				assertMismatch(actual, unit, equalTo("SiteIndex was <Optional[3.0]> but expected <Optional[4.0]>"));
 			}
 
+		}
+
+		@Nested
+		class testLayerProcessingState {
+			VdypPolygon expectedPolygon;
+			TestProcessingState expectedState;
+			TestLayerProcessingState expectedLayerState;
+			Matcher<? super TestLayerProcessingState> unit;
+			Map<String, Object> controlMap;
+
+			@BeforeEach
+			void setup() throws ProcessingException {
+				controlMap = TestUtils.loadControlMap();
+				expectedPolygon = VdypPolygon.build(pb -> {
+
+					pb.polygonIdentifier("Test", 2024);
+					pb.percentAvailable(90f);
+					pb.biogeoclimaticZone(Utils.getBec("CDF", controlMap));
+					pb.forestInventoryZone("Z");
+
+					pb.addLayer(lb -> {
+
+						lb.layerType(LayerType.PRIMARY);
+
+						lb.empiricalRelationshipParameterIndex(21);
+						lb.inventoryTypeGroup(34);
+						lb.primaryGenus("MB");
+
+						lb.addSpecies(sb -> {
+							sb.genus("MB");
+							sb.controlMap(controlMap);
+
+							sb.percentGenus(90);
+
+							sb.breakageGroup(12);
+							sb.decayGroup(13);
+							sb.volumeGroup(14);
+
+							sb.addSp64Distribution("MB", 100);
+
+							sb.addCompatibilityVariables(cvb -> {
+								cvb.cvVolume((k1, k2, k3) -> rand.nextFloat() * 10);
+								cvb.cvBasalArea((k1, k2) -> rand.nextFloat() * 10);
+								cvb.cvQuadraticMeanDiameter((k1, k2) -> rand.nextFloat() * 10);
+								cvb.cvPrimaryLayerSmall(k1 -> rand.nextFloat() * 10);
+							});
+
+							sb.addSite(ib -> {
+								ib.ageTotal(40);
+								ib.yearsToBreastHeight(5);
+								ib.height(15);
+								ib.siteCurveNumber(42);
+								ib.siteIndex(4);
+							});
+
+							sb.loreyHeight(mockHeightVector());
+
+							sb.baseArea(mockUtilVector(2));
+							sb.quadMeanDiameter(mockUtilVector(10));
+							sb.treesPerHectare(mockUtilVector(300));
+
+							sb.wholeStemVolume(mockUtilVector(7));
+							sb.closeUtilizationVolumeByUtilization(mockUtilVector(6));
+							sb.closeUtilizationVolumeNetOfDecayByUtilization(mockUtilVector(5));
+							sb.closeUtilizationVolumeNetOfDecayAndWasteByUtilization(mockUtilVector(4));
+							sb.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(mockUtilVector(3));
+						});
+
+						lb.loreyHeight(mockHeightVector());
+
+						lb.baseArea(mockUtilVector(2));
+						lb.quadMeanDiameter(mockUtilVector(10));
+						lb.treesPerHectare(mockUtilVector(300));
+
+						lb.wholeStemVolume(mockUtilVector(7));
+						lb.closeUtilizationVolumeByUtilization(mockUtilVector(6));
+						lb.closeUtilizationVolumeNetOfDecayByUtilization(mockUtilVector(5));
+						lb.closeUtilizationVolumeNetOfDecayAndWasteByUtilization(mockUtilVector(4));
+						lb.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(mockUtilVector(3));
+					});
+				});
+
+				expectedState = new TestProcessingState(controlMap);
+				expectedState.setPolygon(expectedPolygon);
+				expectedLayerState = expectedState.getPrimaryLayerProcessingState();
+
+				unit = VdypMatchers.deepEquals(expectedLayerState);
+			}
+
+			@Test
+			void testPass() throws ProcessingException {
+				var actualState = new TestProcessingState(controlMap);
+				var actualPolygon = VdypPolygon.build(pb -> {
+					pb.copy(expectedPolygon);
+
+					pb.copyLayers(expectedPolygon, (lb, expectedLayer) -> {
+						lb.copy(expectedLayer);
+						lb.copySpecies(expectedLayer, (sb, expectedSpec) -> {
+							sb.copy(expectedSpec);
+							sb.copySiteFrom(expectedSpec, (ib, i) -> {
+							});
+							sb.copyCompatibilityVariablesFrom(expectedSpec, (ib, cv) -> {
+							});
+						});
+					});
+				});
+				actualState.setPolygon(actualPolygon);
+				var actualLayerState = actualState.getPrimaryLayerProcessingState();
+
+				assertMatch(actualLayerState, unit);
+			}
+
+			@Test
+			void testDifferentPoly() throws ProcessingException {
+				var actualState = new TestProcessingState(controlMap);
+				var actualPolygon = VdypPolygon.build(pb -> {
+					pb.copy(expectedPolygon);
+
+					pb.polygonIdentifier("Different", 2025);
+
+					pb.copyLayers(expectedPolygon, (lb, expectedLayer) -> {
+						lb.copy(expectedLayer);
+						lb.copySpecies(expectedLayer, (sb, expectedSpec) -> {
+							sb.copy(expectedSpec);
+							sb.copySiteFrom(expectedSpec, (ib, i) -> {
+							});
+							sb.copyCompatibilityVariablesFrom(expectedSpec, (ib, cv) -> {
+							});
+						});
+					});
+				});
+				actualState.setPolygon(actualPolygon);
+				var actualLayerState = actualState.getPrimaryLayerProcessingState();
+
+				assertMismatch(
+						actualLayerState, unit,
+						equalTo(
+								"hasProperty(\"polygon\", hasProperty(\"polygonIdentifier\", (an instance of ca.bc.gov.nrs.vdyp.model.PolygonIdentifier and hasProperty(\"base\", is \"Test\") and hasProperty(\"year\", is <2024>))))  property 'polygon'  property 'polygonIdentifier' hasProperty(\"base\", is \"Test\")  property 'base' was \"Different\""
+						)
+				);
+			}
+
+			@Test
+			void testDifferentLayer() throws ProcessingException {
+				var actualState = new TestProcessingState(controlMap);
+				var actualPolygon = VdypPolygon.build(pb -> {
+					pb.copy(expectedPolygon);
+
+					pb.copyLayers(expectedPolygon, (lb, expectedLayer) -> {
+						lb.copy(expectedLayer);
+						lb.copySpecies(expectedLayer, (sb, expectedSpec) -> {
+							sb.copy(expectedSpec);
+							sb.copySiteFrom(expectedSpec, (ib, i) -> {
+							});
+							sb.copyCompatibilityVariablesFrom(expectedSpec, (ib, cv) -> {
+							});
+						});
+					});
+					pb.copyLayers(expectedPolygon, (lb, expectedLayer) -> {
+						lb.copy(expectedLayer);
+						lb.layerType(LayerType.VETERAN);
+						lb.copySpecies(expectedLayer, (sb, expectedSpec) -> {
+							sb.copy(expectedSpec);
+							sb.copySiteFrom(expectedSpec, (ib, i) -> {
+							});
+							sb.copyCompatibilityVariablesFrom(expectedSpec, (ib, cv) -> {
+							});
+						});
+					});
+				});
+				actualState.setPolygon(actualPolygon);
+				var actualLayerState = actualState.getVeteranLayerProcessingState().get();
+
+				assertMismatch(
+						actualLayerState, unit,
+						equalTo("hasProperty(\"layerType\", <PRIMARY>)  property 'layerType' was <VETERAN>")
+				);
+			}
+
+			@Test
+			void testDifferentBank() throws ProcessingException {
+				var actualState = new TestProcessingState(controlMap);
+				var actualPolygon = VdypPolygon.build(pb -> {
+					pb.copy(expectedPolygon);
+
+					pb.copyLayers(expectedPolygon, (lb, expectedLayer) -> {
+						lb.copy(expectedLayer);
+						lb.copySpecies(expectedLayer, (sb, expectedSpec) -> {
+							sb.copy(expectedSpec);
+							sb.copySiteFrom(expectedSpec, (ib, i) -> {
+							});
+							sb.copyCompatibilityVariablesFrom(expectedSpec, (ib, cv) -> {
+							});
+						});
+					});
+				});
+				actualState.setPolygon(actualPolygon);
+				var actualLayerState = actualState.getPrimaryLayerProcessingState();
+
+				actualLayerState.getBank().basalAreas[1][1] += 1;
+
+				assertMismatch(
+						actualLayerState, unit,
+						Matchers.matchesRegex(
+								".*?field \\\"basalAreas\\\" item 1: item 1: was a java\\.lang\\.Float \\(<\\d+\\.\\d+F>\\).*"
+						)
+				);
+			}
 		}
 	}
 

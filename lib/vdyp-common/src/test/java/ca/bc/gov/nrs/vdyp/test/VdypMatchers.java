@@ -63,6 +63,7 @@ import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.builders.ModelClassBuilder;
 import ca.bc.gov.nrs.vdyp.model.variables.UtilizationClassVariable;
 import ca.bc.gov.nrs.vdyp.processing_state.Bank;
+import ca.bc.gov.nrs.vdyp.processing_state.LayerProcessingState;
 
 /**
  * Custom Hamcrest Matchers
@@ -626,6 +627,10 @@ public class VdypMatchers<V> {
 
 	public static Matcher<PolygonIdentifier> isPolyId(String base, int year) {
 		return allOf(instanceOf(PolygonIdentifier.class), hasProperty("base", is(base)), hasProperty("year", is(year)));
+	}
+
+	public static Matcher<PolygonIdentifier> isPolyId(PolygonIdentifier expected) {
+		return isPolyId(expected.getBase(), expected.getYear());
 	}
 
 	public static Matcher<BecDefinition> isBec(String alias) {
@@ -1280,7 +1285,8 @@ public class VdypMatchers<V> {
 					var value = field.get(item);
 					var arrayComponentType = value.getClass().componentType();
 
-					// Hamcrest does not behave nicely with arrays of primitive types so we need to convert to arrays of boxed types
+					// Hamcrest does not behave nicely with arrays of primitive types so we need to convert to arrays of
+					// boxed types
 					if (arrayComponentType == int.class) {
 						value = ArrayUtils.toObject((int[]) value);
 					} else if (arrayComponentType == float.class) {
@@ -1325,7 +1331,6 @@ public class VdypMatchers<V> {
 		}
 	}
 
-
 	@SuppressWarnings("unchecked")
 	public static Matcher<float[]> array1D(int[] expected) {
 		@SuppressWarnings("rawtypes")
@@ -1354,57 +1359,39 @@ public class VdypMatchers<V> {
 		return arrayContaining(list);
 	}
 
+	public static <T extends LayerProcessingState<?, T>> Matcher<? super T> deepEquals(T expected) {
+		expected.getBank();
+		return allOf(
+				hasProperty(
+						"polygon",
+						hasProperty("polygonIdentifier", isPolyId(expected.getPolygon().getPolygonIdentifier()))
+				), hasProperty("layerType", equalTo(expected.getLayerType())),
+				hasProperty("bank", deepEquals(expected.getBank()))
+		);
+	}
+
 	public static Matcher<Bank> deepEquals(Bank expected) {
 
 		List<Matcher<? super Bank>> matchers = new LinkedList<>();
-		Stream.of(
-				"siteCurveNumbers",
-				"speciesIndices"
-		)
+		Stream.of("siteCurveNumbers", "speciesIndices")
 				.map(
-						name -> hasField(
-								name, array1D(VdypMatchers.getField(name, expected))
-						)
+						name -> hasField(name, array1D(VdypMatchers.getField(name, expected)))
 
-				)
+				).forEach(matchers::add);
+
+		Stream.of("speciesNames", "sp64Distributions")
+				.map(name -> hasField(name, Matchers.arrayContaining((Object[]) getField(name, expected))))
 				.forEach(matchers::add);
 
 		Stream.of(
-				"speciesNames",
-				"sp64Distributions"
-		)
-				.map(
-						name -> hasField(
-								name, Matchers.arrayContaining(
-										(Object[]) getField(name, expected)
-								)
-						)
-				)
-				.forEach(matchers::add);
-
-		Stream.of(
-				"siteIndices",
-				"dominantHeights",
-				"ageTotals",
-				"yearsAtBreastHeight",
-				"yearsToBreastHeight",
+				"siteIndices", "dominantHeights", "ageTotals", "yearsAtBreastHeight", "yearsToBreastHeight",
 				"percentagesOfForestedLand"
-		)
-				.map(name -> hasField(name, arrayCloseTo1D(getField(name, expected))))
-				.forEach(matchers::add);
+		).map(name -> hasField(name, arrayCloseTo1D(getField(name, expected)))).forEach(matchers::add);
 
 		Stream.of(
-				"loreyHeights",
-				"basalAreas",
-				"closeUtilizationVolumes",
-				"cuVolumesMinusDecay",
-				"cuVolumesMinusDecayAndWastage",
-				"quadMeanDiameters",
-				"treesPerHectare",
-				"wholeStemVolumes"
-		)
-				.map(name -> hasField(name, arrayCloseTo2D(getField(name, expected))))
-				.forEach(matchers::add);
+				"loreyHeights", "basalAreas", "closeUtilizationVolumes", "cuVolumesMinusDecay",
+				"cuVolumesMinusDecayAndWastage", "quadMeanDiameters", "treesPerHectare", "wholeStemVolumes"
+		).map(name -> hasField(name, arrayCloseTo2D(getField(name, expected)))).forEach(matchers::add);
 
 		return allOf(matchers);
 	}
