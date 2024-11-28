@@ -64,6 +64,7 @@ import ca.bc.gov.nrs.vdyp.model.builders.ModelClassBuilder;
 import ca.bc.gov.nrs.vdyp.model.variables.UtilizationClassVariable;
 import ca.bc.gov.nrs.vdyp.processing_state.Bank;
 import ca.bc.gov.nrs.vdyp.processing_state.LayerProcessingState;
+import ca.bc.gov.nrs.vdyp.processing_state.TestProcessingState;
 
 /**
  * Custom Hamcrest Matchers
@@ -237,6 +238,12 @@ public class VdypMatchers<V> {
 			}
 
 		};
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public static <T> Matcher<? super Optional<T>>
+			optional(Optional<T> expected, Function<T, Matcher<? super T>> valueMatcherFactory) {
+		return expected.map(v -> present((Matcher) valueMatcherFactory.apply(v))).orElse(notPresent());
 	}
 
 	public static <T> Matcher<MatrixMap<T>> mmHasEntry(Matcher<T> valueMatcher, Object... keys) {
@@ -1394,5 +1401,20 @@ public class VdypMatchers<V> {
 		).map(name -> hasField(name, arrayCloseTo2D(getField(name, expected)))).forEach(matchers::add);
 
 		return allOf(matchers);
+	}
+
+	public static Matcher<? super TestProcessingState> deepEquals(TestProcessingState expectedState) {
+		return allOf(
+				hasProperty(
+						"currentPolygon",
+						hasProperty(
+								"polygonIdentifier", isPolyId(expectedState.getCurrentPolygon().getPolygonIdentifier())
+						)
+				),
+				hasProperty(
+						"veteranLayerProcessingState",
+						optional(expectedState.getVeteranLayerProcessingState(), v -> deepEquals(v))
+				)
+		);
 	}
 }

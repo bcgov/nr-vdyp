@@ -1466,6 +1466,230 @@ class VdypMatchersTest {
 				);
 			}
 		}
+
+		@Nested
+		class testProcessingState {
+			VdypPolygon expectedPolygon;
+			TestProcessingState expectedState;
+			Matcher<? super TestProcessingState> unit;
+			Map<String, Object> controlMap;
+
+			@BeforeEach
+			void setup() throws ProcessingException {
+				controlMap = TestUtils.loadControlMap();
+				expectedPolygon = VdypPolygon.build(pb -> {
+
+					pb.polygonIdentifier("Test", 2024);
+					pb.percentAvailable(90f);
+					pb.biogeoclimaticZone(Utils.getBec("CDF", controlMap));
+					pb.forestInventoryZone("Z");
+
+					pb.addLayer(lb -> {
+
+						lb.layerType(LayerType.PRIMARY);
+
+						lb.empiricalRelationshipParameterIndex(21);
+						lb.inventoryTypeGroup(34);
+						lb.primaryGenus("MB");
+
+						lb.addSpecies(sb -> {
+							sb.genus("MB");
+							sb.controlMap(controlMap);
+
+							sb.percentGenus(90);
+
+							sb.breakageGroup(12);
+							sb.decayGroup(13);
+							sb.volumeGroup(14);
+
+							sb.addSp64Distribution("MB", 100);
+
+							sb.addCompatibilityVariables(cvb -> {
+								cvb.cvVolume((k1, k2, k3) -> rand.nextFloat() * 10);
+								cvb.cvBasalArea((k1, k2) -> rand.nextFloat() * 10);
+								cvb.cvQuadraticMeanDiameter((k1, k2) -> rand.nextFloat() * 10);
+								cvb.cvPrimaryLayerSmall(k1 -> rand.nextFloat() * 10);
+							});
+
+							sb.addSite(ib -> {
+								ib.ageTotal(40);
+								ib.yearsToBreastHeight(5);
+								ib.height(15);
+								ib.siteCurveNumber(42);
+								ib.siteIndex(4);
+							});
+
+							sb.loreyHeight(mockHeightVector());
+
+							sb.baseArea(mockUtilVector(2));
+							sb.quadMeanDiameter(mockUtilVector(10));
+							sb.treesPerHectare(mockUtilVector(300));
+
+							sb.wholeStemVolume(mockUtilVector(7));
+							sb.closeUtilizationVolumeByUtilization(mockUtilVector(6));
+							sb.closeUtilizationVolumeNetOfDecayByUtilization(mockUtilVector(5));
+							sb.closeUtilizationVolumeNetOfDecayAndWasteByUtilization(mockUtilVector(4));
+							sb.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(mockUtilVector(3));
+						});
+
+						lb.loreyHeight(mockHeightVector());
+
+						lb.baseArea(mockUtilVector(2));
+						lb.quadMeanDiameter(mockUtilVector(10));
+						lb.treesPerHectare(mockUtilVector(300));
+
+						lb.wholeStemVolume(mockUtilVector(7));
+						lb.closeUtilizationVolumeByUtilization(mockUtilVector(6));
+						lb.closeUtilizationVolumeNetOfDecayByUtilization(mockUtilVector(5));
+						lb.closeUtilizationVolumeNetOfDecayAndWasteByUtilization(mockUtilVector(4));
+						lb.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(mockUtilVector(3));
+					});
+				});
+
+				expectedState = new TestProcessingState(controlMap);
+				expectedState.setPolygon(expectedPolygon);
+
+				unit = VdypMatchers.deepEquals(expectedState);
+			}
+
+			@Test
+			void testPass() throws ProcessingException {
+				var actualState = new TestProcessingState(controlMap);
+				var actualPolygon = VdypPolygon.build(pb -> {
+					pb.copy(expectedPolygon);
+
+					pb.copyLayers(expectedPolygon, (lb, expectedLayer) -> {
+						lb.copy(expectedLayer);
+						lb.copySpecies(expectedLayer, (sb, expectedSpec) -> {
+							sb.copy(expectedSpec);
+							sb.copySiteFrom(expectedSpec, (ib, i) -> {
+							});
+							sb.copyCompatibilityVariablesFrom(expectedSpec, (ib, cv) -> {
+							});
+						});
+					});
+				});
+				actualState.setPolygon(actualPolygon);
+
+				assertMatch(actualState, unit);
+			}
+
+			@Test
+			void testPolyDifferent() throws ProcessingException {
+				var actualState = new TestProcessingState(controlMap);
+				var actualPolygon = VdypPolygon.build(pb -> {
+					pb.copy(expectedPolygon);
+					pb.polygonIdentifier("Different", 2025);
+
+					pb.copyLayers(expectedPolygon, (lb, expectedLayer) -> {
+						lb.copy(expectedLayer);
+						lb.copySpecies(expectedLayer, (sb, expectedSpec) -> {
+							sb.copy(expectedSpec);
+							sb.copySiteFrom(expectedSpec, (ib, i) -> {
+							});
+							sb.copyCompatibilityVariablesFrom(expectedSpec, (ib, cv) -> {
+							});
+						});
+					});
+				});
+				actualState.setPolygon(actualPolygon);
+				assertMismatch(
+						actualState, unit,
+						equalTo(
+								"hasProperty(\"currentPolygon\", hasProperty(\"polygonIdentifier\", (an instance of ca.bc.gov.nrs.vdyp.model.PolygonIdentifier and hasProperty(\"base\", is \"Test\") and hasProperty(\"year\", is <2024>))))  property 'currentPolygon'  property 'polygonIdentifier' hasProperty(\"base\", is \"Test\")  property 'base' was \"Different\""
+						)
+				);
+			}
+
+			@Test
+			void testUnexpectedVeteranLayer() throws ProcessingException {
+				var actualState = new TestProcessingState(controlMap);
+				var actualPolygon = VdypPolygon.build(pb -> {
+					pb.copy(expectedPolygon);
+
+					pb.copyLayers(expectedPolygon, (lb, expectedLayer) -> {
+						lb.copy(expectedLayer);
+						lb.copySpecies(expectedLayer, (sb, expectedSpec) -> {
+							sb.copy(expectedSpec);
+							sb.copySiteFrom(expectedSpec, (ib, i) -> {
+							});
+							sb.copyCompatibilityVariablesFrom(expectedSpec, (ib, cv) -> {
+							});
+						});
+					});
+					pb.copyLayers(expectedPolygon, (lb, expectedLayer) -> {
+						lb.copy(expectedLayer);
+						lb.layerType(LayerType.VETERAN);
+						lb.copySpecies(expectedLayer, (sb, expectedSpec) -> {
+							sb.copy(expectedSpec);
+							sb.copySiteFrom(expectedSpec, (ib, i) -> {
+							});
+							sb.copyCompatibilityVariablesFrom(expectedSpec, (ib, cv) -> {
+							});
+						});
+					});
+				});
+				actualState.setPolygon(actualPolygon);
+				assertMismatch(
+						actualState, unit,
+						startsWith(
+								"hasProperty(\"veteranLayerProcessingState\", Optional that is empty)  property 'veteranLayerProcessingState' had value"
+						)
+				);
+			}
+
+			@Test
+			void testMissingVeteranLayer() throws ProcessingException {
+				var actualState = new TestProcessingState(controlMap);
+
+				var actualPolygon = VdypPolygon.build(pb -> {
+					pb.copy(expectedPolygon);
+
+					pb.copyLayers(expectedPolygon, (lb, expectedLayer) -> {
+						lb.copy(expectedLayer);
+						lb.copySpecies(expectedLayer, (sb, expectedSpec) -> {
+							sb.copy(expectedSpec);
+							sb.copySiteFrom(expectedSpec, (ib, i) -> {
+							});
+							sb.copyCompatibilityVariablesFrom(expectedSpec, (ib, cv) -> {
+							});
+						});
+					});
+				});
+				expectedPolygon = VdypPolygon.build(pb -> {
+					pb.copy(expectedPolygon);
+
+					pb.copyLayers(expectedPolygon, (lb, expectedLayer) -> {
+						lb.copy(expectedLayer);
+						lb.copySpecies(expectedLayer, (sb, expectedSpec) -> {
+							sb.copy(expectedSpec);
+							sb.copySiteFrom(expectedSpec, (ib, i) -> {
+							});
+							sb.copyCompatibilityVariablesFrom(expectedSpec, (ib, cv) -> {
+							});
+						});
+					});
+					pb.copyLayers(expectedPolygon, (lb, expectedLayer) -> {
+						lb.copy(expectedLayer);
+						lb.layerType(LayerType.VETERAN);
+						lb.copySpecies(expectedLayer, (sb, expectedSpec) -> {
+							sb.copy(expectedSpec);
+							sb.copySiteFrom(expectedSpec, (ib, i) -> {
+							});
+							sb.copyCompatibilityVariablesFrom(expectedSpec, (ib, cv) -> {
+							});
+						});
+					});
+				});
+				expectedState.setPolygon(expectedPolygon);
+				unit = VdypMatchers.deepEquals(expectedState);
+
+				actualState.setPolygon(actualPolygon);
+				assertMismatch(
+						actualState, unit, Matchers.endsWith("property 'veteranLayerProcessingState' Not present")
+				);
+			}
+		}
 	}
 
 	@Nested
