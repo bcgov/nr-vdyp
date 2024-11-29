@@ -9,13 +9,12 @@ import org.junit.jupiter.api.Test;
 import ca.bc.gov.nrs.api.helpers.TestHelper;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
-import net.datafaker.Faker;
 
 @QuarkusTest
 class HelpEndpointTest {
 
+	@SuppressWarnings("unused")
 	private final TestHelper testHelper;
-	private final Faker faker = new Faker();
 
 	@Inject
 	HelpEndpointTest(TestHelper testHelper) {
@@ -29,7 +28,8 @@ class HelpEndpointTest {
 	@Test
 	void testGetHelp_shouldReturnStatusOK() {
 
-		given().basePath("/v8").when().get("/help").then().statusCode(200).and().contentType("application/json").and()
+		given().basePath(TestHelper.ROOT_PATH).when().get("/help").then().statusCode(200).and()
+				.contentType("application/json").and()
 				.body(Matchers.containsString("outputFormat"), Matchers.containsString("Output Data Format"));
 	}
 

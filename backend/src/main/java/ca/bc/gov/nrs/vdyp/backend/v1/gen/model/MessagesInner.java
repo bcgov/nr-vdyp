@@ -28,9 +28,6 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 			MessagesInner.JSON_PROPERTY_SEVERITY, MessagesInner.JSON_PROPERTY_MESSAGE_CODE,
 			MessagesInner.JSON_PROPERTY_MESSAGE }
 )
-@jakarta.annotation.Generated(
-		value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2024-11-12T09:52:55.097945-08:00[America/Vancouver]", comments = "Generator version: 7.9.0"
-)
 @RegisterForReflection
 public class MessagesInner {
 	public static final String JSON_PROPERTY_ID = "id";
@@ -67,7 +64,7 @@ public class MessagesInner {
 	}
 
 	/**
-	 * the message&#39;s unique identifier
+	 * the message's unique identifier
 	 *
 	 * @return id
 	 **/

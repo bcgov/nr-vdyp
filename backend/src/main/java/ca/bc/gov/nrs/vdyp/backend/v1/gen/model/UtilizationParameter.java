@@ -24,12 +24,9 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 /**
  * ParametersUtilsInner
  */
-@JsonPropertyOrder({ ParametersUtilsInner.JSON_PROPERTY_SPECIES_NAME, ParametersUtilsInner.JSON_PROPERTY_VALUE })
-@jakarta.annotation.Generated(
-		value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2024-11-12T09:52:55.097945-08:00[America/Vancouver]", comments = "Generator version: 7.9.0"
-)
+@JsonPropertyOrder({ UtilizationParameter.JSON_PROPERTY_SPECIES_NAME, UtilizationParameter.JSON_PROPERTY_VALUE })
 @RegisterForReflection
-public class ParametersUtilsInner {
+public class UtilizationParameter {
 	public static final String JSON_PROPERTY_SPECIES_NAME = "speciesName";
 	@JsonProperty(JSON_PROPERTY_SPECIES_NAME)
 	private String speciesName;
@@ -77,7 +74,7 @@ public class ParametersUtilsInner {
 	@JsonProperty(JSON_PROPERTY_VALUE)
 	private ValueEnum value;
 
-	public ParametersUtilsInner speciesName(String speciesName) {
+	public UtilizationParameter speciesName(String speciesName) {
 		this.speciesName = speciesName;
 		return this;
 	}
@@ -97,7 +94,7 @@ public class ParametersUtilsInner {
 		this.speciesName = speciesName;
 	}
 
-	public ParametersUtilsInner value(ValueEnum value) {
+	public UtilizationParameter value(ValueEnum value) {
 		this.value = value;
 		return this;
 	}
@@ -125,9 +122,9 @@ public class ParametersUtilsInner {
 		if (o == null || getClass() != o.getClass()) {
 			return false;
 		}
-		ParametersUtilsInner parametersUtilsInner = (ParametersUtilsInner) o;
-		return Objects.equals(this.speciesName, parametersUtilsInner.speciesName)
-				&& Objects.equals(this.value, parametersUtilsInner.value);
+		UtilizationParameter up = (UtilizationParameter) o;
+		return Objects.equals(this.speciesName, up.speciesName)
+				&& Objects.equals(this.value, up.value);
 	}
 
 	@Override
@@ -138,9 +135,9 @@ public class ParametersUtilsInner {
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append("class ParametersUtilsInner {\n");
-
-		sb.append("    speciesName: ").append(toIndentedString(speciesName)).append("\n");
+		sb.append("class ");
+		sb.append(UtilizationParameter.class.getSimpleName());
+		sb.append(" {\n    speciesName: ").append(toIndentedString(speciesName)).append("\n");
 		sb.append("    value: ").append(toIndentedString(value)).append("\n");
 		sb.append("}");
 		return sb.toString();

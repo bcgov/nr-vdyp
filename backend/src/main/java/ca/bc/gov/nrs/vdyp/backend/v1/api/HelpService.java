@@ -1,11 +1,13 @@
 package ca.bc.gov.nrs.vdyp.backend.v1.api;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ca.bc.gov.nrs.vdyp.backend.v1.api.impl.exceptions.NotFoundException;
 import ca.bc.gov.nrs.vdyp.backend.v1.gen.model.ParameterDetailsMessage;
 import ca.bc.gov.nrs.vdyp.backend.v1.gen.responses.HelpResource;
 import ca.bc.gov.nrs.vdyp.backend.v1.model.ParameterDetailsMessageBuilder;
@@ -486,6 +488,46 @@ public class HelpService {
 						"true"
 				)
 		);
+
+		/* Additional Parameters supported by VDYP8 */
+
+		messageList.add(
+				ParameterDetailsMessageBuilder.build(
+						"selectedExecutionOptions.doEnableProgressLogging", //
+						"Enable Progress logging", //
+						"true if present", //
+						"Enables or disables the logging of progress messages during projections.", //
+						"false"
+				)
+		);
+
+		messageList.add(
+				ParameterDetailsMessageBuilder.build(
+						"selectedExecutionOptions.doEnableErrorLogging", //
+						"Enable Error logging", //
+						"true if present", //
+						"Enables or disables the logging of error messages during projections.", //
+						"false"
+				)
+		);
+
+		messageList.add(
+				ParameterDetailsMessageBuilder.build(
+						"selectedExecutionOptions.doEnableDebugLogging", //
+						"Enable Debug logging", //
+						"true if present", //
+						"Enables or disables the logging of debug messages during projections.", //
+						"false"
+				)
+		);
+
+		messageList.sort(new Comparator<ParameterDetailsMessage>() {
+
+			@Override
+			public int compare(ParameterDetailsMessage o1, ParameterDetailsMessage o2) {
+				return o1.getField().compareTo(o2.getField());
+			}
+		});
 
 		logger.info(">helpGet");
 

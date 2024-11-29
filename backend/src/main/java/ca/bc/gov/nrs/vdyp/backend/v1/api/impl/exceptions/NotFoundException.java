@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.vdyp.backend.v1.api;
+package ca.bc.gov.nrs.vdyp.backend.v1.api.impl.exceptions;
 
 public class NotFoundException extends Exception {
 

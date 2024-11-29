@@ -30,19 +30,15 @@ import jakarta.validation.Valid;
 
 @JsonPropertyOrder(
 	{ Parameters.JSON_PROPERTY_OUTPUT_FORMAT, Parameters.JSON_PROPERTY_SELECTED_EXECUTION_OPTIONS,
-			Parameters.JSON_PROPERTY_DO_ENABLE_PROGRESS_LOGGING, Parameters.JSON_PROPERTY_DO_ENABLE_ERROR_LOGGING,
-			Parameters.JSON_PROPERTY_DO_ENABLE_DEBUG_LOGGING, Parameters.JSON_PROPERTY_SELECTED_DEBUG_OPTIONS,
-			Parameters.JSON_PROPERTY_AGE_START, Parameters.JSON_PROPERTY_MIN_AGE_START,
-			Parameters.JSON_PROPERTY_MAX_AGE_START, Parameters.JSON_PROPERTY_AGE_END,
-			Parameters.JSON_PROPERTY_MIN_AGE_END, Parameters.JSON_PROPERTY_MAX_AGE_END,
-			Parameters.JSON_PROPERTY_YEAR_START, Parameters.JSON_PROPERTY_YEAR_END, Parameters.JSON_PROPERTY_FORCE_YEAR,
+			Parameters.JSON_PROPERTY_SELECTED_DEBUG_OPTIONS, Parameters.JSON_PROPERTY_AGE_START,
+			Parameters.JSON_PROPERTY_MIN_AGE_START, Parameters.JSON_PROPERTY_MAX_AGE_START,
+			Parameters.JSON_PROPERTY_AGE_END, Parameters.JSON_PROPERTY_MIN_AGE_END,
+			Parameters.JSON_PROPERTY_MAX_AGE_END, Parameters.JSON_PROPERTY_YEAR_START,
+			Parameters.JSON_PROPERTY_YEAR_END, Parameters.JSON_PROPERTY_FORCE_YEAR,
 			Parameters.JSON_PROPERTY_AGE_INCREMENT, Parameters.JSON_PROPERTY_MIN_AGE_INCREMENT,
 			Parameters.JSON_PROPERTY_MAX_AGE_INCREMENT, Parameters.JSON_PROPERTY_COMBINE_AGE_YEAR_RANGE,
 			Parameters.JSON_PROPERTY_PROGRESS_FREQUENCY, Parameters.JSON_PROPERTY_METADATA_TO_OUTPUT,
 			Parameters.JSON_PROPERTY_FILTERS, Parameters.JSON_PROPERTY_UTILS }
-)
-@jakarta.annotation.Generated(
-		value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2024-11-19T17:38:05.300985-08:00[America/Vancouver]", comments = "Generator version: 7.9.0"
 )
 @RegisterForReflection
 public class Parameters {
@@ -129,7 +125,13 @@ public class Parameters {
 
 		DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE(
 				"doIncludeSecondarySpeciesDominantHeightInYieldTable"
-		);
+		),
+
+		DO_ENABLE_PROGRESS_LOGGING("doEnableProgressLogging"),
+
+		DO_ENABLE_ERROR_LOGGING("doEnableErrorLogging"),
+
+		DO_ENABLE_DEBUG_LOGGING("doEnableDebugLogging");
 
 		private String value;
 
@@ -157,16 +159,6 @@ public class Parameters {
 	public static final String JSON_PROPERTY_SELECTED_EXECUTION_OPTIONS = "selectedExecutionOptions";
 	@JsonProperty(JSON_PROPERTY_SELECTED_EXECUTION_OPTIONS)
 	private List<SelectedExecutionOptionsEnum> selectedExecutionOptions = new ArrayList<>();
-
-	public static final String JSON_PROPERTY_DO_ENABLE_PROGRESS_LOGGING = "doEnableProgressLogging";
-	@JsonProperty(JSON_PROPERTY_DO_ENABLE_PROGRESS_LOGGING)
-	private Boolean doEnableProgressLogging;
-	public static final String JSON_PROPERTY_DO_ENABLE_ERROR_LOGGING = "doEnableErrorLogging";
-	@JsonProperty(JSON_PROPERTY_DO_ENABLE_ERROR_LOGGING)
-	private Boolean doEnableErrorLogging;
-	public static final String JSON_PROPERTY_DO_ENABLE_DEBUG_LOGGING = "doEnableDebugLogging";
-	@JsonProperty(JSON_PROPERTY_DO_ENABLE_DEBUG_LOGGING)
-	private Boolean doEnableDebugLogging;
 
 	/**
 	 * Gets or Sets selectedDebugOptions
@@ -294,7 +286,7 @@ public class Parameters {
 
 	public static final String JSON_PROPERTY_PROGRESS_FREQUENCY = "progressFrequency";
 	@JsonProperty(JSON_PROPERTY_PROGRESS_FREQUENCY)
-	private ParametersProgressFrequency progressFrequency;
+	private ProgressFrequency progressFrequency;
 
 	/**
 	 * Controls how much metadata is displayed in the Output and Error Logs.
@@ -343,7 +335,7 @@ public class Parameters {
 
 	public static final String JSON_PROPERTY_UTILS = "utils";
 	@JsonProperty(JSON_PROPERTY_UTILS)
-	private List<@Valid ParametersUtilsInner> utils = new ArrayList<>();
+	private List<@Valid UtilizationParameter> utils = new ArrayList<>();
 
 	public Parameters outputFormat(OutputFormatEnum outputFormat) {
 		this.outputFormat = outputFormat;
@@ -391,48 +383,6 @@ public class Parameters {
 
 	public void setSelectedExecutionOptions(List<SelectedExecutionOptionsEnum> selectedExecutionOptions) {
 		this.selectedExecutionOptions = selectedExecutionOptions;
-	}
-
-	public Parameters doEnableProgressLogging(Boolean doEnableProgressLogging) {
-		this.doEnableProgressLogging = doEnableProgressLogging;
-		return this;
-	}
-
-	@JsonProperty(value = "doEnableProgressLogging")
-	public Boolean getDoEnableProgressLogging() {
-		return doEnableProgressLogging;
-	}
-
-	public void setDoEnableProgressLogging(Boolean doEnableProgressLogging) {
-		this.doEnableProgressLogging = doEnableProgressLogging;
-	}
-
-	public Parameters doEnableErrorLogging(Boolean doEnableErrorLogging) {
-		this.doEnableErrorLogging = doEnableErrorLogging;
-		return this;
-	}
-
-	@JsonProperty(value = "doEnableErrorLogging")
-	public Boolean getDoEnableErrorLogging() {
-		return doEnableErrorLogging;
-	}
-
-	public void setDoEnableErrorLogging(Boolean doEnableErrorLogging) {
-		this.doEnableErrorLogging = doEnableErrorLogging;
-	}
-
-	public Parameters doEnableDebugLogging(Boolean doEnableDebugLogging) {
-		this.doEnableDebugLogging = doEnableDebugLogging;
-		return this;
-	}
-
-	@JsonProperty(value = "doEnableDebugLogging")
-	public Boolean getDoEnableDebugLogging() {
-		return doEnableDebugLogging;
-	}
-
-	public void setDoEnableDebugLogging(Boolean doEnableDebugLogging) {
-		this.doEnableDebugLogging = doEnableDebugLogging;
 	}
 
 	public Parameters selectedDebugOptions(List<SelectedDebugOptionsEnum> selectedDebugOptions) {
@@ -723,7 +673,7 @@ public class Parameters {
 		this.combineAgeYearRange = combineAgeYearRange;
 	}
 
-	public Parameters progressFrequency(ParametersProgressFrequency progressFrequency) {
+	public Parameters progressFrequency(ProgressFrequency progressFrequency) {
 		this.progressFrequency = progressFrequency;
 		return this;
 	}
@@ -735,11 +685,11 @@ public class Parameters {
 	 **/
 	@JsonProperty(value = "progressFrequency")
 	@Valid
-	public ParametersProgressFrequency getProgressFrequency() {
+	public ProgressFrequency getProgressFrequency() {
 		return progressFrequency;
 	}
 
-	public void setProgressFrequency(ParametersProgressFrequency progressFrequency) {
+	public void setProgressFrequency(ProgressFrequency progressFrequency) {
 		this.progressFrequency = progressFrequency;
 	}
 
@@ -783,12 +733,12 @@ public class Parameters {
 		this.filters = filters;
 	}
 
-	public Parameters utils(List<@Valid ParametersUtilsInner> utils) {
+	public Parameters utils(List<@Valid UtilizationParameter> utils) {
 		this.utils = utils;
 		return this;
 	}
 
-	public Parameters addUtilsItem(ParametersUtilsInner utilsItem) {
+	public Parameters addUtilsItem(UtilizationParameter utilsItem) {
 		if (this.utils == null) {
 			this.utils = new ArrayList<>();
 		}
@@ -803,11 +753,11 @@ public class Parameters {
 	 **/
 	@JsonProperty(value = "utils")
 	@Valid
-	public List<@Valid ParametersUtilsInner> getUtils() {
+	public List<@Valid UtilizationParameter> getUtils() {
 		return utils;
 	}
 
-	public void setUtils(List<@Valid ParametersUtilsInner> utils) {
+	public void setUtils(List<@Valid UtilizationParameter> utils) {
 		this.utils = utils;
 	}
 
@@ -822,9 +772,6 @@ public class Parameters {
 		Parameters parameters = (Parameters) o;
 		return Objects.equals(this.outputFormat, parameters.outputFormat)
 				&& Objects.equals(this.selectedExecutionOptions, parameters.selectedExecutionOptions)
-				&& Objects.equals(this.doEnableProgressLogging, parameters.doEnableProgressLogging)
-				&& Objects.equals(this.doEnableErrorLogging, parameters.doEnableErrorLogging)
-				&& Objects.equals(this.doEnableDebugLogging, parameters.doEnableDebugLogging)
 				&& Objects.equals(this.selectedDebugOptions, parameters.selectedDebugOptions)
 				&& Objects.equals(this.ageStart, parameters.ageStart)
 				&& Objects.equals(this.minAgeStart, parameters.minAgeStart)
@@ -841,16 +788,16 @@ public class Parameters {
 				&& Objects.equals(this.combineAgeYearRange, parameters.combineAgeYearRange)
 				&& Objects.equals(this.progressFrequency, parameters.progressFrequency)
 				&& Objects.equals(this.metadataToOutput, parameters.metadataToOutput)
-				&& Objects.equals(this.filters, parameters.filters) && Objects.equals(this.utils, parameters.utils);
+				&& Objects.equals(this.filters, parameters.filters) 
+				&& Objects.equals(this.utils, parameters.utils);
 	}
 
 	@Override
 	public int hashCode() {
 		return Objects.hash(
-				outputFormat, selectedExecutionOptions, doEnableProgressLogging, doEnableErrorLogging,
-				doEnableDebugLogging, selectedDebugOptions, ageStart, minAgeStart, maxAgeStart, ageEnd, minAgeEnd,
-				maxAgeEnd, yearStart, yearEnd, forceYear, ageIncrement, minAgeIncrement, maxAgeIncrement,
-				combineAgeYearRange, progressFrequency, metadataToOutput, filters, utils
+				outputFormat, selectedExecutionOptions, selectedDebugOptions, ageStart, minAgeStart, maxAgeStart,
+				ageEnd, minAgeEnd, maxAgeEnd, yearStart, yearEnd, forceYear, ageIncrement, minAgeIncrement,
+				maxAgeIncrement, combineAgeYearRange, progressFrequency, metadataToOutput, filters, utils
 		);
 	}
 
@@ -861,9 +808,6 @@ public class Parameters {
 
 		sb.append("    outputFormat: ").append(toIndentedString(outputFormat)).append("\n");
 		sb.append("    selectedExecutionOptions: ").append(toIndentedString(selectedExecutionOptions)).append("\n");
-		sb.append("    doEnableProgressLogging: ").append(toIndentedString(doEnableProgressLogging)).append("\n");
-		sb.append("    doEnableErrorLogging: ").append(toIndentedString(doEnableErrorLogging)).append("\n");
-		sb.append("    doEnableDebugLogging: ").append(toIndentedString(doEnableDebugLogging)).append("\n");
 		sb.append("    selectedDebugOptions: ").append(toIndentedString(selectedDebugOptions)).append("\n");
 		sb.append("    ageStart: ").append(toIndentedString(ageStart)).append("\n");
 		sb.append("    minAgeStart: ").append(toIndentedString(minAgeStart)).append("\n");

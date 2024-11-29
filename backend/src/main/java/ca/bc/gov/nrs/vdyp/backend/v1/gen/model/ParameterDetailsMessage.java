@@ -30,9 +30,6 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 			ParameterDetailsMessage.JSON_PROPERTY_LONG_DESCRIPTION,
 			ParameterDetailsMessage.JSON_PROPERTY_DEFAULT_VALUE }
 )
-@jakarta.annotation.Generated(
-		value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2024-11-12T09:52:55.097945-08:00[America/Vancouver]", comments = "Generator version: 7.9.0"
-)
 @RegisterForReflection
 public class ParameterDetailsMessage implements Serializable {
 

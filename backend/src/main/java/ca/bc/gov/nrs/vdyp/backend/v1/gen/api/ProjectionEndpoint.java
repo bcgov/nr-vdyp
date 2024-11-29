@@ -1,27 +1,28 @@
 package ca.bc.gov.nrs.vdyp.backend.v1.gen.api;
 
-import java.text.MessageFormat;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+import org.jboss.resteasy.reactive.PartType;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import ca.bc.gov.nrs.vdyp.backend.v1.api.ProjectionService;
-import ca.bc.gov.nrs.vdyp.backend.v1.gen.model.MessagesInner;
-import ca.bc.gov.nrs.vdyp.backend.v1.gen.model.ProjectionDcsvPostRequest;
-import ca.bc.gov.nrs.vdyp.backend.v1.gen.model.ProjectionHcsvPostRequest;
-import ca.bc.gov.nrs.vdyp.backend.v1.gen.model.ProjectionScsvPostRequest;
-import ca.bc.gov.nrs.vdyp.backend.v1.gen.responses.ProjectionResource;
+import ca.bc.gov.nrs.vdyp.backend.v1.api.impl.exceptions.ProjectionExecutionException;
+import ca.bc.gov.nrs.vdyp.backend.v1.api.impl.exceptions.ProjectionRequestValidationException;
+import ca.bc.gov.nrs.vdyp.backend.v1.gen.model.Parameters;
 import io.quarkus.runtime.annotations.RegisterForReflection;
-import io.swagger.annotations.ApiParam;
 import jakarta.inject.Inject;
-import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.FormParam;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.Status;
 
-@Path("/v8/projection")
+@Path("/api/v8/projection")
 @io.swagger.annotations.Api(description = "the projection API")
-@jakarta.annotation.Generated(
-		value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2024-11-12T09:52:55.097945-08:00[America/Vancouver]", comments = "Generator version: 7.9.0"
-)
 @RegisterForReflection
 public class ProjectionEndpoint implements Endpoint {
 
@@ -30,75 +31,91 @@ public class ProjectionEndpoint implements Endpoint {
 
 	@jakarta.ws.rs.POST
 	@Path("/dcsv")
-	@Consumes({ "application/json" })
-	@Produces({ "multipart/form-data", "application/json" })
-	@io.swagger.annotations.ApiOperation(
-			value = "Project the growth of one or more polygons to a given year.", notes = "Run a projection of polygons in the supplied DCSV formatted input file as  controlled by the parameters in the supplied projection parameters file.", response = ProjectionResource.class, authorizations = {
-					@io.swagger.annotations.Authorization(
-							value = "accessCode", scopes = { @io.swagger.annotations.AuthorizationScope(
-									scope = "read", description = "allows reading resources"
-							), @io.swagger.annotations.AuthorizationScope(scope = "write", description = "allows modifying resources") }
-					) }, tags = {}
+	@Consumes({ MediaType.MULTIPART_FORM_DATA })
+	@Produces({ MediaType.APPLICATION_OCTET_STREAM, MediaType.APPLICATION_JSON })
+	@Tag(
+			name = "Run DCSV Projection", description = "Run a projection of polygons in the supplied DCSV formatted input file as controlled by the parameters in the supplied projection parameters file."
 	)
-	@io.swagger.annotations.ApiResponses(
-			value = { @io.swagger.annotations.ApiResponse(
-					code = 201, message = "OK", response = ProjectionResource.class
-			), @io.swagger.annotations.ApiResponse(code = 400, message = "Client Error. Response content is a list of one or more messages describing the error.", response = MessagesInner.class, responseContainer = "List") }
-	)
-	public Response projectionDcsvPost(@ApiParam(value = "") @Valid ProjectionDcsvPostRequest projectionDcsvPostRequest
-	/* , @Context SecurityContext securityContext */
+	public Response projectionDcsvPost(
+			@QueryParam(value = ParameterNames.TRIAL_RUN) @DefaultValue("false") Boolean trialRun, //
+			@RestForm(value = ParameterNames.PROJECTION_PARAMETERS) @PartType(
+				MediaType.APPLICATION_JSON
+			) Parameters parameters, //
+			@FormParam(value = ParameterNames.DCSV_INPUT_DATA) FileUpload dcsvDataStream //
+			/* , @Context SecurityContext securityContext */
 
 	) {
-		return projectionService.projectionDcsvPost(projectionDcsvPostRequest, null /* securityContext */);
+		try {
+			return projectionService.projectionDcsvPost(
+					parameters, dcsvDataStream, true /* trialRun */, null /* securityContext */
+			);
+		} catch (ProjectionRequestValidationException e) {
+			return Response.status(Status.BAD_REQUEST).entity(e).build();
+		} catch (ProjectionExecutionException e) {
+			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e).build();
+		}
 	}
 
 	@jakarta.ws.rs.POST
 	@Path("/hcsv")
-	@Consumes({ "application/json" })
-	@Produces({ "multipart/form-data", "application/json" })
-	@io.swagger.annotations.ApiOperation(
-			value = "Project the growth of one or more polygons to a given year.", notes = "Run a projection of polygons in the supplied HCSV formatted input files as  controlled by the parameters in the supplied projection parameters file.", response = ProjectionResource.class, authorizations = {
-					@io.swagger.annotations.Authorization(
-							value = "accessCode", scopes = { @io.swagger.annotations.AuthorizationScope(
-									scope = "read", description = "allows reading resources"
-							), @io.swagger.annotations.AuthorizationScope(scope = "write", description = "allows modifying resources") }
-					) }, tags = {}
-	)
-	@io.swagger.annotations.ApiResponses(
-			value = { @io.swagger.annotations.ApiResponse(
-					code = 200, message = "OK", response = ProjectionResource.class
-			), @io.swagger.annotations.ApiResponse(code = 400, message = "Client Error. Response content is a list of one or more messages describing the error.", response = MessagesInner.class, responseContainer = "List") }
+	@Consumes({ MediaType.MULTIPART_FORM_DATA })
+	@Produces({ MediaType.APPLICATION_OCTET_STREAM, MediaType.APPLICATION_JSON })
+	@Tag(
+			name = "Run HCSV Projection", description = "Run a projection of polygons in the supplied polygon and layers input files as controlled by the parameters in the supplied projection parameters file."
 	)
 	public Response projectionHcsvPost(
-			//
-			@ApiParam(value = "") @Valid ProjectionHcsvPostRequest projectionHcsvPostRequest //
-	// , @Context SecurityContext securityContext
+			@QueryParam(value = ParameterNames.TRIAL_RUN) @DefaultValue("false") Boolean trialRun, //
+			@RestForm(value = ParameterNames.PROJECTION_PARAMETERS) @PartType(
+				MediaType.APPLICATION_JSON
+			) Parameters parameters, //
+			@FormParam(value = ParameterNames.POLYGON_INPUT_DATA) FileUpload polygonDataStream, //
+			@FormParam(value = ParameterNames.LAYERS_INPUT_DATA) FileUpload layersDataStream //
+			// , @Context SecurityContext securityContext
 	) {
-		return projectionService.projectionHcsvPost(projectionHcsvPostRequest, null /* securityContext */);
+		try {
+			return projectionService.projectionHcsvPost(
+					trialRun, parameters, polygonDataStream, layersDataStream, null /* securityContext */
+			);
+		} catch (ProjectionRequestValidationException e) {
+			return Response.status(Status.BAD_REQUEST).entity(e).build();
+		} catch (ProjectionExecutionException e) {
+			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e).build();
+		}
 	}
 
 	@jakarta.ws.rs.POST
 	@Path("/scsv")
-	@Consumes({ "application/json" })
-	@Produces({ "multipart/form-data", "application/json" })
-	@io.swagger.annotations.ApiOperation(
-			value = "Project the growth of one or more polygons to a given year.", notes = "Run a projection of polygons in the supplied SCSV formatted input files as  controlled by the parameters in the supplied projection parameters file.", response = ProjectionResource.class, authorizations = {
-					@io.swagger.annotations.Authorization(
-							value = "accessCode", scopes = { @io.swagger.annotations.AuthorizationScope(
-									scope = "read", description = "allows reading resources"
-							), @io.swagger.annotations.AuthorizationScope(scope = "write", description = "allows modifying resources") }
-					) }, tags = {}
-	)
-	@io.swagger.annotations.ApiResponses(
-			value = { @io.swagger.annotations.ApiResponse(
-					code = 200, message = "OK", response = ProjectionResource.class
-			), @io.swagger.annotations.ApiResponse(code = 400, message = "Client Error. Response content is a list of one or more messages describing the error.", response = MessagesInner.class, responseContainer = "List") }
+	@Consumes({ MediaType.MULTIPART_FORM_DATA })
+	@Produces({ MediaType.APPLICATION_OCTET_STREAM, MediaType.APPLICATION_JSON })
+	@Tag(
+			name = "Run SCSV Projection", description = "Run a projection of polygons in the supplied SCSV input files as controlled by the parameters in the supplied projection parameters file."
 	)
 	public Response projectionScsvPost(
-			//
-			@ApiParam(value = "") @Valid ProjectionScsvPostRequest projectionScsvPostRequest //
-	// , @Context SecurityContext securityContext
+			@QueryParam(value = ParameterNames.TRIAL_RUN) @DefaultValue("false") Boolean trialRun, //
+			@RestForm(value = ParameterNames.PROJECTION_PARAMETERS) @PartType(
+				MediaType.APPLICATION_JSON
+			) Parameters parameters, //
+			@FormParam(value = ParameterNames.POLYGON_INPUT_DATA) FileUpload polygonDataStream, //
+			@FormParam(value = ParameterNames.LAYERS_INPUT_DATA) FileUpload layersDataStream, //
+			@FormParam(value = ParameterNames.HISTORY_INPUT_DATA) FileUpload historyDataStream, //
+			@FormParam(value = ParameterNames.NON_VEGETATION_INPUT_DATA) FileUpload nonVegetationDataStream, //
+			@FormParam(value = ParameterNames.OTHER_VEGETATION_INPUT_DATA) FileUpload otherVegetationDataStream, //
+			@FormParam(value = ParameterNames.POLYGON_ID_INPUT_DATA) FileUpload polygonIdDataStream, //
+			@FormParam(value = ParameterNames.SPECIES_INPUT_DATA) FileUpload speciesDataStream, //
+			@FormParam(value = ParameterNames.VRI_ADJUST_INPUT_DATA) FileUpload vriAdjustDataStream //
+			// , @Context SecurityContext securityContext
 	) {
-		return projectionService.projectionScsvPost(projectionScsvPostRequest, null /* securityContext */);
+		try {
+			return projectionService
+					.projectionScsvPost(
+							trialRun, parameters, polygonDataStream, layersDataStream, historyDataStream,
+							nonVegetationDataStream, otherVegetationDataStream, polygonIdDataStream, speciesDataStream,
+							vriAdjustDataStream, null /* securityContext */
+					);
+		} catch (ProjectionRequestValidationException e) {
+			return Response.status(Status.BAD_REQUEST).entity(e).build();
+		} catch (ProjectionExecutionException e) {
+			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e).build();
+		}
 	}
 }

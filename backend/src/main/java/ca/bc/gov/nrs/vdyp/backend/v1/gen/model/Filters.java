@@ -26,9 +26,6 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 	{ Filters.JSON_PROPERTY_MAINTAINER, Filters.JSON_PROPERTY_MAPSHEET, Filters.JSON_PROPERTY_POLYGON,
 			Filters.JSON_PROPERTY_POLYGON_ID }
 )
-@jakarta.annotation.Generated(
-		value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2024-11-12T09:52:55.097945-08:00[America/Vancouver]", comments = "Generator version: 7.9.0"
-)
 @RegisterForReflection
 public class Filters {
 	public static final String JSON_PROPERTY_MAINTAINER = "maintainer";

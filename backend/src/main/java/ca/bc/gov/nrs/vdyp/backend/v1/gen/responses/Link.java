@@ -1,11 +1,8 @@
 package ca.bc.gov.nrs.vdyp.backend.v1.gen.responses;
 
-import java.lang.reflect.Method;
-
 import ca.bc.gov.nrs.vdyp.backend.v1.gen.api.HelpEndpoint;
 import ca.bc.gov.nrs.vdyp.backend.v1.gen.api.ProjectionEndpoint;
 import io.quarkus.runtime.annotations.RegisterForReflection;
-import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.UriBuilder;
 import jakarta.ws.rs.core.UriInfo;
 
