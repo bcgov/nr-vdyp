@@ -7,39 +7,55 @@ import ca.bc.gov.nrs.vdyp.backend.v1.api.impl.messaging.MessageLog;
 import ca.bc.gov.nrs.vdyp.backend.v1.api.impl.messaging.NullMessageLog;
 import ca.bc.gov.nrs.vdyp.backend.v1.gen.model.Parameters;
 import ca.bc.gov.nrs.vdyp.backend.v1.gen.model.ProjectionRequestKind;
-import jakarta.validation.Valid;
 
 public class ProjectionState {
 
 	private final String projectionId;
-	private final Parameters params;
 	private final ProjectionRequestKind kind;
+
+	// This field will be updated once the parameters have been validated.
+	private Parameters params;
 
 	private final IMessageLog progressLog;
 	private final IMessageLog errorLog;
 
-	public ProjectionState(ProjectionRequestKind kind, String projectionId, @Valid Parameters params) {
+	public ProjectionState(ProjectionRequestKind kind, String projectionId, Parameters params) {
+
+		if (kind == null) {
+			throw new IllegalArgumentException("kind cannot be null in constructor of ProjectionState");
+		}
+		if (projectionId == null || projectionId.isBlank()) {
+			throw new IllegalArgumentException("projectionId cannot be empty in constructor of ProjectionState");
+		}
+		if (params == null) {
+			throw new IllegalArgumentException("params cannot be null in constructor of ProjectionState");
+		}
 
 		this.projectionId = projectionId;
 		this.params = params;
 		this.kind = kind;
 
-		boolean errorLoggingEnabled = this.params.getSelectedExecutionOptions()
-				.contains(Parameters.SelectedExecutionOptionsEnum.DO_ENABLE_ERROR_LOGGING);
-		boolean progressLoggingEnabled = this.params.getSelectedExecutionOptions()
-				.contains(Parameters.SelectedExecutionOptionsEnum.DO_ENABLE_PROGRESS_LOGGING);
+		var loggingParams = LoggingParameters.of(params);
 
-		if (errorLoggingEnabled) {
+		if (loggingParams.doEnableErrorLogging) {
 			errorLog = new MessageLog(Level.ERROR);
 		} else {
 			errorLog = new NullMessageLog(Level.ERROR);
 		}
 
-		if (progressLoggingEnabled) {
+		if (loggingParams.doEnableProgressLogging) {
 			progressLog = new MessageLog(Level.INFO);
 		} else {
 			progressLog = new NullMessageLog(Level.INFO);
 		}
+	}
+
+	public Parameters getParams() {
+		return params;
+	}
+
+	void setValidatedParams(ValidatedParameters validatedParams) {
+		this.params = validatedParams;
 	}
 
 	public String getProjectionId() {

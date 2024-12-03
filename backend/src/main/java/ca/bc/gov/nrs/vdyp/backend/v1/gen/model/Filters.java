@@ -44,6 +44,10 @@ public class Filters {
 	@JsonProperty(JSON_PROPERTY_POLYGON_ID)
 	private String polygonId;
 
+	public Filters copy() {
+		return new Filters().maintainer(maintainer).mapsheet(mapsheet).polygon(polygon).polygonId(polygonId);
+	}
+
 	public Filters maintainer(String maintainer) {
 		this.maintainer = maintainer;
 		return this;
@@ -55,7 +59,6 @@ public class Filters {
 	 * @return maintainer
 	 **/
 	@JsonProperty(value = "maintainer")
-
 	public String getMaintainer() {
 		return maintainer;
 	}
@@ -75,7 +78,6 @@ public class Filters {
 	 * @return mapsheet
 	 **/
 	@JsonProperty(value = "mapsheet")
-
 	public String getMapsheet() {
 		return mapsheet;
 	}
@@ -95,7 +97,6 @@ public class Filters {
 	 * @return polygon
 	 **/
 	@JsonProperty(value = "polygon")
-
 	public String getPolygon() {
 		return polygon;
 	}
@@ -115,7 +116,6 @@ public class Filters {
 	 * @return polygonId
 	 **/
 	@JsonProperty(value = "polygonId")
-
 	public String getPolygonId() {
 		return polygonId;
 	}

@@ -18,14 +18,14 @@ public class FileHelperTest {
 		InputStream is = FileHelper.getStubResourceFile("Output_Log.txt");
 		Assert.assertNotNull(is);
 	}
-	
+
 	@Test
 	void testGetAndDeleteFile() throws IOException {
 		Path tempFilePath = Files.createTempFile("pre_", "_post");
-		
+
 		InputStream is1 = FileHelper.getForReading(tempFilePath);
 		Assert.assertNotNull(is1);
-		
+
 		FileHelper.delete(tempFilePath);
 
 		Assert.assertThrows(NoSuchFileException.class, () -> FileHelper.getForReading(tempFilePath));

@@ -53,11 +53,11 @@ public class TestHelper {
 	public Parameters
 			addSelectedOptions(Parameters params, Parameters.SelectedExecutionOptionsEnum... executionOptions) {
 
-		var options = new ArrayList<Parameters.SelectedExecutionOptionsEnum>();
+		var options = new ArrayList<String>();
 		for (var e : executionOptions) {
-			options.add(e);
+			options.add(e.toString());
 		}
-		params.setSelectedExecutionOptions(options);
+		params.setSelectedExecutionOptionsText(options);
 
 		return params;
 	}

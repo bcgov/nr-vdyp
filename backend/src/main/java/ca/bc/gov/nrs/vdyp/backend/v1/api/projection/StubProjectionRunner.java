@@ -9,13 +9,12 @@ import ca.bc.gov.nrs.vdyp.backend.v1.api.impl.exceptions.ProjectionRequestValida
 import ca.bc.gov.nrs.vdyp.backend.v1.gen.model.Parameters;
 import ca.bc.gov.nrs.vdyp.backend.v1.gen.model.ProjectionRequestKind;
 import ca.bc.gov.nrs.vdyp.backend.v1.utils.FileHelper;
-import jakarta.validation.Valid;
 
 public class StubProjectionRunner implements IProjectionRunner {
 
 	private final ProjectionState state;
 
-	public StubProjectionRunner(ProjectionRequestKind kind, String projectionId, @Valid Parameters parameters) {
+	public StubProjectionRunner(ProjectionRequestKind kind, String projectionId, Parameters parameters) {
 		this.state = new ProjectionState(kind, projectionId, parameters);
 	}
 

@@ -12,6 +12,8 @@
 
 package ca.bc.gov.nrs.vdyp.backend.v1.gen.model;
 
+import java.text.MessageFormat;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -23,7 +25,6 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
  * Identifies how often or when progress will be reported from the application. In the case of a number being supplied,
  * the number indicates the number of polygons to be processed between indications of progress.
  */
-
 @JsonPropertyOrder({ ProgressFrequency.JSON_PROPERTY_INT_VALUE_NAME, ProgressFrequency.JSON_PROPERTY_ENUM_VALUE_NAME })
 @RegisterForReflection
 public class ProgressFrequency {
@@ -54,6 +55,14 @@ public class ProgressFrequency {
 			return String.valueOf(value);
 		}
 
+		/**
+		 * Converts <code>value</code> in a value from this enumeration, throwing an
+		 * <code>IllegalArgumentException</code> when there's no match.
+		 *
+		 * @param value the text corresponding to a value of this enumeration
+		 * @return the enumeration value
+		 * @throws IllegalArgumentException when conversion cannot be performed
+		 */
 		@JsonCreator
 		public static EnumValue fromValue(String value) {
 			for (EnumValue b : EnumValue.values()) {
@@ -69,23 +78,38 @@ public class ProgressFrequency {
 		this.intValue = null;
 		this.enumValue = null;
 	}
-	
-	public ProgressFrequency(EnumValue enumValue) {
-		if (this.intValue != null || this.enumValue != null) {
-			throw new IllegalStateException("ProgressFreauency already has a value; cannot assign a second");
-		}
 
-		this.enumValue = enumValue;
-		this.intValue = null;
+	public ProgressFrequency(EnumValue enumValue) {
+		setEnumValue(enumValue);
 	}
 
 	public ProgressFrequency(int intValue) {
-		if (this.intValue != null || this.enumValue != null) {
-			throw new IllegalStateException("ProgressFreauency already has a value; cannot assign a second");
-		}
+		setIntValue(intValue);
+	}
 
-		this.intValue = intValue;
+	public ProgressFrequency(String text) {
+		text = text.trim();
+		try {
+			setEnumValue(EnumValue.fromValue(text));
+		} catch (IllegalArgumentException iae) {
+			try {
+				setIntValue(Integer.parseInt(text));
+			} catch (NumberFormatException nfe) {
+				throw new IllegalArgumentException(
+						MessageFormat.format("\"{0}\" is not a valid ProgressFrequency value", text)
+				);
+			}
+		}
+	}
+
+	public ProgressFrequency intValue(int intValue) {
+		setIntValue(intValue);
+		return this;
+	}
+
+	public void setIntValue(Integer intValue) {
 		this.enumValue = null;
+		this.intValue = intValue;
 	}
 
 	@JsonProperty(JSON_PROPERTY_INT_VALUE_NAME)
@@ -93,19 +117,21 @@ public class ProgressFrequency {
 		return intValue;
 	}
 
-	public void setIntValue(Integer intValue) {
-		this.intValue = intValue;
+	public ProgressFrequency enumValue(EnumValue enumValue) {
+		setEnumValue(enumValue);
+		return this;
 	}
-	
+
+	public void setEnumValue(EnumValue enumValue) {
+		this.intValue = null;
+		this.enumValue = enumValue;
+	}
+
 	@JsonProperty(JSON_PROPERTY_ENUM_VALUE_NAME)
 	public EnumValue getEnumValue() {
 		return enumValue;
 	}
 
-	public void setEnumValue(EnumValue enumValue) {
-		this.enumValue = enumValue;
-	}
-	
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) {
@@ -130,10 +156,18 @@ public class ProgressFrequency {
 		StringBuilder sb = new StringBuilder();
 		sb.append("class ParametersProgressFrequency {\n");
 		if (intValue != null)
-			sb.append(intValue).append("\n");
+			sb.append("Every ").append(intValue).append(" polygons\n");
 		else if (enumValue != null)
 			sb.append(enumValue).append("\n");
 		sb.append("}");
 		return sb.toString();
+	}
+
+	public ProgressFrequency copy() {
+		if (enumValue != null) {
+			return new ProgressFrequency(enumValue);
+		} else {
+			return new ProgressFrequency(intValue);
+		}
 	}
 }

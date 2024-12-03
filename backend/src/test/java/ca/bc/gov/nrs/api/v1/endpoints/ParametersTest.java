@@ -8,7 +8,8 @@ import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import ca.bc.gov.nrs.vdyp.backend.v1.gen.api.ParametersProvider;
+import ca.bc.gov.nrs.vdyp.backend.v1.api.projection.ValidatedParameters;
+import ca.bc.gov.nrs.vdyp.backend.v1.gen.api.impl.ParametersProvider;
 import ca.bc.gov.nrs.vdyp.backend.v1.gen.model.Filters;
 import ca.bc.gov.nrs.vdyp.backend.v1.gen.model.Parameters;
 import ca.bc.gov.nrs.vdyp.backend.v1.gen.model.Parameters.CombineAgeYearRangeEnum;
@@ -18,8 +19,8 @@ import ca.bc.gov.nrs.vdyp.backend.v1.gen.model.Parameters.SelectedDebugOptionsEn
 import ca.bc.gov.nrs.vdyp.backend.v1.gen.model.Parameters.SelectedExecutionOptionsEnum;
 import ca.bc.gov.nrs.vdyp.backend.v1.gen.model.ProgressFrequency;
 import ca.bc.gov.nrs.vdyp.backend.v1.gen.model.ProgressFrequency.EnumValue;
-import ca.bc.gov.nrs.vdyp.backend.v1.gen.model.UtilizationParameter;
-import ca.bc.gov.nrs.vdyp.backend.v1.gen.model.UtilizationParameter.ValueEnum;
+import ca.bc.gov.nrs.vdyp.backend.v1.gen.model.UtilizationParameterText;
+import ca.bc.gov.nrs.vdyp.backend.v1.gen.model.UtilizationParameterText.ValueEnum;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
 
@@ -27,7 +28,7 @@ public class ParametersTest {
 
 	@Test
 	public void testParametersProvider() throws WebApplicationException, IOException {
-		Parameters op = new Parameters();
+		ValidatedParameters op = new ValidatedParameters();
 
 		op.addSelectedDebugOptionsItem(SelectedDebugOptionsEnum.DO_INCLUDE_DEBUG_ENTRY_EXIT);
 		op.addSelectedDebugOptionsItem(SelectedDebugOptionsEnum.DO_INCLUDE_DEBUG_INDENT_BLOCKS);
@@ -44,7 +45,9 @@ public class ParametersTest {
 		op.addSelectedExecutionOptionsItem(
 				SelectedExecutionOptionsEnum.DO_FORCE_CALENDAR_YEAR_INCLUSION_IN_YIELD_TABLES
 		);
-		op.addSelectedExecutionOptionsItem(SelectedExecutionOptionsEnum.DO_FORCE_CURRENT_YEAR_INCLUSION_IN_YIELD_TABLES);
+		op.addSelectedExecutionOptionsItem(
+				SelectedExecutionOptionsEnum.DO_FORCE_CURRENT_YEAR_INCLUSION_IN_YIELD_TABLES
+		);
 		op.addSelectedExecutionOptionsItem(
 				SelectedExecutionOptionsEnum.DO_FORCE_REFERENCE_YEAR_INCLUSION_IN_YIELD_TABLES
 		);
@@ -66,12 +69,12 @@ public class ParametersTest {
 		op.addSelectedExecutionOptionsItem(SelectedExecutionOptionsEnum.DO_SUMMARIZE_PROJECTION_BY_POLYGON);
 		op.addSelectedExecutionOptionsItem(SelectedExecutionOptionsEnum.FORWARD_GROW_ENABLED);
 
-		op.addUtilsItem(new UtilizationParameter().speciesName("AL").value(ValueEnum._12_5));
-		op.addUtilsItem(new UtilizationParameter().speciesName("C").value(ValueEnum._17_5));
-		op.addUtilsItem(new UtilizationParameter().speciesName("D").value(ValueEnum._22_5));
-		op.addUtilsItem(new UtilizationParameter().speciesName("E").value(ValueEnum._4_0));
-		op.addUtilsItem(new UtilizationParameter().speciesName("F").value(ValueEnum._7_5));
-		op.addUtilsItem(new UtilizationParameter().speciesName("H").value(ValueEnum.EXCL));
+		op.addUtilsItem(new UtilizationParameterText().speciesName("AL").value(ValueEnum._12_5.name()));
+		op.addUtilsItem(new UtilizationParameterText().speciesName("C").value(ValueEnum._17_5.name()));
+		op.addUtilsItem(new UtilizationParameterText().speciesName("D").value(ValueEnum._22_5.name()));
+		op.addUtilsItem(new UtilizationParameterText().speciesName("E").value(ValueEnum._4_0.name()));
+		op.addUtilsItem(new UtilizationParameterText().speciesName("F").value(ValueEnum._7_5.name()));
+		op.addUtilsItem(new UtilizationParameterText().speciesName("H").value(ValueEnum.EXCL.name()));
 
 		op.ageEnd(2030) //
 				.ageIncrement(1) //
@@ -85,47 +88,50 @@ public class ParametersTest {
 
 		op.progressFrequency(new ProgressFrequency(ProgressFrequency.EnumValue.MAPSHEET));
 
-		op.maxAgeEnd(3000) //
-				.maxAgeIncrement(10) //
-				.maxAgeStart(2030) //
+		op.maxAgeIncrement(10) //
 				.metadataToOutput(MetadataToOutputEnum.ALL) //
-				.minAgeEnd(2000) //
-				.minAgeStart(1970) //
 				.minAgeIncrement(1) //
 				.outputFormat(OutputFormatEnum.CSV_YIELD_TABLE) //
 				.yearEnd(2030) //
 				.yearStart(2020);
-		
+
 		var objectMapper = new ObjectMapper();
 		byte[] json = objectMapper.writeValueAsBytes(op);
-		
-		ParametersProvider provider = new ParametersProvider();
-		
-		Assert.assertTrue(provider.isReadable(Parameters.class, Parameters.class, null, MediaType.APPLICATION_JSON_TYPE));
 
-		Parameters np = provider.readFrom(Parameters.class, Parameters.class, null, MediaType.APPLICATION_JSON_TYPE, null
-				, new ByteArrayInputStream(json));
-		
+		ParametersProvider provider = new ParametersProvider();
+
+		Assert.assertTrue(
+				provider.isReadable(Parameters.class, Parameters.class, null, MediaType.APPLICATION_JSON_TYPE)
+		);
+
+		Parameters np = provider.readFrom(
+				Parameters.class, Parameters.class, null, MediaType.APPLICATION_JSON_TYPE, null,
+				new ByteArrayInputStream(json)
+		);
+
 		Assert.assertTrue(op.equals(np));
-		
+
 		Assert.assertFalse(provider.isReadable(Object.class, null, null, MediaType.APPLICATION_JSON_TYPE));
 		Assert.assertFalse(provider.isReadable(Parameters.class, null, null, MediaType.APPLICATION_OCTET_STREAM_TYPE));
-		
-		np.getProgressFrequency().setEnumValue(EnumValue.POLYGON);
+
+		Assert.assertEquals(np.getProgressFrequencyText(), EnumValue.POLYGON.toString());
 
 		Assert.assertFalse(op.equals(np));
 	}
-	
+
 	@Test
 	void testProgressFrequency() {
-		
+
 		Assert.assertNull(new ProgressFrequency().getIntValue());
 		Assert.assertNull(new ProgressFrequency().getEnumValue());
 		Assert.assertEquals(Integer.valueOf(12), new ProgressFrequency(12).getIntValue());
 		Assert.assertNull(new ProgressFrequency(12).getEnumValue());
 		Assert.assertNull(new ProgressFrequency(ProgressFrequency.EnumValue.MAPSHEET).getIntValue());
-		Assert.assertEquals(ProgressFrequency.EnumValue.MAPSHEET, new ProgressFrequency(ProgressFrequency.EnumValue.MAPSHEET).getEnumValue());
-	
+		Assert.assertEquals(
+				ProgressFrequency.EnumValue.MAPSHEET,
+				new ProgressFrequency(ProgressFrequency.EnumValue.MAPSHEET).getEnumValue()
+		);
+
 		Assert.assertThrows(IllegalArgumentException.class, () -> ProgressFrequency.EnumValue.fromValue("not a value"));
 
 		ProgressFrequency pf1 = new ProgressFrequency(12);
@@ -134,28 +140,33 @@ public class ParametersTest {
 		Assert.assertEquals(Integer.valueOf(12).hashCode(), pf1.hashCode());
 		Assert.assertEquals(ProgressFrequency.EnumValue.MAPSHEET.hashCode(), pf2.hashCode());
 		Assert.assertEquals(17, new ProgressFrequency().hashCode());
-		
+
 		Assert.assertTrue(pf1.toString().indexOf("12") != -1);
 		Assert.assertTrue(pf2.toString().indexOf("mapsheet") != -1);
 	}
-	
+
 	@SuppressWarnings("unlikely-arg-type")
 	@Test
 	void testUtilizationParameter() {
-		Assert.assertEquals("AL", new UtilizationParameter().speciesName("AL").value(ValueEnum._12_5).getSpeciesName());
-		Assert.assertEquals(ValueEnum._17_5, new UtilizationParameter().speciesName("AL").value(ValueEnum._17_5).getValue());
-		
-		Assert.assertThrows(IllegalArgumentException.class, () -> UtilizationParameter.ValueEnum.fromValue("ZZZ"));
-		
-		var up1 = new UtilizationParameter().speciesName("AL").value(ValueEnum._12_5);
-		var up2 = new UtilizationParameter().speciesName("C").value(ValueEnum._12_5);
-		var up3 = new UtilizationParameter().speciesName("C").value(ValueEnum._22_5);
-		
+		Assert.assertEquals(
+				"AL", new UtilizationParameterText().speciesName("AL").value(ValueEnum._12_5.name()).getSpeciesName()
+		);
+		Assert.assertEquals(
+				ValueEnum._17_5.name(),
+				new UtilizationParameterText().speciesName("AL").value(ValueEnum._17_5.name()).getValue()
+		);
+
+		Assert.assertThrows(IllegalArgumentException.class, () -> UtilizationParameterText.ValueEnum.fromValue("ZZZ"));
+
+		var up1 = new UtilizationParameterText().speciesName("AL").value(ValueEnum._12_5.name());
+		var up2 = new UtilizationParameterText().speciesName("C").value(ValueEnum._12_5.name());
+		var up3 = new UtilizationParameterText().speciesName("C").value(ValueEnum._22_5.name());
+
 		Assert.assertTrue(up1.equals(up1));
 		Assert.assertTrue(up1.hashCode() == up1.hashCode());
 		Assert.assertFalse(up2.equals(up3));
 		Assert.assertFalse(up2.equals("C"));
-		
+
 		Assert.assertTrue(up1.toString().indexOf("speciesName: AL") != -1);
 		Assert.assertTrue(up1.toString().indexOf("value: 12.5") != -1);
 	}

@@ -8,7 +8,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.backend.v1.api.impl.exceptions.NotFoundException;
+import ca.bc.gov.nrs.vdyp.backend.v1.api.projection.ValidatedParameters;
 import ca.bc.gov.nrs.vdyp.backend.v1.gen.model.ParameterDetailsMessage;
+import ca.bc.gov.nrs.vdyp.backend.v1.gen.model.Parameters;
 import ca.bc.gov.nrs.vdyp.backend.v1.gen.responses.HelpResource;
 import ca.bc.gov.nrs.vdyp.backend.v1.model.ParameterDetailsMessageBuilder;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -33,7 +35,7 @@ public class HelpService {
 						"Output Data Format", //
 						"YieldTable | CSVYieldTable | DCSV", //
 						"Identifies the output file format. One of (YieldTable default): YieldTable, CSVYieldTable, DCSV", //
-						"YieldTable"
+						ValidatedParameters.DEFAULT.getOutputFormat().name()
 				)
 		);
 
@@ -44,7 +46,10 @@ public class HelpService {
 						"Allow Back Grow", //
 						"true if present", //
 						"Enables or disables the use of the Back Grow feature of VDYP7.", //
-						"false"
+						Boolean.toString(
+								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
+										.contains(Parameters.SelectedExecutionOptionsEnum.BACK_GROW_ENABLED)
+						)
 				)
 		);
 
@@ -55,7 +60,10 @@ public class HelpService {
 						"Allow Forward Grow", //
 						"true if present", //
 						"Enables or disables the use of the Forward Grow feature of VDYP7.", //
-						"true"
+						Boolean.toString(
+								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
+										.contains(Parameters.SelectedExecutionOptionsEnum.FORWARD_GROW_ENABLED)
+						)
 				)
 		);
 
@@ -66,7 +74,10 @@ public class HelpService {
 						"Debug Log Include Timestamps", //
 						"true if present", //
 						"Includes or suppresses Debug Log File Timestamps.", //
-						"false"
+						Boolean.toString(
+								ValidatedParameters.DEFAULT.getSelectedDebugOptions()
+										.contains(Parameters.SelectedDebugOptionsEnum.DO_INCLUDE_DEBUG_TIMESTAMPS)
+						)
 				)
 		);
 
@@ -77,7 +88,10 @@ public class HelpService {
 						"Debug Log Include Routine Names", //
 						"true if present", //
 						"Includes or suppresses Debug Log File Routine Names.", //
-						"false"
+						Boolean.toString(
+								ValidatedParameters.DEFAULT.getSelectedDebugOptions()
+										.contains(Parameters.SelectedDebugOptionsEnum.DO_INCLUDE_DEBUG_ROUTINE_NAMES)
+						)
 				)
 		);
 
@@ -88,7 +102,10 @@ public class HelpService {
 						"Debug Log Entry/Exit", //
 						"true if present", //
 						"Includes or suppresses Debug Log Block Entry and Exit.", //
-						"false"
+						Boolean.toString(
+								ValidatedParameters.DEFAULT.getSelectedDebugOptions()
+										.contains(Parameters.SelectedDebugOptionsEnum.DO_INCLUDE_DEBUG_ENTRY_EXIT)
+						)
 				)
 		);
 
@@ -99,7 +116,10 @@ public class HelpService {
 						"Debug Indent Log Blocks", //
 						"true if present", //
 						"Indents Logging Blocks as they are Entered and Exited.", //
-						"false"
+						Boolean.toString(
+								ValidatedParameters.DEFAULT.getSelectedDebugOptions()
+										.contains(Parameters.SelectedDebugOptionsEnum.DO_INCLUDE_DEBUG_INDENT_BLOCKS)
+						)
 				)
 		);
 
@@ -122,29 +142,7 @@ public class HelpService {
 						"Start Age", //
 						"<age>", //
 						"The starting age value for the Age Range for generated yield tables. Either -9 (not specified) or in the range 0..600.", //
-						"-9"
-				)
-		);
-
-		/* cmdLineOpt_MIN_START_AGE */
-		messageList.add(
-				ParameterDetailsMessageBuilder.build(
-						"minAgeStart", //
-						"Minimum Start Age", //
-						"<age>", //
-						"Sets the minimum value for the start age of the Age Range.", //
-						"0"
-				)
-		);
-
-		/* cmdLineOpt_MAX_START_AGE */
-		messageList.add(
-				ParameterDetailsMessageBuilder.build(
-						"maxAgeStart", //
-						"Maximum Start Age", //
-						"<age>", //
-						"Sets the maximum value for the start age of the Age Range.", //
-						"600"
+						"none"
 				)
 		);
 
@@ -155,29 +153,7 @@ public class HelpService {
 						"End Age", //
 						"<age>", //
 						"The ending age value for the Age Range for generated yield tables. Either -9 (not specified) or in the range 1..1000", //
-						"-9"
-				)
-		);
-
-		/* cmdLineOpt_MIN_END_AGE */
-		messageList.add(
-				ParameterDetailsMessageBuilder.build(
-						"minAgeEnd", //
-						"Minimum End Age", //
-						"<age>", //
-						"Sets the minimum value for the end age of the Age Range.", //
-						"1"
-				)
-		);
-
-		/* cmdLineOpt_MAX_END_AGE */
-		messageList.add(
-				ParameterDetailsMessageBuilder.build(
-						"maxEndAge", //
-						"Maximum End Age", //
-						"<age>", //
-						"Sets the maximum value for the end age of the Age Range.", //
-						"1000"
+						"none"
 				)
 		);
 
@@ -188,7 +164,7 @@ public class HelpService {
 						"Start Year", //
 						"<calendar year>", //
 						"The starting year for the Year Range for generated yield tables. Either -9 (not specified) or in the range 1400..3250.", //
-						"-9"
+						"none"
 				)
 		);
 
@@ -199,7 +175,7 @@ public class HelpService {
 						"End Year", //
 						"<calendar year>", //
 						"The ending year for the Year Range for generated yield tables. Either -9 (not specified) or in the range 1400..3250.", //
-						"true"
+						"none"
 				)
 		);
 
@@ -210,29 +186,7 @@ public class HelpService {
 						"Increment", //
 						"<increment value>", //
 						"The number of years to increment the current value for the Age and Year Ranges. Either -9 (not specified) or in the range 1..350.", //
-						"1"
-				)
-		);
-
-		/* cmdLineOpt_MIN_AGE_INC */
-		messageList.add(
-				ParameterDetailsMessageBuilder.build(
-						"minAgeIncrement", //
-						"Minimum Age Increment", //
-						"<increment>", //
-						"Sets the minimum value for the Age and Year increment.", //
-						"1"
-				)
-		);
-
-		/* cmdLineOpt_MAX_AGE_INC */
-		messageList.add(
-				ParameterDetailsMessageBuilder.build(
-						"maxAgeIncrement", //
-						"Maximum Age Increment", //
-						"<increment>", //
-						"Sets the maximum value for the Age and Year increment.", //
-						"350"
+						"none"
 				)
 		);
 
@@ -243,7 +197,11 @@ public class HelpService {
 						"Force Reference Year Indicator", //
 						"true if present", //
 						"Enables or disables the forced inclusion of the Reference Year in Yield Tables.", //
-						"false"
+						Boolean.toString(
+								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
+										Parameters.SelectedExecutionOptionsEnum.DO_FORCE_REFERENCE_YEAR_INCLUSION_IN_YIELD_TABLES
+								)
+						)
 				)
 		);
 
@@ -254,7 +212,11 @@ public class HelpService {
 						"Force Current Year Indicator", //
 						"true if present", //
 						"Enables or disables the forced inclusion of the Current Year in Yield Tables.", //
-						"false"
+						Boolean.toString(
+								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
+										Parameters.SelectedExecutionOptionsEnum.DO_FORCE_CURRENT_YEAR_INCLUSION_IN_YIELD_TABLES
+								)
+						)
 				)
 		);
 
@@ -265,7 +227,7 @@ public class HelpService {
 						"Force Calendar Year Indicator", //
 						"<calendar year>", //
 						"Forces the inclusion of the specified calendar year in Yield Tables.", //
-						"-9 (do not force)"
+						"none"
 				)
 		);
 
@@ -276,7 +238,10 @@ public class HelpService {
 						"Include output file headers (default) or not", //
 						"true if present", //
 						"In file formats where a file header is optional, this option will display or suppress the file header.", //
-						"true"
+						Boolean.toString(
+								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
+										.contains(Parameters.SelectedExecutionOptionsEnum.DO_INCLUDE_FILE_HEADER)
+						)
 				)
 		);
 
@@ -287,7 +252,7 @@ public class HelpService {
 						"Metadata to Include (default: VERSION )", //
 						"ALL | MAIN | VERSION | MIN_IDENT | NONE", //
 						"Controls how much metadata is displayed in the Output and Error Logs.", //
-						"VERSION"
+						ValidatedParameters.DEFAULT.getMetadataToOutputText()
 				)
 		);
 
@@ -298,7 +263,11 @@ public class HelpService {
 						"Include Projection Mode Indicator", //
 						"true if present", //
 						"If present, a column indicating how the yield table row was projected is included in Yield Tables.", //
-						"true"
+						Boolean.toString(
+								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
+										Parameters.SelectedExecutionOptionsEnum.DO_INCLUDE_PROJECTION_MODE_IN_YIELD_TABLE
+								)
+						)
 				)
 		);
 
@@ -309,7 +278,11 @@ public class HelpService {
 						"Include Age Rows Indicator", //
 						"true if present", //
 						"Includes or excludes age rows of the Age Range in the Yield Table.", //
-						"true"
+						Boolean.toString(
+								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
+										Parameters.SelectedExecutionOptionsEnum.DO_INCLUDE_AGE_ROWS_IN_YIELD_TABLE
+								)
+						)
 				)
 		);
 
@@ -320,7 +293,11 @@ public class HelpService {
 						"Include Year Rows Indicator", //
 						"true if present", //
 						"If true, the year rows of the Year Range are included in the Yield Table.", //
-						"true"
+						Boolean.toString(
+								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
+										Parameters.SelectedExecutionOptionsEnum.DO_INCLUDE_YEAR_ROWS_IN_YIELD_TABLE
+								)
+						)
 				)
 		);
 
@@ -331,7 +308,8 @@ public class HelpService {
 						"Filter Polygons For Maintainer", //
 						"<maintainer value>", //
 						"Only those polygons with the specified maintainer will be considered for inclusion in the output.", //
-						"(filter ignored)"
+						ValidatedParameters.DEFAULT.getFilters().getMaintainer() == null ? "not filtered by this value"
+								: ValidatedParameters.DEFAULT.getFilters().getMaintainer()
 				)
 		);
 
@@ -342,7 +320,8 @@ public class HelpService {
 						"Filter Polygons For Mapsheet", //
 						"<mapsheet value>", //
 						"Only those polygons with the specified mapsheet will be considered for inclusion in the output.", //
-						"(filter ignored)"
+						ValidatedParameters.DEFAULT.getFilters().getMapsheet() == null ? "not filtered by this value"
+								: ValidatedParameters.DEFAULT.getFilters().getMapsheet()
 				)
 		);
 
@@ -353,7 +332,8 @@ public class HelpService {
 						"Filter Polygons for Polygon Number", //
 						"<polygon number>", //
 						"Only the polygon with the specified polygon number will be considered for inclusion in the output.", //
-						"-9 (filter ignored)"
+						ValidatedParameters.DEFAULT.getFilters().getPolygon() == null ? "not filtered by this value"
+								: ValidatedParameters.DEFAULT.getFilters().getPolygon()
 				)
 		);
 
@@ -364,7 +344,8 @@ public class HelpService {
 						"Filter Polygons for Polygon Identifier", //
 						"<polygon id>", //
 						"Only the polygon with the specified polygon id will be considered for inclusion in the output.", //
-						"-9 (filter ignored)"
+						ValidatedParameters.DEFAULT.getFilters().getPolygonId() == null ? "not filtered by this value"
+								: ValidatedParameters.DEFAULT.getFilters().getPolygonId()
 				)
 		);
 
@@ -375,7 +356,7 @@ public class HelpService {
 						"Progress Frequency Mode", //
 						"NEVER | EACH_MAPSHEET | EACH_POLYGON | <number>", //
 						"Identifies how often or when progress will be reported from the application.", //
-						"EACH_POLYGON"
+						ValidatedParameters.DEFAULT.getProgressFrequency().toString()
 				)
 		);
 
@@ -386,7 +367,11 @@ public class HelpService {
 						"Include Polygon ID Indicator", //
 						"true if present", //
 						"Include the POLYGON_RCRD_ID in the header of yield tables.", //
-						"false"
+						Boolean.toString(
+								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
+										Parameters.SelectedExecutionOptionsEnum.DO_INCLUDE_POLYGON_RECORD_ID_IN_YIELD_TABLE
+								)
+						)
 				)
 		);
 
@@ -397,7 +382,11 @@ public class HelpService {
 						"Allow Supplied BA/TPH to be used as Projected", //
 						"true if present", //
 						"If present, the substitution of Supplied BA/TPH as Projected Values is allowed.", //
-						"true"
+						Boolean.toString(
+								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
+										Parameters.SelectedExecutionOptionsEnum.DO_ALLOW_BASAL_AREA_AND_TREES_PER_HECTARE_VALUE_SUBSTITUTION
+								)
+						)
 				)
 		);
 
@@ -408,7 +397,11 @@ public class HelpService {
 						"Display secondary species height in yield tables.", //
 						"true if present", //
 						"Display/Suppress the Secondary Species Dominant Height column in Yield Tables.", //
-						"false"
+						Boolean.toString(
+								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
+										Parameters.SelectedExecutionOptionsEnum.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE
+								)
+						)
 				)
 		);
 
@@ -419,7 +412,11 @@ public class HelpService {
 						"Projection summarized by polygon", //
 						"true if present", //
 						"If present, projected values are summarized at the polygon level.", //
-						"false"
+						Boolean.toString(
+								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
+										Parameters.SelectedExecutionOptionsEnum.DO_SUMMARIZE_PROJECTION_BY_POLYGON
+								)
+						)
 				)
 		);
 
@@ -430,7 +427,11 @@ public class HelpService {
 						"Projection summarized by layer", //
 						"true if present", //
 						"If present, projected values are summarized at the layer level.", //
-						"true"
+						Boolean.toString(
+								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
+										Parameters.SelectedExecutionOptionsEnum.DO_SUMMARIZE_PROJECTION_BY_LAYER
+								)
+						)
 				)
 		);
 
@@ -441,7 +442,10 @@ public class HelpService {
 						"Projection produced by Species", //
 						"true if present", //
 						"If present, projected values are produced for each species.", //
-						"false"
+						Boolean.toString(
+								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
+										.contains(Parameters.SelectedExecutionOptionsEnum.DO_INCLUDE_SPECIES_PROJECTION)
+						)
 				)
 		);
 
@@ -452,7 +456,11 @@ public class HelpService {
 						"Include MoF Projected Volumes", //
 						"true if present", //
 						"Indicate whether MoF projected volumes are included in the output.", //
-						"true"
+						Boolean.toString(
+								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
+										Parameters.SelectedExecutionOptionsEnum.DO_INCLUDE_PROJECTED_MOF_VOLUMES
+								)
+						)
 				)
 		);
 
@@ -463,7 +471,11 @@ public class HelpService {
 						"Include Projected MoF Biomass", //
 						"true if present", //
 						"Indicate whether projected MoF biomass is included in the output.", //
-						"false"
+						Boolean.toString(
+								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
+										Parameters.SelectedExecutionOptionsEnum.DO_INCLUDE_PROJECTED_MOF_BIOMASS
+								)
+						)
 				)
 		);
 
@@ -474,7 +486,11 @@ public class HelpService {
 						"Include Projected CFS Biomass", //
 						"true if present", //
 						"Indicate whether projected CFS biomass is included in the output.", //
-						"false"
+						Boolean.toString(
+								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
+										Parameters.SelectedExecutionOptionsEnum.DO_INCLUDE_PROJECTED_CFS_BIOMASS
+								)
+						)
 				)
 		);
 
@@ -485,7 +501,11 @@ public class HelpService {
 						"Include Formatted Yield Table Column Headers", //
 						"true if present", //
 						"Indicate whether formatted yield tables will include column headers or not.", //
-						"true"
+						Boolean.toString(
+								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
+										Parameters.SelectedExecutionOptionsEnum.DO_INCLUDE_COLUMN_HEADERS_IN_YIELD_TABLE
+								)
+						)
 				)
 		);
 
@@ -497,7 +517,10 @@ public class HelpService {
 						"Enable Progress logging", //
 						"true if present", //
 						"Enables or disables the logging of progress messages during projections.", //
-						"false"
+						Boolean.toString(
+								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
+										.contains(Parameters.SelectedExecutionOptionsEnum.DO_ENABLE_DEBUG_LOGGING)
+						)
 				)
 		);
 
@@ -507,7 +530,10 @@ public class HelpService {
 						"Enable Error logging", //
 						"true if present", //
 						"Enables or disables the logging of error messages during projections.", //
-						"false"
+						Boolean.toString(
+								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
+										.contains(Parameters.SelectedExecutionOptionsEnum.DO_ENABLE_ERROR_LOGGING)
+						)
 				)
 		);
 
@@ -517,7 +543,10 @@ public class HelpService {
 						"Enable Debug logging", //
 						"true if present", //
 						"Enables or disables the logging of debug messages during projections.", //
-						"false"
+						Boolean.toString(
+								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
+										.contains(Parameters.SelectedExecutionOptionsEnum.DO_ENABLE_PROGRESS_LOGGING)
+						)
 				)
 		);
 

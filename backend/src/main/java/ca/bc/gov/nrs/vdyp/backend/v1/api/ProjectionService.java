@@ -27,12 +27,11 @@ import ca.bc.gov.nrs.vdyp.backend.v1.api.impl.exceptions.ProjectionRequestValida
 import ca.bc.gov.nrs.vdyp.backend.v1.api.projection.IProjectionRunner;
 import ca.bc.gov.nrs.vdyp.backend.v1.api.projection.ProjectionRunner;
 import ca.bc.gov.nrs.vdyp.backend.v1.api.projection.StubProjectionRunner;
-import ca.bc.gov.nrs.vdyp.backend.v1.gen.api.ParameterNames;
+import ca.bc.gov.nrs.vdyp.backend.v1.gen.api.impl.ParameterNames;
 import ca.bc.gov.nrs.vdyp.backend.v1.gen.model.Parameters;
 import ca.bc.gov.nrs.vdyp.backend.v1.gen.model.ProjectionRequestKind;
 import ca.bc.gov.nrs.vdyp.backend.v1.utils.FileHelper;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.validation.Valid;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
 import jakarta.ws.rs.core.SecurityContext;
@@ -72,7 +71,7 @@ public class ProjectionService {
 					layersStream = FileHelper.getStubResourceFile("VDYP7_INPUT_LAYER.csv");
 				}
 			}
-			
+
 			inputStreams.put(ParameterNames.POLYGON_INPUT_DATA, polyStream);
 			inputStreams.put(ParameterNames.LAYERS_INPUT_DATA, layersStream);
 
@@ -97,7 +96,7 @@ public class ProjectionService {
 	}
 
 	public Response projectionDcsvPost(
-			@Valid Parameters parameters, FileUpload dcsvDataStream, Boolean trialRun, SecurityContext securityContext
+			Parameters parameters, FileUpload dcsvDataStream, Boolean trialRun, SecurityContext securityContext
 	) throws ProjectionRequestValidationException, ProjectionExecutionException {
 		return Response.serverError().status(501).build();
 	}
@@ -118,8 +117,8 @@ public class ProjectionService {
 
 		logger.info("<runProjection {} {}", kind, projectionId);
 
-		boolean debugLoggingEnabled = params.getSelectedExecutionOptions()
-				.contains(Parameters.SelectedExecutionOptionsEnum.DO_ENABLE_DEBUG_LOGGING);
+		boolean debugLoggingEnabled = params.getSelectedExecutionOptionsText()
+				.contains(Parameters.SelectedExecutionOptionsEnum.DO_ENABLE_DEBUG_LOGGING.toString());
 		if (debugLoggingEnabled) {
 			MDC.put("projectionId", projectionId);
 		}

@@ -8,6 +8,8 @@ import org.jboss.resteasy.reactive.multipart.FileUpload;
 import ca.bc.gov.nrs.vdyp.backend.v1.api.ProjectionService;
 import ca.bc.gov.nrs.vdyp.backend.v1.api.impl.exceptions.ProjectionExecutionException;
 import ca.bc.gov.nrs.vdyp.backend.v1.api.impl.exceptions.ProjectionRequestValidationException;
+import ca.bc.gov.nrs.vdyp.backend.v1.gen.api.impl.Endpoint;
+import ca.bc.gov.nrs.vdyp.backend.v1.gen.api.impl.ParameterNames;
 import ca.bc.gov.nrs.vdyp.backend.v1.gen.model.Parameters;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import jakarta.inject.Inject;
@@ -106,12 +108,11 @@ public class ProjectionEndpoint implements Endpoint {
 			// , @Context SecurityContext securityContext
 	) {
 		try {
-			return projectionService
-					.projectionScsvPost(
-							trialRun, parameters, polygonDataStream, layersDataStream, historyDataStream,
-							nonVegetationDataStream, otherVegetationDataStream, polygonIdDataStream, speciesDataStream,
-							vriAdjustDataStream, null /* securityContext */
-					);
+			return projectionService.projectionScsvPost(
+					trialRun, parameters, polygonDataStream, layersDataStream, historyDataStream,
+					nonVegetationDataStream, otherVegetationDataStream, polygonIdDataStream, speciesDataStream,
+					vriAdjustDataStream, null /* securityContext */
+			);
 		} catch (ProjectionRequestValidationException e) {
 			return Response.status(Status.BAD_REQUEST).entity(e).build();
 		} catch (ProjectionExecutionException e) {

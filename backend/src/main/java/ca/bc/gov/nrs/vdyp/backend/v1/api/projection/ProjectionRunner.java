@@ -9,13 +9,12 @@ import ca.bc.gov.nrs.vdyp.backend.v1.api.impl.exceptions.ProjectionRequestValida
 import ca.bc.gov.nrs.vdyp.backend.v1.gen.model.Parameters;
 import ca.bc.gov.nrs.vdyp.backend.v1.gen.model.ProjectionRequestKind;
 import ca.bc.gov.nrs.vdyp.backend.v1.utils.FileHelper;
-import jakarta.validation.Valid;
 
 public class ProjectionRunner implements IProjectionRunner {
 
 	private final ProjectionState state;
 
-	public ProjectionRunner(ProjectionRequestKind kind, String projectionId, @Valid Parameters parameters) {
+	public ProjectionRunner(ProjectionRequestKind kind, String projectionId, Parameters parameters) {
 		this.state = new ProjectionState(kind, projectionId, parameters);
 	}
 
@@ -24,9 +23,9 @@ public class ProjectionRunner implements IProjectionRunner {
 		state.getProgressLog().addMessage("Running Projection");
 
 		ProjectionRequestValidator.validate(state, streams);
-		
+
 		createInputStream(streams.get("polygon"), streams.get("layers"));
-		
+
 		project();
 	}
 

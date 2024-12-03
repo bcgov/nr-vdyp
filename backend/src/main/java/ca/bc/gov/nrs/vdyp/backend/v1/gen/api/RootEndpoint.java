@@ -4,6 +4,7 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 import ca.bc.gov.nrs.vdyp.backend.v1.api.RootService;
 import ca.bc.gov.nrs.vdyp.backend.v1.api.impl.exceptions.NotFoundException;
+import ca.bc.gov.nrs.vdyp.backend.v1.gen.api.impl.Endpoint;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Path;

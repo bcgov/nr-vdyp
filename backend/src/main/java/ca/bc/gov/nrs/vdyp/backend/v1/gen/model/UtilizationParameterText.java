@@ -24,12 +24,18 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 /**
  * This class records a utilization class for a given sp0 (species group) name.
  */
-@JsonPropertyOrder({ UtilizationParameter.JSON_PROPERTY_SPECIES_NAME, UtilizationParameter.JSON_PROPERTY_VALUE })
+@JsonPropertyOrder(
+	{ UtilizationParameterText.JSON_PROPERTY_SPECIES_NAME, UtilizationParameterText.JSON_PROPERTY_VALUE }
+)
 @RegisterForReflection
-public class UtilizationParameter {
+public class UtilizationParameterText {
 	public static final String JSON_PROPERTY_SPECIES_NAME = "speciesName";
 	@JsonProperty(JSON_PROPERTY_SPECIES_NAME)
 	private String speciesName;
+
+	public static final String JSON_PROPERTY_VALUE = "value";
+	@JsonProperty(JSON_PROPERTY_VALUE)
+	private String value;
 
 	/**
 	 * Gets or Sets value
@@ -70,11 +76,7 @@ public class UtilizationParameter {
 		}
 	}
 
-	public static final String JSON_PROPERTY_VALUE = "value";
-	@JsonProperty(JSON_PROPERTY_VALUE)
-	private ValueEnum value;
-
-	public UtilizationParameter speciesName(String speciesName) {
+	public UtilizationParameterText speciesName(String speciesName) {
 		this.speciesName = speciesName;
 		return this;
 	}
@@ -94,7 +96,7 @@ public class UtilizationParameter {
 		this.speciesName = speciesName;
 	}
 
-	public UtilizationParameter value(ValueEnum value) {
+	public UtilizationParameterText value(String value) {
 		this.value = value;
 		return this;
 	}
@@ -106,11 +108,11 @@ public class UtilizationParameter {
 	 **/
 	@JsonProperty(value = "value")
 
-	public ValueEnum getValue() {
+	public String getValue() {
 		return value;
 	}
 
-	public void setValue(ValueEnum value) {
+	public void setValue(String value) {
 		this.value = value;
 	}
 
@@ -122,7 +124,7 @@ public class UtilizationParameter {
 		if (o == null || getClass() != o.getClass()) {
 			return false;
 		}
-		UtilizationParameter up = (UtilizationParameter) o;
+		UtilizationParameterText up = (UtilizationParameterText) o;
 		return Objects.equals(this.speciesName, up.speciesName) && Objects.equals(this.value, up.value);
 	}
 
@@ -135,7 +137,7 @@ public class UtilizationParameter {
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("class ");
-		sb.append(UtilizationParameter.class.getSimpleName());
+		sb.append(UtilizationParameterText.class.getSimpleName());
 		sb.append(" {\n    speciesName: ").append(toIndentedString(speciesName)).append("\n");
 		sb.append("    value: ").append(toIndentedString(value)).append("\n");
 		sb.append("}");

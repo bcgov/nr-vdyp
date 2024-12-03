@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.vdyp.backend.v1.gen.api;
+package ca.bc.gov.nrs.vdyp.backend.v1.gen.api.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
