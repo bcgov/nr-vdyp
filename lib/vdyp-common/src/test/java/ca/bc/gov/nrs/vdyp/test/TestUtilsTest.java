@@ -5,6 +5,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
@@ -22,30 +23,146 @@ import ca.bc.gov.nrs.vdyp.model.MatrixMap3Impl;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
 import ca.bc.gov.nrs.vdyp.model.VdypCompatibilityVariables;
+import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.variables.UtilizationClassVariable;
+import ca.bc.gov.nrs.vdyp.processing_state.Bank;
 
 public class TestUtilsTest {
+	Random rand;
+
+	@BeforeEach
+	void setup() {
+		rand = new Random(42);
+	}
+
+	UtilizationVector mockUtilVector(float multiplier) {
+		return Utils.utilizationVector(
+				rand.nextFloat() * multiplier, rand.nextFloat() * multiplier, rand.nextFloat() * multiplier,
+				rand.nextFloat() * multiplier, rand.nextFloat() * multiplier
+		);
+	}
+
+	UtilizationVector mockHeightVector() {
+		return Utils.heightVector(rand.nextFloat() * 5, rand.nextFloat() * 20);
+	}
+
+	@Nested
+	class WriteProcessingState {
+		@Test
+		void testBank() throws IOException {
+			var controlMap = TestUtils.loadControlMap();
+			var expectedBec = Utils.getBec("CDF", controlMap);
+			var expectedLayer = VdypLayer.build(lb -> {
+				lb.polygonIdentifier("Test", 2024);
+				lb.layerType(LayerType.PRIMARY);
+
+				lb.empiricalRelationshipParameterIndex(21);
+				lb.inventoryTypeGroup(34);
+				lb.primaryGenus("MB");
+
+				lb.addSpecies(sb -> {
+					sb.genus("MB");
+					sb.controlMap(controlMap);
+
+					sb.percentGenus(90);
+
+					sb.breakageGroup(12);
+					sb.decayGroup(13);
+					sb.volumeGroup(14);
+
+					sb.addSp64Distribution("MB", 100);
+
+					sb.addCompatibilityVariables(cvb -> {
+						cvb.cvVolume((k1, k2, k3) -> rand.nextFloat() * 10);
+						cvb.cvBasalArea((k1, k2) -> rand.nextFloat() * 10);
+						cvb.cvQuadraticMeanDiameter((k1, k2) -> rand.nextFloat() * 10);
+						cvb.cvPrimaryLayerSmall(k1 -> rand.nextFloat() * 10);
+					});
+
+					sb.addSite(ib -> {
+						ib.ageTotal(40);
+						ib.yearsToBreastHeight(5);
+						ib.height(15);
+						ib.siteCurveNumber(42);
+						ib.siteIndex(4);
+					});
+
+					sb.loreyHeight(mockHeightVector());
+
+					sb.baseArea(mockUtilVector(2));
+					sb.quadMeanDiameter(mockUtilVector(10));
+					sb.treesPerHectare(mockUtilVector(300));
+
+					sb.wholeStemVolume(mockUtilVector(7));
+					sb.closeUtilizationVolumeByUtilization(mockUtilVector(6));
+					sb.closeUtilizationVolumeNetOfDecayByUtilization(mockUtilVector(5));
+					sb.closeUtilizationVolumeNetOfDecayAndWasteByUtilization(mockUtilVector(4));
+					sb.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(mockUtilVector(3));
+				});
+
+				lb.loreyHeight(mockHeightVector());
+
+				lb.baseArea(mockUtilVector(2));
+				lb.quadMeanDiameter(mockUtilVector(10));
+				lb.treesPerHectare(mockUtilVector(300));
+
+				lb.wholeStemVolume(mockUtilVector(7));
+				lb.closeUtilizationVolumeByUtilization(mockUtilVector(6));
+				lb.closeUtilizationVolumeNetOfDecayByUtilization(mockUtilVector(5));
+				lb.closeUtilizationVolumeNetOfDecayAndWasteByUtilization(mockUtilVector(4));
+				lb.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(mockUtilVector(3));
+			});
+
+			Bank expected = new Bank(expectedLayer, expectedBec, x -> true);
+
+			// Change the bank values from those initially set to match the layer
+			TestUtils.jitterArray(expected.ageTotals, rand);
+			TestUtils.jitterArray(expected.basalAreas, rand);
+			TestUtils.jitterArray(expected.dominantHeights, rand);
+			TestUtils.jitterArray(expected.siteCurveNumbers, rand);
+			TestUtils.jitterArray(expected.siteIndices, rand);
+			TestUtils.jitterArray(expected.yearsAtBreastHeight, rand);
+			TestUtils.jitterArray(expected.yearsToBreastHeight, rand);
+
+			expected.percentagesOfForestedLand[1] = 70;
+
+			var buf = new StringBuffer();
+			TestUtils.writeModel(expected, buf, 3, "result", "expectedLayer");
+
+			System.out.print(buf.toString());
+
+			Bank result = null;
+
+			/* the following Bank definition was generated */
+
+			var validSpecGroupIndices = List.of(0, 10);
+			result = new Bank(
+					expectedLayer, Utils.getBec("CDF", controlMap),
+					spec -> validSpecGroupIndices.contains(spec.getGenusIndex())
+			);
+			System.arraycopy(new float[] { 0.000000f, 41.552448f }, 0, result.ageTotals, 0, 2);
+			System.arraycopy(new float[] { 0.000000f, 70.000000f }, 0, result.percentagesOfForestedLand, 0, 2);
+			System.arraycopy(
+					new float[][] { { 1.073338f, 3.073815f, 0.181232f, 1.592524f, 1.446236f, 0.064980f },
+							{ 1.052509f, 3.325452f, 0.180743f, 1.492788f, 1.646765f, 0.059891f } },
+					0, result.basalAreas, 0, 2
+			);
+			System.arraycopy(new String[] { null, "MB" }, 0, result.speciesNames, 0, 2);
+			System.arraycopy(new float[] { 0.000000f, 4.253897f }, 0, result.siteIndices, 0, 2);
+			System.arraycopy(new float[] { 0.000000f, 14.915393f }, 0, result.dominantHeights, 0, 2);
+			System.arraycopy(new float[] { 0.000000f, 38.343075f }, 0, result.yearsAtBreastHeight, 0, 2);
+			System.arraycopy(new float[] { 0.000000f, 5.202045f }, 0, result.yearsToBreastHeight, 0, 2);
+			System.arraycopy(new int[] { -1, 41 }, 0, result.siteCurveNumbers, 0, 2);
+
+			/* End of generated Bank definition */
+
+			assertThat(result, deepEquals(expected));
+		}
+	}
 
 	@Nested
 	class WriteModel {
-		Random rand;
-
-		@BeforeEach
-		void setup() {
-			rand = new Random(42);
-		}
-
-		UtilizationVector mockUtilVector(float multiplier) {
-			return Utils.utilizationVector(
-					rand.nextFloat() * multiplier, rand.nextFloat() * multiplier, rand.nextFloat() * multiplier,
-					rand.nextFloat() * multiplier, rand.nextFloat() * multiplier
-			);
-		}
-
-		UtilizationVector mockHeightVector() {
-			return Utils.heightVector(rand.nextFloat() * 5, rand.nextFloat() * 20);
-		}
 
 		@Test
 		void polygon() throws IOException {
@@ -122,7 +239,7 @@ public class TestUtilsTest {
 			});
 
 			var buf = new StringBuffer();
-			TestUtils.writeModel(poly, buf, "result");
+			TestUtils.writeModel(poly, buf, 3, "result");
 
 			System.out.print(buf.toString());
 
@@ -133,13 +250,6 @@ public class TestUtilsTest {
 
 		private VdypPolygon get(Map<String, Object> controlMap) {
 			VdypPolygon result = null;
-
-			/*
-			 * There is probably a way to automate this but it would require some additional work in Maven.
-			 *
-			 * For now, if something changes how the code generation works, Run the test, copy the output to Stdout to
-			 * replace the code delimited by the following comments and run again to confirm the test passes.
-			 */
 
 			/* the following Polygon definition was generated */
 

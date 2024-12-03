@@ -25,12 +25,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
@@ -67,7 +69,9 @@ import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
 import ca.bc.gov.nrs.vdyp.model.VdypCompatibilityVariables;
+import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
+import ca.bc.gov.nrs.vdyp.processing_state.Bank;
 
 public class TestUtils {
 
@@ -645,8 +649,13 @@ public class TestUtils {
 		return new BecDefinition("T", Region.COASTAL, "Test");
 	}
 
-	private static void line(Appendable out, String line, Object... args) throws UncheckedIOException {
+	private static void line(Appendable out, int indent, String line, Object... args) throws UncheckedIOException {
 		try {
+			if (!line.isEmpty()) {
+				for (int i = 0; i < indent; i++) {
+					out.append("\t");
+				}
+			}
 			out.append(String.format(line, args)).append("\n");
 		} catch (IOException e) {
 			new UncheckedIOException(e);
@@ -654,6 +663,9 @@ public class TestUtils {
 	}
 
 	private static String stringLiteral(String s) {
+		if (s == null) {
+			return "null";
+		}
 		return String.format("\"%s\"", StringEscapeUtils.escapeJava(s));
 	}
 
@@ -698,255 +710,349 @@ public class TestUtils {
 		return opt.map(valueLiteral).map(s -> String.format("Optional.of(%s)", s)).orElse("Optional.empty()");
 	}
 
+	private static void writeBuilderConfig(VdypLayer layer, Appendable out, int indent, String assignTo)
+			throws IOException {
+		line(out, indent, "lb.layerType(%s);", enumLiteral(layer.getLayerType()));
+		line(out, indent, "");
+		line(
+				out, indent, "lb.empiricalRelationshipParameterIndex(%s);",
+				optionalLiteral(layer.getEmpiricalRelationshipParameterIndex(), TestUtils::intLiteral)
+		);
+		line(out, indent, "");
+		line(
+				out, indent, "		lb.inventoryTypeGroup(%s);",
+				optionalLiteral(layer.getInventoryTypeGroup(), TestUtils::intLiteral)
+		);
+		line(out, indent, "");
+		line(out, indent, "lb.loreyHeight(%s);", utilVectorLiteral(layer.getLoreyHeightByUtilization()));
+		line(out, indent, "lb.treesPerHectare(%s);", utilVectorLiteral(layer.getTreesPerHectareByUtilization()));
+		line(
+				out, indent, "		lb.quadMeanDiameter(%s);",
+				utilVectorLiteral(layer.getQuadraticMeanDiameterByUtilization())
+		);
+		line(out, indent, "lb.baseArea(%s);", utilVectorLiteral(layer.getBaseAreaByUtilization()));
+		line(out, indent, "");
+		line(out, indent, "lb.wholeStemVolume(%s);", utilVectorLiteral(layer.getWholeStemVolumeByUtilization()));
+		line(
+				out, indent, "lb.closeUtilizationVolumeByUtilization(%s);",
+				utilVectorLiteral(layer.getCloseUtilizationVolumeByUtilization())
+		);
+		line(
+				out, indent, "lb.closeUtilizationVolumeNetOfDecayByUtilization(%s);",
+				utilVectorLiteral(layer.getCloseUtilizationVolumeNetOfDecayByUtilization())
+		);
+		line(
+				out, indent, "lb.closeUtilizationVolumeNetOfDecayAndWasteByUtilization(%s);",
+				utilVectorLiteral(layer.getCloseUtilizationVolumeNetOfDecayAndWasteByUtilization())
+		);
+		line(
+				out, indent, "lb.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(%s);",
+				utilVectorLiteral(layer.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization())
+		);
+		line(out, indent, "");
+		for (var spec : layer.getSpecies().values()) {
+			line(out, indent, "lb.addSpecies(sb -> {");
+			line(out, indent, "	sb.genus(%s);", stringLiteral(spec.getGenus()));
+			line(out, indent, "	sb.genus(%d);", spec.getGenusIndex());
+			line(out, indent, "");
+			line(out, indent, "	sb.breakageGroup(%d);", spec.getBreakageGroup());
+			line(out, indent, "	sb.volumeGroup(%d);", spec.getVolumeGroup());
+			line(out, indent, "	sb.decayGroup(%d);", spec.getDecayGroup());
+			line(out, indent, "");
+			line(out, indent, "	sb.percentGenus(%s);", floatLiteral(spec.getPercentGenus()));
+			line(out, indent, "");
+
+			spec.getSp64DistributionSet().getSp64DistributionList().forEach(sp64 -> {
+				line(
+						out, indent, "	sb.addSp64Distribution(%s, %s);", stringLiteral(sp64.getGenusAlias()),
+						floatLiteral(sp64.getPercentage())
+				);
+			});
+
+			line(out, indent, "");
+			line(out, indent, "	sb.loreyHeight(%s);", utilVectorLiteral(spec.getLoreyHeightByUtilization()));
+			line(out, indent, "	sb.treesPerHectare(%s);", utilVectorLiteral(spec.getTreesPerHectareByUtilization()));
+			line(
+					out, indent, "	sb.quadMeanDiameter(%s);",
+					utilVectorLiteral(spec.getQuadraticMeanDiameterByUtilization())
+			);
+			line(out, indent, "	sb.baseArea(%s);", utilVectorLiteral(spec.getBaseAreaByUtilization()));
+			line(out, indent, "");
+			line(out, indent, "	sb.wholeStemVolume(%s);", utilVectorLiteral(spec.getWholeStemVolumeByUtilization()));
+			line(
+					out, indent, "	sb.closeUtilizationVolumeByUtilization(%s);",
+					utilVectorLiteral(spec.getCloseUtilizationVolumeByUtilization())
+			);
+			line(
+					out, indent, "	sb.closeUtilizationVolumeNetOfDecayByUtilization(%s);",
+					utilVectorLiteral(spec.getCloseUtilizationVolumeNetOfDecayByUtilization())
+			);
+			line(
+					out, indent, "	sb.closeUtilizationVolumeNetOfDecayAndWasteByUtilization(%s);",
+					utilVectorLiteral(spec.getCloseUtilizationVolumeNetOfDecayAndWasteByUtilization())
+			);
+			line(
+					out, indent, "	sb.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(%s);",
+					utilVectorLiteral(spec.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization())
+			);
+			line(out, indent, "");
+			spec.getCompatibilityVariables().ifPresent(cv -> {
+				line(out, indent, "	sb.addCompatibilityVariables(cvb -> {");
+				line(out, indent, "");
+
+				line(
+						out, indent,
+						"		MatrixMap3<UtilizationClass, UtilizationClassVariable, LayerType, Float> cvVolume = new MatrixMap3Impl<>("
+				);
+				line(out, indent, "				UtilizationClass.UTIL_CLASSES, ");
+				line(out, indent, "				VdypCompatibilityVariables.VOLUME_UTILIZATION_VARIABLES, ");
+				line(out, indent, "				LayerType.ALL_USED,");
+				line(out, indent, "				(uc, vv, lt) -> 0f");
+				line(out, indent, "		);");
+				for (var uc : UtilizationClass.UTIL_CLASSES) {
+					for (var vv : VdypCompatibilityVariables.VOLUME_UTILIZATION_VARIABLES) {
+						for (var lt : LayerType.ALL_USED) {
+							line(
+									out, indent,
+									"		cvVolume.put(UtilizationClass.%s, UtilizationClassVariable.%s, LayerType.%s, %s);",
+									uc, vv, lt, floatLiteral(cv.getCvVolume(uc, vv, lt))
+							);
+						}
+					}
+				}
+				line(
+						out, indent,
+						"		MatrixMap2<UtilizationClass, LayerType, Float> cvBasalArea = new MatrixMap2Impl<>("
+				);
+				line(out, indent, "				UtilizationClass.UTIL_CLASSES, ");
+				line(out, indent, "				LayerType.ALL_USED,");
+				line(out, indent, "				(uc, lt) -> 0f");
+				line(out, indent, "		);");
+
+				for (var uc : UtilizationClass.UTIL_CLASSES) {
+					for (var lt : LayerType.ALL_USED) {
+						line(
+								out, indent, "		cvBasalArea.put(UtilizationClass.%s, LayerType.%s, %s);", uc, lt,
+								floatLiteral(cv.getCvBasalArea(uc, lt))
+						);
+					}
+				}
+
+				line(
+						out, indent,
+						"		MatrixMap2<UtilizationClass, LayerType, Float> cvQuadraticMeanDiameter = new MatrixMap2Impl<>("
+				);
+				line(out, indent, "				UtilizationClass.UTIL_CLASSES, ");
+				line(out, indent, "				LayerType.ALL_USED,");
+				line(out, indent, "				(uc, lt) -> 0f");
+				line(out, indent, "		);");
+				line(out, indent, "");
+				for (var uc : UtilizationClass.UTIL_CLASSES) {
+					for (var lt : LayerType.ALL_USED) {
+						line(
+								out, indent,
+								"		cvQuadraticMeanDiameter.put(UtilizationClass.%s, LayerType.%s, %s);", uc, lt,
+								floatLiteral(cv.getCvQuadraticMeanDiameter(uc, lt))
+						);
+					}
+				}
+				line(out, indent, "");
+				line(out, indent, "		Map<UtilizationClassVariable, Float> cvPrimaryLayerSmall = new HashMap<>();");
+				line(out, indent, "");
+				for (var ucv : VdypCompatibilityVariables.SMALL_UTILIZATION_VARIABLES) {
+					line(
+							out, indent, "		cvPrimaryLayerSmall.put(UtilizationClassVariable.%s, %s);", ucv,
+							floatLiteral(cv.getCvPrimaryLayerSmall(ucv))
+					);
+				}
+				line(out, indent, "");
+				line(out, indent, "		cvb.cvVolume(cvVolume);");
+				line(out, indent, "		cvb.cvBasalArea(cvBasalArea);");
+				line(out, indent, "		cvb.cvQuadraticMeanDiameter(cvQuadraticMeanDiameter);");
+				line(out, indent, "		cvb.cvPrimaryLayerSmall(cvPrimaryLayerSmall);");
+				line(out, indent, "	});");
+			});
+			line(out, indent, "");
+			spec.getSite().ifPresent(site -> {
+				line(out, indent, "");
+
+				line(out, indent, "	sb.addSite(ib -> {");
+				line(
+						out, indent, "		ib.ageTotal(%s);",
+						optionalLiteral(site.getAgeTotal(), TestUtils::floatLiteral)
+				);
+				line(out, indent, "		ib.height(%s);", optionalLiteral(site.getHeight(), TestUtils::floatLiteral));
+				line(
+						out, indent, "		ib.siteCurveNumber(%s);",
+						optionalLiteral(site.getSiteCurveNumber(), TestUtils::intLiteral)
+				);
+				line(
+						out, indent, "		ib.siteIndex(%s);",
+						optionalLiteral(site.getSiteIndex(), TestUtils::floatLiteral)
+				);
+				line(
+						out, indent, "		ib.yearsToBreastHeight(%s);",
+						optionalLiteral(site.getYearsToBreastHeight(), TestUtils::floatLiteral)
+				);
+				line(out, indent, "	});");
+				line(out, indent, "");
+			});
+			line(out, indent, "");
+			line(out, indent, "});");
+		}
+		line(out, indent, "");
+		line(out, indent, "lb.primaryGenus(%s);", optionalLiteral(layer.getPrimaryGenus(), TestUtils::stringLiteral));
+
+	}
+
 	/**
 	 * Serializes a VdypPolygon as Java code that can be executed to recreate it. Meant to be used to aid in creating
 	 * unit tests.
 	 */
-	public static void writeModel(VdypPolygon poly, Appendable out, String assignTo) throws IOException {
+	public static void writeModel(VdypPolygon poly, Appendable out, int indent, String assignTo) throws IOException {
 		try {
-			line(out, "/* the following Polygon definition was generated */");
-			line(out, "");
-			line(out, "%s = VdypPolygon.build(pb -> {", assignTo);
+			line(out, indent, "/* the following Polygon definition was generated */");
+			line(out, indent, "");
+			line(out, indent, "%s = VdypPolygon.build(pb -> {", assignTo);
 
 			line(
-					out, "	pb.polygonIdentifier(%s, %d);", stringLiteral(poly.getPolygonIdentifier().getBase()),
-					poly.getPolygonIdentifier().getYear()
+					out, indent, "	pb.polygonIdentifier(%s, %d);",
+					stringLiteral(poly.getPolygonIdentifier().getBase()), poly.getPolygonIdentifier().getYear()
 			);
 
-			line(out, "");
+			line(out, indent, "");
 			line(
-					out, "	pb.biogeoclimaticZone(Utils.getBec(%s, controlMap));",
+					out, indent, "	pb.biogeoclimaticZone(Utils.getBec(%s, controlMap));",
 					stringLiteral(poly.getBiogeoclimaticZone().getAlias())
 			);
-			line(out, "	pb.forestInventoryZone(%s);", stringLiteral(poly.getForestInventoryZone()));
-			line(out, "");
+			line(out, indent, "	pb.forestInventoryZone(%s);", stringLiteral(poly.getForestInventoryZone()));
+			line(out, indent, "");
 			line(
-					out, "	pb.inventoryTypeGroup(%s);",
+					out, indent, "	pb.inventoryTypeGroup(%s);",
 					optionalLiteral(poly.getInventoryTypeGroup(), TestUtils::intLiteral)
 			);
-			line(out, "	pb.targetYear(%s);", optionalLiteral(poly.getTargetYear(), TestUtils::intLiteral));
-			line(out, "");
-			line(out, "	pb.mode(%s);", optionalLiteral(poly.getMode(), TestUtils::enumLiteral));
-			line(out, "	pb.percentAvailable(%s);", floatLiteral(poly.getPercentAvailable()));
-			line(out, "");
+			line(out, indent, "	pb.targetYear(%s);", optionalLiteral(poly.getTargetYear(), TestUtils::intLiteral));
+			line(out, indent, "");
+			line(out, indent, "	pb.mode(%s);", optionalLiteral(poly.getMode(), TestUtils::enumLiteral));
+			line(out, indent, "	pb.percentAvailable(%s);", floatLiteral(poly.getPercentAvailable()));
+			line(out, indent, "");
 			for (var layer : poly.getLayers().values()) {
-				line(out, "	pb.addLayer(lb -> {");
-				line(out, "		lb.layerType(%s);", enumLiteral(layer.getLayerType()));
-				line(out, "");
-				line(
-						out, "		lb.empiricalRelationshipParameterIndex(%s);",
-						optionalLiteral(layer.getEmpiricalRelationshipParameterIndex(), TestUtils::intLiteral)
-				);
-				line(out, "");
-				line(
-						out, "		lb.inventoryTypeGroup(%s);",
-						optionalLiteral(layer.getInventoryTypeGroup(), TestUtils::intLiteral)
-				);
-				line(out, "");
-				line(out, "		lb.loreyHeight(%s);", utilVectorLiteral(layer.getLoreyHeightByUtilization()));
-				line(out, "		lb.treesPerHectare(%s);", utilVectorLiteral(layer.getTreesPerHectareByUtilization()));
-				line(
-						out, "		lb.quadMeanDiameter(%s);",
-						utilVectorLiteral(layer.getQuadraticMeanDiameterByUtilization())
-				);
-				line(out, "		lb.baseArea(%s);", utilVectorLiteral(layer.getBaseAreaByUtilization()));
-				line(out, "");
-				line(out, "		lb.wholeStemVolume(%s);", utilVectorLiteral(layer.getWholeStemVolumeByUtilization()));
-				line(
-						out, "		lb.closeUtilizationVolumeByUtilization(%s);",
-						utilVectorLiteral(layer.getCloseUtilizationVolumeByUtilization())
-				);
-				line(
-						out, "		lb.closeUtilizationVolumeNetOfDecayByUtilization(%s);",
-						utilVectorLiteral(layer.getCloseUtilizationVolumeNetOfDecayByUtilization())
-				);
-				line(
-						out, "		lb.closeUtilizationVolumeNetOfDecayAndWasteByUtilization(%s);",
-						utilVectorLiteral(layer.getCloseUtilizationVolumeNetOfDecayAndWasteByUtilization())
-				);
-				line(
-						out, "		lb.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(%s);",
-						utilVectorLiteral(layer.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization())
-				);
-				line(out, "");
-				for (var spec : layer.getSpecies().values()) {
-					line(out, "		lb.addSpecies(sb -> {");
-					line(out, "			sb.genus(%s);", stringLiteral(spec.getGenus()));
-					line(out, "			sb.genus(%d);", spec.getGenusIndex());
-					line(out, "");
-					line(out, "			sb.breakageGroup(%d);", spec.getBreakageGroup());
-					line(out, "			sb.volumeGroup(%d);", spec.getVolumeGroup());
-					line(out, "			sb.decayGroup(%d);", spec.getDecayGroup());
-					line(out, "");
-					line(out, "			sb.percentGenus(%s);", floatLiteral(spec.getPercentGenus()));
-					line(out, "");
-
-					spec.getSp64DistributionSet().getSp64DistributionList().forEach(sp64 -> {
-						line(
-								out, "			sb.addSp64Distribution(%s, %s);", stringLiteral(sp64.getGenusAlias()),
-								floatLiteral(sp64.getPercentage())
-						);
-					});
-
-					line(out, "");
-					line(out, "			sb.loreyHeight(%s);", utilVectorLiteral(spec.getLoreyHeightByUtilization()));
-					line(
-							out, "			sb.treesPerHectare(%s);",
-							utilVectorLiteral(spec.getTreesPerHectareByUtilization())
-					);
-					line(
-							out, "			sb.quadMeanDiameter(%s);",
-							utilVectorLiteral(spec.getQuadraticMeanDiameterByUtilization())
-					);
-					line(out, "			sb.baseArea(%s);", utilVectorLiteral(spec.getBaseAreaByUtilization()));
-					line(out, "");
-					line(
-							out, "			sb.wholeStemVolume(%s);",
-							utilVectorLiteral(spec.getWholeStemVolumeByUtilization())
-					);
-					line(
-							out, "			sb.closeUtilizationVolumeByUtilization(%s);",
-							utilVectorLiteral(spec.getCloseUtilizationVolumeByUtilization())
-					);
-					line(
-							out, "			sb.closeUtilizationVolumeNetOfDecayByUtilization(%s);",
-							utilVectorLiteral(spec.getCloseUtilizationVolumeNetOfDecayByUtilization())
-					);
-					line(
-							out, "			sb.closeUtilizationVolumeNetOfDecayAndWasteByUtilization(%s);",
-							utilVectorLiteral(spec.getCloseUtilizationVolumeNetOfDecayAndWasteByUtilization())
-					);
-					line(
-							out, "			sb.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(%s);",
-							utilVectorLiteral(spec.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization())
-					);
-					line(out, "");
-					spec.getCompatibilityVariables().ifPresent(cv -> {
-						line(out, "			sb.addCompatibilityVariables(cvb -> {");
-						line(out, "");
-
-						line(
-								out,
-								"				MatrixMap3<UtilizationClass, UtilizationClassVariable, LayerType, Float> cvVolume = new MatrixMap3Impl<>("
-						);
-						line(out, "						UtilizationClass.UTIL_CLASSES, ");
-						line(out, "						VdypCompatibilityVariables.VOLUME_UTILIZATION_VARIABLES, ");
-						line(out, "						LayerType.ALL_USED,");
-						line(out, "						(uc, vv, lt) -> 0f");
-						line(out, "				);");
-						for (var uc : UtilizationClass.UTIL_CLASSES) {
-							for (var vv : VdypCompatibilityVariables.VOLUME_UTILIZATION_VARIABLES) {
-								for (var lt : LayerType.ALL_USED) {
-									line(
-											out,
-											"				cvVolume.put(UtilizationClass.%s, UtilizationClassVariable.%s, LayerType.%s, %s);",
-											uc, vv, lt, floatLiteral(cv.getCvVolume(uc, vv, lt))
-									);
-								}
-							}
-						}
-						line(
-								out,
-								"				MatrixMap2<UtilizationClass, LayerType, Float> cvBasalArea = new MatrixMap2Impl<>("
-						);
-						line(out, "						UtilizationClass.UTIL_CLASSES, ");
-						line(out, "						LayerType.ALL_USED,");
-						line(out, "						(uc, lt) -> 0f");
-						line(out, "				);");
-
-						for (var uc : UtilizationClass.UTIL_CLASSES) {
-							for (var lt : LayerType.ALL_USED) {
-								line(
-										out, "				cvBasalArea.put(UtilizationClass.%s, LayerType.%s, %s);",
-										uc, lt, floatLiteral(cv.getCvBasalArea(uc, lt))
-								);
-							}
-						}
-
-						line(
-								out,
-								"				MatrixMap2<UtilizationClass, LayerType, Float> cvQuadraticMeanDiameter = new MatrixMap2Impl<>("
-						);
-						line(out, "						UtilizationClass.UTIL_CLASSES, ");
-						line(out, "						LayerType.ALL_USED,");
-						line(out, "						(uc, lt) -> 0f");
-						line(out, "				);");
-						line(out, "");
-						for (var uc : UtilizationClass.UTIL_CLASSES) {
-							for (var lt : LayerType.ALL_USED) {
-								line(
-										out,
-										"				cvQuadraticMeanDiameter.put(UtilizationClass.%s, LayerType.%s, %s);",
-										uc, lt, floatLiteral(cv.getCvQuadraticMeanDiameter(uc, lt))
-								);
-							}
-						}
-						line(out, "");
-						line(
-								out,
-								"				Map<UtilizationClassVariable, Float> cvPrimaryLayerSmall = new HashMap<>();"
-						);
-						line(out, "");
-						for (var ucv : VdypCompatibilityVariables.SMALL_UTILIZATION_VARIABLES) {
-							line(
-									out, "				cvPrimaryLayerSmall.put(UtilizationClassVariable.%s, %s);", ucv,
-									floatLiteral(cv.getCvPrimaryLayerSmall(ucv))
-							);
-						}
-						line(out, "");
-						line(out, "				cvb.cvVolume(cvVolume);");
-						line(out, "				cvb.cvBasalArea(cvBasalArea);");
-						line(out, "				cvb.cvQuadraticMeanDiameter(cvQuadraticMeanDiameter);");
-						line(out, "				cvb.cvPrimaryLayerSmall(cvPrimaryLayerSmall);");
-						line(out, "			});");
-					});
-					line(out, "");
-					spec.getSite().ifPresent(site -> {
-						line(out, "");
-
-						line(out, "			sb.addSite(ib -> {");
-						line(
-								out, "				ib.ageTotal(%s);",
-								optionalLiteral(site.getAgeTotal(), TestUtils::floatLiteral)
-						);
-						line(
-								out, "				ib.height(%s);",
-								optionalLiteral(site.getHeight(), TestUtils::floatLiteral)
-						);
-						line(
-								out, "				ib.siteCurveNumber(%s);",
-								optionalLiteral(site.getSiteCurveNumber(), TestUtils::intLiteral)
-						);
-						line(
-								out, "				ib.siteIndex(%s);",
-								optionalLiteral(site.getSiteIndex(), TestUtils::floatLiteral)
-						);
-						line(
-								out, "				ib.yearsToBreastHeight(%s);",
-								optionalLiteral(site.getYearsToBreastHeight(), TestUtils::floatLiteral)
-						);
-						line(out, "			});");
-						line(out, "");
-					});
-					line(out, "");
-					line(out, "		});");
-				}
-				line(out, "");
-				line(
-						out, "		lb.primaryGenus(%s);",
-						optionalLiteral(layer.getPrimaryGenus(), TestUtils::stringLiteral)
-				);
-				line(out, "	});");
+				line(out, indent, "	pb.addLayer(lb -> {");
+				writeBuilderConfig(layer, out, indent + 2, assignTo);
+				line(out, indent, "	});");
 			}
-			line(out, "});");
+			line(out, indent, "});");
 
-			line(out, "");
+			line(out, indent, "");
 
-			line(out, "/* End of generated polygon Definition */");
+			line(out, indent, "/* End of generated Polygon definition */");
 
 		} catch (UncheckedIOException e) {
 			throw new IOException(e);
 		}
+	}
+
+	static String arrayLiteral(String[] arr) {
+		return Arrays.stream(arr).map(TestUtils::stringLiteral).collect(Collectors.joining(", ", "new String[]{", "}"));
+	}
+
+	static String arrayLiteral(int[] arr) {
+		return Arrays.stream(ArrayUtils.toObject(arr)).map(i -> Integer.toString(i))
+				.collect(Collectors.joining(", ", "new int[]{", "}"));
+	}
+
+	static String arrayLiteral(float[] arr) {
+		return Arrays.stream(ArrayUtils.toObject(arr)).map(TestUtils::floatLiteral)
+				.collect(Collectors.joining(", ", "new float[]{", "}"));
+	}
+
+	static String arrayLiteral(float[][] arr) {
+		return Arrays.stream(arr)
+				.map(
+						subArr -> Arrays.stream(ArrayUtils.toObject(subArr)).map(TestUtils::floatLiteral)
+								.collect(Collectors.joining(", ", "{", "}"))
+				).collect(Collectors.joining(", ", "new float[][]{", "}"));
+	}
+
+	static void jitterArray(int[] arr, Random rand) {
+		for (int i = 0; i < arr.length; i++) {
+			arr[i] += rand.nextInt(1) * 2 - 1;
+		}
+	}
+
+	static void jitterArray(float[] arr, Random rand) {
+		for (int i = 0; i < arr.length; i++) {
+			arr[i] *= rand.nextFloat(0.9f, 1.1f);
+		}
+	}
+
+	static void jitterArray(float[][] arr, Random rand) {
+		for (int i = 0; i < arr.length; i++) {
+			for (int j = 0; j < arr[i].length; j++) {
+				arr[i][j] *= rand.nextFloat(0.9f, 1.1f);
+			}
+		}
+	}
+
+	public static void writeModel(Bank expected, Appendable out, int indent, String assignTo, String layerVar) {
+
+		line(out, indent, "/* the following Bank definition was generated */");
+		line(out, indent, "");
+
+		line(
+				out, indent, "var validSpecGroupIndices = %s;",
+				Arrays.stream(expected.speciesIndices).mapToObj((int i) -> Integer.toString(i))
+						.collect(Collectors.joining(", ", "List.of(", ")"))
+		);
+
+		line(
+				out, indent,
+				"%s = new Bank(%s, Utils.getBec(%s, controlMap), spec->validSpecGroupIndices.contains(spec.getGenusIndex()));",
+				assignTo, layerVar, stringLiteral(expected.getBecZone().getAlias())
+		);
+
+		// System.arraycopy(src, srcPos, dest, destPos, len);
+		line(
+				out, indent, "System.arraycopy(%s, 0, %s.ageTotals, 0, %d);", arrayLiteral(expected.ageTotals),
+				assignTo, expected.ageTotals.length
+		);
+		line(
+				out, indent, "System.arraycopy(%s, 0, %s.percentagesOfForestedLand, 0, %d);",
+				arrayLiteral(expected.percentagesOfForestedLand), assignTo, expected.percentagesOfForestedLand.length
+		);
+		line(
+				out, indent, "System.arraycopy(%s, 0, %s.basalAreas, 0, %d);", arrayLiteral(expected.basalAreas),
+				assignTo, expected.basalAreas.length
+		);
+		line(
+				out, indent, "System.arraycopy(%s, 0, %s.speciesNames, 0, %d);", arrayLiteral(expected.speciesNames),
+				assignTo, expected.speciesNames.length
+		);
+		line(
+				out, indent, "System.arraycopy(%s, 0, %s.siteIndices, 0, %d);", arrayLiteral(expected.siteIndices),
+				assignTo, expected.siteIndices.length
+		);
+		line(
+				out, indent, "System.arraycopy(%s, 0, %s.dominantHeights, 0, %d);",
+				arrayLiteral(expected.dominantHeights), assignTo, expected.dominantHeights.length
+		);
+		line(
+				out, indent, "System.arraycopy(%s, 0, %s.yearsAtBreastHeight, 0, %d);",
+				arrayLiteral(expected.yearsAtBreastHeight), assignTo, expected.yearsAtBreastHeight.length
+		);
+		line(
+				out, indent, "System.arraycopy(%s, 0, %s.yearsToBreastHeight, 0, %d);",
+				arrayLiteral(expected.yearsToBreastHeight), assignTo, expected.yearsToBreastHeight.length
+		);
+		line(
+				out, indent, "System.arraycopy(%s, 0, %s.siteCurveNumbers, 0, %d);",
+				arrayLiteral(expected.siteCurveNumbers), assignTo, expected.siteCurveNumbers.length
+		);
+
+		line(out, indent, "");
+
+		line(out, indent, "/* End of generated Bank definition */");
+
 	}
 
 }

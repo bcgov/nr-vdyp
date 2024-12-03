@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.test;
 
+import static ca.bc.gov.nrs.vdyp.test.TestUtils.UTIL_CLASSES;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.anything;
@@ -1386,10 +1387,8 @@ public class VdypMatchers<V> {
 
 				).forEach(matchers::add);
 
-		Stream.of("speciesNames", "sp64Distributions")
-				.map(name -> hasField(name, Matchers.arrayContaining((Object[]) getField(name, expected))))
-				.forEach(matchers::add);
-
+		matchers.add(hasField("speciesNames", arrayContaining(expected.speciesNames)));
+		matchers.add(hasField("sp64Distributions", arrayContaining(expected.sp64Distributions)));
 		Stream.of(
 				"siteIndices", "dominantHeights", "ageTotals", "yearsAtBreastHeight", "yearsToBreastHeight",
 				"percentagesOfForestedLand"
