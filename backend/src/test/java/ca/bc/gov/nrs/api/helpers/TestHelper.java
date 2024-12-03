@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import ca.bc.gov.nrs.vdyp.backend.v1.gen.model.Parameters;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
 import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
@@ -57,7 +57,7 @@ public class TestHelper {
 		for (var e : executionOptions) {
 			options.add(e.toString());
 		}
-		params.setSelectedExecutionOptionsText(options);
+		params.setSelectedExecutionOptions(options);
 
 		return params;
 	}
