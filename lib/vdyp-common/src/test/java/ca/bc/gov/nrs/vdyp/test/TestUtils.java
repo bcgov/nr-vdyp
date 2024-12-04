@@ -72,6 +72,8 @@ import ca.bc.gov.nrs.vdyp.model.VdypCompatibilityVariables;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.processing_state.Bank;
+import ca.bc.gov.nrs.vdyp.processing_state.ProcessingState;
+import ca.bc.gov.nrs.vdyp.processing_state.TestProcessingState;
 
 public class TestUtils {
 
@@ -699,6 +701,12 @@ public class TestUtils {
 	}
 
 	private static String floatLiteral(float v) {
+		if (Float.isNaN(v)) {
+			return "Float.NaN";
+		}
+		if (Float.isInfinite(v)) {
+			return v > 0 ? "Float.POSITIVE_INFINITY" : "Float.NEGATIVE_INFINITY";
+		}
 		return String.format("%ff", v);
 	}
 
@@ -1011,7 +1019,41 @@ public class TestUtils {
 				assignTo, layerVar, stringLiteral(expected.getBecZone().getAlias())
 		);
 
-		// System.arraycopy(src, srcPos, dest, destPos, len);
+		writeBankConfig(expected, out, indent, assignTo);
+
+		line(out, indent, "");
+
+		line(out, indent, "/* End of generated Bank definition */");
+
+	}
+
+	public static void writeModel(ProcessingState<?, ?> expected, Appendable out, int indent, String assignTo)
+			throws IOException {
+
+		line(out, indent, "/* the following ProcessingState definition was generated */");
+		line(out, indent, "");
+
+		var poly = expected.getCurrentPolygon();
+
+		writeModel(poly, out, indent, "var polygon");
+
+		line(out, indent, "var state = new TestProcessingState(controlMap);");
+		line(out, indent, "state.setPolygon(polygon);");
+		line(out, indent, "var primaryBank = state.getPrimaryLayerProcessingState().getBank();");
+
+		writeBankConfig(expected.getPrimaryLayerProcessingState().getBank(), out, indent, "primaryBank");
+
+		expected.getVeteranLayerProcessingState().ifPresent(vetState -> {
+			line(out, indent, "var veteranBank = state.getVeteranLayerProcessingState().get().getBank();");
+			writeBankConfig(vetState.getBank(), out, indent, "veteranBank");
+		});
+
+		line(out, indent, "");
+		line(out, indent, "/* End of generated ProcessingState definition */");
+
+	}
+
+	public static void writeBankConfig(Bank expected, Appendable out, int indent, String assignTo) {
 		line(
 				out, indent, "System.arraycopy(%s, 0, %s.ageTotals, 0, %d);", arrayLiteral(expected.ageTotals),
 				assignTo, expected.ageTotals.length
@@ -1048,11 +1090,6 @@ public class TestUtils {
 				out, indent, "System.arraycopy(%s, 0, %s.siteCurveNumbers, 0, %d);",
 				arrayLiteral(expected.siteCurveNumbers), assignTo, expected.siteCurveNumbers.length
 		);
-
-		line(out, indent, "");
-
-		line(out, indent, "/* End of generated Bank definition */");
-
 	}
 
 }

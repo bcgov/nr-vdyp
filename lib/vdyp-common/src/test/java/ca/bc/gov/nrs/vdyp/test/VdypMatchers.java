@@ -43,6 +43,7 @@ import org.junit.platform.commons.util.ReflectionUtils;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common.ValueOrMarker;
+import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
@@ -65,6 +66,7 @@ import ca.bc.gov.nrs.vdyp.model.builders.ModelClassBuilder;
 import ca.bc.gov.nrs.vdyp.model.variables.UtilizationClassVariable;
 import ca.bc.gov.nrs.vdyp.processing_state.Bank;
 import ca.bc.gov.nrs.vdyp.processing_state.LayerProcessingState;
+import ca.bc.gov.nrs.vdyp.processing_state.ProcessingState;
 import ca.bc.gov.nrs.vdyp.processing_state.TestProcessingState;
 
 /**
@@ -1402,7 +1404,8 @@ public class VdypMatchers<V> {
 		return allOf(matchers);
 	}
 
-	public static Matcher<? super TestProcessingState> deepEquals(TestProcessingState expectedState) {
+	public static <C extends ResolvedControlMap, L extends LayerProcessingState<C, L>>
+			Matcher<? super ProcessingState<C, L>> deepEquals(ProcessingState<C, L> expectedState) {
 		return allOf(
 				hasProperty(
 						"currentPolygon",
@@ -1410,6 +1413,7 @@ public class VdypMatchers<V> {
 								"polygonIdentifier", isPolyId(expectedState.getCurrentPolygon().getPolygonIdentifier())
 						)
 				),
+				hasProperty("primaryLayerProcessingState", deepEquals(expectedState.getPrimaryLayerProcessingState())),
 				hasProperty(
 						"veteranLayerProcessingState",
 						optional(expectedState.getVeteranLayerProcessingState(), v -> deepEquals(v))
