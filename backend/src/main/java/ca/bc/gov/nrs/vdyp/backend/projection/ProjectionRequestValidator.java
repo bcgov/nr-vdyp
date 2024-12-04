@@ -202,7 +202,9 @@ public class ProjectionRequestValidator {
 
 		// Parameters.JSON_PROPERTY_FILTERS
 		if (params.getFilters() == null) {
-			params.setFilters(DEFAULT.getFilters().copy());
+			vparams.setFilters(DEFAULT.getFilters().copy());
+		} else {
+			vparams.setFilters(params.getFilters());
 		}
 
 		// Parameters.JSON_PROPERTY_UTILS
@@ -232,6 +234,7 @@ public class ProjectionRequestValidator {
 					);
 				}
 			}
+			vparams.setUtils(upList);
 		}
 
 		state.setValidatedParams(vparams);

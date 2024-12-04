@@ -90,11 +90,6 @@ public class ValidatedParameters {
 		return selectedDebugOptions.contains(option);
 	}
 
-	public ValidatedParameters outputFormat(OutputFormat outputFormat) {
-		this.outputFormat = outputFormat;
-		return this;
-	}
-
 	/**
 	 * Identifies the output file format. Default: YieldTable
 	 *
@@ -104,22 +99,13 @@ public class ValidatedParameters {
 		return outputFormat;
 	}
 
+	public ValidatedParameters outputFormat(OutputFormat outputFormat) {
+		this.outputFormat = outputFormat;
+		return this;
+	}
+
 	public void setOutputFormat(OutputFormat outputFormat) {
 		this.outputFormat = outputFormat;
-	}
-
-	public ValidatedParameters selectedExecutionOptions(List<ExecutionOption> selectedExecutionOptions) {
-		this.selectedExecutionOptions = selectedExecutionOptions;
-		return this;
-	}
-
-	public ValidatedParameters
-			addSelectedExecutionOptionsItem(ExecutionOption selectedExecutionOptionsItem) {
-		if (this.selectedExecutionOptions == null) {
-			this.selectedExecutionOptions = new ArrayList<>();
-		}
-		this.selectedExecutionOptions.add(selectedExecutionOptionsItem);
-		return this;
 	}
 
 	/**
@@ -131,21 +117,24 @@ public class ValidatedParameters {
 		return Collections.unmodifiableList(selectedExecutionOptions);
 	}
 
-	public void setSelectedExecutionOptions(List<ExecutionOption> selectedExecutionOptions) {
-		this.selectedExecutionOptions = selectedExecutionOptions;
-	}
-
-	public ValidatedParameters selectedDebugOptions(List<DebugOption> selectedDebugOptions) {
-		this.selectedDebugOptions = selectedDebugOptions;
+	public ValidatedParameters selectedExecutionOptions(List<ExecutionOption> selectedExecutionOptions) {
+		setSelectedExecutionOptions(selectedExecutionOptions);
 		return this;
 	}
 
-	public ValidatedParameters addSelectedDebugOptionsItem(DebugOption selectedDebugOptionsItem) {
-		if (this.selectedDebugOptions == null) {
-			this.selectedDebugOptions = new ArrayList<>();
+	public ValidatedParameters addSelectedExecutionOptionsItem(ExecutionOption selectedExecutionOptionsItem) {
+		if (this.selectedExecutionOptions == null) {
+			this.selectedExecutionOptions = new ArrayList<>();
 		}
-		this.selectedDebugOptions.add(selectedDebugOptionsItem);
+		this.selectedExecutionOptions.add(selectedExecutionOptionsItem);
 		return this;
+	}
+
+	public void setSelectedExecutionOptions(List<ExecutionOption> selectedExecutionOptions) {
+		this.selectedExecutionOptions = new ArrayList<>();
+		if (selectedExecutionOptions != null) {
+			selectedExecutionOptions.stream().forEach(o -> this.selectedExecutionOptions.add(o));
+		}
 	}
 
 	/**
@@ -157,13 +146,24 @@ public class ValidatedParameters {
 		return Collections.unmodifiableList(selectedDebugOptions);
 	}
 
-	public void setSelectedDebugOptions(List<DebugOption> selectedDebugOptions) {
-		this.selectedDebugOptions = selectedDebugOptions;
+	public ValidatedParameters selectedDebugOptions(List<DebugOption> selectedDebugOptions) {
+		setSelectedDebugOptions(selectedDebugOptions);
+		return this;
 	}
 
-	public ValidatedParameters ageStart(Integer ageStart) {
-		this.ageStart = ageStart;
+	public ValidatedParameters addSelectedDebugOptionsItem(DebugOption selectedDebugOptionsItem) {
+		if (this.selectedDebugOptions == null) {
+			this.selectedDebugOptions = new ArrayList<>();
+		}
+		this.selectedDebugOptions.add(selectedDebugOptionsItem);
 		return this;
+	}
+
+	public void setSelectedDebugOptions(List<DebugOption> selectedDebugOptions) {
+		this.selectedDebugOptions = new ArrayList<>();
+		if (selectedDebugOptions != null) {
+			selectedDebugOptions.stream().forEach(o -> this.selectedDebugOptions.add(o));
+		}
 	}
 
 	/**
@@ -175,39 +175,39 @@ public class ValidatedParameters {
 		return ageStart;
 	}
 
-	public void setAgeStart(Integer ageStart) {
-		this.ageStart = ageStart;
+	public ValidatedParameters ageStart(Integer ageStart) {
+		setAgeStart(ageStart);
+		return this;
 	}
 
-	ValidatedParameters minAgeStart(Integer minAgeStart) {
-		this.minAgeStart = minAgeStart;
-		return this;
+	public void setAgeStart(Integer ageStart) {
+		this.ageStart = ageStart;
 	}
 
 	Integer getMinAgeStart() {
 		return minAgeStart;
 	}
 
-	void setMinAgeStart(Integer minAgeStart) {
-		this.minAgeStart = minAgeStart;
+	ValidatedParameters minAgeStart(Integer minAgeStart) {
+		setMinAgeStart(minAgeStart);
+		return this;
 	}
 
-	ValidatedParameters maxAgeStart(Integer maxAgeStart) {
-		this.maxAgeStart = maxAgeStart;
-		return this;
+	void setMinAgeStart(Integer minAgeStart) {
+		this.minAgeStart = minAgeStart;
 	}
 
 	Integer getMaxAgeStart() {
 		return maxAgeStart;
 	}
 
-	void setMaxAgeStart(Integer maxAgeStart) {
-		this.maxAgeStart = maxAgeStart;
+	ValidatedParameters maxAgeStart(Integer maxAgeStart) {
+		setMaxAgeStart(maxAgeStart);
+		return this;
 	}
 
-	public ValidatedParameters ageEnd(Integer ageEnd) {
-		this.ageEnd = ageEnd;
-		return this;
+	void setMaxAgeStart(Integer maxAgeStart) {
+		this.maxAgeStart = maxAgeStart;
 	}
 
 	/**
@@ -219,39 +219,39 @@ public class ValidatedParameters {
 		return ageEnd;
 	}
 
-	public void setAgeEnd(Integer ageEnd) {
-		this.ageEnd = ageEnd;
+	public ValidatedParameters ageEnd(Integer ageEnd) {
+		setAgeEnd(ageEnd);
+		return this;
 	}
 
-	ValidatedParameters minAgeEnd(Integer minAgeEnd) {
-		this.minAgeEnd = minAgeEnd;
-		return this;
+	public void setAgeEnd(Integer ageEnd) {
+		this.ageEnd = ageEnd;
 	}
 
 	Integer getMinAgeEnd() {
 		return minAgeEnd;
 	}
 
-	void setMinAgeEnd(Integer minAgeEnd) {
-		this.minAgeEnd = minAgeEnd;
+	ValidatedParameters minAgeEnd(Integer minAgeEnd) {
+		setMinAgeEnd(minAgeEnd);
+		return this;
 	}
 
-	ValidatedParameters maxAgeEnd(Integer maxAgeEnd) {
-		this.maxAgeEnd = maxAgeEnd;
-		return this;
+	void setMinAgeEnd(Integer minAgeEnd) {
+		this.minAgeEnd = minAgeEnd;
 	}
 
 	Integer getMaxAgeEnd() {
 		return maxAgeEnd;
 	}
 
-	void setMaxAgeEnd(Integer maxAgeEnd) {
-		this.maxAgeEnd = maxAgeEnd;
+	ValidatedParameters maxAgeEnd(Integer maxAgeEnd) {
+		setMaxAgeEnd(maxAgeEnd);
+		return this;
 	}
 
-	public ValidatedParameters yearStart(Integer yearStart) {
-		this.yearStart = yearStart;
-		return this;
+	void setMaxAgeEnd(Integer maxAgeEnd) {
+		this.maxAgeEnd = maxAgeEnd;
 	}
 
 	/**
@@ -263,39 +263,39 @@ public class ValidatedParameters {
 		return yearStart;
 	}
 
-	public void setYearStart(Integer yearStart) {
-		this.yearStart = yearStart;
+	public ValidatedParameters yearStart(Integer yearStart) {
+		setYearStart(yearStart);
+		return this;
 	}
 
-	ValidatedParameters minYearStart(Integer minYearStart) {
-		this.minYearStart = minYearStart;
-		return this;
+	public void setYearStart(Integer yearStart) {
+		this.yearStart = yearStart;
 	}
 
 	Integer getMinYearStart() {
 		return minYearStart;
 	}
 
-	void setMinYearStart(Integer minYearStart) {
-		this.minYearStart = minYearStart;
+	ValidatedParameters minYearStart(Integer minYearStart) {
+		setMinYearStart(minYearStart);
+		return this;
 	}
 
-	ValidatedParameters maxYearStart(Integer maxYearStart) {
-		this.maxYearStart = maxYearStart;
-		return this;
+	void setMinYearStart(Integer minYearStart) {
+		this.minYearStart = minYearStart;
 	}
 
 	Integer getMaxYearStart() {
 		return maxYearStart;
 	}
 
-	void setMaxYearStart(Integer maxYearStart) {
-		this.maxYearStart = maxYearStart;
+	ValidatedParameters maxYearStart(Integer maxYearStart) {
+		setMaxYearStart(maxYearStart);
+		return this;
 	}
 
-	public ValidatedParameters yearEnd(Integer yearEnd) {
-		this.yearEnd = yearEnd;
-		return this;
+	void setMaxYearStart(Integer maxYearStart) {
+		this.maxYearStart = maxYearStart;
 	}
 
 	/**
@@ -305,6 +305,11 @@ public class ValidatedParameters {
 	 */
 	public Integer getYearEnd() {
 		return yearEnd;
+	}
+
+	public ValidatedParameters yearEnd(Integer yearEnd) {
+		setYearEnd(yearEnd);
+		return this;
 	}
 
 	public void setYearEnd(Integer yearEnd) {
@@ -337,11 +342,6 @@ public class ValidatedParameters {
 		this.maxYearEnd = maxYearEnd;
 	}
 
-	public ValidatedParameters forceYear(Integer forceYear) {
-		this.forceYear = forceYear;
-		return this;
-	}
-
 	/**
 	 * Forces the inclusion of the specified calendar year in Yield tables.
 	 *
@@ -351,13 +351,13 @@ public class ValidatedParameters {
 		return forceYear;
 	}
 
-	public void setForceYear(Integer forceYear) {
-		this.forceYear = forceYear;
+	public ValidatedParameters forceYear(Integer forceYear) {
+		setForceYear(forceYear);
+		return this;
 	}
 
-	public ValidatedParameters ageIncrement(Integer ageIncrement) {
-		this.ageIncrement = ageIncrement;
-		return this;
+	public void setForceYear(Integer forceYear) {
+		this.forceYear = forceYear;
 	}
 
 	/**
@@ -369,13 +369,13 @@ public class ValidatedParameters {
 		return ageIncrement;
 	}
 
-	public void setAgeIncrement(Integer ageIncrement) {
-		this.ageIncrement = ageIncrement;
+	public ValidatedParameters ageIncrement(Integer ageIncrement) {
+		setAgeIncrement(ageIncrement);
+		return this;
 	}
 
-	public ValidatedParameters minAgeIncrement(Integer minAgeIncrement) {
-		this.minAgeIncrement = minAgeIncrement;
-		return this;
+	public void setAgeIncrement(Integer ageIncrement) {
+		this.ageIncrement = ageIncrement;
 	}
 
 	/**
@@ -387,13 +387,13 @@ public class ValidatedParameters {
 		return minAgeIncrement;
 	}
 
-	public void setMinAgeIncrement(Integer minAgeIncrement) {
-		this.minAgeIncrement = minAgeIncrement;
+	public ValidatedParameters minAgeIncrement(Integer minAgeIncrement) {
+		setMinAgeIncrement(minAgeIncrement);
+		return this;
 	}
 
-	public ValidatedParameters maxAgeIncrement(Integer maxAgeIncrement) {
-		this.maxAgeIncrement = maxAgeIncrement;
-		return this;
+	public void setMinAgeIncrement(Integer minAgeIncrement) {
+		this.minAgeIncrement = minAgeIncrement;
 	}
 
 	/**
@@ -405,13 +405,13 @@ public class ValidatedParameters {
 		return maxAgeIncrement;
 	}
 
-	public void setMaxAgeIncrement(Integer maxAgeIncrement) {
-		this.maxAgeIncrement = maxAgeIncrement;
+	public ValidatedParameters maxAgeIncrement(Integer maxAgeIncrement) {
+		setMaxAgeIncrement(maxAgeIncrement);
+		return this;
 	}
 
-	public ValidatedParameters combineAgeYearRange(AgeYearRangeCombinationKind combineAgeYearRange) {
-		this.combineAgeYearRange = combineAgeYearRange;
-		return this;
+	public void setMaxAgeIncrement(Integer maxAgeIncrement) {
+		this.maxAgeIncrement = maxAgeIncrement;
 	}
 
 	/**
@@ -423,13 +423,13 @@ public class ValidatedParameters {
 		return combineAgeYearRange;
 	}
 
-	public void setCombineAgeYearRange(AgeYearRangeCombinationKind combineAgeYearRange) {
-		this.combineAgeYearRange = combineAgeYearRange;
+	public ValidatedParameters combineAgeYearRange(AgeYearRangeCombinationKind combineAgeYearRange) {
+		setCombineAgeYearRange(combineAgeYearRange);
+		return this;
 	}
 
-	public ValidatedParameters progressFrequency(ProgressFrequency progressFrequency) {
-		this.progressFrequency = progressFrequency;
-		return this;
+	public void setCombineAgeYearRange(AgeYearRangeCombinationKind combineAgeYearRange) {
+		this.combineAgeYearRange = combineAgeYearRange;
 	}
 
 	/**
@@ -441,13 +441,13 @@ public class ValidatedParameters {
 		return progressFrequency;
 	}
 
-	public void setProgressFrequency(ProgressFrequency progressFrequency) {
-		this.progressFrequency = progressFrequency.copy();
+	public ValidatedParameters progressFrequency(ProgressFrequency progressFrequency) {
+		setProgressFrequency(progressFrequency);
+		return this;
 	}
 
-	public ValidatedParameters metadataToOutput(MetadataToOutputDirective metadataToOutput) {
-		this.metadataToOutput = metadataToOutput;
-		return this;
+	public void setProgressFrequency(ProgressFrequency progressFrequency) {
+		this.progressFrequency = progressFrequency == null ? null : progressFrequency.copy();
 	}
 
 	/**
@@ -459,13 +459,13 @@ public class ValidatedParameters {
 		return metadataToOutput;
 	}
 
-	public void setMetadataToOutput(MetadataToOutputDirective metadataToOutput) {
-		this.metadataToOutput = metadataToOutput;
+	public ValidatedParameters metadataToOutput(MetadataToOutputDirective metadataToOutput) {
+		setMetadataToOutput(metadataToOutput);
+		return this;
 	}
 
-	public ValidatedParameters filters(Filters filters) {
-		this.filters = filters;
-		return this;
+	public void setMetadataToOutput(MetadataToOutputDirective metadataToOutput) {
+		this.metadataToOutput = metadataToOutput;
 	}
 
 	/**
@@ -477,21 +477,13 @@ public class ValidatedParameters {
 		return filters;
 	}
 
+	public ValidatedParameters filters(Filters filters) {
+		setFilters(filters);
+		return this;
+	}
+
 	public void setFilters(Filters filters) {
-		this.filters = filters;
-	}
-
-	public ValidatedParameters utils(List<ValidatedUtilizationParameter> utils) {
-		this.utils = utils;
-		return this;
-	}
-
-	public ValidatedParameters addUtilsItem(ValidatedUtilizationParameter utilsItem) {
-		if (this.utils == null) {
-			this.utils = new ArrayList<>();
-		}
-		this.utils.add(utilsItem);
-		return this;
+		this.filters = filters == null ? null : filters.copy();
 	}
 
 	/**
@@ -503,8 +495,24 @@ public class ValidatedParameters {
 		return Collections.unmodifiableList(utils);
 	}
 
+	public ValidatedParameters utils(List<ValidatedUtilizationParameter> utils) {
+		setUtils(utils);
+		return this;
+	}
+
+	public ValidatedParameters addUtilsItem(ValidatedUtilizationParameter utilsItem) {
+		if (this.utils == null) {
+			this.utils = new ArrayList<>();
+		}
+		this.utils.add(utilsItem);
+		return this;
+	}
+
 	public void setUtils(List<ValidatedUtilizationParameter> utils) {
-		this.utils = utils;
+		this.utils = new ArrayList<>();
+		if (utils != null) {
+			utils.stream().forEach(u -> this.utils.add(u));
+		}
 	}
 
 	@Override

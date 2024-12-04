@@ -53,7 +53,7 @@ public class ProgressFrequency {
 		public String toString() {
 			return getValue();
 		}
-		
+
 		@JsonValue
 		public String getValue() {
 			return value;

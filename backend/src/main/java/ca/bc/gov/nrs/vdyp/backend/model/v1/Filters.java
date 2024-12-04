@@ -48,11 +48,6 @@ public class Filters {
 		return new Filters().maintainer(maintainer).mapsheet(mapsheet).polygon(polygon).polygonId(polygonId);
 	}
 
-	public Filters maintainer(String maintainer) {
-		this.maintainer = maintainer;
-		return this;
-	}
-
 	/**
 	 * only those polygons with the specified maintainer will be considered for inclusion in the output
 	 *
@@ -63,13 +58,13 @@ public class Filters {
 		return maintainer;
 	}
 
-	public void setMaintainer(String maintainer) {
-		this.maintainer = maintainer;
+	public Filters maintainer(String maintainer) {
+		setMaintainer(maintainer);
+		return this;
 	}
 
-	public Filters mapsheet(String mapsheet) {
-		this.mapsheet = mapsheet;
-		return this;
+	public void setMaintainer(String maintainer) {
+		this.maintainer = maintainer;
 	}
 
 	/**
@@ -82,13 +77,13 @@ public class Filters {
 		return mapsheet;
 	}
 
-	public void setMapsheet(String mapsheet) {
-		this.mapsheet = mapsheet;
+	public Filters mapsheet(String mapsheet) {
+		setMapsheet(mapsheet);
+		return this;
 	}
 
-	public Filters polygon(String polygon) {
-		this.polygon = polygon;
-		return this;
+	public void setMapsheet(String mapsheet) {
+		this.mapsheet = mapsheet;
 	}
 
 	/**
@@ -101,13 +96,13 @@ public class Filters {
 		return polygon;
 	}
 
-	public void setPolygon(String polygon) {
-		this.polygon = polygon;
+	public Filters polygon(String polygon) {
+		setPolygon(polygon);
+		return this;
 	}
 
-	public Filters polygonId(String polygonId) {
-		this.polygonId = polygonId;
-		return this;
+	public void setPolygon(String polygon) {
+		this.polygon = polygon;
 	}
 
 	/**
@@ -118,6 +113,11 @@ public class Filters {
 	@JsonProperty(value = "polygonId")
 	public String getPolygonId() {
 		return polygonId;
+	}
+
+	public Filters polygonId(String polygonId) {
+		setPolygonId(polygonId);
+		return this;
 	}
 
 	public void setPolygonId(String polygonId) {
@@ -146,7 +146,6 @@ public class Filters {
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("class Filters {\n");
-
 		sb.append("    maintainer: ").append(toIndentedString(maintainer)).append("\n");
 		sb.append("    mapsheet: ").append(toIndentedString(mapsheet)).append("\n");
 		sb.append("    polygon: ").append(toIndentedString(polygon)).append("\n");

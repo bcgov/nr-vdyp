@@ -264,9 +264,8 @@ public class HelpService {
 						"true if present", //
 						"If present, a column indicating how the yield table row was projected is included in Yield Tables.", //
 						Boolean.toString(
-								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
-										Parameters.ExecutionOption.DO_INCLUDE_PROJECTION_MODE_IN_YIELD_TABLE
-								)
+								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
+										.contains(Parameters.ExecutionOption.DO_INCLUDE_PROJECTION_MODE_IN_YIELD_TABLE)
 						)
 				)
 		);
@@ -279,9 +278,8 @@ public class HelpService {
 						"true if present", //
 						"Includes or excludes age rows of the Age Range in the Yield Table.", //
 						Boolean.toString(
-								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
-										Parameters.ExecutionOption.DO_INCLUDE_AGE_ROWS_IN_YIELD_TABLE
-								)
+								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
+										.contains(Parameters.ExecutionOption.DO_INCLUDE_AGE_ROWS_IN_YIELD_TABLE)
 						)
 				)
 		);
@@ -294,9 +292,8 @@ public class HelpService {
 						"true if present", //
 						"If true, the year rows of the Year Range are included in the Yield Table.", //
 						Boolean.toString(
-								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
-										Parameters.ExecutionOption.DO_INCLUDE_YEAR_ROWS_IN_YIELD_TABLE
-								)
+								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
+										.contains(Parameters.ExecutionOption.DO_INCLUDE_YEAR_ROWS_IN_YIELD_TABLE)
 						)
 				)
 		);
@@ -413,9 +410,8 @@ public class HelpService {
 						"true if present", //
 						"If present, projected values are summarized at the polygon level.", //
 						Boolean.toString(
-								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
-										Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_POLYGON
-								)
+								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
+										.contains(Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_POLYGON)
 						)
 				)
 		);
@@ -428,9 +424,8 @@ public class HelpService {
 						"true if present", //
 						"If present, projected values are summarized at the layer level.", //
 						Boolean.toString(
-								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
-										Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER
-								)
+								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
+										.contains(Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER)
 						)
 				)
 		);
@@ -457,9 +452,8 @@ public class HelpService {
 						"true if present", //
 						"Indicate whether MoF projected volumes are included in the output.", //
 						Boolean.toString(
-								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
-										Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES
-								)
+								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
+										.contains(Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES)
 						)
 				)
 		);
@@ -472,9 +466,8 @@ public class HelpService {
 						"true if present", //
 						"Indicate whether projected MoF biomass is included in the output.", //
 						Boolean.toString(
-								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
-										Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_BIOMASS
-								)
+								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
+										.contains(Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_BIOMASS)
 						)
 				)
 		);
@@ -487,9 +480,8 @@ public class HelpService {
 						"true if present", //
 						"Indicate whether projected CFS biomass is included in the output.", //
 						Boolean.toString(
-								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
-										Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS
-								)
+								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
+										.contains(Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS)
 						)
 				)
 		);
@@ -502,9 +494,8 @@ public class HelpService {
 						"true if present", //
 						"Indicate whether formatted yield tables will include column headers or not.", //
 						Boolean.toString(
-								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
-										Parameters.ExecutionOption.DO_INCLUDE_COLUMN_HEADERS_IN_YIELD_TABLE
-								)
+								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
+										.contains(Parameters.ExecutionOption.DO_INCLUDE_COLUMN_HEADERS_IN_YIELD_TABLE)
 						)
 				)
 		);

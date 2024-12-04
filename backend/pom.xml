@@ -239,8 +239,7 @@
 			<artifactId>jersey-media-multipart</artifactId>
 			<version>${jersey2-version}</version>
 		</dependency>
-		<!-- Base64 encoding that works in
-     both JVM and Android -->
+		<!-- Base64 encoding that works in both JVM and Android -->
 		<dependency>
 			<groupId>com.fasterxml.jackson.datatype</groupId>
 			<artifactId>jackson-datatype-jsr310</artifactId>

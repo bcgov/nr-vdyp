@@ -37,13 +37,13 @@ public class ProjectionState {
 
 		var loggingParams = LoggingParameters.of(params);
 
-		if (loggingParams.doEnableErrorLogging) {
+		if (loggingParams.doEnableErrorLogging()) {
 			errorLog = new MessageLog(Level.ERROR);
 		} else {
 			errorLog = new NullMessageLog(Level.ERROR);
 		}
 
-		if (loggingParams.doEnableProgressLogging) {
+		if (loggingParams.doEnableProgressLogging()) {
 			progressLog = new MessageLog(Level.INFO);
 		} else {
 			progressLog = new NullMessageLog(Level.INFO);

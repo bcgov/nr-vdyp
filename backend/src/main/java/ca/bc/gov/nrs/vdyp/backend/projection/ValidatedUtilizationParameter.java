@@ -24,7 +24,8 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
  * This class records a utilization class for a given sp0 (species group) name.
  */
 @JsonPropertyOrder(
-	{ ValidatedUtilizationParameter.JSON_PROPERTY_SPECIES_NAME, ValidatedUtilizationParameter.JSON_PROPERTY_UTILIZATION_CLASS }
+	{ ValidatedUtilizationParameter.JSON_PROPERTY_SPECIES_NAME,
+			ValidatedUtilizationParameter.JSON_PROPERTY_UTILIZATION_CLASS }
 )
 @RegisterForReflection
 public class ValidatedUtilizationParameter {
@@ -46,8 +47,7 @@ public class ValidatedUtilizationParameter {
 	 *
 	 * @return speciesName
 	 **/
-	@JsonProperty(value = "speciesName")
-
+	@JsonProperty(value = JSON_PROPERTY_SPECIES_NAME)
 	public String getSpeciesName() {
 		return speciesName;
 	}
@@ -61,7 +61,7 @@ public class ValidatedUtilizationParameter {
 	 *
 	 * @return utilizationClass
 	 **/
-	@JsonProperty(value = "utilizationClass")
+	@JsonProperty(value = JSON_PROPERTY_UTILIZATION_CLASS)
 	public UtilizationParameter.UtilizationClass getUtilizationClass() {
 		return utilizationClass;
 	}
@@ -84,7 +84,8 @@ public class ValidatedUtilizationParameter {
 			return false;
 		}
 		ValidatedUtilizationParameter up = (ValidatedUtilizationParameter) o;
-		return Objects.equals(this.speciesName, up.speciesName) && Objects.equals(this.utilizationClass, up.utilizationClass);
+		return Objects.equals(this.speciesName, up.speciesName)
+				&& Objects.equals(this.utilizationClass, up.utilizationClass);
 	}
 
 	@Override

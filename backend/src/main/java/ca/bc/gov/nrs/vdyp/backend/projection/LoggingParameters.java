@@ -15,14 +15,14 @@ public class LoggingParameters {
 
 	public static final LoggingParameters DEFAULT;
 
-	public boolean doEnableErrorLogging;
-	public boolean doEnableProgressLogging;
-	public boolean doEnableDebugLogging;
+	private boolean doEnableErrorLogging;
+	private boolean doEnableProgressLogging;
+	private boolean doEnableDebugLogging;
 
-	public boolean doIncludeDebugTimestamps;
-	public boolean doIncludeDebugRoutineNames;
-	public boolean doIncludeDebugEntryExit;
-	public boolean doIncludeDebugIndentBlocks;
+	private boolean doIncludeDebugTimestamps;
+	private boolean doIncludeDebugRoutineNames;
+	private boolean doIncludeDebugEntryExit;
+	private boolean doIncludeDebugIndentBlocks;
 
 	private LoggingParameters(Parameters params) {
 
@@ -32,50 +32,43 @@ public class LoggingParameters {
 					.selectedDebugOptions(new ArrayList<Parameters.DebugOption>());
 		}
 
-		if (params.getSelectedExecutionOptions()
-				.contains(ExecutionOption.DO_ENABLE_ERROR_LOGGING.toString())) {
+		if (params.getSelectedExecutionOptions().contains(ExecutionOption.DO_ENABLE_ERROR_LOGGING.toString())) {
 			doEnableErrorLogging = true;
 		} else {
 			doEnableErrorLogging = LoggingParameters.DEFAULT.doEnableErrorLogging;
 		}
 
-		if (params.getSelectedExecutionOptions()
-				.contains(ExecutionOption.DO_ENABLE_PROGRESS_LOGGING.toString())) {
+		if (params.getSelectedExecutionOptions().contains(ExecutionOption.DO_ENABLE_PROGRESS_LOGGING.toString())) {
 			doEnableProgressLogging = true;
 		} else {
 			doEnableProgressLogging = LoggingParameters.DEFAULT.doEnableProgressLogging;
 		}
 
-		if (params.getSelectedExecutionOptions()
-				.contains(ExecutionOption.DO_ENABLE_DEBUG_LOGGING.toString())) {
+		if (params.getSelectedExecutionOptions().contains(ExecutionOption.DO_ENABLE_DEBUG_LOGGING.toString())) {
 			doEnableDebugLogging = true;
 		} else {
 			doEnableDebugLogging = LoggingParameters.DEFAULT.doEnableDebugLogging;
 		}
 
-		if (params.getSelectedDebugOptions()
-				.contains(DebugOption.DO_INCLUDE_DEBUG_ENTRY_EXIT.toString())) {
+		if (params.getSelectedDebugOptions().contains(DebugOption.DO_INCLUDE_DEBUG_ENTRY_EXIT.toString())) {
 			doIncludeDebugEntryExit = true;
 		} else {
 			doIncludeDebugEntryExit = LoggingParameters.DEFAULT.doIncludeDebugEntryExit;
 		}
 
-		if (params.getSelectedDebugOptions()
-				.contains(DebugOption.DO_INCLUDE_DEBUG_INDENT_BLOCKS.toString())) {
+		if (params.getSelectedDebugOptions().contains(DebugOption.DO_INCLUDE_DEBUG_INDENT_BLOCKS.toString())) {
 			doIncludeDebugIndentBlocks = true;
 		} else {
 			doIncludeDebugIndentBlocks = LoggingParameters.DEFAULT.doIncludeDebugIndentBlocks;
 		}
 
-		if (params.getSelectedDebugOptions()
-				.contains(DebugOption.DO_INCLUDE_DEBUG_ROUTINE_NAMES.toString())) {
+		if (params.getSelectedDebugOptions().contains(DebugOption.DO_INCLUDE_DEBUG_ROUTINE_NAMES.toString())) {
 			doIncludeDebugRoutineNames = true;
 		} else {
 			doIncludeDebugRoutineNames = LoggingParameters.DEFAULT.doIncludeDebugRoutineNames;
 		}
 
-		if (params.getSelectedDebugOptions()
-				.contains(DebugOption.DO_INCLUDE_DEBUG_TIMESTAMPS.toString())) {
+		if (params.getSelectedDebugOptions().contains(DebugOption.DO_INCLUDE_DEBUG_TIMESTAMPS.toString())) {
 			doIncludeDebugTimestamps = true;
 		} else {
 			doIncludeDebugTimestamps = LoggingParameters.DEFAULT.doIncludeDebugTimestamps;
@@ -89,31 +82,46 @@ public class LoggingParameters {
 		return new LoggingParameters(params);
 	}
 
-	public boolean isDoEnableErrorLogging() {
+	public LoggingParameters copy() {
+		var copy = new LoggingParameters();
+
+		copy.doEnableErrorLogging = doEnableErrorLogging;
+		copy.doEnableProgressLogging = doEnableProgressLogging;
+		copy.doEnableDebugLogging = doEnableDebugLogging;
+
+		copy.doIncludeDebugTimestamps = doIncludeDebugTimestamps;
+		copy.doIncludeDebugRoutineNames = doIncludeDebugRoutineNames;
+		copy.doIncludeDebugEntryExit = doIncludeDebugEntryExit;
+		copy.doIncludeDebugIndentBlocks = doIncludeDebugIndentBlocks;
+
+		return copy;
+	}
+
+	public boolean doEnableErrorLogging() {
 		return doEnableErrorLogging;
 	}
 
-	public boolean isDoEnableProgressLogging() {
+	public boolean doEnableProgressLogging() {
 		return doEnableProgressLogging;
 	}
 
-	public boolean isDoEnableDebugLogging() {
+	public boolean doEnableDebugLogging() {
 		return doEnableDebugLogging;
 	}
 
-	public boolean isDoIncludeDebugTimestamps() {
+	public boolean doIncludeDebugTimestamps() {
 		return doIncludeDebugTimestamps;
 	}
 
-	public boolean isDoIncludeDebugRoutineNames() {
+	public boolean doIncludeDebugRoutineNames() {
 		return doIncludeDebugRoutineNames;
 	}
 
-	public boolean isDoIncludeDebugEntryExit() {
+	public boolean doIncludeDebugEntryExit() {
 		return doIncludeDebugEntryExit;
 	}
 
-	public boolean isDoIncludeDebugIndentBlocks() {
+	public boolean doIncludeDebugIndentBlocks() {
 		return doIncludeDebugIndentBlocks;
 	}
 
@@ -149,18 +157,17 @@ public class LoggingParameters {
 	public boolean equals(Object o) {
 		if (this == o) {
 			return true;
-		}
-		if (o == null || getClass() != o.getClass()) {
+		} else if (o instanceof LoggingParameters that) {
+			return this.doEnableDebugLogging == that.doEnableDebugLogging
+					&& this.doEnableErrorLogging == that.doEnableErrorLogging
+					&& this.doEnableProgressLogging == that.doEnableProgressLogging
+					&& this.doIncludeDebugEntryExit == that.doIncludeDebugEntryExit
+					&& this.doIncludeDebugIndentBlocks == that.doIncludeDebugIndentBlocks
+					&& this.doIncludeDebugRoutineNames == that.doIncludeDebugRoutineNames
+					&& this.doIncludeDebugTimestamps == that.doIncludeDebugTimestamps;
+		} else {
 			return false;
 		}
-		LoggingParameters that = (LoggingParameters) o;
-		return this.doEnableDebugLogging == that.doEnableDebugLogging
-				&& this.doEnableErrorLogging == that.doEnableErrorLogging
-				&& this.doEnableProgressLogging == that.doEnableProgressLogging
-				&& this.doIncludeDebugEntryExit == that.doIncludeDebugEntryExit
-				&& this.doIncludeDebugIndentBlocks == that.doIncludeDebugIndentBlocks
-				&& this.doIncludeDebugRoutineNames == that.doIncludeDebugRoutineNames
-				&& this.doIncludeDebugTimestamps == that.doIncludeDebugTimestamps;
 	}
 
 	@Override
@@ -174,27 +181,16 @@ public class LoggingParameters {
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append("class Parameters {\n");
-
-		sb.append("    doEnableErrorLogging: ").append(toIndentedString(doEnableErrorLogging)).append("\n");
-		sb.append("    doEnableProgressLogging: ").append(toIndentedString(doEnableProgressLogging)).append("\n");
-		sb.append("    doEnableDebugLogging: ").append(toIndentedString(doEnableDebugLogging)).append("\n");
-		sb.append("    doIncludeDebugTimestamps: ").append(toIndentedString(doIncludeDebugTimestamps)).append("\n");
-		sb.append("    doIncludeDebugRoutineNames: ").append(toIndentedString(doIncludeDebugRoutineNames)).append("\n");
-		sb.append("    doIncludeDebugEntryExit: ").append(toIndentedString(doIncludeDebugEntryExit)).append("\n");
-		sb.append("    doIncludeDebugIndentBlocks: ").append(toIndentedString(doIncludeDebugIndentBlocks)).append("\n");
+		sb.append("class LoggingParameters {\n");
+		sb.append("    doEnableErrorLogging: ").append(doEnableErrorLogging).append("\n");
+		sb.append("    doEnableProgressLogging: ").append(doEnableProgressLogging).append("\n");
+		sb.append("    doEnableDebugLogging: ").append(doEnableDebugLogging).append("\n");
+		sb.append("    doIncludeDebugTimestamps: ").append(doIncludeDebugTimestamps).append("\n");
+		sb.append("    doIncludeDebugRoutineNames: ").append(doIncludeDebugRoutineNames).append("\n");
+		sb.append("    doIncludeDebugEntryExit: ").append(doIncludeDebugEntryExit).append("\n");
+		sb.append("    doIncludeDebugIndentBlocks: ").append(doIncludeDebugIndentBlocks).append("\n");
 		sb.append("}");
 		return sb.toString();
-	}
-
-	/**
-	 * Convert the given object to string with each line indented by 4 spaces (except the first line).
-	 */
-	private String toIndentedString(Object o) {
-		if (o == null) {
-			return "null";
-		}
-		return o.toString().replace("\n", "\n    ");
 	}
 
 	static {

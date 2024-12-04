@@ -24,15 +24,17 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 /**
  * This class records a utilization class for a given sp0 (species group) name.
  */
-@JsonPropertyOrder({ UtilizationParameter.JSON_PROPERTY_SPECIES_NAME, UtilizationParameter.JSON_PROPERTY_VALUE })
+@JsonPropertyOrder(
+	{ UtilizationParameter.JSON_PROPERTY_SPECIES_NAME, UtilizationParameter.JSON_PROPERTY_UTILIZATION_CLASS }
+)
 @RegisterForReflection
 public class UtilizationParameter {
 	public static final String JSON_PROPERTY_SPECIES_NAME = "speciesName";
 	@JsonProperty(JSON_PROPERTY_SPECIES_NAME)
 	private String speciesName;
 
-	public static final String JSON_PROPERTY_VALUE = "value";
-	@JsonProperty(JSON_PROPERTY_VALUE)
+	public static final String JSON_PROPERTY_UTILIZATION_CLASS = "utilizationClass";
+	@JsonProperty(JSON_PROPERTY_UTILIZATION_CLASS)
 	private String utilizationClass;
 
 	/**
@@ -61,7 +63,7 @@ public class UtilizationParameter {
 		public String toString() {
 			return getValue();
 		}
-		
+
 		@JsonValue
 		public String getValue() {
 			return value;
@@ -78,20 +80,19 @@ public class UtilizationParameter {
 		}
 	}
 
-	public UtilizationParameter speciesName(String speciesName) {
-		this.speciesName = speciesName;
-		return this;
-	}
-
 	/**
 	 * Get speciesName
 	 *
 	 * @return speciesName
 	 **/
-	@JsonProperty(value = "speciesName")
-
+	@JsonProperty(value = JSON_PROPERTY_SPECIES_NAME)
 	public String getSpeciesName() {
 		return speciesName;
+	}
+
+	public UtilizationParameter speciesName(String speciesName) {
+		setSpeciesName(speciesName);
+		return this;
 	}
 
 	public void setSpeciesName(String speciesName) {
@@ -103,7 +104,7 @@ public class UtilizationParameter {
 	 *
 	 * @return value
 	 **/
-	@JsonProperty(value = "utilizationClass")
+	@JsonProperty(value = JSON_PROPERTY_UTILIZATION_CLASS)
 	public String getUtilizationClass() {
 		return utilizationClass;
 	}
@@ -135,7 +136,8 @@ public class UtilizationParameter {
 			return false;
 		}
 		UtilizationParameter up = (UtilizationParameter) o;
-		return Objects.equals(this.speciesName, up.speciesName) && Objects.equals(this.utilizationClass, up.utilizationClass);
+		return Objects.equals(this.speciesName, up.speciesName)
+				&& Objects.equals(this.utilizationClass, up.utilizationClass);
 	}
 
 	@Override
@@ -149,7 +151,7 @@ public class UtilizationParameter {
 		sb.append("class ");
 		sb.append(UtilizationParameter.class.getSimpleName());
 		sb.append(" {\n    speciesName: ").append(toIndentedString(speciesName)).append("\n");
-		sb.append("    value: ").append(toIndentedString(utilizationClass)).append("\n");
+		sb.append("    utilizationClass: ").append(toIndentedString(utilizationClass)).append("\n");
 		sb.append("}");
 		return sb.toString();
 	}

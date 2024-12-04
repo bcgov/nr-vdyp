@@ -38,15 +38,9 @@ public class ParametersTest {
 		op.addSelectedExecutionOptionsItem(ExecutionOption.DO_ENABLE_DEBUG_LOGGING);
 		op.addSelectedExecutionOptionsItem(ExecutionOption.DO_ENABLE_ERROR_LOGGING);
 		op.addSelectedExecutionOptionsItem(ExecutionOption.DO_ENABLE_PROGRESS_LOGGING);
-		op.addSelectedExecutionOptionsItem(
-				ExecutionOption.DO_FORCE_CALENDAR_YEAR_INCLUSION_IN_YIELD_TABLES
-		);
-		op.addSelectedExecutionOptionsItem(
-				ExecutionOption.DO_FORCE_CURRENT_YEAR_INCLUSION_IN_YIELD_TABLES
-		);
-		op.addSelectedExecutionOptionsItem(
-				ExecutionOption.DO_FORCE_REFERENCE_YEAR_INCLUSION_IN_YIELD_TABLES
-		);
+		op.addSelectedExecutionOptionsItem(ExecutionOption.DO_FORCE_CALENDAR_YEAR_INCLUSION_IN_YIELD_TABLES);
+		op.addSelectedExecutionOptionsItem(ExecutionOption.DO_FORCE_CURRENT_YEAR_INCLUSION_IN_YIELD_TABLES);
+		op.addSelectedExecutionOptionsItem(ExecutionOption.DO_FORCE_REFERENCE_YEAR_INCLUSION_IN_YIELD_TABLES);
 		op.addSelectedExecutionOptionsItem(ExecutionOption.DO_INCLUDE_AGE_ROWS_IN_YIELD_TABLE);
 		op.addSelectedExecutionOptionsItem(ExecutionOption.DO_INCLUDE_COLUMN_HEADERS_IN_YIELD_TABLE);
 		op.addSelectedExecutionOptionsItem(ExecutionOption.DO_INCLUDE_FILE_HEADER);
@@ -55,9 +49,7 @@ public class ParametersTest {
 		op.addSelectedExecutionOptionsItem(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_BIOMASS);
 		op.addSelectedExecutionOptionsItem(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES);
 		op.addSelectedExecutionOptionsItem(ExecutionOption.DO_INCLUDE_PROJECTION_MODE_IN_YIELD_TABLE);
-		op.addSelectedExecutionOptionsItem(
-				ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE
-		);
+		op.addSelectedExecutionOptionsItem(ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE);
 		op.addSelectedExecutionOptionsItem(ExecutionOption.DO_INCLUDE_SPECIES_PROJECTION);
 		op.addSelectedExecutionOptionsItem(ExecutionOption.DO_INCLUDE_YEAR_ROWS_IN_YIELD_TABLE);
 		op.addSelectedExecutionOptionsItem(ExecutionOption.DO_SAVE_INTERMEDIATE_FILES);
@@ -126,7 +118,9 @@ public class ParametersTest {
 				new ProgressFrequency(ProgressFrequency.FrequencyKind.MAPSHEET).getEnumValue()
 		);
 
-		Assert.assertThrows(IllegalArgumentException.class, () -> ProgressFrequency.FrequencyKind.fromValue("not a value"));
+		Assert.assertThrows(
+				IllegalArgumentException.class, () -> ProgressFrequency.FrequencyKind.fromValue("not a value")
+		);
 
 		ProgressFrequency pf1 = new ProgressFrequency(12);
 		ProgressFrequency pf2 = new ProgressFrequency(ProgressFrequency.FrequencyKind.MAPSHEET);
@@ -143,15 +137,17 @@ public class ParametersTest {
 	@Test
 	void testUtilizationParameter() {
 		Assert.assertEquals(
-				"AL", new ValidatedUtilizationParameter().speciesName("AL").utilizationClass(UtilizationClass._12_5).getSpeciesName()
+				"AL",
+				new ValidatedUtilizationParameter().speciesName("AL").utilizationClass(UtilizationClass._12_5)
+						.getSpeciesName()
 		);
 		Assert.assertEquals(
-				UtilizationClass._17_5, new ValidatedUtilizationParameter().speciesName("AL").utilizationClass(UtilizationClass._17_5).getUtilizationClass()
+				UtilizationClass._17_5,
+				new ValidatedUtilizationParameter().speciesName("AL").utilizationClass(UtilizationClass._17_5)
+						.getUtilizationClass()
 		);
 
-		Assert.assertThrows(
-				IllegalArgumentException.class, () -> UtilizationClass.fromValue("ZZZ")
-		);
+		Assert.assertThrows(IllegalArgumentException.class, () -> UtilizationClass.fromValue("ZZZ"));
 
 		var up1 = new ValidatedUtilizationParameter().speciesName("AL").utilizationClass(UtilizationClass._12_5);
 		var up2 = new ValidatedUtilizationParameter().speciesName("C").utilizationClass(UtilizationClass._12_5);
@@ -163,6 +159,6 @@ public class ParametersTest {
 		Assert.assertFalse(up2.equals("C"));
 
 		Assert.assertTrue(up1.toString().indexOf("speciesName: AL") != -1);
-		Assert.assertTrue(up1.toString().indexOf("value: 12.5") != -1);
+		Assert.assertTrue(up1.toString().indexOf("utilizationClass: 12.5") != -1);
 	}
 }

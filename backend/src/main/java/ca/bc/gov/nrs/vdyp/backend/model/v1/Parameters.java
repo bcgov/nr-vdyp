@@ -86,9 +86,7 @@ public class Parameters {
 
 	public static final String JSON_PROPERTY_FILTERS = "filters";
 	@JsonProperty(JSON_PROPERTY_FILTERS)
-	// protected because this parameter requires no validation and therefore isn't in ValidatedParameters.
-	// This is the only such parameter
-	protected Filters filters;
+	public Filters filters;
 
 	public static final String JSON_PROPERTY_UTILS = "utils";
 	@JsonProperty(JSON_PROPERTY_UTILS)
@@ -375,15 +373,6 @@ public class Parameters {
 		return selectedExecutionOptions;
 	}
 
-	public void setSelectedExecutionOptions(List<ExecutionOption> selectedExecutionOptions) {
-		if (selectedExecutionOptions == null) {
-			this.selectedExecutionOptions.clear();
-		} else {
-			this.selectedExecutionOptions = new ArrayList<String>();
-			selectedExecutionOptions.stream().forEach(o -> this.selectedExecutionOptions.add(o.getValue()));
-		}
-	}
-
 	public Parameters selectedExecutionOptions(List<ExecutionOption> selectedExecutionOptions) {
 		setSelectedExecutionOptions(selectedExecutionOptions);
 		return this;
@@ -392,6 +381,15 @@ public class Parameters {
 	public Parameters addSelectedExecutionOptionsItem(ExecutionOption selectedExecutionOptionsItem) {
 		this.selectedExecutionOptions.add(selectedExecutionOptionsItem.getValue());
 		return this;
+	}
+
+	public void setSelectedExecutionOptions(List<ExecutionOption> selectedExecutionOptions) {
+		if (selectedExecutionOptions == null) {
+			this.selectedExecutionOptions.clear();
+		} else {
+			this.selectedExecutionOptions = new ArrayList<String>();
+			selectedExecutionOptions.stream().forEach(o -> this.selectedExecutionOptions.add(o.getValue()));
+		}
 	}
 
 	public Parameters addSelectedExecutionOptionsItem(String selectedExecutionOptionsItemText) {
@@ -426,12 +424,15 @@ public class Parameters {
 	}
 
 	public Parameters addSelectedDebugOptionsItem(DebugOption selectedDebugOptionsItem) {
+		if (selectedDebugOptions == null) {
+			selectedDebugOptions = new ArrayList<>();
+		}
 		this.selectedDebugOptions.add(selectedDebugOptionsItem.getValue());
 		return this;
 	}
 
 	public Parameters addSelectedDebugOptionsItem(String selectedDebugOptionsItemText) {
-		if (selectedDebugOptionsItemText != null) {	
+		if (selectedDebugOptionsItemText != null) {
 			this.selectedDebugOptions.add(selectedDebugOptionsItemText);
 		}
 		return this;
@@ -632,7 +633,7 @@ public class Parameters {
 	public void setCombineAgeYearRange(String combineAgeYearRangeText) {
 		this.combineAgeYearRange = combineAgeYearRangeText;
 	}
-	
+
 	/**
 	 * Get progressFrequency
 	 *
@@ -715,12 +716,12 @@ public class Parameters {
 	}
 
 	public Parameters filters(Filters filters) {
-		this.filters = filters;
+		setFilters(filters);
 		return this;
 	}
 
 	public void setFilters(Filters filters) {
-		this.filters = filters;
+		this.filters = filters == null ? null : filters.copy();
 	}
 
 	/**
@@ -740,7 +741,8 @@ public class Parameters {
 
 	public Parameters addUtilsItem(ValidatedUtilizationParameter utilsItem) {
 		this.utils.add(
-				new UtilizationParameter().speciesName(utilsItem.getSpeciesName()).utilizationClass(utilsItem.getUtilizationClass().getValue())
+				new UtilizationParameter().speciesName(utilsItem.getSpeciesName())
+						.utilizationClass(utilsItem.getUtilizationClass().getValue())
 		);
 		return this;
 	}
@@ -750,13 +752,12 @@ public class Parameters {
 			this.utils = null;
 		} else {
 			this.utils = new ArrayList<>();
-			utils.stream()
-					.forEach(
-							u -> this.utils.add(
-									new UtilizationParameter().speciesName(u.getSpeciesName())
-											.utilizationClass(u.getUtilizationClass().getValue())
-							)
-					);
+			utils.stream().forEach(
+					u -> this.utils.add(
+							new UtilizationParameter().speciesName(u.getSpeciesName())
+									.utilizationClass(u.getUtilizationClass().getValue())
+					)
+			);
 		}
 	}
 

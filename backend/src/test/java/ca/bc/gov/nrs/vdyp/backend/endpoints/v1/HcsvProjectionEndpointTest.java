@@ -1,8 +1,7 @@
 package ca.bc.gov.nrs.vdyp.backend.endpoints.v1;
 
 import static io.restassured.RestAssured.given;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,6 +15,8 @@ import java.util.zip.ZipInputStream;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.api.helpers.TestHelper;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
@@ -25,6 +26,8 @@ import jakarta.ws.rs.core.MediaType;
 
 @QuarkusTest
 class HcsvProjectionEndpointTest {
+
+	private static final Logger logger = LoggerFactory.getLogger(HcsvProjectionEndpointTest.class);
 
 	private final TestHelper testHelper;
 
@@ -39,6 +42,8 @@ class HcsvProjectionEndpointTest {
 
 	@Test
 	void testProjectionHscv_shouldReturnStatusOK() throws IOException {
+
+		logger.info("Starting testProjectionHscv_shouldReturnStatusOK");
 
 		Path resourceFolderPath = Path.of("VDYP7Console-sample-files", "hcsv", "vdyp-240");
 

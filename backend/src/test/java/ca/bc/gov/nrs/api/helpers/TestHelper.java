@@ -50,8 +50,7 @@ public class TestHelper {
 		return new ByteArrayInputStream("Test data".getBytes());
 	}
 
-	public Parameters
-			addSelectedOptions(Parameters params, Parameters.ExecutionOption... executionOptions) {
+	public Parameters addSelectedOptions(Parameters params, Parameters.ExecutionOption... executionOptions) {
 
 		params.setSelectedExecutionOptions(List.of(executionOptions));
 

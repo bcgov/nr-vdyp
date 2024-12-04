@@ -10,11 +10,15 @@ import java.util.Set;
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 
+import ca.bc.gov.nrs.vdyp.backend.model.v1.Filters;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.AgeYearRangeCombinationKind;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.DebugOption;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.MetadataToOutputDirective;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.OutputFormat;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ProgressFrequency;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.ProgressFrequency.FrequencyKind;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ProjectionRequestKind;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.UtilizationParameter;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.UtilizationParameter.UtilizationClass;
@@ -22,13 +26,16 @@ import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessageKind;
 import jakarta.ws.rs.WebApplicationException;
 
-public class ParameterValidationTest {
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
+
+class ParameterValidationTest {
 
 	@Test
-	public void testNoParametersSupplied() throws WebApplicationException, IOException {
+	void testNoParametersSupplied() throws WebApplicationException, IOException {
 
-		Parameters p1 = new Parameters();
-		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p1);
+		Parameters p = new Parameters();
+		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
 		var validator = new ProjectionRequestValidator();
 		validator.validateState(s1);
@@ -36,43 +43,10 @@ public class ParameterValidationTest {
 	}
 
 	@Test
-	public void testOnlyAgeStartParameterSupplied() throws WebApplicationException, IOException {
+	void testOnlyAgeStartParameterSupplied() throws WebApplicationException, IOException {
 
-		Parameters p1 = new Parameters().ageStart(1);
-		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p1);
-
-		var validator = new ProjectionRequestValidator();
-		validator.validateState(s1);
-		verifyMessageSetIs(validator.getValidationMessages(), MISSING_END_CRITERIA);
-	}
-
-	@Test
-	public void testAgeStartTooLowParameterSupplied() throws WebApplicationException, IOException {
-
-		Parameters p1 = new Parameters().ageEnd(400).ageStart(ValidatedParameters.DEFAULT.getMinAgeStart() - 1);
-		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p1);
-
-		var validator = new ProjectionRequestValidator();
-		validator.validateState(s1);
-		verifyMessageSetIs(validator.getValidationMessages(), MISSING_START_CRITERIA, INTEGER_VALUE_TOO_LOW);
-	}
-
-	@Test
-	public void testAgeStartTooHighParameterSupplied() throws WebApplicationException, IOException {
-
-		Parameters p1 = new Parameters().ageEnd(400).ageStart(ValidatedParameters.DEFAULT.getMaxAgeStart() + 1);
-		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p1);
-
-		var validator = new ProjectionRequestValidator();
-		validator.validateState(s1);
-		verifyMessageSetIs(validator.getValidationMessages(), MISSING_START_CRITERIA, INTEGER_VALUE_TOO_HIGH);
-	}
-
-	@Test
-	public void testOnlyYearStartParameterSupplied() throws WebApplicationException, IOException {
-
-		Parameters p1 = new Parameters().yearStart(ValidatedParameters.DEFAULT.getMinYearStart());
-		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p1);
+		Parameters p = new Parameters().ageStart(1);
+		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
 		var validator = new ProjectionRequestValidator();
 		validator.validateState(s1);
@@ -80,10 +54,10 @@ public class ParameterValidationTest {
 	}
 
 	@Test
-	public void testYearStartTooLowParameterSupplied() throws WebApplicationException, IOException {
+	void testAgeStartTooLowParameterSupplied() throws WebApplicationException, IOException {
 
-		Parameters p1 = new Parameters().ageEnd(400).yearStart(ValidatedParameters.DEFAULT.getMinYearStart() - 1);
-		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p1);
+		Parameters p = new Parameters().ageEnd(400).ageStart(ValidatedParameters.DEFAULT.getMinAgeStart() - 1);
+		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
 		var validator = new ProjectionRequestValidator();
 		validator.validateState(s1);
@@ -91,10 +65,10 @@ public class ParameterValidationTest {
 	}
 
 	@Test
-	public void testYearStartTooHighParameterSupplied() throws WebApplicationException, IOException {
+	void testAgeStartTooHighParameterSupplied() throws WebApplicationException, IOException {
 
-		Parameters p1 = new Parameters().ageEnd(400).yearStart(ValidatedParameters.DEFAULT.getMaxYearStart() + 1);
-		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p1);
+		Parameters p = new Parameters().ageEnd(400).ageStart(ValidatedParameters.DEFAULT.getMaxAgeStart() + 1);
+		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
 		var validator = new ProjectionRequestValidator();
 		validator.validateState(s1);
@@ -102,10 +76,43 @@ public class ParameterValidationTest {
 	}
 
 	@Test
-	public void testOnlyAgeEndParameterSupplied() throws WebApplicationException, IOException {
+	void testOnlyYearStartParameterSupplied() throws WebApplicationException, IOException {
 
-		Parameters p1 = new Parameters().ageEnd(400);
-		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p1);
+		Parameters p = new Parameters().yearStart(ValidatedParameters.DEFAULT.getMinYearStart());
+		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
+
+		var validator = new ProjectionRequestValidator();
+		validator.validateState(s1);
+		verifyMessageSetIs(validator.getValidationMessages(), MISSING_END_CRITERIA);
+	}
+
+	@Test
+	void testYearStartTooLowParameterSupplied() throws WebApplicationException, IOException {
+
+		Parameters p = new Parameters().ageEnd(400).yearStart(ValidatedParameters.DEFAULT.getMinYearStart() - 1);
+		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
+
+		var validator = new ProjectionRequestValidator();
+		validator.validateState(s1);
+		verifyMessageSetIs(validator.getValidationMessages(), MISSING_START_CRITERIA, INTEGER_VALUE_TOO_LOW);
+	}
+
+	@Test
+	void testYearStartTooHighParameterSupplied() throws WebApplicationException, IOException {
+
+		Parameters p = new Parameters().ageEnd(400).yearStart(ValidatedParameters.DEFAULT.getMaxYearStart() + 1);
+		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
+
+		var validator = new ProjectionRequestValidator();
+		validator.validateState(s1);
+		verifyMessageSetIs(validator.getValidationMessages(), MISSING_START_CRITERIA, INTEGER_VALUE_TOO_HIGH);
+	}
+
+	@Test
+	void testOnlyAgeEndParameterSupplied() throws WebApplicationException, IOException {
+
+		Parameters p = new Parameters().ageEnd(400);
+		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
 		var validator = new ProjectionRequestValidator();
 		validator.validateState(s1);
@@ -113,10 +120,10 @@ public class ParameterValidationTest {
 	}
 
 	@Test
-	public void testAgeEndTooLowParameterSupplied() throws WebApplicationException, IOException {
+	void testAgeEndTooLowParameterSupplied() throws WebApplicationException, IOException {
 
-		Parameters p1 = new Parameters().ageStart(1).ageEnd(ValidatedParameters.DEFAULT.getMinAgeEnd() - 1);
-		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p1);
+		Parameters p = new Parameters().ageStart(1).ageEnd(ValidatedParameters.DEFAULT.getMinAgeEnd() - 1);
+		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
 		var validator = new ProjectionRequestValidator();
 		validator.validateState(s1);
@@ -124,10 +131,10 @@ public class ParameterValidationTest {
 	}
 
 	@Test
-	public void testAgeEndTooHighParameterSupplied() throws WebApplicationException, IOException {
+	void testAgeEndTooHighParameterSupplied() throws WebApplicationException, IOException {
 
-		Parameters p1 = new Parameters().ageStart(1).ageEnd(ValidatedParameters.DEFAULT.getMaxAgeEnd() + 1);
-		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p1);
+		Parameters p = new Parameters().ageStart(1).ageEnd(ValidatedParameters.DEFAULT.getMaxAgeEnd() + 1);
+		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
 		var validator = new ProjectionRequestValidator();
 		validator.validateState(s1);
@@ -135,10 +142,10 @@ public class ParameterValidationTest {
 	}
 
 	@Test
-	public void testOnlyYearEndParameterSupplied() throws WebApplicationException, IOException {
+	void testOnlyYearEndParameterSupplied() throws WebApplicationException, IOException {
 
-		Parameters p1 = new Parameters().yearEnd(1500);
-		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p1);
+		Parameters p = new Parameters().yearEnd(1500);
+		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
 		var validator = new ProjectionRequestValidator();
 		validator.validateState(s1);
@@ -146,10 +153,10 @@ public class ParameterValidationTest {
 	}
 
 	@Test
-	public void testYearEndTooLowParameterSupplied() throws WebApplicationException, IOException {
+	void testYearEndTooLowParameterSupplied() throws WebApplicationException, IOException {
 
-		Parameters p1 = new Parameters().yearStart(1500).yearEnd(ValidatedParameters.DEFAULT.getMinYearEnd() - 1);
-		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p1);
+		Parameters p = new Parameters().yearStart(1500).yearEnd(ValidatedParameters.DEFAULT.getMinYearEnd() - 1);
+		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
 		var validator = new ProjectionRequestValidator();
 		validator.validateState(s1);
@@ -157,10 +164,10 @@ public class ParameterValidationTest {
 	}
 
 	@Test
-	public void testYearEndTooHighParameterSupplied() throws WebApplicationException, IOException {
+	void testYearEndTooHighParameterSupplied() throws WebApplicationException, IOException {
 
-		Parameters p1 = new Parameters().yearStart(1500).yearEnd(ValidatedParameters.DEFAULT.getMaxYearEnd() + 1);
-		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p1);
+		Parameters p = new Parameters().yearStart(1500).yearEnd(ValidatedParameters.DEFAULT.getMaxYearEnd() + 1);
+		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
 		var validator = new ProjectionRequestValidator();
 		validator.validateState(s1);
@@ -168,10 +175,10 @@ public class ParameterValidationTest {
 	}
 
 	@Test
-	public void testAgeIncrementTooLowParameterSupplied() throws WebApplicationException, IOException {
+	void testAgeIncrementTooLowParameterSupplied() throws WebApplicationException, IOException {
 
-		Parameters p1 = buildValidParametersObject().ageIncrement(ValidatedParameters.DEFAULT.getMinAgeIncrement() - 1);
-		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p1);
+		Parameters p = buildValidParametersObject().ageIncrement(ValidatedParameters.DEFAULT.getMinAgeIncrement() - 1);
+		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
 		var validator = new ProjectionRequestValidator();
 		validator.validateState(s1);
@@ -179,10 +186,10 @@ public class ParameterValidationTest {
 	}
 
 	@Test
-	public void testAgeIncrementTooHighParameterSupplied() throws WebApplicationException, IOException {
+	void testAgeIncrementTooHighParameterSupplied() throws WebApplicationException, IOException {
 
-		Parameters p1 = buildValidParametersObject().ageIncrement(ValidatedParameters.DEFAULT.getMaxAgeIncrement() + 1);
-		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p1);
+		Parameters p = buildValidParametersObject().ageIncrement(ValidatedParameters.DEFAULT.getMaxAgeIncrement() + 1);
+		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
 		var validator = new ProjectionRequestValidator();
 		validator.validateState(s1);
@@ -190,21 +197,10 @@ public class ParameterValidationTest {
 	}
 
 	@Test
-	public void testValidAgeIncrementSupplied() throws WebApplicationException, IOException {
+	void testValidAgeIncrementSupplied() throws WebApplicationException, IOException {
 
-		Parameters p1 = buildValidParametersObject().ageIncrement(ValidatedParameters.DEFAULT.getMaxAgeIncrement());
-		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p1);
-
-		var validator = new ProjectionRequestValidator();
-		validator.validateState(s1);
-		verifyMessageSetIs(validator.getValidationMessages());
-	}
-
-	@Test
-	public void testValidAgeStartAndEndParameterSupplied() throws WebApplicationException, IOException {
-
-		Parameters p1 = buildValidParametersObject();
-		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p1);
+		Parameters p = buildValidParametersObject().ageIncrement(ValidatedParameters.DEFAULT.getMaxAgeIncrement());
+		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
 		var validator = new ProjectionRequestValidator();
 		validator.validateState(s1);
@@ -212,10 +208,10 @@ public class ParameterValidationTest {
 	}
 
 	@Test
-	public void testValidYearStartAndEndParameterSupplied() throws WebApplicationException, IOException {
+	void testValidAgeStartAndEndParameterSupplied() throws WebApplicationException, IOException {
 
-		Parameters p1 = new Parameters().yearStart(1600).yearEnd(2100);
-		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p1);
+		Parameters p = buildValidParametersObject();
+		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
 		var validator = new ProjectionRequestValidator();
 		validator.validateState(s1);
@@ -223,12 +219,23 @@ public class ParameterValidationTest {
 	}
 
 	@Test
-	public void testInvalidOutputFormatOptionSupplied() throws WebApplicationException, IOException {
+	void testValidYearStartAndEndParameterSupplied() throws WebApplicationException, IOException {
 
-		Parameters p1 = buildValidParametersObject();
-		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p1);
+		Parameters p = new Parameters().yearStart(1600).yearEnd(2100);
+		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
-		p1.setOutputFormat("bad output format");
+		var validator = new ProjectionRequestValidator();
+		validator.validateState(s1);
+		verifyMessageSetIs(validator.getValidationMessages());
+	}
+
+	@Test
+	void testInvalidOutputFormatOptionSupplied() throws WebApplicationException, IOException {
+
+		Parameters p = buildValidParametersObject();
+		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
+
+		p.setOutputFormat("bad output format");
 
 		var validator = new ProjectionRequestValidator();
 		validator.validateState(s1);
@@ -236,12 +243,12 @@ public class ParameterValidationTest {
 	}
 
 	@Test
-	public void testValidOutputFormatOptionSupplied() throws WebApplicationException, IOException {
+	void testValidOutputFormatOptionSupplied() throws WebApplicationException, IOException {
 
-		Parameters p1 = buildValidParametersObject();
-		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p1);
+		Parameters p = buildValidParametersObject();
+		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
-		p1.setOutputFormat(Parameters.OutputFormat.CSV_YIELD_TABLE);
+		p.setOutputFormat(Parameters.OutputFormat.CSV_YIELD_TABLE);
 
 		var validator = new ProjectionRequestValidator();
 		validator.validateState(s1);
@@ -249,12 +256,12 @@ public class ParameterValidationTest {
 	}
 
 	@Test
-	public void testInvalidCombineAgeYearRangeOptionSupplied() throws WebApplicationException, IOException {
+	void testInvalidCombineAgeYearRangeOptionSupplied() throws WebApplicationException, IOException {
 
-		Parameters p1 = buildValidParametersObject();
-		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p1);
+		Parameters p = buildValidParametersObject();
+		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
-		p1.setCombineAgeYearRange("bad option");
+		p.setCombineAgeYearRange("bad option");
 
 		var validator = new ProjectionRequestValidator();
 		validator.validateState(s1);
@@ -262,12 +269,12 @@ public class ParameterValidationTest {
 	}
 
 	@Test
-	public void testValidCombineAgeYearRangeOptionSupplied() throws WebApplicationException, IOException {
+	void testValidCombineAgeYearRangeOptionSupplied() throws WebApplicationException, IOException {
 
-		Parameters p1 = buildValidParametersObject();
-		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p1);
+		Parameters p = buildValidParametersObject();
+		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
-		p1.setCombineAgeYearRange(Parameters.AgeYearRangeCombinationKind.INTERSECT);
+		p.setCombineAgeYearRange(Parameters.AgeYearRangeCombinationKind.INTERSECT);
 
 		var validator = new ProjectionRequestValidator();
 		validator.validateState(s1);
@@ -275,12 +282,12 @@ public class ParameterValidationTest {
 	}
 
 	@Test
-	public void testInvalidProcessFrequencySupplied() throws WebApplicationException, IOException {
+	void testInvalidProcessFrequencySupplied() throws WebApplicationException, IOException {
 
-		Parameters p1 = buildValidParametersObject();
-		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p1);
+		Parameters p = buildValidParametersObject();
+		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
-		p1.setProgressFrequency("bad option");
+		p.setProgressFrequency("bad option");
 
 		var validator = new ProjectionRequestValidator();
 		validator.validateState(s1);
@@ -288,25 +295,12 @@ public class ParameterValidationTest {
 	}
 
 	@Test
-	public void testValidProcessFrequencySupplied1() throws WebApplicationException, IOException {
+	void testValidProcessFrequencySupplied1() throws WebApplicationException, IOException {
 
-		Parameters p1 = buildValidParametersObject();
-		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p1);
+		Parameters p = buildValidParametersObject();
+		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
-		p1.setProgressFrequency(ProgressFrequency.FrequencyKind.MAPSHEET);
-
-		var validator = new ProjectionRequestValidator();
-		validator.validateState(s1);
-		verifyMessageSetIs(validator.getValidationMessages());
-	}
-
-	@Test
-	public void testValidProcessFrequencySupplied2() throws WebApplicationException, IOException {
-
-		Parameters p1 = buildValidParametersObject();
-		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p1);
-
-		p1.setProgressFrequency(100);
+		p.setProgressFrequency(ProgressFrequency.FrequencyKind.MAPSHEET);
 
 		var validator = new ProjectionRequestValidator();
 		validator.validateState(s1);
@@ -314,12 +308,25 @@ public class ParameterValidationTest {
 	}
 
 	@Test
-	public void testInvalidMetadataToOutputValueSupplied() throws WebApplicationException, IOException {
+	void testValidProcessFrequencySupplied2() throws WebApplicationException, IOException {
 
-		Parameters p1 = buildValidParametersObject();
-		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p1);
+		Parameters p = buildValidParametersObject();
+		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
-		p1.setMetadataToOutput("bad option");
+		p.setProgressFrequency(100);
+
+		var validator = new ProjectionRequestValidator();
+		validator.validateState(s1);
+		verifyMessageSetIs(validator.getValidationMessages());
+	}
+
+	@Test
+	void testInvalidMetadataToOutputValueSupplied() throws WebApplicationException, IOException {
+
+		Parameters p = buildValidParametersObject();
+		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
+
+		p.setMetadataToOutput("bad option");
 
 		var validator = new ProjectionRequestValidator();
 		validator.validateState(s1);
@@ -327,12 +334,12 @@ public class ParameterValidationTest {
 	}
 
 	@Test
-	public void testInvalidExecutionOptionSupplied() throws WebApplicationException, IOException {
+	void testInvalidExecutionOptionSupplied() throws WebApplicationException, IOException {
 
-		Parameters p1 = buildValidParametersObject();
-		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p1);
+		Parameters p = buildValidParametersObject();
+		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
-		p1.addSelectedExecutionOptionsItem(ExecutionOption.BACK_GROW_ENABLED)
+		p.addSelectedExecutionOptionsItem(ExecutionOption.BACK_GROW_ENABLED)
 				.addSelectedExecutionOptionsItem("bad option");
 
 		var validator = new ProjectionRequestValidator();
@@ -341,12 +348,12 @@ public class ParameterValidationTest {
 	}
 
 	@Test
-	public void testInvalidDebugOptionSupplied() throws WebApplicationException, IOException {
+	void testInvalidDebugOptionSupplied() throws WebApplicationException, IOException {
 
-		Parameters p1 = buildValidParametersObject();
-		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p1);
+		Parameters p = buildValidParametersObject();
+		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
-		p1.addSelectedDebugOptionsItem(DebugOption.DO_INCLUDE_DEBUG_ENTRY_EXIT)
+		p.addSelectedDebugOptionsItem(DebugOption.DO_INCLUDE_DEBUG_ENTRY_EXIT)
 				.addSelectedDebugOptionsItem("bad option");
 
 		var validator = new ProjectionRequestValidator();
@@ -355,14 +362,14 @@ public class ParameterValidationTest {
 	}
 
 	@Test
-	public void testBadUtilizationParameterSpeciesSupplied() throws WebApplicationException, IOException {
+	void testBadUtilizationParameterSpeciesSupplied() throws WebApplicationException, IOException {
 
-		Parameters p1 = buildValidParametersObject();
-		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p1);
+		Parameters p = buildValidParametersObject();
+		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
 		var up = new UtilizationParameter().speciesName("bad species name")
 				.utilizationClass(UtilizationParameter.UtilizationClass._12_5.getValue());
-		p1.addUtilsItem(up);
+		p.addUtilsItem(up);
 
 		var validator = new ProjectionRequestValidator();
 		validator.validateState(s1);
@@ -370,13 +377,13 @@ public class ParameterValidationTest {
 	}
 
 	@Test
-	public void testBadUtilizationParameterUtilizationClassSupplied() throws WebApplicationException, IOException {
+	void testBadUtilizationParameterUtilizationClassSupplied() throws WebApplicationException, IOException {
 
-		Parameters p1 = buildValidParametersObject();
-		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p1);
+		Parameters p = buildValidParametersObject();
+		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
 		var up = new UtilizationParameter().speciesName("D").utilizationClass("bad utilization class");
-		p1.addUtilsItem(up);
+		p.addUtilsItem(up);
 
 		var validator = new ProjectionRequestValidator();
 		validator.validateState(s1);
@@ -384,13 +391,13 @@ public class ParameterValidationTest {
 	}
 
 	@Test
-	public void testBadUtilizationParameterSupplied() throws WebApplicationException, IOException {
+	void testBadUtilizationParameterSupplied() throws WebApplicationException, IOException {
 
-		Parameters p1 = buildValidParametersObject();
-		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p1);
+		Parameters p = buildValidParametersObject();
+		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
 		var up = new UtilizationParameter().speciesName("bad species name").utilizationClass("bad utilization class");
-		p1.addUtilsItem(up);
+		p.addUtilsItem(up);
 
 		var validator = new ProjectionRequestValidator();
 		validator.validateState(s1);
@@ -400,13 +407,13 @@ public class ParameterValidationTest {
 	}
 
 	@Test
-	public void testValidUtilizationParameterSupplied() throws WebApplicationException, IOException {
+	void testValidUtilizationParameterSupplied() throws WebApplicationException, IOException {
 
-		Parameters p1 = buildValidParametersObject();
-		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p1);
+		Parameters p = buildValidParametersObject();
+		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
 		var up = new UtilizationParameter().speciesName("D").utilizationClass(UtilizationClass._12_5);
-		p1.addUtilsItem(up);
+		p.addUtilsItem(up);
 
 		var validator = new ProjectionRequestValidator();
 		validator.validateState(s1);
@@ -414,12 +421,12 @@ public class ParameterValidationTest {
 	}
 
 	@Test
-	public void testInvalidForceYear() {
+	void testInvalidForceYear() {
 
-		Parameters p1 = buildValidParametersObject();
-		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p1);
+		Parameters p = buildValidParametersObject();
+		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
-		p1.forceYear("bad year");
+		p.forceYear("bad year");
 
 		var validator = new ProjectionRequestValidator();
 		validator.validateState(s1);
@@ -427,12 +434,12 @@ public class ParameterValidationTest {
 	}
 
 	@Test
-	public void testValidForceYear() {
+	void testValidForceYear() {
 
-		Parameters p1 = buildValidParametersObject();
-		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p1);
+		Parameters p = buildValidParametersObject();
+		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
-		p1.forceYear(2020);
+		p.forceYear(2020);
 
 		var validator = new ProjectionRequestValidator();
 		validator.validateState(s1);
@@ -440,12 +447,12 @@ public class ParameterValidationTest {
 	}
 
 	@Test
-	public void testDCSVIssues() {
+	void testDCSVIssues() {
 
-		Parameters p1 = buildValidParametersObject();
-		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p1);
+		Parameters p = buildValidParametersObject();
+		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
-		p1.outputFormat(OutputFormat.DCSV);
+		p.outputFormat(OutputFormat.DCSV);
 
 		var validator = new ProjectionRequestValidator();
 		validator.validateState(s1);
@@ -456,12 +463,12 @@ public class ParameterValidationTest {
 	}
 
 	@Test
-	public void testDCSVIssues2() {
+	void testDCSVIssues2() {
 
-		Parameters p1 = buildValidParametersObject();
-		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p1);
+		Parameters p = buildValidParametersObject();
+		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
-		p1.outputFormat(OutputFormat.DCSV).forceYear(2020);
+		p.outputFormat(OutputFormat.DCSV).forceYear(2020);
 
 		var validator = new ProjectionRequestValidator();
 		validator.validateState(s1);
@@ -471,12 +478,12 @@ public class ParameterValidationTest {
 	}
 
 	@Test
-	public void testCSFBiomassIssues1() {
+	void testCSFBiomassIssues1() {
 
-		Parameters p1 = buildValidParametersObject();
-		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p1);
+		Parameters p = buildValidParametersObject();
+		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
-		p1.addSelectedExecutionOptionsItem(ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS)
+		p.addSelectedExecutionOptionsItem(ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS)
 				.addSelectedExecutionOptionsItem(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_BIOMASS);
 
 		var validator = new ProjectionRequestValidator();
@@ -488,12 +495,12 @@ public class ParameterValidationTest {
 	}
 
 	@Test
-	public void testCSFBiomassIssues2() {
+	void testCSFBiomassIssues2() {
 
-		Parameters p1 = buildValidParametersObject();
-		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p1);
+		Parameters p = buildValidParametersObject();
+		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
-		p1.addSelectedExecutionOptionsItem(ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS)
+		p.addSelectedExecutionOptionsItem(ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS)
 				.addSelectedExecutionOptionsItem(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES);
 
 		var validator = new ProjectionRequestValidator();
@@ -502,17 +509,132 @@ public class ParameterValidationTest {
 	}
 
 	@Test
-	public void testCSFBiomassIssues3() {
+	void testCSFBiomassIssues3() {
 
-		Parameters p1 = new Parameters();
-		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.DCSV, "id", p1);
+		Parameters p = new Parameters();
+		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.DCSV, "id", p);
 
-		p1.addSelectedExecutionOptionsItem(ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS)
+		p.addSelectedExecutionOptionsItem(ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS)
 				.outputFormat(OutputFormat.DCSV).forceYear(2020);
 
 		var validator = new ProjectionRequestValidator();
 		validator.validateState(s1);
 		verifyMessageSetIs(validator.getValidationMessages(), INVALID_CFS_BIOMASS_OUTPUT_FORMAT);
+	}
+
+	@Test
+	void testValidFullParameterCreation() {
+		Parameters p = new Parameters();
+		p //
+				.addSelectedDebugOptionsItem(DebugOption.DO_INCLUDE_DEBUG_ENTRY_EXIT)
+				.addSelectedDebugOptionsItem(DebugOption.DO_INCLUDE_DEBUG_INDENT_BLOCKS)
+				.addSelectedDebugOptionsItem(DebugOption.DO_INCLUDE_DEBUG_ROUTINE_NAMES)
+				.addSelectedDebugOptionsItem(DebugOption.DO_INCLUDE_DEBUG_TIMESTAMPS)
+				.addSelectedExecutionOptionsItem(ExecutionOption.BACK_GROW_ENABLED)
+				.addSelectedExecutionOptionsItem(
+						ExecutionOption.DO_ALLOW_BASAL_AREA_AND_TREES_PER_HECTARE_VALUE_SUBSTITUTION
+				).addSelectedExecutionOptionsItem(ExecutionOption.DO_ENABLE_DEBUG_LOGGING)
+				.addSelectedExecutionOptionsItem(ExecutionOption.DO_ENABLE_ERROR_LOGGING)
+				.addSelectedExecutionOptionsItem(ExecutionOption.DO_ENABLE_PROGRESS_LOGGING)
+				.addSelectedExecutionOptionsItem(ExecutionOption.DO_FORCE_CALENDAR_YEAR_INCLUSION_IN_YIELD_TABLES)
+				.addSelectedExecutionOptionsItem(ExecutionOption.DO_FORCE_CURRENT_YEAR_INCLUSION_IN_YIELD_TABLES)
+				.addSelectedExecutionOptionsItem(ExecutionOption.DO_FORCE_REFERENCE_YEAR_INCLUSION_IN_YIELD_TABLES)
+				.addSelectedExecutionOptionsItem(ExecutionOption.DO_INCLUDE_AGE_ROWS_IN_YIELD_TABLE)
+				.addSelectedExecutionOptionsItem(ExecutionOption.DO_INCLUDE_COLUMN_HEADERS_IN_YIELD_TABLE)
+				.addSelectedExecutionOptionsItem(ExecutionOption.DO_INCLUDE_FILE_HEADER)
+				.addSelectedExecutionOptionsItem(ExecutionOption.DO_INCLUDE_POLYGON_RECORD_ID_IN_YIELD_TABLE)
+				.addSelectedExecutionOptionsItem(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_BIOMASS)
+				.addSelectedExecutionOptionsItem(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES)
+				.addSelectedExecutionOptionsItem(ExecutionOption.DO_INCLUDE_PROJECTION_MODE_IN_YIELD_TABLE)
+				.addSelectedExecutionOptionsItem(
+						ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE
+				).addSelectedExecutionOptionsItem(ExecutionOption.DO_INCLUDE_SPECIES_PROJECTION)
+				.addSelectedExecutionOptionsItem(ExecutionOption.DO_INCLUDE_YEAR_ROWS_IN_YIELD_TABLE)
+				.addSelectedExecutionOptionsItem(ExecutionOption.DO_SAVE_INTERMEDIATE_FILES)
+				.addSelectedExecutionOptionsItem(ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER)
+				.addSelectedExecutionOptionsItem(ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_POLYGON)
+				.addSelectedExecutionOptionsItem(ExecutionOption.FORWARD_GROW_ENABLED)
+				.addUtilsItem(
+						new ValidatedUtilizationParameter().speciesName("D").utilizationClass(UtilizationClass._12_5)
+				)
+				.addUtilsItem(
+						new ValidatedUtilizationParameter().speciesName("C").utilizationClass(UtilizationClass._4_0)
+				).ageEnd(10) //
+				.ageIncrement(3) //
+				.ageStart(20) //
+				.combineAgeYearRange(AgeYearRangeCombinationKind.DIFFERENCE) //
+				.filters(
+						new Filters().maintainer("maintainer").mapsheet("mapsheet").polygon("polygon")
+								.polygonId("polygonId")
+				).forceYear(2020) //
+				.metadataToOutput(MetadataToOutputDirective.ALL) //
+				.outputFormat(OutputFormat.YIELD_TABLE) //
+				.progressFrequency(FrequencyKind.MAPSHEET) //
+				.yearEnd(2024) //
+				.yearStart(2015);
+
+		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
+
+		var validator = new ProjectionRequestValidator();
+		validator.validateState(s1);
+		verifyMessageSetIs(validator.getValidationMessages());
+
+		var vp = s1.getValidatedParams();
+
+		Assert.assertTrue(vp.containsOption(DebugOption.DO_INCLUDE_DEBUG_ENTRY_EXIT));
+		Assert.assertTrue(vp.containsOption(DebugOption.DO_INCLUDE_DEBUG_INDENT_BLOCKS));
+		Assert.assertTrue(vp.containsOption(DebugOption.DO_INCLUDE_DEBUG_ROUTINE_NAMES));
+		Assert.assertTrue(vp.containsOption(DebugOption.DO_INCLUDE_DEBUG_TIMESTAMPS));
+		Assert.assertTrue(vp.containsOption(ExecutionOption.BACK_GROW_ENABLED));
+		Assert.assertTrue(
+				vp.containsOption(ExecutionOption.DO_ALLOW_BASAL_AREA_AND_TREES_PER_HECTARE_VALUE_SUBSTITUTION)
+		);
+		Assert.assertTrue(vp.containsOption(ExecutionOption.DO_ENABLE_DEBUG_LOGGING));
+		Assert.assertTrue(vp.containsOption(ExecutionOption.DO_ENABLE_ERROR_LOGGING));
+		Assert.assertTrue(vp.containsOption(ExecutionOption.DO_ENABLE_PROGRESS_LOGGING));
+		Assert.assertTrue(vp.containsOption(ExecutionOption.DO_FORCE_CALENDAR_YEAR_INCLUSION_IN_YIELD_TABLES));
+		Assert.assertTrue(vp.containsOption(ExecutionOption.DO_FORCE_CURRENT_YEAR_INCLUSION_IN_YIELD_TABLES));
+		Assert.assertTrue(vp.containsOption(ExecutionOption.DO_FORCE_REFERENCE_YEAR_INCLUSION_IN_YIELD_TABLES));
+		Assert.assertTrue(vp.containsOption(ExecutionOption.DO_INCLUDE_AGE_ROWS_IN_YIELD_TABLE));
+		Assert.assertTrue(vp.containsOption(ExecutionOption.DO_INCLUDE_COLUMN_HEADERS_IN_YIELD_TABLE));
+		Assert.assertTrue(vp.containsOption(ExecutionOption.DO_INCLUDE_FILE_HEADER));
+		Assert.assertTrue(vp.containsOption(ExecutionOption.DO_INCLUDE_POLYGON_RECORD_ID_IN_YIELD_TABLE));
+		Assert.assertTrue(vp.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_BIOMASS));
+		Assert.assertTrue(vp.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES));
+		Assert.assertTrue(vp.containsOption(ExecutionOption.DO_INCLUDE_PROJECTION_MODE_IN_YIELD_TABLE));
+		Assert.assertTrue(
+				vp.containsOption(ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE)
+		);
+		Assert.assertTrue(vp.containsOption(ExecutionOption.DO_INCLUDE_SPECIES_PROJECTION));
+		Assert.assertTrue(vp.containsOption(ExecutionOption.DO_INCLUDE_YEAR_ROWS_IN_YIELD_TABLE));
+		Assert.assertTrue(vp.containsOption(ExecutionOption.DO_SAVE_INTERMEDIATE_FILES));
+		Assert.assertTrue(vp.containsOption(ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER));
+		Assert.assertTrue(vp.containsOption(ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_POLYGON));
+		Assert.assertTrue(vp.containsOption(ExecutionOption.FORWARD_GROW_ENABLED));
+
+		Assert.assertEquals(Integer.valueOf(10), vp.getAgeEnd());
+		Assert.assertEquals(Integer.valueOf(3), vp.getAgeIncrement());
+		Assert.assertEquals(Integer.valueOf(20), vp.getAgeStart());
+		Assert.assertEquals(AgeYearRangeCombinationKind.DIFFERENCE, vp.getCombineAgeYearRange());
+		Assert.assertEquals(Integer.valueOf(2020), vp.getForceYear());
+		Assert.assertEquals(MetadataToOutputDirective.ALL, vp.getMetadataToOutput());
+		Assert.assertEquals(OutputFormat.YIELD_TABLE, vp.getOutputFormat());
+		Assert.assertEquals(FrequencyKind.MAPSHEET, vp.getProgressFrequency().getEnumValue());
+		Assert.assertEquals(Integer.valueOf(2024), vp.getYearEnd());
+		Assert.assertEquals(Integer.valueOf(2015), vp.getYearStart());
+
+		Assert.assertEquals("maintainer", vp.getFilters().getMaintainer());
+		Assert.assertEquals("mapsheet", vp.getFilters().getMapsheet());
+		Assert.assertEquals("polygon", vp.getFilters().getPolygon());
+		Assert.assertEquals("polygonId", vp.getFilters().getPolygonId());
+
+		assertThat(
+				vp.getUtils(),
+				containsInAnyOrder(
+						new ValidatedUtilizationParameter().speciesName("C").utilizationClass(UtilizationClass._4_0),
+						new ValidatedUtilizationParameter().speciesName("D").utilizationClass(UtilizationClass._12_5)
+				)
+		);
 	}
 
 	// Helpers
