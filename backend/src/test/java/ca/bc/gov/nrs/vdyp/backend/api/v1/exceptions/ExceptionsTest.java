@@ -3,10 +3,6 @@ package ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions;
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.Exceptions;
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.NotFoundException;
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionExecutionException;
-
 public class ExceptionsTest {
 
 	@Test

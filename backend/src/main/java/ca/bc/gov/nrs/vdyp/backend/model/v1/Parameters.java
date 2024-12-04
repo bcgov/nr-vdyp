@@ -16,6 +16,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonValue;
 
+import ca.bc.gov.nrs.vdyp.backend.projection.ValidatedUtilizationParameter;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
 /**
@@ -93,7 +94,7 @@ public class Parameters {
 	@JsonProperty(JSON_PROPERTY_UTILS)
 	private List<UtilizationParameter> utils = new ArrayList<>();
 
-	public enum OutputFormatEnum {
+	public enum OutputFormat {
 		YIELD_TABLE("YieldTable"),
 
 		CSV_YIELD_TABLE("CSVYieldTable"),
@@ -102,27 +103,31 @@ public class Parameters {
 
 		private String value;
 
-		OutputFormatEnum(String value) {
+		OutputFormat(String value) {
 			this.value = value;
 		}
 
 		@Override
-		@JsonValue
 		public String toString() {
-			return String.valueOf(value);
+			return getValue();
+		}
+
+		@JsonValue
+		public String getValue() {
+			return value;
 		}
 
 		/**
 		 * Converts <code>value</code> in a value from this enumeration, throwing an
 		 * <code>IllegalArgumentException</code> when there's no match.
 		 *
-		 * @param value the  corresponding to a value of this enumeration
+		 * @param value the corresponding to a value of this enumeration
 		 * @return the enumeration value
 		 * @throws IllegalArgumentException when conversion cannot be performed
 		 */
 		@JsonCreator
-		public static OutputFormatEnum fromValue(String value) {
-			for (OutputFormatEnum b : OutputFormatEnum.values()) {
+		public static OutputFormat fromValue(String value) {
+			for (OutputFormat b : OutputFormat.values()) {
 				if (b.value.equals(value)) {
 					return b;
 				}
@@ -131,7 +136,7 @@ public class Parameters {
 		}
 	}
 
-	public enum SelectedExecutionOptionsEnum {
+	public enum ExecutionOption {
 
 		BACK_GROW_ENABLED("backGrowEnabled"), //
 		FORWARD_GROW_ENABLED("forwardGrowEnabled"), //
@@ -163,13 +168,17 @@ public class Parameters {
 
 		private String value;
 
-		SelectedExecutionOptionsEnum(String value) {
+		ExecutionOption(String value) {
 			this.value = value;
 		}
 
 		@Override
-		@JsonValue
 		public String toString() {
+			return getValue();
+		}
+
+		@JsonValue
+		public String getValue() {
 			return value;
 		}
 
@@ -177,13 +186,13 @@ public class Parameters {
 		 * Converts <code>value</code> in a value from this enumeration, throwing an
 		 * <code>IllegalArgumentException</code> when there's no match.
 		 *
-		 * @param value the  corresponding to a value of this enumeration
+		 * @param value the corresponding to a value of this enumeration
 		 * @return the enumeration value
 		 * @throws IllegalArgumentException when conversion cannot be performed
 		 */
 		@JsonCreator
-		public static SelectedExecutionOptionsEnum fromValue(String value) {
-			for (SelectedExecutionOptionsEnum b : SelectedExecutionOptionsEnum.values()) {
+		public static ExecutionOption fromValue(String value) {
+			for (ExecutionOption b : ExecutionOption.values()) {
 				if (b.value.equals(value)) {
 					return b;
 				}
@@ -197,7 +206,7 @@ public class Parameters {
 	/**
 	 * Determines how the Age Range and Year Range are to be combined when producing yield tables.
 	 */
-	public enum CombineAgeYearRangeEnum {
+	public enum AgeYearRangeCombinationKind {
 		UNION("union"),
 
 		INTERSECT("intersect"),
@@ -206,27 +215,31 @@ public class Parameters {
 
 		private String value;
 
-		CombineAgeYearRangeEnum(String value) {
+		AgeYearRangeCombinationKind(String value) {
 			this.value = value;
 		}
 
 		@Override
-		@JsonValue
 		public String toString() {
-			return String.valueOf(value);
+			return getValue();
+		}
+
+		@JsonValue
+		public String getValue() {
+			return value;
 		}
 
 		/**
 		 * Converts <code>value</code> in a value from this enumeration, throwing an
 		 * <code>IllegalArgumentException</code> when there's no match.
 		 *
-		 * @param value the  corresponding to a value of this enumeration
+		 * @param value the corresponding to a value of this enumeration
 		 * @return the enumeration value
 		 * @throws IllegalArgumentException when conversion cannot be performed
 		 */
 		@JsonCreator
-		public static CombineAgeYearRangeEnum fromValue(String value) {
-			for (CombineAgeYearRangeEnum b : CombineAgeYearRangeEnum.values()) {
+		public static AgeYearRangeCombinationKind fromValue(String value) {
+			for (AgeYearRangeCombinationKind b : AgeYearRangeCombinationKind.values()) {
 				if (b.value.equals(value)) {
 					return b;
 				}
@@ -237,7 +250,7 @@ public class Parameters {
 		}
 	}
 
-	public enum SelectedDebugOptionsEnum {
+	public enum DebugOption {
 		DO_INCLUDE_DEBUG_TIMESTAMPS("doIncludeDebugTimestamps"),
 		DO_INCLUDE_DEBUG_ROUTINE_NAMES("doIncludeDebugRoutineNames"),
 		DO_INCLUDE_DEBUG_ENTRY_EXIT("doIncludeDebugEntryExit"),
@@ -245,27 +258,31 @@ public class Parameters {
 
 		private String value;
 
-		SelectedDebugOptionsEnum(String value) {
+		DebugOption(String value) {
 			this.value = value;
 		}
 
 		@Override
-		@JsonValue
 		public String toString() {
-			return String.valueOf(value);
+			return getValue();
+		}
+
+		@JsonValue
+		public String getValue() {
+			return value;
 		}
 
 		/**
 		 * Converts <code>value</code> in a value from this enumeration, throwing an
 		 * <code>IllegalArgumentException</code> when there's no match.
 		 *
-		 * @param value the  corresponding to a value of this enumeration
+		 * @param value the corresponding to a value of this enumeration
 		 * @return the enumeration value
 		 * @throws IllegalArgumentException when conversion cannot be performed
 		 */
 		@JsonCreator
-		public static SelectedDebugOptionsEnum fromValue(String value) {
-			for (SelectedDebugOptionsEnum b : SelectedDebugOptionsEnum.values()) {
+		public static DebugOption fromValue(String value) {
+			for (DebugOption b : DebugOption.values()) {
 				if (b.value.equals(value)) {
 					return b;
 				}
@@ -279,32 +296,36 @@ public class Parameters {
 	/**
 	 * Controls how much metadata is displayed in the Output and Error Logs.
 	 */
-	public enum MetadataToOutputEnum {
+	public enum MetadataToOutputDirective {
 		ALL("ALL"), MAIN("MAIN"), VERSION("VERSION"), MIN_IDENT("MIN_IDENT"), NONE("NONE");
 
 		private String value;
 
-		MetadataToOutputEnum(String value) {
+		MetadataToOutputDirective(String value) {
 			this.value = value;
 		}
 
 		@Override
-		@JsonValue
 		public String toString() {
-			return String.valueOf(value);
+			return getValue();
+		}
+
+		@JsonValue
+		public String getValue() {
+			return value;
 		}
 
 		/**
 		 * Converts <code>value</code> in a value from this enumeration, throwing an
 		 * <code>IllegalArgumentException</code> when there's no match.
 		 *
-		 * @param value the  corresponding to a value of this enumeration
+		 * @param value the corresponding to a value of this enumeration
 		 * @return the enumeration value
 		 * @throws IllegalArgumentException when conversion cannot be performed
 		 */
 		@JsonCreator
-		public static MetadataToOutputEnum fromValue(String value) {
-			for (MetadataToOutputEnum b : MetadataToOutputEnum.values()) {
+		public static MetadataToOutputDirective fromValue(String value) {
+			for (MetadataToOutputDirective b : MetadataToOutputDirective.values()) {
 				if (b.value.equals(value)) {
 					return b;
 				}
@@ -313,11 +334,6 @@ public class Parameters {
 					MessageFormat.format("\"{}\" is not a valid MetadataToOutput value", value)
 			);
 		}
-	}
-
-	public Parameters outputFormat(String outputFormat) {
-		this.outputFormat = outputFormat;
-		return this;
 	}
 
 	/**
@@ -330,18 +346,22 @@ public class Parameters {
 		return outputFormat;
 	}
 
-	public void setOutputFormat(String outputFormat) {
-		this.outputFormat = outputFormat;
-	}
-
-	public Parameters selectedExecutionOptions(List<String> selectedExecutionOptions) {
-		setSelectedExecutionOptions(selectedExecutionOptions);
+	public Parameters outputFormat(OutputFormat outputFormat) {
+		setOutputFormat(outputFormat);
 		return this;
 	}
 
-	public Parameters addSelectedExecutionOptionsItem(SelectedExecutionOptionsEnum selectedExecutionOptionsItem) {
-		this.selectedExecutionOptions.add(selectedExecutionOptionsItem.name());
+	public void setOutputFormat(OutputFormat outputFormat) {
+		this.outputFormat = outputFormat.value;
+	}
+
+	public Parameters outputFormat(String outputFormatText) {
+		setOutputFormat(outputFormatText);
 		return this;
+	}
+
+	public void setOutputFormat(String outputFormatText) {
+		this.outputFormat = outputFormatText;
 	}
 
 	/**
@@ -355,21 +375,29 @@ public class Parameters {
 		return selectedExecutionOptions;
 	}
 
-	public void setSelectedExecutionOptions(List<String> selectedExecutionOptions) {
+	public void setSelectedExecutionOptions(List<ExecutionOption> selectedExecutionOptions) {
 		if (selectedExecutionOptions == null) {
 			this.selectedExecutionOptions.clear();
 		} else {
-			this.selectedExecutionOptions = selectedExecutionOptions;
+			this.selectedExecutionOptions = new ArrayList<String>();
+			selectedExecutionOptions.stream().forEach(o -> this.selectedExecutionOptions.add(o.getValue()));
 		}
 	}
 
-	public Parameters selectedDebugOptions(List<String> selectedDebugOptions) {
-		setSelectedDebugOptions(selectedDebugOptions);
+	public Parameters selectedExecutionOptions(List<ExecutionOption> selectedExecutionOptions) {
+		setSelectedExecutionOptions(selectedExecutionOptions);
 		return this;
 	}
 
-	public Parameters addSelectedDebugOptionsItem(SelectedDebugOptionsEnum selectedDebugOptionsItem) {
-		this.selectedDebugOptions.add(selectedDebugOptionsItem.name());
+	public Parameters addSelectedExecutionOptionsItem(ExecutionOption selectedExecutionOptionsItem) {
+		this.selectedExecutionOptions.add(selectedExecutionOptionsItem.getValue());
+		return this;
+	}
+
+	public Parameters addSelectedExecutionOptionsItem(String selectedExecutionOptionsItemText) {
+		if (selectedExecutionOptionsItemText != null) {
+			this.selectedExecutionOptions.add(selectedExecutionOptionsItemText);
+		}
 		return this;
 	}
 
@@ -383,16 +411,29 @@ public class Parameters {
 		return selectedDebugOptions;
 	}
 
-	public void setSelectedDebugOptions(List<String> selectedDebugOptions) {
+	public void setSelectedDebugOptions(List<DebugOption> selectedDebugOptions) {
 		if (selectedDebugOptions == null) {
-			this.selectedDebugOptions.clear();
+			this.selectedDebugOptions = null;
 		} else {
-			this.selectedDebugOptions = selectedDebugOptions;
+			this.selectedDebugOptions = new ArrayList<>();
+			selectedDebugOptions.stream().forEach(o -> this.selectedDebugOptions.add(o.getValue()));
 		}
 	}
 
-	public Parameters ageStart(String ageStart) {
-		this.ageStart = ageStart;
+	public Parameters selectedDebugOptions(List<DebugOption> selectedDebugOptions) {
+		setSelectedDebugOptions(selectedDebugOptions);
+		return this;
+	}
+
+	public Parameters addSelectedDebugOptionsItem(DebugOption selectedDebugOptionsItem) {
+		this.selectedDebugOptions.add(selectedDebugOptionsItem.getValue());
+		return this;
+	}
+
+	public Parameters addSelectedDebugOptionsItem(String selectedDebugOptionsItemText) {
+		if (selectedDebugOptionsItemText != null) {	
+			this.selectedDebugOptions.add(selectedDebugOptionsItemText);
+		}
 		return this;
 	}
 
@@ -406,13 +447,22 @@ public class Parameters {
 		return ageStart;
 	}
 
-	public void setAgeStart(String ageStart) {
-		this.ageStart = ageStart;
+	public Parameters ageStart(Integer ageStart) {
+		setAgeStart(ageStart);
+		return this;
 	}
 
-	public Parameters ageEnd(String ageEnd) {
-		this.ageEnd = ageEnd;
+	public void setAgeStart(Integer ageStart) {
+		this.ageStart = ageStart == null ? null : ageStart.toString();
+	}
+
+	public Parameters ageStart(String ageStartText) {
+		setAgeStart(ageStartText);
 		return this;
+	}
+
+	public void setAgeStart(String ageStartText) {
+		this.ageStart = ageStartText;
 	}
 
 	/**
@@ -425,13 +475,22 @@ public class Parameters {
 		return ageEnd;
 	}
 
-	public void setAgeEnd(String ageEnd) {
-		this.ageEnd = ageEnd;
+	public Parameters ageEnd(Integer ageEnd) {
+		setAgeEnd(ageEnd);
+		return this;
 	}
 
-	public Parameters yearStart(String yearStart) {
-		this.yearStart = yearStart;
+	public void setAgeEnd(Integer ageEnd) {
+		this.ageEnd = ageEnd == null ? null : ageEnd.toString();
+	}
+
+	public Parameters ageEnd(String ageEndText) {
+		setAgeEnd(ageEnd);
 		return this;
+	}
+
+	public void setAgeEnd(String ageEndText) {
+		this.ageEnd = ageEndText;
 	}
 
 	/**
@@ -444,13 +503,22 @@ public class Parameters {
 		return yearStart;
 	}
 
-	public void setYearStart(String yearStart) {
-		this.yearStart = yearStart;
+	public Parameters yearStart(Integer yearStart) {
+		setYearStart(yearStart);
+		return this;
 	}
 
-	public Parameters yearEnd(String yearEnd) {
-		this.yearEnd = yearEnd;
+	public void setYearStart(Integer yearStart) {
+		this.yearStart = yearStart == null ? null : yearStart.toString();
+	}
+
+	public Parameters yearStart(String yearStartText) {
+		setYearStart(yearStartText);
 		return this;
+	}
+
+	public void setYearStart(String yearStartText) {
+		this.yearStart = yearStartText;
 	}
 
 	/**
@@ -463,13 +531,22 @@ public class Parameters {
 		return yearEnd;
 	}
 
-	public void setYearEnd(String yearEnd) {
-		this.yearEnd = yearEnd;
+	public Parameters yearEnd(Integer yearEnd) {
+		setYearEnd(yearEnd);
+		return this;
 	}
 
-	public Parameters forceYear(String forceYear) {
-		this.forceYear = forceYear;
+	public void setYearEnd(Integer yearEnd) {
+		this.yearEnd = yearEnd == null ? null : yearEnd.toString();
+	}
+
+	public Parameters yearEnd(String yearEndText) {
+		setYearEnd(yearEndText);
 		return this;
+	}
+
+	public void setYearEnd(String yearEndText) {
+		this.yearEnd = yearEndText == null ? null : yearEndText.toString();
 	}
 
 	/**
@@ -482,13 +559,22 @@ public class Parameters {
 		return forceYear;
 	}
 
-	public void setForceYear(String forceYear) {
-		this.forceYear = forceYear;
+	public Parameters forceYear(Integer forceYear) {
+		setForceYear(forceYear);
+		return this;
 	}
 
-	public Parameters ageIncrement(String ageIncrement) {
-		this.ageIncrement = ageIncrement;
+	public void setForceYear(Integer forceYear) {
+		this.forceYear = forceYear == null ? null : forceYear.toString();
+	}
+
+	public Parameters forceYear(String forceYearText) {
+		setForceYear(forceYearText);
 		return this;
+	}
+
+	public void setForceYear(String forceYearText) {
+		this.forceYear = forceYearText;
 	}
 
 	/**
@@ -501,13 +587,22 @@ public class Parameters {
 		return ageIncrement;
 	}
 
-	public void setAgeIncrement(String ageIncrement) {
-		this.ageIncrement = ageIncrement;
+	public Parameters ageIncrement(Integer ageIncrement) {
+		setAgeIncrement(ageIncrement);
+		return this;
 	}
 
-	public Parameters combineAgeYearRange(String combineAgeYearRange) {
-		this.combineAgeYearRange = combineAgeYearRange;
+	public void setAgeIncrement(Integer ageIncrement) {
+		this.ageIncrement = ageIncrement == null ? null : ageIncrement.toString();
+	}
+
+	public Parameters ageIncrement(String ageIncrementText) {
+		setAgeIncrement(ageIncrementText);
 		return this;
+	}
+
+	public void setAgeIncrement(String ageIncrementText) {
+		this.ageIncrement = ageIncrementText;
 	}
 
 	/**
@@ -520,15 +615,24 @@ public class Parameters {
 		return combineAgeYearRange;
 	}
 
-	public void setCombineAgeYearRange(String combineAgeYearRange) {
-		this.combineAgeYearRange = combineAgeYearRange;
-	}
-
-	public Parameters progressFrequency(String progressFrequency) {
-		this.progressFrequency = progressFrequency;
+	public Parameters combineAgeYearRange(AgeYearRangeCombinationKind combineAgeYearRange) {
+		setCombineAgeYearRange(combineAgeYearRange);
 		return this;
 	}
 
+	public void setCombineAgeYearRange(AgeYearRangeCombinationKind combineAgeYearRange) {
+		this.combineAgeYearRange = combineAgeYearRange == null ? null : combineAgeYearRange.getValue();
+	}
+
+	public Parameters combineAgeYearRange(String combineAgeYearRangeText) {
+		setCombineAgeYearRange(combineAgeYearRangeText);
+		return this;
+	}
+
+	public void setCombineAgeYearRange(String combineAgeYearRangeText) {
+		this.combineAgeYearRange = combineAgeYearRangeText;
+	}
+	
 	/**
 	 * Get progressFrequency
 	 *
@@ -539,13 +643,37 @@ public class Parameters {
 		return progressFrequency;
 	}
 
-	public void setProgressFrequency(String progressFrequency) {
-		this.progressFrequency = progressFrequency;
+	public Parameters progressFrequency(ProgressFrequency.FrequencyKind progressFrequency) {
+		setProgressFrequency(progressFrequency);
+		return this;
 	}
 
-	public Parameters metadataToOutput(String metadataToOutput) {
-		this.metadataToOutput = metadataToOutput;
+	public void setProgressFrequency(ProgressFrequency.FrequencyKind progressFrequency) {
+		if (progressFrequency != null) {
+			this.progressFrequency = progressFrequency.getValue();
+		}
+	}
+
+	public Parameters progressFrequency(Integer progressFrequency) {
+		setProgressFrequency(progressFrequency);
 		return this;
+	}
+
+	public void setProgressFrequency(Integer progressFrequency) {
+		if (progressFrequency != null) {
+			this.progressFrequency = progressFrequency.toString();
+		}
+	}
+
+	public Parameters progressFrequency(String progressFrequency) {
+		setProgressFrequency(progressFrequency);
+		return this;
+	}
+
+	public void setProgressFrequency(String progressFrequency) {
+		if (progressFrequency != null) {
+			this.progressFrequency = progressFrequency;
+		}
 	}
 
 	/**
@@ -558,13 +686,22 @@ public class Parameters {
 		return metadataToOutput;
 	}
 
-	public void setMetadataToOutput(String metadataToOutput) {
-		this.metadataToOutput = metadataToOutput;
+	public Parameters metadataToOutput(MetadataToOutputDirective metadataToOutput) {
+		setMetadataToOutput(metadataToOutput);
+		return this;
 	}
 
-	public Parameters filters(Filters filters) {
-		this.filters = filters;
+	public void setMetadataToOutput(MetadataToOutputDirective metadataToOutput) {
+		this.metadataToOutput = metadataToOutput == null ? null : metadataToOutput.getValue();
+	}
+
+	public Parameters metadataToOutput(String metadataToOutputText) {
+		setMetadataToOutput(metadataToOutputText);
 		return this;
+	}
+
+	public void setMetadataToOutput(String metadataToOutputText) {
+		this.metadataToOutput = metadataToOutputText;
 	}
 
 	/**
@@ -577,21 +714,13 @@ public class Parameters {
 		return filters;
 	}
 
+	public Parameters filters(Filters filters) {
+		this.filters = filters;
+		return this;
+	}
+
 	public void setFilters(Filters filters) {
 		this.filters = filters;
-	}
-
-	public Parameters utils(List<UtilizationParameter> utils) {
-		setUtils(utils);
-		return this;
-	}
-
-	public Parameters addUtilsItem(ValidatedUtilizationParameter utilsItem) {
-		this.utils.add(
-				new UtilizationParameter().speciesName(utilsItem.getSpeciesName())
-						.value(utilsItem.getValue().name())
-		);
-		return this;
 	}
 
 	/**
@@ -604,12 +733,38 @@ public class Parameters {
 		return utils;
 	}
 
-	public void setUtils(List<UtilizationParameter> utils) {
+	public Parameters utils(List<ValidatedUtilizationParameter> utils) {
+		setUtils(utils);
+		return this;
+	}
+
+	public Parameters addUtilsItem(ValidatedUtilizationParameter utilsItem) {
+		this.utils.add(
+				new UtilizationParameter().speciesName(utilsItem.getSpeciesName()).utilizationClass(utilsItem.getUtilizationClass().getValue())
+		);
+		return this;
+	}
+
+	public void setUtils(List<ValidatedUtilizationParameter> utils) {
 		if (utils == null) {
-			this.utils.clear();
+			this.utils = null;
 		} else {
-			this.utils = utils;
+			this.utils = new ArrayList<>();
+			utils.stream()
+					.forEach(
+							u -> this.utils.add(
+									new UtilizationParameter().speciesName(u.getSpeciesName())
+											.utilizationClass(u.getUtilizationClass().getValue())
+							)
+					);
 		}
+	}
+
+	public Parameters addUtilsItem(UtilizationParameter utilsItem) {
+		if (utilsItem != null) {
+			this.utils.add(utilsItem);
+		}
+		return this;
 	}
 
 	@Override
@@ -624,8 +779,7 @@ public class Parameters {
 		return Objects.equals(this.outputFormat, parameters.outputFormat)
 				&& Objects.equals(this.selectedExecutionOptions, parameters.selectedExecutionOptions)
 				&& Objects.equals(this.selectedDebugOptions, parameters.selectedDebugOptions)
-				&& Objects.equals(this.ageStart, parameters.ageStart)
-				&& Objects.equals(this.ageEnd, parameters.ageEnd)
+				&& Objects.equals(this.ageStart, parameters.ageStart) && Objects.equals(this.ageEnd, parameters.ageEnd)
 				&& Objects.equals(this.yearStart, parameters.yearStart)
 				&& Objects.equals(this.yearEnd, parameters.yearEnd)
 				&& Objects.equals(this.forceYear, parameters.forceYear)
@@ -633,16 +787,14 @@ public class Parameters {
 				&& Objects.equals(this.combineAgeYearRange, parameters.combineAgeYearRange)
 				&& Objects.equals(this.progressFrequency, parameters.progressFrequency)
 				&& Objects.equals(this.metadataToOutput, parameters.metadataToOutput)
-				&& Objects.equals(this.filters, parameters.filters)
-				&& Objects.equals(this.utils, parameters.utils);
+				&& Objects.equals(this.filters, parameters.filters) && Objects.equals(this.utils, parameters.utils);
 	}
 
 	@Override
 	public int hashCode() {
 		return Objects.hash(
-				outputFormat, selectedExecutionOptions, selectedDebugOptions, ageStart, ageEnd,
-				yearStart, yearEnd, forceYear, ageIncrement, combineAgeYearRange,
-				progressFrequency, metadataToOutput, filters, utils
+				outputFormat, selectedExecutionOptions, selectedDebugOptions, ageStart, ageEnd, yearStart, yearEnd,
+				forceYear, ageIncrement, combineAgeYearRange, progressFrequency, metadataToOutput, filters, utils
 		);
 	}
 
@@ -652,8 +804,7 @@ public class Parameters {
 		sb.append("class Parameters {\n");
 
 		sb.append("    outputFormat: ").append(toIndentedString(outputFormat)).append("\n");
-		sb.append("    selectedExecutionOptions: ").append(toIndentedString(selectedExecutionOptions))
-				.append("\n");
+		sb.append("    selectedExecutionOptions: ").append(toIndentedString(selectedExecutionOptions)).append("\n");
 		sb.append("    selectedDebugOptions: ").append(toIndentedString(selectedDebugOptions)).append("\n");
 		sb.append("    ageStart: ").append(toIndentedString(ageStart)).append("\n");
 		sb.append("    ageEnd: ").append(toIndentedString(ageEnd)).append("\n");

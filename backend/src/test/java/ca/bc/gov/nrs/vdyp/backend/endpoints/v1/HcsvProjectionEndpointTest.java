@@ -18,7 +18,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.api.helpers.TestHelper;
-import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.ParameterNames;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
@@ -45,11 +44,11 @@ class HcsvProjectionEndpointTest {
 
 		Parameters parameters = testHelper.addSelectedOptions(
 				new Parameters(), //
-				Parameters.SelectedExecutionOptionsEnum.DO_ENABLE_DEBUG_LOGGING,
-				Parameters.SelectedExecutionOptionsEnum.DO_ENABLE_PROGRESS_LOGGING,
-				Parameters.SelectedExecutionOptionsEnum.DO_ENABLE_ERROR_LOGGING
+				Parameters.ExecutionOption.DO_ENABLE_DEBUG_LOGGING,
+				Parameters.ExecutionOption.DO_ENABLE_PROGRESS_LOGGING,
+				Parameters.ExecutionOption.DO_ENABLE_ERROR_LOGGING
 		);
-		parameters.ageStart("100").ageEnd("400");
+		parameters.ageStart(100).ageEnd(400);
 
 		// Included to generate JSON text of parameters as needed
 //		ObjectMapper mapper = new ObjectMapper();
@@ -97,7 +96,7 @@ class HcsvProjectionEndpointTest {
 		Path resourceFolderPath = Path.of("VDYP7Console-sample-files", "hcsv", "vdyp-240");
 
 		Parameters parameters = new Parameters();
-		parameters.ageStart("100").ageEnd("400");
+		parameters.ageStart(100).ageEnd(400);
 
 		InputStream zipInputStream = given().basePath(TestHelper.ROOT_PATH).when() //
 				.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //

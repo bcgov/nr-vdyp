@@ -118,7 +118,7 @@ public class ProjectionService {
 		logger.info("<runProjection {} {}", kind, projectionId);
 
 		boolean debugLoggingEnabled = params.getSelectedExecutionOptions()
-				.contains(Parameters.SelectedExecutionOptionsEnum.DO_ENABLE_DEBUG_LOGGING.toString());
+				.contains(Parameters.ExecutionOption.DO_ENABLE_DEBUG_LOGGING.toString());
 		if (debugLoggingEnabled) {
 			MDC.put("projectionId", projectionId);
 		}
@@ -146,7 +146,7 @@ public class ProjectionService {
 				if (debugLoggingEnabled) {
 					debugLogStream = FileHelper.getForReading(debugLogPath);
 				}
-			} catch (IOException e) {	
+			} catch (IOException e) {
 				String message = Exceptions.getMessage(e, "Projection, when opening input files,");
 				logger.warn(message);
 			}

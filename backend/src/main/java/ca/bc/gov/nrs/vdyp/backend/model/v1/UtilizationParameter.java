@@ -24,9 +24,7 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 /**
  * This class records a utilization class for a given sp0 (species group) name.
  */
-@JsonPropertyOrder(
-	{ UtilizationParameter.JSON_PROPERTY_SPECIES_NAME, UtilizationParameter.JSON_PROPERTY_VALUE }
-)
+@JsonPropertyOrder({ UtilizationParameter.JSON_PROPERTY_SPECIES_NAME, UtilizationParameter.JSON_PROPERTY_VALUE })
 @RegisterForReflection
 public class UtilizationParameter {
 	public static final String JSON_PROPERTY_SPECIES_NAME = "speciesName";
@@ -35,12 +33,12 @@ public class UtilizationParameter {
 
 	public static final String JSON_PROPERTY_VALUE = "value";
 	@JsonProperty(JSON_PROPERTY_VALUE)
-	private String value;
+	private String utilizationClass;
 
 	/**
 	 * Gets or Sets value
 	 */
-	public enum ValueEnum {
+	public enum UtilizationClass {
 		EXCL("Excl"),
 
 		_4_0("4.0"),
@@ -55,19 +53,23 @@ public class UtilizationParameter {
 
 		private String value;
 
-		ValueEnum(String value) {
+		UtilizationClass(String value) {
 			this.value = value;
 		}
 
 		@Override
-		@JsonValue
 		public String toString() {
-			return String.valueOf(value);
+			return getValue();
+		}
+		
+		@JsonValue
+		public String getValue() {
+			return value;
 		}
 
 		@JsonCreator
-		public static ValueEnum fromValue(String value) {
-			for (ValueEnum b : ValueEnum.values()) {
+		public static UtilizationClass fromValue(String value) {
+			for (UtilizationClass b : UtilizationClass.values()) {
 				if (b.value.equals(value)) {
 					return b;
 				}
@@ -96,24 +98,32 @@ public class UtilizationParameter {
 		this.speciesName = speciesName;
 	}
 
-	public UtilizationParameter value(String value) {
-		this.value = value;
-		return this;
-	}
-
 	/**
 	 * Get value
 	 *
 	 * @return value
 	 **/
-	@JsonProperty(value = "value")
-
-	public String getValue() {
-		return value;
+	@JsonProperty(value = "utilizationClass")
+	public String getUtilizationClass() {
+		return utilizationClass;
 	}
 
-	public void setValue(String value) {
-		this.value = value;
+	public UtilizationParameter utilizationClass(String utilizationClassText) {
+		setUtilizationClass(utilizationClassText);
+		return this;
+	}
+
+	public void setUtilizationClass(String utilizationClassText) {
+		this.utilizationClass = utilizationClassText;
+	}
+
+	public UtilizationParameter utilizationClass(UtilizationClass uc) {
+		setUtilizationClass(uc);
+		return this;
+	}
+
+	public void setUtilizationClass(UtilizationClass uc) {
+		this.utilizationClass = uc.getValue();
 	}
 
 	@Override
@@ -125,12 +135,12 @@ public class UtilizationParameter {
 			return false;
 		}
 		UtilizationParameter up = (UtilizationParameter) o;
-		return Objects.equals(this.speciesName, up.speciesName) && Objects.equals(this.value, up.value);
+		return Objects.equals(this.speciesName, up.speciesName) && Objects.equals(this.utilizationClass, up.utilizationClass);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(speciesName, value);
+		return Objects.hash(speciesName, utilizationClass);
 	}
 
 	@Override
@@ -139,7 +149,7 @@ public class UtilizationParameter {
 		sb.append("class ");
 		sb.append(UtilizationParameter.class.getSimpleName());
 		sb.append(" {\n    speciesName: ").append(toIndentedString(speciesName)).append("\n");
-		sb.append("    value: ").append(toIndentedString(value)).append("\n");
+		sb.append("    value: ").append(toIndentedString(utilizationClass)).append("\n");
 		sb.append("}");
 		return sb.toString();
 	}

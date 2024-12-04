@@ -9,17 +9,14 @@ import org.junit.jupiter.api.Test;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.impl.ParametersProvider;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.Filters;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.ProgressFrequency;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidatedUtilizationParameter;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.CombineAgeYearRangeEnum;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.MetadataToOutputEnum;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.OutputFormatEnum;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.SelectedDebugOptionsEnum;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.SelectedExecutionOptionsEnum;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.ProgressFrequency.EnumValue;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidatedUtilizationParameter.ValueEnum;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.AgeYearRangeCombinationKind;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.DebugOption;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.MetadataToOutputDirective;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.OutputFormat;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.ProgressFrequency.FrequencyKind;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.UtilizationParameter.UtilizationClass;
+import ca.bc.gov.nrs.vdyp.backend.projection.ValidatedUtilizationParameter;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
 
@@ -29,68 +26,68 @@ public class ParametersTest {
 	public void testParametersProvider() throws WebApplicationException, IOException {
 		Parameters op = new Parameters();
 
-		op.addSelectedDebugOptionsItem(SelectedDebugOptionsEnum.DO_INCLUDE_DEBUG_ENTRY_EXIT);
-		op.addSelectedDebugOptionsItem(SelectedDebugOptionsEnum.DO_INCLUDE_DEBUG_INDENT_BLOCKS);
-		op.addSelectedDebugOptionsItem(SelectedDebugOptionsEnum.DO_INCLUDE_DEBUG_ROUTINE_NAMES);
-		op.addSelectedDebugOptionsItem(SelectedDebugOptionsEnum.DO_INCLUDE_DEBUG_TIMESTAMPS);
+		op.addSelectedDebugOptionsItem(DebugOption.DO_INCLUDE_DEBUG_ENTRY_EXIT);
+		op.addSelectedDebugOptionsItem(DebugOption.DO_INCLUDE_DEBUG_INDENT_BLOCKS);
+		op.addSelectedDebugOptionsItem(DebugOption.DO_INCLUDE_DEBUG_ROUTINE_NAMES);
+		op.addSelectedDebugOptionsItem(DebugOption.DO_INCLUDE_DEBUG_TIMESTAMPS);
 
-		op.addSelectedExecutionOptionsItem(SelectedExecutionOptionsEnum.BACK_GROW_ENABLED);
+		op.addSelectedExecutionOptionsItem(ExecutionOption.BACK_GROW_ENABLED);
 		op.addSelectedExecutionOptionsItem(
-				SelectedExecutionOptionsEnum.DO_ALLOW_BASAL_AREA_AND_TREES_PER_HECTARE_VALUE_SUBSTITUTION
+				ExecutionOption.DO_ALLOW_BASAL_AREA_AND_TREES_PER_HECTARE_VALUE_SUBSTITUTION
 		);
-		op.addSelectedExecutionOptionsItem(SelectedExecutionOptionsEnum.DO_ENABLE_DEBUG_LOGGING);
-		op.addSelectedExecutionOptionsItem(SelectedExecutionOptionsEnum.DO_ENABLE_ERROR_LOGGING);
-		op.addSelectedExecutionOptionsItem(SelectedExecutionOptionsEnum.DO_ENABLE_PROGRESS_LOGGING);
+		op.addSelectedExecutionOptionsItem(ExecutionOption.DO_ENABLE_DEBUG_LOGGING);
+		op.addSelectedExecutionOptionsItem(ExecutionOption.DO_ENABLE_ERROR_LOGGING);
+		op.addSelectedExecutionOptionsItem(ExecutionOption.DO_ENABLE_PROGRESS_LOGGING);
 		op.addSelectedExecutionOptionsItem(
-				SelectedExecutionOptionsEnum.DO_FORCE_CALENDAR_YEAR_INCLUSION_IN_YIELD_TABLES
-		);
-		op.addSelectedExecutionOptionsItem(
-				SelectedExecutionOptionsEnum.DO_FORCE_CURRENT_YEAR_INCLUSION_IN_YIELD_TABLES
+				ExecutionOption.DO_FORCE_CALENDAR_YEAR_INCLUSION_IN_YIELD_TABLES
 		);
 		op.addSelectedExecutionOptionsItem(
-				SelectedExecutionOptionsEnum.DO_FORCE_REFERENCE_YEAR_INCLUSION_IN_YIELD_TABLES
+				ExecutionOption.DO_FORCE_CURRENT_YEAR_INCLUSION_IN_YIELD_TABLES
 		);
-		op.addSelectedExecutionOptionsItem(SelectedExecutionOptionsEnum.DO_INCLUDE_AGE_ROWS_IN_YIELD_TABLE);
-		op.addSelectedExecutionOptionsItem(SelectedExecutionOptionsEnum.DO_INCLUDE_COLUMN_HEADERS_IN_YIELD_TABLE);
-		op.addSelectedExecutionOptionsItem(SelectedExecutionOptionsEnum.DO_INCLUDE_FILE_HEADER);
-		op.addSelectedExecutionOptionsItem(SelectedExecutionOptionsEnum.DO_INCLUDE_POLYGON_RECORD_ID_IN_YIELD_TABLE);
-		op.addSelectedExecutionOptionsItem(SelectedExecutionOptionsEnum.DO_INCLUDE_PROJECTED_CFS_BIOMASS);
-		op.addSelectedExecutionOptionsItem(SelectedExecutionOptionsEnum.DO_INCLUDE_PROJECTED_MOF_BIOMASS);
-		op.addSelectedExecutionOptionsItem(SelectedExecutionOptionsEnum.DO_INCLUDE_PROJECTED_MOF_VOLUMES);
-		op.addSelectedExecutionOptionsItem(SelectedExecutionOptionsEnum.DO_INCLUDE_PROJECTION_MODE_IN_YIELD_TABLE);
 		op.addSelectedExecutionOptionsItem(
-				SelectedExecutionOptionsEnum.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE
+				ExecutionOption.DO_FORCE_REFERENCE_YEAR_INCLUSION_IN_YIELD_TABLES
 		);
-		op.addSelectedExecutionOptionsItem(SelectedExecutionOptionsEnum.DO_INCLUDE_SPECIES_PROJECTION);
-		op.addSelectedExecutionOptionsItem(SelectedExecutionOptionsEnum.DO_INCLUDE_YEAR_ROWS_IN_YIELD_TABLE);
-		op.addSelectedExecutionOptionsItem(SelectedExecutionOptionsEnum.DO_SAVE_INTERMEDIATE_FILES);
-		op.addSelectedExecutionOptionsItem(SelectedExecutionOptionsEnum.DO_SUMMARIZE_PROJECTION_BY_LAYER);
-		op.addSelectedExecutionOptionsItem(SelectedExecutionOptionsEnum.DO_SUMMARIZE_PROJECTION_BY_POLYGON);
-		op.addSelectedExecutionOptionsItem(SelectedExecutionOptionsEnum.FORWARD_GROW_ENABLED);
+		op.addSelectedExecutionOptionsItem(ExecutionOption.DO_INCLUDE_AGE_ROWS_IN_YIELD_TABLE);
+		op.addSelectedExecutionOptionsItem(ExecutionOption.DO_INCLUDE_COLUMN_HEADERS_IN_YIELD_TABLE);
+		op.addSelectedExecutionOptionsItem(ExecutionOption.DO_INCLUDE_FILE_HEADER);
+		op.addSelectedExecutionOptionsItem(ExecutionOption.DO_INCLUDE_POLYGON_RECORD_ID_IN_YIELD_TABLE);
+		op.addSelectedExecutionOptionsItem(ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS);
+		op.addSelectedExecutionOptionsItem(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_BIOMASS);
+		op.addSelectedExecutionOptionsItem(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES);
+		op.addSelectedExecutionOptionsItem(ExecutionOption.DO_INCLUDE_PROJECTION_MODE_IN_YIELD_TABLE);
+		op.addSelectedExecutionOptionsItem(
+				ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE
+		);
+		op.addSelectedExecutionOptionsItem(ExecutionOption.DO_INCLUDE_SPECIES_PROJECTION);
+		op.addSelectedExecutionOptionsItem(ExecutionOption.DO_INCLUDE_YEAR_ROWS_IN_YIELD_TABLE);
+		op.addSelectedExecutionOptionsItem(ExecutionOption.DO_SAVE_INTERMEDIATE_FILES);
+		op.addSelectedExecutionOptionsItem(ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER);
+		op.addSelectedExecutionOptionsItem(ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_POLYGON);
+		op.addSelectedExecutionOptionsItem(ExecutionOption.FORWARD_GROW_ENABLED);
 
-		op.addUtilsItem(new ValidatedUtilizationParameter().speciesName("AL").value(ValueEnum._12_5));
-		op.addUtilsItem(new ValidatedUtilizationParameter().speciesName("C").value(ValueEnum._17_5));
-		op.addUtilsItem(new ValidatedUtilizationParameter().speciesName("D").value(ValueEnum._22_5));
-		op.addUtilsItem(new ValidatedUtilizationParameter().speciesName("E").value(ValueEnum._4_0));
-		op.addUtilsItem(new ValidatedUtilizationParameter().speciesName("F").value(ValueEnum._7_5));
-		op.addUtilsItem(new ValidatedUtilizationParameter().speciesName("H").value(ValueEnum.EXCL));
+		op.addUtilsItem(new ValidatedUtilizationParameter().speciesName("AL").utilizationClass(UtilizationClass._12_5));
+		op.addUtilsItem(new ValidatedUtilizationParameter().speciesName("C").utilizationClass(UtilizationClass._17_5));
+		op.addUtilsItem(new ValidatedUtilizationParameter().speciesName("D").utilizationClass(UtilizationClass._22_5));
+		op.addUtilsItem(new ValidatedUtilizationParameter().speciesName("E").utilizationClass(UtilizationClass._4_0));
+		op.addUtilsItem(new ValidatedUtilizationParameter().speciesName("F").utilizationClass(UtilizationClass._7_5));
+		op.addUtilsItem(new ValidatedUtilizationParameter().speciesName("H").utilizationClass(UtilizationClass.EXCL));
 
-		op.ageEnd("2030") //
-				.ageIncrement("1") //
-				.ageStart("2020") //
-				.combineAgeYearRange(CombineAgeYearRangeEnum.DIFFERENCE.name()) //
-				.forceYear("2020");
+		op.ageEnd(2030) //
+				.ageIncrement(1) //
+				.ageStart(2020) //
+				.combineAgeYearRange(AgeYearRangeCombinationKind.DIFFERENCE) //
+				.forceYear(2020);
 
 		var filters = new Filters().maintainer("maintainer").mapsheet("mapsheet").polygon("polygon")
 				.polygonId("polygonId");
 		op.filters(filters);
 
-		op.progressFrequency(ProgressFrequency.EnumValue.MAPSHEET.name());
+		op.progressFrequency(ProgressFrequency.FrequencyKind.MAPSHEET);
 
-		op.metadataToOutput(MetadataToOutputEnum.ALL.name()) //
-				.outputFormat(OutputFormatEnum.CSV_YIELD_TABLE.name()) //
-				.yearEnd("2030") //
-				.yearStart("2020");
+		op.metadataToOutput(MetadataToOutputDirective.ALL) //
+				.outputFormat(OutputFormat.CSV_YIELD_TABLE) //
+				.yearEnd(2030) //
+				.yearStart(2020);
 
 		var objectMapper = new ObjectMapper();
 		byte[] json = objectMapper.writeValueAsBytes(op);
@@ -111,7 +108,7 @@ public class ParametersTest {
 		Assert.assertFalse(provider.isReadable(Object.class, null, null, MediaType.APPLICATION_JSON_TYPE));
 		Assert.assertFalse(provider.isReadable(Parameters.class, null, null, MediaType.APPLICATION_OCTET_STREAM_TYPE));
 
-		np.setProgressFrequency(EnumValue.POLYGON.name());
+		np.setProgressFrequency(FrequencyKind.POLYGON.getValue());
 
 		Assert.assertFalse(op.equals(np));
 	}
@@ -123,19 +120,19 @@ public class ParametersTest {
 		Assert.assertNull(new ProgressFrequency().getEnumValue());
 		Assert.assertEquals(Integer.valueOf(12), new ProgressFrequency(12).getIntValue());
 		Assert.assertNull(new ProgressFrequency(12).getEnumValue());
-		Assert.assertNull(new ProgressFrequency(ProgressFrequency.EnumValue.MAPSHEET).getIntValue());
+		Assert.assertNull(new ProgressFrequency(ProgressFrequency.FrequencyKind.MAPSHEET).getIntValue());
 		Assert.assertEquals(
-				ProgressFrequency.EnumValue.MAPSHEET,
-				new ProgressFrequency(ProgressFrequency.EnumValue.MAPSHEET).getEnumValue()
+				ProgressFrequency.FrequencyKind.MAPSHEET,
+				new ProgressFrequency(ProgressFrequency.FrequencyKind.MAPSHEET).getEnumValue()
 		);
 
-		Assert.assertThrows(IllegalArgumentException.class, () -> ProgressFrequency.EnumValue.fromValue("not a value"));
+		Assert.assertThrows(IllegalArgumentException.class, () -> ProgressFrequency.FrequencyKind.fromValue("not a value"));
 
 		ProgressFrequency pf1 = new ProgressFrequency(12);
-		ProgressFrequency pf2 = new ProgressFrequency(ProgressFrequency.EnumValue.MAPSHEET);
+		ProgressFrequency pf2 = new ProgressFrequency(ProgressFrequency.FrequencyKind.MAPSHEET);
 		Assert.assertTrue(pf1.equals(pf1));
 		Assert.assertEquals(Integer.valueOf(12).hashCode(), pf1.hashCode());
-		Assert.assertEquals(ProgressFrequency.EnumValue.MAPSHEET.hashCode(), pf2.hashCode());
+		Assert.assertEquals(ProgressFrequency.FrequencyKind.MAPSHEET.hashCode(), pf2.hashCode());
 		Assert.assertEquals(17, new ProgressFrequency().hashCode());
 
 		Assert.assertTrue(pf1.toString().indexOf("12") != -1);
@@ -146,18 +143,19 @@ public class ParametersTest {
 	@Test
 	void testUtilizationParameter() {
 		Assert.assertEquals(
-				"AL", new ValidatedUtilizationParameter().speciesName("AL").value(ValueEnum._12_5).getSpeciesName()
+				"AL", new ValidatedUtilizationParameter().speciesName("AL").utilizationClass(UtilizationClass._12_5).getSpeciesName()
 		);
 		Assert.assertEquals(
-				ValueEnum._17_5,
-				new ValidatedUtilizationParameter().speciesName("AL").value(ValueEnum._17_5).getValue()
+				UtilizationClass._17_5, new ValidatedUtilizationParameter().speciesName("AL").utilizationClass(UtilizationClass._17_5).getUtilizationClass()
 		);
 
-		Assert.assertThrows(IllegalArgumentException.class, () -> ValidatedUtilizationParameter.ValueEnum.fromValue("ZZZ"));
+		Assert.assertThrows(
+				IllegalArgumentException.class, () -> UtilizationClass.fromValue("ZZZ")
+		);
 
-		var up1 = new ValidatedUtilizationParameter().speciesName("AL").value(ValueEnum._12_5);
-		var up2 = new ValidatedUtilizationParameter().speciesName("C").value(ValueEnum._12_5);
-		var up3 = new ValidatedUtilizationParameter().speciesName("C").value(ValueEnum._22_5);
+		var up1 = new ValidatedUtilizationParameter().speciesName("AL").utilizationClass(UtilizationClass._12_5);
+		var up2 = new ValidatedUtilizationParameter().speciesName("C").utilizationClass(UtilizationClass._12_5);
+		var up3 = new ValidatedUtilizationParameter().speciesName("C").utilizationClass(UtilizationClass._22_5);
 
 		Assert.assertTrue(up1.equals(up1));
 		Assert.assertTrue(up1.hashCode() == up1.hashCode());

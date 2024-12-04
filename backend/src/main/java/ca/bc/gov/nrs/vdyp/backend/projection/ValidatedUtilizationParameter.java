@@ -10,69 +10,31 @@
  * Do not edit the class manually.
  */
 
-package ca.bc.gov.nrs.vdyp.backend.model.v1;
+package ca.bc.gov.nrs.vdyp.backend.projection;
 
 import java.util.Objects;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.annotation.JsonValue;
 
+import ca.bc.gov.nrs.vdyp.backend.model.v1.UtilizationParameter;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
 /**
  * This class records a utilization class for a given sp0 (species group) name.
  */
-@JsonPropertyOrder({ ValidatedUtilizationParameter.JSON_PROPERTY_SPECIES_NAME, ValidatedUtilizationParameter.JSON_PROPERTY_VALUE })
+@JsonPropertyOrder(
+	{ ValidatedUtilizationParameter.JSON_PROPERTY_SPECIES_NAME, ValidatedUtilizationParameter.JSON_PROPERTY_UTILIZATION_CLASS }
+)
 @RegisterForReflection
 public class ValidatedUtilizationParameter {
 	public static final String JSON_PROPERTY_SPECIES_NAME = "speciesName";
 	@JsonProperty(JSON_PROPERTY_SPECIES_NAME)
 	private String speciesName;
 
-	/**
-	 * Gets or Sets value
-	 */
-	public enum ValueEnum {
-		EXCL("Excl"),
-
-		_4_0("4.0"),
-
-		_7_5("7.5"),
-
-		_12_5("12.5"),
-
-		_17_5("17.5"),
-
-		_22_5("22.5");
-
-		private String value;
-
-		ValueEnum(String value) {
-			this.value = value;
-		}
-
-		@Override
-		@JsonValue
-		public String toString() {
-			return String.valueOf(value);
-		}
-
-		@JsonCreator
-		public static ValueEnum fromValue(String value) {
-			for (ValueEnum b : ValueEnum.values()) {
-				if (b.value.equals(value)) {
-					return b;
-				}
-			}
-			throw new IllegalArgumentException("Unexpected value '" + value + "'");
-		}
-	}
-
-	public static final String JSON_PROPERTY_VALUE = "value";
-	@JsonProperty(JSON_PROPERTY_VALUE)
-	private ValueEnum value;
+	public static final String JSON_PROPERTY_UTILIZATION_CLASS = "utilizationClass";
+	@JsonProperty(JSON_PROPERTY_UTILIZATION_CLASS)
+	private UtilizationParameter.UtilizationClass utilizationClass;
 
 	public ValidatedUtilizationParameter speciesName(String speciesName) {
 		this.speciesName = speciesName;
@@ -94,24 +56,23 @@ public class ValidatedUtilizationParameter {
 		this.speciesName = speciesName;
 	}
 
-	public ValidatedUtilizationParameter value(ValueEnum value) {
-		this.value = value;
+	/**
+	 * Get utilizationClass
+	 *
+	 * @return utilizationClass
+	 **/
+	@JsonProperty(value = "utilizationClass")
+	public UtilizationParameter.UtilizationClass getUtilizationClass() {
+		return utilizationClass;
+	}
+
+	public ValidatedUtilizationParameter utilizationClass(UtilizationParameter.UtilizationClass utilizationClass) {
+		setUtilizationClass(utilizationClass);
 		return this;
 	}
 
-	/**
-	 * Get value
-	 *
-	 * @return value
-	 **/
-	@JsonProperty(value = "value")
-
-	public ValueEnum getValue() {
-		return value;
-	}
-
-	public void setValue(ValueEnum value) {
-		this.value = value;
+	public void setUtilizationClass(UtilizationParameter.UtilizationClass utilizationClass) {
+		this.utilizationClass = utilizationClass;
 	}
 
 	@Override
@@ -123,12 +84,12 @@ public class ValidatedUtilizationParameter {
 			return false;
 		}
 		ValidatedUtilizationParameter up = (ValidatedUtilizationParameter) o;
-		return Objects.equals(this.speciesName, up.speciesName) && Objects.equals(this.value, up.value);
+		return Objects.equals(this.speciesName, up.speciesName) && Objects.equals(this.utilizationClass, up.utilizationClass);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(speciesName, value);
+		return Objects.hash(speciesName, utilizationClass);
 	}
 
 	@Override
@@ -137,7 +98,7 @@ public class ValidatedUtilizationParameter {
 		sb.append("class ");
 		sb.append(ValidatedUtilizationParameter.class.getSimpleName());
 		sb.append(" {\n    speciesName: ").append(toIndentedString(speciesName)).append("\n");
-		sb.append("    value: ").append(toIndentedString(value)).append("\n");
+		sb.append("    utilizationClass: ").append(toIndentedString(utilizationClass)).append("\n");
 		sb.append("}");
 		return sb.toString();
 	}

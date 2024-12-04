@@ -35,7 +35,7 @@ public class HelpService {
 						"Output Data Format", //
 						"YieldTable | CSVYieldTable | DCSV", //
 						"Identifies the output file format. One of (YieldTable default): YieldTable, CSVYieldTable, DCSV", //
-						ValidatedParameters.DEFAULT.getOutputFormat().name()
+						ValidatedParameters.DEFAULT.getOutputFormat().getValue()
 				)
 		);
 
@@ -48,7 +48,7 @@ public class HelpService {
 						"Enables or disables the use of the Back Grow feature of VDYP7.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
-										.contains(Parameters.SelectedExecutionOptionsEnum.BACK_GROW_ENABLED)
+										.contains(Parameters.ExecutionOption.BACK_GROW_ENABLED)
 						)
 				)
 		);
@@ -62,7 +62,7 @@ public class HelpService {
 						"Enables or disables the use of the Forward Grow feature of VDYP7.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
-										.contains(Parameters.SelectedExecutionOptionsEnum.FORWARD_GROW_ENABLED)
+										.contains(Parameters.ExecutionOption.FORWARD_GROW_ENABLED)
 						)
 				)
 		);
@@ -76,7 +76,7 @@ public class HelpService {
 						"Includes or suppresses Debug Log File Timestamps.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedDebugOptions()
-										.contains(Parameters.SelectedDebugOptionsEnum.DO_INCLUDE_DEBUG_TIMESTAMPS)
+										.contains(Parameters.DebugOption.DO_INCLUDE_DEBUG_TIMESTAMPS)
 						)
 				)
 		);
@@ -90,7 +90,7 @@ public class HelpService {
 						"Includes or suppresses Debug Log File Routine Names.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedDebugOptions()
-										.contains(Parameters.SelectedDebugOptionsEnum.DO_INCLUDE_DEBUG_ROUTINE_NAMES)
+										.contains(Parameters.DebugOption.DO_INCLUDE_DEBUG_ROUTINE_NAMES)
 						)
 				)
 		);
@@ -104,7 +104,7 @@ public class HelpService {
 						"Includes or suppresses Debug Log Block Entry and Exit.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedDebugOptions()
-										.contains(Parameters.SelectedDebugOptionsEnum.DO_INCLUDE_DEBUG_ENTRY_EXIT)
+										.contains(Parameters.DebugOption.DO_INCLUDE_DEBUG_ENTRY_EXIT)
 						)
 				)
 		);
@@ -118,7 +118,7 @@ public class HelpService {
 						"Indents Logging Blocks as they are Entered and Exited.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedDebugOptions()
-										.contains(Parameters.SelectedDebugOptionsEnum.DO_INCLUDE_DEBUG_INDENT_BLOCKS)
+										.contains(Parameters.DebugOption.DO_INCLUDE_DEBUG_INDENT_BLOCKS)
 						)
 				)
 		);
@@ -199,7 +199,7 @@ public class HelpService {
 						"Enables or disables the forced inclusion of the Reference Year in Yield Tables.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
-										Parameters.SelectedExecutionOptionsEnum.DO_FORCE_REFERENCE_YEAR_INCLUSION_IN_YIELD_TABLES
+										Parameters.ExecutionOption.DO_FORCE_REFERENCE_YEAR_INCLUSION_IN_YIELD_TABLES
 								)
 						)
 				)
@@ -214,7 +214,7 @@ public class HelpService {
 						"Enables or disables the forced inclusion of the Current Year in Yield Tables.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
-										Parameters.SelectedExecutionOptionsEnum.DO_FORCE_CURRENT_YEAR_INCLUSION_IN_YIELD_TABLES
+										Parameters.ExecutionOption.DO_FORCE_CURRENT_YEAR_INCLUSION_IN_YIELD_TABLES
 								)
 						)
 				)
@@ -240,7 +240,7 @@ public class HelpService {
 						"In file formats where a file header is optional, this option will display or suppress the file header.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
-										.contains(Parameters.SelectedExecutionOptionsEnum.DO_INCLUDE_FILE_HEADER)
+										.contains(Parameters.ExecutionOption.DO_INCLUDE_FILE_HEADER)
 						)
 				)
 		);
@@ -252,7 +252,7 @@ public class HelpService {
 						"Metadata to Include (default: VERSION )", //
 						"ALL | MAIN | VERSION | MIN_IDENT | NONE", //
 						"Controls how much metadata is displayed in the Output and Error Logs.", //
-						ValidatedParameters.DEFAULT.getMetadataToOutput().name()
+						ValidatedParameters.DEFAULT.getMetadataToOutput().getValue()
 				)
 		);
 
@@ -265,7 +265,7 @@ public class HelpService {
 						"If present, a column indicating how the yield table row was projected is included in Yield Tables.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
-										Parameters.SelectedExecutionOptionsEnum.DO_INCLUDE_PROJECTION_MODE_IN_YIELD_TABLE
+										Parameters.ExecutionOption.DO_INCLUDE_PROJECTION_MODE_IN_YIELD_TABLE
 								)
 						)
 				)
@@ -280,7 +280,7 @@ public class HelpService {
 						"Includes or excludes age rows of the Age Range in the Yield Table.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
-										Parameters.SelectedExecutionOptionsEnum.DO_INCLUDE_AGE_ROWS_IN_YIELD_TABLE
+										Parameters.ExecutionOption.DO_INCLUDE_AGE_ROWS_IN_YIELD_TABLE
 								)
 						)
 				)
@@ -295,7 +295,7 @@ public class HelpService {
 						"If true, the year rows of the Year Range are included in the Yield Table.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
-										Parameters.SelectedExecutionOptionsEnum.DO_INCLUDE_YEAR_ROWS_IN_YIELD_TABLE
+										Parameters.ExecutionOption.DO_INCLUDE_YEAR_ROWS_IN_YIELD_TABLE
 								)
 						)
 				)
@@ -369,7 +369,7 @@ public class HelpService {
 						"Include the POLYGON_RCRD_ID in the header of yield tables.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
-										Parameters.SelectedExecutionOptionsEnum.DO_INCLUDE_POLYGON_RECORD_ID_IN_YIELD_TABLE
+										Parameters.ExecutionOption.DO_INCLUDE_POLYGON_RECORD_ID_IN_YIELD_TABLE
 								)
 						)
 				)
@@ -384,7 +384,7 @@ public class HelpService {
 						"If present, the substitution of Supplied BA/TPH as Projected Values is allowed.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
-										Parameters.SelectedExecutionOptionsEnum.DO_ALLOW_BASAL_AREA_AND_TREES_PER_HECTARE_VALUE_SUBSTITUTION
+										Parameters.ExecutionOption.DO_ALLOW_BASAL_AREA_AND_TREES_PER_HECTARE_VALUE_SUBSTITUTION
 								)
 						)
 				)
@@ -399,7 +399,7 @@ public class HelpService {
 						"Display/Suppress the Secondary Species Dominant Height column in Yield Tables.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
-										Parameters.SelectedExecutionOptionsEnum.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE
+										Parameters.ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE
 								)
 						)
 				)
@@ -414,7 +414,7 @@ public class HelpService {
 						"If present, projected values are summarized at the polygon level.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
-										Parameters.SelectedExecutionOptionsEnum.DO_SUMMARIZE_PROJECTION_BY_POLYGON
+										Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_POLYGON
 								)
 						)
 				)
@@ -429,7 +429,7 @@ public class HelpService {
 						"If present, projected values are summarized at the layer level.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
-										Parameters.SelectedExecutionOptionsEnum.DO_SUMMARIZE_PROJECTION_BY_LAYER
+										Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER
 								)
 						)
 				)
@@ -444,7 +444,7 @@ public class HelpService {
 						"If present, projected values are produced for each species.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
-										.contains(Parameters.SelectedExecutionOptionsEnum.DO_INCLUDE_SPECIES_PROJECTION)
+										.contains(Parameters.ExecutionOption.DO_INCLUDE_SPECIES_PROJECTION)
 						)
 				)
 		);
@@ -458,7 +458,7 @@ public class HelpService {
 						"Indicate whether MoF projected volumes are included in the output.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
-										Parameters.SelectedExecutionOptionsEnum.DO_INCLUDE_PROJECTED_MOF_VOLUMES
+										Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES
 								)
 						)
 				)
@@ -473,7 +473,7 @@ public class HelpService {
 						"Indicate whether projected MoF biomass is included in the output.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
-										Parameters.SelectedExecutionOptionsEnum.DO_INCLUDE_PROJECTED_MOF_BIOMASS
+										Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_BIOMASS
 								)
 						)
 				)
@@ -488,7 +488,7 @@ public class HelpService {
 						"Indicate whether projected CFS biomass is included in the output.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
-										Parameters.SelectedExecutionOptionsEnum.DO_INCLUDE_PROJECTED_CFS_BIOMASS
+										Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS
 								)
 						)
 				)
@@ -503,7 +503,7 @@ public class HelpService {
 						"Indicate whether formatted yield tables will include column headers or not.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
-										Parameters.SelectedExecutionOptionsEnum.DO_INCLUDE_COLUMN_HEADERS_IN_YIELD_TABLE
+										Parameters.ExecutionOption.DO_INCLUDE_COLUMN_HEADERS_IN_YIELD_TABLE
 								)
 						)
 				)
@@ -519,7 +519,7 @@ public class HelpService {
 						"Enables or disables the logging of progress messages during projections.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
-										.contains(Parameters.SelectedExecutionOptionsEnum.DO_ENABLE_DEBUG_LOGGING)
+										.contains(Parameters.ExecutionOption.DO_ENABLE_DEBUG_LOGGING)
 						)
 				)
 		);
@@ -532,7 +532,7 @@ public class HelpService {
 						"Enables or disables the logging of error messages during projections.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
-										.contains(Parameters.SelectedExecutionOptionsEnum.DO_ENABLE_ERROR_LOGGING)
+										.contains(Parameters.ExecutionOption.DO_ENABLE_ERROR_LOGGING)
 						)
 				)
 		);
@@ -545,7 +545,7 @@ public class HelpService {
 						"Enables or disables the logging of debug messages during projections.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
-										.contains(Parameters.SelectedExecutionOptionsEnum.DO_ENABLE_PROGRESS_LOGGING)
+										.contains(Parameters.ExecutionOption.DO_ENABLE_PROGRESS_LOGGING)
 						)
 				)
 		);

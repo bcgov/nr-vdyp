@@ -35,24 +35,28 @@ public class ProgressFrequency {
 
 	public static final String JSON_PROPERTY_ENUM_VALUE_NAME = "enumValue";
 	@JsonProperty(JSON_PROPERTY_ENUM_VALUE_NAME)
-	private EnumValue enumValue;
+	private FrequencyKind enumValue;
 
 	/**
 	 * Gets or Sets value
 	 */
-	public enum EnumValue {
+	public enum FrequencyKind {
 		NEVER("never"), POLYGON("polygon"), MAPSHEET("mapsheet");
 
 		private String value;
 
-		EnumValue(String value) {
+		FrequencyKind(String value) {
 			this.value = value;
 		}
 
 		@Override
-		@JsonValue
 		public String toString() {
-			return String.valueOf(value);
+			return getValue();
+		}
+		
+		@JsonValue
+		public String getValue() {
+			return value;
 		}
 
 		/**
@@ -64,8 +68,8 @@ public class ProgressFrequency {
 		 * @throws IllegalArgumentException when conversion cannot be performed
 		 */
 		@JsonCreator
-		public static EnumValue fromValue(String value) {
-			for (EnumValue b : EnumValue.values()) {
+		public static FrequencyKind fromValue(String value) {
+			for (FrequencyKind b : FrequencyKind.values()) {
 				if (b.value.equals(value)) {
 					return b;
 				}
@@ -79,7 +83,7 @@ public class ProgressFrequency {
 		this.enumValue = null;
 	}
 
-	public ProgressFrequency(EnumValue enumValue) {
+	public ProgressFrequency(FrequencyKind enumValue) {
 		setEnumValue(enumValue);
 	}
 
@@ -90,7 +94,7 @@ public class ProgressFrequency {
 	public ProgressFrequency(String text) {
 		text = text.trim();
 		try {
-			setEnumValue(EnumValue.fromValue(text));
+			setEnumValue(FrequencyKind.fromValue(text));
 		} catch (IllegalArgumentException iae) {
 			try {
 				setIntValue(Integer.parseInt(text));
@@ -117,18 +121,18 @@ public class ProgressFrequency {
 		return intValue;
 	}
 
-	public ProgressFrequency enumValue(EnumValue enumValue) {
+	public ProgressFrequency enumValue(FrequencyKind enumValue) {
 		setEnumValue(enumValue);
 		return this;
 	}
 
-	public void setEnumValue(EnumValue enumValue) {
+	public void setEnumValue(FrequencyKind enumValue) {
 		this.intValue = null;
 		this.enumValue = enumValue;
 	}
 
 	@JsonProperty(JSON_PROPERTY_ENUM_VALUE_NAME)
-	public EnumValue getEnumValue() {
+	public FrequencyKind getEnumValue() {
 		return enumValue;
 	}
 

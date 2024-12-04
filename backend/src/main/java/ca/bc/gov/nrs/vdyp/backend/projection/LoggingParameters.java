@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.Objects;
 
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.SelectedDebugOptionsEnum;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.SelectedExecutionOptionsEnum;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.DebugOption;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption;
 
 /**
  * The class represents a Parameter class instance whose logging related parameters have been validated and presents
@@ -27,54 +27,55 @@ public class LoggingParameters {
 	private LoggingParameters(Parameters params) {
 
 		if (params == null) {
-			params = new Parameters().selectedExecutionOptions(new ArrayList<String>())
-					.selectedDebugOptions(new ArrayList<String>());
+			params = new Parameters() //
+					.selectedExecutionOptions(new ArrayList<Parameters.ExecutionOption>()) //
+					.selectedDebugOptions(new ArrayList<Parameters.DebugOption>());
 		}
 
 		if (params.getSelectedExecutionOptions()
-				.contains(SelectedExecutionOptionsEnum.DO_ENABLE_ERROR_LOGGING.toString())) {
+				.contains(ExecutionOption.DO_ENABLE_ERROR_LOGGING.toString())) {
 			doEnableErrorLogging = true;
 		} else {
 			doEnableErrorLogging = LoggingParameters.DEFAULT.doEnableErrorLogging;
 		}
 
 		if (params.getSelectedExecutionOptions()
-				.contains(SelectedExecutionOptionsEnum.DO_ENABLE_PROGRESS_LOGGING.toString())) {
+				.contains(ExecutionOption.DO_ENABLE_PROGRESS_LOGGING.toString())) {
 			doEnableProgressLogging = true;
 		} else {
 			doEnableProgressLogging = LoggingParameters.DEFAULT.doEnableProgressLogging;
 		}
 
 		if (params.getSelectedExecutionOptions()
-				.contains(SelectedExecutionOptionsEnum.DO_ENABLE_DEBUG_LOGGING.toString())) {
+				.contains(ExecutionOption.DO_ENABLE_DEBUG_LOGGING.toString())) {
 			doEnableDebugLogging = true;
 		} else {
 			doEnableDebugLogging = LoggingParameters.DEFAULT.doEnableDebugLogging;
 		}
 
 		if (params.getSelectedDebugOptions()
-				.contains(SelectedDebugOptionsEnum.DO_INCLUDE_DEBUG_ENTRY_EXIT.toString())) {
+				.contains(DebugOption.DO_INCLUDE_DEBUG_ENTRY_EXIT.toString())) {
 			doIncludeDebugEntryExit = true;
 		} else {
 			doIncludeDebugEntryExit = LoggingParameters.DEFAULT.doIncludeDebugEntryExit;
 		}
 
 		if (params.getSelectedDebugOptions()
-				.contains(SelectedDebugOptionsEnum.DO_INCLUDE_DEBUG_INDENT_BLOCKS.toString())) {
+				.contains(DebugOption.DO_INCLUDE_DEBUG_INDENT_BLOCKS.toString())) {
 			doIncludeDebugIndentBlocks = true;
 		} else {
 			doIncludeDebugIndentBlocks = LoggingParameters.DEFAULT.doIncludeDebugIndentBlocks;
 		}
 
 		if (params.getSelectedDebugOptions()
-				.contains(SelectedDebugOptionsEnum.DO_INCLUDE_DEBUG_ROUTINE_NAMES.toString())) {
+				.contains(DebugOption.DO_INCLUDE_DEBUG_ROUTINE_NAMES.toString())) {
 			doIncludeDebugRoutineNames = true;
 		} else {
 			doIncludeDebugRoutineNames = LoggingParameters.DEFAULT.doIncludeDebugRoutineNames;
 		}
 
 		if (params.getSelectedDebugOptions()
-				.contains(SelectedDebugOptionsEnum.DO_INCLUDE_DEBUG_TIMESTAMPS.toString())) {
+				.contains(DebugOption.DO_INCLUDE_DEBUG_TIMESTAMPS.toString())) {
 			doIncludeDebugTimestamps = true;
 		} else {
 			doIncludeDebugTimestamps = LoggingParameters.DEFAULT.doIncludeDebugTimestamps;

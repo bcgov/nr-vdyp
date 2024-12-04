@@ -9,7 +9,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.text.MessageFormat;
-import java.util.ArrayList;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -51,13 +51,9 @@ public class TestHelper {
 	}
 
 	public Parameters
-			addSelectedOptions(Parameters params, Parameters.SelectedExecutionOptionsEnum... executionOptions) {
+			addSelectedOptions(Parameters params, Parameters.ExecutionOption... executionOptions) {
 
-		var options = new ArrayList<String>();
-		for (var e : executionOptions) {
-			options.add(e.toString());
-		}
-		params.setSelectedExecutionOptions(options);
+		params.setSelectedExecutionOptions(List.of(executionOptions));
 
 		return params;
 	}

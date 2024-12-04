@@ -15,7 +15,7 @@ public class ProjectionState {
 
 	private Parameters params;
 	private ValidatedParameters vparams;
-	
+
 	private final IMessageLog progressLog;
 	private final IMessageLog errorLog;
 

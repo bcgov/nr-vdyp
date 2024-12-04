@@ -12,15 +12,15 @@
 
 package ca.bc.gov.nrs.vdyp.backend.projection;
 
-import static ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.SelectedExecutionOptionsEnum.DO_ALLOW_BASAL_AREA_AND_TREES_PER_HECTARE_VALUE_SUBSTITUTION;
-import static ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.SelectedExecutionOptionsEnum.DO_INCLUDE_AGE_ROWS_IN_YIELD_TABLE;
-import static ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.SelectedExecutionOptionsEnum.DO_INCLUDE_COLUMN_HEADERS_IN_YIELD_TABLE;
-import static ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.SelectedExecutionOptionsEnum.DO_INCLUDE_FILE_HEADER;
-import static ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.SelectedExecutionOptionsEnum.DO_INCLUDE_PROJECTED_MOF_VOLUMES;
-import static ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.SelectedExecutionOptionsEnum.DO_INCLUDE_PROJECTION_MODE_IN_YIELD_TABLE;
-import static ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.SelectedExecutionOptionsEnum.DO_INCLUDE_YEAR_ROWS_IN_YIELD_TABLE;
-import static ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.SelectedExecutionOptionsEnum.DO_SUMMARIZE_PROJECTION_BY_LAYER;
-import static ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.SelectedExecutionOptionsEnum.FORWARD_GROW_ENABLED;
+import static ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption.DO_ALLOW_BASAL_AREA_AND_TREES_PER_HECTARE_VALUE_SUBSTITUTION;
+import static ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption.DO_INCLUDE_AGE_ROWS_IN_YIELD_TABLE;
+import static ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption.DO_INCLUDE_COLUMN_HEADERS_IN_YIELD_TABLE;
+import static ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption.DO_INCLUDE_FILE_HEADER;
+import static ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES;
+import static ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption.DO_INCLUDE_PROJECTION_MODE_IN_YIELD_TABLE;
+import static ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption.DO_INCLUDE_YEAR_ROWS_IN_YIELD_TABLE;
+import static ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER;
+import static ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption.FORWARD_GROW_ENABLED;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,26 +29,25 @@ import java.util.Objects;
 
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Filters;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ProgressFrequency;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidatedUtilizationParameter;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.CombineAgeYearRangeEnum;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.MetadataToOutputEnum;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.OutputFormatEnum;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.SelectedDebugOptionsEnum;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.SelectedExecutionOptionsEnum;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.AgeYearRangeCombinationKind;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.MetadataToOutputDirective;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.OutputFormat;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.DebugOption;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
 /**
- * This class represents a Parameters instance that has been validated. All fields are
- * converted to their internal data type (if not String). All defaults have been applied.
+ * This class represents a Parameters instance that has been validated. All fields are converted to their internal data
+ * type (if not String). All defaults have been applied.
  */
 @RegisterForReflection
 public class ValidatedParameters {
 
 	public static final ValidatedParameters DEFAULT;
 
-	private OutputFormatEnum outputFormat;
-	private List<SelectedExecutionOptionsEnum> selectedExecutionOptions = new ArrayList<>();
-	private List<SelectedDebugOptionsEnum> selectedDebugOptions = new ArrayList<>();
+	private OutputFormat outputFormat;
+	private List<ExecutionOption> selectedExecutionOptions = new ArrayList<>();
+	private List<DebugOption> selectedDebugOptions = new ArrayList<>();
 	private Integer ageStart;
 	private Integer minAgeStart;
 	private Integer maxAgeStart;
@@ -65,9 +64,9 @@ public class ValidatedParameters {
 	private Integer ageIncrement;
 	private Integer minAgeIncrement;
 	private Integer maxAgeIncrement;
-	private CombineAgeYearRangeEnum combineAgeYearRange;
+	private AgeYearRangeCombinationKind combineAgeYearRange;
 	private ProgressFrequency progressFrequency;
-	private MetadataToOutputEnum metadataToOutput;
+	private MetadataToOutputDirective metadataToOutput;
 	private Filters filters;
 	private List<ValidatedUtilizationParameter> utils = new ArrayList<>();
 
@@ -77,7 +76,7 @@ public class ValidatedParameters {
 	 * @param option the option whose presence is determined
 	 * @return as described
 	 */
-	public boolean containsOption(SelectedExecutionOptionsEnum option) {
+	public boolean containsOption(ExecutionOption option) {
 		return selectedExecutionOptions.contains(option);
 	}
 
@@ -87,11 +86,11 @@ public class ValidatedParameters {
 	 * @param option the option whose presence is determined
 	 * @return as described
 	 */
-	public boolean containsOption(SelectedDebugOptionsEnum option) {
+	public boolean containsOption(DebugOption option) {
 		return selectedDebugOptions.contains(option);
 	}
 
-	public ValidatedParameters outputFormat(OutputFormatEnum outputFormat) {
+	public ValidatedParameters outputFormat(OutputFormat outputFormat) {
 		this.outputFormat = outputFormat;
 		return this;
 	}
@@ -101,21 +100,21 @@ public class ValidatedParameters {
 	 *
 	 * @return outputFormat
 	 */
-	public OutputFormatEnum getOutputFormat() {
+	public OutputFormat getOutputFormat() {
 		return outputFormat;
 	}
 
-	public void setOutputFormat(OutputFormatEnum outputFormat) {
+	public void setOutputFormat(OutputFormat outputFormat) {
 		this.outputFormat = outputFormat;
 	}
 
-	public ValidatedParameters selectedExecutionOptions(List<SelectedExecutionOptionsEnum> selectedExecutionOptions) {
+	public ValidatedParameters selectedExecutionOptions(List<ExecutionOption> selectedExecutionOptions) {
 		this.selectedExecutionOptions = selectedExecutionOptions;
 		return this;
 	}
 
 	public ValidatedParameters
-			addSelectedExecutionOptionsItem(SelectedExecutionOptionsEnum selectedExecutionOptionsItem) {
+			addSelectedExecutionOptionsItem(ExecutionOption selectedExecutionOptionsItem) {
 		if (this.selectedExecutionOptions == null) {
 			this.selectedExecutionOptions = new ArrayList<>();
 		}
@@ -128,20 +127,20 @@ public class ValidatedParameters {
 	 *
 	 * @return selectedExecutionOptions
 	 */
-	public List<SelectedExecutionOptionsEnum> getSelectedExecutionOptions() {
+	public List<ExecutionOption> getSelectedExecutionOptions() {
 		return Collections.unmodifiableList(selectedExecutionOptions);
 	}
 
-	public void setSelectedExecutionOptions(List<SelectedExecutionOptionsEnum> selectedExecutionOptions) {
+	public void setSelectedExecutionOptions(List<ExecutionOption> selectedExecutionOptions) {
 		this.selectedExecutionOptions = selectedExecutionOptions;
 	}
 
-	public ValidatedParameters selectedDebugOptions(List<SelectedDebugOptionsEnum> selectedDebugOptions) {
+	public ValidatedParameters selectedDebugOptions(List<DebugOption> selectedDebugOptions) {
 		this.selectedDebugOptions = selectedDebugOptions;
 		return this;
 	}
 
-	public ValidatedParameters addSelectedDebugOptionsItem(SelectedDebugOptionsEnum selectedDebugOptionsItem) {
+	public ValidatedParameters addSelectedDebugOptionsItem(DebugOption selectedDebugOptionsItem) {
 		if (this.selectedDebugOptions == null) {
 			this.selectedDebugOptions = new ArrayList<>();
 		}
@@ -154,11 +153,11 @@ public class ValidatedParameters {
 	 *
 	 * @return selectedDebugOptions
 	 */
-	public List<SelectedDebugOptionsEnum> getSelectedDebugOptions() {
+	public List<DebugOption> getSelectedDebugOptions() {
 		return Collections.unmodifiableList(selectedDebugOptions);
 	}
 
-	public void setSelectedDebugOptions(List<SelectedDebugOptionsEnum> selectedDebugOptions) {
+	public void setSelectedDebugOptions(List<DebugOption> selectedDebugOptions) {
 		this.selectedDebugOptions = selectedDebugOptions;
 	}
 
@@ -410,7 +409,7 @@ public class ValidatedParameters {
 		this.maxAgeIncrement = maxAgeIncrement;
 	}
 
-	public ValidatedParameters combineAgeYearRange(CombineAgeYearRangeEnum combineAgeYearRange) {
+	public ValidatedParameters combineAgeYearRange(AgeYearRangeCombinationKind combineAgeYearRange) {
 		this.combineAgeYearRange = combineAgeYearRange;
 		return this;
 	}
@@ -420,11 +419,11 @@ public class ValidatedParameters {
 	 *
 	 * @return combineAgeYearRange
 	 */
-	public CombineAgeYearRangeEnum getCombineAgeYearRange() {
+	public AgeYearRangeCombinationKind getCombineAgeYearRange() {
 		return combineAgeYearRange;
 	}
 
-	public void setCombineAgeYearRange(CombineAgeYearRangeEnum combineAgeYearRange) {
+	public void setCombineAgeYearRange(AgeYearRangeCombinationKind combineAgeYearRange) {
 		this.combineAgeYearRange = combineAgeYearRange;
 	}
 
@@ -446,7 +445,7 @@ public class ValidatedParameters {
 		this.progressFrequency = progressFrequency.copy();
 	}
 
-	public ValidatedParameters metadataToOutput(MetadataToOutputEnum metadataToOutput) {
+	public ValidatedParameters metadataToOutput(MetadataToOutputDirective metadataToOutput) {
 		this.metadataToOutput = metadataToOutput;
 		return this;
 	}
@@ -456,11 +455,11 @@ public class ValidatedParameters {
 	 *
 	 * @return metadataToOutput
 	 */
-	public MetadataToOutputEnum getMetadataToOutput() {
+	public MetadataToOutputDirective getMetadataToOutput() {
 		return metadataToOutput;
 	}
 
-	public void setMetadataToOutput(MetadataToOutputEnum metadataToOutput) {
+	public void setMetadataToOutput(MetadataToOutputDirective metadataToOutput) {
 		this.metadataToOutput = metadataToOutput;
 	}
 
@@ -596,7 +595,7 @@ public class ValidatedParameters {
 		DEFAULT.yearEnd = null;
 		DEFAULT.ageIncrement = null;
 
-		DEFAULT.outputFormat = OutputFormatEnum.CSV_YIELD_TABLE;
+		DEFAULT.outputFormat = OutputFormat.CSV_YIELD_TABLE;
 
 		DEFAULT.selectedExecutionOptions = new ArrayList<>();
 		// exclude since false: BACK_GROW_ENABLED
@@ -641,9 +640,9 @@ public class ValidatedParameters {
 		DEFAULT.minAgeIncrement = 1;
 		DEFAULT.maxAgeIncrement = 350;
 		DEFAULT.forceYear = null;
-		DEFAULT.combineAgeYearRange = CombineAgeYearRangeEnum.INTERSECT;
+		DEFAULT.combineAgeYearRange = AgeYearRangeCombinationKind.INTERSECT;
 		DEFAULT.progressFrequency = new ProgressFrequency().intValue(1000);
-		DEFAULT.metadataToOutput = MetadataToOutputEnum.VERSION;
+		DEFAULT.metadataToOutput = MetadataToOutputDirective.VERSION;
 		DEFAULT.filters = new Filters();
 		DEFAULT.utils = new ArrayList<>();
 	}
