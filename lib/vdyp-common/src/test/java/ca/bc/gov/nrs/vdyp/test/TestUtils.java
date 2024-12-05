@@ -1037,14 +1037,14 @@ public class TestUtils {
 
 		writeModel(poly, out, indent, "var polygon");
 
-		line(out, indent, "var state = new TestProcessingState(controlMap);");
-		line(out, indent, "state.setPolygon(polygon);");
-		line(out, indent, "var primaryBank = state.getPrimaryLayerProcessingState().getBank();");
+		line(out, indent, "%s = new TestProcessingState(controlMap);", assignTo);
+		line(out, indent, "%s.setPolygon(polygon);", assignTo);
+		line(out, indent, "var primaryBank = %s.getPrimaryLayerProcessingState().getBank();", assignTo);
 
 		writeBankConfig(expected.getPrimaryLayerProcessingState().getBank(), out, indent, "primaryBank");
 
 		expected.getVeteranLayerProcessingState().ifPresent(vetState -> {
-			line(out, indent, "var veteranBank = state.getVeteranLayerProcessingState().get().getBank();");
+			line(out, indent, "var veteranBank = %s.getVeteranLayerProcessingState().get().getBank();", assignTo);
 			writeBankConfig(vetState.getBank(), out, indent, "veteranBank");
 		});
 

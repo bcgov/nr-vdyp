@@ -158,7 +158,7 @@ public class TestUtilsTest {
 			assertThat(result, deepEquals(expected));
 		}
 
-		public void jitterBank(Bank expected) {
+		void jitterBank(Bank expected) {
 			TestUtils.jitterArray(expected.ageTotals, rand);
 			TestUtils.jitterArray(expected.basalAreas, rand);
 			TestUtils.jitterArray(expected.dominantHeights, rand);
@@ -304,7 +304,7 @@ public class TestUtilsTest {
 
 			System.out.print(buf.toString());
 
-			ProcessingState result = null;
+			ProcessingState<?, ?> result = null;
 
 			{
 				/* the following ProcessingState definition was generated */
@@ -912,9 +912,9 @@ public class TestUtilsTest {
 				});
 
 				/* End of generated Polygon definition */
-				var state = new TestProcessingState(controlMap);
-				state.setPolygon(polygon);
-				var primaryBank = state.getPrimaryLayerProcessingState().getBank();
+				result = new TestProcessingState(controlMap);
+				result.setPolygon(polygon);
+				var primaryBank = result.getPrimaryLayerProcessingState().getBank();
 				System.arraycopy(new float[] { 0.000000f, 37.029385f }, 0, primaryBank.ageTotals, 0, 2);
 				System.arraycopy(new float[] { 0.000000f, 0.000000f }, 0, primaryBank.percentagesOfForestedLand, 0, 2);
 				System.arraycopy(
@@ -928,7 +928,7 @@ public class TestUtilsTest {
 				System.arraycopy(new float[] { 0.000000f, 31.781885f }, 0, primaryBank.yearsAtBreastHeight, 0, 2);
 				System.arraycopy(new float[] { 0.000000f, 4.648443f }, 0, primaryBank.yearsToBreastHeight, 0, 2);
 				System.arraycopy(new int[] { -1, 41 }, 0, primaryBank.siteCurveNumbers, 0, 2);
-				var veteranBank = state.getVeteranLayerProcessingState().get().getBank();
+				var veteranBank = result.getVeteranLayerProcessingState().get().getBank();
 				System.arraycopy(new float[] { 0.000000f, Float.NaN }, 0, veteranBank.ageTotals, 0, 2);
 				System.arraycopy(new float[] { 0.000000f, 0.000000f }, 0, veteranBank.percentagesOfForestedLand, 0, 2);
 				System.arraycopy(
@@ -946,7 +946,7 @@ public class TestUtilsTest {
 				/* End of generated ProcessingState definition */
 			}
 
-			assertThat(result, deepEquals((ProcessingState) expectedState));
+			assertThat(result, deepEquals(expectedState));
 
 		}
 

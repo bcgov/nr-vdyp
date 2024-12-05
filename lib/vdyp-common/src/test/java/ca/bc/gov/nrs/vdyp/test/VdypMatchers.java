@@ -195,7 +195,9 @@ public class VdypMatchers<V> {
 					description.appendText("Not present");
 					return;
 				}
-				delegate.describeMismatch(item, description);
+
+				description.appendText("was present but ");
+				delegate.describeMismatch( ((Optional<?>) item).get(), description);
 			}
 
 		};
@@ -576,7 +578,10 @@ public class VdypMatchers<V> {
 	}
 
 	public static Matcher<Float> closeTo(float expected) {
-		return closeTo(expected, currentEpsilon);
+		if (Float.isFinite(expected)) {
+			return closeTo(expected, currentEpsilon);
+		}
+		return equalTo(expected);
 	}
 
 	public static Matcher<Float> closeTo(float expected, float threshold) {
@@ -1370,7 +1375,6 @@ public class VdypMatchers<V> {
 	}
 
 	public static <T extends LayerProcessingState<?, T>> Matcher<? super T> deepEquals(T expected) {
-		expected.getBank();
 		return allOf(
 				hasProperty(
 						"polygon",
