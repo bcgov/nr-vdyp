@@ -72,8 +72,8 @@ public class ProjectionService {
 				}
 			}
 
-			inputStreams.put(ParameterNames.POLYGON_INPUT_DATA, polyStream);
-			inputStreams.put(ParameterNames.LAYERS_INPUT_DATA, layersStream);
+			inputStreams.put(ParameterNames.HCSV_POLYGON_INPUT_DATA, polyStream);
+			inputStreams.put(ParameterNames.HCSV_LAYERS_INPUT_DATA, layersStream);
 
 			response = runProjection(ProjectionRequestKind.HCSV, inputStreams, trialRun, parameters, securityContext);
 		} catch (IOException e) {

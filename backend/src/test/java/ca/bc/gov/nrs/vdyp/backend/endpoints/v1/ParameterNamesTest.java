@@ -8,6 +8,6 @@ public class ParameterNamesTest {
 
 	@Test
 	void test() {
-		Assert.assertEquals("historyInputData", ParameterNames.HISTORY_INPUT_DATA);
+		Assert.assertEquals("SCSV-History", ParameterNames.SCSV_HISTORY_INPUT_DATA);
 	}
 }

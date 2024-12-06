@@ -30,14 +30,14 @@ class ScsvProjectionEndpointTest {
 	void testProjectionSscv_shouldThrow() throws IOException {
 
 		given().basePath(TestHelper.ROOT_PATH).when().multiPart(ParameterNames.PROJECTION_PARAMETERS, new Parameters()) //
-				.multiPart(ParameterNames.POLYGON_INPUT_DATA, testHelper.buildTestFile().readAllBytes()) //
-				.multiPart(ParameterNames.LAYERS_INPUT_DATA, testHelper.buildTestFile().readAllBytes()) //
-				.multiPart(ParameterNames.HISTORY_INPUT_DATA, testHelper.buildTestFile().readAllBytes()) //
-				.multiPart(ParameterNames.NON_VEGETATION_INPUT_DATA, testHelper.buildTestFile().readAllBytes()) //
-				.multiPart(ParameterNames.OTHER_VEGETATION_INPUT_DATA, testHelper.buildTestFile().readAllBytes()) //
-				.multiPart(ParameterNames.POLYGON_ID_INPUT_DATA, testHelper.buildTestFile().readAllBytes()) //
-				.multiPart(ParameterNames.SPECIES_INPUT_DATA, testHelper.buildTestFile().readAllBytes()) //
-				.multiPart(ParameterNames.VRI_ADJUST_INPUT_DATA, testHelper.buildTestFile().readAllBytes()) //
+				.multiPart(ParameterNames.SCSV_POLYGON_INPUT_DATA, testHelper.buildTestFile().readAllBytes()) //
+				.multiPart(ParameterNames.SCSV_LAYERS_INPUT_DATA, testHelper.buildTestFile().readAllBytes()) //
+				.multiPart(ParameterNames.SCSV_HISTORY_INPUT_DATA, testHelper.buildTestFile().readAllBytes()) //
+				.multiPart(ParameterNames.SCSV_NON_VEGETATION_INPUT_DATA, testHelper.buildTestFile().readAllBytes()) //
+				.multiPart(ParameterNames.SCSV_OTHER_VEGETATION_INPUT_DATA, testHelper.buildTestFile().readAllBytes()) //
+				.multiPart(ParameterNames.SCSV_POLYGON_ID_INPUT_DATA, testHelper.buildTestFile().readAllBytes()) //
+				.multiPart(ParameterNames.SCSV_SPECIES_INPUT_DATA, testHelper.buildTestFile().readAllBytes()) //
+				.multiPart(ParameterNames.SCSV_VRI_ADJUST_INPUT_DATA, testHelper.buildTestFile().readAllBytes()) //
 				.post("/projection/scsv").then().statusCode(501);
 	}
 }

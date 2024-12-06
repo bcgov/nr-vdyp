@@ -9,11 +9,17 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.text.MessageFormat;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import org.junit.Assert;
+
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessageKind;
 import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
@@ -55,5 +61,20 @@ public class TestHelper {
 		params.setSelectedExecutionOptions(List.of(executionOptions));
 
 		return params;
+	}
+
+	public static void verifyMessageSetIs(List<ValidationMessage> validationMessages, ValidationMessageKind... kinds) {
+		Set<ValidationMessageKind> expectedKinds = Set.of(kinds);
+		Set<ValidationMessageKind> presentKinds = new HashSet<>();
+	
+		for (var message : validationMessages) {
+			presentKinds.add(message.getKind());
+		}
+	
+		Assert.assertEquals(expectedKinds, presentKinds);
+	}
+
+	public static Parameters buildValidParametersObject() {
+		return new Parameters().ageEnd(400).ageStart(1);
 	}
 }

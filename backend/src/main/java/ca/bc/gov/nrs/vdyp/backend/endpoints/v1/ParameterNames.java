@@ -17,14 +17,17 @@ package ca.bc.gov.nrs.vdyp.backend.endpoints.v1;
  */
 public class ParameterNames {
 	public static final String TRIAL_RUN = "trialRun";
-	public static final String PROJECTION_PARAMETERS = "projectionParameters";
-	public static final String POLYGON_INPUT_DATA = "polygonInputData";
-	public static final String LAYERS_INPUT_DATA = "layersInputData";
-	public static final String HISTORY_INPUT_DATA = "historyInputData";
-	public static final String NON_VEGETATION_INPUT_DATA = "nonVegetationInputData";
-	public static final String OTHER_VEGETATION_INPUT_DATA = "otherVegetationInputData";
-	public static final String POLYGON_ID_INPUT_DATA = "polygonIdInputData";
-	public static final String SPECIES_INPUT_DATA = "speciesInputData";
-	public static final String VRI_ADJUST_INPUT_DATA = "vriAdjustInputData";
-	public static final String DCSV_INPUT_DATA = "dcsvInputData";
+	public static final String PROJECTION_PARAMETERS = "Projection Parameters";
+	public static final String HCSV_POLYGON_INPUT_DATA = "HCSV-Polygon";
+	public static final String HCSV_LAYERS_INPUT_DATA = "HCSV-Layers";
+	public static final String SCSV_POLYGON_INPUT_DATA = "SCSV-Polygon";
+	public static final String SCSV_LAYERS_INPUT_DATA = "SCSV-Layers";
+	public static final String SCSV_HISTORY_INPUT_DATA = "SCSV-History";
+	public static final String SCSV_NON_VEGETATION_INPUT_DATA = "SCSV-Non-vegetation";
+	public static final String SCSV_OTHER_VEGETATION_INPUT_DATA = "SCSV-Other-vegetation";
+	public static final String SCSV_POLYGON_ID_INPUT_DATA = "SCSV-PolygonId";
+	public static final String SCSV_SPECIES_INPUT_DATA = "SCSV-Species";
+	public static final String SCSV_VRI_ADJUST_INPUT_DATA = "SCSV-VRIAdjust";
+	public static final String DCSV_INPUT_DATA = "DCSV";
+	public static final String ICSV_INPUT_DATA = "ICSV";
 }

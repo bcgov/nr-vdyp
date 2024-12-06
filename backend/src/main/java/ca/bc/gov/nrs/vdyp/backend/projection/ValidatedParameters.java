@@ -558,8 +558,7 @@ public class ValidatedParameters {
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append("class Parameters {\n");
-
+		sb.append("Validated Parameters:\n");
 		sb.append("    outputFormat: ").append(toIndentedString(outputFormat)).append("\n");
 		sb.append("    selectedExecutionOptions: ").append(toIndentedString(selectedExecutionOptions)).append("\n");
 		sb.append("    selectedDebugOptions: ").append(toIndentedString(selectedDebugOptions)).append("\n");
@@ -580,7 +579,7 @@ public class ValidatedParameters {
 		sb.append("    metadataToOutput: ").append(toIndentedString(metadataToOutput)).append("\n");
 		sb.append("    filters: ").append(toIndentedString(filters)).append("\n");
 		sb.append("    utils: ").append(toIndentedString(utils)).append("\n");
-		sb.append("}");
+		
 		return sb.toString();
 	}
 

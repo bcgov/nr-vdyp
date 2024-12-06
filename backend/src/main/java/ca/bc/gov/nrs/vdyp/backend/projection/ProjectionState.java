@@ -11,7 +11,7 @@ import ca.bc.gov.nrs.vdyp.backend.model.v1.ProjectionRequestKind;
 public class ProjectionState {
 
 	private final String projectionId;
-	private final ProjectionRequestKind kind;
+	private final ProjectionRequestKind requestKind;
 
 	private Parameters params;
 	private ValidatedParameters vparams;
@@ -19,9 +19,9 @@ public class ProjectionState {
 	private final IMessageLog progressLog;
 	private final IMessageLog errorLog;
 
-	public ProjectionState(ProjectionRequestKind kind, String projectionId, Parameters params) {
+	public ProjectionState(ProjectionRequestKind requestKind, String projectionId, Parameters params) {
 
-		if (kind == null) {
+		if (requestKind == null) {
 			throw new IllegalArgumentException("kind cannot be null in constructor of ProjectionState");
 		}
 		if (projectionId == null || projectionId.isBlank()) {
@@ -33,7 +33,7 @@ public class ProjectionState {
 
 		this.projectionId = projectionId;
 		this.params = params;
-		this.kind = kind;
+		this.requestKind = requestKind;
 
 		var loggingParams = LoggingParameters.of(params);
 
@@ -66,8 +66,8 @@ public class ProjectionState {
 		return projectionId;
 	}
 
-	public ProjectionRequestKind getKind() {
-		return kind;
+	public ProjectionRequestKind getRequestKind() {
+		return requestKind;
 	}
 
 	public IMessageLog getProgressLog() {

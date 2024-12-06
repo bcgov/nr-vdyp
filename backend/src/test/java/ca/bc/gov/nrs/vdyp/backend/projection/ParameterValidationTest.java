@@ -3,13 +3,11 @@ package ca.bc.gov.nrs.vdyp.backend.projection;
 import static ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessageKind.*;
 
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 
+import ca.bc.gov.nrs.api.helpers.TestHelper;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Filters;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.AgeYearRangeCombinationKind;
@@ -22,8 +20,6 @@ import ca.bc.gov.nrs.vdyp.backend.model.v1.ProgressFrequency.FrequencyKind;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ProjectionRequestKind;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.UtilizationParameter;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.UtilizationParameter.UtilizationClass;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessageKind;
 import jakarta.ws.rs.WebApplicationException;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -37,9 +33,9 @@ class ParameterValidationTest {
 		Parameters p = new Parameters();
 		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
-		var validator = new ProjectionRequestValidator();
+		var validator = new ProjectionRequestParametersValidator();
 		validator.validateState(s1);
-		verifyMessageSetIs(validator.getValidationMessages(), MISSING_START_CRITERIA, MISSING_END_CRITERIA);
+		TestHelper.verifyMessageSetIs(validator.getValidationMessages(), MISSING_START_CRITERIA, MISSING_END_CRITERIA);
 	}
 
 	@Test
@@ -48,9 +44,9 @@ class ParameterValidationTest {
 		Parameters p = new Parameters().ageStart(1);
 		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
-		var validator = new ProjectionRequestValidator();
+		var validator = new ProjectionRequestParametersValidator();
 		validator.validateState(s1);
-		verifyMessageSetIs(validator.getValidationMessages(), MISSING_END_CRITERIA);
+		TestHelper.verifyMessageSetIs(validator.getValidationMessages(), MISSING_END_CRITERIA);
 	}
 
 	@Test
@@ -59,9 +55,9 @@ class ParameterValidationTest {
 		Parameters p = new Parameters().ageEnd(400).ageStart(ValidatedParameters.DEFAULT.getMinAgeStart() - 1);
 		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
-		var validator = new ProjectionRequestValidator();
+		var validator = new ProjectionRequestParametersValidator();
 		validator.validateState(s1);
-		verifyMessageSetIs(validator.getValidationMessages(), MISSING_START_CRITERIA, INTEGER_VALUE_TOO_LOW);
+		TestHelper.verifyMessageSetIs(validator.getValidationMessages(), MISSING_START_CRITERIA, INTEGER_VALUE_TOO_LOW);
 	}
 
 	@Test
@@ -70,9 +66,9 @@ class ParameterValidationTest {
 		Parameters p = new Parameters().ageEnd(400).ageStart(ValidatedParameters.DEFAULT.getMaxAgeStart() + 1);
 		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
-		var validator = new ProjectionRequestValidator();
+		var validator = new ProjectionRequestParametersValidator();
 		validator.validateState(s1);
-		verifyMessageSetIs(validator.getValidationMessages(), MISSING_START_CRITERIA, INTEGER_VALUE_TOO_HIGH);
+		TestHelper.verifyMessageSetIs(validator.getValidationMessages(), MISSING_START_CRITERIA, INTEGER_VALUE_TOO_HIGH);
 	}
 
 	@Test
@@ -81,9 +77,9 @@ class ParameterValidationTest {
 		Parameters p = new Parameters().yearStart(ValidatedParameters.DEFAULT.getMinYearStart());
 		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
-		var validator = new ProjectionRequestValidator();
+		var validator = new ProjectionRequestParametersValidator();
 		validator.validateState(s1);
-		verifyMessageSetIs(validator.getValidationMessages(), MISSING_END_CRITERIA);
+		TestHelper.verifyMessageSetIs(validator.getValidationMessages(), MISSING_END_CRITERIA);
 	}
 
 	@Test
@@ -92,9 +88,9 @@ class ParameterValidationTest {
 		Parameters p = new Parameters().ageEnd(400).yearStart(ValidatedParameters.DEFAULT.getMinYearStart() - 1);
 		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
-		var validator = new ProjectionRequestValidator();
+		var validator = new ProjectionRequestParametersValidator();
 		validator.validateState(s1);
-		verifyMessageSetIs(validator.getValidationMessages(), MISSING_START_CRITERIA, INTEGER_VALUE_TOO_LOW);
+		TestHelper.verifyMessageSetIs(validator.getValidationMessages(), MISSING_START_CRITERIA, INTEGER_VALUE_TOO_LOW);
 	}
 
 	@Test
@@ -103,9 +99,9 @@ class ParameterValidationTest {
 		Parameters p = new Parameters().ageEnd(400).yearStart(ValidatedParameters.DEFAULT.getMaxYearStart() + 1);
 		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
-		var validator = new ProjectionRequestValidator();
+		var validator = new ProjectionRequestParametersValidator();
 		validator.validateState(s1);
-		verifyMessageSetIs(validator.getValidationMessages(), MISSING_START_CRITERIA, INTEGER_VALUE_TOO_HIGH);
+		TestHelper.verifyMessageSetIs(validator.getValidationMessages(), MISSING_START_CRITERIA, INTEGER_VALUE_TOO_HIGH);
 	}
 
 	@Test
@@ -114,9 +110,9 @@ class ParameterValidationTest {
 		Parameters p = new Parameters().ageEnd(400);
 		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
-		var validator = new ProjectionRequestValidator();
+		var validator = new ProjectionRequestParametersValidator();
 		validator.validateState(s1);
-		verifyMessageSetIs(validator.getValidationMessages(), MISSING_START_CRITERIA);
+		TestHelper.verifyMessageSetIs(validator.getValidationMessages(), MISSING_START_CRITERIA);
 	}
 
 	@Test
@@ -125,9 +121,9 @@ class ParameterValidationTest {
 		Parameters p = new Parameters().ageStart(1).ageEnd(ValidatedParameters.DEFAULT.getMinAgeEnd() - 1);
 		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
-		var validator = new ProjectionRequestValidator();
+		var validator = new ProjectionRequestParametersValidator();
 		validator.validateState(s1);
-		verifyMessageSetIs(validator.getValidationMessages(), MISSING_END_CRITERIA, INTEGER_VALUE_TOO_LOW);
+		TestHelper.verifyMessageSetIs(validator.getValidationMessages(), MISSING_END_CRITERIA, INTEGER_VALUE_TOO_LOW);
 	}
 
 	@Test
@@ -136,9 +132,9 @@ class ParameterValidationTest {
 		Parameters p = new Parameters().ageStart(1).ageEnd(ValidatedParameters.DEFAULT.getMaxAgeEnd() + 1);
 		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
-		var validator = new ProjectionRequestValidator();
+		var validator = new ProjectionRequestParametersValidator();
 		validator.validateState(s1);
-		verifyMessageSetIs(validator.getValidationMessages(), MISSING_END_CRITERIA, INTEGER_VALUE_TOO_HIGH);
+		TestHelper.verifyMessageSetIs(validator.getValidationMessages(), MISSING_END_CRITERIA, INTEGER_VALUE_TOO_HIGH);
 	}
 
 	@Test
@@ -147,9 +143,9 @@ class ParameterValidationTest {
 		Parameters p = new Parameters().yearEnd(1500);
 		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
-		var validator = new ProjectionRequestValidator();
+		var validator = new ProjectionRequestParametersValidator();
 		validator.validateState(s1);
-		verifyMessageSetIs(validator.getValidationMessages(), MISSING_START_CRITERIA);
+		TestHelper.verifyMessageSetIs(validator.getValidationMessages(), MISSING_START_CRITERIA);
 	}
 
 	@Test
@@ -158,9 +154,9 @@ class ParameterValidationTest {
 		Parameters p = new Parameters().yearStart(1500).yearEnd(ValidatedParameters.DEFAULT.getMinYearEnd() - 1);
 		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
-		var validator = new ProjectionRequestValidator();
+		var validator = new ProjectionRequestParametersValidator();
 		validator.validateState(s1);
-		verifyMessageSetIs(validator.getValidationMessages(), MISSING_END_CRITERIA, INTEGER_VALUE_TOO_LOW);
+		TestHelper.verifyMessageSetIs(validator.getValidationMessages(), MISSING_END_CRITERIA, INTEGER_VALUE_TOO_LOW);
 	}
 
 	@Test
@@ -169,53 +165,53 @@ class ParameterValidationTest {
 		Parameters p = new Parameters().yearStart(1500).yearEnd(ValidatedParameters.DEFAULT.getMaxYearEnd() + 1);
 		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
-		var validator = new ProjectionRequestValidator();
+		var validator = new ProjectionRequestParametersValidator();
 		validator.validateState(s1);
-		verifyMessageSetIs(validator.getValidationMessages(), MISSING_END_CRITERIA, INTEGER_VALUE_TOO_HIGH);
+		TestHelper.verifyMessageSetIs(validator.getValidationMessages(), MISSING_END_CRITERIA, INTEGER_VALUE_TOO_HIGH);
 	}
 
 	@Test
 	void testAgeIncrementTooLowParameterSupplied() throws WebApplicationException, IOException {
 
-		Parameters p = buildValidParametersObject().ageIncrement(ValidatedParameters.DEFAULT.getMinAgeIncrement() - 1);
+		Parameters p = TestHelper.buildValidParametersObject().ageIncrement(ValidatedParameters.DEFAULT.getMinAgeIncrement() - 1);
 		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
-		var validator = new ProjectionRequestValidator();
+		var validator = new ProjectionRequestParametersValidator();
 		validator.validateState(s1);
-		verifyMessageSetIs(validator.getValidationMessages(), INTEGER_VALUE_TOO_LOW);
+		TestHelper.verifyMessageSetIs(validator.getValidationMessages(), INTEGER_VALUE_TOO_LOW);
 	}
 
 	@Test
 	void testAgeIncrementTooHighParameterSupplied() throws WebApplicationException, IOException {
 
-		Parameters p = buildValidParametersObject().ageIncrement(ValidatedParameters.DEFAULT.getMaxAgeIncrement() + 1);
+		Parameters p = TestHelper.buildValidParametersObject().ageIncrement(ValidatedParameters.DEFAULT.getMaxAgeIncrement() + 1);
 		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
-		var validator = new ProjectionRequestValidator();
+		var validator = new ProjectionRequestParametersValidator();
 		validator.validateState(s1);
-		verifyMessageSetIs(validator.getValidationMessages(), INTEGER_VALUE_TOO_HIGH);
+		TestHelper.verifyMessageSetIs(validator.getValidationMessages(), INTEGER_VALUE_TOO_HIGH);
 	}
 
 	@Test
 	void testValidAgeIncrementSupplied() throws WebApplicationException, IOException {
 
-		Parameters p = buildValidParametersObject().ageIncrement(ValidatedParameters.DEFAULT.getMaxAgeIncrement());
+		Parameters p = TestHelper.buildValidParametersObject().ageIncrement(ValidatedParameters.DEFAULT.getMaxAgeIncrement());
 		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
-		var validator = new ProjectionRequestValidator();
+		var validator = new ProjectionRequestParametersValidator();
 		validator.validateState(s1);
-		verifyMessageSetIs(validator.getValidationMessages());
+		TestHelper.verifyMessageSetIs(validator.getValidationMessages());
 	}
 
 	@Test
 	void testValidAgeStartAndEndParameterSupplied() throws WebApplicationException, IOException {
 
-		Parameters p = buildValidParametersObject();
+		Parameters p = TestHelper.buildValidParametersObject();
 		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
-		var validator = new ProjectionRequestValidator();
+		var validator = new ProjectionRequestParametersValidator();
 		validator.validateState(s1);
-		verifyMessageSetIs(validator.getValidationMessages());
+		TestHelper.verifyMessageSetIs(validator.getValidationMessages());
 	}
 
 	@Test
@@ -224,184 +220,184 @@ class ParameterValidationTest {
 		Parameters p = new Parameters().yearStart(1600).yearEnd(2100);
 		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
-		var validator = new ProjectionRequestValidator();
+		var validator = new ProjectionRequestParametersValidator();
 		validator.validateState(s1);
-		verifyMessageSetIs(validator.getValidationMessages());
+		TestHelper.verifyMessageSetIs(validator.getValidationMessages());
 	}
 
 	@Test
 	void testInvalidOutputFormatOptionSupplied() throws WebApplicationException, IOException {
 
-		Parameters p = buildValidParametersObject();
+		Parameters p = TestHelper.buildValidParametersObject();
 		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
 		p.setOutputFormat("bad output format");
 
-		var validator = new ProjectionRequestValidator();
+		var validator = new ProjectionRequestParametersValidator();
 		validator.validateState(s1);
-		verifyMessageSetIs(validator.getValidationMessages(), UNRECOGNIZED_OUTPUT_FORMAT);
+		TestHelper.verifyMessageSetIs(validator.getValidationMessages(), UNRECOGNIZED_OUTPUT_FORMAT);
 	}
 
 	@Test
 	void testValidOutputFormatOptionSupplied() throws WebApplicationException, IOException {
 
-		Parameters p = buildValidParametersObject();
+		Parameters p = TestHelper.buildValidParametersObject();
 		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
 		p.setOutputFormat(Parameters.OutputFormat.CSV_YIELD_TABLE);
 
-		var validator = new ProjectionRequestValidator();
+		var validator = new ProjectionRequestParametersValidator();
 		validator.validateState(s1);
-		verifyMessageSetIs(validator.getValidationMessages());
+		TestHelper.verifyMessageSetIs(validator.getValidationMessages());
 	}
 
 	@Test
 	void testInvalidCombineAgeYearRangeOptionSupplied() throws WebApplicationException, IOException {
 
-		Parameters p = buildValidParametersObject();
+		Parameters p = TestHelper.buildValidParametersObject();
 		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
 		p.setCombineAgeYearRange("bad option");
 
-		var validator = new ProjectionRequestValidator();
+		var validator = new ProjectionRequestParametersValidator();
 		validator.validateState(s1);
-		verifyMessageSetIs(validator.getValidationMessages(), UNRECOGNIZED_COMBINE_AGE_YEAR_RANGE_OPTION);
+		TestHelper.verifyMessageSetIs(validator.getValidationMessages(), UNRECOGNIZED_COMBINE_AGE_YEAR_RANGE_OPTION);
 	}
 
 	@Test
 	void testValidCombineAgeYearRangeOptionSupplied() throws WebApplicationException, IOException {
 
-		Parameters p = buildValidParametersObject();
+		Parameters p = TestHelper.buildValidParametersObject();
 		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
 		p.setCombineAgeYearRange(Parameters.AgeYearRangeCombinationKind.INTERSECT);
 
-		var validator = new ProjectionRequestValidator();
+		var validator = new ProjectionRequestParametersValidator();
 		validator.validateState(s1);
-		verifyMessageSetIs(validator.getValidationMessages());
+		TestHelper.verifyMessageSetIs(validator.getValidationMessages());
 	}
 
 	@Test
 	void testInvalidProcessFrequencySupplied() throws WebApplicationException, IOException {
 
-		Parameters p = buildValidParametersObject();
+		Parameters p = TestHelper.buildValidParametersObject();
 		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
 		p.setProgressFrequency("bad option");
 
-		var validator = new ProjectionRequestValidator();
+		var validator = new ProjectionRequestParametersValidator();
 		validator.validateState(s1);
-		verifyMessageSetIs(validator.getValidationMessages(), INVALID_PROCESS_FREQUENCY_VALUE);
+		TestHelper.verifyMessageSetIs(validator.getValidationMessages(), INVALID_PROCESS_FREQUENCY_VALUE);
 	}
 
 	@Test
 	void testValidProcessFrequencySupplied1() throws WebApplicationException, IOException {
 
-		Parameters p = buildValidParametersObject();
+		Parameters p = TestHelper.buildValidParametersObject();
 		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
 		p.setProgressFrequency(ProgressFrequency.FrequencyKind.MAPSHEET);
 
-		var validator = new ProjectionRequestValidator();
+		var validator = new ProjectionRequestParametersValidator();
 		validator.validateState(s1);
-		verifyMessageSetIs(validator.getValidationMessages());
+		TestHelper.verifyMessageSetIs(validator.getValidationMessages());
 	}
 
 	@Test
 	void testValidProcessFrequencySupplied2() throws WebApplicationException, IOException {
 
-		Parameters p = buildValidParametersObject();
+		Parameters p = TestHelper.buildValidParametersObject();
 		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
 		p.setProgressFrequency(100);
 
-		var validator = new ProjectionRequestValidator();
+		var validator = new ProjectionRequestParametersValidator();
 		validator.validateState(s1);
-		verifyMessageSetIs(validator.getValidationMessages());
+		TestHelper.verifyMessageSetIs(validator.getValidationMessages());
 	}
 
 	@Test
 	void testInvalidMetadataToOutputValueSupplied() throws WebApplicationException, IOException {
 
-		Parameters p = buildValidParametersObject();
+		Parameters p = TestHelper.buildValidParametersObject();
 		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
 		p.setMetadataToOutput("bad option");
 
-		var validator = new ProjectionRequestValidator();
+		var validator = new ProjectionRequestParametersValidator();
 		validator.validateState(s1);
-		verifyMessageSetIs(validator.getValidationMessages(), INVALID_METADATA_TO_OUTPUT_VALUE);
+		TestHelper.verifyMessageSetIs(validator.getValidationMessages(), INVALID_METADATA_TO_OUTPUT_VALUE);
 	}
 
 	@Test
 	void testInvalidExecutionOptionSupplied() throws WebApplicationException, IOException {
 
-		Parameters p = buildValidParametersObject();
+		Parameters p = TestHelper.buildValidParametersObject();
 		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
 		p.addSelectedExecutionOptionsItem(ExecutionOption.BACK_GROW_ENABLED)
 				.addSelectedExecutionOptionsItem("bad option");
 
-		var validator = new ProjectionRequestValidator();
+		var validator = new ProjectionRequestParametersValidator();
 		validator.validateState(s1);
-		verifyMessageSetIs(validator.getValidationMessages(), UNRECOGNIZED_EXECUTION_OPTION);
+		TestHelper.verifyMessageSetIs(validator.getValidationMessages(), UNRECOGNIZED_EXECUTION_OPTION);
 	}
 
 	@Test
 	void testInvalidDebugOptionSupplied() throws WebApplicationException, IOException {
 
-		Parameters p = buildValidParametersObject();
+		Parameters p = TestHelper.buildValidParametersObject();
 		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
 		p.addSelectedDebugOptionsItem(DebugOption.DO_INCLUDE_DEBUG_ENTRY_EXIT)
 				.addSelectedDebugOptionsItem("bad option");
 
-		var validator = new ProjectionRequestValidator();
+		var validator = new ProjectionRequestParametersValidator();
 		validator.validateState(s1);
-		verifyMessageSetIs(validator.getValidationMessages(), UNRECOGNIZED_DEBUG_OPTION);
+		TestHelper.verifyMessageSetIs(validator.getValidationMessages(), UNRECOGNIZED_DEBUG_OPTION);
 	}
 
 	@Test
 	void testBadUtilizationParameterSpeciesSupplied() throws WebApplicationException, IOException {
 
-		Parameters p = buildValidParametersObject();
+		Parameters p = TestHelper.buildValidParametersObject();
 		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
 		var up = new UtilizationParameter().speciesName("bad species name")
 				.utilizationClass(UtilizationParameter.UtilizationClass._12_5.getValue());
 		p.addUtilsItem(up);
 
-		var validator = new ProjectionRequestValidator();
+		var validator = new ProjectionRequestParametersValidator();
 		validator.validateState(s1);
-		verifyMessageSetIs(validator.getValidationMessages(), UNKNOWN_SPECIES_GROUP_NAME);
+		TestHelper.verifyMessageSetIs(validator.getValidationMessages(), UNKNOWN_SPECIES_GROUP_NAME);
 	}
 
 	@Test
 	void testBadUtilizationParameterUtilizationClassSupplied() throws WebApplicationException, IOException {
 
-		Parameters p = buildValidParametersObject();
+		Parameters p = TestHelper.buildValidParametersObject();
 		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
 		var up = new UtilizationParameter().speciesName("D").utilizationClass("bad utilization class");
 		p.addUtilsItem(up);
 
-		var validator = new ProjectionRequestValidator();
+		var validator = new ProjectionRequestParametersValidator();
 		validator.validateState(s1);
-		verifyMessageSetIs(validator.getValidationMessages(), UNKNOWN_UTILIZATION_CLASS_NAME);
+		TestHelper.verifyMessageSetIs(validator.getValidationMessages(), UNKNOWN_UTILIZATION_CLASS_NAME);
 	}
 
 	@Test
 	void testBadUtilizationParameterSupplied() throws WebApplicationException, IOException {
 
-		Parameters p = buildValidParametersObject();
+		Parameters p = TestHelper.buildValidParametersObject();
 		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
 		var up = new UtilizationParameter().speciesName("bad species name").utilizationClass("bad utilization class");
 		p.addUtilsItem(up);
 
-		var validator = new ProjectionRequestValidator();
+		var validator = new ProjectionRequestParametersValidator();
 		validator.validateState(s1);
-		verifyMessageSetIs(
+		TestHelper.verifyMessageSetIs(
 				validator.getValidationMessages(), UNKNOWN_SPECIES_GROUP_NAME, UNKNOWN_UTILIZATION_CLASS_NAME
 		);
 	}
@@ -409,54 +405,54 @@ class ParameterValidationTest {
 	@Test
 	void testValidUtilizationParameterSupplied() throws WebApplicationException, IOException {
 
-		Parameters p = buildValidParametersObject();
+		Parameters p = TestHelper.buildValidParametersObject();
 		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
 		var up = new UtilizationParameter().speciesName("D").utilizationClass(UtilizationClass._12_5);
 		p.addUtilsItem(up);
 
-		var validator = new ProjectionRequestValidator();
+		var validator = new ProjectionRequestParametersValidator();
 		validator.validateState(s1);
-		verifyMessageSetIs(validator.getValidationMessages());
+		TestHelper.verifyMessageSetIs(validator.getValidationMessages());
 	}
 
 	@Test
 	void testInvalidForceYear() {
 
-		Parameters p = buildValidParametersObject();
+		Parameters p = TestHelper.buildValidParametersObject();
 		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
 		p.forceYear("bad year");
 
-		var validator = new ProjectionRequestValidator();
+		var validator = new ProjectionRequestParametersValidator();
 		validator.validateState(s1);
-		verifyMessageSetIs(validator.getValidationMessages(), INVALID_INTEGER_VALUE);
+		TestHelper.verifyMessageSetIs(validator.getValidationMessages(), INVALID_INTEGER_VALUE);
 	}
 
 	@Test
 	void testValidForceYear() {
 
-		Parameters p = buildValidParametersObject();
+		Parameters p = TestHelper.buildValidParametersObject();
 		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
 		p.forceYear(2020);
 
-		var validator = new ProjectionRequestValidator();
+		var validator = new ProjectionRequestParametersValidator();
 		validator.validateState(s1);
-		verifyMessageSetIs(validator.getValidationMessages());
+		TestHelper.verifyMessageSetIs(validator.getValidationMessages());
 	}
 
 	@Test
 	void testDCSVIssues() {
 
-		Parameters p = buildValidParametersObject();
+		Parameters p = TestHelper.buildValidParametersObject();
 		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
 		p.outputFormat(OutputFormat.DCSV);
 
-		var validator = new ProjectionRequestValidator();
+		var validator = new ProjectionRequestParametersValidator();
 		validator.validateState(s1);
-		verifyMessageSetIs(
+		TestHelper.verifyMessageSetIs(
 				validator.getValidationMessages(), AGE_RANGES_IGNORED_WHEN_DCSV_OUTPUT,
 				MUST_BE_EXACTLY_ONE_FORCE_PARAM_WHEN_DCSV_OUTPUT, MISMATCHED_INPUT_OUTPUT_TYPES
 		);
@@ -465,14 +461,14 @@ class ParameterValidationTest {
 	@Test
 	void testDCSVIssues2() {
 
-		Parameters p = buildValidParametersObject();
+		Parameters p = TestHelper.buildValidParametersObject();
 		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
 		p.outputFormat(OutputFormat.DCSV).forceYear(2020);
 
-		var validator = new ProjectionRequestValidator();
+		var validator = new ProjectionRequestParametersValidator();
 		validator.validateState(s1);
-		verifyMessageSetIs(
+		TestHelper.verifyMessageSetIs(
 				validator.getValidationMessages(), AGE_RANGES_IGNORED_WHEN_DCSV_OUTPUT, MISMATCHED_INPUT_OUTPUT_TYPES
 		);
 	}
@@ -480,15 +476,15 @@ class ParameterValidationTest {
 	@Test
 	void testCSFBiomassIssues1() {
 
-		Parameters p = buildValidParametersObject();
+		Parameters p = TestHelper.buildValidParametersObject();
 		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
 		p.addSelectedExecutionOptionsItem(ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS)
 				.addSelectedExecutionOptionsItem(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_BIOMASS);
 
-		var validator = new ProjectionRequestValidator();
+		var validator = new ProjectionRequestParametersValidator();
 		validator.validateState(s1);
-		verifyMessageSetIs(
+		TestHelper.verifyMessageSetIs(
 				validator.getValidationMessages(), CANNOT_SPECIFY_BOTH_CFS_AND_MOF_BIOMASS_OUTPUT,
 				CANNOT_SPECIFY_BOTH_CFS_BIOMASS_AND_EITHER_MOF_OPTIONS
 		);
@@ -497,15 +493,15 @@ class ParameterValidationTest {
 	@Test
 	void testCSFBiomassIssues2() {
 
-		Parameters p = buildValidParametersObject();
+		Parameters p = TestHelper.buildValidParametersObject();
 		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
 		p.addSelectedExecutionOptionsItem(ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS)
 				.addSelectedExecutionOptionsItem(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES);
 
-		var validator = new ProjectionRequestValidator();
+		var validator = new ProjectionRequestParametersValidator();
 		validator.validateState(s1);
-		verifyMessageSetIs(validator.getValidationMessages(), CANNOT_SPECIFY_BOTH_CFS_BIOMASS_AND_EITHER_MOF_OPTIONS);
+		TestHelper.verifyMessageSetIs(validator.getValidationMessages(), CANNOT_SPECIFY_BOTH_CFS_BIOMASS_AND_EITHER_MOF_OPTIONS);
 	}
 
 	@Test
@@ -517,9 +513,9 @@ class ParameterValidationTest {
 		p.addSelectedExecutionOptionsItem(ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS)
 				.outputFormat(OutputFormat.DCSV).forceYear(2020);
 
-		var validator = new ProjectionRequestValidator();
+		var validator = new ProjectionRequestParametersValidator();
 		validator.validateState(s1);
-		verifyMessageSetIs(validator.getValidationMessages(), INVALID_CFS_BIOMASS_OUTPUT_FORMAT);
+		TestHelper.verifyMessageSetIs(validator.getValidationMessages(), INVALID_CFS_BIOMASS_OUTPUT_FORMAT);
 	}
 
 	@Test
@@ -575,9 +571,9 @@ class ParameterValidationTest {
 
 		ProjectionState s1 = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 
-		var validator = new ProjectionRequestValidator();
+		var validator = new ProjectionRequestParametersValidator();
 		validator.validateState(s1);
-		verifyMessageSetIs(validator.getValidationMessages());
+		TestHelper.verifyMessageSetIs(validator.getValidationMessages());
 
 		var vp = s1.getValidatedParams();
 
@@ -635,22 +631,5 @@ class ParameterValidationTest {
 						new ValidatedUtilizationParameter().speciesName("D").utilizationClass(UtilizationClass._12_5)
 				)
 		);
-	}
-
-	// Helpers
-
-	private void verifyMessageSetIs(List<ValidationMessage> validationMessages, ValidationMessageKind... kinds) {
-		Set<ValidationMessageKind> expectedKinds = Set.of(kinds);
-		Set<ValidationMessageKind> presentKinds = new HashSet<>();
-
-		for (var message : validationMessages) {
-			presentKinds.add(message.getKind());
-		}
-
-		Assert.assertEquals(expectedKinds, presentKinds);
-	}
-
-	private Parameters buildValidParametersObject() {
-		return new Parameters().ageEnd(400).ageStart(1);
 	}
 }

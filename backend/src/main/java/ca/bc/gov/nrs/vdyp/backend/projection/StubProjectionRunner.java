@@ -8,6 +8,7 @@ import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionExecutionException
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestValidationException;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ProjectionRequestKind;
+import ca.bc.gov.nrs.vdyp.backend.projection.input.AbstractPolygonStream;
 import ca.bc.gov.nrs.vdyp.backend.utils.FileHelper;
 
 public class StubProjectionRunner implements IProjectionRunner {
@@ -22,7 +23,13 @@ public class StubProjectionRunner implements IProjectionRunner {
 	public void run(Map<String, InputStream> streams) throws ProjectionRequestValidationException {
 		state.getProgressLog().addMessage("Running Projection");
 
-		ProjectionRequestValidator.validate(state, streams);
+		ProjectionRequestParametersValidator.validate(state);
+
+		AbstractPolygonStream polygonStream = AbstractPolygonStream.build(state.getRequestKind(), streams);
+		
+		while (polygonStream.hasNextPolygon()) {
+			
+		}
 	}
 
 	@Override

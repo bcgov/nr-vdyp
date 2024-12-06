@@ -3,11 +3,9 @@ package ca.bc.gov.nrs.vdyp.backend.projection;
 import static ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessageKind.*;
 import static ca.bc.gov.nrs.vdyp.backend.projection.ValidatedParameters.DEFAULT;
 
-import java.io.InputStream;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestValidationException;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
@@ -21,24 +19,20 @@ import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessageKind;
 import ca.bc.gov.nrs.vdyp.si32.vdyp.SP0Name;
 
-public class ProjectionRequestValidator {
+public class ProjectionRequestParametersValidator {
 
 	private List<ValidationMessage> validationErrorMessages = new ArrayList<>();
 
-	public static void validate(ProjectionState state, Map<String, InputStream> streams)
+	public static void validate(ProjectionState state)
 			throws ProjectionRequestValidationException {
 
-		var validator = new ProjectionRequestValidator();
+		var validator = new ProjectionRequestParametersValidator();
 
 		validator.validateState(state);
-		validator.validateStreams(streams);
 
 		if (validator.validationErrorMessages.size() > 0) {
 			throw new ProjectionRequestValidationException(validator.validationErrorMessages);
 		}
-	}
-
-	void validateStreams(Map<String, InputStream> streams) throws ProjectionRequestValidationException {
 	}
 
 	public List<ValidationMessage> getValidationMessages() {
@@ -273,8 +267,8 @@ public class ProjectionRequestValidator {
 				recordValidationMessage(MISSING_END_CRITERIA);
 			}
 
-			if (state.getKind() == ProjectionRequestKind.DCSV && vparams.getOutputFormat() != OutputFormat.DCSV
-					|| state.getKind() != ProjectionRequestKind.DCSV
+			if (state.getRequestKind() == ProjectionRequestKind.DCSV && vparams.getOutputFormat() != OutputFormat.DCSV
+					|| state.getRequestKind() != ProjectionRequestKind.DCSV
 							&& vparams.getOutputFormat() == OutputFormat.DCSV) {
 				recordValidationMessage(MISMATCHED_INPUT_OUTPUT_TYPES);
 			}

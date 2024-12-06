@@ -69,8 +69,8 @@ public class ProjectionEndpoint implements Endpoint {
 			@RestForm(value = ParameterNames.PROJECTION_PARAMETERS) @PartType(
 				MediaType.APPLICATION_JSON
 			) Parameters parameters, //
-			@FormParam(value = ParameterNames.POLYGON_INPUT_DATA) FileUpload polygonDataStream, //
-			@FormParam(value = ParameterNames.LAYERS_INPUT_DATA) FileUpload layersDataStream //
+			@FormParam(value = ParameterNames.HCSV_POLYGON_INPUT_DATA) FileUpload polygonDataStream, //
+			@FormParam(value = ParameterNames.HCSV_LAYERS_INPUT_DATA) FileUpload layersDataStream //
 			// , @Context SecurityContext securityContext
 	) {
 		try {
@@ -96,14 +96,14 @@ public class ProjectionEndpoint implements Endpoint {
 			@RestForm(value = ParameterNames.PROJECTION_PARAMETERS) @PartType(
 				MediaType.APPLICATION_JSON
 			) Parameters parameters, //
-			@FormParam(value = ParameterNames.POLYGON_INPUT_DATA) FileUpload polygonDataStream, //
-			@FormParam(value = ParameterNames.LAYERS_INPUT_DATA) FileUpload layersDataStream, //
-			@FormParam(value = ParameterNames.HISTORY_INPUT_DATA) FileUpload historyDataStream, //
-			@FormParam(value = ParameterNames.NON_VEGETATION_INPUT_DATA) FileUpload nonVegetationDataStream, //
-			@FormParam(value = ParameterNames.OTHER_VEGETATION_INPUT_DATA) FileUpload otherVegetationDataStream, //
-			@FormParam(value = ParameterNames.POLYGON_ID_INPUT_DATA) FileUpload polygonIdDataStream, //
-			@FormParam(value = ParameterNames.SPECIES_INPUT_DATA) FileUpload speciesDataStream, //
-			@FormParam(value = ParameterNames.VRI_ADJUST_INPUT_DATA) FileUpload vriAdjustDataStream //
+			@FormParam(value = ParameterNames.SCSV_POLYGON_INPUT_DATA) FileUpload polygonDataStream, //
+			@FormParam(value = ParameterNames.SCSV_LAYERS_INPUT_DATA) FileUpload layersDataStream, //
+			@FormParam(value = ParameterNames.SCSV_HISTORY_INPUT_DATA) FileUpload historyDataStream, //
+			@FormParam(value = ParameterNames.SCSV_NON_VEGETATION_INPUT_DATA) FileUpload nonVegetationDataStream, //
+			@FormParam(value = ParameterNames.SCSV_OTHER_VEGETATION_INPUT_DATA) FileUpload otherVegetationDataStream, //
+			@FormParam(value = ParameterNames.SCSV_POLYGON_ID_INPUT_DATA) FileUpload polygonIdDataStream, //
+			@FormParam(value = ParameterNames.SCSV_SPECIES_INPUT_DATA) FileUpload speciesDataStream, //
+			@FormParam(value = ParameterNames.SCSV_VRI_ADJUST_INPUT_DATA) FileUpload vriAdjustDataStream //
 			// , @Context SecurityContext securityContext
 	) {
 		try {

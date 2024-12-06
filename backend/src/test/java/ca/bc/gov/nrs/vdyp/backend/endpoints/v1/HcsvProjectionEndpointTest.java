@@ -62,11 +62,11 @@ class HcsvProjectionEndpointTest {
 		InputStream zipInputStream = given().basePath(TestHelper.ROOT_PATH).when() //
 				.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
 				.multiPart(
-						ParameterNames.POLYGON_INPUT_DATA,
+						ParameterNames.HCSV_POLYGON_INPUT_DATA,
 						Files.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_POLY.csv"))
 				) //
 				.multiPart(
-						ParameterNames.LAYERS_INPUT_DATA,
+						ParameterNames.HCSV_LAYERS_INPUT_DATA,
 						Files.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_LAYER.csv"))
 				) //
 				.post("/projection/hcsv?trialRun=false") //
@@ -106,11 +106,11 @@ class HcsvProjectionEndpointTest {
 		InputStream zipInputStream = given().basePath(TestHelper.ROOT_PATH).when() //
 				.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
 				.multiPart(
-						ParameterNames.POLYGON_INPUT_DATA,
+						ParameterNames.HCSV_POLYGON_INPUT_DATA,
 						Files.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_POLY.csv"))
 				) //
 				.multiPart(
-						ParameterNames.LAYERS_INPUT_DATA,
+						ParameterNames.HCSV_LAYERS_INPUT_DATA,
 						Files.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_LAYER.csv"))
 				) //
 				.post("/projection/hcsv?trialRun=false") //

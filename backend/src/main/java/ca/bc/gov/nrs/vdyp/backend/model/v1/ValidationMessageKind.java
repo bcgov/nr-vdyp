@@ -30,7 +30,11 @@ public enum ValidationMessageKind {
 			"For CSV Yield Table of CFS Biomass, neither MoF Volume or Biomass may also be selected.", Category.ERROR
 	), INVALID_INTEGER_VALUE("Field {1}''s value \"{0}\" is not an integer", Category.ERROR),
 	INTEGER_VALUE_TOO_LOW("Field {1}''s value \"{0}\" is not an integer", Category.ERROR),
-	INTEGER_VALUE_TOO_HIGH("Field {1}''s value \"{0}\" is not an integer", Category.ERROR),;
+	INTEGER_VALUE_TOO_HIGH("Field {1}''s value \"{0}\" is not an integer", Category.ERROR),
+	
+	EXPECTED_STREAMS_NOT_SUPPLIED("The following input file types were not supplied: {0}", Category.ERROR),
+	UNEXPECTED_STREAMS_SUPPLIED("The following input file types were supplied, but not expected: {0}", Category.ERROR),
+	;
 
 	public enum Category {
 		ERROR, WARNING, INFO
