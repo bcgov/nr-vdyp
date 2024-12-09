@@ -23,13 +23,7 @@ export const becZoneOptions = [
 ]
 
 export const siteSpeciesValuesOptions = [
-  { label: 'Computed', value: CONSTANTS.SITE_SPECIES_VALUES.COMPUTED },
   { label: 'Supplied', value: CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED },
-]
-
-export const ageTypeOptions = [
-  { label: 'Total', value: CONSTANTS.AGE_TYPE.TOTAL },
-  { label: 'Breast', value: CONSTANTS.AGE_TYPE.BREAST },
 ]
 
 export const ecoZoneOptions = [
@@ -38,28 +32,6 @@ export const ecoZoneOptions = [
   { label: 'Montane Cordillera', value: '3' },
   { label: 'Pacific Maritime', value: '4' },
   { label: 'Taiga Plains', value: '5' },
-]
-
-export const floatingOptions = [
-  { label: 'Float', value: CONSTANTS.FLOATING.AGE },
-  { label: 'Float', value: CONSTANTS.FLOATING.HEIGHT },
-  { label: 'Float', value: CONSTANTS.FLOATING.SITEINDEX },
-]
-
-export const minimumDBHLimitsOptions = [
-  { label: '4.0 cm+', value: CONSTANTS.MINIMUM_DBH_LIMITS.CM4_0 },
-  { label: '7.5 cm+', value: CONSTANTS.MINIMUM_DBH_LIMITS.CM7_5 },
-  { label: '12.5 cm+', value: CONSTANTS.MINIMUM_DBH_LIMITS.CM12_5 },
-  { label: '17.5 cm+', value: CONSTANTS.MINIMUM_DBH_LIMITS.CM17_5 },
-  { label: '22.5 cm+', value: CONSTANTS.MINIMUM_DBH_LIMITS.CM22_5 },
-]
-
-export const addtStandAttrsOptions = [
-  {
-    label: 'Use Computed Values',
-    value: CONSTANTS.COMPUTED_VALUES.USE,
-  },
-  { label: 'Modify Computed Values', value: CONSTANTS.COMPUTED_VALUES.MODIFY },
 ]
 
 export const volumeReportedOptions = [
@@ -87,7 +59,7 @@ export const projectionTypeOptions = [
   { label: 'CFS Biomass', value: CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS },
 ]
 
-export const modelTypeOptions = [
+export const modelSelectionOptions = [
   {
     label: 'File Upload',
     value: CONSTANTS.MODEL_SELECTION.FILE_UPLOAD,
@@ -95,16 +67,5 @@ export const modelTypeOptions = [
   {
     label: 'Input Model Parameters',
     value: CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS,
-  },
-]
-
-export const engineVersionOptions = [
-  {
-    label: 'VDYP 8',
-    value: CONSTANTS.ENGINE_VERSION.VDYP8,
-  },
-  {
-    label: 'VDYP 9',
-    value: CONSTANTS.ENGINE_VERSION.VDYP9,
   },
 ]

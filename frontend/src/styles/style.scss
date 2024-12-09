@@ -105,6 +105,14 @@ body {
   padding: 1rem !important;
 }
 
+/* FILE-INPUT */
+.v-input--center-affix .v-input__prepend,
+.v-input--center-affix .v-input__append {
+  align-items: center;
+  padding-top: 0;
+  display: none;
+}
+
 /* TABS */
 // tab
 .v-tab.v-tab.v-btn {

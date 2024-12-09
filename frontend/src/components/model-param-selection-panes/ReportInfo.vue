@@ -138,7 +138,7 @@
                 <span class="text-h7">Report Title</span>
               </div>
               <v-row>
-                <v-col cols="12">
+                <v-col cols="6">
                   <v-text-field
                     type="string"
                     v-model="reportTitle"
@@ -150,37 +150,6 @@
                     style="max-width: 50% !important"
                     :disabled="!isConfirmEnabled"
                   ></v-text-field>
-                </v-col>
-              </v-row>
-            </div>
-            <div class="mt-5">
-              <v-row v-for="(group, index) in speciesGroups" :key="index">
-                <v-col cols="3">
-                  <v-text-field
-                    :label="`Minimum DBH Limit by Species #${index + 1}`"
-                    type="string"
-                    v-model="group.group"
-                    persistent-placeholder
-                    placeholder="Select..."
-                    density="compact"
-                    dense
-                    disabled
-                  ></v-text-field>
-                </v-col>
-                <v-col class="col-space-3" />
-                <v-col cols="5" class="ma-5">
-                  <vue-slider
-                    v-model="group.minimumDBHLimit"
-                    :data="minimumDBHLimitsOptions"
-                    :data-value="'value'"
-                    :data-label="'label'"
-                    :contained="true"
-                    :tooltip="'none'"
-                    :dotStyle="{ backgroundColor: '#787878' }"
-                    :rail-style="{ backgroundColor: '#f5f5f5' }"
-                    :process-style="{ backgroundColor: '#787878' }"
-                    :disabled="!isConfirmEnabled"
-                  />
                 </v-col>
               </v-row>
             </div>
@@ -215,17 +184,13 @@ import { ref, computed } from 'vue'
 import { useModelParameterStore } from '@/stores/modelParameterStore'
 import { useMessageDialogStore } from '@/stores/common/messageDialogStore'
 import { storeToRefs } from 'pinia'
-import VueSlider from 'vue-slider-component'
-import 'vue-slider-component/theme/default.css'
 import {
   volumeReportedOptions,
   includeInReportOptions,
   projectionTypeOptions,
-  minimumDBHLimitsOptions,
 } from '@/constants/options'
 import {
   PANEL,
-  MINIMUM_DBH_LIMITS,
   MODEL_PARAMETER_PANEL,
   NUM_INPUT_LIMITS,
 } from '@/constants/constants'
@@ -348,7 +313,6 @@ const clear = () => {
   projectionType.value = DEFAULT_VALUES.PROJECTION_TYPE
   speciesGroups.value = speciesGroups.value.map((group) => ({
     ...group,
-    minimumDBHLimit: MINIMUM_DBH_LIMITS.CM4_0,
   }))
 }
 </script>

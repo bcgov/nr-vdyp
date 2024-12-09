@@ -6,10 +6,10 @@ import type {
 } from 'axios'
 import { useAuthStore } from '@/stores/common/authStore'
 import { AXIOS } from '@/constants/constants'
-import { env } from '@/env'
+import { logErrorMessage } from '@/utils/messageHandler'
+import { AXIOS_INST_ERR } from '@/constants/message'
 
 const axiosInstance: AxiosInstance = axios.create({
-  baseURL: env.VITE_API_BASE_URL,
   headers: {
     Accept: AXIOS.ACCEPT,
     'Content-Type': AXIOS.CONTENT_TYPE,
@@ -30,7 +30,10 @@ axiosInstance.interceptors.request.use(
         config.headers.Authorization = `Bearer ${token}`
       }
     } else {
-      console.warn('Authorization token or authStore is not available.')
+      logErrorMessage(
+        AXIOS_INST_ERR.SESSION_INACTIVE,
+        'Authorization token or authStore is not available.',
+      )
     }
 
     return config

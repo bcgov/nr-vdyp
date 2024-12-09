@@ -15,51 +15,54 @@
     <div class="hr-line mb-5"></div>
     <v-spacer class="space"></v-spacer>
 
-    <v-tabs
-      v-model="currentTab"
-      :hideSlider="true"
-      :centerActive="true"
-      :showArrows="true"
-      height="60px"
-    >
-      <v-tab
-        v-for="(tab, index) in tabs"
-        :key="index"
-        :class="{ 'first-tab': index === 0 }"
-        >{{ tab.label }}</v-tab
+    <template v-if="modelSelection === MODEL_SELECTION.INPUT_MODEL_PARAMETERS">
+      <v-tabs
+        v-model="currentTab"
+        :hideSlider="true"
+        :centerActive="true"
+        :showArrows="true"
+        height="60px"
       >
-    </v-tabs>
-    <v-tabs-window v-model="currentTab">
-      <v-tabs-window-item
-        v-for="(tab, index) in tabs"
-        :key="index"
-        :value="index"
-      >
-        <component :is="tab.component"></component>
-      </v-tabs-window-item>
-    </v-tabs-window>
+        <v-tab
+          v-for="(tab, index) in tabs"
+          :key="index"
+          :class="{ 'first-tab': index === 0 }"
+          >{{ tab.label }}</v-tab
+        >
+      </v-tabs>
+      <v-tabs-window v-model="currentTab">
+        <v-tabs-window-item
+          v-for="(tab, index) in tabs"
+          :key="index"
+          :value="index"
+        >
+          <component :is="tab.component"></component>
+        </v-tabs-window-item>
+      </v-tabs-window>
 
-    <template v-if="modelType === MODEL_SELECTION.INPUT_MODEL_PARAMETERS">
-      <v-spacer class="space"></v-spacer>
-      <SiteInfo />
-      <v-spacer class="space"></v-spacer>
-      <StandDensity />
-      <v-spacer class="space"></v-spacer>
-      <AddtStandAttrs />
-      <v-spacer class="space"></v-spacer>
-      <ReportInfo />
+      <template v-if="isModelParameterPanelsVisible">
+        <v-spacer class="space"></v-spacer>
+        <SiteInfo />
+        <v-spacer class="space"></v-spacer>
+        <StandDensity />
+        <v-spacer class="space"></v-spacer>
+        <ReportInfo />
 
-      <v-card class="mt-5 pa-4 run-model-card" elevation="0">
-        <v-card-actions class="pr-0 mr-2">
-          <v-spacer></v-spacer>
-          <v-btn
-            class="blue-btn ml-2"
-            :disabled="!modelParameterStore.runModelEnabled"
-            @click="runModel"
-            >Run Model</v-btn
-          >
-        </v-card-actions>
-      </v-card>
+        <v-card class="mt-5 pa-4 run-model-card" elevation="0">
+          <v-card-actions class="pr-0 mr-2">
+            <v-spacer></v-spacer>
+            <v-btn
+              class="blue-btn ml-2"
+              :disabled="!modelParameterStore.runModelEnabled"
+              @click="runModel"
+              >Run Model</v-btn
+            >
+          </v-card-actions>
+        </v-card>
+      </template>
+    </template>
+    <template v-else>
+      <FileUpload />
     </template>
   </v-container>
 </template>
@@ -79,7 +82,6 @@ import ViewErrorMessages from '@/views/input-model-parameters/ViewErrorMessages.
 
 import SiteInfo from '@/components/model-param-selection-panes/SiteInfo.vue'
 import StandDensity from '@/components/model-param-selection-panes/StandDensity.vue'
-import AddtStandAttrs from '@/components/model-param-selection-panes/AddtStandAttrs.vue'
 import ReportInfo from '@/components/model-param-selection-panes/ReportInfo.vue'
 
 import FileUpload from '@/views/input-model-parameters/FileUpload.vue'
@@ -89,35 +91,26 @@ import { MODEL_SELECTION, MODEL_PARAM_TAB_NAME } from '@/constants/constants'
 const appStore = useAppStore()
 const modelParameterStore = useModelParameterStore()
 
-const { currentTab, modelType } = storeToRefs(appStore)
+const { currentTab, modelSelection } = storeToRefs(appStore)
 
-const tabs = computed(() => {
-  if (modelType.value === MODEL_SELECTION.FILE_UPLOAD) {
-    return [
-      {
-        label: MODEL_PARAM_TAB_NAME.FILE_UPLOAD,
-        component: FileUpload,
-      },
-      { label: MODEL_PARAM_TAB_NAME.MODEL_REPORT, component: ModelReport },
-      { label: MODEL_PARAM_TAB_NAME.VIEW_LOG_FILE, component: ViewLogFile },
-      {
-        label: MODEL_PARAM_TAB_NAME.VIEW_ERROR_MESSAGES,
-        component: ViewErrorMessages,
-      },
-    ]
-  }
-  return [
-    {
-      label: MODEL_PARAM_TAB_NAME.MODEL_PARAM_SELECTION,
-      component: ModelParameterSelection,
-    },
-    { label: MODEL_PARAM_TAB_NAME.MODEL_REPORT, component: ModelReport },
-    { label: MODEL_PARAM_TAB_NAME.VIEW_LOG_FILE, component: ViewLogFile },
-    {
-      label: MODEL_PARAM_TAB_NAME.VIEW_ERROR_MESSAGES,
-      component: ViewErrorMessages,
-    },
-  ]
+const tabs = [
+  {
+    label: MODEL_PARAM_TAB_NAME.MODEL_PARAM_SELECTION,
+    component: ModelParameterSelection,
+  },
+  { label: MODEL_PARAM_TAB_NAME.MODEL_REPORT, component: ModelReport },
+  { label: MODEL_PARAM_TAB_NAME.VIEW_LOG_FILE, component: ViewLogFile },
+  {
+    label: MODEL_PARAM_TAB_NAME.VIEW_ERROR_MESSAGES,
+    component: ViewErrorMessages,
+  },
+]
+
+const isModelParameterPanelsVisible = computed(() => {
+  return (
+    modelSelection.value === MODEL_SELECTION.INPUT_MODEL_PARAMETERS &&
+    currentTab.value === 0
+  )
 })
 
 onMounted(() => {
@@ -127,7 +120,7 @@ onMounted(() => {
 const runModel = () => {}
 </script>
 
-<style>
+<style scoped>
 .space {
   margin-top: 10px;
 }

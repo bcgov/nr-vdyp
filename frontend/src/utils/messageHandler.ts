@@ -1,6 +1,7 @@
 import { useNotificationStore } from '@/stores/common/notificationStore'
 import type { MessageType } from '@/types/types'
 import { MESSAGE_TYPE } from '@/constants/constants'
+import { getActivePinia } from 'pinia'
 
 /**
  * Displays job success or failure messages to notification and/or console.
@@ -15,14 +16,25 @@ export const messageResult = (
   failMessage: string,
   error: Error | null = null,
 ) => {
-  const notificationStore = useNotificationStore()
+  const pinia = getActivePinia()
+  let notificationStore
+
+  if (pinia) {
+    notificationStore = useNotificationStore()
+  } else {
+    console.warn('Pinia is not active. Message will only be logged.')
+  }
 
   if (isSuccess) {
     console.info(successMessage)
-    notificationStore.showSuccessMessage(successMessage)
+    if (notificationStore) {
+      notificationStore.showSuccessMessage(successMessage)
+    }
   } else {
     console.warn(failMessage, error)
-    notificationStore.showWarningMessage(failMessage)
+    if (notificationStore) {
+      notificationStore.showWarningMessage(failMessage)
+    }
   }
 }
 
@@ -34,14 +46,21 @@ export const messageResult = (
  * @param {boolean} [disableConsole=false] - Whether to disable console logging.
  * @param {boolean} [disableNotification=false] - Whether to disable notification messages.
  */
-export const logMessage = (
+const logMessage = (
   message: string,
   messageType: MessageType = MESSAGE_TYPE.INFO,
   optionalMessage?: string | null,
   disableConsole: boolean = false,
   disableNotification: boolean = false,
 ) => {
-  const notificationStore = useNotificationStore()
+  const pinia = getActivePinia()
+  let notificationStore
+
+  if (pinia) {
+    notificationStore = useNotificationStore()
+  } else {
+    console.warn('Pinia is not active. Message will only be logged.')
+  }
 
   const consoleMessage = optionalMessage
     ? `${message} (${optionalMessage})`
@@ -69,19 +88,25 @@ export const logMessage = (
   if (!disableNotification) {
     switch (messageType) {
       case MESSAGE_TYPE.ERROR:
-        notificationStore.showErrorMessage(message)
+        if (notificationStore) {
+          notificationStore.showErrorMessage(message)
+        }
         break
       case MESSAGE_TYPE.WARNING:
-        notificationStore.showWarningMessage(message)
-        break
-      case MESSAGE_TYPE.INFO:
-        notificationStore.showInfoMessage(message)
+        if (notificationStore) {
+          notificationStore.showWarningMessage(message)
+        }
         break
       case MESSAGE_TYPE.SUCCESS:
-        notificationStore.showSuccessMessage(message)
+        if (notificationStore) {
+          notificationStore.showSuccessMessage(message)
+        }
         break
+      case MESSAGE_TYPE.INFO:
       default:
-        notificationStore.showInfoMessage(message)
+        if (notificationStore) {
+          notificationStore.showInfoMessage(message)
+        }
     }
   }
 }

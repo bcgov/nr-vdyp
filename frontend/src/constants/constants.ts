@@ -25,32 +25,7 @@ export const DERIVED_BY = Object.freeze({
 })
 
 export const SITE_SPECIES_VALUES = Object.freeze({
-  COMPUTED: 'Computed',
   SUPPLIED: 'Supplied',
-})
-
-export const AGE_TYPE = Object.freeze({
-  TOTAL: 'Total',
-  BREAST: 'Breast',
-})
-
-export const FLOATING = Object.freeze({
-  AGE: 'Age',
-  HEIGHT: 'Height',
-  SITEINDEX: 'SiteIndex',
-})
-
-export const COMPUTED_VALUES = Object.freeze({
-  USE: 'Use',
-  MODIFY: 'Modify',
-})
-
-export const MINIMUM_DBH_LIMITS = Object.freeze({
-  CM4_0: '4.0 cm+',
-  CM7_5: '7.5 cm+',
-  CM12_5: '12.5 cm+',
-  CM17_5: '17.5 cm+',
-  CM22_5: '22.5 cm+',
 })
 
 export const VOLUME_REPORTED = Object.freeze({
@@ -75,7 +50,6 @@ export const MODEL_PARAMETER_PANEL = Object.freeze({
   SPECIES_INFO: 'speciesInfo',
   SITE_INFO: 'siteInfo',
   STAND_DENSITY: 'standDensity',
-  ADDT_STAND_ATTRS: 'addtStandAttrs',
   REPORT_INFO: 'reportInfo',
 })
 
@@ -85,13 +59,6 @@ export const NUM_INPUT_LIMITS = Object.freeze({
   SPECIES_PERCENT_STEP: 5,
   SPECIES_PERCENT_DECIMAL_NUM: 1,
   TOTAL_SPECIES_PERCENT: 100,
-  AGE_MAX: 500,
-  AGE_MIN: 0,
-  AGE_STEP: 10,
-  HEIGHT_MAX: 99.9,
-  HEIGHT_MIN: 0,
-  HEIGHT_STEP: 1,
-  HEIGHT_DECIMAL_NUM: 2,
   BHA50_SITE_INDEX_MAX: 60,
   BHA50_SITE_INDEX_MIN: 0,
   BHA50_SITE_INDEX_STEP: 1,
@@ -99,38 +66,6 @@ export const NUM_INPUT_LIMITS = Object.freeze({
   PERCENT_STOCKABLE_AREA_MAX: 100,
   PERCENT_STOCKABLE_AREA_MIN: 0,
   PERCENT_STOCKABLE_AREA_STEP: 5,
-  BASAL_AREA_MAX: 250,
-  BASAL_AREA_MIN: 0.1,
-  BASAL_AREA_STEP: 2.5,
-  BASAL_AREA_DECIMAL_NUM: 4,
-  TPH_MAX: 9999.9,
-  TPH_MIN: 0.1,
-  TPH_STEP: 250,
-  TPH_DECIMAL_NUM: 2,
-  CROWN_CLOSURE_MAX: 100,
-  CROWN_CLOSURE_MIN: 0,
-  CROWN_CLOSURE_STEP: 5,
-  LOREY_HEIGHT_MAX: 99.9,
-  LOREY_HEIGHT_MIN: 0.01,
-  LOREY_HEIGHT_DECIMAL_NUM: 2,
-  WHOLE_STEM_VOL75_MAX: 2500,
-  WHOLE_STEM_VOL75_MIN: 0.1,
-  WHOLE_STEM_VOL75_DECIMAL_NUM: 1,
-  BASAL_AREA125_MAX: 250,
-  BASAL_AREA125_MIN: 0.1,
-  BASAL_AREA125_DECIMAL_NUM: 4,
-  WHOLE_STEM_VOL125_MAX: 2500,
-  WHOLE_STEM_VOL125_MIN: 0,
-  WHOLE_STEM_VOL125_DECIMAL_NUM: 1,
-  CU_VOL_MAX: 2500,
-  CU_VOL_MIN: 0,
-  CU_VOL_DECIMAL_NUM: 1,
-  CU_NET_DECAY_VOL_MAX: 2500,
-  CU_NET_DECAY_VOL_MIN: 0,
-  CU_NET_DECAY_DECIMAL_NUM: 1,
-  CU_NET_DECAY_WASTE_VOL_MAX: 2500,
-  CU_NET_DECAY_WASTE_VOL_MIN: 0,
-  CU_NET_DECAY_WASTE_DECIMAL_NUM: 1,
   STARTING_AGE_MAX: 500,
   STARTING_AGE_MIN: 0,
   STARTING_AGE_STEP: 10,
@@ -173,14 +108,8 @@ export const MODEL_SELECTION = Object.freeze({
   INPUT_MODEL_PARAMETERS: 'Input Model Parameters',
 })
 
-export const ENGINE_VERSION = Object.freeze({
-  VDYP8: 'VDYP 8',
-  VDYP9: 'VDYP 9',
-})
-
 export const MODEL_PARAM_TAB_NAME = Object.freeze({
   MODEL_PARAM_SELECTION: 'Model Parameter Selection',
-  FILE_UPLOAD: 'File Upload',
   MODEL_REPORT: 'Model Report',
   VIEW_LOG_FILE: 'View Log File',
   VIEW_ERROR_MESSAGES: 'View Error Messages',

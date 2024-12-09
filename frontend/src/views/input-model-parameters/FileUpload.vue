@@ -1,8 +1,8 @@
 <template>
   <div>
-    <v-form ref="form" @submit.prevent="runModel">
-      <v-card class="elevation-4 pl-16 pt-10 pr-10 pb-15">
-        <div>
+    <v-form ref="form" @submit.prevent="fileUploadRunModel">
+      <v-card class="elevation-4">
+        <div class="pl-16 pt-10">
           <v-row>
             <v-col cols="3">
               <v-text-field
@@ -50,126 +50,129 @@
             </v-col>
           </v-row>
         </div>
-        <div class="ml-4 mt-5">
-          <div class="ml-n4 mt-n5">
-            <span class="text-h7">Volume Reported</span>
+        <div class="pl-16 pr-16 pb-5">
+          <div class="ml-4 mt-5">
+            <div class="ml-n4 mt-n5">
+              <span class="text-h7">Volume Reported</span>
+            </div>
+            <v-row class="ml-n6">
+              <v-col cols="12" style="padding-top: 0px">
+                <v-row>
+                  <v-col
+                    v-for="(option, index) in volumeReportedOptions"
+                    :key="index"
+                    :style="{ 'max-width': index < 4 ? '20%' : 'auto' }"
+                  >
+                    <v-checkbox
+                      v-model="volumeReported"
+                      :label="option.label"
+                      :value="option.value"
+                      hide-details
+                    ></v-checkbox>
+                  </v-col>
+                </v-row>
+              </v-col>
+            </v-row>
           </div>
-          <v-row class="ml-n6">
-            <v-col cols="12" style="padding-top: 0px">
-              <v-row>
-                <v-col
-                  v-for="(option, index) in volumeReportedOptions"
-                  :key="index"
-                  :style="{ 'max-width': index < 4 ? '20%' : 'auto' }"
-                >
-                  <v-checkbox
-                    v-model="volumeReported"
-                    :label="option.label"
-                    :value="option.value"
-                    hide-details
-                  ></v-checkbox>
-                </v-col>
-              </v-row>
-            </v-col>
-          </v-row>
-        </div>
-        <div class="ml-4 mt-5">
-          <div class="ml-n4 mt-n5">
-            <span class="text-h7">Include in Report</span>
+          <div class="ml-4 mt-5">
+            <div class="ml-n4 mt-n5">
+              <span class="text-h7">Include in Report</span>
+            </div>
+            <v-row class="ml-n6">
+              <v-col cols="12" style="padding-top: 0px">
+                <v-row>
+                  <v-col
+                    v-for="(option, index) in includeInReportOptions"
+                    :key="index"
+                    :style="{ 'max-width': index < 4 ? '20%' : 'auto' }"
+                  >
+                    <v-checkbox
+                      v-model="includeInReport"
+                      :label="option.label"
+                      :value="option.value"
+                      hide-details
+                    ></v-checkbox>
+                  </v-col>
+                  <v-col style="max-width: 20% !important">
+                    <v-select
+                      label="Projection Type"
+                      :items="projectionTypeOptions"
+                      v-model="projectionType"
+                      item-title="label"
+                      item-value="value"
+                      hide-details="auto"
+                      persistent-placeholder
+                      placeholder="Select..."
+                      density="compact"
+                      dense
+                      style="max-width: 70% !important"
+                    ></v-select>
+                  </v-col>
+                </v-row>
+              </v-col>
+            </v-row>
           </div>
-          <v-row class="ml-n6">
-            <v-col cols="12" style="padding-top: 0px">
-              <v-row>
-                <v-col
-                  v-for="(option, index) in includeInReportOptions"
-                  :key="index"
-                  :style="{ 'max-width': index < 4 ? '20%' : 'auto' }"
-                >
-                  <v-checkbox
-                    v-model="includeInReport"
-                    :label="option.label"
-                    :value="option.value"
-                    hide-details
-                  ></v-checkbox>
-                </v-col>
-                <v-col style="max-width: 20% !important">
-                  <v-select
-                    label="Projection Type"
-                    :items="projectionTypeOptions"
-                    v-model="projectionType"
-                    item-title="label"
-                    item-value="value"
-                    hide-details="auto"
-                    persistent-placeholder
-                    placeholder="Select..."
-                    density="compact"
-                    dense
-                    style="max-width: 70% !important"
-                  ></v-select>
-                </v-col>
-              </v-row>
-            </v-col>
-          </v-row>
-        </div>
-        <div class="ml-4 mt-5">
-          <div class="ml-n4 mt-n5">
-            <span class="text-h7">Report Title</span>
+          <div class="ml-4 mt-5">
+            <div class="ml-n4 mt-n5">
+              <span class="text-h9">Report Title</span>
+            </div>
+            <v-row>
+              <v-col cols="12">
+                <v-text-field
+                  type="string"
+                  v-model="reportTitle"
+                  hide-details="auto"
+                  persistent-placeholder
+                  placeholder="Enter a report title..."
+                  density="compact"
+                  dense
+                  style="max-width: 41% !important"
+                ></v-text-field>
+              </v-col>
+            </v-row>
           </div>
-          <v-row>
-            <v-col cols="12">
-              <v-text-field
-                type="string"
-                v-model="reportTitle"
-                hide-details="auto"
-                persistent-placeholder
-                placeholder="Enter a report title..."
-                density="compact"
-                dense
-                style="max-width: 50% !important"
-              ></v-text-field>
-            </v-col>
-          </v-row>
-        </div>
-        <div class="ml-4 mt-10">
-          <div class="ml-n4 mt-n5">
-            <span class="text-h7">Upload Files</span>
+          <div class="ml-4 mt-10">
+            <div class="ml-n4 mt-n5">
+              <span class="text-h7">Attachments</span>
+            </div>
+            <v-row class="mb-n10">
+              <v-col cols="5">
+                <v-file-input
+                  label="Layer File"
+                  v-model="layerFile"
+                  show-size
+                  chips
+                  clearable
+                  flat
+                  persistent-placeholder
+                  placeholder="Select Eco Zone"
+                  density="compact"
+                  accept=".csv"
+                />
+              </v-col>
+              <v-col class="col-space-3" />
+              <v-col cols="5">
+                <v-file-input
+                  label="Polygon File"
+                  v-model="polygonFile"
+                  show-size
+                  chips
+                  clearable
+                  density="compact"
+                  accept=".csv"
+                />
+              </v-col>
+            </v-row>
           </div>
-          <v-row class="mb-n10">
-            <v-col cols="4">
-              <v-file-input
-                label="Layer File"
-                v-model="layerFile"
-                show-size
-                chips
-                clearable
-                flat
-                persistent-placeholder
-                placeholder="Select Eco Zone"
-                density="compact"
-                accept=".csv"
-              />
-            </v-col>
-            <v-col class="col-space-3" />
-            <v-col cols="4">
-              <v-file-input
-                label="Polygon File"
-                v-model="polygonFile"
-                show-size
-                chips
-                clearable
-                density="compact"
-                accept=".csv"
-              />
-            </v-col>
-          </v-row>
         </div>
-      </v-card>
-
-      <v-card class="mt-5 pa-4 run-model-card" elevation="0">
-        <v-card-actions class="pr-0 mr-2">
-          <v-spacer></v-spacer>
-          <v-btn class="blue-btn ml-2" @click="runModel">Run Model</v-btn>
-        </v-card-actions>
+        <v-card class="mt-5 pa-4 file-upload-run-model-card" elevation="0">
+          <v-card-actions class="pr-0 mr-2">
+            <v-spacer></v-spacer>
+            <v-btn class="blue-btn ml-2" @click="fileUploadRunModel"
+              >Run Model</v-btn
+            >
+          </v-card-actions>
+        </v-card>
       </v-card>
     </v-form>
   </div>
@@ -177,10 +180,8 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { API } from '@/services/apiModules'
-import { StatusCodes } from 'http-status-codes'
+import { projectionHcsvPost } from '@/services/apiActions'
 import { handleApiError } from '@/services/apiErrorHandler'
-import * as messageHandler from '@/utils/messageHandler'
 import { useMessageDialogStore } from '@/stores/common/messageDialogStore'
 import {
   volumeReportedOptions,
@@ -192,12 +193,13 @@ import {
   MDL_PRM_INPUT_ERR,
   MSG_DIALOG_TITLE,
   FILE_UPLOAD_ERR,
-  SVC_ERR,
 } from '@/constants/message'
 import { DEFAULT_VALUES } from '@/constants/defaults'
-import Papa from 'papaparse'
+import { FileUploadValidation } from '@/validation/fileUploadValidation'
 
 const form = ref<HTMLFormElement>()
+
+const fileUploadValidator = new FileUploadValidation()
 
 const startingAge = ref<number | null>(DEFAULT_VALUES.STARTING_AGE)
 const finishingAge = ref<number | null>(DEFAULT_VALUES.FINISHING_AGE)
@@ -213,84 +215,61 @@ const polygonFile = ref<File | null>(null)
 const messageDialogStore = useMessageDialogStore()
 
 const validateComparison = (): boolean => {
-  if (finishingAge.value !== null && startingAge.value !== null) {
-    if (finishingAge.value < startingAge.value) {
-      messageDialogStore.openDialog(
-        MSG_DIALOG_TITLE.INVALID_INPUT,
-        MDL_PRM_INPUT_ERR.RPT_VLD_COMP_FNSH_AGE,
-        { width: 400 },
-      )
-      return false
-    }
+  if (
+    !fileUploadValidator.validateAgeComparison(
+      finishingAge.value,
+      startingAge.value,
+    )
+  ) {
+    messageDialogStore.openDialog(
+      MSG_DIALOG_TITLE.INVALID_INPUT,
+      MDL_PRM_INPUT_ERR.RPT_VLD_COMP_FNSH_AGE,
+      { width: 400 },
+    )
+    return false
   }
+
   return true
 }
 
-// Validation to check the range of input values
 const validateRange = (): boolean => {
-  if (startingAge.value !== null) {
-    if (
-      startingAge.value < NUM_INPUT_LIMITS.STARTING_AGE_MIN ||
-      startingAge.value > NUM_INPUT_LIMITS.STARTING_AGE_MAX
-    ) {
-      messageDialogStore.openDialog(
-        MSG_DIALOG_TITLE.INVALID_INPUT,
-        MDL_PRM_INPUT_ERR.RPT_VLD_START_AGE_RNG(
-          NUM_INPUT_LIMITS.STARTING_AGE_MIN,
-          NUM_INPUT_LIMITS.STARTING_AGE_MAX,
-        ),
-        { width: 400 },
-      )
-      return false
-    }
+  if (!fileUploadValidator.validateStartingAgeRange(startingAge.value)) {
+    messageDialogStore.openDialog(
+      MSG_DIALOG_TITLE.INVALID_INPUT,
+      MDL_PRM_INPUT_ERR.RPT_VLD_START_AGE_RNG(
+        NUM_INPUT_LIMITS.STARTING_AGE_MIN,
+        NUM_INPUT_LIMITS.STARTING_AGE_MAX,
+      ),
+      { width: 400 },
+    )
+    return false
   }
 
-  if (finishingAge.value !== null) {
-    if (
-      finishingAge.value < NUM_INPUT_LIMITS.FINISHING_AGE_MIN ||
-      finishingAge.value > NUM_INPUT_LIMITS.FINISHING_AGE_MAX
-    ) {
-      messageDialogStore.openDialog(
-        MSG_DIALOG_TITLE.INVALID_INPUT,
-        MDL_PRM_INPUT_ERR.RPT_VLD_START_FNSH_RNG(
-          NUM_INPUT_LIMITS.FINISHING_AGE_MIN,
-          NUM_INPUT_LIMITS.FINISHING_AGE_MAX,
-        ),
-        { width: 400 },
-      )
-      return false
-    }
+  if (!fileUploadValidator.validateFinishingAgeRange(finishingAge.value)) {
+    messageDialogStore.openDialog(
+      MSG_DIALOG_TITLE.INVALID_INPUT,
+      MDL_PRM_INPUT_ERR.RPT_VLD_START_FNSH_RNG(
+        NUM_INPUT_LIMITS.FINISHING_AGE_MIN,
+        NUM_INPUT_LIMITS.FINISHING_AGE_MAX,
+      ),
+      { width: 400 },
+    )
+    return false
   }
 
-  if (ageIncrement.value !== null) {
-    if (
-      ageIncrement.value < NUM_INPUT_LIMITS.AGE_INC_MIN ||
-      ageIncrement.value > NUM_INPUT_LIMITS.AGE_INC_MAX
-    ) {
-      messageDialogStore.openDialog(
-        MSG_DIALOG_TITLE.INVALID_INPUT,
-        MDL_PRM_INPUT_ERR.RPT_VLD_AGE_INC_RNG(
-          NUM_INPUT_LIMITS.AGE_INC_MIN,
-          NUM_INPUT_LIMITS.AGE_INC_MAX,
-        ),
-        { width: 400 },
-      )
-      return false
-    }
+  if (!fileUploadValidator.validateAgeIncrementRange(ageIncrement.value)) {
+    messageDialogStore.openDialog(
+      MSG_DIALOG_TITLE.INVALID_INPUT,
+      MDL_PRM_INPUT_ERR.RPT_VLD_AGE_INC_RNG(
+        NUM_INPUT_LIMITS.AGE_INC_MIN,
+        NUM_INPUT_LIMITS.AGE_INC_MAX,
+      ),
+      { width: 400 },
+    )
+    return false
   }
 
   return true
-}
-
-const isCSVFile = async (file: File): Promise<boolean> => {
-  return new Promise((resolve) => {
-    Papa.parse(file, {
-      complete: (results: any) => {
-        resolve(results.errors.length === 0)
-      },
-      error: () => resolve(false),
-    })
-  })
 }
 
 const validateFiles = async () => {
@@ -312,10 +291,7 @@ const validateFiles = async () => {
     return false
   }
 
-  const isLayerCSV = await isCSVFile(layerFile.value)
-  const isPolygonCSV = await isCSVFile(polygonFile.value)
-
-  if (!isLayerCSV) {
+  if (!(await fileUploadValidator.isCSVFile(layerFile.value))) {
     messageDialogStore.openDialog(
       MSG_DIALOG_TITLE.INVALID_FILE,
       FILE_UPLOAD_ERR.LAYER_FILE_NOT_CSV_FORMAT,
@@ -324,7 +300,7 @@ const validateFiles = async () => {
     return false
   }
 
-  if (!isPolygonCSV) {
+  if (!(await fileUploadValidator.isCSVFile(polygonFile.value))) {
     messageDialogStore.openDialog(
       MSG_DIALOG_TITLE.INVALID_FILE,
       FILE_UPLOAD_ERR.POLYGON_FILE_NOT_CSV_FORMAT,
@@ -336,47 +312,77 @@ const validateFiles = async () => {
   return true
 }
 
-const runModel = async () => {
-  if (validateComparison() && validateRange() && (await validateFiles())) {
+const validateRequiredFields = (): boolean => {
+  if (
+    !fileUploadValidator.validateRequiredFields(
+      startingAge.value,
+      finishingAge.value,
+      ageIncrement.value,
+    )
+  ) {
+    messageDialogStore.openDialog(
+      MSG_DIALOG_TITLE.INVALID_INPUT,
+      FILE_UPLOAD_ERR.RPT_VLD_REQUIRED_FIELDS,
+      { width: 400 },
+    )
+    return false
+  }
+  return true
+}
+
+const fileUploadRunModel = async () => {
+  if (
+    validateRequiredFields() &&
+    validateComparison() &&
+    validateRange() &&
+    (await validateFiles())
+  ) {
     if (form.value) {
       form.value.validate()
     }
 
-    const projectionParameters = {
-      startingAge: startingAge.value,
-      finishingAge: finishingAge.value,
-      ageIncrement: ageIncrement.value,
-      volumeReported: volumeReported.value,
-      includeInReport: includeInReport.value,
-      projectionType: projectionType.value,
-      reportTitle: reportTitle.value,
+    const body = {
+      projectionParameters: {
+        ageStart: startingAge.value!,
+        ageEnd: finishingAge.value!,
+        ageIncrement: ageIncrement.value!,
+        volumeReported: volumeReported.value,
+        includeInReport: includeInReport.value,
+        projectionType: projectionType.value,
+        reportTitle: reportTitle.value,
+      },
+      layerInputData: null, // Set to null for now
+      polygonInputData: null, // Set to null for now
     }
-    console.log(JSON.stringify(projectionParameters))
 
     try {
-      const response = await API.create.uploadHcsvProjection(
-        projectionParameters,
-        layerFile.value!,
-        polygonFile.value!,
-      )
+      const result = await projectionHcsvPost(body)
 
-      if (response && response.status) {
-        messageHandler.messageResult(
-          response.status === StatusCodes.CREATED,
-          'Model ran successfully!',
-          'Failed to run Model',
-        )
-      } else {
-        messageHandler.logWarningMessage(
-          SVC_ERR.DEFAULT,
-          'Unexpected response format',
-        )
-      }
-    } catch (err) {
-      handleApiError(err, 'Failed to run Model')
+      const url = window.URL.createObjectURL(new Blob([result]))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', 'vdyp-output.zip')
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+    } catch (error) {
+      handleApiError(error, 'Failed to run Projection (Axios)')
     }
   }
 }
 </script>
-
-<style scoped />
+<style scoped>
+.file-upload-run-model-card {
+  padding-bottom: 16px !important;
+  background-color: #f6f6f6;
+  border-top: 1px solid #0000001f;
+  border-top-left-radius: 0px;
+  border-top-right-radius: 0px;
+  border-bottom-left-radius: 3px;
+  border-bottom-right-radius: 3px;
+  display: flex;
+  justify-content: end;
+  align-items: end;
+  text-align: end;
+}
+</style>

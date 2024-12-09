@@ -21,7 +21,7 @@
             <div>
               <v-row>
                 <v-col cols="6">
-                  <v-row class="mb-3">
+                  <v-row class="mb-2">
                     <v-col cols="6">
                       <v-select
                         label="BEC Zone"
@@ -75,7 +75,7 @@
               <div class="hr-line"></div>
               <v-row class="mt-7">
                 <v-col cols="6">
-                  <v-row>
+                  <v-row class="mb-2">
                     <v-col cols="6">
                       <v-select
                         label="Site Species"
@@ -92,25 +92,6 @@
                           isSelectedSiteSpeciesDisabled || !isConfirmEnabled
                         "
                       ></v-select>
-                    </v-col>
-                    <v-col class="col-space-6" />
-                    <v-col>
-                      <v-select
-                        label="Site Index Curve"
-                        :items="computedSpeciesOptions"
-                        v-model="siteIndexCurve"
-                        item-title="label"
-                        item-value="value"
-                        hide-details="auto"
-                        persistent-placeholder
-                        placeholder="Select..."
-                        density="compact"
-                        dense
-                        disabled
-                      ></v-select>
-                      <v-label style="font-size: 12px"
-                        >*Ministry Default Curve for this Species
-                      </v-label>
                     </v-col>
                   </v-row>
                 </v-col>
@@ -142,120 +123,6 @@
                 <v-col cols="6">
                   <v-row style="height: 70px !important">
                     <v-col cols="6">
-                      <v-select
-                        label="Age Type"
-                        :items="ageTypeOptions"
-                        v-model="ageType"
-                        item-title="label"
-                        item-value="value"
-                        hide-details
-                        persistent-placeholder
-                        placeholder=""
-                        density="compact"
-                        dense
-                        :disabled="isAgeTypeDisabled || !isConfirmEnabled"
-                      ></v-select>
-                    </v-col>
-                    <v-col class="col-space-6" />
-                    <v-col>
-                      <v-text-field
-                        label="Age (years)"
-                        type="number"
-                        v-model.number="age"
-                        :max="NUM_INPUT_LIMITS.AGE_MAX"
-                        :min="NUM_INPUT_LIMITS.AGE_MIN"
-                        :step="NUM_INPUT_LIMITS.AGE_STEP"
-                        persistent-placeholder
-                        :placeholder="agePlaceholder"
-                        hide-details
-                        density="compact"
-                        dense
-                        :disabled="isAgeDisabled || !isConfirmEnabled"
-                      ></v-text-field>
-                      <v-label
-                        v-show="Util.isZeroValue(age)"
-                        style="font-size: 12px"
-                        >{{ MDL_PRM_INPUT_HINT.SITE_ZERO_NOT_KNOW }}</v-label
-                      >
-                    </v-col>
-                  </v-row>
-                  <v-row style="height: 70px !important">
-                    <v-col cols="6">
-                      <v-text-field
-                        label="% Stockable Area"
-                        type="number"
-                        v-model.number="percentStockableArea"
-                        :max="NUM_INPUT_LIMITS.PERCENT_STOCKABLE_AREA_MAX"
-                        :min="NUM_INPUT_LIMITS.PERCENT_STOCKABLE_AREA_MIN"
-                        :step="NUM_INPUT_LIMITS.PERCENT_STOCKABLE_AREA_STEP"
-                        placeholder=""
-                        persistent-placeholder
-                        hide-details
-                        density="compact"
-                        dense
-                        :disabled="!isConfirmEnabled"
-                      ></v-text-field>
-                      <v-label
-                        v-show="Util.isZeroValue(percentStockableArea)"
-                        style="font-size: 12px"
-                        >{{ MDL_PRM_INPUT_HINT.SITE_DFT_COMPUTED }}</v-label
-                      >
-                    </v-col>
-                    <v-col class="col-space-6" />
-                    <v-col>
-                      <div style="position: relative; width: 100%">
-                        <v-text-field
-                          label="Height (meters)"
-                          type="text"
-                          v-model="height"
-                          persistent-placeholder
-                          :placeholder="heightPlaceholder"
-                          hide-details
-                          density="compact"
-                          dense
-                          style="padding-left: 15px"
-                          variant="plain"
-                          :disabled="isHeightDisabled || !isConfirmEnabled"
-                        ></v-text-field>
-                        <!-- spin buttons -->
-                        <div class="spin-box">
-                          <div
-                            class="spin-up-arrow-button"
-                            @mousedown="startIncrementHeight"
-                            @mouseup="stopIncrementHeight"
-                            @mouseleave="stopIncrementHeight"
-                            :class="{
-                              disabled: isHeightDisabled || !isConfirmEnabled,
-                            }"
-                          >
-                            {{ SPIN_BUTTON.UP }}
-                          </div>
-                          <div
-                            class="spin-down-arrow-button"
-                            @mousedown="startDecrementHeight"
-                            @mouseup="stopDecrementHeight"
-                            @mouseleave="stopDecrementHeight"
-                            :class="{
-                              disabled: isHeightDisabled || !isConfirmEnabled,
-                            }"
-                          >
-                            {{ SPIN_BUTTON.DOWN }}
-                          </div>
-                        </div>
-                        <div class="spin-text-field-bottom-line"></div>
-                      </div>
-                      <v-label
-                        v-show="Util.isZeroValue(height)"
-                        style="font-size: 12px"
-                      >
-                        {{ MDL_PRM_INPUT_HINT.SITE_ZERO_NOT_KNOW }}
-                      </v-label>
-                    </v-col>
-                  </v-row>
-                  <v-row style="height: 70px !important">
-                    <v-col cols="6" />
-                    <v-col class="col-space-6" />
-                    <v-col>
                       <div style="position: relative; width: 100%">
                         <v-text-field
                           label="BHA 50 Site Index"
@@ -309,24 +176,6 @@
                     </v-col>
                   </v-row>
                 </v-col>
-                <v-col cols="6">
-                  <div class="mt-2">
-                    <v-radio-group
-                      v-model="floating"
-                      row
-                      hide-details
-                      :disabled="isFloatingDisabled || !isConfirmEnabled"
-                    >
-                      <v-radio
-                        v-for="option in floatingOptions"
-                        :key="option.value"
-                        :label="option.label"
-                        :value="option.value"
-                        style="margin-bottom: 25px"
-                      ></v-radio>
-                    </v-radio-group>
-                  </div>
-                </v-col>
               </v-row>
             </div>
             <v-card-actions class="mt-5 pr-0">
@@ -365,16 +214,10 @@ import {
   becZoneOptions,
   ecoZoneOptions,
   siteSpeciesValuesOptions,
-  ageTypeOptions,
-  floatingOptions,
 } from '@/constants/options'
-import { SITE_INDEX_CURVE_MAP } from '@/constants/mappings'
 import {
   PANEL,
   DERIVED_BY,
-  SITE_SPECIES_VALUES,
-  FLOATING,
-  SPECIAL_INDICATORS,
   MODEL_PARAMETER_PANEL,
   NUM_INPUT_LIMITS,
   CONTINUOUS_INC_DEC,
@@ -404,14 +247,8 @@ const {
   becZone,
   ecoZone,
   incSecondaryHeight,
-  siteIndexCurve,
   siteSpeciesValues,
-  ageType,
-  percentStockableArea,
-  age,
-  height,
   bha50SiteIndex,
-  floating,
 } = storeToRefs(modelParameterStore)
 
 const panelName = MODEL_PARAMETER_PANEL.SITE_INFO
@@ -420,17 +257,6 @@ const isConfirmEnabled = computed(
 )
 const isConfirmed = computed(
   () => modelParameterStore.panelState[panelName].confirmed,
-)
-
-const computedSpeciesOptions = computed(() =>
-  (
-    Object.keys(SITE_INDEX_CURVE_MAP) as Array<
-      keyof typeof SITE_INDEX_CURVE_MAP
-    >
-  ).map((code) => ({
-    label: `${SITE_INDEX_CURVE_MAP[code]}`,
-    value: code,
-  })),
 )
 
 const siteSpeciesOptions = computed(() =>
@@ -443,138 +269,35 @@ const siteSpeciesOptions = computed(() =>
 const isIncSecondaryHeightDisabled = ref(false)
 const isSelectedSiteSpeciesDisabled = ref(false)
 const isSiteSpeciesValueDisabled = ref(false)
-const isAgeTypeDisabled = ref(false)
-const isAgeDisabled = ref(false)
-const isHeightDisabled = ref(false)
 const isBHA50SiteIndexDisabled = ref(false)
-const isFloatingDisabled = ref(false)
-
-const agePlaceholder = ref('')
-const heightPlaceholder = ref('')
 
 // Interval references for continuous increment/decrement
-let heightIncrementInterval: number | null = null
-let heightDecrementInterval: number | null = null
 let bha50IncrementInterval: number | null = null
 let bha50DecrementInterval: number | null = null
-
-const setFloatingState = (newFloating: string | null) => {
-  isAgeTypeDisabled.value = false
-  isAgeDisabled.value = false
-  isHeightDisabled.value = false
-  isBHA50SiteIndexDisabled.value = false
-  floating.value = newFloating
-
-  if (newFloating === FLOATING.AGE) {
-    isAgeTypeDisabled.value = true
-    isAgeDisabled.value = true
-  } else if (newFloating === FLOATING.HEIGHT) {
-    isHeightDisabled.value = true
-  } else if (newFloating === FLOATING.SITEINDEX) {
-    isBHA50SiteIndexDisabled.value = true
-  }
-}
-
-const handleSiteSpeciesValuesState = (
-  newSiteSpeciesValues: string | null,
-  newFloating: string | null,
-) => {
-  if (newSiteSpeciesValues === SITE_SPECIES_VALUES.COMPUTED) {
-    isFloatingDisabled.value = false
-    setFloatingState(newFloating)
-
-    // TODO - set values based on species, beczone, agetype
-    // if age or height float is selected, age, height or bha 50 site index should also be factored into the calculation for these values
-    age.value = 60
-    height.value = DEFAULT_VALUES.HEIGHT
-
-    agePlaceholder.value = ''
-    heightPlaceholder.value = ''
-  } else if (newSiteSpeciesValues === SITE_SPECIES_VALUES.SUPPLIED) {
-    isAgeTypeDisabled.value = true
-    isAgeDisabled.value = true
-    isHeightDisabled.value = true
-    isBHA50SiteIndexDisabled.value = false
-    isFloatingDisabled.value = true
-
-    age.value = null
-    height.value = null
-    agePlaceholder.value = SPECIAL_INDICATORS.NA
-    heightPlaceholder.value = SPECIAL_INDICATORS.NA
-  }
-}
 
 const handleDerivedByChange = (
   newDerivedBy: string | null,
   newSiteSpecies: string | null,
-  newSiteSpeciesValues: string | null,
-  newFloating: string | null,
 ) => {
   if (newDerivedBy === DERIVED_BY.VOLUME) {
     incSecondaryHeight.value = false
     isIncSecondaryHeightDisabled.value = true
     isSelectedSiteSpeciesDisabled.value = true
-    handleSiteSpeciesValuesState(newSiteSpeciesValues, newFloating)
   } else if (newDerivedBy === DERIVED_BY.BASAL_AREA) {
     isIncSecondaryHeightDisabled.value = false
     isSelectedSiteSpeciesDisabled.value = false
     isSiteSpeciesValueDisabled.value =
       newSiteSpecies !== highestPercentSpecies.value
-    handleSiteSpeciesValuesState(newSiteSpeciesValues, newFloating)
   }
 }
-
-// Update siteIndexCurve based on selectedSiteSpecies
-const updateSiteIndexCurve = (newSiteSpecies: string | null) => {
-  if (
-    newSiteSpecies &&
-    SITE_INDEX_CURVE_MAP[newSiteSpecies as keyof typeof SITE_INDEX_CURVE_MAP]
-  ) {
-    siteIndexCurve.value =
-      SITE_INDEX_CURVE_MAP[newSiteSpecies as keyof typeof SITE_INDEX_CURVE_MAP]
-  } else {
-    siteIndexCurve.value = null // Clear if no mapping found
-  }
-}
-
-watch(selectedSiteSpecies, (newSiteSpecies) => {
-  updateSiteIndexCurve(newSiteSpecies)
-})
 
 watch(
-  [derivedBy, selectedSiteSpecies, siteSpeciesValues, floating],
-  ([newDerivedBy, newSiteSpecies, newSiteSpeciesValues, newFloating]) => {
-    handleDerivedByChange(
-      newDerivedBy,
-      newSiteSpecies,
-      newSiteSpeciesValues,
-      newFloating,
-    )
+  [derivedBy, selectedSiteSpecies, siteSpeciesValues],
+  ([newDerivedBy, newSiteSpecies]) => {
+    handleDerivedByChange(newDerivedBy, newSiteSpecies)
   },
   { immediate: true },
 )
-
-const incrementHeight = () => {
-  const newValue = Util.increaseItemBySpinButton(
-    height.value,
-    NUM_INPUT_LIMITS.HEIGHT_MAX,
-    NUM_INPUT_LIMITS.HEIGHT_MIN,
-    NUM_INPUT_LIMITS.HEIGHT_STEP,
-  )
-
-  height.value = newValue.toFixed(NUM_INPUT_LIMITS.HEIGHT_DECIMAL_NUM)
-}
-
-const decrementHeight = () => {
-  let newValue = Util.decrementItemBySpinButton(
-    height.value,
-    NUM_INPUT_LIMITS.HEIGHT_MAX,
-    NUM_INPUT_LIMITS.HEIGHT_MIN,
-    NUM_INPUT_LIMITS.HEIGHT_STEP,
-  )
-
-  height.value = newValue.toFixed(NUM_INPUT_LIMITS.HEIGHT_DECIMAL_NUM)
-}
 
 const incrementBHA50SiteIndex = () => {
   const newValue = Util.increaseItemBySpinButton(
@@ -600,37 +323,6 @@ const decrementBHA50SiteIndex = () => {
   bha50SiteIndex.value = newValue.toFixed(
     NUM_INPUT_LIMITS.BHA50_SITE_INDEX_DECIMAL_NUM,
   )
-}
-
-// Methods to handle continuous increment/decrement for Height
-const startIncrementHeight = () => {
-  incrementHeight()
-  heightIncrementInterval = window.setInterval(
-    incrementHeight,
-    CONTINUOUS_INC_DEC.INTERVAL,
-  )
-}
-
-const stopIncrementHeight = () => {
-  if (heightIncrementInterval !== null) {
-    clearInterval(heightIncrementInterval)
-    heightIncrementInterval = null
-  }
-}
-
-const startDecrementHeight = () => {
-  decrementHeight()
-  heightDecrementInterval = window.setInterval(
-    decrementHeight,
-    CONTINUOUS_INC_DEC.INTERVAL,
-  )
-}
-
-const stopDecrementHeight = () => {
-  if (heightDecrementInterval !== null) {
-    clearInterval(heightDecrementInterval)
-    heightDecrementInterval = null
-  }
 }
 
 // Methods to handle continuous increment/decrement for BHA 50 Site Index
@@ -665,37 +357,6 @@ const stopDecrementBHA50SiteIndex = () => {
 }
 
 const validateRange = (): boolean => {
-  if (
-    !siteInfoValidator.validatePercentStockableAreaRange(
-      percentStockableArea.value,
-    )
-  ) {
-    messageDialogStore.openDialog(
-      MSG_DIALOG_TITLE.INVALID_INPUT,
-      MDL_PRM_INPUT_ERR.SITE_VLD_PCT_STCB_AREA_RNG,
-      { width: 400 },
-    )
-    return false
-  }
-
-  if (!siteInfoValidator.validateAgeRange(age.value)) {
-    messageDialogStore.openDialog(
-      MSG_DIALOG_TITLE.INVALID_INPUT,
-      MDL_PRM_INPUT_ERR.SITE_VLD_AGE_RNG,
-      { width: 400 },
-    )
-    return false
-  }
-
-  if (!siteInfoValidator.validateHeightRange(height.value)) {
-    messageDialogStore.openDialog(
-      MSG_DIALOG_TITLE.INVALID_INPUT,
-      MDL_PRM_INPUT_ERR.SITE_VLD_HIGHT_RNG,
-      { width: 400 },
-    )
-    return false
-  }
-
   if (!siteInfoValidator.validateBha50SiteIndexRange(bha50SiteIndex.value)) {
     messageDialogStore.openDialog(
       MSG_DIALOG_TITLE.INVALID_INPUT,
@@ -709,21 +370,10 @@ const validateRange = (): boolean => {
 }
 
 const validateRequiredFields = (): boolean => {
-  if (
-    !siteInfoValidator.validateRequiredFields(
-      siteSpeciesValues.value,
-      age.value,
-      height.value,
-      bha50SiteIndex.value,
-    )
-  ) {
+  if (!siteInfoValidator.validateRequiredFields(bha50SiteIndex.value)) {
     messageDialogStore.openDialog(
       MSG_DIALOG_TITLE.MISSING_INFO,
-      siteSpeciesValues.value === SITE_SPECIES_VALUES.COMPUTED
-        ? MDL_PRM_INPUT_ERR.SITE_VLD_SPCZ_REQ_VALS_SUP(
-            selectedSiteSpecies.value,
-          )
-        : MDL_PRM_INPUT_ERR.SITE_VLD_SPCZ_REQ_SI_VAL(selectedSiteSpecies.value),
+      MDL_PRM_INPUT_ERR.SITE_VLD_SPCZ_REQ_SI_VAL(selectedSiteSpecies.value),
       { width: 400 },
     )
     return false
@@ -733,12 +383,6 @@ const validateRequiredFields = (): boolean => {
 }
 
 const formattingValues = (): void => {
-  if (height.value) {
-    height.value = parseFloat(height.value).toFixed(
-      NUM_INPUT_LIMITS.HEIGHT_DECIMAL_NUM,
-    )
-  }
-
   if (bha50SiteIndex.value) {
     bha50SiteIndex.value = parseFloat(bha50SiteIndex.value).toFixed(
       NUM_INPUT_LIMITS.BHA50_SITE_INDEX_DECIMAL_NUM,
@@ -774,19 +418,11 @@ const clear = () => {
   }
 
   selectedSiteSpecies.value = highestPercentSpecies.value
-  updateSiteIndexCurve(selectedSiteSpecies.value)
 
   becZone.value = DEFAULT_VALUES.BEC_ZONE
   siteSpeciesValues.value = DEFAULT_VALUES.SITE_SPECIES_VALUES
-  ageType.value = DEFAULT_VALUES.AGE_TYPE
-  floating.value = DEFAULT_VALUES.FLOATING
 
-  handleDerivedByChange(
-    derivedBy.value,
-    selectedSiteSpecies.value,
-    siteSpeciesValues.value,
-    floating.value,
-  )
+  handleDerivedByChange(derivedBy.value, selectedSiteSpecies.value)
 }
 </script>
 

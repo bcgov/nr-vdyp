@@ -2,7 +2,6 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import {
   PANEL,
-  FLOATING,
   MODEL_PARAMETER_PANEL,
   NUM_INPUT_LIMITS,
 } from '@/constants/constants'
@@ -16,7 +15,6 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     speciesInfo: PANEL.OPEN,
     siteInfo: PANEL.CLOSE,
     standDensity: PANEL.CLOSE,
-    addtStandAttrs: PANEL.CLOSE,
     reportInfo: PANEL.CLOSE,
   })
 
@@ -24,14 +22,12 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
   const panelState = ref<
     Record<PanelName, { confirmed: boolean; editable: boolean }>
   >({
-    speciesInfo: { confirmed: false, editable: true }, // Only speciesInfo is editable initially
+    speciesInfo: { confirmed: false, editable: true },
     siteInfo: { confirmed: false, editable: false },
     standDensity: { confirmed: false, editable: false },
-    addtStandAttrs: { confirmed: false, editable: false },
     reportInfo: { confirmed: false, editable: false },
   })
 
-  // Run Model button state
   const runModelEnabled = ref(false)
 
   // <confirmed === true>
@@ -57,7 +53,6 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
       MODEL_PARAMETER_PANEL.SPECIES_INFO,
       MODEL_PARAMETER_PANEL.SITE_INFO,
       MODEL_PARAMETER_PANEL.STAND_DENSITY,
-      MODEL_PARAMETER_PANEL.ADDT_STAND_ATTRS,
       MODEL_PARAMETER_PANEL.REPORT_INFO,
     ]
     const currentIndex = panelOrder.indexOf(panelName)
@@ -84,7 +79,6 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
       MODEL_PARAMETER_PANEL.SPECIES_INFO,
       MODEL_PARAMETER_PANEL.SITE_INFO,
       MODEL_PARAMETER_PANEL.STAND_DENSITY,
-      MODEL_PARAMETER_PANEL.ADDT_STAND_ATTRS,
       MODEL_PARAMETER_PANEL.REPORT_INFO,
     ]
     const currentIndex = panelOrder.indexOf(panelName)
@@ -119,7 +113,6 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
       group: string
       percent: number
       siteSpecies: string
-      minimumDBHLimit: string
     }[]
   >([])
 
@@ -164,7 +157,6 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
       group: key,
       percent: groupMap[key],
       siteSpecies: key,
-      minimumDBHLimit: DEFAULT_VALUES.MINIMUM_DBH_LIMIT,
     }))
 
     speciesGroups.value.sort((a, b) => b.percent - a.percent)
@@ -178,31 +170,11 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
   const becZone = ref<string | null>(null)
   const ecoZone = ref<string | null>(null)
   const incSecondaryHeight = ref(false)
-  const siteIndexCurve = ref<string | null>(null)
   const siteSpeciesValues = ref<string | null>(null)
-  const ageType = ref<string | null>(null)
-  const percentStockableArea = ref<number | null>(null)
-  const age = ref<number | null>(null)
-  const height = ref<string | null>(null)
   const bha50SiteIndex = ref<string | null>(null)
-  const floating = ref<string | null>(null)
 
   // stand density
-  const basalArea = ref<string | null>(null)
-  const treesPerHectare = ref<string | null>(null)
-  const minimumDBHLimit = ref<string | null>(null)
-  const currentDiameter = ref<string | null>(null)
-  const percentCrownClosure = ref<number | null>(null)
-
-  // additional stand attributes
-  const computedValues = ref<string | null>(null)
-  const loreyHeight = ref<string | null>(null)
-  const wholeStemVol75 = ref<string | null>(null)
-  const basalArea125 = ref<string | null>(null)
-  const wholeStemVol125 = ref<string | null>(null)
-  const cuVol = ref<string | null>(null)
-  const cuNetDecayVol = ref<string | null>(null)
-  const cuNetDecayWasteVol = ref<string | null>(null)
+  const percentStockableArea = ref<number | null>(null)
 
   // report info
   const startingAge = ref<number | null>(null)
@@ -229,28 +201,12 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
 
     speciesGroups.value = speciesGroups.value.map((group) => ({
       ...group,
-      minimumDBHLimit: DEFAULT_VALUES.MINIMUM_DBH_LIMIT,
     }))
 
     becZone.value = DEFAULT_VALUES.BEC_ZONE
     siteSpeciesValues.value = DEFAULT_VALUES.SITE_SPECIES_VALUES
-    ageType.value = DEFAULT_VALUES.AGE_TYPE
-    percentStockableArea.value = DEFAULT_VALUES.PERCENT_STOCKABLE_AREA
-    age.value = DEFAULT_VALUES.AGE
-    height.value = DEFAULT_VALUES.HEIGHT
     bha50SiteIndex.value = DEFAULT_VALUES.BHA50_SITE_INDEX
-    floating.value = FLOATING.SITEINDEX
-    minimumDBHLimit.value = DEFAULT_VALUES.MINIMUM_DBH_LIMIT
-    currentDiameter.value = DEFAULT_VALUES.CURRENT_DIAMETER
-    percentCrownClosure.value = DEFAULT_VALUES.PERCENT_CROWN_CLOSURE
-    computedValues.value = DEFAULT_VALUES.COMPUTED_VALUES
-    loreyHeight.value = DEFAULT_VALUES.LOREY_HEIGHT
-    wholeStemVol75.value = DEFAULT_VALUES.WHOLE_STEM_VOL75
-    basalArea125.value = DEFAULT_VALUES.BASAL_AREA125
-    wholeStemVol125.value = DEFAULT_VALUES.WHOLE_STEM_VOL125
-    cuVol.value = DEFAULT_VALUES.CU_VOL
-    cuNetDecayVol.value = DEFAULT_VALUES.CU_NET_DECAY_VOL
-    cuNetDecayWasteVol.value = DEFAULT_VALUES.CU_NET_DECAY_WASTE_VOL
+    percentStockableArea.value = DEFAULT_VALUES.PERCENT_STOCKABLE_AREA
     startingAge.value = DEFAULT_VALUES.STARTING_AGE
     finishingAge.value = DEFAULT_VALUES.FINISHING_AGE
     ageIncrement.value = DEFAULT_VALUES.AGE_INCREMENT
@@ -280,29 +236,10 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     becZone,
     ecoZone,
     incSecondaryHeight,
-    siteIndexCurve,
     siteSpeciesValues,
-    ageType,
-    percentStockableArea,
-    age,
-    height,
     bha50SiteIndex,
-    floating,
     // stand density
-    basalArea,
-    treesPerHectare,
-    minimumDBHLimit,
-    percentCrownClosure,
-    currentDiameter,
-    // additional stand attributes
-    computedValues,
-    loreyHeight,
-    wholeStemVol75,
-    basalArea125,
-    wholeStemVol125,
-    cuVol,
-    cuNetDecayVol,
-    cuNetDecayWasteVol,
+    percentStockableArea,
 
     // report info
     startingAge,

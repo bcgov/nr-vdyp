@@ -1,15 +1,14 @@
 package ca.bc.gov.nrs.vdyp.backend.projection;
 
-import java.io.IOException;
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Map;
 
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionExecutionException;
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestValidationException;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.ProjectionRequestKind;
-import ca.bc.gov.nrs.vdyp.backend.projection.input.AbstractPolygonStream;
-import ca.bc.gov.nrs.vdyp.backend.utils.FileHelper;
+import ca.bc.gov.nrs.vdyp.backend.v1.api.impl.exceptions.ProjectionExecutionException;
+import ca.bc.gov.nrs.vdyp.backend.v1.api.impl.exceptions.ProjectionRequestValidationException;
+import ca.bc.gov.nrs.vdyp.backend.v1.gen.model.Parameters;
+import ca.bc.gov.nrs.vdyp.backend.v1.gen.model.ProjectionRequestKind;
+import jakarta.validation.Valid;
 
 public class StubProjectionRunner implements IProjectionRunner {
 
@@ -39,28 +38,17 @@ public class StubProjectionRunner implements IProjectionRunner {
 
 	@Override
 	public InputStream getYieldTable() throws ProjectionExecutionException {
-		try {
-			return FileHelper.getStubResourceFile("Output_YldTbl.csv");
-		} catch (IOException e) {
-			throw new ProjectionExecutionException(e);
-		}
+		// No projection was done; therefore, there's no yield table.
+		return new ByteArrayInputStream(new byte[0]);
 	}
 
 	@Override
-	public InputStream getProgressStream() throws ProjectionExecutionException {
-		try {
-			return FileHelper.getStubResourceFile("Output_Log.txt");
-		} catch (IOException e) {
-			throw new ProjectionExecutionException(e);
-		}
+	public InputStream getProgressStream() {
+		return state.getProgressLog().getAsStream();
 	}
 
 	@Override
-	public InputStream getErrorStream() throws ProjectionExecutionException {
-		try {
-			return FileHelper.getStubResourceFile("Output_Error.txt");
-		} catch (IOException e) {
-			throw new ProjectionExecutionException(e);
-		}
+	public InputStream getErrorStream() {
+		return state.getErrorLog().getAsStream();
 	}
 }

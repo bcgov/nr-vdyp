@@ -1,5 +1,5 @@
 <template>
-  <v-container fluid min-height="600px">
+  <v-container>
     <v-card
       elevation="0"
       style="
@@ -21,75 +21,69 @@
       ref="errMsgRsltPrintAreaRef"
       class="ml-2 mr-2"
     >
-      <h2 class="mt-5 mb-10">View Error Message Results</h2>
-      <div
-        class="v-row"
-        v-for="(group, groupIndex) in chunkedErrMsgResults"
-        :key="groupIndex"
-      >
-        <template v-for="(item, index) in group" :key="index">
-          <!-- data column -->
-          <div class="v-col-md-2 v-col-12 mb-5">
-            <div style="border-bottom: 1px solid rgb(223, 220, 220)">
-              <div
-                class="mb-1 pl-3 pb-1 ml-3 readonly-label"
-                :title="item.label"
-                style="
-                  white-space: nowrap;
-                  overflow: hidden;
-                  text-overflow: ellipsis;
-                "
-              >
-                {{ item.label }}
-                <div class="pl-0 readonly-text">{{ item.value }}</div>
-              </div>
-            </div>
-          </div>
-          <!-- empty column: Insert Except Last Column -->
+      <v-virtual-scroll :items="items" :item-height="50" height="430px">
+        <template #default="{ item }">
           <div
-            v-if="index < group.length - 1"
-            class="v-col-md-1 v-col-12"
-            style="max-width: 3%"
-          ></div>
+            style="
+              display: flex;
+              align-items: center;
+              height: 30px;
+              padding: 0 16px;
+            "
+          >
+            {{ item }}
+          </div>
         </template>
-      </div>
+      </v-virtual-scroll>
     </div>
   </v-container>
 </template>
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useProjectionStore } from '@/stores/projectionStore'
 import printJS from 'print-js'
 import { saveAs } from 'file-saver'
 import { Util } from '@/utils/util'
 
+const projectionStore = useProjectionStore()
+const items = computed(() => projectionStore.errorMessages)
+
 const errMsgRsltPrintAreaRef = ref<HTMLElement | null>(null)
 
-const errMsgResults = [
-  { label: 'Insufficient Stockable Area Supplied', value: '55' },
-  { label: 'CFS Eco Zone', value: 'Number not provided' },
-  { label: 'Trees Per Hectare', value: '<Not Used>' },
-  { label: 'Measured Basal Area', value: '<Not Used>' },
-  { label: 'Additional Stand Attributes', value: 'None Applied' },
-]
-
-// Bundle data into groups of five
-const chunkedErrMsgResults = errMsgResults.reduce(
-  (acc, _, i) => {
-    if (i % 5 === 0) acc.push(errMsgResults.slice(i, i + 5))
-    return acc
-  },
-  [] as Array<Array<{ label: string; value: string }>>,
-)
-
 const download = () => {
-  const content = 'Hello, this is your text file!'
+  const content = items.value.join('\n')
   const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
-
-  saveAs(blob, 'view-log-file.txt')
+  saveAs(blob, 'Output_Error.txt')
 }
 
 const print = () => {
   if (errMsgRsltPrintAreaRef.value) {
+    // Create a temporary DOM
+    const container = document.createElement('div')
+    container.style.fontFamily =
+      "'BCSans', 'Noto Sans', Verdana, Arial, sans-serif"
+    container.style.fontSize = '12px'
+
+    // Add a print-only header
+    const header = document.createElement('h2')
+    header.style.textAlign = 'center'
+    header.style.marginBottom = '20px'
+    header.textContent = 'View Error Message Results'
+    container.appendChild(header)
+
+    // traverse the v-virtual-scroll item directly and add it to the DOM
+    items.value.forEach((item: any) => {
+      const itemDiv = document.createElement('div')
+      itemDiv.style.padding = '4px 16px'
+      itemDiv.style.height = '30px'
+      itemDiv.style.display = 'flex'
+      itemDiv.style.alignItems = 'center'
+      itemDiv.style.border = 'none'
+      itemDiv.textContent = item
+      container.appendChild(itemDiv)
+    })
+
+    // Define a print style
     const styles =
       Util.extractStylesFromDocument(document.styleSheets) +
       `
@@ -97,16 +91,19 @@ const print = () => {
         size: Letter portrait;
         margin: 7mm;
       }
-      .v-col-md-2 { flex: 0 0 16.6666666667%; max-width: 16.6666666667%; }
-      .readonly-label { font-size: 10px; }
-      .readonly-text { font-size: 10px; }
-      html, body { font-family: 'BCSans', 'Noto Sans', Verdana, Arial, sans-serif; font-size: 10px; font-weight: 400;}
+      h2 {
+        font-size: 16px;
+        margin-bottom: 10px;
+      }
+      div {
+        font-size: 12px;
+      }
     `
 
+    // Print a temporary DOM
     printJS({
-      printable: errMsgRsltPrintAreaRef.value.id,
-      type: 'html',
-      scanStyles: false,
+      printable: container.innerHTML,
+      type: 'raw-html',
       style: styles,
     })
   }

@@ -111,11 +111,12 @@ frontend:
   pdb:
     enabled: false # enable it in PRODUCTION for having pod disruption budget.
     minAvailable: 1 # the minimum number of pods that must be available during the disruption budget.
-  env: 
+  env:
     VITE_SSO_AUTH_SERVER_URL: ~
     VITE_SSO_CLIENT_ID: ~
     VITE_SSO_REALM: ~
     VITE_SSO_REDIRECT_URI: ~
+    VITE_API_URL: ~
 
 crunchy: # enable it for TEST and PROD, for PR based pipelines simply use single postgres
   enabled: false
