@@ -1,6 +1,5 @@
 package ca.bc.gov.nrs.vdyp.processing_state;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -10,7 +9,6 @@ import java.util.stream.IntStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ca.bc.gov.nrs.vdyp.application.ProcessingException;
 import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
@@ -119,24 +117,24 @@ public abstract class LayerProcessingState<RCM extends ResolvedControlMap, Self 
 		}).toList());
 	}
 
-	public float getCVVolume(
+	public float getCvVolume(
 			int speciesIndex, UtilizationClass uc, UtilizationClassVariable volumeVariable, LayerType layerType
 	) {
 		return compatibilityVariables.orElseThrow(() -> new IllegalStateException(UNSET_CV_VOLUMES)).get(speciesIndex)
 				.getCvVolume(uc, volumeVariable, layerType);
 	}
 
-	public float getCVBasalArea(int speciesIndex, UtilizationClass uc, LayerType layerType) {
+	public float getCvBasalArea(int speciesIndex, UtilizationClass uc, LayerType layerType) {
 		return compatibilityVariables.orElseThrow(() -> new IllegalStateException(UNSET_CV_VOLUMES)).get(speciesIndex)
 				.getCvBasalArea(uc, layerType);
 	}
 
-	public float getCVQuadraticMeanDiameter(int speciesIndex, UtilizationClass uc, LayerType layerType) {
+	public float getCvQuadraticMeanDiameter(int speciesIndex, UtilizationClass uc, LayerType layerType) {
 		return compatibilityVariables.orElseThrow(() -> new IllegalStateException(UNSET_CV_VOLUMES)).get(speciesIndex)
 				.getCvQuadraticMeanDiameter(uc, layerType);
 	}
 
-	public float getCVSmall(int speciesIndex, UtilizationClassVariable variable) {
+	public float getCvSmall(int speciesIndex, UtilizationClassVariable variable) {
 		return compatibilityVariables.orElseThrow(() -> new IllegalStateException(UNSET_CV_VOLUMES)).get(speciesIndex)
 				.getCvPrimaryLayerSmall(variable);
 	}

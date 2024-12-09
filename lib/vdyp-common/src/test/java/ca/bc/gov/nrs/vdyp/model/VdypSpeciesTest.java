@@ -22,7 +22,6 @@ import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.application.InitializationIncompleteException;
 import ca.bc.gov.nrs.vdyp.model.variables.UtilizationClassVariable;
-import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
 
 class VdypSpeciesTest {
 

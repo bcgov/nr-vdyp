@@ -1,6 +1,5 @@
 package ca.bc.gov.nrs.vdyp.test;
 
-import static ca.bc.gov.nrs.vdyp.test.TestUtils.UTIL_CLASSES;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.anything;
@@ -38,8 +37,6 @@ import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.hamcrest.StringDescription;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
-import org.junit.platform.commons.util.ReflectionUtils;
-
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common.ValueOrMarker;
@@ -54,7 +51,6 @@ import ca.bc.gov.nrs.vdyp.model.BecLookup;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
-import ca.bc.gov.nrs.vdyp.model.Sp64DistributionSet;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
 import ca.bc.gov.nrs.vdyp.model.VdypCompatibilityVariables;
@@ -67,7 +63,6 @@ import ca.bc.gov.nrs.vdyp.model.variables.UtilizationClassVariable;
 import ca.bc.gov.nrs.vdyp.processing_state.Bank;
 import ca.bc.gov.nrs.vdyp.processing_state.LayerProcessingState;
 import ca.bc.gov.nrs.vdyp.processing_state.ProcessingState;
-import ca.bc.gov.nrs.vdyp.processing_state.TestProcessingState;
 
 /**
  * Custom Hamcrest Matchers

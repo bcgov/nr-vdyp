@@ -18,8 +18,6 @@ import ca.bc.gov.nrs.vdyp.test.MockFileResolver;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
 
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.*;
-
 class VdypSpeciesParserTest {
 
 	@Test

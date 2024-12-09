@@ -11,7 +11,6 @@ import java.util.function.Consumer;
 
 import ca.bc.gov.nrs.vdyp.application.InitializationIncompleteException;
 import ca.bc.gov.nrs.vdyp.common.Computed;
-import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.GenusDefinitionParser;
 import ca.bc.gov.nrs.vdyp.model.builders.ModelClassBuilder;
 import ca.bc.gov.nrs.vdyp.model.builders.SpeciesGroupIdentifiedBuilder;

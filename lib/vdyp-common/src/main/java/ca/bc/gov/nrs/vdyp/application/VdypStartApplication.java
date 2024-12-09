@@ -8,13 +8,9 @@ import static ca.bc.gov.nrs.vdyp.math.FloatMath.pow;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import java.beans.IntrospectionException;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.InvocationTargetException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -69,7 +65,6 @@ import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
-import ca.bc.gov.nrs.vdyp.model.VdypUtilizationHolder;
 import ca.bc.gov.nrs.vdyp.model.VolumeComputeMode;
 
 public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional<Float>, S, I>, L extends BaseVdypLayer<S, I> & InputLayer, S extends BaseVdypSpecies<I>, I extends BaseVdypSite>
@@ -1453,7 +1448,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 			);
 
 			for (var accessors : ComputationMethods.UTILIZATION_VECTOR_ACCESSORS) {
-				UtilizationVector utilVector = (UtilizationVector) accessors.get(vdypSpecies);
+				UtilizationVector utilVector = accessors.get(vdypSpecies);
 
 				// Set all components other than 4 to 0.0
 				for (var uc : UtilizationClass.ALL_BUT_LARGEST) {

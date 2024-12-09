@@ -78,7 +78,7 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingEngine.
 			final int specIndex = i + 1;
 			cvVolume[specIndex] = new MatrixMap2Impl<>(
 					List.of(UtilizationClass.values()), VdypCompatibilityVariables.VOLUME_UTILIZATION_VARIABLES,
-					(uc, vv) -> primaryState.getCVVolume(specIndex, uc, vv, LayerType.PRIMARY)
+					(uc, vv) -> primaryState.getCvVolume(specIndex, uc, vv, LayerType.PRIMARY)
 			);
 
 			cvBasalArea[specIndex] = new EnumMap<>(UtilizationClass.class);
@@ -86,13 +86,13 @@ public class BackProcessingEngine extends ProcessingEngine<BackProcessingEngine.
 			cvPrimaryLayerSmall[specIndex] = new EnumMap<>(UtilizationClassVariable.class);
 
 			for (var uc : UtilizationClass.values()) {
-				cvBasalArea[specIndex].put(uc, primaryState.getCVBasalArea(specIndex, uc, LayerType.PRIMARY));
+				cvBasalArea[specIndex].put(uc, primaryState.getCvBasalArea(specIndex, uc, LayerType.PRIMARY));
 				cvQuadraticMeanDiameter[specIndex]
-						.put(uc, primaryState.getCVQuadraticMeanDiameter(specIndex, uc, LayerType.PRIMARY));
+						.put(uc, primaryState.getCvQuadraticMeanDiameter(specIndex, uc, LayerType.PRIMARY));
 			}
 
 			for (var ucv : VdypCompatibilityVariables.SMALL_UTILIZATION_VARIABLES) {
-				cvPrimaryLayerSmall[specIndex].put(ucv, primaryState.getCVSmall(specIndex, ucv));
+				cvPrimaryLayerSmall[specIndex].put(ucv, primaryState.getCvSmall(specIndex, ucv));
 			}
 
 		}

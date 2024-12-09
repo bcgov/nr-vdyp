@@ -73,7 +73,6 @@ import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.processing_state.Bank;
 import ca.bc.gov.nrs.vdyp.processing_state.ProcessingState;
-import ca.bc.gov.nrs.vdyp.processing_state.TestProcessingState;
 
 public class TestUtils {
 

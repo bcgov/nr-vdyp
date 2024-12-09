@@ -5,7 +5,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import ca.bc.gov.nrs.vdyp.common.Computed;
-import ca.bc.gov.nrs.vdyp.common.Utils;
 
 public class VdypLayer extends BaseVdypLayer<VdypSpecies, VdypSite> implements VdypUtilizationHolder {
 

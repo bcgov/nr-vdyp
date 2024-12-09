@@ -191,21 +191,21 @@ class LayerProcessingStateTest {
 		void testFailBeforeSet() throws ProcessingException {
 			assertThrows(
 					IllegalStateException.class,
-					() -> unit.getCVVolume(
+					() -> unit.getCvVolume(
 							1, UtilizationClass.ALL, UtilizationClassVariable.CLOSE_UTIL_VOL, LayerType.PRIMARY
 					), "getCVVolume"
 			);
 			assertThrows(
-					IllegalStateException.class, () -> unit.getCVBasalArea(1, UtilizationClass.ALL, LayerType.PRIMARY),
+					IllegalStateException.class, () -> unit.getCvBasalArea(1, UtilizationClass.ALL, LayerType.PRIMARY),
 					"getCVBasalArea"
 			);
 			assertThrows(
 					IllegalStateException.class,
-					() -> unit.getCVQuadraticMeanDiameter(1, UtilizationClass.ALL, LayerType.PRIMARY),
+					() -> unit.getCvQuadraticMeanDiameter(1, UtilizationClass.ALL, LayerType.PRIMARY),
 					"getCVQuadraticMeanDiameter"
 			);
 			assertThrows(
-					IllegalStateException.class, () -> unit.getCVSmall(1, UtilizationClassVariable.BASAL_AREA),
+					IllegalStateException.class, () -> unit.getCvSmall(1, UtilizationClassVariable.BASAL_AREA),
 					"getCVSmall"
 			);
 		}
@@ -216,7 +216,7 @@ class LayerProcessingStateTest {
 			assertThat(
 					unit,
 					testCV(
-							"getCVVolume", 1, UtilizationClass.ALL, UtilizationClassVariable.CLOSE_UTIL_VOL,
+							"getCvVolume", 1, UtilizationClass.ALL, UtilizationClassVariable.CLOSE_UTIL_VOL,
 							LayerType.PRIMARY,
 							is(
 									11f + UtilizationClassVariable.CLOSE_UTIL_VOL.ordinal() * 2f
@@ -227,21 +227,21 @@ class LayerProcessingStateTest {
 			assertThat(
 					unit,
 					testCV(
-							"getCVBasalArea", 1, UtilizationClass.ALL, LayerType.PRIMARY,
+							"getCvBasalArea", 1, UtilizationClass.ALL, LayerType.PRIMARY,
 							is(13f + UtilizationClass.ALL.ordinal() * 3f + LayerType.PRIMARY.ordinal() * 5f)
 					)
 			);
 			assertThat(
 					unit,
 					testCV(
-							"getCVQuadraticMeanDiameter", 1, UtilizationClass.U125TO175, LayerType.PRIMARY,
+							"getCvQuadraticMeanDiameter", 1, UtilizationClass.U125TO175, LayerType.PRIMARY,
 							is(17f + UtilizationClass.U125TO175.ordinal() * 3f + LayerType.PRIMARY.ordinal() * 5f)
 					)
 			);
 			assertThat(
 					unit,
 					testCV(
-							"getCVSmall", 1, UtilizationClassVariable.QUAD_MEAN_DIAMETER,
+							"getCvSmall", 1, UtilizationClassVariable.QUAD_MEAN_DIAMETER,
 							is(UtilizationClassVariable.QUAD_MEAN_DIAMETER.ordinal() * 7f)
 					)
 			);

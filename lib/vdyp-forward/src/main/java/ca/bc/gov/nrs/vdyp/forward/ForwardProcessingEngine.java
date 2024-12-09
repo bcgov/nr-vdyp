@@ -1543,19 +1543,19 @@ public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingE
 					.getControlVariable(ControlVariable.COMPAT_VAR_APPLICATION_3);
 
 			if (controlVar3Value >= 1 /* apply compatibility variables */) {
-				spBaSmall += lps.getCVSmall(speciesIndex, UtilizationClassVariable.BASAL_AREA);
+				spBaSmall += lps.getCvSmall(speciesIndex, UtilizationClassVariable.BASAL_AREA);
 				if (spBaSmall < 0.0f) {
 					spBaSmall = 0.0f;
 				}
-				spDqSmall += lps.getCVSmall(speciesIndex, UtilizationClassVariable.QUAD_MEAN_DIAMETER);
+				spDqSmall += lps.getCvSmall(speciesIndex, UtilizationClassVariable.QUAD_MEAN_DIAMETER);
 				FloatMath.clamp(spDqSmall, 4.01f, 7.49f);
 
 				spLhSmall = 1.3f + (spLhSmall - 1.3f)
-						* FloatMath.exp(lps.getCVSmall(speciesIndex, UtilizationClassVariable.LOREY_HEIGHT));
+						* FloatMath.exp(lps.getCvSmall(speciesIndex, UtilizationClassVariable.LOREY_HEIGHT));
 
 				if (controlVar3Value >= 2 && meanVolumeSmall > 0.0f) {
 					meanVolumeSmall *= FloatMath
-							.exp(lps.getCVSmall(speciesIndex, UtilizationClassVariable.WHOLE_STEM_VOL));
+							.exp(lps.getCvSmall(speciesIndex, UtilizationClassVariable.WHOLE_STEM_VOL));
 				}
 			}
 

@@ -1,6 +1,5 @@
 package ca.bc.gov.nrs.vdyp.application;
 
-import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 
 public abstract class ProcessingEngine<E extends ProcessingEngine.ExecutionStep<E>> {
