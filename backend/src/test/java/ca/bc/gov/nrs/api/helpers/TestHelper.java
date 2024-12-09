@@ -1,62 +1,64 @@
 package ca.bc.gov.nrs.api.helpers;
 
-import ca.bc.gov.nrs.api.v1.entity.UserAddressEntity;
-import ca.bc.gov.nrs.api.v1.entity.UserEntity;
-import ca.bc.gov.nrs.api.v1.repository.UserRepository;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
-import net.datafaker.Faker;
-import org.instancio.Instancio;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Path;
+import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
-import java.util.List;
+import ca.bc.gov.nrs.vdyp.backend.v1.gen.model.Parameters;
+import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 public class TestHelper {
-  private final UserRepository userRepository;
-  private final Faker faker = new Faker();
-  @Inject
-  TestHelper(UserRepository userRepository) {
-    this.userRepository = userRepository;
-  }
 
-  @Transactional(Transactional.TxType.REQUIRES_NEW)
-  public void clearDatabase() {
-    this.userRepository.deleteAll();
-  }
+	public static final String ROOT_PATH = "/api/v8";
 
-  @Transactional(Transactional.TxType.REQUIRES_NEW)
-  public UserEntity saveUser() {
-    var name = faker.name();
-    var email = faker.internet().emailAddress();
-    UserEntity user = new UserEntity();
-    user.setName(name.fullName());
-    user.setEmail(email);
-    this.userRepository.persist(user);
-    return user;
-  }
+	public Path getResourceFile(Path testResourceFolderPath, String fileName) throws IOException {
 
-  @Transactional(Transactional.TxType.REQUIRES_NEW)
-  public List<UserEntity> saveUsers(int size) {
-    var users = Instancio.ofList(UserEntity.class).size(size).create().stream().peek(x -> {
-      x.setId(null);
-      x.setAddresses(null);
-    }).toList();
-    this.userRepository.persist(users);
-    return users;
-  }
+		String resourceFilePath = Path.of(testResourceFolderPath.toString(), fileName).toString();
 
-  @Transactional(Transactional.TxType.REQUIRES_NEW)
-  public UserAddressEntity saveUserAddress(UserEntity userEntity) {
-    var savedUser = userRepository.findById(userEntity.getId());
-    UserAddressEntity userAddress = new UserAddressEntity();
-    userAddress.setUser(userEntity);
-    userAddress.setStreet(faker.address().streetAddress());
-    userAddress.setCity(faker.address().city());
-    userAddress.setState(faker.address().state());
-    userAddress.setZipCode(faker.address().zipCode());
-    savedUser.getAddresses().add(userAddress);
-    userRepository.persist(savedUser);
-    return savedUser.getAddresses().get(0);
-  }
+		URL testFileURL = this.getClass().getClassLoader().getResource(resourceFilePath);
+		try {
+			File resourceFile = new File(testFileURL.toURI());
+			return Path.of(resourceFile.getAbsolutePath());
+		} catch (URISyntaxException e) {
+			throw new IllegalStateException(MessageFormat.format("Unable to find test resource {0}", resourceFilePath));
+		}
+	}
+
+	public byte[] readZipEntry(ZipInputStream zipInputStream, ZipEntry zipEntry) throws IOException {
+
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		byte[] buffer = new byte[1024];
+		int bytesRead;
+		while ( (bytesRead = zipInputStream.read(buffer, 0, 1024)) != -1) {
+			baos.write(buffer, 0, bytesRead);
+		}
+
+		return baos.toByteArray();
+	}
+
+	public InputStream buildTestFile() throws IOException {
+		return new ByteArrayInputStream("Test data".getBytes());
+	}
+
+	public Parameters
+			addSelectedOptions(Parameters params, Parameters.SelectedExecutionOptionsEnum... executionOptions) {
+
+		var options = new ArrayList<Parameters.SelectedExecutionOptionsEnum>();
+		for (var e : executionOptions) {
+			options.add(e);
+		}
+		params.setSelectedExecutionOptions(options);
+
+		return params;
+	}
 }

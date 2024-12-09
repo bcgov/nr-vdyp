@@ -100,19 +100,18 @@ body {
 }
 
 .v-card-title {
-  color: white;
-  background: #44608d;
-  border-bottom: 2px solid orange;
+  color: #ffffff;
+  background: #003366;
   padding: 1rem !important;
 }
 
-/* //only for color='primary'
-.v-card-actions {
-  .text-primary.v-btn--variant-text {
-    background: #003366;
-    color: white !important;
-  }
-}*/
+/* FILE-INPUT */
+.v-input--center-affix .v-input__prepend,
+.v-input--center-affix .v-input__append {
+  align-items: center;
+  padding-top: 0;
+  display: none;
+}
 
 /* TABS */
 // tab
@@ -128,11 +127,6 @@ body {
     0px 2px 4px -1px rgba(0, 0, 0, 0.2),
     0px 4px 5px 0px rgba(0, 0, 0, 0.14),
     0px 1px 10px 0px rgba(0, 0, 0, 0.12); /* elevation-4 */
-}
-
-// first tab
-.first-tab {
-  margin-left: 50px !important;
 }
 
 // tab window
@@ -180,25 +174,88 @@ input[type='number']::-webkit-outer-spin-button {
 }
 
 /* SELECT box */
-/* v-select 컴포넌트의 입력 슬롯 배경색을 흰색으로 설정 */
+/* Set the input slot background color of the v-select component to white */
 .v-field--variant-filled .v-field__overlay {
   background-color: #ffffff;
 }
 
+/* Styles for enabled input components */
+/* Active components are darker in contrast to disabled components. */
+.v-input:not(.v-input--is-disabled) .v-label {
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.87);
+  opacity: 1;
+}
+.v-input:not(.v-input--is-disabled) .v-input__control {
+  color: rgba(0, 0, 0, 0.87);
+  opacity: 1;
+}
+
+/* custom spin box and spin button beside text field */
+.spin-box {
+  position: absolute;
+  right: 15px;
+  top: 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 16px;
+  height: 20px;
+  background-color: transparent;
+  padding: 2px;
+}
+
+// mouse over
+.spin-box div:hover {
+  background-color: #d3d3d3 !important;
+}
+
+.spin-up-arrow-button {
+  cursor: pointer;
+  font-size: 7px;
+  width: 10px;
+  height: 10px;
+  background-color: #f2f0f0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transform: scaleX(1.5);
+  padding-top: 3px;
+  padding-bottom: 2px;
+}
+
+.spin-down-arrow-button {
+  cursor: pointer;
+  font-size: 7px;
+  width: 10px;
+  height: 10px;
+  background-color: #f2f0f0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transform: scaleX(1.5);
+  padding-top: 3px;
+  padding-bottom: 2px;
+}
+
+// bottom line under text field
+.spin-text-field-bottom-line {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: #ababab;
+}
+
+.spin-box .disabled {
+  cursor: not-allowed;
+  opacity: 0.5; /* Makes the button look visually disabled */
+  pointer-events: none; /* Prevents clicking */
+}
+
 /* etc */
-
-// .fieldset {
-//   border: 2px solid #39598b;
-//   border-radius: 8px;
-//   padding: 16px;
-//   margin-bottom: 16px;
-// }
-
-// .legend {
-//   padding: 0 8px;
-//   font-weight: bold;
-//   color: #39598b;
-// }
 
 .top-project-year {
   display: flex;
@@ -219,15 +276,9 @@ input[type='number']::-webkit-outer-spin-button {
   font-weight: bold;
 }
 
-.input-field-label {
-  font-size: 12px;
-  color: #747474;
-  padding-left: 15px;
-}
-
 .readonly-text {
   color: black;
-  font-size: 18px;
+  font-size: 16px;
 }
 
 .readonly-label {

@@ -2,14 +2,33 @@ export class Util {
   /**
    * VALIDATATING
    */
-  static isValidVal(item: any): any {
-    return !Util.isBlank(item) ? item : ''
+  public static readonly isZeroValue = (value: any): boolean => {
+    if (value === null || value === undefined) {
+      return false
+    }
+
+    const trimmedValue = this.trimValue(value)
+
+    if (typeof trimmedValue === 'string' && trimmedValue.trim() === '') {
+      return false
+    }
+
+    const numericValue = Number(trimmedValue)
+
+    return !isNaN(numericValue) && numericValue === 0
+  }
+
+  public static readonly isEmptyOrZero = (
+    value: number | string | null,
+  ): boolean => {
+    const trimmedValue = this.trimValue(value)
+    return this.isZeroValue(trimmedValue) || this.isBlank(trimmedValue)
   }
 
   // undefined, null, NaN, 0, "" (empty string), and false
   // isBlank(" ") = false
   static isBlank(item: any): boolean {
-    if (!item) {
+    if (item === undefined || item === null || Number.isNaN(item)) {
       return true
     } else if (Array.isArray(item)) {
       return item.length === 0
@@ -63,7 +82,9 @@ export class Util {
     }
 
     const year = new Intl.DateTimeFormat('en', { year: 'numeric' }).format(date)
-    const month = new Intl.DateTimeFormat('en', { month: '2-digit' }).format(date)
+    const month = new Intl.DateTimeFormat('en', { month: '2-digit' }).format(
+      date,
+    )
     const day = new Intl.DateTimeFormat('en', { day: '2-digit' }).format(date)
 
     const hour = date.getHours().toString().padStart(2, '0')
@@ -81,7 +102,10 @@ export class Util {
     }
   }
 
-  static formatNumberFractionGroup(minimumFractionDigits: number, maximumFractionDigits: number): any {
+  static formatNumberFractionGroup(
+    minimumFractionDigits: number,
+    maximumFractionDigits: number,
+  ): any {
     return new Intl.NumberFormat('en-US', {
       minimumFractionDigits: minimumFractionDigits,
       maximumFractionDigits: maximumFractionDigits,
@@ -132,6 +156,39 @@ export class Util {
   /**
    * CONVERTING
    */
+
+  public static readonly trimValue = (value: any): any => {
+    if (typeof value === 'string') {
+      return value.trim()
+    }
+    return value
+  }
+
+  /**
+   * Converts the input to a number if it's a string and returns it,
+   * otherwise returns the input unchanged if it's a number.
+   * The conversion only occurs if the input is not blank.
+   *
+   * @param item - The input to be processed (string or number or null).
+   * @returns The processed input: number or unchanged if blank or not a string.
+   */
+  static toNumber(item: string | number | null): number | null {
+    if (Util.isBlank(item)) {
+      return null
+    }
+
+    if (typeof item === 'string') {
+      const convertedNumber = Number(this.trimValue(item))
+      return isNaN(convertedNumber) ? null : convertedNumber
+    }
+
+    if (typeof item === 'number') {
+      return item
+    }
+
+    return null
+  }
+
   static arrayToString(array: Array<any>, separator: string): string {
     if (array) {
       return array.join(separator)
@@ -143,6 +200,20 @@ export class Util {
   /**
    * EXTRACTING
    */
+
+  /**
+   * Extracts the numeric value from a given string.
+   * It parses the leading numeric part of the string, ignoring any following non-numeric characters.
+   * If the input string does not contain a valid numeric prefix, the function returns 0.
+   *
+   * @param input - The input string that may contain numeric values.
+   * @returns A number parsed from the leading numeric part of the string, or 0 if no valid number is found.
+   */
+  static extractNumeric(input: string): number {
+    const match = input.match(/^\s*-?\d+(\.\d+)?/)
+    return match ? parseFloat(match[0]) : 0
+  }
+
   static translateCode(code: string, codeList: Array<any>): string {
     if (code && codeList && codeList.length > 0) {
       return codeList.find((c) => c.codeName === code).description
@@ -159,10 +230,38 @@ export class Util {
   }
 
   /**
+   * Extracts all CSS styles from the provided style sheets that are either inline or belong to the same origin.
+   * This function iterates through each style sheet and retrieves the CSS rules, appending them to a single string.
+   *
+   * @param {StyleSheetList} styleSheets - The list of style sheets from the document to extract CSS from.
+   * @returns {string} A concatenated string of all CSS rules from the provided style sheets.
+   */
+  static extractStylesFromDocument(styleSheets: StyleSheetList): string {
+    let styles = ''
+    for (const sheet of Array.from(styleSheets)) {
+      if (!sheet.href || sheet.href.startsWith(window.location.origin)) {
+        try {
+          if (sheet.cssRules) {
+            for (const rule of Array.from(sheet.cssRules)) {
+              styles += rule.cssText
+            }
+          }
+        } catch (e) {
+          console.warn('Could not access stylesheet:', sheet, e)
+        }
+      }
+    }
+
+    return styles
+  }
+
+  /**
    * SPLITING
    */
   static splitStringByCharCamelCase(inString: string): string {
-    return !Util.isBlank(inString) ? inString.replace(/([a-z0-9])([A-Z])/g, '$1 $2') : ''
+    return !Util.isBlank(inString)
+      ? inString.replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+      : ''
   }
 
   /**
@@ -185,8 +284,13 @@ export class Util {
     return result
   }
 
-  static openRequestedPopup(url: string, windowsName: string, windowFeatures?: string): void {
-    if (Util.isBlank(windowFeatures)) windowFeatures = 'toolbar=0,location=0,menubar=0'
+  static openRequestedPopup(
+    url: string,
+    windowsName: string,
+    windowFeatures?: string,
+  ): void {
+    if (Util.isBlank(windowFeatures))
+      windowFeatures = 'toolbar=0,location=0,menubar=0'
     window.open(url, windowsName, windowFeatures)
   }
 
@@ -196,5 +300,95 @@ export class Util {
 
   static deepCopy(obj: any): any {
     return JSON.parse(JSON.stringify(obj)) as typeof obj
+  }
+
+  /**
+   * Increases the numeric value extracted from the input string by a specified step,
+   * ensuring that the result stays within the provided minimum and maximum limits.
+   *
+   * @param value - The input value as a string (e.g., '10.5') or null. It can contain numeric and non-numeric characters.
+   * @param max - The maximum allowable value. If the calculated value exceeds this, the maximum value is returned.
+   * @param min - The minimum allowable value. If the calculated value is lower than this, the minimum value is returned.
+   * @param step - The amount by which to increase the numeric value.
+   * @returns The new value, ensuring it is within the [min, max] range.
+   */
+  static increaseItemBySpinButton(
+    value: string | null,
+    max: number,
+    min: number,
+    step: number,
+  ): number {
+    let newValue
+
+    // If value is null, assign step value and format
+    if (!value) {
+      newValue = step
+    } else {
+      // extract only numbers, commas, and minus signs
+      const extractedValue = value.replace(/[^\d.-]/g, '')
+
+      const numericValue = parseFloat(extractedValue)
+
+      // Check if the extracted value is a valid number
+      if (isNaN(numericValue)) {
+        newValue = step // Assign step value if invalid
+      } else {
+        newValue = numericValue + step
+      }
+
+      if (newValue < min) {
+        // 0
+        newValue = min // 0
+      }
+    }
+
+    if (newValue > max) {
+      newValue = max
+    }
+
+    return newValue
+  }
+
+  /**
+   * Decreases the numeric value extracted from the input string by a specified step,
+   * ensuring that the result stays within the provided minimum and maximum limits.
+   *
+   * @param value - The input value as a string (e.g., '10.5') or null. It can contain numeric and non-numeric characters.
+   * @param max - The maximum allowable value. If the calculated value exceeds this, the maximum value is returned.
+   * @param min - The minimum allowable value. If the calculated value is lower than this, the minimum value is returned.
+   * @param step - The amount by which to decrease the numeric value.
+   * @returns The new value, ensuring it is within the [min, max] range.
+   */
+  static decrementItemBySpinButton(
+    value: string | null,
+    max: number,
+    min: number,
+    step: number,
+  ): number {
+    let newValue
+    if (!value) {
+      newValue = min // 0
+    } else {
+      // extract only numbers, commas, and minus signs
+      const extractedValue = value.replace(/[^\d.-]/g, '')
+
+      const numericValue = parseFloat(extractedValue)
+
+      if (isNaN(numericValue)) {
+        newValue = min // 0
+      } else {
+        newValue = numericValue - step
+      }
+
+      if (newValue < min) {
+        newValue = min // 0
+      }
+
+      if (newValue > max) {
+        newValue = max
+      }
+    }
+
+    return newValue
   }
 }

@@ -25,9 +25,15 @@
         <template v-slot:activator="{ props }">
           <v-btn v-bind="props" class="d-flex align-center header-user-button">
             <v-icon class="header-user-icon">mdi-account-circle</v-icon>
-            <span class="header-user-name"
-              >{{ userInfo?.given_name }} {{ userInfo?.family_name }}</span
-            >
+            <span class="header-user-name">
+              <template v-if="userInfo && userInfo.given_name"
+                >{{ userInfo.given_name }} </template
+              >&nbsp;
+              <template v-if="userInfo && userInfo.family_name">{{
+                userInfo.family_name
+              }}</template>
+              <template v-else>Guest</template>
+            </span>
           </v-btn>
         </template>
 

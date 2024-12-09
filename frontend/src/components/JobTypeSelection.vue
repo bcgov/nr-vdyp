@@ -1,56 +1,30 @@
 <template>
   <div>
-    <v-row>
+    <v-row class="mt-n5">
       <v-col cols="3" sm="3" md="3">
         <span class="search-label">Model</span>
         <v-select
-          v-model="modelType"
-          :items="modelTypes"
+          :items="modelSelectionOptions"
+          v-model="modelSelection"
+          item-title="label"
+          item-value="value"
           hide-details
           dense
           density="compact"
           variant="outlined"
           style="background-color: white !important"
         ></v-select>
-      </v-col>
-      <v-col cols="2" sm="2" md="2">
-        <span class="search-label">Version</span>
-        <v-select
-          v-model="modelName"
-          :items="modelNames"
-          hide-details
-          dense
-          density="compact"
-          variant="outlined"
-          style="background-color: white !important"
-        ></v-select>
-      </v-col>
-      <v-col cols="2" sm="2" md="2">
-        <span class="search-label">Job ID</span>
-        <v-text-field
-          v-model="jobName"
-          hide-details
-          placeholder="Search Job Name..."
-          density="compact"
-          dense
-          variant="outlined"
-          style="background-color: white !important"
-        ></v-text-field>
       </v-col>
     </v-row>
   </div>
 </template>
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useJobTypeSelectionStore } from '@/stores/jobTypeSelectionStore'
+import { useAppStore } from '@/stores/appStore'
+import { storeToRefs } from 'pinia'
+import { modelSelectionOptions } from '@/constants/options'
 
-const jobTypeSelectionStore = useJobTypeSelectionStore()
-const modelType = ref(jobTypeSelectionStore.modelType)
-const modelName = ref(jobTypeSelectionStore.modelName)
-const jobName = ref(jobTypeSelectionStore.jobName)
-
-const modelTypes = ['File Upload', 'Input Model Parameters']
-const modelNames = ['VDYP 8', 'VDYP 9']
+const appStore = useAppStore()
+const { modelSelection } = storeToRefs(appStore)
 </script>
 
 <style scoped>

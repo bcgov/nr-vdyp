@@ -30,6 +30,7 @@
 	<modules>
 		<module>lib</module>
 		<module>buildtools</module>
+		<module>backend</module>
 	</modules>
 
 	<dependencyManagement>

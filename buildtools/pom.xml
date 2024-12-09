@@ -12,6 +12,7 @@
 		<groupId>ca.bc.gov.nrs.vdyp</groupId>
 		<artifactId>vdyp-root</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
+		<relativePath>../pom.xml</relativePath>
 	</parent>
 
 </project>

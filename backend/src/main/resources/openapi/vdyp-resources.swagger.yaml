@@ -1,0 +1,747 @@
+---
+openapi: 3.0.0
+servers:
+  # Added by API Auto Mocking Plugin
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/MJUNKIN_1/VDYP/1.0.0
+info:
+  version: 1.0.0
+  title: Variable Density Yield Projection
+  description: API for the Variable Density Yield Projection back-end
+security:
+  - accessCode:
+    - read
+    - write
+components:
+  schemas:
+    job:
+      type: object
+      properties:
+        name:
+          type: string
+          description: the job's name
+        handlingOptions:
+          $ref: '#/components/schemas/enumJobHandlingOptions'
+        reportingLevel:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/enumVDYP7UtilizationLevels'
+        processingState:
+          $ref: '#/components/schemas/enumProcessingState'
+        projectionParams:
+          $ref: '#/components/schemas/projectionParams'
+        messages:
+          type: array
+          description: messages generated during the execution of the job
+          items:
+            $ref: '#/components/schemas/message'
+        polygon:
+          $ref: '#/components/schemas/polygon'
+
+    polygon:
+      type: object
+      properties:
+        id:
+          type: string
+          description: 'the unique identifier of the polygon'
+        district:
+          type: string
+          description: 'the district responsible for the map'
+        mapSheet:
+          type: string
+          description: the map sheet of the polygon
+        mapQuad:
+          type: string
+          description: the map quad of the polygon
+        mapSubQuad:
+          type: string
+          description: map sub-quad of the polygon
+        polygonNumber:
+          type: integer
+          description: the polygon number within the map sheet
+          minimum: 0
+        disturbanceHistory:
+          $ref: '#/components/schemas/polygonDisturbanceInfo'
+        inventoryStandard:
+          $ref: '#/components/schemas/enumInventoryStandard'
+        layerSummarizationMode:
+          $ref: '#/components/schemas/enumLayerSummarizationMode'
+        referenceYear:
+          type: integer
+          description: the year the polygon information is based on
+          minimum: 0
+        yearOfDeath:
+          type: integer
+          description: "In the event of a significant kill of the stand, this parameter supplies the year in which the stand kill occurred. This would normally be paired with the 'fPctStockableDead' parameter. -9 indicates no stand kill has occurred."
+        isCoastal:
+          type: boolean
+          description: 'true iff the polygon is in a coastal zone (interior, otherwise)'
+        fiz:
+          type: string
+          description: 'the Forest Inventory Zone of the polygon'
+        bec:
+          type: string
+          description: 'the BEC Zone of the polygon'
+        cfsEcoZone:
+          $ref: '#/components/schemas/enumCfsEcoZone'
+        nonProdDescription:
+          type: string
+          description: 'the non productive descriptor of the polygon'
+        percentStockable:
+          type: number
+          description: 'the precent stockable land of the polygon'
+        percentStockableDead:
+          type: number
+          description: "Represents the percent of the stockable land consisting of dead stems (presumably due to an insect attack). This value ranges from 0 to 100 is the proportion of the stockable area that was killed. This parameter would normally be paired with the 'iYearOfDeath' parameter. -9.0 if not known or there has been no kill of the stand."
+        yieldFactor:
+          type: number
+          description: 'the multiplier for the volumes to adjust by if not known or if an internal factor is to be supplied, use -9.0. Any other value between 0.0 and 1.0 inclusive will be used as is without calculating an internal yield factor.'
+        otherVegetationTypePercentages:
+          description: 'map indexed by enumOtherVegetationTypes giving, for each type, the percentage of the polygon occupied by the given type'
+          type: object
+          additionalProperties:
+            type: number
+        nonVegetationTypePercentages:
+          description: 'map indexed by enumNonVegetationTypes giving, for each type, the percentage of the polygon occupied by the given type'
+          type: object
+          additionalProperties:
+            type: number
+        actualProcessingModeUsed:
+          description: 'map indexed by enumProjectionTypes giving, for each type, the actual processing mode used for layers of that type'
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/enumProcessingMode'
+        percentForestedLandUsed:
+          description: 'map indexed by enumProjectionTypes giving, for each type, the actual percent forested land values for layer with that projection type (if one)'
+          type: object
+          additionalProperties:
+            type: number
+        yieldFactorUsed:
+          description: 'map indexed by enumProjectionTypes giving, for each type, the actual yield factor value used for the layer with that projection type (if one)'
+          type: object
+          additionalProperties:
+            type: number
+        projectionTypeProjectionOK:
+          description: 'map indexed by enumProjectionTypes giving, for each type, whether the projection of the layer of that projection type (if one) was OK'
+          type: object 
+          additionalProperties:
+            type: boolean
+        overallProjectionOK:
+          description: 'true iff the overall projection was OK'
+          type: boolean
+        layerAdjustmentsSupplied:
+          description: 'true iff layer adjustments were supplied to the projection'
+          type: boolean
+        layers:
+          type: array
+          items:
+            $ref: '#/components/schemas/layer'
+          
+    layer:
+      type: object
+      properties:
+        id: 
+          type: string
+          description: "The layer's unique identifier."
+        doIncludeWithProjection:
+          type: boolean
+          description: 'If true, this layer will be included in the projection. if false, this layer will not be included in the projection. This will normally occur when layers get combined into a single layer.'
+        doSuppressPerHectareYields: 
+          type: boolean
+          description: 'Indicates whether or not projected yields are suppressed. If false, this flag is ignored and inclusion is determined by the Non-Forest Descriptor in the layer definition. If true, projected per hectare yields will be suppressed and all projected species percents will be returned as supplied in the polygon definition.'
+        layerId: 
+          type: string
+          description: 'The layer identifier'
+        vdyp7LayerId:
+          type: string
+          description: 'The Layer within VDYP7 in which the layer was processed. If not processed within VDYP7, this member will contain an empty string.'
+        rankCode:
+          type: string
+          description: 'The rank code associated with the layer. Rank "1" indicates the primary layer.'
+        nonForestDescriptor:
+          type: string
+          description: 'The non-forest descriptor associated with the layer. If none, or one is not known, this value will contain "".'
+        crownClosure:
+          type: number
+          description: 'Crown closure. If not known, it will be set to -9.0.'
+        basalArea:
+          type: number
+          description: 'Basal area. If not known, it will be set to -9.0.'
+        treesPerHectare:
+          type: number
+          description: 'Trees per hectare. If not known, it will be set to -9.0.'
+        estimatedSiteIndexSpecies:
+          type: integer
+          description: ''
+        estimatedSiteIndex:
+          type: number
+          description: ''
+        measuredUtilizationLevel:
+          type: number
+          description: ''
+        isDeadLayer:
+          type: boolean
+          description: ''
+        yearOfDeath:
+          type: integer
+          description: ''
+        ageAtDeath:
+          type: number
+          description: ''
+        percentStockable:
+          type: number
+          description: ''
+        speciesGroups:
+          type: array
+          description: "the species groups of the layer. Groups are added to this list in the order they're encountered as species are added to the layer at construction time."
+          items:
+            $ref: '#/components/schemas/speciesGroupComponent'
+        species:
+          type: array
+          description: "the species of the layer. Species are added to this list in the order they're supplied at construction time."
+          items:
+            $ref: '#/components/schemas/speciesComponent'
+        layerAdjustments:
+          $ref: '#/components/schemas/layerAdjustments'
+        layerYields:
+          $ref: '#/components/schemas/layerYields'
+        
+    message:
+      type: object
+      properties:
+        id:
+          type: string
+          description: "the message's unique identifier"
+        layerId:
+          type: string
+          description: 'the id of the layer to which the message applies. This value is null if this is a polygon level message and so does not apply to a specific layer'
+        standComponentId:
+          type: string
+          description: 'the id of the stand component to which the message applies. This value will be null if not known or applicable'
+        errorCode:
+          type: string
+          description: 'the element of the ReturnCode enumeration returned from the operation that resulted in this message being generated'
+        severity:
+          $ref: '#/components/schemas/enumSeverity'
+        messageCode:
+          type: string
+          description: 'the element of the MessageCode enumeration describing this message'
+        message:
+          type: string
+          description: 'the message contents'
+        
+    species:
+      type: object
+      properties:
+        codeName:
+          type: string
+          description: "Unique key. The short standard code name for the species"
+        fullName:
+          type: string
+          description: "The full common name for the species"
+        latinName:
+          type: string
+          description: "The Latin name (if known) for the species"
+        genusName:
+          type: string
+          description: "The species code name associated with the species as a genus"
+        speciesGroupName:
+          type: string
+          description: "The species group name (i.e., the VDYP7 Sp0 code name) to use with the species"
+        cfsTreeSpecies:
+          type: object
+          properties:
+            speciesNumber: 
+              type: integer
+              description: "the Canadian Forest Service species number of this species"
+            cfsSpeciesName:
+              type: string
+              description: "the CFS name of this species"
+            cfsTreeGenusName:
+              type: string
+              description: "the CFS name of the species' genus"
+        isCommercial:
+          type: boolean
+          description: "true if and only if this is a commercial species (vice non-commercial)"
+        isDeciduous:
+          type: boolean
+          description: "true if and only if this is a deciduous species (vice coniferous)"
+        isSoftwood:
+          type: boolean
+          description: "true if and only if the species is a softwood species (vice hardwood)"
+        defaultCrownClosures:
+          type: object
+          properties:
+            coastal:
+              type: number
+              description: "contains the default crown closure value of this species in the Coastal region"
+            interior:
+              type: number
+              description: "contains the default crown closure value of this species in the Coastal region"
+        currentSICurves:
+          type: object
+          properties:
+            coastal:
+              $ref: '#/components/schemas/siteIndex'
+            interior:
+              $ref: '#/components/schemas/siteIndex'
+        proposedGrowthModel:
+          # description: 'the growth model to be used if possible'
+          $ref: '#/components/schemas/enumGrowthModels'
+        actualGrowthModels:
+          description: 'the actual growth model used, per layer'
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/enumGrowthModels'
+    
+    layerYields:
+      description: 'the yields for a single layer'
+      properties:
+        id: 
+          type: string
+          description: 'the unique identifier of the layerYields'
+        yieldsWerePredicted:
+          type: boolean
+          description: 'Indicates whether or not yields were predicted for the year in question by VDYP7. If not, then manual growth information may have been derived using species input parameters but no yield information will be there.'
+        vdyp7Layer:
+          type: string
+          description: 'The VDYP7 Layer from which these volumes were extracted.'
+        doCorrespondToDominantSpeciesGroup:
+          type: boolean
+          description: 'Indicates whether or not the yields correspond to the dominant species group in the layer at the specified stand age/year. This will always be FALSE if stand summary information is requested.'
+        speciesGroupId:
+          type: string
+          description: 'If not null, this identifies with which VDYP7 Species Group in the stand this yield information corresponds to. If null, indicates the entire stand is summarized in this structure.'
+        standYear:
+          type: integer
+          description: 'The calendar year for which these yields apply.'
+        speciesAge:
+          type: number
+          description: 'The age of the species at the calendar year.'
+        loreyHeight7pt5:
+          type: number
+          description: 'Lorey Height at the 7.5cm+ utilization level'
+        wholeStemVolume7pt5:
+          type: number
+          description: 'Whole Stem Volume of the layer at the 7.5cm+ utilization level.'
+        basalArea12pt5:
+          type: number
+          description: 'Basal Area of the layer at the 12.5cm+ utilization level.'
+        wholeStemVolume12pt5:
+          type: number
+          description: 'Whole Stem Volume of the layer at the 12.5cm+ utilization level.'
+        closeUtilizationVolume12pt5:
+          type: number
+          description: 'Close Utilization of the layer at the 12.5cm+ utilization level.'
+        closeUtilizationVolumeNetDecay12pt5:
+          type: number
+          description: 'Close Utilization, net decay, of the layer at the 12.5cm+ utilization level.'
+        closeUtilizationVolumeNetDecayWaste12pt5:
+          type: number
+          description: 'Close Utilization, net decay and waste, of the layer at the 12.5cm+ utilization level.'
+
+    layerAdjustments:
+      description: 'the adjustments for a single layer'
+      properties:
+        id: 
+          type: string
+          description: 'the unique identifier of the layerAdjustments'
+        loreyHeight7pt5:
+          type: number
+          description: 'Lorey Height at the 7.5cm+ utilization level'
+        wholeStemVolume7pt5:
+          type: number
+          description: 'Whole Stem Volume of the layer at the 7.5cm+ utilization level.'
+        basalArea12pt5:
+          type: number
+          description: 'Basal Area of the layer at the 12.5cm+ utilization level.'
+        wholeStemVolume12pt5:
+          type: number
+          description: 'Whole Stem Volume of the layer at the 12.5cm+ utilization level.'
+        closeUtilizationVolume12pt5:
+          type: number
+          description: 'Close Utilization of the layer at the 12.5cm+ utilization level.'
+        closeUtilizationVolumeNetDecay12pt5:
+          type: number
+          description: 'Close Utilization, net decay, of the layer at the 12.5cm+ utilization level.'
+        closeUtilizationVolumeNetDecayWaste12pt5:
+          type: number
+          description: 'Close Utilization, net decay and waste, of the layer at the 12.5cm+ utilization level.'
+
+    polygonDisturbanceInfo:
+      type: object
+      description: "records information about disturbances to the polygon"
+      properties:
+        silvicultureBase:
+          $ref: '#/components/schemas/enumSilvicultureBase'
+        startYear:
+          type: integer
+          description: the year the disturbance started
+        endYear:
+          type: integer
+          description: the year the disturbance ended
+        percentDisturbed:
+          type: number
+          description: the percentage of the layer that was disturbed
+         
+    siteIndex:
+      type: object
+      description: describes the Site Index Curve of a species in a region
+      properties:
+        index:
+          type: number
+          description: identifies the SINDEX curve number
+        alias:
+          type: string
+          description: identifies the SINDEX curve number currently assigned to the species for the Coastal region
+        name:
+          type: string
+          description: identifies the SINDEX curve number currently assigned to the species for the Coastal region
+          
+    becZone:
+      type: object
+      description: describes Biogeoclimatic Zone
+      properties:
+        alias:
+          type: string
+          description: the short-form of the BEC Zone's name
+        name:
+          type: string
+          description: the BEC Zone's name
+        region:
+          type: string
+          description: the Region containing the BEC Zone 
+          enum: [Coastal, Interior]
+        growthBecAlias:
+          type: string
+          description: the alias of the BEC Zone to be used for growth calculations, if not this BEC Zone
+          nullable: true
+        decayBecAlias:
+          type: string
+          description: the alias of the BEC Zone to be used for decay calculations, if not this BEC Zone
+          nullable: true
+        volumeBecAlias:
+          type: string
+          description: the alias of the BEC Zone to be used for volume calculations, if not this BEC Zone
+          nullable: true
+          
+    enumeration:
+      type: object
+      properties:
+        name:
+          type: string
+        values:
+          type: array
+          items:
+            type: string
+           
+    projectionParams:
+      type: object
+      properties:
+        measurementYear: 
+          type: integer
+          description: the stand's measurement year
+        standAgeAtMeasurement: 
+          type: integer
+          description: the age of the stand when measured
+        startYear: 
+          type: integer
+          description: the calendar year at the start of projection
+        endYear: 
+          type: integer
+          description: the calendar year to project to
+        subjectSpeciesGroup: 
+          type: string
+          description: the species group to report on
+        doDisableVDYP7: 
+          type: boolean
+          description: true iff VDYP7 Forward processing is disabled
+        doDisableBackGrow: 
+          type: boolean
+          description: true iff VDYP7 Back processing is disabled
+      
+    speciesGroupComponent:
+      type: object
+      description: 'the details of a specific Species Group (Sp0)'
+      properties:
+        id:
+          type: string
+          description: 'the unique identifier of this entity'
+        vdyp7sp0Index:
+          type: integer
+          description: 'the VDYP7 index for this Species Group'
+        speciesGroupComponent:
+          # description: 'the SP0 component which is a summation of all SP64 components making up the SP0.'
+          $ref: '#/components/schemas/speciesComponent'
+        speciesComponent:
+          type: array
+          description: 'the individual species (sp64s) that make up the species group'
+          items:
+            $ref: '#/components/schemas/speciesComponent'
+            
+    speciesComponent:
+      description: 'the details of a specific species component'
+      properties:
+        id: 
+          type: string
+          description: 'the unique identifier of the speciesComponent'
+        standComponentId:
+          type: string
+          description: 'the id of the containing standComponent'
+        speciesCode:
+          type: integer
+          description: 'the index to a specific species code as returned by the SiteTools library'
+        speciesPercent:
+          type: number
+          description: 'the percent of the stand comprised of this species'
+        totalAge:
+          type: number
+          description: 'the total age of the stand. A value of -9.0 is used when unknown.'
+        breastHeightAge:
+          type: number
+          description: 'the breast height age of the stand. A value of -9.0 is used when unknown.'
+        dominantHeight:
+          type: number
+          description: 'the dominant height of the species. A value of -9.0 is used when unknown.'
+        siteIndex:
+          type: number
+          description: 'the site index of the species. A value of -9.0 is used when unknown.'
+        yearsToBreastHeight:
+          type: number
+          description: 'the years to breast height of the species. A value of -9.0 is used when unknown.'
+        siteCurveNumber:
+          type: integer
+          description: 'the site curve number as currently defined by the SiteTools library. A value of -9 is used when unknown.'
+        suppliedTotalAge:
+          type: number
+          description: 'the total age of the stand prior to projection. If the species is supplied more than once and this value must be the same each time. Otherwise, a warning is generated and the last supplied value is used'
+        suppliedDominantHeight:
+          type: number
+          description: 'the dominant height of the species prior to projection. See also note for suppliedTotalAge'
+        suppliedSiteIndex:
+          type: number
+          description: 'the site index of the species prior to projection. See also note for suppliedTotalAge'
+        nTimesSupplied:
+          type: integer
+          description: 'a single species may be supplied multiple times. This member keeps count of exactly the number of times the single species was supplied as an input parameter.'
+        percentsSupplied:
+          type: array
+          description: 'for each of the times this species was supplied, this array holds the individual species percents that were supplied.'
+        
+    enumVDYP7UtilizationLevels:
+      description: the utilization levels supported by VDYP7
+      enum:
+        - level040cm
+        - level075cm
+        - level125cm
+        - level175cm
+        - level225cm
+        - levelExclude
+        
+    enumJobHandlingOptions:
+      description: the handling option selected for a job
+      enum:
+        - option_EnableBackGrow
+        - option_EnableForwardGrow
+        - option_DoAllowBasalAreaAndTreesPerHectareSubstitution
+        
+    enumVDYP7ProjectionTypes:
+      description: describes, for a projection (VDYP7, VDYPBACK), the type of layer the projection represents.
+      enum:
+        - projectionType_Primary
+        - projectionType_Veteran
+        - projectionType_Residual
+        - projectionType_Regeneration
+        - projectionType_Dead
+        
+    enumProcessingState:
+      description: the job's current execution state.
+      enum:
+        - processingState_DefiningPolygon
+        - processingState_PolygonDefined
+        - processingState_InitiallyProcessed
+        - processingState_Projected
+        - processingState_Error
+        
+    enumSilvicultureBase:
+      description: polygon disturbance categories
+      enum:
+        - silvicultureBase_Unknown
+        - silvicultureBase_Disturbed
+        - silvicultureBase_InsectAttack
+        - silvicultureBase_SitePreparation
+        - silvicultureBase_Planting
+        - silvicultureBase_Standtending
+        
+    enumInventoryStandard:
+      description: inventory standard
+      enum:
+        - inventoryStandard_Unknown
+        - inventoryStandard_Silvaculture
+        - inventoryStandard_Fip
+        - inventoryStandard_Vri
+
+    enumLayerSummarizationMode:
+      description: indicates the layer summarization mode used to combine layers into the specific VDYP7 model
+      enum:
+        - layerSummarizationMode_Unknown
+        - layerSummarizationMode_Rank1Only
+        - layerSummarizationMode_2Layer
+        
+    enumCfsEcoZone:
+      description: 'an enumeration of the different Canadian Forest Service ECO Zones'
+      enum:
+        - cfsEco_ArcticCordillera
+        - cfsEco_NorthernArctic
+        - cfsEco_SouthernArctic
+        - cfsEco_TaigaPlains
+        - cfsEco_TaigaShield
+        - cfsEco_BorealShield
+        - cfsEco_AtlanticMaritime
+        - cfsEco_MixedwoodPlains
+        - cfsEco_BorealPlains
+        - cfsEco_Prairies
+        - cfsEco_TaigaCordillera
+        - cfsEco_BorealCordillera
+        - cfsEco_PacificMaritime
+        - cfsEco_MontaneCordillera
+        - cfsEco_HudsonPlains
+        
+    enumNonVegetationTypes:
+      description: 'Describes classes of non-vegetative outcroppings that may occur in a polygon'
+      enum:
+        - nonVegetationType_Water
+        - nonVegetationType_ExposedSoil
+        - nonVegetationType_BurnedArea
+        - nonVegetationType_Rock
+        - nonVegetationType_Snow
+        - nonVegetationType_Other
+        
+    enumOtherVegetationTypes:
+      description: 'Describes other classes of vegetation that may reside in a polygon that are not trees'
+      enum:
+        - nonVegetationType_Shrub
+        - nonVegetationType_Herb
+        - nonVegetationType_Bryoid
+        
+    enumGrowthModels:
+      description: 'The growth models available to be used to start the stand model'
+      enum:
+        - growthModel_Fip
+        - growthModel_Vri
+        - growthModel_Default
+        
+    enumProcessingMode:
+      description: 'Available processing modes for the two stand models. xxxDefault means the processing model is to be chosen based on stand characteristics'
+      enum:
+        - FipDoNotProcess
+        - FipDefault
+        - FipStart
+        - FipYoung
+        - VriDefault
+        - VriStart
+        - VriYoung
+        - VriMinimal
+        - VriCrownCover
+
+    enumSeverity:
+      description: 'Message severity codes'
+      enum:
+        - Information
+        - Status
+        - Warning
+        - Error
+        - FatalError
+
+  securitySchemes:
+    accessCode:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: http://example.com/oauth/auth
+          tokenUrl: http://example.com/oauth/token
+          scopes:
+            write: allows modifying resources
+            read: allows reading resources
+            
+paths:
+  /species:
+    get:
+      summary: Retrieve a species descriptions
+      description: Retrieve the list of species descriptions (sp64) supported by the system
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/species'
+                  
+  /becZones:
+    get:
+      summary: Retrieve the list of supported BEC zones
+      description:
+        Retrieve the list of biogeoclimatic zones supported by the system.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/becZone'
+                  
+  /enums/{enumNameWildcard}:
+    get:
+      summary: Retrieve all enumerations matching param
+      description:
+        Retrieve all the enumerations whose name matches the given wildcard string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/enumeration'
+        '404':
+          description: No such enumeration exists
+    parameters:
+      - name: enumNameWildcard
+        in: path
+        description: the wildcard expression
+        required: true
+        schema:
+          type: string
+          
+  /jobs:
+    post:
+      summary: Create a new VDYP Job
+      parameters:
+        - name: jobDetails
+          in: query
+          schema:
+            $ref: '#/components/schemas/job'
+        
+      responses:
+        '201':
+          description: Created
+          
+    get:
+      summary: Retrieve some or all of the jobs in the system
+      responses:
+        '200':
+          description: OK
+          
+  /ping:
+    get:
+      summary: Test whether the service is "up"
+      description:
+        This operation shows how to override the global security defined above,
+        as we want to open it up for all users.
+      security: []
+      responses:
+        '200':
+          description: OK

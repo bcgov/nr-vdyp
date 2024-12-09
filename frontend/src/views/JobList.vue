@@ -1,5 +1,5 @@
 <template>
-  <div class="joblist-container">
+  <div class="joblist-container mt-3">
     <div class="top-project-year">
       <h1 class="top-project">Projects</h1>
       <span class="top-year">Year: 2024/2025</span>
@@ -27,7 +27,6 @@
             @update:startDate="startDate = $event"
             @update:endDate="endDate = $event"
           />
-          <!-- <p>Selected Start Date: {{ startDate }}</p> <p>Selected End Date: {{ endDate }}</p> -->
         </v-col>
         <v-col cols="12" md="2" style="padding-top: 9px">
           <span class="search-label">Job Status</span>
@@ -138,7 +137,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import AppDateRangePicker from '@/components/common/AppDateRangePicker.vue'
-import type TableOptions from '@/interfaces/TableOptions'
+import type { TableOptions } from '@/interfaces/interfaces'
 import { SORT_ORDER } from '@/constants/constants'
 import { Util } from '@/utils/util'
 import { useRouter } from 'vue-router'

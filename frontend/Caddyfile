@@ -18,7 +18,7 @@
       header {
         Content-Type text/javascript
       }
-      respond `window.config={"VITE_SSO_AUTH_SERVER_URL":"{$VITE_SSO_AUTH_SERVER_URL}", "VITE_SSO_CLIENT_ID":"{$VITE_SSO_CLIENT_ID}", "VITE_SSO_REALM":"{$VITE_SSO_REALM}", "VITE_SSO_REDIRECT_URI":"{$VITE_SSO_REDIRECT_URI}"};`
+      respond `window.config={"VITE_SSO_AUTH_SERVER_URL":"{$VITE_SSO_AUTH_SERVER_URL}", "VITE_SSO_CLIENT_ID":"{$VITE_SSO_CLIENT_ID}", "VITE_SSO_REALM":"{$VITE_SSO_REALM}", "VITE_SSO_REDIRECT_URI":"{$VITE_SSO_REDIRECT_URI}", "VITE_API_URL":"{$VITE_API_URL}"};`
   }
 	root * /srv
 	encode zstd gzip
@@ -31,10 +31,12 @@
 	}
 	rewrite @spa_router {http.matchers.file.relative}
 	# Proxy requests to API service
-	reverse_proxy /api/* {$BACKEND_URL} {
-		header_up Host {http.reverse_proxy.upstream.hostport}
-		header_up X-Real-IP {remote_host}
-		header_up X-Forwarded-For {remote_host}
+	handle_path /api/* {
+		reverse_proxy {$VITE_API_URL} {
+			header_up Host {http.reverse_proxy.upstream.hostport}
+			header_up X-Real-IP {remote_host}
+			header_up X-Forwarded-For {remote_host}
+		}
 	}
 	header {
 		X-Frame-Options "SAMEORIGIN"
@@ -42,7 +44,7 @@
 		Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate"
 		X-Content-Type-Options "nosniff"
 		Strict-Transport-Security "max-age=31536000"
-		Content-Security-Policy "default-src 'self' https://spt.apps.gov.bc.ca data:; script-src 'self' 'unsafe-eval' https://www2.gov.bc.ca; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://use.fontawesome.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; img-src 'self' data: https://fonts.googleapis.com http://www.w3.org https://*.gov.bc.ca; frame-src 'self' https://dev.loginproxy.gov.bc.ca https://login.microsoftonline.com; connect-src 'self' https://dev.loginproxy.gov.bc.ca"
+		Content-Security-Policy "default-src 'self' https://spt.apps.gov.bc.ca data:; script-src 'self' 'unsafe-eval' https://www2.gov.bc.ca; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://use.fontawesome.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; img-src 'self' data: https://fonts.googleapis.com http://www.w3.org https://*.gov.bc.ca; frame-src 'self' https://*.gov.bc.ca https://login.microsoftonline.com; connect-src 'self' https://*.gov.bc.ca"
 		Referrer-Policy "same-origin"
 		Feature-Policy "fullscreen 'self'; camera 'none'; microphone 'none'"
 	}
