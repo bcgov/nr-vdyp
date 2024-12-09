@@ -162,4 +162,8 @@ public abstract class LayerProcessingState<RCM extends ResolvedControlMap, Self 
 
 	}
 
+	public int[] getIndices() {
+		return getBank().getIndices();
+	}
+
 }

@@ -1,6 +1,5 @@
 package ca.bc.gov.nrs.vdyp.forward;
 
-import static ca.bc.gov.nrs.vdyp.math.FloatMath.clamp;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.exp;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.log;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.pow;
@@ -27,7 +26,6 @@ import ca.bc.gov.nrs.vdyp.application.RuntimeProcessingException;
 import ca.bc.gov.nrs.vdyp.application.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.EstimationMethods;
-import ca.bc.gov.nrs.vdyp.common.ReconcilationMethods;
 import ca.bc.gov.nrs.vdyp.common.Reference;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
@@ -37,6 +35,7 @@ import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.NoAnswerException
 import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.SpeciesErrorException;
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexAgeType;
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
+import ca.bc.gov.nrs.vdyp.forward.controlmap.ForwardResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.forward.model.ControlVariable;
 import ca.bc.gov.nrs.vdyp.forward.model.ForwardControlVariables;
 import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings;
@@ -51,23 +50,19 @@ import ca.bc.gov.nrs.vdyp.model.CompatibilityVariableMode;
 import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
-import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
-import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
-import ca.bc.gov.nrs.vdyp.model.MatrixMap3Impl;
 import ca.bc.gov.nrs.vdyp.model.ModelCoefficients;
 import ca.bc.gov.nrs.vdyp.model.NonprimaryHLCoefficients;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.SiteCurveAgeMaximum;
 import ca.bc.gov.nrs.vdyp.model.Sp64Distribution;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
-import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
-import ca.bc.gov.nrs.vdyp.model.VdypCompatibilityVariables;
 import ca.bc.gov.nrs.vdyp.model.VdypEntity;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VolumeComputeMode;
 import ca.bc.gov.nrs.vdyp.model.variables.UtilizationClassVariable;
 import ca.bc.gov.nrs.vdyp.processing_state.Bank;
+import ca.bc.gov.nrs.vdyp.processing_state.LayerProcessingState;
 import ca.bc.gov.nrs.vdyp.si32.site.SiteTool;
 
 /**
@@ -75,11 +70,12 @@ import ca.bc.gov.nrs.vdyp.si32.site.SiteTool;
  * <code>processPolygon</code> for each polygon to be processed. All calls to <code>processPolygon</code> are entirely
  * independent of one another, allowing (different) polygons to the processed in parallel.
  */
-public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingEngine.ForwardExecutionStep> {
+public class ForwardProcessingEngine extends
+		ProcessingEngine<ForwardResolvedControlMap, ForwardProcessingState, ForwardLayerProcessingState, ForwardProcessingEngine.ForwardExecutionStep> {
 
 	private static final Logger logger = LoggerFactory.getLogger(ForwardProcessingEngine.class);
 
-	private static final int UC_ALL_INDEX = UtilizationClass.ALL.ordinal();
+	public static final int UC_ALL_INDEX = UtilizationClass.ALL.ordinal();
 	private static final int UC_SMALL_INDEX = UtilizationClass.SMALL.ordinal();
 
 	public static final float MIN_BASAL_AREA = 0.001f;
@@ -130,8 +126,6 @@ public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingE
 
 	}
 
-	/* pp */ final ForwardProcessingState fps;
-
 	/** The entity to which result information is written */
 	private Optional<VdypOutputWriter> outputWriter = Optional.empty();
 
@@ -139,7 +133,7 @@ public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingE
 
 	public ForwardProcessingEngine(Map<String, Object> controlMap, Optional<VdypOutputWriter> outputWriter)
 			throws ProcessingException {
-		this.fps = new ForwardProcessingState(controlMap);
+		super(controlMap);
 		this.outputWriter = outputWriter;
 
 		int cv7Value = this.fps.getControlMap().getForwardControlVariables()
@@ -617,7 +611,7 @@ public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingE
 			return;
 	}
 
-	private void updateVeteranSpeciesAges(ForwardLayerProcessingState vlps) {
+	private void updateVeteranSpeciesAges(LayerProcessingState<ForwardResolvedControlMap, ForwardLayerProcessingState> vlps) {
 
 		for (int i : vlps.getIndices()) {
 			vlps.getBank().ageTotals[i] += 1;
@@ -650,7 +644,7 @@ public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingE
 	 */
 	void growUsingNoSpeciesDynamics(float baChangeRate, float tphChangeRate) {
 
-		ForwardLayerProcessingState lps = fps.getPrimaryLayerProcessingState();
+		LayerProcessingState<ForwardResolvedControlMap, ForwardLayerProcessingState> lps = fps.getPrimaryLayerProcessingState();
 		Bank bank = lps.getBank();
 
 		for (int i : lps.getIndices()) {
@@ -720,7 +714,7 @@ public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingE
 			float baStart, float baDelta, float dqStart, float dqDelta, float tphStart, float[] hlStart
 	) throws ProcessingException {
 
-		ForwardLayerProcessingState lps = fps.getPrimaryLayerProcessingState();
+		LayerProcessingState<ForwardResolvedControlMap, ForwardLayerProcessingState> lps = fps.getPrimaryLayerProcessingState();
 		Bank bank = lps.getBank();
 		Region polygonRegion = fps.getCurrentBecZone().getRegion();
 
@@ -1491,7 +1485,7 @@ public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingE
 	 *
 	 * @throws ProcessingException
 	 */
-	private void calculateSmallComponentYields(ForwardLayerProcessingState lps) throws ProcessingException {
+	private void calculateSmallComponentYields(LayerProcessingState<ForwardResolvedControlMap, ForwardLayerProcessingState> lps) throws ProcessingException {
 
 		Bank bank = lps.getBank();
 
@@ -1603,7 +1597,7 @@ public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingE
 	 * @param pspLhStart  primary species Lorey height at end
 	 */
 	void growLoreyHeights(
-			ForwardLayerProcessingState lps, float dhStart, float dhEnd, float pspTphStart, float pspTphEnd,
+			LayerProcessingState<ForwardResolvedControlMap, ForwardLayerProcessingState> lps, float dhStart, float dhEnd, float pspTphStart, float pspTphEnd,
 			float pspLhStart
 	) {
 		Bank bank = lps.getBank();
@@ -1729,7 +1723,7 @@ public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingE
 			Optional<Float> veteranBaEnd, float dhDelta, Reference<Boolean> dqGrowthLimitApplied
 	) throws StandProcessingException {
 
-		var lps = fps.getPrimaryLayerProcessingState();
+		LayerProcessingState<ForwardResolvedControlMap, ForwardLayerProcessingState> lps = fps.getPrimaryLayerProcessingState();
 		var becZone = lps.getBecZone();
 
 		float[] speciesProportionsByBasalArea = getSpeciesProportionsByBasalAreaAtStartOfYear();
@@ -1903,7 +1897,7 @@ public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingE
 	 */
 	private float[] getSpeciesProportionsByBasalAreaAtStartOfYear() {
 
-		ForwardLayerProcessingState lps = fps.getPrimaryLayerProcessingState();
+		LayerProcessingState<ForwardResolvedControlMap, ForwardLayerProcessingState> lps = fps.getPrimaryLayerProcessingState();
 		Bank bank = lps.getBank();
 
 		float[] speciesProportionsByBasalArea = new float[lps.getNSpecies() + 1];
@@ -1932,7 +1926,7 @@ public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingE
 	) throws StandProcessingException {
 
 		ForwardDebugSettings debugSettings = fps.getControlMap().getDebugSettings();
-		ForwardLayerProcessingState lps = fps.getPrimaryLayerProcessingState();
+		LayerProcessingState<ForwardResolvedControlMap, ForwardLayerProcessingState> lps = fps.getPrimaryLayerProcessingState();
 		Bank bank = lps.getBank();
 
 		float[] speciesProportionsByBasalArea = getSpeciesProportionsByBasalAreaAtStartOfYear();
@@ -2407,217 +2401,6 @@ public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingE
 		}
 	}
 
-	private static final float[] DEFAULT_QUAD_MEAN_DIAMETERS = new float[] { Float.NaN, 10.0f, 15.0f, 20.0f, 25.0f };
-	private static final float V_BASE_MIN = 0.1f;
-	private static final float B_BASE_MIN = 0.01f;
-
-	/**
-	 * CVSET1 - computes cvVolume, cvBasalArea, cvQuadraticMeanDiameter and cvSmall and assigns them to the current
-	 * LayerProcessingState.
-	 *
-	 * @throws ProcessingException
-	 */
-	@SuppressWarnings("unchecked")
-	void setCompatibilityVariables() throws ProcessingException {
-
-		Coefficients aAdjust = new Coefficients(new float[] { 0.0f, 0.0f, 0.0f, 0.0f }, 1);
-
-		var growthDetails = fps.getControlMap().getForwardControlVariables();
-		var lps = fps.getPrimaryLayerProcessingState();
-		Bank bank = lps.getBank();
-
-		// Note: L1COM2 (INL1VGRP, INL1DGRP, INL1BGRP) is initialized when
-		// PolygonProcessingState (volumeEquationGroups, decayEquationGroups
-		// breakageEquationGroups, respectively) is constructed. Copying
-		// the values into LCOM1 is not necessary. Note, however, that
-		// VolumeEquationGroup 10 is mapped to 11 (VGRPFIND) - this is done
-		// when volumeEquationGroups is built (i.e., when the equivalent to
-		// INL1VGRP is built, rather than when LCOM1 VGRPL is built in the
-		// original code.)
-
-		var cvVolume = new MatrixMap3[lps.getNSpecies() + 1];
-		var cvBasalArea = new MatrixMap2[lps.getNSpecies() + 1];
-		var cvQuadraticMeanDiameter = new MatrixMap2[lps.getNSpecies() + 1];
-		var cvSmall = new HashMap[lps.getNSpecies() + 1];
-
-		for (int s : lps.getIndices()) {
-
-			String genusName = bank.speciesNames[s];
-
-			float spLoreyHeight_All = bank.loreyHeights[s][UtilizationClass.ALL.ordinal()];
-
-			UtilizationVector basalAreas = Utils.utilizationVector();
-			UtilizationVector wholeStemVolumes = Utils.utilizationVector();
-			UtilizationVector closeUtilizationVolumes = Utils.utilizationVector();
-			UtilizationVector closeUtilizationVolumesNetOfDecay = Utils.utilizationVector();
-			UtilizationVector closeUtilizationVolumesNetOfDecayAndWaste = Utils.utilizationVector();
-			UtilizationVector quadMeanDiameters = Utils.utilizationVector();
-			UtilizationVector treesPerHectare = Utils.utilizationVector();
-
-			cvVolume[s] = new MatrixMap3Impl<UtilizationClass, UtilizationClassVariable, LayerType, Float>(
-					UtilizationClass.UTIL_CLASSES, VdypCompatibilityVariables.VOLUME_UTILIZATION_VARIABLES,
-					LayerType.ALL_USED, (k1, k2, k3) -> 0f
-			);
-			cvBasalArea[s] = new MatrixMap2Impl<UtilizationClass, LayerType, Float>(
-					UtilizationClass.UTIL_CLASSES, LayerType.ALL_USED, (k1, k2) -> 0f
-			);
-			cvQuadraticMeanDiameter[s] = new MatrixMap2Impl<UtilizationClass, LayerType, Float>(
-					UtilizationClass.UTIL_CLASSES, LayerType.ALL_USED, (k1, k2) -> 0f
-			);
-
-			for (UtilizationClass uc : UtilizationClass.ALL_BUT_SMALL) {
-
-				basalAreas.setCoe(uc.index, bank.basalAreas[s][uc.ordinal()]);
-				wholeStemVolumes.setCoe(uc.index, bank.wholeStemVolumes[s][uc.ordinal()]);
-				closeUtilizationVolumes.setCoe(uc.index, bank.closeUtilizationVolumes[s][uc.ordinal()]);
-				closeUtilizationVolumesNetOfDecay.setCoe(uc.index, bank.cuVolumesMinusDecay[s][uc.ordinal()]);
-				closeUtilizationVolumesNetOfDecayAndWaste
-						.setCoe(uc.index, bank.cuVolumesMinusDecayAndWastage[s][uc.ordinal()]);
-
-				quadMeanDiameters.setCoe(uc.index, bank.quadMeanDiameters[s][uc.ordinal()]);
-				if (uc != UtilizationClass.ALL && quadMeanDiameters.getCoe(uc.index) <= 0.0f) {
-					quadMeanDiameters.setCoe(uc.index, DEFAULT_QUAD_MEAN_DIAMETERS[uc.ordinal()]);
-				}
-			}
-
-			for (UtilizationClass uc : UtilizationClass.UTIL_CLASSES) {
-
-				float adjustment;
-				float baseVolume;
-
-				// Volume less decay and waste
-				adjustment = 0.0f;
-				baseVolume = bank.cuVolumesMinusDecay[s][uc.ordinal()];
-
-				if (growthDetails.allowCalculation(baseVolume, V_BASE_MIN, (l, r) -> l > r)) {
-
-					// EMP094
-					fps.getEstimators().estimateNetDecayAndWasteVolume(
-							lps.getBecZone().getRegion(), uc, aAdjust, bank.speciesNames[s], spLoreyHeight_All,
-							quadMeanDiameters, closeUtilizationVolumes, closeUtilizationVolumesNetOfDecay,
-							closeUtilizationVolumesNetOfDecayAndWaste
-					);
-
-					float actualVolume = bank.cuVolumesMinusDecayAndWastage[s][uc.ordinal()];
-					float staticVolume = closeUtilizationVolumesNetOfDecayAndWaste.getCoe(uc.index);
-					adjustment = calculateCompatibilityVariable(actualVolume, baseVolume, staticVolume);
-				}
-
-				cvVolume[s].put(
-						uc, UtilizationClassVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, LayerType.PRIMARY,
-						adjustment
-				);
-
-				// Volume less decay
-				adjustment = 0.0f;
-				baseVolume = bank.closeUtilizationVolumes[s][uc.ordinal()];
-
-				if (growthDetails.allowCalculation(baseVolume, V_BASE_MIN, (l, r) -> l > r)) {
-
-					// EMP093
-					int decayGroup = lps.getDecayEquationGroups()[s];
-					fps.getEstimators().estimateNetDecayVolume(
-							bank.speciesNames[s], lps.getBecZone().getRegion(), uc, aAdjust, decayGroup,
-							lps.getPrimarySpeciesAgeAtBreastHeight(), quadMeanDiameters, closeUtilizationVolumes,
-							closeUtilizationVolumesNetOfDecay
-					);
-
-					float actualVolume = bank.cuVolumesMinusDecay[s][uc.ordinal()];
-					float staticVolume = closeUtilizationVolumesNetOfDecay.getCoe(uc.index);
-					adjustment = calculateCompatibilityVariable(actualVolume, baseVolume, staticVolume);
-				}
-
-				cvVolume[s].put(uc, UtilizationClassVariable.CLOSE_UTIL_VOL_LESS_DECAY, LayerType.PRIMARY, adjustment);
-
-				// Volume
-				adjustment = 0.0f;
-				baseVolume = bank.wholeStemVolumes[s][uc.ordinal()];
-
-				if (growthDetails.allowCalculation(baseVolume, V_BASE_MIN, (l, r) -> l > r)) {
-
-					// EMP092
-					int volumeGroup = lps.getVolumeEquationGroups()[s];
-					fps.getEstimators().estimateCloseUtilizationVolume(
-							uc, aAdjust, volumeGroup, spLoreyHeight_All, quadMeanDiameters, wholeStemVolumes,
-							closeUtilizationVolumes
-					);
-
-					float actualVolume = bank.closeUtilizationVolumes[s][uc.ordinal()];
-					float staticVolume = closeUtilizationVolumes.getCoe(uc.index);
-					adjustment = calculateCompatibilityVariable(actualVolume, baseVolume, staticVolume);
-				}
-
-				cvVolume[s].put(uc, UtilizationClassVariable.CLOSE_UTIL_VOL, LayerType.PRIMARY, adjustment);
-			}
-
-			int primarySpeciesVolumeGroup = lps.getVolumeEquationGroups()[s];
-			float primarySpeciesQMDAll = bank.quadMeanDiameters[s][UC_ALL_INDEX];
-			var wholeStemVolume = bank.treesPerHectare[s][UC_ALL_INDEX] * fps.getEstimators()
-					.estimateWholeStemVolumePerTree(primarySpeciesVolumeGroup, spLoreyHeight_All, primarySpeciesQMDAll);
-
-			wholeStemVolumes.setCoe(UC_ALL_INDEX, wholeStemVolume);
-
-			fps.getEstimators().estimateWholeStemVolume(
-					UtilizationClass.ALL, 0.0f, primarySpeciesVolumeGroup, spLoreyHeight_All, quadMeanDiameters,
-					basalAreas, wholeStemVolumes
-			);
-
-			for (UtilizationClass uc : UtilizationClass.UTIL_CLASSES) {
-				float adjustment = 0.0f;
-				float basalArea = basalAreas.getCoe(uc.index);
-				if (growthDetails.allowCalculation(basalArea, B_BASE_MIN, (l, r) -> l > r)) {
-					adjustment = calculateWholeStemVolume(
-							bank.wholeStemVolumes[s][uc.ordinal()], basalArea, wholeStemVolumes.getCoe(uc.index)
-					);
-				}
-
-				cvVolume[s].put(uc, UtilizationClassVariable.WHOLE_STEM_VOL, LayerType.PRIMARY, adjustment);
-			}
-
-			fps.getEstimators().estimateQuadMeanDiameterByUtilization(lps.getBecZone(), quadMeanDiameters, genusName);
-
-			fps.getEstimators()
-					.estimateBaseAreaByUtilization(lps.getBecZone(), quadMeanDiameters, basalAreas, genusName);
-
-			// Calculate trees-per-hectare per utilization
-			treesPerHectare.setCoe(UtilizationClass.ALL.index, bank.treesPerHectare[s][UC_ALL_INDEX]);
-			for (UtilizationClass uc : UtilizationClass.UTIL_CLASSES) {
-				treesPerHectare.setCoe(
-						uc.index,
-						BaseAreaTreeDensityDiameter
-								.treesPerHectare(basalAreas.getCoe(uc.index), quadMeanDiameters.getCoe(uc.index))
-				);
-			}
-
-			ReconcilationMethods.reconcileComponents(basalAreas, treesPerHectare, quadMeanDiameters);
-
-			for (UtilizationClass uc : UtilizationClass.UTIL_CLASSES) {
-				float baCvValue = bank.basalAreas[s][uc.ordinal()] - basalAreas.getCoe(uc.index);
-				cvBasalArea[s].put(uc, LayerType.PRIMARY, baCvValue);
-
-				float originalQmd = bank.quadMeanDiameters[s][uc.ordinal()];
-				float adjustedQmd = quadMeanDiameters.getCoe(uc.index);
-
-				float qmdCvValue;
-				if (growthDetails.allowCalculation(() -> originalQmd < B_BASE_MIN)) {
-					qmdCvValue = 0.0f;
-				} else if (originalQmd > 0 && adjustedQmd > 0) {
-					qmdCvValue = originalQmd - adjustedQmd;
-				} else {
-					qmdCvValue = 0.0f;
-				}
-
-				cvQuadraticMeanDiameter[s].put(uc, LayerType.PRIMARY, qmdCvValue);
-			}
-
-			// Small components
-
-			cvSmall[s] = calculateSmallCompatibilityVariables(s, growthDetails);
-		}
-
-		lps.setCompatibilityVariableDetails(cvVolume, cvBasalArea, cvQuadraticMeanDiameter, cvSmall);
-	}
-
 	/**
 	 * Function that calculates values for the small component compatibility variables and returns the result.
 	 *
@@ -2626,11 +2409,11 @@ public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingE
 	 *
 	 * @throws ProcessingException
 	 */
-	private HashMap<UtilizationClassVariable, Float>
+	public HashMap<UtilizationClassVariable, Float>
 			calculateSmallCompatibilityVariables(int speciesIndex, ForwardControlVariables forwardControlVariables)
 					throws ProcessingException {
 
-		var lps = fps.getPrimaryLayerProcessingState();
+		LayerProcessingState<ForwardResolvedControlMap, ForwardLayerProcessingState> lps = fps.getPrimaryLayerProcessingState();
 		Bank bank = lps.getBank();
 
 		Region region = lps.getBecZone().getRegion();
@@ -2669,7 +2452,9 @@ public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingE
 		float spInputBasalArea_Small = bank.basalAreas[speciesIndex][UC_SMALL_INDEX];
 		spCvSmall.put(UtilizationClassVariable.BASAL_AREA, spInputBasalArea_Small - spBaSmall);
 
-		if (forwardControlVariables.allowCalculation(spInputBasalArea_Small, B_BASE_MIN, (l, r) -> l > r)) {
+		if (forwardControlVariables.allowCalculation(
+				spInputBasalArea_Small, ProcessingEngine.B_BASE_MIN, (l, r) -> l > r
+		)) {
 			float spInputQuadMeanDiameter_Small = bank.quadMeanDiameters[speciesIndex][UC_SMALL_INDEX];
 			spCvSmall.put(UtilizationClassVariable.QUAD_MEAN_DIAMETER, spInputQuadMeanDiameter_Small - spDqSmall);
 		} else {
@@ -2686,7 +2471,9 @@ public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingE
 
 		float spInputWholeStemVolume_Small = bank.wholeStemVolumes[speciesIndex][UC_SMALL_INDEX];
 		if (spInputWholeStemVolume_Small > 0.0f && spMeanVolumeSmall > 0.0f
-				&& forwardControlVariables.allowCalculation(spInputBasalArea_Small, B_BASE_MIN, (l, r) -> l >= r)) {
+				&& forwardControlVariables.allowCalculation(
+						spInputBasalArea_Small, ProcessingEngine.B_BASE_MIN, (l, r) -> l >= r
+				)) {
 
 			float spInputTreePerHectare_Small = bank.treesPerHectare[speciesIndex][UC_SMALL_INDEX];
 
@@ -2811,32 +2598,7 @@ public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingE
 		return exp(a0 + a1 * log(spDqSmall) + a2 * log(spHlSmall) + a3 * spDqSmall);
 	}
 
-	private static float calculateCompatibilityVariable(float actualVolume, float baseVolume, float staticVolume) {
-
-		float staticRatio = staticVolume / baseVolume;
-		float staticLogit;
-		if (staticRatio <= 0.0f) {
-			staticLogit = -7.0f;
-		} else if (staticRatio >= 1.0f) {
-			staticLogit = 7.0f;
-		} else {
-			staticLogit = clamp(log(staticRatio / (1.0f - staticRatio)), -7.0f, 7.0f);
-		}
-
-		float actualRatio = actualVolume / baseVolume;
-		float actualLogit;
-		if (actualRatio <= 0.0f) {
-			actualLogit = -7.0f;
-		} else if (actualRatio >= 1.0f) {
-			actualLogit = 7.0f;
-		} else {
-			actualLogit = clamp(log(actualRatio / (1.0f - actualRatio)), -7.0f, 7.0f);
-		}
-
-		return actualLogit - staticLogit;
-	}
-
-	private static float calculateWholeStemVolume(float actualVolume, float basalArea, float staticVolume) {
+	public static float calculateWholeStemVolume(float actualVolume, float basalArea, float staticVolume) {
 
 		float staticRatio = staticVolume / basalArea;
 		float staticLogit;
@@ -3156,7 +2918,7 @@ public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingE
 	 *
 	 * @param state the bank in which the calculations are performed
 	 */
-	static void calculateCoverages(ForwardLayerProcessingState lps) {
+	static void calculateCoverages(LayerProcessingState<ForwardResolvedControlMap, ForwardLayerProcessingState> lps) {
 
 		Bank bank = lps.getBank();
 
@@ -3560,5 +3322,10 @@ public class ForwardProcessingEngine extends ProcessingEngine<ForwardProcessingE
 	@Override
 	protected ForwardExecutionStep getLastStep() {
 		return ForwardExecutionStep.ALL;
+	}
+
+	@Override
+	protected ForwardProcessingState getState(Map<String, Object> controlMap) throws ProcessingException {
+		return new ForwardProcessingState(controlMap);
 	}
 }

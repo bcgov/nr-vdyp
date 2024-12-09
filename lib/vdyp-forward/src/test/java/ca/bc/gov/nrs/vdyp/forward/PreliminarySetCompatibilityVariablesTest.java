@@ -15,22 +15,397 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import org.hamcrest.Matchers;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.application.ProcessingEngine;
 import ca.bc.gov.nrs.vdyp.application.ProcessingException;
+import ca.bc.gov.nrs.vdyp.common.Utils;
+import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.ForwardExecutionStep;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.VdypEntity;
+import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
+import ca.bc.gov.nrs.vdyp.processing_state.ProcessingState;
+import ca.bc.gov.nrs.vdyp.processing_state.TestProcessingState;
+import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 class PreliminarySetCompatibilityVariablesTest extends AbstractForwardProcessingEngineTest {
 
 	@SuppressWarnings("unused")
 	private static final Logger logger = LoggerFactory.getLogger(PreliminarySetCompatibilityVariablesTest.class);
+
+	ProcessingState initialState;
+
+	@BeforeEach
+	void initialState() throws ProcessingException {
+		/* the following ProcessingState definition was generated */
+
+		/* the following Polygon definition was generated */
+
+		var polygon = VdypPolygon.build(pb -> {
+			pb.polygonIdentifier("01002 S000001 00", 1970);
+
+			pb.biogeoclimaticZone(Utils.getBec("CWH", controlMap));
+			pb.forestInventoryZone("A");
+
+			pb.inventoryTypeGroup(Optional.of(37));
+			pb.targetYear(Optional.of(1990));
+
+			pb.mode(Optional.of(ca.bc.gov.nrs.vdyp.model.PolygonMode.START));
+			pb.percentAvailable(99.000000f);
+
+			pb.addLayer(lb -> {
+				lb.layerType(ca.bc.gov.nrs.vdyp.model.LayerType.PRIMARY);
+
+				lb.empiricalRelationshipParameterIndex(Optional.empty());
+
+				lb.inventoryTypeGroup(Optional.of(37));
+
+				lb.loreyHeight(Utils.heightVector(7.016600f, 30.972401f));
+				lb.treesPerHectare(
+						Utils.utilizationVector(
+								5.292929f, 601.333313f, 65.474747f, 72.656563f, 74.343430f, 388.868683f
+						) /* ALL does not match sum of bands */
+				);
+				lb.quadMeanDiameter(
+						Utils.utilizationVector(
+								6.063298f, 30.999918f, 10.212870f, 15.043846f, 20.077644f, 36.730598f
+						) /* ALL does not match sum of bands */
+				);
+				lb.baseArea(
+						Utils.utilizationVector(
+								0.015283f, 45.386452f, 0.536364f, 1.291465f, 2.353737f, 41.204899f
+						) /* ALL does not match sum of bands */
+				);
+
+				lb.wholeStemVolume(
+						Utils.utilizationVector(
+								0.063636f, 627.249939f, 2.624141f, 9.197676f, 22.628180f, 592.799988f
+						) /* ALL does not match sum of bands */
+				);
+				lb.closeUtilizationVolumeByUtilization(
+						Utils.utilizationVector(
+								0.000000f, 598.184082f, 0.387273f, 6.994444f, 20.327675f, 570.474609f
+						) /* ALL does not match sum of bands */
+				);
+				lb.closeUtilizationVolumeNetOfDecayByUtilization(
+						Utils.utilizationVector(
+								0.000000f, 586.028320f, 0.383232f, 6.916060f, 20.089291f, 558.639771f
+						) /* ALL does not match sum of bands */
+				);
+				lb.closeUtilizationVolumeNetOfDecayAndWasteByUtilization(
+						Utils.utilizationVector(
+								0.000000f, 583.457458f, 0.382626f, 6.901413f, 20.037878f, 556.135437f
+						) /* ALL does not match sum of bands */
+				);
+				lb.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(
+						Utils.utilizationVector(0.000000f, 0.365960f, 6.604445f, 19.146969f, 528.444153f)
+				);
+
+				lb.addSpecies(sb -> {
+					sb.genus("B");
+					sb.genus(3);
+
+					sb.breakageGroup(5);
+					sb.volumeGroup(12);
+					sb.decayGroup(7);
+
+					sb.percentGenus(0.008967f);
+
+					sb.addSp64Distribution("B", 100.000000f);
+
+					sb.loreyHeight(Utils.heightVector(8.027200f, 36.755299f));
+					sb.treesPerHectare(
+							Utils.utilizationVector(
+									0.000000f, 5.212121f, 0.767677f, 0.939394f, 0.888889f, 2.626262f
+							) /* ALL does not match sum of bands */
+					);
+					sb.quadMeanDiameter(
+							Utils.utilizationVector(
+									6.100000f, 31.531136f, 9.170650f, 13.660340f, 18.178658f, 42.070770f
+							) /* ALL does not match sum of bands */
+					);
+					sb.baseArea(Utils.utilizationVector(0.000000f, 0.005071f, 0.013768f, 0.023071f, 0.365081f));
+
+					sb.wholeStemVolume(Utils.utilizationVector(0.000000f, 0.018687f, 0.076465f, 0.176566f, 6.000808f));
+					sb.closeUtilizationVolumeByUtilization(
+							Utils.utilizationVector(0.000000f, 0.000909f, 0.050303f, 0.153636f, 5.814545f)
+					);
+					sb.closeUtilizationVolumeNetOfDecayByUtilization(
+							Utils.utilizationVector(
+									0.000000f, 5.905555f, 0.000909f, 0.050202f, 0.152929f, 5.701616f
+							) /* ALL does not match sum of bands */
+					);
+					sb.closeUtilizationVolumeNetOfDecayAndWasteByUtilization(
+							Utils.utilizationVector(0.000000f, 0.000909f, 0.050101f, 0.152727f, 5.671313f)
+					);
+					sb.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(
+							Utils.utilizationVector(
+									0.000000f, 5.573434f, 0.000909f, 0.047980f, 0.145960f, 5.378687f
+							) /* ALL does not match sum of bands */
+					);
+
+				});
+				lb.addSpecies(sb -> {
+					sb.genus("C");
+					sb.genus(4);
+
+					sb.breakageGroup(6);
+					sb.volumeGroup(20);
+					sb.decayGroup(14);
+
+					sb.percentGenus(0.112301f);
+
+					sb.addSp64Distribution("C", 100.000000f);
+
+					sb.loreyHeight(Utils.heightVector(6.460200f, 22.958401f));
+					sb.treesPerHectare(
+							Utils.utilizationVector(
+									4.444444f, 84.303024f, 16.282829f, 18.050505f, 16.717171f, 33.252522f
+							) /* ALL does not match sum of bands */
+					);
+					sb.quadMeanDiameter(
+							Utils.utilizationVector(
+									5.997417f, 27.745222f, 10.063532f, 14.862596f, 19.873747f, 39.793953f
+							) /* ALL does not match sum of bands */
+					);
+					sb.baseArea(
+							Utils.utilizationVector(
+									0.012556f, 5.096939f, 0.129515f, 0.313162f, 0.518576f, 4.135696f
+							) /* ALL does not match sum of bands */
+					);
+
+					sb.wholeStemVolume(
+							Utils.utilizationVector(
+									0.051212f, 43.907677f, 0.608788f, 1.943131f, 3.861616f, 37.494141f
+							) /* ALL does not match sum of bands */
+					);
+					sb.closeUtilizationVolumeByUtilization(
+							Utils.utilizationVector(0.000000f, 0.112727f, 1.424545f, 3.349697f, 34.951412f)
+					);
+					sb.closeUtilizationVolumeNetOfDecayByUtilization(
+							Utils.utilizationVector(0.000000f, 0.110505f, 1.384848f, 3.245151f, 31.889189f)
+					);
+					sb.closeUtilizationVolumeNetOfDecayAndWasteByUtilization(
+							Utils.utilizationVector(
+									0.000000f, 35.649494f, 0.110101f, 1.376566f, 3.218081f, 30.944645f
+							) /* ALL does not match sum of bands */
+					);
+					sb.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(
+							Utils.utilizationVector(
+									0.000000f, 33.246864f, 0.104545f, 1.304545f, 3.037980f, 28.799898f
+							) /* ALL does not match sum of bands */
+					);
+
+				});
+				lb.addSpecies(sb -> {
+					sb.genus("D");
+					sb.genus(5);
+
+					sb.breakageGroup(12);
+					sb.volumeGroup(25);
+					sb.decayGroup(19);
+
+					sb.percentGenus(0.652143f);
+
+					sb.addSp64Distribution("D", 100.000000f);
+
+					sb.loreyHeight(Utils.heightVector(10.603300f, 33.743999f));
+					sb.treesPerHectare(
+							Utils.utilizationVector(
+									0.474747f, 290.606049f, 1.656566f, 2.717172f, 13.959595f, 272.282806f
+							) /* ALL does not match sum of bands */
+					);
+					sb.quadMeanDiameter(
+							Utils.utilizationVector(
+									6.479955f, 36.011185f, 10.470093f, 15.579478f, 20.527220f, 36.869789f
+							) /* ALL does not match sum of bands */
+					);
+					sb.baseArea(
+							Utils.utilizationVector(
+									0.001566f, 29.598473f, 0.014263f, 0.051798f, 0.461980f, 29.070423f
+							) /* ALL does not match sum of bands */
+					);
+
+					sb.wholeStemVolume(
+							Utils.utilizationVector(
+									0.007879f, 464.164917f, 0.110202f, 0.565859f, 6.073636f, 457.415314f
+							) /* ALL does not match sum of bands */
+					);
+					sb.closeUtilizationVolumeByUtilization(
+							Utils.utilizationVector(
+									0.000000f, 448.570099f, 0.057677f, 0.509899f, 5.698383f, 442.304016f
+							) /* ALL does not match sum of bands */
+					);
+					sb.closeUtilizationVolumeNetOfDecayByUtilization(
+							Utils.utilizationVector(
+									0.000000f, 440.937378f, 0.057172f, 0.505758f, 5.654040f, 434.720367f
+							) /* ALL does not match sum of bands */
+					);
+					sb.closeUtilizationVolumeNetOfDecayAndWasteByUtilization(
+							Utils.utilizationVector(
+									0.000000f, 439.678558f, 0.057071f, 0.505556f, 5.651313f, 433.464630f
+							) /* ALL does not match sum of bands */
+					);
+					sb.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(
+							Utils.utilizationVector(0.000000f, 0.054646f, 0.483131f, 5.392222f, 411.943604f)
+					);
+
+					sb.addSite(ib -> {
+						ib.ageTotal(Optional.of(55.000000f));
+						ib.height(Optional.of(35.299999f));
+						ib.siteCurveNumber(Optional.of(13));
+						ib.siteIndex(Optional.of(35.000000f));
+						ib.yearsToBreastHeight(Optional.of(1.000000f));
+					});
+
+				});
+				lb.addSpecies(sb -> {
+					sb.genus("H");
+					sb.genus(8);
+
+					sb.breakageGroup(17);
+					sb.volumeGroup(37);
+					sb.decayGroup(31);
+
+					sb.percentGenus(0.129306f);
+
+					sb.addSp64Distribution("H", 100.000000f);
+
+					sb.loreyHeight(Utils.heightVector(7.546400f, 22.770399f));
+					sb.treesPerHectare(
+							Utils.utilizationVector(
+									0.000000f, 169.595947f, 44.010098f, 46.454544f, 34.272724f, 44.868683f
+							) /* ALL does not match sum of bands */
+					);
+					sb.quadMeanDiameter(
+							Utils.utilizationVector(
+									Float.NaN, 20.990366f, 10.276456f, 15.108315f, 20.090958f, 31.892609f
+							) /* ALL does not match sum of bands */
+					);
+					sb.baseArea(Utils.utilizationVector(0.000000f, 0.365030f, 0.832818f, 1.086525f, 3.584374f));
+
+					sb.wholeStemVolume(Utils.utilizationVector(0.000000f, 1.756060f, 5.925858f, 9.749595f, 39.020805f));
+					sb.closeUtilizationVolumeByUtilization(
+							Utils.utilizationVector(0.000000f, 0.194444f, 4.460101f, 8.661818f, 37.016060f)
+					);
+					sb.closeUtilizationVolumeNetOfDecayByUtilization(
+							Utils.utilizationVector(
+									0.000000f, 49.569897f, 0.193232f, 4.428889f, 8.587777f, 36.359898f
+							) /* ALL does not match sum of bands */
+					);
+					sb.closeUtilizationVolumeNetOfDecayAndWasteByUtilization(
+							Utils.utilizationVector(0.000000f, 0.193030f, 4.423131f, 8.568384f, 36.163937f)
+					);
+					sb.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(
+							Utils.utilizationVector(0.000000f, 0.185253f, 4.244747f, 8.221919f, 34.502422f)
+					);
+
+				});
+				lb.addSpecies(sb -> {
+					sb.genus("S");
+					sb.genus(15);
+
+					sb.breakageGroup(28);
+					sb.volumeGroup(66);
+					sb.decayGroup(54);
+
+					sb.percentGenus(0.097282f);
+
+					sb.addSp64Distribution("S", 100.000000f);
+
+					sb.loreyHeight(Utils.heightVector(8.200300f, 32.012501f));
+					sb.treesPerHectare(
+							Utils.utilizationVector(
+									0.363636f, 51.616158f, 2.757576f, 4.505050f, 8.515151f, 35.848484f
+							) /* ALL does not match sum of bands */
+					);
+					sb.quadMeanDiameter(
+							Utils.utilizationVector(
+									6.377533f, 33.002167f, 10.186822f, 15.028074f, 19.852715f, 37.923717f
+							) /* ALL does not match sum of bands */
+					);
+					sb.baseArea(
+							Utils.utilizationVector(
+									0.001162f, 4.415303f, 0.022475f, 0.079909f, 0.263586f, 4.049323f
+							) /* ALL does not match sum of bands */
+					);
+
+					sb.wholeStemVolume(
+							Utils.utilizationVector(
+									0.004545f, 56.452423f, 0.130404f, 0.686364f, 2.766768f, 52.868885f
+							) /* ALL does not match sum of bands */
+					);
+					sb.closeUtilizationVolumeByUtilization(
+							Utils.utilizationVector(0.000000f, 0.021515f, 0.549495f, 2.464242f, 50.388485f)
+					);
+					sb.closeUtilizationVolumeNetOfDecayByUtilization(
+							Utils.utilizationVector(0.000000f, 0.021414f, 0.546465f, 2.449495f, 49.968582f)
+					);
+					sb.closeUtilizationVolumeNetOfDecayAndWasteByUtilization(
+							Utils.utilizationVector(
+									0.000000f, 52.905857f, 0.021414f, 0.546061f, 2.447374f, 49.890903f
+							) /* ALL does not match sum of bands */
+					);
+					sb.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(
+							Utils.utilizationVector(
+									0.000000f, 50.713131f, 0.020606f, 0.524141f, 2.348889f, 47.819595f
+							) /* ALL does not match sum of bands */
+					);
+
+				});
+
+				lb.primaryGenus(Optional.of("D"));
+			});
+		});
+
+		/* End of generated Polygon definition */
+		initialState = new TestProcessingState(controlMap);
+		initialState.setPolygon(polygon);
+		var primaryBank = initialState.getPrimaryLayerProcessingState().getBank();
+		System.arraycopy(
+				new float[] { 0.000000f, Float.NaN, Float.NaN, 55.000000f, Float.NaN, Float.NaN }, 0,
+				primaryBank.ageTotals, 0, 6
+		);
+		System.arraycopy(
+				new float[] { 0.000000f, 0.896721f, 11.230113f, 65.214325f, 12.930618f, 9.728219f }, 0,
+				primaryBank.percentagesOfForestedLand, 0, 6
+		);
+		System.arraycopy(
+				new float[][] { { 0.015283f, 45.386444f, 0.536354f, 1.291455f, 2.353737f, 41.204899f }, { 0.000000f,
+						0.406990f, 0.005071f, 0.013768f, 0.023071f, 0.365081f }, { 0.012556f, 5.096949f, 0.129515f,
+								0.313162f, 0.518576f, 4.135696f }, { 0.001566f, 29.598463f, 0.014263f, 0.051798f,
+										0.461980f, 29.070423f }, { 0.000000f, 5.868748f, 0.365030f, 0.832818f,
+												1.086525f, 3.584374f }, { 0.001162f, 4.415293f, 0.022475f, 0.079909f,
+														0.263586f, 4.049323f } }, 0, primaryBank.basalAreas, 0, 6
+		);
+		System.arraycopy(new String[] { null, "B", "C", "D", "H", "S" }, 0, primaryBank.speciesNames, 0, 6);
+		System.arraycopy(
+				new float[] { 35.000000f, Float.NaN, Float.NaN, 35.000000f, Float.NaN, Float.NaN }, 0,
+				primaryBank.siteIndices, 0, 6
+		);
+		System.arraycopy(
+				new float[] { 0.000000f, Float.NaN, Float.NaN, 35.299999f, Float.NaN, Float.NaN }, 0,
+				primaryBank.dominantHeights, 0, 6
+		);
+		System.arraycopy(
+				new float[] { 0.000000f, Float.NaN, Float.NaN, 54.000000f, Float.NaN, Float.NaN }, 0,
+				primaryBank.yearsAtBreastHeight, 0, 6
+		);
+		System.arraycopy(
+				new float[] { 0.000000f, 5.000000f, 7.500000f, 1.000000f, 4.500000f, 5.200000f }, 0,
+				primaryBank.yearsToBreastHeight, 0, 6
+		);
+		System.arraycopy(new int[] { 0, 118, 122, 13, 99, 59 }, 0, primaryBank.siteCurveNumbers, 0, 6);
+
+		/* End of generated ProcessingState definition */
+	}
 
 	@Test
 	/** SET_COMPATIBILITY_VARIABLES */
@@ -39,9 +414,36 @@ class PreliminarySetCompatibilityVariablesTest extends AbstractForwardProcessing
 		var reader = new ForwardDataStreamReader(controlMap);
 		var polygon = reader.readNextPolygon().orElseThrow();
 
-		ForwardProcessingEngine fpe = new ForwardProcessingEngine(controlMap);
-		fpe.processPolygon(polygon, ForwardProcessingEngine.ForwardExecutionStep.SET_COMPATIBILITY_VARIABLES);
+		ProcessingEngine fpe = new ProcessingEngine(controlMap) {
 
+			@Override
+			public void processPolygon(VdypPolygon polygon, ExecutionStep lastStepInclusive)
+					throws ProcessingException {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			protected ExecutionStep getFirstStep() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			@Override
+			protected ExecutionStep getLastStep() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+		};
+		fpe.fps = initialState;
+		fpe.
+		//fpe.processPolygon(polygon, ForwardProcessingEngine.ForwardExecutionStep.SET_COMPATIBILITY_VARIABLES);
+
+		fpe.processPolygon(
+				polygon, ProcessingEngine<ForwardExecutionStep>.ForwardExecutionStep.CALCULATE_DOMINANT_HEIGHT_AGE_SITE_INDEX
+		);
+		TestUtils.writeModel(fpe.fps, System.out, 3, "initialState");
 		// These values have been verified against the FORTRAN implementation, allowing for minor
 		// platform-specific differences.
 

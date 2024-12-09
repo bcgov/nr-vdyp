@@ -11,8 +11,10 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ca.bc.gov.nrs.vdyp.application.ProcessingEngine;
 import ca.bc.gov.nrs.vdyp.application.ProcessingException;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
+import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.ForwardExecutionStep;
 import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings.Vars;
 import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
@@ -55,7 +57,7 @@ class Grow5SpeciesBaDqTphTest {
 		// Select the first polygon - 01002 S000001 00(1970)
 		VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
-		fpe.processPolygon(polygon, ForwardProcessingEngine.ForwardExecutionStep.GROW_5A_LH_EST);
+		fpe.processPolygon(polygon, ProcessingEngine<ForwardExecutionStep>.ForwardExecutionStep.GROW_5A_LH_EST);
 		ForwardLayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
 
 		float baStart = 45.3864441f;
@@ -108,7 +110,7 @@ class Grow5SpeciesBaDqTphTest {
 		// Select the first polygon - 01002 S000001 00(1970)
 		VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
-		fpe.processPolygon(polygon, ForwardProcessingEngine.ForwardExecutionStep.GROW_4_LAYER_BA_AND_DQTPH_EST);
+		fpe.processPolygon(polygon, ProcessingEngine<ForwardExecutionStep>.ForwardExecutionStep.GROW_4_LAYER_BA_AND_DQTPH_EST);
 		ForwardLayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
 
 		float baChangeRate = 0.00775236264f;
@@ -150,7 +152,7 @@ class Grow5SpeciesBaDqTphTest {
 		// Select the first polygon - 01002 S000001 00(1970)
 		VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
-		fpe.processPolygon(polygon, ForwardProcessingEngine.ForwardExecutionStep.GROW_4_LAYER_BA_AND_DQTPH_EST);
+		fpe.processPolygon(polygon, ProcessingEngine<ForwardExecutionStep>.ForwardExecutionStep.GROW_4_LAYER_BA_AND_DQTPH_EST);
 		ForwardLayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
 
 		fpe.fps.getControlMap().getDebugSettings().setValue(Vars.SPECIES_DYNAMICS_1, 0);

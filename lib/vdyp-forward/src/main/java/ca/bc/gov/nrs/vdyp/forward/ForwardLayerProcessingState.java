@@ -19,7 +19,7 @@ import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.variables.UtilizationClassVariable;
 import ca.bc.gov.nrs.vdyp.processing_state.LayerProcessingState;
 
-class ForwardLayerProcessingState extends LayerProcessingState<ForwardResolvedControlMap, ForwardLayerProcessingState> {
+public class ForwardLayerProcessingState extends LayerProcessingState<ForwardResolvedControlMap, ForwardLayerProcessingState> {
 
 	private static final String PRIMARY_SPECIES_DETAILS_CAN_BE_SET_ONCE_ONLY = "PrimarySpeciesDetails can be set once only";
 	private static final String SITE_CURVE_NUMBERS_CAN_BE_SET_ONCE_ONLY = "SiteCurveNumbers can be set once only";
@@ -117,10 +117,6 @@ class ForwardLayerProcessingState extends LayerProcessingState<ForwardResolvedCo
 	@Override
 	protected Predicate<VdypSpecies> getBankFilter() {
 		return s -> s.getBaseAreaByUtilization().get(UtilizationClass.ALL) >= ForwardProcessingEngine.MIN_BASAL_AREA;
-	}
-
-	public int[] getIndices() {
-		return getBank().getIndices();
 	}
 
 	public int getPrimarySpeciesIndex() {
