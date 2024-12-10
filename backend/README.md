@@ -22,3 +22,65 @@ http://localhost:8080/MJUNKIN_1/VDYP-File/1.0.0/swagger.json
 
 Note that if you have configured the `host` to be something other than localhost, the calls through
 swagger-ui will be directed to that host and not localhost!
+
+## Docker
+
+Docker is required to run the back end test suite.
+
+### Install on Ubuntu
+
+#### Remove old versions
+
+```
+for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do sudo apt remove $pkg; done
+```
+
+#### Set up Docker APT repo
+
+```
+# Add Docker's official GPG key:
+sudo apt update
+sudo apt install ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+# Add the repository to Apt sources:
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt-get update
+```
+
+#### Install Docker
+
+```
+sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+```
+
+#### Verify install
+
+```
+sudo docker run hello-world
+```
+
+This should sdownload a container and run it showing a confirmation message that docker is working.
+
+#### Set user permissions
+
+```
+sudo groupadd docker
+sudo usermod -aG docker $USER
+```
+
+Log out and back in
+
+#### Verify permissions are working
+
+```
+docker run hello-world
+```
+
+This should work the same way as it did without `sudo`.
+
