@@ -31,9 +31,9 @@ import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap3Impl;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
-import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
+import ca.bc.gov.nrs.vdyp.model.VdypCompatibilityVariables;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
-import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
+import ca.bc.gov.nrs.vdyp.model.variables.UtilizationClassVariable;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 class BackProcessingEngineTest {
@@ -74,17 +74,18 @@ class BackProcessingEngineTest {
 					final float dq = 31.5006275f;
 					final float tph = BaseAreaTreeDensityDiameter.treesPerHectare(ba, dq);
 					lb.addSpecies(sb -> {
-						sb.genus("F", controlMap);
+						sb.controlMap(controlMap);
+						sb.genus("F");
 						sb.baseArea(ba);
 						sb.loreyHeight(hl);
 						sb.quadMeanDiameter(dq);
 						sb.treesPerHectare(tph);
 					});
 
-					lb.baseAreaByUtilization(ba);
-					lb.loreyHeightByUtilization(hl);
-					lb.quadraticMeanDiameterByUtilization(dq);
-					lb.treesPerHectareByUtilization(tph);
+					lb.baseArea(ba);
+					lb.loreyHeight(hl);
+					lb.quadMeanDiameter(dq);
+					lb.treesPerHectare(tph);
 				});
 			});
 
@@ -93,9 +94,10 @@ class BackProcessingEngineTest {
 			state.setPolygon(polygon);
 
 			@SuppressWarnings("unchecked")
-			MatrixMap3<UtilizationClass, VolumeVariable, LayerType, Float>[] cvVolume = new MatrixMap3[] { null,
-					new MatrixMap3Impl<UtilizationClass, VolumeVariable, LayerType, Float>(
-							List.of(UtilizationClass.values()), List.of(VolumeVariable.values()),
+			MatrixMap3<UtilizationClass, UtilizationClassVariable, LayerType, Float>[] cvVolume = new MatrixMap3[] {
+					null,
+					new MatrixMap3Impl<UtilizationClass, UtilizationClassVariable, LayerType, Float>(
+							List.of(UtilizationClass.values()), VdypCompatibilityVariables.VOLUME_UTILIZATION_VARIABLES,
 							List.of(LayerType.values()),
 							(uc, vv, lt) -> 11f + vv.ordinal() * 2f + uc.ordinal() * 3f + lt.ordinal() * 5f
 					) };
@@ -117,7 +119,7 @@ class BackProcessingEngineTest {
 			Map<UtilizationClassVariable, Float>[] cvSm = new EnumMap[] { null,
 					new EnumMap<UtilizationClassVariable, Float>(UtilizationClassVariable.class) };
 
-			for (var uc : UtilizationClassVariable.values()) {
+			for (var uc : VdypCompatibilityVariables.SMALL_UTILIZATION_VARIABLES) {
 				cvSm[1].put(uc, uc.ordinal() * 7f);
 			}
 
@@ -139,10 +141,11 @@ class BackProcessingEngineTest {
 				});
 				pb.addLayer(lb -> {
 					lb.layerType(LayerType.VETERAN);
-					lb.baseAreaByUtilization(20f);
+					lb.baseArea(20f);
 
 					lb.addSpecies(sb -> {
-						sb.genus("F", controlMap);
+						sb.controlMap(controlMap);
+						sb.genus("F");
 						sb.baseArea(20f);
 					});
 				});
@@ -184,9 +187,10 @@ class BackProcessingEngineTest {
 					});
 					pb.addLayer(lb -> {
 						lb.layerType(LayerType.VETERAN);
-						lb.baseAreaByUtilization(42f); // Not the sum of the base areas of the species
+						lb.baseArea(42f); // Not the sum of the base areas of the species
 						lb.addSpecies(sb -> {
-							sb.genus("F", controlMap);
+							sb.controlMap(controlMap);
+							sb.genus("F");
 							sb.baseArea(20f);
 						});
 					});

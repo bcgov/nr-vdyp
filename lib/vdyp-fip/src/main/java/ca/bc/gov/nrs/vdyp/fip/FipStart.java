@@ -9,7 +9,6 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
@@ -45,6 +44,7 @@ import ca.bc.gov.nrs.vdyp.application.ProcessingException;
 import ca.bc.gov.nrs.vdyp.application.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.application.VdypStartApplication;
+import ca.bc.gov.nrs.vdyp.common.ComputationMethods;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common.ValueOrMarker;
@@ -250,8 +250,8 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 
 		float factor = factorEntry.get().getFactor();
 
-		scaleAllSummableUtilization(vdypLayer, factor);
-		vdypLayer.getSpecies().values().forEach(spec -> scaleAllSummableUtilization(spec, factor));
+		ComputationMethods.scaleAllSummableUtilization(vdypLayer, factor);
+		vdypLayer.getSpecies().values().forEach(spec -> ComputationMethods.scaleAllSummableUtilization(spec, factor));
 
 		log.atInfo().addArgument(fipLayerPrimary.getStockingClass()).addArgument(factor).setMessage(
 				"Foregoing Primary Layer has stocking class {} Yield values will be multiplied by {}  before being written to output file."
@@ -412,15 +412,12 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 
 		if (result.getSpecies().size() == 1) {
 			var spec = result.getSpecies().values().iterator().next();
-			for (var accessors : NON_VOLUME_UTILIZATION_VECTOR_ACCESSORS) {
+			for (var accessors : ComputationMethods.NON_VOLUME_UTILIZATION_VECTOR_ACCESSORS) {
 
-				try {
-					UtilizationVector specVector = (UtilizationVector) accessors.getReadMethod().invoke(spec);
-					UtilizationVector layerVector = (UtilizationVector) accessors.getReadMethod().invoke(result);
-					specVector.setAll(layerVector.getAll());
-				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-					throw new IllegalStateException(e);
-				}
+				UtilizationVector specVector = (UtilizationVector) accessors.get(spec);
+				UtilizationVector layerVector = (UtilizationVector) accessors.get(result);
+				specVector.setAll(layerVector.getAll());
+
 			}
 
 			result.getLoreyHeightByUtilization().setAll(spec.getLoreyHeightByUtilization().getAll());

@@ -103,7 +103,7 @@ public class VriSiteParser implements ControlMapValueReplacer<StreamingParserFac
 							siteBuilder.polygonIdentifier(polygon);
 							siteBuilder.layerType(s.get());
 
-							siteBuilder.siteGenus(siteGenus);
+							siteBuilder.genus(siteGenus);
 							siteBuilder.siteSpecies(siteSpecies);
 							siteBuilder.siteCurveNumber(siteCurveNumber);
 

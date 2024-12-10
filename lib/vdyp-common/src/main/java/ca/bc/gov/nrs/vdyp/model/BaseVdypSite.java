@@ -6,6 +6,8 @@ import java.util.Optional;
 
 import ca.bc.gov.nrs.vdyp.common.Computed;
 import ca.bc.gov.nrs.vdyp.common.Utils;
+import ca.bc.gov.nrs.vdyp.model.builders.ModelClassBuilder;
+import ca.bc.gov.nrs.vdyp.model.builders.SpeciesGroupIdentifiedBuilder;
 
 public abstract class BaseVdypSite {
 
@@ -93,7 +95,8 @@ public abstract class BaseVdypSite {
 		return (polygonIdentifier.hashCode() * 17 + layerType.hashCode()) * 17 + siteGenus.hashCode();
 	}
 
-	public abstract static class Builder<T extends BaseVdypSite> extends ModelClassBuilder<T> {
+	public abstract static class Builder<T extends BaseVdypSite> extends ModelClassBuilder<T>
+			implements SpeciesGroupIdentifiedBuilder {
 		protected Optional<PolygonIdentifier> polygonIdentifier = Optional.empty();
 		protected Optional<LayerType> layerType = Optional.empty();
 		protected Optional<String> siteGenus = Optional.empty();
@@ -105,29 +108,19 @@ public abstract class BaseVdypSite {
 		protected Optional<Float> height = Optional.empty();
 		protected Optional<Float> yearsToBreastHeight = Optional.empty();
 
-		public Builder<T> polygonIdentifier(PolygonIdentifier polygonIdentifier) {
+		@Override
+		public void polygonIdentifier(PolygonIdentifier polygonIdentifier) {
 			this.polygonIdentifier = Optional.of(polygonIdentifier);
-			return this;
 		}
 
-		public Builder<T> polygonIdentifier(String polygonIdentifier) {
-			this.polygonIdentifier = Optional.of(PolygonIdentifier.split(polygonIdentifier));
-			return this;
-		}
-
-		public Builder<T> polygonIdentifier(String base, int year) {
-			this.polygonIdentifier = Optional.of(new PolygonIdentifier(base, year));
-			return this;
-		}
-
-		public Builder<T> layerType(LayerType layerType) {
+		@Override
+		public void layerType(LayerType layerType) {
 			this.layerType = Optional.of(layerType);
-			return this;
 		}
 
-		public Builder<T> siteGenus(String siteGenus) {
+		@Override
+		public void genus(String siteGenus) {
 			this.siteGenus = Optional.of(siteGenus);
-			return this;
 		}
 
 		public Builder<T> siteIndex(float siteIndex) {
@@ -148,7 +141,7 @@ public abstract class BaseVdypSite {
 			return this;
 		}
 
-		public Builder<T> siteGenus(Optional<String> siteGenus) {
+		public Builder<T> genus(Optional<String> siteGenus) {
 			this.siteGenus = siteGenus;
 			return this;
 		}
@@ -188,7 +181,7 @@ public abstract class BaseVdypSite {
 			height(source.getHeight());
 			siteIndex(source.getSiteIndex());
 			siteCurveNumber(source.getSiteCurveNumber());
-			siteGenus(source.getSiteGenus());
+			genus(source.getSiteGenus());
 			return this;
 		}
 

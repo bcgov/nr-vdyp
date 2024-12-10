@@ -1,9 +1,5 @@
 package ca.bc.gov.nrs.vdyp.common;
 
-import java.beans.IntrospectionException;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.stream.Collectors;
@@ -20,50 +16,43 @@ import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.CompatibilityVariableMode;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
-import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
+import ca.bc.gov.nrs.vdyp.model.VdypCompatibilityVariables;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.VdypUtilizationHolder;
 import ca.bc.gov.nrs.vdyp.model.VolumeComputeMode;
-import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
+import ca.bc.gov.nrs.vdyp.model.variables.UtilizationClassVariable;
 
 public class ComputationMethods {
 
-	public static final Logger log = LoggerFactory.getLogger(VdypStartApplication.class);
+	public static final Logger log = LoggerFactory.getLogger(ComputationMethods.class);
 
 	/**
 	 * Accessor methods for utilization vectors, except for Lorey Height, on Layer and Species objects.
 	 */
-	protected static final Collection<PropertyDescriptor> UTILIZATION_VECTOR_ACCESSORS;
+	public static final Collection<UtilizationClassVariable> UTILIZATION_VECTOR_ACCESSORS;
 
 	/**
 	 * Accessor methods for utilization vectors, except for Lorey Height and Quadratic Mean Diameter, on Layer and
 	 * Species objects. These are properties where the values for the layer are the sum of those for its species.
 	 */
-	public static final Collection<PropertyDescriptor> SUMMABLE_UTILIZATION_VECTOR_ACCESSORS;
+	public static final Collection<UtilizationClassVariable> SUMMABLE_UTILIZATION_VECTOR_ACCESSORS;
 
 	/**
 	 * Accessor methods for utilization vectors, except for Lorey Height,and Volume on Layer and Species objects.
 	 */
-	protected static final Collection<PropertyDescriptor> NON_VOLUME_UTILIZATION_VECTOR_ACCESSORS;
+	public static final Collection<UtilizationClassVariable> NON_VOLUME_UTILIZATION_VECTOR_ACCESSORS;
 
 	static {
-		try {
-			var bean = Introspector.getBeanInfo(VdypUtilizationHolder.class);
-			UTILIZATION_VECTOR_ACCESSORS = Arrays.stream(bean.getPropertyDescriptors()) //
-					.filter(p -> p.getName().endsWith("ByUtilization")) //
-					.filter(p -> !p.getName().startsWith("loreyHeight")) //
-					.filter(p -> p.getPropertyType() == UtilizationVector.class) //
-					.toList();
-		} catch (IntrospectionException e) {
-			throw new IllegalStateException(e);
-		}
+		UTILIZATION_VECTOR_ACCESSORS = Arrays.stream(UtilizationClassVariable.values()) //
+				.filter(p -> p != UtilizationClassVariable.LOREY_HEIGHT) //
+				.toList();
 
 		SUMMABLE_UTILIZATION_VECTOR_ACCESSORS = UTILIZATION_VECTOR_ACCESSORS.stream()
-				.filter(x -> !x.getName().startsWith("quadraticMeanDiameter")).toList();
+				.filter(x -> x != UtilizationClassVariable.QUAD_MEAN_DIAMETER).toList();
 
 		NON_VOLUME_UTILIZATION_VECTOR_ACCESSORS = UTILIZATION_VECTOR_ACCESSORS.stream()
-				.filter(x -> !x.getName().contains("Volume")).toList();
+				.filter(x -> !UtilizationClassVariable.VOLUME_VARIABLES.contains(x)).toList();
 	}
 
 	private final EstimationMethods estimationMethods;
@@ -159,12 +148,15 @@ public class ComputationMethods {
 			ReconcilationMethods.reconcileComponents(basalAreaUtil, treesPerHectareUtil, quadMeanDiameterUtil);
 
 			if (compatibilityVariableMode != CompatibilityVariableMode.NONE) {
+				final VdypCompatibilityVariables compatibilityVariables = spec.requireCompatibilityVariables();
 
 				float basalAreaSumForSpecies = 0.0f;
 				for (var uc : VdypStartApplication.UTIL_CLASSES) {
 
 					float currentUcBasalArea = basalAreaUtil.get(uc);
-					basalAreaUtil.set(uc, currentUcBasalArea + spec.getCvBasalArea(uc, spec.getLayerType()));
+					basalAreaUtil.set(
+							uc, currentUcBasalArea + compatibilityVariables.getCvBasalArea(uc, spec.getLayerType())
+					);
 					if (basalAreaUtil.get(uc) < 0.0f) {
 						basalAreaUtil.set(uc, 0.0f);
 					}
@@ -172,7 +164,7 @@ public class ComputationMethods {
 					basalAreaSumForSpecies += basalAreaUtil.get(uc);
 
 					float newDqValue = quadMeanDiameterUtil.get(uc)
-							+ spec.getCvQuadraticMeanDiameter(uc, spec.getLayerType());
+							+ compatibilityVariables.getCvQuadraticMeanDiameter(uc, spec.getLayerType());
 					quadMeanDiameterUtil.set(uc, FloatMath.clamp(newDqValue, uc.lowBound, uc.highBound));
 				}
 
@@ -213,13 +205,17 @@ public class ComputationMethods {
 
 				if (compatibilityVariableMode == CompatibilityVariableMode.ALL) {
 					// apply compatibility variables to WS volume
+					final VdypCompatibilityVariables compatibilityVariables = spec.requireCompatibilityVariables();
 
 					float wholeStemVolumeSum = 0.0f;
 					for (UtilizationClass uc : UtilizationClass.UTIL_CLASSES) {
 						wholeStemVolumeUtil.set(
 								uc,
-								wholeStemVolumeUtil.get(uc) * FloatMath
-										.exp(spec.getCvVolume(uc, VolumeVariable.WHOLE_STEM_VOL, spec.getLayerType()))
+								wholeStemVolumeUtil.get(uc) * FloatMath.exp(
+										compatibilityVariables.getCvVolume(
+												uc, UtilizationClassVariable.WHOLE_STEM_VOL, spec.getLayerType()
+										)
+								)
 						);
 						wholeStemVolumeSum += wholeStemVolumeUtil.get(uc);
 					}
@@ -227,15 +223,22 @@ public class ComputationMethods {
 
 					// Set the adjustment factors for next three volume types
 					for (UtilizationClass uc : UtilizationClass.UTIL_CLASSES) {
-						adjustCloseUtil
-								.set(uc, spec.getCvVolume(uc, VolumeVariable.CLOSE_UTIL_VOL, spec.getLayerType()));
+						adjustCloseUtil.set(
+								uc,
+								compatibilityVariables
+										.getCvVolume(uc, UtilizationClassVariable.CLOSE_UTIL_VOL, spec.getLayerType())
+						);
 						adjustDecayUtil.set(
-								uc, spec.getCvVolume(uc, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY, spec.getLayerType())
+								uc,
+								compatibilityVariables.getCvVolume(
+										uc, UtilizationClassVariable.CLOSE_UTIL_VOL_LESS_DECAY, spec.getLayerType()
+								)
 						);
 						adjustDecayWasteUtil.set(
 								uc,
-								spec.getCvVolume(
-										uc, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, spec.getLayerType()
+								compatibilityVariables.getCvVolume(
+										uc, UtilizationClassVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE,
+										spec.getLayerType()
 								)
 						);
 					}
@@ -376,31 +379,32 @@ public class ComputationMethods {
 		}
 	}
 
-	// TODO De-reflectify this when we want to make it work in GraalVM
-	private static void sumSpeciesUtilizationVectorsToLayer(VdypLayer vdypLayer) throws IllegalStateException {
-		try {
-			for (var accessors : SUMMABLE_UTILIZATION_VECTOR_ACCESSORS) {
-				var utilVector = Utils.utilizationVector();
-				for (var vdypSpecies : vdypLayer.getSpecies().values()) {
-					var speciesVector = (Coefficients) accessors.getReadMethod().invoke(vdypSpecies);
-					utilVector.pairwiseInPlace(speciesVector, (x, y) -> x + y);
-				}
-				accessors.getWriteMethod().invoke(vdypLayer, utilVector);
+	/**
+	 * For those utilization fields that can be summed, add together the vectors for each species in the given layer and
+	 * store the result on the layer.
+	 *
+	 * @param vdypLayer
+	 */
+	public static void sumSpeciesUtilizationVectorsToLayer(VdypLayer vdypLayer) {
+		for (var accessors : SUMMABLE_UTILIZATION_VECTOR_ACCESSORS) {
+			var utilVector = Utils.utilizationVector();
+			for (var vdypSpecies : vdypLayer.getSpecies().values()) {
+				var speciesVector = (Coefficients) accessors.get(vdypSpecies);
+				utilVector.pairwiseInPlace(speciesVector, (x, y) -> x + y);
 			}
-		} catch (IllegalAccessException | InvocationTargetException ex) {
-			throw new IllegalStateException(ex);
+			accessors.set(vdypLayer, utilVector);
 		}
 	}
 
-	// TODO De-reflectify this when we want to make it work in GralVM
-	protected static void scaleAllSummableUtilization(VdypUtilizationHolder holder, float factor)
-			throws IllegalStateException {
-		try {
-			for (var accessors : SUMMABLE_UTILIZATION_VECTOR_ACCESSORS) {
-				((Coefficients) accessors.getReadMethod().invoke(holder)).scalarInPlace(x -> x * factor);
-			}
-		} catch (IllegalAccessException | InvocationTargetException ex) {
-			throw new IllegalStateException(ex);
+	/**
+	 * For those utilization fields that can be summed, scale them by the given value.
+	 *
+	 * @param holder
+	 * @param factor
+	 */
+	public static void scaleAllSummableUtilization(VdypUtilizationHolder holder, float factor) {
+		for (var accessors : SUMMABLE_UTILIZATION_VECTOR_ACCESSORS) {
+			((Coefficients) accessors.get(holder)).scalarInPlace(x -> x * factor);
 		}
 	}
 

@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.application.ProcessingException;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
-import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.ExecutionStep;
 import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
@@ -57,7 +56,7 @@ class Grow10StoreSpeciesDetails {
 		// Select the first polygon - 01002 S000001 00(1970)
 		VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
-		fpe.processPolygon(polygon, ExecutionStep.GROW_13_STORE_SPECIES_DETAILS);
+		fpe.processPolygon(polygon, ForwardProcessingEngine.ForwardExecutionStep.GROW_13_STORE_SPECIES_DETAILS);
 
 		// VDYP7 reports [], -9, -9, 35.473381, -9, -9)
 		Bank bank = fpe.fps.getPrimaryLayerProcessingState().getBank();

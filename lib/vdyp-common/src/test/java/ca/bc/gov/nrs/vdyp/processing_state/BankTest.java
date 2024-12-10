@@ -49,22 +49,26 @@ class BankTest {
 				lb.layerType(LayerType.PRIMARY);
 
 				lb.addSpecies(sb -> {
-					sb.genus("B", controlMap);
+					sb.controlMap(controlMap);
+					sb.genus("B");
 					sb.baseArea(0.4f);
 					sb.percentGenus(10);
 				});
 				lb.addSpecies(sb -> {
-					sb.genus("C", controlMap);
+					sb.controlMap(controlMap);
+					sb.genus("C");
 					sb.baseArea(0.6f);
 					sb.percentGenus(10);
 				});
 				lb.addSpecies(sb -> {
-					sb.genus("D", controlMap);
+					sb.controlMap(controlMap);
+					sb.genus("D");
 					sb.baseArea(10f);
 					sb.percentGenus(10);
 				});
 				lb.addSpecies(sb -> {
-					sb.genus("H", controlMap);
+					sb.controlMap(controlMap);
+					sb.genus("H");
 					sb.baseArea(50f);
 					sb.percentGenus(60);
 					sb.addSite(ib -> {
@@ -76,7 +80,8 @@ class BankTest {
 					});
 				});
 				lb.addSpecies(sb -> {
-					sb.genus("S", controlMap);
+					sb.controlMap(controlMap);
+					sb.genus("S");
 					sb.baseArea(99.9f);
 					sb.percentGenus(10);
 					sb.addSite(ib -> {
@@ -96,10 +101,10 @@ class BankTest {
 					sb.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(39);
 				});
 
-				lb.quadraticMeanDiameterByUtilization(21);
-				lb.baseAreaByUtilization(22);
-				lb.treesPerHectareByUtilization(BaseAreaTreeDensityDiameter.treesPerHectare(22, 21));
-				lb.loreyHeightByUtilization(24);
+				lb.quadMeanDiameter(21);
+				lb.baseArea(22);
+				lb.treesPerHectare(BaseAreaTreeDensityDiameter.treesPerHectare(22, 21));
+				lb.loreyHeight(24);
 				lb.closeUtilizationVolumeByUtilization(42);
 				lb.closeUtilizationVolumeNetOfDecayByUtilization(41);
 				lb.closeUtilizationVolumeNetOfDecayAndWasteByUtilization(40);

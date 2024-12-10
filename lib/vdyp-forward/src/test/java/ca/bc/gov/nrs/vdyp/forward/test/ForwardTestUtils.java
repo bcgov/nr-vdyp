@@ -106,7 +106,8 @@ public class ForwardTestUtils {
 	 */
 	public static void setGrowthTargetYear(ForwardProcessingState fps, int targetYear) {
 		try {
-			fps.fcm.getForwardControlVariables().setControlVariable(ControlVariable.GROW_TARGET_1, targetYear);
+			fps.getControlMap().getForwardControlVariables()
+					.setControlVariable(ControlVariable.GROW_TARGET_1, targetYear);
 		} catch (ValueParseException e) {
 			throw new RuntimeException(e);
 		}

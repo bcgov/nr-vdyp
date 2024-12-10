@@ -15,8 +15,7 @@ import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.CompVarAdjustmentsParser;
 import ca.bc.gov.nrs.vdyp.model.CompVarAdjustments;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
-import ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable;
-import ca.bc.gov.nrs.vdyp.model.VolumeVariable;
+import ca.bc.gov.nrs.vdyp.model.variables.UtilizationClassVariable;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 /**
@@ -24,7 +23,7 @@ import ca.bc.gov.nrs.vdyp.test.TestUtils;
  *
  * @author Michael Junkin, Vivid Solutions
  */
-public class CompVarAdjustmentsParserTest {
+class CompVarAdjustmentsParserTest {
 
 	@Test
 	void testParseSimple() throws Exception {
@@ -74,7 +73,7 @@ public class CompVarAdjustmentsParserTest {
 		assertThat(m.getValue(UtilizationClass.SMALL, UtilizationClassVariable.BASAL_AREA), is(0.50f));
 		assertThat(m.getValue(UtilizationClass.SMALL, UtilizationClassVariable.QUAD_MEAN_DIAMETER), is(0.51f));
 		assertThat(m.getValue(UtilizationClass.SMALL, UtilizationClassVariable.LOREY_HEIGHT), is(0.52f));
-		assertThat(m.getValue(UtilizationClass.SMALL, UtilizationClassVariable.WHOLE_STEM_VOLUME), is(0.53f));
+		assertThat(m.getValue(UtilizationClass.SMALL, UtilizationClassVariable.WHOLE_STEM_VOL), is(0.53f));
 		assertThat(m.getLoreyHeightPrimaryParam(), is(0.80f));
 		assertThat(m.getLoreyHeightOther(), is(0.81f));
 
@@ -94,43 +93,59 @@ public class CompVarAdjustmentsParserTest {
 		);
 		assertThrows(
 				IllegalArgumentException.class,
-				() -> m.getValue(UtilizationClass.OVER225, UtilizationClassVariable.WHOLE_STEM_VOLUME)
+				() -> m.getValue(UtilizationClass.OVER225, UtilizationClassVariable.WHOLE_STEM_VOL)
 		);
 		assertThrows(
 				IllegalArgumentException.class,
 				() -> m.getValue(UtilizationClass.ALL, UtilizationClassVariable.BASAL_AREA)
 		);
 
-		assertThat(m.getVolumeValue(UtilizationClass.U75TO125, VolumeVariable.WHOLE_STEM_VOL), is(0.91f));
-		assertThat(m.getVolumeValue(UtilizationClass.U125TO175, VolumeVariable.WHOLE_STEM_VOL), is(0.92f));
-		assertThat(m.getVolumeValue(UtilizationClass.U175TO225, VolumeVariable.WHOLE_STEM_VOL), is(0.93f));
-		assertThat(m.getVolumeValue(UtilizationClass.OVER225, VolumeVariable.WHOLE_STEM_VOL), is(0.94f));
+		assertThat(m.getVolumeValue(UtilizationClass.U75TO125, UtilizationClassVariable.WHOLE_STEM_VOL), is(0.91f));
+		assertThat(m.getVolumeValue(UtilizationClass.U125TO175, UtilizationClassVariable.WHOLE_STEM_VOL), is(0.92f));
+		assertThat(m.getVolumeValue(UtilizationClass.U175TO225, UtilizationClassVariable.WHOLE_STEM_VOL), is(0.93f));
+		assertThat(m.getVolumeValue(UtilizationClass.OVER225, UtilizationClassVariable.WHOLE_STEM_VOL), is(0.94f));
 
-		assertThat(m.getVolumeValue(UtilizationClass.U75TO125, VolumeVariable.CLOSE_UTIL_VOL), is(0.92f));
-		assertThat(m.getVolumeValue(UtilizationClass.U125TO175, VolumeVariable.CLOSE_UTIL_VOL), is(0.93f));
-		assertThat(m.getVolumeValue(UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL), is(0.94f));
-		assertThat(m.getVolumeValue(UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL), is(0.95f));
-
-		assertThat(m.getVolumeValue(UtilizationClass.U75TO125, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY), is(0.93f));
-		assertThat(m.getVolumeValue(UtilizationClass.U125TO175, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY), is(0.94f));
-		assertThat(m.getVolumeValue(UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY), is(0.95f));
-		assertThat(m.getVolumeValue(UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY), is(0.96f));
+		assertThat(m.getVolumeValue(UtilizationClass.U75TO125, UtilizationClassVariable.CLOSE_UTIL_VOL), is(0.92f));
+		assertThat(m.getVolumeValue(UtilizationClass.U125TO175, UtilizationClassVariable.CLOSE_UTIL_VOL), is(0.93f));
+		assertThat(m.getVolumeValue(UtilizationClass.U175TO225, UtilizationClassVariable.CLOSE_UTIL_VOL), is(0.94f));
+		assertThat(m.getVolumeValue(UtilizationClass.OVER225, UtilizationClassVariable.CLOSE_UTIL_VOL), is(0.95f));
 
 		assertThat(
-				m.getVolumeValue(UtilizationClass.U75TO125, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE),
+				m.getVolumeValue(UtilizationClass.U75TO125, UtilizationClassVariable.CLOSE_UTIL_VOL_LESS_DECAY),
+				is(0.93f)
+		);
+		assertThat(
+				m.getVolumeValue(UtilizationClass.U125TO175, UtilizationClassVariable.CLOSE_UTIL_VOL_LESS_DECAY),
 				is(0.94f)
 		);
 		assertThat(
-				m.getVolumeValue(UtilizationClass.U125TO175, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE),
+				m.getVolumeValue(UtilizationClass.U175TO225, UtilizationClassVariable.CLOSE_UTIL_VOL_LESS_DECAY),
 				is(0.95f)
 		);
 		assertThat(
-				m.getVolumeValue(UtilizationClass.U175TO225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE),
+				m.getVolumeValue(UtilizationClass.OVER225, UtilizationClassVariable.CLOSE_UTIL_VOL_LESS_DECAY),
 				is(0.96f)
 		);
+
 		assertThat(
-				m.getVolumeValue(UtilizationClass.OVER225, VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE),
-				is(0.97f)
+				m.getVolumeValue(
+						UtilizationClass.U75TO125, UtilizationClassVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE
+				), is(0.94f)
+		);
+		assertThat(
+				m.getVolumeValue(
+						UtilizationClass.U125TO175, UtilizationClassVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE
+				), is(0.95f)
+		);
+		assertThat(
+				m.getVolumeValue(
+						UtilizationClass.U175TO225, UtilizationClassVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE
+				), is(0.96f)
+		);
+		assertThat(
+				m.getVolumeValue(
+						UtilizationClass.OVER225, UtilizationClassVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE
+				), is(0.97f)
 		);
 	}
 
