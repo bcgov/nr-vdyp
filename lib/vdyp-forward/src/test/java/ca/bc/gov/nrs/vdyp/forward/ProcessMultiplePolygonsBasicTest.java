@@ -18,9 +18,9 @@ class ProcessMultiplePolygonsBasicTest extends AbstractForwardProcessingEngineTe
 
 		ForwardProcessingEngine fpe = new ForwardProcessingEngine(controlMap);
 
-		assertThat(fpe.fps.fcm.getBecLookup(), notNullValue());
-		assertThat(fpe.fps.fcm.getGenusDefinitionMap(), notNullValue());
-		assertThat(fpe.fps.fcm.getSiteCurveMap(), notNullValue());
+		assertThat(fpe.fps.getControlMap().getBecLookup(), notNullValue());
+		assertThat(fpe.fps.getControlMap().getGenusDefinitionMap(), notNullValue());
+		assertThat(fpe.fps.getControlMap().getSiteCurveMap(), notNullValue());
 
 		// Fetch the next polygon to process.
 		int nPolygonsProcessed = 0;

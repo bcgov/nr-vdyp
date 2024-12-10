@@ -11,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.application.ProcessingException;
-import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.ExecutionStep;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 
 class ProcessPolygonBasicTest extends AbstractForwardProcessingEngineTest {
@@ -24,15 +23,15 @@ class ProcessPolygonBasicTest extends AbstractForwardProcessingEngineTest {
 
 		ForwardProcessingEngine fpe = new ForwardProcessingEngine(controlMap);
 
-		assertThat(fpe.fps.fcm.getBecLookup(), notNullValue());
-		assertThat(fpe.fps.fcm.getGenusDefinitionMap(), notNullValue());
-		assertThat(fpe.fps.fcm.getSiteCurveMap(), notNullValue());
+		assertThat(fpe.fps.getControlMap().getBecLookup(), notNullValue());
+		assertThat(fpe.fps.getControlMap().getGenusDefinitionMap(), notNullValue());
+		assertThat(fpe.fps.getControlMap().getSiteCurveMap(), notNullValue());
 
 		int nPolygonsProcessed = 0;
 		var polygon = forwardDataStreamReader.readNextPolygon();
 
 		if (polygon.isPresent()) {
-			fpe.processPolygon(polygon.get(), ExecutionStep.GROW);
+			fpe.processPolygon(polygon.get(), ForwardProcessingEngine.ForwardExecutionStep.GROW);
 			nPolygonsProcessed += 1;
 		}
 

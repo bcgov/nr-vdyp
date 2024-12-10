@@ -40,7 +40,7 @@ public class TestSpecies extends BaseVdypSpecies<TestSite> {
 			return TestSite.build(builder -> {
 				builder.polygonIdentifier(this.polygonIdentifier.get());
 				builder.layerType(this.layerType.get());
-				builder.siteGenus(this.genus.get());
+				builder.genus(this.genus.get());
 
 				config.accept(builder);
 			});

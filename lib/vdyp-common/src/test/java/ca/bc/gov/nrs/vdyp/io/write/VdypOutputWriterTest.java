@@ -103,7 +103,8 @@ class VdypOutputWriterTest {
 				builder.layerType(LayerType.PRIMARY);
 
 				builder.addSpecies(specBuilder -> {
-					specBuilder.genus("PL", controlMap);
+					specBuilder.controlMap(controlMap);
+					specBuilder.genus("PL");
 					specBuilder.percentGenus(100);
 					specBuilder.volumeGroup(1);
 					specBuilder.decayGroup(2);
@@ -142,7 +143,8 @@ class VdypOutputWriterTest {
 				builder.primaryGenus("PL");
 
 				builder.addSpecies(specBuilder -> {
-					specBuilder.genus("PL", controlMap);
+					specBuilder.controlMap(controlMap);
+					specBuilder.genus("PL");
 					specBuilder.percentGenus(100);
 					specBuilder.volumeGroup(0);
 					specBuilder.decayGroup(0);
@@ -186,7 +188,8 @@ class VdypOutputWriterTest {
 				builder.layerType(LayerType.PRIMARY);
 
 				builder.addSpecies(specBuilder -> {
-					specBuilder.genus("PL", controlMap);
+					specBuilder.controlMap(controlMap);
+					specBuilder.genus("PL");
 					specBuilder.percentGenus(100);
 					specBuilder.volumeGroup(1);
 					specBuilder.decayGroup(2);
@@ -205,7 +208,8 @@ class VdypOutputWriterTest {
 
 			@SuppressWarnings("unused")
 			var species = VdypSpecies.build(layer, builder -> {
-				builder.genus("PL", controlMap);
+				builder.controlMap(controlMap);
+				builder.genus("PL");
 				builder.addSp64Distribution("PL", 100f);
 
 				builder.percentGenus(100f);
@@ -273,7 +277,8 @@ class VdypOutputWriterTest {
 				builder.layerType(LayerType.PRIMARY);
 
 				builder.addSpecies(specBuilder -> {
-					specBuilder.genus("PL", controlMap);
+					specBuilder.controlMap(controlMap);
+					specBuilder.genus("PL");
 					specBuilder.percentGenus(100);
 					specBuilder.volumeGroup(1);
 					specBuilder.decayGroup(2);
@@ -290,7 +295,8 @@ class VdypOutputWriterTest {
 			});
 
 			var species = VdypSpecies.build(layer, builder -> {
-				builder.genus("PL", controlMap);
+				builder.controlMap(controlMap);
+				builder.genus("PL");
 				builder.addSp64Distribution("PL", 100f);
 
 				builder.percentGenus(100f);
@@ -363,7 +369,8 @@ class VdypOutputWriterTest {
 				builder.primaryGenus("PL");
 
 				builder.addSpecies(specBuilder -> {
-					specBuilder.genus("PL", controlMap);
+					specBuilder.controlMap(controlMap);
+					specBuilder.genus("PL");
 					specBuilder.percentGenus(100);
 					specBuilder.volumeGroup(0);
 					specBuilder.decayGroup(0);
@@ -492,7 +499,8 @@ class VdypOutputWriterTest {
 				builder.primaryGenus("PL");
 
 				builder.addSpecies(specBuilder -> {
-					specBuilder.genus("PL", controlMap);
+					specBuilder.controlMap(controlMap);
+					specBuilder.genus("PL");
 					specBuilder.percentGenus(100);
 					specBuilder.volumeGroup(0);
 					specBuilder.decayGroup(0);

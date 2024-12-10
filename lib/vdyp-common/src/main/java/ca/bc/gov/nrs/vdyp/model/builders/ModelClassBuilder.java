@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.vdyp.model;
+package ca.bc.gov.nrs.vdyp.model.builders;
 
 import java.text.MessageFormat;
 import java.util.Collection;

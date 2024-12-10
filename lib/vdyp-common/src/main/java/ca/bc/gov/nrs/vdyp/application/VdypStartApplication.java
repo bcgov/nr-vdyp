@@ -8,13 +8,9 @@ import static ca.bc.gov.nrs.vdyp.math.FloatMath.pow;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-import java.beans.IntrospectionException;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.InvocationTargetException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,6 +31,7 @@ import java.util.stream.IntStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ca.bc.gov.nrs.vdyp.common.ComputationMethods;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.EstimationMethods;
 import ca.bc.gov.nrs.vdyp.common.ReconcilationMethods;
@@ -68,7 +65,6 @@ import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
-import ca.bc.gov.nrs.vdyp.model.VdypUtilizationHolder;
 import ca.bc.gov.nrs.vdyp.model.VolumeComputeMode;
 
 public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional<Float>, S, I>, L extends BaseVdypLayer<S, I> & InputLayer, S extends BaseVdypSpecies<I>, I extends BaseVdypSite>
@@ -131,41 +127,6 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		}
 	}
 
-	/**
-	 * Accessor methods for utilization vectors, except for Lorey Height, on Layer and Species objects.
-	 */
-	protected static final Collection<PropertyDescriptor> UTILIZATION_VECTOR_ACCESSORS;
-
-	/**
-	 * Accessor methods for utilization vectors, except for Lorey Height and Quadratic Mean Diameter, on Layer and
-	 * Species objects. These are properties where the values for the layer are the sum of those for its species.
-	 */
-	static final Collection<PropertyDescriptor> SUMMABLE_UTILIZATION_VECTOR_ACCESSORS;
-
-	/**
-	 * Accessor methods for utilization vectors, except for Lorey Height,and Volume on Layer and Species objects.
-	 */
-	protected static final Collection<PropertyDescriptor> NON_VOLUME_UTILIZATION_VECTOR_ACCESSORS;
-
-	static {
-		try {
-			var bean = Introspector.getBeanInfo(VdypUtilizationHolder.class);
-			UTILIZATION_VECTOR_ACCESSORS = Arrays.stream(bean.getPropertyDescriptors()) //
-					.filter(p -> p.getName().endsWith("ByUtilization")) //
-					.filter(p -> !p.getName().startsWith("loreyHeight")) //
-					.filter(p -> p.getPropertyType() == UtilizationVector.class) //
-					.toList();
-		} catch (IntrospectionException e) {
-			throw new IllegalStateException(e);
-		}
-
-		SUMMABLE_UTILIZATION_VECTOR_ACCESSORS = UTILIZATION_VECTOR_ACCESSORS.stream()
-				.filter(x -> !x.getName().startsWith("quadraticMeanDiameter")).toList();
-
-		NON_VOLUME_UTILIZATION_VECTOR_ACCESSORS = UTILIZATION_VECTOR_ACCESSORS.stream()
-				.filter(x -> !x.getName().contains("Volume")).toList();
-	}
-
 	protected VdypOutputWriter vriWriter;
 
 	protected Map<String, Object> controlMap = new HashMap<>();
@@ -222,7 +183,6 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	 * @throws IOException
 	 */
 	public void init(FileSystemFileResolver resolver, Map<String, Object> controlMap) throws IOException {
-
 		setControlMap(controlMap);
 		closeVriWriter();
 		vriWriter = createWriter(resolver, controlMap);
@@ -1359,7 +1319,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	protected void computeLayerUtilizationComponentsFromSpecies(VdypLayer vdypLayer) {
 		// Layer utilization vectors other than quadratic mean diameter are the pairwise
 		// sums of those of their species
-		sumSpeciesUtilizationVectorsToLayer(vdypLayer);
+		ComputationMethods.sumSpeciesUtilizationVectorsToLayer(vdypLayer);
 
 		{
 			var hlVector = Utils.heightVector();
@@ -1391,34 +1351,6 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 	}
 
-	// TODO De-reflectify this when we want to make it work in GralVM
-	void sumSpeciesUtilizationVectorsToLayer(VdypLayer vdypLayer) throws IllegalStateException {
-		try {
-			for (var accessors : SUMMABLE_UTILIZATION_VECTOR_ACCESSORS) {
-				var utilVector = Utils.utilizationVector();
-				for (var vdypSpecies : vdypLayer.getSpecies().values()) {
-					var speciesVector = (Coefficients) accessors.getReadMethod().invoke(vdypSpecies);
-					utilVector.pairwiseInPlace(speciesVector, (x, y) -> x + y);
-				}
-				accessors.getWriteMethod().invoke(vdypLayer, utilVector);
-			}
-		} catch (IllegalAccessException | InvocationTargetException ex) {
-			throw new IllegalStateException(ex);
-		}
-	}
-
-	// TODO De-reflectify this when we want to make it work in GralVM
-	protected void scaleAllSummableUtilization(VdypUtilizationHolder holder, float factor)
-			throws IllegalStateException {
-		try {
-			for (var accessors : SUMMABLE_UTILIZATION_VECTOR_ACCESSORS) {
-				((Coefficients) accessors.getReadMethod().invoke(holder)).scalarInPlace(x -> x * factor);
-			}
-		} catch (IllegalAccessException | InvocationTargetException ex) {
-			throw new IllegalStateException(ex);
-		}
-	}
-
 	// YUCV
 	protected void computeUtilizationComponentsVeteran(VdypLayer vdypLayer, BecDefinition bec)
 			throws ProcessingException {
@@ -1430,114 +1362,108 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		var volumeAdjustMap = Utils.<Map<String, Coefficients>>expectParsedControl(
 				controlMap, ControlKey.VETERAN_LAYER_VOLUME_ADJUST, java.util.Map.class
 		);
-		try {
-			for (var vdypSpecies : vdypLayer.getSpecies().values()) {
+		for (var vdypSpecies : vdypLayer.getSpecies().values()) {
 
-				var treesPerHectareUtil = Utils.utilizationVector();
-				var quadMeanDiameterUtil = Utils.utilizationVector();
-				var baseAreaUtil = Utils.utilizationVector();
-				var wholeStemVolumeUtil = Utils.utilizationVector();
+			var treesPerHectareUtil = Utils.utilizationVector();
+			var quadMeanDiameterUtil = Utils.utilizationVector();
+			var baseAreaUtil = Utils.utilizationVector();
+			var wholeStemVolumeUtil = Utils.utilizationVector();
 
-				var closeUtilizationVolumeUtil = Utils.utilizationVector();
-				var closeUtilizationNetOfDecayUtil = Utils.utilizationVector();
-				var closeUtilizationNetOfDecayAndWasteUtil = Utils.utilizationVector();
-				var closeUtilizationNetOfDecayWasteAndBreakageUtil = Utils.utilizationVector();
+			var closeUtilizationVolumeUtil = Utils.utilizationVector();
+			var closeUtilizationNetOfDecayUtil = Utils.utilizationVector();
+			var closeUtilizationNetOfDecayAndWasteUtil = Utils.utilizationVector();
+			var closeUtilizationNetOfDecayWasteAndBreakageUtil = Utils.utilizationVector();
 
-				var hlSp = vdypSpecies.getLoreyHeightByUtilization().getAll();
-				{
-					var baSp = vdypSpecies.getBaseAreaByUtilization().getLarge();
-					var tphSp = vdypSpecies.getTreesPerHectareByUtilization().getLarge();
-					var dqSp = vdypSpecies.getQuadraticMeanDiameterByUtilization().getLarge();
+			var hlSp = vdypSpecies.getLoreyHeightByUtilization().getAll();
+			{
+				var baSp = vdypSpecies.getBaseAreaByUtilization().getLarge();
+				var tphSp = vdypSpecies.getTreesPerHectareByUtilization().getLarge();
+				var dqSp = vdypSpecies.getQuadraticMeanDiameterByUtilization().getLarge();
 
-					treesPerHectareUtil.setAll(tphSp);
-					quadMeanDiameterUtil.setAll(dqSp);
-					baseAreaUtil.setAll(baSp);
-					wholeStemVolumeUtil.setAll(0f);
+				treesPerHectareUtil.setAll(tphSp);
+				quadMeanDiameterUtil.setAll(dqSp);
+				baseAreaUtil.setAll(baSp);
+				wholeStemVolumeUtil.setAll(0f);
 
-					treesPerHectareUtil.setLarge(tphSp);
-					quadMeanDiameterUtil.setLarge(dqSp);
-					baseAreaUtil.setLarge(baSp);
-					wholeStemVolumeUtil.setLarge(0f);
-				}
-				// AADJUSTV
-				var volumeAdjustCoe = volumeAdjustMap.get(vdypSpecies.getGenus());
+				treesPerHectareUtil.setLarge(tphSp);
+				quadMeanDiameterUtil.setLarge(dqSp);
+				baseAreaUtil.setLarge(baSp);
+				wholeStemVolumeUtil.setLarge(0f);
+			}
+			// AADJUSTV
+			var volumeAdjustCoe = volumeAdjustMap.get(vdypSpecies.getGenus());
 
-				var utilizationClass = UtilizationClass.OVER225; // IUC_VET
+			var utilizationClass = UtilizationClass.OVER225; // IUC_VET
 
-				// ADJ
-				var adjust = new Coefficients(new float[] { 0f, 0f, 0f, 0f }, 1);
+			// ADJ
+			var adjust = new Coefficients(new float[] { 0f, 0f, 0f, 0f }, 1);
 
-				// EMP091
-				estimationMethods.estimateWholeStemVolume(
-						utilizationClass, volumeAdjustCoe.getCoe(1), vdypSpecies.getVolumeGroup(), hlSp,
-						quadMeanDiameterUtil, baseAreaUtil, wholeStemVolumeUtil
-				);
+			// EMP091
+			estimationMethods.estimateWholeStemVolume(
+					utilizationClass, volumeAdjustCoe.getCoe(1), vdypSpecies.getVolumeGroup(), hlSp,
+					quadMeanDiameterUtil, baseAreaUtil, wholeStemVolumeUtil
+			);
 
-				adjust.setCoe(4, volumeAdjustCoe.getCoe(2));
-				// EMP092
-				estimationMethods.estimateCloseUtilizationVolume(
-						utilizationClass, adjust, vdypSpecies.getVolumeGroup(), hlSp, quadMeanDiameterUtil,
-						wholeStemVolumeUtil, closeUtilizationVolumeUtil
-				);
+			adjust.setCoe(4, volumeAdjustCoe.getCoe(2));
+			// EMP092
+			estimationMethods.estimateCloseUtilizationVolume(
+					utilizationClass, adjust, vdypSpecies.getVolumeGroup(), hlSp, quadMeanDiameterUtil,
+					wholeStemVolumeUtil, closeUtilizationVolumeUtil
+			);
 
-				adjust.setCoe(4, volumeAdjustCoe.getCoe(3));
-				// EMP093
-				estimationMethods.estimateNetDecayVolume(
-						vdypSpecies.getGenus(), bec.getRegion(), utilizationClass, adjust, vdypSpecies.getDecayGroup(),
-						vdypLayer.getBreastHeightAge().orElse(0f), quadMeanDiameterUtil, closeUtilizationVolumeUtil,
-						closeUtilizationNetOfDecayUtil
-				);
+			adjust.setCoe(4, volumeAdjustCoe.getCoe(3));
+			// EMP093
+			estimationMethods.estimateNetDecayVolume(
+					vdypSpecies.getGenus(), bec.getRegion(), utilizationClass, adjust, vdypSpecies.getDecayGroup(),
+					vdypLayer.getBreastHeightAge().orElse(0f), quadMeanDiameterUtil, closeUtilizationVolumeUtil,
+					closeUtilizationNetOfDecayUtil
+			);
 
-				adjust.setCoe(4, volumeAdjustCoe.getCoe(4));
-				// EMP094
-				estimationMethods.estimateNetDecayAndWasteVolume(
-						bec.getRegion(), utilizationClass, adjust, vdypSpecies.getGenus(), hlSp, quadMeanDiameterUtil,
-						closeUtilizationVolumeUtil, closeUtilizationNetOfDecayUtil,
-						closeUtilizationNetOfDecayAndWasteUtil
-				);
+			adjust.setCoe(4, volumeAdjustCoe.getCoe(4));
+			// EMP094
+			estimationMethods.estimateNetDecayAndWasteVolume(
+					bec.getRegion(), utilizationClass, adjust, vdypSpecies.getGenus(), hlSp, quadMeanDiameterUtil,
+					closeUtilizationVolumeUtil, closeUtilizationNetOfDecayUtil, closeUtilizationNetOfDecayAndWasteUtil
+			);
 
-				if (getId().isStart()) {
-					// EMP095
-					estimationMethods.estimateNetDecayWasteAndBreakageVolume(
-							utilizationClass, vdypSpecies.getBreakageGroup(), quadMeanDiameterUtil,
-							closeUtilizationVolumeUtil, closeUtilizationNetOfDecayAndWasteUtil,
-							closeUtilizationNetOfDecayWasteAndBreakageUtil
-					);
-				}
-
-				vdypSpecies.setBaseAreaByUtilization(baseAreaUtil);
-				vdypSpecies.setTreesPerHectareByUtilization(treesPerHectareUtil);
-				vdypSpecies.setQuadraticMeanDiameterByUtilization(quadMeanDiameterUtil);
-				vdypSpecies.setWholeStemVolumeByUtilization(wholeStemVolumeUtil);
-				vdypSpecies.setCloseUtilizationVolumeByUtilization(closeUtilizationVolumeUtil);
-				vdypSpecies.setCloseUtilizationVolumeNetOfDecayByUtilization(closeUtilizationNetOfDecayUtil);
-				vdypSpecies.setCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(
-						closeUtilizationNetOfDecayAndWasteUtil
-				);
-				vdypSpecies.setCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(
+			if (getId().isStart()) {
+				// EMP095
+				estimationMethods.estimateNetDecayWasteAndBreakageVolume(
+						utilizationClass, vdypSpecies.getBreakageGroup(), quadMeanDiameterUtil,
+						closeUtilizationVolumeUtil, closeUtilizationNetOfDecayAndWasteUtil,
 						closeUtilizationNetOfDecayWasteAndBreakageUtil
 				);
-
-				for (var accessors : UTILIZATION_VECTOR_ACCESSORS) {
-					UtilizationVector utilVector = (UtilizationVector) accessors.getReadMethod().invoke(vdypSpecies);
-
-					// Set all components other than 4 to 0.0
-					for (var uc : UtilizationClass.ALL_BUT_LARGEST) {
-						utilVector.set(uc, 0f);
-					}
-
-					// Set component 0 to equal component 4.
-					utilVector.setAll(utilVector.getLarge());
-
-					accessors.getWriteMethod().invoke(vdypSpecies, utilVector);
-				}
 			}
 
-			computeLayerUtilizationComponentsFromSpecies(vdypLayer);
+			vdypSpecies.setBaseAreaByUtilization(baseAreaUtil);
+			vdypSpecies.setTreesPerHectareByUtilization(treesPerHectareUtil);
+			vdypSpecies.setQuadraticMeanDiameterByUtilization(quadMeanDiameterUtil);
+			vdypSpecies.setWholeStemVolumeByUtilization(wholeStemVolumeUtil);
+			vdypSpecies.setCloseUtilizationVolumeByUtilization(closeUtilizationVolumeUtil);
+			vdypSpecies.setCloseUtilizationVolumeNetOfDecayByUtilization(closeUtilizationNetOfDecayUtil);
+			vdypSpecies
+					.setCloseUtilizationVolumeNetOfDecayAndWasteByUtilization(closeUtilizationNetOfDecayAndWasteUtil);
+			vdypSpecies.setCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(
+					closeUtilizationNetOfDecayWasteAndBreakageUtil
+			);
 
-		} catch (IllegalAccessException | InvocationTargetException ex) {
-			throw new IllegalStateException(ex);
+			for (var accessors : ComputationMethods.UTILIZATION_VECTOR_ACCESSORS) {
+				UtilizationVector utilVector = accessors.get(vdypSpecies);
+
+				// Set all components other than 4 to 0.0
+				for (var uc : UtilizationClass.ALL_BUT_LARGEST) {
+					utilVector.set(uc, 0f);
+				}
+
+				// Set component 0 to equal component 4.
+				utilVector.setAll(utilVector.getLarge());
+
+				accessors.set(vdypSpecies, utilVector);
+			}
 		}
+
+		computeLayerUtilizationComponentsFromSpecies(vdypLayer);
+
 	}
 
 }
