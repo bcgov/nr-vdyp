@@ -6,8 +6,8 @@ import ca.bc.gov.nrs.vdyp.model.EnumIterator;
 import ca.bc.gov.nrs.vdyp.si32.enumerations.SI32Enum;
 
 /**
- * An enumeration holding each of the valid SP0 Species known to VDYP7. The index value <b>must</b> match the index of
- * this species in {@code SpeciesTable}.
+ * An enumeration holding each of the valid SP64 Species supported by VDYP. The index value <b>must</b> match the index
+ * of this species in {@code SpeciesTable}.
  * <p>
  * <b>UNKNOWN</b> represents an error condition or an uninitialized state. This value should not be used as a species
  * constant.

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import type ProgressCircularState from '@/interfaces/ProgressCircularState'
+import type { ProgressCircularState } from '@/interfaces/interfaces'
 
 export const useProgressCircularStore = defineStore({
   id: 'progressCircularStore',

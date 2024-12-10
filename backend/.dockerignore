@@ -1,8 +1,0 @@
-target/**
-.dockerignore
-.gitignore
-Dockerfile
-mvnw.cmd
-*.yml
-*.yaml
-*.md

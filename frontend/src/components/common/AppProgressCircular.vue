@@ -1,7 +1,7 @@
 <template>
   <div
     class="centered-progress progress-wrapper"
-    v-show="progressCircularStore.isShow"
+    v-show="progressCircularStore.isShow ?? false"
   >
     <v-progress-circular
       indeterminate
@@ -9,8 +9,8 @@
       :width="5"
       color="primary"
     ></v-progress-circular>
-    <div v-show="progressCircularStore.showMessage" class="message">
-      {{ progressCircularStore.message }}
+    <div v-show="progressCircularStore.showMessage ?? false" class="message">
+      {{ progressCircularStore.message || 'Loading...' }}
     </div>
   </div>
 </template>

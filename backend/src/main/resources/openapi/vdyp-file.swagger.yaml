@@ -1,0 +1,390 @@
+openapi: 3.0.0
+servers:
+  # Added by API Auto Mocking Plugin
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/MJUNKIN_1/VDYP-File/1.0.0
+info:
+  version: "1.0.0"
+  title: Variable Density Yield Projection
+  description: >-
+    API for the Variable Density Yield Projection service
+security:
+  - accessCode:
+      - read
+      - write
+paths:
+  /:
+    get:
+      summary: 'Return the top level resource of this service'
+      description: >-
+        Returns the top level resource of the service, including links to all other top level resources.
+      responses:
+        200:
+          description: OK
+  /projection/dcsv:
+    post:
+      summary: 'Project the growth of one or more polygons to a given year.'
+      description: >-
+        Run a projection of polygons in the supplied DCSV formatted input file as 
+        controlled by the parameters in the supplied projection parameters file.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                projectionParameters:
+                  $ref: '#/components/schemas/parameters'
+                inputData:
+                  type: string
+                  format: binary
+                  description: 'a file containing the input data in DCSV format.'
+      responses:
+        '201':
+          description: OK
+          content:
+            multipart/form-data:
+              schema:
+                $ref: '#/components/schemas/projectionResponse'
+        '400':
+          description: 'Client Error. Response content is a list of one or more messages describing the error.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/messages'
+            
+  /projection/hcsv:
+    post:
+      summary: 'Project the growth of one or more polygons to a given year.'
+      description: >-
+        Run a projection of polygons in the supplied HCSV formatted input files as 
+        controlled by the parameters in the supplied projection parameters file.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                projectionParameters:
+                  $ref: '#/components/schemas/parameters'
+                polygonInputData:
+                  type: string
+                  format: binary
+                  description: 'a file containing the polygon input data in HCSV format.'
+                layerInputData:
+                  type: string
+                  format: binary
+                  description: 'a file containing the layer input data in HCSV format.'
+      responses:
+        '200':
+          description: OK
+          content:
+            multipart/form-data:
+              schema:
+                $ref: '#/components/schemas/projectionResponse'
+        '400':
+          description: 'Client Error. Response content is a list of one or more messages describing the error.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/messages'
+            
+  /projection/scsv:
+    post:
+      summary: 'Project the growth of one or more polygons to a given year.'
+      description: >-
+        Run a projection of polygons in the supplied SCSV formatted input files as 
+        controlled by the parameters in the supplied projection parameters file.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                projectionParameters:
+                  $ref: '#/components/schemas/parameters'
+                polygonInputData:
+                  type: string
+                  format: binary
+                  description: 'a file containing the polygon input data in HCSV format.'
+                layerInputData:
+                  type: string
+                  format: binary
+                  description: 'a file containing the layer input data in HCSV format.'
+                historyInputData:
+                  type: string
+                  format: binary
+                  description: 'a file containing the history input data in HCSV format.'
+                nonVegetationInputData:
+                  type: string
+                  format: binary
+                  description: 'a file containing the non-vegetation input data in HCSV format.'
+                otherVegetationInputData:
+                  type: string
+                  format: binary
+                  description: 'a file containing the non-tree vegetation input data in HCSV format.'
+                polygonIdInputData:
+                  type: string
+                  format: binary
+                  description: 'a file containing the polygon id input data in HCSV format.'
+                speciesInputData:
+                  type: string
+                  format: binary
+                  description: 'a file containing the species input data in HCSV format.'
+                vriAdjustInputData:
+                  type: string
+                  format: binary
+                  description: 'a file containing the VRI adjust input data in HCSV format.'
+      responses:
+        '200':
+          description: OK
+          content:
+            multipart/form-data:
+              schema:
+                $ref: '#/components/schemas/projectionResponse'
+        '400':
+          description: 'Client Error. Response content is a list of one or more messages describing the error.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/messages'
+  /help:
+    get:
+      summary: returns a detailed description of the parameters available when executing a projection.
+      responses:
+        '200':
+          description: OK
+          content: 
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/parameterDetailsMessage'       
+
+components:
+  schemas:
+    parameters:
+      description: 'the parameters defining specifics of the run'
+      type: object
+      properties:
+        outputFormat:
+          description: "Identifies the output file format. Default: YieldTable"
+          enum:
+            - YieldTable
+            - CSVYieldTable
+            - DCSV
+        selectedExecutionOptions:
+          $ref: '#/components/schemas/executionOptions'
+        doEnableProgressLogging: 
+          description: 'Progress logging is enabled iff this value is true. If false, progressMessages in the response will be empty.'
+          type: boolean
+        doEnableErrorLogging: 
+          description: 'Error logging is enabled iff this value is true. If false, errorMessages in the response will be empty.'
+          type: boolean
+        doEnableDebugLogging: 
+          description: 'Debug logging is enabled iff this value is true. If false, debugMessages in the response will be empty.'
+          type: boolean
+        selectedDebugOptions:
+          $ref: '#/components/schemas/debugOptions'
+        ageStart:
+          description: 'The starting age value for the Age Range for generated yield tables.'
+          type: integer
+        minAgeStart:
+          description: 'The minimum value for ageStart.'
+          type: integer
+        maxAgeStart:
+          description: 'The maximum value for ageStart.'
+          type: integer
+        ageEnd:
+          description: 'The ending age value for the Age Range for generated yield tables.'
+          type: integer
+        minAgeEnd:
+          description: 'The minimum value for ageEnd.'
+          type: integer
+        maxAgeEnd:
+          description: 'The maximum value for ageEnd.'
+          type: integer
+        yearStart:
+          description: 'The starting year for the Year Range for generated yield tables.'
+          type: integer
+        yearEnd:
+          description: 'The ending year for the Year Range for generated yield tables.'
+          type: integer
+        forceYear:
+          description: 'Forces the inclusion of the specified calendar year in Yield tables.'
+          type: integer
+        ageIncrement:
+          description: 'The number of years to increment the current value for the Age and Year ranges.'
+          type: integer
+        minAgeIncrement:
+          description: 'The minimum value for ageIncrement.'
+          type: integer
+        maxAgeIncrement:
+          description: 'The maximum value for ageIncrement.'
+          type: integer
+        combineAgeYearRange:
+          description: 'Determines how the Age Range and Year Range are to be combined when producing yield tables.'
+          enum:
+            - union
+            - intersect
+            - difference
+        progressFrequency:
+          description:
+            'Identifies how often or when progress will be reported from the application. In the case of
+            a number being supplied, the number indicates the number of polygons to be processed between
+            indications of progress.'
+          oneOf:
+            - enum:
+              - NEVER
+              - EACH_MAPSHEET
+              - EACH_POLYGON
+            - type: integer
+        metadataToOutput:
+          description: Controls how much metadata is displayed in the Output and Error Logs.
+          enum:
+            - ALL
+            - MAIN
+            - VERSION
+            - MIN_IDENT
+            - NONE
+        filters:
+          $ref: '#/components/schemas/filters'
+        utils:
+          type: array
+          items:
+            type: object
+            properties:
+              speciesName: 
+                type: string
+              value:
+                enum:
+                  - "Excl"
+                  - "4.0"
+                  - "7.5"
+                  - "12.5"
+                  - "17.5"
+                  - "22.5"
+    executionOptions:
+      type: array
+      items:
+        enum:
+          - backGrowEnabled
+          - forwardGrowEnabled
+          - doSaveIntermediateFiles
+          - doForceReferenceYearInclusionInYieldTables
+          - doForceCurrentYearInclusionInYieldTables
+          - doForceCalendarYearInclusionInYieldTables
+          - doIncludeFileHeader
+          - doIncludeProjectionModeInYieldTable
+          - doIncludeAgeRowsInYieldTable
+          - doIncludeYearRowsInYieldTable
+          - doIncludePolygonRecordIdInYieldTable
+          - doSummarizeProjectionByPolygon
+          - doSummarizeProjectionByLayer
+          - doIncludeSpeciesProjection
+          - doIncludeProjectedMOFVolumes
+          - doIncludeProjectedMOFBiomass
+          - doIncludeProjectedCFSBiomass
+          - doIncludeColumnHeadersInYieldTable
+          - doAllowBasalAreaAndTreesPerHectareValueSubstitution
+          - doIncludeSecondarySpeciesDominantHeightInYieldTable
+    debugOptions:
+      type: array
+      items:
+        enum:
+          - doIncludeDebugTimestamps
+          - doIncludeDebugRoutineNames
+          - doIncludeDebugEntryExit
+          - doIncludeDebugIndentBlocks
+    filters:
+      type: object
+      properties:
+        maintainer: 
+          description: only those polygons with the specified maintainer will be considered for inclusion in the output
+          type: string
+        mapsheet: 
+          description: only those polygons with the specified mapsheet will be considered for inclusion in the output
+          type: string
+        polygon: 
+          description: only those polygons with the specified polygon number will be considered for inclusion in the output
+          type: string
+        polygonId: 
+          description: only those polygons with the specified polygon id will be considered for inclusion in the output
+          type: string
+    projectionResponse:
+      type: object
+      properties:
+        yieldTable: 
+          type: string
+          format: binary
+        errorMessages:
+          type: string
+          format: binary
+        progressMessages:
+          type: string
+          format: binary
+        debugMessages:
+          type: string
+          format: binary
+    messages:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: string
+            description: "the message's unique identifier"
+          layerId:
+            type: string
+            description: 'the id of the layer to which the message applies. This value is null if this is a polygon level message and so does not apply to a specific layer'
+          standComponentId:
+            type: string
+            description: 'the id of the stand component to which the message applies. This value will be null if not known or applicable'
+          errorCode:
+            type: string
+            description: 'the element of the ReturnCode enumeration returned from the operation that resulted in this message being generated'
+          severity:
+            $ref: '#/components/schemas/enumSeverity'
+          messageCode:
+            type: string
+            description: 'the element of the MessageCode enumeration describing this message'
+          message:
+            type: string
+            description: 'the message contents'
+    enumSeverity:
+      description: 'Message severity codes'
+      enum:
+        - Information
+        - Status
+        - Warning
+        - Error
+        - FatalError
+    parameterDetailsMessage:
+      description: provides details about one parameter
+      type: object
+      properties:
+        field: 
+          type: string
+          description: the parameter name
+        shortDescription: 
+          type: string
+          description: "a brief description of the parameter's purpose"
+        parameterValue: 
+          type: string
+          description: "if the parameter has a value, a description of the value"
+        longDescription:
+          type: string
+          description: "a description of the parameter"
+        defaultValue:
+          type: string
+          description: the default value used if the parameter is not specified
+  securitySchemes:
+    accessCode:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: 'http://example.com/oauth/auth'
+          tokenUrl: 'http://example.com/oauth/token'
+          scopes:
+            write: allows modifying resources
+            read: allows reading resources

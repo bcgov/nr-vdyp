@@ -107,7 +107,7 @@ objects:
                       key: database-user
 
               ports:
-                - containerPort: 3000
+                - containerPort: 8080
                   protocol: TCP
               resources:
                 requests:
@@ -119,7 +119,7 @@ objects:
               readinessProbe:
                 httpGet:
                   path: /
-                  port: 3000
+                  port: 8080
                   scheme: HTTP
                 initialDelaySeconds: 5
                 periodSeconds: 2
@@ -131,7 +131,7 @@ objects:
                 failureThreshold: 3
                 httpGet:
                   path: /
-                  port: 3000
+                  port: 8080
                   scheme: HTTP
                 initialDelaySeconds: 60
                 periodSeconds: 30
@@ -145,10 +145,10 @@ objects:
       name: "${NAME}-${ZONE}-${COMPONENT}"
     spec:
       ports:
-        - name: 3000-tcp
+        - name: 8080-tcp
           protocol: TCP
           port: 80
-          targetPort: 3000
+          targetPort: 8080
       selector:
         deploymentconfig: "${NAME}-${ZONE}-${COMPONENT}"
   - apiVersion: route.openshift.io/v1
@@ -160,7 +160,7 @@ objects:
     spec:
       host: "${NAME}-${ZONE}-${COMPONENT}.${DOMAIN}"
       port:
-        targetPort: 3000-tcp
+        targetPort: 8080-tcp
       to:
         kind: Service
         name: "${NAME}-${ZONE}-${COMPONENT}"

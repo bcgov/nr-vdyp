@@ -19,9 +19,7 @@
   </v-navigation-drawer>
 
   <div class="main-layout-container">
-    <!-- <div class="content"> -->
     <slot />
-    <!-- </div> -->
   </div>
 </template>
 
@@ -35,7 +33,6 @@ const drawer = ref(true)
 <style scoped>
 /* v-navigation-drawer whole box */
 .v-navigation-drawer {
-  /* min-width: 256px; */
   background-color: #f6f6f6;
 }
 
@@ -72,9 +69,4 @@ const drawer = ref(true)
   bottom: 0;
   width: 100%;
 }
-
-/* .content {
-  flex: none;
-  margin-bottom: 0px;
-} */
 </style>

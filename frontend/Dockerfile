@@ -1,12 +1,12 @@
 # Build static files
 # Node Bullseye has npm
 FROM node:20.17.0-bullseye-slim AS build
-
+ARG CONTEXT="./frontend"
 # Install packages, build and keep only prod packages
 WORKDIR /app
-COPY *.json *.ts index.html ./
-COPY public ./public
-COPY ./src ./src
+COPY ${CONTEXT}/*.json ${CONTEXT}/*.ts ${CONTEXT}/index.html ./
+COPY ${CONTEXT}/public ./public
+COPY ${CONTEXT}/src ./src
 RUN npm ci --ignore-scripts --no-update-notifier --omit=dev && \
     npm run build-only
 
@@ -19,8 +19,9 @@ RUN apk add --no-cache ca-certificates && \
     chown -R 1001:1001 /config/caddy /data/caddy
 
 # Copy static files and run formatting
+ARG CONTEXT="./frontend"
 COPY --from=build /app/dist /srv
-COPY Caddyfile /etc/caddy/Caddyfile
+COPY ${CONTEXT}/Caddyfile /etc/caddy/Caddyfile
 RUN caddy fmt --overwrite /etc/caddy/Caddyfile
 
 RUN chmod 755 /usr/bin/caddy

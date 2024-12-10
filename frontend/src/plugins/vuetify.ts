@@ -15,6 +15,9 @@ const defaultTheme: ThemeDefinition = {
     anchor: '#1A5A96',
     background: '#ffffff',
   },
+  variables: {
+    'disabled-opacity': 0.6,
+  },
 }
 
 export default createVuetify({
