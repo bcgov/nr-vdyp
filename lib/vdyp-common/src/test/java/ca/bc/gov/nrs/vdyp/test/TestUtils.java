@@ -634,4 +634,8 @@ public class TestUtils {
 
 		return layer.getSpecies().get(ids[0]);
 	}
+
+	public static BecDefinition mockBec() {
+		return new BecDefinition("T", Region.COASTAL, "Test");
+	}
 }
