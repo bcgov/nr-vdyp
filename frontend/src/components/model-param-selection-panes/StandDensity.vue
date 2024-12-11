@@ -138,6 +138,8 @@ const onConfirm = async () => {
 
   if (form.value) {
     form.value.validate()
+  } else {
+    console.warn('Form reference is null. Validation skipped.')
   }
 
   // this panel is not in a confirmed state

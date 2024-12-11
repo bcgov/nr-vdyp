@@ -5,15 +5,14 @@ import type { AxiosResponse, AxiosInstance, AxiosRequestConfig } from 'axios'
 import { Configuration } from '../configuration'
 // Some imports not used depending on template conditions
 // @ts-ignore
-import { BASE_PATH, COLLECTION_FORMATS, BaseAPI, RequiredError } from '../base'
+import { BASE_PATH, BaseAPI, RequiredError } from '../base'
 import type { RequestArgs } from '../base'
 import type { ParameterDetailsMessage } from '../models'
-
 /**
- * HelpEndpointApi - axios parameter creator
+ * GetHelpApi - axios parameter creator
  * @export
  */
-export const HelpEndpointApiAxiosParamCreator = function (
+export const GetHelpApiAxiosParamCreator = function (
   configuration?: Configuration,
 ) {
   return {
@@ -22,10 +21,8 @@ export const HelpEndpointApiAxiosParamCreator = function (
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    v8HelpGet: async (
-      options: AxiosRequestConfig = {},
-    ): Promise<RequestArgs> => {
-      const localVarPath = `/api/v8/help` /* edited */
+    helpGet: async (options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+      const localVarPath = `/api/v8/help`
       // use dummy base URL string because the URL constructor only accepts absolute URLs.
       const localVarUrlObj = new URL(localVarPath, 'https://example.com')
       let baseOptions
@@ -36,7 +33,6 @@ export const HelpEndpointApiAxiosParamCreator = function (
         method: 'GET',
         ...baseOptions,
         ...options,
-        responseType: 'json' /* edited */,
       }
       const localVarHeaderParameter = {} as any
       const localVarQueryParameter = {} as any
@@ -67,17 +63,17 @@ export const HelpEndpointApiAxiosParamCreator = function (
 }
 
 /**
- * HelpEndpointApi - functional programming interface
+ * GetHelpApi - functional programming interface
  * @export
  */
-export const HelpEndpointApiFp = function (configuration?: Configuration) {
+export const GetHelpApiFp = function (configuration?: Configuration) {
   return {
     /**
      *
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    async v8HelpGet(
+    async helpGet(
       options?: AxiosRequestConfig,
     ): Promise<
       (
@@ -86,28 +82,26 @@ export const HelpEndpointApiFp = function (configuration?: Configuration) {
       ) => Promise<AxiosResponse<ParameterDetailsMessage[] /* edited */>>
     > {
       const localVarAxiosArgs =
-        await HelpEndpointApiAxiosParamCreator(configuration).v8HelpGet(options)
+        await GetHelpApiAxiosParamCreator(configuration).helpGet(options)
       return (
         axios: AxiosInstance = globalAxios,
         basePath: string = BASE_PATH,
       ) => {
         const axiosRequestArgs: AxiosRequestConfig = {
           ...localVarAxiosArgs.options,
-          url: /* edited */ localVarAxiosArgs.url,
+          url: basePath + localVarAxiosArgs.url,
         }
-        return axios.request<ParameterDetailsMessage[] /* edited */>(
-          axiosRequestArgs,
-        )
+        return axios.request(axiosRequestArgs)
       }
     },
   }
 }
 
 /**
- * HelpEndpointApi - factory interface
+ * GetHelpApi - factory interface
  * @export
  */
-export const HelpEndpointApiFactory = function (
+export const GetHelpApiFactory = function (
   configuration?: Configuration,
   basePath?: string,
   axios?: AxiosInstance,
@@ -118,34 +112,34 @@ export const HelpEndpointApiFactory = function (
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    async v8HelpGet(
+    async helpGet(
       options?: AxiosRequestConfig,
     ): Promise<AxiosResponse<ParameterDetailsMessage[] /* edited */>> {
-      return HelpEndpointApiFp(configuration)
-        .v8HelpGet(options)
-        .then((request) => request(axios /* edited */))
+      return GetHelpApiFp(configuration)
+        .helpGet(options)
+        .then((request) => request(axios, basePath))
     },
   }
 }
 
 /**
- * HelpEndpointApi - object-oriented interface
+ * GetHelpApi - object-oriented interface
  * @export
- * @class HelpEndpointApi
+ * @class GetHelpApi
  * @extends {BaseAPI}
  */
-export class HelpEndpointApi extends BaseAPI {
+export class GetHelpApi extends BaseAPI {
   /**
    *
    * @param {*} [options] Override http request option.
    * @throws {RequiredError}
-   * @memberof HelpEndpointApi
+   * @memberof GetHelpApi
    */
-  public async v8HelpGet(
+  public async helpGet(
     options?: AxiosRequestConfig,
   ): Promise<AxiosResponse<ParameterDetailsMessage[] /* edited */>> {
-    return HelpEndpointApiFp(this.configuration)
-      .v8HelpGet(options)
-      .then((request) => request(this.axios /* edited */))
+    return GetHelpApiFp(this.configuration)
+      .helpGet(options)
+      .then((request) => request(this.axios, this.basePath))
   }
 }

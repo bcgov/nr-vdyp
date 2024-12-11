@@ -180,24 +180,32 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { SelectedExecutionOptionsEnum } from '@/services/vdyp-api'
 import { projectionHcsvPost } from '@/services/apiActions'
 import { handleApiError } from '@/services/apiErrorHandler'
 import { useMessageDialogStore } from '@/stores/common/messageDialogStore'
+import { useProgressCircularStore } from '@/stores/common/progressCircularStore'
 import {
   volumeReportedOptions,
   includeInReportOptions,
   projectionTypeOptions,
 } from '@/constants/options'
-import { NUM_INPUT_LIMITS } from '@/constants/constants'
+import { NUM_INPUT_LIMITS, DOWNLOAD_FILE_NAME } from '@/constants/constants'
 import {
   MDL_PRM_INPUT_ERR,
   MSG_DIALOG_TITLE,
   FILE_UPLOAD_ERR,
+  PROGRESS_MSG,
+  SUCESS_MSG,
 } from '@/constants/message'
 import { DEFAULT_VALUES } from '@/constants/defaults'
 import { FileUploadValidation } from '@/validation/fileUploadValidation'
+import { Util } from '@/utils/util'
+import { logSuccessMessage } from '@/utils/messageHandler'
 
 const form = ref<HTMLFormElement>()
+
+const progressCircularStore = useProgressCircularStore()
 
 const fileUploadValidator = new FileUploadValidation()
 
@@ -331,43 +339,65 @@ const validateRequiredFields = (): boolean => {
 }
 
 const fileUploadRunModel = async () => {
-  if (
-    validateRequiredFields() &&
-    validateComparison() &&
-    validateRange() &&
-    (await validateFiles())
-  ) {
+  try {
+    const isValidationSuccessful =
+      validateRequiredFields() &&
+      validateComparison() &&
+      validateRange() &&
+      (await validateFiles())
+
+    if (!isValidationSuccessful) {
+      return
+    }
+
     if (form.value) {
       form.value.validate()
+    } else {
+      console.warn('Form reference is null. Validation skipped.')
     }
 
-    const body = {
-      projectionParameters: {
-        ageStart: startingAge.value!,
-        ageEnd: finishingAge.value!,
-        ageIncrement: ageIncrement.value!,
-        volumeReported: volumeReported.value,
-        includeInReport: includeInReport.value,
-        projectionType: projectionType.value,
-        reportTitle: reportTitle.value,
-      },
-      layerInputData: null, // Set to null for now
-      polygonInputData: null, // Set to null for now
+    progressCircularStore.showProgress(PROGRESS_MSG.RUNNING_MODEL)
+    await Util.delay(1000)
+
+    const formData = new FormData()
+
+    const selectedExecutionOptions = [
+      SelectedExecutionOptionsEnum.DoEnableProgressLogging,
+      SelectedExecutionOptionsEnum.DoEnableErrorLogging,
+      SelectedExecutionOptionsEnum.DoEnableDebugLogging,
+    ]
+
+    const projectionParameters = {
+      ageStart: startingAge.value,
+      ageEnd: finishingAge.value,
+      ageIncrement: ageIncrement.value,
+      selectedExecutionOptions: selectedExecutionOptions,
     }
 
-    try {
-      const result = await projectionHcsvPost(body)
+    formData.append(
+      'projectionParameters',
+      new Blob([JSON.stringify(projectionParameters)], {
+        type: 'application/json',
+      }),
+    )
+    formData.append('polygonInputData', polygonFile.value as Blob)
+    formData.append('layersInputData', layerFile.value as Blob)
 
-      const url = window.URL.createObjectURL(new Blob([result]))
-      const link = document.createElement('a')
-      link.href = url
-      link.setAttribute('download', 'vdyp-output.zip')
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
-    } catch (error) {
-      handleApiError(error, 'Failed to run Projection (Axios)')
-    }
+    const result = await projectionHcsvPost(formData, false)
+
+    const url = window.URL.createObjectURL(new Blob([result]))
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', DOWNLOAD_FILE_NAME.MULTI_POLYGON_OUTPUT)
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+
+    logSuccessMessage(SUCESS_MSG.FILE_UPLOAD_RUN_MODEL_RESULT)
+  } catch (error) {
+    handleApiError(error, FILE_UPLOAD_ERR.FAIL_RUN_MODEL)
+  } finally {
+    progressCircularStore.hideProgress()
   }
 }
 </script>

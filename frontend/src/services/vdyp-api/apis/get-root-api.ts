@@ -5,13 +5,15 @@ import type { AxiosResponse, AxiosInstance, AxiosRequestConfig } from 'axios'
 import { Configuration } from '../configuration'
 // Some imports not used depending on template conditions
 // @ts-ignore
-import { BASE_PATH, COLLECTION_FORMATS, BaseAPI, RequiredError } from '../base'
+import { BASE_PATH, BaseAPI, RequiredError } from '../base'
 import type { RequestArgs } from '../base'
+import type { RootResource } from '../models'
+
 /**
- * RootEndpointApi - axios parameter creator
+ * GetRootApi - axios parameter creator
  * @export
  */
-export const RootEndpointApiAxiosParamCreator = function (
+export const GetRootApiAxiosParamCreator = function (
   configuration?: Configuration,
 ) {
   return {
@@ -20,8 +22,8 @@ export const RootEndpointApiAxiosParamCreator = function (
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    v8Get: async (options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
-      const localVarPath = `/api/v8` /* edited */
+    rootGet: async (options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+      const localVarPath = `/api/v8`
       // use dummy base URL string because the URL constructor only accepts absolute URLs.
       const localVarUrlObj = new URL(localVarPath, 'https://example.com')
       let baseOptions
@@ -62,30 +64,33 @@ export const RootEndpointApiAxiosParamCreator = function (
 }
 
 /**
- * RootEndpointApi - functional programming interface
+ * GetRootApi - functional programming interface
  * @export
  */
-export const RootEndpointApiFp = function (configuration?: Configuration) {
+export const GetRootApiFp = function (configuration?: Configuration) {
   return {
     /**
      *
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    async v8Get(
+    async rootGet(
       options?: AxiosRequestConfig,
     ): Promise<
-      (axios?: AxiosInstance, basePath?: string) => Promise<AxiosResponse<void>>
+      (
+        axios?: AxiosInstance,
+        basePath?: string,
+      ) => Promise<AxiosResponse<RootResource>> /* edited */
     > {
       const localVarAxiosArgs =
-        await RootEndpointApiAxiosParamCreator(configuration).v8Get(options)
+        await GetRootApiAxiosParamCreator(configuration).rootGet(options)
       return (
         axios: AxiosInstance = globalAxios,
         basePath: string = BASE_PATH,
       ) => {
         const axiosRequestArgs: AxiosRequestConfig = {
           ...localVarAxiosArgs.options,
-          url: /* edited */ localVarAxiosArgs.url,
+          url: basePath + localVarAxiosArgs.url,
         }
         return axios.request(axiosRequestArgs)
       }
@@ -94,10 +99,10 @@ export const RootEndpointApiFp = function (configuration?: Configuration) {
 }
 
 /**
- * RootEndpointApi - factory interface
+ * GetRootApi - factory interface
  * @export
  */
-export const RootEndpointApiFactory = function (
+export const GetRootApiFactory = function (
   configuration?: Configuration,
   basePath?: string,
   axios?: AxiosInstance,
@@ -108,32 +113,34 @@ export const RootEndpointApiFactory = function (
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    async v8Get(options?: AxiosRequestConfig): Promise<AxiosResponse<void>> {
-      return RootEndpointApiFp(configuration)
-        .v8Get(options)
-        .then((request) => request(axios /* edited */))
+    async rootGet(
+      options?: AxiosRequestConfig,
+    ): Promise<AxiosResponse<RootResource>> /* edited */ {
+      return GetRootApiFp(configuration)
+        .rootGet(options)
+        .then((request) => request(axios, basePath))
     },
   }
 }
 
 /**
- * RootEndpointApi - object-oriented interface
+ * GetRootApi - object-oriented interface
  * @export
- * @class RootEndpointApi
+ * @class GetRootApi
  * @extends {BaseAPI}
  */
-export class RootEndpointApi extends BaseAPI {
+export class GetRootApi extends BaseAPI {
   /**
    *
    * @param {*} [options] Override http request option.
    * @throws {RequiredError}
-   * @memberof RootEndpointApi
+   * @memberof GetRootApi
    */
-  public async v8Get(
+  public async rootGet(
     options?: AxiosRequestConfig,
-  ): Promise<AxiosResponse<void>> {
-    return RootEndpointApiFp(this.configuration)
-      .v8Get(options)
-      .then((request) => request(this.axios /* edited */))
+  ): Promise<AxiosResponse<RootResource>> /* edited */ {
+    return GetRootApiFp(this.configuration)
+      .rootGet(options)
+      .then((request) => request(this.axios, this.basePath))
   }
 }

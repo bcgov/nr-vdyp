@@ -101,4 +101,13 @@ export const FILE_UPLOAD_ERR = Object.freeze({
     'The response is missing one or more required files. Please contact support or try again later.',
   INVALID_RESPONSED_FILE:
     'The response contains invalid or corrupted files. Please contact support or try again later.',
+  FAIL_RUN_MODEL: 'Failed to run the projection model.',
+})
+
+export const PROGRESS_MSG = Object.freeze({
+  RUNNING_MODEL: 'Running Model...',
+})
+
+export const SUCESS_MSG = Object.freeze({
+  FILE_UPLOAD_RUN_MODEL_RESULT: 'File successfully downloaded.',
 })

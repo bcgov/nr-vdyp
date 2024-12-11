@@ -486,7 +486,10 @@ const onConfirm = () => {
   ) {
     if (form.value) {
       form.value.validate()
+    } else {
+      console.warn('Form reference is null. Validation skipped.')
     }
+
     // this panel is not in a confirmed state
     if (!isConfirmed.value) {
       modelParameterStore.confirmPanel(panelName)

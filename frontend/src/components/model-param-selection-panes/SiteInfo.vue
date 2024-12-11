@@ -394,6 +394,8 @@ const onConfirm = () => {
   if (validateRequiredFields() && validateRange()) {
     if (form.value) {
       form.value.validate()
+    } else {
+      console.warn('Form reference is null. Validation skipped.')
     }
 
     formattingValues()

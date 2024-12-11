@@ -4,10 +4,10 @@ import { CombineAgeYearRangeEnum } from './combine-age-year-range-enum'
 import type { Filters } from './filters'
 import { MetadataToOutputEnum } from './metadata-to-output-enum'
 import { OutputFormatEnum } from './output-format-enum'
-import type { ParametersProgressFrequency } from './parameters-progress-frequency'
-import type { ParametersUtilsInner } from './parameters-utils-inner'
+import type { ProgressFrequency } from './progress-frequency'
 import { SelectedDebugOptionsEnum } from './selected-debug-options-enum'
 import { SelectedExecutionOptionsEnum } from './selected-execution-options-enum'
+import type { UtilizationParameter } from './utilization-parameter'
 export interface Parameters {
   /**
    * @type {OutputFormatEnum}
@@ -20,24 +20,6 @@ export interface Parameters {
    * @memberof Parameters
    */
   selectedExecutionOptions?: Array<SelectedExecutionOptionsEnum>
-
-  /**
-   * @type {boolean}
-   * @memberof Parameters
-   */
-  doEnableProgressLogging?: boolean
-
-  /**
-   * @type {boolean}
-   * @memberof Parameters
-   */
-  doEnableErrorLogging?: boolean
-
-  /**
-   * @type {boolean}
-   * @memberof Parameters
-   */
-  doEnableDebugLogging?: boolean
 
   /**
    * @type {Array<SelectedDebugOptionsEnum>}
@@ -124,10 +106,10 @@ export interface Parameters {
   combineAgeYearRange?: CombineAgeYearRangeEnum
 
   /**
-   * @type {ParametersProgressFrequency}
+   * @type {ProgressFrequency}
    * @memberof Parameters
    */
-  progressFrequency?: ParametersProgressFrequency
+  progressFrequency?: ProgressFrequency
 
   /**
    * @type {MetadataToOutputEnum}
@@ -142,8 +124,8 @@ export interface Parameters {
   filters?: Filters
 
   /**
-   * @type {Array<ParametersUtilsInner>}
+   * @type {Array<UtilizationParameter>}
    * @memberof Parameters
    */
-  utils?: Array<ParametersUtilsInner>
+  utils?: Array<UtilizationParameter>
 }

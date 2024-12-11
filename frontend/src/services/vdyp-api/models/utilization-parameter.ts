@@ -1,16 +1,16 @@
 /* tslint:disable */
 /* eslint-disable */
 import { ValueEnum } from './value-enum'
-export interface ParametersUtilsInner {
+export interface UtilizationParameter {
   /**
    * @type {string}
-   * @memberof ParametersUtilsInner
+   * @memberof UtilizationParameter
    */
   speciesName?: string
 
   /**
    * @type {ValueEnum}
-   * @memberof ParametersUtilsInner
+   * @memberof UtilizationParameter
    */
   value?: ValueEnum
 }

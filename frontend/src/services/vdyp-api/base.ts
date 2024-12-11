@@ -5,9 +5,8 @@ import { Configuration } from './configuration'
 // @ts-ignore
 import globalAxios from 'axios'
 import type { AxiosRequestConfig, AxiosInstance } from 'axios'
-import { env } from '@/env'
 
-export const BASE_PATH = env.VITE_API_URL.replace(/\/+$/, '')
+export const BASE_PATH = ''
 
 /**
  *

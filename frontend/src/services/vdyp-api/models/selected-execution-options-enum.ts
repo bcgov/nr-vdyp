@@ -21,4 +21,7 @@ export enum SelectedExecutionOptionsEnum {
   DoIncludeColumnHeadersInYieldTable = 'doIncludeColumnHeadersInYieldTable',
   DoAllowBasalAreaAndTreesPerHectareValueSubstitution = 'doAllowBasalAreaAndTreesPerHectareValueSubstitution',
   DoIncludeSecondarySpeciesDominantHeightInYieldTable = 'doIncludeSecondarySpeciesDominantHeightInYieldTable',
+  DoEnableProgressLogging = 'doEnableProgressLogging',
+  DoEnableErrorLogging = 'doEnableErrorLogging',
+  DoEnableDebugLogging = 'doEnableDebugLogging',
 }
