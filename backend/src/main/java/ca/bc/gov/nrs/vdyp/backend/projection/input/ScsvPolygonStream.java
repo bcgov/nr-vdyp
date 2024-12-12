@@ -2,20 +2,21 @@ package ca.bc.gov.nrs.vdyp.backend.projection.input;
 
 import java.io.InputStream;
 
+import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionState;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Polygon;
 
 public class ScsvPolygonStream extends AbstractPolygonStream {
 
 	public ScsvPolygonStream(
-			InputStream polygonStream, InputStream layersStream, InputStream historyStream,
+			ProjectionState state, InputStream polygonStream, InputStream layersStream, InputStream historyStream,
 			InputStream nonVegetationStream, InputStream otherVegetationStream, InputStream polygonIdStream,
 			InputStream speciesStream, InputStream vriAdjustStream
 	) {
-		// TODO Auto-generated constructor stub
+		super(state);
 	}
 
 	@Override
-	Polygon getNextPolygon() {
+	public Polygon getNextPolygon() {
 		throw new UnsupportedOperationException("SCSV input files not (yet) supported.");
 	}
 

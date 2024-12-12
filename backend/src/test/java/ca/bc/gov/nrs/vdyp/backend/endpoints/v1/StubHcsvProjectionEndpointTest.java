@@ -1,8 +1,7 @@
-package ca.bc.gov.nrs.api.v1.endpoints;
+package ca.bc.gov.nrs.vdyp.backend.endpoints.v1;
 
 import static io.restassured.RestAssured.given;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,8 +17,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.api.helpers.TestHelper;
-import ca.bc.gov.nrs.vdyp.backend.v1.gen.api.ParameterNames;
-import ca.bc.gov.nrs.vdyp.backend.v1.gen.model.Parameters;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.MediaType;
@@ -45,9 +43,9 @@ class StubHcsvProjectionEndpointTest {
 
 		Parameters parameters = testHelper.addSelectedOptions(
 				new Parameters(), //
-				Parameters.SelectedExecutionOptionsEnum.DO_ENABLE_DEBUG_LOGGING,
-				Parameters.SelectedExecutionOptionsEnum.DO_ENABLE_PROGRESS_LOGGING,
-				Parameters.SelectedExecutionOptionsEnum.DO_ENABLE_ERROR_LOGGING
+				Parameters.ExecutionOption.DO_ENABLE_DEBUG_LOGGING,
+				Parameters.ExecutionOption.DO_ENABLE_PROGRESS_LOGGING,
+				Parameters.ExecutionOption.DO_ENABLE_ERROR_LOGGING
 		);
 
 		// Included to generate JSON text of parameters as needed
@@ -57,11 +55,11 @@ class StubHcsvProjectionEndpointTest {
 		InputStream zipInputStream = given().basePath(TestHelper.ROOT_PATH).when() //
 				.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
 				.multiPart(
-						ParameterNames.POLYGON_INPUT_DATA,
+						ParameterNames.HCSV_POLYGON_INPUT_DATA,
 						Files.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_POLY.csv"))
 				) //
 				.multiPart(
-						ParameterNames.LAYERS_INPUT_DATA,
+						ParameterNames.HCSV_LAYERS_INPUT_DATA,
 						Files.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_LAYER.csv"))
 				) //
 				.post("/projection/hcsv?trialRun=true") //
@@ -102,11 +100,11 @@ class StubHcsvProjectionEndpointTest {
 		InputStream zipInputStream = given().basePath(TestHelper.ROOT_PATH).when() //
 				.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
 				.multiPart(
-						ParameterNames.POLYGON_INPUT_DATA,
+						ParameterNames.HCSV_POLYGON_INPUT_DATA,
 						Files.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_POLY.csv"))
 				) //
 				.multiPart(
-						ParameterNames.LAYERS_INPUT_DATA,
+						ParameterNames.HCSV_LAYERS_INPUT_DATA,
 						Files.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_LAYER.csv"))
 				) //
 				.post("/projection/hcsv?trialRun=true") //

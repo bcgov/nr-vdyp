@@ -4,11 +4,11 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Map;
 
-import ca.bc.gov.nrs.vdyp.backend.v1.api.impl.exceptions.ProjectionExecutionException;
-import ca.bc.gov.nrs.vdyp.backend.v1.api.impl.exceptions.ProjectionRequestValidationException;
-import ca.bc.gov.nrs.vdyp.backend.v1.gen.model.Parameters;
-import ca.bc.gov.nrs.vdyp.backend.v1.gen.model.ProjectionRequestKind;
-import jakarta.validation.Valid;
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionInternalExecutionException;
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestValidationException;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.ProjectionRequestKind;
+import ca.bc.gov.nrs.vdyp.backend.projection.input.AbstractPolygonStream;
 
 public class StubProjectionRunner implements IProjectionRunner {
 
@@ -24,7 +24,7 @@ public class StubProjectionRunner implements IProjectionRunner {
 
 		ProjectionRequestParametersValidator.validate(state);
 
-		AbstractPolygonStream polygonStream = AbstractPolygonStream.build(state.getRequestKind(), streams);
+		AbstractPolygonStream polygonStream = AbstractPolygonStream.build(state, streams);
 		
 		while (polygonStream.hasNextPolygon()) {
 			
@@ -37,7 +37,7 @@ public class StubProjectionRunner implements IProjectionRunner {
 	}
 
 	@Override
-	public InputStream getYieldTable() throws ProjectionExecutionException {
+	public InputStream getYieldTable() throws ProjectionInternalExecutionException {
 		// No projection was done; therefore, there's no yield table.
 		return new ByteArrayInputStream(new byte[0]);
 	}

@@ -52,5 +52,9 @@ public enum ProcessingMode {
 	/**
 	 * A specific processing mode for the VRISTART stand model.
 	 */
-	VRI_CrownClosure
+	VRI_CrownClosure;
+
+	public static ProcessingMode getDefault() {
+		return VRI_Default;
+	}
 }

@@ -8,11 +8,16 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionExecutionException;
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonExecutionException;
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionInternalExecutionException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestValidationException;
+import ca.bc.gov.nrs.vdyp.backend.api.v1.messaging.IMessageLog;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ProjectionRequestKind;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
 import ca.bc.gov.nrs.vdyp.backend.projection.input.AbstractPolygonStream;
+import ca.bc.gov.nrs.vdyp.backend.projection.model.Polygon;
 import ca.bc.gov.nrs.vdyp.backend.utils.FileHelper;
 
 public class ProjectionRunner implements IProjectionRunner {
@@ -34,9 +39,9 @@ public class ProjectionRunner implements IProjectionRunner {
 		logger.debug("{0}", state.getValidatedParams().toString());
 		logApplicationMetadata();
 		
-		AbstractPolygonStream polygonStream = AbstractPolygonStream.build(state.getRequestKind(), streams);
+		AbstractPolygonStream polygonStream = AbstractPolygonStream.build(state, streams);
 
-		project(polygonStream);
+		projectAll(polygonStream);
 	}
 
 	private void logApplicationMetadata() {
@@ -48,17 +53,39 @@ public class ProjectionRunner implements IProjectionRunner {
 		return state;
 	}
 
-	private void project(AbstractPolygonStream polygonStream) {
+	private void projectAll(AbstractPolygonStream polygonStream) {
+		
+		while (polygonStream.hasNextPolygon()) {
+			 
+			try {
+				project(polygonStream.getNextPolygon());
+			} catch (PolygonValidationException e) {
+				IMessageLog errorLog = state.getErrorLog();
+				for (ValidationMessage m: e.getValidationMessages()) {
+					errorLog.addMessage(m.getKind().template, m.getArgs());
+				}
+			} catch (PolygonExecutionException e) {
+				IMessageLog errorLog = state.getErrorLog();
+				for (ValidationMessage m: e.getValidationMessages()) {
+					errorLog.addMessage(m.getKind().template, m.getArgs());
+				}
+			}
+		}
+	}
+
+	private void project(Polygon nextPolygon) 
+			throws PolygonExecutionException {
+		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
-	public InputStream getYieldTable() throws ProjectionExecutionException {
+	public InputStream getYieldTable() throws ProjectionInternalExecutionException {
 		// TODO: For now...
 		try {
 			return FileHelper.getStubResourceFile("Output_YldTbl.csv");
 		} catch (IOException e) {
-			throw new ProjectionExecutionException(e);
+			throw new ProjectionInternalExecutionException(e);
 		}
 	}
 

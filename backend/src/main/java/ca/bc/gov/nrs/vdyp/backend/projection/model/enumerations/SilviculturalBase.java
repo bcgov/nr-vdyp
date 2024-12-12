@@ -20,5 +20,10 @@ public enum SilviculturalBase {
 	STAND_TENDING,
 
 	/** Some unknown disturbance occurred. */
-	UNKNOWN
+	UNKNOWN;
+
+	public static SilviculturalBase getDefault() {
+		
+		return UNKNOWN;
+	}
 }

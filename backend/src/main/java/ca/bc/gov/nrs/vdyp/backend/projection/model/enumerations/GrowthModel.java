@@ -7,5 +7,11 @@ public enum GrowthModel {
 	FIP,
 
 	/** Defines that the stand characteristics has VRISTART properties. */
-	VRI
+	VRI,
+	
+	UNKNOWN;
+
+	public static GrowthModel getDefault() {
+		return UNKNOWN;
+	}
 }

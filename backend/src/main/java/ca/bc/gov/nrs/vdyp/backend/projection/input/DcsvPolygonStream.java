@@ -2,16 +2,17 @@ package ca.bc.gov.nrs.vdyp.backend.projection.input;
 
 import java.io.InputStream;
 
+import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionState;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Polygon;
 
 public class DcsvPolygonStream extends AbstractPolygonStream {
 
-	DcsvPolygonStream(InputStream dcsvInputStream) {
-		
+	DcsvPolygonStream(ProjectionState state, InputStream dcsvInputStream) {
+		super(state);
 	}
 
 	@Override
-	Polygon getNextPolygon() {
+	public Polygon getNextPolygon() {
 		throw new UnsupportedOperationException("DCSV input files not (yet) supported.");
 	}
 

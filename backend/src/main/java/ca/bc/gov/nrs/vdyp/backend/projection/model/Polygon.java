@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.backend.projection.model;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -8,8 +9,8 @@ import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.CfsEcoZone;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.GrowthModel;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.InventoryStandard;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.LayerSummarizationMode;
-import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.NonVegetationTypes;
-import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.OtherVegetationTypes;
+import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.NonVegetationType;
+import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.OtherVegetationType;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.PolygonProcessingState;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProcessingMode;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionType;
@@ -69,16 +70,16 @@ public class Polygon {
 	private String nonProductiveDescriptor;
 
 	/** The percentage of the polygon that's actually stockable. */
-	private double percentStockable;
+	private Double percentStockable;
 
 	/** The amount of the polygon that has suffered significant kill. */
-	private double percentStockableDead;
+	private Double percentStockableDead;
 
 	/** The factor to multiply predicted yields by */
-	private double yieldFactor;
+	private Double yieldFactor;
 
-	private Map<OtherVegetationTypes, Double> otherVegetationTypes;
-	private Map<NonVegetationTypes, Double> nonVegetationTypes;
+	private Map<OtherVegetationType, Integer> otherVegetationTypes;
+	private Map<NonVegetationType, Double> nonVegetationTypes;
 
 	private GrowthModel growthModelToBeUsed;
 	private Map<ProjectionType, GrowthModel> growthModelUsedByProjectionType;
@@ -165,11 +166,743 @@ public class Polygon {
 	// Per-projection type information
 
 	private Map<ProjectionType, GrowthModel> initialModelReturnCode;
-	private Map<ProjectionType, GrowthModel> initialProcessingResults;
-	private Map<ProjectionType, GrowthModel> adjustmentProcessingResults;
-	private Map<ProjectionType, GrowthModel> projectionProcessingResults;
-	private Map<ProjectionType, GrowthModel> firstYearValidYields;
+	private Map<ProjectionType, Integer> initialProcessingResults;
+	private Map<ProjectionType, Integer> adjustmentProcessingResults;
+	private Map<ProjectionType, Integer> projectionProcessingResults;
+	private Map<ProjectionType, Integer> firstYearValidYields;
 
 	/** The messages generated during the projection of the polygon. */
 	private List<PolygonMessage> messages;
+
+	/** Initialize the Polygon, according to <code>V7Int_ResetPolyInfo</code>. */
+	private Polygon() {
+		polygonId = UUID.randomUUID();
+		
+		currentProcessingState = PolygonProcessingState.DEFINING_POLYGON;
+		
+		district = "UNK";
+		mapSheet = "TESTMAP";
+		mapQuad = "0";
+		mapSubQuad = "0";
+		polygonNumber = 0L;
+		inventoryStandard = InventoryStandard.getDefault();
+		layerSummarizationMode = LayerSummarizationMode.getDefault();
+		referenceYear = 0;
+		yearOfDeath = null;
+		isCoastal = false;
+		forestInventoryZone = "";
+		becZone = "";
+		cfsEcoZone = CfsEcoZone.getDefault();
+		nonProductiveDescriptor = "";
+		percentStockable = null;
+		percentStockableDead = null;
+		yieldFactor = 1.0;
+		otherVegetationTypes = Map.of(
+				OtherVegetationType.Bryoid, 0, //
+				OtherVegetationType.Herb, 0, //
+				OtherVegetationType.Shrub, 0);
+		nonVegetationTypes = Map.of(
+				NonVegetationType.BurnedArea, Double.valueOf(0.0), //
+				NonVegetationType.ExposedSoil, Double.valueOf(0.0), //
+				NonVegetationType.Other, Double.valueOf(0.0), //
+				NonVegetationType.Rock, Double.valueOf(0.0), //
+				NonVegetationType.Snow, Double.valueOf(0.0), //
+				NonVegetationType.Water, Double.valueOf(0.0)); //
+		
+		doAllowProjection = true;
+		wereLayerAdjustmentsSupplied = false;
+
+		growthModelToBeUsed = GrowthModel.getDefault();
+		
+		growthModelUsedByProjectionType = new HashMap<>();
+		processingModeUsedByProjectionType = new HashMap<>();
+		percentForestedLandUsed = new HashMap<>();
+		yieldFactorUsed = new HashMap<>();
+		doAllowProjectionOfType = new HashMap<>();
+		initialModelReturnCode = new HashMap<>();
+		initialProcessingResults = new HashMap<>();
+		adjustmentProcessingResults = new HashMap<>();
+		projectionProcessingResults = new HashMap<>();
+		
+		for (ProjectionType t: ProjectionType.values()) {
+			growthModelUsedByProjectionType.put(t, GrowthModel.UNKNOWN);
+			processingModeUsedByProjectionType.put(t, ProcessingMode.getDefault());
+			percentForestedLandUsed.put(t, null);
+			yieldFactorUsed.put(t, null);
+			doAllowProjectionOfType.put(t, true);
+			initialModelReturnCode.put(t, GrowthModel.UNKNOWN);
+			initialProcessingResults.put(t, -9999);
+			adjustmentProcessingResults.put(t, -9999);
+			projectionProcessingResults.put(t, -9999);
+			firstYearValidYields.put(t, -9999);
+		}
+		
+		layers = new HashMap<>();
+		layerByProjectionType = new HashMap<>();
+		
+		lastReferencedLayer = null;
+		targetedPrimaryLayer = null;
+		targetedVeteranLayer = null;
+		primaryLayer = null;
+		veteranLayer = null;
+		residualLayer = null;
+		regenerationLayer = null;
+		deadLayer = null;
+		rank1Layer = null;
+		
+		history = null;
+		reportingLevelBySp0 = null;
+		
+		projectionParameters = new ProjectionParameters.Builder().build();
+	}
+
+	public UUID getPolygonId() {
+		return polygonId;
+	}
+
+	public PolygonProcessingState getCurrentProcessingState() {
+		return currentProcessingState;
+	}
+
+	public Map<String, UtilizationClass> getReportingLevelBySp0() {
+		return reportingLevelBySp0;
+	}
+
+	public String getDistrict() {
+		return district;
+	}
+
+	public String getMapSheet() {
+		return mapSheet;
+	}
+
+	public String getMapQuad() {
+		return mapQuad;
+	}
+
+	public String getMapSubQuad() {
+		return mapSubQuad;
+	}
+
+	public Long getPolygonNumber() {
+		return polygonNumber;
+	}
+
+	public InventoryStandard getInventoryStandard() {
+		return inventoryStandard;
+	}
+
+	public LayerSummarizationMode getLayerSummarizationMode() {
+		return layerSummarizationMode;
+	}
+
+	public Integer getReferenceYear() {
+		return referenceYear;
+	}
+
+	public Integer getYearOfDeath() {
+		return yearOfDeath;
+	}
+
+	public boolean isCoastal() {
+		return isCoastal;
+	}
+
+	public String getForestInventoryZone() {
+		return forestInventoryZone;
+	}
+
+	public String getBecZone() {
+		return becZone;
+	}
+
+	public CfsEcoZone getCfsEcoZone() {
+		return cfsEcoZone;
+	}
+
+	public String getNonProductiveDescriptor() {
+		return nonProductiveDescriptor;
+	}
+
+	public Double getPercentStockable() {
+		return percentStockable;
+	}
+
+	public Double getPercentStockableDead() {
+		return percentStockableDead;
+	}
+
+	public Double getYieldFactor() {
+		return yieldFactor;
+	}
+
+	public Map<OtherVegetationType, Integer> getOtherVegetationTypes() {
+		return otherVegetationTypes;
+	}
+
+	public Map<NonVegetationType, Double> getNonVegetationTypes() {
+		return nonVegetationTypes;
+	}
+
+	public GrowthModel getGrowthModelToBeUsed() {
+		return growthModelToBeUsed;
+	}
+
+	public Map<ProjectionType, GrowthModel> getGrowthModelUsedByProjectionType() {
+		return growthModelUsedByProjectionType;
+	}
+
+	public Map<ProjectionType, ProcessingMode> getProcessingModeUsedByProjectionType() {
+		return processingModeUsedByProjectionType;
+	}
+
+	public Map<ProjectionType, Double> getPercentForestedLandUsed() {
+		return percentForestedLandUsed;
+	}
+
+	public Map<ProjectionType, Double> getYieldFactorUsed() {
+		return yieldFactorUsed;
+	}
+
+	public boolean isDoAllowProjection() {
+		return doAllowProjection;
+	}
+
+	public Map<ProjectionType, Boolean> getDoAllowProjectionOfType() {
+		return doAllowProjectionOfType;
+	}
+
+	public boolean isWereLayerAdjustmentsSupplied() {
+		return wereLayerAdjustmentsSupplied;
+	}
+
+	public Map<UUID, Layer> getLayers() {
+		return layers;
+	}
+
+	public Map<ProjectionType, Layer> getLayerByProjectionType() {
+		return layerByProjectionType;
+	}
+
+	public Layer getLastReferencedLayer() {
+		return lastReferencedLayer;
+	}
+
+	public Layer getTargetedPrimaryLayer() {
+		return targetedPrimaryLayer;
+	}
+
+	public Layer getTargetedVeteranLayer() {
+		return targetedVeteranLayer;
+	}
+
+	public Layer getPrimaryLayer() {
+		return primaryLayer;
+	}
+
+	public Layer getVeteranLayer() {
+		return veteranLayer;
+	}
+
+	public Layer getResidualLayer() {
+		return residualLayer;
+	}
+
+	public Layer getRegenerationLayer() {
+		return regenerationLayer;
+	}
+
+	public Layer getDeadLayer() {
+		return deadLayer;
+	}
+
+	public Layer getRank1Layer() {
+		return rank1Layer;
+	}
+
+	public History getHistory() {
+		return history;
+	}
+
+	public ProjectionParameters getProjectionParameters() {
+		return projectionParameters;
+	}
+
+	public Map<ProjectionType, GrowthModel> getInitialModelReturnCode() {
+		return initialModelReturnCode;
+	}
+
+	public Map<ProjectionType, Integer> getInitialProcessingResults() {
+		return initialProcessingResults;
+	}
+
+	public Map<ProjectionType, Integer> getAdjustmentProcessingResults() {
+		return adjustmentProcessingResults;
+	}
+
+	public Map<ProjectionType, Integer> getProjectionProcessingResults() {
+		return projectionProcessingResults;
+	}
+
+	public Map<ProjectionType, Integer> getFirstYearValidYields() {
+		return firstYearValidYields;
+	}
+
+	public List<PolygonMessage> getMessages() {
+		return messages;
+	}
+
+	void setPolygonId(UUID polygonId) {
+		this.polygonId = polygonId;
+	}
+
+	void setCurrentProcessingState(PolygonProcessingState currentProcessingState) {
+		this.currentProcessingState = currentProcessingState;
+	}
+
+	void setReportingLevelBySp0(Map<String, UtilizationClass> reportingLevelBySp0) {
+		this.reportingLevelBySp0 = reportingLevelBySp0;
+	}
+
+	void setDistrict(String district) {
+		this.district = district;
+	}
+
+	void setMapSheet(String mapSheet) {
+		this.mapSheet = mapSheet;
+	}
+
+	void setMapQuad(String mapQuad) {
+		this.mapQuad = mapQuad;
+	}
+
+	void setMapSubQuad(String mapSubQuad) {
+		this.mapSubQuad = mapSubQuad;
+	}
+
+	void setPolygonNumber(Long polygonNumber) {
+		this.polygonNumber = polygonNumber;
+	}
+
+	void setInventoryStandard(InventoryStandard inventoryStandard) {
+		this.inventoryStandard = inventoryStandard;
+	}
+
+	void setLayerSummarizationMode(LayerSummarizationMode layerSummarizationMode) {
+		this.layerSummarizationMode = layerSummarizationMode;
+	}
+
+	void setReferenceYear(Integer referenceYear) {
+		this.referenceYear = referenceYear;
+	}
+
+	void setYearOfDeath(Integer yearOfDeath) {
+		this.yearOfDeath = yearOfDeath;
+	}
+
+	void setIsCoastal(boolean isCoastal) {
+		this.isCoastal = isCoastal;
+	}
+
+	void setForestInventoryZone(String forestInventoryZone) {
+		this.forestInventoryZone = forestInventoryZone;
+	}
+
+	void setBecZone(String becZone) {
+		this.becZone = becZone;
+	}
+
+	void setCfsEcoZone(CfsEcoZone cfsEcoZone) {
+		this.cfsEcoZone = cfsEcoZone;
+	}
+
+	void setNonProductiveDescriptor(String nonProductiveDescriptor) {
+		this.nonProductiveDescriptor = nonProductiveDescriptor;
+	}
+
+	void setPercentStockable(Double percentStockable) {
+		this.percentStockable = percentStockable;
+	}
+
+	void setPercentStockableDead(Double percentStockableDead) {
+		this.percentStockableDead = percentStockableDead;
+	}
+
+	void setYieldFactor(Double yieldFactor) {
+		this.yieldFactor = yieldFactor;
+	}
+
+	void setOtherVegetationTypes(Map<OtherVegetationType, Integer> otherVegetationTypes) {
+		this.otherVegetationTypes = otherVegetationTypes;
+	}
+
+	void setNonVegetationTypes(Map<NonVegetationType, Double> nonVegetationTypes) {
+		this.nonVegetationTypes = nonVegetationTypes;
+	}
+
+	void setGrowthModelToBeUsed(GrowthModel growthModelToBeUsed) {
+		this.growthModelToBeUsed = growthModelToBeUsed;
+	}
+
+	void setGrowthModelUsedByProjectionType(Map<ProjectionType, GrowthModel> growthModelUsedByProjectionType) {
+		this.growthModelUsedByProjectionType = growthModelUsedByProjectionType;
+	}
+
+	void setProcessingModeUsedByProjectionType(Map<ProjectionType, ProcessingMode> processingModeUsedByProjectionType) {
+		this.processingModeUsedByProjectionType = processingModeUsedByProjectionType;
+	}
+
+	void setPercentForestedLandUsed(Map<ProjectionType, Double> percentForestedLandUsed) {
+		this.percentForestedLandUsed = percentForestedLandUsed;
+	}
+
+	void setYieldFactorUsed(Map<ProjectionType, Double> yieldFactorUsed) {
+		this.yieldFactorUsed = yieldFactorUsed;
+	}
+
+	void setDoAllowProjection(boolean doAllowProjection) {
+		this.doAllowProjection = doAllowProjection;
+	}
+
+	void setDoAllowProjectionOfType(Map<ProjectionType, Boolean> doAllowProjectionOfType) {
+		this.doAllowProjectionOfType = doAllowProjectionOfType;
+	}
+
+	void setWereLayerAdjustmentsSupplied(boolean wereLayerAdjustmentsSupplied) {
+		this.wereLayerAdjustmentsSupplied = wereLayerAdjustmentsSupplied;
+	}
+
+	void setLayers(Map<UUID, Layer> layers) {
+		this.layers = layers;
+	}
+
+	void setLayerByProjectionType(Map<ProjectionType, Layer> layerByProjectionType) {
+		this.layerByProjectionType = layerByProjectionType;
+	}
+
+	void setLastReferencedLayer(Layer lastReferencedLayer) {
+		this.lastReferencedLayer = lastReferencedLayer;
+	}
+
+	void setTargetedPrimaryLayer(Layer targetedPrimaryLayer) {
+		this.targetedPrimaryLayer = targetedPrimaryLayer;
+	}
+
+	void setTargetedVeteranLayer(Layer targetedVeteranLayer) {
+		this.targetedVeteranLayer = targetedVeteranLayer;
+	}
+
+	void setPrimaryLayer(Layer primaryLayer) {
+		this.primaryLayer = primaryLayer;
+	}
+
+	void setVeteranLayer(Layer veteranLayer) {
+		this.veteranLayer = veteranLayer;
+	}
+
+	void setResidualLayer(Layer residualLayer) {
+		this.residualLayer = residualLayer;
+	}
+
+	void setRegenerationLayer(Layer regenerationLayer) {
+		this.regenerationLayer = regenerationLayer;
+	}
+
+	void setDeadLayer(Layer deadLayer) {
+		this.deadLayer = deadLayer;
+	}
+
+	void setRank1Layer(Layer rank1Layer) {
+		this.rank1Layer = rank1Layer;
+	}
+
+	void setHistory(History history) {
+		this.history = history;
+	}
+
+	void setProjectionParameters(ProjectionParameters projectionParameters) {
+		this.projectionParameters = projectionParameters;
+	}
+
+	void setInitialModelReturnCode(Map<ProjectionType, GrowthModel> initialModelReturnCode) {
+		this.initialModelReturnCode = initialModelReturnCode;
+	}
+
+	void setInitialProcessingResults(Map<ProjectionType, Integer> initialProcessingResults) {
+		this.initialProcessingResults = initialProcessingResults;
+	}
+
+	void setAdjustmentProcessingResults(Map<ProjectionType, Integer> adjustmentProcessingResults) {
+		this.adjustmentProcessingResults = adjustmentProcessingResults;
+	}
+
+	void setProjectionProcessingResults(Map<ProjectionType, Integer> projectionProcessingResults) {
+		this.projectionProcessingResults = projectionProcessingResults;
+	}
+
+	void setFirstYearValidYields(Map<ProjectionType, Integer> firstYearValidYields) {
+		this.firstYearValidYields = firstYearValidYields;
+	}
+
+	void setMessages(List<PolygonMessage> messages) {
+		this.messages = messages;
+	}
+
+	public static class Builder {
+		private Polygon polygon = new Polygon();
+
+		public Polygon.Builder polygonId(UUID polygonId) {
+			polygon.setPolygonId(polygonId);
+			return this;
+		}
+
+		public Polygon.Builder currentProcessingState(PolygonProcessingState currentProcessingState) {
+			polygon.setCurrentProcessingState(currentProcessingState);
+			return this;
+		}
+
+		public Polygon.Builder reportingLevelBySp0(Map<String, UtilizationClass> reportingLevelBySp0) {
+			polygon.setReportingLevelBySp0(reportingLevelBySp0);
+			return this;
+		}
+
+		public Polygon.Builder district(String district) {
+			polygon.setDistrict(district);
+			return this;
+		}
+
+		public Polygon.Builder mapSheet(String mapSheet) {
+			polygon.setMapSheet(mapSheet);
+			return this;
+		}
+
+		public Polygon.Builder mapQuad(String mapQuad) {
+			polygon.setMapQuad(mapQuad);
+			return this;
+		}
+
+		public Polygon.Builder mapSubQuad(String mapSubQuad) {
+			polygon.setMapSubQuad(mapSubQuad);
+			return this;
+		}
+
+		public Polygon.Builder polygonNumber(Long polygonNumber) {
+			polygon.setPolygonNumber(polygonNumber);
+			return this;
+		}
+
+		public Polygon.Builder inventoryStandard(InventoryStandard inventoryStandard) {
+			polygon.setInventoryStandard(inventoryStandard);
+			return this;
+		}
+
+		public Polygon.Builder layerSummarizationMode(LayerSummarizationMode layerSummarizationMode) {
+			polygon.setLayerSummarizationMode(layerSummarizationMode);
+			return this;
+		}
+
+		public Polygon.Builder referenceYear(Integer referenceYear) {
+			polygon.setReferenceYear(referenceYear);
+			return this;
+		}
+
+		public Polygon.Builder yearOfDeath(Integer yearOfDeath) {
+			polygon.setYearOfDeath(yearOfDeath);
+			return this;
+		}
+
+		public Polygon.Builder coastal(boolean isCoastal) {
+			polygon.setIsCoastal(isCoastal);
+			return this;
+		}
+
+		public Polygon.Builder forestInventoryZone(String forestInventoryZone) {
+			polygon.setForestInventoryZone(forestInventoryZone);
+			return this;
+		}
+
+		public Polygon.Builder becZone(String becZone) {
+			polygon.setBecZone(becZone);
+			return this;
+		}
+
+		public Polygon.Builder cfsEcoZone(CfsEcoZone cfsEcoZone) {
+			polygon.setCfsEcoZone(cfsEcoZone);
+			return this;
+		}
+
+		public Polygon.Builder nonProductiveDescriptor(String nonProductiveDescriptor) {
+			polygon.setNonProductiveDescriptor(nonProductiveDescriptor);
+			return this;
+		}
+
+		public Polygon.Builder percentStockable(Double percentStockable) {
+			polygon.setPercentStockable(percentStockable);
+			return this;
+		}
+
+		public Polygon.Builder percentStockableDead(Double percentStockableDead) {
+			polygon.setPercentStockableDead(percentStockableDead);
+			return this;
+		}
+
+		public Polygon.Builder yieldFactor(Double yieldFactor) {
+			polygon.setYieldFactor(yieldFactor);
+			return this;
+		}
+
+		public Polygon.Builder otherVegetationTypes(Map<OtherVegetationType, Integer> otherVegetationTypes) {
+			polygon.setOtherVegetationTypes(otherVegetationTypes);
+			return this;
+		}
+
+		public Polygon.Builder nonVegetationTypes(Map<NonVegetationType, Double> nonVegetationTypes) {
+			polygon.setNonVegetationTypes(nonVegetationTypes);
+			return this;
+		}
+
+		public Polygon.Builder growthModelToBeUsed(GrowthModel growthModelToBeUsed) {
+			polygon.setGrowthModelToBeUsed(growthModelToBeUsed);
+			return this;
+		}
+
+		public Polygon.Builder
+				growthModelUsedByProjectionType(Map<ProjectionType, GrowthModel> growthModelUsedByProjectionType) {
+			polygon.setGrowthModelUsedByProjectionType(growthModelUsedByProjectionType);
+			return this;
+		}
+
+		public Polygon.Builder processingModeUsedByProjectionType(
+				Map<ProjectionType, ProcessingMode> processingModeUsedByProjectionType
+		) {
+			polygon.setProcessingModeUsedByProjectionType(processingModeUsedByProjectionType);
+			return this;
+		}
+
+		public Polygon.Builder percentForestedLandUsed(Map<ProjectionType, Double> percentForestedLandUsed) {
+			polygon.setPercentForestedLandUsed(percentForestedLandUsed);
+			return this;
+		}
+
+		public Polygon.Builder yieldFactorUsed(Map<ProjectionType, Double> yieldFactorUsed) {
+			polygon.setYieldFactorUsed(yieldFactorUsed);
+			return this;
+		}
+
+		public Polygon.Builder doAllowProjection(boolean doAllowProjection) {
+			polygon.setDoAllowProjection(doAllowProjection);
+			return this;
+		}
+
+		public Polygon.Builder doAllowProjectionOfType(Map<ProjectionType, Boolean> doAllowProjectionOfType) {
+			polygon.setDoAllowProjectionOfType(doAllowProjectionOfType);
+			return this;
+		}
+
+		public Polygon.Builder wereLayerAdjustmentsSupplied(boolean wereLayerAdjustmentsSupplied) {
+			polygon.setWereLayerAdjustmentsSupplied(wereLayerAdjustmentsSupplied);
+			return this;
+		}
+
+		public Polygon.Builder layers(Map<UUID, Layer> layers) {
+			polygon.setLayers(layers);
+			return this;
+		}
+
+		public Polygon.Builder layerByProjectionType(Map<ProjectionType, Layer> layerByProjectionType) {
+			polygon.setLayerByProjectionType(layerByProjectionType);
+			return this;
+		}
+
+		public Polygon.Builder lastReferencedLayer(Layer lastReferencedLayer) {
+			polygon.setLastReferencedLayer(lastReferencedLayer);
+			return this;
+		}
+
+		public Polygon.Builder targetedPrimaryLayer(Layer targetedPrimaryLayer) {
+			polygon.setTargetedPrimaryLayer(targetedPrimaryLayer);
+			return this;
+		}
+
+		public Polygon.Builder targetedVeteranLayer(Layer targetedVeteranLayer) {
+			polygon.setTargetedVeteranLayer(targetedVeteranLayer);
+			return this;
+		}
+
+		public Polygon.Builder primaryLayer(Layer primaryLayer) {
+			polygon.setPrimaryLayer(primaryLayer);
+			return this;
+		}
+
+		public Polygon.Builder veteranLayer(Layer veteranLayer) {
+			polygon.setVeteranLayer(veteranLayer);
+			return this;
+		}
+
+		public Polygon.Builder residualLayer(Layer residualLayer) {
+			polygon.setResidualLayer(residualLayer);
+			return this;
+		}
+
+		public Polygon.Builder regenerationLayer(Layer regenerationLayer) {
+			polygon.setRegenerationLayer(regenerationLayer);
+			return this;
+		}
+
+		public Polygon.Builder deadLayer(Layer deadLayer) {
+			polygon.setDeadLayer(deadLayer);
+			return this;
+		}
+
+		public Polygon.Builder rank1Layer(Layer rank1Layer) {
+			polygon.setRank1Layer(rank1Layer);
+			return this;
+		}
+
+		public Polygon.Builder history(History history) {
+			polygon.setHistory(history);
+			return this;
+		}
+
+		public Polygon.Builder projectionParameters(ProjectionParameters projectionParameters) {
+			polygon.setProjectionParameters(projectionParameters);
+			return this;
+		}
+
+		public Polygon.Builder initialModelReturnCode(Map<ProjectionType, GrowthModel> initialModelReturnCode) {
+			polygon.setInitialModelReturnCode(initialModelReturnCode);
+			return this;
+		}
+
+		public Polygon.Builder initialProcessingResults(Map<ProjectionType, Integer> initialProcessingResults) {
+			polygon.setInitialProcessingResults(initialProcessingResults);
+			return this;
+		}
+
+		public Polygon.Builder
+				adjustmentProcessingResults(Map<ProjectionType, Integer> adjustmentProcessingResults) {
+			polygon.setAdjustmentProcessingResults(adjustmentProcessingResults);
+			return this;
+		}
+
+		public Polygon.Builder
+				projectionProcessingResults(Map<ProjectionType, Integer> projectionProcessingResults) {
+			polygon.setProjectionProcessingResults(projectionProcessingResults);
+			return this;
+		}
+
+		public Polygon.Builder firstYearValidYields(Map<ProjectionType, Integer> firstYearValidYields) {
+			polygon.setFirstYearValidYields(firstYearValidYields);
+			return this;
+		}
+
+		public Polygon.Builder messages(List<PolygonMessage> messages) {
+			polygon.setMessages(messages);
+			return this;
+		}
+
+		public Polygon build() {
+			return polygon;
+		}
+	}
 }
