@@ -4,17 +4,11 @@ import java.util.List;
 
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
 
-public class ProjectionRequestValidationException extends Exception {
+public class ProjectionRequestValidationException extends AbstractProjectionRequestException {
 
-	private static final long serialVersionUID = 5172661648677695483L;
-
-	private final List<ValidationMessage> validationMessages;
+	private static final long serialVersionUID = -5559129890898878919L;
 
 	public ProjectionRequestValidationException(List<ValidationMessage> validationMessages) {
-		this.validationMessages = validationMessages;
-	}
-
-	public List<ValidationMessage> getValidationMessages() {
-		return validationMessages;
+		super(validationMessages);
 	}
 }
