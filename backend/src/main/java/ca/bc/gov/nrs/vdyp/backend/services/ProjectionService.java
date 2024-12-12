@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.Exceptions;
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionExecutionException;
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionInternalExecutionException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestValidationException;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.ParameterNames;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
@@ -51,7 +51,7 @@ public class ProjectionService {
 			FileUpload polygonFileStream, //
 			FileUpload layersFileStream, //
 			SecurityContext securityContext
-	) throws ProjectionRequestValidationException, ProjectionExecutionException {
+	) throws ProjectionRequestValidationException, ProjectionInternalExecutionException {
 		Response response;
 
 		Map<String, InputStream> inputStreams = new HashMap<>();
@@ -97,7 +97,7 @@ public class ProjectionService {
 
 	public Response projectionDcsvPost(
 			Parameters parameters, FileUpload dcsvDataStream, Boolean trialRun, SecurityContext securityContext
-	) throws ProjectionRequestValidationException, ProjectionExecutionException {
+	) throws ProjectionRequestValidationException, ProjectionInternalExecutionException {
 		return Response.serverError().status(501).build();
 	}
 
@@ -105,14 +105,14 @@ public class ProjectionService {
 			Boolean trialRun, Parameters parameters, FileUpload polygonDataStream, FileUpload layersDataStream,
 			FileUpload historyDataStream, FileUpload nonVegetationDataStream, FileUpload otherVegetationDataStream,
 			FileUpload polygonIdDataStream, FileUpload speciesDataStream, FileUpload vriAdjustDataStream, Object object
-	) throws ProjectionRequestValidationException, ProjectionExecutionException {
+	) throws ProjectionRequestValidationException, ProjectionInternalExecutionException {
 		return Response.serverError().status(501).build();
 	}
 
 	private Response runProjection(
 			ProjectionRequestKind kind, Map<String, InputStream> inputStreams, Boolean trialRun, Parameters params,
 			SecurityContext securityContext
-	) throws ProjectionRequestValidationException, ProjectionExecutionException {
+	) throws ProjectionRequestValidationException, ProjectionInternalExecutionException {
 		String projectionId = ProjectionService.buildId(kind);
 
 		logger.info("<runProjection {} {}", kind, projectionId);
@@ -217,7 +217,7 @@ public class ProjectionService {
 			return Response.ok(resultingByteArray).status(Status.CREATED)
 					.header("content-disposition", "attachment;filename=\"" + outputFileName + "\"").build();
 
-		} catch (ProjectionExecutionException | IOException e) {
+		} catch (ProjectionInternalExecutionException | IOException e) {
 			String message = Exceptions.getMessage(e, "Projection, when creating output zip,");
 			logger.error(message);
 
