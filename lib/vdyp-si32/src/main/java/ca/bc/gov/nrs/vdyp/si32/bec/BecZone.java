@@ -6,6 +6,7 @@ import java.util.Map;
 
 import ca.bc.gov.nrs.vdyp.model.EnumIterator;
 import ca.bc.gov.nrs.vdyp.si32.enumerations.SI32Enum;
+import ca.bc.gov.nrs.vdyp.si32.enumerations.SpeciesRegion;
 
 /**
  * Identifies each of the BEC Zones known to the system.
@@ -14,22 +15,22 @@ import ca.bc.gov.nrs.vdyp.si32.enumerations.SI32Enum;
  * <li>others: Individual BEC Zones recognized.
  */
 public enum BecZone implements SI32Enum<BecZone> {
-	UNKNOWN(-1),
+	UNKNOWN(-1, SpeciesRegion.INTERIOR),
 
-	AT(0), //
-	BG(1), //
-	BWBS(2), //
-	CDF(3), //
-	CWH(4), //
-	ESSF(5), //
-	ICH(6), //
-	IDF(7), //
-	MH(8), //
-	MS(9), //
-	PP(10), //
-	SBPS(11), //
-	SBS(12), //
-	SWB(13); //
+	AT(0, SpeciesRegion.INTERIOR), //
+	BG(1, SpeciesRegion.INTERIOR), //
+	BWBS(2, SpeciesRegion.INTERIOR), //
+	CDF(3, SpeciesRegion.COAST), //
+	CWH(4, SpeciesRegion.COAST), //
+	ESSF(5, SpeciesRegion.INTERIOR), //
+	ICH(6, SpeciesRegion.INTERIOR), //
+	IDF(7, SpeciesRegion.INTERIOR), //
+	MH(8, SpeciesRegion.COAST), //
+	MS(9, SpeciesRegion.INTERIOR), //
+	PP(10, SpeciesRegion.INTERIOR), //
+	SBPS(11, SpeciesRegion.INTERIOR), //
+	SBS(12, SpeciesRegion.INTERIOR), //
+	SWB(13, SpeciesRegion.INTERIOR); //
 
 	private static Map<Integer, BecZone> index2EnumMap = null;
 
@@ -41,15 +42,21 @@ public enum BecZone implements SI32Enum<BecZone> {
 	}
 
 	private final int index;
+	private final SpeciesRegion speciesRegion;
 
-	private BecZone(int index) {
+	private BecZone(int index, SpeciesRegion speciesRegion) {
 		this.index = index;
+		this.speciesRegion = speciesRegion;
 		getIndex2EnumMap().put(index, this);
 	}
 
 	@Override
 	public int getIndex() {
 		return index;
+	}
+	
+	public SpeciesRegion getSpeciesRegion() { 
+		return speciesRegion;
 	}
 
 	@Override
