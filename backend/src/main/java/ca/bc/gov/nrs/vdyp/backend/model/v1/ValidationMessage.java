@@ -35,6 +35,11 @@ public class ValidationMessage implements Comparable<ValidationMessage> {
 	}
 
 	@Override
+	public String toString() {
+		return MessageFormat.format(message, args);
+	}
+	
+	@Override
 	public int compareTo(ValidationMessage that) {
 		if (that == null) {
 			return -1;

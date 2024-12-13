@@ -36,13 +36,10 @@ public enum ValidationMessageKind {
 	UNEXPECTED_STREAMS_SUPPLIED("The following input file types were supplied, but not expected: {0}", Category.ERROR),
 	
 	MISSING_INVENTORY_STANDARD_CODE("Polygon {0}: missing inventory standard code", Category.ERROR),
-	INVALID_PERCENT_STOCKABLE("Polygon {0}: percent stockable value {1} is not a percentage", Category.ERROR),
-	INVALID_PERCENT_STOCKABLE_DEAD("Polygon {0}: percent stockable dead value {1} is not a percentage", Category.ERROR),
 	MISSING_BEC_ZONE("Polygon {0}: bec zone missing", Category.ERROR), 
-	YIELD_FACTOR_OUT_OF_RANGE("Polygon {0}: yield factor {} is out of range. Must be between 0.0 and 10.0, inclusive", Category.ERROR),
-	INVALID_REFERENCE_YEAR("Polygon {0}: reference year must be between {1} and {2}, inclusive. The value {3} is out of range", Category.ERROR),
-	INVALID_YEAR_OF_DEATH("Polygon {0}: year of death must be between {1} and {2}, inclusive. The value {3} is out of range", Category.ERROR), 
-	INVALID_CFS_ECO_ZONE("Polygon {0}: CFS Eco Zone code {1} does not identify a Cfs Eco Zone", Category.ERROR),
+	NUMBER_OUT_OF_RANGE("Polygon {0}: field {1} value \"{2}\" is either not a number or out of range. Must be between {3} and {4}, inclusive", Category.ERROR),
+	INVALID_CODE("Polygon {0}: field {1} value \"{2}\" is not a recognized value for this code", Category.ERROR), 
+	NOT_A_NUMBER("Polygon {0}: field {1} value \"{2}\" is not a number", Category.ERROR), 
 	;
 
 	public enum Category {

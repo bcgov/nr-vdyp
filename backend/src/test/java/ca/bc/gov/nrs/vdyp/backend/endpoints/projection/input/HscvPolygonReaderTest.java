@@ -14,9 +14,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.opencsv.bean.CsvToBeanBuilder;
+import com.opencsv.exceptions.CsvConstraintViolationException;
 
 import ca.bc.gov.nrs.api.helpers.TestHelper;
 import ca.bc.gov.nrs.api.helpers.TestHelper.ValueOverride;
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
 import ca.bc.gov.nrs.vdyp.backend.projection.input.HcsvLineFilter;
 import ca.bc.gov.nrs.vdyp.backend.projection.input.HcsvPolygonRecordBean;
 import ca.bc.gov.nrs.vdyp.backend.projection.input.InventoryStandardCode;
@@ -60,7 +62,7 @@ public class HscvPolygonReaderTest {
 		Assert.assertEquals("8", polygon.getHerbCoverPatternCode());
 		Assert.assertEquals(null, polygon.getBryoidCoverPercent());
 		Assert.assertEquals("MS", polygon.getBecZoneCode());
-		Assert.assertEquals(Short.valueOf((short)14), polygon.getCfsEcoZoneCode());
+		Assert.assertEquals(Short.valueOf((short) 14), polygon.getCfsEcoZoneCode());
 		Assert.assertEquals(Double.valueOf(50.0), polygon.getPercentStockable());
 		Assert.assertEquals(Double.valueOf(1.0), polygon.getYieldFactor());
 		Assert.assertEquals(null, polygon.getNonProductiveDescriptorCode());
@@ -138,8 +140,7 @@ public class HscvPolygonReaderTest {
 
 	@Test
 	void testNumberFormatting() {
-		var csvText = testHelper
-				.buildPolygonCsvStream(new ValueOverride("percentStockable", Double.valueOf(20.32)));
+		var csvText = testHelper.buildPolygonCsvStream(new ValueOverride("percentStockable", Double.valueOf(20.32)));
 
 		var polygonCsvStream = new CsvToBeanBuilder<HcsvPolygonRecordBean>(
 				new BufferedReader(new InputStreamReader(new ByteArrayInputStream(csvText.getBytes())))
@@ -155,8 +156,7 @@ public class HscvPolygonReaderTest {
 
 	@Test
 	void testEnumerations() {
-		var csvText = testHelper
-				.buildPolygonCsvStream(new ValueOverride("inventoryStandardCode", ""));
+		var csvText = testHelper.buildPolygonCsvStream(new ValueOverride("inventoryStandardCode", ""));
 
 		var polygonCsvStream = new CsvToBeanBuilder<HcsvPolygonRecordBean>(
 				new BufferedReader(new InputStreamReader(new ByteArrayInputStream(csvText.getBytes())))
@@ -168,5 +168,83 @@ public class HscvPolygonReaderTest {
 
 		HcsvPolygonRecordBean p = polygonCsvStream.iterator().next();
 		Assert.assertTrue(p.getInventoryStandardCode() == null);
+	}
+
+	@Test
+	void testEnumerationOutOfRange() {
+		var csvText = testHelper.buildPolygonCsvStream(new ValueOverride("inventoryStandardCode", "Z"));
+
+		var polygonCsvStream = HcsvPolygonRecordBean
+				.createHcsvPolygonStream(new ByteArrayInputStream(csvText.getBytes()));
+
+		try {
+			polygonCsvStream.iterator().next();
+			Assert.fail();
+		} catch (RuntimeException e) {
+			if (e.getCause() instanceof CsvConstraintViolationException cve) {
+				if (cve.getSourceObject() instanceof PolygonValidationException pve) {
+					var messages = pve.getValidationMessages();
+					Assert.assertEquals(1, messages.size());
+					var message = messages.get(0);
+					Assert.assertEquals("Polygon 13919428: field Inventory Standard Code value \"Z\" is not a recognized value for this code", message.toString());
+				} else {
+					Assert.fail();
+				}
+			} else {
+				Assert.fail();
+			}
+		}
+	}
+
+	@Test
+	void testNotANumber() {
+		var csvText = testHelper.buildPolygonCsvStream(new ValueOverride("shrubHeight", "not a number"));
+
+		var polygonCsvStream = HcsvPolygonRecordBean
+				.createHcsvPolygonStream(new ByteArrayInputStream(csvText.getBytes()));
+
+		try {
+			polygonCsvStream.iterator().next();
+			Assert.fail();
+		} catch (RuntimeException e) {
+			if (e.getCause() instanceof CsvConstraintViolationException cve) {
+				if (cve.getSourceObject() instanceof PolygonValidationException pve) {
+					var messages = pve.getValidationMessages();
+					Assert.assertEquals(1, messages.size());
+					var message = messages.get(0);
+					Assert.assertEquals("Polygon 13919428: field Shrub Height value \"not a number\" is not a number", message.toString());
+				} else {
+					Assert.fail();
+				}
+			} else {
+				Assert.fail();
+			}
+		}
+	}
+
+	@Test
+	void testNumberOutOfRange() {
+		var csvText = testHelper.buildPolygonCsvStream(new ValueOverride("yieldFactor", "11.0"));
+
+		var polygonCsvStream = HcsvPolygonRecordBean
+				.createHcsvPolygonStream(new ByteArrayInputStream(csvText.getBytes()));
+
+		try {
+			polygonCsvStream.iterator().next();
+			Assert.fail();
+		} catch (RuntimeException e) {
+			if (e.getCause() instanceof CsvConstraintViolationException cve) {
+				if (cve.getSourceObject() instanceof PolygonValidationException pve) {
+					var messages = pve.getValidationMessages();
+					Assert.assertEquals(1, messages.size());
+					var message = messages.get(0);
+					Assert.assertEquals("Polygon 13919428: field Yield Factor value \"11.0\" is either not a number or out of range. Must be between 0 and 10, inclusive", message.toString());
+				} else {
+					Assert.fail();
+				}
+			} else {
+				Assert.fail();
+			}
+		}
 	}
 }

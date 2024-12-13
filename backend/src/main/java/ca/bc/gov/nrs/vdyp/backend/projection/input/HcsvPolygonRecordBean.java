@@ -3,20 +3,21 @@ package ca.bc.gov.nrs.vdyp.backend.projection.input;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.opencsv.bean.BeanVerifier;
 import com.opencsv.bean.CsvBindByName;
 import com.opencsv.bean.CsvBindByPosition;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
+import com.opencsv.bean.processor.ConvertEmptyOrBlankStringsToDefault;
 import com.opencsv.bean.processor.ConvertEmptyOrBlankStringsToNull;
 import com.opencsv.bean.processor.PreAssignmentProcessor;
+import com.opencsv.exceptions.CsvConstraintViolationException;
 
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessageKind;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Vdyp7Constants;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.CfsEcoZone;
@@ -25,276 +26,292 @@ public class HcsvPolygonRecordBean {
 
 	private static final Logger logger = LoggerFactory.getLogger(HcsvPolygonRecordBean.class);
 
+	private static final String DEFAULT_MAP_ID = "UNKNOWN";
+
 	public static CsvToBean<HcsvPolygonRecordBean> createHcsvPolygonStream(InputStream polygonStream) {
 		return new CsvToBeanBuilder<HcsvPolygonRecordBean>(new BufferedReader(new InputStreamReader(polygonStream))) //
 				.withSeparator(',') //
 				.withType(HcsvPolygonRecordBean.class) //
 				.withFilter(new HcsvLineFilter(true, true)) //
+				.withVerifier(new HcsvPolygonRecordBeanValidator()) //
 				.build();
 	}
 
-	// { "POLY_FEATURE_ID", csvFldType_CHAR, 38, 0, "", TRUE }, /* A. HCSV_IFld_POLYGON__FEATURE_ID */
+	// { "POLY_FEATURE_ID", csvFldType_CHAR, 38, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "FEATURE_ID")
 	@CsvBindByPosition(position = 0)
-	private Long polyFeatureId;
+	private String polyFeatureId;
 
-	// { "MAP_ID", csvFldType_CHAR, 9, 0, "", TRUE }, /* B. HCSV_IFld_POLYGON__MAP_ID */
-	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	// { "MAP_ID", csvFldType_CHAR, 9, 0, "", TRUE }
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToDefault.class, paramString = DEFAULT_MAP_ID)
 	@CsvBindByName(column = "MAP_ID")
 	@CsvBindByPosition(position = 1)
 	private String mapId;
 
-	// { "POLYGON_NO", csvFldType_LONG, 10, 0, "", TRUE }, /* C. HCSV_IFld_POLYGON__POLYGON_NO */
+	// { "POLYGON_NO", csvFldType_LONG, 10, 0, "", TRUE }
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "POLYGON_NUMBER")
 	@CsvBindByPosition(position = 2)
-	private Long polygonNumber;
+	private String polygonNumber;
 
-	// { "ORG_UNIT", csvFldType_CHAR, 10, 0, "", TRUE }, /* D. HCVS_IFld_POLYGON__ORG_UNIT */
+	// { "ORG_UNIT", csvFldType_CHAR, 10, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "ORG_UNIT")
 	@CsvBindByPosition(position = 3)
 	private String orgUnit;
 
-	// { "TSA", csvFldType_CHAR, 5, 0, "", TRUE }, /* E. HCSV_IFld_POLYGON__TSA */
+	// { "TSA", csvFldType_CHAR, 5, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "TSA_NAME")
 	@CsvBindByPosition(position = 4)
 	private String tsaName;
 
-	// { "TFL", csvFldType_CHAR, 5, 0, "", TRUE }, /* F. HCSV_IFld_POLYGON__TFL */
+	// { "TFL", csvFldType_CHAR, 5, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "TFL_NAME")
 	@CsvBindByPosition(position = 5)
 	private String tflName;
 
-	// { "INVENTORY_STANDARD_CD", csvFldType_CHAR, 10, 0, "", TRUE }, /* G. HCSV_IFld_POLYGON__INVENTORY_STANDARD */
+	// { "INVENTORY_STANDARD_CD", csvFldType_CHAR, 10, 0, "", TRUE }
 	// maps to InventoryStandard
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "INVENTORY_STANDARD_CODE")
 	@CsvBindByPosition(position = 6)
-	private InventoryStandardCode inventoryStandardCode;
+	private String inventoryStandardCode;
 
-	// { "TSA_NUM", csvFldType_CHAR, 5, 0, "", TRUE }, /* H. HCSV_IFld_POLYGON__TSA_NUM */
+	// { "TSA_NUM", csvFldType_CHAR, 5, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "TSA_NUMBER")
 	@CsvBindByPosition(position = 7)
 	private String tsaNumber;
 
-	// { "SHRUB_HEIGHT", csvFldType_SINGLE, 4, 1, "", TRUE }, /* I. HCSV_IFld_POLYGON__SHRUB_HEIGHT */
+	// { "SHRUB_HEIGHT", csvFldType_SINGLE, 4, 1, "", TRUE }
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "SHRUB_HEIGHT")
 	@CsvBindByPosition(position = 8)
-	private Double shrubHeight;
+	private String shrubHeight;
 
-	// { "SHRUB_CROWN_CLOSURE", csvFldType_SHORT, 3, 0, "", TRUE }, /* J. HCSV_IFld_POLYGON__SHRUB_CC */
+	// { "SHRUB_CROWN_CLOSURE", csvFldType_SHORT, 3, 0, "", TRUE }
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "SHRUB_CROWN_CLOSURE")
 	@CsvBindByPosition(position = 9)
-	private Integer shrubCrownClosure;
+	private String shrubCrownClosure;
 
-	// { "SHRUB_COVER_PATTERN", csvFldType_CHAR, 10, 0, "", TRUE }, /* K. HCSV_IFld_POLYGON__SHRUB_PATTERN */
+	// { "SHRUB_COVER_PATTERN", csvFldType_CHAR, 10, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "SHRUB_COVER_PATTERN")
 	@CsvBindByPosition(position = 10)
 	private String shrubCoverPattern;
 
-	// { "HERB_COVER_TYPE", csvFldType_CHAR, 10, 0, "", TRUE }, /* L. HCSV_IFld_POLYGON__HERB_COVER_TYPE */
+	// { "HERB_COVER_TYPE", csvFldType_CHAR, 10, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "HERB_COVER_TYPE_CODE")
 	@CsvBindByPosition(position = 11)
 	private String herbCoverTypeCode;
 
-	// { "HERB_COVER_PCT", csvFldType_SHORT, 3, 0, "", TRUE }, /* M. HCSV_IFld_POLYGON__HERB_CC */
+	// { "HERB_COVER_PCT", csvFldType_SHORT, 3, 0, "", TRUE }
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "HERB_COVER_PCT")
 	@CsvBindByPosition(position = 12)
-	private Integer herbCoverPercent;
+	private String herbCoverPercent;
 
-	// { "HERB_COVER_PATTERN", csvFldType_CHAR, 10, 0, "", TRUE }, /* N. HCSV_IFld_POLYGON__HERB_PATTERN */
+	// { "HERB_COVER_PATTERN", csvFldType_CHAR, 10, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "HERB_COVER_PATTERN_CODE")
 	@CsvBindByPosition(position = 13)
 	private String herbCoverPatternCode;
 
-	// { "BRYOID_COVER_PCT", csvFldType_SHORT, 3, 0, "", TRUE }, /* O. HCSV_IFld_POLYGON__BRYOID_CC */
+	// { "BRYOID_COVER_PCT", csvFldType_SHORT, 3, 0, "", TRUE }
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "BRYOID_COVER_PCT")
 	@CsvBindByPosition(position = 14)
-	private Integer bryoidCoverPercent;
+	private String bryoidCoverPercent;
 
-	// { "BEC_ZONE_CD", csvFldType_CHAR, 10, 0, "", TRUE }, /* P. HCSV_IFld_POLYGON__BEC_ZONE */
+	// { "BEC_ZONE_CD", csvFldType_CHAR, 10, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "BEC_ZONE_CODE")
 	@CsvBindByPosition(position = 15)
 	private String becZoneCode;
 
-	// { "CFS_ECO_ZONE", csvFldType_SHORT, 3, 0, "", TRUE }, /* Q. HCSV_IFld_POLYGON__CFS_ECO_ZONE */
+	// { "CFS_ECO_ZONE", csvFldType_SHORT, 3, 0, "", TRUE }
 	// Maps to CfsEcoZone
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "CFS_ECOZONE")
 	@CsvBindByPosition(position = 16)
-	private Short cfsEcoZoneCode;
+	private String cfsEcoZoneCode;
 
-	// { "STOCKABILITY", csvFldType_SINGLE, 4, 1, "", TRUE }, /* R. HCSV_IFld_POLYGON__PCT_STOCKABLE */
+	// { "STOCKABILITY", csvFldType_SINGLE, 4, 1, "", TRUE }
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "PRE_DISTURBANCE_STOCKABILITY")
 	@CsvBindByPosition(position = 17)
-	private Double percentStockable;
+	private String percentStockable;
 
-	// { "YIELD_FACTOR", csvFldType_SINGLE, 5, 3, "", TRUE }, /* S. HCSV_IFld_POLYGON__YIELD_FACTOR */
+	// { "YIELD_FACTOR", csvFldType_SINGLE, 5, 3, "", TRUE }
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "YIELD_FACTOR")
 	@CsvBindByPosition(position = 18)
-	private Double yieldFactor;
+	private String yieldFactor;
 
-	// { "NON_PRODUCTIVE_DESCRIPTOR_CD", csvFldType_CHAR, 5, 0, "", TRUE }, /* T. HCSV_IFld_POLYGON__NON_PROD_DESC */
+	// { "NON_PRODUCTIVE_DESCRIPTOR_CD", csvFldType_CHAR, 5, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "NON_PRODUCTIVE_DESCRIPTOR_CD")
 	@CsvBindByPosition(position = 19)
 	private String nonProductiveDescriptorCode;
 
-	// { "BCLCS_LEVEL_1", csvFldType_CHAR, 10, 0, "", TRUE }, /* U. HCSV_IFld_POLYGON__BCLCS_LVL_1_CODE */
+	// { "BCLCS_LEVEL_1", csvFldType_CHAR, 10, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "BCLCS_LEVEL1_CODE")
 	@CsvBindByPosition(position = 20)
 	private String bclcsLevel1Code;
 
-	// { "BCLCS_LEVEL_2", csvFldType_CHAR, 10, 0, "", TRUE }, /* V. HCSV_IFld_POLYGON__BCLCS_LVL_2_CODE */
+	// { "BCLCS_LEVEL_2", csvFldType_CHAR, 10, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "BCLCS_LEVEL2_CODE")
 	@CsvBindByPosition(position = 21)
 	private String bclcsLevel2Code;
 
-	// { "BCLCS_LEVEL_3", csvFldType_CHAR, 10, 0, "", TRUE }, /* W. HCSV_IFld_POLYGON__BCLCS_LVL_3_CODE */
+	// { "BCLCS_LEVEL_3", csvFldType_CHAR, 10, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "BCLCS_LEVEL3_CODE")
 	@CsvBindByPosition(position = 22)
 	private String bclcsLevel3Code;
 
-	// { "BCLCS_LEVEL_4", csvFldType_CHAR, 10, 0, "", TRUE }, /* X. HCSV_IFld_POLYGON__BCLCS_LVL_4_CODE */
+	// { "BCLCS_LEVEL_4", csvFldType_CHAR, 10, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "BCLCS_LEVEL4_CODE")
 	@CsvBindByPosition(position = 23)
 	private String bclcsLevel4Code;
 
-	// { "BCLCS_LEVEL_5", csvFldType_CHAR, 10, 0, "", TRUE }, /* Y. HCSV_IFld_POLYGON__BCLCS_LVL_5_CODE */
+	// { "BCLCS_LEVEL_5", csvFldType_CHAR, 10, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "BCLCS_LEVEL5_CODE")
 	@CsvBindByPosition(position = 24)
 	private String bclcsLevel5Code;
 
-	// { "REFERENCE_YEAR", csvFldType_SHORT, 4, 0, "", TRUE }, /* Z. HCSV_IFld_POLYGON__REFERENCE_YEAR */
+	// { "REFERENCE_YEAR", csvFldType_SHORT, 4, 0, "", TRUE }
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "PHOTO_ESTIMATION_BASE_YEAR")
 	@CsvBindByPosition(position = 25)
-	private Integer referenceYear;
+	private String referenceYear;
 
-	// { "YEAR_OF_DEATH", csvFldType_SHORT, 4, 0, "", TRUE }, /* AA. HCSV_IFld_POLYGON__YEAR_OF_DEATH */
+	// { "YEAR_OF_DEATH", csvFldType_SHORT, 4, 0, "", TRUE }
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "REFERENCE_YEAR")
 	@CsvBindByPosition(position = 26)
-	private Integer yearOfDeath;
+	private String yearOfDeath;
 
-	// { "STOCKABILITY_DEAD", csvFldType_SINGLE, 4, 1, "", TRUE }, /* AB. HCSV_IFld_POLYGON__PCT_STOCKABLE_DEAD */
+	// { "STOCKABILITY_DEAD", csvFldType_SINGLE, 4, 1, "", TRUE }
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "PCT_DEAD")
 	@CsvBindByPosition(position = 27)
-	private Double percentDead;
+	private String percentDead;
 
-	// { "NON_VEG_COVER_TYPE_1", csvFldType_CHAR, 10, 0, "", TRUE }, /* AC. HCSV_IFld_POLYGON__NON_VEG_COVER_TYPE_1 */
+	// { "NON_VEG_COVER_TYPE_1", csvFldType_CHAR, 10, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "NON_VEG_COVER_TYPE_1")
 	@CsvBindByPosition(position = 28)
 	private String nonVegCoverType1;
 
-	// { "NON_VEG_COVER_PCT_1", csvFldType_SHORT, 3, 0, "", TRUE }, /* AD. HCSV_IFld_POLYGON__NON_VEG_COVER_PCT_1 */
+	// { "NON_VEG_COVER_PCT_1", csvFldType_SHORT, 3, 0, "", TRUE }
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "NON_VEG_COVER_PCT_1")
 	@CsvBindByPosition(position = 29)
-	private Integer nonVegCoverPercent1;
+	private String nonVegCoverPercent1;
 
-	// { "NON_VEG_COVER_PATTERN_1", csvFldType_CHAR, 10, 0, "", TRUE }, /* AE.
-	// HCSV_IFld_POLYGON__NON_VEG_COVER_PATTERN_1 */
+	// { "NON_VEG_COVER_PATTERN_1", csvFldType_CHAR, 10, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "NON_VEG_COVER_PATTERN_1")
 	@CsvBindByPosition(position = 30)
 	private String nonVegCoverPattern1;
 
-	// { "NON_VEG_COVER_TYPE_2", csvFldType_CHAR, 10, 0, "", TRUE }, /* AC. HCSV_IFld_POLYGON__NON_VEG_COVER_TYPE_2 */
+	// { "NON_VEG_COVER_TYPE_2", csvFldType_CHAR, 10, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "NON_VEG_COVER_TYPE_2")
 	@CsvBindByPosition(position = 31)
 	private String nonVegCoverType2;
 
-	// { "NON_VEG_COVER_PCT_2", csvFldType_SHORT, 3, 0, "", TRUE }, /* AD. HCSV_IFld_POLYGON__NON_VEG_COVER_PCT_2 */
+	// { "NON_VEG_COVER_PCT_2", csvFldType_SHORT, 3, 0, "", TRUE }
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "NON_VEG_COVER_PCT_2")
 	@CsvBindByPosition(position = 32)
-	private Integer nonVegCoverPercent2;
+	private String nonVegCoverPercent2;
 
-	// { "NON_VEG_COVER_PATTERN_2", csvFldType_CHAR, 10, 0, "", TRUE }, /* AE.
-	// HCSV_IFld_POLYGON__NON_VEG_COVER_PATTERN_2 */
+	// { "NON_VEG_COVER_PATTERN_2", csvFldType_CHAR, 10, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "NON_VEG_COVER_PATTERN_2")
 	@CsvBindByPosition(position = 33)
 	private String nonVegCoverPattern2;
 
-	// { "NON_VEG_COVER_TYPE_3", csvFldType_CHAR, 10, 0, "", TRUE }, /* AC. HCSV_IFld_POLYGON__NON_VEG_COVER_TYPE_3 */
+	// { "NON_VEG_COVER_TYPE_3", csvFldType_CHAR, 10, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "NON_VEG_COVER_TYPE_3")
 	@CsvBindByPosition(position = 34)
 	private String nonVegCoverType3;
 
-	// { "NON_VEG_COVER_PCT_3", csvFldType_SHORT, 3, 0, "", TRUE }, /* AD. HCSV_IFld_POLYGON__NON_VEG_COVER_PCT_3 */
+	// { "NON_VEG_COVER_PCT_3", csvFldType_SHORT, 3, 0, "", TRUE }
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "NON_VEG_COVER_PCT_3")
 	@CsvBindByPosition(position = 35)
-	private Integer nonVegCoverPercent3;
+	private String nonVegCoverPercent3;
 
-	// { "NON_VEG_COVER_PATTERN_3", csvFldType_CHAR, 10, 0, "", TRUE }, /* AE.
-	// HCSV_IFld_POLYGON__NON_VEG_COVER_PATTERN_3 */
+	// { "NON_VEG_COVER_PATTERN_3", csvFldType_CHAR, 10, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "NON_VEG_COVER_PATTERN_3")
 	@CsvBindByPosition(position = 36)
 	private String nonVegCoverPattern3;
 
-	// { "LAND_COVER_CLASS_CD_1", csvFldType_CHAR, 10, 0, "", TRUE }, /* AL. HCSV_IFld_POLYGON__LAND_COVER_CLASS_CODE_1
-	// */
+	// { "LAND_COVER_CLASS_CD_1", csvFldType_CHAR, 10, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "LAND_COVER_CLASS_CD_1")
 	@CsvBindByPosition(position = 37)
 	private String landCoverClassCode1;
 
-	// { "LAND_COVER_CLASS_PCT_1", csvFldType_SHORT, 3, 0, "", TRUE }, /* AM. HCSV_IFld_POLYGON__LAND_COVER_CLASS_PCT_1
-	// */
+	// { "LAND_COVER_CLASS_PCT_1", csvFldType_SHORT, 3, 0, "", TRUE }
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "LAND_COVER_PCT_1")
 	@CsvBindByPosition(position = 38)
-	private Integer landCoverPercent1;
+	private String landCoverPercent1;
 
-	// { "LAND_COVER_CLASS_CD_2", csvFldType_CHAR, 10, 0, "", TRUE }, /* AL. HCSV_IFld_POLYGON__LAND_COVER_CLASS_CODE_2
-	// */
+	// { "LAND_COVER_CLASS_CD_2", csvFldType_CHAR, 10, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "LAND_COVER_CLASS_CD_2")
 	@CsvBindByPosition(position = 39)
 	private String landCoverClassCode2;
 
-	// { "LAND_COVER_CLASS_PCT_2", csvFldType_SHORT, 3, 0, "", TRUE }, /* AM. HCSV_IFld_POLYGON__LAND_COVER_CLASS_PCT_2
-	// */
+	// { "LAND_COVER_CLASS_PCT_2", csvFldType_SHORT, 3, 0, "", TRUE }
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "LAND_COVER_PCT_2")
 	@CsvBindByPosition(position = 40)
-	private Integer landCoverPercent2;
+	private String landCoverPercent2;
 
-	// { "LAND_COVER_CLASS_CD_3", csvFldType_CHAR, 10, 0, "", TRUE }, /* AL. HCSV_IFld_POLYGON__LAND_COVER_CLASS_CODE_3
-	// */
+	// { "LAND_COVER_CLASS_CD_3", csvFldType_CHAR, 10, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "LAND_COVER_CLASS_CD_3")
 	@CsvBindByPosition(position = 41)
 	private String landCoverClassCode3;
 
-	// { "LAND_COVER_CLASS_PCT_3", csvFldType_SHORT, 3, 0, "", TRUE }, /* AM. HCSV_IFld_POLYGON__LAND_COVER_CLASS_PCT_3
-	// */
+	// { "LAND_COVER_CLASS_PCT_3", csvFldType_SHORT, 3, 0, "", TRUE }
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "LAND_COVER_PCT_3")
 	@CsvBindByPosition(position = 42)
-	private Integer landCoverPercent3;
+	private String landCoverPercent3;
+
+	// ACCESSORS
 
 	public Long getPolyFeatureId() {
-		return polyFeatureId;
+		return Long.valueOf(polyFeatureId);
 	}
 
 	public String getMapId() {
+		if (mapId == null) {
+			mapId = DEFAULT_MAP_ID;
+		}
 		return mapId;
 	}
 
 	public Long getPolygonNumber() {
-		return polygonNumber;
+		return polygonNumber == null ? null : Long.valueOf(polygonNumber);
 	}
 
 	public String getOrgUnit() {
@@ -310,7 +327,7 @@ public class HcsvPolygonRecordBean {
 	}
 
 	public InventoryStandardCode getInventoryStandardCode() {
-		return inventoryStandardCode;
+		return inventoryStandardCode == null ? null : InventoryStandardCode.valueOf(inventoryStandardCode);
 	}
 
 	public String getTsaNumber() {
@@ -318,11 +335,11 @@ public class HcsvPolygonRecordBean {
 	}
 
 	public Double getShrubHeight() {
-		return shrubHeight;
+		return shrubHeight == null ? null : Double.valueOf(shrubHeight);
 	}
 
 	public Integer getShrubCrownClosure() {
-		return shrubCrownClosure;
+		return shrubCrownClosure == null ? null : Integer.valueOf(shrubCrownClosure);
 	}
 
 	public String getShrubCoverPattern() {
@@ -334,7 +351,7 @@ public class HcsvPolygonRecordBean {
 	}
 
 	public Integer getHerbCoverPercent() {
-		return herbCoverPercent;
+		return herbCoverPercent == null ? null : Integer.valueOf(herbCoverPercent);
 	}
 
 	public String getHerbCoverPatternCode() {
@@ -342,7 +359,7 @@ public class HcsvPolygonRecordBean {
 	}
 
 	public Integer getBryoidCoverPercent() {
-		return bryoidCoverPercent;
+		return bryoidCoverPercent == null ? null : Integer.valueOf(bryoidCoverPercent);
 	}
 
 	public String getBecZoneCode() {
@@ -350,15 +367,15 @@ public class HcsvPolygonRecordBean {
 	}
 
 	public Short getCfsEcoZoneCode() {
-		return cfsEcoZoneCode;
+		return cfsEcoZoneCode == null ? null : Short.valueOf(cfsEcoZoneCode);
 	}
 
 	public Double getPercentStockable() {
-		return percentStockable;
+		return percentStockable == null ? null : Double.valueOf(percentStockable);
 	}
 
 	public Double getYieldFactor() {
-		return yieldFactor;
+		return yieldFactor == null ? null : Double.valueOf(yieldFactor);
 	}
 
 	public String getNonProductiveDescriptorCode() {
@@ -386,15 +403,15 @@ public class HcsvPolygonRecordBean {
 	}
 
 	public Integer getReferenceYear() {
-		return referenceYear;
+		return referenceYear == null ? null : Integer.valueOf(referenceYear);
 	}
 
 	public Integer getYearOfDeath() {
-		return yearOfDeath;
+		return yearOfDeath == null ? null : Integer.valueOf(yearOfDeath);
 	}
 
 	public Double getPercentDead() {
-		return percentDead;
+		return percentDead == null ? null : Double.valueOf(percentDead);
 	}
 
 	public String getNonVegCoverType1() {
@@ -402,7 +419,7 @@ public class HcsvPolygonRecordBean {
 	}
 
 	public Integer getNonVegCoverPercent1() {
-		return nonVegCoverPercent1;
+		return nonVegCoverPercent1 == null ? null : Integer.valueOf(nonVegCoverPercent1);
 	}
 
 	public String getNonVegCoverPattern1() {
@@ -414,7 +431,7 @@ public class HcsvPolygonRecordBean {
 	}
 
 	public Integer getNonVegCoverPercent2() {
-		return nonVegCoverPercent2;
+		return nonVegCoverPercent1 == null ? null : Integer.valueOf(nonVegCoverPercent2);
 	}
 
 	public String getNonVegCoverPattern2() {
@@ -426,7 +443,7 @@ public class HcsvPolygonRecordBean {
 	}
 
 	public Integer getNonVegCoverPercent3() {
-		return nonVegCoverPercent3;
+		return nonVegCoverPercent3 == null ? null : Integer.valueOf(nonVegCoverPercent3);
 	}
 
 	public String getNonVegCoverPattern3() {
@@ -438,7 +455,7 @@ public class HcsvPolygonRecordBean {
 	}
 
 	public Integer getLandCoverPercent1() {
-		return landCoverPercent1;
+		return landCoverPercent1 == null ? null : Integer.valueOf(landCoverPercent1);
 	}
 
 	public String getLandCoverClassCode2() {
@@ -446,7 +463,7 @@ public class HcsvPolygonRecordBean {
 	}
 
 	public Integer getLandCoverPercent2() {
-		return landCoverPercent2;
+		return landCoverPercent2 == null ? null : Integer.valueOf(landCoverPercent2);
 	}
 
 	public String getLandCoverClassCode3() {
@@ -454,7 +471,7 @@ public class HcsvPolygonRecordBean {
 	}
 
 	public Integer getLandCoverPercent3() {
-		return landCoverPercent3;
+		return landCoverPercent3 == null ? null : Integer.valueOf(landCoverPercent3);
 	}
 
 	/**
@@ -464,118 +481,135 @@ public class HcsvPolygonRecordBean {
 	 * @return completed record
 	 * @throws PolygonValidationException
 	 */
-	HcsvPolygonRecordBean adjustAndValidate() throws PolygonValidationException {
+	private static class HcsvPolygonRecordBeanValidator implements BeanVerifier<HcsvPolygonRecordBean> {
 
-		var validationMessages = new ArrayList<ValidationMessage>();
+		@Override
+		public boolean verifyBean(HcsvPolygonRecordBean bean) throws CsvConstraintViolationException {
 
-		// lcl_CopyPolygonDataIntoSnapshot: 3156
-		if (mapId == null) {
-			mapId = "UNKNOWN";
-		} else if (mapId.length() > Vdyp7Constants.MAX_LEN_MAPSHEET) {
-			mapId = mapId.substring(0, Vdyp7Constants.MAX_LEN_MAPSHEET);
-		}
+			// Skip lines with no POLY_FEATURE_ID
+			if (bean.polyFeatureId == null) {
+				return false;
+			}
 
-		if (referenceYear == null && yearOfDeath != null) {
-			// lcl_CopyPolygonDataIntoSnapshot: 3177
-			referenceYear = yearOfDeath;
-		}
+			BeanValidatorHelper bvh = new BeanValidatorHelper(bean.polyFeatureId);
 
-		if (nonProductiveDescriptorCode != null
-				&& nonProductiveDescriptorCode.length() > Vdyp7Constants.MAX_LEN_NON_PROD_DESC) {
-			// lcl_CopyPolygonDataIntoSnapshot: 3206
-			nonProductiveDescriptorCode = nonProductiveDescriptorCode
-					.substring(0, Vdyp7Constants.MAX_LEN_NON_PROD_DESC);
-		}
+			bvh.validateNumber(bean.polyFeatureId, n -> Long.parseLong(n), "Feature ID");
 
-		if (cfsEcoZoneCode == null) {
-			// lcl_CopyPolygonDataIntoSnapshot: 3224 makes V7Ext_StartNewPolygon: 1409 redundant
-			cfsEcoZoneCode = CfsEcoZone.Unknown.getCode();
-		} else {
-			try {
-				CfsEcoZone.fromCode(cfsEcoZoneCode);
-			} catch (IllegalArgumentException e) {
-				validationMessages.add(
-						new ValidationMessage(
-								ValidationMessageKind.INVALID_CFS_ECO_ZONE, polyFeatureId.toString(), cfsEcoZoneCode
-						)
+			if (bean.mapId.length() > Vdyp7Constants.MAX_LEN_MAPSHEET) {
+				// lcl_CopyPolygonDataIntoSnapshot: 3156
+				bean.mapId = bean.mapId.substring(0, Vdyp7Constants.MAX_LEN_MAPSHEET);
+			}
+
+			if (bean.referenceYear == null && bean.yearOfDeath != null) {
+				// lcl_CopyPolygonDataIntoSnapshot: 3177
+				bean.referenceYear = bean.yearOfDeath;
+			}
+
+			if (bean.inventoryStandardCode.equals(InventoryStandardCode.I.toString())) {
+				bean.inventoryStandardCode = InventoryStandardCode.F.toString();
+			} else {
+				bvh.validateEnumeration(
+						bean.inventoryStandardCode, c -> InventoryStandardCode.valueOf(c), "Inventory Standard Code"
 				);
 			}
-		}
 
-		if (inventoryStandardCode == InventoryStandardCode.I) {
-			inventoryStandardCode = InventoryStandardCode.F;
-		}
+			bvh.validateNumber(bean.shrubHeight, d -> Double.valueOf(d), "Shrub Height");
 
-		if (percentStockable != null && (percentStockable < 0.0 || percentStockable > 100.0)) {
-			// V7Ext_StartNewPolygon: 1422
-			validationMessages.add(
-					new ValidationMessage(
-							ValidationMessageKind.INVALID_PERCENT_STOCKABLE_DEAD, polyFeatureId.toString(),
-							percentStockable
-					)
-			);
-		}
+			bvh.validateNumber(bean.shrubCrownClosure, n -> Integer.valueOf(n), "Shrub Crown Closure");
 
-		if (percentDead != null && (percentDead < 0.0 || percentDead > 100.0)) {
-			// V7Ext_StartNewPolygon: 1437
-			validationMessages.add(
-					new ValidationMessage(
-							ValidationMessageKind.INVALID_PERCENT_STOCKABLE_DEAD, polyFeatureId.toString(),
-							percentStockable
-					)
-			);
-		}
+			bvh.validateNumber(bean.herbCoverPercent, n -> Integer.valueOf(n), "Herb Cover Percent");
 
-		if (becZoneCode == null) {
-			// V7Ext_StartNewPolygon: 1453
-			validationMessages
-					.add(new ValidationMessage(ValidationMessageKind.MISSING_BEC_ZONE, polyFeatureId.toString()));
-		} else if (becZoneCode != null) {
+			bvh.validateNumber(bean.bryoidCoverPercent, n -> Integer.valueOf(n), "Bryoid Cover Percent");
 
-			if (becZoneCode.length() > Vdyp7Constants.MAX_LEN_BEC_ZONE) {
-				// lcl_CopyPolygonDataIntoSnapshot: 3200
-				becZoneCode = becZoneCode.substring(0, Vdyp7Constants.MAX_LEN_BEC_ZONE);
+			if (bean.becZoneCode == null) {
+				// V7Ext_StartNewPolygon: 1453
+				bvh.addValidationMessage(ValidationMessageKind.MISSING_BEC_ZONE);
+			} else if (bean.becZoneCode != null) {
+
+				if (bean.becZoneCode.length() > Vdyp7Constants.MAX_LEN_BEC_ZONE) {
+					// lcl_CopyPolygonDataIntoSnapshot: 3200
+					bean.becZoneCode = bean.becZoneCode.substring(0, Vdyp7Constants.MAX_LEN_BEC_ZONE);
+				}
+
+				// V7Ext_StartNewPolygon: 1479. Certain BEC zones are not supported; substitute
+				// "AT" for each.
+				if (bean.becZoneCode.equals("BAFA") || bean.becZoneCode.equals("CMA")
+						|| bean.becZoneCode.equals("IMA")) {
+					logger.info("Translating unsupported BEC zone {} to {}", bean.becZoneCode, "AT");
+					bean.becZoneCode = "AT";
+				}
 			}
 
-			// V7Ext_StartNewPolygon: 1479. Certain BEC zones are not supported; substitute
-			// "AT" for each.
-			if (becZoneCode.equals("BAFA") || becZoneCode.equals("CMA") || becZoneCode.equals("IMA")) {
-				logger.info("Translating unsupported BEC zone {} to {}", becZoneCode, "AT");
-				becZoneCode = "AT";
+			if (bean.cfsEcoZoneCode == null) {
+				// lcl_CopyPolygonDataIntoSnapshot: 3224 makes V7Ext_StartNewPolygon: 1409 redundant
+				bean.cfsEcoZoneCode = String.valueOf(CfsEcoZone.Unknown.getCode());
+			} else {
+				bvh.validateEnumeration(bean.cfsEcoZoneCode, c -> CfsEcoZone.fromCode(Short.valueOf(c)), "CFS Eco Zone");
 			}
-		}
 
-		if (yieldFactor != null && (yieldFactor < 0.0 || yieldFactor > 10.0)) {
-			// V7Ext_StartNewPolygon: 1527
-			validationMessages.add(new ValidationMessage(ValidationMessageKind.YIELD_FACTOR_OUT_OF_RANGE, yieldFactor));
-		}
-
-		if (referenceYear == null || (referenceYear < Vdyp7Constants.MIN_CALENDAR_YEAR
-				|| referenceYear > Vdyp7Constants.MAX_CALENDAR_YEAR)) {
-			// V7Ext_StartNewPolygon: 1538
-			validationMessages.add(
-					new ValidationMessage(
-							ValidationMessageKind.INVALID_REFERENCE_YEAR, polyFeatureId.toString(),
-							Vdyp7Constants.MIN_CALENDAR_YEAR, Vdyp7Constants.MAX_CALENDAR_YEAR, referenceYear
-					)
+			bvh.validateRange(
+					bean.percentStockable, n -> Double.valueOf(n), n -> Double.valueOf(n), 0.0, 100.0,
+					"Percent Stockable"
 			);
-		}
 
-		if (yearOfDeath == null
-				|| (yearOfDeath < Vdyp7Constants.MIN_CALENDAR_YEAR || yearOfDeath > Vdyp7Constants.MAX_CALENDAR_YEAR)) {
-			// V7Ext_StartNewPolygon: 1561
-			validationMessages.add(
-					new ValidationMessage(
-							ValidationMessageKind.INVALID_REFERENCE_YEAR, polyFeatureId.toString(),
-							Vdyp7Constants.MIN_CALENDAR_YEAR, Vdyp7Constants.MAX_CALENDAR_YEAR, referenceYear
-					)
+			bvh.validateRange(
+					bean.yieldFactor, d -> Double.valueOf(d), d -> Double.valueOf(d), 0.0, 10.0, "Yield Factor"
 			);
-		}
 
-		if (validationMessages.size() > 0) {
-			throw new PolygonValidationException(validationMessages);
-		}
+			if (bean.nonProductiveDescriptorCode != null
+					&& bean.nonProductiveDescriptorCode.length() > Vdyp7Constants.MAX_LEN_NON_PROD_DESC) {
+				// lcl_CopyPolygonDataIntoSnapshot: 3206
+				bean.nonProductiveDescriptorCode = bean.nonProductiveDescriptorCode
+						.substring(0, Vdyp7Constants.MAX_LEN_NON_PROD_DESC);
+			}
 
-		return this;
+			bvh.validateRange(
+					bean.referenceYear, s -> Short.valueOf(s), s -> Short.valueOf(s), Vdyp7Constants.MIN_CALENDAR_YEAR,
+					Vdyp7Constants.MAX_CALENDAR_YEAR, "Reference Year"
+			);
+
+			bvh.validateRange(
+					bean.yearOfDeath, s -> Short.valueOf(s), s -> Short.valueOf(s), Vdyp7Constants.MIN_CALENDAR_YEAR,
+					Vdyp7Constants.MAX_CALENDAR_YEAR, "Year of Death"
+			);
+
+			bvh.validateRange(
+					bean.percentDead, n -> Double.valueOf(n), n -> Double.valueOf(n), 0.0, 100.0, "Percent Dead"
+			);
+
+			bvh.validateRange(
+					bean.nonVegCoverPercent1, i -> Integer.valueOf(i), i -> Integer.valueOf(i), 0, 100,
+					"Non Vegetation Cover Percentage #1"
+			);
+			bvh.validateRange(
+					bean.nonVegCoverPercent2, i -> Integer.valueOf(i), i -> Integer.valueOf(i), 0, 100,
+					"Non Vegetation Cover Percentage #2"
+			);
+			bvh.validateRange(
+					bean.nonVegCoverPercent3, i -> Integer.valueOf(i), i -> Integer.valueOf(i), 0, 100,
+					"Non Vegetation Cover Percentage #3"
+			);
+
+			bvh.validateRange(
+					bean.landCoverPercent1, i -> Integer.valueOf(i), i -> Integer.valueOf(i), 0, 100,
+					"Land Cover Percentage #1"
+			);
+			bvh.validateRange(
+					bean.landCoverPercent2, i -> Integer.valueOf(i), i -> Integer.valueOf(i), 0, 100,
+					"Land Cover Percentage #2"
+			);
+			bvh.validateRange(
+					bean.landCoverPercent3, i -> Integer.valueOf(i), i -> Integer.valueOf(i), 0, 100,
+					"Land Cover Percentage #3"
+			);
+
+			// Now, throw if there's been any validation errors.
+
+			if (bvh.getValidationMessages().size() > 0) {
+				throw new CsvConstraintViolationException(new PolygonValidationException(bvh.getValidationMessages()));
+			}
+
+			return true;
+		}
 	}
 }

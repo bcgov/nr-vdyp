@@ -2,7 +2,6 @@ package ca.bc.gov.nrs.vdyp.backend.projection.input;
 
 import java.io.InputStream;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
@@ -22,8 +21,8 @@ import ca.bc.gov.nrs.vdyp.si32.enumerations.SpeciesRegion;
 
 public class HcsvPolygonStream extends AbstractPolygonStream {
 
-	private Iterator<HcsvPolygonRecordBean> polygonCsvStreamIterator;
-	private Iterator<HcsvLayerRecordBean> layersCsvStream;
+	private CsvStreamIterator<HcsvPolygonRecordBean> polygonRecordIterator;
+	private CsvStreamIterator<HcsvLayerRecordBean> layerRecordIterator;
 	private HcsvLayerRecordBean nextLayerRecord;
 	private HcsvPolygonRecordBean nextPolygonRecord;
 
@@ -33,8 +32,10 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 
 		super(state);
 
-		polygonCsvStreamIterator = HcsvPolygonRecordBean.createHcsvPolygonStream(polygonStream).iterator();
-		layersCsvStream = HcsvLayerRecordBean.createHcsvLayerStream(layersStream).iterator();
+		var polygonRecordIterator = HcsvPolygonRecordBean.createHcsvPolygonStream(polygonStream).iterator();
+		polygonRecordIterator = new CsvStreamIterator<>(polygonRecordIterator);
+		var layerRecordIterator = HcsvLayerRecordBean.createHcsvLayerStream(layersStream).iterator();
+		layerRecordIterator = new CsvStreamIterator<>(layerRecordIterator);
 
 		streamsStarted = false;
 	}
@@ -44,13 +45,13 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 
 		if (streamsStarted == false) {
 
-			if (polygonCsvStreamIterator.hasNext()) {
-				nextPolygonRecord = polygonCsvStreamIterator.next().adjustAndValidate();
+			if (polygonRecordIterator.hasNext()) {
+				nextPolygonRecord = polygonRecordIterator.next();
 			}
 
 			if (nextPolygonRecord != null) {
-				while (layersCsvStream.hasNext()) {
-					nextLayerRecord = layersCsvStream.next().doPostBuildAdjustments();
+				while (layerRecordIterator.hasNext()) {
+					nextLayerRecord = layerRecordIterator.next().doPostBuildAdjustments();
 					if (nextLayerRecord.getLayerFeatureId() >= nextPolygonRecord.getPolyFeatureId()) {
 						break;
 					}
@@ -66,8 +67,8 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 
 		var polygon = buildPolygon();
 
-		if (polygonCsvStreamIterator.hasNext()) {
-			nextPolygonRecord = polygonCsvStreamIterator.next().adjustAndValidate();
+		if (polygonRecordIterator.hasNext()) {
+			nextPolygonRecord = polygonRecordIterator.next();
 		}
 
 		return polygon;

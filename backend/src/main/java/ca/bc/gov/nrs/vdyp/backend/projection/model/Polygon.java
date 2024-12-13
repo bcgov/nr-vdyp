@@ -40,7 +40,7 @@ public class Polygon {
 	private String mapSubQuad;
 
 	/** The polygon's "polygon number" */
-	private int polygonNumber;
+	private Long polygonNumber;
 
 	/** The inventory standard at which the polygon data was recorded. */
 	private InventoryStandard inventoryStandard;
@@ -49,10 +49,10 @@ public class Polygon {
 	private LayerSummarizationMode layerSummarizationMode;
 
 	/** The reference year of the polygon */
-	private int referenceYear;
+	private Integer referenceYear;
 
 	/** The year in which the stand suffered a significant kill */
-	private int yearOfDeath;
+	private Integer yearOfDeath;
 
 	/** If true, the polygon is in the Coastal region; otherwise, it's in the Interior region */
 	private boolean isCoastal;
@@ -88,13 +88,13 @@ public class Polygon {
 	private Map<ProjectionType, Double> yieldFactorUsed;
 
 	/** If false, projection is turned off globally for this polygon */
-	private boolean doAllowProjection;
+	private Boolean doAllowProjection;
 
 	/** If false for a given projection type, projection is turned off for that type */
 	private Map<ProjectionType, Boolean> doAllowProjectionOfType;
 
 	/** If true, layer adjustments were supplied in the input data */
-	private boolean wereLayerAdjustmentsSupplied;
+	private Boolean wereLayerAdjustmentsSupplied;
 
 	/** The layers (to be) processed during this projection. */
 	private Map<UUID, Layer> layers;

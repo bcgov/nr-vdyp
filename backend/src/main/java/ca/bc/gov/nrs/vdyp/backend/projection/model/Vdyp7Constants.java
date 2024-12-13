@@ -6,11 +6,11 @@ public class Vdyp7Constants {
 	public static final int MAX_LEN_BEC_ZONE = 4;
 	public static final int MAX_LEN_NON_PROD_DESC = 5;
 
-	public static final int MIN_PROJECTION_YEAR = 1500;
-	public static final int MAX_PROJECTION_YEAR = 2500;
+	public static final short MIN_PROJECTION_YEAR = 1500;
+	public static final short MAX_PROJECTION_YEAR = 2500;
 
-	public static final int MIN_CALENDAR_YEAR = 1400;
-	public static final int MAX_CALENDAR_YEAR = 2500;
+	public static final short MIN_CALENDAR_YEAR = 1400;
+	public static final short MAX_CALENDAR_YEAR = 2500;
 
 	public static final double MIN_SPECIES_AGE = 0.0;
 	public static final double MAX_SPECIES_AGE = 2000.0;
