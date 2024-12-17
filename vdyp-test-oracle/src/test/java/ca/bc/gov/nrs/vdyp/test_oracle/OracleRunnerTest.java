@@ -4,23 +4,18 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasEntry;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
-import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 
+import org.apache.commons.io.FileUtils;
 import org.easymock.EasyMock;
-import org.hamcrest.Matchers;
+import org.hamcrest.Description;
+import org.hamcrest.Matcher;
+import org.hamcrest.TypeSafeDiagnosingMatcher;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.CleanupMode;
 import org.junit.jupiter.api.io.TempDir;
@@ -56,17 +51,6 @@ class OracleRunnerTest {
 
 	void setupInput1() throws IOException {
 		for (String testName : INPUT1_TESTS) {
-			Files.createDirectories(inputDir.resolve(testName));
-			for (String filename : FILES) {
-				copyResource(
-						OracleRunnerTest.class, "input1/", testName + "/" + filename, inputDir
-				);
-			}
-		}
-	}
-
-	void setupInput2() throws IOException {
-		for (String testName : INPUT2_TESTS) {
 			Files.createDirectories(inputDir.resolve(testName));
 			for (String filename : FILES) {
 				copyResource(
@@ -123,6 +107,24 @@ class OracleRunnerTest {
 								)
 						)
 				);
+
+				assertThat(tempDir, fileExists("test1/input/RunVDYP7.cmd"));
+				assertThat(tempDir, fileExists("test1/input/parms.txt"));
+				assertThat(tempDir, fileExists("test1/input/VDYP7_INPUT_POLY.csv"));
+				assertThat(tempDir, fileExists("test1/input/VDYP7_INPUT_LAYER.csv"));
+
+				for (var tag : new String[] {
+						"7INPP", "7INPS", "7INPU",
+						"7OUTP", "7OUTS", "7OUTU", "7OUTC",
+						"AJSTA", "AJSTP", "AJSTS", "AJSTU",
+						"BINPP", "BINPS", "BINPU",
+						"BOUTP", "BOUTS", "BOUTU", "BOUTC",
+						"GROW",
+						"VRII", "VRIL", "VRIP", "VRIS"
+				}) {
+					FileUtils.touch(tempDir.resolve("test1/output/P-SAVE_VDYP7_" + tag + ".dat").toFile());
+				}
+
 				return mockFuture;
 			}
 
@@ -132,5 +134,58 @@ class OracleRunnerTest {
 
 		em.verify();
 
+		assertThat(outputDir, fileExists("test1/input/RunVDYP7.cmd"));
+		assertThat(outputDir, fileExists("test1/input/parms.txt"));
+		assertThat(outputDir, fileExists("test1/input/VDYP7_INPUT_POLY.csv"));
+		assertThat(outputDir, fileExists("test1/input/VDYP7_INPUT_LAYER.csv"));
+
+		for (var tag : new String[] { "7INPP", "7INPS", "7INPU" }) {
+			assertThat(outputDir, fileExists("test1/forwardInput/P-SAVE_VDYP7_" + tag + ".dat"));
+		}
+		for (var tag : new String[] { "7OUTP", "7OUTS", "7OUTU", "7OUTC" }) {
+			assertThat(outputDir, fileExists("test1/forwardOutput/P-SAVE_VDYP7_" + tag + ".dat"));
+		}
+		for (var tag : new String[] { "AJSTA", "AJSTP", "AJSTS", "AJSTU" }) {
+			assertThat(outputDir, fileExists("test1/adjustInput/P-SAVE_VDYP7_" + tag + ".dat"));
+		}
+		for (var tag : new String[] { "BINPP", "BINPS", "BINPU" }) {
+			assertThat(outputDir, fileExists("test1/backInput/P-SAVE_VDYP7_" + tag + ".dat"));
+		}
+		for (var tag : new String[] { "BOUTP", "BOUTS", "BOUTU", "BOUTC" }) {
+			assertThat(outputDir, fileExists("test1/backOutput/P-SAVE_VDYP7_" + tag + ".dat"));
+		}
+		/*for (var tag : new String[] { "GROW" }) {
+			assertThat(outputDir, fileExists("test1/other/P-SAVE_VDYP7_" + tag + ".dat"));
+		}*/
+		for (var tag : new String[] { "VRII", "VRIL", "VRIP", "VRIS" }) {
+			assertThat(outputDir, fileExists("test1/vriInput/P-SAVE_VDYP7_" + tag + ".dat"));
+		}
+
+
+		assertThat(outputDir, fileExists("test1/input/RunVDYP7.cmd"));
+		assertThat(outputDir, fileExists("test1/input/parms.txt"));
+		assertThat(outputDir, fileExists("test1/input/VDYP7_INPUT_POLY.csv"));
+		assertThat(outputDir, fileExists("test1/input/VDYP7_INPUT_LAYER.csv"));
+
+	}
+
+	Matcher<Path> fileExists(String path) {
+		return new TypeSafeDiagnosingMatcher<Path>() {
+
+			@Override
+			public void describeTo(Description description) {
+				description.appendText("contains a file at ").appendValue(path);
+			}
+
+			@Override
+			protected boolean matchesSafely(Path item, Description mismatchDescription) {
+				if (Files.exists(item.resolve(path)))
+					return true;
+
+				mismatchDescription.appendValue("does not exist");
+				return false;
+			}
+
+		};
 	}
 }

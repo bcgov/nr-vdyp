@@ -2,15 +2,18 @@ package ca.bc.gov.nrs.vdyp.test_oracle;
 
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.io.FileUtils;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import org.apache.commons.cli.CommandLine;
@@ -55,6 +58,11 @@ public class OracleRunner {
 		var installDir = Path.of(cmd.getOptionValue(INSTALL_DIR_OPT));
 		var tempDir = Path.of(cmd.getOptionValue(TEMP_DIR_OPT));
 
+		if (Files.notExists(tempDir))
+			Files.createDirectory(tempDir);
+		if (Files.notExists(outputDir))
+			Files.createDirectory(outputDir);
+
 		// loop over children of inputDir
 		for (var originalSubdir : Files.newDirectoryStream(inputDir, (d) -> Files.isDirectory(d))) {
 
@@ -63,25 +71,11 @@ public class OracleRunner {
 			var inputSubdir = tempSubdir.resolve("input");
 			var paramSubdir = inputSubdir;
 			var outputSubdir = tempSubdir.resolve("output");
+			var finalSubdir = outputDir.resolve(dirname);
 
-			Files.deleteIfExists(tempSubdir);
+			deleteDir(tempSubdir);
 			Files.createDirectory(tempSubdir);
-			Files.createDirectory(outputSubdir);
-
-			// this is the most concise way I could find to "copy the content of a directory" in Java
-			try (var files = Files.walk(originalSubdir)) {
-				files.filter(source -> {
-					return !source.getFileName().startsWith(".");
-				})
-					.forEach(source -> {
-							Path destination = inputSubdir.resolve(originalSubdir.relativize(source));
-						try {
-							Files.copy(source, destination);
-						} catch (IOException e) {
-							throw new UncheckedIOException(e);
-						}
-					});
-			}
+			copyDir(originalSubdir, inputSubdir);
 
 			// Make sure the params file includes the flag to save the intermediate data
 			var paramFile = paramSubdir.resolve("parms.txt");
@@ -110,9 +104,72 @@ public class OracleRunner {
 
 			run(builder).get();
 
-			// TODO Copy files for test case to output dir
+			copyOutput(originalSubdir, inputSubdir, outputSubdir, finalSubdir);
 		}
 
+	}
+
+	/**
+	 * Create the final output
+	 * 
+	 * @param originalSubdir
+	 * @param inputSubdir
+	 * @param outputSubdir
+	 * @param finalSubdir
+	 * @throws IOException
+	 */
+	void copyOutput(Path originalSubdir, Path inputSubdir, Path outputSubdir, Path finalSubdir) throws IOException {
+		deleteDir(finalSubdir);
+		Files.createDirectory(finalSubdir);
+
+		var inputDir = finalSubdir.resolve("input");
+		var fipDir = finalSubdir.resolve("fipInput");
+		var vriDir = finalSubdir.resolve("vriInput");
+		var adjustDir = finalSubdir.resolve("adjustInput");
+		var forwardDir = finalSubdir.resolve("forwardInput");
+		var backDir = finalSubdir.resolve("backInput");
+		var forwardOutDir = finalSubdir.resolve("forwardOutput");
+		var backOutDir = finalSubdir.resolve("backOutput");
+		var outputDir = finalSubdir.resolve("output");
+
+		Files.createDirectory(inputDir);
+		Files.createDirectory(fipDir);
+		Files.createDirectory(vriDir);
+		Files.createDirectory(adjustDir);
+		Files.createDirectory(forwardDir);
+		Files.createDirectory(backDir);
+		Files.createDirectory(forwardOutDir);
+		Files.createDirectory(backOutDir);
+		Files.createDirectory(outputDir);
+
+		copyDir(inputSubdir, inputDir);
+
+		copyFiles(outputSubdir, fipDir, file -> file.getFileName().toString().contains("_FIP"));
+		copyFiles(outputSubdir, vriDir, file -> file.getFileName().toString().contains("_VRI"));
+		copyFiles(outputSubdir, adjustDir, file -> file.getFileName().toString().contains("_AJST"));
+		copyFiles(outputSubdir, forwardDir, file -> file.getFileName().toString().contains("_7INP"));
+		copyFiles(outputSubdir, forwardOutDir, file -> file.getFileName().toString().contains("_7OUT"));
+		copyFiles(outputSubdir, backDir, file -> file.getFileName().toString().contains("_BINP"));
+		copyFiles(outputSubdir, backOutDir, file -> file.getFileName().toString().contains("_BOUT"));
+		copyFiles(outputSubdir, backOutDir, file -> file.getFileName().toString().contains("_BOUT"));
+
+		copyFiles(outputSubdir, outputDir, file -> file.getFileName().toString().startsWith("Output_"));
+	}
+
+	void copyFiles(Path source, Path destination, DirectoryStream.Filter<Path> filter) throws IOException {
+		try (var dirStream = Files.newDirectoryStream(source, filter)) {
+			for (var file : dirStream) {
+				FileUtils.copyFileToDirectory(file.toFile(), destination.toFile());
+			}
+		}
+	}
+
+	void copyDir(Path source, Path destination) throws IOException {
+		FileUtils.copyDirectory(source.toFile(), destination.toFile());
+	}
+
+	void deleteDir(Path dir) throws IOException {
+		FileUtils.deleteDirectory(dir.toFile());
 	}
 
 	protected CompletableFuture<Void> run(ProcessBuilder builder) throws IOException {
