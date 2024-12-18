@@ -131,6 +131,7 @@ public class OracleRunner {
 		var forwardOutDir = finalSubdir.resolve("forwardOutput");
 		var backOutDir = finalSubdir.resolve("backOutput");
 		var outputDir = finalSubdir.resolve("output");
+		var otherDir = finalSubdir.resolve("other");
 
 		Files.createDirectory(inputDir);
 		Files.createDirectory(fipDir);
@@ -141,6 +142,7 @@ public class OracleRunner {
 		Files.createDirectory(forwardOutDir);
 		Files.createDirectory(backOutDir);
 		Files.createDirectory(outputDir);
+		Files.createDirectory(otherDir);
 
 		copyDir(inputSubdir, inputDir);
 
@@ -152,6 +154,7 @@ public class OracleRunner {
 		copyFiles(outputSubdir, backDir, file -> file.getFileName().toString().contains("_BINP"));
 		copyFiles(outputSubdir, backOutDir, file -> file.getFileName().toString().contains("_BOUT"));
 		copyFiles(outputSubdir, backOutDir, file -> file.getFileName().toString().contains("_BOUT"));
+		copyFiles(outputSubdir, otherDir, file -> file.getFileName().toString().contains("_GROW"));
 
 		copyFiles(outputSubdir, outputDir, file -> file.getFileName().toString().startsWith("Output_"));
 	}

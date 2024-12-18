@@ -154,9 +154,9 @@ class OracleRunnerTest {
 		for (var tag : new String[] { "BOUTP", "BOUTS", "BOUTU", "BOUTC" }) {
 			assertThat(outputDir, fileExists("test1/backOutput/P-SAVE_VDYP7_" + tag + ".dat"));
 		}
-		/*for (var tag : new String[] { "GROW" }) {
+		for (var tag : new String[] { "GROW" }) {
 			assertThat(outputDir, fileExists("test1/other/P-SAVE_VDYP7_" + tag + ".dat"));
-		}*/
+		}
 		for (var tag : new String[] { "VRII", "VRIL", "VRIP", "VRIS" }) {
 			assertThat(outputDir, fileExists("test1/vriInput/P-SAVE_VDYP7_" + tag + ".dat"));
 		}
