@@ -53,9 +53,7 @@ class OracleRunnerTest {
 		for (String testName : INPUT1_TESTS) {
 			Files.createDirectories(inputDir.resolve(testName));
 			for (String filename : FILES) {
-				copyResource(
-						OracleRunnerTest.class, "input1/", testName + "/" + filename, inputDir
-				);
+				copyResource(OracleRunnerTest.class, "input1/", testName + "/" + filename, inputDir);
 			}
 		}
 	}
@@ -80,32 +78,31 @@ class OracleRunnerTest {
 				assertThat(builder.command(), contains(equalTo("RunVDYP7.cmd")));
 				assertThat(builder.directory(), equalTo(tempDir.resolve("test1/input").toAbsolutePath().toFile()));
 				assertThat(
-						builder.environment(), hasEntry(
-								equalTo(OracleRunner.INPUT_DIR_ENV), equalTo(
-										tempDir.resolve("test1/input").toAbsolutePath().toString()
+						builder.environment(),
+						hasEntry(
+								equalTo(OracleRunner.INPUT_DIR_ENV),
+								equalTo(tempDir.resolve("test1/input").toAbsolutePath().toString())
+						)
+				);
+				assertThat(
+						builder.environment(),
+						hasEntry(
+								equalTo(OracleRunner.OUTPUT_DIR_ENV),
+								equalTo(tempDir.resolve("test1/output").toAbsolutePath().toString())
+						)
+				);
+				assertThat(
+						builder.environment(),
+						hasEntry(
+								equalTo(OracleRunner.PARAM_DIR_ENV),
+								equalTo(
+										tempDir.resolve("test1/input").toAbsolutePath().toString() // Same as input dir
 								)
 						)
 				);
 				assertThat(
-						builder.environment(), hasEntry(
-								equalTo(OracleRunner.OUTPUT_DIR_ENV), equalTo(
-										tempDir.resolve("test1/output").toAbsolutePath().toString()
-								)
-						)
-				);
-				assertThat(
-						builder.environment(), hasEntry(
-								equalTo(OracleRunner.PARAM_DIR_ENV), equalTo(
-										tempDir.resolve("test1/input").toAbsolutePath().toString() //Same as input dir
-								)
-						)
-				);
-				assertThat(
-						builder.environment(), hasEntry(
-								equalTo(OracleRunner.INSTALL_DIR_ENV), equalTo(
-										installDir.toAbsolutePath().toString()
-								)
-						)
+						builder.environment(),
+						hasEntry(equalTo(OracleRunner.INSTALL_DIR_ENV), equalTo(installDir.toAbsolutePath().toString()))
 				);
 
 				assertThat(tempDir, fileExists("test1/input/RunVDYP7.cmd"));
@@ -113,14 +110,13 @@ class OracleRunnerTest {
 				assertThat(tempDir, fileExists("test1/input/VDYP7_INPUT_POLY.csv"));
 				assertThat(tempDir, fileExists("test1/input/VDYP7_INPUT_LAYER.csv"));
 
-				for (var tag : new String[] {
-						"7INPP", "7INPS", "7INPU",
-						"7OUTP", "7OUTS", "7OUTU", "7OUTC",
-						"AJSTA", "AJSTP", "AJSTS", "AJSTU",
-						"BINPP", "BINPS", "BINPU",
-						"BOUTP", "BOUTS", "BOUTU", "BOUTC",
-						"GROW",
-						"VRII", "VRIL", "VRIP", "VRIS"
+				for (var tag : new String[] { "7INPP", "7INPS", "7INPU", //
+						"7OUTP", "7OUTS", "7OUTU", "7OUTC", //
+						"AJSTA", "AJSTP", "AJSTS", "AJSTU", //
+						"BINPP", "BINPS", "BINPU", //
+						"BOUTP", "BOUTS", "BOUTU", "BOUTC", //
+						"GROW", //
+						"VRII", "VRIL", "VRIP", "VRIS" //
 				}) {
 					FileUtils.touch(tempDir.resolve("test1/output/P-SAVE_VDYP7_" + tag + ".dat").toFile());
 				}
@@ -160,7 +156,6 @@ class OracleRunnerTest {
 		for (var tag : new String[] { "VRII", "VRIL", "VRIP", "VRIS" }) {
 			assertThat(outputDir, fileExists("test1/vriInput/P-SAVE_VDYP7_" + tag + ".dat"));
 		}
-
 
 		assertThat(outputDir, fileExists("test1/input/RunVDYP7.cmd"));
 		assertThat(outputDir, fileExists("test1/input/parms.txt"));
