@@ -8,6 +8,10 @@ public class PolygonValidationException extends AbstractProjectionRequestExcepti
 
 	private static final long serialVersionUID = 2651505762328626871L;
 
+	public PolygonValidationException(ValidationMessage validationMessage) {
+		super(List.of(validationMessage));
+	}
+
 	public PolygonValidationException(List<ValidationMessage> validationMessages) {
 		super(validationMessages);
 	}

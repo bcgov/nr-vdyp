@@ -36,7 +36,7 @@ public class ProjectionRunner implements IProjectionRunner {
 
 		ProjectionRequestParametersValidator.validate(state);
 
-		logger.debug("{0}", state.getValidatedParams().toString());
+		logger.debug("{}", state.getValidatedParams().toString());
 		logApplicationMetadata();
 		
 		AbstractPolygonStream polygonStream = AbstractPolygonStream.build(state, streams);
@@ -58,7 +58,13 @@ public class ProjectionRunner implements IProjectionRunner {
 		while (polygonStream.hasNextPolygon()) {
 			 
 			try {
-				project(polygonStream.getNextPolygon());
+				var polygonToProject = polygonStream.getNextPolygon();
+				if (polygonToProject.doAllowProjection()) {
+					logger.info("Starting the projection of feature \"{}\"", polygonToProject);
+					project(polygonToProject);
+				} else {
+					logger.info("Skipping the projection of feature \"{}\" on request", polygonToProject);
+				}
 			} catch (PolygonValidationException e) {
 				IMessageLog errorLog = state.getErrorLog();
 				for (ValidationMessage m: e.getValidationMessages()) {
@@ -75,7 +81,7 @@ public class ProjectionRunner implements IProjectionRunner {
 
 	private void project(Polygon nextPolygon) 
 			throws PolygonExecutionException {
-		// TODO Auto-generated method stub
+		// For Kevin: implement this. TODO Auto-generated method stub
 		
 	}
 

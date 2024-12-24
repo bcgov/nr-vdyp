@@ -22,6 +22,7 @@ import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
 import ca.bc.gov.nrs.vdyp.backend.projection.input.HcsvLineFilter;
 import ca.bc.gov.nrs.vdyp.backend.projection.input.HcsvPolygonRecordBean;
 import ca.bc.gov.nrs.vdyp.backend.projection.input.InventoryStandardCode;
+import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.CfsEcoZone;
 
 public class HscvPolygonReaderTest {
 
@@ -46,7 +47,7 @@ public class HscvPolygonReaderTest {
 		var polygon = pi.next();
 
 		logger.info("Read polygon {}", polygon.getPolygonNumber());
-		Assert.assertEquals(Long.valueOf(13919428), polygon.getPolyFeatureId());
+		Assert.assertEquals(Long.valueOf(13919428), polygon.getFeatureId());
 		Assert.assertEquals("093C090", polygon.getMapId());
 		Assert.assertEquals(Long.valueOf(94833422L), polygon.getPolygonNumber());
 		Assert.assertEquals("DQU", polygon.getOrgUnit());
@@ -62,7 +63,7 @@ public class HscvPolygonReaderTest {
 		Assert.assertEquals("8", polygon.getHerbCoverPatternCode());
 		Assert.assertEquals(null, polygon.getBryoidCoverPercent());
 		Assert.assertEquals("MS", polygon.getBecZoneCode());
-		Assert.assertEquals(Short.valueOf((short) 14), polygon.getCfsEcoZoneCode());
+		Assert.assertEquals(CfsEcoZone.MontaneCordillera, polygon.getCfsEcoZoneCode());
 		Assert.assertEquals(Double.valueOf(50.0), polygon.getPercentStockable());
 		Assert.assertEquals(Double.valueOf(1.0), polygon.getYieldFactor());
 		Assert.assertEquals(null, polygon.getNonProductiveDescriptorCode());
@@ -186,7 +187,7 @@ public class HscvPolygonReaderTest {
 					var messages = pve.getValidationMessages();
 					Assert.assertEquals(1, messages.size());
 					var message = messages.get(0);
-					Assert.assertEquals("Polygon 13919428: field Inventory Standard Code value \"Z\" is not a recognized value for this code", message.toString());
+					Assert.assertEquals("Polygon 13919428: field \"Inventory Standard Code\" value \"Z\" is not a recognized value for this code", message.toString());
 				} else {
 					Assert.fail();
 				}
@@ -212,7 +213,7 @@ public class HscvPolygonReaderTest {
 					var messages = pve.getValidationMessages();
 					Assert.assertEquals(1, messages.size());
 					var message = messages.get(0);
-					Assert.assertEquals("Polygon 13919428: field Shrub Height value \"not a number\" is not a number", message.toString());
+					Assert.assertEquals("Polygon 13919428: field \"Shrub Height\" value \"not a number\" is not a number", message.toString());
 				} else {
 					Assert.fail();
 				}
@@ -238,7 +239,7 @@ public class HscvPolygonReaderTest {
 					var messages = pve.getValidationMessages();
 					Assert.assertEquals(1, messages.size());
 					var message = messages.get(0);
-					Assert.assertEquals("Polygon 13919428: field Yield Factor value \"11.0\" is either not a number or out of range. Must be between 0 and 10, inclusive", message.toString());
+					Assert.assertEquals("Polygon 13919428: field \"Yield Factor\" value \"11.0\" is either not a number or out of range. Must be between 0 and 10, inclusive", message.toString());
 				} else {
 					Assert.fail();
 				}

@@ -160,9 +160,9 @@ public class ProgressFrequency {
 		StringBuilder sb = new StringBuilder();
 		sb.append("class ParametersProgressFrequency {\n");
 		if (intValue != null)
-			sb.append("Every ").append(intValue).append(" polygons\n");
+			sb.append("   Every ").append(intValue).append(" polygons\n");
 		else if (enumValue != null)
-			sb.append(enumValue).append("\n");
+			sb.append("   ").append(enumValue).append("\n");
 		sb.append("}");
 		return sb.toString();
 	}

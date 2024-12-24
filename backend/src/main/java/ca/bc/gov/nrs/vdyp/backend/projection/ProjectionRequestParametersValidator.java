@@ -210,7 +210,7 @@ public class ProjectionRequestParametersValidator {
 				boolean isValidUtilizationParameter = true;
 
 				if (SP0Name.forText(up.getSpeciesName()).equals(SP0Name.UNKNOWN)) {
-					recordValidationMessage(UNKNOWN_SPECIES_GROUP_NAME, up.getSpeciesName());
+					recordValidationMessage(UNRECOGNIZED_SPECIES_GROUP_NAME, up.getSpeciesName());
 					isValidUtilizationParameter = false;
 				}
 
@@ -218,7 +218,7 @@ public class ProjectionRequestParametersValidator {
 				try {
 					uc = UtilizationParameter.UtilizationClass.fromValue(up.getUtilizationClass());
 				} catch (IllegalArgumentException e) {
-					recordValidationMessage(UNKNOWN_UTILIZATION_CLASS_NAME, up.getUtilizationClass());
+					recordValidationMessage(UNRECOGNIZED_UTILIZATION_CLASS_NAME, up.getUtilizationClass());
 					isValidUtilizationParameter = false;
 				}
 

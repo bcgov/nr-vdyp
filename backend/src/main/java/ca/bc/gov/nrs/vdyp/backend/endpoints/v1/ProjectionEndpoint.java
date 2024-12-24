@@ -1,5 +1,10 @@
 package ca.bc.gov.nrs.vdyp.backend.endpoints.v1;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+
+import org.apache.commons.codec.binary.Base64InputStream;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.jboss.resteasy.reactive.PartType;
 import org.jboss.resteasy.reactive.RestForm;
@@ -74,13 +79,18 @@ public class ProjectionEndpoint implements Endpoint {
 			// , @Context SecurityContext securityContext
 	) {
 		try {
+			InputStream polyStream = new Base64InputStream(new FileInputStream(polygonDataStream.uploadedFile().toFile()));
+			InputStream layersStream = new Base64InputStream(new FileInputStream(layersDataStream.uploadedFile().toFile()));
+
 			return projectionService.projectionHcsvPost(
-					trialRun, parameters, polygonDataStream, layersDataStream, null /* securityContext */
+					trialRun, parameters, polyStream, layersStream, null /* securityContext */
 			);
 		} catch (ProjectionRequestValidationException e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getValidationMessages()).build();
 		} catch (ProjectionInternalExecutionException e) {
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e).build();
+		} catch (FileNotFoundException e) {
+			return Response.status(Status.INTERNAL_SERVER_ERROR).entity("Internal error reading uploaded file(s)").build();
 		}
 	}
 

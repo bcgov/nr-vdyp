@@ -103,16 +103,15 @@ class HcsvProjectionEndpointTest {
 		Parameters parameters = new Parameters();
 		parameters.ageStart(100).ageEnd(400);
 
+		byte[] polyFileBytes = Files
+				.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_POLY.csv"));
+		byte[] layerFileBytes = Files
+				.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_LAYER.csv"));
+
 		InputStream zipInputStream = given().basePath(TestHelper.ROOT_PATH).when() //
 				.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
-				.multiPart(
-						ParameterNames.HCSV_POLYGON_INPUT_DATA,
-						Files.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_POLY.csv"))
-				) //
-				.multiPart(
-						ParameterNames.HCSV_LAYERS_INPUT_DATA,
-						Files.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_LAYER.csv"))
-				) //
+				.multiPart(ParameterNames.HCSV_POLYGON_INPUT_DATA, polyFileBytes) //
+				.multiPart(ParameterNames.HCSV_LAYERS_INPUT_DATA, layerFileBytes) //
 				.post("/projection/hcsv?trialRun=false") //
 				.then().statusCode(201) //
 				.and().contentType("application/octet-stream") //

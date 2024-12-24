@@ -17,6 +17,7 @@ import com.opencsv.bean.CsvToBeanBuilder;
 
 import ca.bc.gov.nrs.api.helpers.TestHelper;
 import ca.bc.gov.nrs.vdyp.backend.projection.input.HcsvLayerRecordBean;
+import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
 
 public class HscvLayerReaderTest {
 
@@ -46,13 +47,13 @@ public class HscvLayerReaderTest {
 		Assert.assertTrue(li.hasNext());
 		
 		var l1 = li.next();
-		logger.info("Read layer {}", l1.getLayerFeatureId() + ' ' + l1.getLayerLevelCode());
+		logger.info("Read layer {}", l1.getFeatureId() + ' ' + l1.getLayerId());
 
-		Assert.assertEquals(null, l1.getAdjustmentIndicatorInd());
-		Assert.assertEquals(null, l1.getBasalArea125());
-		Assert.assertEquals(null, l1.getCloseUtilizationVolumeLessDecayAndWastagePerHectare125());
-		Assert.assertEquals(null, l1.getCloseUtilizationVolumeLessDecayPerHectare125());
-		Assert.assertEquals(null, l1.getCloseUtilizationVolumePerHectare125());
+		Assert.assertEquals(false, l1.getAdjustmentIndicatorInd());
+		Assert.assertEquals(null, l1.getBasalArea125Adjustment());
+		Assert.assertEquals(null, l1.getCloseUtilizationVolumeLessDecayAndWastagePerHectare125Adjustment());
+		Assert.assertEquals(null, l1.getCloseUtilizationVolumeLessDecayPerHectare125Adjustment());
+		Assert.assertEquals(null, l1.getCloseUtilizationVolumePerHectare125Adjustment());
 		Assert.assertEquals(Short.valueOf((short)5), l1.getCrownClosure());
 		Assert.assertEquals(Short.valueOf((short)60), l1.getEstimatedAgeSpp1());
 		Assert.assertEquals(null, l1.getEstimatedAgeSpp2());
@@ -63,11 +64,11 @@ public class HscvLayerReaderTest {
 		Assert.assertEquals(null, l1.getEstimatedSiteIndex());
 		Assert.assertEquals(null, l1.getEstimatedSiteIndexSpeciesCode());
 		Assert.assertEquals(null, l1.getForestCoverRankCode());
-		Assert.assertEquals("13919428", l1.getLayerFeatureId());
-		Assert.assertEquals("2", l1.getLayerLevelCode());
+		Assert.assertEquals(13919428L, l1.getFeatureId());
+		Assert.assertEquals("2", l1.getLayerId());
 		Assert.assertEquals("093C090", l1.getLayerMapId());
 		Assert.assertEquals(null, l1.getLayerStockability());
-		Assert.assertEquals(null, l1.getLoreyHeight75());
+		Assert.assertEquals(null, l1.getLoreyHeight75Adjustment());
 		Assert.assertEquals(null, l1.getNonForestDescriptorCode());
 		Assert.assertEquals(Long.valueOf(94833422), l1.getPolygonNumber());
 		Assert.assertEquals("PLI", l1.getSpeciesCode1());
@@ -84,14 +85,14 @@ public class HscvLayerReaderTest {
 		Assert.assertEquals(null, l1.getSpeciesPercent6());
 		Assert.assertEquals(Double.valueOf(150.0d), l1.getStemsPerHectare());
 		Assert.assertEquals("14321067", l1.getTreeCoverId());
-		Assert.assertEquals("Y", l1.getVdyp7LayerLevelCode());
-		Assert.assertEquals(null, l1.getWholeStemVolumePerHectare125());
-		Assert.assertEquals(null, l1.getWholeStemVolumePerHectare75());
+		Assert.assertEquals(ProjectionTypeCode.REGENERATION, l1.getTargetVdyp7LayerCode());
+		Assert.assertEquals(null, l1.getWholeStemVolumePerHectare125Adjustment());
+		Assert.assertEquals(null, l1.getWholeStemVolumePerHectare75Adjustment());
 
 		var l2 = li.next();
-		logger.info("Read layer {}", l2.getLayerFeatureId() + ' ' + l2.getLayerLevelCode());
+		logger.info("Read layer {}", l2.getFeatureId() + ' ' + l2.getLayerId());
 		var l3 = li.next();
-		logger.info("Read layer {}", l3.getLayerFeatureId() + ' ' + l3.getLayerLevelCode());
+		logger.info("Read layer {}", l3.getFeatureId() + ' ' + l3.getLayerId());
 		Assert.assertFalse(li.hasNext());
 	}
 }

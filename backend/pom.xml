@@ -56,9 +56,19 @@
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
+			<groupId>ca.bc.gov.nrs.vdyp</groupId>
+			<artifactId>vdyp-common</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
 		    <groupId>com.opencsv</groupId>
 		    <artifactId>opencsv</artifactId>
 		    <version>5.9</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/commons-codec/commons-codec -->
+		<dependency>
+		    <groupId>commons-codec</groupId>
+		    <artifactId>commons-codec</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>javax.xml.bind</groupId>
@@ -277,6 +287,11 @@
 		<dependency>
 			<groupId>javax.annotation</groupId>
 			<artifactId>javax.annotation-api</artifactId>
+		</dependency>
+		<dependency>
+				<groupId>ca.bc.gov.nrs.vdyp</groupId>
+				<artifactId>vdyp-common</artifactId>
+				<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 	<build>

@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.backend.projection.model;
 
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -21,17 +22,55 @@ import java.util.List;
  */
 public class SiteSpeciesSorting {
 
-	/** The individual site species */
-	List<SiteSpeciesComponent> siteSpeciesArray;
-
-	/**
-	 * An array holding the indices to the individual elements in <code>siteSpeciesArray</code> in sorted order.
-	 */
-	int siteSpeciesSorting;
+	/** The individual site species, sorted by the individual SiteSpecies's sorting orders. */
+	private List<SiteSpecies> siteSpeciesArray;
 
 	/** If one exists, this member points to the site species corresponding to the C/Y Species Group. */
-	SiteSpeciesComponent siteSpeciesC;
+	private SiteSpecies siteSpeciesC;
 
 	/** If one exists, this member points to the site species corresponding to the PA/PL Species Group. */
-	SiteSpeciesComponent siteSpeciesP;
+	private SiteSpecies siteSpeciesP;
+
+	private SiteSpeciesSorting() {
+	}
+
+	public List<SiteSpecies> getSiteSpeciesArray() {
+		return siteSpeciesArray;
+	}
+
+	public SiteSpecies getSiteSpeciesC() {
+		return siteSpeciesC;
+	}
+
+	public SiteSpecies getSiteSpeciesP() {
+		return siteSpeciesP;
+	}
+
+	public static class Builder {
+		private SiteSpeciesSorting SiteSpeciesSorting = new SiteSpeciesSorting();
+
+		public Builder setSiteSpeciesArray(List<SiteSpecies> siteSpeciesArray) {
+
+			siteSpeciesArray.sort(new Comparator<SiteSpecies>() {
+				@Override
+				public int compare(SiteSpecies o1, SiteSpecies o2) {
+					return o1.compareTo(o2);
+				}
+			});
+			
+			SiteSpeciesSorting.siteSpeciesArray = siteSpeciesArray;
+
+			return this;
+		}
+
+		public Builder setSiteSpeciesC(SiteSpecies siteSpeciesC) {
+			SiteSpeciesSorting.siteSpeciesC = siteSpeciesC;
+			return this;
+		}
+
+		public Builder setSiteSpeciesP(SiteSpecies siteSpeciesP) {
+			SiteSpeciesSorting.siteSpeciesP = siteSpeciesP;
+			return this;
+		}
+	}
 }

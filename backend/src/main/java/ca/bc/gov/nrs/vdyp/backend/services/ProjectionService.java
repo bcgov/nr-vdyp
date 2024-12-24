@@ -5,7 +5,6 @@ import static ch.qos.logback.classic.ClassicConstants.FINALIZE_SESSION_MARKER;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
@@ -48,8 +47,8 @@ public class ProjectionService {
 	public Response projectionHcsvPost(
 			Boolean trialRun, //
 			Parameters parameters, //
-			FileUpload polygonFileStream, //
-			FileUpload layersFileStream, //
+			InputStream polygonStream, //
+			InputStream layersStream, //
 			SecurityContext securityContext
 	) throws ProjectionRequestValidationException, ProjectionInternalExecutionException {
 		Response response;
@@ -57,13 +56,10 @@ public class ProjectionService {
 		Map<String, InputStream> inputStreams = new HashMap<>();
 
 		try {
-			InputStream polyStream = new FileInputStream(polygonFileStream.uploadedFile().toFile());
-			InputStream layersStream = new FileInputStream(layersFileStream.uploadedFile().toFile());
-
 			if (trialRun) {
-				if (polyStream.available() == 0) {
-					polyStream.close();
-					polyStream = FileHelper.getStubResourceFile("VDYP7_INPUT_POLY.csv");
+				if (polygonStream.available() == 0) {
+					polygonStream.close();
+					polygonStream = FileHelper.getStubResourceFile("VDYP7_INPUT_POLY.csv");
 				}
 
 				if (layersStream.available() == 0) {
@@ -72,7 +68,7 @@ public class ProjectionService {
 				}
 			}
 
-			inputStreams.put(ParameterNames.HCSV_POLYGON_INPUT_DATA, polyStream);
+			inputStreams.put(ParameterNames.HCSV_POLYGON_INPUT_DATA, polygonStream);
 			inputStreams.put(ParameterNames.HCSV_LAYERS_INPUT_DATA, layersStream);
 
 			response = runProjection(ProjectionRequestKind.HCSV, inputStreams, trialRun, parameters, securityContext);

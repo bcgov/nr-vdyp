@@ -2,12 +2,15 @@ package ca.bc.gov.nrs.vdyp.backend.projection;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Map;
 
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionInternalExecutionException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestValidationException;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ProjectionRequestKind;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
 import ca.bc.gov.nrs.vdyp.backend.projection.input.AbstractPolygonStream;
 
 public class StubProjectionRunner implements IProjectionRunner {
@@ -26,8 +29,18 @@ public class StubProjectionRunner implements IProjectionRunner {
 
 		AbstractPolygonStream polygonStream = AbstractPolygonStream.build(state, streams);
 		
+		var validationMessages = new ArrayList<ValidationMessage>();
+		
 		while (polygonStream.hasNextPolygon()) {
-			
+			try {
+				polygonStream.getNextPolygon();
+			} catch (PolygonValidationException e) {
+				validationMessages.addAll(e.getValidationMessages());
+			}
+		}
+		
+		if (! validationMessages.isEmpty()) {
+			throw new ProjectionRequestValidationException(validationMessages);
 		}
 	}
 

@@ -1,6 +1,8 @@
 package ca.bc.gov.nrs.vdyp.backend.projection;
 
 import static ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessageKind.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 
 import java.io.IOException;
 
@@ -21,9 +23,6 @@ import ca.bc.gov.nrs.vdyp.backend.model.v1.ProjectionRequestKind;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.UtilizationParameter;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.UtilizationParameter.UtilizationClass;
 import jakarta.ws.rs.WebApplicationException;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
 
 class ParameterValidationTest {
 
@@ -369,7 +368,7 @@ class ParameterValidationTest {
 
 		var validator = new ProjectionRequestParametersValidator();
 		validator.validateState(s1);
-		TestHelper.verifyMessageSetIs(validator.getValidationMessages(), UNKNOWN_SPECIES_GROUP_NAME);
+		TestHelper.verifyMessageSetIs(validator.getValidationMessages(), UNRECOGNIZED_SPECIES_GROUP_NAME);
 	}
 
 	@Test
@@ -383,7 +382,7 @@ class ParameterValidationTest {
 
 		var validator = new ProjectionRequestParametersValidator();
 		validator.validateState(s1);
-		TestHelper.verifyMessageSetIs(validator.getValidationMessages(), UNKNOWN_UTILIZATION_CLASS_NAME);
+		TestHelper.verifyMessageSetIs(validator.getValidationMessages(), UNRECOGNIZED_UTILIZATION_CLASS_NAME);
 	}
 
 	@Test
@@ -398,7 +397,7 @@ class ParameterValidationTest {
 		var validator = new ProjectionRequestParametersValidator();
 		validator.validateState(s1);
 		TestHelper.verifyMessageSetIs(
-				validator.getValidationMessages(), UNKNOWN_SPECIES_GROUP_NAME, UNKNOWN_UTILIZATION_CLASS_NAME
+				validator.getValidationMessages(), UNRECOGNIZED_SPECIES_GROUP_NAME, UNRECOGNIZED_UTILIZATION_CLASS_NAME
 		);
 	}
 

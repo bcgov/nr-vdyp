@@ -3,6 +3,8 @@ package ca.bc.gov.nrs.vdyp.backend.projection.input;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +23,9 @@ import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessageKind;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Vdyp7Constants;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.CfsEcoZone;
+import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.NonVegetationType;
+import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.OtherVegetationType;
+import ca.bc.gov.nrs.vdyp.backend.utils.CsvRecordBeanHelper;
 
 public class HcsvPolygonRecordBean {
 
@@ -299,7 +304,7 @@ public class HcsvPolygonRecordBean {
 
 	// ACCESSORS
 
-	public Long getPolyFeatureId() {
+	public Long getFeatureId() {
 		return Long.valueOf(polyFeatureId);
 	}
 
@@ -311,7 +316,7 @@ public class HcsvPolygonRecordBean {
 	}
 
 	public Long getPolygonNumber() {
-		return polygonNumber == null ? null : Long.valueOf(polygonNumber);
+		return CsvRecordBeanHelper.parseLongAcceptNull(polygonNumber);
 	}
 
 	public String getOrgUnit() {
@@ -334,12 +339,34 @@ public class HcsvPolygonRecordBean {
 		return tsaNumber;
 	}
 
+	public record OtherVegCoverDetails(Integer otherVegCoverPercent, OtherVegetationType getNonVegCoverType) {
+	}
+
+	public Map<OtherVegetationType, OtherVegCoverDetails> getOtherVegCoverDetails() {
+		var details = new HashMap<OtherVegetationType, OtherVegCoverDetails>();
+
+		if (getShrubCrownClosure() != null) {
+			OtherVegetationType type = OtherVegetationType.Shrub;
+			details.put(type, new OtherVegCoverDetails(getShrubCrownClosure(), type));
+		}
+		if (getBryoidCoverPercent() != null) {
+			OtherVegetationType type = OtherVegetationType.Bryoid;
+			details.put(type, new OtherVegCoverDetails(getBryoidCoverPercent(), type));
+		}
+		if (getHerbCoverPercent() != null) {
+			OtherVegetationType type = OtherVegetationType.Herb;
+			details.put(type, new OtherVegCoverDetails(getHerbCoverPercent(), type));
+		}
+
+		return details;
+	}
+
 	public Double getShrubHeight() {
-		return shrubHeight == null ? null : Double.valueOf(shrubHeight);
+		return CsvRecordBeanHelper.parseDoubleAcceptNull(shrubHeight);
 	}
 
 	public Integer getShrubCrownClosure() {
-		return shrubCrownClosure == null ? null : Integer.valueOf(shrubCrownClosure);
+		return CsvRecordBeanHelper.parseIntegerAcceptNull(shrubCrownClosure);
 	}
 
 	public String getShrubCoverPattern() {
@@ -351,7 +378,7 @@ public class HcsvPolygonRecordBean {
 	}
 
 	public Integer getHerbCoverPercent() {
-		return herbCoverPercent == null ? null : Integer.valueOf(herbCoverPercent);
+		return CsvRecordBeanHelper.parseIntegerAcceptNull(herbCoverPercent);
 	}
 
 	public String getHerbCoverPatternCode() {
@@ -359,23 +386,23 @@ public class HcsvPolygonRecordBean {
 	}
 
 	public Integer getBryoidCoverPercent() {
-		return bryoidCoverPercent == null ? null : Integer.valueOf(bryoidCoverPercent);
+		return CsvRecordBeanHelper.parseIntegerAcceptNull(bryoidCoverPercent);
 	}
 
 	public String getBecZoneCode() {
 		return becZoneCode;
 	}
 
-	public Short getCfsEcoZoneCode() {
-		return cfsEcoZoneCode == null ? null : Short.valueOf(cfsEcoZoneCode);
+	public CfsEcoZone getCfsEcoZoneCode() {
+		return cfsEcoZoneCode == null ? null : CfsEcoZone.fromCode(Short.valueOf(cfsEcoZoneCode));
 	}
 
 	public Double getPercentStockable() {
-		return percentStockable == null ? null : Double.valueOf(percentStockable);
+		return CsvRecordBeanHelper.parseDoubleAcceptNull(percentStockable);
 	}
 
 	public Double getYieldFactor() {
-		return yieldFactor == null ? null : Double.valueOf(yieldFactor);
+		return CsvRecordBeanHelper.parseDoubleAcceptNull(yieldFactor);
 	}
 
 	public String getNonProductiveDescriptorCode() {
@@ -403,15 +430,39 @@ public class HcsvPolygonRecordBean {
 	}
 
 	public Integer getReferenceYear() {
-		return referenceYear == null ? null : Integer.valueOf(referenceYear);
+		return CsvRecordBeanHelper.parseIntegerAcceptNull(referenceYear);
 	}
 
 	public Integer getYearOfDeath() {
-		return yearOfDeath == null ? null : Integer.valueOf(yearOfDeath);
+		return CsvRecordBeanHelper.parseIntegerAcceptNull(yearOfDeath);
 	}
 
 	public Double getPercentDead() {
-		return percentDead == null ? null : Double.valueOf(percentDead);
+		return CsvRecordBeanHelper.parseDoubleAcceptNull(percentDead);
+	}
+
+	public record NonVegCoverDetails(
+			String getNonVegCoverPattern, Integer nonVegCoverPercent, NonVegetationType getNonVegCoverType
+	) {
+	}
+
+	public Map<NonVegetationType, NonVegCoverDetails> getNonVegCoverDetails() {
+		var details = new HashMap<NonVegetationType, NonVegCoverDetails>();
+
+		if (getNonVegCoverType1() != null) {
+			NonVegetationType type = NonVegetationType.fromCode(nonVegCoverType1);
+			details.put(type, new NonVegCoverDetails(nonVegCoverPattern1, getNonVegCoverPercent1(), type));
+		}
+		if (getNonVegCoverType2() != null) {
+			NonVegetationType type = NonVegetationType.fromCode(nonVegCoverType2);
+			details.put(type, new NonVegCoverDetails(nonVegCoverPattern2, getNonVegCoverPercent2(), type));
+		}
+		if (getNonVegCoverType3() != null) {
+			NonVegetationType type = NonVegetationType.fromCode(nonVegCoverType3);
+			details.put(type, new NonVegCoverDetails(nonVegCoverPattern3, getNonVegCoverPercent3(), type));
+		}
+
+		return details;
 	}
 
 	public String getNonVegCoverType1() {
@@ -419,7 +470,7 @@ public class HcsvPolygonRecordBean {
 	}
 
 	public Integer getNonVegCoverPercent1() {
-		return nonVegCoverPercent1 == null ? null : Integer.valueOf(nonVegCoverPercent1);
+		return CsvRecordBeanHelper.parseIntegerAcceptNull(nonVegCoverPercent1);
 	}
 
 	public String getNonVegCoverPattern1() {
@@ -431,7 +482,7 @@ public class HcsvPolygonRecordBean {
 	}
 
 	public Integer getNonVegCoverPercent2() {
-		return nonVegCoverPercent1 == null ? null : Integer.valueOf(nonVegCoverPercent2);
+		return CsvRecordBeanHelper.parseIntegerAcceptNull(nonVegCoverPercent1);
 	}
 
 	public String getNonVegCoverPattern2() {
@@ -443,7 +494,7 @@ public class HcsvPolygonRecordBean {
 	}
 
 	public Integer getNonVegCoverPercent3() {
-		return nonVegCoverPercent3 == null ? null : Integer.valueOf(nonVegCoverPercent3);
+		return CsvRecordBeanHelper.parseIntegerAcceptNull(nonVegCoverPercent3);
 	}
 
 	public String getNonVegCoverPattern3() {
@@ -455,7 +506,7 @@ public class HcsvPolygonRecordBean {
 	}
 
 	public Integer getLandCoverPercent1() {
-		return landCoverPercent1 == null ? null : Integer.valueOf(landCoverPercent1);
+		return CsvRecordBeanHelper.parseIntegerAcceptNull(landCoverPercent1);
 	}
 
 	public String getLandCoverClassCode2() {
@@ -463,7 +514,7 @@ public class HcsvPolygonRecordBean {
 	}
 
 	public Integer getLandCoverPercent2() {
-		return landCoverPercent2 == null ? null : Integer.valueOf(landCoverPercent2);
+		return CsvRecordBeanHelper.parseIntegerAcceptNull(landCoverPercent2);
 	}
 
 	public String getLandCoverClassCode3() {
@@ -471,7 +522,7 @@ public class HcsvPolygonRecordBean {
 	}
 
 	public Integer getLandCoverPercent3() {
-		return landCoverPercent3 == null ? null : Integer.valueOf(landCoverPercent3);
+		return CsvRecordBeanHelper.parseIntegerAcceptNull(landCoverPercent3);
 	}
 
 	/**
@@ -491,45 +542,51 @@ public class HcsvPolygonRecordBean {
 				return false;
 			}
 
+			logger.debug("Performing validation of polygon \"{}\" in isolation", bean.polyFeatureId);
+
 			BeanValidatorHelper bvh = new BeanValidatorHelper(bean.polyFeatureId);
 
 			bvh.validateNumber(bean.polyFeatureId, n -> Long.parseLong(n), "Feature ID");
 
-			if (bean.mapId.length() > Vdyp7Constants.MAX_LEN_MAPSHEET) {
-				// lcl_CopyPolygonDataIntoSnapshot: 3156
-				bean.mapId = bean.mapId.substring(0, Vdyp7Constants.MAX_LEN_MAPSHEET);
-			}
+			// lcl_CopyPolygonDataIntoSnapshot: 3156
+			bean.mapId = bvh.truncateString(bean.mapId, Vdyp7Constants.MAX_LEN_MAPSHEET);
 
 			if (bean.referenceYear == null && bean.yearOfDeath != null) {
 				// lcl_CopyPolygonDataIntoSnapshot: 3177
 				bean.referenceYear = bean.yearOfDeath;
 			}
 
-			if (bean.inventoryStandardCode.equals(InventoryStandardCode.I.toString())) {
+			boolean isValidEnumerationMember = bvh.validateEnumeration(
+					bean.inventoryStandardCode, c -> InventoryStandardCode.valueOf(c), "Inventory Standard Code"
+			);
+			if (isValidEnumerationMember && InventoryStandardCode.I.equals(bean.getInventoryStandardCode())) {
 				bean.inventoryStandardCode = InventoryStandardCode.F.toString();
-			} else {
-				bvh.validateEnumeration(
-						bean.inventoryStandardCode, c -> InventoryStandardCode.valueOf(c), "Inventory Standard Code"
-				);
 			}
 
-			bvh.validateNumber(bean.shrubHeight, d -> Double.valueOf(d), "Shrub Height");
-
+			// SHRUB_HEIGHT is not transferred from the CSV to the layer snapshot in VDYP7. Still, we 
+			// validate that it's a number.
+			bvh.validateNumber(bean.shrubHeight, n -> Double.valueOf(n), "Shrub Height");
+			// SHRUB_PATTERN is not transferred from the CSV to the layer snapshot in VDYP7. No validation
+			// required.
 			bvh.validateNumber(bean.shrubCrownClosure, n -> Integer.valueOf(n), "Shrub Crown Closure");
 
+			// HERB_COVER_TYPE is not transferred from the CSV to the layer snapshot in VDYP7
+			// HERB_PATTERN is not transferred from the CSV to the layer snapshot in VDYP7
 			bvh.validateNumber(bean.herbCoverPercent, n -> Integer.valueOf(n), "Herb Cover Percent");
 
 			bvh.validateNumber(bean.bryoidCoverPercent, n -> Integer.valueOf(n), "Bryoid Cover Percent");
+
+			if (sum(bean.shrubCrownClosure, bean.herbCoverPercent, bean.bryoidCoverPercent) > 100.0) {
+				bvh.addValidationMessage(ValidationMessageKind.NON_TREE_COVERAGE_PERCENTAGES_EXCEED_100);
+			}
 
 			if (bean.becZoneCode == null) {
 				// V7Ext_StartNewPolygon: 1453
 				bvh.addValidationMessage(ValidationMessageKind.MISSING_BEC_ZONE);
 			} else if (bean.becZoneCode != null) {
 
-				if (bean.becZoneCode.length() > Vdyp7Constants.MAX_LEN_BEC_ZONE) {
-					// lcl_CopyPolygonDataIntoSnapshot: 3200
-					bean.becZoneCode = bean.becZoneCode.substring(0, Vdyp7Constants.MAX_LEN_BEC_ZONE);
-				}
+				// lcl_CopyPolygonDataIntoSnapshot: 3200
+				bean.becZoneCode = bvh.truncateString(bean.becZoneCode, Vdyp7Constants.MAX_LEN_BEC_ZONE);
 
 				// V7Ext_StartNewPolygon: 1479. Certain BEC zones are not supported; substitute
 				// "AT" for each.
@@ -544,7 +601,9 @@ public class HcsvPolygonRecordBean {
 				// lcl_CopyPolygonDataIntoSnapshot: 3224 makes V7Ext_StartNewPolygon: 1409 redundant
 				bean.cfsEcoZoneCode = String.valueOf(CfsEcoZone.Unknown.getCode());
 			} else {
-				bvh.validateEnumeration(bean.cfsEcoZoneCode, c -> CfsEcoZone.fromCode(Short.valueOf(c)), "CFS Eco Zone");
+				bvh.validateEnumeration(
+						bean.cfsEcoZoneCode, c -> CfsEcoZone.fromCode(Short.valueOf(c)), "CFS Eco Zone"
+				);
 			}
 
 			bvh.validateRange(
@@ -556,12 +615,9 @@ public class HcsvPolygonRecordBean {
 					bean.yieldFactor, d -> Double.valueOf(d), d -> Double.valueOf(d), 0.0, 10.0, "Yield Factor"
 			);
 
-			if (bean.nonProductiveDescriptorCode != null
-					&& bean.nonProductiveDescriptorCode.length() > Vdyp7Constants.MAX_LEN_NON_PROD_DESC) {
-				// lcl_CopyPolygonDataIntoSnapshot: 3206
-				bean.nonProductiveDescriptorCode = bean.nonProductiveDescriptorCode
-						.substring(0, Vdyp7Constants.MAX_LEN_NON_PROD_DESC);
-			}
+			// lcl_CopyPolygonDataIntoSnapshot: 3206
+			bean.nonProductiveDescriptorCode = bvh
+					.truncateString(bean.nonProductiveDescriptorCode, Vdyp7Constants.MAX_LEN_NON_PROD_DESC);
 
 			bvh.validateRange(
 					bean.referenceYear, s -> Short.valueOf(s), s -> Short.valueOf(s), Vdyp7Constants.MIN_CALENDAR_YEAR,
@@ -577,6 +633,16 @@ public class HcsvPolygonRecordBean {
 					bean.percentDead, n -> Double.valueOf(n), n -> Double.valueOf(n), 0.0, 100.0, "Percent Dead"
 			);
 
+			bvh.validateEnumeration(
+					bean.nonVegCoverType1, e -> NonVegetationType.fromCode(e), "Non-Vegetation Cover Type 1"
+			);
+			bvh.validateEnumeration(
+					bean.nonVegCoverType2, e -> NonVegetationType.fromCode(e), "Non-Vegetation Cover Type 2"
+			);
+			bvh.validateEnumeration(
+					bean.nonVegCoverType3, e -> NonVegetationType.fromCode(e), "Non-Vegetation Cover Type 3"
+			);
+
 			bvh.validateRange(
 					bean.nonVegCoverPercent1, i -> Integer.valueOf(i), i -> Integer.valueOf(i), 0, 100,
 					"Non Vegetation Cover Percentage #1"
@@ -589,6 +655,10 @@ public class HcsvPolygonRecordBean {
 					bean.nonVegCoverPercent3, i -> Integer.valueOf(i), i -> Integer.valueOf(i), 0, 100,
 					"Non Vegetation Cover Percentage #3"
 			);
+
+			if (sum(bean.nonVegCoverPercent1, bean.nonVegCoverPercent2, bean.nonVegCoverPercent3) > 100.0) {
+				bvh.addValidationMessage(ValidationMessageKind.NON_VEGETATION_COVERAGE_PERCENTAGES_EXCEED_100);
+			}
 
 			bvh.validateRange(
 					bean.landCoverPercent1, i -> Integer.valueOf(i), i -> Integer.valueOf(i), 0, 100,
@@ -610,6 +680,24 @@ public class HcsvPolygonRecordBean {
 			}
 
 			return true;
+		}
+
+		static double sum(String... eTexts) {
+			double sum = 0.0;
+
+			try {
+				for (String eText : eTexts) {
+					double e = 0;
+					if (eText != null) {
+						e = Double.parseDouble(eText);
+					}
+					sum += e;
+				}
+
+				return sum;
+			} catch (NumberFormatException e) {
+				return 0.0;
+			}
 		}
 	}
 }

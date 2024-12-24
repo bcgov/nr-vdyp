@@ -12,15 +12,7 @@
 
 package ca.bc.gov.nrs.vdyp.backend.projection;
 
-import static ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption.DO_ALLOW_BASAL_AREA_AND_TREES_PER_HECTARE_VALUE_SUBSTITUTION;
-import static ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption.DO_INCLUDE_AGE_ROWS_IN_YIELD_TABLE;
-import static ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption.DO_INCLUDE_COLUMN_HEADERS_IN_YIELD_TABLE;
-import static ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption.DO_INCLUDE_FILE_HEADER;
-import static ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES;
-import static ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption.DO_INCLUDE_PROJECTION_MODE_IN_YIELD_TABLE;
-import static ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption.DO_INCLUDE_YEAR_ROWS_IN_YIELD_TABLE;
-import static ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER;
-import static ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption.FORWARD_GROW_ENABLED;
+import static ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -28,12 +20,12 @@ import java.util.List;
 import java.util.Objects;
 
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Filters;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.ProgressFrequency;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.AgeYearRangeCombinationKind;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.MetadataToOutputDirective;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.OutputFormat;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.DebugOption;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.MetadataToOutputDirective;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.OutputFormat;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.ProgressFrequency;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
 /**

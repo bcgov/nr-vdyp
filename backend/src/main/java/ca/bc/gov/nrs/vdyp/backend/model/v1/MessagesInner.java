@@ -38,9 +38,9 @@ public class MessagesInner {
 	@JsonProperty(JSON_PROPERTY_LAYER_ID)
 	private String layerId;
 
-	public static final String JSON_PROPERTY_STAND_COMPONENT_ID = "standComponentId";
+	public static final String JSON_PROPERTY_STAND_COMPONENT_ID = "standId";
 	@JsonProperty(JSON_PROPERTY_STAND_COMPONENT_ID)
-	private String standComponentId;
+	private String standId;
 
 	public static final String JSON_PROPERTY_ERROR_CODE = "errorCode";
 	@JsonProperty(JSON_PROPERTY_ERROR_CODE)
@@ -99,24 +99,24 @@ public class MessagesInner {
 		this.layerId = layerId;
 	}
 
-	public MessagesInner standComponentId(String standComponentId) {
-		this.standComponentId = standComponentId;
+	public MessagesInner standId(String standId) {
+		this.standId = standId;
 		return this;
 	}
 
 	/**
 	 * the id of the stand component to which the message applies. This value will be null if not known or applicable
 	 *
-	 * @return standComponentId
+	 * @return standId
 	 **/
-	@JsonProperty(value = "standComponentId")
+	@JsonProperty(value = "standId")
 
-	public String getStandComponentId() {
-		return standComponentId;
+	public String getStandId() {
+		return standId;
 	}
 
-	public void setStandComponentId(String standComponentId) {
-		this.standComponentId = standComponentId;
+	public void setStandId(String standId) {
+		this.standId = standId;
 	}
 
 	public MessagesInner errorCode(String errorCode) {
@@ -210,7 +210,7 @@ public class MessagesInner {
 		}
 		MessagesInner messagesInner = (MessagesInner) o;
 		return Objects.equals(this.id, messagesInner.id) && Objects.equals(this.layerId, messagesInner.layerId)
-				&& Objects.equals(this.standComponentId, messagesInner.standComponentId)
+				&& Objects.equals(this.standId, messagesInner.standId)
 				&& Objects.equals(this.errorCode, messagesInner.errorCode)
 				&& Objects.equals(this.severity, messagesInner.severity)
 				&& Objects.equals(this.messageCode, messagesInner.messageCode)
@@ -219,7 +219,7 @@ public class MessagesInner {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(id, layerId, standComponentId, errorCode, severity, messageCode, message);
+		return Objects.hash(id, layerId, standId, errorCode, severity, messageCode, message);
 	}
 
 	@Override
@@ -229,7 +229,7 @@ public class MessagesInner {
 
 		sb.append("    id: ").append(toIndentedString(id)).append("\n");
 		sb.append("    layerId: ").append(toIndentedString(layerId)).append("\n");
-		sb.append("    standComponentId: ").append(toIndentedString(standComponentId)).append("\n");
+		sb.append("    standId: ").append(toIndentedString(standId)).append("\n");
 		sb.append("    errorCode: ").append(toIndentedString(errorCode)).append("\n");
 		sb.append("    severity: ").append(toIndentedString(severity)).append("\n");
 		sb.append("    messageCode: ").append(toIndentedString(messageCode)).append("\n");

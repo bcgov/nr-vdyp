@@ -42,7 +42,7 @@ class StubHcsvProjectionEndpointTest {
 		Path resourceFolderPath = Path.of("VDYP7Console-sample-files", "hcsv", "vdyp-240");
 
 		Parameters parameters = testHelper.addSelectedOptions(
-				new Parameters(), //
+				new Parameters().ageStart(10).ageEnd(20), //
 				Parameters.ExecutionOption.DO_ENABLE_DEBUG_LOGGING,
 				Parameters.ExecutionOption.DO_ENABLE_PROGRESS_LOGGING,
 				Parameters.ExecutionOption.DO_ENABLE_ERROR_LOGGING
@@ -95,7 +95,7 @@ class StubHcsvProjectionEndpointTest {
 
 		Path resourceFolderPath = Path.of("VDYP7Console-sample-files", "hcsv", "vdyp-240");
 
-		Parameters parameters = new Parameters();
+		Parameters parameters = new Parameters().ageStart(10).ageEnd(20);
 
 		InputStream zipInputStream = given().basePath(TestHelper.ROOT_PATH).when() //
 				.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //

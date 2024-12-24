@@ -18,12 +18,10 @@ import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.HelpEndpoint;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.ProjectionEndpoint;
-
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import jakarta.ws.rs.core.UriInfo;
 
