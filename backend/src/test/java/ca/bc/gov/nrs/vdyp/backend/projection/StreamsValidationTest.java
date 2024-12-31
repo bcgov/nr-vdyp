@@ -37,12 +37,12 @@ class StreamsValidationTest {
 	void testMissingHcsvInputStreams() {
 		
 		Parameters p = TestHelper.buildValidParametersObject();
-		ProjectionState s = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 		
 		Map<String, InputStream> streams = new HashMap<>();
 		streams.put(ParameterNames.HCSV_POLYGON_INPUT_DATA, new ByteArrayInputStream(new byte[0]));
 		
 		try {
+			ProjectionState s = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 			ProjectionRequestParametersValidator.validate(s);
 		} catch (ProjectionRequestValidationException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), ValidationMessageKind.EXPECTED_STREAMS_NOT_SUPPLIED);
@@ -56,7 +56,6 @@ class StreamsValidationTest {
 	void testTooManyHcsvInputStreams() {
 		
 		Parameters p = TestHelper.buildValidParametersObject();
-		ProjectionState s = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 		
 		Map<String, InputStream> streams = new HashMap<>();
 		streams.put(ParameterNames.HCSV_POLYGON_INPUT_DATA, new ByteArrayInputStream(new byte[0]));
@@ -64,6 +63,7 @@ class StreamsValidationTest {
 		streams.put(ParameterNames.SCSV_HISTORY_INPUT_DATA, new ByteArrayInputStream(new byte[0]));
 		
 		try {
+			ProjectionState s = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 			ProjectionRequestParametersValidator.validate(s);
 		} catch (ProjectionRequestValidationException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), ValidationMessageKind.UNEXPECTED_STREAMS_SUPPLIED);
@@ -77,13 +77,13 @@ class StreamsValidationTest {
 	void testDifferentHcsvInputStreams() {
 		
 		Parameters p = TestHelper.buildValidParametersObject();
-		ProjectionState s = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 		
 		Map<String, InputStream> streams = new HashMap<>();
 		streams.put(ParameterNames.HCSV_POLYGON_INPUT_DATA, new ByteArrayInputStream(new byte[0]));
 		streams.put(ParameterNames.SCSV_HISTORY_INPUT_DATA, new ByteArrayInputStream(new byte[0]));
 		
 		try {
+			ProjectionState s = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
 			ProjectionRequestParametersValidator.validate(s);
 		} catch (ProjectionRequestValidationException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), ValidationMessageKind.UNEXPECTED_STREAMS_SUPPLIED
@@ -98,12 +98,12 @@ class StreamsValidationTest {
 	void testValidDcsvInputStreams() {
 		
 		Parameters p = TestHelper.buildValidParametersObject();
-		ProjectionState s = new ProjectionState(ProjectionRequestKind.DCSV, "id", p);
 		
 		Map<String, InputStream> streams = new HashMap<>();
 		streams.put(ParameterNames.DCSV_INPUT_DATA, new ByteArrayInputStream(new byte[0]));
 		
 		try {
+			ProjectionState s = new ProjectionState(ProjectionRequestKind.DCSV, "id", p);
 			ProjectionRequestParametersValidator.validate(s);
 		} catch (ProjectionRequestValidationException e) {
 			assertThat(e, Matchers.notNullValue());
@@ -114,7 +114,6 @@ class StreamsValidationTest {
 	void testValidScsvInputStreams() {
 		
 		Parameters p = TestHelper.buildValidParametersObject();
-		ProjectionState s = new ProjectionState(ProjectionRequestKind.SCSV, "id", p);
 		
 		Map<String, InputStream> streams = new HashMap<>();
 		streams.put(ParameterNames.SCSV_POLYGON_ID_INPUT_DATA, new ByteArrayInputStream(new byte[0]));
@@ -127,6 +126,7 @@ class StreamsValidationTest {
 		streams.put(ParameterNames.SCSV_VRI_ADJUST_INPUT_DATA, new ByteArrayInputStream(new byte[0]));
 		
 		try {
+			ProjectionState s = new ProjectionState(ProjectionRequestKind.SCSV, "id", p);
 			ProjectionRequestParametersValidator.validate(s);
 		} catch (ProjectionRequestValidationException e) {
 			assertThat(e, Matchers.notNullValue());
@@ -137,12 +137,12 @@ class StreamsValidationTest {
 	void testValidIcsvInputStreams() {
 		
 		Parameters p = TestHelper.buildValidParametersObject();
-		ProjectionState s = new ProjectionState(ProjectionRequestKind.ICSV, "id", p);
 		
 		Map<String, InputStream> streams = new HashMap<>();
 		streams.put(ParameterNames.ICSV_INPUT_DATA, new ByteArrayInputStream(new byte[0]));
 		
 		try {
+			ProjectionState s = new ProjectionState(ProjectionRequestKind.ICSV, "id", p);
 			ProjectionRequestParametersValidator.validate(s);
 		} catch (ProjectionRequestValidationException e) {
 			assertThat(e, Matchers.notNullValue());

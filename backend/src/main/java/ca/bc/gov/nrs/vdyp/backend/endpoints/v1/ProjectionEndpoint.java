@@ -1,8 +1,7 @@
 package ca.bc.gov.nrs.vdyp.backend.endpoints.v1;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
+import java.io.IOException;
 
 import org.apache.commons.codec.binary.Base64InputStream;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
@@ -78,19 +77,20 @@ public class ProjectionEndpoint implements Endpoint {
 			@FormParam(value = ParameterNames.HCSV_LAYERS_INPUT_DATA) FileUpload layersDataStream //
 			// , @Context SecurityContext securityContext
 	) {
+		var polygonFile = polygonDataStream.uploadedFile().toFile();
+		var layerFile = layersDataStream.uploadedFile().toFile();
 		try {
-			InputStream polyStream = new Base64InputStream(new FileInputStream(polygonDataStream.uploadedFile().toFile()));
-			InputStream layersStream = new Base64InputStream(new FileInputStream(layersDataStream.uploadedFile().toFile()));
-
-			return projectionService.projectionHcsvPost(
-					trialRun, parameters, polyStream, layersStream, null /* securityContext */
-			);
+			try (var polyStream = new Base64InputStream(new FileInputStream(polygonFile))) {
+				try (var layersStream = new Base64InputStream(new FileInputStream(layerFile))) {
+					return projectionService.projectionHcsvPost(
+							trialRun, parameters, polyStream, layersStream, null /* securityContext */
+					);
+				}
+			}
 		} catch (ProjectionRequestValidationException e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getValidationMessages()).build();
-		} catch (ProjectionInternalExecutionException e) {
+		} catch (IOException | ProjectionInternalExecutionException e) {
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e).build();
-		} catch (FileNotFoundException e) {
-			return Response.status(Status.INTERNAL_SERVER_ERROR).entity("Internal error reading uploaded file(s)").build();
 		}
 	}
 

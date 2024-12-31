@@ -18,27 +18,28 @@ import ca.bc.gov.nrs.vdyp.backend.model.v1.ProjectionRequestKind;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
 import ca.bc.gov.nrs.vdyp.backend.projection.input.AbstractPolygonStream;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Polygon;
+import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.PolygonProcessingState;
 import ca.bc.gov.nrs.vdyp.backend.utils.FileHelper;
 
 public class ProjectionRunner implements IProjectionRunner {
 
 	private static final Logger logger = LoggerFactory.getLogger(ProjectionRunner.class);
-	
+
 	private final ProjectionState state;
-	
-	public ProjectionRunner(ProjectionRequestKind kind, String projectionId, Parameters parameters) {
+
+	public ProjectionRunner(ProjectionRequestKind kind, String projectionId, Parameters parameters)
+			throws ProjectionRequestValidationException {
 		this.state = new ProjectionState(kind, projectionId, parameters);
 	}
 
 	@Override
 	public void run(Map<String, InputStream> streams) throws ProjectionRequestValidationException {
-		state.getProgressLog().addMessage(MessageFormat.format("Running Projection of type {0}", state.getRequestKind()));
-
-		ProjectionRequestParametersValidator.validate(state);
+		state.getProgressLog()
+				.addMessage(MessageFormat.format("Running Projection of type {0}", state.getRequestKind()));
 
 		logger.debug("{}", state.getValidatedParams().toString());
 		logApplicationMetadata();
-		
+
 		AbstractPolygonStream polygonStream = AbstractPolygonStream.build(state, streams);
 
 		projectAll(polygonStream);
@@ -54,9 +55,9 @@ public class ProjectionRunner implements IProjectionRunner {
 	}
 
 	private void projectAll(AbstractPolygonStream polygonStream) {
-		
+
 		while (polygonStream.hasNextPolygon()) {
-			 
+
 			try {
 				var polygonToProject = polygonStream.getNextPolygon();
 				if (polygonToProject.doAllowProjection()) {
@@ -67,22 +68,31 @@ public class ProjectionRunner implements IProjectionRunner {
 				}
 			} catch (PolygonValidationException e) {
 				IMessageLog errorLog = state.getErrorLog();
-				for (ValidationMessage m: e.getValidationMessages()) {
+				for (ValidationMessage m : e.getValidationMessages()) {
 					errorLog.addMessage(m.getKind().template, m.getArgs());
 				}
 			} catch (PolygonExecutionException e) {
 				IMessageLog errorLog = state.getErrorLog();
-				for (ValidationMessage m: e.getValidationMessages()) {
+				for (ValidationMessage m : e.getValidationMessages()) {
 					errorLog.addMessage(m.getKind().template, m.getArgs());
 				}
 			}
 		}
 	}
 
-	private void project(Polygon nextPolygon) 
-			throws PolygonExecutionException {
-		// For Kevin: implement this. TODO Auto-generated method stub
-		
+	private void project(Polygon polygon) throws PolygonExecutionException {
+		if (polygon.getCurrentProcessingState() != PolygonProcessingState.POLYGON_DEFINED) {
+			throw new IllegalStateException("Cannot call ProjectionRunner.project unless the Polygon is in DEFINING_POLYGON state");
+		}
+
+		// Begin implementation based on code starting at line 2088 (call to "V7Ext_GetPolygonInfo") in vdyp7console.c.
+		// Note the funky error handling in this routine: "rtrnCode" is set to SUCCESS and is potentially set to
+		// another value only when YldTable_GeneratePolygonYieldTables is called. "v7RtrnCode" is set to the result
+		// of all the other routines and a negative result will sometimes inhibit the execution of a follow-on block
+		// of code such as "V7Ext_ProjectStandByAge" and "YldTable_GeneratePolygonYieldTables" but not all. It's hard
+		// to understand why things are done the way they are.
+
+		polygon.doCompleteProjection();
 	}
 
 	@Override

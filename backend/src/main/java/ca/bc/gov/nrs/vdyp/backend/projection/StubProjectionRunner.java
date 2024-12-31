@@ -17,7 +17,8 @@ public class StubProjectionRunner implements IProjectionRunner {
 
 	private final ProjectionState state;
 
-	public StubProjectionRunner(ProjectionRequestKind kind, String projectionId, Parameters parameters) {
+	public StubProjectionRunner(ProjectionRequestKind kind, String projectionId, Parameters parameters)
+			throws ProjectionRequestValidationException {
 		this.state = new ProjectionState(kind, projectionId, parameters);
 	}
 

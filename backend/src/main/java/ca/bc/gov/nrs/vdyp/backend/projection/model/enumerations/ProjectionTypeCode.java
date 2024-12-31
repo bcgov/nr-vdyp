@@ -2,7 +2,7 @@ package ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations;
 
 import java.text.MessageFormat;
 import java.util.Collections;
-import java.util.Set;
+import java.util.List;
 
 /**
  * Describes, for a projection, which type of layer the projection represents.
@@ -23,8 +23,8 @@ public enum ProjectionTypeCode {
 	/** The unknown layer type */
 	UNKNOWN(null);
 
-	public final static Set<ProjectionTypeCode> ACTUAL_PROJECTION_TYPES =
-			Collections.unmodifiableSet(Set.of(PRIMARY, VETERAN, RESIDUAL, REGENERATION, DEAD));
+	public final static List<ProjectionTypeCode> ACTUAL_PROJECTION_TYPES_LIST =
+			Collections.unmodifiableList(List.of(PRIMARY, VETERAN, RESIDUAL, REGENERATION, DEAD));
 	
 	public final String specialLayerTypeCodeText;
 	

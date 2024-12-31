@@ -4,7 +4,7 @@ package ca.bc.gov.nrs.vdyp.backend.projection.model;
 public class SiteSpecies implements Comparable<SiteSpecies> {
 
 	/** The Species Group (Sp0) component corresponding to the site species. */
-	private Stand speciesGroupComponent;
+	private Stand stand;
 
 	/** <code>true</code> iff relevant site information has been applied to the current site species component. */
 	private boolean hasSiteInfo;
@@ -17,21 +17,18 @@ public class SiteSpecies implements Comparable<SiteSpecies> {
 	/** The total stand percent for this particular site species component. */
 	private double totalSpeciesPercent;
 
-	/** Indicates the Species Group sorting order of the original stand from which this entry comes. */
-	private int speciesGroupSortingOrder;
-	
 	private SiteSpecies() {
 	}
 
-	public Stand getSpeciesGroupComponent() {
-		return speciesGroupComponent;
+	public Stand getStand() {
+		return stand;
 	}
 
-	public boolean isHasSiteInfo() {
+	public boolean getHasSiteInfo() {
 		return hasSiteInfo;
 	}
 
-	public boolean isHasBeenCombined() {
+	public boolean getHasBeenCombined() {
 		return hasBeenCombined;
 	}
 
@@ -39,41 +36,51 @@ public class SiteSpecies implements Comparable<SiteSpecies> {
 		return totalSpeciesPercent;
 	}
 
-	public int getSpeciesGroupSortingOrder() {
-		return speciesGroupSortingOrder;
-	}
-
-	public class Builder {
+	public static class Builder {
 		private SiteSpecies siteSpecies = new SiteSpecies();
 
-		public Builder setSpeciesGroupComponent(Stand speciesGroupComponent) {
-			siteSpecies.speciesGroupComponent = speciesGroupComponent;
+		public Builder stand(Stand stand) {
+			siteSpecies.stand = stand;
 			return this;
 		}
 	
-		public Builder setHasSiteInfo(boolean hasSiteInfo) {
+		public Builder hasSiteInfo(boolean hasSiteInfo) {
 			siteSpecies.hasSiteInfo = hasSiteInfo;
 			return this;
 		}
 	
-		public Builder setHasBeenCombined(boolean hasBeenCombined) {
+		public Builder hasBeenCombined(boolean hasBeenCombined) {
 			siteSpecies.hasBeenCombined = hasBeenCombined;
 			return this;
 		}
 	
-		public Builder setTotalSpeciesPercent(double totalSpeciesPercent) {
+		public Builder totalSpeciesPercent(double totalSpeciesPercent) {
 			siteSpecies.totalSpeciesPercent = totalSpeciesPercent;
 			return this;
 		}
 	
-		public Builder setSpeciesGroupSortingOrder(int speciesGroupSortingOrder) {
-			siteSpecies.speciesGroupSortingOrder = speciesGroupSortingOrder;
-			return this;
+		public SiteSpecies build() {
+			return siteSpecies;
 		}
 	}
 
+	public void incrementTotalSpeciesPercent(double speciesPercent) {
+		totalSpeciesPercent += speciesPercent;
+		hasBeenCombined = true;
+	}	
+	
 	@Override
 	public int compareTo(SiteSpecies that) {
-		return this.speciesGroupSortingOrder - that.speciesGroupSortingOrder;
-	}	
+		int result = (int)Math.signum(that.getTotalSpeciesPercent() - this.getTotalSpeciesPercent());
+		if (result == 0) {
+			result = this.getStand().getStandIndex() - that.getStand().getStandIndex();
+		} 
+		return result;
+	}
+	
+	@Override
+	public String toString() {
+		return stand.getSpeciesGroup().getSpeciesCode() + ": Combined? " + (hasBeenCombined ? "Y" : "N")
+			+ " " + totalSpeciesPercent + "%";
+	}
 }

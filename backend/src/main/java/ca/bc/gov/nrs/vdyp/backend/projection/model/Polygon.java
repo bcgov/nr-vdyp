@@ -24,6 +24,7 @@ import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProcessingMode;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ReturnCode;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.UtilizationClass;
+import ca.bc.gov.nrs.vdyp.backend.utils.NullMath;
 
 /**
  * This class is the internal representation of a Polygon to be projected.
@@ -31,14 +32,14 @@ import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.UtilizationClass
 public class Polygon implements Comparable<Polygon> {
 
 	private static Logger logger = LoggerFactory.getLogger(Polygon.class);
-	
+
 	// BUSINESS KEY - all fields required.
 
 	/** Feature Id */
 	private long featureId;
 
 	// Optional Members
-	
+
 	/** The polygon's "polygon number" */
 	private Long polygonNumber;
 
@@ -138,12 +139,6 @@ public class Polygon implements Comparable<Polygon> {
 
 	/** The layer summarization mode applied to the layers within the polygon */
 	private LayerSummarizationMode layerSummarizationMode;
-
-	/**
-	 * Points to the last referenced layer. This provides a shortcut for other routines to make the automatic search for
-	 * the same layer unnecessary.
-	 */
-	private Layer lastReferencedLayer;
 
 	/**
 	 * Points to the layer identified as that desired to be the VDYP7 primary layer, irrespective of the automatic
@@ -270,7 +265,6 @@ public class Polygon implements Comparable<Polygon> {
 
 		layerByProjectionType = new HashMap<>();
 
-		lastReferencedLayer = null;
 		targetedPrimaryLayer = null;
 		targetedVeteranLayer = null;
 		primaryLayer = null;
@@ -416,10 +410,6 @@ public class Polygon implements Comparable<Polygon> {
 		return layerByProjectionType;
 	}
 
-	public Layer getLastReferencedLayer() {
-		return lastReferencedLayer;
-	}
-
 	public Layer getTargetedPrimaryLayer() {
 		return targetedPrimaryLayer;
 	}
@@ -494,10 +484,6 @@ public class Polygon implements Comparable<Polygon> {
 		this.layerSummarizationMode = layerSummarizationMode;
 	}
 
-	public void setLastReferencedLayer(Layer lastReferencedLayer) {
-		this.lastReferencedLayer = lastReferencedLayer;
-	}
-
 	public void setTargetedPrimaryLayer(Layer targetedPrimaryLayer) {
 		this.targetedPrimaryLayer = targetedPrimaryLayer;
 	}
@@ -530,6 +516,10 @@ public class Polygon implements Comparable<Polygon> {
 		this.rank1Layer = rank1Layer;
 	}
 
+	void setLayerByProjectionType(ProjectionTypeCode layerProjectionType, Layer layer) {
+		layerByProjectionType.put(layerProjectionType, layer);
+	}
+
 	public static class Builder {
 		private Polygon polygon = new Polygon();
 
@@ -540,11 +530,6 @@ public class Polygon implements Comparable<Polygon> {
 
 		public Builder polygonNumber(Long polygonNumber) {
 			polygon.polygonNumber = polygonNumber;
-			return this;
-		}
-
-		public Builder currentProcessingState(PolygonProcessingState currentProcessingState) {
-			polygon.currentProcessingState = currentProcessingState;
 			return this;
 		}
 
@@ -696,11 +681,6 @@ public class Polygon implements Comparable<Polygon> {
 			return this;
 		}
 
-		public Builder lastReferencedLayer(Layer lastReferencedLayer) {
-			polygon.lastReferencedLayer = lastReferencedLayer;
-			return this;
-		}
-
 		public Builder targetedPrimaryLayer(Layer targetedPrimaryLayer) {
 			polygon.targetedPrimaryLayer = targetedPrimaryLayer;
 			return this;
@@ -796,7 +776,7 @@ public class Polygon implements Comparable<Polygon> {
 		Layer selectedLayer = null;
 
 		if (layerId == null) {
-			selectedLayer = getLastReferencedLayer();
+			throw new IllegalArgumentException("findSpecificLayer: layerId is null");
 		} else if (Vdyp7Constants.VDYP7_LAYER_ID_SPANNING.equals(layerId)) {
 			selectedLayer = getLayers().get(layerId);
 		} else if (Vdyp7Constants.VDYP7_LAYER_ID_PRIMARY.equals(layerId)) {
@@ -810,34 +790,31 @@ public class Polygon implements Comparable<Polygon> {
 			}
 		}
 
-		setLastReferencedLayer(selectedLayer);
-
 		return selectedLayer;
 	}
 
-	private Layer findPrimaryLayerByProjectionType(ProjectionTypeCode projectionType)
-			throws PolygonValidationException {
+	Layer findPrimaryLayerByProjectionType(ProjectionTypeCode projectionType) throws PolygonValidationException {
 
 		Layer primaryLayer = null;
 
 		switch (projectionType) {
-		case DEAD:
-			primaryLayer = determineDeadLayer();
-			break;
 		case PRIMARY:
 			primaryLayer = determinePrimaryLayer();
-			break;
-		case REGENERATION:
-			primaryLayer = getRegenerationLayer();
-			break;
-		case RESIDUAL:
-			primaryLayer = getResidualLayer();
 			break;
 		case VETERAN:
 			primaryLayer = determineVeteranLayer();
 			break;
+		case RESIDUAL:
+			primaryLayer = getResidualLayer();
+			break;
+		case REGENERATION:
+			primaryLayer = getRegenerationLayer();
+			break;
+		case DEAD:
+			primaryLayer = determineDeadLayer();
+			break;
 		case UNKNOWN:
-			for (var pType : ProjectionTypeCode.ACTUAL_PROJECTION_TYPES) {
+			for (var pType : ProjectionTypeCode.ACTUAL_PROJECTION_TYPES_LIST) {
 				primaryLayer = findPrimaryLayerByProjectionType(pType);
 				if (primaryLayer != null) {
 					break;
@@ -851,6 +828,7 @@ public class Polygon implements Comparable<Polygon> {
 
 		return primaryLayer;
 	}
+
 	private Layer determinePrimaryLayer() throws PolygonValidationException {
 
 		Layer primaryLayer;
@@ -861,8 +839,6 @@ public class Polygon implements Comparable<Polygon> {
 			mergeLayers(ProjectionTypeCode.UNKNOWN);
 			primaryLayer = getPrimaryLayer();
 		}
-
-		setLastReferencedLayer(primaryLayer);
 
 		return primaryLayer;
 	}
@@ -878,8 +854,6 @@ public class Polygon implements Comparable<Polygon> {
 			veteranLayer = getVeteranLayer();
 		}
 
-		setLastReferencedLayer(veteranLayer);
-
 		return veteranLayer;
 	}
 
@@ -890,8 +864,6 @@ public class Polygon implements Comparable<Polygon> {
 		if (getDeadLayer() != null) {
 			deadLayer = getDeadLayer();
 		}
-
-		setLastReferencedLayer(deadLayer);
 
 		return deadLayer;
 	}
@@ -906,9 +878,7 @@ public class Polygon implements Comparable<Polygon> {
 			case Silviculture: {
 				setLayerSummarizationMode(determineFipMergeModel());
 
-				logger.debug(
-						"Selected FIP Inventory Layer Summarization Mode: {}", getLayerSummarizationMode()
-				);
+				logger.debug("Selected FIP Inventory Layer Summarization Mode: {}", getLayerSummarizationMode());
 
 				switch (getLayerSummarizationMode()) {
 				case RankOneOnly:
@@ -923,7 +893,7 @@ public class Polygon implements Comparable<Polygon> {
 				default:
 					throw new PolygonValidationException(
 							new ValidationMessage(
-									ValidationMessageKind.UNRECOGNIZED_LAYER_SUMMARIZATION_MODE,
+									ValidationMessageKind.UNRECOGNIZED_LAYER_SUMMARIZATION_MODE, this,
 									getLayerSummarizationMode()
 							)
 					);
@@ -933,9 +903,7 @@ public class Polygon implements Comparable<Polygon> {
 			case VRI:
 				setLayerSummarizationMode(determineVriMergeModel());
 
-				logger.debug(
-						"Selected VRI Inventory Layer Summarization Mode: {}", getLayerSummarizationMode()
-				);
+				logger.debug("Selected VRI Inventory Layer Summarization Mode: {}", getLayerSummarizationMode());
 
 				switch (getLayerSummarizationMode()) {
 				case RankOneOnly:
@@ -950,7 +918,7 @@ public class Polygon implements Comparable<Polygon> {
 				default:
 					throw new PolygonValidationException(
 							new ValidationMessage(
-									ValidationMessageKind.UNRECOGNIZED_LAYER_SUMMARIZATION_MODE,
+									ValidationMessageKind.UNRECOGNIZED_LAYER_SUMMARIZATION_MODE, this,
 									getLayerSummarizationMode()
 							)
 					);
@@ -960,14 +928,18 @@ public class Polygon implements Comparable<Polygon> {
 			default:
 				throw new PolygonValidationException(
 						new ValidationMessage(
-								ValidationMessageKind.UNRECOGNIZED_INVENTORY_STANDARD_CODE, inventoryStandard
+								ValidationMessageKind.UNRECOGNIZED_INVENTORY_STANDARD_CODE, this, inventoryStandard
 						)
 				);
 			}
 		}
 
-		logger.debug("Selected primary layer: {}", getPrimaryLayer().toDetailedString());
-		logger.debug("Selected veteran layer: {}", getVeteranLayer().toDetailedString());
+		logger.debug(
+				"Selected primary layer: {}", getPrimaryLayer() == null ? "none" : getPrimaryLayer().toDetailedString()
+		);
+		logger.debug(
+				"Selected veteran layer: {}", getVeteranLayer() == null ? "none" : getVeteranLayer().toDetailedString()
+		);
 	}
 
 	private LayerSummarizationMode determineFipMergeModel() {
@@ -1038,7 +1010,7 @@ public class Polygon implements Comparable<Polygon> {
 
 	private Layer selectPrimaryLayer() {
 
-		Layer primaryLayer = null;
+		Layer selectedPrimaryLayer = null;
 
 		logger.debug("Determining VDYP primary layer");
 
@@ -1047,12 +1019,12 @@ public class Polygon implements Comparable<Polygon> {
 
 		if (getTargetedPrimaryLayer() != null) {
 
-			primaryLayer = getTargetedPrimaryLayer();
-			logger.debug("Layer {} is identified/targeted as the primary layer", primaryLayer);
+			selectedPrimaryLayer = getTargetedPrimaryLayer();
+			logger.debug("Layer {} is identified/targeted as the primary layer", selectedPrimaryLayer);
 		} else if (getRank1Layer() != null && getRank1Layer() != deadLayer) {
 
-			primaryLayer = getRank1Layer();
-			logger.debug("Layer {} is primary layer due to being the rank 1 layer", primaryLayer);
+			selectedPrimaryLayer = getRank1Layer();
+			logger.debug("Layer {} is primary layer due to being the rank 1 layer", selectedPrimaryLayer);
 		} else if (getLayers().size() > 0) {
 
 			// Find the first live-stem Layer that satisfies the criteria. If none do, choose any
@@ -1065,7 +1037,7 @@ public class Polygon implements Comparable<Polygon> {
 			// exist - return the first found.
 			Layer fallbackChoice = null;
 
-			for (Layer candidate : getLayers().values().stream().filter(l -> !l.isDeadLayer()).toList()) {
+			for (Layer candidate : getLayers().values().stream().filter(l -> !l.getIsDeadLayer()).toList()) {
 				if (fallbackChoice == null) {
 					fallbackChoice = candidate;
 				}
@@ -1077,28 +1049,30 @@ public class Polygon implements Comparable<Polygon> {
 						// Layer 1 is really a veteran layer
 						continue;
 					} else {
-						primaryLayer = candidate;
+						selectedPrimaryLayer = candidate;
 						break;
 					}
 				}
 			}
 
-			if (primaryLayer == null) {
-				primaryLayer = fallbackChoice;
+			if (selectedPrimaryLayer == null) {
+				selectedPrimaryLayer = fallbackChoice;
 			}
 
-			if (primaryLayer != null) {
-				var message = new PolygonMessage.Builder().setLayer(primaryLayer).setErrorCode(ReturnCode.SUCCESS)
+			if (selectedPrimaryLayer != null) {
+				var message = new PolygonMessage.Builder().setLayer(selectedPrimaryLayer)
+						.setErrorCode(ReturnCode.SUCCESS)
 						.setMessage(
 								new ValidationMessage(
-										ValidationMessageKind.NO_PRIMARY_LAYER_SUPPLIED, primaryLayer.getLayerId()
+										ValidationMessageKind.NO_PRIMARY_LAYER_SUPPLIED, this,
+										selectedPrimaryLayer.getLayerId()
 								)
 						).build();
 				getMessages().add(message);
 			}
 		}
 
-		return primaryLayer;
+		return selectedPrimaryLayer;
 	}
 
 	private Layer selectFipVeteranLayer() {
@@ -1142,7 +1116,7 @@ public class Polygon implements Comparable<Polygon> {
 
 				if (veteranLayer != null) {
 					veteranLayer.setDoIncludeWithProjection(true);
-					veteranLayer.setVDYP7LayerCode(ProjectionTypeCode.VETERAN);
+					veteranLayer.setVdyp7LayerCode(ProjectionTypeCode.VETERAN);
 
 					logger.debug(
 							"Layer {} passes all criteria and will be processed as a veteran layer",
@@ -1163,18 +1137,15 @@ public class Polygon implements Comparable<Polygon> {
 
 	private Layer selectVriVeteranLayer() {
 
-		Layer veteranLayer = null;
+		Layer selectedVeteranLayer = null;
 
 		if (getPrimaryLayer() == null) {
 			logger.debug("Stand contains no primary layer, therefore stand can not contain a veteran layer.");
 		} else if (getVeteranLayer() == null) {
 
 			if (getTargetedVeteranLayer() != null) {
-				veteranLayer = getVeteranLayer();
-				logger.debug(
-						"Targeted veteran layer '{}' identified as veteran layer",
-						getVeteranLayer().getLayerId()
-				);
+				selectedVeteranLayer = getVeteranLayer();
+				logger.debug("Targeted veteran layer '{}' identified as veteran layer", getVeteranLayer().getLayerId());
 			} else {
 				for (Layer candidate : getLayers().values()) {
 
@@ -1202,7 +1173,7 @@ public class Polygon implements Comparable<Polygon> {
 									&& dbh >= Vdyp7Constants.MIN_VETERAN_LAYER_DBH
 									&& candidate.doesHeightExceed(Vdyp7Constants.MIN_VETERAN_LAYER_HEIGHT)) {
 
-								veteranLayer = candidate;
+								selectedVeteranLayer = candidate;
 								break;
 							} else {
 								logger.debug(
@@ -1222,17 +1193,77 @@ public class Polygon implements Comparable<Polygon> {
 				}
 			}
 		} else {
-			veteranLayer = getVeteranLayer();
-			logger.debug(
-					"Layer {} was already identified as a veteran layer: '{}'", getVeteranLayer().getLayerId()
+			selectedVeteranLayer = getVeteranLayer();
+			logger.debug("Layer {} was already identified as a veteran layer: '{}'", getVeteranLayer().getLayerId());
+		}
+
+		return selectedVeteranLayer;
+	}
+
+	public void disableProjectionsOfType(ProjectionTypeCode layerProjectionType) {
+		if (layerProjectionType == ProjectionTypeCode.UNKNOWN) {
+			doAllowProjection = false;
+		} else {
+			doAllowProjectionOfType.put(layerProjectionType, false);
+		}
+	}
+
+	/**
+	 * Assign <code>newDeadLayer</code> as the dead layer of this polygon. Assign year-of-death of this layer to the
+	 * maximum of (<code>yearOfDeath</code>, the layer's year of death, and this polygon's yearOfDeath). Assign
+	 * percent-stockable of this layer to the maximum of (<code>percentStockKilled</code>,
+	 * <code>newDeadLayer.getPercentStockable()</code>, and this polygon's percentStockableDead). <code>null</code> is
+	 * never greater than other values in a comparison.
+	 * <p>
+	 * This method does -not- consider whether the polygon already has a dead layer - it simply replaces the existing
+	 * one if there is one. If this is not the desired behaviour, call <code>getDeadLayer</code> before calling this
+	 * method to determine if a dead layer has already been assigned.
+	 * 
+	 * @param newDeadLayer       the new dead layer
+	 * @param yearOfDeath        as described
+	 * @param percentStockKilled as described
+	 */
+	public void assignDeadLayer(Layer newDeadLayer, Integer yearOfDeath, Double percentStockKilled) {
+
+		yearOfDeath = NullMath.max(yearOfDeath, newDeadLayer.getYearOfDeath(), (a, b) -> Math.max(a, b), -9);
+		yearOfDeath = NullMath.max(yearOfDeath, getYearOfDeath(), (a, b) -> Math.max(a, b), -9);
+
+		if (yearOfDeath == null) {
+			yearOfDeath = getReferenceYear();
+		}
+
+		logger.debug("assignDeadLayer: using year-of-death {}", yearOfDeath);
+
+		percentStockKilled = NullMath.max(percentStockableDead, percentStockKilled, (a, b) -> Math.max(a, b), -9.0);
+		percentStockKilled = NullMath
+				.max(newDeadLayer.getPercentStockable(), percentStockKilled, (a, b) -> Math.max(a, b), -9.0);
+
+		logger.debug("Percent Stockable Land Killed to use: {}", percentStockKilled);
+
+		setDeadLayer(newDeadLayer);
+		deadLayer.setAsDeadLayer(yearOfDeath, percentStockKilled);
+	}
+
+	public void doCompleteDefinition() throws PolygonValidationException {
+
+		if (currentProcessingState != PolygonProcessingState.DEFINING_POLYGON) {
+			throw new IllegalStateException(
+					"Cannot call Polygon.doCompleteDefinition unless the Polygon is in DEFINING_POLYGON state"
 			);
 		}
 
-		return veteranLayer;
+		// Assign the projection type of each of the layers. This is set at construction time to
+		// UNKNOWN.
+
+		for (Layer layer : layers.values()) {
+			layer.doCompleteDefinition(this);
+		}
+
+		currentProcessingState = PolygonProcessingState.POLYGON_DEFINED;
 	}
-	
-	public void disableProjectionsOfType(ProjectionTypeCode layerProjectionType) {
-		doAllowProjectionOfType.put(layerProjectionType, false);
+
+	public void doCompleteProjection() {
+		currentProcessingState = PolygonProcessingState.PROJECTED;
 	}
 
 	@Override
@@ -1243,17 +1274,17 @@ public class Polygon implements Comparable<Polygon> {
 			return false;
 		}
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return Long.valueOf(featureId).hashCode();
 	}
-	
+
 	@Override
 	public int compareTo(Polygon that) {
 		return this.featureId == that.featureId ? 0 : this.featureId > that.featureId ? 1 : -1;
 	}
-	
+
 	// toString implementations
 
 	@Override

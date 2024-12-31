@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.backend.model.v1;
 
 import java.text.MessageFormat;
+import java.util.Arrays;
 
 public class ValidationMessage implements Comparable<ValidationMessage> {
 
@@ -71,6 +72,6 @@ public class ValidationMessage implements Comparable<ValidationMessage> {
 	
 	@Override
 	public int hashCode() {
-		return kind.hashCode() * 17 + args.hashCode();
+		return kind.hashCode() * 17 + Arrays.hashCode(args);
 	}
 }

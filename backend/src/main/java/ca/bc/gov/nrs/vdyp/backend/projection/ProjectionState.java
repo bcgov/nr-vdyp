@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.vdyp.backend.projection;
 
 import org.slf4j.event.Level;
 
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestValidationException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.messaging.IMessageLog;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.messaging.MessageLog;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.messaging.NullMessageLog;
@@ -19,7 +20,8 @@ public class ProjectionState {
 	private final IMessageLog progressLog;
 	private final IMessageLog errorLog;
 
-	public ProjectionState(ProjectionRequestKind requestKind, String projectionId, Parameters params) {
+	public ProjectionState(ProjectionRequestKind requestKind, String projectionId, Parameters params)
+			throws ProjectionRequestValidationException {
 
 		if (requestKind == null) {
 			throw new IllegalArgumentException("kind cannot be null in constructor of ProjectionState");
@@ -48,6 +50,8 @@ public class ProjectionState {
 		} else {
 			progressLog = new NullMessageLog(Level.INFO);
 		}
+
+		ProjectionRequestParametersValidator.validate(this);
 	}
 
 	public Parameters getParams() {

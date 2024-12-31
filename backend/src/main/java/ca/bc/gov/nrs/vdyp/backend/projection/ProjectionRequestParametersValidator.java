@@ -23,7 +23,7 @@ public class ProjectionRequestParametersValidator {
 
 	private List<ValidationMessage> validationErrorMessages = new ArrayList<>();
 
-	public static void validate(ProjectionState state)
+	static void validate(ProjectionState state)
 			throws ProjectionRequestValidationException {
 
 		var validator = new ProjectionRequestParametersValidator();

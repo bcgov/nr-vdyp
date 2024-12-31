@@ -13,14 +13,17 @@ public class Stand implements Comparable<Stand> {
 	/** The parent Layer */
 	private Layer parentComponent;
 	
+	/** The SP0 species code of the stand */
+	private String sp0Code;
+	
 	/** The species group's Sp0 Species. */
-	private Species speciesGroup;
+	private Species sp0;
 
-	/** The VDYP7 index for this species group. */
-	private int speciesGroupIndex;
+	/** The number of stands added to the Layer prior to this one. */
+	private int standIndex;
 
 	/** The species of the individual species (VDYP7: Sp64) of the species group. */
-	private List<Species> species = new ArrayList<Species>();
+	private List<Species> sp64s = new ArrayList<Species>();
 	
 	private Stand() {
 	}
@@ -29,16 +32,20 @@ public class Stand implements Comparable<Stand> {
 		return parentComponent;
 	}
 	
-	public int getSpeciesGroupIndex() {
-		return speciesGroupIndex;
+	public String getSp0Code() {
+		return sp0Code;
+	}
+
+	public int getStandIndex() {
+		return standIndex;
 	}
 	
 	public Species getSpeciesGroup() {
-		return speciesGroup;
+		return sp0;
 	}
 	
 	public List<Species> getSpecies() {
-		return species;
+		return sp64s;
 	}
 	
 	public static class Builder {
@@ -52,7 +59,12 @@ public class Stand implements Comparable<Stand> {
 		// NOTE: speciesGroup and speciesGroupIndex are added post-construction, in updateAfterSpeciesGroupAdded
 		
 		public Builder species(List<Species> species) {
-			stand.species = species;
+			stand.sp64s = species;
+			return this;
+		}
+		
+		public Builder sp0Code(String sp0Code) {
+			stand.sp0Code = sp0Code;
 			return this;
 		}
 		
@@ -79,8 +91,8 @@ public class Stand implements Comparable<Stand> {
 	 * @return as described
 	 */
 	public Double determineMaturityAge() {
-		String sp0Name = SiteTool.getSpeciesShortName(getSpeciesGroupIndex());
-		boolean isDeciduous = SiteTool.getIsDeciduous(getSpeciesGroupIndex());
+		String sp0Name = SiteTool.getSpeciesShortName(getStandIndex());
+		boolean isDeciduous = SiteTool.getIsDeciduous(getStandIndex());
 
 		if (isDeciduous || "PL".equals(sp0Name) || "PA".equals(sp0Name)) {
 			return 81.0;
@@ -92,15 +104,39 @@ public class Stand implements Comparable<Stand> {
 	/**
 	 * A species (sp64) has been added to the stand. Update the Stand to reflect this.
 	 * 
-	 * @param species the species that was added.
+	 * @param sp64 the species that was added.
 	 */
-	public void updateAfterSpeciesAdded(Species species) {
-		speciesGroup.updateAfterSpeciesAdded(species);
+	public void updateAfterSp64Added(Species sp64) {
+		this.sp0.updateAfterSp64Added(sp64);
+		this.sp64s.add(sp64);
 	}
 
-	public void updateAfterSpeciesGroupAdded(Species speciesInstance) {
-		speciesGroup = speciesInstance;
-		speciesGroupIndex = SiteTool.getSpeciesIndex(speciesInstance.getSpeciesCode());
+	/**
+	 * A species group (sp0) has been added to the stand. Update the stand to reflect this.
+	 *
+	 * @param speciesInstance the sp64 instance being added as the species group to this Stand
+	 * @param index the order the sp0 appeared in the containing layer
+	 */
+	public void addSpeciesGroup(Species speciesInstance, int index) {
+		
+		int sp64Index = SiteTool.getSpeciesIndex(sp0Code);
+		String sp64Code = SiteTool.getSpeciesShortName(sp64Index);
+		
+		this.sp0 = new Species.Builder() //
+				.parentComponent(this) //
+				.ageAtBreastHeight(speciesInstance.getAgeAtBreastHeight()) //
+				.dominantHeight(speciesInstance.getDominantHeight()) //
+				.totalAge(speciesInstance.getTotalAge()) //
+				.siteCurve(speciesInstance.getSiteCurve()) //
+				.siteIndex(speciesInstance.getSiteIndex()) //
+				.speciesCode(sp64Code) //
+				.speciesPercent(0.0) //
+				.suppliedDominantHeight(speciesInstance.getSuppliedDominantHeight()) //
+				.suppliedSiteIndex(speciesInstance.getSiteIndex()) //
+				.suppliedTotalAge(speciesInstance.getTotalAge()) //
+				.build();
+				
+		this.standIndex = index;
 	}
 
 	@Override
@@ -114,14 +150,14 @@ public class Stand implements Comparable<Stand> {
 	
 	@Override
 	public int hashCode() {
-		return parentComponent.hashCode() * 17 + speciesGroup.hashCode();
+		return parentComponent.hashCode() * 17 + sp0.hashCode();
 	}
 	
 	@Override
 	public int compareTo(Stand that) {
 		int layerComparisonResult = this.parentComponent.compareTo(that.parentComponent);
 		if (layerComparisonResult == 0) {
-			return this.speciesGroup.getSpeciesCode().compareTo(that.speciesGroup.getSpeciesCode());
+			return this.sp0.getSpeciesCode().compareTo(that.sp0.getSpeciesCode());
 		} else {
 			return layerComparisonResult;
 		}
@@ -129,6 +165,6 @@ public class Stand implements Comparable<Stand> {
 	
 	@Override 
 	public String toString() {
-		return parentComponent.toString() + ":" + speciesGroupIndex;
+		return parentComponent.toString() + ":" + sp0Code;
 	}
 }

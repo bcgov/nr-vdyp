@@ -74,7 +74,9 @@ public enum ValidationMessageKind {
 	DUPLICATE_SPECIES("Polygon {0} Layer {1}: species '{2}' appears more than once in the layer definition", Category.WARNING), 
 	INCONSISTENT_SITE_INFO("Polygon {0} Layer {1}: species definitions for species '{3}' have inconsistent site information", Category.WARNING), 
 	LOW_SITE_INDEX_ERROR("Polygon {0} Layer {1}: very low or null site index {2} for species '{3}'. Projected Dominant Height set to input height", Category.ERROR),
-	LOW_SITE_INDEX_WARNING("Polygon {0} Layer {1}: very low or null site index {2} for species '{3}'. Projected Dominant Height set to input height", Category.WARNING),
+	LOW_SITE_INDEX_WARNING("Polygon {0} Layer {1}: very low or null site index {2} for species '{3}'. Projected Dominant Height set to input height", Category.WARNING), 
+	NO_LEADING_SPECIES("Polygon {0} Layer {1}: no leading site species could be found", Category.ERROR), 
+	SPECIES_WITH_NO_STAND_OR_AGE("Polygon {0} Layer {1}: Species '{2}' has no age but requires that a new Stand be created, which requires the age be known", Category.ERROR),
 	;
 
 	public enum Category {

@@ -28,6 +28,10 @@ public class Species implements Comparable<Species> {
 	/** The Stand containing the Species. */
 	private Stand parentComponent;
 
+	/** 
+	 * If this represents an Sp0 (a Species Group), this field stores its Sp0 code. If
+	 * this represents an Sp64, this field stores its Sp64 code.
+	 */
 	private String speciesCode;
 
 	// Required Members
@@ -113,6 +117,24 @@ public class Species implements Comparable<Species> {
 
 	public Map<Integer, Double> getPercentsPerDuplicate() {
 		return percentsPerDuplicate;
+	}
+	
+	// MUTABLE field setters
+
+	void setTotalAge(Double totalAge) {
+		this.totalAge = totalAge;
+	}
+
+	void setSiteIndex(double siteIndex) {
+		this.siteIndex = siteIndex;
+	}
+
+	void resetDominantHeight() {
+		this.dominantHeight = null;
+	}
+
+	void setSiteCurve(SiteIndexEquation siteCurve) {
+		this.siteCurve = siteCurve;
 	}
 
 	public static class Builder {
@@ -292,7 +314,7 @@ public class Species implements Comparable<Species> {
 	 * 
 	 * @param species the sp64 added.
 	 */
-	public void updateAfterSpeciesAdded(Species species) {
+	public void updateAfterSp64Added(Species species) {
 
 		speciesPercent += species.speciesPercent;
 
@@ -339,7 +361,7 @@ public class Species implements Comparable<Species> {
 
 			keepTrying = false;
 
-			if (siteCurve == null) {
+			if (siteCurve != null) {
 
 				if (!haveComputedSiteIndex && lSiteIndex == -9.0 && lTotalAge >= 30.0 && lDominantHeight > 0) {
 
@@ -350,11 +372,11 @@ public class Species implements Comparable<Species> {
 
 					logger.debug("Calculated Site Index using {} with parameters:", "dominantHeightAndAgeToSiteIndex");
 					logger.debug(
-							"   %32s: %s ('%s')", "Site Curve Number", siteCurve, SiteTool.getSICurveName(siteCurve)
+							"   {}: {} ('{}')", "Site Curve Number", siteCurve, SiteTool.getSICurveName(siteCurve)
 					);
-					logger.debug("   %32s: %.2d", "Total Age", totalAge);
-					logger.debug("%32s: %.2d", "Dominant Height", dominantHeight);
-					logger.debug("   %32s: %.2d", "Result", siteIndex);
+					logger.debug("   {}: {}", "Total Age", totalAge);
+					logger.debug("{}: {}", "Dominant Height", dominantHeight);
+					logger.debug("   {}: {}", "Result", siteIndex);
 				}
 
 				if (!haveComputedYearsToBreastHeight && yearsToBreastHeight == null && siteIndex != null) {
@@ -370,10 +392,10 @@ public class Species implements Comparable<Species> {
 								"SiteTool_YearsToBreastHeight"
 						);
 						logger.debug(
-								"   %32s: %s ('%s')", "Site Curve Number", siteCurve, SiteTool.getSICurveName(siteCurve)
+								"   {}: {} ('{}')", "Site Curve Number", siteCurve, SiteTool.getSICurveName(siteCurve)
 						);
-						logger.debug("   %32s: %.2d", "Site Index", siteIndex);
-						logger.debug("   %32s: %.2d", "Result", yearsToBreastHeight);
+						logger.debug("   {}: {}", "Site Index", siteIndex);
+						logger.debug("   {}: {}", "Result", yearsToBreastHeight);
 
 					} catch (CommonCalculatorException e) {
 						logger.error(
@@ -548,7 +570,7 @@ public class Species implements Comparable<Species> {
 			Polygon polygon = layer.getPolygon();
 			polygon.disableProjectionsOfType(layer.determineProjectionType(polygon));
 
-			ValidationMessage message = new ValidationMessage(ValidationMessageKind.LOW_SITE_INDEX_ERROR, layer, siteIndex, this);
+			ValidationMessage message = new ValidationMessage(ValidationMessageKind.LOW_SITE_INDEX_ERROR, polygon, layer.getLayerId(), siteIndex, this);
 			polygon.getMessages().add(new PolygonMessage.Builder().setLayer(layer).setMessage(message).build());
 
 			logger.error("Site Index was too low to compute a Dominant Height. Using value %.1f", computedHeight);
@@ -602,7 +624,7 @@ public class Species implements Comparable<Species> {
 				Polygon polygon = layer.getPolygon();
 				polygon.disableProjectionsOfType(layer.determineProjectionType(polygon));
 
-				ValidationMessage message = new ValidationMessage(ValidationMessageKind.LOW_SITE_INDEX_WARNING, layer, siteIndex, this);
+				ValidationMessage message = new ValidationMessage(ValidationMessageKind.LOW_SITE_INDEX_WARNING, polygon, layer.getLayerId(), siteIndex, this);
 				polygon.getMessages().add(new PolygonMessage.Builder().setLayer(layer).setMessage(message).build());
 
 			}
@@ -639,7 +661,7 @@ public class Species implements Comparable<Species> {
 				Polygon polygon = layer.getPolygon();
 				polygon.disableProjectionsOfType(layer.determineProjectionType(polygon));
 	
-				ValidationMessage message = new ValidationMessage(ValidationMessageKind.LOW_SITE_INDEX_ERROR, layer, siteIndex, this);
+				ValidationMessage message = new ValidationMessage(ValidationMessageKind.LOW_SITE_INDEX_ERROR, polygon, layer.getLayerId(), siteIndex, this);
 				polygon.getMessages().add(new PolygonMessage.Builder().setLayer(layer).setMessage(message).build());
 			
 				computedSiteIndex = null;
