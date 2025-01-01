@@ -41,6 +41,7 @@ public class HscvLayerReaderTest {
 										csvBytes))))
 				.withSeparator(',')
                 .withType(HcsvLayerRecordBean.class)
+                .withSkipLines(1)
                 .build();
 		
 		Iterator<HcsvLayerRecordBean> li = layerCsvStream.iterator();
@@ -57,9 +58,9 @@ public class HscvLayerReaderTest {
 		Assert.assertEquals(Short.valueOf((short)5), l1.getCrownClosure());
 		Assert.assertEquals(Short.valueOf((short)60), l1.getEstimatedAgeSpp1());
 		Assert.assertEquals(null, l1.getEstimatedAgeSpp2());
-		Assert.assertEquals(null, l1.getEstimatedHeightSpp1());
+		Assert.assertEquals(Double.valueOf(9.0), l1.getEstimatedHeightSpp1());
 		Assert.assertEquals(null, l1.getEstimatedAgeSpp2());
-		Assert.assertEquals(null, l1.getEstimatedHeightSpp1());
+		Assert.assertEquals(Double.valueOf(9.0), l1.getEstimatedHeightSpp1());
 		Assert.assertEquals(null, l1.getEstimatedHeightSpp2());
 		Assert.assertEquals(null, l1.getEstimatedSiteIndex());
 		Assert.assertEquals(null, l1.getEstimatedSiteIndexSpeciesCode());

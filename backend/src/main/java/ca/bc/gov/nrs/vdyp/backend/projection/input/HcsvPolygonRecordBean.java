@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.opencsv.bean.BeanVerifier;
+import com.opencsv.bean.CsvBindByName;
 import com.opencsv.bean.CsvBindByPosition;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
@@ -43,218 +44,261 @@ public class HcsvPolygonRecordBean {
 
 	// { "POLY_FEATURE_ID", csvFldType_CHAR, 38, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "FEATURE_ID")
 	@CsvBindByPosition(position = 0)
 	private String polyFeatureId;
 
 	// { "MAP_ID", csvFldType_CHAR, 9, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToDefault.class, paramString = DEFAULT_MAP_ID)
+	@CsvBindByName(column = "MAP_ID")
 	@CsvBindByPosition(position = 1)
 	private String mapId;
 
 	// { "POLYGON_NO", csvFldType_LONG, 10, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "POLYGON_NUMBER")
 	@CsvBindByPosition(position = 2)
 	private String polygonNumber;
 
 	// { "ORG_UNIT", csvFldType_CHAR, 10, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "ORG_UNIT")
 	@CsvBindByPosition(position = 3)
 	private String orgUnit;
 
 	// { "TSA", csvFldType_CHAR, 5, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "TSA_NAME")
 	@CsvBindByPosition(position = 4)
 	private String tsaName;
 
 	// { "TFL", csvFldType_CHAR, 5, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "TFL_NAME")
 	@CsvBindByPosition(position = 5)
 	private String tflName;
 
 	// { "INVENTORY_STANDARD_CD", csvFldType_CHAR, 10, 0, "", TRUE }
 	// maps to InventoryStandard
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "INVENTORY_STANDARD_CODE")
 	@CsvBindByPosition(position = 6)
 	private String inventoryStandardCode;
 
 	// { "TSA_NUM", csvFldType_CHAR, 5, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "TSA_NUMBER")
 	@CsvBindByPosition(position = 7)
 	private String tsaNumber;
 
 	// { "SHRUB_HEIGHT", csvFldType_SINGLE, 4, 1, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "SHRUB_HEIGHT")
 	@CsvBindByPosition(position = 8)
 	private String shrubHeight;
 
 	// { "SHRUB_CROWN_CLOSURE", csvFldType_SHORT, 3, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "SHRUB_CROWN_CLOSURE")
 	@CsvBindByPosition(position = 9)
 	private String shrubCrownClosure;
 
 	// { "SHRUB_COVER_PATTERN", csvFldType_CHAR, 10, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "SHRUB_COVER_PATTERN")
 	@CsvBindByPosition(position = 10)
 	private String shrubCoverPattern;
 
 	// { "HERB_COVER_TYPE", csvFldType_CHAR, 10, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "HERB_COVER_TYPE_CODE")
 	@CsvBindByPosition(position = 11)
 	private String herbCoverTypeCode;
 
 	// { "HERB_COVER_PCT", csvFldType_SHORT, 3, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "HERB_COVER_PCT")
 	@CsvBindByPosition(position = 12)
 	private String herbCoverPercent;
 
 	// { "HERB_COVER_PATTERN", csvFldType_CHAR, 10, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "HERB_COVER_PATTERN_CODE")
 	@CsvBindByPosition(position = 13)
 	private String herbCoverPatternCode;
 
 	// { "BRYOID_COVER_PCT", csvFldType_SHORT, 3, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "BRYOID_COVER_PCT")
 	@CsvBindByPosition(position = 14)
 	private String bryoidCoverPercent;
 
 	// { "BEC_ZONE_CD", csvFldType_CHAR, 10, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "BEC_ZONE_CODE")
 	@CsvBindByPosition(position = 15)
 	private String becZoneCode;
 
 	// { "CFS_ECO_ZONE", csvFldType_SHORT, 3, 0, "", TRUE }
 	// Maps to CfsEcoZone
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "CFS_ECOZONE")
 	@CsvBindByPosition(position = 16)
 	private String cfsEcoZoneCode;
 
 	// { "STOCKABILITY", csvFldType_SINGLE, 4, 1, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "PRE_DISTURBANCE_STOCKABILITY")
 	@CsvBindByPosition(position = 17)
 	private String percentStockable;
 
 	// { "YIELD_FACTOR", csvFldType_SINGLE, 5, 3, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "YIELD_FACTOR")
 	@CsvBindByPosition(position = 18)
 	private String yieldFactor;
 
 	// { "NON_PRODUCTIVE_DESCRIPTOR_CD", csvFldType_CHAR, 5, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "NON_PRODUCTIVE_DESCRIPTOR_CD")
 	@CsvBindByPosition(position = 19)
 	private String nonProductiveDescriptorCode;
 
 	// { "BCLCS_LEVEL_1", csvFldType_CHAR, 10, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "BCLCS_LEVEL1_CODE")
 	@CsvBindByPosition(position = 20)
 	private String bclcsLevel1Code;
 
 	// { "BCLCS_LEVEL_2", csvFldType_CHAR, 10, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "BCLCS_LEVEL2_CODE")
 	@CsvBindByPosition(position = 21)
 	private String bclcsLevel2Code;
 
 	// { "BCLCS_LEVEL_3", csvFldType_CHAR, 10, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "BCLCS_LEVEL3_CODE")
 	@CsvBindByPosition(position = 22)
 	private String bclcsLevel3Code;
 
 	// { "BCLCS_LEVEL_4", csvFldType_CHAR, 10, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "BCLCS_LEVEL4_CODE")
 	@CsvBindByPosition(position = 23)
 	private String bclcsLevel4Code;
 
 	// { "BCLCS_LEVEL_5", csvFldType_CHAR, 10, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "BCLCS_LEVEL5_CODE")
 	@CsvBindByPosition(position = 24)
 	private String bclcsLevel5Code;
 
 	// { "REFERENCE_YEAR", csvFldType_SHORT, 4, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "PHOTO_ESTIMATION_BASE_YEAR")
 	@CsvBindByPosition(position = 25)
 	private String referenceYear;
 
 	// { "YEAR_OF_DEATH", csvFldType_SHORT, 4, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "REFERENCE_YEAR")
 	@CsvBindByPosition(position = 26)
 	private String yearOfDeath;
 
 	// { "STOCKABILITY_DEAD", csvFldType_SINGLE, 4, 1, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "PCT_DEAD")
 	@CsvBindByPosition(position = 27)
 	private String percentDead;
 
 	// { "NON_VEG_COVER_TYPE_1", csvFldType_CHAR, 10, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "NON_VEG_COVER_TYPE_1")
 	@CsvBindByPosition(position = 28)
 	private String nonVegCoverType1;
 
 	// { "NON_VEG_COVER_PCT_1", csvFldType_SHORT, 3, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "NON_VEG_COVER_PCT_1")
 	@CsvBindByPosition(position = 29)
 	private String nonVegCoverPercent1;
 
 	// { "NON_VEG_COVER_PATTERN_1", csvFldType_CHAR, 10, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "NON_VEG_COVER_PATTERN_1")
 	@CsvBindByPosition(position = 30)
 	private String nonVegCoverPattern1;
 
 	// { "NON_VEG_COVER_TYPE_2", csvFldType_CHAR, 10, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "NON_VEG_COVER_TYPE_2")
 	@CsvBindByPosition(position = 31)
 	private String nonVegCoverType2;
 
 	// { "NON_VEG_COVER_PCT_2", csvFldType_SHORT, 3, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "NON_VEG_COVER_PCT_2")
 	@CsvBindByPosition(position = 32)
 	private String nonVegCoverPercent2;
 
 	// { "NON_VEG_COVER_PATTERN_2", csvFldType_CHAR, 10, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "NON_VEG_COVER_PATTERN_2")
 	@CsvBindByPosition(position = 33)
 	private String nonVegCoverPattern2;
 
 	// { "NON_VEG_COVER_TYPE_3", csvFldType_CHAR, 10, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "NON_VEG_COVER_TYPE_3")
 	@CsvBindByPosition(position = 34)
 	private String nonVegCoverType3;
 
 	// { "NON_VEG_COVER_PCT_3", csvFldType_SHORT, 3, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "NON_VEG_COVER_PCT_3")
 	@CsvBindByPosition(position = 35)
 	private String nonVegCoverPercent3;
 
 	// { "NON_VEG_COVER_PATTERN_3", csvFldType_CHAR, 10, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "NON_VEG_COVER_PATTERN_3")
 	@CsvBindByPosition(position = 36)
 	private String nonVegCoverPattern3;
 
 	// { "LAND_COVER_CLASS_CD_1", csvFldType_CHAR, 10, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "LAND_COVER_CLASS_CD_1")
 	@CsvBindByPosition(position = 37)
 	private String landCoverClassCode1;
 
 	// { "LAND_COVER_CLASS_PCT_1", csvFldType_SHORT, 3, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "LAND_COVER_PCT_1")
 	@CsvBindByPosition(position = 38)
 	private String landCoverPercent1;
 
 	// { "LAND_COVER_CLASS_CD_2", csvFldType_CHAR, 10, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "LAND_COVER_CLASS_CD_2")
 	@CsvBindByPosition(position = 39)
 	private String landCoverClassCode2;
 
 	// { "LAND_COVER_CLASS_PCT_2", csvFldType_SHORT, 3, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "LAND_COVER_PCT_2")
 	@CsvBindByPosition(position = 40)
 	private String landCoverPercent2;
 
 	// { "LAND_COVER_CLASS_CD_3", csvFldType_CHAR, 10, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "LAND_COVER_CLASS_CD_3")
 	@CsvBindByPosition(position = 41)
 	private String landCoverClassCode3;
 
 	// { "LAND_COVER_CLASS_PCT_3", csvFldType_SHORT, 3, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@CsvBindByName(column = "LAND_COVER_PCT_3")
 	@CsvBindByPosition(position = 42)
 	private String landCoverPercent3;
 
