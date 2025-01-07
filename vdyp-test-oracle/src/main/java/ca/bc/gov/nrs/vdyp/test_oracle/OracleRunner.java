@@ -75,6 +75,7 @@ public class OracleRunner {
 
 			deleteDir(tempSubdir);
 			Files.createDirectory(tempSubdir);
+			Files.createDirectory(outputSubdir);
 			copyDir(originalSubdir, inputSubdir);
 
 			// Make sure the params file includes the flag to save the intermediate data
@@ -96,15 +97,19 @@ public class OracleRunner {
 			builder.environment().put(INSTALL_DIR_ENV, installDir.toAbsolutePath().toString());
 			builder.environment().put(PARAM_DIR_ENV, paramSubdir.toAbsolutePath().toString());
 
-			builder.command("RunVDYP7.cmd");
+			//builder.command(inputSubdir.resolve("RunVDYP7.cmd").toAbsolutePath().toString());
+			builder.command(installDir.resolve("VDYP7Console.exe").toAbsolutePath().toString(), "-p", paramSubdir.resolve("parms.txt").toAbsolutePath().toString());
 
-			System.out.format("Running %s", builder.command());
-			System.out.format("PWD=%s", builder.directory());
-			System.out.format("ENV=%s", builder.environment());
+			System.out.format("Running %s\n", builder.command());
+			System.out.format("PWD=%s\n", builder.directory());
+			System.out.format("ENV=%s\n", builder.environment());
+
+			Path intermediateDir = installDir.resolve("VDYP_CFG");
+			deleteFiles(intermediateDir, file->file.getFileName().toString().startsWith("P-SAVE_VDYP"));
 
 			run(builder).get();
 
-			copyOutput(originalSubdir, inputSubdir, outputSubdir, finalSubdir);
+			copyOutput(originalSubdir, inputSubdir, intermediateDir, outputSubdir, finalSubdir);
 		}
 
 	}
@@ -118,7 +123,7 @@ public class OracleRunner {
 	 * @param finalSubdir
 	 * @throws IOException
 	 */
-	void copyOutput(Path originalSubdir, Path inputSubdir, Path outputSubdir, Path finalSubdir) throws IOException {
+	void copyOutput(Path originalSubdir, Path inputSubdir, Path intermediateDir, Path outputSubdir, Path finalSubdir) throws IOException {
 		deleteDir(finalSubdir);
 		Files.createDirectory(finalSubdir);
 
@@ -145,16 +150,17 @@ public class OracleRunner {
 		Files.createDirectory(otherDir);
 
 		copyDir(inputSubdir, inputDir);
+		
 
-		copyFiles(outputSubdir, fipDir, file -> file.getFileName().toString().contains("_FIP"));
-		copyFiles(outputSubdir, vriDir, file -> file.getFileName().toString().contains("_VRI"));
-		copyFiles(outputSubdir, adjustDir, file -> file.getFileName().toString().contains("_AJST"));
-		copyFiles(outputSubdir, forwardDir, file -> file.getFileName().toString().contains("_7INP"));
-		copyFiles(outputSubdir, forwardOutDir, file -> file.getFileName().toString().contains("_7OUT"));
-		copyFiles(outputSubdir, backDir, file -> file.getFileName().toString().contains("_BINP"));
-		copyFiles(outputSubdir, backOutDir, file -> file.getFileName().toString().contains("_BOUT"));
-		copyFiles(outputSubdir, backOutDir, file -> file.getFileName().toString().contains("_BOUT"));
-		copyFiles(outputSubdir, otherDir, file -> file.getFileName().toString().contains("_GROW"));
+		copyFiles(intermediateDir, fipDir, file -> file.getFileName().toString().contains("_FIP"));
+		copyFiles(intermediateDir, vriDir, file -> file.getFileName().toString().contains("_VRI"));
+		copyFiles(intermediateDir, adjustDir, file -> file.getFileName().toString().contains("_AJST"));
+		copyFiles(intermediateDir, forwardDir, file -> file.getFileName().toString().contains("_7INP"));
+		copyFiles(intermediateDir, forwardOutDir, file -> file.getFileName().toString().contains("_7OUT"));
+		copyFiles(intermediateDir, backDir, file -> file.getFileName().toString().contains("_BINP"));
+		copyFiles(intermediateDir, backOutDir, file -> file.getFileName().toString().contains("_BOUT"));
+		copyFiles(intermediateDir, backOutDir, file -> file.getFileName().toString().contains("_BOUT"));
+		copyFiles(intermediateDir, otherDir, file -> file.getFileName().toString().contains("_GROW"));
 
 		copyFiles(outputSubdir, outputDir, file -> file.getFileName().toString().startsWith("Output_"));
 	}
@@ -163,6 +169,14 @@ public class OracleRunner {
 		try (var dirStream = Files.newDirectoryStream(source, filter)) {
 			for (var file : dirStream) {
 				FileUtils.copyFileToDirectory(file.toFile(), destination.toFile());
+			}
+		}
+	}
+	
+	void deleteFiles(Path parent, DirectoryStream.Filter<Path> filter) throws IOException {
+		try (var dirStream = Files.newDirectoryStream(parent, filter)) {
+			for (var file : dirStream) {
+				FileUtils.deleteQuietly(file.toFile());
 			}
 		}
 	}
