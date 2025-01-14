@@ -323,6 +323,19 @@ const runModelHandler = async () => {
     formData.append('polygonInputData', polygonFile.value as Blob)
     formData.append('layersInputData', layerFile.value as Blob)
 
+    console.log('FileUpload formData content:')
+    formData.forEach((value, key) => {
+      console.log(`${key}: ${value}`)
+
+      if (value instanceof Blob) {
+        const reader = new FileReader()
+        reader.onload = () => {
+          console.log(`${key}: ${reader.result}`)
+        }
+        reader.readAsText(value)
+      }
+    })
+
     const result = await projectionHcsvPost(formData, false)
 
     const url = window.URL.createObjectURL(new Blob([result]))
