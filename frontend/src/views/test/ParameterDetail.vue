@@ -1,6 +1,6 @@
 <template>
   <div>
-    <p>(test)Root:</p>
+    <p>(test2)Root:</p>
     <ul v-if="rootDetails">
       <li v-for="link in rootDetails.links" :key="link.href">
         <strong>{{ link.rel }}:</strong> {{ link.method }} - {{ link.href }}

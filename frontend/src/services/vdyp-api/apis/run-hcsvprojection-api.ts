@@ -73,14 +73,17 @@ export const RunHCSVProjectionApiAxiosParamCreator = function (
       }
       localVarRequestOptions.data = localVarFormParams
 
-      console.log('(api client) Axios Request Options:', localVarRequestOptions)
-      console.log('(api client) FormData Content:')
+      console.info(
+        '(api client) Axios Request Options:',
+        localVarRequestOptions,
+      )
+      console.info('(api client) FormData Content:')
       if (polygonInputData)
-        console.log('(api client) polygonInputData:', polygonInputData)
+        console.info('(api client) polygonInputData:', polygonInputData)
       if (layersInputData)
-        console.log('(api client) layersInputData:', layersInputData)
+        console.info('(api client) layersInputData:', layersInputData)
       if (projectionParameters)
-        console.log('(api client) projectionParameters:', projectionParameters)
+        console.info('(api client) projectionParameters:', projectionParameters)
 
       return {
         url:
