@@ -19,7 +19,7 @@ RUN apk add --no-cache ca-certificates && \
     chown -R 1001:1001 /config/caddy /data/caddy
 
 # Copy the root CA certificate to /etc/ssl/certs
-COPY entrust_g2_ca.crt /etc/ssl/certs/entrust_g2_ca.crt
+COPY ${CONTEXT}/entrust_g2_ca.crt /etc/ssl/certs/entrust_g2_ca.crt
 RUN update-ca-certificates
 
 # Copy static files and run formatting
