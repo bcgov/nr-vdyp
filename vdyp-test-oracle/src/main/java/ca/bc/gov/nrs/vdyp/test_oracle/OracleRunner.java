@@ -97,6 +97,12 @@ public class OracleRunner {
 			builder.environment().put(INSTALL_DIR_ENV, installDir.toAbsolutePath().toString());
 			builder.environment().put(PARAM_DIR_ENV, paramSubdir.toAbsolutePath().toString());
 
+			builder.environment().merge(
+					"PATH",
+					installDir.toAbsolutePath().toString(),
+					(old, add) -> String.format("%s;%s", old, add)
+			);
+
 			//builder.command(inputSubdir.resolve("RunVDYP7.cmd").toAbsolutePath().toString());
 			builder.command(installDir.resolve("VDYP7Console.exe").toAbsolutePath().toString(), "-p", paramSubdir.resolve("parms.txt").toAbsolutePath().toString());
 

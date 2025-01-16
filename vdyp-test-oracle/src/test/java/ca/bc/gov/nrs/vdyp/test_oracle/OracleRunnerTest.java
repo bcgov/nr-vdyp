@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.vdyp.test_oracle;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -15,7 +16,9 @@ import org.apache.commons.io.FileUtils;
 import org.easymock.EasyMock;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.CleanupMode;
 import org.junit.jupiter.api.io.TempDir;
@@ -49,6 +52,11 @@ class OracleRunnerTest {
 	String[] INPUT1_TESTS = new String[] { "test1" };
 	String[] INPUT2_TESTS = new String[] { "test1", "test2" };
 
+	@BeforeEach
+	void setupInstallDir() throws IOException {
+		Files.createDirectory(installDir.resolve("VDYP_CFG"));
+	}
+
 	void setupInput1() throws IOException {
 		for (String testName : INPUT1_TESTS) {
 			Files.createDirectories(inputDir.resolve(testName));
@@ -75,7 +83,11 @@ class OracleRunnerTest {
 
 			@Override
 			protected CompletableFuture<Void> run(ProcessBuilder builder) throws IOException {
-				assertThat(builder.command(), contains(equalTo("RunVDYP7.cmd")));
+				assertThat(
+						builder.command(), contains(
+								endsWith("VDYP7Console.exe"), equalTo("-p"), endsWith("test1/input/parms.txt")
+						)
+				);
 				assertThat(builder.directory(), equalTo(tempDir.resolve("test1/input").toAbsolutePath().toFile()));
 				assertThat(
 						builder.environment(),
