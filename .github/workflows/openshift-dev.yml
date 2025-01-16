@@ -27,7 +27,7 @@ jobs:
           build_context: .
           build_file: ${{matrix.package}}/Dockerfile
           package: ${{ matrix.package }}
-          tag: ${{ github.event.number }}
+          tag: pr-100
           tag_fallback: latest
           triggers: ('${{ matrix.package }}/')
 
