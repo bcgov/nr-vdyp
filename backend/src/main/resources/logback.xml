@@ -28,6 +28,8 @@
     </encoder>
   </appender>
 
+  <logger name="ca.bc.gov.nrs.vdyp.backend" level="DEBUG" /> 
+
   <root level="INFO">
     <appender-ref ref="sifter" />
     <appender-ref ref="stdout" />
