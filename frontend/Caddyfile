@@ -35,6 +35,9 @@
 		header_up Host {http.reverse_proxy.upstream.hostport}
 		header_up X-Real-IP {remote_host}
 		header_up X-Forwarded-For {remote_host}
+		transport http {
+			tls_insecure_skip_verify
+		}
   }
 	header {
 		X-Frame-Options "SAMEORIGIN"
