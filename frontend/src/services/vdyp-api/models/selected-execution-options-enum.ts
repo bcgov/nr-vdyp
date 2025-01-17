@@ -1,5 +1,3 @@
-/* tslint:disable */
-/* eslint-disable */
 export enum SelectedExecutionOptionsEnum {
   BackGrowEnabled = 'backGrowEnabled',
   ForwardGrowEnabled = 'forwardGrowEnabled',
@@ -21,4 +19,7 @@ export enum SelectedExecutionOptionsEnum {
   DoIncludeColumnHeadersInYieldTable = 'doIncludeColumnHeadersInYieldTable',
   DoAllowBasalAreaAndTreesPerHectareValueSubstitution = 'doAllowBasalAreaAndTreesPerHectareValueSubstitution',
   DoIncludeSecondarySpeciesDominantHeightInYieldTable = 'doIncludeSecondarySpeciesDominantHeightInYieldTable',
+  DoEnableProgressLogging = 'doEnableProgressLogging',
+  DoEnableErrorLogging = 'doEnableErrorLogging',
+  DoEnableDebugLogging = 'doEnableDebugLogging',
 }

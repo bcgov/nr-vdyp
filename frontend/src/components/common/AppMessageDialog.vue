@@ -1,17 +1,16 @@
 <template>
   <v-dialog
-    v-model="dialog"
+    :model-value="computedDialog"
+    @update:model-value="updateDialog"
     persistent
-    :max-width="options && options.width ? options.width : '400'"
+    :max-width="computedDialogWidth"
   >
-    <v-card>
-      <v-card-title
-        style="font-weight: 300 !important; padding-left: 30px !important"
-        class="popup-header"
-        >{{ title || 'VDYP Message' }}</v-card-title
-      >
+    <v-card :style="computedDialogStyle">
+      <v-card-title :style="computedHeaderStyle" class="popup-header">
+        {{ computedTitle }}
+      </v-card-title>
       <v-card-text
-        v-show="Boolean(message)"
+        v-show="Boolean(computedMessage)"
         class="pa-4"
         style="
           font-size: 14px;
@@ -20,16 +19,21 @@
           white-space: pre-line;
         "
       >
-        {{ message }}
+        {{ computedMessage }}
       </v-card-text>
       <v-card-actions
         class="pt-3"
-        style="background-color: #f6f6f6; border-top: 1px solid #0000001f"
+        :style="{
+          backgroundColor: computedActionsBackground,
+          borderTop: '1px solid #0000001f',
+        }"
       >
         <v-spacer></v-spacer>
-        <v-btn class="blue-btn ml-2" @click="agree">{{
-          btnLabel || 'OK'
-        }}</v-btn>
+        <AppButton
+          :label="computedBtnLabel"
+          customClass="blue-btn ml-2"
+          @click="agree"
+        />
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -37,20 +41,58 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useMessageDialogStore } from '@/stores/common/messageDialogStore'
+import AppButton from '@/components/core/AppButton.vue'
+import { BUTTON_LABEL } from '@/constants/constants'
 
-const messageDialogStore = useMessageDialogStore()
+const props = defineProps<{
+  dialog?: boolean
+  title?: string
+  message?: string
+  dialogWidth?: number
+  dialogBorderRadius?: number
+  btnLabel?: string
+  headerBackground?: string
+  headerColor?: string
+  actionsBackground?: string
+}>()
 
-const dialog = computed(() => messageDialogStore.isOpen)
-const title = computed(() => messageDialogStore.dialogTitle || 'VDYP Message')
-const message = computed(() => messageDialogStore.dialogMessage || '')
-const btnLabel = computed(() => messageDialogStore.dialogBtnLabel || 'OK')
-const options = computed(
-  () => messageDialogStore.dialogOptions || { width: '400px' },
+const emit = defineEmits(['update:dialog', 'close'])
+
+const computedDialog = computed(() => props.dialog ?? false)
+const computedTitle = computed(() => props.title ?? '')
+const computedMessage = computed(() => props.message ?? '')
+const computedDialogWidth = computed(() => props.dialogWidth ?? 400)
+const computedBtnLabel = computed(
+  () => props.btnLabel ?? BUTTON_LABEL.CONT_EDIT,
 )
 
+const computedHeaderStyle = computed(() => ({
+  fontWeight: '300',
+  paddingLeft: '30px',
+  padding: '1rem',
+  background: props.headerBackground ?? '#003366',
+  color: props.headerColor ?? '#ffffff',
+}))
+
+const computedActionsBackground = computed(
+  () => props.actionsBackground ?? '#f6f6f6',
+)
+
+const computedDialogStyle = computed(() => {
+  return {
+    borderRadius: `${props.dialogBorderRadius ?? 8}px`,
+  }
+})
+
+// Emit updates for dialog visibility
+const updateDialog = (value: boolean) => {
+  emit('update:dialog', value)
+}
+
+// Emit close event and close the dialog
 const agree = () => {
-  messageDialogStore.agree()
+  emit('update:dialog', false)
+  emit('close')
 }
 </script>
 

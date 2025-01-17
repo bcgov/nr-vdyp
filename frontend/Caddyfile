@@ -31,13 +31,11 @@
 	}
 	rewrite @spa_router {http.matchers.file.relative}
 	# Proxy requests to API service
-	handle_path /api/* {
-		reverse_proxy {$VITE_API_URL} {
-			header_up Host {http.reverse_proxy.upstream.hostport}
-			header_up X-Real-IP {remote_host}
-			header_up X-Forwarded-For {remote_host}
-		}
-	}
+	reverse_proxy /api/* {$VITE_API_URL} {
+		header_up Host {http.reverse_proxy.upstream.hostport}
+		header_up X-Real-IP {remote_host}
+		header_up X-Forwarded-For {remote_host}
+  }
 	header {
 		X-Frame-Options "SAMEORIGIN"
 		X-XSS-Protection "1;mode=block"

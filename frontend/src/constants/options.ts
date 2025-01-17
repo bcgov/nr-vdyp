@@ -49,9 +49,15 @@ export const volumeReportedOptions = [
 ]
 
 export const includeInReportOptions = [
-  { label: 'Computed MAI', value: 'Computed MAI' },
-  { label: 'Species Composition', value: 'Species Composition' },
-  { label: 'Culmination Values', value: 'Culmination Values' },
+  { label: 'Computed MAI', value: CONSTANTS.INCLUDE_IN_REPORT.COMPUTED_MAI },
+  {
+    label: 'Species Composition',
+    value: CONSTANTS.INCLUDE_IN_REPORT.SPECIES_COMPOSITION,
+  },
+  {
+    label: 'Culmination Values',
+    value: CONSTANTS.INCLUDE_IN_REPORT.CULMINATION_VALUES,
+  },
 ]
 
 export const projectionTypeOptions = [

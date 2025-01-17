@@ -1,5 +1,3 @@
-/* tslint:disable */
-/* eslint-disable */
-export * from './apis/help-endpoint-api'
-export * from './apis/projection-endpoint-api'
-export * from './apis/root-endpoint-api'
+export * from './apis/get-help-api'
+export * from './apis/get-root-api'
+export * from './apis/run-hcsvprojection-api'
