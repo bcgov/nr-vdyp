@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.vdyp.forward.parsers;
+package ca.bc.gov.nrs.vdyp.io.parse.model;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -51,6 +51,8 @@ public class VdypSpeciesParser implements ControlMapValueReplacer<Object, String
 	private static final String IS_PRIMARY_SPECIES = "IS_PRIMARY_SPECIES"; // INSITESP
 	private static final String SITE_CURVE_NUMBER = "SITE_CURVE_NUMBER"; // SCN
 
+	private static final ValueOrMarker.Builder<Optional<LayerType>, EndOfRecord> LAYER_TYPE_EOR_BUILDER = new ValueOrMarker.Builder<>();
+
 	@Override
 	public ControlKey getControlKey() {
 		return ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SPECIES;
@@ -86,13 +88,13 @@ public class VdypSpeciesParser implements ControlMapValueReplacer<Object, String
 					.value(5, PERCENT_SPECIES_2, ControlledValueParser.optional(ValueParser.PERCENTAGE))
 					.value(3, SPECIES_3, ControlledValueParser.optional(ControlledValueParser.SPECIES))
 					.value(5, PERCENT_SPECIES_3, ControlledValueParser.optional(ValueParser.PERCENTAGE))
-					.value(6, SITE_INDEX, VdypForwardDefaultingParser.FLOAT_WITH_DEFAULT)
-					.value(6, DOMINANT_HEIGHT, VdypForwardDefaultingParser.FLOAT_WITH_DEFAULT)
-					.value(6, TOTAL_AGE, VdypForwardDefaultingParser.FLOAT_WITH_DEFAULT)
-					.value(6, AGE_AT_BREAST_HEIGHT, VdypForwardDefaultingParser.FLOAT_WITH_DEFAULT)
-					.value(6, YEARS_TO_BREAST_HEIGHT, VdypForwardDefaultingParser.FLOAT_WITH_DEFAULT)
+					.value(6, SITE_INDEX, ValueParser.FLOAT_WITH_DEFAULT)
+					.value(6, DOMINANT_HEIGHT, ValueParser.FLOAT_WITH_DEFAULT)
+					.value(6, TOTAL_AGE, ValueParser.FLOAT_WITH_DEFAULT)
+					.value(6, AGE_AT_BREAST_HEIGHT, ValueParser.FLOAT_WITH_DEFAULT)
+					.value(6, YEARS_TO_BREAST_HEIGHT, ValueParser.FLOAT_WITH_DEFAULT)
 					.value(2, IS_PRIMARY_SPECIES, ControlledValueParser.optional(ValueParser.LOGICAL_0_1))
-					.value(3, SITE_CURVE_NUMBER, VdypForwardDefaultingParser.INTEGER_WITH_DEFAULT);
+					.value(3, SITE_CURVE_NUMBER, ValueParser.INTEGER_WITH_DEFAULT);
 
 			var is = fileResolver.resolveForInput(fileName);
 
@@ -107,11 +109,8 @@ public class VdypSpeciesParser implements ControlMapValueReplacer<Object, String
 						throws ResourceParseException {
 
 					var polygonId = VdypPolygonDescriptionParser.parse((String) entry.get(DESCRIPTION));
-					var layerType = (ValueOrMarker<Optional<LayerType>, EndOfRecord>) entry.get(LAYER_TYPE);
-					if (layerType == null) {
-						var builder = new ValueOrMarker.Builder<Optional<LayerType>, EndOfRecord>();
-						layerType = builder.marker(EndOfRecord.END_OF_RECORD);
-					}
+					var layerType = (ValueOrMarker<Optional<LayerType>, EndOfRecord>) entry
+							.getOrDefault(LAYER_TYPE, LAYER_TYPE_EOR_BUILDER.marker(EndOfRecord.END_OF_RECORD));
 					var genusIndex = (Integer) entry.get(GENUS_INDEX);
 					var optionalGenus = (Optional<String>) entry.get(GENUS);
 					var genusNameText0 = (Optional<String>) entry.get(SPECIES_0);
@@ -136,44 +135,26 @@ public class VdypSpeciesParser implements ControlMapValueReplacer<Object, String
 
 						List<Sp64Distribution> gdList = new ArrayList<>();
 
-						Utils.ifBothPresent(
-								genusNameText0.filter(t -> genusDefinitionMap.contains(t)), percentGenus0,
-								(s, p) -> gdList.add(new Sp64Distribution(1, s, p))
-						);
+						speciesDistribution(genusDefinitionMap, genusNameText0, percentGenus0, 1)
+								.ifPresent(gdList::add);
 
-						Utils.ifBothPresent(
-								genusNameText1.filter(t -> genusDefinitionMap.contains(t)), percentGenus1,
-								(s, p) -> gdList.add(new Sp64Distribution(2, s, p))
-						);
+						speciesDistribution(genusDefinitionMap, genusNameText1, percentGenus1, 2)
+								.ifPresent(gdList::add);
 
-						Utils.ifBothPresent(
-								genusNameText2.filter(t -> genusDefinitionMap.contains(t)), percentGenus2,
-								(s, p) -> gdList.add(new Sp64Distribution(3, s, p))
-						);
+						speciesDistribution(genusDefinitionMap, genusNameText2, percentGenus2, 3)
+								.ifPresent(gdList::add);
 
-						Utils.ifBothPresent(
-								genusNameText3.filter(t -> genusDefinitionMap.contains(t)), percentGenus3,
-								(s, p) -> gdList.add(new Sp64Distribution(4, s, p))
-						);
+						speciesDistribution(genusDefinitionMap, genusNameText3, percentGenus3, 4)
+								.ifPresent(gdList::add);
 
 						Sp64DistributionSet speciesDistributionSet = new Sp64DistributionSet(4, gdList);
 
 						var genus = optionalGenus.orElse(genusDefinitionMap.getByIndex(genusIndex).getAlias());
 
-						var iTotalAge = totalAge;
-						var iYearsToBreastHeight = yearsToBreastHeight;
+						var inferredAges = inferAges(new Ages(totalAge, yearsAtBreastHeight, yearsToBreastHeight));
 
-						// From VDYPGETS.FOR, lines 235 to 255.
-						if (Float.isNaN(totalAge)) {
-							if (yearsAtBreastHeight > 0.0 && yearsToBreastHeight > 0.0)
-								iTotalAge = yearsAtBreastHeight + yearsToBreastHeight;
-						} else if (Float.isNaN(yearsToBreastHeight)) {
-							if (yearsAtBreastHeight > 0.0 && totalAge > yearsAtBreastHeight)
-								iYearsToBreastHeight = totalAge - yearsAtBreastHeight;
-						}
-
-						var inferredTotalAge = iTotalAge;
-						var inferredYearsToBreastHeight = iYearsToBreastHeight;
+						var inferredTotalAge = inferredAges.totalAge;
+						var inferredYearsToBreastHeight = inferredAges.yearsToBreastHeight;
 
 						return VdypSpecies.build(speciesBuilder -> {
 							speciesBuilder.sp64DistributionSet(speciesDistributionSet);
@@ -181,7 +162,7 @@ public class VdypSpeciesParser implements ControlMapValueReplacer<Object, String
 							speciesBuilder.layerType(lt);
 							speciesBuilder.genus(genus, controlMap);
 
-							if (isPrimarySpecies.isPresent() && isPrimarySpecies.get() == true) {
+							if (isPrimarySpecies.orElse(false)) {
 								speciesBuilder.addSite(siteBuilder -> {
 									siteBuilder.ageTotal(inferredTotalAge);
 									siteBuilder.height(dominantHeight);
@@ -195,6 +176,16 @@ public class VdypSpeciesParser implements ControlMapValueReplacer<Object, String
 							}
 						});
 					})), builder::marker);
+				}
+
+				private Optional<Sp64Distribution> speciesDistribution(
+						GenusDefinitionMap genusDefinitionMap, Optional<String> genusNameText0,
+						Optional<Float> percentGenus0, int index
+				) {
+					return Utils.mapBoth(
+							genusNameText0.filter(genusDefinitionMap::contains), percentGenus0,
+							(s, p) -> new Sp64Distribution(index, s, p)
+					);
 				}
 			};
 
@@ -220,6 +211,31 @@ public class VdypSpeciesParser implements ControlMapValueReplacer<Object, String
 				}
 			};
 		};
+	}
+
+	record Ages(float totalAge, float yearsAtBreastHeight, float yearsToBreastHeight) {
+	}
+
+	/**
+	 * Fills in NaN value for one of totalAge or yearsToBreastHeight if the other values are valid numbers
+	 *
+	 * @param givenAges
+	 * @return An ages object with the NaN value filled in.
+	 */
+	static Ages inferAges(final Ages givenAges) {
+		var iTotalAge = givenAges.totalAge;
+		var iYearsToBreastHeight = givenAges.yearsToBreastHeight;
+
+		// From VDYPGETS.FOR, lines 235 to 255.
+		if (Float.isNaN(givenAges.totalAge)) {
+			if (givenAges.yearsAtBreastHeight > 0.0 && givenAges.yearsToBreastHeight > 0.0)
+				iTotalAge = givenAges.yearsAtBreastHeight + givenAges.yearsToBreastHeight;
+		} else if (Float.isNaN(givenAges.yearsToBreastHeight)) {
+			if (givenAges.yearsAtBreastHeight > 0.0 && givenAges.totalAge > givenAges.yearsAtBreastHeight)
+				iYearsToBreastHeight = givenAges.totalAge - givenAges.yearsAtBreastHeight;
+		}
+
+		return new Ages(iTotalAge, givenAges.yearsAtBreastHeight, iYearsToBreastHeight);
 	}
 
 	@Override

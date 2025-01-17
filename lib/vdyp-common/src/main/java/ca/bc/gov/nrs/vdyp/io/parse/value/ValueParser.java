@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.io.parse.value;
 
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -11,9 +12,12 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+import org.apache.commons.lang3.StringUtils;
+
 import ca.bc.gov.nrs.vdyp.common.ValueOrMarker;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.Region;
+import ca.bc.gov.nrs.vdyp.model.VdypEntity;
 
 /**
  * Parses a string to a value
@@ -40,6 +44,42 @@ public interface ValueParser<T> extends ControlledValueParser<T> {
 	default T parse(String string, Map<String, Object> control) throws ValueParseException {
 		// Ignore the control map
 		return this.parse(string);
+	}
+
+	/**
+	 * Validate that a parsed value is greater than 0 and less than (or, if includeMax is true, equal to) max.
+	 * Additionally, if the value is -9.0, it is considered "not present" and Float.NaN is returns.
+	 *
+	 * @param parser     underlying parser
+	 * @param max        the upper bound
+	 * @param includeMax is the upper bound inclusive
+	 * @param name       Name for the value to use in the parse error if it is out of the range.
+	 */
+	static <T extends Comparable<T>> ValueParser<T> rangeSilentWithDefaulting(
+			ValueParser<T> parser, T min, boolean includeMin, T max, boolean includeMax, T missingIndicator,
+			T defaultValue, String name
+	) {
+		return ValueParser.validate(s -> {
+			var result = defaultValue;
+			if (!StringUtils.isEmpty(s)) {
+				result = parser.parse(s);
+				if (missingIndicator.equals(result)) {
+					result = defaultValue;
+				}
+			}
+			return result;
+		}, result -> {
+			if (!defaultValue.equals(result) && (result.compareTo(max) > (includeMax ? 0 : -1)
+					|| result.compareTo(min) < (includeMin ? 0 : 1))) {
+				return Optional.of(
+						MessageFormat.format(
+								"{} must be between {} ({}) and {} ({})", name, min,
+								includeMin ? "inclusive" : "exclusive", max, includeMax ? "inclusive" : "exclusive"
+						)
+				);
+			}
+			return Optional.empty();
+		});
 	}
 
 	public static interface JavaNumberParser<U extends Number> {
@@ -475,5 +515,22 @@ public interface ValueParser<T> extends ControlledValueParser<T> {
 			return result;
 		};
 	}
+
+	/**
+	 * Parser for non-negative single precision floats with default -9.0. -9.0 results in an
+	 * VdypEntity.MISSING_FLOAT_VALUE being returned. All other negative values, and those greater than Float.MAX_VALUE,
+	 * result in an error.
+	 */
+	ValueParser<Float> FLOAT_WITH_DEFAULT = rangeSilentWithDefaulting(
+			FLOAT, 0.0f, true, Float.MAX_VALUE, true, -9.0f, VdypEntity.MISSING_FLOAT_VALUE, "non-negative float"
+	);
+
+	/**
+	 * Parser for non-negative integers with default -9. -9 results in VdypEntity.MISSING_INTEGER_VALUE being returned.
+	 * All other negative values, and those > Float.MAX_VALUE, result in an error.
+	 */
+	ValueParser<Integer> INTEGER_WITH_DEFAULT = rangeSilentWithDefaulting(
+			INTEGER, 0, true, Integer.MAX_VALUE, true, -9, VdypEntity.MISSING_INTEGER_VALUE, "non-negative integer"
+	);
 
 }
