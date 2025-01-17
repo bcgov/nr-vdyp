@@ -1,5 +1,3 @@
-/* tslint:disable */
-/* eslint-disable */
 export enum MetadataToOutputEnum {
   ALL = 'ALL',
   MAIN = 'MAIN',

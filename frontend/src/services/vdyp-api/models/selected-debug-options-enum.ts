@@ -1,5 +1,3 @@
-/* tslint:disable */
-/* eslint-disable */
 export enum SelectedDebugOptionsEnum {
   DoIncludeDebugTimestamps = 'doIncludeDebugTimestamps',
   DoIncludeDebugRoutineNames = 'doIncludeDebugRoutineNames',
