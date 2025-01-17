@@ -1,18 +1,9 @@
-/* tslint:disable */
-/* eslint-disable */
 import { Configuration } from './configuration'
-// Some imports not used depending on template conditions
-// @ts-ignore
 import globalAxios from 'axios'
 import type { AxiosRequestConfig, AxiosInstance } from 'axios'
-import { env } from '@/env'
 
-export const BASE_PATH = env.VITE_API_URL.replace(/\/+$/, '')
+export const BASE_PATH = ''
 
-/**
- *
- * @export
- */
 export const COLLECTION_FORMATS = {
   csv: ',',
   ssv: ' ',
@@ -20,21 +11,11 @@ export const COLLECTION_FORMATS = {
   pipes: '|',
 }
 
-/**
- *
- * @export
- * @interface RequestArgs
- */
 export interface RequestArgs {
   url: string
   options: AxiosRequestConfig
 }
 
-/**
- *
- * @export
- * @class BaseAPI
- */
 export class BaseAPI {
   protected configuration: Configuration | undefined
 
@@ -50,12 +31,6 @@ export class BaseAPI {
   }
 }
 
-/**
- *
- * @export
- * @class RequiredError
- * @extends {Error}
- */
 export class RequiredError extends Error {
   name: 'RequiredError' = 'RequiredError'
   constructor(

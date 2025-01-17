@@ -1,5 +1,3 @@
-/* tslint:disable */
-/* eslint-disable */
 export enum ValueEnum {
   Excl = 'Excl',
   _40 = '4.0',

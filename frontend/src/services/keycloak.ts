@@ -66,7 +66,7 @@ export const initializeKeycloak = async (): Promise<Keycloak | undefined> => {
       keycloakInstance.authenticated = true
 
       // Perform token validation
-      if (!validateAccessToken(keycloakInstance.token)) {
+      if (!validateAccessToken(keycloakInstance.token ?? '')) {
         logErrorAndLogout(
           AUTH_ERR.AUTH_001,
           'Token validation failed (Error: AUTH_001).',
@@ -129,6 +129,11 @@ export const initializeKeycloak = async (): Promise<Keycloak | undefined> => {
 }
 
 const validateAccessToken = (accessToken: string): boolean => {
+  if (!accessToken) {
+    console.error('Access token is missing.')
+    return false
+  }
+
   try {
     const tokenParsed = JSON.parse(atob(accessToken.split('.')[1]))
 

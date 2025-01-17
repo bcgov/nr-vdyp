@@ -1,5 +1,14 @@
 <template>
   <v-card class="elevation-4">
+    <AppMessageDialog
+      :dialog="messageDialog.dialog"
+      :title="messageDialog.title"
+      :message="messageDialog.message"
+      :dialogWidth="messageDialog.dialogWidth"
+      :btnLabel="messageDialog.btnLabel"
+      @update:dialog="(value) => (messageDialog.dialog = value)"
+      @close="handleDialogClose"
+    />
     <v-expansion-panels v-model="panelOpenStates.speciesInfo">
       <v-expansion-panel hide-actions>
         <v-expansion-panel-title>
@@ -7,7 +16,7 @@
             <v-col cols="auto" class="expansion-panel-icon-col">
               <v-icon class="expansion-panel-icon">
                 {{
-                  panelOpenStates.speciesInfo === PANEL.OPEN
+                  panelOpenStates.speciesInfo === CONSTANTS.PANEL.OPEN
                     ? 'mdi-chevron-up'
                     : 'mdi-chevron-down'
                 }}
@@ -33,7 +42,7 @@
                       :disabled="!isConfirmEnabled"
                     >
                       <v-radio
-                        v-for="option in derivedByOptions"
+                        v-for="option in OPTIONS.derivedByOptions"
                         :key="option.value"
                         :label="option.label"
                         :value="option.value"
@@ -46,68 +55,18 @@
             <div class="mt-n3">
               <v-row>
                 <v-col cols="5">
-                  <div v-for="(item, index) in speciesList" :key="index">
-                    <v-row>
-                      <v-col cols="6">
-                        <v-select
-                          :label="`Species #${index + 1}`"
-                          :items="computedSpeciesOptions"
-                          v-model="item.species"
-                          item-title="label"
-                          item-value="value"
-                          clearable
-                          hide-details="auto"
-                          persistent-placeholder
-                          placeholder="Select..."
-                          density="compact"
-                          dense
-                          :disabled="!isConfirmEnabled"
-                        ></v-select>
-                      </v-col>
-                      <v-col cols="6">
-                        <div style="position: relative; width: 100%">
-                          <v-text-field
-                            :label="`Species #${index + 1} Percent`"
-                            type="text"
-                            v-model="item.percent"
-                            :max="NUM_INPUT_LIMITS.SPECIES_PERCENT_MAX"
-                            :min="NUM_INPUT_LIMITS.SPECIES_PERCENT_MIN"
-                            :step="NUM_INPUT_LIMITS.SPECIES_PERCENT_STEP"
-                            :rules="[validatePercent]"
-                            persistent-placeholder
-                            placeholder="Select..."
-                            density="compact"
-                            dense
-                            @blur="triggerSpeciesSortByPercent"
-                            @input="handlePercentInput($event, index)"
-                            :disabled="!isConfirmEnabled"
-                          ></v-text-field>
-                          <!-- Custom spin buttons -->
-                          <div class="spin-box">
-                            <div
-                              class="spin-up-arrow-button"
-                              @mousedown="startIncrementPercent(index)"
-                              @mouseup="stopIncrementPercent"
-                              @mouseleave="stopIncrementPercent"
-                              :class="{ disabled: !isConfirmEnabled }"
-                            >
-                              {{ SPIN_BUTTON.UP }}
-                            </div>
-                            <div
-                              class="spin-down-arrow-button"
-                              @mousedown="startDecrementPercent(index)"
-                              @mouseup="stopDecrementPercent"
-                              @mouseleave="stopDecrementPercent"
-                              :class="{ disabled: !isConfirmEnabled }"
-                            >
-                              {{ SPIN_BUTTON.DOWN }}
-                            </div>
-                          </div>
-                        </div>
-                      </v-col>
-                    </v-row>
-                    <div class="hr-line mb-1"></div>
-                  </div>
+                  <SpeciesListInput
+                    :speciesList="speciesList"
+                    :computedSpeciesOptions="computedSpeciesOptions"
+                    :isConfirmEnabled="isConfirmEnabled"
+                    :max="CONSTANTS.NUM_INPUT_LIMITS.SPECIES_PERCENT_MAX"
+                    :min="CONSTANTS.NUM_INPUT_LIMITS.SPECIES_PERCENT_MIN"
+                    :step="CONSTANTS.NUM_INPUT_LIMITS.SPECIES_PERCENT_STEP"
+                    @update:speciesList="
+                      (updatedList: SpeciesList[]) =>
+                        handleSpeciesListUpdate(updatedList)
+                    "
+                  />
                 </v-col>
                 <v-col class="vertical-line pb-0" />
                 <!-- output -->
@@ -214,25 +173,13 @@
                 <v-col cols="6" />
               </v-row>
             </div>
-            <v-card-actions class="mt-5 pr-0">
-              <v-spacer></v-spacer>
-              <v-btn
-                class="white-btn"
-                :disabled="!isConfirmEnabled"
-                @click="clear"
-                >Clear</v-btn
-              >
-              <v-btn
-                v-show="!isConfirmed"
-                class="blue-btn ml-2"
-                :disabled="!isConfirmEnabled"
-                @click="onConfirm"
-                >Confirm</v-btn
-              >
-              <v-btn v-show="isConfirmed" class="blue-btn ml-2" @click="onEdit"
-                >Edit</v-btn
-              >
-            </v-card-actions>
+            <AppPanelActions
+              :isConfirmEnabled="isConfirmEnabled"
+              :isConfirmed="isConfirmed"
+              @clear="onClear"
+              @confirm="onConfirm"
+              @edit="onEdit"
+            />
           </v-form>
         </v-expansion-panel-text>
       </v-expansion-panel>
@@ -241,29 +188,29 @@
 </template>
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
-import { Util } from '@/utils/util'
-import { useModelParameterStore } from '@/stores/modelParameterStore'
-import { useMessageDialogStore } from '@/stores/common/messageDialogStore'
 import { storeToRefs } from 'pinia'
-import { derivedByOptions } from '@/constants/options'
-import { SPECIES_MAP } from '@/constants/mappings'
+import { useModelParameterStore } from '@/stores/modelParameterStore'
 import {
-  PANEL,
-  MODEL_PARAMETER_PANEL,
-  NUM_INPUT_LIMITS,
-  CONTINUOUS_INC_DEC,
-  SPIN_BUTTON,
-} from '@/constants/constants'
-import { DEFAULT_VALUES } from '@/constants/defaults'
-import { MDL_PRM_INPUT_ERR, MSG_DIALOG_TITLE } from '@/constants/message'
+  AppMessageDialog,
+  AppPanelActions,
+  SpeciesListInput,
+} from '@/components'
+import { CONSTANTS, DEFAULTS, MAPPINGS, MESSAGE, OPTIONS } from '@/constants'
+import type { SpeciesList, MessageDialog } from '@/interfaces/interfaces'
 import { SpeciesInfoValidation } from '@/validation/speciesInfoValidation'
+import { cloneDeep } from 'lodash'
 
 const form = ref<HTMLFormElement>()
 
 const speciesInfoValidator = new SpeciesInfoValidation()
 
 const modelParameterStore = useModelParameterStore()
-const messageDialogStore = useMessageDialogStore()
+
+const messageDialog = ref<MessageDialog>({
+  dialog: false,
+  title: '',
+  message: '',
+})
 
 const {
   panelOpenStates,
@@ -274,7 +221,7 @@ const {
   totalSpeciesGroupPercent,
 } = storeToRefs(modelParameterStore)
 
-const panelName = MODEL_PARAMETER_PANEL.SPECIES_INFO
+const panelName = CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO
 const isConfirmEnabled = computed(
   () => modelParameterStore.panelState[panelName].editable,
 )
@@ -283,148 +230,38 @@ const isConfirmed = computed(
 )
 
 const computedSpeciesOptions = computed(() =>
-  (Object.keys(SPECIES_MAP) as Array<keyof typeof SPECIES_MAP>).map((code) => ({
-    label: `${code} - ${SPECIES_MAP[code]}`,
+  (
+    Object.keys(MAPPINGS.SPECIES_MAP) as Array<
+      keyof typeof MAPPINGS.SPECIES_MAP
+    >
+  ).map((code) => ({
+    label: `${code} - ${MAPPINGS.SPECIES_MAP[code]}`,
     value: code,
   })),
 )
 
 const updateSpeciesGroup = modelParameterStore.updateSpeciesGroup
 
-// Interval references for continuous increment/decrement
-let percentIncrementInterval: number | null = null
-let percentDecrementInterval: number | null = null
-
 watch(
   speciesList,
-  (newSpeciesList) => {
-    // Sort only if all items contain species
-    const shouldSort = newSpeciesList.every((item) => item.species)
-    if (shouldSort) {
-      triggerSpeciesSortByPercent()
-    }
-
+  () => {
     updateSpeciesGroup()
   },
   { deep: true },
 )
 
-const incrementPercent = (index: number) => {
-  if (speciesList.value[index]) {
-    const newValue = Util.increaseItemBySpinButton(
-      speciesList.value[index].percent,
-      NUM_INPUT_LIMITS.SPECIES_PERCENT_MAX,
-      NUM_INPUT_LIMITS.SPECIES_PERCENT_MIN,
-      NUM_INPUT_LIMITS.SPECIES_PERCENT_STEP,
+const handleSpeciesListUpdate = (updatedList: SpeciesList[]) => {
+  const isDifferent = updatedList.some((item, index) => {
+    return (
+      item.species !== speciesList.value[index]?.species ||
+      item.percent !== speciesList.value[index]?.percent
     )
-    speciesList.value[index].percent = newValue.toFixed(
-      NUM_INPUT_LIMITS.SPECIES_PERCENT_DECIMAL_NUM,
-    )
-
-    // Sort only when species exists
-    if (speciesList.value[index].species) {
-      triggerSpeciesSortByPercent()
-    }
-  }
-}
-
-const decrementPercent = (index: number) => {
-  if (speciesList.value[index]) {
-    const newValue = Util.decrementItemBySpinButton(
-      speciesList.value[index].percent,
-      NUM_INPUT_LIMITS.SPECIES_PERCENT_MAX,
-      NUM_INPUT_LIMITS.SPECIES_PERCENT_MIN,
-      NUM_INPUT_LIMITS.SPECIES_PERCENT_STEP,
-    )
-    speciesList.value[index].percent = newValue.toFixed(
-      NUM_INPUT_LIMITS.SPECIES_PERCENT_DECIMAL_NUM,
-    )
-
-    // sort only when species is present, remove species if value is 0
-    if (Util.isEmptyOrZero(newValue)) {
-      speciesList.value[index].species = null
-    } else if (speciesList.value[index].species) {
-      triggerSpeciesSortByPercent()
-    }
-  }
-}
-
-// Continuous increment/decrement functions
-const startIncrementPercent = (index: number) => {
-  incrementPercent(index)
-  percentIncrementInterval = window.setInterval(
-    () => incrementPercent(index),
-    CONTINUOUS_INC_DEC.INTERVAL,
-  )
-}
-
-const stopIncrementPercent = () => {
-  if (percentIncrementInterval !== null) {
-    clearInterval(percentIncrementInterval)
-    percentIncrementInterval = null
-  }
-}
-
-const startDecrementPercent = (index: number) => {
-  decrementPercent(index)
-  percentDecrementInterval = window.setInterval(
-    () => decrementPercent(index),
-    CONTINUOUS_INC_DEC.INTERVAL,
-  )
-}
-
-const stopDecrementPercent = () => {
-  if (percentDecrementInterval !== null) {
-    clearInterval(percentDecrementInterval)
-    percentDecrementInterval = null
-  }
-}
-
-const triggerSpeciesSortByPercent = () => {
-  speciesList.value.sort((a, b) => {
-    const percentA = parseFloat(a.percent || '0')
-    const percentB = parseFloat(b.percent || '0')
-
-    // Empty species are sent backward in the sort
-    if (!a.species) return 1
-    if (!b.species) return -1
-
-    // Sort by percent in descending order
-    return percentB - percentA
   })
-}
 
-// allow only up to the first decimal place
-const handlePercentInput = (event: Event, index: number) => {
-  const input = event.target as HTMLInputElement
-  let value = input.value
-
-  if (value.includes('.')) {
-    const [integerPart, decimalPart] = value.split('.')
-    if (decimalPart.length > 1) {
-      value = `${integerPart}.${decimalPart.slice(0, 1)}`
-    }
+  // Update speciesList only if there are differences
+  if (isDifferent) {
+    speciesList.value = cloneDeep(updatedList)
   }
-
-  speciesList.value[index].percent = value
-
-  // sort only when species is present, remove species if value is 0
-  if (Util.isEmptyOrZero(value)) {
-    speciesList.value[index].species = null
-  } else if (speciesList.value[index].species) {
-    triggerSpeciesSortByPercent()
-  }
-}
-
-const validatePercent = (percent: any) => {
-  const isValid = speciesInfoValidator.validatePercent(percent)
-  if (!isValid) {
-    return MDL_PRM_INPUT_ERR.SPCZ_VLD_INPUT_RANGE(
-      NUM_INPUT_LIMITS.SPECIES_PERCENT_MIN,
-      NUM_INPUT_LIMITS.SPECIES_PERCENT_MAX,
-    )
-  }
-  return true
 }
 
 const validateDuplicateSpecies = () => {
@@ -433,16 +270,29 @@ const validateDuplicateSpecies = () => {
   )
   if (duplicateSpecies) {
     const speciesLabel = (
-      Object.keys(SPECIES_MAP) as Array<keyof typeof SPECIES_MAP>
+      Object.keys(MAPPINGS.SPECIES_MAP) as Array<
+        keyof typeof MAPPINGS.SPECIES_MAP
+      >
     ).find((key) => key === duplicateSpecies)
-      ? SPECIES_MAP[duplicateSpecies as keyof typeof SPECIES_MAP]
+      ? MAPPINGS.SPECIES_MAP[
+          duplicateSpecies as keyof typeof MAPPINGS.SPECIES_MAP
+        ]
       : ''
 
     const message = speciesLabel
-      ? MDL_PRM_INPUT_ERR.SPCZ_VLD_DUP_W_LABEL(duplicateSpecies, speciesLabel)
-      : MDL_PRM_INPUT_ERR.SPCZ_VLD_DUP_WO_LABEL(duplicateSpecies)
+      ? MESSAGE.MDL_PRM_INPUT_ERR.SPCZ_VLD_DUP_W_LABEL(
+          duplicateSpecies,
+          speciesLabel,
+        )
+      : MESSAGE.MDL_PRM_INPUT_ERR.SPCZ_VLD_DUP_WO_LABEL(duplicateSpecies)
 
-    messageDialogStore.openDialog(MSG_DIALOG_TITLE.DATA_DUPLICATED, message)
+    messageDialog.value = {
+      dialog: true,
+      title: MESSAGE.MSG_DIALOG_TITLE.DATA_DUPLICATED,
+      message: message,
+      btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+    }
+
     return false
   }
 
@@ -456,11 +306,13 @@ const validateTotalSpeciesPercent = () => {
       totalSpeciesGroupPercent.value,
     )
   ) {
-    messageDialogStore.openDialog(
-      MSG_DIALOG_TITLE.DATA_INCOMPLETE,
-      MDL_PRM_INPUT_ERR.SPCZ_VLD_TOTAL_PCT,
-      { width: 400 },
-    )
+    messageDialog.value = {
+      dialog: true,
+      title: MESSAGE.MSG_DIALOG_TITLE.DATA_INCOMPLETE,
+      message: MESSAGE.MDL_PRM_INPUT_ERR.SPCZ_VLD_TOTAL_PCT,
+      btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+    }
+
     return false
   }
   return true
@@ -468,11 +320,13 @@ const validateTotalSpeciesPercent = () => {
 
 const validateRequired = () => {
   if (!speciesInfoValidator.validateRequired(derivedBy.value)) {
-    messageDialogStore.openDialog(
-      MSG_DIALOG_TITLE.MISSING_INFO,
-      MDL_PRM_INPUT_ERR.SPCZ_VLD_MISSING_DERIVED_BY,
-      { width: 400 },
-    )
+    messageDialog.value = {
+      dialog: true,
+      title: MESSAGE.MSG_DIALOG_TITLE.MISSING_INFO,
+      message: MESSAGE.MDL_PRM_INPUT_ERR.SPCZ_VLD_MISSING_DERIVED_BY,
+      btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+    }
+
     return false
   }
   return true
@@ -486,7 +340,10 @@ const onConfirm = () => {
   ) {
     if (form.value) {
       form.value.validate()
+    } else {
+      console.warn('Form reference is null. Validation skipped.')
     }
+
     // this panel is not in a confirmed state
     if (!isConfirmed.value) {
       modelParameterStore.confirmPanel(panelName)
@@ -501,7 +358,7 @@ const onEdit = () => {
   }
 }
 
-const clear = () => {
+const onClear = () => {
   for (const item of speciesList.value) {
     item.species = null
     item.percent = null
@@ -511,8 +368,10 @@ const clear = () => {
     form.value.reset()
   }
 
-  derivedBy.value = DEFAULT_VALUES.DERIVED_BY
+  derivedBy.value = DEFAULTS.DEFAULT_VALUES.DERIVED_BY
 }
+
+const handleDialogClose = () => {}
 </script>
 
 <style scoped>
@@ -528,10 +387,5 @@ const clear = () => {
   display: block;
   border-left: 1px dashed rgba(0, 0, 0, 0.12);
   height: 100%;
-}
-
-/* custom spin box and spin button beside text field */
-.spin-box {
-  top: 16px;
 }
 </style>

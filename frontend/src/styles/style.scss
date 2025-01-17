@@ -18,7 +18,7 @@ body {
 
 .blue-btn {
   background: #003366;
-  color: #ffffff !important;
+  color: #ffffff;
   letter-spacing: 0.25px;
   padding-left: 25px;
   padding-right: 25px;
@@ -27,7 +27,7 @@ body {
 
 .white-btn {
   background: #ffffff;
-  color: #003366 !important;
+  color: #003366;
   letter-spacing: 0.25px;
   border: 1px solid #003366;
   padding-left: 25px;
@@ -191,90 +191,7 @@ input[type='number']::-webkit-outer-spin-button {
   opacity: 1;
 }
 
-/* custom spin box and spin button beside text field */
-.spin-box {
-  position: absolute;
-  right: 15px;
-  top: 8px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  width: 16px;
-  height: 20px;
-  background-color: transparent;
-  padding: 2px;
-}
-
-// mouse over
-.spin-box div:hover {
-  background-color: #d3d3d3 !important;
-}
-
-.spin-up-arrow-button {
-  cursor: pointer;
-  font-size: 7px;
-  width: 10px;
-  height: 10px;
-  background-color: #f2f0f0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transform: scaleX(1.5);
-  padding-top: 3px;
-  padding-bottom: 2px;
-}
-
-.spin-down-arrow-button {
-  cursor: pointer;
-  font-size: 7px;
-  width: 10px;
-  height: 10px;
-  background-color: #f2f0f0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transform: scaleX(1.5);
-  padding-top: 3px;
-  padding-bottom: 2px;
-}
-
-// bottom line under text field
-.spin-text-field-bottom-line {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background-color: #ababab;
-}
-
-.spin-box .disabled {
-  cursor: not-allowed;
-  opacity: 0.5; /* Makes the button look visually disabled */
-  pointer-events: none; /* Prevents clicking */
-}
-
 /* etc */
-
-.top-project-year {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-  padding-bottom: 60px;
-  border-bottom: 2px solid #dfdcdc;
-}
-
-.top-project {
-  font-size: 24px;
-  font-weight: bold;
-}
-
-.top-year {
-  font-size: 24px;
-  font-weight: bold;
-}
 
 .readonly-text {
   color: black;
@@ -300,6 +217,10 @@ input[type='number']::-webkit-outer-spin-button {
 
 .hr-line {
   border-top: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.hr-line-2 {
+  border-top: 2px solid rgba(0, 0, 0, 0.12);
 }
 
 .col-space-3 {
