@@ -1,15 +1,19 @@
 import type { MessageType, SortOrder } from '@/types/types'
 
-export interface ProgressCircularState {
-  isShow: boolean
-  message: string | undefined
-}
-
 export interface NotificationState {
   isShow: boolean
   message: string
   type: MessageType
+  color: MessageType
   timeoutId: number | null
+}
+
+export interface MessageDialog {
+  dialog: boolean
+  title: string
+  message: string
+  dialogWidth?: number
+  btnLabel?: string
 }
 
 export interface JobSearchParams {
@@ -38,4 +42,16 @@ export interface TableOptions {
 export interface SpeciesList {
   species: string | null
   percent: string | null
+}
+
+export interface SpeciesGroup {
+  group: string
+  percent: string
+  siteSpecies: string
+}
+
+export interface Tab {
+  label: string
+  component: string | object // Component name or an actual component
+  tabname: string | null // Optional tabname
 }

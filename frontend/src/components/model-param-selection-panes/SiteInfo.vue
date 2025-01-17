@@ -1,12 +1,21 @@
 <template>
   <v-card class="elevation-4">
+    <AppMessageDialog
+      :dialog="messageDialog.dialog"
+      :title="messageDialog.title"
+      :message="messageDialog.message"
+      :dialogWidth="messageDialog.dialogWidth"
+      :btnLabel="messageDialog.btnLabel"
+      @update:dialog="(value) => (messageDialog.dialog = value)"
+      @close="handleDialogClose"
+    />
     <v-expansion-panels v-model="panelOpenStates.siteInfo">
       <v-expansion-panel hide-actions>
         <v-expansion-panel-title>
           <v-row no-gutters class="expander-header">
             <v-col cols="auto" class="expansion-panel-icon-col">
               <v-icon class="expansion-panel-icon">{{
-                panelOpenStates.siteInfo === PANEL.OPEN
+                panelOpenStates.siteInfo === CONSTANTS.PANEL.OPEN
                   ? 'mdi-chevron-up'
                   : 'mdi-chevron-down'
               }}</v-icon>
@@ -25,7 +34,7 @@
                     <v-col cols="6">
                       <v-select
                         label="BEC Zone"
-                        :items="becZoneOptions"
+                        :items="OPTIONS.becZoneOptions"
                         v-model="becZone"
                         item-title="label"
                         item-value="value"
@@ -41,7 +50,7 @@
                     <v-col>
                       <v-select
                         label="Eco Zone"
-                        :items="ecoZoneOptions"
+                        :items="OPTIONS.ecoZoneOptions"
                         v-model="ecoZone"
                         item-title="label"
                         item-value="value"
@@ -111,7 +120,7 @@
                     :disabled="isSiteSpeciesValueDisabled || !isConfirmEnabled"
                   >
                     <v-radio
-                      v-for="option in siteSpeciesValuesOptions"
+                      v-for="option in OPTIONS.siteSpeciesValuesOptions"
                       :key="option.value"
                       :label="option.label"
                       :value="option.value"
@@ -123,80 +132,48 @@
                 <v-col cols="6">
                   <v-row style="height: 70px !important">
                     <v-col cols="6">
-                      <div style="position: relative; width: 100%">
-                        <v-text-field
-                          label="BHA 50 Site Index"
-                          type="text"
-                          v-model="bha50SiteIndex"
-                          persistent-placeholder
-                          placeholder=""
-                          hide-details
-                          density="compact"
-                          dense
-                          style="padding-left: 15px"
-                          variant="plain"
-                          :disabled="
-                            isBHA50SiteIndexDisabled || !isConfirmEnabled
-                          "
-                        ></v-text-field>
-                        <!-- spin buttons -->
-                        <div class="spin-box">
-                          <div
-                            class="spin-up-arrow-button"
-                            @mousedown="startIncrementBHA50SiteIndex"
-                            @mouseup="stopIncrementBHA50SiteIndex"
-                            @mouseleave="stopIncrementBHA50SiteIndex"
-                            :class="{
-                              disabled:
-                                isBHA50SiteIndexDisabled || !isConfirmEnabled,
-                            }"
-                          >
-                            {{ SPIN_BUTTON.UP }}
-                          </div>
-                          <div
-                            class="spin-down-arrow-button"
-                            @mousedown="startDecrementBHA50SiteIndex"
-                            @mouseup="stopDecrementBHA50SiteIndex"
-                            @mouseleave="stopDecrementBHA50SiteIndex"
-                            :class="{
-                              disabled:
-                                isBHA50SiteIndexDisabled || !isConfirmEnabled,
-                            }"
-                          >
-                            {{ SPIN_BUTTON.DOWN }}
-                          </div>
-                        </div>
-                        <div class="spin-text-field-bottom-line"></div>
-                      </div>
+                      <AppSpinField
+                        label="BHA 50 Site Index"
+                        :model-value="bha50SiteIndex"
+                        :max="CONSTANTS.NUM_INPUT_LIMITS.BHA50_SITE_INDEX_MAX"
+                        :min="CONSTANTS.NUM_INPUT_LIMITS.BHA50_SITE_INDEX_MIN"
+                        :step="CONSTANTS.NUM_INPUT_LIMITS.BHA50_SITE_INDEX_STEP"
+                        :persistent-placeholder="true"
+                        placeholder=""
+                        :hideDetails="true"
+                        density="compact"
+                        :dense="true"
+                        customStyle="padding-left: 15px"
+                        variant="plain"
+                        :disabled="
+                          isBHA50SiteIndexDisabled || !isConfirmEnabled
+                        "
+                        :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
+                        :decimalAllowNumber="
+                          CONSTANTS.NUM_INPUT_LIMITS
+                            .BHA50_SITE_INDEX_DECIMAL_NUM
+                        "
+                        @update:modelValue="handleBha50SiteIndexUpdate"
+                      />
                       <v-label
                         v-show="Util.isZeroValue(bha50SiteIndex)"
                         style="font-size: 12px"
-                        >{{ MDL_PRM_INPUT_HINT.SITE_ZERO_NOT_KNOW }}</v-label
+                        >{{
+                          MESSAGE.MDL_PRM_INPUT_HINT.SITE_ZERO_NOT_KNOW
+                        }}</v-label
                       >
                     </v-col>
                   </v-row>
                 </v-col>
               </v-row>
             </div>
-            <v-card-actions class="mt-5 pr-0">
-              <v-spacer></v-spacer>
-              <v-btn
-                class="white-btn"
-                :disabled="!isConfirmEnabled"
-                @click="clear"
-                >Clear</v-btn
-              >
-              <v-btn
-                v-show="!isConfirmed"
-                class="blue-btn ml-2"
-                :disabled="!isConfirmEnabled"
-                @click="onConfirm"
-                >Confirm</v-btn
-              >
-              <v-btn v-show="isConfirmed" class="blue-btn ml-2" @click="onEdit"
-                >Edit</v-btn
-              >
-            </v-card-actions>
+            <AppPanelActions
+              :isConfirmEnabled="isConfirmEnabled"
+              :isConfirmed="isConfirmed"
+              @clear="onClear"
+              @confirm="onConfirm"
+              @edit="onEdit"
+            />
           </v-form>
         </v-expansion-panel-text>
       </v-expansion-panel>
@@ -206,37 +183,25 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { Util } from '@/utils/util'
-import { useModelParameterStore } from '@/stores/modelParameterStore'
-import { useMessageDialogStore } from '@/stores/common/messageDialogStore'
 import { storeToRefs } from 'pinia'
-import {
-  becZoneOptions,
-  ecoZoneOptions,
-  siteSpeciesValuesOptions,
-} from '@/constants/options'
-import {
-  PANEL,
-  DERIVED_BY,
-  MODEL_PARAMETER_PANEL,
-  NUM_INPUT_LIMITS,
-  CONTINUOUS_INC_DEC,
-  SPIN_BUTTON,
-} from '@/constants/constants'
-import { DEFAULT_VALUES } from '@/constants/defaults'
-import {
-  MDL_PRM_INPUT_ERR,
-  MSG_DIALOG_TITLE,
-  MDL_PRM_INPUT_HINT,
-} from '@/constants/message'
+import { useModelParameterStore } from '@/stores/modelParameterStore'
+import { AppMessageDialog, AppPanelActions, AppSpinField } from '@/components'
+import type { SpeciesGroup, MessageDialog } from '@/interfaces/interfaces'
+import { CONSTANTS, OPTIONS, DEFAULTS, MESSAGE } from '@/constants'
 import { SiteInfoValidation } from '@/validation/siteInfoValidation'
+import { Util } from '@/utils/util'
 
 const form = ref<HTMLFormElement>()
 
 const siteInfoValidator = new SiteInfoValidation()
 
 const modelParameterStore = useModelParameterStore()
-const messageDialogStore = useMessageDialogStore()
+
+const messageDialog = ref<MessageDialog>({
+  dialog: false,
+  title: '',
+  message: '',
+})
 
 const {
   panelOpenStates,
@@ -251,7 +216,7 @@ const {
   bha50SiteIndex,
 } = storeToRefs(modelParameterStore)
 
-const panelName = MODEL_PARAMETER_PANEL.SITE_INFO
+const panelName = CONSTANTS.MODEL_PARAMETER_PANEL.SITE_INFO
 const isConfirmEnabled = computed(
   () => modelParameterStore.panelState[panelName].editable,
 )
@@ -260,7 +225,7 @@ const isConfirmed = computed(
 )
 
 const siteSpeciesOptions = computed(() =>
-  speciesGroups.value.map((group) => ({
+  speciesGroups.value.map((group: SpeciesGroup) => ({
     label: group.siteSpecies,
     value: group.siteSpecies,
   })),
@@ -271,19 +236,15 @@ const isSelectedSiteSpeciesDisabled = ref(false)
 const isSiteSpeciesValueDisabled = ref(false)
 const isBHA50SiteIndexDisabled = ref(false)
 
-// Interval references for continuous increment/decrement
-let bha50IncrementInterval: number | null = null
-let bha50DecrementInterval: number | null = null
-
 const handleDerivedByChange = (
   newDerivedBy: string | null,
   newSiteSpecies: string | null,
 ) => {
-  if (newDerivedBy === DERIVED_BY.VOLUME) {
+  if (newDerivedBy === CONSTANTS.DERIVED_BY.VOLUME) {
     incSecondaryHeight.value = false
     isIncSecondaryHeightDisabled.value = true
     isSelectedSiteSpeciesDisabled.value = true
-  } else if (newDerivedBy === DERIVED_BY.BASAL_AREA) {
+  } else if (newDerivedBy === CONSTANTS.DERIVED_BY.BASAL_AREA) {
     isIncSecondaryHeightDisabled.value = false
     isSelectedSiteSpeciesDisabled.value = false
     isSiteSpeciesValueDisabled.value =
@@ -299,70 +260,19 @@ watch(
   { immediate: true },
 )
 
-const incrementBHA50SiteIndex = () => {
-  const newValue = Util.increaseItemBySpinButton(
-    bha50SiteIndex.value,
-    NUM_INPUT_LIMITS.BHA50_SITE_INDEX_MAX,
-    NUM_INPUT_LIMITS.BHA50_SITE_INDEX_MIN,
-    NUM_INPUT_LIMITS.BHA50_SITE_INDEX_STEP,
-  )
-
-  bha50SiteIndex.value = newValue.toFixed(
-    NUM_INPUT_LIMITS.BHA50_SITE_INDEX_DECIMAL_NUM,
-  )
-}
-
-const decrementBHA50SiteIndex = () => {
-  let newValue = Util.decrementItemBySpinButton(
-    bha50SiteIndex.value,
-    NUM_INPUT_LIMITS.BHA50_SITE_INDEX_MAX,
-    NUM_INPUT_LIMITS.BHA50_SITE_INDEX_MIN,
-    NUM_INPUT_LIMITS.BHA50_SITE_INDEX_STEP,
-  )
-
-  bha50SiteIndex.value = newValue.toFixed(
-    NUM_INPUT_LIMITS.BHA50_SITE_INDEX_DECIMAL_NUM,
-  )
-}
-
-// Methods to handle continuous increment/decrement for BHA 50 Site Index
-const startIncrementBHA50SiteIndex = () => {
-  incrementBHA50SiteIndex()
-  bha50IncrementInterval = window.setInterval(
-    incrementBHA50SiteIndex,
-    CONTINUOUS_INC_DEC.INTERVAL,
-  )
-}
-
-const stopIncrementBHA50SiteIndex = () => {
-  if (bha50IncrementInterval !== null) {
-    clearInterval(bha50IncrementInterval)
-    bha50IncrementInterval = null
-  }
-}
-
-const startDecrementBHA50SiteIndex = () => {
-  decrementBHA50SiteIndex()
-  bha50DecrementInterval = window.setInterval(
-    decrementBHA50SiteIndex,
-    CONTINUOUS_INC_DEC.INTERVAL,
-  )
-}
-
-const stopDecrementBHA50SiteIndex = () => {
-  if (bha50DecrementInterval !== null) {
-    clearInterval(bha50DecrementInterval)
-    bha50DecrementInterval = null
-  }
+const handleBha50SiteIndexUpdate = (value: string | null) => {
+  bha50SiteIndex.value = value
 }
 
 const validateRange = (): boolean => {
   if (!siteInfoValidator.validateBha50SiteIndexRange(bha50SiteIndex.value)) {
-    messageDialogStore.openDialog(
-      MSG_DIALOG_TITLE.INVALID_INPUT,
-      MDL_PRM_INPUT_ERR.SITE_VLD_SI_RNG,
-      { width: 400 },
-    )
+    messageDialog.value = {
+      dialog: true,
+      title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
+      message: MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SI_RNG,
+      btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+    }
+
     return false
   }
 
@@ -371,11 +281,15 @@ const validateRange = (): boolean => {
 
 const validateRequiredFields = (): boolean => {
   if (!siteInfoValidator.validateRequiredFields(bha50SiteIndex.value)) {
-    messageDialogStore.openDialog(
-      MSG_DIALOG_TITLE.MISSING_INFO,
-      MDL_PRM_INPUT_ERR.SITE_VLD_SPCZ_REQ_SI_VAL(selectedSiteSpecies.value),
-      { width: 400 },
-    )
+    messageDialog.value = {
+      dialog: true,
+      title: MESSAGE.MSG_DIALOG_TITLE.MISSING_INFO,
+      message: MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SPCZ_REQ_SI_VAL(
+        selectedSiteSpecies.value,
+      ),
+      btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+    }
+
     return false
   }
 
@@ -385,7 +299,7 @@ const validateRequiredFields = (): boolean => {
 const formattingValues = (): void => {
   if (bha50SiteIndex.value) {
     bha50SiteIndex.value = parseFloat(bha50SiteIndex.value).toFixed(
-      NUM_INPUT_LIMITS.BHA50_SITE_INDEX_DECIMAL_NUM,
+      CONSTANTS.NUM_INPUT_LIMITS.BHA50_SITE_INDEX_DECIMAL_NUM,
     )
   }
 }
@@ -394,6 +308,8 @@ const onConfirm = () => {
   if (validateRequiredFields() && validateRange()) {
     if (form.value) {
       form.value.validate()
+    } else {
+      console.warn('Form reference is null. Validation skipped.')
     }
 
     formattingValues()
@@ -412,18 +328,20 @@ const onEdit = () => {
   }
 }
 
-const clear = () => {
+const onClear = () => {
   if (form.value) {
     form.value.reset()
   }
 
   selectedSiteSpecies.value = highestPercentSpecies.value
 
-  becZone.value = DEFAULT_VALUES.BEC_ZONE
-  siteSpeciesValues.value = DEFAULT_VALUES.SITE_SPECIES_VALUES
+  becZone.value = DEFAULTS.DEFAULT_VALUES.BEC_ZONE
+  siteSpeciesValues.value = DEFAULTS.DEFAULT_VALUES.SITE_SPECIES_VALUES
 
   handleDerivedByChange(derivedBy.value, selectedSiteSpecies.value)
 }
+
+const handleDialogClose = () => {}
 </script>
 
 <style scoped></style>
