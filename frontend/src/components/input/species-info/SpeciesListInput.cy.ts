@@ -1,7 +1,7 @@
 import { mount } from 'cypress/vue'
 import { createVuetify } from 'vuetify'
 import 'vuetify/styles'
-import SpeciesListInput from '@/components/input/species-info/SpeciesListInput.vue'
+import SpeciesListInput from './SpeciesListInput.vue'
 
 const vuetify = createVuetify()
 

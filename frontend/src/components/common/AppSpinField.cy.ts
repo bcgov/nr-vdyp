@@ -1,7 +1,7 @@
 import { mount } from 'cypress/vue'
 import { createVuetify } from 'vuetify'
 import 'vuetify/styles'
-import AppSpinField from '@/components/common/AppSpinField.vue'
+import AppSpinField from './AppSpinField.vue'
 
 const vuetify = createVuetify()
 

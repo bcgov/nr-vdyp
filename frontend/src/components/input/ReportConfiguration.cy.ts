@@ -1,7 +1,7 @@
 import { mount } from 'cypress/vue'
 import { createVuetify } from 'vuetify'
 import 'vuetify/styles'
-import ReportConfiguration from '@/components/input/ReportConfiguration.vue'
+import ReportConfiguration from './ReportConfiguration.vue'
 import { CONSTANTS } from '@/constants'
 
 describe('ReportConfiguration.vue', () => {

@@ -1,4 +1,4 @@
-import AppButton from '@/components/core/AppButton.vue'
+import AppButton from './AppButton.vue'
 
 describe('<AppButton />', () => {
   beforeEach(() => {
