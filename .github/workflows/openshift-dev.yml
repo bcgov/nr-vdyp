@@ -21,7 +21,16 @@ jobs:
         package: [backend, frontend]
     timeout-minutes: 10
     steps:
-      - uses: bcgov-nr/action-builder-ghcr@v2.2.0
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create root CA certificate
+        # Create the certificate file from GitHub Secret
+        run: |
+          echo "${{ secrets.ENTRUST_G2_CA_CRT }}" > ./frontend/entrust_g2_ca.crt
+
+      - name: Build Docker Image
+        uses: bcgov-nr/action-builder-ghcr@v2.2.0
         with:
           keep_versions: 50
           build_context: .
