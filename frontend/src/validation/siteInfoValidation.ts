@@ -1,21 +1,19 @@
-import { ValidationBase } from './validationBase'
-import { NUM_INPUT_LIMITS } from '@/constants/constants'
-import { Util } from '@/utils/util'
+import { SiteInfoValidator } from './siteInfoValidator'
 
-export class SiteInfoValidation extends ValidationBase {
-  validateRequiredFields(bha50SiteIndex: string | null): boolean {
-    return !Util.isEmptyOrZero(bha50SiteIndex)
+const siteInfoValidator = new SiteInfoValidator()
+
+export const validateRequiredFields = (bha50SiteIndex: string | null) => {
+  if (!siteInfoValidator.validateRequiredFields(bha50SiteIndex)) {
+    return { isValid: false }
   }
 
-  validateBha50SiteIndexRange(bha50SiteIndex: string | null): boolean {
-    if (!bha50SiteIndex) return true
+  return { isValid: true }
+}
 
-    const numericBha50 = parseFloat(bha50SiteIndex)
-
-    return this.validateRange(
-      numericBha50,
-      NUM_INPUT_LIMITS.BHA50_SITE_INDEX_MIN,
-      NUM_INPUT_LIMITS.BHA50_SITE_INDEX_MAX,
-    )
+export const validateRange = (bha50SiteIndex: string | null) => {
+  if (!siteInfoValidator.validateBha50SiteIndexRange(bha50SiteIndex)) {
+    return { isValid: false }
   }
+
+  return { isValid: true }
 }

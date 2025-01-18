@@ -1,66 +1,95 @@
-import { ValidationBase } from './validationBase'
-import { NUM_INPUT_LIMITS } from '@/constants/constants'
-import Papa from 'papaparse'
+import { FileUploadValidator } from './fileUploadValidator'
 
-export class FileUploadValidation extends ValidationBase {
-  validateRequiredFields(
-    startingAge: number | null,
-    finishingAge: number | null,
-    ageIncrement: number | null,
-  ): boolean {
-    return (
-      startingAge !== null && finishingAge !== null && ageIncrement !== null
+const fileUploadValidator = new FileUploadValidator()
+
+export const validateComparison = (
+  startingAge: number | null,
+  finishingAge: number | null,
+) => {
+  if (!fileUploadValidator.validateAgeComparison(startingAge, finishingAge)) {
+    return { isValid: false }
+  }
+
+  return { isValid: true }
+}
+
+export const validateRequiredFields = (
+  startingAge: number | null,
+  finishingAge: number | null,
+  ageIncrement: number | null,
+) => {
+  if (
+    !fileUploadValidator.validateRequiredFields(
+      startingAge,
+      finishingAge,
+      ageIncrement,
     )
+  ) {
+    return { isValid: false }
   }
+  return { isValid: true }
+}
 
-  validateAgeComparison(
-    finishingAge: number | null,
-    startingAge: number | null,
-  ): boolean {
-    if (finishingAge !== null && startingAge !== null) {
-      return finishingAge >= startingAge
+export const validateRange = (
+  startingAge: number | null,
+  finishingAge: number | null,
+  ageIncrement: number | null,
+) => {
+  if (!fileUploadValidator.validateStartingAgeRange(startingAge)) {
+    return {
+      isValid: false,
+      errorType: 'startingAge',
     }
-    return true
   }
 
-  validateStartingAgeRange(startingAge: number | null): boolean {
-    if (startingAge !== null) {
-      return (
-        startingAge >= NUM_INPUT_LIMITS.STARTING_AGE_MIN &&
-        startingAge <= NUM_INPUT_LIMITS.STARTING_AGE_MAX
-      )
+  if (!fileUploadValidator.validateFinishingAgeRange(finishingAge)) {
+    return {
+      isValid: false,
+      errorType: 'finishingAge',
     }
-    return true
   }
 
-  validateFinishingAgeRange(finishingAge: number | null): boolean {
-    if (finishingAge !== null) {
-      return (
-        finishingAge >= NUM_INPUT_LIMITS.FINISHING_AGE_MIN &&
-        finishingAge <= NUM_INPUT_LIMITS.FINISHING_AGE_MAX
-      )
+  if (!fileUploadValidator.validateAgeIncrementRange(ageIncrement)) {
+    return {
+      isValid: false,
+      errorType: 'ageIncrement',
     }
-    return true
   }
 
-  validateAgeIncrementRange(ageIncrement: number | null): boolean {
-    if (ageIncrement !== null) {
-      return (
-        ageIncrement >= NUM_INPUT_LIMITS.AGE_INC_MIN &&
-        ageIncrement <= NUM_INPUT_LIMITS.AGE_INC_MAX
-      )
+  return { isValid: true }
+}
+
+export const validateFiles = async (
+  layerFile: File | null,
+  polygonFile: File | null,
+) => {
+  if (!layerFile) {
+    return {
+      isValid: false,
+      errorType: 'layerFileMissing',
     }
-    return true
   }
 
-  async isCSVFile(file: File): Promise<boolean> {
-    return new Promise((resolve) => {
-      Papa.parse(file, {
-        complete: (results: any) => {
-          resolve(results.errors.length === 0)
-        },
-        error: () => resolve(false),
-      })
-    })
+  if (!polygonFile) {
+    return {
+      isValid: false,
+      errorType: 'polygonFileMissing',
+    }
   }
+
+  if (!(await fileUploadValidator.isCSVFile(layerFile))) {
+    return {
+      isValid: false,
+      errorType: 'layerFileNotCSVFormat',
+    }
+  }
+
+  if (!(await fileUploadValidator.isCSVFile(polygonFile))) {
+    return {
+      isValid: false,
+      errorType: 'polygonFileNotCSVFormat',
+    }
+  }
+
+  return { isValid: true }
 }
