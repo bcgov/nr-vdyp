@@ -68,11 +68,9 @@ import {
 } from '@/components'
 import { CONSTANTS, DEFAULTS, MESSAGE } from '@/constants'
 import type { MessageDialog } from '@/interfaces/interfaces'
-import { ReportInfoValidation } from '@/validation/reportInfoValidation'
+import { reportInfoValidation } from '@/validation'
 
 const form = ref<HTMLFormElement>()
-
-const reportInfoValidator = new ReportInfoValidation()
 
 const modelParameterStore = useModelParameterStore()
 
@@ -129,81 +127,70 @@ const handleReportTitleUpdate = (value: string | null) => {
   reportTitle.value = value
 }
 
-const validateComparison = (): boolean => {
-  if (
-    !reportInfoValidator.validateAgeComparison(
-      finishingAge.value,
-      startingAge.value,
-    )
-  ) {
+const onConfirm = () => {
+  // validation - comparison
+  const comparisonResult = reportInfoValidation.validateComparison(
+    startingAge.value,
+    finishingAge.value,
+  )
+  if (!comparisonResult.isValid) {
     messageDialog.value = {
       dialog: true,
       title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
       message: MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_COMP_FNSH_AGE,
       btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
     }
-
-    return false
+    return
   }
 
-  return true
-}
+  // validation - range
+  const rangeResult = reportInfoValidation.validateRange(
+    startingAge.value,
+    finishingAge.value,
+    ageIncrement.value,
+  )
 
-const validateRange = (): boolean => {
-  if (!reportInfoValidator.validateStartingAgeRange(startingAge.value)) {
+  if (!rangeResult.isValid) {
+    let message = ''
+    switch (rangeResult.errorType) {
+      case 'startingAge':
+        message = MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_START_AGE_RNG(
+          CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MIN,
+          CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MAX,
+        )
+        break
+      case 'finishingAge':
+        message = MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_START_FNSH_RNG(
+          CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MIN,
+          CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MAX,
+        )
+        break
+      case 'ageIncrement':
+        message = MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_AGE_INC_RNG(
+          CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MIN,
+          CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MAX,
+        )
+        break
+    }
+
     messageDialog.value = {
       dialog: true,
       title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
-      message: MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_START_AGE_RNG(
-        CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MIN,
-        CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MAX,
-      ),
+      message: message,
       btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
     }
-    return false
+    return
   }
 
-  if (!reportInfoValidator.validateFinishingAgeRange(finishingAge.value)) {
-    messageDialog.value = {
-      dialog: true,
-      title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
-      message: MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_START_FNSH_RNG(
-        CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MIN,
-        CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MAX,
-      ),
-      btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
-    }
-    return false
+  if (form.value) {
+    form.value.validate()
+  } else {
+    console.warn('Form reference is null. Validation skipped.')
   }
 
-  if (!reportInfoValidator.validateAgeIncrementRange(ageIncrement.value)) {
-    messageDialog.value = {
-      dialog: true,
-      title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
-      message: MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_AGE_INC_RNG(
-        CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MIN,
-        CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MAX,
-      ),
-      btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
-    }
-    return false
-  }
-
-  return true
-}
-
-const onConfirm = () => {
-  if (validateComparison() && validateRange()) {
-    if (form.value) {
-      form.value.validate()
-    } else {
-      console.warn('Form reference is null. Validation skipped.')
-    }
-
-    // this panel is not in a confirmed state
-    if (!isConfirmed.value) {
-      modelParameterStore.confirmPanel(panelName)
-    }
+  // this panel is not in a confirmed state
+  if (!isConfirmed.value) {
+    modelParameterStore.confirmPanel(panelName)
   }
 }
 

@@ -188,12 +188,10 @@ import { useModelParameterStore } from '@/stores/modelParameterStore'
 import { AppMessageDialog, AppPanelActions, AppSpinField } from '@/components'
 import type { SpeciesGroup, MessageDialog } from '@/interfaces/interfaces'
 import { CONSTANTS, OPTIONS, DEFAULTS, MESSAGE } from '@/constants'
-import { SiteInfoValidation } from '@/validation/siteInfoValidation'
+import { siteInfoValidation } from '@/validation'
 import { Util } from '@/utils/util'
 
 const form = ref<HTMLFormElement>()
-
-const siteInfoValidator = new SiteInfoValidation()
 
 const modelParameterStore = useModelParameterStore()
 
@@ -264,38 +262,6 @@ const handleBha50SiteIndexUpdate = (value: string | null) => {
   bha50SiteIndex.value = value
 }
 
-const validateRange = (): boolean => {
-  if (!siteInfoValidator.validateBha50SiteIndexRange(bha50SiteIndex.value)) {
-    messageDialog.value = {
-      dialog: true,
-      title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
-      message: MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SI_RNG,
-      btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
-    }
-
-    return false
-  }
-
-  return true
-}
-
-const validateRequiredFields = (): boolean => {
-  if (!siteInfoValidator.validateRequiredFields(bha50SiteIndex.value)) {
-    messageDialog.value = {
-      dialog: true,
-      title: MESSAGE.MSG_DIALOG_TITLE.MISSING_INFO,
-      message: MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SPCZ_REQ_SI_VAL(
-        selectedSiteSpecies.value,
-      ),
-      btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
-    }
-
-    return false
-  }
-
-  return true
-}
-
 const formattingValues = (): void => {
   if (bha50SiteIndex.value) {
     bha50SiteIndex.value = parseFloat(bha50SiteIndex.value).toFixed(
@@ -305,19 +271,45 @@ const formattingValues = (): void => {
 }
 
 const onConfirm = () => {
-  if (validateRequiredFields() && validateRange()) {
-    if (form.value) {
-      form.value.validate()
-    } else {
-      console.warn('Form reference is null. Validation skipped.')
+  // validation - required fields
+  const requiredResult = siteInfoValidation.validateRequiredFields(
+    bha50SiteIndex.value,
+  )
+  if (!requiredResult.isValid) {
+    messageDialog.value = {
+      dialog: true,
+      title: MESSAGE.MSG_DIALOG_TITLE.MISSING_INFO,
+      message: MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SPCZ_REQ_SI_VAL(
+        selectedSiteSpecies.value,
+      ),
+      btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
     }
+    return
+  }
 
-    formattingValues()
-
-    // this panel is not in a confirmed state
-    if (!isConfirmed.value) {
-      modelParameterStore.confirmPanel(panelName)
+  // validation - range
+  const rangeResult = siteInfoValidation.validateRange(bha50SiteIndex.value)
+  if (!rangeResult.isValid) {
+    messageDialog.value = {
+      dialog: true,
+      title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
+      message: MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SI_RNG,
+      btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
     }
+    return
+  }
+
+  if (form.value) {
+    form.value.validate()
+  } else {
+    console.warn('Form reference is null. Validation skipped.')
+  }
+
+  formattingValues()
+
+  // this panel is not in a confirmed state
+  if (!isConfirmed.value) {
+    modelParameterStore.confirmPanel(panelName)
   }
 }
 

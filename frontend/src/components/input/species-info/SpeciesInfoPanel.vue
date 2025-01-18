@@ -69,85 +69,7 @@
                   />
                 </v-col>
                 <v-col class="vertical-line pb-0" />
-                <!-- output -->
-                <v-col cols="6" v-if="speciesGroups.length > 0">
-                  <div
-                    v-for="(group, index) in speciesGroups"
-                    :key="index"
-                    class="mt-2"
-                  >
-                    <v-row>
-                      <v-col cols="4" sm="4" md="4">
-                        <v-text-field
-                          label="Species Group"
-                          :model-value="group.group"
-                          variant="underlined"
-                          disabled
-                          density="compact"
-                          dense
-                        ></v-text-field>
-                      </v-col>
-                      <v-col cols="4" sm="4" md="4">
-                        <v-text-field
-                          label="Species Group Percent"
-                          :model-value="group.percent"
-                          variant="underlined"
-                          disabled
-                          density="compact"
-                          dense
-                        ></v-text-field>
-                      </v-col>
-                      <v-col cols="4" sm="4" md="4">
-                        <v-text-field
-                          label="Site Species"
-                          :model-value="group.siteSpecies"
-                          variant="underlined"
-                          disabled
-                          density="compact"
-                          dense
-                        ></v-text-field>
-                      </v-col>
-                    </v-row>
-                    <div class="hr-line mb-3"></div>
-                  </div>
-                </v-col>
-                <v-col cols="6" v-else>
-                  <div class="mt-2">
-                    <v-row
-                      ><v-col cols="4" sm="4" md="4">
-                        <v-text-field
-                          label="Species Group"
-                          variant="underlined"
-                          disabled
-                          persistent-placeholder
-                          placeholder=""
-                          density="compact"
-                          dense
-                        ></v-text-field></v-col
-                      ><v-col cols="4" sm="4" md="4">
-                        <v-text-field
-                          label="Species Group Percent"
-                          variant="underlined"
-                          disabled
-                          persistent-placeholder
-                          placeholder=""
-                          density="compact"
-                          dense
-                        ></v-text-field></v-col
-                      ><v-col cols="4" sm="4" md="4">
-                        <v-text-field
-                          label="Site Species"
-                          variant="underlined"
-                          disabled
-                          persistent-placeholder
-                          placeholder=""
-                          density="compact"
-                          dense
-                        ></v-text-field
-                      ></v-col>
-                    </v-row>
-                  </div>
-                </v-col>
+                <SpeciesGroupsDisplay :speciesGroups="speciesGroups" />
               </v-row>
             </div>
             <div>
@@ -194,15 +116,14 @@ import {
   AppMessageDialog,
   AppPanelActions,
   SpeciesListInput,
+  SpeciesGroupsDisplay,
 } from '@/components'
 import { CONSTANTS, DEFAULTS, MAPPINGS, MESSAGE, OPTIONS } from '@/constants'
 import type { SpeciesList, MessageDialog } from '@/interfaces/interfaces'
-import { SpeciesInfoValidation } from '@/validation/speciesInfoValidation'
+import { speciesInfoValidation } from '@/validation'
 import { cloneDeep } from 'lodash'
 
 const form = ref<HTMLFormElement>()
-
-const speciesInfoValidator = new SpeciesInfoValidation()
 
 const modelParameterStore = useModelParameterStore()
 
@@ -264,19 +185,20 @@ const handleSpeciesListUpdate = (updatedList: SpeciesList[]) => {
   }
 }
 
-const validateDuplicateSpecies = () => {
-  const duplicateSpecies = speciesInfoValidator.validateDuplicateSpecies(
+const onConfirm = () => {
+  // validation - duplicate
+  const duplicateSpeciesResult = speciesInfoValidation.validateDuplicateSpecies(
     speciesList.value,
   )
-  if (duplicateSpecies) {
+  if (!duplicateSpeciesResult.isValid) {
+    const duplicateSpecies =
+      duplicateSpeciesResult.duplicateSpecies as keyof typeof MAPPINGS.SPECIES_MAP
     const speciesLabel = (
       Object.keys(MAPPINGS.SPECIES_MAP) as Array<
         keyof typeof MAPPINGS.SPECIES_MAP
       >
-    ).find((key) => key === duplicateSpecies)
-      ? MAPPINGS.SPECIES_MAP[
-          duplicateSpecies as keyof typeof MAPPINGS.SPECIES_MAP
-        ]
+    ).find((key) => key === duplicateSpeciesResult.duplicateSpecies)
+      ? MAPPINGS.SPECIES_MAP[duplicateSpecies]
       : ''
 
     const message = speciesLabel
@@ -292,62 +214,45 @@ const validateDuplicateSpecies = () => {
       message: message,
       btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
     }
-
-    return false
+    return
   }
 
-  return true
-}
-
-const validateTotalSpeciesPercent = () => {
-  if (
-    !speciesInfoValidator.validateTotalSpeciesPercent(
-      totalSpeciesPercent.value,
-      totalSpeciesGroupPercent.value,
-    )
-  ) {
+  // validation - total percent
+  const totalPercentResult = speciesInfoValidation.validateTotalSpeciesPercent(
+    totalSpeciesPercent.value,
+    totalSpeciesGroupPercent.value,
+  )
+  if (!totalPercentResult.isValid) {
     messageDialog.value = {
       dialog: true,
       title: MESSAGE.MSG_DIALOG_TITLE.DATA_INCOMPLETE,
       message: MESSAGE.MDL_PRM_INPUT_ERR.SPCZ_VLD_TOTAL_PCT,
       btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
     }
-
-    return false
+    return
   }
-  return true
-}
 
-const validateRequired = () => {
-  if (!speciesInfoValidator.validateRequired(derivedBy.value)) {
+  // validation - required fields
+  const requiredResult = speciesInfoValidation.validateRequired(derivedBy.value)
+  if (!requiredResult.isValid) {
     messageDialog.value = {
       dialog: true,
       title: MESSAGE.MSG_DIALOG_TITLE.MISSING_INFO,
       message: MESSAGE.MDL_PRM_INPUT_ERR.SPCZ_VLD_MISSING_DERIVED_BY,
       btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
     }
-
-    return false
+    return
   }
-  return true
-}
 
-const onConfirm = () => {
-  if (
-    validateDuplicateSpecies() &&
-    validateTotalSpeciesPercent() &&
-    validateRequired()
-  ) {
-    if (form.value) {
-      form.value.validate()
-    } else {
-      console.warn('Form reference is null. Validation skipped.')
-    }
+  if (form.value) {
+    form.value.validate()
+  } else {
+    console.warn('Form reference is null. Validation skipped.')
+  }
 
-    // this panel is not in a confirmed state
-    if (!isConfirmed.value) {
-      modelParameterStore.confirmPanel(panelName)
-    }
+  // this panel is not in a confirmed state
+  if (!isConfirmed.value) {
+    modelParameterStore.confirmPanel(panelName)
   }
 }
 

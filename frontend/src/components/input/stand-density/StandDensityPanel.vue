@@ -16,7 +16,7 @@
             <!-- Place an arrow icon to the left of the title -->
             <v-col cols="auto" class="expansion-panel-icon-col">
               <v-icon class="expansion-panel-icon">{{
-                panelOpenStates.standDensity === PANEL.OPEN
+                panelOpenStates.standDensity === CONSTANTS.PANEL.OPEN
                   ? 'mdi-chevron-up'
                   : 'mdi-chevron-down'
               }}</v-icon>
@@ -34,9 +34,9 @@
                   label="% Stockable Area"
                   type="number"
                   v-model.number="percentStockableArea"
-                  :max="NUM_INPUT_LIMITS.PERCENT_STOCKABLE_AREA_MAX"
-                  :min="NUM_INPUT_LIMITS.PERCENT_STOCKABLE_AREA_MIN"
-                  :step="NUM_INPUT_LIMITS.PERCENT_STOCKABLE_AREA_STEP"
+                  :max="CONSTANTS.NUM_INPUT_LIMITS.PERCENT_STOCKABLE_AREA_MAX"
+                  :min="CONSTANTS.NUM_INPUT_LIMITS.PERCENT_STOCKABLE_AREA_MIN"
+                  :step="CONSTANTS.NUM_INPUT_LIMITS.PERCENT_STOCKABLE_AREA_STEP"
                   placeholder=""
                   persistent-placeholder
                   hide-details
@@ -47,7 +47,7 @@
                 <v-label
                   v-show="Util.isZeroValue(percentStockableArea)"
                   style="font-size: 12px"
-                  >{{ MDL_PRM_INPUT_HINT.SITE_DFT_COMPUTED }}</v-label
+                  >{{ MESSAGE.MDL_PRM_INPUT_HINT.SITE_DFT_COMPUTED }}</v-label
                 >
               </v-col>
             </v-row>
@@ -67,27 +67,15 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { Util } from '@/utils/util'
+import { storeToRefs } from 'pinia'
 import { useModelParameterStore } from '@/stores/modelParameterStore'
 import { AppMessageDialog, AppPanelActions } from '@/components'
-import { storeToRefs } from 'pinia'
-import {
-  PANEL,
-  MODEL_PARAMETER_PANEL,
-  NUM_INPUT_LIMITS,
-  BUTTON_LABEL,
-} from '@/constants/constants'
-import {
-  MDL_PRM_INPUT_ERR,
-  MSG_DIALOG_TITLE,
-  MDL_PRM_INPUT_HINT,
-} from '@/constants/message'
+import { CONSTANTS, MESSAGE } from '@/constants'
 import type { MessageDialog } from '@/interfaces/interfaces'
-import { StandDensityValidation } from '@/validation/standDensityValidation'
+import { standDensityValidation } from '@/validation'
+import { Util } from '@/utils/util'
 
 const form = ref<HTMLFormElement>()
-
-const standDensityValidator = new StandDensityValidation()
 
 const modelParameterStore = useModelParameterStore()
 
@@ -100,7 +88,7 @@ const messageDialog = ref<MessageDialog>({
 const { panelOpenStates, percentStockableArea } =
   storeToRefs(modelParameterStore)
 
-const panelName = MODEL_PARAMETER_PANEL.STAND_DENSITY
+const panelName = CONSTANTS.MODEL_PARAMETER_PANEL.STAND_DENSITY
 const isConfirmEnabled = computed(
   () => modelParameterStore.panelState[panelName].editable,
 )
@@ -108,36 +96,18 @@ const isConfirmed = computed(
   () => modelParameterStore.panelState[panelName].confirmed,
 )
 
-const validateRange = (): boolean => {
-  if (
-    !standDensityValidator.validatePercentStockableAreaRange(
-      percentStockableArea.value,
-    )
-  ) {
+const onConfirm = () => {
+  // validation - range
+  const rangeResult = standDensityValidation.validateRange(
+    percentStockableArea.value,
+  )
+  if (!rangeResult.isValid) {
     messageDialog.value = {
       dialog: true,
-      title: MSG_DIALOG_TITLE.INVALID_INPUT,
-      message: MDL_PRM_INPUT_ERR.DENSITY_VLD_PCT_STCB_AREA_RNG,
-      btnLabel: BUTTON_LABEL.CONT_EDIT,
+      title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
+      message: MESSAGE.MDL_PRM_INPUT_ERR.DENSITY_VLD_PCT_STCB_AREA_RNG,
+      btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
     }
-    return false
-  }
-
-  return true
-}
-
-const validateFormInputs = async (): Promise<boolean> => {
-  if (!validateRange()) {
-    return false
-  }
-
-  return true
-}
-
-const onConfirm = async () => {
-  const isFormValid = await validateFormInputs()
-
-  if (!isFormValid) {
     return
   }
 
