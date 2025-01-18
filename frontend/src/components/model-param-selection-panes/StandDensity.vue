@@ -83,11 +83,11 @@ import {
   MDL_PRM_INPUT_HINT,
 } from '@/constants/message'
 import type { MessageDialog } from '@/interfaces/interfaces'
-import { StandDensityValidation } from '@/validation/standDensityValidation'
+import { StandDensityValidator } from '@/validation/standDensityValidator'
 
 const form = ref<HTMLFormElement>()
 
-const standDensityValidator = new StandDensityValidation()
+const standDensityValidator = new StandDensityValidator()
 
 const modelParameterStore = useModelParameterStore()
 

@@ -93,7 +93,7 @@ import {
 } from '@/components'
 import type { MessageDialog } from '@/interfaces/interfaces'
 import { CONSTANTS, MESSAGE, DEFAULTS } from '@/constants'
-import { FileUploadValidation } from '@/validation/fileUploadValidation'
+import { FileUploadValidator } from '@/validation/fileUploadValidator'
 import { Util } from '@/utils/util'
 import { logSuccessMessage } from '@/utils/messageHandler'
 
@@ -102,7 +102,7 @@ const form = ref<HTMLFormElement>()
 const isProgressVisible = ref(false)
 const progressMessage = ref('')
 
-const fileUploadValidator = new FileUploadValidation()
+const fileUploadValidator = new FileUploadValidator()
 
 const startingAge = ref<number | null>(DEFAULTS.DEFAULT_VALUES.STARTING_AGE)
 const finishingAge = ref<number | null>(DEFAULTS.DEFAULT_VALUES.FINISHING_AGE)

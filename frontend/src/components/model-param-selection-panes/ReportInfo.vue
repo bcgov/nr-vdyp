@@ -68,11 +68,11 @@ import {
 } from '@/components'
 import { CONSTANTS, DEFAULTS, MESSAGE } from '@/constants'
 import type { MessageDialog } from '@/interfaces/interfaces'
-import { ReportInfoValidation } from '@/validation/reportInfoValidation'
+import { ReportInfoValidator } from '@/validation/reportInfoValidator'
 
 const form = ref<HTMLFormElement>()
 
-const reportInfoValidator = new ReportInfoValidation()
+const reportInfoValidator = new ReportInfoValidator()
 
 const modelParameterStore = useModelParameterStore()
 

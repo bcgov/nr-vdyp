@@ -197,12 +197,12 @@ import {
 } from '@/components'
 import { CONSTANTS, DEFAULTS, MAPPINGS, MESSAGE, OPTIONS } from '@/constants'
 import type { SpeciesList, MessageDialog } from '@/interfaces/interfaces'
-import { SpeciesInfoValidation } from '@/validation/speciesInfoValidation'
+import { SpeciesInfoValidator } from '@/validation/speciesInfoValidator'
 import { cloneDeep } from 'lodash'
 
 const form = ref<HTMLFormElement>()
 
-const speciesInfoValidator = new SpeciesInfoValidation()
+const speciesInfoValidator = new SpeciesInfoValidator()
 
 const modelParameterStore = useModelParameterStore()
 
