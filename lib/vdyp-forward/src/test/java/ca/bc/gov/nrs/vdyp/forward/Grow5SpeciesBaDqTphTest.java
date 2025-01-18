@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.application.ProcessingException;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
-import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.ExecutionStep;
 import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings.Vars;
 import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
@@ -56,8 +55,8 @@ class Grow5SpeciesBaDqTphTest {
 		// Select the first polygon - 01002 S000001 00(1970)
 		VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
-		fpe.processPolygon(polygon, ExecutionStep.GROW_5A_LH_EST);
-		LayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
+		fpe.processPolygon(polygon, ForwardProcessingEngine.ForwardExecutionStep.GROW_5A_LH_EST);
+		ForwardLayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
 
 		float baStart = 45.3864441f;
 		float baDelta = 0.351852179f;
@@ -109,13 +108,13 @@ class Grow5SpeciesBaDqTphTest {
 		// Select the first polygon - 01002 S000001 00(1970)
 		VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
-		fpe.processPolygon(polygon, ExecutionStep.GROW_4_LAYER_BA_AND_DQTPH_EST);
-		LayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
+		fpe.processPolygon(polygon, ForwardProcessingEngine.ForwardExecutionStep.GROW_4_LAYER_BA_AND_DQTPH_EST);
+		ForwardLayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
 
 		float baChangeRate = 0.00775236264f;
 		float tphChangeRate = 0.987927794f;
 
-		fpe.fps.fcm.getDebugSettings().setValue(Vars.SPECIES_DYNAMICS_1, 1);
+		fpe.fps.getControlMap().getDebugSettings().setValue(Vars.SPECIES_DYNAMICS_1, 1);
 
 		fpe.growUsingNoSpeciesDynamics(baChangeRate, tphChangeRate);
 
@@ -151,10 +150,10 @@ class Grow5SpeciesBaDqTphTest {
 		// Select the first polygon - 01002 S000001 00(1970)
 		VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
-		fpe.processPolygon(polygon, ExecutionStep.GROW_4_LAYER_BA_AND_DQTPH_EST);
-		LayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
+		fpe.processPolygon(polygon, ForwardProcessingEngine.ForwardExecutionStep.GROW_4_LAYER_BA_AND_DQTPH_EST);
+		ForwardLayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
 
-		fpe.fps.fcm.getDebugSettings().setValue(Vars.SPECIES_DYNAMICS_1, 0);
+		fpe.fps.getControlMap().getDebugSettings().setValue(Vars.SPECIES_DYNAMICS_1, 0);
 
 		// Results are stored in bank.basalAreas[1..nSpecies]
 

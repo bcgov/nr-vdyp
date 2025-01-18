@@ -4,6 +4,9 @@ import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Map;
 
+import ca.bc.gov.nrs.vdyp.common.Utils;
+import ca.bc.gov.nrs.vdyp.model.variables.UtilizationClassVariable;
+
 public class CompVarAdjustments {
 	public static final int MIN_INDEX = 1;
 	public static final int MAX_INDEX = 98;
@@ -19,29 +22,35 @@ public class CompVarAdjustments {
 	private final Map<UtilizationClassVariable, Float> smallUtilizationClassVariables = new HashMap<>();
 	private final Map<UtilizationClass, Float> utilizationClassBasalAreaVariables = new HashMap<>();
 	private final Map<UtilizationClass, Float> utilizationClassQuadMeanDiameterVariables = new HashMap<>();
-	private final MatrixMap2<VolumeVariable, UtilizationClass, Float> utilizationClassVolumeVariables = new MatrixMap2Impl<>(
-			VolumeVariable.ALL, UtilizationClass.UTIL_CLASSES, (k1, k2) -> 1.0f
+	private final MatrixMap2<UtilizationClassVariable, UtilizationClass, Float> utilizationClassVolumeVariables = new MatrixMap2Impl<>(
+			VdypCompatibilityVariables.VOLUME_UTILIZATION_VARIABLES, UtilizationClass.UTIL_CLASSES, (k1, k2) -> 1.0f
 	);
 
 	private float loreyHeightPrimary;
 	private float loreyHeightOther;
 
-	static {
-		assert UtilizationClassVariable.BASAL_AREA.ordinal() == 0;
-		assert UtilizationClassVariable.QUAD_MEAN_DIAMETER.ordinal() == 1;
-		assert UtilizationClassVariable.LOREY_HEIGHT.ordinal() == 2;
-		assert UtilizationClassVariable.WHOLE_STEM_VOLUME.ordinal() == 3;
+	private static final Map<UtilizationClassVariable, Integer> SMALL_INDEX = Utils
+			.constMap(UtilizationClassVariable.class, map -> {
+				map.put(UtilizationClassVariable.BASAL_AREA, 0);
+				map.put(UtilizationClassVariable.QUAD_MEAN_DIAMETER, 1);
+				map.put(UtilizationClassVariable.LOREY_HEIGHT, 2);
+				map.put(UtilizationClassVariable.WHOLE_STEM_VOL, 3);
+			});
 
-		assert UtilizationClass.U75TO125.ordinal() == 2;
-		assert UtilizationClass.U125TO175.ordinal() == 3;
-		assert UtilizationClass.U175TO225.ordinal() == 4;
-		assert UtilizationClass.OVER225.ordinal() == 5;
+	private static final Map<UtilizationClass, Integer> CLASS_INDEX = Utils.constMap(UtilizationClass.class, map -> {
+		map.put(UtilizationClass.U75TO125, 0);
+		map.put(UtilizationClass.U125TO175, 1);
+		map.put(UtilizationClass.U175TO225, 2);
+		map.put(UtilizationClass.OVER225, 3);
+	});
 
-		assert VolumeVariable.WHOLE_STEM_VOL.ordinal() == 0;
-		assert VolumeVariable.CLOSE_UTIL_VOL.ordinal() == 1;
-		assert VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY.ordinal() == 2;
-		assert VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE.ordinal() == 3;
-	}
+	private static final Map<UtilizationClassVariable, Integer> VOLUME_INDEX = Utils
+			.constMap(UtilizationClassVariable.class, map -> {
+				map.put(UtilizationClassVariable.WHOLE_STEM_VOL, 0);
+				map.put(UtilizationClassVariable.CLOSE_UTIL_VOL, 1);
+				map.put(UtilizationClassVariable.CLOSE_UTIL_VOL_LESS_DECAY, 2);
+				map.put(UtilizationClassVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE, 3);
+			});
 
 	private final static Map<UtilizationClass, Integer> ucOffsets = new HashMap<>();
 	private final static Map<Integer, Float> defaultValuesMap = new HashMap<>();
@@ -68,21 +77,21 @@ public class CompVarAdjustments {
 	 */
 	public CompVarAdjustments(Map<Integer, Float> values) {
 
-		for (UtilizationClassVariable ucv : UtilizationClassVariable.values()) {
-			smallUtilizationClassVariables.put(ucv, values.get(SMALL_VARIABLE_START_INDEX + ucv.ordinal()));
+		for (UtilizationClassVariable ucv : VdypCompatibilityVariables.SMALL_UTILIZATION_VARIABLES) {
+			smallUtilizationClassVariables.put(ucv, values.get(SMALL_VARIABLE_START_INDEX + SMALL_INDEX.get(ucv)));
 		}
 
 		for (UtilizationClass uc : UtilizationClass.UTIL_CLASSES) {
-			utilizationClassBasalAreaVariables.put(uc, values.get(BA_ADJ_UC_START_INDEX + uc.ordinal() - 2));
+			utilizationClassBasalAreaVariables.put(uc, values.get(BA_ADJ_UC_START_INDEX + CLASS_INDEX.get(uc)));
 		}
 
 		for (UtilizationClass uc : UtilizationClass.UTIL_CLASSES) {
-			utilizationClassQuadMeanDiameterVariables.put(uc, values.get(DQ_ADJ_UC_START_INDEX + uc.ordinal() - 2));
+			utilizationClassQuadMeanDiameterVariables.put(uc, values.get(DQ_ADJ_UC_START_INDEX + CLASS_INDEX.get(uc)));
 		}
 
-		for (VolumeVariable vv : VolumeVariable.ALL) {
+		for (UtilizationClassVariable vv : VdypCompatibilityVariables.VOLUME_UTILIZATION_VARIABLES) {
 			for (UtilizationClass uc : UtilizationClass.UTIL_CLASSES) {
-				utilizationClassVolumeVariables.put(vv, uc, values.get(ucOffsets.get(uc) + vv.ordinal()));
+				utilizationClassVolumeVariables.put(vv, uc, values.get(ucOffsets.get(uc) + VOLUME_INDEX.get(vv)));
 			}
 		}
 
@@ -120,7 +129,7 @@ public class CompVarAdjustments {
 		);
 	}
 
-	public float getVolumeValue(UtilizationClass uc, VolumeVariable vv) {
+	public float getVolumeValue(UtilizationClass uc, UtilizationClassVariable vv) {
 		if (uc.ordinal() >= UtilizationClass.U75TO125.ordinal()) {
 			return utilizationClassVolumeVariables.get(vv, uc);
 		}

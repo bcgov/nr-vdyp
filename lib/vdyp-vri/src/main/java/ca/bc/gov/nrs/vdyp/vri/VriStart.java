@@ -50,13 +50,13 @@ import ca.bc.gov.nrs.vdyp.math.FloatMath;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSite;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies.Builder;
+import ca.bc.gov.nrs.vdyp.model.builders.ModelClassBuilder;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.CompatibilityVariableMode;
 import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
-import ca.bc.gov.nrs.vdyp.model.ModelClassBuilder;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
 import ca.bc.gov.nrs.vdyp.model.PolygonMode;
 import ca.bc.gov.nrs.vdyp.model.Region;
@@ -471,9 +471,9 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		);
 
 		float layerQuadMeanDiameter = quadMeanDiameter(primaryBaseArea, primaryLayerDensity);
-		lBuilder.quadraticMeanDiameterByUtilization(layerQuadMeanDiameter);
-		lBuilder.baseAreaByUtilization(primaryBaseArea);
-		lBuilder.treesPerHectareByUtilization(primaryLayerDensity);
+		lBuilder.quadMeanDiameter(layerQuadMeanDiameter);
+		lBuilder.baseArea(primaryBaseArea);
+		lBuilder.treesPerHectare(primaryLayerDensity);
 		lBuilder.empiricalRelationshipParameterIndex(primaryLayer.getEmpiricalRelationshipParameterIndex());
 
 		lBuilder.adaptSpecies(primaryLayer, (sBuilder, vriSpec) -> {
@@ -545,7 +545,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			}
 		}
 
-		lBuilder.loreyHeightByUtilization(sumBaseAreaLoreyHeight / primaryBaseArea);
+		lBuilder.loreyHeight(sumBaseAreaLoreyHeight / primaryBaseArea);
 
 	}
 
@@ -1517,7 +1517,8 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 
 		// Note, this function has side effects in that it modifies resultPerSpecies. This is intentional, the goal is
 		// to apply adjustment factor x to the values in initialDqs until the combination of their values has minimal
-		// error then use those adjusted values.
+		// error then use those adjusted values. x is computed such that it is 0 when the sum of TPH for the species
+		// is equal to the expected TPH for the layer and the root finder tries to bring it to 0.
 
 		// Keeping track of the recent X values tied can be used to make some sort of guess if it doesn't converge.
 		double[] lastXes = new double[2];

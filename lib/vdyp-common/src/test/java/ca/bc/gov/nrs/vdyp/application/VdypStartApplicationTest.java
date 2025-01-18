@@ -757,12 +757,14 @@ class VdypStartApplicationTest {
 					lb.layerType(LayerType.PRIMARY);
 					lb.crownClosure(82.8000031f);
 					lb.addSpecies(sb -> {
-						sb.genus("B", controlMap);
+						sb.controlMap(controlMap);
+						sb.genus("B");
 						sb.percentGenus(33f);
 						sb.addSp64Distribution("B", 100f);
 					});
 					lb.addSpecies(sb -> {
-						sb.genus("H", controlMap);
+						sb.controlMap(controlMap);
+						sb.genus("H");
 						sb.percentGenus(67f);
 						sb.addSp64Distribution("H", 100f);
 						sb.addSite(ib -> {
@@ -794,12 +796,14 @@ class VdypStartApplicationTest {
 					lb.layerType(LayerType.PRIMARY);
 					lb.crownClosure(82.8000031f);
 					lb.addSpecies(sb -> {
-						sb.genus("B", controlMap);
+						sb.controlMap(controlMap);
+						sb.genus("B");
 						sb.percentGenus(33f);
 						sb.addSp64Distribution("B", 100f);
 					});
 					lb.addSpecies(sb -> {
-						sb.genus("H", controlMap);
+						sb.controlMap(controlMap);
+						sb.genus("H");
 						sb.percentGenus(67f);
 						sb.addSp64Distribution("H", 100f);
 						sb.addSite(ib -> {
@@ -831,12 +835,14 @@ class VdypStartApplicationTest {
 					lb.layerType(LayerType.PRIMARY);
 					lb.crownClosure(9f);// Altered this in the debugger while running VDYP7
 					lb.addSpecies(sb -> {
-						sb.genus("B", controlMap);
+						sb.controlMap(controlMap);
+						sb.genus("B");
 						sb.percentGenus(33f);
 						sb.addSp64Distribution("B", 100f);
 					});
 					lb.addSpecies(sb -> {
-						sb.genus("H", controlMap);
+						sb.controlMap(controlMap);
+						sb.genus("H");
 						sb.percentGenus(67f);
 						sb.addSp64Distribution("H", 100f);
 						sb.addSite(ib -> {
@@ -868,12 +874,14 @@ class VdypStartApplicationTest {
 					lb.layerType(LayerType.PRIMARY);
 					lb.crownClosure(82.8000031f);
 					lb.addSpecies(sb -> {
-						sb.genus("B", controlMap);
+						sb.controlMap(controlMap);
+						sb.genus("B");
 						sb.percentGenus(33f);
 						sb.addSp64Distribution("B", 100f);
 					});
 					lb.addSpecies(sb -> {
-						sb.genus("H", controlMap);
+						sb.controlMap(controlMap);
+						sb.genus("H");
 						sb.percentGenus(67f);
 						sb.addSp64Distribution("H", 100f);
 						sb.addSite(ib -> {
@@ -915,12 +923,14 @@ class VdypStartApplicationTest {
 					lb.layerType(LayerType.PRIMARY);
 					lb.crownClosure(82.8000031f);
 					lb.addSpecies(sb -> {
-						sb.genus("B", controlMap);
+						sb.controlMap(controlMap);
+						sb.genus("B");
 						sb.percentGenus(33f);
 						sb.addSp64Distribution("B", 100f);
 					});
 					lb.addSpecies(sb -> {
-						sb.genus("H", controlMap);
+						sb.controlMap(controlMap);
+						sb.genus("H");
 						sb.percentGenus(67f);
 						sb.addSp64Distribution("H", 100f);
 						sb.addSite(ib -> {
@@ -953,12 +963,14 @@ class VdypStartApplicationTest {
 					lb.layerType(LayerType.PRIMARY);
 					lb.crownClosure(82.8000031f);
 					lb.addSpecies(sb -> {
-						sb.genus("B", controlMap);
+						sb.controlMap(controlMap);
+						sb.genus("B");
 						sb.percentGenus(33f);
 						sb.addSp64Distribution("B", 100f);
 					});
 					lb.addSpecies(sb -> {
-						sb.genus("H", controlMap);
+						sb.controlMap(controlMap);
+						sb.genus("H");
 						sb.percentGenus(67f);
 						sb.addSp64Distribution("H", 100f);
 						sb.addSite(ib -> {
@@ -991,12 +1003,14 @@ class VdypStartApplicationTest {
 					lb.layerType(LayerType.PRIMARY);
 					lb.crownClosure(82.8000031f);
 					lb.addSpecies(sb -> {
-						sb.genus("B", controlMap);
+						sb.controlMap(controlMap);
+						sb.genus("B");
 						sb.percentGenus(33f);
 						sb.addSp64Distribution("B", 100f);
 					});
 					lb.addSpecies(sb -> {
-						sb.genus("H", controlMap);
+						sb.controlMap(controlMap);
+						sb.genus("H");
 						sb.percentGenus(67f);
 						sb.addSp64Distribution("H", 100f);
 						sb.addSite(ib -> {
@@ -1064,10 +1078,11 @@ class VdypStartApplicationTest {
 						lb.crownClosure(60f);
 
 						lb.addSpecies(sb -> {
-							sb.genus("L", controlMap);
+							sb.controlMap(controlMap);
+							sb.genus("L");
 							sb.percentGenus(10);
 							sb.addSite(ib -> {
-								ib.siteGenus("L");
+								ib.genus("L");
 								ib.ageTotal(60f);
 								ib.height(15f);
 								ib.siteIndex(5f);
@@ -1075,7 +1090,8 @@ class VdypStartApplicationTest {
 							});
 						});
 						lb.addSpecies(sb -> {
-							sb.genus("PL", controlMap);
+							sb.controlMap(controlMap);
+							sb.genus("PL");
 							sb.percentGenus(90);
 						});
 					});
@@ -1116,15 +1132,18 @@ class VdypStartApplicationTest {
 						lb.crownClosure(82.8f);
 
 						lb.addSpecies(sb -> {
-							sb.genus("B", controlMap);
+							sb.controlMap(controlMap);
+							sb.genus("B");
 							sb.percentGenus(15);
 						});
 						lb.addSpecies(sb -> {
-							sb.genus("D", controlMap);
+							sb.controlMap(controlMap);
+							sb.genus("D");
 							sb.percentGenus(7);
 						});
 						lb.addSpecies(sb -> {
-							sb.genus("H", controlMap);
+							sb.controlMap(controlMap);
+							sb.genus("H");
 							sb.percentGenus(77);
 							sb.addSite(ib -> {
 								ib.ageTotal(45f);
@@ -1135,7 +1154,8 @@ class VdypStartApplicationTest {
 
 						});
 						lb.addSpecies(sb -> {
-							sb.genus("S", controlMap);
+							sb.controlMap(controlMap);
+							sb.genus("S");
 							sb.percentGenus(1);
 						});
 					});
@@ -1145,10 +1165,10 @@ class VdypStartApplicationTest {
 						lb.crownClosure(4f);
 
 						lb.addSpecies(sb -> {
-							sb.genus("H", controlMap);
+							sb.controlMap(controlMap);
+							sb.genus("H");
 							sb.percentGenus(100);
 							sb.addSite(ib -> {
-								ib.siteGenus("H");
 								ib.ageTotal(105f);
 								ib.height(26.2f);
 								ib.siteIndex(16.7f);
@@ -1193,7 +1213,8 @@ class VdypStartApplicationTest {
 					for (String s : dist.split(" ")) {
 						var parts = s.split(":");
 						lb.addSpecies(sb -> {
-							sb.genus(parts[0], controlMap);
+							sb.controlMap(controlMap);
+							sb.genus(parts[0]);
 							sb.percentGenus(Float.valueOf(parts[1]));
 						});
 					}
@@ -1225,7 +1246,8 @@ class VdypStartApplicationTest {
 					for (String s : dist.split(" ")) {
 						var parts = s.split(":");
 						lb.addSpecies(sb -> {
-							sb.genus(parts[0], controlMap);
+							sb.controlMap(controlMap);
+							sb.genus(parts[0]);
 							sb.percentGenus(Float.valueOf(parts[1]));
 						});
 					}
@@ -1258,7 +1280,8 @@ class VdypStartApplicationTest {
 					lb.primaryGenus("H");
 
 					lb.addSpecies(sb -> {
-						sb.genus("B", controlMap);
+						sb.controlMap(controlMap);
+						sb.genus("B");
 						sb.percentGenus(20f);
 						sb.volumeGroup(-1);
 						sb.decayGroup(-1);
@@ -1271,7 +1294,8 @@ class VdypStartApplicationTest {
 						sb.wholeStemVolume(635.659668f);
 					});
 					lb.addSpecies(sb -> {
-						sb.genus("C", controlMap);
+						sb.controlMap(controlMap);
+						sb.genus("C");
 						sb.percentGenus(20f);
 						sb.volumeGroup(-1);
 						sb.decayGroup(-1);
@@ -1283,7 +1307,8 @@ class VdypStartApplicationTest {
 						sb.wholeStemVolume(6.35662031f);
 					});
 					lb.addSpecies(sb -> {
-						sb.genus("D", controlMap);
+						sb.controlMap(controlMap);
+						sb.genus("D");
 						sb.percentGenus(20f);
 						sb.volumeGroup(-1);
 						sb.decayGroup(-1);
@@ -1295,7 +1320,8 @@ class VdypStartApplicationTest {
 						sb.wholeStemVolume(44.496151f);
 					});
 					lb.addSpecies(sb -> {
-						sb.genus("H", controlMap);
+						sb.controlMap(controlMap);
+						sb.genus("H");
 						sb.percentGenus(20f);
 						sb.volumeGroup(-1);
 						sb.decayGroup(-1);
@@ -1313,7 +1339,8 @@ class VdypStartApplicationTest {
 
 					});
 					lb.addSpecies(sb -> {
-						sb.genus("S", controlMap);
+						sb.controlMap(controlMap);
+						sb.genus("S");
 						sb.percentGenus(20f);
 						sb.volumeGroup(-1);
 						sb.decayGroup(-1);
@@ -1325,11 +1352,11 @@ class VdypStartApplicationTest {
 						sb.wholeStemVolume(57.2091446f);
 					});
 
-					lb.loreyHeightByUtilization(31.3307209f);
-					lb.baseAreaByUtilization(44.6249847f);
-					lb.treesPerHectareByUtilization(620.484802f);
-					lb.quadraticMeanDiameterByUtilization(30.2606697f);
-					lb.wholeStemVolumeByUtilization(635.659668f);
+					lb.loreyHeight(31.3307209f);
+					lb.baseArea(44.6249847f);
+					lb.treesPerHectare(620.484802f);
+					lb.quadMeanDiameter(30.2606697f);
+					lb.wholeStemVolume(635.659668f);
 				});
 
 				app.estimateSmallComponents(fPoly, layer);
@@ -1395,7 +1422,8 @@ class VdypStartApplicationTest {
 					lb.inventoryTypeGroup(14);
 					lb.primaryGenus("H");
 					lb.addSpecies(sb -> {
-						sb.genus("B", controlMap);
+						sb.controlMap(controlMap);
+						sb.genus("B");
 						sb.percentGenus(20f);
 
 						sb.volumeGroup(15);
@@ -1410,7 +1438,8 @@ class VdypStartApplicationTest {
 						sb.addSp64Distribution("BL", 100);
 					});
 					lb.addSpecies(sb -> {
-						sb.genus("C", controlMap);
+						sb.controlMap(controlMap);
+						sb.genus("C");
 						sb.percentGenus(30f);
 
 						sb.volumeGroup(23);
@@ -1425,7 +1454,8 @@ class VdypStartApplicationTest {
 						sb.addSp64Distribution("CW", 100);
 					});
 					lb.addSpecies(sb -> {
-						sb.genus("H", controlMap);
+						sb.controlMap(controlMap);
+						sb.genus("H");
 						sb.percentGenus(50f);
 
 						sb.volumeGroup(40);
@@ -1535,7 +1565,8 @@ class VdypStartApplicationTest {
 				var result = VdypSpecies.build(sb -> {
 					sb.polygonIdentifier("Test", 2024);
 					sb.layerType(LayerType.PRIMARY);
-					sb.genus("B", controlMap);
+					sb.controlMap(controlMap);
+					sb.genus("B");
 					sb.percentGenus(100);
 					app.applyGroups(bec, "B", sb);
 				});
@@ -1559,7 +1590,8 @@ class VdypStartApplicationTest {
 					pb.addLayer(lb -> {
 						lb.layerType(LayerType.PRIMARY);
 						lb.addSpecies(sb -> {
-							sb.genus("B", controlMap);
+							sb.controlMap(controlMap);
+							sb.genus("B");
 							sb.percentGenus(100);
 						});
 					});
@@ -1613,7 +1645,8 @@ class VdypStartApplicationTest {
 				var species = TestSpecies.build(sb -> {
 					sb.polygonIdentifier("TestPolygon", 2024);
 					sb.layerType(LayerType.PRIMARY);
-					sb.genus("MB", controlMap);
+					sb.controlMap(controlMap);
+					sb.genus("MB");
 					sb.percentGenus(90);
 				});
 				var result = app.getCoeForSpecies(species, ControlKey.SMALL_COMP_BA);
@@ -1689,7 +1722,8 @@ class VdypStartApplicationTest {
 			layer.getWholeStemVolumeByUtilization().setSmall(0.107688069f);
 
 			var spec1 = VdypSpecies.build(layer, builder -> {
-				builder.genus("L", controlMap);
+				builder.controlMap(controlMap);
+				builder.genus("L");
 				builder.percentGenus(11.0567074f);
 				builder.volumeGroup(46);
 				builder.decayGroup(38);
@@ -1709,7 +1743,8 @@ class VdypStartApplicationTest {
 			spec1.getWholeStemVolumeByUtilization().setSmall(0.0411359742f);
 
 			var spec2 = VdypSpecies.build(layer, builder -> {
-				builder.genus("PL", controlMap);
+				builder.controlMap(controlMap);
+				builder.genus("PL");
 				builder.percentGenus(88.9432907f);
 				builder.volumeGroup(54);
 				builder.decayGroup(42);
@@ -1872,7 +1907,8 @@ class VdypStartApplicationTest {
 			builder.polygonIdentifier(polygonId);
 			builder.layerType(LayerType.PRIMARY);
 			builder.addSpecies(specBuilder -> {
-				specBuilder.genus("B", controlMap);
+				specBuilder.controlMap(controlMap);
+				specBuilder.genus("B");
 				specBuilder.addSite(siteBuilder -> {
 					siteBuilder.ageTotal(8f);
 					siteBuilder.yearsToBreastHeight(7f);
@@ -1897,7 +1933,8 @@ class VdypStartApplicationTest {
 			builder.layerType(LayerType.VETERAN);
 
 			builder.addSpecies(specBuilder -> {
-				specBuilder.genus("B", controlMap);
+				specBuilder.controlMap(controlMap);
+				specBuilder.genus("B");
 				specBuilder.addSite(siteBuilder -> {
 					siteBuilder.ageTotal(8f);
 					siteBuilder.yearsToBreastHeight(7f);
@@ -1924,7 +1961,8 @@ class VdypStartApplicationTest {
 		var result = TestSpecies.build(builder -> {
 			builder.polygonIdentifier(polygonId);
 			builder.layerType(layer);
-			builder.genus(genusId, controlMap);
+			builder.controlMap(controlMap);
+			builder.genus(genusId);
 			builder.percentGenus(100.0f);
 			builder.addSp64Distribution(genusId, 100f);
 		});

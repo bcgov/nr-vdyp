@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.model;
 
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.isPolyId;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
@@ -15,10 +16,12 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.application.InitializationIncompleteException;
+import ca.bc.gov.nrs.vdyp.model.variables.UtilizationClassVariable;
 
 class VdypSpeciesTest {
 
@@ -27,7 +30,8 @@ class VdypSpeciesTest {
 		var species1 = VdypSpecies.build(builder -> {
 			builder.polygonIdentifier("Test", 2024);
 			builder.layerType(LayerType.PRIMARY);
-			builder.genus("B", 3);
+			builder.genus("B");
+			builder.genus(3);
 			builder.percentGenus(50f);
 			builder.volumeGroup(1);
 			builder.decayGroup(2);
@@ -48,7 +52,8 @@ class VdypSpeciesTest {
 		var species2 = VdypSpecies.build(builder -> {
 			builder.polygonIdentifier("Test2", 2024);
 			builder.layerType(LayerType.PRIMARY);
-			builder.genus("B", 3);
+			builder.genus("B");
+			builder.genus(3);
 			builder.percentGenus(50f);
 			builder.volumeGroup(1);
 			builder.decayGroup(2);
@@ -60,7 +65,8 @@ class VdypSpeciesTest {
 		var species3 = VdypSpecies.build(builder -> {
 			builder.polygonIdentifier("Test", 2024);
 			builder.layerType(LayerType.PRIMARY);
-			builder.genus("D", 5);
+			builder.genus("D");
+			builder.genus(5);
 			builder.percentGenus(50f);
 			builder.volumeGroup(1);
 			builder.decayGroup(2);
@@ -72,7 +78,8 @@ class VdypSpeciesTest {
 		var species4 = VdypSpecies.build(builder -> {
 			builder.polygonIdentifier("Test", 2024);
 			builder.layerType(LayerType.VETERAN);
-			builder.genus("B", 3);
+			builder.genus("B");
+			builder.genus(3);
 			builder.percentGenus(50f);
 			builder.volumeGroup(1);
 			builder.decayGroup(2);
@@ -88,7 +95,8 @@ class VdypSpeciesTest {
 			sb.polygonIdentifier(new PolygonIdentifier("Poly1", 2024));
 			sb.layerType(LayerType.PRIMARY);
 			sb.percentGenus(100.0f);
-			sb.genus("Species1", 5);
+			sb.genus("Species1");
+			sb.genus(5);
 			sb.baseArea(0.00155f, 0.01412f, 0.05128f, 0.45736f, 28.77972f);
 			sb.treesPerHectare(0.47f, 1.64f, 2.69f, 13.82f, 269.56f);
 			sb.loreyHeight(10.6033f, 33.7440f);
@@ -115,15 +123,13 @@ class VdypSpeciesTest {
 		assertThrows(IllegalStateException.class, () -> sp.setBreakageGroup(1));
 
 		List<UtilizationClass> ucs = Arrays.asList(UtilizationClass.values());
-		List<VolumeVariable> vvs = Arrays.asList(VolumeVariable.values());
+		Set<UtilizationClassVariable> vvs = VdypCompatibilityVariables.VOLUME_UTILIZATION_VARIABLES;
 		List<LayerType> lts = Arrays.asList(LayerType.values());
 
-		assertThrows(InitializationIncompleteException.class, () -> sp.getCvVolume(null, null, null));
-		assertThrows(InitializationIncompleteException.class, () -> sp.getCvBasalArea(null, null));
-		assertThrows(InitializationIncompleteException.class, () -> sp.getCvQuadraticMeanDiameter(null, null));
-		assertThrows(InitializationIncompleteException.class, () -> sp.getCvPrimaryLayerSmall(null));
+		assertThrows(InitializationIncompleteException.class, () -> sp.requireCompatibilityVariables());
+		assertThat(sp, hasProperty("compatibilityVariables", notPresent()));
 
-		var cvVolume = new MatrixMap3Impl<UtilizationClass, VolumeVariable, LayerType, Float>(
+		var cvVolume = new MatrixMap3Impl<UtilizationClass, UtilizationClassVariable, LayerType, Float>(
 				ucs, vvs, lts, (x, y, z) -> 1.0f
 		);
 		var cvBasalArea = new MatrixMap2Impl<UtilizationClass, LayerType, Float>(ucs, lts, (x, y) -> 1.0f);
@@ -156,7 +162,8 @@ class VdypSpeciesTest {
 
 		var result = VdypSpecies.build(layer, builder -> {
 			builder.polygonIdentifier("Test", 2024);
-			builder.genus("B", 3);
+			builder.genus("B");
+			builder.genus(3);
 			builder.percentGenus(50f);
 			builder.volumeGroup(1);
 			builder.decayGroup(2);
@@ -186,7 +193,8 @@ class VdypSpeciesTest {
 		var result = VdypSpecies.build(builder -> {
 			builder.polygonIdentifier("Test", 2024);
 			builder.layerType(LayerType.PRIMARY);
-			builder.genus("B", 3);
+			builder.genus("B");
+			builder.genus(3);
 			builder.percentGenus(50f);
 			builder.volumeGroup(1);
 			builder.decayGroup(2);
@@ -213,7 +221,8 @@ class VdypSpeciesTest {
 		var toCopy = VdypSpecies.build(builder -> {
 			builder.polygonIdentifier("Test", 2024);
 			builder.layerType(LayerType.PRIMARY);
-			builder.genus("B", 3);
+			builder.genus("B");
+			builder.genus(3);
 			builder.percentGenus(50f);
 			builder.volumeGroup(1);
 			builder.decayGroup(2);

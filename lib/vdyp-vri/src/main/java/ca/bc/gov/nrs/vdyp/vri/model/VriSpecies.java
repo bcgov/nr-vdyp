@@ -62,7 +62,7 @@ public class VriSpecies extends BaseVdypSpecies<VriSite> {
 				config.accept(builder);
 				builder.polygonIdentifier(this.polygonIdentifier.get());
 				builder.layerType(this.layerType.get());
-				builder.siteGenus(this.genus);
+				builder.genus(this.genus);
 			});
 		}
 

@@ -27,7 +27,6 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.application.ProcessingException;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
-import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.ExecutionStep;
 import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
@@ -116,7 +115,7 @@ class Grow1CalculateDominantHeightDeltaTest {
 
 		fpe.fps.setPolygon(polygon);
 
-		fpe.processPolygon(polygon, ExecutionStep.GROW_1_LAYER_DHDELTA.predecessor());
+		fpe.processPolygon(polygon, ForwardProcessingEngine.ForwardExecutionStep.GROW_1_LAYER_DHDELTA.predecessor());
 
 		float hd = 26.5f;
 		int sc = 11;

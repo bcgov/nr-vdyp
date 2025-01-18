@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.vdyp.forward.parsers;
+package ca.bc.gov.nrs.vdyp.io.parse.model;
 
 import java.io.IOException;
 import java.text.MessageFormat;

@@ -1,8 +1,10 @@
 package ca.bc.gov.nrs.vdyp.common;
 
+import java.text.MessageFormat;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -15,6 +17,7 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
@@ -214,7 +217,32 @@ public class Utils {
 	 * @return
 	 */
 	public static <K, V> Map<K, V> constMap(Consumer<Map<K, V>> body) {
-		var map = new HashMap<K, V>();
+		return constMap(HashMap::new, body);
+	}
+
+	/**
+	 * Create a map, allow it to be modified, then return an unmodifiable view of it.
+	 *
+	 * @param <K>
+	 * @param <V>
+	 * @param body
+	 * @return
+	 */
+	public static <K extends Enum<K>, V> Map<K, V> constMap(Class<K> keyEnum, Consumer<Map<K, V>> body) {
+		return constMap(() -> new EnumMap<K, V>(keyEnum), body);
+	}
+
+	/**
+	 * Create map, allow it to be modified, then return an unmodifiable view of it.
+	 *
+	 * @param <K>
+	 * @param <V>
+	 * @param body
+	 * @param constructor
+	 * @return
+	 */
+	public static <K, V> Map<K, V> constMap(Supplier<Map<K, V>> constructor, Consumer<Map<K, V>> body) {
+		var map = constructor.get();
 		body.accept(map);
 		return Collections.unmodifiableMap(map);
 	}
@@ -533,5 +561,70 @@ public class Utils {
 	 */
 	public static double computeInFeet(double value, DoubleUnaryOperator operation) {
 		return operation.applyAsDouble(value / METRES_PER_FOOT) * METRES_PER_FOOT;
+	}
+
+	/**
+	 * Given a particular Enum value, and an ordered array of all values of that enum could take on (the result of
+	 * calling values()) Gives the next Enum.
+	 *
+	 * @param <T>
+	 * @param current
+	 * @param values
+	 * @return
+	 * @throws IllegalStateException If the given Enum value is the last one
+	 */
+	public static <T extends Enum<T>> T successorOrThrow(T current, T[] values) {
+		return successor(current, values)
+				.orElseThrow(() -> new IllegalStateException(MessageFormat.format("{} has no successor", current)));
+	}
+
+	/**
+	 * Given a particular Enum value, and an ordered array of all values of that enum could take on (the result of
+	 * calling values()) Gives the precious Enum.
+	 *
+	 * @param <T>
+	 * @param current
+	 * @param values
+	 * @return
+	 * @throws IllegalStateException If the given Enum value is the first one
+	 */
+	public static <T extends Enum<T>> T predecessorOrThrow(T current, T[] values) {
+		return predecessor(current, values)
+				.orElseThrow(() -> new IllegalStateException(MessageFormat.format("{} has no predecessor", current)));
+	}
+
+	/**
+	 * Given a particular Enum value, and an ordered array of all values of that enum could take on (the result of
+	 * calling values()) Gives the next Enum.
+	 *
+	 * @param <T>
+	 * @param current
+	 * @param values
+	 * @return
+	 */
+	public static <T extends Enum<T>> Optional<T> successor(T current, T[] values) {
+		int i = current.ordinal();
+		if (i <= 0) {
+			return Optional.empty();
+		}
+		return Optional.of(values[i + 1]);
+	}
+
+	/**
+	 * Given a particular Enum value, and an ordered array of all values of that enum could take on (the result of
+	 * calling values()) Gives the next Enum.
+	 *
+	 * @param <T>
+	 * @param current
+	 * @param values
+	 * @return
+	 * @throws IllegalStateException If the given Enum value is the first one
+	 */
+	public static <T extends Enum<T>> Optional<T> predecessor(T current, T[] values) {
+		int i = current.ordinal();
+		if (i <= 0) {
+			return Optional.empty();
+		}
+		return Optional.of(values[i - 1]);
 	}
 }

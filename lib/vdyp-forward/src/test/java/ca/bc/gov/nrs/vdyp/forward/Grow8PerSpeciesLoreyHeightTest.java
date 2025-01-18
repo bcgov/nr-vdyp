@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.application.ProcessingException;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
-import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.ExecutionStep;
 import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings.Vars;
 import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
@@ -56,10 +55,10 @@ class Grow8PerSpeciesLoreyHeightTest {
 		// Select the first polygon - 01002 S000001 00(1970)
 		VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
-		fpe.fps.fcm.getDebugSettings().setValue(Vars.LOREY_HEIGHT_CHANGE_STRATEGY_8, 0);
-		fpe.processPolygon(polygon, ExecutionStep.GROW_8_SPECIES_LH);
+		fpe.fps.getControlMap().getDebugSettings().setValue(Vars.LOREY_HEIGHT_CHANGE_STRATEGY_8, 0);
+		fpe.processPolygon(polygon, ForwardProcessingEngine.ForwardExecutionStep.GROW_8_SPECIES_LH);
 
-		LayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
+		ForwardLayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
 
 		var calculatedLayerDq = lps.getBank().quadMeanDiameters[0][UtilizationClass.ALL.ordinal()];
 
@@ -75,10 +74,10 @@ class Grow8PerSpeciesLoreyHeightTest {
 		// Select the first polygon - 01002 S000001 00(1970)
 		VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
-		fpe.fps.fcm.getDebugSettings().setValue(Vars.LOREY_HEIGHT_CHANGE_STRATEGY_8, 2);
-		fpe.processPolygon(polygon, ExecutionStep.GROW_8_SPECIES_LH);
+		fpe.fps.getControlMap().getDebugSettings().setValue(Vars.LOREY_HEIGHT_CHANGE_STRATEGY_8, 2);
+		fpe.processPolygon(polygon, ForwardProcessingEngine.ForwardExecutionStep.GROW_8_SPECIES_LH);
 
-		LayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
+		ForwardLayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
 
 		var calculatedLayerDq = lps.getBank().quadMeanDiameters[0][UtilizationClass.ALL.ordinal()];
 

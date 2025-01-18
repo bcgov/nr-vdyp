@@ -14,6 +14,8 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import ca.bc.gov.nrs.vdyp.common.Computed;
+import ca.bc.gov.nrs.vdyp.model.builders.LayerIdentifiedBuilder;
+import ca.bc.gov.nrs.vdyp.model.builders.ModelClassBuilder;
 
 public abstract class BaseVdypLayer<S extends BaseVdypSpecies<I>, I extends BaseVdypSite> {
 
@@ -114,7 +116,7 @@ public abstract class BaseVdypLayer<S extends BaseVdypSpecies<I>, I extends Base
 	}
 
 	public abstract static class Builder<T extends BaseVdypLayer<S, I>, S extends BaseVdypSpecies<I>, I extends BaseVdypSite, SB extends BaseVdypSpecies.Builder<S, I, IB>, IB extends BaseVdypSite.Builder<I>>
-			extends ModelClassBuilder<T> {
+			extends ModelClassBuilder<T> implements LayerIdentifiedBuilder {
 		protected Optional<PolygonIdentifier> polygonIdentifier = Optional.empty();
 		protected Optional<LayerType> layerType = Optional.empty();
 
@@ -124,24 +126,14 @@ public abstract class BaseVdypLayer<S extends BaseVdypSpecies<I>, I extends Base
 		protected List<Consumer<SB>> speciesBuilders = new LinkedList<>();
 		protected List<Consumer<IB>> siteBuilders = new LinkedList<>();
 
-		public Builder<T, S, I, SB, IB> polygonIdentifier(PolygonIdentifier polygonIdentifier) {
+		@Override
+		public void polygonIdentifier(PolygonIdentifier polygonIdentifier) {
 			this.polygonIdentifier = Optional.of(polygonIdentifier);
-			return this;
 		}
 
-		public Builder<T, S, I, SB, IB> polygonIdentifier(String polygonIdentifier) {
-			this.polygonIdentifier = Optional.of(PolygonIdentifier.split(polygonIdentifier));
-			return this;
-		}
-
-		public Builder<T, S, I, SB, IB> polygonIdentifier(String base, int year) {
-			this.polygonIdentifier = Optional.of(new PolygonIdentifier(base, year));
-			return this;
-		}
-
-		public Builder<T, S, I, SB, IB> layerType(LayerType layer) {
+		@Override
+		public void layerType(LayerType layer) {
 			this.layerType = Optional.of(layer);
-			return this;
 		}
 
 		public Optional<LayerType> getLayerType() {

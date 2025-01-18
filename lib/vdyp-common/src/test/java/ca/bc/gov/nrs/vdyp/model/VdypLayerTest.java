@@ -37,7 +37,8 @@ class VdypLayerTest {
 			builder.primaryGenus("PL");
 
 			builder.addSpecies(specBuilder -> {
-				specBuilder.genus("PL", 12);
+				specBuilder.genus("PL");
+				specBuilder.genus(12);
 				specBuilder.percentGenus(100);
 				specBuilder.volumeGroup(-1);
 				specBuilder.decayGroup(-1);
@@ -86,7 +87,8 @@ class VdypLayerTest {
 			builder.primaryGenus("PL");
 
 			builder.addSpecies(specBuilder -> {
-				specBuilder.genus("PL", 12);
+				specBuilder.genus("PL");
+				specBuilder.genus(12);
 				specBuilder.percentGenus(100);
 				specBuilder.volumeGroup(-1);
 				specBuilder.decayGroup(-1);
@@ -120,7 +122,8 @@ class VdypLayerTest {
 			builder.polygonIdentifier("Test", 2024);
 			builder.layerType(LayerType.PRIMARY);
 			builder.addSpecies(specBuilder -> {
-				specBuilder.genus("PL", 12);
+				specBuilder.genus("PL");
+				specBuilder.genus(12);
 				specBuilder.percentGenus(100);
 				specBuilder.volumeGroup(-1);
 				specBuilder.decayGroup(-1);
@@ -134,7 +137,8 @@ class VdypLayerTest {
 			});
 
 			builder.addSpecies(specBuilder -> {
-				specBuilder.genus("B", 3);
+				specBuilder.genus("B");
+				specBuilder.genus(3);
 				specBuilder.percentGenus(90f);
 				specBuilder.volumeGroup(10);
 				specBuilder.decayGroup(10);
@@ -239,7 +243,8 @@ class VdypLayerTest {
 			builder.layerType(LayerType.PRIMARY);
 
 			builder.addSpecies(speciesBuilder -> {
-				speciesBuilder.genus("B", 3);
+				speciesBuilder.genus("B");
+				speciesBuilder.genus(3);
 				speciesBuilder.percentGenus(100f);
 				speciesBuilder.fractionGenus(1f);
 				speciesBuilder.volumeGroup(1);
@@ -319,11 +324,11 @@ class VdypLayerTest {
 			builder.closeUtilizationVolumeNetOfDecayByUtilization(1.0f);
 			builder.closeUtilizationVolumeNetOfDecayAndWasteByUtilization(1.0f);
 			builder.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(1.0f);
-			builder.wholeStemVolumeByUtilization(1.0f);
-			builder.baseAreaByUtilization(1.0f);
-			builder.loreyHeightByUtilization(1.0f, 1.0f);
-			builder.quadraticMeanDiameterByUtilization(1.0f);
-			builder.treesPerHectareByUtilization(1.0f);
+			builder.wholeStemVolume(1.0f);
+			builder.baseArea(1.0f);
+			builder.loreyHeight(1.0f, 1.0f);
+			builder.quadMeanDiameter(1.0f);
+			builder.treesPerHectare(1.0f);
 		});
 
 		assertThat(poly.getLayers(), hasEntry(LayerType.PRIMARY, layer1));
@@ -363,11 +368,11 @@ class VdypLayerTest {
 			builder.closeUtilizationVolumeNetOfDecayByUtilization(2.0f, 2.0f, 2.0f, 2.0f, 2.0f);
 			builder.closeUtilizationVolumeNetOfDecayAndWasteByUtilization(2.0f, 2.0f, 2.0f, 2.0f, 2.0f);
 			builder.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(2.0f, 2.0f, 2.0f, 2.0f, 2.0f);
-			builder.wholeStemVolumeByUtilization(2.0f, 2.0f, 2.0f, 2.0f, 2.0f);
-			builder.baseAreaByUtilization(2.0f, 2.0f, 2.0f, 2.0f, 2.0f);
-			builder.loreyHeightByUtilization(2.0f, 2.0f);
-			builder.quadraticMeanDiameterByUtilization(2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f);
-			builder.treesPerHectareByUtilization(2.0f, 2.0f, 2.0f, 2.0f, 2.0f);
+			builder.wholeStemVolume(2.0f, 2.0f, 2.0f, 2.0f, 2.0f);
+			builder.baseArea(2.0f, 2.0f, 2.0f, 2.0f, 2.0f);
+			builder.loreyHeight(2.0f, 2.0f);
+			builder.quadMeanDiameter(2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f);
+			builder.treesPerHectare(2.0f, 2.0f, 2.0f, 2.0f, 2.0f);
 		});
 
 		assertThat(poly.getLayers(), hasEntry(LayerType.PRIMARY, layer2));

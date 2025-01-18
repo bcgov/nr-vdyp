@@ -22,7 +22,7 @@ class VdypSiteTest {
 			builder.ageTotal(35.0f);
 			builder.height(53.0f);
 			builder.siteCurveNumber(22);
-			builder.siteGenus("B");
+			builder.genus("B");
 			builder.siteIndex(42.5f);
 			builder.yearsToBreastHeight(5.0f);
 		});
@@ -45,7 +45,7 @@ class VdypSiteTest {
 			builder.ageTotal(35.0f);
 			builder.height(53.0f);
 			builder.siteCurveNumber(22);
-			builder.siteGenus("B");
+			builder.genus("B");
 			builder.siteIndex(42.5f);
 			builder.yearsToBreastHeight(5.0f);
 		});
@@ -58,7 +58,7 @@ class VdypSiteTest {
 			builder.ageTotal(35.0f);
 			builder.height(53.0f);
 			builder.siteCurveNumber(22);
-			builder.siteGenus("C");
+			builder.genus("C");
 			builder.siteIndex(42.5f);
 			builder.yearsToBreastHeight(5.0f);
 		});
@@ -71,7 +71,7 @@ class VdypSiteTest {
 			builder.ageTotal(35.0f);
 			builder.height(53.0f);
 			builder.siteCurveNumber(22);
-			builder.siteGenus("B");
+			builder.genus("B");
 			builder.siteIndex(42.5f);
 			builder.yearsToBreastHeight(5.0f);
 		});
@@ -103,7 +103,7 @@ class VdypSiteTest {
 			builder.ageTotal(35.0f);
 			builder.height(53.0f);
 			builder.siteCurveNumber(22);
-			builder.siteGenus("B");
+			builder.genus("B");
 			builder.siteIndex(42.5f);
 			builder.yearsToBreastHeight(5.0f);
 		});

@@ -106,7 +106,7 @@ public class FipLayerParser
 									siteBuilder.yearsToBreastHeight(yearsToBreastHeight);
 									siteBuilder.height(height);
 									siteBuilder.siteIndex(siteIndex);
-									siteBuilder.siteGenus(siteSp0.get());
+									siteBuilder.genus(siteSp0.get());
 									siteBuilder.siteCurveNumber(siteCurveNumber);
 									siteBuilder.siteSpecies(siteSp64.get());
 								});
@@ -126,7 +126,7 @@ public class FipLayerParser
 									siteBuilder.yearsToBreastHeight(yearsToBreastHeight);
 									siteBuilder.height(height);
 									siteBuilder.siteIndex(siteIndex);
-									siteBuilder.siteGenus(siteSp0.get());
+									siteBuilder.genus(siteSp0.get());
 									siteBuilder.siteSpecies(siteSp64.get());
 								});
 

@@ -5,10 +5,12 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import ca.bc.gov.nrs.vdyp.application.InitializationIncompleteException;
 import ca.bc.gov.nrs.vdyp.common.Utils;
+import ca.bc.gov.nrs.vdyp.model.variables.UtilizationClassVariable;
 
 public class VdypSpecies extends BaseVdypSpecies<VdypSite> implements VdypUtilizationHolder {
 
@@ -29,10 +31,7 @@ public class VdypSpecies extends BaseVdypSpecies<VdypSite> implements VdypUtiliz
 
 	// Compatibility Variables
 
-	private Optional<MatrixMap3<UtilizationClass, VolumeVariable, LayerType, Float>> cvVolume = Optional.empty();
-	private Optional<MatrixMap2<UtilizationClass, LayerType, Float>> cvBasalArea = Optional.empty();
-	private Optional<MatrixMap2<UtilizationClass, LayerType, Float>> cvQuadraticMeanDiameter = Optional.empty();
-	private Optional<Map<UtilizationClassVariable, Float>> cvPrimaryLayerSmall = Optional.empty();
+	private Optional<VdypCompatibilityVariables> compatibilityVariables = Optional.empty();
 
 	public VdypSpecies(
 			PolygonIdentifier polygonIdentifier, LayerType layer, String genus, int genusIndex,
@@ -197,47 +196,42 @@ public class VdypSpecies extends BaseVdypSpecies<VdypSite> implements VdypUtiliz
 		this.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization = closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization;
 	}
 
+	public void setCompatibilityVariables(VdypCompatibilityVariables cv) {
+		this.compatibilityVariables = Optional.of(cv);
+
+	}
+
 	public void setCompatibilityVariables(
-			MatrixMap3<UtilizationClass, VolumeVariable, LayerType, Float> cvVolume,
+			MatrixMap3<UtilizationClass, UtilizationClassVariable, LayerType, Float> cvVolume,
 			MatrixMap2<UtilizationClass, LayerType, Float> cvBasalArea,
 			MatrixMap2<UtilizationClass, LayerType, Float> cvQuadraticMeanDiameter,
 			Map<UtilizationClassVariable, Float> cvPrimaryLayerSmall
 	) {
 
-		this.cvVolume = Optional.of(cvVolume);
-		this.cvBasalArea = Optional.of(cvBasalArea);
-		this.cvQuadraticMeanDiameter = Optional.of(cvQuadraticMeanDiameter);
-		this.cvPrimaryLayerSmall = Optional.of(cvPrimaryLayerSmall);
+		this.setCompatibilityVariables(VdypCompatibilityVariables.build(this, cvb -> {
+
+			cvb.cvVolume(cvVolume);
+			cvb.cvBasalArea(cvBasalArea);
+			cvb.cvQuadraticMeanDiameter(cvQuadraticMeanDiameter);
+			cvb.cvPrimaryLayerSmall(cvPrimaryLayerSmall);
+
+		}));
 	}
 
-	public float getCvVolume(UtilizationClass uc, VolumeVariable vv, LayerType lt) {
-		if (cvVolume.isEmpty()) {
-			throw new InitializationIncompleteException(MessageFormat.format("Species {0}: cvVolume", this));
-		}
-		return cvVolume.get().get(uc, vv, lt);
+	public Optional<VdypCompatibilityVariables> getCompatibilityVariables() {
+		return this.compatibilityVariables;
 	}
 
-	public float getCvBasalArea(UtilizationClass uc, LayerType lt) {
-		if (cvBasalArea.isEmpty()) {
-			throw new InitializationIncompleteException(MessageFormat.format("Species {0}: cvBasalArea", this));
-		}
-		return cvBasalArea.get().get(uc, lt);
-	}
-
-	public float getCvQuadraticMeanDiameter(UtilizationClass uc, LayerType lt) {
-		if (cvQuadraticMeanDiameter.isEmpty()) {
-			throw new InitializationIncompleteException(
-					MessageFormat.format("Species {0}: cvQuadraticMeanDiameter", this)
-			);
-		}
-		return cvQuadraticMeanDiameter.get().get(uc, lt);
-	}
-
-	public float getCvPrimaryLayerSmall(UtilizationClassVariable ucv) {
-		if (cvPrimaryLayerSmall.isEmpty()) {
-			throw new InitializationIncompleteException(MessageFormat.format("Species {0}: cvPrimaryLayerSmall", this));
-		}
-		return cvPrimaryLayerSmall.get().get(ucv);
+	/**
+	 * @return the compatibility variables if they are present
+	 * @throws InitializationIncompleteException if there are no compatibility variables
+	 */
+	public VdypCompatibilityVariables requireCompatibilityVariables() throws InitializationIncompleteException {
+		return getCompatibilityVariables().orElseThrow(
+				() -> new InitializationIncompleteException(
+						MessageFormat.format("Species {0}: compatibilityVariables", this)
+				)
+		);
 	}
 
 	/**
@@ -280,107 +274,79 @@ public class VdypSpecies extends BaseVdypSpecies<VdypSite> implements VdypUtiliz
 		return result;
 	}
 
-	public static class Builder extends BaseVdypSpecies.Builder<VdypSpecies, VdypSite, VdypSite.Builder> {
+	public static class Builder extends BaseVdypSpecies.Builder<VdypSpecies, VdypSite, VdypSite.Builder>
+			implements VdypUtilizationHolder.Builder {
 		protected Optional<Integer> volumeGroup = Optional.empty();
 		protected Optional<Integer> decayGroup = Optional.empty();
 		protected Optional<Integer> breakageGroup = Optional.empty();
 
 		protected UtilizationVector loreyHeight = VdypUtilizationHolder.emptyLoreyHeightUtilization();
 
-		public void loreyHeight(float height) {
-			this.loreyHeight = Utils.heightVector(0, height);
-		}
-
-		public void loreyHeight(float small, float height) {
-			this.loreyHeight = Utils.heightVector(small, height);
+		@Override
+		public void loreyHeight(UtilizationVector vector) {
+			this.loreyHeight = vector;
 		}
 
 		protected UtilizationVector baseArea = VdypUtilizationHolder.emptyUtilization();
 
-		public void baseArea(float small, float u1, float u2, float u3, float u4) {
-			this.baseArea = Utils.utilizationVector(small, u1, u2, u3, u4);
-		}
-
-		public void baseArea(float baseArea) {
-			this.baseArea = Utils.utilizationVector(baseArea);
+		@Override
+		public void baseArea(UtilizationVector vector) {
+			this.baseArea = vector;
 		}
 
 		protected UtilizationVector treesPerHectare = VdypUtilizationHolder.emptyUtilization();
 
-		public void treesPerHectare(float small, float u1, float u2, float u3, float u4) {
-			this.treesPerHectare = Utils.utilizationVector(small, u1, u2, u3, u4);
-		}
-
-		public void treesPerHectare(float height) {
-			this.treesPerHectare = Utils.utilizationVector(height);
+		@Override
+		public void treesPerHectare(UtilizationVector vector) {
+			this.treesPerHectare = vector;
 		}
 
 		protected UtilizationVector quadMeanDiameter = VdypUtilizationHolder.emptyUtilization();
 
-		public void quadMeanDiameter(float small, float uAll, float u1, float u2, float u3, float u4) {
-			this.quadMeanDiameter = Utils.utilizationVector(small, uAll, u1, u2, u3, u4);
-		}
-
-		public void quadMeanDiameter(float height) {
-			this.quadMeanDiameter = Utils.utilizationVector(height);
+		@Override
+		public void quadMeanDiameter(UtilizationVector vector) {
+			this.quadMeanDiameter = vector;
 		}
 
 		protected UtilizationVector wholeStemVolume = VdypUtilizationHolder.emptyUtilization();
 
-		public void wholeStemVolume(float small, float u1, float u2, float u3, float u4) {
-			this.wholeStemVolume = Utils.utilizationVector(small, u1, u2, u3, u4);
-		}
-
-		public void wholeStemVolume(float volume) {
-			this.wholeStemVolume = Utils.utilizationVector(volume);
+		@Override
+		public void wholeStemVolume(UtilizationVector vector) {
+			this.wholeStemVolume = vector;
 		}
 
 		protected UtilizationVector closeUtilizationVolumeByUtilization = VdypUtilizationHolder.emptyUtilization();
 
-		public void closeUtilizationVolumeByUtilization(float small, float u1, float u2, float u3, float u4) {
-			this.closeUtilizationVolumeByUtilization = Utils.utilizationVector(small, u1, u2, u3, u4);
-		}
-
-		public void closeUtilizationVolumeByUtilization(float volume) {
-			this.closeUtilizationVolumeByUtilization = Utils.utilizationVector(volume);
+		@Override
+		public void closeUtilizationVolumeByUtilization(UtilizationVector vector) {
+			this.closeUtilizationVolumeByUtilization = vector;
 		}
 
 		protected UtilizationVector closeUtilizationNetVolumeOfDecayByUtilization = VdypUtilizationHolder
 				.emptyUtilization();
 
-		public void closeUtilizationVolumeNetOfDecayByUtilization(float small, float u1, float u2, float u3, float u4) {
-			this.closeUtilizationNetVolumeOfDecayByUtilization = Utils.utilizationVector(small, u1, u2, u3, u4);
-		}
-
-		public void closeUtilizationVolumeNetOfDecayByUtilization(float volume) {
-			this.closeUtilizationNetVolumeOfDecayByUtilization = Utils.utilizationVector(volume);
+		@Override
+		public void closeUtilizationVolumeNetOfDecayByUtilization(UtilizationVector vector) {
+			this.closeUtilizationNetVolumeOfDecayByUtilization = vector;
 		}
 
 		protected UtilizationVector closeUtilizationVolumeNetOfDecayAndWasteByUtilization = VdypUtilizationHolder
 				.emptyUtilization();
 
-		public void closeUtilizationVolumeNetOfDecayAndWasteByUtilization(
-				float small, float u1, float u2, float u3, float u4
-		) {
-			this.closeUtilizationVolumeNetOfDecayAndWasteByUtilization = Utils.utilizationVector(small, u1, u2, u3, u4);
-		}
-
-		public void closeUtilizationVolumeNetOfDecayAndWasteByUtilization(float volume) {
-			this.closeUtilizationVolumeNetOfDecayAndWasteByUtilization = Utils.utilizationVector(volume);
+		@Override
+		public void closeUtilizationVolumeNetOfDecayAndWasteByUtilization(UtilizationVector vector) {
+			this.closeUtilizationVolumeNetOfDecayAndWasteByUtilization = vector;
 		}
 
 		protected UtilizationVector closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization = VdypUtilizationHolder
 				.emptyUtilization();
 
-		public void closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(
-				float small, float u1, float u2, float u3, float u4
-		) {
-			this.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization = Utils
-					.utilizationVector(small, u1, u2, u3, u4);
-		}
+		private Optional<Consumer<VdypCompatibilityVariables.Builder>> compatibilityVariablesBuilder = Optional.empty();
+		private Optional<VdypCompatibilityVariables> compatibilityVariables = Optional.empty();
 
-		public void closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(float volume) {
-			this.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization = Utils.utilizationVector(volume);
+		@Override
+		public void closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(UtilizationVector vector) {
+			this.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization = vector;
 		}
 
 		@Override
@@ -441,7 +407,8 @@ public class VdypSpecies extends BaseVdypSpecies<VdypSite> implements VdypUtiliz
 			spec.setCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(
 					closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization
 			);
-			;
+
+			compatibilityVariables.ifPresent(spec::setCompatibilityVariables);
 		}
 
 		@Override
@@ -467,7 +434,7 @@ public class VdypSpecies extends BaseVdypSpecies<VdypSite> implements VdypUtiliz
 				config.accept(builder);
 				builder.polygonIdentifier(polygonIdentifier.get());
 				builder.layerType(layerType.get());
-				builder.siteGenus(genus);
+				builder.genus(genus);
 			});
 		}
 
@@ -485,5 +452,56 @@ public class VdypSpecies extends BaseVdypSpecies<VdypSite> implements VdypUtiliz
 			this.breakageGroup = Optional.of(i);
 			return this;
 		}
+
+		public void addCompatibilityVariables(Consumer<VdypCompatibilityVariables.Builder> config) {
+			this.compatibilityVariablesBuilder = Optional.of(config);
+			this.compatibilityVariables = Optional.empty();
+		}
+
+		public void addCompatibilityVariables(VdypCompatibilityVariables cvs) {
+			this.addCompatibilityVariables(Optional.of(cvs));
+		}
+
+		public void addCompatibilityVariables(Optional<VdypCompatibilityVariables> cvs) {
+			this.compatibilityVariablesBuilder = Optional.empty();
+			this.compatibilityVariables = cvs;
+		}
+
+		public void copyCompatibilityVariables(
+				VdypCompatibilityVariables source,
+				BiConsumer<VdypCompatibilityVariables.Builder, VdypCompatibilityVariables> config
+		) {
+			this.addCompatibilityVariables(builder -> {
+				builder.copy(source);
+				config.accept(builder, source);
+			});
+		}
+
+		public void copyCompatibilityVariablesFrom(
+				VdypSpecies specToCopy,
+				BiConsumer<VdypCompatibilityVariables.Builder, VdypCompatibilityVariables> config
+		) {
+			specToCopy.getCompatibilityVariables().ifPresent(source -> this.copyCompatibilityVariables(source, config));
+		}
+
+		@Override
+		protected void preProcess() {
+			super.preProcess();
+
+			compatibilityVariables = compatibilityVariablesBuilder.map(this::buildCompatibilityVariables)
+					.or(() -> compatibilityVariables);
+			compatibilityVariablesBuilder = Optional.empty();
+		}
+
+		protected VdypCompatibilityVariables
+				buildCompatibilityVariables(Consumer<VdypCompatibilityVariables.Builder> config) {
+			return VdypCompatibilityVariables.build(builder -> {
+				config.accept(builder);
+				builder.polygonIdentifier(polygonIdentifier.get());
+				builder.layerType(layerType.get());
+				builder.genus(genus);
+			});
+		}
+
 	}
 }

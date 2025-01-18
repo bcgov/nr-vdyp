@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.application.ProcessingException;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
-import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.ExecutionStep;
 import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings;
 import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
@@ -56,8 +55,8 @@ public class Grow4CalculateLoreyHeightEstimatesTest {
 		// Select the first polygon - 01002 S000001 00(1970)
 		VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
-		fpe.processPolygon(polygon, ExecutionStep.GROW_4_LAYER_BA_AND_DQTPH_EST);
-		LayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
+		fpe.processPolygon(polygon, ForwardProcessingEngine.ForwardExecutionStep.GROW_4_LAYER_BA_AND_DQTPH_EST);
+		ForwardLayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
 
 		float dhStart = 35.3f;
 		float dhEnd = 35.473381f;
@@ -84,8 +83,8 @@ public class Grow4CalculateLoreyHeightEstimatesTest {
 		// Select the first polygon - 01002 S000001 00(1970)
 		VdypPolygon polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
 
-		fpe.processPolygon(polygon, ExecutionStep.GROW_4_LAYER_BA_AND_DQTPH_EST);
-		LayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
+		fpe.processPolygon(polygon, ForwardProcessingEngine.ForwardExecutionStep.GROW_4_LAYER_BA_AND_DQTPH_EST);
+		ForwardLayerProcessingState lps = fpe.fps.getPrimaryLayerProcessingState();
 
 		float dhStart = 35.3f;
 		float dhEnd = 35.3f;
@@ -93,7 +92,8 @@ public class Grow4CalculateLoreyHeightEstimatesTest {
 		float pspTphEnd = 287.107788f;
 		float pspLhStart = 33.7439995f;
 
-		fpe.fps.fcm.getDebugSettings().setValue(ForwardDebugSettings.Vars.LOREY_HEIGHT_CHANGE_STRATEGY_8, 2);
+		fpe.fps.getControlMap().getDebugSettings()
+				.setValue(ForwardDebugSettings.Vars.LOREY_HEIGHT_CHANGE_STRATEGY_8, 2);
 
 		fpe.growLoreyHeights(lps, dhStart, dhEnd, pspTphStart, pspTphEnd, pspLhStart);
 

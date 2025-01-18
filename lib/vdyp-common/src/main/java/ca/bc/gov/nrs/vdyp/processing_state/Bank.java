@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.vdyp.forward;
+package ca.bc.gov.nrs.vdyp.processing_state;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -23,7 +23,7 @@ import ca.bc.gov.nrs.vdyp.model.VdypSite;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.VdypUtilizationHolder;
 
-class Bank {
+public class Bank {
 
 	@SuppressWarnings("unused")
 	private static final Logger logger = LoggerFactory.getLogger(Bank.class);
@@ -146,11 +146,11 @@ class Bank {
 		return nSpecies;
 	}
 
-	int[] getIndices() {
+	public int[] getIndices() {
 		return indices;
 	}
 
-	BecDefinition getBecZone() {
+	public BecDefinition getBecZone() {
 		return becZone;
 	}
 
@@ -162,7 +162,7 @@ class Bank {
 	 * @param layer a (presumably modified) version of the layer.
 	 * @throws ProcessingException
 	 */
-	void refreshBank(VdypLayer layer) throws ProcessingException {
+	public void refreshBank(VdypLayer layer) throws ProcessingException {
 
 		if (!this.layer.equals(layer)) {
 			throw new IllegalArgumentException(
@@ -365,7 +365,7 @@ class Bank {
 	 *
 	 * @return as described
 	 */
-	VdypLayer buildLayerFromBank() {
+	public VdypLayer buildLayerFromBank() {
 
 		transferUtilizationsFromBank(0, layer);
 
@@ -385,7 +385,7 @@ class Bank {
 			speciesBuilder.percentGenus(this.percentagesOfForestedLand[index]);
 			species.getSite().ifPresentOrElse(site -> speciesBuilder.addSite(VdypSite.build(siteBuilder -> {
 				siteBuilder.copy(site);
-				siteBuilder.siteGenus(this.speciesNames[index]);
+				siteBuilder.genus(this.speciesNames[index]);
 				siteBuilder.ageTotal(Utils.optFloat(ageTotals[index]));
 				siteBuilder.height(Utils.optFloat(this.dominantHeights[index]));
 				siteBuilder.siteCurveNumber(Utils.optInt(this.siteCurveNumbers[index]));
@@ -395,7 +395,7 @@ class Bank {
 				VdypSite site = VdypSite.build(siteBuilder -> {
 					siteBuilder.polygonIdentifier(species.getPolygonIdentifier());
 					siteBuilder.layerType(species.getLayerType());
-					siteBuilder.siteGenus(this.speciesNames[index]);
+					siteBuilder.genus(this.speciesNames[index]);
 					siteBuilder.ageTotal(Utils.optFloat(this.ageTotals[index]));
 					siteBuilder.height(Utils.optFloat(this.dominantHeights[index]));
 					siteBuilder.siteCurveNumber(Utils.optInt(this.siteCurveNumbers[index]));
