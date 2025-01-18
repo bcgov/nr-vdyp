@@ -8,6 +8,7 @@ import ca.bc.gov.nrs.vdyp.common.Utils;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
@@ -16,7 +17,10 @@ import java.nio.file.StandardOpenOption;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.regex.MatchResult;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.apache.commons.cli.CommandLine;
@@ -81,26 +85,31 @@ public class OracleRunner {
 			Files.createDirectory(outputSubdir);
 			copyDir(originalSubdir, inputSubdir);
 
-			// Make sure the params file includes the flag to save the intermediate data
-			var paramFile = paramSubdir.resolve("parms.txt");
-			boolean hasSaveIntermediariesParam;
-			try (Stream<String> stream = Files.lines(paramFile)) {
-				hasSaveIntermediariesParam = stream.anyMatch(line -> line.matches("\\-v7save yes"));
-			}
-			if (!hasSaveIntermediariesParam) {
-				Files.write(paramFile, "-v7save yes\r\n".getBytes(), StandardOpenOption.APPEND);
-			}
-
-			var builder = new ProcessBuilder();
-
-			builder.directory(inputSubdir.toFile());
-
-			Map<String, String> env = Utils.constMap(map -> {
+			final Map<String, String> env = Utils.constMap(map -> {
 				map.put(INPUT_DIR_ENV, inputSubdir.toAbsolutePath().toString());
 				map.put(OUTPUT_DIR_ENV, outputSubdir.toAbsolutePath().toString());
 				map.put(INSTALL_DIR_ENV, installDir.toAbsolutePath().toString());
 				map.put(PARAM_DIR_ENV, paramSubdir.toAbsolutePath().toString());
 			});
+
+			// Update parameters file
+			var paramFile = paramSubdir.resolve("parms.txt");
+			{
+				var subPattern = Pattern.compile("\\$\\((.+?)\\)");
+				var paramsText = FileUtils.readFileToString(paramFile.toFile(), StandardCharsets.ISO_8859_1);
+				paramsText = subPattern.matcher(paramsText).replaceAll(m -> env.get(m.group()));
+				var saveIntermediatesPattern = Pattern.compile(
+						"^-v7save\s+yes", Pattern.CASE_INSENSITIVE & Pattern.MULTILINE
+				);
+				if (!saveIntermediatesPattern.matcher(paramsText).matches()) {
+					paramsText += "\r\n-v7save Yes\r\n";
+				}
+				FileUtils.writeStringToFile(paramFile.toFile(), paramsText, StandardCharsets.ISO_8859_1);
+			}
+			var builder = new ProcessBuilder();
+
+			builder.directory(inputSubdir.toFile());
+
 
 			builder.environment().putAll(env);
 
