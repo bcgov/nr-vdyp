@@ -15,6 +15,7 @@
           density="compact"
           dense
           :disabled="isDisabled"
+          @update:model-value="handleStartingAgeInput"
         ></v-text-field>
       </v-col>
       <v-col class="col-space-3" />
@@ -32,6 +33,7 @@
           density="compact"
           dense
           :disabled="isDisabled"
+          @update:model-value="handleFinishingAgeInput"
         ></v-text-field>
       </v-col>
       <v-col class="col-space-3" />
@@ -49,6 +51,7 @@
           density="compact"
           dense
           :disabled="isDisabled"
+          @update:model-value="handleAgeIncrementInput"
         ></v-text-field>
       </v-col>
     </v-row>
@@ -142,6 +145,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { CONSTANTS, OPTIONS } from '@/constants'
+import { Util } from '@/utils/util'
 
 const props = defineProps<{
   startingAge: number | null
@@ -236,5 +240,18 @@ watch(localIncludeInReport, (newVal) => {
 })
 watch(localProjectionType, (newVal) => emit('update:projectionType', newVal))
 watch(localReportTitle, (newVal) => emit('update:reportTitle', newVal))
+
+const handleStartingAgeInput = (value: string) => {
+  // Convert an empty string to null
+  localStartingAge.value = Util.parseNumberOrNull(value)
+}
+
+const handleFinishingAgeInput = (value: string) => {
+  localFinishingAge.value = Util.parseNumberOrNull(value)
+}
+
+const handleAgeIncrementInput = (value: string) => {
+  localAgeIncrement.value = Util.parseNumberOrNull(value)
+}
 </script>
 <style scoped></style>
