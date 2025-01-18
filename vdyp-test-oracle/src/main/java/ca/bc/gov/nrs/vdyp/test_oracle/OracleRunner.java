@@ -4,6 +4,8 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.FileUtils;
 
+import ca.bc.gov.nrs.vdyp.common.Utils;
+
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.DirectoryStream;
@@ -11,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Predicate;
@@ -92,10 +95,14 @@ public class OracleRunner {
 
 			builder.directory(inputSubdir.toFile());
 
-			builder.environment().put(INPUT_DIR_ENV, inputSubdir.toAbsolutePath().toString());
-			builder.environment().put(OUTPUT_DIR_ENV, outputSubdir.toAbsolutePath().toString());
-			builder.environment().put(INSTALL_DIR_ENV, installDir.toAbsolutePath().toString());
-			builder.environment().put(PARAM_DIR_ENV, paramSubdir.toAbsolutePath().toString());
+			Map<String, String> env = Utils.constMap(map -> {
+				map.put(INPUT_DIR_ENV, inputSubdir.toAbsolutePath().toString());
+				map.put(OUTPUT_DIR_ENV, outputSubdir.toAbsolutePath().toString());
+				map.put(INSTALL_DIR_ENV, installDir.toAbsolutePath().toString());
+				map.put(PARAM_DIR_ENV, paramSubdir.toAbsolutePath().toString());
+			});
+
+			builder.environment().putAll(env);
 
 			builder.environment().merge(
 					"PATH",
@@ -104,14 +111,22 @@ public class OracleRunner {
 			);
 
 			//builder.command(inputSubdir.resolve("RunVDYP7.cmd").toAbsolutePath().toString());
-			builder.command(installDir.resolve("VDYP7Console.exe").toAbsolutePath().toString(), "-p", paramSubdir.resolve("parms.txt").toAbsolutePath().toString());
+			builder.command(
+					installDir.resolve("VDYP7Console.exe").toAbsolutePath().toString(),
+					"-p", paramSubdir.resolve("parms.txt").toAbsolutePath().toString(),
+					"-env", String.format("%s=%s", INPUT_DIR_ENV, env.get(INPUT_DIR_ENV)),
+					"-env", String.format("%s=%s", OUTPUT_DIR_ENV, env.get(OUTPUT_DIR_ENV)),
+					"-env", String.format("%s=%s", INSTALL_DIR_ENV, env.get(INSTALL_DIR_ENV)),
+					"-env", String.format("%s=%s", PARAM_DIR_ENV, env.get(PARAM_DIR_ENV))
+
+			);
+
+			Path intermediateDir = installDir.resolve("VDYP_CFG");
+			deleteFiles(intermediateDir, file -> file.getFileName().toString().startsWith("P-SAVE_VDYP"));
 
 			System.out.format("Running %s\n", builder.command());
 			System.out.format("PWD=%s\n", builder.directory());
 			System.out.format("ENV=%s\n", builder.environment());
-
-			Path intermediateDir = installDir.resolve("VDYP_CFG");
-			deleteFiles(intermediateDir, file->file.getFileName().toString().startsWith("P-SAVE_VDYP"));
 
 			run(builder).get();
 
