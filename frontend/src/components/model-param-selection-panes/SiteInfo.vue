@@ -188,12 +188,12 @@ import { useModelParameterStore } from '@/stores/modelParameterStore'
 import { AppMessageDialog, AppPanelActions, AppSpinField } from '@/components'
 import type { SpeciesGroup, MessageDialog } from '@/interfaces/interfaces'
 import { CONSTANTS, OPTIONS, DEFAULTS, MESSAGE } from '@/constants'
-import { SiteInfoValidation } from '@/validation/siteInfoValidation'
+import { SiteInfoValidator } from '@/validation/siteInfoValidator'
 import { Util } from '@/utils/util'
 
 const form = ref<HTMLFormElement>()
 
-const siteInfoValidator = new SiteInfoValidation()
+const siteInfoValidator = new SiteInfoValidator()
 
 const modelParameterStore = useModelParameterStore()
 

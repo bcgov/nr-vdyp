@@ -165,6 +165,23 @@ export class Util {
   }
 
   /**
+   * Parses the input value and converts it to a number or null.
+   * If the input is an empty string, it returns null.
+   * If the input is a valid number, it returns the number.
+   * @param value - The value to be parsed (string | number | null)
+   * @returns number | null
+   */
+  static parseNumberOrNull(value: string | number | null): number | null {
+    if (value === '' || value === null) {
+      return null
+    }
+
+    const parsedValue = Number(value)
+
+    return isNaN(parsedValue) ? null : parsedValue
+  }
+
+  /**
    * Converts the input to a number if it's a string and returns it,
    * otherwise returns the input unchanged if it's a number.
    * The conversion only occurs if the input is not blank.

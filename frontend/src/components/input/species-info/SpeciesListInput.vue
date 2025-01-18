@@ -71,7 +71,7 @@
 import { ref, onBeforeUnmount, watch, type PropType } from 'vue'
 import { CONSTANTS, MESSAGE } from '@/constants'
 import type { SpeciesList } from '@/interfaces/interfaces'
-import { SpeciesInfoValidation } from '@/validation/speciesInfoValidation'
+import { SpeciesInfoValidator } from '@/validation/speciesInfoValidator'
 import { Util } from '@/utils/util'
 import { cloneDeep } from 'lodash'
 
@@ -106,7 +106,7 @@ const emit = defineEmits(['update:speciesList'])
 
 const localSpeciesList = ref(cloneDeep(props.speciesList))
 
-const speciesInfoValidator = new SpeciesInfoValidation()
+const speciesInfoValidator = new SpeciesInfoValidator()
 
 // Watch for external speciesList changes
 watch(
