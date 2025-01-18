@@ -172,8 +172,10 @@ public class OracleRunner {
 	}
 
 	void copyFiles(Path source, Path destination, DirectoryStream.Filter<Path> filter) throws IOException {
+		System.out.println("  Copying select files in " + source + " to " + destination);
 		try (var dirStream = Files.newDirectoryStream(source, filter)) {
 			for (var file : dirStream) {
+				System.out.println("    Copying " + file.getFileName());
 				FileUtils.copyFileToDirectory(file.toFile(), destination.toFile());
 			}
 		}
@@ -188,6 +190,7 @@ public class OracleRunner {
 	}
 
 	void copyDir(Path source, Path destination) throws IOException {
+		System.out.println("  Copying all files in " + source + " to " + destination);
 		FileUtils.copyDirectory(source.toFile(), destination.toFile());
 	}
 
