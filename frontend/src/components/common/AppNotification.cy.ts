@@ -1,6 +1,6 @@
 import { createPinia, setActivePinia } from 'pinia'
 import { useNotificationStore } from '@/stores/common/notificationStore'
-import AppNotification from '@/components/common/AppNotification.vue'
+import AppNotification from './AppNotification.vue'
 
 describe('AppNotification.vue', () => {
   let notificationStore: ReturnType<typeof useNotificationStore>

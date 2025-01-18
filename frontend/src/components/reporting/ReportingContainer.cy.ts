@@ -1,4 +1,4 @@
-import ReportingContainer from '@/components/reporting/ReportingContainer.vue'
+import ReportingContainer from './ReportingContainer.vue'
 import { createPinia, setActivePinia } from 'pinia'
 import { useProjectionStore } from '@/stores/projectionStore'
 import { REPORTING_TAB } from '@/constants/constants'

@@ -1,4 +1,4 @@
-import TopProjectYear from '@/components/projection-setup/TopProjectYear.vue'
+import TopProjectYear from './TopProjectYear.vue'
 
 describe('TopProjectYear.vue', () => {
   beforeEach(() => {

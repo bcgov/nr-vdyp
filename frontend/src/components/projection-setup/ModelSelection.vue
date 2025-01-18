@@ -4,7 +4,7 @@
       <v-col cols="3" sm="3" md="3">
         <span class="search-label">Model</span>
         <v-select
-          :items="modelSelectionOptions"
+          :items="OPTIONS.modelSelectionOptions"
           v-model="selectedModel"
           item-title="label"
           item-value="value"
@@ -20,12 +20,11 @@
 </template>
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { modelSelectionOptions } from '@/constants/options'
-import { MODEL_SELECTION } from '@/constants/constants'
+import { DEFAULTS, OPTIONS } from '@/constants'
 
 const emit = defineEmits(['update:modelSelection'])
 
-const selectedModel = ref<string>(MODEL_SELECTION.FILE_UPLOAD)
+const selectedModel = ref<string>(DEFAULTS.DEFAULT_VALUES.MODEL_SELECTION)
 
 watch(selectedModel, (newValue) => {
   emit('update:modelSelection', newValue)

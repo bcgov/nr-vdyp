@@ -1,5 +1,5 @@
 import { mount } from 'cypress/vue'
-import AppTabs from '@/components/core/AppTabs.vue'
+import AppTabs from './AppTabs.vue'
 import { createVuetify } from 'vuetify'
 import 'vuetify/styles'
 

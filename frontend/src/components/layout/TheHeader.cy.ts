@@ -1,4 +1,4 @@
-import TheHeader from '@/components/layout/TheHeader.vue'
+import TheHeader from './TheHeader.vue'
 import { createPinia, setActivePinia } from 'pinia'
 import { createVuetify } from 'vuetify'
 

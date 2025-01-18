@@ -1,5 +1,5 @@
 import { mount } from 'cypress/vue'
-import ModelSelectionContainer from '@/components/projection-setup/ModelSelectionContainer.vue'
+import ModelSelectionContainer from './ModelSelectionContainer.vue'
 import { createVuetify } from 'vuetify'
 import 'vuetify/styles'
 import { MODEL_SELECTION, HEADER_SELECTION } from '@/constants/constants'

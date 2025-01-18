@@ -119,7 +119,7 @@ const runModelHandler = async () => {
 
     logSuccessMessage(MESSAGE.SUCESS_MSG.INPUT_MODEL_PARAM_RUN_RESULT)
   } catch (error) {
-    handleApiError(error, MESSAGE.FILE_UPLOAD_ERR.FAIL_RUN_MODEL)
+    handleApiError(error, MESSAGE.MODEL_PARAM_INPUT_ERR.FAIL_RUN_MODEL)
   } finally {
     isProgressVisible.value = false
   }

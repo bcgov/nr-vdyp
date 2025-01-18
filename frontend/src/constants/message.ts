@@ -108,6 +108,10 @@ export const FILE_DOWNLOAD_ERR = Object.freeze({
   NO_DATA: 'No data available to download.',
 })
 
+export const MODEL_PARAM_INPUT_ERR = Object.freeze({
+  FAIL_RUN_MODEL: 'Failed to run the projection model.',
+})
+
 export const PRINT_ERR = Object.freeze({
   NO_DATA: 'No data available to download.',
 })

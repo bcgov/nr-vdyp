@@ -1,4 +1,4 @@
-import AppSnackbar from '@/components/core/AppSnackbar.vue'
+import AppSnackbar from './AppSnackbar.vue'
 
 describe('AppSnackbar.vue', () => {
   beforeEach(() => {

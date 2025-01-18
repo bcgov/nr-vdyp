@@ -1,4 +1,4 @@
-import UserMenu from '@/components/layout/UserMenu.vue'
+import UserMenu from './UserMenu.vue'
 import { createPinia, setActivePinia } from 'pinia'
 import { useAuthStore } from '@/stores/common/authStore'
 

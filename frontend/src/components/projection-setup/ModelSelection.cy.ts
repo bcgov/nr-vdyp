@@ -1,4 +1,4 @@
-import ModelSelection from '@/components/projection-setup/ModelSelection.vue'
+import ModelSelection from './ModelSelection.vue'
 import { createVuetify } from 'vuetify'
 import { MODEL_SELECTION } from '@/constants/constants'
 
