@@ -19,11 +19,11 @@
       <AppTabs v-model:currentTab="activeTab" :tabs="tabs" />
       <template v-if="isModelParameterPanelsVisible">
         <v-spacer class="space"></v-spacer>
-        <SiteInfo />
+        <SiteInfoPanel />
         <v-spacer class="space"></v-spacer>
-        <StandDensity />
+        <StandDensityPanel />
         <v-spacer class="space"></v-spacer>
-        <ReportInfo />
+        <ReportInfoPanel />
         <AppRunModelButton
           :isDisabled="!modelParameterStore.runModelEnabled"
           cardClass="input-model-param-run-model-card"
@@ -48,12 +48,12 @@ import {
   ModelSelectionContainer,
   TopProjectYear,
   ReportingContainer,
+  SpeciesInfoPanel,
+  SiteInfoPanel,
+  StandDensityPanel,
+  ReportInfoPanel,
+  FileUpload,
 } from '@/components'
-import SiteInfo from '@/components/model-param-selection-panes/SiteInfo.vue'
-import StandDensity from '@/components/model-param-selection-panes/StandDensity.vue'
-import ReportInfo from '@/components/model-param-selection-panes/ReportInfo.vue'
-import ModelParameterSelection from '@/views/ModelParameterSelection.vue'
-import FileUpload from '@/views/FileUpload.vue'
 import type { Tab } from '@/interfaces/interfaces'
 import { CONSTANTS, MESSAGE, DEFAULTS } from '@/constants'
 import { handleApiError } from '@/services/apiErrorHandler'
@@ -72,7 +72,7 @@ const projectionStore = useProjectionStore()
 const tabs: Tab[] = [
   {
     label: CONSTANTS.MODEL_PARAM_TAB_NAME.MODEL_PARAM_SELECTION,
-    component: ModelParameterSelection,
+    component: SpeciesInfoPanel,
     tabname: null,
   },
   {

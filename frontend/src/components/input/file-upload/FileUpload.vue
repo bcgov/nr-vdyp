@@ -93,7 +93,7 @@ import {
 } from '@/components'
 import type { MessageDialog } from '@/interfaces/interfaces'
 import { CONSTANTS, MESSAGE, DEFAULTS } from '@/constants'
-import { FileUploadValidator } from '@/validation/fileUploadValidator'
+import { fileUploadValidation } from '@/validation'
 import { Util } from '@/utils/util'
 import { logSuccessMessage } from '@/utils/messageHandler'
 
@@ -101,8 +101,6 @@ const form = ref<HTMLFormElement>()
 
 const isProgressVisible = ref(false)
 const progressMessage = ref('')
-
-const fileUploadValidator = new FileUploadValidator()
 
 const startingAge = ref<number | null>(DEFAULTS.DEFAULT_VALUES.STARTING_AGE)
 const finishingAge = ref<number | null>(DEFAULTS.DEFAULT_VALUES.FINISHING_AGE)
@@ -151,140 +149,105 @@ const handleReportTitleUpdate = (value: string | null) => {
   reportTitle.value = value
 }
 
-const validateComparison = (): boolean => {
-  if (
-    !fileUploadValidator.validateAgeComparison(
-      finishingAge.value,
+const runModelHandler = async () => {
+  try {
+    // validation - comparison
+    const comparisonResult = fileUploadValidation.validateComparison(
       startingAge.value,
+      finishingAge.value,
     )
-  ) {
-    messageDialog.value = {
-      dialog: true,
-      title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
-      message: MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_COMP_FNSH_AGE,
-      btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+    if (!comparisonResult.isValid) {
+      messageDialog.value = {
+        dialog: true,
+        title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
+        message: MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_COMP_FNSH_AGE,
+        btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+      }
+      return
     }
-    return false
-  }
 
-  return true
-}
-
-const validateRange = (): boolean => {
-  if (!fileUploadValidator.validateStartingAgeRange(startingAge.value)) {
-    messageDialog.value = {
-      dialog: true,
-      title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
-      message: MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_START_AGE_RNG(
-        CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MIN,
-        CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MAX,
-      ),
-      btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
-    }
-    return false
-  }
-
-  if (!fileUploadValidator.validateFinishingAgeRange(finishingAge.value)) {
-    messageDialog.value = {
-      dialog: true,
-      title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
-      message: MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_START_FNSH_RNG(
-        CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MIN,
-        CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MAX,
-      ),
-      btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
-    }
-    return false
-  }
-
-  if (!fileUploadValidator.validateAgeIncrementRange(ageIncrement.value)) {
-    messageDialog.value = {
-      dialog: true,
-      title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
-      message: MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_AGE_INC_RNG(
-        CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MIN,
-        CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MAX,
-      ),
-      btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
-    }
-    return false
-  }
-
-  return true
-}
-
-const validateFiles = async () => {
-  if (!layerFile.value) {
-    messageDialog.value = {
-      dialog: true,
-      title: MESSAGE.MSG_DIALOG_TITLE.MISSING_FILE,
-      message: MESSAGE.FILE_UPLOAD_ERR.LAYER_FILE_MISSING,
-      btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
-    }
-    return false
-  }
-
-  if (!polygonFile.value) {
-    messageDialog.value = {
-      dialog: true,
-      title: MESSAGE.MSG_DIALOG_TITLE.MISSING_FILE,
-      message: MESSAGE.FILE_UPLOAD_ERR.POLYGON_FILE_MISSING,
-      btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
-    }
-    return false
-  }
-
-  if (!(await fileUploadValidator.isCSVFile(layerFile.value))) {
-    messageDialog.value = {
-      dialog: true,
-      title: MESSAGE.MSG_DIALOG_TITLE.INVALID_FILE,
-      message: MESSAGE.FILE_UPLOAD_ERR.LAYER_FILE_NOT_CSV_FORMAT,
-      btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
-    }
-    return false
-  }
-
-  if (!(await fileUploadValidator.isCSVFile(polygonFile.value))) {
-    messageDialog.value = {
-      dialog: true,
-      title: MESSAGE.MSG_DIALOG_TITLE.INVALID_FILE,
-      message: MESSAGE.FILE_UPLOAD_ERR.POLYGON_FILE_NOT_CSV_FORMAT,
-      btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
-    }
-    return false
-  }
-
-  return true
-}
-
-const validateRequiredFields = (): boolean => {
-  if (
-    !fileUploadValidator.validateRequiredFields(
+    // validation - required fields
+    const requiredFieldsResult = fileUploadValidation.validateRequiredFields(
       startingAge.value,
       finishingAge.value,
       ageIncrement.value,
     )
-  ) {
-    messageDialog.value = {
-      dialog: true,
-      title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
-      message: MESSAGE.FILE_UPLOAD_ERR.RPT_VLD_REQUIRED_FIELDS,
-      btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+    if (!requiredFieldsResult.isValid) {
+      messageDialog.value = {
+        dialog: true,
+        title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
+        message: MESSAGE.FILE_UPLOAD_ERR.RPT_VLD_REQUIRED_FIELDS,
+        btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+      }
+      return
     }
-    return false
-  }
-  return true
-}
 
-const runModelHandler = async () => {
-  try {
-    const isValidationSuccessful =
-      validateRequiredFields() &&
-      validateComparison() &&
-      validateRange() &&
-      (await validateFiles())
+    // validation - range
+    const rangeResult = fileUploadValidation.validateRange(
+      startingAge.value,
+      finishingAge.value,
+      ageIncrement.value,
+    )
+    if (!rangeResult.isValid) {
+      let message = ''
+      switch (rangeResult.errorType) {
+        case 'startingAge':
+          message = MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_START_AGE_RNG(
+            CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MIN,
+            CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MAX,
+          )
+          break
+        case 'finishingAge':
+          message = MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_START_FNSH_RNG(
+            CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MIN,
+            CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MAX,
+          )
+          break
+        case 'ageIncrement':
+          message = MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_AGE_INC_RNG(
+            CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MIN,
+            CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MAX,
+          )
+          break
+      }
 
-    if (!isValidationSuccessful) {
+      messageDialog.value = {
+        dialog: true,
+        title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
+        message: message,
+        btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+      }
+      return
+    }
+
+    // validation - files
+    const filesResult = await fileUploadValidation.validateFiles(
+      layerFile.value,
+      polygonFile.value,
+    )
+    if (!filesResult.isValid) {
+      let message = ''
+      switch (filesResult.errorType) {
+        case 'layerFileMissing':
+          message = MESSAGE.FILE_UPLOAD_ERR.LAYER_FILE_MISSING
+          break
+        case 'polygonFileMissing':
+          message = MESSAGE.FILE_UPLOAD_ERR.POLYGON_FILE_MISSING
+          break
+        case 'layerFileNotCSVFormat':
+          message = MESSAGE.FILE_UPLOAD_ERR.LAYER_FILE_NOT_CSV_FORMAT
+          break
+        case 'polygonFileNotCSVFormat':
+          message = MESSAGE.FILE_UPLOAD_ERR.POLYGON_FILE_NOT_CSV_FORMAT
+          break
+      }
+
+      messageDialog.value = {
+        dialog: true,
+        title: MESSAGE.MSG_DIALOG_TITLE.INVALID_FILE,
+        message: message,
+        btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+      }
       return
     }
 
