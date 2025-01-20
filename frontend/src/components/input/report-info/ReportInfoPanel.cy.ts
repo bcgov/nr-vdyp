@@ -26,17 +26,26 @@ describe('ReportInfoPanel.vue', () => {
 
   const mountComponent = (overrides = {}) => {
     const modelParameterStore = useModelParameterStore()
-    modelParameterStore.panelOpenStates.reportInfo = CONSTANTS.PANEL.OPEN
-    modelParameterStore.panelState.reportInfo = {
-      editable: true,
-      confirmed: false,
-    }
+
+    modelParameterStore.setDefaultValues()
+
+    // Assume Species Info, Site Info, Stand Density are verified
+    modelParameterStore.confirmPanel(
+      CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO,
+    )
+    modelParameterStore.confirmPanel(CONSTANTS.MODEL_PARAMETER_PANEL.SITE_INFO)
+    modelParameterStore.confirmPanel(
+      CONSTANTS.MODEL_PARAMETER_PANEL.STAND_DENSITY,
+    )
+
     modelParameterStore.startingAge = 10
     modelParameterStore.finishingAge = 100
     modelParameterStore.ageIncrement = 5
-    modelParameterStore.volumeReported = ['Total Volume']
-    modelParameterStore.includeInReport = ['Species Summary']
-    modelParameterStore.projectionType = 'Type A'
+    modelParameterStore.volumeReported = [CONSTANTS.VOLUME_REPORTED.WHOLE_STEM]
+    modelParameterStore.includeInReport = [
+      CONSTANTS.INCLUDE_IN_REPORT.COMPUTED_MAI,
+    ]
+    modelParameterStore.projectionType = CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
     modelParameterStore.reportTitle = 'Sample Report'
 
     mount(ReportInfoPanel, {
@@ -58,19 +67,19 @@ describe('ReportInfoPanel.vue', () => {
       .should('exist')
 
     // Verify that Starting Age input is rendered and has the expected value
-    cy.get('input#startingAge')
+    cy.get('[id="startingAge"]')
       .should('exist')
       .and('have.value', '10')
       .and('have.attr', 'type', 'number')
 
     // Verify that Finishing Age input is rendered and has the expected value
-    cy.get('input#finishingAge')
+    cy.get('[id="finishingAge"]')
       .should('exist')
       .and('have.value', '100')
       .and('have.attr', 'type', 'number')
 
     // Verify that Age Increment input is rendered and has the expected value
-    cy.get('input#ageIncrement')
+    cy.get('[id="ageIncrement"]')
       .should('exist')
       .and('have.value', '5')
       .and('have.attr', 'type', 'number')
@@ -102,15 +111,15 @@ describe('ReportInfoPanel.vue', () => {
     mountComponent()
 
     // Set invalid values for Starting Age and Finishing Age
-    cy.get('input[type="number"]')
-      .first()
+    cy.get('[id="startingAge"]')
+      .should('exist')
       .then((input) => {
         cy.wrap(input).clear() // Clear the input value
         cy.wrap(input).type('200') // Type a new invalid value
       })
 
-    cy.get('input[type="number"]')
-      .last()
+    cy.get('[id="finishingAge"]')
+      .should('exist')
       .then((input) => {
         cy.wrap(input).clear() // Clear the input value
         cy.wrap(input).type('50') // Type a new invalid value
@@ -136,9 +145,10 @@ describe('ReportInfoPanel.vue', () => {
     cy.get('button').contains('Clear').click()
 
     // Verify that all fields are cleared
-    cy.get('input[type="number"]').first().should('have.value', '')
-    cy.get('input[type="number"]').last().should('have.value', '')
-    cy.get('input').contains('Sample Report').should('not.exist')
+    cy.get('[id="startingAge"]').should('exist').should('have.value', '')
+    cy.get('[id="finishingAge"]').should('exist').should('have.value', '')
+    cy.get('[id="ageIncrement"]').should('exist').should('have.value', '')
+    cy.get('[id="reportTitle"]').should('exist').should('have.value', '')
   })
 
   it('disables inputs and buttons when the panel is not editable', () => {

@@ -153,6 +153,7 @@
                           CONSTANTS.NUM_INPUT_LIMITS
                             .BHA50_SITE_INDEX_DECIMAL_NUM
                         "
+                        data-testid="bha-50-site-index"
                         @update:modelValue="handleBha50SiteIndexUpdate"
                       />
                       <v-label

@@ -22,10 +22,10 @@ describe('SpeciesGroupsDisplay.vue', () => {
 
   const propsWithGroups = {
     speciesGroups: [
-      { group: 'PL - Lodgepole Pine', percent: '30.0', siteSpecies: 'PL' },
-      { group: 'AC - Poplar', percent: '30.0', siteSpecies: 'AC' },
-      { group: 'H - Hemlock', percent: '30.0', siteSpecies: 'H' },
-      { group: 'S - Spruce', percent: '10.0', siteSpecies: 'S' },
+      { group: 'PL', percent: '30.0', siteSpecies: 'PL' },
+      { group: 'AC', percent: '30.0', siteSpecies: 'AC' },
+      { group: 'H', percent: '30.0', siteSpecies: 'H' },
+      { group: 'S', percent: '10.0', siteSpecies: 'S' },
     ],
   }
 
@@ -49,13 +49,58 @@ describe('SpeciesGroupsDisplay.vue', () => {
       .within(() => {
         cy.get('[data-testid="species-group-column"] input')
           .invoke('val')
-          .should('equal', 'PL - Lodgepole Pine') // Group name
+          .should('equal', 'PL') // Group name
         cy.get('[data-testid="species-group-percent-column"] input')
           .invoke('val')
           .should('equal', '30.0') // Percent
         cy.get('[data-testid="site-species-column"] input')
           .invoke('val')
           .should('equal', 'PL') // Site species
+      })
+
+    // Verify the second group's columns
+    cy.get('[data-testid="species-group-row"]')
+      .eq(1)
+      .within(() => {
+        cy.get('[data-testid="species-group-column"] input')
+          .invoke('val')
+          .should('equal', 'AC')
+        cy.get('[data-testid="species-group-percent-column"] input')
+          .invoke('val')
+          .should('equal', '30.0')
+        cy.get('[data-testid="site-species-column"] input')
+          .invoke('val')
+          .should('equal', 'AC')
+      })
+
+    // Verify the third group's columns
+    cy.get('[data-testid="species-group-row"]')
+      .eq(2)
+      .within(() => {
+        cy.get('[data-testid="species-group-column"] input')
+          .invoke('val')
+          .should('equal', 'H')
+        cy.get('[data-testid="species-group-percent-column"] input')
+          .invoke('val')
+          .should('equal', '30.0')
+        cy.get('[data-testid="site-species-column"] input')
+          .invoke('val')
+          .should('equal', 'H')
+      })
+
+    // Verify the fourth group's columns
+    cy.get('[data-testid="species-group-row"]')
+      .eq(3)
+      .within(() => {
+        cy.get('[data-testid="species-group-column"] input')
+          .invoke('val')
+          .should('equal', 'S')
+        cy.get('[data-testid="species-group-percent-column"] input')
+          .invoke('val')
+          .should('equal', '10.0')
+        cy.get('[data-testid="site-species-column"] input')
+          .invoke('val')
+          .should('equal', 'S')
       })
   })
 

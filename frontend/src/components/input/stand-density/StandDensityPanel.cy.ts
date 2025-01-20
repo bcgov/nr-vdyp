@@ -26,11 +26,15 @@ describe('StandDensityPanel.vue', () => {
 
   const mountComponent = (overrides = {}) => {
     const modelParameterStore = useModelParameterStore()
-    modelParameterStore.panelOpenStates.standDensity = CONSTANTS.PANEL.OPEN
-    modelParameterStore.panelState.standDensity = {
-      editable: true,
-      confirmed: false,
-    }
+
+    modelParameterStore.setDefaultValues()
+
+    // Assume Species Info and Site Info are verified
+    modelParameterStore.confirmPanel(
+      CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO,
+    )
+    modelParameterStore.confirmPanel(CONSTANTS.MODEL_PARAMETER_PANEL.SITE_INFO)
+
     modelParameterStore.percentStockableArea = 50
 
     mount(StandDensityPanel, {
@@ -49,14 +53,8 @@ describe('StandDensityPanel.vue', () => {
     // Checking the Expansion panel status
     cy.get('.v-expansion-panel-title').contains('Stand Density').should('exist')
 
-    // Verify that the % Stockable Area text field is rendered
-    cy.get('label')
-      .contains('% Stockable Area')
-      .should('exist')
-      .and('have.attr', 'for', 'input-1')
-
     // Verify that the input field is rendered and has the expected value
-    cy.get('input#input-1')
+    cy.get('[data-testid="percent-stockable-area"] input')
       .should('exist')
       .and('have.value', '50')
       .and('have.attr', 'type', 'number')
@@ -64,7 +62,7 @@ describe('StandDensityPanel.vue', () => {
       .and('have.attr', 'min', '0')
       .and('have.attr', 'step', '5')
 
-    // Verify that the AppPanelActions buttons are rendered
+    // // Verify that the AppPanelActions buttons are rendered
     cy.get('button').contains('Clear').should('exist')
     cy.get('button').contains('Confirm').should('exist')
     cy.get('button').contains('Edit').should('not.be.visible')

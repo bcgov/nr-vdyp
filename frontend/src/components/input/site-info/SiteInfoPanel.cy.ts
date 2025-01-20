@@ -4,7 +4,7 @@ import 'vuetify/styles'
 import SiteInfoPanel from './SiteInfoPanel.vue'
 import { useModelParameterStore } from '@/stores/modelParameterStore'
 import { setActivePinia, createPinia } from 'pinia'
-import { CONSTANTS } from '@/constants'
+import { CONSTANTS, DEFAULTS } from '@/constants'
 
 const vuetify = createVuetify()
 
@@ -26,17 +26,15 @@ describe('SiteInfoPanel.vue', () => {
 
   const mountComponent = (overrides = {}) => {
     const modelParameterStore = useModelParameterStore()
-    modelParameterStore.panelOpenStates.siteInfo = CONSTANTS.PANEL.OPEN
-    modelParameterStore.panelState.siteInfo = {
-      editable: true,
-      confirmed: false,
-    }
-    modelParameterStore.becZone = 'Zone A'
-    modelParameterStore.ecoZone = 'Eco A'
-    modelParameterStore.incSecondaryHeight = true
-    modelParameterStore.selectedSiteSpecies = 'Species A'
-    modelParameterStore.siteSpeciesValues = 'Value A'
-    modelParameterStore.bha50SiteIndex = '10'
+
+    modelParameterStore.setDefaultValues()
+
+    // Assume Species Info is verified
+    modelParameterStore.confirmPanel(
+      CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO,
+    )
+
+    modelParameterStore.ecoZone = '1' // 'Boreal Cordillera'
 
     mount(SiteInfoPanel, {
       global: {
@@ -58,17 +56,21 @@ describe('SiteInfoPanel.vue', () => {
 
     // Verify that BEC Zone select is rendered and has the expected value
     cy.get('label').contains('BEC Zone').should('exist')
-    cy.get('.v-select__selection-text').contains('Zone A').should('exist')
+    cy.get('.v-select__selection-text')
+      .contains(DEFAULTS.DEFAULT_VALUES.BEC_ZONE)
+      .should('exist')
 
     // Verify that Eco Zone select is rendered and has the expected value
     cy.get('label').contains('Eco Zone').should('exist')
-    cy.get('.v-select__selection-text').contains('Eco A').should('exist')
+    cy.get('.v-select__selection-text')
+      .contains('Boreal Cordillera')
+      .should('exist')
 
     // Verify that the checkbox is rendered and checked
     cy.get('label')
       .contains('Include Secondary Dominant Height in Yield Table')
       .should('exist')
-    cy.get('input[type="checkbox"]').should('be.checked')
+    cy.get('input[type="checkbox"]').should('be.not.checked')
 
     // Verify that the AppPanelActions buttons are rendered
     cy.get('button').contains('Clear').should('exist')
@@ -95,7 +97,7 @@ describe('SiteInfoPanel.vue', () => {
     mountComponent()
 
     // Set invalid value for BHA 50 Site Index
-    cy.get('input#input-17').then((input) => {
+    cy.get('[data-testid="bha-50-site-index"] input').then((input) => {
       // Clear the input value
       cy.wrap(input).clear()
 
@@ -117,10 +119,6 @@ describe('SiteInfoPanel.vue', () => {
         )
       })
   })
-
-  // cy.get('body').then(($body) => {
-  //   cy.log($body.html())
-  // })
 
   it('clears the form when Clear is clicked', () => {
     const store = mountComponent()

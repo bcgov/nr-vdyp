@@ -113,7 +113,7 @@ export const MODEL_PARAM_INPUT_ERR = Object.freeze({
 })
 
 export const PRINT_ERR = Object.freeze({
-  NO_DATA: 'No data available to download.',
+  NO_DATA: 'No data available to print.',
 })
 
 export const PROGRESS_MSG = Object.freeze({

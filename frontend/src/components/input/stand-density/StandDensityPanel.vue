@@ -43,6 +43,7 @@
                   density="compact"
                   dense
                   :disabled="!isConfirmEnabled"
+                  data-testid="percent-stockable-area"
                 ></v-text-field>
                 <v-label
                   v-show="Util.isZeroValue(percentStockableArea)"
