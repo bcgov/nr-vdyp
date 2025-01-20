@@ -96,7 +96,11 @@ public class OracleRunner {
 			var paramFile = paramSubdir.resolve("parms.txt");
 			{
 				var subPattern = Pattern.compile("\\$\\((.+?)\\)");
-				var paramsText = FileUtils.readFileToString(paramFile.toFile(), StandardCharsets.ISO_8859_1);
+				var paramsText = FileUtils.readFileToString(paramFile.toFile(), StandardCharsets.UTF_8);
+				// Remove Byte order mark if present
+				if (paramsText.startsWith("\uFEFF")) {
+					paramsText.subSequence(3, paramsText.length());
+				}
 				paramsText = subPattern.matcher(paramsText).replaceAll(m -> env.get(m.group()));
 				var saveIntermediatesPattern = Pattern.compile(
 						"^-v7save\s+yes", Pattern.CASE_INSENSITIVE & Pattern.MULTILINE
@@ -104,7 +108,7 @@ public class OracleRunner {
 				if (!saveIntermediatesPattern.matcher(paramsText).matches()) {
 					paramsText += "\r\n-v7save Yes\r\n";
 				}
-				FileUtils.writeStringToFile(paramFile.toFile(), paramsText, StandardCharsets.ISO_8859_1);
+				FileUtils.writeStringToFile(paramFile.toFile(), paramsText, StandardCharsets.UTF_8);
 			}
 			var builder = new ProcessBuilder();
 
