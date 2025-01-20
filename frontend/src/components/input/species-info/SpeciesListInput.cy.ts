@@ -22,10 +22,10 @@ describe('SpeciesListInput.vue', () => {
 
   const props = {
     speciesList: [
-      { species: 'PL - Lodgepole Pine', percent: '30.0' },
-      { species: 'AC - Poplar', percent: '30.0' },
-      { species: 'H - Hemlock', percent: '30.0' },
-      { species: 'S - Spruce', percent: '10.0' },
+      { species: 'PL', percent: '30.0' },
+      { species: 'AC', percent: '30.0' },
+      { species: 'H', percent: '30.0' },
+      { species: 'S', percent: '10.0' },
       { species: null, percent: '0.0' },
       { species: null, percent: '0.0' },
     ],
@@ -34,7 +34,7 @@ describe('SpeciesListInput.vue', () => {
       { label: 'AC - Poplar', value: 'AC' },
       { label: 'H - Hemlock', value: 'H' },
       { label: 'S - Spruce', value: 'S' },
-      { label: 'FD - Douglas-fir', value: 'FD' },
+      { label: 'FD - Douglas Fir', value: 'FD' },
     ],
     isConfirmEnabled: true,
     max: 100,
@@ -79,13 +79,13 @@ describe('SpeciesListInput.vue', () => {
 
     // Change the first Species value
     cy.get('[data-testid="species-select"]').should('exist').first().click()
-    cy.contains('FD - Douglas-fir').click()
+    cy.contains('FD - Douglas Fir').click()
     cy.get('[data-testid="species-select"] input')
       .first()
       .should('have.value', 'FD')
     cy.get('[data-testid="species-select"]').should(
       'contain.text',
-      'FD - Douglas-fir',
+      'FD - Douglas Fir',
     )
 
     // Clear the input field
@@ -142,7 +142,7 @@ describe('SpeciesListInput.vue', () => {
       .should('have.value', '100.0')
   })
 
-  it('does not exceed max or min limits', () => {
+  it('does not exceed min limits', () => {
     // Min Test
     mount(SpeciesListInput, {
       props: {

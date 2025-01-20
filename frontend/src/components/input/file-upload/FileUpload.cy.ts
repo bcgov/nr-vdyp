@@ -29,10 +29,49 @@ describe('FileUpload.vue', () => {
 
     // Check if the form and inputs are rendered
     cy.get('form').should('exist')
+    cy.get('[id="startingAge"]').should('exist')
+    cy.get('[id="finishingAge"]').should('exist')
+    cy.get('[id="ageIncrement"]').should('exist')
     cy.get('input[type="file"]').should('have.length', 2) // Layer file and Polygon file
     cy.contains('Layer File').should('exist')
     cy.contains('Polygon File').should('exist')
     cy.get('button').contains('Run Model').should('exist')
+  })
+
+  it('shows a validation error for invalid starting and finishing ages', () => {
+    mount(FileUpload, {
+      global: {
+        plugins: [vuetify],
+      },
+    })
+
+    // Set invalid values for Starting Age and Finishing Age
+    cy.get('[id="startingAge"]')
+      .should('exist')
+      .then((input) => {
+        cy.wrap(input).clear() // Clear the input value
+        cy.wrap(input).type('200') // Type a new invalid value
+      })
+
+    cy.get('[id="finishingAge"]')
+      .should('exist')
+      .then((input) => {
+        cy.wrap(input).clear() // Clear the input value
+        cy.wrap(input).type('50') // Type a new invalid value
+      })
+
+    // Click the Confirm button
+    cy.get('button').contains('Run Model').click()
+
+    // Ensure the dialog appears with an error message
+    cy.get('.v-dialog')
+      .should('exist')
+      .within(() => {
+        cy.contains('Invalid Input').should('exist')
+        cy.contains(
+          "'Finish Age' must be at least as great as the 'Start Age'",
+        ).should('exist')
+      })
   })
 
   it('uploads layer and polygon files', () => {
