@@ -86,6 +86,7 @@
                           disabled
                           density="compact"
                           dense
+                          data-testid="total-species-percent"
                         ></v-text-field>
                       </v-col>
                     </v-row>
