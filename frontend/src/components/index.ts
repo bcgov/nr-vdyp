@@ -20,6 +20,7 @@ export { default as StandDensityPanel } from './input/stand-density/StandDensity
 export { default as ReportInfoPanel } from './input/report-info/ReportInfoPanel.vue'
 
 export { default as FileUpload } from './input/file-upload/FileUpload.vue'
+
 export { default as BCLogo } from './layout/BCLogo.vue'
 export { default as HeaderTitle } from './layout/HeaderTitle.vue'
 export { default as TheHeader } from './layout/TheHeader.vue'

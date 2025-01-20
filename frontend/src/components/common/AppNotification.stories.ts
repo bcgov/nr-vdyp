@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/vue3'
 import { createPinia, setActivePinia } from 'pinia'
-import AppNotification from '.AppNotification.vue'
+import AppNotification from './AppNotification.vue'
 import { useNotificationStore } from '@/stores/common/notificationStore'
 
 const pinia = createPinia()
