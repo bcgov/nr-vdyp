@@ -1,58 +1,30 @@
 import type { Meta, StoryObj } from '@storybook/vue3'
+import { createPinia, setActivePinia } from 'pinia'
+import { useModelParameterStore } from '@/stores/modelParameterStore'
 import SiteInfoPanel from './SiteInfoPanel.vue'
+import { CONSTANTS } from '@/constants'
+
+const pinia = createPinia()
+setActivePinia(pinia)
 
 const meta: Meta<typeof SiteInfoPanel> = {
   title: 'components/input/site-info/SiteInfoPanel',
   component: SiteInfoPanel,
-  argTypes: {
-    panelOpenStates: {
-      control: { type: 'object' },
-      description: 'State of panel (open or closed)',
-      defaultValue: {
-        siteInfo: 1, // 1 for open, 0 for closed
-      },
+  decorators: [
+    (story) => {
+      const modelParameterStore = useModelParameterStore()
+      modelParameterStore.setDefaultValues()
+
+      modelParameterStore.confirmPanel(
+        CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO,
+      )
+
+      return {
+        components: { story },
+        template: `<div><story /></div>`,
+      }
     },
-    becZone: {
-      control: { type: 'text' },
-      description: 'BEC Zone selection.',
-      defaultValue: 'BEC Zone A',
-    },
-    ecoZone: {
-      control: { type: 'text' },
-      description: 'Eco Zone selection.',
-      defaultValue: 'Eco Zone A',
-    },
-    incSecondaryHeight: {
-      control: { type: 'boolean' },
-      description: 'Includes Secondary Dominant Height.',
-      defaultValue: false,
-    },
-    selectedSiteSpecies: {
-      control: { type: 'text' },
-      description: 'Selected Site Species.',
-      defaultValue: 'Species A',
-    },
-    siteSpeciesValues: {
-      control: { type: 'text' },
-      description: 'Site Species Value radio selection.',
-      defaultValue: 'Value A',
-    },
-    bha50SiteIndex: {
-      control: { type: 'number' },
-      description: 'BHA 50 Site Index.',
-      defaultValue: 25.5,
-    },
-    isConfirmEnabled: {
-      control: { type: 'boolean' },
-      description: 'Determines if the confirm actions are enabled.',
-      defaultValue: true,
-    },
-    isConfirmed: {
-      control: { type: 'boolean' },
-      description: 'Indicates if the panel is confirmed.',
-      defaultValue: false,
-    },
-  },
+  ],
   tags: ['autodocs'],
 }
 
@@ -61,64 +33,25 @@ export default meta
 type Story = StoryObj<typeof SiteInfoPanel>
 
 export const Default: Story = {
-  render: (args) => ({
-    components: { SiteInfoPanel },
-    setup() {
-      return { args }
-    },
-    template: `<SiteInfoPanel v-bind="args" />`,
-  }),
-  args: {
-    panelOpenStates: { siteInfo: 1 },
-    becZone: 'BEC Zone A',
-    ecoZone: 'Eco Zone A',
-    incSecondaryHeight: false,
-    selectedSiteSpecies: 'Species A',
-    siteSpeciesValues: 'Value A',
-    bha50SiteIndex: 25.5,
-    isConfirmEnabled: true,
-    isConfirmed: false,
+  render: () => {
+    const modelParameterStore = useModelParameterStore()
+    modelParameterStore.editPanel(CONSTANTS.MODEL_PARAMETER_PANEL.SITE_INFO)
+
+    return {
+      components: { SiteInfoPanel },
+      template: '<SiteInfoPanel />',
+    }
   },
 }
 
 export const Confirmed: Story = {
-  render: (args) => ({
-    components: { SiteInfoPanel },
-    setup() {
-      return { args }
-    },
-    template: `<SiteInfoPanel v-bind="args" />`,
-  }),
-  args: {
-    panelOpenStates: { siteInfo: 0 },
-    becZone: 'BEC Zone B',
-    ecoZone: 'Eco Zone B',
-    incSecondaryHeight: true,
-    selectedSiteSpecies: 'Species B',
-    siteSpeciesValues: 'Value B',
-    bha50SiteIndex: 30.0,
-    isConfirmEnabled: false,
-    isConfirmed: true,
-  },
-}
+  render: () => {
+    const modelParameterStore = useModelParameterStore()
+    modelParameterStore.confirmPanel(CONSTANTS.MODEL_PARAMETER_PANEL.SITE_INFO)
 
-export const EmptyState: Story = {
-  render: (args) => ({
-    components: { SiteInfoPanel },
-    setup() {
-      return { args }
-    },
-    template: `<SiteInfoPanel v-bind="args" />`,
-  }),
-  args: {
-    panelOpenStates: { siteInfo: 1 },
-    becZone: '',
-    ecoZone: '',
-    incSecondaryHeight: false,
-    selectedSiteSpecies: '',
-    siteSpeciesValues: '',
-    bha50SiteIndex: null,
-    isConfirmEnabled: true,
-    isConfirmed: false,
+    return {
+      components: { SiteInfoPanel },
+      template: '<SiteInfoPanel />',
+    }
   },
 }

@@ -1,39 +1,26 @@
 import type { Meta, StoryObj } from '@storybook/vue3'
+import { createPinia, setActivePinia } from 'pinia'
+import { useModelParameterStore } from '@/stores/modelParameterStore'
 import SpeciesInfoPanel from './SpeciesInfoPanel.vue'
+import { CONSTANTS } from '@/constants'
+
+const pinia = createPinia()
+setActivePinia(pinia)
 
 const meta: Meta<typeof SpeciesInfoPanel> = {
   title: 'components/input/species-info/SpeciesInfoPanel',
   component: SpeciesInfoPanel,
-  argTypes: {
-    speciesList: {
-      control: { type: 'object' },
-      description: 'List of species with their percentages.',
-      defaultValue: [
-        { species: 'PL', percent: '30.0' },
-        { species: 'AC', percent: '30.0' },
-        { species: 'H', percent: '30.0' },
-        { species: 'S', percent: '10.0' },
-      ],
+  decorators: [
+    (story) => {
+      const modelParameterStore = useModelParameterStore()
+      modelParameterStore.setDefaultValues()
+
+      return {
+        components: { story },
+        template: `<div><story /></div>`,
+      }
     },
-    speciesGroups: {
-      control: { type: 'object' },
-      description: 'Grouped species information.',
-      defaultValue: [
-        { group: 'Group 1', percent: '50.0', siteSpecies: 'Pine' },
-        { group: 'Group 2', percent: '50.0', siteSpecies: 'Spruce' },
-      ],
-    },
-    isConfirmEnabled: {
-      control: { type: 'boolean' },
-      description: 'Determines if the confirm actions are enabled.',
-      defaultValue: true,
-    },
-    isConfirmed: {
-      control: { type: 'boolean' },
-      description: 'Indicates if the panel is confirmed.',
-      defaultValue: false,
-    },
-  },
+  ],
   tags: ['autodocs'],
 }
 
@@ -42,48 +29,27 @@ export default meta
 type Story = StoryObj<typeof SpeciesInfoPanel>
 
 export const Default: Story = {
-  render: (args) => ({
-    components: { SpeciesInfoPanel },
-    setup() {
-      return { args }
-    },
-    template: `<SpeciesInfoPanel v-bind="args" />`,
-  }),
-  args: {
-    speciesList: [
-      { species: 'PL', percent: '30.0' },
-      { species: 'AC', percent: '30.0' },
-      { species: 'H', percent: '30.0' },
-      { species: 'S', percent: '10.0' },
-    ],
-    speciesGroups: [
-      { group: 'Group 1', percent: '50.0', siteSpecies: 'Pine' },
-      { group: 'Group 2', percent: '50.0', siteSpecies: 'Spruce' },
-    ],
-    isConfirmEnabled: true,
-    isConfirmed: false,
+  render: () => {
+    const modelParameterStore = useModelParameterStore()
+    modelParameterStore.editPanel(CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO)
+
+    return {
+      components: { SpeciesInfoPanel },
+      template: '<SpeciesInfoPanel />',
+    }
   },
 }
 
 export const Confirmed: Story = {
-  render: (args) => ({
-    components: { SpeciesInfoPanel },
-    setup() {
-      return { args }
-    },
-    template: `<SpeciesInfoPanel v-bind="args" />`,
-  }),
-  args: {
-    speciesList: [
-      { species: 'PL', percent: '40.0' },
-      { species: 'AC', percent: '35.0' },
-      { species: 'H', percent: '25.0' },
-    ],
-    speciesGroups: [
-      { group: 'Group 1', percent: '60.0', siteSpecies: 'Lodgepole Pine' },
-      { group: 'Group 2', percent: '40.0', siteSpecies: 'Hemlock' },
-    ],
-    isConfirmEnabled: false,
-    isConfirmed: true,
+  render: () => {
+    const modelParameterStore = useModelParameterStore()
+    modelParameterStore.confirmPanel(
+      CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO,
+    )
+
+    return {
+      components: { SpeciesInfoPanel },
+      template: '<SpeciesInfoPanel />',
+    }
   },
 }

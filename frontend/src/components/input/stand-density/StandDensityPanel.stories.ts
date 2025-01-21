@@ -1,33 +1,33 @@
 import type { Meta, StoryObj } from '@storybook/vue3'
+import { createPinia, setActivePinia } from 'pinia'
+import { useModelParameterStore } from '@/stores/modelParameterStore'
 import StandDensityPanel from './StandDensityPanel.vue'
+import { CONSTANTS } from '@/constants'
+
+const pinia = createPinia()
+setActivePinia(pinia)
 
 const meta: Meta<typeof StandDensityPanel> = {
   title: 'components/input/stand-density/StandDensityPanel',
   component: StandDensityPanel,
-  argTypes: {
-    panelOpenStates: {
-      control: { type: 'object' },
-      description: 'State of panel (open or closed)',
-      defaultValue: {
-        standDensity: 1, // 1 for open, 0 for closed
-      },
+  decorators: [
+    (story) => {
+      const modelParameterStore = useModelParameterStore()
+      modelParameterStore.setDefaultValues()
+
+      modelParameterStore.confirmPanel(
+        CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO,
+      )
+      modelParameterStore.confirmPanel(
+        CONSTANTS.MODEL_PARAMETER_PANEL.SITE_INFO,
+      )
+
+      return {
+        components: { story },
+        template: `<div><story /></div>`,
+      }
     },
-    percentStockableArea: {
-      control: { type: 'number' },
-      description: 'Percent Stockable Area input value.',
-      defaultValue: 75,
-    },
-    isConfirmEnabled: {
-      control: { type: 'boolean' },
-      description: 'Determines if the confirm actions are enabled.',
-      defaultValue: true,
-    },
-    isConfirmed: {
-      control: { type: 'boolean' },
-      description: 'Indicates if the panel is confirmed.',
-      defaultValue: false,
-    },
-  },
+  ],
   tags: ['autodocs'],
 }
 
@@ -36,49 +36,27 @@ export default meta
 type Story = StoryObj<typeof StandDensityPanel>
 
 export const Default: Story = {
-  render: (args) => ({
-    components: { StandDensityPanel },
-    setup() {
-      return { args }
-    },
-    template: `<StandDensityPanel v-bind="args" />`,
-  }),
-  args: {
-    panelOpenStates: { standDensity: 1 },
-    percentStockableArea: 75,
-    isConfirmEnabled: true,
-    isConfirmed: false,
+  render: () => {
+    const modelParameterStore = useModelParameterStore()
+    modelParameterStore.editPanel(CONSTANTS.MODEL_PARAMETER_PANEL.STAND_DENSITY)
+
+    return {
+      components: { StandDensityPanel },
+      template: '<StandDensityPanel />',
+    }
   },
 }
 
 export const Confirmed: Story = {
-  render: (args) => ({
-    components: { StandDensityPanel },
-    setup() {
-      return { args }
-    },
-    template: `<StandDensityPanel v-bind="args" />`,
-  }),
-  args: {
-    panelOpenStates: { standDensity: 0 },
-    percentStockableArea: 85,
-    isConfirmEnabled: false,
-    isConfirmed: true,
-  },
-}
+  render: () => {
+    const modelParameterStore = useModelParameterStore()
+    modelParameterStore.confirmPanel(
+      CONSTANTS.MODEL_PARAMETER_PANEL.STAND_DENSITY,
+    )
 
-export const EmptyState: Story = {
-  render: (args) => ({
-    components: { StandDensityPanel },
-    setup() {
-      return { args }
-    },
-    template: `<StandDensityPanel v-bind="args" />`,
-  }),
-  args: {
-    panelOpenStates: { standDensity: 1 },
-    percentStockableArea: null,
-    isConfirmEnabled: true,
-    isConfirmed: false,
+    return {
+      components: { StandDensityPanel },
+      template: '<StandDensityPanel />',
+    }
   },
 }
