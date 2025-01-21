@@ -83,7 +83,7 @@
 							<archive>
 								<manifest>
 									<mainClass>
-										ca.bc.gov.nrs.vdyp.fip.FipStart
+										ca.bc.gov.nrs.vdyp.vri.VriStart
 									</mainClass>
 								</manifest>
 							</archive>
