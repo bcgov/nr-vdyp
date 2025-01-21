@@ -99,9 +99,9 @@ public class OracleRunner {
 				var paramsText = FileUtils.readFileToString(paramFile.toFile(), StandardCharsets.UTF_8);
 				// Remove Byte order mark if present
 				if (paramsText.startsWith("\uFEFF")) {
-					paramsText.subSequence(3, paramsText.length());
+					paramsText.subSequence(1, paramsText.length());
 				}
-				paramsText = subPattern.matcher(paramsText).replaceAll(m -> env.get(m.group()));
+				//paramsText = subPattern.matcher(paramsText).replaceAll(m -> env.get(m.group()));
 				var saveIntermediatesPattern = Pattern.compile(
 						"^-v7save\s+yes", Pattern.CASE_INSENSITIVE & Pattern.MULTILINE
 				);
