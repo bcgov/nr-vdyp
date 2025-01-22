@@ -2,6 +2,7 @@ import { mount } from 'cypress/vue'
 import { createVuetify } from 'vuetify'
 import 'vuetify/styles'
 import FileUpload from './FileUpload.vue'
+import { CONSTANTS, MESSAGE } from '@/constants'
 
 const vuetify = createVuetify()
 
@@ -68,46 +69,10 @@ describe('FileUpload.vue', () => {
       .should('exist')
       .within(() => {
         cy.contains('Invalid Input').should('exist')
-        cy.contains(
-          "'Finish Age' must be at least as great as the 'Start Age'",
-        ).should('exist')
+        cy.contains(MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_COMP_FNSH_AGE).should(
+          'exist',
+        )
       })
-  })
-
-  it('uploads layer and polygon files', () => {
-    mount(FileUpload, {
-      global: {
-        plugins: [vuetify],
-      },
-    })
-
-    // Simulate file upload for Layer File
-    const layerFile = new File(['layer content'], 'layer.csv', {
-      type: 'text/csv',
-    })
-    cy.get('input[type="file"]').first().selectFile({
-      contents: layerFile,
-      fileName: 'layer.csv',
-      mimeType: 'text/csv',
-    })
-
-    // Simulate file upload for Polygon File
-    const polygonFile = new File(['polygon content'], 'polygon.csv', {
-      type: 'text/csv',
-    })
-    cy.get('input[type="file"]').last().selectFile({
-      contents: polygonFile,
-      fileName: 'polygon.csv',
-      mimeType: 'text/csv',
-    })
-
-    // Verify that files are uploaded
-    cy.get('input[type="file"]')
-      .first()
-      .should('have.value', 'C:\\fakepath\\layer.csv')
-    cy.get('input[type="file"]')
-      .last()
-      .should('have.value', 'C:\\fakepath\\polygon.csv')
   })
 
   it('validates required fields before running the model', () => {
@@ -117,21 +82,133 @@ describe('FileUpload.vue', () => {
       },
     })
 
+    cy.get('[id="startingAge"]')
+      .should('exist')
+      .then((input) => {
+        cy.wrap(input).clear()
+      })
+
     // Click the Run Model button without filling any fields
     cy.get('button').contains('Run Model').click()
 
     // Check if a validation error message is displayed
-    cy.get('.v-card-title.popup-header')
+    cy.get('.v-dialog')
       .should('exist')
-      .and('contain.text', 'Invalid File!')
+      .within(() => {
+        cy.contains(MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT).should('exist')
+        cy.contains(MESSAGE.FILE_UPLOAD_ERR.RPT_VLD_REQUIRED_FIELDS).should(
+          'exist',
+        )
+      })
   })
 
-  it('shows progress indicator when running the model', () => {
+  it('validates age range values', () => {
     mount(FileUpload, {
       global: {
         plugins: [vuetify],
       },
     })
+
+    cy.get('[id="finishingAge"]')
+      .should('exist')
+      .then((input) => {
+        cy.wrap(input).clear()
+        cy.wrap(input).type('600')
+      })
+
+    cy.get('button').contains('Run Model').click()
+
+    cy.get('.v-dialog')
+      .should('exist')
+      .within(() => {
+        cy.contains(MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT).should('exist')
+        cy.contains(
+          MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_START_FNSH_RNG(
+            CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MIN,
+            CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MAX,
+          ),
+        ).should('exist')
+      })
+  })
+
+  it('validates uploaded files', () => {
+    mount(FileUpload, {
+      global: {
+        plugins: [vuetify],
+      },
+    })
+
+    cy.get('button').contains('Run Model').click()
+
+    cy.get('.v-dialog')
+      .should('exist')
+      .within(() => {
+        cy.contains(MESSAGE.MSG_DIALOG_TITLE.INVALID_FILE).should('exist')
+        cy.contains(MESSAGE.FILE_UPLOAD_ERR.LAYER_FILE_MISSING).should('exist')
+      })
+  })
+
+  it('validates incorrect file format', () => {
+    mount(FileUpload, {
+      global: {
+        plugins: [vuetify],
+      },
+    })
+
+    const invalidFile = new File(['invalid content'], 'invalid.txt', {
+      type: 'text/plain',
+    })
+    cy.get('input[type="file"]').first().selectFile({
+      contents: invalidFile,
+      fileName: 'invalid.txt',
+      mimeType: 'text/plain',
+    })
+
+    const polygonFile = new File(['polygon content'], 'polygon.csv', {
+      type: 'text/csv',
+    })
+    cy.get('input[type="file"]').last().selectFile({
+      contents: polygonFile,
+      fileName: 'polygon.csv',
+    })
+
+    cy.get('button').contains('Run Model').click()
+
+    cy.get('.v-dialog')
+      .should('exist')
+      .within(() => {
+        cy.contains(MESSAGE.MSG_DIALOG_TITLE.INVALID_FILE).should('exist')
+        cy.contains(MESSAGE.FILE_UPLOAD_ERR.LAYER_FILE_NOT_CSV_FORMAT).should(
+          'exist',
+        )
+      })
+  })
+
+  it('validates correct form submission', () => {
+    mount(FileUpload, {
+      global: {
+        plugins: [vuetify],
+      },
+    })
+
+    cy.get('[id="startingAge"]')
+      .should('exist')
+      .then((input) => {
+        cy.wrap(input).clear()
+        cy.wrap(input).type('50')
+      })
+    cy.get('[id="finishingAge"]')
+      .should('exist')
+      .then((input) => {
+        cy.wrap(input).clear()
+        cy.wrap(input).type('100')
+      })
+    cy.get('[id="ageIncrement"]')
+      .should('exist')
+      .then((input) => {
+        cy.wrap(input).clear()
+        cy.wrap(input).type('10')
+      })
 
     // Mock file uploads
     const layerFile = new File(['layer content'], 'layer.csv', {
@@ -152,14 +229,13 @@ describe('FileUpload.vue', () => {
       fileName: 'polygon.csv',
     })
 
-    // Click the Run Model button
     cy.get('button').contains('Run Model').click()
 
     // Verify that the progress indicator is displayed
-    cy.get('.centered-progress.progress-wrapper').should('exist') // Check the progress wrapper
+    cy.get('.centered-progress.progress-wrapper').should('exist')
     cy.get('.v-progress-circular.v-progress-circular--indeterminate').should(
       'exist',
-    ) // Check the circular progress
-    cy.get('.message').should('contain.text', 'Running Model...') // Check the progress message
+    )
+    cy.get('.message').should('contain.text', 'Running Model...')
   })
 })
