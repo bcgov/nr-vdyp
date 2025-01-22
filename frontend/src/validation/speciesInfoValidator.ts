@@ -1,5 +1,5 @@
 import { ValidationBase } from './validationBase'
-import { NUM_INPUT_LIMITS } from '@/constants/constants'
+import { CONSTANTS } from '@/constants'
 import type { SpeciesList } from '@/interfaces/interfaces'
 
 export class SpeciesInfoValidator extends ValidationBase {
@@ -9,8 +9,8 @@ export class SpeciesInfoValidator extends ValidationBase {
     }
     const numValue = Math.floor(parseFloat(percent) * 10) / 10
     return (
-      numValue >= NUM_INPUT_LIMITS.SPECIES_PERCENT_MIN &&
-      numValue <= NUM_INPUT_LIMITS.SPECIES_PERCENT_MAX
+      numValue >= CONSTANTS.NUM_INPUT_LIMITS.SPECIES_PERCENT_MIN &&
+      numValue <= CONSTANTS.NUM_INPUT_LIMITS.SPECIES_PERCENT_MAX
     )
   }
 
@@ -19,11 +19,12 @@ export class SpeciesInfoValidator extends ValidationBase {
     totalSpeciesGroupPercent: number,
   ): boolean {
     const formattedPercentLimit = (
-      Math.floor(NUM_INPUT_LIMITS.TOTAL_SPECIES_PERCENT * 10) / 10
-    ).toFixed(NUM_INPUT_LIMITS.SPECIES_PERCENT_DECIMAL_NUM)
+      Math.floor(CONSTANTS.NUM_INPUT_LIMITS.TOTAL_SPECIES_PERCENT * 10) / 10
+    ).toFixed(CONSTANTS.NUM_INPUT_LIMITS.SPECIES_PERCENT_DECIMAL_NUM)
     return (
       totalSpeciesPercent === formattedPercentLimit &&
-      totalSpeciesGroupPercent === NUM_INPUT_LIMITS.TOTAL_SPECIES_PERCENT
+      totalSpeciesGroupPercent ===
+        CONSTANTS.NUM_INPUT_LIMITS.TOTAL_SPECIES_PERCENT
     )
   }
 

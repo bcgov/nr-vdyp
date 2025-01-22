@@ -99,6 +99,22 @@ Chrome browser.
 npx cypress open --e2e --browser chrome
 ```
 
+#### Run Specific E2E Tests
+
+Run Cypress E2E tests for specific files or directories.
+
+- Run all tests in the reporting folder:
+
+```bash
+npx cypress run --e2e --spec "cypress/e2e/unit/validation/*.cy.ts"
+```
+
+- Run tests for a specific component:
+
+```bash
+npx cypress run --e2e --spec "cypress/e2e/unit/validation/speciesInfoValidation.cy.ts"
+```
+
 ## Linting
 
 Linting helps maintain code quality and consistency. To run lint checks, use the
