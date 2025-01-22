@@ -14,41 +14,35 @@ describe('ReportingContainer.vue', () => {
     setActivePinia(pinia)
     projectionStore = useProjectionStore()
 
-    const loadAndProcessZip = async () => {
-      try {
-        const [errorLog, progressLog, yieldTable] = await Promise.all([
-          cy.fixture('ErrorLog.txt'),
-          cy.fixture('ProgressLog.txt'),
-          cy.fixture('YieldTable.csv'),
-        ])
+    cy.fixture('ErrorLog.txt').then((errorLog) => {
+      cy.fixture('ProgressLog.txt').then((progressLog) => {
+        cy.fixture('YieldTable.csv').then((yieldTable) => {
+          cy.task('log', `Loaded ErrorLog: ${errorLog}`)
+          cy.task('log', `Loaded ProgressLog: ${progressLog}`)
+          cy.task('log', `Loaded YieldTable: ${yieldTable}`)
 
-        const zip = new JSZip()
+          const zip = new JSZip()
+          zip.file('ErrorLog.txt', errorLog)
+          zip.file('ProgressLog.txt', progressLog)
+          zip.file('YieldTable.csv', yieldTable)
 
-        console.log('Loaded ErrorLog:', errorLog)
-        console.log('Loaded ProgressLog:', progressLog)
-        console.log('Loaded YieldTable:', yieldTable)
+          cy.task('log', 'Files in ZIP archive:')
+          Object.keys(zip.files).forEach((relativePath) => {
+            cy.task('log', `- ${relativePath}`)
+          })
 
-        // Add files to ZIP
-        zip.file('ErrorLog.txt', errorLog)
-        zip.file('ProgressLog.txt', progressLog)
-        zip.file('YieldTable.csv', yieldTable)
-
-        // Print all file names in the ZIP file
-        console.log('Files in ZIP archive:')
-        for (const relativePath of Object.keys(zip.files)) {
-          console.log(`- ${relativePath}`)
-        }
-
-        // Generate ZIP and process it
-        return zip.generateAsync({ type: 'blob' }).then((zipBlob) => {
-          return projectionStore.handleZipResponse(zipBlob)
+          return cy
+            .wrap(
+              Promise.resolve(
+                zip.generateAsync({ type: 'blob' }) as Promise<Blob>,
+              ),
+            )
+            .then((zipBlob) => {
+              projectionStore.handleZipResponse(zipBlob as Blob)
+            })
         })
-      } catch (error) {
-        console.error('Error loading fixtures or processing ZIP:', error)
-      }
-    }
-
-    loadAndProcessZip()
+      })
+    })
   })
 
   it('displays model report and verifies UI elements', () => {

@@ -28,10 +28,10 @@ export const Default: Story = {
   }),
   args: {
     speciesGroups: [
-      { group: 'PL - Lodgepole Pine', percent: '30.0', siteSpecies: 'PL' },
-      { group: 'AC - Poplar', percent: '30.0', siteSpecies: 'AC' },
-      { group: 'H - Hemlock', percent: '30.0', siteSpecies: 'H' },
-      { group: 'S - Spruce', percent: '10.0', siteSpecies: 'S' },
+      { group: 'PL', percent: '30.0', siteSpecies: 'PL' },
+      { group: 'AC', percent: '30.0', siteSpecies: 'AC' },
+      { group: 'H', percent: '30.0', siteSpecies: 'H' },
+      { group: 'S', percent: '10.0', siteSpecies: 'S' },
     ],
   },
 }

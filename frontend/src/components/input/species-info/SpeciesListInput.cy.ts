@@ -2,6 +2,8 @@ import { mount } from 'cypress/vue'
 import { createVuetify } from 'vuetify'
 import 'vuetify/styles'
 import SpeciesListInput from './SpeciesListInput.vue'
+import { computed } from 'vue'
+import { MAPPINGS } from '@/constants'
 
 const vuetify = createVuetify()
 
@@ -20,6 +22,17 @@ describe('SpeciesListInput.vue', () => {
     })
   })
 
+  const computedSpeciesOptions = computed(() =>
+    (
+      Object.keys(MAPPINGS.SPECIES_MAP) as Array<
+        keyof typeof MAPPINGS.SPECIES_MAP
+      >
+    ).map((code) => ({
+      label: `${code} - ${MAPPINGS.SPECIES_MAP[code]}`,
+      value: code,
+    })),
+  )
+
   const props = {
     speciesList: [
       { species: 'PL', percent: '30.0' },
@@ -29,13 +42,7 @@ describe('SpeciesListInput.vue', () => {
       { species: null, percent: '0.0' },
       { species: null, percent: '0.0' },
     ],
-    computedSpeciesOptions: [
-      { label: 'PL - Lodgepole Pine', value: 'PL' },
-      { label: 'AC - Poplar', value: 'AC' },
-      { label: 'H - Hemlock', value: 'H' },
-      { label: 'S - Spruce', value: 'S' },
-      { label: 'FD - Douglas Fir', value: 'FD' },
-    ],
+    computedSpeciesOptions: computedSpeciesOptions.value,
     isConfirmEnabled: true,
     max: 100,
     min: 0,

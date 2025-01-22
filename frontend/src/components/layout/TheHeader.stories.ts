@@ -47,9 +47,16 @@ type Story = StoryObj<typeof TheHeader>
 
 export const Default: Story = {
   args: {
-    logoProps: {},
-    titleProps: {},
-    userMenuProps: {},
+    logoProps: { maxHeight: 50, maxWidth: 150, marginLeft: 15 },
+    titleProps: {
+      text: 'VARIABLE DENSITY YIELD PROJECTION',
+      style: { textalign: 'center', flex: 1, fontWeight: 300 },
+    },
+    userMenuProps: {
+      userIcon: 'mdi-account-circle',
+      guestName: 'Guest',
+      logoutText: 'Logout',
+    },
   },
   render: (args) => ({
     components: { TheHeader, BCLogo, HeaderTitle, TrainingSupport, UserMenu },
@@ -63,19 +70,4 @@ export const Default: Story = {
       />
     `,
   }),
-}
-
-export const CustomStyle: Story = {
-  args: {
-    logoProps: { maxHeight: 50, maxWidth: 150, marginLeft: 15 },
-    titleProps: {
-      text: 'Custom Header Title',
-      style: { fontSize: '24px', color: 'white', fontWeight: 'bold' },
-    },
-    userMenuProps: {
-      userIcon: 'mdi-face',
-      guestName: 'Anonymous',
-      logoutText: 'Sign Out',
-    },
-  },
 }
