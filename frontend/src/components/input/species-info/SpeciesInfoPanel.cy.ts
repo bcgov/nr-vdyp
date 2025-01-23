@@ -119,7 +119,6 @@ describe('SpeciesInfoPanel.vue', () => {
   it('changes to Confirm state and renders the Edit button, then clicks Edit button and verifies state', () => {
     const store = mountComponent()
 
-    // Click the Confirm button
     cy.get('button').contains('Confirm').click()
 
     // Wait for the Pinia store state to update
@@ -132,7 +131,6 @@ describe('SpeciesInfoPanel.vue', () => {
     // Verify that the Edit button is now rendered
     cy.get('button').contains('Edit').should('exist')
 
-    // Click the Edit button
     cy.get('button').contains('Edit').click()
 
     // Wait for the Pinia store state to update
@@ -161,7 +159,6 @@ describe('SpeciesInfoPanel.vue', () => {
       ]
     })
 
-    // Click the Confirm button
     cy.get('button').contains('Confirm').click()
 
     // Ensure the validation dialog appears with an error message
@@ -173,7 +170,6 @@ describe('SpeciesInfoPanel.vue', () => {
           'exist',
         )
 
-        // Click "Continue Editing" button
         cy.get('button').contains(CONSTANTS.BUTTON_LABEL.CONT_EDIT).click()
       })
 
@@ -203,7 +199,6 @@ describe('SpeciesInfoPanel.vue', () => {
       store.derivedBy = null
     })
 
-    // Click the Confirm button
     cy.get('button').contains('Confirm').click()
 
     // Ensure the validation dialog appears with an error message
@@ -215,7 +210,6 @@ describe('SpeciesInfoPanel.vue', () => {
           MESSAGE.MDL_PRM_INPUT_ERR.SPCZ_VLD_MISSING_DERIVED_BY,
         ).should('exist')
 
-        // Click "Continue Editing" button
         cy.get('button').contains(CONSTANTS.BUTTON_LABEL.CONT_EDIT).click()
       })
 
@@ -233,16 +227,17 @@ describe('SpeciesInfoPanel.vue', () => {
       store.speciesList.push({ species: 'PL', percent: '10.0' })
     })
 
-    // Click the Confirm button
     cy.get('button').contains('Confirm').click()
 
     // Ensure the dialog appears with an error message
     cy.get('.v-dialog')
       .should('exist')
       .within(() => {
-        cy.contains("Species 'PL - Lodgepole Pine' already specified").should(
-          'exist',
-        )
+        cy.contains(
+          MESSAGE.MDL_PRM_INPUT_ERR.SPCZ_VLD_DUP_WO_LABEL(
+            'PL - Lodgepole Pine',
+          ),
+        ).should('exist')
       })
   })
 

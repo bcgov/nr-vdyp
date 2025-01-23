@@ -4,7 +4,7 @@ import 'vuetify/styles'
 import SiteInfoPanel from './SiteInfoPanel.vue'
 import { useModelParameterStore } from '@/stores/modelParameterStore'
 import { setActivePinia, createPinia } from 'pinia'
-import { CONSTANTS, DEFAULTS } from '@/constants'
+import { CONSTANTS, DEFAULTS, MESSAGE } from '@/constants'
 
 const vuetify = createVuetify()
 
@@ -81,7 +81,6 @@ describe('SiteInfoPanel.vue', () => {
   it('changes to Confirm state and renders the Edit button', () => {
     const store = mountComponent()
 
-    // Click the Confirm button
     cy.get('button').contains('Confirm').click()
 
     // Wait for the Pinia store state to update
@@ -91,6 +90,31 @@ describe('SiteInfoPanel.vue', () => {
 
     // Verify that the Edit button is now rendered
     cy.get('button').contains('Edit').should('exist')
+  })
+
+  it('should display the correct site species value', () => {
+    mountComponent()
+
+    cy.get('[data-testid="bha-50-site-index"] input').clear()
+
+    cy.get('[data-testid="selected-site-species"] input')
+      .invoke('val')
+      .then((value) => {
+        const siteSpeciesValue = value as string | null
+
+        cy.get('button').contains('Confirm').click()
+
+        cy.get('.v-dialog')
+          .should('exist')
+          .within(() => {
+            cy.contains(MESSAGE.MSG_DIALOG_TITLE.MISSING_INFO).should('exist')
+            cy.contains(
+              MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SPCZ_REQ_SI_VAL(
+                siteSpeciesValue,
+              ),
+            ).should('exist')
+          })
+      })
   })
 
   it('shows a validation error for invalid BHA 50 Site Index', () => {
@@ -105,7 +129,6 @@ describe('SiteInfoPanel.vue', () => {
       cy.wrap(input).type('200')
     })
 
-    // Click the Confirm button
     cy.get('button').contains('Confirm').click()
 
     // Ensure the dialog appears with an error message
@@ -113,10 +136,8 @@ describe('SiteInfoPanel.vue', () => {
       .should('exist')
       .and('be.visible') // Wait until you see the dialog
       .within(() => {
-        cy.contains('Invalid Input').should('exist')
-        cy.contains("'Site Index' must range from 0.00 and 60.00").should(
-          'exist',
-        )
+        cy.contains(MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT).should('exist')
+        cy.contains(MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SI_RNG).should('exist')
       })
   })
 

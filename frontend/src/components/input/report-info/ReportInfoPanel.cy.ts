@@ -4,7 +4,7 @@ import 'vuetify/styles'
 import ReportInfoPanel from './ReportInfoPanel.vue'
 import { useModelParameterStore } from '@/stores/modelParameterStore'
 import { setActivePinia, createPinia } from 'pinia'
-import { CONSTANTS } from '@/constants'
+import { CONSTANTS, MESSAGE } from '@/constants'
 
 const vuetify = createVuetify()
 
@@ -93,7 +93,6 @@ describe('ReportInfoPanel.vue', () => {
   it('changes to Confirm state and renders the Edit button', () => {
     const store = mountComponent()
 
-    // Click the Confirm button
     cy.get('button').contains('Confirm').click()
 
     // Wait for the Pinia store state to update
@@ -114,15 +113,15 @@ describe('ReportInfoPanel.vue', () => {
     cy.get('[id="startingAge"]')
       .should('exist')
       .then((input) => {
-        cy.wrap(input).clear() // Clear the input value
-        cy.wrap(input).type('200') // Type a new invalid value
+        cy.wrap(input).clear()
+        cy.wrap(input).type('200')
       })
 
     cy.get('[id="finishingAge"]')
       .should('exist')
       .then((input) => {
-        cy.wrap(input).clear() // Clear the input value
-        cy.wrap(input).type('50') // Type a new invalid value
+        cy.wrap(input).clear()
+        cy.wrap(input).type('50')
       })
 
     // Click the Confirm button
@@ -132,9 +131,84 @@ describe('ReportInfoPanel.vue', () => {
     cy.get('.v-dialog')
       .should('exist')
       .within(() => {
-        cy.contains('Invalid Input').should('exist')
+        cy.contains(MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT).should('exist')
+        cy.contains(MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_COMP_FNSH_AGE).should(
+          'exist',
+        )
+      })
+  })
+
+  it('shows validation error when starting age is out of range', () => {
+    mountComponent()
+
+    // Enter a value less than the minimum
+    cy.get('[id="startingAge"]')
+      .should('exist')
+      .then((input) => {
+        cy.wrap(input).clear()
+        cy.wrap(input).type('-1')
+      })
+
+    cy.get('button').contains('Confirm').click()
+
+    cy.get('.v-dialog')
+      .should('exist')
+      .within(() => {
         cy.contains(
-          "'Finish Age' must be at least as great as the 'Start Age'",
+          MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_START_AGE_RNG(
+            CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MIN,
+            CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MAX,
+          ),
+        ).should('exist')
+      })
+  })
+
+  it('shows validation error when finishing age is out of range', () => {
+    mountComponent()
+
+    // Enter a value greater than the maximum
+    cy.get('[id="finishingAge"]')
+      .should('exist')
+      .then((input) => {
+        cy.wrap(input).clear()
+        cy.wrap(input).type('1001')
+      })
+
+    cy.get('button').contains('Confirm').click()
+
+    cy.get('.v-dialog')
+      .should('exist')
+      .within(() => {
+        cy.contains(
+          MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_START_FNSH_RNG(
+            CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MIN,
+            CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MAX,
+          ),
+        ).should('exist')
+      })
+  })
+
+  it('shows validation error when age increment is out of range', () => {
+    mountComponent()
+
+    // Enter a value greater than the maximum
+    cy.get('[id="ageIncrement"]')
+      .should('exist')
+      .then((input) => {
+        cy.wrap(input).clear()
+        cy.wrap(input).type('501')
+      })
+
+    cy.get('button').contains('Confirm').click()
+
+    cy.get('.v-dialog')
+      .should('exist')
+      .within(() => {
+        cy.contains(
+          MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_AGE_INC_RNG(
+            CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MIN,
+            CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MAX,
+          ),
         ).should('exist')
       })
   })
