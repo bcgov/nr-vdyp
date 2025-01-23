@@ -1,5 +1,5 @@
 import { ValidationBase } from './validationBase'
-import { NUM_INPUT_LIMITS } from '@/constants/constants'
+import { CONSTANTS } from '@/constants'
 
 export class StandDensityValidator extends ValidationBase {
   validatePercentStockableAreaRange(psa: number | null): boolean {
@@ -7,8 +7,8 @@ export class StandDensityValidator extends ValidationBase {
 
     return this.validateRange(
       psa,
-      NUM_INPUT_LIMITS.PERCENT_STOCKABLE_AREA_MIN,
-      NUM_INPUT_LIMITS.PERCENT_STOCKABLE_AREA_MAX,
+      CONSTANTS.NUM_INPUT_LIMITS.PERCENT_STOCKABLE_AREA_MIN,
+      CONSTANTS.NUM_INPUT_LIMITS.PERCENT_STOCKABLE_AREA_MAX,
     )
   }
 }

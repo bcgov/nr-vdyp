@@ -1,5 +1,5 @@
 import { ValidationBase } from './validationBase'
-import { NUM_INPUT_LIMITS } from '@/constants/constants'
+import { CONSTANTS } from '@/constants'
 
 export class ReportInfoValidator extends ValidationBase {
   validateAgeComparison(
@@ -15,8 +15,8 @@ export class ReportInfoValidator extends ValidationBase {
   validateStartingAgeRange(startingAge: number | null): boolean {
     if (startingAge !== null) {
       return (
-        startingAge >= NUM_INPUT_LIMITS.STARTING_AGE_MIN &&
-        startingAge <= NUM_INPUT_LIMITS.STARTING_AGE_MAX
+        startingAge >= CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MIN &&
+        startingAge <= CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MAX
       )
     }
     return true
@@ -25,8 +25,8 @@ export class ReportInfoValidator extends ValidationBase {
   validateFinishingAgeRange(finishingAge: number | null): boolean {
     if (finishingAge !== null) {
       return (
-        finishingAge >= NUM_INPUT_LIMITS.FINISHING_AGE_MIN &&
-        finishingAge <= NUM_INPUT_LIMITS.FINISHING_AGE_MAX
+        finishingAge >= CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MIN &&
+        finishingAge <= CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MAX
       )
     }
     return true
@@ -35,8 +35,8 @@ export class ReportInfoValidator extends ValidationBase {
   validateAgeIncrementRange(ageIncrement: number | null): boolean {
     if (ageIncrement !== null) {
       return (
-        ageIncrement >= NUM_INPUT_LIMITS.AGE_INC_MIN &&
-        ageIncrement <= NUM_INPUT_LIMITS.AGE_INC_MAX
+        ageIncrement >= CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MIN &&
+        ageIncrement <= CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MAX
       )
     }
     return true

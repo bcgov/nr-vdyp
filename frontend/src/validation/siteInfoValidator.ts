@@ -1,5 +1,5 @@
 import { ValidationBase } from './validationBase'
-import { NUM_INPUT_LIMITS } from '@/constants/constants'
+import { CONSTANTS } from '@/constants'
 import { Util } from '@/utils/util'
 
 export class SiteInfoValidator extends ValidationBase {
@@ -14,8 +14,8 @@ export class SiteInfoValidator extends ValidationBase {
 
     return this.validateRange(
       numericBha50,
-      NUM_INPUT_LIMITS.BHA50_SITE_INDEX_MIN,
-      NUM_INPUT_LIMITS.BHA50_SITE_INDEX_MAX,
+      CONSTANTS.NUM_INPUT_LIMITS.BHA50_SITE_INDEX_MIN,
+      CONSTANTS.NUM_INPUT_LIMITS.BHA50_SITE_INDEX_MAX,
     )
   }
 }
