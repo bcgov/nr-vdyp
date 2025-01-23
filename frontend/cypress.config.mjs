@@ -19,7 +19,7 @@ export default defineConfig({
     },
     fixturesFolder: 'cypress/fixtures',
     supportFile: 'cypress/support/component.ts',
-    defaultCommandTimeout: 10000,
+    // defaultCommandTimeout: 10000,
     // eslint-disable-next-line no-unused-vars
     setupNodeEvents(on, config) {
       on('task', {

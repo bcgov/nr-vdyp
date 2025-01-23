@@ -4,7 +4,7 @@ import 'vuetify/styles'
 import StandDensityPanel from './StandDensityPanel.vue'
 import { useModelParameterStore } from '@/stores/modelParameterStore'
 import { setActivePinia, createPinia } from 'pinia'
-import { CONSTANTS } from '@/constants'
+import { CONSTANTS, MESSAGE } from '@/constants'
 
 const vuetify = createVuetify()
 
@@ -104,9 +104,9 @@ describe('StandDensityPanel.vue', () => {
     cy.get('.v-dialog')
       .should('exist')
       .within(() => {
-        cy.contains('Invalid Input').should('exist')
+        cy.contains(MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT).should('exist')
         cy.contains(
-          "'Percent Stockable Area' must range from 0 and 100",
+          MESSAGE.MDL_PRM_INPUT_ERR.DENSITY_VLD_PCT_STCB_AREA_RNG,
         ).should('exist')
       })
   })

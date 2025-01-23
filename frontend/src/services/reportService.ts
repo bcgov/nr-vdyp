@@ -1,7 +1,7 @@
+import { MESSAGE } from '@/constants'
+import * as messageHandler from '@/utils/messageHandler'
 import { saveAs } from 'file-saver'
 import printJS from 'print-js'
-import * as messageHandler from '@/utils/messageHandler'
-import { PRINT_ERR, FILE_DOWNLOAD_ERR } from '@/constants/message'
 /**
  * Download file as text.
  * @param {string[]} data - Array of strings to be saved as a text file.
@@ -9,7 +9,7 @@ import { PRINT_ERR, FILE_DOWNLOAD_ERR } from '@/constants/message'
  */
 export const downloadTextFile = (data: string[], fileName: string) => {
   if (!data || data.length === 0 || data.every((item) => item.trim() === '')) {
-    messageHandler.logWarningMessage(FILE_DOWNLOAD_ERR.NO_DATA)
+    messageHandler.logWarningMessage(MESSAGE.FILE_DOWNLOAD_ERR.NO_DATA)
     return
   }
 
@@ -25,7 +25,7 @@ export const downloadTextFile = (data: string[], fileName: string) => {
  */
 export const downloadCSVFile = (data: string[], fileName: string) => {
   if (!data || data.length === 0 || data.every((item) => item.trim() === '')) {
-    messageHandler.logWarningMessage(FILE_DOWNLOAD_ERR.NO_DATA)
+    messageHandler.logWarningMessage(MESSAGE.FILE_DOWNLOAD_ERR.NO_DATA)
     return
   }
 
@@ -40,7 +40,7 @@ export const downloadCSVFile = (data: string[], fileName: string) => {
  */
 export const printReport = (data: string[]) => {
   if (!data || data.length === 0 || data.every((item) => item.trim() === '')) {
-    messageHandler.logWarningMessage(PRINT_ERR.NO_DATA)
+    messageHandler.logWarningMessage(MESSAGE.PRINT_ERR.NO_DATA)
     return
   }
 

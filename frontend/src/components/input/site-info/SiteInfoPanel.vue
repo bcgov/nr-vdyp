@@ -97,6 +97,7 @@
                         placeholder="Select..."
                         density="compact"
                         dense
+                        data-testid="selected-site-species"
                         :disabled="
                           isSelectedSiteSpeciesDisabled || !isConfirmEnabled
                         "
