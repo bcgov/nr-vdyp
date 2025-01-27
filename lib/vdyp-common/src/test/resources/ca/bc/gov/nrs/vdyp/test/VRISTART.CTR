@@ -28,7 +28,7 @@
 
 030 coe/GRPBA1.DAT                                    Default Eq # BA=f(CC)     RD_GRBA1
 031 coe/GMODBA1.DAT                                   Eqn modifiers for above   RD_GMBA1 
-033 coe/fipstkR.prm                                   Stocking class factors    RD_STK33
+033 coe/FIPSTKR.PRM                                   Stocking class factors    RD_STK33
 
 040 coe/REGBA25.coe                                   Coe BA=f(CC)              RD_E040 IPSJF128
 041 coe/REGDQ26.coe                                   Coe DQ=f(CC)              RD_E041 IPSJF129
