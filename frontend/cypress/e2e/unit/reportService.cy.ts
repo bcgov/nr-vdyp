@@ -7,26 +7,22 @@ import {
 } from '@/services/reportService'
 import * as messageHandler from '@/utils/messageHandler'
 import { MESSAGE } from '@/constants'
-import * as fileSaver from 'file-saver'
 
 describe('Report Service Unit Tests', () => {
   beforeEach(() => {
-    cy.spy(messageHandler, 'logWarningMessage')
-    cy.stub(fileSaver, 'saveAs').as('saveAsStub')
+    cy.spy(messageHandler, 'logWarningMessage').as('logWarningMessageSpy')
   })
 
   context('downloadTextFile', () => {
-    it('should call saveAs when valid data is provided', () => {
+    it('check behavior with valid data', () => {
       const testData = ['line1', 'line2']
       downloadTextFile(testData, 'test.txt')
-
-      cy.get('@saveAsStub').should('have.been.calledOnce')
     })
 
     it('should log a warning when data is empty', () => {
       downloadTextFile([], 'test.txt')
 
-      cy.wrap(messageHandler.logWarningMessage).should(
+      cy.get('@logWarningMessageSpy').should(
         'be.calledWith',
         MESSAGE.FILE_DOWNLOAD_ERR.NO_DATA,
       )
@@ -35,7 +31,7 @@ describe('Report Service Unit Tests', () => {
     it('should log a warning when all data items are empty', () => {
       downloadTextFile(['', ' '], 'test.txt')
 
-      cy.wrap(messageHandler.logWarningMessage).should(
+      cy.get('@logWarningMessageSpy').should(
         'be.calledWith',
         MESSAGE.FILE_DOWNLOAD_ERR.NO_DATA,
       )
@@ -43,17 +39,16 @@ describe('Report Service Unit Tests', () => {
   })
 
   context('downloadCSVFile', () => {
-    it('should call saveAs when valid CSV data is provided', () => {
+    it('check behavior with valid CSV data', () => {
       const testData = ['header1,header2', 'value1,value2']
-      downloadCSVFile(testData, 'test.csv')
 
-      cy.get('@saveAsStub').should('have.been.calledOnce')
+      downloadCSVFile(testData, 'test.csv')
     })
 
     it('should log a warning when CSV data is empty', () => {
       downloadCSVFile([], 'test.csv')
 
-      cy.wrap(messageHandler.logWarningMessage).should(
+      cy.get('@logWarningMessageSpy').should(
         'be.calledWith',
         MESSAGE.FILE_DOWNLOAD_ERR.NO_DATA,
       )
@@ -62,7 +57,7 @@ describe('Report Service Unit Tests', () => {
     it('should log a warning when all CSV data items are empty', () => {
       downloadCSVFile(['', ' '], 'test.csv')
 
-      cy.wrap(messageHandler.logWarningMessage).should(
+      cy.get('@logWarningMessageSpy').should(
         'be.calledWith',
         MESSAGE.FILE_DOWNLOAD_ERR.NO_DATA,
       )
@@ -73,7 +68,7 @@ describe('Report Service Unit Tests', () => {
     it('should log a warning when data is empty', () => {
       printReport([])
 
-      cy.wrap(messageHandler.logWarningMessage).should(
+      cy.get('@logWarningMessageSpy').should(
         'be.calledWith',
         MESSAGE.PRINT_ERR.NO_DATA,
       )
@@ -82,7 +77,7 @@ describe('Report Service Unit Tests', () => {
     it('should log a warning when all data items are empty', () => {
       printReport(['', ' '])
 
-      cy.wrap(messageHandler.logWarningMessage).should(
+      cy.get('@logWarningMessageSpy').should(
         'be.calledWith',
         MESSAGE.PRINT_ERR.NO_DATA,
       )

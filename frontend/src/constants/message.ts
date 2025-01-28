@@ -3,6 +3,8 @@ export const SVC_ERR = Object.freeze({
   REQUEST_TIMEOUT: 'Request timed out. Please try again. (Error: Timeout)',
   SERVICE_UNAVAILABLE:
     'The service is currently unavailable. Please try later. (Error: Unavailable)',
+  BAD_GATEWAY:
+    'The server was unable to complete your request. Please try again later. (Error: Bad Gateway)',
   GATEWAY_TIMEOUT:
     'The server did not respond in time. Please try again later. (Error: Gateway Timeout)',
   INTERNAL_SERVER_ERROR:
