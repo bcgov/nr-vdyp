@@ -1,10 +1,6 @@
 import ReportingOutput from './ReportingOutput.vue'
 
 describe('<ReportingOutput />', () => {
-  beforeEach(() => {
-    cy.viewport(1024, 768)
-  })
-
   const defaultProps = {
     data: [
       'Line 1: Output data',

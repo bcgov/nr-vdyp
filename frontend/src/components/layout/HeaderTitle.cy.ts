@@ -1,10 +1,6 @@
 import HeaderTitle from './HeaderTitle.vue'
 
 describe('HeaderTitle.vue', () => {
-  beforeEach(() => {
-    cy.viewport(1024, 768)
-  })
-
   it('renders the default text', () => {
     cy.mount(HeaderTitle, {
       props: {

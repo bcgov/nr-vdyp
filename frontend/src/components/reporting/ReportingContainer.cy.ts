@@ -8,8 +8,6 @@ describe('ReportingContainer.vue', () => {
   let projectionStore: ReturnType<typeof useProjectionStore>
 
   beforeEach(() => {
-    cy.viewport(1024, 768)
-
     const pinia = createPinia()
     setActivePinia(pinia)
     projectionStore = useProjectionStore()

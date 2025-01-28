@@ -9,8 +9,6 @@ const vuetify = createVuetify()
 
 describe('SpeciesListInput.vue', () => {
   beforeEach(() => {
-    cy.viewport(1024, 768)
-
     cy.document().then((doc) => {
       const style = doc.createElement('style')
       style.innerHTML = `

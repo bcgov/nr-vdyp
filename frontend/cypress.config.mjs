@@ -1,6 +1,8 @@
 import { defineConfig } from 'cypress'
 
 export default defineConfig({
+  viewportWidth: 1024,
+  viewportHeight: 768,
   e2e: {
     // eslint-disable-next-line no-unused-vars
     setupNodeEvents(on, config) {
