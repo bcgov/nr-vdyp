@@ -6,8 +6,6 @@ describe('UserMenu.vue', () => {
   let authStore: ReturnType<typeof useAuthStore>
 
   beforeEach(() => {
-    cy.viewport(1024, 768)
-
     // Set Cypress preview background color
     cy.document().then((doc) => {
       const style = doc.createElement('style')

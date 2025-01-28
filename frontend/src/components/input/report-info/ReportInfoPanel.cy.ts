@@ -10,9 +10,7 @@ const vuetify = createVuetify()
 
 describe('ReportInfoPanel.vue', () => {
   beforeEach(() => {
-    setActivePinia(createPinia()) // Initialize the Pinia store
-    cy.viewport(1024, 768)
-
+    setActivePinia(createPinia())
     cy.document().then((doc) => {
       const style = doc.createElement('style')
       style.innerHTML = `

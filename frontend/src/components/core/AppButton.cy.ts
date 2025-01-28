@@ -2,8 +2,6 @@ import AppButton from './AppButton.vue'
 
 describe('<AppButton />', () => {
   beforeEach(() => {
-    cy.viewport(1024, 768)
-
     // Add custom styles to override Vuetify's styles
     cy.document().then((doc) => {
       const style = doc.createElement('style')

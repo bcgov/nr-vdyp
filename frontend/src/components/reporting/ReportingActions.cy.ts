@@ -1,10 +1,6 @@
 import ReportingActions from './ReportingActions.vue'
 
 describe('<ReportingActions />', () => {
-  beforeEach(() => {
-    cy.viewport(1024, 768)
-  })
-
   const defaultProps = {
     isButtonDisabled: false,
   }
