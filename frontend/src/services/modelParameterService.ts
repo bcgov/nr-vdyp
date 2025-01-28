@@ -3,6 +3,17 @@ import { SelectedExecutionOptionsEnum } from '@/services/vdyp-api'
 import { projectionHcsvPost } from '@/services/apiActions'
 import type { CSVRowType } from '@/types/types'
 
+export const saveCSVFile = (blob: Blob, fileName: string) => {
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = fileName
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
+
 export const createCSVFiles = (modelParameterStore: any) => {
   const derivedByCode =
     modelParameterStore.derivedBy === CONSTANTS.DERIVED_BY.VOLUME
@@ -14,64 +25,64 @@ export const createCSVFiles = (modelParameterStore: any) => {
   const polygonData: CSVRowType = [
     CSVHEADERS.POLYGON_HEADERS,
     [
-      'FEATURE_ID',
-      'MAP_ID',
-      'POLYGON_NUMBER',
-      'ORG_UNIT',
-      'TSA_NAME',
-      'TFL_NAME',
+      '', // FEATURE_ID
+      '', // MAP_ID
+      '', // POLYGON_NUMBER
+      '', // ORG_UNIT
+      '', // TSA_NAME
+      '', // TFL_NAME
       derivedByCode || '', // 'INVENTORY_STANDARD_CODE'
-      'TSA_NUMBER',
-      'SHRUB_HEIGHT',
-      'SHRUB_CROWN_CLOSURE',
-      'SHRUB_COVER_PATTERN',
-      'HERB_COVER_TYPE_CODE',
-      'HERB_COVER_PCT',
-      'HERB_COVER_PATTERN_CODE',
-      'BRYOID_COVER_PCT',
+      '', // TSA_NUMBER
+      '', // SHRUB_HEIGHT
+      '', // SHRUB_CROWN_CLOSURE
+      '', // SHRUB_COVER_PATTERN
+      '', // HERB_COVER_TYPE_CODE
+      '', // HERB_COVER_PCT
+      '', // HERB_COVER_PATTERN_CODE
+      '', // BRYOID_COVER_PCT
       modelParameterStore.becZone || '', // 'BEC_ZONE_CODE'
       modelParameterStore.ecoZone || '', // 'CFS_ECOZONE'
       modelParameterStore.percentStockableArea || '', // 'PRE_DISTURBANCE_STOCKABILITY'
-      'YIELD_FACTOR',
-      'NON_PRODUCTIVE_DESCRIPTOR_CD',
-      'BCLCS_LEVEL1_CODE',
-      'BCLCS_LEVEL2_CODE',
-      'BCLCS_LEVEL3_CODE',
-      'BCLCS_LEVEL4_CODE',
-      'BCLCS_LEVEL5_CODE',
-      'PHOTO_ESTIMATION_BASE_YEAR',
-      'REFERENCE_YEAR',
-      'PCT_DEAD',
-      'NON_VEG_COVER_TYPE_1',
-      'NON_VEG_COVER_PCT_1',
-      'NON_VEG_COVER_PATTERN_1',
-      'NON_VEG_COVER_TYPE_2',
-      'NON_VEG_COVER_PCT_2',
-      'NON_VEG_COVER_PATTERN_2',
-      'NON_VEG_COVER_TYPE_3',
-      'NON_VEG_COVER_PCT_3',
-      'NON_VEG_COVER_PATTERN_3',
-      'LAND_COVER_CLASS_CD_1',
-      'LAND_COVER_PCT_1',
-      'LAND_COVER_CLASS_CD_2',
-      'LAND_COVER_PCT_2',
-      'LAND_COVER_CLASS_CD_3',
-      'LAND_COVER_PCT_3',
+      '', // YIELD_FACTOR
+      '', // NON_PRODUCTIVE_DESCRIPTOR_CD
+      '', // BCLCS_LEVEL1_CODE
+      '', // BCLCS_LEVEL2_CODE
+      '', // BCLCS_LEVEL3_CODE
+      '', // BCLCS_LEVEL4_CODE
+      '', // BCLCS_LEVEL5_CODE
+      '', // PHOTO_ESTIMATION_BASE_YEAR
+      '', // REFERENCE_YEAR
+      '', // PCT_DEAD
+      '', // NON_VEG_COVER_TYPE_1
+      '', // NON_VEG_COVER_PCT_1
+      '', // NON_VEG_COVER_PATTERN_1
+      '', // NON_VEG_COVER_TYPE_2
+      '', // NON_VEG_COVER_PCT_2
+      '', // NON_VEG_COVER_PATTERN_2
+      '', // NON_VEG_COVER_TYPE_3
+      '', // NON_VEG_COVER_PCT_3
+      '', // NON_VEG_COVER_PATTERN_3
+      '', // LAND_COVER_CLASS_CD_1
+      '', // LAND_COVER_PCT_1
+      '', // LAND_COVER_CLASS_CD_2
+      '', // LAND_COVER_PCT_2
+      '', // LAND_COVER_CLASS_CD_3
+      '', // LAND_COVER_PCT_3
     ],
   ]
 
   const layerData: CSVRowType = [
     CSVHEADERS.LAYER_HEADERS,
     [
-      'FEATURE_ID',
-      'TREE_COVER_LAYER_ESTIMATED_ID',
-      'MAP_ID',
-      'POLYGON_NUMBER',
-      'LAYER_LEVEL_CODE',
-      'VDYP7_LAYER_CD',
-      'LAYER_STOCKABILITY',
-      'FOREST_COVER_RANK_CODE',
-      'NON_FOREST_DESCRIPTOR_CODE',
+      '', // FEATURE_ID
+      '', // TREE_COVER_LAYER_ESTIMATED_ID
+      '', // MAP_ID
+      '', // POLYGON_NUMBER
+      '', // LAYER_LEVEL_CODE
+      '', // VDYP7_LAYER_CD
+      '', // LAYER_STOCKABILITY
+      '', // FOREST_COVER_RANK_CODE
+      '', // NON_FOREST_DESCRIPTOR_CODE
       modelParameterStore.highestPercentSpecies || '', // 'EST_SITE_INDEX_SPECIES_CD'
       modelParameterStore.bha50SiteIndex || '', // 'ESTIMATED_SITE_INDEX'
       '', // 'CROWN_CLOSURE'
@@ -123,6 +134,10 @@ export const createCSVFiles = (modelParameterStore: any) => {
     type: 'text/csv;charset=utf-8;',
   })
   const blobLayer = new Blob([layerCSV], { type: 'text/csv;charset=utf-8;' })
+
+  // Save files locally for debugging
+  saveCSVFile(blobPolygon, 'VDYP7_INPUT_POLY.csv')
+  saveCSVFile(blobLayer, 'VDYP7_INPUT_LAYER.csv')
 
   return { blobPolygon, blobLayer }
 }
