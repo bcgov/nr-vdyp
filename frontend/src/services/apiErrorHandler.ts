@@ -104,6 +104,8 @@ function getErrorMessage(status: number): string {
       return SVC_ERR.REQUEST_TIMEOUT
     case StatusCodes.SERVICE_UNAVAILABLE:
       return SVC_ERR.SERVICE_UNAVAILABLE
+    case StatusCodes.BAD_GATEWAY:
+      return SVC_ERR.BAD_GATEWAY
     case StatusCodes.GATEWAY_TIMEOUT:
       return SVC_ERR.GATEWAY_TIMEOUT
     case StatusCodes.INTERNAL_SERVER_ERROR:
@@ -141,5 +143,5 @@ function getErrorMessage(status: number): string {
  * @returns true if the error is an AxiosError.
  */
 function isAxiosError(error: unknown): error is AxiosError {
-  return (error as AxiosError).isAxiosError !== undefined
+  return !!error && (error as AxiosError).isAxiosError !== undefined
 }
