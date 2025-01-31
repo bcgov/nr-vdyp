@@ -1,7 +1,11 @@
 import { CONSTANTS, CSVHEADERS } from '@/constants'
-import { SelectedExecutionOptionsEnum } from '@/services/vdyp-api'
+import {
+  SelectedExecutionOptionsEnum,
+  type Parameters,
+} from '@/services/vdyp-api'
 import { projectionHcsvPost } from '@/services/apiActions'
 import type { CSVRowType } from '@/types/types'
+import { Util } from '@/utils/util'
 
 export const saveCSVFile = (blob: Blob, fileName: string) => {
   const url = URL.createObjectURL(blob)
@@ -15,6 +19,8 @@ export const saveCSVFile = (blob: Blob, fileName: string) => {
 }
 
 export const createCSVFiles = (modelParameterStore: any) => {
+  const featureId = Util.generateFeatureId()
+
   const derivedByCode =
     modelParameterStore.derivedBy === CONSTANTS.DERIVED_BY.VOLUME
       ? CONSTANTS.INVENTORY_CODES.FIP
@@ -25,7 +31,7 @@ export const createCSVFiles = (modelParameterStore: any) => {
   const polygonData: CSVRowType = [
     CSVHEADERS.POLYGON_HEADERS,
     [
-      '', // FEATURE_ID
+      featureId, // FEATURE_ID
       '', // MAP_ID
       '', // POLYGON_NUMBER
       '', // ORG_UNIT
@@ -43,7 +49,7 @@ export const createCSVFiles = (modelParameterStore: any) => {
       modelParameterStore.becZone || '', // 'BEC_ZONE_CODE'
       modelParameterStore.ecoZone || '', // 'CFS_ECOZONE'
       modelParameterStore.percentStockableArea || '', // 'PRE_DISTURBANCE_STOCKABILITY'
-      '', // YIELD_FACTOR
+      '1', // YIELD_FACTOR - see VDYP7Console Interface Guide.pdf
       '', // NON_PRODUCTIVE_DESCRIPTOR_CD
       '', // BCLCS_LEVEL1_CODE
       '', // BCLCS_LEVEL2_CODE
@@ -74,7 +80,7 @@ export const createCSVFiles = (modelParameterStore: any) => {
   const layerData: CSVRowType = [
     CSVHEADERS.LAYER_HEADERS,
     [
-      '', // FEATURE_ID
+      featureId, // FEATURE_ID
       '', // TREE_COVER_LAYER_ESTIMATED_ID
       '', // MAP_ID
       '', // POLYGON_NUMBER
@@ -83,7 +89,7 @@ export const createCSVFiles = (modelParameterStore: any) => {
       '', // LAYER_STOCKABILITY
       '', // FOREST_COVER_RANK_CODE
       '', // NON_FOREST_DESCRIPTOR_CODE
-      modelParameterStore.highestPercentSpecies || '', // 'EST_SITE_INDEX_SPECIES_CD'
+      modelParameterStore.selectedSiteSpecies || '', // 'EST_SITE_INDEX_SPECIES_CD'
       modelParameterStore.bha50SiteIndex || '', // 'ESTIMATED_SITE_INDEX'
       '', // 'CROWN_CLOSURE'
       '', // 'BASAL_AREA_75'
@@ -151,7 +157,22 @@ export const runModel = async (modelParameterStore: any) => {
     SelectedExecutionOptionsEnum.DoEnableProgressLogging,
     SelectedExecutionOptionsEnum.DoEnableErrorLogging,
     SelectedExecutionOptionsEnum.DoEnableDebugLogging,
+    // SelectedExecutionOptionsEnum.DoForceReferenceYearInclusionInYieldTables,
+    // SelectedExecutionOptionsEnum.DoForceCurrentYearInclusionInYieldTables,
+    // SelectedExecutionOptionsEnum.DoForceCalendarYearInclusionInYieldTables,
   ]
+
+  if (modelParameterStore.projectionType === CONSTANTS.PROJECTION_TYPE.VOLUME) {
+    selectedExecutionOptions.push(
+      SelectedExecutionOptionsEnum.DoIncludeProjectedMOFVolumes,
+    )
+  } else if (
+    modelParameterStore.projectionType === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
+  ) {
+    selectedExecutionOptions.push(
+      SelectedExecutionOptionsEnum.DoIncludeProjectedCFSBiomass,
+    )
+  }
 
   if (modelParameterStore.incSecondaryHeight) {
     selectedExecutionOptions.push(
@@ -159,10 +180,24 @@ export const runModel = async (modelParameterStore: any) => {
     )
   }
 
-  const projectionParameters = {
+  if (
+    modelParameterStore.includeInReport.includes(
+      CONSTANTS.INCLUDE_IN_REPORT.SPECIES_COMPOSITION,
+    )
+  ) {
+    selectedExecutionOptions.push(
+      SelectedExecutionOptionsEnum.DoIncludeSpeciesProjection,
+    )
+  }
+  //
+  const projectionParameters: Parameters = {
     ageStart: modelParameterStore.startingAge,
     ageEnd: modelParameterStore.finishingAge,
     ageIncrement: modelParameterStore.ageIncrement,
+    // 2024/2025 -> This is the year in which the projection is being run /current year
+    // yearStart: 2024 ?
+    // yearEnd: 2025 ?
+    // forceYear?
     selectedExecutionOptions,
   }
 
