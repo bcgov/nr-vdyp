@@ -130,10 +130,6 @@ export const createCSVFiles = (modelParameterStore: any) => {
   })
   const blobLayer = new Blob([layerCSV], { type: 'text/csv;charset=utf-8;' })
 
-  // Save files locally for debugging
-  Util.saveCSVFile(blobPolygon, 'VDYP7_INPUT_POLY.csv')
-  Util.saveCSVFile(blobLayer, 'VDYP7_INPUT_LAYER.csv')
-
   return { blobPolygon, blobLayer }
 }
 
@@ -146,9 +142,6 @@ export const runModel = async (modelParameterStore: any) => {
     SelectedExecutionOptionsEnum.DoEnableProgressLogging,
     SelectedExecutionOptionsEnum.DoEnableErrorLogging,
     SelectedExecutionOptionsEnum.DoEnableDebugLogging,
-    // SelectedExecutionOptionsEnum.DoForceReferenceYearInclusionInYieldTables,
-    // SelectedExecutionOptionsEnum.DoForceCurrentYearInclusionInYieldTables,
-    // SelectedExecutionOptionsEnum.DoForceCalendarYearInclusionInYieldTables,
   ]
 
   if (modelParameterStore.projectionType === CONSTANTS.PROJECTION_TYPE.VOLUME) {
@@ -178,15 +171,11 @@ export const runModel = async (modelParameterStore: any) => {
       SelectedExecutionOptionsEnum.DoIncludeSpeciesProjection,
     )
   }
-  //
+
   const projectionParameters: Parameters = {
     ageStart: modelParameterStore.startingAge,
     ageEnd: modelParameterStore.finishingAge,
     ageIncrement: modelParameterStore.ageIncrement,
-    // 2024/2025 -> This is the year in which the projection is being run /current year
-    // yearStart: 2024 ?
-    // yearEnd: 2025 ?
-    // forceYear?
     selectedExecutionOptions,
   }
 
