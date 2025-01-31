@@ -5,8 +5,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
@@ -112,7 +115,13 @@ class ITFipStart {
 
 			var resolver = new FileSystemFileResolver(configDir);
 
-			assertThrows(IllegalArgumentException.class, () -> app.init(resolver));
+			assertThrows(
+					NoSuchFileException.class, () -> app.init(
+							resolver,
+							new PrintStream(new ByteArrayOutputStream()),
+							new ByteArrayInputStream("\n\r".getBytes())
+					)
+			);
 		}
 	}
 
@@ -122,7 +131,14 @@ class ITFipStart {
 
 			var resolver = new FileSystemFileResolver(configDir);
 
-			assertThrows(NoSuchFileException.class, () -> app.init(resolver, "FAKE"));
+			assertThrows(
+					NoSuchFileException.class, () -> app.init(
+							resolver,
+							new PrintStream(new ByteArrayOutputStream()),
+							new ByteArrayInputStream("\n\r".getBytes()),
+							"FAKE"
+					)
+			);
 		}
 	}
 
@@ -264,7 +280,13 @@ class ITFipStart {
 
 			var resolver = new FileSystemFileResolver(configDir);
 
-			app.init(resolver, baseControlFile.toString(), ioControlFile.toString());
+			app.init(
+					resolver,
+					new PrintStream(new ByteArrayOutputStream()),
+					new ByteArrayInputStream("\n\r".getBytes()),
+					baseControlFile.toString(),
+					ioControlFile.toString()
+			);
 
 			app.process();
 		}

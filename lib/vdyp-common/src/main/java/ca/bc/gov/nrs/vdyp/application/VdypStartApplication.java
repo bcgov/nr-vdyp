@@ -14,6 +14,7 @@ import java.beans.PropertyDescriptor;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -117,7 +118,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		var resolver = new FileSystemFileResolver();
 
 		try {
-			app.init(resolver, args);
+			app.init(resolver, System.out, System.in, args);
 		} catch (Exception ex) {
 			log.error("Error during initialization", ex);
 			System.exit(CONFIG_LOAD_ERROR);
@@ -190,30 +191,22 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	 * @throws IOException
 	 * @throws ResourceParseException
 	 */
-	public void init(FileSystemFileResolver resolver, String... controlFilePaths)
+	public void init(
+			FileSystemFileResolver resolver,
+			PrintStream writeToIfNoArgs,
+			InputStream readFromIfNoArgs,
+			String... controlFilePaths
+	)
 			throws IOException, ResourceParseException {
 
-		// Load the control map
+		var controlFileNames = VdypApplication.getControlMapFileNames(
+				controlFilePaths, getDefaultControlFileName(), getId(), writeToIfNoArgs, readFromIfNoArgs
+		);
 
-		if (controlFilePaths.length < 1) {
-			throw new IllegalArgumentException("At least one control file must be specified.");
-		}
-
-		BaseControlParser parser = getControlFileParser();
-		List<InputStream> resources = new ArrayList<>(controlFilePaths.length);
-		try {
-			for (String path : controlFilePaths) {
-				resources.add(resolver.resolveForInput(path));
-			}
-
-			init(resolver, parser.parse(resources, resolver, controlMap));
-
-		} finally {
-			for (var resource : resources) {
-				resource.close();
-			}
-		}
+		init(resolver, getControlFileParser().parseByName(controlFileNames, resolver, controlMap));
 	}
+
+	protected abstract String getDefaultControlFileName();
 
 	/**
 	 * Initialize application

@@ -1692,4 +1692,9 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 
 		throw new NoBracketingException(currentX, lastX, currentF, lastF);
 	}
+
+	@Override
+	protected String getDefaultControlFileName() {
+		return "vristart.ctr";
+	}
 }

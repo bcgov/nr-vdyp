@@ -17,6 +17,8 @@ import java.util.stream.Stream;
 import org.apache.commons.io.FilenameUtils;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.io.CleanupMode;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -29,6 +31,9 @@ import ca.bc.gov.nrs.vdyp.fip.model.FipLayer;
 import ca.bc.gov.nrs.vdyp.fip.model.FipPolygon;
 import ca.bc.gov.nrs.vdyp.fip.model.FipSite;
 import ca.bc.gov.nrs.vdyp.fip.model.FipSpecies;
+import ca.bc.gov.nrs.vdyp.forward.ForwardProcessor;
+import ca.bc.gov.nrs.vdyp.forward.VdypForwardApplication;
+import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.write.ControlFileWriter;
@@ -41,7 +46,11 @@ import ca.bc.gov.nrs.vdyp.vri.model.VriSite;
 import ca.bc.gov.nrs.vdyp.vri.model.VriSpecies;
 import io.github.classgraph.ClassGraph;
 
+@TestMethodOrder(org.junit.jupiter.api.MethodOrderer.OrderAnnotation.class)
 class ITDataBased {
+
+	static final int ORDER_START = 2;
+	static final int ORDER_GROW = 3;
 
 	@TempDir(cleanup = CleanupMode.ON_SUCCESS)
 	static Path configDir;
@@ -66,22 +75,52 @@ class ITDataBased {
 
 	}
 
-	private static final String POLYGON_OUTPUT_NAME = "vri_poly.dat";
-	private static final String SPECIES_OUTPUT_NAME = "vri_spec.dat";
-	private static final String UTILIZATION_OUTPUT_NAME = "vri_util.dat";
+	static enum State {
+		FipInput("FIP", "fipInput"),
+		VriInput("VRI", "vriInput"),
+		ForwardInput("7INP", "forwardInput"),
+		ForwardOutput("7OUT", "forwardOutput");
 
-	private static final String POLYGON_EXPECTED_NAME = "P-SAVE_VDYP7_7INPP.dat";
-	private static final String SPECIES_EXPECTED_NAME = "P-SAVE_VDYP7_7INPS.dat";
-	private static final String UTILIZATION_EXPECTED_NAME = "P-SAVE_VDYP7_7INPU.dat";
+		final String prefix;
+		final Path dir;
 
-	private static final String VRI_POLYGON_INPUT_NAME = "P-SAVE_VDYP7_VRIP.dat";
-	private static final String VRI_LAYER_INPUT_NAME = "P-SAVE_VDYP7_VRIL.dat";
-	private static final String VRI_SPECIES_INPUT_NAME = "P-SAVE_VDYP7_VRIS.dat";
-	private static final String VRI_SITE_INPUT_NAME = "P-SAVE_VDYP7_VRII.dat";
+		State(String prefix, String dir) {
+			this.prefix = prefix;
+			this.dir = Path.of(dir);
+		}
+	}
 
-	private static final String FIP_POLYGON_INPUT_NAME = "P-SAVE_VDYP7_FIPP.dat";
-	private static final String FIP_LAYER_INPUT_NAME = "P-SAVE_VDYP7_FIPL.dat";
-	private static final String FIP_SPECIES_INPUT_NAME = "P-SAVE_VDYP7_FIPS.dat";
+	static enum Data {
+		Polygon("P"),
+		Layer("L"),
+		Species("S"),
+		Site("I"),
+		Utilization("U"),
+		Compatibility("C"),
+		GrowTo("GROW");
+
+		final String suffix;
+
+		Data(String suffix) {
+			this.suffix = suffix;
+		}
+	}
+
+	static String fileName(State state, Data data) {
+		if (data == Data.GrowTo) {
+			return String.format("P-SAVE_VDYP7_%s.dat", data.suffix);
+		}
+		return String.format("P-SAVE_VDYP7_%s%s.dat", state.prefix, data.suffix);
+	}
+
+	static Path dataPath(State state, Data data) {
+		return state.dir.resolve(fileName(state, data));
+	}
+
+	private static final String POLYGON_OUTPUT_NAME = "poly.dat";
+	private static final String SPECIES_OUTPUT_NAME = "spec.dat";
+	private static final String UTILIZATION_OUTPUT_NAME = "util.dat";
+	private static final String COMPATIBILITY_OUTPUT_NAME = "compat.dat";
 
 	static final Pattern UTIL_LINE_MATCHER = Pattern
 			.compile("^(.{27})(?:(.{9})(.{9})(.{9})(.{9})(.{9})(.{9})(.{9})(.{9})(.{9})(.{6}))?$", Pattern.MULTILINE);
@@ -136,16 +175,20 @@ class ITDataBased {
 		return Files.list(testDataDir).map(p -> p.getFileName().toString());
 	}
 
+	@Order(ORDER_START)
 	@ParameterizedTest
 	@MethodSource("testNameProvider")
 	void testVriStart(String test) throws IOException, ResourceParseException, ProcessingException {
-		Path dataDir = testDataDir.resolve(test).resolve("vriInput");
-		Path expectedDir = testDataDir.resolve(test).resolve("forwardInput");
+		State inputState = State.VriInput;
+		State outputState = State.ForwardInput;
+
+		Path dataDir = testDataDir.resolve(test).resolve(inputState.dir);
+		Path expectedDir = testDataDir.resolve(test).resolve(outputState.dir);
 
 		Path baseControlFile = copyResource(TestUtils.class, "VRISTART.CTR", testConfigDir);
 
-		Assumptions.assumeTrue(Files.exists(dataDir), "No VRI Input data");
-		Assumptions.assumeTrue(Files.exists(expectedDir), "No Forward Input data");
+		Assumptions.assumeTrue(Files.exists(dataDir), "No input data");
+		Assumptions.assumeTrue(Files.exists(expectedDir), "No expected output data");
 
 		// Create a second control file pointing to the input and output
 		Path ioControlFile = dataDir.resolve("vri.ctr");
@@ -154,14 +197,14 @@ class ITDataBased {
 				var os = Files.newOutputStream(ioControlFile); //
 				var writer = new ControlFileWriter(os);
 		) {
-			writer.writeComment("Generated supplementarty control file for integration testing");
+			writer.writeComment("Generated supplementary control file for integration testing");
 			writer.writeBlank();
 			writer.writeComment("Inputs");
 			writer.writeBlank();
-			writer.writeEntry(11, dataDir.resolve(VRI_POLYGON_INPUT_NAME).toString(), "VRI Polygon Input");
-			writer.writeEntry(12, dataDir.resolve(VRI_LAYER_INPUT_NAME).toString(), "VRI Layer Input");
-			writer.writeEntry(13, dataDir.resolve(VRI_SITE_INPUT_NAME).toString(), "VRI Site Input");
-			writer.writeEntry(14, dataDir.resolve(VRI_SPECIES_INPUT_NAME).toString(), "VRI Species Input");
+			writer.writeEntry(11, dataDir.resolve(fileName(inputState, Data.Polygon)).toString(), "VRI Polygon Input");
+			writer.writeEntry(12, dataDir.resolve(fileName(inputState, Data.Layer)).toString(), "VRI Layer Input");
+			writer.writeEntry(13, dataDir.resolve(fileName(inputState, Data.Site)).toString(), "VRI Site Input");
+			writer.writeEntry(14, dataDir.resolve(fileName(inputState, Data.Species)).toString(), "VRI Species Input");
 			writer.writeBlank();
 			writer.writeComment("Outputs");
 			writer.writeBlank();
@@ -184,27 +227,34 @@ class ITDataBased {
 		assertFileExists(outputDir.resolve(UTILIZATION_OUTPUT_NAME));
 
 		assertFileMatches(
-				outputDir.resolve(POLYGON_OUTPUT_NAME), expectedDir.resolve(POLYGON_EXPECTED_NAME), String::equals
+				outputDir.resolve(POLYGON_OUTPUT_NAME), expectedDir.resolve(fileName(outputState, Data.Polygon)),
+				String::equals
 		);
 		assertFileMatches(
-				outputDir.resolve(SPECIES_OUTPUT_NAME), expectedDir.resolve(SPECIES_EXPECTED_NAME),
+				outputDir.resolve(SPECIES_OUTPUT_NAME), expectedDir.resolve(fileName(outputState, Data.Species)),
 				this::specLinesMatch
 		);
 		assertFileMatches(
-				outputDir.resolve(UTILIZATION_OUTPUT_NAME), expectedDir.resolve(UTILIZATION_EXPECTED_NAME),
+				outputDir.resolve(UTILIZATION_OUTPUT_NAME), expectedDir.resolve(
+						fileName(outputState, Data.Utilization)
+				),
 				this::utilLinesMatch
 		);
 
 	}
 
+	@Order(ORDER_START)
 	@ParameterizedTest
 	@MethodSource("testNameProvider")
 	void testFipStart(String test) throws IOException, ResourceParseException, ProcessingException {
-		Path dataDir = testDataDir.resolve(test).resolve("fipInput");
-		Path expectedDir = testDataDir.resolve(test).resolve("forwardInput");
+		State inputState = State.FipInput;
+		State outputState = State.ForwardInput;
 
-		Assumptions.assumeTrue(Files.exists(dataDir), "No FIP Input data");
-		Assumptions.assumeTrue(Files.exists(expectedDir), "No Forward Input data");
+		Path dataDir = testDataDir.resolve(test).resolve(inputState.dir);
+		Path expectedDir = testDataDir.resolve(test).resolve(outputState.dir);
+
+		Assumptions.assumeTrue(Files.exists(dataDir), "No input data");
+		Assumptions.assumeTrue(Files.exists(expectedDir), "No expected output data");
 
 		Path baseControlFile = copyResource(TestUtils.class, "FIPSTART.CTR", testConfigDir);
 
@@ -219,9 +269,9 @@ class ITDataBased {
 			writer.writeBlank();
 			writer.writeComment("Inputs");
 			writer.writeBlank();
-			writer.writeEntry(11, dataDir.resolve(FIP_POLYGON_INPUT_NAME).toString(), "FIP Polygon Input");
-			writer.writeEntry(12, dataDir.resolve(FIP_LAYER_INPUT_NAME).toString(), "FIP Layer Input");
-			writer.writeEntry(13, dataDir.resolve(FIP_SPECIES_INPUT_NAME).toString(), "FIP Species Input");
+			writer.writeEntry(11, dataDir.resolve(fileName(inputState, Data.Polygon)).toString(), "FIP Polygon Input");
+			writer.writeEntry(12, dataDir.resolve(fileName(inputState, Data.Layer)).toString(), "FIP Layer Input");
+			writer.writeEntry(13, dataDir.resolve(fileName(inputState, Data.Species)).toString(), "FIP Species Input");
 			writer.writeBlank();
 			writer.writeComment("Outputs");
 			writer.writeBlank();
@@ -244,15 +294,105 @@ class ITDataBased {
 		assertFileExists(outputDir.resolve(UTILIZATION_OUTPUT_NAME));
 
 		assertFileMatches(
-				outputDir.resolve(POLYGON_OUTPUT_NAME), expectedDir.resolve(POLYGON_EXPECTED_NAME), String::equals
+				outputDir.resolve(POLYGON_OUTPUT_NAME), expectedDir.resolve(fileName(outputState, Data.Polygon)),
+				String::equals
 		);
 		assertFileMatches(
-				outputDir.resolve(SPECIES_OUTPUT_NAME), expectedDir.resolve(SPECIES_EXPECTED_NAME),
+				outputDir.resolve(SPECIES_OUTPUT_NAME), expectedDir.resolve(fileName(outputState, Data.Species)),
 				this::specLinesMatch
 		);
 		assertFileMatches(
-				outputDir.resolve(UTILIZATION_OUTPUT_NAME), expectedDir.resolve(UTILIZATION_EXPECTED_NAME),
+				outputDir.resolve(UTILIZATION_OUTPUT_NAME), expectedDir.resolve(
+						fileName(outputState, Data.Utilization)
+				),
 				this::utilLinesMatch
+		);
+
+	}
+
+	@Order(ORDER_GROW)
+	@ParameterizedTest
+	@MethodSource("testNameProvider")
+	void testVdypForward(String test) throws IOException, ResourceParseException, ProcessingException {
+		State inputState = State.ForwardInput;
+		State outputState = State.ForwardOutput;
+
+		Path dataDir = testDataDir.resolve(test).resolve(inputState.dir);
+		Path expectedDir = testDataDir.resolve(test).resolve(outputState.dir);
+
+		Assumptions.assumeTrue(Files.exists(dataDir), "No input data");
+		Assumptions.assumeTrue(Files.exists(expectedDir), "No expected output data");
+
+		Path baseControlFile = copyResource(TestUtils.class, "VDYP.CTR", testConfigDir);
+
+		// Create a second control file pointing to the input and output
+		Path ioControlFile = dataDir.resolve("fip.ctr");
+
+		try (
+				var os = Files.newOutputStream(ioControlFile); //
+				var writer = new ControlFileWriter(os);
+		) {
+			writer.writeComment("Generated supplementarty control file for integration testing");
+			writer.writeBlank();
+			writer.writeComment("Inputs");
+			writer.writeBlank();
+			writer.writeEntry(11, dataDir.resolve(fileName(inputState, Data.Polygon)).toString(), "VDYP Polygon Input");
+			writer.writeEntry(12, dataDir.resolve(fileName(inputState, Data.Species)).toString(), "VDYP Species Input");
+			writer.writeEntry(
+					13, dataDir.resolve(fileName(inputState, Data.Utilization)).toString(), "VDYP Utilization Input"
+			);
+			writer.writeEntry(
+					14, dataDir.resolve(fileName(inputState, Data.GrowTo)).toString(), "VDYP Grow To Input"
+			);
+			writer.writeBlank();
+			writer.writeComment("Outputs");
+			writer.writeBlank();
+			writer.writeEntry(15, outputDir.resolve(POLYGON_OUTPUT_NAME).toString(), "VDYP Polygon Output");
+			writer.writeEntry(16, outputDir.resolve(SPECIES_OUTPUT_NAME).toString(), "VDYP Species Output");
+			writer.writeEntry(18, outputDir.resolve(UTILIZATION_OUTPUT_NAME).toString(), "VDYP Utilization Output");
+			writer.writeEntry(
+					19, outputDir.resolve(COMPATIBILITY_OUTPUT_NAME).toString(), "VDYP Compatibility Variables Output"
+			);
+		}
+
+		{
+
+			FileResolver inputFileResolver = new FileSystemFileResolver(configDir);
+			FileResolver outputFileResolver = new FileSystemFileResolver(configDir);
+
+			ForwardProcessor processor = new ForwardProcessor();
+			processor.run(
+					inputFileResolver, outputFileResolver,
+					List.of(baseControlFile.toString(), ioControlFile.toString()),
+					VdypForwardApplication.DEFAULT_PASS_SET
+			);
+
+		}
+
+		assertFileExists(outputDir.resolve(POLYGON_OUTPUT_NAME));
+		assertFileExists(outputDir.resolve(SPECIES_OUTPUT_NAME));
+		assertFileExists(outputDir.resolve(UTILIZATION_OUTPUT_NAME));
+		assertFileExists(outputDir.resolve(COMPATIBILITY_OUTPUT_NAME));
+
+		assertFileMatches(
+				outputDir.resolve(POLYGON_OUTPUT_NAME), expectedDir.resolve(fileName(outputState, Data.Polygon)),
+				String::equals
+		);
+		assertFileMatches(
+				outputDir.resolve(SPECIES_OUTPUT_NAME), expectedDir.resolve(fileName(outputState, Data.Species)),
+				this::specLinesMatch
+		);
+		assertFileMatches(
+				outputDir.resolve(UTILIZATION_OUTPUT_NAME), expectedDir.resolve(
+						fileName(outputState, Data.Utilization)
+				),
+				this::utilLinesMatch
+		);
+		assertFileMatches(
+				outputDir.resolve(COMPATIBILITY_OUTPUT_NAME), expectedDir.resolve(
+						fileName(outputState, Data.Compatibility)
+				),
+				String::equals
 		);
 
 	}
