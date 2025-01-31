@@ -15,6 +15,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.apache.commons.io.FilenameUtils;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.io.CleanupMode;
 import org.junit.jupiter.api.io.TempDir;
@@ -23,6 +24,11 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import ca.bc.gov.nrs.vdyp.application.ProcessingException;
 import ca.bc.gov.nrs.vdyp.application.VdypStartApplication;
+import ca.bc.gov.nrs.vdyp.fip.FipStart;
+import ca.bc.gov.nrs.vdyp.fip.model.FipLayer;
+import ca.bc.gov.nrs.vdyp.fip.model.FipPolygon;
+import ca.bc.gov.nrs.vdyp.fip.model.FipSite;
+import ca.bc.gov.nrs.vdyp.fip.model.FipSpecies;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.write.ControlFileWriter;
@@ -35,19 +41,19 @@ import ca.bc.gov.nrs.vdyp.vri.model.VriSite;
 import ca.bc.gov.nrs.vdyp.vri.model.VriSpecies;
 import io.github.classgraph.ClassGraph;
 
-class ITVriStart {
+class ITDataBased {
 
 	@TempDir(cleanup = CleanupMode.ON_SUCCESS)
 	static Path configDir;
+
+	@TempDir(cleanup = CleanupMode.ON_SUCCESS)
+	Path testConfigDir;
 
 	@TempDir(cleanup = CleanupMode.ON_SUCCESS)
 	static Path testDataDir;
 
 	@TempDir(cleanup = CleanupMode.ON_SUCCESS)
 	Path outputDir;
-
-	static private Path baseControlFile;
-	private Path ioControlFile;
 
 	static Path copyResource(Class<?> klazz, String path, Path destination) throws IOException {
 		Path result = destination.resolve(path);
@@ -68,10 +74,14 @@ class ITVriStart {
 	private static final String SPECIES_EXPECTED_NAME = "P-SAVE_VDYP7_7INPS.dat";
 	private static final String UTILIZATION_EXPECTED_NAME = "P-SAVE_VDYP7_7INPU.dat";
 
-	private static final String POLYGON_INPUT_NAME = "P-SAVE_VDYP7_VRIP.dat";
-	private static final String LAYER_INPUT_NAME = "P-SAVE_VDYP7_VRIL.dat";
-	private static final String SPECIES_INPUT_NAME = "P-SAVE_VDYP7_VRIS.dat";
-	private static final String SITE_INPUT_NAME = "P-SAVE_VDYP7_VRII.dat";
+	private static final String VRI_POLYGON_INPUT_NAME = "P-SAVE_VDYP7_VRIP.dat";
+	private static final String VRI_LAYER_INPUT_NAME = "P-SAVE_VDYP7_VRIL.dat";
+	private static final String VRI_SPECIES_INPUT_NAME = "P-SAVE_VDYP7_VRIS.dat";
+	private static final String VRI_SITE_INPUT_NAME = "P-SAVE_VDYP7_VRII.dat";
+
+	private static final String FIP_POLYGON_INPUT_NAME = "P-SAVE_VDYP7_FIPP.dat";
+	private static final String FIP_LAYER_INPUT_NAME = "P-SAVE_VDYP7_FIPL.dat";
+	private static final String FIP_SPECIES_INPUT_NAME = "P-SAVE_VDYP7_FIPS.dat";
 
 	static final Pattern UTIL_LINE_MATCHER = Pattern
 			.compile("^(.{27})(?:(.{9})(.{9})(.{9})(.{9})(.{9})(.{9})(.{9})(.{9})(.{9})(.{6}))?$", Pattern.MULTILINE);
@@ -83,7 +93,6 @@ class ITVriStart {
 
 	@BeforeAll
 	static void init() throws IOException {
-		baseControlFile = copyResource(TestUtils.class, "VRISTART.CTR", configDir);
 
 		final Path coeDir = configDir.resolve("coe/");
 		Files.createDirectory(coeDir);
@@ -91,7 +100,7 @@ class ITVriStart {
 		try (
 				var scan = new ClassGraph().verbose()
 						.addClassLoader(TestUtils.class.getClassLoader())
-						.addClassLoader(ITVriStart.class.getClassLoader())
+						.addClassLoader(ITDataBased.class.getClassLoader())
 						.acceptPaths("ca/bc/gov/nrs/vdyp/test")
 						.acceptPaths("ca/bc/gov/nrs/vdyp/integration_tests")
 						.scan()
@@ -129,12 +138,17 @@ class ITVriStart {
 
 	@ParameterizedTest
 	@MethodSource("testNameProvider")
-	void test(String test) throws IOException, ResourceParseException, ProcessingException {
+	void testVriStart(String test) throws IOException, ResourceParseException, ProcessingException {
 		Path dataDir = testDataDir.resolve(test).resolve("vriInput");
 		Path expectedDir = testDataDir.resolve(test).resolve("forwardInput");
 
+		Path baseControlFile = copyResource(TestUtils.class, "VRISTART.CTR", testConfigDir);
+
+		Assumptions.assumeTrue(Files.exists(dataDir), "No VRI Input data");
+		Assumptions.assumeTrue(Files.exists(expectedDir), "No Forward Input data");
+
 		// Create a second control file pointing to the input and output
-		ioControlFile = dataDir.resolve("vri.ctr");
+		Path ioControlFile = dataDir.resolve("vri.ctr");
 
 		try (
 				var os = Files.newOutputStream(ioControlFile); //
@@ -144,19 +158,79 @@ class ITVriStart {
 			writer.writeBlank();
 			writer.writeComment("Inputs");
 			writer.writeBlank();
-			writer.writeEntry(11, dataDir.resolve(POLYGON_INPUT_NAME).toString(), "VRI Polygon Input");
-			writer.writeEntry(12, dataDir.resolve(LAYER_INPUT_NAME).toString(), "VRI Layer Input");
-			writer.writeEntry(13, dataDir.resolve(SITE_INPUT_NAME).toString(), "VRI Site Input");
-			writer.writeEntry(14, dataDir.resolve(SPECIES_INPUT_NAME).toString(), "VRI Species Input");
+			writer.writeEntry(11, dataDir.resolve(VRI_POLYGON_INPUT_NAME).toString(), "VRI Polygon Input");
+			writer.writeEntry(12, dataDir.resolve(VRI_LAYER_INPUT_NAME).toString(), "VRI Layer Input");
+			writer.writeEntry(13, dataDir.resolve(VRI_SITE_INPUT_NAME).toString(), "VRI Site Input");
+			writer.writeEntry(14, dataDir.resolve(VRI_SPECIES_INPUT_NAME).toString(), "VRI Species Input");
 			writer.writeBlank();
 			writer.writeComment("Outputs");
 			writer.writeBlank();
-			writer.writeEntry(15, outputDir.resolve(POLYGON_OUTPUT_NAME).toString(), "VRI Polygon Output");
-			writer.writeEntry(16, outputDir.resolve(SPECIES_OUTPUT_NAME).toString(), "VRI Species Output");
-			writer.writeEntry(18, outputDir.resolve(UTILIZATION_OUTPUT_NAME).toString(), "VRI Utilization Output");
+			writer.writeEntry(15, outputDir.resolve(POLYGON_OUTPUT_NAME).toString(), "VDYP Polygon Output");
+			writer.writeEntry(16, outputDir.resolve(SPECIES_OUTPUT_NAME).toString(), "VDYP Species Output");
+			writer.writeEntry(18, outputDir.resolve(UTILIZATION_OUTPUT_NAME).toString(), "VDYP Utilization Output");
 		}
 
 		try (VdypStartApplication<VriPolygon, VriLayer, VriSpecies, VriSite> app = new VriStart();) {
+
+			var resolver = new FileSystemFileResolver(configDir);
+
+			app.init(resolver, baseControlFile.toString(), ioControlFile.toString());
+
+			app.process();
+		}
+
+		assertFileExists(outputDir.resolve(POLYGON_OUTPUT_NAME));
+		assertFileExists(outputDir.resolve(SPECIES_OUTPUT_NAME));
+		assertFileExists(outputDir.resolve(UTILIZATION_OUTPUT_NAME));
+
+		assertFileMatches(
+				outputDir.resolve(POLYGON_OUTPUT_NAME), expectedDir.resolve(POLYGON_EXPECTED_NAME), String::equals
+		);
+		assertFileMatches(
+				outputDir.resolve(SPECIES_OUTPUT_NAME), expectedDir.resolve(SPECIES_EXPECTED_NAME),
+				this::specLinesMatch
+		);
+		assertFileMatches(
+				outputDir.resolve(UTILIZATION_OUTPUT_NAME), expectedDir.resolve(UTILIZATION_EXPECTED_NAME),
+				this::utilLinesMatch
+		);
+
+	}
+
+	@ParameterizedTest
+	@MethodSource("testNameProvider")
+	void testFipStart(String test) throws IOException, ResourceParseException, ProcessingException {
+		Path dataDir = testDataDir.resolve(test).resolve("fipInput");
+		Path expectedDir = testDataDir.resolve(test).resolve("forwardInput");
+
+		Assumptions.assumeTrue(Files.exists(dataDir), "No FIP Input data");
+		Assumptions.assumeTrue(Files.exists(expectedDir), "No Forward Input data");
+
+		Path baseControlFile = copyResource(TestUtils.class, "FIPSTART.CTR", testConfigDir);
+
+		// Create a second control file pointing to the input and output
+		Path ioControlFile = dataDir.resolve("fip.ctr");
+
+		try (
+				var os = Files.newOutputStream(ioControlFile); //
+				var writer = new ControlFileWriter(os);
+		) {
+			writer.writeComment("Generated supplementarty control file for integration testing");
+			writer.writeBlank();
+			writer.writeComment("Inputs");
+			writer.writeBlank();
+			writer.writeEntry(11, dataDir.resolve(FIP_POLYGON_INPUT_NAME).toString(), "FIP Polygon Input");
+			writer.writeEntry(12, dataDir.resolve(FIP_LAYER_INPUT_NAME).toString(), "FIP Layer Input");
+			writer.writeEntry(13, dataDir.resolve(FIP_SPECIES_INPUT_NAME).toString(), "FIP Species Input");
+			writer.writeBlank();
+			writer.writeComment("Outputs");
+			writer.writeBlank();
+			writer.writeEntry(15, outputDir.resolve(POLYGON_OUTPUT_NAME).toString(), "VDYP Polygon Output");
+			writer.writeEntry(16, outputDir.resolve(SPECIES_OUTPUT_NAME).toString(), "VDYP Species Output");
+			writer.writeEntry(18, outputDir.resolve(UTILIZATION_OUTPUT_NAME).toString(), "VDYP Utilization Output");
+		}
+
+		try (VdypStartApplication<FipPolygon, FipLayer, FipSpecies, FipSite> app = new FipStart();) {
 
 			var resolver = new FileSystemFileResolver(configDir);
 
