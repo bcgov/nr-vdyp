@@ -7,17 +7,6 @@ import { projectionHcsvPost } from '@/services/apiActions'
 import type { CSVRowType } from '@/types/types'
 import { Util } from '@/utils/util'
 
-export const saveCSVFile = (blob: Blob, fileName: string) => {
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = fileName
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  URL.revokeObjectURL(url)
-}
-
 export const createCSVFiles = (modelParameterStore: any) => {
   const featureId = Util.generateFeatureId()
 
@@ -142,8 +131,8 @@ export const createCSVFiles = (modelParameterStore: any) => {
   const blobLayer = new Blob([layerCSV], { type: 'text/csv;charset=utf-8;' })
 
   // Save files locally for debugging
-  saveCSVFile(blobPolygon, 'VDYP7_INPUT_POLY.csv')
-  saveCSVFile(blobLayer, 'VDYP7_INPUT_LAYER.csv')
+  Util.saveCSVFile(blobPolygon, 'VDYP7_INPUT_POLY.csv')
+  Util.saveCSVFile(blobLayer, 'VDYP7_INPUT_LAYER.csv')
 
   return { blobPolygon, blobLayer }
 }
