@@ -163,6 +163,7 @@ export const runModel = async (modelParameterStore: any) => {
   }
 
   if (
+    modelParameterStore.includeInReport &&
     modelParameterStore.includeInReport.includes(
       CONSTANTS.INCLUDE_IN_REPORT.SPECIES_COMPOSITION,
     )
