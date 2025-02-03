@@ -26,7 +26,7 @@ export const createCSVFiles = (modelParameterStore: any) => {
       '', // ORG_UNIT
       '', // TSA_NAME
       '', // TFL_NAME
-      derivedByCode || '', // 'INVENTORY_STANDARD_CODE'
+      derivedByCode || '', // INVENTORY_STANDARD_CODE
       '', // TSA_NUMBER
       '', // SHRUB_HEIGHT
       '', // SHRUB_CROWN_CLOSURE
@@ -35,9 +35,9 @@ export const createCSVFiles = (modelParameterStore: any) => {
       '', // HERB_COVER_PCT
       '', // HERB_COVER_PATTERN_CODE
       '', // BRYOID_COVER_PCT
-      modelParameterStore.becZone || '', // 'BEC_ZONE_CODE'
-      modelParameterStore.ecoZone || '', // 'CFS_ECOZONE'
-      modelParameterStore.percentStockableArea || '', // 'PRE_DISTURBANCE_STOCKABILITY'
+      modelParameterStore.becZone || '', // BEC_ZONE_CODE
+      modelParameterStore.ecoZone || '', // CFS_ECOZONE
+      modelParameterStore.percentStockableArea || '', // PRE_DISTURBANCE_STOCKABILITY
       '1', // YIELD_FACTOR - see VDYP7Console Interface Guide.pdf
       '', // NON_PRODUCTIVE_DESCRIPTOR_CD
       '', // BCLCS_LEVEL1_CODE
@@ -78,35 +78,35 @@ export const createCSVFiles = (modelParameterStore: any) => {
       '', // LAYER_STOCKABILITY
       '', // FOREST_COVER_RANK_CODE
       '', // NON_FOREST_DESCRIPTOR_CODE
-      modelParameterStore.selectedSiteSpecies || '', // 'EST_SITE_INDEX_SPECIES_CD'
-      modelParameterStore.bha50SiteIndex || '', // 'ESTIMATED_SITE_INDEX'
-      '', // 'CROWN_CLOSURE'
-      '', // 'BASAL_AREA_75'
-      '', // 'STEMS_PER_HA_75'
-      modelParameterStore.speciesList[0].species || '', // 'SPECIES_CD_1'
-      modelParameterStore.speciesList[0].percent || '', // 'SPECIES_PCT_1'
-      modelParameterStore.speciesList[1].species || '', // 'SPECIES_CD_2'
-      modelParameterStore.speciesList[1].percent || '', // 'SPECIES_PCT_2'
-      modelParameterStore.speciesList[2].species || '', // 'SPECIES_CD_3'
-      modelParameterStore.speciesList[2].percent || '', // 'SPECIES_PCT_3'
-      modelParameterStore.speciesList[3].species || '', // 'SPECIES_CD_4'
-      modelParameterStore.speciesList[3].percent || '', // 'SPECIES_PCT_4'
-      modelParameterStore.speciesList[4].species || '', // 'SPECIES_CD_5'
-      modelParameterStore.speciesList[4].percent || '', // 'SPECIES_PCT_5'
-      modelParameterStore.speciesList[5].species || '', // 'SPECIES_CD_6'
-      modelParameterStore.speciesList[5].percent || '', // 'SPECIES_PCT_6'
-      '', // 'EST_AGE_SPP1',
-      '', // 'EST_HEIGHT_SPP1',
-      '', // 'EST_AGE_SPP2',
-      '', // 'EST_HEIGHT_SPP2',
-      '', // 'ADJ_IND',
-      '', // 'LOREY_HEIGHT_75',
-      '', // 'BASAL_AREA_125',
-      '', // 'WS_VOL_PER_HA_75',
-      '', // 'WS_VOL_PER_HA_125',
-      '', // 'CU_VOL_PER_HA_125',
-      '', // 'D_VOL_PER_HA_125',
-      '', // 'DW_VOL_PER_HA_125',
+      '', // EST_SITE_INDEX_SPECIES_CD
+      '', // ESTIMATED_SITE_INDEX
+      '', // CROWN_CLOSURE
+      '', // BASAL_AREA_75
+      '', // STEMS_PER_HA_75
+      modelParameterStore.speciesList[0].species || '', // SPECIES_CD_1
+      modelParameterStore.speciesList[0].percent || '', // SPECIES_PCT_1
+      modelParameterStore.speciesList[1].species || '', // SPECIES_CD_2
+      modelParameterStore.speciesList[1].percent || '', // SPECIES_PCT_2
+      modelParameterStore.speciesList[2].species || '', // SPECIES_CD_3
+      modelParameterStore.speciesList[2].percent || '', // SPECIES_PCT_3'
+      modelParameterStore.speciesList[3].species || '', // SPECIES_CD_4
+      modelParameterStore.speciesList[3].percent || '', // SPECIES_PCT_4
+      modelParameterStore.speciesList[4].species || '', // SPECIES_CD_5
+      modelParameterStore.speciesList[4].percent || '', // SPECIES_PCT_5
+      modelParameterStore.speciesList[5].species || '', // SPECIES_CD_6
+      modelParameterStore.speciesList[5].percent || '', // SPECIES_PCT_6
+      '', // EST_AGE_SPP1
+      '', // EST_HEIGHT_SPP1
+      '', // EST_AGE_SPP2
+      '', // EST_HEIGHT_SPP2
+      '', // ADJ_IND
+      '', // LOREY_HEIGHT_75
+      '', // BASAL_AREA_125
+      '', // WS_VOL_PER_HA_75
+      '', // WS_VOL_PER_HA_125
+      '', // CU_VOL_PER_HA_125
+      '', // D_VOL_PER_HA_125
+      '', // DW_VOL_PER_HA_125
     ],
   ]
 
@@ -185,8 +185,16 @@ export const runModel = async (modelParameterStore: any) => {
       type: 'application/json',
     }),
   )
-  formData.append('polygonInputData', blobPolygon, 'VDYP7_INPUT_POLY.csv')
-  formData.append('layersInputData', blobLayer, 'VDYP7_INPUT_LAYER.csv')
+  formData.append(
+    'polygonInputData',
+    blobPolygon,
+    CONSTANTS.FILE_NAME.INPUT_POLY_CSV,
+  )
+  formData.append(
+    'layersInputData',
+    blobLayer,
+    CONSTANTS.FILE_NAME.INPUT_LAYER_CSV,
+  )
 
   const result = await projectionHcsvPost(formData, false)
   return result

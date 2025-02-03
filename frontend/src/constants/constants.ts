@@ -131,6 +131,8 @@ export const FILE_NAME = Object.freeze({
   ERROR_TXT: 'ErrorLog.txt',
   LOG_TXT: 'ProgressLog.txt',
   YIELD_TABLE_CSV: 'YieldTable.csv',
+  INPUT_POLY_CSV: 'VDYP7_INPUT_POLY.csv',
+  INPUT_LAYER_CSV: 'VDYP7_INPUT_LAYER.csv',
 })
 
 export const BUTTON_LABEL = Object.freeze({
