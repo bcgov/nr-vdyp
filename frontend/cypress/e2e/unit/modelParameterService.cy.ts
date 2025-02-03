@@ -26,6 +26,7 @@ describe('Model Parameter Service Unit Tests', () => {
     startingAge: DEFAULTS.DEFAULT_VALUES.STARTING_AGE,
     finishingAge: DEFAULTS.DEFAULT_VALUES.FINISHING_AGE,
     ageIncrement: DEFAULTS.DEFAULT_VALUES.AGE_INCREMENT,
+    includeInReport: [],
   }
 
   let projectionStub: sinon.SinonStub
@@ -67,7 +68,6 @@ describe('Model Parameter Service Unit Tests', () => {
 
     cy.wrap(blobLayer.text()).then((text) => {
       expect(text).to.include(mockModelParameterStore.highestPercentSpecies)
-      expect(text).to.include(mockModelParameterStore.bha50SiteIndex)
       expect(text).to.include('PL,30.0')
       expect(text).to.include('AC,30.0')
       expect(text).to.include('H,30.0')

@@ -1,5 +1,20 @@
 export class Util {
   /**
+   * GENERATING
+   */
+
+  /**
+   * Generates a unique numeric FEATURE_ID.
+   * The FEATURE_ID is a 7 to 8-digit number.
+   *
+   * @returns {number} A unique FEATURE_ID as an integer.
+   */
+  public static generateFeatureId(): number {
+    // Generate a random 7 to 8-digit number
+    return Math.floor(1000000 + Math.random() * 9000000)
+  }
+
+  /**
    * VALIDATATING
    */
   public static readonly isZeroValue = (value: any): boolean => {
@@ -407,5 +422,16 @@ export class Util {
     }
 
     return newValue
+  }
+
+  static saveCSVFile(blob: Blob, fileName: string) {
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = fileName
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
   }
 }

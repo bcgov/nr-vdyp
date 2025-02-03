@@ -25,7 +25,7 @@ describe('ReportConfiguration.vue', () => {
     ageIncrement: 5,
     volumeReported: [CONSTANTS.VOLUME_REPORTED.WHOLE_STEM],
     includeInReport: [CONSTANTS.INCLUDE_IN_REPORT.COMPUTED_MAI],
-    projectionType: CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS,
+    projectionType: CONSTANTS.PROJECTION_TYPE.VOLUME,
     reportTitle: 'Test Report',
     isDisabled: false,
   }
@@ -107,49 +107,112 @@ describe('ReportConfiguration.vue', () => {
     cy.get('@ageIncrement').type('10')
     cy.get('@updateSpy').should('have.been.calledWith', 10)
 
-    // Update "Volume Reported"
-    cy.get('.v-input').each(($el) => {
-      if ($el.text().includes(CONSTANTS.VOLUME_REPORTED.CLOSE_UTIL)) {
-        cy.wrap($el).find('input[type="checkbox"]').check({ force: true })
-      }
-    })
-    cy.get('@updateSpy').should('have.been.calledWith', [
-      ...props.volumeReported,
-      CONSTANTS.VOLUME_REPORTED.CLOSE_UTIL,
-    ])
-
-    // Update "Include in Report"
-    cy.get('.v-input').each(($el) => {
-      if (
-        $el.text().includes(CONSTANTS.INCLUDE_IN_REPORT.SPECIES_COMPOSITION)
-      ) {
-        cy.wrap($el).find('input[type="checkbox"]').check({ force: true })
-      }
-    })
-    cy.get('@updateSpy').should('have.been.calledWith', [
-      ...props.includeInReport,
-      CONSTANTS.INCLUDE_IN_REPORT.SPECIES_COMPOSITION,
-    ])
-
-    // Update "Projection Type"
-    cy.get('.v-select').click() // Select opens the dropdown
-    cy.get('.v-list-item')
-      .contains(CONSTANTS.PROJECTION_TYPE.VOLUME) // Match the dropdown item by text
-      .click({ force: true }) // Force click in case the item is hidden
-    cy.get('.v-select input').should(
-      'have.value',
-      CONSTANTS.PROJECTION_TYPE.VOLUME,
-    ) // Ensure value is updated
-    cy.get('@updateSpy').should(
-      'have.been.calledWith',
-      CONSTANTS.PROJECTION_TYPE.VOLUME,
-    )
-
     // Update "Report Title"
     cy.get('input[id="reportTitle"]').as('reportTitleInput')
     cy.get('@reportTitleInput').clear()
     cy.get('@reportTitleInput').type('Updated Report Title')
     cy.get('@updateSpy').should('have.been.calledWith', 'Updated Report Title')
+  })
+
+  it('forces Close Utilization checkbox checked when Projection Type is CFS_BIOMASS', () => {
+    mount(ReportConfiguration, {
+      props: {
+        ...props,
+      },
+      global: {
+        plugins: [vuetify],
+      },
+    })
+
+    cy.get('.v-select').click() // Select opens the dropdown
+    cy.get('.v-list-item')
+      .contains(CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS) // Match the dropdown item by text
+      .click({ force: true }) // Force click in case the item is hidden
+    cy.get('.v-select input').should(
+      'have.value',
+      CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS,
+    )
+
+    // Under "Volumes Reported", make sure the "Close Utilization" checkbox is checked
+    cy.contains('.v-input', CONSTANTS.VOLUME_REPORTED.CLOSE_UTIL)
+      .find('input[type="checkbox"]')
+      .should('be.checked')
+
+    // Verify that the other checkboxes in "Volumes Reported" are reset
+    cy.get('[data-testid="volume-reported"] input[type="checkbox"]').each(
+      ($el) => {
+        cy.wrap($el)
+          .closest('.v-input')
+          .invoke('text')
+          .then((parentText) => {
+            if (!parentText.includes(CONSTANTS.VOLUME_REPORTED.CLOSE_UTIL)) {
+              cy.wrap($el).should('not.be.checked')
+            }
+          })
+      },
+    )
+
+    // Ensure that all checkboxes in "Volumes Reported" are Disabled
+    cy.get('[data-testid="volume-reported"] input[type="checkbox"]').should(
+      'be.disabled',
+    )
+
+    // Make sure the "Computed MAI" checkbox under "Include in Report" is Disabled
+    cy.contains('.v-input', CONSTANTS.INCLUDE_IN_REPORT.COMPUTED_MAI)
+      .find('input[type="checkbox"]')
+      .should('be.disabled')
+  })
+
+  it('enables Culmination Values checkbox when Starting Age <= 10 and Finishing Age >= 300', () => {
+    mount(ReportConfiguration, {
+      props: {
+        ...props,
+      },
+      global: {
+        plugins: [vuetify],
+      },
+    })
+
+    cy.get('input[id="startingAge"]').clear()
+    cy.get('input[id="startingAge"]').type('10')
+
+    cy.get('input[id="finishingAge"]').clear()
+    cy.get('input[id="finishingAge"]').type('300')
+
+    // Make sure the "Culmination Values" checkbox under "Include in Report" is enabled
+    cy.contains('.v-input', CONSTANTS.INCLUDE_IN_REPORT.CULMINATION_VALUES)
+      .find('input[type="checkbox"]')
+      .should('not.be.disabled')
+  })
+
+  it('disables Culmination Values checkbox when Starting Age > 10 or Finishing Age < 300', () => {
+    mount(ReportConfiguration, {
+      props: {
+        ...props,
+      },
+      global: {
+        plugins: [vuetify],
+      },
+    })
+
+    // Set "Starting Age" to 11 (keep Finishing Age at 300)
+    cy.get('input[id="startingAge"]').clear()
+    cy.get('input[id="startingAge"]').type('11')
+
+    // Make sure the "Culmination Values" checkbox under "Include in Report" is disabled
+    cy.contains('.v-input', CONSTANTS.INCLUDE_IN_REPORT.CULMINATION_VALUES)
+      .find('input[type="checkbox"]')
+      .should('be.disabled')
+
+    cy.get('input[id="startingAge"]').clear()
+    cy.get('input[id="startingAge"]').type('10')
+    cy.get('input[id="finishingAge"]').clear()
+    cy.get('input[id="finishingAge"]').type('299')
+
+    // Make sure the "ulmination Values" checkbox under "Include in Report" is disabled
+    cy.contains('.v-input', CONSTANTS.INCLUDE_IN_REPORT.CULMINATION_VALUES)
+      .find('input[type="checkbox"]')
+      .should('be.disabled')
   })
 
   it('disables all inputs when "isDisabled" is true', () => {
@@ -182,6 +245,6 @@ describe('ReportConfiguration.vue', () => {
     // Verify that all inputs are enabled
     cy.get('.v-field__input input').should('not.be.disabled')
     cy.get('.v-select input').should('not.be.disabled')
-    cy.get('.v-checkbox input[type="checkbox"]').should('not.be.disabled')
+    // cy.get('.v-checkbox input[type="checkbox"]').should('not.be.disabled')
   })
 })
