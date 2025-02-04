@@ -1,6 +1,10 @@
 import { CONSTANTS, CSVHEADERS } from '@/constants'
 import {
+  OutputFormatEnum,
   SelectedExecutionOptionsEnum,
+  SelectedDebugOptionsEnum,
+  CombineAgeYearRangeEnum,
+  MetadataToOutputEnum,
   type Parameters,
 } from '@/services/vdyp-api'
 import { projectionHcsvPost } from '@/services/apiActions'
@@ -138,7 +142,15 @@ export const runModel = async (modelParameterStore: any) => {
 
   const formData = new FormData()
 
-  const selectedExecutionOptions = [
+  const selectedExecutionOptions: Array<SelectedExecutionOptionsEnum> = [
+    SelectedExecutionOptionsEnum.ForwardGrowEnabled,
+    SelectedExecutionOptionsEnum.DoIncludeFileHeader,
+    SelectedExecutionOptionsEnum.DoIncludeProjectionModeInYieldTable,
+    SelectedExecutionOptionsEnum.DoIncludeAgeRowsInYieldTable,
+    SelectedExecutionOptionsEnum.DoIncludeYearRowsInYieldTable,
+    SelectedExecutionOptionsEnum.DoSummarizeProjectionByLayer,
+    SelectedExecutionOptionsEnum.DoIncludeColumnHeadersInYieldTable,
+    SelectedExecutionOptionsEnum.DoAllowBasalAreaAndTreesPerHectareValueSubstitution,
     SelectedExecutionOptionsEnum.DoEnableProgressLogging,
     SelectedExecutionOptionsEnum.DoEnableErrorLogging,
     SelectedExecutionOptionsEnum.DoEnableDebugLogging,
@@ -173,11 +185,22 @@ export const runModel = async (modelParameterStore: any) => {
     )
   }
 
+  const selectedDebugOptions: Array<SelectedDebugOptionsEnum> = [
+    SelectedDebugOptionsEnum.DoIncludeDebugTimestamps,
+    SelectedDebugOptionsEnum.DoIncludeDebugEntryExit,
+    SelectedDebugOptionsEnum.DoIncludeDebugIndentBlocks,
+    SelectedDebugOptionsEnum.DoIncludeDebugRoutineNames,
+  ]
+
   const projectionParameters: Parameters = {
     ageStart: modelParameterStore.startingAge,
     ageEnd: modelParameterStore.finishingAge,
     ageIncrement: modelParameterStore.ageIncrement,
+    outputFormat: OutputFormatEnum.CSVYieldTable,
     selectedExecutionOptions,
+    selectedDebugOptions,
+    combineAgeYearRange: CombineAgeYearRangeEnum.Intersect,
+    metadataToOutput: MetadataToOutputEnum.VERSION,
   }
 
   formData.append(
