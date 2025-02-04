@@ -296,6 +296,11 @@ public class ForwardControlParser extends BaseControlParser {
 		if (source.isEmpty()) {
 			String polyFileName = (String) map.get(ControlKey.FORWARD_INPUT_VDYP_POLY.name());
 			map.put(ControlKey.FORWARD_INPUT_GROWTO.name(), polyFileName);
+			fileResolver.put(
+					ControlKey.FORWARD_INPUT_GROWTO.name(), fileResolver.get(
+							ControlKey.FORWARD_INPUT_VDYP_POLY.name()
+					)
+			);
 		}
 
 		for (ControlKey key : orderedControlKeys) {

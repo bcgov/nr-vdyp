@@ -103,6 +103,8 @@ public abstract class BaseControlParser {
 			}
 		}
 
+		resolverContext.put(null, fileResolver); // Default file resolver
+
 		applyAllModifiers(map, resolverContext);
 
 		return map;

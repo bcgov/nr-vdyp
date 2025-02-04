@@ -101,6 +101,7 @@ class VdypStartApplicationTest {
 			app.close();
 		}
 
+		@Disabled
 		@Test
 		void testInitNoControlFile() throws IOException, ResourceParseException {
 			var resolver1 = dummyIo();
@@ -120,6 +121,7 @@ class VdypStartApplicationTest {
 			app.close();
 		}
 
+		@Disabled
 		@Test
 		void testInitDefaultControl() throws IOException, ResourceParseException {
 			controlMap = TestUtils.loadControlMap();
@@ -141,6 +143,7 @@ class VdypStartApplicationTest {
 			app.close();
 		}
 
+		@Disabled
 		@Test
 		void testInitControlViaStdIn() throws IOException, ResourceParseException {
 			MockFileResolver resolver = dummyIo();

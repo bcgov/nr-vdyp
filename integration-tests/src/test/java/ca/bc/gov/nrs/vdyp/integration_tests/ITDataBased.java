@@ -4,8 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -217,7 +219,13 @@ class ITDataBased {
 
 			var resolver = new FileSystemFileResolver(configDir);
 
-			app.init(resolver, baseControlFile.toString(), ioControlFile.toString());
+			app.init(
+					resolver,
+					new PrintStream(new ByteArrayOutputStream()),
+					TestUtils.makeInputStream("", ""),
+					baseControlFile.toString(),
+					ioControlFile.toString()
+			);
 
 			app.process();
 		}
@@ -284,7 +292,13 @@ class ITDataBased {
 
 			var resolver = new FileSystemFileResolver(configDir);
 
-			app.init(resolver, baseControlFile.toString(), ioControlFile.toString());
+			app.init(
+					resolver,
+					new PrintStream(new ByteArrayOutputStream()),
+					TestUtils.makeInputStream("", ""),
+					baseControlFile.toString(),
+					ioControlFile.toString()
+			);
 
 			app.process();
 		}

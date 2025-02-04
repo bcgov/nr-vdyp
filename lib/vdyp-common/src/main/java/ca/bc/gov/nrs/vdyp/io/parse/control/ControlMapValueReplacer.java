@@ -23,16 +23,24 @@ public interface ControlMapValueReplacer<Result, Raw> extends ControlMapModifier
 			throws ResourceParseException, IOException;
 
 	@Override
-	default void modify(Map<String, Object> control, Map<String, FileResolver> fileResolver)
+	default void modify(Map<String, Object> control, Map<String, FileResolver> fileResolverContext)
 			throws ResourceParseException, IOException {
 
 		Optional<Raw> source = Utils.optSafe(control.get(this.getControlKeyName()));
 		if (source.isPresent()) {
-			control.put(getControlKeyName(), this.map(source.get(), fileResolver.get(getControlKeyName()), control));
+			control.put(
+					getControlKeyName(), this.map(source.get(), getFileResolver(fileResolverContext), control)
+			);
 		} else {
 			control.put(getControlKeyName(), defaultModification(control));
 		}
 
+	}
+
+	default FileResolver getFileResolver(Map<String, FileResolver> fileResolverContext) {
+		return fileResolverContext.getOrDefault(
+				getControlKeyName(), fileResolverContext.get(null)
+		);
 	}
 
 	/**
