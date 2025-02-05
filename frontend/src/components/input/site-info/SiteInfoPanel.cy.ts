@@ -79,6 +79,12 @@ describe('SiteInfoPanel.vue', () => {
   it('changes to Confirm state and renders the Edit button', () => {
     const store = mountComponent()
 
+    // Set valid value for BHA 50 Site Index
+    cy.get('[data-testid="bha-50-site-index"] input').then((input) => {
+      cy.wrap(input).clear()
+      cy.wrap(input).type('19.2')
+    })
+
     cy.get('button').contains('Confirm').click()
 
     // Wait for the Pinia store state to update

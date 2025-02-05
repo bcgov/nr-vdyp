@@ -82,8 +82,8 @@ export const createCSVFiles = (modelParameterStore: any) => {
       '', // LAYER_STOCKABILITY
       '', // FOREST_COVER_RANK_CODE
       '', // NON_FOREST_DESCRIPTOR_CODE
-      '', // EST_SITE_INDEX_SPECIES_CD
-      '', // ESTIMATED_SITE_INDEX
+      modelParameterStore.highestPercentSpecies, // EST_SITE_INDEX_SPECIES_CD
+      modelParameterStore.bha50SiteIndex, // ESTIMATED_SITE_INDEX
       '', // CROWN_CLOSURE
       '', // BASAL_AREA_75
       '', // STEMS_PER_HA_75

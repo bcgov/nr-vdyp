@@ -98,7 +98,7 @@
                         density="compact"
                         dense
                         data-testid="selected-site-species"
-                        :disabled="!isConfirmEnabled"
+                        disabled
                       ></v-select>
                     </v-col>
                   </v-row>
