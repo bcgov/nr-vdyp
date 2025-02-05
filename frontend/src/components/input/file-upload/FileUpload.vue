@@ -82,7 +82,13 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { SelectedExecutionOptionsEnum } from '@/services/vdyp-api'
+import {
+  OutputFormatEnum,
+  SelectedExecutionOptionsEnum,
+  SelectedDebugOptionsEnum,
+  MetadataToOutputEnum,
+  CombineAgeYearRangeEnum,
+} from '@/services/vdyp-api'
 import { projectionHcsvPost } from '@/services/apiActions'
 import { handleApiError } from '@/services/apiErrorHandler'
 import {
@@ -265,16 +271,56 @@ const runModelHandler = async () => {
     const formData = new FormData()
 
     const selectedExecutionOptions = [
+      SelectedExecutionOptionsEnum.ForwardGrowEnabled,
+      SelectedExecutionOptionsEnum.DoIncludeFileHeader,
+      SelectedExecutionOptionsEnum.DoIncludeProjectionModeInYieldTable,
+      SelectedExecutionOptionsEnum.DoIncludeAgeRowsInYieldTable,
+      SelectedExecutionOptionsEnum.DoIncludeYearRowsInYieldTable,
+      SelectedExecutionOptionsEnum.DoSummarizeProjectionByLayer,
+      SelectedExecutionOptionsEnum.DoIncludeColumnHeadersInYieldTable,
+      SelectedExecutionOptionsEnum.DoAllowBasalAreaAndTreesPerHectareValueSubstitution,
       SelectedExecutionOptionsEnum.DoEnableProgressLogging,
       SelectedExecutionOptionsEnum.DoEnableErrorLogging,
       SelectedExecutionOptionsEnum.DoEnableDebugLogging,
+    ]
+
+    if (projectionType.value === CONSTANTS.PROJECTION_TYPE.VOLUME) {
+      selectedExecutionOptions.push(
+        SelectedExecutionOptionsEnum.DoIncludeProjectedMOFVolumes,
+      )
+    } else if (projectionType.value === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS) {
+      selectedExecutionOptions.push(
+        SelectedExecutionOptionsEnum.DoIncludeProjectedCFSBiomass,
+      )
+    }
+
+    if (
+      includeInReport.value &&
+      includeInReport.value.includes(
+        CONSTANTS.INCLUDE_IN_REPORT.SPECIES_COMPOSITION,
+      )
+    ) {
+      selectedExecutionOptions.push(
+        SelectedExecutionOptionsEnum.DoIncludeSpeciesProjection,
+      )
+    }
+
+    const selectedDebugOptions: Array<SelectedDebugOptionsEnum> = [
+      SelectedDebugOptionsEnum.DoIncludeDebugTimestamps,
+      SelectedDebugOptionsEnum.DoIncludeDebugEntryExit,
+      SelectedDebugOptionsEnum.DoIncludeDebugIndentBlocks,
+      SelectedDebugOptionsEnum.DoIncludeDebugRoutineNames,
     ]
 
     const projectionParameters = {
       ageStart: startingAge.value,
       ageEnd: finishingAge.value,
       ageIncrement: ageIncrement.value,
+      outputFormat: OutputFormatEnum.CSVYieldTable,
       selectedExecutionOptions: selectedExecutionOptions,
+      selectedDebugOptions: selectedDebugOptions,
+      combineAgeYearRange: CombineAgeYearRangeEnum.Intersect,
+      metadataToOutput: MetadataToOutputEnum.VERSION,
     }
 
     formData.append(

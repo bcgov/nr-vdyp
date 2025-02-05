@@ -144,13 +144,8 @@ export const runModel = async (modelParameterStore: any) => {
 
   const selectedExecutionOptions: Array<SelectedExecutionOptionsEnum> = [
     SelectedExecutionOptionsEnum.ForwardGrowEnabled,
-    SelectedExecutionOptionsEnum.DoIncludeFileHeader,
-    SelectedExecutionOptionsEnum.DoIncludeProjectionModeInYieldTable,
     SelectedExecutionOptionsEnum.DoIncludeAgeRowsInYieldTable,
-    SelectedExecutionOptionsEnum.DoIncludeYearRowsInYieldTable,
-    SelectedExecutionOptionsEnum.DoSummarizeProjectionByLayer,
     SelectedExecutionOptionsEnum.DoIncludeColumnHeadersInYieldTable,
-    SelectedExecutionOptionsEnum.DoAllowBasalAreaAndTreesPerHectareValueSubstitution,
     SelectedExecutionOptionsEnum.DoEnableProgressLogging,
     SelectedExecutionOptionsEnum.DoEnableErrorLogging,
     SelectedExecutionOptionsEnum.DoEnableDebugLogging,
@@ -197,10 +192,9 @@ export const runModel = async (modelParameterStore: any) => {
     ageEnd: modelParameterStore.finishingAge,
     ageIncrement: modelParameterStore.ageIncrement,
     outputFormat: OutputFormatEnum.CSVYieldTable,
-    selectedExecutionOptions,
-    selectedDebugOptions,
-    combineAgeYearRange: CombineAgeYearRangeEnum.Intersect,
-    metadataToOutput: MetadataToOutputEnum.VERSION,
+    selectedExecutionOptions: selectedExecutionOptions,
+    selectedDebugOptions: selectedDebugOptions,
+    metadataToOutput: MetadataToOutputEnum.NONE,
   }
 
   formData.append(
