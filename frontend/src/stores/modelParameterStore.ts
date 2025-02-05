@@ -206,7 +206,6 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
 
     becZone.value = DEFAULTS.DEFAULT_VALUES.BEC_ZONE
     siteSpeciesValues.value = DEFAULTS.DEFAULT_VALUES.SITE_SPECIES_VALUES
-    bha50SiteIndex.value = DEFAULTS.DEFAULT_VALUES.BHA50_SITE_INDEX
     percentStockableArea.value = DEFAULTS.DEFAULT_VALUES.PERCENT_STOCKABLE_AREA
     startingAge.value = DEFAULTS.DEFAULT_VALUES.STARTING_AGE
     finishingAge.value = DEFAULTS.DEFAULT_VALUES.FINISHING_AGE

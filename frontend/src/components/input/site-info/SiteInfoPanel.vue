@@ -98,9 +98,7 @@
                         density="compact"
                         dense
                         data-testid="selected-site-species"
-                        :disabled="
-                          isSelectedSiteSpeciesDisabled || !isConfirmEnabled
-                        "
+                        :disabled="!isConfirmEnabled"
                       ></v-select>
                     </v-col>
                   </v-row>
@@ -232,7 +230,6 @@ const siteSpeciesOptions = computed(() =>
 )
 
 const isIncSecondaryHeightDisabled = ref(false)
-const isSelectedSiteSpeciesDisabled = ref(false)
 const isSiteSpeciesValueDisabled = ref(false)
 const isBHA50SiteIndexDisabled = ref(false)
 
@@ -243,10 +240,8 @@ const handleDerivedByChange = (
   if (newDerivedBy === CONSTANTS.DERIVED_BY.VOLUME) {
     incSecondaryHeight.value = false
     isIncSecondaryHeightDisabled.value = true
-    isSelectedSiteSpeciesDisabled.value = true
   } else if (newDerivedBy === CONSTANTS.DERIVED_BY.BASAL_AREA) {
     isIncSecondaryHeightDisabled.value = false
-    isSelectedSiteSpeciesDisabled.value = false
     isSiteSpeciesValueDisabled.value =
       newSiteSpecies !== highestPercentSpecies.value
   }

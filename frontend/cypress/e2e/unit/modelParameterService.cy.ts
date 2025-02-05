@@ -21,7 +21,6 @@ describe('Model Parameter Service Unit Tests', () => {
     ecoZone: OPTIONS.ecoZoneOptions[0].value,
     incSecondaryHeight: false,
     highestPercentSpecies: 'PL',
-    bha50SiteIndex: DEFAULTS.DEFAULT_VALUES.BHA50_SITE_INDEX,
     percentStockableArea: DEFAULTS.DEFAULT_VALUES.PERCENT_STOCKABLE_AREA,
     startingAge: DEFAULTS.DEFAULT_VALUES.STARTING_AGE,
     finishingAge: DEFAULTS.DEFAULT_VALUES.FINISHING_AGE,
