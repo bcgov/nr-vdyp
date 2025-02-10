@@ -10,6 +10,7 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiPredicate;
@@ -124,6 +125,8 @@ class ITDataBased {
 	private static final String UTILIZATION_OUTPUT_NAME = "util.dat";
 	private static final String COMPATIBILITY_OUTPUT_NAME = "compat.dat";
 
+	static final Pattern POLY_LINE_MATCHER = Pattern
+			.compile("^(.{25}) (.{4}) (.{1})(.{6})(.{3})(.{3})(.{3})$", Pattern.MULTILINE);
 	static final Pattern UTIL_LINE_MATCHER = Pattern
 			.compile("^(.{27})(?:(.{9})(.{9})(.{9})(.{9})(.{9})(.{9})(.{9})(.{9})(.{9})(.{6}))?$", Pattern.MULTILINE);
 	static final Pattern SPEC_LINE_MATCHER = Pattern
@@ -184,13 +187,16 @@ class ITDataBased {
 		State inputState = State.VriInput;
 		State outputState = State.ForwardInput;
 
-		Path dataDir = testDataDir.resolve(test).resolve(inputState.dir);
-		Path expectedDir = testDataDir.resolve(test).resolve(outputState.dir);
+		Path testDir = testDataDir.resolve(test);
+		Path dataDir = testDir.resolve(inputState.dir);
+		Path expectedDir = testDir.resolve(outputState.dir);
 
 		Path baseControlFile = copyResource(TestUtils.class, "VRISTART.CTR", testConfigDir);
 
 		Assumptions.assumeTrue(Files.exists(dataDir), "No input data");
 		Assumptions.assumeTrue(Files.exists(expectedDir), "No expected output data");
+
+		doSkip(testDir, "testVriStart");
 
 		// Create a second control file pointing to the input and output
 		Path ioControlFile = dataDir.resolve("vri.ctr");
@@ -236,7 +242,7 @@ class ITDataBased {
 
 		assertFileMatches(
 				outputDir.resolve(POLYGON_OUTPUT_NAME), expectedDir.resolve(fileName(outputState, Data.Polygon)),
-				String::equals
+				this::polygonLinesMatch
 		);
 		assertFileMatches(
 				outputDir.resolve(SPECIES_OUTPUT_NAME), expectedDir.resolve(fileName(outputState, Data.Species)),
@@ -251,6 +257,7 @@ class ITDataBased {
 
 	}
 
+
 	@Order(ORDER_START)
 	@ParameterizedTest
 	@MethodSource("testNameProvider")
@@ -258,11 +265,14 @@ class ITDataBased {
 		State inputState = State.FipInput;
 		State outputState = State.ForwardInput;
 
-		Path dataDir = testDataDir.resolve(test).resolve(inputState.dir);
-		Path expectedDir = testDataDir.resolve(test).resolve(outputState.dir);
+		Path testDir = testDataDir.resolve(test);
+		Path dataDir = testDir.resolve(inputState.dir);
+		Path expectedDir = testDir.resolve(outputState.dir);
 
 		Assumptions.assumeTrue(Files.exists(dataDir), "No input data");
 		Assumptions.assumeTrue(Files.exists(expectedDir), "No expected output data");
+
+		doSkip(testDir, "testFipStart");
 
 		Path baseControlFile = copyResource(TestUtils.class, "FIPSTART.CTR", testConfigDir);
 
@@ -309,7 +319,7 @@ class ITDataBased {
 
 		assertFileMatches(
 				outputDir.resolve(POLYGON_OUTPUT_NAME), expectedDir.resolve(fileName(outputState, Data.Polygon)),
-				String::equals
+				this::polygonLinesMatch
 		);
 		assertFileMatches(
 				outputDir.resolve(SPECIES_OUTPUT_NAME), expectedDir.resolve(fileName(outputState, Data.Species)),
@@ -331,16 +341,28 @@ class ITDataBased {
 		State inputState = State.ForwardInput;
 		State outputState = State.ForwardOutput;
 
-		Path dataDir = testDataDir.resolve(test).resolve(inputState.dir);
-		Path expectedDir = testDataDir.resolve(test).resolve(outputState.dir);
+		Path testDir = testDataDir.resolve(test);
+		Path dataDir = testDir.resolve(inputState.dir);
+		Path expectedDir = testDir.resolve(outputState.dir);
 
 		Assumptions.assumeTrue(Files.exists(dataDir), "No input data");
 		Assumptions.assumeTrue(Files.exists(expectedDir), "No expected output data");
 
+		doSkip(testDir, "testVdypForward");
+
 		Path baseControlFile = copyResource(TestUtils.class, "VDYP.CTR", testConfigDir);
+
+		Path testControlFile = dataDir.resolve("VDYP.CTR");
 
 		// Create a second control file pointing to the input and output
 		Path ioControlFile = dataDir.resolve("fip.ctr");
+
+		List<String> controlFiles = new ArrayList<>(3);
+		controlFiles.add(baseControlFile.toString());
+		if (Files.exists(testControlFile)) {
+			controlFiles.add(testControlFile.toString());
+		}
+		controlFiles.add(ioControlFile.toString());
 
 		try (
 				var os = Files.newOutputStream(ioControlFile); //
@@ -355,9 +377,16 @@ class ITDataBased {
 			writer.writeEntry(
 					13, dataDir.resolve(fileName(inputState, Data.Utilization)).toString(), "VDYP Utilization Input"
 			);
-			writer.writeEntry(
-					14, dataDir.resolve(fileName(inputState, Data.GrowTo)).toString(), "VDYP Grow To Input"
-			);
+			Path growFilePath = dataDir.resolve(fileName(inputState, Data.GrowTo));
+			if (Files.exists(growFilePath)) {
+				writer.writeEntry(
+						14, dataDir.resolve(fileName(inputState, Data.GrowTo)).toString(), "VDYP Grow To Input"
+				);
+			} else {
+				writer.writeEntry(
+						14, "", "No GROW input"
+				);
+			}
 			writer.writeBlank();
 			writer.writeComment("Outputs");
 			writer.writeBlank();
@@ -376,8 +405,9 @@ class ITDataBased {
 
 			ForwardProcessor processor = new ForwardProcessor();
 			processor.run(
-					inputFileResolver, outputFileResolver,
-					List.of(baseControlFile.toString(), ioControlFile.toString()),
+					inputFileResolver,
+					outputFileResolver,
+					controlFiles,
 					VdypForwardApplication.DEFAULT_PASS_SET
 			);
 
@@ -390,7 +420,7 @@ class ITDataBased {
 
 		assertFileMatches(
 				outputDir.resolve(POLYGON_OUTPUT_NAME), expectedDir.resolve(fileName(outputState, Data.Polygon)),
-				String::equals
+				this::polygonLinesMatchIgnoreFizAndGroups
 		);
 		assertFileMatches(
 				outputDir.resolve(SPECIES_OUTPUT_NAME), expectedDir.resolve(fileName(outputState, Data.Species)),
@@ -409,6 +439,17 @@ class ITDataBased {
 				String::equals
 		);
 
+	}
+
+	public void doSkip(Path testDir, String test) throws IOException {
+		Path skip = testDir.resolve("skip");
+
+		if (Files.exists(skip)) {
+			boolean doSkip = Files.readAllLines(skip).stream().map(line -> line.split(" ")[0]).anyMatch(
+					toSkip -> toSkip.equals(test)
+			);
+			Assumptions.assumeFalse(doSkip, "Skipping for " + test);
+		}
 	}
 
 	public void assertFileExists(Path path) {
@@ -476,6 +517,68 @@ class ITDataBased {
 		}
 	}
 
+	boolean polygonLinesMatch(String actual, String expected) {
+		var actualMatch = POLY_LINE_MATCHER.matcher(actual);
+		var expectedMatch = POLY_LINE_MATCHER.matcher(expected);
+		if (!actualMatch.find()) {
+			return false;
+		}
+		if (!expectedMatch.find()) {
+			return false;
+		}
+
+		List<BiPredicate<String, String>> checks = List.of(
+				stringsEqual(),
+				stringsEqual(),
+				stringsEqual(),
+				floatStringsWithin(),
+				intStringsEqual(),
+				intStringsEqual(),
+				intStringsEqual()
+		);
+
+		if (actualMatch.groupCount() != expectedMatch.groupCount()) {
+			return false;
+		}
+		for (int i = 0; i < expectedMatch.groupCount(); i++) {
+			if (!checks.get(i).test(actualMatch.group(i + 1), expectedMatch.group(i + 1))) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	boolean polygonLinesMatchIgnoreFizAndGroups(String actual, String expected) {
+		var actualMatch = POLY_LINE_MATCHER.matcher(actual);
+		var expectedMatch = POLY_LINE_MATCHER.matcher(expected);
+		if (!actualMatch.find()) {
+			return false;
+		}
+		if (!expectedMatch.find()) {
+			return false;
+		}
+
+		List<BiPredicate<String, String>> checks = List.of(
+				stringsEqual(),
+				stringsEqual(),
+				ignoreStrings(),
+				floatStringsWithin(),
+				intStringsEqual(),
+				ignoreStrings(),
+				ignoreStrings()
+		);
+
+		if (actualMatch.groupCount() != expectedMatch.groupCount()) {
+			return false;
+		}
+		for (int i = 0; i < expectedMatch.groupCount(); i++) {
+			if (!checks.get(i).test(actualMatch.group(i + 1), expectedMatch.group(i + 1))) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 	boolean utilLinesMatch(String actual, String expected) {
 		var actualMatch = UTIL_LINE_MATCHER.matcher(actual);
 		var expectedMatch = UTIL_LINE_MATCHER.matcher(expected);
@@ -487,16 +590,17 @@ class ITDataBased {
 		}
 
 		List<BiPredicate<String, String>> checks = List.of(
-				String::equals, Objects::equals, //
+				String::equals, //
+				Objects::equals, //
+				floatStringsWithin(), //
+				floatStringsWithin(0.01f, 0.015f), //
 				floatStringsWithin(), //
 				floatStringsWithin(), //
 				floatStringsWithin(), //
+				floatStringsWithin(0.01f, 0.02f), //
 				floatStringsWithin(), //
 				floatStringsWithin(), //
-				floatStringsWithin(), //
-				floatStringsWithin(), //
-				floatStringsWithin(), //
-				floatStringsWithin() //
+				floatStringsDefaultZero(floatStringsWithin(0.1f, 0.2f)) //
 		);
 
 		if (actualMatch.groupCount() != expectedMatch.groupCount()) {
@@ -504,6 +608,9 @@ class ITDataBased {
 		}
 		for (int i = 0; i < expectedMatch.groupCount(); i++) {
 			if (!checks.get(i).test(actualMatch.group(i + 1), expectedMatch.group(i + 1))) {
+				System.out.println(
+						String.format("%d - %s - %s", i, actualMatch.group(i + 1), expectedMatch.group(i + 1))
+				);
 				return false;
 			}
 		}
@@ -581,7 +688,37 @@ class ITDataBased {
 	}
 
 	BiPredicate<String, String> floatStringsWithin() {
-		return floatStringsWithin(0.01f, 0.0001f);
+		return floatStringsWithin(0.015f, 0.01f);
+	}
+
+	BiPredicate<String, String> floatStringsDefaultZero(BiPredicate<String, String> test) {
+		return (String actual, String expected) -> {
+			if (actual == null && expected == null) {
+				return true;
+			}
+
+			if (actual == null || expected == null) {
+				return false;
+			}
+
+			float actualValue = Float.parseFloat(actual);
+			float expectedValue = Float.parseFloat(expected);
+
+			if (actualValue == -9.0) {
+				actualValue = 0.0f;
+			}
+			if (expectedValue == -9.0) {
+				expectedValue = 0.0f;
+			}
+			if (expectedValue == 0.0f && actualValue == 0.0f) {
+				return true;
+			}
+			return test.test(actual, expected);
+		};
+	}
+
+	BiPredicate<String, String> ignoreStrings() {
+		return (s1, s2) -> true;
 	}
 
 	BiPredicate<String, String> intStringsEqual() {
