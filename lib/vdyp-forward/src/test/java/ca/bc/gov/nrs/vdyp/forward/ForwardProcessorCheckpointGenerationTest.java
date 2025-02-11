@@ -1,10 +1,6 @@
 package ca.bc.gov.nrs.vdyp.forward;
 
-import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.PASS_1;
-import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.PASS_2;
-import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.PASS_3;
-import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.PASS_4;
-import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.PASS_5;
+import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.*;
 
 import java.io.IOException;
 import java.nio.file.Files;

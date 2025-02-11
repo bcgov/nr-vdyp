@@ -594,6 +594,46 @@ public class Layer implements Comparable<Layer> {
 		return projectionType;
 	}
 
+	/**
+	 * lcl_DetermineLayerAgeAtYear - determine the layer's age at the given year,
+	 * which must be non-null and between 1400 and 2500 (inclusive.)
+	 * @param year as described
+	 * @return as described
+	 * @throws IllegalStateException if:
+	 * <ul>
+	 * <li>year is null or out of range
+	 * <li><code>this</code> has no leading species
+	 * <li>the leading species has no total age value
+	 * <li>the containing polygon's measurement year cannot be calculated
+	 * </ul>
+	 */
+	public double determineLayerAgeAtYear(Integer year) {
+		if (year == null || year < Vdyp7Constants.MIN_CALENDAR_YEAR || year > Vdyp7Constants.MAX_CALENDAR_YEAR) {
+			throw new IllegalArgumentException(MessageFormat.format("Invalid year {0}; must be non null and between {1} and {2} (inclusive)"
+					, year, Vdyp7Constants.MIN_CALENDAR_YEAR, Vdyp7Constants.MAX_CALENDAR_YEAR));
+		}
+		
+		Stand leadingSp0 = determineLeadingSp0(0);
+		if (leadingSp0 == null) {
+			throw new IllegalStateException(MessageFormat.format("Leading Sp0 not found for layer {0}", this));
+		} else if (leadingSp0.getSpeciesGroup().getTotalAge() == null) {
+			throw new IllegalStateException(MessageFormat.format("Leading Sp0 {0} of layer {1} has no total age", leadingSp0.getSpeciesGroup(), this));
+		}
+		
+		Integer measurementYear = getPolygon().getMeasurementYear();
+		if (measurementYear == null) {
+			throw new IllegalStateException(MessageFormat.format("Measurement year is not known for polygon {0}", getPolygon()));
+		}
+		
+		double layerAge = leadingSp0.getSpeciesGroup().getTotalAge() + year - measurementYear;
+		
+		if (layerAge < 0.0) {
+			layerAge = 0.0;
+		}
+		
+		return layerAge;
+	}
+
 	public void setAsDeadLayer(Integer yearOfDeath, Double percentStockKilled) {
 
 		this.vdyp7LayerCode = ProjectionTypeCode.DEAD;

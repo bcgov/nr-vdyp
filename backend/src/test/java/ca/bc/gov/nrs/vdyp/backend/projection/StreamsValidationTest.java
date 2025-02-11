@@ -24,7 +24,7 @@ class StreamsValidationTest {
 	void testValidHcsvInputStreams() throws ProjectionRequestValidationException {
 		
 		Parameters p = TestHelper.buildValidParametersObject();
-		ProjectionState s = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
+		ProjectionContext s = new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
 		
 		Map<String, InputStream> streams = new HashMap<>();
 		streams.put(ParameterNames.HCSV_POLYGON_INPUT_DATA, new ByteArrayInputStream(new byte[0]));
@@ -42,7 +42,7 @@ class StreamsValidationTest {
 		streams.put(ParameterNames.HCSV_POLYGON_INPUT_DATA, new ByteArrayInputStream(new byte[0]));
 		
 		try {
-			ProjectionState s = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
+			ProjectionContext s = new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
 			ProjectionRequestParametersValidator.validate(s);
 		} catch (ProjectionRequestValidationException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), ValidationMessageKind.EXPECTED_STREAMS_NOT_SUPPLIED);
@@ -63,7 +63,7 @@ class StreamsValidationTest {
 		streams.put(ParameterNames.SCSV_HISTORY_INPUT_DATA, new ByteArrayInputStream(new byte[0]));
 		
 		try {
-			ProjectionState s = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
+			ProjectionContext s = new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
 			ProjectionRequestParametersValidator.validate(s);
 		} catch (ProjectionRequestValidationException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), ValidationMessageKind.UNEXPECTED_STREAMS_SUPPLIED);
@@ -83,7 +83,7 @@ class StreamsValidationTest {
 		streams.put(ParameterNames.SCSV_HISTORY_INPUT_DATA, new ByteArrayInputStream(new byte[0]));
 		
 		try {
-			ProjectionState s = new ProjectionState(ProjectionRequestKind.HCSV, "id", p);
+			ProjectionContext s = new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
 			ProjectionRequestParametersValidator.validate(s);
 		} catch (ProjectionRequestValidationException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), ValidationMessageKind.UNEXPECTED_STREAMS_SUPPLIED
@@ -103,7 +103,7 @@ class StreamsValidationTest {
 		streams.put(ParameterNames.DCSV_INPUT_DATA, new ByteArrayInputStream(new byte[0]));
 		
 		try {
-			ProjectionState s = new ProjectionState(ProjectionRequestKind.DCSV, "id", p);
+			ProjectionContext s = new ProjectionContext(ProjectionRequestKind.DCSV, "id", p, false);
 			ProjectionRequestParametersValidator.validate(s);
 		} catch (ProjectionRequestValidationException e) {
 			assertThat(e, Matchers.notNullValue());
@@ -126,7 +126,7 @@ class StreamsValidationTest {
 		streams.put(ParameterNames.SCSV_VRI_ADJUST_INPUT_DATA, new ByteArrayInputStream(new byte[0]));
 		
 		try {
-			ProjectionState s = new ProjectionState(ProjectionRequestKind.SCSV, "id", p);
+			ProjectionContext s = new ProjectionContext(ProjectionRequestKind.SCSV, "id", p, false);
 			ProjectionRequestParametersValidator.validate(s);
 		} catch (ProjectionRequestValidationException e) {
 			assertThat(e, Matchers.notNullValue());
@@ -142,7 +142,7 @@ class StreamsValidationTest {
 		streams.put(ParameterNames.ICSV_INPUT_DATA, new ByteArrayInputStream(new byte[0]));
 		
 		try {
-			ProjectionState s = new ProjectionState(ProjectionRequestKind.ICSV, "id", p);
+			ProjectionContext s = new ProjectionContext(ProjectionRequestKind.ICSV, "id", p, false);
 			ProjectionRequestParametersValidator.validate(s);
 		} catch (ProjectionRequestValidationException e) {
 			assertThat(e, Matchers.notNullValue());

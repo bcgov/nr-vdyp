@@ -1,7 +1,6 @@
 package ca.bc.gov.nrs.vdyp.io.write;
 
-import static org.hamcrest.Matchers.emptyString;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 
 import java.io.IOException;
 import java.util.HashMap;

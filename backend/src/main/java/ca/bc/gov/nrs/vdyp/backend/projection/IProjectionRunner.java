@@ -11,7 +11,7 @@ public interface IProjectionRunner {
 	void run(Map<String, InputStream> inputStreams)
 			throws ProjectionRequestValidationException, ProjectionInternalExecutionException;
 
-	ProjectionState getState();
+	ProjectionContext getProjectionContext();
 
 	InputStream getYieldTable() throws ProjectionInternalExecutionException;
 

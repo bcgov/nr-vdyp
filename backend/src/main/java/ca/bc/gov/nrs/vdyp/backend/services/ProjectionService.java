@@ -28,7 +28,6 @@ import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ProjectionRequestKind;
 import ca.bc.gov.nrs.vdyp.backend.projection.IProjectionRunner;
 import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionRunner;
-import ca.bc.gov.nrs.vdyp.backend.projection.StubProjectionRunner;
 import ca.bc.gov.nrs.vdyp.backend.utils.FileHelper;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.core.Response;
@@ -106,7 +105,7 @@ public class ProjectionService {
 	}
 
 	private Response runProjection(
-			ProjectionRequestKind kind, Map<String, InputStream> inputStreams, Boolean trialRun, Parameters params,
+			ProjectionRequestKind kind, Map<String, InputStream> inputStreams, Boolean isTrailRun, Parameters params,
 			SecurityContext securityContext
 	) throws ProjectionRequestValidationException, ProjectionInternalExecutionException {
 		String projectionId = ProjectionService.buildId(kind);
@@ -129,11 +128,7 @@ public class ProjectionService {
 
 			logger.info("Running {} projection {}", kind, projectionId);
 
-			if (trialRun) {
-				runner = new StubProjectionRunner(ProjectionRequestKind.HCSV, projectionId, params);
-			} else {
-				runner = new ProjectionRunner(ProjectionRequestKind.HCSV, projectionId, params);
-			}
+			runner = new ProjectionRunner(ProjectionRequestKind.HCSV, projectionId, params, isTrailRun);
 
 			runner.run(inputStreams);
 

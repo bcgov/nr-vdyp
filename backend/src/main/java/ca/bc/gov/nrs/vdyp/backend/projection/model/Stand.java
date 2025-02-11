@@ -11,7 +11,7 @@ import ca.bc.gov.nrs.vdyp.si32.site.SiteTool;
 public class Stand implements Comparable<Stand> {
 
 	/** The parent Layer */
-	private Layer parentComponent;
+	private Layer layer;
 	
 	/** The SP0 species code of the stand */
 	private String sp0Code;
@@ -28,8 +28,8 @@ public class Stand implements Comparable<Stand> {
 	private Stand() {
 	}
 	
-	public Layer getParentComponent() {
-		return parentComponent;
+	public Layer getLayer() {
+		return layer;
 	}
 	
 	public String getSp0Code() {
@@ -51,8 +51,8 @@ public class Stand implements Comparable<Stand> {
 	public static class Builder {
 		private Stand stand = new Stand();
 			
-		public Builder parentComponent(Layer parentComponent) {
-			stand.parentComponent = parentComponent;
+		public Builder layer(Layer layer) {
+			stand.layer = layer;
 			return this;
 		}
 		
@@ -68,14 +68,9 @@ public class Stand implements Comparable<Stand> {
 			return this;
 		}
 		
-		public Builder layer(Layer layer) {
-			stand.parentComponent = layer;
-			return this;
-		}
-		
 		public Stand build() {
 
-			if (stand.parentComponent == null) {
+			if (stand.layer == null) {
 				throw new IllegalArgumentException("Attempted to create a Stand with no parent Layer");
 			}
 			
@@ -123,7 +118,7 @@ public class Stand implements Comparable<Stand> {
 		String sp64Code = SiteTool.getSpeciesShortName(sp64Index);
 		
 		this.sp0 = new Species.Builder() //
-				.parentComponent(this) //
+				.stand(this) //
 				.ageAtBreastHeight(speciesInstance.getAgeAtBreastHeight()) //
 				.dominantHeight(speciesInstance.getDominantHeight()) //
 				.totalAge(speciesInstance.getTotalAge()) //
@@ -150,12 +145,12 @@ public class Stand implements Comparable<Stand> {
 	
 	@Override
 	public int hashCode() {
-		return parentComponent.hashCode() * 17 + sp0.hashCode();
+		return layer.hashCode() * 17 + sp0.hashCode();
 	}
 	
 	@Override
 	public int compareTo(Stand that) {
-		int layerComparisonResult = this.parentComponent.compareTo(that.parentComponent);
+		int layerComparisonResult = this.layer.compareTo(that.layer);
 		if (layerComparisonResult == 0) {
 			return this.sp0.getSpeciesCode().compareTo(that.sp0.getSpeciesCode());
 		} else {
@@ -165,6 +160,6 @@ public class Stand implements Comparable<Stand> {
 	
 	@Override 
 	public String toString() {
-		return parentComponent.toString() + ":" + sp0Code;
+		return layer.toString() + ":" + sp0Code;
 	}
 }

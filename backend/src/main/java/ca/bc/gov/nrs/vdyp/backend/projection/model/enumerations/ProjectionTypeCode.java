@@ -9,15 +9,15 @@ import java.util.List;
  */
 public enum ProjectionTypeCode {
 	/** The projection is for the stand's primary layer. */
-	PRIMARY(SpecialLayerType.PRIMARY.code),
+	PRIMARY(SpecialLayerTypeCode.PRIMARY.code),
 	/** The projection is for the stand's veteran layer. */
-	VETERAN(SpecialLayerType.VETERAN.code),
+	VETERAN(SpecialLayerTypeCode.VETERAN.code),
 	/** The projection is for the stand's residual layer. */
-	RESIDUAL(SpecialLayerType.RESIDUAL.code),
+	RESIDUAL(SpecialLayerTypeCode.RESIDUAL.code),
 	/** The projection is for the stand's regeneration layer. */
-	REGENERATION(SpecialLayerType.REGEN.code),
+	REGENERATION(SpecialLayerTypeCode.REGEN.code),
 	/** The projection is for the stand's dead stem layer. */
-	DEAD(SpecialLayerType.DEAD.code),
+	DEAD(SpecialLayerTypeCode.DEAD.code),
 	/** A live layer that should not be projected. */
 	DO_NOT_PROJECT(null),
 	/** The unknown layer type */
@@ -36,7 +36,7 @@ public enum ProjectionTypeCode {
 	 * Convert from a <code>SpecialLayerType</code>'s code to a ProjectionTypeCode.
 	 * @param t the SpecialLayerType's code
 	 * @return the equivalent ProjectionTypeCode
-	 * @see SpecialLayerType
+	 * @see SpecialLayerTypeCode
 	 */
 	public static ProjectionTypeCode fromSpecialLayerTypeText(String specialLayerTypeText) {
 		
@@ -55,9 +55,9 @@ public enum ProjectionTypeCode {
 	 * Convert from a SpecialLayerType to a ProjectionTypeCode.
 	 * @param t the SpecialLayerType's code
 	 * @return the equivalent ProjectionTypeCode
-	 * @see SpecialLayerType
+	 * @see SpecialLayerTypeCode
 	 */
-	public static ProjectionTypeCode fromSpecialLayerType(SpecialLayerType t) {
+	public static ProjectionTypeCode fromSpecialLayerType(SpecialLayerTypeCode t) {
 		
 		return fromSpecialLayerTypeText(t.code);
 	}

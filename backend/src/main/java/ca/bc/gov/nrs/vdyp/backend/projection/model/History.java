@@ -1,12 +1,12 @@
 package ca.bc.gov.nrs.vdyp.backend.projection.model;
 
-import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.SilviculturalBase;
+import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.SilviculturalBaseCode;
 
 /** Records information about disturbances to the polygon. */
 public class History {
 	
 	/** Identifies the Silvicultural Base code that occurred. */
-	private SilviculturalBase silvicultureBase;
+	private SilviculturalBaseCode silvicultureBase;
 	
 	/** The year the disturbance started. */
 	private int disturbanceStartYear;
@@ -18,13 +18,13 @@ public class History {
 	private double percent;
 	
 	private History() {
-		silvicultureBase = SilviculturalBase.getDefault();
+		silvicultureBase = SilviculturalBaseCode.getDefault();
 		disturbanceEndYear = 0;
 		disturbanceStartYear = 0;
 		percent = 0.0;
 	}
 	
-	public SilviculturalBase getSilvicultureBase() {
+	public SilviculturalBaseCode getSilvicultureBase() {
 		return silvicultureBase;
 	}
 
@@ -43,7 +43,7 @@ public class History {
 	public static class Builder {
 		private History history = new History();
 		
-		public Builder silvicultureBase(SilviculturalBase silvicultureBase) {
+		public Builder silvicultureBase(SilviculturalBaseCode silvicultureBase) {
 			history.silvicultureBase = silvicultureBase;
 			return this;
 		}

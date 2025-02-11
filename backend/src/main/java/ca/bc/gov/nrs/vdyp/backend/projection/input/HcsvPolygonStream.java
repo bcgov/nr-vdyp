@@ -12,7 +12,7 @@ import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessageKind;
-import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionState;
+import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionContext;
 import ca.bc.gov.nrs.vdyp.backend.projection.input.HcsvLayerRecordBean.SpeciesDetails;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.History;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Layer;
@@ -43,7 +43,7 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 	private CsvStreamIterator<HcsvLayerRecordBean> layerRecordIterator;
 	private HcsvLayerRecordBean nextLayerRecord;
 
-	public HcsvPolygonStream(ProjectionState state, InputStream polygonStream, InputStream layersStream) {
+	public HcsvPolygonStream(ProjectionContext state, InputStream polygonStream, InputStream layersStream) {
 
 		super(state);
 
@@ -148,7 +148,6 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 				.doAllowProjection(true) //
 				.doAllowProjectionOfType(initializeProjectionMap(true)) //
 				.featureId(nextPolygonRecord.getFeatureId()) //
-				.firstYearValidYields(initializeProjectionMap(-9999)) //
 				.inventoryStandard(InventoryStandard.getFromCode(nextPolygonRecord.getInventoryStandardCode())) //
 				.mapSheet(nextPolygonRecord.getMapId()) //
 				.nonProductiveDescriptor(nextPolygonRecord.getNonProductiveDescriptorCode()).nonVegetationTypes(null) //
@@ -511,7 +510,7 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 		}
 
 		var newSpeciesInstance = new Species.Builder() //
-				.parentComponent(stand) //
+				.stand(stand) //
 				.speciesCode(speciesCode) //
 				.speciesPercent(speciesPercent) //
 				.totalAge(totalAge) //

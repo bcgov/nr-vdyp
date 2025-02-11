@@ -17,7 +17,7 @@ import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestValidationE
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.ParameterNames;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ProjectionRequestKind;
-import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionState;
+import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionContext;
 import ca.bc.gov.nrs.vdyp.backend.projection.input.AbstractPolygonStream;
 import ca.bc.gov.nrs.vdyp.backend.utils.FileHelper;
 
@@ -37,7 +37,7 @@ public class PolygonLayerMergeTest {
 			streams.put(ParameterNames.HCSV_POLYGON_INPUT_DATA, polygonStreamFile);
 			streams.put(ParameterNames.HCSV_LAYERS_INPUT_DATA, layerStreamFile);
 
-			var state = new ProjectionState(ProjectionRequestKind.HCSV, "PolygonTest", parameters);
+			var state = new ProjectionContext(ProjectionRequestKind.HCSV, "PolygonTest", parameters, false);
 
 			polygonStream = AbstractPolygonStream.build(state, streams);
 		}

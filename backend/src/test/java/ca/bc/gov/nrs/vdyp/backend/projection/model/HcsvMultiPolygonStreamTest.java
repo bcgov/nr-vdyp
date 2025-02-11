@@ -17,7 +17,7 @@ import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestValidationE
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.ParameterNames;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ProjectionRequestKind;
-import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionState;
+import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionContext;
 import ca.bc.gov.nrs.vdyp.backend.projection.input.AbstractPolygonStream;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
 import ca.bc.gov.nrs.vdyp.backend.utils.FileHelper;
@@ -38,7 +38,7 @@ public class HcsvMultiPolygonStreamTest {
 			streams.put(ParameterNames.HCSV_POLYGON_INPUT_DATA, polygonStreamFile);
 			streams.put(ParameterNames.HCSV_LAYERS_INPUT_DATA, layerStreamFile);
 
-			var state = new ProjectionState(ProjectionRequestKind.HCSV, "PolygonTest", parameters);
+			var state = new ProjectionContext(ProjectionRequestKind.HCSV, "PolygonTest", parameters, false);
 
 			polygonStream = AbstractPolygonStream.build(state, streams);
 		}
@@ -100,13 +100,13 @@ public class HcsvMultiPolygonStreamTest {
 
 		assertThat(
 				p1Layer1.getSp0sAsSupplied().get(0), //
-				allOf(hasProperty("parentComponent", hasProperty("layerId", is("1"))) //
+				allOf(hasProperty("layer", hasProperty("layerId", is("1"))) //
 						, hasProperty("standIndex", is(0)), //
 						hasProperty(
 								"speciesGroup",
 								allOf(
 										hasProperty("speciesCode", is("PL")),
-										hasProperty("parentComponent", hasProperty("sp0Code", is("PL")))
+										hasProperty("stand", hasProperty("sp0Code", is("PL")))
 								)
 						) //
 						,
@@ -116,7 +116,7 @@ public class HcsvMultiPolygonStreamTest {
 										List.of(
 												allOf(
 														hasProperty(
-																"parentComponent", hasProperty("standIndex", is(0))
+																"stand", hasProperty("standIndex", is(0))
 														), hasProperty("speciesCode", is("PLI"))
 												)
 										)
@@ -127,13 +127,13 @@ public class HcsvMultiPolygonStreamTest {
 
 		assertThat(
 				p1Layer1.getSp0sAsSupplied().get(1), //
-				allOf(hasProperty("parentComponent", hasProperty("layerId", is("1"))) //
+				allOf(hasProperty("layer", hasProperty("layerId", is("1"))) //
 						, hasProperty("standIndex", is(1)), //
 						hasProperty(
 								"speciesGroup",
 								allOf(
 										hasProperty("speciesCode", is("S")),
-										hasProperty("parentComponent", hasProperty("sp0Code", is("S")))
+										hasProperty("stand", hasProperty("sp0Code", is("S")))
 								)
 						), //
 						hasProperty(
@@ -142,7 +142,7 @@ public class HcsvMultiPolygonStreamTest {
 										List.of(
 												allOf(
 														hasProperty(
-																"parentComponent", hasProperty("standIndex", is(1))
+																"stand", hasProperty("standIndex", is(1))
 														), hasProperty("speciesCode", is("SX"))
 												)
 										)

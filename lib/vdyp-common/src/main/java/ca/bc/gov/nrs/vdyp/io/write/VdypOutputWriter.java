@@ -117,7 +117,7 @@ public class VdypOutputWriter implements Closeable {
 	 *
 	 * @param polygonFile
 	 * @param speciesFile
-	 * @param utilizationFile
+	 * @param layerFile
 	 * @param controlMap
 	 */
 	public VdypOutputWriter(Map<String, Object> controlMap, FileResolver resolver) throws IOException {

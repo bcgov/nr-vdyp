@@ -1,21 +1,10 @@
 package ca.bc.gov.nrs.vdyp.application;
 
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.causedBy;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.*;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.coe;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.utilization;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.utilizationAllAndBiggest;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.utilizationHeight;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.describedAs;
-import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

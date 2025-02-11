@@ -1,9 +1,6 @@
 package ca.bc.gov.nrs.vdyp.forward;
 
-import static ca.bc.gov.nrs.vdyp.math.FloatMath.clamp;
-import static ca.bc.gov.nrs.vdyp.math.FloatMath.exp;
-import static ca.bc.gov.nrs.vdyp.math.FloatMath.log;
-import static ca.bc.gov.nrs.vdyp.math.FloatMath.pow;
+import static ca.bc.gov.nrs.vdyp.math.FloatMath.*;
 import static java.lang.Math.max;
 
 import java.io.IOException;

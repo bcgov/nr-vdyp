@@ -22,9 +22,9 @@ import com.opencsv.exceptions.CsvConstraintViolationException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessageKind;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Vdyp7Constants;
-import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.CfsEcoZone;
-import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.NonVegetationType;
-import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.OtherVegetationType;
+import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.CfsEcoZoneCode;
+import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.NonVegetationTypeCode;
+import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.OtherVegetationTypeCode;
 import ca.bc.gov.nrs.vdyp.backend.utils.CsvRecordBeanHelper;
 
 public class HcsvPolygonRecordBean {
@@ -339,22 +339,22 @@ public class HcsvPolygonRecordBean {
 		return tsaNumber;
 	}
 
-	public record OtherVegCoverDetails(Integer otherVegCoverPercent, OtherVegetationType getNonVegCoverType) {
+	public record OtherVegCoverDetails(Integer otherVegCoverPercent, OtherVegetationTypeCode getNonVegCoverType) {
 	}
 
-	public Map<OtherVegetationType, OtherVegCoverDetails> getOtherVegCoverDetails() {
-		var details = new HashMap<OtherVegetationType, OtherVegCoverDetails>();
+	public Map<OtherVegetationTypeCode, OtherVegCoverDetails> getOtherVegCoverDetails() {
+		var details = new HashMap<OtherVegetationTypeCode, OtherVegCoverDetails>();
 
 		if (getShrubCrownClosure() != null) {
-			OtherVegetationType type = OtherVegetationType.Shrub;
+			OtherVegetationTypeCode type = OtherVegetationTypeCode.Shrub;
 			details.put(type, new OtherVegCoverDetails(getShrubCrownClosure(), type));
 		}
 		if (getBryoidCoverPercent() != null) {
-			OtherVegetationType type = OtherVegetationType.Bryoid;
+			OtherVegetationTypeCode type = OtherVegetationTypeCode.Bryoid;
 			details.put(type, new OtherVegCoverDetails(getBryoidCoverPercent(), type));
 		}
 		if (getHerbCoverPercent() != null) {
-			OtherVegetationType type = OtherVegetationType.Herb;
+			OtherVegetationTypeCode type = OtherVegetationTypeCode.Herb;
 			details.put(type, new OtherVegCoverDetails(getHerbCoverPercent(), type));
 		}
 
@@ -393,8 +393,8 @@ public class HcsvPolygonRecordBean {
 		return becZoneCode;
 	}
 
-	public CfsEcoZone getCfsEcoZoneCode() {
-		return cfsEcoZoneCode == null ? null : CfsEcoZone.fromCode(Short.valueOf(cfsEcoZoneCode));
+	public CfsEcoZoneCode getCfsEcoZoneCode() {
+		return cfsEcoZoneCode == null ? null : CfsEcoZoneCode.fromCode(Short.valueOf(cfsEcoZoneCode));
 	}
 
 	public Double getPercentStockable() {
@@ -442,23 +442,23 @@ public class HcsvPolygonRecordBean {
 	}
 
 	public record NonVegCoverDetails(
-			String getNonVegCoverPattern, Integer nonVegCoverPercent, NonVegetationType getNonVegCoverType
+			String getNonVegCoverPattern, Integer nonVegCoverPercent, NonVegetationTypeCode getNonVegCoverType
 	) {
 	}
 
-	public Map<NonVegetationType, NonVegCoverDetails> getNonVegCoverDetails() {
-		var details = new HashMap<NonVegetationType, NonVegCoverDetails>();
+	public Map<NonVegetationTypeCode, NonVegCoverDetails> getNonVegCoverDetails() {
+		var details = new HashMap<NonVegetationTypeCode, NonVegCoverDetails>();
 
 		if (getNonVegCoverType1() != null) {
-			NonVegetationType type = NonVegetationType.fromCode(nonVegCoverType1);
+			NonVegetationTypeCode type = NonVegetationTypeCode.fromCode(nonVegCoverType1);
 			details.put(type, new NonVegCoverDetails(nonVegCoverPattern1, getNonVegCoverPercent1(), type));
 		}
 		if (getNonVegCoverType2() != null) {
-			NonVegetationType type = NonVegetationType.fromCode(nonVegCoverType2);
+			NonVegetationTypeCode type = NonVegetationTypeCode.fromCode(nonVegCoverType2);
 			details.put(type, new NonVegCoverDetails(nonVegCoverPattern2, getNonVegCoverPercent2(), type));
 		}
 		if (getNonVegCoverType3() != null) {
-			NonVegetationType type = NonVegetationType.fromCode(nonVegCoverType3);
+			NonVegetationTypeCode type = NonVegetationTypeCode.fromCode(nonVegCoverType3);
 			details.put(type, new NonVegCoverDetails(nonVegCoverPattern3, getNonVegCoverPercent3(), type));
 		}
 
@@ -599,10 +599,10 @@ public class HcsvPolygonRecordBean {
 
 			if (bean.cfsEcoZoneCode == null) {
 				// lcl_CopyPolygonDataIntoSnapshot: 3224 makes V7Ext_StartNewPolygon: 1409 redundant
-				bean.cfsEcoZoneCode = String.valueOf(CfsEcoZone.Unknown.getCode());
+				bean.cfsEcoZoneCode = String.valueOf(CfsEcoZoneCode.Unknown.getCode());
 			} else {
 				bvh.validateEnumeration(
-						bean.cfsEcoZoneCode, c -> CfsEcoZone.fromCode(Short.valueOf(c)), "CFS Eco Zone"
+						bean.cfsEcoZoneCode, c -> CfsEcoZoneCode.fromCode(Short.valueOf(c)), "CFS Eco Zone"
 				);
 			}
 
@@ -634,13 +634,13 @@ public class HcsvPolygonRecordBean {
 			);
 
 			bvh.validateEnumeration(
-					bean.nonVegCoverType1, e -> NonVegetationType.fromCode(e), "Non-Vegetation Cover Type 1"
+					bean.nonVegCoverType1, e -> NonVegetationTypeCode.fromCode(e), "Non-Vegetation Cover Type 1"
 			);
 			bvh.validateEnumeration(
-					bean.nonVegCoverType2, e -> NonVegetationType.fromCode(e), "Non-Vegetation Cover Type 2"
+					bean.nonVegCoverType2, e -> NonVegetationTypeCode.fromCode(e), "Non-Vegetation Cover Type 2"
 			);
 			bvh.validateEnumeration(
-					bean.nonVegCoverType3, e -> NonVegetationType.fromCode(e), "Non-Vegetation Cover Type 3"
+					bean.nonVegCoverType3, e -> NonVegetationTypeCode.fromCode(e), "Non-Vegetation Cover Type 3"
 			);
 
 			bvh.validateRange(

@@ -10,7 +10,8 @@ public enum ValidationMessageKind {
 	UNRECOGNIZED_SPECIES_GROUP_NAME("Species Group name \"{0}\" is not a known Species Group name", Category.ERROR),
 	UNRECOGNIZED_UTILIZATION_CLASS_NAME(
 			"Utilization Class \"{0}\" is not a known Utilization Class name", Category.ERROR
-	), MISSING_START_CRITERIA("At least one of \"ageStart\" or \"yearStart\" must be given", Category.ERROR),
+	), // 
+	MISSING_START_CRITERIA("At least one of \"ageStart\" or \"yearStart\" must be given", Category.ERROR),
 	MISSING_END_CRITERIA("At least one of \"ageEnd\" or \"yearEnd\" must be given", Category.ERROR),
 	MISMATCHED_INPUT_OUTPUT_TYPES(
 			"DCSV output Format can be selected when, and only when, the input format is DCSV", Category.ERROR
@@ -29,7 +30,8 @@ public enum ValidationMessageKind {
 	),
 	CANNOT_SPECIFY_BOTH_CFS_BIOMASS_AND_EITHER_MOF_OPTIONS(
 			"For CSV Yield Table of CFS Biomass, neither MoF Volume or Biomass may also be selected.", Category.ERROR
-	), INVALID_INTEGER_VALUE("Field \"{1}\"'s value \"{0}\" is not an integer", Category.ERROR),
+	), //
+	INVALID_INTEGER_VALUE("Field \"{1}\"'s value \"{0}\" is not an integer", Category.ERROR),
 	INTEGER_VALUE_TOO_LOW("Field \"{1}\"'s value \"{0}\" is not an integer", Category.ERROR),
 	INTEGER_VALUE_TOO_HIGH("Field \"{1}\"'s value \"{0}\" is not an integer", Category.ERROR),
 
@@ -77,6 +79,8 @@ public enum ValidationMessageKind {
 	LOW_SITE_INDEX_WARNING("Polygon {0} Layer {1}: very low or null site index {2} for species '{3}'. Projected Dominant Height set to input height", Category.WARNING), 
 	NO_LEADING_SPECIES("Polygon {0} Layer {1}: no leading site species could be found", Category.ERROR), 
 	SPECIES_WITH_NO_STAND_OR_AGE("Polygon {0} Layer {1}: Species '{2}' has no age but requires that a new Stand be created, which requires the age be known", Category.ERROR),
+	PRIMARY_LAYER_NOT_FOUND("Polygon {0}: no primary layer found", Category.ERROR),
+	GENERIC("{0}", Category.ERROR);
 	;
 
 	public enum Category {

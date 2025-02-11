@@ -2,9 +2,7 @@ package ca.bc.gov.nrs.vdyp.forward;
 
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.controlMapHasEntry;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.*;
 
 import java.io.IOException;
 import java.util.List;

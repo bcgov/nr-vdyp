@@ -26,7 +26,7 @@ public class Species implements Comparable<Species> {
 	// BUSINESS KEY - all fields not nullable
 
 	/** The Stand containing the Species. */
-	private Stand parentComponent;
+	private Stand stand;
 
 	/** 
 	 * If this represents an Sp0 (a Species Group), this field stores its Sp0 code. If
@@ -63,8 +63,8 @@ public class Species implements Comparable<Species> {
 	private Species() {
 	}
 
-	public Stand getParentComponent() {
-		return parentComponent;
+	public Stand getStand() {
+		return stand;
 	}
 
 	public String getSpeciesCode() {
@@ -141,8 +141,8 @@ public class Species implements Comparable<Species> {
 		private Species species = new Species();
 		private boolean speciesPercentHasBeenSet = false;
 
-		public Builder parentComponent(Stand parentComponent) {
-			species.parentComponent = parentComponent;
+		public Builder stand(Stand stand) {
+			species.stand = stand;
 			return this;
 		}
 
@@ -212,7 +212,7 @@ public class Species implements Comparable<Species> {
 				throw new IllegalStateException("Attempt to create a Species with no species code");
 			}
 
-			if (species.parentComponent == null) {
+			if (species.stand == null) {
 				throw new IllegalStateException("Attempt to create a Species with no parent (Stand) component given");
 			}
 			
@@ -339,7 +339,7 @@ public class Species implements Comparable<Species> {
 	 */
 	public void calculateUndefinedFieldValues() {
 
-		Layer layer = this.parentComponent.getParentComponent();
+		Layer layer = this.stand.getLayer();
 		Polygon polygon = layer.getPolygon();
 
 		boolean isCoastal = polygon.isCoastal();
@@ -566,7 +566,7 @@ public class Species implements Comparable<Species> {
 
 			computedHeight = dominantHeight;
 
-			Layer layer = parentComponent.getParentComponent();
+			Layer layer = stand.getLayer();
 			Polygon polygon = layer.getPolygon();
 			polygon.disableProjectionsOfType(layer.determineProjectionType(polygon));
 
@@ -620,7 +620,7 @@ public class Species implements Comparable<Species> {
 						Vdyp7Constants.LOW_SITE_INDEX_THRESHOLD
 				);
 
-				Layer layer = parentComponent.getParentComponent();
+				Layer layer = stand.getLayer();
 				Polygon polygon = layer.getPolygon();
 				polygon.disableProjectionsOfType(layer.determineProjectionType(polygon));
 
@@ -657,7 +657,7 @@ public class Species implements Comparable<Species> {
 						computedSiteIndex, Vdyp7Constants.LOW_SITE_INDEX_THRESHOLD
 				);
 	
-				Layer layer = parentComponent.getParentComponent();
+				Layer layer = stand.getLayer();
 				Polygon polygon = layer.getPolygon();
 				polygon.disableProjectionsOfType(layer.determineProjectionType(polygon));
 	
@@ -688,12 +688,12 @@ public class Species implements Comparable<Species> {
 
 	@Override
 	public int hashCode() {
-		return parentComponent.hashCode() * 17 + speciesCode.hashCode();
+		return stand.hashCode() * 17 + speciesCode.hashCode();
 	}
 
 	@Override
 	public int compareTo(Species that) {
-		int standComparisonResult = this.parentComponent.compareTo(that.parentComponent);
+		int standComparisonResult = this.stand.compareTo(that.stand);
 		if (standComparisonResult == 0) {
 			return this.speciesCode.compareTo(that.speciesCode);
 		} else {
@@ -703,6 +703,6 @@ public class Species implements Comparable<Species> {
 
 	@Override
 	public String toString() {
-		return parentComponent.toString() + " " + speciesCode;
+		return stand.toString() + " " + speciesCode;
 	}
 }

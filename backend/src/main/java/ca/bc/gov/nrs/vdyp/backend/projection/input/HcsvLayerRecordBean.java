@@ -18,10 +18,11 @@ import com.opencsv.bean.processor.PreAssignmentProcessor;
 import com.opencsv.exceptions.CsvConstraintViolationException;
 
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.LayerValidationException;
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessageKind;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Vdyp7Constants;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
-import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.SpecialLayerType;
+import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.SpecialLayerTypeCode;
 import ca.bc.gov.nrs.vdyp.backend.utils.CsvRecordBeanHelper;
 import ca.bc.gov.nrs.vdyp.si32.site.SiteTool;
 import ca.bc.gov.nrs.vdyp.si32.vdyp.SpeciesTable;
@@ -495,8 +496,8 @@ public class HcsvLayerRecordBean {
 			
 			// V7Ext_AddLayer, 2672
 			if (bean.targetVdyp7LayerCode == null) {
-				if (SpecialLayerType.doesLayerIdIdentifyASpecialLayerType(bean.layerId)) {
-					SpecialLayerType layerType = SpecialLayerType.valueOf(bean.layerId);
+				if (SpecialLayerTypeCode.doesLayerIdIdentifyASpecialLayerType(bean.layerId)) {
+					SpecialLayerTypeCode layerType = SpecialLayerTypeCode.valueOf(bean.layerId);
 					bean.targetVdyp7LayerCode = ProjectionTypeCode.fromSpecialLayerType(layerType).name();
 				}
 			}

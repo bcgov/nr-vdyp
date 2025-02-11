@@ -14,14 +14,14 @@ import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestValidationException;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.ParameterNames;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
-import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionState;
+import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionContext;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Polygon;
 
 public abstract class AbstractPolygonStream {
 
-	protected ProjectionState state;
+	protected ProjectionContext state;
 	
-	public AbstractPolygonStream(ProjectionState state) {
+	public AbstractPolygonStream(ProjectionContext state) {
 		this.state = state;
 	}
 	
@@ -55,7 +55,7 @@ public abstract class AbstractPolygonStream {
 
 	public abstract boolean hasNextPolygon();
 
-	public static AbstractPolygonStream build(ProjectionState state, Map<String, InputStream> streams)
+	public static AbstractPolygonStream build(ProjectionContext state, Map<String, InputStream> streams)
 			throws ProjectionRequestValidationException {
 		switch (state.getRequestKind()) {
 		case DCSV:

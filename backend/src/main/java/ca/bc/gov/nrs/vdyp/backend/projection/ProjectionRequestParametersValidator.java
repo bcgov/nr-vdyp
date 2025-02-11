@@ -23,7 +23,7 @@ public class ProjectionRequestParametersValidator {
 
 	private List<ValidationMessage> validationErrorMessages = new ArrayList<>();
 
-	static void validate(ProjectionState state)
+	static void validate(ProjectionContext state)
 			throws ProjectionRequestValidationException {
 
 		var validator = new ProjectionRequestParametersValidator();
@@ -39,15 +39,15 @@ public class ProjectionRequestParametersValidator {
 		return validationErrorMessages;
 	}
 
-	void validateState(ProjectionState state) {
+	void validateState(ProjectionContext state) {
 
 		validateRequestParametersIndividually(state);
 		validateRequestParametersCollectively(state);
 	}
 
-	private void validateRequestParametersIndividually(ProjectionState state) {
+	private void validateRequestParametersIndividually(ProjectionContext state) {
 
-		Parameters params = state.getParams();
+		Parameters params = state.getRawParams();
 		ValidatedParameters vparams = new ValidatedParameters();
 
 		// Parameters.JSON_PROPERTY_OUTPUT_FORMAT
@@ -234,7 +234,7 @@ public class ProjectionRequestParametersValidator {
 		state.setValidatedParams(vparams);
 	}
 
-	private void validateRequestParametersCollectively(ProjectionState state) {
+	private void validateRequestParametersCollectively(ProjectionContext state) {
 
 		if (state.getValidatedParams() == null) {
 			throw new IllegalStateException(

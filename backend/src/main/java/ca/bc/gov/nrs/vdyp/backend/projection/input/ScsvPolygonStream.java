@@ -2,13 +2,13 @@ package ca.bc.gov.nrs.vdyp.backend.projection.input;
 
 import java.io.InputStream;
 
-import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionState;
+import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionContext;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Polygon;
 
 public class ScsvPolygonStream extends AbstractPolygonStream {
 
 	public ScsvPolygonStream(
-			ProjectionState state, InputStream polygonStream, InputStream layersStream, InputStream historyStream,
+			ProjectionContext state, InputStream polygonStream, InputStream layersStream, InputStream historyStream,
 			InputStream nonVegetationStream, InputStream otherVegetationStream, InputStream polygonIdStream,
 			InputStream speciesStream, InputStream vriAdjustStream
 	) {

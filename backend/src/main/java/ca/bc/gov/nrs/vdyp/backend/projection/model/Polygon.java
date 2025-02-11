@@ -1,5 +1,15 @@
 package ca.bc.gov.nrs.vdyp.backend.projection.model;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.text.MessageFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -8,23 +18,33 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonExecutionException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionInternalExecutionException;
+import ca.bc.gov.nrs.vdyp.backend.io.write.FipStartOutputWriter;
+import ca.bc.gov.nrs.vdyp.backend.io.write.VriStartOutputWriter;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessageKind;
+import ca.bc.gov.nrs.vdyp.backend.projection.ComponentReturnCodes;
+import ca.bc.gov.nrs.vdyp.backend.projection.IComponentRunner;
+import ca.bc.gov.nrs.vdyp.backend.projection.PolygonProjectionState;
+import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionContext;
 import ca.bc.gov.nrs.vdyp.backend.projection.input.HcsvPolygonRecordBean.NonVegCoverDetails;
 import ca.bc.gov.nrs.vdyp.backend.projection.input.HcsvPolygonRecordBean.OtherVegCoverDetails;
-import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.CfsEcoZone;
-import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.GrowthModel;
+import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.CfsEcoZoneCode;
+import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.GrowthModelCode;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.InventoryStandard;
-import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.LayerSummarizationMode;
-import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.NonVegetationType;
-import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.OtherVegetationType;
-import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.PolygonProcessingState;
-import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProcessingMode;
+import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.LayerSummarizationModeCode;
+import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.NonVegetationTypeCode;
+import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.OtherVegetationTypeCode;
+import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.PolygonProcessingStateCode;
+import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProcessingModeCode;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ReturnCode;
-import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.UtilizationClass;
+import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.UtilizationClassCode;
 import ca.bc.gov.nrs.vdyp.backend.utils.NullMath;
+import ca.bc.gov.nrs.vdyp.backend.utils.ProjectionUtils;
 
 /**
  * This class is the internal representation of a Polygon to be projected.
@@ -44,10 +64,10 @@ public class Polygon implements Comparable<Polygon> {
 	private Long polygonNumber;
 
 	/** The current Processing State of the Polygon */
-	private PolygonProcessingState currentProcessingState;
+	private PolygonProcessingStateCode currentProcessingState;
 
 	/** The reporting levels for each of the possible SP0s when predicting yields. */
-	private Map<String, UtilizationClass> reportingLevelBySp0;
+	private Map<String, UtilizationClassCode> reportingLevelBySp0;
 
 	/** The district responsible for the map */
 	private String district;
@@ -77,7 +97,7 @@ public class Polygon implements Comparable<Polygon> {
 	private String becZone;
 
 	/** the polygon's Canadian Forest Service Ecological Zone */
-	private CfsEcoZone cfsEcoZone;
+	private CfsEcoZoneCode cfsEcoZone;
 
 	/** the Non-Productive Descriptor of the polygon. */
 	private String nonProductiveDescriptor;
@@ -90,15 +110,6 @@ public class Polygon implements Comparable<Polygon> {
 
 	/** The factor to multiply predicted yields by */
 	private Double yieldFactor;
-
-	private Map<OtherVegetationType, OtherVegCoverDetails> otherVegetationTypes;
-	private Map<NonVegetationType, NonVegCoverDetails> nonVegetationTypes;
-
-	private GrowthModel growthModelToBeUsed;
-	private Map<ProjectionTypeCode, GrowthModel> growthModelUsedByProjectionType;
-	private Map<ProjectionTypeCode, ProcessingMode> processingModeUsedByProjectionType;
-	private Map<ProjectionTypeCode, Double> percentForestedLandUsed;
-	private Map<ProjectionTypeCode, Double> yieldFactorUsed;
 
 	/** If false, projection is turned off globally for this polygon */
 	private Boolean doAllowProjection;
@@ -121,24 +132,19 @@ public class Polygon implements Comparable<Polygon> {
 	/** The parameters used for the most recent projection of a layer of this polygon. */
 	private ProjectionParameters projectionParameters;
 
-	// Per-projection type information
-
-	private Map<ProjectionTypeCode, GrowthModel> initialModelReturnCode;
-	private Map<ProjectionTypeCode, Integer> initialProcessingResults;
-	private Map<ProjectionTypeCode, Integer> adjustmentProcessingResults;
-	private Map<ProjectionTypeCode, Integer> projectionProcessingResults;
-	private Map<ProjectionTypeCode, Integer> firstYearValidYields;
-
 	/** The messages generated during the projection of the polygon. */
 	private List<PolygonMessage> messages;
 
 	/** This polygon's reporting information, including that of all child layers */
 	private PolygonReportingInfo reportingInfo;
 
+	private Map<OtherVegetationTypeCode, OtherVegCoverDetails> otherVegetationTypes;
+	private Map<NonVegetationTypeCode, NonVegCoverDetails> nonVegetationTypes;
+
 	// MUTABLE fields - the value of these fields will change over the lifetime of the object
 
 	/** The layer summarization mode applied to the layers within the polygon */
-	private LayerSummarizationMode layerSummarizationMode;
+	private LayerSummarizationModeCode layerSummarizationMode;
 
 	/**
 	 * Points to the layer identified as that desired to be the VDYP7 primary layer, irrespective of the automatic
@@ -191,7 +197,7 @@ public class Polygon implements Comparable<Polygon> {
 
 	/** Initialize the Polygon, according to <code>V7Int_ResetPolyInfo</code>. */
 	private Polygon() {
-		currentProcessingState = PolygonProcessingState.DEFINING_POLYGON;
+		currentProcessingState = PolygonProcessingStateCode.DEFINING_POLYGON;
 
 		featureId = 0;
 		district = "UNK";
@@ -200,59 +206,39 @@ public class Polygon implements Comparable<Polygon> {
 		mapSubQuad = "0";
 		polygonNumber = 0L;
 		inventoryStandard = InventoryStandard.getDefault();
-		layerSummarizationMode = LayerSummarizationMode.getDefault();
+		layerSummarizationMode = LayerSummarizationModeCode.getDefault();
 		referenceYear = 0;
 		yearOfDeath = null;
 		isCoastal = false;
-		forestInventoryZone = "";
+		forestInventoryZone = null;
 		becZone = "";
-		cfsEcoZone = CfsEcoZone.getDefault();
-		nonProductiveDescriptor = "";
+		cfsEcoZone = CfsEcoZoneCode.getDefault();
+		nonProductiveDescriptor = null;
 		percentStockable = null;
 		percentStockableDead = null;
 		yieldFactor = 1.0;
 
 		otherVegetationTypes = Map.of(
-				OtherVegetationType.Bryoid, new OtherVegCoverDetails(0, OtherVegetationType.Bryoid), //
-				OtherVegetationType.Herb, new OtherVegCoverDetails(0, OtherVegetationType.Herb), //
-				OtherVegetationType.Shrub, new OtherVegCoverDetails(0, OtherVegetationType.Shrub)
+				OtherVegetationTypeCode.Bryoid, new OtherVegCoverDetails(0, OtherVegetationTypeCode.Bryoid), //
+				OtherVegetationTypeCode.Herb, new OtherVegCoverDetails(0, OtherVegetationTypeCode.Herb), //
+				OtherVegetationTypeCode.Shrub, new OtherVegCoverDetails(0, OtherVegetationTypeCode.Shrub)
 		);
 		nonVegetationTypes = Map.of(
-				NonVegetationType.BurnedArea, new NonVegCoverDetails("", 0, NonVegetationType.BurnedArea), //
-				NonVegetationType.ExposedSoil, new NonVegCoverDetails("", 0, NonVegetationType.ExposedSoil), //
-				NonVegetationType.Other, new NonVegCoverDetails("", 0, NonVegetationType.Other), //
-				NonVegetationType.Rock, new NonVegCoverDetails("", 0, NonVegetationType.Rock), //
-				NonVegetationType.Snow, new NonVegCoverDetails("", 0, NonVegetationType.Snow), //
-				NonVegetationType.Water, new NonVegCoverDetails("", 0, NonVegetationType.Water)
+				NonVegetationTypeCode.BurnedArea, new NonVegCoverDetails("", 0, NonVegetationTypeCode.BurnedArea), //
+				NonVegetationTypeCode.ExposedSoil, new NonVegCoverDetails("", 0, NonVegetationTypeCode.ExposedSoil), //
+				NonVegetationTypeCode.Other, new NonVegCoverDetails("", 0, NonVegetationTypeCode.Other), //
+				NonVegetationTypeCode.Rock, new NonVegCoverDetails("", 0, NonVegetationTypeCode.Rock), //
+				NonVegetationTypeCode.Snow, new NonVegCoverDetails("", 0, NonVegetationTypeCode.Snow), //
+				NonVegetationTypeCode.Water, new NonVegCoverDetails("", 0, NonVegetationTypeCode.Water)
 		); //
 
 		doAllowProjection = true;
 		wereLayerAdjustmentsSupplied = false;
 
-		growthModelToBeUsed = GrowthModel.getDefault();
-
-		growthModelUsedByProjectionType = new HashMap<>();
-		processingModeUsedByProjectionType = new HashMap<>();
-		percentForestedLandUsed = new HashMap<>();
-		yieldFactorUsed = new HashMap<>();
 		doAllowProjectionOfType = new HashMap<>();
-		initialModelReturnCode = new HashMap<>();
-		initialProcessingResults = new HashMap<>();
-		adjustmentProcessingResults = new HashMap<>();
-		projectionProcessingResults = new HashMap<>();
-		firstYearValidYields = new HashMap<>();
 
-		for (ProjectionTypeCode t : ProjectionTypeCode.values()) {
-			growthModelUsedByProjectionType.put(t, GrowthModel.UNKNOWN);
-			processingModeUsedByProjectionType.put(t, ProcessingMode.getDefault());
-			percentForestedLandUsed.put(t, null);
-			yieldFactorUsed.put(t, null);
+		for (ProjectionTypeCode t : ProjectionTypeCode.ACTUAL_PROJECTION_TYPES_LIST) {
 			doAllowProjectionOfType.put(t, true);
-			initialModelReturnCode.put(t, GrowthModel.UNKNOWN);
-			initialProcessingResults.put(t, -9999);
-			adjustmentProcessingResults.put(t, -9999);
-			projectionProcessingResults.put(t, -9999);
-			firstYearValidYields.put(t, -9999);
 		}
 
 		layers = new HashMap<>();
@@ -290,11 +276,11 @@ public class Polygon implements Comparable<Polygon> {
 		return polygonNumber;
 	}
 
-	public PolygonProcessingState getCurrentProcessingState() {
+	public PolygonProcessingStateCode getCurrentProcessingState() {
 		return currentProcessingState;
 	}
 
-	public Map<String, UtilizationClass> getReportingLevelBySp0() {
+	public Map<String, UtilizationClassCode> getReportingLevelBySp0() {
 		return Collections.unmodifiableMap(reportingLevelBySp0);
 	}
 
@@ -318,7 +304,7 @@ public class Polygon implements Comparable<Polygon> {
 		return inventoryStandard;
 	}
 
-	public LayerSummarizationMode getLayerSummarizationMode() {
+	public LayerSummarizationModeCode getLayerSummarizationMode() {
 		return layerSummarizationMode;
 	}
 
@@ -328,6 +314,24 @@ public class Polygon implements Comparable<Polygon> {
 
 	public Integer getYearOfDeath() {
 		return yearOfDeath;
+	}
+
+	/**
+	 * @return the greater of <code>referenceYear</code> and <code>yearOfDeath</code>. If both are null, return null. If
+	 *         one is null, return the other.
+	 */
+	Integer getMeasurementYear() {
+		Integer result = null;
+
+		if (getReferenceYear() != null) {
+			result = getReferenceYear();
+		}
+
+		if (getYearOfDeath() != null && (result == null || result < getYearOfDeath())) {
+			result = getYearOfDeath();
+		}
+
+		return result;
 	}
 
 	public boolean isCoastal() {
@@ -342,7 +346,7 @@ public class Polygon implements Comparable<Polygon> {
 		return becZone;
 	}
 
-	public CfsEcoZone getCfsEcoZone() {
+	public CfsEcoZoneCode getCfsEcoZone() {
 		return cfsEcoZone;
 	}
 
@@ -362,32 +366,12 @@ public class Polygon implements Comparable<Polygon> {
 		return yieldFactor;
 	}
 
-	public Map<OtherVegetationType, OtherVegCoverDetails> getOtherVegetationTypes() {
+	public Map<OtherVegetationTypeCode, OtherVegCoverDetails> getOtherVegetationTypes() {
 		return Collections.unmodifiableMap(otherVegetationTypes);
 	}
 
-	public Map<NonVegetationType, NonVegCoverDetails> getNonVegetationTypes() {
+	public Map<NonVegetationTypeCode, NonVegCoverDetails> getNonVegetationTypes() {
 		return Collections.unmodifiableMap(nonVegetationTypes);
-	}
-
-	public GrowthModel getGrowthModelToBeUsed() {
-		return growthModelToBeUsed;
-	}
-
-	public Map<ProjectionTypeCode, GrowthModel> getGrowthModelUsedByProjectionType() {
-		return Collections.unmodifiableMap(growthModelUsedByProjectionType);
-	}
-
-	public Map<ProjectionTypeCode, ProcessingMode> getProcessingModeUsedByProjectionType() {
-		return Collections.unmodifiableMap(processingModeUsedByProjectionType);
-	}
-
-	public Map<ProjectionTypeCode, Double> getPercentForestedLandUsed() {
-		return Collections.unmodifiableMap(percentForestedLandUsed);
-	}
-
-	public Map<ProjectionTypeCode, Double> getYieldFactorUsed() {
-		return yieldFactorUsed;
 	}
 
 	public boolean doAllowProjection() {
@@ -450,26 +434,6 @@ public class Polygon implements Comparable<Polygon> {
 		return projectionParameters;
 	}
 
-	public Map<ProjectionTypeCode, GrowthModel> getInitialModelReturnCode() {
-		return initialModelReturnCode;
-	}
-
-	public Map<ProjectionTypeCode, Integer> getInitialProcessingResults() {
-		return initialProcessingResults;
-	}
-
-	public Map<ProjectionTypeCode, Integer> getAdjustmentProcessingResults() {
-		return adjustmentProcessingResults;
-	}
-
-	public Map<ProjectionTypeCode, Integer> getProjectionProcessingResults() {
-		return projectionProcessingResults;
-	}
-
-	public Map<ProjectionTypeCode, Integer> getFirstYearValidYields() {
-		return firstYearValidYields;
-	}
-
 	public PolygonReportingInfo getReportingInfo() {
 		return reportingInfo;
 	}
@@ -480,7 +444,7 @@ public class Polygon implements Comparable<Polygon> {
 
 	// MUTABLE data - this may vary over the lifetime of the object.
 
-	public void setLayerSummarizationMode(LayerSummarizationMode layerSummarizationMode) {
+	public void setLayerSummarizationMode(LayerSummarizationModeCode layerSummarizationMode) {
 		this.layerSummarizationMode = layerSummarizationMode;
 	}
 
@@ -533,7 +497,7 @@ public class Polygon implements Comparable<Polygon> {
 			return this;
 		}
 
-		public Builder reportingLevelBySp0(Map<String, UtilizationClass> reportingLevelBySp0) {
+		public Builder reportingLevelBySp0(Map<String, UtilizationClassCode> reportingLevelBySp0) {
 			polygon.reportingLevelBySp0 = reportingLevelBySp0;
 			return this;
 		}
@@ -563,7 +527,7 @@ public class Polygon implements Comparable<Polygon> {
 			return this;
 		}
 
-		public Builder layerSummarizationMode(LayerSummarizationMode layerSummarizationMode) {
+		public Builder layerSummarizationMode(LayerSummarizationModeCode layerSummarizationMode) {
 			polygon.layerSummarizationMode = layerSummarizationMode;
 			return this;
 		}
@@ -593,7 +557,7 @@ public class Polygon implements Comparable<Polygon> {
 			return this;
 		}
 
-		public Builder cfsEcoZone(CfsEcoZone cfsEcoZone) {
+		public Builder cfsEcoZone(CfsEcoZoneCode cfsEcoZone) {
 			polygon.cfsEcoZone = cfsEcoZone;
 			return this;
 		}
@@ -618,41 +582,13 @@ public class Polygon implements Comparable<Polygon> {
 			return this;
 		}
 
-		public Builder otherVegetationTypes(Map<OtherVegetationType, OtherVegCoverDetails> otherVegetationMap) {
+		public Builder otherVegetationTypes(Map<OtherVegetationTypeCode, OtherVegCoverDetails> otherVegetationMap) {
 			polygon.otherVegetationTypes = otherVegetationMap;
 			return this;
 		}
 
-		public Builder nonVegetationTypes(Map<NonVegetationType, NonVegCoverDetails> nonVegetationMap) {
+		public Builder nonVegetationTypes(Map<NonVegetationTypeCode, NonVegCoverDetails> nonVegetationMap) {
 			polygon.nonVegetationTypes = nonVegetationMap;
-			return this;
-		}
-
-		public Builder growthModelToBeUsed(GrowthModel growthModelToBeUsed) {
-			polygon.growthModelToBeUsed = growthModelToBeUsed;
-			return this;
-		}
-
-		public Builder
-				growthModelUsedByProjectionType(Map<ProjectionTypeCode, GrowthModel> growthModelUsedByProjectionType) {
-			polygon.growthModelUsedByProjectionType = growthModelUsedByProjectionType;
-			return this;
-		}
-
-		public Builder processingModeUsedByProjectionType(
-				Map<ProjectionTypeCode, ProcessingMode> processingModeUsedByProjectionType
-		) {
-			polygon.processingModeUsedByProjectionType = processingModeUsedByProjectionType;
-			return this;
-		}
-
-		public Builder percentForestedLandUsed(Map<ProjectionTypeCode, Double> percentForestedLandUsed) {
-			polygon.percentForestedLandUsed = percentForestedLandUsed;
-			return this;
-		}
-
-		public Builder yieldFactorUsed(Map<ProjectionTypeCode, Double> yieldFactorUsed) {
-			polygon.yieldFactorUsed = yieldFactorUsed;
 			return this;
 		}
 
@@ -731,31 +667,6 @@ public class Polygon implements Comparable<Polygon> {
 			return this;
 		}
 
-		public Builder initialModelReturnCode(Map<ProjectionTypeCode, GrowthModel> initialModelReturnCode) {
-			polygon.initialModelReturnCode = initialModelReturnCode;
-			return this;
-		}
-
-		public Builder initialProcessingResults(Map<ProjectionTypeCode, Integer> initialProcessingResults) {
-			polygon.initialProcessingResults = initialProcessingResults;
-			return this;
-		}
-
-		public Builder adjustmentProcessingResults(Map<ProjectionTypeCode, Integer> adjustmentProcessingResults) {
-			polygon.adjustmentProcessingResults = adjustmentProcessingResults;
-			return this;
-		}
-
-		public Builder projectionProcessingResults(Map<ProjectionTypeCode, Integer> projectionProcessingResults) {
-			polygon.projectionProcessingResults = projectionProcessingResults;
-			return this;
-		}
-
-		public Builder firstYearValidYields(Map<ProjectionTypeCode, Integer> firstYearValidYields) {
-			polygon.firstYearValidYields = firstYearValidYields;
-			return this;
-		}
-
 		public Builder messages(List<PolygonMessage> messages) {
 			polygon.messages = messages;
 			return this;
@@ -768,6 +679,242 @@ public class Polygon implements Comparable<Polygon> {
 
 		public Polygon build() {
 			return polygon;
+		}
+	}
+
+	private void performInitialProcessing(IComponentRunner componentRunner, PolygonProjectionState state)
+			throws PolygonExecutionException {
+
+		if (currentProcessingState != PolygonProcessingStateCode.POLYGON_DEFINED) {
+			throw new IllegalStateException(
+					MessageFormat.format(
+							"performInitialProcessing expects Polygon {0} to be in state"
+									+ " PolygonProcessingState.POLYGON_DEFINED but it is in state {1}",
+							this, currentProcessingState
+					)
+			);
+		}
+
+		try {
+			this.determineInitialProcessingModel(state);
+		} catch (PolygonValidationException e) {
+			// Convert any validation exceptions into execution exceptions at this point.
+			throw new PolygonExecutionException(e);
+		}
+
+		for (ProjectionTypeCode projectionType : ProjectionTypeCode.ACTUAL_PROJECTION_TYPES_LIST) {
+
+			if (this.getLayerByProjectionType().get(projectionType) == null) {
+				logger.debug(
+						"No layers defined for projection type {}; skipping initial processing for this type",
+						projectionType
+				);
+				continue;
+			}
+
+			logger.debug(
+					"Polygon {}: layer exists for projection type {} (growth model {}; processing mode {}); initial processing will occur for this type"
+					, this, projectionType, state.getGrowthModel(projectionType), state.getProcessingMode(projectionType)
+			);
+
+			switch (state.getGrowthModel(projectionType)) {
+			case FIP: {
+
+				createFipInputData(projectionType, state);
+
+				componentRunner.runFipStart(this, projectionType, state);
+				logger.debug(
+						"Performed FIP Model; FIPSTART return code: {}", state.getProcessingResultsCode(projectionType)
+				);
+
+				if (state.getInitialModelReturnCode().get(projectionType)
+						.equals(ComponentReturnCodes.FIP_RETRY_USING_VRI_START)) {
+					logger.debug("Falling through to VRI Model");
+					state.modifyGrowthModel(projectionType, GrowthModelCode.VRI, ProcessingModeCode.VRI_VriYoung);
+				} else {
+					break;
+				}
+			}
+
+			case VRI: {
+
+				createVriInputData(projectionType, state);
+
+				componentRunner.runVriStart(this, projectionType, state);
+				logger.debug(
+						"Performed VRI Model; VRISTART return code: {}", state.getProcessingResultsCode(projectionType)
+				);
+
+				break;
+			}
+
+			default:
+				logger.error("Unrecognized growth model {}", state.getGrowthModel(projectionType));
+
+				addMessage(
+						state.getContext(), "Attempt to process an unrecognized growth model {0}",
+						state.getGrowthModel(projectionType)
+				);
+			}
+		}
+	}
+
+	private void createFipInputData(ProjectionTypeCode projectionType, PolygonProjectionState state)
+			throws PolygonExecutionException {
+		
+		Path executionFolder = Path.of(state.getExecutionFolder().toString(), projectionType.toString());
+		
+		try {
+			Path polygonFile = Path.of(executionFolder.toString(), "fip_p01.dat");
+			FileOutputStream polygonOutputStream = new FileOutputStream(polygonFile.toFile());
+			
+			Path layersFile = Path.of(executionFolder.toString(), "fip_l01.dat");
+			FileOutputStream layersOutputStream = new FileOutputStream(layersFile.toFile());
+			
+			Path speciesFile = Path.of(executionFolder.toString(), "fip_ls01.dat");
+			FileOutputStream speciesOutputStream = new FileOutputStream(speciesFile.toFile());
+			
+			try (
+					var outputWriter = new FipStartOutputWriter(
+							polygonOutputStream, layersOutputStream, speciesOutputStream
+							)
+					) {
+				outputWriter.writePolygon(this, projectionType, state);
+				outputWriter.writePolygonLayers(getLayerByProjectionType().get(projectionType));
+			}
+		} catch (IOException e) {
+			throw new PolygonExecutionException(e);
+		}
+	}
+	
+	private void createVriInputData(ProjectionTypeCode projectionTypeCode, PolygonProjectionState state)
+			throws PolygonExecutionException {
+		Path executionFolder = Path.of(state.getExecutionFolder().toString(), projectionTypeCode.toString());
+
+		try {
+			Path polygonFile = Path.of(executionFolder.toString(), "virnp01.dat");
+			FileOutputStream polygonOutputStream = new FileOutputStream(polygonFile.toFile());
+
+			Path layersFile = Path.of(executionFolder.toString(), " vrinl01.dat");
+			FileOutputStream layersOutputStream = new FileOutputStream(layersFile.toFile());
+
+			Path speciesFile = Path.of(executionFolder.toString(), "vrinsp01.dat");
+			FileOutputStream speciesOutputStream = new FileOutputStream(speciesFile.toFile());
+
+			Path siteIndexFile = Path.of(executionFolder.toString(), "vrinsi01.dat");
+			FileOutputStream siteIndexOutputStream = new FileOutputStream(siteIndexFile.toFile());
+
+			try (
+					var outputWriter = new VriStartOutputWriter(
+							polygonOutputStream, layersOutputStream, speciesOutputStream, siteIndexOutputStream
+					)
+			) {
+				outputWriter.writePolygon(this, projectionTypeCode, state);
+				outputWriter.writePolygonLayers(getLayerByProjectionType().get(projectionTypeCode));
+			}
+		} catch (IOException e) {
+			throw new PolygonExecutionException(e);
+		}
+	}
+
+	private void performAdjustProcessing(IComponentRunner componentRunner, PolygonProjectionState state) {
+
+	}
+
+	private void performForwardProcessing(IComponentRunner componentRunner, PolygonProjectionState state) {
+
+	}
+
+	private void performBackProcessing(IComponentRunner componentRunner, PolygonProjectionState state) {
+
+	}
+
+	/**
+	 * Determine the processing model to which the stand will be initially subject.
+	 * 
+	 * @return as described
+	 * @throws PolygonValidationException if the polygon definition contains errors
+	 */
+	private void determineInitialProcessingModel(PolygonProjectionState state) throws PolygonValidationException {
+
+		GrowthModelCode growthModel = null;
+		ProcessingModeCode processingMode = null;
+
+		for (ProjectionTypeCode pt : ProjectionTypeCode.ACTUAL_PROJECTION_TYPES_LIST) {
+
+			// Iterate until we find a projection type with a primary layer; that will determine
+			// the (initial) model for all projection types.
+			
+			if (growthModel == null && processingMode == null) {
+				
+				// Determine the primary layer of the stand.
+				Layer ptPrimaryLayer = findPrimaryLayerByProjectionType(pt);
+				if (ptPrimaryLayer != null) {
+	
+					logger.debug("Projection type {0}: primary layer determined to be: {}", pt, ptPrimaryLayer);
+	
+					// Check if the stand is non-productive.
+					if (getNonProductiveDescriptor() != null) {
+						if (ptPrimaryLayer.getSp0sAsSupplied().size() > 0) {
+							logger.debug(
+									"Stand labelled with Non-Productive code {}, but also contains a stand description.",
+									getNonProductiveDescriptor()
+							);
+						} else {
+							disableProjectionsOfType(pt);
+	
+							addMessage(
+									state.getContext(), "Layer {0} is not completely, or is not consistently, defined",
+									ptPrimaryLayer
+							);
+						}
+					}
+	
+					Stand leadingSp0 = ptPrimaryLayer.determineLeadingSp0(0 /* leading */);
+					if (leadingSp0 == null) {
+						disableProjectionsOfType(pt);
+						addMessage(
+								state.getContext(), "Unable to locate a leading species for primary layer {}",
+								ptPrimaryLayer
+						);
+					} else {
+						logger.debug(
+								"Primary layer determined to be {} (percentage {})", ptPrimaryLayer,
+								leadingSp0.getSpeciesGroup().getSpeciesPercent()
+						);
+					}
+	
+					if (getInventoryStandard().equals(InventoryStandard.Silviculture)) {
+						logger.debug("Implemented Classification Rule 1: SILV Standard Inventory treated as FIPSTART");
+						growthModel = GrowthModelCode.FIP;
+						processingMode = ProcessingModeCode.FIP_Default;
+					} else if (ptPrimaryLayer.getBasalArea() > 0.0 && ptPrimaryLayer.getTreesPerHectare() > 0.0) {
+						logger.debug(
+								"Implemented Classification Rule 2: BA and TPH both greater than 0 ({}, {})",
+								ptPrimaryLayer.getBasalArea(), ptPrimaryLayer.getTreesPerHectare()
+						);
+						growthModel = GrowthModelCode.VRI;
+						processingMode = ProcessingModeCode.VRI_Default;
+					} else if (getInventoryStandard().equals(InventoryStandard.FIP)) {
+						logger.debug("Implemented Classification Rule 3: FIP Standard Inventory");
+						growthModel = GrowthModelCode.FIP;
+						processingMode = ProcessingModeCode.FIP_Default;
+					} else {
+						logger.debug("Implemented Classification Rule 4: all other cases");
+						growthModel = GrowthModelCode.VRI;
+						processingMode = ProcessingModeCode.VRI_Default;
+					}
+				}
+			}
+			
+			if (growthModel != null && processingMode != null) {
+				state.setGrowthModel(pt, growthModel, processingMode);
+				logger.trace("Polygon {}: growth model {}; processing mode {}", this, growthModel, processingMode);
+			} else {
+				throw new PolygonValidationException(
+						new ValidationMessage(ValidationMessageKind.PRIMARY_LAYER_NOT_FOUND, this)
+				);
+			}
 		}
 	}
 
@@ -791,6 +938,102 @@ public class Polygon implements Comparable<Polygon> {
 		}
 
 		return selectedLayer;
+	}
+
+	private final String POLYGON_DESCRIPTOR_FORMAT = "%-7s%10d%3s%5d";
+
+	public String buildPolygonDescriptor() {
+
+		String mapSheet = this.mapSheet.length() > 7 ? this.mapSheet.substring(0, 7) : this.mapSheet;
+		String district = this.district == null ? ""
+				: this.district.length() > 3 ? this.district.substring(0, 3) : this.district;
+		int measurementYear = this.getMeasurementYear();
+		return String.format(POLYGON_DESCRIPTOR_FORMAT, mapSheet, polygonNumber, district, measurementYear);
+	}
+
+	/**
+	 * Assign <code>newDeadLayer</code> as the dead layer of this polygon. Assign year-of-death of this layer to the
+	 * maximum of (<code>yearOfDeath</code>, the layer's year of death, and this polygon's yearOfDeath). Assign
+	 * percent-stockable of this layer to the maximum of (<code>percentStockKilled</code>,
+	 * <code>newDeadLayer.getPercentStockable()</code>, and this polygon's percentStockableDead). <code>null</code> is
+	 * never greater than other values in a comparison.
+	 * <p>
+	 * This method does -not- consider whether the polygon already has a dead layer - it simply replaces the existing
+	 * one if there is one. If this is not the desired behaviour, call <code>getDeadLayer</code> before calling this
+	 * method to determine if a dead layer has already been assigned.
+	 * 
+	 * @param newDeadLayer       the new dead layer
+	 * @param yearOfDeath        as described
+	 * @param percentStockKilled as described
+	 */
+	public void assignDeadLayer(Layer newDeadLayer, Integer yearOfDeath, Double percentStockKilled) {
+
+		yearOfDeath = NullMath.max(yearOfDeath, newDeadLayer.getYearOfDeath(), (a, b) -> Math.max(a, b), -9);
+		yearOfDeath = NullMath.max(yearOfDeath, getYearOfDeath(), (a, b) -> Math.max(a, b), -9);
+
+		if (yearOfDeath == null) {
+			yearOfDeath = getReferenceYear();
+		}
+
+		logger.debug("assignDeadLayer: using year-of-death {}", yearOfDeath);
+
+		percentStockKilled = NullMath.max(percentStockableDead, percentStockKilled, (a, b) -> Math.max(a, b), -9.0);
+		percentStockKilled = NullMath
+				.max(newDeadLayer.getPercentStockable(), percentStockKilled, (a, b) -> Math.max(a, b), -9.0);
+
+		logger.debug("Percent Stockable Land Killed to use: {}", percentStockKilled);
+
+		setDeadLayer(newDeadLayer);
+		deadLayer.setAsDeadLayer(yearOfDeath, percentStockKilled);
+	}
+
+	public void disableProjectionsOfType(ProjectionTypeCode layerProjectionType) {
+		if (layerProjectionType == ProjectionTypeCode.UNKNOWN) {
+			doAllowProjection = false;
+		} else {
+			doAllowProjectionOfType.put(layerProjectionType, false);
+		}
+	}
+
+	public void doCompleteDefinition() throws PolygonValidationException {
+
+		if (currentProcessingState != PolygonProcessingStateCode.DEFINING_POLYGON) {
+			throw new IllegalStateException(
+					"Cannot call Polygon.doCompleteDefinition unless the Polygon is in DEFINING_POLYGON state"
+			);
+		}
+
+		// Assign the projection type of each of the layers. This is set at construction time to
+		// UNKNOWN.
+
+		for (Layer layer : layers.values()) {
+			layer.doCompleteDefinition(this);
+		}
+
+		currentProcessingState = PolygonProcessingStateCode.POLYGON_DEFINED;
+	}
+
+	public void project(IComponentRunner componentRunner, PolygonProjectionState state)
+			throws PolygonExecutionException, ProjectionInternalExecutionException {
+
+		buildProjectionExecutionStructure(state);
+
+		performInitialProcessing(componentRunner, state);
+
+		// VRI ADJUST is not supported at this time, so this code doesn't need to be written:
+		// defineAdjustmentSeeds(state);
+
+		determineAgeRange(state);
+
+		performAdjustProcessing(componentRunner, state);
+
+		performForwardProcessing(componentRunner, state);
+
+		performBackProcessing(componentRunner, state);
+
+		generateYieldTables(state);
+
+		currentProcessingState = PolygonProcessingStateCode.PROJECTED;
 	}
 
 	Layer findPrimaryLayerByProjectionType(ProjectionTypeCode projectionType) throws PolygonValidationException {
@@ -942,16 +1185,16 @@ public class Polygon implements Comparable<Polygon> {
 		);
 	}
 
-	private LayerSummarizationMode determineFipMergeModel() {
+	private LayerSummarizationModeCode determineFipMergeModel() {
 		// RankOneOnly is legacy and supported only for backwards compatibility. TwoLayer is
 		// the mode to be used going forward.
-		return LayerSummarizationMode.TwoLayer;
+		return LayerSummarizationModeCode.TwoLayer;
 	}
 
-	private LayerSummarizationMode determineVriMergeModel() {
+	private LayerSummarizationModeCode determineVriMergeModel() {
 		// RankOneOnly is legacy and supported only for backwards compatibility. TwoLayer is
 		// the mode to be used going forward.
-		return LayerSummarizationMode.TwoLayer;
+		return LayerSummarizationModeCode.TwoLayer;
 	}
 
 	/**
@@ -1200,70 +1443,272 @@ public class Polygon implements Comparable<Polygon> {
 		return selectedVeteranLayer;
 	}
 
-	public void disableProjectionsOfType(ProjectionTypeCode layerProjectionType) {
-		if (layerProjectionType == ProjectionTypeCode.UNKNOWN) {
-			doAllowProjection = false;
-		} else {
-			doAllowProjectionOfType.put(layerProjectionType, false);
-		}
+	private void generateYieldTables(PolygonProjectionState state) {
+		// TODO Auto-generated method stub
+
 	}
 
-	/**
-	 * Assign <code>newDeadLayer</code> as the dead layer of this polygon. Assign year-of-death of this layer to the
-	 * maximum of (<code>yearOfDeath</code>, the layer's year of death, and this polygon's yearOfDeath). Assign
-	 * percent-stockable of this layer to the maximum of (<code>percentStockKilled</code>,
-	 * <code>newDeadLayer.getPercentStockable()</code>, and this polygon's percentStockableDead). <code>null</code> is
-	 * never greater than other values in a comparison.
-	 * <p>
-	 * This method does -not- consider whether the polygon already has a dead layer - it simply replaces the existing
-	 * one if there is one. If this is not the desired behaviour, call <code>getDeadLayer</code> before calling this
-	 * method to determine if a dead layer has already been assigned.
-	 * 
-	 * @param newDeadLayer       the new dead layer
-	 * @param yearOfDeath        as described
-	 * @param percentStockKilled as described
-	 */
-	public void assignDeadLayer(Layer newDeadLayer, Integer yearOfDeath, Double percentStockKilled) {
+	public double determineStockabilityByProjectionType(ProjectionTypeCode projectionType) {
 
-		yearOfDeath = NullMath.max(yearOfDeath, newDeadLayer.getYearOfDeath(), (a, b) -> Math.max(a, b), -9);
-		yearOfDeath = NullMath.max(yearOfDeath, getYearOfDeath(), (a, b) -> Math.max(a, b), -9);
+		Double polygonPercentStockable = this.getPercentStockable();
 
-		if (yearOfDeath == null) {
-			yearOfDeath = getReferenceYear();
+		double primaryPercentStockable = 0.0;
+		double veteranPercentStockable = 0.0;
+		double deadPercentStockable = 0.0;
+		double regenerationPercentStockable = 0.0;
+		double residualPercentStockable = 0.0;
+
+		Layer primaryLayer = this.getTargetedPrimaryLayer();
+		if (primaryLayer == null) {
+			primaryLayer = this.getPrimaryLayer();
+		}
+		if (primaryLayer == null) {
+			primaryLayer = this.getRank1Layer();
 		}
 
-		logger.debug("assignDeadLayer: using year-of-death {}", yearOfDeath);
+		Layer veteranLayer = this.getTargetedVeteranLayer();
+		if (veteranLayer == null) {
+			veteranLayer = this.getVeteranLayer();
+		}
 
-		percentStockKilled = NullMath.max(percentStockableDead, percentStockKilled, (a, b) -> Math.max(a, b), -9.0);
-		percentStockKilled = NullMath
-				.max(newDeadLayer.getPercentStockable(), percentStockKilled, (a, b) -> Math.max(a, b), -9.0);
+		Layer deadLayer = getDeadLayer();
+		Layer regenerationLayer = getRegenerationLayer();
+		Layer residualLayer = getResidualLayer();
 
-		logger.debug("Percent Stockable Land Killed to use: {}", percentStockKilled);
+		if (polygonPercentStockable == null) {
+			polygonPercentStockable = 85.0; /* where does this come from??? */
+		}
 
-		setDeadLayer(newDeadLayer);
-		deadLayer.setAsDeadLayer(yearOfDeath, percentStockKilled);
-	}
+		if (deadLayer != null) {
+			Double m = NullMath
+					.max(getPercentStockableDead(), deadLayer.getPercentStockable(), (a, b) -> Math.max(a, b), null);
+			if (m != null && getPercentStockable() != null) {
+				deadPercentStockable = getPercentStockable() * m / 100.0;
+			}
+			if (deadPercentStockable < 1.0) {
+				deadPercentStockable = 1.0;
+			}
+		}
 
-	public void doCompleteDefinition() throws PolygonValidationException {
-
-		if (currentProcessingState != PolygonProcessingState.DEFINING_POLYGON) {
-			throw new IllegalStateException(
-					"Cannot call Polygon.doCompleteDefinition unless the Polygon is in DEFINING_POLYGON state"
+		if (regenerationLayer != null && deadPercentStockable > 0.0) {
+			regenerationPercentStockable = deadPercentStockable;
+		} else if (regenerationLayer != null) {
+			Double m = NullMath.max(
+					getPercentStockableDead(), regenerationLayer.getPercentStockable(), (a, b) -> Math.max(a, b), null
 			);
+			if (m != null && getPercentStockable() != null) {
+				regenerationPercentStockable = getPercentStockable() * m / 100.0;
+			}
+			if (regenerationPercentStockable < 1.0) {
+				regenerationPercentStockable = 1.0;
+			}
 		}
 
-		// Assign the projection type of each of the layers. This is set at construction time to
-		// UNKNOWN.
-
-		for (Layer layer : layers.values()) {
-			layer.doCompleteDefinition(this);
+		if (veteranLayer != null) {
+			if (veteranLayer.getCrownClosure() != null && veteranLayer.getCrownClosure() >= 1.0) {
+				veteranPercentStockable = veteranLayer.getCrownClosure();
+			} else {
+				veteranPercentStockable = 1.0;
+			}
 		}
 
-		currentProcessingState = PolygonProcessingState.POLYGON_DEFINED;
+		if (primaryLayer != null && residualLayer != null) {
+			Double primaryBasalArea = primaryLayer.getBasalArea();
+			Double residualBasalArea = residualLayer.getBasalArea();
+
+			primaryPercentStockable = polygonPercentStockable - veteranPercentStockable - deadPercentStockable
+					- regenerationPercentStockable;
+			residualPercentStockable = primaryPercentStockable;
+
+			if (primaryBasalArea != null && residualBasalArea != null) {
+
+				primaryPercentStockable *= (primaryBasalArea / (primaryBasalArea + residualBasalArea));
+				residualPercentStockable *= (residualBasalArea / (primaryBasalArea + residualBasalArea));
+
+				if (primaryPercentStockable <= 1.0) {
+					primaryPercentStockable = 1.0;
+				}
+				if (residualPercentStockable <= 1.0) {
+					residualPercentStockable = 1.0;
+				}
+			} else {
+
+				residualPercentStockable = deadPercentStockable <= 1.0 ? 1.0 : deadPercentStockable;
+				primaryPercentStockable -= residualPercentStockable;
+			}
+
+		} else if (primaryLayer != null) {
+			primaryPercentStockable = polygonPercentStockable - veteranPercentStockable - deadPercentStockable
+					- regenerationPercentStockable;
+		} else if (residualLayer != null) {
+			residualPercentStockable = polygonPercentStockable - veteranPercentStockable - deadPercentStockable
+					- regenerationPercentStockable;
+		}
+
+		switch (projectionType) {
+		case DEAD:
+			return deadPercentStockable;
+		case PRIMARY:
+			return primaryPercentStockable;
+		case REGENERATION:
+			return regenerationPercentStockable;
+		case RESIDUAL:
+			return residualPercentStockable;
+		case VETERAN:
+			return veteranPercentStockable;
+		default:
+			return 0.0;
+		}
 	}
 
-	public void doCompleteProjection() {
-		currentProcessingState = PolygonProcessingState.PROJECTED;
+	private void determineAgeRange(PolygonProjectionState state) throws PolygonExecutionException {
+
+		ProjectionContext context = state.getContext();
+
+		try {
+			Integer measurementYear = getMeasurementYear();
+			long standAgeAtMeasurementYear;
+			standAgeAtMeasurementYear = Math.round(determineStandAgeAtYear(measurementYear));
+
+			logger.debug("Determined age is {} at measurement year {}", standAgeAtMeasurementYear, measurementYear);
+
+			// Determine the year range of the projection.
+
+			// Calculate the starting age over which the yield table is to be produced.
+			//
+			// We are guaranteed that one of the yearStart, ageStart or one of the
+			// force year parameters has been supplied. That leaves us with the
+			// cases:
+			//
+			// 1. Both yearStart and ageStart are supplied:
+			// startAge is the maximum of the age corresponding to the start year
+			// and the supplied ageStart.
+			//
+			// 2. yearStart parameter is supplied only:
+			// standAge is the stand age corresponding at the specified year.
+			//
+			// 3. ageStart parameter is supplied only:
+			// ageStart is the same as this parameter.
+			//
+			Long startAge = null;
+
+			{
+				Long ageAtYear = null;
+				if (context.getValidatedParams().getYearStart() != null) {
+					Layer layer = findPrimaryLayerByProjectionType(ProjectionTypeCode.UNKNOWN);
+					ageAtYear = Math.round(layer.determineLayerAgeAtYear(context.getValidatedParams().getYearStart()));
+				}
+
+				if (ageAtYear != null && context.getValidatedParams().getAgeStart() != null) {
+					startAge = ageAtYear > context.getValidatedParams().getAgeStart()
+							? context.getValidatedParams().getAgeStart() : ageAtYear;
+				} else if (ageAtYear != null) {
+					startAge = ageAtYear;
+				} else {
+					startAge = context.getValidatedParams().getAgeStart().longValue();
+				}
+
+				logger.debug("Starting age of yield table has been determined to be {}", startAge);
+			}
+
+			// Calculate the finishing age over which the yield table is to be produced.
+			//
+			// We are guaranteed that one of the yearEnd or ageEnd parameters has been supplied.
+			// That leaves us with cases:
+			//
+			// 1. Both are supplied:
+			// endAge is the lesser of the age corresponding to the yearEnd and the supplied ageEnd.
+			//
+			// 2. Only yearEnd is supplied:
+			// endAge is the stand age corresponding at the specified year.
+			//
+			// 3. Only ageEnd is supplied:
+			// endAge is the same as this parameter.
+			Long endAge = null;
+
+			{
+				Long ageAtYear = null;
+				if (context.getValidatedParams().getYearEnd() != null) {
+					Layer layer = findPrimaryLayerByProjectionType(ProjectionTypeCode.UNKNOWN);
+					ageAtYear = Math.round(layer.determineLayerAgeAtYear(context.getValidatedParams().getYearEnd()));
+				}
+
+				if (ageAtYear != null && context.getValidatedParams().getAgeEnd() != null) {
+					endAge = ageAtYear > context.getValidatedParams().getAgeEnd()
+							? context.getValidatedParams().getAgeEnd() : ageAtYear;
+				} else if (ageAtYear != null) {
+					endAge = ageAtYear;
+				} else {
+					endAge = context.getValidatedParams().getAgeEnd().longValue();
+				}
+
+				logger.debug("Ending age of yield table has been determined to be {}", endAge);
+			}
+
+			// We need to make an allowance for the reference year and the current year. We need to
+			// check if they extend the range of years to be projected.
+
+			if (context.getValidatedParams().getSelectedExecutionOptions()
+					.contains(ExecutionOption.DO_FORCE_REFERENCE_YEAR_INCLUSION_IN_YIELD_TABLES)) {
+
+				if (startAge == null || standAgeAtMeasurementYear < startAge) {
+					startAge = standAgeAtMeasurementYear;
+				}
+
+				if (endAge == null || standAgeAtMeasurementYear > endAge) {
+					endAge = standAgeAtMeasurementYear;
+				}
+
+				logger.debug("start and end age after considering reference year: {}, {}", startAge, endAge);
+			}
+
+			if (context.getValidatedParams().getSelectedExecutionOptions()
+					.contains(ExecutionOption.DO_FORCE_CURRENT_YEAR_INCLUSION_IN_YIELD_TABLES)) {
+
+				long standAgeAtCurrentYear = Double.valueOf(determineStandAgeAtYear(LocalDate.now().getYear()))
+						.longValue();
+				if (startAge == null || standAgeAtCurrentYear < startAge) {
+					startAge = standAgeAtCurrentYear;
+				}
+
+				if (endAge == null || standAgeAtCurrentYear > endAge) {
+					endAge = standAgeAtCurrentYear;
+				}
+
+				logger.debug("start and end age after considering current year: {}, {}", startAge, endAge);
+			}
+
+			if (context.getValidatedParams().getForceYear() != null) {
+
+				long standAgeAtGivenYear = Double
+						.valueOf(determineStandAgeAtYear(context.getValidatedParams().getForceYear())).longValue();
+				if (startAge == null || standAgeAtGivenYear < startAge) {
+					startAge = standAgeAtGivenYear;
+				}
+
+				if (endAge == null || standAgeAtGivenYear > endAge) {
+					endAge = standAgeAtGivenYear;
+				}
+
+				logger.debug("start and end age after considering special year: {}, {}", startAge, endAge);
+			}
+
+			state.setProjectionRange(startAge, endAge);
+
+		} catch (PolygonValidationException pve) {
+			throw new PolygonExecutionException(pve);
+		}
+	}
+
+	private double determineStandAgeAtYear(Integer year) throws PolygonValidationException {
+		Layer primaryLayer = findPrimaryLayerByProjectionType(ProjectionTypeCode.UNKNOWN);
+		return primaryLayer.determineLayerAgeAtYear(year);
+	}
+
+	private void addMessage(ProjectionContext state, String message, Object... args) {
+		String messageText = MessageFormat.format(message, args);
+		state.getErrorLog().addMessage(messageText);
+		logger.debug(messageText);
 	}
 
 	@Override
@@ -1295,5 +1740,33 @@ public class Polygon implements Comparable<Polygon> {
 	public String toDetailedString() {
 		// TODO: elaborate, in the manner of V7Ext_LogLayerDescriptor
 		return toString();
+	}
+
+	private void buildProjectionExecutionStructure(PolygonProjectionState state)
+			throws ProjectionInternalExecutionException {
+
+		URL rootUrl = ProjectionUtils.class.getClassLoader().getResource("ca/bc/gov/nrs/vdyp/template");
+		try {
+			String jobName = toString() + '-'
+					+ LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME).replace(":", "-");
+
+			Path rootFolder = Path.of(rootUrl.toURI());
+			Path executionFolder = Files.createTempDirectory(rootFolder, jobName + '-');
+
+			for (ProjectionTypeCode projectionType : ProjectionTypeCode.ACTUAL_PROJECTION_TYPES_LIST) {
+
+				if (getLayerByProjectionType().get(projectionType) != null) {
+					ProjectionUtils.logger.debug("Populating execution folder for projectionType {}", projectionType);
+					ProjectionUtils.prepareProjectionTypeFolder(
+							rootFolder, executionFolder, projectionType.toString(), "FIPSTART.CTR", "VRISTART.CTR",
+							"VRIADJST.CTR", "VDYP.CTR", "VDYPBACK.CTR"
+					);
+				}
+			}
+
+			state.setExecutionFolder(executionFolder);
+		} catch (IOException | URISyntaxException e) {
+			throw new ProjectionInternalExecutionException(e);
+		}
 	}
 }

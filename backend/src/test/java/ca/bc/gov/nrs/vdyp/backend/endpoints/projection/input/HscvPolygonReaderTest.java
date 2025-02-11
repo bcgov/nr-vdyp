@@ -22,7 +22,7 @@ import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
 import ca.bc.gov.nrs.vdyp.backend.projection.input.HcsvLineFilter;
 import ca.bc.gov.nrs.vdyp.backend.projection.input.HcsvPolygonRecordBean;
 import ca.bc.gov.nrs.vdyp.backend.projection.input.InventoryStandardCode;
-import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.CfsEcoZone;
+import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.CfsEcoZoneCode;
 
 public class HscvPolygonReaderTest {
 
@@ -63,7 +63,7 @@ public class HscvPolygonReaderTest {
 		Assert.assertEquals("8", polygon.getHerbCoverPatternCode());
 		Assert.assertEquals(null, polygon.getBryoidCoverPercent());
 		Assert.assertEquals("MS", polygon.getBecZoneCode());
-		Assert.assertEquals(CfsEcoZone.MontaneCordillera, polygon.getCfsEcoZoneCode());
+		Assert.assertEquals(CfsEcoZoneCode.MontaneCordillera, polygon.getCfsEcoZoneCode());
 		Assert.assertEquals(Double.valueOf(50.0), polygon.getPercentStockable());
 		Assert.assertEquals(Double.valueOf(1.0), polygon.getYieldFactor());
 		Assert.assertEquals(null, polygon.getNonProductiveDescriptorCode());
