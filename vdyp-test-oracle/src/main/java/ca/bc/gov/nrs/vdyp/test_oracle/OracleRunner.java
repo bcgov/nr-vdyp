@@ -101,10 +101,9 @@ public class OracleRunner {
 				if (paramsText.startsWith("\uFEFF")) {
 					paramsText.subSequence(1, paramsText.length());
 				}
-				//paramsText = subPattern.matcher(paramsText).replaceAll(m -> env.get(m.group()));
-				var saveIntermediatesPattern = Pattern.compile(
-						"^-v7save\s+yes", Pattern.CASE_INSENSITIVE & Pattern.MULTILINE
-				);
+				// paramsText = subPattern.matcher(paramsText).replaceAll(m -> env.get(m.group()));
+				var saveIntermediatesPattern = Pattern
+						.compile("^-v7save\s+yes", Pattern.CASE_INSENSITIVE & Pattern.MULTILINE);
 				if (!saveIntermediatesPattern.matcher(paramsText).matches()) {
 					paramsText += "\r\n-v7save Yes\r\n";
 				}
@@ -114,23 +113,20 @@ public class OracleRunner {
 
 			builder.directory(inputSubdir.toFile());
 
-
 			builder.environment().putAll(env);
 
 			builder.environment().merge(
-					"PATH",
-					installDir.toAbsolutePath().toString(),
-					(old, add) -> String.format("%s;%s", old, add)
+					"PATH", installDir.toAbsolutePath().toString(), (old, add) -> String.format("%s;%s", old, add)
 			);
 
-			//builder.command(inputSubdir.resolve("RunVDYP7.cmd").toAbsolutePath().toString());
+			// builder.command(inputSubdir.resolve("RunVDYP7.cmd").toAbsolutePath().toString());
 			builder.command(
-					installDir.resolve("VDYP7Console.exe").toAbsolutePath().toString(),
-					"-p", paramSubdir.resolve("parms.txt").toAbsolutePath().toString(),
-					"-env", String.format("%s=%s", INPUT_DIR_ENV, env.get(INPUT_DIR_ENV)),
-					"-env", String.format("%s=%s", OUTPUT_DIR_ENV, env.get(OUTPUT_DIR_ENV)),
-					"-env", String.format("%s=%s", INSTALL_DIR_ENV, env.get(INSTALL_DIR_ENV)),
-					"-env", String.format("%s=%s", PARAM_DIR_ENV, env.get(PARAM_DIR_ENV))
+					installDir.resolve("VDYP7Console.exe").toAbsolutePath().toString(), "-p",
+					paramSubdir.resolve("parms.txt").toAbsolutePath().toString(), "-env",
+					String.format("%s=%s", INPUT_DIR_ENV, env.get(INPUT_DIR_ENV)), "-env",
+					String.format("%s=%s", OUTPUT_DIR_ENV, env.get(OUTPUT_DIR_ENV)), "-env",
+					String.format("%s=%s", INSTALL_DIR_ENV, env.get(INSTALL_DIR_ENV)), "-env",
+					String.format("%s=%s", PARAM_DIR_ENV, env.get(PARAM_DIR_ENV))
 
 			);
 
@@ -157,7 +153,8 @@ public class OracleRunner {
 	 * @param finalSubdir
 	 * @throws IOException
 	 */
-	void copyOutput(Path originalSubdir, Path inputSubdir, Path intermediateDir, Path outputSubdir, Path finalSubdir) throws IOException {
+	void copyOutput(Path originalSubdir, Path inputSubdir, Path intermediateDir, Path outputSubdir, Path finalSubdir)
+			throws IOException {
 		deleteDir(finalSubdir);
 		Files.createDirectory(finalSubdir);
 
@@ -184,7 +181,6 @@ public class OracleRunner {
 		Files.createDirectory(otherDir);
 
 		copyDir(inputSubdir, inputDir);
-		
 
 		copyFiles(intermediateDir, fipDir, file -> file.getFileName().toString().contains("_FIP"));
 		copyFiles(intermediateDir, vriDir, file -> file.getFileName().toString().contains("_VRI"));
@@ -208,7 +204,7 @@ public class OracleRunner {
 			}
 		}
 	}
-	
+
 	void deleteFiles(Path parent, DirectoryStream.Filter<Path> filter) throws IOException {
 		try (var dirStream = Files.newDirectoryStream(parent, filter)) {
 			for (var file : dirStream) {

@@ -1,10 +1,12 @@
 package ca.bc.gov.nrs.vdyp.test_oracle;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.any;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasEntry;
+import static org.hamcrest.Matchers.matchesRegex;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -84,8 +86,13 @@ class OracleRunnerTest {
 			@Override
 			protected CompletableFuture<Void> run(ProcessBuilder builder) throws IOException {
 				assertThat(
-						builder.command(), contains(
-								endsWith("VDYP7Console.exe"), equalTo("-p"), endsWith("test1/input/parms.txt")
+						builder.command(),
+						contains(
+								endsWith("VDYP7Console.exe"), equalTo("-p"), endsWith("test1/input/parms.txt"),
+								equalTo("-env"), matchesRegex("InputFileDir=.*?/test1/input"), equalTo("-env"),
+								matchesRegex("OutputFileDir=.*?/test1/output"), equalTo("-env"),
+								equalTo("InstallDir=" + installDir.toString()), equalTo("-env"),
+								matchesRegex("ParmsFileDir=.*?/test1/input")
 						)
 				);
 				assertThat(builder.directory(), equalTo(tempDir.resolve("test1/input").toAbsolutePath().toFile()));
@@ -130,7 +137,7 @@ class OracleRunnerTest {
 						"GROW", //
 						"VRII", "VRIL", "VRIP", "VRIS" //
 				}) {
-					FileUtils.touch(tempDir.resolve("test1/output/P-SAVE_VDYP7_" + tag + ".dat").toFile());
+					FileUtils.touch(installDir.resolve("VDYP_CFG/P-SAVE_VDYP7_" + tag + ".dat").toFile());
 				}
 
 				return mockFuture;
