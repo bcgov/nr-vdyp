@@ -1,6 +1,10 @@
 import { CONSTANTS, CSVHEADERS } from '@/constants'
 import {
+  OutputFormatEnum,
   SelectedExecutionOptionsEnum,
+  SelectedDebugOptionsEnum,
+  CombineAgeYearRangeEnum,
+  MetadataToOutputEnum,
   type Parameters,
 } from '@/services/vdyp-api'
 import { projectionHcsvPost } from '@/services/apiActions'
@@ -78,8 +82,8 @@ export const createCSVFiles = (modelParameterStore: any) => {
       '', // LAYER_STOCKABILITY
       '', // FOREST_COVER_RANK_CODE
       '', // NON_FOREST_DESCRIPTOR_CODE
-      '', // EST_SITE_INDEX_SPECIES_CD
-      '', // ESTIMATED_SITE_INDEX
+      modelParameterStore.highestPercentSpecies, // EST_SITE_INDEX_SPECIES_CD
+      modelParameterStore.bha50SiteIndex, // ESTIMATED_SITE_INDEX
       '', // CROWN_CLOSURE
       '', // BASAL_AREA_75
       '', // STEMS_PER_HA_75
@@ -138,7 +142,10 @@ export const runModel = async (modelParameterStore: any) => {
 
   const formData = new FormData()
 
-  const selectedExecutionOptions = [
+  const selectedExecutionOptions: Array<SelectedExecutionOptionsEnum> = [
+    SelectedExecutionOptionsEnum.ForwardGrowEnabled,
+    SelectedExecutionOptionsEnum.DoIncludeAgeRowsInYieldTable,
+    SelectedExecutionOptionsEnum.DoIncludeColumnHeadersInYieldTable,
     SelectedExecutionOptionsEnum.DoEnableProgressLogging,
     SelectedExecutionOptionsEnum.DoEnableErrorLogging,
     SelectedExecutionOptionsEnum.DoEnableDebugLogging,
@@ -173,11 +180,21 @@ export const runModel = async (modelParameterStore: any) => {
     )
   }
 
+  const selectedDebugOptions: Array<SelectedDebugOptionsEnum> = [
+    SelectedDebugOptionsEnum.DoIncludeDebugTimestamps,
+    SelectedDebugOptionsEnum.DoIncludeDebugEntryExit,
+    SelectedDebugOptionsEnum.DoIncludeDebugIndentBlocks,
+    SelectedDebugOptionsEnum.DoIncludeDebugRoutineNames,
+  ]
+
   const projectionParameters: Parameters = {
     ageStart: modelParameterStore.startingAge,
     ageEnd: modelParameterStore.finishingAge,
     ageIncrement: modelParameterStore.ageIncrement,
-    selectedExecutionOptions,
+    outputFormat: OutputFormatEnum.CSVYieldTable,
+    selectedExecutionOptions: selectedExecutionOptions,
+    selectedDebugOptions: selectedDebugOptions,
+    metadataToOutput: MetadataToOutputEnum.NONE,
   }
 
   formData.append(
