@@ -14,7 +14,10 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
@@ -45,6 +48,145 @@ public class OracleRunner {
 			app.run(args);
 		} catch (ParseException | IOException | ExecutionException e) {
 			System.err.println(e.getMessage());
+		}
+	}
+
+	public static Path getSourceFile(IntermediateStage stage, ModelObject obj, Layer layer) {
+		final String extension = obj == ModelObject.CONTROL ? "ctl" : "dat";
+		return Path
+				.of(String.format("%s-SAVE_VDYP7_%s.%s", layer.code, obj.getStageCode(stage), extension));
+	}
+
+	public static Path getDestFile(IntermediateStage stage, ModelObject obj, Layer layer) {
+		final String extension = obj == ModelObject.CONTROL ? "ctl" : "dat";
+		return Path.of(stage.name, layer.name, String.format("%s.%s", obj.name, extension));
+	}
+
+	public static enum Layer {
+		PRIMARY("primary", "P"), //
+		VETERAN("veteran", "V"), //
+		YOUNG("young", "Y"), //
+		DEAD("dead", "D"), //
+		REGENERATION("regen", "R");
+
+		public final String name;
+		public final String code;
+
+		Layer(String name, String code) {
+			this.name = name;
+			this.code = code;
+		}
+
+		static Layer byCode(String code) {
+			for (var e : Layer.values()) {
+				if (e.code.equals(code)) {
+					return e;
+				}
+			}
+			throw new IllegalArgumentException(String.format("Unknown layer code", code));
+		}
+	}
+
+	public static enum ModelObject {
+		POLYGON("polygon", "P"), //
+		LAYER("layer", "L"), //
+		SPECIES("species", "S"), //
+		SITE("site", "I"), //
+		UTILIZATION("util", "U"), //
+		ADJUSTMENTS("adjust", "A"), //
+		GROW_TO("grow", "GROW") {
+			@Override
+			String getStageCode(IntermediateStage stage) {
+				return this.code;
+			};
+		},
+		COMPATIBILITY("compat", "C"), //
+		CONTROL("control", "CTL") {
+			@Override
+			String getStageCode(IntermediateStage stage) {
+				switch (stage) {
+				case BACK_INPUT:
+					return "BACK";
+				case FORWARD_INPUT:
+					return "VDYP";
+				default:
+					throw new IllegalArgumentException("No stage code for control file for stage " + stage);
+				}
+			};
+		};
+
+		public final String name;
+		public final String code;
+
+		ModelObject(String name, String code) {
+			this.name = name;
+			this.code = code;
+		}
+
+		String getStageCode(IntermediateStage stage) {
+			return String.format("%s%s", stage.code, this.code);
+		};
+
+		static ModelObject byCode(String code) {
+			for (var e : ModelObject.values()) {
+				if (e.code.equals(code)) {
+					return e;
+				}
+			}
+			throw new IllegalArgumentException(String.format("Unknown model object code", code));
+		}
+	}
+
+	public static enum IntermediateStage {
+		FIP_INPUT("fipInput", "FIP", EnumSet.of(ModelObject.POLYGON, ModelObject.LAYER, ModelObject.SPECIES)), //
+		VRI_INPUT(
+				"vriInput", "VRI",
+				EnumSet.of(ModelObject.POLYGON, ModelObject.LAYER, ModelObject.SPECIES, ModelObject.SITE)
+		),
+		ADJUST_INPUT(
+				"adjustInput", "AJST",
+				EnumSet.of(ModelObject.POLYGON, ModelObject.SPECIES, ModelObject.UTILIZATION, ModelObject.ADJUSTMENTS)
+		),
+		FORWARD_INPUT(
+				"forwardInput", "7INP",
+				EnumSet.of(
+						ModelObject.POLYGON, ModelObject.SPECIES, ModelObject.UTILIZATION, ModelObject.GROW_TO,
+						ModelObject.CONTROL
+				)
+		),
+		FORWARD_OUTPUT(
+				"forwardOutput", "7OUT",
+				EnumSet.of(ModelObject.POLYGON, ModelObject.SPECIES, ModelObject.UTILIZATION, ModelObject.COMPATIBILITY)
+		),
+		BACK_INPUT(
+				"backInput", "BINP",
+				EnumSet.of(
+						ModelObject.POLYGON, ModelObject.SPECIES, ModelObject.UTILIZATION, ModelObject.GROW_TO,
+						ModelObject.CONTROL
+				)
+		),
+		BACK_OUTPUT(
+				"backOutput", "BOUT",
+				EnumSet.of(ModelObject.POLYGON, ModelObject.SPECIES, ModelObject.UTILIZATION, ModelObject.COMPATIBILITY)
+		);
+
+		public final String name;
+		public final String code;
+		public final Set<ModelObject> files;
+
+		IntermediateStage(String name, String code, Set<ModelObject> files) {
+			this.name = name;
+			this.code = code;
+			this.files = Collections.unmodifiableSet(files);
+		}
+
+		static IntermediateStage byCode(String code) {
+			for (var e : IntermediateStage.values()) {
+				if (e.code.equals(code)) {
+					return e;
+				}
+			}
+			throw new IllegalArgumentException(String.format("Unknown intermediate stage code", code));
 		}
 	}
 
@@ -144,6 +286,10 @@ public class OracleRunner {
 
 	}
 
+	static final Pattern INTERMEDIATE_FILE = Pattern.compile(
+			"(?<layer>\\w)\\-SAVE_VDYP7_(?<suffix>(?:GROW|VDYP|BACK)|(?<stage>\\w+?)(?<obj>\\w))\\.(?<ext>\\w+)"
+	);
+
 	/**
 	 * Create the final output
 	 *
@@ -159,38 +305,47 @@ public class OracleRunner {
 		Files.createDirectory(finalSubdir);
 
 		var inputDir = finalSubdir.resolve("input");
-		var fipDir = finalSubdir.resolve("fipInput");
-		var vriDir = finalSubdir.resolve("vriInput");
-		var adjustDir = finalSubdir.resolve("adjustInput");
-		var forwardDir = finalSubdir.resolve("forwardInput");
-		var backDir = finalSubdir.resolve("backInput");
-		var forwardOutDir = finalSubdir.resolve("forwardOutput");
-		var backOutDir = finalSubdir.resolve("backOutput");
 		var outputDir = finalSubdir.resolve("output");
-		var otherDir = finalSubdir.resolve("other");
 
 		Files.createDirectory(inputDir);
-		Files.createDirectory(fipDir);
-		Files.createDirectory(vriDir);
-		Files.createDirectory(adjustDir);
-		Files.createDirectory(forwardDir);
-		Files.createDirectory(backDir);
-		Files.createDirectory(forwardOutDir);
-		Files.createDirectory(backOutDir);
 		Files.createDirectory(outputDir);
-		Files.createDirectory(otherDir);
 
 		copyDir(inputSubdir, inputDir);
 
-		copyFiles(intermediateDir, fipDir, file -> file.getFileName().toString().contains("_FIP"));
-		copyFiles(intermediateDir, vriDir, file -> file.getFileName().toString().contains("_VRI"));
-		copyFiles(intermediateDir, adjustDir, file -> file.getFileName().toString().contains("_AJST"));
-		copyFiles(intermediateDir, forwardDir, file -> file.getFileName().toString().contains("_7INP"));
-		copyFiles(intermediateDir, forwardOutDir, file -> file.getFileName().toString().contains("_7OUT"));
-		copyFiles(intermediateDir, backDir, file -> file.getFileName().toString().contains("_BINP"));
-		copyFiles(intermediateDir, backOutDir, file -> file.getFileName().toString().contains("_BOUT"));
-		copyFiles(intermediateDir, backOutDir, file -> file.getFileName().toString().contains("_BOUT"));
-		copyFiles(intermediateDir, otherDir, file -> file.getFileName().toString().contains("_GROW"));
+		final var activeStages = EnumSet.noneOf(IntermediateStage.class);
+		final var activeLayers = EnumSet.noneOf(Layer.class);
+
+		final var it = FileUtils.iterateFiles(intermediateDir.toFile(), new String[] { "dat" }, false);
+		while (it.hasNext()) {
+			final var file = it.next();
+			final var match = INTERMEDIATE_FILE.matcher(file.toPath().getFileName().toString());
+			if (match.find()) {
+				final var stage = match.group("stage");
+				final var layer = match.group("layer");
+				if (stage != null) {
+					activeStages.add(IntermediateStage.byCode(stage));
+				}
+				activeLayers.add(Layer.byCode(layer));
+			}
+		}
+
+		for (final var stage : activeStages) {
+			final var stageDir = finalSubdir.resolve(stage.name);
+			Files.createDirectory(stageDir);
+
+			for (final var layer : activeLayers) {
+				final var layerDir = stageDir.resolve(layer.name);
+				Files.createDirectory(layerDir);
+				for (var fileType : stage.files) {
+					final var sourceFile = intermediateDir.resolve(getSourceFile(stage, fileType, layer));
+					final var destFile = finalSubdir.resolve(getDestFile(stage, fileType, layer));
+					if(Files.exists(sourceFile)) {
+						System.out.printf("  Copying %s to %s", sourceFile, destFile).println();
+						Files.copy(sourceFile, destFile);
+					}
+				}
+			}
+		}
 
 		copyFiles(outputSubdir, outputDir, file -> file.getFileName().toString().startsWith("Output_"));
 	}

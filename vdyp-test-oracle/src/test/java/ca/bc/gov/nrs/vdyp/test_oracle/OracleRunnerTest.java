@@ -25,6 +25,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.CleanupMode;
 import org.junit.jupiter.api.io.TempDir;
 
+import ca.bc.gov.nrs.vdyp.test_oracle.OracleRunner.Layer;
+
 class OracleRunnerTest {
 
 	@TempDir
@@ -68,10 +70,13 @@ class OracleRunnerTest {
 		}
 	}
 
+	
 	@Test
-	void testSingleTest() throws Exception {
+	void testSingleTestPrimary() throws Exception {
 
 		setupInput1();
+		
+		final var layers = new Layer[] {Layer.PRIMARY};
 
 		var em = EasyMock.createControl();
 
@@ -129,17 +134,23 @@ class OracleRunnerTest {
 				assertThat(tempDir, fileExists("test1/input/VDYP7_INPUT_POLY.csv"));
 				assertThat(tempDir, fileExists("test1/input/VDYP7_INPUT_LAYER.csv"));
 
-				for (var tag : new String[] { "7INPP", "7INPS", "7INPU", //
-						"7OUTP", "7OUTS", "7OUTU", "7OUTC", //
-						"AJSTA", "AJSTP", "AJSTS", "AJSTU", //
-						"BINPP", "BINPS", "BINPU", //
-						"BOUTP", "BOUTS", "BOUTU", "BOUTC", //
-						"GROW", //
-						"VRII", "VRIL", "VRIP", "VRIS" //
-				}) {
-					FileUtils.touch(installDir.resolve("VDYP_CFG/P-SAVE_VDYP7_" + tag + ".dat").toFile());
+				for (var layer: layers) {
+					for (var tag : new String[] { "7INPP", "7INPS", "7INPU", //
+							"7OUTP", "7OUTS", "7OUTU", "7OUTC", //
+							"AJSTA", "AJSTP", "AJSTS", "AJSTU", //
+							"BINPP", "BINPS", "BINPU", //
+							"BOUTP", "BOUTS", "BOUTU", "BOUTC", //
+							"GROW", //
+							"VRII", "VRIL", "VRIP", "VRIS" //
+					}) {
+						FileUtils.touch(installDir.resolve("VDYP_CFG/"+layer.code+"-SAVE_VDYP7_" + tag + ".dat").toFile());
+					}
+					FileUtils.touch(installDir.resolve("VDYP_CFG/"+layer.code+"-SAVE_VDYP7_VDYP.ctl").toFile());
+					FileUtils.touch(installDir.resolve("VDYP_CFG/"+layer.code+"-SAVE_VDYP7_BACK.ctl").toFile());
 				}
 
+				// TODO create mock final output files
+				
 				return mockFuture;
 			}
 
@@ -154,32 +165,30 @@ class OracleRunnerTest {
 		assertThat(outputDir, fileExists("test1/input/VDYP7_INPUT_POLY.csv"));
 		assertThat(outputDir, fileExists("test1/input/VDYP7_INPUT_LAYER.csv"));
 
-		for (var tag : new String[] { "7INPP", "7INPS", "7INPU" }) {
-			assertThat(outputDir, fileExists("test1/forwardInput/P-SAVE_VDYP7_" + tag + ".dat"));
-		}
-		for (var tag : new String[] { "7OUTP", "7OUTS", "7OUTU", "7OUTC" }) {
-			assertThat(outputDir, fileExists("test1/forwardOutput/P-SAVE_VDYP7_" + tag + ".dat"));
-		}
-		for (var tag : new String[] { "AJSTA", "AJSTP", "AJSTS", "AJSTU" }) {
-			assertThat(outputDir, fileExists("test1/adjustInput/P-SAVE_VDYP7_" + tag + ".dat"));
-		}
-		for (var tag : new String[] { "BINPP", "BINPS", "BINPU" }) {
-			assertThat(outputDir, fileExists("test1/backInput/P-SAVE_VDYP7_" + tag + ".dat"));
-		}
-		for (var tag : new String[] { "BOUTP", "BOUTS", "BOUTU", "BOUTC" }) {
-			assertThat(outputDir, fileExists("test1/backOutput/P-SAVE_VDYP7_" + tag + ".dat"));
-		}
-		for (var tag : new String[] { "GROW" }) {
-			assertThat(outputDir, fileExists("test1/other/P-SAVE_VDYP7_" + tag + ".dat"));
-		}
-		for (var tag : new String[] { "VRII", "VRIL", "VRIP", "VRIS" }) {
-			assertThat(outputDir, fileExists("test1/vriInput/P-SAVE_VDYP7_" + tag + ".dat"));
+		for (var layer: layers) {
+			for (var tag : new String[] { "polygon", "species", "util", "grow" }) {
+				assertThat(outputDir, fileExists("test1/forwardInput/primary/" + tag + ".dat"));
+			}
+			assertThat(outputDir, fileExists("test1/forwardInput/primary/control.ctl"));
+			for (var tag : new String[] { "polygon", "species", "util", "compat" }) {
+				assertThat(outputDir, fileExists("test1/forwardOutput/primary/" + tag + ".dat"));
+			}
+			for (var tag : new String[] { "adjust", "polygon", "species", "util" }) {
+				assertThat(outputDir, fileExists("test1/adjustInput/primary/" + tag + ".dat"));
+			}
+			for (var tag : new String[] { "polygon", "species", "util" }) {
+				assertThat(outputDir, fileExists("test1/backInput/primary/" + tag + ".dat"));
+			}
+			assertThat(outputDir, fileExists("test1/backInput/primary/control.ctl"));
+			for (var tag : new String[] { "polygon", "species", "util", "compat" }) {
+				assertThat(outputDir, fileExists("test1/backOutput/primary/" + tag + ".dat"));
+			}
+			for (var tag : new String[] { "site", "layer", "polygon", "species" }) {
+				assertThat(outputDir, fileExists("test1/vriInput/primary/" + tag + ".dat"));
+			}
 		}
 
-		assertThat(outputDir, fileExists("test1/input/RunVDYP7.cmd"));
-		assertThat(outputDir, fileExists("test1/input/parms.txt"));
-		assertThat(outputDir, fileExists("test1/input/VDYP7_INPUT_POLY.csv"));
-		assertThat(outputDir, fileExists("test1/input/VDYP7_INPUT_LAYER.csv"));
+		assertThat(outputDir, fileExists("test1/output/Output_YldTbl.csv"));
 
 	}
 
@@ -196,7 +205,7 @@ class OracleRunnerTest {
 				if (Files.exists(item.resolve(path)))
 					return true;
 
-				mismatchDescription.appendValue("does not exist");
+				mismatchDescription.appendValue(item.resolve(path)).appendText(" does not exist");
 				return false;
 			}
 
