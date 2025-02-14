@@ -1,5 +1,24 @@
 package ca.bc.gov.nrs.vdyp.application;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.PrintStream;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import ca.bc.gov.nrs.vdyp.io.FileResolver;
+import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
+import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
+import ca.bc.gov.nrs.vdyp.io.parse.control.BaseControlParser;
+
 /**
  * Base class of all VDYP applications.
  *
@@ -9,6 +28,9 @@ package ca.bc.gov.nrs.vdyp.application;
  * @author Michael Junkin, Vivid Solutions
  */
 public abstract class VdypApplication extends VdypComponent {
+
+	private static final Logger logger = LoggerFactory.getLogger(VdypApplication.class);
+
 	public abstract VdypApplicationIdentifier getId();
 
 	/**
@@ -18,4 +40,35 @@ public abstract class VdypApplication extends VdypComponent {
 	public int getJProgramNumber() {
 		return getId().getJProgramNumber();
 	}
+
+	public static List<String> getControlMapFileNames(
+			final String[] args, final String defaultName, final VdypApplicationIdentifier appId,
+			PrintStream writeToIfNoArgs,
+			InputStream readFromIfNoArgs
+	) throws IOException {
+		List<String> controlFileNames;
+		if (args.length == 0) {
+			System.out.printf(
+					"Enter name of %s control file (or RETURN for %s) or *name for both): ", appId.toString(),
+					defaultName
+			);
+
+			controlFileNames = new ArrayList<>();
+			try (BufferedReader br = new BufferedReader(new InputStreamReader(readFromIfNoArgs))) {
+				String userResponse = br.readLine();
+				if (userResponse.length() == 0) {
+					controlFileNames.add(defaultName);
+				} else if (userResponse.startsWith("*")) {
+					controlFileNames.add(defaultName);
+
+					userResponse = userResponse.substring(1);
+					controlFileNames.addAll(Arrays.asList(userResponse.split("[[:space:]]+")));
+				}
+			}
+		} else {
+			controlFileNames = Arrays.asList(args);
+		}
+		return controlFileNames;
+	}
+
 }

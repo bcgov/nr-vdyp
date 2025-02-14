@@ -22,6 +22,16 @@ public interface FileResolver {
 	 * @return
 	 * @throws IOException
 	 */
+
 	public FileResolver relative(String path) throws IOException;
+
+	/**
+	 * Create a FileResolver that resolves relative to the parent of the given path
+	 *
+	 * @param path
+	 * @return
+	 * @throws IOException
+	 */
+	public FileResolver relativeToParent(String path) throws IOException;
 
 }

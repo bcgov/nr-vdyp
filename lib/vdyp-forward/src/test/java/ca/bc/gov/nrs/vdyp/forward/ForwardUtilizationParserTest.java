@@ -39,7 +39,7 @@ public class ForwardUtilizationParserTest {
 		controlMap.put(ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name(), "test.dat");
 		TestUtils.populateControlMapBecReal(controlMap);
 
-		var fileResolver = TestUtils.fileResolver("test.dat", TestUtils.makeInputStream(/* empty */));
+		var fileResolver = TestUtils.fileResolverContext("test.dat", TestUtils.makeInputStream(/* empty */));
 
 		parser.modify(controlMap, fileResolver);
 
@@ -65,7 +65,7 @@ public class ForwardUtilizationParserTest {
 		controlMap.put(ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name(), "test.dat");
 		TestUtils.populateControlMapGenusReal(controlMap);
 
-		var fileResolver = TestUtils.fileResolver(
+		var fileResolver = TestUtils.fileResolverContext(
 				"test.dat",
 				TestUtils.makeInputStream(
 						"01002 S000001 00     1970 P  0    -1  0.01513     5.24   7.0166   0.0630   0.0000   0.0000   0.0000   0.0000   6.1",
@@ -121,7 +121,7 @@ public class ForwardUtilizationParserTest {
 		controlMap.put(ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name(), "test.dat");
 		TestUtils.populateControlMapGenusReal(controlMap);
 
-		var fileResolver = TestUtils.fileResolver(
+		var fileResolver = TestUtils.fileResolverContext(
 				"test.dat",
 				TestUtils.makeInputStream(
 						"01002 S000001 00     1970 P  0    -1  0.01513     5.24   7.0166   0.0630   0.0000   0.0000   0.0000   0.0000   6.1", //

@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.application.ProcessingException;
+import ca.bc.gov.nrs.vdyp.application.VdypApplication;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
@@ -64,7 +65,7 @@ public class ForwardProcessor {
 	 * @throws ResourceParseException
 	 * @throws ProcessingException
 	 */
-	void run(
+	public void run(
 			FileResolver inputFileResolver, FileResolver outputFileResolver, List<String> controlFileNames,
 			Set<ForwardPass> vdypPassSet
 	) throws IOException, ResourceParseException, ProcessingException {
@@ -100,16 +101,7 @@ public class ForwardProcessor {
 
 		var parser = new ForwardControlParser();
 
-		for (var controlFileName : controlFileNames) {
-			logger.info("Resolving and parsing {}", controlFileName);
-
-			try (var is = inputFileResolver.resolveForInput(controlFileName)) {
-				Path controlFilePath = inputFileResolver.toPath(controlFileName).getParent();
-				FileSystemFileResolver relativeResolver = new FileSystemFileResolver(controlFilePath);
-
-				parser.parse(is, relativeResolver, controlMap);
-			}
-		}
+		parser.parseByName(controlFileNames, inputFileResolver, controlMap);
 
 		process(vdypPassSet, controlMap, Optional.of(outputFileResolver), polygonFilter);
 	}
