@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { CONSTANTS, DEFAULTS } from '@/constants'
 import type { PanelName, PanelState } from '@/types/types'
 import type { SpeciesList, SpeciesGroup } from '@/interfaces/interfaces'
+import { SPECIES_GROUP_MAP } from '@/constants/mappings'
 import { Util } from '@/utils/util'
 
 export const useModelParameterStore = defineStore('modelParameter', () => {
@@ -151,7 +152,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
 
     // Convert groupMap to speciesGroups array
     speciesGroups.value = Object.keys(groupMap).map((key) => ({
-      group: key,
+      group: SPECIES_GROUP_MAP[key] || key,
       percent: groupMap[key].toFixed(
         CONSTANTS.NUM_INPUT_LIMITS.SPECIES_PERCENT_DECIMAL_NUM,
       ),

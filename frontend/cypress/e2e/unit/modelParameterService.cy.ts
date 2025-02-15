@@ -17,6 +17,7 @@ describe('Model Parameter Service Unit Tests', () => {
       { species: null, percent: '0.0' },
       { species: null, percent: '0.0' },
     ],
+    speciesGroups: [],
     becZone: DEFAULTS.DEFAULT_VALUES.BEC_ZONE,
     ecoZone: OPTIONS.ecoZoneOptions[0].value,
     incSecondaryHeight: false,
