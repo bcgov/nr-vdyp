@@ -19,10 +19,10 @@ import ca.bc.gov.nrs.vdyp.backend.projection.model.Polygon;
 
 public abstract class AbstractPolygonStream {
 
-	protected ProjectionContext state;
+	protected ProjectionContext context;
 	
-	public AbstractPolygonStream(ProjectionContext state) {
-		this.state = state;
+	public AbstractPolygonStream(ProjectionContext context) {
+		this.context = context;
 	}
 	
 	public abstract Polygon getNextPolygon() throws PolygonValidationException;
@@ -55,18 +55,18 @@ public abstract class AbstractPolygonStream {
 
 	public abstract boolean hasNextPolygon();
 
-	public static AbstractPolygonStream build(ProjectionContext state, Map<String, InputStream> streams)
+	public static AbstractPolygonStream build(ProjectionContext context, Map<String, InputStream> streams)
 			throws ProjectionRequestValidationException {
-		switch (state.getRequestKind()) {
+		switch (context.getRequestKind()) {
 		case DCSV:
 			verifyStreamTypes(streams, ParameterNames.DCSV_INPUT_DATA);
-			return new DcsvPolygonStream(state, streams.get(ParameterNames.DCSV_INPUT_DATA));
+			return new DcsvPolygonStream(context, streams.get(ParameterNames.DCSV_INPUT_DATA));
 		case HCSV:
 			verifyStreamTypes(streams, ParameterNames.HCSV_POLYGON_INPUT_DATA, ParameterNames.HCSV_LAYERS_INPUT_DATA);
-			return new HcsvPolygonStream(state, streams.get(ParameterNames.HCSV_POLYGON_INPUT_DATA), streams.get(ParameterNames.HCSV_LAYERS_INPUT_DATA));
+			return new HcsvPolygonStream(context, streams.get(ParameterNames.HCSV_POLYGON_INPUT_DATA), streams.get(ParameterNames.HCSV_LAYERS_INPUT_DATA));
 		case ICSV:
 			verifyStreamTypes(streams, ParameterNames.ICSV_INPUT_DATA);
-			return new IcsvPolygonStream(state, streams.get(ParameterNames.ICSV_INPUT_DATA));
+			return new IcsvPolygonStream(context, streams.get(ParameterNames.ICSV_INPUT_DATA));
 		case SCSV:
 			verifyStreamTypes(
 					streams, //
@@ -75,7 +75,7 @@ public abstract class AbstractPolygonStream {
 					ParameterNames.SCSV_OTHER_VEGETATION_INPUT_DATA, ParameterNames.SCSV_POLYGON_ID_INPUT_DATA,
 					ParameterNames.SCSV_SPECIES_INPUT_DATA, ParameterNames.SCSV_VRI_ADJUST_INPUT_DATA
 			);
-			return new ScsvPolygonStream(state, streams.get(ParameterNames.SCSV_POLYGON_INPUT_DATA),
+			return new ScsvPolygonStream(context, streams.get(ParameterNames.SCSV_POLYGON_INPUT_DATA),
 					streams.get(ParameterNames.SCSV_LAYERS_INPUT_DATA),
 					streams.get(ParameterNames.SCSV_HISTORY_INPUT_DATA),
 					streams.get(ParameterNames.SCSV_NON_VEGETATION_INPUT_DATA),
@@ -84,7 +84,7 @@ public abstract class AbstractPolygonStream {
 					streams.get(ParameterNames.SCSV_SPECIES_INPUT_DATA),
 					streams.get(ParameterNames.SCSV_VRI_ADJUST_INPUT_DATA));
 		default:
-			throw new IllegalStateException(MessageFormat.format("Projection kind {0} is not recognized", state));
+			throw new IllegalStateException(MessageFormat.format("Projection kind {0} is not recognized", context));
 		}
 	}
 }

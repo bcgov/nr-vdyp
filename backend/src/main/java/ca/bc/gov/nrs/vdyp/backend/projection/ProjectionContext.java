@@ -1,5 +1,7 @@
 package ca.bc.gov.nrs.vdyp.backend.projection;
 
+import java.text.MessageFormat;
+
 import org.slf4j.event.Level;
 
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestValidationException;
@@ -87,5 +89,11 @@ public class ProjectionContext {
 
 	public IMessageLog getErrorLog() {
 		return errorLog;
+	}
+
+	public void addMessage(String message, Object... args) {
+		String messageText = MessageFormat.format(message, args);
+		getErrorLog().addMessage(messageText);
+		PolygonProjectionRunner.logger.debug(messageText);
 	}
 }

@@ -748,8 +748,8 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 			}
 			if (Objects.isNull(layer)) {
 				throw validationError(
-						"Species entry references layer %s of polygon %s but it is not present.", layer,
-						polygon.getPolygonIdentifier()
+						"Species entry references layer of type \"%s\" of polygon %s but it is not present.",
+						spec.getLayerType(), polygon.getPolygonIdentifier()
 				);
 			}
 			speciesPerLayerMap.get(spec.getLayerType()).put(spec.getGenus(), spec);

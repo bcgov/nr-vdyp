@@ -111,22 +111,18 @@ public class ForwardProcessor {
 			}
 		}
 
-		process(vdypPassSet, controlMap, Optional.of(outputFileResolver), polygonFilter);
+		process(vdypPassSet, controlMap, polygonFilter);
 	}
 
 	/**
 	 * Implements VDYP_SUB.
 	 *
-	 * @param vdypPassSet        the set of stages (passes) to be executed
-	 * @param controlMap         parsed control map
-	 * @param outputFileResolver optional file resolver that, if present, locates output files.
-	 *
+	 * @param vdypPassSet the set of stages (passes) to be executed
+	 * @param controlMap  parsed control map
 	 * @throws ProcessingException
 	 */
-	public void process(
-			Set<ForwardPass> vdypPassSet, Map<String, Object> controlMap, Optional<FileResolver> outputFileResolver
-	) throws ProcessingException {
-		process(vdypPassSet, controlMap, outputFileResolver, (p) -> true);
+	public void process(Set<ForwardPass> vdypPassSet, Map<String, Object> controlMap) throws ProcessingException {
+		process(vdypPassSet, controlMap, (p) -> true);
 	}
 
 	/**
@@ -139,10 +135,9 @@ public class ForwardProcessor {
 	 *
 	 * @throws ProcessingException
 	 */
-	public void process(
-			Set<ForwardPass> vdypPassSet, Map<String, Object> controlMap, Optional<FileResolver> outputFileResolver,
-			Predicate<VdypPolygon> polygonFilter
-	) throws ProcessingException {
+	public void
+			process(Set<ForwardPass> vdypPassSet, Map<String, Object> controlMap, Predicate<VdypPolygon> polygonFilter)
+					throws ProcessingException {
 
 		logger.info("Beginning processing with given configuration");
 
@@ -164,13 +159,10 @@ public class ForwardProcessor {
 		if (vdypPassSet.contains(ForwardPass.PASS_3)) {
 
 			Optional<VdypOutputWriter> outputWriter = Optional.empty();
-
-			if (outputFileResolver.isPresent()) {
-				try {
-					outputWriter = Optional.of(new VdypOutputWriter(controlMap, outputFileResolver.get()));
-				} catch (IOException e) {
-					throw new ProcessingException(e);
-				}
+			try {
+				outputWriter = Optional.of(new VdypOutputWriter(controlMap));
+			} catch (IOException e) {
+				throw new ProcessingException(e);
 			}
 
 			var fpe = new ForwardProcessingEngine(controlMap, outputWriter);

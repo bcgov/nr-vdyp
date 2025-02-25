@@ -12,9 +12,12 @@ import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.io.Closeable;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -114,13 +117,23 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	static final Set<String> HARDWOODS = Set.of("AC", "AT", "D", "E", "MB");
 
 	protected static void doMain(VdypStartApplication<?, ?, ?, ?> app, final String... args) {
-		var resolver = new FileSystemFileResolver();
-
-		try {
-			app.init(resolver, args);
-		} catch (Exception ex) {
-			log.error("Error during initialization", ex);
-			System.exit(CONFIG_LOAD_ERROR);
+		
+		if (args.length == 1 /* one control file */) {
+			try {
+				app.init(args[0]);
+			} catch (Exception ex) {
+				log.error("Error during initialization", ex);
+				System.exit(CONFIG_LOAD_ERROR);
+			}
+		} else {
+			var resolver = new FileSystemFileResolver();
+			
+			try {
+				app.init(resolver, args);
+			} catch (Exception ex) {
+				log.error("Error during initialization", ex);
+				System.exit(CONFIG_LOAD_ERROR);
+			}
 		}
 
 		try {
@@ -180,6 +193,45 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 	protected VdypStartApplication() {
 		super();
+	}
+
+	/**
+	 * Initialize application
+	 *
+	 * @param resolver
+	 * @param controlFilePath
+	 * @throws IOException
+	 * @throws ResourceParseException
+	 */
+	public void init(String controlFileLocation)
+			throws IOException, ResourceParseException {
+
+		// Load the control map
+
+		BaseControlParser parser = getControlFileParser();
+		List<InputStream> resources = new ArrayList<>(1);
+		try {
+			Path controlFilePath = Path.of(controlFileLocation);
+			if (!Files.exists(controlFilePath)) {
+				throw new FileNotFoundException(MessageFormat.format("Control file {} not found", controlFilePath.toString()));
+			}
+			if (Files.isDirectory(controlFilePath)) {
+				throw new FileNotFoundException(MessageFormat.format("Control file {} is not a file", controlFilePath.toString()));
+			}
+			if (!Files.isReadable(controlFilePath)) {
+				throw new FileNotFoundException(MessageFormat.format("Control file {} is not readable", controlFilePath.toString()));
+			}
+			
+			FileSystemFileResolver resolver = new FileSystemFileResolver(controlFilePath.getParent());
+			resources.add(resolver.resolveForInput(controlFileLocation));
+
+			init(resolver, parser.parse(resources, resolver, controlMap));
+
+		} finally {
+			for (var resource : resources) {
+				resource.close();
+			}
+		}
 	}
 
 	/**
@@ -383,7 +435,6 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	 * @return
 	 * @throws ProcessingException
 	 */
-	@SuppressWarnings("java:S3776")
 	protected int findItg(List<S> primarySecondary) throws StandProcessingException {
 		var primary = primarySecondary.get(0);
 

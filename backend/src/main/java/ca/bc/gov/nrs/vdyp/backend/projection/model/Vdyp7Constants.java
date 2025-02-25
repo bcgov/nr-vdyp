@@ -2,6 +2,11 @@ package ca.bc.gov.nrs.vdyp.backend.projection.model;
 
 public class Vdyp7Constants {
 	
+	public static final double EMPTY_DECIMAL = -9.0f;
+	public static final String EMPTY_DECIMAL_TEXT = Double.toString(EMPTY_DECIMAL);
+	public static final int EMPTY_INT = -9;
+	public static final String EMPTY_INT_TEXT = Integer.toString(EMPTY_INT);
+
 	// Polygon related constants
 	
 	public static final int MAX_LEN_MAPSHEET = 7;

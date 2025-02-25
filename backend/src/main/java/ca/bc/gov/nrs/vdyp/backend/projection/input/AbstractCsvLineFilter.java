@@ -9,9 +9,6 @@ import com.opencsv.bean.CsvToBeanFilter;
 
 public class AbstractCsvLineFilter implements CsvToBeanFilter {
 	
-	protected static final String VDYP7_UNSET_INTEGER_VALUE_TEXT = "-9";
-	protected static final String VDYP7_UNSET_FLOAT_VALUE_TEXT = "-9.0";
-
 	public enum Feature {
 		FILTER_BLANK_LINES, FILTER_HEADER_LINE
 	}

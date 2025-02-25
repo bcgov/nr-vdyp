@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.backend.projection.model;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -28,18 +29,18 @@ public class Species implements Comparable<Species> {
 	/** The Stand containing the Species. */
 	private Stand stand;
 
-	/** 
-	 * If this represents an Sp0 (a Species Group), this field stores its Sp0 code. If
-	 * this represents an Sp64, this field stores its Sp64 code.
+	/**
+	 * If this represents an Sp0 (a Species Group), this field stores its Sp0 code. If this represents an Sp64, this
+	 * field stores its Sp64 code.
 	 */
 	private String speciesCode;
 
 	// Required Members
 
 	private double speciesPercent = 0.0;
-	
-	// Optional Members
-	
+
+	// Optional Members - never set these directly; always call the setter.
+
 	private Double totalAge;
 	private Double ageAtBreastHeight;
 	private Double dominantHeight;
@@ -51,14 +52,16 @@ public class Species implements Comparable<Species> {
 	private Double suppliedDominantHeight;
 	private Double suppliedSiteIndex;
 
-	private Integer numTimesSupplied = 0;
+	// The number of duplicates of this species.
+
+	private Integer nDuplicates = 0;
 
 	/**
 	 * For each of the times this species was supplied, this array holds the individual species percents that were
 	 * supplied. This is necessary because when projected results are requested, those results will have to be prorated
 	 * by the input percent.
 	 */
-	private Map<Integer /* duplicate number */, Double> percentsPerDuplicate;
+	private Map<Integer /* duplicate number */, Double> percentsPerDuplicate = new HashMap<>();
 
 	private Species() {
 	}
@@ -111,30 +114,63 @@ public class Species implements Comparable<Species> {
 		return suppliedSiteIndex;
 	}
 
-	public Integer getNumTimesSupplied() {
-		return numTimesSupplied;
+	public Integer getNDuplicates() {
+		return nDuplicates;
 	}
 
 	public Map<Integer, Double> getPercentsPerDuplicate() {
 		return percentsPerDuplicate;
 	}
-	
+
 	// MUTABLE field setters
 
 	void setTotalAge(Double totalAge) {
 		this.totalAge = totalAge;
+		if (this.suppliedTotalAge == null) {
+			this.suppliedTotalAge = this.totalAge;
+		}
 	}
 
-	void setSiteIndex(double siteIndex) {
+	void setSiteIndex(Double siteIndex) {
 		this.siteIndex = siteIndex;
+		if (this.suppliedSiteIndex == null) {
+			this.suppliedSiteIndex = this.siteIndex;
+		}
+	}
+
+	public void setDominantHeight(Double dominantHeight) {
+		this.dominantHeight = dominantHeight;
+		if (this.suppliedDominantHeight == null) {
+			this.suppliedDominantHeight = this.dominantHeight;
+		}
+	}
+
+	public void setYearsToBreastHeight(Double yearsToBreastHeight) {
+		this.yearsToBreastHeight = yearsToBreastHeight;
+	}
+
+	public void setAgeAtBreastHeight(Double ageAtBreastHeight) {
+		this.ageAtBreastHeight = ageAtBreastHeight;
 	}
 
 	void resetDominantHeight() {
-		this.dominantHeight = null;
+		setDominantHeight(null);
 	}
 
 	void setSiteCurve(SiteIndexEquation siteCurve) {
 		this.siteCurve = siteCurve;
+	}
+
+	/**
+	 * Adjust the percentage of the species (and the duplicate within the species) by the given amount.
+	 * 
+	 * @param adjustment       the adjustment amount, possibly negative.
+	 * @param duplicationIndex the duplication index to adjust. If the species has no duplicates, supply 0.
+	 */
+	public void adjustSpeciesPercent(double adjustment, int duplicationIndex) {
+
+		this.speciesPercent += adjustment;
+		this.percentsPerDuplicate.put(duplicationIndex, this.percentsPerDuplicate.get(duplicationIndex) + adjustment);
 	}
 
 	public static class Builder {
@@ -156,54 +192,34 @@ public class Species implements Comparable<Species> {
 			speciesPercentHasBeenSet = true;
 			return this;
 		}
-		
+
 		public Builder ageAtBreastHeight(Double ageAtBreastHeight) {
-			species.ageAtBreastHeight = ageAtBreastHeight;
+			species.setAgeAtBreastHeight(ageAtBreastHeight);
 			return this;
 		}
 
 		public Builder totalAge(Double totalAge) {
-			species.totalAge = totalAge;
+			species.setTotalAge(totalAge);
 			return this;
 		}
 
 		public Builder dominantHeight(Double dominantHeight) {
-			species.dominantHeight = dominantHeight;
+			species.setDominantHeight(dominantHeight);
 			return this;
 		}
 
 		public Builder siteIndex(Double siteIndex) {
-			species.siteIndex = siteIndex;
+			species.setSiteIndex(siteIndex);
 			return this;
 		}
 
 		public Builder yearsToBreastHeight(Double yearsToBreastHeight) {
-			species.yearsToBreastHeight = yearsToBreastHeight;
+			species.setYearsToBreastHeight(yearsToBreastHeight);
 			return this;
 		}
 
 		public Builder siteCurve(SiteIndexEquation siteCurve) {
-			species.siteCurve = siteCurve;
-			return this;
-		}
-
-		public Builder suppliedTotalAge(Double suppliedTotalAge) {
-			species.suppliedTotalAge = suppliedTotalAge;
-			return this;
-		}
-
-		public Builder suppliedDominantHeight(Double suppliedDominantHeight) {
-			species.suppliedDominantHeight = suppliedDominantHeight;
-			return this;
-		}
-
-		public Builder suppliedSiteIndex(Double suppliedSiteIndex) {
-			species.suppliedSiteIndex = suppliedSiteIndex;
-			return this;
-		}
-
-		public Builder percentsPerDuplicate(Map<Integer, Double> percentsPerDuplicate) {
-			species.percentsPerDuplicate = percentsPerDuplicate;
+			species.setSiteCurve(siteCurve);
 			return this;
 		}
 
@@ -215,10 +231,12 @@ public class Species implements Comparable<Species> {
 			if (species.stand == null) {
 				throw new IllegalStateException("Attempt to create a Species with no parent (Stand) component given");
 			}
-			
-			if (! speciesPercentHasBeenSet) {
+
+			if (!speciesPercentHasBeenSet) {
 				throw new IllegalStateException("Attempt to create a Species with no species percentage given");
 			}
+
+			species.percentsPerDuplicate.put(0, species.speciesPercent);
 
 			return species;
 		}
@@ -269,71 +287,63 @@ public class Species implements Comparable<Species> {
 	public void addDuplicate(Species duplicate) {
 
 		speciesPercent += duplicate.getSpeciesPercent();
-		percentsPerDuplicate.put(numTimesSupplied++, duplicate.getSpeciesPercent());
+		percentsPerDuplicate.put(nDuplicates++, duplicate.getSpeciesPercent());
 
 		if (getTotalAge() == null) {
-			totalAge = duplicate.totalAge;
+			setTotalAge(duplicate.getTotalAge());
 		}
 
 		if (getDominantHeight() == null) {
-			dominantHeight = duplicate.getDominantHeight();
+			setDominantHeight(duplicate.getDominantHeight());
 		}
 
 		if (getSiteIndex() == null) {
-			siteIndex = duplicate.getSiteIndex();
+			setSiteIndex(duplicate.getSiteIndex());
 		}
 
 		if (getYearsToBreastHeight() == null) {
-			yearsToBreastHeight = duplicate.getYearsToBreastHeight();
+			setYearsToBreastHeight(duplicate.getYearsToBreastHeight());
 		}
 
 		if (getAgeAtBreastHeight() == null) {
-			ageAtBreastHeight = duplicate.getAgeAtBreastHeight();
+			setAgeAtBreastHeight(duplicate.getAgeAtBreastHeight());
 		}
 
 		if (getSiteCurve() == null) {
-			siteCurve = duplicate.getSiteCurve();
-		}
-
-		if (getSuppliedTotalAge() == null) {
-			suppliedTotalAge = duplicate.getSuppliedTotalAge();
-		}
-
-		if (getSuppliedDominantHeight() == null) {
-			yearsToBreastHeight = duplicate.getSuppliedDominantHeight();
-		}
-
-		if (getSuppliedSiteIndex() == null) {
-			suppliedSiteIndex = duplicate.getSuppliedSiteIndex();
+			setSiteCurve(duplicate.getSiteCurve());
 		}
 	}
 
 	/**
-	 * A new species has been added to the Stand of which this Species is the Species Group. Update this Species (Group)
+	 * A new species has been added to the Stand of which this Species is a Species Group. Update this Species (Group)
 	 * to reflect this.
 	 * 
-	 * @param species the sp64 added.
+	 * @param sp64 the sp64 added.
 	 */
-	public void updateAfterSp64Added(Species species) {
+	public void updateAfterSp64Added(Species sp64) {
 
-		speciesPercent += species.speciesPercent;
+		speciesPercent += sp64.speciesPercent;
 
-		if (totalAge == null && species.getTotalAge() != null) {
+		assert nDuplicates == 0;
+		this.percentsPerDuplicate.put(0, speciesPercent);
 
-			totalAge = species.getTotalAge();
-			dominantHeight = species.getDominantHeight();
-			siteCurve = species.siteCurve;
-			ageAtBreastHeight = species.ageAtBreastHeight;
-			yearsToBreastHeight = species.getYearsToBreastHeight();
-			siteIndex = species.getSiteIndex();
+		if (totalAge == null && sp64.getTotalAge() != null) {
 
-			suppliedTotalAge = species.getSuppliedTotalAge();
-			suppliedDominantHeight = species.getSuppliedDominantHeight();
-			suppliedSiteIndex = species.getSiteIndex();
+			ageAtBreastHeight = sp64.getAgeAtBreastHeight();
+			dominantHeight = sp64.getDominantHeight();
+			siteCurve = sp64.getSiteCurve();
+			siteIndex = sp64.getSiteIndex();
+			suppliedDominantHeight = sp64.getSuppliedDominantHeight();
+			suppliedSiteIndex = sp64.getSiteIndex();
+			suppliedTotalAge = sp64.getSuppliedTotalAge();
+			totalAge = sp64.getTotalAge();
+			yearsToBreastHeight = sp64.getYearsToBreastHeight();
 		}
 	}
 
 	/**
+	 * V7Int_FillInSpeciesComponent
+	 * 
 	 * This species has been added to a layer (and polygon.) Infer the values of undefined fields from the context,
 	 * where possible.
 	 */
@@ -346,15 +356,10 @@ public class Species implements Comparable<Species> {
 
 		boolean haveComputedSiteIndexCurve = false;
 		boolean haveComputedTotalAge = false;
-		double lTotalAge = totalAge == null ? -9.0 : totalAge;
 		boolean haveComputedAgeAtBreastHeight = false;
-		double lAgeAtBreastHeight = ageAtBreastHeight == null ? -9.0 : ageAtBreastHeight;
 		boolean haveComputedYearsToBreastHeight = false;
-		double lYearsToBreastHeight = yearsToBreastHeight == null ? -9.0 : yearsToBreastHeight;
 		boolean haveComputedDominantHeight = false;
-		double lDominantHeight = dominantHeight == null ? -9.0 : dominantHeight;
 		boolean haveComputedSiteIndex = false;
-		double lSiteIndex = siteIndex == null ? -9.0 : siteIndex;
 
 		boolean keepTrying = true;
 		while (keepTrying) {
@@ -363,33 +368,35 @@ public class Species implements Comparable<Species> {
 
 			if (siteCurve != null) {
 
-				if (!haveComputedSiteIndex && lSiteIndex == -9.0 && lTotalAge >= 30.0 && lDominantHeight > 0) {
+				if (!haveComputedSiteIndex && siteIndex == null && eval(totalAge) >= 30.0 && eval(dominantHeight) > 0) {
 
-					this.siteIndex = dominantHeightAndAgeToSiteIndex();
+					this.setSiteIndex(dominantHeightAndAgeToSiteIndex());
 
 					keepTrying = true;
 					haveComputedSiteIndex = true;
 
-					logger.debug("Calculated Site Index using {} with parameters:", "dominantHeightAndAgeToSiteIndex");
+					logger.debug(
+							"{}: calculated Site Index using dominantHeightAndAgeToSiteIndex with parameters:", this
+					);
 					logger.debug(
 							"   {}: {} ('{}')", "Site Curve Number", siteCurve, SiteTool.getSICurveName(siteCurve)
 					);
 					logger.debug("   {}: {}", "Total Age", totalAge);
-					logger.debug("{}: {}", "Dominant Height", dominantHeight);
-					logger.debug("   {}: {}", "Result", siteIndex);
+					logger.debug("   {}: {}", "Dominant Height", dominantHeight);
+					logger.debug("   {}: {}", "Resulting Site Index", siteIndex);
 				}
 
 				if (!haveComputedYearsToBreastHeight && yearsToBreastHeight == null && siteIndex != null) {
 
 					try {
-						this.yearsToBreastHeight = SiteTool.yearsToBreastHeight(siteCurve, siteIndex);
+						this.setYearsToBreastHeight(SiteTool.yearsToBreastHeight(siteCurve, siteIndex));
 
 						keepTrying = true;
 						haveComputedYearsToBreastHeight = true;
 
 						logger.debug(
-								"Calculated Years to Breast Height using {} with parameters:",
-								"SiteTool_YearsToBreastHeight"
+								"{}: calculated Years to Breast Height using {} with parameters:",
+								"SiteTool_YearsToBreastHeight", this
 						);
 						logger.debug(
 								"   {}: {} ('{}')", "Site Curve Number", siteCurve, SiteTool.getSICurveName(siteCurve)
@@ -409,53 +416,60 @@ public class Species implements Comparable<Species> {
 				//
 				// If Total_Age - YTBH <= 0.5 then
 				// YTBH = MAX (0.1 , TotalAge - 0.6)
-				if (polygon.getInventoryStandard() == InventoryStandard.FIP && lTotalAge >= 0.0
-						&& yearsToBreastHeight != null && totalAge - yearsToBreastHeight <= 0.5
+				if (polygon.getInventoryStandard() == InventoryStandard.FIP && eval(totalAge) >= 0.0
+						&& eval(totalAge) - eval(yearsToBreastHeight) <= 0.5
 						&& ("NP".equals(polygon.getNonProductiveDescriptor())
 								|| "AF".equals(polygon.getNonProductiveDescriptor()))) {
 
-					logger.debug("Applying Special Case YTBH Calculation where species has the following attributes:");
+					logger.debug(
+							"{}: applying Special Case YTBH Calculation where species has the following attributes:",
+							this
+					);
 					logger.debug("   FIP Inventory Standard");
 					logger.debug("   Non-Productive Polygon (%s)", polygon.getInventoryStandard());
 					logger.debug("   Total Age (%.3f) - Computed YTBH (%.3f) is <= 0.5", totalAge, yearsToBreastHeight);
-					logger.debug("Applying Special Case YTBH Calculation of:");
-					logger.debug("   YTBH = MAX( 0.1, TotalAge - 0.6 )");
+					logger.debug("   Applying Special Case YTBH Calculation of: YTBH = MAX( 0.1, TotalAge - 0.6 )");
 
-					this.yearsToBreastHeight = totalAge - 0.6;
-					if (yearsToBreastHeight < 0.1) {
-						yearsToBreastHeight = 0.1;
+					double newYearsToBreastHeight = totalAge - 0.6;
+					if (newYearsToBreastHeight < 0.1) {
+						newYearsToBreastHeight = 0.1;
 					}
 
-					logger.debug("   Years to Breast Height = %.3f", yearsToBreastHeight);
+					setYearsToBreastHeight(newYearsToBreastHeight);
+
+					logger.debug("   (Re)calculated Years to Breast Height to be %.3f", newYearsToBreastHeight);
 				}
 
-				if (!haveComputedTotalAge && totalAge == null && lDominantHeight > 0.0 && lSiteIndex > 0.0) {
+				if (!haveComputedTotalAge && totalAge == null && eval(dominantHeight) > 0.0 && eval(siteIndex) > 0.0) {
 
-					this.totalAge = dominantHeightAndSiteIndexToAge();
+					this.setTotalAge(dominantHeightAndSiteIndexToAge());
 
 					keepTrying = true;
 					haveComputedTotalAge = true;
 
-					logger.debug("Calculated Total Age using {} with parameters:", "dominantHeightAndSiteIndexToAge");
+					logger.debug(
+							"{}: calculated Total Age using dominantHeightAndSiteIndexToAge with parameters:", this
+					);
 					logger.debug(
 							"   %32s: %s ('%s')", "Site Curve Number", siteCurve, SiteTool.getSICurveName(siteCurve)
 					);
-					logger.debug("%32s: %.2d", "Dominant Height", dominantHeight);
+					logger.debug("   %32s: %.2d", "Dominant Height", dominantHeight);
 					logger.debug("   %32s: %.2d", "Site Index", siteIndex);
 					logger.debug("   %32s: %.2d", "Years to Breast Height", yearsToBreastHeight);
 					logger.debug("   %32s: %.2d", "Result", totalAge);
 				}
 
-				if (!haveComputedDominantHeight && dominantHeight == null && lTotalAge > 0.0 && lSiteIndex > 0.0) {
+				if (!haveComputedDominantHeight && dominantHeight == null && eval(totalAge) > 0.0
+						&& eval(siteIndex) > 0.0) {
 
-					dominantHeight = totalAgeAndSiteIndexToDominantHeight();
+					setDominantHeight(totalAgeAndSiteIndexToDominantHeight());
 
 					keepTrying = true;
 					haveComputedDominantHeight = true;
 
 					logger.debug(
-							"Calculated Dominant Height using {} with parameters:",
-							"totalAgeAndSiteIndexToDominantHeight"
+							"{}: calculated Dominant Height using totalAgeAndSiteIndexToDominantHeight with parameters:",
+							this
 					);
 					logger.debug(
 							"   %32s: %s ('%s')", "Site Curve Number", siteCurve, SiteTool.getSICurveName(siteCurve)
@@ -467,66 +481,79 @@ public class Species implements Comparable<Species> {
 
 					// If the calculated height is <= 0.0, substitute a nominal height
 					if (dominantHeight <= 0.0) {
-						dominantHeight = 0.1;
-						logger.debug("Clamped computed Dominant Height to %.2d", dominantHeight);
+						dominantHeight = 0.01;
+						logger.debug("   clamped computed Dominant Height to %.2d", dominantHeight);
 					}
 				}
 			} else if (!haveComputedSiteIndexCurve) {
 
 				var shortName = SiteTool.getSpeciesShortName(SiteTool.getSpeciesIndex(speciesCode));
-				siteCurve = SiteTool.getSICurve(shortName, isCoastal);
+				setSiteCurve(SiteTool.getSICurve(shortName, isCoastal));
 
 				keepTrying = true;
 				haveComputedSiteIndexCurve = true;
 
-				logger.debug("Determined Site Curve to be: {} {}", SiteTool.getSICurveName(siteCurve), siteCurve);
+				logger.debug(
+						"{}: determined Site Curve to be: {} {}", this, SiteTool.getSICurveName(siteCurve), siteCurve
+				);
 			}
 
-			if (!haveComputedTotalAge && totalAge == null && lAgeAtBreastHeight > 0.0 && lYearsToBreastHeight >= 0.0) {
+			if (!haveComputedTotalAge && totalAge == null && eval(ageAtBreastHeight) > 0.0
+					&& eval(yearsToBreastHeight) >= 0.0) {
 
-				var ageAtBreastHeightRef = new Reference<Double>(lAgeAtBreastHeight);
-				var yearsToBreastHeightRef = new Reference<Double>(lYearsToBreastHeight);
-				var computedTotalAgeRef = new Reference<Double>(-9.0);
+				var ageAtBreastHeightRef = new Reference<Double>(ageAtBreastHeight);
+				var yearsToBreastHeightRef = new Reference<Double>(yearsToBreastHeight);
+				var computedTotalAgeRef = new Reference<Double>(Vdyp7Constants.EMPTY_DECIMAL);
 
 				SiteTool.fillInAgeTriplet(computedTotalAgeRef, ageAtBreastHeightRef, yearsToBreastHeightRef);
 
-				this.totalAge = computedTotalAgeRef.get();
+				setTotalAge(computedTotalAgeRef.get());
 
-				logger.debug("Calculated Total Age to be: %.2f", totalAge);
+				keepTrying = true;
+				haveComputedTotalAge = true;
+
+				logger.debug("{}: calculated Total Age to be: %.2f", this, totalAge);
 			}
 
-			if (!haveComputedAgeAtBreastHeight && ageAtBreastHeight == null && lTotalAge > 0.0
-					&& lYearsToBreastHeight >= 0.0) {
+			if (!haveComputedAgeAtBreastHeight && ageAtBreastHeight == null && eval(totalAge) > 0.0
+					&& eval(yearsToBreastHeight) >= 0.0) {
 
-				var ageAtBreastHeightRef = new Reference<Double>(-9.0);
-				var yearsToBreastHeightRef = new Reference<Double>(lYearsToBreastHeight);
-				var computedTotalAgeRef = new Reference<Double>(lTotalAge);
+				var ageAtBreastHeightRef = new Reference<Double>(Vdyp7Constants.EMPTY_DECIMAL);
+				var yearsToBreastHeightRef = new Reference<Double>(yearsToBreastHeight);
+				var computedTotalAgeRef = new Reference<Double>(totalAge);
 
 				SiteTool.fillInAgeTriplet(computedTotalAgeRef, ageAtBreastHeightRef, yearsToBreastHeightRef);
 
-				this.ageAtBreastHeight = yearsToBreastHeightRef.get();
+				setAgeAtBreastHeight(yearsToBreastHeightRef.get());
 
-				logger.debug("Calculated Years to Breast Height to be: %.2f", yearsToBreastHeightRef);
+				keepTrying = true;
+				haveComputedAgeAtBreastHeight = true;
+
+				logger.debug("{}: calculated Years to Breast Height to be: {}", this, yearsToBreastHeightRef);
 			}
 		}
 
 		// If any computations result in values less than zero, reset those to null (i.e., not computed.)
 
 		if (dominantHeight != null && dominantHeight < 0.0) {
-			dominantHeight = null;
+			setDominantHeight(null);
 		}
 
 		if (siteIndex != null && siteIndex < 0.0) {
-			siteIndex = null;
+			setSiteIndex(null);
 		}
 
 		if (totalAge != null && totalAge < 0.0) {
-			totalAge = null;
+			setTotalAge(null);
 		}
 
 		if (yearsToBreastHeight != null && yearsToBreastHeight < 0.0) {
-			yearsToBreastHeight = null;
+			setYearsToBreastHeight(null);
 		}
+	}
+
+	private double eval(Double d) {
+		return d == null ? Vdyp7Constants.EMPTY_DECIMAL : d;
 	}
 
 	/**
@@ -560,7 +587,7 @@ public class Species implements Comparable<Species> {
 		if (siteIndex == null || siteIndex < Vdyp7Constants.LOW_SITE_INDEX_THRESHOLD) {
 
 			logger.debug(
-					"Site Index of %.2f is less than minimum Site Index of %.2f.", siteIndex,
+					"{}: site Index of %.2f is less than minimum Site Index of %.2f.", this, siteIndex,
 					Vdyp7Constants.LOW_SITE_INDEX_THRESHOLD
 			);
 
@@ -570,29 +597,34 @@ public class Species implements Comparable<Species> {
 			Polygon polygon = layer.getPolygon();
 			polygon.disableProjectionsOfType(layer.determineProjectionType(polygon));
 
-			ValidationMessage message = new ValidationMessage(ValidationMessageKind.LOW_SITE_INDEX_ERROR, polygon, layer.getLayerId(), siteIndex, this);
-			polygon.getMessages().add(new PolygonMessage.Builder().setLayer(layer).setMessage(message).build());
+			ValidationMessage message = new ValidationMessage(
+					ValidationMessageKind.LOW_SITE_INDEX_ERROR, polygon, layer.getLayerId(), siteIndex, this
+			);
+			polygon.getDefinitionMessages()
+					.add(new PolygonMessage.Builder().layer(layer).message(message).build());
 
-			logger.error("Site Index was too low to compute a Dominant Height. Using value %.1f", computedHeight);
+			logger.error(
+					"{}: site Index was too low to compute a Dominant Height. Using value {}...", this, computedHeight
+			);
 
 		} else {
 
 			if (yearsToBreastHeight == null || yearsToBreastHeight < 0.0) {
 				try {
-					yearsToBreastHeight = SiteTool.yearsToBreastHeight(siteCurve, siteIndex);
+					setYearsToBreastHeight(SiteTool.yearsToBreastHeight(siteCurve, siteIndex));
 
-					logger.debug("Years to Breast Height was computed to be %.1f", yearsToBreastHeight);
+					logger.debug("{}: years to Breast Height was computed to be {}", this, yearsToBreastHeight);
 
 					computedHeight = SiteTool.ageAndSiteIndexToHeight(
 							siteCurve, totalAge, SiteIndexAgeType.SI_AT_TOTAL, siteIndex, yearsToBreastHeight
 					);
 
-					logger.debug("Dominant Height from SiteTools call was computed to be %.1f", computedHeight);
+					logger.debug("{}: dominant Height from SiteTools call was computed to be {}", this, computedHeight);
 
 				} catch (CommonCalculatorException e) {
 					logger.error(
-							"CommonCalculatorException encountered in call SiteTool.yearsToBreastHeight({}, {}){}; not computing Years to Breast Height",
-							siteCurve, siteIndex, e.getMessage() != null ? ": reason " + e.getMessage() : ""
+							"{}: commonCalculatorException encountered in call SiteTool.yearsToBreastHeight({}, {}){}; not computing Years to Breast Height",
+							this, siteCurve, siteIndex, e.getMessage() != null ? ": reason " + e.getMessage() : ""
 					);
 				}
 			}
@@ -601,37 +633,42 @@ public class Species implements Comparable<Species> {
 		return computedHeight;
 	}
 
-	private Double dominantHeightAndSiteIndexToAge() {
+	public Double dominantHeightAndSiteIndexToAge() {
 
 		Double computedHeight = null;
 
 		try {
-			siteIndex = SiteTool.heightAndAgeToSiteIndex(
-					siteCurve, totalAge, SiteIndexAgeType.SI_AT_TOTAL, dominantHeight,
-					SiteIndexEstimationType.SI_EST_ITERATE
+			setSiteIndex(
+					SiteTool.heightAndAgeToSiteIndex(
+							siteCurve, totalAge, SiteIndexAgeType.SI_AT_TOTAL, dominantHeight,
+							SiteIndexEstimationType.SI_EST_ITERATE
+					)
 			);
 
-			logger.debug("Computed Site Index from SiteTools call: %.2f", siteIndex);
+			logger.debug("{}: computed Site Index from SiteTools call: %.2f", this, siteIndex);
 
 			if (siteIndex < Vdyp7Constants.LOW_SITE_INDEX_THRESHOLD) {
 
 				logger.warn(
-						"Site Index of %.2f is less than minimum Site Index of %.2f; setting Site Index to null", siteIndex,
-						Vdyp7Constants.LOW_SITE_INDEX_THRESHOLD
+						"{}: site Index of %.2f is less than minimum Site Index of %.2f; setting Site Index to null",
+						this, siteIndex, Vdyp7Constants.LOW_SITE_INDEX_THRESHOLD
 				);
 
 				Layer layer = stand.getLayer();
 				Polygon polygon = layer.getPolygon();
 				polygon.disableProjectionsOfType(layer.determineProjectionType(polygon));
 
-				ValidationMessage message = new ValidationMessage(ValidationMessageKind.LOW_SITE_INDEX_WARNING, polygon, layer.getLayerId(), siteIndex, this);
-				polygon.getMessages().add(new PolygonMessage.Builder().setLayer(layer).setMessage(message).build());
+				ValidationMessage message = new ValidationMessage(
+						ValidationMessageKind.LOW_SITE_INDEX_WARNING, polygon, layer.getLayerId(), siteIndex, this
+				);
+				polygon.getDefinitionMessages()
+						.add(new PolygonMessage.Builder().layer(layer).message(message).build());
 
 			}
 		} catch (CommonCalculatorException e) {
 			logger.error(
-					"CommonCalculatorException encountered in call SiteTool.heightAndAgeToSiteIndex({}, {}, {}, {}, {}){}; not computing Site Index",
-					siteCurve, totalAge, SiteIndexAgeType.SI_AT_TOTAL, dominantHeight,
+					"{}: CommonCalculatorException encountered in call SiteTool.heightAndAgeToSiteIndex({}, {}, {}, {}, {}){}; not computing Site Index",
+					this, siteCurve, totalAge, SiteIndexAgeType.SI_AT_TOTAL, dominantHeight,
 					SiteIndexEstimationType.SI_EST_ITERATE, e.getMessage() != null ? ": reason " + e.getMessage() : ""
 			);
 		}
@@ -639,37 +676,43 @@ public class Species implements Comparable<Species> {
 		return computedHeight;
 	}
 
-	private Double dominantHeightAndAgeToSiteIndex() {
+	public Double dominantHeightAndAgeToSiteIndex() {
 		assert totalAge != null;
 		assert dominantHeight != null;
 
 		Double computedSiteIndex = null;
 		try {
 
-			computedSiteIndex = SiteTool.heightAndAgeToSiteIndex(siteCurve, totalAge, SiteIndexAgeType.SI_AT_TOTAL, dominantHeight, SiteIndexEstimationType.SI_EST_ITERATE);
+			computedSiteIndex = SiteTool.heightAndAgeToSiteIndex(
+					siteCurve, totalAge, SiteIndexAgeType.SI_AT_TOTAL, dominantHeight,
+					SiteIndexEstimationType.SI_EST_ITERATE
+			);
 
 			assert computedSiteIndex != null;
-			
+
 			if (computedSiteIndex < Vdyp7Constants.LOW_SITE_INDEX_THRESHOLD) {
-	
+
 				logger.warn(
-						"Site Index of %.2f is less than minimum Site Index of %.2f. Setting siteIndex to null",
-						computedSiteIndex, Vdyp7Constants.LOW_SITE_INDEX_THRESHOLD
+						"{}: siteIndex of %.2f is less than minimum Site Index of %.2f. Setting siteIndex to null",
+						this, computedSiteIndex, Vdyp7Constants.LOW_SITE_INDEX_THRESHOLD
 				);
-	
+
 				Layer layer = stand.getLayer();
 				Polygon polygon = layer.getPolygon();
 				polygon.disableProjectionsOfType(layer.determineProjectionType(polygon));
-	
-				ValidationMessage message = new ValidationMessage(ValidationMessageKind.LOW_SITE_INDEX_ERROR, polygon, layer.getLayerId(), siteIndex, this);
-				polygon.getMessages().add(new PolygonMessage.Builder().setLayer(layer).setMessage(message).build());
-			
+
+				ValidationMessage message = new ValidationMessage(
+						ValidationMessageKind.LOW_SITE_INDEX_ERROR, polygon, layer.getLayerId(), siteIndex, this
+				);
+				polygon.getDefinitionMessages()
+						.add(new PolygonMessage.Builder().layer(layer).message(message).build());
+
 				computedSiteIndex = null;
 			}
 		} catch (CommonCalculatorException e) {
 			logger.error(
-					"CommonCalculatorException encountered in call SiteTool.heightAndAgeToSiteIndex({}, {}, {}, {}, {}){}; not computing Site Index",
-					siteCurve, totalAge, SiteIndexAgeType.SI_AT_TOTAL, dominantHeight,
+					"{}: CommonCalculatorException encountered in call SiteTool.heightAndAgeToSiteIndex({}, {}, {}, {}, {}){}; not computing Site Index",
+					this, siteCurve, totalAge, SiteIndexAgeType.SI_AT_TOTAL, dominantHeight,
 					SiteIndexEstimationType.SI_EST_ITERATE, e.getMessage() != null ? ": reason " + e.getMessage() : ""
 			);
 		}

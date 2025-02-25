@@ -28,6 +28,14 @@ public class AbstractProjectionRequestException extends Exception {
 		}
 	}
 
+	public AbstractProjectionRequestException(String cause, Exception e) {
+		super(cause, e);
+		validationMessages = new ArrayList<ValidationMessage>();
+		if (cause != null) {
+			validationMessages.add(new ValidationMessage(ValidationMessageKind.GENERIC, cause));
+		}
+	}
+
 	public List<ValidationMessage> getValidationMessages() {
 		return validationMessages;
 	}

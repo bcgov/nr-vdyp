@@ -48,7 +48,7 @@ public class PolygonAssignDeadLayerTest {
 		Assert.assertNotNull(deadLayer);
 		
 		var maxYearOfDeath = NullMath.max(deadLayer.getYearOfDeath(), polygon.getYearOfDeath(), (a, b) -> Math.max(a, b), -9);
-		var maxPercentStockable = NullMath.max(deadLayer.getPercentStockable(), polygon.getPercentStockable(), (a, b) -> Math.max(a, b), -9.0);
+		var maxPercentStockable = NullMath.max(deadLayer.getPercentStockable(), polygon.getPercentStockable(), (a, b) -> Math.max(a, b), Vdyp7Constants.EMPTY_DECIMAL);
 
 		Assert.assertNotNull(maxYearOfDeath);
 		Assert.assertNotNull(maxPercentStockable);

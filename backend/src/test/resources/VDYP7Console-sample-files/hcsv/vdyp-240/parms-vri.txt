@@ -11,8 +11,8 @@
 -ofmt csvyieldtable
 #identifies output file format to be CSV format
 
--ip $(InputFileDir)\VDYP7_INPUT_POLY.csv
--il $(InputFileDir)\VDYP7_INPUT_LAYER.csv
+-ip $(InputFileDir)\VDYP7_INPUT_POLY_VRI.csv
+-il $(InputFileDir)\VDYP7_INPUT_LAYER_VRI.csv
 #identifies input polygon definition file and layer definition file's location
 
 -o $(OutputFileDir)\Output_YldTbl.csv

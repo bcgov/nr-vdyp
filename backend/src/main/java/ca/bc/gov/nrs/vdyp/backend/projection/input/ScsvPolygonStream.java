@@ -8,11 +8,11 @@ import ca.bc.gov.nrs.vdyp.backend.projection.model.Polygon;
 public class ScsvPolygonStream extends AbstractPolygonStream {
 
 	public ScsvPolygonStream(
-			ProjectionContext state, InputStream polygonStream, InputStream layersStream, InputStream historyStream,
+			ProjectionContext context, InputStream polygonStream, InputStream layersStream, InputStream historyStream,
 			InputStream nonVegetationStream, InputStream otherVegetationStream, InputStream polygonIdStream,
 			InputStream speciesStream, InputStream vriAdjustStream
 	) {
-		super(state);
+		super(context);
 	}
 
 	@Override

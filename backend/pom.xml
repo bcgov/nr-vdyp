@@ -61,6 +61,31 @@
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
+			<groupId>ca.bc.gov.nrs.vdyp</groupId>
+			<artifactId>vdyp-fip</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>ca.bc.gov.nrs.vdyp</groupId>
+			<artifactId>vdyp-vri</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<!-- dependency>
+			<groupId>ca.bc.gov.nrs.vdyp</groupId>
+			<artifactId>vdyp-adjust</artifactId>
+			<version>${project.version}</version>
+		</dependency -->
+		<dependency>
+			<groupId>ca.bc.gov.nrs.vdyp</groupId>
+			<artifactId>vdyp-forward</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<!-- dependency>
+			<groupId>ca.bc.gov.nrs.vdyp</groupId>
+			<artifactId>vdyp-back</artifactId>
+			<version>${project.version}</version>
+		</dependency -->
+		<dependency>
 		    <groupId>com.opencsv</groupId>
 		    <artifactId>opencsv</artifactId>
 		    <version>5.9</version>

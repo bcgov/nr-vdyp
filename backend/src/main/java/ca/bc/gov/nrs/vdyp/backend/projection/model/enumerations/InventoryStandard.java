@@ -29,15 +29,26 @@ public enum InventoryStandard {
 	
 	public static InventoryStandard getFromCode(InventoryStandardCode code) {
 		
+		InventoryStandard is = null;
+		
 		if (code != null) {
-			for (InventoryStandard is: values()) {
-				if (code == is.code) {
-					return is;
+			for (InventoryStandard candidate: values()) {
+				if (code == candidate.code) {
+					is = candidate;
 				}
 			}
 		}
 		
-		throw new IllegalArgumentException(MessageFormat.format("Code {0} is not a known Inventory Standard Code", code));
+		if (is != null) {
+			// polydefn.c 388-398
+			if (is == InventoryStandard.Silviculture) {
+				is = InventoryStandard.FIP;
+			}
+		} else {
+			throw new IllegalArgumentException(MessageFormat.format("Code {0} is not a known Inventory Standard Code", code));
+		}
+		
+		return is;
 	}
 
 	public static InventoryStandard getDefault() {

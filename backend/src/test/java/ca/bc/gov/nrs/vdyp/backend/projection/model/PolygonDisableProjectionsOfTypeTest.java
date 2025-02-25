@@ -46,36 +46,28 @@ public class PolygonDisableProjectionsOfTypeTest {
 	void testDisablingProjectionsOfType() {
 		Assert.assertTrue(polygon.doAllowProjection());
 
-		var allowedProjectionsMap = polygon.getAllowedProjectionMap();
-		Assert.assertNotNull(allowedProjectionsMap);
-		for (Boolean doAllowProjectionOfType: allowedProjectionsMap.values()) {
-			Assert.assertTrue(doAllowProjectionOfType);
+		for (var projectionType: ProjectionTypeCode.ACTUAL_PROJECTION_TYPES_LIST) {
+			Assert.assertTrue(polygon.doAllowProjectionOfType(projectionType));
 		}
 		
 		polygon.disableProjectionsOfType(ProjectionTypeCode.PRIMARY);
-		Assert.assertTrue(polygon.doAllowProjection());
-		
-		allowedProjectionsMap = polygon.getAllowedProjectionMap();
-		Assert.assertFalse(allowedProjectionsMap.get(ProjectionTypeCode.PRIMARY));
+		Assert.assertTrue(polygon.doAllowProjection());		
+		Assert.assertFalse(polygon.doAllowProjectionOfType(ProjectionTypeCode.PRIMARY));
 	}
 
 	@Test
 	void testDisablingProjection() {
 		Assert.assertTrue(polygon.doAllowProjection());
 
-		var allowedProjectionsMap = polygon.getAllowedProjectionMap();
-		Assert.assertNotNull(allowedProjectionsMap);
-		for (Boolean doAllowProjectionOfType: allowedProjectionsMap.values()) {
-			Assert.assertTrue(doAllowProjectionOfType);
+		for (var projectionType: ProjectionTypeCode.ACTUAL_PROJECTION_TYPES_LIST) {
+			Assert.assertTrue(polygon.doAllowProjectionOfType(projectionType));
 		}
 		
 		polygon.disableProjectionsOfType(ProjectionTypeCode.UNKNOWN);
 		Assert.assertFalse(polygon.doAllowProjection());
 
-		allowedProjectionsMap = polygon.getAllowedProjectionMap();
-		Assert.assertNotNull(allowedProjectionsMap);
-		for (Boolean doAllowProjectionOfType: allowedProjectionsMap.values()) {
-			Assert.assertTrue(doAllowProjectionOfType);
+		for (var projectionType: ProjectionTypeCode.ACTUAL_PROJECTION_TYPES_LIST) {
+			Assert.assertTrue(polygon.doAllowProjectionOfType(projectionType));
 		}
 	}
 }

@@ -2,6 +2,8 @@ package ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations;
 
 import java.text.MessageFormat;
 
+import ca.bc.gov.nrs.vdyp.backend.projection.model.Vdyp7Constants;
+
 /**
  * An enumeration of the different Canadian Forest Service ECO Zones.
  * 
@@ -37,7 +39,7 @@ public enum CfsEcoZoneCode {
 	PacificMaritime(13),
 	MontaneCordillera(14),
 	
-	Unknown(-9);
+	Unknown(Vdyp7Constants.EMPTY_INT);
 
 	private final short code;
 	

@@ -40,11 +40,40 @@ public class VdypForwardApplication extends VdypApplication {
 
 	private static Set<ForwardPass> vdypPassSet = new HashSet<>(Arrays.asList(PASS_1, PASS_2, PASS_3, PASS_4, PASS_5));
 
+	private static class InitializationException extends Exception {
+		private static final long serialVersionUID = -7892984575682978204L;
+
+		InitializationException(Exception e) {
+			super(e);
+		}
+	}
+	
+	private static class RuntimeException extends Exception {
+		private static final long serialVersionUID = 6675331977223310947L;
+
+		RuntimeException(Exception e) {
+			super(e);
+		}
+	}
+	
 	public static void main(final String... args) {
 
 		var app = new VdypForwardApplication();
 
-		app.logVersionInformation();
+		try {
+			app.doMain(args);
+		} catch (InitializationException ex) {
+			logger.error("Error during initialization", ex);
+			System.exit(CONFIG_LOAD_ERROR);
+		} catch (RuntimeException ex) {
+			logger.error("Error during processing", ex);
+			System.exit(PROCESSING_ERROR);
+		}
+	}
+	
+	public void doMain(final String... args) throws InitializationException, RuntimeException {
+
+		logVersionInformation();
 
 		List<String> controlFileNames = null;
 
@@ -69,7 +98,7 @@ public class VdypForwardApplication extends VdypApplication {
 			}
 		} catch (Exception ex) {
 			logger.error("Error during initialization", ex);
-			System.exit(CONFIG_LOAD_ERROR);
+			throw new InitializationException(ex);
 		}
 
 		try {
@@ -79,7 +108,7 @@ public class VdypForwardApplication extends VdypApplication {
 
 		} catch (Exception ex) {
 			logger.error("Error during processing", ex);
-			System.exit(PROCESSING_ERROR);
+			throw new RuntimeException(ex);
 		}
 	}
 

@@ -7,29 +7,33 @@ public class StubComponentRunner implements IComponentRunner {
 
 	@Override
 	public void runFipStart(Polygon polygon, ProjectionTypeCode projectionTypeCode, PolygonProjectionState state) {
-		state.setInitialProcessingResults(projectionTypeCode, ComponentReturnCodes.SUCCESS, new ProcessingResultsCode(-99));
+		state.setInitialProcessingResults(
+				projectionTypeCode, ComponentReturnCodes.SUCCESS, new ProcessingResultsCode(-99)
+		);
 	}
 
 	@Override
 	public void runVriStart(Polygon polygon, ProjectionTypeCode projectionTypeCode, PolygonProjectionState state) {
-		state.setInitialProcessingResults(projectionTypeCode, ComponentReturnCodes.SUCCESS, new ProcessingResultsCode(-99));
+		state.setInitialProcessingResults(
+				projectionTypeCode, ComponentReturnCodes.SUCCESS, new ProcessingResultsCode(-99)
+		);
 	}
 
 	@Override
 	public void runAdjust(Polygon polygon, ProjectionTypeCode projectionTypeCode, PolygonProjectionState state) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void runForward(Polygon polygon, ProjectionTypeCode projectionTypeCode, PolygonProjectionState state) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void runBack(Polygon polygon, ProjectionTypeCode projectionTypeCode, PolygonProjectionState state) {
 		// TODO Auto-generated method stub
-		
+
 	}
 }

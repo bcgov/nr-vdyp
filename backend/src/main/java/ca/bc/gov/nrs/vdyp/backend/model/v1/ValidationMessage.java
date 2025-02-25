@@ -7,6 +7,7 @@ public class ValidationMessage implements Comparable<ValidationMessage> {
 
 	/** the kind of this ValidationMessage - an enum value and a template */
 	private final ValidationMessageKind kind;
+	
 	/** the arguments that, when applied to the template of kind, produce the message */
 	private final Object[] args;
 

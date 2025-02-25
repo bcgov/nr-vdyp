@@ -18,7 +18,6 @@ import com.opencsv.bean.processor.PreAssignmentProcessor;
 import com.opencsv.exceptions.CsvConstraintViolationException;
 
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.LayerValidationException;
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessageKind;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Vdyp7Constants;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;

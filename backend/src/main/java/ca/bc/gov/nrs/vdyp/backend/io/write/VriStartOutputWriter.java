@@ -3,7 +3,6 @@ package ca.bc.gov.nrs.vdyp.backend.io.write;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,12 +12,14 @@ import ca.bc.gov.nrs.vdyp.backend.projection.model.Layer;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Polygon;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Species;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Stand;
+import ca.bc.gov.nrs.vdyp.backend.projection.model.Vdyp7Constants;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
+import ca.bc.gov.nrs.vdyp.model.LayerType;
 
 /**
  * Write files to be input into FIP Start
  */
-public class VriStartOutputWriter implements Closeable {
+public class VriStartOutputWriter extends AbstractOutputWriter implements Closeable {
 
 	private static final Logger logger = LoggerFactory.getLogger(VriStartOutputWriter.class);
 
@@ -27,27 +28,21 @@ public class VriStartOutputWriter implements Closeable {
 	protected final OutputStream speciesFile;
 	protected final OutputStream siteIndexFile;
 
-	private Optional<Integer> currentYear = Optional.empty();
-
-	static final String POLY_IDENTIFIER_FORMAT = "%-25s";
-
-	static final float EMPTY_FLOAT = -9f;
-	static final int EMPTY_INT = -9;
-
 	// FORMAT( A25, 3x, A4, 1x, F4.0, 1x, I2, 1x, A5, F5.2 )
-	static final String POLY_FORMAT = POLY_IDENTIFIER_FORMAT + "   %4s %4.0f %2d %5s%5.2f\n";
+	static final String POLY_FORMAT = POLY_IDENTIFIER_FORMAT + "   %4s %4s %2d %5s%5s\n";
 
 	// FORMAT( A25, 1x, A1, f6.0, f9.5, 1x, f8.2, 1x, f4.1 )
-	static final String LAYER_FORMAT = POLY_IDENTIFIER_FORMAT + " %1s%6d%9.5f %8.2f %4.1f\n";
+	static final String LAYER_FORMAT = POLY_IDENTIFIER_FORMAT + " %1s%6s%9s %8s %4s\n";
+	static final String END_LAYER_FORMAT = POLY_IDENTIFIER_FORMAT + " Z\n";
 
-	// FORMAT(A25, 1x, A1, 1x, A2, F6.1, A32)
-	static final String SPECIES_FORMAT = POLY_IDENTIFIER_FORMAT + " %1s %2s%6.1f%8s%8s%8s%8s\n";
+	// FORMAT( A25, 1x, A1, 1x, A2, F6.1, A32)
+	static final String SPECIES_FORMAT = POLY_IDENTIFIER_FORMAT + " %1s %2s%6s%8s%8s%8s%8s\n";
+	static final String END_SPECIES_FORMAT = POLY_IDENTIFIER_FORMAT + " Z      0.0     0.0     0.0     0.0     0.0\n";
 
-	// FORMAT(A25,1x,A1,f4.0,f5.2,f5.2,8x,A2,A3,f5.2,8x,f6.1,I3)
+	// FORMAT( A25, 1x, A1, f4.0, f5.2, f5.2, 8x, A2, A3, f5.2, 8x, f6.1, I3)
 	static final String SITE_INDEX_FORMAT = POLY_IDENTIFIER_FORMAT
-			+ " %1s%4s%5.2f%5.2f        %2s%3s%5.2f        %6.1f%3d\n";
-
-	static final String END_RECORD_FORMAT = POLY_IDENTIFIER_FORMAT + " Z\n";
+			+ " %1s%4s%5s%5s        %2s%3s%5s        %6s%3s\n";
+	static final String END_SITE_INDEX_FORMAT = POLY_IDENTIFIER_FORMAT + " Z   0  0.0  0\n";
 
 	/**
 	 * Create a writer for VriStart input files using provided OutputStreams. The Streams will be closed when the writer
@@ -67,10 +62,6 @@ public class VriStartOutputWriter implements Closeable {
 		this.siteIndexFile = siteIndexFile;
 	}
 
-	public void setPolygonYear(int currentYear) {
-		this.currentYear = Optional.of(currentYear);
-	}
-
 	/**
 	 * V7W_RIP - Write the given polygon record to the polygon file
 	 *
@@ -86,46 +77,37 @@ public class VriStartOutputWriter implements Closeable {
 
 				polygon.buildPolygonDescriptor(), //
 				polygon.getBecZone() == null ? "" : polygon.getBecZone(), //
-				polygon.determineStockabilityByProjectionType(projectionType), //
+				format(polygon.determineStockabilityByProjectionType(projectionType), 4, 0), //
 				state.getProcessingModeUsedByProjectionType().get(projectionType).value, //
 				polygon.getNonProductiveDescriptor() == null ? "" : polygon.getNonProductiveDescriptor(), //
-				polygon.getYieldFactor() == null ? -9.0 : polygon.getYieldFactor()//
+				format(polygon.getYieldFactor(), 5, 2) //
 		);
 	}
 
 	/**
-	 * V7W_RIL1 - Write the given layer records to the layers file, and recursively write each layer's species to the
+	 * V7W_RIL1 - Write the given layer record to the layers file, and recursively write the layer's species to the
 	 * species file.
 	 * 
 	 * @param layers
 	 * @throws IOException
 	 */
-	public void writePolygonLayers(Layer... layers) throws IOException {
+	public void writePolygonLayer(Layer layer) throws IOException {
 
-		boolean layerWritten = false;
+		writeFormat(
+				layersFile, //
+				LAYER_FORMAT, //
 
-		for (Layer layer : layers) {
+				layer.getPolygon().buildPolygonDescriptor(), //
+				LayerType.PRIMARY.getAlias(), // vdypintperform.c lines 3686 - 3703 - always write "P" for the layer code. 
+				format(layer.getCrownClosure(), 6), //
+				format(layer.getBasalArea(), 9, 5), //
+				format(layer.getTreesPerHectare(), 8, 2), //
+				format(layer.getMeasuredUtilizationLevel(), 4, 1)
+		);
 
-			layerWritten = true;
+		writeLayerSpeciesInfo(layer);
 
-			writeFormat(
-					layersFile, //
-					LAYER_FORMAT, //
-
-					layer.getPolygon().buildPolygonDescriptor(), //
-					layer.getLayerId(), //
-					layer.getCrownClosure() == null ? -9 : layer.getCrownClosure(), //
-					layer.getBasalArea() == null ? -9.0 : layer.getBasalArea(), //
-					layer.getTreesPerHectare() == null ? -9.0 : layer.getTreesPerHectare(), //
-					layer.getMeasuredUtilizationLevel() == null ? -9.0 : layer.getMeasuredUtilizationLevel()
-			);
-
-			writeLayerSpeciesInfo(layer);
-		}
-
-		if (layerWritten) {
-			writeLayersEndRecord(layers[0].getPolygon());
-		}
+		writeLayersEndRecord(layer.getPolygon());
 	}
 
 	/**
@@ -164,7 +146,7 @@ public class VriStartOutputWriter implements Closeable {
 					Species s = stand.getSpecies().get(i);
 					speciesDistributionTexts[i] = String.format("%3s%5.1f", s.getSpeciesCode(), s.getSpeciesPercent());
 				} else {
-					speciesDistributionTexts[i] = "        ";
+					speciesDistributionTexts[i] = "     0.0";
 				}
 			}
 
@@ -173,9 +155,9 @@ public class VriStartOutputWriter implements Closeable {
 					SPECIES_FORMAT, //
 
 					stand.getLayer().getPolygon().buildPolygonDescriptor(), //
-					stand.getLayer().getLayerId(), //
+					LayerType.PRIMARY.getAlias(), // vdypintperform.c lines 3934 - 3950 - always write "P" for the layer code. 
 					stand.getSp0Code(), //
-					stand.getSpeciesGroup().getSpeciesPercent(), //
+					format(stand.getSpeciesGroup().getSpeciesPercent(), 6, 1), //
 					speciesDistributionTexts[0], speciesDistributionTexts[1], speciesDistributionTexts[2],
 					speciesDistributionTexts[3]
 			);
@@ -187,14 +169,14 @@ public class VriStartOutputWriter implements Closeable {
 						stand, leadingSite.getSpeciesGroup().getDominantHeight(),
 						leadingSite.getSpeciesGroup().getTotalAge()
 				);
-				standDominantHeight = -9.0;
+				standDominantHeight = Vdyp7Constants.EMPTY_DECIMAL;
 			}
 
 			var sp0 = stand.getSpeciesGroup();
 
 			String totalAgeText;
 			if (stand.getSpeciesGroup().getTotalAge() == null) {
-				totalAgeText = "  -9";
+				totalAgeText = "  " + Vdyp7Constants.EMPTY_INT;
 			} else {
 				totalAgeText = Long.toString(Math.round(stand.getSpeciesGroup().getTotalAge()));
 			}
@@ -204,15 +186,15 @@ public class VriStartOutputWriter implements Closeable {
 					SITE_INDEX_FORMAT, //
 
 					stand.getLayer().getPolygon().buildPolygonDescriptor(), //
-					stand.getLayer().getLayerId(), //
+					LayerType.PRIMARY.getAlias(), // vdypintperform.c lines 3934 - 3950 - always write "P" for the layer code.
 					totalAgeText, //
-					sp0.getDominantHeight() == null ? -9.0 : sp0.getDominantHeight(), //
-					sp0.getSiteIndex() == null ? -9.0 : sp0.getSiteIndex(), //
+					format(sp0.getDominantHeight(), 5, 2), //
+					format(sp0.getSiteIndex(), 5, 2), //
 					sp0.getSpeciesCode(), //
 					stand.getSpecies().get(0).getSpeciesCode(), //
-					sp0.getYearsToBreastHeight() == null ? -9.0 : sp0.getYearsToBreastHeight(), //
-					sp0.getAgeAtBreastHeight() == null ? -9.0 : sp0.getAgeAtBreastHeight(), //
-					sp0.getSiteCurve() == null ? -9 : sp0.getSiteCurve().n()
+					format(sp0.getYearsToBreastHeight(), 5, 2), //
+					format(sp0.getAgeAtBreastHeight(), 6, 1), //
+					sp0.getSiteCurve() == null ? " " + Vdyp7Constants.EMPTY_INT : format(sp0.getSiteCurve().n(), 3)
 			);
 			
 			speciesWasWritten = true;
@@ -223,20 +205,15 @@ public class VriStartOutputWriter implements Closeable {
 		}
 	}
 
-	private void writeEndRecord(OutputStream os, Polygon polygon) throws IOException {
-		writeFormat(os, END_RECORD_FORMAT, polygon.buildPolygonDescriptor());
+	@Override
+	protected void writeLayersEndRecord(Polygon polygon) throws IOException {
+		writeEndRecord(layersFile, polygon, END_LAYER_FORMAT);
 	}
 
-	private void writeLayersEndRecord(Polygon polygon) throws IOException {
-		writeEndRecord(layersFile, polygon);
-	}
-
-	private void writeSpeciesEndRecord(Polygon polygon) throws IOException {
-		writeEndRecord(speciesFile, polygon);
-	}
-
-	void writeFormat(OutputStream os, String format, Object... params) throws IOException {
-		os.write(String.format(format, params).getBytes());
+	@Override
+	protected void writeSpeciesEndRecord(Polygon polygon) throws IOException {
+		writeEndRecord(speciesFile, polygon, END_SPECIES_FORMAT);
+		writeEndRecord(siteIndexFile, polygon, END_SITE_INDEX_FORMAT);
 	}
 
 	@Override

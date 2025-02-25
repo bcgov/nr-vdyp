@@ -34,8 +34,6 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 @RegisterForReflection
 public class Parameters {
 
-	public static final int LEGACY_NULL_VALUE = -9;
-
 	public static final String JSON_PROPERTY_OUTPUT_FORMAT = "outputFormat";
 	@JsonProperty(JSON_PROPERTY_OUTPUT_FORMAT)
 	private String outputFormat;

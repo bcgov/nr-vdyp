@@ -9,7 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.SeverityCode;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessageKind;
 import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionContext;
@@ -20,7 +20,6 @@ import ca.bc.gov.nrs.vdyp.backend.projection.model.LayerReportingInfo;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Polygon;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.PolygonMessage;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.PolygonReportingInfo;
-import ca.bc.gov.nrs.vdyp.backend.projection.model.ProjectionParameters;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Species;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.SpeciesReportingInfo;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Stand;
@@ -43,9 +42,9 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 	private CsvStreamIterator<HcsvLayerRecordBean> layerRecordIterator;
 	private HcsvLayerRecordBean nextLayerRecord;
 
-	public HcsvPolygonStream(ProjectionContext state, InputStream polygonStream, InputStream layersStream) {
+	public HcsvPolygonStream(ProjectionContext context, InputStream polygonStream, InputStream layersStream) {
 
-		super(state);
+		super(context);
 
 		var hcsvPolygonStream = HcsvPolygonRecordBean.createHcsvPolygonStream(polygonStream).iterator();
 		polygonRecordIterator = new CsvStreamIterator<>(hcsvPolygonStream);
@@ -56,16 +55,24 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 	}
 
 	@Override
+	public boolean hasNextPolygon() {
+		return nextPolygonRecord != null;
+	}
+
+	@Override
 	public Polygon getNextPolygon() throws PolygonValidationException {
 
 		if (nextPolygonRecord == null) {
 			throw new IllegalStateException("Attempt to read past end of polygon input stream");
 		}
 
-		var polygon = buildPolygon();
-
-		advanceToNextPolygon();
-
+		Polygon polygon = null;
+		try {
+			polygon = buildPolygon();
+		} finally {
+			advanceToNextPolygon();
+		}
+		
 		return polygon;
 	}
 
@@ -112,17 +119,7 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 		}
 	}
 
-	@Override
-	public boolean hasNextPolygon() {
-		return nextPolygonRecord != null;
-	}
-
 	private Polygon buildPolygon() throws PolygonValidationException {
-
-		ProjectionParameters projectionParameters = new ProjectionParameters.Builder() //
-				.enableBack(state.getValidatedParams().containsOption(ExecutionOption.BACK_GROW_ENABLED)) //
-				.enableForward(state.getValidatedParams().containsOption(ExecutionOption.FORWARD_GROW_ENABLED)) //
-				.measurementYear(nextPolygonRecord.getReferenceYear()).standAgeAtMeasurementYear(0).build();
 
 		var nonVegetationMap = nextPolygonRecord.getNonVegCoverDetails();
 		var otherVegetationMap = nextPolygonRecord.getOtherVegCoverDetails();
@@ -155,7 +152,7 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 				.otherVegetationTypes(otherVegetationMap) //
 				.percentStockable(nextPolygonRecord.getPercentStockable()) //
 				.percentStockableDead(nextPolygonRecord.getPercentDead()) //
-				.polygonNumber(nextPolygonRecord.getPolygonNumber()).projectionParameters(projectionParameters) //
+				.polygonNumber(nextPolygonRecord.getPolygonNumber()) //
 				.referenceYear(nextPolygonRecord.getReferenceYear()) //
 				.reportingInfo(polygonReportingInfo) //
 				.layers(layers) //
@@ -163,50 +160,62 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 
 		while (nextLayerRecord != null && nextLayerRecord.getFeatureId() == polygonFeatureId) {
 
-			var layerReportingInfo = new LayerReportingInfo.Builder().layerID(nextLayerRecord.getLayerId())
-					.rank(nextLayerRecord.getForestCoverRankCode())
-					.nonForestDesc(nextLayerRecord.getNonForestDescriptorCode())
-					.processedAsVDYP7Layer(nextLayerRecord.getTargetVdyp7LayerCode()).build();
-
-			polygonReportingInfo.getLayers().put(layerReportingInfo.getLayerID(), layerReportingInfo);
-
-			// Note that HCSV contains no history information (lcl_CopyHistoryDataIntoSnapshot)
-			var history = new History.Builder().build();
-
-			var stands = new ArrayList<Stand>();
-
-			Layer layer = new Layer.Builder() //
-					.polygon(polygon) //
-					.assignedProjectionType(ProjectionTypeCode.UNKNOWN) //
-					.layerId(nextLayerRecord.getLayerId()) //
-					.basalArea(nextLayerRecord.getBasalArea()) //
-					.crownClosure(nextLayerRecord.getCrownClosure()) //
-					.estimatedSiteIndex(nextLayerRecord.getEstimatedSiteIndex()) //
-					.estimatedSiteIndexSpecies(nextLayerRecord.getEstimatedSiteIndexSpeciesCode()) //
-					.measuredUtilizationLevel(7.5 /* from lcl_CopyLayerDataIntoSnapshot, line 4596 */) //
-					.nonForestDescriptor(nextLayerRecord.getNonForestDescriptorCode()) //
-					.precentStockable(nextLayerRecord.getLayerStockability()) //
-					.rankCode(nextLayerRecord.getForestCoverRankCode()) //
-					.treesPerHectare(nextLayerRecord.getStemsPerHectare()) //
-					.vdyp7LayerCode(nextLayerRecord.getTargetVdyp7LayerCode()) //
-					.species(stands) //
-					.history(history) //
-					.build();
-
-			addLayerToPolygon(polygon, layer);
-
-			buildStandsAndSpecies(polygon, layer);
-
-			advanceToNextLayer();
+			try {
+				var layerReportingInfo = new LayerReportingInfo.Builder().layerID(nextLayerRecord.getLayerId())
+						.rank(nextLayerRecord.getForestCoverRankCode())
+						.nonForestDesc(nextLayerRecord.getNonForestDescriptorCode())
+						.processedAsVDYP7Layer(nextLayerRecord.getTargetVdyp7LayerCode()).build();
+	
+				polygonReportingInfo.getLayers().put(layerReportingInfo.getLayerID(), layerReportingInfo);
+	
+				// Note that HCSV contains no history information (lcl_CopyHistoryDataIntoSnapshot)
+				var history = new History.Builder().build();
+	
+				var stands = new ArrayList<Stand>();
+	
+				Layer layer = new Layer.Builder() //
+						.polygon(polygon) //
+						.assignedProjectionType(ProjectionTypeCode.UNKNOWN) //
+						.layerId(nextLayerRecord.getLayerId()) //
+						.basalArea(nextLayerRecord.getBasalArea()) //
+						.crownClosure(nextLayerRecord.getCrownClosure()) //
+						.estimatedSiteIndex(nextLayerRecord.getEstimatedSiteIndex()) //
+						.estimatedSiteIndexSpecies(nextLayerRecord.getEstimatedSiteIndexSpeciesCode()) //
+						.measuredUtilizationLevel(7.5 /* from lcl_CopyLayerDataIntoSnapshot, line 4596 */) //
+						.nonForestDescriptor(nextLayerRecord.getNonForestDescriptorCode()) //
+						.precentStockable(nextLayerRecord.getLayerStockability()) //
+						.rankCode(nextLayerRecord.getForestCoverRankCode()) //
+						.treesPerHectare(nextLayerRecord.getStemsPerHectare()) //
+						.vdyp7LayerCode(nextLayerRecord.getTargetVdyp7LayerCode()) //
+						.species(stands) //
+						.history(history) //
+						.build();
+	
+				addLayerToPolygon(polygon, layer);
+	
+				buildStandsAndSpecies(polygon, layer);
+				
+			} finally {
+				advanceToNextLayer();
+			}
 		}
 
-		polygon.doCompleteDefinition();
+		polygon.doCompleteDefinition(context);
 
 		logger.info("Successfully read polygon with feature id \"{}\"", polygon.getFeatureId());
 
 		return polygon;
 	}
 
+	/**
+	 * <code>V7Ext_AddLayer</code>
+	 * <p>
+	 * Add the given Layer (containing stand information) to the given Polygon.
+     * 
+	 * @param polygon as described
+	 * @param layer as described
+	 * @throws PolygonValidationException
+	 */
 	private void addLayerToPolygon(Polygon polygon, Layer layer) throws PolygonValidationException {
 
 		// The field values of layer have been validated. Now validate
@@ -231,7 +240,7 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 					layer.getPercentStockable(), polygon.getPercentStockable()
 			);
 
-			polygon.getMessages().add(new PolygonMessage.Builder().setLayer(layer).setMessage(message).build());
+			polygon.getDefinitionMessages().add(new PolygonMessage.Builder().layer(layer).message(message).build());
 			logger.error(
 					"Layer '{}' percent stockable ({}%) exceeds the polygon percent stockable ({}%)", polygon,
 					layer.getLayerId(), layer.getPercentStockable(), polygon.getPercentStockable()
@@ -245,7 +254,7 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 						ValidationMessageKind.POLYGON_ALREADY_HAS_RANK_ONE_LAYER, polygon
 				);
 
-				polygon.getMessages().add(new PolygonMessage.Builder().setLayer(layer).setMessage(message).build());
+				polygon.getDefinitionMessages().add(new PolygonMessage.Builder().layer(layer).message(message).build());
 				logger.error("Polygon {} already has a rank one layer", polygon);
 			} else {
 				polygon.setRank1Layer(layer);
@@ -382,91 +391,96 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 
 		var species = new ArrayList<Species>();
 
-		var speciesDetails = nextLayerRecord.getSpeciesDetails();
-		for (var sd : speciesDetails) {
+		var sp64Details = nextLayerRecord.getSpeciesDetails();
+		for (var sd : sp64Details) {
 
 			var speciesReportingInfo = new SpeciesReportingInfo.Builder().sp64Name(sd.speciesCode())
 					.sp64Percent(sd.percent()).build();
 
 			layerReportingInfo.getSpecies().put(speciesReportingInfo.getSp64Name(), speciesReportingInfo);
 
-			var speciesInstance = addSpeciesToLayer(polygon, layer, sd);
+			var speciesInstance = addSpeciesToLayer(layer, sd);
 
 			species.add(speciesInstance);
 		}
 	}
 
-	private Species addSpeciesToLayer(Polygon polygon, Layer layer, SpeciesDetails sd)
+	/**
+	 * <code>V7Ext_AddSpeciesComponent</code>
+	 * <p>
+	 * Add a Species with the given details to the given layer.
+	 * 
+	 * @param layer the target layer
+	 * @param sp64Details the details of the species to be added
+	 * @return the resulting Species instance
+	 * @throws PolygonValidationException when the species details contain inaccurate information
+	 */
+	private Species addSpeciesToLayer(Layer layer, SpeciesDetails sp64Details)
 			throws PolygonValidationException {
 
-		Species speciesInstance = null;
+		Species sp64 = null;
 
-		var speciesCode = sd.speciesCode();
-		var speciesPercent = sd.percent();
-		var totalAge = sd.estimatedAge() == null ? null : Double.valueOf(sd.estimatedAge());
-		var dominantHeight = sd.estimatedHeight();
+		var speciesCode = sp64Details.speciesCode();
+		var speciesPercent = sp64Details.percent();
+		var totalAge = sp64Details.estimatedAge() == null ? null : Double.valueOf(sp64Details.estimatedAge());
+		var dominantHeight = sp64Details.estimatedHeight();
 
 		String sp0Code = SiteTool.getSpeciesVDYP7Code(speciesCode);
 
-		if (SiteTool.getSpeciesIndex(sd.speciesCode()) == SpeciesTable.UNKNOWN_ENTRY_INDEX
-				|| SiteTool.getSpeciesIndex(sp0Code) == SpeciesTable.UNKNOWN_ENTRY_INDEX
-		/* TODO: || sp0Code is NOT a species known to the back end. Is this necessary here?) */) {
+		if (SiteTool.getSpeciesIndex(sp64Details.speciesCode()) == SpeciesTable.UNKNOWN_ENTRY_INDEX
+				|| SiteTool.getSpeciesIndex(sp0Code) == SpeciesTable.UNKNOWN_ENTRY_INDEX) {
 
-			ProjectionTypeCode layerProjectionType = layer.determineProjectionType(polygon);
-			polygon.disableProjectionsOfType(layerProjectionType);
+			ProjectionTypeCode layerProjectionType = layer.determineProjectionType(layer.getPolygon());
+			layer.getPolygon().disableProjectionsOfType(layerProjectionType);
 
-			logger.error("Polygon {} Layer {}: species code {} is not recognized", polygon, layer, sd.speciesCode());
+			logger.error("{}: species code {} is not recognized", layer, sp64Details.speciesCode());
 
 			var validationMessage = new ValidationMessage(
-					ValidationMessageKind.UNRECOGNIZED_SPECIES, polygon, layer.getLayerId(), sd.speciesCode()
-			);
-
-			polygon.getMessages().add(
-					new PolygonMessage.Builder() //
-							.setLayer(layer) //
-							.setErrorCode(ReturnCode.ERROR_INVALIDSPECIES).setMessage(validationMessage).build()
+					ValidationMessageKind.UNRECOGNIZED_SPECIES, layer.getPolygon(), layer.getLayerId(), sp64Details.speciesCode()
 			);
 
 			throw new PolygonValidationException(validationMessage);
 		}
 
-		boolean isNewStand = false;
-
+		boolean isNewStand;
 		var stand = layer.getSp0sByNameMap().get(sp0Code);
 		if (stand != null) {
 
+			isNewStand = false;
+			
 			for (var possibleDuplicate : stand.getSpecies()) {
 
-				if (possibleDuplicate.getSpeciesCode().equals(sd.speciesCode())) {
+				if (possibleDuplicate.getSpeciesCode().equals(sp64Details.speciesCode())) {
 					// We have a duplicate species
 
-					polygon.getMessages().add(
+					layer.getPolygon().getDefinitionMessages().add(
 							new PolygonMessage.Builder() //
-									.setLayer(layer) //
-									.setErrorCode(ReturnCode.ERROR_INVALIDSPECIES) //
-									.setMessage(
+									.stand(stand) //
+									.returnCode(ReturnCode.ERROR_SPECIESALREADYEXISTS) //
+									.severity(SeverityCode.WARNING) //
+									.message(
 											new ValidationMessage(
-													ValidationMessageKind.DUPLICATE_SPECIES, polygon, layer.getLayerId(),
-													sd.speciesCode()
+													ValidationMessageKind.DUPLICATE_SPECIES, layer.getPolygon(), layer.getLayerId(),
+													sp64Details.speciesCode()
 											)
 									).build()
 					);
 
 					logger.warn(
 							"Polygon {} Layer {}: species code {} appears more than once in the layer definition",
-							polygon, layer, sd.speciesCode()
+							layer.getPolygon(), layer, sp64Details.speciesCode()
 					);
 
-					if (!possibleDuplicate.equivalentSiteInfo(sd)) {
+					if (!possibleDuplicate.equivalentSiteInfo(sp64Details)) {
 
-						polygon.getMessages().add(
+						layer.getPolygon().getDefinitionMessages().add(
 								new PolygonMessage.Builder() //
-										.setLayer(layer) //
-										.setErrorCode(ReturnCode.ERROR_INVALIDSITEINFO)
-										.setMessage(
+										.stand(stand) //
+										.returnCode(ReturnCode.ERROR_INVALIDSITEINFO)
+										.message(
 												new ValidationMessage(
 														ValidationMessageKind.INCONSISTENT_SITE_INFO,
-														polygon, layer.getLayerId(), sd.speciesCode()
+														layer.getPolygon(), layer.getLayerId(), sp64Details.speciesCode()
 												)
 										) //
 										.build()
@@ -474,42 +488,27 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 
 						logger.warn(
 								"Polygon {} Layer {}: the site information information for at least two species with species code \"{}\" is inconsistent",
-								polygon, layer, sd.speciesCode()
+								layer.getPolygon(), layer, sp64Details.speciesCode()
 						);
 					}
-					speciesInstance = possibleDuplicate;
+					sp64 = possibleDuplicate;
 				}
 			}
 		} else {
 
-			if (totalAge != null) {
+			isNewStand = true;
+			
+			// This stand is not yet defined and this species is necessarily the
+			// largest percentage sp64 and therefore will be the sp0 for the layer.
 
-				// This stand is not yet defined and this species is necessarily the
-				// largest percentage sp64 and therefore will be the sp0 for the layer.
-
-				isNewStand = true;
-				
-				stand = new Stand.Builder() //
-						.species(new ArrayList<Species>()) //
-						.sp0Code(sp0Code) //
-						.layer(layer) //
-						.build();
-			} else {
-				var validationMessage = new ValidationMessage(
-						ValidationMessageKind.SPECIES_WITH_NO_STAND_OR_AGE, polygon, layer.getLayerId(), sd.speciesCode()
-				);
-
-				polygon.getMessages().add(
-						new PolygonMessage.Builder() //
-								.setLayer(layer) //
-								.setErrorCode(ReturnCode.ERROR_INVALIDSPECIES).setMessage(validationMessage).build()
-				);
-
-				throw new PolygonValidationException(validationMessage);
-			}
+			stand = new Stand.Builder() //
+					.species(new ArrayList<Species>()) //
+					.sp0Code(sp0Code) //
+					.layer(layer) //
+					.build();
 		}
 
-		var newSpeciesInstance = new Species.Builder() //
+		var newSp64 = new Species.Builder() //
 				.stand(stand) //
 				.speciesCode(speciesCode) //
 				.speciesPercent(speciesPercent) //
@@ -517,35 +516,39 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 				.dominantHeight(dominantHeight) //
 				.build();
 
-		if (speciesInstance != null) {
+		if (sp64 != null) {
+			
 			// The new sp64 is a duplicate of an existing sp64. First, adjust
 			// the existing sp64 to include whatever information from the new
 			// sp64 it doesn't already have, and add the new sp64's percentage
 			// to the total for that sp64.
 			
-			speciesInstance.addDuplicate(newSpeciesInstance);
-			
-			// 
+			sp64.addDuplicate(newSp64);
 		} else {
 			// The new sp64 is new to the layer. 
 			
-			speciesInstance = newSpeciesInstance;
+			sp64 = newSp64;
 			
 			// If no stand exists in the layer for this sp0, add one, and make the 
 			// new species the species group for the stand.
 						
 			if (isNewStand) {
-				stand.addSpeciesGroup(speciesInstance, layer.getSp0sAsSupplied().size());
+				Species sp0 = new Species.Builder()
+						.stand(stand) //
+						.speciesCode(speciesCode) //
+						.speciesPercent(0) //
+						.build();
+				stand.addSpeciesGroup(sp0, layer.getSp0sAsSupplied().size());
 				layer.addStand(stand);
 			}
 		}
 
-		speciesInstance.calculateUndefinedFieldValues();
+		sp64.calculateUndefinedFieldValues();
 
-		stand.updateAfterSp64Added(speciesInstance);
-		layer.updateAfterSp64Added(speciesInstance);
+		stand.updateAfterSp64Added(sp64);
+		layer.updateAfterSp64Added(sp64);
 
-		return speciesInstance;
+		return sp64;
 	}
 
 	private <T> Map<ProjectionTypeCode, T> initializeProjectionMap(T value) {

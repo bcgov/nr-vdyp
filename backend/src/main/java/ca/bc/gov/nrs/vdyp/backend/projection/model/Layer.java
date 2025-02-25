@@ -12,10 +12,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.SeverityCode;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessageKind;
+import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionContext;
+import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.GrowthModelCode;
+import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProcessingModeCode;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
+import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ReturnCode;
+import ca.bc.gov.nrs.vdyp.common.Reference;
 import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.CommonCalculatorException;
+import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.si32.site.SiteTool;
 
 /** Identifies information regarding a single layer within a stand. */
@@ -273,7 +280,7 @@ public class Layer implements Comparable<Layer> {
 			}
 		}).toList();
 	}
-	
+
 	public List<SiteSpecies> getSiteSpecies() {
 		return siteSpecies;
 	}
@@ -314,6 +321,7 @@ public class Layer implements Comparable<Layer> {
 
 	public void setAssignedProjectionType(ProjectionTypeCode newAssignedProjectionType) {
 		this.assignedProjectionType = newAssignedProjectionType;
+		polygon.setLayerByProjectionType(this.assignedProjectionType, this);
 	}
 
 	public static class Builder {
@@ -469,6 +477,367 @@ public class Layer implements Comparable<Layer> {
 	}
 
 	/**
+	 * V7Int_ApplyEstimatedSI
+	 * 
+	 * Routine implementing the logic of assigning an Estimated Site Index to a species.
+	 * <p>
+	 * The rules are defined in the document IPSCB205.doc. Summary of these rules, filling in some unstated assumptions:
+	 * <ul>
+	 * <li>All polygons, regardless of inventory type: apply the business logic for VRISTART
+	 * <li>Fill in the species details:
+	 * <ol>
+	 * <li>For each species in the stand:
+	 * <ol>
+	 * <li>Fill in the SI details for the species.
+	 * <li>If the corresponding SP0 has no site information and the current species contains site information, assign
+	 * the site information to the SP0.
+	 * <li>Next species
+	 * </ol>
+	 * <li>If the resulting SI causes us to change Initial Growth Models, then we need to reapply the Estimated SI and
+	 * resort the species.
+	 * </ol>
+	 * Notes:
+	 * <p>
+	 * 2003/12/16: According to Cam's 2003/12/15 e-mail, we will copy over height and age and site curve number to the
+	 * SP0 so that they will appear with the species information in the VRISTART/FIPSTART input files.
+	 * <p>
+	 * 2004/02/19: According to Cam's 2004/02/12 e-mail describing application of a computed height based on the site
+	 * index when a species has site information and is less than 30 years of age.
+	 * <p>
+	 * 2004/11/28: Added a step 5 to the PART C logic as the application of the estimated site species may cause a
+	 * change in the initial model to be used. For instance, this will happen if the Estimated SI causes a FIP Inventory
+	 * polygon to flip one way or the other around 10.0 m.
+	 * <p>
+	 * 2009/07/08: Produce an informational message that input height was reset due to an Estimated SI assignment.
+	 * <p>
+	 * 
+	 * @param currentGrowthModel      the Growth Model that is currently being used
+	 * @param doPreventRecursiveCalls The definition of this routine allows for a recursive call back to this routine to
+	 *                                fill in the blanks in case we change Initial Processing modes as a result of
+	 *                                applying an Estimated SI. If this is not desired, then set this parameter to TRUE.
+	 *                                Normally, this parameter is FALSE to allow recursive calls.
+	 * 
+	 * @throws PolygonValidationException
+	 */
+	public void calculateEstimatedSiteIndex(
+			ProjectionContext context, GrowthModelCode currentGrowthModel, boolean doPreventRecursiveCalls
+	) throws PolygonValidationException {
+
+		// If we have the site species and the total age is less than
+		// 30 years of age, use the estimated site index as the actual
+		// site index to use.
+
+		applyEstimatedSiteIndex_VriStart(context);
+
+		logger.debug("{}: adding site index information to any species that need it", this);
+
+		for (var speciesGroup : getSp0sByPercent()) {
+
+			for (var sp64 : speciesGroup.getSpecies()) {
+				boolean doRecomputeInputHeight = false;
+
+				logger.debug(
+						"   species {}: percent {}; age: {}; height: {}; site index: {}", sp64.getSpeciesCode(),
+						sp64.getSpeciesPercent(), sp64.getTotalAge(), sp64.getDominantHeight(), sp64.getSiteIndex()
+				);
+
+				if (sp64.getTotalAge() != null && sp64.getTotalAge() < 30 && sp64.getSiteIndex() != null) {
+
+					sp64.resetDominantHeight();
+					doRecomputeInputHeight = true;
+
+					logger.debug("{}: species {}: height recalculation required", this, sp64);
+
+				} else if (sp64.getTotalAge() != null && sp64.getTotalAge() < 30 && sp64.getDominantHeight() > 0
+						&& sp64.getSiteIndex() == null) {
+
+					sp64.setSiteIndex(sp64.dominantHeightAndAgeToSiteIndex());
+
+					polygon.getDefinitionMessages().add(
+							new PolygonMessage.Builder().returnCode(ReturnCode.SUCCESS).stand(speciesGroup)
+									.severity(SeverityCode.WARNING)
+									.message(
+											new ValidationMessage(
+													ValidationMessageKind.ESTIMATED_SI_UNAVAILABLE,
+													sp64.getSpeciesCode(), sp64.getTotalAge()
+											)
+									).build()
+					);
+
+					logger.warn(
+							"{}: species {}: Site index triplet still not completed. Using final fallback of computing site index from age and height ({} = f({}, {}))",
+							this, sp64, sp64.getSiteIndex(), sp64.getTotalAge(), sp64.getDominantHeight()
+					);
+				}
+
+				sp64.calculateUndefinedFieldValues();
+
+				if (doRecomputeInputHeight) {
+
+					polygon.getDefinitionMessages().add(
+							new PolygonMessage.Builder() //
+									.returnCode(ReturnCode.SUCCESS) //
+									.stand(speciesGroup) //
+									.severity(SeverityCode.INFORMATION) //
+									.message(
+											new ValidationMessage(
+													ValidationMessageKind.REASSIGNED_HEIGHT, this, sp64,
+													sp64.getSiteIndex(), sp64.getTotalAge(), sp64.getDominantHeight()
+											)
+									).build()
+					);
+
+					logger.info(
+							"{}: species {}: based on estimated site index of {}, recomputed input height at age {} to be {}",
+							this, sp64, sp64.getSiteIndex(), sp64.getTotalAge(), sp64.getDominantHeight()
+					);
+				}
+
+				// Copy site index information from this species to the species group
+
+				var sp0 = speciesGroup.getSpeciesGroup();
+
+				if (sp0.getSiteIndex() == null && sp64.getSiteIndex() != null) {
+					sp0.setAgeAtBreastHeight(sp64.getAgeAtBreastHeight());
+					sp0.setDominantHeight(sp64.getDominantHeight());
+					sp0.setSiteIndex(sp64.getSiteIndex());
+					sp0.setTotalAge(sp64.getTotalAge());
+					sp0.setSiteCurve(sp64.getSiteCurve());
+				}
+
+				if (sp0.getTotalAge() == null || sp0.getDominantHeight() == null) {
+					sp0.setTotalAge(sp64.getTotalAge());
+					sp0.setDominantHeight(sp64.getDominantHeight());
+				}
+
+				if (sp0.getSiteCurve() == null) {
+					sp0.setSiteCurve(sp64.getSiteCurve());
+				}
+			}
+		}
+
+		var rGrowthModel = new Reference<GrowthModelCode>();
+		var rProcessingModel = new Reference<ProcessingModeCode>();
+		var rPrimaryLayer = new Reference<Layer>();
+
+		polygon.calculateInitialProcessingModel(rGrowthModel, rProcessingModel, rPrimaryLayer);
+
+		GrowthModelCode newGrowthModel = rGrowthModel.get();
+		if (newGrowthModel != currentGrowthModel && !doPreventRecursiveCalls) {
+
+			logger.debug("{}: switching to growth model {}", this, newGrowthModel);
+
+			calculateEstimatedSiteIndex(context, newGrowthModel, true /* do not recurse */);
+		}
+	}
+
+	private void applyEstimatedSiteIndex_VriStart(ProjectionContext context) {
+
+		logger.debug("{}: determining estimated site index from age 30+ species", this);
+
+		SiteIndexEquation estimatedCurve = null;
+		Species estimatedSiteIndexSpecies = null;
+		Double estimatedSiteIndex = null;
+		Double estimatedAge = null;
+
+		if (getEstimatedSiteIndex() != null) {
+
+			estimatedCurve = SiteTool.getSICurve(getEstimatedSiteIndexSpecies(), getPolygon().isCoastal());
+			for (Species s : getSp64sAsSupplied()) {
+				estimatedAge = s.getTotalAge();
+				if (estimatedAge != null) {
+					estimatedSiteIndexSpecies = s;
+					estimatedSiteIndex = getEstimatedSiteIndex();
+					break;
+				}
+			}
+		} else {
+			for (Species s : getSp64sByPercent()) {
+
+				if (get(s.getTotalAge()) >= 30.0 && s.getDominantHeight() != null) {
+
+					s.calculateUndefinedFieldValues();
+
+					estimatedSiteIndexSpecies = s;
+					estimatedAge = s.getTotalAge();
+					if (s.getSiteCurve() != null) {
+						estimatedCurve = s.getSiteCurve();
+					} else {
+						estimatedCurve = SiteTool.getSICurve(getEstimatedSiteIndexSpecies(), getPolygon().isCoastal());
+					}
+					estimatedSiteIndex = s.getSiteIndex();
+
+					logger.debug(
+							"{}: estimated site index will come from species {} with age: {} and height: {}", this,
+							s.getSpeciesCode(), s.getTotalAge(), s.getDominantHeight()
+					);
+
+					break;
+
+				} else {
+					logger.debug(
+							"{}: species {} with age: {} and height: {} is not a candidate for supplying estimated site index",
+							this, s.getSpeciesCode(), s.getTotalAge(), s.getDominantHeight()
+					);
+				}
+			}
+		}
+
+		logger.debug(
+				"{}: estimated site index {} from species {} (age {}; curve: {})", this, estimatedSiteIndex,
+				estimatedSiteIndexSpecies.getSpeciesCode(), estimatedAge, estimatedCurve
+		);
+
+		if (estimatedSiteIndex != null) {
+
+			var leadingSpecies = this.determineLeadingSp64(0);
+
+			logger.debug(
+					"{}: scanning for young tree species. Leading sp64 is {}", this,
+					leadingSpecies == null ? "<none>" : leadingSpecies.getSpeciesCode()
+			);
+
+			for (Species s : getSp64sByPercent()) {
+				logger.debug("{}: checking species {}", this, s.getSpeciesCode());
+
+				Double targetSiteIndex = null;
+
+				if (s.getTotalAge() != null && s.getTotalAge() < 30
+						|| s.compareTo(leadingSpecies) == 0 && leadingSpecies.getTotalAge() == null) {
+
+					var targetCurve = s.getSiteCurve();
+
+					logger.debug("   species {} with age {} requires an estimated site index", s, s.getTotalAge());
+
+					if (estimatedSiteIndex != null && targetCurve == null) {
+						targetCurve = SiteTool.getSICurve(s.getSpeciesCode(), polygon.isCoastal());
+						logger.debug("   site index curve not supplied, using default {}", targetCurve.name());
+					}
+
+					if (estimatedCurve != null && targetCurve != null && estimatedCurve != targetCurve) {
+						try {
+							targetSiteIndex = SiteTool
+									.convertSiteIndexBetweenCurves(estimatedCurve, estimatedSiteIndex, targetCurve);
+						} catch (CommonCalculatorException e) {
+							logger.debug(
+									"   failed to convert site index curve {} to {}; error: {}", estimatedCurve,
+									targetCurve, e.getMessage()
+							);
+							targetSiteIndex = null;
+						}
+					}
+
+					if (targetSiteIndex == null) {
+						s.setSiteIndex(estimatedSiteIndex);
+						s.setYearsToBreastHeight(null);
+
+						polygon.getDefinitionMessages().add(
+								new PolygonMessage.Builder() //
+										.returnCode(ReturnCode.SUCCESS) //
+										.stand(s.getStand()) //
+										.severity(SeverityCode.INFORMATION) //
+										.message(
+												new ValidationMessage(
+														ValidationMessageKind.ASSIGNING_ESTIMATED_SITE_INDEX,
+														estimatedSiteIndex, s.getSpeciesCode()
+												)
+										).build()
+						);
+
+						logger.info(
+								"   assigning to current species {} directly from estimated site index the value of {}",
+								s.getSpeciesCode(), estimatedSiteIndex
+						);
+					} else {
+						s.setSiteIndex(targetSiteIndex);
+						s.setYearsToBreastHeight(null);
+
+						polygon.getDefinitionMessages().add(
+								new PolygonMessage.Builder() //
+										.returnCode(ReturnCode.SUCCESS) //
+										.stand(s.getStand()) //
+										.severity(SeverityCode.INFORMATION) //
+										.message(
+												new ValidationMessage(
+														ValidationMessageKind.ASSIGNING_ESTIMATED_SITE_INDEX,
+														estimatedSiteIndex, s.getSpeciesCode()
+												)
+										).build()
+						);
+
+						logger.info(
+								"   assigning to current species {} a converted site index the value of {}",
+								s.getSpeciesCode(), targetSiteIndex
+						);
+					}
+
+					if (s.getTotalAge() == null) {
+						s.setTotalAge(estimatedAge);
+
+						logger.info(
+								"   assigning to current species {} a total age value of {}", s.getSpeciesCode(),
+								estimatedAge
+						);
+					}
+
+					if (estimatedSiteIndex != null && estimatedAge >= Vdyp7Constants.MIN_SITEINDEX_AGE) {
+						polygon.getDefinitionMessages().add(
+								new PolygonMessage.Builder() //
+										.returnCode(ReturnCode.SUCCESS) //
+										.layer(this) //
+										.severity(SeverityCode.INFORMATION) //
+										.message(
+												new ValidationMessage(
+														ValidationMessageKind.ESTIMATE_APPLIED_FROM_OTHER_SPECIES,
+														estimatedSiteIndexSpecies.getSpeciesCode(), s.getSpeciesCode()
+												)
+										).build()
+						);
+					}
+				} else {
+					logger.debug(
+							"{}: species {} with age {} does not require an estimated site index", this,
+							s.getSpeciesCode(), s.getTotalAge()
+					);
+				}
+			}
+		}
+	}
+
+	public void estimateCrownClosure(ProjectionContext context) {
+
+		if (crownClosure == null) {
+
+			if (this == polygon.getLayerByProjectionType(ProjectionTypeCode.UNKNOWN)) {
+				// this is the primary layer
+
+				Species leadingSp64 = this.determineLeadingSp64(0);
+				if (leadingSp64 != null && leadingSp64.getDominantHeight() >= 10.0) {
+					var estimatedCrownClosure = SiteTool
+							.getSpeciesDefaultCrownClosure(leadingSp64.getSpeciesCode(), polygon.isCoastal());
+					logger.debug("{}: estimating crown closure of primary layer at {}", this, estimatedCrownClosure);
+					crownClosure = (short) estimatedCrownClosure;
+				} else if (leadingSp64 == null) {
+					polygon.disableProjectionsOfType(assignedProjectionType);
+					context.addMessage(
+							"{}: Crown closure was not supplied and there is no leading sp64 from which it can be determined. Disabling projection",
+							this
+					);
+					logger.debug("Disabling projections of type {}", assignedProjectionType);
+				}
+			} else if (this == polygon.getLayerByProjectionType(ProjectionTypeCode.VETERAN)) {
+				// this is the veteran layer
+
+				short estimatedCrownClosure = 4;
+				logger.debug("{}: estimating crown closure of veteran layer at {}", this, estimatedCrownClosure);
+				crownClosure = estimatedCrownClosure;
+			} else {
+				// do nothing - no need to estimate crown closure for non-primary, non-veteran layer
+			}
+		}
+	}
+
+	/**
 	 * Return the <code>nthLeading</code> species group of the layer.
 	 * 
 	 * @param nthLeading the zero-based ordinal identifying the rank to be returned.
@@ -595,43 +964,58 @@ public class Layer implements Comparable<Layer> {
 	}
 
 	/**
-	 * lcl_DetermineLayerAgeAtYear - determine the layer's age at the given year,
-	 * which must be non-null and between 1400 and 2500 (inclusive.)
+	 * <code>lcl_DetermineLayerAgeAtYear</code>
+	 * <p>
+	 * Determine the layer's age at the given year, which must be non-null and between 1400 and 2500 (inclusive.)
+	 * 
 	 * @param year as described
 	 * @return as described
 	 * @throws IllegalStateException if:
-	 * <ul>
-	 * <li>year is null or out of range
-	 * <li><code>this</code> has no leading species
-	 * <li>the leading species has no total age value
-	 * <li>the containing polygon's measurement year cannot be calculated
-	 * </ul>
+	 *                               <ul>
+	 *                               <li>year is null or out of range
+	 *                               <li><code>this</code> has no leading species
+	 *                               <li>the leading species has no total age value
+	 *                               <li>the containing polygon's measurement year cannot be calculated
+	 *                               </ul>
 	 */
 	public double determineLayerAgeAtYear(Integer year) {
 		if (year == null || year < Vdyp7Constants.MIN_CALENDAR_YEAR || year > Vdyp7Constants.MAX_CALENDAR_YEAR) {
-			throw new IllegalArgumentException(MessageFormat.format("Invalid year {0}; must be non null and between {1} and {2} (inclusive)"
-					, year, Vdyp7Constants.MIN_CALENDAR_YEAR, Vdyp7Constants.MAX_CALENDAR_YEAR));
+			throw new IllegalArgumentException(
+					MessageFormat.format(
+							"Invalid year {0}; must be non null and between {1} and {2} (inclusive)", year,
+							Vdyp7Constants.MIN_CALENDAR_YEAR, Vdyp7Constants.MAX_CALENDAR_YEAR
+					)
+			);
 		}
-		
+
 		Stand leadingSp0 = determineLeadingSp0(0);
 		if (leadingSp0 == null) {
 			throw new IllegalStateException(MessageFormat.format("Leading Sp0 not found for layer {0}", this));
 		} else if (leadingSp0.getSpeciesGroup().getTotalAge() == null) {
-			throw new IllegalStateException(MessageFormat.format("Leading Sp0 {0} of layer {1} has no total age", leadingSp0.getSpeciesGroup(), this));
+			throw new IllegalStateException(
+					MessageFormat
+							.format("Leading Sp0 {0} of layer {1} has no total age", leadingSp0.getSpeciesGroup(), this)
+			);
 		}
-		
+
 		Integer measurementYear = getPolygon().getMeasurementYear();
 		if (measurementYear == null) {
-			throw new IllegalStateException(MessageFormat.format("Measurement year is not known for polygon {0}", getPolygon()));
+			throw new IllegalStateException(
+					MessageFormat.format("Measurement year is not known for polygon {0}", getPolygon())
+			);
 		}
-		
+
 		double layerAge = leadingSp0.getSpeciesGroup().getTotalAge() + year - measurementYear;
-		
+
 		if (layerAge < 0.0) {
 			layerAge = 0.0;
 		}
-		
+
 		return layerAge;
+	}
+
+	public void determineAgeAtDeath() {
+		ageAtDeath = determineLayerAgeAtYear(yearOfDeath);
 	}
 
 	public void setAsDeadLayer(Integer yearOfDeath, Double percentStockKilled) {
@@ -642,25 +1026,31 @@ public class Layer implements Comparable<Layer> {
 		this.yearOfDeath = yearOfDeath;
 
 		logger.debug(
-				"Layer {} marked as a Dead Layer with mortality occurring in {} and affecting {} of the land", this,
+				"{}: marked as a Dead Layer with mortality occurring in {} and affecting {} of the land", this,
 				yearOfDeath, percentStockable
 		);
 	}
 
-	public void doCompleteDefinition(Polygon polygon) throws PolygonValidationException {
+	/**
+	 * <code>V7Ext_CompletedPolygonDefinition</code>, layer portion (lines 4300 - 4362).
+	 * 
+	 * Complete the definition of the Layer, assigning the projection type, building the Site Species,
+	 * 
+	 * @throws PolygonValidationException
+	 */
+	public void doCompleteDefinition() throws PolygonValidationException {
 
 		if (getDoSuppressPerHAYields()) {
+
 			setAssignedProjectionType(ProjectionTypeCode.UNKNOWN);
 		}
-
-		// Assign the projection type of the layer.
 
 		if (getAssignedProjectionType() == ProjectionTypeCode.UNKNOWN) {
 
 			var layerProjectionType = determineProjectionType(polygon);
+
 			if (ProjectionTypeCode.ACTUAL_PROJECTION_TYPES_LIST.contains(layerProjectionType)) {
 				setAssignedProjectionType(layerProjectionType);
-				polygon.setLayerByProjectionType(layerProjectionType, this);
 			} else if (layerProjectionType.equals(ProjectionTypeCode.UNKNOWN)) {
 				// If the layer still does not have a projection type, suppress projection.
 				setDoSuppressPerHAYields(true);
@@ -673,98 +1063,117 @@ public class Layer implements Comparable<Layer> {
 				);
 			}
 		}
-
-		doBuildSiteSpecies();
-
-		doCompleteSiteSpeciesSiteIndexInfo();
-
-		// TODO: Continue work at V7Ext_CompletedPolygonDefinition line 4389
 	}
 
-	private void doBuildSiteSpecies() {
+	/**
+	 * Build the Site Species list from the Layer's stands. This logic is from <code>lcl_RebuildSiteSpeciesArray</code>,
+	 * excluding the sorting logic (lines 7750 - 7778).
+	 * <p>
+	 * There are two steps to building the site species array:
+	 * <ol>
+	 * <li>Reset the array to be empty.
+	 * <li>Load the Site Species array in decreasing order of SP0 percent. We must combine any C and Y SP0s. We must
+	 * also combine any PA and PL SP0s
+	 * <li>Sort the Site Species Array using the combined SP0 percent. The tie breaker sorts by increasing alphabetical
+	 * SP0 Name.
+	 * </ol>
+	 * When combining SP0s (C/Y and PA/PL), percents are summed together and the secondary SP0 loses its identity to the
+	 * more significant SP0.
+	 * <p>
+	 * The original code contains this comment: "when combining SP0s and the primary SP0 does not have site index
+	 * information but the secondary SP0 does, the primary SP0 loses its identity to the secondary SP0", but this is not
+	 * implemented in the original code.
+	 * 
+	 * @param growthModelCode
+	 */
+	void doBuildSiteSpecies(GrowthModelCode growthModelCode) {
 
 		var unsortedSiteSpecies = new ArrayList<SiteSpecies>();
 
 		SiteSpecies pSiteSpecies = null;
 		SiteSpecies cSiteSpecies = null;
-		
+
 		for (Stand stand : sp0s) {
 
 			var standSp0 = stand.getSpeciesGroup();
-			
-			var newSiteSpecies = new SiteSpecies.Builder() //
-					.hasBeenCombined(false) //
-					.hasSiteInfo(standSp0.getSiteIndex() != null) //
-					.stand(stand) //
-					.totalSpeciesPercent(standSp0.getSpeciesPercent()) //
-					.build();
+
+			var newSiteSpeciesBuilder = new SiteSpecies.Builder().stand(stand)
+					.totalSpeciesPercent(standSp0.getSpeciesPercent());
 
 			if ("C".equals(standSp0.getSpeciesCode()) || "Y".equals(standSp0.getSpeciesCode())) {
 
 				if (cSiteSpecies == null) {
 
-					cSiteSpecies = newSiteSpecies;
-					unsortedSiteSpecies.add(newSiteSpecies);
+					cSiteSpecies = newSiteSpeciesBuilder.hasBeenCombined(false).build();
+					unsortedSiteSpecies.add(cSiteSpecies);
 
 				} else {
 					var currentCedarSiteSpeciesGroup = cSiteSpecies.getStand().getSpeciesGroup();
-					var percentageComparison = currentCedarSiteSpeciesGroup.getSpeciesPercent()
+					var oldPercentageMinusNew = currentCedarSiteSpeciesGroup.getSpeciesPercent()
 							- standSp0.getSpeciesPercent();
-					var nameComparison = currentCedarSiteSpeciesGroup.getSpeciesCode()
+					var oldNameComparedToNew = currentCedarSiteSpeciesGroup.getSpeciesCode()
 							.compareTo(standSp0.getSpeciesCode());
 
-					if (percentageComparison > 0 || percentageComparison == 0 && nameComparison < 0) {
+					if (oldPercentageMinusNew > 0 || oldPercentageMinusNew == 0 && oldNameComparedToNew < 0) {
 						// The new cedar SiteSpecies will be merged into the existing one since it has
 						// a lower percentage or the same percentage but a later name.
-						cSiteSpecies.incrementTotalSpeciesPercent(newSiteSpecies.getTotalSpeciesPercent());
+						cSiteSpecies.incrementTotalSpeciesPercent(standSp0.getSpeciesPercent());
 					} else {
 						unsortedSiteSpecies.remove(cSiteSpecies);
+						var newSiteSpecies = newSiteSpeciesBuilder.hasBeenCombined(true).build();
 						newSiteSpecies.incrementTotalSpeciesPercent(cSiteSpecies.getTotalSpeciesPercent());
-						cSiteSpecies = newSiteSpecies;
-						unsortedSiteSpecies.add(newSiteSpecies);
+						unsortedSiteSpecies.add(cSiteSpecies = newSiteSpecies);
 					}
 				}
 			} else if ("PA".equals(standSp0.getSpeciesCode()) || "PL".equals(standSp0.getSpeciesCode())) {
 
 				if (pSiteSpecies == null) {
 
-					pSiteSpecies = newSiteSpecies;
-					unsortedSiteSpecies.add(newSiteSpecies);
+					pSiteSpecies = newSiteSpeciesBuilder.hasBeenCombined(false).build();
+					unsortedSiteSpecies.add(pSiteSpecies);
 
 				} else {
 					var currentPineSiteSpeciesGroup = pSiteSpecies.getStand().getSpeciesGroup();
-					var percentageComparison = currentPineSiteSpeciesGroup.getSpeciesPercent()
+					var oldPercentageMinusNew = currentPineSiteSpeciesGroup.getSpeciesPercent()
 							- standSp0.getSpeciesPercent();
-					var nameComparison = currentPineSiteSpeciesGroup.getSpeciesCode()
+					var oldNameComparedToNew = currentPineSiteSpeciesGroup.getSpeciesCode()
 							.compareTo(standSp0.getSpeciesCode());
 
-					if (percentageComparison > 0 || percentageComparison == 0 && nameComparison < 0) {
+					if (oldPercentageMinusNew > 0 || oldPercentageMinusNew == 0 && oldNameComparedToNew < 0) {
 						// The new pine SiteSpecies will be merged into the existing one since it has
 						// a lower percentage or the same percentage but a later name.
-						pSiteSpecies.incrementTotalSpeciesPercent(newSiteSpecies.getTotalSpeciesPercent());
+						pSiteSpecies.incrementTotalSpeciesPercent(standSp0.getSpeciesPercent());
 					} else {
 						unsortedSiteSpecies.remove(pSiteSpecies);
+						var newSiteSpecies = newSiteSpeciesBuilder.hasBeenCombined(true).build();
 						newSiteSpecies.incrementTotalSpeciesPercent(pSiteSpecies.getTotalSpeciesPercent());
-						pSiteSpecies = newSiteSpecies;
-						unsortedSiteSpecies.add(newSiteSpecies);
+						unsortedSiteSpecies.add(pSiteSpecies = newSiteSpecies);
 					}
 				}
 			} else {
-				unsortedSiteSpecies.add(newSiteSpecies);
+				unsortedSiteSpecies.add(newSiteSpeciesBuilder.hasBeenCombined(false).build());
 			}
 		}
 
 		siteSpecies = unsortedSiteSpecies;
-		siteSpecies.sort(SiteSpecies::compareTo);
+
+		if (growthModelCode == GrowthModelCode.FIP) {
+			// sorting is not necessary - the above implementation orders the SiteSpecies in the
+			// correct way for FIP.
+		} else {
+			siteSpecies.sort(SiteSpecies::compareTo_VRI);
+		}
 	}
 
 	/**
+	 * <code>V7Int_FillInOneSiteSpeciesSIInfo</code>
+	 * <p>
 	 * Fills in the Site Species SI Info for this layer.
 	 * <p>
 	 * This routine implements the algorithm described in IPSCB205 for 'Site Species Fill In'. Boiled down into
 	 * pseudo-code, the following rules are implemented:
 	 * <ol>
-	 * <li>The supplied layer must have data and have a stand description.
+	 * <li>The supplied layer must have a stand description.
 	 * <li>Determine leading site species. If site species already has site information, we are done.
 	 * <li>Determine a 'donor' species by selecting the first alphabetical species in the stand description which has
 	 * site information.
@@ -776,7 +1185,7 @@ public class Layer implements Comparable<Layer> {
 	 * 
 	 * @throws PolygonValidationException
 	 */
-	private void doCompleteSiteSpeciesSiteIndexInfo() throws PolygonValidationException {
+	void doCompleteSiteSpeciesSiteIndexInfo() throws PolygonValidationException {
 
 		boolean amDone = false;
 
@@ -795,21 +1204,21 @@ public class Layer implements Comparable<Layer> {
 
 			if (stand != null) {
 				logger.debug(
-						"Located Site SP0 \"{}\" with site info: Age: {}, Ht: {}, SI: {}",
+						"{}: located Site SP0 \"{}\" with site info: Age: {}, Ht: {}, SI: {}", this,
 						stand.getSpeciesGroup().getSpeciesCode(), stand.getSpeciesGroup().getTotalAge(),
 						stand.getSpeciesGroup().getDominantHeight(), stand.getSpeciesGroup().getSiteIndex()
 				);
 			}
 			if (siteSpecies != null) {
 				logger.debug(
-						"Located Site SP64 \"{}\" with site info: Age: {}, Ht: {}, SI: {}",
+						"{}: located Site SP64 \"{}\" with site info: Age: {}, Ht: {}, SI: {}", this,
 						siteSpecies.getSpeciesCode(), siteSpecies.getTotalAge(), siteSpecies.getDominantHeight(),
 						siteSpecies.getSiteIndex()
 				);
 			}
 
 			if (stand == null || siteSpecies == null) {
-				logger.error("Leading site species could not be determined; cannot continue");
+				logger.error("{}: leading site species could not be determined; cannot continue", this);
 
 				throw new PolygonValidationException(
 						new ValidationMessage(ValidationMessageKind.NO_LEADING_SPECIES, polygon, getLayerId())
@@ -821,7 +1230,7 @@ public class Layer implements Comparable<Layer> {
 			if (siteSpecies.getTotalAge() != null && siteSpecies.getDominantHeight() != null
 					&& siteSpecies.getSiteIndex() != null) {
 
-				logger.debug("Leading site species {} already has site information", siteSpecies);
+				logger.debug("{}: leading site species {} already has site information", this, siteSpecies);
 				amDone = true;
 
 			} else {
@@ -850,7 +1259,7 @@ public class Layer implements Comparable<Layer> {
 
 					if (donorSpecies != null) {
 						logger.debug(
-								"Located Donor SP64 \"{}\" with site info: Age: {}, Ht: {}, SI: {}",
+								"{}: located Donor SP64 \"{}\" with site info: Age: {}, Ht: {}, SI: {}", this,
 								donorSpecies.getSpeciesCode(), donorSpecies.getTotalAge(),
 								donorSpecies.getDominantHeight(), donorSpecies.getSiteIndex()
 						);
@@ -860,7 +1269,7 @@ public class Layer implements Comparable<Layer> {
 
 			if (donorSpecies == null) {
 				amDone = true;
-				logger.debug("Layer {}: unable to find donor species", this);
+				logger.debug("{}: unable to find donor species", this);
 			}
 		}
 
@@ -873,7 +1282,7 @@ public class Layer implements Comparable<Layer> {
 				siteSpecies.setTotalAge(donorSpecies.getTotalAge());
 
 				logger.debug(
-						"Set site species {} age from donor species {} to {}", siteSpecies.getSpeciesCode(),
+						"{}: set site species {} age from donor species {} to {}", this, siteSpecies.getSpeciesCode(),
 						donorSpecies.getSpeciesCode(), donorSpecies.getTotalAge()
 				);
 
@@ -888,7 +1297,7 @@ public class Layer implements Comparable<Layer> {
 					siteSpecies.setSiteIndex(siteIndex);
 
 					logger.debug(
-							"Donor {} site index {} converted to {} and assigned to site species {}",
+							"{}: donor {} site index {} converted to {} and assigned to site species {}", this,
 							donorSpecies.getSpeciesCode(), donorSpecies.getSiteIndex(), siteSpecies.getSiteIndex(),
 							siteSpecies.getSpeciesCode()
 					);
@@ -901,8 +1310,9 @@ public class Layer implements Comparable<Layer> {
 					siteSpecies.setSiteIndex(siteIndex);
 
 					logger.debug(
-							"No conversion of site index from {} to {}. Assigned straight copy of donor site index value {} to site species",
-							donorSpecies.getSpeciesCode(), siteSpecies.getSpeciesCode(), donorSpecies.getSiteIndex()
+							"{}: no conversion of site index from {} to {}. Assigned straight copy of donor site index value {} to site species",
+							this, donorSpecies.getSpeciesCode(), siteSpecies.getSpeciesCode(),
+							donorSpecies.getSiteIndex()
 					);
 				}
 
@@ -954,5 +1364,9 @@ public class Layer implements Comparable<Layer> {
 	public String toDetailedString() {
 		// TODO: elaborate, in the manner of V7Ext_LogLayerDescriptor
 		return toString();
+	}
+
+	private double get(Double d) {
+		return d == null ? Vdyp7Constants.EMPTY_DECIMAL : d;
 	}
 }

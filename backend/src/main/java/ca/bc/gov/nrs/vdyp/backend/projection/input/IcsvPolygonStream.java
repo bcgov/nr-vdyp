@@ -7,8 +7,8 @@ import ca.bc.gov.nrs.vdyp.backend.projection.model.Polygon;
 
 public class IcsvPolygonStream extends AbstractPolygonStream {
 
-	public IcsvPolygonStream(ProjectionContext state, InputStream icsvInputStream) {
-		super(state);
+	public IcsvPolygonStream(ProjectionContext context, InputStream icsvInputStream) {
+		super(context);
 	}
 
 	@Override

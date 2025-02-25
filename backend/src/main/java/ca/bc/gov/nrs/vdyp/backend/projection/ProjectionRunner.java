@@ -17,32 +17,30 @@ import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ProjectionRequestKind;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
 import ca.bc.gov.nrs.vdyp.backend.projection.input.AbstractPolygonStream;
-import ca.bc.gov.nrs.vdyp.backend.projection.model.Polygon;
-import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.PolygonProcessingStateCode;
 import ca.bc.gov.nrs.vdyp.backend.utils.FileHelper;
 
 public class ProjectionRunner implements IProjectionRunner {
 
 	private static final Logger logger = LoggerFactory.getLogger(ProjectionRunner.class);
 
-	private final ProjectionContext state;
+	private final ProjectionContext context;
 
 	public ProjectionRunner(ProjectionRequestKind kind, String projectionId, Parameters parameters, Boolean isTrialRun)
 			throws ProjectionRequestValidationException {
-		this.state = new ProjectionContext(kind, projectionId, parameters, isTrialRun);
+		this.context = new ProjectionContext(kind, projectionId, parameters, isTrialRun);
 	}
 
 	@Override
 	public void run(Map<String, InputStream> streams) throws ProjectionRequestValidationException, ProjectionInternalExecutionException {
-		state.getProgressLog().addMessage("Running Projection of type {0}", state.getRequestKind());
+		context.getProgressLog().addMessage("Running Projection of type {0}", context.getRequestKind());
 
-		logger.debug("{}", state.getValidatedParams().toString());
+		logger.debug("{}", context.getValidatedParams().toString());
 		logApplicationMetadata();
 
-		AbstractPolygonStream polygonStream = AbstractPolygonStream.build(state, streams);
+		AbstractPolygonStream polygonStream = AbstractPolygonStream.build(context, streams);
 
 		IComponentRunner componentRunner;
-		if (state.isTrialRun()) {
+		if (context.isTrialRun()) {
 			componentRunner = new StubComponentRunner();
 		} else {
 			componentRunner = new ComponentRunner();
@@ -51,20 +49,21 @@ public class ProjectionRunner implements IProjectionRunner {
 		while (polygonStream.hasNextPolygon()) {
 
 			try {
-				var polygonToProject = polygonStream.getNextPolygon();
-				if (polygonToProject.doAllowProjection()) {
-					logger.info("Starting the projection of feature \"{}\"", polygonToProject);
-					project(componentRunner, polygonToProject);
+				var polygon = polygonStream.getNextPolygon();
+				if (polygon.doAllowProjection()) {
+					logger.info("Starting the projection of feature \"{}\"", polygon);
+					var polygonProjectionRunner = new PolygonProjectionRunner(polygon, context, componentRunner);
+					polygonProjectionRunner.project();
 				} else {
-					logger.info("Skipping the projection of feature \"{}\" on request", polygonToProject);
+					logger.info("Skipping the projection of feature \"{}\" on request", polygon);
 				}
 			} catch (PolygonValidationException e) {
-				IMessageLog errorLog = state.getErrorLog();
+				IMessageLog errorLog = context.getErrorLog();
 				for (ValidationMessage m : e.getValidationMessages()) {
 					errorLog.addMessage(m.getKind().template, m.getArgs());
 				}
 			} catch (PolygonExecutionException e) {
-				IMessageLog errorLog = state.getErrorLog();
+				IMessageLog errorLog = context.getErrorLog();
 				for (ValidationMessage m : e.getValidationMessages()) {
 					errorLog.addMessage(m.getKind().template, m.getArgs());
 				}
@@ -77,32 +76,8 @@ public class ProjectionRunner implements IProjectionRunner {
 	}
 
 	@Override
-	public ProjectionContext getProjectionContext() {
-		return state;
-	}
-
-	private void project(IComponentRunner componentRunner, Polygon polygon) throws PolygonExecutionException, ProjectionInternalExecutionException {
-		if (polygon.getCurrentProcessingState() != PolygonProcessingStateCode.POLYGON_DEFINED) {
-			throw new IllegalStateException(
-					"Cannot call ProjectionRunner.project unless the Polygon is in POLYGON_DEFINED state"
-			);
-		}
-
-		// Begin implementation based on code starting at line 2088 (call to "V7Ext_GetPolygonInfo") in vdyp7console.c.
-		// Note the funky error handling in this routine: "rtrnCode" is set to SUCCESS and is potentially set to
-		// another value only when YldTable_GeneratePolygonYieldTables is called. "v7RtrnCode" is set to the result
-		// of all the other routines and a negative result will sometimes inhibit the execution of a follow-on block
-		// of code such as "V7Ext_ProjectStandByAge" and "YldTable_GeneratePolygonYieldTables" but not all. It's hard
-		// to understand why things are done the way they are.
-
-		PolygonProjectionState state = new PolygonProjectionState(getProjectionContext());
-		
-		polygon.project(componentRunner, state);
-	}
-
-	@Override
 	public InputStream getYieldTable() throws ProjectionInternalExecutionException {
-		if (state.isTrialRun()) {
+		if (context.isTrialRun()) {
 			return new ByteArrayInputStream(new byte[0]);
 		} else {
 			// TODO: For now...
@@ -116,11 +91,11 @@ public class ProjectionRunner implements IProjectionRunner {
 
 	@Override
 	public InputStream getProgressStream() {
-		return state.getProgressLog().getAsStream();
+		return context.getProgressLog().getAsStream();
 	}
 
 	@Override
 	public InputStream getErrorStream() {
-		return state.getErrorLog().getAsStream();
+		return context.getErrorLog().getAsStream();
 	}
 }

@@ -1,13 +1,10 @@
 package ca.bc.gov.nrs.vdyp.backend.projection.model;
 
 /** Holds the relevant details of a particular site species. */
-public class SiteSpecies implements Comparable<SiteSpecies> {
+public class SiteSpecies {
 
 	/** The Species Group (Sp0) component corresponding to the site species. */
 	private Stand stand;
-
-	/** <code>true</code> iff relevant site information has been applied to the current site species component. */
-	private boolean hasSiteInfo;
 
 	/**
 	 * <code>true</code> iff this entry has been combined with a different SP0 to produce a composite SP0 Site Species.
@@ -25,7 +22,7 @@ public class SiteSpecies implements Comparable<SiteSpecies> {
 	}
 
 	public boolean getHasSiteInfo() {
-		return hasSiteInfo;
+		return stand.getSpeciesGroup().getSiteIndex() != null;
 	}
 
 	public boolean getHasBeenCombined() {
@@ -41,11 +38,6 @@ public class SiteSpecies implements Comparable<SiteSpecies> {
 
 		public Builder stand(Stand stand) {
 			siteSpecies.stand = stand;
-			return this;
-		}
-	
-		public Builder hasSiteInfo(boolean hasSiteInfo) {
-			siteSpecies.hasSiteInfo = hasSiteInfo;
 			return this;
 		}
 	
@@ -69,8 +61,15 @@ public class SiteSpecies implements Comparable<SiteSpecies> {
 		hasBeenCombined = true;
 	}	
 	
-	@Override
-	public int compareTo(SiteSpecies that) {
+	/**
+	 * <code>lcl_SortVRISTARTSiteSpecies</code>
+	 * <p>
+	 * Compare two <code>SiteSpecies</code> according to the VRI sorting order.
+	 * 
+	 * @param that the SiteSpecies with which the comparison should be made.
+	 * @return -1, 0, or 1, if this is before, equal to, or after <code>that</code>
+	 */
+	public int compareTo_VRI(SiteSpecies that) {
 		int result = (int)Math.signum(that.getTotalSpeciesPercent() - this.getTotalSpeciesPercent());
 		if (result == 0) {
 			result = this.getStand().getStandIndex() - that.getStand().getStandIndex();

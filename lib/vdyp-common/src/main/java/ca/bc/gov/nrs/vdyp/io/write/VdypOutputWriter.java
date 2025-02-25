@@ -131,6 +131,25 @@ public class VdypOutputWriter implements Closeable {
 		);
 	}
 
+	/**
+	 * Create a writer for Vdyp output files configured using the given control map.
+	 *
+	 * @param polygonFile
+	 * @param speciesFile
+	 * @param layerFile
+	 * @param controlMap
+	 */
+	public VdypOutputWriter(Map<String, Object> controlMap) throws IOException {
+		this(
+				controlMap, getOutputStream(controlMap, ControlKey.VDYP_OUTPUT_VDYP_POLYGON.name()),
+				getOutputStream(controlMap, ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SPECIES.name()),
+				getOutputStream(controlMap, ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name()),
+				controlMap.containsKey(ControlKey.VDYP_OUTPUT_COMPATIBILITY_VARIABLES.name()) ? Optional.of(
+						getOutputStream(controlMap, ControlKey.VDYP_OUTPUT_COMPATIBILITY_VARIABLES.name())
+				) : Optional.empty()
+		);
+	}
+
 	public void setPolygonYear(int currentYear) {
 		this.currentYear = Optional.of(currentYear);
 	}
@@ -249,6 +268,11 @@ public class VdypOutputWriter implements Closeable {
 			throws IOException {
 		String fileName = Utils.expectParsedControl(controlMap, key, String.class);
 		return resolver.resolveForOutput(fileName);
+	}
+
+	static OutputStream getOutputStream(Map<String, Object> controlMap, String key)
+			throws IOException {
+		return Utils.expectParsedControl(controlMap, key, OutputStream.class);
 	}
 
 	private PolygonIdentifier getCurrentPolygonDescriptor(PolygonIdentifier originalIdentifier) {

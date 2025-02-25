@@ -17,18 +17,19 @@ import ca.bc.gov.nrs.vdyp.backend.model.v1.ProjectionRequestKind;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.UtilizationParameter;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessageKind;
+import ca.bc.gov.nrs.vdyp.backend.projection.model.Vdyp7Constants;
 import ca.bc.gov.nrs.vdyp.si32.vdyp.SP0Name;
 
 public class ProjectionRequestParametersValidator {
 
 	private List<ValidationMessage> validationErrorMessages = new ArrayList<>();
 
-	static void validate(ProjectionContext state)
+	static void validate(ProjectionContext context)
 			throws ProjectionRequestValidationException {
 
 		var validator = new ProjectionRequestParametersValidator();
 
-		validator.validateState(state);
+		validator.validateState(context);
 
 		if (validator.validationErrorMessages.size() > 0) {
 			throw new ProjectionRequestValidationException(validator.validationErrorMessages);
@@ -39,15 +40,15 @@ public class ProjectionRequestParametersValidator {
 		return validationErrorMessages;
 	}
 
-	void validateState(ProjectionContext state) {
+	void validateState(ProjectionContext context) {
 
-		validateRequestParametersIndividually(state);
-		validateRequestParametersCollectively(state);
+		validateRequestParametersIndividually(context);
+		validateRequestParametersCollectively(context);
 	}
 
-	private void validateRequestParametersIndividually(ProjectionContext state) {
+	private void validateRequestParametersIndividually(ProjectionContext context) {
 
-		Parameters params = state.getRawParams();
+		Parameters params = context.getRawParams();
 		ValidatedParameters vparams = new ValidatedParameters();
 
 		// Parameters.JSON_PROPERTY_OUTPUT_FORMAT
@@ -65,7 +66,7 @@ public class ProjectionRequestParametersValidator {
 
 		// Parameters.JSON_PROPERTY_SELECTED_EXECUTION_OPTIONS
 
-		if (params.getSelectedExecutionOptions() == null) {
+		if (params.getSelectedExecutionOptions().size() == 0) {
 			vparams.selectedExecutionOptions(DEFAULT.getSelectedExecutionOptions());
 		} else {
 			List<ExecutionOption> selectedOptions = new ArrayList<>();
@@ -82,7 +83,7 @@ public class ProjectionRequestParametersValidator {
 
 		// Parameters.JSON_PROPERTY_SELECTED_DEBUG_OPTIONS
 
-		if (params.getSelectedDebugOptions() == null) {
+		if (params.getSelectedDebugOptions().size() == 0) {
 			vparams.selectedDebugOptions(DEFAULT.getSelectedDebugOptions());
 		} else {
 			List<DebugOption> selectedOptions = new ArrayList<>();
@@ -231,20 +232,20 @@ public class ProjectionRequestParametersValidator {
 			vparams.setUtils(upList);
 		}
 
-		state.setValidatedParams(vparams);
+		context.setValidatedParams(vparams);
 	}
 
-	private void validateRequestParametersCollectively(ProjectionContext state) {
+	private void validateRequestParametersCollectively(ProjectionContext context) {
 
-		if (state.getValidatedParams() == null) {
+		if (context.getValidatedParams() == null) {
 			throw new IllegalStateException(
 					MessageFormat.format(
-							"{0}: parameters have not yet been individually validated.", state.getProjectionId()
+							"{0}: parameters have not yet been individually validated.", context.getProjectionId()
 					)
 			);
 		}
 
-		ValidatedParameters vparams = state.getValidatedParams();
+		ValidatedParameters vparams = context.getValidatedParams();
 		if (vparams.getOutputFormat() != null) {
 
 			if (!vparams.getOutputFormat().equals(OutputFormat.DCSV) //
@@ -267,8 +268,8 @@ public class ProjectionRequestParametersValidator {
 				recordValidationMessage(MISSING_END_CRITERIA);
 			}
 
-			if (state.getRequestKind() == ProjectionRequestKind.DCSV && vparams.getOutputFormat() != OutputFormat.DCSV
-					|| state.getRequestKind() != ProjectionRequestKind.DCSV
+			if (context.getRequestKind() == ProjectionRequestKind.DCSV && vparams.getOutputFormat() != OutputFormat.DCSV
+					|| context.getRequestKind() != ProjectionRequestKind.DCSV
 							&& vparams.getOutputFormat() == OutputFormat.DCSV) {
 				recordValidationMessage(MISMATCHED_INPUT_OUTPUT_TYPES);
 			}
@@ -351,7 +352,7 @@ public class ProjectionRequestParametersValidator {
 				value = defaultValue;
 			} else {
 				value = Integer.valueOf(text);
-				if (value == Parameters.LEGACY_NULL_VALUE) {
+				if (value == Vdyp7Constants.EMPTY_INT) {
 					value = defaultValue;
 				}
 			}

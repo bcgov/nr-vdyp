@@ -1,28 +1,36 @@
 package ca.bc.gov.nrs.vdyp.backend.projection;
 
+import static ca.bc.gov.nrs.vdyp.backend.projection.ProjectionStageCode.Initial;
+
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import ca.bc.gov.nrs.vdyp.backend.projection.model.PolygonMessage;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.GrowthModelCode;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProcessingModeCode;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
 
 public class PolygonProjectionState {
 
-	private ProjectionContext projectionContext;
+	public record ModelReturnCodeKey(ProjectionStageCode stage, ProjectionTypeCode type) {} 
 	
-	private Long startAge = null;
-	private Long endAge = null;
+	/** The messages generated during the projection of the polygon. */
+	private List<PolygonMessage> projectionMessages;
+
+	private Double startAge = null;
+	private Double endAge = null;
 	
 	// Per-projection type information
 
-	private Map<ProjectionTypeCode, Integer> initialModelReturnCodeByProjectionType;
-	private Map<ProjectionTypeCode, ProcessingResultsCode> initialProcessingResultByProjectionType;
-	private Map<ProjectionTypeCode, Integer> adjustmentProcessingResultByProjectionType;
-	private Map<ProjectionTypeCode, Integer> projectionProcessingResultByProjectionType;
-	private Map<ProjectionTypeCode, Integer> firstYearValidYieldByProjectionType;
+	private Map<ModelReturnCodeKey, Integer> initialModelReturnCodeByProjectionType;
+	private Map<ModelReturnCodeKey, ProcessingResultsCode> initialProcessingResultByProjectionType;
+	private Map<ModelReturnCodeKey, Integer> adjustmentProcessingResultByProjectionType;
+	private Map<ModelReturnCodeKey, Integer> projectionProcessingResultByProjectionType;
+	private Map<ModelReturnCodeKey, Integer> firstYearValidYieldByProjectionType;
 
 	private GrowthModelCode growthModelToBeUsed;
 	private Map<ProjectionTypeCode, GrowthModelCode> growthModelByProjectionType;
@@ -32,10 +40,8 @@ public class PolygonProjectionState {
 	
 	private Path executionFolder = null;
 
-	public PolygonProjectionState(ProjectionContext projectionContext) {
+	public PolygonProjectionState() {
 
-		this.projectionContext = projectionContext;
-		
 		growthModelToBeUsed = GrowthModelCode.getDefault();
 
 		growthModelByProjectionType = new HashMap<>();
@@ -48,21 +54,25 @@ public class PolygonProjectionState {
 		projectionProcessingResultByProjectionType = new HashMap<>();
 		firstYearValidYieldByProjectionType = new HashMap<>();
 
-		for (ProjectionTypeCode t : ProjectionTypeCode.ACTUAL_PROJECTION_TYPES_LIST) {
-			growthModelByProjectionType.put(t, GrowthModelCode.UNKNOWN);
-			processingModeByProjectionType.put(t, ProcessingModeCode.getDefault());
-			percentForestedLandUsedByProjectionType.put(t, null);
-			yieldFactorByProjectionType.put(t, null);
-			initialModelReturnCodeByProjectionType.put(t, 0);
-			initialProcessingResultByProjectionType.put(t, ProcessingResultsCode.NULL_PROCESSING_RESULT_CODE);
-			adjustmentProcessingResultByProjectionType.put(t, -9999);
-			projectionProcessingResultByProjectionType.put(t, -9999);
-			firstYearValidYieldByProjectionType.put(t, -9999);
+		for (ProjectionStageCode s: ProjectionStageCode.values()) {
+			for (ProjectionTypeCode t : ProjectionTypeCode.ACTUAL_PROJECTION_TYPES_LIST) {
+				growthModelByProjectionType.put(t, GrowthModelCode.UNKNOWN);
+				processingModeByProjectionType.put(t, ProcessingModeCode.getDefault());
+				percentForestedLandUsedByProjectionType.put(t, null);
+				yieldFactorByProjectionType.put(t, null);
+				initialModelReturnCodeByProjectionType.put(new ModelReturnCodeKey(s, t), 0);
+				initialProcessingResultByProjectionType.put(new ModelReturnCodeKey(s, t), ProcessingResultsCode.NULL_PROCESSING_RESULT_CODE);
+				adjustmentProcessingResultByProjectionType.put(new ModelReturnCodeKey(s, t), -9999);
+				projectionProcessingResultByProjectionType.put(new ModelReturnCodeKey(s, t), -9999);
+				firstYearValidYieldByProjectionType.put(new ModelReturnCodeKey(s, t), -9999);
+			}
 		}
+		
+		projectionMessages = new ArrayList<>();
 	}
 
-	public ProjectionContext getContext() {
-		return projectionContext;
+	public List<PolygonMessage> getProjectionMessages() {
+		return projectionMessages;
 	}
 
 	public GrowthModelCode getGrowthModelToBeUsed() {
@@ -85,23 +95,23 @@ public class PolygonProjectionState {
 		return Collections.unmodifiableMap(yieldFactorByProjectionType);
 	}
 
-	public Map<ProjectionTypeCode, Integer> getInitialModelReturnCode() {
+	public Map<ModelReturnCodeKey, Integer> getInitialModelReturnCode() {
 		return Collections.unmodifiableMap(initialModelReturnCodeByProjectionType);
 	}
 
-	public Map<ProjectionTypeCode, ProcessingResultsCode> getInitialProcessingResults() {
+	public Map<ModelReturnCodeKey, ProcessingResultsCode> getInitialProcessingResults() {
 		return Collections.unmodifiableMap(initialProcessingResultByProjectionType);
 	}
 
-	public Map<ProjectionTypeCode, Integer> getAdjustmentProcessingResults() {
+	public Map<ModelReturnCodeKey, Integer> getAdjustmentProcessingResults() {
 		return Collections.unmodifiableMap(adjustmentProcessingResultByProjectionType);
 	}
 
-	public Map<ProjectionTypeCode, Integer> getProjectionProcessingResults() {
+	public Map<ModelReturnCodeKey, Integer> getProjectionProcessingResults() {
 		return Collections.unmodifiableMap(projectionProcessingResultByProjectionType);
 	}
 
-	public Map<ProjectionTypeCode, Integer> getFirstYearValidYields() {
+	public Map<ModelReturnCodeKey, Integer> getFirstYearValidYields() {
 		return Collections.unmodifiableMap(firstYearValidYieldByProjectionType);
 	}
 
@@ -109,8 +119,8 @@ public class PolygonProjectionState {
 		
 		private final PolygonProjectionState polygon;
 
-		public Builder(ProjectionContext projectionContext) {
-			polygon = new PolygonProjectionState(projectionContext);
+		public Builder() {
+			polygon = new PolygonProjectionState();
 		}
 		
 		public Builder growthModelToBeUsed(GrowthModelCode growthModelToBeUsed) {
@@ -141,27 +151,27 @@ public class PolygonProjectionState {
 			return this;
 		}
 	
-		public Builder initialModelReturnCode(Map<ProjectionTypeCode, Integer> initialModelReturnCode) {
+		public Builder initialModelReturnCode(Map<ModelReturnCodeKey, Integer> initialModelReturnCode) {
 			polygon.initialModelReturnCodeByProjectionType = initialModelReturnCode;
 			return this;
 		}
 	
-		public Builder initialProcessingResults(Map<ProjectionTypeCode, ProcessingResultsCode> initialProcessingResults) {
+		public Builder initialProcessingResults(Map<ModelReturnCodeKey, ProcessingResultsCode> initialProcessingResults) {
 			polygon.initialProcessingResultByProjectionType = initialProcessingResults;
 			return this;
 		}
 	
-		public Builder adjustmentProcessingResults(Map<ProjectionTypeCode, Integer> adjustmentProcessingResults) {
+		public Builder adjustmentProcessingResults(Map<ModelReturnCodeKey, Integer> adjustmentProcessingResults) {
 			polygon.adjustmentProcessingResultByProjectionType = adjustmentProcessingResults;
 			return this;
 		}
 	
-		public Builder projectionProcessingResults(Map<ProjectionTypeCode, Integer> projectionProcessingResults) {
+		public Builder projectionProcessingResults(Map<ModelReturnCodeKey, Integer> projectionProcessingResults) {
 			polygon.projectionProcessingResultByProjectionType = projectionProcessingResults;
 			return this;
 		}
 	
-		public Builder firstYearValidYields(Map<ProjectionTypeCode, Integer> firstYearValidYields) {
+		public Builder firstYearValidYields(Map<ModelReturnCodeKey, Integer> firstYearValidYields) {
 			polygon.firstYearValidYieldByProjectionType = firstYearValidYields;
 			return this;
 		}
@@ -203,29 +213,32 @@ public class PolygonProjectionState {
 	}
 	
 	public void setInitialProcessingResults(ProjectionTypeCode projectionType, Integer modelReturnCode, ProcessingResultsCode processingResultsCode) {
-		if (this.initialProcessingResultByProjectionType.get(projectionType)!= ProcessingResultsCode.NULL_PROCESSING_RESULT_CODE) {
+		var key = new ModelReturnCodeKey(Initial, projectionType);
+		if (this.initialProcessingResultByProjectionType.get(key) != ProcessingResultsCode.NULL_PROCESSING_RESULT_CODE) {
 			throw new IllegalStateException(this.getClass().getName() + ".ProjectionState.setInitialProcessingResults: initialProcessingResults has already been set for projectionType " + projectionType);
 		}
 		
-		this.initialModelReturnCodeByProjectionType.put(projectionType, modelReturnCode);
-		this.initialProcessingResultByProjectionType.put(projectionType, processingResultsCode);
+		this.initialModelReturnCodeByProjectionType.put(key, modelReturnCode);
+		this.initialProcessingResultByProjectionType.put(key, processingResultsCode);
 	}
 
 	public Integer getInitialModelReturnCode(ProjectionTypeCode projectionType) {
-		if (initialModelReturnCodeByProjectionType.get(projectionType) == null) {
+		var key = new ModelReturnCodeKey(Initial, projectionType);
+		if (initialModelReturnCodeByProjectionType.get(key) == null) {
 			throw new IllegalStateException(this.getClass().getName() + ".ProjectionState.getInitialModelReturnCode: initialModelReturnCode has not been set for projectionType " + projectionType);
 		}
-		return initialModelReturnCodeByProjectionType.get(projectionType);
+		return initialModelReturnCodeByProjectionType.get(key);
 	}
 
-	public ProcessingResultsCode getProcessingResultsCode(ProjectionTypeCode projectionType) {
-		if (initialProcessingResultByProjectionType.get(projectionType) == null) {
+	public ProcessingResultsCode getProcessingResultsCode(ProjectionStageCode state, ProjectionTypeCode projectionType) {
+		var key = new ModelReturnCodeKey(state, projectionType);
+		if (initialProcessingResultByProjectionType.get(key) == null) {
 			throw new IllegalStateException(this.getClass().getName() + ".ProjectionState.getProcessingResultsCode: initialProcessingResult has not been set for projectionType " + projectionType);
 		}
-		return initialProcessingResultByProjectionType.get(projectionType);
+		return initialProcessingResultByProjectionType.get(key);
 	}
 	
-	public void setProjectionRange(Long startAge, Long endAge) {
+	public void setProjectionRange(Double startAge, Double endAge) {
 		if (this.startAge != null) {
 			throw new IllegalStateException(this.getClass().getName() + ".ProjectionState.setProjectionRange: startAge has already been set");
 		}
@@ -237,14 +250,26 @@ public class PolygonProjectionState {
 		this.endAge = endAge;
 	}
 
-	public Long getStartAge() {
+	public void updateProjectionRange(Double startAge, Double endAge) {
+		if (this.startAge == null) {
+			throw new IllegalStateException(this.getClass().getName() + ".ProjectionState.updateProjectionRange: startAge has not been set");
+		}
+		if (this.endAge == null) {
+			throw new IllegalStateException(this.getClass().getName() + ".ProjectionState.updateProjectionRange: endAge has not been set");
+		}
+
+		this.startAge = startAge;
+		this.endAge = endAge;
+	}
+
+	public Double getStartAge() {
 		if (startAge == null) {
 			throw new IllegalStateException(this.getClass().getName() + ".ProjectionState.getStartAge: startAge has not been set");
 		}
 		return startAge;
 	}
 
-	public Long getEndAge() {
+	public Double getEndAge() {
 		if (endAge == null) {
 			throw new IllegalStateException(this.getClass().getName() + ".ProjectionState.getEndAge: endAge has not been set");
 		}

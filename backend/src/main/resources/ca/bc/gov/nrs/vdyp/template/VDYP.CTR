@@ -11,7 +11,7 @@
 011 vp_adj.dat                                        VDYP7 Polygon input
 012 vs_adj.dat                                        VDYP7 Layer by Species, input
 013 vu_adj.dat                                        VDYP7 Layer by SP0 by Util, input 
-014 vin_y1.dat                                        Grow-to years
+                                                      NOTE: Grow-to years file is not used by backend
 
 015 vp_grow.dat                                       VDYP7 Polygon  out
 016 vs_grow.dat                                       VDYP7 Layer by SP0  out

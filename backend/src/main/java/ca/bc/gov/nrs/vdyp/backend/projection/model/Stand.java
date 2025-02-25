@@ -126,9 +126,6 @@ public class Stand implements Comparable<Stand> {
 				.siteIndex(speciesInstance.getSiteIndex()) //
 				.speciesCode(sp64Code) //
 				.speciesPercent(0.0) //
-				.suppliedDominantHeight(speciesInstance.getSuppliedDominantHeight()) //
-				.suppliedSiteIndex(speciesInstance.getSiteIndex()) //
-				.suppliedTotalAge(speciesInstance.getTotalAge()) //
 				.build();
 				
 		this.standIndex = index;
