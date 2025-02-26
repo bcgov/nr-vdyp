@@ -313,11 +313,6 @@
 			<groupId>javax.annotation</groupId>
 			<artifactId>javax.annotation-api</artifactId>
 		</dependency>
-		<dependency>
-				<groupId>ca.bc.gov.nrs.vdyp</groupId>
-				<artifactId>vdyp-common</artifactId>
-				<version>0.0.1-SNAPSHOT</version>
-		</dependency>
 	</dependencies>
 	<build>
 		<plugins>
