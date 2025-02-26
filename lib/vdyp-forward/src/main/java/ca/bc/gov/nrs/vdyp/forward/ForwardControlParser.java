@@ -21,7 +21,7 @@ import ca.bc.gov.nrs.vdyp.forward.parsers.VdypPolygonDescriptionParser;
 import ca.bc.gov.nrs.vdyp.forward.parsers.VdypPolygonParser;
 import ca.bc.gov.nrs.vdyp.forward.parsers.VdypSpeciesParser;
 import ca.bc.gov.nrs.vdyp.forward.parsers.VdypUtilizationParser;
-import ca.bc.gov.nrs.vdyp.io.ComposedFileResolver;
+import ca.bc.gov.nrs.vdyp.io.CompositeFileResolver;
 import ca.bc.gov.nrs.vdyp.io.ConcreteFileResolver;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BasalAreaGrowthEmpiricalParser;
@@ -340,10 +340,12 @@ public class ForwardControlParser extends BaseControlParser {
 
 			if (vdypForwardOutputWriters.contains(key) && map.containsKey(key.name())) {
 				logger.debug("Creating output stream for file {}[{}]", key);
-				if (fileResolver instanceof ComposedFileResolver cfr) {
+				if (fileResolver instanceof CompositeFileResolver cfr) {
 					map.put(key.name(), cfr.getOutputFileResolver().toPath((String) map.get(key.name())));
 				} else if (fileResolver instanceof ConcreteFileResolver cfr) {
-					map.put(key.name(), cfr.toPath((String) map.get(key.name())));
+					String fileName = (String) map.get(key.name());
+					logger.debug("about to resolve {} using {}", fileName, cfr);
+					map.put(key.name(), cfr.toPath(fileName));
 				}
 			}
 		}

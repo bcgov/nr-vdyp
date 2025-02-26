@@ -50,9 +50,10 @@ class HcsvProjectionEndpointTest {
 
 		Parameters parameters = testHelper.addSelectedOptions(
 				new Parameters(), //
-				Parameters.ExecutionOption.DO_ENABLE_DEBUG_LOGGING,
-				Parameters.ExecutionOption.DO_ENABLE_PROGRESS_LOGGING,
-				Parameters.ExecutionOption.DO_ENABLE_ERROR_LOGGING, Parameters.ExecutionOption.FORWARD_GROW_ENABLED
+				Parameters.ExecutionOption.DO_ENABLE_DEBUG_LOGGING, //
+				Parameters.ExecutionOption.DO_ENABLE_PROGRESS_LOGGING, //
+				Parameters.ExecutionOption.DO_ENABLE_ERROR_LOGGING, //
+				Parameters.ExecutionOption.FORWARD_GROW_ENABLED //
 		);
 		parameters.ageStart(100).ageEnd(400);
 

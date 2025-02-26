@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.application.ProcessingException;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
-import ca.bc.gov.nrs.vdyp.io.ComposedFileResolver;
+import ca.bc.gov.nrs.vdyp.io.CompositeFileResolver;
 import ca.bc.gov.nrs.vdyp.io.ConcreteFileResolver;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
@@ -100,9 +100,9 @@ public class ForwardProcessor {
 			logger.info("Resolving and parsing {}", controlFileName);
 
 			try (var is = fileResolver.resolveForInput(controlFileName)) {
-				if (fileResolver instanceof ComposedFileResolver composedResolver) {
+				if (fileResolver instanceof CompositeFileResolver composedResolver) {
 					Path controlFilePath = composedResolver.getInputFileResolver().toPath(controlFileName).getParent();
-					fileResolver = new ComposedFileResolver(
+					fileResolver = new CompositeFileResolver(
 							new FileSystemFileResolver(controlFilePath), composedResolver.getOutputFileResolver()
 					);
 				} else if (fileResolver instanceof ConcreteFileResolver concreteResolver) {

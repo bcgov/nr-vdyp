@@ -24,7 +24,7 @@ import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.forward.parsers.VdypPolygonParser;
 import ca.bc.gov.nrs.vdyp.forward.parsers.VdypSpeciesParser;
 import ca.bc.gov.nrs.vdyp.forward.parsers.VdypUtilizationParser;
-import ca.bc.gov.nrs.vdyp.io.ComposedFileResolver;
+import ca.bc.gov.nrs.vdyp.io.CompositeFileResolver;
 import ca.bc.gov.nrs.vdyp.io.ConcreteFileResolver;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BecDefinitionParser;
@@ -68,7 +68,7 @@ class ForwardProcessorEndToEndTest {
 
 		var vdyp8OutputResolver = new FileSystemFileResolver(vdyp8OutputPath);
 
-		fp.run(new ComposedFileResolver(inputFileResolver, vdyp8OutputResolver), List.of("VDYP.CTR"), vdypPassSet);
+		fp.run(new CompositeFileResolver(inputFileResolver, vdyp8OutputResolver), List.of("VDYP.CTR"), vdypPassSet);
 
 		var vdyp8InputResolver = new FileSystemFileResolver(vdyp8OutputPath);
 		var polygonParser = new VdypPolygonParser();

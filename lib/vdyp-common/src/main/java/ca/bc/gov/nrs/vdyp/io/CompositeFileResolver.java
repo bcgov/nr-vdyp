@@ -4,12 +4,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-public class ComposedFileResolver implements FileResolver {
+public class CompositeFileResolver implements FileResolver {
 
 	private final ConcreteFileResolver inputFileResolver;
 	private final ConcreteFileResolver outputFileResolver;
 
-	public ComposedFileResolver(ConcreteFileResolver inputFileResolver, ConcreteFileResolver outputFileResolver) {
+	public CompositeFileResolver(ConcreteFileResolver inputFileResolver, ConcreteFileResolver outputFileResolver) {
 		this.inputFileResolver = inputFileResolver;
 		this.outputFileResolver = outputFileResolver;
 	}
