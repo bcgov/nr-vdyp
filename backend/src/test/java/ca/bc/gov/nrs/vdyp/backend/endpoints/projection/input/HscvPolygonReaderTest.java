@@ -23,6 +23,7 @@ import ca.bc.gov.nrs.vdyp.backend.projection.input.HcsvLineFilter;
 import ca.bc.gov.nrs.vdyp.backend.projection.input.HcsvPolygonRecordBean;
 import ca.bc.gov.nrs.vdyp.backend.projection.input.InventoryStandardCode;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.CfsEcoZoneCode;
+import ca.bc.gov.nrs.vdyp.backend.utils.FileHelper;
 
 public class HscvPolygonReaderTest {
 
@@ -35,7 +36,7 @@ public class HscvPolygonReaderTest {
 
 		logger.info("Starting testHscvPolygonReader");
 
-		Path resourceFolderPath = Path.of("VDYP7Console-sample-files", "hcsv", "vdyp-240");
+		Path resourceFolderPath = Path.of("VDYP7Console-sample-files", FileHelper.HCSV, FileHelper.VDYP_240);
 
 		byte[] csvBytes = Files.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_POLY.csv"));
 
@@ -187,7 +188,10 @@ public class HscvPolygonReaderTest {
 					var messages = pve.getValidationMessages();
 					Assert.assertEquals(1, messages.size());
 					var message = messages.get(0);
-					Assert.assertEquals("Polygon 13919428: field \"Inventory Standard Code\" value \"Z\" is not a recognized value for this code", message.toString());
+					Assert.assertEquals(
+							"Polygon 13919428: field \"Inventory Standard Code\" value \"Z\" is not a recognized value for this code",
+							message.toString()
+					);
 				} else {
 					Assert.fail();
 				}
@@ -213,7 +217,10 @@ public class HscvPolygonReaderTest {
 					var messages = pve.getValidationMessages();
 					Assert.assertEquals(1, messages.size());
 					var message = messages.get(0);
-					Assert.assertEquals("Polygon 13919428: field \"Shrub Height\" value \"not a number\" is not a number", message.toString());
+					Assert.assertEquals(
+							"Polygon 13919428: field \"Shrub Height\" value \"not a number\" is not a number",
+							message.toString()
+					);
 				} else {
 					Assert.fail();
 				}
@@ -239,7 +246,10 @@ public class HscvPolygonReaderTest {
 					var messages = pve.getValidationMessages();
 					Assert.assertEquals(1, messages.size());
 					var message = messages.get(0);
-					Assert.assertEquals("Polygon 13919428: field \"Yield Factor\" value \"11.0\" is either not a number or out of range. Must be between 0 and 10, inclusive", message.toString());
+					Assert.assertEquals(
+							"Polygon 13919428: field \"Yield Factor\" value \"11.0\" is either not a number or out of range. Must be between 0 and 10, inclusive",
+							message.toString()
+					);
 				} else {
 					Assert.fail();
 				}

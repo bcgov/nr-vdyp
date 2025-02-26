@@ -51,7 +51,7 @@ public class PolygonProjectionRunner {
 	/**
 	 * Create a runner for the given {@link Polygon}, in the given {@link ProjectionContext}, using the given
 	 * {@link ComponentRunner}.
-	 * 
+	 *
 	 * @param polygon         the polygon to project
 	 * @param context         the context in which the projection is to occur
 	 * @param componentRunner the component runner to use
@@ -72,7 +72,7 @@ public class PolygonProjectionRunner {
 
 	/**
 	 * Run the projection
-	 * 
+	 *
 	 * @throws PolygonExecutionException            if there's an exception caused by the input data during the
 	 *                                              projection
 	 * @throws ProjectionInternalExecutionException if there's an exception caused by the software during the projection
@@ -227,14 +227,12 @@ public class PolygonProjectionRunner {
 			}
 		} catch (IOException e) {
 			throw new PolygonExecutionException(
-					MessageFormat.format("{}: encountered exception while running createVriInputData", polygon), e
+					MessageFormat.format("{0}: encountered exception while running createVriInputData", polygon), e
 			);
 		}
 	}
 
 	private void performAdjustProcessing() throws PolygonExecutionException {
-
-		// ADJUST is currently not being run; we just copy the input to output.
 
 		for (ProjectionTypeCode projectionType : ProjectionTypeCode.ACTUAL_PROJECTION_TYPES_LIST) {
 
@@ -248,34 +246,7 @@ public class PolygonProjectionRunner {
 					state.getProcessingMode(projectionType)
 			);
 
-			copyAdjustInputFilesToOutput(projectionType, state.getExecutionFolder());
-		}
-	}
-
-	private void copyAdjustInputFilesToOutput(ProjectionTypeCode projectionType, Path rootExecutionFolder)
-			throws PolygonExecutionException {
-
-		Path executionFolder = Path.of(state.getExecutionFolder().toString(), projectionType.toString());
-
-		try {
-			Path polygonInputFile = Path.of(executionFolder.toString(), "vp_01.dat");
-			Path polygonOutputFile = Path.of(executionFolder.toString(), "vp_adj.dat");
-			Files.copy(polygonInputFile, polygonOutputFile);
-
-			Path speciesInputFile = Path.of(executionFolder.toString(), "vs_01.dat");
-			Path speciesOutputFile = Path.of(executionFolder.toString(), "vs_adj.dat");
-			Files.copy(speciesInputFile, speciesOutputFile);
-
-			Path utilizationsInputFile = Path.of(executionFolder.toString(), "vu_01.dat");
-			Path utilizationsOutputFile = Path.of(executionFolder.toString(), "vu_adj.dat");
-			Files.copy(utilizationsInputFile, utilizationsOutputFile);
-
-		} catch (IOException e) {
-			throw new PolygonExecutionException(
-					MessageFormat
-							.format("{}: encountered exception while running copyAdjustInputFilesToOutput", polygon),
-					e
-			);
+			componentRunner.runAdjust(polygon, projectionType, state);
 		}
 	}
 
@@ -429,7 +400,7 @@ public class PolygonProjectionRunner {
 
 	/**
 	 * Determine the processing model to which the stand will be initially subject.
-	 * 
+	 *
 	 * @return as described
 	 * @throws PolygonValidationException if the polygon definition contains errors
 	 */

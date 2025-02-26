@@ -33,7 +33,8 @@ import jakarta.inject.Inject;
 @QuarkusTest
 class HcsvSingleLayerSingleSp0sMultipleSp64sRuntimeStructureTest {
 
-	private static final Logger logger = LoggerFactory.getLogger(HcsvSingleLayerSingleSp0sMultipleSp64sRuntimeStructureTest.class);
+	private static final Logger logger = LoggerFactory
+			.getLogger(HcsvSingleLayerSingleSp0sMultipleSp64sRuntimeStructureTest.class);
 
 	private final TestHelper testHelper;
 
@@ -52,21 +53,24 @@ class HcsvSingleLayerSingleSp0sMultipleSp64sRuntimeStructureTest {
 
 		logger.info("Starting {}", this.getClass().getSimpleName());
 
-		Path resourceFolderPath = Path.of("VDYP7Console-sample-files", "hcsv", "single-layer-single-sp0-multiple-sp64s-fip");
+		Path resourceFolderPath = Path
+				.of("VDYP7Console-sample-files", "hcsv", "single-layer-single-sp0-multiple-sp64s-fip");
 
 		Map<String, InputStream> inputStreams = new HashMap<>();
 
 		{
 			var polygonStream = new ByteArrayInputStream(
-					Files.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_POLY_FIP.csv")));
+					Files.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_POLY_FIP.csv"))
+			);
 			var layersStream = new ByteArrayInputStream(
-					Files.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_LAYER_FIP.csv")));
+					Files.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_LAYER_FIP.csv"))
+			);
 			inputStreams.put(ParameterNames.HCSV_POLYGON_INPUT_DATA, polygonStream);
 			inputStreams.put(ParameterNames.HCSV_LAYERS_INPUT_DATA, layersStream);
 		}
 
 		String projectionId = ProjectionService.buildId(ProjectionRequestKind.HCSV);
-		
+
 		var parameters = new Parameters().ageStart(100).ageEnd(400);
 		var context = new ProjectionContext(ProjectionRequestKind.HCSV, projectionId, parameters, false);
 
@@ -98,18 +102,17 @@ class HcsvSingleLayerSingleSp0sMultipleSp64sRuntimeStructureTest {
 		Assert.assertEquals(ProjectionTypeCode.PRIMARY, layer.getVdyp7LayerCode());
 
 		Assert.assertEquals(1, layer.getSiteSpecies().size());
-		
-		
+
 		Stand stand0 = layer.getSp0sAsSupplied().get(0);
 		SiteSpecies siteSpecies0 = layer.getSiteSpecies().get(0);
 		Assert.assertEquals(stand0.getSp0Code(), siteSpecies0.getStand().getSp0Code());
 		Assert.assertTrue(0 == stand0.getStandIndex());
-		
+
 		Assert.assertTrue(100 == siteSpecies0.getTotalSpeciesPercent());
 		Assert.assertTrue(siteSpecies0.getHasSiteInfo());
 		Assert.assertFalse(siteSpecies0.getHasBeenCombined());
 		Assert.assertEquals(stand0, siteSpecies0.getStand());
-		
+
 		Species sp0_0 = stand0.getSpeciesGroup();
 		Assert.assertEquals(stand0, sp0_0.getStand());
 		Assert.assertTrue(10.4 == sp0_0.getAgeAtBreastHeight());
@@ -126,7 +129,7 @@ class HcsvSingleLayerSingleSp0sMultipleSp64sRuntimeStructureTest {
 		Assert.assertTrue(90.0 == sp0_0.getSuppliedTotalAge());
 		Assert.assertTrue(90.0 == sp0_0.getTotalAge());
 		Assert.assertTrue(10.4 == sp0_0.getYearsToBreastHeight());
-		
+
 		Assert.assertEquals(2, stand0.getSpecies().size());
 		Species sp64_0_0 = stand0.getSpecies().get(0);
 		Assert.assertEquals(stand0, sp64_0_0.getStand());
@@ -161,8 +164,7 @@ class HcsvSingleLayerSingleSp0sMultipleSp64sRuntimeStructureTest {
 		Assert.assertNull(sp64_0_1.getSuppliedTotalAge());
 		Assert.assertNull(sp64_0_1.getTotalAge());
 		Assert.assertNull(sp64_0_1.getYearsToBreastHeight());
-	
-		
+
 		Assert.assertFalse(polygonStream.hasNextPolygon());
 	}
 }

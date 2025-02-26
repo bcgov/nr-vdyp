@@ -32,6 +32,7 @@ public class BeanValidatorHelper {
 	 * </ul>
 	 * <p>
 	 * <code>null</code> values are silently <b>accepted</b>.
+	 *
 	 * @return true iff <code>numberText</code> is in the given range or is null
 	 */
 	protected <T extends Comparable<T>> boolean validateRange(
@@ -50,9 +51,10 @@ public class BeanValidatorHelper {
 
 	/**
 	 * Add a validation-failed message against <code>fieldName</code> if <code>d</code> is not between <code>low</code>
-	 * and <code>high</code>, inclusive. 
+	 * and <code>high</code>, inclusive.
 	 * <p>
 	 * <code>null</code> values are silently <b>accepted</b>.
+	 *
 	 * @return true iff <code>d</code> is in the given range or is null
 	 */
 	protected boolean validateRange(Double d, double low, double high, String fieldName) {
@@ -70,6 +72,7 @@ public class BeanValidatorHelper {
 	 * and <code>high</code>, inclusive.
 	 * <p>
 	 * <code>null</code> values are silently <b>accepted</b>.
+	 *
 	 * @return true iff <code>d</code> is in the given range or is null
 	 */
 	protected boolean validateRange(Short d, short low, short high, String fieldName) {
@@ -87,6 +90,7 @@ public class BeanValidatorHelper {
 	 * and <code>high</code>, inclusive.
 	 * <p>
 	 * <code>null</code> values are silently <b>accepted</b>.
+	 *
 	 * @return true iff <code>d</code> is in the given range or is null
 	 */
 	protected boolean validateRange(Integer d, int low, int high, String fieldName) {
@@ -108,6 +112,7 @@ public class BeanValidatorHelper {
 	 * </ul>
 	 * <p>
 	 * <code>null</code> values are silently <b>accepted</b>.
+	 *
 	 * @return true iff <code>numberText</code> passes the given validation test or is null
 	 */
 	protected <T> boolean validateNumber(String numberText, Consumer<String> validator, String fieldName) {
@@ -131,6 +136,7 @@ public class BeanValidatorHelper {
 	 * </ul>
 	 * <p>
 	 * <code>null</code> values are silently <b>accepted</b>.
+	 *
 	 * @return true iff <code>code</code> passes the validation test or is null
 	 */
 	protected <T> boolean validateEnumeration(String code, Consumer<String> validator, String fieldName) {
@@ -146,8 +152,9 @@ public class BeanValidatorHelper {
 	}
 
 	/**
-	 * Add a validation message of kind <code>kind</code> with args <code>args</code> to the 
-	 * validation messages being recorded by this helper instance.
+	 * Add a validation message of kind <code>kind</code> with args <code>args</code> to the validation messages being
+	 * recorded by this helper instance.
+	 *
 	 * @param kind
 	 * @param args
 	 */
@@ -173,8 +180,9 @@ public class BeanValidatorHelper {
 	}
 
 	/**
-	 * If <code>s</code> is not <code>null</code> and is longer than <code>maxLenLayerLevelCode</code>, return
-	 * the result of truncating <code>s</code> to the given length. Otherwise, return <code>s</code>.
+	 * If <code>s</code> is not <code>null</code> and is longer than <code>maxLenLayerLevelCode</code>, return the
+	 * result of truncating <code>s</code> to the given length. Otherwise, return <code>s</code>.
+	 *
 	 * @param s
 	 * @param maxStringLength
 	 * @return as described
@@ -188,17 +196,18 @@ public class BeanValidatorHelper {
 	}
 
 	/**
-	 * Round the given number, expressed as a text string, to the given precision. Trailing 0s
-	 * in the fractional part of the resulting number are removed.
+	 * Round the given number, expressed as a text string, to the given precision. Trailing 0s in the fractional part of
+	 * the resulting number are removed.
 	 * <p>
-	 * It is not an error if the original text cannot be parsed as a number. In this case, it 
-	 * is the original text is returned.
-	 * @param doubleText the text of the number to be manipulated.
+	 * It is not an error if the original text cannot be parsed as a number. In this case, it is the original text is
+	 * returned.
+	 *
+	 * @param doubleText       the text of the number to be manipulated.
 	 * @param maximumPrecision the maximum precision the result is to have.
 	 * @return a String representation of the resulting number
 	 */
 	public static String round(String doubleText, int maximumPrecision) {
-		
+
 		if (doubleText != null) {
 			try {
 				BigDecimal bd = new BigDecimal(doubleText);
@@ -207,25 +216,26 @@ public class BeanValidatorHelper {
 			} catch (NumberFormatException e) {
 				// do nothing; return the original text.
 			}
-		} 
-		
+		}
+
 		return doubleText;
 	}
 
 	/**
 	 * Round the given Double to the given precision.
-	 * @param d the number to be manipulated.
+	 *
+	 * @param d                the number to be manipulated.
 	 * @param maximumPrecision the maximum precision the result is to have.
 	 * @return the resulting number
 	 */
 	public static Double round(Double d, int maximumPrecision) {
-		
+
 		if (d != null) {
 			BigDecimal bd = new BigDecimal(d.toString());
 			bd = bd.setScale(maximumPrecision, RoundingMode.HALF_UP);
 			d = bd.doubleValue();
-		} 
-		
+		}
+
 		return d;
 	}
 }

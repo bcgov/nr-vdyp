@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.api.helpers.TestHelper;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
+import ca.bc.gov.nrs.vdyp.backend.utils.FileHelper;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.MediaType;
@@ -39,7 +40,7 @@ class StubHcsvProjectionEndpointTest {
 	@Test
 	void testProjectionHscv_shouldReturnStatusOK() throws IOException {
 
-		Path resourceFolderPath = Path.of("VDYP7Console-sample-files", "hcsv", "vdyp-240");
+		Path resourceFolderPath = Path.of("VDYP7Console-sample-files", FileHelper.HCSV, FileHelper.VDYP_240);
 
 		Parameters parameters = testHelper.addSelectedOptions(
 				new Parameters().ageStart(10).ageEnd(20), //
@@ -93,7 +94,7 @@ class StubHcsvProjectionEndpointTest {
 	@Test
 	void testProjectionHscv_testNoProgressLogging() throws IOException {
 
-		Path resourceFolderPath = Path.of("VDYP7Console-sample-files", "hcsv", "vdyp-240");
+		Path resourceFolderPath = Path.of("VDYP7Console-sample-files", FileHelper.HCSV, FileHelper.VDYP_240);
 
 		Parameters parameters = new Parameters().ageStart(10).ageEnd(20);
 

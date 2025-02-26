@@ -33,30 +33,30 @@ public enum ProcessingModeCode {
 	/**
 	 * The underlying VRI model determines which processing mode to use based on the supplied stand characteristics.
 	 */
-	VRI_Default(0), 
+	VRI_Default(0),
 
 	/**
 	 * A specific processing mode for the VRISTART stand model.
 	 */
-	VRI_VriStart(1), 
+	VRI_VriStart(1),
 
 	/**
 	 * A specific processing mode for the VRISTART stand model.
 	 */
-	VRI_VriYoung(2), 
+	VRI_VriYoung(2),
 
 	/**
 	 * A specific processing mode for the VRISTART stand model.
 	 */
-	VRI_Minimal(3), 
-	
+	VRI_Minimal(3),
+
 	/**
 	 * A specific processing mode for the VRISTART stand model.
 	 */
 	VRI_CrownClosure(4);
-	
+
 	public final int value;
-	
+
 	private ProcessingModeCode(int value) {
 		this.value = value;
 	}

@@ -8,7 +8,7 @@ import com.google.common.base.Strings;
 import com.opencsv.bean.CsvToBeanFilter;
 
 public class AbstractCsvLineFilter implements CsvToBeanFilter {
-	
+
 	public enum Feature {
 		FILTER_BLANK_LINES, FILTER_HEADER_LINE
 	}
@@ -35,7 +35,7 @@ public class AbstractCsvLineFilter implements CsvToBeanFilter {
 
 		featureSet = Set.of(new Feature[] { Feature.FILTER_HEADER_LINE });
 	}
-	
+
 	protected Set<Feature> getFeatureSet() {
 		return Collections.unmodifiableSet(featureSet);
 	}
@@ -45,10 +45,10 @@ public class AbstractCsvLineFilter implements CsvToBeanFilter {
 
 		boolean headerLine = false;
 		boolean blankLine = true;
-		
+
 		var doFilterHeaderLines = featureSet.contains(Feature.FILTER_HEADER_LINE);
 		var doFilterBlankLines = featureSet.contains(Feature.FILTER_BLANK_LINES);
-		
+
 		if (cellsOfLine.length > 0) {
 			if (nLinesSeen == 0 && cellsOfLine[0].trim().equals(leadingHeader)) {
 				headerLine = true;
@@ -64,7 +64,7 @@ public class AbstractCsvLineFilter implements CsvToBeanFilter {
 				}
 			}
 		}
-		
+
 		nLinesSeen += 1;
 
 		return false == (doFilterHeaderLines && headerLine || doFilterBlankLines && blankLine);

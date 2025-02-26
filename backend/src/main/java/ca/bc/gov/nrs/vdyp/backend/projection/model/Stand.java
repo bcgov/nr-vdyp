@@ -5,17 +5,17 @@ import java.util.List;
 
 import ca.bc.gov.nrs.vdyp.si32.site.SiteTool;
 
-/** 
- * Holds all of the information regarding a single Species Group (Sp0 in VDYP7) component. 
+/**
+ * Holds all of the information regarding a single Species Group (Sp0 in VDYP7) component.
  */
 public class Stand implements Comparable<Stand> {
 
 	/** The parent Layer */
 	private Layer layer;
-	
+
 	/** The SP0 species code of the stand */
 	private String sp0Code;
-	
+
 	/** The species group's Sp0 Species. */
 	private Species sp0;
 
@@ -24,14 +24,14 @@ public class Stand implements Comparable<Stand> {
 
 	/** The species of the individual species (VDYP7: Sp64) of the species group. */
 	private List<Species> sp64s = new ArrayList<Species>();
-	
+
 	private Stand() {
 	}
-	
+
 	public Layer getLayer() {
 		return layer;
 	}
-	
+
 	public String getSp0Code() {
 		return sp0Code;
 	}
@@ -39,49 +39,49 @@ public class Stand implements Comparable<Stand> {
 	public int getStandIndex() {
 		return standIndex;
 	}
-	
+
 	public Species getSpeciesGroup() {
 		return sp0;
 	}
-	
+
 	public List<Species> getSpecies() {
 		return sp64s;
 	}
-	
+
 	public static class Builder {
 		private Stand stand = new Stand();
-			
+
 		public Builder layer(Layer layer) {
 			stand.layer = layer;
 			return this;
 		}
-		
+
 		// NOTE: speciesGroup and speciesGroupIndex are added post-construction, in updateAfterSpeciesGroupAdded
-		
+
 		public Builder species(List<Species> species) {
 			stand.sp64s = species;
 			return this;
 		}
-		
+
 		public Builder sp0Code(String sp0Code) {
 			stand.sp0Code = sp0Code;
 			return this;
 		}
-		
+
 		public Stand build() {
 
 			if (stand.layer == null) {
 				throw new IllegalArgumentException("Attempted to create a Stand with no parent Layer");
 			}
-			
+
 			return stand;
 		}
 	}
 
 	/**
 	 * Return the <code>n</code>th species (Sp64) of the layer from a list sorted by <code>criteria</code>.
-	 * 
-	 * @param n the zero-based index
+	 *
+	 * @param n        the zero-based index
 	 * @param criteria the sorting criteria
 	 * @return as described
 	 */
@@ -98,7 +98,7 @@ public class Stand implements Comparable<Stand> {
 
 	/**
 	 * A species (sp64) has been added to the stand. Update the Stand to reflect this.
-	 * 
+	 *
 	 * @param sp64 the species that was added.
 	 */
 	public void updateAfterSp64Added(Species sp64) {
@@ -110,13 +110,13 @@ public class Stand implements Comparable<Stand> {
 	 * A species group (sp0) has been added to the stand. Update the stand to reflect this.
 	 *
 	 * @param speciesInstance the sp64 instance being added as the species group to this Stand
-	 * @param index the order the sp0 appeared in the containing layer
+	 * @param index           the order the sp0 appeared in the containing layer
 	 */
 	public void addSpeciesGroup(Species speciesInstance, int index) {
-		
+
 		int sp64Index = SiteTool.getSpeciesIndex(sp0Code);
 		String sp64Code = SiteTool.getSpeciesShortName(sp64Index);
-		
+
 		this.sp0 = new Species.Builder() //
 				.stand(this) //
 				.ageAtBreastHeight(speciesInstance.getAgeAtBreastHeight()) //
@@ -127,7 +127,7 @@ public class Stand implements Comparable<Stand> {
 				.speciesCode(sp64Code) //
 				.speciesPercent(0.0) //
 				.build();
-				
+
 		this.standIndex = index;
 	}
 
@@ -139,12 +139,12 @@ public class Stand implements Comparable<Stand> {
 			return false;
 		}
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return layer.hashCode() * 17 + sp0.hashCode();
 	}
-	
+
 	@Override
 	public int compareTo(Stand that) {
 		int layerComparisonResult = this.layer.compareTo(that.layer);
@@ -154,8 +154,8 @@ public class Stand implements Comparable<Stand> {
 			return layerComparisonResult;
 		}
 	}
-	
-	@Override 
+
+	@Override
 	public String toString() {
 		return layer.toString() + ":" + sp0Code;
 	}

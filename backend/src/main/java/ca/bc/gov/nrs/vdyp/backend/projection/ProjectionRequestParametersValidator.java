@@ -24,8 +24,7 @@ public class ProjectionRequestParametersValidator {
 
 	private List<ValidationMessage> validationErrorMessages = new ArrayList<>();
 
-	static void validate(ProjectionContext context)
-			throws ProjectionRequestValidationException {
+	static void validate(ProjectionContext context) throws ProjectionRequestValidationException {
 
 		var validator = new ProjectionRequestParametersValidator();
 

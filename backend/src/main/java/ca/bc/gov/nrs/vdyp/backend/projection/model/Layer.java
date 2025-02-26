@@ -453,7 +453,7 @@ public class Layer implements Comparable<Layer> {
 
 	/**
 	 * A stand, has been added to a Stand of a Layer. Adjust the Layer state to reflect this.
-	 * 
+	 *
 	 * @param stand the stand that was added
 	 */
 	public void addStand(Stand stand) {
@@ -478,7 +478,7 @@ public class Layer implements Comparable<Layer> {
 
 	/**
 	 * V7Int_ApplyEstimatedSI
-	 * 
+	 *
 	 * Routine implementing the logic of assigning an Estimated Site Index to a species.
 	 * <p>
 	 * The rules are defined in the document IPSCB205.doc. Summary of these rules, filling in some unstated assumptions:
@@ -510,13 +510,13 @@ public class Layer implements Comparable<Layer> {
 	 * <p>
 	 * 2009/07/08: Produce an informational message that input height was reset due to an Estimated SI assignment.
 	 * <p>
-	 * 
+	 *
 	 * @param currentGrowthModel      the Growth Model that is currently being used
 	 * @param doPreventRecursiveCalls The definition of this routine allows for a recursive call back to this routine to
 	 *                                fill in the blanks in case we change Initial Processing modes as a result of
 	 *                                applying an Estimated SI. If this is not desired, then set this parameter to TRUE.
 	 *                                Normally, this parameter is FALSE to allow recursive calls.
-	 * 
+	 *
 	 * @throws PolygonValidationException
 	 */
 	public void calculateEstimatedSiteIndex(
@@ -839,7 +839,7 @@ public class Layer implements Comparable<Layer> {
 
 	/**
 	 * Return the <code>nthLeading</code> species group of the layer.
-	 * 
+	 *
 	 * @param nthLeading the zero-based ordinal identifying the rank to be returned.
 	 * @return as described. If <code>nthLeading</code> is not between 0 and the (number of species groups) - 1,
 	 *         inclusive, <code>null</code> is returned.
@@ -854,7 +854,7 @@ public class Layer implements Comparable<Layer> {
 
 	/**
 	 * Return the first Species of the <code>nthLeading</code> species group of the layer.
-	 * 
+	 *
 	 * @param nthLeading the zero-based ordinal identifying the rank to be returned.
 	 * @return as described. If <code>nthLeading</code> is not between 0 and the (number of species groups) - 1,
 	 *         inclusive, or the identified species group has no species, <code>null</code> is returned.
@@ -877,7 +877,7 @@ public class Layer implements Comparable<Layer> {
 	/**
 	 * Return true iff this layer contains at least one sp64 with a height, and the leading sp64 of all sp0s is at least
 	 * the given height.
-	 * 
+	 *
 	 * @param minVeteranLayerHeight the height lower bound
 	 * @return as described
 	 */
@@ -904,7 +904,7 @@ public class Layer implements Comparable<Layer> {
 
 	/**
 	 * Return the <code>n</code>th species (Sp64) of the layer from a list sorted by <code>criteria</code>.
-	 * 
+	 *
 	 * @param n        the zero-based index
 	 * @param criteria the sorting criteria
 	 * @return as described
@@ -936,7 +936,7 @@ public class Layer implements Comparable<Layer> {
 	/**
 	 * Return the assigned projection type for this layer; if one has not yet been assigned, determine it based on the
 	 * containing polygon's characteristics.
-	 * 
+	 *
 	 * @param polygon the layer's container
 	 * @return as described
 	 */
@@ -967,7 +967,7 @@ public class Layer implements Comparable<Layer> {
 	 * <code>lcl_DetermineLayerAgeAtYear</code>
 	 * <p>
 	 * Determine the layer's age at the given year, which must be non-null and between 1400 and 2500 (inclusive.)
-	 * 
+	 *
 	 * @param year as described
 	 * @return as described
 	 * @throws IllegalStateException if:
@@ -1033,9 +1033,9 @@ public class Layer implements Comparable<Layer> {
 
 	/**
 	 * <code>V7Ext_CompletedPolygonDefinition</code>, layer portion (lines 4300 - 4362).
-	 * 
+	 *
 	 * Complete the definition of the Layer, assigning the projection type, building the Site Species,
-	 * 
+	 *
 	 * @throws PolygonValidationException
 	 */
 	public void doCompleteDefinition() throws PolygonValidationException {
@@ -1083,7 +1083,7 @@ public class Layer implements Comparable<Layer> {
 	 * The original code contains this comment: "when combining SP0s and the primary SP0 does not have site index
 	 * information but the secondary SP0 does, the primary SP0 loses its identity to the secondary SP0", but this is not
 	 * implemented in the original code.
-	 * 
+	 *
 	 * @param growthModelCode
 	 */
 	void doBuildSiteSpecies(GrowthModelCode growthModelCode) {
@@ -1182,7 +1182,7 @@ public class Layer implements Comparable<Layer> {
 	 * <li>Compute height for site species based on Age and SI. In our case, we will reset height as it will be
 	 * recomputed when all species details are filled in later.
 	 * </ol>
-	 * 
+	 *
 	 * @throws PolygonValidationException
 	 */
 	void doCompleteSiteSpeciesSiteIndexInfo() throws PolygonValidationException {

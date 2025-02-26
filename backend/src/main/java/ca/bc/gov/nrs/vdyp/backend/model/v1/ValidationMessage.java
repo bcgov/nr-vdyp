@@ -7,7 +7,7 @@ public class ValidationMessage implements Comparable<ValidationMessage> {
 
 	/** the kind of this ValidationMessage - an enum value and a template */
 	private final ValidationMessageKind kind;
-	
+
 	/** the arguments that, when applied to the template of kind, produce the message */
 	private final Object[] args;
 
@@ -40,7 +40,7 @@ public class ValidationMessage implements Comparable<ValidationMessage> {
 	public String toString() {
 		return MessageFormat.format(message, args);
 	}
-	
+
 	@Override
 	public int compareTo(ValidationMessage that) {
 		if (that == null) {
@@ -53,15 +53,15 @@ public class ValidationMessage implements Comparable<ValidationMessage> {
 				return this.args.length - that.args.length;
 			}
 			for (int i = 0; i < this.args.length; i++) {
-				if (! this.args[i].equals(that.args[i])) {
+				if (!this.args[i].equals(that.args[i])) {
 					return this.args[i].hashCode() - that.args[i].hashCode();
 				}
 			}
 		}
-		
+
 		return 0;
 	}
-	
+
 	@Override
 	public boolean equals(Object o) {
 		if (o instanceof ValidationMessage that) {
@@ -70,7 +70,7 @@ public class ValidationMessage implements Comparable<ValidationMessage> {
 			return false;
 		}
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return kind.hashCode() * 17 + Arrays.hashCode(args);

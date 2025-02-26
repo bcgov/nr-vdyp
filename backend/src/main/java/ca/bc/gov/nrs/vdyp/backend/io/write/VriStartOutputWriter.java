@@ -40,8 +40,7 @@ public class VriStartOutputWriter extends AbstractOutputWriter implements Closea
 	static final String END_SPECIES_FORMAT = POLY_IDENTIFIER_FORMAT + " Z      0.0     0.0     0.0     0.0     0.0\n";
 
 	// FORMAT( A25, 1x, A1, f4.0, f5.2, f5.2, 8x, A2, A3, f5.2, 8x, f6.1, I3)
-	static final String SITE_INDEX_FORMAT = POLY_IDENTIFIER_FORMAT
-			+ " %1s%4s%5s%5s        %2s%3s%5s        %6s%3s\n";
+	static final String SITE_INDEX_FORMAT = POLY_IDENTIFIER_FORMAT + " %1s%4s%5s%5s        %2s%3s%5s        %6s%3s\n";
 	static final String END_SITE_INDEX_FORMAT = POLY_IDENTIFIER_FORMAT + " Z   0  0.0  0\n";
 
 	/**
@@ -87,7 +86,7 @@ public class VriStartOutputWriter extends AbstractOutputWriter implements Closea
 	/**
 	 * V7W_RIL1 - Write the given layer record to the layers file, and recursively write the layer's species to the
 	 * species file.
-	 * 
+	 *
 	 * @param layers
 	 * @throws IOException
 	 */
@@ -98,7 +97,8 @@ public class VriStartOutputWriter extends AbstractOutputWriter implements Closea
 				LAYER_FORMAT, //
 
 				layer.getPolygon().buildPolygonDescriptor(), //
-				LayerType.PRIMARY.getAlias(), // vdypintperform.c lines 3686 - 3703 - always write "P" for the layer code. 
+				LayerType.PRIMARY.getAlias(), // vdypintperform.c lines 3686 - 3703 - always write "P" for the layer
+												// code.
 				format(layer.getCrownClosure(), 6), //
 				format(layer.getBasalArea(), 9, 5), //
 				format(layer.getTreesPerHectare(), 8, 2), //
@@ -112,14 +112,14 @@ public class VriStartOutputWriter extends AbstractOutputWriter implements Closea
 
 	/**
 	 * V7W_RIS1 - Write the given species group (Sp0) record to the species file.
-	 * 
+	 *
 	 * @param stand
 	 * @throws IOException
 	 */
 	private void writeLayerSpeciesInfo(Layer layer) throws IOException {
 
 		boolean leadingSiteDominantHeightExceeds6m = false;
-		
+
 		Stand leadingSite = layer.getSp0sByPercent().get(0);
 		if (leadingSite != null) {
 			if (leadingSite.getSpeciesGroup().getDominantHeight() > 6.0) {
@@ -130,7 +130,7 @@ public class VriStartOutputWriter extends AbstractOutputWriter implements Closea
 				leadingSiteDominantHeightExceeds6m = true;
 			}
 		}
-		
+
 		boolean speciesWasWritten = false;
 
 		for (Stand stand : layer.getSp0sAsSupplied()) {
@@ -155,7 +155,8 @@ public class VriStartOutputWriter extends AbstractOutputWriter implements Closea
 					SPECIES_FORMAT, //
 
 					stand.getLayer().getPolygon().buildPolygonDescriptor(), //
-					LayerType.PRIMARY.getAlias(), // vdypintperform.c lines 3934 - 3950 - always write "P" for the layer code. 
+					LayerType.PRIMARY.getAlias(), // vdypintperform.c lines 3934 - 3950 - always write "P" for the layer
+													// code.
 					stand.getSp0Code(), //
 					format(stand.getSpeciesGroup().getSpeciesPercent(), 6, 1), //
 					speciesDistributionTexts[0], speciesDistributionTexts[1], speciesDistributionTexts[2],
@@ -186,7 +187,8 @@ public class VriStartOutputWriter extends AbstractOutputWriter implements Closea
 					SITE_INDEX_FORMAT, //
 
 					stand.getLayer().getPolygon().buildPolygonDescriptor(), //
-					LayerType.PRIMARY.getAlias(), // vdypintperform.c lines 3934 - 3950 - always write "P" for the layer code.
+					LayerType.PRIMARY.getAlias(), // vdypintperform.c lines 3934 - 3950 - always write "P" for the layer
+													// code.
 					totalAgeText, //
 					format(sp0.getDominantHeight(), 5, 2), //
 					format(sp0.getSiteIndex(), 5, 2), //
@@ -196,10 +198,10 @@ public class VriStartOutputWriter extends AbstractOutputWriter implements Closea
 					format(sp0.getAgeAtBreastHeight(), 6, 1), //
 					sp0.getSiteCurve() == null ? " " + Vdyp7Constants.EMPTY_INT : format(sp0.getSiteCurve().n(), 3)
 			);
-			
+
 			speciesWasWritten = true;
 		}
-		
+
 		if (speciesWasWritten) {
 			writeSpeciesEndRecord(layer.getPolygon());
 		}

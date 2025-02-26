@@ -98,7 +98,7 @@ public class PolygonMessage {
 
 			polygonMessage.layer = layer;
 			polygonMessage.polygon = layer.getPolygon();
-			
+
 			return this;
 		}
 

@@ -92,11 +92,11 @@ public enum MessageCode {
 	BAD_STAND_DEFN,
 
 	/** Indicates a problem was encountered with the age range of the projection. */
-	AGE_RANGE, 
-	
+	AGE_RANGE,
+
 	/** Indicates Site Index was reassigned. */
-	REASSIGNED_SITE, 
-	
+	REASSIGNED_SITE,
+
 	/** Indicates Input Height was reassigned. */
 	REASSIGNED_HEIGHT
 }

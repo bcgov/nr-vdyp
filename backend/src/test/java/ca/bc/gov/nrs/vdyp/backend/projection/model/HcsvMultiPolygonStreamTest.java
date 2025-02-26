@@ -31,8 +31,10 @@ public class HcsvMultiPolygonStreamTest {
 		var parameters = new Parameters().ageStart(10).ageEnd(20);
 
 		{
-			var polygonStreamFile = FileHelper.getStubResourceFile("VDYP7_INPUT_MULTI_POLY.csv");
-			var layerStreamFile = FileHelper.getStubResourceFile("VDYP7_INPUT_MULTI_POLY_LAYER.csv");
+			var polygonStreamFile = FileHelper
+					.getStubResourceFile(FileHelper.HCSV, FileHelper.VDYP_240, "VDYP7_INPUT_MULTI_POLY.csv");
+			var layerStreamFile = FileHelper
+					.getStubResourceFile(FileHelper.HCSV, FileHelper.VDYP_240, "VDYP7_INPUT_MULTI_POLY_LAYER.csv");
 
 			var streams = new HashMap<String, InputStream>();
 			streams.put(ParameterNames.HCSV_POLYGON_INPUT_DATA, polygonStreamFile);
@@ -115,9 +117,8 @@ public class HcsvMultiPolygonStreamTest {
 								contains(
 										List.of(
 												allOf(
-														hasProperty(
-																"stand", hasProperty("standIndex", is(0))
-														), hasProperty("speciesCode", is("PLI"))
+														hasProperty("stand", hasProperty("standIndex", is(0))),
+														hasProperty("speciesCode", is("PLI"))
 												)
 										)
 								)
@@ -141,9 +142,8 @@ public class HcsvMultiPolygonStreamTest {
 								contains(
 										List.of(
 												allOf(
-														hasProperty(
-																"stand", hasProperty("standIndex", is(1))
-														), hasProperty("speciesCode", is("SX"))
+														hasProperty("stand", hasProperty("standIndex", is(1))),
+														hasProperty("speciesCode", is("SX"))
 												)
 										)
 								)
@@ -198,10 +198,12 @@ public class HcsvMultiPolygonStreamTest {
 		assertThat(
 				p1Layer1.getSiteSpecies(), //
 				contains(List.of(allOf(hasProperty("stand", hasProperty("sp0Code", is("PL"))) //
-						, hasProperty("hasSiteInfo", is(false)) //
+						, hasProperty("hasSiteInfo", is(true)) //
 						, hasProperty("hasBeenCombined", is(false)) //
 						, hasProperty("totalSpeciesPercent", is(60.0))
-				), hasProperty("stand", hasProperty("sp0Code", is("S")))))
+				), //
+						hasProperty("stand", hasProperty("sp0Code", is("S")))
+				))
 		);
 
 		var polygon2 = polygonStream.getNextPolygon();

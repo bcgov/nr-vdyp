@@ -614,7 +614,7 @@ class ParameterValidationTest {
 		} catch (ProjectionRequestValidationException e) {
 			Assert.fail();
 		}
-		
+
 		var vp = s1.getValidatedParams();
 
 		Assert.assertTrue(vp.containsOption(DebugOption.DO_INCLUDE_DEBUG_ENTRY_EXIT));

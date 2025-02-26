@@ -143,7 +143,7 @@ public class Polygon implements Comparable<Polygon> {
 	/**
 	 * Points to the layer identified as the veteran layer. Any time an aspect of the stand is redefined, this member
 	 * will be reset and have to be redetermined.
-	 * 
+	 *
 	 * Points to the layer which will be sent to the VDYP7 libraries as the 'V' layer.
 	 */
 	private Layer veteranLayer;
@@ -283,7 +283,7 @@ public class Polygon implements Comparable<Polygon> {
 	/**
 	 * Getter. Note that VDYP7 has a function called "V7Ext_PolygonReferenceYear" which does not necessarily return this
 	 * value - see {@link Polygon.getMeasurementYear()}
-	 * 
+	 *
 	 * @return the reference year value, which may be null.
 	 */
 	public Integer getReferenceYear() {
@@ -355,7 +355,7 @@ public class Polygon implements Comparable<Polygon> {
 	public boolean doAllowProjection() {
 		return doAllowProjection;
 	}
-	
+
 	public boolean doAllowProjectionOfType(ProjectionTypeCode projectionType) {
 		return doAllowProjectionOfType.containsKey(projectionType) && doAllowProjectionOfType.get(projectionType);
 	}
@@ -652,7 +652,7 @@ public class Polygon implements Comparable<Polygon> {
 	 * <p>
 	 * This polygon and all its child items has been read from input. Complete its definition by building intermediate
 	 * data structures as needed and calculating estimates for values not supplied in the input.
-	 * 
+	 *
 	 * @param context
 	 * @throws PolygonValidationException
 	 */
@@ -733,9 +733,9 @@ public class Polygon implements Comparable<Polygon> {
 
 	/**
 	 * <code>lcl_CalculateCC</code>
-	 * 
+	 *
 	 * Estimate the crown closures of all Layers (that will be projected) that haven't been supplied with one.
-	 * 
+	 *
 	 * @param context the projection context of the estimation
 	 */
 	private void doEstimateLayerCrownClosures(ProjectionContext context) {
@@ -747,11 +747,11 @@ public class Polygon implements Comparable<Polygon> {
 
 	/**
 	 * <code>lcl_AdjustAllLayersSpeciesPercents</code>
-	 * 
+	 *
 	 * Adjust the percents of all Layers for which the sum of the percentages of their Stands is between 99 and 99.99 or
 	 * between 100.01 and 101 to be 100. If the percentage is beyond this range, it is an error. If it is within 0.01 of
 	 * 100, nothing is done.
-	 * 
+	 *
 	 * @param context
 	 */
 	private void doAdjustAllLayersSpeciesPercents(ProjectionContext context) {
@@ -773,13 +773,13 @@ public class Polygon implements Comparable<Polygon> {
 					/*
 					 * The stand has a percentage that needs adjusting. Determine the SP0 and SP64 to which the
 					 * adjustment is to be performed.
-					 * 
+					 *
 					 * If the stand is less than 100%, add the difference to the leading sp0.
-					 * 
+					 *
 					 * If the stand is more than 100%, subtract the difference from the last sp0. Ensure we have
 					 * selected a species with a species percent at least as great as percent we are subtracting -
 					 * negative percentages are not allowed.
-					 * 
+					 *
 					 * Finally, if the adjusted sp64 is a duplicate, always increase the first duplicate and reduce the
 					 * last duplicate.
 					 */
@@ -879,7 +879,7 @@ public class Polygon implements Comparable<Polygon> {
 					rGrowthModel.set(GrowthModelCode.VRI);
 					rProcessingMode.set(ProcessingModeCode.VRI_Default);
 				}
-				
+
 				// Process only the first Projection Type for which there is a Primary layer.
 				break;
 			}
@@ -1088,9 +1088,9 @@ public class Polygon implements Comparable<Polygon> {
 
 	/**
 	 * <code>lcl_CalculateYieldFactor</code>
-	 * 
+	 *
 	 * If the yield factor for this polygon has not been calculated, do so.
-	 * 
+	 *
 	 * @throws PolygonValidationException
 	 */
 	private void doEstimateYieldFactor() throws PolygonValidationException {
@@ -1143,6 +1143,7 @@ public class Polygon implements Comparable<Polygon> {
 	 * If all is done well, the sum of %stockable for V, R and Y should not exceed 100%.
 	 * <p>
 	 * Remarks:
+	 *
 	 * <pre>
 	 *       A: If there is no veteran layer:
 	 *          1: Only one residual layer + D layer:
@@ -1369,7 +1370,6 @@ public class Polygon implements Comparable<Polygon> {
 
 	private final String POLYGON_DESCRIPTOR_FORMAT = "%-7s%10d%3s%5d";
 
-
 	public String buildPolygonDescriptor(int year) {
 
 		String mapSheet = this.mapSheet.length() > 7 ? this.mapSheet.substring(0, 7) : this.mapSheet;
@@ -1393,7 +1393,7 @@ public class Polygon implements Comparable<Polygon> {
 	 * This method does -not- consider whether the polygon already has a dead layer - it simply replaces the existing
 	 * one if there is one. If this is not the desired behaviour, call <code>getDeadLayer</code> before calling this
 	 * method to determine if a dead layer has already been assigned.
-	 * 
+	 *
 	 * @param newDeadLayer       the new dead layer
 	 * @param yearOfDeath        as described
 	 * @param percentStockKilled as described
@@ -1717,14 +1717,14 @@ public class Polygon implements Comparable<Polygon> {
 		Layer selectedVeteranLayer = null;
 
 		if (getPrimaryLayer() == null) {
-			logger.debug("{}: stand contains no primary layer, therefore stand can not contain a veteran layer.", this);
+			logger.debug("{}: stand contains no primary layer, therefore stand can not contain a veteran layer", this);
 		} else if (getVeteranLayer() == null) {
 
 			if (getTargetedVeteranLayer() != null) {
-				selectedVeteranLayer = getVeteranLayer();
+				selectedVeteranLayer = getTargetedVeteranLayer();
 				logger.debug(
 						"{}: targeted veteran layer '{}' identified as veteran layer", this,
-						getVeteranLayer().getLayerId()
+						selectedVeteranLayer.getLayerId()
 				);
 			} else {
 				for (Layer candidate : getLayers().values()) {
@@ -1748,7 +1748,7 @@ public class Polygon implements Comparable<Polygon> {
 									&& candidate.getBasalArea() >= 0.0
 									&& candidate.getCrownClosure() >= Vdyp7Constants.MIN_VETERAN_LAYER_CROWN_CLOSURE
 									&& candidate.getCrownClosure() <= Vdyp7Constants.MAX_VETERAN_LAYER_CROWN_CLOSURE
-									&& candidate.getTreesPerHectare() <= Vdyp7Constants.MIN_VETERAN_LAYER_TPH
+									&& candidate.getTreesPerHectare() >= Vdyp7Constants.MIN_VETERAN_LAYER_TPH
 									&& candidate.getTreesPerHectare() < Vdyp7Constants.MAX_VETERAN_LAYER_TPH_EXCLUSIVE
 									&& dbh >= Vdyp7Constants.MIN_VETERAN_LAYER_DBH
 									&& candidate.doesHeightExceed(Vdyp7Constants.MIN_VETERAN_LAYER_HEIGHT)) {
@@ -1757,16 +1757,19 @@ public class Polygon implements Comparable<Polygon> {
 								break;
 							} else {
 								logger.debug(
-										"{}: layer '{}' did not pass the tests to be a veteran layer.", this,
+										"{}: layer '{}' did not pass the tests to be a veteran layer", this,
 										candidate.getLayerId()
 								);
 							}
 						} else {
-							logger.debug("Layer '{}' does not have a leading species...", candidate.getLayerId());
+							logger.debug(
+									"{}: does not have a leading species and therefore cannot be a veteran layer",
+									candidate.getLayerId()
+							);
 						}
 					} else {
 						logger.debug(
-								"{}: layer '{}' is either the primary layer or does not have layer id \"1\".", this,
+								"{}: layer '{}' is either the primary layer or does not have layer id \"1\"", this,
 								candidate.getLayerId()
 						);
 					}

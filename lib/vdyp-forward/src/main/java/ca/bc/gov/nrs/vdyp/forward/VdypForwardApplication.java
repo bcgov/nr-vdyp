@@ -47,7 +47,7 @@ public class VdypForwardApplication extends VdypApplication {
 			super(e);
 		}
 	}
-	
+
 	private static class RuntimeException extends Exception {
 		private static final long serialVersionUID = 6675331977223310947L;
 
@@ -55,7 +55,7 @@ public class VdypForwardApplication extends VdypApplication {
 			super(e);
 		}
 	}
-	
+
 	public static void main(final String... args) {
 
 		var app = new VdypForwardApplication();
@@ -70,7 +70,7 @@ public class VdypForwardApplication extends VdypApplication {
 			System.exit(PROCESSING_ERROR);
 		}
 	}
-	
+
 	public void doMain(final String... args) throws InitializationException, RuntimeException {
 
 		logVersionInformation();
@@ -104,7 +104,7 @@ public class VdypForwardApplication extends VdypApplication {
 		try {
 			ForwardProcessor processor = new ForwardProcessor();
 
-			processor.run(new FileSystemFileResolver(), new FileSystemFileResolver(), controlFileNames, vdypPassSet);
+			processor.run(new FileSystemFileResolver(), controlFileNames, vdypPassSet);
 
 		} catch (Exception ex) {
 			logger.error("Error during processing", ex);

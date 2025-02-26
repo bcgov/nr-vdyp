@@ -23,7 +23,7 @@ public enum SilviculturalBaseCode {
 	UNKNOWN;
 
 	public static SilviculturalBaseCode getDefault() {
-		
+
 		return UNKNOWN;
 	}
 }

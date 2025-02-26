@@ -1,7 +1,7 @@
 package ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations;
 
 public enum ReturnCode {
-	
+
 	SUCCESS(0), //
 	ERROR_INTERNALERROR(-1), //
 	ERROR_INVALIDPARAMETER(-2), //
@@ -24,7 +24,7 @@ public enum ReturnCode {
 	ERROR_LAYERNOTPROCESSED(-19);
 
 	public final int errorCode;
-	
+
 	private ReturnCode(int errorCode) {
 		this.errorCode = errorCode;
 	}

@@ -95,7 +95,9 @@ public class Parameters {
 
 		CSV_YIELD_TABLE("CSVYieldTable"),
 
-		DCSV("DCSV");
+		DCSV("DCSV"),
+
+		PLOTSY("PLOTSY");
 
 		private String value;
 
@@ -128,7 +130,9 @@ public class Parameters {
 					return b;
 				}
 			}
-			throw new IllegalArgumentException(MessageFormat.format("\"{}\" is not a valid OutputFormat value", value));
+			throw new IllegalArgumentException(
+					MessageFormat.format("\"{0}\" is not a valid OutputFormat value", value)
+			);
 		}
 	}
 
@@ -194,7 +198,7 @@ public class Parameters {
 				}
 			}
 			throw new IllegalArgumentException(
-					MessageFormat.format("\"{}\" is not a valid SelectedExecutionOptions value", value)
+					MessageFormat.format("\"{0}\" is not a valid SelectedExecutionOptions value", value)
 			);
 		}
 	}
@@ -241,7 +245,7 @@ public class Parameters {
 				}
 			}
 			throw new IllegalArgumentException(
-					MessageFormat.format("\"{}\" is not a valid CombineAgeYearRange value", value)
+					MessageFormat.format("\"{0}\" is not a valid CombineAgeYearRange value", value)
 			);
 		}
 	}
@@ -284,7 +288,7 @@ public class Parameters {
 				}
 			}
 			throw new IllegalArgumentException(
-					MessageFormat.format("\"{}\" is not a valid SelectedDebugOptions value", value)
+					MessageFormat.format("\"{0}\" is not a valid SelectedDebugOptions value", value)
 			);
 		}
 	}
@@ -327,7 +331,7 @@ public class Parameters {
 				}
 			}
 			throw new IllegalArgumentException(
-					MessageFormat.format("\"{}\" is not a valid MetadataToOutput value", value)
+					MessageFormat.format("\"{0}\" is not a valid MetadataToOutput value", value)
 			);
 		}
 	}

@@ -7,7 +7,7 @@ import java.util.List;
 public class PolygonMessageList {
 
 	private List<PolygonMessage> messages = new ArrayList<>();
-	
+
 	public void add(PolygonMessage m) {
 		messages.add(m);
 	}

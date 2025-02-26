@@ -22,9 +22,10 @@ public class ProjectionContext {
 
 	private final IMessageLog progressLog;
 	private final IMessageLog errorLog;
-	
-	public ProjectionContext(ProjectionRequestKind requestKind, String projectionId, Parameters params, boolean isTrialRun)
-			throws ProjectionRequestValidationException {
+
+	public ProjectionContext(
+			ProjectionRequestKind requestKind, String projectionId, Parameters params, boolean isTrialRun
+	) throws ProjectionRequestValidationException {
 
 		if (requestKind == null) {
 			throw new IllegalArgumentException("kind cannot be null in constructor of ProjectionState");
@@ -78,7 +79,7 @@ public class ProjectionContext {
 	public ProjectionRequestKind getRequestKind() {
 		return requestKind;
 	}
-	
+
 	public boolean isTrialRun() {
 		return isTrailRun;
 	}

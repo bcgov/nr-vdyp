@@ -19,35 +19,37 @@ import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCo
 import ca.bc.gov.nrs.vdyp.backend.utils.FileHelper;
 
 public class PolygonSelectLayerWhenLayersTest {
-	
+
 	private Polygon polygon;
-	
+
 	@BeforeEach
 	void beforeEach() throws IOException, PolygonValidationException, ProjectionRequestValidationException {
 		var parameters = new Parameters().ageStart(10).ageEnd(20);
 
 		var streams = new HashMap<String, InputStream>();
-		var polygonStreamFile = FileHelper.getStubResourceFile("VDYP7_INPUT_POLY.csv");
-		var layersStreamFile = FileHelper.getStubResourceFile("VDYP7_INPUT_LAYER.csv");
+		var polygonStreamFile = FileHelper
+				.getStubResourceFile(FileHelper.HCSV, FileHelper.VDYP_240, "VDYP7_INPUT_POLY.csv");
+		var layersStreamFile = FileHelper
+				.getStubResourceFile(FileHelper.HCSV, FileHelper.VDYP_240, "VDYP7_INPUT_LAYER.csv");
 
-		streams.put(ParameterNames.HCSV_POLYGON_INPUT_DATA, polygonStreamFile);	
-		streams.put(ParameterNames.HCSV_LAYERS_INPUT_DATA, layersStreamFile);	
-		
+		streams.put(ParameterNames.HCSV_POLYGON_INPUT_DATA, polygonStreamFile);
+		streams.put(ParameterNames.HCSV_LAYERS_INPUT_DATA, layersStreamFile);
+
 		var state = new ProjectionContext(ProjectionRequestKind.HCSV, "PolygonTest", parameters, false);
 
 		AbstractPolygonStream polygonStream = AbstractPolygonStream.build(state, streams);
 		Assert.assertTrue(polygonStream.hasNextPolygon());
-		
+
 		polygon = polygonStream.getNextPolygon();
 		Assert.assertNotNull(polygon);
 	}
-	
+
 	@Test
 	void testSelectLayerWhenParameterNull() throws IOException {
-		
+
 		Assert.assertThrows(IllegalArgumentException.class, () -> polygon.findSpecificLayer(null));
 	}
-	
+
 	@Test
 	void testSelectSpanningLayer() {
 		try {
@@ -57,7 +59,7 @@ public class PolygonSelectLayerWhenLayersTest {
 			Assert.fail();
 		}
 	}
-	
+
 	@Test
 	void testSelectPrimaryLayer() {
 		try {
@@ -67,7 +69,7 @@ public class PolygonSelectLayerWhenLayersTest {
 			Assert.fail();
 		}
 	}
-	
+
 	@Test
 	void testSelectDeadLayer() {
 		try {
@@ -77,7 +79,7 @@ public class PolygonSelectLayerWhenLayersTest {
 			Assert.fail();
 		}
 	}
-	
+
 	@Test
 	void testSelectResidualLayer() {
 		try {
@@ -87,7 +89,7 @@ public class PolygonSelectLayerWhenLayersTest {
 			Assert.fail();
 		}
 	}
-	
+
 	@Test
 	void testSelectRegenerationLayer() {
 		try {

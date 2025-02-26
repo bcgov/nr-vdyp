@@ -18,35 +18,30 @@ import com.opencsv.bean.CsvToBeanBuilder;
 import ca.bc.gov.nrs.api.helpers.TestHelper;
 import ca.bc.gov.nrs.vdyp.backend.projection.input.HcsvLayerRecordBean;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
+import ca.bc.gov.nrs.vdyp.backend.utils.FileHelper;
 
 public class HscvLayerReaderTest {
 
 	private static Logger logger = LoggerFactory.getLogger(HscvLayerReaderTest.class);
 
 	private TestHelper testHelper = new TestHelper();
-	
+
 	@Test
 	void testHscvLayerReader() throws IOException {
 
 		logger.info("Starting testHscvLayerReader");
 
-		Path resourceFolderPath = Path.of("VDYP7Console-sample-files", "hcsv", "vdyp-240");
+		Path resourceFolderPath = Path.of("VDYP7Console-sample-files", FileHelper.HCSV, FileHelper.VDYP_240);
 
 		byte[] csvBytes = Files.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_LAYER.csv"));
-		
+
 		var layerCsvStream = new CsvToBeanBuilder<HcsvLayerRecordBean>(
-				new BufferedReader(
-						new InputStreamReader(
-								new ByteArrayInputStream(
-										csvBytes))))
-				.withSeparator(',')
-                .withType(HcsvLayerRecordBean.class)
-                .withSkipLines(1)
-                .build();
-		
+				new BufferedReader(new InputStreamReader(new ByteArrayInputStream(csvBytes)))
+		).withSeparator(',').withType(HcsvLayerRecordBean.class).withSkipLines(1).build();
+
 		Iterator<HcsvLayerRecordBean> li = layerCsvStream.iterator();
 		Assert.assertTrue(li.hasNext());
-		
+
 		var l1 = li.next();
 		logger.info("Read layer {}", l1.getFeatureId() + ' ' + l1.getLayerId());
 
@@ -55,8 +50,8 @@ public class HscvLayerReaderTest {
 		Assert.assertEquals(null, l1.getCloseUtilizationVolumeLessDecayAndWastagePerHectare125Adjustment());
 		Assert.assertEquals(null, l1.getCloseUtilizationVolumeLessDecayPerHectare125Adjustment());
 		Assert.assertEquals(null, l1.getCloseUtilizationVolumePerHectare125Adjustment());
-		Assert.assertEquals(Short.valueOf((short)5), l1.getCrownClosure());
-		Assert.assertEquals(Short.valueOf((short)60), l1.getEstimatedAgeSpp1());
+		Assert.assertEquals(Short.valueOf((short) 5), l1.getCrownClosure());
+		Assert.assertEquals(Short.valueOf((short) 60), l1.getEstimatedAgeSpp1());
 		Assert.assertEquals(null, l1.getEstimatedAgeSpp2());
 		Assert.assertEquals(Double.valueOf(9.0), l1.getEstimatedHeightSpp1());
 		Assert.assertEquals(null, l1.getEstimatedAgeSpp2());

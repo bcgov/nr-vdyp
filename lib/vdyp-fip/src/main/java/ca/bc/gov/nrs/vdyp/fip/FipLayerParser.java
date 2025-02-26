@@ -155,7 +155,7 @@ public class FipLayerParser
 						return layer.getHeightSafe() <= 0f || layer.getCrownClosure() <= 0f;
 					}).orElse(true)) // If the layer is not present (Unknown layer type) ignore
 							.orElse(false); // If it's a marker, let it through so the stop method can see it.
-				}	
+				}
 
 				@Override
 				protected boolean stop(ValueOrMarker<Optional<FipLayer>, EndOfRecord> nextChild) {

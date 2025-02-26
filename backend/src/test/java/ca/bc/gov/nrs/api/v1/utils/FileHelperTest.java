@@ -15,7 +15,7 @@ public class FileHelperTest {
 
 	@Test
 	void testGetStubResourceFile() throws IOException {
-		InputStream is = FileHelper.getStubResourceFile("Output_Log.txt");
+		InputStream is = FileHelper.getStubResourceFile(FileHelper.HCSV, FileHelper.VDYP_240, "Output_Log.txt");
 		Assert.assertNotNull(is);
 	}
 

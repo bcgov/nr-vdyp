@@ -31,7 +31,8 @@ public class ProjectionRunner implements IProjectionRunner {
 	}
 
 	@Override
-	public void run(Map<String, InputStream> streams) throws ProjectionRequestValidationException, ProjectionInternalExecutionException {
+	public void run(Map<String, InputStream> streams)
+			throws ProjectionRequestValidationException, ProjectionInternalExecutionException {
 		context.getProgressLog().addMessage("Running Projection of type {0}", context.getRequestKind());
 
 		logger.debug("{}", context.getValidatedParams().toString());
@@ -45,7 +46,7 @@ public class ProjectionRunner implements IProjectionRunner {
 		} else {
 			componentRunner = new ComponentRunner();
 		}
-		
+
 		while (polygonStream.hasNextPolygon()) {
 
 			try {
@@ -82,7 +83,7 @@ public class ProjectionRunner implements IProjectionRunner {
 		} else {
 			// TODO: For now...
 			try {
-				return FileHelper.getStubResourceFile("Output_YldTbl.csv");
+				return FileHelper.getStubResourceFile(FileHelper.HCSV, FileHelper.VDYP_240, "Output_YldTbl.csv");
 			} catch (IOException e) {
 				throw new ProjectionInternalExecutionException(e);
 			}

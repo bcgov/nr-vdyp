@@ -1,7 +1,12 @@
 package ca.bc.gov.nrs.vdyp.backend.projection;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.MessageFormat;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonExecutionException;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Polygon;
@@ -11,6 +16,8 @@ import ca.bc.gov.nrs.vdyp.forward.VdypForwardApplication;
 import ca.bc.gov.nrs.vdyp.vri.VriStart;
 
 public class ComponentRunner implements IComponentRunner {
+
+	private static Logger logger = LoggerFactory.getLogger(ComponentRunner.class);
 
 	@Override
 	public void runFipStart(Polygon polygon, ProjectionTypeCode projectionTypeCode, PolygonProjectionState state)
@@ -41,9 +48,42 @@ public class ComponentRunner implements IComponentRunner {
 	}
 
 	@Override
-	public void runAdjust(Polygon polygon, ProjectionTypeCode projectionTypeCode, PolygonProjectionState state) {
+	public void runAdjust(Polygon polygon, ProjectionTypeCode projectionType, PolygonProjectionState state)
+			throws PolygonExecutionException {
 
-		// ADJUST is not currently used - skipping
+		// ADJUST is currently not being run; we just copy the input to output.
+
+		logger.info("{} {}: ADJUST is operating as a pass-through", polygon, projectionType);
+
+		copyAdjustInputFilesToOutput(polygon, state, projectionType, state.getExecutionFolder());
+	}
+
+	private void copyAdjustInputFilesToOutput(
+			Polygon polygon, PolygonProjectionState state, ProjectionTypeCode projectionType, Path rootExecutionFolder
+	) throws PolygonExecutionException {
+
+		Path executionFolder = Path.of(state.getExecutionFolder().toString(), projectionType.toString());
+
+		try {
+			Path polygonInputFile = Path.of(executionFolder.toString(), "vp_01.dat");
+			Path polygonOutputFile = Path.of(executionFolder.toString(), "vp_adj.dat");
+			Files.copy(polygonInputFile, polygonOutputFile);
+
+			Path speciesInputFile = Path.of(executionFolder.toString(), "vs_01.dat");
+			Path speciesOutputFile = Path.of(executionFolder.toString(), "vs_adj.dat");
+			Files.copy(speciesInputFile, speciesOutputFile);
+
+			Path utilizationsInputFile = Path.of(executionFolder.toString(), "vu_01.dat");
+			Path utilizationsOutputFile = Path.of(executionFolder.toString(), "vu_adj.dat");
+			Files.copy(utilizationsInputFile, utilizationsOutputFile);
+
+		} catch (IOException e) {
+			throw new PolygonExecutionException(
+					MessageFormat
+							.format("{0}: encountered exception while running copyAdjustInputFilesToOutput", polygon),
+					e
+			);
+		}
 	}
 
 	@Override
@@ -67,7 +107,7 @@ public class ComponentRunner implements IComponentRunner {
 
 		try {
 			// TODO: BACK is not supported yet.
-			
+
 			Path controlFilePath = Path
 					.of(state.getExecutionFolder().toString(), projectionTypeCode.toString(), "VDYPBACK.CTR");
 

@@ -3,6 +3,8 @@ package ca.bc.gov.nrs.vdyp.io.write;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -15,7 +17,7 @@ import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.controlmap.CachingResolvedControlMapImpl;
 import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMap;
-import ca.bc.gov.nrs.vdyp.io.FileResolver;
+import ca.bc.gov.nrs.vdyp.io.ConcreteFileResolver;
 import ca.bc.gov.nrs.vdyp.math.FloatMath;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
@@ -120,7 +122,7 @@ public class VdypOutputWriter implements Closeable {
 	 * @param layerFile
 	 * @param controlMap
 	 */
-	public VdypOutputWriter(Map<String, Object> controlMap, FileResolver resolver) throws IOException {
+	public VdypOutputWriter(Map<String, Object> controlMap, ConcreteFileResolver resolver) throws IOException {
 		this(
 				controlMap, getOutputStream(controlMap, resolver, ControlKey.VDYP_OUTPUT_VDYP_POLYGON.name()),
 				getOutputStream(controlMap, resolver, ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SPECIES.name()),
@@ -144,9 +146,10 @@ public class VdypOutputWriter implements Closeable {
 				controlMap, getOutputStream(controlMap, ControlKey.VDYP_OUTPUT_VDYP_POLYGON.name()),
 				getOutputStream(controlMap, ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SPECIES.name()),
 				getOutputStream(controlMap, ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name()),
-				controlMap.containsKey(ControlKey.VDYP_OUTPUT_COMPATIBILITY_VARIABLES.name()) ? Optional.of(
-						getOutputStream(controlMap, ControlKey.VDYP_OUTPUT_COMPATIBILITY_VARIABLES.name())
-				) : Optional.empty()
+				controlMap.containsKey(ControlKey.VDYP_OUTPUT_COMPATIBILITY_VARIABLES.name())
+						? Optional
+								.of(getOutputStream(controlMap, ControlKey.VDYP_OUTPUT_COMPATIBILITY_VARIABLES.name()))
+						: Optional.empty()
 		);
 	}
 
@@ -264,15 +267,15 @@ public class VdypOutputWriter implements Closeable {
 		}
 	}
 
-	static OutputStream getOutputStream(Map<String, Object> controlMap, FileResolver resolver, String key)
+	static OutputStream getOutputStream(Map<String, Object> controlMap, ConcreteFileResolver resolver, String key)
 			throws IOException {
 		String fileName = Utils.expectParsedControl(controlMap, key, String.class);
 		return resolver.resolveForOutput(fileName);
 	}
 
-	static OutputStream getOutputStream(Map<String, Object> controlMap, String key)
-			throws IOException {
-		return Utils.expectParsedControl(controlMap, key, OutputStream.class);
+	static OutputStream getOutputStream(Map<String, Object> controlMap, String key) throws IOException {
+		var outputFilePath = Utils.expectParsedControl(controlMap, key, Path.class);
+		return Files.newOutputStream(outputFilePath);
 	}
 
 	private PolygonIdentifier getCurrentPolygonDescriptor(PolygonIdentifier originalIdentifier) {

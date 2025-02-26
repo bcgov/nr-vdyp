@@ -54,8 +54,8 @@ public enum BecZone implements SI32Enum<BecZone> {
 	public int getIndex() {
 		return index;
 	}
-	
-	public SpeciesRegion getSpeciesRegion() { 
+
+	public SpeciesRegion getSpeciesRegion() {
 		return speciesRegion;
 	}
 
@@ -63,8 +63,9 @@ public enum BecZone implements SI32Enum<BecZone> {
 	public int getOffset() {
 		if (this.equals(UNKNOWN)) {
 			throw new UnsupportedOperationException(
-					MessageFormat
-							.format("Cannot call getIndex on {} as it's not a standard member of the enumeration", this)
+					MessageFormat.format(
+							"Cannot call getIndex on {0} as it's not a standard member of the enumeration", this
+					)
 			);
 		}
 
@@ -76,7 +77,7 @@ public enum BecZone implements SI32Enum<BecZone> {
 		if (this.equals(UNKNOWN)) {
 			throw new UnsupportedOperationException(
 					MessageFormat
-							.format("Cannot call getText on {} as it's not a standard member of the enumeration", this)
+							.format("Cannot call getText on {0} as it's not a standard member of the enumeration", this)
 			);
 		}
 

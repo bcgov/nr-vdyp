@@ -22,51 +22,53 @@ public class PolygonObjectTest {
 
 	private Polygon polygon1;
 	private Polygon polygon2;
-	
+
 	@BeforeEach
 	void beforeEach() throws IOException, PolygonValidationException, ProjectionRequestValidationException {
 		var parameters = new Parameters().ageStart(10).ageEnd(20);
 
 		{
-			var polygonStreamFile = FileHelper.getStubResourceFile("VDYP7_INPUT_POLY.csv");
+			var polygonStreamFile = FileHelper
+					.getStubResourceFile(FileHelper.HCSV, FileHelper.VDYP_240, "VDYP7_INPUT_POLY.csv");
 
 			var streams = new HashMap<String, InputStream>();
-			streams.put(ParameterNames.HCSV_POLYGON_INPUT_DATA, polygonStreamFile);	
-			streams.put(ParameterNames.HCSV_LAYERS_INPUT_DATA, new ByteArrayInputStream(new byte[0]));	
-			
+			streams.put(ParameterNames.HCSV_POLYGON_INPUT_DATA, polygonStreamFile);
+			streams.put(ParameterNames.HCSV_LAYERS_INPUT_DATA, new ByteArrayInputStream(new byte[0]));
+
 			var state = new ProjectionContext(ProjectionRequestKind.HCSV, "PolygonTest", parameters, false);
-	
+
 			AbstractPolygonStream polygonStream = AbstractPolygonStream.build(state, streams);
 			Assert.assertTrue(polygonStream.hasNextPolygon());
-			
+
 			polygon1 = polygonStream.getNextPolygon();
 			Assert.assertNotNull(polygon1);
 		}
-		
+
 		{
-			var polygonStreamFile = FileHelper.getStubResourceFile("VDYP7_INPUT_POLY.csv");
+			var polygonStreamFile = FileHelper
+					.getStubResourceFile(FileHelper.HCSV, FileHelper.VDYP_240, "VDYP7_INPUT_POLY.csv");
 
 			var streams = new HashMap<String, InputStream>();
-			streams.put(ParameterNames.HCSV_POLYGON_INPUT_DATA, polygonStreamFile);	
-			streams.put(ParameterNames.HCSV_LAYERS_INPUT_DATA, new ByteArrayInputStream(new byte[0]));	
-			
+			streams.put(ParameterNames.HCSV_POLYGON_INPUT_DATA, polygonStreamFile);
+			streams.put(ParameterNames.HCSV_LAYERS_INPUT_DATA, new ByteArrayInputStream(new byte[0]));
+
 			var state = new ProjectionContext(ProjectionRequestKind.HCSV, "PolygonTest", parameters, false);
-	
+
 			AbstractPolygonStream polygonStream = AbstractPolygonStream.build(state, streams);
 			Assert.assertTrue(polygonStream.hasNextPolygon());
-			
+
 			polygon2 = polygonStream.getNextPolygon();
 			Assert.assertNotNull(polygon2);
 		}
 	}
-	
+
 	@Test
 	void testObjectMethods() {
-		
+
 		Assert.assertEquals(polygon1, polygon2);
 		Assert.assertTrue(polygon2.hashCode() == polygon1.hashCode());
 		Assert.assertTrue(polygon1.compareTo(polygon2) == 0);
-		
+
 		Assert.assertEquals(Long.valueOf(polygon1.getFeatureId()).toString(), polygon1.toString());
 		Assert.assertEquals(Long.valueOf(polygon1.getFeatureId()).toString(), polygon1.toDetailedString());
 	}

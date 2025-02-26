@@ -58,15 +58,17 @@ class HcsvSingleLayerMultipleSp0sRuntimeStructureTest {
 
 		{
 			var polygonStream = new ByteArrayInputStream(
-					Files.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_POLY_FIP.csv")));
+					Files.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_POLY_FIP.csv"))
+			);
 			var layersStream = new ByteArrayInputStream(
-					Files.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_LAYER_FIP.csv")));
+					Files.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_LAYER_FIP.csv"))
+			);
 			inputStreams.put(ParameterNames.HCSV_POLYGON_INPUT_DATA, polygonStream);
 			inputStreams.put(ParameterNames.HCSV_LAYERS_INPUT_DATA, layersStream);
 		}
 
 		String projectionId = ProjectionService.buildId(ProjectionRequestKind.HCSV);
-		
+
 		var parameters = new Parameters().ageStart(100).ageEnd(400);
 		var context = new ProjectionContext(ProjectionRequestKind.HCSV, projectionId, parameters, false);
 
@@ -98,18 +100,17 @@ class HcsvSingleLayerMultipleSp0sRuntimeStructureTest {
 		Assert.assertEquals(ProjectionTypeCode.PRIMARY, layer.getVdyp7LayerCode());
 
 		Assert.assertEquals(2, layer.getSiteSpecies().size());
-		
-		
+
 		Stand stand0 = layer.getSp0sAsSupplied().get(0);
 		SiteSpecies siteSpecies0 = layer.getSiteSpecies().get(0);
 		Assert.assertEquals(stand0.getSp0Code(), siteSpecies0.getStand().getSp0Code());
 		Assert.assertTrue(0 == stand0.getStandIndex());
-		
+
 		Assert.assertTrue(60 == siteSpecies0.getTotalSpeciesPercent());
 		Assert.assertTrue(siteSpecies0.getHasSiteInfo());
 		Assert.assertFalse(siteSpecies0.getHasBeenCombined());
 		Assert.assertEquals(stand0, siteSpecies0.getStand());
-		
+
 		Assert.assertEquals(1, stand0.getSpecies().size());
 		Species sp64_0_0 = stand0.getSpecies().get(0);
 		Assert.assertEquals(stand0, sp64_0_0.getStand());
@@ -149,12 +150,12 @@ class HcsvSingleLayerMultipleSp0sRuntimeStructureTest {
 		SiteSpecies siteSpecies1 = layer.getSiteSpecies().get(1);
 		Assert.assertEquals(stand1.getSp0Code(), siteSpecies1.getStand().getSp0Code());
 		Assert.assertTrue(1 == stand1.getStandIndex());
-		
+
 		Assert.assertTrue(40 == siteSpecies1.getTotalSpeciesPercent());
 		Assert.assertFalse(siteSpecies1.getHasSiteInfo());
 		Assert.assertFalse(siteSpecies1.getHasBeenCombined());
 		Assert.assertEquals(stand1, siteSpecies1.getStand());
-	
+
 		Assert.assertEquals(1, stand1.getSpecies().size());
 		Species sp64_1_0 = stand1.getSpecies().get(0);
 		Assert.assertEquals(stand1, sp64_1_0.getStand());
@@ -189,8 +190,7 @@ class HcsvSingleLayerMultipleSp0sRuntimeStructureTest {
 		Assert.assertNull(sp64_1_0.getSuppliedTotalAge());
 		Assert.assertNull(sp64_1_0.getTotalAge());
 		Assert.assertNull(sp64_1_0.getYearsToBreastHeight());
-	
-		
+
 		Assert.assertFalse(polygonStream.hasNextPolygon());
 	}
 }

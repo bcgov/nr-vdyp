@@ -19,31 +19,32 @@ import ca.bc.gov.nrs.vdyp.backend.projection.input.AbstractPolygonStream;
 import ca.bc.gov.nrs.vdyp.backend.utils.FileHelper;
 
 public class PolygonSelectLayerWhenNoLayersTest {
-	
+
 	private Polygon polygon;
-	
+
 	@BeforeEach
 	void beforeEach() throws IOException, PolygonValidationException, ProjectionRequestValidationException {
 		var parameters = new Parameters().ageStart(10).ageEnd(20);
 
 		var streams = new HashMap<String, InputStream>();
-		var polygonStreamFile = FileHelper.getStubResourceFile("VDYP7_INPUT_POLY.csv");
+		var polygonStreamFile = FileHelper
+				.getStubResourceFile(FileHelper.HCSV, FileHelper.VDYP_240, "VDYP7_INPUT_POLY.csv");
 
-		streams.put(ParameterNames.HCSV_POLYGON_INPUT_DATA, polygonStreamFile);	
-		streams.put(ParameterNames.HCSV_LAYERS_INPUT_DATA, new ByteArrayInputStream(new byte[0]));	
-		
+		streams.put(ParameterNames.HCSV_POLYGON_INPUT_DATA, polygonStreamFile);
+		streams.put(ParameterNames.HCSV_LAYERS_INPUT_DATA, new ByteArrayInputStream(new byte[0]));
+
 		var state = new ProjectionContext(ProjectionRequestKind.HCSV, "PolygonTest", parameters, false);
 
 		AbstractPolygonStream polygonStream = AbstractPolygonStream.build(state, streams);
 		Assert.assertTrue(polygonStream.hasNextPolygon());
-		
+
 		polygon = polygonStream.getNextPolygon();
 		Assert.assertNotNull(polygon);
 	}
-	
+
 	@Test
 	void testSelectLayerWhenParameterNull() throws IOException {
-		
+
 		try {
 			polygon.findSpecificLayer(null);
 			Assert.fail();
@@ -53,7 +54,7 @@ public class PolygonSelectLayerWhenNoLayersTest {
 			Assert.fail();
 		}
 	}
-	
+
 	@Test
 	void testSelectSpanningLayer() {
 		try {
@@ -63,7 +64,7 @@ public class PolygonSelectLayerWhenNoLayersTest {
 			Assert.fail();
 		}
 	}
-	
+
 	@Test
 	void testSelectPrimaryLayer() {
 		try {
@@ -73,7 +74,7 @@ public class PolygonSelectLayerWhenNoLayersTest {
 			Assert.fail();
 		}
 	}
-	
+
 	@Test
 	void testSelectNamedLayer() {
 		try {

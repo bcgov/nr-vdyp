@@ -528,7 +528,7 @@ public class HcsvPolygonRecordBean {
 	/**
 	 * Perform adjustments and checks once the record is initialized from the data in the CSV. This method combines the
 	 * logic of lcl_CopyPolygonDataIntoSnapshot and DefPoly_DefinePolygonToVDYP7.
-	 * 
+	 *
 	 * @return completed record
 	 * @throws PolygonValidationException
 	 */
@@ -563,7 +563,7 @@ public class HcsvPolygonRecordBean {
 				bean.inventoryStandardCode = InventoryStandardCode.F.toString();
 			}
 
-			// SHRUB_HEIGHT is not transferred from the CSV to the layer snapshot in VDYP7. Still, we 
+			// SHRUB_HEIGHT is not transferred from the CSV to the layer snapshot in VDYP7. Still, we
 			// validate that it's a number.
 			bvh.validateNumber(bean.shrubHeight, n -> Double.valueOf(n), "Shrub Height");
 			// SHRUB_PATTERN is not transferred from the CSV to the layer snapshot in VDYP7. No validation

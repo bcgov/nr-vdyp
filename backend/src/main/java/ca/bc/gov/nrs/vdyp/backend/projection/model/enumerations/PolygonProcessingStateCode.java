@@ -25,9 +25,9 @@ public enum PolygonProcessingStateCode {
 	 * The polygon has been projected to a specified year.
 	 */
 	PROJECTED,
-	
+
 	/**
-	 * Some processing error has occurred placing the polygon in an unrecoverable state. 
+	 * Some processing error has occurred placing the polygon in an unrecoverable state.
 	 */
 	ERROR
 }

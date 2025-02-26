@@ -163,7 +163,7 @@ public class Species implements Comparable<Species> {
 
 	/**
 	 * Adjust the percentage of the species (and the duplicate within the species) by the given amount.
-	 * 
+	 *
 	 * @param adjustment       the adjustment amount, possibly negative.
 	 * @param duplicationIndex the duplication index to adjust. If the species has no duplicates, supply 0.
 	 */
@@ -247,7 +247,7 @@ public class Species implements Comparable<Species> {
 	 * <code>SpeciesDetails</code> instance. Note that SpeciesDetail does not contain a full set of Site information -
 	 * only age and dominant height, and then only for certain species of a layer. Fields that are <code>other</code> in
 	 * either are considered equivalent.
-	 * 
+	 *
 	 * @param other the SpeciesDetails object to compare against
 	 * @return as described
 	 * @see SpeciesDetails
@@ -261,7 +261,7 @@ public class Species implements Comparable<Species> {
 	/**
 	 * Determine if the Site information for this species is equivalent to that of <code>other</code>. Fields that are
 	 * <code>other</code> in either are considered equivalent.
-	 * 
+	 *
 	 * @param other the Species object to compare against
 	 * @return as described
 	 */
@@ -281,7 +281,7 @@ public class Species implements Comparable<Species> {
 
 	/**
 	 * A duplicate of an existing species (sp64) has been supplied for a stand. Merge the duplicate into this species.
-	 * 
+	 *
 	 * @param duplicate
 	 */
 	public void addDuplicate(Species duplicate) {
@@ -317,7 +317,7 @@ public class Species implements Comparable<Species> {
 	/**
 	 * A new species has been added to the Stand of which this Species is a Species Group. Update this Species (Group)
 	 * to reflect this.
-	 * 
+	 *
 	 * @param sp64 the sp64 added.
 	 */
 	public void updateAfterSp64Added(Species sp64) {
@@ -343,7 +343,7 @@ public class Species implements Comparable<Species> {
 
 	/**
 	 * V7Int_FillInSpeciesComponent
-	 * 
+	 *
 	 * This species has been added to a layer (and polygon.) Infer the values of undefined fields from the context,
 	 * where possible.
 	 */
@@ -558,7 +558,7 @@ public class Species implements Comparable<Species> {
 
 	/**
 	 * Compute Dominant Height given an Age and Site Index.
-	 * 
+	 *
 	 * <p>
 	 * This routine is a wrapper to the SiteTool library that adds some additional business logic around computing
 	 * height taking advantage of some information available to it that is not available in the SiteTool library.
@@ -575,7 +575,7 @@ public class Species implements Comparable<Species> {
 	 * <li>set per Hectare yields to null
 	 * <li>issue an appropriate warning message
 	 * </ul>
-	 * 
+	 *
 	 * @return the calculated Dominant Height and null if the height could not be computed.
 	 */
 	private Double totalAgeAndSiteIndexToDominantHeight() {
@@ -600,8 +600,7 @@ public class Species implements Comparable<Species> {
 			ValidationMessage message = new ValidationMessage(
 					ValidationMessageKind.LOW_SITE_INDEX_ERROR, polygon, layer.getLayerId(), siteIndex, this
 			);
-			polygon.getDefinitionMessages()
-					.add(new PolygonMessage.Builder().layer(layer).message(message).build());
+			polygon.getDefinitionMessages().add(new PolygonMessage.Builder().layer(layer).message(message).build());
 
 			logger.error(
 					"{}: site Index was too low to compute a Dominant Height. Using value {}...", this, computedHeight
@@ -661,8 +660,7 @@ public class Species implements Comparable<Species> {
 				ValidationMessage message = new ValidationMessage(
 						ValidationMessageKind.LOW_SITE_INDEX_WARNING, polygon, layer.getLayerId(), siteIndex, this
 				);
-				polygon.getDefinitionMessages()
-						.add(new PolygonMessage.Builder().layer(layer).message(message).build());
+				polygon.getDefinitionMessages().add(new PolygonMessage.Builder().layer(layer).message(message).build());
 
 			}
 		} catch (CommonCalculatorException e) {
@@ -704,8 +702,7 @@ public class Species implements Comparable<Species> {
 				ValidationMessage message = new ValidationMessage(
 						ValidationMessageKind.LOW_SITE_INDEX_ERROR, polygon, layer.getLayerId(), siteIndex, this
 				);
-				polygon.getDefinitionMessages()
-						.add(new PolygonMessage.Builder().layer(layer).message(message).build());
+				polygon.getDefinitionMessages().add(new PolygonMessage.Builder().layer(layer).message(message).build());
 
 				computedSiteIndex = null;
 			}

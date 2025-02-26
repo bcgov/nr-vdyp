@@ -29,7 +29,7 @@ import ca.bc.gov.nrs.vdyp.si32.vdyp.SpeciesTable;
 public class HcsvLayerRecordBean {
 
 	private static final Logger logger = LoggerFactory.getLogger(HcsvLayerRecordBean.class);
-	
+
 	public static CsvToBean<HcsvLayerRecordBean> createHcsvLayerStream(InputStream layersCsvStream) {
 		return new CsvToBeanBuilder<HcsvLayerRecordBean>(new BufferedReader(new InputStreamReader(layersCsvStream))) //
 				.withSeparator(',') //
@@ -39,193 +39,193 @@ public class HcsvLayerRecordBean {
 				.build();
 	}
 
-	// { "LAYER_FEATURE_ID",               csvFldType_CHAR,   38, 0, "", TRUE },
-    @PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	// { "LAYER_FEATURE_ID", csvFldType_CHAR, 38, 0, "", TRUE },
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 0)
 	private String featureId;
 
-	// { "TREE_COVER_ID",                  csvFldType_CHAR,   38, 0, "", TRUE },
-    @PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	// { "TREE_COVER_ID", csvFldType_CHAR, 38, 0, "", TRUE },
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 1)
 	private String treeCoverId;
 
-	// { "LAYER_MAP_ID",                   csvFldType_CHAR,    9, 0, "", TRUE },
-    @PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	// { "LAYER_MAP_ID", csvFldType_CHAR, 9, 0, "", TRUE },
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 2)
 	private String layerMapId;
 
-	// { "LAYER_POLYGON_NO",               csvFldType_LONG,   10, 0, "", TRUE },
-    @PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	// { "LAYER_POLYGON_NO", csvFldType_LONG, 10, 0, "", TRUE },
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 3)
 	private String polygonNumber;
-	
-	// { "LAYER_LEVEL_CD",                 csvFldType_CHAR,    1, 0, "", TRUE },
-    @PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+
+	// { "LAYER_LEVEL_CD", csvFldType_CHAR, 1, 0, "", TRUE },
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 4)
 	private String layerId;
 
-	// { "VDYP7_LAYER_LEVEL_CD",           csvFldType_CHAR,    1, 0, "", TRUE },
-    @PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	// { "VDYP7_LAYER_LEVEL_CD", csvFldType_CHAR, 1, 0, "", TRUE },
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 5)
 	private String targetVdyp7LayerCode;
 
-	// { "LAYER_STOCKABILITY",             csvFldType_SINGLE,  5, 1, "", TRUE },
-    @PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	// { "LAYER_STOCKABILITY", csvFldType_SINGLE, 5, 1, "", TRUE },
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 6)
 	private String layerStockability;
 
-	// { "LAYER_RANK_CD",                  csvFldType_CHAR,   38, 0, "", TRUE },
-    @PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	// { "LAYER_RANK_CD", csvFldType_CHAR, 38, 0, "", TRUE },
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 7)
 	private String forestCoverRankCode;
 
-	// { "NON_FOREST_DESCRIPTOR",          csvFldType_CHAR,   10, 0, "", TRUE },
-    @PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	// { "NON_FOREST_DESCRIPTOR", csvFldType_CHAR, 10, 0, "", TRUE },
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 8)
 	private String nonForestDescriptorCode;
 
-	// { "EST_SITE_INDEX_SPECIES_CD",      csvFldType_CHAR,   10, 0, "", TRUE },
-    @PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	// { "EST_SITE_INDEX_SPECIES_CD", csvFldType_CHAR, 10, 0, "", TRUE },
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 9)
 	private String estimatedSiteIndexSpeciesCode;
 
-	// { "EST_SITE_INDEX",                 csvFldType_SINGLE,  5, 1, "", TRUE },
-    @PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	// { "EST_SITE_INDEX", csvFldType_SINGLE, 5, 1, "", TRUE },
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 10)
 	private String estimatedSiteIndex;
 
-	// { "CROWN_CLOSURE",                  csvFldType_SHORT,   3, 0, "", TRUE },
-    @PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	// { "CROWN_CLOSURE", csvFldType_SHORT, 3, 0, "", TRUE },
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 11)
 	private String crownClosure;
 
-	// { "BASAL_AREA",                     csvFldType_SINGLE, 10, 6, "", TRUE },
-    @PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	// { "BASAL_AREA", csvFldType_SINGLE, 10, 6, "", TRUE },
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 12)
 	private String basalArea;
 
-	// { "STEMS_PER_HA",                   csvFldType_SINGLE,  8, 0, "", TRUE },
-    @PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	// { "STEMS_PER_HA", csvFldType_SINGLE, 8, 0, "", TRUE },
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 13)
 	private String stemsPerHectare;
 
-	// { "SPECIES_CD_1",                   csvFldType_CHAR,   10, 0, "", TRUE },
-    @PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	// { "SPECIES_CD_1", csvFldType_CHAR, 10, 0, "", TRUE },
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 14)
 	private String speciesCode1;
 
-	// { "SPECIES_PCT_1",                  csvFldType_SINGLE,  5, 2, "", TRUE },
-    @PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	// { "SPECIES_PCT_1", csvFldType_SINGLE, 5, 2, "", TRUE },
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 15)
 	private String speciesPercent1;
 
-	// { "SPECIES_CD_2",                   csvFldType_CHAR,   10, 0, "", TRUE },
-    @PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	// { "SPECIES_CD_2", csvFldType_CHAR, 10, 0, "", TRUE },
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 16)
 	private String speciesCode2;
 
-	// { "SPECIES_PCT_2",                  csvFldType_SINGLE,  5, 2, "", TRUE },
-    @PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	// { "SPECIES_PCT_2", csvFldType_SINGLE, 5, 2, "", TRUE },
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 17)
 	private String speciesPercent2;
 
-	// { "SPECIES_CD_3",                   csvFldType_CHAR,   10, 0, "", TRUE },
-    @PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	// { "SPECIES_CD_3", csvFldType_CHAR, 10, 0, "", TRUE },
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 18)
 	private String speciesCode3;
 
-	// { "SPECIES_PCT_3",                  csvFldType_SINGLE,  5, 2, "", TRUE },
-    @PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	// { "SPECIES_PCT_3", csvFldType_SINGLE, 5, 2, "", TRUE },
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 19)
 	private String speciesPercent3;
 
-	// { "SPECIES_CD_4",                   csvFldType_CHAR,   10, 0, "", TRUE },
-    @PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	// { "SPECIES_CD_4", csvFldType_CHAR, 10, 0, "", TRUE },
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 20)
 	private String speciesCode4;
 
-	// { "SPECIES_PCT_4",                  csvFldType_SINGLE,  5, 2, "", TRUE },
-    @PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	// { "SPECIES_PCT_4", csvFldType_SINGLE, 5, 2, "", TRUE },
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 21)
 	private String speciesPercent4;
 
-	// { "SPECIES_CD_5",                   csvFldType_CHAR,   10, 0, "", TRUE },
-    @PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	// { "SPECIES_CD_5", csvFldType_CHAR, 10, 0, "", TRUE },
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 22)
 	private String speciesCode5;
 
-	// { "SPECIES_PCT_5",                  csvFldType_SINGLE,  5, 2, "", TRUE },
-    @PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	// { "SPECIES_PCT_5", csvFldType_SINGLE, 5, 2, "", TRUE },
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 23)
 	private String speciesPercent5;
 
-	// { "SPECIES_CD_6",                   csvFldType_CHAR,   10, 0, "", TRUE },
-    @PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	// { "SPECIES_CD_6", csvFldType_CHAR, 10, 0, "", TRUE },
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 24)
 	private String speciesCode6;
 
-	// { "SPECIES_PCT_6",                  csvFldType_SINGLE,  5, 2, "", TRUE },
-    @PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	// { "SPECIES_PCT_6", csvFldType_SINGLE, 5, 2, "", TRUE },
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 25)
 	private String speciesPercent6;
 
-	// { "EST_AGE_SPP1",                   csvFldType_SHORT,   4, 0, "", TRUE },
-    @PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	// { "EST_AGE_SPP1", csvFldType_SHORT, 4, 0, "", TRUE },
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 26)
 	private String estimatedAgeSpp1;
 
-	// { "EST_HEIGHT_SPP1",                csvFldType_SINGLE,  5, 1, "", TRUE },
-    @PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	// { "EST_HEIGHT_SPP1", csvFldType_SINGLE, 5, 1, "", TRUE },
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 27)
 	private String estimatedHeightSpp1;
 
-	// { "EST_AGE_SPP2",                   csvFldType_SHORT,   4, 0, "", TRUE },
-    @PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	// { "EST_AGE_SPP2", csvFldType_SHORT, 4, 0, "", TRUE },
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 28)
 	private String estimatedAgeSpp2;
 
-	// { "EST_HEIGHT_SPP2",                csvFldType_SINGLE,  5, 1, "", TRUE },
-    @PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	// { "EST_HEIGHT_SPP2", csvFldType_SINGLE, 5, 1, "", TRUE },
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 29)
 	private String estimatedHeightSpp2;
 
-	// { "ADJUSTMENT_IND",                 csvFldType_CHAR,    1, 0, "", TRUE },
-    @PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	// { "ADJUSTMENT_IND", csvFldType_CHAR, 1, 0, "", TRUE },
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 30)
 	private String adjustmentIndicatorInd;
 
-	// { "ADJ_LOREY_HEIGHT",               csvFldType_SINGLE,  9, 5, "", TRUE },
-    @PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	// { "ADJ_LOREY_HEIGHT", csvFldType_SINGLE, 9, 5, "", TRUE },
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 31)
 	private String loreyHeight75Adjustment;
 
-	// { "ADJ_BASAL_AREA_125",             csvFldType_SINGLE, 10, 6, "", TRUE },
-    @PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	// { "ADJ_BASAL_AREA_125", csvFldType_SINGLE, 10, 6, "", TRUE },
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 32)
 	private String basalArea125Adjustment;
-	
-	// { "ADJ_VOL_PER_HA_75",              csvFldType_SINGLE,  9, 5, "", TRUE },
-    @PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+
+	// { "ADJ_VOL_PER_HA_75", csvFldType_SINGLE, 9, 5, "", TRUE },
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 33)
 	private String wholeStemVolumePerHectare75Adjustment;
-	
-	// { "ADJ_VOL_PER_HA_125",             csvFldType_SINGLE,  9, 5, "", TRUE },
-    @PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+
+	// { "ADJ_VOL_PER_HA_125", csvFldType_SINGLE, 9, 5, "", TRUE },
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 34)
 	private String wholeStemVolumePerHectare125Adjustment;
-	
-	// { "ADJ_CLOSE_UTIL_VOL_125",         csvFldType_SINGLE,  9, 5, "", TRUE },
-    @PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+
+	// { "ADJ_CLOSE_UTIL_VOL_125", csvFldType_SINGLE, 9, 5, "", TRUE },
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 35)
 	private String closeUtilizationVolumePerHectare125Adjustment;
-	
-	// { "ADJ_CLOSE_UTIL_DECAY_VOL_125",   csvFldType_SINGLE,  9, 5, "", TRUE },
-    @PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+
+	// { "ADJ_CLOSE_UTIL_DECAY_VOL_125", csvFldType_SINGLE, 9, 5, "", TRUE },
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 36)
 	private String closeUtilizationVolumeLessDecayPerHectare125Adjustment;
-	
-	// { "ADJ_CLOSE_UTIL_WASTE_VOL_125",   csvFldType_SINGLE,  9, 5, "", TRUE } 
-    @PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+
+	// { "ADJ_CLOSE_UTIL_WASTE_VOL_125", csvFldType_SINGLE, 9, 5, "", TRUE }
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 37)
 	private String closeUtilizationVolumeLessDecayAndWastagePerHectare125Adjustment;
 
@@ -290,24 +290,32 @@ public class HcsvLayerRecordBean {
 			int layerSpeciesIndex, String speciesCode, double percent, Short estimatedAge, Double estimatedHeight
 	) {
 	}
-	
-	/** 
-	 * Return the species details supplied for each of the up to 6 species whose details 
-	 * are given in the layer record. The resulting list is ordered species 1, species 2,
-	 * ... , species 6 (including only those that for which a percentage value was supplied.)
-	 * 
+
+	/**
+	 * Return the species details supplied for each of the up to 6 species whose details are given in the layer record.
+	 * The resulting list is ordered species 1, species 2, ... , species 6 (including only those that for which a
+	 * percentage value was supplied.)
+	 *
 	 * @return as described
 	 */
 	public List<SpeciesDetails> getSpeciesDetails() {
 		var details = new ArrayList<SpeciesDetails>();
-		
+
 		if (getSpeciesPercent1() != null) {
 			var speciesCode = getSpeciesCode1();
-			details.add(new SpeciesDetails(1, speciesCode, getSpeciesPercent1(), getEstimatedAgeSpp1(), getEstimatedHeightSpp1()));
+			details.add(
+					new SpeciesDetails(
+							1, speciesCode, getSpeciesPercent1(), getEstimatedAgeSpp1(), getEstimatedHeightSpp1()
+					)
+			);
 		}
 		if (getSpeciesPercent2() != null) {
 			var speciesCode = getSpeciesCode2();
-			details.add(new SpeciesDetails(2, speciesCode, getSpeciesPercent2(), getEstimatedAgeSpp2(), getEstimatedHeightSpp2()));
+			details.add(
+					new SpeciesDetails(
+							2, speciesCode, getSpeciesPercent2(), getEstimatedAgeSpp2(), getEstimatedHeightSpp2()
+					)
+			);
 		}
 		if (getSpeciesPercent3() != null) {
 			var speciesCode = getSpeciesCode3();
@@ -325,7 +333,7 @@ public class HcsvLayerRecordBean {
 			var speciesCode = getSpeciesCode6();
 			details.add(new SpeciesDetails(6, speciesCode, getSpeciesPercent6(), null, null));
 		}
-		
+
 		return details;
 	}
 
@@ -422,14 +430,15 @@ public class HcsvLayerRecordBean {
 	}
 
 	public Double getCloseUtilizationVolumeLessDecayAndWastagePerHectare125Adjustment() {
-		return CsvRecordBeanHelper.parseDoubleAcceptNull(closeUtilizationVolumeLessDecayAndWastagePerHectare125Adjustment);
+		return CsvRecordBeanHelper
+				.parseDoubleAcceptNull(closeUtilizationVolumeLessDecayAndWastagePerHectare125Adjustment);
 	}
 
 	/**
-	 * Perform adjustments and checks once the record is initialized from the data in the CSV. The
-	 * validation checks are limited to those of lcl_CopyLayerDataIntoSnapshot and 
-	 * DefPoly_DefineLayerToVDYP7 that evaluate the Layer independently of context.
-	 * 
+	 * Perform adjustments and checks once the record is initialized from the data in the CSV. The validation checks are
+	 * limited to those of lcl_CopyLayerDataIntoSnapshot and DefPoly_DefineLayerToVDYP7 that evaluate the Layer
+	 * independently of context.
+	 *
 	 * @return completed record
 	 * @throws PolygonValidationException
 	 */
@@ -451,48 +460,70 @@ public class HcsvLayerRecordBean {
 			if (bean.layerId == null) {
 				bvh.addValidationMessage(ValidationMessageKind.MISSING_LAYER_CODE, bean.layerId);
 			}
-			
+
 			// V7Ext_AddLayer 2613
-			bvh.validateEnumeration(bean.targetVdyp7LayerCode, t -> ProjectionTypeCode.fromSpecialLayerTypeText(t), "Target VDYP7 Layer Code");
-			
+			bvh.validateEnumeration(
+					bean.targetVdyp7LayerCode, t -> ProjectionTypeCode.fromSpecialLayerTypeText(t),
+					"Target VDYP7 Layer Code"
+			);
+
 			bvh.validateNumber(bean.featureId, n -> Long.parseLong(n), "Feature Id");
 			bvh.validateNumber(bean.polygonNumber, n -> Long.parseLong(n), "Polygon Number");
 
 			// TREE_COVER_ID is not transferred from the CSV to the layer snapshot in VDYP7
 			// LAYER_MAP_ID is not transferred from the CSV to the layer snapshot in VDYP7
 			// LAYER_POLYGON_NO is not transferred from the CSV to the layer snapshot in VDYP7
-			
+
 			// V7Ext_AddLayer, 2637
-			bvh.validateRange(bean.layerStockability, n -> Double.parseDouble(n), n -> Double.parseDouble(n), 0d, 100d, "Layer Stockability");
-			
+			bvh.validateRange(
+					bean.layerStockability, n -> Double.parseDouble(n), n -> Double.parseDouble(n), 0d, 100d,
+					"Layer Stockability"
+			);
+
 			// lcl_CopyLayerDataIntoSnapshot, 4526
 			bean.layerId = bvh.truncateString(bean.layerId, Vdyp7Constants.MAX_LEN_LAYER_ID);
 
 			// lcl_CopyLayerDataIntoSnapshot, 4604
-			bean.forestCoverRankCode = bvh.truncateString(bean.forestCoverRankCode, Vdyp7Constants.MAX_FOREST_COVER_RANK_CODE_LEN);
-			
+			bean.forestCoverRankCode = bvh
+					.truncateString(bean.forestCoverRankCode, Vdyp7Constants.MAX_FOREST_COVER_RANK_CODE_LEN);
+
 			// lcl_CopyLayerDataIntoSnapshot, 4610
-			bean.nonForestDescriptorCode = bvh.truncateString(bean.nonForestDescriptorCode, Vdyp7Constants.MAX_NON_FOREST_DESCRIPTOR_CODE_LEN);
+			bean.nonForestDescriptorCode = bvh
+					.truncateString(bean.nonForestDescriptorCode, Vdyp7Constants.MAX_NON_FOREST_DESCRIPTOR_CODE_LEN);
 
 			// lcl_CopyLayerDataIntoSnapshot, 4616
-			bean.estimatedSiteIndexSpeciesCode = bvh.truncateString(bean.estimatedSiteIndexSpeciesCode, Vdyp7Constants.MAX_LEN_ESTIMATED_SITE_INDEX_SPECIES_CODE);
+			bean.estimatedSiteIndexSpeciesCode = bvh.truncateString(
+					bean.estimatedSiteIndexSpeciesCode, Vdyp7Constants.MAX_LEN_ESTIMATED_SITE_INDEX_SPECIES_CODE
+			);
 
 			// V7Ext_AddLayer, 2658
-			bvh.validateRange(bean.estimatedSiteIndex, n -> Double.parseDouble(n), n -> Double.parseDouble(n), 0d, Double.MAX_VALUE, "Estimated Site Index");
-			
+			bvh.validateRange(
+					bean.estimatedSiteIndex, n -> Double.parseDouble(n), n -> Double.parseDouble(n), 0d,
+					Double.MAX_VALUE, "Estimated Site Index"
+			);
+
 			// V7Ext_AddLayer, 2637
-			bvh.validateRange(bean.crownClosure, n -> Short.parseShort(n), n -> Short.parseShort(n), (short)0, (short)100, "Crown Closure");
-			
+			bvh.validateRange(
+					bean.crownClosure, n -> Short.parseShort(n), n -> Short.parseShort(n), (short) 0, (short) 100,
+					"Crown Closure"
+			);
+
 			// V7Ext_AddLayer, 2644
-			bvh.validateRange(bean.basalArea, n -> Double.parseDouble(n), n -> Double.parseDouble(n), 0d, Double.MAX_VALUE, "Basal Area");
+			bvh.validateRange(
+					bean.basalArea, n -> Double.parseDouble(n), n -> Double.parseDouble(n), 0d, Double.MAX_VALUE,
+					"Basal Area"
+			);
 			// V7Ext_AddLayer, 2851
 			bean.basalArea = BeanValidatorHelper.round(bean.basalArea, 5);
-			
+
 			// V7Ext_AddLayer, 2651
-			bvh.validateRange(bean.stemsPerHectare, n -> Double.parseDouble(n), n -> Double.parseDouble(n), 0d, Double.MAX_VALUE, "Stems per Hectare");
+			bvh.validateRange(
+					bean.stemsPerHectare, n -> Double.parseDouble(n), n -> Double.parseDouble(n), 0d, Double.MAX_VALUE,
+					"Stems per Hectare"
+			);
 			// V7Ext_AddLayer, 2852
 			bean.stemsPerHectare = BeanValidatorHelper.round(bean.stemsPerHectare, 2);
-			
+
 			// V7Ext_AddLayer, 2672
 			if (bean.targetVdyp7LayerCode == null) {
 				if (SpecialLayerTypeCode.doesLayerIdIdentifyASpecialLayerType(bean.layerId)) {
@@ -500,17 +531,19 @@ public class HcsvLayerRecordBean {
 					bean.targetVdyp7LayerCode = ProjectionTypeCode.fromSpecialLayerType(layerType).name();
 				}
 			}
-			
+
 			// V7Ext_AddLayer, 2698
 			if (bean.estimatedSiteIndexSpeciesCode != null) {
 				int speciesIndex = SiteTool.getSpeciesIndex(bean.estimatedSiteIndexSpeciesCode);
 				if (speciesIndex == SpeciesTable.UNKNOWN_ENTRY_INDEX) {
-					bvh.addValidationMessage(ValidationMessageKind.UNRECOGNIZED_SPECIES, bean.layerId, bean.estimatedSiteIndexSpeciesCode);
+					bvh.addValidationMessage(
+							ValidationMessageKind.UNRECOGNIZED_SPECIES, bean.layerId, bean.estimatedSiteIndexSpeciesCode
+					);
 				}
 			}
-			
+
 			// V7Ext_AddSpeciesComponent, line 4022
-			
+
 			bvh.validateNumber(bean.speciesPercent1, n -> Double.parseDouble(n), "Species Percent 1");
 			bean.speciesPercent1 = BeanValidatorHelper.round(bean.speciesPercent1, 1);
 			bvh.validateNumber(bean.speciesPercent2, n -> Double.parseDouble(n), "Species Percent 2");
@@ -523,42 +556,65 @@ public class HcsvLayerRecordBean {
 			bean.speciesPercent5 = BeanValidatorHelper.round(bean.speciesPercent5, 1);
 			bvh.validateNumber(bean.speciesPercent6, n -> Double.parseDouble(n), "Species Percent 6");
 			bean.speciesPercent6 = BeanValidatorHelper.round(bean.speciesPercent6, 1);
-			
+
 			double highestSpeciesPercentageSeen = Double.POSITIVE_INFINITY;
-			for (var sd: bean.getSpeciesDetails()) {
+			for (var sd : bean.getSpeciesDetails()) {
 				if (sd.speciesCode() == null) {
 					// V7Ext_AddSpecies, line 3677
-					bvh.addValidationMessage(ValidationMessageKind.MISSING_SPECIES_NAME, bean.layerId, sd.layerSpeciesIndex);
+					bvh.addValidationMessage(
+							ValidationMessageKind.MISSING_SPECIES_NAME, bean.layerId, sd.layerSpeciesIndex
+					);
 				}
-				
+
 				// Ensure that the species are supplied in descending order of percentage - that is,
 				// the more common species precede the less common species.
 				if (sd.percent > highestSpeciesPercentageSeen) {
-					bvh.addValidationMessage(ValidationMessageKind.PERCENTAGES_INCREASING, bean.layerId, sd.layerSpeciesIndex, sd.percent);
+					bvh.addValidationMessage(
+							ValidationMessageKind.PERCENTAGES_INCREASING, bean.layerId, sd.layerSpeciesIndex, sd.percent
+					);
 				}
-				
+
 				// V7Ext_AddSpecies, line 3683
 				bvh.validateRange(sd.percent, 0.0, 100.0, "Species Code " + sd.layerSpeciesIndex);
 				highestSpeciesPercentageSeen = sd.percent;
 				// V7Ext_AddSpecies, line 3689
-				bvh.validateRange(sd.estimatedAge, (short)0, (short)2000, "Estimated Age " + sd.layerSpeciesIndex);
+				bvh.validateRange(sd.estimatedAge, (short) 0, (short) 2000, "Estimated Age " + sd.layerSpeciesIndex);
 				// V7Ext_AddSpecies, line 3695
 				bvh.validateRange(sd.estimatedHeight, 0.0, 150.0, "Estimated Height " + sd.layerSpeciesIndex);
 
 				// All other Species fields are uninitialized in HCSV input.
 			}
-			
+
 			bvh.validateNumber(bean.estimatedAgeSpp1, n -> Short.parseShort(n), "Estimated Age Spp 1");
 			bvh.validateNumber(bean.estimatedHeightSpp1, n -> Double.parseDouble(n), "Estimated Height Spp 1");
 			bvh.validateNumber(bean.estimatedAgeSpp2, n -> Short.parseShort(n), "Estimated Age Spp 2");
 			bvh.validateNumber(bean.estimatedHeightSpp2, n -> Double.parseDouble(n), "Estimated Height Spp 2");
-			bvh.validateNumber(bean.loreyHeight75Adjustment, n -> Double.parseDouble(n), "Lorey Height 7.5cm+ Adjustment");
-			bvh.validateNumber(bean.basalArea125Adjustment, n -> Double.parseDouble(n), "Basal Area 12.5cm+ Adjustment");
-			bvh.validateNumber(bean.wholeStemVolumePerHectare75Adjustment, n -> Double.parseDouble(n), "Whole Stem Volume 7.5cm+ Adjustment");
-			bvh.validateNumber(bean.closeUtilizationVolumePerHectare125Adjustment, n -> Double.parseDouble(n), "Close Utilization 12.5cm+ Adjustment");
-			bvh.validateNumber(bean.closeUtilizationVolumeLessDecayPerHectare125Adjustment, n -> Double.parseDouble(n), "Close Utilization Volume Less Decay 12.5cm+ Adjustment");
-			bvh.validateNumber(bean.closeUtilizationVolumeLessDecayAndWastagePerHectare125Adjustment, n -> Double.parseDouble(n), "Close Utilization Volume Less Decay and Wastage 12.5cm+ Adjustment");
-			bvh.validateNumber(bean.wholeStemVolumePerHectare125Adjustment, n -> Double.parseDouble(n), "Whole Stem Volume 12.5cm+ Adjustment");
+			bvh.validateNumber(
+					bean.loreyHeight75Adjustment, n -> Double.parseDouble(n), "Lorey Height 7.5cm+ Adjustment"
+			);
+			bvh.validateNumber(
+					bean.basalArea125Adjustment, n -> Double.parseDouble(n), "Basal Area 12.5cm+ Adjustment"
+			);
+			bvh.validateNumber(
+					bean.wholeStemVolumePerHectare75Adjustment, n -> Double.parseDouble(n),
+					"Whole Stem Volume 7.5cm+ Adjustment"
+			);
+			bvh.validateNumber(
+					bean.closeUtilizationVolumePerHectare125Adjustment, n -> Double.parseDouble(n),
+					"Close Utilization 12.5cm+ Adjustment"
+			);
+			bvh.validateNumber(
+					bean.closeUtilizationVolumeLessDecayPerHectare125Adjustment, n -> Double.parseDouble(n),
+					"Close Utilization Volume Less Decay 12.5cm+ Adjustment"
+			);
+			bvh.validateNumber(
+					bean.closeUtilizationVolumeLessDecayAndWastagePerHectare125Adjustment, n -> Double.parseDouble(n),
+					"Close Utilization Volume Less Decay and Wastage 12.5cm+ Adjustment"
+			);
+			bvh.validateNumber(
+					bean.wholeStemVolumePerHectare125Adjustment, n -> Double.parseDouble(n),
+					"Whole Stem Volume 12.5cm+ Adjustment"
+			);
 
 			// Now, throw if there's been any validation errors.
 

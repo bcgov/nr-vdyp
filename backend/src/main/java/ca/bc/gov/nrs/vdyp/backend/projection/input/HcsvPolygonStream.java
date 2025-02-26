@@ -72,7 +72,7 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 		} finally {
 			advanceToNextPolygon();
 		}
-		
+
 		return polygon;
 	}
 
@@ -165,14 +165,14 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 						.rank(nextLayerRecord.getForestCoverRankCode())
 						.nonForestDesc(nextLayerRecord.getNonForestDescriptorCode())
 						.processedAsVDYP7Layer(nextLayerRecord.getTargetVdyp7LayerCode()).build();
-	
+
 				polygonReportingInfo.getLayers().put(layerReportingInfo.getLayerID(), layerReportingInfo);
-	
+
 				// Note that HCSV contains no history information (lcl_CopyHistoryDataIntoSnapshot)
 				var history = new History.Builder().build();
-	
+
 				var stands = new ArrayList<Stand>();
-	
+
 				Layer layer = new Layer.Builder() //
 						.polygon(polygon) //
 						.assignedProjectionType(ProjectionTypeCode.UNKNOWN) //
@@ -190,11 +190,11 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 						.species(stands) //
 						.history(history) //
 						.build();
-	
+
 				addLayerToPolygon(polygon, layer);
-	
+
 				buildStandsAndSpecies(polygon, layer);
-				
+
 			} finally {
 				advanceToNextLayer();
 			}
@@ -211,9 +211,9 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 	 * <code>V7Ext_AddLayer</code>
 	 * <p>
 	 * Add the given Layer (containing stand information) to the given Polygon.
-     * 
+	 *
 	 * @param polygon as described
-	 * @param layer as described
+	 * @param layer   as described
 	 * @throws PolygonValidationException
 	 */
 	private void addLayerToPolygon(Polygon polygon, Layer layer) throws PolygonValidationException {
@@ -409,14 +409,13 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 	 * <code>V7Ext_AddSpeciesComponent</code>
 	 * <p>
 	 * Add a Species with the given details to the given layer.
-	 * 
-	 * @param layer the target layer
+	 *
+	 * @param layer       the target layer
 	 * @param sp64Details the details of the species to be added
 	 * @return the resulting Species instance
 	 * @throws PolygonValidationException when the species details contain inaccurate information
 	 */
-	private Species addSpeciesToLayer(Layer layer, SpeciesDetails sp64Details)
-			throws PolygonValidationException {
+	private Species addSpeciesToLayer(Layer layer, SpeciesDetails sp64Details) throws PolygonValidationException {
 
 		Species sp64 = null;
 
@@ -436,7 +435,8 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 			logger.error("{}: species code {} is not recognized", layer, sp64Details.speciesCode());
 
 			var validationMessage = new ValidationMessage(
-					ValidationMessageKind.UNRECOGNIZED_SPECIES, layer.getPolygon(), layer.getLayerId(), sp64Details.speciesCode()
+					ValidationMessageKind.UNRECOGNIZED_SPECIES, layer.getPolygon(), layer.getLayerId(),
+					sp64Details.speciesCode()
 			);
 
 			throw new PolygonValidationException(validationMessage);
@@ -447,7 +447,7 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 		if (stand != null) {
 
 			isNewStand = false;
-			
+
 			for (var possibleDuplicate : stand.getSpecies()) {
 
 				if (possibleDuplicate.getSpeciesCode().equals(sp64Details.speciesCode())) {
@@ -460,8 +460,8 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 									.severity(SeverityCode.WARNING) //
 									.message(
 											new ValidationMessage(
-													ValidationMessageKind.DUPLICATE_SPECIES, layer.getPolygon(), layer.getLayerId(),
-													sp64Details.speciesCode()
+													ValidationMessageKind.DUPLICATE_SPECIES, layer.getPolygon(),
+													layer.getLayerId(), sp64Details.speciesCode()
 											)
 									).build()
 					);
@@ -480,7 +480,8 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 										.message(
 												new ValidationMessage(
 														ValidationMessageKind.INCONSISTENT_SITE_INFO,
-														layer.getPolygon(), layer.getLayerId(), sp64Details.speciesCode()
+														layer.getPolygon(), layer.getLayerId(),
+														sp64Details.speciesCode()
 												)
 										) //
 										.build()
@@ -497,7 +498,7 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 		} else {
 
 			isNewStand = true;
-			
+
 			// This stand is not yet defined and this species is necessarily the
 			// largest percentage sp64 and therefore will be the sp0 for the layer.
 
@@ -517,24 +518,23 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 				.build();
 
 		if (sp64 != null) {
-			
+
 			// The new sp64 is a duplicate of an existing sp64. First, adjust
 			// the existing sp64 to include whatever information from the new
 			// sp64 it doesn't already have, and add the new sp64's percentage
 			// to the total for that sp64.
-			
+
 			sp64.addDuplicate(newSp64);
 		} else {
-			// The new sp64 is new to the layer. 
-			
+			// The new sp64 is new to the layer.
+
 			sp64 = newSp64;
-			
-			// If no stand exists in the layer for this sp0, add one, and make the 
+
+			// If no stand exists in the layer for this sp0, add one, and make the
 			// new species the species group for the stand.
-						
+
 			if (isNewStand) {
-				Species sp0 = new Species.Builder()
-						.stand(stand) //
+				Species sp0 = new Species.Builder().stand(stand) //
 						.speciesCode(speciesCode) //
 						.speciesPercent(0) //
 						.build();

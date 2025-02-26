@@ -182,7 +182,7 @@ public class HelpService {
 		/* cmdLineOpt_INCREMENT */
 		messageList.add(
 				ParameterDetailsMessageBuilder.build(
-						"selectedExecutionOptions.backGrowEnabled", //
+						"ageIncrement", //
 						"Increment", //
 						"<increment value>", //
 						"The number of years to increment the current value for the Age and Year Ranges. Either -9 (not specified) or in the range 1..350.", //

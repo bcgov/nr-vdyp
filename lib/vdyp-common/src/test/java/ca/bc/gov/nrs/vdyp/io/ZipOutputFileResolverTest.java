@@ -29,12 +29,13 @@ class ZipOutputFileResolverTest {
 
 		Path currentRelativePath = Paths.get("");
 		String currentPath = currentRelativePath.toAbsolutePath().toString();
-		
+
 		MatcherAssert.assertThat(resolver.toPath("file"), Matchers.is(Paths.get(currentPath, "file")));
 
 		assertThrows(UnsupportedOperationException.class, () -> resolver.resolveForInput("file"));
 
-		MatcherAssert.assertThat(resolver.toString("file"), Matchers.endsWith(Paths.get(currentPath, "file").toString()));
+		MatcherAssert
+				.assertThat(resolver.toString("file"), Matchers.endsWith(Paths.get(currentPath, "file").toString()));
 
 		for (int i = 0; i < 5; i++) {
 			OutputStream os = resolver.resolveForOutput("file" + i);

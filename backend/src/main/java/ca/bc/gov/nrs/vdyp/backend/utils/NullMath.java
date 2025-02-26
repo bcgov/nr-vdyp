@@ -4,7 +4,7 @@ import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
 
 public class NullMath {
-	
+
 	public static <T extends Number> boolean op(T a, T b, BiFunction<T, T, Boolean> f, T valueIfNull) {
 		if (a == null) {
 			a = valueIfNull;
@@ -34,7 +34,7 @@ public class NullMath {
 		if (a == null && b == null && c == null) {
 			return null;
 		}
-		
+
 		return max(a, max(b, c, maxf, valueIfNull), maxf, valueIfNull);
 	}
 }

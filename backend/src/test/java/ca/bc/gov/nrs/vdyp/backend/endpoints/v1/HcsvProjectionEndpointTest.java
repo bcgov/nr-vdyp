@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.api.helpers.TestHelper;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
+import ca.bc.gov.nrs.vdyp.backend.utils.FileHelper;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.MediaType;
@@ -45,14 +46,13 @@ class HcsvProjectionEndpointTest {
 
 		logger.info("Starting testProjectionHscv_shouldReturnStatusOK");
 
-		Path resourceFolderPath = Path.of("VDYP7Console-sample-files", "hcsv", "vdyp-240");
+		Path resourceFolderPath = Path.of("VDYP7Console-sample-files", FileHelper.HCSV, FileHelper.VDYP_240);
 
 		Parameters parameters = testHelper.addSelectedOptions(
 				new Parameters(), //
 				Parameters.ExecutionOption.DO_ENABLE_DEBUG_LOGGING,
 				Parameters.ExecutionOption.DO_ENABLE_PROGRESS_LOGGING,
-				Parameters.ExecutionOption.DO_ENABLE_ERROR_LOGGING,
-				Parameters.ExecutionOption.FORWARD_GROW_ENABLED
+				Parameters.ExecutionOption.DO_ENABLE_ERROR_LOGGING, Parameters.ExecutionOption.FORWARD_GROW_ENABLED
 		);
 		parameters.ageStart(100).ageEnd(400);
 
@@ -101,7 +101,7 @@ class HcsvProjectionEndpointTest {
 
 		logger.info("Starting testProjectionHscv_shouldReturnStatusOK");
 
-		Path resourceFolderPath = Path.of("VDYP7Console-sample-files", "hcsv", "vdyp-240");
+		Path resourceFolderPath = Path.of("VDYP7Console-sample-files", FileHelper.HCSV, FileHelper.VDYP_240);
 
 		Parameters parameters = testHelper.addSelectedOptions(
 				new Parameters(), //
@@ -154,7 +154,7 @@ class HcsvProjectionEndpointTest {
 	@Test
 	void testProjectionHscvVri_testNoProgressLogging() throws IOException {
 
-		Path resourceFolderPath = Path.of("VDYP7Console-sample-files", "hcsv", "vdyp-240");
+		Path resourceFolderPath = Path.of("VDYP7Console-sample-files", FileHelper.HCSV, FileHelper.VDYP_240);
 
 		Parameters parameters = new Parameters();
 		parameters.ageStart(100).ageEnd(400);

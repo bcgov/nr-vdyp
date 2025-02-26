@@ -37,7 +37,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 public class TestHelper {
 
 	private static final Logger logger = LoggerFactory.getLogger(TestHelper.class);
-	
+
 	public static final String ROOT_PATH = "/api/v8";
 
 	public Path getResourceFile(Path testResourceFolderPath, String fileName) throws IOException {
@@ -102,7 +102,7 @@ public class TestHelper {
 
 	public String buildPolygonCsvStream(ValueOverride... overrides) {
 		StringBuffer sb = new StringBuffer();
-		
+
 		Map<String, Object> fieldMap = new TreeMap<String, Object>(new Comparator<String>() {
 			@Override
 			public int compare(String o1, String o2) {
@@ -115,33 +115,36 @@ public class TestHelper {
 				} else {
 					return POLYGON_METADATA.get(o1).ordering - POLYGON_METADATA.get(o2).ordering;
 				}
-			}});
+			}
+		});
 
-		for (var e: STANDARD_POLYGON_MAP.entrySet()) {
+		for (var e : STANDARD_POLYGON_MAP.entrySet()) {
 			fieldMap.put(e.getKey(), e.getValue());
 		}
 
-		for (var o: overrides) {
-			if (! fieldMap.containsKey(o.field)) {
-				throw new IllegalArgumentException(MessageFormat.format("\"{0}\" is not a HscvPolygonRecordBean field", o.field));
+		for (var o : overrides) {
+			if (!fieldMap.containsKey(o.field)) {
+				throw new IllegalArgumentException(
+						MessageFormat.format("\"{0}\" is not a HscvPolygonRecordBean field", o.field)
+				);
 			}
-			
+
 			fieldMap.put(o.field, o.value);
 		}
-		
-		// headers 
-		for (var e: fieldMap.entrySet()) {
+
+		// headers
+		for (var e : fieldMap.entrySet()) {
 			sb.append(POLYGON_METADATA.get(e.getKey()).columnName).append(',');
 		}
 		sb.delete(sb.length() - 1, sb.length());
 		sb.append('\n');
-		
+
 		// one row of values
-		for (var e: fieldMap.entrySet()) {
+		for (var e : fieldMap.entrySet()) {
 			sb.append(e.getValue() == null ? "" : e.getValue()).append(',');
 		}
 		sb.delete(sb.length() - 1, sb.length());
-		
+
 		return sb.toString();
 	}
 
@@ -197,18 +200,19 @@ public class TestHelper {
 		buildFieldMetadata(POLYGON_METADATA, HcsvPolygonRecordBean.class);
 	}
 
-	private record FieldMetadata(String columnName, Integer ordering) {}
-	
+	private record FieldMetadata(String columnName, Integer ordering) {
+	}
+
 	private static void buildFieldMetadata(Map<String, FieldMetadata> map, Class<?> clazz) {
-		
+
 		logger.info("Building metadata information for class {}", clazz.getName());
-		
-		for (var f: clazz.getDeclaredFields()) {
-			if (! Modifier.isStatic(f.getModifiers())) {
+
+		for (var f : clazz.getDeclaredFields()) {
+			if (!Modifier.isStatic(f.getModifiers())) {
 				var fieldName = f.getName();
 				var columnName = f.getAnnotation(CsvBindByName.class).column();
 				var fieldOrdering = f.getAnnotation(CsvBindByPosition.class).position();
-				
+
 				map.put(fieldName, new FieldMetadata(columnName, fieldOrdering));
 			}
 		}

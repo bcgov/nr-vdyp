@@ -5,11 +5,11 @@ import java.util.Iterator;
 public class CsvStreamIterator<T> implements Iterator<T> {
 
 	private final Iterator<T> delegate;
-	
+
 	CsvStreamIterator(Iterator<T> delegate) {
 		this.delegate = delegate;
 	}
-	
+
 	@Override
 	public boolean hasNext() {
 		return delegate.hasNext();
@@ -18,9 +18,9 @@ public class CsvStreamIterator<T> implements Iterator<T> {
 	@Override
 	public T next() {
 		T polygon = delegate.next();
-		
+
 		// Validate
-		
+
 		return polygon;
 	}
 }

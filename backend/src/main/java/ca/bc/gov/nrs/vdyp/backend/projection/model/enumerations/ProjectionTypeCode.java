@@ -23,42 +23,48 @@ public enum ProjectionTypeCode {
 	/** The unknown layer type */
 	UNKNOWN(null);
 
-	public final static List<ProjectionTypeCode> ACTUAL_PROJECTION_TYPES_LIST =
-			Collections.unmodifiableList(List.of(PRIMARY, VETERAN, RESIDUAL, REGENERATION, DEAD));
-	
+	public final static List<ProjectionTypeCode> ACTUAL_PROJECTION_TYPES_LIST = Collections
+			.unmodifiableList(List.of(PRIMARY, VETERAN, RESIDUAL, REGENERATION, DEAD));
+
 	public final String specialLayerTypeCodeText;
-	
+
 	ProjectionTypeCode(String specialLayerTypeCodeText) {
 		this.specialLayerTypeCodeText = specialLayerTypeCodeText;
 	}
-	
+
 	/**
 	 * Convert from a <code>SpecialLayerType</code>'s code to a ProjectionTypeCode.
+	 *
 	 * @param t the SpecialLayerType's code
 	 * @return the equivalent ProjectionTypeCode
 	 * @see SpecialLayerTypeCode
 	 */
 	public static ProjectionTypeCode fromSpecialLayerTypeText(String specialLayerTypeText) {
-		
+
 		if (specialLayerTypeText != null) {
-			for (var e: ProjectionTypeCode.values()) {
+			for (var e : ProjectionTypeCode.values()) {
 				if (specialLayerTypeText.equals(e.specialLayerTypeCodeText)) {
 					return e;
 				}
 			}
 		}
-		
-		throw new IllegalStateException(MessageFormat.format("SpecialLayerType code {0} does not have an equivalent ProjectionType", specialLayerTypeText));
+
+		throw new IllegalStateException(
+				MessageFormat.format(
+						"SpecialLayerType code {0} does not have an equivalent ProjectionType", specialLayerTypeText
+				)
+		);
 	}
-	
+
 	/**
 	 * Convert from a SpecialLayerType to a ProjectionTypeCode.
+	 *
 	 * @param t the SpecialLayerType's code
 	 * @return the equivalent ProjectionTypeCode
 	 * @see SpecialLayerTypeCode
 	 */
 	public static ProjectionTypeCode fromSpecialLayerType(SpecialLayerTypeCode t) {
-		
+
 		return fromSpecialLayerTypeText(t.code);
 	}
 }

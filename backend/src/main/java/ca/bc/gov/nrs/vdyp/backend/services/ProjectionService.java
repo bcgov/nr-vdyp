@@ -58,12 +58,14 @@ public class ProjectionService {
 			if (trialRun) {
 				if (polygonStream.available() == 0) {
 					polygonStream.close();
-					polygonStream = FileHelper.getStubResourceFile("VDYP7_INPUT_POLY.csv");
+					polygonStream = FileHelper
+							.getStubResourceFile(FileHelper.HCSV, FileHelper.VDYP_240, "VDYP7_INPUT_POLY.csv");
 				}
 
 				if (layersStream.available() == 0) {
 					layersStream.close();
-					layersStream = FileHelper.getStubResourceFile("VDYP7_INPUT_LAYER.csv");
+					layersStream = FileHelper
+							.getStubResourceFile(FileHelper.HCSV, FileHelper.VDYP_240, "VDYP7_INPUT_LAYER.csv");
 				}
 			}
 
@@ -105,7 +107,7 @@ public class ProjectionService {
 	}
 
 	private Response runProjection(
-			ProjectionRequestKind kind, Map<String, InputStream> inputStreams, Boolean isTrailRun, Parameters params,
+			ProjectionRequestKind kind, Map<String, InputStream> inputStreams, Boolean isTrialRun, Parameters params,
 			SecurityContext securityContext
 	) throws ProjectionRequestValidationException, ProjectionInternalExecutionException {
 		String projectionId = ProjectionService.buildId(kind);
@@ -128,7 +130,7 @@ public class ProjectionService {
 
 			logger.info("Running {} projection {}", kind, projectionId);
 
-			runner = new ProjectionRunner(ProjectionRequestKind.HCSV, projectionId, params, isTrailRun);
+			runner = new ProjectionRunner(ProjectionRequestKind.HCSV, projectionId, params, isTrialRun);
 
 			runner.run(inputStreams);
 

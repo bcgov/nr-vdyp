@@ -30,8 +30,10 @@ public class PolygonLayerMergeTest {
 		var parameters = new Parameters().ageStart(10).ageEnd(20);
 
 		{
-			var polygonStreamFile = FileHelper.getStubResourceFile("VDYP7_INPUT_MERGE_POLY.csv");
-			var layerStreamFile = FileHelper.getStubResourceFile("VDYP7_INPUT_MERGE_LAYER.csv");
+			var polygonStreamFile = FileHelper
+					.getStubResourceFile(FileHelper.HCSV, FileHelper.VDYP_240, "VDYP7_INPUT_MERGE_POLY.csv");
+			var layerStreamFile = FileHelper
+					.getStubResourceFile(FileHelper.HCSV, FileHelper.VDYP_240, "VDYP7_INPUT_MERGE_LAYER.csv");
 
 			var streams = new HashMap<String, InputStream>();
 			streams.put(ParameterNames.HCSV_POLYGON_INPUT_DATA, polygonStreamFile);

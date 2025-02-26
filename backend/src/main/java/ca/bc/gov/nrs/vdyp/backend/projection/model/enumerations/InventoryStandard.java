@@ -5,13 +5,13 @@ import java.text.MessageFormat;
 import ca.bc.gov.nrs.vdyp.backend.projection.input.InventoryStandardCode;
 
 public enum InventoryStandard {
-	
+
 	/** TODO: definition */
 	Silviculture(InventoryStandardCode.I),
 
 	/** The inventory data was captured using VRI standards. */
 	VRI(InventoryStandardCode.V),
-	
+
 	/** The inventory data was captured using FIP standards. */
 	FIP(InventoryStandardCode.F),
 
@@ -22,32 +22,34 @@ public enum InventoryStandard {
 	Unknown(InventoryStandardCode.Unknown);
 
 	private InventoryStandardCode code;
-	
+
 	InventoryStandard(InventoryStandardCode inventoryStandardCode) {
 		this.code = inventoryStandardCode;
 	}
-	
+
 	public static InventoryStandard getFromCode(InventoryStandardCode code) {
-		
+
 		InventoryStandard is = null;
-		
+
 		if (code != null) {
-			for (InventoryStandard candidate: values()) {
+			for (InventoryStandard candidate : values()) {
 				if (code == candidate.code) {
 					is = candidate;
 				}
 			}
 		}
-		
+
 		if (is != null) {
 			// polydefn.c 388-398
 			if (is == InventoryStandard.Silviculture) {
 				is = InventoryStandard.FIP;
 			}
 		} else {
-			throw new IllegalArgumentException(MessageFormat.format("Code {0} is not a known Inventory Standard Code", code));
+			throw new IllegalArgumentException(
+					MessageFormat.format("Code {0} is not a known Inventory Standard Code", code)
+			);
 		}
-		
+
 		return is;
 	}
 

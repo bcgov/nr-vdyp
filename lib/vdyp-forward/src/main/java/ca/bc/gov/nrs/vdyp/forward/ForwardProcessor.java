@@ -14,6 +14,8 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.application.ProcessingException;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
+import ca.bc.gov.nrs.vdyp.io.ComposedFileResolver;
+import ca.bc.gov.nrs.vdyp.io.ConcreteFileResolver;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
@@ -56,35 +58,29 @@ public class ForwardProcessor {
 	/**
 	 * Initialize VdypForwardProcessor
 	 *
-	 * @param inputFileResolver
-	 * @param outputFileResolver
+	 * @param fileResolver
 	 * @param controlFileNames
-	 *
 	 * @throws IOException
 	 * @throws ResourceParseException
 	 * @throws ProcessingException
 	 */
-	void run(
-			FileResolver inputFileResolver, FileResolver outputFileResolver, List<String> controlFileNames,
-			Set<ForwardPass> vdypPassSet
-	) throws IOException, ResourceParseException, ProcessingException {
-		run(inputFileResolver, outputFileResolver, controlFileNames, vdypPassSet, (p) -> true);
+	void run(FileResolver fileResolver, List<String> controlFileNames, Set<ForwardPass> vdypPassSet)
+			throws IOException, ResourceParseException, ProcessingException {
+		run(fileResolver, controlFileNames, vdypPassSet, (p) -> true);
 	}
 
 	/**
 	 * Initialize VdypForwardProcessor
 	 *
-	 * @param inputFileResolver
-	 * @param outputFileResolver
+	 * @param fileResolver
 	 * @param controlFileNames
-	 *
 	 * @throws IOException
 	 * @throws ResourceParseException
 	 * @throws ProcessingException
 	 */
 	void run(
-			FileResolver inputFileResolver, FileResolver outputFileResolver, List<String> controlFileNames,
-			Set<ForwardPass> vdypPassSet, Predicate<VdypPolygon> polygonFilter
+			FileResolver fileResolver, List<String> controlFileNames, Set<ForwardPass> vdypPassSet,
+			Predicate<VdypPolygon> polygonFilter
 	) throws IOException, ResourceParseException, ProcessingException {
 
 		logger.info("VDYPPASS: {}", vdypPassSet);
@@ -103,11 +99,18 @@ public class ForwardProcessor {
 		for (var controlFileName : controlFileNames) {
 			logger.info("Resolving and parsing {}", controlFileName);
 
-			try (var is = inputFileResolver.resolveForInput(controlFileName)) {
-				Path controlFilePath = inputFileResolver.toPath(controlFileName).getParent();
-				FileSystemFileResolver relativeResolver = new FileSystemFileResolver(controlFilePath);
+			try (var is = fileResolver.resolveForInput(controlFileName)) {
+				if (fileResolver instanceof ComposedFileResolver composedResolver) {
+					Path controlFilePath = composedResolver.getInputFileResolver().toPath(controlFileName).getParent();
+					fileResolver = new ComposedFileResolver(
+							new FileSystemFileResolver(controlFilePath), composedResolver.getOutputFileResolver()
+					);
+				} else if (fileResolver instanceof ConcreteFileResolver concreteResolver) {
+					Path configurationLocation = concreteResolver.toPath(controlFileName).getParent();
+					fileResolver = new FileSystemFileResolver(configurationLocation);
+				}
 
-				parser.parse(is, relativeResolver, controlMap);
+				parser.parse(is, fileResolver, controlMap);
 			}
 		}
 

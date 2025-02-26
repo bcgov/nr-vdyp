@@ -17,7 +17,7 @@ public class VdypMath {
 			return max;
 		return x;
 	}
-	
+
 	public static int clamp(int x, int min, int max) {
 		assert max >= min : "Maximum " + max + " was less than minimum " + min;
 		if (x < min)
@@ -116,7 +116,7 @@ public class VdypMath {
 	public static double max(double f1, double f2, double f3, double f4) {
 		return Math.max(Math.max(f1, f2), Math.max(f3, f4));
 	}
-	
+
 	/**
 	 * Compute the maximum of three int values, using <code>Math.max</code> to do pairwise comparisons.
 	 *

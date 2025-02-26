@@ -1494,8 +1494,9 @@ public class ForwardProcessingEngine {
 				logBaDeltaProportion = a0 + a1 * logBaProportionStart + a2 * baStart;
 			} else {
 				throw new ProcessingException(
-						MessageFormat
-								.format("Model value {} for polygon stratum {} is out of range", model, psStratumNumber)
+						MessageFormat.format(
+								"Model value {0} for polygon stratum {1} is out of range", model, psStratumNumber
+						)
 				);
 			}
 

@@ -24,7 +24,7 @@ public class LayerAdjustments {
 	private Double adjustmentVCU125;
 	/** Specifies the Close Utilization Volume, less Decay, adjustment of the layer at the 12.5cm+ utilization level. */
 	private Double adjustmentVD125;
-	
+
 	/**
 	 * Specifies the Close Utilization Volume, less Decay and Wastage, adjustment of the layer at the 12.5cm+
 	 * utilization level.
@@ -66,7 +66,7 @@ public class LayerAdjustments {
 	public Double getAdjustmentVDW125() {
 		return adjustmentVDW125;
 	}
-	
+
 	public static class Builder {
 		private LayerAdjustments layerAdjustments = new LayerAdjustments();
 
@@ -74,42 +74,42 @@ public class LayerAdjustments {
 			layerAdjustments.doesContainDefaults = doesContainDefaults;
 			return this;
 		}
-	
+
 		public Builder setAdjustmentBA075(Double adjustmentBA075) {
 			layerAdjustments.adjustmentBA075 = adjustmentBA075;
 			return this;
 		}
-	
+
 		public Builder setAdjustmentLH075(Double adjustmentLH075) {
 			layerAdjustments.adjustmentLH075 = adjustmentLH075;
 			return this;
 		}
-	
+
 		public Builder setAdjustmentWSV075(Double adjustmentWSV075) {
 			layerAdjustments.adjustmentWSV075 = adjustmentWSV075;
 			return this;
 		}
-	
+
 		public Builder setAdjustmentBA125(Double adjustmentBA125) {
 			layerAdjustments.adjustmentBA125 = adjustmentBA125;
 			return this;
 		}
-	
+
 		public Builder setAdjustmentWSV125(Double adjustmentWSV125) {
 			layerAdjustments.adjustmentWSV125 = adjustmentWSV125;
 			return this;
 		}
-	
+
 		public Builder setAdjustmentVCU125(Double adjustmentVCU125) {
 			layerAdjustments.adjustmentVCU125 = adjustmentVCU125;
 			return this;
 		}
-	
+
 		public Builder setAdjustmentVD125(Double adjustmentVD125) {
 			layerAdjustments.adjustmentVD125 = adjustmentVD125;
 			return this;
 		}
-	
+
 		public Builder setAdjustmentVDW125(Double adjustmentVDW125) {
 			layerAdjustments.adjustmentVDW125 = adjustmentVDW125;
 			return this;

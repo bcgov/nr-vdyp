@@ -7,7 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 
-public class FileSystemFileResolver implements FileResolver {
+public class FileSystemFileResolver implements ConcreteFileResolver {
 
 	private Optional<Path> currentDirectory;
 
@@ -39,8 +39,17 @@ public class FileSystemFileResolver implements FileResolver {
 		return String.format("file:%s", toPath(filename));
 	}
 
-	@Override
 	public FileSystemFileResolver relative(String path) throws IOException {
 		return new FileSystemFileResolver(toPath(path));
+	}
+
+	@Override
+	public FileResolver getOutputFileResolver() {
+		return this;
+	}
+
+	@Override
+	public FileResolver getInputFileResolver() {
+		return this;
 	}
 }

@@ -73,7 +73,7 @@ public class FipStartOutputWriter extends AbstractOutputWriter implements Closea
 	/**
 	 * V7W_FIL1 - Write the given layer record to the layers file, and recursively write the layer's species to the
 	 * species file.
-	 * 
+	 *
 	 * @param layers
 	 * @throws IOException
 	 */
@@ -89,7 +89,8 @@ public class FipStartOutputWriter extends AbstractOutputWriter implements Closea
 				LAYER_FORMAT, //
 
 				layer.getPolygon().buildPolygonDescriptor(), //
-				LayerType.PRIMARY.getAlias(), // vdypintperform.c lines 2634 - 2651 - always write "P" for the layer code.
+				LayerType.PRIMARY.getAlias(), // vdypintperform.c lines 2634 - 2651 - always write "P" for the layer
+												// code.
 				format(leadingSpecies.getTotalAge(), 4, 0), //
 				format(leadingSpecies.getDominantHeight(), 5, 2), //
 				format(leadingSpecies.getSiteIndex(), 5, 2), //
@@ -100,7 +101,8 @@ public class FipStartOutputWriter extends AbstractOutputWriter implements Closea
 				' ', // stocking class - unknown
 				Vdyp7Constants.EMPTY_INT, // inventory type group - unknown
 				format(leadingSpecies.getAgeAtBreastHeight(), 6, 1), //
-				leadingSpecies.getSiteCurve() != null ? format(leadingSpecies.getSiteCurve().n(), 3) : " " + Vdyp7Constants.EMPTY_INT
+				leadingSpecies.getSiteCurve() != null ? format(leadingSpecies.getSiteCurve().n(), 3)
+						: " " + Vdyp7Constants.EMPTY_INT
 		);
 
 		for (Stand s : layer.getSp0sAsSupplied()) {
@@ -127,7 +129,7 @@ public class FipStartOutputWriter extends AbstractOutputWriter implements Closea
 
 	/**
 	 * V7W_FIS1 - Write the given species group (Sp0) record to the species file.
-	 * 
+	 *
 	 * @param stand
 	 * @throws IOException
 	 */
@@ -148,7 +150,8 @@ public class FipStartOutputWriter extends AbstractOutputWriter implements Closea
 				SPECIES_FORMAT, //
 
 				stand.getLayer().getPolygon().buildPolygonDescriptor(), //
-				LayerType.PRIMARY.getAlias(), // vdypintperform.c lines 2634 - 2651 - always write "P" for the layer code.
+				LayerType.PRIMARY.getAlias(), // vdypintperform.c lines 2634 - 2651 - always write "P" for the layer
+												// code.
 				stand.getSp0Code(), //
 				format(stand.getSpeciesGroup().getSpeciesPercent(), 6, 1), speciesDistributionTexts[0],
 				speciesDistributionTexts[1], speciesDistributionTexts[2], speciesDistributionTexts[3]

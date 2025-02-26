@@ -117,7 +117,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	static final Set<String> HARDWOODS = Set.of("AC", "AT", "D", "E", "MB");
 
 	protected static void doMain(VdypStartApplication<?, ?, ?, ?> app, final String... args) {
-		
+
 		if (args.length == 1 /* one control file */) {
 			try {
 				app.init(args[0]);
@@ -127,7 +127,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 			}
 		} else {
 			var resolver = new FileSystemFileResolver();
-			
+
 			try {
 				app.init(resolver, args);
 			} catch (Exception ex) {
@@ -203,8 +203,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	 * @throws IOException
 	 * @throws ResourceParseException
 	 */
-	public void init(String controlFileLocation)
-			throws IOException, ResourceParseException {
+	public void init(String controlFileLocation) throws IOException, ResourceParseException {
 
 		// Load the control map
 
@@ -213,15 +212,21 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		try {
 			Path controlFilePath = Path.of(controlFileLocation);
 			if (!Files.exists(controlFilePath)) {
-				throw new FileNotFoundException(MessageFormat.format("Control file {} not found", controlFilePath.toString()));
+				throw new FileNotFoundException(
+						MessageFormat.format("Control file {0} not found", controlFilePath.toString())
+				);
 			}
 			if (Files.isDirectory(controlFilePath)) {
-				throw new FileNotFoundException(MessageFormat.format("Control file {} is not a file", controlFilePath.toString()));
+				throw new FileNotFoundException(
+						MessageFormat.format("Control file {0} is not a file", controlFilePath.toString())
+				);
 			}
 			if (!Files.isReadable(controlFilePath)) {
-				throw new FileNotFoundException(MessageFormat.format("Control file {} is not readable", controlFilePath.toString()));
+				throw new FileNotFoundException(
+						MessageFormat.format("Control file {0} is not readable", controlFilePath.toString())
+				);
 			}
-			
+
 			FileSystemFileResolver resolver = new FileSystemFileResolver(controlFilePath.getParent());
 			resources.add(resolver.resolveForInput(controlFileLocation));
 

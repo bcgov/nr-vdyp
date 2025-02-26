@@ -9,12 +9,15 @@ import java.text.MessageFormat;
 
 public class FileHelper {
 
+	public static final String HCSV = "hcsv";
+	public static final String VDYP_240 = "vdyp-240";
+
 	protected FileHelper() {
 	}
 
-	public static InputStream getStubResourceFile(String fileName) throws IOException {
+	public static InputStream getStubResourceFile(String... pathComponents) throws IOException {
 
-		String resourceFilePath = "VDYP7Console-sample-files/hcsv/vdyp-240/" + fileName;
+		String resourceFilePath = Path.of("VDYP7Console-sample-files", pathComponents).toString();
 		return FileHelper.class.getClassLoader().getResourceAsStream(resourceFilePath);
 	}
 

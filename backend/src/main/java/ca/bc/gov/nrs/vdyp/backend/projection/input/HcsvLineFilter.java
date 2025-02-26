@@ -23,7 +23,7 @@ public class HcsvLineFilter extends AbstractCsvLineFilter implements CsvToBeanFi
 				return false;
 			}
 		}
-		
+
 		return doAllowLine;
 	}
 }
