@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.forward;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
@@ -322,7 +323,7 @@ public class ForwardControlParser extends BaseControlParser {
 			if (m != null) {
 				// m is a configuration file parser.
 				logger.debug(
-						"Parsing configuration file {}[{}] using {}", m.getControlKeyName(), key.sequence.get(),
+						"Parsing configuration file [{[{}] using {}", m.getControlKeyName(), key.sequence.get(),
 						m.getClass().getName()
 				);
 				m.modify(map, fileResolver);
@@ -339,13 +340,17 @@ public class ForwardControlParser extends BaseControlParser {
 			}
 
 			if (vdypForwardOutputWriters.contains(key) && map.containsKey(key.name())) {
-				logger.debug("Creating output stream for file {}[{}]", key);
+				String fileName = (String) map.get(key.name());
+				logger.debug(
+						"Creating output stream for file {}[{}] using {}", fileName, key,
+						fileResolver.getClass().getName()
+				);
 				if (fileResolver instanceof CompositeFileResolver cfr) {
-					map.put(key.name(), cfr.getOutputFileResolver().toPath((String) map.get(key.name())));
+					map.put(key.name(), cfr.getOutputFileResolver().toPath(fileName));
 				} else if (fileResolver instanceof ConcreteFileResolver cfr) {
-					String fileName = (String) map.get(key.name());
-					logger.debug("about to resolve {} using {}", fileName, cfr);
-					map.put(key.name(), cfr.toPath(fileName));
+					var path = Path.of(cfr.toPath(".").getParent().toString(), fileName);
+					logger.debug("Resolved location to {}", path);
+					map.put(key.name(), path);
 				}
 			}
 		}
