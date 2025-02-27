@@ -12,8 +12,8 @@ import java.util.Arrays;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import org.hamcrest.MatcherAssert;
-import org.hamcrest.Matchers;
+import static org.hamcrest.MatcherAssert.*;
+import static org.hamcrest.Matchers.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -26,16 +26,18 @@ class ZipOutputFileResolverTest {
 	void testZipOutputFileResolver() throws IOException {
 
 		ZipOutputFileResolver resolver = new ZipOutputFileResolver();
+		
+		assertThat(resolver.getOutputFileResolver(), equalTo(resolver));
+		assertThrows(UnsupportedOperationException.class, () -> resolver.getInputFileResolver());
 
 		Path currentRelativePath = Paths.get("");
 		String currentPath = currentRelativePath.toAbsolutePath().toString();
 
-		MatcherAssert.assertThat(resolver.toPath("file"), Matchers.is(Paths.get(currentPath, "file")));
+		assertThat(resolver.toPath("file"), is(Paths.get(currentPath, "file")));
 
 		assertThrows(UnsupportedOperationException.class, () -> resolver.resolveForInput("file"));
 
-		MatcherAssert
-				.assertThat(resolver.toString("file"), Matchers.endsWith(Paths.get(currentPath, "file").toString()));
+		assertThat(resolver.toString("file"), endsWith(Paths.get(currentPath, "file").toString()));
 
 		for (int i = 0; i < 5; i++) {
 			OutputStream os = resolver.resolveForOutput("file" + i);

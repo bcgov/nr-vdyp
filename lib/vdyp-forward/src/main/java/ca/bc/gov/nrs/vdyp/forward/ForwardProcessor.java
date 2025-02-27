@@ -100,10 +100,10 @@ public class ForwardProcessor {
 			logger.info("Resolving and parsing {}", controlFileName);
 
 			try (var is = fileResolver.resolveForInput(controlFileName)) {
-				if (fileResolver instanceof CompositeFileResolver composedResolver) {
-					Path controlFilePath = composedResolver.getInputFileResolver().toPath(controlFileName).getParent();
+				if (fileResolver instanceof CompositeFileResolver compositeResolver) {
+					Path controlFilePath = compositeResolver.getInputFileResolver().toPath(controlFileName).getParent();
 					fileResolver = new CompositeFileResolver(
-							new FileSystemFileResolver(controlFilePath), composedResolver.getOutputFileResolver()
+							new FileSystemFileResolver(controlFilePath), compositeResolver.getOutputFileResolver()
 					);
 				} else if (fileResolver instanceof ConcreteFileResolver concreteResolver) {
 					Path configurationLocation = concreteResolver.toPath(controlFileName).getParent();

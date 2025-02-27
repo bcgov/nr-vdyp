@@ -27,7 +27,6 @@ import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParser;
  *
  */
 public class FipControlParser extends StartApplicationControlParser {
-	@SuppressWarnings("unused")
 	private static final Logger log = LoggerFactory.getLogger(FipControlParser.class);
 
 	public FipControlParser() {

@@ -43,6 +43,8 @@ import ca.bc.gov.nrs.vdyp.common.EstimationMethods;
 import ca.bc.gov.nrs.vdyp.common.ReconcilationMethods;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common.ValueOrMarker;
+import ca.bc.gov.nrs.vdyp.common.VdypApplicationInitializationException;
+import ca.bc.gov.nrs.vdyp.common.VdypApplicationProcessingException;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMapImpl;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
@@ -116,14 +118,15 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 	static final Set<String> HARDWOODS = Set.of("AC", "AT", "D", "E", "MB");
 
-	protected static void doMain(VdypStartApplication<?, ?, ?, ?> app, final String... args) {
+	protected static void doMain(VdypStartApplication<?, ?, ?, ?> app, final String... args)
+			throws VdypApplicationInitializationException, VdypApplicationProcessingException {
 
 		if (args.length == 1 /* one control file */) {
 			try {
 				app.init(args[0]);
 			} catch (Exception ex) {
 				log.error("Error during initialization", ex);
-				System.exit(CONFIG_LOAD_ERROR);
+				throw new VdypApplicationInitializationException(ex);
 			}
 		} else {
 			var resolver = new FileSystemFileResolver();
@@ -132,7 +135,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 				app.init(resolver, args);
 			} catch (Exception ex) {
 				log.error("Error during initialization", ex);
-				System.exit(CONFIG_LOAD_ERROR);
+				throw new VdypApplicationInitializationException(ex);
 			}
 		}
 
@@ -140,7 +143,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 			app.process();
 		} catch (Exception ex) {
 			log.error("Error during processing", ex);
-			System.exit(PROCESSING_ERROR);
+			throw new VdypApplicationProcessingException(ex);
 		}
 	}
 
@@ -196,10 +199,9 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	}
 
 	/**
-	 * Initialize application
+	 * Initialize application from one control file. Resolve references in the control file relative to that file.
 	 *
-	 * @param resolver
-	 * @param controlFilePath
+	 * @param controlFileLocation
 	 * @throws IOException
 	 * @throws ResourceParseException
 	 */
@@ -240,7 +242,8 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	}
 
 	/**
-	 * Initialize application
+	 * Initialize application from multiple control files. Resolve references in those files using
+	 * <code>resolver</code>.
 	 *
 	 * @param resolver
 	 * @param controlFilePath
@@ -273,14 +276,16 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	}
 
 	/**
-	 * Initialize application
+	 * Initialize application from the given control map. Resolve all references in the map using <code>resolver</code>.
 	 *
+	 * @param resolver
 	 * @param controlMap
 	 * @throws IOException
 	 */
 	public void init(FileSystemFileResolver resolver, Map<String, Object> controlMap) throws IOException {
 
 		setControlMap(controlMap);
+
 		closeVriWriter();
 		vriWriter = createWriter(resolver, controlMap);
 	}

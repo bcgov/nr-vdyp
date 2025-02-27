@@ -1,9 +1,5 @@
 package ca.bc.gov.nrs.vdyp.math;
 
-import java.io.IOException;
-
-import ca.bc.gov.nrs.vdyp.application.ProcessingException;
-
 public class VdypMath {
 
 	private VdypMath() {
@@ -26,72 +22,7 @@ public class VdypMath {
 			return max;
 		return x;
 	}
-
-	public static double ratio(double arg, double radius) {
-		if (arg < -radius) {
-			return 0.0f;
-		} else if (arg > radius) {
-			return 1.0f;
-		}
-		return Math.exp(arg) / (1.0f + Math.exp(arg));
-	}
-
-	public static String toString(double[] vector) {
-		var builder = new StringBuilder();
-		try {
-			toString(vector, builder);
-		} catch (IOException e) {
-			throw new IllegalStateException("StringBuilder should not throw IOException", e);
-		}
-		return builder.toString();
-	}
-
-	public static void toString(double[] vector, Appendable builder) throws IOException {
-		builder.append("[");
-		var first = true;
-		for (var x : vector) {
-			if (!first)
-				builder.append(", ");
-			first = false;
-			builder.append(Double.toString(x));
-		}
-		builder.append("]");
-	}
-
-	public static String toString(int[] vector) {
-		var builder = new StringBuilder();
-		try {
-			toString(vector, builder);
-		} catch (IOException e) {
-			throw new IllegalStateException("StringBuilder should not throw IOException", e);
-		}
-		return builder.toString();
-	}
-
-	public static void toString(int[] vector, Appendable builder) throws IOException {
-		builder.append("[");
-		var first = true;
-		for (var x : vector) {
-			if (!first)
-				builder.append(", ");
-			first = false;
-			builder.append(Double.toString(x));
-		}
-		builder.append("]");
-	}
-
-	public static double exponentRatio(double logit) throws ProcessingException {
-		double exp = safeExponent(logit);
-		return exp / (1f + exp);
-	}
-
-	public static double safeExponent(double logit) throws ProcessingException {
-		if (logit > 88f) {
-			throw new ProcessingException("logit " + logit + " exceeds 88");
-		}
-		return Math.exp(logit);
-	}
-
+	
 	/**
 	 * Compute the maximum of three double values, using <code>Math.max</code> to do pairwise comparisons.
 	 *

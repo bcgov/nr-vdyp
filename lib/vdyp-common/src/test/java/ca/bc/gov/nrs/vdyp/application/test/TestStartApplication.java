@@ -1,7 +1,6 @@
 package ca.bc.gov.nrs.vdyp.application.test;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -9,21 +8,28 @@ import java.util.function.Consumer;
 import ca.bc.gov.nrs.vdyp.application.ProcessingException;
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.application.VdypStartApplication;
-import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
-import ca.bc.gov.nrs.vdyp.io.parse.control.ControlMapValueReplacer;
-import ca.bc.gov.nrs.vdyp.io.parse.control.NonFipControlParser;
+import ca.bc.gov.nrs.vdyp.io.parse.control.BaseControlParser;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies.Builder;
+import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 public class TestStartApplication extends VdypStartApplication<TestPolygon, TestLayer, TestSpecies, TestSite> {
 
-	boolean realInit;
+	private boolean realInit;
 
 	public TestStartApplication(Map<String, Object> controlMap, boolean realInit) {
-		this.setControlMap(controlMap);
+		this.controlMap = controlMap;
 		this.realInit = realInit;
+	}
+
+	@Override
+	public void init(String controlFilePath)
+			throws IOException, ResourceParseException {
+		if (realInit) {
+			super.init(controlFilePath);
+		}
 	}
 
 	@Override
@@ -42,25 +48,8 @@ public class TestStartApplication extends VdypStartApplication<TestPolygon, Test
 	}
 
 	@Override
-	protected NonFipControlParser getControlFileParser() {
-		return new NonFipControlParser() {
-
-			@Override
-			protected List<ControlMapValueReplacer<Object, String>> inputFileParsers() {
-				return List.of();
-			}
-
-			@Override
-			protected List<ControlKey> outputFileParsers() {
-				return List.of();
-			}
-
-			@Override
-			protected VdypApplicationIdentifier getProgramId() {
-				return VdypApplicationIdentifier.VRI_START;
-			}
-
-		};
+	protected BaseControlParser getControlFileParser() {
+		return TestUtils.startAppControlParser();
 	}
 
 	@Override

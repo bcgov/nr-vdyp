@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.vdyp.io;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Path;
 
 public class CompositeFileResolver implements FileResolver {
 
@@ -32,5 +33,13 @@ public class CompositeFileResolver implements FileResolver {
 	@Override
 	public ConcreteFileResolver getInputFileResolver() {
 		return inputFileResolver;
+	}
+
+	public Path toInputPath(String fileName) throws IOException {
+		return this.getInputFileResolver().toPath(fileName);
+	}
+
+	public Path toOutputPath(String fileName) throws IOException {
+		return this.getOutputFileResolver().toPath(fileName);
 	}
 }

@@ -346,7 +346,7 @@ public class ForwardControlParser extends BaseControlParser {
 						fileResolver.getClass().getName()
 				);
 				if (fileResolver instanceof CompositeFileResolver cfr) {
-					map.put(key.name(), cfr.getOutputFileResolver().toPath(fileName));
+					map.put(key.name(), cfr.toOutputPath(fileName));
 				} else if (fileResolver instanceof ConcreteFileResolver cfr) {
 					var path = Path.of(cfr.toPath(".").getParent().toString(), fileName);
 					logger.debug("Resolved location to {}", path);

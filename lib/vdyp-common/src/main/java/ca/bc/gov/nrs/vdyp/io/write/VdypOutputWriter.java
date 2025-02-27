@@ -76,14 +76,15 @@ public class VdypOutputWriter implements Closeable {
 	static final String END_RECORD_FORMAT = POLY_IDENTIFIER_FORMAT + "  \n";
 
 	/**
-	 * Create a writer for Vdyp output files using provided OutputStreams. The Streams will be closed when the writer is
-	 * closed.
+	 * Create a writer for Vdyp output files using the provided OutputStreams and an empty Optional for the
+	 * compatibility variables file. The controlMap provided is used by the implementation when needed.
+	 * <p>
+	 * The Streams will be closed when the writer is closed.
 	 *
 	 * @param controlMap
 	 * @param polygonFile
 	 * @param speciesFile
 	 * @param utilizationFile
-	 * @param compatibilityVariablesFile
 	 */
 	public VdypOutputWriter(
 			Map<String, Object> controlMap, OutputStream polygonFile, OutputStream speciesFile,
@@ -93,15 +94,16 @@ public class VdypOutputWriter implements Closeable {
 	}
 
 	/**
-	 * Create a writer for Vdyp output files using provided OutputStreams. The Streams will be closed when the writer is
-	 * closed.
+	 * Create a writer for Vdyp output files using provided OutputStreams. The controlMap provided is used by the
+	 * implementation when needed.
+	 * <p>
+	 * The Streams will be closed when the writer is closed.
 	 *
 	 * @param controlMap
 	 * @param polygonFile
 	 * @param speciesFile
 	 * @param utilizationFile
 	 * @param compatibilityVariablesFile
-	 * @param controlMap
 	 */
 	public VdypOutputWriter(
 			Map<String, Object> controlMap, OutputStream polygonFile, OutputStream speciesFile,
@@ -115,37 +117,40 @@ public class VdypOutputWriter implements Closeable {
 	}
 
 	/**
-	 * Create a writer for Vdyp output files configured using the given control map.
+	 * Create a writer for Vdyp output files. The output streams are created from values in the given control map
+	 * resolved against the given resolver.
 	 *
-	 * @param polygonFile
-	 * @param speciesFile
-	 * @param layerFile
 	 * @param controlMap
+	 * @param resolver
 	 */
 	public VdypOutputWriter(Map<String, Object> controlMap, ConcreteFileResolver resolver) throws IOException {
 		this(
-				controlMap, getOutputStream(controlMap, resolver, ControlKey.VDYP_OUTPUT_VDYP_POLYGON.name()),
-				getOutputStream(controlMap, resolver, ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SPECIES.name()),
-				getOutputStream(controlMap, resolver, ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name()),
-				controlMap.containsKey(ControlKey.VDYP_OUTPUT_COMPATIBILITY_VARIABLES.name()) ? Optional.of(
-						getOutputStream(controlMap, resolver, ControlKey.VDYP_OUTPUT_COMPATIBILITY_VARIABLES.name())
-				) : Optional.empty()
+				controlMap, //
+				getOutputStream(controlMap, resolver, ControlKey.VDYP_OUTPUT_VDYP_POLYGON.name()), //
+				getOutputStream(controlMap, resolver, ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SPECIES.name()), //
+				getOutputStream(controlMap, resolver, ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name()), //
+				controlMap.containsKey(ControlKey.VDYP_OUTPUT_COMPATIBILITY_VARIABLES.name()) //
+						? Optional.of(
+								getOutputStream(
+										controlMap, resolver, ControlKey.VDYP_OUTPUT_COMPATIBILITY_VARIABLES.name()
+								)
+						) //
+						: Optional.empty() //
 		);
 	}
 
 	/**
-	 * Create a writer for Vdyp output files configured using the given control map.
+	 * Create a writer for Vdyp output files. The output streams are created from values in the given control map
+	 * already assumed to have been resolved (i.e., be absolute path names).
 	 *
-	 * @param polygonFile
-	 * @param speciesFile
-	 * @param layerFile
 	 * @param controlMap
 	 */
 	public VdypOutputWriter(Map<String, Object> controlMap) throws IOException {
 		this(
-				controlMap, getOutputStream(controlMap, ControlKey.VDYP_OUTPUT_VDYP_POLYGON.name()),
-				getOutputStream(controlMap, ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SPECIES.name()),
-				getOutputStream(controlMap, ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name()),
+				controlMap, //
+				getOutputStream(controlMap, ControlKey.VDYP_OUTPUT_VDYP_POLYGON.name()), //
+				getOutputStream(controlMap, ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SPECIES.name()), //
+				getOutputStream(controlMap, ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name()), //
 				controlMap.containsKey(ControlKey.VDYP_OUTPUT_COMPATIBILITY_VARIABLES.name())
 						? Optional
 								.of(getOutputStream(controlMap, ControlKey.VDYP_OUTPUT_COMPATIBILITY_VARIABLES.name()))
@@ -267,13 +272,13 @@ public class VdypOutputWriter implements Closeable {
 		}
 	}
 
-	static OutputStream getOutputStream(Map<String, Object> controlMap, ConcreteFileResolver resolver, String key)
+	private static OutputStream getOutputStream(Map<String, Object> controlMap, ConcreteFileResolver resolver, String key)
 			throws IOException {
 		String fileName = Utils.expectParsedControl(controlMap, key, String.class);
 		return resolver.resolveForOutput(fileName);
 	}
 
-	static OutputStream getOutputStream(Map<String, Object> controlMap, String key) throws IOException {
+	private static OutputStream getOutputStream(Map<String, Object> controlMap, String key) throws IOException {
 		var outputFilePath = Utils.expectParsedControl(controlMap, key, Path.class);
 		return Files.newOutputStream(outputFilePath);
 	}

@@ -38,6 +38,8 @@ import ca.bc.gov.nrs.vdyp.common.ComputationMethods;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.EstimationMethods;
 import ca.bc.gov.nrs.vdyp.common.Utils;
+import ca.bc.gov.nrs.vdyp.common.VdypApplicationInitializationException;
+import ca.bc.gov.nrs.vdyp.common.VdypApplicationProcessingException;
 import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMapImpl;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BecDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
@@ -98,6 +100,21 @@ class VdypStartApplicationTest {
 			app.close();
 		}
 
+		@Test
+		void testInitOneControlFile() throws IOException, ResourceParseException {
+			var app = new TestStartApplication(controlMap, true);
+			
+			var controlFileResolver = TestUtils.fileResolver(TestUtils.class);
+			try {
+				TestStartApplication.doMain(app, controlFileResolver.toPath("VRISTART.CTR").toString());
+			} catch (VdypApplicationInitializationException e) {
+				fail("CONFIG_LOAD_ERROR", e);
+			} catch (VdypApplicationProcessingException e) {
+				fail("PROCESSING_ERROR", e);
+			}
+
+			app.close();
+		}
 	}
 
 	private MockFileResolver dummyIo() {
