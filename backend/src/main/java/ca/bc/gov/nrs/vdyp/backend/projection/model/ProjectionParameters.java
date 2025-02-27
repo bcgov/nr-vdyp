@@ -47,11 +47,11 @@ public class ProjectionParameters {
 		return reportedSpeciesGroups;
 	}
 
-	public boolean isEnableForward() {
+	public boolean isForwardEnabled() {
 		return enableForward;
 	}
 
-	public boolean isEnableBack() {
+	public boolean isBackEnabled() {
 		return enableBack;
 	}
 

@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.vdyp.backend.projection;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
@@ -175,15 +176,18 @@ public class PolygonProjectionRunner {
 
 		Path executionFolder = Path.of(state.getExecutionFolder().toString(), projectionType.toString());
 
+		FileOutputStream polygonOutputStream = null;
+		FileOutputStream layersOutputStream = null;
+		FileOutputStream speciesOutputStream = null;
 		try {
 			Path polygonFile = Path.of(executionFolder.toString(), "fip_p01.dat");
-			FileOutputStream polygonOutputStream = new FileOutputStream(polygonFile.toFile());
+			polygonOutputStream = new FileOutputStream(polygonFile.toFile());
 
 			Path layersFile = Path.of(executionFolder.toString(), "fip_l01.dat");
-			FileOutputStream layersOutputStream = new FileOutputStream(layersFile.toFile());
+			layersOutputStream = new FileOutputStream(layersFile.toFile());
 
 			Path speciesFile = Path.of(executionFolder.toString(), "fip_ls01.dat");
-			FileOutputStream speciesOutputStream = new FileOutputStream(speciesFile.toFile());
+			speciesOutputStream = new FileOutputStream(speciesFile.toFile());
 
 			try (
 					var outputWriter = new FipStartOutputWriter(
@@ -197,25 +201,48 @@ public class PolygonProjectionRunner {
 			throw new PolygonExecutionException(
 					MessageFormat.format("{0}: encountered exception while running createFipInputData", polygon), e
 			);
+		} finally {
+			if (polygonOutputStream != null) {
+				close(polygonOutputStream);
+			}
+			if (layersOutputStream != null) {
+				close(polygonOutputStream);
+			}
+			if (speciesOutputStream != null) {
+				close(polygonOutputStream);
+			}
 		}
 	}
+	
+	private void close(OutputStream os) {
+		try {
+			os.close();
+		} catch (IOException e) {
+			logger.error("Failed to close OutputStream", e);
+		}
+ 	}
 
 	private void createVriInputData(ProjectionTypeCode projectionTypeCode, PolygonProjectionState state)
 			throws PolygonExecutionException {
 		Path executionFolder = Path.of(state.getExecutionFolder().toString(), projectionTypeCode.toString());
 
+		FileOutputStream polygonOutputStream = null;
+		FileOutputStream layersOutputStream = null;
+		FileOutputStream speciesOutputStream = null;
+		FileOutputStream siteIndexOutputStream = null;
+
 		try {
 			Path polygonFile = Path.of(executionFolder.toString(), "virnp01.dat");
-			FileOutputStream polygonOutputStream = new FileOutputStream(polygonFile.toFile());
+			polygonOutputStream = new FileOutputStream(polygonFile.toFile());
 
 			Path layersFile = Path.of(executionFolder.toString(), "vrinl01.dat");
-			FileOutputStream layersOutputStream = new FileOutputStream(layersFile.toFile());
+			layersOutputStream = new FileOutputStream(layersFile.toFile());
 
 			Path speciesFile = Path.of(executionFolder.toString(), "vrinsp01.dat");
-			FileOutputStream speciesOutputStream = new FileOutputStream(speciesFile.toFile());
+			speciesOutputStream = new FileOutputStream(speciesFile.toFile());
 
 			Path siteIndexFile = Path.of(executionFolder.toString(), "vrinsi01.dat");
-			FileOutputStream siteIndexOutputStream = new FileOutputStream(siteIndexFile.toFile());
+			siteIndexOutputStream = new FileOutputStream(siteIndexFile.toFile());
 
 			try (
 					var outputWriter = new VriStartOutputWriter(
@@ -229,6 +256,11 @@ public class PolygonProjectionRunner {
 			throw new PolygonExecutionException(
 					MessageFormat.format("{0}: encountered exception while running createVriInputData", polygon), e
 			);
+		} finally {
+			close(polygonOutputStream);
+			close(layersOutputStream);
+			close(speciesOutputStream);
+			close(siteIndexOutputStream);
 		}
 	}
 
@@ -256,7 +288,7 @@ public class PolygonProjectionRunner {
 
 		for (ProjectionTypeCode projectionType : ProjectionTypeCode.ACTUAL_PROJECTION_TYPES_LIST) {
 
-			if (polygon.doAllowProjectionOfType(projectionType) == false) {
+			if (! polygon.doAllowProjectionOfType(projectionType)) {
 				logger.debug("{}: projections of type {} for this polygon are not allowed", polygon, projectionType);
 
 				continue;
@@ -301,35 +333,11 @@ public class PolygonProjectionRunner {
 			// Determine the stand age, based on the leading site Sp0.
 			var standAge = layer.determineLeadingSp0(0).getSpeciesGroup().getTotalAge();
 
-			int startYear = measurementYear;
-			int endYear = measurementYear;
+			int startYear = adjustMeasurementYearAsNecessary(measurementYear, state.getStartAge(), standAge);
+			int endYear = adjustMeasurementYearAsNecessary(measurementYear, state.getEndAge(), standAge);
 
-			{
-				var startAgeStandAgeDiff = state.getStartAge() - standAge;
-				var areFractionalAges = Math.round(startAgeStandAgeDiff) == startAgeStandAgeDiff;
-				if (startAgeStandAgeDiff >= 0) {
-					startYear += (int) Math
-							.round(areFractionalAges ? startAgeStandAgeDiff - 0.5 : startAgeStandAgeDiff);
-				} else {
-					startYear += (int) Math
-							.round(areFractionalAges ? startAgeStandAgeDiff + 0.5 : startAgeStandAgeDiff);
-				}
-			}
-
-			{
-				var endAgeStandAgeDiff = state.getEndAge() - standAge;
-				var areFractionalAges = Math.round(endAgeStandAgeDiff) == endAgeStandAgeDiff;
-				if (endAgeStandAgeDiff >= 0) {
-					endYear += Math.round(areFractionalAges ? endAgeStandAgeDiff - 0.5 : endAgeStandAgeDiff);
-				} else {
-					endYear += Math.round(areFractionalAges ? endAgeStandAgeDiff + 0.5 : endAgeStandAgeDiff);
-				}
-			}
-
-			var doAllowForward = context.getValidatedParams().getSelectedExecutionOptions()
-					.contains(ExecutionOption.FORWARD_GROW_ENABLED);
-			var doAllowBack = context.getValidatedParams().getSelectedExecutionOptions()
-					.contains(ExecutionOption.BACK_GROW_ENABLED);
+			var doAllowForward = projectionParameters.isForwardEnabled();
+			var doAllowBack = projectionParameters.isBackEnabled();
 			if (state.getGrowthModel(projectionType) == GrowthModelCode.VRI
 					&& state.getProcessingMode(projectionType) == ProcessingModeCode.VRI_VriYoung) {
 				doAllowBack = false;
@@ -398,6 +406,21 @@ public class PolygonProjectionRunner {
 		}
 	}
 
+	private int adjustMeasurementYearAsNecessary(int measurementYear, double suppliedAge, double standAge) {
+
+		var suppliedAgeStandAgeDiff = suppliedAge - standAge;
+		var areFractionalAges = Math.round(suppliedAgeStandAgeDiff) == suppliedAgeStandAgeDiff;
+		if (suppliedAgeStandAgeDiff >= 0) {
+			measurementYear += (int) Math
+					.round(areFractionalAges ? suppliedAgeStandAgeDiff - 0.5 : suppliedAgeStandAgeDiff);
+		} else {
+			measurementYear += (int) Math
+					.round(areFractionalAges ? suppliedAgeStandAgeDiff + 0.5 : suppliedAgeStandAgeDiff);
+		}
+		
+		return measurementYear;
+	}
+	
 	/**
 	 * Determine the processing model to which the stand will be initially subject.
 	 *
@@ -478,78 +501,9 @@ public class PolygonProjectionRunner {
 
 			// Determine the year range of the projection.
 
-			// Calculate the starting age over which the yield table is to be produced.
-			//
-			// We are guaranteed that one of the yearStart, ageStart or one of the
-			// force year parameters has been supplied. That leaves us with the
-			// cases:
-			//
-			// 1. Both yearStart and ageStart are supplied:
-			// startAge is the maximum of the age corresponding to the start year
-			// and the supplied ageStart.
-			//
-			// 2. yearStart parameter is supplied only:
-			// standAge is the stand age corresponding at the specified year.
-			//
-			// 3. ageStart parameter is supplied only:
-			// ageStart is the same as this parameter.
-			//
-			Double startAge = null;
+			Double startAge = calculateStartAge();
 
-			{
-				Double ageAtYear = null;
-				if (context.getValidatedParams().getYearStart() != null) {
-					Layer layer = polygon.findPrimaryLayerByProjectionType(ProjectionTypeCode.UNKNOWN);
-					ageAtYear = layer.determineLayerAgeAtYear(context.getValidatedParams().getYearStart());
-				}
-
-				if (ageAtYear != null && context.getValidatedParams().getAgeStart() != null) {
-					startAge = Double.valueOf(
-							ageAtYear > context.getValidatedParams().getAgeStart()
-									? context.getValidatedParams().getAgeStart() : ageAtYear
-					);
-				} else if (ageAtYear != null) {
-					startAge = ageAtYear;
-				} else {
-					startAge = Double.valueOf(context.getValidatedParams().getAgeStart());
-				}
-
-				logger.debug("{}: starting age of yield table has been determined to be {}", polygon, startAge);
-			}
-
-			// Calculate the finishing age over which the yield table is to be produced.
-			//
-			// We are guaranteed that one of the yearEnd or ageEnd parameters has been supplied.
-			// That leaves us with cases:
-			//
-			// 1. Both are supplied:
-			// endAge is the lesser of the age corresponding to the yearEnd and the supplied ageEnd.
-			//
-			// 2. Only yearEnd is supplied:
-			// endAge is the stand age corresponding at the specified year.
-			//
-			// 3. Only ageEnd is supplied:
-			// endAge is the same as this parameter.
-			Double endAge = null;
-
-			{
-				Double ageAtYear = null;
-				if (context.getValidatedParams().getYearEnd() != null) {
-					Layer layer = polygon.findPrimaryLayerByProjectionType(ProjectionTypeCode.UNKNOWN);
-					ageAtYear = layer.determineLayerAgeAtYear(context.getValidatedParams().getYearEnd());
-				}
-
-				if (ageAtYear != null && context.getValidatedParams().getAgeEnd() != null) {
-					endAge = ageAtYear > context.getValidatedParams().getAgeEnd()
-							? context.getValidatedParams().getAgeEnd() : ageAtYear;
-				} else if (ageAtYear != null) {
-					endAge = ageAtYear;
-				} else {
-					endAge = Double.valueOf(context.getValidatedParams().getAgeEnd());
-				}
-
-				logger.debug("{}: ending age of yield table has been determined to be {}", polygon, endAge);
-			}
+			Double endAge = calculateEndAge();
 
 			// We need to make an allowance for the reference year and the current year. We need to
 			// check if they extend the range of years to be projected.
@@ -607,6 +561,76 @@ public class PolygonProjectionRunner {
 		}
 	}
 
+	/**
+	 * Calculate the starting age over which the yield table is to be produced.
+	 * <p>
+	 * This will be the minimum of the supplied AgeStart value and the age of
+	 * the layer at the given YearStart, if both are supplied. If only the 
+	 * latter has a value, it is used. Otherwise, AgeStart is used (even if
+	 * null.)
+	 * 
+	 * @return as described
+	 * @throws PolygonValidationException
+	 */
+	private Double calculateStartAge() throws PolygonValidationException {
+		
+		Double calculatedAge = null;
+		
+		Double ageAtYear = null;
+		if (context.getValidatedParams().getYearStart() != null) {
+			Layer layer = polygon.findPrimaryLayerByProjectionType(ProjectionTypeCode.UNKNOWN);
+			ageAtYear = layer.determineLayerAgeAtYear(context.getValidatedParams().getYearStart());
+		}
+
+		Integer suppliedAgeStart = context.getValidatedParams().getAgeStart();
+		if (ageAtYear != null && suppliedAgeStart != null) {
+			calculatedAge = Math.min(ageAtYear, suppliedAgeStart);
+		} else if (ageAtYear != null) {
+			calculatedAge = ageAtYear;
+		} else if (suppliedAgeStart != null) {
+			calculatedAge = Double.valueOf(suppliedAgeStart);
+		}
+
+		logger.debug("{}: starting age of yield table has been determined to be {}", polygon, calculatedAge);
+		
+		return calculatedAge;
+	}
+	
+	/**
+	 * Calculate the ending age over which the yield table is to be produced.
+	 * <p>
+	 * This will be the minimum of the supplied AgeEnd value and the age of
+	 * the layer at the given YearEnd, if both are supplied. If only the 
+	 * latter has a value, it is used. Otherwise, AgeEnd is used (even if
+	 * null.)
+	 * 
+	 * @return as described
+	 * @throws PolygonValidationException
+	 */
+	private Double calculateEndAge() throws PolygonValidationException {
+		
+		Double calculatedAge = null;
+		
+		Double ageAtYearEnd = null;
+		if (context.getValidatedParams().getYearEnd() != null) {
+			Layer layer = polygon.findPrimaryLayerByProjectionType(ProjectionTypeCode.UNKNOWN);
+			ageAtYearEnd = layer.determineLayerAgeAtYear(context.getValidatedParams().getYearEnd());
+		}
+
+		Integer suppliedAgeEnd = context.getValidatedParams().getAgeEnd();
+		if (ageAtYearEnd != null && suppliedAgeEnd != null) {
+			calculatedAge = Math.min(ageAtYearEnd, suppliedAgeEnd);
+		} else if (ageAtYearEnd != null) {
+			calculatedAge = ageAtYearEnd;
+		} else if (suppliedAgeEnd != null) {
+			calculatedAge = Double.valueOf(suppliedAgeEnd);
+		}
+
+		logger.debug("{}: ending age of yield table has been determined to be {}", polygon, calculatedAge);
+		
+		return calculatedAge;
+	}
+	
 	private void buildProjectionExecutionStructure() throws ProjectionInternalExecutionException {
 
 		URL rootUrl = ProjectionUtils.class.getClassLoader().getResource("ca/bc/gov/nrs/vdyp/template");

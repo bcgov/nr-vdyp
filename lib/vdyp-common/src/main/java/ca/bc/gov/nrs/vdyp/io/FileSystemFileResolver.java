@@ -55,6 +55,6 @@ public class FileSystemFileResolver implements ConcreteFileResolver {
 	
 	@Override
 	public String toString() {
-		return "FileSystemFileResolver (" + (currentDirectory == null ? "absolute" : "relative [" + currentDirectory + "]") + ")";
+		return "FileSystemFileResolver (" + (currentDirectory.isEmpty() ? "absolute" : "relative [" + currentDirectory.get() + "]") + ")";
 	}
 }

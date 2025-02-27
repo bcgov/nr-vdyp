@@ -962,7 +962,7 @@ public class Polygon implements Comparable<Polygon> {
 				if (getHistory().getDisturbanceStartYear() > measurementYear) {
 					years = leadingSpecies.getSpeciesGroup().getTotalAge();
 				} else {
-					years = measurementYear - getHistory().getDisturbanceStartYear();
+					years = (double) measurementYear - getHistory().getDisturbanceStartYear();
 					years = VdypMath.clamp(years, 0, leadingSpecies.getSpeciesGroup().getTotalAge());
 				}
 			} else {
