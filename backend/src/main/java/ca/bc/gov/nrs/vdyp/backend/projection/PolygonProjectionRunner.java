@@ -202,25 +202,11 @@ public class PolygonProjectionRunner {
 					MessageFormat.format("{0}: encountered exception while running createFipInputData", polygon), e
 			);
 		} finally {
-			if (polygonOutputStream != null) {
-				close(polygonOutputStream);
-			}
-			if (layersOutputStream != null) {
-				close(polygonOutputStream);
-			}
-			if (speciesOutputStream != null) {
-				close(polygonOutputStream);
-			}
+			close(speciesOutputStream);
+			close(layersOutputStream);
+			close(polygonOutputStream);
 		}
 	}
-	
-	private void close(OutputStream os) {
-		try {
-			os.close();
-		} catch (IOException e) {
-			logger.error("Failed to close OutputStream", e);
-		}
- 	}
 
 	private void createVriInputData(ProjectionTypeCode projectionTypeCode, PolygonProjectionState state)
 			throws PolygonExecutionException {
@@ -257,12 +243,22 @@ public class PolygonProjectionRunner {
 					MessageFormat.format("{0}: encountered exception while running createVriInputData", polygon), e
 			);
 		} finally {
-			close(polygonOutputStream);
-			close(layersOutputStream);
-			close(speciesOutputStream);
 			close(siteIndexOutputStream);
+			close(speciesOutputStream);
+			close(layersOutputStream);
+			close(polygonOutputStream);
 		}
 	}
+	
+	private void close(OutputStream os) {
+		if (os != null) {
+			try {
+				os.close();
+			} catch (IOException e) {
+				logger.error("Failed to close OutputStream", e);
+			}
+		}
+ 	}
 
 	private void performAdjustProcessing() throws PolygonExecutionException {
 
