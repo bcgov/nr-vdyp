@@ -32,22 +32,20 @@ public enum BecZone implements SI32Enum<BecZone> {
 	SBS(12, SpeciesRegion.INTERIOR), //
 	SWB(13, SpeciesRegion.INTERIOR); //
 
-	private static Map<Integer, BecZone> index2EnumMap = null;
+	private static final Map<Integer, BecZone> index2EnumMap = new HashMap<>();
 
-	private static synchronized Map<Integer, BecZone> getIndex2EnumMap() {
-		if (index2EnumMap == null) {
-			index2EnumMap = new HashMap<>();
+	static {
+		for (BecZone becZone: BecZone.values()) {
+			index2EnumMap.put(becZone.index, becZone);
 		}
-		return index2EnumMap;
 	}
-
+	
 	private final int index;
 	private final SpeciesRegion speciesRegion;
 
 	private BecZone(int index, SpeciesRegion speciesRegion) {
 		this.index = index;
 		this.speciesRegion = speciesRegion;
-		getIndex2EnumMap().put(index, this);
 	}
 
 	@Override
@@ -92,7 +90,7 @@ public enum BecZone implements SI32Enum<BecZone> {
 	 *         <code>null</code> is returned.
 	 */
 	public static BecZone forIndex(int index) {
-		return getIndex2EnumMap().get(index);
+		return index2EnumMap.get(index);
 	}
 
 	/**

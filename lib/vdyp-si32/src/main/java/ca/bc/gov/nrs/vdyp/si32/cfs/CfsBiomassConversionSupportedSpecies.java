@@ -115,7 +115,11 @@ public enum CfsBiomassConversionSupportedSpecies implements SI32Enum<CfsBiomassC
 	@Override
 	public String getText() {
 		if (this.equals(UNKNOWN)) {
-			return "";
+			throw new UnsupportedOperationException(
+					MessageFormat.format(
+							"Cannot call getIndex on {0} as it's not a standard member of the enumeration", this
+					)
+			);
 		}
 
 		return this.toString();
