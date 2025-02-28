@@ -1,13 +1,8 @@
 package ca.bc.gov.nrs.vdyp.test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.aMapWithSize;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasKey;
-import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.is;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.io.ByteArrayInputStream;
@@ -35,6 +30,7 @@ import org.hamcrest.Matchers;
 
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
+import ca.bc.gov.nrs.vdyp.io.ConcreteFileResolver;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BecDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BreakageParser;
@@ -129,7 +125,7 @@ public class TestUtils {
 	 * @param is
 	 * @return
 	 */
-	public static FileResolver fileResolver(String expectedFilename, InputStream is) {
+	public static ConcreteFileResolver fileResolver(String expectedFilename, InputStream is) {
 		var result = new MockFileResolver("TEST");
 		result.addStream(expectedFilename, is);
 		return result;
@@ -372,8 +368,8 @@ public class TestUtils {
 		}
 	}
 
-	public static FileResolver fileResolver(Class<?> klazz) {
-		return new FileResolver() {
+	public static ConcreteFileResolver fileResolver(Class<?> klazz) {
+		return new ConcreteFileResolver() {
 
 			@Override
 			public InputStream resolveForInput(String filename) throws IOException {
@@ -391,21 +387,29 @@ public class TestUtils {
 			}
 
 			@Override
-			public String toString(String filename) throws IOException {
-				return klazz.getResource(filename).getPath();
+			public FileResolver getOutputFileResolver() {
+				return this;
 			}
 
 			@Override
-			public FileResolver relative(String path) throws IOException {
-				fail("Should not be requesting relative file resolver " + path);
-				return null;
+			public FileResolver getInputFileResolver() {
+				return this;
+			}
+
+			@Override
+			public String toString(String filename) throws IOException {
+				return klazz.getResource(filename).getPath();
 			}
 
 			@Override
 			public Path toPath(String filename) throws IOException {
 				return Path.of(toString(filename));
 			}
-
+			
+			@Override
+			public String toString() {
+				return "Dynamic ConcreteFileResolver for class " + klazz.getName();
+			}
 		};
 	}
 
@@ -456,7 +460,10 @@ public class TestUtils {
 
 		@Override
 		protected List<ControlKey> outputFileParsers() {
-			return Collections.emptyList();
+			return List.of(
+					ControlKey.VDYP_OUTPUT_VDYP_POLYGON, ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SPECIES,
+					ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL
+			);
 		}
 
 		@Override

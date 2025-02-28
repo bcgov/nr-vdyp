@@ -1,21 +1,10 @@
 package ca.bc.gov.nrs.vdyp.application;
 
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.causedBy;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.*;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.coe;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.utilization;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.utilizationAllAndBiggest;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.utilizationHeight;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.describedAs;
-import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -49,6 +38,8 @@ import ca.bc.gov.nrs.vdyp.common.ComputationMethods;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.EstimationMethods;
 import ca.bc.gov.nrs.vdyp.common.Utils;
+import ca.bc.gov.nrs.vdyp.common.VdypApplicationInitializationException;
+import ca.bc.gov.nrs.vdyp.common.VdypApplicationProcessingException;
 import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMapImpl;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BecDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
@@ -109,6 +100,44 @@ class VdypStartApplicationTest {
 			app.close();
 		}
 
+		@Test
+		void testInitOneControlFile() throws IOException, ResourceParseException {
+			var app = new TestStartApplication(controlMap, true);
+			
+			var controlFileResolver = TestUtils.fileResolver(TestUtils.class);
+			try {
+				TestStartApplication.doMain(app, controlFileResolver.toPath("VRISTART.CTR").toString());
+			} catch (VdypApplicationInitializationException e) {
+				fail("CONFIG_LOAD_ERROR", e);
+			} catch (VdypApplicationProcessingException e) {
+				fail("PROCESSING_ERROR", e);
+			}
+
+			app.close();
+		}
+	}
+	
+	@Test
+	void testDebugGetSet() throws IOException {
+		try (var app = new TestStartApplication(controlMap, true)) {
+		
+			for (int i = 0; i < 25; i++) {
+				app.setDebugMode(0, i + 1);
+				assertThat(app.getDebugMode(0), equalTo(i + 1));
+			}
+			
+			assertThrows(ArrayIndexOutOfBoundsException.class, () -> app.setDebugMode(-1, 1));
+			assertThrows(ArrayIndexOutOfBoundsException.class, () -> app.setDebugMode(25, 1));
+		}
+	}
+	
+	@Test
+	void testApplicationExceptions() throws IOException, ResourceParseException {
+		try (var app = new TestStartApplication(controlMap, true)) {
+		
+			assertThrows(VdypApplicationInitializationException.class, () -> TestStartApplication.doMain(app));
+			assertThrows(VdypApplicationInitializationException.class, () -> TestStartApplication.doMain(app, "bad path"));
+		} 
 	}
 
 	private MockFileResolver dummyIo() {

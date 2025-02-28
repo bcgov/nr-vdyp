@@ -1,7 +1,6 @@
 package ca.bc.gov.nrs.vdyp.common_calculators;
 
-import static ca.bc.gov.nrs.vdyp.common_calculators.SiteIndexUtilities.llog;
-import static ca.bc.gov.nrs.vdyp.common_calculators.SiteIndexUtilities.ppow;
+import static ca.bc.gov.nrs.vdyp.common_calculators.SiteIndexUtilities.*;
 
 import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.CommonCalculatorException;
 import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.CurveErrorException;

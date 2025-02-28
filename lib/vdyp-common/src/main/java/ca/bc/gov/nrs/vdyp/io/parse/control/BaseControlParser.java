@@ -40,9 +40,6 @@ public abstract class BaseControlParser {
 
 	protected ControlFileParser controlParser = new ControlFileParser();
 
-	protected BaseControlParser() {
-	}
-
 	/**
 	 * This method is to be called after the concrete Control Parsers are initialized. This can be from the constructors
 	 * of those classes, after initialization is complete.

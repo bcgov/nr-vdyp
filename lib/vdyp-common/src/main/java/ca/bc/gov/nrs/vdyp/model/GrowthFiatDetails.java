@@ -152,6 +152,6 @@ public class GrowthFiatDetails {
 			}
 		}
 
-		throw new IllegalStateException(MessageFormat.format("age {} was not found to be in range ", age));
+		throw new IllegalStateException(MessageFormat.format("age {0} was not found to be in range ", age));
 	}
 }

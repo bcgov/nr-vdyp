@@ -1,19 +1,19 @@
 package ca.bc.gov.nrs.vdyp.io;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import org.hamcrest.MatcherAssert;
-import org.hamcrest.Matchers;
+import static org.hamcrest.MatcherAssert.*;
+import static org.hamcrest.Matchers.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -26,12 +26,20 @@ class ZipOutputFileResolverTest {
 	void testZipOutputFileResolver() throws IOException {
 
 		ZipOutputFileResolver resolver = new ZipOutputFileResolver();
+		
+		assertThat(resolver.toString(), equalTo("ZipOutputFileResolver"));
+		
+		assertThat(resolver.getOutputFileResolver(), equalTo(resolver));
+		assertThrows(UnsupportedOperationException.class, () -> resolver.getInputFileResolver());
 
-		MatcherAssert.assertThat(resolver.toPath("file").toString(), Matchers.endsWith("lib/vdyp-common/file"));
+		Path currentRelativePath = Paths.get("");
+		String currentPath = currentRelativePath.toAbsolutePath().toString();
+
+		assertThat(resolver.toPath("file"), is(Paths.get(currentPath, "file")));
 
 		assertThrows(UnsupportedOperationException.class, () -> resolver.resolveForInput("file"));
 
-		MatcherAssert.assertThat(resolver.toString("file"), Matchers.endsWith("lib/vdyp-common/file"));
+		assertThat(resolver.toString("file"), endsWith(Paths.get(currentPath, "file").toString()));
 
 		for (int i = 0; i < 5; i++) {
 			OutputStream os = resolver.resolveForOutput("file" + i);

@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.forward;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
@@ -21,6 +22,8 @@ import ca.bc.gov.nrs.vdyp.forward.parsers.VdypPolygonDescriptionParser;
 import ca.bc.gov.nrs.vdyp.forward.parsers.VdypPolygonParser;
 import ca.bc.gov.nrs.vdyp.forward.parsers.VdypSpeciesParser;
 import ca.bc.gov.nrs.vdyp.forward.parsers.VdypUtilizationParser;
+import ca.bc.gov.nrs.vdyp.io.CompositeFileResolver;
+import ca.bc.gov.nrs.vdyp.io.ConcreteFileResolver;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BasalAreaGrowthEmpiricalParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BasalAreaGrowthFiatParser;
@@ -128,9 +131,16 @@ public class ForwardControlParser extends BaseControlParser {
 			ControlKey.class
 	);
 
+	private final Set<ControlKey> vdypForwardOutputWriters = new HashSet<>();
+
 	private void addInputParser(ControlMapValueReplacer<Object, String> parser) {
 		vdypForwardInputParsers.put(parser.getControlKey(), parser);
 		orderedControlKeys.add(parser.getControlKey());
+	}
+
+	private void addOutputWriter(ControlKey key) {
+		vdypForwardOutputWriters.add(key);
+		orderedControlKeys.add(key);
 	}
 
 	private final Map<ControlKey, ResourceControlMapModifier> vdypForwardConfigurationParsers = new EnumMap<>(
@@ -267,6 +277,15 @@ public class ForwardControlParser extends BaseControlParser {
 		// V7O_VI7 - 14
 		addInputParser(new VdypPolygonDescriptionParser());
 
+		// V7O_VOP - 15
+		addOutputWriter(ControlKey.VDYP_OUTPUT_VDYP_POLYGON);
+		// V7O_VOS - 16
+		addOutputWriter(ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SPECIES);
+		// V7O_VOU - 18
+		addOutputWriter(ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL);
+		// V7O_VOC - 19
+		addOutputWriter(ControlKey.VDYP_OUTPUT_COMPATIBILITY_VARIABLES);
+
 		// 101 - a literal value of type VdypGrowthDetails
 
 		controlParser.record(ControlKey.VTROL, new ForwardControlVariableParser());
@@ -304,7 +323,7 @@ public class ForwardControlParser extends BaseControlParser {
 			if (m != null) {
 				// m is a configuration file parser.
 				logger.debug(
-						"Parsing configuration file {}[{}] using {}", m.getControlKeyName(), key.sequence.get(),
+						"Parsing configuration file [{[{}] using {}", m.getControlKeyName(), key.sequence.get(),
 						m.getClass().getName()
 				);
 				m.modify(map, fileResolver);
@@ -318,6 +337,21 @@ public class ForwardControlParser extends BaseControlParser {
 						r.getClass().getName()
 				);
 				r.modify(map, fileResolver);
+			}
+
+			if (vdypForwardOutputWriters.contains(key) && map.containsKey(key.name())) {
+				String fileName = (String) map.get(key.name());
+				logger.debug(
+						"Creating output stream for file {}[{}] using {}", fileName, key,
+						fileResolver.getClass().getName()
+				);
+				if (fileResolver instanceof CompositeFileResolver cfr) {
+					map.put(key.name(), cfr.toOutputPath(fileName));
+				} else if (fileResolver instanceof ConcreteFileResolver cfr) {
+					var path = Path.of(cfr.toPath(".").getParent().toString(), fileName);
+					logger.debug("Resolved location to {}", path);
+					map.put(key.name(), path);
+				}
 			}
 		}
 
