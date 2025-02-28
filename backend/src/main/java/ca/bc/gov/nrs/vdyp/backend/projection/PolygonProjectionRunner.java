@@ -255,7 +255,7 @@ public class PolygonProjectionRunner {
 			try {
 				os.close();
 			} catch (IOException e) {
-				logger.error("Failed to close OutputStream", e);
+				throw new RuntimeException("Failed to close a given output stream");
 			}
 		}
  	}

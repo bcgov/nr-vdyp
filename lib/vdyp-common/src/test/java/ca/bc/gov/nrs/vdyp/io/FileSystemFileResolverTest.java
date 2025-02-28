@@ -18,6 +18,10 @@ class FileSystemFileResolverTest {
 	void testWorkingDirGetPath() throws Exception {
 		var unit = new FileSystemFileResolver();
 
+		assertThat(unit.getInputFileResolver(), equalTo(unit));
+		assertThat(unit.getOutputFileResolver(), equalTo(unit));
+		assertThat(unit.toString(), equalTo("FileSystemFileResolver (absolute)"));
+
 		var result = unit.toPath("test");
 
 		assertThat(result.toAbsolutePath().toString(), equalTo(System.getProperty("user.dir") + "/test"));
@@ -28,6 +32,8 @@ class FileSystemFileResolverTest {
 		var unit = new FileSystemFileResolver(testDir);
 
 		var result = unit.toPath("test");
+
+		assertThat(unit.toString(), equalTo("FileSystemFileResolver (relative [" + result.getParent().toAbsolutePath() + "])"));
 
 		assertThat(result.toAbsolutePath().toString(), equalTo(testDir.resolve("test").toString()));
 	}

@@ -40,8 +40,7 @@ public class VdypOutputWriter implements Closeable {
 	protected final OutputStream polygonFile;
 	protected final OutputStream speciesFile;
 	protected final OutputStream utilizationFile;
-	@SuppressWarnings("unused")
-	private Optional<OutputStream> compatibilityVariablesFile;
+	protected Optional<OutputStream> compatibilityVariablesFile;
 
 	private ResolvedControlMap controlMap;
 
@@ -272,8 +271,9 @@ public class VdypOutputWriter implements Closeable {
 		}
 	}
 
-	private static OutputStream getOutputStream(Map<String, Object> controlMap, ConcreteFileResolver resolver, String key)
-			throws IOException {
+	private static OutputStream
+			getOutputStream(Map<String, Object> controlMap, ConcreteFileResolver resolver, String key)
+					throws IOException {
 		String fileName = Utils.expectParsedControl(controlMap, key, String.class);
 		return resolver.resolveForOutput(fileName);
 	}
@@ -468,8 +468,9 @@ public class VdypOutputWriter implements Closeable {
 
 	@Override
 	public void close() throws IOException {
-		polygonFile.close();
-		speciesFile.close();
-		utilizationFile.close();
+		Utils.close(polygonFile);
+		Utils.close(speciesFile);
+		Utils.close(utilizationFile);
+		compatibilityVariablesFile.ifPresent(x -> Utils.close(x));
 	}
 }

@@ -36,6 +36,7 @@ class VdypOutputWriterTest {
 	MockOutputStream polyStream;
 	MockOutputStream specStream;
 	MockOutputStream utilStream;
+	MockOutputStream cvarsStream;
 
 	MockFileResolver fileResolver;
 
@@ -44,37 +45,43 @@ class VdypOutputWriterTest {
 	@BeforeEach
 	void initStreams() {
 		controlMap = new HashMap<String, Object>();
+		
 		TestUtils.populateControlMapBecReal(controlMap);
 		TestUtils.populateControlMapGenusReal(controlMap);
 
 		polyStream = new TestUtils.MockOutputStream("polygons");
 		specStream = new TestUtils.MockOutputStream("species");
 		utilStream = new TestUtils.MockOutputStream("utilization");
+		cvarsStream = new TestUtils.MockOutputStream("cvars");
 
 		controlMap.put(ControlKey.VDYP_OUTPUT_VDYP_POLYGON.name(), "testPolygonFile");
 		controlMap.put(ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SPECIES.name(), "testSpeciesFile");
 		controlMap.put(ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name(), "testUtilizationFile");
+		controlMap.put(ControlKey.VDYP_OUTPUT_COMPATIBILITY_VARIABLES.name(), "testCompatibilityVariables");
 
 		fileResolver = new MockFileResolver("TEST");
 		fileResolver.addStream("testPolygonFile", polyStream);
 		fileResolver.addStream("testSpeciesFile", specStream);
 		fileResolver.addStream("testUtilizationFile", utilStream);
+		fileResolver.addStream("testCompatibilityVariables", cvarsStream);
 	}
 
 	@Test
 	void testClosesGivenStreams() throws IOException {
 
-		var unit = new VdypOutputWriter(controlMap, polyStream, specStream, utilStream);
+		var unit = new VdypOutputWriter(controlMap, polyStream, specStream, utilStream, Optional.of(cvarsStream));
 
 		unit.close();
 
 		polyStream.assertClosed();
 		specStream.assertClosed();
 		utilStream.assertClosed();
+		cvarsStream.assertClosed();
 
 		polyStream.assertContent(emptyString());
 		specStream.assertContent(emptyString());
 		utilStream.assertContent(emptyString());
+		cvarsStream.assertContent(emptyString());
 	}
 
 	@Test
@@ -87,10 +94,12 @@ class VdypOutputWriterTest {
 		polyStream.assertClosed();
 		specStream.assertClosed();
 		utilStream.assertClosed();
+		cvarsStream.assertClosed();
 
 		polyStream.assertContent(emptyString());
 		specStream.assertContent(emptyString());
 		utilStream.assertContent(emptyString());
+		cvarsStream.assertContent(emptyString());
 	}
 	
 	@Test
@@ -101,6 +110,7 @@ class VdypOutputWriterTest {
 		controlMap.put(ControlKey.VDYP_OUTPUT_VDYP_POLYGON.name(), fileResolver.toPath("testPolygonFile"));
 		controlMap.put(ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SPECIES.name(), fileResolver.toPath("testSpeciesFile"));
 		controlMap.put(ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name(), fileResolver.toPath("testUtilizationFile"));
+		controlMap.put(ControlKey.VDYP_OUTPUT_COMPATIBILITY_VARIABLES.name(), fileResolver.toPath("testCompatibilityVariables"));
 
 		try (var unit = new VdypOutputWriter(controlMap)) {
 			var polygon = buildTestPolygonAndChildren();
@@ -118,6 +128,10 @@ class VdypOutputWriterTest {
 		
 		try (var utilizationReader = Files.newBufferedReader(fileResolver.toPath("testUtilizationFile"))) {
 			assertTrue(utilizationReader.read() >= 0);
+		}
+		
+		try (var cVarsReader = Files.newBufferedReader(fileResolver.toPath("testCompatibilityVariables"))) {
+			assertTrue(cVarsReader.read() == -1);
 		}
 	}
 

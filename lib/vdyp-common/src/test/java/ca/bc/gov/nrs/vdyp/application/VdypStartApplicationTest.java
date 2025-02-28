@@ -116,6 +116,29 @@ class VdypStartApplicationTest {
 			app.close();
 		}
 	}
+	
+	@Test
+	void testDebugGetSet() throws IOException {
+		try (var app = new TestStartApplication(controlMap, true)) {
+		
+			for (int i = 0; i < 25; i++) {
+				app.setDebugMode(0, i + 1);
+				assertThat(app.getDebugMode(0), equalTo(i + 1));
+			}
+			
+			assertThrows(ArrayIndexOutOfBoundsException.class, () -> app.setDebugMode(-1, 1));
+			assertThrows(ArrayIndexOutOfBoundsException.class, () -> app.setDebugMode(25, 1));
+		}
+	}
+	
+	@Test
+	void testApplicationExceptions() throws IOException, ResourceParseException {
+		try (var app = new TestStartApplication(controlMap, true)) {
+		
+			assertThrows(VdypApplicationInitializationException.class, () -> TestStartApplication.doMain(app));
+			assertThrows(VdypApplicationInitializationException.class, () -> TestStartApplication.doMain(app, "bad path"));
+		} 
+	}
 
 	private MockFileResolver dummyIo() {
 		controlMap.put(ControlKey.VDYP_OUTPUT_VDYP_POLYGON.name(), "DUMMY1");
