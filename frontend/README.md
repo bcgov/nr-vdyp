@@ -22,9 +22,9 @@ Cypress is used for end-to-end, component testing, unit testing.
 npx cypress open
 ```
 
-### Run Component Tests in Specific Browsers (GUI mode)
+### Run Component Tests in Specific Browser (GUI mode)
 
-Run component tests using different browsers with the following commands:
+Run component tests using chrome browser with the following command:
 
 - Chrome:
 
@@ -32,32 +32,18 @@ Run component tests using different browsers with the following commands:
 npx cypress open --component --browser chrome
 ```
 
-- Firefox
-
-```bash
-npx cypress open --component --browser firefox
-```
-
-- Edge
-
-```bash
-npx cypress open --component --browser edge
-```
-
-#### Use a Specific Config File
-
-To open Cypress with a specific configuration file:
-
-```bash
-npx cypress open --config-file cypress.config.mjs
-```
-
 ### Run Cypress Tests in Headless Mode (CLI mode)
 
-Run tests without opening the Cypress GUI in headless mode.
+Execute all component tests in headless mode.
 
 ```bash
 npx cypress run --component
+```
+
+Run all component tests in the src/components directory:
+
+```bash
+npx cypress run --component --spec "src/components/**/*.cy.ts"
 ```
 
 #### Run Specific Component Tests
@@ -76,18 +62,18 @@ npx cypress run --component --spec "src/components/reporting/*.cy.ts"
 npx cypress run --component --spec "src/components/reporting/ReportingContainer.cy.ts"
 ```
 
-- Run multiple specific tests:
-
-```bash
-npx cypress run --component --spec "src/components/reporting/ReportingContainer.cy.ts,src/components/common/AppMessageDialog.vue.cy.ts"
-```
-
-### Run End-to-End (E2E) Tests
+### Run End-to-End (E2E) Tests (CLI mode)
 
 Execute all end-to-end tests in headless mode.
 
 ```bash
 npx cypress run --e2e
+```
+
+Execute all tests in the unit directory:
+
+```bash
+npx cypress run --e2e --spec "cypress/e2e/unit/**/*.cy.ts"
 ```
 
 #### Open Cypress Test Runner for E2E in Chrome
