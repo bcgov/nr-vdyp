@@ -3,7 +3,7 @@
 import { createCSVFiles, runModel } from '@/services/modelParameterService'
 import { SelectedExecutionOptionsEnum } from '@/services/vdyp-api'
 import * as apiActions from '@/services/apiActions'
-import { CONSTANTS, DEFAULTS, OPTIONS } from '@/constants'
+import { BIZCONSTANTS, CONSTANTS, DEFAULTS, OPTIONS } from '@/constants'
 import sinon from 'sinon'
 
 describe('Model Parameter Service Unit Tests', () => {
@@ -54,9 +54,9 @@ describe('Model Parameter Service Unit Tests', () => {
 
     const derivedByCode =
       mockModelParameterStore.derivedBy === CONSTANTS.DERIVED_BY.VOLUME
-        ? CONSTANTS.INVENTORY_CODES.FIP
+        ? BIZCONSTANTS.INVENTORY_CODES.FIP
         : mockModelParameterStore.derivedBy === CONSTANTS.DERIVED_BY.BASAL_AREA
-          ? CONSTANTS.INVENTORY_CODES.VRI
+          ? BIZCONSTANTS.INVENTORY_CODES.VRI
           : ''
 
     cy.wrap(blobPolygon.text()).then((text) => {
@@ -94,8 +94,8 @@ describe('Model Parameter Service Unit Tests', () => {
     expect(projectionStub.calledOnce).to.be.true
     const formDataArg = projectionStub.getCall(0).args[0] as FormData
 
-    expect(formDataArg.has('polygonInputData')).to.be.true
-    expect(formDataArg.has('layersInputData')).to.be.true
+    expect(formDataArg.has('HCSV-Polygon')).to.be.true
+    expect(formDataArg.has('HCSV-Layers')).to.be.true
     expect(formDataArg.has('projectionParameters')).to.be.true
   })
 

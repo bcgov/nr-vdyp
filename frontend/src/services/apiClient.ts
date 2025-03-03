@@ -25,8 +25,8 @@ export const apiClient = {
     options?: AxiosRequestConfig,
   ) => {
     return projectionApiInstance.projectionHcsvPostForm(
-      formData.get('polygonInputData') as File,
-      formData.get('layersInputData') as File,
+      formData.get('HCSV-Polygon') as File,
+      formData.get('HCSV-Layers') as File,
       formData.get('projectionParameters') as any,
       trialRun,
       options,

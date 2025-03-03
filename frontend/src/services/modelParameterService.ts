@@ -347,15 +347,11 @@ export const runModel = async (modelParameterStore: any) => {
     }),
   )
   formData.append(
-    'polygonInputData',
+    'HCSV-Polygon',
     blobPolygon,
     CONSTANTS.FILE_NAME.INPUT_POLY_CSV,
   )
-  formData.append(
-    'layersInputData',
-    blobLayer,
-    CONSTANTS.FILE_NAME.INPUT_LAYER_CSV,
-  )
+  formData.append('HCSV-Layers', blobLayer, CONSTANTS.FILE_NAME.INPUT_LAYER_CSV)
 
   const result = await projectionHcsvPost(formData, false)
   return result

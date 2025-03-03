@@ -41,11 +41,11 @@ export const RunHCSVProjectionApiAxiosParamCreator = function (
       }
 
       if (polygonInputData !== undefined) {
-        localVarFormParams.append('polygonInputData', polygonInputData as any)
+        localVarFormParams.append('HCSV-Polygon', polygonInputData as any)
       }
 
       if (layersInputData !== undefined) {
-        localVarFormParams.append('layersInputData', layersInputData as any)
+        localVarFormParams.append('HCSV-Layers', layersInputData as any)
       }
 
       if (projectionParameters !== undefined) {

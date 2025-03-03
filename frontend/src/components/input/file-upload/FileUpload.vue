@@ -329,8 +329,8 @@ const runModelHandler = async () => {
         type: 'application/json',
       }),
     )
-    formData.append('polygonInputData', polygonFile.value as Blob)
-    formData.append('layersInputData', layerFile.value as Blob)
+    formData.append('HCSV-Polygon', polygonFile.value as Blob)
+    formData.append('HCSV-Layers', layerFile.value as Blob)
 
     const result = await projectionHcsvPost(formData, false)
 
