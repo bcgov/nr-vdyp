@@ -1,7 +1,10 @@
 /// <reference types="cypress" />
 
 import { createCSVFiles, runModel } from '@/services/modelParameterService'
-import { SelectedExecutionOptionsEnum } from '@/services/vdyp-api'
+import {
+  SelectedExecutionOptionsEnum,
+  ParameterNamesEnum,
+} from '@/services/vdyp-api'
 import * as apiActions from '@/services/apiActions'
 import { BIZCONSTANTS, CONSTANTS, DEFAULTS, OPTIONS } from '@/constants'
 import sinon from 'sinon'
@@ -94,9 +97,11 @@ describe('Model Parameter Service Unit Tests', () => {
     expect(projectionStub.calledOnce).to.be.true
     const formDataArg = projectionStub.getCall(0).args[0] as FormData
 
-    expect(formDataArg.has('HCSV-Polygon')).to.be.true
-    expect(formDataArg.has('HCSV-Layers')).to.be.true
-    expect(formDataArg.has('projectionParameters')).to.be.true
+    expect(formDataArg.has(ParameterNamesEnum.HCSV_POLYGON_INPUT_DATA)).to.be
+      .true
+    expect(formDataArg.has(ParameterNamesEnum.HCSV_LAYERS_INPUT_DATA)).to.be
+      .true
+    expect(formDataArg.has(ParameterNamesEnum.PROJECTION_PARAMETERS)).to.be.true
   })
 
   it('should include additional options when secondary height is enabled', async () => {
@@ -108,7 +113,9 @@ describe('Model Parameter Service Unit Tests', () => {
     await runModel(updatedModelParameterStore)
 
     const formDataArg = projectionStub.getCall(0).args[0] as FormData
-    const projectionParamsBlob = formDataArg.get('projectionParameters') as Blob
+    const projectionParamsBlob = formDataArg.get(
+      ParameterNamesEnum.PROJECTION_PARAMETERS,
+    ) as Blob
 
     const projectionParamsText = await projectionParamsBlob.text()
     const projectionParams = JSON.parse(projectionParamsText)
@@ -122,7 +129,9 @@ describe('Model Parameter Service Unit Tests', () => {
     await runModel(mockModelParameterStore)
 
     const formDataArg = projectionStub.getCall(0).args[0] as FormData
-    const projectionParamsBlob = formDataArg.get('projectionParameters') as Blob
+    const projectionParamsBlob = formDataArg.get(
+      ParameterNamesEnum.PROJECTION_PARAMETERS,
+    ) as Blob
 
     const projectionParamsText = await projectionParamsBlob.text()
     const projectionParams = JSON.parse(projectionParamsText)

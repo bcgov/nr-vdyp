@@ -4,6 +4,7 @@ import { Configuration } from '../configuration'
 import { BASE_PATH, BaseAPI } from '../base'
 import type { RequestArgs } from '../base'
 import type { FileUpload, Parameters } from '../models'
+import { ParameterNamesEnum } from '../models'
 import { env } from '@/env'
 
 export const RunHCSVProjectionApiAxiosParamCreator = function (
@@ -37,20 +38,26 @@ export const RunHCSVProjectionApiAxiosParamCreator = function (
       const localVarFormParams = new FormData()
 
       if (trialRun !== undefined) {
-        localVarQueryParameter['trialRun'] = trialRun
+        localVarQueryParameter[ParameterNamesEnum.TRIAL_RUN] = trialRun
       }
 
       if (polygonInputData !== undefined) {
-        localVarFormParams.append('HCSV-Polygon', polygonInputData as any)
+        localVarFormParams.append(
+          ParameterNamesEnum.HCSV_POLYGON_INPUT_DATA,
+          polygonInputData as any,
+        )
       }
 
       if (layersInputData !== undefined) {
-        localVarFormParams.append('HCSV-Layers', layersInputData as any)
+        localVarFormParams.append(
+          ParameterNamesEnum.HCSV_LAYERS_INPUT_DATA,
+          layersInputData as any,
+        )
       }
 
       if (projectionParameters !== undefined) {
         localVarFormParams.append(
-          'projectionParameters',
+          ParameterNamesEnum.PROJECTION_PARAMETERS,
           projectionParameters as any,
         )
       }

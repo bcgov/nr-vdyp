@@ -4,6 +4,7 @@ import {
   SelectedExecutionOptionsEnum,
   SelectedDebugOptionsEnum,
   MetadataToOutputEnum,
+  ParameterNamesEnum,
   type Parameters,
 } from '@/services/vdyp-api'
 import { projectionHcsvPost } from '@/services/apiActions'
@@ -341,17 +342,21 @@ export const runModel = async (modelParameterStore: any) => {
   }
 
   formData.append(
-    'projectionParameters',
+    ParameterNamesEnum.PROJECTION_PARAMETERS,
     new Blob([JSON.stringify(projectionParameters)], {
       type: 'application/json',
     }),
   )
   formData.append(
-    'HCSV-Polygon',
+    ParameterNamesEnum.HCSV_POLYGON_INPUT_DATA,
     blobPolygon,
     CONSTANTS.FILE_NAME.INPUT_POLY_CSV,
   )
-  formData.append('HCSV-Layers', blobLayer, CONSTANTS.FILE_NAME.INPUT_LAYER_CSV)
+  formData.append(
+    ParameterNamesEnum.HCSV_LAYERS_INPUT_DATA,
+    blobLayer,
+    CONSTANTS.FILE_NAME.INPUT_LAYER_CSV,
+  )
 
   const result = await projectionHcsvPost(formData, false)
   return result

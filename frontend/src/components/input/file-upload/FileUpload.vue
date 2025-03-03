@@ -88,6 +88,7 @@ import {
   SelectedDebugOptionsEnum,
   MetadataToOutputEnum,
   CombineAgeYearRangeEnum,
+  ParameterNamesEnum,
 } from '@/services/vdyp-api'
 import { projectionHcsvPost } from '@/services/apiActions'
 import { handleApiError } from '@/services/apiErrorHandler'
@@ -324,13 +325,19 @@ const runModelHandler = async () => {
     }
 
     formData.append(
-      'projectionParameters',
+      ParameterNamesEnum.PROJECTION_PARAMETERS,
       new Blob([JSON.stringify(projectionParameters)], {
         type: 'application/json',
       }),
     )
-    formData.append('HCSV-Polygon', polygonFile.value as Blob)
-    formData.append('HCSV-Layers', layerFile.value as Blob)
+    formData.append(
+      ParameterNamesEnum.HCSV_POLYGON_INPUT_DATA,
+      polygonFile.value as Blob,
+    )
+    formData.append(
+      ParameterNamesEnum.HCSV_LAYERS_INPUT_DATA,
+      layerFile.value as Blob,
+    )
 
     const result = await projectionHcsvPost(formData, false)
 
