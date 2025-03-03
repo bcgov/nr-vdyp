@@ -139,11 +139,6 @@ export const BUTTON_LABEL = Object.freeze({
   CONT_EDIT: 'Continue Editing',
 })
 
-export const INVENTORY_CODES = Object.freeze({
-  FIP: 'F',
-  VRI: 'V',
-})
-
 export const REPORTING_TAB = Object.freeze({
   MODEL_REPORT: 'ModelReport',
   VIEW_ERR_MSG: 'ViewErrorMessages',
