@@ -3,7 +3,7 @@ import { createVuetify } from 'vuetify'
 import 'vuetify/styles'
 import SpeciesListInput from './SpeciesListInput.vue'
 import { computed } from 'vue'
-import { MAPPINGS } from '@/constants'
+import { BIZCONSTANTS } from '@/constants'
 
 const vuetify = createVuetify()
 
@@ -22,11 +22,11 @@ describe('SpeciesListInput.vue', () => {
 
   const computedSpeciesOptions = computed(() =>
     (
-      Object.keys(MAPPINGS.SPECIES_MAP) as Array<
-        keyof typeof MAPPINGS.SPECIES_MAP
+      Object.keys(BIZCONSTANTS.SPECIES_MAP) as Array<
+        keyof typeof BIZCONSTANTS.SPECIES_MAP
       >
     ).map((code) => ({
-      label: `${code} - ${MAPPINGS.SPECIES_MAP[code]}`,
+      label: `${code} - ${BIZCONSTANTS.SPECIES_MAP[code]}`,
       value: code,
     })),
   )
