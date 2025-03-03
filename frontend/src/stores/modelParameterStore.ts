@@ -1,10 +1,9 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { CONSTANTS, DEFAULTS } from '@/constants'
+import { BIZCONSTANTS, CONSTANTS, DEFAULTS } from '@/constants'
 import type { PanelName, PanelState } from '@/types/types'
 import type { SpeciesList, SpeciesGroup } from '@/interfaces/interfaces'
-import { SPECIES_GROUP_MAP } from '@/constants/mappings'
-import { Util } from '@/utils/util'
+import { isEmptyOrZero } from '@/utils/util'
 
 export const useModelParameterStore = defineStore('modelParameter', () => {
   // panel open
@@ -137,7 +136,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
 
     // Iterate through speciesList and build a group map
     for (const item of speciesList.value) {
-      if (!item.species || Util.isEmptyOrZero(item.percent)) {
+      if (!item.species || isEmptyOrZero(item.percent)) {
         continue
       }
 
@@ -152,7 +151,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
 
     // Convert groupMap to speciesGroups array
     speciesGroups.value = Object.keys(groupMap).map((key) => ({
-      group: SPECIES_GROUP_MAP[key] || key,
+      group: BIZCONSTANTS.SPECIES_GROUP_MAP[key] || key,
       percent: groupMap[key].toFixed(
         CONSTANTS.NUM_INPUT_LIMITS.SPECIES_PERCENT_DECIMAL_NUM,
       ),

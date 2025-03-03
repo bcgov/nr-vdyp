@@ -72,7 +72,11 @@ import { ref, onBeforeUnmount, watch, type PropType } from 'vue'
 import { CONSTANTS, MESSAGE } from '@/constants'
 import type { SpeciesList } from '@/interfaces/interfaces'
 import { speciesInfoValidation } from '@/validation'
-import { Util } from '@/utils/util'
+import {
+  increaseItemBySpinButton,
+  decrementItemBySpinButton,
+  isEmptyOrZero,
+} from '@/utils/util'
 import { cloneDeep } from 'lodash'
 
 const props = defineProps({
@@ -151,13 +155,8 @@ const updateValue = (action: 'increment' | 'decrement', index: number) => {
   const localPercent = localSpeciesList.value[index].percent
   let newValue =
     action === 'increment'
-      ? Util.increaseItemBySpinButton(
-          localPercent,
-          props.max,
-          props.min,
-          props.step,
-        )
-      : Util.decrementItemBySpinButton(
+      ? increaseItemBySpinButton(localPercent, props.max, props.min, props.step)
+      : decrementItemBySpinButton(
           localPercent,
           props.max,
           props.min,
@@ -168,7 +167,7 @@ const updateValue = (action: 'increment' | 'decrement', index: number) => {
     CONSTANTS.NUM_INPUT_LIMITS.SPECIES_PERCENT_DECIMAL_NUM,
   )
 
-  if (Util.isEmptyOrZero(localSpeciesList.value[index].percent)) {
+  if (isEmptyOrZero(localSpeciesList.value[index].percent)) {
     localSpeciesList.value[index].species = null
   }
 }
@@ -284,7 +283,7 @@ const handlePercentInput = (index: number) => {
   localSpeciesList.value[index].percent = cleanedValue
 
   // If the value is 0.0, set the species to null
-  if (Util.isEmptyOrZero(localSpeciesList.value[index].percent)) {
+  if (isEmptyOrZero(localSpeciesList.value[index].percent)) {
     localSpeciesList.value[index].species = null
   }
 }

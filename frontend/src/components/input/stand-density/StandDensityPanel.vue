@@ -46,7 +46,7 @@
                   data-testid="percent-stockable-area"
                 ></v-text-field>
                 <v-label
-                  v-show="Util.isZeroValue(percentStockableArea)"
+                  v-show="isEmptyOrZero(percentStockableArea)"
                   style="font-size: 12px"
                   >{{ MESSAGE.MDL_PRM_INPUT_HINT.SITE_DFT_COMPUTED }}</v-label
                 >
@@ -74,7 +74,7 @@ import { AppMessageDialog, AppPanelActions } from '@/components'
 import { CONSTANTS, MESSAGE } from '@/constants'
 import type { MessageDialog } from '@/interfaces/interfaces'
 import { standDensityValidation } from '@/validation'
-import { Util } from '@/utils/util'
+import { isEmptyOrZero } from '@/utils/util'
 
 const form = ref<HTMLFormElement>()
 
@@ -116,6 +116,10 @@ const onConfirm = () => {
     form.value.validate()
   } else {
     console.warn('Form reference is null. Validation skipped.')
+  }
+
+  if (isEmptyOrZero(percentStockableArea.value)) {
+    percentStockableArea.value = 0
   }
 
   // this panel is not in a confirmed state

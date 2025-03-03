@@ -100,7 +100,7 @@ import {
 import type { MessageDialog } from '@/interfaces/interfaces'
 import { CONSTANTS, MESSAGE, DEFAULTS } from '@/constants'
 import { fileUploadValidation } from '@/validation'
-import { Util } from '@/utils/util'
+import { delay } from '@/utils/util'
 import { logSuccessMessage } from '@/utils/messageHandler'
 
 const form = ref<HTMLFormElement>()
@@ -266,7 +266,7 @@ const runModelHandler = async () => {
     isProgressVisible.value = true
     progressMessage.value = MESSAGE.PROGRESS_MSG.RUNNING_MODEL
 
-    await Util.delay(1000)
+    await delay(1000)
 
     const formData = new FormData()
 
