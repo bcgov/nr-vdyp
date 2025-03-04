@@ -2,7 +2,7 @@ import Keycloak from 'keycloak-js'
 import { useAuthStore } from '@/stores/common/authStore'
 import type { KeycloakInitOptions } from 'keycloak-js'
 import { KEYCLOAK } from '@/constants/constants'
-import { Util } from '@/utils/util'
+import { formatUnixTimestampToDate } from '@/utils/util'
 import * as messageHandler from '@/utils/messageHandler'
 import { env } from '@/env'
 import { AUTH_ERR } from '@/constants/message'
@@ -334,7 +334,7 @@ const getAuthTimeInUnixTime = (accessToken: string): number => {
   try {
     const accessTokenParsed = JSON.parse(atob(accessToken.split('.')[1]))
     console.log(
-      `auth_time: ${accessTokenParsed.auth_time} (${Util.formatUnixTimestampToDate(accessTokenParsed.auth_time)})`,
+      `auth_time: ${accessTokenParsed.auth_time} (${formatUnixTimestampToDate(accessTokenParsed.auth_time)})`,
     )
     return accessTokenParsed.auth_time * 1000 // convert to milliseconds
   } catch (error) {
@@ -350,7 +350,7 @@ const getTokenExpirationDate = (token: string): Date | null => {
       return null
     }
 
-    const expirationDate = Util.formatUnixTimestampToDate(tokenParsed.exp)
+    const expirationDate = formatUnixTimestampToDate(tokenParsed.exp)
     return expirationDate
   } catch (error) {
     console.error('Failed to parse token expiration:', error)

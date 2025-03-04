@@ -32,7 +32,7 @@ describe('SiteInfoPanel.vue', () => {
       CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO,
     )
 
-    modelParameterStore.ecoZone = '1' // 'Boreal Cordillera'
+    modelParameterStore.ecoZone = '12' // 'Boreal Cordillera'
 
     mount(SiteInfoPanel, {
       global: {

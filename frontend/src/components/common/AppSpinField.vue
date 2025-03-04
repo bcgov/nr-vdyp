@@ -46,7 +46,10 @@
 import { ref, watch, type PropType } from 'vue'
 import type { Density, Variant } from '@/types/types'
 import { CONSTANTS } from '@/constants'
-import { Util } from '@/utils/util'
+import {
+  increaseItemBySpinButton,
+  decrementItemBySpinButton,
+} from '@/utils/util'
 
 const props = defineProps({
   label: String,
@@ -139,13 +142,13 @@ const stopDecrement = () => {
 const updateValue = (action: 'increment' | 'decrement') => {
   let newValue =
     action === 'increment'
-      ? Util.increaseItemBySpinButton(
+      ? increaseItemBySpinButton(
           localValue.value,
           props.max,
           props.min,
           props.step,
         )
-      : Util.decrementItemBySpinButton(
+      : decrementItemBySpinButton(
           localValue.value,
           props.max,
           props.min,

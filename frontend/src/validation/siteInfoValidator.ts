@@ -1,10 +1,10 @@
 import { ValidationBase } from './validationBase'
 import { CONSTANTS } from '@/constants'
-import { Util } from '@/utils/util'
+import { isEmptyOrZero } from '@/utils/util'
 
 export class SiteInfoValidator extends ValidationBase {
   validateRequiredFields(bha50SiteIndex: string | null): boolean {
-    return !Util.isEmptyOrZero(bha50SiteIndex)
+    return !isEmptyOrZero(bha50SiteIndex)
   }
 
   validateBha50SiteIndexRange(bha50SiteIndex: string | null): boolean {

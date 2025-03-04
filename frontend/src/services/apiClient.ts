@@ -2,6 +2,7 @@ import {
   GetHelpApi,
   GetRootApi,
   RunHCSVProjectionApi,
+  ParameterNamesEnum,
 } from '@/services/vdyp-api/'
 import axiosInstance from '@/services/axiosInstance'
 import type { AxiosRequestConfig } from 'axios'
@@ -25,9 +26,9 @@ export const apiClient = {
     options?: AxiosRequestConfig,
   ) => {
     return projectionApiInstance.projectionHcsvPostForm(
-      formData.get('polygonInputData') as File,
-      formData.get('layersInputData') as File,
-      formData.get('projectionParameters') as any,
+      formData.get(ParameterNamesEnum.HCSV_POLYGON_INPUT_DATA) as File,
+      formData.get(ParameterNamesEnum.HCSV_LAYERS_INPUT_DATA) as File,
+      formData.get(ParameterNamesEnum.PROJECTION_PARAMETERS) as any,
       trialRun,
       options,
     )

@@ -88,6 +88,7 @@ import {
   SelectedDebugOptionsEnum,
   MetadataToOutputEnum,
   CombineAgeYearRangeEnum,
+  ParameterNamesEnum,
 } from '@/services/vdyp-api'
 import { projectionHcsvPost } from '@/services/apiActions'
 import { handleApiError } from '@/services/apiErrorHandler'
@@ -100,7 +101,7 @@ import {
 import type { MessageDialog } from '@/interfaces/interfaces'
 import { CONSTANTS, MESSAGE, DEFAULTS } from '@/constants'
 import { fileUploadValidation } from '@/validation'
-import { Util } from '@/utils/util'
+import { delay } from '@/utils/util'
 import { logSuccessMessage } from '@/utils/messageHandler'
 
 const form = ref<HTMLFormElement>()
@@ -266,7 +267,7 @@ const runModelHandler = async () => {
     isProgressVisible.value = true
     progressMessage.value = MESSAGE.PROGRESS_MSG.RUNNING_MODEL
 
-    await Util.delay(1000)
+    await delay(1000)
 
     const formData = new FormData()
 
@@ -324,13 +325,19 @@ const runModelHandler = async () => {
     }
 
     formData.append(
-      'projectionParameters',
+      ParameterNamesEnum.PROJECTION_PARAMETERS,
       new Blob([JSON.stringify(projectionParameters)], {
         type: 'application/json',
       }),
     )
-    formData.append('polygonInputData', polygonFile.value as Blob)
-    formData.append('layersInputData', layerFile.value as Blob)
+    formData.append(
+      ParameterNamesEnum.HCSV_POLYGON_INPUT_DATA,
+      polygonFile.value as Blob,
+    )
+    formData.append(
+      ParameterNamesEnum.HCSV_LAYERS_INPUT_DATA,
+      layerFile.value as Blob,
+    )
 
     const result = await projectionHcsvPost(formData, false)
 

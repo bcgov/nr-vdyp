@@ -58,7 +58,7 @@ import type { Tab } from '@/interfaces/interfaces'
 import { CONSTANTS, MESSAGE, DEFAULTS } from '@/constants'
 import { handleApiError } from '@/services/apiErrorHandler'
 import { runModel } from '@/services/modelParameterService'
-import { Util } from '@/utils/util'
+import { delay } from '@/utils/util'
 import { logSuccessMessage } from '@/utils/messageHandler'
 
 const modelSelection = ref<string>(DEFAULTS.DEFAULT_VALUES.MODEL_SELECTION)
@@ -112,7 +112,7 @@ const runModelHandler = async () => {
     isProgressVisible.value = true
     progressMessage.value = MESSAGE.PROGRESS_MSG.RUNNING_MODEL
 
-    await Util.delay(1000)
+    await delay(1000)
 
     const result = await runModel(modelParameterStore)
     await projectionStore.handleZipResponse(result)

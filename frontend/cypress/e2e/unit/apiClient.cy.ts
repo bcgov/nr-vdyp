@@ -6,6 +6,7 @@ import {
   GetHelpApi,
   GetRootApi,
   RunHCSVProjectionApi,
+  ParameterNamesEnum,
 } from '@/services/vdyp-api'
 
 describe('apiClient Unit Tests', () => {
@@ -57,9 +58,18 @@ describe('apiClient Unit Tests', () => {
       projectionHcsvPostStub.resolves({ data: mockBlob })
 
       const formData = new FormData()
-      formData.append('polygonInputData', new File([], 'polygon.json'))
-      formData.append('layersInputData', new File([], 'layers.json'))
-      formData.append('projectionParameters', JSON.stringify({ param: 'test' }))
+      formData.append(
+        ParameterNamesEnum.HCSV_POLYGON_INPUT_DATA,
+        new File([], 'polygon.json'),
+      )
+      formData.append(
+        ParameterNamesEnum.HCSV_LAYERS_INPUT_DATA,
+        new File([], 'layers.json'),
+      )
+      formData.append(
+        ParameterNamesEnum.PROJECTION_PARAMETERS,
+        JSON.stringify({ param: 'test' }),
+      )
 
       const result = await apiClient.apiClient.projectionHcsvPost(
         formData,

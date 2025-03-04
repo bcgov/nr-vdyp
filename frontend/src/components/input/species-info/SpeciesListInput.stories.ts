@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/vue3'
 import SpeciesListInput from './SpeciesListInput.vue'
 import type { SpeciesList } from '@/interfaces/interfaces'
-import { CONSTANTS, MAPPINGS } from '@/constants'
+import { CONSTANTS, BIZCONSTANTS } from '@/constants'
 
-const computedSpeciesOptions = Object.keys(MAPPINGS.SPECIES_MAP).map(
+const computedSpeciesOptions = Object.keys(BIZCONSTANTS.SPECIES_MAP).map(
   (code) => ({
-    label: `${code} - ${MAPPINGS.SPECIES_MAP[code as keyof typeof MAPPINGS.SPECIES_MAP]}`,
+    label: `${code} - ${BIZCONSTANTS.SPECIES_MAP[code as keyof typeof BIZCONSTANTS.SPECIES_MAP]}`,
     value: code,
   }),
 )

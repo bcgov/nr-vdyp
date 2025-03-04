@@ -119,7 +119,13 @@ import {
   SpeciesListInput,
   SpeciesGroupsDisplay,
 } from '@/components'
-import { CONSTANTS, DEFAULTS, MAPPINGS, MESSAGE, OPTIONS } from '@/constants'
+import {
+  BIZCONSTANTS,
+  CONSTANTS,
+  DEFAULTS,
+  MESSAGE,
+  OPTIONS,
+} from '@/constants'
 import type { SpeciesList, MessageDialog } from '@/interfaces/interfaces'
 import { speciesInfoValidation } from '@/validation'
 import { cloneDeep } from 'lodash'
@@ -153,11 +159,11 @@ const isConfirmed = computed(
 
 const computedSpeciesOptions = computed(() =>
   (
-    Object.keys(MAPPINGS.SPECIES_MAP) as Array<
-      keyof typeof MAPPINGS.SPECIES_MAP
+    Object.keys(BIZCONSTANTS.SPECIES_MAP) as Array<
+      keyof typeof BIZCONSTANTS.SPECIES_MAP
     >
   ).map((code) => ({
-    label: `${code} - ${MAPPINGS.SPECIES_MAP[code]}`,
+    label: `${code} - ${BIZCONSTANTS.SPECIES_MAP[code]}`,
     value: code,
   })),
 )
@@ -193,13 +199,13 @@ const onConfirm = () => {
   )
   if (!duplicateSpeciesResult.isValid) {
     const duplicateSpecies =
-      duplicateSpeciesResult.duplicateSpecies as keyof typeof MAPPINGS.SPECIES_MAP
+      duplicateSpeciesResult.duplicateSpecies as keyof typeof BIZCONSTANTS.SPECIES_MAP
     const speciesLabel = (
-      Object.keys(MAPPINGS.SPECIES_MAP) as Array<
-        keyof typeof MAPPINGS.SPECIES_MAP
+      Object.keys(BIZCONSTANTS.SPECIES_MAP) as Array<
+        keyof typeof BIZCONSTANTS.SPECIES_MAP
       >
     ).find((key) => key === duplicateSpeciesResult.duplicateSpecies)
-      ? MAPPINGS.SPECIES_MAP[duplicateSpecies]
+      ? BIZCONSTANTS.SPECIES_MAP[duplicateSpecies]
       : ''
 
     const message = speciesLabel

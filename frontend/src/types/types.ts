@@ -41,3 +41,5 @@ export type Variant =
   | 'solo'
   | 'solo-inverted'
   | 'solo-filled'
+
+export type NumStrNullType = number | string | null

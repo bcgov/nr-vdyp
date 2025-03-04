@@ -146,7 +146,7 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
 import { CONSTANTS, OPTIONS } from '@/constants'
-import { Util } from '@/utils/util'
+import { parseNumberOrNull } from '@/utils/util'
 
 const props = defineProps<{
   startingAge: number | null
@@ -292,15 +292,15 @@ const getIncludeInReportDisabled = (value: string) => {
 
 const handleStartingAgeInput = (value: string) => {
   // Convert an empty string to null
-  localStartingAge.value = Util.parseNumberOrNull(value)
+  localStartingAge.value = parseNumberOrNull(value)
 }
 
 const handleFinishingAgeInput = (value: string) => {
-  localFinishingAge.value = Util.parseNumberOrNull(value)
+  localFinishingAge.value = parseNumberOrNull(value)
 }
 
 const handleAgeIncrementInput = (value: string) => {
-  localAgeIncrement.value = Util.parseNumberOrNull(value)
+  localAgeIncrement.value = parseNumberOrNull(value)
 }
 </script>
 <style scoped></style>

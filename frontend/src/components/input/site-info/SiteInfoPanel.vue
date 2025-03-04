@@ -156,7 +156,7 @@
                         @update:modelValue="handleBha50SiteIndexUpdate"
                       />
                       <v-label
-                        v-show="Util.isZeroValue(bha50SiteIndex)"
+                        v-show="isZeroValue(bha50SiteIndex)"
                         style="font-size: 12px"
                         >{{
                           MESSAGE.MDL_PRM_INPUT_HINT.SITE_ZERO_NOT_KNOW
@@ -189,7 +189,7 @@ import { AppMessageDialog, AppPanelActions, AppSpinField } from '@/components'
 import type { SpeciesGroup, MessageDialog } from '@/interfaces/interfaces'
 import { CONSTANTS, OPTIONS, DEFAULTS, MESSAGE } from '@/constants'
 import { siteInfoValidation } from '@/validation'
-import { Util } from '@/utils/util'
+import { isZeroValue } from '@/utils/util'
 
 const form = ref<HTMLFormElement>()
 
