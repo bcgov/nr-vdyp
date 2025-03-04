@@ -145,8 +145,8 @@ class OracleRunnerTest {
 					}) {
 						FileUtils.touch(installDir.resolve("VDYP_CFG/"+layer.code+"-SAVE_VDYP7_" + tag + ".dat").toFile());
 					}
-					FileUtils.touch(installDir.resolve("VDYP_CFG/"+layer.code+"-SAVE_VDYP7_VDYP.ctl").toFile());
-					FileUtils.touch(installDir.resolve("VDYP_CFG/"+layer.code+"-SAVE_VDYP7_BACK.ctl").toFile());
+					FileUtils.touch(installDir.resolve("VDYP_CFG/"+layer.code+"-VDYP7_VDYP.ctl").toFile());
+					FileUtils.touch(installDir.resolve("VDYP_CFG/"+layer.code+"-VDYP7_BACK.ctl").toFile());
 				}
 
 				// TODO create mock final output files

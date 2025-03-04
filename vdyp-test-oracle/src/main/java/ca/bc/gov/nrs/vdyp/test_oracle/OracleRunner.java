@@ -47,14 +47,15 @@ public class OracleRunner {
 			var app = new OracleRunner();
 			app.run(args);
 		} catch (ParseException | IOException | ExecutionException e) {
-			System.err.println(e.getMessage());
+			e.printStackTrace(System.err);
 		}
 	}
 
 	public static Path getSourceFile(IntermediateStage stage, ModelObject obj, Layer layer) {
 		final String extension = obj == ModelObject.CONTROL ? "ctl" : "dat";
-		return Path
-				.of(String.format("%s-SAVE_VDYP7_%s.%s", layer.code, obj.getStageCode(stage), extension));
+		final String savePrefix = obj == ModelObject.CONTROL ? "" : "SAVE_";
+		return Path.of(String.format("%s-%sVDYP7_%s.%s", layer.code, savePrefix,
+				obj.getStageCode(stage), extension));
 	}
 
 	public static Path getDestFile(IntermediateStage stage, ModelObject obj, Layer layer) {
@@ -139,36 +140,21 @@ public class OracleRunner {
 
 	public static enum IntermediateStage {
 		FIP_INPUT("fipInput", "FIP", EnumSet.of(ModelObject.POLYGON, ModelObject.LAYER, ModelObject.SPECIES)), //
-		VRI_INPUT(
-				"vriInput", "VRI",
-				EnumSet.of(ModelObject.POLYGON, ModelObject.LAYER, ModelObject.SPECIES, ModelObject.SITE)
-		),
-		ADJUST_INPUT(
-				"adjustInput", "AJST",
-				EnumSet.of(ModelObject.POLYGON, ModelObject.SPECIES, ModelObject.UTILIZATION, ModelObject.ADJUSTMENTS)
-		),
-		FORWARD_INPUT(
-				"forwardInput", "7INP",
-				EnumSet.of(
-						ModelObject.POLYGON, ModelObject.SPECIES, ModelObject.UTILIZATION, ModelObject.GROW_TO,
-						ModelObject.CONTROL
-				)
-		),
-		FORWARD_OUTPUT(
-				"forwardOutput", "7OUT",
-				EnumSet.of(ModelObject.POLYGON, ModelObject.SPECIES, ModelObject.UTILIZATION, ModelObject.COMPATIBILITY)
-		),
-		BACK_INPUT(
-				"backInput", "BINP",
-				EnumSet.of(
-						ModelObject.POLYGON, ModelObject.SPECIES, ModelObject.UTILIZATION, ModelObject.GROW_TO,
-						ModelObject.CONTROL
-				)
-		),
-		BACK_OUTPUT(
-				"backOutput", "BOUT",
-				EnumSet.of(ModelObject.POLYGON, ModelObject.SPECIES, ModelObject.UTILIZATION, ModelObject.COMPATIBILITY)
-		);
+		VRI_INPUT("vriInput", "VRI",
+				EnumSet.of(ModelObject.POLYGON, ModelObject.LAYER, ModelObject.SPECIES, ModelObject.SITE)),
+		ADJUST_INPUT("adjustInput", "AJST",
+				EnumSet.of(ModelObject.POLYGON, ModelObject.SPECIES, ModelObject.UTILIZATION, ModelObject.ADJUSTMENTS)),
+		FORWARD_INPUT("forwardInput", "7INP",
+				EnumSet.of(ModelObject.POLYGON, ModelObject.SPECIES, ModelObject.UTILIZATION, ModelObject.GROW_TO,
+						ModelObject.CONTROL)),
+		FORWARD_OUTPUT("forwardOutput", "7OUT",
+				EnumSet.of(ModelObject.POLYGON, ModelObject.SPECIES, ModelObject.UTILIZATION,
+						ModelObject.COMPATIBILITY)),
+		BACK_INPUT("backInput", "BINP",
+				EnumSet.of(ModelObject.POLYGON, ModelObject.SPECIES, ModelObject.UTILIZATION, ModelObject.GROW_TO,
+						ModelObject.CONTROL)),
+		BACK_OUTPUT("backOutput", "BOUT", EnumSet.of(ModelObject.POLYGON, ModelObject.SPECIES, ModelObject.UTILIZATION,
+				ModelObject.COMPATIBILITY));
 
 		public final String name;
 		public final String code;
@@ -243,9 +229,10 @@ public class OracleRunner {
 				if (paramsText.startsWith("\uFEFF")) {
 					paramsText.subSequence(1, paramsText.length());
 				}
-				// paramsText = subPattern.matcher(paramsText).replaceAll(m -> env.get(m.group()));
-				var saveIntermediatesPattern = Pattern
-						.compile("^-v7save\s+yes", Pattern.CASE_INSENSITIVE & Pattern.MULTILINE);
+				// paramsText = subPattern.matcher(paramsText).replaceAll(m ->
+				// env.get(m.group()));
+				var saveIntermediatesPattern = Pattern.compile("^-v7save\s+yes",
+						Pattern.CASE_INSENSITIVE & Pattern.MULTILINE);
 				if (!saveIntermediatesPattern.matcher(paramsText).matches()) {
 					paramsText += "\r\n-v7save Yes\r\n";
 				}
@@ -257,13 +244,11 @@ public class OracleRunner {
 
 			builder.environment().putAll(env);
 
-			builder.environment().merge(
-					"PATH", installDir.toAbsolutePath().toString(), (old, add) -> String.format("%s;%s", old, add)
-			);
+			builder.environment().merge("PATH", installDir.toAbsolutePath().toString(),
+					(old, add) -> String.format("%s;%s", old, add));
 
 			// builder.command(inputSubdir.resolve("RunVDYP7.cmd").toAbsolutePath().toString());
-			builder.command(
-					installDir.resolve("VDYP7Console.exe").toAbsolutePath().toString(), "-p",
+			builder.command(installDir.resolve("VDYP7Console.exe").toAbsolutePath().toString(), "-p",
 					paramSubdir.resolve("parms.txt").toAbsolutePath().toString(), "-env",
 					String.format("%s=%s", INPUT_DIR_ENV, env.get(INPUT_DIR_ENV)), "-env",
 					String.format("%s=%s", OUTPUT_DIR_ENV, env.get(OUTPUT_DIR_ENV)), "-env",
@@ -273,7 +258,7 @@ public class OracleRunner {
 			);
 
 			Path intermediateDir = installDir.resolve("VDYP_CFG");
-			deleteFiles(intermediateDir, file -> file.getFileName().toString().startsWith("P-SAVE_VDYP"));
+			deleteFiles(intermediateDir, file -> INTERMEDIATE_FILE.matcher(file.getFileName().toString()).matches());
 
 			System.out.format("Running %s\n", builder.command());
 			System.out.format("PWD=%s\n", builder.directory());
@@ -287,8 +272,7 @@ public class OracleRunner {
 	}
 
 	static final Pattern INTERMEDIATE_FILE = Pattern.compile(
-			"(?<layer>\\w)\\-SAVE_VDYP7_(?<suffix>(?:GROW|VDYP|BACK)|(?<stage>\\w+?)(?<obj>\\w))\\.(?<ext>\\w+)"
-	);
+			"(?<layer>\\w)\\-(?:SAVE_)?VDYP7_(?<suffix>(?:GROW|VDYP|BACK)|(?<stage>\\w+?)(?<obj>\\w))\\.(?<ext>\\w+)");
 
 	/**
 	 * Create the final output
@@ -315,7 +299,7 @@ public class OracleRunner {
 		final var activeStages = EnumSet.noneOf(IntermediateStage.class);
 		final var activeLayers = EnumSet.noneOf(Layer.class);
 
-		final var it = FileUtils.iterateFiles(intermediateDir.toFile(), new String[] { "dat" }, false);
+		final var it = FileUtils.iterateFiles(intermediateDir.toFile(), new String[] { "dat", "ctl" }, false);
 		while (it.hasNext()) {
 			final var file = it.next();
 			final var match = INTERMEDIATE_FILE.matcher(file.toPath().getFileName().toString());
@@ -339,7 +323,7 @@ public class OracleRunner {
 				for (var fileType : stage.files) {
 					final var sourceFile = intermediateDir.resolve(getSourceFile(stage, fileType, layer));
 					final var destFile = finalSubdir.resolve(getDestFile(stage, fileType, layer));
-					if(Files.exists(sourceFile)) {
+					if (Files.exists(sourceFile)) {
 						System.out.printf("  Copying %s to %s", sourceFile, destFile).println();
 						Files.copy(sourceFile, destFile);
 					}
