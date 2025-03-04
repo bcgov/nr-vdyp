@@ -130,6 +130,7 @@ export const FILE_NAME = Object.freeze({
   PROJECTION_RESULT_ZIP: 'vdyp-output.zip',
   ERROR_TXT: 'ErrorLog.txt',
   LOG_TXT: 'ProgressLog.txt',
+  DEBUG_TXT: 'DebugLog.txt',
   YIELD_TABLE_CSV: 'YieldTable.csv',
   INPUT_POLY_CSV: 'VDYP7_INPUT_POLY.csv',
   INPUT_LAYER_CSV: 'VDYP7_INPUT_LAYER.csv',
