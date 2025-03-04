@@ -42,20 +42,40 @@ export const RunHCSVProjectionApiAxiosParamCreator = function (
       }
 
       if (polygonInputData !== undefined) {
+        const polygonFile = polygonInputData as unknown as File
+        console.debug(
+          `Polygon Input Data - name: ${polygonFile.name}, size: ${polygonFile.size}, type: ${polygonFile.type}`,
+        )
+
         localVarFormParams.append(
           ParameterNamesEnum.HCSV_POLYGON_INPUT_DATA,
-          polygonInputData as any,
+          polygonFile as any,
         )
       }
 
       if (layersInputData !== undefined) {
+        const layersFile = layersInputData as unknown as File
+        console.debug(
+          `Layers Input Data - name: ${layersFile.name}, size: ${layersFile.size}, type: ${layersFile.type}`,
+        )
+
         localVarFormParams.append(
           ParameterNamesEnum.HCSV_LAYERS_INPUT_DATA,
-          layersInputData as any,
+          layersFile as any,
         )
       }
 
       if (projectionParameters !== undefined) {
+        if (projectionParameters instanceof Blob) {
+          projectionParameters.text().then((text) => {
+            console.debug(`Projection Parameters: ${text}`)
+          })
+        } else {
+          console.debug(
+            `Projection Parameters: ${JSON.stringify(projectionParameters)}`,
+          )
+        }
+
         localVarFormParams.append(
           ParameterNamesEnum.PROJECTION_PARAMETERS,
           projectionParameters as any,

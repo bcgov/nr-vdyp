@@ -90,7 +90,7 @@ import {
   CombineAgeYearRangeEnum,
   ParameterNamesEnum,
 } from '@/services/vdyp-api'
-import { projectionHcsvPost } from '@/services/apiActions'
+import { projectionHcsvPostResponse } from '@/services/apiActions'
 import { handleApiError } from '@/services/apiErrorHandler'
 import {
   AppRunModelButton,
@@ -101,7 +101,7 @@ import {
 import type { MessageDialog } from '@/interfaces/interfaces'
 import { CONSTANTS, MESSAGE, DEFAULTS } from '@/constants'
 import { fileUploadValidation } from '@/validation'
-import { delay } from '@/utils/util'
+import { delay, downloadFile } from '@/utils/util'
 import { logSuccessMessage } from '@/utils/messageHandler'
 
 const form = ref<HTMLFormElement>()
@@ -128,135 +128,314 @@ const messageDialog = ref<MessageDialog>({
   message: '',
 })
 
+/**
+ * Updates the starting age value.
+ * @param value - The new starting age.
+ */
 const handleStartingAgeUpdate = (value: number | null) => {
   startingAge.value = value
 }
 
+/**
+ * Updates the finishing age value.
+ * @param value - The new finishing age.
+ */
 const handleFinishingAgeUpdate = (value: number | null) => {
   finishingAge.value = value
 }
 
+/**
+ * Updates the age increment value.
+ * @param value - The new age increment.
+ */
 const handleAgeIncrementUpdate = (value: number | null) => {
   ageIncrement.value = value
 }
 
+/**
+ * Updates the volume reported array.
+ * @param value - The new volume reported array.
+ */
 const handleVolumeReportedUpdate = (value: string[]) => {
   volumeReported.value = [...value]
 }
 
+/**
+ * Updates the include in report array.
+ * @param value - The new array for including items in the report.
+ */
 const handleIncludeInReportUpdate = (value: string[]) => {
   includeInReport.value = [...value]
 }
 
+/**
+ * Updates the projection type.
+ * @param value - The new projection type.
+ */
 const handleProjectionTypeUpdate = (value: string | null) => {
   projectionType.value = value
 }
 
+/**
+ * Updates the report title.
+ * @param value - The new report title.
+ */
 const handleReportTitleUpdate = (value: string | null) => {
   reportTitle.value = value
 }
 
+/**
+ * Validates the starting and finishing age comparison.
+ * Displays an error dialog if validation fails.
+ * @returns True if the comparison is valid, false otherwise.
+ */
+const validateComparison = (): boolean => {
+  const result = fileUploadValidation.validateComparison(
+    startingAge.value,
+    finishingAge.value,
+  )
+  if (!result.isValid) {
+    messageDialog.value = {
+      dialog: true,
+      title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
+      message: MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_COMP_FNSH_AGE,
+      btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+    }
+  }
+  return result.isValid
+}
+
+/**
+ * Validates that all required fields are provided.
+ * Displays an error dialog if any required field is missing.
+ * @returns True if all required fields are valid, false otherwise.
+ */
+const validateRequiredFields = (): boolean => {
+  const result = fileUploadValidation.validateRequiredFields(
+    startingAge.value,
+    finishingAge.value,
+    ageIncrement.value,
+  )
+  if (!result.isValid) {
+    messageDialog.value = {
+      dialog: true,
+      title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
+      message: MESSAGE.FILE_UPLOAD_ERR.RPT_VLD_REQUIRED_FIELDS,
+      btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+    }
+  }
+  return result.isValid
+}
+
+/**
+ * Validates that the age range values fall within the allowed limits.
+ * Displays an error dialog if validation fails.
+ * @returns True if the age range is valid, false otherwise.
+ */
+const validateRange = (): boolean => {
+  const result = fileUploadValidation.validateRange(
+    startingAge.value,
+    finishingAge.value,
+    ageIncrement.value,
+  )
+  if (!result.isValid) {
+    let message = ''
+    switch (result.errorType) {
+      case 'startingAge':
+        message = MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_START_AGE_RNG(
+          CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MIN,
+          CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MAX,
+        )
+        break
+      case 'finishingAge':
+        message = MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_START_FNSH_RNG(
+          CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MIN,
+          CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MAX,
+        )
+        break
+      case 'ageIncrement':
+        message = MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_AGE_INC_RNG(
+          CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MIN,
+          CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MAX,
+        )
+        break
+    }
+    messageDialog.value = {
+      dialog: true,
+      title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
+      message: message,
+      btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+    }
+  }
+  return result.isValid
+}
+
+/**
+ * Asynchronously validates that the necessary files are provided and have correct formats.
+ * Displays an error dialog if validation fails.
+ * @returns A Promise that resolves to true if file validation passes, false otherwise.
+ */
+const validateFiles = async (): Promise<boolean> => {
+  const result = await fileUploadValidation.validateFiles(
+    layerFile.value,
+    polygonFile.value,
+  )
+  if (!result.isValid) {
+    let message = ''
+    switch (result.errorType) {
+      case 'layerFileMissing':
+        message = MESSAGE.FILE_UPLOAD_ERR.LAYER_FILE_MISSING
+        break
+      case 'polygonFileMissing':
+        message = MESSAGE.FILE_UPLOAD_ERR.POLYGON_FILE_MISSING
+        break
+      case 'layerFileNotCSVFormat':
+        message = MESSAGE.FILE_UPLOAD_ERR.LAYER_FILE_NOT_CSV_FORMAT
+        break
+      case 'polygonFileNotCSVFormat':
+        message = MESSAGE.FILE_UPLOAD_ERR.POLYGON_FILE_NOT_CSV_FORMAT
+        break
+    }
+    messageDialog.value = {
+      dialog: true,
+      title: MESSAGE.MSG_DIALOG_TITLE.INVALID_FILE,
+      message: message,
+      btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+    }
+  }
+  return result.isValid
+}
+
+/**
+ * Returns an array of selected execution options based on the current projection type and report settings.
+ * @returns An array of execution option enums.
+ */
+const getSelectedExecutionOptions = () => {
+  const selectedExecutionOptions = [
+    SelectedExecutionOptionsEnum.ForwardGrowEnabled,
+    SelectedExecutionOptionsEnum.DoIncludeFileHeader,
+    SelectedExecutionOptionsEnum.DoIncludeProjectionModeInYieldTable,
+    SelectedExecutionOptionsEnum.DoIncludeAgeRowsInYieldTable,
+    SelectedExecutionOptionsEnum.DoIncludeYearRowsInYieldTable,
+    SelectedExecutionOptionsEnum.DoSummarizeProjectionByLayer,
+    SelectedExecutionOptionsEnum.DoIncludeColumnHeadersInYieldTable,
+    SelectedExecutionOptionsEnum.DoAllowBasalAreaAndTreesPerHectareValueSubstitution,
+    SelectedExecutionOptionsEnum.DoEnableProgressLogging,
+    SelectedExecutionOptionsEnum.DoEnableErrorLogging,
+    SelectedExecutionOptionsEnum.DoEnableDebugLogging,
+  ]
+
+  if (projectionType.value === CONSTANTS.PROJECTION_TYPE.VOLUME) {
+    selectedExecutionOptions.push(
+      SelectedExecutionOptionsEnum.DoIncludeProjectedMOFVolumes,
+    )
+  } else if (projectionType.value === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS) {
+    selectedExecutionOptions.push(
+      SelectedExecutionOptionsEnum.DoIncludeProjectedCFSBiomass,
+    )
+  }
+
+  if (
+    includeInReport.value &&
+    includeInReport.value.includes(
+      CONSTANTS.INCLUDE_IN_REPORT.SPECIES_COMPOSITION,
+    )
+  ) {
+    selectedExecutionOptions.push(
+      SelectedExecutionOptionsEnum.DoIncludeSpeciesProjection,
+    )
+  }
+
+  return selectedExecutionOptions
+}
+
+/**
+ * Returns an array of selected debug options.
+ * @returns An array of debug option enums.
+ */
+const getSelectedDebugOptions = () => {
+  const selectedDebugOptions: Array<SelectedDebugOptionsEnum> = [
+    SelectedDebugOptionsEnum.DoIncludeDebugTimestamps,
+    SelectedDebugOptionsEnum.DoIncludeDebugEntryExit,
+    SelectedDebugOptionsEnum.DoIncludeDebugIndentBlocks,
+    SelectedDebugOptionsEnum.DoIncludeDebugRoutineNames,
+  ]
+
+  return selectedDebugOptions
+}
+
+/**
+ * Constructs a FormData object with the projection parameters and attached files.
+ * @returns The FormData object containing projection parameters and file inputs.
+ */
+const getFormData = () => {
+  const projectionParameters = {
+    ageStart: startingAge.value,
+    ageEnd: finishingAge.value,
+    ageIncrement: ageIncrement.value,
+    outputFormat: OutputFormatEnum.CSVYieldTable,
+    selectedExecutionOptions: getSelectedExecutionOptions(),
+    selectedDebugOptions: getSelectedDebugOptions(),
+    combineAgeYearRange: CombineAgeYearRangeEnum.Intersect,
+    metadataToOutput: MetadataToOutputEnum.VERSION,
+  }
+
+  const formData = new FormData()
+
+  formData.append(
+    ParameterNamesEnum.PROJECTION_PARAMETERS,
+    new Blob([JSON.stringify(projectionParameters)], {
+      type: 'application/json',
+    }),
+  )
+  formData.append(
+    ParameterNamesEnum.HCSV_POLYGON_INPUT_DATA,
+    polygonFile.value as Blob,
+  )
+  formData.append(
+    ParameterNamesEnum.HCSV_LAYERS_INPUT_DATA,
+    layerFile.value as Blob,
+  )
+
+  return formData
+}
+
+/**
+ * Extracts the zip file name from the response headers.
+ * It checks for a 'content-disposition' header and extracts the file name.
+ * @param headers - The response headers object (either Axios or Fetch style)
+ * @returns The extracted zip file name or a default name if not found.
+ */
+const extractZipFileName = (headers: any): string => {
+  const defaultName = CONSTANTS.FILE_NAME.PROJECTION_RESULT_ZIP
+  let contentDisposition: string | undefined
+
+  // Support for both Axios (plain object) and Fetch (Headers instance)
+  if (typeof headers.get === 'function') {
+    contentDisposition = headers.get('content-disposition')
+  } else {
+    contentDisposition = headers['content-disposition']
+  }
+
+  if (contentDisposition) {
+    const fileNameMatch = contentDisposition.match(/filename="([^"]+)"/)
+    if (fileNameMatch && fileNameMatch[1]) {
+      return fileNameMatch[1]
+    }
+  }
+  return defaultName
+}
+
+/**
+ * Handles the run model process.
+ * Validates inputs, sends the projection request, and downloads the resulting file.
+ */
 const runModelHandler = async () => {
   try {
-    // validation - comparison
-    const comparisonResult = fileUploadValidation.validateComparison(
-      startingAge.value,
-      finishingAge.value,
-    )
-    if (!comparisonResult.isValid) {
-      messageDialog.value = {
-        dialog: true,
-        title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
-        message: MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_COMP_FNSH_AGE,
-        btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
-      }
-      return
-    }
-
-    // validation - required fields
-    const requiredFieldsResult = fileUploadValidation.validateRequiredFields(
-      startingAge.value,
-      finishingAge.value,
-      ageIncrement.value,
-    )
-    if (!requiredFieldsResult.isValid) {
-      messageDialog.value = {
-        dialog: true,
-        title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
-        message: MESSAGE.FILE_UPLOAD_ERR.RPT_VLD_REQUIRED_FIELDS,
-        btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
-      }
-      return
-    }
-
-    // validation - range
-    const rangeResult = fileUploadValidation.validateRange(
-      startingAge.value,
-      finishingAge.value,
-      ageIncrement.value,
-    )
-    if (!rangeResult.isValid) {
-      let message = ''
-      switch (rangeResult.errorType) {
-        case 'startingAge':
-          message = MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_START_AGE_RNG(
-            CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MIN,
-            CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MAX,
-          )
-          break
-        case 'finishingAge':
-          message = MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_START_FNSH_RNG(
-            CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MIN,
-            CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MAX,
-          )
-          break
-        case 'ageIncrement':
-          message = MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_AGE_INC_RNG(
-            CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MIN,
-            CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MAX,
-          )
-          break
-      }
-
-      messageDialog.value = {
-        dialog: true,
-        title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
-        message: message,
-        btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
-      }
-      return
-    }
-
-    // validation - files
-    const filesResult = await fileUploadValidation.validateFiles(
-      layerFile.value,
-      polygonFile.value,
-    )
-    if (!filesResult.isValid) {
-      let message = ''
-      switch (filesResult.errorType) {
-        case 'layerFileMissing':
-          message = MESSAGE.FILE_UPLOAD_ERR.LAYER_FILE_MISSING
-          break
-        case 'polygonFileMissing':
-          message = MESSAGE.FILE_UPLOAD_ERR.POLYGON_FILE_MISSING
-          break
-        case 'layerFileNotCSVFormat':
-          message = MESSAGE.FILE_UPLOAD_ERR.LAYER_FILE_NOT_CSV_FORMAT
-          break
-        case 'polygonFileNotCSVFormat':
-          message = MESSAGE.FILE_UPLOAD_ERR.POLYGON_FILE_NOT_CSV_FORMAT
-          break
-      }
-
-      messageDialog.value = {
-        dialog: true,
-        title: MESSAGE.MSG_DIALOG_TITLE.INVALID_FILE,
-        message: message,
-        btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
-      }
-      return
-    }
+    if (!validateComparison()) return
+    if (!validateRequiredFields()) return
+    if (!validateRange()) return
+    if (!(await validateFiles())) return
 
     if (form.value) {
       form.value.validate()
@@ -269,85 +448,13 @@ const runModelHandler = async () => {
 
     await delay(1000)
 
-    const formData = new FormData()
+    const response = await projectionHcsvPostResponse(getFormData(), false)
 
-    const selectedExecutionOptions = [
-      SelectedExecutionOptionsEnum.ForwardGrowEnabled,
-      SelectedExecutionOptionsEnum.DoIncludeFileHeader,
-      SelectedExecutionOptionsEnum.DoIncludeProjectionModeInYieldTable,
-      SelectedExecutionOptionsEnum.DoIncludeAgeRowsInYieldTable,
-      SelectedExecutionOptionsEnum.DoIncludeYearRowsInYieldTable,
-      SelectedExecutionOptionsEnum.DoSummarizeProjectionByLayer,
-      SelectedExecutionOptionsEnum.DoIncludeColumnHeadersInYieldTable,
-      SelectedExecutionOptionsEnum.DoAllowBasalAreaAndTreesPerHectareValueSubstitution,
-      SelectedExecutionOptionsEnum.DoEnableProgressLogging,
-      SelectedExecutionOptionsEnum.DoEnableErrorLogging,
-      SelectedExecutionOptionsEnum.DoEnableDebugLogging,
-    ]
+    const zipFileName = extractZipFileName(response.headers)
+    console.debug('download zip file name:', zipFileName)
 
-    if (projectionType.value === CONSTANTS.PROJECTION_TYPE.VOLUME) {
-      selectedExecutionOptions.push(
-        SelectedExecutionOptionsEnum.DoIncludeProjectedMOFVolumes,
-      )
-    } else if (projectionType.value === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS) {
-      selectedExecutionOptions.push(
-        SelectedExecutionOptionsEnum.DoIncludeProjectedCFSBiomass,
-      )
-    }
-
-    if (
-      includeInReport.value &&
-      includeInReport.value.includes(
-        CONSTANTS.INCLUDE_IN_REPORT.SPECIES_COMPOSITION,
-      )
-    ) {
-      selectedExecutionOptions.push(
-        SelectedExecutionOptionsEnum.DoIncludeSpeciesProjection,
-      )
-    }
-
-    const selectedDebugOptions: Array<SelectedDebugOptionsEnum> = [
-      SelectedDebugOptionsEnum.DoIncludeDebugTimestamps,
-      SelectedDebugOptionsEnum.DoIncludeDebugEntryExit,
-      SelectedDebugOptionsEnum.DoIncludeDebugIndentBlocks,
-      SelectedDebugOptionsEnum.DoIncludeDebugRoutineNames,
-    ]
-
-    const projectionParameters = {
-      ageStart: startingAge.value,
-      ageEnd: finishingAge.value,
-      ageIncrement: ageIncrement.value,
-      outputFormat: OutputFormatEnum.CSVYieldTable,
-      selectedExecutionOptions: selectedExecutionOptions,
-      selectedDebugOptions: selectedDebugOptions,
-      combineAgeYearRange: CombineAgeYearRangeEnum.Intersect,
-      metadataToOutput: MetadataToOutputEnum.VERSION,
-    }
-
-    formData.append(
-      ParameterNamesEnum.PROJECTION_PARAMETERS,
-      new Blob([JSON.stringify(projectionParameters)], {
-        type: 'application/json',
-      }),
-    )
-    formData.append(
-      ParameterNamesEnum.HCSV_POLYGON_INPUT_DATA,
-      polygonFile.value as Blob,
-    )
-    formData.append(
-      ParameterNamesEnum.HCSV_LAYERS_INPUT_DATA,
-      layerFile.value as Blob,
-    )
-
-    const result = await projectionHcsvPost(formData, false)
-
-    const url = window.URL.createObjectURL(new Blob([result]))
-    const link = document.createElement('a')
-    link.href = url
-    link.setAttribute('download', CONSTANTS.FILE_NAME.PROJECTION_RESULT_ZIP)
-    document.body.appendChild(link)
-    link.click()
-    link.remove()
+    const resultBlob = response.data
+    downloadFile(resultBlob, zipFileName)
 
     logSuccessMessage(MESSAGE.SUCESS_MSG.FILE_UPLOAD_RUN_RESULT)
   } catch (error) {
@@ -357,6 +464,9 @@ const runModelHandler = async () => {
   }
 }
 
+/**
+ * Handles the closing of the message dialog.
+ */
 const handleDialogClose = () => {}
 </script>
 <style scoped></style>
