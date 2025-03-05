@@ -415,7 +415,7 @@ class ITDataBased {
 
 		Path baseControlFile = copyResource(TestUtils.class, "VDYP.CTR", testConfigDir);
 
-		Path testControlFile = dataDir.resolve("VDYP.CTR");
+		Path testControlFile = dataDir.resolve("control.ctl");
 
 		// Create a second control file pointing to the input and output
 		Path ioControlFile = dataDir.resolve("fip.ctr");
