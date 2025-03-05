@@ -10,7 +10,6 @@ import {
 import { projectionHcsvPost } from '@/services/apiActions'
 import type { CSVRowType } from '@/types/types'
 import type { SpeciesGroup } from '@/interfaces/interfaces'
-import { downloadFile } from '@/utils/util'
 
 /**
  * Generates a unique 9-digit or 10-digit feature ID using the current timestamp and random values.
@@ -350,9 +349,6 @@ export const createCSVFiles = (modelParameterStore: any) => {
     type: 'text/csv;charset=utf-8;',
   })
   const blobLayer = new Blob([layerCSV], { type: 'text/csv;charset=utf-8;' })
-
-  downloadFile(blobPolygon, 'VDYP7_INPUT_POLY.csv')
-  downloadFile(blobLayer, 'VDYP7_INPUT_LAYER.csv')
 
   return { blobPolygon, blobLayer }
 }
