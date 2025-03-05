@@ -8,13 +8,19 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.BiPredicate;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.io.FilenameUtils;
@@ -25,6 +31,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.io.CleanupMode;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import ca.bc.gov.nrs.vdyp.application.ProcessingException;
@@ -109,11 +116,22 @@ class ITDataBased {
 		}
 	}
 
+	static final Map<Data, String> DATA_FILENAMES;
+
+	static {
+		var map = new EnumMap<Data, String>(Data.class);
+		map.put(Data.Polygon, "polygon.dat");
+		map.put(Data.Layer, "layer.dat");
+		map.put(Data.Species, "species.dat");
+		map.put(Data.Site, "site.dat");
+		map.put(Data.Utilization, "util.dat");
+		map.put(Data.Compatibility, "compat.dat");
+		map.put(Data.GrowTo, "grow.dat");
+		DATA_FILENAMES = Collections.unmodifiableMap(map);
+	}
+
 	static String fileName(State state, Data data) {
-		if (data == Data.GrowTo) {
-			return String.format("P-SAVE_VDYP7_%s.dat", data.suffix);
-		}
-		return String.format("P-SAVE_VDYP7_%s%s.dat", state.prefix, data.suffix);
+		return DATA_FILENAMES.get(data);
 	}
 
 	static Path dataPath(State state, Data data) {
@@ -180,16 +198,50 @@ class ITDataBased {
 		return Files.list(testDataDir).map(p -> p.getFileName().toString());
 	}
 
+	static Collection<Arguments> testNameAndLayerProvider() throws IOException {
+		try {
+			return Files.list(testDataDir)
+					.filter(p -> Files.isDirectory(p))
+					.flatMap(p -> {
+						try {
+							return Files.list(p);
+						} catch (IOException e) {
+							throw new UncheckedIOException(e);
+						}
+					})
+					.filter(p -> Files.isDirectory(p))
+					.flatMap(p -> {
+						try {
+							return Files.list(p);
+						} catch (IOException e) {
+							throw new UncheckedIOException(e);
+						}
+					})
+					.filter(p -> Files.isDirectory(p))
+					.map(
+							p -> Arguments.of(
+									p.getParent().getParent().getFileName().toString(),
+									p.getFileName().toString()
+							)
+					)
+					// Collapse together test/layer pairs
+					.collect(Collectors.toMap(args -> String.format("%s/%s", args.get()), args -> args, (a1, a2) -> a1))
+					.values();
+		} catch (UncheckedIOException e) {
+			throw new IOException(e);
+		}
+	}
+
 	@Order(ORDER_START)
 	@ParameterizedTest
-	@MethodSource("testNameProvider")
-	void testVriStart(String test) throws IOException, ResourceParseException, ProcessingException {
+	@MethodSource("testNameAndLayerProvider")
+	void testVriStart(String test, String layer) throws IOException, ResourceParseException, ProcessingException {
 		State inputState = State.VriInput;
 		State outputState = State.ForwardInput;
 
 		Path testDir = testDataDir.resolve(test);
-		Path dataDir = testDir.resolve(inputState.dir);
-		Path expectedDir = testDir.resolve(outputState.dir);
+		Path dataDir = testDir.resolve(inputState.dir).resolve(layer);
+		Path expectedDir = testDir.resolve(outputState.dir).resolve(layer);
 
 		Path baseControlFile = copyResource(TestUtils.class, "VRISTART.CTR", testConfigDir);
 
@@ -199,7 +251,9 @@ class ITDataBased {
 		doSkip(testDir, "testVriStart");
 
 		// Create a second control file pointing to the input and output
-		Path ioControlFile = dataDir.resolve("vri.ctr");
+		Path ioControlFile = dataDir.resolve("io-control.ctl");
+
+		Path testControlFile = dataDir.resolve("control.ctl");
 
 		try (
 				var os = Files.newOutputStream(ioControlFile); //
@@ -221,6 +275,11 @@ class ITDataBased {
 			writer.writeEntry(18, outputDir.resolve(UTILIZATION_OUTPUT_NAME).toString(), "VDYP Utilization Output");
 		}
 
+		final var controlFiles = Stream.of(baseControlFile, testControlFile, ioControlFile)
+				.filter(Files::exists)
+				.map(Object::toString)
+				.toArray(String[]::new);
+
 		try (VdypStartApplication<VriPolygon, VriLayer, VriSpecies, VriSite> app = new VriStart();) {
 
 			var resolver = new FileSystemFileResolver(configDir);
@@ -229,8 +288,7 @@ class ITDataBased {
 					resolver,
 					new PrintStream(new ByteArrayOutputStream()),
 					TestUtils.makeInputStream("", ""),
-					baseControlFile.toString(),
-					ioControlFile.toString()
+					controlFiles
 			);
 
 			app.process();
@@ -257,17 +315,16 @@ class ITDataBased {
 
 	}
 
-
 	@Order(ORDER_START)
 	@ParameterizedTest
-	@MethodSource("testNameProvider")
-	void testFipStart(String test) throws IOException, ResourceParseException, ProcessingException {
+	@MethodSource("testNameAndLayerProvider")
+	void testFipStart(String test, String layer) throws IOException, ResourceParseException, ProcessingException {
 		State inputState = State.FipInput;
 		State outputState = State.ForwardInput;
 
 		Path testDir = testDataDir.resolve(test);
-		Path dataDir = testDir.resolve(inputState.dir);
-		Path expectedDir = testDir.resolve(outputState.dir);
+		Path dataDir = testDir.resolve(inputState.dir).resolve(layer);
+		Path expectedDir = testDir.resolve(outputState.dir).resolve(layer);
 
 		Assumptions.assumeTrue(Files.exists(dataDir), "No input data");
 		Assumptions.assumeTrue(Files.exists(expectedDir), "No expected output data");
@@ -276,7 +333,9 @@ class ITDataBased {
 
 		Path baseControlFile = copyResource(TestUtils.class, "FIPSTART.CTR", testConfigDir);
 
-		// Create a second control file pointing to the input and output
+		Path testControlFile = dataDir.resolve("control.ctl");
+
+		// Create a control file pointing to the input and output
 		Path ioControlFile = dataDir.resolve("fip.ctr");
 
 		try (
@@ -298,6 +357,11 @@ class ITDataBased {
 			writer.writeEntry(18, outputDir.resolve(UTILIZATION_OUTPUT_NAME).toString(), "VDYP Utilization Output");
 		}
 
+		final var controlFiles = Stream.of(baseControlFile, testControlFile, ioControlFile)
+				.filter(Files::exists)
+				.map(Object::toString)
+				.toArray(String[]::new);
+
 		try (VdypStartApplication<FipPolygon, FipLayer, FipSpecies, FipSite> app = new FipStart();) {
 
 			var resolver = new FileSystemFileResolver(configDir);
@@ -306,8 +370,7 @@ class ITDataBased {
 					resolver,
 					new PrintStream(new ByteArrayOutputStream()),
 					TestUtils.makeInputStream("", ""),
-					baseControlFile.toString(),
-					ioControlFile.toString()
+					controlFiles
 			);
 
 			app.process();
@@ -336,14 +399,14 @@ class ITDataBased {
 
 	@Order(ORDER_GROW)
 	@ParameterizedTest
-	@MethodSource("testNameProvider")
-	void testVdypForward(String test) throws IOException, ResourceParseException, ProcessingException {
+	@MethodSource("testNameAndLayerProvider")
+	void testVdypForward(String test, String layer) throws IOException, ResourceParseException, ProcessingException {
 		State inputState = State.ForwardInput;
 		State outputState = State.ForwardOutput;
 
 		Path testDir = testDataDir.resolve(test);
-		Path dataDir = testDir.resolve(inputState.dir);
-		Path expectedDir = testDir.resolve(outputState.dir);
+		Path dataDir = testDir.resolve(inputState.dir).resolve(layer);
+		Path expectedDir = testDir.resolve(outputState.dir).resolve(layer);
 
 		Assumptions.assumeTrue(Files.exists(dataDir), "No input data");
 		Assumptions.assumeTrue(Files.exists(expectedDir), "No expected output data");
@@ -357,12 +420,6 @@ class ITDataBased {
 		// Create a second control file pointing to the input and output
 		Path ioControlFile = dataDir.resolve("fip.ctr");
 
-		List<String> controlFiles = new ArrayList<>(3);
-		controlFiles.add(baseControlFile.toString());
-		if (Files.exists(testControlFile)) {
-			controlFiles.add(testControlFile.toString());
-		}
-		controlFiles.add(ioControlFile.toString());
 
 		try (
 				var os = Files.newOutputStream(ioControlFile); //
@@ -397,6 +454,11 @@ class ITDataBased {
 					19, outputDir.resolve(COMPATIBILITY_OUTPUT_NAME).toString(), "VDYP Compatibility Variables Output"
 			);
 		}
+
+		final var controlFiles = Stream.of(baseControlFile, testControlFile, ioControlFile)
+				.filter(Files::exists)
+				.map(Object::toString)
+				.toList();
 
 		{
 
