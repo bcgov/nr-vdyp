@@ -149,7 +149,7 @@ class OracleRunnerTest {
 					FileUtils.touch(installDir.resolve("VDYP_CFG/"+layer.code+"-VDYP7_BACK.ctl").toFile());
 				}
 
-				// TODO create mock final output files
+				FileUtils.touch(tempDir.resolve("test1/output/Output_YldTbl.csv").toFile());
 				
 				return mockFuture;
 			}
