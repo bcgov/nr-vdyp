@@ -5,19 +5,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import ca.bc.gov.nrs.vdyp.io.FileResolver;
-import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
-import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
-import ca.bc.gov.nrs.vdyp.io.parse.control.BaseControlParser;
 
 /**
  * Base class of all VDYP applications.
@@ -29,6 +21,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.control.BaseControlParser;
  */
 public abstract class VdypApplication extends VdypComponent {
 
+	@SuppressWarnings("unused")
 	private static final Logger logger = LoggerFactory.getLogger(VdypApplication.class);
 
 	public abstract VdypApplicationIdentifier getId();

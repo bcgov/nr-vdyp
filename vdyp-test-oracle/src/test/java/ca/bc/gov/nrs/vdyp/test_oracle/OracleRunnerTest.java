@@ -1,14 +1,11 @@
 package ca.bc.gov.nrs.vdyp.test_oracle;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.any;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.matchesRegex;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -18,7 +15,6 @@ import org.apache.commons.io.FileUtils;
 import org.easymock.EasyMock;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
-import org.hamcrest.Matchers;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -167,24 +163,24 @@ class OracleRunnerTest {
 
 		for (var layer: layers) {
 			for (var tag : new String[] { "polygon", "species", "util", "grow" }) {
-				assertThat(outputDir, fileExists("test1/forwardInput/primary/" + tag + ".dat"));
+				assertThat(outputDir, fileExists("test1/forwardInput/" + layer.filename + "/" + tag + ".dat"));
 			}
 			assertThat(outputDir, fileExists("test1/forwardInput/primary/control.ctl"));
 			for (var tag : new String[] { "polygon", "species", "util", "compat" }) {
-				assertThat(outputDir, fileExists("test1/forwardOutput/primary/" + tag + ".dat"));
+				assertThat(outputDir, fileExists("test1/forwardOutput/" + layer.filename + "/" + tag + ".dat"));
 			}
 			for (var tag : new String[] { "adjust", "polygon", "species", "util" }) {
-				assertThat(outputDir, fileExists("test1/adjustInput/primary/" + tag + ".dat"));
+				assertThat(outputDir, fileExists("test1/adjustInput/" + layer.filename + "/" + tag + ".dat"));
 			}
 			for (var tag : new String[] { "polygon", "species", "util" }) {
-				assertThat(outputDir, fileExists("test1/backInput/primary/" + tag + ".dat"));
+				assertThat(outputDir, fileExists("test1/backInput/" + layer.filename + "/" + tag + ".dat"));
 			}
 			assertThat(outputDir, fileExists("test1/backInput/primary/control.ctl"));
 			for (var tag : new String[] { "polygon", "species", "util", "compat" }) {
-				assertThat(outputDir, fileExists("test1/backOutput/primary/" + tag + ".dat"));
+				assertThat(outputDir, fileExists("test1/backOutput/" + layer.filename + "/" + tag + ".dat"));
 			}
 			for (var tag : new String[] { "site", "layer", "polygon", "species" }) {
-				assertThat(outputDir, fileExists("test1/vriInput/primary/" + tag + ".dat"));
+				assertThat(outputDir, fileExists("test1/vriInput/" + layer.filename + "/" + tag + ".dat"));
 			}
 		}
 

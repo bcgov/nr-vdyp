@@ -17,7 +17,6 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -110,6 +109,7 @@ class VdypStartApplicationTest {
 
 			var app = new TestStartApplication(controlMap, false);
 
+			@SuppressWarnings("unused")
 			var ex = assertThrows(
 					FileNotFoundException.class, () -> app.init(
 							resolver,

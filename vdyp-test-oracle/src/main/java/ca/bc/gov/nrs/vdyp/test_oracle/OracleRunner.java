@@ -7,25 +7,17 @@ import org.apache.commons.io.FileUtils;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -60,7 +52,7 @@ public class OracleRunner {
 
 	public static Path getDestFile(IntermediateStage stage, ModelObject obj, Layer layer) {
 		final String extension = obj == ModelObject.CONTROL ? "ctl" : "dat";
-		return Path.of(stage.name, layer.name, String.format("%s.%s", obj.name, extension));
+		return Path.of(stage.filename, layer.filename, String.format("%s.%s", obj.filename, extension));
 	}
 
 	public static enum Layer {
@@ -70,11 +62,11 @@ public class OracleRunner {
 		DEAD("dead", "D"), //
 		REGENERATION("regen", "R");
 
-		public final String name;
+		public final String filename;
 		public final String code;
 
 		Layer(String name, String code) {
-			this.name = name;
+			this.filename = name;
 			this.code = code;
 		}
 
@@ -116,11 +108,11 @@ public class OracleRunner {
 			};
 		};
 
-		public final String name;
+		public final String filename;
 		public final String code;
 
 		ModelObject(String name, String code) {
-			this.name = name;
+			this.filename = name;
 			this.code = code;
 		}
 
@@ -156,12 +148,12 @@ public class OracleRunner {
 		BACK_OUTPUT("backOutput", "BOUT", EnumSet.of(ModelObject.POLYGON, ModelObject.SPECIES, ModelObject.UTILIZATION,
 				ModelObject.COMPATIBILITY));
 
-		public final String name;
+		public final String filename;
 		public final String code;
 		public final Set<ModelObject> files;
 
 		IntermediateStage(String name, String code, Set<ModelObject> files) {
-			this.name = name;
+			this.filename = name;
 			this.code = code;
 			this.files = Collections.unmodifiableSet(files);
 		}
@@ -223,11 +215,10 @@ public class OracleRunner {
 			// Update parameters file
 			var paramFile = paramSubdir.resolve("parms.txt");
 			{
-				var subPattern = Pattern.compile("\\$\\((.+?)\\)");
 				var paramsText = FileUtils.readFileToString(paramFile.toFile(), StandardCharsets.UTF_8);
 				// Remove Byte order mark if present
 				if (paramsText.startsWith("\uFEFF")) {
-					paramsText.subSequence(1, paramsText.length());
+					paramsText = paramsText.substring(1, paramsText.length());
 				}
 				// paramsText = subPattern.matcher(paramsText).replaceAll(m ->
 				// env.get(m.group()));
@@ -299,26 +290,14 @@ public class OracleRunner {
 		final var activeStages = EnumSet.noneOf(IntermediateStage.class);
 		final var activeLayers = EnumSet.noneOf(Layer.class);
 
-		final var it = FileUtils.iterateFiles(intermediateDir.toFile(), new String[] { "dat", "ctl" }, false);
-		while (it.hasNext()) {
-			final var file = it.next();
-			final var match = INTERMEDIATE_FILE.matcher(file.toPath().getFileName().toString());
-			if (match.find()) {
-				final var stage = match.group("stage");
-				final var layer = match.group("layer");
-				if (stage != null) {
-					activeStages.add(IntermediateStage.byCode(stage));
-				}
-				activeLayers.add(Layer.byCode(layer));
-			}
-		}
+		findActiveLayersAndStages(intermediateDir, activeStages, activeLayers);
 
 		for (final var stage : activeStages) {
-			final var stageDir = finalSubdir.resolve(stage.name);
+			final var stageDir = finalSubdir.resolve(stage.filename);
 			Files.createDirectory(stageDir);
 
 			for (final var layer : activeLayers) {
-				final var layerDir = stageDir.resolve(layer.name);
+				final var layerDir = stageDir.resolve(layer.filename);
 				Files.createDirectory(layerDir);
 				for (var fileType : stage.files) {
 					final var sourceFile = intermediateDir.resolve(getSourceFile(stage, fileType, layer));
@@ -332,6 +311,24 @@ public class OracleRunner {
 		}
 
 		copyFiles(outputSubdir, outputDir, file -> file.getFileName().toString().startsWith("Output_"));
+	}
+
+	private void findActiveLayersAndStages(
+			Path intermediateDir, final EnumSet<IntermediateStage> activeStages, final EnumSet<Layer> activeLayers
+	) {
+		final var it = FileUtils.iterateFiles(intermediateDir.toFile(), new String[] { "dat", "ctl" }, false);
+		while (it.hasNext()) {
+			final var file = it.next();
+			final var match = INTERMEDIATE_FILE.matcher(file.toPath().getFileName().toString());
+			if (match.find()) {
+				final var stage = match.group("stage");
+				final var layer = match.group("layer");
+				if (stage != null) {
+					activeStages.add(IntermediateStage.byCode(stage));
+				}
+				activeLayers.add(Layer.byCode(layer));
+			}
+		}
 	}
 
 	void copyFiles(Path source, Path destination, DirectoryStream.Filter<Path> filter) throws IOException {

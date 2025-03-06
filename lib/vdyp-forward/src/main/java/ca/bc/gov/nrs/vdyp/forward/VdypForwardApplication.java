@@ -6,11 +6,8 @@ import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.PASS_3;
 import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.PASS_4;
 import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.PASS_5;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
