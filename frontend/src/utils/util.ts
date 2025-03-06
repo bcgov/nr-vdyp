@@ -277,16 +277,17 @@ export const decrementItemBySpinButton = (
 }
 
 /**
- * Saves a Blob as a CSV file by triggering a browser download.
- * Creates a temporary URL and simulates a link click to download the file.
+ * Downloads a Blob as a file by triggering a browser download.
+ * Creates a temporary URL and simulates a link click to download the file,
+ * regardless of whether the file is a CSV, ZIP, or any other type.
  *
- * @param blob - The Blob object containing the CSV data
- * @param fileName - The name of the file to save (e.g., "data.csv")
+ * @param blob - The Blob object containing the file data.
+ * @param fileName - The name of the file to save (e.g., "data.zip" or "data.csv").
  * @example
- *   const csvBlob = new Blob(["name,age\nJohn,25"], { type: "text/csv" });
- *   saveCSVFile(csvBlob, "example.csv"); // Downloads "example.csv"
+ *   const fileBlob = new Blob(["sample content"], { type: "application/octet-stream" });
+ *   downloadFile(fileBlob, "example.zip"); // Downloads "example.zip"
  */
-export const saveCSVFile = (blob: Blob, fileName: string) => {
+export const downloadFile = (blob: Blob, fileName: string) => {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
