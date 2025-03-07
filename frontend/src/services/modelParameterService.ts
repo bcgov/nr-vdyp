@@ -12,61 +12,111 @@ import type { CSVRowType } from '@/types/types'
 import type { SpeciesGroup } from '@/interfaces/interfaces'
 
 /**
- * Generates a unique 9-digit or 10-digit number using the current timestamp and random values.
- * @returns {number} A 9-digit or 10-digit number
+ * Generates a unique 9-digit or 10-digit feature ID using the current timestamp and random values.
+ * @returns {number} A unique feature ID.
  */
 const generateFeatureId = (): number => {
   const timestamp = Date.now()
-
-  // Use the last 8 digits of the timestamp (0 to 99999999)
   const timestampPart = timestamp % 100000000
-
   const randomPart = Math.floor(Math.random() * 99) + 1 // 1 to 99
-  const numberStr = `${randomPart}${timestampPart}`
-  return Number(numberStr)
+  return Number(`${randomPart}${timestampPart}`)
 }
 
 /**
- * Generates a random number within a specified range.
- * @param min Minimum number of digits (inclusive).
- * @param max Maximum number of digits (inclusive).
+ * Generates a random number as a string within the specified digit range.
+ * @param minDigits Minimum number of digits (inclusive).
+ * @param maxDigits Maximum number of digits (inclusive).
  * @returns A random number as a string.
  */
 const generateRandomNumber = (minDigits: number, maxDigits: number): string => {
   if (minDigits > maxDigits) {
     throw new Error('minDigits must be less than or equal to maxDigits')
   }
-
   const min = Math.pow(10, minDigits - 1)
   const max = Math.pow(10, maxDigits) - 1
-
   return (Math.floor(Math.random() * (max - min + 1)) + min).toString()
 }
 
 /**
- * Generates a random POLYGON_NUMBER (4 to 9 digits).
- * Polygon Number starts with the Map_id and then up to 8 numbers
- * @returns A random POLYGON_NUMBER.
+ * Generates a random polygon number by concatenating the map ID with a random number (1 to 8 digits).
+ * @param mapId The map identifier.
+ * @returns A random polygon number.
  */
 const generatePolygonNumber = (mapId: string): string => {
-  const randomPart = generateRandomNumber(1, 8) // 1 to 8-digit
+  const randomPart = generateRandomNumber(1, 8)
   return `${mapId}${randomPart}`
 }
 
 /**
- * Generates a random TREE_COVER_LAYER_ESTIMATED_ID (4 to 10 digits).
+ * Generates a random TREE_COVER_LAYER_ESTIMATED_ID with 4 to 10 digits.
  * @returns A random TREE_COVER_LAYER_ESTIMATED_ID.
  */
 const generateTreeCoverLayerEstimatedId = (): string => {
   return generateRandomNumber(4, 10)
 }
 
-const determineBclcsLevel5 = (percentStockableArea: number): string => {
-  if (percentStockableArea >= 61) return BIZCONSTANTS.BCLCS_LEVEL5_DE
-  if (percentStockableArea >= 26) return BIZCONSTANTS.BCLCS_LEVEL5_OP
-  return BIZCONSTANTS.BCLCS_LEVEL5_SP
+/**
+ * Converts an array of CSV rows into a CSV string.
+ * @param data The CSV row type data.
+ * @returns A CSV-formatted string.
+ */
+const convertToCSV = (data: CSVRowType): string => {
+  return data
+    .map((row) =>
+      row
+        .map((value) =>
+          value !== null && value !== undefined ? String(value) : '',
+        )
+        .join(','),
+    )
+    .join('\n')
 }
 
+/**
+ * Computes BCLCS Level 1 based on the percent stockable area.
+ * @param percentStockableArea The percent stockable area.
+ * @returns The corresponding BCLCS Level 1 code.
+ */
+const computeBclcsLevel1 = (
+  percentStockableArea: number | undefined,
+): string => {
+  const threshold = BIZCONSTANTS.BCLCS_LEVEL1_THRESHOLD
+  return (percentStockableArea ?? threshold) < threshold
+    ? BIZCONSTANTS.BCLCS_LEVEL1_NON_VEG
+    : BIZCONSTANTS.BCLCS_LEVEL1_VEG
+}
+
+/**
+ * Computes BCLCS Level 2 based on the percent stockable area.
+ * @param percentStockableArea The percent stockable area.
+ * @returns The corresponding BCLCS Level 2 code.
+ */
+const computeBclcsLevel2 = (
+  percentStockableArea: number | undefined,
+): string => {
+  const threshold = BIZCONSTANTS.BCLCS_LEVEL2_THRESHOLD
+  return (percentStockableArea ?? threshold) < threshold
+    ? BIZCONSTANTS.BCLCS_LEVEL2_NON_TREED
+    : BIZCONSTANTS.BCLCS_LEVEL2_TREED
+}
+
+/**
+ * Computes BCLCS Level 3 based on the BEC zone.
+ * @param becZone The BEC zone.
+ * @returns The corresponding BCLCS Level 3 code.
+ */
+const computeBclcsLevel3 = (becZone: string | undefined): string => {
+  return (becZone ?? BIZCONSTANTS.BCLCS_LEVEL3_DEFAULT) ===
+    BIZCONSTANTS.BCLCS_LEVEL3_BECZONE_AT
+    ? BIZCONSTANTS.BCLCS_LEVEL3_ALPINE
+    : BIZCONSTANTS.BCLCS_LEVEL3_DEFAULT
+}
+
+/**
+ * Determines the BCLCS Level 4 code based on species groups.
+ * @param speciesGroups Array of species groups.
+ * @returns The corresponding BCLCS Level 4 code.
+ */
 const determineBclcsLevel4 = (speciesGroups: SpeciesGroup[]): string => {
   let coniferousTotal = 0
   let broadleafTotal = 0
@@ -91,23 +141,64 @@ const determineBclcsLevel4 = (speciesGroups: SpeciesGroup[]): string => {
   }
 }
 
-const convertToCSV = (data: CSVRowType): string => {
-  return data
-    .map((row) =>
-      row
-        .map((value) =>
-          value !== null && value !== undefined ? String(value) : '',
-        )
-        .join(','),
-    )
-    .join('\n')
+/**
+ * Determines the BCLCS Level 5 code based on the percent stockable area.
+ * @param percentStockableArea The percent stockable area.
+ * @returns The corresponding BCLCS Level 5 code.
+ */
+const determineBclcsLevel5 = (percentStockableArea: number): string => {
+  if (percentStockableArea >= 61) return BIZCONSTANTS.BCLCS_LEVEL5_DE
+  if (percentStockableArea >= 26) return BIZCONSTANTS.BCLCS_LEVEL5_OP
+  return BIZCONSTANTS.BCLCS_LEVEL5_SP
 }
 
-export const createCSVFiles = (modelParameterStore: any) => {
-  const featureId = generateFeatureId()
-  const mapId = BIZCONSTANTS.MAP_ID
-  const polygonNumber = generatePolygonNumber(mapId)
-  const treeCoverLayerEstimatedId = generateTreeCoverLayerEstimatedId()
+/**
+ * Extracts species data (species code and percentage) from the species list.
+ * @param speciesList The list of species objects.
+ * @returns An array of objects with species code and percentage.
+ */
+const getSpeciesData = (
+  speciesList: any[],
+): { species: string; percent: string }[] => {
+  return speciesList.map((item) => ({
+    species: item.species,
+    percent:
+      item.percent === 0 || item.percent === null || item.species === null
+        ? ''
+        : String(item.percent),
+  }))
+}
+
+/**
+ * Flattens species data into an array suitable for CSV row insertion.
+ * @param speciesData Array of species data objects.
+ * @param count The number of species to include.
+ * @returns A flattened array of species codes and percentages.
+ */
+const flattenSpeciesData = (
+  speciesData: { species: string; percent: string }[],
+  count: number,
+): any[] => {
+  return speciesData.slice(0, count).reduce((acc: any[], cur) => {
+    acc.push(cur.species, cur.percent)
+    return acc
+  }, [])
+}
+
+/**
+ * Creates CSV data for the polygon file.
+ * @param modelParameterStore The store containing model parameters.
+ * @param featureId The generated feature ID.
+ * @param mapId The map ID.
+ * @param polygonNumber The generated polygon number.
+ * @returns The CSV row type for the polygon data.
+ */
+const createPolygonData = (
+  modelParameterStore: any,
+  featureId: number,
+  mapId: string,
+  polygonNumber: string,
+): CSVRowType => {
   const derivedByCode =
     modelParameterStore.derivedBy === CONSTANTS.DERIVED_BY.VOLUME
       ? BIZCONSTANTS.INVENTORY_CODES.FIP
@@ -115,160 +206,141 @@ export const createCSVFiles = (modelParameterStore: any) => {
         ? BIZCONSTANTS.INVENTORY_CODES.VRI
         : ''
 
-  const bclcsLevel1 =
-    (modelParameterStore.percentStockableArea ??
-      BIZCONSTANTS.BCLCS_LEVEL1_THRESHOLD) < BIZCONSTANTS.BCLCS_LEVEL1_THRESHOLD
-      ? BIZCONSTANTS.BCLCS_LEVEL1_NON_VEG
-      : BIZCONSTANTS.BCLCS_LEVEL1_VEG
-
-  const bclcsLevel2 =
-    (modelParameterStore.percentStockableArea ??
-      BIZCONSTANTS.BCLCS_LEVEL2_THRESHOLD) < BIZCONSTANTS.BCLCS_LEVEL2_THRESHOLD
-      ? BIZCONSTANTS.BCLCS_LEVEL2_NON_TREED
-      : BIZCONSTANTS.BCLCS_LEVEL2_TREED
-
-  const bclcsLevel3 =
-    (modelParameterStore.becZone ?? BIZCONSTANTS.BCLCS_LEVEL3_DEFAULT) ===
-    BIZCONSTANTS.BCLCS_LEVEL3_BECZONE_AT
-      ? BIZCONSTANTS.BCLCS_LEVEL3_ALPINE
-      : BIZCONSTANTS.BCLCS_LEVEL3_DEFAULT
-
+  const bclcsLevel1 = computeBclcsLevel1(
+    modelParameterStore.percentStockableArea,
+  )
+  const bclcsLevel2 = computeBclcsLevel2(
+    modelParameterStore.percentStockableArea,
+  )
+  const bclcsLevel3 = computeBclcsLevel3(modelParameterStore.becZone)
   const bclcsLevel4 = determineBclcsLevel4(modelParameterStore.speciesGroups)
-
   const bclcsLevel5 = determineBclcsLevel5(
     modelParameterStore.percentStockableArea,
   )
+  const referenceYear = '2024'
 
-  const species1 = modelParameterStore.speciesList[0].species
-  const spczPct1 = modelParameterStore.speciesList[0].percent
-
-  const species2 = modelParameterStore.speciesList[1].species
-  const spczPct2 =
-    modelParameterStore.speciesList[1].percent === 0 ||
-    modelParameterStore.speciesList[1].percent == null
-      ? ''
-      : modelParameterStore.speciesList[1].percent
-
-  const species3 = modelParameterStore.speciesList[2].species
-  const spczPct3 =
-    modelParameterStore.speciesList[2].percent === 0 ||
-    modelParameterStore.speciesList[2].percent == null
-      ? ''
-      : modelParameterStore.speciesList[2].percent
-
-  const species4 = modelParameterStore.speciesList[3].species
-  const spczPct4 =
-    modelParameterStore.speciesList[3].percent === 0 ||
-    modelParameterStore.speciesList[3].percent == null
-      ? ''
-      : modelParameterStore.speciesList[3].percent
-
-  const species5 = modelParameterStore.speciesList[4].species
-  const spczPct5 =
-    modelParameterStore.speciesList[4].percent === 0 ||
-    modelParameterStore.speciesList[4].percent == null
-      ? ''
-      : modelParameterStore.speciesList[4].percent
-
-  const species6 = modelParameterStore.speciesList[5].species
-  const spczPct6 =
-    modelParameterStore.speciesList[5].percent === 0 ||
-    modelParameterStore.speciesList[5].percent == null
-      ? ''
-      : modelParameterStore.speciesList[5].percent
-
-  const polygonData: CSVRowType = [
-    CSVHEADERS.POLYGON_HEADERS,
-    [
-      featureId, // FEATURE_ID
-      mapId, // MAP_ID
-      polygonNumber, // POLYGON_NUMBER
-      '', // ORG_UNIT
-      BIZCONSTANTS.UNKNOWN_CD, // TSA_NAME
-      BIZCONSTANTS.UNKNOWN_CD, // TFL_NAME
-      derivedByCode || '', // INVENTORY_STANDARD_CODE
-      BIZCONSTANTS.UNKNOWN_CD, // TSA_NUMBER
-      '', // SHRUB_HEIGHT
-      '', // SHRUB_CROWN_CLOSURE
-      '', // SHRUB_COVER_PATTERN
-      '', // HERB_COVER_TYPE_CODE
-      '', // HERB_COVER_PCT
-      '', // HERB_COVER_PATTERN_CODE
-      '', // BRYOID_COVER_PCT
-      modelParameterStore.becZone, // BEC_ZONE_CODE
-      modelParameterStore.ecoZone || '', // CFS_ECOZONE
-      modelParameterStore.percentStockableArea || '', // PRE_DISTURBANCE_STOCKABILITY
-      BIZCONSTANTS.YIELD_FACTOR_CD, // YIELD_FACTOR
-      '', // NON_PRODUCTIVE_DESCRIPTOR_CD
-      bclcsLevel1 || '', // BCLCS_LEVEL1_CODE
-      bclcsLevel2 || '', // BCLCS_LEVEL2_CODE
-      bclcsLevel3 || '', // BCLCS_LEVEL3_CODE
-      bclcsLevel4 || '', // BCLCS_LEVEL4_CODE
-      bclcsLevel5 || '', // BCLCS_LEVEL5_CODE
-      '', // PHOTO_ESTIMATION_BASE_YEAR
-      '', // REFERENCE_YEAR
-      '', // PCT_DEAD
-      '', // NON_VEG_COVER_TYPE_1
-      '', // NON_VEG_COVER_PCT_1
-      '', // NON_VEG_COVER_PATTERN_1
-      '', // NON_VEG_COVER_TYPE_2
-      '', // NON_VEG_COVER_PCT_2
-      '', // NON_VEG_COVER_PATTERN_2
-      '', // NON_VEG_COVER_TYPE_3
-      '', // NON_VEG_COVER_PCT_3
-      '', // NON_VEG_COVER_PATTERN_3
-      '', // LAND_COVER_CLASS_CD_1
-      '', // LAND_COVER_PCT_1
-      '', // LAND_COVER_CLASS_CD_2
-      '', // LAND_COVER_PCT_2
-      '', // LAND_COVER_CLASS_CD_3
-      '', // LAND_COVER_PCT_3
-    ],
+  const row = [
+    featureId, // FEATURE_ID
+    mapId, // MAP_ID
+    polygonNumber, // POLYGON_NUMBER
+    '', // ORG_UNIT
+    BIZCONSTANTS.UNKNOWN_CD, // TSA_NAME
+    BIZCONSTANTS.UNKNOWN_CD, // TFL_NAME
+    derivedByCode || '', // INVENTORY_STANDARD_CODE
+    BIZCONSTANTS.UNKNOWN_CD, // TSA_NUMBER
+    '', // SHRUB_HEIGHT
+    '', // SHRUB_CROWN_CLOSURE
+    '', // SHRUB_COVER_PATTERN
+    '', // HERB_COVER_TYPE_CODE
+    '', // HERB_COVER_PCT
+    '', // HERB_COVER_PATTERN_CODE
+    '', // BRYOID_COVER_PCT
+    modelParameterStore.becZone, // BEC_ZONE_CODE
+    modelParameterStore.ecoZone || '', // CFS_ECOZONE
+    modelParameterStore.percentStockableArea || '', // PRE_DISTURBANCE_STOCKABILITY
+    BIZCONSTANTS.YIELD_FACTOR_CD, // YIELD_FACTOR
+    '', // NON_PRODUCTIVE_DESCRIPTOR_CD
+    bclcsLevel1 || '', // BCLCS_LEVEL1_CODE
+    bclcsLevel2 || '', // BCLCS_LEVEL2_CODE
+    bclcsLevel3 || '', // BCLCS_LEVEL3_CODE
+    bclcsLevel4 || '', // BCLCS_LEVEL4_CODE
+    bclcsLevel5 || '', // BCLCS_LEVEL5_CODE
+    '', // PHOTO_ESTIMATION_BASE_YEAR
+    referenceYear, // REFERENCE_YEAR
+    '', // PCT_DEAD
+    '', // NON_VEG_COVER_TYPE_1
+    '', // NON_VEG_COVER_PCT_1
+    '', // NON_VEG_COVER_PATTERN_1
+    '', // NON_VEG_COVER_TYPE_2
+    '', // NON_VEG_COVER_PCT_2
+    '', // NON_VEG_COVER_PATTERN_2
+    '', // NON_VEG_COVER_TYPE_3
+    '', // NON_VEG_COVER_PCT_3
+    '', // NON_VEG_COVER_PATTERN_3
+    '', // LAND_COVER_CLASS_CD_1
+    '', // LAND_COVER_PCT_1
+    '', // LAND_COVER_CLASS_CD_2
+    '', // LAND_COVER_PCT_2
+    '', // LAND_COVER_CLASS_CD_3
+    '', // LAND_COVER_PCT_3
   ]
+  return [CSVHEADERS.POLYGON_HEADERS, row]
+}
 
-  const layerData: CSVRowType = [
-    CSVHEADERS.LAYER_HEADERS,
-    [
-      featureId, // FEATURE_ID
-      treeCoverLayerEstimatedId, // TREE_COVER_LAYER_ESTIMATED_ID
-      mapId, // MAP_ID
-      polygonNumber, // POLYGON_NUMBER
-      BIZCONSTANTS.LAYER_LEVEL_CD, // LAYER_LEVEL_CODE (note: equal to layerId)
-      BIZCONSTANTS.VDYP7_LAYER_CD, // VDYP7_LAYER_CD
-      '', // LAYER_STOCKABILITY
-      BIZCONSTANTS.FOREST_COVER_RANK_CD, // FOREST_COVER_RANK_CODE
-      '', // NON_FOREST_DESCRIPTOR_CODE
-      modelParameterStore.highestPercentSpecies, // EST_SITE_INDEX_SPECIES_CD
-      modelParameterStore.bha50SiteIndex || '', // ESTIMATED_SITE_INDEX
-      '', // CROWN_CLOSURE
-      '', // BASAL_AREA_75
-      '', // STEMS_PER_HA_75
-      species1, // SPECIES_CD_1
-      spczPct1, // SPECIES_PCT_1
-      species2, // SPECIES_CD_2
-      spczPct2, // SPECIES_PCT_2
-      species3, // SPECIES_CD_3
-      spczPct3, // SPECIES_PCT_3'
-      species4, // SPECIES_CD_4
-      spczPct4, // SPECIES_PCT_4
-      species5, // SPECIES_CD_5
-      spczPct5, // SPECIES_PCT_5
-      species6, // SPECIES_CD_6
-      spczPct6, // SPECIES_PCT_6
-      '', // EST_AGE_SPP1
-      '', // EST_HEIGHT_SPP1
-      '', // EST_AGE_SPP2
-      '', // EST_HEIGHT_SPP2
-      '', // ADJ_IND
-      '', // LOREY_HEIGHT_75
-      '', // BASAL_AREA_125
-      '', // WS_VOL_PER_HA_75
-      '', // WS_VOL_PER_HA_125
-      '', // CU_VOL_PER_HA_125
-      '', // D_VOL_PER_HA_125
-      '', // DW_VOL_PER_HA_125
-    ],
+/**
+ * Creates CSV data for the layer file.
+ * @param modelParameterStore The store containing model parameters.
+ * @param featureId The generated feature ID.
+ * @param mapId The map ID.
+ * @param polygonNumber The generated polygon number.
+ * @param treeCoverLayerEstimatedId The generated tree cover layer estimated ID.
+ * @returns The CSV row type for the layer data.
+ */
+const createLayerData = (
+  modelParameterStore: any,
+  featureId: number,
+  mapId: string,
+  polygonNumber: string,
+  treeCoverLayerEstimatedId: string,
+): CSVRowType => {
+  const speciesData = getSpeciesData(modelParameterStore.speciesList)
+  const speciesRow = flattenSpeciesData(speciesData, 6)
+  const row = [
+    featureId, // FEATURE_ID
+    treeCoverLayerEstimatedId, // TREE_COVER_LAYER_ESTIMATED_ID
+    mapId, // MAP_ID
+    polygonNumber, // POLYGON_NUMBER
+    BIZCONSTANTS.LAYER_LEVEL_CD, // LAYER_LEVEL_CODE
+    BIZCONSTANTS.VDYP7_LAYER_CD, // VDYP7_LAYER_CD
+    '', // LAYER_STOCKABILITY
+    BIZCONSTANTS.FOREST_COVER_RANK_CD, // FOREST_COVER_RANK_CODE
+    '', // NON_FOREST_DESCRIPTOR_CODE
+    modelParameterStore.highestPercentSpecies, // EST_SITE_INDEX_SPECIES_CD
+    modelParameterStore.bha50SiteIndex || '', // ESTIMATED_SITE_INDEX
+    '', // CROWN_CLOSURE
+    '', // BASAL_AREA_75
+    '', // STEMS_PER_HA_75
+    ...speciesRow, // Species codes and percentages (6 pairs)
+    '', // EST_AGE_SPP1
+    '', // EST_HEIGHT_SPP1
+    '', // EST_AGE_SPP2
+    '', // EST_HEIGHT_SPP2
+    '', // ADJ_IND
+    '', // LOREY_HEIGHT_75
+    '', // BASAL_AREA_125
+    '', // WS_VOL_PER_HA_75
+    '', // WS_VOL_PER_HA_125
+    '', // CU_VOL_PER_HA_125
+    '', // D_VOL_PER_HA_125
+    '', // DW_VOL_PER_HA_125
   ]
+  return [CSVHEADERS.LAYER_HEADERS, row]
+}
+
+/**
+ * Creates CSV files (as Blobs) for the model parameters.
+ * @param modelParameterStore The store containing model parameters.
+ * @returns An object with two properties: blobPolygon and blobLayer, representing the CSV Blobs.
+ */
+export const createCSVFiles = (modelParameterStore: any) => {
+  const featureId = generateFeatureId()
+  const mapId = BIZCONSTANTS.MAP_ID
+  const polygonNumber = generatePolygonNumber(mapId)
+  const treeCoverLayerEstimatedId = generateTreeCoverLayerEstimatedId()
+
+  const polygonData = createPolygonData(
+    modelParameterStore,
+    featureId,
+    mapId,
+    polygonNumber,
+  )
+  const layerData = createLayerData(
+    modelParameterStore,
+    featureId,
+    mapId,
+    polygonNumber,
+    treeCoverLayerEstimatedId,
+  )
 
   const polygonCSV = convertToCSV(polygonData)
   const layerCSV = convertToCSV(layerData)
@@ -281,12 +353,15 @@ export const createCSVFiles = (modelParameterStore: any) => {
   return { blobPolygon, blobLayer }
 }
 
-export const runModel = async (modelParameterStore: any) => {
-  const { blobPolygon, blobLayer } = createCSVFiles(modelParameterStore)
-
-  const formData = new FormData()
-
-  const selectedExecutionOptions: Array<SelectedExecutionOptionsEnum> = [
+/**
+ * Builds an array of selected execution options based on the model parameter store.
+ * @param modelParameterStore The store containing model parameters.
+ * @returns An array of execution option enums.
+ */
+const buildSelectedExecutionOptions = (
+  modelParameterStore: any,
+): SelectedExecutionOptionsEnum[] => {
+  const options: SelectedExecutionOptionsEnum[] = [
     SelectedExecutionOptionsEnum.ForwardGrowEnabled,
     SelectedExecutionOptionsEnum.DoIncludeAgeRowsInYieldTable,
     SelectedExecutionOptionsEnum.DoIncludeColumnHeadersInYieldTable,
@@ -294,42 +369,54 @@ export const runModel = async (modelParameterStore: any) => {
     SelectedExecutionOptionsEnum.DoEnableErrorLogging,
     SelectedExecutionOptionsEnum.DoEnableDebugLogging,
   ]
-
   if (modelParameterStore.projectionType === CONSTANTS.PROJECTION_TYPE.VOLUME) {
-    selectedExecutionOptions.push(
-      SelectedExecutionOptionsEnum.DoIncludeProjectedMOFVolumes,
-    )
+    options.push(SelectedExecutionOptionsEnum.DoIncludeProjectedMOFVolumes)
   } else if (
     modelParameterStore.projectionType === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
   ) {
-    selectedExecutionOptions.push(
-      SelectedExecutionOptionsEnum.DoIncludeProjectedCFSBiomass,
-    )
+    options.push(SelectedExecutionOptionsEnum.DoIncludeProjectedCFSBiomass)
   }
-
   if (modelParameterStore.incSecondaryHeight) {
-    selectedExecutionOptions.push(
+    options.push(
       SelectedExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
     )
   }
-
   if (
     modelParameterStore.includeInReport &&
     modelParameterStore.includeInReport.includes(
       CONSTANTS.INCLUDE_IN_REPORT.SPECIES_COMPOSITION,
     )
   ) {
-    selectedExecutionOptions.push(
-      SelectedExecutionOptionsEnum.DoIncludeSpeciesProjection,
-    )
+    options.push(SelectedExecutionOptionsEnum.DoIncludeSpeciesProjection)
   }
+  return options
+}
 
-  const selectedDebugOptions: Array<SelectedDebugOptionsEnum> = [
+/**
+ * Builds an array of selected debug options.
+ * @returns An array of debug option enums.
+ */
+const buildSelectedDebugOptions = (): SelectedDebugOptionsEnum[] => {
+  return [
     SelectedDebugOptionsEnum.DoIncludeDebugTimestamps,
     SelectedDebugOptionsEnum.DoIncludeDebugEntryExit,
     SelectedDebugOptionsEnum.DoIncludeDebugIndentBlocks,
     SelectedDebugOptionsEnum.DoIncludeDebugRoutineNames,
   ]
+}
+
+/**
+ * Runs the model by sending the generated CSV files and projection parameters to the projection service.
+ * @param modelParameterStore The store containing model parameters.
+ * @returns The result from the projectionHcsvPost API call.
+ */
+export const runModel = async (modelParameterStore: any) => {
+  const { blobPolygon, blobLayer } = createCSVFiles(modelParameterStore)
+  const formData = new FormData()
+
+  const selectedExecutionOptions =
+    buildSelectedExecutionOptions(modelParameterStore)
+  const selectedDebugOptions = buildSelectedDebugOptions()
 
   const projectionParameters: Parameters = {
     ageStart: modelParameterStore.startingAge,

@@ -92,6 +92,10 @@ const tabs: Tab[] = [
   },
 ]
 
+/**
+ * Computes whether the model parameter panels should be visible.
+ * Panels are visible when the model selection equals the constant for input model parameters and the active tab is 0.
+ */
 const isModelParameterPanelsVisible = computed(() => {
   return (
     modelSelection.value === CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS &&
@@ -99,14 +103,26 @@ const isModelParameterPanelsVisible = computed(() => {
   )
 })
 
+/**
+ * Updates the model selection value.
+ * @param newSelection - The new model selection string.
+ */
 const updateModelSelection = (newSelection: string) => {
   modelSelection.value = newSelection
 }
 
+/**
+ * Sets default values in the model parameter store when the component is mounted.
+ */
 onMounted(() => {
   modelParameterStore.setDefaultValues()
 })
 
+/**
+ * Handles the run model process.
+ * This function shows a progress indicator, waits briefly, then runs the model using the modelParameterStore.
+ * It processes the returned zip response, logs a success message, and handles any errors.
+ */
 const runModelHandler = async () => {
   try {
     isProgressVisible.value = true
