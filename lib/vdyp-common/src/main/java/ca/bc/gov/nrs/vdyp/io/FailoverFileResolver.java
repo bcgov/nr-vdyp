@@ -29,7 +29,7 @@ public class FailoverFileResolver implements FileResolver {
 		for (var delegate : delegates) {
 			try {
 				return delegate.resolveForInput(filename);
-			} catch (NoSuchFileException ex) {
+			} catch (NoSuchFileException | FileNotFoundException ex) {
 				// Do Nothing
 			}
 		}
@@ -41,7 +41,7 @@ public class FailoverFileResolver implements FileResolver {
 		for (var delegate : delegates) {
 			try {
 				return delegate.resolveForOutput(filename);
-			} catch (NoSuchFileException ex) {
+			} catch (NoSuchFileException | FileNotFoundException ex) {
 				// Do Nothing
 			}
 		}
@@ -50,8 +50,7 @@ public class FailoverFileResolver implements FileResolver {
 
 	@Override
 	public String toString(String filename) throws IOException {
-		delegates.iterator().next().toString();
-		return null;
+		return delegates.iterator().next().toString(filename);
 	}
 
 	@Override
