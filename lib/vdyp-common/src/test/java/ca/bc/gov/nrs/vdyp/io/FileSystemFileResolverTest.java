@@ -20,7 +20,9 @@ class FileSystemFileResolverTest {
 
 		var result = unit.toPath("test");
 
-		assertThat(result.toAbsolutePath().toString(), equalTo(System.getProperty("user.dir") + "/test"));
+		Path userDir = Path.of(System.getProperty("user.dir"));
+
+		assertThat(result.toAbsolutePath().toString(), equalTo(userDir.resolve("test").toString()));
 	}
 
 	@Test

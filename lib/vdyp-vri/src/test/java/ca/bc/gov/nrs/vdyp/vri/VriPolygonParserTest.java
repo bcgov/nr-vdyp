@@ -35,7 +35,7 @@ class VriPolygonParserTest {
 		controlMap.put(ControlKey.VRI_INPUT_YIELD_POLY.name(), "test.dat");
 		TestUtils.populateControlMapBecReal(controlMap);
 
-		var fileResolver = TestUtils.fileResolver("test.dat", TestUtils.makeInputStream(/* empty */));
+		var fileResolver = TestUtils.fileResolverContext("test.dat", TestUtils.makeInputStream(/* empty */));
 
 		parser.modify(controlMap, fileResolver);
 
@@ -61,7 +61,7 @@ class VriPolygonParserTest {
 		controlMap.put(ControlKey.VRI_INPUT_YIELD_POLY.name(), "test.dat");
 		TestUtils.populateControlMapBecReal(controlMap);
 
-		var fileResolver = TestUtils.fileResolver(
+		var fileResolver = TestUtils.fileResolverContext(
 				"test.dat", TestUtils.makeInputStream("082F074/0071         2001 G IDF  90.0  2 BLAH  0.95")
 		);
 
@@ -99,7 +99,7 @@ class VriPolygonParserTest {
 		controlMap.put(ControlKey.VRI_INPUT_YIELD_POLY.name(), "test.dat");
 		TestUtils.populateControlMapBecReal(controlMap);
 
-		var fileResolver = TestUtils.fileResolver(
+		var fileResolver = TestUtils.fileResolverContext(
 				"test.dat", TestUtils.makeInputStream("082F074/0071         2001 G IDF                    ")
 		);
 
@@ -137,7 +137,7 @@ class VriPolygonParserTest {
 		controlMap.put(ControlKey.VRI_INPUT_YIELD_POLY.name(), "test.dat");
 		TestUtils.populateControlMapBecReal(controlMap);
 
-		var fileResolver = TestUtils.fileResolver(
+		var fileResolver = TestUtils.fileResolverContext(
 				"test.dat", TestUtils.makeInputStream(
 						"01002 S000001 00     1970 A CWH                1.00", //
 						"01002 S000002 00     1970 A CWH                1.00", //
@@ -276,7 +276,7 @@ class VriPolygonParserTest {
 		controlMap.put(ControlKey.VRI_INPUT_YIELD_POLY.name(), "test.dat");
 		TestUtils.populateControlMapBecReal(controlMap);
 
-		var fileResolver = TestUtils.fileResolver(
+		var fileResolver = TestUtils.fileResolverContext(
 				"test.dat", TestUtils.makeInputStream("01002 S000001 00     1970 A CWH   0.0  0       0.00")
 		);
 
@@ -314,7 +314,7 @@ class VriPolygonParserTest {
 		controlMap.put(ControlKey.VRI_INPUT_YIELD_POLY.name(), "test.dat");
 		TestUtils.populateControlMapBecReal(controlMap);
 
-		var fileResolver = TestUtils.fileResolver(
+		var fileResolver = TestUtils.fileResolverContext(
 				"test.dat", TestUtils.makeInputStream("01002 S000001 00     1970 A CWH  -1.0         -1.00")
 		);
 
@@ -352,7 +352,7 @@ class VriPolygonParserTest {
 		controlMap.put(ControlKey.VRI_INPUT_YIELD_POLY.name(), "test.dat");
 		TestUtils.populateControlMapBecReal(controlMap);
 
-		var fileResolver = TestUtils.fileResolver(
+		var fileResolver = TestUtils.fileResolverContext(
 				"test.dat", TestUtils.makeInputStream("082F074/0071         2001 G IDF        4 BLAH  0.95")
 		);
 
@@ -390,7 +390,7 @@ class VriPolygonParserTest {
 		controlMap.put(ControlKey.VRI_INPUT_YIELD_POLY.name(), "test.dat");
 		TestUtils.populateControlMapBecReal(controlMap);
 
-		var fileResolver = TestUtils.fileResolver(
+		var fileResolver = TestUtils.fileResolverContext(
 				"test.dat", TestUtils.makeInputStream("082F074/0071         2001 G IDF  90.0  4 BLAH  0.95")
 		);
 

@@ -27,11 +27,13 @@ class ZipOutputFileResolverTest {
 
 		ZipOutputFileResolver resolver = new ZipOutputFileResolver();
 
-		MatcherAssert.assertThat(resolver.toPath("file").toString(), Matchers.endsWith("lib/vdyp-common/file"));
+		String expectedEnding = Path.of("lib", "vdyp-common", "file").toString();
+
+		MatcherAssert.assertThat(resolver.toPath("file").toString(), Matchers.endsWith(expectedEnding));
 
 		assertThrows(UnsupportedOperationException.class, () -> resolver.resolveForInput("file"));
 
-		MatcherAssert.assertThat(resolver.toString("file"), Matchers.endsWith("lib/vdyp-common/file"));
+		MatcherAssert.assertThat(resolver.toString("file"), Matchers.endsWith(expectedEnding));
 
 		for (int i = 0; i < 5; i++) {
 			OutputStream os = resolver.resolveForOutput("file" + i);

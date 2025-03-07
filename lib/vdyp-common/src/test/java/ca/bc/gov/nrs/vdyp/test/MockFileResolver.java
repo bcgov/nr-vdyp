@@ -76,6 +76,15 @@ public class MockFileResolver extends FileSystemFileResolver {
 		return (FileSystemFileResolver) get(subResolverMap, path, "relative");
 	}
 
+	@Override
+	public FileSystemFileResolver relativeToParent(String path) throws IOException {
+		path = this.toPath(".").relativize(toPath(path).getParent()).toString();
+		if (path.isEmpty() || path.equals(".")) {
+			return this;
+		}
+		return relative(path);
+	}
+
 	public void addStream(String filename, InputStream is) {
 		this.isMap.put(filename, is);
 	}

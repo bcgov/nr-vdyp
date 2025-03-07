@@ -35,7 +35,7 @@ class ForwardPolygonParserTest {
 		controlMap.put(ControlKey.FORWARD_INPUT_VDYP_POLY.name(), "test.dat");
 		TestUtils.populateControlMapBecReal(controlMap);
 
-		var fileResolver = TestUtils.fileResolver("test.dat", TestUtils.makeInputStream(/* empty */));
+		var fileResolver = TestUtils.fileResolverContext("test.dat", TestUtils.makeInputStream(/* empty */));
 
 		parser.modify(controlMap, fileResolver);
 
@@ -62,7 +62,9 @@ class ForwardPolygonParserTest {
 		TestUtils.populateControlMapBecReal(controlMap);
 
 		var fileResolver = TestUtils
-				.fileResolver("test.dat", TestUtils.makeInputStream("01002 S000001 00     1970 CWH  A    99 37  1  1"));
+				.fileResolverContext(
+						"test.dat", TestUtils.makeInputStream("01002 S000001 00     1970 CWH  A    99 37  1  1")
+				);
 
 		parser.modify(controlMap, fileResolver);
 
@@ -99,7 +101,7 @@ class ForwardPolygonParserTest {
 		TestUtils.populateControlMapBecReal(controlMap);
 
 		var fileResolver = TestUtils
-				.fileResolver("test.dat", TestUtils.makeInputStream("01002 S000001 00     1970 CWH  A    99"));
+				.fileResolverContext("test.dat", TestUtils.makeInputStream("01002 S000001 00     1970 CWH  A    99"));
 
 		parser.modify(controlMap, fileResolver);
 
@@ -135,7 +137,7 @@ class ForwardPolygonParserTest {
 		controlMap.put(ControlKey.FORWARD_INPUT_VDYP_POLY.name(), "test.dat");
 		TestUtils.populateControlMapBecReal(controlMap);
 
-		var fileResolver = TestUtils.fileResolver(
+		var fileResolver = TestUtils.fileResolverContext(
 				"test.dat", TestUtils.makeInputStream(
 						"01002 S000001 00     1970 CWH  A    99 37  1  1", //
 						"01002 S000002 00     1970 CWH  A    98 15 75  1", //
@@ -275,7 +277,7 @@ class ForwardPolygonParserTest {
 		controlMap.put(ControlKey.FORWARD_INPUT_VDYP_POLY.name(), "test.dat");
 		TestUtils.populateControlMapBecReal(controlMap);
 
-		var fileResolver = TestUtils.fileResolver(
+		var fileResolver = TestUtils.fileResolverContext(
 				"test.dat",
 				TestUtils.makeInputStream(
 						"01002 S000001 00     1970 CWH  A   0.0", "01002 S000002 00     1970 CWH  A  -1.0"
