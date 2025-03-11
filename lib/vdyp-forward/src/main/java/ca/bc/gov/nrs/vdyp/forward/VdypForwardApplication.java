@@ -28,18 +28,18 @@ public class VdypForwardApplication extends VdypApplication {
 
 	private static Set<ForwardPass> vdypPassSet = new HashSet<>(Arrays.asList(PASS_1, PASS_2, PASS_3, PASS_4, PASS_5));
 
-	private static class InitializationException extends Exception {
+	private static class ProjectionInitializationException extends Exception {
 		private static final long serialVersionUID = -7892984575682978204L;
 
-		InitializationException(Exception e) {
+		ProjectionInitializationException(Exception e) {
 			super(e);
 		}
 	}
 
-	private static class RuntimeException extends Exception {
+	private static class ProjectionRuntimeException extends Exception {
 		private static final long serialVersionUID = 6675331977223310947L;
 
-		RuntimeException(Exception e) {
+		ProjectionRuntimeException(Exception e) {
 			super(e);
 		}
 	}
@@ -50,16 +50,16 @@ public class VdypForwardApplication extends VdypApplication {
 
 		try {
 			app.doMain(args);
-		} catch (InitializationException ex) {
+		} catch (ProjectionInitializationException ex) {
 			logger.error("Error during initialization", ex);
 			System.exit(CONFIG_LOAD_ERROR);
-		} catch (RuntimeException ex) {
+		} catch (ProjectionRuntimeException ex) {
 			logger.error("Error during processing", ex);
 			System.exit(PROCESSING_ERROR);
 		}
 	}
 
-	public void doMain(final String... args) throws InitializationException, RuntimeException {
+	public void doMain(final String... args) throws ProjectionInitializationException, ProjectionRuntimeException {
 
 		logVersionInformation();
 
@@ -86,7 +86,7 @@ public class VdypForwardApplication extends VdypApplication {
 			}
 		} catch (Exception ex) {
 			logger.error("Error during initialization", ex);
-			throw new InitializationException(ex);
+			throw new ProjectionInitializationException(ex);
 		}
 
 		try {
@@ -96,7 +96,7 @@ public class VdypForwardApplication extends VdypApplication {
 
 		} catch (Exception ex) {
 			logger.error("Error during processing", ex);
-			throw new RuntimeException(ex);
+			throw new ProjectionRuntimeException(ex);
 		}
 	}
 

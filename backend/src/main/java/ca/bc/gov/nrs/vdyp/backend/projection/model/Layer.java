@@ -308,18 +308,22 @@ public class Layer implements Comparable<Layer> {
 	// MUTABLE data - these values may change during the lifetime of the entity.
 
 	public void setDoIncludeWithProjection(Boolean doIncludeWithProjection) {
+		polygon.ensureUnlocked();
 		this.doIncludeWithProjection = doIncludeWithProjection;
 	}
 
 	public void setVdyp7LayerCode(ProjectionTypeCode newVdyp7LayerCode) {
+		polygon.ensureUnlocked();
 		this.vdyp7LayerCode = newVdyp7LayerCode;
 	}
 
 	public void setDoSuppressPerHAYields(boolean doSuppressPerHAYields) {
+		polygon.ensureUnlocked();
 		this.doSuppressPerHAYields = doSuppressPerHAYields;
 	}
 
 	public void setAssignedProjectionType(ProjectionTypeCode newAssignedProjectionType) {
+		polygon.ensureUnlocked();
 		this.assignedProjectionType = newAssignedProjectionType;
 		polygon.setLayerByProjectionType(this.assignedProjectionType, this);
 	}
@@ -553,7 +557,7 @@ public class Layer implements Comparable<Layer> {
 
 					sp64.setSiteIndex(sp64.dominantHeightAndAgeToSiteIndex());
 
-					polygon.getDefinitionMessages().add(
+					polygon.addDefinitionMessage(
 							new PolygonMessage.Builder().returnCode(ReturnCode.SUCCESS).stand(speciesGroup)
 									.severity(SeverityCode.WARNING)
 									.message(
@@ -731,7 +735,7 @@ public class Layer implements Comparable<Layer> {
 						s.setSiteIndex(estimatedSiteIndex);
 						s.setYearsToBreastHeight(null);
 
-						polygon.getDefinitionMessages().add(
+						polygon.addDefinitionMessage(
 								new PolygonMessage.Builder() //
 										.returnCode(ReturnCode.SUCCESS) //
 										.stand(s.getStand()) //
@@ -841,14 +845,20 @@ public class Layer implements Comparable<Layer> {
 	 * Return the <code>nthLeading</code> species group of the layer.
 	 *
 	 * @param nthLeading the zero-based ordinal identifying the rank to be returned.
-	 * @return as described. If <code>nthLeading</code> is not between 0 and the (number of species groups) - 1,
-	 *         inclusive, <code>null</code> is returned.
+	 * @return as described.
+	 * @throws IllegalStateException when <code>nthLeading</code> is not between 0 and the (number of species groups) -
+	 *                               1, inclusive.
 	 */
 	public Stand determineLeadingSp0(Integer nthLeading) {
 		if (nthLeading < siteSpecies.size()) {
 			return siteSpecies.get(nthLeading).getStand();
 		} else {
-			return null;
+			throw new IllegalStateException(
+					MessageFormat.format(
+							"{0}: nthLeading parameter value of {1} exceeds the number of site species", this,
+							nthLeading, siteSpecies.size()
+					)
+			);
 		}
 	}
 
@@ -1014,6 +1024,18 @@ public class Layer implements Comparable<Layer> {
 		return layerAge;
 	}
 
+	public int determineYearAtAge(double age) {
+
+		var leadingSiteSp0 = determineLeadingSp0(0);
+
+		var measurementAge = Math.round(leadingSiteSp0.getSpeciesGroup().getTotalAge());
+		var measurementYear = polygon.getMeasurementYear();
+
+		var calendarYear = measurementYear + Math.round(age) - measurementAge;
+
+		return (int) calendarYear;
+	}
+
 	public void determineAgeAtDeath() {
 		ageAtDeath = determineLayerAgeAtYear(yearOfDeath);
 	}
@@ -1026,7 +1048,7 @@ public class Layer implements Comparable<Layer> {
 		this.yearOfDeath = yearOfDeath;
 
 		logger.debug(
-				"{}: marked as a Dead Layer with mortality occurring in {} and affecting {} of the land", this,
+				"{}: marked as a Dead Layer with mortality occurring in {} and affecting {}% of the land", this,
 				yearOfDeath, percentStockable
 		);
 	}
@@ -1049,7 +1071,7 @@ public class Layer implements Comparable<Layer> {
 
 			var layerProjectionType = determineProjectionType(polygon);
 
-			if (ProjectionTypeCode.ACTUAL_PROJECTION_TYPES_LIST.contains(layerProjectionType)) {
+			if (ProjectionTypeCode.ACTUAL_PROJECTION_TYPES_SET.contains(layerProjectionType)) {
 				setAssignedProjectionType(layerProjectionType);
 			} else if (layerProjectionType.equals(ProjectionTypeCode.UNKNOWN)) {
 				// If the layer still does not have a projection type, suppress projection.

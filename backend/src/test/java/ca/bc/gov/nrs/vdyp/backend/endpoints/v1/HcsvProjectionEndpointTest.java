@@ -53,9 +53,11 @@ class HcsvProjectionEndpointTest {
 				Parameters.ExecutionOption.DO_ENABLE_DEBUG_LOGGING, //
 				Parameters.ExecutionOption.DO_ENABLE_PROGRESS_LOGGING, //
 				Parameters.ExecutionOption.DO_ENABLE_ERROR_LOGGING, //
-				Parameters.ExecutionOption.FORWARD_GROW_ENABLED //
+				Parameters.ExecutionOption.FORWARD_GROW_ENABLED, //
+				Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES, //
+				Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER
 		);
-		parameters.ageStart(100).ageEnd(400);
+		parameters.yearStart(2000).yearEnd(2050);
 
 		// Included to generate JSON text of parameters as needed
 //		ObjectMapper mapper = new ObjectMapper();
@@ -65,11 +67,11 @@ class HcsvProjectionEndpointTest {
 				.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
 				.multiPart(
 						ParameterNames.HCSV_POLYGON_INPUT_DATA,
-						Files.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_POLY.csv"))
+						Files.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_POLY_VRI.csv"))
 				) //
 				.multiPart(
 						ParameterNames.HCSV_LAYERS_INPUT_DATA,
-						Files.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_LAYER.csv"))
+						Files.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_LAYER_VRI.csv"))
 				) //
 				.post("/projection/hcsv?trialRun=false") //
 				.then().statusCode(201) //
@@ -108,9 +110,12 @@ class HcsvProjectionEndpointTest {
 				new Parameters(), //
 				Parameters.ExecutionOption.DO_ENABLE_DEBUG_LOGGING,
 				Parameters.ExecutionOption.DO_ENABLE_PROGRESS_LOGGING,
-				Parameters.ExecutionOption.DO_ENABLE_ERROR_LOGGING
+				Parameters.ExecutionOption.DO_ENABLE_ERROR_LOGGING, //
+				Parameters.ExecutionOption.FORWARD_GROW_ENABLED, //
+				Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES, //
+				Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER
 		);
-		parameters.ageStart(100).ageEnd(400);
+		parameters.ageStart(10).ageEnd(100);
 
 		// Included to generate JSON text of parameters as needed
 //		ObjectMapper mapper = new ObjectMapper();
@@ -158,12 +163,15 @@ class HcsvProjectionEndpointTest {
 		Path resourceFolderPath = Path.of("VDYP7Console-sample-files", FileHelper.HCSV, FileHelper.VDYP_240);
 
 		Parameters parameters = new Parameters();
-		parameters.ageStart(100).ageEnd(400);
+		parameters.ageStart(10).ageEnd(100)
+				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES)
+				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER)
+				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.FORWARD_GROW_ENABLED);
 
 		byte[] polyFileBytes = Files
-				.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_POLY.csv"));
+				.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_POLY_VRI.csv"));
 		byte[] layerFileBytes = Files
-				.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_LAYER.csv"));
+				.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_LAYER_VRI.csv"));
 
 		InputStream zipInputStream = given().basePath(TestHelper.ROOT_PATH).when() //
 				.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //

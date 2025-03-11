@@ -1,7 +1,6 @@
 package ca.bc.gov.nrs.vdyp.si32;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.hamcrest.Matchers;
@@ -11,8 +10,6 @@ import ca.bc.gov.nrs.vdyp.si32.cfs.CfsBiomassConversionCoefficientsDead;
 import ca.bc.gov.nrs.vdyp.si32.cfs.CfsBiomassConversionCoefficientsDetails;
 import ca.bc.gov.nrs.vdyp.si32.cfs.CfsBiomassConversionCoefficientsForGenus;
 import ca.bc.gov.nrs.vdyp.si32.cfs.CfsBiomassConversionCoefficientsForSpecies;
-import ca.bc.gov.nrs.vdyp.si32.cfs.CfsBiomassConversionSupportedEcoZone;
-import ca.bc.gov.nrs.vdyp.si32.enumerations.SpeciesRegion;
 
 class CfsBioMassConversionCoefficientsTests {
 

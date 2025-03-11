@@ -26,9 +26,9 @@ class ZipOutputFileResolverTest {
 	void testZipOutputFileResolver() throws IOException {
 
 		ZipOutputFileResolver resolver = new ZipOutputFileResolver();
-		
+
 		assertThat(resolver.toString(), equalTo("ZipOutputFileResolver"));
-		
+
 		assertThat(resolver.getOutputFileResolver(), equalTo(resolver));
 		assertThrows(UnsupportedOperationException.class, () -> resolver.getInputFileResolver());
 

@@ -323,8 +323,8 @@ public class ForwardControlParser extends BaseControlParser {
 			if (m != null) {
 				// m is a configuration file parser.
 				logger.debug(
-						"Parsing configuration file [{[{}] using {}", m.getControlKeyName(), key.sequence.get(),
-						m.getClass().getName()
+						"Parsing configuration file {}[{}] using {}", m.getControlKeyName(), key.sequence.get(),
+						m.getClass().getSimpleName()
 				);
 				m.modify(map, fileResolver);
 			}
@@ -334,7 +334,7 @@ public class ForwardControlParser extends BaseControlParser {
 				// r is an input file parser.
 				logger.debug(
 						"Parsing input file {}[{}] using {}", r.getControlKeyName(), key.sequence.get(),
-						r.getClass().getName()
+						r.getClass().getSimpleName()
 				);
 				r.modify(map, fileResolver);
 			}
@@ -343,7 +343,7 @@ public class ForwardControlParser extends BaseControlParser {
 				String fileName = (String) map.get(key.name());
 				logger.debug(
 						"Creating output stream for file {}[{}] using {}", fileName, key,
-						fileResolver.getClass().getName()
+						fileResolver.getClass().getSimpleName()
 				);
 				if (fileResolver instanceof CompositeFileResolver cfr) {
 					map.put(key.name(), cfr.toOutputPath(fileName));

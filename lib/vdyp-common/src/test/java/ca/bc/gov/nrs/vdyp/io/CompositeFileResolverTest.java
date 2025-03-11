@@ -26,7 +26,7 @@ class CompositeFileResolverTest {
 
 		assertThat(compositeResolver.getInputFileResolver(), equalTo(inputResolver));
 		assertThat(compositeResolver.getOutputFileResolver(), equalTo(outputResolver));
-		
+
 		var inputResult = compositeResolver.toInputPath("inputTest");
 		assertThat(inputResult.toAbsolutePath().toString(), equalTo(System.getProperty("user.dir") + "/inputTest"));
 
@@ -44,7 +44,7 @@ class CompositeFileResolverTest {
 		try (var writer = Files.newBufferedWriter(inputTestDir.resolve("test"))) {
 			writer.write("blah");
 		}
-		
+
 		try (var is = compositeResolver.resolveForInput("test")) {
 			var result = is.readAllBytes();
 			assertThat(result, equalTo("blah".getBytes()));
@@ -57,11 +57,11 @@ class CompositeFileResolverTest {
 		var outputResolver = new FileSystemFileResolver(outputTestDir);
 
 		var compositeResolver = new CompositeFileResolver(inputResolver, outputResolver);
-		
+
 		try (var os = compositeResolver.resolveForOutput("test")) {
 			os.write("blah".getBytes());
 		}
-		
+
 		try (var reader = Files.newBufferedReader(outputTestDir.resolve("test"))) {
 			assertThat(reader.readLine(), equalTo("blah"));
 		}

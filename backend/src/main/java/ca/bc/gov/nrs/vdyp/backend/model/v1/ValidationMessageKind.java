@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.vdyp.backend.model.v1;
 
 public enum ValidationMessageKind {
 	UNRECOGNIZED_OUTPUT_FORMAT("{0} is not a recognized output format"),
+	UNSUPPORTED_OUTPUT_FORMAT("{0} is not a supported output format"),
 	UNRECOGNIZED_EXECUTION_OPTION("{0} is not a recognized execution option"),
 	UNRECOGNIZED_DEBUG_OPTION("{0} is not a recognized debug option"),
 	UNRECOGNIZED_COMBINE_AGE_YEAR_RANGE_OPTION("{0} is not a recognized CombineAgeYearRangeEnum value"),

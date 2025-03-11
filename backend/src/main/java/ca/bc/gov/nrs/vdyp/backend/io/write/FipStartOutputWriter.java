@@ -64,7 +64,7 @@ public class FipStartOutputWriter extends AbstractOutputWriter implements Closea
 				polygon.getForestInventoryZone() == null ? "" : polygon.getForestInventoryZone(), //
 				polygon.getBecZone() == null ? "" : polygon.getBecZone(), //
 				polygon.determineStockabilityByProjectionType(projectionType), //
-				state.getProcessingModeUsedByProjectionType().get(projectionType).value, //
+				state.getProcessingModeUsedByProjectionType(projectionType).value, //
 				polygon.getNonProductiveDescriptor() == null ? "" : polygon.getNonProductiveDescriptor(), //
 				format(polygon.getYieldFactor(), 5, 2) //
 		);

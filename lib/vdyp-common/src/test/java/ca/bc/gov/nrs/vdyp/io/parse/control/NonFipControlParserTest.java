@@ -32,7 +32,7 @@ import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.SiteCurveAgeMaximum;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
-@SuppressWarnings({ "unused", "unchecked", "rawtypes" })
+@SuppressWarnings({ "unchecked", "rawtypes" })
 class NonFipControlParserTest {
 
 	static final String CONTROL_FILE = "VRISTART.CTR";

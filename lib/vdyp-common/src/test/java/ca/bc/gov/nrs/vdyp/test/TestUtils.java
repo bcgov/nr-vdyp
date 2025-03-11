@@ -405,7 +405,7 @@ public class TestUtils {
 			public Path toPath(String filename) throws IOException {
 				return Path.of(toString(filename));
 			}
-			
+
 			@Override
 			public String toString() {
 				return "Dynamic ConcreteFileResolver for class " + klazz.getName();

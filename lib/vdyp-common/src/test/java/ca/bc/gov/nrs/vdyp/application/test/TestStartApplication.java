@@ -25,8 +25,7 @@ public class TestStartApplication extends VdypStartApplication<TestPolygon, Test
 	}
 
 	@Override
-	public void init(String controlFilePath)
-			throws IOException, ResourceParseException {
+	public void init(String controlFilePath) throws IOException, ResourceParseException {
 		if (realInit) {
 			super.init(controlFilePath);
 		}

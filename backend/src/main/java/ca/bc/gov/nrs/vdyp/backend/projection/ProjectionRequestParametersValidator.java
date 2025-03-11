@@ -153,7 +153,12 @@ public class ProjectionRequestParametersValidator {
 		);
 
 		// Parameters.JSON_PROPERTY_FORCE_YEAR
-		vparams.setForceYear(getIntegerValue(params.getForceYear(), DEFAULT.getForceYear(), null, null, "forceYear"));
+		vparams.setYearForcedIntoYieldTable(
+				getIntegerValue(
+						params.getYearForcedIntoYieldTable(), DEFAULT.getYearForcedIntoYearTable(), null, null,
+						"forceYear"
+				)
+		);
 
 		// Parameters.JSON_PROPERTY_COMBINE_AGE_YEAR_RANGE
 		if (params.getCombineAgeYearRange() == null) {
@@ -250,7 +255,7 @@ public class ProjectionRequestParametersValidator {
 			if (!vparams.getOutputFormat().equals(OutputFormat.DCSV) //
 					&& vparams.getAgeStart() == null //
 					&& vparams.getYearStart() == null //
-					&& vparams.getForceYear() == null //
+					&& vparams.getYearForcedIntoYearTable() == null //
 					&& !vparams.containsOption(ExecutionOption.DO_FORCE_CURRENT_YEAR_INCLUSION_IN_YIELD_TABLES) //
 					&& !vparams.containsOption(ExecutionOption.DO_FORCE_REFERENCE_YEAR_INCLUSION_IN_YIELD_TABLES)) {
 
@@ -260,7 +265,7 @@ public class ProjectionRequestParametersValidator {
 			if (!vparams.getOutputFormat().equals(OutputFormat.DCSV) //
 					&& vparams.getAgeEnd() == null //
 					&& vparams.getYearEnd() == null //
-					&& vparams.getForceYear() == null //
+					&& vparams.getYearForcedIntoYearTable() == null //
 					&& !vparams.containsOption(ExecutionOption.DO_FORCE_CURRENT_YEAR_INCLUSION_IN_YIELD_TABLES) //
 					&& !vparams.containsOption(ExecutionOption.DO_FORCE_REFERENCE_YEAR_INCLUSION_IN_YIELD_TABLES)) {
 
@@ -282,7 +287,7 @@ public class ProjectionRequestParametersValidator {
 				}
 
 				int forceParamCount = 0;
-				if (vparams.getForceYear() != null) {
+				if (vparams.getYearForcedIntoYearTable() != null) {
 					forceParamCount += 1;
 				}
 				if (vparams.containsOption(ExecutionOption.DO_FORCE_CURRENT_YEAR_INCLUSION_IN_YIELD_TABLES)) {

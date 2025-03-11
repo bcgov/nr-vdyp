@@ -103,7 +103,7 @@ class VdypStartApplicationTest {
 		@Test
 		void testInitOneControlFile() throws IOException, ResourceParseException {
 			var app = new TestStartApplication(controlMap, true);
-			
+
 			var controlFileResolver = TestUtils.fileResolver(TestUtils.class);
 			try {
 				TestStartApplication.doMain(app, controlFileResolver.toPath("VRISTART.CTR").toString());
@@ -116,28 +116,30 @@ class VdypStartApplicationTest {
 			app.close();
 		}
 	}
-	
+
 	@Test
 	void testDebugGetSet() throws IOException {
 		try (var app = new TestStartApplication(controlMap, true)) {
-		
+
 			for (int i = 0; i < 25; i++) {
 				app.setDebugMode(0, i + 1);
 				assertThat(app.getDebugMode(0), equalTo(i + 1));
 			}
-			
+
 			assertThrows(ArrayIndexOutOfBoundsException.class, () -> app.setDebugMode(-1, 1));
 			assertThrows(ArrayIndexOutOfBoundsException.class, () -> app.setDebugMode(25, 1));
 		}
 	}
-	
+
 	@Test
 	void testApplicationExceptions() throws IOException, ResourceParseException {
 		try (var app = new TestStartApplication(controlMap, true)) {
-		
+
 			assertThrows(VdypApplicationInitializationException.class, () -> TestStartApplication.doMain(app));
-			assertThrows(VdypApplicationInitializationException.class, () -> TestStartApplication.doMain(app, "bad path"));
-		} 
+			assertThrows(
+					VdypApplicationInitializationException.class, () -> TestStartApplication.doMain(app, "bad path")
+			);
+		}
 	}
 
 	private MockFileResolver dummyIo() {
@@ -190,7 +192,6 @@ class VdypStartApplicationTest {
 
 			app.init(resolver, controlMap);
 
-			@SuppressWarnings("resource") // mock object can't leak anything
 			var ex = assertThrows(
 					ProcessingException.class, () -> app.getStreamingParser(ControlKey.FIP_INPUT_YIELD_LAYER)
 			);
@@ -220,7 +221,6 @@ class VdypStartApplicationTest {
 
 			app.init(resolver, controlMap);
 
-			@SuppressWarnings("resource") // mock object can't leak anything
 			var ex = assertThrows(
 					ProcessingException.class, () -> app.getStreamingParser(ControlKey.FIP_INPUT_YIELD_LAYER)
 			);

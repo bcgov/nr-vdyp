@@ -1,6 +1,6 @@
 package ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions;
 
-public class ProjectionInternalExecutionException extends Exception {
+public class ProjectionInternalExecutionException extends ProjectionRequestException {
 
 	private static final long serialVersionUID = -3026466812172806593L;
 

@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.vdyp.backend.projection.model;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -38,7 +39,7 @@ public class Polygon implements Comparable<Polygon> {
 
 	// BUSINESS KEY - all fields required.
 
-	/** Feature Id */
+	/** Feature Id (called, sometimes, "polygon record i.d." in VDYP7 */
 	private long featureId;
 
 	// Optional Members
@@ -91,12 +92,6 @@ public class Polygon implements Comparable<Polygon> {
 	/** The factor to multiply predicted yields by */
 	private Double yieldFactor;
 
-	/** If false, projection is turned off globally for this polygon */
-	private Boolean doAllowProjection;
-
-	/** If false for a given projection type, projection is turned off for that type */
-	private Map<ProjectionTypeCode, Boolean> doAllowProjectionOfType;
-
 	/** If true, layer adjustments were supplied in the input data */
 	private Boolean wereLayerAdjustmentsSupplied;
 
@@ -115,7 +110,10 @@ public class Polygon implements Comparable<Polygon> {
 	private Map<OtherVegetationTypeCode, OtherVegCoverDetails> otherVegetationTypes;
 	private Map<NonVegetationTypeCode, NonVegCoverDetails> nonVegetationTypes;
 
-	// MUTABLE fields - the value of these fields will change over the lifetime of the object
+	// MUTABLE fields - the value of these fields will change over the lifetime of the object,
+	// but not after the definition is locked.
+
+	private boolean definitionIsLocked;
 
 	/** The layer summarization mode applied to the layers within the polygon */
 	private LayerSummarizationModeCode layerSummarizationMode;
@@ -171,6 +169,12 @@ public class Polygon implements Comparable<Polygon> {
 
 	/** Messages generated during the definition of the polygon */
 	private ArrayList<PolygonMessage> definitionMessages;
+
+	/** If false, projection is turned off globally for this polygon */
+	private Boolean doAllowProjection;
+
+	/** If false for a given projection type, projection is turned off for that type */
+	private Map<ProjectionTypeCode, Boolean> doAllowProjectionOfType;
 
 	/** Initialize the Polygon, according to <code>V7Int_ResetPolyInfo</code>. */
 	private Polygon() {
@@ -412,49 +416,75 @@ public class Polygon implements Comparable<Polygon> {
 		return reportingInfo;
 	}
 
-	// MUTABLE data - this may vary over the lifetime of the object.
+	public List<PolygonMessage> getDefinitionMessages() {
+		return Collections.unmodifiableList(definitionMessages);
+	}
 
-	public ArrayList<PolygonMessage> getDefinitionMessages() {
-		return definitionMessages;
+	// MUTABLE data - this may vary over the lifetime of the object, but not after
+	// the definition has been locked.
+
+	public void lockDefinition() {
+		definitionIsLocked = true;
+	}
+
+	void ensureUnlocked() {
+		if (definitionIsLocked) {
+			throw new IllegalStateException(this + " is locked and cannot be altered");
+		}
+	}
+
+	public void addDefinitionMessage(PolygonMessage message) {
+		ensureUnlocked();
+		definitionMessages.add(message);
 	}
 
 	public void setLayerSummarizationMode(LayerSummarizationModeCode layerSummarizationMode) {
+		ensureUnlocked();
 		this.layerSummarizationMode = layerSummarizationMode;
 	}
 
 	public void setTargetedPrimaryLayer(Layer targetedPrimaryLayer) {
+		ensureUnlocked();
 		this.targetedPrimaryLayer = targetedPrimaryLayer;
 	}
 
 	public void setTargetedVeteranLayer(Layer targetedVeteranLayer) {
+		ensureUnlocked();
 		this.targetedVeteranLayer = targetedVeteranLayer;
 	}
 
 	public void setPrimaryLayer(Layer primaryLayer) {
+		ensureUnlocked();
 		this.primaryLayer = primaryLayer;
 	}
 
 	public void setVeteranLayer(Layer veteranLayer) {
+		ensureUnlocked();
 		this.veteranLayer = veteranLayer;
 	}
 
 	public void setResidualLayer(Layer residualLayer) {
+		ensureUnlocked();
 		this.residualLayer = residualLayer;
 	}
 
 	public void setRegenerationLayer(Layer regenerationLayer) {
+		ensureUnlocked();
 		this.regenerationLayer = regenerationLayer;
 	}
 
 	public void setDeadLayer(Layer deadLayer) {
+		ensureUnlocked();
 		this.deadLayer = deadLayer;
 	}
 
 	public void setRank1Layer(Layer rank1Layer) {
+		ensureUnlocked();
 		this.rank1Layer = rank1Layer;
 	}
 
 	void setLayerByProjectionType(ProjectionTypeCode layerProjectionType, Layer layer) {
+		ensureUnlocked();
 		assert layerByProjectionType.get(layerProjectionType) == null;
 		layerByProjectionType.put(layerProjectionType, layer);
 	}
@@ -1639,7 +1669,7 @@ public class Polygon implements Comparable<Polygon> {
 										selectedPrimaryLayer.getLayerId()
 								)
 						).build();
-				getDefinitionMessages().add(message);
+				addDefinitionMessage(message);
 			}
 		}
 

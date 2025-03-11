@@ -118,7 +118,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 	static final Set<String> HARDWOODS = Set.of("AC", "AT", "D", "E", "MB");
 
-	protected static void doMain(VdypStartApplication<?, ?, ?, ?> app, final String... args)
+	public static void doMain(VdypStartApplication<?, ?, ?, ?> app, final String... args)
 			throws VdypApplicationInitializationException, VdypApplicationProcessingException {
 
 		if (args.length == 1 /* one control file */) {

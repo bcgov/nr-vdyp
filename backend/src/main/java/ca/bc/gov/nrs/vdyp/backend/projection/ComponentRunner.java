@@ -9,8 +9,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonExecutionException;
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.YieldTableGenerationException;
+import ca.bc.gov.nrs.vdyp.backend.projection.model.LayerReportingInfo;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Polygon;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
+import ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable.YieldTable;
+import ca.bc.gov.nrs.vdyp.common.VdypApplicationInitializationException;
+import ca.bc.gov.nrs.vdyp.common.VdypApplicationProcessingException;
 import ca.bc.gov.nrs.vdyp.fip.FipStart;
 import ca.bc.gov.nrs.vdyp.forward.VdypForwardApplication;
 import ca.bc.gov.nrs.vdyp.vri.VriStart;
@@ -26,11 +31,16 @@ public class ComponentRunner implements IComponentRunner {
 		try {
 			Path controlFilePath = Path
 					.of(state.getExecutionFolder().toString(), projectionTypeCode.toString(), "FIPSTART.CTR");
-			FipStart.main(controlFilePath.toAbsolutePath().toString());
-		} catch (IOException e) {
-			throw new PolygonExecutionException("Encountered exception while running FIPSTART", e);
+			var fipStartApplication = new FipStart();
+			FipStart.doMain(fipStartApplication, controlFilePath.toAbsolutePath().toString());
+			state.setProcessingResults(ProjectionStageCode.Initial, projectionTypeCode, 0, -99);
+		} catch (VdypApplicationInitializationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (VdypApplicationProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		state.setInitialProcessingResults(projectionTypeCode, 0, new ProcessingResultsCode(-99));
 	}
 
 	@Override
@@ -39,12 +49,16 @@ public class ComponentRunner implements IComponentRunner {
 		try {
 			Path controlFilePath = Path
 					.of(state.getExecutionFolder().toString(), projectionTypeCode.toString(), "VRISTART.CTR");
-			VriStart.main(controlFilePath.toAbsolutePath().toString());
-		} catch (IOException e) {
-			throw new PolygonExecutionException("Encountered exception while running VRISTART", e);
+			var vriStartApplication = new VriStart();
+			VriStart.doMain(vriStartApplication, controlFilePath.toAbsolutePath().toString());
+			state.setProcessingResults(ProjectionStageCode.Initial, projectionTypeCode, 0, -99);
+		} catch (VdypApplicationInitializationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (VdypApplicationProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-
-		state.setInitialProcessingResults(projectionTypeCode, 0, new ProcessingResultsCode(-99));
 	}
 
 	@Override
@@ -56,6 +70,8 @@ public class ComponentRunner implements IComponentRunner {
 		logger.info("{} {}: ADJUST is operating as a pass-through", polygon, projectionType);
 
 		copyAdjustInputFilesToOutput(polygon, state, projectionType, state.getExecutionFolder());
+
+		state.setProcessingResults(ProjectionStageCode.Adjust, projectionType, 0, -99);
 	}
 
 	private void copyAdjustInputFilesToOutput(
@@ -96,6 +112,7 @@ public class ComponentRunner implements IComponentRunner {
 
 			VdypForwardApplication app = new VdypForwardApplication();
 			app.doMain(controlFilePath.toAbsolutePath().toString());
+			state.setProcessingResults(ProjectionStageCode.Forward, projectionTypeCode, 0, -99);
 		} catch (Exception e) {
 			throw new PolygonExecutionException("Encountered exception while running ForwardApplication", e);
 		}
@@ -108,6 +125,7 @@ public class ComponentRunner implements IComponentRunner {
 		try {
 			// TODO: BACK is not supported yet.
 
+			@SuppressWarnings("unused")
 			Path controlFilePath = Path
 					.of(state.getExecutionFolder().toString(), projectionTypeCode.toString(), "VDYPBACK.CTR");
 
@@ -116,5 +134,20 @@ public class ComponentRunner implements IComponentRunner {
 		} catch (Exception e) {
 			throw new PolygonExecutionException("Encountered exception while running BackApplication", e);
 		}
+	}
+
+	@Override
+	public void generateYieldTableForPolygonLayer(
+			YieldTable yieldTable, Polygon polygon, PolygonProjectionState state, LayerReportingInfo layerReportingInfo,
+			boolean doGenerateDetailedTableHeader
+	) throws YieldTableGenerationException {
+		yieldTable.generateYieldTableForPolygonLayer(polygon, state, layerReportingInfo, doGenerateDetailedTableHeader);
+	}
+
+	@Override
+	public void generateYieldTableForPolygon(
+			YieldTable yieldTable, Polygon polygon, PolygonProjectionState state, boolean doGenerateDetailedTableHeader
+	) throws YieldTableGenerationException {
+		yieldTable.generateYieldTableForPolygon(polygon, state, doGenerateDetailedTableHeader);
 	}
 }

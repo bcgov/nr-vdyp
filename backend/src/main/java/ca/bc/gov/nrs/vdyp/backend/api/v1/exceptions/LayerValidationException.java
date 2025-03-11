@@ -4,7 +4,7 @@ import java.util.List;
 
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
 
-public class LayerValidationException extends AbstractProjectionRequestException {
+public class LayerValidationException extends ProjectionRequestException {
 
 	private static final long serialVersionUID = 2651505762328626871L;
 

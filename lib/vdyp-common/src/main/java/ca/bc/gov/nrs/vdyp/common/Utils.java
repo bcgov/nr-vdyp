@@ -39,7 +39,7 @@ import ca.bc.gov.nrs.vdyp.model.VdypUtilizationHolder;
 public class Utils {
 
 	private static final Logger logger = LoggerFactory.getLogger(Utils.class);
-			
+
 	private Utils() {
 	}
 
@@ -198,7 +198,7 @@ public class Utils {
 				logger.error("Failed to close OutputStream", e);
 			}
 		}
- 	}
+	}
 
 	/**
 	 * Compares two Optionals of comparables of the same type, treating "empty" as equal to "empty" and before

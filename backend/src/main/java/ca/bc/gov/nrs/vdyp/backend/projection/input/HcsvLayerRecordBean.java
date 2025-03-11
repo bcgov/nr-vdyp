@@ -21,7 +21,7 @@ import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.LayerValidationException;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessageKind;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Vdyp7Constants;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
-import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.SpecialLayerTypeCode;
+import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.Vdyp7LayerTypeCode;
 import ca.bc.gov.nrs.vdyp.backend.utils.CsvRecordBeanHelper;
 import ca.bc.gov.nrs.vdyp.si32.site.SiteTool;
 import ca.bc.gov.nrs.vdyp.si32.vdyp.SpeciesTable;
@@ -251,7 +251,7 @@ public class HcsvLayerRecordBean {
 	}
 
 	public ProjectionTypeCode getTargetVdyp7LayerCode() {
-		return targetVdyp7LayerCode == null ? null : ProjectionTypeCode.fromSpecialLayerTypeText(targetVdyp7LayerCode);
+		return targetVdyp7LayerCode == null ? null : ProjectionTypeCode.fromVdyp7LayerTypeText(targetVdyp7LayerCode);
 	}
 
 	public Double getLayerStockability() {
@@ -463,7 +463,7 @@ public class HcsvLayerRecordBean {
 
 			// V7Ext_AddLayer 2613
 			bvh.validateEnumeration(
-					bean.targetVdyp7LayerCode, t -> ProjectionTypeCode.fromSpecialLayerTypeText(t),
+					bean.targetVdyp7LayerCode, t -> ProjectionTypeCode.fromVdyp7LayerTypeText(t),
 					"Target VDYP7 Layer Code"
 			);
 
@@ -526,9 +526,9 @@ public class HcsvLayerRecordBean {
 
 			// V7Ext_AddLayer, 2672
 			if (bean.targetVdyp7LayerCode == null) {
-				if (SpecialLayerTypeCode.doesLayerIdIdentifyASpecialLayerType(bean.layerId)) {
-					SpecialLayerTypeCode layerType = SpecialLayerTypeCode.valueOf(bean.layerId);
-					bean.targetVdyp7LayerCode = ProjectionTypeCode.fromSpecialLayerType(layerType).name();
+				if (Vdyp7LayerTypeCode.isLayerIdAVdyp7LayerType(bean.layerId)) {
+					Vdyp7LayerTypeCode layerType = Vdyp7LayerTypeCode.valueOf(bean.layerId);
+					bean.targetVdyp7LayerCode = ProjectionTypeCode.fromVdyp7LayerType(layerType).name();
 				}
 			}
 

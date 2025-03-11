@@ -77,7 +77,7 @@ public class VriStartOutputWriter extends AbstractOutputWriter implements Closea
 				polygon.buildPolygonDescriptor(), //
 				polygon.getBecZone() == null ? "" : polygon.getBecZone(), //
 				format(polygon.determineStockabilityByProjectionType(projectionType), 4, 0), //
-				state.getProcessingModeUsedByProjectionType().get(projectionType).value, //
+				state.getProcessingModeUsedByProjectionType(projectionType).value, //
 				polygon.getNonProductiveDescriptor() == null ? "" : polygon.getNonProductiveDescriptor(), //
 				format(polygon.getYieldFactor(), 5, 2) //
 		);
@@ -97,8 +97,8 @@ public class VriStartOutputWriter extends AbstractOutputWriter implements Closea
 				LAYER_FORMAT, //
 
 				layer.getPolygon().buildPolygonDescriptor(), //
-				LayerType.PRIMARY.getAlias(), // vdypintperform.c lines 3686 - 3703 - always write "P" for the layer
-												// code.
+				// vdypintperform.c lines 3686 - 3703 - always write "P" for the layer code.
+				LayerType.PRIMARY.getAlias(), //
 				format(layer.getCrownClosure(), 6), //
 				format(layer.getBasalArea(), 9, 5), //
 				format(layer.getTreesPerHectare(), 8, 2), //

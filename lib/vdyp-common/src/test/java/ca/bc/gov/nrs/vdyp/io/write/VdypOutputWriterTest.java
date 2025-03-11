@@ -32,7 +32,7 @@ class VdypOutputWriterTest {
 
 	@TempDir
 	Path tempDir;
-	
+
 	MockOutputStream polyStream;
 	MockOutputStream specStream;
 	MockOutputStream utilStream;
@@ -45,7 +45,7 @@ class VdypOutputWriterTest {
 	@BeforeEach
 	void initStreams() {
 		controlMap = new HashMap<String, Object>();
-		
+
 		TestUtils.populateControlMapBecReal(controlMap);
 		TestUtils.populateControlMapGenusReal(controlMap);
 
@@ -101,35 +101,39 @@ class VdypOutputWriterTest {
 		utilStream.assertContent(emptyString());
 		cvarsStream.assertContent(emptyString());
 	}
-	
+
 	@Test
 	void testCreateFromControlMap() throws IOException {
-		
+
 		var fileResolver = new FileSystemFileResolver(tempDir);
-		
+
 		controlMap.put(ControlKey.VDYP_OUTPUT_VDYP_POLYGON.name(), fileResolver.toPath("testPolygonFile"));
 		controlMap.put(ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SPECIES.name(), fileResolver.toPath("testSpeciesFile"));
-		controlMap.put(ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name(), fileResolver.toPath("testUtilizationFile"));
-		controlMap.put(ControlKey.VDYP_OUTPUT_COMPATIBILITY_VARIABLES.name(), fileResolver.toPath("testCompatibilityVariables"));
+		controlMap.put(
+				ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name(), fileResolver.toPath("testUtilizationFile")
+		);
+		controlMap.put(
+				ControlKey.VDYP_OUTPUT_COMPATIBILITY_VARIABLES.name(), fileResolver.toPath("testCompatibilityVariables")
+		);
 
 		try (var unit = new VdypOutputWriter(controlMap)) {
 			var polygon = buildTestPolygonAndChildren();
-			
+
 			unit.writePolygonWithSpeciesAndUtilization(polygon);
 		}
-		
+
 		try (var polygonReader = Files.newBufferedReader(fileResolver.toPath("testPolygonFile"))) {
 			assertTrue(polygonReader.read() >= 0);
 		}
-		
+
 		try (var speciesReader = Files.newBufferedReader(fileResolver.toPath("testSpeciesFile"))) {
 			assertTrue(speciesReader.read() >= 0);
 		}
-		
+
 		try (var utilizationReader = Files.newBufferedReader(fileResolver.toPath("testUtilizationFile"))) {
 			assertTrue(utilizationReader.read() >= 0);
 		}
-		
+
 		try (var cVarsReader = Files.newBufferedReader(fileResolver.toPath("testCompatibilityVariables"))) {
 			assertTrue(cVarsReader.read() == -1);
 		}
@@ -399,7 +403,7 @@ class VdypOutputWriterTest {
 			VdypPolygon polygon = buildTestPolygonAndChildren();
 			unit.writePolygonWithSpeciesAndUtilization(polygon);
 		}
-		
+
 		polyStream.assertContent(is("082E004    615       1988 IDF  D   100 28119  1\n"));
 		utilStream.assertContent(
 				VdypMatchers.hasLines(
@@ -463,9 +467,9 @@ class VdypOutputWriterTest {
 				)
 		);
 	}
-	
+
 	private VdypPolygon buildTestPolygonAndChildren() {
-		
+
 		VdypPolygon polygon = VdypPolygon.build(builder -> {
 
 			builder.polygonIdentifier("082E004    615       1988");

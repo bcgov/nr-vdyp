@@ -33,7 +33,10 @@ class FileSystemFileResolverTest {
 
 		var result = unit.toPath("test");
 
-		assertThat(unit.toString(), equalTo("FileSystemFileResolver (relative [" + result.getParent().toAbsolutePath() + "])"));
+		assertThat(
+				unit.toString(),
+				equalTo("FileSystemFileResolver (relative [" + result.getParent().toAbsolutePath() + "])")
+		);
 
 		assertThat(result.toAbsolutePath().toString(), equalTo(testDir.resolve("test").toString()));
 	}

@@ -11,7 +11,7 @@ import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.api.helpers.TestHelper;
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestValidationException;
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.ParameterNames;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ProjectionRequestKind;
@@ -21,7 +21,7 @@ import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessageKind;
 class StreamsValidationTest {
 
 	@Test
-	void testValidHcsvInputStreams() throws ProjectionRequestValidationException {
+	void testValidHcsvInputStreams() throws ProjectionRequestException {
 
 		Parameters p = TestHelper.buildValidParametersObject();
 		ProjectionContext s = new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
@@ -44,7 +44,7 @@ class StreamsValidationTest {
 		try {
 			ProjectionContext s = new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
 			ProjectionRequestParametersValidator.validate(s);
-		} catch (ProjectionRequestValidationException e) {
+		} catch (ProjectionRequestException e) {
 			TestHelper
 					.verifyMessageSetIs(e.getValidationMessages(), ValidationMessageKind.EXPECTED_STREAMS_NOT_SUPPLIED);
 
@@ -66,7 +66,7 @@ class StreamsValidationTest {
 		try {
 			ProjectionContext s = new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
 			ProjectionRequestParametersValidator.validate(s);
-		} catch (ProjectionRequestValidationException e) {
+		} catch (ProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), ValidationMessageKind.UNEXPECTED_STREAMS_SUPPLIED);
 
 			var message = e.getValidationMessages().get(0).getMessage();
@@ -86,7 +86,7 @@ class StreamsValidationTest {
 		try {
 			ProjectionContext s = new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
 			ProjectionRequestParametersValidator.validate(s);
-		} catch (ProjectionRequestValidationException e) {
+		} catch (ProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(
 					e.getValidationMessages(), ValidationMessageKind.UNEXPECTED_STREAMS_SUPPLIED,
 					ValidationMessageKind.EXPECTED_STREAMS_NOT_SUPPLIED
@@ -118,7 +118,7 @@ class StreamsValidationTest {
 		try {
 			ProjectionContext s = new ProjectionContext(ProjectionRequestKind.DCSV, "id", p, false);
 			ProjectionRequestParametersValidator.validate(s);
-		} catch (ProjectionRequestValidationException e) {
+		} catch (ProjectionRequestException e) {
 			assertThat(e, Matchers.notNullValue());
 		}
 	}
@@ -141,7 +141,7 @@ class StreamsValidationTest {
 		try {
 			ProjectionContext s = new ProjectionContext(ProjectionRequestKind.SCSV, "id", p, false);
 			ProjectionRequestParametersValidator.validate(s);
-		} catch (ProjectionRequestValidationException e) {
+		} catch (ProjectionRequestException e) {
 			assertThat(e, Matchers.notNullValue());
 		}
 	}
@@ -157,7 +157,7 @@ class StreamsValidationTest {
 		try {
 			ProjectionContext s = new ProjectionContext(ProjectionRequestKind.ICSV, "id", p, false);
 			ProjectionRequestParametersValidator.validate(s);
-		} catch (ProjectionRequestValidationException e) {
+		} catch (ProjectionRequestException e) {
 			assertThat(e, Matchers.notNullValue());
 		}
 	}

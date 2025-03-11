@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.api.helpers.TestHelper;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestValidationException;
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.ParameterNames;
 import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionContext;
 import ca.bc.gov.nrs.vdyp.backend.projection.input.AbstractPolygonStream;
@@ -47,8 +47,7 @@ class HcsvSingleLayerMultipleSp0sRuntimeStructureTest {
 	}
 
 	@Test
-	void testHcsvSingleLayerMultipleSp0s()
-			throws IOException, ProjectionRequestValidationException, PolygonValidationException {
+	void testHcsvSingleLayerMultipleSp0s() throws IOException, ProjectionRequestException, PolygonValidationException {
 
 		logger.info("Starting {}", this.getClass().getSimpleName());
 

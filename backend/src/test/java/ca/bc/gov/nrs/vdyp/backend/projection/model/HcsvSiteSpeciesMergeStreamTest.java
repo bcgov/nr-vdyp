@@ -13,7 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestValidationException;
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.ParameterNames;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ProjectionRequestKind;
@@ -27,7 +27,7 @@ public class HcsvSiteSpeciesMergeStreamTest {
 	private AbstractPolygonStream polygonStream;
 
 	@BeforeEach
-	void beforeEach() throws IOException, PolygonValidationException, ProjectionRequestValidationException {
+	void beforeEach() throws IOException, PolygonValidationException, ProjectionRequestException {
 		var parameters = new Parameters().ageStart(10).ageEnd(20);
 
 		{

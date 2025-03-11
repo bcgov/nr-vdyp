@@ -52,7 +52,7 @@ public class PolygonReportingInfo {
 		return referenceYear;
 	}
 
-	public Map<String, LayerReportingInfo> getLayers() {
+	public Map<String, LayerReportingInfo> getLayerReportingInfos() {
 		return layers;
 	}
 

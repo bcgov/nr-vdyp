@@ -38,7 +38,6 @@ public class ParametersTest {
 		op.addSelectedExecutionOptionsItem(ExecutionOption.DO_ENABLE_DEBUG_LOGGING);
 		op.addSelectedExecutionOptionsItem(ExecutionOption.DO_ENABLE_ERROR_LOGGING);
 		op.addSelectedExecutionOptionsItem(ExecutionOption.DO_ENABLE_PROGRESS_LOGGING);
-		op.addSelectedExecutionOptionsItem(ExecutionOption.DO_FORCE_CALENDAR_YEAR_INCLUSION_IN_YIELD_TABLES);
 		op.addSelectedExecutionOptionsItem(ExecutionOption.DO_FORCE_CURRENT_YEAR_INCLUSION_IN_YIELD_TABLES);
 		op.addSelectedExecutionOptionsItem(ExecutionOption.DO_FORCE_REFERENCE_YEAR_INCLUSION_IN_YIELD_TABLES);
 		op.addSelectedExecutionOptionsItem(ExecutionOption.DO_INCLUDE_AGE_ROWS_IN_YIELD_TABLE);
@@ -68,7 +67,7 @@ public class ParametersTest {
 				.ageIncrement(1) //
 				.ageStart(2020) //
 				.combineAgeYearRange(AgeYearRangeCombinationKind.DIFFERENCE) //
-				.forceYear(2020);
+				.yearForcedIntoYieldTable(2020);
 
 		var filters = new Filters().maintainer("maintainer").mapsheet("mapsheet").polygon("polygon")
 				.polygonId("polygonId");

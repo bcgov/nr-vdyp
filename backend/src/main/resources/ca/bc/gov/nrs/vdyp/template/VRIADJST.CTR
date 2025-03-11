@@ -5,8 +5,8 @@
 
 001 00999999                                          Max # of Adjustment records to process (I8)
 
-009 ../../coe/BECDEF.dat                              List of BECs
-010 ../../coe/SP0DEF_V0.dat                           Standard SP0 Codes (with order)  RD_SP0  
+009 ../../../coe/BECDEF.dat                              List of BECs
+010 ../../../coe/SP0DEF_V0.dat                           Standard SP0 Codes (with order)  RD_SP0  
 
 011 vp_01.dat                                         VDYP7 Polygon input
 012 vs_01.dat                                         VDYP7 Layer by Species (ht and Age), input
@@ -17,9 +17,9 @@
 016 vs_adj.dat                                        VDYP7 Layer by SP0 (Ht and Age) out
 018 vu_adj.dat                                        VDYP7 Layer by SP0 by Util out
 
-022 ../../coe/bgrp.dat                                Defines Breakage Groups   RD_BGRP      IPSJF157
+022 ../../../coe/bgrp.dat                                Defines Breakage Groups   RD_BGRP      IPSJF157
 
-095 ../../coe/regbreak.coe                            Breakage                   RD_EMP95 IPSJF157
+095 ../../../coe/regbreak.coe                            Breakage                   RD_EMP95 IPSJF157
 
 101    1   0   2   1   0                              Control Switches (10I4)
                                                       First value  1: 1 input record/polygon (P or X)

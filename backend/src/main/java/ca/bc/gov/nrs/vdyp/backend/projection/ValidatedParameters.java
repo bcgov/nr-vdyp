@@ -52,7 +52,7 @@ public class ValidatedParameters {
 	private Integer yearEnd;
 	private Integer minYearEnd;
 	private Integer maxYearEnd;
-	private Integer forceYear;
+	private Integer yearForcedIntoYieldTable;
 	private Integer ageIncrement;
 	private Integer minAgeIncrement;
 	private Integer maxAgeIncrement;
@@ -339,17 +339,17 @@ public class ValidatedParameters {
 	 *
 	 * @return forceYear
 	 */
-	public Integer getForceYear() {
-		return forceYear;
+	public Integer getYearForcedIntoYearTable() {
+		return yearForcedIntoYieldTable;
 	}
 
-	public ValidatedParameters forceYear(Integer forceYear) {
-		setForceYear(forceYear);
+	public ValidatedParameters yearForcedIntoYieldTable(Integer yearForcedIntoYieldTable) {
+		setYearForcedIntoYieldTable(yearForcedIntoYieldTable);
 		return this;
 	}
 
-	public void setForceYear(Integer forceYear) {
-		this.forceYear = forceYear;
+	public void setYearForcedIntoYieldTable(Integer yearForcedIntoYieldTable) {
+		this.yearForcedIntoYieldTable = yearForcedIntoYieldTable;
 	}
 
 	/**
@@ -527,7 +527,7 @@ public class ValidatedParameters {
 				&& Objects.equals(this.maxAgeEnd, parameters.maxAgeEnd)
 				&& Objects.equals(this.yearStart, parameters.yearStart)
 				&& Objects.equals(this.yearEnd, parameters.yearEnd)
-				&& Objects.equals(this.forceYear, parameters.forceYear)
+				&& Objects.equals(this.yearForcedIntoYieldTable, parameters.yearForcedIntoYieldTable)
 				&& Objects.equals(this.ageIncrement, parameters.ageIncrement)
 				&& Objects.equals(this.minAgeIncrement, parameters.minAgeIncrement)
 				&& Objects.equals(this.maxAgeIncrement, parameters.maxAgeIncrement)
@@ -542,8 +542,8 @@ public class ValidatedParameters {
 	public int hashCode() {
 		return Objects.hash(
 				outputFormat, selectedExecutionOptions, selectedDebugOptions, ageStart, minAgeStart, maxAgeStart,
-				ageEnd, minAgeEnd, maxAgeEnd, yearStart, yearEnd, forceYear, ageIncrement, minAgeIncrement,
-				maxAgeIncrement, combineAgeYearRange, progressFrequency, metadataToOutput, utils
+				ageEnd, minAgeEnd, maxAgeEnd, yearStart, yearEnd, yearForcedIntoYieldTable, ageIncrement,
+				minAgeIncrement, maxAgeIncrement, combineAgeYearRange, progressFrequency, metadataToOutput, utils
 		);
 	}
 
@@ -562,7 +562,7 @@ public class ValidatedParameters {
 		sb.append("    maxAgeEnd: ").append(toIndentedString(maxAgeEnd)).append("\n");
 		sb.append("    yearStart: ").append(toIndentedString(yearStart)).append("\n");
 		sb.append("    yearEnd: ").append(toIndentedString(yearEnd)).append("\n");
-		sb.append("    forceYear: ").append(toIndentedString(forceYear)).append("\n");
+		sb.append("    forceYear: ").append(toIndentedString(yearForcedIntoYieldTable)).append("\n");
 		sb.append("    ageIncrement: ").append(toIndentedString(ageIncrement)).append("\n");
 		sb.append("    minAgeIncrement: ").append(toIndentedString(minAgeIncrement)).append("\n");
 		sb.append("    maxAgeIncrement: ").append(toIndentedString(maxAgeIncrement)).append("\n");
@@ -592,7 +592,7 @@ public class ValidatedParameters {
 		DEFAULT.ageEnd = null;
 		DEFAULT.yearStart = null;
 		DEFAULT.yearEnd = null;
-		DEFAULT.ageIncrement = null;
+		DEFAULT.ageIncrement = 1;
 
 		DEFAULT.outputFormat = OutputFormat.CSV_YIELD_TABLE;
 
@@ -638,7 +638,7 @@ public class ValidatedParameters {
 		DEFAULT.maxYearEnd = 3250;
 		DEFAULT.minAgeIncrement = 1;
 		DEFAULT.maxAgeIncrement = 350;
-		DEFAULT.forceYear = null;
+		DEFAULT.yearForcedIntoYieldTable = null;
 		DEFAULT.combineAgeYearRange = AgeYearRangeCombinationKind.INTERSECT;
 		DEFAULT.progressFrequency = new ProgressFrequency().intValue(1000);
 		DEFAULT.metadataToOutput = MetadataToOutputDirective.VERSION;

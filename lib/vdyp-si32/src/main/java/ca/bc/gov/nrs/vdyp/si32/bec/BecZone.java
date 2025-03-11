@@ -35,11 +35,11 @@ public enum BecZone implements SI32Enum<BecZone> {
 	private static final Map<Integer, BecZone> index2EnumMap = new HashMap<>();
 
 	static {
-		for (BecZone becZone: BecZone.values()) {
+		for (BecZone becZone : BecZone.values()) {
 			index2EnumMap.put(becZone.index, becZone);
 		}
 	}
-	
+
 	private final int index;
 	private final SpeciesRegion speciesRegion;
 

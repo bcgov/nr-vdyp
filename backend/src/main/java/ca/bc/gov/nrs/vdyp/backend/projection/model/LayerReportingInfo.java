@@ -1,23 +1,19 @@
 package ca.bc.gov.nrs.vdyp.backend.projection.model;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
 
 public class LayerReportingInfo {
 
+	private Layer layer;
+
 	private Integer sourceLayerID;
-	private String layerID;
-	private String rank;
-	private String nonForestDesc;
+	private Boolean isDeadStemLayer;
 
-	private ProjectionTypeCode processedAsVDYP7Layer;
-	private Integer firstYearYieldsDisplayed;
-
-	private boolean isDeadStemLayer;
-
-	private Map<String, SpeciesReportingInfo> species = new HashMap<>();
+	private List<SpeciesReportingInfo> orderedSpecies;
 
 	private LayerReportingInfo() {
 	}
@@ -26,80 +22,74 @@ public class LayerReportingInfo {
 		return sourceLayerID;
 	}
 
+	public Layer getLayer() {
+		return layer;
+	}
+
 	public String getLayerID() {
-		return layerID;
+		return layer.getLayerId();
 	}
 
 	public String getRank() {
-		return rank;
+		return layer.getRankCode();
 	}
 
 	public String getNonForestDesc() {
-		return nonForestDesc;
+		return layer.getNonForestDescriptor();
 	}
 
 	public ProjectionTypeCode getProcessedAsVDYP7Layer() {
-		return processedAsVDYP7Layer;
+		return layer.getVdyp7LayerCode();
 	}
 
-	public Integer getFirstYearYieldsDisplayed() {
-		return firstYearYieldsDisplayed;
-	}
-
-	public boolean isDeadStemLayer() {
+	public Boolean isDeadStemLayer() {
 		return isDeadStemLayer;
 	}
 
-	public Map<String, SpeciesReportingInfo> getSpecies() {
-		return species;
+	/**
+	 * Record the child {@link SpeciesReportingInfo} elements of this. We assert that this method has not been called
+	 * before because as the code is written if it is called a second time it's a mistake.
+	 *
+	 * @param sris the child SpeciesReportingInfo elements. This list is sorted here by the default sort order.
+	 */
+	public void setSpeciesReportingInfos(List<SpeciesReportingInfo> sris) {
+		assert orderedSpecies == null;
+		Collections.sort(sris);
+		orderedSpecies = sris;
+	}
+
+	/**
+	 * Return the sorted list of SpeciesReportingInfo children. It is asserted that this list has already been set.
+	 *
+	 * @return as described
+	 */
+	public List<SpeciesReportingInfo> getOrderedSpecies() {
+		assert orderedSpecies != null;
+		return orderedSpecies;
 	}
 
 	public static class Builder {
 
-		private LayerReportingInfo layerReportingInfo = new LayerReportingInfo();
+		private LayerReportingInfo lri = new LayerReportingInfo();
+
+		public Builder layer(Layer layer) {
+
+			lri.layer = layer;
+
+			if (layer.getVdyp7LayerCode() != null) {
+				lri.isDeadStemLayer = layer.getVdyp7LayerCode() == ProjectionTypeCode.DEAD;
+			}
+
+			return this;
+		}
 
 		public Builder sourceLayerID(Integer sourceLayerID) {
-			layerReportingInfo.sourceLayerID = sourceLayerID;
-			return this;
-		}
-
-		public Builder layerID(String layerID) {
-			layerReportingInfo.layerID = layerID;
-			return this;
-		}
-
-		public Builder rank(String rank) {
-			layerReportingInfo.rank = rank;
-			return this;
-		}
-
-		public Builder nonForestDesc(String nonForestDesc) {
-			layerReportingInfo.nonForestDesc = nonForestDesc;
-			return this;
-		}
-
-		public Builder processedAsVDYP7Layer(ProjectionTypeCode processedAsVDYP7Layer) {
-			layerReportingInfo.processedAsVDYP7Layer = processedAsVDYP7Layer;
-			return this;
-		}
-
-		public Builder firstYearYieldsDisplayed(Integer firstYearYieldsDisplayed) {
-			layerReportingInfo.firstYearYieldsDisplayed = firstYearYieldsDisplayed;
-			return this;
-		}
-
-		public Builder deadStemLayer(boolean deadStemLayer) {
-			layerReportingInfo.isDeadStemLayer = deadStemLayer;
-			return this;
-		}
-
-		public Builder species(Map<String, SpeciesReportingInfo> species) {
-			layerReportingInfo.species = species;
+			lri.sourceLayerID = sourceLayerID;
 			return this;
 		}
 
 		public LayerReportingInfo build() {
-			return layerReportingInfo;
+			return lri;
 		}
 	}
 }

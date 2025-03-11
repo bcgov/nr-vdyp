@@ -125,6 +125,8 @@ public class Species implements Comparable<Species> {
 	// MUTABLE field setters
 
 	void setTotalAge(Double totalAge) {
+		stand.getLayer().getPolygon().ensureUnlocked();
+
 		this.totalAge = totalAge;
 		if (this.suppliedTotalAge == null) {
 			this.suppliedTotalAge = this.totalAge;
@@ -132,6 +134,8 @@ public class Species implements Comparable<Species> {
 	}
 
 	void setSiteIndex(Double siteIndex) {
+		stand.getLayer().getPolygon().ensureUnlocked();
+
 		this.siteIndex = siteIndex;
 		if (this.suppliedSiteIndex == null) {
 			this.suppliedSiteIndex = this.siteIndex;
@@ -139,6 +143,8 @@ public class Species implements Comparable<Species> {
 	}
 
 	public void setDominantHeight(Double dominantHeight) {
+		stand.getLayer().getPolygon().ensureUnlocked();
+
 		this.dominantHeight = dominantHeight;
 		if (this.suppliedDominantHeight == null) {
 			this.suppliedDominantHeight = this.dominantHeight;
@@ -146,18 +152,26 @@ public class Species implements Comparable<Species> {
 	}
 
 	public void setYearsToBreastHeight(Double yearsToBreastHeight) {
+		stand.getLayer().getPolygon().ensureUnlocked();
+
 		this.yearsToBreastHeight = yearsToBreastHeight;
 	}
 
 	public void setAgeAtBreastHeight(Double ageAtBreastHeight) {
+		stand.getLayer().getPolygon().ensureUnlocked();
+
 		this.ageAtBreastHeight = ageAtBreastHeight;
 	}
 
 	void resetDominantHeight() {
+		stand.getLayer().getPolygon().ensureUnlocked();
+
 		setDominantHeight(null);
 	}
 
 	void setSiteCurve(SiteIndexEquation siteCurve) {
+		stand.getLayer().getPolygon().ensureUnlocked();
+
 		this.siteCurve = siteCurve;
 	}
 
@@ -168,6 +182,7 @@ public class Species implements Comparable<Species> {
 	 * @param duplicationIndex the duplication index to adjust. If the species has no duplicates, supply 0.
 	 */
 	public void adjustSpeciesPercent(double adjustment, int duplicationIndex) {
+		stand.getLayer().getPolygon().ensureUnlocked();
 
 		this.speciesPercent += adjustment;
 		this.percentsPerDuplicate.put(duplicationIndex, this.percentsPerDuplicate.get(duplicationIndex) + adjustment);
@@ -529,7 +544,7 @@ public class Species implements Comparable<Species> {
 				keepTrying = true;
 				haveComputedAgeAtBreastHeight = true;
 
-				logger.debug("{}: calculated Years to Breast Height to be: {}", this, yearsToBreastHeightRef);
+				logger.debug("{}: calculated Years to Breast Height to be: {}", this, yearsToBreastHeightRef.get());
 			}
 		}
 
@@ -600,7 +615,7 @@ public class Species implements Comparable<Species> {
 			ValidationMessage message = new ValidationMessage(
 					ValidationMessageKind.LOW_SITE_INDEX_ERROR, polygon, layer.getLayerId(), siteIndex, this
 			);
-			polygon.getDefinitionMessages().add(new PolygonMessage.Builder().layer(layer).message(message).build());
+			polygon.addDefinitionMessage(new PolygonMessage.Builder().layer(layer).message(message).build());
 
 			logger.error(
 					"{}: site Index was too low to compute a Dominant Height. Using value {}...", this, computedHeight
@@ -660,7 +675,7 @@ public class Species implements Comparable<Species> {
 				ValidationMessage message = new ValidationMessage(
 						ValidationMessageKind.LOW_SITE_INDEX_WARNING, polygon, layer.getLayerId(), siteIndex, this
 				);
-				polygon.getDefinitionMessages().add(new PolygonMessage.Builder().layer(layer).message(message).build());
+				polygon.addDefinitionMessage(new PolygonMessage.Builder().layer(layer).message(message).build());
 
 			}
 		} catch (CommonCalculatorException e) {
@@ -702,7 +717,7 @@ public class Species implements Comparable<Species> {
 				ValidationMessage message = new ValidationMessage(
 						ValidationMessageKind.LOW_SITE_INDEX_ERROR, polygon, layer.getLayerId(), siteIndex, this
 				);
-				polygon.getDefinitionMessages().add(new PolygonMessage.Builder().layer(layer).message(message).build());
+				polygon.addDefinitionMessage(new PolygonMessage.Builder().layer(layer).message(message).build());
 
 				computedSiteIndex = null;
 			}

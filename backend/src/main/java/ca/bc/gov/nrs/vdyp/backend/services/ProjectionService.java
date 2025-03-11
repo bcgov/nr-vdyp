@@ -22,11 +22,11 @@ import org.slf4j.MDC;
 
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.Exceptions;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionInternalExecutionException;
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestValidationException;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.ParameterNames;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ProjectionRequestKind;
-import ca.bc.gov.nrs.vdyp.backend.projection.IProjectionRunner;
 import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionRunner;
 import ca.bc.gov.nrs.vdyp.backend.utils.FileHelper;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -49,7 +49,7 @@ public class ProjectionService {
 			InputStream polygonStream, //
 			InputStream layersStream, //
 			SecurityContext securityContext
-	) throws ProjectionRequestValidationException, ProjectionInternalExecutionException {
+	) throws ProjectionRequestException {
 		Response response;
 
 		Map<String, InputStream> inputStreams = new HashMap<>();
@@ -76,7 +76,7 @@ public class ProjectionService {
 		} catch (IOException e) {
 			String message = Exceptions.getMessage(e, "Projection, when opening input files,");
 
-			logger.error(message);
+			logger.error(message, e);
 
 			response = Response.serverError().status(500).entity(message).build();
 		} finally {
@@ -109,7 +109,8 @@ public class ProjectionService {
 	private Response runProjection(
 			ProjectionRequestKind kind, Map<String, InputStream> inputStreams, Boolean isTrialRun, Parameters params,
 			SecurityContext securityContext
-	) throws ProjectionRequestValidationException, ProjectionInternalExecutionException {
+	) throws ProjectionRequestException {
+
 		String projectionId = ProjectionService.buildId(kind);
 
 		logger.info("<runProjection {} {}", kind, projectionId);
@@ -120,23 +121,21 @@ public class ProjectionService {
 			MDC.put("projectionId", projectionId);
 		}
 
-		/* this is known from logback.xml */
-		Path debugLogPath = Path.of("logs", projectionId + ".log");
-
 		Response response = Response.serverError().status(500).build();
 
 		try {
-			IProjectionRunner runner;
-
 			logger.info("Running {} projection {}", kind, projectionId);
 
-			runner = new ProjectionRunner(ProjectionRequestKind.HCSV, projectionId, params, isTrialRun);
+			var runner = new ProjectionRunner(ProjectionRequestKind.HCSV, projectionId, params, isTrialRun);
 
 			runner.run(inputStreams);
 
 			InputStream debugLogStream = new ByteArrayInputStream(new byte[0]);
 			try {
 				if (debugLoggingEnabled) {
+					/* this is known from logback.xml */
+					Path debugLogPath = Path.of("logs", projectionId + ".log");
+
 					debugLogStream = FileHelper.getForReading(debugLogPath);
 				}
 			} catch (IOException e) {
@@ -146,6 +145,8 @@ public class ProjectionService {
 
 			response = buildOutputZipFile(runner, debugLogStream);
 
+		} catch (Exception e) {
+			logger.error("Failure in runProjection", e);
 		} finally {
 			logger.info(FINALIZE_SESSION_MARKER, ">runProjection {} {}", kind, projectionId);
 
@@ -160,7 +161,7 @@ public class ProjectionService {
 	}
 
 	private static final DateTimeFormatter dateTimeFormatterForFilenames = DateTimeFormatter
-			.ofPattern("yyyy$MM$dd$HH$mm$ss$SSSS");
+			.ofPattern("yyyy_MM_dd_HH_mm_ss_SSSS");
 	private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH:mm:ss");
 
 	public static String buildId(ProjectionRequestKind projectionKind) {
@@ -170,7 +171,7 @@ public class ProjectionService {
 		return sb.toString();
 	}
 
-	private Response buildOutputZipFile(IProjectionRunner runner, InputStream debugLogStream) {
+	private Response buildOutputZipFile(ProjectionRunner runner, InputStream debugLogStream) {
 		logger.info("<buildOutputZipFile");
 
 		try {
@@ -212,7 +213,7 @@ public class ProjectionService {
 
 		} catch (ProjectionInternalExecutionException | IOException e) {
 			String message = Exceptions.getMessage(e, "Projection, when creating output zip,");
-			logger.error(message);
+			logger.error(message, e);
 
 			return Response.serverError().status(500).entity(message).build();
 		}

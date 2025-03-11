@@ -45,7 +45,7 @@ class BecZoneMethodsTest {
 		assertThat(BecZoneMethods.mofBiomassCoefficient(null, SP64Name.A.getText()), equalTo(-1.0f));
 		assertThat(BecZoneMethods.mofBiomassCoefficient(BecZone.AT.getText(), null), equalTo(-1.0f));
 	}
-	
+
 	@Test
 	void testUtilityMethods() {
 		assertThat(BecZone.MS.getIndex(), equalTo(9));
@@ -56,10 +56,10 @@ class BecZoneMethodsTest {
 		assertThat(BecZone.CDF.getText(), equalTo("CDF"));
 		assertThat(BecZone.forIndex(9), equalTo(BecZone.MS));
 		assertThat(BecZone.forIndex(9), not(equalTo(BecZone.CDF)));
-		
+
 		BecZone.Iterator i = new BecZone.Iterator();
 		assertTrue(i.hasNext());
 		assertThat(i.next(), equalTo(BecZone.AT));
-		
+
 	}
 }

@@ -22,7 +22,7 @@ public class VdypMath {
 			return max;
 		return x;
 	}
-	
+
 	/**
 	 * Compute the maximum of three double values, using <code>Math.max</code> to do pairwise comparisons.
 	 *

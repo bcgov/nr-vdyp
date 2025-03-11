@@ -158,16 +158,10 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 				.layers(layers) //
 				.build();
 
+		int layerOrderNumber = 0;
 		while (nextLayerRecord != null && nextLayerRecord.getFeatureId() == polygonFeatureId) {
 
 			try {
-				var layerReportingInfo = new LayerReportingInfo.Builder().layerID(nextLayerRecord.getLayerId())
-						.rank(nextLayerRecord.getForestCoverRankCode())
-						.nonForestDesc(nextLayerRecord.getNonForestDescriptorCode())
-						.processedAsVDYP7Layer(nextLayerRecord.getTargetVdyp7LayerCode()).build();
-
-				polygonReportingInfo.getLayers().put(layerReportingInfo.getLayerID(), layerReportingInfo);
-
 				// Note that HCSV contains no history information (lcl_CopyHistoryDataIntoSnapshot)
 				var history = new History.Builder().build();
 
@@ -193,9 +187,18 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 
 				addLayerToPolygon(polygon, layer);
 
+				var layerReportingInfo = new LayerReportingInfo.Builder() //
+						.layer(layer) //
+						.sourceLayerID(layerOrderNumber) //
+						.build();
+
+				polygonReportingInfo.getLayerReportingInfos().put(layerReportingInfo.getLayerID(), layerReportingInfo);
+
 				buildStandsAndSpecies(polygon, layer);
 
 			} finally {
+				layerOrderNumber += 1;
+
 				advanceToNextLayer();
 			}
 		}
@@ -240,7 +243,7 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 					layer.getPercentStockable(), polygon.getPercentStockable()
 			);
 
-			polygon.getDefinitionMessages().add(new PolygonMessage.Builder().layer(layer).message(message).build());
+			polygon.addDefinitionMessage(new PolygonMessage.Builder().layer(layer).message(message).build());
 			logger.error(
 					"Layer '{}' percent stockable ({}%) exceeds the polygon percent stockable ({}%)", polygon,
 					layer.getLayerId(), layer.getPercentStockable(), polygon.getPercentStockable()
@@ -382,7 +385,7 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 
 		logger.debug("Building stand and species components of layer \"{}\"", layer);
 
-		var layerReportingInfo = polygon.getReportingInfo().getLayers().get(layer.getLayerId());
+		var layerReportingInfo = polygon.getReportingInfo().getLayerReportingInfos().get(layer.getLayerId());
 
 		var layerProjectionType = layer.determineProjectionType(polygon);
 		logger.debug(
@@ -390,19 +393,24 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 		);
 
 		var species = new ArrayList<Species>();
+		var speciesReportingInfoList = new ArrayList<SpeciesReportingInfo>();
 
 		var sp64Details = nextLayerRecord.getSpeciesDetails();
+		var index = 0;
 		for (var sd : sp64Details) {
 
-			var speciesReportingInfo = new SpeciesReportingInfo.Builder().sp64Name(sd.speciesCode())
-					.sp64Percent(sd.percent()).build();
+			var speciesReportingInfo = new SpeciesReportingInfo.Builder() //
+					.sp64Name(sd.speciesCode()) //
+					.sp64Percent(sd.percent()) //
+					.asSuppliedIndex(index++) //
+					.build();
 
-			layerReportingInfo.getSpecies().put(speciesReportingInfo.getSp64Name(), speciesReportingInfo);
+			speciesReportingInfoList.add(speciesReportingInfo);
 
-			var speciesInstance = addSpeciesToLayer(layer, sd);
-
-			species.add(speciesInstance);
+			species.add(addSpeciesToLayer(layer, sd));
 		}
+
+		layerReportingInfo.setSpeciesReportingInfos(speciesReportingInfoList);
 	}
 
 	/**
@@ -453,7 +461,7 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 				if (possibleDuplicate.getSpeciesCode().equals(sp64Details.speciesCode())) {
 					// We have a duplicate species
 
-					layer.getPolygon().getDefinitionMessages().add(
+					layer.getPolygon().addDefinitionMessage(
 							new PolygonMessage.Builder() //
 									.stand(stand) //
 									.returnCode(ReturnCode.ERROR_SPECIESALREADYEXISTS) //

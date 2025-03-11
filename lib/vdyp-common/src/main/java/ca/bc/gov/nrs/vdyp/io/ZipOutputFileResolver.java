@@ -118,7 +118,7 @@ public class ZipOutputFileResolver implements ConcreteFileResolver {
 	public FileResolver getInputFileResolver() {
 		throw new UnsupportedOperationException("ZipOutputResolver.getInputFileResolver");
 	}
-	
+
 	@Override
 	public String toString() {
 		return "ZipOutputFileResolver";

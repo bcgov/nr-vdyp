@@ -194,12 +194,14 @@ public class HcsvPolygonRecordBean {
 	@CsvBindByPosition(position = 24)
 	private String bclcsLevel5Code;
 
+	// NOTE inconsistency in VDYP7 - called "Reference Year" although col. is called PHOTO_ESTIMATION_BASE_YEAR in CSV
 	// { "REFERENCE_YEAR", csvFldType_SHORT, 4, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "PHOTO_ESTIMATION_BASE_YEAR")
 	@CsvBindByPosition(position = 25)
 	private String referenceYear;
 
+	// NOTE inconsistency in VDYP7 - called "Year of Death" although col. is called REFERENCE_YEAR in CSV
 	// { "YEAR_OF_DEATH", csvFldType_SHORT, 4, 0, "", TRUE }
 	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "REFERENCE_YEAR")

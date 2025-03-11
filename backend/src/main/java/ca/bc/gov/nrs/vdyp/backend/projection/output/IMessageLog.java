@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.vdyp.backend.api.v1.messaging;
+package ca.bc.gov.nrs.vdyp.backend.projection.output;
 
 import java.io.InputStream;
 

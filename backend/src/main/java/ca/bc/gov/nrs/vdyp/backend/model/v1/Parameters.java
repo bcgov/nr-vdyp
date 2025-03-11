@@ -64,7 +64,7 @@ public class Parameters {
 
 	public static final String JSON_PROPERTY_FORCE_YEAR = "forceYear";
 	@JsonProperty(JSON_PROPERTY_FORCE_YEAR)
-	private String forceYear;
+	private String yearForcedIntoYieldTable;
 
 	public static final String JSON_PROPERTY_AGE_INCREMENT = "ageIncrement";
 	@JsonProperty(JSON_PROPERTY_AGE_INCREMENT)
@@ -143,7 +143,6 @@ public class Parameters {
 		DO_SAVE_INTERMEDIATE_FILES("doSaveIntermediateFiles"), //
 		DO_FORCE_REFERENCE_YEAR_INCLUSION_IN_YIELD_TABLES("doForceReferenceYearInclusionInYieldTables"), //
 		DO_FORCE_CURRENT_YEAR_INCLUSION_IN_YIELD_TABLES("doForceCurrentYearInclusionInYieldTables"), //
-		DO_FORCE_CALENDAR_YEAR_INCLUSION_IN_YIELD_TABLES("doForceCalendarYearInclusionInYieldTables"), //
 		DO_INCLUDE_FILE_HEADER("doIncludeFileHeader"), //
 		DO_INCLUDE_PROJECTION_MODE_IN_YIELD_TABLE("doIncludeProjectionModeInYieldTable"), //
 		DO_INCLUDE_AGE_ROWS_IN_YIELD_TABLE("doIncludeAgeRowsInYieldTable"), //
@@ -207,11 +206,8 @@ public class Parameters {
 	 * Determines how the Age Range and Year Range are to be combined when producing yield tables.
 	 */
 	public enum AgeYearRangeCombinationKind {
-		UNION("union"),
 
-		INTERSECT("intersect"),
-
-		DIFFERENCE("difference");
+		UNION("union"), INTERSECT("intersect"), DIFFERENCE("difference");
 
 		private String value;
 
@@ -558,26 +554,26 @@ public class Parameters {
 	 * @return forceYear
 	 **/
 	@JsonProperty(value = JSON_PROPERTY_FORCE_YEAR)
-	public String getForceYear() {
-		return forceYear;
+	public String getYearForcedIntoYieldTable() {
+		return yearForcedIntoYieldTable;
 	}
 
-	public Parameters forceYear(Integer forceYear) {
-		setForceYear(forceYear);
+	public Parameters yearForcedIntoYieldTable(Integer yearForcedIntoYieldTable) {
+		setYearForcedIntoYieldTable(yearForcedIntoYieldTable);
 		return this;
 	}
 
-	public void setForceYear(Integer forceYear) {
-		this.forceYear = forceYear == null ? null : forceYear.toString();
+	public void setYearForcedIntoYieldTable(Integer yearForcedIntoYieldTable) {
+		this.yearForcedIntoYieldTable = yearForcedIntoYieldTable == null ? null : yearForcedIntoYieldTable.toString();
 	}
 
-	public Parameters forceYear(String forceYearText) {
-		setForceYear(forceYearText);
+	public Parameters yearForcedIntoYieldTable(String yearForcedIntoYieldTableText) {
+		setYearForcedIntoYieldTable(yearForcedIntoYieldTableText);
 		return this;
 	}
 
-	public void setForceYear(String forceYearText) {
-		this.forceYear = forceYearText;
+	public void setYearForcedIntoYieldTable(String yearForcedIntoYieldTableText) {
+		this.yearForcedIntoYieldTable = yearForcedIntoYieldTableText;
 	}
 
 	/**
@@ -785,7 +781,7 @@ public class Parameters {
 				&& Objects.equals(this.ageStart, parameters.ageStart) && Objects.equals(this.ageEnd, parameters.ageEnd)
 				&& Objects.equals(this.yearStart, parameters.yearStart)
 				&& Objects.equals(this.yearEnd, parameters.yearEnd)
-				&& Objects.equals(this.forceYear, parameters.forceYear)
+				&& Objects.equals(this.yearForcedIntoYieldTable, parameters.yearForcedIntoYieldTable)
 				&& Objects.equals(this.ageIncrement, parameters.ageIncrement)
 				&& Objects.equals(this.combineAgeYearRange, parameters.combineAgeYearRange)
 				&& Objects.equals(this.progressFrequency, parameters.progressFrequency)
@@ -797,7 +793,8 @@ public class Parameters {
 	public int hashCode() {
 		return Objects.hash(
 				outputFormat, selectedExecutionOptions, selectedDebugOptions, ageStart, ageEnd, yearStart, yearEnd,
-				forceYear, ageIncrement, combineAgeYearRange, progressFrequency, metadataToOutput, filters, utils
+				yearForcedIntoYieldTable, ageIncrement, combineAgeYearRange, progressFrequency, metadataToOutput,
+				filters, utils
 		);
 	}
 
@@ -813,7 +810,7 @@ public class Parameters {
 		sb.append("    ageEnd: ").append(toIndentedString(ageEnd)).append("\n");
 		sb.append("    yearStart: ").append(toIndentedString(yearStart)).append("\n");
 		sb.append("    yearEnd: ").append(toIndentedString(yearEnd)).append("\n");
-		sb.append("    forceYear: ").append(toIndentedString(forceYear)).append("\n");
+		sb.append("    forceYear: ").append(toIndentedString(yearForcedIntoYieldTable)).append("\n");
 		sb.append("    ageIncrement: ").append(toIndentedString(ageIncrement)).append("\n");
 		sb.append("    combineAgeYearRange: ").append(toIndentedString(combineAgeYearRange)).append("\n");
 		sb.append("    progressFrequency: ").append(toIndentedString(progressFrequency)).append("\n");
