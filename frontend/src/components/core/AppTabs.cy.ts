@@ -1,5 +1,5 @@
 import { mount } from 'cypress/vue'
-import AppTabs from '@/components/core/AppTabs.vue'
+import AppTabs from './AppTabs.vue'
 import { createVuetify } from 'vuetify'
 import 'vuetify/styles'
 
@@ -13,7 +13,6 @@ describe('AppTabs.vue', () => {
   ]
 
   beforeEach(() => {
-    cy.viewport(1024, 768)
     cy.document().then((doc) => {
       const style = doc.createElement('style')
       style.innerHTML = `

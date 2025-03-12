@@ -65,11 +65,11 @@ export const WithInitialTab: Story = {
     `,
   }),
   args: {
-    currentTab: 1,
+    currentTab: 0,
     tabs: [
       {
         label: MODEL_PARAM_TAB_NAME.MODEL_PARAM_SELECTION,
-        component: 'ModelParameterSelection',
+        component: 'SpeciesInfoPanel',
         tabname: null,
       },
       {

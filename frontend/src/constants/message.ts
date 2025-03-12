@@ -3,6 +3,8 @@ export const SVC_ERR = Object.freeze({
   REQUEST_TIMEOUT: 'Request timed out. Please try again. (Error: Timeout)',
   SERVICE_UNAVAILABLE:
     'The service is currently unavailable. Please try later. (Error: Unavailable)',
+  BAD_GATEWAY:
+    'The server was unable to complete your request. Please try again later. (Error: Bad Gateway)',
   GATEWAY_TIMEOUT:
     'The server did not respond in time. Please try again later. (Error: Gateway Timeout)',
   INTERNAL_SERVER_ERROR:
@@ -108,8 +110,12 @@ export const FILE_DOWNLOAD_ERR = Object.freeze({
   NO_DATA: 'No data available to download.',
 })
 
+export const MODEL_PARAM_INPUT_ERR = Object.freeze({
+  FAIL_RUN_MODEL: 'Failed to run the projection model.',
+})
+
 export const PRINT_ERR = Object.freeze({
-  NO_DATA: 'No data available to download.',
+  NO_DATA: 'No data available to print.',
 })
 
 export const PROGRESS_MSG = Object.freeze({

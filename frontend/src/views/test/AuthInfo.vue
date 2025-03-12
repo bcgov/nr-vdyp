@@ -119,7 +119,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useAuthStore } from '@/stores/common/authStore'
-import { Util } from '@/utils/util'
+import { formatUnixTimestampToDate } from '@/utils/util'
 import { handleTokenValidation } from '@/services/keycloak'
 
 const authStore = useAuthStore()
@@ -146,13 +146,13 @@ const refToken = computed(() => {
 
 const formattedAuthTime = computed(() => {
   return userInfo.value && userInfo.value.auth_time
-    ? Util.formatUnixTimestampToDate(userInfo.value.auth_time)
+    ? formatUnixTimestampToDate(userInfo.value.auth_time)
     : 'No Auth Time'
 })
 
 const formattedExpTime = computed(() => {
   return userInfo.value && userInfo.value.exp
-    ? Util.formatUnixTimestampToDate(userInfo.value.exp)
+    ? formatUnixTimestampToDate(userInfo.value.exp)
     : 'No Expiration Time'
 })
 

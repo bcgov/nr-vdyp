@@ -12,6 +12,14 @@ export { default as AppTabs } from './core/AppTabs.vue'
 export { default as ReportConfiguration } from './input/ReportConfiguration.vue'
 
 export { default as SpeciesListInput } from './input/species-info/SpeciesListInput.vue'
+export { default as SpeciesGroupsDisplay } from './input/species-info/SpeciesGroupsDisplay.vue'
+export { default as SpeciesInfoPanel } from './input/species-info/SpeciesInfoPanel.vue'
+
+export { default as SiteInfoPanel } from './input/site-info/SiteInfoPanel.vue'
+export { default as StandDensityPanel } from './input/stand-density/StandDensityPanel.vue'
+export { default as ReportInfoPanel } from './input/report-info/ReportInfoPanel.vue'
+
+export { default as FileUpload } from './input/file-upload/FileUpload.vue'
 
 export { default as BCLogo } from './layout/BCLogo.vue'
 export { default as HeaderTitle } from './layout/HeaderTitle.vue'

@@ -8,6 +8,7 @@ import { FILE_NAME } from '@/constants/constants'
 export const useProjectionStore = defineStore('projectionStore', () => {
   const errorMessages = ref<string[]>([])
   const logMessages = ref<string[]>([])
+  const debugMessages = ref<string[]>([])
   const yieldTable = ref<string>('') // raw CSV
   const yieldTableArray = ref<string[]>([]) // Array of CSV lines
 
@@ -53,6 +54,12 @@ export const useProjectionStore = defineStore('projectionStore', () => {
           .filter((line) => line.trim() !== '') // Remove blank lines
       } else {
         yieldTableArray.value = []
+      }
+
+      // Optional
+      const debugFile = zip.file(FILE_NAME.DEBUG_TXT)
+      if (debugFile) {
+        debugMessages.value = (await debugFile.async('string')).split(/\r?\n/)
       }
     } catch (error) {
       console.error('Error processing ZIP file:', error)

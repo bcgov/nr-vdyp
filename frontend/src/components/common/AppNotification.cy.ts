@@ -1,13 +1,11 @@
 import { createPinia, setActivePinia } from 'pinia'
 import { useNotificationStore } from '@/stores/common/notificationStore'
-import AppNotification from '@/components/common/AppNotification.vue'
+import AppNotification from './AppNotification.vue'
 
 describe('AppNotification.vue', () => {
   let notificationStore: ReturnType<typeof useNotificationStore>
 
   beforeEach(() => {
-    cy.viewport(1024, 768)
-
     // Set Cypress preview background color
     cy.document().then((doc) => {
       const style = doc.createElement('style')

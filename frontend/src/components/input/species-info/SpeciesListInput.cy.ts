@@ -1,14 +1,14 @@
 import { mount } from 'cypress/vue'
 import { createVuetify } from 'vuetify'
 import 'vuetify/styles'
-import SpeciesListInput from '@/components/input/species-info/SpeciesListInput.vue'
+import SpeciesListInput from './SpeciesListInput.vue'
+import { computed } from 'vue'
+import { BIZCONSTANTS } from '@/constants'
 
 const vuetify = createVuetify()
 
 describe('SpeciesListInput.vue', () => {
   beforeEach(() => {
-    cy.viewport(1024, 768)
-
     cy.document().then((doc) => {
       const style = doc.createElement('style')
       style.innerHTML = `
@@ -20,22 +20,27 @@ describe('SpeciesListInput.vue', () => {
     })
   })
 
+  const computedSpeciesOptions = computed(() =>
+    (
+      Object.keys(BIZCONSTANTS.SPECIES_MAP) as Array<
+        keyof typeof BIZCONSTANTS.SPECIES_MAP
+      >
+    ).map((code) => ({
+      label: `${code} - ${BIZCONSTANTS.SPECIES_MAP[code]}`,
+      value: code,
+    })),
+  )
+
   const props = {
     speciesList: [
-      { species: 'PL - Lodgepole Pine', percent: '30.0' },
-      { species: 'AC - Poplar', percent: '30.0' },
-      { species: 'H - Hemlock', percent: '30.0' },
-      { species: 'S - Spruce', percent: '10.0' },
+      { species: 'PL', percent: '30.0' },
+      { species: 'AC', percent: '30.0' },
+      { species: 'H', percent: '30.0' },
+      { species: 'S', percent: '10.0' },
       { species: null, percent: '0.0' },
       { species: null, percent: '0.0' },
     ],
-    computedSpeciesOptions: [
-      { label: 'PL - Lodgepole Pine', value: 'PL' },
-      { label: 'AC - Poplar', value: 'AC' },
-      { label: 'H - Hemlock', value: 'H' },
-      { label: 'S - Spruce', value: 'S' },
-      { label: 'FD - Douglas-fir', value: 'FD' },
-    ],
+    computedSpeciesOptions: computedSpeciesOptions.value,
     isConfirmEnabled: true,
     max: 100,
     min: 0,
@@ -79,13 +84,13 @@ describe('SpeciesListInput.vue', () => {
 
     // Change the first Species value
     cy.get('[data-testid="species-select"]').should('exist').first().click()
-    cy.contains('FD - Douglas-fir').click()
+    cy.contains('FD - Douglas Fir').click()
     cy.get('[data-testid="species-select"] input')
       .first()
       .should('have.value', 'FD')
     cy.get('[data-testid="species-select"]').should(
       'contain.text',
-      'FD - Douglas-fir',
+      'FD - Douglas Fir',
     )
 
     // Clear the input field
@@ -142,7 +147,7 @@ describe('SpeciesListInput.vue', () => {
       .should('have.value', '100.0')
   })
 
-  it('does not exceed max or min limits', () => {
+  it('does not exceed min limits', () => {
     // Min Test
     mount(SpeciesListInput, {
       props: {

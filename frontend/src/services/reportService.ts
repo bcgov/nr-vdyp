@@ -1,46 +1,58 @@
+import { MESSAGE } from '@/constants'
+import * as messageHandler from '@/utils/messageHandler'
 import { saveAs } from 'file-saver'
 import printJS from 'print-js'
-import * as messageHandler from '@/utils/messageHandler'
-import { PRINT_ERR, FILE_DOWNLOAD_ERR } from '@/constants/message'
+
 /**
  * Download file as text.
  * @param {string[]} data - Array of strings to be saved as a text file.
  * @param {string} fileName - Name of the output file.
+ * @param {Function} saveAsFunc - Optional function to handle file saving (defaults to saveAs).
  */
-export const downloadTextFile = (data: string[], fileName: string) => {
+export const downloadTextFile = (
+  data: string[],
+  fileName: string,
+  saveAsFunc = saveAs,
+) => {
   if (!data || data.length === 0 || data.every((item) => item.trim() === '')) {
-    messageHandler.logWarningMessage(FILE_DOWNLOAD_ERR.NO_DATA)
+    messageHandler.logWarningMessage(MESSAGE.FILE_DOWNLOAD_ERR.NO_DATA)
     return
   }
 
   const content = data.join('\n')
   const blob = new Blob([content], { type: 'text/plain;charset=utf-8;' })
-  saveAs(blob, fileName)
+  saveAsFunc(blob, fileName)
 }
 
 /**
  * Download file as CSV.
  * @param {string[]} data - Array of strings to be saved as a CSV file.
  * @param {string} fileName - Name of the output file.
+ * @param {Function} saveAsFunc - Optional function to handle file saving (defaults to saveAs).
  */
-export const downloadCSVFile = (data: string[], fileName: string) => {
+export const downloadCSVFile = (
+  data: string[],
+  fileName: string,
+  saveAsFunc = saveAs,
+) => {
   if (!data || data.length === 0 || data.every((item) => item.trim() === '')) {
-    messageHandler.logWarningMessage(FILE_DOWNLOAD_ERR.NO_DATA)
+    messageHandler.logWarningMessage(MESSAGE.FILE_DOWNLOAD_ERR.NO_DATA)
     return
   }
 
   const csvContent = data.map((row) => row.split(',').join(',')).join('\n')
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-  saveAs(blob, fileName)
+  saveAsFunc(blob, fileName)
 }
 
 /**
  * Print data with specific styles.
  * @param {string[]} data - Array of strings to be printed.
+ * @param {Function} printJSFunc - Optional function to handle printing (defaults to printJS).
  */
-export const printReport = (data: string[]) => {
+export const printReport = (data: string[], printJSFunc = printJS) => {
   if (!data || data.length === 0 || data.every((item) => item.trim() === '')) {
-    messageHandler.logWarningMessage(PRINT_ERR.NO_DATA)
+    messageHandler.logWarningMessage(MESSAGE.PRINT_ERR.NO_DATA)
     return
   }
 
@@ -70,7 +82,7 @@ export const printReport = (data: string[]) => {
   `
 
   // Use printJS to print the container content
-  printJS({
+  printJSFunc({
     printable: container.innerHTML,
     type: 'raw-html',
     style: printStyles,

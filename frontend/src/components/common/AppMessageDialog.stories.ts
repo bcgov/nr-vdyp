@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/vue3'
-import AppMessageDialog from '@/components/common/AppMessageDialog.vue'
+import AppMessageDialog from './AppMessageDialog.vue'
 
 const meta: Meta<typeof AppMessageDialog> = {
   title: 'components/common/AppMessageDialog',

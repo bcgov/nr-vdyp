@@ -19,11 +19,11 @@
       <AppTabs v-model:currentTab="activeTab" :tabs="tabs" />
       <template v-if="isModelParameterPanelsVisible">
         <v-spacer class="space"></v-spacer>
-        <SiteInfo />
+        <SiteInfoPanel />
         <v-spacer class="space"></v-spacer>
-        <StandDensity />
+        <StandDensityPanel />
         <v-spacer class="space"></v-spacer>
-        <ReportInfo />
+        <ReportInfoPanel />
         <AppRunModelButton
           :isDisabled="!modelParameterStore.runModelEnabled"
           cardClass="input-model-param-run-model-card"
@@ -48,17 +48,17 @@ import {
   ModelSelectionContainer,
   TopProjectYear,
   ReportingContainer,
+  SpeciesInfoPanel,
+  SiteInfoPanel,
+  StandDensityPanel,
+  ReportInfoPanel,
+  FileUpload,
 } from '@/components'
-import SiteInfo from '@/components/model-param-selection-panes/SiteInfo.vue'
-import StandDensity from '@/components/model-param-selection-panes/StandDensity.vue'
-import ReportInfo from '@/components/model-param-selection-panes/ReportInfo.vue'
-import ModelParameterSelection from '@/views/ModelParameterSelection.vue'
-import FileUpload from '@/views/FileUpload.vue'
 import type { Tab } from '@/interfaces/interfaces'
 import { CONSTANTS, MESSAGE, DEFAULTS } from '@/constants'
 import { handleApiError } from '@/services/apiErrorHandler'
 import { runModel } from '@/services/modelParameterService'
-import { Util } from '@/utils/util'
+import { delay } from '@/utils/util'
 import { logSuccessMessage } from '@/utils/messageHandler'
 
 const modelSelection = ref<string>(DEFAULTS.DEFAULT_VALUES.MODEL_SELECTION)
@@ -72,7 +72,7 @@ const projectionStore = useProjectionStore()
 const tabs: Tab[] = [
   {
     label: CONSTANTS.MODEL_PARAM_TAB_NAME.MODEL_PARAM_SELECTION,
-    component: ModelParameterSelection,
+    component: SpeciesInfoPanel,
     tabname: null,
   },
   {
@@ -92,6 +92,10 @@ const tabs: Tab[] = [
   },
 ]
 
+/**
+ * Computes whether the model parameter panels should be visible.
+ * Panels are visible when the model selection equals the constant for input model parameters and the active tab is 0.
+ */
 const isModelParameterPanelsVisible = computed(() => {
   return (
     modelSelection.value === CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS &&
@@ -99,27 +103,39 @@ const isModelParameterPanelsVisible = computed(() => {
   )
 })
 
+/**
+ * Updates the model selection value.
+ * @param newSelection - The new model selection string.
+ */
 const updateModelSelection = (newSelection: string) => {
   modelSelection.value = newSelection
 }
 
+/**
+ * Sets default values in the model parameter store when the component is mounted.
+ */
 onMounted(() => {
   modelParameterStore.setDefaultValues()
 })
 
+/**
+ * Handles the run model process.
+ * This function shows a progress indicator, waits briefly, then runs the model using the modelParameterStore.
+ * It processes the returned zip response, logs a success message, and handles any errors.
+ */
 const runModelHandler = async () => {
   try {
     isProgressVisible.value = true
     progressMessage.value = MESSAGE.PROGRESS_MSG.RUNNING_MODEL
 
-    await Util.delay(1000)
+    await delay(1000)
 
     const result = await runModel(modelParameterStore)
     await projectionStore.handleZipResponse(result)
 
     logSuccessMessage(MESSAGE.SUCESS_MSG.INPUT_MODEL_PARAM_RUN_RESULT)
   } catch (error) {
-    handleApiError(error, MESSAGE.FILE_UPLOAD_ERR.FAIL_RUN_MODEL)
+    handleApiError(error, MESSAGE.MODEL_PARAM_INPUT_ERR.FAIL_RUN_MODEL)
   } finally {
     isProgressVisible.value = false
   }

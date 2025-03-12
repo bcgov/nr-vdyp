@@ -1,10 +1,9 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { CONSTANTS } from '@/constants'
-import { DEFAULT_VALUES } from '@/constants/defaults'
+import { BIZCONSTANTS, CONSTANTS, DEFAULTS } from '@/constants'
 import type { PanelName, PanelState } from '@/types/types'
 import type { SpeciesList, SpeciesGroup } from '@/interfaces/interfaces'
-import { Util } from '@/utils/util'
+import { isEmptyOrZero } from '@/utils/util'
 
 export const useModelParameterStore = defineStore('modelParameter', () => {
   // panel open
@@ -137,7 +136,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
 
     // Iterate through speciesList and build a group map
     for (const item of speciesList.value) {
-      if (!item.species || Util.isEmptyOrZero(item.percent)) {
+      if (!item.species || isEmptyOrZero(item.percent)) {
         continue
       }
 
@@ -152,7 +151,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
 
     // Convert groupMap to speciesGroups array
     speciesGroups.value = Object.keys(groupMap).map((key) => ({
-      group: key,
+      group: BIZCONSTANTS.SPECIES_GROUP_MAP[key] || key,
       percent: groupMap[key].toFixed(
         CONSTANTS.NUM_INPUT_LIMITS.SPECIES_PERCENT_DECIMAL_NUM,
       ),
@@ -189,7 +188,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
 
   // set default values
   const setDefaultValues = () => {
-    derivedBy.value = DEFAULT_VALUES.DERIVED_BY
+    derivedBy.value = DEFAULTS.DEFAULT_VALUES.DERIVED_BY
     speciesList.value = [
       { species: 'PL', percent: '30.0' },
       { species: 'AC', percent: '30.0' },
@@ -205,16 +204,15 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
       ...group,
     }))
 
-    becZone.value = DEFAULT_VALUES.BEC_ZONE
-    siteSpeciesValues.value = DEFAULT_VALUES.SITE_SPECIES_VALUES
-    bha50SiteIndex.value = DEFAULT_VALUES.BHA50_SITE_INDEX
-    percentStockableArea.value = DEFAULT_VALUES.PERCENT_STOCKABLE_AREA
-    startingAge.value = DEFAULT_VALUES.STARTING_AGE
-    finishingAge.value = DEFAULT_VALUES.FINISHING_AGE
-    ageIncrement.value = DEFAULT_VALUES.AGE_INCREMENT
-    volumeReported.value = DEFAULT_VALUES.VOLUME_REPORTED
-    projectionType.value = DEFAULT_VALUES.PROJECTION_TYPE
-    reportTitle.value = DEFAULT_VALUES.REPORT_TITLE
+    becZone.value = DEFAULTS.DEFAULT_VALUES.BEC_ZONE
+    siteSpeciesValues.value = DEFAULTS.DEFAULT_VALUES.SITE_SPECIES_VALUES
+    percentStockableArea.value = DEFAULTS.DEFAULT_VALUES.PERCENT_STOCKABLE_AREA
+    startingAge.value = DEFAULTS.DEFAULT_VALUES.STARTING_AGE
+    finishingAge.value = DEFAULTS.DEFAULT_VALUES.FINISHING_AGE
+    ageIncrement.value = DEFAULTS.DEFAULT_VALUES.AGE_INCREMENT
+    volumeReported.value = DEFAULTS.DEFAULT_VALUES.VOLUME_REPORTED
+    projectionType.value = DEFAULTS.DEFAULT_VALUES.PROJECTION_TYPE
+    reportTitle.value = DEFAULTS.DEFAULT_VALUES.REPORT_TITLE
   }
 
   return {

@@ -1,49 +1,37 @@
-import { ValidationBase } from './validationBase'
-import { NUM_INPUT_LIMITS } from '@/constants/constants'
+import { SpeciesInfoValidator } from './speciesInfoValidator'
 import type { SpeciesList } from '@/interfaces/interfaces'
 
-export class SpeciesInfoValidation extends ValidationBase {
-  validatePercent(percent: any): boolean {
-    if (percent === null || percent === '') {
-      return true
+const speciesInfoValidator = new SpeciesInfoValidator()
+
+export const validateDuplicateSpecies = (speciesList: SpeciesList[]) => {
+  const duplicateSpecies =
+    speciesInfoValidator.validateDuplicateSpecies(speciesList)
+  if (duplicateSpecies) {
+    return {
+      isValid: false,
+      duplicateSpecies,
     }
-    const numValue = Math.floor(parseFloat(percent) * 10) / 10
-    return (
-      numValue >= NUM_INPUT_LIMITS.SPECIES_PERCENT_MIN &&
-      numValue <= NUM_INPUT_LIMITS.SPECIES_PERCENT_MAX
-    )
   }
+  return { isValid: true }
+}
 
-  validateTotalSpeciesPercent(
-    totalSpeciesPercent: string,
-    totalSpeciesGroupPercent: number,
-  ): boolean {
-    const formattedPercentLimit = (
-      Math.floor(NUM_INPUT_LIMITS.TOTAL_SPECIES_PERCENT * 10) / 10
-    ).toFixed(NUM_INPUT_LIMITS.SPECIES_PERCENT_DECIMAL_NUM)
-    return (
-      totalSpeciesPercent === formattedPercentLimit &&
-      totalSpeciesGroupPercent === NUM_INPUT_LIMITS.TOTAL_SPECIES_PERCENT
-    )
-  }
+export const validateTotalSpeciesPercent = (
+  totalSpeciesPercent: string,
+  totalSpeciesGroupPercent: number,
+) => {
+  const isValid = speciesInfoValidator.validateTotalSpeciesPercent(
+    totalSpeciesPercent,
+    totalSpeciesGroupPercent,
+  )
+  return { isValid }
+}
 
-  validateDuplicateSpecies(speciesList: SpeciesList[]): string | null {
-    const speciesCount: { [key: string]: number } = {}
-    let duplicateSpecies = null
+export const validateRequired = (derivedBy: string | null) => {
+  const isValid = speciesInfoValidator.validateRequired(derivedBy)
+  return { isValid }
+}
 
-    for (const item of speciesList) {
-      if (item.species) {
-        if (!speciesCount[item.species]) {
-          speciesCount[item.species] = 0
-        }
-        speciesCount[item.species] += 1
-
-        if (speciesCount[item.species] > 1) {
-          duplicateSpecies = item.species
-        }
-      }
-    }
-
-    return duplicateSpecies
-  }
+export const validatePercent = (percent: string | null) => {
+  const isValid = speciesInfoValidator.validatePercent(percent)
+  return { isValid }
 }

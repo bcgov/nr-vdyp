@@ -2,8 +2,6 @@ import BCLogo from './BCLogo.vue'
 
 describe('BCLogo', () => {
   beforeEach(() => {
-    cy.viewport(1024, 768)
-
     // Add custom styles to set background color
     cy.document().then((doc) => {
       const style = doc.createElement('style')

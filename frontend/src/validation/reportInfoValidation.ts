@@ -1,44 +1,43 @@
-import { ValidationBase } from './validationBase'
-import { NUM_INPUT_LIMITS } from '@/constants/constants'
+import { ReportInfoValidator } from '@/validation/reportInfoValidator'
 
-export class ReportInfoValidation extends ValidationBase {
-  validateAgeComparison(
-    finishingAge: number | null,
-    startingAge: number | null,
-  ): boolean {
-    if (finishingAge !== null && startingAge !== null) {
-      return finishingAge >= startingAge
-    }
-    return true
+const reportInfoValidator = new ReportInfoValidator()
+
+export const validateComparison = (
+  startingAge: number | null,
+  finishingAge: number | null,
+) => {
+  if (!reportInfoValidator.validateAgeComparison(startingAge, finishingAge)) {
+    return { isValid: false }
   }
 
-  validateStartingAgeRange(startingAge: number | null): boolean {
-    if (startingAge !== null) {
-      return (
-        startingAge >= NUM_INPUT_LIMITS.STARTING_AGE_MIN &&
-        startingAge <= NUM_INPUT_LIMITS.STARTING_AGE_MAX
-      )
+  return { isValid: true }
+}
+
+export const validateRange = (
+  startingAge: number | null,
+  finishingAge: number | null,
+  ageIncrement: number | null,
+) => {
+  if (!reportInfoValidator.validateStartingAgeRange(startingAge)) {
+    return {
+      isValid: false,
+      errorType: 'startingAge',
     }
-    return true
   }
 
-  validateFinishingAgeRange(finishingAge: number | null): boolean {
-    if (finishingAge !== null) {
-      return (
-        finishingAge >= NUM_INPUT_LIMITS.FINISHING_AGE_MIN &&
-        finishingAge <= NUM_INPUT_LIMITS.FINISHING_AGE_MAX
-      )
+  if (!reportInfoValidator.validateFinishingAgeRange(finishingAge)) {
+    return {
+      isValid: false,
+      errorType: 'finishingAge',
     }
-    return true
   }
 
-  validateAgeIncrementRange(ageIncrement: number | null): boolean {
-    if (ageIncrement !== null) {
-      return (
-        ageIncrement >= NUM_INPUT_LIMITS.AGE_INC_MIN &&
-        ageIncrement <= NUM_INPUT_LIMITS.AGE_INC_MAX
-      )
+  if (!reportInfoValidator.validateAgeIncrementRange(ageIncrement)) {
+    return {
+      isValid: false,
+      errorType: 'ageIncrement',
     }
-    return true
   }
+
+  return { isValid: true }
 }

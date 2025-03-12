@@ -4,6 +4,7 @@ import { Configuration } from '../configuration'
 import { BASE_PATH, BaseAPI } from '../base'
 import type { RequestArgs } from '../base'
 import type { FileUpload, Parameters } from '../models'
+import { ParameterNamesEnum } from '../models'
 import { env } from '@/env'
 
 export const RunHCSVProjectionApiAxiosParamCreator = function (
@@ -37,20 +38,46 @@ export const RunHCSVProjectionApiAxiosParamCreator = function (
       const localVarFormParams = new FormData()
 
       if (trialRun !== undefined) {
-        localVarQueryParameter['trialRun'] = trialRun
+        localVarQueryParameter[ParameterNamesEnum.TRIAL_RUN] = trialRun
       }
 
       if (polygonInputData !== undefined) {
-        localVarFormParams.append('polygonInputData', polygonInputData as any)
+        const polygonFile = polygonInputData as unknown as File
+        console.debug(
+          `Polygon Input Data - name: ${polygonFile.name}, size: ${polygonFile.size}, type: ${polygonFile.type}`,
+        )
+
+        localVarFormParams.append(
+          ParameterNamesEnum.HCSV_POLYGON_INPUT_DATA,
+          polygonFile as any,
+        )
       }
 
       if (layersInputData !== undefined) {
-        localVarFormParams.append('layersInputData', layersInputData as any)
+        const layersFile = layersInputData as unknown as File
+        console.debug(
+          `Layers Input Data - name: ${layersFile.name}, size: ${layersFile.size}, type: ${layersFile.type}`,
+        )
+
+        localVarFormParams.append(
+          ParameterNamesEnum.HCSV_LAYERS_INPUT_DATA,
+          layersFile as any,
+        )
       }
 
       if (projectionParameters !== undefined) {
+        if (projectionParameters instanceof Blob) {
+          projectionParameters.text().then((text) => {
+            console.debug(`Projection Parameters: ${text}`)
+          })
+        } else {
+          console.debug(
+            `Projection Parameters: ${JSON.stringify(projectionParameters)}`,
+          )
+        }
+
         localVarFormParams.append(
-          'projectionParameters',
+          ParameterNamesEnum.PROJECTION_PARAMETERS,
           projectionParameters as any,
         )
       }

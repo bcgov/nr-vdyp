@@ -15,6 +15,7 @@
           density="compact"
           dense
           :disabled="isDisabled"
+          @update:model-value="handleStartingAgeInput"
         ></v-text-field>
       </v-col>
       <v-col class="col-space-3" />
@@ -32,6 +33,7 @@
           density="compact"
           dense
           :disabled="isDisabled"
+          @update:model-value="handleFinishingAgeInput"
         ></v-text-field>
       </v-col>
       <v-col class="col-space-3" />
@@ -49,13 +51,14 @@
           density="compact"
           dense
           :disabled="isDisabled"
+          @update:model-value="handleAgeIncrementInput"
         ></v-text-field>
       </v-col>
     </v-row>
   </div>
   <div class="ml-4 mt-5">
     <div class="ml-n4 mt-n5">
-      <span class="text-h7">Volume Reported</span>
+      <span class="text-h7">Volumes Reported</span>
     </div>
     <v-row class="ml-n6">
       <v-col cols="12" style="padding-top: 0px">
@@ -70,7 +73,8 @@
               :label="option.label"
               :value="option.value"
               hide-details
-              :disabled="isDisabled"
+              :disabled="isVolumeReportedDisabled"
+              data-testid="volume-reported"
             ></v-checkbox>
           </v-col>
         </v-row>
@@ -94,7 +98,7 @@
               :label="option.label"
               :value="option.value"
               hide-details
-              :disabled="isDisabled"
+              :disabled="getIncludeInReportDisabled(option.value)"
             ></v-checkbox>
           </v-col>
           <v-col style="max-width: 20% !important">
@@ -140,8 +144,9 @@
   </div>
 </template>
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { CONSTANTS, OPTIONS } from '@/constants'
+import { parseNumberOrNull } from '@/utils/util'
 
 const props = defineProps<{
   startingAge: number | null
@@ -220,9 +225,29 @@ watch(
   },
 )
 
+// Calculating whether the "Culmination Values" checkbox is enabled
+const isCulminationValuesEnabled = computed(() => {
+  return (
+    localStartingAge.value !== null &&
+    localStartingAge.value <= 10 &&
+    localFinishingAge.value !== null &&
+    localFinishingAge.value >= 300
+  )
+})
+
 // Watch local state for changes (Local State -> Parent Emit)
 watch(localStartingAge, (newVal) => emit('update:startingAge', newVal))
 watch(localFinishingAge, (newVal) => emit('update:finishingAge', newVal))
+
+watch([localStartingAge, localFinishingAge], () => {
+  if (!isCulminationValuesEnabled.value) {
+    // Remove the selection if "Culmination Values" is disabled
+    localIncludeInReport.value = localIncludeInReport.value.filter(
+      (item) => item !== CONSTANTS.INCLUDE_IN_REPORT.CULMINATION_VALUES,
+    )
+  }
+})
+
 watch(localAgeIncrement, (newVal) => emit('update:ageIncrement', newVal))
 watch(localVolumeReported, (newVal) => {
   if (JSON.stringify(newVal) !== JSON.stringify(props.volumeReported)) {
@@ -234,7 +259,48 @@ watch(localIncludeInReport, (newVal) => {
     emit('update:includeInReport', [...newVal])
   }
 })
-watch(localProjectionType, (newVal) => emit('update:projectionType', newVal))
+
+watch(localProjectionType, (newVal) => {
+  if (newVal === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS) {
+    // Reset the "Volumes Reported" checkbox and force select only 'Close Utilization' checkbox
+    localVolumeReported.value = [CONSTANTS.VOLUME_REPORTED.CLOSE_UTIL]
+    emit('update:volumeReported', [...localVolumeReported.value])
+  }
+
+  emit('update:projectionType', newVal)
+})
+
 watch(localReportTitle, (newVal) => emit('update:reportTitle', newVal))
+
+// Decide whether to disable the "Volumes Reported" checkbox
+const isVolumeReportedDisabled = computed(() => {
+  return (
+    localProjectionType.value === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS ||
+    props.isDisabled
+  )
+})
+
+// Decide to enable/disable the "Include in Report" checkbox
+const getIncludeInReportDisabled = (value: string) => {
+  if (value === CONSTANTS.INCLUDE_IN_REPORT.CULMINATION_VALUES) {
+    return !isCulminationValuesEnabled.value
+  } else if (value === CONSTANTS.INCLUDE_IN_REPORT.COMPUTED_MAI) {
+    return localProjectionType.value === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
+  }
+  return props.isDisabled
+}
+
+const handleStartingAgeInput = (value: string) => {
+  // Convert an empty string to null
+  localStartingAge.value = parseNumberOrNull(value)
+}
+
+const handleFinishingAgeInput = (value: string) => {
+  localFinishingAge.value = parseNumberOrNull(value)
+}
+
+const handleAgeIncrementInput = (value: string) => {
+  localAgeIncrement.value = parseNumberOrNull(value)
+}
 </script>
 <style scoped></style>

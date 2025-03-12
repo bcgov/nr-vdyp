@@ -2,10 +2,6 @@ import { mount } from 'cypress/vue'
 import TrainingSupport from './TrainingSupport.vue'
 
 describe('TrainingSupport.vue', () => {
-  beforeEach(() => {
-    cy.viewport(1024, 768)
-  })
-
   it('renders default text and style correctly', () => {
     mount(TrainingSupport)
 
