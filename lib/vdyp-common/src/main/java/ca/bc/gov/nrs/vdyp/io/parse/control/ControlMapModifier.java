@@ -10,7 +10,16 @@ import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParser;
 
 public interface ControlMapModifier {
 
-	void modify(Map<String, Object> control, FileResolver fileResolver) throws ResourceParseException, IOException;
+	/**
+	 * 
+	 * @param control
+	 * @param fileResolverContext The file resolver to use to resolve file paths per key.
+	 * @throws ResourceParseException
+	 * @throws IOException
+	 */
+	void modify(Map<String, Object> control, Map<String, FileResolver> fileResolverContext)
+			throws ResourceParseException,
+			IOException;
 
 	/**
 	 * @return the name of the key for this resource's entry in the control map

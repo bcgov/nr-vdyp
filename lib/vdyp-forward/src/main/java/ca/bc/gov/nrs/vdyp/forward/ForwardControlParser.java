@@ -287,7 +287,7 @@ public class ForwardControlParser extends BaseControlParser {
 	}
 
 	@Override
-	protected void applyAllModifiers(Map<String, Object> map, FileResolver fileResolver)
+	protected void applyAllModifiers(Map<String, Object> map, Map<String, FileResolver> fileResolver)
 			throws ResourceParseException, IOException {
 
 		// FORWARD_INPUT_GROWTO is optional; if missing, the polygon list is read from the
@@ -296,6 +296,11 @@ public class ForwardControlParser extends BaseControlParser {
 		if (source.isEmpty()) {
 			String polyFileName = (String) map.get(ControlKey.FORWARD_INPUT_VDYP_POLY.name());
 			map.put(ControlKey.FORWARD_INPUT_GROWTO.name(), polyFileName);
+			fileResolver.put(
+					ControlKey.FORWARD_INPUT_GROWTO.name(), fileResolver.get(
+							ControlKey.FORWARD_INPUT_VDYP_POLY.name()
+					)
+			);
 		}
 
 		for (ControlKey key : orderedControlKeys) {

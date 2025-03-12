@@ -50,7 +50,7 @@ abstract class AbstractForwardProcessingEngineTest {
 
 		controlMap.put(ControlKey.FORWARD_INPUT_VDYP_POLY.name(), fileName);
 		var polygonParser = new VdypPolygonParser();
-		var polygonFileResolver = TestUtils.fileResolver(fileName, TestUtils.makeInputStream(streamContent));
+		var polygonFileResolver = TestUtils.fileResolverContext(fileName, TestUtils.makeInputStream(streamContent));
 
 		polygonParser.modify(controlMap, polygonFileResolver);
 	}
@@ -60,7 +60,7 @@ abstract class AbstractForwardProcessingEngineTest {
 
 		controlMap.put(ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SPECIES.name(), fileName);
 		var speciesParser = new VdypSpeciesParser();
-		var speciesFileResolver = TestUtils.fileResolver(fileName, TestUtils.makeInputStream(streamContent));
+		var speciesFileResolver = TestUtils.fileResolverContext(fileName, TestUtils.makeInputStream(streamContent));
 
 		speciesParser.modify(controlMap, speciesFileResolver);
 	}
@@ -70,7 +70,9 @@ abstract class AbstractForwardProcessingEngineTest {
 
 		controlMap.put(ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name(), fileName);
 		var utilizationsParser = new VdypUtilizationParser();
-		var utilizationsFileResolver = TestUtils.fileResolver(fileName, TestUtils.makeInputStream(streamContent));
+		var utilizationsFileResolver = TestUtils.fileResolverContext(
+				fileName, TestUtils.makeInputStream(streamContent)
+		);
 
 		utilizationsParser.modify(controlMap, utilizationsFileResolver);
 	}

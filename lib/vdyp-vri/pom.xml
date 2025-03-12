@@ -83,7 +83,7 @@
 							<archive>
 								<manifest>
 									<mainClass>
-										ca.bc.gov.nrs.vdyp.fip.FipStart
+										ca.bc.gov.nrs.vdyp.vri.VriStart
 									</mainClass>
 								</manifest>
 							</archive>
@@ -108,6 +108,17 @@
 							<version>${project.version}</version>
 						</dependency>
 					</dependencies>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-jar-plugin</artifactId>
+					<executions>
+						<execution>
+							<goals>
+								<goal>test-jar</goal>
+							</goals>
+						</execution>
+					</executions>
 				</plugin>
 			</plugins>
 		</pluginManagement>

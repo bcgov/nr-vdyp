@@ -32,7 +32,7 @@ public interface ResourceControlMapModifier extends ControlMapModifier {
 	 * @throws ResourceParseException
 	 */
 	@Override
-	default void modify(Map<String, Object> control, FileResolver fileResolver)
+	default void modify(Map<String, Object> control, Map<String, FileResolver> fileResolver)
 			throws IOException, ResourceParseException {
 
 		Optional<String> filenameOpt = Utils.optSafe(control.get(getControlKeyName()));
@@ -47,7 +47,7 @@ public interface ResourceControlMapModifier extends ControlMapModifier {
 								+ getControlKey().sequence.map(i -> "(" + i + ")").orElse("") + " not specified"
 				)
 		);
-		try (InputStream data = fileResolver.resolveForInput(filename)) {
+		try (InputStream data = fileResolver.get(getControlKeyName()).resolveForInput(filename)) {
 			modify(control, data);
 		}
 	}

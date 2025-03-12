@@ -18,11 +18,11 @@ import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParser;
 public interface OptionalResourceControlMapModifier extends ResourceControlMapModifier {
 
 	@Override
-	default void modify(Map<String, Object> control, FileResolver fileResolver)
+	default void modify(Map<String, Object> control, Map<String, FileResolver> fileResolver)
 			throws IOException, ResourceParseException {
 		var filename = Utils.parsedControl(control, getControlKey(), String.class);
 		if (filename.isPresent()) {
-			try (InputStream data = fileResolver.resolveForInput(filename.get())) {
+			try (InputStream data = fileResolver.get(getControlKeyName()).resolveForInput(filename.get())) {
 				modify(control, data);
 			}
 		} else {

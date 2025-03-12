@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Path;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -24,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -135,6 +137,20 @@ public class TestUtils {
 		return result;
 	}
 
+	public static Map<String, FileResolver> fileResolverContext(String expectedFilename, InputStream is) {
+		return new AbstractMap<String, FileResolver>() {
+
+			@Override
+			public FileResolver get(Object key) {
+				return TestUtils.fileResolver(expectedFilename, is);
+			}
+
+			@Override
+			public Set<Entry<String, FileResolver>> entrySet() {
+				return null;
+			}
+		};
+	}
 	/**
 	 * Add a mock control map entry for BEC parse results
 	 */
@@ -399,6 +415,13 @@ public class TestUtils {
 			public FileResolver relative(String path) throws IOException {
 				fail("Should not be requesting relative file resolver " + path);
 				return null;
+			}
+
+			@Override
+			public FileResolver relativeToParent(String path) throws IOException {
+				if (path.contains("\\") || path.contains("/"))
+					fail("Should not be requesting relative file resolver " + path);
+				return this;
 			}
 
 			@Override

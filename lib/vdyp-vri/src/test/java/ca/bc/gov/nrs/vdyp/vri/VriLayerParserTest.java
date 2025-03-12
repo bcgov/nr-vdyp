@@ -38,7 +38,7 @@ class VriLayerParserTest {
 		controlMap.put(ControlKey.VRI_INPUT_YIELD_LAYER.name(), "test.dat");
 		TestUtils.populateControlMapBecReal(controlMap);
 
-		var fileResolver = TestUtils.fileResolver("test.dat", TestUtils.makeInputStream(/* empty */));
+		var fileResolver = TestUtils.fileResolverContext("test.dat", TestUtils.makeInputStream(/* empty */));
 
 		parser.modify(controlMap, fileResolver);
 
@@ -63,7 +63,7 @@ class VriLayerParserTest {
 
 		controlMap.put(ControlKey.VRI_INPUT_YIELD_LAYER.name(), "test.dat");
 
-		var fileResolver = TestUtils.fileResolver(
+		var fileResolver = TestUtils.fileResolverContext(
 				"test.dat", TestUtils.makeInputStream(
 						"082F074/0071         2001 P  57.8     66.0      850  7.5", //
 						"082F074/0071         2001 Z"
@@ -114,7 +114,7 @@ class VriLayerParserTest {
 
 		controlMap.put(ControlKey.VRI_INPUT_YIELD_LAYER.name(), "test.dat");
 
-		var fileResolver = TestUtils.fileResolver(
+		var fileResolver = TestUtils.fileResolverContext(
 				"test.dat", TestUtils.makeInputStream(
 						"082F074/0071         2001 V  57.8     66.0      850  7.5", //
 						"082F074/0071         2001 Z"
@@ -166,7 +166,7 @@ class VriLayerParserTest {
 		controlMap.put(ControlKey.VRI_INPUT_YIELD_LAYER.name(), "test.dat");
 		TestUtils.populateControlMapGenusReal(controlMap);
 
-		var fileResolver = TestUtils.fileResolver(
+		var fileResolver = TestUtils.fileResolverContext(
 				"test.dat", TestUtils.makeInputStream(
 						"082F074/0071         2001 P  57.8     66.0      850  7.5", //
 						"082F074/0071         2001 V  30.0     -9.0       -9  7.5", //
