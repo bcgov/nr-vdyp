@@ -37,7 +37,7 @@
 			<type>test-jar</type>
 			<scope>test</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>ca.bc.gov.nrs.vdyp</groupId>
 			<artifactId>vdyp-vri</artifactId>
@@ -116,7 +116,6 @@
 
 	<build>
 		<pluginManagement>
-
 			<plugins>
 				<plugin>
 					<groupId>net.revelc.code.formatter</groupId>
@@ -128,6 +127,20 @@
 							<version>${project.version}</version>
 						</dependency>
 					</dependencies>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-jar-plugin</artifactId>
+					<executions>
+						<execution>
+							<goals>
+								<goal>test-jar</goal>
+							</goals>
+							<configuration>
+								<classifier>test-jar</classifier>
+							</configuration>
+						</execution>
+					</executions>
 				</plugin>
 			</plugins>
 		</pluginManagement>

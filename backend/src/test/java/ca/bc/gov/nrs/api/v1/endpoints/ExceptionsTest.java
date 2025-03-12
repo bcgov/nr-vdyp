@@ -12,7 +12,7 @@ public class ExceptionsTest {
 
 	@Test
 	void ProjectionExecutionExceptionTest() {
-		
+
 		var e1 = new ProjectionExecutionException(new IllegalStateException("illegal"));
 		Assert.assertEquals("illegal", e1.getCause().getMessage());
 
@@ -26,7 +26,7 @@ public class ExceptionsTest {
 
 	@Test
 	void ProjectionRequestValidationExceptionTest() {
-		
+
 		var e1 = new ProjectionRequestValidationException(new IllegalStateException("illegal"));
 		Assert.assertEquals("illegal", e1.getCause().getMessage());
 
@@ -36,18 +36,18 @@ public class ExceptionsTest {
 		var e3 = new ProjectionRequestValidationException(new IllegalStateException("illegal"), "validation error");
 		Assert.assertEquals("illegal", e3.getCause().getMessage());
 		Assert.assertEquals("validation error", e3.getMessage());
-}
+	}
 
 	@Test
 	void NotFoundExceptionTest() {
-		
+
 		var e1 = new NotFoundException();
 		Assert.assertEquals(null, e1.getCause());
 	}
 
 	@Test
 	void ExceptionsClassTest() {
-		
+
 		var e1 = new ProjectionRequestValidationException("validation error");
 		String message1 = Exceptions.getMessage(e1, "while performation operation f, ");
 		Assert.assertTrue(message1.startsWith("while performation operation f, saw"));

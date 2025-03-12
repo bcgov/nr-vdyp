@@ -28,9 +28,7 @@ public interface ControlMapValueReplacer<Result, Raw> extends ControlMapModifier
 
 		Optional<Raw> source = Utils.optSafe(control.get(this.getControlKeyName()));
 		if (source.isPresent()) {
-			control.put(
-					getControlKeyName(), this.map(source.get(), getFileResolver(fileResolverContext), control)
-			);
+			control.put(getControlKeyName(), this.map(source.get(), getFileResolver(fileResolverContext), control));
 		} else {
 			control.put(getControlKeyName(), defaultModification(control));
 		}
@@ -38,9 +36,7 @@ public interface ControlMapValueReplacer<Result, Raw> extends ControlMapModifier
 	}
 
 	default FileResolver getFileResolver(Map<String, FileResolver> fileResolverContext) {
-		return fileResolverContext.getOrDefault(
-				getControlKeyName(), fileResolverContext.get(null)
-		);
+		return fileResolverContext.getOrDefault(getControlKeyName(), fileResolverContext.get(null));
 	}
 
 	/**

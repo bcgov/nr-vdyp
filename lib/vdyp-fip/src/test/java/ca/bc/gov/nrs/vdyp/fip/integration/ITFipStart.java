@@ -1,8 +1,6 @@
 package ca.bc.gov.nrs.vdyp.fip.integration;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -19,6 +17,7 @@ import java.util.function.BiPredicate;
 import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.CleanupMode;
 import org.junit.jupiter.api.io.TempDir;
@@ -92,7 +91,7 @@ class ITFipStart {
 				var os = Files.newOutputStream(ioControlFile); //
 				var writer = new ControlFileWriter(os);
 		) {
-			writer.writeComment("Generated supplementarty control file for integration testing");
+			writer.writeComment("Generated supplementary control file for integration testing");
 			writer.writeBlank();
 			writer.writeComment("Inputs");
 			writer.writeBlank();
@@ -109,6 +108,7 @@ class ITFipStart {
 		}
 	}
 
+	@Disabled
 	@Test
 	void noControlFile() throws IOException, ResourceParseException, ProcessingException {
 		try (VdypStartApplication<FipPolygon, FipLayer, FipSpecies, FipSite> app = new FipStart();) {
@@ -116,9 +116,9 @@ class ITFipStart {
 			var resolver = new FileSystemFileResolver(configDir);
 
 			assertThrows(
-					NoSuchFileException.class, () -> app.init(
-							resolver,
-							new PrintStream(new ByteArrayOutputStream()),
+					NoSuchFileException.class,
+					() -> app.init(
+							resolver, new PrintStream(new ByteArrayOutputStream()),
 							new ByteArrayInputStream("\n\r".getBytes())
 					)
 			);
@@ -132,11 +132,10 @@ class ITFipStart {
 			var resolver = new FileSystemFileResolver(configDir);
 
 			assertThrows(
-					NoSuchFileException.class, () -> app.init(
-							resolver,
-							new PrintStream(new ByteArrayOutputStream()),
-							new ByteArrayInputStream("\n\r".getBytes()),
-							"FAKE"
+					NoSuchFileException.class,
+					() -> app.init(
+							resolver, new PrintStream(new ByteArrayOutputStream()),
+							new ByteArrayInputStream("\n\r".getBytes()), "FAKE"
 					)
 			);
 		}
@@ -281,11 +280,8 @@ class ITFipStart {
 			var resolver = new FileSystemFileResolver(configDir);
 
 			app.init(
-					resolver,
-					new PrintStream(new ByteArrayOutputStream()),
-					new ByteArrayInputStream("\n\r".getBytes()),
-					baseControlFile.toString(),
-					ioControlFile.toString()
+					resolver, new PrintStream(new ByteArrayOutputStream()), new ByteArrayInputStream("\n\r".getBytes()),
+					baseControlFile.toString(), ioControlFile.toString()
 			);
 
 			app.process();

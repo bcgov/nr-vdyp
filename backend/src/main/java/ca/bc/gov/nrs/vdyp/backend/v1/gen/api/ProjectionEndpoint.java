@@ -106,12 +106,11 @@ public class ProjectionEndpoint implements Endpoint {
 			// , @Context SecurityContext securityContext
 	) {
 		try {
-			return projectionService
-					.projectionScsvPost(
-							trialRun, parameters, polygonDataStream, layersDataStream, historyDataStream,
-							nonVegetationDataStream, otherVegetationDataStream, polygonIdDataStream, speciesDataStream,
-							vriAdjustDataStream, null /* securityContext */
-					);
+			return projectionService.projectionScsvPost(
+					trialRun, parameters, polygonDataStream, layersDataStream, historyDataStream,
+					nonVegetationDataStream, otherVegetationDataStream, polygonIdDataStream, speciesDataStream,
+					vriAdjustDataStream, null /* securityContext */
+			);
 		} catch (ProjectionRequestValidationException e) {
 			return Response.status(Status.BAD_REQUEST).entity(e).build();
 		} catch (ProjectionExecutionException e) {

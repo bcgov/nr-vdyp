@@ -788,8 +788,7 @@ public class Parameters {
 				&& Objects.equals(this.combineAgeYearRange, parameters.combineAgeYearRange)
 				&& Objects.equals(this.progressFrequency, parameters.progressFrequency)
 				&& Objects.equals(this.metadataToOutput, parameters.metadataToOutput)
-				&& Objects.equals(this.filters, parameters.filters) 
-				&& Objects.equals(this.utils, parameters.utils);
+				&& Objects.equals(this.filters, parameters.filters) && Objects.equals(this.utils, parameters.utils);
 	}
 
 	@Override

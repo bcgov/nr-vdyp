@@ -72,7 +72,7 @@ public class ProjectionService {
 					layersStream = FileHelper.getStubResourceFile("VDYP7_INPUT_LAYER.csv");
 				}
 			}
-			
+
 			inputStreams.put(ParameterNames.POLYGON_INPUT_DATA, polyStream);
 			inputStreams.put(ParameterNames.LAYERS_INPUT_DATA, layersStream);
 

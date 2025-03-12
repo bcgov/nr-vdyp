@@ -70,9 +70,8 @@ abstract class AbstractForwardProcessingEngineTest {
 
 		controlMap.put(ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name(), fileName);
 		var utilizationsParser = new VdypUtilizationParser();
-		var utilizationsFileResolver = TestUtils.fileResolverContext(
-				fileName, TestUtils.makeInputStream(streamContent)
-		);
+		var utilizationsFileResolver = TestUtils
+				.fileResolverContext(fileName, TestUtils.makeInputStream(streamContent));
 
 		utilizationsParser.modify(controlMap, utilizationsFileResolver);
 	}

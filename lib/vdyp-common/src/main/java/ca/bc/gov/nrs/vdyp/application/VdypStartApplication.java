@@ -192,12 +192,9 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	 * @throws ResourceParseException
 	 */
 	public void init(
-			FileSystemFileResolver resolver,
-			PrintStream writeToIfNoArgs,
-			InputStream readFromIfNoArgs,
+			FileSystemFileResolver resolver, PrintStream writeToIfNoArgs, InputStream readFromIfNoArgs,
 			String... controlFilePaths
-	)
-			throws IOException, ResourceParseException {
+	) throws IOException, ResourceParseException {
 
 		var controlFileNames = VdypApplication.getControlMapFileNames(
 				controlFilePaths, getDefaultControlFileName(), getId(), writeToIfNoArgs, readFromIfNoArgs

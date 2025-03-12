@@ -42,22 +42,13 @@ public class FailoverFileResolverTest {
 	void testOneDelegateFileMissing() throws IOException {
 		var delegate1 = new MockFileResolver("delegate1");
 
-		delegate1.addError(
-				"inputFile", () -> new NoSuchFileException(
-						"The file is missing and no failover"
-				)
-		);
-		delegate1.addError(
-				"outputFile", () -> new NoSuchFileException(
-						"The file is missing and no failover"
-				)
-		);
+		delegate1.addError("inputFile", () -> new NoSuchFileException("The file is missing and no failover"));
+		delegate1.addError("outputFile", () -> new NoSuchFileException("The file is missing and no failover"));
 
 		var unit = new FailoverFileResolver(delegate1);
 
-		var inputEx = assertThrows(FileNotFoundException.class, () -> unit.resolveForInput("inputFile"));
-		var outputEx = assertThrows(FileNotFoundException.class, () -> unit.resolveForOutput("outputFile"));
-
+		assertThrows(FileNotFoundException.class, () -> unit.resolveForInput("inputFile"));
+		assertThrows(FileNotFoundException.class, () -> unit.resolveForOutput("outputFile"));
 	}
 
 	@Test
@@ -86,17 +77,15 @@ public class FailoverFileResolverTest {
 
 		final InputStream inputStream = TestUtils.makeInputStream("data");
 		delegate1.addError(
-				"inputFile", () -> new NoSuchFileException(
-						"The file is missing, should silently fail over to next resolver"
-				)
+				"inputFile",
+				() -> new NoSuchFileException("The file is missing, should silently fail over to next resolver")
 		);
 		delegate2.addStream("inputFile", inputStream);
 
 		final OutputStream outputStream = new ByteArrayOutputStream();
 		delegate1.addError(
-				"outputFile", () -> new NoSuchFileException(
-						"The file is missing, should silently fail over to next resolver"
-				)
+				"outputFile",
+				() -> new NoSuchFileException("The file is missing, should silently fail over to next resolver")
 		);
 		delegate2.addStream("outputFile", outputStream);
 
@@ -114,31 +103,21 @@ public class FailoverFileResolverTest {
 		var delegate2 = new MockFileResolver("delegate2");
 
 		delegate1.addError(
-				"inputFile", () -> new NoSuchFileException(
-						"The file is missing, should silently fail over to next resolver"
-				)
+				"inputFile",
+				() -> new NoSuchFileException("The file is missing, should silently fail over to next resolver")
 		);
-		delegate2.addError(
-				"inputFile", () -> new NoSuchFileException(
-						"The file is missing and no failover"
-				)
-		);
+		delegate2.addError("inputFile", () -> new NoSuchFileException("The file is missing and no failover"));
 
 		delegate1.addError(
-				"outputFile", () -> new NoSuchFileException(
-						"The file is missing, should silently fail over to next resolver"
-				)
+				"outputFile",
+				() -> new NoSuchFileException("The file is missing, should silently fail over to next resolver")
 		);
-		delegate2.addError(
-				"outputFile", () -> new NoSuchFileException(
-						"The file is missing and no failover"
-				)
-		);
+		delegate2.addError("outputFile", () -> new NoSuchFileException("The file is missing and no failover"));
 
 		var unit = new FailoverFileResolver(delegate1, delegate2);
 
-		var inputEx = assertThrows(FileNotFoundException.class, () -> unit.resolveForInput("inputFile"));
-		var outputEx = assertThrows(FileNotFoundException.class, () -> unit.resolveForOutput("outputFile"));
+		assertThrows(FileNotFoundException.class, () -> unit.resolveForInput("inputFile"));
+		assertThrows(FileNotFoundException.class, () -> unit.resolveForOutput("outputFile"));
 	}
 
 	@Test
@@ -175,17 +154,15 @@ public class FailoverFileResolverTest {
 
 		final InputStream inputStream = TestUtils.makeInputStream("data");
 		delegate1rel.addError(
-				"inputFile", () -> new NoSuchFileException(
-						"The file is missing, should silently fail over to next resolver"
-				)
+				"inputFile",
+				() -> new NoSuchFileException("The file is missing, should silently fail over to next resolver")
 		);
 		delegate2rel.addStream("inputFile", inputStream);
 
 		final OutputStream outputStream = new ByteArrayOutputStream();
 		delegate1rel.addError(
-				"outputFile", () -> new NoSuchFileException(
-						"The file is missing, should silently fail over to next resolver"
-				)
+				"outputFile",
+				() -> new NoSuchFileException("The file is missing, should silently fail over to next resolver")
 		);
 		delegate2rel.addStream("outputFile", outputStream);
 
@@ -229,17 +206,15 @@ public class FailoverFileResolverTest {
 
 		final InputStream inputStream = TestUtils.makeInputStream("data");
 		delegate1rel.addError(
-				"inputFile", () -> new NoSuchFileException(
-						"The file is missing, should silently fail over to next resolver"
-				)
+				"inputFile",
+				() -> new NoSuchFileException("The file is missing, should silently fail over to next resolver")
 		);
 		delegate2rel.addStream("inputFile", inputStream);
 
 		final OutputStream outputStream = new ByteArrayOutputStream();
 		delegate1rel.addError(
-				"outputFile", () -> new NoSuchFileException(
-						"The file is missing, should silently fail over to next resolver"
-				)
+				"outputFile",
+				() -> new NoSuchFileException("The file is missing, should silently fail over to next resolver")
 		);
 		delegate2rel.addStream("outputFile", outputStream);
 

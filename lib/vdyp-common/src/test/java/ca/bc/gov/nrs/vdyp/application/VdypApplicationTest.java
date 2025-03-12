@@ -24,11 +24,7 @@ public class VdypApplicationTest {
 				InputStream input = null;
 				PrintStream output = null;
 				var result = VdypApplication.getControlMapFileNames(
-						new String[] { "input.ctl" },
-						"default.ctl",
-						VdypApplicationIdentifier.FIP_START,
-						output,
-						input
+						new String[] { "input.ctl" }, "default.ctl", VdypApplicationIdentifier.FIP_START, output, input
 				);
 				assertThat(result, contains("input.ctl"));
 			}
@@ -38,11 +34,8 @@ public class VdypApplicationTest {
 				InputStream input = null;
 				PrintStream output = null;
 				var result = VdypApplication.getControlMapFileNames(
-						new String[] { "input1.ctl", "input2.ctl" },
-						"default.ctl",
-						VdypApplicationIdentifier.FIP_START,
-						output,
-						input
+						new String[] { "input1.ctl", "input2.ctl" }, "default.ctl", VdypApplicationIdentifier.FIP_START,
+						output, input
 				);
 				assertThat(result, contains("input1.ctl", "input2.ctl"));
 			}
@@ -52,11 +45,7 @@ public class VdypApplicationTest {
 				InputStream input = null;
 				PrintStream output = null;
 				var result = VdypApplication.getControlMapFileNames(
-						new String[] { "*" },
-						"default.ctl",
-						VdypApplicationIdentifier.FIP_START,
-						output,
-						input
+						new String[] { "*" }, "default.ctl", VdypApplicationIdentifier.FIP_START, output, input
 				);
 				assertThat(result, contains("default.ctl"));
 			}
@@ -66,11 +55,7 @@ public class VdypApplicationTest {
 				InputStream input = null;
 				PrintStream output = null;
 				var result = VdypApplication.getControlMapFileNames(
-						new String[] { "*input.ctl" },
-						"default.ctl",
-						VdypApplicationIdentifier.FIP_START,
-						output,
-						input
+						new String[] { "*input.ctl" }, "default.ctl", VdypApplicationIdentifier.FIP_START, output, input
 				);
 				assertThat(result, contains("default.ctl", "input.ctl"));
 			}
@@ -84,11 +69,7 @@ public class VdypApplicationTest {
 				var input = TestUtils.makeInputStream("input.ctl", "");
 				var output = new PrintStream(new ByteArrayOutputStream());
 				var result = VdypApplication.getControlMapFileNames(
-						new String[] {},
-						"default.ctl",
-						VdypApplicationIdentifier.FIP_START,
-						output,
-						input
+						new String[] {}, "default.ctl", VdypApplicationIdentifier.FIP_START, output, input
 				);
 				assertThat(result, contains("input.ctl"));
 			}
@@ -98,11 +79,7 @@ public class VdypApplicationTest {
 				var input = TestUtils.makeInputStream("input1.ctl input2.ctl", "");
 				var output = new PrintStream(new ByteArrayOutputStream());
 				var result = VdypApplication.getControlMapFileNames(
-						new String[] {},
-						"default.ctl",
-						VdypApplicationIdentifier.FIP_START,
-						output,
-						input
+						new String[] {}, "default.ctl", VdypApplicationIdentifier.FIP_START, output, input
 				);
 				assertThat(result, contains("input1.ctl", "input2.ctl"));
 			}
@@ -112,11 +89,7 @@ public class VdypApplicationTest {
 				var input = TestUtils.makeInputStream("*input.ctl", "");
 				var output = new PrintStream(new ByteArrayOutputStream());
 				var result = VdypApplication.getControlMapFileNames(
-						new String[] {},
-						"default.ctl",
-						VdypApplicationIdentifier.FIP_START,
-						output,
-						input
+						new String[] {}, "default.ctl", VdypApplicationIdentifier.FIP_START, output, input
 				);
 				assertThat(result, contains("default.ctl", "input.ctl"));
 			}
@@ -126,11 +99,7 @@ public class VdypApplicationTest {
 				var input = TestUtils.makeInputStream("*", "");
 				var output = new PrintStream(new ByteArrayOutputStream());
 				var result = VdypApplication.getControlMapFileNames(
-						new String[] {},
-						"default.ctl",
-						VdypApplicationIdentifier.FIP_START,
-						output,
-						input
+						new String[] {}, "default.ctl", VdypApplicationIdentifier.FIP_START, output, input
 				);
 				assertThat(result, contains("default.ctl"));
 			}
@@ -140,11 +109,7 @@ public class VdypApplicationTest {
 				var input = TestUtils.makeInputStream("", "");
 				var output = new PrintStream(new ByteArrayOutputStream());
 				var result = VdypApplication.getControlMapFileNames(
-						new String[] {},
-						"default.ctl",
-						VdypApplicationIdentifier.FIP_START,
-						output,
-						input
+						new String[] {}, "default.ctl", VdypApplicationIdentifier.FIP_START, output, input
 				);
 				assertThat(result, contains("default.ctl"));
 			}

@@ -61,10 +61,9 @@ class ForwardPolygonParserTest {
 		controlMap.put(ControlKey.FORWARD_INPUT_VDYP_POLY.name(), "test.dat");
 		TestUtils.populateControlMapBecReal(controlMap);
 
-		var fileResolver = TestUtils
-				.fileResolverContext(
-						"test.dat", TestUtils.makeInputStream("01002 S000001 00     1970 CWH  A    99 37  1  1")
-				);
+		var fileResolver = TestUtils.fileResolverContext(
+				"test.dat", TestUtils.makeInputStream("01002 S000001 00     1970 CWH  A    99 37  1  1")
+		);
 
 		parser.modify(controlMap, fileResolver);
 

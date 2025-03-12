@@ -69,7 +69,7 @@ public class ProgressFrequency {
 		this.intValue = null;
 		this.enumValue = null;
 	}
-	
+
 	public ProgressFrequency(EnumValue enumValue) {
 		if (this.intValue != null || this.enumValue != null) {
 			throw new IllegalStateException("ProgressFreauency already has a value; cannot assign a second");
@@ -96,7 +96,7 @@ public class ProgressFrequency {
 	public void setIntValue(Integer intValue) {
 		this.intValue = intValue;
 	}
-	
+
 	@JsonProperty(JSON_PROPERTY_ENUM_VALUE_NAME)
 	public EnumValue getEnumValue() {
 		return enumValue;
@@ -105,7 +105,7 @@ public class ProgressFrequency {
 	public void setEnumValue(EnumValue enumValue) {
 		this.enumValue = enumValue;
 	}
-	
+
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) {
