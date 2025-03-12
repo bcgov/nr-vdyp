@@ -46,8 +46,7 @@ public class OracleRunner {
 	public static Path getSourceFile(IntermediateStage stage, ModelObject obj, Layer layer) {
 		final String extension = obj == ModelObject.CONTROL ? "ctl" : "dat";
 		final String savePrefix = obj == ModelObject.CONTROL ? "" : "SAVE_";
-		return Path.of(String.format("%s-%sVDYP7_%s.%s", layer.code, savePrefix,
-				obj.getStageCode(stage), extension));
+		return Path.of(String.format("%s-%sVDYP7_%s.%s", layer.code, savePrefix, obj.getStageCode(stage), extension));
 	}
 
 	public static Path getDestFile(IntermediateStage stage, ModelObject obj, Layer layer) {
@@ -132,21 +131,36 @@ public class OracleRunner {
 
 	public static enum IntermediateStage {
 		FIP_INPUT("fipInput", "FIP", EnumSet.of(ModelObject.POLYGON, ModelObject.LAYER, ModelObject.SPECIES)), //
-		VRI_INPUT("vriInput", "VRI",
-				EnumSet.of(ModelObject.POLYGON, ModelObject.LAYER, ModelObject.SPECIES, ModelObject.SITE)),
-		ADJUST_INPUT("adjustInput", "AJST",
-				EnumSet.of(ModelObject.POLYGON, ModelObject.SPECIES, ModelObject.UTILIZATION, ModelObject.ADJUSTMENTS)),
-		FORWARD_INPUT("forwardInput", "7INP",
-				EnumSet.of(ModelObject.POLYGON, ModelObject.SPECIES, ModelObject.UTILIZATION, ModelObject.GROW_TO,
-						ModelObject.CONTROL)),
-		FORWARD_OUTPUT("forwardOutput", "7OUT",
-				EnumSet.of(ModelObject.POLYGON, ModelObject.SPECIES, ModelObject.UTILIZATION,
-						ModelObject.COMPATIBILITY)),
-		BACK_INPUT("backInput", "BINP",
-				EnumSet.of(ModelObject.POLYGON, ModelObject.SPECIES, ModelObject.UTILIZATION, ModelObject.GROW_TO,
-						ModelObject.CONTROL)),
-		BACK_OUTPUT("backOutput", "BOUT", EnumSet.of(ModelObject.POLYGON, ModelObject.SPECIES, ModelObject.UTILIZATION,
-				ModelObject.COMPATIBILITY));
+		VRI_INPUT(
+				"vriInput", "VRI",
+				EnumSet.of(ModelObject.POLYGON, ModelObject.LAYER, ModelObject.SPECIES, ModelObject.SITE)
+		),
+		ADJUST_INPUT(
+				"adjustInput", "AJST",
+				EnumSet.of(ModelObject.POLYGON, ModelObject.SPECIES, ModelObject.UTILIZATION, ModelObject.ADJUSTMENTS)
+		),
+		FORWARD_INPUT(
+				"forwardInput", "7INP",
+				EnumSet.of(
+						ModelObject.POLYGON, ModelObject.SPECIES, ModelObject.UTILIZATION, ModelObject.GROW_TO,
+						ModelObject.CONTROL
+				)
+		),
+		FORWARD_OUTPUT(
+				"forwardOutput", "7OUT",
+				EnumSet.of(ModelObject.POLYGON, ModelObject.SPECIES, ModelObject.UTILIZATION, ModelObject.COMPATIBILITY)
+		),
+		BACK_INPUT(
+				"backInput", "BINP",
+				EnumSet.of(
+						ModelObject.POLYGON, ModelObject.SPECIES, ModelObject.UTILIZATION, ModelObject.GROW_TO,
+						ModelObject.CONTROL
+				)
+		),
+		BACK_OUTPUT(
+				"backOutput", "BOUT",
+				EnumSet.of(ModelObject.POLYGON, ModelObject.SPECIES, ModelObject.UTILIZATION, ModelObject.COMPATIBILITY)
+		);
 
 		public final String filename;
 		public final String code;
@@ -222,8 +236,8 @@ public class OracleRunner {
 				}
 				// paramsText = subPattern.matcher(paramsText).replaceAll(m ->
 				// env.get(m.group()));
-				var saveIntermediatesPattern = Pattern.compile("^-v7save\s+yes",
-						Pattern.CASE_INSENSITIVE & Pattern.MULTILINE);
+				var saveIntermediatesPattern = Pattern
+						.compile("^-v7save\s+yes", Pattern.CASE_INSENSITIVE & Pattern.MULTILINE);
 				if (!saveIntermediatesPattern.matcher(paramsText).matches()) {
 					paramsText += "\r\n-v7save Yes\r\n";
 				}
@@ -235,11 +249,13 @@ public class OracleRunner {
 
 			builder.environment().putAll(env);
 
-			builder.environment().merge("PATH", installDir.toAbsolutePath().toString(),
-					(old, add) -> String.format("%s;%s", old, add));
+			builder.environment().merge(
+					"PATH", installDir.toAbsolutePath().toString(), (old, add) -> String.format("%s;%s", old, add)
+			);
 
 			// builder.command(inputSubdir.resolve("RunVDYP7.cmd").toAbsolutePath().toString());
-			builder.command(installDir.resolve("VDYP7Console.exe").toAbsolutePath().toString(), "-p",
+			builder.command(
+					installDir.resolve("VDYP7Console.exe").toAbsolutePath().toString(), "-p",
 					paramSubdir.resolve("parms.txt").toAbsolutePath().toString(), "-env",
 					String.format("%s=%s", INPUT_DIR_ENV, env.get(INPUT_DIR_ENV)), "-env",
 					String.format("%s=%s", OUTPUT_DIR_ENV, env.get(OUTPUT_DIR_ENV)), "-env",
@@ -263,7 +279,8 @@ public class OracleRunner {
 	}
 
 	static final Pattern INTERMEDIATE_FILE = Pattern.compile(
-			"(?<layer>\\w)\\-(?:SAVE_)?VDYP7_(?<suffix>(?:GROW|VDYP|BACK)|(?<stage>\\w+?)(?<obj>\\w))\\.(?<ext>\\w+)");
+			"(?<layer>\\w)\\-(?:SAVE_)?VDYP7_(?<suffix>(?:GROW|VDYP|BACK)|(?<stage>\\w+?)(?<obj>\\w))\\.(?<ext>\\w+)"
+	);
 
 	/**
 	 * Create the final output

@@ -111,10 +111,9 @@ class VdypStartApplicationTest {
 
 			@SuppressWarnings("unused")
 			var ex = assertThrows(
-					FileNotFoundException.class, () -> app.init(
-							resolver,
-							new PrintStream(new ByteArrayOutputStream()),
-							TestUtils.makeInputStream("", "")
+					FileNotFoundException.class,
+					() -> app.init(
+							resolver, new PrintStream(new ByteArrayOutputStream()), TestUtils.makeInputStream("", "")
 					)
 			);
 
@@ -133,11 +132,7 @@ class VdypStartApplicationTest {
 
 			var app = new TestStartApplication(controlMap, true);
 
-			app.init(
-					resolver,
-					new PrintStream(new ByteArrayOutputStream()),
-					TestUtils.makeInputStream("", "")
-			);
+			app.init(resolver, new PrintStream(new ByteArrayOutputStream()), TestUtils.makeInputStream("", ""));
 			assertThat(app.controlMap, is(controlMap));
 
 			app.close();
@@ -150,11 +145,7 @@ class VdypStartApplicationTest {
 
 			var app = new TestStartApplication(controlMap, true);
 
-			app.init(
-					resolver,
-					new PrintStream(new ByteArrayOutputStream()),
-					TestUtils.makeInputStream("testControl")
-			);
+			app.init(resolver, new PrintStream(new ByteArrayOutputStream()), TestUtils.makeInputStream("testControl"));
 			assertThat(app.controlMap, is(controlMap));
 
 			app.close();

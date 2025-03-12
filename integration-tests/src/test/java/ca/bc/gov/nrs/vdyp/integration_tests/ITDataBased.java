@@ -85,9 +85,7 @@ class ITDataBased {
 	}
 
 	static enum State {
-		FipInput("FIP", "fipInput"),
-		VriInput("VRI", "vriInput"),
-		ForwardInput("7INP", "forwardInput"),
+		FipInput("FIP", "fipInput"), VriInput("VRI", "vriInput"), ForwardInput("7INP", "forwardInput"),
 		ForwardOutput("7OUT", "forwardOutput");
 
 		final String prefix;
@@ -100,13 +98,7 @@ class ITDataBased {
 	}
 
 	static enum Data {
-		Polygon("P"),
-		Layer("L"),
-		Species("S"),
-		Site("I"),
-		Utilization("U"),
-		Compatibility("C"),
-		GrowTo("GROW");
+		Polygon("P"), Layer("L"), Species("S"), Site("I"), Utilization("U"), Compatibility("C"), GrowTo("GROW");
 
 		final String suffix;
 
@@ -146,11 +138,10 @@ class ITDataBased {
 			.compile("^(.{25}) (.{4}) (.{1})(.{6})(.{3})(.{3})(.{3})$", Pattern.MULTILINE);
 	static final Pattern UTIL_LINE_MATCHER = Pattern
 			.compile("^(.{27})(?:(.{9})(.{9})(.{9})(.{9})(.{9})(.{9})(.{9})(.{9})(.{9})(.{6}))?$", Pattern.MULTILINE);
-	static final Pattern SPEC_LINE_MATCHER = Pattern
-			.compile(
-					"^(.{25}) (.?) (?:(.{2}) (.{2}) (.{3})(.{5})(.{8})(.{8})(.{8})(.{6})(.{6})(.{6})(.{6})(.{6})(.{2})(.{3}))?$",
-					Pattern.MULTILINE
-			);
+	static final Pattern SPEC_LINE_MATCHER = Pattern.compile(
+			"^(.{25}) (.?) (?:(.{2}) (.{2}) (.{3})(.{5})(.{8})(.{8})(.{8})(.{6})(.{6})(.{6})(.{6})(.{6})(.{2})(.{3}))?$",
+			Pattern.MULTILINE
+	);
 
 	@BeforeAll
 	static void init() throws IOException {
@@ -159,12 +150,9 @@ class ITDataBased {
 		Files.createDirectory(coeDir);
 
 		try (
-				var scan = new ClassGraph().verbose()
-						.addClassLoader(TestUtils.class.getClassLoader())
-						.addClassLoader(ITDataBased.class.getClassLoader())
-						.acceptPaths("ca/bc/gov/nrs/vdyp/test")
-						.acceptPaths("ca/bc/gov/nrs/vdyp/integration_tests")
-						.scan()
+				var scan = new ClassGraph().verbose().addClassLoader(TestUtils.class.getClassLoader())
+						.addClassLoader(ITDataBased.class.getClassLoader()).acceptPaths("ca/bc/gov/nrs/vdyp/test")
+						.acceptPaths("ca/bc/gov/nrs/vdyp/integration_tests").scan()
 		) {
 			for (var resource : scan.getResourcesMatchingWildcard("ca/bc/gov/nrs/vdyp/test/coe/*")) {
 				final Path dest = coeDir.resolve(FilenameUtils.getName(resource.getPath()));
@@ -199,30 +187,21 @@ class ITDataBased {
 
 	static Collection<Arguments> testNameAndLayerProvider() throws IOException {
 		try {
-			return Files.list(testDataDir)
-					.filter(p -> Files.isDirectory(p))
-					.flatMap(p -> {
-						try {
-							return Files.list(p);
-						} catch (IOException e) {
-							throw new UncheckedIOException(e);
-						}
-					})
-					.filter(p -> Files.isDirectory(p))
-					.flatMap(p -> {
-						try {
-							return Files.list(p);
-						} catch (IOException e) {
-							throw new UncheckedIOException(e);
-						}
-					})
-					.filter(p -> Files.isDirectory(p))
-					.map(
-							p -> Arguments.of(
-									p.getParent().getParent().getFileName().toString(),
-									p.getFileName().toString()
-							)
-					)
+			return Files.list(testDataDir).filter(p -> Files.isDirectory(p)).flatMap(p -> {
+				try {
+					return Files.list(p);
+				} catch (IOException e) {
+					throw new UncheckedIOException(e);
+				}
+			}).filter(p -> Files.isDirectory(p)).flatMap(p -> {
+				try {
+					return Files.list(p);
+				} catch (IOException e) {
+					throw new UncheckedIOException(e);
+				}
+			}).filter(p -> Files.isDirectory(p)).map(
+					p -> Arguments.of(p.getParent().getParent().getFileName().toString(), p.getFileName().toString())
+			)
 					// Collapse together test/layer pairs
 					.collect(Collectors.toMap(args -> String.format("%s/%s", args.get()), args -> args, (a1, a2) -> a1))
 					.values();
@@ -274,19 +253,15 @@ class ITDataBased {
 			writer.writeEntry(18, outputDir.resolve(UTILIZATION_OUTPUT_NAME).toString(), "VDYP Utilization Output");
 		}
 
-		final var controlFiles = Stream.of(baseControlFile, testControlFile, ioControlFile)
-				.filter(Files::exists)
-				.map(Object::toString)
-				.toArray(String[]::new);
+		final var controlFiles = Stream.of(baseControlFile, testControlFile, ioControlFile).filter(Files::exists)
+				.map(Object::toString).toArray(String[]::new);
 
 		try (VdypStartApplication<VriPolygon, VriLayer, VriSpecies, VriSite> app = new VriStart();) {
 
 			var resolver = new FileSystemFileResolver(configDir);
 
 			app.init(
-					resolver,
-					new PrintStream(new ByteArrayOutputStream()),
-					TestUtils.makeInputStream("", ""),
+					resolver, new PrintStream(new ByteArrayOutputStream()), TestUtils.makeInputStream("", ""),
 					controlFiles
 			);
 
@@ -306,10 +281,8 @@ class ITDataBased {
 				this::specLinesMatch
 		);
 		assertFileMatches(
-				outputDir.resolve(UTILIZATION_OUTPUT_NAME), expectedDir.resolve(
-						fileName(outputState, Data.Utilization)
-				),
-				this::utilLinesMatch
+				outputDir.resolve(UTILIZATION_OUTPUT_NAME),
+				expectedDir.resolve(fileName(outputState, Data.Utilization)), this::utilLinesMatch
 		);
 
 	}
@@ -356,19 +329,15 @@ class ITDataBased {
 			writer.writeEntry(18, outputDir.resolve(UTILIZATION_OUTPUT_NAME).toString(), "VDYP Utilization Output");
 		}
 
-		final var controlFiles = Stream.of(baseControlFile, testControlFile, ioControlFile)
-				.filter(Files::exists)
-				.map(Object::toString)
-				.toArray(String[]::new);
+		final var controlFiles = Stream.of(baseControlFile, testControlFile, ioControlFile).filter(Files::exists)
+				.map(Object::toString).toArray(String[]::new);
 
 		try (VdypStartApplication<FipPolygon, FipLayer, FipSpecies, FipSite> app = new FipStart();) {
 
 			var resolver = new FileSystemFileResolver(configDir);
 
 			app.init(
-					resolver,
-					new PrintStream(new ByteArrayOutputStream()),
-					TestUtils.makeInputStream("", ""),
+					resolver, new PrintStream(new ByteArrayOutputStream()), TestUtils.makeInputStream("", ""),
 					controlFiles
 			);
 
@@ -388,10 +357,8 @@ class ITDataBased {
 				this::specLinesMatch
 		);
 		assertFileMatches(
-				outputDir.resolve(UTILIZATION_OUTPUT_NAME), expectedDir.resolve(
-						fileName(outputState, Data.Utilization)
-				),
-				this::utilLinesMatch
+				outputDir.resolve(UTILIZATION_OUTPUT_NAME),
+				expectedDir.resolve(fileName(outputState, Data.Utilization)), this::utilLinesMatch
 		);
 
 	}
@@ -419,7 +386,6 @@ class ITDataBased {
 		// Create a second control file pointing to the input and output
 		Path ioControlFile = dataDir.resolve("fip.ctr");
 
-
 		try (
 				var os = Files.newOutputStream(ioControlFile); //
 				var writer = new ControlFileWriter(os);
@@ -439,9 +405,7 @@ class ITDataBased {
 						14, dataDir.resolve(fileName(inputState, Data.GrowTo)).toString(), "VDYP Grow To Input"
 				);
 			} else {
-				writer.writeEntry(
-						14, "", "No GROW input"
-				);
+				writer.writeEntry(14, "", "No GROW input");
 			}
 			writer.writeBlank();
 			writer.writeComment("Outputs");
@@ -454,10 +418,8 @@ class ITDataBased {
 			);
 		}
 
-		final var controlFiles = Stream.of(baseControlFile, testControlFile, ioControlFile)
-				.filter(Files::exists)
-				.map(Object::toString)
-				.toList();
+		final var controlFiles = Stream.of(baseControlFile, testControlFile, ioControlFile).filter(Files::exists)
+				.map(Object::toString).toList();
 
 		{
 
@@ -465,12 +427,7 @@ class ITDataBased {
 			FileResolver outputFileResolver = new FileSystemFileResolver(configDir);
 
 			ForwardProcessor processor = new ForwardProcessor();
-			processor.run(
-					inputFileResolver,
-					outputFileResolver,
-					controlFiles,
-					VdypForwardApplication.DEFAULT_PASS_SET
-			);
+			processor.run(inputFileResolver, outputFileResolver, controlFiles, VdypForwardApplication.DEFAULT_PASS_SET);
 
 		}
 
@@ -488,16 +445,12 @@ class ITDataBased {
 				this::specLinesMatch
 		);
 		assertFileMatches(
-				outputDir.resolve(UTILIZATION_OUTPUT_NAME), expectedDir.resolve(
-						fileName(outputState, Data.Utilization)
-				),
-				this::utilLinesMatch
+				outputDir.resolve(UTILIZATION_OUTPUT_NAME),
+				expectedDir.resolve(fileName(outputState, Data.Utilization)), this::utilLinesMatch
 		);
 		assertFileMatches(
-				outputDir.resolve(COMPATIBILITY_OUTPUT_NAME), expectedDir.resolve(
-						fileName(outputState, Data.Compatibility)
-				),
-				String::equals
+				outputDir.resolve(COMPATIBILITY_OUTPUT_NAME),
+				expectedDir.resolve(fileName(outputState, Data.Compatibility)), String::equals
 		);
 
 	}
@@ -506,9 +459,8 @@ class ITDataBased {
 		Path skip = testDir.resolve("skip");
 
 		if (Files.exists(skip)) {
-			boolean doSkip = Files.readAllLines(skip).stream().map(line -> line.split(" ")[0]).anyMatch(
-					toSkip -> toSkip.equals(test)
-			);
+			boolean doSkip = Files.readAllLines(skip).stream().map(line -> line.split(" ")[0])
+					.anyMatch(toSkip -> toSkip.equals(test));
 			Assumptions.assumeFalse(doSkip, "Skipping for " + test);
 		}
 	}
@@ -589,13 +541,8 @@ class ITDataBased {
 		}
 
 		List<BiPredicate<String, String>> checks = List.of(
-				stringsEqual(),
-				stringsEqual(),
-				stringsEqual(),
-				floatStringsWithin(),
-				intStringsEqual(),
-				intStringsEqual(),
-				intStringsEqual()
+				stringsEqual(), stringsEqual(), stringsEqual(), floatStringsWithin(), intStringsEqual(),
+				intStringsEqual(), intStringsEqual()
 		);
 
 		if (actualMatch.groupCount() != expectedMatch.groupCount()) {
@@ -620,13 +567,8 @@ class ITDataBased {
 		}
 
 		List<BiPredicate<String, String>> checks = List.of(
-				stringsEqual(),
-				stringsEqual(),
-				ignoreStrings(),
-				floatStringsWithin(),
-				intStringsEqual(),
-				ignoreStrings(),
-				ignoreStrings()
+				stringsEqual(), stringsEqual(), ignoreStrings(), floatStringsWithin(), intStringsEqual(),
+				ignoreStrings(), ignoreStrings()
 		);
 
 		if (actualMatch.groupCount() != expectedMatch.groupCount()) {
@@ -691,7 +633,7 @@ class ITDataBased {
 		List<BiPredicate<String, String>> checks = List.of(
 				stringsEqual(), // Polygon ID
 				stringsEqual(), // Layer Type
-				intStringsEqual(), // 
+				intStringsEqual(), //
 				stringsEqual(), //
 				stringsEqual(), //
 
@@ -707,8 +649,8 @@ class ITDataBased {
 				floatStringsWithin(), //
 				floatStringsWithin(), //
 
-				intStringsEqual(), // 
-				intStringsEqual() // 
+				intStringsEqual(), //
+				intStringsEqual() //
 		);
 
 		if (actualMatch.groupCount() != expectedMatch.groupCount()) {

@@ -42,9 +42,8 @@ public class VdypForwardApplication extends VdypApplication {
 
 	public static final String DEFAULT_VDYP_CONTROL_FILE_NAME = "vdyp.ctr";
 
-	public static final Set<ForwardPass> DEFAULT_PASS_SET = Collections.unmodifiableSet(
-			new HashSet<>(Arrays.asList(PASS_1, PASS_2, PASS_3, PASS_4, PASS_5))
-	);
+	public static final Set<ForwardPass> DEFAULT_PASS_SET = Collections
+			.unmodifiableSet(new HashSet<>(Arrays.asList(PASS_1, PASS_2, PASS_3, PASS_4, PASS_5)));
 	private static Set<ForwardPass> vdypPassSet = new HashSet<>(DEFAULT_PASS_SET);
 
 	public static void main(final String... args) {
@@ -73,12 +72,8 @@ public class VdypForwardApplication extends VdypApplication {
 			System.exit(CONFIG_LOAD_ERROR);
 		}
 
-		var inputFileResolver = inputDir.map(FileSystemFileResolver::new).orElseGet(
-				FileSystemFileResolver::new
-		);
-		var outputFileResolver = outputDir.map(FileSystemFileResolver::new).orElseGet(
-				FileSystemFileResolver::new
-		);
+		var inputFileResolver = inputDir.map(FileSystemFileResolver::new).orElseGet(FileSystemFileResolver::new);
+		var outputFileResolver = outputDir.map(FileSystemFileResolver::new).orElseGet(FileSystemFileResolver::new);
 
 		try {
 			ForwardProcessor processor = new ForwardProcessor();

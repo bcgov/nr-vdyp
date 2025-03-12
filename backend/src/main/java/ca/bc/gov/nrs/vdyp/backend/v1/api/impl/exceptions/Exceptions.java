@@ -13,7 +13,7 @@ public class Exceptions {
 		} else {
 			context = context.stripTrailing();
 		}
-		
+
 		if (t.getCause() != null) {
 
 			message = MessageFormat.format(

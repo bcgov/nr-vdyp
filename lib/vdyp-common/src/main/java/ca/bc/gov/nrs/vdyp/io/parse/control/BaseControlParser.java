@@ -110,10 +110,9 @@ public abstract class BaseControlParser {
 		return map;
 	}
 
-	public Map<String, Object> parseByName(
-			List<String> resourceNames, FileResolver fileResolver, Map<String, Object> map
-	)
-			throws IOException, ResourceParseException {
+	public Map<String, Object>
+			parseByName(List<String> resourceNames, FileResolver fileResolver, Map<String, Object> map)
+					throws IOException, ResourceParseException {
 
 		Map<String, FileResolver> resolverContext = new HashMap<>();
 		for (var resourceName : resourceNames) {
@@ -124,9 +123,8 @@ public abstract class BaseControlParser {
 				map.putAll(controlParser.parse(is, map));
 				for (var changedKey : newEntries.keySet()) {
 					resolverContext.put(
-							changedKey, new FailoverFileResolver(
-									fileResolver.relativeToParent(resourceName), fileResolver
-							)
+							changedKey,
+							new FailoverFileResolver(fileResolver.relativeToParent(resourceName), fileResolver)
 					);
 				}
 			}

@@ -24,9 +24,9 @@ public class ProjectionRunner implements IProjectionRunner {
 		state.getProgressLog().addMessage("Running Projection");
 
 		ProjectionRequestValidator.validate(state, streams);
-		
+
 		createInputStream(streams.get("polygon"), streams.get("layers"));
-		
+
 		project();
 	}
 

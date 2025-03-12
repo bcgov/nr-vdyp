@@ -66,13 +66,12 @@ class OracleRunnerTest {
 		}
 	}
 
-	
 	@Test
 	void testSingleTestPrimary() throws Exception {
 
 		setupInput1();
-		
-		final var layers = new Layer[] {Layer.PRIMARY};
+
+		final var layers = new Layer[] { Layer.PRIMARY };
 
 		var em = EasyMock.createControl();
 
@@ -130,7 +129,7 @@ class OracleRunnerTest {
 				assertThat(tempDir, fileExists("test1/input/VDYP7_INPUT_POLY.csv"));
 				assertThat(tempDir, fileExists("test1/input/VDYP7_INPUT_LAYER.csv"));
 
-				for (var layer: layers) {
+				for (var layer : layers) {
 					for (var tag : new String[] { "7INPP", "7INPS", "7INPU", //
 							"7OUTP", "7OUTS", "7OUTU", "7OUTC", //
 							"AJSTA", "AJSTP", "AJSTS", "AJSTU", //
@@ -139,14 +138,16 @@ class OracleRunnerTest {
 							"GROW", //
 							"VRII", "VRIL", "VRIP", "VRIS" //
 					}) {
-						FileUtils.touch(installDir.resolve("VDYP_CFG/"+layer.code+"-SAVE_VDYP7_" + tag + ".dat").toFile());
+						FileUtils.touch(
+								installDir.resolve("VDYP_CFG/" + layer.code + "-SAVE_VDYP7_" + tag + ".dat").toFile()
+						);
 					}
-					FileUtils.touch(installDir.resolve("VDYP_CFG/"+layer.code+"-VDYP7_VDYP.ctl").toFile());
-					FileUtils.touch(installDir.resolve("VDYP_CFG/"+layer.code+"-VDYP7_BACK.ctl").toFile());
+					FileUtils.touch(installDir.resolve("VDYP_CFG/" + layer.code + "-VDYP7_VDYP.ctl").toFile());
+					FileUtils.touch(installDir.resolve("VDYP_CFG/" + layer.code + "-VDYP7_BACK.ctl").toFile());
 				}
 
 				FileUtils.touch(tempDir.resolve("test1/output/Output_YldTbl.csv").toFile());
-				
+
 				return mockFuture;
 			}
 
@@ -161,7 +162,7 @@ class OracleRunnerTest {
 		assertThat(outputDir, fileExists("test1/input/VDYP7_INPUT_POLY.csv"));
 		assertThat(outputDir, fileExists("test1/input/VDYP7_INPUT_LAYER.csv"));
 
-		for (var layer: layers) {
+		for (var layer : layers) {
 			for (var tag : new String[] { "polygon", "species", "util", "grow" }) {
 				assertThat(outputDir, fileExists("test1/forwardInput/" + layer.filename + "/" + tag + ".dat"));
 			}

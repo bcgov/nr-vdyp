@@ -123,8 +123,7 @@ public class UtilizationParameter {
 			return false;
 		}
 		UtilizationParameter up = (UtilizationParameter) o;
-		return Objects.equals(this.speciesName, up.speciesName)
-				&& Objects.equals(this.value, up.value);
+		return Objects.equals(this.speciesName, up.speciesName) && Objects.equals(this.value, up.value);
 	}
 
 	@Override

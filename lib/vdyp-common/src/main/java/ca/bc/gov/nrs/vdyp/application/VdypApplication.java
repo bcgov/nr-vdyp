@@ -38,8 +38,7 @@ public abstract class VdypApplication extends VdypComponent {
 
 	public static List<String> getControlMapFileNames(
 			final String[] args, final String defaultName, final VdypApplicationIdentifier appId,
-			PrintStream writeToIfNoArgs,
-			InputStream readFromIfNoArgs
+			PrintStream writeToIfNoArgs, InputStream readFromIfNoArgs
 	) throws IOException {
 		List<String> controlFileNames;
 		if (args.length == 0) {
@@ -65,8 +64,7 @@ public abstract class VdypApplication extends VdypComponent {
 		} else {
 			controlFileNames = Arrays.stream(args)
 					.flatMap(arg -> arg.startsWith("*") ? Stream.of(defaultName, arg.substring(1)) : Stream.of(arg))
-					.filter(s -> !s.isEmpty())
-					.toList();
+					.filter(s -> !s.isEmpty()).toList();
 		}
 		return controlFileNames;
 	}

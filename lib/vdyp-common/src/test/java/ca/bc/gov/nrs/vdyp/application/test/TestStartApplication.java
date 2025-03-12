@@ -30,12 +30,9 @@ public class TestStartApplication extends VdypStartApplication<TestPolygon, Test
 
 	@Override
 	public void init(
-			FileSystemFileResolver resolver,
-			PrintStream writeToIfNoArgs,
-			InputStream readFromIfNoArgs,
+			FileSystemFileResolver resolver, PrintStream writeToIfNoArgs, InputStream readFromIfNoArgs,
 			String... controlFilePaths
-	)
-			throws IOException, ResourceParseException {
+	) throws IOException, ResourceParseException {
 		if (realInit) {
 			super.init(resolver, writeToIfNoArgs, readFromIfNoArgs, controlFilePaths);
 		}

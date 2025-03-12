@@ -8,7 +8,8 @@ import ca.bc.gov.nrs.vdyp.backend.v1.api.impl.exceptions.ProjectionRequestValida
 
 public interface IProjectionRunner {
 
-	void run(Map<String, InputStream> inputStreams) throws ProjectionRequestValidationException, ProjectionExecutionException;
+	void run(Map<String, InputStream> inputStreams)
+			throws ProjectionRequestValidationException, ProjectionExecutionException;
 
 	ProjectionState getState();
 
