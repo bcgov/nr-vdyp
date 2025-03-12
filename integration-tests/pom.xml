@@ -37,7 +37,7 @@
 			<type>test-jar</type>
 			<scope>test</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>ca.bc.gov.nrs.vdyp</groupId>
 			<artifactId>vdyp-vri</artifactId>
@@ -136,6 +136,9 @@
 							<goals>
 								<goal>test-jar</goal>
 							</goals>
+							<configuration>
+								<classifier>test-jar</classifier>
+							</configuration>
 						</execution>
 					</executions>
 				</plugin>
