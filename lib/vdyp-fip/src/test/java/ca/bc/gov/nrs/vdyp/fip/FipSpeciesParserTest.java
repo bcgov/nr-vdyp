@@ -29,7 +29,7 @@ class FipSpeciesParserTest {
 		controlMap.put(ControlKey.FIP_INPUT_YIELD_LX_SP0.name(), "test.dat");
 		TestUtils.populateControlMapBecReal(controlMap);
 
-		var fileResolver = TestUtils.fileResolver("test.dat", TestUtils.makeInputStream(/* empty */));
+		var fileResolver = TestUtils.fileResolverContext("test.dat", TestUtils.makeInputStream(/* empty */));
 
 		parser.modify(controlMap, fileResolver);
 
@@ -55,7 +55,7 @@ class FipSpeciesParserTest {
 		controlMap.put(ControlKey.FIP_INPUT_YIELD_LX_SP0.name(), "test.dat");
 		TestUtils.populateControlMapGenusReal(controlMap);
 
-		var fileResolver = TestUtils.fileResolver(
+		var fileResolver = TestUtils.fileResolverContext(
 				"test.dat",
 				TestUtils.makeInputStream(
 						"01002 S000001 00     1970 1 B  100.0B  100.0     0.0     0.0     0.0", //
@@ -115,7 +115,7 @@ class FipSpeciesParserTest {
 		controlMap.put(ControlKey.FIP_INPUT_YIELD_LX_SP0.name(), "test.dat");
 		TestUtils.populateControlMapGenusReal(controlMap);
 
-		var fileResolver = TestUtils.fileResolver(
+		var fileResolver = TestUtils.fileResolverContext(
 				"test.dat",
 				TestUtils.makeInputStream(
 						"01002 S000001 00     1970 1 B   75.0B  100.0     0.0     0.0     0.0", //
@@ -198,7 +198,7 @@ class FipSpeciesParserTest {
 		controlMap.put(ControlKey.FIP_INPUT_YIELD_LX_SP0.name(), "test.dat");
 		TestUtils.populateControlMapGenusReal(controlMap);
 
-		var fileResolver = TestUtils.fileResolver(
+		var fileResolver = TestUtils.fileResolverContext(
 				"test.dat",
 				TestUtils.makeInputStream(
 						"01002 S000001 00     1970 1 B  100.0B  100.0     0.0     0.0     0.0", //
@@ -280,7 +280,7 @@ class FipSpeciesParserTest {
 		controlMap.put(ControlKey.FIP_INPUT_YIELD_LX_SP0.name(), "test.dat");
 		TestUtils.populateControlMapGenusReal(controlMap);
 
-		var fileResolver = TestUtils.fileResolver(
+		var fileResolver = TestUtils.fileResolverContext(
 				"test.dat",
 				TestUtils.makeInputStream(
 						"01002 S000001 00     1970 1 B  100.0B  100.0     0.0     0.0     0.0", //
@@ -370,7 +370,7 @@ class FipSpeciesParserTest {
 		controlMap.put(ControlKey.FIP_INPUT_YIELD_LX_SP0.name(), "test.dat");
 		TestUtils.populateControlMapGenusReal(controlMap);
 
-		var fileResolver = TestUtils.fileResolver(
+		var fileResolver = TestUtils.fileResolverContext(
 				"test.dat",
 				TestUtils.makeInputStream(
 						"01002 S000001 00     1970 1 B  100.0B1  75.0B2  10.0B3   8.0B4   7.0", //

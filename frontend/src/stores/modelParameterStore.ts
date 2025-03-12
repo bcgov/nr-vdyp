@@ -1,21 +1,17 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import {
-  PANEL,
-  MODEL_PARAMETER_PANEL,
-  NUM_INPUT_LIMITS,
-} from '@/constants/constants'
-import { DEFAULT_VALUES } from '@/constants/defaults'
+import { BIZCONSTANTS, CONSTANTS, DEFAULTS } from '@/constants'
 import type { PanelName, PanelState } from '@/types/types'
-import type { SpeciesList } from '@/interfaces/interfaces'
+import type { SpeciesList, SpeciesGroup } from '@/interfaces/interfaces'
+import { isEmptyOrZero } from '@/utils/util'
 
 export const useModelParameterStore = defineStore('modelParameter', () => {
   // panel open
   const panelOpenStates = ref<Record<PanelName, PanelState>>({
-    speciesInfo: PANEL.OPEN,
-    siteInfo: PANEL.CLOSE,
-    standDensity: PANEL.CLOSE,
-    reportInfo: PANEL.CLOSE,
+    speciesInfo: CONSTANTS.PANEL.OPEN,
+    siteInfo: CONSTANTS.PANEL.CLOSE,
+    standDensity: CONSTANTS.PANEL.CLOSE,
+    reportInfo: CONSTANTS.PANEL.CLOSE,
   })
 
   // Panel states for confirming and editing
@@ -50,16 +46,16 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
 
     // Enable the next panel's confirm and clear buttons
     const panelOrder: PanelName[] = [
-      MODEL_PARAMETER_PANEL.SPECIES_INFO,
-      MODEL_PARAMETER_PANEL.SITE_INFO,
-      MODEL_PARAMETER_PANEL.STAND_DENSITY,
-      MODEL_PARAMETER_PANEL.REPORT_INFO,
+      CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO,
+      CONSTANTS.MODEL_PARAMETER_PANEL.SITE_INFO,
+      CONSTANTS.MODEL_PARAMETER_PANEL.STAND_DENSITY,
+      CONSTANTS.MODEL_PARAMETER_PANEL.REPORT_INFO,
     ]
     const currentIndex = panelOrder.indexOf(panelName)
     if (currentIndex !== -1 && currentIndex < panelOrder.length - 1) {
       // The next panel opens automatically, switching to the editable.
       const nextPanel = panelOrder[currentIndex + 1]
-      panelOpenStates.value[nextPanel] = PANEL.OPEN
+      panelOpenStates.value[nextPanel] = CONSTANTS.PANEL.OPEN
       panelState.value[nextPanel].editable = true
     }
 
@@ -76,10 +72,10 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
 
     // Disable all subsequent panels
     const panelOrder: PanelName[] = [
-      MODEL_PARAMETER_PANEL.SPECIES_INFO,
-      MODEL_PARAMETER_PANEL.SITE_INFO,
-      MODEL_PARAMETER_PANEL.STAND_DENSITY,
-      MODEL_PARAMETER_PANEL.REPORT_INFO,
+      CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO,
+      CONSTANTS.MODEL_PARAMETER_PANEL.SITE_INFO,
+      CONSTANTS.MODEL_PARAMETER_PANEL.STAND_DENSITY,
+      CONSTANTS.MODEL_PARAMETER_PANEL.REPORT_INFO,
     ]
     const currentIndex = panelOrder.indexOf(panelName)
     if (currentIndex !== -1) {
@@ -88,7 +84,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
         const nextPanel = panelOrder[i]
         panelState.value[nextPanel].confirmed = false
         panelState.value[nextPanel].editable = false
-        panelOpenStates.value[nextPanel] = PANEL.CLOSE
+        panelOpenStates.value[nextPanel] = CONSTANTS.PANEL.CLOSE
       }
     }
 
@@ -108,13 +104,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     { species: null, percent: null },
   ])
 
-  const speciesGroups = ref<
-    {
-      group: string
-      percent: number
-      siteSpecies: string
-    }[]
-  >([])
+  const speciesGroups = ref<SpeciesGroup[]>([])
 
   // determined in Species Information
   const highestPercentSpecies = ref<string | null>(null)
@@ -129,7 +119,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
 
     // Preserve to the first decimal place and convert to string in '##0.0' format
     const formattedPercent = (Math.floor(totalPercent * 10) / 10).toFixed(
-      NUM_INPUT_LIMITS.SPECIES_PERCENT_DECIMAL_NUM,
+      CONSTANTS.NUM_INPUT_LIMITS.SPECIES_PERCENT_DECIMAL_NUM,
     )
 
     return formattedPercent
@@ -137,31 +127,42 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
 
   const totalSpeciesGroupPercent = computed(() => {
     return speciesGroups.value.reduce((acc, group) => {
-      return acc + group.percent
+      return acc + (parseFloat(group.percent) || 0)
     }, 0)
   })
 
   const updateSpeciesGroup = () => {
     const groupMap: { [key: string]: number } = {}
 
+    // Iterate through speciesList and build a group map
     for (const item of speciesList.value) {
-      if (item.species && item.percent !== null) {
-        if (!groupMap[item.species]) {
-          groupMap[item.species] = 0
-        }
-        groupMap[item.species] += parseFloat(item.percent as any) || 0
+      if (!item.species || isEmptyOrZero(item.percent)) {
+        continue
       }
+
+      // Initialize group if it doesn't exist in groupMap
+      if (!groupMap[item.species]) {
+        groupMap[item.species] = 0
+      }
+
+      // Add percent to the group
+      groupMap[item.species] += parseFloat(item.percent as any) || 0
     }
 
+    // Convert groupMap to speciesGroups array
     speciesGroups.value = Object.keys(groupMap).map((key) => ({
-      group: key,
-      percent: groupMap[key],
+      group: BIZCONSTANTS.SPECIES_GROUP_MAP[key] || key,
+      percent: groupMap[key].toFixed(
+        CONSTANTS.NUM_INPUT_LIMITS.SPECIES_PERCENT_DECIMAL_NUM,
+      ),
       siteSpecies: key,
     }))
 
-    speciesGroups.value.sort((a, b) => b.percent - a.percent)
+    speciesGroups.value.sort(
+      (a, b) => parseFloat(b.percent) - parseFloat(a.percent),
+    )
 
-    // update highestPercentSpecies and selectedSiteSpecies
+    // Update highestPercentSpecies and selectedSiteSpecies with the first siteSpecies in speciesGroups
     highestPercentSpecies.value = selectedSiteSpecies.value =
       speciesGroups.value.length > 0 ? speciesGroups.value[0].siteSpecies : null
   }
@@ -187,7 +188,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
 
   // set default values
   const setDefaultValues = () => {
-    derivedBy.value = DEFAULT_VALUES.DERIVED_BY
+    derivedBy.value = DEFAULTS.DEFAULT_VALUES.DERIVED_BY
     speciesList.value = [
       { species: 'PL', percent: '30.0' },
       { species: 'AC', percent: '30.0' },
@@ -203,16 +204,15 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
       ...group,
     }))
 
-    becZone.value = DEFAULT_VALUES.BEC_ZONE
-    siteSpeciesValues.value = DEFAULT_VALUES.SITE_SPECIES_VALUES
-    bha50SiteIndex.value = DEFAULT_VALUES.BHA50_SITE_INDEX
-    percentStockableArea.value = DEFAULT_VALUES.PERCENT_STOCKABLE_AREA
-    startingAge.value = DEFAULT_VALUES.STARTING_AGE
-    finishingAge.value = DEFAULT_VALUES.FINISHING_AGE
-    ageIncrement.value = DEFAULT_VALUES.AGE_INCREMENT
-    volumeReported.value = DEFAULT_VALUES.VOLUME_REPORTED
-    projectionType.value = DEFAULT_VALUES.PROJECTION_TYPE
-    reportTitle.value = DEFAULT_VALUES.REPORT_TITLE
+    becZone.value = DEFAULTS.DEFAULT_VALUES.BEC_ZONE
+    siteSpeciesValues.value = DEFAULTS.DEFAULT_VALUES.SITE_SPECIES_VALUES
+    percentStockableArea.value = DEFAULTS.DEFAULT_VALUES.PERCENT_STOCKABLE_AREA
+    startingAge.value = DEFAULTS.DEFAULT_VALUES.STARTING_AGE
+    finishingAge.value = DEFAULTS.DEFAULT_VALUES.FINISHING_AGE
+    ageIncrement.value = DEFAULTS.DEFAULT_VALUES.AGE_INCREMENT
+    volumeReported.value = DEFAULTS.DEFAULT_VALUES.VOLUME_REPORTED
+    projectionType.value = DEFAULTS.DEFAULT_VALUES.PROJECTION_TYPE
+    reportTitle.value = DEFAULTS.DEFAULT_VALUES.REPORT_TITLE
   }
 
   return {

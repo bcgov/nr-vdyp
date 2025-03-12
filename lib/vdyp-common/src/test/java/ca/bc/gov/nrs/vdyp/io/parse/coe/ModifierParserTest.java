@@ -19,6 +19,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
+import ca.bc.gov.nrs.vdyp.common.Utils;
+import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
@@ -43,7 +45,11 @@ class ModifierParserTest {
 
 		var fileResolver = new MockFileResolver("TEST");
 
-		parser.modify(controlMap, fileResolver);
+		Map<String, FileResolver> context = Utils.constMap(map -> {
+			map.put(ControlKey.MODIFIER_FILE.name(), fileResolver);
+		});
+
+		parser.modify(controlMap, context);
 
 		assertThat(controlMap, (Matcher) controlMapHasEntry(ControlKey.MODIFIER_FILE, notPresent()));
 	}
@@ -58,8 +64,11 @@ class ModifierParserTest {
 
 		var fileResolver = new MockFileResolver("TEST");
 		fileResolver.addError("testFilename", () -> new IOException());
+		Map<String, FileResolver> context = Utils.constMap(map -> {
+			map.put(ControlKey.MODIFIER_FILE.name(), fileResolver);
+		});
 
-		var ex = Assertions.assertThrows(IOException.class, () -> parser.modify(controlMap, fileResolver));
+		var ex = Assertions.assertThrows(IOException.class, () -> parser.modify(controlMap, context));
 
 		assertThat(ex, Matchers.notNullValue());
 
@@ -82,8 +91,11 @@ class ModifierParserTest {
 
 		var fileResolver = new MockFileResolver("TEST");
 		fileResolver.addStream("testFilename", is);
+		Map<String, FileResolver> context = Utils.constMap(map -> {
+			map.put(ControlKey.MODIFIER_FILE.name(), fileResolver);
+		});
 
-		parser.modify(controlMap, fileResolver);
+		parser.modify(controlMap, context);
 
 		modifierDefaultAsserts(controlMap);
 	}
@@ -145,8 +157,11 @@ class ModifierParserTest {
 
 		var fileResolver = new MockFileResolver("TEST");
 		fileResolver.addStream("testFilename", is);
+		Map<String, FileResolver> context = Utils.constMap(map -> {
+			map.put(ControlKey.MODIFIER_FILE.name(), fileResolver);
+		});
 
-		parser.modify(controlMap, fileResolver);
+		parser.modify(controlMap, context);
 
 		var baMap = ((MatrixMap<Float>) controlMap.get(ControlKey.BA_MODIFIERS.name()));
 		baMap.eachKey(k -> {
@@ -191,8 +206,11 @@ class ModifierParserTest {
 
 		var fileResolver = new MockFileResolver("TEST");
 		fileResolver.addStream("testFilename", is);
+		Map<String, FileResolver> context = Utils.constMap(map -> {
+			map.put(ControlKey.MODIFIER_FILE.name(), fileResolver);
+		});
 
-		parser.modify(controlMap, fileResolver);
+		parser.modify(controlMap, context);
 
 		modifierDefaultAsserts(controlMap);
 	}
@@ -214,8 +232,11 @@ class ModifierParserTest {
 
 		var fileResolver = new MockFileResolver("TEST");
 		fileResolver.addStream("testFilename", is);
+		Map<String, FileResolver> context = Utils.constMap(map -> {
+			map.put(ControlKey.MODIFIER_FILE.name(), fileResolver);
+		});
 
-		parser.modify(controlMap, fileResolver);
+		parser.modify(controlMap, context);
 
 		modifierDefaultAsserts(controlMap);
 	}
@@ -238,8 +259,11 @@ class ModifierParserTest {
 
 		var fileResolver = new MockFileResolver("TEST");
 		fileResolver.addStream("testFilename", is);
+		Map<String, FileResolver> context = Utils.constMap(map -> {
+			map.put(ControlKey.MODIFIER_FILE.name(), fileResolver);
+		});
 
-		parser.modify(controlMap, fileResolver);
+		parser.modify(controlMap, context);
 
 		modifierDefaultAsserts(controlMap);
 
@@ -262,8 +286,11 @@ class ModifierParserTest {
 
 		var fileResolver = new MockFileResolver("TEST");
 		fileResolver.addStream("testFilename", is);
+		Map<String, FileResolver> context = Utils.constMap(map -> {
+			map.put(ControlKey.MODIFIER_FILE.name(), fileResolver);
+		});
 
-		parser.modify(controlMap, fileResolver);
+		parser.modify(controlMap, context);
 
 		var baMap = ((MatrixMap<Float>) controlMap.get(ControlKey.BA_MODIFIERS.name()));
 		baMap.eachKey(k -> {
@@ -308,8 +335,11 @@ class ModifierParserTest {
 
 		var fileResolver = new MockFileResolver("TEST");
 		fileResolver.addStream("testFilename", is);
+		Map<String, FileResolver> context = Utils.constMap(map -> {
+			map.put(ControlKey.MODIFIER_FILE.name(), fileResolver);
+		});
 
-		parser.modify(controlMap, fileResolver);
+		parser.modify(controlMap, context);
 
 		var baMap = ((MatrixMap<Float>) controlMap.get(ControlKey.BA_MODIFIERS.name()));
 		baMap.eachKey(k -> {
@@ -346,8 +376,11 @@ class ModifierParserTest {
 
 		var fileResolver = new MockFileResolver("TEST");
 		fileResolver.addStream("testFilename", is);
+		Map<String, FileResolver> context = Utils.constMap(map -> {
+			map.put(ControlKey.MODIFIER_FILE.name(), fileResolver);
+		});
 
-		parser.modify(controlMap, fileResolver);
+		parser.modify(controlMap, context);
 
 		vetBqMap.eachKey(k -> {
 			if (k[1].equals(Region.COASTAL)) {
@@ -384,8 +417,11 @@ class ModifierParserTest {
 
 		var fileResolver = new MockFileResolver("TEST");
 		fileResolver.addStream("testFilename", is);
+		Map<String, FileResolver> context = Utils.constMap(map -> {
+			map.put(ControlKey.MODIFIER_FILE.name(), fileResolver);
+		});
 
-		parser.modify(controlMap, fileResolver);
+		parser.modify(controlMap, context);
 
 		var decayMap = ((MatrixMap<Float>) controlMap.get(ModifierParser.CONTROL_KEY_MOD301_DECAY.name()));
 		decayMap.eachKey(k -> {
@@ -431,8 +467,11 @@ class ModifierParserTest {
 
 		var fileResolver = new MockFileResolver("TEST");
 		fileResolver.addStream("testFilename", is);
+		Map<String, FileResolver> context = Utils.constMap(map -> {
+			map.put(ControlKey.MODIFIER_FILE.name(), fileResolver);
+		});
 
-		parser.modify(controlMap, fileResolver);
+		parser.modify(controlMap, context);
 
 		hlP1Map.eachKey(k -> {
 			if (k[0].equals("AC")) {

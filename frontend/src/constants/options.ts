@@ -27,11 +27,11 @@ export const siteSpeciesValuesOptions = [
 ]
 
 export const ecoZoneOptions = [
-  { label: 'Boreal Cordillera', value: '1' },
-  { label: 'Boreal Plains', value: '2' },
-  { label: 'Montane Cordillera', value: '3' },
-  { label: 'Pacific Maritime', value: '4' },
-  { label: 'Taiga Plains', value: '5' },
+  { label: 'Boreal Cordillera', value: '12' },
+  { label: 'Boreal Plains', value: '9' },
+  { label: 'Montane Cordillera', value: '14' },
+  { label: 'Pacific Maritime', value: '13' },
+  { label: 'Taiga Plains', value: '4' },
 ]
 
 export const volumeReportedOptions = [
@@ -49,9 +49,15 @@ export const volumeReportedOptions = [
 ]
 
 export const includeInReportOptions = [
-  { label: 'Computed MAI', value: 'Computed MAI' },
-  { label: 'Species Composition', value: 'Species Composition' },
-  { label: 'Culmination Values', value: 'Culmination Values' },
+  { label: 'Computed MAI', value: CONSTANTS.INCLUDE_IN_REPORT.COMPUTED_MAI },
+  {
+    label: 'Species Composition',
+    value: CONSTANTS.INCLUDE_IN_REPORT.SPECIES_COMPOSITION,
+  },
+  {
+    label: 'Culmination Values',
+    value: CONSTANTS.INCLUDE_IN_REPORT.CULMINATION_VALUES,
+  },
 ]
 
 export const projectionTypeOptions = [

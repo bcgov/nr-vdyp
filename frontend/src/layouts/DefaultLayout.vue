@@ -14,7 +14,7 @@
     </v-list>
 
     <div class="nv-drawer-footer">
-      <span class="ml-2">Release: {{ appVersion }}</span>
+      <span class="ml-2 app-build-release">Release: {{ appVersion }}</span>
     </div>
   </v-navigation-drawer>
 
@@ -68,5 +68,9 @@ const drawer = ref(true)
   position: absolute;
   bottom: 0;
   width: 100%;
+}
+
+.app-build-release {
+  color: #f6f6f6;
 }
 </style>

@@ -1093,4 +1093,9 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 		// TODO Make an InputPolygon interface that has this.
 	}
 
+	@Override
+	protected String getDefaultControlFileName() {
+		return "fipstart.ctr";
+	}
+
 }

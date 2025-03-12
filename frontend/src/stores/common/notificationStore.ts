@@ -9,6 +9,7 @@ export const useNotificationStore = defineStore({
     isShow: false,
     message: '',
     type: '',
+    color: '',
     timeoutId: null,
   }),
   getters: {},
@@ -24,6 +25,7 @@ export const useNotificationStore = defineStore({
       this.resetMessage()
       this.message = message
       this.type = type
+      this.color = type
       this.isShow = true
 
       // Automatically close messages after NOTIFICATION.SHOW_TIME

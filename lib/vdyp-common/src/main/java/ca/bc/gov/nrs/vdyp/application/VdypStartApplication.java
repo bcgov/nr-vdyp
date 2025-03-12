@@ -12,12 +12,10 @@ import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.io.Closeable;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,8 +41,6 @@ import ca.bc.gov.nrs.vdyp.common.EstimationMethods;
 import ca.bc.gov.nrs.vdyp.common.ReconcilationMethods;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common.ValueOrMarker;
-import ca.bc.gov.nrs.vdyp.common.VdypApplicationInitializationException;
-import ca.bc.gov.nrs.vdyp.common.VdypApplicationProcessingException;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMapImpl;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
@@ -118,32 +114,21 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 	static final Set<String> HARDWOODS = Set.of("AC", "AT", "D", "E", "MB");
 
-	public static void doMain(VdypStartApplication<?, ?, ?, ?> app, final String... args)
-			throws VdypApplicationInitializationException, VdypApplicationProcessingException {
+	protected static void doMain(VdypStartApplication<?, ?, ?, ?> app, final String... args) {
+		var resolver = new FileSystemFileResolver();
 
-		if (args.length == 1 /* one control file */) {
-			try {
-				app.init(args[0]);
-			} catch (Exception ex) {
-				log.error("Error during initialization", ex);
-				throw new VdypApplicationInitializationException(ex);
-			}
-		} else {
-			var resolver = new FileSystemFileResolver();
-
-			try {
-				app.init(resolver, args);
-			} catch (Exception ex) {
-				log.error("Error during initialization", ex);
-				throw new VdypApplicationInitializationException(ex);
-			}
+		try {
+			app.init(resolver, System.out, System.in, args);
+		} catch (Exception ex) {
+			log.error("Error during initialization", ex);
+			System.exit(CONFIG_LOAD_ERROR);
 		}
 
 		try {
 			app.process();
 		} catch (Exception ex) {
 			log.error("Error during processing", ex);
-			throw new VdypApplicationProcessingException(ex);
+			System.exit(PROCESSING_ERROR);
 		}
 	}
 
@@ -199,93 +184,36 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	}
 
 	/**
-	 * Initialize application from one control file. Resolve references in the control file relative to that file.
-	 *
-	 * @param controlFileLocation
-	 * @throws IOException
-	 * @throws ResourceParseException
-	 */
-	public void init(String controlFileLocation) throws IOException, ResourceParseException {
-
-		// Load the control map
-
-		BaseControlParser parser = getControlFileParser();
-		List<InputStream> resources = new ArrayList<>(1);
-		try {
-			Path controlFilePath = Path.of(controlFileLocation);
-			if (!Files.exists(controlFilePath)) {
-				throw new FileNotFoundException(
-						MessageFormat.format("Control file {0} not found", controlFilePath.toString())
-				);
-			}
-			if (Files.isDirectory(controlFilePath)) {
-				throw new FileNotFoundException(
-						MessageFormat.format("Control file {0} is not a file", controlFilePath.toString())
-				);
-			}
-			if (!Files.isReadable(controlFilePath)) {
-				throw new FileNotFoundException(
-						MessageFormat.format("Control file {0} is not readable", controlFilePath.toString())
-				);
-			}
-
-			FileSystemFileResolver resolver = new FileSystemFileResolver(controlFilePath.getParent());
-			resources.add(resolver.resolveForInput(controlFileLocation));
-
-			init(resolver, parser.parse(resources, resolver, controlMap));
-
-		} finally {
-			for (var resource : resources) {
-				resource.close();
-			}
-		}
-	}
-
-	/**
-	 * Initialize application from multiple control files. Resolve references in those files using
-	 * <code>resolver</code>.
+	 * Initialize application
 	 *
 	 * @param resolver
 	 * @param controlFilePath
 	 * @throws IOException
 	 * @throws ResourceParseException
 	 */
-	public void init(FileSystemFileResolver resolver, String... controlFilePaths)
-			throws IOException, ResourceParseException {
+	public void init(
+			FileSystemFileResolver resolver, PrintStream writeToIfNoArgs, InputStream readFromIfNoArgs,
+			String... controlFilePaths
+	) throws IOException, ResourceParseException {
 
-		// Load the control map
+		var controlFileNames = VdypApplication.getControlMapFileNames(
+				controlFilePaths, getDefaultControlFileName(), getId(), writeToIfNoArgs, readFromIfNoArgs
+		);
 
-		if (controlFilePaths.length < 1) {
-			throw new IllegalArgumentException("At least one control file must be specified.");
-		}
-
-		BaseControlParser parser = getControlFileParser();
-		List<InputStream> resources = new ArrayList<>(controlFilePaths.length);
-		try {
-			for (String path : controlFilePaths) {
-				resources.add(resolver.resolveForInput(path));
-			}
-
-			init(resolver, parser.parse(resources, resolver, controlMap));
-
-		} finally {
-			for (var resource : resources) {
-				resource.close();
-			}
-		}
+		init(resolver, getControlFileParser().parseByName(controlFileNames, resolver, controlMap));
 	}
 
+	protected abstract String getDefaultControlFileName();
+
 	/**
-	 * Initialize application from the given control map. Resolve all references in the map using <code>resolver</code>.
+	 * Initialize application
 	 *
-	 * @param resolver
 	 * @param controlMap
 	 * @throws IOException
 	 */
 	public void init(FileSystemFileResolver resolver, Map<String, Object> controlMap) throws IOException {
 
 		setControlMap(controlMap);
-
 		closeVriWriter();
 		vriWriter = createWriter(resolver, controlMap);
 	}
@@ -445,6 +373,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	 * @return
 	 * @throws ProcessingException
 	 */
+	@SuppressWarnings("java:S3776")
 	protected int findItg(List<S> primarySecondary) throws StandProcessingException {
 		var primary = primarySecondary.get(0);
 

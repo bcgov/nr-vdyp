@@ -36,6 +36,12 @@ export const VOLUME_REPORTED = Object.freeze({
   NET_DECAY_WASTE_BREAKAGE: 'Net Decay, Waste and Breakage',
 })
 
+export const INCLUDE_IN_REPORT = Object.freeze({
+  COMPUTED_MAI: 'Computed MAI',
+  SPECIES_COMPOSITION: 'Species Composition',
+  CULMINATION_VALUES: 'Culmination Values',
+})
+
 export const PROJECTION_TYPE = Object.freeze({
   VOLUME: 'Volume',
   CFS_BIOMASS: 'CFS Biomass',
@@ -103,6 +109,11 @@ export const MESSAGE_TYPE = Object.freeze({
   WARNING: 'warning',
 })
 
+export const HEADER_SELECTION = Object.freeze({
+  MODEL_PARAMETER_SELECTION: 'Model Parameter Selection',
+  FILE_UPLOAD: 'File upload',
+})
+
 export const MODEL_SELECTION = Object.freeze({
   FILE_UPLOAD: 'File Upload',
   INPUT_MODEL_PARAMETERS: 'Input Model Parameters',
@@ -113,4 +124,24 @@ export const MODEL_PARAM_TAB_NAME = Object.freeze({
   MODEL_REPORT: 'Model Report',
   VIEW_LOG_FILE: 'View Log File',
   VIEW_ERROR_MESSAGES: 'View Error Messages',
+})
+
+export const FILE_NAME = Object.freeze({
+  PROJECTION_RESULT_ZIP: 'vdyp-output.zip',
+  ERROR_TXT: 'ErrorLog.txt',
+  LOG_TXT: 'ProgressLog.txt',
+  DEBUG_TXT: 'DebugLog.txt',
+  YIELD_TABLE_CSV: 'YieldTable.csv',
+  INPUT_POLY_CSV: 'VDYP7_INPUT_POLY.csv',
+  INPUT_LAYER_CSV: 'VDYP7_INPUT_LAYER.csv',
+})
+
+export const BUTTON_LABEL = Object.freeze({
+  CONT_EDIT: 'Continue Editing',
+})
+
+export const REPORTING_TAB = Object.freeze({
+  MODEL_REPORT: 'ModelReport',
+  VIEW_ERR_MSG: 'ViewErrorMessages',
+  VIEW_LOG_FILE: 'ViewLogFile',
 })

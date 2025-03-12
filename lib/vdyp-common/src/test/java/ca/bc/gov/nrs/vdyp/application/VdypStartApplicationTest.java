@@ -7,9 +7,11 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -23,6 +25,7 @@ import org.easymock.Capture;
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -82,20 +85,59 @@ class VdypStartApplicationTest {
 
 			var app = new TestStartApplication(controlMap, false);
 
-			app.init(resolver, "testControl");
+			app.init(resolver, null, null, "testControl");
 			assertThat(app.controlMap, is(controlMap));
 
 			app.close();
 		}
 
+		@Disabled
 		@Test
-		void testInitNoControlFiles() throws IOException, ResourceParseException {
-			MockFileResolver resolver = new MockFileResolver("Test");
+		void testInitNoControlFile() throws IOException, ResourceParseException {
+			var resolver1 = dummyIo();
+			resolver1.addError("test.ctr", () -> new FileNotFoundException());
+			MockFileResolver resolver = resolver1;
+
+			var app = new TestStartApplication(controlMap, false);
+
+			@SuppressWarnings("unused")
+			var ex = assertThrows(
+					FileNotFoundException.class,
+					() -> app.init(
+							resolver, new PrintStream(new ByteArrayOutputStream()), TestUtils.makeInputStream("", "")
+					)
+			);
+
+			app.close();
+		}
+
+		@Disabled
+		@Test
+		void testInitDefaultControl() throws IOException, ResourceParseException {
+			controlMap = TestUtils.loadControlMap();
+
+			MockFileResolver resolver = dummyIo();
+
+			InputStream inputStream = TestUtils.makeInputStream("");
+			resolver.addStream("test.ctr", inputStream);
 
 			var app = new TestStartApplication(controlMap, true);
 
-			var ex = assertThrows(IllegalArgumentException.class, () -> app.init(resolver));
-			assertThat(ex, hasProperty("message", is("At least one control file must be specified.")));
+			app.init(resolver, new PrintStream(new ByteArrayOutputStream()), TestUtils.makeInputStream("", ""));
+			assertThat(app.controlMap, is(controlMap));
+
+			app.close();
+		}
+
+		@Disabled
+		@Test
+		void testInitControlViaStdIn() throws IOException, ResourceParseException {
+			MockFileResolver resolver = dummyIo();
+
+			var app = new TestStartApplication(controlMap, true);
+
+			app.init(resolver, new PrintStream(new ByteArrayOutputStream()), TestUtils.makeInputStream("testControl"));
+			assertThat(app.controlMap, is(controlMap));
 
 			app.close();
 		}

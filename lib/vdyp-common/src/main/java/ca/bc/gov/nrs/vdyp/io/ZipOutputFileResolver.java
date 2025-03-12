@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-public class ZipOutputFileResolver implements ConcreteFileResolver {
+public class ZipOutputFileResolver implements FileResolver {
 
 	private record OutputStreamDetails(Path outputStreamLocation, OutputStream outputStream) {
 	}
@@ -41,6 +41,16 @@ public class ZipOutputFileResolver implements ConcreteFileResolver {
 	@Override
 	public String toString(String filename) throws IOException {
 		return String.format("zip:%s", toPath(filename));
+	}
+
+	@Override
+	public ZipOutputFileResolver relative(String path) throws IOException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public ZipOutputFileResolver relativeToParent(String path) throws IOException {
+		throw new UnsupportedOperationException();
 	}
 
 	private static final int BUFFER_SIZE = 64 * 1024;
@@ -107,20 +117,5 @@ public class ZipOutputFileResolver implements ConcreteFileResolver {
 		} catch (IOException e) {
 			throw new IllegalStateException(e);
 		}
-	}
-
-	@Override
-	public FileResolver getOutputFileResolver() {
-		return this;
-	}
-
-	@Override
-	public FileResolver getInputFileResolver() {
-		throw new UnsupportedOperationException("ZipOutputResolver.getInputFileResolver");
-	}
-
-	@Override
-	public String toString() {
-		return "ZipOutputFileResolver";
 	}
 }

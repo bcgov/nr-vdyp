@@ -31,3 +31,5 @@ coverage
 
 # env
 .env
+
+*storybook.log

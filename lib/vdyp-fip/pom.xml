@@ -26,6 +26,7 @@
 			<groupId>ca.bc.gov.nrs.vdyp</groupId>
 			<artifactId>vdyp-common</artifactId>
 			<version>${project.version}</version>
+			<classifier>common-test-jar</classifier>
 			<type>test-jar</type>
 			<scope>test</scope>
 		</dependency>
@@ -103,6 +104,20 @@
 							<version>${project.version}</version>
 						</dependency>
 					</dependencies>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-jar-plugin</artifactId>
+					<executions>
+						<execution>
+							<goals>
+								<goal>test-jar</goal>
+							</goals>
+							<configuration>
+								<classifier>fip-test-jar</classifier>
+							</configuration>
+						</execution>
+					</executions>
 				</plugin>
 			</plugins>
 		</pluginManagement>

@@ -32,7 +32,7 @@ class ForwardSpeciesParserTest {
 		controlMap.put(ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SPECIES.name(), "test.dat");
 		TestUtils.populateControlMapBecReal(controlMap);
 
-		var fileResolver = TestUtils.fileResolver("test.dat", TestUtils.makeInputStream(/* empty */));
+		var fileResolver = TestUtils.fileResolverContext("test.dat", TestUtils.makeInputStream(/* empty */));
 
 		parser.modify(controlMap, fileResolver);
 
@@ -58,7 +58,7 @@ class ForwardSpeciesParserTest {
 		controlMap.put(ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SPECIES.name(), "test.dat");
 		TestUtils.populateControlMapGenusReal(controlMap);
 
-		var fileResolver = TestUtils.fileResolver(
+		var fileResolver = TestUtils.fileResolverContext(
 				"test.dat",
 				TestUtils.makeInputStream(
 						"01002 S000001 00     1970 P 15 S  S  100.0     0.0     0.0     0.0 -9.00 -9.00  -9.0  -9.0  -9.0 0 -9",
@@ -118,7 +118,7 @@ class ForwardSpeciesParserTest {
 		controlMap.put(ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SPECIES.name(), "test.dat");
 		TestUtils.populateControlMapGenusReal(controlMap);
 
-		var fileResolver = TestUtils.fileResolver(
+		var fileResolver = TestUtils.fileResolverContext(
 				"test.dat",
 				TestUtils.makeInputStream(
 						"01002 S000002 00     1970 P 15 S  S  100.0     0.0     0.0     0.0 -9.00 -9.00  -9.0  -9.0  -9.0 0 -9", //
@@ -160,7 +160,7 @@ class ForwardSpeciesParserTest {
 		controlMap.put(ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SPECIES.name(), "test.dat");
 		TestUtils.populateControlMapGenusReal(controlMap);
 
-		var fileResolver = TestUtils.fileResolver(
+		var fileResolver = TestUtils.fileResolverContext(
 				"test.dat",
 				TestUtils.makeInputStream(
 						"01002 S000002 00     1970 P 15 S  S  100.0     0.0     0.0     0.0 -9.00 -9.00  20.0  12.0  -9.0 0 -9", //
@@ -281,7 +281,7 @@ class ForwardSpeciesParserTest {
 		controlMap.put(ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SPECIES.name(), "test.dat");
 		TestUtils.populateControlMapGenusReal(controlMap);
 
-		var fileResolver = TestUtils.fileResolver(
+		var fileResolver = TestUtils.fileResolverContext(
 				"test.dat",
 				TestUtils.makeInputStream(
 						"01002 S000002 00     1970 P 15 S  S  100.0     0.0     0.0     0.0 14.50 -9.00  -9.0  -9.0  -9.0 1 -9", //

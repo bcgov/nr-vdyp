@@ -9,7 +9,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.hamcrest.Matcher;
@@ -30,6 +32,7 @@ import ca.bc.gov.nrs.vdyp.model.GenusDefinitionMap;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.SiteCurveAgeMaximum;
+import ca.bc.gov.nrs.vdyp.test.MockFileResolver;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -39,6 +42,22 @@ class NonFipControlParserTest {
 
 	private StartApplicationControlParser getUnit() {
 		return TestUtils.startAppControlParser();
+	}
+
+	@Test
+	void testParseByName() throws Exception {
+		BaseControlParser parser = getUnit();
+		var controlMap = new HashMap<String, Object>();
+		var resolver = TestUtils.fileResolver(TestUtils.class);
+		var names = List.of(CONTROL_FILE);
+		var result = getUnit().parseByName(names, resolver, controlMap);
+		assertThat(
+				result,
+				(Matcher) controlMapHasEntry(
+						ControlKey.BEC_DEF,
+						allOf(instanceOf(BecLookup.class), hasBec("AT", present(instanceOf(BecDefinition.class))))
+				)
+		);
 	}
 
 	// Most of these tests are the same as in FipControlParserTest TODO consider
