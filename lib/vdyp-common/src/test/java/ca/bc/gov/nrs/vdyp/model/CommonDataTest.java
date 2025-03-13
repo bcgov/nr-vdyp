@@ -1,9 +1,7 @@
 package ca.bc.gov.nrs.vdyp.model;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.aMapWithSize;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.iterableWithSize;
+import static org.hamcrest.Matchers.*;
 
 import org.junit.jupiter.api.Test;
 
