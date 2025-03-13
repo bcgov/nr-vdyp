@@ -312,6 +312,8 @@ public class YieldTable {
 			if (yearOfDeath == null) {
 				yearOfDeath = polygon.getYearOfDeath();
 			}
+			
+			row.setNumSpecies(0);
 		} else {
 			layer = layerReportingInfo.getLayer();
 
@@ -332,6 +334,8 @@ public class YieldTable {
 
 			double ageAtYear = layer.determineLayerAgeAtYear(row.getReferenceYear());
 			row.setReferenceAge((int) ageAtYear);
+			
+			row.setNumSpecies(layer.getSp64sAsSupplied().size());
 		}
 
 		// In case the polygon has a dead stem layer and the year of death
@@ -353,6 +357,7 @@ public class YieldTable {
 					throw new YieldTableGenerationException(e);
 				}
 			} else {
+				assert layer != null;
 				relevantAge = layer.determineLayerAgeAtYear(yearOfDeath);
 			}
 
@@ -366,7 +371,6 @@ public class YieldTable {
 		assert row.getMeasurementAge() != null && row.getMeasurementYear() != null;
 
 		row.calculateTableRangeInformation(context);
-		row.setNumSpecies(row.isPolygonTable() ? 0 : layer.getSp64sAsSupplied().size());
 
 		calculateLayerAgeOffsets(row);
 
