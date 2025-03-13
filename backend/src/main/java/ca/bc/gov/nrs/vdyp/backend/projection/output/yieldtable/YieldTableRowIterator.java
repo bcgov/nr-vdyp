@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable;
 
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption;
 import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionContext;
@@ -33,7 +34,7 @@ public class YieldTableRowIterator implements Iterator<YieldTableData> {
 			rowIsCurrent = false;
 			return row;
 		} else {
-			throw new IllegalStateException("YieldTableRowIterator.next() called when there is no next row");
+			throw new NoSuchElementException("YieldTableRowIterator.next() called when there is no next row");
 		}
 	}
 
@@ -86,8 +87,8 @@ public class YieldTableRowIterator implements Iterator<YieldTableData> {
 
 		// Find out to which range (year or age) the current year corresponds.
 
-		row.setCurrentYearIsYearRow(row.getCurrentYearRangeYear() == row.getCurrentTableYear());
-		row.setCurrentYearIsAgeRow(row.getCurrentAgeRangeYear() == row.getCurrentTableYear());
+		row.setCurrentYearIsYearRow(row.getCurrentYearRangeYear().equals(row.getCurrentTableYear()));
+		row.setCurrentYearIsAgeRow(row.getCurrentAgeRangeYear().equals(row.getCurrentTableYear()));
 
 		// Compute the total stand age of the current year.
 
@@ -205,8 +206,8 @@ public class YieldTableRowIterator implements Iterator<YieldTableData> {
 
 		// Find out to which range (year or age) the current year corresponds.
 
-		row.setCurrentYearIsYearRow(row.getCurrentYearRangeYear() == row.getCurrentTableYear());
-		row.setCurrentYearIsAgeRow(row.getCurrentAgeRangeYear() == row.getCurrentTableYear());
+		row.setCurrentYearIsYearRow(row.getCurrentYearRangeYear().equals(row.getCurrentTableYear()));
+		row.setCurrentYearIsAgeRow(row.getCurrentAgeRangeYear().equals(row.getCurrentTableYear()));
 
 		// Check if we have passed the end of the table range.
 

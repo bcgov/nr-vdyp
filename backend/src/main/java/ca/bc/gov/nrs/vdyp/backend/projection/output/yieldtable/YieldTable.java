@@ -16,6 +16,7 @@ import ca.bc.gov.nrs.vdyp.application.ProcessingException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.YieldTableGenerationException;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.OutputFormat;
 import ca.bc.gov.nrs.vdyp.backend.projection.PolygonProjectionState;
 import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionContext;
 import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionStageCode;
@@ -103,6 +104,34 @@ public class YieldTable {
 
 		var outputFormat = params.getOutputFormat();
 
+		try (YieldTableWriter writer = buildYieldTableWriter(outputFormat)) {
+
+			yieldTableCount += 1;
+
+			for (var polygonProjectionResultsForYear : polygonProjectionResults.entrySet()) {
+
+				var row = createTableRow(polygon, layerReportingInfo, polygonProjectionResultsForYear.getKey());
+
+				writer.writeHeader(polygon, layerReportingInfo, doGenerateDetailedTableHeader, yieldTableCount);
+
+				YieldTableRowIterator rowIterator = new YieldTableRowIterator(context, row);
+				while (rowIterator.hasNext()) {
+
+					row = rowIterator.next();
+					if (rowIsToBeGenerated(row)) {
+						generateRow(row, polygonProjectionResultsForYear.getValue(), writer);
+					}
+				}
+			}
+
+			writer.writeTrailer(yieldTableCount);
+		} catch (IOException e) {
+			throw new YieldTableGenerationException(e);
+		}
+	}
+
+	private YieldTableWriter buildYieldTableWriter(OutputFormat outputFormat) throws YieldTableGenerationException {
+
 		YieldTableWriter writer;
 
 		switch (outputFormat) {
@@ -122,25 +151,7 @@ public class YieldTable {
 			throw new IllegalStateException("Unrecognized output format " + outputFormat);
 		}
 
-		yieldTableCount += 1;
-
-		for (var polygonProjectionResultsForYear : polygonProjectionResults.entrySet()) {
-
-			var row = createTableRow(polygon, layerReportingInfo, polygonProjectionResultsForYear.getKey());
-
-			writer.writeHeader(polygon, layerReportingInfo, doGenerateDetailedTableHeader, yieldTableCount);
-
-			YieldTableRowIterator rowIterator = new YieldTableRowIterator(context, row);
-			while (rowIterator.hasNext()) {
-
-				row = rowIterator.next();
-				if (rowIsToBeGenerated(row)) {
-					generateRow(row, polygonProjectionResultsForYear.getValue(), writer);
-				}
-			}
-		}
-
-		writer.writeTrailer(yieldTableCount);
+		return writer;
 	}
 
 	public void generateCfsBiomassTableForPolygon(
@@ -281,42 +292,46 @@ public class YieldTable {
 
 		var row = new YieldTableData(polygon, layerReportingInfo);
 
+		row.setReferenceYear(year);
+
+		Integer yearOfDeath = null;
+
 		Layer layer;
 		if (row.isPolygonTable()) {
 			layer = null;
-		} else {
-			layer = layerReportingInfo.getLayer();
-		}
 
-		if (!row.isPolygonTable()) {
-
-			row.setProjectionType(layerReportingInfo.getProcessedAsVDYP7Layer());
-
-			if (row.getProjectionType() == ProjectionTypeCode.DEAD) {
-				Integer yearOfDeath = layer.getYearOfDeath();
-				if (yearOfDeath == null) {
-					yearOfDeath = polygon.getYearOfDeath();
-				}
-
-				if (yearOfDeath != null) {
-					double layerAgeAtDeath = layer.determineLayerAgeAtYear(yearOfDeath);
-					row.setAgeAtDeath(Double.valueOf(layerAgeAtDeath).intValue());
-				}
-			}
-		}
-
-		row.setReferenceYear(year);
-
-		if (row.isPolygonTable()) {
 			try {
 				double ageAtYear = polygon.determineStandAgeAtYear(row.getReferenceYear());
-				row.setReferenceAge(Double.valueOf(ageAtYear).intValue());
+				row.setReferenceAge((int) ageAtYear);
 			} catch (PolygonValidationException e) {
 				throw new YieldTableGenerationException(e);
 			}
+
+			var primaryLayer = polygon.getPrimaryLayer();
+			yearOfDeath = primaryLayer.getYearOfDeath();
+			if (yearOfDeath == null) {
+				yearOfDeath = polygon.getYearOfDeath();
+			}
 		} else {
+			layer = layerReportingInfo.getLayer();
+
+			row.setProjectionType(layerReportingInfo.getProcessedAsVDYP7Layer());
+
+			yearOfDeath = layer.getYearOfDeath();
+			if (yearOfDeath == null) {
+				yearOfDeath = polygon.getYearOfDeath();
+			}
+
+			if (row.getProjectionType() == ProjectionTypeCode.DEAD) {
+
+				if (yearOfDeath != null) {
+					double layerAgeAtDeath = layer.determineLayerAgeAtYear(yearOfDeath);
+					row.setAgeAtDeath((int) layerAgeAtDeath);
+				}
+			}
+
 			double ageAtYear = layer.determineLayerAgeAtYear(row.getReferenceYear());
-			row.setReferenceAge(Double.valueOf(ageAtYear).intValue());
+			row.setReferenceAge((int) ageAtYear);
 		}
 
 		// In case the polygon has a dead stem layer and the year of death
@@ -328,33 +343,21 @@ public class YieldTable {
 		// should only be set for the Dead Stem Layer. This is so the yield table
 		// generator can mark the row as a Year of Death row.
 
-		Integer yearOfDeath = null;
-		if (row.isPolygonTable()) {
-			var primaryLayer = polygon.getPrimaryLayer();
-			yearOfDeath = primaryLayer.getYearOfDeath();
-			if (yearOfDeath == null) {
-				yearOfDeath = polygon.getYearOfDeath();
-			}
-		} else {
-			yearOfDeath = layer.getYearOfDeath();
-			if (yearOfDeath == null) {
-				yearOfDeath = polygon.getYearOfDeath();
-			}
-		}
-
 		if (yearOfDeath != null && (row.getReferenceYear() == null || yearOfDeath > row.getReferenceYear())) {
-			row.setMeasurementYear(yearOfDeath);
+
+			double relevantAge;
 			if (row.isPolygonTable()) {
 				try {
-					double standAge = polygon.determineStandAgeAtYear(yearOfDeath);
-					row.setMeasurementAge(Double.valueOf(standAge).intValue());
+					relevantAge = polygon.determineStandAgeAtYear(yearOfDeath);
 				} catch (PolygonValidationException e) {
 					throw new YieldTableGenerationException(e);
 				}
 			} else {
-				double layerAge = layer.determineLayerAgeAtYear(yearOfDeath);
-				row.setMeasurementAge(Double.valueOf(layerAge).intValue());
+				relevantAge = layer.determineLayerAgeAtYear(yearOfDeath);
 			}
+
+			row.setMeasurementYear(yearOfDeath);
+			row.setMeasurementAge((int) relevantAge);
 		} else {
 			row.setMeasurementYear(row.getReferenceYear());
 			row.setMeasurementAge(row.getReferenceAge());
@@ -417,13 +420,13 @@ public class YieldTable {
 		}
 
 		if (params.containsOption(ExecutionOption.DO_FORCE_REFERENCE_YEAR_INCLUSION_IN_YIELD_TABLES)
-				&& row.getCurrentTableYear() == row.getMeasurementYear()) {
+				&& row.getCurrentTableYear().equals(row.getMeasurementYear())) {
 			doDisplayRow = true;
 		} else if (params.containsOption(ExecutionOption.DO_FORCE_CURRENT_YEAR_INCLUSION_IN_YIELD_TABLES)
-				&& row.getCurrentTableYear() == row.getCurrentYear()) {
+				&& row.getCurrentTableYear().equals(row.getCurrentYear())) {
 			doDisplayRow = true;
 		} else if (params.getYearForcedIntoYearTable() != null
-				&& row.getCurrentTableYear() == params.getYearForcedIntoYearTable()) {
+				&& row.getCurrentTableYear().equals(params.getYearForcedIntoYearTable())) {
 			doDisplayRow = true;
 		}
 
@@ -571,7 +574,7 @@ public class YieldTable {
 		for (var layer : row.getPolygon().getLayers().values()) {
 
 			var layerAge0Year = layer.determineYearAtAge(0);
-			double ageOffset = primaryLayerAge0Year - layerAge0Year;
+			double ageOffset = (double) primaryLayerAge0Year - layerAge0Year;
 			var ageToRequest = year + ageOffset;
 
 			if (ageToRequest >= 0) {

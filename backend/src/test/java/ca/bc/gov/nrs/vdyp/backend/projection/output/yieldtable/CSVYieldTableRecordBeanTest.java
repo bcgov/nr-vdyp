@@ -20,12 +20,14 @@ public class CSVYieldTableRecordBeanTest {
 						b.setSpeciesField(p, i, s, Integer.valueOf(nextSetValue).toString());
 					}
 				} else {
+					var setSuccessfully = false;
 					try {
 						b.setSpeciesField(p, 1, s, "");
-						Assert.fail();
+						setSuccessfully = true;
 					} catch (AssertionError e) {
 						// expected
 					}
+					Assert.assertFalse(setSuccessfully);
 				}
 			}
 		}
@@ -38,12 +40,14 @@ public class CSVYieldTableRecordBeanTest {
 						Assert.assertEquals(Integer.valueOf(nextGetValue).toString(), b.getSpeciesField(p, i, s));
 					}
 				} else {
+					var setSuccessfully = false;
 					try {
 						b.getSpeciesField(p, 1, s);
-						Assert.fail();
+						setSuccessfully = true;
 					} catch (AssertionError e) {
 						// expected
 					}
+					Assert.assertFalse(setSuccessfully);
 				}
 			}
 		}
