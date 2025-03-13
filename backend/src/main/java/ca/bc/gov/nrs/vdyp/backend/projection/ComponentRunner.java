@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.MessageFormat;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,11 +29,10 @@ public class ComponentRunner implements IComponentRunner {
 	public void runFipStart(Polygon polygon, ProjectionTypeCode projectionTypeCode, PolygonProjectionState state)
 			throws PolygonExecutionException {
 
-		try {
+		try (var fipStartApplication = new FipStart()) {
 			Path controlFilePath = Path
 					.of(state.getExecutionFolder().toString(), projectionTypeCode.toString(), "FIPSTART.CTR");
-			var fipStartApplication = new FipStart();
-			FipStart.doMain(fipStartApplication, controlFilePath.toAbsolutePath().toString());
+			fipStartApplication.doMain(controlFilePath.toAbsolutePath().toString());
 			state.setProcessingResults(ProjectionStageCode.Initial, projectionTypeCode, 0, -99);
 		} catch (VdypApplicationInitializationException e) {
 			// TODO Auto-generated catch block
@@ -46,11 +46,10 @@ public class ComponentRunner implements IComponentRunner {
 	@Override
 	public void runVriStart(Polygon polygon, ProjectionTypeCode projectionTypeCode, PolygonProjectionState state)
 			throws PolygonExecutionException {
-		try {
+		try (var vriStartApplication = new VriStart()) {
 			Path controlFilePath = Path
 					.of(state.getExecutionFolder().toString(), projectionTypeCode.toString(), "VRISTART.CTR");
-			var vriStartApplication = new VriStart();
-			VriStart.doMain(vriStartApplication, controlFilePath.toAbsolutePath().toString());
+			vriStartApplication.doMain(controlFilePath.toAbsolutePath().toString());
 			state.setProcessingResults(ProjectionStageCode.Initial, projectionTypeCode, 0, -99);
 		} catch (VdypApplicationInitializationException e) {
 			// TODO Auto-generated catch block
@@ -110,8 +109,8 @@ public class ComponentRunner implements IComponentRunner {
 			Path controlFilePath = Path
 					.of(state.getExecutionFolder().toString(), projectionTypeCode.toString(), "VDYP.CTR");
 
-			VdypForwardApplication app = new VdypForwardApplication();
-			app.doMain(controlFilePath.toAbsolutePath().toString());
+			VdypForwardApplication
+					.main(Optional.empty(), Optional.empty(), controlFilePath.toAbsolutePath().toString());
 			state.setProcessingResults(ProjectionStageCode.Forward, projectionTypeCode, 0, -99);
 		} catch (Exception e) {
 			throw new PolygonExecutionException("Encountered exception while running ForwardApplication", e);

@@ -17,7 +17,7 @@ import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.controlmap.CachingResolvedControlMapImpl;
 import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMap;
-import ca.bc.gov.nrs.vdyp.io.ConcreteFileResolver;
+import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.math.FloatMath;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
@@ -122,7 +122,7 @@ public class VdypOutputWriter implements Closeable {
 	 * @param controlMap
 	 * @param resolver
 	 */
-	public VdypOutputWriter(Map<String, Object> controlMap, ConcreteFileResolver resolver) throws IOException {
+	public VdypOutputWriter(Map<String, Object> controlMap, FileResolver resolver) throws IOException {
 		this(
 				controlMap, //
 				getOutputStream(controlMap, resolver, ControlKey.VDYP_OUTPUT_VDYP_POLYGON.name()), //
@@ -271,9 +271,8 @@ public class VdypOutputWriter implements Closeable {
 		}
 	}
 
-	private static OutputStream
-			getOutputStream(Map<String, Object> controlMap, ConcreteFileResolver resolver, String key)
-					throws IOException {
+	private static OutputStream getOutputStream(Map<String, Object> controlMap, FileResolver resolver, String key)
+			throws IOException {
 		String fileName = Utils.expectParsedControl(controlMap, key, String.class);
 		return resolver.resolveForOutput(fileName);
 	}

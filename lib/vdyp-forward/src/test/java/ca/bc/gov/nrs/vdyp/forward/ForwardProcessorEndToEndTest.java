@@ -24,8 +24,7 @@ import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.forward.parsers.VdypPolygonParser;
 import ca.bc.gov.nrs.vdyp.forward.parsers.VdypSpeciesParser;
 import ca.bc.gov.nrs.vdyp.forward.parsers.VdypUtilizationParser;
-import ca.bc.gov.nrs.vdyp.io.CompositeFileResolver;
-import ca.bc.gov.nrs.vdyp.io.ConcreteFileResolver;
+import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BecDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BreakageEquationGroupParser;
@@ -61,14 +60,14 @@ class ForwardProcessorEndToEndTest {
 
 		ForwardProcessor fp = new ForwardProcessor();
 
-		ConcreteFileResolver inputFileResolver = TestUtils.fileResolver(TestUtils.class);
+		FileResolver inputFileResolver = TestUtils.fileResolver(TestUtils.class);
 
 		Path vdyp8OutputPath = Path.of(System.getenv().get("HOME"), "tmp", "vdyp-deltas", "vdyp8");
 		Files.createDirectories(vdyp8OutputPath);
 
 		var vdyp8OutputResolver = new FileSystemFileResolver(vdyp8OutputPath);
 
-		fp.run(new CompositeFileResolver(inputFileResolver, vdyp8OutputResolver), List.of("VDYP.CTR"), vdypPassSet);
+		fp.run(inputFileResolver, vdyp8OutputResolver, List.of("VDYP.CTR"), vdypPassSet);
 
 		var vdyp8InputResolver = new FileSystemFileResolver(vdyp8OutputPath);
 		var polygonParser = new VdypPolygonParser();
@@ -114,7 +113,7 @@ class ForwardProcessorEndToEndTest {
 				volumeGroupsParser.parse(TestUtils.class, "coe/VGRPDEF1.DAT", vdyp8ControlMap)
 		);
 
-		ConcreteFileResolver vdyp7InputResolver = TestUtils.fileResolver(TestUtils.class);
+		FileResolver vdyp7InputResolver = TestUtils.fileResolver(TestUtils.class);
 
 		Map<String, Object> vdyp7ControlMap = new HashMap<>();
 		vdyp7ControlMap.put(

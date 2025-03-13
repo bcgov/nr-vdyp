@@ -89,7 +89,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 
 		try (var app = new VriStart();) {
 			try {
-				doMain(app, args);
+				app.doMain(args);
 			} catch (VdypApplicationInitializationException e) {
 				System.exit(CONFIG_LOAD_ERROR);
 			} catch (VdypApplicationProcessingException e) {

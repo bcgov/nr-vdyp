@@ -2944,9 +2944,6 @@ class FipStartTest {
 			assertThat(vdypPolygon, notNullValue());
 			assertThat(vdypPolygon, hasProperty("layers", equalTo(processedLayers)));
 			assertThat(vdypPolygon, hasProperty("percentAvailable", closeTo(90f)));
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 	}
 
@@ -3003,9 +3000,6 @@ class FipStartTest {
 			assertThat(vdypPolygon, notNullValue());
 			assertThat(vdypPolygon, hasProperty("layers", equalTo(processedLayers)));
 			assertThat(vdypPolygon, hasProperty("percentAvailable", closeTo(42f)));
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 	}
 
@@ -3058,9 +3052,6 @@ class FipStartTest {
 			assertThat(vdypPolygon, notNullValue());
 			assertThat(vdypPolygon, hasProperty("layers", equalTo(processedLayers)));
 			assertThat(vdypPolygon, hasProperty("percentAvailable", closeTo(100f)));
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 	}
 
@@ -3211,11 +3202,7 @@ class FipStartTest {
 			assertThat(
 					spec2, hasProperty("closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization", modifiedValue)
 			);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
-
 	}
 
 	@Test
@@ -3383,11 +3370,7 @@ class FipStartTest {
 							"closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization", modifiableNotModifiedValue
 					)
 			);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
-
 	}
 
 	@Test
@@ -3567,11 +3550,7 @@ class FipStartTest {
 							"closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization", modifiableNotModifiedValue
 					)
 			);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
-
 	}
 
 	@Test

@@ -18,8 +18,6 @@ class FileSystemFileResolverTest {
 	void testWorkingDirGetPath() throws Exception {
 		var unit = new FileSystemFileResolver();
 
-		assertThat(unit.getInputFileResolver(), equalTo(unit));
-		assertThat(unit.getOutputFileResolver(), equalTo(unit));
 		assertThat(unit.toString(), equalTo("FileSystemFileResolver (absolute)"));
 
 		var result = unit.toPath("test");

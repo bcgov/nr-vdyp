@@ -117,7 +117,7 @@ public abstract class BaseControlParser {
 			try (var is = fileResolver.resolveForInput(resourceName)) {
 
 				var newEntries = controlParser.parse(is, map);
-				map.putAll(controlParser.parse(is, map));
+				map.putAll(newEntries);
 				for (var changedKey : newEntries.keySet()) {
 					resolverContext.put(
 							changedKey,

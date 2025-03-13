@@ -92,7 +92,7 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 
 		try (var app = new FipStart();) {
 			try {
-				doMain(app, args);
+				app.doMain(args);
 			} catch (VdypApplicationInitializationException e) {
 				System.exit(CONFIG_LOAD_ERROR);
 			} catch (VdypApplicationProcessingException e) {

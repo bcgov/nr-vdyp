@@ -1,6 +1,5 @@
 package ca.bc.gov.nrs.vdyp.backend.projection.model;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 

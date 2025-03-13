@@ -3,6 +3,8 @@ package ca.bc.gov.nrs.vdyp.forward;
 import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.*;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -21,7 +23,7 @@ import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.forward.parsers.VdypPolygonParser;
 import ca.bc.gov.nrs.vdyp.forward.parsers.VdypSpeciesParser;
 import ca.bc.gov.nrs.vdyp.forward.parsers.VdypUtilizationParser;
-import ca.bc.gov.nrs.vdyp.io.ConcreteFileResolver;
+import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BecDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.GenusDefinitionParser;
@@ -41,11 +43,14 @@ class ForwardProcessorCheckpointGenerationTest {
 
 		ForwardProcessor fp = new ForwardProcessor();
 
-		ConcreteFileResolver inputFileResolver = TestUtils.fileResolver(TestUtils.class);
+		FileResolver inputFileResolver = TestUtils.fileResolver(TestUtils.class);
 
-		fp.run(inputFileResolver, List.of("VDYP-Checkpoint.CTR"), vdypPassSet);
+		Path vdyp8OutputPath = Path.of(System.getenv().get("HOME"), "tmp", "vdyp-deltas", "vdyp8");
+		Files.createDirectories(vdyp8OutputPath);
 
-		var vdyp8InputResolver = new FileSystemFileResolver(inputFileResolver.toPath("."));
+		var vdyp8OutputResolver = new FileSystemFileResolver(vdyp8OutputPath);
+
+		fp.run(inputFileResolver, vdyp8OutputResolver, List.of("VDYP-Checkpoint.CTR"), vdypPassSet);
 
 		// Verify that polygons are output 14 times for each year of growth.
 
@@ -53,17 +58,17 @@ class ForwardProcessorCheckpointGenerationTest {
 		var polygonParser = new VdypPolygonParser();
 		controlMap.put(
 				ControlKey.FORWARD_INPUT_VDYP_POLY.name(),
-				polygonParser.map("vp_grow2.dat", vdyp8InputResolver, controlMap)
+				polygonParser.map("vp_grow2.dat", vdyp8OutputResolver, controlMap)
 		);
 		var speciesParser = new VdypSpeciesParser();
 		controlMap.put(
 				ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SPECIES.name(),
-				speciesParser.map("vs_grow2.dat", vdyp8InputResolver, controlMap)
+				speciesParser.map("vs_grow2.dat", vdyp8OutputResolver, controlMap)
 		);
 		var utilizationParser = new VdypUtilizationParser();
 		controlMap.put(
 				ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name(),
-				utilizationParser.map("vu_grow2.dat", vdyp8InputResolver, controlMap)
+				utilizationParser.map("vu_grow2.dat", vdyp8OutputResolver, controlMap)
 		);
 		var becDefinitionParser = new BecDefinitionParser();
 		controlMap.put(

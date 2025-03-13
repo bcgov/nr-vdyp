@@ -1,7 +1,6 @@
 package ca.bc.gov.nrs.vdyp.integration_tests;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -35,6 +34,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import ca.bc.gov.nrs.vdyp.application.ProcessingException;
 import ca.bc.gov.nrs.vdyp.application.VdypStartApplication;
+import ca.bc.gov.nrs.vdyp.common.VdypApplicationInitializationException;
 import ca.bc.gov.nrs.vdyp.fip.FipStart;
 import ca.bc.gov.nrs.vdyp.fip.model.FipLayer;
 import ca.bc.gov.nrs.vdyp.fip.model.FipPolygon;
@@ -213,78 +213,86 @@ class ITDataBased {
 	@Order(ORDER_START)
 	@ParameterizedTest
 	@MethodSource("testNameAndLayerProvider")
-	void testVriStart(String test, String layer) throws IOException, ResourceParseException, ProcessingException {
-		State inputState = State.VriInput;
-		State outputState = State.ForwardInput;
+	void testVriStart(String test, String layer) throws VdypApplicationInitializationException, ProcessingException {
 
-		Path testDir = testDataDir.resolve(test);
-		Path dataDir = testDir.resolve(inputState.dir).resolve(layer);
-		Path expectedDir = testDir.resolve(outputState.dir).resolve(layer);
+		try {
+			State inputState = State.VriInput;
+			State outputState = State.ForwardInput;
 
-		Path baseControlFile = copyResource(TestUtils.class, "VRISTART.CTR", testConfigDir);
+			Path testDir = testDataDir.resolve(test);
+			Path dataDir = testDir.resolve(inputState.dir).resolve(layer);
+			Path expectedDir = testDir.resolve(outputState.dir).resolve(layer);
 
-		Assumptions.assumeTrue(Files.exists(dataDir), "No input data");
-		Assumptions.assumeTrue(Files.exists(expectedDir), "No expected output data");
+			Path baseControlFile = copyResource(TestUtils.class, "VRISTART.CTR", testConfigDir);
 
-		doSkip(testDir, "testVriStart");
+			Assumptions.assumeTrue(Files.exists(dataDir), "No input data");
+			Assumptions.assumeTrue(Files.exists(expectedDir), "No expected output data");
 
-		// Create a second control file pointing to the input and output
-		Path ioControlFile = dataDir.resolve("io-control.ctl");
+			doSkip(testDir, "testVriStart");
 
-		Path testControlFile = dataDir.resolve("control.ctl");
+			// Create a second control file pointing to the input and output
+			Path ioControlFile = dataDir.resolve("io-control.ctl");
 
-		try (
-				var os = Files.newOutputStream(ioControlFile); //
-				var writer = new ControlFileWriter(os);
-		) {
-			writer.writeComment("Generated supplementary control file for integration testing");
-			writer.writeBlank();
-			writer.writeComment("Inputs");
-			writer.writeBlank();
-			writer.writeEntry(11, dataDir.resolve(fileName(inputState, Data.Polygon)).toString(), "VRI Polygon Input");
-			writer.writeEntry(12, dataDir.resolve(fileName(inputState, Data.Layer)).toString(), "VRI Layer Input");
-			writer.writeEntry(13, dataDir.resolve(fileName(inputState, Data.Site)).toString(), "VRI Site Input");
-			writer.writeEntry(14, dataDir.resolve(fileName(inputState, Data.Species)).toString(), "VRI Species Input");
-			writer.writeBlank();
-			writer.writeComment("Outputs");
-			writer.writeBlank();
-			writer.writeEntry(15, outputDir.resolve(POLYGON_OUTPUT_NAME).toString(), "VDYP Polygon Output");
-			writer.writeEntry(16, outputDir.resolve(SPECIES_OUTPUT_NAME).toString(), "VDYP Species Output");
-			writer.writeEntry(18, outputDir.resolve(UTILIZATION_OUTPUT_NAME).toString(), "VDYP Utilization Output");
-		}
+			Path testControlFile = dataDir.resolve("control.ctl");
 
-		final var controlFiles = Stream.of(baseControlFile, testControlFile, ioControlFile).filter(Files::exists)
-				.map(Object::toString).toArray(String[]::new);
+			try (
+					var os = Files.newOutputStream(ioControlFile); //
+					var writer = new ControlFileWriter(os);
+			) {
+				writer.writeComment("Generated supplementary control file for integration testing");
+				writer.writeBlank();
+				writer.writeComment("Inputs");
+				writer.writeBlank();
+				writer.writeEntry(
+						11, dataDir.resolve(fileName(inputState, Data.Polygon)).toString(), "VRI Polygon Input"
+				);
+				writer.writeEntry(12, dataDir.resolve(fileName(inputState, Data.Layer)).toString(), "VRI Layer Input");
+				writer.writeEntry(13, dataDir.resolve(fileName(inputState, Data.Site)).toString(), "VRI Site Input");
+				writer.writeEntry(
+						14, dataDir.resolve(fileName(inputState, Data.Species)).toString(), "VRI Species Input"
+				);
+				writer.writeBlank();
+				writer.writeComment("Outputs");
+				writer.writeBlank();
+				writer.writeEntry(15, outputDir.resolve(POLYGON_OUTPUT_NAME).toString(), "VDYP Polygon Output");
+				writer.writeEntry(16, outputDir.resolve(SPECIES_OUTPUT_NAME).toString(), "VDYP Species Output");
+				writer.writeEntry(18, outputDir.resolve(UTILIZATION_OUTPUT_NAME).toString(), "VDYP Utilization Output");
+			}
 
-		try (VdypStartApplication<VriPolygon, VriLayer, VriSpecies, VriSite> app = new VriStart();) {
+			final var controlFiles = Stream.of(baseControlFile, testControlFile, ioControlFile).filter(Files::exists)
+					.map(Object::toString).toArray(String[]::new);
 
-			var resolver = new FileSystemFileResolver(configDir);
+			try (VdypStartApplication<VriPolygon, VriLayer, VriSpecies, VriSite> app = new VriStart();) {
 
-			app.init(
-					resolver, new PrintStream(new ByteArrayOutputStream()), TestUtils.makeInputStream("", ""),
-					controlFiles
+				var resolver = new FileSystemFileResolver(configDir);
+
+				app.init(
+						resolver, new PrintStream(new ByteArrayOutputStream()), TestUtils.makeInputStream("", ""),
+						controlFiles
+				);
+
+				app.process();
+			}
+
+			assertFileExists(outputDir.resolve(POLYGON_OUTPUT_NAME));
+			assertFileExists(outputDir.resolve(SPECIES_OUTPUT_NAME));
+			assertFileExists(outputDir.resolve(UTILIZATION_OUTPUT_NAME));
+
+			assertFileMatches(
+					outputDir.resolve(POLYGON_OUTPUT_NAME), expectedDir.resolve(fileName(outputState, Data.Polygon)),
+					this::polygonLinesMatch
 			);
-
-			app.process();
+			assertFileMatches(
+					outputDir.resolve(SPECIES_OUTPUT_NAME), expectedDir.resolve(fileName(outputState, Data.Species)),
+					this::specLinesMatch
+			);
+			assertFileMatches(
+					outputDir.resolve(UTILIZATION_OUTPUT_NAME),
+					expectedDir.resolve(fileName(outputState, Data.Utilization)), this::utilLinesMatch
+			);
+		} catch (Exception e) {
+			throw new VdypApplicationInitializationException(e);
 		}
-
-		assertFileExists(outputDir.resolve(POLYGON_OUTPUT_NAME));
-		assertFileExists(outputDir.resolve(SPECIES_OUTPUT_NAME));
-		assertFileExists(outputDir.resolve(UTILIZATION_OUTPUT_NAME));
-
-		assertFileMatches(
-				outputDir.resolve(POLYGON_OUTPUT_NAME), expectedDir.resolve(fileName(outputState, Data.Polygon)),
-				this::polygonLinesMatch
-		);
-		assertFileMatches(
-				outputDir.resolve(SPECIES_OUTPUT_NAME), expectedDir.resolve(fileName(outputState, Data.Species)),
-				this::specLinesMatch
-		);
-		assertFileMatches(
-				outputDir.resolve(UTILIZATION_OUTPUT_NAME),
-				expectedDir.resolve(fileName(outputState, Data.Utilization)), this::utilLinesMatch
-		);
-
 	}
 
 	@Order(ORDER_START)

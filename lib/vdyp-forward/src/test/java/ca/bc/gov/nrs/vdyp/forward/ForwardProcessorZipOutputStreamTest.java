@@ -20,7 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.application.ProcessingException;
-import ca.bc.gov.nrs.vdyp.io.ConcreteFileResolver;
+import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.ZipOutputFileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
@@ -39,11 +39,11 @@ class ForwardProcessorZipOutputStreamTest {
 
 		ForwardProcessor fp = new ForwardProcessor();
 
-		ConcreteFileResolver inputFileResolver = TestUtils.fileResolver(TestUtils.class);
+		FileResolver inputFileResolver = TestUtils.fileResolver(TestUtils.class);
 
 		var outputResolver = new ZipOutputFileResolver();
 
-		fp.run(inputFileResolver, List.of("VDYP.CTR"), vdypPassSet);
+		fp.run(inputFileResolver, outputResolver, List.of("VDYP.CTR"), vdypPassSet);
 
 		Path resourceDirectory = Paths.get("src", "test", "resources", "output");
 		Files.createDirectories(resourceDirectory);
