@@ -2,10 +2,7 @@ package ca.bc.gov.nrs.vdyp.io.parse.coe;
 
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.hasSpecificEntry;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.hasEntry;
-import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 
 import java.util.HashMap;
 import java.util.Map;

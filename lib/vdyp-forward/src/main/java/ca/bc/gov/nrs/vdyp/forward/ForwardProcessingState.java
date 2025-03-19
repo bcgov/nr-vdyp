@@ -3,10 +3,10 @@ package ca.bc.gov.nrs.vdyp.forward;
 import java.util.Map;
 import java.util.Optional;
 
-import ca.bc.gov.nrs.vdyp.application.ProcessingException;
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.common.ComputationMethods;
 import ca.bc.gov.nrs.vdyp.common.EstimationMethods;
+import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.controlmap.ForwardResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.forward.controlmap.ForwardResolvedControlMapImpl;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;

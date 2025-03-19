@@ -1,13 +1,12 @@
 package ca.bc.gov.nrs.vdyp.forward;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
-import ca.bc.gov.nrs.vdyp.application.ProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 
 public class FindInventoryTypeGroupsTest {
 

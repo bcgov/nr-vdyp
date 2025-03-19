@@ -53,13 +53,13 @@ import org.junit.jupiter.params.provider.EnumSource.Mode;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import ca.bc.gov.nrs.vdyp.application.ApplicationTestUtils;
-import ca.bc.gov.nrs.vdyp.application.ProcessingException;
-import ca.bc.gov.nrs.vdyp.application.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.application.VdypStartApplication;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
+import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BasalAreaYieldParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BaseAreaCoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.HLNonprimaryCoefficientParser;

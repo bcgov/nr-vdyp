@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.ValueOrMarker;
-import ca.bc.gov.nrs.vdyp.vri.model.VriLayer;
 import ca.bc.gov.nrs.vdyp.io.EndOfRecord;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.common.LineParser;
@@ -19,6 +18,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.streaming.GroupingStreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParser;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
+import ca.bc.gov.nrs.vdyp.vri.model.VriLayer;
 
 /**
  * Parses a file containing VRI Layer records into VriLayer.Builder objects. Returns Builders rather than finished

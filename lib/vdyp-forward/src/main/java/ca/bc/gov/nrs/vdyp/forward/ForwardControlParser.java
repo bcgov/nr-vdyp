@@ -128,9 +128,16 @@ public class ForwardControlParser extends BaseControlParser {
 			ControlKey.class
 	);
 
+	private final Set<ControlKey> vdypForwardOutputWriters = new HashSet<>();
+
 	private void addInputParser(ControlMapValueReplacer<Object, String> parser) {
 		vdypForwardInputParsers.put(parser.getControlKey(), parser);
 		orderedControlKeys.add(parser.getControlKey());
+	}
+
+	private void addOutputWriter(ControlKey key) {
+		vdypForwardOutputWriters.add(key);
+		orderedControlKeys.add(key);
 	}
 
 	private final Map<ControlKey, ResourceControlMapModifier> vdypForwardConfigurationParsers = new EnumMap<>(
@@ -267,6 +274,15 @@ public class ForwardControlParser extends BaseControlParser {
 		// V7O_VI7 - 14
 		addInputParser(new VdypPolygonDescriptionParser());
 
+		// V7O_VOP - 15
+		addOutputWriter(ControlKey.VDYP_OUTPUT_VDYP_POLYGON);
+		// V7O_VOS - 16
+		addOutputWriter(ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SPECIES);
+		// V7O_VOU - 18
+		addOutputWriter(ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL);
+		// V7O_VOC - 19
+		addOutputWriter(ControlKey.VDYP_OUTPUT_COMPATIBILITY_VARIABLES);
+
 		// 101 - a literal value of type VdypGrowthDetails
 
 		controlParser.record(ControlKey.VTROL, new ForwardControlVariableParser());
@@ -308,7 +324,7 @@ public class ForwardControlParser extends BaseControlParser {
 				// m is a configuration file parser.
 				logger.debug(
 						"Parsing configuration file {}[{}] using {}", m.getControlKeyName(), key.sequence.get(),
-						m.getClass().getName()
+						m.getClass().getSimpleName()
 				);
 				m.modify(map, fileResolver);
 			}
@@ -318,7 +334,7 @@ public class ForwardControlParser extends BaseControlParser {
 				// r is an input file parser.
 				logger.debug(
 						"Parsing input file {}[{}] using {}", r.getControlKeyName(), key.sequence.get(),
-						r.getClass().getName()
+						r.getClass().getSimpleName()
 				);
 				r.modify(map, fileResolver);
 			}

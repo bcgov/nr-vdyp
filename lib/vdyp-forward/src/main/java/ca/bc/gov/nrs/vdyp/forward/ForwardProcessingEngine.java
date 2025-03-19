@@ -1,9 +1,6 @@
 package ca.bc.gov.nrs.vdyp.forward;
 
-import static ca.bc.gov.nrs.vdyp.math.FloatMath.clamp;
-import static ca.bc.gov.nrs.vdyp.math.FloatMath.exp;
-import static ca.bc.gov.nrs.vdyp.math.FloatMath.log;
-import static ca.bc.gov.nrs.vdyp.math.FloatMath.pow;
+import static ca.bc.gov.nrs.vdyp.math.FloatMath.*;
 import static java.lang.Math.max;
 
 import java.io.IOException;
@@ -21,9 +18,6 @@ import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ca.bc.gov.nrs.vdyp.application.ProcessingException;
-import ca.bc.gov.nrs.vdyp.application.RuntimeProcessingException;
-import ca.bc.gov.nrs.vdyp.application.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.EstimationMethods;
 import ca.bc.gov.nrs.vdyp.common.ReconcilationMethods;
@@ -36,6 +30,9 @@ import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.NoAnswerException
 import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.SpeciesErrorException;
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexAgeType;
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
+import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.RuntimeProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.model.ControlVariable;
 import ca.bc.gov.nrs.vdyp.forward.model.ForwardControlVariables;
 import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings;
@@ -1497,8 +1494,9 @@ public class ForwardProcessingEngine {
 				logBaDeltaProportion = a0 + a1 * logBaProportionStart + a2 * baStart;
 			} else {
 				throw new ProcessingException(
-						MessageFormat
-								.format("Model value {} for polygon stratum {} is out of range", model, psStratumNumber)
+						MessageFormat.format(
+								"Model value {0} for polygon stratum {1} is out of range", model, psStratumNumber
+						)
 				);
 			}
 
@@ -2371,7 +2369,6 @@ public class ForwardProcessingEngine {
 		}
 	}
 
-	@SuppressWarnings("java:S3776")
 	private void writeCurrentPolygon(int startYear, int currentYear, int endYear) throws ProcessingException {
 
 		try {
@@ -3449,7 +3446,6 @@ public class ForwardProcessingEngine {
 	 * @return as described
 	 * @throws ProcessingException if primaryGenus is not a known genus
 	 */
-	@SuppressWarnings("java:S3776")
 	static int findInventoryTypeGroup(String primarySp0, Optional<String> optionalSecondarySp0, float primaryPercentage)
 			throws ProcessingException {
 
