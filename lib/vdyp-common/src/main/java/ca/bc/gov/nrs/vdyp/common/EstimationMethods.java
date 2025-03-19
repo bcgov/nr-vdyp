@@ -17,15 +17,17 @@ import java.util.function.Predicate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ca.bc.gov.nrs.vdyp.application.ProcessingException;
-import ca.bc.gov.nrs.vdyp.application.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMap;
+import ca.bc.gov.nrs.vdyp.exceptions.BreastHeightAgeLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.math.FloatMath;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
+import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
@@ -843,7 +845,7 @@ public class EstimationMethods {
 		}
 
 		if (ageToUse <= 0f) {
-			throw new StandProcessingException("Age was not positive");
+			throw new BreastHeightAgeLowException(LayerType.PRIMARY, Optional.of(ageToUse));
 		}
 
 		float trAge = FloatMath.log(ageToUse);
@@ -902,7 +904,7 @@ public class EstimationMethods {
 		}
 
 		if (ageUse <= 0f) {
-			throw new StandProcessingException("Primary breast height age must be positive but was " + ageUse);
+			throw new BreastHeightAgeLowException(LayerType.PRIMARY, Optional.of(ageUse));
 		}
 
 		final float trAge = FloatMath.log(ageUse);

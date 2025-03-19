@@ -19,7 +19,9 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.math3.analysis.UnivariateFunction;
@@ -29,13 +31,10 @@ import org.apache.commons.math3.exception.TooManyEvaluationsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ca.bc.gov.nrs.vdyp.application.ProcessingException;
-import ca.bc.gov.nrs.vdyp.application.RuntimeProcessingException;
-import ca.bc.gov.nrs.vdyp.application.RuntimeStandProcessingException;
-import ca.bc.gov.nrs.vdyp.application.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.application.VdypStartApplication;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
+import ca.bc.gov.nrs.vdyp.common.ResultWithStatus;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common.ValueOrMarker;
 import ca.bc.gov.nrs.vdyp.common.VdypApplicationInitializationException;
@@ -45,6 +44,15 @@ import ca.bc.gov.nrs.vdyp.common_calculators.SiteIndex2Height;
 import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.CommonCalculatorException;
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexAgeType;
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
+import ca.bc.gov.nrs.vdyp.exceptions.BaseAreaLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.FatalProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.HeightLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.LayerValueLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.RuntimeProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.RuntimeStandProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.TreesPerHectareLowException;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.control.BaseControlParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
@@ -99,18 +107,19 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 	}
 
 	protected static <T extends Number> T requirePositive(Optional<T> opt, String name)
-			throws StandProcessingException {
+			throws FatalProcessingException {
+
 		T value = require(opt, name);
 
 		if (value.doubleValue() <= 0) {
-			throw new StandProcessingException(name + " " + value + " is not positive");
+			throw new FatalProcessingException(name + " " + value + " is not positive");
 		}
 
 		return value;
 	}
 
-	protected static <T> T require(Optional<T> opt, String name) throws StandProcessingException {
-		return opt.orElseThrow(() -> new StandProcessingException(name + " is not present"));
+	protected static <T> T require(Optional<T> opt, String name) throws FatalProcessingException {
+		return opt.orElseThrow(() -> new FatalProcessingException(name + " is not present"));
 	}
 
 	// VRI_SUB
@@ -469,7 +478,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		var primarySpeciesDensity = primarySpeciesPercent * primaryLayerDensity;
 
 		// HDL1 or HT_L1
-		var leadHeight = requirePositive(primarySiteIn.getHeight(), "Primary layer lead species height");
+		float leadHeight = requirePositive(LayerType.PRIMARY, primarySiteIn.getHeight(), HeightLowException::new);
 
 		// HLPL1
 		// EMP050 Method 1
@@ -688,7 +697,13 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		);
 	}
 
-	private float processVeteranLayer(VriPolygon polygon, VdypLayer.Builder lBuilder) throws StandProcessingException {
+	private record VeteranResult(float treesPerHectare, boolean lowDq) {
+	};
+
+	private ResultWithStatus<Float, ResultWithStatus.BasicStatus> processVeteranLayer(
+			VriPolygon polygon, VdypLayer.Builder lBuilder
+	)
+			throws StandProcessingException {
 		var veteranLayer = polygon.getLayers().get(LayerType.VETERAN);
 		lBuilder.layerType(LayerType.VETERAN);
 
@@ -704,25 +719,20 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		float yearsToBreastHeight = primarySite.flatMap(VriSite::getYearsToBreastHeight).orElse(0f); // YTBHLV
 		float dominantHeight = primarySite.flatMap(VriSite::getHeight).orElse(0f); // HDLV
 
-		var baseArea = veteranLayer.getBaseArea()
-				.orElseThrow(() -> new StandProcessingException("Expected veteran layer to have a base area")); // BA_V1
-		var treesPerHectare = veteranLayer.getTreesPerHectare()
-				.orElseThrow(() -> new StandProcessingException("Expected veteran layer to have a trees per hectare")); // TPH_V1
+		float baseArea = requirePositive(LayerType.VETERAN, veteranLayer.getBaseArea(), BaseAreaLowException::new);
+		float treesPerHectare = requirePositive(
+				LayerType.VETERAN, veteranLayer.getTreesPerHectare(), TreesPerHectareLowException::new
+		);
 
-		treesPerHectare = enforceMinimumDiameter(baseArea, treesPerHectare);
+		boolean lowDq = false;
+
+		{
+			var enforcedTph = enforceMinimumDiameter(baseArea, treesPerHectare);
+			treesPerHectare = enforcedTph.treesPerHectare();
+			lowDq = enforcedTph.lowDq();
+		}
 
 		float inputTreesPerHectare = treesPerHectare; // TPHInput
-
-		if (baseArea <= 0) {
-			throw new StandProcessingException(
-					MessageFormat.format("Veteran layer base area ({0}) was not positive", baseArea)
-			);
-		}
-		if (treesPerHectare <= 0) {
-			throw new StandProcessingException(
-					MessageFormat.format("Veteran layer trees per hectare ({0}) was not positive", baseArea)
-			);
-		}
 
 		lBuilder.adaptSpecies(veteranLayer, (sBuilder, spec) -> {
 			applyGroups(bec, spec.getGenus(), sBuilder);
@@ -784,7 +794,10 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			treesPerHectare = tphSum;
 		}
 
-		return inputTreesPerHectare;
+		return new ResultWithStatus<>(
+				inputTreesPerHectare,
+				lowDq ? ResultWithStatus.BasicStatus.OK : ResultWithStatus.BasicStatus.WARNING
+		);
 	}
 
 	static final String MINIMUM_DIAMETER_BASE_MESSAGE = "Quadratic mean diameter {0} cm was lower than {1} cm";
@@ -792,18 +805,21 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			+ ", raising tree density to {2} trees/ha";
 	static final String MINIMUM_DIAMETER_FAIL_MESSAGE = MINIMUM_DIAMETER_BASE_MESSAGE + ".";
 
-	private Float enforceMinimumDiameter(Float baseArea, Float treesPerHectare) throws StandProcessingException {
+	private VeteranResult enforceMinimumDiameter(Float baseArea, Float treesPerHectare)
+			throws StandProcessingException {
 		final float quadMeanDiameter = BaseAreaTreeDensityDiameter.quadMeanDiameter(baseArea, treesPerHectare);
+		boolean lowDq = false;
 		if (quadMeanDiameter < VETERAN_MIN_DQ) {
 			if (this.getId() == VdypApplicationIdentifier.VRI_START && this.getDebugMode(1) == 2) {
-				throw new StandProcessingException(
+				throw new ProcessingException(
 						MessageFormat.format(MINIMUM_DIAMETER_FAIL_MESSAGE, quadMeanDiameter, VETERAN_MIN_DQ)
 				);
 			}
 			treesPerHectare = BaseAreaTreeDensityDiameter.treesPerHectare(baseArea, VETERAN_MIN_DQ);
 			log.atWarn().setMessage(MINIMUM_DIAMETER_WARN_MESSAGE).addArgument(treesPerHectare);
+			lowDq = true;
 		}
-		return treesPerHectare;
+		return new VeteranResult(treesPerHectare, lowDq);
 	}
 
 	// EMP097 TODO move to EstimationMethods and this should probably be used in FipStart

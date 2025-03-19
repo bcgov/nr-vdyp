@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.vdyp.application;
+package ca.bc.gov.nrs.vdyp.exceptions;
 
 import java.text.MessageFormat;
 
@@ -18,10 +18,6 @@ public class ProcessingException extends Exception {
 
 	public ProcessingException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
 		super(message, cause, enableSuppression, writableStackTrace);
-	}
-
-	public ProcessingException(String message, int errorNumber, Throwable cause) {
-		super(MessageFormat.format("{0} ({1})", message, errorNumber), cause);
 	}
 
 	public ProcessingException(String message, int errorNumber) {
