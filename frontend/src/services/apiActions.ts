@@ -17,39 +17,42 @@ export const helpGet = async (): Promise<ParameterDetailsMessage[]> => {
 
 /**
  * Sends a projection HCSV POST request to the API using the provided FormData.
- * @param formData The FormData containing necessary files and parameters.
- * @param trialRun Boolean flag indicating if this is a trial run (default is false).
- * @returns A promise that resolves to a Blob containing the projection result.
- */
-export const projectionHcsvPost = async (
-  formData: FormData,
-  trialRun: boolean = false,
-): Promise<Blob> => {
-  try {
-    const response = await projectionHcsvPostResponse(formData, trialRun)
-    return response.data
-  } catch (error) {
-    console.error('Error running projection:', error)
-    throw error
-  }
-}
-
-/**
- * Sends a projection HCSV POST request and returns the full Axios response.
- * Useful for cases where need access to the response headers.
+ * Returns the full Axios response including headers and data.
  * @param formData The FormData containing necessary files and parameters.
  * @param trialRun Boolean flag indicating if this is a trial run (default is false).
  * @returns A promise that resolves to the full Axios response.
  */
-export const projectionHcsvPostResponse = async (
+export const projectionHcsvPost = async (
   formData: FormData,
   trialRun: boolean = false,
 ): Promise<any> => {
   try {
     const response = await apiClient.projectionHcsvPost(formData, trialRun)
-    return response
+
+    // Check status and content type
+    if (
+      response.status === 200 &&
+      response.headers['content-type']?.includes('application/octet-stream')
+    ) {
+      // Success response, returns a blob
+      return response
+    } else if (
+      response.status === 400 &&
+      response.headers['content-type']?.includes('application/json')
+    ) {
+      // Errors including validation messages
+      throw new Error(JSON.stringify(response.data))
+    } else {
+      throw new Error(`Unexpected response: ${response.status}`)
+    }
   } catch (error) {
-    console.error('Error running projection:', error)
+    console.error('Error running projection:', {
+      message: (error as any).message,
+      code: (error as any).code,
+      response: (error as any).response,
+      request: (error as any).request,
+      config: (error as any).config,
+    })
     throw error
   }
 }

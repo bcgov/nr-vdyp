@@ -2,8 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import JSZip from 'jszip'
 import { messageResult } from '@/utils/messageHandler'
-import { FILE_UPLOAD_ERR } from '@/constants/message'
-import { FILE_NAME } from '@/constants/constants'
+import { CONSTANTS, MESSAGE } from '@/constants'
 
 export const useProjectionStore = defineStore('projectionStore', () => {
   const errorMessages = ref<string[]>([])
@@ -11,10 +10,15 @@ export const useProjectionStore = defineStore('projectionStore', () => {
   const debugMessages = ref<string[]>([])
   const yieldTable = ref<string>('') // raw CSV
   const yieldTableArray = ref<string[]>([]) // Array of CSV lines
+  const rawResultZipFile = ref<Blob | null>(null) // zip file
+  const rawResultZipFileName = ref<string>('')
 
-  const handleZipResponse = async (zipData: Blob) => {
+  const handleZipResponse = async (zipFile: Blob, zipFileName: string) => {
     try {
-      const zip = await JSZip.loadAsync(zipData)
+      rawResultZipFile.value = zipFile
+      rawResultZipFileName.value = zipFileName
+
+      const zip = await JSZip.loadAsync(zipFile)
 
       // Print all file names in the ZIP file
       console.log('Files in ZIP archive:')
@@ -23,9 +27,9 @@ export const useProjectionStore = defineStore('projectionStore', () => {
       }
 
       const requiredFiles = {
-        error: FILE_NAME.ERROR_TXT,
-        log: FILE_NAME.LOG_TXT,
-        yield: FILE_NAME.YIELD_TABLE_CSV,
+        error: CONSTANTS.FILE_NAME.ERROR_TXT,
+        log: CONSTANTS.FILE_NAME.LOG_TXT,
+        yield: CONSTANTS.FILE_NAME.YIELD_TABLE_CSV,
       }
 
       const errorFile = zip.file(requiredFiles.error)
@@ -39,7 +43,7 @@ export const useProjectionStore = defineStore('projectionStore', () => {
         messageResult(
           false,
           '',
-          `${FILE_UPLOAD_ERR.MISSING_RESPONSED_FILE}: ${missingFiles.join(', ')}`,
+          `${MESSAGE.FILE_UPLOAD_ERR.MISSING_RESPONSED_FILE}: ${missingFiles.join(', ')}`,
         )
         throw new Error(`Missing files: ${missingFiles.join(', ')}`)
       }
@@ -57,13 +61,13 @@ export const useProjectionStore = defineStore('projectionStore', () => {
       }
 
       // Optional
-      const debugFile = zip.file(FILE_NAME.DEBUG_TXT)
+      const debugFile = zip.file(CONSTANTS.FILE_NAME.DEBUG_TXT)
       if (debugFile) {
         debugMessages.value = (await debugFile.async('string')).split(/\r?\n/)
       }
     } catch (error) {
       console.error('Error processing ZIP file:', error)
-      messageResult(false, '', FILE_UPLOAD_ERR.INVALID_RESPONSED_FILE)
+      messageResult(false, '', MESSAGE.FILE_UPLOAD_ERR.INVALID_RESPONSED_FILE)
       throw error
     }
   }
@@ -94,9 +98,28 @@ export const useProjectionStore = defineStore('projectionStore', () => {
       const zipBlob = await zip.generateAsync({ type: 'blob' })
 
       // Handle the ZIP file
-      await handleZipResponse(zipBlob)
+      await handleZipResponse(
+        zipBlob,
+        CONSTANTS.FILE_NAME.PROJECTION_RESULT_ZIP,
+      )
     } catch (error) {
       console.error('Error creating ZIP file:', error)
+    }
+  }
+
+  const loadSampleRawData = async (): Promise<Blob> => {
+    try {
+      const filePath = '/test-data/test-data.zip'
+      const response = await fetch(filePath)
+      if (!response.ok) {
+        throw new Error(`Failed to load file: ${filePath}`)
+      }
+      const zipBlob = await response.blob()
+
+      return zipBlob
+    } catch (error) {
+      console.error('Error loading raw ZIP file:', error)
+      throw error
     }
   }
 
@@ -105,7 +128,10 @@ export const useProjectionStore = defineStore('projectionStore', () => {
     logMessages,
     yieldTable,
     yieldTableArray,
+    rawResultZipFile,
+    rawResultZipFileName,
     handleZipResponse,
     loadSampleData,
+    loadSampleRawData,
   }
 })

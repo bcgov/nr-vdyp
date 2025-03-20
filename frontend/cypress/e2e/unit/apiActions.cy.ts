@@ -47,14 +47,18 @@ describe('apiActions Unit Tests', () => {
   context('projectionHcsvPost', () => {
     it('should post projection data successfully', async () => {
       const mockBlob = new Blob(['test data'], { type: 'application/json' })
-      projectionHcsvPostStub.resolves({ data: mockBlob })
+      projectionHcsvPostStub.resolves({
+        status: 200,
+        headers: { 'content-type': 'application/octet-stream' },
+        data: mockBlob,
+      })
 
       const formData = new FormData()
       formData.append('file', new Blob(), 'test.csv')
       const result = await apiActions.projectionHcsvPost(formData, true)
 
       expect(projectionHcsvPostStub.calledOnceWith(formData, true)).to.be.true
-      expect(result).to.equal(mockBlob)
+      expect(result.data).to.equal(mockBlob)
     })
 
     it('should handle error when posting projection data', async () => {
