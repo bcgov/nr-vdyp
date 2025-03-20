@@ -38,6 +38,8 @@ npx cypress run --e2e --spec "cypress/e2e/unit/**/*.cy.ts"
 
 ## Storybook
 
+## Storybook
+
 Storybook is a frontend workshop for building UI components and pages in
 isolation. To start Storybook, run the following command:
 
