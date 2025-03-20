@@ -7,8 +7,8 @@ public class ValidationMessageTest {
 
 	@Test
 	void objectMethodTests() {
-		var m1 = new ValidationMessage(ValidationMessageKind.INTEGER_VALUE_TOO_HIGH, "1", "field");
-		var m2 = new ValidationMessage(ValidationMessageKind.INTEGER_VALUE_TOO_LOW, "1", "field");
+		var m1 = new ValidationMessage(ValidationMessageKind.INTEGER_VALUE_TOO_HIGH, "1", "field", "0");
+		var m2 = new ValidationMessage(ValidationMessageKind.INTEGER_VALUE_TOO_LOW, "1", "field", "2");
 		var m3 = new ValidationMessage(ValidationMessageKind.INTEGER_VALUE_TOO_LOW);
 		var m4 = new ValidationMessage(ValidationMessageKind.INTEGER_VALUE_TOO_LOW, "2", "field");
 

@@ -136,7 +136,7 @@ public class ProjectionRequestParametersValidator {
 		vparams.setAgeStart(
 				getIntegerValue(
 						params.getAgeStart(), DEFAULT.getAgeStart(), vparams.getMinAgeStart(), vparams.getMaxAgeStart(),
-						"ageEnd"
+						"ageStart"
 				)
 		);
 
