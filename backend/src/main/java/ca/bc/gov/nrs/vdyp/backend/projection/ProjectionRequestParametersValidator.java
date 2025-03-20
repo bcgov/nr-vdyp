@@ -129,7 +129,7 @@ public class ProjectionRequestParametersValidator {
 			vparams.selectedDebugOptions(new ArrayList<>(selectedOptions));
 		}
 
-		vparams.setMinAgeStart(DEFAULT.getMinAgeEnd());
+		vparams.setMinAgeStart(DEFAULT.getMinAgeStart());
 		vparams.setMaxAgeStart(DEFAULT.getMaxAgeStart());
 
 		// Parameters.JSON_PROPERTY_AGE_START
