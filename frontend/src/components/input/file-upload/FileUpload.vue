@@ -90,7 +90,7 @@ import {
   CombineAgeYearRangeEnum,
   ParameterNamesEnum,
 } from '@/services/vdyp-api'
-import { projectionHcsvPostResponse } from '@/services/apiActions'
+import { projectionHcsvPost } from '@/services/apiActions'
 import { handleApiError } from '@/services/apiErrorHandler'
 import {
   AppRunModelButton,
@@ -101,7 +101,7 @@ import {
 import type { MessageDialog } from '@/interfaces/interfaces'
 import { CONSTANTS, MESSAGE, DEFAULTS } from '@/constants'
 import { fileUploadValidation } from '@/validation'
-import { delay, downloadFile } from '@/utils/util'
+import { delay, downloadFile, extractZipFileName } from '@/utils/util'
 import { logSuccessMessage } from '@/utils/messageHandler'
 
 const form = ref<HTMLFormElement>()
@@ -401,32 +401,6 @@ const getFormData = () => {
 }
 
 /**
- * Extracts the zip file name from the response headers.
- * It checks for a 'content-disposition' header and extracts the file name.
- * @param headers - The response headers object (either Axios or Fetch style)
- * @returns The extracted zip file name or a default name if not found.
- */
-const extractZipFileName = (headers: any): string => {
-  const defaultName = CONSTANTS.FILE_NAME.PROJECTION_RESULT_ZIP
-  let contentDisposition: string | undefined
-
-  // Support for both Axios (plain object) and Fetch (Headers instance)
-  if (typeof headers.get === 'function') {
-    contentDisposition = headers.get('content-disposition')
-  } else {
-    contentDisposition = headers['content-disposition']
-  }
-
-  if (contentDisposition) {
-    const fileNameMatch = contentDisposition.match(/filename="([^"]+)"/)
-    if (fileNameMatch && fileNameMatch[1]) {
-      return fileNameMatch[1]
-    }
-  }
-  return defaultName
-}
-
-/**
  * Handles the run model process.
  * Validates inputs, sends the projection request, and downloads the resulting file.
  */
@@ -448,9 +422,11 @@ const runModelHandler = async () => {
 
     await delay(1000)
 
-    const response = await projectionHcsvPostResponse(getFormData(), false)
+    const response = await projectionHcsvPost(getFormData(), false)
 
-    const zipFileName = extractZipFileName(response.headers)
+    const zipFileName =
+      extractZipFileName(response.headers) ||
+      CONSTANTS.FILE_NAME.PROJECTION_RESULT_ZIP
     console.debug('download zip file name:', zipFileName)
 
     const resultBlob = response.data

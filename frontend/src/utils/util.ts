@@ -297,3 +297,28 @@ export const downloadFile = (blob: Blob, fileName: string) => {
   document.body.removeChild(a)
   URL.revokeObjectURL(url)
 }
+
+/**
+ * Extracts the zip file name from the response headers.
+ * It checks for a 'content-disposition' header and extracts the file name.
+ * @param headers - The response headers object (either Axios or Fetch style)
+ * @returns The extracted zip file name or a default name if not found.
+ */
+export const extractZipFileName = (headers: any): string | null => {
+  let contentDisposition: string | undefined
+
+  // Support for both Axios (plain object) and Fetch (Headers instance)
+  if (typeof headers.get === 'function') {
+    contentDisposition = headers.get('content-disposition')
+  } else {
+    contentDisposition = headers['content-disposition']
+  }
+
+  if (contentDisposition) {
+    const fileNameMatch = contentDisposition.match(/filename="([^"]+)"/)
+    if (fileNameMatch && fileNameMatch[1]) {
+      return fileNameMatch[1]
+    }
+  }
+  return null
+}

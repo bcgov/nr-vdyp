@@ -2,8 +2,10 @@
   <v-container>
     <ReportingActions
       :isButtonDisabled="isButtonDisabled"
+      :tabname="tabname"
       @print="handlePrint"
       @download="handleDownload"
+      @downloadrawresult="handleDownloadRawResult"
     />
     <ReportingOutput :data="data" />
   </v-container>
@@ -24,6 +26,7 @@ import { FILE_NAME, REPORTING_TAB } from '@/constants/constants'
 import { FILE_DOWNLOAD_ERR } from '@/constants/message'
 import type { ReportingTab } from '@/types/types'
 import * as messageHandler from '@/utils/messageHandler'
+import { downloadFile } from '@/utils/util'
 
 const props = defineProps({
   tabname: {
@@ -63,6 +66,18 @@ const handleDownload = () => {
     case REPORTING_TAB.VIEW_LOG_FILE:
       downloadTextFile(data.value, FILE_NAME.LOG_TXT)
       break
+  }
+}
+
+const handleDownloadRawResult = () => {
+  if (
+    projectionStore.rawResultZipFile &&
+    projectionStore.rawResultZipFileName
+  ) {
+    downloadFile(
+      projectionStore.rawResultZipFile,
+      projectionStore.rawResultZipFileName,
+    )
   }
 }
 
