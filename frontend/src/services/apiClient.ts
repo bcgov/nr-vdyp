@@ -39,12 +39,20 @@ export const apiClient = {
     trialRun: boolean,
     options?: AxiosRequestConfig,
   ) => {
+    const customOptions: AxiosRequestConfig = {
+      ...options,
+      headers: {
+        ...options?.headers,
+        Accept: 'application/octet-stream, application/json',
+      },
+    }
+
     return projectionApiInstance.projectionHcsvPostForm(
       formData.get(ParameterNamesEnum.HCSV_POLYGON_INPUT_DATA) as File,
       formData.get(ParameterNamesEnum.HCSV_LAYERS_INPUT_DATA) as File,
       formData.get(ParameterNamesEnum.PROJECTION_PARAMETERS) as any,
       trialRun,
-      options,
+      customOptions,
     )
   },
 
