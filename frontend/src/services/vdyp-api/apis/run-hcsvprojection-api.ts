@@ -27,7 +27,8 @@ export const RunHCSVProjectionApiAxiosParamCreator = function (
       const localVarRequestOptions: AxiosRequestConfig = {
         method: 'POST',
         headers: {
-          Accept: 'application/octet-stream',
+          // Make JSON responses acceptable
+          Accept: 'application/octet-stream, application/json',
           'Content-Type': 'multipart/form-data',
         },
         ...baseOptions,
@@ -118,7 +119,7 @@ export const RunHCSVProjectionApiFp = function (configuration?: Configuration) {
       trialRun?: boolean,
       options?: AxiosRequestConfig,
     ): Promise<
-      (axios?: AxiosInstance, basePath?: string) => Promise<AxiosResponse<Blob>>
+      (axios?: AxiosInstance, basePath?: string) => Promise<AxiosResponse<any>>
     > {
       const localVarAxiosArgs = await RunHCSVProjectionApiAxiosParamCreator(
         configuration,
@@ -136,9 +137,14 @@ export const RunHCSVProjectionApiFp = function (configuration?: Configuration) {
         const axiosRequestArgs: AxiosRequestConfig = {
           ...localVarAxiosArgs.options,
           url: basePath + localVarAxiosArgs.url,
-          responseType: 'blob',
         }
-        return axios.request(axiosRequestArgs)
+        return axios.request(axiosRequestArgs).catch((error) => {
+          console.error(
+            'Backend API error:',
+            error.response ? error.response.data : error.message,
+          )
+          throw error
+        })
       }
     },
   }
@@ -156,7 +162,7 @@ export const RunHCSVProjectionApiFactory = function (
       projectionParameters?: Parameters,
       trialRun?: boolean,
       options?: AxiosRequestConfig,
-    ): Promise<AxiosResponse<Blob>> {
+    ): Promise<AxiosResponse<any>> {
       return RunHCSVProjectionApiFp(configuration)
         .projectionHcsvPostForm(
           polygonInputData,
@@ -177,7 +183,7 @@ export class RunHCSVProjectionApi extends BaseAPI {
     projectionParameters?: Parameters,
     trialRun?: boolean,
     options?: AxiosRequestConfig,
-  ): Promise<AxiosResponse<Blob>> {
+  ): Promise<AxiosResponse<any>> {
     return RunHCSVProjectionApiFp(this.configuration)
       .projectionHcsvPostForm(
         polygonInputData,
