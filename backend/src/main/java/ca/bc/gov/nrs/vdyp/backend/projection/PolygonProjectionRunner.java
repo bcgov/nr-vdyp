@@ -354,7 +354,7 @@ public class PolygonProjectionRunner {
 		}
 	}
 
-	private void performAdjustProcessing() throws PolygonExecutionException {
+	private void performAdjustProcessing() throws PolygonExecutionException, ProjectionInternalExecutionException {
 
 		logger.info("{}: performing ADJUST", polygon);
 
