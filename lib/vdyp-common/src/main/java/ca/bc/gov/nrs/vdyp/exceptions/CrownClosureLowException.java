@@ -30,7 +30,7 @@ public class CrownClosureLowException extends LayerValueLowException {
 	}
 	@Override
 	public Optional<Integer> getIpassCode(VdypApplicationIdentifier app) {
-		if (app == VdypApplicationIdentifier.VDYP_BACK)
+		if (app == VdypApplicationIdentifier.VRI_START)
 			return Optional.of(-9);
 		return Optional.empty();
 	}

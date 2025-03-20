@@ -1,6 +1,5 @@
 package ca.bc.gov.nrs.vdyp.exceptions;
 
-import java.text.MessageFormat;
 import java.util.Optional;
 
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
@@ -17,21 +16,21 @@ public class YearsToBreastHeightLowException extends LayerValueLowException {
 
 	static final String DEFAULT_NAME = "Years to breast height";
 
-	YearsToBreastHeightLowException(RuntimeStandProcessingException cause) {
+	public YearsToBreastHeightLowException(RuntimeStandProcessingException cause) {
 		super(cause, YearsToBreastHeightLowException.class);
 	}
 
-	YearsToBreastHeightLowException(LayerType layer, Optional<Float> value) {
+	public YearsToBreastHeightLowException(LayerType layer, Optional<Float> value) {
 		this(layer, DEFAULT_NAME, value);
 	}
 
-	YearsToBreastHeightLowException(LayerType layer, String name, Optional<Float> value) {
+	public YearsToBreastHeightLowException(LayerType layer, String name, Optional<Float> value) {
 		super(layer, name, value);
 	}
 
 	@Override
 	public Optional<Integer> getIpassCode(VdypApplicationIdentifier app) {
-		if (app == VdypApplicationIdentifier.VDYP_BACK)
+		if (app == VdypApplicationIdentifier.VRI_START)
 			return Optional.of(-5);
 		return Optional.empty();
 	}

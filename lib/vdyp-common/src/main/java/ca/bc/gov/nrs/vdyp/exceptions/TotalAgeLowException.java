@@ -17,15 +17,15 @@ public class TotalAgeLowException extends LayerValueLowException {
 
 	static final String DEFAULT_NAME = "Total age";
 
-	TotalAgeLowException(RuntimeStandProcessingException cause) {
+	public TotalAgeLowException(RuntimeStandProcessingException cause) {
 		super(cause, TotalAgeLowException.class);
 	}
 
-	TotalAgeLowException(LayerType layer, Optional<Float> value) {
+	public TotalAgeLowException(LayerType layer, Optional<Float> value) {
 		this(layer, DEFAULT_NAME, value);
 	}
 
-	TotalAgeLowException(LayerType layer, String name, Optional<Float> value) {
+	public TotalAgeLowException(LayerType layer, String name, Optional<Float> value) {
 		super(layer, name, value);
 	}
 
@@ -34,7 +34,7 @@ public class TotalAgeLowException extends LayerValueLowException {
 		switch (app) {
 		case FIP_START:
 			return Optional.of(-6);
-		case VDYP_BACK:
+		case VRI_START:
 			return Optional.of(-5);
 		default:
 			return Optional.empty();

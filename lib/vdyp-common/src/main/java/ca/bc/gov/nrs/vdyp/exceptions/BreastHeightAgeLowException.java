@@ -34,7 +34,7 @@ public class BreastHeightAgeLowException extends LayerValueLowException {
 		switch (app) {
 		case FIP_START:
 			return Optional.of(-10);
-		case VDYP_BACK:
+		case VRI_START:
 			return Optional.of(-5);
 		default:
 			return Optional.empty();

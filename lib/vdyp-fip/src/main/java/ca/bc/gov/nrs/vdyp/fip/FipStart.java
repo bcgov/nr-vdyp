@@ -40,7 +40,6 @@ import org.apache.commons.math3.util.FastMath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ca.bc.gov.nrs.vdyp.application.LowValueException;
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.application.VdypStartApplication;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
@@ -49,8 +48,15 @@ import ca.bc.gov.nrs.vdyp.common.ValueOrMarker;
 import ca.bc.gov.nrs.vdyp.common.VdypApplicationInitializationException;
 import ca.bc.gov.nrs.vdyp.common.VdypApplicationProcessingException;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
+import ca.bc.gov.nrs.vdyp.exceptions.FatalProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.HeightLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.ResultBaseAreaLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.SiteIndexLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.TotalAgeLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.UnsupportedModeException;
+import ca.bc.gov.nrs.vdyp.exceptions.YearsToBreastHeightLowException;
 import ca.bc.gov.nrs.vdyp.fip.model.FipLayer;
 import ca.bc.gov.nrs.vdyp.fip.model.FipLayerPrimary;
 import ca.bc.gov.nrs.vdyp.fip.model.FipPolygon;
@@ -166,7 +172,7 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 	static final EnumSet<PolygonMode> ACCEPTABLE_MODES = EnumSet.of(PolygonMode.START, PolygonMode.YOUNG);
 
 	Optional<VdypPolygon> processPolygon(int polygonsRead, FipPolygon polygon)
-			throws ProcessingException, LowValueException {
+			throws ProcessingException {
 		VdypPolygon resultPoly;
 		log.atInfo().setMessage("Read polygon {}, preparing to process").addArgument(polygon.getPolygonIdentifier())
 				.log();
@@ -227,11 +233,13 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 			float minimumBaseArea = minima.get(BaseControlParser.MINIMUM_BASE_AREA);
 			float minimumPredictedBaseArea = minima.get(BaseControlParser.MINIMUM_FULLY_STOCKED_AREA);
 			if (baseAreaTotalPrime < minimumBaseArea) {
-				throw new LowValueException("Base area", baseAreaTotalPrime, minimumBaseArea);
+				throw new ResultBaseAreaLowException(LayerType.PRIMARY, Optional.of(baseAreaTotalPrime));
 			}
 			float predictedBaseArea = baseAreaTotalPrime * (100f / resultPoly.getPercentAvailable());
 			if (predictedBaseArea < minimumPredictedBaseArea) {
-				throw new LowValueException("Predicted base area", predictedBaseArea, minimumPredictedBaseArea);
+				throw new ResultBaseAreaLowException(
+						LayerType.PRIMARY, "Predicted base area", Optional.of(predictedBaseArea)
+				);
 			}
 		}
 		// FIPSTK
@@ -711,7 +719,7 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 	protected FipPolygon getPolygon(
 			StreamingParser<FipPolygon> polyStream, StreamingParser<Map<LayerType, FipLayer>> layerStream,
 			StreamingParser<Collection<FipSpecies>> speciesStream
-	) throws ProcessingException, IOException, ResourceParseException {
+	) throws FatalProcessingException, IOException, ResourceParseException {
 
 		log.trace("Getting polygon");
 		var polygon = polyStream.next();
@@ -721,7 +729,7 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 		try {
 			layers = layerStream.next();
 		} catch (NoSuchElementException ex) {
-			throw validationError("Layers file has fewer records than polygon file.", ex);
+			throw causedFatalError("Layers file has fewer records than polygon file.", ex);
 		}
 
 		log.trace("Getting species for polygon {}", polygon.getPolygonIdentifier());
@@ -729,7 +737,7 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 		try {
 			species = speciesStream.next();
 		} catch (NoSuchElementException ex) {
-			throw validationError("Species file has fewer records than polygon file.", ex);
+			throw causedFatalError("Species file has fewer records than polygon file.", ex);
 		}
 
 		var speciesPerLayerMap = new HashMap<LayerType, Map<String, FipSpecies>>();
@@ -737,7 +745,7 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 		// Validate that layers belong to the correct polygon
 		for (var layer : layers.values()) {
 			if (!layer.getPolygonIdentifier().equals(polygon.getPolygonIdentifier())) {
-				throw validationError(
+				throw fatalError(
 						"Record in layer file contains layer for polygon %s when expecting one for %s.",
 						layer.getPolygonIdentifier(), polygon.getPolygonIdentifier()
 				);
@@ -749,13 +757,13 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 			var layer = layers.get(spec.getLayerType());
 			// Validate that species belong to the correct polygon
 			if (!spec.getPolygonIdentifier().equals(polygon.getPolygonIdentifier())) {
-				throw validationError(
+				throw fatalError(
 						"Record in species file contains species for polygon %s when expecting one for %s.",
 						layer.getPolygonIdentifier(), polygon.getPolygonIdentifier()
 				);
 			}
 			if (Objects.isNull(layer)) {
-				throw validationError(
+				throw fatalError(
 						"Species entry references layer of type \"%s\" of polygon %s but it is not present.",
 						spec.getLayerType(), polygon.getPolygonIdentifier()
 				);
@@ -800,12 +808,7 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 		// consider changing it.
 
 		if (primaryLayer.getAgeTotal().orElse(0f) - primaryLayer.getYearsToBreastHeight().orElse(0f) < 0.5f) {
-			var ageTotal = primaryLayer.getAgeTotal().map(Object::toString).orElse("N/A (0)");
-			var ytbh = primaryLayer.getYearsToBreastHeight().map(Object::toString).orElse("N/A (0)");
-			throw validationError(
-					"Polygon %s has %s layer where total age (%s) is less than YTBH (%s).",
-					polygon.getPolygonIdentifier(), LayerType.PRIMARY, ageTotal, ytbh
-			);
+			throw new TotalAgeLowException(LayerType.PRIMARY, primaryLayer.getAgeTotal());
 		}
 
 		// TODO This is the only validation step done to non-primary layers, VDYP7 had a
@@ -817,35 +820,24 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 		for (FipLayer layer : polygon.getLayers().values()) {
 			var height = layer.getHeight().orElse(0f);
 
+			
 			throwIfPresent(
 					heightMinimum(layer.getLayerType()).filter(minimum -> height < minimum).map(
-							minimum -> validationError(
-									"Polygon %s has %s layer where height %.1f is less than minimum %.1f.",
-									polygon.getPolygonIdentifier(), layer.getLayerType(), layer.getHeightSafe(), minimum
-							)
+							minimum -> new HeightLowException(layer.getLayerType(), layer.getHeight())
 					)
 			);
 		}
 
 		if (polygon.getMode().map(x -> x == PolygonMode.YOUNG).orElse(false)) {
-			throw validationError(
-					"Polygon %s is using unsupported mode %s.", polygon.getPolygonIdentifier(), PolygonMode.YOUNG
-			);
+			throw new UnsupportedModeException(polygon.getMode());
 		}
 
 		if (primaryLayer.getYearsToBreastHeight().orElse(0f) < 0.5) {
-			throw validationError(
-					"Polygon %s has %s layer where years to breast height %.1f is less than minimum %.1f years.",
-					polygon.getPolygonIdentifier(), LayerType.PRIMARY, primaryLayer.getYearsToBreastHeightSafe(), 0.5f
-			);
+			throw new YearsToBreastHeightLowException(LayerType.PRIMARY, primaryLayer.getYearsToBreastHeight());
 		}
 
 		if (primaryLayer.getSiteIndex().orElse(0f) < 0.5) {
-			throw validationError(
-					"Polygon %s has %s layer where site index %s is less than minimum %.1f years.",
-					polygon.getPolygonIdentifier(), LayerType.PRIMARY,
-					primaryLayer.getSiteIndex().map(x -> String.format("%.1f", x)).orElse("N/A"), 0.5f
-			);
+			throw new SiteIndexLowException(LayerType.PRIMARY, primaryLayer.getSiteIndex());
 		}
 
 		for (FipLayer layer : polygon.getLayers().values()) {

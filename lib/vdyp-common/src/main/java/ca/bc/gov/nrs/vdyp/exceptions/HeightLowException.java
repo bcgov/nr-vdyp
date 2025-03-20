@@ -41,7 +41,7 @@ public class HeightLowException extends LayerValueLowException {
 			default:
 				return Optional.empty();
 			}
-		case VDYP_BACK:
+		case VRI_START:
 			switch (getLayer()) {
 			case PRIMARY:
 				return Optional.of(-6);

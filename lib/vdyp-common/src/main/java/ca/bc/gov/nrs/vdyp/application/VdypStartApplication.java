@@ -703,10 +703,17 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	}
 
 	protected static FatalProcessingException fatalError(
-			Integer ipassFip, Integer ipassVri, String template, Object... values
+			String template, Object... values
 	) {
 
 		return new FatalProcessingException(String.format(template, values));
+	}
+
+	protected static FatalProcessingException causedFatalError(
+			String template, Throwable cause, Object... values
+	) {
+
+		return new FatalProcessingException(String.format(template, values), cause);
 	}
 
 	/**
