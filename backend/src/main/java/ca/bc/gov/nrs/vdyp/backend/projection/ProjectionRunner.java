@@ -129,25 +129,28 @@ public class ProjectionRunner {
 
 		if (context.getValidatedParams().containsOption(ExecutionOption.DO_INCLUDE_PROJECTION_FILES)) {
 			try {
-				for (var polygonFolder : Files.list(context.getExecutionFolder()).filter(e -> Files.isDirectory(e))
-						.toList()) {
+				try (var polygonFolders = Files.list(context.getExecutionFolder()).filter(e -> Files.isDirectory(e))) {
+					for (var polygonFolder : polygonFolders.toList()) {
 
-					for (var projectionTypeFolder : Files.list(polygonFolder).filter(e -> Files.isDirectory(e))
-							.toList()) {
+						try (var projectionTypeFolders = Files.list(polygonFolder).filter(e -> Files.isDirectory(e))) {
+							for (var projectionTypeFolder : projectionTypeFolders.toList()) {
 
-						for (var entry : entryNameToFileNameMap.entrySet()) {
+								for (var entry : entryNameToFileNameMap.entrySet()) {
 
-							Path expectedFileName = Path.of(projectionTypeFolder.toString(), entry.getValue());
-							if (Files.exists(expectedFileName) && Files.isRegularFile(expectedFileName)) {
-								var polygonId = polygonFolder.getName(polygonFolder.getNameCount() - 1);
-								var projectionType = projectionTypeFolder
-										.getName(projectionTypeFolder.getNameCount() - 1);
-								var key = new ProjectionResultsKey(
-										polygonId.toString(), projectionType.toString(), entry.getKey()
-								);
+									Path expectedFileName = Path.of(projectionTypeFolder.toString(), entry.getValue());
+									if (Files.exists(expectedFileName) && Files.isRegularFile(expectedFileName)) {
+										var polygonId = polygonFolder.getName(polygonFolder.getNameCount() - 1);
+										var projectionType = projectionTypeFolder
+												.getName(projectionTypeFolder.getNameCount() - 1);
+										var key = new ProjectionResultsKey(
+												polygonId.toString(), projectionType.toString(), entry.getKey()
+										);
 
-								projectionResults
-										.put(key, Files.newInputStream(expectedFileName, StandardOpenOption.READ));
+										projectionResults.put(
+												key, Files.newInputStream(expectedFileName, StandardOpenOption.READ)
+										);
+									}
+								}
 							}
 						}
 					}

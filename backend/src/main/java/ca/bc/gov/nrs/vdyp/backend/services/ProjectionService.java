@@ -174,10 +174,15 @@ public class ProjectionService {
 	private Response buildOutputZipFile(ProjectionRunner runner, InputStream debugLogStream) {
 		logger.info("<buildOutputZipFile");
 
+		InputStream yieldTableStream = null;
+		InputStream progressLogStream = null;
+		InputStream errorLogStream = null;
+		Map<ProjectionRunner.ProjectionResultsKey, InputStream> projectionResults = null;
+
 		try {
-			InputStream yieldTableStream = runner.getYieldTable();
-			InputStream progressLogStream = runner.getProgressStream();
-			InputStream errorLogStream = runner.getErrorStream();
+			yieldTableStream = runner.getYieldTable();
+			progressLogStream = runner.getProgressStream();
+			errorLogStream = runner.getErrorStream();
 
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			ZipOutputStream zipOut = new ZipOutputStream(baos);
@@ -198,7 +203,7 @@ public class ProjectionService {
 			zipOut.putNextEntry(debugOutputZipEntry);
 			zipOut.write(debugLogStream.readAllBytes());
 
-			var projectionResults = runner.getProjectionResults();
+			projectionResults = runner.getProjectionResults();
 			for (var e : projectionResults.entrySet()) {
 				ZipEntry projectionResultsEntry = new ZipEntry(e.getKey().toString());
 				zipOut.putNextEntry(projectionResultsEntry);
@@ -223,6 +228,30 @@ public class ProjectionService {
 			logger.error(message, e);
 
 			return Response.serverError().status(500).entity(message).build();
+		} finally {
+			if (errorLogStream != null) {
+				close(yieldTableStream, "yieldTable");
+			}
+			if (progressLogStream != null) {
+				close(yieldTableStream, "yieldTable");
+			}
+			if (yieldTableStream != null) {
+				close(yieldTableStream, "yieldTable");
+			}
+
+			for (var e : projectionResults.entrySet()) {
+				if (e.getValue() != null) {
+					close(e.getValue(), e.getKey().toString());
+				}
+			}
+		}
+	}
+
+	private static void close(InputStream is, String name) {
+		try {
+			is.close();
+		} catch (IOException e) {
+			logger.warn("Encountered IOException when closing stream " + name, e);
 		}
 	}
 }
