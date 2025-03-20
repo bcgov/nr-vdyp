@@ -9,6 +9,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestValidationException;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.DebugOption;
@@ -24,6 +27,8 @@ import ca.bc.gov.nrs.vdyp.si32.vdyp.SP0Name;
 
 public class ProjectionRequestParametersValidator {
 
+	private static final Logger logger = LoggerFactory.getLogger(ProjectionRequestParametersValidator.class);
+	
 	private List<ValidationMessage> validationErrorMessages = new ArrayList<>();
 
 	static void validate(ProjectionContext context) throws ProjectionRequestValidationException {
@@ -33,6 +38,11 @@ public class ProjectionRequestParametersValidator {
 		validator.validateState(context);
 
 		if (validator.validationErrorMessages.size() > 0) {
+			logger.error("Validation errors encountered:");
+			logger.error(context.getRawParams().toString());
+			for (var m: validator.validationErrorMessages) {
+				logger.error(m.toString());
+			}
 			throw new ProjectionRequestValidationException(validator.validationErrorMessages);
 		}
 	}
