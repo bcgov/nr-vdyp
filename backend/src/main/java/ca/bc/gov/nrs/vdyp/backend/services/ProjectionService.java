@@ -198,6 +198,13 @@ public class ProjectionService {
 			zipOut.putNextEntry(debugOutputZipEntry);
 			zipOut.write(debugLogStream.readAllBytes());
 
+			var projectionResults = runner.getProjectionResults();
+			for (var e : projectionResults.entrySet()) {
+				ZipEntry projectionResultsEntry = new ZipEntry(e.getKey().toString());
+				zipOut.putNextEntry(projectionResultsEntry);
+				zipOut.write(e.getValue().readAllBytes());
+			}
+
 			zipOut.close();
 
 			byte[] resultingByteArray = baos.toByteArray();

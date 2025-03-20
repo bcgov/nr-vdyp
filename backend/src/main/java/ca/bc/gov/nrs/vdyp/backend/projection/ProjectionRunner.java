@@ -1,7 +1,12 @@
 package ca.bc.gov.nrs.vdyp.backend.projection;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -14,6 +19,7 @@ import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestValidationException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.YieldTableGenerationException;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ProjectionRequestKind;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
 import ca.bc.gov.nrs.vdyp.backend.projection.input.AbstractPolygonStream;
@@ -22,6 +28,26 @@ import ca.bc.gov.nrs.vdyp.backend.projection.output.IMessageLog;
 public class ProjectionRunner {
 
 	private static final Logger logger = LoggerFactory.getLogger(ProjectionRunner.class);
+
+	private static final String FORWARD_POLYGON_ENTRY_NAME = "ForwardPolygon";
+	private static final String FORWARD_SPECIES_ENTRY_NAME = "ForwardSpecies";
+	private static final String FORWARD_UTILIZATION_ENTRY_NAME = "ForwardUtilization";
+	private static final String FORWARD_COMPATIBILITY_ENTRY_NAME = "ForwardCompatibility";
+	private static final String BACK_POLYGON_ENTRY_NAME = "BackPolygon";
+	private static final String BACK_SPECIES_ENTRY_NAME = "BackSpecies";
+	private static final String BACK_UTILIZATION_ENTRY_NAME = "BackUtilization";
+
+	private static final Map<String, String> entryNameToFileNameMap = new HashMap<>();
+
+	static {
+		entryNameToFileNameMap.put(FORWARD_POLYGON_ENTRY_NAME, "vp_grow.dat");
+		entryNameToFileNameMap.put(FORWARD_SPECIES_ENTRY_NAME, "vs_grow.dat");
+		entryNameToFileNameMap.put(FORWARD_UTILIZATION_ENTRY_NAME, "vu_grow.dat");
+		entryNameToFileNameMap.put(FORWARD_COMPATIBILITY_ENTRY_NAME, "vc_grow.dat");
+		entryNameToFileNameMap.put(BACK_POLYGON_ENTRY_NAME, "vp_back_grow.dat");
+		entryNameToFileNameMap.put(BACK_SPECIES_ENTRY_NAME, "vs_back_grow.dat");
+		entryNameToFileNameMap.put(BACK_UTILIZATION_ENTRY_NAME, "vu_back_grow.dat");
+	}
 
 	private final ProjectionContext context;
 
@@ -89,6 +115,49 @@ public class ProjectionRunner {
 				throw new ProjectionInternalExecutionException(e);
 			}
 		}
+	}
+
+	public static record ProjectionResultsKey(String polygonId, String projectionType, String entryName) {
+		@Override
+		public String toString() {
+			return polygonId + '-' + projectionType + '-' + entryName;
+		}
+	};
+
+	public Map<ProjectionResultsKey, InputStream> getProjectionResults() {
+		var projectionResults = new HashMap<ProjectionResultsKey, InputStream>();
+
+		if (context.getValidatedParams().containsOption(ExecutionOption.DO_INCLUDE_PROJECTION_FILES)) {
+			try {
+				for (var polygonFolder : Files.list(context.getExecutionFolder()).filter(e -> Files.isDirectory(e))
+						.toList()) {
+
+					for (var projectionTypeFolder : Files.list(polygonFolder).filter(e -> Files.isDirectory(e))
+							.toList()) {
+
+						for (var entry : entryNameToFileNameMap.entrySet()) {
+
+							Path expectedFileName = Path.of(projectionTypeFolder.toString(), entry.getValue());
+							if (Files.exists(expectedFileName) && Files.isRegularFile(expectedFileName)) {
+								var polygonId = polygonFolder.getName(polygonFolder.getNameCount() - 1);
+								var projectionType = projectionTypeFolder
+										.getName(projectionTypeFolder.getNameCount() - 1);
+								var key = new ProjectionResultsKey(
+										polygonId.toString(), projectionType.toString(), entry.getKey()
+								);
+
+								projectionResults
+										.put(key, Files.newInputStream(expectedFileName, StandardOpenOption.READ));
+							}
+						}
+					}
+				}
+			} catch (IOException e) {
+				logger.warn("Unable to create Projection Results map", e);
+			}
+		}
+
+		return projectionResults;
 	}
 
 	public InputStream getProgressStream() {

@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import ca.bc.gov.nrs.api.helpers.TestHelper;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
 import io.quarkus.test.junit.QuarkusTest;
+import io.smallrye.common.constraint.Assert;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.MediaType;
 
@@ -96,5 +97,20 @@ class HcsvProjectionEndpoint_VRIPerPolygon_Test {
 		assertEquals("DebugLog.txt", entry4.getName());
 		String entry4Content = new String(testHelper.readZipEntry(zipFile, entry2));
 		assertTrue(entry4Content.startsWith(LocalDate.now().format(DateTimeFormatter.ISO_DATE)));
+
+		ZipEntry projectionResultsEntry;
+		var outputSeen = false;
+		while ( (projectionResultsEntry = zipFile.getNextEntry()) != null) {
+			logger.info("Name: {}", projectionResultsEntry.getName());
+			String entryContent = new String(testHelper.readZipEntry(zipFile, projectionResultsEntry));
+			if (entryContent.length() > 0) {
+				logger.info("Content: {}", entryContent.substring(0, Math.min(entryContent.length(), 60)));
+			} else {
+				logger.info("Content: <empty>");
+			}
+
+			outputSeen = true;
+		}
+		Assert.assertTrue(outputSeen);
 	}
 }

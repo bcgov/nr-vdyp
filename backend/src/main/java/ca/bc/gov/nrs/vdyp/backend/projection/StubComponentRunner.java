@@ -1,10 +1,8 @@
 package ca.bc.gov.nrs.vdyp.backend.projection;
 
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.YieldTableGenerationException;
-import ca.bc.gov.nrs.vdyp.backend.projection.model.LayerReportingInfo;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Polygon;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
-import ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable.YieldTable;
 
 public class StubComponentRunner implements IComponentRunner {
 

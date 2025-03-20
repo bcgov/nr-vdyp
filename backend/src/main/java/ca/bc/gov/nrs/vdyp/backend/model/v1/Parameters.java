@@ -151,6 +151,7 @@ public class Parameters {
 		BACK_GROW_ENABLED("backGrowEnabled"), //
 		FORWARD_GROW_ENABLED("forwardGrowEnabled"), //
 		DO_SAVE_INTERMEDIATE_FILES("doSaveIntermediateFiles"), //
+		DO_INCLUDE_PROJECTION_FILES("doIncludeProjectionFiles"), //
 		DO_FORCE_REFERENCE_YEAR_INCLUSION_IN_YIELD_TABLES("doForceReferenceYearInclusionInYieldTables"), //
 		DO_FORCE_CURRENT_YEAR_INCLUSION_IN_YIELD_TABLES("doForceCurrentYearInclusionInYieldTables"), //
 		DO_INCLUDE_FILE_HEADER("doIncludeFileHeader"), //

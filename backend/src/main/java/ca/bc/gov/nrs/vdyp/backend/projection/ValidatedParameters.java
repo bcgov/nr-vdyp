@@ -599,6 +599,7 @@ public class ValidatedParameters {
 		DEFAULT.selectedExecutionOptions = new ArrayList<>();
 		// exclude since false: BACK_GROW_ENABLED
 		DEFAULT.selectedExecutionOptions.add(FORWARD_GROW_ENABLED);
+		DEFAULT.selectedExecutionOptions.add(DO_INCLUDE_PROJECTION_FILES);
 		// exclude since false: DO_SAVE_INTERMEDIATE_FILES
 		// exclude since false: DO_FORCE_REFERENCE_YEAR_INCLUSION_IN_YIELD_TABLES
 		// exclude since false: DO_FORCE_CURRENT_YEAR_INCLUSION_IN_YIELD_TABLES
