@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.text.MessageFormat;
 import java.time.LocalDate;
 
+import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -116,6 +117,29 @@ public class PolygonProjectionRunner {
 		generateYieldTablesForPolygon();
 	}
 
+	private void buildPolygonProjectionExecutionStructure() throws ProjectionInternalExecutionException {
+
+		try {
+			Path executionFolderPath = Path.of(context.getExecutionFolder().toString(), polygon.toString());
+			Path executionFolder = Files.createDirectory(executionFolderPath);
+
+			for (ProjectionTypeCode projectionType : ProjectionTypeCode.ACTUAL_PROJECTION_TYPES_LIST) {
+
+				if (polygon.getLayerByProjectionType(projectionType) != null) {
+					ProjectionUtils.logger.debug("Populating execution folder for projectionType {}", projectionType);
+					ProjectionUtils.prepareProjectionTypeFolder(
+							context.getRootFolder(), executionFolder, projectionType.toString(), "FIPSTART.CTR",
+							"VRISTART.CTR", "VRIADJST.CTR", "VDYP.CTR", "VDYPBACK.CTR"
+					);
+				}
+			}
+
+			state.setExecutionFolder(executionFolder);
+		} catch (IOException e) {
+			throw new ProjectionInternalExecutionException(e);
+		}
+	}
+
 	private void performInitialProcessing() throws PolygonExecutionException {
 
 		logger.info("{}: performing initial processing", polygon);
@@ -206,7 +230,10 @@ public class PolygonProjectionRunner {
 		}
 
 		Layer selectedPrimaryLayer = rPrimaryLayer.get();
-		assert rGrowthModel.isPresent() && rProcessingMode.isPresent();
+		Validate.isTrue(
+				rGrowthModel.isPresent() && rProcessingMode.isPresent(),
+				"PolygonProjectionRunner.determineInitialProcessingModel: at least one of rGrowthModel and rProcessingMode is not present"
+		);
 
 		for (ProjectionTypeCode pt : ProjectionTypeCode.ACTUAL_PROJECTION_TYPES_LIST) {
 
@@ -529,10 +556,10 @@ public class PolygonProjectionRunner {
 				logger.debug("{}: start and end age after considering current year: {}, {}", polygon, startAge, endAge);
 			}
 
-			if (context.getValidatedParams().getYearForcedIntoYearTable() != null) {
+			if (context.getValidatedParams().getYearForcedIntoYieldTable() != null) {
 
 				Double standAgeAtGivenYear = polygon
-						.determineStandAgeAtYear(context.getValidatedParams().getYearForcedIntoYearTable());
+						.determineStandAgeAtYear(context.getValidatedParams().getYearForcedIntoYieldTable());
 				if (startAge == null || standAgeAtGivenYear < startAge) {
 					startAge = standAgeAtGivenYear;
 				}
@@ -617,78 +644,6 @@ public class PolygonProjectionRunner {
 		return calculatedAge;
 	}
 
-	private void generateYieldTablesForPolygon() throws YieldTableGenerationException {
-
-		boolean doGenerateDetailedTableHeader = true;
-
-		ValidatedParameters params = context.getValidatedParams();
-		if (params.containsOption(ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_POLYGON)
-				&& (params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES)
-						|| params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_BIOMASS))) {
-
-			componentRunner.generateYieldTableForPolygon(
-					context.getYieldTable(), polygon, state, doGenerateDetailedTableHeader
-			);
-			doGenerateDetailedTableHeader = false;
-
-			logger.debug("{}: generated polygon-level yield table", polygon);
-		}
-
-		if (params.containsOption(ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_POLYGON)
-				&& params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS)) {
-
-			context.getYieldTable().generateCfsBiomassTableForPolygon(polygon, state, doGenerateDetailedTableHeader);
-			doGenerateDetailedTableHeader = false;
-
-			logger.debug("{}: generated polygon-level CFS biomass table", polygon);
-		}
-
-		if (params.containsOption(ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER)) {
-
-			for (var layerReportingInfo : polygon.getReportingInfo().getLayerReportingInfos().values()) {
-
-				var layer = layerReportingInfo.getLayer();
-				if (state.wasLayerProcessed(layer)) {
-
-					doGenerateDetailedTableHeader = true;
-
-					if (params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES)
-							|| params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_BIOMASS)) {
-
-						componentRunner.generateYieldTableForPolygonLayer(
-								context.getYieldTable(), polygon, state, layerReportingInfo,
-								doGenerateDetailedTableHeader
-						);
-						doGenerateDetailedTableHeader = false;
-
-						logger.debug("{}: generated yield table", layerReportingInfo.getLayer());
-					}
-
-					if (params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS)) {
-						if (!layerReportingInfo.isDeadStemLayer()) {
-
-							context.getYieldTable().generateCfsBiomassTable(
-									polygon, state, layerReportingInfo, doGenerateDetailedTableHeader
-							);
-							doGenerateDetailedTableHeader = false;
-
-							logger.debug("{}: generated CFS biomass table", layer);
-						} else {
-							context.addMessage(
-									"{0}: Suppressing CFS biomass output for dead layer. The yield table will not be produced",
-									layer
-							);
-						}
-					}
-				} else {
-					context.addMessage(
-							"{0}: both Forward and Back not executed. Yield Table will not be produced.", layer
-					);
-				}
-			}
-		}
-	}
-
 	private int adjustMeasurementYearAsNecessary(int year, double suppliedAge, double standAge) {
 
 		var suppliedAgeStandAgeDiff = suppliedAge - standAge;
@@ -702,27 +657,11 @@ public class PolygonProjectionRunner {
 		return year;
 	}
 
-	private void buildPolygonProjectionExecutionStructure() throws ProjectionInternalExecutionException {
+	private void generateYieldTablesForPolygon() throws YieldTableGenerationException {
 
-		try {
-			Path executionFolderPath = Path.of(context.getExecutionFolder().toString(), polygon.toString());
-			Path executionFolder = Files.createDirectory(executionFolderPath);
+		logger.info("{}: performing Yield Table generation", polygon);
 
-			for (ProjectionTypeCode projectionType : ProjectionTypeCode.ACTUAL_PROJECTION_TYPES_LIST) {
-
-				if (polygon.getLayerByProjectionType(projectionType) != null) {
-					ProjectionUtils.logger.debug("Populating execution folder for projectionType {}", projectionType);
-					ProjectionUtils.prepareProjectionTypeFolder(
-							context.getRootFolder(), executionFolder, projectionType.toString(), "FIPSTART.CTR",
-							"VRISTART.CTR", "VRIADJST.CTR", "VDYP.CTR", "VDYPBACK.CTR"
-					);
-				}
-			}
-
-			state.setExecutionFolder(executionFolder);
-		} catch (IOException e) {
-			throw new ProjectionInternalExecutionException(e);
-		}
+		componentRunner.generateYieldTables(context, polygon, state);
 	}
 
 	private void close(OutputStream os) {

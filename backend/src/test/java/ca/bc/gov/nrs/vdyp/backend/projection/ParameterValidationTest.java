@@ -650,7 +650,7 @@ class ParameterValidationTest {
 		Assert.assertEquals(Integer.valueOf(3), vp.getAgeIncrement());
 		Assert.assertEquals(Integer.valueOf(20), vp.getAgeStart());
 		Assert.assertEquals(AgeYearRangeCombinationKind.DIFFERENCE, vp.getCombineAgeYearRange());
-		Assert.assertEquals(Integer.valueOf(2020), vp.getYearForcedIntoYearTable());
+		Assert.assertEquals(Integer.valueOf(2020), vp.getYearForcedIntoYieldTable());
 		Assert.assertEquals(MetadataToOutputDirective.ALL, vp.getMetadataToOutput());
 		Assert.assertEquals(OutputFormat.YIELD_TABLE, vp.getOutputFormat());
 		Assert.assertEquals(FrequencyKind.MAPSHEET, vp.getProgressFrequency().getEnumValue());

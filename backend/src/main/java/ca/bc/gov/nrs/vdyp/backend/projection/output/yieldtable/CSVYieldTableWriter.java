@@ -2,28 +2,26 @@ package ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable;
 
 import java.io.FileWriter;
 
+import org.apache.commons.lang3.Validate;
+
 import com.opencsv.bean.StatefulBeanToCsv;
-import com.opencsv.exceptions.CsvException;
 
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.YieldTableGenerationException;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption;
 import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionContext;
-import ca.bc.gov.nrs.vdyp.backend.projection.model.LayerReportingInfo;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Polygon;
-import ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable.CSVYieldTableRecordBean.MultiFieldPrefixes;
-import ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable.CSVYieldTableRecordBean.MultiFieldSuffixes;
+import ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable.YieldTableRowValues.MultiFieldPrefixes;
+import ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable.YieldTableRowValues.MultiFieldSuffixes;
 
-public class CSVYieldTableWriter extends AbstractCSVTypeYieldTableWriter<CSVYieldTableRecordBean> {
+class CSVYieldTableWriter extends AbstractCSVTypeYieldTableWriter<CSVYieldTableRowValuesBean> {
 
 	private CSVYieldTableWriter(ProjectionContext context) {
-		super(CSVYieldTableRecordBean.class, context);
-
-		context.getYieldTable();
+		super(CSVYieldTableRowValuesBean.class, context);
 	}
 
-	public static AbstractCSVTypeYieldTableWriter<CSVYieldTableRecordBean> of(ProjectionContext context)
-			throws YieldTableGenerationException {
+	public static CSVYieldTableWriter of(ProjectionContext context) throws YieldTableGenerationException {
 
-		AbstractCSVTypeYieldTableWriter<CSVYieldTableRecordBean> writer = new CSVYieldTableWriter(context);
+		CSVYieldTableWriter writer = new CSVYieldTableWriter(context);
 
 		writer.initialize();
 
@@ -31,72 +29,79 @@ public class CSVYieldTableWriter extends AbstractCSVTypeYieldTableWriter<CSVYiel
 	}
 
 	@Override
-	protected StatefulBeanToCsv<CSVYieldTableRecordBean> createCsvOutputStream(FileWriter fileWriter) {
-		return CSVYieldTableRecordBean.createCsvOutputStream(fileWriter);
+	protected StatefulBeanToCsv<CSVYieldTableRowValuesBean> createCsvOutputStream(FileWriter fileWriter) {
+		return CSVYieldTableRowValuesBean.createCsvOutputStream(fileWriter, context);
 	}
 
 	@Override
-	protected CSVYieldTableRecordBean convertToTargetFormat(YieldTableData data) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	public void writeHeader() {
+		if (this.context.getValidatedParams()
+				.containsOption(ExecutionOption.DO_INCLUDE_COLUMN_HEADERS_IN_YIELD_TABLE)) {
 
-	@Override
-	public void writeHeader(
-			Polygon polygonReportingInfo, LayerReportingInfo layerReportingInfo, boolean doGenerateDetailedTableHeader,
-			Integer yieldTableCount
-	) throws YieldTableGenerationException {
-
-		assert currentRecord == null;
-
-		var headerRowRecord = new CSVYieldTableRecordBean();
-
-		headerRowRecord.setTableNumber(Integer.toString(yieldTableCount));
-		headerRowRecord.setFeatureId(Long.toString(polygonReportingInfo.getFeatureId()));
-		headerRowRecord.setDistrict(polygonReportingInfo.getDistrict());
-		headerRowRecord.setMapId(polygonReportingInfo.getMapSheet());
-		headerRowRecord.setPolygonId(Long.toString(polygonReportingInfo.getPolygonNumber()));
-		if (layerReportingInfo != null) {
-			headerRowRecord.setLayerId(layerReportingInfo.getLayerID());
-		}
-
-		try {
-			write(headerRowRecord);
-		} catch (CsvException e) {
-			throw new YieldTableGenerationException(e);
 		}
 	}
 
 	@Override
-	public void writeCalendarYearAndLayerAge(YieldTableData row) {
-
-		assert currentRecord != null;
-
-		currentRecord.setProjectionYear(Integer.toString(row.getCurrentTableYear()));
-		currentRecord.setTotalAge(Integer.toString(row.getCurrentTableAge()));
+	protected void recordPerPolygonDetails(Polygon polygon, int yieldTableNumber) {
+		currentRecord.setDistrict(polygon.getDistrict());
+		currentRecord.setFeatureId(Long.toString(polygon.getFeatureId()));
+		currentRecord.setMapId(polygon.getMapSheet());
+		currentRecord.setPolygonId(polygon.getPolygonNumber() == null ? "" : Long.toString(polygon.getPolygonNumber()));
+		currentRecord.setTableNumber(Integer.toString(yieldTableNumber));
 	}
 
 	@Override
-	public void writeSpeciesComposition(YieldTableData row) throws YieldTableGenerationException {
+	public void recordCalendarYearAndLayerAge(YieldTableRowContext rowContext) {
 
-		assert currentRecord != null;
+		Validate.notNull(
+				currentRecord, "CSVYieldTableWriter.recordCalendarYearAndLayerAge: currentRecord must not be null"
+		);
 
-		var isPolygonTable = row.getLayerReportingInfo() != null;
+		currentRecord.setProjectionYear(Integer.toString(rowContext.getCurrentTableYear()));
+		currentRecord.setTotalAge(Integer.toString(rowContext.getCurrentTableAge()));
+	}
 
-		if (isPolygonTable) {
+	@Override
+	public void recordSpeciesComposition(YieldTableRowContext rowContext) throws YieldTableGenerationException {
+
+		Validate.notNull(currentRecord, "CSVYieldTableWriter.recordSpeciesComposition: currentRecord must not be null");
+
+		if (rowContext.isPolygonTable()) {
 			// Species code and percent are all set to null in Vdyp7; here, they are already null so
 			// nothing needs to be done.
 		} else {
 			int index = 1;
-			for (var sri : row.getLayerReportingInfo().getOrderedSpecies()) {
-				currentRecord.setSpeciesField(
-						MultiFieldPrefixes.SPECIES_, index, MultiFieldSuffixes._CODE, sri.getSp64Name()
+			for (var sri : rowContext.getLayerReportingInfo().getOrderedSpecies()) {
+				currentRecord.setSpeciesFieldValue(
+						MultiFieldPrefixes.Species, index, MultiFieldSuffixes.Code, sri.getSp64Name()
 				);
-				currentRecord.setSpeciesField(
-						MultiFieldPrefixes.SPECIES_, index, MultiFieldSuffixes._PCNT, sri.getSp64Percent()
+				currentRecord.setSpeciesFieldValue(
+						MultiFieldPrefixes.Species, index, MultiFieldSuffixes.Percent,
+						Double.valueOf(sri.getSp64Percent()).toString()
 				);
 				index += 1;
 			}
+		}
+	}
+
+	@Override
+	void recordSiteInformation(
+			Double percentStockable, Double siteIndex, Double dominantHeight, Double secondaryHeight
+	) {
+		if (percentStockable != null) {
+			currentRecord.setPercentStockable(Double.toString(percentStockable));
+		}
+
+		if (siteIndex != null) {
+			currentRecord.setSiteIndex(Double.toString(siteIndex));
+		}
+
+		if (dominantHeight != null) {
+			currentRecord.setDominantHeight(Double.toString(dominantHeight));
+		}
+
+		if (secondaryHeight != null) {
+			currentRecord.setSecondaryHeight(Double.toString(secondaryHeight));
 		}
 	}
 }

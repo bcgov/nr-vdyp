@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.backend.projection;
 
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.YieldTableGenerationException;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.LayerReportingInfo;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Polygon;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
@@ -48,17 +49,7 @@ public class StubComponentRunner implements IComponentRunner {
 	}
 
 	@Override
-	public void generateYieldTableForPolygonLayer(
-			YieldTable yieldTable, Polygon polygon, PolygonProjectionState state, LayerReportingInfo layerReportingInfo,
-			boolean doGenerateDetailedTableHeader
-	) {
-		// Do nothing
-	}
-
-	@Override
-	public void generateYieldTableForPolygon(
-			YieldTable yieldTable, Polygon polygon, PolygonProjectionState state, boolean doGenerateDetailedTableHeader
-	) {
-		// Do nothing
+	public void generateYieldTables(ProjectionContext context, Polygon polygon, PolygonProjectionState state)
+			throws YieldTableGenerationException {
 	}
 }

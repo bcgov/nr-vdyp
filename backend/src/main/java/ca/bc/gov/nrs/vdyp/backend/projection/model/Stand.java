@@ -1,7 +1,8 @@
 package ca.bc.gov.nrs.vdyp.backend.projection.model;
 
-import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.TreeSet;
 
 import ca.bc.gov.nrs.vdyp.si32.site.SiteTool;
 
@@ -22,8 +23,8 @@ public class Stand implements Comparable<Stand> {
 	/** The number of stands added to the Layer prior to this one. */
 	private int standIndex;
 
-	/** The species of the individual species (VDYP7: Sp64) of the species group. */
-	private List<Species> sp64s = new ArrayList<Species>();
+	/** The individual species (VDYP7: Sp64) of the species group. */
+	private TreeSet<Species> sp64s = new TreeSet<>(new Species.ByDecreasingPercentageComparator());
 
 	private Stand() {
 	}
@@ -44,22 +45,17 @@ public class Stand implements Comparable<Stand> {
 		return sp0;
 	}
 
-	public List<Species> getSpecies() {
-		return sp64s;
+	public List<Species> getSpeciesByPercent() {
+		return sp64s.stream().toList();
 	}
 
 	public static class Builder {
 		private Stand stand = new Stand();
 
+		// NOTE: sp0, speciesGroupIndex and the individual sp64s are added post-construction
+
 		public Builder layer(Layer layer) {
 			stand.layer = layer;
-			return this;
-		}
-
-		// NOTE: speciesGroup and speciesGroupIndex are added post-construction, in updateAfterSpeciesGroupAdded
-
-		public Builder species(List<Species> species) {
-			stand.sp64s = species;
 			return this;
 		}
 
@@ -74,6 +70,10 @@ public class Stand implements Comparable<Stand> {
 				throw new IllegalArgumentException("Attempted to create a Stand with no parent Layer");
 			}
 
+			if (stand.sp0Code == null) {
+				throw new IllegalArgumentException("Attempted to create a Stand with no sp0Code value");
+			}
+
 			return stand;
 		}
 	}
@@ -86,6 +86,7 @@ public class Stand implements Comparable<Stand> {
 	 * @return as described
 	 */
 	public Double determineMaturityAge() {
+
 		String sp0Name = SiteTool.getSpeciesShortName(getStandIndex());
 		boolean isDeciduous = SiteTool.getIsDeciduous(getStandIndex());
 
@@ -97,11 +98,16 @@ public class Stand implements Comparable<Stand> {
 	}
 
 	/**
-	 * A species (sp64) has been added to the stand. Update the Stand to reflect this.
+	 * Add a species (sp64) to the Stand.
 	 *
-	 * @param sp64 the species that was added.
+	 * @param sp64 the species to be added.
 	 */
-	public void updateAfterSp64Added(Species sp64) {
+	public void addSp64(Species sp64) {
+
+		if (sp0 == null) {
+			throw new IllegalStateException("Stand.updateAfterSp64Added: sp0 is null - call addSpeciesGroup first");
+		}
+
 		this.sp0.updateAfterSp64Added(sp64);
 		this.sp64s.add(sp64);
 	}
@@ -129,6 +135,29 @@ public class Stand implements Comparable<Stand> {
 				.build();
 
 		this.standIndex = index;
+	}
+
+	public static class ByIncreasingNameComparator implements Comparator<Stand> {
+		@Override
+		public int compare(Stand o1, Stand o2) {
+			return o1.getSp0Code().compareTo(o2.getSp0Code());
+		}
+	}
+
+	public static class ByDecreasingPercentageComparator implements Comparator<Stand> {
+		@Override
+		public int compare(Stand o1, Stand o2) {
+			int result = signum(o2.getSpeciesGroup().getSpeciesPercent() - o1.getSpeciesGroup().getSpeciesPercent());
+			if (result == 0) {
+				return o1.getStandIndex() - o2.getStandIndex();
+			} else {
+				return result;
+			}
+		}
+
+		private int signum(double d) {
+			return d > 0 ? 1 : d < 0 ? -1 : 0;
+		}
 	}
 
 	@Override

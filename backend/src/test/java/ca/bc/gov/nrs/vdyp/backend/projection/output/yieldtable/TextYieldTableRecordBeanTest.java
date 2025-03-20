@@ -6,11 +6,11 @@ import org.junit.jupiter.api.Test;
 import ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable.YieldTableRowValues.MultiFieldPrefixes;
 import ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable.YieldTableRowValues.MultiFieldSuffixes;
 
-public class CSVYieldTableRecordBeanTest {
+public class TextYieldTableRecordBeanTest {
 
 	@Test
 	void testLoading() {
-		CSVYieldTableRowValuesBean b = new CSVYieldTableRowValuesBean();
+		YieldTableRowValues b = new TextYieldTableRowValuesBean();
 
 		int nextSetValue = 0;
 		for (var p : MultiFieldPrefixes.values()) {

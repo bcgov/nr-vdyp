@@ -142,8 +142,8 @@ public class VriStartOutputWriter extends AbstractOutputWriter implements Closea
 
 			String[] speciesDistributionTexts = new String[4];
 			for (int i = 0; i < 4; i++) {
-				if (i < stand.getSpecies().size()) {
-					Species s = stand.getSpecies().get(i);
+				if (i < stand.getSpeciesByPercent().size()) {
+					Species s = stand.getSpeciesByPercent().get(i);
 					speciesDistributionTexts[i] = String.format("%3s%5.1f", s.getSpeciesCode(), s.getSpeciesPercent());
 				} else {
 					speciesDistributionTexts[i] = "     0.0";
@@ -193,7 +193,7 @@ public class VriStartOutputWriter extends AbstractOutputWriter implements Closea
 					format(sp0.getDominantHeight(), 5, 2), //
 					format(sp0.getSiteIndex(), 5, 2), //
 					sp0.getSpeciesCode(), //
-					stand.getSpecies().get(0).getSpeciesCode(), //
+					stand.getSpeciesByPercent().get(0).getSpeciesCode(), //
 					format(sp0.getYearsToBreastHeight(), 5, 2), //
 					format(sp0.getAgeAtBreastHeight(), 6, 1), //
 					sp0.getSiteCurve() == null ? " " + Vdyp7Constants.EMPTY_INT : format(sp0.getSiteCurve().n(), 3)

@@ -129,8 +129,8 @@ class HcsvSingleLayerSingleSp0sMultipleSp64sRuntimeStructureTest {
 		Assert.assertTrue(90.0 == sp0_0.getTotalAge());
 		Assert.assertTrue(10.4 == sp0_0.getYearsToBreastHeight());
 
-		Assert.assertEquals(2, stand0.getSpecies().size());
-		Species sp64_0_0 = stand0.getSpecies().get(0);
+		Assert.assertEquals(2, stand0.getSpeciesByPercent().size());
+		Species sp64_0_0 = stand0.getSpeciesByPercent().get(0);
 		Assert.assertEquals(stand0, sp64_0_0.getStand());
 		Assert.assertTrue(10.4 == sp64_0_0.getAgeAtBreastHeight());
 		Assert.assertTrue(21.0 == sp64_0_0.getDominantHeight());
@@ -147,7 +147,7 @@ class HcsvSingleLayerSingleSp0sMultipleSp64sRuntimeStructureTest {
 		Assert.assertTrue(90.0 == sp64_0_0.getTotalAge());
 		Assert.assertTrue(10.4 == sp64_0_0.getYearsToBreastHeight());
 
-		Species sp64_0_1 = stand0.getSpecies().get(1);
+		Species sp64_0_1 = stand0.getSpeciesByPercent().get(1);
 		Assert.assertEquals(stand0, sp64_0_1.getStand());
 		Assert.assertNull(sp64_0_1.getAgeAtBreastHeight());
 		Assert.assertNull(sp64_0_1.getDominantHeight());

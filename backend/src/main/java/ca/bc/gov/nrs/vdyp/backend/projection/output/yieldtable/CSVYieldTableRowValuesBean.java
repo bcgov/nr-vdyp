@@ -2,9 +2,13 @@ package ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable;
 
 import java.io.FileWriter;
 import java.lang.reflect.Field;
+import java.text.MessageFormat;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,36 +17,37 @@ import com.opencsv.bean.CsvBindByPosition;
 import com.opencsv.bean.StatefulBeanToCsv;
 import com.opencsv.bean.StatefulBeanToCsvBuilder;
 
-public class CSVYieldTableRecordBean {
+import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption;
+import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionContext;
+
+public class CSVYieldTableRowValuesBean implements YieldTableRowValues {
 
 	@SuppressWarnings("unused")
-	private static final Logger logger = LoggerFactory.getLogger(CSVYieldTableRecordBean.class);
+	private static final Logger logger = LoggerFactory.getLogger(CSVYieldTableRowValuesBean.class);
 
-	public static StatefulBeanToCsv<CSVYieldTableRecordBean> createCsvOutputStream(FileWriter writer) {
-		return new StatefulBeanToCsvBuilder<CSVYieldTableRecordBean>(writer) //
-				.build();
+	public static StatefulBeanToCsv<CSVYieldTableRowValuesBean>
+			createCsvOutputStream(FileWriter writer, ProjectionContext context) {
+
+		var doGenerateHeader = context.getValidatedParams()
+				.containsOption(ExecutionOption.DO_INCLUDE_COLUMN_HEADERS_IN_YIELD_TABLE);
+
+		if (doGenerateHeader) {
+
+			var unfilteredFields = CSVYieldTableRowValuesBean.class.getDeclaredFields();
+			var filteredFields = List.of(unfilteredFields).stream()
+					.filter(m -> m.isAnnotationPresent(CsvBindByPosition.class)).collect(Collectors.toList());
+
+			var strategy = new CustomMappingStrategy<CSVYieldTableRowValuesBean>(filteredFields);
+			strategy.setType(CSVYieldTableRowValuesBean.class);
+			return new StatefulBeanToCsvBuilder<CSVYieldTableRowValuesBean>(writer).withMappingStrategy(strategy)
+					.build();
+		} else {
+			return new StatefulBeanToCsvBuilder<CSVYieldTableRowValuesBean>(writer).build();
+		}
 	}
 
-	public enum MultiFieldPrefixes {
-		SPECIES_, PRJ_SP
-	};
-
-	public enum MultiFieldSuffixes {
-		_CODE, _PCNT, _VOL_WS, _VOL_CU, _VOL_D, _VOL_DW, _VOL_DWB, //
-		_MOF_BIO_WS, _MOF_BIO_CU, _MOF_BIO_D, _MOF_BIO_DW, _MOF_BIO_DWB
-	}
-
-	/**
-	 * The valid (prefix, suffix) pairs are those where if the prefix ends with "_", the suffix is either _CODE or _PCNT
-	 * OR both statements are false.
-	 *
-	 * @param p prefix
-	 * @param s suffix
-	 * @return as described
-	 */
-	public static boolean isValidPrefixSuffixPair(MultiFieldPrefixes p, MultiFieldSuffixes s) {
-		return p.name().endsWith("_") && (s == MultiFieldSuffixes._CODE || s == MultiFieldSuffixes._PCNT)
-				|| !p.name().endsWith("_") && (s != MultiFieldSuffixes._CODE && s != MultiFieldSuffixes._PCNT);
+	public CSVYieldTableRowValuesBean() {
+		// default constructor necessary for reflection
 	}
 
 //  { "(TABLE_NUM)"(,                      csvFldType_LONG,   10, 0, "", TRUE },  /* csvYldTbl_TblNum                       */)
@@ -198,42 +203,42 @@ public class CSVYieldTableRecordBean {
 //  { "(PRJ_VOL_D)"(,                      csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionVolD               */)
 	@CsvBindByName(column = "PRJ_VOL_D")
 	@CsvBindByPosition(position = 30)
-	private String cuVolumeLessDepth;
+	private String cuVolumeLessDecay;
 
 //  { "(PRJ_VOL_DW)"(,                     csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionVolDW              */)
 	@CsvBindByName(column = "PRJ_VOL_DW")
 	@CsvBindByPosition(position = 31)
-	private String cuVolumeLessDepthWastage;
+	private String cuVolumeLessDecayWastage;
 
 //  { "(PRJ_VOL_DWB)"(,                    csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionVolDWB             */)
 	@CsvBindByName(column = "PRJ_VOL_DWB")
 	@CsvBindByPosition(position = 32)
-	private String cuVolumeLessDepthWastageBreakage;
+	private String cuVolumeLessDecayWastageBreakage;
 
-//  { "(PRJ_MOF_BIO_WS)"(,                 csvFldType_SINGLE, 10, 5, "", FALSE }, /* csvYldTbl_ProjectionMoFBioWS           */)
-	@CsvBindByName(column = "PRJ_MOF_BIO_WS")
+//  { "(PRJ_MoF_BIO_WS)"(,                 csvFldType_SINGLE, 10, 5, "", FALSE }, /* csvYldTbl_ProjectionMoFBioWS           */)
+	@CsvBindByName(column = "PRJ_MoF_BIO_WS")
 	@CsvBindByPosition(position = 33)
-	private String mofBiomassWholeStemVolume;
+	private String MoFBiomassWholeStemVolume;
 
-//  { "(PRJ_MOF_BIO_CU)"(,                 csvFldType_SINGLE, 10, 5, "", FALSE }, /* csvYldTbl_ProjectionMoFBioCU           */)
-	@CsvBindByName(column = "PRJ_MOF_BIO_CU")
+//  { "(PRJ_MoF_BIO_CU)"(,                 csvFldType_SINGLE, 10, 5, "", FALSE }, /* csvYldTbl_ProjectionMoFBioCU           */)
+	@CsvBindByName(column = "PRJ_MoF_BIO_CU")
 	@CsvBindByPosition(position = 34)
-	private String mofBiomassCloseUtilizationVolume;
+	private String MoFBiomassCloseUtilizationVolume;
 
-//  { "(PRJ_MOF_BIO_D)"(,                  csvFldType_SINGLE, 10, 5, "", FALSE }, /* csvYldTbl_ProjectionMoFBioD            */)
-	@CsvBindByName(column = "PRJ_MOF_BIO_D")
+//  { "(PRJ_MoF_BIO_D)"(,                  csvFldType_SINGLE, 10, 5, "", FALSE }, /* csvYldTbl_ProjectionMoFBioD            */)
+	@CsvBindByName(column = "PRJ_MoF_BIO_D")
 	@CsvBindByPosition(position = 35)
-	private String mofBiomassCuVolumeLessDepth;
+	private String MoFBiomassCuVolumeLessDecay;
 
-//  { "(PRJ_MOF_BIO_DW)"(,                 csvFldType_SINGLE, 10, 5, "", FALSE }, /* csvYldTbl_ProjectionMoFBioDW           */)
-	@CsvBindByName(column = "PRJ_MOF_BIO_DW")
+//  { "(PRJ_MoF_BIO_DW)"(,                 csvFldType_SINGLE, 10, 5, "", FALSE }, /* csvYldTbl_ProjectionMoFBioDW           */)
+	@CsvBindByName(column = "PRJ_MoF_BIO_DW")
 	@CsvBindByPosition(position = 36)
-	private String mofBiomassCuVolumeLessDepthWastage;
+	private String MoFBiomassCuVolumeLessDecayWastage;
 
-//  { "(PRJ_MOF_BIO_DWB)"(,                csvFldType_SINGLE, 10, 5, "", FALSE }, /* csvYldTbl_ProjectionMoFBioDWB          */)
-	@CsvBindByName(column = "PRJ_MOF_BIO_DWB")
+//  { "(PRJ_MoF_BIO_DWB)"(,                csvFldType_SINGLE, 10, 5, "", FALSE }, /* csvYldTbl_ProjectionMoFBioDWB          */)
+	@CsvBindByName(column = "PRJ_MoF_BIO_DWB")
 	@CsvBindByPosition(position = 37)
-	private String mofBiomassCuVolumeLessDepthWastageBreakage;
+	private String MoFBiomassCuVolumeLessDecayWastageBreakage;
 
 //  { "(PRJ_SP1_VOL_WS)"(,                 csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs1VolWS         */)
 	@CsvBindByName(column = "PRJ_SP1_VOL_WS")
@@ -248,17 +253,17 @@ public class CSVYieldTableRecordBean {
 //  { "(PRJ_SP1_VOL_D)"(,                  csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs1VolD          */)
 	@CsvBindByName(column = "PRJ_SP1_VOL_D")
 	@CsvBindByPosition(position = 40)
-	private String species1CuVolumeLessDepth;
+	private String species1CuVolumeLessDecay;
 
 //  { "(PRJ_SP1_VOL_DW)"(,                 csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs1VolDW         */)
 	@CsvBindByName(column = "PRJ_SP1_VOL_DW")
 	@CsvBindByPosition(position = 41)
-	private String species1CuVolumeLessDepthWastage;
+	private String species1CuVolumeLessDecayWastage;
 
 //  { "(PRJ_SP1_VOL_DWB)"(,                csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs1VolDWB        */)
 	@CsvBindByName(column = "PRJ_SP1_VOL_DWB")
 	@CsvBindByPosition(position = 42)
-	private String species1CuVolumeLessDepthWastageBreakage;
+	private String species1CuVolumeLessDecayWastageBreakage;
 
 //  { "(PRJ_SP2_VOL_WS)"(,                 csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs2VolWS         */)
 	@CsvBindByName(column = "PRJ_SP2_VOL_WS")
@@ -273,17 +278,17 @@ public class CSVYieldTableRecordBean {
 //  { "(PRJ_SP2_VOL_D)"(,                  csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs2VolD          */)
 	@CsvBindByName(column = "PRJ_SP2_VOL_D")
 	@CsvBindByPosition(position = 45)
-	private String species2CuVolumeLessDepth;
+	private String species2CuVolumeLessDecay;
 
 //  { "(PRJ_SP2_VOL_DW)"(,                 csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs2VolDW         */)
 	@CsvBindByName(column = "PRJ_SP2_VOL_DW")
 	@CsvBindByPosition(position = 46)
-	private String species2CuVolumeLessDepthWastage;
+	private String species2CuVolumeLessDecayWastage;
 
 //  { "(PRJ_SP2_VOL_DWB)"(,                csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs2VolDWB        */)
 	@CsvBindByName(column = "PRJ_SP2_VOL_DWB")
 	@CsvBindByPosition(position = 47)
-	private String species2CuVolumeLessDepthWastageBreakage;
+	private String species2CuVolumeLessDecayWastageBreakage;
 
 //  { "(PRJ_SP3_VOL_WS)"(,                 csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs3VolWS         */)
 	@CsvBindByName(column = "PRJ_SP3_VOL_WS")
@@ -298,17 +303,17 @@ public class CSVYieldTableRecordBean {
 //  { "(PRJ_SP3_VOL_D)"(,                  csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs3VolD          */)
 	@CsvBindByName(column = "PRJ_SP3_VOL_D")
 	@CsvBindByPosition(position = 50)
-	private String species3CuVolumeLessDepth;
+	private String species3CuVolumeLessDecay;
 
 //  { "(PRJ_SP3_VOL_DW)"(,                 csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs3VolDW         */)
 	@CsvBindByName(column = "PRJ_SP3_VOL_DW")
 	@CsvBindByPosition(position = 51)
-	private String species3CuVolumeLessDepthWastage;
+	private String species3CuVolumeLessDecayWastage;
 
 //  { "(PRJ_SP3_VOL_DWB)"(,                csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs3VolDWB        */)
 	@CsvBindByName(column = "PRJ_SP3_VOL_DWB")
 	@CsvBindByPosition(position = 52)
-	private String species3CuVolumeLessDepthWastageBreakage;
+	private String species3CuVolumeLessDecayWastageBreakage;
 
 //  { "(PRJ_SP4_VOL_WS)"(,                 csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs4VolWS         */)
 	@CsvBindByName(column = "PRJ_SP4_VOL_WS")
@@ -323,17 +328,17 @@ public class CSVYieldTableRecordBean {
 //  { "(PRJ_SP4_VOL_D)"(,                  csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs4VolD          */)
 	@CsvBindByName(column = "PRJ_SP4_VOL_D")
 	@CsvBindByPosition(position = 55)
-	private String species4CuVolumeLessDepth;
+	private String species4CuVolumeLessDecay;
 
 //  { "(PRJ_SP4_VOL_DW)"(,                 csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs4VolDW         */)
 	@CsvBindByName(column = "PRJ_SP4_VOL_DW")
 	@CsvBindByPosition(position = 56)
-	private String species4CuVolumeLessDepthWastage;
+	private String species4CuVolumeLessDecayWastage;
 
 //  { "(PRJ_SP4_VOL_DWB)"(,                csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs4VolDWB        */)
 	@CsvBindByName(column = "PRJ_SP4_VOL_DWB")
 	@CsvBindByPosition(position = 57)
-	private String species4CuVolumeLessDepthWastageBreakage;
+	private String species4CuVolumeLessDecayWastageBreakage;
 
 //  { "(PRJ_SP5_VOL_WS)"(,                 csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs5VolWS         */)
 	@CsvBindByName(column = "PRJ_SP5_VOL_WS")
@@ -348,17 +353,17 @@ public class CSVYieldTableRecordBean {
 //  { "(PRJ_SP5_VOL_D)"(,                  csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs5VolD          */)
 	@CsvBindByName(column = "PRJ_SP5_VOL_D")
 	@CsvBindByPosition(position = 60)
-	private String species5CuVolumeLessDepth;
+	private String species5CuVolumeLessDecay;
 
 //  { "(PRJ_SP5_VOL_DW)"(,                 csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs5VolDW         */)
 	@CsvBindByName(column = "PRJ_SP5_VOL_DW")
 	@CsvBindByPosition(position = 61)
-	private String species5CuVolumeLessDepthWastage;
+	private String species5CuVolumeLessDecayWastage;
 
 //  { "(PRJ_SP5_VOL_DWB)"(,                csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs5VolDWB        */)
 	@CsvBindByName(column = "PRJ_SP5_VOL_DWB")
 	@CsvBindByPosition(position = 62)
-	private String species5CuVolumeLessDepthWastageBreakage;
+	private String species5CuVolumeLessDecayWastageBreakage;
 
 //  { "(PRJ_SP6_VOL_WS)"(,                 csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs6VolWS         */)
 	@CsvBindByName(column = "PRJ_SP6_VOL_WS")
@@ -373,167 +378,167 @@ public class CSVYieldTableRecordBean {
 //  { "(PRJ_SP6_VOL_D)"(,                  csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs6VolD          */)
 	@CsvBindByName(column = "PRJ_SP6_VOL_D")
 	@CsvBindByPosition(position = 65)
-	private String species6CuVolumeLessDepth;
+	private String species6CuVolumeLessDecay;
 
 //  { "(PRJ_SP6_VOL_DW)"(,                 csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs6VolDW         */)
 	@CsvBindByName(column = "PRJ_SP6_VOL_DW")
 	@CsvBindByPosition(position = 66)
-	private String species6CuVolumeLessDepthWastage;
+	private String species6CuVolumeLessDecayWastage;
 
 //  { "(PRJ_SP6_VOL_DWB)"(,                csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs6VolDWB        */)
 	@CsvBindByName(column = "PRJ_SP6_VOL_DWB")
 	@CsvBindByPosition(position = 67)
-	private String species6CuVolumeLessDepthWastageBreakage;
+	private String species6CuVolumeLessDecayWastageBreakage;
 
-//  { "(PRJ_SP1_MOF_BIO_WS)"(,             csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs1MoFBioWS      */)
-	@CsvBindByName(column = "PRJ_SP1_MOF_BIO_WS")
+//  { "(PRJ_SP1_MoF_BIO_WS)"(,             csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs1MoFBioWS      */)
+	@CsvBindByName(column = "PRJ_SP1_MoF_BIO_WS")
 	@CsvBindByPosition(position = 68)
-	private String species1MofBiomassWholeStemVolume;
+	private String species1MoFBiomassWholeStemVolume;
 
-//  { "(PRJ_SP1_MOF_BIO_CU)"(,             csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs1MoFBioCU      */)
-	@CsvBindByName(column = "PRJ_SP1_MOF_BIO_CU")
+//  { "(PRJ_SP1_MoF_BIO_CU)"(,             csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs1MoFBioCU      */)
+	@CsvBindByName(column = "PRJ_SP1_MoF_BIO_CU")
 	@CsvBindByPosition(position = 69)
-	private String species1MofBiomassCloseUtilizationVolume;
+	private String species1MoFBiomassCloseUtilizationVolume;
 
-//  { "(PRJ_SP1_MOF_BIO_D)"(,              csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs1MoFBioD       */)
-	@CsvBindByName(column = "PRJ_SP1_MOF_BIO_D")
+//  { "(PRJ_SP1_MoF_BIO_D)"(,              csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs1MoFBioD       */)
+	@CsvBindByName(column = "PRJ_SP1_MoF_BIO_D")
 	@CsvBindByPosition(position = 70)
-	private String species1MofBiomassCuVolumeLessDepth;
+	private String species1MoFBiomassCuVolumeLessDecay;
 
-//  { "(PRJ_SP1_MOF_BIO_DW)"(,             csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs1MoFBioDW      */)
-	@CsvBindByName(column = "PRJ_SP1_MOF_BIO_DW")
+//  { "(PRJ_SP1_MoF_BIO_DW)"(,             csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs1MoFBioDW      */)
+	@CsvBindByName(column = "PRJ_SP1_MoF_BIO_DW")
 	@CsvBindByPosition(position = 71)
-	private String species1MofBiomassCuVolumeLessDepthWastage;
+	private String species1MoFBiomassCuVolumeLessDecayWastage;
 
-//  { "(PRJ_SP1_MOF_BIO_DWB)"(,            csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs1MoFBioDWB     */)
-	@CsvBindByName(column = "PRJ_SP1_MOF_BIO_DWB")
+//  { "(PRJ_SP1_MoF_BIO_DWB)"(,            csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs1MoFBioDWB     */)
+	@CsvBindByName(column = "PRJ_SP1_MoF_BIO_DWB")
 	@CsvBindByPosition(position = 72)
-	private String species1MofBiomassCuVolumeLessDepthWastageBreakage;
+	private String species1MoFBiomassCuVolumeLessDecayWastageBreakage;
 
-//  { "(PRJ_SP2_MOF_BIO_WS)"(,             csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs2MoFBioWS      */)
-	@CsvBindByName(column = "PRJ_SP2_MOF_BIO_WS")
+//  { "(PRJ_SP2_MoF_BIO_WS)"(,             csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs2MoFBioWS      */)
+	@CsvBindByName(column = "PRJ_SP2_MoF_BIO_WS")
 	@CsvBindByPosition(position = 73)
-	private String species2MofBiomassWholeStemVolume;
+	private String species2MoFBiomassWholeStemVolume;
 
-//  { "(PRJ_SP2_MOF_BIO_CU)"(,             csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs2MoFBioCU      */)
-	@CsvBindByName(column = "PRJ_SP2_MOF_BIO_CU")
+//  { "(PRJ_SP2_MoF_BIO_CU)"(,             csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs2MoFBioCU      */)
+	@CsvBindByName(column = "PRJ_SP2_MoF_BIO_CU")
 	@CsvBindByPosition(position = 74)
-	private String species2MofBiomassCloseUtilizationVolume;
+	private String species2MoFBiomassCloseUtilizationVolume;
 
-//  { "(PRJ_SP2_MOF_BIO_D)"(,              csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs2MoFBioD       */)
-	@CsvBindByName(column = "PRJ_SP2_MOF_BIO_D")
+//  { "(PRJ_SP2_MoF_BIO_D)"(,              csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs2MoFBioD       */)
+	@CsvBindByName(column = "PRJ_SP2_MoF_BIO_D")
 	@CsvBindByPosition(position = 75)
-	private String species2MofBiomassCuVolumeLessDepth;
+	private String species2MoFBiomassCuVolumeLessDecay;
 
-//  { "(PRJ_SP2_MOF_BIO_DW)"(,             csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs2MoFBioDW      */)
-	@CsvBindByName(column = "PRJ_SP2_MOF_BIO_DW")
+//  { "(PRJ_SP2_MoF_BIO_DW)"(,             csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs2MoFBioDW      */)
+	@CsvBindByName(column = "PRJ_SP2_MoF_BIO_DW")
 	@CsvBindByPosition(position = 76)
-	private String species2MofBiomassCuVolumeLessDepthWastage;
+	private String species2MoFBiomassCuVolumeLessDecayWastage;
 
-//  { "(PRJ_SP2_MOF_BIO_DWB)"(,            csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs2MoFBioDWB     */)
-	@CsvBindByName(column = "PRJ_SP2_MOF_BIO_DWB")
+//  { "(PRJ_SP2_MoF_BIO_DWB)"(,            csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs2MoFBioDWB     */)
+	@CsvBindByName(column = "PRJ_SP2_MoF_BIO_DWB")
 	@CsvBindByPosition(position = 77)
-	private String species2MofBiomassCuVolumeLessDepthWastageBreakage;
+	private String species2MoFBiomassCuVolumeLessDecayWastageBreakage;
 
-//  { "(PRJ_SP3_MOF_BIO_WS)"(,             csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs3MoFBioWS      */)
-	@CsvBindByName(column = "PRJ_SP3_MOF_BIO_WS")
+//  { "(PRJ_SP3_MoF_BIO_WS)"(,             csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs3MoFBioWS      */)
+	@CsvBindByName(column = "PRJ_SP3_MoF_BIO_WS")
 	@CsvBindByPosition(position = 78)
-	private String species3MofBiomassWholeStemVolume;
+	private String species3MoFBiomassWholeStemVolume;
 
-//  { "(PRJ_SP3_MOF_BIO_CU)"(,             csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs3MoFBioCU      */)
-	@CsvBindByName(column = "PRJ_SP3_MOF_BIO_CU")
+//  { "(PRJ_SP3_MoF_BIO_CU)"(,             csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs3MoFBioCU      */)
+	@CsvBindByName(column = "PRJ_SP3_MoF_BIO_CU")
 	@CsvBindByPosition(position = 79)
-	private String species3MofBiomassCloseUtilizationVolume;
+	private String species3MoFBiomassCloseUtilizationVolume;
 
-//  { "(PRJ_SP3_MOF_BIO_D)"(,              csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs3MoFBioD       */)
-	@CsvBindByName(column = "PRJ_SP3_MOF_BIO_D")
+//  { "(PRJ_SP3_MoF_BIO_D)"(,              csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs3MoFBioD       */)
+	@CsvBindByName(column = "PRJ_SP3_MoF_BIO_D")
 	@CsvBindByPosition(position = 80)
-	private String species3MofBiomassCuVolumeLessDepth;
+	private String species3MoFBiomassCuVolumeLessDecay;
 
-//  { "(PRJ_SP3_MOF_BIO_DW)"(,             csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs3MoFBioDW      */)
-	@CsvBindByName(column = "PRJ_SP3_MOF_BIO_DW")
+//  { "(PRJ_SP3_MoF_BIO_DW)"(,             csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs3MoFBioDW      */)
+	@CsvBindByName(column = "PRJ_SP3_MoF_BIO_DW")
 	@CsvBindByPosition(position = 81)
-	private String species3MofBiomassCuVolumeLessDepthWastage;
+	private String species3MoFBiomassCuVolumeLessDecayWastage;
 
-//  { "(PRJ_SP3_MOF_BIO_DWB)"(,            csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs3MoFBioDWB     */)
-	@CsvBindByName(column = "PRJ_SP3_MOF_BIO_DWB")
+//  { "(PRJ_SP3_MoF_BIO_DWB)"(,            csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs3MoFBioDWB     */)
+	@CsvBindByName(column = "PRJ_SP3_MoF_BIO_DWB")
 	@CsvBindByPosition(position = 82)
-	private String species3MofBiomassCuVolumeLessDepthWastageBreakage;
+	private String species3MoFBiomassCuVolumeLessDecayWastageBreakage;
 
-//  { "(PRJ_SP4_MOF_BIO_WS)"(,             csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs4MoFBioWS      */)
-	@CsvBindByName(column = "PRJ_SP4_MOF_BIO_WS")
+//  { "(PRJ_SP4_MoF_BIO_WS)"(,             csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs4MoFBioWS      */)
+	@CsvBindByName(column = "PRJ_SP4_MoF_BIO_WS")
 	@CsvBindByPosition(position = 83)
-	private String species4MofBiomassWholeStemVolume;
+	private String species4MoFBiomassWholeStemVolume;
 
-//  { "(PRJ_SP4_MOF_BIO_CU)"(,             csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs4MoFBioCU      */)
-	@CsvBindByName(column = "PRJ_SP4_MOF_BIO_CU")
+//  { "(PRJ_SP4_MoF_BIO_CU)"(,             csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs4MoFBioCU      */)
+	@CsvBindByName(column = "PRJ_SP4_MoF_BIO_CU")
 	@CsvBindByPosition(position = 84)
-	private String species4MofBiomassCloseUtilizationVolume;
+	private String species4MoFBiomassCloseUtilizationVolume;
 
-//  { "(PRJ_SP4_MOF_BIO_D)"(,              csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs4MoFBioD       */)
-	@CsvBindByName(column = "PRJ_SP4_MOF_BIO_D")
+//  { "(PRJ_SP4_MoF_BIO_D)"(,              csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs4MoFBioD       */)
+	@CsvBindByName(column = "PRJ_SP4_MoF_BIO_D")
 	@CsvBindByPosition(position = 85)
-	private String species4MofBiomassCuVolumeLessDepth;
+	private String species4MoFBiomassCuVolumeLessDecay;
 
-//  { "(PRJ_SP4_MOF_BIO_DW)"(,             csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs4MoFBioDW      */)
-	@CsvBindByName(column = "PRJ_SP4_MOF_BIO_DW")
+//  { "(PRJ_SP4_MoF_BIO_DW)"(,             csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs4MoFBioDW      */)
+	@CsvBindByName(column = "PRJ_SP4_MoF_BIO_DW")
 	@CsvBindByPosition(position = 86)
-	private String species4MofBiomassCuVolumeLessDepthWastage;
+	private String species4MoFBiomassCuVolumeLessDecayWastage;
 
-//  { "(PRJ_SP4_MOF_BIO_DWB)"(,            csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs4MoFBioDWB     */)
-	@CsvBindByName(column = "PRJ_SP4_MOF_BIO_DWB")
+//  { "(PRJ_SP4_MoF_BIO_DWB)"(,            csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs4MoFBioDWB     */)
+	@CsvBindByName(column = "PRJ_SP4_MoF_BIO_DWB")
 	@CsvBindByPosition(position = 87)
-	private String species4MofBiomassCuVolumeLessDepthWastageBreakage;
+	private String species4MoFBiomassCuVolumeLessDecayWastageBreakage;
 
-//  { "(PRJ_SP5_MOF_BIO_WS)"(,             csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs5MoFBioWS      */)
-	@CsvBindByName(column = "PRJ_SP5_MOF_BIO_WS")
+//  { "(PRJ_SP5_MoF_BIO_WS)"(,             csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs5MoFBioWS      */)
+	@CsvBindByName(column = "PRJ_SP5_MoF_BIO_WS")
 	@CsvBindByPosition(position = 88)
-	private String species5MofBiomassWholeStemVolume;
+	private String species5MoFBiomassWholeStemVolume;
 
-//  { "(PRJ_SP5_MOF_BIO_CU)"(,             csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs5MoFBioCU      */)
-	@CsvBindByName(column = "PRJ_SP5_MOF_BIO_CU")
+//  { "(PRJ_SP5_MoF_BIO_CU)"(,             csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs5MoFBioCU      */)
+	@CsvBindByName(column = "PRJ_SP5_MoF_BIO_CU")
 	@CsvBindByPosition(position = 89)
-	private String species5MofBiomassCloseUtilizationVolume;
+	private String species5MoFBiomassCloseUtilizationVolume;
 
-//  { "(PRJ_SP5_MOF_BIO_D)"(,              csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs5MoFBioD       */)
-	@CsvBindByName(column = "PRJ_SP5_MOF_BIO_D")
+//  { "(PRJ_SP5_MoF_BIO_D)"(,              csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs5MoFBioD       */)
+	@CsvBindByName(column = "PRJ_SP5_MoF_BIO_D")
 	@CsvBindByPosition(position = 90)
-	private String species5MofBiomassCuVolumeLessDepth;
+	private String species5MoFBiomassCuVolumeLessDecay;
 
-//  { "(PRJ_SP5_MOF_BIO_DW)"(,             csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs5MoFBioDW      */)
-	@CsvBindByName(column = "PRJ_SP5_MOF_BIO_DW")
+//  { "(PRJ_SP5_MoF_BIO_DW)"(,             csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs5MoFBioDW      */)
+	@CsvBindByName(column = "PRJ_SP5_MoF_BIO_DW")
 	@CsvBindByPosition(position = 91)
-	private String species5MofBiomassCuVolumeLessDepthWastage;
+	private String species5MoFBiomassCuVolumeLessDecayWastage;
 
-//  { "(PRJ_SP5_MOF_BIO_DWB)"(,            csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs5MoFBioDWB     */)
-	@CsvBindByName(column = "PRJ_SP5_MOF_BIO_DWB")
+//  { "(PRJ_SP5_MoF_BIO_DWB)"(,            csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs5MoFBioDWB     */)
+	@CsvBindByName(column = "PRJ_SP5_MoF_BIO_DWB")
 	@CsvBindByPosition(position = 92)
-	private String species5MofBiomassCuVolumeLessDepthWastageBreakage;
+	private String species5MoFBiomassCuVolumeLessDecayWastageBreakage;
 
-//  { "(PRJ_SP6_MOF_BIO_WS)"(,             csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs6MoFBioWS      */)
-	@CsvBindByName(column = "PRJ_SP6_MOF_BIO_WS")
+//  { "(PRJ_SP6_MoF_BIO_WS)"(,             csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs6MoFBioWS      */)
+	@CsvBindByName(column = "PRJ_SP6_MoF_BIO_WS")
 	@CsvBindByPosition(position = 93)
-	private String species6MofBiomassWholeStemVolume;
+	private String species6MoFBiomassWholeStemVolume;
 
-//  { "(PRJ_SP6_MOF_BIO_CU)"(,             csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs6MoFBioCU      */)
-	@CsvBindByName(column = "PRJ_SP6_MOF_BIO_CU")
+//  { "(PRJ_SP6_MoF_BIO_CU)"(,             csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs6MoFBioCU      */)
+	@CsvBindByName(column = "PRJ_SP6_MoF_BIO_CU")
 	@CsvBindByPosition(position = 94)
-	private String species6MofBiomassCloseUtilizationVolume;
+	private String species6MoFBiomassCloseUtilizationVolume;
 
-//  { "(PRJ_SP6_MOF_BIO_D)"(,              csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs6MoFBioD       */)
-	@CsvBindByName(column = "PRJ_SP6_MOF_BIO_D")
+//  { "(PRJ_SP6_MoF_BIO_D)"(,              csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs6MoFBioD       */)
+	@CsvBindByName(column = "PRJ_SP6_MoF_BIO_D")
 	@CsvBindByPosition(position = 95)
-	private String species6MofBiomassCuVolumeLessDepth;
+	private String species6MoFBiomassCuVolumeLessDecay;
 
-//  { "(PRJ_SP6_MOF_BIO_DW)"(,             csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs6MoFBioDW      */)
-	@CsvBindByName(column = "PRJ_SP6_MOF_BIO_DW")
+//  { "(PRJ_SP6_MoF_BIO_DW)"(,             csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs6MoFBioDW      */)
+	@CsvBindByName(column = "PRJ_SP6_MoF_BIO_DW")
 	@CsvBindByPosition(position = 96)
-	private String species6MofBiomassCuVolumeLessDepthWastage;
+	private String species6MoFBiomassCuVolumeLessDecayWastage;
 
-//  { "(PRJ_SP6_MOF_BIO_DWB)"(,            csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs6MoFBioDWB     */)
-	@CsvBindByName(column = "PRJ_SP6_MOF_BIO_DWB")
+//  { "(PRJ_SP6_MoF_BIO_DWB)"(,            csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionSpcs6MoFBioDWB     */)
+	@CsvBindByName(column = "PRJ_SP6_MoF_BIO_DWB")
 	@CsvBindByPosition(position = 97)
-	private String species6MofBiomassCuVolumeLessDepthWastageBreakage;
+	private String species6MoFBiomassCuVolumeLessDecayWastageBreakage;
 
 //  { "(PRJ_CFS_BIO_STEM)"(,               csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionCFSBiomassStem     */)
 	@CsvBindByName(column = "PRJ_CFS_BIO_STEM")
@@ -563,22 +568,39 @@ public class CSVYieldTableRecordBean {
 	private static Map<String, Field> csvFields = new HashMap<>();
 
 	static {
-		for (Field f : CSVYieldTableRecordBean.class.getDeclaredFields()) {
+		for (Field f : CSVYieldTableRowValuesBean.class.getDeclaredFields()) {
 			for (var a : f.getAnnotationsByType(CsvBindByName.class)) {
-				assert !csvFields.containsKey(a.column());
+				Validate.isTrue(
+						!csvFields.containsKey(a.column()),
+						MessageFormat.format("csvFields must not already contain key {0}", a.column())
+				);
 				csvFields.put(a.column(), f);
 			}
 		}
 	}
 
-	public Object getSpeciesField(MultiFieldPrefixes prefix, int speciesNumber, MultiFieldSuffixes suffix) {
+	@Override
+	public String getSpeciesFieldValue(MultiFieldPrefixes prefix, int speciesNumber, MultiFieldSuffixes suffix) {
+
+		Validate.isTrue(
+				isValidPrefixSuffixPair(prefix, suffix),
+				MessageFormat.format(
+						"CSVYieldTableRowValuesBean.getSpeciesFieldValue: {0} and {1} must be a valid prefix suffix pair",
+						prefix, suffix
+				)
+		);
 
 		if (speciesNumber < 1 || speciesNumber > 6) {
 			throw new IllegalArgumentException("speciesNumber");
 		}
 
-		String column = prefix.name() + speciesNumber + suffix.name();
-		assert csvFields.containsKey(column);
+		String column = prefix.fieldName + speciesNumber + suffix.fieldName;
+		Validate.isTrue(
+				csvFields.containsKey(column),
+				MessageFormat
+						.format("CSVYieldTableRowValuesBean.getSpeciesFieldValue: {0} must exist in csvFields", column)
+		);
+
 		try {
 			return (String) csvFields.get(column).get(this);
 		} catch (ReflectiveOperationException e) {
@@ -586,138 +608,165 @@ public class CSVYieldTableRecordBean {
 		}
 	}
 
-	String getTableNumber() {
+	@Override
+	public String getTableNumber() {
 		return tableNumber;
 	}
 
-	String getFeatureId() {
+	@Override
+	public String getFeatureId() {
 		return featureId;
 	}
 
-	String getDistrict() {
+	@Override
+	public String getDistrict() {
 		return district;
 	}
 
-	String getMapId() {
+	@Override
+	public String getMapId() {
 		return mapId;
 	}
 
-	String getPolygonId() {
+	@Override
+	public String getPolygonId() {
 		return polygonId;
 	}
 
-	String getLayerId() {
+	@Override
+	public String getLayerId() {
 		return layerId;
 	}
 
-	String getProjectionYear() {
+	@Override
+	public String getProjectionYear() {
 		return projectionYear;
 	}
 
-	String getTotalAge() {
+	@Override
+	public String getTotalAge() {
 		return totalAge;
 	}
 
-	String getPercentStockable() {
+	@Override
+	public String getPercentStockable() {
 		return percentStockable;
 	}
 
-	String getSiteIndex() {
+	@Override
+	public String getSiteIndex() {
 		return siteIndex;
 	}
 
-	String getDominantHeight() {
+	@Override
+	public String getDominantHeight() {
 		return dominantHeight;
 	}
 
-	String getSecondaryHeight() {
+	@Override
+	public String getSecondaryHeight() {
 		return secondaryHeight;
 	}
 
-	String getLoreyHeight() {
+	@Override
+	public String getLoreyHeight() {
 		return loreyHeight;
 	}
 
-	String getDiameter() {
+	@Override
+	public String getDiameter() {
 		return diameter;
 	}
 
-	String getTreesPerHectare() {
+	@Override
+	public String getTreesPerHectare() {
 		return treesPerHectare;
 	}
 
-	String getBasalArea() {
+	@Override
+	public String getBasalArea() {
 		return basalArea;
 	}
 
-	String getWholeStemVolume() {
+	@Override
+	public String getWholeStemVolume() {
 		return wholeStemVolume;
 	}
 
-	String getCloseUtilizationVolume() {
+	@Override
+	public String getCloseUtilizationVolume() {
 		return closeUtilizationVolume;
 	}
 
-	String getCuVolumeLessDepth() {
-		return cuVolumeLessDepth;
+	@Override
+	public String getMoFBiomassWholeStemVolume() {
+		return MoFBiomassWholeStemVolume;
 	}
 
-	String getCuVolumeLessDepthWastage() {
-		return cuVolumeLessDepthWastage;
+	@Override
+	public String getMoFBiomassCloseUtilizationVolume() {
+		return MoFBiomassCloseUtilizationVolume;
 	}
 
-	String getCuVolumeLessDepthWastageBreakage() {
-		return cuVolumeLessDepthWastageBreakage;
+	@Override
+	public String getMoFBiomassCuVolumeLessDecay() {
+		return MoFBiomassCuVolumeLessDecay;
 	}
 
-	String getMofBiomassWholeStemVolume() {
-		return mofBiomassWholeStemVolume;
+	@Override
+	public String getMoFBiomassCuVolumeLessDecayWastage() {
+		return MoFBiomassCuVolumeLessDecayWastage;
 	}
 
-	String getMofBiomassCloseUtilizationVolume() {
-		return mofBiomassCloseUtilizationVolume;
+	@Override
+	public String getMoFBiomassCuVolumeLessDecayWastageBreakage() {
+		return MoFBiomassCuVolumeLessDecayWastageBreakage;
 	}
 
-	String getMofBiomassCuVolumeLessDepth() {
-		return mofBiomassCuVolumeLessDepth;
-	}
-
-	String getMofBiomassCuVolumeLessDepthWastage() {
-		return mofBiomassCuVolumeLessDepthWastage;
-	}
-
-	String getMofBiomassCuVolumeLessDepthWastageBreakage() {
-		return mofBiomassCuVolumeLessDepthWastageBreakage;
-	}
-
-	String getCfsBiomassStem() {
+	@Override
+	public String getCfsBiomassStem() {
 		return cfsBiomassStem;
 	}
 
-	String getCfsBiomassBark() {
+	@Override
+	public String getCfsBiomassBark() {
 		return cfsBiomassBark;
 	}
 
-	String getCfsBiomassBranch() {
+	@Override
+	public String getCfsBiomassBranch() {
 		return cfsBiomassBranch;
 	}
 
-	String getCfsBiomassFoliage() {
+	@Override
+	public String getCfsBiomassFoliage() {
 		return cfsBiomassFoliage;
 	}
 
-	String getMode() {
+	@Override
+	public String getMode() {
 		return mode;
 	}
 
-	public void setSpeciesField(MultiFieldPrefixes prefix, int speciesNumber, MultiFieldSuffixes suffix, Object value) {
+	@Override
+	public void setSpeciesFieldValue(
+			MultiFieldPrefixes prefix, int speciesNumber, MultiFieldSuffixes suffix, String value
+	) {
 
 		if (speciesNumber < 1 || speciesNumber > 6) {
 			throw new IllegalArgumentException("speciesNumber");
 		}
 
-		String column = prefix.name() + speciesNumber + suffix.name();
-		assert csvFields.containsKey(column);
+		String column = prefix.fieldName + speciesNumber + suffix.fieldName;
+
+		Validate.isTrue(
+				csvFields.containsKey(column),
+				MessageFormat.format(
+						"CSVYieldTableRowValuesBean.setSpeciesFieldValue: {0} must exist already exist in csvFields",
+						column
+				)
+		);
+
 		try {
 			csvFields.get(column).set(this, value);
 		} catch (ReflectiveOperationException e) {
@@ -725,131 +774,177 @@ public class CSVYieldTableRecordBean {
 		}
 	}
 
+	@Override
 	public void setTableNumber(String tableNumber) {
 		this.tableNumber = tableNumber;
 	}
 
+	@Override
 	public void setFeatureId(String featureId) {
 		this.featureId = featureId;
 	}
 
+	@Override
 	public void setDistrict(String district) {
 		this.district = district;
 	}
 
+	@Override
 	public void setMapId(String mapId) {
 		this.mapId = mapId;
 	}
 
+	@Override
 	public void setPolygonId(String polygonId) {
 		this.polygonId = polygonId;
 	}
 
+	@Override
 	public void setLayerId(String layerId) {
 		this.layerId = layerId;
 	}
 
+	@Override
 	public void setProjectionYear(String projectionYear) {
 		this.projectionYear = projectionYear;
 	}
 
+	@Override
 	public void setTotalAge(String totalAge) {
 		this.totalAge = totalAge;
 	}
 
+	@Override
 	public void setPercentStockable(String percentStockable) {
 		this.percentStockable = percentStockable;
 	}
 
+	@Override
 	public void setSiteIndex(String siteIndex) {
 		this.siteIndex = siteIndex;
 	}
 
+	@Override
 	public void setDominantHeight(String dominantHeight) {
 		this.dominantHeight = dominantHeight;
 	}
 
+	@Override
 	public void setSecondaryHeight(String secondaryHeight) {
 		this.secondaryHeight = secondaryHeight;
 	}
 
+	@Override
 	public void setLoreyHeight(String loreyHeight) {
 		this.loreyHeight = loreyHeight;
 	}
 
+	@Override
 	public void setDiameter(String diameter) {
 		this.diameter = diameter;
 	}
 
+	@Override
 	public void setTreesPerHectare(String treesPerHectare) {
 		this.treesPerHectare = treesPerHectare;
 	}
 
+	@Override
 	public void setBasalArea(String basalArea) {
 		this.basalArea = basalArea;
 	}
 
+	@Override
 	public void setWholeStemVolume(String wholeStemVolume) {
 		this.wholeStemVolume = wholeStemVolume;
 	}
 
+	@Override
 	public void setCloseUtilizationVolume(String closeUtilizationVolume) {
 		this.closeUtilizationVolume = closeUtilizationVolume;
 	}
 
-	public void setCuVolumeLessDepth(String cuVolumeLessDepth) {
-		this.cuVolumeLessDepth = cuVolumeLessDepth;
+	@Override
+	public void setMoFBiomassWholeStemVolume(String MoFBiomassWholeStemVolume) {
+		this.MoFBiomassWholeStemVolume = MoFBiomassWholeStemVolume;
 	}
 
-	public void setCuVolumeLessDepthWastage(String cuVolumeLessDepthWastage) {
-		this.cuVolumeLessDepthWastage = cuVolumeLessDepthWastage;
+	@Override
+	public void setMoFBiomassCloseUtilizationVolume(String MoFBiomassCloseUtilizationVolume) {
+		this.MoFBiomassCloseUtilizationVolume = MoFBiomassCloseUtilizationVolume;
 	}
 
-	public void setCuVolumeLessDepthWastageBreakage(String cuVolumeLessDepthWastageBreakage) {
-		this.cuVolumeLessDepthWastageBreakage = cuVolumeLessDepthWastageBreakage;
+	@Override
+	public void setMoFBiomassCuVolumeLessDecay(String MoFBiomassCuVolumeLessDecay) {
+		this.MoFBiomassCuVolumeLessDecay = MoFBiomassCuVolumeLessDecay;
 	}
 
-	public void setMofBiomassWholeStemVolume(String mofBiomassWholeStemVolume) {
-		this.mofBiomassWholeStemVolume = mofBiomassWholeStemVolume;
+	@Override
+	public void setMoFBiomassCuVolumeLessDecayWastage(String MoFBiomassCuVolumeLessDecayWastage) {
+		this.MoFBiomassCuVolumeLessDecayWastage = MoFBiomassCuVolumeLessDecayWastage;
 	}
 
-	public void setMofBiomassCloseUtilizationVolume(String mofBiomassCloseUtilizationVolume) {
-		this.mofBiomassCloseUtilizationVolume = mofBiomassCloseUtilizationVolume;
-	}
-
-	public void setMofBiomassCuVolumeLessDepth(String mofBiomassCuVolumeLessDepth) {
-		this.mofBiomassCuVolumeLessDepth = mofBiomassCuVolumeLessDepth;
-	}
-
-	public void setMofBiomassCuVolumeLessDepthWastage(String mofBiomassCuVolumeLessDepthWastage) {
-		this.mofBiomassCuVolumeLessDepthWastage = mofBiomassCuVolumeLessDepthWastage;
-	}
-
-	public void setMofBiomassCuVolumeLessDepthWastageBreakage(String mofBiomassCuVolumeLessDepthWastageBreakage) {
-		this.mofBiomassCuVolumeLessDepthWastageBreakage = mofBiomassCuVolumeLessDepthWastageBreakage;
+	@Override
+	public void setMoFBiomassCuVolumeLessDecayWastageBreakage(String MoFBiomassCuVolumeLessDecayWastageBreakage) {
+		this.MoFBiomassCuVolumeLessDecayWastageBreakage = MoFBiomassCuVolumeLessDecayWastageBreakage;
 	}
 
 	public void setSpeciesWholeStemVolume(int speciesNumber, String species1WholeStemVolume) {
 		this.species1WholeStemVolume = species1WholeStemVolume;
 	}
 
+	@Override
 	public void setCfsBiomassStem(String cfsBiomassStem) {
 		this.cfsBiomassStem = cfsBiomassStem;
 	}
 
+	@Override
 	public void setCfsBiomassBark(String cfsBiomassBark) {
 		this.cfsBiomassBark = cfsBiomassBark;
 	}
 
+	@Override
 	public void setCfsBiomassBranch(String cfsBiomassBranch) {
 		this.cfsBiomassBranch = cfsBiomassBranch;
 	}
 
+	@Override
 	public void setCfsBiomassFoliage(String cfsBiomassFoliage) {
 		this.cfsBiomassFoliage = cfsBiomassFoliage;
 	}
 
+	@Override
 	public void setMode(String mode) {
 		this.mode = mode;
+	}
+
+	@Override
+	public void setCuVolumeLessDecayWastageBreakage(String cuVolumeLessDecayWastageBreakage) {
+		this.cuVolumeLessDecayWastageBreakage = cuVolumeLessDecayWastageBreakage;
+	}
+
+	@Override
+	public String getCuVolumeLessDecayWastageBreakage() {
+		return cuVolumeLessDecayWastageBreakage;
+	}
+
+	@Override
+	public void setCuVolumeLessDecayWastage(String cuVolumeLessDecayWastage) {
+		this.cuVolumeLessDecayWastage = cuVolumeLessDecayWastage;
+	}
+
+	@Override
+	public String getCuVolumeLessDecayWastage() {
+		return cuVolumeLessDecayWastage;
+	}
+
+	@Override
+	public void setCuVolumeLessDecay(String cuVolumeLessDecay) {
+		this.cuVolumeLessDecay = cuVolumeLessDecay;
+	}
+
+	@Override
+	public String getCuVolumeLessDecay() {
+		return cuVolumeLessDecay;
 	}
 }

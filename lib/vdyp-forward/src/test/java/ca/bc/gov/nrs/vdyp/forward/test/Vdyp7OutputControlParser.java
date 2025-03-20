@@ -28,6 +28,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.coe.VolumeEquationGroupParser;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.control.BaseControlParser;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ControlMapValueReplacer;
+import ca.bc.gov.nrs.vdyp.io.parse.control.OutputFileLocationResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ResourceControlMapModifier;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParser;
 
@@ -55,7 +56,7 @@ public class Vdyp7OutputControlParser extends BaseControlParser {
 	}
 
 	@Override
-	protected List<ControlKey> outputFileParsers() {
+	protected List<OutputFileLocationResolver> outputFiles() {
 		return List.of();
 	}
 

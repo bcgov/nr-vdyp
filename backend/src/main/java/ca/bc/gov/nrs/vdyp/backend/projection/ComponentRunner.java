@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonExecutionException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.YieldTableGenerationException;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.LayerReportingInfo;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Polygon;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
@@ -136,17 +137,76 @@ public class ComponentRunner implements IComponentRunner {
 	}
 
 	@Override
-	public void generateYieldTableForPolygonLayer(
-			YieldTable yieldTable, Polygon polygon, PolygonProjectionState state, LayerReportingInfo layerReportingInfo,
-			boolean doGenerateDetailedTableHeader
-	) throws YieldTableGenerationException {
-		yieldTable.generateYieldTableForPolygonLayer(polygon, state, layerReportingInfo, doGenerateDetailedTableHeader);
-	}
+	public void generateYieldTables(ProjectionContext context, Polygon polygon, PolygonProjectionState state)
+			throws YieldTableGenerationException {
 
-	@Override
-	public void generateYieldTableForPolygon(
-			YieldTable yieldTable, Polygon polygon, PolygonProjectionState state, boolean doGenerateDetailedTableHeader
-	) throws YieldTableGenerationException {
-		yieldTable.generateYieldTableForPolygon(polygon, state, doGenerateDetailedTableHeader);
+		var yieldTable = context.getYieldTable();
+
+		boolean doGenerateDetailedTableHeader = true;
+
+		ValidatedParameters params = context.getValidatedParams();
+
+		if (params.containsOption(ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_POLYGON)
+				&& (params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES)
+						|| params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_BIOMASS))) {
+
+			yieldTable.generateYieldTableForPolygon(polygon, state, doGenerateDetailedTableHeader);
+			doGenerateDetailedTableHeader = false;
+
+			logger.debug("{}: generated polygon-level yield table", polygon);
+		}
+
+		if (params.containsOption(ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_POLYGON)
+				&& params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS)) {
+
+			yieldTable.generateCfsBiomassTableForPolygon(polygon, state, doGenerateDetailedTableHeader);
+			doGenerateDetailedTableHeader = false;
+
+			logger.debug("{}: generated polygon-level CFS biomass table", polygon);
+		}
+
+		if (params.containsOption(ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER)) {
+
+			for (var layerReportingInfo : polygon.getReportingInfo().getLayerReportingInfos().values()) {
+
+				var layer = layerReportingInfo.getLayer();
+				if (state.layerWasProjected(layer)) {
+
+					doGenerateDetailedTableHeader = true;
+
+					if (params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES)
+							|| params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_BIOMASS)) {
+
+						yieldTable.generateYieldTableForPolygonLayer(
+								polygon, state, layerReportingInfo, doGenerateDetailedTableHeader
+						);
+						doGenerateDetailedTableHeader = false;
+
+						logger.debug("{}: generated yield table", layerReportingInfo.getLayer());
+					}
+
+					if (params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS)) {
+						if (!layerReportingInfo.isDeadStemLayer()) {
+
+							context.getYieldTable().generateCfsBiomassTable(
+									polygon, state, layerReportingInfo, doGenerateDetailedTableHeader
+							);
+							doGenerateDetailedTableHeader = false;
+
+							logger.debug("{}: generated CFS biomass table", layer);
+						} else {
+							context.addMessage(
+									"{0}: Suppressing CFS biomass output for dead layer. The yield table will not be produced",
+									layer
+							);
+						}
+					}
+				} else {
+					context.addMessage(
+							"{0}: both Forward and Back not executed. Yield Table will not be produced.", layer
+					);
+				}
+			}
+		}
 	}
 }

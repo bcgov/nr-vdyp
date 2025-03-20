@@ -1,5 +1,7 @@
 package ca.bc.gov.nrs.vdyp.backend.projection;
 
+import static ca.bc.gov.nrs.vdyp.backend.projection.ProjectionStageCode.*;
+
 import java.nio.file.Path;
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -13,8 +15,6 @@ import ca.bc.gov.nrs.vdyp.backend.projection.model.PolygonMessage;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.GrowthModelCode;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProcessingModeCode;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
-
-import static ca.bc.gov.nrs.vdyp.backend.projection.ProjectionStageCode.*;
 
 public class PolygonProjectionState {
 
@@ -90,10 +90,6 @@ public class PolygonProjectionState {
 
 	public Double getYieldFactorUsed(ProjectionTypeCode projectionType) {
 		return yieldFactorByProjectionType.get(projectionType);
-	}
-
-	public ProcessingResult getProcessingResult(ProjectionStageCode stage, ProjectionTypeCode type) {
-		return processingResultByStageAndProjectionType.get(new ModelReturnCodeKey(stage, type));
 	}
 
 	public Integer getFirstYearValidYields(ProjectionStageCode stage, ProjectionTypeCode type) {
@@ -348,13 +344,13 @@ public class PolygonProjectionState {
 		return executionFolder;
 	}
 
-	public boolean wasLayerProcessed(Layer layer) {
+	public boolean layerWasProjected(Layer layer) {
 
 		var projectionType = layer.getAssignedProjectionType();
 		return didRunProjectionStage(Forward, projectionType) || didRunProjectionStage(Back, projectionType);
 	}
 
 	public boolean didRunProjectionStage(ProjectionStageCode stage, ProjectionTypeCode projectionType) {
-		return getProcessingResult(stage, projectionType) != ProcessingResult.PROCESSING_RESULT_NULL;
+		return getProcessingResults(stage, projectionType) != ProcessingResult.PROCESSING_RESULT_NULL;
 	}
 }

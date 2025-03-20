@@ -3,7 +3,6 @@ package ca.bc.gov.nrs.vdyp.backend.projection.model;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -119,7 +118,7 @@ public class Layer implements Comparable<Layer> {
 	private Double percentStockable;
 
 	/** The Sp0s (species groups; stands) of the layer, in the order they were supplied. */
-	private List<Stand> sp0s;
+	private List<Stand> sp0s = new ArrayList<>();
 
 	/** The species (sp64s) currently defined in the stand, sorted in the order they were supplied. */
 	private List<Species> sp64s = new ArrayList<>();
@@ -134,8 +133,6 @@ public class Layer implements Comparable<Layer> {
 	private ProjectionTypeCode assignedProjectionType;
 
 	private LayerAdjustments adjustments;
-
-	private LayerYields lastRequestedYield;
 
 	private History history;
 
@@ -217,13 +214,7 @@ public class Layer implements Comparable<Layer> {
 	}
 
 	public List<Stand> getSp0sByName() {
-		return sp0s.stream().sorted(new Comparator<Stand>() {
-
-			@Override
-			public int compare(Stand o1, Stand o2) {
-				return o1.getSp0Code().compareTo(o2.getSp0Code());
-			}
-		}).toList();
+		return sp0s.stream().sorted(new Stand.ByIncreasingNameComparator()).toList();
 	}
 
 	public List<Stand> getSp0sAsSupplied() {
@@ -231,24 +222,7 @@ public class Layer implements Comparable<Layer> {
 	}
 
 	public List<Stand> getSp0sByPercent() {
-		return sp0s.stream().sorted(new Comparator<Stand>() {
-
-			@Override
-			public int compare(Stand o1, Stand o2) {
-				int result = signum(
-						o2.getSpeciesGroup().getSpeciesPercent() - o1.getSpeciesGroup().getSpeciesPercent()
-				);
-				if (result == 0) {
-					return o1.getStandIndex() - o2.getStandIndex();
-				} else {
-					return result;
-				}
-			}
-
-			private int signum(double d) {
-				return d > 0 ? 1 : d < 0 ? -1 : 0;
-			}
-		}).toList();
+		return sp0s.stream().sorted(new Stand.ByDecreasingPercentageComparator()).toList();
 	}
 
 	public List<Species> getSp64sAsSupplied() {
@@ -256,29 +230,11 @@ public class Layer implements Comparable<Layer> {
 	}
 
 	public List<Species> getSp64sByPercent() {
-		return sp64s.stream().sorted(new Comparator<Species>() {
-
-			@Override
-			public int compare(Species o1, Species o2) {
-				// Sort the sp64s by decreasing percentage. Those with equal percentage appear
-				// in random order.
-				return signum(o2.getSpeciesPercent() - o1.getSpeciesPercent());
-			}
-
-			private int signum(double d) {
-				return d > 0 ? 1 : d < 0 ? -1 : 0;
-			}
-		}).toList();
+		return sp64s.stream().sorted(new Species.ByDecreasingPercentageComparator()).toList();
 	}
 
 	public List<Species> getSp64sByName() {
-		return sp64s.stream().sorted(new Comparator<Species>() {
-
-			@Override
-			public int compare(Species o1, Species o2) {
-				return o1.getSpeciesCode().compareTo(o2.getSpeciesCode());
-			}
-		}).toList();
+		return sp64s.stream().sorted(new Species.ByIncreasingNameComparator()).toList();
 	}
 
 	public List<SiteSpecies> getSiteSpecies() {
@@ -291,10 +247,6 @@ public class Layer implements Comparable<Layer> {
 
 	public LayerAdjustments getAdjustments() {
 		return adjustments;
-	}
-
-	public LayerYields getLastRequestedYield() {
-		return lastRequestedYield;
 	}
 
 	public Boolean getDoSuppressPerHAYields() {
@@ -411,11 +363,6 @@ public class Layer implements Comparable<Layer> {
 			return this;
 		}
 
-		public Builder species(List<Stand> sp0sAsSupplied) {
-			layer.sp0s = sp0sAsSupplied;
-			return this;
-		}
-
 		// sp64s is initialized to null on object creation. It is subsequently updated
 		// when updateAfterSpeciesAdded is called. It is not possible to add any
 		// meaningful values in the Builder because Species require the Layer to exist
@@ -428,11 +375,6 @@ public class Layer implements Comparable<Layer> {
 
 		public Builder adjustments(LayerAdjustments adjustments) {
 			layer.adjustments = adjustments;
-			return this;
-		}
-
-		public Builder lastRequestedYield(LayerYields lastRequestedYield) {
-			layer.lastRequestedYield = lastRequestedYield;
 			return this;
 		}
 
@@ -470,7 +412,7 @@ public class Layer implements Comparable<Layer> {
 		sp0s.add(stand);
 	}
 
-	public void updateAfterSp64Added(Species speciesInstance) {
+	public void addSp64(Species speciesInstance) {
 		if (sp64s.contains(speciesInstance)) {
 			throw new IllegalStateException(
 					MessageFormat.format("Attempt to add a Species {0} already in Layer {1}", speciesInstance, this)
@@ -537,7 +479,7 @@ public class Layer implements Comparable<Layer> {
 
 		for (var speciesGroup : getSp0sByPercent()) {
 
-			for (var sp64 : speciesGroup.getSpecies()) {
+			for (var sp64 : speciesGroup.getSpeciesByPercent()) {
 				boolean doRecomputeInputHeight = false;
 
 				logger.debug(
@@ -824,7 +766,7 @@ public class Layer implements Comparable<Layer> {
 				} else if (leadingSp64 == null) {
 					polygon.disableProjectionsOfType(assignedProjectionType);
 					context.addMessage(
-							"{}: Crown closure was not supplied and there is no leading sp64 from which it can be determined. Disabling projection",
+							"{0}: Crown closure was not supplied and there is no leading sp64 from which it can be determined. Disabling projection",
 							this
 					);
 					logger.debug("Disabling projections of type {}", assignedProjectionType);
@@ -855,7 +797,7 @@ public class Layer implements Comparable<Layer> {
 		} else {
 			throw new IllegalStateException(
 					MessageFormat.format(
-							"{0}: nthLeading parameter value of {1} exceeds the number of site species", this,
+							"{0}: nthLeading parameter value {1} exceeds the number of site species ({2})", this,
 							nthLeading, siteSpecies.size()
 					)
 			);
@@ -876,12 +818,30 @@ public class Layer implements Comparable<Layer> {
 		if (nthLeading < siteSpecies.size()) {
 
 			Stand stand = determineLeadingSp0(nthLeading);
-			if (stand != null && stand.getSpecies().size() > 0) {
-				species = stand.getSpecies().get(0);
+			if (stand != null && stand.getSpeciesByPercent().size() > 0) {
+				species = stand.getSpeciesByPercent().get(0);
 			}
 		}
 
 		return species;
+	}
+
+	public Double determineLeadingSiteSpeciesHeight(int targetAge) {
+		if (siteSpecies == null || siteSpecies.size() == 0) {
+			throw new IllegalStateException(
+					"Layer.determineLeadingSiteSpeciesHeight: siteSpecies == null || siteSpecies.size() == 0"
+			);
+		}
+
+		var leadingSiteSpecies = siteSpecies.get(0);
+
+		if (!leadingSiteSpecies.getHasSiteInfo()) {
+			throw new IllegalStateException(
+					"Layer.determineLeadingSiteSpeciesHeight: ! leadingSiteSpecies.getHasSiteInfo()"
+			);
+		}
+
+		return leadingSiteSpecies.getStand().getSpeciesByPercent().get(0).getDominantHeight();
 	}
 
 	/**

@@ -1,19 +1,23 @@
 package ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable;
 
+import java.io.BufferedInputStream;
+import java.io.Closeable;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.application.ProcessingException;
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.StandYieldCalculationException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.YieldTableGenerationException;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.OutputFormat;
@@ -24,6 +28,7 @@ import ca.bc.gov.nrs.vdyp.backend.projection.ValidatedParameters;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Layer;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.LayerReportingInfo;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Polygon;
+import ca.bc.gov.nrs.vdyp.backend.projection.model.Species;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Stand;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Vdyp7Constants;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
@@ -35,21 +40,27 @@ import ca.bc.gov.nrs.vdyp.forward.parsers.VdypSpeciesParser;
 import ca.bc.gov.nrs.vdyp.forward.parsers.VdypUtilizationParser;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
+import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
+import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 
-public class YieldTable {
+public class YieldTable implements Closeable {
 
 	private static final Logger logger = LoggerFactory.getLogger(YieldTable.class);
 
 	private final ProjectionContext context;
 	private final ValidatedParameters params;
 
+	private YieldTableWriter<? extends YieldTableRowValues> writer;
+	private Path yieldTableFilePath;
+
 	private int yieldTableCount = 0;
 
-	private YieldTable(ProjectionContext context) {
+	private YieldTable(ProjectionContext context) throws YieldTableGenerationException {
 		this.context = context;
 		this.params = context.getValidatedParams();
+		this.writer = buildYieldTableWriter(params.getOutputFormat());
 	}
 
 	public static YieldTable of(ProjectionContext context) throws YieldTableGenerationException {
@@ -57,13 +68,17 @@ public class YieldTable {
 		return new YieldTable(context);
 	}
 
+	public void startGeneration() throws YieldTableGenerationException {
+		writer.writeHeader();
+	}
+
 	public void generateYieldTableForPolygon(
 			Polygon polygon, PolygonProjectionState state, boolean doGenerateDetailedTableHeader
 	) throws YieldTableGenerationException {
 
-		var polygonAfterProjection = readProjectionResults(polygon, state, ProjectionTypeCode.PRIMARY);
+		var projectionResults = readProjectionResults(polygon, state, ProjectionTypeCode.PRIMARY);
 
-		generateYieldTable(polygon, polygonAfterProjection, state, null, doGenerateDetailedTableHeader);
+		generateYieldTable(polygon, projectionResults, state, null, doGenerateDetailedTableHeader);
 	}
 
 	/**
@@ -97,42 +112,62 @@ public class YieldTable {
 		}
 	}
 
-	private void generateYieldTable(
-			Polygon polygon, Map<Integer, Pair<Optional<VdypPolygon>, Optional<VdypPolygon>>> polygonProjectionResults,
-			PolygonProjectionState state, LayerReportingInfo layerReportingInfo, boolean doGenerateDetailedTableHeader
-	) throws YieldTableGenerationException {
+	public void generateCfsBiomassTableForPolygon(
+			Polygon polygon, PolygonProjectionState state, boolean doGenerateDetailedTableHeader
+	) {
+		generateCfsBiomassTable(polygon, state, null, doGenerateDetailedTableHeader);
+	}
 
-		var outputFormat = params.getOutputFormat();
+	public void generateCfsBiomassTable(
+			Polygon polygon, PolygonProjectionState state, LayerReportingInfo layerReportingInfo,
+			boolean doGenerateDetailedTableHeader
+	) {
+		// TODO Implement this
+	}
 
-		try (YieldTableWriter writer = buildYieldTableWriter(outputFormat)) {
+	public void endGeneration() throws YieldTableGenerationException {
+		writer.writeTrailer();
+	}
 
-			yieldTableCount += 1;
-
-			for (var polygonProjectionResultsForYear : polygonProjectionResults.entrySet()) {
-
-				var row = createTableRow(polygon, layerReportingInfo, polygonProjectionResultsForYear.getKey());
-
-				writer.writeHeader(polygon, layerReportingInfo, doGenerateDetailedTableHeader, yieldTableCount);
-
-				YieldTableRowIterator rowIterator = new YieldTableRowIterator(context, row);
-				while (rowIterator.hasNext()) {
-
-					row = rowIterator.next();
-					if (rowIsToBeGenerated(row)) {
-						generateRow(row, polygonProjectionResultsForYear.getValue(), writer);
-					}
-				}
-			}
-
-			writer.writeTrailer(yieldTableCount);
-		} catch (IOException e) {
-			throw new YieldTableGenerationException(e);
+	public InputStream getAsInputStream() {
+		try {
+			return new BufferedInputStream(new FileInputStream(writer.getYieldTableFilePath().toFile()));
+		} catch (FileNotFoundException e) {
+			throw new IllegalStateException(
+					MessageFormat.format(
+							"Yield table path {} not found, despite our creating it", writer.getYieldTableFilePath()
+					)
+			);
 		}
 	}
 
-	private YieldTableWriter buildYieldTableWriter(OutputFormat outputFormat) throws YieldTableGenerationException {
+	private void generateYieldTable(
+			Polygon polygon, Map<Integer, VdypPolygon> polygonProjectionResults, PolygonProjectionState state,
+			LayerReportingInfo layerReportingInfo, boolean doGenerateDetailedTableHeader
+	) throws YieldTableGenerationException {
 
-		YieldTableWriter writer;
+		writer.writePolygonTableHeader(
+				polygon, Optional.ofNullable(layerReportingInfo), doGenerateDetailedTableHeader, yieldTableCount
+		);
+
+		YieldTableRowIterator rowIterator = new YieldTableRowIterator(context, polygon, state, layerReportingInfo);
+		while (rowIterator.hasNext()) {
+
+			YieldTableRowContext rowContext = rowIterator.next();
+			if (rowIsToBeGenerated(rowContext)) {
+				generateYieldTableRow(rowContext, polygonProjectionResults, writer);
+			}
+		}
+
+		writer.writePolygonTableTrailer(yieldTableCount);
+
+		yieldTableCount += 1;
+	}
+
+	private YieldTableWriter<? extends YieldTableRowValues> buildYieldTableWriter(OutputFormat outputFormat)
+			throws YieldTableGenerationException {
+
+		YieldTableWriter<? extends YieldTableRowValues> writer;
 
 		switch (outputFormat) {
 		case CSV_YIELD_TABLE:
@@ -151,34 +186,26 @@ public class YieldTable {
 			throw new IllegalStateException("Unrecognized output format " + outputFormat);
 		}
 
+		yieldTableFilePath = writer.getYieldTableFilePath();
+
 		return writer;
 	}
 
-	public void generateCfsBiomassTableForPolygon(
-			Polygon polygon, PolygonProjectionState state, boolean doGenerateDetailedTableHeader
-	) {
-		generateCfsBiomassTable(polygon, state, null, doGenerateDetailedTableHeader);
-	}
-
-	public void generateCfsBiomassTable(
-			Polygon polygon, PolygonProjectionState state, LayerReportingInfo layerReportingInfo,
-			boolean doGenerateDetailedTableHeader
-	) {
-		// TODO Implement this
-	}
-
-	private Map<Integer, Pair<Optional<VdypPolygon>, Optional<VdypPolygon>>>
+	private Map<Integer, VdypPolygon>
 			readProjectionResults(Polygon polygon, PolygonProjectionState state, ProjectionTypeCode projectionType)
 					throws YieldTableGenerationException {
 
-		var resultsByYear = new HashMap<Integer, Pair<Optional<VdypPolygon>, Optional<VdypPolygon>>>();
+		var resultsByYear = new HashMap<Integer, VdypPolygon>();
 
 		if (state.didRunProjectionStage(ProjectionStageCode.Forward, projectionType)) {
 			var componentResultsByYear = getComponentProjectionResultsByYear(
 					"VDYP.CTR", polygon, state, projectionType
 			);
 			for (var e : componentResultsByYear.entrySet()) {
-				resultsByYear.put(e.getKey(), new ImmutablePair<>(Optional.of(e.getValue()), Optional.empty()));
+				var year = e.getKey();
+				VdypPolygon forwardVdypPolygon = e.getValue();
+
+				resultsByYear.put(year, forwardVdypPolygon);
 			}
 		}
 
@@ -189,11 +216,16 @@ public class YieldTable {
 			for (var e : componentResultsByYear.entrySet()) {
 				var year = e.getKey();
 				VdypPolygon backVdypPolygon = e.getValue();
-				if (resultsByYear.containsKey(e.getKey())) {
-					var forwardVdypPolygon = resultsByYear.get(e.getKey()).getLeft();
-					resultsByYear.put(year, new ImmutablePair<>(forwardVdypPolygon, Optional.of(backVdypPolygon)));
+
+				if (resultsByYear.containsKey(year)) {
+					throw new IllegalStateException(
+							MessageFormat.format(
+									"{0}: contains both FORWARD and BACK results for the same year {1}", polygon,
+									e.getKey()
+							)
+					);
 				} else {
-					resultsByYear.put(year, new ImmutablePair<>(Optional.empty(), Optional.of(backVdypPolygon)));
+					resultsByYear.put(year, backVdypPolygon);
 				}
 			}
 		}
@@ -287,96 +319,6 @@ public class YieldTable {
 		logger.warn("{}: {}", polygon, message);
 	}
 
-	private YieldTableData createTableRow(Polygon polygon, LayerReportingInfo layerReportingInfo, Integer year)
-			throws YieldTableGenerationException {
-
-		var row = new YieldTableData(polygon, layerReportingInfo);
-
-		row.setReferenceYear(year);
-
-		Integer yearOfDeath = null;
-
-		Layer layer;
-		if (row.isPolygonTable()) {
-			layer = null;
-
-			try {
-				double ageAtYear = polygon.determineStandAgeAtYear(row.getReferenceYear());
-				row.setReferenceAge((int) ageAtYear);
-			} catch (PolygonValidationException e) {
-				throw new YieldTableGenerationException(e);
-			}
-
-			var primaryLayer = polygon.getPrimaryLayer();
-			yearOfDeath = primaryLayer.getYearOfDeath();
-			if (yearOfDeath == null) {
-				yearOfDeath = polygon.getYearOfDeath();
-			}
-			
-			row.setNumSpecies(0);
-		} else {
-			layer = layerReportingInfo.getLayer();
-
-			row.setProjectionType(layerReportingInfo.getProcessedAsVDYP7Layer());
-
-			yearOfDeath = layer.getYearOfDeath();
-			if (yearOfDeath == null) {
-				yearOfDeath = polygon.getYearOfDeath();
-			}
-
-			if (row.getProjectionType() == ProjectionTypeCode.DEAD) {
-
-				if (yearOfDeath != null) {
-					double layerAgeAtDeath = layer.determineLayerAgeAtYear(yearOfDeath);
-					row.setAgeAtDeath((int) layerAgeAtDeath);
-				}
-			}
-
-			double ageAtYear = layer.determineLayerAgeAtYear(row.getReferenceYear());
-			row.setReferenceAge((int) ageAtYear);
-			
-			row.setNumSpecies(layer.getSp64sAsSupplied().size());
-		}
-
-		// In case the polygon has a dead stem layer and the year of death
-		// occurred after the reference year, use the year of death as the
-		// measurement year.
-		//
-		// Note that this needs to be an explicitly separate calculation from
-		// the section that sets the '.yearAtDeath' member because that attribute
-		// should only be set for the Dead Stem Layer. This is so the yield table
-		// generator can mark the row as a Year of Death row.
-
-		if (yearOfDeath != null && (row.getReferenceYear() == null || yearOfDeath > row.getReferenceYear())) {
-
-			double relevantAge;
-			if (row.isPolygonTable()) {
-				try {
-					relevantAge = polygon.determineStandAgeAtYear(yearOfDeath);
-				} catch (PolygonValidationException e) {
-					throw new YieldTableGenerationException(e);
-				}
-			} else {
-				assert layer != null;
-				relevantAge = layer.determineLayerAgeAtYear(yearOfDeath);
-			}
-
-			row.setMeasurementYear(yearOfDeath);
-			row.setMeasurementAge((int) relevantAge);
-		} else {
-			row.setMeasurementYear(row.getReferenceYear());
-			row.setMeasurementAge(row.getReferenceAge());
-		}
-
-		assert row.getMeasurementAge() != null && row.getMeasurementYear() != null;
-
-		row.calculateTableRangeInformation(context);
-
-		calculateLayerAgeOffsets(row);
-
-		return row;
-	}
-
 	/**
 	 * <b>lcl_bDisplayCurrentYear</b>
 	 * <p>
@@ -386,59 +328,82 @@ public class YieldTable {
 	 * routine finds such conditions and any others that may require a particular row that would have otherwise been
 	 * displayed become suppressed.
 	 *
-	 * @param row the row in question
+	 * @param rowContext the context of the row in question
 	 */
-	private boolean rowIsToBeGenerated(YieldTableData row) {
+	private boolean rowIsToBeGenerated(YieldTableRowContext rowContext) {
 
 		var doDisplayRow = true;
+		String reasonNotDisplayed = null;
 
-		if (row.getYearAtGapStart() != null && row.getYearAtGapEnd() != null
-				&& row.getCurrentTableYear() > row.getYearAtGapStart()
-				&& row.getCurrentTableYear() < row.getYearAtGapEnd()) {
-
+		if (rowContext.getCurrentTableYear() == null) {
+			reasonNotDisplayed = MessageFormat.format("current year {0} is null", rowContext.getCurrentTableYear());
 			doDisplayRow = false;
 		}
 
-		if (row.getCurrentTableYear() == null || row.getCurrentTableYear() < row.getYearAtStartAge()
-				|| row.getCurrentTableYear() > row.getYearAtEndAge()) {
+		if (doDisplayRow //
+				&& rowContext.getYearAtGapStart() != null //
+				&& rowContext.getCurrentTableYear() > rowContext.getYearAtGapStart() //
+				&& rowContext.getCurrentTableYear() < rowContext.getYearAtGapEnd()) {
+
+			reasonNotDisplayed = MessageFormat.format(
+					"current year {0} falls in gap [{1}, {2}]", rowContext.getCurrentTableYear(),
+					rowContext.getYearAtGapStart(), rowContext.getYearAtGapEnd()
+			);
+			doDisplayRow = false;
+		}
+
+		if (doDisplayRow && //
+				(rowContext.getYearAtStartAge() == null //
+						|| rowContext.getCurrentTableYear() < rowContext.getYearAtStartAge() //
+						|| rowContext.getCurrentTableYear() > rowContext.getYearAtEndAge())) {
+
+			reasonNotDisplayed = MessageFormat.format(
+					"current year {0} not in age range [{1}, {2}]", rowContext.getCurrentTableYear(),
+					rowContext.getYearAtStartAge(), rowContext.getYearAtEndAge()
+			);
 			doDisplayRow = false;
 		}
 
 		if (doDisplayRow) {
 
+			reasonNotDisplayed = "current row is neither age row nor year row";
+
 			doDisplayRow = false;
 
-			if (row.getCurrentYearIsYearRow()
+			if (rowContext.getCurrentYearIsYearRow()
 					&& params.containsOption(ExecutionOption.DO_INCLUDE_YEAR_ROWS_IN_YIELD_TABLE)) {
 				doDisplayRow = true;
 			}
 
-			if (row.getCurrentYearIsAgeRow()
+			if (rowContext.getCurrentYearIsAgeRow()
 					&& params.containsOption(ExecutionOption.DO_INCLUDE_AGE_ROWS_IN_YIELD_TABLE)) {
 				doDisplayRow = true;
 			}
 
-			if (row.getCurrentTableAge() == null) {
+			if (rowContext.getCurrentTableAge() == null || rowContext.getCurrentTableAge() < 0) {
+				reasonNotDisplayed = MessageFormat
+						.format("current table age {0} is null or less than zero", rowContext.getCurrentTableAge());
 				doDisplayRow = false;
 			}
 		}
 
 		if (params.containsOption(ExecutionOption.DO_FORCE_REFERENCE_YEAR_INCLUSION_IN_YIELD_TABLES)
-				&& row.getCurrentTableYear().equals(row.getMeasurementYear())) {
+				&& rowContext.getCurrentTableYear().equals(rowContext.getMeasurementYear())) {
 			doDisplayRow = true;
 		} else if (params.containsOption(ExecutionOption.DO_FORCE_CURRENT_YEAR_INCLUSION_IN_YIELD_TABLES)
-				&& row.getCurrentTableYear().equals(row.getCurrentYear())) {
+				&& rowContext.getCurrentTableYear().equals(rowContext.getCurrentYear())) {
 			doDisplayRow = true;
-		} else if (params.getYearForcedIntoYearTable() != null
-				&& row.getCurrentTableYear().equals(params.getYearForcedIntoYearTable())) {
+		} else if (params.getYearForcedIntoYieldTable() != null
+				&& rowContext.getCurrentTableYear().equals(params.getYearForcedIntoYieldTable())) {
 			doDisplayRow = true;
 		}
 
 		if (!doDisplayRow) {
 			logger.debug(
-					"{}: excluding row for year {} from yield table",
-					row.getLayerReportingInfo() == null ? row.getPolygon() : row.getLayerReportingInfo(),
-					row.getCurrentTableYear()
+					"{}: excluding row for year {} from yield table. Reason: {}",
+					rowContext.getLayerReportingInfo() == null ? rowContext.getPolygon()
+							: rowContext.getLayerReportingInfo(),
+					rowContext.getCurrentTableYear(), reasonNotDisplayed
 			);
 		}
 
@@ -450,86 +415,85 @@ public class YieldTable {
 	 * <p>
 	 * Writes <code>row</code> out to <code>writer</code>.
 	 *
-	 * @param row    the row to be written
-	 * @param writer the target writer
-	 * @param pair
+	 * @param rowContext the context of the row to be written
+	 * @param writer     the target writer
+	 * @param projection
 	 * @throws YieldTableGenerationException
 	 */
-	private void generateRow(
-			YieldTableData row, Pair<Optional<VdypPolygon>, Optional<VdypPolygon>> pair, YieldTableWriter writer
+	private void generateYieldTableRow(
+			YieldTableRowContext rowContext, Map<Integer, VdypPolygon> projectedPolygons,
+			YieldTableWriter<? extends YieldTableRowValues> writer
 	) throws YieldTableGenerationException {
 
-		var polygon = row.getPolygon();
-		var layer = row.isPolygonTable() ? null : row.getLayerReportingInfo().getLayer();
+		var layer = rowContext.isPolygonTable() ? null : rowContext.getLayerReportingInfo().getLayer();
 
-		var targetAge = row.getCurrentTableAgeToRequest() - row.getLayerAgeOffset();
+		var targetAge = rowContext.getCurrentTableAgeToRequest() - rowContext.getLayerAgeOffset();
 
 		Integer DCSVLayerFieldOffset = null;
-		if (!row.isPolygonTable()) {
-			if (row.getLayerReportingInfo().getSourceLayerID() == 0) {
+		if (!rowContext.isPolygonTable()) {
+			if (rowContext.getLayerReportingInfo().getSourceLayerID() == 0) {
 				DCSVLayerFieldOffset = 0;
-			} else if (row.getLayerReportingInfo().getSourceLayerID() == 1) {
+			} else if (rowContext.getLayerReportingInfo().getSourceLayerID() == 1) {
 				DCSVLayerFieldOffset = DCSVField.DCSV_OFld__RS_FIRST - DCSVField.DCSV_OFld__R1_FIRST;
 			}
 		}
 
-		var becZone = row.getPolygon().getBecZone();
+		var becZone = rowContext.getPolygon().getBecZone();
 		Double percentStockable;
-		if (row.isPolygonTable()) {
-			percentStockable = polygon.getPercentStockable();
+		if (rowContext.isPolygonTable()) {
+			percentStockable = rowContext.getPolygon().getPercentStockable();
 		} else {
-			percentStockable = polygon.determineStockabilityByProjectionType(layer.getAssignedProjectionType());
+			percentStockable = rowContext.getPolygon()
+					.determineStockabilityByProjectionType(layer.getAssignedProjectionType());
 		}
 
 		writer.startNewRecord();
 
-		writer.writeCalendarYearAndLayerAge(row);
+		try {
+			writer.recordPerPolygonDetails(rowContext.getPolygon(), this.yieldTableCount);
 
-		writer.writeSpeciesComposition(row);
+			writer.recordCalendarYearAndLayerAge(rowContext);
 
-		writeProjectionGrowthInfo(row, writer, pair, targetAge);
-	}
+			writer.recordSpeciesComposition(rowContext);
 
-	/**
-	 * from yldtable.c lines 3241 - 3356
-	 * <p>
-	 * 2005/03/28: Added some logic to make the VDYP7CORE more in keeping with how VDYP7Batch generates its yield
-	 * tables.
-	 * <p>
-	 * Comments taken from that source code:
-	 * <p>
-	 * 2004/11/17: According to Cam's Nov.9, 2004 e-mail, we want the yield table to reflect the ages of the primary
-	 * species within the particular layer. Further, there should be no age corrections made to adjust the displayed age
-	 * to be relative to the primary layer age.
-	 * <p>
-	 * 2004/11/25: Further to the above note, the primary species for a layer is the species VDYP7CORE determines to be
-	 * the primary species at reference age rather than the leading species as supplied.
-	 * <p>
-	 * 2007/02/10: According recent telephone conversations and e-mails, we are going to disable the layer offset
-	 * calculations. The main reason for this is because the years for which you want a projection may not have been
-	 * computed. Further, by adjusting backwards, you may require BACKGROW to have run while it had explicitly been set
-	 * to not run or it ran resulting in an error.
-	 * <p>
-	 * The solution here is to leave the age correction logic inside the code so that it can be re-activated easily and
-	 * leave the age offset at zero so that there is no effect due to age correction.
-	 * <p>
-	 * By way of example:
-	 * <p>
-	 * A primary and secondary species differ in age by 10 years. The stand is projected over the time range of the
-	 * primary species. VDYP7 determines the secondary species to be the leading species. The arithmetic to get the year
-	 * at which the secondary species could require a projection for the stand before or after the range of years over
-	 * which the stand was originally projected.
-	 */
-	private void calculateLayerAgeOffsets(YieldTableData row) {
-		row.setLayerAgeOffset(0.0);
-	}
+			Double secondaryHeight = null;
+			try {
+				EntityGrowthDetails growthDetails;
+				if (rowContext.isPolygonTable()) {
+					growthDetails = getProjectedPolygonGrowthInfo(rowContext, projectedPolygons, targetAge);
+				} else {
+					growthDetails = getProjectedLayerStandGrowthInfo(rowContext, projectedPolygons, layer, targetAge);
 
-	private void writeProjectionGrowthInfo(
-			YieldTableData row, YieldTableWriter writer, Pair<Optional<VdypPolygon>, Optional<VdypPolygon>> pair,
-			Double targetAge
-	) {
-		if (row.isPolygonTable()) {
-			getProjectedPolygonGrowthInfo(row, pair, targetAge);
+					var layerSp0sByPercent = layer.getSp0sByPercent();
+					if (layerSp0sByPercent.size() > 1 && context.getValidatedParams().containsOption(
+							ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE
+					)) {
+						var secondarySp0 = layerSp0sByPercent.get(1);
+						if (secondarySp0.getSpeciesByPercent().size() > 0) {
+							var secondarySp64 = secondarySp0.getSpeciesByPercent().get(0);
+							getProjectedLayerSpeciesGrowthInfo(rowContext, projectedPolygons, secondarySp64, targetAge);
+						}
+					}
+				}
+
+				Double dominantHeight;
+				if (rowContext.isPolygonTable()) {
+					var primaryLayer = rowContext.getPolygon().getLayerByProjectionType(ProjectionTypeCode.PRIMARY);
+					dominantHeight = primaryLayer.determineLeadingSiteSpeciesHeight(targetAge);
+				} else {
+					dominantHeight = layer.determineLeadingSiteSpeciesHeight(targetAge);
+				}
+
+				writer.recordSiteInformation(
+						percentStockable, growthDetails.siteIndex(), dominantHeight, secondaryHeight
+				);
+
+				writer.writeProjectionGrowthInfo();
+
+			} catch (StandYieldCalculationException e) {
+			}
+		} finally {
+			writer.endRecord();
 		}
 	}
 
@@ -553,37 +517,69 @@ public class YieldTable {
 	 * <li>For TPH, Basal Area and Diameter: These values are based on the aggregate of all projected layers.
 	 * </ul>
 	 *
-	 * @param row  the row object into which the growth information is written
-	 * @param pair the source of the growth information
-	 * @param the  year for which the growth information is to be retrieved
+	 * @param rowContext        the row object into which the growth information is written
+	 * @param projectedPolygons the result of the projection of the polygon and year given in <code>row</code>.
+	 * @throws StandYieldCalculationException
 	 */
-	private void getProjectedPolygonGrowthInfo(
-			YieldTableData row, Pair<Optional<VdypPolygon>, Optional<VdypPolygon>> pair, Double year
-	) {
+	private EntityGrowthDetails getProjectedPolygonGrowthInfo(
+			YieldTableRowContext rowContext, Map<Integer, VdypPolygon> projectedPolygons, int totalAge
+	) throws StandYieldCalculationException {
 
-		if (year < Vdyp7Constants.MIN_SPECIES_AGE || year > Vdyp7Constants.MAX_SPECIES_AGE) {
+		if (totalAge < Vdyp7Constants.MIN_SPECIES_AGE || totalAge > Vdyp7Constants.MAX_SPECIES_AGE) {
 			throw new IllegalArgumentException("getProjectionPolygonGrowthInfo: targetAge");
 		}
 
-		var primaryLayer = row.getPolygon().getPrimaryLayer();
+		var primaryLayer = rowContext.getPolygon().getPrimaryLayer();
 		var primaryLayerAge0Year = primaryLayer.determineYearAtAge(0);
 
-		double currentSiteIndex = 0;
-		double dominantHeight = 0;
-		double loreyHeight = 0;
+		Double siteIndex = null;
+		Double dominantHeight = null;
+		Double loreyHeight = null;
 
 		double totalTreesPerHectare = 0;
 		double totalBasalArea = 0;
 
-		for (var layer : row.getPolygon().getLayers().values()) {
+		for (var layer : rowContext.getPolygon().getLayers().values()) {
 
-			var layerAge0Year = layer.determineYearAtAge(0);
-			double ageOffset = (double) primaryLayerAge0Year - layerAge0Year;
-			var ageToRequest = year + ageOffset;
+			if (rowContext.getPolygonProjectionState().layerWasProjected(layer)) {
 
-			if (ageToRequest >= 0) {
-				getProjectionLayerStandGrowthInfo(row, layer, ageToRequest);
+				var layerAge0Year = layer.determineYearAtAge(0);
+				int ageOffset = primaryLayerAge0Year - layerAge0Year;
+				var ageToRequest = totalAge + ageOffset;
+
+				if (ageToRequest >= 0) {
+					var layerGrowthInfo = getProjectedLayerStandGrowthInfo(
+							rowContext, projectedPolygons, layer, ageToRequest
+					);
+
+					if (layer.getAssignedProjectionType() == ProjectionTypeCode.PRIMARY) {
+						siteIndex = layerGrowthInfo.siteIndex();
+						dominantHeight = layerGrowthInfo.dominantHeight();
+						loreyHeight = layerGrowthInfo.loreyHeight();
+					}
+
+					if (layerGrowthInfo.treesPerHectare() != null && layerGrowthInfo.basalArea() != null) {
+						totalTreesPerHectare += layerGrowthInfo.treesPerHectare();
+						totalBasalArea += layerGrowthInfo.basalArea();
+					}
+				}
 			}
+		}
+
+		Double totalDiameter = computeDiameter(totalTreesPerHectare, totalBasalArea);
+
+		var result = new EntityGrowthDetails(
+				siteIndex, dominantHeight, loreyHeight, totalDiameter, totalTreesPerHectare, totalBasalArea
+		);
+
+		return result;
+	}
+
+	private static Double computeDiameter(Double treesPerHectare, Double basalArea) {
+		if (treesPerHectare != null && treesPerHectare < 1.0e6 && basalArea != null && basalArea < 1.0e6) {
+			return Math.sqrt(basalArea / treesPerHectare / Vdyp7Constants.PI_40K);
+		} else {
+			return null;
 		}
 	}
 
@@ -620,59 +616,73 @@ public class YieldTable {
 	 * <li>Added support for optionally turning the substitution of BA/TPH on or off.
 	 * </ul>
 	 *
-	 * @param row          the row object into which the growth information is written
-	 * @param vdypPolygon  the source of the growth information
-	 * @param ageToRequest year for which the growth information is to be retrieved
+	 * @param rowContext       the row object into which the growth information is written
+	 * @param projectedPolygon
+	 * @param vdypPolygon      the source of the growth information
+	 * @param totalAge         year for which the growth information is to be retrieved
+	 * @throws StandYieldCalculationException
 	 */
-	private void getProjectionLayerStandGrowthInfo(YieldTableData row, Layer layer, double ageToRequest) {
+	private EntityGrowthDetails getProjectedLayerStandGrowthInfo(
+			YieldTableRowContext rowContext, Map<Integer, VdypPolygon> projectedPolygons, Layer layer, int totalAge
+	) throws StandYieldCalculationException {
 
 		var leadingSpeciesSp0 = layer.determineLeadingSp0(0);
+		var projectionYear = layer.determineYearAtAge(totalAge);
 
-		var projectionYear = layer.determineYearAtAge(ageToRequest);
+		Double siteIndex = leadingSpeciesSp0.getSpeciesGroup().getSiteIndex();
 
-		obtainStandYield(row, layer, leadingSpeciesSp0, ageToRequest);
+		var layerYields = obtainStandYield(rowContext, projectedPolygons, layer, leadingSpeciesSp0, totalAge);
+
+		// siteIndex, Double dominantHeight, Double loreyHeight, Double diameter, Double treesPerHectare, Double
+		// basalArea
+		return new EntityGrowthDetails(
+				siteIndex, layerYields.dominantHeight(), layerYields.loreyHeight(), layerYields.diameter(),
+				layerYields.treesPerHectare(), layerYields.basalArea125cm()
+		);
+	}
+
+	private void getProjectedLayerSpeciesGrowthInfo(
+			YieldTableRowContext rowContext, Map<Integer, VdypPolygon> projectedPolygons, Species secondarySp64,
+			int targetAge
+	) {
+		// TODO Auto-generated method stub
+
 	}
 
 	/**
 	 * <b>V7Int_ObtainStandYield</b>
 	 * <p>
-	 * Extract the appropriate yield from the stand at the requested age.
-	 * <p>
-	 * <b>Notes</b>
-	 * <ul>
-	 * <li>In cases of species being projected and not having a projected age and height even though it had one on
-	 * input, we will now fill in the missing values. This seems to occur especially on Vet layers for secondary species
-	 * with site information.
-	 * <li>Made changes to catch a case where projected height is not always recalculated. See the comments at the top
-	 * of this module as well as Cam's e-mail.
-	 * <li>Based on Sam's Apr.14, 2008 e-mail, copy input BA/TPH over to projected if there is no projected BA/TPH. This
-	 * also implies that the diameter should be filled in.
-	 * </ul>
+	 * Extract the appropriate yield from the stand at the requested age. This method requires that the given layer was
+	 * projected.
 	 *
-	 * @param row
+	 * @param rowContext
 	 * @param layer        the specific layer within the polygon for which yields are to be generated
 	 * @param stand        the particular SP0 in the layer for which yield information is requested. If null, summary
 	 *                     information for the whole layer is retrieved.
 	 * @param ageToRequest the layer total age for which yields are to be generated
+	 * @throws YieldTableGenerationException
 	 */
-	private void obtainStandYield(YieldTableData row, Layer layer, Stand stand, double ageToRequest) {
+	private LayerYields obtainStandYield(
+			YieldTableRowContext rowContext, Map<Integer, VdypPolygon> projectedPolygons, Layer layer, Stand stand,
+			int ageToRequest
+	) throws StandYieldCalculationException {
 
-		assert row != null && layer != null && stand != null && ageToRequest > 0;
+		Validate.notNull(rowContext, "YieldTable.obtainStandYield(): rowContext must not be null");
+		Validate.notNull(layer, "YieldTable.obtainStandYield(): layer must not be null");
+		Validate.notNull(stand, "YieldTable.obtainStandYield(): stand must not be null");
+		Validate.notNull(
+				ageToRequest > 0,
+				MessageFormat.format(
+						"YieldTable.obtainStandYield(): ageToRequest value {0} must be at least one", ageToRequest
+				)
+		);
+
+		Validate.isTrue(
+				rowContext.getPolygonProjectionState().layerWasProjected(layer),
+				MessageFormat.format("YieldTable.obtainStandYield(): layer {0} must have been projected", layer)
+		);
 
 		var projectionType = layer.getAssignedProjectionType();
-
-		boolean dataExistsForLayerAtYear;
-		if (ProjectionTypeCode.ACTUAL_PROJECTION_TYPES_LIST.contains(projectionType)) {
-			dataExistsForLayerAtYear = true;
-			logger.debug("{} obtainStandYield: projection type is {}", layer, projectionType);
-		} else if (projectionType == ProjectionTypeCode.DO_NOT_PROJECT) {
-			dataExistsForLayerAtYear = false;
-			logger.debug("{} obtainStandYield: layer was marked \"do not project\"", layer);
-		} else {
-			throw new IllegalStateException(
-					MessageFormat.format("{0} obtainStandYield: Projection type was not set for this layer!", layer)
-			);
-		}
 
 		// Determine the age to use based on the Projection Type.
 		//
@@ -690,7 +700,6 @@ public class YieldTable {
 		// a vet layer has a flat yield curve.
 
 		double ageToUse = ageToRequest;
-		Integer calendarYear;
 
 		switch (projectionType) {
 		case DEAD: {
@@ -702,17 +711,21 @@ public class YieldTable {
 		}
 
 		case VETERAN: {
-			calendarYear = layer.getPolygon().getReferenceYear();
-			ageToUse = layer.determineLayerAgeAtYear(calendarYear);
+			Integer referenceYear = layer.getPolygon().getReferenceYear();
+			ageToUse = layer.determineLayerAgeAtYear(referenceYear);
 			logger.debug("{}: veteran layer, so clamping requested age to use to reference age of {}", layer, ageToUse);
 			break;
 		}
+
 		default:
 			// use the requested age
 			break;
 		}
 
-		calendarYear = layer.determineYearAtAge(ageToUse);
+		Integer calendarYear = layer.determineYearAtAge(ageToUse);
+		if (calendarYear == null || calendarYear < 0) {
+			throw new StandYieldCalculationException(calendarYear == null ? -9 : calendarYear);
+		}
 
 		// Obtain the yields at the requested age.
 
@@ -726,24 +739,80 @@ public class YieldTable {
 		// some very poor ground for growing trees.
 
 		var sp0 = stand.getSpeciesGroup();
+
 		boolean doReprojectHeight;
+		LayerType layerType;
 		switch (projectionType) {
 		case VETERAN:
+			layerType = LayerType.PRIMARY;
 			doReprojectHeight = true;
 			break;
 		case DEAD:
 		case PRIMARY:
 		case REGENERATION:
 		case RESIDUAL:
+			layerType = LayerType.PRIMARY;
 			doReprojectHeight = false;
 			break;
 		case DO_NOT_PROJECT:
 		case UNKNOWN:
+			layerType = null;
 			doReprojectHeight = true;
 			break;
 		default:
 			throw new IllegalStateException("Unknown projection type " + projectionType);
 		}
 
+		var initialProcessingResult = rowContext.getPolygonProjectionState()
+				.getProcessingResults(ProjectionStageCode.Initial, projectionType);
+		var runCode = initialProcessingResult.getRunCode().isPresent() ? initialProcessingResult.getRunCode().get() : 0;
+		if (layerType != null) {
+			if (runCode == -14) {
+				throw new StandYieldCalculationException(-14 /* ?!? */);
+			}
+
+			// VDYP7 projects the polygon over the entire requested range of years using some
+			// combination of Forward and Back. In VDYP8 we currently -do not- support Back,
+			// and so some years may be missing from projectedPolygons.
+
+			if (projectedPolygons.containsKey(calendarYear)) {
+				var projectedPolygon = projectedPolygons.get(calendarYear);
+
+				var projectedLayer = projectedPolygon.getLayers().get(layerType);
+				VdypSpecies projectedSp0 = projectedLayer.getSpeciesBySp0(sp0.getSpeciesCode());
+
+				projectedSp0.getSite().ifPresent(s -> {
+					var totalAge = s.getAgeTotal().map(a -> a).orElse(null);
+					var dominantHeight = s.getHeight().map(v -> v).orElseGet(null);
+					var siteIndex = s.getSiteIndex().map(i -> i).orElseGet(null);
+					var siteCurve = s.getSiteCurveNumber().map(c -> c).orElseGet(null);
+					var ageAtBreastHeight = s.getYearsAtBreastHeight().map(y -> y).orElseGet(null);
+
+					System.out.println("");
+				});
+			} else {
+
+			}
+		}
+
+		return new LayerYields(
+				doReprojectHeight, doReprojectHeight, runCode, runCode, ageToUse, ageToUse, ageToUse, ageToUse,
+				ageToUse, ageToUse, ageToUse, ageToUse, ageToUse, ageToUse, ageToUse, ageToUse, ageToUse, ageToUse,
+				runCode
+		);
+	}
+
+	public InputStream getAsStream() {
+		try {
+			return new FileInputStream(yieldTableFilePath.toFile());
+		} catch (FileNotFoundException e) {
+			throw new IllegalStateException(e);
+		}
+	}
+
+	@Override
+	public void close() throws IOException {
+		writer.close();
+		writer = null;
 	}
 }

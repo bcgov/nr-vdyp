@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import org.apache.commons.lang3.Validate;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -42,9 +44,17 @@ public class Parameters {
 	@JsonProperty(JSON_PROPERTY_SELECTED_EXECUTION_OPTIONS)
 	private List<String> selectedExecutionOptions = new ArrayList<>();
 
+	public static final String JSON_PROPERTY_EXCLUDED_EXECUTION_OPTIONS = "excludedExecutionOptions";
+	@JsonProperty(JSON_PROPERTY_EXCLUDED_EXECUTION_OPTIONS)
+	private List<String> excludedExecutionOptions = new ArrayList<>();
+
 	public static final String JSON_PROPERTY_SELECTED_DEBUG_OPTIONS = "selectedDebugOptions";
 	@JsonProperty(JSON_PROPERTY_SELECTED_DEBUG_OPTIONS)
 	private List<String> selectedDebugOptions = new ArrayList<>();
+
+	public static final String JSON_PROPERTY_EXCLUDED_DEBUG_OPTIONS = "excludedDebugOptions";
+	@JsonProperty(JSON_PROPERTY_EXCLUDED_DEBUG_OPTIONS)
+	private List<String> excludedDebugOptions = new ArrayList<>();
 
 	public static final String JSON_PROPERTY_AGE_START = "ageStart";
 	@JsonProperty(JSON_PROPERTY_AGE_START)
@@ -197,7 +207,7 @@ public class Parameters {
 				}
 			}
 			throw new IllegalArgumentException(
-					MessageFormat.format("\"{0}\" is not a valid SelectedExecutionOptions value", value)
+					MessageFormat.format("\"{0}\" is not a valid ExecutionOptions value", value)
 			);
 		}
 	}
@@ -284,7 +294,7 @@ public class Parameters {
 				}
 			}
 			throw new IllegalArgumentException(
-					MessageFormat.format("\"{0}\" is not a valid SelectedDebugOptions value", value)
+					MessageFormat.format("\"{0}\" is not a valid DebugOptions value", value)
 			);
 		}
 	}
@@ -367,7 +377,10 @@ public class Parameters {
 	 **/
 	@JsonProperty(value = JSON_PROPERTY_SELECTED_EXECUTION_OPTIONS)
 	public List<String> getSelectedExecutionOptions() {
-		assert selectedExecutionOptions != null;
+		Validate.notNull(
+				selectedExecutionOptions,
+				"Parameters.getSelectedExecutionOptions: selectedExecutionOptions must not be null"
+		);
 		return selectedExecutionOptions;
 	}
 
@@ -393,6 +406,46 @@ public class Parameters {
 	public Parameters addSelectedExecutionOptionsItem(String selectedExecutionOptionsItemText) {
 		if (selectedExecutionOptionsItemText != null) {
 			this.selectedExecutionOptions.add(selectedExecutionOptionsItemText);
+		}
+		return this;
+	}
+
+	/**
+	 * Get excludedExecutionOptions
+	 *
+	 * @return excludedExecutionOptions
+	 **/
+	@JsonProperty(value = JSON_PROPERTY_EXCLUDED_EXECUTION_OPTIONS)
+	public List<String> getExcludedExecutionOptions() {
+		Validate.notNull(
+				excludedExecutionOptions,
+				"Parameters.getExcludedExecutionOptions: excludedExecutionOptions must not be null"
+		);
+		return excludedExecutionOptions;
+	}
+
+	public Parameters excludedExecutionOptions(List<ExecutionOption> excludedExecutionOptions) {
+		setExcludedExecutionOptions(excludedExecutionOptions);
+		return this;
+	}
+
+	public Parameters addExcludedExecutionOptionsItem(ExecutionOption excludedExecutionOptionsItem) {
+		this.excludedExecutionOptions.add(excludedExecutionOptionsItem.getValue());
+		return this;
+	}
+
+	public void setExcludedExecutionOptions(List<ExecutionOption> excludedExecutionOptions) {
+		if (excludedExecutionOptions == null) {
+			this.excludedExecutionOptions.clear();
+		} else {
+			this.excludedExecutionOptions = new ArrayList<String>();
+			excludedExecutionOptions.stream().forEach(o -> this.excludedExecutionOptions.add(o.getValue()));
+		}
+	}
+
+	public Parameters addExcludedExecutionOptionsItem(String excludedExecutionOptionsItemText) {
+		if (excludedExecutionOptionsItemText != null) {
+			this.excludedExecutionOptions.add(excludedExecutionOptionsItemText);
 		}
 		return this;
 	}
@@ -432,6 +485,45 @@ public class Parameters {
 	public Parameters addSelectedDebugOptionsItem(String selectedDebugOptionsItemText) {
 		if (selectedDebugOptionsItemText != null) {
 			this.selectedDebugOptions.add(selectedDebugOptionsItemText);
+		}
+		return this;
+	}
+
+	/**
+	 * Get excludedDebugOptions
+	 *
+	 * @return excludedDebugOptions
+	 **/
+	@JsonProperty(value = JSON_PROPERTY_EXCLUDED_DEBUG_OPTIONS)
+	public List<String> getExcludedDebugOptions() {
+		return excludedDebugOptions;
+	}
+
+	public void setExcludedDebugOptions(List<DebugOption> excludedDebugOptions) {
+		if (excludedDebugOptions == null) {
+			this.excludedDebugOptions = null;
+		} else {
+			this.excludedDebugOptions = new ArrayList<>();
+			excludedDebugOptions.stream().forEach(o -> this.excludedDebugOptions.add(o.getValue()));
+		}
+	}
+
+	public Parameters excludedDebugOptions(List<DebugOption> excludedDebugOptions) {
+		setExcludedDebugOptions(excludedDebugOptions);
+		return this;
+	}
+
+	public Parameters addExcludedDebugOptionsItem(DebugOption excludedDebugOptionsItem) {
+		if (excludedDebugOptions == null) {
+			excludedDebugOptions = new ArrayList<>();
+		}
+		this.excludedDebugOptions.add(excludedDebugOptionsItem.getValue());
+		return this;
+	}
+
+	public Parameters addExcludedDebugOptionsItem(String excludedDebugOptionsItemText) {
+		if (excludedDebugOptionsItemText != null) {
+			this.excludedDebugOptions.add(excludedDebugOptionsItemText);
 		}
 		return this;
 	}
@@ -777,7 +869,9 @@ public class Parameters {
 		Parameters parameters = (Parameters) o;
 		return Objects.equals(this.outputFormat, parameters.outputFormat)
 				&& Objects.equals(this.selectedExecutionOptions, parameters.selectedExecutionOptions)
+				&& Objects.equals(this.excludedExecutionOptions, parameters.excludedExecutionOptions)
 				&& Objects.equals(this.selectedDebugOptions, parameters.selectedDebugOptions)
+				&& Objects.equals(this.excludedDebugOptions, parameters.excludedDebugOptions)
 				&& Objects.equals(this.ageStart, parameters.ageStart) && Objects.equals(this.ageEnd, parameters.ageEnd)
 				&& Objects.equals(this.yearStart, parameters.yearStart)
 				&& Objects.equals(this.yearEnd, parameters.yearEnd)
@@ -792,9 +886,9 @@ public class Parameters {
 	@Override
 	public int hashCode() {
 		return Objects.hash(
-				outputFormat, selectedExecutionOptions, selectedDebugOptions, ageStart, ageEnd, yearStart, yearEnd,
-				yearForcedIntoYieldTable, ageIncrement, combineAgeYearRange, progressFrequency, metadataToOutput,
-				filters, utils
+				outputFormat, selectedExecutionOptions, excludedExecutionOptions, selectedDebugOptions,
+				excludedDebugOptions, ageStart, ageEnd, yearStart, yearEnd, yearForcedIntoYieldTable, ageIncrement,
+				combineAgeYearRange, progressFrequency, metadataToOutput, filters, utils
 		);
 	}
 
@@ -805,7 +899,9 @@ public class Parameters {
 
 		sb.append("    outputFormat: ").append(toIndentedString(outputFormat)).append("\n");
 		sb.append("    selectedExecutionOptions: ").append(toIndentedString(selectedExecutionOptions)).append("\n");
+		sb.append("    excludedExecutionOptions: ").append(toIndentedString(excludedExecutionOptions)).append("\n");
 		sb.append("    selectedDebugOptions: ").append(toIndentedString(selectedDebugOptions)).append("\n");
+		sb.append("    excludedDebugOptions: ").append(toIndentedString(excludedDebugOptions)).append("\n");
 		sb.append("    ageStart: ").append(toIndentedString(ageStart)).append("\n");
 		sb.append("    ageEnd: ").append(toIndentedString(ageEnd)).append("\n");
 		sb.append("    yearStart: ").append(toIndentedString(yearStart)).append("\n");

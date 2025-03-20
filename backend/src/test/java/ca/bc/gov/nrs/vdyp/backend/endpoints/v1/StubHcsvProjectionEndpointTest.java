@@ -78,7 +78,7 @@ class StubHcsvProjectionEndpointTest {
 		ZipEntry entry2 = zipFile.getNextEntry();
 		assertEquals("ProgressLog.txt", entry2.getName());
 		String entry2Content = new String(testHelper.readZipEntry(zipFile, entry2));
-		assertTrue(entry2Content.startsWith("Running Projection"));
+		assertTrue(entry2Content.contains("starting projection (type HCSV)"));
 
 		ZipEntry entry3 = zipFile.getNextEntry();
 		assertEquals("ErrorLog.txt", entry3.getName());

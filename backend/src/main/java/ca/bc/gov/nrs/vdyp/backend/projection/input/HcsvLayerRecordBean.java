@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -230,7 +231,7 @@ public class HcsvLayerRecordBean {
 	private String closeUtilizationVolumeLessDecayAndWastagePerHectare125Adjustment;
 
 	public long getFeatureId() {
-		assert featureId != null;
+		Validate.notNull(featureId, "HcsvLayerRecordBean.getFeatureId: featureId must not be null");
 		return CsvRecordBeanHelper.parseLongAcceptNull(featureId);
 	}
 

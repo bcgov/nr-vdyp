@@ -70,6 +70,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.coe.VolumeNetDecayWasteParser;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.control.BaseControlParser;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ControlMapValueReplacer;
+import ca.bc.gov.nrs.vdyp.io.parse.control.OutputFileLocationResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ResourceControlMapModifier;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParser;
 
@@ -97,10 +98,12 @@ public class ForwardControlParser extends BaseControlParser {
 	}
 
 	@Override
-	protected List<ControlKey> outputFileParsers() {
+	protected List<OutputFileLocationResolver> outputFiles() {
 		return List.of(
-				ControlKey.VDYP_OUTPUT_VDYP_POLYGON, ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SPECIES,
-				ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL, ControlKey.VDYP_OUTPUT_COMPATIBILITY_VARIABLES
+				new OutputFileLocationResolver(ControlKey.VDYP_OUTPUT_VDYP_POLYGON), //
+				new OutputFileLocationResolver(ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SPECIES), //
+				new OutputFileLocationResolver(ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL), //
+				new OutputFileLocationResolver(ControlKey.VDYP_OUTPUT_COMPATIBILITY_VARIABLES)
 		);
 	}
 
@@ -338,6 +341,13 @@ public class ForwardControlParser extends BaseControlParser {
 				);
 				r.modify(map, fileResolver);
 			}
+		}
+
+		for (var outputFile : outputFiles()) {
+			var key = outputFile.getControlKey();
+			logger.debug("Adjusting location of output file {}[{}] relative to control file", key, key.sequence.get());
+
+			outputFile.modify(map, fileResolver);
 		}
 
 		// Report any control map items that are a) not included in orderedControlKeys

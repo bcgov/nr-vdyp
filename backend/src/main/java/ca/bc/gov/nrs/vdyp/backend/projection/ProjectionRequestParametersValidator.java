@@ -5,7 +5,9 @@ import static ca.bc.gov.nrs.vdyp.backend.projection.ValidatedParameters.DEFAULT;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestValidationException;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
@@ -68,7 +70,9 @@ public class ProjectionRequestParametersValidator {
 		if (params.getSelectedExecutionOptions().size() == 0) {
 			vparams.selectedExecutionOptions(DEFAULT.getSelectedExecutionOptions());
 		} else {
-			List<ExecutionOption> selectedOptions = new ArrayList<>();
+			// Add the default Yes options, then the options explicitly Yes, then remove the options
+			// explicitly No.
+			Set<ExecutionOption> selectedOptions = new HashSet<>(List.copyOf(DEFAULT.getSelectedExecutionOptions()));
 			for (String optionText : params.getSelectedExecutionOptions()) {
 				try {
 					var e = Parameters.ExecutionOption.fromValue(optionText);
@@ -77,7 +81,15 @@ public class ProjectionRequestParametersValidator {
 					recordValidationMessage(UNRECOGNIZED_EXECUTION_OPTION, optionText);
 				}
 			}
-			vparams.selectedExecutionOptions(selectedOptions);
+			for (String optionText : params.getExcludedExecutionOptions()) {
+				try {
+					var e = Parameters.ExecutionOption.fromValue(optionText);
+					selectedOptions.remove(e);
+				} catch (IllegalArgumentException e) {
+					recordValidationMessage(UNRECOGNIZED_EXECUTION_OPTION, optionText);
+				}
+			}
+			vparams.selectedExecutionOptions(new ArrayList<>(selectedOptions));
 		}
 
 		// Parameters.JSON_PROPERTY_SELECTED_DEBUG_OPTIONS
@@ -85,7 +97,9 @@ public class ProjectionRequestParametersValidator {
 		if (params.getSelectedDebugOptions().size() == 0) {
 			vparams.selectedDebugOptions(DEFAULT.getSelectedDebugOptions());
 		} else {
-			List<DebugOption> selectedOptions = new ArrayList<>();
+			// Add the default Yes options, then the options explicitly Yes, then remove the options
+			// explicitly No.
+			Set<DebugOption> selectedOptions = new HashSet<>(List.copyOf(DEFAULT.getSelectedDebugOptions()));
 			for (String optionText : params.getSelectedDebugOptions()) {
 				try {
 					var e = Parameters.DebugOption.fromValue(optionText);
@@ -94,7 +108,15 @@ public class ProjectionRequestParametersValidator {
 					recordValidationMessage(UNRECOGNIZED_DEBUG_OPTION, optionText);
 				}
 			}
-			vparams.selectedDebugOptions(selectedOptions);
+			for (String optionText : params.getExcludedDebugOptions()) {
+				try {
+					var e = Parameters.DebugOption.fromValue(optionText);
+					selectedOptions.remove(e);
+				} catch (IllegalArgumentException e) {
+					recordValidationMessage(UNRECOGNIZED_DEBUG_OPTION, optionText);
+				}
+			}
+			vparams.selectedDebugOptions(new ArrayList<>(selectedOptions));
 		}
 
 		vparams.setMinAgeStart(DEFAULT.getMinAgeEnd());
@@ -155,7 +177,7 @@ public class ProjectionRequestParametersValidator {
 		// Parameters.JSON_PROPERTY_FORCE_YEAR
 		vparams.setYearForcedIntoYieldTable(
 				getIntegerValue(
-						params.getYearForcedIntoYieldTable(), DEFAULT.getYearForcedIntoYearTable(), null, null,
+						params.getYearForcedIntoYieldTable(), DEFAULT.getYearForcedIntoYieldTable(), null, null,
 						"forceYear"
 				)
 		);
@@ -255,7 +277,7 @@ public class ProjectionRequestParametersValidator {
 			if (!vparams.getOutputFormat().equals(OutputFormat.DCSV) //
 					&& vparams.getAgeStart() == null //
 					&& vparams.getYearStart() == null //
-					&& vparams.getYearForcedIntoYearTable() == null //
+					&& vparams.getYearForcedIntoYieldTable() == null //
 					&& !vparams.containsOption(ExecutionOption.DO_FORCE_CURRENT_YEAR_INCLUSION_IN_YIELD_TABLES) //
 					&& !vparams.containsOption(ExecutionOption.DO_FORCE_REFERENCE_YEAR_INCLUSION_IN_YIELD_TABLES)) {
 
@@ -265,7 +287,7 @@ public class ProjectionRequestParametersValidator {
 			if (!vparams.getOutputFormat().equals(OutputFormat.DCSV) //
 					&& vparams.getAgeEnd() == null //
 					&& vparams.getYearEnd() == null //
-					&& vparams.getYearForcedIntoYearTable() == null //
+					&& vparams.getYearForcedIntoYieldTable() == null //
 					&& !vparams.containsOption(ExecutionOption.DO_FORCE_CURRENT_YEAR_INCLUSION_IN_YIELD_TABLES) //
 					&& !vparams.containsOption(ExecutionOption.DO_FORCE_REFERENCE_YEAR_INCLUSION_IN_YIELD_TABLES)) {
 
@@ -287,7 +309,7 @@ public class ProjectionRequestParametersValidator {
 				}
 
 				int forceParamCount = 0;
-				if (vparams.getYearForcedIntoYearTable() != null) {
+				if (vparams.getYearForcedIntoYieldTable() != null) {
 					forceParamCount += 1;
 				}
 				if (vparams.containsOption(ExecutionOption.DO_FORCE_CURRENT_YEAR_INCLUSION_IN_YIELD_TABLES)) {

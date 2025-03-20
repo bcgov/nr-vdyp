@@ -44,7 +44,7 @@ public class HelpService {
 				ParameterDetailsMessageBuilder.build(
 						"selectedExecutionOptions.backGrowEnabled", //
 						"Allow Back Grow", //
-						"true if present", //
+						"Yes | No", //
 						"Enables or disables the use of the Back Grow feature of VDYP7.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
@@ -58,7 +58,7 @@ public class HelpService {
 				ParameterDetailsMessageBuilder.build(
 						"selectedExecutionOptions.forwardGrowEnabled", //
 						"Allow Forward Grow", //
-						"true if present", //
+						"Yes | No", //
 						"Enables or disables the use of the Forward Grow feature of VDYP7.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
@@ -72,7 +72,7 @@ public class HelpService {
 				ParameterDetailsMessageBuilder.build(
 						"selectedDebugOptions.doIncludeDebugTimestamps", //
 						"Debug Log Include Timestamps", //
-						"true if present", //
+						"Yes | No", //
 						"Includes or suppresses Debug Log File Timestamps.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedDebugOptions()
@@ -86,7 +86,7 @@ public class HelpService {
 				ParameterDetailsMessageBuilder.build(
 						"selectedDebugOptions.doIncludeDebugRoutineNames", //
 						"Debug Log Include Routine Names", //
-						"true if present", //
+						"Yes | No", //
 						"Includes or suppresses Debug Log File Routine Names.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedDebugOptions()
@@ -100,7 +100,7 @@ public class HelpService {
 				ParameterDetailsMessageBuilder.build(
 						"selectedDebugOptions.doIncludeDebugEntryExit", //
 						"Debug Log Entry/Exit", //
-						"true if present", //
+						"Yes | No", //
 						"Includes or suppresses Debug Log Block Entry and Exit.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedDebugOptions()
@@ -114,7 +114,7 @@ public class HelpService {
 				ParameterDetailsMessageBuilder.build(
 						"selectedDebugOptions.doIncludeDebugIndentBlocks", //
 						"Debug Indent Log Blocks", //
-						"true if present", //
+						"Yes | No", //
 						"Indents Logging Blocks as they are Entered and Exited.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedDebugOptions()
@@ -195,7 +195,7 @@ public class HelpService {
 				ParameterDetailsMessageBuilder.build(
 						"selectedExecutionOptions.doForceReferenceYearInclusionInYieldTables", //
 						"Force Reference Year Indicator", //
-						"true if present", //
+						"Yes | No", //
 						"Enables or disables the forced inclusion of the Reference Year in Yield Tables.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
@@ -210,7 +210,7 @@ public class HelpService {
 				ParameterDetailsMessageBuilder.build(
 						"selectedExecutionOptions.doForceCurrentYearInclusionInYieldTables", //
 						"Force Current Year Indicator", //
-						"true if present", //
+						"Yes | No", //
 						"Enables or disables the forced inclusion of the Current Year in Yield Tables.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
@@ -236,7 +236,7 @@ public class HelpService {
 				ParameterDetailsMessageBuilder.build(
 						"selectedExecutionOptions.doIncludeFileHeader", //
 						"Include output file headers (default) or not", //
-						"true if present", //
+						"Yes | No", //
 						"In file formats where a file header is optional, this option will display or suppress the file header.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
@@ -261,7 +261,7 @@ public class HelpService {
 				ParameterDetailsMessageBuilder.build(
 						"selectedExecutionOptions.doIncludeProjectionModeInYieldTable", //
 						"Include Projection Mode Indicator", //
-						"true if present", //
+						"Yes | No", //
 						"If present, a column indicating how the yield table row was projected is included in Yield Tables.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
@@ -275,7 +275,7 @@ public class HelpService {
 				ParameterDetailsMessageBuilder.build(
 						"selectedExecutionOptions.backGrowEnabled", //
 						"Include Age Rows Indicator", //
-						"true if present", //
+						"Yes | No", //
 						"Includes or excludes age rows of the Age Range in the Yield Table.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
@@ -289,7 +289,7 @@ public class HelpService {
 				ParameterDetailsMessageBuilder.build(
 						"selectedExecutionOptions.doIncludeAgeRowsInYieldTable", //
 						"Include Year Rows Indicator", //
-						"true if present", //
+						"Yes | No", //
 						"If true, the year rows of the Year Range are included in the Yield Table.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
@@ -362,7 +362,7 @@ public class HelpService {
 				ParameterDetailsMessageBuilder.build(
 						"selectedExecutionOptions.doIncludePolygonRecordIdInYieldTable", //
 						"Include Polygon ID Indicator", //
-						"true if present", //
+						"Yes | No", //
 						"Include the POLYGON_RCRD_ID in the header of yield tables.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
@@ -377,7 +377,7 @@ public class HelpService {
 				ParameterDetailsMessageBuilder.build(
 						"selectedExecutionOptions.doAllowBasalAreaAndTreesPerHectareValueSubstitution", //
 						"Allow Supplied BA/TPH to be used as Projected", //
-						"true if present", //
+						"Yes | No", //
 						"If present, the substitution of Supplied BA/TPH as Projected Values is allowed.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
@@ -392,7 +392,7 @@ public class HelpService {
 				ParameterDetailsMessageBuilder.build(
 						"selectedExecutionOptions.doIncludeSecondarySpeciesDominantHeightInYieldTable", //
 						"Display secondary species height in yield tables.", //
-						"true if present", //
+						"Yes | No", //
 						"Display/Suppress the Secondary Species Dominant Height column in Yield Tables.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
@@ -407,7 +407,7 @@ public class HelpService {
 				ParameterDetailsMessageBuilder.build(
 						"selectedExecutionOptions.doSummarizeProjectionByPolygon", //
 						"Projection summarized by polygon", //
-						"true if present", //
+						"Yes | No", //
 						"If present, projected values are summarized at the polygon level.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
@@ -421,7 +421,7 @@ public class HelpService {
 				ParameterDetailsMessageBuilder.build(
 						"selectedExecutionOptions.doSummarizeProjectionByLayer", //
 						"Projection summarized by layer", //
-						"true if present", //
+						"Yes | No", //
 						"If present, projected values are summarized at the layer level.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
@@ -435,7 +435,7 @@ public class HelpService {
 				ParameterDetailsMessageBuilder.build(
 						"selectedExecutionOptions.doIncludeSpeciesProjection", //
 						"Projection produced by Species", //
-						"true if present", //
+						"Yes | No", //
 						"If present, projected values are produced for each species.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
@@ -449,7 +449,7 @@ public class HelpService {
 				ParameterDetailsMessageBuilder.build(
 						"selectedExecutionOptions.doIncludeProjectedMoFVolumes", //
 						"Include MoF Projected Volumes", //
-						"true if present", //
+						"Yes | No", //
 						"Indicate whether MoF projected volumes are included in the output.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
@@ -463,7 +463,7 @@ public class HelpService {
 				ParameterDetailsMessageBuilder.build(
 						"selectedExecutionOptions.doIncludeProjectedMoFBiomass", //
 						"Include Projected MoF Biomass", //
-						"true if present", //
+						"Yes | No", //
 						"Indicate whether projected MoF biomass is included in the output.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
@@ -477,7 +477,7 @@ public class HelpService {
 				ParameterDetailsMessageBuilder.build(
 						"selectedExecutionOptions.doIncludeProjectedCFSBiomass", //
 						"Include Projected CFS Biomass", //
-						"true if present", //
+						"Yes | No", //
 						"Indicate whether projected CFS biomass is included in the output.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
@@ -491,7 +491,7 @@ public class HelpService {
 				ParameterDetailsMessageBuilder.build(
 						"selectedExecutionOptions.doIncludeColumnHeadersInYieldTable", //
 						"Include Formatted Yield Table Column Headers", //
-						"true if present", //
+						"Yes | No", //
 						"Indicate whether formatted yield tables will include column headers or not.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
@@ -506,7 +506,7 @@ public class HelpService {
 				ParameterDetailsMessageBuilder.build(
 						"selectedExecutionOptions.doEnableProgressLogging", //
 						"Enable Progress logging", //
-						"true if present", //
+						"Yes | No", //
 						"Enables or disables the logging of progress messages during projections.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
@@ -519,7 +519,7 @@ public class HelpService {
 				ParameterDetailsMessageBuilder.build(
 						"selectedExecutionOptions.doEnableErrorLogging", //
 						"Enable Error logging", //
-						"true if present", //
+						"Yes | No", //
 						"Enables or disables the logging of error messages during projections.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
@@ -532,7 +532,7 @@ public class HelpService {
 				ParameterDetailsMessageBuilder.build(
 						"selectedExecutionOptions.doEnableDebugLogging", //
 						"Enable Debug logging", //
-						"true if present", //
+						"Yes | No", //
 						"Enables or disables the logging of debug messages during projections.", //
 						Boolean.toString(
 								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()

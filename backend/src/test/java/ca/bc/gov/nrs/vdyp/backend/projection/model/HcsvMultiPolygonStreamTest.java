@@ -102,8 +102,12 @@ public class HcsvMultiPolygonStreamTest {
 
 		assertThat(
 				p1Layer1.getSp0sAsSupplied().get(0), //
-				allOf(hasProperty("layer", hasProperty("layerId", is("1"))) //
-						, hasProperty("standIndex", is(0)), //
+				allOf(
+						hasProperty(
+								"layer", //
+								hasProperty("layerId", is("1"))
+						), //
+						hasProperty("standIndex", is(0)), //
 						hasProperty(
 								"speciesGroup",
 								allOf(
@@ -113,7 +117,7 @@ public class HcsvMultiPolygonStreamTest {
 						) //
 						,
 						hasProperty(
-								"species",
+								"speciesByPercent",
 								contains(
 										List.of(
 												allOf(
@@ -138,7 +142,7 @@ public class HcsvMultiPolygonStreamTest {
 								)
 						), //
 						hasProperty(
-								"species",
+								"speciesByPercent",
 								contains(
 										List.of(
 												allOf(
@@ -152,12 +156,12 @@ public class HcsvMultiPolygonStreamTest {
 		);
 
 		assertThat(
-				p1Layer1.getSp0sAsSupplied().get(0).getSpecies(),
+				p1Layer1.getSp0sAsSupplied().get(0).getSpeciesByPercent(),
 				contains(List.of(hasProperty("speciesCode", is("PLI"))))
 		);
 
 		assertThat(
-				p1Layer1.getSp0sAsSupplied().get(1).getSpecies(),
+				p1Layer1.getSp0sAsSupplied().get(1).getSpeciesByPercent(),
 				contains(List.of(hasProperty("speciesCode", is("SX"))))
 		);
 

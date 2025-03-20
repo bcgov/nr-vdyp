@@ -113,7 +113,7 @@ public class HcsvSiteSpeciesMergeStreamTest {
 						) //
 						,
 						hasProperty(
-								"species",
+								"speciesByPercent",
 								contains(
 										List.of(
 												allOf(
@@ -138,7 +138,7 @@ public class HcsvSiteSpeciesMergeStreamTest {
 								)
 						), //
 						hasProperty(
-								"species",
+								"speciesByPercent",
 								contains(
 										List.of(
 												allOf(
@@ -152,12 +152,12 @@ public class HcsvSiteSpeciesMergeStreamTest {
 		);
 
 		assertThat(
-				p1Layer1.getSp0sAsSupplied().get(0).getSpecies(),
+				p1Layer1.getSp0sAsSupplied().get(0).getSpeciesByPercent(),
 				contains(List.of(hasProperty("speciesCode", is("PLI"))))
 		);
 
 		assertThat(
-				p1Layer1.getSp0sAsSupplied().get(1).getSpecies(),
+				p1Layer1.getSp0sAsSupplied().get(1).getSpeciesByPercent(),
 				contains(List.of(hasProperty("speciesCode", is("SX"))))
 		);
 

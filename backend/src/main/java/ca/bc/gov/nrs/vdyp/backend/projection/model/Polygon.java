@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -485,7 +486,10 @@ public class Polygon implements Comparable<Polygon> {
 
 	void setLayerByProjectionType(ProjectionTypeCode layerProjectionType, Layer layer) {
 		ensureUnlocked();
-		assert layerByProjectionType.get(layerProjectionType) == null;
+		Validate.isTrue(
+				!layerByProjectionType.containsKey(layerProjectionType),
+				"Polygon.setLayerByProjectionType: map entry must not already exist"
+		);
 		layerByProjectionType.put(layerProjectionType, layer);
 	}
 
@@ -732,13 +736,13 @@ public class Polygon implements Comparable<Polygon> {
 			if (primaryLayer != null) {
 				if (primaryLayer.getBasalArea() == null) {
 					context.getErrorLog().addMessage(
-							"Layer {}: VRI Inventory Standard but basal area value missing on primary layer; will be estimated",
+							"Layer {0}: VRI Inventory Standard but basal area value missing on primary layer; will be estimated",
 							primaryLayer
 					);
 				}
 				if (primaryLayer.getTreesPerHectare() == null) {
 					context.getErrorLog().addMessage(
-							"Layer {}: VRI Inventory Standard but trees-per-hectare value missing on primary layer; will be estimated",
+							"Layer {0}: VRI Inventory Standard but trees-per-hectare value missing on primary layer; will be estimated",
 							primaryLayer
 					);
 				}
@@ -747,13 +751,13 @@ public class Polygon implements Comparable<Polygon> {
 			if (veteranLayer != null) {
 				if (veteranLayer.getBasalArea() == null) {
 					context.getErrorLog().addMessage(
-							"Layer {}: VRI Inventory Standard but basal area value missing on veteran layer; will be estimated",
+							"Layer {0}: VRI Inventory Standard but basal area value missing on veteran layer; will be estimated",
 							veteranLayer
 					);
 				}
 				if (veteranLayer.getTreesPerHectare() == null) {
 					context.getErrorLog().addMessage(
-							"Layer {}: VRI Inventory Standard but trees-per-hectare value missing on veteran layer; will be estimated",
+							"Layer {0}: VRI Inventory Standard but trees-per-hectare value missing on veteran layer; will be estimated",
 							veteranLayer
 					);
 				}
@@ -819,7 +823,7 @@ public class Polygon implements Comparable<Polygon> {
 					if (sumStandPercentages < 100.0) {
 						Stand targetStand = l.getSp0sByPercent().get(0);
 						targetSp0 = targetStand.getSpeciesGroup();
-						targetSp64 = targetStand.getSpecies().get(0);
+						targetSp64 = targetStand.getSpeciesByPercent().get(0);
 						duplicatedSpeciesIndex = 0;
 					} else {
 						Stand targetStand = null;
@@ -829,10 +833,16 @@ public class Polygon implements Comparable<Polygon> {
 								break;
 							}
 						}
-						assert targetStand != null; /* -some- sp0 has to have its % > difference... */
+
+						/* -some- sp0 has to have its % > difference... */
+						Validate.isTrue(
+								targetStand != null,
+								"Polygon.doAdjustAllLayersSpeciesPercents: targetStand must not be null"
+						);
 
 						targetSp0 = targetStand.getSpeciesGroup();
-						targetSp64 = targetStand.getSpecies().get(targetStand.getSpecies().size() - 1);
+						targetSp64 = targetStand.getSpeciesByPercent()
+								.get(targetStand.getSpeciesByPercent().size() - 1);
 						duplicatedSpeciesIndex = targetSp64.getNDuplicates();
 					}
 
@@ -963,7 +973,7 @@ public class Polygon implements Comparable<Polygon> {
 
 		if (primaryLayer != null) {
 			var leadingSpecies = primaryLayer.determineLeadingSp0(0);
-			if (leadingSpecies == null || leadingSpecies.getSpecies().size() == 0) {
+			if (leadingSpecies == null || leadingSpecies.getSpeciesByPercent().size() == 0) {
 				throw new PolygonValidationException(
 						new ValidationMessage(ValidationMessageKind.NO_LEADING_SPECIES, this, primaryLayer)
 				);
@@ -1350,9 +1360,15 @@ public class Polygon implements Comparable<Polygon> {
 		} else if (primaryLayer != null) {
 			primaryPercentStockable = polygonPercentStockable - veteranPercentStockable - deadPercentStockable
 					- regenerationPercentStockable;
+			if (primaryPercentStockable <= 1.0) {
+				primaryPercentStockable = 1.0;
+			}
 		} else if (residualLayer != null) {
 			residualPercentStockable = polygonPercentStockable - veteranPercentStockable - deadPercentStockable
 					- regenerationPercentStockable;
+			if (residualPercentStockable <= 1.0) {
+				residualPercentStockable = 1.0;
+			}
 		}
 
 		switch (projectionType) {

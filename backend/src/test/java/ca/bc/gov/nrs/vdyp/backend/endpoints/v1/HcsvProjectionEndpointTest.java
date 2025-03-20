@@ -46,7 +46,7 @@ class HcsvProjectionEndpointTest {
 
 		logger.info("Starting testProjectionHscv_shouldReturnStatusOK");
 
-		Path resourceFolderPath = Path.of("VDYP7Console-sample-files", FileHelper.HCSV, FileHelper.VDYP_240);
+		Path resourceFolderPath = Path.of("VDYP7Console-sample-files", "hcsv", "VRI-PerPolygon");
 
 		Parameters parameters = testHelper.addSelectedOptions(
 				new Parameters(), //
@@ -88,7 +88,7 @@ class HcsvProjectionEndpointTest {
 		ZipEntry entry2 = zipFile.getNextEntry();
 		assertEquals("ProgressLog.txt", entry2.getName());
 		String entry2Content = new String(testHelper.readZipEntry(zipFile, entry2));
-		assertTrue(entry2Content.startsWith("Running Projection"));
+		assertTrue(entry2Content.contains("starting projection (type HCSV)"));
 
 		ZipEntry entry3 = zipFile.getNextEntry();
 		assertEquals("ErrorLog.txt", entry3.getName());
@@ -146,7 +146,7 @@ class HcsvProjectionEndpointTest {
 		ZipEntry entry2 = zipFile.getNextEntry();
 		assertEquals("ProgressLog.txt", entry2.getName());
 		String entry2Content = new String(testHelper.readZipEntry(zipFile, entry2));
-		assertTrue(entry2Content.startsWith("Running Projection"));
+		assertTrue(entry2Content.contains("starting projection (type HCSV)"));
 
 		ZipEntry entry3 = zipFile.getNextEntry();
 		assertEquals("ErrorLog.txt", entry3.getName());
@@ -187,7 +187,7 @@ class HcsvProjectionEndpointTest {
 		ZipEntry entry1 = zipFile.getNextEntry();
 		assertEquals("YieldTable.csv", entry1.getName());
 		String entry1Content = new String(testHelper.readZipEntry(zipFile, entry1));
-		assertTrue(entry1Content.length() > 0);
+		assertTrue(entry1Content.length() == 0);
 
 		ZipEntry entry2 = zipFile.getNextEntry();
 		assertEquals("ProgressLog.txt", entry2.getName());

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,8 +79,12 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 
 	private void advanceToFirstPolygon() {
 
-		assert nextPolygonRecord == null;
-		assert nextLayerRecord == null;
+		Validate.isTrue(
+				nextPolygonRecord == null, "HcsvPolygonStream.advanceToFirstPolygon: nextPolygonRecord must not be null"
+		);
+		Validate.isTrue(
+				nextLayerRecord == null, "HcsvPolygonStream.nextLayerRecord: nextPolygonRecord must not be null"
+		);
 
 		if (polygonRecordIterator.hasNext()) {
 			nextPolygonRecord = polygonRecordIterator.next();
@@ -181,7 +186,6 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 						.rankCode(nextLayerRecord.getForestCoverRankCode()) //
 						.treesPerHectare(nextLayerRecord.getStemsPerHectare()) //
 						.vdyp7LayerCode(nextLayerRecord.getTargetVdyp7LayerCode()) //
-						.species(stands) //
 						.history(history) //
 						.build();
 
@@ -456,7 +460,7 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 
 			isNewStand = false;
 
-			for (var possibleDuplicate : stand.getSpecies()) {
+			for (var possibleDuplicate : stand.getSpeciesByPercent()) {
 
 				if (possibleDuplicate.getSpeciesCode().equals(sp64Details.speciesCode())) {
 					// We have a duplicate species
@@ -511,7 +515,6 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 			// largest percentage sp64 and therefore will be the sp0 for the layer.
 
 			stand = new Stand.Builder() //
-					.species(new ArrayList<Species>()) //
 					.sp0Code(sp0Code) //
 					.layer(layer) //
 					.build();
@@ -553,8 +556,8 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 
 		sp64.calculateUndefinedFieldValues();
 
-		stand.updateAfterSp64Added(sp64);
-		layer.updateAfterSp64Added(sp64);
+		stand.addSp64(sp64);
+		layer.addSp64(sp64);
 
 		return sp64;
 	}

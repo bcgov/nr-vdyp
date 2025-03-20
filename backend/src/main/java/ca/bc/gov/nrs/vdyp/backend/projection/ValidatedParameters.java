@@ -339,7 +339,7 @@ public class ValidatedParameters {
 	 *
 	 * @return forceYear
 	 */
-	public Integer getYearForcedIntoYearTable() {
+	public Integer getYearForcedIntoYieldTable() {
 		return yearForcedIntoYieldTable;
 	}
 

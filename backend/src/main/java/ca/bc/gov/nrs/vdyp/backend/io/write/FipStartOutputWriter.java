@@ -82,7 +82,7 @@ public class FipStartOutputWriter extends AbstractOutputWriter implements Closea
 		boolean speciesWritten = false;
 
 		Stand leadingStand = layer.determineLeadingSp0(0);
-		Species leadingSpecies = leadingStand.getSpecies().get(0);
+		Species leadingSpecies = leadingStand.getSpeciesByPercent().get(0);
 
 		writeFormat(
 				layersFile, //
@@ -137,8 +137,8 @@ public class FipStartOutputWriter extends AbstractOutputWriter implements Closea
 
 		String[] speciesDistributionTexts = new String[4];
 		for (int i = 0; i < 4; i++) {
-			if (i < stand.getSpecies().size()) {
-				Species s = stand.getSpecies().get(i);
+			if (i < stand.getSpeciesByPercent().size()) {
+				Species s = stand.getSpeciesByPercent().get(i);
 				speciesDistributionTexts[i] = String.format("%3s%5.1f", s.getSpeciesCode(), s.getSpeciesPercent());
 			} else {
 				speciesDistributionTexts[i] = "     0.0";

@@ -80,7 +80,7 @@ public class ForwardTestUtils {
 	public static Map<String, Object> loadControlMap() {
 		var parser = new ForwardControlParser();
 		try {
-			return loadControlMap(parser, ForwardControlParser.class, "FIPSTART.CTR");
+			return loadControlMap(parser, ForwardControlParser.class, "VDYP.CTR");
 		} catch (IOException | ResourceParseException ex) {
 			throw new AssertionFailedError(null, ex);
 		}

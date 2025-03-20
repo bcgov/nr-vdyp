@@ -1,8 +1,10 @@
 package ca.bc.gov.nrs.vdyp.backend.projection.model;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -339,7 +341,7 @@ public class Species implements Comparable<Species> {
 
 		speciesPercent += sp64.speciesPercent;
 
-		assert nDuplicates == 0;
+		Validate.isTrue(nDuplicates == 0, "Species.updateAfterSp64Added: nDuplicates must be zero");
 		this.percentsPerDuplicate.put(0, speciesPercent);
 
 		if (totalAge == null && sp64.getTotalAge() != null) {
@@ -596,8 +598,8 @@ public class Species implements Comparable<Species> {
 	private Double totalAgeAndSiteIndexToDominantHeight() {
 		Double computedHeight = null;
 
-		assert totalAge != null;
-		assert siteCurve != null;
+		Validate.isTrue(totalAge != null, "Species.totalAgeAndSiteIndexToDominantHeight: totalAge must not be null");
+		Validate.isTrue(siteCurve != null, "Species.totalAgeAndSiteIndexToDominantHeight: siteCurve must not be null");
 
 		if (siteIndex == null || siteIndex < Vdyp7Constants.LOW_SITE_INDEX_THRESHOLD) {
 
@@ -690,8 +692,11 @@ public class Species implements Comparable<Species> {
 	}
 
 	public Double dominantHeightAndAgeToSiteIndex() {
-		assert totalAge != null;
-		assert dominantHeight != null;
+
+		Validate.isTrue(totalAge != null, "Species.dominantHeightAndAgeToSiteIndex: totalAge must not be null");
+		Validate.isTrue(
+				dominantHeight != null, "Species.dominantHeightAndAgeToSiteIndex: dominantHeight must not be null"
+		);
 
 		Double computedSiteIndex = null;
 		try {
@@ -701,7 +706,10 @@ public class Species implements Comparable<Species> {
 					SiteIndexEstimationType.SI_EST_ITERATE
 			);
 
-			assert computedSiteIndex != null;
+			Validate.isTrue(
+					computedSiteIndex != null,
+					"Species.dominantHeightAndAgeToSiteIndex: computedSiteIndex must not be null"
+			);
 
 			if (computedSiteIndex < Vdyp7Constants.LOW_SITE_INDEX_THRESHOLD) {
 
@@ -730,6 +738,27 @@ public class Species implements Comparable<Species> {
 		}
 
 		return computedSiteIndex;
+	}
+
+	public static class ByIncreasingNameComparator implements Comparator<Species> {
+		@Override
+		public int compare(Species o1, Species o2) {
+			return o1.getSpeciesCode().compareTo(o2.getSpeciesCode());
+		}
+	}
+
+	public static class ByDecreasingPercentageComparator implements Comparator<Species> {
+
+		@Override
+		public int compare(Species o1, Species o2) {
+			if (o1.getSpeciesPercent() < o2.getSpeciesPercent()) {
+				return 1;
+			} else if (o1.getSpeciesPercent() > o2.getSpeciesPercent()) {
+				return -1;
+			} else {
+				return o1.getSpeciesCode().compareTo(o2.getSpeciesCode());
+			}
+		}
 	}
 
 	@Override
