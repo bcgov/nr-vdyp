@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonExecutionException;
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionInternalExecutionException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.YieldTableGenerationException;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Polygon;
@@ -61,7 +62,7 @@ public class ComponentRunner implements IComponentRunner {
 
 	@Override
 	public void runAdjust(Polygon polygon, ProjectionTypeCode projectionType, PolygonProjectionState state)
-			throws PolygonExecutionException {
+			throws ProjectionInternalExecutionException {
 
 		// ADJUST is currently not being run; we just copy the input to output.
 
@@ -74,7 +75,7 @@ public class ComponentRunner implements IComponentRunner {
 
 	private void copyAdjustInputFilesToOutput(
 			Polygon polygon, PolygonProjectionState state, ProjectionTypeCode projectionType, Path rootExecutionFolder
-	) throws PolygonExecutionException {
+	) throws ProjectionInternalExecutionException {
 
 		Path executionFolder = Path.of(state.getExecutionFolder().toString(), projectionType.toString());
 
@@ -92,7 +93,7 @@ public class ComponentRunner implements IComponentRunner {
 			Files.copy(utilizationsInputFile, utilizationsOutputFile);
 
 		} catch (IOException e) {
-			throw new PolygonExecutionException(
+			throw new ProjectionInternalExecutionException(
 					MessageFormat
 							.format("{0}: encountered exception while running copyAdjustInputFilesToOutput", polygon),
 					e

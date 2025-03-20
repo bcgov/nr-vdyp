@@ -491,6 +491,10 @@ public class YieldTable implements Closeable {
 				writer.writeProjectionGrowthInfo();
 
 			} catch (StandYieldCalculationException e) {
+				logger.warn(
+						"{}: encountered StandYieldCalculationException during yield table row generation{}",
+						layer == null ? rowContext.getPolygon() : layer, e.getMessage() == null ? "" : ": " + e.getMessage()
+				);
 			}
 		} finally {
 			writer.endRecord();

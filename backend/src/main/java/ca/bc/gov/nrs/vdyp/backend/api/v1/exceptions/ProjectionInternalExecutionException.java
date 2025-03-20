@@ -12,7 +12,7 @@ public class ProjectionInternalExecutionException extends ProjectionRequestExcep
 		super(reason);
 	}
 
-	public ProjectionInternalExecutionException(Exception cause, String reason) {
+	public ProjectionInternalExecutionException(String reason, Exception cause) {
 		super(reason, cause);
 	}
 }

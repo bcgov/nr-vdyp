@@ -74,11 +74,10 @@ public class ProjectionService {
 
 			response = runProjection(ProjectionRequestKind.HCSV, inputStreams, trialRun, parameters, securityContext);
 		} catch (IOException e) {
+
 			String message = Exceptions.getMessage(e, "Projection, when opening input files,");
-
 			logger.error(message, e);
-
-			response = Response.serverError().status(500).entity(message).build();
+			response = Response.serverError().status(Status.INTERNAL_SERVER_ERROR).entity(message).build();
 		} finally {
 			for (var entry : inputStreams.entrySet()) {
 				try {
@@ -95,7 +94,7 @@ public class ProjectionService {
 	public Response projectionDcsvPost(
 			Parameters parameters, FileUpload dcsvDataStream, Boolean trialRun, SecurityContext securityContext
 	) throws ProjectionRequestValidationException, ProjectionInternalExecutionException {
-		return Response.serverError().status(501).build();
+		return Response.serverError().status(Status.NOT_IMPLEMENTED).build();
 	}
 
 	public Response projectionScsvPost(
@@ -103,14 +102,13 @@ public class ProjectionService {
 			FileUpload historyDataStream, FileUpload nonVegetationDataStream, FileUpload otherVegetationDataStream,
 			FileUpload polygonIdDataStream, FileUpload speciesDataStream, FileUpload vriAdjustDataStream, Object object
 	) throws ProjectionRequestValidationException, ProjectionInternalExecutionException {
-		return Response.serverError().status(501).build();
+		return Response.serverError().status(Status.NOT_IMPLEMENTED).build();
 	}
 
 	private Response runProjection(
 			ProjectionRequestKind kind, Map<String, InputStream> inputStreams, Boolean isTrialRun, Parameters params,
 			SecurityContext securityContext
 	) throws ProjectionRequestException {
-
 		String projectionId = ProjectionService.buildId(kind);
 
 		logger.info("<runProjection {} {}", kind, projectionId);
@@ -121,7 +119,7 @@ public class ProjectionService {
 			MDC.put("projectionId", projectionId);
 		}
 
-		Response response = Response.serverError().status(500).build();
+		Response response;
 
 		try {
 			logger.info("Running {} projection {}", kind, projectionId);
@@ -145,8 +143,6 @@ public class ProjectionService {
 
 			response = buildOutputZipFile(runner, debugLogStream);
 
-		} catch (Exception e) {
-			logger.error("Failure in runProjection", e);
 		} finally {
 			logger.info(FINALIZE_SESSION_MARKER, ">runProjection {} {}", kind, projectionId);
 
@@ -227,7 +223,7 @@ public class ProjectionService {
 			String message = Exceptions.getMessage(e, "Projection, when creating output zip,");
 			logger.error(message, e);
 
-			return Response.serverError().status(500).entity(message).build();
+			return Response.serverError().status(Status.INTERNAL_SERVER_ERROR).entity(message).build();
 		} finally {
 			if (errorLogStream != null) {
 				close(yieldTableStream, "yieldTable");

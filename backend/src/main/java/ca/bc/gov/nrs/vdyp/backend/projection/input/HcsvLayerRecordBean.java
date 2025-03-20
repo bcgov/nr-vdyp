@@ -441,7 +441,6 @@ public class HcsvLayerRecordBean {
 	 * independently of context.
 	 *
 	 * @return completed record
-	 * @throws PolygonValidationException
 	 */
 	private static class HcsvLayerRecordBeanValidator implements BeanVerifier<HcsvLayerRecordBean> {
 
