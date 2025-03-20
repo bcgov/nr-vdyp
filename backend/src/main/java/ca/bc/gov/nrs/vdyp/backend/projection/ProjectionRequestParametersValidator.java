@@ -28,7 +28,7 @@ import ca.bc.gov.nrs.vdyp.si32.vdyp.SP0Name;
 public class ProjectionRequestParametersValidator {
 
 	private static final Logger logger = LoggerFactory.getLogger(ProjectionRequestParametersValidator.class);
-	
+
 	private List<ValidationMessage> validationErrorMessages = new ArrayList<>();
 
 	static void validate(ProjectionContext context) throws ProjectionRequestValidationException {
@@ -40,7 +40,7 @@ public class ProjectionRequestParametersValidator {
 		if (validator.validationErrorMessages.size() > 0) {
 			logger.error("Validation errors encountered:");
 			logger.error(context.getRawParams().toString());
-			for (var m: validator.validationErrorMessages) {
+			for (var m : validator.validationErrorMessages) {
 				logger.error(m.toString());
 			}
 			throw new ProjectionRequestValidationException(validator.validationErrorMessages);

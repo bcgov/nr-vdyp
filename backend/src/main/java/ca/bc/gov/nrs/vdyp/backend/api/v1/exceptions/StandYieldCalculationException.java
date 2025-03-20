@@ -1,10 +1,9 @@
 package ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions;
 
 /**
- * Exceptions thrown during the calculation of stand yields during the creation
- * of yield tables. These exceptions are meant to indicate that while the 
- * yield table information for a given polygon may be incomplete, generation
- * should continue.
+ * Exceptions thrown during the calculation of stand yields during the creation of yield tables. These exceptions are
+ * meant to indicate that while the yield table information for a given polygon may be incomplete, generation should
+ * continue.
  */
 public class StandYieldCalculationException extends ProjectionRequestException {
 

@@ -1,9 +1,8 @@
 package ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions;
 
 /**
- * These exceptions are to be used when unrecoverable issues happen during 
- * yield table generation - that is, it is not possible to resume the 
- * generation of the table.
+ * These exceptions are to be used when unrecoverable issues happen during yield table generation - that is, it is not
+ * possible to resume the generation of the table.
  */
 public class YieldTableGenerationException extends ProjectionRequestException {
 

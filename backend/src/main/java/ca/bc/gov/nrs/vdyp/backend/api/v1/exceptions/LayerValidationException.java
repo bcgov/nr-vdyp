@@ -7,9 +7,8 @@ import com.opencsv.exceptions.CsvConstraintViolationException;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
 
 /**
- * Exceptions thrown during the validation of a Layer read from an input CSV.
- * These exceptions are used only to wrap the list of validation errors and
- * get passed into a {@link CsvConstraintViolationException}
+ * Exceptions thrown during the validation of a Layer read from an input CSV. These exceptions are used only to wrap the
+ * list of validation errors and get passed into a {@link CsvConstraintViolationException}
  */
 public class LayerValidationException extends ProjectionRequestException {
 
