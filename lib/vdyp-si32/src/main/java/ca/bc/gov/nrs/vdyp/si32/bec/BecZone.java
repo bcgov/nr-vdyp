@@ -6,6 +6,7 @@ import java.util.Map;
 
 import ca.bc.gov.nrs.vdyp.model.EnumIterator;
 import ca.bc.gov.nrs.vdyp.si32.enumerations.SI32Enum;
+import ca.bc.gov.nrs.vdyp.si32.enumerations.SpeciesRegion;
 
 /**
  * Identifies each of the BEC Zones known to the system.
@@ -14,37 +15,37 @@ import ca.bc.gov.nrs.vdyp.si32.enumerations.SI32Enum;
  * <li>others: Individual BEC Zones recognized.
  */
 public enum BecZone implements SI32Enum<BecZone> {
-	UNKNOWN(-1),
+	UNKNOWN(-1, SpeciesRegion.INTERIOR),
 
-	AT(0), //
-	BG(1), //
-	BWBS(2), //
-	CDF(3), //
-	CWH(4), //
-	ESSF(5), //
-	ICH(6), //
-	IDF(7), //
-	MH(8), //
-	MS(9), //
-	PP(10), //
-	SBPS(11), //
-	SBS(12), //
-	SWB(13); //
+	AT(0, SpeciesRegion.INTERIOR), //
+	BG(1, SpeciesRegion.INTERIOR), //
+	BWBS(2, SpeciesRegion.INTERIOR), //
+	CDF(3, SpeciesRegion.COAST), //
+	CWH(4, SpeciesRegion.COAST), //
+	ESSF(5, SpeciesRegion.INTERIOR), //
+	ICH(6, SpeciesRegion.INTERIOR), //
+	IDF(7, SpeciesRegion.INTERIOR), //
+	MH(8, SpeciesRegion.COAST), //
+	MS(9, SpeciesRegion.INTERIOR), //
+	PP(10, SpeciesRegion.INTERIOR), //
+	SBPS(11, SpeciesRegion.INTERIOR), //
+	SBS(12, SpeciesRegion.INTERIOR), //
+	SWB(13, SpeciesRegion.INTERIOR); //
 
-	private static Map<Integer, BecZone> index2EnumMap = null;
+	private static final Map<Integer, BecZone> index2EnumMap = new HashMap<>();
 
-	private static synchronized Map<Integer, BecZone> getIndex2EnumMap() {
-		if (index2EnumMap == null) {
-			index2EnumMap = new HashMap<>();
+	static {
+		for (BecZone becZone : BecZone.values()) {
+			index2EnumMap.put(becZone.index, becZone);
 		}
-		return index2EnumMap;
 	}
 
 	private final int index;
+	private final SpeciesRegion speciesRegion;
 
-	private BecZone(int index) {
+	private BecZone(int index, SpeciesRegion speciesRegion) {
 		this.index = index;
-		getIndex2EnumMap().put(index, this);
+		this.speciesRegion = speciesRegion;
 	}
 
 	@Override
@@ -52,12 +53,17 @@ public enum BecZone implements SI32Enum<BecZone> {
 		return index;
 	}
 
+	public SpeciesRegion getSpeciesRegion() {
+		return speciesRegion;
+	}
+
 	@Override
 	public int getOffset() {
 		if (this.equals(UNKNOWN)) {
 			throw new UnsupportedOperationException(
-					MessageFormat
-							.format("Cannot call getIndex on {} as it's not a standard member of the enumeration", this)
+					MessageFormat.format(
+							"Cannot call getIndex on {0} as it's not a standard member of the enumeration", this
+					)
 			);
 		}
 
@@ -69,7 +75,7 @@ public enum BecZone implements SI32Enum<BecZone> {
 		if (this.equals(UNKNOWN)) {
 			throw new UnsupportedOperationException(
 					MessageFormat
-							.format("Cannot call getText on {} as it's not a standard member of the enumeration", this)
+							.format("Cannot call getText on {0} as it's not a standard member of the enumeration", this)
 			);
 		}
 
@@ -84,7 +90,7 @@ public enum BecZone implements SI32Enum<BecZone> {
 	 *         <code>null</code> is returned.
 	 */
 	public static BecZone forIndex(int index) {
-		return getIndex2EnumMap().get(index);
+		return index2EnumMap.get(index);
 	}
 
 	/**

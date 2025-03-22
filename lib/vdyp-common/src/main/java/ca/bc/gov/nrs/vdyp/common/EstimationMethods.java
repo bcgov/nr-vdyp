@@ -1,11 +1,10 @@
 package ca.bc.gov.nrs.vdyp.common;
 
+import static ca.bc.gov.nrs.vdyp.math.FloatMath.*;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.abs;
-import static ca.bc.gov.nrs.vdyp.math.FloatMath.clamp;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.exp;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.log;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.pow;
-import static ca.bc.gov.nrs.vdyp.math.FloatMath.ratio;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.sqrt;
 import static java.lang.Math.max;
 import static java.lang.Math.min;

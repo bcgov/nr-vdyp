@@ -1,13 +1,8 @@
 package ca.bc.gov.nrs.vdyp.test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.aMapWithSize;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasKey;
-import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.is;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.io.ByteArrayInputStream;
@@ -50,6 +45,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.control.BaseControlParser;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ControlMapValueReplacer;
 import ca.bc.gov.nrs.vdyp.io.parse.control.NonFipControlParser;
+import ca.bc.gov.nrs.vdyp.io.parse.control.OutputFileLocationResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ResourceControlMapModifier;
 import ca.bc.gov.nrs.vdyp.io.parse.control.StartApplicationControlParser;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypLayer;
@@ -409,7 +405,12 @@ public class TestUtils {
 
 			@Override
 			public String toString(String filename) throws IOException {
-				return klazz.getResource(filename).getPath();
+				var resourceUrl = klazz.getResource(filename);
+				if (resourceUrl == null) {
+					return filename;
+				} else {
+					return resourceUrl.getPath();
+				}
 			}
 
 			@Override
@@ -430,6 +431,10 @@ public class TestUtils {
 				return Path.of(toString(filename));
 			}
 
+			@Override
+			public String toString() {
+				return "Dynamic FileResolver for class " + klazz.getName();
+			}
 		};
 	}
 
@@ -479,8 +484,8 @@ public class TestUtils {
 		}
 
 		@Override
-		protected List<ControlKey> outputFileParsers() {
-			return Collections.emptyList();
+		protected List<OutputFileLocationResolver> outputFiles() {
+			return List.of();
 		}
 
 		@Override
