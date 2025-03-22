@@ -1,0 +1,9 @@
+{
+  "bundles": [
+    {"name":"opencsv"}
+  ],
+  "resources": {
+    "includes": [
+      {"pattern": ".*"}
+    ]
+  }}
