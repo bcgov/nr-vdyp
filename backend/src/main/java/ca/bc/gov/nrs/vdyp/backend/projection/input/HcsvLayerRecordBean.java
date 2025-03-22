@@ -26,7 +26,9 @@ import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.Vdyp7LayerTypeCo
 import ca.bc.gov.nrs.vdyp.backend.utils.CsvRecordBeanHelper;
 import ca.bc.gov.nrs.vdyp.si32.site.SiteTool;
 import ca.bc.gov.nrs.vdyp.si32.vdyp.SpeciesTable;
+import io.quarkus.runtime.annotations.RegisterForReflection;
 
+@RegisterForReflection
 public class HcsvLayerRecordBean {
 
 	private static final Logger logger = LoggerFactory.getLogger(HcsvLayerRecordBean.class);

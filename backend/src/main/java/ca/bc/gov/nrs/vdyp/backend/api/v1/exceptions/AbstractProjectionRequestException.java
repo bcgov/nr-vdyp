@@ -6,21 +6,21 @@ import java.util.List;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessageKind;
 
-public abstract class ProjectionRequestException extends Exception {
+public abstract class AbstractProjectionRequestException extends Exception {
 
 	private static final long serialVersionUID = -3349545755843821804L;
 	private final List<ValidationMessage> validationMessages;
 
-	public ProjectionRequestException(List<ValidationMessage> validationMessages) {
+	public AbstractProjectionRequestException(List<ValidationMessage> validationMessages) {
 		this.validationMessages = validationMessages;
 	}
 
-	public ProjectionRequestException(List<ValidationMessage> validationMessages, Exception cause) {
+	public AbstractProjectionRequestException(List<ValidationMessage> validationMessages, Exception cause) {
 		super(cause);
 		this.validationMessages = validationMessages;
 	}
 
-	public ProjectionRequestException(Exception cause) {
+	public AbstractProjectionRequestException(Exception cause) {
 		super(cause);
 		validationMessages = new ArrayList<ValidationMessage>();
 		if (cause.getMessage() != null) {
@@ -28,7 +28,7 @@ public abstract class ProjectionRequestException extends Exception {
 		}
 	}
 
-	public ProjectionRequestException(String cause, Exception e) {
+	public AbstractProjectionRequestException(String cause, Exception e) {
 		super(cause, e);
 		validationMessages = new ArrayList<ValidationMessage>();
 		if (cause != null) {
@@ -36,7 +36,7 @@ public abstract class ProjectionRequestException extends Exception {
 		}
 	}
 
-	public ProjectionRequestException(String cause) {
+	public AbstractProjectionRequestException(String cause) {
 		super(cause);
 		validationMessages = new ArrayList<ValidationMessage>();
 		if (cause != null) {

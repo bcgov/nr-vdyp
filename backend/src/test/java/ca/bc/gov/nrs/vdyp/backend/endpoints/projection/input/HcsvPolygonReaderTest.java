@@ -25,9 +25,9 @@ import ca.bc.gov.nrs.vdyp.backend.projection.input.InventoryStandardCode;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.CfsEcoZoneCode;
 import ca.bc.gov.nrs.vdyp.backend.utils.FileHelper;
 
-public class HscvPolygonReaderTest {
+public class HcsvPolygonReaderTest {
 
-	private static Logger logger = LoggerFactory.getLogger(HscvPolygonReaderTest.class);
+	private static Logger logger = LoggerFactory.getLogger(HcsvPolygonReaderTest.class);
 
 	private final TestHelper testHelper = new TestHelper();
 
@@ -36,7 +36,7 @@ public class HscvPolygonReaderTest {
 
 		logger.info("Starting testHscvPolygonReader");
 
-		Path resourceFolderPath = Path.of("VDYP7Console-sample-files", FileHelper.HCSV, FileHelper.VDYP_240);
+		Path resourceFolderPath = Path.of("test-data-files", FileHelper.HCSV, FileHelper.COMMON);
 
 		byte[] csvBytes = Files.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_POLY.csv"));
 

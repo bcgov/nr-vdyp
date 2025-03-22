@@ -1,19 +1,28 @@
 package ca.bc.gov.nrs.vdyp.backend.projection;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.URL;
+import java.net.URI;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.FileVisitResult;
+import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.text.MessageFormat;
+import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionInternalExecutionException;
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.YieldTableGenerationException;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ProjectionRequestKind;
@@ -21,11 +30,12 @@ import ca.bc.gov.nrs.vdyp.backend.projection.output.IMessageLog;
 import ca.bc.gov.nrs.vdyp.backend.projection.output.MessageLog;
 import ca.bc.gov.nrs.vdyp.backend.projection.output.NullMessageLog;
 import ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable.YieldTable;
-import ca.bc.gov.nrs.vdyp.backend.utils.ProjectionUtils;
 
 public class ProjectionContext {
 
 	private static final Logger logger = LoggerFactory.getLogger(ProjectionContext.class);
+
+	private static final int EXECUTION_FOLDER_RETENTION_TIME_m = 30;
 
 	private final String projectionId;
 	private long startTime_ms;
@@ -36,16 +46,17 @@ public class ProjectionContext {
 	private Parameters params;
 	private ValidatedParameters vparams;
 
-	private Path rootFolder;
 	private Path executionFolder;
 
 	private final IMessageLog progressLog;
 	private final IMessageLog errorLog;
 	private Optional<YieldTable> yieldTable;
 
+	private ExecutorService executorService;
+
 	public ProjectionContext(
 			ProjectionRequestKind requestKind, String projectionId, Parameters params, boolean isTrialRun
-	) throws ProjectionRequestException {
+	) throws AbstractProjectionRequestException {
 
 		if (requestKind == null) {
 			throw new IllegalArgumentException("kind cannot be null in constructor of ProjectionState");
@@ -82,6 +93,8 @@ public class ProjectionContext {
 		buildProjectionExecutionStructure();
 
 		yieldTable = Optional.empty();
+
+		executorService = Executors.newSingleThreadExecutor();
 	}
 
 	public void startRun() {
@@ -97,6 +110,37 @@ public class ProjectionContext {
 					"Encountered error starting the generation of this projection's yield table{}",
 					e.getMessage() != null ? ": " + e.getMessage() : ""
 			);
+		}
+	}
+
+	private void buildProjectionExecutionStructure() throws ProjectionInternalExecutionException {
+
+		if (this.executionFolder != null) {
+			throw new IllegalStateException(
+					this.getClass().getName() + ".buildExecutionFolder: executionFolder has already been set"
+			);
+		}
+
+		// This hack registers NativeImageResourceFileSystemProvider & NativeImageResourceFileSystem when
+		// ran via Native Image. It allows lookups using "resource:/" URIs which means calls like
+		// Path.of(URI) will not fail.
+		try {
+			FileSystem filesystem = FileSystems
+					.newFileSystem(URI.create("resource:/"), Collections.singletonMap("create", "true"));
+			logger.info("Created {} filesystem", filesystem.getClass().getSimpleName());
+		} catch (Exception e) {
+			// This will always happen outside of an native image; there no such thing as a "resource:/" file system
+			// outside of native image
+			logger.info("Not creating resource file system as not a native image.");
+		}
+
+		try {
+			this.executionFolder = Files.createTempDirectory(projectionId + '-');
+
+			logger.info("{}: execution folder is {}", projectionId, executionFolder);
+
+		} catch (IOException e) {
+			throw new ProjectionInternalExecutionException(e);
 		}
 	}
 
@@ -123,6 +167,48 @@ public class ProjectionContext {
 			} catch (IOException | YieldTableGenerationException e) {
 				logger.error("Encountered exception closing the yield table of projection " + projectionId, e);
 			}
+
+			// Finally, delete the execution folder tree EXECUTION_FOLDER_RETENTION_TIME_m minutes from now.
+
+			logger.info(
+					"Scheduling deletion of execution folder {} for {}", executionFolder,
+					LocalDateTime.now().plusMinutes(EXECUTION_FOLDER_RETENTION_TIME_m)
+			);
+
+			executorService.submit(() -> {
+				Thread.sleep(EXECUTION_FOLDER_RETENTION_TIME_m * 60 * 1000);
+
+				FileVisitor<Path> visitor = new SimpleFileVisitor<Path>() {
+					@Override
+					public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+						Files.delete(file);
+						return FileVisitResult.CONTINUE;
+					}
+
+					@Override
+					public FileVisitResult postVisitDirectory(Path dir, IOException e) throws IOException {
+						if (e == null) {
+							Files.delete(dir);
+							return FileVisitResult.CONTINUE;
+						} else {
+							// directory iteration failed
+							throw e;
+						}
+					}
+				};
+
+				try {
+					Files.walkFileTree(executionFolder, visitor);
+					logger.info("Deletion of execution folder {} completed", executionFolder);
+				} catch (IOException e) {
+					logger.info(
+							"Deletion of execution folder {} failed{}", executionFolder,
+							e.getCause() != null ? ". Reason: " + e.getCause() : ""
+					);
+				}
+
+				return "completed...";
+			});
 		}
 	}
 
@@ -166,25 +252,6 @@ public class ProjectionContext {
 		return yieldTable.get();
 	}
 
-	private void buildProjectionExecutionStructure() throws ProjectionInternalExecutionException {
-
-		if (this.executionFolder != null) {
-			throw new IllegalStateException(
-					this.getClass().getName() + ".buildExecutionFolder: executionFolder has already been set"
-			);
-		}
-
-		try {
-			URL rootUrl = ProjectionUtils.class.getClassLoader().getResource("ca/bc/gov/nrs/vdyp/template");
-
-			this.rootFolder = Path.of(rootUrl.toURI());
-			this.executionFolder = Files.createTempDirectory(rootFolder, projectionId + '-');
-
-		} catch (IOException | URISyntaxException e) {
-			throw new ProjectionInternalExecutionException(e);
-		}
-	}
-
 	public Path getExecutionFolder() {
 		if (this.executionFolder == null) {
 			throw new IllegalStateException(
@@ -194,16 +261,9 @@ public class ProjectionContext {
 		return executionFolder;
 	}
 
-	public Path getRootFolder() {
-		if (this.rootFolder == null) {
-			throw new IllegalStateException(this.getClass().getName() + ".getRootFolder: rootFolder has not been set");
-		}
-		return rootFolder;
-	}
-
 	public void addMessage(String message, Object... args) {
 		String messageText = MessageFormat.format(message, args);
 		getErrorLog().addMessage(messageText);
-		PolygonProjectionRunner.logger.debug(messageText);
+		logger.debug(messageText);
 	}
 }

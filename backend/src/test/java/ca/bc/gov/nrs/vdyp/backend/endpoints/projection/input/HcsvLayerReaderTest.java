@@ -20,9 +20,9 @@ import ca.bc.gov.nrs.vdyp.backend.projection.input.HcsvLayerRecordBean;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
 import ca.bc.gov.nrs.vdyp.backend.utils.FileHelper;
 
-public class HscvLayerReaderTest {
+public class HcsvLayerReaderTest {
 
-	private static Logger logger = LoggerFactory.getLogger(HscvLayerReaderTest.class);
+	private static Logger logger = LoggerFactory.getLogger(HcsvLayerReaderTest.class);
 
 	private TestHelper testHelper = new TestHelper();
 
@@ -31,7 +31,7 @@ public class HscvLayerReaderTest {
 
 		logger.info("Starting testHscvLayerReader");
 
-		Path resourceFolderPath = Path.of("VDYP7Console-sample-files", FileHelper.HCSV, FileHelper.VDYP_240);
+		Path resourceFolderPath = Path.of("test-data-files", FileHelper.HCSV, FileHelper.COMMON);
 
 		byte[] csvBytes = Files.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_LAYER.csv"));
 

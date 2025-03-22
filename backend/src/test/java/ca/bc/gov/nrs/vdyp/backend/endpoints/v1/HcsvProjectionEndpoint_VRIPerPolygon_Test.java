@@ -46,7 +46,7 @@ class HcsvProjectionEndpoint_VRIPerPolygon_Test {
 
 		logger.info("Starting testVRIPerPolygonYieldTable");
 
-		Path resourceFolderPath = Path.of("VDYP7Console-sample-files", "hcsv", "VRI-PerPolygon");
+		Path resourceFolderPath = Path.of("test-data-files", "hcsv", "VRI-PerPolygon");
 
 		Parameters parameters = testHelper.addSelectedOptions(
 				new Parameters(), //
@@ -67,11 +67,11 @@ class HcsvProjectionEndpoint_VRIPerPolygon_Test {
 				.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
 				.multiPart(
 						ParameterNames.HCSV_POLYGON_INPUT_DATA,
-						Files.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_POLY_VRI.csv"))
+						testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_POLY_VRI.csv").toFile()
 				) //
 				.multiPart(
 						ParameterNames.HCSV_LAYERS_INPUT_DATA,
-						Files.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_LAYER_VRI.csv"))
+						testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_LAYER_VRI.csv").toFile()
 				) //
 				.post("/projection/hcsv?trialRun=false") //
 				.then().statusCode(201) //

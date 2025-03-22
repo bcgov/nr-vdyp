@@ -170,8 +170,6 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 				// Note that HCSV contains no history information (lcl_CopyHistoryDataIntoSnapshot)
 				var history = new History.Builder().build();
 
-				var stands = new ArrayList<Stand>();
-
 				Layer layer = new Layer.Builder() //
 						.polygon(polygon) //
 						.assignedProjectionType(ProjectionTypeCode.UNKNOWN) //

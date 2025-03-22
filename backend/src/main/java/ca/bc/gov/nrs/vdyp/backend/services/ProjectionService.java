@@ -22,7 +22,7 @@ import org.slf4j.MDC;
 
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.Exceptions;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionInternalExecutionException;
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestException;
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestValidationException;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.ParameterNames;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
@@ -49,7 +49,7 @@ public class ProjectionService {
 			InputStream polygonStream, //
 			InputStream layersStream, //
 			SecurityContext securityContext
-	) throws ProjectionRequestException {
+	) throws AbstractProjectionRequestException {
 		Response response;
 
 		Map<String, InputStream> inputStreams = new HashMap<>();
@@ -58,14 +58,12 @@ public class ProjectionService {
 			if (trialRun) {
 				if (polygonStream.available() == 0) {
 					polygonStream.close();
-					polygonStream = FileHelper
-							.getStubResourceFile(FileHelper.HCSV, FileHelper.VDYP_240, "VDYP7_INPUT_POLY.csv");
+					polygonStream = FileHelper.getStubResourceFile("VDYP7_INPUT_POLY.csv");
 				}
 
 				if (layersStream.available() == 0) {
 					layersStream.close();
-					layersStream = FileHelper
-							.getStubResourceFile(FileHelper.HCSV, FileHelper.VDYP_240, "VDYP7_INPUT_LAYER.csv");
+					layersStream = FileHelper.getStubResourceFile("VDYP7_INPUT_LAYER.csv");
 				}
 			}
 
@@ -108,7 +106,7 @@ public class ProjectionService {
 	private Response runProjection(
 			ProjectionRequestKind kind, Map<String, InputStream> inputStreams, Boolean isTrialRun, Parameters params,
 			SecurityContext securityContext
-	) throws ProjectionRequestException {
+	) throws AbstractProjectionRequestException {
 		String projectionId = ProjectionService.buildId(kind);
 
 		logger.info("<runProjection {} {}", kind, projectionId);
@@ -121,10 +119,10 @@ public class ProjectionService {
 
 		Response response;
 
+		var runner = new ProjectionRunner(ProjectionRequestKind.HCSV, projectionId, params, isTrialRun);
+
 		try {
 			logger.info("Running {} projection {}", kind, projectionId);
-
-			var runner = new ProjectionRunner(ProjectionRequestKind.HCSV, projectionId, params, isTrialRun);
 
 			runner.run(inputStreams);
 
@@ -144,12 +142,12 @@ public class ProjectionService {
 			response = buildOutputZipFile(runner, debugLogStream);
 
 		} finally {
+			runner.endRun();
+
 			logger.info(FINALIZE_SESSION_MARKER, ">runProjection {} {}", kind, projectionId);
 
 			if (debugLoggingEnabled) {
 				MDC.remove("projectionId");
-				// TODO: uncomment once mechanism is validated
-				// FileHelper.delete(debugLogPath);
 			}
 		}
 

@@ -10,7 +10,7 @@ import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionInternalExecutionException;
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestException;
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestValidationException;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.impl.Endpoint;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
@@ -81,8 +81,8 @@ public class ProjectionEndpoint implements Endpoint {
 		var polygonFile = polygonDataStream.uploadedFile().toFile();
 		var layerFile = layersDataStream.uploadedFile().toFile();
 		try {
-			try (var polyStream = new Base64InputStream(new FileInputStream(polygonFile))) {
-				try (var layersStream = new Base64InputStream(new FileInputStream(layerFile))) {
+			try (var polyStream = new FileInputStream(polygonFile)) {
+				try (var layersStream = new FileInputStream(layerFile)) {
 					return projectionService.projectionHcsvPost(
 							trialRun, parameters, polyStream, layersStream, null /* securityContext */
 					);
@@ -90,7 +90,7 @@ public class ProjectionEndpoint implements Endpoint {
 			}
 		} catch (ProjectionRequestValidationException e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getValidationMessages()).build();
-		} catch (ProjectionRequestException | IOException e) {
+		} catch (AbstractProjectionRequestException | IOException e) {
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e).build();
 		}
 	}

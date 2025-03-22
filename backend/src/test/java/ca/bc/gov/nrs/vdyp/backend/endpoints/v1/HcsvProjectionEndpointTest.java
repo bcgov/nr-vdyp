@@ -3,9 +3,9 @@ package ca.bc.gov.nrs.vdyp.backend.endpoints.v1;
 import static io.restassured.RestAssured.given;
 import static org.junit.Assert.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -46,7 +46,7 @@ class HcsvProjectionEndpointTest {
 
 		logger.info("Starting testProjectionHscv_shouldReturnStatusOK");
 
-		Path resourceFolderPath = Path.of("VDYP7Console-sample-files", "hcsv", "VRI-PerPolygon");
+		Path resourceFolderPath = Path.of("test-data-files", "hcsv", "VRI-PerPolygon");
 
 		Parameters parameters = testHelper.addSelectedOptions(
 				new Parameters(), //
@@ -67,11 +67,11 @@ class HcsvProjectionEndpointTest {
 				.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
 				.multiPart(
 						ParameterNames.HCSV_POLYGON_INPUT_DATA,
-						Files.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_POLY_VRI.csv"))
+						testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_POLY_VRI.csv").toFile()
 				) //
 				.multiPart(
 						ParameterNames.HCSV_LAYERS_INPUT_DATA,
-						Files.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_LAYER_VRI.csv"))
+						testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_LAYER_VRI.csv").toFile()
 				) //
 				.post("/projection/hcsv?trialRun=false") //
 				.then().statusCode(201) //
@@ -104,7 +104,7 @@ class HcsvProjectionEndpointTest {
 
 		logger.info("Starting testProjectionHscv_shouldReturnStatusOK");
 
-		Path resourceFolderPath = Path.of("VDYP7Console-sample-files", FileHelper.HCSV, FileHelper.VDYP_240);
+		Path resourceFolderPath = Path.of("test-data-files", FileHelper.HCSV, FileHelper.COMMON);
 
 		Parameters parameters = testHelper.addSelectedOptions(
 				new Parameters(), //
@@ -125,11 +125,11 @@ class HcsvProjectionEndpointTest {
 				.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
 				.multiPart(
 						ParameterNames.HCSV_POLYGON_INPUT_DATA,
-						Files.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_POLY_FIP.csv"))
+						testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_POLY_FIP.csv").toFile()
 				) //
 				.multiPart(
 						ParameterNames.HCSV_LAYERS_INPUT_DATA,
-						Files.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_LAYER_FIP.csv"))
+						testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_LAYER_FIP.csv").toFile()
 				) //
 				.post("/projection/hcsv?trialRun=false") //
 				.then().statusCode(201) //
@@ -160,7 +160,7 @@ class HcsvProjectionEndpointTest {
 	@Test
 	void testProjectionHscvVri_testNoProgressLogging() throws IOException {
 
-		Path resourceFolderPath = Path.of("VDYP7Console-sample-files", FileHelper.HCSV, FileHelper.VDYP_240);
+		Path resourceFolderPath = Path.of("test-data-files", FileHelper.HCSV, FileHelper.COMMON);
 
 		Parameters parameters = new Parameters();
 		parameters.ageStart(10).ageEnd(100)
@@ -168,15 +168,13 @@ class HcsvProjectionEndpointTest {
 				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER)
 				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.FORWARD_GROW_ENABLED);
 
-		byte[] polyFileBytes = Files
-				.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_POLY_VRI.csv"));
-		byte[] layerFileBytes = Files
-				.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_LAYER_VRI.csv"));
+		File polygonFile = testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_POLY_VRI.csv").toFile();
+		File layerFile = testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_LAYER_VRI.csv").toFile();
 
 		InputStream zipInputStream = given().basePath(TestHelper.ROOT_PATH).when() //
 				.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
-				.multiPart(ParameterNames.HCSV_POLYGON_INPUT_DATA, polyFileBytes) //
-				.multiPart(ParameterNames.HCSV_LAYERS_INPUT_DATA, layerFileBytes) //
+				.multiPart(ParameterNames.HCSV_POLYGON_INPUT_DATA, polygonFile) //
+				.multiPart(ParameterNames.HCSV_LAYERS_INPUT_DATA, layerFile) //
 				.post("/projection/hcsv?trialRun=false") //
 				.then().statusCode(201) //
 				.and().contentType("application/octet-stream") //

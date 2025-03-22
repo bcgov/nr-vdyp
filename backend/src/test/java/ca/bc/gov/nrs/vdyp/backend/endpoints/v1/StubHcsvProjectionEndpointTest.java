@@ -5,7 +5,6 @@ import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -40,7 +39,7 @@ class StubHcsvProjectionEndpointTest {
 	@Test
 	void testProjectionHscv_shouldReturnStatusOK() throws IOException {
 
-		Path resourceFolderPath = Path.of("VDYP7Console-sample-files", FileHelper.HCSV, FileHelper.VDYP_240);
+		Path resourceFolderPath = Path.of("test-data-files", FileHelper.HCSV, FileHelper.COMMON);
 
 		Parameters parameters = testHelper.addSelectedOptions(
 				new Parameters().ageStart(10).ageEnd(20), //
@@ -57,11 +56,11 @@ class StubHcsvProjectionEndpointTest {
 				.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
 				.multiPart(
 						ParameterNames.HCSV_POLYGON_INPUT_DATA,
-						Files.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_POLY.csv"))
+						testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_POLY.csv").toFile()
 				) //
 				.multiPart(
 						ParameterNames.HCSV_LAYERS_INPUT_DATA,
-						Files.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_LAYER.csv"))
+						testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_LAYER.csv").toFile()
 				) //
 				.post("/projection/hcsv?trialRun=true") //
 				.then().statusCode(201) //
@@ -94,7 +93,7 @@ class StubHcsvProjectionEndpointTest {
 	@Test
 	void testProjectionHscv_testNoProgressLogging() throws IOException {
 
-		Path resourceFolderPath = Path.of("VDYP7Console-sample-files", FileHelper.HCSV, FileHelper.VDYP_240);
+		Path resourceFolderPath = Path.of("test-data-files", FileHelper.HCSV, FileHelper.COMMON);
 
 		Parameters parameters = new Parameters().ageStart(10).ageEnd(20);
 
@@ -102,11 +101,11 @@ class StubHcsvProjectionEndpointTest {
 				.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
 				.multiPart(
 						ParameterNames.HCSV_POLYGON_INPUT_DATA,
-						Files.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_POLY.csv"))
+						testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_POLY.csv").toFile()
 				) //
 				.multiPart(
 						ParameterNames.HCSV_LAYERS_INPUT_DATA,
-						Files.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_LAYER.csv"))
+						testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_LAYER.csv").toFile()
 				) //
 				.post("/projection/hcsv?trialRun=true") //
 				.then().statusCode(201) //

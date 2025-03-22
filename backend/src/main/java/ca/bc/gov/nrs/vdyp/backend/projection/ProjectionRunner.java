@@ -12,10 +12,9 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonExecutionException;
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.AbstractPolygonProjectionException;
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionInternalExecutionException;
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestValidationException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.YieldTableGenerationException;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
@@ -52,7 +51,7 @@ public class ProjectionRunner {
 	private final ProjectionContext context;
 
 	public ProjectionRunner(ProjectionRequestKind kind, String projectionId, Parameters parameters, Boolean isTrialRun)
-			throws ProjectionRequestException {
+			throws AbstractProjectionRequestException {
 		this.context = new ProjectionContext(kind, projectionId, parameters, isTrialRun);
 	}
 
@@ -60,44 +59,35 @@ public class ProjectionRunner {
 			ProjectionInternalExecutionException, YieldTableGenerationException {
 
 		context.startRun();
-		try {
 
-			logger.debug("{}", context.getValidatedParams().toString());
-			logApplicationMetadata();
+		logger.debug("{}", context.getValidatedParams().toString());
+		logApplicationMetadata();
 
-			AbstractPolygonStream polygonStream = AbstractPolygonStream.build(context, streams);
+		AbstractPolygonStream polygonStream = AbstractPolygonStream.build(context, streams);
 
-			IComponentRunner componentRunner;
-			if (context.isTrialRun()) {
-				componentRunner = new StubComponentRunner();
-			} else {
-				componentRunner = new ComponentRunner();
-			}
+		IComponentRunner componentRunner;
+		if (context.isTrialRun()) {
+			componentRunner = new StubComponentRunner();
+		} else {
+			componentRunner = new ComponentRunner();
+		}
 
-			while (polygonStream.hasNextPolygon()) {
+		while (polygonStream.hasNextPolygon()) {
 
-				try {
-					var polygon = polygonStream.getNextPolygon();
-					if (polygon.doAllowProjection()) {
-						logger.info("Starting the projection of feature \"{}\"", polygon);
-						PolygonProjectionRunner.of(polygon, context, componentRunner).project();
-					} else {
-						logger.info("By request, the projection of feature \"{}\" has been skipped", polygon);
-					}
-				} catch (PolygonValidationException e) {
-					IMessageLog errorLog = context.getErrorLog();
-					for (ValidationMessage m : e.getValidationMessages()) {
-						errorLog.addMessage(m.getKind().template, m.getArgs());
-					}
-				} catch (PolygonExecutionException e) {
-					IMessageLog errorLog = context.getErrorLog();
-					for (ValidationMessage m : e.getValidationMessages()) {
-						errorLog.addMessage(m.getKind().template, m.getArgs());
-					}
+			try {
+				var polygon = polygonStream.getNextPolygon();
+				if (polygon.doAllowProjection()) {
+					logger.info("Starting the projection of feature \"{}\"", polygon);
+					PolygonProjectionRunner.of(polygon, context, componentRunner).project();
+				} else {
+					logger.info("By request, the projection of feature \"{}\" has been skipped", polygon);
+				}
+			} catch (AbstractPolygonProjectionException e) {
+				IMessageLog errorLog = context.getErrorLog();
+				for (ValidationMessage m : e.getValidationMessages()) {
+					errorLog.addMessage(m.getKind().template, m.getArgs());
 				}
 			}
-		} finally {
-			context.endRun();
 		}
 	}
 
@@ -169,5 +159,12 @@ public class ProjectionRunner {
 
 	public InputStream getErrorStream() {
 		return context.getErrorLog().getAsStream();
+	}
+
+	/**
+	 * Call this in a finally {} block after executing run() in the try {} block.
+	 */
+	public void endRun() {
+		context.endRun();
 	}
 }

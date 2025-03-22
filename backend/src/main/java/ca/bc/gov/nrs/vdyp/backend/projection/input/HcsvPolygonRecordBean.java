@@ -26,7 +26,9 @@ import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.CfsEcoZoneCode;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.NonVegetationTypeCode;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.OtherVegetationTypeCode;
 import ca.bc.gov.nrs.vdyp.backend.utils.CsvRecordBeanHelper;
+import io.quarkus.runtime.annotations.RegisterForReflection;
 
+@RegisterForReflection
 public class HcsvPolygonRecordBean {
 
 	private static final Logger logger = LoggerFactory.getLogger(HcsvPolygonRecordBean.class);

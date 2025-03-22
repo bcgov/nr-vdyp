@@ -8,6 +8,9 @@ import org.slf4j.LoggerFactory;
 import com.opencsv.bean.StatefulBeanToCsv;
 import com.opencsv.bean.StatefulBeanToCsvBuilder;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
+
+@RegisterForReflection
 public class DCSVYieldTableRecordBean implements YieldTableRowValues {
 
 	@SuppressWarnings("unused")

@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.api.helpers.TestHelper;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestException;
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.ParameterNames;
 import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionContext;
 import ca.bc.gov.nrs.vdyp.backend.projection.input.AbstractPolygonStream;
@@ -48,12 +48,12 @@ class HcsvSingleLayerSingleSp0sMultipleSp64sRuntimeStructureTest {
 	}
 
 	@Test
-	void testHcsvSingleLayerMultipleSp0s() throws IOException, ProjectionRequestException, PolygonValidationException {
+	void testHcsvSingleLayerMultipleSp0s()
+			throws IOException, AbstractProjectionRequestException, PolygonValidationException {
 
 		logger.info("Starting {}", this.getClass().getSimpleName());
 
-		Path resourceFolderPath = Path
-				.of("VDYP7Console-sample-files", "hcsv", "single-layer-single-sp0-multiple-sp64s-fip");
+		Path resourceFolderPath = Path.of("test-data-files", "hcsv", "single-layer-single-sp0-multiple-sp64s-fip");
 
 		Map<String, InputStream> inputStreams = new HashMap<>();
 

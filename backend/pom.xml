@@ -22,20 +22,9 @@
 		<skipITs>true</skipITs>
 		<surefire-plugin.version>3.2.5</surefire-plugin.version>
 		<io.swagger.annotations.version>1.6.10</io.swagger.annotations.version>
-		<!-- all properties below were automatically generated into 
-             target/generated-sources/openapi/pom.xml
-         and copied here to build the generated code as part of the application.
-     -->
 		<java.version>1.8</java.version>
 		<maven.compiler.source>${java.version}</maven.compiler.source>
 		<maven.compiler.target>${java.version}</maven.compiler.target>
-		<swagger-core-version>1.6.5</swagger-core-version>
-		<beanvalidation-version>2.0.2</beanvalidation-version>
-		<jetty-version>9.2.9.v20150224</jetty-version>
-		<jersey2-version>2.35</jersey2-version>
-		<jackson-version>2.17.1</jackson-version>
-		<junit-version>4.13.2</junit-version>
-		<logback-version>1.4.14</logback-version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 	<dependencyManagement>
@@ -86,56 +75,50 @@
 			<version>${project.version}</version>
 		</dependency -->
 		<dependency>
-		    <groupId>com.opencsv</groupId>
-		    <artifactId>opencsv</artifactId>
-		    <version>5.9</version>
+			<groupId>com.opencsv</groupId>
+			<artifactId>opencsv</artifactId>
+			<exclusions>
+				<exclusion>
+					<artifactId>commons-logging</artifactId>
+					<groupId>commons-logging</groupId>
+				</exclusion>
+			</exclusions>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/commons-codec/commons-codec -->
 		<dependency>
-		    <groupId>commons-codec</groupId>
-		    <artifactId>commons-codec</artifactId>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>commons-codec</groupId>
+			<artifactId>commons-codec</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>javax.xml.bind</groupId>
 			<artifactId>jaxb-api</artifactId>
-			<version>2.3.1</version>
 		</dependency>
 		<dependency>
 			<groupId>javax.ws.rs</groupId>
 			<artifactId>javax.ws.rs-api</artifactId>
-			<version>2.1.1</version>
 		</dependency>
-		<!--
-		https://mvnrepository.com/artifact/org.glassfish.jersey.core/jersey-server -->
 		<dependency>
 			<groupId>org.glassfish.jersey.core</groupId>
 			<artifactId>jersey-server</artifactId>
-			<version>2.26</version>
 		</dependency>
-		<!--
-		https://mvnrepository.com/artifact/org.glassfish.jersey.core/jersey-client -->
 		<dependency>
 			<groupId>org.glassfish.jersey.core</groupId>
 			<artifactId>jersey-client</artifactId>
-			<version>2.26</version>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.osgi/org.osgi.framework -->
 		<dependency>
 			<groupId>org.osgi</groupId>
 			<artifactId>org.osgi.framework</artifactId>
-			<version>1.10.0</version>
 		</dependency>
-		<!--
-		https://mvnrepository.com/artifact/org.glassfish.jersey.inject/jersey-hk2 -->
 		<dependency>
 			<groupId>org.glassfish.jersey.core</groupId>
 			<artifactId>jersey-common</artifactId>
-			<version>2.26</version>
 		</dependency>
 		<dependency>
 			<groupId>org.codehaus.janino</groupId>
 			<artifactId>janino</artifactId>
-			<version>3.1.12</version>
 		</dependency>
 		<dependency>
 			<groupId>io.quarkus</groupId>
@@ -198,7 +181,6 @@
 		<dependency>
 			<groupId>io.quarkiverse.logging.logback</groupId>
 			<artifactId>quarkus-logging-logback</artifactId>
-			<version>1.1.2</version>
 		</dependency>
 		<dependency>
 			<groupId>io.quarkus</groupId>
@@ -219,7 +201,6 @@
 		<dependency>
 			<groupId>org.instancio</groupId>
 			<artifactId>instancio-junit</artifactId>
-			<version>4.3.2</version>
 			<scope>test</scope>
 		</dependency>
 		<!-- all dependencies below were automatically generated into 
@@ -229,10 +210,6 @@
 		<dependency>
 			<groupId>net.datafaker</groupId>
 			<artifactId>datafaker</artifactId>
-			<version>2.2.0</version>
-			<!-- excluded validation-api:1.1.0.Final due to fact that it doesn't
-			support TYPE_USE,
-			 for this project used jakarta.validation-api -->
 		</dependency>
 		<dependency>
 			<groupId>org.flywaydb</groupId>
@@ -241,13 +218,20 @@
 		<dependency>
 			<groupId>io.swagger</groupId>
 			<artifactId>swagger-jersey2-jaxrs</artifactId>
-			<version>${swagger-core-version}</version>
 			<exclusions>
 				<exclusion>
 					<groupId>javax.validation</groupId>
 					<artifactId>validation-api</artifactId>
 				</exclusion>
 			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>jcl-over-slf4j</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
@@ -260,7 +244,6 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>${junit-version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -270,12 +253,10 @@
 		<dependency>
 			<groupId>org.glassfish.jersey.containers</groupId>
 			<artifactId>jersey-container-servlet-core</artifactId>
-			<version>${jersey2-version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.glassfish.jersey.media</groupId>
 			<artifactId>jersey-media-multipart</artifactId>
-			<version>${jersey2-version}</version>
 		</dependency>
 		<!-- Base64 encoding that works in both JVM and Android -->
 		<dependency>
@@ -289,7 +270,6 @@
 		<dependency>
 			<groupId>com.brsanthu</groupId>
 			<artifactId>migbase64</artifactId>
-			<version>2.2</version>
 		</dependency>
 		<!-- Bean Validation API support -->
 		<dependency>
@@ -299,7 +279,6 @@
 		<dependency>
 			<groupId>com.sun.xml.bind</groupId>
 			<artifactId>jaxb-impl</artifactId>
-			<version>2.3.3</version>
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>

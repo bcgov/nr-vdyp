@@ -19,7 +19,9 @@ import com.opencsv.bean.StatefulBeanToCsvBuilder;
 
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption;
 import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionContext;
+import io.quarkus.runtime.annotations.RegisterForReflection;
 
+@RegisterForReflection
 public class CSVYieldTableRowValuesBean implements YieldTableRowValues {
 
 	@SuppressWarnings("unused")

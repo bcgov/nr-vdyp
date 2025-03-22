@@ -10,7 +10,7 @@ import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.api.helpers.TestHelper;
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestException;
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Filters;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.AgeYearRangeCombinationKind;
@@ -34,7 +34,7 @@ class ParameterValidationTest {
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
 			Assert.fail();
-		} catch (ProjectionRequestException e) {
+		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), MISSING_START_CRITERIA, MISSING_END_CRITERIA);
 		}
 	}
@@ -46,7 +46,7 @@ class ParameterValidationTest {
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
 			Assert.fail();
-		} catch (ProjectionRequestException e) {
+		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), MISSING_END_CRITERIA);
 		}
 	}
@@ -58,7 +58,7 @@ class ParameterValidationTest {
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
 			Assert.fail();
-		} catch (ProjectionRequestException e) {
+		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), MISSING_START_CRITERIA, INTEGER_VALUE_TOO_LOW);
 		}
 	}
@@ -70,7 +70,7 @@ class ParameterValidationTest {
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
 			Assert.fail();
-		} catch (ProjectionRequestException e) {
+		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), MISSING_START_CRITERIA, INTEGER_VALUE_TOO_HIGH);
 		}
 	}
@@ -82,7 +82,7 @@ class ParameterValidationTest {
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
 			Assert.fail();
-		} catch (ProjectionRequestException e) {
+		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), MISSING_END_CRITERIA);
 		}
 	}
@@ -94,7 +94,7 @@ class ParameterValidationTest {
 			Parameters p = new Parameters().ageEnd(400).yearStart(ValidatedParameters.DEFAULT.getMinYearStart() - 1);
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
 			Assert.fail();
-		} catch (ProjectionRequestException e) {
+		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), MISSING_START_CRITERIA, INTEGER_VALUE_TOO_LOW);
 		}
 	}
@@ -106,7 +106,7 @@ class ParameterValidationTest {
 			Parameters p = new Parameters().ageEnd(400).yearStart(ValidatedParameters.DEFAULT.getMaxYearStart() + 1);
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
 			Assert.fail();
-		} catch (ProjectionRequestException e) {
+		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), MISSING_START_CRITERIA, INTEGER_VALUE_TOO_HIGH);
 		}
 	}
@@ -118,7 +118,7 @@ class ParameterValidationTest {
 			Parameters p = new Parameters().ageEnd(400);
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
 			Assert.fail();
-		} catch (ProjectionRequestException e) {
+		} catch (AbstractProjectionRequestException e) {
 
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), MISSING_START_CRITERIA);
 		}
@@ -131,7 +131,7 @@ class ParameterValidationTest {
 			Parameters p = new Parameters().ageStart(1).ageEnd(ValidatedParameters.DEFAULT.getMinAgeEnd() - 1);
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
 			Assert.fail();
-		} catch (ProjectionRequestException e) {
+		} catch (AbstractProjectionRequestException e) {
 
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), MISSING_END_CRITERIA, INTEGER_VALUE_TOO_LOW);
 		}
@@ -144,7 +144,7 @@ class ParameterValidationTest {
 			Parameters p = new Parameters().ageStart(1).ageEnd(ValidatedParameters.DEFAULT.getMaxAgeEnd() + 1);
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
 			Assert.fail();
-		} catch (ProjectionRequestException e) {
+		} catch (AbstractProjectionRequestException e) {
 
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), MISSING_END_CRITERIA, INTEGER_VALUE_TOO_HIGH);
 		}
@@ -157,7 +157,7 @@ class ParameterValidationTest {
 			Parameters p = new Parameters().yearEnd(1500);
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
 			Assert.fail();
-		} catch (ProjectionRequestException e) {
+		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), MISSING_START_CRITERIA);
 		}
 	}
@@ -169,7 +169,7 @@ class ParameterValidationTest {
 			Parameters p = new Parameters().yearStart(1500).yearEnd(ValidatedParameters.DEFAULT.getMinYearEnd() - 1);
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
 			Assert.fail();
-		} catch (ProjectionRequestException e) {
+		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), MISSING_END_CRITERIA, INTEGER_VALUE_TOO_LOW);
 		}
 	}
@@ -181,7 +181,7 @@ class ParameterValidationTest {
 			Parameters p = new Parameters().yearStart(1500).yearEnd(ValidatedParameters.DEFAULT.getMaxYearEnd() + 1);
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
 			Assert.fail();
-		} catch (ProjectionRequestException e) {
+		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), MISSING_END_CRITERIA, INTEGER_VALUE_TOO_HIGH);
 		}
 	}
@@ -194,7 +194,7 @@ class ParameterValidationTest {
 					.ageIncrement(ValidatedParameters.DEFAULT.getMinAgeIncrement() - 1);
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
 			Assert.fail();
-		} catch (ProjectionRequestException e) {
+		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), INTEGER_VALUE_TOO_LOW);
 		}
 	}
@@ -207,7 +207,7 @@ class ParameterValidationTest {
 					.ageIncrement(ValidatedParameters.DEFAULT.getMaxAgeIncrement() + 1);
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
 			Assert.fail();
-		} catch (ProjectionRequestException e) {
+		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), INTEGER_VALUE_TOO_HIGH);
 		}
 	}
@@ -219,7 +219,7 @@ class ParameterValidationTest {
 			Parameters p = TestHelper.buildValidParametersObject()
 					.ageIncrement(ValidatedParameters.DEFAULT.getMaxAgeIncrement());
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
-		} catch (ProjectionRequestException e) {
+		} catch (AbstractProjectionRequestException e) {
 			Assert.fail();
 		}
 	}
@@ -230,7 +230,7 @@ class ParameterValidationTest {
 		try {
 			Parameters p = TestHelper.buildValidParametersObject();
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
-		} catch (ProjectionRequestException e) {
+		} catch (AbstractProjectionRequestException e) {
 			Assert.fail();
 		}
 	}
@@ -241,7 +241,7 @@ class ParameterValidationTest {
 		try {
 			Parameters p = new Parameters().yearStart(1600).yearEnd(2100);
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
-		} catch (ProjectionRequestException e) {
+		} catch (AbstractProjectionRequestException e) {
 			Assert.fail();
 		}
 	}
@@ -255,7 +255,7 @@ class ParameterValidationTest {
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
 			Assert.fail();
-		} catch (ProjectionRequestException e) {
+		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), UNRECOGNIZED_OUTPUT_FORMAT);
 		}
 	}
@@ -268,7 +268,7 @@ class ParameterValidationTest {
 
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
-		} catch (ProjectionRequestException e) {
+		} catch (AbstractProjectionRequestException e) {
 			Assert.fail();
 		}
 	}
@@ -282,7 +282,7 @@ class ParameterValidationTest {
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
 			Assert.fail();
-		} catch (ProjectionRequestException e) {
+		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), UNRECOGNIZED_COMBINE_AGE_YEAR_RANGE_OPTION);
 		}
 	}
@@ -295,7 +295,7 @@ class ParameterValidationTest {
 
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
-		} catch (ProjectionRequestException e) {
+		} catch (AbstractProjectionRequestException e) {
 			Assert.fail();
 		}
 	}
@@ -309,7 +309,7 @@ class ParameterValidationTest {
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
 			Assert.fail();
-		} catch (ProjectionRequestException e) {
+		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), INVALID_PROCESS_FREQUENCY_VALUE);
 		}
 	}
@@ -322,7 +322,7 @@ class ParameterValidationTest {
 
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
-		} catch (ProjectionRequestException e) {
+		} catch (AbstractProjectionRequestException e) {
 			Assert.fail();
 		}
 	}
@@ -335,7 +335,7 @@ class ParameterValidationTest {
 
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
-		} catch (ProjectionRequestException e) {
+		} catch (AbstractProjectionRequestException e) {
 			Assert.fail();
 		}
 	}
@@ -349,7 +349,7 @@ class ParameterValidationTest {
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
 			Assert.fail();
-		} catch (ProjectionRequestException e) {
+		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), INVALID_METADATA_TO_OUTPUT_VALUE);
 		}
 	}
@@ -364,7 +364,7 @@ class ParameterValidationTest {
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
 			Assert.fail();
-		} catch (ProjectionRequestException e) {
+		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), UNRECOGNIZED_EXECUTION_OPTION);
 		}
 	}
@@ -379,7 +379,7 @@ class ParameterValidationTest {
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
 			Assert.fail();
-		} catch (ProjectionRequestException e) {
+		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), UNRECOGNIZED_DEBUG_OPTION);
 		}
 	}
@@ -395,7 +395,7 @@ class ParameterValidationTest {
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
 			Assert.fail();
-		} catch (ProjectionRequestException e) {
+		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), UNRECOGNIZED_SPECIES_GROUP_NAME);
 		}
 	}
@@ -410,7 +410,7 @@ class ParameterValidationTest {
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
 			Assert.fail();
-		} catch (ProjectionRequestException e) {
+		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), UNRECOGNIZED_UTILIZATION_CLASS_NAME);
 		}
 	}
@@ -425,7 +425,7 @@ class ParameterValidationTest {
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
 			Assert.fail();
-		} catch (ProjectionRequestException e) {
+		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(
 					e.getValidationMessages(), UNRECOGNIZED_SPECIES_GROUP_NAME, UNRECOGNIZED_UTILIZATION_CLASS_NAME
 			);
@@ -441,7 +441,7 @@ class ParameterValidationTest {
 
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
-		} catch (ProjectionRequestException e) {
+		} catch (AbstractProjectionRequestException e) {
 			Assert.fail();
 		}
 	}
@@ -455,7 +455,7 @@ class ParameterValidationTest {
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
 			Assert.fail();
-		} catch (ProjectionRequestException e) {
+		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), INVALID_INTEGER_VALUE);
 		}
 	}
@@ -468,7 +468,7 @@ class ParameterValidationTest {
 
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
-		} catch (ProjectionRequestException e) {
+		} catch (AbstractProjectionRequestException e) {
 			Assert.fail();
 		}
 	}
@@ -482,7 +482,7 @@ class ParameterValidationTest {
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
 			Assert.fail();
-		} catch (ProjectionRequestException e) {
+		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(
 					e.getValidationMessages(), AGE_RANGES_IGNORED_WHEN_DCSV_OUTPUT,
 					MUST_BE_EXACTLY_ONE_FORCE_PARAM_WHEN_DCSV_OUTPUT, MISMATCHED_INPUT_OUTPUT_TYPES
@@ -499,7 +499,7 @@ class ParameterValidationTest {
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
 			Assert.fail();
-		} catch (ProjectionRequestException e) {
+		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(
 					e.getValidationMessages(), AGE_RANGES_IGNORED_WHEN_DCSV_OUTPUT, MISMATCHED_INPUT_OUTPUT_TYPES
 			);
@@ -516,7 +516,7 @@ class ParameterValidationTest {
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
 			Assert.fail();
-		} catch (ProjectionRequestException e) {
+		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(
 					e.getValidationMessages(), CANNOT_SPECIFY_BOTH_CFS_AND_MOF_BIOMASS_OUTPUT,
 					CANNOT_SPECIFY_BOTH_CFS_BIOMASS_AND_EITHER_MOF_OPTIONS
@@ -534,7 +534,7 @@ class ParameterValidationTest {
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
 			Assert.fail();
-		} catch (ProjectionRequestException e) {
+		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(
 					e.getValidationMessages(), CANNOT_SPECIFY_BOTH_CFS_BIOMASS_AND_EITHER_MOF_OPTIONS
 			);
@@ -551,7 +551,7 @@ class ParameterValidationTest {
 		try {
 			new ProjectionContext(ProjectionRequestKind.DCSV, "id", p, false);
 			Assert.fail();
-		} catch (ProjectionRequestException e) {
+		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), INVALID_CFS_BIOMASS_OUTPUT_FORMAT);
 		}
 	}
@@ -610,7 +610,7 @@ class ParameterValidationTest {
 					.yearStart(2015);
 
 			s1 = new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
-		} catch (ProjectionRequestException e) {
+		} catch (AbstractProjectionRequestException e) {
 			Assert.fail();
 		}
 

@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.vdyp.backend.projection;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -38,7 +39,9 @@ import ca.bc.gov.nrs.vdyp.math.VdypMath;
  */
 public class PolygonProjectionRunner {
 
-	static Logger logger = LoggerFactory.getLogger(PolygonProjectionRunner.class);
+	private static Logger logger = LoggerFactory.getLogger(PolygonProjectionRunner.class);
+
+	private static final String EXECUTION_FOLDER_TEMPLATE_ZIP_FILE_NAME = "ExecutionFolderTemplateZip";
 
 	private Polygon polygon;
 	private ProjectionContext context;
@@ -127,10 +130,11 @@ public class PolygonProjectionRunner {
 
 				if (polygon.getLayerByProjectionType(projectionType) != null) {
 					ProjectionUtils.logger.debug("Populating execution folder for projectionType {}", projectionType);
-					ProjectionUtils.prepareProjectionTypeFolder(
-							context.getRootFolder(), executionFolder, projectionType.toString(), "FIPSTART.CTR",
-							"VRISTART.CTR", "VRIADJST.CTR", "VDYP.CTR", "VDYPBACK.CTR"
-					);
+
+					InputStream is = ProjectionUtils.class.getClassLoader()
+							.getResourceAsStream(EXECUTION_FOLDER_TEMPLATE_ZIP_FILE_NAME);
+
+					ProjectionUtils.prepareProjectionTypeFolder(is, executionFolder, projectionType.toString());
 				}
 			}
 

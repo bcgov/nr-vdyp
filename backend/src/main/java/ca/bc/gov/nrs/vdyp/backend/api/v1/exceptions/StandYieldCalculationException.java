@@ -5,7 +5,7 @@ package ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions;
  * meant to indicate that while the yield table information for a given polygon may be incomplete, generation should
  * continue.
  */
-public class StandYieldCalculationException extends ProjectionRequestException {
+public class StandYieldCalculationException extends AbstractProjectionRequestException {
 
 	private static final long serialVersionUID = -4342933248690426666L;
 

@@ -10,7 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestException;
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.ParameterNames;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ProjectionRequestKind;
@@ -23,12 +23,12 @@ public class PolygonSelectLayerWhenNoLayersTest {
 	private Polygon polygon;
 
 	@BeforeEach
-	void beforeEach() throws IOException, PolygonValidationException, ProjectionRequestException {
+	void beforeEach() throws IOException, PolygonValidationException, AbstractProjectionRequestException {
 		var parameters = new Parameters().ageStart(10).ageEnd(20);
 
 		var streams = new HashMap<String, InputStream>();
 		var polygonStreamFile = FileHelper
-				.getStubResourceFile(FileHelper.HCSV, FileHelper.VDYP_240, "VDYP7_INPUT_POLY.csv");
+				.getTestResourceFile(FileHelper.HCSV, FileHelper.COMMON, "VDYP7_INPUT_POLY.csv");
 
 		streams.put(ParameterNames.HCSV_POLYGON_INPUT_DATA, polygonStreamFile);
 		streams.put(ParameterNames.HCSV_LAYERS_INPUT_DATA, new ByteArrayInputStream(new byte[0]));

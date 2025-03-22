@@ -11,6 +11,9 @@ import java.util.Map;
 
 import org.apache.commons.lang3.Validate;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
+
+@RegisterForReflection
 class TextYieldTableRowValuesBean implements YieldTableRowValues {
 
 	private String tableNumber;
