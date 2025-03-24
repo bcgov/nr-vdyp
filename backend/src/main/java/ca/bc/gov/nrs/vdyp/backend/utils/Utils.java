@@ -14,7 +14,8 @@ public class Utils {
 		try {
 			Thread.sleep(n_ms);
 		} catch (InterruptedException e) {
-			logger.warn("Saw InterruptedException during \"sleep\" of " + n_ms + "ms");
+			logger.error("Saw InterruptedException during \"sleep\" of " + n_ms + "ms");
+			throw new RuntimeException("Unexpected InterruptException seen");
 		}
 	}
 
