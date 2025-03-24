@@ -23,11 +23,11 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
  * Filters
  */
 @JsonPropertyOrder(
-	{ Filters.JSON_PROPERTY_MAINTAINER, Filters.JSON_PROPERTY_MAPSHEET, Filters.JSON_PROPERTY_POLYGON,
-			Filters.JSON_PROPERTY_POLYGON_ID }
+	{ FilterParameters.JSON_PROPERTY_MAINTAINER, FilterParameters.JSON_PROPERTY_MAPSHEET,
+			FilterParameters.JSON_PROPERTY_POLYGON, FilterParameters.JSON_PROPERTY_POLYGON_ID }
 )
 @RegisterForReflection
-public class Filters {
+public class FilterParameters {
 	public static final String JSON_PROPERTY_MAINTAINER = "maintainer";
 	@JsonProperty(JSON_PROPERTY_MAINTAINER)
 	private String maintainer;
@@ -44,8 +44,8 @@ public class Filters {
 	@JsonProperty(JSON_PROPERTY_POLYGON_ID)
 	private String polygonId;
 
-	public Filters copy() {
-		return new Filters().maintainer(maintainer).mapsheet(mapsheet).polygon(polygon).polygonId(polygonId);
+	public FilterParameters copy() {
+		return new FilterParameters().maintainer(maintainer).mapsheet(mapsheet).polygon(polygon).polygonId(polygonId);
 	}
 
 	/**
@@ -58,7 +58,7 @@ public class Filters {
 		return maintainer;
 	}
 
-	public Filters maintainer(String maintainer) {
+	public FilterParameters maintainer(String maintainer) {
 		setMaintainer(maintainer);
 		return this;
 	}
@@ -77,7 +77,7 @@ public class Filters {
 		return mapsheet;
 	}
 
-	public Filters mapsheet(String mapsheet) {
+	public FilterParameters mapsheet(String mapsheet) {
 		setMapsheet(mapsheet);
 		return this;
 	}
@@ -96,7 +96,7 @@ public class Filters {
 		return polygon;
 	}
 
-	public Filters polygon(String polygon) {
+	public FilterParameters polygon(String polygon) {
 		setPolygon(polygon);
 		return this;
 	}
@@ -115,7 +115,7 @@ public class Filters {
 		return polygonId;
 	}
 
-	public Filters polygonId(String polygonId) {
+	public FilterParameters polygonId(String polygonId) {
 		setPolygonId(polygonId);
 		return this;
 	}
@@ -132,7 +132,7 @@ public class Filters {
 		if (o == null || getClass() != o.getClass()) {
 			return false;
 		}
-		Filters filters = (Filters) o;
+		FilterParameters filters = (FilterParameters) o;
 		return Objects.equals(this.maintainer, filters.maintainer) && Objects.equals(this.mapsheet, filters.mapsheet)
 				&& Objects.equals(this.polygon, filters.polygon) && Objects.equals(this.polygonId, filters.polygonId);
 	}

@@ -69,7 +69,7 @@ public class ParametersTest {
 				.combineAgeYearRange(AgeYearRangeCombinationKind.DIFFERENCE) //
 				.yearForcedIntoYieldTable(2020);
 
-		var filters = new Filters().maintainer("maintainer").mapsheet("mapsheet").polygon("polygon")
+		var filters = new FilterParameters().maintainer("maintainer").mapsheet("mapsheet").polygon("polygon")
 				.polygonId("polygonId");
 		op.filters(filters);
 

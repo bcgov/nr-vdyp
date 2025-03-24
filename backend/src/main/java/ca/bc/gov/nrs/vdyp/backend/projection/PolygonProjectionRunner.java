@@ -3,7 +3,6 @@ package ca.bc.gov.nrs.vdyp.backend.projection;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.MessageFormat;
@@ -31,6 +30,7 @@ import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.GrowthModelCode;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProcessingModeCode;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
 import ca.bc.gov.nrs.vdyp.backend.utils.ProjectionUtils;
+import ca.bc.gov.nrs.vdyp.backend.utils.Utils;
 import ca.bc.gov.nrs.vdyp.common.Reference;
 import ca.bc.gov.nrs.vdyp.math.VdypMath;
 
@@ -309,9 +309,9 @@ public class PolygonProjectionRunner {
 					MessageFormat.format("{0}: encountered exception while running createFipInputData", polygon), e
 			);
 		} finally {
-			close(speciesOutputStream);
-			close(layersOutputStream);
-			close(polygonOutputStream);
+			Utils.close(speciesOutputStream, "PolygonProjectionRunner.speciesOutputStream");
+			Utils.close(layersOutputStream, "PolygonProjectionRunner.layersOutputStream");
+			Utils.close(polygonOutputStream, "PolygonProjectionRunner.polygonOutputStream");
 		}
 	}
 
@@ -351,10 +351,10 @@ public class PolygonProjectionRunner {
 					MessageFormat.format("{0}: encountered exception while running createVriInputData", polygon), e
 			);
 		} finally {
-			close(siteIndexOutputStream);
-			close(speciesOutputStream);
-			close(layersOutputStream);
-			close(polygonOutputStream);
+			Utils.close(siteIndexOutputStream, "PolygonProjectionRunner.siteIndexOutputStream");
+			Utils.close(speciesOutputStream, "PolygonProjectionRunner.speciesOutputStream");
+			Utils.close(layersOutputStream, "PolygonProjectionRunner.layersOutputStream");
+			Utils.close(polygonOutputStream, "PolygonProjectionRunner.polygonOutputStream");
 		}
 	}
 
@@ -666,15 +666,5 @@ public class PolygonProjectionRunner {
 		logger.info("{}: performing Yield Table generation", polygon);
 
 		componentRunner.generateYieldTables(context, polygon, state);
-	}
-
-	private void close(OutputStream os) {
-		if (os != null) {
-			try {
-				os.close();
-			} catch (IOException e) {
-				throw new RuntimeException("Failed to close a given output stream");
-			}
-		}
 	}
 }

@@ -33,94 +33,64 @@ public class HelpService {
 				ParameterDetailsMessageBuilder.build(
 						"outputFormat", //
 						"Output Data Format", //
-						"YieldTable | CSVYieldTable | DCSV", //
-						"Identifies the output file format. One of (YieldTable default): YieldTable, CSVYieldTable, DCSV", //
+						"YieldTable | CSVYieldTable | DCSV | PLOTSY", //
+						"Identifies the output file format. One of: YieldTable, CSVYieldTable, DCSV, PLOTSY", //
 						ValidatedParameters.DEFAULT.getOutputFormat().getValue()
 				)
 		);
 
 		/* cmdLineOpt_BACK_GROW_FLAG */
-		messageList.add(
-				ParameterDetailsMessageBuilder.build(
-						"selectedExecutionOptions.backGrowEnabled", //
-						"Allow Back Grow", //
-						"Yes | No", //
-						"Enables or disables the use of the Back Grow feature of VDYP7.", //
-						Boolean.toString(
-								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
-										.contains(Parameters.ExecutionOption.BACK_GROW_ENABLED)
-						)
-				)
+		addYesNoExecutionMessage(
+				messageList, //
+				"backGrowEnabled", //
+				"Back Grow", //
+				"the Back Grow feature of VDYP", //
+				Parameters.ExecutionOption.BACK_GROW_ENABLED
 		);
 
 		/* cmdLineOpt_FORWARD_GROW_FLAG */
-		messageList.add(
-				ParameterDetailsMessageBuilder.build(
-						"selectedExecutionOptions.forwardGrowEnabled", //
-						"Allow Forward Grow", //
-						"Yes | No", //
-						"Enables or disables the use of the Forward Grow feature of VDYP7.", //
-						Boolean.toString(
-								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
-										.contains(Parameters.ExecutionOption.FORWARD_GROW_ENABLED)
-						)
-				)
+		addYesNoExecutionMessage(
+				messageList, //
+				"forwardGrowEnabled", //
+				"Forward Grow", //
+				"the Forward Grow feature of VDYP", //
+				Parameters.ExecutionOption.FORWARD_GROW_ENABLED
 		);
 
 		/* cmdLineOpt_DEBUG_INCLUDE_TIMESTAMPS */
-		messageList.add(
-				ParameterDetailsMessageBuilder.build(
-						"selectedDebugOptions.doIncludeDebugTimestamps", //
-						"Debug Log Include Timestamps", //
-						"Yes | No", //
-						"Includes or suppresses Debug Log File Timestamps.", //
-						Boolean.toString(
-								ValidatedParameters.DEFAULT.getSelectedDebugOptions()
-										.contains(Parameters.DebugOption.DO_INCLUDE_DEBUG_TIMESTAMPS)
-						)
-				)
+		addYesNoDebugMessage(
+				messageList, //
+				"doIncludeDebugTimestamps", //
+				"including timestamps in Debug Log", //
+				"the inclusion of timestamps in the Debug Log file", //
+				Parameters.DebugOption.DO_INCLUDE_DEBUG_TIMESTAMPS
 		);
 
 		/* cmdLineOpt_DEBUG_INCLUDE_ROUTINE_NAMES */
-		messageList.add(
-				ParameterDetailsMessageBuilder.build(
-						"selectedDebugOptions.doIncludeDebugRoutineNames", //
-						"Debug Log Include Routine Names", //
-						"Yes | No", //
-						"Includes or suppresses Debug Log File Routine Names.", //
-						Boolean.toString(
-								ValidatedParameters.DEFAULT.getSelectedDebugOptions()
-										.contains(Parameters.DebugOption.DO_INCLUDE_DEBUG_ROUTINE_NAMES)
-						)
-				)
+		addYesNoDebugMessage(
+				messageList, //
+				"doIncludeDebugRoutineNames", //
+				"including routine names in Debug Log", //
+				"the inclusion of routine names in Debug Log file", //
+				Parameters.DebugOption.DO_INCLUDE_DEBUG_ROUTINE_NAMES
 		);
 
 		/* cmdLineOpt_DEBUG_LOG_ENTRY_EXIT */
-		messageList.add(
-				ParameterDetailsMessageBuilder.build(
-						"selectedDebugOptions.doIncludeDebugEntryExit", //
-						"Debug Log Entry/Exit", //
-						"Yes | No", //
-						"Includes or suppresses Debug Log Block Entry and Exit.", //
-						Boolean.toString(
-								ValidatedParameters.DEFAULT.getSelectedDebugOptions()
-										.contains(Parameters.DebugOption.DO_INCLUDE_DEBUG_ENTRY_EXIT)
-						)
-				)
+		addYesNoDebugMessage(
+				messageList, //
+				"doIncludeDebugEntryExit", //
+				"logging debug log block entry and exit", //
+				"the inclusion of Debug Log block entry and exit", //
+				Parameters.DebugOption.DO_INCLUDE_DEBUG_ENTRY_EXIT
 		);
 
 		/* cmdLineOpt_DEBUG_INDENT_LOG_BLOCKS */
-		messageList.add(
-				ParameterDetailsMessageBuilder.build(
-						"selectedDebugOptions.doIncludeDebugIndentBlocks", //
-						"Debug Indent Log Blocks", //
-						"Yes | No", //
-						"Indents Logging Blocks as they are Entered and Exited.", //
-						Boolean.toString(
-								ValidatedParameters.DEFAULT.getSelectedDebugOptions()
-										.contains(Parameters.DebugOption.DO_INCLUDE_DEBUG_INDENT_BLOCKS)
-						)
-				)
+		addYesNoDebugMessage(
+				messageList, //
+				"doIncludeDebugIndentBlocks", //
+				"log block indentation", //
+				"the indentation of log blocks in the Debug Log as they are entered and exited", //
+				Parameters.DebugOption.DO_INCLUDE_DEBUG_INDENT_BLOCKS
 		);
 
 		/* cmdLineOpt_SPCS_UTIL_LEVEL */
@@ -129,9 +99,9 @@ public class HelpService {
 						"utils", //
 						"Species Utilization Level", //
 						"<x> = Excl | 4.0 | 7.5 | 12.5 | 17.5 | 22.5", //
-						"Sets the Species code <x> to the specified utilization level for reporting purposes. Repeat for each species as required." //
-								+ " If doIncludeProjectedMoFBiomass or doIncludeProjectedCFSBiomass is set, this value is ignored.", //
-						"0.0 (invalid)."
+						"Sets the Species code <x> to the specified utilization level for reporting purposes. Repeat for each species as required"//
+								+ "If doIncludeProjectedMoFBiomass or doIncludeProjectedCFSBiomass is set, this value is ignored", //
+						"0.0 (invalid)"
 				)
 		);
 
@@ -141,7 +111,7 @@ public class HelpService {
 						"ageStart", //
 						"Start Age", //
 						"<age>", //
-						"The starting age value for the Age Range for generated yield tables. Either -9 (not specified) or in the range 0..600.", //
+						"The starting age value for the Age Range for generated yield tables. Either -9 (not specified) or in the range 0..600", //
 						"none"
 				)
 		);
@@ -163,7 +133,7 @@ public class HelpService {
 						"yearStart", //
 						"Start Year", //
 						"<calendar year>", //
-						"The starting year for the Year Range for generated yield tables. Either -9 (not specified) or in the range 1400..3250.", //
+						"The starting year for the Year Range for generated yield tables. Either -9 (not specified) or in the range 1400..3250", //
 						"none"
 				)
 		);
@@ -174,7 +144,7 @@ public class HelpService {
 						"yearEnd", //
 						"End Year", //
 						"<calendar year>", //
-						"The ending year for the Year Range for generated yield tables. Either -9 (not specified) or in the range 1400..3250.", //
+						"The ending year for the Year Range for generated yield tables. Either -9 (not specified) or in the range 1400..3250", //
 						"none"
 				)
 		);
@@ -185,64 +155,47 @@ public class HelpService {
 						"ageIncrement", //
 						"Increment", //
 						"<increment value>", //
-						"The number of years to increment the current value for the Age and Year Ranges. Either -9 (not specified) or in the range 1..350.", //
+						"The number of years to increment the current value for the Age and Year Ranges. Either -9 (not specified) or in the range 1..350", //
 						"none"
 				)
 		);
 
 		/* cmdLineOpt_FORCE_REF_YEAR */
-		messageList.add(
-				ParameterDetailsMessageBuilder.build(
-						"selectedExecutionOptions.doForceReferenceYearInclusionInYieldTables", //
-						"Force Reference Year Indicator", //
-						"Yes | No", //
-						"Enables or disables the forced inclusion of the Reference Year in Yield Tables.", //
-						Boolean.toString(
-								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
-										Parameters.ExecutionOption.DO_FORCE_REFERENCE_YEAR_INCLUSION_IN_YIELD_TABLES
-								)
-						)
-				)
+		addYesNoExecutionMessage(
+				messageList, //
+				"doForceReferenceYearInclusionInYieldTables", //
+				"forcing reference year into yield table", //
+				"the forced inclusion of a polygon's reference year into yield tables", //
+				Parameters.ExecutionOption.DO_FORCE_REFERENCE_YEAR_INCLUSION_IN_YIELD_TABLES
 		);
 
 		/* cmdLineOpt_FORCE_CRNT_YEAR */
-		messageList.add(
-				ParameterDetailsMessageBuilder.build(
-						"selectedExecutionOptions.doForceCurrentYearInclusionInYieldTables", //
-						"Force Current Year Indicator", //
-						"Yes | No", //
-						"Enables or disables the forced inclusion of the Current Year in Yield Tables.", //
-						Boolean.toString(
-								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
-										Parameters.ExecutionOption.DO_FORCE_CURRENT_YEAR_INCLUSION_IN_YIELD_TABLES
-								)
-						)
-				)
+		addYesNoExecutionMessage(
+				messageList, //
+				"doForceCurrentYearInclusionInYieldTables", //
+				"forcing the current year into yield table", //
+				"the forced inclusion of the current year into yield tables", //
+				Parameters.ExecutionOption.DO_FORCE_CURRENT_YEAR_INCLUSION_IN_YIELD_TABLES
 		);
 
 		/* cmdLineOpt_FORCE_SPCL_YEAR */
 		messageList.add(
 				ParameterDetailsMessageBuilder.build(
-						"selectedExecutionOptions.doForceCalendarYearInclusionInYieldTables", //
+						"forceYear", //
 						"Force Calendar Year Indicator", //
 						"<calendar year>", //
-						"Forces the inclusion of the specified calendar year in Yield Tables.", //
+						"Forces the inclusion of the specified calendar year in yield tables", //
 						"none"
 				)
 		);
 
 		/* cmdLineOpt_INCLUDE_FILE_HEADER */
-		messageList.add(
-				ParameterDetailsMessageBuilder.build(
-						"selectedExecutionOptions.doIncludeFileHeader", //
-						"Include output file headers (default) or not", //
-						"Yes | No", //
-						"In file formats where a file header is optional, this option will display or suppress the file header.", //
-						Boolean.toString(
-								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
-										.contains(Parameters.ExecutionOption.DO_INCLUDE_FILE_HEADER)
-						)
-				)
+		addYesNoExecutionMessage(
+				messageList, //
+				"doIncludeFileHeader", //
+				"output file headers (default) in yield tables", //
+				"display of file headers in yield table file formats for which a file header is optional", //
+				Parameters.ExecutionOption.DO_INCLUDE_FILE_HEADER
 		);
 
 		/* cmdLineOpt_INCLUDE_METADATA */
@@ -251,60 +204,44 @@ public class HelpService {
 						"metadataToOutput", //
 						"Metadata to Include (default: VERSION )", //
 						"ALL | MAIN | VERSION | MIN_IDENT | NONE", //
-						"Controls how much metadata is displayed in the Output and Error Logs.", //
+						"Controls how much metadata is displayed in the Output and Error Logs", //
 						ValidatedParameters.DEFAULT.getMetadataToOutput().getValue()
 				)
 		);
 
 		/* cmdLineOpt_INCLUDE_PROJECTION_MODE */
-		messageList.add(
-				ParameterDetailsMessageBuilder.build(
-						"selectedExecutionOptions.doIncludeProjectionModeInYieldTable", //
-						"Include Projection Mode Indicator", //
-						"Yes | No", //
-						"If present, a column indicating how the yield table row was projected is included in Yield Tables.", //
-						Boolean.toString(
-								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
-										.contains(Parameters.ExecutionOption.DO_INCLUDE_PROJECTION_MODE_IN_YIELD_TABLE)
-						)
-				)
+		addYesNoExecutionMessage(
+				messageList, //
+				"doIncludeProjectionModeInYieldTable", //
+				"including projection mode method in the yield table", //
+				"the inclusion of a yield table column indicating how the row was projected", //
+				Parameters.ExecutionOption.DO_INCLUDE_PROJECTION_MODE_IN_YIELD_TABLE
 		);
 
 		/* cmdLineOpt_INCLUDE_AGE_ROWS */
-		messageList.add(
-				ParameterDetailsMessageBuilder.build(
-						"selectedExecutionOptions.backGrowEnabled", //
-						"Include Age Rows Indicator", //
-						"Yes | No", //
-						"Includes or excludes age rows of the Age Range in the Yield Table.", //
-						Boolean.toString(
-								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
-										.contains(Parameters.ExecutionOption.DO_INCLUDE_AGE_ROWS_IN_YIELD_TABLE)
-						)
-				)
+		addYesNoExecutionMessage(
+				messageList, "backGrowEnabled", //
+				"including the age information in the yield tables", //
+				"the inclusion of age range data in the yield tables", //
+				Parameters.ExecutionOption.DO_INCLUDE_AGE_ROWS_IN_YIELD_TABLE
 		);
 
 		/* cmdLineOpt_INCLUDE_YEAR_ROWS */
-		messageList.add(
-				ParameterDetailsMessageBuilder.build(
-						"selectedExecutionOptions.doIncludeAgeRowsInYieldTable", //
-						"Include Year Rows Indicator", //
-						"Yes | No", //
-						"If true, the year rows of the Year Range are included in the Yield Table.", //
-						Boolean.toString(
-								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
-										.contains(Parameters.ExecutionOption.DO_INCLUDE_YEAR_ROWS_IN_YIELD_TABLE)
-						)
-				)
+		addYesNoExecutionMessage(
+				messageList, //
+				"doIncludeAgeRowsInYieldTable", //
+				"including the year information in the yield tables", //
+				"the inclusion of year range data in the yield tables", //
+				Parameters.ExecutionOption.DO_INCLUDE_YEAR_ROWS_IN_YIELD_TABLE
 		);
 
 		/* cmdLineOpt_FILTER_FOR_MAINTAINER */
 		messageList.add(
 				ParameterDetailsMessageBuilder.build(
 						"filters.maintainer", //
-						"Filter Polygons For Maintainer", //
+						"filter by maintainer", //
 						"<maintainer value>", //
-						"Only those polygons with the specified maintainer will be considered for inclusion in the output.", //
+						"Only those polygons with the specified maintainer will be considered for inclusion in the output", //
 						ValidatedParameters.DEFAULT.getFilters().getMaintainer() == null ? "not filtered by this value"
 								: ValidatedParameters.DEFAULT.getFilters().getMaintainer()
 				)
@@ -314,9 +251,9 @@ public class HelpService {
 		messageList.add(
 				ParameterDetailsMessageBuilder.build(
 						"filters.mapsheet", //
-						"Filter Polygons For Mapsheet", //
+						"filter by mapsheet", //
 						"<mapsheet value>", //
-						"Only those polygons with the specified mapsheet will be considered for inclusion in the output.", //
+						"Only those polygons with the specified mapsheet will be considered for inclusion in the output", //
 						ValidatedParameters.DEFAULT.getFilters().getMapsheet() == null ? "not filtered by this value"
 								: ValidatedParameters.DEFAULT.getFilters().getMapsheet()
 				)
@@ -325,10 +262,10 @@ public class HelpService {
 		/* cmdLineOpt_FILTER_FOR_POLYGON_NUM */
 		messageList.add(
 				ParameterDetailsMessageBuilder.build(
-						"selectedExecutionOptions.backGrowEnabled", //
-						"Filter Polygons for Polygon Number", //
+						"filters.polygon", //
+						"filter by polygon number", //
 						"<polygon number>", //
-						"Only the polygon with the specified polygon number will be considered for inclusion in the output.", //
+						"Only the polygon with the specified polygon number will be considered for inclusion in the output", //
 						ValidatedParameters.DEFAULT.getFilters().getPolygon() == null ? "not filtered by this value"
 								: ValidatedParameters.DEFAULT.getFilters().getPolygon()
 				)
@@ -337,10 +274,10 @@ public class HelpService {
 		/* cmdLineOpt_FILTER_FOR_POLYGON_ID */
 		messageList.add(
 				ParameterDetailsMessageBuilder.build(
-						"selectedExecutionOptions.backGrowEnabled", //
-						"Filter Polygons for Polygon Identifier", //
+						"filters.polygonId", //
+						"filter by polygon id", //
 						"<polygon id>", //
-						"Only the polygon with the specified polygon id will be considered for inclusion in the output.", //
+						"Only the polygon with the specified polygon id will be considered for inclusion in the output", //
 						ValidatedParameters.DEFAULT.getFilters().getPolygonId() == null ? "not filtered by this value"
 								: ValidatedParameters.DEFAULT.getFilters().getPolygonId()
 				)
@@ -349,196 +286,135 @@ public class HelpService {
 		/* cmdLineOpt_PROGRESS_FREQUENCY */
 		messageList.add(
 				ParameterDetailsMessageBuilder.build(
-						"selectedExecutionOptions.backGrowEnabled", //
+						"progressFrequency", //
 						"Progress Frequency Mode", //
 						"NEVER | EACH_MAPSHEET | EACH_POLYGON | <number>", //
-						"Identifies how often or when progress will be reported from the application.", //
+						"Identifies how often or when progress will be reported from the application", //
 						ValidatedParameters.DEFAULT.getProgressFrequency().toString()
 				)
 		);
 
 		/* cmdLineOpt_YIELD_TABLE_INC_POLY_ID */
-		messageList.add(
-				ParameterDetailsMessageBuilder.build(
-						"selectedExecutionOptions.doIncludePolygonRecordIdInYieldTable", //
-						"Include Polygon ID Indicator", //
-						"Yes | No", //
-						"Include the POLYGON_RCRD_ID in the header of yield tables.", //
-						Boolean.toString(
-								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
-										Parameters.ExecutionOption.DO_INCLUDE_POLYGON_RECORD_ID_IN_YIELD_TABLE
-								)
-						)
-				)
+		addYesNoExecutionMessage(
+				messageList, //
+				"doIncludePolygonRecordIdInYieldTable", //
+				"including polygon ids", //
+				"the inclusion of polygon ids in yield tables", //
+				Parameters.ExecutionOption.DO_INCLUDE_POLYGON_RECORD_ID_IN_YIELD_TABLE
 		);
 
 		/* cmdLineOpt_ALLOW_BA_TPH_SUBSTITUTION */
-		messageList.add(
-				ParameterDetailsMessageBuilder.build(
-						"selectedExecutionOptions.doAllowBasalAreaAndTreesPerHectareValueSubstitution", //
-						"Allow Supplied BA/TPH to be used as Projected", //
-						"Yes | No", //
-						"If present, the substitution of Supplied BA/TPH as Projected Values is allowed.", //
-						Boolean.toString(
-								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
-										Parameters.ExecutionOption.DO_ALLOW_BASAL_AREA_AND_TREES_PER_HECTARE_VALUE_SUBSTITUTION
-								)
-						)
-				)
+		addYesNoExecutionMessage(
+				messageList, //
+				"doAllowBasalAreaAndTreesPerHectareValueSubstitution", //
+				"supplied BA/TPH to be used as Projected", //
+				"the substitution of Supplied BA/TPH as Projected Values", //
+				Parameters.ExecutionOption.DO_ALLOW_BASAL_AREA_AND_TREES_PER_HECTARE_VALUE_SUBSTITUTION
 		);
 
 		/* cmdLineOpt_SECONDARY_SPCS_HEIGHT */
-		messageList.add(
-				ParameterDetailsMessageBuilder.build(
-						"selectedExecutionOptions.doIncludeSecondarySpeciesDominantHeightInYieldTable", //
-						"Display secondary species height in yield tables.", //
-						"Yes | No", //
-						"Display/Suppress the Secondary Species Dominant Height column in Yield Tables.", //
-						Boolean.toString(
-								ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(
-										Parameters.ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE
-								)
-						)
-				)
+		addYesNoExecutionMessage(
+				messageList, //
+				"doIncludeSecondarySpeciesDominantHeightInYieldTable", //
+				"displaying secondary species height in yield tables", //
+				"the display of the dominant height of a layer's secondary species in yield tables", //
+				Parameters.ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE
 		);
 
 		/* cmdLineOpt_PROJECTED_BY_POLYGON */
-		messageList.add(
-				ParameterDetailsMessageBuilder.build(
-						"selectedExecutionOptions.doSummarizeProjectionByPolygon", //
-						"Projection summarized by polygon", //
-						"Yes | No", //
-						"If present, projected values are summarized at the polygon level.", //
-						Boolean.toString(
-								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
-										.contains(Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_POLYGON)
-						)
-				)
+		addYesNoExecutionMessage(
+				messageList, //
+				"doSummarizeProjectionByPolygon", //
+				"including a projection summary per polygon", //
+				"the inclusion of a summary at the polygon level of the projected values", //
+				Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_POLYGON
 		);
 
 		/* cmdLineOpt_PROJECTED_BY_LAYER */
-		messageList.add(
-				ParameterDetailsMessageBuilder.build(
-						"selectedExecutionOptions.doSummarizeProjectionByLayer", //
-						"Projection summarized by layer", //
-						"Yes | No", //
-						"If present, projected values are summarized at the layer level.", //
-						Boolean.toString(
-								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
-										.contains(Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER)
-						)
-				)
+		addYesNoExecutionMessage(
+				messageList, //
+				"doSummarizeProjectionByLayer", //
+				"including a projection summary per layer", //
+				"the inclusion of a summary at the layer level of the projected values in yield tables", //
+				Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER
 		);
 
 		/* cmdLineOpt_PROJECTED_BY_SPECIES */
-		messageList.add(
-				ParameterDetailsMessageBuilder.build(
-						"selectedExecutionOptions.doIncludeSpeciesProjection", //
-						"Projection produced by Species", //
-						"Yes | No", //
-						"If present, projected values are produced for each species.", //
-						Boolean.toString(
-								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
-										.contains(Parameters.ExecutionOption.DO_INCLUDE_SPECIES_PROJECTION)
-						)
-				)
+		addYesNoExecutionMessage(
+				messageList, //
+				"doIncludeSpeciesProjection", //
+				"including species projection values", //
+				"the presentation of projected values for each species in yield tables", //
+				Parameters.ExecutionOption.DO_INCLUDE_SPECIES_PROJECTION
 		);
 
 		/* cmdLineOpt_PROJECTED_MOF_VOLUME */
-		messageList.add(
-				ParameterDetailsMessageBuilder.build(
-						"selectedExecutionOptions.doIncludeProjectedMoFVolumes", //
-						"Include MoF Projected Volumes", //
-						"Yes | No", //
-						"Indicate whether MoF projected volumes are included in the output.", //
-						Boolean.toString(
-								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
-										.contains(Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES)
-						)
-				)
+		addYesNoExecutionMessage(
+				messageList, //
+				"doIncludeProjectedMoFVolumes", //
+				"including MoF Projected Volumes", //
+				"the inclusion of MoF projected volumes in the yield tables", //
+				Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES
 		);
 
 		/* cmdLineOpt_PROJECTED_MOF_BIOMASS */
-		messageList.add(
-				ParameterDetailsMessageBuilder.build(
-						"selectedExecutionOptions.doIncludeProjectedMoFBiomass", //
-						"Include Projected MoF Biomass", //
-						"Yes | No", //
-						"Indicate whether projected MoF biomass is included in the output.", //
-						Boolean.toString(
-								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
-										.contains(Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_BIOMASS)
-						)
-				)
+		addYesNoExecutionMessage(
+				messageList, //
+				"doIncludeProjectedMoFBiomass", //
+				"including projected MoF biomass", //
+				"the inclusion of projected MoF biomass in the yield tables", //
+				Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_BIOMASS
 		);
 
 		/* cmdLineOpt_PROJECTED_CFS_BIOMASS */
-		messageList.add(
-				ParameterDetailsMessageBuilder.build(
-						"selectedExecutionOptions.doIncludeProjectedCFSBiomass", //
-						"Include Projected CFS Biomass", //
-						"Yes | No", //
-						"Indicate whether projected CFS biomass is included in the output.", //
-						Boolean.toString(
-								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
-										.contains(Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS)
-						)
-				)
+		addYesNoExecutionMessage(
+				messageList, //
+				"doIncludeProjectedCFSBiomass", //
+				"including projected CFS biomass", //
+				"the inclusion of projected CFS biomass in the yield tables", //
+				Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS
 		);
 
 		/* cmdLineOpt_YLDTBL_COLUMN_HEADERS */
-		messageList.add(
-				ParameterDetailsMessageBuilder.build(
-						"selectedExecutionOptions.doIncludeColumnHeadersInYieldTable", //
-						"Include Formatted Yield Table Column Headers", //
-						"Yes | No", //
-						"Indicate whether formatted yield tables will include column headers or not.", //
-						Boolean.toString(
-								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
-										.contains(Parameters.ExecutionOption.DO_INCLUDE_COLUMN_HEADERS_IN_YIELD_TABLE)
-						)
-				)
+		addYesNoExecutionMessage(
+				messageList, //
+				"doIncludeColumnHeadersInYieldTable", //
+				"including yield table column headers", //
+				"the inclusion of column headers in formatted yield tables", //
+				Parameters.ExecutionOption.DO_INCLUDE_COLUMN_HEADERS_IN_YIELD_TABLE
 		);
 
 		/* Additional Parameters supported by VDYP8 */
 
-		messageList.add(
-				ParameterDetailsMessageBuilder.build(
-						"selectedExecutionOptions.doEnableProgressLogging", //
-						"Enable Progress logging", //
-						"Yes | No", //
-						"Enables or disables the logging of progress messages during projections.", //
-						Boolean.toString(
-								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
-										.contains(Parameters.ExecutionOption.DO_ENABLE_DEBUG_LOGGING)
-						)
-				)
+		addYesNoExecutionMessage(
+				messageList, //
+				"doEnableProgressLogging", //
+				"progress logging", //
+				"the logging of progress messages during projection", //
+				Parameters.ExecutionOption.DO_ENABLE_DEBUG_LOGGING
 		);
 
-		messageList.add(
-				ParameterDetailsMessageBuilder.build(
-						"selectedExecutionOptions.doEnableErrorLogging", //
-						"Enable Error logging", //
-						"Yes | No", //
-						"Enables or disables the logging of error messages during projections.", //
-						Boolean.toString(
-								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
-										.contains(Parameters.ExecutionOption.DO_ENABLE_ERROR_LOGGING)
-						)
-				)
+		addYesNoExecutionMessage(
+				messageList, //
+				"doEnableErrorLogging", //
+				"error logging", //
+				"the logging of error messages during projection", //
+				Parameters.ExecutionOption.DO_ENABLE_ERROR_LOGGING
 		);
 
-		messageList.add(
-				ParameterDetailsMessageBuilder.build(
-						"selectedExecutionOptions.doEnableDebugLogging", //
-						"Enable Debug logging", //
-						"Yes | No", //
-						"Enables or disables the logging of debug messages during projections.", //
-						Boolean.toString(
-								ValidatedParameters.DEFAULT.getSelectedExecutionOptions()
-										.contains(Parameters.ExecutionOption.DO_ENABLE_PROGRESS_LOGGING)
-						)
-				)
+		addYesNoExecutionMessage(
+				messageList, "doEnableDebugLogging", //
+				"debug logging", //
+				"the logging of debug messages during projection", //
+				Parameters.ExecutionOption.DO_ENABLE_PROGRESS_LOGGING
+		);
+
+		addYesNoExecutionMessage(
+				messageList, //
+				"doIncludeProjectionFiles", //
+				"including projection results in output", //
+				"the inclusion in the response of the output of all invocations of BACK and FORWARD during the projection run", //
+				Parameters.ExecutionOption.DO_INCLUDE_PROJECTION_FILES
 		);
 
 		messageList.sort(new Comparator<ParameterDetailsMessage>() {
@@ -552,5 +428,57 @@ public class HelpService {
 		logger.info(">helpGet");
 
 		return HelpResource.of(uriInfo, messageList);
+	}
+
+	private void addYesNoExecutionMessage(
+			List<ParameterDetailsMessage> messageList, String field, String shortDescription, String longDescription,
+			Parameters.ExecutionOption executionOption
+	) {
+
+		messageList.add(
+				ParameterDetailsMessageBuilder.build(
+						"selectedExecutionOptions." + field, //
+						"Allow " + shortDescription, //
+						"Enables " + longDescription, //
+						ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(executionOption) ? "Selected"
+								: "Not Selected"
+				)
+		);
+
+		messageList.add(
+				ParameterDetailsMessageBuilder.build(
+						"excludedExecutionOptions." + field, //
+						"Disallow " + shortDescription, //
+						"Disables " + longDescription, //
+						ValidatedParameters.DEFAULT.getSelectedExecutionOptions().contains(executionOption)
+								? "Not Excluded" : "Excluded"
+				)
+		);
+	}
+
+	private void addYesNoDebugMessage(
+			List<ParameterDetailsMessage> messageList, String field, String shortDescription, String longDescription,
+			Parameters.DebugOption debugOption
+	) {
+
+		messageList.add(
+				ParameterDetailsMessageBuilder.build(
+						"selectedDebugOptions." + field, //
+						"Allow " + shortDescription, //
+						"Enables " + longDescription, //
+						ValidatedParameters.DEFAULT.getSelectedDebugOptions().contains(debugOption) ? "Selected"
+								: "Not Selected"
+				)
+		);
+
+		messageList.add(
+				ParameterDetailsMessageBuilder.build(
+						"excludedDebugOptions." + field, //
+						"Disallow " + shortDescription, //
+						"Disables " + longDescription, //
+						ValidatedParameters.DEFAULT.getSelectedDebugOptions().contains(debugOption) ? "Not Excluded"
+								: "Excluded"
+				)
+		);
 	}
 }

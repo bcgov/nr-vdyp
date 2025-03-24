@@ -15,6 +15,7 @@ import ca.bc.gov.nrs.vdyp.backend.projection.model.LayerReportingInfo;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Polygon;
 import ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable.YieldTableRowValues.MultiFieldPrefixes;
 import ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable.YieldTableRowValues.MultiFieldSuffixes;
+import ca.bc.gov.nrs.vdyp.backend.utils.Utils;
 
 class TextYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean> {
 
@@ -236,14 +237,8 @@ class TextYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean>
 	}
 
 	@Override
-	public final void close() throws IOException {
-		if (outputStream != null) {
-			try {
-				outputStream.close();
-				outputStream = null;
-			} catch (IOException e) {
-				throw new IllegalStateException("Unable to close FileYieldTableOutputWriter outputStream");
-			}
-		}
+	public final void close() {
+		Utils.close(outputStream, "TextYieldTableWriter.outputStream");
+		outputStream = null;
 	}
 }

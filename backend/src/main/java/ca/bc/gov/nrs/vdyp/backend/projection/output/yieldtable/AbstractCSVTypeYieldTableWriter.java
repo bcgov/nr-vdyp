@@ -12,6 +12,7 @@ import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.YieldTableGenerationExceptio
 import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionContext;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.LayerReportingInfo;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Polygon;
+import ca.bc.gov.nrs.vdyp.backend.utils.Utils;
 
 abstract class AbstractCSVTypeYieldTableWriter<T> extends YieldTableWriter<T> {
 
@@ -71,8 +72,8 @@ abstract class AbstractCSVTypeYieldTableWriter<T> extends YieldTableWriter<T> {
 	}
 
 	@Override
-	public void close() throws IOException {
-		fileWriter.close();
+	public void close() {
+		Utils.close(fileWriter, "AbstractCSVTypeYieldTableWriter<T>.fileWriter");
 		fileWriter = null;
 	}
 }

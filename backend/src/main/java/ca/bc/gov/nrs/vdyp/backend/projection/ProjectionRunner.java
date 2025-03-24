@@ -161,6 +161,10 @@ public class ProjectionRunner {
 		return context.getErrorLog().getAsStream();
 	}
 
+	public ProjectionContext getContext() {
+		return context;
+	}
+
 	/**
 	 * Call this in a finally {} block after executing run() in the try {} block.
 	 */

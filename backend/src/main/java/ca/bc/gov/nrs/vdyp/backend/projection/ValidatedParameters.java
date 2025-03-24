@@ -19,7 +19,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-import ca.bc.gov.nrs.vdyp.backend.model.v1.Filters;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.FilterParameters;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.AgeYearRangeCombinationKind;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.DebugOption;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption;
@@ -59,7 +59,7 @@ public class ValidatedParameters {
 	private AgeYearRangeCombinationKind combineAgeYearRange;
 	private ProgressFrequency progressFrequency;
 	private MetadataToOutputDirective metadataToOutput;
-	private Filters filters;
+	private FilterParameters filters;
 	private List<ValidatedUtilizationParameter> utils = new ArrayList<>();
 
 	/**
@@ -465,16 +465,16 @@ public class ValidatedParameters {
 	 *
 	 * @return filters
 	 */
-	public Filters getFilters() {
+	public FilterParameters getFilters() {
 		return filters;
 	}
 
-	public ValidatedParameters filters(Filters filters) {
+	public ValidatedParameters filters(FilterParameters filters) {
 		setFilters(filters);
 		return this;
 	}
 
-	public void setFilters(Filters filters) {
+	public void setFilters(FilterParameters filters) {
 		this.filters = filters == null ? null : filters.copy();
 	}
 
@@ -643,7 +643,7 @@ public class ValidatedParameters {
 		DEFAULT.combineAgeYearRange = AgeYearRangeCombinationKind.INTERSECT;
 		DEFAULT.progressFrequency = new ProgressFrequency().intValue(1000);
 		DEFAULT.metadataToOutput = MetadataToOutputDirective.VERSION;
-		DEFAULT.filters = new Filters();
+		DEFAULT.filters = new FilterParameters();
 		DEFAULT.utils = new ArrayList<>();
 	}
 }

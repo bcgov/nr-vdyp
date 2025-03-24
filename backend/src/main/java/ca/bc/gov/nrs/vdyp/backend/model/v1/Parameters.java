@@ -94,7 +94,7 @@ public class Parameters {
 
 	public static final String JSON_PROPERTY_FILTERS = "filters";
 	@JsonProperty(JSON_PROPERTY_FILTERS)
-	public Filters filters;
+	public FilterParameters filters;
 
 	public static final String JSON_PROPERTY_UTILS = "utils";
 	@JsonProperty(JSON_PROPERTY_UTILS)
@@ -802,16 +802,16 @@ public class Parameters {
 	 * @return filters
 	 **/
 	@JsonProperty(value = JSON_PROPERTY_FILTERS)
-	public Filters getFilters() {
+	public FilterParameters getFilters() {
 		return filters;
 	}
 
-	public Parameters filters(Filters filters) {
+	public Parameters filters(FilterParameters filters) {
 		setFilters(filters);
 		return this;
 	}
 
-	public void setFilters(Filters filters) {
+	public void setFilters(FilterParameters filters) {
 		this.filters = filters == null ? null : filters.copy();
 	}
 

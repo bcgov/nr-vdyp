@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Polygon;
+import ca.bc.gov.nrs.vdyp.backend.utils.Utils;
 
 /**
  * Write the grow-to-year file used by Forward and Back to indicate the target years.
@@ -35,6 +36,6 @@ public class VdypGrowToYearFileWriter implements Closeable {
 
 	@Override
 	public void close() throws IOException {
-		growToYearFile.close();
+		Utils.close(growToYearFile, "VdypGrowToYearFileWriter.growToYearFile");
 	}
 }

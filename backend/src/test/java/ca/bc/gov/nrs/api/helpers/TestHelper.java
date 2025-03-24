@@ -56,10 +56,12 @@ public class TestHelper {
 	public byte[] readZipEntry(ZipInputStream zipInputStream, ZipEntry zipEntry) throws IOException {
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		byte[] buffer = new byte[1024];
-		int bytesRead;
-		while ( (bytesRead = zipInputStream.read(buffer, 0, 1024)) != -1) {
-			baos.write(buffer, 0, bytesRead);
+		if (zipInputStream.available() > 0) {
+			byte[] buffer = new byte[1024];
+			int bytesRead;
+			while ( (bytesRead = zipInputStream.read(buffer, 0, 1024)) > 0) {
+				baos.write(buffer, 0, bytesRead);
+			}
 		}
 
 		return baos.toByteArray();

@@ -26,9 +26,11 @@ import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.AbstractProjectionRequestExc
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestValidationException;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.ParameterNames;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ProjectionRequestKind;
 import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionRunner;
 import ca.bc.gov.nrs.vdyp.backend.utils.FileHelper;
+import ca.bc.gov.nrs.vdyp.backend.utils.Utils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
@@ -39,9 +41,9 @@ import jakarta.ws.rs.core.SecurityContext;
  * Implements the projection endpoints. These methods return Responses rather than Response objects because these
  * responses are not JSON objects and contain no links.
  */
-public class ProjectionService {
+public class \ {
 
-	private static final Logger logger = LoggerFactory.getLogger(ProjectionService.class);
+	public static final Logger logger = LoggerFactory.getLogger(ProjectionService.class);
 
 	public Response projectionHcsvPost(
 			Boolean trialRun, //
@@ -55,34 +57,13 @@ public class ProjectionService {
 		Map<String, InputStream> inputStreams = new HashMap<>();
 
 		try {
-			if (trialRun) {
-				if (polygonStream.available() == 0) {
-					polygonStream.close();
-					polygonStream = FileHelper.getStubResourceFile("VDYP7_INPUT_POLY.csv");
-				}
-
-				if (layersStream.available() == 0) {
-					layersStream.close();
-					layersStream = FileHelper.getStubResourceFile("VDYP7_INPUT_LAYER.csv");
-				}
-			}
-
 			inputStreams.put(ParameterNames.HCSV_POLYGON_INPUT_DATA, polygonStream);
 			inputStreams.put(ParameterNames.HCSV_LAYERS_INPUT_DATA, layersStream);
 
 			response = runProjection(ProjectionRequestKind.HCSV, inputStreams, trialRun, parameters, securityContext);
-		} catch (IOException e) {
-
-			String message = Exceptions.getMessage(e, "Projection, when opening input files,");
-			logger.error(message, e);
-			response = Response.serverError().status(Status.INTERNAL_SERVER_ERROR).entity(message).build();
 		} finally {
 			for (var entry : inputStreams.entrySet()) {
-				try {
-					entry.getValue().close();
-				} catch (IOException e) {
-					logger.warn("Unable to close {}; reason: {}", entry.getKey(), e.getMessage());
-				}
+				Utils.close(entry.getValue(), entry.getKey());
 			}
 		}
 
@@ -173,38 +154,31 @@ public class ProjectionService {
 		InputStream errorLogStream = null;
 		Map<ProjectionRunner.ProjectionResultsKey, InputStream> projectionResults = null;
 
-		try {
+		var baos = new ByteArrayOutputStream();
+		try (ZipOutputStream zipOut = new ZipOutputStream(baos)) {
+
 			yieldTableStream = runner.getYieldTable();
 			progressLogStream = runner.getProgressStream();
 			errorLogStream = runner.getErrorStream();
 
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			ZipOutputStream zipOut = new ZipOutputStream(baos);
+			writeZipEntry(zipOut, "YieldTable.csv", yieldTableStream.readAllBytes());
 
-			ZipEntry yieldTableZipEntry = new ZipEntry("YieldTable.csv");
-			zipOut.putNextEntry(yieldTableZipEntry);
-			zipOut.write(yieldTableStream.readAllBytes());
+			if (runner.getContext().getValidatedParams().containsOption(ExecutionOption.DO_ENABLE_PROGRESS_LOGGING)) {
+				writeZipEntry(zipOut, "ProgressLog.txt", runner.getProgressStream().readAllBytes());
+			}
 
-			ZipEntry logOutputEntry = new ZipEntry("ProgressLog.txt");
-			zipOut.putNextEntry(logOutputEntry);
-			zipOut.write(progressLogStream.readAllBytes());
+			if (runner.getContext().getValidatedParams().containsOption(ExecutionOption.DO_ENABLE_ERROR_LOGGING)) {
+				writeZipEntry(zipOut, "ErrorLog.txt", runner.getErrorStream().readAllBytes());
+			}
 
-			ZipEntry errorOutputZipEntry = new ZipEntry("ErrorLog.txt");
-			zipOut.putNextEntry(errorOutputZipEntry);
-			zipOut.write(errorLogStream.readAllBytes());
-
-			ZipEntry debugOutputZipEntry = new ZipEntry("DebugLog.txt");
-			zipOut.putNextEntry(debugOutputZipEntry);
-			zipOut.write(debugLogStream.readAllBytes());
+			if (runner.getContext().getValidatedParams().containsOption(ExecutionOption.DO_ENABLE_DEBUG_LOGGING)) {
+				writeZipEntry(zipOut, "DebugLog.txt", debugLogStream.readAllBytes());
+			}
 
 			projectionResults = runner.getProjectionResults();
 			for (var e : projectionResults.entrySet()) {
-				ZipEntry projectionResultsEntry = new ZipEntry(e.getKey().toString());
-				zipOut.putNextEntry(projectionResultsEntry);
-				zipOut.write(e.getValue().readAllBytes());
+				writeZipEntry(zipOut, e.getKey().toString(), e.getValue().readAllBytes());
 			}
-
-			zipOut.close();
 
 			byte[] resultingByteArray = baos.toByteArray();
 
@@ -224,28 +198,27 @@ public class ProjectionService {
 			return Response.serverError().status(Status.INTERNAL_SERVER_ERROR).entity(message).build();
 		} finally {
 			if (errorLogStream != null) {
-				close(yieldTableStream, "yieldTable");
+				Utils.close(yieldTableStream, "ProjectionService.errorLog");
 			}
 			if (progressLogStream != null) {
-				close(yieldTableStream, "yieldTable");
+				Utils.close(yieldTableStream, "ProjectionService.progressLog");
 			}
 			if (yieldTableStream != null) {
-				close(yieldTableStream, "yieldTable");
+				Utils.close(yieldTableStream, "ProjectionService.yieldTable");
 			}
 
 			for (var e : projectionResults.entrySet()) {
 				if (e.getValue() != null) {
-					close(e.getValue(), e.getKey().toString());
+					Utils.close(e.getValue(), e.getKey().toString());
 				}
 			}
 		}
 	}
 
-	private static void close(InputStream is, String name) {
-		try {
-			is.close();
-		} catch (IOException e) {
-			logger.warn("Encountered IOException when closing stream " + name, e);
-		}
+	private void writeZipEntry(ZipOutputStream zipOut, String entryName, byte[] entry) throws IOException {
+		ZipEntry projectionResultsEntry = new ZipEntry(entryName);
+		zipOut.putNextEntry(projectionResultsEntry);
+		zipOut.write(entry);
+		zipOut.closeEntry();
 	}
 }

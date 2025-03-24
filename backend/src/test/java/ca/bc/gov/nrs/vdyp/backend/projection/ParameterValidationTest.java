@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.api.helpers.TestHelper;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.AbstractProjectionRequestException;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.Filters;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.FilterParameters;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.AgeYearRangeCombinationKind;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.DebugOption;
@@ -600,7 +600,7 @@ class ParameterValidationTest {
 					.ageStart(20) //
 					.combineAgeYearRange(AgeYearRangeCombinationKind.DIFFERENCE) //
 					.filters(
-							new Filters().maintainer("maintainer").mapsheet("mapsheet").polygon("polygon")
+							new FilterParameters().maintainer("maintainer").mapsheet("mapsheet").polygon("polygon")
 									.polygonId("polygonId")
 					).yearForcedIntoYieldTable(2020) //
 					.metadataToOutput(MetadataToOutputDirective.ALL) //

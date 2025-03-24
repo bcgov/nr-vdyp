@@ -119,19 +119,6 @@ class StubHcsvProjectionEndpointTest {
 		String entry1Content = new String(testHelper.readZipEntry(zipFile, entry1));
 		assertTrue(entry1Content.length() == 0);
 
-		ZipEntry entry2 = zipFile.getNextEntry();
-		assertEquals("ProgressLog.txt", entry2.getName());
-		String entry2Content = new String(testHelper.readZipEntry(zipFile, entry2));
-		assertTrue(entry2Content.isBlank());
-
-		ZipEntry entry3 = zipFile.getNextEntry();
-		assertEquals("ErrorLog.txt", entry3.getName());
-		String entry3Content = new String(testHelper.readZipEntry(zipFile, entry3));
-		assertTrue(entry3Content.isBlank());
-
-		ZipEntry entry4 = zipFile.getNextEntry();
-		assertEquals("DebugLog.txt", entry4.getName());
-		String entry4Content = new String(testHelper.readZipEntry(zipFile, entry4));
-		assertTrue(entry4Content.isBlank());
+		assertTrue(zipFile.getNextEntry() == null);
 	}
 }

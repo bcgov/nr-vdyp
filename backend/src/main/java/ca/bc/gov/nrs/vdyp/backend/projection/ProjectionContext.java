@@ -30,6 +30,7 @@ import ca.bc.gov.nrs.vdyp.backend.projection.output.IMessageLog;
 import ca.bc.gov.nrs.vdyp.backend.projection.output.MessageLog;
 import ca.bc.gov.nrs.vdyp.backend.projection.output.NullMessageLog;
 import ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable.YieldTable;
+import ca.bc.gov.nrs.vdyp.backend.utils.Utils;
 
 public class ProjectionContext {
 
@@ -53,6 +54,7 @@ public class ProjectionContext {
 	private Optional<YieldTable> yieldTable;
 
 	private ExecutorService executorService;
+	private FileSystem resourceFileSystem;
 
 	public ProjectionContext(
 			ProjectionRequestKind requestKind, String projectionId, Parameters params, boolean isTrialRun
@@ -125,9 +127,9 @@ public class ProjectionContext {
 		// ran via Native Image. It allows lookups using "resource:/" URIs which means calls like
 		// Path.of(URI) will not fail.
 		try {
-			FileSystem filesystem = FileSystems
+			resourceFileSystem = FileSystems
 					.newFileSystem(URI.create("resource:/"), Collections.singletonMap("create", "true"));
-			logger.info("Created {} filesystem", filesystem.getClass().getSimpleName());
+			logger.info("Created {} filesystem", resourceFileSystem.getClass().getSimpleName());
 		} catch (Exception e) {
 			// This will always happen outside of an native image; there no such thing as a "resource:/" file system
 			// outside of native image
@@ -164,9 +166,12 @@ public class ProjectionContext {
 		} finally {
 			try {
 				getYieldTable().close();
-			} catch (IOException | YieldTableGenerationException e) {
+			} catch (YieldTableGenerationException e) {
 				logger.error("Encountered exception closing the yield table of projection " + projectionId, e);
 			}
+
+			// Close the fileSystem instance (possibly) opened in buildProjectionExecutionStructure
+			Utils.close(resourceFileSystem, "resourceFileSystem");
 
 			// Finally, delete the execution folder tree EXECUTION_FOLDER_RETENTION_TIME_m minutes from now.
 
@@ -176,7 +181,7 @@ public class ProjectionContext {
 			);
 
 			executorService.submit(() -> {
-				Thread.sleep(EXECUTION_FOLDER_RETENTION_TIME_m * 60 * 1000);
+				Utils.sleep(EXECUTION_FOLDER_RETENTION_TIME_m * 60 * 1000L);
 
 				FileVisitor<Path> visitor = new SimpleFileVisitor<Path>() {
 					@Override
@@ -206,8 +211,6 @@ public class ProjectionContext {
 							e.getCause() != null ? ". Reason: " + e.getCause() : ""
 					);
 				}
-
-				return "completed...";
 			});
 		}
 	}

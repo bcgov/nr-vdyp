@@ -11,6 +11,7 @@ import ca.bc.gov.nrs.vdyp.backend.projection.model.Species;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Stand;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Vdyp7Constants;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
+import ca.bc.gov.nrs.vdyp.backend.utils.Utils;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 
 /**
@@ -160,8 +161,8 @@ public class FipStartOutputWriter extends AbstractOutputWriter implements Closea
 
 	@Override
 	public void close() throws IOException {
-		polygonFile.close();
-		speciesFile.close();
-		layersFile.close();
+		Utils.close(polygonFile, "polygonFile");
+		Utils.close(speciesFile, "speciesFile");
+		Utils.close(layersFile, "layers");
 	}
 }
