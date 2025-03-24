@@ -31,7 +31,7 @@ export const projectionHcsvPost = async (
 
     // Check status and content type
     if (
-      response.status === 200 &&
+      (response.status === 200 || response.status === 201) &&
       response.headers['content-type']?.includes('application/octet-stream')
     ) {
       // Success response, returns a blob
@@ -41,7 +41,8 @@ export const projectionHcsvPost = async (
       response.headers['content-type']?.includes('application/json')
     ) {
       // Errors including validation messages
-      throw new Error(JSON.stringify(response.data))
+      const errorData = await response.data.text()
+      throw new Error(errorData)
     } else {
       throw new Error(`Unexpected response: ${response.status}`)
     }
