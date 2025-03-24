@@ -45,6 +45,7 @@ export const apiClient = {
         ...options?.headers,
         Accept: 'application/octet-stream, application/json',
       },
+      responseType: 'blob',
     }
 
     return projectionApiInstance.projectionHcsvPostForm(

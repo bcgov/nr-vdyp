@@ -424,12 +424,25 @@ const runModelHandler = async () => {
 
     const response = await projectionHcsvPost(getFormData(), false)
 
+    console.log('Full response:', response)
+
     const zipFileName =
       extractZipFileName(response.headers) ||
       CONSTANTS.FILE_NAME.PROJECTION_RESULT_ZIP
     console.debug('download zip file name:', zipFileName)
 
     const resultBlob = response.data
+
+    console.log('resultBlob:', resultBlob, 'type:', resultBlob?.type)
+
+    if (!resultBlob) {
+      throw new Error('Response data is undefined')
+    }
+
+    if (!(resultBlob instanceof Blob)) {
+      throw new Error('Response data is not a Blob')
+    }
+
     downloadFile(resultBlob, zipFileName)
 
     logSuccessMessage(MESSAGE.SUCESS_MSG.FILE_UPLOAD_RUN_RESULT)
