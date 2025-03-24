@@ -7,7 +7,7 @@ import ca.bc.gov.nrs.vdyp.model.LayerType;
 
 /**
  * Trees per hectare is low or has not been set.
- * 
+ *
  * Equivalent to IPASS= -7 for VRI
  */
 public class TreesPerHectareLowException extends LayerValueLowException {
@@ -20,12 +20,40 @@ public class TreesPerHectareLowException extends LayerValueLowException {
 		super(cause, TreesPerHectareLowException.class);
 	}
 
-	public TreesPerHectareLowException(LayerType layer, Optional<Float> value) {
-		this(layer, DEFAULT_NAME, value);
+	public TreesPerHectareLowException(LayerType layer, Optional<Float> value, Optional<Float> threshold) {
+		this(layer, DEFAULT_NAME, value, threshold);
 	}
 
-	public TreesPerHectareLowException(LayerType layer, String name, Optional<Float> value) {
-		super(layer, name, value);
+	public TreesPerHectareLowException(LayerType layer, String name, Optional<Float> value, Optional<Float> threshold) {
+		super(layer, name, value, threshold);
+	}
+
+	/**
+	 * Checks that the given value is present and greater than the given threshold. Returns an optional with an
+	 * appropriate exception if it fails, an empty optional otherwise.
+	 *
+	 * @param layer
+	 * @param name
+	 * @param value
+	 * @param threshold
+	 * @return
+	 */
+	public static Optional<TreesPerHectareLowException>
+			check(LayerType layer, String name, Optional<Float> value, float threshold) {
+		return LayerValueLowException.check(layer, name, value, threshold, TreesPerHectareLowException::new);
+	}
+
+	/**
+	 * Checks that the given value is present and greater than the given threshold. Returns an optional with an
+	 * appropriate exception if it fails, an empty optional otherwise.
+	 *
+	 * @param layer
+	 * @param value
+	 * @param threshold
+	 * @return
+	 */
+	public static Optional<TreesPerHectareLowException> check(LayerType layer, Optional<Float> value, float threshold) {
+		return check(layer, DEFAULT_NAME, value, threshold);
 	}
 
 	@Override

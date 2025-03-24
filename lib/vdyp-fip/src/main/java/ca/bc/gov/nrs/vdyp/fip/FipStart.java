@@ -171,8 +171,7 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 
 	static final EnumSet<PolygonMode> ACCEPTABLE_MODES = EnumSet.of(PolygonMode.START, PolygonMode.YOUNG);
 
-	Optional<VdypPolygon> processPolygon(int polygonsRead, FipPolygon polygon)
-			throws ProcessingException {
+	Optional<VdypPolygon> processPolygon(int polygonsRead, FipPolygon polygon) throws ProcessingException {
 		VdypPolygon resultPoly;
 		log.atInfo().setMessage("Read polygon {}, preparing to process").addArgument(polygon.getPolygonIdentifier())
 				.log();
@@ -232,15 +231,18 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 
 			float minimumBaseArea = minima.get(BaseControlParser.MINIMUM_BASE_AREA);
 			float minimumPredictedBaseArea = minima.get(BaseControlParser.MINIMUM_FULLY_STOCKED_AREA);
-			if (baseAreaTotalPrime < minimumBaseArea) {
-				throw new ResultBaseAreaLowException(LayerType.PRIMARY, Optional.of(baseAreaTotalPrime));
-			}
+			ResultBaseAreaLowException.check(
+					LayerType.PRIMARY, //
+					Optional.of(baseAreaTotalPrime), //
+					minimumBaseArea //
+			);
 			float predictedBaseArea = baseAreaTotalPrime * (100f / resultPoly.getPercentAvailable());
-			if (predictedBaseArea < minimumPredictedBaseArea) {
-				throw new ResultBaseAreaLowException(
-						LayerType.PRIMARY, "Predicted base area", Optional.of(predictedBaseArea)
-				);
-			}
+			ResultBaseAreaLowException.check(
+					LayerType.PRIMARY, //
+					"Predicted base area", //
+					Optional.of(predictedBaseArea), //
+					minimumPredictedBaseArea //
+			);
 		}
 		// FIPSTK
 		adjustForStocking(
@@ -807,9 +809,13 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 		// error that total age is "less than" YTBH. Replicating that for now but
 		// consider changing it.
 
-		if (primaryLayer.getAgeTotal().orElse(0f) - primaryLayer.getYearsToBreastHeight().orElse(0f) < 0.5f) {
-			throw new TotalAgeLowException(LayerType.PRIMARY, primaryLayer.getAgeTotal());
-		}
+		throwIfPresent(
+				TotalAgeLowException.check(
+						LayerType.PRIMARY, primaryLayer.getAgeTotal(),
+
+						primaryLayer.getYearsToBreastHeight().orElse(0f) + 0.5f
+				)
+		);
 
 		// TODO This is the only validation step done to non-primary layers, VDYP7 had a
 		// less well defined idea of a layer being present or not and so it may have
@@ -818,13 +824,9 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 		// layers.
 
 		for (FipLayer layer : polygon.getLayers().values()) {
-			var height = layer.getHeight().orElse(0f);
-
-			
 			throwIfPresent(
-					heightMinimum(layer.getLayerType()).filter(minimum -> height < minimum).map(
-							minimum -> new HeightLowException(layer.getLayerType(), layer.getHeight())
-					)
+					heightMinimum(layer.getLayerType())
+							.flatMap(min -> HeightLowException.check(layer.getLayerType(), layer.getHeight(), min))
 			);
 		}
 
@@ -832,13 +834,11 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 			throw new UnsupportedModeException(polygon.getMode());
 		}
 
-		if (primaryLayer.getYearsToBreastHeight().orElse(0f) < 0.5) {
-			throw new YearsToBreastHeightLowException(LayerType.PRIMARY, primaryLayer.getYearsToBreastHeight());
-		}
+		throwIfPresent(
+				YearsToBreastHeightLowException.check(LayerType.PRIMARY, primaryLayer.getYearsToBreastHeight(), 0.5f)
+		);
 
-		if (primaryLayer.getSiteIndex().orElse(0f) < 0.5) {
-			throw new SiteIndexLowException(LayerType.PRIMARY, primaryLayer.getSiteIndex());
-		}
+		throwIfPresent(SiteIndexLowException.check(LayerType.PRIMARY, primaryLayer.getSiteIndex(), 0.5f));
 
 		for (FipLayer layer : polygon.getLayers().values()) {
 			var percentTotal = getPercentTotal(layer);

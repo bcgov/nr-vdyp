@@ -7,7 +7,7 @@ import ca.bc.gov.nrs.vdyp.model.LayerType;
 
 /**
  * Computed basal area is low.
- * 
+ *
  * Equivalent to IPASS= -13 for FIP
  */
 public class ResultBaseAreaLowException extends LayerValueLowException {
@@ -20,12 +20,12 @@ public class ResultBaseAreaLowException extends LayerValueLowException {
 		super(cause, ResultBaseAreaLowException.class);
 	}
 
-	public ResultBaseAreaLowException(LayerType layer, Optional<Float> value) {
-		this(layer, DEFAULT_NAME, value);
+	public ResultBaseAreaLowException(LayerType layer, Optional<Float> value, Optional<Float> threshold) {
+		this(layer, DEFAULT_NAME, value, threshold);
 	}
 
-	public ResultBaseAreaLowException(LayerType layer, String name, Optional<Float> value) {
-		super(layer, name, value);
+	public ResultBaseAreaLowException(LayerType layer, String name, Optional<Float> value, Optional<Float> threshold) {
+		super(layer, name, value, threshold);
 	}
 
 	@Override
@@ -33,6 +33,34 @@ public class ResultBaseAreaLowException extends LayerValueLowException {
 		if (app == VdypApplicationIdentifier.FIP_START)
 			return Optional.of(-13);
 		return Optional.empty();
+	}
+
+	/**
+	 * Checks that the given value is present and greater than the given threshold. Returns an optional with an
+	 * appropriate exception if it fails, an empty optional otherwise.
+	 *
+	 * @param layer
+	 * @param name
+	 * @param value
+	 * @param threshold
+	 * @return
+	 */
+	public static Optional<ResultBaseAreaLowException>
+			check(LayerType layer, String name, Optional<Float> value, float threshold) {
+		return LayerValueLowException.check(layer, name, value, threshold, ResultBaseAreaLowException::new);
+	}
+
+	/**
+	 * Checks that the given value is present and greater than the given threshold. Returns an optional with an
+	 * appropriate exception if it fails, an empty optional otherwise.
+	 *
+	 * @param layer
+	 * @param value
+	 * @param threshold
+	 * @return
+	 */
+	public static Optional<ResultBaseAreaLowException> check(LayerType layer, Optional<Float> value, float threshold) {
+		return check(layer, DEFAULT_NAME, value, threshold);
 	}
 
 }

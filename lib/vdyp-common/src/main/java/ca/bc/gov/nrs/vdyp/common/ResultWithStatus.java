@@ -8,7 +8,7 @@ public record ResultWithStatus<V, S>(V value, S status) {
 	static interface Status {
 		/**
 		 * The status is normal and unexceptional.
-		 * 
+		 *
 		 * @return
 		 */
 		boolean isOK();
@@ -18,8 +18,7 @@ public record ResultWithStatus<V, S>(V value, S status) {
 	 * A basic status enum
 	 */
 	public enum BasicStatus implements Status {
-		OK(true),
-		WARNING(false);
+		OK(true), WARNING(false);
 
 		private final boolean ok;
 

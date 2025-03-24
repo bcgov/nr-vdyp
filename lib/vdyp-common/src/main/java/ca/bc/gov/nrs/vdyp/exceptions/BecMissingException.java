@@ -6,7 +6,7 @@ import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 
 /**
  * BEC has not been set.
- * 
+ *
  * Equivalent to IPASS= -12 for VRI
  */
 public class BecMissingException extends StandProcessingException {
@@ -14,7 +14,6 @@ public class BecMissingException extends StandProcessingException {
 	private static final long serialVersionUID = 5267990153323800885L;
 
 	static final String TEMPLATE_MISSING = "Required BEC was missing";
-
 
 	BecMissingException(Throwable cause) {
 		super(TEMPLATE_MISSING, cause);

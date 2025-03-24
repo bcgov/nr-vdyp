@@ -31,11 +31,13 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.application.ApplicationTestUtils;
+import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.application.VdypStartApplication;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.UnsupportedModeException;
 import ca.bc.gov.nrs.vdyp.fip.model.FipLayer;
 import ca.bc.gov.nrs.vdyp.fip.model.FipLayerPrimary;
 import ca.bc.gov.nrs.vdyp.fip.model.FipLayerPrimary.PrimaryBuilder;
@@ -323,14 +325,12 @@ class FipStartTest {
 			var layer = this.getTestPrimaryLayer(polygonId, TestUtils.valid(), TestUtils.valid());
 			polygon.setLayers(List.of(layer));
 
-			var ex = assertThrows(StandProcessingException.class, () -> app.checkPolygon(polygon));
+			var ex = assertThrows(UnsupportedModeException.class, () -> app.checkPolygon(polygon));
+			assertThat(ex, hasProperty("message", is("Mode YOUNG is not supported.")));
 			assertThat(
-					ex,
-					hasProperty(
-							"message",
-							is("Polygon " + polygonId + " is using unsupported mode " + PolygonMode.YOUNG + ".")
-					)
+					"IPASS code for FIP_START", ex.getIpassCode(VdypApplicationIdentifier.FIP_START), present(is(-4))
 			);
+			assertThat("IPASS code for VRI_START", ex.getIpassCode(VdypApplicationIdentifier.VRI_START), notPresent());
 		}
 
 	}

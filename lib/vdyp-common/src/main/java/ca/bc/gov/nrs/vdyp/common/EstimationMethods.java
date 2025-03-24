@@ -845,7 +845,7 @@ public class EstimationMethods {
 		}
 
 		if (ageToUse <= 0f) {
-			throw new BreastHeightAgeLowException(LayerType.PRIMARY, Optional.of(ageToUse));
+			throw new BreastHeightAgeLowException(LayerType.PRIMARY, Optional.of(ageToUse), Optional.of(0f));
 		}
 
 		float trAge = FloatMath.log(ageToUse);
@@ -904,7 +904,7 @@ public class EstimationMethods {
 		}
 
 		if (ageUse <= 0f) {
-			throw new BreastHeightAgeLowException(LayerType.PRIMARY, Optional.of(ageUse));
+			throw new BreastHeightAgeLowException(LayerType.PRIMARY, Optional.of(ageUse), Optional.of(0f));
 		}
 
 		final float trAge = FloatMath.log(ageUse);

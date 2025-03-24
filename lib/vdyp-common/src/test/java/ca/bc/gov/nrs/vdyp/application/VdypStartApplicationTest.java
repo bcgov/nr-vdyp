@@ -945,6 +945,7 @@ class VdypStartApplicationTest {
 				);
 
 				assertThat(ex, hasProperty("value", present(is(0f))));
+				assertThat(ex, hasProperty("threshold", present(is(0.05f))));
 			}
 		}
 

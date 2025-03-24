@@ -8,7 +8,7 @@ import ca.bc.gov.nrs.vdyp.model.LayerType;
 
 /**
  * Height is low or has not been set.
- * 
+ *
  * If layer is PRIMARY it's equivalent to IPASS=-4/-6 for FIP/VRI, if layer is VETERAN, to -5/-10
  */
 public class HeightLowException extends LayerValueLowException {
@@ -21,12 +21,40 @@ public class HeightLowException extends LayerValueLowException {
 		super(cause, HeightLowException.class);
 	}
 
-	public HeightLowException(LayerType layer, Optional<Float> value) {
-		this(layer, DEFAULT_NAME, value);
+	public HeightLowException(LayerType layer, Optional<Float> value, Optional<Float> threshold) {
+		this(layer, DEFAULT_NAME, value, threshold);
 	}
 
-	public HeightLowException(LayerType layer, String name, Optional<Float> value) {
-		super(layer, name, value);
+	public HeightLowException(LayerType layer, String name, Optional<Float> value, Optional<Float> threshold) {
+		super(layer, name, value, threshold);
+	}
+
+	/**
+	 * Checks that the given value is present and greater than the given threshold. Returns an optional with an
+	 * appropriate exception if it fails, an empty optional otherwise.
+	 *
+	 * @param layer
+	 * @param name
+	 * @param value
+	 * @param threshold
+	 * @return
+	 */
+	public static Optional<HeightLowException>
+			check(LayerType layer, String name, Optional<Float> value, float threshold) {
+		return LayerValueLowException.check(layer, name, value, threshold, HeightLowException::new);
+	}
+
+	/**
+	 * Checks that the given value is present and greater than the given threshold. Returns an optional with an
+	 * appropriate exception if it fails, an empty optional otherwise.
+	 *
+	 * @param layer
+	 * @param value
+	 * @param threshold
+	 * @return
+	 */
+	public static Optional<HeightLowException> check(LayerType layer, Optional<Float> value, float threshold) {
+		return check(layer, DEFAULT_NAME, value, threshold);
 	}
 
 	@Override

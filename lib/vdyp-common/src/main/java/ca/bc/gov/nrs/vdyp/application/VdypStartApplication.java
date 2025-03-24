@@ -300,8 +300,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	protected L requireLayer(P polygon, LayerType type) throws ProcessingException {
 		if (!polygon.getLayers().containsKey(type)) {
 			throw validationError(
-					-1, -1,
-					"Polygon \"%s\" has no %s layer, or that layer has non-positive height or crown closure.",
+					-1, -1, "Polygon \"%s\" has no %s layer, or that layer has non-positive height or crown closure.",
 					polygon.getPolygonIdentifier(), type
 			);
 		}
@@ -624,9 +623,8 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		baseArea *= yieldFactor;
 
 		// This is to prevent underflow errors in later calculations
-		if (baseArea <= 0.05f) {
-			throw new BaseAreaLowException(layer.getLayerType(), "Estimated base area", Optional.of(baseArea));
-		}
+		BaseAreaLowException.check(layer.getLayerType(), "Estimated base area", Optional.of(baseArea), 0.05f);
+
 		return baseArea;
 	}
 
@@ -685,9 +683,8 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		}
 	}
 
-	protected static StandProcessingException validationError(
-			Integer ipassFip, Integer ipassVri, String template, Object... values
-	) {
+	protected static StandProcessingException
+			validationError(Integer ipassFip, Integer ipassVri, String template, Object... values) {
 		// TODO this is temporary and should be removed
 
 		return new StandProcessingException(String.format(template, values)) {
@@ -702,16 +699,12 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		};
 	}
 
-	protected static FatalProcessingException fatalError(
-			String template, Object... values
-	) {
+	protected static FatalProcessingException fatalError(String template, Object... values) {
 
 		return new FatalProcessingException(String.format(template, values));
 	}
 
-	protected static FatalProcessingException causedFatalError(
-			String template, Throwable cause, Object... values
-	) {
+	protected static FatalProcessingException causedFatalError(String template, Throwable cause, Object... values) {
 
 		return new FatalProcessingException(String.format(template, values), cause);
 	}
