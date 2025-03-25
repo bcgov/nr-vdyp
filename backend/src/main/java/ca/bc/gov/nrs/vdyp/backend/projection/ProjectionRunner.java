@@ -28,13 +28,13 @@ public class ProjectionRunner {
 
 	private static final Logger logger = LoggerFactory.getLogger(ProjectionRunner.class);
 
-	private static final String FORWARD_POLYGON_ENTRY_NAME = "ForwardPolygon";
-	private static final String FORWARD_SPECIES_ENTRY_NAME = "ForwardSpecies";
-	private static final String FORWARD_UTILIZATION_ENTRY_NAME = "ForwardUtilization";
-	private static final String FORWARD_COMPATIBILITY_ENTRY_NAME = "ForwardCompatibility";
-	private static final String BACK_POLYGON_ENTRY_NAME = "BackPolygon";
-	private static final String BACK_SPECIES_ENTRY_NAME = "BackSpecies";
-	private static final String BACK_UTILIZATION_ENTRY_NAME = "BackUtilization";
+	public static final String FORWARD_POLYGON_ENTRY_NAME = "ForwardPolygon";
+	public static final String FORWARD_SPECIES_ENTRY_NAME = "ForwardSpecies";
+	public static final String FORWARD_UTILIZATION_ENTRY_NAME = "ForwardUtilization";
+	public static final String FORWARD_COMPATIBILITY_ENTRY_NAME = "ForwardCompatibility";
+	public static final String BACK_POLYGON_ENTRY_NAME = "BackPolygon";
+	public static final String BACK_SPECIES_ENTRY_NAME = "BackSpecies";
+	public static final String BACK_UTILIZATION_ENTRY_NAME = "BackUtilization";
 
 	private static final Map<String, String> entryNameToFileNameMap = new HashMap<>();
 
@@ -118,28 +118,26 @@ public class ProjectionRunner {
 		var projectionResults = new HashMap<ProjectionResultsKey, InputStream>();
 
 		if (context.getValidatedParams().containsOption(ExecutionOption.DO_INCLUDE_PROJECTION_FILES)) {
-			try {
-				try (var polygonFolders = Files.list(context.getExecutionFolder()).filter(e -> Files.isDirectory(e))) {
-					for (var polygonFolder : polygonFolders.toList()) {
 
-						try (var projectionTypeFolders = Files.list(polygonFolder).filter(e -> Files.isDirectory(e))) {
-							for (var projectionTypeFolder : projectionTypeFolders.toList()) {
+			try (var polygonFolders = Files.list(context.getExecutionFolder()).filter(e -> Files.isDirectory(e))) {
+				for (var polygonFolder : polygonFolders.toList()) {
 
-								for (var entry : entryNameToFileNameMap.entrySet()) {
+					try (var projectionTypeFolders = Files.list(polygonFolder).filter(e -> Files.isDirectory(e))) {
+						for (var projectionTypeFolder : projectionTypeFolders.toList()) {
 
-									Path expectedFileName = Path.of(projectionTypeFolder.toString(), entry.getValue());
-									if (Files.exists(expectedFileName) && Files.isRegularFile(expectedFileName)) {
-										var polygonId = polygonFolder.getName(polygonFolder.getNameCount() - 1);
-										var projectionType = projectionTypeFolder
-												.getName(projectionTypeFolder.getNameCount() - 1);
-										var key = new ProjectionResultsKey(
-												polygonId.toString(), projectionType.toString(), entry.getKey()
-										);
+							for (var entry : entryNameToFileNameMap.entrySet()) {
 
-										projectionResults.put(
-												key, Files.newInputStream(expectedFileName, StandardOpenOption.READ)
-										);
-									}
+								Path expectedFileName = Path.of(projectionTypeFolder.toString(), entry.getValue());
+								if (Files.exists(expectedFileName) && Files.isRegularFile(expectedFileName)) {
+									var polygonId = polygonFolder.getName(polygonFolder.getNameCount() - 1);
+									var projectionType = projectionTypeFolder
+											.getName(projectionTypeFolder.getNameCount() - 1);
+									var key = new ProjectionResultsKey(
+											polygonId.toString(), projectionType.toString(), entry.getKey()
+									);
+
+									projectionResults
+											.put(key, Files.newInputStream(expectedFileName, StandardOpenOption.READ));
 								}
 							}
 						}

@@ -3,12 +3,18 @@ package ca.bc.gov.nrs.vdyp.backend.projection.input;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.opencsv.bean.CsvToBean;
+import com.opencsv.bean.exceptionhandler.ExceptionHandlerQueue;
+import com.opencsv.exceptions.CsvConstraintViolationException;
+
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.SeverityCode;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
@@ -37,9 +43,11 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 
 	private static Logger logger = LoggerFactory.getLogger(HcsvPolygonStream.class);
 
+	private CsvToBean<HcsvPolygonRecordBean> hcsvPolygonStream;
 	private CsvStreamIterator<HcsvPolygonRecordBean> polygonRecordIterator;
 	private HcsvPolygonRecordBean nextPolygonRecord;
 
+	private CsvToBean<HcsvLayerRecordBean> hcsvLayerStream;
 	private CsvStreamIterator<HcsvLayerRecordBean> layerRecordIterator;
 	private HcsvLayerRecordBean nextLayerRecord;
 
@@ -47,10 +55,12 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 
 		super(context);
 
-		var hcsvPolygonStream = HcsvPolygonRecordBean.createHcsvPolygonStream(polygonStream).iterator();
-		polygonRecordIterator = new CsvStreamIterator<>(hcsvPolygonStream);
-		var hcsvLayerStream = HcsvLayerRecordBean.createHcsvLayerStream(layersStream).iterator();
-		layerRecordIterator = new CsvStreamIterator<>(hcsvLayerStream);
+		var exceptionHandler = new ExceptionHandlerQueue();
+
+		hcsvPolygonStream = HcsvPolygonRecordBean.createHcsvPolygonStream(exceptionHandler, polygonStream);
+		polygonRecordIterator = new CsvStreamIterator<>(hcsvPolygonStream.iterator());
+		hcsvLayerStream = HcsvLayerRecordBean.createHcsvLayerStream(exceptionHandler, layersStream);
+		layerRecordIterator = new CsvStreamIterator<>(hcsvLayerStream.iterator());
 
 		advanceToFirstPolygon();
 	}
@@ -68,23 +78,69 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 		}
 
 		Polygon polygon = null;
+
+		List<ValidationMessage> validationMessagesSeenDuringRead = new ArrayList<ValidationMessage>();
+		PolygonValidationException validationExceptionSeenDuringBuild = null;
 		try {
+			validationMessagesSeenDuringRead = collectExceptions();
 			polygon = buildPolygon();
+		} catch (PolygonValidationException e) {
+			validationExceptionSeenDuringBuild = e;
 		} finally {
 			advanceToNextPolygon();
+		}
+
+		if (validationExceptionSeenDuringBuild != null) {
+			if (validationMessagesSeenDuringRead.size() > 0) {
+				validationMessagesSeenDuringRead.addAll(validationExceptionSeenDuringBuild.getValidationMessages());
+				throw new PolygonValidationException(validationMessagesSeenDuringRead);
+			} else {
+				throw validationExceptionSeenDuringBuild;
+			}
+		} else if (validationMessagesSeenDuringRead.size() > 0) {
+			throw new PolygonValidationException(validationMessagesSeenDuringRead);
 		}
 
 		return polygon;
 	}
 
+	private List<ValidationMessage> collectExceptions() {
+		var messages = new ArrayList<ValidationMessage>();
+
+		for (var e : hcsvPolygonStream.getCapturedExceptions()) {
+			collectMessages(messages, e);
+		}
+
+		for (var e : hcsvLayerStream.getCapturedExceptions()) {
+			collectMessages(messages, e);
+		}
+
+		return messages;
+	}
+
+	private void collectMessages(List<ValidationMessage> messages, Exception e) {
+		if (e instanceof CsvConstraintViolationException cve) {
+			if (cve.getSourceObject() instanceof AbstractProjectionRequestException apre) {
+				messages.addAll(apre.getValidationMessages());
+			} else {
+				throw new IllegalStateException(
+						"Expecting instanceof AbstractProjectionRequestException; saw instead " + e.getClass().getName()
+				);
+			}
+			System.out.println(e);
+		} else {
+			throw new IllegalStateException(
+					"Expecting instanceof CsvConstraintViolationException; saw instead " + e.getClass().getName()
+			);
+		}
+	}
+
 	private void advanceToFirstPolygon() {
 
 		Validate.isTrue(
-				nextPolygonRecord == null, "HcsvPolygonStream.advanceToFirstPolygon: nextPolygonRecord must not be null"
+				nextPolygonRecord == null, "HcsvPolygonStream.advanceToFirstPolygon: nextPolygonRecord must be null"
 		);
-		Validate.isTrue(
-				nextLayerRecord == null, "HcsvPolygonStream.nextLayerRecord: nextPolygonRecord must not be null"
-		);
+		Validate.isTrue(nextLayerRecord == null, "HcsvPolygonStream.nextLayerRecord: nextPolygonRecord must be null");
 
 		if (polygonRecordIterator.hasNext()) {
 			nextPolygonRecord = polygonRecordIterator.next();
@@ -126,86 +182,98 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 
 	private Polygon buildPolygon() throws PolygonValidationException {
 
-		var nonVegetationMap = nextPolygonRecord.getNonVegCoverDetails();
-		var otherVegetationMap = nextPolygonRecord.getOtherVegCoverDetails();
+		Polygon polygon = null;
 
-		BecZone bec = BecZoneMethods.becZoneToIndex(nextPolygonRecord.getBecZoneCode());
-		Long polygonFeatureId = nextPolygonRecord.getFeatureId();
+		try {
+			var nonVegetationMap = nextPolygonRecord.getNonVegCoverDetails();
+			var otherVegetationMap = nextPolygonRecord.getOtherVegCoverDetails();
 
-		var polygonReportingInfo = new PolygonReportingInfo.Builder().featureId(polygonFeatureId)
-				.polygonNumber(nextPolygonRecord.getPolygonNumber()).mapSheet(nextPolygonRecord.getMapId())
-				.mapQuad("0" /* lcl_CopyPolygonDataInfoSnapshot, line 3162 */)
-				.mapSubQuad("0" /* lcl_CopyPolygonDataInfoSnapshot, line 3163 */)
-				.nonProdDescriptor(nextPolygonRecord.getNonProductiveDescriptorCode()).district(null)
-				.referenceYear(nextPolygonRecord.getReferenceYear()).build();
+			BecZone bec = BecZoneMethods.becZoneToIndex(nextPolygonRecord.getBecZoneCode());
+			Long polygonFeatureId = nextPolygonRecord.getFeatureId();
 
-		var layers = new HashMap<String /* layer id */, Layer>();
+			var polygonReportingInfo = new PolygonReportingInfo.Builder().featureId(polygonFeatureId)
+					.polygonNumber(nextPolygonRecord.getPolygonNumber()).mapSheet(nextPolygonRecord.getMapId())
+					.mapQuad("0" /* lcl_CopyPolygonDataInfoSnapshot, line 3162 */)
+					.mapSubQuad("0" /* lcl_CopyPolygonDataInfoSnapshot, line 3163 */)
+					.nonProdDescriptor(nextPolygonRecord.getNonProductiveDescriptorCode()).district(null)
+					.referenceYear(nextPolygonRecord.getReferenceYear()).build();
 
-		Polygon polygon = new Polygon.Builder() //
-				.becZone(bec.getText()) //
-				.cfsEcoZone(nextPolygonRecord.getCfsEcoZoneCode()) //
-				.coastal(bec.getSpeciesRegion() == SpeciesRegion.COAST) //
-				.deadLayer(null) // set later
-				.district(null /* not available in HCSV input */) //
-				.doAllowProjection(true) //
-				.doAllowProjectionOfType(initializeProjectionMap(true)) //
-				.featureId(nextPolygonRecord.getFeatureId()) //
-				.inventoryStandard(InventoryStandard.getFromCode(nextPolygonRecord.getInventoryStandardCode())) //
-				.mapSheet(nextPolygonRecord.getMapId()) //
-				.nonProductiveDescriptor(nextPolygonRecord.getNonProductiveDescriptorCode()).nonVegetationTypes(null) //
-				.nonVegetationTypes(nonVegetationMap) //
-				.otherVegetationTypes(otherVegetationMap) //
-				.percentStockable(nextPolygonRecord.getPercentStockable()) //
-				.percentStockableDead(nextPolygonRecord.getPercentDead()) //
-				.polygonNumber(nextPolygonRecord.getPolygonNumber()) //
-				.referenceYear(nextPolygonRecord.getReferenceYear()) //
-				.reportingInfo(polygonReportingInfo) //
-				.layers(layers) //
-				.build();
+			var layers = new HashMap<String /* layer id */, Layer>();
 
-		int layerOrderNumber = 0;
-		while (nextLayerRecord != null && nextLayerRecord.getFeatureId() == polygonFeatureId) {
+			polygon = new Polygon.Builder() //
+					.becZone(bec.getText()) //
+					.cfsEcoZone(nextPolygonRecord.getCfsEcoZoneCode()) //
+					.coastal(bec.getSpeciesRegion() == SpeciesRegion.COAST) //
+					.deadLayer(null) // set later
+					.district(null /* not available in HCSV input */) //
+					.doAllowProjection(true) //
+					.doAllowProjectionOfType(initializeProjectionMap(true)) //
+					.featureId(nextPolygonRecord.getFeatureId()) //
+					.inventoryStandard(InventoryStandard.getFromCode(nextPolygonRecord.getInventoryStandardCode())) //
+					.mapSheet(nextPolygonRecord.getMapId()) //
+					.nonProductiveDescriptor(nextPolygonRecord.getNonProductiveDescriptorCode())
+					.nonVegetationTypes(null) //
+					.nonVegetationTypes(nonVegetationMap) //
+					.otherVegetationTypes(otherVegetationMap) //
+					.percentStockable(nextPolygonRecord.getPercentStockable()) //
+					.percentStockableDead(nextPolygonRecord.getPercentDead()) //
+					.polygonNumber(nextPolygonRecord.getPolygonNumber()) //
+					.referenceYear(nextPolygonRecord.getReferenceYear()) //
+					.reportingInfo(polygonReportingInfo) //
+					.layers(layers) //
+					.build();
 
-			try {
-				// Note that HCSV contains no history information (lcl_CopyHistoryDataIntoSnapshot)
-				var history = new History.Builder().build();
+			int layerOrderNumber = 0;
+			while (nextLayerRecord != null && nextLayerRecord.getFeatureId() == polygonFeatureId) {
 
-				Layer layer = new Layer.Builder() //
-						.polygon(polygon) //
-						.assignedProjectionType(ProjectionTypeCode.UNKNOWN) //
-						.layerId(nextLayerRecord.getLayerId()) //
-						.basalArea(nextLayerRecord.getBasalArea()) //
-						.crownClosure(nextLayerRecord.getCrownClosure()) //
-						.estimatedSiteIndex(nextLayerRecord.getEstimatedSiteIndex()) //
-						.estimatedSiteIndexSpecies(nextLayerRecord.getEstimatedSiteIndexSpeciesCode()) //
-						.measuredUtilizationLevel(7.5 /* from lcl_CopyLayerDataIntoSnapshot, line 4596 */) //
-						.nonForestDescriptor(nextLayerRecord.getNonForestDescriptorCode()) //
-						.precentStockable(nextLayerRecord.getLayerStockability()) //
-						.rankCode(nextLayerRecord.getForestCoverRankCode()) //
-						.treesPerHectare(nextLayerRecord.getStemsPerHectare()) //
-						.vdyp7LayerCode(nextLayerRecord.getTargetVdyp7LayerCode()) //
-						.history(history) //
-						.build();
+				try {
+					// Note that HCSV contains no history information (lcl_CopyHistoryDataIntoSnapshot)
+					var history = new History.Builder().build();
 
-				addLayerToPolygon(polygon, layer);
+					Layer layer = new Layer.Builder() //
+							.polygon(polygon) //
+							.assignedProjectionType(ProjectionTypeCode.UNKNOWN) //
+							.layerId(nextLayerRecord.getLayerId()) //
+							.basalArea(nextLayerRecord.getBasalArea()) //
+							.crownClosure(nextLayerRecord.getCrownClosure()) //
+							.estimatedSiteIndex(nextLayerRecord.getEstimatedSiteIndex()) //
+							.estimatedSiteIndexSpecies(nextLayerRecord.getEstimatedSiteIndexSpeciesCode()) //
+							.measuredUtilizationLevel(7.5 /* from lcl_CopyLayerDataIntoSnapshot, line 4596 */) //
+							.nonForestDescriptor(nextLayerRecord.getNonForestDescriptorCode()) //
+							.precentStockable(nextLayerRecord.getLayerStockability()) //
+							.rankCode(nextLayerRecord.getForestCoverRankCode()) //
+							.treesPerHectare(nextLayerRecord.getStemsPerHectare()) //
+							.vdyp7LayerCode(nextLayerRecord.getTargetVdyp7LayerCode()) //
+							.history(history) //
+							.build();
 
-				var layerReportingInfo = new LayerReportingInfo.Builder() //
-						.layer(layer) //
-						.sourceLayerID(layerOrderNumber) //
-						.build();
+					addLayerToPolygon(polygon, layer);
 
-				polygonReportingInfo.getLayerReportingInfos().put(layerReportingInfo.getLayerID(), layerReportingInfo);
+					var layerReportingInfo = new LayerReportingInfo.Builder() //
+							.layer(layer) //
+							.sourceLayerID(layerOrderNumber) //
+							.build();
 
-				buildStandsAndSpecies(polygon, layer);
+					polygonReportingInfo.getLayerReportingInfos()
+							.put(layerReportingInfo.getLayerID(), layerReportingInfo);
 
-			} finally {
-				layerOrderNumber += 1;
+					buildStandsAndSpecies(polygon, layer);
 
-				advanceToNextLayer();
+				} finally {
+					layerOrderNumber += 1;
+
+					advanceToNextLayer();
+				}
+			}
+
+			polygon.doCompleteDefinition(context);
+
+		} catch (Exception e) {
+			if (! (e instanceof PolygonValidationException)) {
+				var message = new ValidationMessage(ValidationMessageKind.GENERIC, e.getMessage());
+				throw new PolygonValidationException(message);
 			}
 		}
-
-		polygon.doCompleteDefinition(context);
 
 		logger.info("Successfully read polygon with feature id \"{}\"", polygon.getFeatureId());
 

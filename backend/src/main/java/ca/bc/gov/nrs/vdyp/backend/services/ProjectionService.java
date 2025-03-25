@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.ZipEntry;
@@ -20,15 +21,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.Exceptions;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionInternalExecutionException;
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestValidationException;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.ParameterNames;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ProjectionRequestKind;
 import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionRunner;
+import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionRunner.ProjectionResultsKey;
 import ca.bc.gov.nrs.vdyp.backend.utils.FileHelper;
 import ca.bc.gov.nrs.vdyp.backend.utils.Utils;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -154,30 +156,40 @@ public class ProjectionService {
 		InputStream errorLogStream = null;
 		Map<ProjectionRunner.ProjectionResultsKey, InputStream> projectionResults = null;
 
-		var baos = new ByteArrayOutputStream();
-		try (ZipOutputStream zipOut = new ZipOutputStream(baos)) {
+		try {
+			var baos = new ByteArrayOutputStream();
+			try (var zipOut = new ZipOutputStream(baos)) {
 
-			yieldTableStream = runner.getYieldTable();
-			progressLogStream = runner.getProgressStream();
-			errorLogStream = runner.getErrorStream();
+				yieldTableStream = runner.getYieldTable();
+				progressLogStream = runner.getProgressStream();
+				errorLogStream = runner.getErrorStream();
 
-			writeZipEntry(zipOut, "YieldTable.csv", yieldTableStream.readAllBytes());
+				writeZipEntry(zipOut, "YieldTable.csv", yieldTableStream.readAllBytes());
 
-			if (runner.getContext().getValidatedParams().containsOption(ExecutionOption.DO_ENABLE_PROGRESS_LOGGING)) {
-				writeZipEntry(zipOut, "ProgressLog.txt", runner.getProgressStream().readAllBytes());
-			}
+				if (runner.getContext().getValidatedParams()
+						.containsOption(ExecutionOption.DO_ENABLE_PROGRESS_LOGGING)) {
+					writeZipEntry(zipOut, "ProgressLog.txt", runner.getProgressStream().readAllBytes());
+				}
 
-			if (runner.getContext().getValidatedParams().containsOption(ExecutionOption.DO_ENABLE_ERROR_LOGGING)) {
-				writeZipEntry(zipOut, "ErrorLog.txt", runner.getErrorStream().readAllBytes());
-			}
+				if (runner.getContext().getValidatedParams().containsOption(ExecutionOption.DO_ENABLE_ERROR_LOGGING)) {
+					writeZipEntry(zipOut, "ErrorLog.txt", runner.getErrorStream().readAllBytes());
+				}
 
-			if (runner.getContext().getValidatedParams().containsOption(ExecutionOption.DO_ENABLE_DEBUG_LOGGING)) {
-				writeZipEntry(zipOut, "DebugLog.txt", debugLogStream.readAllBytes());
-			}
+				if (runner.getContext().getValidatedParams().containsOption(ExecutionOption.DO_ENABLE_DEBUG_LOGGING)) {
+					writeZipEntry(zipOut, "DebugLog.txt", debugLogStream.readAllBytes());
+				}
 
-			projectionResults = runner.getProjectionResults();
-			for (var e : projectionResults.entrySet()) {
-				writeZipEntry(zipOut, e.getKey().toString(), e.getValue().readAllBytes());
+				projectionResults = runner.getProjectionResults();
+
+				for (var e : projectionResults.entrySet()) {
+					writeZipEntry(zipOut, e.getKey().toString(), e.getValue().readAllBytes());
+				}
+			} catch (IOException e) {
+				return Response.status(500)
+						.entity(
+								"Saw IOException closing zip file containing results" + e.getMessage() != null
+										? ": " + e.getMessage() : ""
+						).build();
 			}
 
 			byte[] resultingByteArray = baos.toByteArray();
@@ -189,9 +201,10 @@ public class ProjectionService {
 			var outputFileName = "vdyp-output-" + java.time.LocalDateTime.now().format(dateTimeFormatter) + ".zip";
 
 			return Response.ok(resultingByteArray).status(Status.CREATED)
-					.header("content-disposition", "attachment;filename=\"" + outputFileName + "\"").build();
+					.header("content-disposition", "attachment;filename=\"" + outputFileName + "\"")
+					.header("content-type", "application/octet-stream").build();
 
-		} catch (ProjectionInternalExecutionException | IOException e) {
+		} catch (ProjectionInternalExecutionException e) {
 			String message = Exceptions.getMessage(e, "Projection, when creating output zip,");
 			logger.error(message, e);
 

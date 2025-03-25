@@ -14,6 +14,7 @@ import com.opencsv.bean.BeanVerifier;
 import com.opencsv.bean.CsvBindByPosition;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
+import com.opencsv.bean.exceptionhandler.CsvExceptionHandler;
 import com.opencsv.bean.processor.ConvertEmptyOrBlankStringsToNull;
 import com.opencsv.bean.processor.PreAssignmentProcessor;
 import com.opencsv.exceptions.CsvConstraintViolationException;
@@ -32,6 +33,17 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 public class HcsvLayerRecordBean {
 
 	private static final Logger logger = LoggerFactory.getLogger(HcsvLayerRecordBean.class);
+
+	public static CsvToBean<HcsvLayerRecordBean>
+			createHcsvLayerStream(CsvExceptionHandler exceptionHandler, InputStream layersCsvStream) {
+		return new CsvToBeanBuilder<HcsvLayerRecordBean>(new BufferedReader(new InputStreamReader(layersCsvStream))) //
+				.withSeparator(',') //
+				.withType(HcsvLayerRecordBean.class) //
+				.withFilter(new HcsvLineFilter(true, true)) //
+				.withVerifier(new HcsvLayerRecordBeanValidator()) //
+				.withExceptionHandler(exceptionHandler) //
+				.build();
+	}
 
 	public static CsvToBean<HcsvLayerRecordBean> createHcsvLayerStream(InputStream layersCsvStream) {
 		return new CsvToBeanBuilder<HcsvLayerRecordBean>(new BufferedReader(new InputStreamReader(layersCsvStream))) //

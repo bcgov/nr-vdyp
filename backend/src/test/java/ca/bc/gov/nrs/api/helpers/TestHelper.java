@@ -28,6 +28,7 @@ import com.opencsv.bean.CsvBindByName;
 import com.opencsv.bean.CsvBindByPosition;
 
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessageKind;
 import ca.bc.gov.nrs.vdyp.backend.projection.input.HcsvPolygonRecordBean;
@@ -72,9 +73,12 @@ public class TestHelper {
 	}
 
 	public Parameters addSelectedOptions(Parameters params, Parameters.ExecutionOption... executionOptions) {
-
 		params.setSelectedExecutionOptions(List.of(executionOptions));
+		return params;
+	}
 
+	public Parameters addExcludedOptions(Parameters params, ExecutionOption executionOptions) {
+		params.setExcludedExecutionOptions(List.of(executionOptions));
 		return params;
 	}
 

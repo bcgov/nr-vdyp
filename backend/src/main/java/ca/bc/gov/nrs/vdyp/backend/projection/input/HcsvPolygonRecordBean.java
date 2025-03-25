@@ -14,6 +14,7 @@ import com.opencsv.bean.CsvBindByName;
 import com.opencsv.bean.CsvBindByPosition;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
+import com.opencsv.bean.exceptionhandler.CsvExceptionHandler;
 import com.opencsv.bean.processor.ConvertEmptyOrBlankStringsToDefault;
 import com.opencsv.bean.processor.ConvertEmptyOrBlankStringsToNull;
 import com.opencsv.bean.processor.PreAssignmentProcessor;
@@ -34,6 +35,17 @@ public class HcsvPolygonRecordBean {
 	private static final Logger logger = LoggerFactory.getLogger(HcsvPolygonRecordBean.class);
 
 	private static final String DEFAULT_MAP_ID = "UNKNOWN";
+
+	public static CsvToBean<HcsvPolygonRecordBean>
+			createHcsvPolygonStream(CsvExceptionHandler exceptionHandler, InputStream polygonStream) {
+		return new CsvToBeanBuilder<HcsvPolygonRecordBean>(new BufferedReader(new InputStreamReader(polygonStream))) //
+				.withSeparator(',') //
+				.withType(HcsvPolygonRecordBean.class) //
+				.withFilter(new HcsvLineFilter(true, true)) //
+				.withVerifier(new HcsvPolygonRecordBeanValidator()) //
+				.withExceptionHandler(exceptionHandler) //
+				.build();
+	}
 
 	public static CsvToBean<HcsvPolygonRecordBean> createHcsvPolygonStream(InputStream polygonStream) {
 		return new CsvToBeanBuilder<HcsvPolygonRecordBean>(new BufferedReader(new InputStreamReader(polygonStream))) //
