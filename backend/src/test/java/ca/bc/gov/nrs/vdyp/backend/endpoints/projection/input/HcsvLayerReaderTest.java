@@ -31,9 +31,10 @@ public class HcsvLayerReaderTest {
 
 		logger.info("Starting testHscvLayerReader");
 
-		Path resourceFolderPath = Path.of("test-data-files", FileHelper.HCSV, "single-polygon");
+		Path resourceFolderPath = Path.of("test-data-files", FileHelper.HCSV, "common");
 
-		byte[] csvBytes = Files.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_LAYER.csv"));
+		byte[] csvBytes = Files
+				.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_LAYER_VRI.csv"));
 
 		var layerCsvStream = new CsvToBeanBuilder<HcsvLayerRecordBean>(
 				new BufferedReader(new InputStreamReader(new ByteArrayInputStream(csvBytes)))
