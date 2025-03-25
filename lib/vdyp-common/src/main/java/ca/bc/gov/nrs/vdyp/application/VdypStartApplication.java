@@ -623,7 +623,9 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		baseArea *= yieldFactor;
 
 		// This is to prevent underflow errors in later calculations
-		BaseAreaLowException.check(layer.getLayerType(), "Estimated base area", Optional.of(baseArea), 0.05f);
+		throwIfPresent(
+				BaseAreaLowException.check(layer.getLayerType(), "Estimated base area", Optional.of(baseArea), 0.05f)
+		);
 
 		return baseArea;
 	}

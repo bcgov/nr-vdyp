@@ -35,9 +35,14 @@ import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.application.VdypStartApplication;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
+import ca.bc.gov.nrs.vdyp.exceptions.HeightLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.LayerSpeciesDoNotSumTo100PercentException;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.SiteIndexLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.TotalAgeLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.UnsupportedModeException;
+import ca.bc.gov.nrs.vdyp.exceptions.YearsToBreastHeightLowException;
 import ca.bc.gov.nrs.vdyp.fip.model.FipLayer;
 import ca.bc.gov.nrs.vdyp.fip.model.FipLayerPrimary;
 import ca.bc.gov.nrs.vdyp.fip.model.FipLayerPrimary.PrimaryBuilder;
@@ -175,17 +180,11 @@ class FipStartTest {
 			});
 			polygon.setLayers(Collections.singletonMap(LayerType.PRIMARY, layer));
 
-			var ex = assertThrows(StandProcessingException.class, () -> app.checkPolygon(polygon));
-			assertThat(
-					ex,
-					hasProperty(
-							"message",
-							is(
-									"Polygon " + polygonId + " has " + LayerType.PRIMARY
-											+ " layer where height 4.0 is less than minimum 5.0."
-							)
-					)
-			);
+			var ex = assertThrows(HeightLowException.class, () -> app.checkPolygon(polygon));
+			assertThat(ex, hasProperty("message", is("Height of 4 was lower than expected 5")));
+			assertThat(ex, hasProperty("layer", is(LayerType.PRIMARY)));
+			assertThat(ex, hasProperty("value", present(is(4f))));
+			assertThat(ex, hasProperty("threshold", present(is(5f))));
 		}
 
 	}
@@ -205,17 +204,11 @@ class FipStartTest {
 			});
 			polygon.setLayers(List.of(layer1, layer2));
 
-			var ex = assertThrows(StandProcessingException.class, () -> app.checkPolygon(polygon));
-			assertThat(
-					ex,
-					hasProperty(
-							"message",
-							is(
-									"Polygon " + polygonId + " has " + LayerType.VETERAN
-											+ " layer where height 9.0 is less than minimum 10.0."
-							)
-					)
-			);
+			var ex = assertThrows(HeightLowException.class, () -> app.checkPolygon(polygon));
+
+			assertThat(ex, hasProperty("layer", is(LayerType.VETERAN)));
+			assertThat(ex, hasProperty("value", present(is(9f))));
+			assertThat(ex, hasProperty("threshold", present(is(10f))));
 		}
 
 	}
@@ -235,17 +228,11 @@ class FipStartTest {
 			});
 			polygon.setLayers(List.of(layer1));
 
-			var ex = assertThrows(StandProcessingException.class, () -> app.checkPolygon(polygon));
-			assertThat(
-					ex,
-					hasProperty(
-							"message",
-							is(
-									"Polygon " + polygonId + " has " + LayerType.PRIMARY
-											+ " layer where years to breast height 0.2 is less than minimum 0.5 years."
-							)
-					)
-			);
+			var ex = assertThrows(YearsToBreastHeightLowException.class, () -> app.checkPolygon(polygon));
+			assertThat(ex, hasProperty("layer", is(LayerType.PRIMARY)));
+			assertThat(ex, hasProperty("value", present(is(0.2f))));
+			assertThat(ex, hasProperty("threshold", present(is(0.5f))));
+
 		}
 	}
 
@@ -269,17 +256,12 @@ class FipStartTest {
 			});
 			polygon.setLayers(List.of(layer1));
 
-			var ex = assertThrows(StandProcessingException.class, () -> app.checkPolygon(polygon));
-			assertThat(
-					ex,
-					hasProperty(
-							"message",
-							is(
-									"Polygon " + polygonId + " has " + LayerType.PRIMARY
-											+ " layer where total age (7.0) is less than YTBH (8.0)."
-							)
-					)
-			);
+			var ex = assertThrows(TotalAgeLowException.class, () -> app.checkPolygon(polygon));
+
+			assertThat(ex, hasProperty("layer", is(LayerType.PRIMARY)));
+			assertThat(ex, hasProperty("value", present(is(7f))));
+			assertThat(ex, hasProperty("threshold", present(is(8.5f))));
+
 		}
 	}
 
@@ -297,17 +279,11 @@ class FipStartTest {
 			});
 			polygon.setLayers(Collections.singletonMap(LayerType.PRIMARY, layer));
 
-			var ex = assertThrows(StandProcessingException.class, () -> app.checkPolygon(polygon));
-			assertThat(
-					ex,
-					hasProperty(
-							"message",
-							is(
-									"Polygon " + polygonId + " has " + LayerType.PRIMARY
-											+ " layer where site index 0.2 is less than minimum 0.5 years."
-							)
-					)
-			);
+			var ex = assertThrows(SiteIndexLowException.class, () -> app.checkPolygon(polygon));
+			assertThat(ex, hasProperty("layer", is(LayerType.PRIMARY)));
+			assertThat(ex, hasProperty("value", present(is(0.2f))));
+			assertThat(ex, hasProperty("threshold", present(is(0.5f))));
+
 		}
 	}
 
@@ -352,17 +328,9 @@ class FipStartTest {
 			layer.setSpecies(List.of(spec));
 			polygon.setLayers(List.of(layer));
 
-			var ex = assertThrows(StandProcessingException.class, () -> app.checkPolygon(polygon));
-			assertThat(
-					ex,
-					hasProperty(
-							"message",
-							is(
-									"Polygon \"" + polygonId
-											+ "\" has PRIMARY layer where species entries have a percentage total that does not sum to 100%."
-							)
-					)
-			);
+			var ex = assertThrows(LayerSpeciesDoNotSumTo100PercentException.class, () -> app.checkPolygon(polygon));
+			assertThat(ex, hasProperty("layer", is(LayerType.PRIMARY)));
+
 		}
 
 	}
@@ -384,17 +352,8 @@ class FipStartTest {
 			layer.setSpecies(List.of(spec));
 			polygon.setLayers(List.of(layer));
 
-			var ex = assertThrows(StandProcessingException.class, () -> app.checkPolygon(polygon));
-			assertThat(
-					ex,
-					hasProperty(
-							"message",
-							is(
-									"Polygon \"" + polygonId
-											+ "\" has PRIMARY layer where species entries have a percentage total that does not sum to 100%."
-							)
-					)
-			);
+			var ex = assertThrows(LayerSpeciesDoNotSumTo100PercentException.class, () -> app.checkPolygon(polygon));
+			assertThat(ex, hasProperty("layer", is(LayerType.PRIMARY)));
 		}
 
 	}
@@ -443,17 +402,9 @@ class FipStartTest {
 			layer.setSpecies(List.of(spec1, spec2));
 			polygon.setLayers(List.of(layer));
 
-			var ex = assertThrows(StandProcessingException.class, () -> app.checkPolygon(polygon));
-			assertThat(
-					ex,
-					hasProperty(
-							"message",
-							is(
-									"Polygon \"" + polygonId
-											+ "\" has PRIMARY layer where species entries have a percentage total that does not sum to 100%."
-							)
-					)
-			);
+			var ex = assertThrows(LayerSpeciesDoNotSumTo100PercentException.class, () -> app.checkPolygon(polygon));
+			assertThat(ex, hasProperty("layer", is(LayerType.PRIMARY)));
+
 		}
 
 	}
@@ -478,17 +429,9 @@ class FipStartTest {
 			layer.setSpecies(List.of(spec1, spec2));
 			polygon.setLayers(List.of(layer));
 
-			var ex = assertThrows(StandProcessingException.class, () -> app.checkPolygon(polygon));
-			assertThat(
-					ex,
-					hasProperty(
-							"message",
-							is(
-									"Polygon \"" + polygonId
-											+ "\" has PRIMARY layer where species entries have a percentage total that does not sum to 100%."
-							)
-					)
-			);
+			var ex = assertThrows(LayerSpeciesDoNotSumTo100PercentException.class, () -> app.checkPolygon(polygon));
+			assertThat(ex, hasProperty("layer", is(LayerType.PRIMARY)));
+
 		}
 
 	}
