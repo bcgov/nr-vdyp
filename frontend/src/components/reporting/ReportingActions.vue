@@ -31,7 +31,7 @@
       <AppButton
         v-if="tabname === REPORTING_TAB.MODEL_REPORT"
         label="Download Raw Results"
-        :isDisabled="isButtonDisabled"
+        :isDisabled="isRawResultsButtonDisabled"
         customClass="white-btn"
         @click="handleDownloadRawResult"
       />
@@ -47,6 +47,10 @@ import { REPORTING_TAB } from '@/constants/constants'
 
 defineProps({
   isButtonDisabled: {
+    type: Boolean,
+    required: true,
+  },
+  isRawResultsButtonDisabled: {
     type: Boolean,
     required: true,
   },
