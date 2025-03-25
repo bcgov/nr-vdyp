@@ -3,7 +3,6 @@ package ca.bc.gov.nrs.vdyp.backend.endpoints.v1;
 import static io.restassured.RestAssured.given;
 import static org.junit.Assert.*;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
@@ -21,7 +20,6 @@ import org.slf4j.LoggerFactory;
 import ca.bc.gov.nrs.api.helpers.TestHelper;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.OutputFormat;
-import ca.bc.gov.nrs.vdyp.backend.utils.FileHelper;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.MediaType;
