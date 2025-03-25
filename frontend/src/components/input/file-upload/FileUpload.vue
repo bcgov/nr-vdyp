@@ -424,7 +424,7 @@ const runModelHandler = async () => {
 
     const response = await projectionHcsvPost(getFormData(), false)
 
-    console.log('Full response:', response)
+    console.debug('Full response:', response)
 
     const zipFileName =
       extractZipFileName(response.headers) ||
@@ -433,7 +433,8 @@ const runModelHandler = async () => {
 
     const resultBlob = response.data
 
-    console.log('resultBlob:', resultBlob, 'type:', resultBlob?.type)
+    console.debug('resultBlob:', resultBlob, 'type:', resultBlob?.type)
+    console.debug('resultBlob size:', resultBlob.size)
 
     if (!resultBlob) {
       throw new Error('Response data is undefined')
@@ -445,7 +446,7 @@ const runModelHandler = async () => {
 
     downloadFile(resultBlob, zipFileName)
 
-    logSuccessMessage(MESSAGE.SUCESS_MSG.FILE_UPLOAD_RUN_RESULT)
+    logSuccessMessage(MESSAGE.SUCCESS_MSG.FILE_UPLOAD_RUN_RESULT)
   } catch (error) {
     handleApiError(error, MESSAGE.FILE_UPLOAD_ERR.FAIL_RUN_MODEL)
   } finally {

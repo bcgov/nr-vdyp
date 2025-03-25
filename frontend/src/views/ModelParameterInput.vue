@@ -58,8 +58,8 @@ import type { Tab } from '@/interfaces/interfaces'
 import { CONSTANTS, MESSAGE, DEFAULTS } from '@/constants'
 import { handleApiError } from '@/services/apiErrorHandler'
 import { runModel } from '@/services/modelParameterService'
-import { delay, extractZipFileName } from '@/utils/util'
-import { logSuccessMessage } from '@/utils/messageHandler'
+import { checkZipForErrors, delay, extractZipFileName } from '@/utils/util'
+import { logSuccessMessage, logErrorMessage } from '@/utils/messageHandler'
 
 const modelSelection = ref<string>(DEFAULTS.DEFAULT_VALUES.MODEL_SELECTION)
 const isProgressVisible = ref(false)
@@ -139,9 +139,15 @@ const runModelHandler = async () => {
 
     const resultBlob = response.data
 
+    const hasErrors = await checkZipForErrors(resultBlob)
+
     await projectionStore.handleZipResponse(resultBlob, zipFileName)
 
-    logSuccessMessage(MESSAGE.SUCESS_MSG.INPUT_MODEL_PARAM_RUN_RESULT)
+    if (hasErrors) {
+      logErrorMessage(MESSAGE.SUCCESS_MSG.INPUT_MODEL_PARAM_RUN_RESULT_W_ERR)
+    } else {
+      logSuccessMessage(MESSAGE.SUCCESS_MSG.INPUT_MODEL_PARAM_RUN_RESULT)
+    }
   } catch (error) {
     if ((error as any).response && (error as any).response.data) {
       try {
