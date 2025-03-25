@@ -1,4 +1,6 @@
 import type { NumStrNullType } from '@/types/types'
+import JSZip from 'jszip'
+import { CONSTANTS } from '@/constants'
 
 /**
  * Trims whitespace from a string value. Non-string values are returned unchanged.
@@ -321,4 +323,31 @@ export const extractZipFileName = (headers: any): string | null => {
     }
   }
   return null
+}
+
+/**
+ * Checks if the ZIP file contains an Error.txt file with content.
+ * @param zipFile - The ZIP file Blob to check.
+ * @returns A boolean indicating whether the Error.txt file exists and has content.
+ * @throws Error if the ZIP file cannot be processed.
+ */
+export const checkZipForErrors = async (zipFile: Blob): Promise<boolean> => {
+  try {
+    const zip = await JSZip.loadAsync(zipFile)
+
+    const errorFile = zip.file(CONSTANTS.FILE_NAME.ERROR_TXT)
+    if (!errorFile) {
+      return false
+    }
+
+    const errorContent = await errorFile.async('string')
+    const errorLines = errorContent.split(/\r?\n/).filter((line) => {
+      const trimmedLine = line.trim()
+      return trimmedLine !== '' && trimmedLine !== 'null'
+    })
+    return errorLines.length > 0
+  } catch (error) {
+    console.error('Error checking ZIP file for errors:', error)
+    throw error
+  }
 }
