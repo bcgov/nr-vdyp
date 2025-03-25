@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.vdyp.backend.endpoints.v1;
 import static io.restassured.RestAssured.given;
 import static org.junit.Assert.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
@@ -19,20 +20,21 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.api.helpers.TestHelper;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.OutputFormat;
+import ca.bc.gov.nrs.vdyp.backend.utils.FileHelper;
 import io.quarkus.test.junit.QuarkusTest;
-import io.smallrye.common.constraint.Assert;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.MediaType;
 
 @QuarkusTest
-class HcsvProjectionEndpoint_VRIPerPolygon_Test {
+class HcsvProjectionEndpointTextYieldTableTest {
 
-	private static final Logger logger = LoggerFactory.getLogger(HcsvProjectionEndpoint_VRIPerPolygon_Test.class);
+	private static final Logger logger = LoggerFactory.getLogger(HcsvProjectionEndpointTextYieldTableTest.class);
 
 	private final TestHelper testHelper;
 
 	@Inject
-	HcsvProjectionEndpoint_VRIPerPolygon_Test(TestHelper testHelper) {
+	HcsvProjectionEndpointTextYieldTableTest(TestHelper testHelper) {
 		this.testHelper = testHelper;
 	}
 
@@ -41,9 +43,9 @@ class HcsvProjectionEndpoint_VRIPerPolygon_Test {
 	}
 
 	@Test
-	void testVRIPerPolygonYieldTable() throws IOException {
+	void testProjectionHscvVri_TextYieldTable() throws IOException {
 
-		logger.info("Starting testVRIPerPolygonYieldTable");
+		logger.info("Starting testProjectionHscvVri_TextYieldTable");
 
 		Path resourceFolderPath = Path.of("test-data-files", "hcsv", "VRI-PerPolygon");
 
@@ -52,12 +54,12 @@ class HcsvProjectionEndpoint_VRIPerPolygon_Test {
 				Parameters.ExecutionOption.DO_ENABLE_DEBUG_LOGGING, //
 				Parameters.ExecutionOption.DO_ENABLE_PROGRESS_LOGGING, //
 				Parameters.ExecutionOption.DO_ENABLE_ERROR_LOGGING, //
-				Parameters.ExecutionOption.DO_INCLUDE_PROJECTION_FILES, //
 				Parameters.ExecutionOption.FORWARD_GROW_ENABLED, //
 				Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES, //
-				Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_POLYGON
-		);
-		parameters.yearStart(2000).yearEnd(2050);
+				Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER
+		).outputFormat(OutputFormat.YIELD_TABLE) //
+				.yearStart(2000) //
+				.yearEnd(2050);
 
 		// Included to generate JSON text of parameters as needed
 //		ObjectMapper mapper = new ObjectMapper();
@@ -81,7 +83,7 @@ class HcsvProjectionEndpoint_VRIPerPolygon_Test {
 
 		ZipInputStream zipFile = new ZipInputStream(zipInputStream);
 		ZipEntry entry1 = zipFile.getNextEntry();
-		assertEquals("YieldTable.csv", entry1.getName());
+		assertEquals("YieldTable.txt", entry1.getName());
 		String entry1Content = new String(testHelper.readZipEntry(zipFile, entry1));
 		assertTrue(entry1Content.length() > 0);
 
@@ -98,19 +100,12 @@ class HcsvProjectionEndpoint_VRIPerPolygon_Test {
 		String entry4Content = new String(testHelper.readZipEntry(zipFile, entry2));
 		assertTrue(entry4Content.startsWith(LocalDate.now().format(DateTimeFormatter.ISO_DATE)));
 
-		ZipEntry projectionResultsEntry;
-		var outputSeen = false;
-		while ( (projectionResultsEntry = zipFile.getNextEntry()) != null) {
-			logger.info("Name: {}", projectionResultsEntry.getName());
-			String entryContent = new String(testHelper.readZipEntry(zipFile, projectionResultsEntry));
-			if (entryContent.length() > 0) {
-				logger.info("Content: {}", entryContent.substring(0, Math.min(entryContent.length(), 60)));
-			} else {
-				logger.info("Content: <empty>");
-			}
+		ZipEntry entry = zipFile.getNextEntry();
+		while (entry != null) {
+			var contents = testHelper.readZipEntry(zipFile, entry);
+			logger.info("Saw projection file " + entry + " containing " + contents.length + " bytes");
 
-			outputSeen = true;
+			entry = zipFile.getNextEntry();
 		}
-		Assert.assertTrue(outputSeen);
 	}
 }

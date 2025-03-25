@@ -17,209 +17,107 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 class TextYieldTableRowValuesBean implements YieldTableRowValues {
 
 	private String tableNumber;
-
 	private String featureId;
-
 	private String district;
-
 	private String mapId;
-
 	private String polygonId;
-
 	private String layerId;
-
 	private String projectionYear;
-
 	private String totalAge;
-
 	private String species1Code;
-
 	private String species1Percent;
-
 	private String species2Code;
-
 	private String species2Percent;
-
 	private String species3Code;
-
 	private String species3Percent;
-
 	private String species4Code;
-
 	private String species4Percent;
-
 	private String species5Code;
-
 	private String species5Percent;
-
 	private String species6Code;
-
 	private String species6Percent;
-
 	private String percentStockable;
-
 	private String siteIndex;
-
 	private String dominantHeight;
-
 	private String secondaryHeight;
-
 	private String loreyHeight;
-
 	private String diameter;
-
 	private String treesPerHectare;
-
 	private String basalArea;
-
 	private String wholeStemVolume;
-
 	private String closeUtilizationVolume;
-
 	private String cuVolumeLessDecay;
-
 	private String cuVolumeLessDecayWastage;
-
 	private String cuVolumeLessDecayWastageBreakage;
-
 	private String moFBiomassWholeStemVolume;
-
 	private String moFBiomassCloseUtilizationVolume;
-
 	private String moFBiomassCuVolumeLessDecay;
-
 	private String moFBiomassCuVolumeLessDecayWastage;
-
 	private String moFBiomassCuVolumeLessDecayWastageBreakage;
-
 	private String species1WholeStemVolume;
-
 	private String species1CloseUtilizationVolume;
-
 	private String species1CuVolumeLessDecay;
-
 	private String species1CuVolumeLessDecayWastage;
-
 	private String species1CuVolumeLessDecayWastageBreakage;
-
 	private String species2WholeStemVolume;
-
 	private String species2CloseUtilizationVolume;
-
 	private String species2CuVolumeLessDecay;
-
 	private String species2CuVolumeLessDecayWastage;
-
 	private String species2CuVolumeLessDecayWastageBreakage;
-
 	private String species3WholeStemVolume;
-
 	private String species3CloseUtilizationVolume;
-
 	private String species3CuVolumeLessDecay;
-
 	private String species3CuVolumeLessDecayWastage;
-
 	private String species3CuVolumeLessDecayWastageBreakage;
-
 	private String species4WholeStemVolume;
-
 	private String species4CloseUtilizationVolume;
-
 	private String species4CuVolumeLessDecay;
-
 	private String species4CuVolumeLessDecayWastage;
-
 	private String species4CuVolumeLessDecayWastageBreakage;
-
 	private String species5WholeStemVolume;
-
 	private String species5CloseUtilizationVolume;
-
 	private String species5CuVolumeLessDecay;
-
 	private String species5CuVolumeLessDecayWastage;
-
 	private String species5CuVolumeLessDecayWastageBreakage;
-
 	private String species6WholeStemVolume;
-
 	private String species6CloseUtilizationVolume;
-
 	private String species6CuVolumeLessDecay;
-
 	private String species6CuVolumeLessDecayWastage;
-
 	private String species6CuVolumeLessDecayWastageBreakage;
-
 	private String species1MoFBiomassWholeStemVolume;
-
 	private String species1MoFBiomassCloseUtilizationVolume;
-
 	private String species1MoFBiomassCuVolumeLessDecay;
-
 	private String species1MoFBiomassCuVolumeLessDecayWastage;
-
 	private String species1MoFBiomassCuVolumeLessDecayWastageBreakage;
-
 	private String species2MoFBiomassWholeStemVolume;
-
 	private String species2MoFBiomassCloseUtilizationVolume;
-
 	private String species2MoFBiomassCuVolumeLessDecay;
-
 	private String species2MoFBiomassCuVolumeLessDecayWastage;
-
 	private String species2MoFBiomassCuVolumeLessDecayWastageBreakage;
-
 	private String species3MoFBiomassWholeStemVolume;
-
 	private String species3MoFBiomassCloseUtilizationVolume;
-
 	private String species3MoFBiomassCuVolumeLessDecay;
-
 	private String species3MoFBiomassCuVolumeLessDecayWastage;
-
 	private String species3MoFBiomassCuVolumeLessDecayWastageBreakage;
-
 	private String species4MoFBiomassWholeStemVolume;
-
 	private String species4MoFBiomassCloseUtilizationVolume;
-
 	private String species4MoFBiomassCuVolumeLessDecay;
-
 	private String species4MoFBiomassCuVolumeLessDecayWastage;
-
 	private String species4MoFBiomassCuVolumeLessDecayWastageBreakage;
-
 	private String species5MoFBiomassWholeStemVolume;
-
 	private String species5MoFBiomassCloseUtilizationVolume;
-
 	private String species5MoFBiomassCuVolumeLessDecay;
-
 	private String species5MoFBiomassCuVolumeLessDecayWastage;
-
 	private String species5MoFBiomassCuVolumeLessDecayWastageBreakage;
-
 	private String species6MoFBiomassWholeStemVolume;
-
 	private String species6MoFBiomassCloseUtilizationVolume;
-
 	private String species6MoFBiomassCuVolumeLessDecay;
-
 	private String species6MoFBiomassCuVolumeLessDecayWastage;
-
 	private String species6MoFBiomassCuVolumeLessDecayWastageBreakage;
-
 	private String cfsBiomassStem;
-
 	private String cfsBiomassBark;
-
 	private String cfsBiomassBranch;
-
 	private String cfsBiomassFoliage;
-
 	private String mode;
 
 	public TextYieldTableRowValuesBean() {

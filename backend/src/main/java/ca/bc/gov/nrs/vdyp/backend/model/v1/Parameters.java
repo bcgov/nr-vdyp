@@ -101,18 +101,20 @@ public class Parameters {
 	private List<UtilizationParameter> utils = new ArrayList<>();
 
 	public enum OutputFormat {
-		YIELD_TABLE("YieldTable"),
+		YIELD_TABLE("YieldTable", "YieldTable.txt"),
 
-		CSV_YIELD_TABLE("CSVYieldTable"),
+		CSV_YIELD_TABLE("CSVYieldTable", "YieldTable.csv"),
 
-		DCSV("DCSV"),
+		DCSV("DCSV", "YieldTable.csv"),
 
-		PLOTSY("PLOTSY");
+		PLOTSY("PLOTSY", "YieldTable.csv");
 
 		private String value;
+		private String yieldTableFileName;
 
-		OutputFormat(String value) {
+		OutputFormat(String value, String yieldTableFileName) {
 			this.value = value;
+			this.yieldTableFileName = yieldTableFileName;
 		}
 
 		@Override
@@ -123,6 +125,11 @@ public class Parameters {
 		@JsonValue
 		public String getValue() {
 			return value;
+		}
+
+		@JsonValue
+		public String getYieldTableFileName() {
+			return yieldTableFileName;
 		}
 
 		/**

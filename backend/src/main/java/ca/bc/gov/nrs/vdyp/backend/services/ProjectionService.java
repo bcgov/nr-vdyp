@@ -10,7 +10,6 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.ZipEntry;
@@ -30,7 +29,6 @@ import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ProjectionRequestKind;
 import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionRunner;
-import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionRunner.ProjectionResultsKey;
 import ca.bc.gov.nrs.vdyp.backend.utils.FileHelper;
 import ca.bc.gov.nrs.vdyp.backend.utils.Utils;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -164,7 +162,9 @@ public class ProjectionService {
 				progressLogStream = runner.getProgressStream();
 				errorLogStream = runner.getErrorStream();
 
-				writeZipEntry(zipOut, "YieldTable.csv", yieldTableStream.readAllBytes());
+				var yieldTableFileName = runner.getContext().getValidatedParams().getOutputFormat()
+						.getYieldTableFileName();
+				writeZipEntry(zipOut, yieldTableFileName, yieldTableStream.readAllBytes());
 
 				if (runner.getContext().getValidatedParams()
 						.containsOption(ExecutionOption.DO_ENABLE_PROGRESS_LOGGING)) {

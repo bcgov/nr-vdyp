@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
@@ -96,7 +96,7 @@ class TextYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean>
 		currentRecord.setPercentStockable(Double.toString(percentStockable));
 		currentRecord.setSiteIndex(Double.toString(siteIndex));
 		currentRecord.setDominantHeight(Double.toString(dominantHeight));
-		currentRecord.setSecondaryHeight(Double.toString(secondaryHeight));
+		currentRecord.setSecondaryHeight(secondaryHeight == null ? null : Double.toString(secondaryHeight));
 	}
 
 	@Override
@@ -104,6 +104,9 @@ class TextYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean>
 
 		writeCalendarYearAndLayerAge();
 		writeSpeciesComposition();
+		writeProjectionGrowthInfo();
+
+		doWrite("\n");
 	}
 
 	@Override
@@ -172,9 +175,11 @@ class TextYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean>
 		while (code != null) {
 			String percentage = currentRecord
 					.getSpeciesFieldValue(MultiFieldPrefixes.Species, speciesIndex, MultiFieldSuffixes.Percent);
-			doWrite("%-3s %5.1f ", code, percentage);
+			doWrite("%-3s %5.1f ", code, Double.parseDouble(percentage));
 
 			speciesIndex += 1;
+			code = currentRecord
+					.getSpeciesFieldValue(MultiFieldPrefixes.Species, speciesIndex, MultiFieldSuffixes.Code);
 		}
 
 		if (speciesIndex == 1) {
@@ -189,25 +194,24 @@ class TextYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean>
 	@Override
 	void writeProjectionGrowthInfo() throws YieldTableGenerationException {
 		if (currentRecord.getPercentStockable() != null)
-			doWrite("%5.1f ", currentRecord.getPercentStockable());
+			doWrite("%5.1f ", Double.parseDouble(currentRecord.getPercentStockable()));
 		else
 			doWrite("      ");
 
 		if (currentRecord.getSiteIndex() != null)
-			doWrite("%6.2f ", currentRecord.getSiteIndex());
-
+			doWrite("%6.2f ", Double.parseDouble(currentRecord.getSiteIndex()));
 		else
 			doWrite("%6s ", " ");
 
 		if (currentRecord.getDominantHeight() != null)
-			doWrite("%6.2f ", currentRecord.getDominantHeight());
+			doWrite("%6.2f ", Double.parseDouble(currentRecord.getDominantHeight()));
 		else
 			doWrite("       ");
 
 		if (context.getValidatedParams()
 				.containsOption(ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE)) {
 			if (currentRecord.getSecondaryHeight() != null)
-				doWrite("%6.2f ", currentRecord.getSecondaryHeight());
+				doWrite("%6.2f ", Double.parseDouble(currentRecord.getSecondaryHeight()));
 			else
 				doWrite("       ");
 		}
@@ -215,16 +219,26 @@ class TextYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean>
 
 	@Override
 	public void writePolygonTableTrailer(Integer yieldTableCount) throws YieldTableGenerationException {
-		doWrite("^^^^^^^^^^ Table Number: %-10d", yieldTableCount);
+		doWrite("^^^^^^^^^^ Table Number: %-10d\n", yieldTableCount);
 	}
 
 	@Override
 	public void writeTrailer() throws YieldTableGenerationException {
-		doWrite("Run completed: %s", LocalDate.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
+		doWrite("Run completed: %s\n", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
 	}
 
 	private void writeCalendarYearAndLayerAge() throws YieldTableGenerationException {
-		doWrite("%4d %4d ", currentRecord.getProjectionYear(), currentRecord.getTotalAge());
+		if (currentRecord.getProjectionYear() != null) {
+			doWrite("%4d ", Integer.parseInt(currentRecord.getProjectionYear()));
+		} else {
+			doWrite("     ");
+		}
+
+		if (currentRecord.getTotalAge() != null) {
+			doWrite("%4d ", Integer.parseInt(currentRecord.getTotalAge()));
+		} else {
+			doWrite("     ");
+		}
 	}
 
 	private void doWrite(String message, Object... args) throws YieldTableGenerationException {

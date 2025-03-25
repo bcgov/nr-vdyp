@@ -489,8 +489,6 @@ public class YieldTable implements Closeable {
 						percentStockable, growthDetails.siteIndex(), dominantHeight, secondaryHeight
 				);
 
-				writer.writeProjectionGrowthInfo();
-
 			} catch (StandYieldCalculationException e) {
 				logger.warn(
 						"{}: encountered StandYieldCalculationException during yield table row generation{}",
