@@ -168,12 +168,12 @@ class YieldTableRowContext {
 			if (projectionType == ProjectionTypeCode.DEAD) {
 
 				if (yearOfDeath != null) {
-					double layerAgeAtDeath = layer.determineLayerAgeAtYear(yearOfDeath);
+					double layerAgeAtDeath = determineLayerAgeAtYear(layer, yearOfDeath);
 					ageAtDeath = (int) layerAgeAtDeath;
 				}
 			}
 
-			double ageAtYear = layer.determineLayerAgeAtYear(getReferenceYear());
+			double ageAtYear = determineLayerAgeAtYear(layer, getReferenceYear());
 			referenceAge = (int) ageAtYear;
 
 			numSpecies = layer.getSp64sAsSupplied().size();
@@ -202,7 +202,7 @@ class YieldTableRowContext {
 				}
 			} else {
 				Validate.isTrue(layer != null, "YieldTableRowIterator.createTableRow(): layer is null");
-				relevantAge = layer.determineLayerAgeAtYear(yearOfDeath);
+				relevantAge = determineLayerAgeAtYear(layer, yearOfDeath);
 			}
 
 			measurementYear = yearOfDeath;
@@ -216,6 +216,14 @@ class YieldTableRowContext {
 
 		currentYear = LocalDate.now().getYear();
 		currentAge = currentYear - yearToAgeDifference;
+	}
+
+	private double determineLayerAgeAtYear(Layer layer, Integer yearOfDeath) {
+		try {
+			return layer.determineLayerAgeAtYear(yearOfDeath);
+		} catch (PolygonValidationException e) {
+			throw new IllegalStateException(e);
+		}
 	}
 
 	private void calculateTableRangeInformation(ValidatedParameters params) {

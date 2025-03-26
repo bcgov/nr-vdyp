@@ -17,6 +17,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.application.ProcessingException;
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonExecutionException;
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.StandYieldCalculationException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.YieldTableGenerationException;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption;
@@ -716,7 +718,14 @@ public class YieldTable implements Closeable {
 
 		case VETERAN: {
 			Integer referenceYear = layer.getPolygon().getReferenceYear();
-			ageToUse = layer.determineLayerAgeAtYear(referenceYear);
+			try {
+				ageToUse = layer.determineLayerAgeAtYear(referenceYear);
+			} catch (PolygonValidationException e) {
+				// determineLayerAgeAtYear may throw a ValidationException, although this error should
+				// have been detected before this point.
+				throw new StandYieldCalculationException(-3, e);
+			}
+
 			logger.debug("{}: veteran layer, so clamping requested age to use to reference age of {}", layer, ageToUse);
 			break;
 		}

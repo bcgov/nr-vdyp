@@ -404,28 +404,34 @@ public class PolygonProjectionRunner {
 					state.getProcessingMode(projectionType)
 			);
 
-			var primaryLayerAge = polygon.getPrimaryLayer().determineLayerAgeAtYear(polygon.getReferenceYear());
+			try {
+				var primaryLayerAge = polygon.getPrimaryLayer().determineLayerAgeAtYear(polygon.getReferenceYear());
 
-			switch (projectionType) {
-			case PRIMARY:
-				// do nothing - state contains the correct start and end ages already.
-				break;
-			case DEAD: {
-				if (layer.getAgeAtDeath() != null) {
-					state.updateProjectionRange(projectionType, layer.getAgeAtDeath(), layer.getAgeAtDeath());
-				} else {
-					var startAge = layer.determineLayerAgeAtYear(polygon.getReferenceYear());
-					state.updateProjectionRange(projectionType, startAge, startAge);
+				switch (projectionType) {
+				case PRIMARY:
+					// do nothing - state contains the correct start and end ages already.
+					break;
+				case DEAD: {
+					if (layer.getAgeAtDeath() != null) {
+						state.updateProjectionRange(projectionType, layer.getAgeAtDeath(), layer.getAgeAtDeath());
+					} else {
+						var startAge = layer.determineLayerAgeAtYear(polygon.getReferenceYear());
+						state.updateProjectionRange(projectionType, startAge, startAge);
+					}
+					break;
 				}
-				break;
-			}
-			default: {
-				var referenceAge = layer.determineLayerAgeAtYear(polygon.getReferenceYear());
-				var startAge = state.getStartAge(projectionType) + referenceAge - primaryLayerAge;
-				var endAge = state.getEndAge(projectionType) + referenceAge - primaryLayerAge;
-				state.updateProjectionRange(projectionType, startAge, endAge);
-				break;
-			}
+				default: {
+					var referenceAge = layer.determineLayerAgeAtYear(polygon.getReferenceYear());
+					var startAge = state.getStartAge(projectionType) + referenceAge - primaryLayerAge;
+					var endAge = state.getEndAge(projectionType) + referenceAge - primaryLayerAge;
+					state.updateProjectionRange(projectionType, startAge, endAge);
+					break;
+				}
+				}
+			} catch (PolygonValidationException e) {
+				// determineLayerAgeAtYear may throw a ValidationException, although this error should
+				// have been detected before this point.
+				throw new PolygonExecutionException(e);
 			}
 
 			// Determine the stand age, based on the leading site Sp0.

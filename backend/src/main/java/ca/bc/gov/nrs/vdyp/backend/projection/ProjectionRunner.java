@@ -14,6 +14,8 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.AbstractPolygonProjectionException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.AbstractProjectionRequestException;
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonExecutionException;
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionInternalExecutionException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestValidationException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.YieldTableGenerationException;
@@ -75,14 +77,25 @@ public class ProjectionRunner {
 		while (polygonStream.hasNextPolygon()) {
 
 			try {
-				var polygon = polygonStream.getNextPolygon();
-				if (polygon.doAllowProjection()) {
-					logger.info("Starting the projection of feature \"{}\"", polygon);
-					PolygonProjectionRunner.of(polygon, context, componentRunner).project();
-				} else {
-					logger.info("By request, the projection of feature \"{}\" has been skipped", polygon);
+				try {
+					var polygon = polygonStream.getNextPolygon();
+					if (polygon.doAllowProjection()) {
+						logger.info("Starting the projection of feature \"{}\"", polygon);
+						PolygonProjectionRunner.of(polygon, context, componentRunner).project();
+					} else {
+						logger.info("By request, the projection of feature \"{}\" has been skipped", polygon);
+					}
+				} catch (PolygonExecutionException e) {
+					IMessageLog errorLog = context.getErrorLog();
+					for (ValidationMessage m : e.getValidationMessages()) {
+						errorLog.addMessage(m.getKind().template, m.getArgs());
+					}
+
+					if (e.getCause() instanceof PolygonValidationException pve) {
+						throw pve;
+					}
 				}
-			} catch (AbstractPolygonProjectionException e) {
+			} catch (PolygonValidationException e) {
 				IMessageLog errorLog = context.getErrorLog();
 				for (ValidationMessage m : e.getValidationMessages()) {
 					errorLog.addMessage(m.getKind().template, m.getArgs());

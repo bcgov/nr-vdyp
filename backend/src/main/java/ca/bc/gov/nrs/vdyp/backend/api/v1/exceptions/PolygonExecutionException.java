@@ -15,4 +15,8 @@ public class PolygonExecutionException extends AbstractPolygonProjectionExceptio
 	public PolygonExecutionException(String cause, Exception e) {
 		super(cause, e);
 	}
+
+	public PolygonExecutionException(String cause) {
+		super(cause);
+	}
 }

@@ -131,7 +131,7 @@ public class PolygonMessage {
 
 		public Builder severity(SeverityCode severity) {
 			polygonMessage.severity = severity;
-			return null;
+			return this;
 		}
 
 		public PolygonMessage build() {

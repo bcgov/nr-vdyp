@@ -123,7 +123,7 @@ public class VriStartOutputWriter extends AbstractOutputWriter implements Closea
 
 		Stand leadingSite = layer.getSp0sByPercent().get(0);
 		if (leadingSite != null) {
-			if (leadingSite.getSpeciesGroup().getDominantHeight() > 6.0) {
+			if (Utils.safeGet(leadingSite.getSpeciesGroup().getDominantHeight()) > 6.0) {
 				logger.debug(
 						"{}: height {} of leading species is tall enough to suppress secondary species heights less than breast height",
 						layer, leadingSite.getSpeciesGroup().getDominantHeight()

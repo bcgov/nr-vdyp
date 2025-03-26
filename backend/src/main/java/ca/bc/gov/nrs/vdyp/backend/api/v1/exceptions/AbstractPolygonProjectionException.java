@@ -19,4 +19,8 @@ public abstract class AbstractPolygonProjectionException extends AbstractProject
 	public AbstractPolygonProjectionException(String cause, Exception e) {
 		super(cause, e);
 	}
+
+	public AbstractPolygonProjectionException(String cause) {
+		super(cause);
+	}
 }

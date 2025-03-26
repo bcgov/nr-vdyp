@@ -10,6 +10,7 @@ import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonExecutionException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessageKind;
