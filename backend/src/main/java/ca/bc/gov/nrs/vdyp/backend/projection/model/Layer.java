@@ -10,6 +10,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonExecutionException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.SeverityCode;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
@@ -19,6 +20,7 @@ import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.GrowthModelCode;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProcessingModeCode;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ReturnCode;
+import ca.bc.gov.nrs.vdyp.backend.utils.Utils;
 import ca.bc.gov.nrs.vdyp.common.Reference;
 import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.CommonCalculatorException;
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
@@ -483,7 +485,7 @@ public class Layer implements Comparable<Layer> {
 				boolean doRecomputeInputHeight = false;
 
 				logger.debug(
-						"   species {}: percent {}; age: {}; height: {}; site index: {}", sp64.getSpeciesCode(),
+						"species {}: percent {}; age: {}; height: {}; site index: {}", sp64.getSpeciesCode(),
 						sp64.getSpeciesPercent(), sp64.getTotalAge(), sp64.getDominantHeight(), sp64.getSiteIndex()
 				);
 
@@ -577,13 +579,53 @@ public class Layer implements Comparable<Layer> {
 		}
 	}
 
+	/**
+	 * <b>lcl_ApplyEstimatedSI_VRISTART</b>
+	 * <p>
+	 * Apply the logic of applying the Estimated Site Index to the layer for a VRISTART polygon.
+	 * <p>
+	 * Remarks
+	 * <p>
+	 * The logic to be applied is defined in IPSCB204. The logic has been turned around a bit to make it more efficient.
+	 * <ol>
+	 * <li>If an EST_SI was supplied:
+	 * <li>Record EST_SI and EST_SI Species as the SI of interest.
+	 * <li>Otherwise
+	 * <li>Scan the stand for the first species with an age/height pair and the age >= 30.0
+	 * <li>If such as species was found
+	 * <li>Fill in the species details to determine the SI.
+	 * <li>Record computed SI and Species as the SI of interest.
+	 * <li>Scan for any species with an age < 30.0
+	 * <li>If such a species was found
+	 * <li>If an SI Species is available and a SINDEX SI Conversion exists
+	 * <li>Assign the converted SI to the target species.
+	 * <li>Otherwise
+	 * <li>Apply the Estimated SI to the species directly.
+	 * </ol>
+	 * Modifications to the above:
+	 * <p>
+	 * <ul>
+	 * <li>Added a check to see that if older species were encountered and we still apply an Est SI to a younger
+	 * species. If we do, then we will want to generate note to that effect.
+	 * <li>When assigning Estimated SI, ensure YTBH is also reset so that it will be recomputed for the new SI.
+	 * <li>Added some additional logic to support supplying SI information to a leading species which has no SI
+	 * information. Up to now, the only information supplied was SI. However, it is possible that age could be missing
+	 * as well. If that is the case, total age is supplied from the first supplied species which has an age assigned to
+	 * it.
+	 * <li>Produce an informational message when assigning Estimated SI to a species. See Sam's related e-mail from this
+	 * date.
+	 * </ul>
+	 *
+	 * @param context the projection context of this projection
+	 */
 	private void applyEstimatedSiteIndex_VriStart(ProjectionContext context) {
 
 		logger.debug("{}: determining estimated site index from age 30+ species", this);
 
+		String estimatedSiteIndexSpeciesCode = getEstimatedSiteIndexSpecies();
+		Double estimatedSiteIndex = getEstimatedSiteIndex();
+
 		SiteIndexEquation estimatedCurve = null;
-		Species estimatedSiteIndexSpecies = null;
-		Double estimatedSiteIndex = null;
 		Double estimatedAge = null;
 
 		if (getEstimatedSiteIndex() != null) {
@@ -591,27 +633,23 @@ public class Layer implements Comparable<Layer> {
 			estimatedCurve = SiteTool.getSICurve(getEstimatedSiteIndexSpecies(), getPolygon().isCoastal());
 			for (Species s : getSp64sAsSupplied()) {
 				estimatedAge = s.getTotalAge();
-				if (estimatedAge != null) {
-					estimatedSiteIndexSpecies = s;
-					estimatedSiteIndex = getEstimatedSiteIndex();
-					break;
-				}
+				break;
 			}
 		} else {
 			for (Species s : getSp64sByPercent()) {
 
-				if (get(s.getTotalAge()) >= 30.0 && s.getDominantHeight() != null) {
+				if (Utils.safeGet(s.getTotalAge()) >= 30.0 && s.getDominantHeight() != null) {
 
 					s.calculateUndefinedFieldValues();
 
-					estimatedSiteIndexSpecies = s;
+					estimatedSiteIndex = s.getSiteIndex();
+					estimatedSiteIndexSpeciesCode = s.getSpeciesCode();
 					estimatedAge = s.getTotalAge();
 					if (s.getSiteCurve() != null) {
 						estimatedCurve = s.getSiteCurve();
 					} else {
 						estimatedCurve = SiteTool.getSICurve(getEstimatedSiteIndexSpecies(), getPolygon().isCoastal());
 					}
-					estimatedSiteIndex = s.getSiteIndex();
 
 					logger.debug(
 							"{}: estimated site index will come from species {} with age: {} and height: {}", this,
@@ -627,16 +665,16 @@ public class Layer implements Comparable<Layer> {
 					);
 				}
 			}
-		}
 
-		logger.debug(
-				"{}: estimated site index {} from species {} (age {}; curve: {})", this, estimatedSiteIndex,
-				estimatedSiteIndexSpecies.getSpeciesCode(), estimatedAge, estimatedCurve
-		);
+			logger.debug(
+					"{}: estimated site index {} from species {} (age {}; curve: {})", this, estimatedSiteIndex,
+					estimatedSiteIndexSpeciesCode, estimatedAge, estimatedCurve
+			);
+		}
 
 		if (estimatedSiteIndex != null) {
 
-			var leadingSpecies = this.determineLeadingSp64(0);
+			var leadingSpecies = determineLeadingSp64(0);
 
 			logger.debug(
 					"{}: scanning for young tree species. Leading sp64 is {}", this,
@@ -653,11 +691,14 @@ public class Layer implements Comparable<Layer> {
 
 					var targetCurve = s.getSiteCurve();
 
-					logger.debug("   species {} with age {} requires an estimated site index", s, s.getTotalAge());
+					logger.debug(
+							"species {} {} requires an estimated site index", s,
+							s.getTotalAge() != null ? "with age " + s.getTotalAge() : "with an unknown age"
+					);
 
 					if (estimatedSiteIndex != null && targetCurve == null) {
 						targetCurve = SiteTool.getSICurve(s.getSpeciesCode(), polygon.isCoastal());
-						logger.debug("   site index curve not supplied, using default {}", targetCurve.name());
+						logger.debug("site index curve not supplied, using default {}", targetCurve.name());
 					}
 
 					if (estimatedCurve != null && targetCurve != null && estimatedCurve != targetCurve) {
@@ -666,7 +707,7 @@ public class Layer implements Comparable<Layer> {
 									.convertSiteIndexBetweenCurves(estimatedCurve, estimatedSiteIndex, targetCurve);
 						} catch (CommonCalculatorException e) {
 							logger.debug(
-									"   failed to convert site index curve {} to {}; error: {}", estimatedCurve,
+									"failed to convert site index curve {} to {}; error: {}", estimatedCurve,
 									targetCurve, e.getMessage()
 							);
 							targetSiteIndex = null;
@@ -691,7 +732,7 @@ public class Layer implements Comparable<Layer> {
 						);
 
 						logger.info(
-								"   assigning to current species {} directly from estimated site index the value of {}",
+								"assigning to current species {} directly from estimated site index the value of {}",
 								s.getSpeciesCode(), estimatedSiteIndex
 						);
 					} else {
@@ -712,7 +753,7 @@ public class Layer implements Comparable<Layer> {
 						);
 
 						logger.info(
-								"   assigning to current species {} a converted site index the value of {}",
+								"assigning to current species {} a converted site index the value of {}",
 								s.getSpeciesCode(), targetSiteIndex
 						);
 					}
@@ -720,13 +761,13 @@ public class Layer implements Comparable<Layer> {
 					if (s.getTotalAge() == null) {
 						s.setTotalAge(estimatedAge);
 
-						logger.info(
-								"   assigning to current species {} a total age value of {}", s.getSpeciesCode(),
+						logger.debug(
+								"assigning to current species {} a total age value of {}", s.getSpeciesCode(),
 								estimatedAge
 						);
 					}
 
-					if (estimatedSiteIndex != null && estimatedAge >= Vdyp7Constants.MIN_SITEINDEX_AGE) {
+					if (estimatedSiteIndex != null && estimatedAge != null) {
 						polygon.getDefinitionMessages().add(
 								new PolygonMessage.Builder() //
 										.returnCode(ReturnCode.SUCCESS) //
@@ -735,13 +776,13 @@ public class Layer implements Comparable<Layer> {
 										.message(
 												new ValidationMessage(
 														ValidationMessageKind.ESTIMATE_APPLIED_FROM_OTHER_SPECIES,
-														estimatedSiteIndexSpecies.getSpeciesCode(), s.getSpeciesCode()
+														estimatedSiteIndexSpeciesCode, s.getSpeciesCode()
 												)
 										).build()
 						);
 					}
 				} else {
-					logger.debug(
+					logger.info(
 							"{}: species {} with age {} does not require an estimated site index", this,
 							s.getSpeciesCode(), s.getTotalAge()
 					);
@@ -940,15 +981,19 @@ public class Layer implements Comparable<Layer> {
 	 *
 	 * @param year as described
 	 * @return as described
-	 * @throws IllegalStateException if:
-	 *                               <ul>
-	 *                               <li>year is null or out of range
-	 *                               <li><code>this</code> has no leading species
-	 *                               <li>the leading species has no total age value
-	 *                               <li>the containing polygon's measurement year cannot be calculated
-	 *                               </ul>
+	 * @throws PolygonValidationException if:
+	 *                                    <ul>
+	 *                                    <li>the leading species has no total age value
+	 *                                    <li>the containing polygon's measurement year cannot be calculated
+	 *                                    </ul>
+	 * @throws IllegalStateException      if:
+	 *                                    <ul>
+	 *                                    <li>year is null or out of range
+	 *                                    <li><code>this</code> has no leading species
+	 *                                    </ul>
 	 */
-	public double determineLayerAgeAtYear(Integer year) {
+	public double determineLayerAgeAtYear(Integer year) throws PolygonValidationException {
+
 		if (year == null || year < Vdyp7Constants.MIN_CALENDAR_YEAR || year > Vdyp7Constants.MAX_CALENDAR_YEAR) {
 			throw new IllegalArgumentException(
 					MessageFormat.format(
@@ -962,16 +1007,15 @@ public class Layer implements Comparable<Layer> {
 		if (leadingSp0 == null) {
 			throw new IllegalStateException(MessageFormat.format("Leading Sp0 not found for layer {0}", this));
 		} else if (leadingSp0.getSpeciesGroup().getTotalAge() == null) {
-			throw new IllegalStateException(
-					MessageFormat
-							.format("Leading Sp0 {0} of layer {1} has no total age", leadingSp0.getSpeciesGroup(), this)
+			throw new PolygonValidationException(
+					new ValidationMessage(ValidationMessageKind.MISSING_TOTAL_AGE, leadingSp0.getSpeciesGroup(), this)
 			);
 		}
 
 		Integer measurementYear = getPolygon().getMeasurementYear();
 		if (measurementYear == null) {
-			throw new IllegalStateException(
-					MessageFormat.format("Measurement year is not known for polygon {0}", getPolygon())
+			throw new PolygonValidationException(
+					new ValidationMessage(ValidationMessageKind.MEASUREMENT_YEAR_NOT_KNOWN, getPolygon(), this)
 			);
 		}
 
@@ -996,7 +1040,7 @@ public class Layer implements Comparable<Layer> {
 		return (int) calendarYear;
 	}
 
-	public void determineAgeAtDeath() {
+	public void determineAgeAtDeath() throws PolygonValidationException {
 		ageAtDeath = determineLayerAgeAtYear(yearOfDeath);
 	}
 
@@ -1346,9 +1390,5 @@ public class Layer implements Comparable<Layer> {
 	public String toDetailedString() {
 		// TODO: elaborate, in the manner of V7Ext_LogLayerDescriptor
 		return toString();
-	}
-
-	private double get(Double d) {
-		return d == null ? Vdyp7Constants.EMPTY_DECIMAL : d;
 	}
 }
