@@ -200,6 +200,7 @@ public class SiteClassCode2SiteIndex {
 				default:
 					throw new ForestInventoryZoneException("Unknown FIZ code: " + forestInventoryZone);
 				}
+				break;
 
 			case SI_SPEC_HWI:
 				switch (siteClass) {
