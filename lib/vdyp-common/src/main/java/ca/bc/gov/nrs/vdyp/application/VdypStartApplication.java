@@ -41,8 +41,16 @@ import ca.bc.gov.nrs.vdyp.common.EstimationMethods;
 import ca.bc.gov.nrs.vdyp.common.ReconcilationMethods;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common.ValueOrMarker;
+import ca.bc.gov.nrs.vdyp.common.VdypApplicationInitializationException;
+import ca.bc.gov.nrs.vdyp.common.VdypApplicationProcessingException;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMapImpl;
+import ca.bc.gov.nrs.vdyp.exceptions.BaseAreaLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.FatalProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.LayerMissingException;
+import ca.bc.gov.nrs.vdyp.exceptions.LayerSpeciesDoNotSumTo100PercentException;
+import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.UpperCoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
@@ -114,7 +122,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 	static final Set<String> HARDWOODS = Set.of("AC", "AT", "D", "E", "MB");
 
-	protected static void doMain(VdypStartApplication<?, ?, ?, ?> app, final String... args) {
+	protected static void main(VdypStartApplication<?, ?, ?, ?> app, final String... args) {
 		var resolver = new FileSystemFileResolver();
 
 		try {
@@ -129,6 +137,25 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		} catch (Exception ex) {
 			log.error("Error during processing", ex);
 			System.exit(PROCESSING_ERROR);
+		}
+	}
+
+	public void doMain(final String... args)
+			throws VdypApplicationInitializationException, VdypApplicationProcessingException {
+		var resolver = new FileSystemFileResolver();
+
+		try {
+			init(resolver, System.out, System.in, args);
+		} catch (Exception ex) {
+			log.error("Error during initialization", ex);
+			throw new VdypApplicationInitializationException(ex);
+		}
+
+		try {
+			process();
+		} catch (Exception ex) {
+			log.error("Error during processing", ex);
+			throw new VdypApplicationProcessingException(ex);
 		}
 	}
 
@@ -257,8 +284,12 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	public abstract void process() throws ProcessingException;
 
 	@Override
-	public void close() throws IOException {
-		closeVriWriter();
+	public void close() {
+		try {
+			closeVriWriter();
+		} catch (IOException e) {
+			throw new IllegalStateException(e);
+		}
 	}
 
 	protected Coefficients getCoeForSpecies(BaseVdypSpecies<?> species, ControlKey controlKey) {
@@ -269,6 +300,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	protected L requireLayer(P polygon, LayerType type) throws ProcessingException {
 		if (!polygon.getLayers().containsKey(type)) {
 			throw validationError(
+					-1, -1,
 					"Polygon \"%s\" has no %s layer, or that layer has non-positive height or crown closure.",
 					polygon.getPolygonIdentifier(), type
 			);
@@ -285,15 +317,12 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	 * @return
 	 * @throws StandProcessingException
 	 */
-	protected float getPercentTotal(L layer) throws StandProcessingException {
+	protected float getPercentTotal(L layer) throws LayerSpeciesDoNotSumTo100PercentException {
 		var percentTotal = (float) layer.getSpecies().values().stream()//
 				.mapToDouble(BaseVdypSpecies::getPercentGenus)//
 				.sum();
 		if (Math.abs(percentTotal - 100f) > 0.01f) {
-			throw validationError(
-					"Polygon \"%s\" has %s layer where species entries have a percentage total that does not sum to 100%%.",
-					layer.getPolygonIdentifier(), LayerType.PRIMARY
-			);
+			throw new LayerSpeciesDoNotSumTo100PercentException(layer.getLayerType());
 		}
 		return percentTotal;
 	}
@@ -373,8 +402,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	 * @return
 	 * @throws ProcessingException
 	 */
-	@SuppressWarnings("java:S3776")
-	protected int findItg(List<S> primarySecondary) throws StandProcessingException {
+	protected int findItg(List<S> primarySecondary) throws FatalProcessingException {
 		var primary = primarySecondary.get(0);
 
 		if (primary.getPercentGenus() > 79.999) { // Copied from VDYP7
@@ -491,7 +519,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 			}
 			return 41;
 		default:
-			throw new StandProcessingException(
+			throw new FatalProcessingException(
 					MessageFormat.format("Unexpected primary species: {0}", primary.getGenus())
 			);
 		}
@@ -517,7 +545,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	protected float estimatePrimaryBaseArea(
 			L layer, BecDefinition bec, float yieldFactor, float breastHeightAge, float baseAreaOverstory,
 			float crownClosure
-	) throws LowValueException {
+	) throws BaseAreaLowException {
 		boolean lowCrownClosure = layer.getCrownClosure() < LOW_CROWN_CLOSURE;
 		crownClosure = lowCrownClosure ? LOW_CROWN_CLOSURE : crownClosure;
 
@@ -597,7 +625,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 		// This is to prevent underflow errors in later calculations
 		if (baseArea <= 0.05f) {
-			throw new LowValueException("Estimated base area", baseArea, 0.05f);
+			throw new BaseAreaLowException(layer.getLayerType(), "Estimated base area", Optional.of(baseArea));
 		}
 		return baseArea;
 	}
@@ -627,7 +655,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 	protected float estimatePrimaryBaseArea(
 			L layer, BecDefinition bec, float yieldFactor, float breastHeightAge, float baseAreaOverstory
-	) throws LowValueException {
+	) throws BaseAreaLowException {
 		return estimatePrimaryBaseArea(
 				layer, bec, yieldFactor, breastHeightAge, baseAreaOverstory, layer.getCrownClosure()
 		);
@@ -642,7 +670,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	protected L getPrimaryLayer(P poly) throws StandProcessingException {
 		L primaryLayer = poly.getLayers().get(LayerType.PRIMARY);
 		if (primaryLayer == null) {
-			throw new StandProcessingException("Polygon does not have a primary layer");
+			throw new LayerMissingException(LayerType.PRIMARY);
 		}
 		return primaryLayer;
 	}
@@ -657,9 +685,28 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		}
 	}
 
-	protected static StandProcessingException validationError(String template, Object... values) {
+	protected static StandProcessingException validationError(
+			Integer ipassFip, Integer ipassVri, String template, Object... values
+	) {
+		// TODO this is temporary and should be removed
 
-		return new StandProcessingException(String.format(template, values));
+		return new StandProcessingException(String.format(template, values)) {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public Optional<Integer> getIpassCode(VdypApplicationIdentifier app) {
+				// TODO Auto-generated method stub
+				return Optional.empty();
+			}
+
+		};
+	}
+
+	protected static FatalProcessingException fatalError(
+			Integer ipassFip, Integer ipassVri, String template, Object... values
+	) {
+
+		return new FatalProcessingException(String.format(template, values));
 	}
 
 	/**

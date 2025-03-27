@@ -1,13 +1,7 @@
 package ca.bc.gov.nrs.vdyp.forward;
 
-import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.PASS_1;
-import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.PASS_2;
-import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.PASS_3;
-import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.PASS_4;
-import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.PASS_5;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -25,8 +19,8 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ca.bc.gov.nrs.vdyp.application.ProcessingException;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
+import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.parsers.VdypPolygonParser;
 import ca.bc.gov.nrs.vdyp.forward.parsers.VdypSpeciesParser;
 import ca.bc.gov.nrs.vdyp.forward.parsers.VdypUtilizationParser;
