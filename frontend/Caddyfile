@@ -6,7 +6,6 @@
     }
 }
 :3000 {
-  debug
 	log {
 		output stdout
 		format console {
