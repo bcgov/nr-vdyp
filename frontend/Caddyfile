@@ -6,16 +6,17 @@
     }
 }
 :3000 {
+  debug
 	log {
 		output stdout
 		format console {
 			time_format iso8601
 			level_format color
 		}
-		level debug
+		level DEBUG
 	}
 	request_body {
-		max_size 1MB
+		max_size 1KB
 	}
   handle /env.js {
       header {
