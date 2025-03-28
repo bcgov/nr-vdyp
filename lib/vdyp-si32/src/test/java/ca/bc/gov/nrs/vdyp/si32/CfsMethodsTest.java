@@ -2,12 +2,17 @@ package ca.bc.gov.nrs.vdyp.si32;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.si32.cfs.CfsBiomassConversionCoefficientsDead;
 import ca.bc.gov.nrs.vdyp.si32.cfs.CfsBiomassConversionCoefficientsForGenus;
 import ca.bc.gov.nrs.vdyp.si32.cfs.CfsBiomassConversionCoefficientsForSpecies;
+import ca.bc.gov.nrs.vdyp.si32.cfs.CfsBiomassConversionSupportedEcoZone;
+import ca.bc.gov.nrs.vdyp.si32.cfs.CfsBiomassConversionSupportedGenera;
+import ca.bc.gov.nrs.vdyp.si32.cfs.CfsBiomassConversionSupportedSpecies;
+import ca.bc.gov.nrs.vdyp.si32.cfs.CfsDeadConversionParams;
 import ca.bc.gov.nrs.vdyp.si32.cfs.CfsDensity;
 import ca.bc.gov.nrs.vdyp.si32.cfs.CfsMethods;
 import ca.bc.gov.nrs.vdyp.si32.cfs.CfsSP0Densities;
@@ -105,5 +110,90 @@ class CfsMethodsTest {
 				CfsSP0Densities.getValue(null, CfsDensity.MEAN_DENSITY_INDEX), equalTo(CfsSP0Densities.DEFAULT_VALUE)
 		);
 		assertThat(CfsSP0Densities.getValue(SP0Name.B, null), equalTo(CfsSP0Densities.DEFAULT_VALUE));
+	}
+
+	@Test
+	void testCfsBiomassConversionSupportedEcoZoneUtilityMethods() {
+		assertThat(CfsBiomassConversionSupportedEcoZone.BOREAL_PLAINS.getIndex(), equalTo(1));
+		assertThat(
+				CfsBiomassConversionSupportedEcoZone.BOREAL_CORDILLERA.getOffset(),
+				equalTo(CfsBiomassConversionSupportedEcoZone.BOREAL_CORDILLERA.getIndex())
+		);
+		assertThrows(
+				UnsupportedOperationException.class, () -> CfsBiomassConversionSupportedEcoZone.UNKNOWN.getOffset()
+		);
+		assertThrows(UnsupportedOperationException.class, () -> CfsBiomassConversionSupportedEcoZone.UNKNOWN.getText());
+		assertThat(CfsBiomassConversionSupportedEcoZone.BOREAL_CORDILLERA.getText(), equalTo("BOREAL_CORDILLERA"));
+
+		CfsBiomassConversionSupportedEcoZone.Iterator i = new CfsBiomassConversionSupportedEcoZone.Iterator();
+		assertTrue(i.hasNext());
+		assertThat(i.next(), equalTo(CfsBiomassConversionSupportedEcoZone.TAIGA_PLAINS));
+	}
+
+	@Test
+	void testCfsBiomassConversionSupportedGeneraUtilityMethods() {
+		assertThat(CfsBiomassConversionSupportedGenera.D.getIndex(), equalTo(3));
+		assertThat(
+				CfsBiomassConversionSupportedGenera.F.getOffset(),
+				equalTo(CfsBiomassConversionSupportedGenera.F.getIndex())
+		);
+		assertThrows(
+				UnsupportedOperationException.class, () -> CfsBiomassConversionSupportedGenera.INVALID.getOffset()
+		);
+		assertThrows(UnsupportedOperationException.class, () -> CfsBiomassConversionSupportedGenera.INVALID.getText());
+		assertThat(CfsBiomassConversionSupportedGenera.D.getText(), equalTo("D"));
+
+		CfsBiomassConversionSupportedGenera.Iterator i = new CfsBiomassConversionSupportedGenera.Iterator();
+		assertTrue(i.hasNext());
+		assertThat(i.next(), equalTo(CfsBiomassConversionSupportedGenera.AC));
+	}
+
+	@Test
+	void testCfsBiomassConversionSupportedSpeciesUtilityMethods() {
+		assertThat(CfsBiomassConversionSupportedSpecies.BL.getIndex(), equalTo(6));
+		assertThat(
+				CfsBiomassConversionSupportedSpecies.PY.getOffset(),
+				equalTo(CfsBiomassConversionSupportedSpecies.PY.getIndex())
+		);
+		assertThrows(
+				UnsupportedOperationException.class, () -> CfsBiomassConversionSupportedSpecies.UNKNOWN.getOffset()
+		);
+		assertThrows(UnsupportedOperationException.class, () -> CfsBiomassConversionSupportedSpecies.UNKNOWN.getText());
+		assertThat(CfsBiomassConversionSupportedSpecies.PY.getText(), equalTo("PY"));
+
+		CfsBiomassConversionSupportedSpecies.Iterator i = new CfsBiomassConversionSupportedSpecies.Iterator();
+		assertTrue(i.hasNext());
+		assertThat(i.next(), equalTo(CfsBiomassConversionSupportedSpecies.AC));
+	}
+
+	@Test
+	void testCfsDeadConversionParamsUtilityMethods() {
+		assertThat(CfsDeadConversionParams.PROP3.getIndex(), equalTo(2));
+		assertThat(CfsDeadConversionParams.PROP4.getOffset(), equalTo(CfsDeadConversionParams.PROP4.getIndex()));
+		assertThrows(UnsupportedOperationException.class, () -> CfsDeadConversionParams.UNKNOWN.getOffset());
+		assertThrows(UnsupportedOperationException.class, () -> CfsDeadConversionParams.UNKNOWN.getText());
+		assertThat(CfsDeadConversionParams.PROP1.getText(), equalTo("PROP1"));
+		assertThat(CfsDeadConversionParams.PROP1.getCategory(), equalTo("Dead"));
+		assertThat(CfsDeadConversionParams.PROP1.getShortName(), equalTo("P1"));
+		assertThat(CfsDeadConversionParams.size(), equalTo(9));
+
+		CfsDeadConversionParams.Iterator i = new CfsDeadConversionParams.Iterator();
+		assertTrue(i.hasNext());
+		assertThat(i.next(), equalTo(CfsDeadConversionParams.PROP1));
+	}
+
+	@Test
+	void testCfsTreeClassUtilityMethods() {
+		assertThat(CfsTreeClass.DEAD_POTENTIAL.getIndex(), equalTo(3));
+		assertThat(CfsTreeClass.DEAD_USELESS.getOffset(), equalTo(CfsTreeClass.DEAD_USELESS.getIndex()));
+		assertThrows(UnsupportedOperationException.class, () -> CfsTreeClass.UNKNOWN.getOffset());
+		assertThrows(UnsupportedOperationException.class, () -> CfsTreeClass.UNKNOWN.getText());
+		assertThat(CfsTreeClass.MISSING.getText(), equalTo("MISSING"));
+		assertThat(CfsTreeClass.MISSING.getDescription(), equalTo("Missing"));
+		assertThat(CfsTreeClass.size(), equalTo(7));
+
+		CfsTreeClass.Iterator i = new CfsTreeClass.Iterator();
+		assertTrue(i.hasNext());
+		assertThat(i.next(), equalTo(CfsTreeClass.MISSING));
 	}
 }

@@ -70,6 +70,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.coe.VolumeNetDecayWasteParser;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.control.BaseControlParser;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ControlMapValueReplacer;
+import ca.bc.gov.nrs.vdyp.io.parse.control.OutputFileLocationResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ResourceControlMapModifier;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParser;
 
@@ -97,10 +98,12 @@ public class ForwardControlParser extends BaseControlParser {
 	}
 
 	@Override
-	protected List<ControlKey> outputFileParsers() {
+	protected List<OutputFileLocationResolver> outputFiles() {
 		return List.of(
-				ControlKey.VDYP_OUTPUT_VDYP_POLYGON, ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SPECIES,
-				ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL, ControlKey.VDYP_OUTPUT_COMPATIBILITY_VARIABLES
+				new OutputFileLocationResolver(ControlKey.VDYP_OUTPUT_VDYP_POLYGON), //
+				new OutputFileLocationResolver(ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SPECIES), //
+				new OutputFileLocationResolver(ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL), //
+				new OutputFileLocationResolver(ControlKey.VDYP_OUTPUT_COMPATIBILITY_VARIABLES)
 		);
 	}
 
@@ -128,9 +131,16 @@ public class ForwardControlParser extends BaseControlParser {
 			ControlKey.class
 	);
 
+	private final Set<ControlKey> vdypForwardOutputWriters = new HashSet<>();
+
 	private void addInputParser(ControlMapValueReplacer<Object, String> parser) {
 		vdypForwardInputParsers.put(parser.getControlKey(), parser);
 		orderedControlKeys.add(parser.getControlKey());
+	}
+
+	private void addOutputWriter(ControlKey key) {
+		vdypForwardOutputWriters.add(key);
+		orderedControlKeys.add(key);
 	}
 
 	private final Map<ControlKey, ResourceControlMapModifier> vdypForwardConfigurationParsers = new EnumMap<>(
@@ -267,6 +277,15 @@ public class ForwardControlParser extends BaseControlParser {
 		// V7O_VI7 - 14
 		addInputParser(new VdypPolygonDescriptionParser());
 
+		// V7O_VOP - 15
+		addOutputWriter(ControlKey.VDYP_OUTPUT_VDYP_POLYGON);
+		// V7O_VOS - 16
+		addOutputWriter(ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SPECIES);
+		// V7O_VOU - 18
+		addOutputWriter(ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL);
+		// V7O_VOC - 19
+		addOutputWriter(ControlKey.VDYP_OUTPUT_COMPATIBILITY_VARIABLES);
+
 		// 101 - a literal value of type VdypGrowthDetails
 
 		controlParser.record(ControlKey.VTROL, new ForwardControlVariableParser());
@@ -308,7 +327,7 @@ public class ForwardControlParser extends BaseControlParser {
 				// m is a configuration file parser.
 				logger.debug(
 						"Parsing configuration file {}[{}] using {}", m.getControlKeyName(), key.sequence.get(),
-						m.getClass().getName()
+						m.getClass().getSimpleName()
 				);
 				m.modify(map, fileResolver);
 			}
@@ -318,10 +337,17 @@ public class ForwardControlParser extends BaseControlParser {
 				// r is an input file parser.
 				logger.debug(
 						"Parsing input file {}[{}] using {}", r.getControlKeyName(), key.sequence.get(),
-						r.getClass().getName()
+						r.getClass().getSimpleName()
 				);
 				r.modify(map, fileResolver);
 			}
+		}
+
+		for (var outputFile : outputFiles()) {
+			var key = outputFile.getControlKey();
+			logger.debug("Adjusting location of output file {}[{}] relative to control file", key, key.sequence.get());
+
+			outputFile.modify(map, fileResolver);
 		}
 
 		// Report any control map items that are a) not included in orderedControlKeys

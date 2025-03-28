@@ -81,7 +81,7 @@ public class ForwardDataStreamReader {
 	 * @param controlMap a raw (i.e., unresolved) control map
 	 * @throws ProcessingException
 	 */
-	ForwardDataStreamReader(Map<String, Object> controlMap) throws ProcessingException {
+	public ForwardDataStreamReader(Map<String, Object> controlMap) throws ProcessingException {
 
 		this(new ForwardResolvedControlMapImpl(controlMap));
 	}
