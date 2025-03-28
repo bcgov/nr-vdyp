@@ -57,7 +57,7 @@ class YieldTableRowIterator implements Iterator<YieldTableRowContext> {
 	 */
 	private void establishStartRow() {
 
-		var params = context.getValidatedParams();
+		var params = context.getParams();
 
 		if (rowContext.getYearAtDeath() == null) {
 
@@ -135,7 +135,7 @@ class YieldTableRowIterator implements Iterator<YieldTableRowContext> {
 	 * case, if the '-inc' command line parameter is supplied, it reaches here as '0'.
 	 */
 	private void advanceToNextRow() {
-		var params = context.getValidatedParams();
+		var params = context.getParams();
 
 		boolean bAnotherRowToBePrinted = true;
 		boolean hasSetNextAge = false;

@@ -28,7 +28,7 @@ class PLOTSYYieldTableWriter extends AbstractCSVTypeYieldTableWriter<PLOTSYYield
 	}
 
 	@Override
-	public void recordCalendarYearAndLayerAge(YieldTableRowContext rowContext) throws YieldTableGenerationException {
+	public void recordCalendarYearAndLayerAge(YieldTableRowContext rowContext) {
 		throw new UnsupportedOperationException("PLOTSYYieldTableWriter.recordCalendarYearAndLayerAge");
 	}
 
@@ -47,5 +47,10 @@ class PLOTSYYieldTableWriter extends AbstractCSVTypeYieldTableWriter<PLOTSYYield
 			Double percentStockable, Double siteIndex, Double dominantHeight, Double secondaryHeight
 	) {
 		throw new UnsupportedOperationException("PLOTSYYieldTableWriter.recordSiteInformation");
+	}
+
+	@Override
+	void recordGrowthDetails(EntityGrowthDetails growthDetails, EntityVolumeDetails entityVolumeDetails) {
+		throw new UnsupportedOperationException("PLOTSYYieldTableWriter.recordGrowthDetails");
 	}
 }

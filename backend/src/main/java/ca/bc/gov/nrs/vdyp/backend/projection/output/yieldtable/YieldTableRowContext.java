@@ -103,7 +103,7 @@ class YieldTableRowContext {
 
 		calculateMeasurementInformation();
 
-		calculateTableRangeInformation(context.getValidatedParams());
+		calculateTableRangeInformation(context.getParams());
 
 		calculateLayerAgeOffsets();
 

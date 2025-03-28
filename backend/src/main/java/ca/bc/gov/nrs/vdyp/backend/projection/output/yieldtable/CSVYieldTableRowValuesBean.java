@@ -30,7 +30,7 @@ public class CSVYieldTableRowValuesBean implements YieldTableRowValues {
 	public static StatefulBeanToCsv<CSVYieldTableRowValuesBean>
 			createCsvOutputStream(FileWriter writer, ProjectionContext context) {
 
-		var doGenerateHeader = context.getValidatedParams()
+		var doGenerateHeader = context.getParams()
 				.containsOption(ExecutionOption.DO_INCLUDE_COLUMN_HEADERS_IN_YIELD_TABLE);
 
 		if (doGenerateHeader) {

@@ -63,7 +63,7 @@ class TextYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean>
 	}
 
 	@Override
-	public void recordCalendarYearAndLayerAge(YieldTableRowContext rowContext) throws YieldTableGenerationException {
+	public void recordCalendarYearAndLayerAge(YieldTableRowContext rowContext) {
 		currentRecord.setProjectionYear(Integer.toString(rowContext.getCurrentTableYear()));
 		currentRecord.setTotalAge(
 				rowContext.getCurrentTableAge() == null ? null : Integer.toString(rowContext.getCurrentTableAge())
@@ -100,6 +100,10 @@ class TextYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean>
 	}
 
 	@Override
+	void recordGrowthDetails(EntityGrowthDetails growthDetails, EntityVolumeDetails entityVolumeDetails) {
+	}
+
+	@Override
 	protected void writeRecord() throws YieldTableGenerationException {
 
 		writeCalendarYearAndLayerAge();
@@ -115,7 +119,7 @@ class TextYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean>
 			Integer yieldTableCount
 	) throws YieldTableGenerationException {
 
-		var params = context.getValidatedParams();
+		var params = context.getParams();
 
 		doWrite("vvvvvvvvvv Table Number: %-10d", yieldTableCount);
 
@@ -166,6 +170,20 @@ class TextYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean>
 		}
 	}
 
+	private void writeCalendarYearAndLayerAge() throws YieldTableGenerationException {
+		if (currentRecord.getProjectionYear() != null) {
+			doWrite("%4d ", Integer.parseInt(currentRecord.getProjectionYear()));
+		} else {
+			doWrite("     ");
+		}
+
+		if (currentRecord.getTotalAge() != null) {
+			doWrite("%4d ", Integer.parseInt(currentRecord.getTotalAge()));
+		} else {
+			doWrite("     ");
+		}
+	}
+
 	private void writeSpeciesComposition() throws YieldTableGenerationException {
 
 		int speciesIndex = 1;
@@ -208,7 +226,7 @@ class TextYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean>
 		else
 			doWrite("       ");
 
-		if (context.getValidatedParams()
+		if (context.getParams()
 				.containsOption(ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE)) {
 			if (currentRecord.getSecondaryHeight() != null)
 				doWrite("%6.2f ", Double.parseDouble(currentRecord.getSecondaryHeight()));
@@ -225,20 +243,6 @@ class TextYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean>
 	@Override
 	public void writeTrailer() throws YieldTableGenerationException {
 		doWrite("Run completed: %s\n", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
-	}
-
-	private void writeCalendarYearAndLayerAge() throws YieldTableGenerationException {
-		if (currentRecord.getProjectionYear() != null) {
-			doWrite("%4d ", Integer.parseInt(currentRecord.getProjectionYear()));
-		} else {
-			doWrite("     ");
-		}
-
-		if (currentRecord.getTotalAge() != null) {
-			doWrite("%4d ", Integer.parseInt(currentRecord.getTotalAge()));
-		} else {
-			doWrite("     ");
-		}
 	}
 
 	private void doWrite(String message, Object... args) throws YieldTableGenerationException {

@@ -38,7 +38,7 @@ class DCSVYieldTableWriter extends AbstractCSVTypeYieldTableWriter<DCSVYieldTabl
 	}
 
 	@Override
-	public void recordSpeciesComposition(YieldTableRowContext rowContext) throws YieldTableGenerationException {
+	public void recordSpeciesComposition(YieldTableRowContext rowContext) {
 		throw new UnsupportedOperationException("DCSVYieldTableWriter.writeSpeciesComposition");
 	}
 
@@ -47,5 +47,10 @@ class DCSVYieldTableWriter extends AbstractCSVTypeYieldTableWriter<DCSVYieldTabl
 			Double percentStockable, Double siteIndex, Double dominantHeight, Double secondaryHeight
 	) {
 		throw new UnsupportedOperationException("DCSVYieldTableWriter.recordSiteInformation");
+	}
+
+	@Override
+	void recordGrowthDetails(EntityGrowthDetails growthDetails, EntityVolumeDetails entityVolumeDetails) {
+		throw new UnsupportedOperationException("DCSVYieldTableWriter.recordGrowthDetails");
 	}
 }
