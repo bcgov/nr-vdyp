@@ -808,7 +808,8 @@ public class Layer implements Comparable<Layer> {
 					polygon.disableProjectionsOfType(assignedProjectionType);
 					context.addMessage(
 							Level.WARN,
-							"{0}: Crown closure was not supplied and there is no leading sp64 from which it can be determined. Disabling projection", this
+							"{0}: Crown closure was not supplied and there is no leading sp64 from which it can be determined. Disabling projection",
+							this
 					);
 					logger.debug("Disabling projections of type {}", assignedProjectionType);
 				}

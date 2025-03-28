@@ -312,7 +312,7 @@ public class ProjectionContext {
 
 	public void addMessage(Level level, String message, Object... args) {
 		String messageText = MessageFormat.format(message, args);
-		
+
 		switch (level) {
 		case ERROR:
 			getErrorLog().addMessage(messageText);
@@ -331,7 +331,9 @@ public class ProjectionContext {
 			logger.trace(messageText);
 			break;
 		default:
-			throw new IllegalStateException("Saw level \"" + level + "\", not supported in ProjectionContext.addMessage");
+			throw new IllegalStateException(
+					"Saw level \"" + level + "\", not supported in ProjectionContext.addMessage"
+			);
 		}
 	}
 }

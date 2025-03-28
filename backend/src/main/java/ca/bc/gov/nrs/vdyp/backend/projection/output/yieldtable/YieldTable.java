@@ -799,7 +799,9 @@ public class YieldTable implements Closeable {
 		Double cuVolumeLessDecayWastage = 0.0;
 		Double cuVolumeLessDecayWastageBreakage = 0.0;
 
-		if (!layer.getDoSuppressPerHAYields()) {
+		boolean layerWasProjected = rowContext.getPolygonProjectionState().layerWasProjected(layer);
+
+		if (layerWasProjected && !layer.getDoSuppressPerHAYields()) {
 			var layerYields = obtainStandYield(rowContext, projectedPolygons, layer, null, targetAge);
 
 			wholeStemVolume = layerYields.wholeStemVolume();
@@ -996,17 +998,20 @@ public class YieldTable implements Closeable {
 			if (didCopyBasalArea && didCopyTreesPerHectare) {
 				context.addMessage(
 						Level.WARN,
-						"Starting values for basal area and trees-per-hectare copied over for QA and alternative model used for Species {}", species
+						"Starting values for basal area and trees-per-hectare copied over for QA and alternative model used for Species {}",
+						species
 				);
 			} else if (didCopyBasalArea) {
 				context.addMessage(
 						Level.WARN,
-						"Starting values for basal area copied over for QA and alternative model used for Species {}", species
+						"Starting values for basal area copied over for QA and alternative model used for Species {}",
+						species
 				);
 			} else if (didCopyTreesPerHectare) {
 				context.addMessage(
 						Level.WARN,
-						"Starting values for trees-per-hectare copied over for QA and alternative model used for Species {}", species
+						"Starting values for trees-per-hectare copied over for QA and alternative model used for Species {}",
+						species
 				);
 			}
 		}
@@ -1229,7 +1234,8 @@ public class YieldTable implements Closeable {
 		} else {
 			context.addMessage(
 					Level.WARN,
-					"{0}: projected data for the {1} layer was not generated at stand age {2}, calendar year {3}", rowContext.getPolygon(), projectionType, ageToUse, calendarYear
+					"{0}: projected data for the {1} layer was not generated at stand age {2}, calendar year {3}",
+					rowContext.getPolygon(), projectionType, ageToUse, calendarYear
 			);
 		}
 

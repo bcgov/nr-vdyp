@@ -845,7 +845,8 @@ public class Polygon implements Comparable<Polygon> {
 					disableProjectionsOfType(l.determineProjectionType(this));
 					context.addMessage(
 							Level.WARN,
-							"Layer {0} percent is different from 100% by more than 1%; can't project (percent = {1})", l, sumStandPercentages
+							"Layer {0} percent is different from 100% by more than 1%; can't project (percent = {1})",
+							l, sumStandPercentages
 					);
 				}
 			}

@@ -258,7 +258,8 @@ public class PolygonProjectionRunner {
 					polygon.disableProjectionsOfType(pt);
 
 					context.addMessage(
-							Level.ERROR, "Layer {0} is not completely, or is not consistently, defined", selectedPrimaryLayer
+							Level.ERROR, "Layer {0} is not completely, or is not consistently, defined",
+							selectedPrimaryLayer
 					);
 				}
 			}
