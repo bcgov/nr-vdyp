@@ -15,7 +15,7 @@
 		level {$LOG_LEVEL}
 	}
 	request_body {
-		max_size 50M
+		max_size 50MB
 	}
   handle /env.js {
       header {
