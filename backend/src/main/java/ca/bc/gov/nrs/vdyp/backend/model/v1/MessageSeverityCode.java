@@ -18,7 +18,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 /**
  * Message severity codes
  */
-public enum SeverityCode {
+public enum MessageSeverityCode {
 
 	INFORMATION("Information"),
 
@@ -32,7 +32,7 @@ public enum SeverityCode {
 
 	private String value;
 
-	SeverityCode(String value) {
+	MessageSeverityCode(String value) {
 		this.value = value;
 	}
 
@@ -47,8 +47,8 @@ public enum SeverityCode {
 	}
 
 	@JsonCreator
-	public static SeverityCode fromValue(String value) {
-		for (SeverityCode b : SeverityCode.values()) {
+	public static MessageSeverityCode fromValue(String value) {
+		for (MessageSeverityCode b : MessageSeverityCode.values()) {
 			if (b.value.equals(value)) {
 				return b;
 			}

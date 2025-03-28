@@ -48,7 +48,7 @@ public class MessagesInner {
 
 	public static final String JSON_PROPERTY_SEVERITY = "severity";
 	@JsonProperty(JSON_PROPERTY_SEVERITY)
-	private SeverityCode severity;
+	private MessageSeverityCode severity;
 
 	public static final String JSON_PROPERTY_MESSAGE_CODE = "messageCode";
 	@JsonProperty(JSON_PROPERTY_MESSAGE_CODE)
@@ -140,7 +140,7 @@ public class MessagesInner {
 		this.errorCode = errorCode;
 	}
 
-	public MessagesInner severity(SeverityCode severity) {
+	public MessagesInner severity(MessageSeverityCode severity) {
 		this.severity = severity;
 		return this;
 	}
@@ -152,11 +152,11 @@ public class MessagesInner {
 	 **/
 	@JsonProperty(value = "severity")
 
-	public SeverityCode getSeverity() {
+	public MessageSeverityCode getSeverity() {
 		return severity;
 	}
 
-	public void setSeverity(SeverityCode severity) {
+	public void setSeverity(MessageSeverityCode severity) {
 		this.severity = severity;
 	}
 
