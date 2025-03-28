@@ -1,8 +1,7 @@
 package ca.bc.gov.nrs.vdyp.backend.model.v1;
 
 public enum ValidationMessageKind {
-	GENERIC("{0}"), 
-	UNRECOGNIZED_OUTPUT_FORMAT("{0} is not a recognized output format"),
+	GENERIC("{0}"), UNRECOGNIZED_OUTPUT_FORMAT("{0} is not a recognized output format"),
 	UNSUPPORTED_OUTPUT_FORMAT("{0} is not a supported output format"),
 	UNRECOGNIZED_EXECUTION_OPTION("{0} is not a recognized execution option"),
 	UNRECOGNIZED_DEBUG_OPTION("{0} is not a recognized debug option"),
@@ -60,14 +59,18 @@ public enum ValidationMessageKind {
 			"Polygon {0} Layer {1}: species definitions for species \"{3}\" have inconsistent site information"
 	),
 	LOW_SITE_INDEX_ERROR(
-			"Polygon {0} Layer {1}: very low or null site index {2} for species \"{3}\". Projected Dominant Height set to input height"
+			"Polygon {0} Layer {1}: very low or null site index {2} for species \"{3}\". {4} not calculated"
 	),
 	LOW_SITE_INDEX_WARNING(
-			"Polygon {0} Layer {1}: very low or null site index {2} for species \"{3}\". Projected Dominant Height set to input height"
-	), NO_LEADING_SPECIES("Polygon {0} Layer {1}: no leading site species could be found"),
+			"Polygon {0} Layer {1}: very low or null site index {2} for species \"{3}\". {4} set to species {4} value prior to projection"
+	), //
+	MISSING_SITE_INDEX_ERROR("Polygon {0} Layer {1}: unable to compute site index for species \"{2}\"."),
+	MISSING_YEARS_TO_BREAST_HEIGHT("Polygon {0} Layer {1}: species {2} missing years-to-breast-height value."), //
+	NO_LEADING_SPECIES("Polygon {0} Layer {1}: no leading site species could be found"), //
 	SPECIES_WITH_NO_STAND_OR_AGE(
 			"Polygon {0} Layer {1}: Species \"{2}\" has no age but requires that a new Stand be created, which requires the age be known"
-	), PRIMARY_LAYER_NOT_FOUND("Polygon {0}: no primary layer found for any projection type"), //
+	), //
+	PRIMARY_LAYER_NOT_FOUND("Polygon {0}: no primary layer found for any projection type"), //
 	ESTIMATED_SI_UNAVAILABLE(
 			"Estimated site index required but unavailable for species {0} at age {1}. Site index computed directly from age and height"
 	), //

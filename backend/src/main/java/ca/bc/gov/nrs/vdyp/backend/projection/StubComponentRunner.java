@@ -4,7 +4,7 @@ import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.YieldTableGenerationExceptio
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Polygon;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
 
-public class StubComponentRunner implements IComponentRunner {
+public class StubComponentRunner implements ComponentRunner {
 
 	@Override
 	public void runFipStart(Polygon polygon, ProjectionTypeCode projectionTypeCode, PolygonProjectionState state) {

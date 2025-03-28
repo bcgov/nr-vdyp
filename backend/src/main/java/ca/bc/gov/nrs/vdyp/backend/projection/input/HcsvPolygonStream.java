@@ -16,7 +16,7 @@ import com.opencsv.exceptions.CsvConstraintViolationException;
 
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.SeverityCode;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.MessageSeverityCode;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessageKind;
 import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionContext;
@@ -535,7 +535,7 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 							new PolygonMessage.Builder() //
 									.stand(stand) //
 									.returnCode(ReturnCode.ERROR_SPECIESALREADYEXISTS) //
-									.severity(SeverityCode.WARNING) //
+									.severity(MessageSeverityCode.WARNING) //
 									.message(
 											new ValidationMessage(
 													ValidationMessageKind.DUPLICATE_SPECIES, layer.getPolygon(),

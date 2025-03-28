@@ -9,10 +9,10 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.event.Level;
 
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonExecutionException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.SeverityCode;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.MessageSeverityCode;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessageKind;
 import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionContext;
@@ -499,11 +499,11 @@ public class Layer implements Comparable<Layer> {
 				} else if (sp64.getTotalAge() != null && sp64.getTotalAge() < 30 && sp64.getDominantHeight() > 0
 						&& sp64.getSiteIndex() == null) {
 
-					sp64.setSiteIndex(sp64.dominantHeightAndAgeToSiteIndex());
+					sp64.setSiteIndex(sp64.determineSiteIndexFromDominantHeightAndAge());
 
 					polygon.addDefinitionMessage(
 							new PolygonMessage.Builder().returnCode(ReturnCode.SUCCESS).stand(speciesGroup)
-									.severity(SeverityCode.WARNING)
+									.severity(MessageSeverityCode.WARNING)
 									.message(
 											new ValidationMessage(
 													ValidationMessageKind.ESTIMATED_SI_UNAVAILABLE,
@@ -526,7 +526,7 @@ public class Layer implements Comparable<Layer> {
 							new PolygonMessage.Builder() //
 									.returnCode(ReturnCode.SUCCESS) //
 									.stand(speciesGroup) //
-									.severity(SeverityCode.INFORMATION) //
+									.severity(MessageSeverityCode.INFORMATION) //
 									.message(
 											new ValidationMessage(
 													ValidationMessageKind.REASSIGNED_HEIGHT, this, sp64,
@@ -722,7 +722,7 @@ public class Layer implements Comparable<Layer> {
 								new PolygonMessage.Builder() //
 										.returnCode(ReturnCode.SUCCESS) //
 										.stand(s.getStand()) //
-										.severity(SeverityCode.INFORMATION) //
+										.severity(MessageSeverityCode.INFORMATION) //
 										.message(
 												new ValidationMessage(
 														ValidationMessageKind.ASSIGNING_ESTIMATED_SITE_INDEX,
@@ -743,7 +743,7 @@ public class Layer implements Comparable<Layer> {
 								new PolygonMessage.Builder() //
 										.returnCode(ReturnCode.SUCCESS) //
 										.stand(s.getStand()) //
-										.severity(SeverityCode.INFORMATION) //
+										.severity(MessageSeverityCode.INFORMATION) //
 										.message(
 												new ValidationMessage(
 														ValidationMessageKind.ASSIGNING_ESTIMATED_SITE_INDEX,
@@ -772,7 +772,7 @@ public class Layer implements Comparable<Layer> {
 								new PolygonMessage.Builder() //
 										.returnCode(ReturnCode.SUCCESS) //
 										.layer(this) //
-										.severity(SeverityCode.INFORMATION) //
+										.severity(MessageSeverityCode.INFORMATION) //
 										.message(
 												new ValidationMessage(
 														ValidationMessageKind.ESTIMATE_APPLIED_FROM_OTHER_SPECIES,
@@ -807,8 +807,8 @@ public class Layer implements Comparable<Layer> {
 				} else if (leadingSp64 == null) {
 					polygon.disableProjectionsOfType(assignedProjectionType);
 					context.addMessage(
-							"{0}: Crown closure was not supplied and there is no leading sp64 from which it can be determined. Disabling projection",
-							this
+							Level.WARN,
+							"{0}: Crown closure was not supplied and there is no leading sp64 from which it can be determined. Disabling projection", this
 					);
 					logger.debug("Disabling projections of type {}", assignedProjectionType);
 				}

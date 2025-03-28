@@ -1,5 +1,7 @@
 package ca.bc.gov.nrs.vdyp.backend.projection.model;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.TreeSet;
@@ -23,8 +25,11 @@ public class Stand implements Comparable<Stand> {
 	/** The number of stands added to the Layer prior to this one. */
 	private int standIndex;
 
-	/** The individual species (VDYP7: Sp64) of the species group. */
-	private TreeSet<Species> sp64s = new TreeSet<>(new Species.ByDecreasingPercentageComparator());
+	/** The individual species (VDYP7: Sp64) of the species group, as ordered on input */
+	private List<Species> sp64s = new ArrayList<Species>();
+
+	/** The individual species (VDYP7: Sp64) of the species group, ordered by decreasing percentage */
+	private TreeSet<Species> sp64sByPercentage = new TreeSet<>(new Species.ByDecreasingPercentageComparator());
 
 	private Stand() {
 	}
@@ -46,7 +51,11 @@ public class Stand implements Comparable<Stand> {
 	}
 
 	public List<Species> getSpeciesByPercent() {
-		return sp64s.stream().toList();
+		return sp64sByPercentage.stream().toList();
+	}
+
+	public List<Species> getSpecies() {
+		return Collections.unmodifiableList(sp64s);
 	}
 
 	public static class Builder {
@@ -109,6 +118,7 @@ public class Stand implements Comparable<Stand> {
 		}
 
 		this.sp0.updateAfterSp64Added(sp64);
+		this.sp64sByPercentage.add(sp64);
 		this.sp64s.add(sp64);
 	}
 

@@ -9,8 +9,8 @@ import java.util.Map;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.event.Level;
 
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonExecutionException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessageKind;
@@ -27,7 +27,6 @@ import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProcessingModeCo
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ReturnCode;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.SilviculturalBaseCode;
-import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.UtilizationClassCode;
 import ca.bc.gov.nrs.vdyp.backend.utils.NullMath;
 import ca.bc.gov.nrs.vdyp.common.Reference;
 import ca.bc.gov.nrs.vdyp.math.VdypMath;
@@ -48,9 +47,6 @@ public class Polygon implements Comparable<Polygon> {
 
 	/** The polygon's "polygon number" */
 	private Long polygonNumber;
-
-	/** The reporting levels for each of the possible SP0s when predicting yields. */
-	private Map<String, UtilizationClassCode> reportingLevelBySp0;
 
 	/** The district responsible for the map */
 	private String district;
@@ -243,7 +239,6 @@ public class Polygon implements Comparable<Polygon> {
 		rank1Layer = null;
 
 		history = null;
-		reportingLevelBySp0 = null;
 
 		reportingInfo = null;
 
@@ -256,10 +251,6 @@ public class Polygon implements Comparable<Polygon> {
 
 	public Long getPolygonNumber() {
 		return polygonNumber;
-	}
-
-	public Map<String, UtilizationClassCode> getReportingLevelBySp0() {
-		return Collections.unmodifiableMap(reportingLevelBySp0);
 	}
 
 	public String getDistrict() {
@@ -504,11 +495,6 @@ public class Polygon implements Comparable<Polygon> {
 
 		public Builder polygonNumber(Long polygonNumber) {
 			polygon.polygonNumber = polygonNumber;
-			return this;
-		}
-
-		public Builder reportingLevelBySp0(Map<String, UtilizationClassCode> reportingLevelBySp0) {
-			polygon.reportingLevelBySp0 = reportingLevelBySp0;
 			return this;
 		}
 
@@ -858,8 +844,8 @@ public class Polygon implements Comparable<Polygon> {
 				} else {
 					disableProjectionsOfType(l.determineProjectionType(this));
 					context.addMessage(
-							"Layer {0} percent is different from 100% by more than 1%; can't project (percent = {1})",
-							l, sumStandPercentages
+							Level.WARN,
+							"Layer {0} percent is different from 100% by more than 1%; can't project (percent = {1})", l, sumStandPercentages
 					);
 				}
 			}

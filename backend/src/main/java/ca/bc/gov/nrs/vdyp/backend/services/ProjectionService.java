@@ -123,8 +123,6 @@ public class ProjectionService {
 			response = buildOutputZipFile(runner, debugLogStream);
 
 		} finally {
-			runner.endRun();
-
 			logger.info(FINALIZE_SESSION_MARKER, ">runProjection {} {}", kind, projectionId);
 
 			if (debugLoggingEnabled) {
@@ -162,20 +160,18 @@ public class ProjectionService {
 				progressLogStream = runner.getProgressStream();
 				errorLogStream = runner.getErrorStream();
 
-				var yieldTableFileName = runner.getContext().getValidatedParams().getOutputFormat()
-						.getYieldTableFileName();
+				var yieldTableFileName = runner.getContext().getParams().getOutputFormat().getYieldTableFileName();
 				writeZipEntry(zipOut, yieldTableFileName, yieldTableStream.readAllBytes());
 
-				if (runner.getContext().getValidatedParams()
-						.containsOption(ExecutionOption.DO_ENABLE_PROGRESS_LOGGING)) {
+				if (runner.getContext().getParams().containsOption(ExecutionOption.DO_ENABLE_PROGRESS_LOGGING)) {
 					writeZipEntry(zipOut, "ProgressLog.txt", runner.getProgressStream().readAllBytes());
 				}
 
-				if (runner.getContext().getValidatedParams().containsOption(ExecutionOption.DO_ENABLE_ERROR_LOGGING)) {
+				if (runner.getContext().getParams().containsOption(ExecutionOption.DO_ENABLE_ERROR_LOGGING)) {
 					writeZipEntry(zipOut, "ErrorLog.txt", runner.getErrorStream().readAllBytes());
 				}
 
-				if (runner.getContext().getValidatedParams().containsOption(ExecutionOption.DO_ENABLE_DEBUG_LOGGING)) {
+				if (runner.getContext().getParams().containsOption(ExecutionOption.DO_ENABLE_DEBUG_LOGGING)) {
 					writeZipEntry(zipOut, "DebugLog.txt", debugLogStream.readAllBytes());
 				}
 

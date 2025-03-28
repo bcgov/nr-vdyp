@@ -12,7 +12,6 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.AbstractPolygonProjectionException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonExecutionException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
@@ -62,45 +61,49 @@ public class ProjectionRunner {
 
 		context.startRun();
 
-		logger.debug("{}", context.getValidatedParams().toString());
-		logApplicationMetadata();
+		try {
+			logger.debug("{}", context.getParams().toString());
+			logApplicationMetadata();
 
-		AbstractPolygonStream polygonStream = AbstractPolygonStream.build(context, streams);
+			AbstractPolygonStream polygonStream = AbstractPolygonStream.build(context, streams);
 
-		IComponentRunner componentRunner;
-		if (context.isTrialRun()) {
-			componentRunner = new StubComponentRunner();
-		} else {
-			componentRunner = new ComponentRunner();
-		}
+			ComponentRunner componentRunner;
+			if (context.isTrialRun()) {
+				componentRunner = new StubComponentRunner();
+			} else {
+				componentRunner = new RealComponentRunner();
+			}
 
-		while (polygonStream.hasNextPolygon()) {
+			while (polygonStream.hasNextPolygon()) {
 
-			try {
 				try {
-					var polygon = polygonStream.getNextPolygon();
-					if (polygon.doAllowProjection()) {
-						logger.info("Starting the projection of feature \"{}\"", polygon);
-						PolygonProjectionRunner.of(polygon, context, componentRunner).project();
-					} else {
-						logger.info("By request, the projection of feature \"{}\" has been skipped", polygon);
+					try {
+						var polygon = polygonStream.getNextPolygon();
+						if (polygon.doAllowProjection()) {
+							logger.info("Starting the projection of feature \"{}\"", polygon);
+							PolygonProjectionRunner.of(polygon, context, componentRunner).project();
+						} else {
+							logger.info("By request, the projection of feature \"{}\" has been skipped", polygon);
+						}
+					} catch (PolygonExecutionException e) {
+						IMessageLog errorLog = context.getErrorLog();
+						for (ValidationMessage m : e.getValidationMessages()) {
+							errorLog.addMessage(m.getKind().template, m.getArgs());
+						}
+
+						if (e.getCause() instanceof PolygonValidationException pve) {
+							throw pve;
+						}
 					}
-				} catch (PolygonExecutionException e) {
+				} catch (PolygonValidationException e) {
 					IMessageLog errorLog = context.getErrorLog();
 					for (ValidationMessage m : e.getValidationMessages()) {
 						errorLog.addMessage(m.getKind().template, m.getArgs());
 					}
-
-					if (e.getCause() instanceof PolygonValidationException pve) {
-						throw pve;
-					}
-				}
-			} catch (PolygonValidationException e) {
-				IMessageLog errorLog = context.getErrorLog();
-				for (ValidationMessage m : e.getValidationMessages()) {
-					errorLog.addMessage(m.getKind().template, m.getArgs());
 				}
 			}
+		} finally {
+			context.endRun();
 		}
 	}
 
@@ -130,7 +133,7 @@ public class ProjectionRunner {
 	public Map<ProjectionResultsKey, InputStream> getProjectionResults() {
 		var projectionResults = new HashMap<ProjectionResultsKey, InputStream>();
 
-		if (context.getValidatedParams().containsOption(ExecutionOption.DO_INCLUDE_PROJECTION_FILES)) {
+		if (context.getParams().containsOption(ExecutionOption.DO_INCLUDE_PROJECTION_FILES)) {
 
 			try (var polygonFolders = Files.list(context.getExecutionFolder()).filter(e -> Files.isDirectory(e))) {
 				for (var polygonFolder : polygonFolders.toList()) {
@@ -174,12 +177,5 @@ public class ProjectionRunner {
 
 	public ProjectionContext getContext() {
 		return context;
-	}
-
-	/**
-	 * Call this in a finally {} block after executing run() in the try {} block.
-	 */
-	public void endRun() {
-		context.endRun();
 	}
 }

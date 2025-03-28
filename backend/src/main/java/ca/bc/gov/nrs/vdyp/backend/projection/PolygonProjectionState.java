@@ -38,7 +38,7 @@ public class PolygonProjectionState {
 	private Map<ProjectionTypeCode, Double> percentForestedLandUsedByProjectionType;
 	private Map<ProjectionTypeCode, Double> yieldFactorByProjectionType;
 
-	private Map<String /* layer id */, Boolean> firstYearYieldsDisplayedByLayer;
+	private Map<String /* layer id */, Integer> firstYearYieldsDisplayedByLayer;
 
 	private Path executionFolder = null;
 
@@ -96,7 +96,7 @@ public class PolygonProjectionState {
 		return firstYearValidYieldByProjectionType.get(new ModelReturnCodeKey(stage, type));
 	}
 
-	public void setFirstYearYieldsDisplayed(Layer layer, boolean firstYearFieldsDisplayed) {
+	public void setFirstYearYieldsDisplayed(Layer layer, int year) {
 		if (firstYearYieldsDisplayedByLayer.containsKey(layer.getLayerId())) {
 			throw new IllegalStateException(
 					MessageFormat.format(
@@ -105,18 +105,10 @@ public class PolygonProjectionState {
 					)
 			);
 		}
-		firstYearYieldsDisplayedByLayer.put(layer.getLayerId(), firstYearFieldsDisplayed);
+		firstYearYieldsDisplayedByLayer.put(layer.getLayerId(), year);
 	}
 
-	public Boolean getFirstYearYieldsDisplayed(Layer layer) {
-		if (!firstYearYieldsDisplayedByLayer.containsKey(layer.getLayerId())) {
-			throw new IllegalStateException(
-					MessageFormat.format(
-							"getFirstYearYieldsDisplayed: firstYearYieldsDisplayed has not been set for layer {0}",
-							layer.getLayerId()
-					)
-			);
-		}
+	public Integer getFirstYearYieldsDisplayed(Layer layer) {
 		return firstYearYieldsDisplayedByLayer.get(layer.getLayerId());
 	}
 
@@ -352,5 +344,23 @@ public class PolygonProjectionState {
 
 	public boolean didRunProjectionStage(ProjectionStageCode stage, ProjectionTypeCode projectionType) {
 		return getProcessingResults(stage, projectionType) != ProcessingResult.PROCESSING_RESULT_NULL;
+	}
+
+	public boolean didRunProjection(ProjectionTypeCode projectionType) {
+		return didRunProjectionStage(ProjectionStageCode.Forward, projectionType)
+				|| didRunProjectionStage(ProjectionStageCode.Back, projectionType);
+	}
+
+	public boolean didRunProjectionStage(ProjectionStageCode stage) {
+		for (var projectionType : ProjectionTypeCode.values()) {
+			if (didRunProjectionStage(stage, projectionType)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public boolean didRunProjection() {
+		return didRunProjectionStage(ProjectionStageCode.Forward) || didRunProjectionStage(ProjectionStageCode.Back);
 	}
 }

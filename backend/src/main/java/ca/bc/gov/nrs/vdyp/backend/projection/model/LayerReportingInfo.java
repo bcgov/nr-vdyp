@@ -68,7 +68,7 @@ public class LayerReportingInfo {
 	 */
 	public List<SpeciesReportingInfo> getOrderedSpecies() {
 		Validate.notNull(orderedSpecies, "LayerReportingInfo.getOrderedSpecies: orderedSpecies must be not null");
-		return orderedSpecies;
+		return Collections.unmodifiableList(orderedSpecies);
 	}
 
 	public static class Builder {

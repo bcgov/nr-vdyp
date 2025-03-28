@@ -1,5 +1,7 @@
 package ca.bc.gov.nrs.vdyp.backend.projection;
 
+import static org.slf4j.event.EventConstants.*;
+
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.FileSystem;
@@ -13,6 +15,8 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.text.MessageFormat;
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -26,11 +30,16 @@ import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionInternalExecutionE
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.YieldTableGenerationException;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ProjectionRequestKind;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.MessageSeverityCode;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.UtilizationClassSet;
+import ca.bc.gov.nrs.vdyp.backend.projection.model.Polygon;
+import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
 import ca.bc.gov.nrs.vdyp.backend.projection.output.IMessageLog;
 import ca.bc.gov.nrs.vdyp.backend.projection.output.MessageLog;
 import ca.bc.gov.nrs.vdyp.backend.projection.output.NullMessageLog;
 import ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable.YieldTable;
 import ca.bc.gov.nrs.vdyp.backend.utils.Utils;
+import ca.bc.gov.nrs.vdyp.si32.vdyp.SP0Name;
 
 public class ProjectionContext {
 
@@ -38,14 +47,16 @@ public class ProjectionContext {
 
 	private static final int EXECUTION_FOLDER_RETENTION_TIME_m = 30;
 
+	private record ProjectionDetails(int startYear, int firstRequestedYear) {
+	};
+
 	private final String projectionId;
 	private long startTime_ms;
 
 	private final ProjectionRequestKind requestKind;
 	private final boolean isTrailRun;
 
-	private Parameters params;
-	private ValidatedParameters vparams;
+	private ValidatedParameters validatedParams;
 
 	private Path executionFolder;
 
@@ -55,6 +66,10 @@ public class ProjectionContext {
 
 	private ExecutorService executorService;
 	private FileSystem resourceFileSystem;
+
+	private Map<Long, Map<ProjectionTypeCode, ProjectionDetails>> projectionDetailsMap = new HashMap<>();
+
+	private Map<SP0Name, UtilizationClassSet> speciesReportingLevels = new HashMap<>();
 
 	public ProjectionContext(
 			ProjectionRequestKind requestKind, String projectionId, Parameters params, boolean isTrialRun
@@ -74,8 +89,6 @@ public class ProjectionContext {
 		this.isTrailRun = isTrialRun;
 		this.requestKind = requestKind;
 
-		this.params = params;
-
 		var loggingParams = LoggingParameters.of(params);
 
 		if (loggingParams.doEnableErrorLogging()) {
@@ -90,13 +103,47 @@ public class ProjectionContext {
 			progressLog = new NullMessageLog(Level.INFO);
 		}
 
-		ProjectionRequestParametersValidator.validate(this);
+		this.yieldTable = Optional.empty();
+		this.executorService = Executors.newSingleThreadExecutor();
+
+		this.validatedParams = ProjectionRequestParametersValidator.validate(params, this.getRequestKind());
+
+		applyVDYP7Limits();
 
 		buildProjectionExecutionStructure();
+	}
 
-		yieldTable = Optional.empty();
+	public void recordProjectionDetails(
+			Polygon polygon, ProjectionTypeCode projectionType, int projectionStartYear, int firstRequestedYear
+	) {
 
-		executorService = Executors.newSingleThreadExecutor();
+		projectionDetailsMap.putIfAbsent(polygon.getFeatureId(), new HashMap<ProjectionTypeCode, ProjectionDetails>());
+		var polygonProjectionDetails = projectionDetailsMap.get(polygon.getFeatureId());
+
+		if (polygonProjectionDetails.containsKey(projectionType)) {
+			throw new IllegalStateException(
+					MessageFormat.format(
+							"{0}: projectionDetailsMap already contains entry for projection type {1}", polygon,
+							projectionType
+					)
+			);
+		}
+
+		polygonProjectionDetails.put(projectionType, new ProjectionDetails(projectionStartYear, firstRequestedYear));
+	}
+
+	public ProjectionDetails getProjectionDetails(Polygon polygon, ProjectionTypeCode projectionType) {
+		if (!projectionDetailsMap.containsKey(polygon.getFeatureId())
+				|| !projectionDetailsMap.get(polygon.getFeatureId()).containsKey(projectionType)) {
+			throw new IllegalArgumentException(
+					MessageFormat.format(
+							"{0}: projectionDetailsMap does not contain entry for polygon and/or projection {1} of that polygon",
+							polygon, projectionType
+					)
+			);
+		}
+
+		return projectionDetailsMap.get(polygon.getFeatureId()).get(projectionType);
 	}
 
 	public void startRun() {
@@ -113,6 +160,13 @@ public class ProjectionContext {
 					e.getMessage() != null ? ": " + e.getMessage() : ""
 			);
 		}
+	}
+
+	/**
+	 * This method replicates the logic in VDYP7CORE_RunVDYPModel
+	 */
+	private void applyVDYP7Limits() {
+
 	}
 
 	private void buildProjectionExecutionStructure() throws ProjectionInternalExecutionException {
@@ -215,16 +269,8 @@ public class ProjectionContext {
 		}
 	}
 
-	public Parameters getRawParams() {
-		return params;
-	}
-
-	void setValidatedParams(ValidatedParameters validatedParams) {
-		this.vparams = validatedParams;
-	}
-
-	public ValidatedParameters getValidatedParams() {
-		return vparams;
+	public ValidatedParameters getParams() {
+		return validatedParams;
 	}
 
 	public String getProjectionId() {
@@ -264,9 +310,28 @@ public class ProjectionContext {
 		return executionFolder;
 	}
 
-	public void addMessage(String message, Object... args) {
+	public void addMessage(Level level, String message, Object... args) {
 		String messageText = MessageFormat.format(message, args);
-		getErrorLog().addMessage(messageText);
-		logger.debug(messageText);
+		
+		switch (level) {
+		case ERROR:
+			getErrorLog().addMessage(messageText);
+			logger.error(messageText);
+			break;
+		case WARN:
+			logger.warn(messageText);
+			break;
+		case INFO:
+			logger.info(messageText);
+			break;
+		case DEBUG:
+			logger.debug(messageText);
+			break;
+		case TRACE:
+			logger.trace(messageText);
+			break;
+		default:
+			throw new IllegalStateException("Saw level \"" + level + "\", not supported in ProjectionContext.addMessage");
+		}
 	}
 }

@@ -15,12 +15,11 @@ public record LayerYields(
 		boolean isDominantSp0,
 
 		/**
-		 * Identifies which Species Code (Sp0) number within the stand this yield information corresponds to.
+		 * Identifies which Species Code (Sp0) within the stand this yield information corresponds to.
 		 * <p>
-		 * If 0, indicates the entire stand is summarized in this structure. Otherwise must range from 1 to the number
-		 * of Species Groups in the polygon.
+		 * If null, indicates the entire stand is summarized in this structure.
 		 */
-		int sp0Index,
+		String sp0Name,
 
 		/** The stand calendar year at which these yields apply. */
 		int standYear,
@@ -53,10 +52,10 @@ public record LayerYields(
 		double cuVolumeLessDecay,
 
 		/** Close utilization volume, less decay and wastage, of the stand at this layer. */
-		double cuVolumeLessDecayWaste,
+		double cuVolumeLessDecayWastage,
 
 		/** Close utilization volume, less decay, wastage and breakage, of the stand at this layer. */
-		double cuVolumeLessDecayWasteBreakage,
+		double cuVolumeLessDecayWastageBreakage,
 
 		/** The Basal Area at Utilization Level 7.5cm+. */
 		double basalArea75cm,

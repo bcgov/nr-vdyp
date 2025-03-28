@@ -332,7 +332,7 @@ public class Species implements Comparable<Species> {
 	}
 
 	/**
-	 * A new species has been added to the Stand of which this Species is a Species Group. Update this Species (Group)
+	 * A new species has been added to the Stand of which this Species is the Species Group. Update this Species (Group)
 	 * to reflect this.
 	 *
 	 * @param sp64 the sp64 added.
@@ -387,7 +387,7 @@ public class Species implements Comparable<Species> {
 
 				if (!haveComputedSiteIndex && siteIndex == null && eval(totalAge) >= 30.0 && eval(dominantHeight) > 0) {
 
-					this.setSiteIndex(dominantHeightAndAgeToSiteIndex());
+					this.setSiteIndex(determineSiteIndexFromDominantHeightAndAge());
 
 					keepTrying = true;
 					haveComputedSiteIndex = true;
@@ -459,7 +459,7 @@ public class Species implements Comparable<Species> {
 
 				if (!haveComputedTotalAge && totalAge == null && eval(dominantHeight) > 0.0 && eval(siteIndex) > 0.0) {
 
-					this.setTotalAge(dominantHeightAndSiteIndexToAge());
+					this.setTotalAge(determineAgeFromDominantHeightAndSiteIndex());
 
 					keepTrying = true;
 					haveComputedTotalAge = true;
@@ -479,7 +479,7 @@ public class Species implements Comparable<Species> {
 				if (!haveComputedDominantHeight && dominantHeight == null && eval(totalAge) > 0.0
 						&& eval(siteIndex) > 0.0) {
 
-					setDominantHeight(totalAgeAndSiteIndexToDominantHeight());
+					setDominantHeight(determineDominantHeightFromAgeAndSiteIndex());
 
 					keepTrying = true;
 					haveComputedDominantHeight = true;
@@ -573,9 +573,16 @@ public class Species implements Comparable<Species> {
 		return d == null ? Vdyp7Constants.EMPTY_DECIMAL : d;
 	}
 
+	public Double determineDominantHeightFromAgeAndSiteIndex() {
+		return determineDominantHeightFromAgeAndSiteIndex(totalAge, siteIndex, yearsToBreastHeight, siteCurve);
+	}
+
 	/**
-	 * Compute Dominant Height given an Age and Site Index.
-	 *
+	 * <b>V7Int_AgeSIToHt</b>
+	 * <p>
+	 * Computes dominant height given an Age and Site Index
+	 * <p>
+	 * <b>Remarks</b>
 	 * <p>
 	 * This routine is a wrapper to the SiteTool library that adds some additional business logic around computing
 	 * height taking advantage of some information available to it that is not available in the SiteTool library.
@@ -593,151 +600,301 @@ public class Species implements Comparable<Species> {
 	 * <li>issue an appropriate warning message
 	 * </ul>
 	 *
-	 * @return the calculated Dominant Height and null if the height could not be computed.
+	 * @return as described, and <code>null</code> if the dominant height could not be computed.
 	 */
-	private Double totalAgeAndSiteIndexToDominantHeight() {
+	public Double determineDominantHeightFromAgeAndSiteIndex(
+			Double totalAge, Double siteIndex, Double yearsToBreastHeight, SiteIndexEquation siteCurve
+	) {
 		Double computedHeight = null;
 
-		Validate.isTrue(totalAge != null, "Species.totalAgeAndSiteIndexToDominantHeight: totalAge must not be null");
-		Validate.isTrue(siteCurve != null, "Species.totalAgeAndSiteIndexToDominantHeight: siteCurve must not be null");
+		if (totalAge == null) {
+			totalAge = getTotalAge();
+		}
+		if (siteIndex == null) {
+			siteIndex = getSiteIndex();
+		}
+		if (yearsToBreastHeight == null) {
+			yearsToBreastHeight = getYearsToBreastHeight();
+		}
+		if (siteCurve == null) {
+			siteCurve = getSiteCurve();
+		}
 
+		Validate.isTrue(
+				totalAge != null, "Species.determineDominantHeightFromAgeAndSiteIndex: totalAge must not be null"
+		);
+		Validate.isTrue(
+				siteCurve != null, "Species.determineDominantHeightFromAgeAndSiteIndex: siteCurve must not be null"
+		);
+
+		var inputIsComplete = true;
 		if (siteIndex == null || siteIndex < Vdyp7Constants.LOW_SITE_INDEX_THRESHOLD) {
 
+			inputIsComplete = false;
 			logger.debug(
-					"{}: site Index of %.2f is less than minimum Site Index of %.2f.", this, siteIndex,
+					"{}: site index {} is not defined or is less that the minimum threshold {}", this, siteIndex,
 					Vdyp7Constants.LOW_SITE_INDEX_THRESHOLD
 			);
+		}
 
-			computedHeight = dominantHeight;
+		if (inputIsComplete && yearsToBreastHeight == null) {
+			try {
+				yearsToBreastHeight = SiteTool.yearsToBreastHeight(siteCurve, siteIndex);
+			} catch (CommonCalculatorException e) {
+				inputIsComplete = false;
+				logger.error(
+						"{}: CommonCalculatorException encountered in call SiteTool.yearsToBreastHeight({}, {}){}; not computing years-to-breast-height",
+						this, siteCurve, siteIndex, e.getMessage() != null ? ": reason " + e.getMessage() : ""
+				);
+			}
+		}
+
+		if (inputIsComplete) {
+			try {
+				computedHeight = SiteTool.ageAndSiteIndexToHeight(
+						siteCurve, totalAge, SiteIndexAgeType.SI_AT_TOTAL, siteIndex, yearsToBreastHeight
+				);
+			} catch (CommonCalculatorException e) {
+				logger.error(
+						"{}: CommonCalculatorException encountered in call SiteTool.ageAndSiteIndexToHeight({}, {}, {}, {}, {}){}; not computing dominant height",
+						this, siteCurve, totalAge, SiteIndexAgeType.SI_AT_TOTAL, siteIndex, yearsToBreastHeight,
+						e.getMessage() != null ? ": reason " + e.getMessage() : ""
+				);
+			}
+		} else {
+			computedHeight = getDominantHeight();
+
+			Layer layer = stand.getLayer();
+			Polygon polygon = layer.getPolygon();
+
+			polygon.disableProjectionsOfType(layer.determineProjectionType(polygon));
+
+			ValidationMessage message;
+			if (siteIndex < Vdyp7Constants.LOW_SITE_INDEX_THRESHOLD) {
+				message = new ValidationMessage(
+						ValidationMessageKind.LOW_SITE_INDEX_WARNING, polygon, layer.getLayerId(), siteIndex, this,
+						"Dominant Height"
+				);
+				logger.warn(
+						"{}: site index value {} is less than minimum site index of {}; dominant height being set to pre-projection value for species",
+						this, siteIndex, Vdyp7Constants.LOW_SITE_INDEX_THRESHOLD
+				);
+			} else {
+				message = new ValidationMessage(
+						ValidationMessageKind.MISSING_YEARS_TO_BREAST_HEIGHT, polygon, layer.getLayerId(), this
+				);
+				logger.warn(
+						"{}: years-to-breast-height was not provided and therefore total age could not be computed",
+						this
+				);
+			}
+
+			polygon.addDefinitionMessage(new PolygonMessage.Builder().layer(layer).message(message).build());
+		}
+
+		return computedHeight;
+	}
+
+	/**
+	 * <b>V7Int_HtSIToAge</b>
+	 * <p>
+	 * Computes total age given dominant height and site index
+	 * <p>
+	 * <b>Remarks</b>
+	 * <p>
+	 * This routine is a wrapper to the SiteTool library that adds some additional business logic around computing age
+	 * taking advantage of some information available to it that is not available in the SiteTool library.
+	 * <p>
+	 * These business rules are as follows (see IPSCB220.doc and refer to the section pertaining to polygon
+	 * DCK/092G046/0247):
+	 * <p>
+	 * When Site Index returned by SINDEX is < 2.0m, then
+	 * <ul>
+	 * <li>set site index to NULL
+	 * <li>return projected age as usual
+	 * <li>return projected height as equal to input height
+	 * <li>do not submit polygon to VRISTART or FIPSTART
+	 * <li>set per hectare yields to null
+	 * <li>issue an appropriate warning message
+	 * </ul>
+	 *
+	 * @return as described, and <code>null</code> if the age could not be computed.
+	 */
+	public Double determineAgeFromDominantHeightAndSiteIndex() {
+
+		Double computedAge = null;
+
+		// Note that all calls to this method in VDYP7 take totalAge, dominantHeight and siteCurve
+		// from the species, so 1380 - 1402 don't need to be implemented.
+
+		Validate.isTrue(
+				dominantHeight != null,
+				"Species.determineAgeFromDominantHeightAndSiteIndex: dominantHeight must not be null"
+		);
+		Validate.isTrue(
+				siteIndex != null, "Species.determineAgeFromDominantHeightAndSiteIndex: siteIndex must not be null"
+		);
+		Validate.isTrue(
+				siteCurve != null, "Species.determineAgeFromDominantHeightAndSiteIndex: siteCurve must not be null"
+		);
+
+		var inputIsComplete = true;
+		if (siteIndex < Vdyp7Constants.LOW_SITE_INDEX_THRESHOLD) {
+
+			inputIsComplete = false;
+			logger.debug(
+					"{}: site index {} is less that the minimum threshold {}", this, siteIndex,
+					Vdyp7Constants.LOW_SITE_INDEX_THRESHOLD
+			);
+		}
+
+		if (inputIsComplete && yearsToBreastHeight == null) {
+			try {
+				yearsToBreastHeight = SiteTool.yearsToBreastHeight(siteCurve, siteIndex);
+			} catch (CommonCalculatorException e) {
+				inputIsComplete = false;
+				logger.error(
+						"{}: CommonCalculatorException encountered in call SiteTool.yearsToBreastHeight({}, {}){}; not computing years-to-breast-height",
+						this, siteCurve, siteIndex, e.getMessage() != null ? ": reason " + e.getMessage() : ""
+				);
+			}
+		}
+
+		if (inputIsComplete) {
+			try {
+				computedAge = SiteTool.heightAndSiteIndexToAge(
+						siteCurve, dominantHeight, SiteIndexAgeType.SI_AT_TOTAL, siteIndex, yearsToBreastHeight
+				);
+				logger.debug("{}: computed site index value {} via call to SiteTools", this, siteIndex);
+			} catch (CommonCalculatorException e) {
+				logger.error(
+						"{}: CommonCalculatorException encountered in call SiteTool.heightAndSiteIndexToAge({}, {}, {}, {}, {}){}; not computing Site Index",
+						this, siteCurve, dominantHeight, SiteIndexAgeType.SI_AT_TOTAL, siteIndex, yearsToBreastHeight,
+						e.getMessage() != null ? ": reason " + e.getMessage() : ""
+				);
+			}
+		} else {
+			computedAge = getTotalAge();
+
+			Layer layer = stand.getLayer();
+			Polygon polygon = layer.getPolygon();
+
+			polygon.disableProjectionsOfType(layer.determineProjectionType(polygon));
+
+			ValidationMessage message;
+			if (siteIndex < Vdyp7Constants.LOW_SITE_INDEX_THRESHOLD) {
+				message = new ValidationMessage(
+						ValidationMessageKind.LOW_SITE_INDEX_WARNING, polygon, layer.getLayerId(), siteIndex, this,
+						"Age"
+				);
+				logger.warn(
+						"{}: site index value {} is less than minimum site index of {}; setting site index to null",
+						this, siteIndex, Vdyp7Constants.LOW_SITE_INDEX_THRESHOLD
+				);
+			} else {
+				message = new ValidationMessage(
+						ValidationMessageKind.MISSING_YEARS_TO_BREAST_HEIGHT, polygon, layer.getLayerId(), this
+				);
+				logger.warn(
+						"{}: years-to-breast-height was not provided and therefore total age could not be computed",
+						this
+				);
+			}
+
+			polygon.addDefinitionMessage(new PolygonMessage.Builder().layer(layer).message(message).build());
+		}
+
+		return computedAge;
+	}
+
+	/**
+	 * <b>V7Int_HtAgeToSI</b>
+	 * <p>
+	 * Computes Site Index from Height and Age
+	 * <p>
+	 * <b>Remarks</b>
+	 * <p>
+	 * This routine is a wrapper to the SiteTool library that adds some additional business logic around computing
+	 * height taking advantage of some information available to it that is not available in the SiteTool library.
+	 * <p>
+	 * These business rules are as follows (see IPSCB220.doc and refer to the section pertaining to polygon
+	 * DCK/092G046/0247):
+	 * <p>
+	 * When Site Index returned by SINDEX is < 2.0m, then:
+	 * <ul>
+	 * <li>set Site Index to NULL
+	 * <li>return projected age as usual
+	 * <li>return projected height as equal to input height
+	 * <li>do not submit polygon to VRISTART or FIPSTART
+	 * <li>set per Hectare yields to null
+	 * <li>issue an appropriate warning message
+	 * </ul>
+	 */
+	public Double determineSiteIndexFromDominantHeightAndAge() {
+
+		Validate.isTrue(
+				totalAge != null, "Species.determineSiteIndexFromDominantHeightAndAge: totalAge must not be null"
+		);
+		Validate.isTrue(
+				dominantHeight != null,
+				"Species.determineSiteIndexFromDominantHeightAndAge: dominantHeight must not be null"
+		);
+		Validate.isTrue(
+				siteCurve != null, "Species.determineSiteIndexFromDominantHeightAndAge: siteCurve must not be null"
+		);
+
+		// Note that all calls to this method in VDYP7 take totalAge, dominantHeight and siteCurve
+		// from the species, so 1128 - 1160 don't need to be implemented.
+
+		Double computedSiteIndex = null;
+		try {
+			computedSiteIndex = SiteTool.heightAndAgeToSiteIndex(
+					siteCurve, totalAge, SiteIndexAgeType.SI_AT_TOTAL, dominantHeight,
+					SiteIndexEstimationType.SI_EST_ITERATE
+			);
+		} catch (CommonCalculatorException e) {
+			logger.error(
+					"{}: CommonCalculatorException encountered in call SiteTool.heightAndAgeToSiteIndex({}, {}, {}, {}, {}){}; not computing Site Index",
+					this, siteCurve, totalAge, SiteIndexAgeType.SI_AT_TOTAL, dominantHeight,
+					SiteIndexEstimationType.SI_EST_ITERATE, e.getMessage() != null ? ": reason " + e.getMessage() : ""
+			);
+		}
+
+		if (computedSiteIndex == null || computedSiteIndex < Vdyp7Constants.LOW_SITE_INDEX_THRESHOLD) {
 
 			Layer layer = stand.getLayer();
 			Polygon polygon = layer.getPolygon();
 			polygon.disableProjectionsOfType(layer.determineProjectionType(polygon));
 
-			ValidationMessage message = new ValidationMessage(
-					ValidationMessageKind.LOW_SITE_INDEX_ERROR, polygon, layer.getLayerId(), siteIndex, this
-			);
-			polygon.addDefinitionMessage(new PolygonMessage.Builder().layer(layer).message(message).build());
-
-			logger.error(
-					"{}: site Index was too low to compute a Dominant Height. Using value {}...", this, computedHeight
-			);
-
-		} else {
-
-			if (yearsToBreastHeight == null || yearsToBreastHeight < 0.0) {
-				try {
-					setYearsToBreastHeight(SiteTool.yearsToBreastHeight(siteCurve, siteIndex));
-
-					logger.debug("{}: years to Breast Height was computed to be {}", this, yearsToBreastHeight);
-
-					computedHeight = SiteTool.ageAndSiteIndexToHeight(
-							siteCurve, totalAge, SiteIndexAgeType.SI_AT_TOTAL, siteIndex, yearsToBreastHeight
-					);
-
-					logger.debug("{}: dominant Height from SiteTools call was computed to be {}", this, computedHeight);
-
-				} catch (CommonCalculatorException e) {
-					logger.error(
-							"{}: commonCalculatorException encountered in call SiteTool.yearsToBreastHeight({}, {}){}; not computing Years to Breast Height",
-							this, siteCurve, siteIndex, e.getMessage() != null ? ": reason " + e.getMessage() : ""
-					);
-				}
-			}
-		}
-
-		return computedHeight;
-	}
-
-	public Double dominantHeightAndSiteIndexToAge() {
-
-		Double computedHeight = null;
-
-		try {
-			setSiteIndex(
-					SiteTool.heightAndAgeToSiteIndex(
-							siteCurve, totalAge, SiteIndexAgeType.SI_AT_TOTAL, dominantHeight,
-							SiteIndexEstimationType.SI_EST_ITERATE
-					)
-			);
-
-			logger.debug("{}: computed Site Index from SiteTools call: %.2f", this, siteIndex);
-
-			if (siteIndex < Vdyp7Constants.LOW_SITE_INDEX_THRESHOLD) {
-
-				logger.warn(
-						"{}: site Index of %.2f is less than minimum Site Index of %.2f; setting Site Index to null",
-						this, siteIndex, Vdyp7Constants.LOW_SITE_INDEX_THRESHOLD
+			ValidationMessage message;
+			if (computedSiteIndex != null) {
+				logger.error(
+						"{}: siteIndex value {} is less than minimum site index of {}. Setting siteIndex to null", this,
+						computedSiteIndex, Vdyp7Constants.LOW_SITE_INDEX_THRESHOLD
 				);
-
-				Layer layer = stand.getLayer();
-				Polygon polygon = layer.getPolygon();
-				polygon.disableProjectionsOfType(layer.determineProjectionType(polygon));
-
-				ValidationMessage message = new ValidationMessage(
-						ValidationMessageKind.LOW_SITE_INDEX_WARNING, polygon, layer.getLayerId(), siteIndex, this
-				);
-				polygon.addDefinitionMessage(new PolygonMessage.Builder().layer(layer).message(message).build());
-
-			}
-		} catch (CommonCalculatorException e) {
-			logger.error(
-					"{}: CommonCalculatorException encountered in call SiteTool.heightAndAgeToSiteIndex({}, {}, {}, {}, {}){}; not computing Site Index",
-					this, siteCurve, totalAge, SiteIndexAgeType.SI_AT_TOTAL, dominantHeight,
-					SiteIndexEstimationType.SI_EST_ITERATE, e.getMessage() != null ? ": reason " + e.getMessage() : ""
-			);
-		}
-
-		return computedHeight;
-	}
-
-	public Double dominantHeightAndAgeToSiteIndex() {
-
-		Validate.isTrue(totalAge != null, "Species.dominantHeightAndAgeToSiteIndex: totalAge must not be null");
-		Validate.isTrue(
-				dominantHeight != null, "Species.dominantHeightAndAgeToSiteIndex: dominantHeight must not be null"
-		);
-
-		Double computedSiteIndex = null;
-		try {
-
-			computedSiteIndex = SiteTool.heightAndAgeToSiteIndex(
-					siteCurve, totalAge, SiteIndexAgeType.SI_AT_TOTAL, dominantHeight,
-					SiteIndexEstimationType.SI_EST_ITERATE
-			);
-
-			Validate.isTrue(
-					computedSiteIndex != null,
-					"Species.dominantHeightAndAgeToSiteIndex: computedSiteIndex must not be null"
-			);
-
-			if (computedSiteIndex < Vdyp7Constants.LOW_SITE_INDEX_THRESHOLD) {
-
-				logger.warn(
-						"{}: siteIndex of %.2f is less than minimum Site Index of %.2f. Setting siteIndex to null",
-						this, computedSiteIndex, Vdyp7Constants.LOW_SITE_INDEX_THRESHOLD
-				);
-
-				Layer layer = stand.getLayer();
-				Polygon polygon = layer.getPolygon();
-				polygon.disableProjectionsOfType(layer.determineProjectionType(polygon));
-
-				ValidationMessage message = new ValidationMessage(
+				message = new ValidationMessage(
 						ValidationMessageKind.LOW_SITE_INDEX_ERROR, polygon, layer.getLayerId(), siteIndex, this
 				);
-				polygon.addDefinitionMessage(new PolygonMessage.Builder().layer(layer).message(message).build());
-
-				computedSiteIndex = null;
+			} else {
+				logger.error("{}: siteIndex cannot be computed", this);
+				message = new ValidationMessage(
+						ValidationMessageKind.MISSING_SITE_INDEX_ERROR, polygon, layer.getLayerId(), this
+				);
 			}
-		} catch (CommonCalculatorException e) {
-			logger.error(
-					"{}: CommonCalculatorException encountered in call SiteTool.heightAndAgeToSiteIndex({}, {}, {}, {}, {}){}; not computing Site Index",
-					this, siteCurve, totalAge, SiteIndexAgeType.SI_AT_TOTAL, dominantHeight,
-					SiteIndexEstimationType.SI_EST_ITERATE, e.getMessage() != null ? ": reason " + e.getMessage() : ""
-			);
+
+			computedSiteIndex = null;
+
+			polygon.addDefinitionMessage(new PolygonMessage.Builder().layer(layer).message(message).build());
 		}
 
 		return computedSiteIndex;
+	}
+
+	/**
+	 * @return true iff this species is the most
+	 */
+	public boolean isDominantSpecies() {
+		return getStand().getSpeciesByPercent().get(0).equals(this);
 	}
 
 	public static class ByIncreasingNameComparator implements Comparator<Species> {

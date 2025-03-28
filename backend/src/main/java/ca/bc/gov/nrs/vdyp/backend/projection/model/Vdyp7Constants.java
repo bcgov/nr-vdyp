@@ -2,6 +2,12 @@ package ca.bc.gov.nrs.vdyp.backend.projection.model;
 
 public class Vdyp7Constants {
 
+	public static final String FIP_START_CONTROL_FILE_NAME = "FIPSTART.CTR";
+	public static final String VRI_START_CONTROL_FILE_NAME = "VRISTART.CTR";
+	public static final String ADJUST_CONTROL_FILE_NAME = "VRIADJST.CTR";
+	public static final String FORWARD_CONTROL_FILE_NAME = "VDYP.CTR";
+	public static final String BACK_CONTROL_FILE_NAME = "VDYPBACK.CTR";
+
 	public static final double EMPTY_DECIMAL = -9.0f;
 	public static final String EMPTY_DECIMAL_TEXT = Double.toString(EMPTY_DECIMAL);
 	public static final int EMPTY_INT = -9;
