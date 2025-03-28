@@ -12,10 +12,10 @@
 			time_format iso8601
 			level_format color
 		}
-		level {$LOG_LEVEL}
+		level debug
 	}
 	request_body {
-		max_size 1GB
+		max_size 1MB
 	}
   handle /env.js {
       header {
