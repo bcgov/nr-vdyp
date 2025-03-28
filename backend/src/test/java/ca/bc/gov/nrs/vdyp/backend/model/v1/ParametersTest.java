@@ -15,8 +15,6 @@ import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.MetadataToOutputDirective;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.OutputFormat;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ProgressFrequency.FrequencyKind;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.UtilizationParameter.UtilizationClass;
-import ca.bc.gov.nrs.vdyp.backend.projection.ValidatedUtilizationParameter;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
 
@@ -56,12 +54,12 @@ public class ParametersTest {
 		op.addSelectedExecutionOptionsItem(ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_POLYGON);
 		op.addSelectedExecutionOptionsItem(ExecutionOption.FORWARD_GROW_ENABLED);
 
-		op.addUtilsItem(new ValidatedUtilizationParameter().speciesName("AL").utilizationClass(UtilizationClass._12_5));
-		op.addUtilsItem(new ValidatedUtilizationParameter().speciesName("C").utilizationClass(UtilizationClass._17_5));
-		op.addUtilsItem(new ValidatedUtilizationParameter().speciesName("D").utilizationClass(UtilizationClass._22_5));
-		op.addUtilsItem(new ValidatedUtilizationParameter().speciesName("E").utilizationClass(UtilizationClass._4_0));
-		op.addUtilsItem(new ValidatedUtilizationParameter().speciesName("F").utilizationClass(UtilizationClass._7_5));
-		op.addUtilsItem(new ValidatedUtilizationParameter().speciesName("H").utilizationClass(UtilizationClass.EXCL));
+		op.addUtilsItem(new UtilizationParameter().speciesName("AL").utilizationClass(UtilizationClassSet._12_5));
+		op.addUtilsItem(new UtilizationParameter().speciesName("C").utilizationClass(UtilizationClassSet._17_5));
+		op.addUtilsItem(new UtilizationParameter().speciesName("D").utilizationClass(UtilizationClassSet._22_5));
+		op.addUtilsItem(new UtilizationParameter().speciesName("E").utilizationClass(UtilizationClassSet._4_0));
+		op.addUtilsItem(new UtilizationParameter().speciesName("F").utilizationClass(UtilizationClassSet._7_5));
+		op.addUtilsItem(new UtilizationParameter().speciesName("H").utilizationClass(UtilizationClassSet.EXCL));
 
 		op.ageEnd(2030) //
 				.ageIncrement(1) //
@@ -137,20 +135,20 @@ public class ParametersTest {
 	void testUtilizationParameter() {
 		Assert.assertEquals(
 				"AL",
-				new ValidatedUtilizationParameter().speciesName("AL").utilizationClass(UtilizationClass._12_5)
+				new UtilizationParameter().speciesName("AL").utilizationClass(UtilizationClassSet._12_5)
 						.getSpeciesName()
 		);
 		Assert.assertEquals(
-				UtilizationClass._17_5,
-				new ValidatedUtilizationParameter().speciesName("AL").utilizationClass(UtilizationClass._17_5)
+				UtilizationClassSet._17_5.getValue(),
+				new UtilizationParameter().speciesName("AL").utilizationClass(UtilizationClassSet._17_5)
 						.getUtilizationClass()
 		);
 
-		Assert.assertThrows(IllegalArgumentException.class, () -> UtilizationClass.fromValue("ZZZ"));
+		Assert.assertThrows(IllegalArgumentException.class, () -> UtilizationClassSet.fromValue("ZZZ"));
 
-		var up1 = new ValidatedUtilizationParameter().speciesName("AL").utilizationClass(UtilizationClass._12_5);
-		var up2 = new ValidatedUtilizationParameter().speciesName("C").utilizationClass(UtilizationClass._12_5);
-		var up3 = new ValidatedUtilizationParameter().speciesName("C").utilizationClass(UtilizationClass._22_5);
+		var up1 = new UtilizationParameter().speciesName("AL").utilizationClass(UtilizationClassSet._12_5);
+		var up2 = new UtilizationParameter().speciesName("C").utilizationClass(UtilizationClassSet._12_5);
+		var up3 = new UtilizationParameter().speciesName("C").utilizationClass(UtilizationClassSet._22_5);
 
 		Assert.assertTrue(up1.equals(up1));
 		Assert.assertTrue(up1.hashCode() == up1.hashCode());

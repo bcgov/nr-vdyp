@@ -14,10 +14,8 @@ package ca.bc.gov.nrs.vdyp.backend.model.v1;
 
 import java.util.Objects;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.annotation.JsonValue;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
@@ -36,49 +34,6 @@ public class UtilizationParameter {
 	public static final String JSON_PROPERTY_UTILIZATION_CLASS = "utilizationClass";
 	@JsonProperty(JSON_PROPERTY_UTILIZATION_CLASS)
 	private String utilizationClass;
-
-	/**
-	 * Gets or Sets value
-	 */
-	public enum UtilizationClass {
-		EXCL("Excl"),
-
-		_4_0("4.0"),
-
-		_7_5("7.5"),
-
-		_12_5("12.5"),
-
-		_17_5("17.5"),
-
-		_22_5("22.5");
-
-		private String value;
-
-		UtilizationClass(String value) {
-			this.value = value;
-		}
-
-		@Override
-		public String toString() {
-			return getValue();
-		}
-
-		@JsonValue
-		public String getValue() {
-			return value;
-		}
-
-		@JsonCreator
-		public static UtilizationClass fromValue(String value) {
-			for (UtilizationClass b : UtilizationClass.values()) {
-				if (b.value.equals(value)) {
-					return b;
-				}
-			}
-			throw new IllegalArgumentException("Unexpected value '" + value + "'");
-		}
-	}
 
 	/**
 	 * Get speciesName
@@ -118,12 +73,12 @@ public class UtilizationParameter {
 		this.utilizationClass = utilizationClassText;
 	}
 
-	public UtilizationParameter utilizationClass(UtilizationClass uc) {
+	public UtilizationParameter utilizationClass(UtilizationClassSet uc) {
 		setUtilizationClass(uc);
 		return this;
 	}
 
-	public void setUtilizationClass(UtilizationClass uc) {
+	public void setUtilizationClass(UtilizationClassSet uc) {
 		this.utilizationClass = uc.getValue();
 	}
 

@@ -3,7 +3,6 @@ package ca.bc.gov.nrs.vdyp.backend.projection;
 import static ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessageKind.*;
 import static ca.bc.gov.nrs.vdyp.backend.projection.ValidatedParameters.DEFAULT;
 
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -19,7 +18,7 @@ import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.OutputFormat;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ProgressFrequency;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ProjectionRequestKind;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.UtilizationParameter;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.UtilizationClassSet;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessageKind;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Vdyp7Constants;
@@ -31,35 +30,29 @@ public class ProjectionRequestParametersValidator {
 
 	private List<ValidationMessage> validationErrorMessages = new ArrayList<>();
 
-	static void validate(ProjectionContext context) throws ProjectionRequestValidationException {
+	static ValidatedParameters validate(Parameters params, ProjectionRequestKind requestKind)
+			throws ProjectionRequestValidationException {
 
 		var validator = new ProjectionRequestParametersValidator();
 
-		validator.validateState(context);
+		var validatedParameters = validator.validateRequestParametersIndividually(params);
+		validator.validateRequestParametersCollectively(validatedParameters, requestKind);
 
 		if (validator.validationErrorMessages.size() > 0) {
 			logger.error("Validation errors encountered:");
-			logger.error(context.getRawParams().toString());
+			logger.error(params.toString());
 			for (var m : validator.validationErrorMessages) {
 				logger.error(m.toString());
 			}
+
 			throw new ProjectionRequestValidationException(validator.validationErrorMessages);
 		}
+
+		return validatedParameters;
 	}
 
-	public List<ValidationMessage> getValidationMessages() {
-		return validationErrorMessages;
-	}
+	private ValidatedParameters validateRequestParametersIndividually(Parameters params) {
 
-	void validateState(ProjectionContext context) {
-
-		validateRequestParametersIndividually(context);
-		validateRequestParametersCollectively(context);
-	}
-
-	private void validateRequestParametersIndividually(ProjectionContext context) {
-
-		Parameters params = context.getRawParams();
 		ValidatedParameters vparams = new ValidatedParameters();
 
 		// Parameters.JSON_PROPERTY_OUTPUT_FORMAT
@@ -239,49 +232,36 @@ public class ProjectionRequestParametersValidator {
 		}
 
 		// Parameters.JSON_PROPERTY_UTILS
-		if (params.getUtils() == null) {
-			vparams.setUtils(DEFAULT.getUtils());
-		} else {
-			List<ValidatedUtilizationParameter> upList = new ArrayList<>();
+		vparams.setUtils(DEFAULT.getUtils());
+		if (params.getUtils() != null) {
 			for (var up : params.getUtils()) {
 				boolean isValidUtilizationParameter = true;
 
-				if (SP0Name.forText(up.getSpeciesName()).equals(SP0Name.UNKNOWN)) {
+				var sp0Name = SP0Name.forText(up.getSpeciesName());
+				if (sp0Name.equals(SP0Name.UNKNOWN)) {
 					recordValidationMessage(UNRECOGNIZED_SPECIES_GROUP_NAME, up.getSpeciesName());
 					isValidUtilizationParameter = false;
 				}
 
-				UtilizationParameter.UtilizationClass uc = null;
+				UtilizationClassSet uc = null;
 				try {
-					uc = UtilizationParameter.UtilizationClass.fromValue(up.getUtilizationClass());
+					uc = UtilizationClassSet.fromValue(up.getUtilizationClass());
 				} catch (IllegalArgumentException e) {
 					recordValidationMessage(UNRECOGNIZED_UTILIZATION_CLASS_NAME, up.getUtilizationClass());
 					isValidUtilizationParameter = false;
 				}
 
 				if (isValidUtilizationParameter) {
-					upList.add(
-							new ValidatedUtilizationParameter().speciesName(up.getSpeciesName()).utilizationClass(uc)
-					);
+					vparams.addUtilsItem(sp0Name, uc);
 				}
 			}
-			vparams.setUtils(upList);
 		}
 
-		context.setValidatedParams(vparams);
+		return vparams;
 	}
 
-	private void validateRequestParametersCollectively(ProjectionContext context) {
+	private void validateRequestParametersCollectively(ValidatedParameters vparams, ProjectionRequestKind requestKind) {
 
-		if (context.getValidatedParams() == null) {
-			throw new IllegalStateException(
-					MessageFormat.format(
-							"{0}: parameters have not yet been individually validated.", context.getProjectionId()
-					)
-			);
-		}
-
-		ValidatedParameters vparams = context.getValidatedParams();
 		if (vparams.getOutputFormat() != null) {
 
 			if (!vparams.getOutputFormat().equals(OutputFormat.DCSV) //
@@ -304,9 +284,8 @@ public class ProjectionRequestParametersValidator {
 				recordValidationMessage(MISSING_END_CRITERIA);
 			}
 
-			if (context.getRequestKind() == ProjectionRequestKind.DCSV && vparams.getOutputFormat() != OutputFormat.DCSV
-					|| context.getRequestKind() != ProjectionRequestKind.DCSV
-							&& vparams.getOutputFormat() == OutputFormat.DCSV) {
+			if (requestKind == ProjectionRequestKind.DCSV && vparams.getOutputFormat() != OutputFormat.DCSV
+					|| requestKind != ProjectionRequestKind.DCSV && vparams.getOutputFormat() == OutputFormat.DCSV) {
 				recordValidationMessage(MISMATCHED_INPUT_OUTPUT_TYPES);
 			}
 

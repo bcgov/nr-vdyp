@@ -18,7 +18,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-import ca.bc.gov.nrs.vdyp.backend.projection.ValidatedUtilizationParameter;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
 /**
@@ -826,26 +825,18 @@ public class Parameters {
 	 * Get utils
 	 *
 	 * @return utils
-	 **/
+	 */
 	@JsonProperty(value = JSON_PROPERTY_UTILS)
 	public List<UtilizationParameter> getUtils() {
 		return utils;
 	}
 
-	public Parameters utils(List<ValidatedUtilizationParameter> utils) {
+	public Parameters utils(List<UtilizationParameter> utils) {
 		setUtils(utils);
 		return this;
 	}
 
-	public Parameters addUtilsItem(ValidatedUtilizationParameter utilsItem) {
-		this.utils.add(
-				new UtilizationParameter().speciesName(utilsItem.getSpeciesName())
-						.utilizationClass(utilsItem.getUtilizationClass().getValue())
-		);
-		return this;
-	}
-
-	public void setUtils(List<ValidatedUtilizationParameter> utils) {
+	public void setUtils(List<UtilizationParameter> utils) {
 		if (utils == null) {
 			this.utils = null;
 		} else {
@@ -853,7 +844,7 @@ public class Parameters {
 			utils.stream().forEach(
 					u -> this.utils.add(
 							new UtilizationParameter().speciesName(u.getSpeciesName())
-									.utilizationClass(u.getUtilizationClass().getValue())
+									.utilizationClass(u.getUtilizationClass())
 					)
 			);
 		}

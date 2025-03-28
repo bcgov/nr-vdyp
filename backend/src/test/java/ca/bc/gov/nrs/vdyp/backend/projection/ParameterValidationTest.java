@@ -2,10 +2,12 @@ package ca.bc.gov.nrs.vdyp.backend.projection;
 
 import static ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessageKind.*;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsInAnyOrder;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
+import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 
@@ -21,8 +23,9 @@ import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.OutputFormat;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ProgressFrequency;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ProgressFrequency.FrequencyKind;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ProjectionRequestKind;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.UtilizationClassSet;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.UtilizationParameter;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.UtilizationParameter.UtilizationClass;
+import ca.bc.gov.nrs.vdyp.si32.vdyp.SP0Name;
 import jakarta.ws.rs.WebApplicationException;
 
 class ParameterValidationTest {
@@ -388,8 +391,7 @@ class ParameterValidationTest {
 	void testBadUtilizationParameterSpeciesSupplied() throws WebApplicationException, IOException {
 
 		Parameters p = TestHelper.buildValidParametersObject();
-		var up = new UtilizationParameter().speciesName("bad species name")
-				.utilizationClass(UtilizationParameter.UtilizationClass._12_5.getValue());
+		var up = new UtilizationParameter().speciesName("bad species name").utilizationClass(UtilizationClassSet._12_5);
 		p.addUtilsItem(up);
 
 		try {
@@ -436,7 +438,7 @@ class ParameterValidationTest {
 	void testValidUtilizationParameterSupplied() throws WebApplicationException, IOException {
 
 		Parameters p = TestHelper.buildValidParametersObject();
-		var up = new UtilizationParameter().speciesName("D").utilizationClass(UtilizationClass._12_5);
+		var up = new UtilizationParameter().speciesName("D").utilizationClass(UtilizationClassSet._12_5);
 		p.addUtilsItem(up);
 
 		try {
@@ -590,11 +592,12 @@ class ParameterValidationTest {
 					.addSelectedExecutionOptionsItem(ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_POLYGON)
 					.addSelectedExecutionOptionsItem(ExecutionOption.FORWARD_GROW_ENABLED)
 					.addUtilsItem(
-							new ValidatedUtilizationParameter().speciesName("D")
-									.utilizationClass(UtilizationClass._12_5)
+							new UtilizationParameter().speciesName("D")
+									.utilizationClass(UtilizationClassSet._12_5.getValue())
 					)
 					.addUtilsItem(
-							new ValidatedUtilizationParameter().speciesName("C").utilizationClass(UtilizationClass._4_0)
+							new UtilizationParameter().speciesName("C")
+									.utilizationClass(UtilizationClassSet._4_0.getValue())
 					).ageEnd(10) //
 					.ageIncrement(3) //
 					.ageStart(20) //
@@ -614,7 +617,7 @@ class ParameterValidationTest {
 			Assert.fail();
 		}
 
-		var vp = s1.getValidatedParams();
+		var vp = s1.getParams();
 
 		Assert.assertTrue(vp.containsOption(DebugOption.DO_INCLUDE_DEBUG_ENTRY_EXIT));
 		Assert.assertTrue(vp.containsOption(DebugOption.DO_INCLUDE_DEBUG_INDENT_BLOCKS));
@@ -662,12 +665,16 @@ class ParameterValidationTest {
 		Assert.assertEquals("polygon", vp.getFilters().getPolygon());
 		Assert.assertEquals("polygonId", vp.getFilters().getPolygonId());
 
-		assertThat(
-				vp.getUtils(),
-				containsInAnyOrder(
-						new ValidatedUtilizationParameter().speciesName("C").utilizationClass(UtilizationClass._4_0),
-						new ValidatedUtilizationParameter().speciesName("D").utilizationClass(UtilizationClass._12_5)
-				)
-		);
+		var expectedMap = new HashMap<SP0Name, UtilizationClassSet>();
+		expectedMap.put(SP0Name.forText("C"), UtilizationClassSet._4_0);
+		expectedMap.put(SP0Name.forText("D"), UtilizationClassSet._12_5);
+		for (var entry : expectedMap.entrySet()) {
+			assertThat(vp.getUtils(), Matchers.hasEntry(entry.getKey(), entry.getValue()));
+		}
+		for (var sp0Name : SP0Name.values()) {
+			Assert.assertTrue(
+					expectedMap.containsKey(sp0Name) || vp.getUtils().get(sp0Name).equals(UtilizationClassSet._12_5)
+			);
+		}
 	}
 }
