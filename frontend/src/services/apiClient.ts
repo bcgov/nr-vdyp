@@ -40,12 +40,14 @@ export const apiClient = {
     options?: AxiosRequestConfig,
   ) => {
     const customOptions: AxiosRequestConfig = {
-      ...options,
+      method: 'POST',
       headers: {
-        ...options?.headers,
         Accept: 'application/octet-stream, application/json',
+        'Content-Type': 'multipart/form-data',
+        ...options?.headers,
       },
       responseType: 'blob',
+      ...options,
     }
 
     return projectionApiInstance.projectionHcsvPostForm(
