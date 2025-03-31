@@ -10,7 +10,7 @@ import java.text.MessageFormat;
 public class FileHelper {
 
 	public static final String STUBBED_RUNNER_DATA_FILES = "stubbed-runner-data-files";
-	public static final String TEST_DATA_FILES = "test-data-files";
+	public static final String TEST_DATA_FILES = "test-data";
 	public static final String HCSV = "hcsv";
 	public static final String COMMON = "common";
 

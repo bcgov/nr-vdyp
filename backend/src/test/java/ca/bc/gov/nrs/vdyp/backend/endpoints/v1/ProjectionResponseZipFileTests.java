@@ -46,7 +46,7 @@ class ProjectionResponseZipFileTests {
 
 		logger.info("Starting singlePolygonTestAllOutputs");
 
-		Path resourceFolderPath = Path.of("test-data-files", "hcsv", "single-polygon");
+		Path resourceFolderPath = Path.of("test-data", "hcsv", "single-polygon");
 
 		Parameters parameters = testHelper.addSelectedOptions(
 				new Parameters(), //
@@ -116,7 +116,7 @@ class ProjectionResponseZipFileTests {
 
 		logger.info("Starting singlePolygonTestNoOutputs");
 
-		Path resourceFolderPath = Path.of("test-data-files", "hcsv", "single-polygon");
+		Path resourceFolderPath = Path.of("test-data", "hcsv", "single-polygon");
 
 		Parameters parameters = testHelper.addSelectedOptions(
 				new Parameters(), //

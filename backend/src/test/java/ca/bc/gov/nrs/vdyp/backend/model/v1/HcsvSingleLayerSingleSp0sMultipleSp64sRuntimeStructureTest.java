@@ -53,7 +53,7 @@ class HcsvSingleLayerSingleSp0sMultipleSp64sRuntimeStructureTest {
 
 		logger.info("Starting {}", this.getClass().getSimpleName());
 
-		Path resourceFolderPath = Path.of("test-data-files", "hcsv", "single-layer-single-sp0-multiple-sp64s-fip");
+		Path resourceFolderPath = Path.of("test-data", "hcsv", "single-layer-single-sp0-multiple-sp64s-fip");
 
 		Map<String, InputStream> inputStreams = new HashMap<>();
 

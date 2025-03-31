@@ -31,7 +31,7 @@ public class HcsvLayerReaderTest {
 
 		logger.info("Starting testHscvLayerReader");
 
-		Path resourceFolderPath = Path.of("test-data-files", FileHelper.HCSV, "common");
+		Path resourceFolderPath = Path.of("test-data", FileHelper.HCSV, "common");
 
 		byte[] csvBytes = Files
 				.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_LAYER_VRI.csv"));

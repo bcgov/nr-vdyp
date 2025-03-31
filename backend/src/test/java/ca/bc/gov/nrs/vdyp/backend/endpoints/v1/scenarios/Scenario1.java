@@ -1,8 +1,9 @@
-package ca.bc.gov.nrs.vdyp.backend.endpoints.v1;
+package ca.bc.gov.nrs.vdyp.backend.endpoints.v1.scenarios;
 
 import static io.restassured.RestAssured.given;
 import static org.junit.Assert.*;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
@@ -12,7 +13,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import org.hamcrest.Matchers;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,23 +22,16 @@ import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.ParameterNames;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.common.constraint.Assert;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.core.MediaType;
 
 @QuarkusTest
-class HcsvProjectionEndpoint_VRIPerPolygon_Test {
+class Scenario1 extends Scenario {
 
-	private static final Logger logger = LoggerFactory.getLogger(HcsvProjectionEndpoint_VRIPerPolygon_Test.class);
+	private static final Logger logger = LoggerFactory.getLogger(Scenario1.class);
+	private static final String SCENARIO = "scenario1";
 
-	private final TestHelper testHelper;
-
-	@Inject
-	HcsvProjectionEndpoint_VRIPerPolygon_Test(TestHelper testHelper) {
-		this.testHelper = testHelper;
-	}
-
-	@BeforeEach
-	void setup() {
+	protected Scenario1() {
+		super(SCENARIO);
 	}
 
 	@Test
@@ -46,7 +39,7 @@ class HcsvProjectionEndpoint_VRIPerPolygon_Test {
 
 		logger.info("Starting testVRIPerPolygonYieldTable");
 
-		Path resourceFolderPath = Path.of("test-data", "hcsv", "VRI-PerPolygon");
+		Path resourceFolderPath = getResourceFolderPath();
 
 		Parameters parameters = testHelper.addSelectedOptions(
 				new Parameters(), //
@@ -59,20 +52,18 @@ class HcsvProjectionEndpoint_VRIPerPolygon_Test {
 				Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_POLYGON
 		);
 		parameters.yearStart(2000).yearEnd(2050);
-
-		// Included to generate JSON text of parameters as needed
-//		ObjectMapper mapper = new ObjectMapper();
-//		String serializedParametersText = mapper.writeValueAsString(parameters);
+		
+		recordScenarioParameters(parameters);
 
 		InputStream zipInputStream = given().basePath(TestHelper.ROOT_PATH).when() //
 				.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
 				.multiPart(
 						ParameterNames.HCSV_POLYGON_INPUT_DATA,
-						testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_POLY_VRI.csv").toFile()
+						testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_POLY.csv").toFile()
 				) //
 				.multiPart(
 						ParameterNames.HCSV_LAYERS_INPUT_DATA,
-						testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_LAYER_VRI.csv").toFile()
+						testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_LAYER.csv").toFile()
 				) //
 				.post("/projection/hcsv?trialRun=false") //
 				.then().statusCode(201) //
@@ -84,6 +75,7 @@ class HcsvProjectionEndpoint_VRIPerPolygon_Test {
 		ZipEntry entry1 = zipFile.getNextEntry();
 		assertEquals("YieldTable.csv", entry1.getName());
 		String entry1Content = new String(testHelper.readZipEntry(zipFile, entry1));
+		record(new ByteArrayInputStream(entry1Content.getBytes()), CSV_OUTPUT_FILE_NAME);
 		assertTrue(entry1Content.length() > 0);
 
 		ZipEntry entry2 = zipFile.getNextEntry();

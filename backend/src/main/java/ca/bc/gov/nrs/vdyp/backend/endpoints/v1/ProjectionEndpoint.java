@@ -77,6 +77,15 @@ public class ProjectionEndpoint implements Endpoint {
 			@FormParam(value = ParameterNames.HCSV_LAYERS_INPUT_DATA) FileUpload layersDataStream //
 			// , @Context SecurityContext securityContext
 	) {
+		if (polygonDataStream == null) {
+			return Response.status(Status.BAD_REQUEST).entity("Projection request failed: no polygon data supplied")
+					.build();
+		}
+		if (layersDataStream == null) {
+			return Response.status(Status.BAD_REQUEST).entity("Projection request failed: no layer data supplied")
+					.build();
+		}
+
 		var polygonFile = polygonDataStream.uploadedFile().toFile();
 		var layerFile = layersDataStream.uploadedFile().toFile();
 		try {

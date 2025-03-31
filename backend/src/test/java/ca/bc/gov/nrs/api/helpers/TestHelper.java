@@ -45,7 +45,7 @@ public class TestHelper {
 
 		String resourceFilePath = Path.of(testResourceFolderPath.toString(), fileName).toString();
 
-		URL testFileURL = this.getClass().getClassLoader().getResource(resourceFilePath);
+		URL testFileURL = this.getClass().getResource("/" + resourceFilePath);
 		try {
 			File resourceFile = new File(testFileURL.toURI());
 			return Path.of(resourceFile.getAbsolutePath());

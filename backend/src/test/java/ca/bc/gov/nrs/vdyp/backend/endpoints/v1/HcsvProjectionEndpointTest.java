@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.api.helpers.TestHelper;
+import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.ParameterNames;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.backend.utils.FileHelper;
 import io.quarkus.test.junit.QuarkusTest;
@@ -46,7 +47,7 @@ class HcsvProjectionEndpointTest {
 
 		logger.info("Starting testProjectionHscv_shouldReturnStatusOK");
 
-		Path resourceFolderPath = Path.of("test-data-files", "hcsv", "VRI-PerPolygon");
+		Path resourceFolderPath = Path.of("test-data", "hcsv", "VRI-PerPolygon");
 
 		Parameters parameters = testHelper.addSelectedOptions(
 				new Parameters(), //
@@ -112,7 +113,7 @@ class HcsvProjectionEndpointTest {
 
 		logger.info("Starting testProjectionHscv_shouldReturnStatusOK");
 
-		Path resourceFolderPath = Path.of("test-data-files", FileHelper.HCSV, FileHelper.COMMON);
+		Path resourceFolderPath = Path.of("test-data", FileHelper.HCSV, FileHelper.COMMON);
 
 		Parameters parameters = testHelper.addSelectedOptions(
 				new Parameters(), //
@@ -176,7 +177,7 @@ class HcsvProjectionEndpointTest {
 	@Test
 	void testProjectionHscvVri_testNoProgressLogging() throws IOException {
 
-		Path resourceFolderPath = Path.of("test-data-files", FileHelper.HCSV, FileHelper.COMMON);
+		Path resourceFolderPath = Path.of("test-data", FileHelper.HCSV, FileHelper.COMMON);
 
 		Parameters parameters = new Parameters();
 		parameters.ageStart(10).ageEnd(100)

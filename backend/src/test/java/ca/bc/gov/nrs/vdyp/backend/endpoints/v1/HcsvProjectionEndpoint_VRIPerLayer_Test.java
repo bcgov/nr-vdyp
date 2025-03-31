@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.api.helpers.TestHelper;
+import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.ParameterNames;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.common.constraint.Assert;
@@ -45,7 +46,7 @@ class HcsvProjectionEndpoint_VRIPerLayer_Test {
 
 		logger.info("Starting testVRIPerLayerYieldTable");
 
-		Path resourceFolderPath = Path.of("test-data-files", "hcsv", "VRI-PerPolygon");
+		Path resourceFolderPath = Path.of("test-data", "hcsv", "VRI-PerPolygon");
 
 		Parameters parameters = testHelper.addSelectedOptions(
 				new Parameters(), //
