@@ -93,7 +93,7 @@ class StubHcsvProjectionEndpointTest {
 	@Test
 	void testProjectionHscv_testNoProgressLogging() throws IOException {
 
-		Path resourceFolderPath = Path.of("test-data", FileHelper.HCSV, FileHelper.COMMON);
+		Path resourceFolderPath = Path.of("/test-data", FileHelper.HCSV, FileHelper.COMMON);
 
 		Parameters parameters = new Parameters().ageStart(10).ageEnd(20);
 

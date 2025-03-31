@@ -5,7 +5,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Map;
 
 import org.hamcrest.Matchers;
 import org.junit.Assert;

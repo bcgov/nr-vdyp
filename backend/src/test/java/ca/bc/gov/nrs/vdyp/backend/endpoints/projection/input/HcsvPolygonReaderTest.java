@@ -36,7 +36,7 @@ public class HcsvPolygonReaderTest {
 
 		logger.info("Starting testHscvPolygonReader");
 
-		Path resourceFolderPath = Path.of("test-data", FileHelper.HCSV, FileHelper.COMMON);
+		Path resourceFolderPath = Path.of(FileHelper.TEST_DATA_FILES, FileHelper.HCSV, FileHelper.COMMON);
 
 		byte[] csvBytes = Files.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_POLY.csv"));
 

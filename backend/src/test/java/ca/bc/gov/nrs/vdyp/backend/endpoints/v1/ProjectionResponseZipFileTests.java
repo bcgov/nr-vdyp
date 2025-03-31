@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.api.helpers.TestHelper;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
+import ca.bc.gov.nrs.vdyp.backend.utils.FileHelper;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.MediaType;
@@ -46,7 +47,7 @@ class ProjectionResponseZipFileTests {
 
 		logger.info("Starting singlePolygonTestAllOutputs");
 
-		Path resourceFolderPath = Path.of("test-data", "hcsv", "single-polygon");
+		Path resourceFolderPath = Path.of(FileHelper.TEST_DATA_FILES, FileHelper.HCSV, "single-polygon");
 
 		Parameters parameters = testHelper.addSelectedOptions(
 				new Parameters(), //
@@ -116,7 +117,7 @@ class ProjectionResponseZipFileTests {
 
 		logger.info("Starting singlePolygonTestNoOutputs");
 
-		Path resourceFolderPath = Path.of("test-data", "hcsv", "single-polygon");
+		Path resourceFolderPath = Path.of(FileHelper.TEST_DATA_FILES, FileHelper.HCSV, "single-polygon");
 
 		Parameters parameters = testHelper.addSelectedOptions(
 				new Parameters(), //

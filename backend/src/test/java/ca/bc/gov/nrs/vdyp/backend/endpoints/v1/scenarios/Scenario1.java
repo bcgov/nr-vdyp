@@ -52,7 +52,7 @@ class Scenario1 extends Scenario {
 				Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_POLYGON
 		);
 		parameters.yearStart(2000).yearEnd(2050);
-		
+
 		recordScenarioParameters(parameters);
 
 		InputStream zipInputStream = given().basePath(TestHelper.ROOT_PATH).when() //

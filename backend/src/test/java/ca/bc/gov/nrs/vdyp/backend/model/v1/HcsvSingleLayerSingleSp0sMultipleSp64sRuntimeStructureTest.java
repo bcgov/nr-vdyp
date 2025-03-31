@@ -26,6 +26,7 @@ import ca.bc.gov.nrs.vdyp.backend.projection.model.Species;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Stand;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
 import ca.bc.gov.nrs.vdyp.backend.services.ProjectionService;
+import ca.bc.gov.nrs.vdyp.backend.utils.FileHelper;
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
@@ -53,7 +54,8 @@ class HcsvSingleLayerSingleSp0sMultipleSp64sRuntimeStructureTest {
 
 		logger.info("Starting {}", this.getClass().getSimpleName());
 
-		Path resourceFolderPath = Path.of("test-data", "hcsv", "single-layer-single-sp0-multiple-sp64s-fip");
+		Path resourceFolderPath = Path
+				.of(FileHelper.TEST_DATA_FILES, FileHelper.HCSV, "single-layer-single-sp0-multiple-sp64s-fip");
 
 		Map<String, InputStream> inputStreams = new HashMap<>();
 

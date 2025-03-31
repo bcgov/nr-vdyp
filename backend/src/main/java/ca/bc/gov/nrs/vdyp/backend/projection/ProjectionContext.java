@@ -1,7 +1,5 @@
 package ca.bc.gov.nrs.vdyp.backend.projection;
 
-import static org.slf4j.event.EventConstants.*;
-
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.FileSystem;
@@ -30,7 +28,6 @@ import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionInternalExecutionE
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.YieldTableGenerationException;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ProjectionRequestKind;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.MessageSeverityCode;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.UtilizationClassSet;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Polygon;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;

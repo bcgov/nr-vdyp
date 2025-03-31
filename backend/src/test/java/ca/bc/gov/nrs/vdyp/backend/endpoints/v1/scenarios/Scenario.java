@@ -13,8 +13,6 @@ import java.nio.file.Path;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.BeforeEach;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ca.bc.gov.nrs.api.helpers.TestHelper;
