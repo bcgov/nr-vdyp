@@ -903,8 +903,8 @@ public class YieldTable implements Closeable {
 
 		if (species.getTotalAge() != null && species.getSiteIndex() != null && species.getYearsToBreastHeight() != null
 				&& (!species.getTotalAge().equals(stand.getSpeciesGroup().getTotalAge())
-						|| !species.getSiteIndex().equals(stand.getSpeciesGroup().getSiteIndex())
-						|| !species.getYearsToBreastHeight().equals(stand.getSpeciesGroup().getYearsToBreastHeight()))) {
+						|| !species.getSiteIndex().equals(stand.getSpeciesGroup().getSiteIndex()) || !species
+								.getYearsToBreastHeight().equals(stand.getSpeciesGroup().getYearsToBreastHeight()))) {
 
 			// Determine the age of the stand based on the difference between
 			// the SP0 starting total age and the SP64 starting total age and the
@@ -1102,7 +1102,7 @@ public class YieldTable implements Closeable {
 		if (calendarYear == null || calendarYear < 0) {
 			throw new StandYieldCalculationException(calendarYear == null ? -9 : calendarYear);
 		}
-		
+
 		// Obtain the yields at the requested age.
 
 		// If the initial processing results ended up indicating a

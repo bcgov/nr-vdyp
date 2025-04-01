@@ -8,6 +8,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.text.MessageFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -19,6 +20,9 @@ import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.Exceptions;
@@ -92,6 +96,16 @@ public class ProjectionService {
 
 		logger.info("<runProjection {} {}", kind, projectionId);
 
+		try {
+			// Included to generate JSON text of parameters as needed
+			ObjectMapper mapper = new ObjectMapper();
+			String serializedParametersText = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(params);
+	
+			logger.info(serializedParametersText);
+		} catch (JsonProcessingException e) {
+			logger.warn(MessageFormat.format("{0}: unable to log parameters JSON", projectionId), e);
+		}
+		
 		boolean debugLoggingEnabled = params.getSelectedExecutionOptions()
 				.contains(Parameters.ExecutionOption.DO_ENABLE_DEBUG_LOGGING.toString());
 		if (debugLoggingEnabled) {

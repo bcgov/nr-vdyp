@@ -998,7 +998,7 @@ public class Layer implements Comparable<Layer> {
 	public Double determineLayerAgeAtYear(Integer year) {
 
 		Double layerAge = null;
-		
+
 		if (year == null || year < Vdyp7Constants.MIN_CALENDAR_YEAR || year > Vdyp7Constants.MAX_CALENDAR_YEAR) {
 			throw new IllegalArgumentException(
 					MessageFormat.format(

@@ -551,7 +551,7 @@ public class PolygonProjectionRunner {
 					startAge = standAgeAtMeasurementYear;
 				}
 
-				if (endAge == null || standAgeAtMeasurementYear == null|| standAgeAtMeasurementYear > endAge) {
+				if (endAge == null || standAgeAtMeasurementYear == null || standAgeAtMeasurementYear > endAge) {
 					endAge = standAgeAtMeasurementYear;
 				}
 
