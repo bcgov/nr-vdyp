@@ -141,8 +141,8 @@ class YieldTableRowContext {
 			layer = null;
 
 			try {
-				double ageAtYear = polygon.determineStandAgeAtYear(getReferenceYear());
-				this.referenceAge = (int) ageAtYear;
+				Double ageAtYear = polygon.determineStandAgeAtYear(getReferenceYear());
+				this.referenceAge = ageAtYear == null ? null : ageAtYear.intValue();
 			} catch (PolygonValidationException e) {
 				// There can't possibly still be a validation failure at this point.
 				throw new IllegalStateException(new YieldTableGenerationException(e));
@@ -168,13 +168,13 @@ class YieldTableRowContext {
 			if (projectionType == ProjectionTypeCode.DEAD) {
 
 				if (yearOfDeath != null) {
-					double layerAgeAtDeath = determineLayerAgeAtYear(layer, yearOfDeath);
-					ageAtDeath = (int) layerAgeAtDeath;
+					var layerAgeAtDeath = layer.determineLayerAgeAtYear(yearOfDeath);
+					ageAtDeath = layerAgeAtDeath == null ? null : layerAgeAtDeath.intValue();
 				}
 			}
 
-			double ageAtYear = determineLayerAgeAtYear(layer, getReferenceYear());
-			referenceAge = (int) ageAtYear;
+			Double ageAtYear = layer.determineLayerAgeAtYear(getReferenceYear());
+			referenceAge = ageAtYear == null ? null : ageAtYear.intValue();
 
 			numSpecies = layer.getSp64sAsSupplied().size();
 		}
@@ -192,7 +192,7 @@ class YieldTableRowContext {
 
 		if (yearOfDeath != null && yearOfDeath > getReferenceYear()) {
 
-			double relevantAge;
+			Double relevantAge;
 			if (isPolygonTable()) {
 				try {
 					relevantAge = polygon.determineStandAgeAtYear(yearOfDeath);
@@ -202,11 +202,11 @@ class YieldTableRowContext {
 				}
 			} else {
 				Validate.isTrue(layer != null, "YieldTableRowIterator.createTableRow(): layer is null");
-				relevantAge = determineLayerAgeAtYear(layer, yearOfDeath);
+				relevantAge = layer.determineLayerAgeAtYear(yearOfDeath);
 			}
 
 			measurementYear = yearOfDeath;
-			measurementAge = (int) relevantAge;
+			measurementAge = relevantAge == null ? null : relevantAge.intValue();
 		} else {
 			measurementYear = referenceYear;
 			measurementAge = referenceAge;
@@ -216,14 +216,6 @@ class YieldTableRowContext {
 
 		currentYear = LocalDate.now().getYear();
 		currentAge = currentYear - yearToAgeDifference;
-	}
-
-	private double determineLayerAgeAtYear(Layer layer, Integer yearOfDeath) {
-		try {
-			return layer.determineLayerAgeAtYear(yearOfDeath);
-		} catch (PolygonValidationException e) {
-			throw new IllegalStateException(e);
-		}
 	}
 
 	private void calculateTableRangeInformation(ValidatedParameters params) {

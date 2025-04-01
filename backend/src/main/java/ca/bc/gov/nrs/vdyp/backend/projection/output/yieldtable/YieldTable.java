@@ -18,7 +18,6 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 
 import ca.bc.gov.nrs.vdyp.application.ProcessingException;
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.StandYieldCalculationException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.YieldTableGenerationException;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption;
@@ -903,9 +902,9 @@ public class YieldTable implements Closeable {
 		Double basalArea = layer.getDoSuppressPerHAYields() ? null : layerYields.basalArea125cm() * factor;
 
 		if (species.getTotalAge() != null && species.getSiteIndex() != null && species.getYearsToBreastHeight() != null
-				&& species.getTotalAge() != stand.getSpeciesGroup().getTotalAge()
-				&& species.getSiteIndex() != stand.getSpeciesGroup().getSiteIndex()
-				&& species.getSiteCurve() != stand.getSpeciesGroup().getSiteCurve()) {
+				&& (!species.getTotalAge().equals(stand.getSpeciesGroup().getTotalAge())
+						|| !species.getSiteIndex().equals(stand.getSpeciesGroup().getSiteIndex())
+						|| !species.getYearsToBreastHeight().equals(stand.getSpeciesGroup().getYearsToBreastHeight()))) {
 
 			// Determine the age of the stand based on the difference between
 			// the SP0 starting total age and the SP64 starting total age and the
@@ -1072,7 +1071,7 @@ public class YieldTable implements Closeable {
 		// Vet layers are clamped to Reference Year/Age. This implies that
 		// a vet layer has a flat yield curve.
 
-		double ageToUse = ageToRequest;
+		Double ageToUse = Double.valueOf(ageToRequest);
 
 		switch (projectionType) {
 		case DEAD: {
@@ -1085,13 +1084,7 @@ public class YieldTable implements Closeable {
 
 		case VETERAN: {
 			Integer referenceYear = layer.getPolygon().getReferenceYear();
-			try {
-				ageToUse = layer.determineLayerAgeAtYear(referenceYear);
-			} catch (PolygonValidationException e) {
-				// determineLayerAgeAtYear may throw a ValidationException, although this error should
-				// have been detected before this point.
-				throw new StandYieldCalculationException(-3, e);
-			}
+			ageToUse = layer.determineLayerAgeAtYear(referenceYear);
 
 			logger.debug("{}: veteran layer, so clamping requested age to use to reference age of {}", layer, ageToUse);
 			break;
@@ -1102,11 +1095,14 @@ public class YieldTable implements Closeable {
 			break;
 		}
 
-		Integer calendarYear = layer.determineYearAtAge(ageToUse);
+		Integer calendarYear = null;
+		if (ageToUse != null) {
+			calendarYear = layer.determineYearAtAge(ageToUse);
+		}
 		if (calendarYear == null || calendarYear < 0) {
 			throw new StandYieldCalculationException(calendarYear == null ? -9 : calendarYear);
 		}
-
+		
 		// Obtain the yields at the requested age.
 
 		// If the initial processing results ended up indicating a

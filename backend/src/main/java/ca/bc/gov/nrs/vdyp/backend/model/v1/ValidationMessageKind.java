@@ -84,8 +84,6 @@ public enum ValidationMessageKind {
 	ASSIGNING_CONVERTED_ESTIMATED_SITE_INDEX(
 			"Assigning converted estimated site index of {0} to Species \"{1}\" and recomputing input height"
 	), //
-	MISSING_TOTAL_AGE("Leading Sp0 \"{0}\" of layer \"{1}\" has no total age"), //
-	MEASUREMENT_YEAR_NOT_KNOWN("Measurement year is not known for polygon {0}"), //
 	;
 
 	public enum Category {

@@ -39,11 +39,9 @@ public class RealComponentRunner implements ComponentRunner {
 			fipStartApplication.doMain(controlFilePath.toAbsolutePath().toString());
 			state.setProcessingResults(ProjectionStageCode.Initial, projectionTypeCode, 0, -99);
 		} catch (VdypApplicationInitializationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new PolygonExecutionException(e.getMessage(), e);
 		} catch (VdypApplicationProcessingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new PolygonExecutionException(e.getMessage(), e);
 		}
 	}
 

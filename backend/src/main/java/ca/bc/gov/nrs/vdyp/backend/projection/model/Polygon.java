@@ -1375,7 +1375,7 @@ public class Polygon implements Comparable<Polygon> {
 		}
 	}
 
-	public double determineStandAgeAtYear(Integer year) throws PolygonValidationException {
+	public Double determineStandAgeAtYear(Integer year) throws PolygonValidationException {
 		Layer primaryLayer = findPrimaryLayerByProjectionType(ProjectionTypeCode.UNKNOWN);
 		return primaryLayer.determineLayerAgeAtYear(year);
 	}

@@ -414,34 +414,39 @@ public class PolygonProjectionRunner {
 					state.getProcessingMode(projectionType)
 			);
 
-			try {
-				var primaryLayerAge = polygon.getPrimaryLayer().determineLayerAgeAtYear(polygon.getReferenceYear());
+			var primaryLayerAge = polygon.getPrimaryLayer().determineLayerAgeAtYear(polygon.getReferenceYear());
 
-				switch (projectionType) {
-				case PRIMARY:
-					// do nothing - state contains the correct start and end ages already.
-					break;
-				case DEAD: {
-					if (layer.getAgeAtDeath() != null) {
-						state.updateProjectionRange(projectionType, layer.getAgeAtDeath(), layer.getAgeAtDeath());
-					} else {
-						var startAge = layer.determineLayerAgeAtYear(polygon.getReferenceYear());
-						state.updateProjectionRange(projectionType, startAge, startAge);
-					}
-					break;
+			switch (projectionType) {
+			case PRIMARY:
+				// do nothing - state contains the correct start and end ages already.
+				break;
+			case DEAD: {
+				if (layer.getAgeAtDeath() != null) {
+					state.updateProjectionRange(projectionType, layer.getAgeAtDeath(), layer.getAgeAtDeath());
+				} else {
+					var startAge = layer.determineLayerAgeAtYear(polygon.getReferenceYear());
+					state.updateProjectionRange(projectionType, startAge, startAge);
 				}
-				default: {
-					var referenceAge = layer.determineLayerAgeAtYear(polygon.getReferenceYear());
-					var startAge = state.getStartAge(projectionType) + referenceAge - primaryLayerAge;
-					var endAge = state.getEndAge(projectionType) + referenceAge - primaryLayerAge;
-					state.updateProjectionRange(projectionType, startAge, endAge);
-					break;
-				}
-				}
-			} catch (PolygonValidationException e) {
+				break;
+			}
+			default: {
+				var referenceAge = layer.determineLayerAgeAtYear(polygon.getReferenceYear());
+				var startAge = state.getStartAge(projectionType) + referenceAge - primaryLayerAge;
+				var endAge = state.getEndAge(projectionType) + referenceAge - primaryLayerAge;
+				state.updateProjectionRange(projectionType, startAge, endAge);
+				break;
+			}
+			}
+
+			if (primaryLayerAge == null) {
 				// determineLayerAgeAtYear may throw a ValidationException, although this error should
 				// have been detected before this point.
-				throw new PolygonExecutionException(e);
+				throw new PolygonExecutionException(
+						MessageFormat.format(
+								"{0}: unable to project since cannot calculate the age of the primary layer {1} at year {2}",
+								polygon, polygon.getPrimaryLayer(), polygon.getReferenceYear()
+						)
+				);
 			}
 
 			// Determine the stand age, based on the leading site Sp0.
@@ -520,7 +525,10 @@ public class PolygonProjectionRunner {
 
 		try {
 			Integer measurementYear = polygon.getMeasurementYear();
-			double standAgeAtMeasurementYear = Math.round(polygon.determineStandAgeAtYear(measurementYear));
+			Double standAgeAtMeasurementYear = polygon.determineStandAgeAtYear(measurementYear);
+			if (standAgeAtMeasurementYear != null) {
+				standAgeAtMeasurementYear = Double.valueOf(Math.round(standAgeAtMeasurementYear));
+			}
 
 			logger.debug(
 					"{}: determined age is {} at measurement year {}", polygon, standAgeAtMeasurementYear,
@@ -539,11 +547,11 @@ public class PolygonProjectionRunner {
 			if (context.getParams().getSelectedExecutionOptions()
 					.contains(ExecutionOption.DO_FORCE_REFERENCE_YEAR_INCLUSION_IN_YIELD_TABLES)) {
 
-				if (startAge == null || standAgeAtMeasurementYear < startAge) {
+				if (startAge == null || standAgeAtMeasurementYear == null || standAgeAtMeasurementYear < startAge) {
 					startAge = standAgeAtMeasurementYear;
 				}
 
-				if (endAge == null || standAgeAtMeasurementYear > endAge) {
+				if (endAge == null || standAgeAtMeasurementYear == null|| standAgeAtMeasurementYear > endAge) {
 					endAge = standAgeAtMeasurementYear;
 				}
 

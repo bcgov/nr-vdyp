@@ -633,7 +633,9 @@ public class Layer implements Comparable<Layer> {
 			estimatedCurve = SiteTool.getSICurve(getEstimatedSiteIndexSpecies(), getPolygon().isCoastal());
 			for (Species s : getSp64sAsSupplied()) {
 				estimatedAge = s.getTotalAge();
-				break;
+				if (estimatedAge != null) {
+					break;
+				}
 			}
 		} else {
 			for (Species s : getSp64sByPercent()) {
@@ -993,8 +995,10 @@ public class Layer implements Comparable<Layer> {
 	 *                                    <li><code>this</code> has no leading species
 	 *                                    </ul>
 	 */
-	public double determineLayerAgeAtYear(Integer year) throws PolygonValidationException {
+	public Double determineLayerAgeAtYear(Integer year) {
 
+		Double layerAge = null;
+		
 		if (year == null || year < Vdyp7Constants.MIN_CALENDAR_YEAR || year > Vdyp7Constants.MAX_CALENDAR_YEAR) {
 			throw new IllegalArgumentException(
 					MessageFormat.format(
@@ -1005,25 +1009,25 @@ public class Layer implements Comparable<Layer> {
 		}
 
 		Stand leadingSp0 = determineLeadingSp0(0);
+		Double totalAge = null;
 		if (leadingSp0 == null) {
-			throw new IllegalStateException(MessageFormat.format("Leading Sp0 not found for layer {0}", this));
+			logger.warn("{}: leading Sp0 not found for layer", this);
 		} else if (leadingSp0.getSpeciesGroup().getTotalAge() == null) {
-			throw new PolygonValidationException(
-					new ValidationMessage(ValidationMessageKind.MISSING_TOTAL_AGE, leadingSp0.getSpeciesGroup(), this)
-			);
+			logger.warn("{}: leading Sp0 \"{}\" of layer has no total age", this, leadingSp0.getSpeciesGroup());
+		} else {
+			totalAge = leadingSp0.getSpeciesGroup().getTotalAge();
 		}
 
 		Integer measurementYear = getPolygon().getMeasurementYear();
 		if (measurementYear == null) {
-			throw new PolygonValidationException(
-					new ValidationMessage(ValidationMessageKind.MEASUREMENT_YEAR_NOT_KNOWN, getPolygon(), this)
-			);
+			logger.warn("{}: measurement year is not known for polygon {}", this, getPolygon());
 		}
 
-		double layerAge = leadingSp0.getSpeciesGroup().getTotalAge() + year - measurementYear;
-
-		if (layerAge < 0.0) {
-			layerAge = 0.0;
+		if (totalAge != null && measurementYear != null) {
+			layerAge = leadingSp0.getSpeciesGroup().getTotalAge() + year - measurementYear;
+			if (layerAge < 0.0) {
+				layerAge = 0.0;
+			}
 		}
 
 		return layerAge;
