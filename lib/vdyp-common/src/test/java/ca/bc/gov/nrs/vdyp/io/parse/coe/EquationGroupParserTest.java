@@ -1,11 +1,8 @@
 package ca.bc.gov.nrs.vdyp.io.parse.coe;
 
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.causedBy;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.mmHasEntry;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.stringContainsInOrder;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.Arrays;

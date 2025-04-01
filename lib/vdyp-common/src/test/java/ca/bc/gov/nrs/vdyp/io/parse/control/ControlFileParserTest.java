@@ -1,17 +1,8 @@
 package ca.bc.gov.nrs.vdyp.io.parse.control;
 
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.parseAs;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasEntry;
-import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.stringContainsInOrder;
+import static org.hamcrest.Matchers.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;

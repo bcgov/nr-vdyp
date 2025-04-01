@@ -1,5 +1,7 @@
 package ca.bc.gov.nrs.vdyp.common;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -19,6 +21,8 @@ import java.util.function.Function;
 import javax.annotation.Nullable;
 
 import org.apache.commons.math3.util.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.BecLookup;
@@ -33,6 +37,8 @@ import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.VdypUtilizationHolder;
 
 public class Utils {
+
+	private static final Logger logger = LoggerFactory.getLogger(Utils.class);
 
 	private Utils() {
 	}
@@ -182,6 +188,16 @@ public class Utils {
 			}
 			return 0;
 		};
+	}
+
+	public static void close(OutputStream os) {
+		if (os != null) {
+			try {
+				os.close();
+			} catch (IOException e) {
+				logger.error("Failed to close OutputStream", e);
+			}
+		}
 	}
 
 	/**

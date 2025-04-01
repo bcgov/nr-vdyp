@@ -54,8 +54,9 @@ public enum CfsBiomassConversionSupportedEcoZone implements SI32Enum<CfsBiomassC
 	public int getOffset() {
 		if (this.equals(UNKNOWN)) {
 			throw new UnsupportedOperationException(
-					MessageFormat
-							.format("Cannot call getIndex on {} as it's not a standard member of the enumeration", this)
+					MessageFormat.format(
+							"Cannot call getIndex on {0} as it's not a standard member of the enumeration", this
+					)
 			);
 		}
 
@@ -67,7 +68,7 @@ public enum CfsBiomassConversionSupportedEcoZone implements SI32Enum<CfsBiomassC
 		if (this.equals(UNKNOWN)) {
 			throw new UnsupportedOperationException(
 					MessageFormat
-							.format("Cannot call getText on {} as it's not a standard member of the enumeration", this)
+							.format("Cannot call getText on {0} as it's not a standard member of the enumeration", this)
 			);
 		}
 

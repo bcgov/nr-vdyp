@@ -41,9 +41,6 @@ public abstract class BaseControlParser {
 
 	protected ControlFileParser controlParser = new ControlFileParser();
 
-	protected BaseControlParser() {
-	}
-
 	/**
 	 * This method is to be called after the concrete Control Parsers are initialized. This can be from the constructors
 	 * of those classes, after initialization is complete.
@@ -57,7 +54,10 @@ public abstract class BaseControlParser {
 						.record(subResourceParser.getControlKey(), subResourceParser.getValueParser())
 		);
 
-		outputFileParsers().forEach(key -> controlParser.record(key, ValueParser.FILENAME));
+		outputFiles().forEach(
+				outputFileLocationResolver -> controlParser
+						.record(outputFileLocationResolver.getControlKey(), outputFileLocationResolver.getValueParser())
+		);
 
 		configurationFileParsers().forEach(
 				subResourceParser -> controlParser
@@ -73,7 +73,7 @@ public abstract class BaseControlParser {
 
 	protected abstract List<ControlMapValueReplacer<Object, String>> inputFileParsers();
 
-	protected abstract List<ControlKey> outputFileParsers();
+	protected abstract List<OutputFileLocationResolver> outputFiles();
 
 	protected abstract List<ResourceControlMapModifier> configurationFileParsers();
 
@@ -120,7 +120,7 @@ public abstract class BaseControlParser {
 			try (var is = fileResolver.resolveForInput(resourceName)) {
 
 				var newEntries = controlParser.parse(is, map);
-				map.putAll(controlParser.parse(is, map));
+				map.putAll(newEntries);
 				for (var changedKey : newEntries.keySet()) {
 					resolverContext.put(
 							changedKey,

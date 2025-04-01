@@ -1,14 +1,11 @@
 package ca.bc.gov.nrs.vdyp.sindex;
 
-import static ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexAgeType.SI_AT_BREAST;
-import static ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexAgeType.SI_AT_TOTAL;
+import static ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexAgeType.*;
 import static ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation.*;
-import static ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexSpecies.*;
-import static ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEstimationType.*;
 import static ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEstablishmentType.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEstimationType.*;
+import static ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexSpecies.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;

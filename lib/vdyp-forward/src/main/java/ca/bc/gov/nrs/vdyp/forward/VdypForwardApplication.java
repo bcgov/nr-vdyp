@@ -1,12 +1,7 @@
 package ca.bc.gov.nrs.vdyp.forward;
 
-import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.PASS_1;
-import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.PASS_2;
-import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.PASS_3;
-import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.PASS_4;
-import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.PASS_5;
+import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.*;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
@@ -14,7 +9,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.logging.LogManager;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,16 +18,6 @@ import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
 
 public class VdypForwardApplication extends VdypApplication {
-
-	static {
-		try {
-			LogManager.getLogManager().readConfiguration(
-					ForwardProcessor.class.getClassLoader().getResourceAsStream("logging.properties")
-			);
-		} catch (SecurityException | IOException e) {
-			System.err.println("Unable to configure logging system");
-		}
-	}
 
 	private static final Logger logger = LoggerFactory.getLogger(VdypForwardApplication.class);
 
