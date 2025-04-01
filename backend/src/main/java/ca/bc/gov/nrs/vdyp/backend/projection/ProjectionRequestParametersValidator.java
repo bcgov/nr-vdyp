@@ -40,7 +40,6 @@ public class ProjectionRequestParametersValidator {
 
 		if (validator.validationErrorMessages.size() > 0) {
 			logger.error("Validation errors encountered:");
-			logger.error(params.toString());
 			for (var m : validator.validationErrorMessages) {
 				logger.error(m.toString());
 			}
