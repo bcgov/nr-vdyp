@@ -327,7 +327,7 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 						ValidationMessageKind.POLYGON_ALREADY_HAS_RANK_ONE_LAYER, polygon
 				);
 
-				polygon.getDefinitionMessages().add(new PolygonMessage.Builder().layer(layer).message(message).build());
+				polygon.addDefinitionMessage(new PolygonMessage.Builder().layer(layer).message(message).build());
 				logger.error("Polygon {} already has a rank one layer", polygon);
 			} else {
 				polygon.setRank1Layer(layer);
@@ -551,7 +551,7 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 
 					if (!possibleDuplicate.equivalentSiteInfo(sp64Details)) {
 
-						layer.getPolygon().getDefinitionMessages().add(
+						layer.getPolygon().addDefinitionMessage(
 								new PolygonMessage.Builder() //
 										.stand(stand) //
 										.returnCode(ReturnCode.ERROR_INVALIDSITEINFO)

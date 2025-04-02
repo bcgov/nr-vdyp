@@ -229,14 +229,10 @@ public class PolygonProjectionState {
 
 		var key = new ModelReturnCodeKey(stage, projectionType);
 		if (processingResultByStageAndProjectionType.get(key) == null) {
-			throw new IllegalStateException(
-					MessageFormat.format(
-							"{0}.ProjectionState.setProcessingResults: processingResult has NOT been set for projection type {1} of stage {2}",
-							this.getClass().getName(), stage, projectionType
-					)
-			);
+			return ProcessingResult.PROCESSING_RESULT_NULL;
+		} else {
+			return processingResultByStageAndProjectionType.get(key);
 		}
-		return processingResultByStageAndProjectionType.get(key);
 	}
 
 	/**

@@ -522,7 +522,7 @@ public class Layer implements Comparable<Layer> {
 
 				if (doRecomputeInputHeight) {
 
-					polygon.getDefinitionMessages().add(
+					polygon.addDefinitionMessage(
 							new PolygonMessage.Builder() //
 									.returnCode(ReturnCode.SUCCESS) //
 									.stand(speciesGroup) //
@@ -741,7 +741,7 @@ public class Layer implements Comparable<Layer> {
 						s.setSiteIndex(targetSiteIndex);
 						s.setYearsToBreastHeight(null);
 
-						polygon.getDefinitionMessages().add(
+						polygon.addDefinitionMessage(
 								new PolygonMessage.Builder() //
 										.returnCode(ReturnCode.SUCCESS) //
 										.stand(s.getStand()) //
@@ -770,7 +770,7 @@ public class Layer implements Comparable<Layer> {
 					}
 
 					if (estimatedSiteIndex != null && estimatedAge != null) {
-						polygon.getDefinitionMessages().add(
+						polygon.addDefinitionMessage(
 								new PolygonMessage.Builder() //
 										.returnCode(ReturnCode.SUCCESS) //
 										.layer(this) //
@@ -1319,9 +1319,11 @@ public class Layer implements Comparable<Layer> {
 
 				// Attempt to convert and copy (or, failing that, just copy) site index to site species
 
+				var donorSiteIndex = donorSpecies.getSiteIndex() == null ? Vdyp7Constants.EMPTY_DECIMAL
+						: donorSpecies.getSiteIndex();
 				try {
 					double siteIndex = SiteTool.convertSiteIndexBetweenCurves(
-							donorSpecies.getSiteCurve(), donorSpecies.getSiteIndex(), siteSpecies.getSiteCurve()
+							donorSpecies.getSiteCurve(), donorSiteIndex, siteSpecies.getSiteCurve()
 					);
 
 					speciesGroup.setSiteIndex(siteIndex);
@@ -1329,21 +1331,18 @@ public class Layer implements Comparable<Layer> {
 
 					logger.debug(
 							"{}: donor {} site index {} converted to {} and assigned to site species {}", this,
-							donorSpecies.getSpeciesCode(), donorSpecies.getSiteIndex(), siteSpecies.getSiteIndex(),
+							donorSpecies.getSpeciesCode(), donorSiteIndex, siteSpecies.getSiteIndex(),
 							siteSpecies.getSpeciesCode()
 					);
 
 				} catch (CommonCalculatorException e) {
 
-					double siteIndex = donorSpecies.getSiteIndex();
-
-					speciesGroup.setSiteIndex(siteIndex);
-					siteSpecies.setSiteIndex(siteIndex);
+					speciesGroup.setSiteIndex(donorSiteIndex);
+					siteSpecies.setSiteIndex(donorSiteIndex);
 
 					logger.debug(
 							"{}: no conversion of site index from {} to {}. Assigned straight copy of donor site index value {} to site species",
-							this, donorSpecies.getSpeciesCode(), siteSpecies.getSpeciesCode(),
-							donorSpecies.getSiteIndex()
+							this, donorSpecies.getSpeciesCode(), siteSpecies.getSpeciesCode(), donorSiteIndex
 					);
 				}
 

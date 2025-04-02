@@ -853,6 +853,28 @@ public class Polygon implements Comparable<Polygon> {
 		}
 	}
 
+	/**
+	 * <b>V7Ext_InitialProcessingModeToBeUsed</b>
+	 * <p>
+	 * Determine the processing the stand will be initially subject to.
+	 * <p>
+	 * The processing mode is specified according to how the stand is defined. The mode is completely defined by the
+	 * stand attributes and is not explicitly chosen by the caller.
+	 * <p>
+	 * <b>Remarks</b>
+	 * <ul>
+	 * <li>Focus of the decision has been changed from leading SP64 to SP0.
+	 * <li>FIPSTART decision logic looks at Non-Productive status.
+	 * <li>The list of possible FIP non-productive codes is any value rather than a subset.
+	 * </ul>
+	 *
+	 * @param rGrowthModel    on output, will specify the underlying growth model which will be used to perform initial
+	 *                        processing based on the properties currently assigned to the polygon.
+	 * @param rProcessingMode on output, will specify the processing mode initially used to process the stand. This
+	 *                        selection may be overridden when the model is actually run. This routine does, however,
+	 *                        identify the initial values which will be used.
+	 * @param rPrimaryLayer   the polygon layer determined to be its primary species
+	 */
 	public void calculateInitialProcessingModel(
 			Reference<GrowthModelCode> rGrowthModel, Reference<ProcessingModeCode> rProcessingMode,
 			Reference<Layer> rPrimaryLayer
@@ -1402,14 +1424,17 @@ public class Polygon implements Comparable<Polygon> {
 		return selectedLayer;
 	}
 
-	private final String POLYGON_DESCRIPTOR_FORMAT = "%-7s%10d%3s%5d";
+	private final String POLYGON_DESCRIPTOR_FORMAT = "%-7s%10s%-3s%5d";
 
 	public String buildPolygonDescriptor(int year) {
 
 		String mapSheet = this.mapSheet.length() > 7 ? this.mapSheet.substring(0, 7) : this.mapSheet;
 		String district = this.district == null ? ""
 				: this.district.length() > 3 ? this.district.substring(0, 3) : this.district;
-		return String.format(POLYGON_DESCRIPTOR_FORMAT, mapSheet, polygonNumber, district, year);
+		var descriptor = String
+				.format(POLYGON_DESCRIPTOR_FORMAT, mapSheet, Long.toString(polygonNumber), district, year);
+
+		return descriptor;
 	}
 
 	public String buildPolygonDescriptor() {
