@@ -232,7 +232,7 @@ public class PolygonProjectionRunner {
 
 		if (!rPrimaryLayer.isPresent()) {
 			throw new PolygonValidationException(
-					new ValidationMessage(ValidationMessageKind.PRIMARY_LAYER_NOT_FOUND, this)
+					new ValidationMessage(ValidationMessageKind.PRIMARY_LAYER_NOT_FOUND, polygon)
 			);
 		}
 

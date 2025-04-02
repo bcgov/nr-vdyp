@@ -23,6 +23,7 @@ import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ProjectionRequestKind;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
 import ca.bc.gov.nrs.vdyp.backend.projection.input.AbstractPolygonStream;
+import ca.bc.gov.nrs.vdyp.backend.projection.model.Polygon;
 import ca.bc.gov.nrs.vdyp.backend.projection.output.IMessageLog;
 
 public class ProjectionRunner {
@@ -74,11 +75,13 @@ public class ProjectionRunner {
 				componentRunner = new RealComponentRunner();
 			}
 
-			while (polygonStream.hasNextPolygon()) {
+			Polygon polygon = null;
 
+			while (polygonStream.hasNextPolygon()) {
 				try {
+					polygon = polygonStream.getNextPolygon();
+
 					try {
-						var polygon = polygonStream.getNextPolygon();
 						if (polygon.doAllowProjection()) {
 							logger.info("Starting the projection of feature \"{}\"", polygon);
 							PolygonProjectionRunner.of(polygon, context, componentRunner).project();

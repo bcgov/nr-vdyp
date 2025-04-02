@@ -248,7 +248,7 @@ public class YieldTable implements Closeable {
 		var vdypControlFileResolver = new FileSystemFileResolver(stepExecutionFolder);
 
 		var expectedPolygonIdentifier = new PolygonIdentifier(
-				polygon.getMapSheet(), polygon.getPolygonNumber(), 0 /* expect any year */
+				polygon.getMapSheet(), polygon.getPolygonNumber(), polygon.getDistrict(), 0 /* expect any year */
 		);
 
 		try (var is = vdypControlFileResolver.resolveForInput(controlFileName)) {
@@ -318,7 +318,8 @@ public class YieldTable implements Closeable {
 
 	private void recordPolygonProjectionInformationMissing(Polygon polygon) {
 		String message = MessageFormat.format(
-				"Expected, but did not find, a polygon {0} in the output of Forward", polygon.getPolygonNumber()
+				"Expected, but did not find, a polygon {0,number,#} in the output of Forward",
+				polygon.getPolygonNumber()
 		);
 		logger.warn("{}: {}", polygon, message);
 	}
@@ -1230,7 +1231,7 @@ public class YieldTable implements Closeable {
 		} else {
 			context.addMessage(
 					Level.WARN,
-					"{0}: projected data for the {1} layer was not generated at stand age {2}, calendar year {3}",
+					"{0}: projected data for the {1} layer was not generated at stand age {2}, calendar year {3,number,#}",
 					rowContext.getPolygon(), projectionType, ageToUse, calendarYear
 			);
 		}

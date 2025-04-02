@@ -312,7 +312,7 @@ public class ProjectionContext {
 
 		switch (level) {
 		case ERROR:
-			getErrorLog().addMessage(messageText);
+			errorLog.addMessage(messageText);
 			logger.error(messageText);
 			break;
 		case WARN:

@@ -100,12 +100,12 @@ public class ProjectionService {
 			// Included to generate JSON text of parameters as needed
 			ObjectMapper mapper = new ObjectMapper();
 			String serializedParametersText = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(params);
-	
+
 			logger.info(serializedParametersText);
 		} catch (JsonProcessingException e) {
 			logger.warn(MessageFormat.format("{0}: unable to log parameters JSON", projectionId), e);
 		}
-		
+
 		boolean debugLoggingEnabled = params.getSelectedExecutionOptions()
 				.contains(Parameters.ExecutionOption.DO_ENABLE_DEBUG_LOGGING.toString());
 		if (debugLoggingEnabled) {

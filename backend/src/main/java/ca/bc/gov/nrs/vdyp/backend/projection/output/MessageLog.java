@@ -24,6 +24,9 @@ public class MessageLog implements IMessageLog {
 	@Override
 	public void addMessage(String message, Object... arguments) {
 		if (arguments.length > 0) {
+			for (int i = 0; i < arguments.length; i++) {
+				arguments[i] = arguments[i] == null ? "null" : arguments[i].toString();
+			}
 			message = MessageFormat.format(message, arguments);
 		}
 		messages.add(message);

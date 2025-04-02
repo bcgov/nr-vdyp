@@ -4,12 +4,17 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 
+import ca.bc.gov.nrs.vdyp.application.VdypApplication;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonExecutionException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionInternalExecutionException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.YieldTableGenerationException;
@@ -32,16 +37,18 @@ public class RealComponentRunner implements ComponentRunner {
 			throws PolygonExecutionException {
 
 		try (var fipStartApplication = new FipStart()) {
-			Path controlFilePath = Path.of(
-					state.getExecutionFolder().toString(), projectionTypeCode.toString(),
-					Vdyp7Constants.FIP_START_CONTROL_FILE_NAME
-			);
-			fipStartApplication.doMain(controlFilePath.toAbsolutePath().toString());
-			state.setProcessingResults(ProjectionStageCode.Initial, projectionTypeCode, 0, -99);
-		} catch (VdypApplicationInitializationException e) {
-			throw new PolygonExecutionException(e.getMessage(), e);
-		} catch (VdypApplicationProcessingException e) {
-			throw new PolygonExecutionException(e.getMessage(), e);
+			try {
+				Path controlFilePath = Path.of(
+						state.getExecutionFolder().toString(), projectionTypeCode.toString(),
+						Vdyp7Constants.FIP_START_CONTROL_FILE_NAME
+				);
+				fipStartApplication.doMain(controlFilePath.toAbsolutePath().toString());
+				state.setProcessingResults(ProjectionStageCode.Initial, projectionTypeCode, 0, -99);
+			} catch (VdypApplicationInitializationException e) {
+				throwInterpretedException(fipStartApplication, polygon, e);
+			} catch (VdypApplicationProcessingException e) {
+				throwInterpretedException(fipStartApplication, polygon, e);
+			}
 		}
 	}
 
@@ -49,18 +56,18 @@ public class RealComponentRunner implements ComponentRunner {
 	public void runVriStart(Polygon polygon, ProjectionTypeCode projectionTypeCode, PolygonProjectionState state)
 			throws PolygonExecutionException {
 		try (var vriStartApplication = new VriStart()) {
-			Path controlFilePath = Path.of(
-					state.getExecutionFolder().toString(), projectionTypeCode.toString(),
-					Vdyp7Constants.VRI_START_CONTROL_FILE_NAME
-			);
-			vriStartApplication.doMain(controlFilePath.toAbsolutePath().toString());
-			state.setProcessingResults(ProjectionStageCode.Initial, projectionTypeCode, 0, -99);
-		} catch (VdypApplicationInitializationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (VdypApplicationProcessingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			try {
+				Path controlFilePath = Path.of(
+						state.getExecutionFolder().toString(), projectionTypeCode.toString(),
+						Vdyp7Constants.VRI_START_CONTROL_FILE_NAME
+				);
+				vriStartApplication.doMain(controlFilePath.toAbsolutePath().toString());
+				state.setProcessingResults(ProjectionStageCode.Initial, projectionTypeCode, 0, -99);
+			} catch (VdypApplicationInitializationException e) {
+				throwInterpretedException(vriStartApplication, polygon, e);
+			} catch (VdypApplicationProcessingException e) {
+				throwInterpretedException(vriStartApplication, polygon, e);
+			}
 		}
 	}
 
@@ -109,17 +116,23 @@ public class RealComponentRunner implements ComponentRunner {
 	public void runForward(Polygon polygon, ProjectionTypeCode projectionTypeCode, PolygonProjectionState state)
 			throws PolygonExecutionException {
 
-		try {
-			Path controlFilePath = Path.of(
-					state.getExecutionFolder().toString(), projectionTypeCode.toString(),
-					Vdyp7Constants.FORWARD_CONTROL_FILE_NAME
-			);
+		try (var forwardApplication = new VdypForwardApplication()) {
+			try {
+				Path controlFilePath = Path.of(
+						state.getExecutionFolder().toString(), projectionTypeCode.toString(),
+						Vdyp7Constants.FORWARD_CONTROL_FILE_NAME
+				);
 
-			VdypForwardApplication
-					.main(Optional.empty(), Optional.empty(), controlFilePath.toAbsolutePath().toString());
-			state.setProcessingResults(ProjectionStageCode.Forward, projectionTypeCode, 0, -99);
-		} catch (Exception e) {
-			throw new PolygonExecutionException("Encountered exception while running ForwardApplication", e);
+				Optional<Path> inputDir = Optional.empty();
+				Optional<Path> outputDir = Optional.empty();
+				forwardApplication.doMain(inputDir, outputDir, controlFilePath.toAbsolutePath().toString());
+
+				state.setProcessingResults(ProjectionStageCode.Forward, projectionTypeCode, 0, -99);
+			} catch (VdypApplicationInitializationException e) {
+				throwInterpretedException(forwardApplication, polygon, e);
+			} catch (VdypApplicationProcessingException e) {
+				throwInterpretedException(forwardApplication, polygon, e);
+			}
 		}
 	}
 
@@ -139,7 +152,7 @@ public class RealComponentRunner implements ComponentRunner {
 			// VdypBackApplication app = new VdypBackApplication();
 			// app.doMain(controlFilePath.toAbsolutePath().toString());
 		} catch (Exception e) {
-			throw new PolygonExecutionException("Encountered exception while running BackApplication", e);
+			throw new PolygonExecutionException("Encountered exception while running BACK", e);
 		}
 	}
 
@@ -217,5 +230,79 @@ public class RealComponentRunner implements ComponentRunner {
 				}
 			}
 		}
+	}
+
+	private void
+			throwInterpretedException(VdypApplication app, Polygon polygon, VdypApplicationInitializationException e)
+					throws PolygonExecutionException {
+		throw new PolygonExecutionException(buildMessage(app, polygon, "initializing", e), e);
+	}
+
+	private void throwInterpretedException(VdypApplication app, Polygon polygon, VdypApplicationProcessingException e)
+			throws PolygonExecutionException {
+		throw new PolygonExecutionException(buildMessage(app, polygon, "running", e), e);
+	}
+
+	private String buildMessage(VdypApplication app, Polygon polygon, String verb, Throwable e) {
+		return MessageFormat.format(
+				"Polygon {0}: encountered error in {1} when {2} polygon{3}", polygon, app.getId(), verb,
+				serializeCauses(e)
+		);
+	}
+
+	/**
+	 * Return the reasons of the cause chain of <code>e</code>, making every effort to remove duplication as well as
+	 * class names that prefix the individual exceptions.
+	 *
+	 * @param e the exception in question
+	 * @return as described
+	 */
+	private String serializeCauses(Throwable e) {
+		var messageList = new ArrayList<String>();
+		return serializeCauses(new StringBuffer(), messageList, e).toString();
+	}
+
+	/**
+	 * A regular expression that allows us to extract the message from a string possibly prefixed with a Java class name
+	 * and possibly suffixed with a "." Group 3 applies if the message is suffixed with "." and group 4 otherwise. All
+	 * messages -should- match this pattern, but if cases have been missed the method will simply take the whole
+	 * message.
+	 */
+	private static final Pattern messagePattern = Pattern.compile("(^[a-zA-Z_0-9\\.]+: )?+((.+)\\.|(.*[^\\.]))$");
+
+	private StringBuffer serializeCauses(StringBuffer s, List<String> messageList, Throwable e) {
+
+		var matcher = messagePattern.matcher(e.getMessage());
+
+		String message;
+		if (matcher.matches()) {
+			if (matcher.group(3) != null) {
+				message = matcher.group(3);
+			} else {
+				message = matcher.group(4);
+			}
+		} else {
+			message = e.getMessage();
+		}
+
+		if (!StringUtils.isBlank(message) && !containsSuffix(messageList, message)) {
+			s.append(": ").append(message);
+			messageList.add(message);
+		}
+
+		if (e.getCause() != null) {
+			serializeCauses(s, messageList, e.getCause());
+		}
+
+		return s;
+	}
+
+	private boolean containsSuffix(List<String> messageList, String message) {
+		for (var m : messageList) {
+			if (m.endsWith(message)) {
+				return true;
+			}
+		}
+		return false;
 	}
 }
