@@ -12,6 +12,12 @@ To start the development server, run the following command:
 npm run dev
 ```
 
+To start the development server in debug mode, run the following command:
+
+```bash
+npm run dev-debug
+```
+
 ## Cypress Testing
 
 Cypress is used for end-to-end, component testing, unit testing.

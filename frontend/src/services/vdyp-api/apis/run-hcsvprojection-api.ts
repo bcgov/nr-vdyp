@@ -25,12 +25,6 @@ export const RunHCSVProjectionApiAxiosParamCreator = function (
         baseOptions = configuration.baseOptions
       }
       const localVarRequestOptions: AxiosRequestConfig = {
-        method: 'POST',
-        headers: {
-          // Make JSON responses acceptable
-          Accept: 'application/octet-stream, application/json',
-          'Content-Type': 'multipart/form-data',
-        },
         ...baseOptions,
         ...options,
       }
