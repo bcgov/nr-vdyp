@@ -96,7 +96,7 @@ class HcsvProjectionEndpoint_MissingTotalAgeTest {
 		String entry3Content = new String(testHelper.readZipEntry(zipFile, entry3));
 		assertTrue(
 				entry3Content.contains(
-						"Species entry references layer of type \"PRIMARY\" of polygon 000A000  88584471    2024 but it is not present."
+						"Species entry references layer of type \"PRIMARY\" of polygon 000A000  88584471    2024 but it is not present"
 				)
 		);
 

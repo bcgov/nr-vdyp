@@ -42,9 +42,9 @@ class HcsvProjectionEndpoint_2MapsheetsTest {
 	}
 
 	@Test
-	void testMissingTotalAge() throws IOException {
+	void run2MapsheetTest() throws IOException {
 
-		logger.info("Starting testMissingTotalAge");
+		logger.info("Starting run2MapsheetTest");
 
 		Path resourceFolderPath = Path.of(FileHelper.TEST_DATA_FILES, FileHelper.HCSV, "2-mapsheets-test");
 
