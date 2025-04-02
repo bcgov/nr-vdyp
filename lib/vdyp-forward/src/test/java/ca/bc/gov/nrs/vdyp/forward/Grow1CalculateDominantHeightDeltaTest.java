@@ -89,7 +89,7 @@ class Grow1CalculateDominantHeightDeltaTest {
 		VdypPolygon polygon;
 		do {
 			polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
-		} while (!polygon.getPolygonIdentifier().getName().equals("01003AS000001 00"));
+		} while (!polygon.getPolygonIdentifier().getName().equals("01003AS000001 00     "));
 
 		fpe.fps.setPolygon(polygon);
 
@@ -112,7 +112,7 @@ class Grow1CalculateDominantHeightDeltaTest {
 		VdypPolygon polygon;
 		do {
 			polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
-		} while (!polygon.getPolygonIdentifier().getName().equals("01003AS000001 00"));
+		} while (!polygon.getPolygonIdentifier().getName().equals("01003AS000001 00     "));
 
 		fpe.fps.setPolygon(polygon);
 

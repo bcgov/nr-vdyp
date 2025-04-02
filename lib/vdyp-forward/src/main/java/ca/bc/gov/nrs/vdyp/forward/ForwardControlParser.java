@@ -325,7 +325,7 @@ public class ForwardControlParser extends BaseControlParser {
 			ResourceControlMapModifier m = vdypForwardConfigurationParsers.get(key);
 			if (m != null) {
 				// m is a configuration file parser.
-				logger.debug(
+				logger.trace(
 						"Parsing configuration file {}[{}] using {}", m.getControlKeyName(), key.sequence.get(),
 						m.getClass().getSimpleName()
 				);
@@ -335,7 +335,7 @@ public class ForwardControlParser extends BaseControlParser {
 			ControlMapValueReplacer<?, ?> r = vdypForwardInputParsers.get(key);
 			if (r != null) {
 				// r is an input file parser.
-				logger.debug(
+				logger.trace(
 						"Parsing input file {}[{}] using {}", r.getControlKeyName(), key.sequence.get(),
 						r.getClass().getSimpleName()
 				);

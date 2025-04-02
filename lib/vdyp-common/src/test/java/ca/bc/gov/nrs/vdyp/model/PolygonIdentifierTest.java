@@ -14,9 +14,10 @@ class PolygonIdentifierTest {
 	@CsvFileSource(resources = { "PolygonIdentifierTestValid.csv" }, numLinesToSkip = 1, useHeadersInDisplayName = true)
 	void testSplit(String id, String base, int year) {
 		var result = PolygonIdentifier.split(id);
+		var polyId = new PolygonIdentifier(base, year);
 		assertThat(result, equalTo(new PolygonIdentifier(base, year)));
-		assertThat(result.getBase(), is(base));
-		assertThat(result.getYear(), is(year));
+		assertThat(result.getBase(), is(polyId.getBase()));
+		assertThat(result.getYear(), is(polyId.getYear()));
 	}
 
 	@ParameterizedTest
