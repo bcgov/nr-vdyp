@@ -116,24 +116,6 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 	static final Set<String> HARDWOODS = Set.of("AC", "AT", "D", "E", "MB");
 
-	protected static void main(VdypStartApplication<?, ?, ?, ?> app, final String... args) {
-		var resolver = new FileSystemFileResolver();
-
-		try {
-			app.init(resolver, System.out, System.in, args);
-		} catch (Exception ex) {
-			log.error("Error during initialization", ex);
-			System.exit(CONFIG_LOAD_ERROR);
-		}
-
-		try {
-			app.process();
-		} catch (Exception ex) {
-			log.error("Error during processing", ex);
-			System.exit(PROCESSING_ERROR);
-		}
-	}
-
 	public void doMain(final String... args)
 			throws VdypApplicationInitializationException, VdypApplicationProcessingException {
 		var resolver = new FileSystemFileResolver();
