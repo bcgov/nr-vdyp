@@ -309,7 +309,7 @@ public class HelpService {
 				"doAllowBasalAreaAndTreesPerHectareValueSubstitution", //
 				"supplied BA/TPH to be used as Projected", //
 				"the substitution of Supplied BA/TPH as Projected Values", //
-				Parameters.ExecutionOption.DO_ALLOW_BASAL_AREA_AND_TREES_PER_HECTARE_VALUE_SUBSTITUTION
+				Parameters.ExecutionOption.DO_ALLOW_BA_AND_TPH_VALUE_SUBSTITUTION
 		);
 
 		/* cmdLineOpt_SECONDARY_SPCS_HEIGHT */

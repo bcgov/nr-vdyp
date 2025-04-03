@@ -616,7 +616,7 @@ public class ValidatedParameters {
 		// exclude since false: DO_INCLUDE_PROJECTED_MOF_BIOMASS
 		// exclude since false: DO_INCLUDE_PROJECTED_CFS_BIOMASS
 		DEFAULT.selectedExecutionOptions.add(DO_INCLUDE_COLUMN_HEADERS_IN_YIELD_TABLE);
-		DEFAULT.selectedExecutionOptions.add(DO_ALLOW_BASAL_AREA_AND_TREES_PER_HECTARE_VALUE_SUBSTITUTION);
+		DEFAULT.selectedExecutionOptions.add(DO_ALLOW_BA_AND_TPH_VALUE_SUBSTITUTION);
 		// exclude since false: DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE
 
 		// exclude since false: DO_ENABLE_PROGRESS_LOGGING

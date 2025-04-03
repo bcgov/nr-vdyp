@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.MessageSeverityCode;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessageKind;
 import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionContext;
@@ -686,15 +687,19 @@ public class Polygon implements Comparable<Polygon> {
 			layer.doCompleteDefinition();
 		}
 
+		for (Layer layer : getLayers().values()) {
+			layer.doBuildSiteSpecies();
+			layer.doCompleteSiteSpeciesSiteIndexInfo();
+		}
+
 		var rGrowthModel = new Reference<GrowthModelCode>();
 		var rProcessingModel = new Reference<ProcessingModeCode>();
 		var rPrimaryLayer = new Reference<Layer>();
-
+		
 		calculateInitialProcessingModel(rGrowthModel, rProcessingModel, rPrimaryLayer);
 
 		for (Layer layer : getLayers().values()) {
-			layer.doBuildSiteSpecies(rGrowthModel.get());
-			layer.doCompleteSiteSpeciesSiteIndexInfo();
+			layer.doSortSiteSpecies(rGrowthModel.get());
 		}
 
 		Layer deadLayer = getDeadLayer();
@@ -1660,12 +1665,6 @@ public class Polygon implements Comparable<Polygon> {
 
 			// Find the first live-stem Layer that satisfies the criteria. If none do, choose any
 			// live-stem Layer.
-			//
-			// NOTE: the original VDYP7 code finds the first live stem layer, then the second, and
-			// if the first doesn't qualify as a primary layer it simply chooses the second (assuming
-			// one exists) without regard to its qualifications. This seems odd and incomplete, so
-			// here we find the first live-stem layer that is qualified to be a primary and - if none
-			// exist - return the first found.
 			Layer fallbackChoice = null;
 
 			for (Layer candidate : getLayers().values().stream().filter(l -> !l.getIsDeadLayer()).toList()) {
@@ -1697,7 +1696,7 @@ public class Polygon implements Comparable<Polygon> {
 										ValidationMessageKind.NO_PRIMARY_LAYER_SUPPLIED, this,
 										selectedPrimaryLayer.getLayerId()
 								)
-						).build();
+						).severity(MessageSeverityCode.INFORMATION).build();
 				addDefinitionMessage(message);
 			}
 		}

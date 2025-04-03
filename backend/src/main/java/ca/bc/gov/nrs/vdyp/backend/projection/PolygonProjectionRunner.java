@@ -146,6 +146,21 @@ public class PolygonProjectionRunner {
 		}
 	}
 
+	/**
+	 * <b>V7Ext_PerformInitialProcessing</b>
+	 * <p>
+	 * Runs the polygon through its initial processing making it capable of being projected to an arbitrary age or year.
+	 * <p>
+	 * <b>Remarks</b>
+	 * <ul>
+	 * <li>The polygon is processed through VRISTART or FIPSTART depending on the configuration of the polygon
+	 * parameters.
+	 * <li>Traps FIPSTART return codes of -4 in addition to -14.
+	 * <li>Prevents initial processing if the Projections OK flag has been reset.
+	 * </ul>
+	 * 
+	 * @throws PolygonExecutionException to report a range of errors that may be encountered in this step.
+	 */
 	private void performInitialProcessing() throws PolygonExecutionException {
 
 		logger.info("{}: performing initial processing", polygon);
@@ -217,9 +232,24 @@ public class PolygonProjectionRunner {
 	}
 
 	/**
-	 * Determine the processing model to which the stand will be initially subject.
-	 *
-	 * @return as described
+	 * <b>V7Ext_InitialProcessingModeToBeUsed</b>
+	 * <p>
+	 * Determines the processing the stand will be initially subject to. The results are stored in the supplied
+	 * <code>state</code> object.
+	 * <p>
+	 * <b>Remarks</b>
+	 * <ul>
+	 * <li>The processing mode is specified according to how the stand is defined. The mode is completely defined by the
+	 * stand attributes and is not explicitly chosen by the caller.
+	 * <li>The focus of the decision is the species group (sp0).
+	 * <li>Changed FIPSTART decision logic to look at Non-Productive status.
+	 * <li>Expanded the list of possible FIP non-productive codes to be any value rather than a subset.
+	 * <li>Handle sitution where polygon consists solely of a dead layer. Prior to this, if only a dead layer, then the
+	 * primary layer could not be found and an error is returned. Determine the processing model to which the stand will
+	 * be initially subject.
+	 * </ul>
+	 * 
+	 * @param state the initial state of the projection of the polygon to this point.
 	 * @throws PolygonValidationException if the polygon definition contains errors
 	 */
 	private void determineInitialProcessingModel(PolygonProjectionState state) throws PolygonValidationException {
@@ -268,7 +298,7 @@ public class PolygonProjectionRunner {
 			if (leadingSp0 == null) {
 				polygon.disableProjectionsOfType(pt);
 				context.addMessage(
-						Level.ERROR, "Unable to locate a leading species for primary layer {}", selectedPrimaryLayer
+						Level.ERROR, "Unable to locate a leading species for primary layer {0}", selectedPrimaryLayer
 				);
 			} else {
 				logger.debug(
@@ -450,7 +480,17 @@ public class PolygonProjectionRunner {
 			}
 
 			// Determine the stand age, based on the leading site Sp0.
-			var standAge = layer.determineLeadingSp0(0).getSpeciesGroup().getTotalAge();
+			var leadingSp0 = layer.determineLeadingSp0(0);
+			if (leadingSp0 == null) {
+				throw new PolygonExecutionException(
+						MessageFormat.format(
+								"{0}: unable to project since layer {1} has no leading Sp0 at year {2}", polygon, layer,
+								polygon.getReferenceYear()
+						)
+				);
+			}
+
+			var standAge = leadingSp0.getSpeciesGroup().getTotalAge();
 
 			int startYear = adjustMeasurementYearAsNecessary(
 					measurementYear, state.getStartAge(projectionType), standAge

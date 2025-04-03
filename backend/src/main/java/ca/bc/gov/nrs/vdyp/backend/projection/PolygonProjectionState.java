@@ -4,14 +4,11 @@ import static ca.bc.gov.nrs.vdyp.backend.projection.ProjectionStageCode.*;
 
 import java.nio.file.Path;
 import java.text.MessageFormat;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Layer;
-import ca.bc.gov.nrs.vdyp.backend.projection.model.PolygonMessage;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.GrowthModelCode;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProcessingModeCode;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
@@ -20,9 +17,6 @@ public class PolygonProjectionState {
 
 	public record ModelReturnCodeKey(ProjectionStageCode stage, ProjectionTypeCode type) {
 	}
-
-	/** The messages generated during the projection of the polygon. */
-	private List<PolygonMessage> projectionMessages;
 
 	private Map<ProjectionTypeCode, Double> startAgeByProjectionType = null;
 	private Map<ProjectionTypeCode, Double> endAgeByProjectionType = null;
@@ -68,12 +62,6 @@ public class PolygonProjectionState {
 		}
 
 		firstYearYieldsDisplayedByLayer = new HashMap<>();
-
-		projectionMessages = new ArrayList<>();
-	}
-
-	public List<PolygonMessage> getProjectionMessages() {
-		return projectionMessages;
 	}
 
 	public GrowthModelCode getGrowthModelUsedByProjectionType(ProjectionTypeCode projectionType) {

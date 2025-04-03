@@ -623,11 +623,9 @@ public class YieldTable implements Closeable {
 
 		Double totalDiameter = computeDiameter(totalTreesPerHectare, totalBasalArea);
 
-		var result = new EntityGrowthDetails(
+		return new EntityGrowthDetails(
 				siteIndex, dominantHeight, loreyHeight, totalDiameter, totalTreesPerHectare, totalBasalArea
 		);
-
-		return result;
 	}
 
 	/**
@@ -663,10 +661,10 @@ public class YieldTable implements Closeable {
 	 * <li>Added support for optionally turning the substitution of BA/TPH on or off.
 	 * </ul>
 	 *
-	 * @param rowContext       the row object into which the growth information is written
-	 * @param projectedPolygon
-	 * @param vdypPolygon      the source of the growth information
-	 * @param totalAge         year for which the growth information is to be retrieved
+	 * @param rowContext        the row object into which the growth information is written
+	 * @param projectedPolygons the result of projecting the polygon (all years)
+	 * @param vdypPolygon       the source of the growth information
+	 * @param totalAge          year for which the growth information is to be retrieved
 	 * @throws StandYieldCalculationException
 	 */
 	private EntityGrowthDetails getProjectedLayerStandGrowthInfo(
@@ -674,17 +672,148 @@ public class YieldTable implements Closeable {
 	) throws StandYieldCalculationException {
 
 		var leadingSpeciesSp0 = layer.determineLeadingSp0(0);
-		var projectionYear = layer.determineYearAtAge(totalAge);
+		var layerWasProcessed = rowContext.getPolygonProjectionState()
+				.didRunProjection(layer.getAssignedProjectionType());
 
-		Double siteIndex = leadingSpeciesSp0.getSpeciesGroup().getSiteIndex();
+		Double siteIndex = null;
+		if (leadingSpeciesSp0 != null) {
+			siteIndex = leadingSpeciesSp0.getSpeciesGroup().getSiteIndex();
+		}
+
+		var projectionYear = layer.determineYearAtAge(totalAge);
 
 		var layerYields = obtainStandYield(rowContext, projectedPolygons, layer, leadingSpeciesSp0, totalAge);
 
-		// siteIndex, Double dominantHeight, Double loreyHeight, Double diameter, Double treesPerHectare, Double
-		// basalArea
+		double diameter = layerYields.diameter();
+		double treesPerHectare = layerYields.treesPerHectare();
+		double basalArea = layerYields.basalArea125cm();
+		double dominantHeight = layerYields.dominantHeight();
+
+		var measurementYear = layer.getPolygon().getReferenceYear();
+
+		if (layer.getDoSuppressPerHAYields()) {
+			diameter = treesPerHectare = basalArea = Vdyp7Constants.EMPTY_DECIMAL;
+			logger.debug("{}: per-hectare projected values were suppressed", layer);
+		}
+
+		if (!layer.getDoSuppressPerHAYields() && layerWasProcessed) {
+			if (treesPerHectare == Vdyp7Constants.EMPTY_DECIMAL) {
+				treesPerHectare = layer.getTreesPerHectare();
+				logger.debug(
+						"{}: non-processed layer => using reference trees-per-hectare {}", layer,
+						layer.getTreesPerHectare()
+				);
+			}
+
+			if (basalArea == Vdyp7Constants.EMPTY_DECIMAL) {
+				basalArea = layer.getBasalArea();
+				logger.debug("{}: non-processed layer => using reference basal area {}", layer, layer.getBasalArea());
+			}
+		}
+
+		Double suppliedDominantHeight = null;
+		if (leadingSpeciesSp0 != null && leadingSpeciesSp0.getSpeciesGroup().getDominantHeight() != null) {
+			suppliedDominantHeight = leadingSpeciesSp0.getSpeciesGroup().getDominantHeight();
+		}
+
+		// Projected height (going forward) must never be less the reference height.
+		// Projected height (going backwards) must never exceed the reference height.
+
+		if (projectionYear != Vdyp7Constants.EMPTY_INT && measurementYear != null && suppliedDominantHeight != null) {
+
+			if (projectionYear >= measurementYear && dominantHeight < suppliedDominantHeight) {
+
+				logger.debug(
+						"Projected dominant height {} in {} is less than supplied dominant height {}"
+								+ " on or after measurement year {}. Setting dominant height to supplied (\"reference\") height",
+						dominantHeight, projectionYear, suppliedDominantHeight, measurementYear
+				);
+
+				dominantHeight = suppliedDominantHeight;
+			} else if (projectionYear < measurementYear && dominantHeight > suppliedDominantHeight) {
+
+				logger.debug(
+						"Projected dominant height {} in {} is greater than supplied dominant height {}"
+								+ " before measurement year {}. Setting dominant height to supplied (\"reference\") height",
+						dominantHeight, projectionYear, suppliedDominantHeight, measurementYear
+				);
+
+				dominantHeight = suppliedDominantHeight;
+			}
+		}
+
+		// If projected BA/TPH were not supplied but are available on input, copy
+		// the available values over to projected. This also implies that diameter should
+		// be computed as well.
+		//
+		// Further suppress this action if there is a VDYP7 Yield row predicted for
+		// the year in question.
+		//
+		// Relax the constraint so that if the per hectare yields were suppressed
+		// (because of IPSCB206), we will also want input BA/TPH copied forward.
+		//
+		// Added support for optionally turning the substitution of BA/TPH on or off.
+
+		if ( (!layerYields.bYieldsPredicted() || layer.getDoSuppressPerHAYields())
+				&& context.getParams().containsOption(ExecutionOption.DO_ALLOW_BA_AND_TPH_VALUE_SUBSTITUTION)
+				&& basalArea == Vdyp7Constants.EMPTY_DECIMAL && treesPerHectare == Vdyp7Constants.EMPTY_DECIMAL) {
+
+			boolean didCopyBasalArea = false;
+			boolean didCopyTreesPerHectare = false;
+
+			if (layer.getBasalArea() != null) {
+				diameter = Vdyp7Constants.EMPTY_DECIMAL;
+				basalArea = layer.getBasalArea();
+				didCopyBasalArea = true;
+
+				logger.debug(
+						"{}: projected basal area not available. Copying supplied value {} to projected value", layer,
+						layer.getBasalArea()
+				);
+			}
+
+			if (layer.getTreesPerHectare() != null) {
+				diameter = Vdyp7Constants.EMPTY_DECIMAL;
+				treesPerHectare = layer.getTreesPerHectare();
+				didCopyTreesPerHectare = true;
+
+				logger.debug(
+						"{}: projected trees-per-hectare not available. Copying supplied value {} to projected value",
+						layer, layer.getTreesPerHectare()
+				);
+			}
+
+			if (didCopyBasalArea && didCopyTreesPerHectare) {
+				context.addMessage(
+						Level.WARN,
+						"Starting values for basal area and trees-per-hectare copied over for QA and alternative model used for layer {}",
+						layer
+				);
+			} else if (didCopyBasalArea) {
+				context.addMessage(
+						Level.WARN,
+						"Starting values for basal area copied over for QA and alternative model used for layer {}",
+						layer
+				);
+			} else if (didCopyTreesPerHectare) {
+				context.addMessage(
+						Level.WARN,
+						"Starting values for trees-per-hectare copied over for QA and alternative model used for layer {}",
+						layer
+				);
+			}
+		}
+
+		if (diameter <= 0 && basalArea >= 0 && treesPerHectare >= 0) {
+			diameter = computeDiameter(treesPerHectare, basalArea);
+			logger.debug(
+					"{}: diameter computed from basal area/trees-per-hectare ({}. {} -> {})", layer, basalArea,
+					treesPerHectare, diameter
+			);
+		}
+
 		return new EntityGrowthDetails(
-				siteIndex, layerYields.dominantHeight(), layerYields.loreyHeight(), layerYields.diameter(),
-				layerYields.treesPerHectare(), layerYields.basalArea125cm()
+				siteIndex, dominantHeight, layerYields.loreyHeight(), diameter, treesPerHectare, basalArea
 		);
 	}
 
@@ -966,7 +1095,7 @@ public class YieldTable implements Closeable {
 
 		var hasResults = layerYields.bYieldsPredicted() && !layer.getDoSuppressPerHAYields();
 		var doAllowSubstitution = context.getParams()
-				.containsOption(ExecutionOption.DO_ALLOW_BASAL_AREA_AND_TREES_PER_HECTARE_VALUE_SUBSTITUTION);
+				.containsOption(ExecutionOption.DO_ALLOW_BA_AND_TPH_VALUE_SUBSTITUTION);
 		if (basalArea == null && treesPerHectare == null && !hasResults && doAllowSubstitution) {
 
 			var didCopyBasalArea = false;

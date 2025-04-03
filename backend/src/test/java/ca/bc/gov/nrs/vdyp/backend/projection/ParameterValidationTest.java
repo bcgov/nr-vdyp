@@ -569,7 +569,7 @@ class ParameterValidationTest {
 					.addSelectedDebugOptionsItem(DebugOption.DO_INCLUDE_DEBUG_TIMESTAMPS)
 					.addSelectedExecutionOptionsItem(ExecutionOption.BACK_GROW_ENABLED)
 					.addSelectedExecutionOptionsItem(
-							ExecutionOption.DO_ALLOW_BASAL_AREA_AND_TREES_PER_HECTARE_VALUE_SUBSTITUTION
+							ExecutionOption.DO_ALLOW_BA_AND_TPH_VALUE_SUBSTITUTION
 					).addSelectedExecutionOptionsItem(ExecutionOption.DO_ENABLE_DEBUG_LOGGING)
 					.addSelectedExecutionOptionsItem(ExecutionOption.DO_ENABLE_ERROR_LOGGING)
 					.addSelectedExecutionOptionsItem(ExecutionOption.DO_ENABLE_PROGRESS_LOGGING)
@@ -624,7 +624,7 @@ class ParameterValidationTest {
 		Assert.assertTrue(vp.containsOption(DebugOption.DO_INCLUDE_DEBUG_TIMESTAMPS));
 		Assert.assertTrue(vp.containsOption(ExecutionOption.BACK_GROW_ENABLED));
 		Assert.assertTrue(
-				vp.containsOption(ExecutionOption.DO_ALLOW_BASAL_AREA_AND_TREES_PER_HECTARE_VALUE_SUBSTITUTION)
+				vp.containsOption(ExecutionOption.DO_ALLOW_BA_AND_TPH_VALUE_SUBSTITUTION)
 		);
 		Assert.assertTrue(vp.containsOption(ExecutionOption.DO_ENABLE_DEBUG_LOGGING));
 		Assert.assertTrue(vp.containsOption(ExecutionOption.DO_ENABLE_ERROR_LOGGING));

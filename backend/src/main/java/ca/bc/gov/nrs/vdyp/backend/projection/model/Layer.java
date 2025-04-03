@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.vdyp.backend.projection.model;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -131,6 +132,12 @@ public class Layer implements Comparable<Layer> {
 	 */
 	private List<SiteSpecies> siteSpecies;
 
+	/**
+	 * The list is used between the time the SiteSpecies and built and when they are sorted. Once sorted, this
+	 * list is null'd.
+	 */
+	private List<SiteSpecies> unsortedSiteSpecies;
+	
 	/** The type of projection this layer represents. */
 	private ProjectionTypeCode assignedProjectionType;
 
@@ -828,24 +835,47 @@ public class Layer implements Comparable<Layer> {
 	}
 
 	/**
+	 * <b>V7Int_DetermineLeadingSp0</b>
+	 * <p>
 	 * Return the <code>nthLeading</code> species group of the layer.
-	 *
-	 * @param nthLeading the zero-based ordinal identifying the rank to be returned.
-	 * @return as described.
-	 * @throws IllegalStateException when <code>nthLeading</code> is not between 0 and the (number of species groups) -
-	 *                               1, inclusive.
+	 * <p>
+	 * <b>Remarks</b>
+	 * <ul>
+	 * <li>"nth leading" is defined as the SP0 with the highest contributing percent and sorted by decreasing order of
+	 * percent.
+	 * <li>As the layer of leading SP0s is maintained in leading species order, the nth leading SP0 is simply the nth
+	 * element in the array of SP0s.
+	 * <li>If we are returning the nth species group alphabetically. A scan must be made of species in the stand in
+	 * alphabetical order until the requested species is located.
+	 * </ul>
+	 * 
+	 * @param nthLeading the zero-based ordinal identifying the rank to be returned. If there are fewer species in the
+	 *                   layer than this number, <code>null</code> is returned.
+	 * @return as described
 	 */
 	public Stand determineLeadingSp0(Integer nthLeading) {
-		if (nthLeading < siteSpecies.size()) {
-			return siteSpecies.get(nthLeading).getStand();
-		} else {
-			throw new IllegalStateException(
-					MessageFormat.format(
-							"{0}: nthLeading parameter value {1} exceeds the number of site species ({2})", this,
-							nthLeading, siteSpecies.size()
-					)
-			);
+		
+		Stand stand = null;
+		
+		if (siteSpecies != null) {
+			if (nthLeading < siteSpecies.size()) {
+				stand = siteSpecies.get(nthLeading).getStand();
+			}
+		} else if (unsortedSiteSpecies != null) {
+			
+			var leadingSp0 = unsortedSiteSpecies.stream().max(new Comparator<SiteSpecies>() {
+
+				@Override
+				public int compare(SiteSpecies o1, SiteSpecies o2) {
+					return (int)(o1.getTotalSpeciesPercent() - o2.getTotalSpeciesPercent());
+				}});
+			
+			if (leadingSp0.isPresent()) {
+				stand = leadingSp0.get().getStand();
+			}
 		}
+		
+		return stand;
 	}
 
 	/**
@@ -859,7 +889,7 @@ public class Layer implements Comparable<Layer> {
 
 		Species species = null;
 
-		if (nthLeading < siteSpecies.size()) {
+		if (nthLeading < unsortedSiteSpecies.size()) {
 
 			Stand stand = determineLeadingSp0(nthLeading);
 			if (stand != null && stand.getSpeciesByPercent().size() > 0) {
@@ -1033,16 +1063,19 @@ public class Layer implements Comparable<Layer> {
 		return layerAge;
 	}
 
-	public int determineYearAtAge(double age) {
+	public Integer determineYearAtAge(double age) {
 
+		Integer calendarYear = null;
+		
 		var leadingSiteSp0 = determineLeadingSp0(0);
+		if (leadingSiteSp0 != null) {
+			
+			var measurementAge = Math.round(leadingSiteSp0.getSpeciesGroup().getTotalAge());
+			var measurementYear = polygon.getMeasurementYear();
+			calendarYear = (int)(measurementYear + Math.round(age) - measurementAge);
+		}
 
-		var measurementAge = Math.round(leadingSiteSp0.getSpeciesGroup().getTotalAge());
-		var measurementYear = polygon.getMeasurementYear();
-
-		var calendarYear = measurementYear + Math.round(age) - measurementAge;
-
-		return (int) calendarYear;
+		return calendarYear;
 	}
 
 	public void determineAgeAtDeath() throws PolygonValidationException {
@@ -1117,9 +1150,9 @@ public class Layer implements Comparable<Layer> {
 	 *
 	 * @param growthModelCode
 	 */
-	void doBuildSiteSpecies(GrowthModelCode growthModelCode) {
+	void doBuildSiteSpecies() {
 
-		var unsortedSiteSpecies = new ArrayList<SiteSpecies>();
+		unsortedSiteSpecies = new ArrayList<SiteSpecies>();
 
 		SiteSpecies pSiteSpecies = null;
 		SiteSpecies cSiteSpecies = null;
@@ -1185,7 +1218,13 @@ public class Layer implements Comparable<Layer> {
 				unsortedSiteSpecies.add(newSiteSpeciesBuilder.hasBeenCombined(false).build());
 			}
 		}
-
+		
+		// not yet sorted...
+		siteSpecies = null;
+	}
+	
+	void doSortSiteSpecies(GrowthModelCode growthModelCode) {
+		
 		siteSpecies = unsortedSiteSpecies;
 
 		if (growthModelCode == GrowthModelCode.FIP) {

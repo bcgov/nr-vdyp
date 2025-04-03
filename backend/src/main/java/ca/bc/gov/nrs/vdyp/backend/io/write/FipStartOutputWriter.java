@@ -83,38 +83,44 @@ public class FipStartOutputWriter extends AbstractOutputWriter implements Closea
 		boolean speciesWritten = false;
 
 		Stand leadingStand = layer.determineLeadingSp0(0);
-		Species leadingSpecies = leadingStand.getSpeciesByPercent().get(0);
+		if (leadingStand != null) {
+			
+			Species leadingSpecies = leadingStand.getSpeciesByPercent().get(0);
+			if (leadingSpecies != null) {
 
-		writeFormat(
-				layersFile, //
-				LAYER_FORMAT, //
+				writeFormat(
+						layersFile, //
+						LAYER_FORMAT, //
 
-				layer.getPolygon().buildPolygonDescriptor(), //
-				LayerType.PRIMARY.getAlias(), // vdypintperform.c lines 2634 - 2651 - always write "P" for the layer
-												// code.
-				format(leadingSpecies.getTotalAge(), 4, 0), //
-				format(leadingSpecies.getDominantHeight(), 5, 2), //
-				format(leadingSpecies.getSiteIndex(), 5, 2), //
-				format(layer.getCrownClosure(), 5), //
-				leadingStand.getSp0Code(), //
-				leadingSpecies.getSpeciesCode(), //
-				format(leadingSpecies.getYearsToBreastHeight(), 5, 2), //
-				' ', // stocking class - unknown
-				Vdyp7Constants.EMPTY_INT, // inventory type group - unknown
-				format(leadingSpecies.getAgeAtBreastHeight(), 6, 1), //
-				leadingSpecies.getSiteCurve() != null ? format(leadingSpecies.getSiteCurve().n(), 3)
-						: " " + Vdyp7Constants.EMPTY_INT
-		);
+						layer.getPolygon().buildPolygonDescriptor(), //
+						LayerType.PRIMARY.getAlias(), // vdypintperform.c lines 2634 - 2651 - always write "P" for the
+														// layer
+														// code.
+						format(leadingSpecies.getTotalAge(), 4, 0), //
+						format(leadingSpecies.getDominantHeight(), 5, 2), //
+						format(leadingSpecies.getSiteIndex(), 5, 2), //
+						format(layer.getCrownClosure(), 5), //
+						leadingStand.getSp0Code(), //
+						leadingSpecies.getSpeciesCode(), //
+						format(leadingSpecies.getYearsToBreastHeight(), 5, 2), //
+						' ', // stocking class - unknown
+						Vdyp7Constants.EMPTY_INT, // inventory type group - unknown
+						format(leadingSpecies.getAgeAtBreastHeight(), 6, 1), //
+						leadingSpecies.getSiteCurve() != null ? format(leadingSpecies.getSiteCurve().n(), 3)
+								: " " + Vdyp7Constants.EMPTY_INT
+				);
 
-		for (Stand s : layer.getSp0sAsSupplied()) {
-			writeLayerSp0(s);
-			speciesWritten = true;
-		}
+				for (Stand s : layer.getSp0sAsSupplied()) {
+					writeLayerSp0(s);
+					speciesWritten = true;
+				}
 
-		writeLayersEndRecord(layer.getPolygon());
+				writeLayersEndRecord(layer.getPolygon());
 
-		if (speciesWritten) {
-			writeSpeciesEndRecord(layer.getPolygon());
+				if (speciesWritten) {
+					writeSpeciesEndRecord(layer.getPolygon());
+				}
+			}
 		}
 	}
 
