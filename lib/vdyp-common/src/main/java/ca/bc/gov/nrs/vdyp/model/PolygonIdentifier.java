@@ -5,9 +5,13 @@ import java.util.function.IntUnaryOperator;
 
 public class PolygonIdentifier {
 
-	public static final int ID_LENGTH = 25;
+	public static final int MAPSHEET_LENGTH = 9;
+	public static final int POLYGON_NUMBER_LENGTH = 12;
 	public static final int YEAR_LENGTH = 4;
-	public static final int BASE_LENGTH = ID_LENGTH - YEAR_LENGTH;
+	public static final int BASE_LENGTH = MAPSHEET_LENGTH + POLYGON_NUMBER_LENGTH;
+	public static final int ID_LENGTH = BASE_LENGTH + YEAR_LENGTH;
+
+	private static final String _21_BLANKS = "                     ";
 
 	private final String base;
 	private final int year;
@@ -17,8 +21,16 @@ public class PolygonIdentifier {
 			throw new IllegalArgumentException("Polygon identifier base \"" + base + "\" is too long.");
 		if (year < 1)
 			throw new IllegalArgumentException("Polygon identifier year " + year + " must be positive.");
-		this.base = base;
+		this.base = base + _21_BLANKS.substring(base.length());
 		this.year = year;
+	}
+
+	public PolygonIdentifier(String mapSheet, long polygonNumber, String district, int measurementYear) {
+		this.base = String.format(
+				"%-7s%10d%-3s ", mapSheet == null ? "       " : mapSheet, polygonNumber,
+				district == null ? "   " : district
+		);
+		this.year = measurementYear;
 	}
 
 	public static PolygonIdentifier split(String polygonIdentifier) throws IllegalArgumentException {
@@ -26,7 +38,7 @@ public class PolygonIdentifier {
 			throw new IllegalArgumentException(
 					"Polygon identifier \"" + polygonIdentifier + "\" must be exactly " + ID_LENGTH + " characters."
 			);
-		String base = polygonIdentifier.substring(0, BASE_LENGTH).trim();
+		String base = polygonIdentifier.substring(0, BASE_LENGTH);
 		String year = polygonIdentifier.substring(BASE_LENGTH, ID_LENGTH).trim();
 
 		return new PolygonIdentifier(base, Integer.parseInt(year));
@@ -65,7 +77,7 @@ public class PolygonIdentifier {
 	}
 
 	public String toStringCompact() {
-		return COMPACT_FORMAT.formatted(base, year);
+		return COMPACT_FORMAT.formatted(base.trim(), year);
 	}
 
 	@Override

@@ -41,6 +41,8 @@ import ca.bc.gov.nrs.vdyp.common.EstimationMethods;
 import ca.bc.gov.nrs.vdyp.common.ReconcilationMethods;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common.ValueOrMarker;
+import ca.bc.gov.nrs.vdyp.common.VdypApplicationInitializationException;
+import ca.bc.gov.nrs.vdyp.common.VdypApplicationProcessingException;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMapImpl;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
@@ -114,21 +116,22 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 	static final Set<String> HARDWOODS = Set.of("AC", "AT", "D", "E", "MB");
 
-	protected static void doMain(VdypStartApplication<?, ?, ?, ?> app, final String... args) {
+	public void doMain(final String... args)
+			throws VdypApplicationInitializationException, VdypApplicationProcessingException {
 		var resolver = new FileSystemFileResolver();
 
 		try {
-			app.init(resolver, System.out, System.in, args);
+			init(resolver, System.out, System.in, args);
 		} catch (Exception ex) {
 			log.error("Error during initialization", ex);
-			System.exit(CONFIG_LOAD_ERROR);
+			throw new VdypApplicationInitializationException(ex);
 		}
 
 		try {
-			app.process();
+			process();
 		} catch (Exception ex) {
 			log.error("Error during processing", ex);
-			System.exit(PROCESSING_ERROR);
+			throw new VdypApplicationProcessingException(ex);
 		}
 	}
 
@@ -257,8 +260,12 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	public abstract void process() throws ProcessingException;
 
 	@Override
-	public void close() throws IOException {
-		closeVriWriter();
+	public void close() {
+		try {
+			closeVriWriter();
+		} catch (IOException e) {
+			throw new IllegalStateException(e);
+		}
 	}
 
 	protected Coefficients getCoeForSpecies(BaseVdypSpecies<?> species, ControlKey controlKey) {
@@ -373,7 +380,6 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	 * @return
 	 * @throws ProcessingException
 	 */
-	@SuppressWarnings("java:S3776")
 	protected int findItg(List<S> primarySecondary) throws StandProcessingException {
 		var primary = primarySecondary.get(0);
 

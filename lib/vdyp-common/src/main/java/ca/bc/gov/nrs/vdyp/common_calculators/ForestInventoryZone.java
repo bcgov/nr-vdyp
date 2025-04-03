@@ -1,8 +1,6 @@
 package ca.bc.gov.nrs.vdyp.common_calculators;
 
-import static ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexForestInventoryZone.FIZ_COAST;
-import static ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexForestInventoryZone.FIZ_INTERIOR;
-import static ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexForestInventoryZone.FIZ_UNKNOWN;
+import static ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexForestInventoryZone.*;
 
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexForestInventoryZone;
 

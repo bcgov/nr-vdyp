@@ -1,14 +1,8 @@
 package ca.bc.gov.nrs.vdyp.forward;
 
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.assertEmpty;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.assertNext;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.hasItems;
-import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -92,7 +86,7 @@ public class ForwardUtilizationParserTest {
 				utilizations,
 				hasItem(
 						allOf(
-								hasProperty("polygonId", hasProperty("name", is("01002 S000001 00"))),
+								hasProperty("polygonId", hasProperty("name", is("01002 S000001 00     "))),
 								hasProperty("polygonId", hasProperty("year", is(1970))),
 								hasProperty("layerType", is(LayerType.PRIMARY)),
 								hasProperty("genus", is(Optional.empty())),
@@ -149,7 +143,7 @@ public class ForwardUtilizationParserTest {
 				utilizations,
 				hasItems(
 						allOf(
-								hasProperty("polygonId", hasProperty("name", is("01002 S000001 00"))),
+								hasProperty("polygonId", hasProperty("name", is("01002 S000001 00     "))),
 								hasProperty("polygonId", hasProperty("year", is(1970))),
 								hasProperty("layerType", is(LayerType.PRIMARY)),
 								hasProperty("genus", is(Optional.empty())),
@@ -163,7 +157,7 @@ public class ForwardUtilizationParserTest {
 								hasProperty("genusIndex", is(0)), hasProperty("quadraticMeanDiameterAtBH", is(6.1f))
 						),
 						allOf(
-								hasProperty("polygonId", hasProperty("name", is("01002 S000001 00"))),
+								hasProperty("polygonId", hasProperty("name", is("01002 S000001 00     "))),
 								hasProperty("polygonId", hasProperty("year", is(1970))),
 								hasProperty("layerType", is(LayerType.PRIMARY)),
 								hasProperty("genus", is(Optional.empty())),

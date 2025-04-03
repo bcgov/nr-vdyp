@@ -1,13 +1,8 @@
 package ca.bc.gov.nrs.vdyp.forward;
 
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.assertEmpty;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.assertNext;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -225,7 +220,7 @@ class ForwardPolygonParserTest {
 
 		poly = assertNext(stream); // 7
 
-		assertThat(poly, hasProperty("polygonIdentifier", hasProperty("name", is("01004 S000002 00"))));
+		assertThat(poly, hasProperty("polygonIdentifier", hasProperty("name", is("01004 S000002 00     "))));
 		assertThat(poly, hasProperty("polygonIdentifier", hasProperty("year", is(1953))));
 		assertThat(poly, hasProperty("biogeoclimaticZone", hasProperty("alias", is("CWH"))));
 		assertThat(poly, hasProperty("forestInventoryZone", is("B")));
@@ -235,7 +230,7 @@ class ForwardPolygonParserTest {
 
 		poly = assertNext(stream); // 8
 
-		assertThat(poly, hasProperty("polygonIdentifier", hasProperty("name", is("01004 S000036 00"))));
+		assertThat(poly, hasProperty("polygonIdentifier", hasProperty("name", is("01004 S000036 00     "))));
 		assertThat(poly, hasProperty("polygonIdentifier", hasProperty("year", is(1957))));
 		assertThat(poly, hasProperty("biogeoclimaticZone", hasProperty("alias", is("MH"))));
 		assertThat(poly, hasProperty("forestInventoryZone", is("B")));
@@ -245,7 +240,7 @@ class ForwardPolygonParserTest {
 
 		poly = assertNext(stream); // 9
 
-		assertThat(poly, hasProperty("polygonIdentifier", hasProperty("name", is("01004 S000037 00"))));
+		assertThat(poly, hasProperty("polygonIdentifier", hasProperty("name", is("01004 S000037 00     "))));
 		assertThat(poly, hasProperty("polygonIdentifier", hasProperty("year", is(1957))));
 		assertThat(poly, hasProperty("biogeoclimaticZone", hasProperty("alias", is("SBS"))));
 		assertThat(poly, hasProperty("forestInventoryZone", is("B")));
@@ -255,7 +250,7 @@ class ForwardPolygonParserTest {
 
 		poly = assertNext(stream); // 10
 
-		assertThat(poly, hasProperty("polygonIdentifier", hasProperty("name", is("01004 S000038 00"))));
+		assertThat(poly, hasProperty("polygonIdentifier", hasProperty("name", is("01004 S000038 00     "))));
 		assertThat(poly, hasProperty("polygonIdentifier", hasProperty("year", is(1957))));
 		assertThat(poly, hasProperty("biogeoclimaticZone", hasProperty("alias", is("CWH"))));
 		assertThat(poly, hasProperty("forestInventoryZone", is("B")));

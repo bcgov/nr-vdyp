@@ -3,6 +3,8 @@ package ca.bc.gov.nrs.vdyp.io.write;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -38,8 +40,7 @@ public class VdypOutputWriter implements Closeable {
 	protected final OutputStream polygonFile;
 	protected final OutputStream speciesFile;
 	protected final OutputStream utilizationFile;
-	@SuppressWarnings("unused")
-	private Optional<OutputStream> compatibilityVariablesFile;
+	protected Optional<OutputStream> compatibilityVariablesFile;
 
 	private ResolvedControlMap controlMap;
 
@@ -56,32 +57,32 @@ public class VdypOutputWriter implements Closeable {
 	static final float EMPTY_FLOAT = -9f;
 	static final int EMPTY_INT = -9;
 
-	// FORMAT(A25, 1x,A4,1x,A1,I6, I3, I3 , I3 )
+	// FORMAT(A25, 1x, A4, 1x, A1, I6, I3, I3, I3 )
 	static final String POLY_FORMAT = POLY_IDENTIFIER_FORMAT + " %-4s %1s%6d%3d%3d%3d\n";
 
-	// FORMAT(A25,1x,A1,1x,I2,1x,A2,1x,A32,2f6.2,3f6.1,I2,I3)
+	// FORMAT(A25, 1x, A1, 1x, I2, 1x, A2, 1x, A32, 2f6.2, 3f6.1, I2, I3)
 	static final String SPEC_FORMAT = POLY_IDENTIFIER_FORMAT + " " + LAYER_TYPE_FORMAT + " " + SPEC_INDEX_FORMAT + " "
 			+ SPEC_IDENTIFIER_FORMAT + " " + SPEC_DIST_FORMAT.repeat(4) + DISTANCE_FORMAT.repeat(2)
 			+ AGE_FORMAT.repeat(3) + "%2d%3d\n";
 
 	// 082E004 615 1988 P 0 0 19.97867 1485.82 13.0660 117.9938 67.7539 67.0665
 	// 66.8413 65.4214 13.1
-	// FORMAT (A25, 1x, A1, 1x, I2, 1x, A2, I3,
-	// 1 F9.5, F9.2, F9.4, 5F9.4, F6.1)
+	// FORMAT (A25, 1x, A1, 1x, I2, 1x, A2, I3, F9.5, F9.2, F9.4, 5F9.4, F6.1)
 	static final String UTIL_FORMAT = POLY_IDENTIFIER_FORMAT + " " + LAYER_TYPE_FORMAT + " " + SPEC_INDEX_FORMAT + " "
 			+ SPEC_IDENTIFIER_FORMAT + "%3d%9.5f%9.2f%9.4f%9.4f%9.4f%9.4f%9.4f%9.4f%6.1f\n";
 
 	static final String END_RECORD_FORMAT = POLY_IDENTIFIER_FORMAT + "  \n";
 
 	/**
-	 * Create a writer for Vdyp output files using provided OutputStreams. The Streams will be closed when the writer is
-	 * closed.
+	 * Create a writer for Vdyp output files using the provided OutputStreams and an empty Optional for the
+	 * compatibility variables file. The controlMap provided is used by the implementation when needed.
+	 * <p>
+	 * The Streams will be closed when the writer is closed.
 	 *
 	 * @param controlMap
 	 * @param polygonFile
 	 * @param speciesFile
 	 * @param utilizationFile
-	 * @param compatibilityVariablesFile
 	 */
 	public VdypOutputWriter(
 			Map<String, Object> controlMap, OutputStream polygonFile, OutputStream speciesFile,
@@ -91,15 +92,16 @@ public class VdypOutputWriter implements Closeable {
 	}
 
 	/**
-	 * Create a writer for Vdyp output files using provided OutputStreams. The Streams will be closed when the writer is
-	 * closed.
+	 * Create a writer for Vdyp output files using provided OutputStreams. The controlMap provided is used by the
+	 * implementation when needed.
+	 * <p>
+	 * The Streams will be closed when the writer is closed.
 	 *
 	 * @param controlMap
 	 * @param polygonFile
 	 * @param speciesFile
 	 * @param utilizationFile
 	 * @param compatibilityVariablesFile
-	 * @param controlMap
 	 */
 	public VdypOutputWriter(
 			Map<String, Object> controlMap, OutputStream polygonFile, OutputStream speciesFile,
@@ -113,21 +115,44 @@ public class VdypOutputWriter implements Closeable {
 	}
 
 	/**
-	 * Create a writer for Vdyp output files configured using the given control map.
+	 * Create a writer for Vdyp output files. The output streams are created from values in the given control map
+	 * resolved against the given resolver.
 	 *
-	 * @param polygonFile
-	 * @param speciesFile
-	 * @param utilizationFile
 	 * @param controlMap
+	 * @param resolver
 	 */
 	public VdypOutputWriter(Map<String, Object> controlMap, FileResolver resolver) throws IOException {
 		this(
-				controlMap, getOutputStream(controlMap, resolver, ControlKey.VDYP_OUTPUT_VDYP_POLYGON.name()),
-				getOutputStream(controlMap, resolver, ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SPECIES.name()),
-				getOutputStream(controlMap, resolver, ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name()),
-				controlMap.containsKey(ControlKey.VDYP_OUTPUT_COMPATIBILITY_VARIABLES.name()) ? Optional.of(
-						getOutputStream(controlMap, resolver, ControlKey.VDYP_OUTPUT_COMPATIBILITY_VARIABLES.name())
-				) : Optional.empty()
+				controlMap, //
+				getOutputStream(controlMap, resolver, ControlKey.VDYP_OUTPUT_VDYP_POLYGON.name()), //
+				getOutputStream(controlMap, resolver, ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SPECIES.name()), //
+				getOutputStream(controlMap, resolver, ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name()), //
+				controlMap.containsKey(ControlKey.VDYP_OUTPUT_COMPATIBILITY_VARIABLES.name()) //
+						? Optional.of(
+								getOutputStream(
+										controlMap, resolver, ControlKey.VDYP_OUTPUT_COMPATIBILITY_VARIABLES.name()
+								)
+						) //
+						: Optional.empty() //
+		);
+	}
+
+	/**
+	 * Create a writer for Vdyp output files. The output streams are created from values in the given control map
+	 * already assumed to have been resolved (i.e., be absolute path names).
+	 *
+	 * @param controlMap
+	 */
+	public VdypOutputWriter(Map<String, Object> controlMap) throws IOException {
+		this(
+				controlMap, //
+				getOutputStream(controlMap, ControlKey.VDYP_OUTPUT_VDYP_POLYGON.name()), //
+				getOutputStream(controlMap, ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SPECIES.name()), //
+				getOutputStream(controlMap, ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name()), //
+				controlMap.containsKey(ControlKey.VDYP_OUTPUT_COMPATIBILITY_VARIABLES.name())
+						? Optional
+								.of(getOutputStream(controlMap, ControlKey.VDYP_OUTPUT_COMPATIBILITY_VARIABLES.name()))
+						: Optional.empty()
 		);
 	}
 
@@ -245,10 +270,15 @@ public class VdypOutputWriter implements Closeable {
 		}
 	}
 
-	static OutputStream getOutputStream(Map<String, Object> controlMap, FileResolver resolver, String key)
+	private static OutputStream getOutputStream(Map<String, Object> controlMap, FileResolver resolver, String key)
 			throws IOException {
 		String fileName = Utils.expectParsedControl(controlMap, key, String.class);
 		return resolver.resolveForOutput(fileName);
+	}
+
+	private static OutputStream getOutputStream(Map<String, Object> controlMap, String key) throws IOException {
+		var outputFilePath = Utils.expectParsedControl(controlMap, key, Path.class);
+		return Files.newOutputStream(outputFilePath);
 	}
 
 	private PolygonIdentifier getCurrentPolygonDescriptor(PolygonIdentifier originalIdentifier) {
@@ -436,8 +466,9 @@ public class VdypOutputWriter implements Closeable {
 
 	@Override
 	public void close() throws IOException {
-		polygonFile.close();
-		speciesFile.close();
-		utilizationFile.close();
+		Utils.close(polygonFile);
+		Utils.close(speciesFile);
+		Utils.close(utilizationFile);
+		compatibilityVariablesFile.ifPresent(x -> Utils.close(x));
 	}
 }

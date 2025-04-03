@@ -35,7 +35,7 @@ public class VdypPolygonDescriptionParser implements ControlMapValueReplacer<Obj
 
 		if (matcher.matches() && matcher.group(2) != null) {
 			year = Integer.parseInt(matcher.group(2));
-			name = matcher.group(1).trim();
+			name = matcher.group(1);
 		} else {
 			throw new ResourceParseException(
 					"Polygon description " + description + " did not end with a four-digit year value."
@@ -57,7 +57,7 @@ public class VdypPolygonDescriptionParser implements ControlMapValueReplacer<Obj
 				public boolean isStopLine(String line) {
 					return line.substring(0, Math.min(25, line.length())).trim().length() == 0;
 				}
-			}.strippedString(25, DESCRIPTION);
+			}.value(25, DESCRIPTION, ValueParser.STRING_UNSTRIPPED);
 
 			var is = fileResolver.resolveForInput(fileName);
 

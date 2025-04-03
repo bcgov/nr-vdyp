@@ -1,17 +1,8 @@
 package ca.bc.gov.nrs.vdyp.forward;
 
-import static ca.bc.gov.nrs.vdyp.model.UtilizationClass.OVER225;
-import static ca.bc.gov.nrs.vdyp.model.UtilizationClass.U125TO175;
-import static ca.bc.gov.nrs.vdyp.model.UtilizationClass.U175TO225;
-import static ca.bc.gov.nrs.vdyp.model.UtilizationClass.U75TO125;
-import static ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable.BASAL_AREA;
-import static ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable.LOREY_HEIGHT;
-import static ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable.QUAD_MEAN_DIAMETER;
-import static ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable.WHOLE_STEM_VOLUME;
-import static ca.bc.gov.nrs.vdyp.model.VolumeVariable.CLOSE_UTIL_VOL;
-import static ca.bc.gov.nrs.vdyp.model.VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY;
-import static ca.bc.gov.nrs.vdyp.model.VolumeVariable.CLOSE_UTIL_VOL_LESS_DECAY_LESS_WASTAGE;
-import static ca.bc.gov.nrs.vdyp.model.VolumeVariable.WHOLE_STEM_VOL;
+import static ca.bc.gov.nrs.vdyp.model.UtilizationClass.*;
+import static ca.bc.gov.nrs.vdyp.model.UtilizationClassVariable.*;
+import static ca.bc.gov.nrs.vdyp.model.VolumeVariable.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 

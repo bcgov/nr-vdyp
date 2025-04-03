@@ -105,22 +105,22 @@
 
 
 199  2 3 2 2 0 2 0 1 1 0 415 5 713 3 0 0 0 0 0 1 0 0 0Debug switches (25) 0=default See IPSJF155, App. IX
-                                                      (1) = 1 to DIASABLE species dynamics
+                                                      (1) = 1 to DISABLE species dynamics
                                                       (2) = n, maximum BH age in BA and DQ eqns = 100*n.
                                                       (3) = 0 Fiat BA growth model (approach to yield curves)
                                                           = 1 to invoke empirical BA growth model (see IPSJF176)
                                                           = 2 invoke empirical growth model PLUS mixing with fiat model.                                                      
                                                       (4) = (1,2) to use limits (SEQ108-GRPBA1, SEQ043-(CI,Pri))  
-                                                          = 0,  defaults to option 2 at present.
+                                                          = 0, defaults to option 2 at present.
                                                       (5) MATH77 Error message control. Should be zero.
                                                           or 1 will show some errors, 2 shows all errors.
                                                       (6) = 0 for fiat DQ growth model (see IPSJF176, and SEQ 117)
-                                                          =1  for empirical, 2 for mixed .   Recommend: 0 or 2.                                                                        
+                                                          = 1 for empirical, 2 for mixed. Recommend: 0 or 2.                                                                        
                                                       (7) Not used
                                                       (8) = 1 to force growth in non-primary HL to zero when del HD=0
                                                            -2 same as 1, but also applies to primary species.
-                                                      (9) =1 for limited BA incr if DQ upper limit hit, else 0  (2009.03.18)
+                                                      (9) = 1 for limited BA incr if DQ upper limit hit, else 0  (2009.03.18)
                                                       (10) Not used.
                                                       (11-20) Controls Ht/Age/SI fillin. See IPSJF174.doc
                                                       Above values f. Cam bartram 14MAR2002
-                                                      (22)  1 implies a preferred sp is primary if ba >.9995 of other.
+                                                      (22) 1 implies a preferred sp is primary if ba >.9995 of other.

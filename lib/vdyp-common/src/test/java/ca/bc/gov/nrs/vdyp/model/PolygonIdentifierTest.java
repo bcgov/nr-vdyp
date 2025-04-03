@@ -1,10 +1,7 @@
 package ca.bc.gov.nrs.vdyp.model;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.params.ParameterizedTest;
@@ -17,9 +14,10 @@ class PolygonIdentifierTest {
 	@CsvFileSource(resources = { "PolygonIdentifierTestValid.csv" }, numLinesToSkip = 1, useHeadersInDisplayName = true)
 	void testSplit(String id, String base, int year) {
 		var result = PolygonIdentifier.split(id);
+		var polyId = new PolygonIdentifier(base, year);
 		assertThat(result, equalTo(new PolygonIdentifier(base, year)));
-		assertThat(result.getBase(), is(base));
-		assertThat(result.getYear(), is(year));
+		assertThat(result.getBase(), is(polyId.getBase()));
+		assertThat(result.getYear(), is(polyId.getYear()));
 	}
 
 	@ParameterizedTest
