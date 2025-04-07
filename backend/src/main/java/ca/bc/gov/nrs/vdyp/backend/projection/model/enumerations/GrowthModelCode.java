@@ -12,6 +12,6 @@ public enum GrowthModelCode {
 	UNKNOWN;
 
 	public static GrowthModelCode getDefault() {
-		return UNKNOWN;
+		return VRI;
 	}
 }

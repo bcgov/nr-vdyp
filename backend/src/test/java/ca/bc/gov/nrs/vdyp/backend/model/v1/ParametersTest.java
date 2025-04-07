@@ -30,9 +30,7 @@ public class ParametersTest {
 		op.addSelectedDebugOptionsItem(DebugOption.DO_INCLUDE_DEBUG_TIMESTAMPS);
 
 		op.addSelectedExecutionOptionsItem(ExecutionOption.BACK_GROW_ENABLED);
-		op.addSelectedExecutionOptionsItem(
-				ExecutionOption.DO_ALLOW_BA_AND_TPH_VALUE_SUBSTITUTION
-		);
+		op.addSelectedExecutionOptionsItem(ExecutionOption.DO_ALLOW_BA_AND_TPH_VALUE_SUBSTITUTION);
 		op.addSelectedExecutionOptionsItem(ExecutionOption.DO_ENABLE_DEBUG_LOGGING);
 		op.addSelectedExecutionOptionsItem(ExecutionOption.DO_ENABLE_ERROR_LOGGING);
 		op.addSelectedExecutionOptionsItem(ExecutionOption.DO_ENABLE_PROGRESS_LOGGING);

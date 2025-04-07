@@ -12,11 +12,12 @@ public abstract class AbstractProjectionRequestException extends Exception {
 	private final List<ValidationMessage> validationMessages;
 
 	public AbstractProjectionRequestException(List<ValidationMessage> validationMessages) {
+		super(buildMessage(validationMessages));
 		this.validationMessages = validationMessages;
 	}
 
-	public AbstractProjectionRequestException(List<ValidationMessage> validationMessages, Exception cause) {
-		super(cause);
+	public AbstractProjectionRequestException(String message, List<ValidationMessage> validationMessages) {
+		super((message != null ? (message + ": ") : "") + buildMessage(validationMessages));
 		this.validationMessages = validationMessages;
 	}
 
@@ -28,23 +29,43 @@ public abstract class AbstractProjectionRequestException extends Exception {
 		}
 	}
 
-	public AbstractProjectionRequestException(String cause, Exception e) {
-		super(cause, e);
+	public AbstractProjectionRequestException(String message, Exception e) {
+		super(message, e);
 		validationMessages = new ArrayList<ValidationMessage>();
-		if (cause != null) {
-			validationMessages.add(new ValidationMessage(ValidationMessageKind.GENERIC, cause));
+		if (message != null) {
+			validationMessages.add(new ValidationMessage(ValidationMessageKind.GENERIC, message));
 		}
 	}
 
-	public AbstractProjectionRequestException(String cause) {
-		super(cause);
+	public AbstractProjectionRequestException(String message) {
+		super(message);
 		validationMessages = new ArrayList<ValidationMessage>();
-		if (cause != null) {
-			validationMessages.add(new ValidationMessage(ValidationMessageKind.GENERIC, cause));
+		if (message != null) {
+			validationMessages.add(new ValidationMessage(ValidationMessageKind.GENERIC, message));
+		}
+	}
+
+	public AbstractProjectionRequestException(String message, Error e) {
+		super(message, e);
+		validationMessages = new ArrayList<ValidationMessage>();
+		if (message != null) {
+			validationMessages.add(new ValidationMessage(ValidationMessageKind.GENERIC, message));
 		}
 	}
 
 	public List<ValidationMessage> getValidationMessages() {
 		return validationMessages;
+	}
+	
+	private static String buildMessage(List<ValidationMessage> validationMessages) {
+		if (validationMessages.size() > 0) {
+			StringBuffer sb = new StringBuffer(validationMessages.get(0).toString());
+			for (int i = 1; i < validationMessages.size(); i++) {
+				sb.append("; ").append(validationMessages.get(i).getMessage());
+			}
+			return sb.toString();
+		} else {
+			return "";
+		}
 	}
 }

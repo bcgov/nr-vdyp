@@ -24,11 +24,11 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.AbstractProjectionRequestException;
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionInternalExecutionException;
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonExecutionException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.YieldTableGenerationException;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ProjectionRequestKind;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.UtilizationClassSet;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Polygon;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
 import ca.bc.gov.nrs.vdyp.backend.projection.output.IMessageLog;
@@ -36,13 +36,12 @@ import ca.bc.gov.nrs.vdyp.backend.projection.output.MessageLog;
 import ca.bc.gov.nrs.vdyp.backend.projection.output.NullMessageLog;
 import ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable.YieldTable;
 import ca.bc.gov.nrs.vdyp.backend.utils.Utils;
-import ca.bc.gov.nrs.vdyp.si32.vdyp.SP0Name;
 
 public class ProjectionContext {
 
 	private static final Logger logger = LoggerFactory.getLogger(ProjectionContext.class);
 
-	private static final int EXECUTION_FOLDER_RETENTION_TIME_m = 30;
+	public static final int EXECUTION_FOLDER_RETENTION_TIME_m = 30;
 
 	private record ProjectionDetails(int startYear, int firstRequestedYear) {
 	};
@@ -65,8 +64,6 @@ public class ProjectionContext {
 	private FileSystem resourceFileSystem;
 
 	private Map<Long, Map<ProjectionTypeCode, ProjectionDetails>> projectionDetailsMap = new HashMap<>();
-
-	private Map<SP0Name, UtilizationClassSet> speciesReportingLevels = new HashMap<>();
 
 	public ProjectionContext(
 			ProjectionRequestKind requestKind, String projectionId, Parameters params, boolean isTrialRun
@@ -163,10 +160,10 @@ public class ProjectionContext {
 	 * This method replicates the logic in VDYP7CORE_RunVDYPModel
 	 */
 	private void applyVDYP7Limits() {
-
+		// TODO
 	}
 
-	private void buildProjectionExecutionStructure() throws ProjectionInternalExecutionException {
+	private void buildProjectionExecutionStructure() throws PolygonExecutionException {
 
 		if (this.executionFolder != null) {
 			throw new IllegalStateException(
@@ -193,7 +190,7 @@ public class ProjectionContext {
 			logger.info("{}: execution folder is {}", projectionId, executionFolder);
 
 		} catch (IOException e) {
-			throw new ProjectionInternalExecutionException(e);
+			throw new PolygonExecutionException(e);
 		}
 	}
 
@@ -220,49 +217,69 @@ public class ProjectionContext {
 			} catch (YieldTableGenerationException e) {
 				logger.error("Encountered exception closing the yield table of projection " + projectionId, e);
 			}
+		}
+	}
 
-			// Close the fileSystem instance (possibly) opened in buildProjectionExecutionStructure
-			Utils.close(resourceFileSystem, "resourceFileSystem");
+	public void close() {
 
-			// Finally, delete the execution folder tree EXECUTION_FOLDER_RETENTION_TIME_m minutes from now.
+		// Close the fileSystem instance (possibly) opened in buildProjectionExecutionStructure
+		Utils.close(resourceFileSystem, "resourceFileSystem");
 
+		// Finally, delete the execution folder tree EXECUTION_FOLDER_RETENTION_TIME_m minutes from now.
+
+		if (validatedParams.containsOption(ExecutionOption.DO_DELAY_EXECUTION_FOLDER_DELETION)) {
 			logger.info(
-					"Scheduling deletion of execution folder {} for {}", executionFolder,
+					"Scheduling deletion of execution folder {} for {}m", executionFolder,
 					LocalDateTime.now().plusMinutes(EXECUTION_FOLDER_RETENTION_TIME_m)
 			);
 
-			executorService.submit(() -> {
-				Utils.sleep(EXECUTION_FOLDER_RETENTION_TIME_m * 60 * 1000L);
+			executorService.submit(new ExecutionFolderRemover(EXECUTION_FOLDER_RETENTION_TIME_m * 60 * 1000L));
+		} else {
+			logger.info("Deleting execution folder {}", executionFolder);
+			new ExecutionFolderRemover(0 /* no delay */).run();
+		}
+	}
 
-				FileVisitor<Path> visitor = new SimpleFileVisitor<Path>() {
-					@Override
-					public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-						Files.delete(file);
-						return FileVisitResult.CONTINUE;
-					}
+	private class ExecutionFolderRemover implements Runnable {
 
-					@Override
-					public FileVisitResult postVisitDirectory(Path dir, IOException e) throws IOException {
-						if (e == null) {
-							Files.delete(dir);
-							return FileVisitResult.CONTINUE;
-						} else {
-							// directory iteration failed
-							throw e;
-						}
-					}
-				};
+		private long delay_ms = 0;
 
-				try {
-					Files.walkFileTree(executionFolder, visitor);
-					logger.info("Deletion of execution folder {} completed", executionFolder);
-				} catch (IOException e) {
-					logger.info(
-							"Deletion of execution folder {} failed{}", executionFolder,
-							e.getCause() != null ? ". Reason: " + e.getCause() : ""
-					);
+		public ExecutionFolderRemover(long delay_ms) {
+			this.delay_ms = delay_ms;
+		}
+
+		@Override
+		public void run() {
+			Utils.sleep(delay_ms);
+
+			FileVisitor<Path> visitor = new SimpleFileVisitor<Path>() {
+				@Override
+				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+					Files.delete(file);
+					return FileVisitResult.CONTINUE;
 				}
-			});
+
+				@Override
+				public FileVisitResult postVisitDirectory(Path dir, IOException e) throws IOException {
+					if (e == null) {
+						Files.delete(dir);
+						return FileVisitResult.CONTINUE;
+					} else {
+						// directory iteration failed
+						throw e;
+					}
+				}
+			};
+
+			try {
+				Files.walkFileTree(executionFolder, visitor);
+				logger.info("Deletion of execution folder {} completed", executionFolder);
+			} catch (IOException e) {
+				logger.info(
+						"Deletion of execution folder {} failed{}", executionFolder,
+						e.getCause() != null ? ". Reason: " + e.getCause() : ""
+				);
+			}
 		}
 	}
 
@@ -313,7 +330,6 @@ public class ProjectionContext {
 		switch (level) {
 		case ERROR:
 			errorLog.addMessage(messageText);
-			logger.error(messageText);
 			break;
 		case WARN:
 			logger.warn(messageText);

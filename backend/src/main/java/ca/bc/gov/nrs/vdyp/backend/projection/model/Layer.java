@@ -133,11 +133,11 @@ public class Layer implements Comparable<Layer> {
 	private List<SiteSpecies> siteSpecies;
 
 	/**
-	 * The list is used between the time the SiteSpecies and built and when they are sorted. Once sorted, this
-	 * list is null'd.
+	 * The list is used between the time the SiteSpecies and built and when they are sorted. Once sorted, this list is
+	 * null'd.
 	 */
 	private List<SiteSpecies> unsortedSiteSpecies;
-	
+
 	/** The type of projection this layer represents. */
 	private ProjectionTypeCode assignedProjectionType;
 
@@ -574,8 +574,9 @@ public class Layer implements Comparable<Layer> {
 		var rGrowthModel = new Reference<GrowthModelCode>();
 		var rProcessingModel = new Reference<ProcessingModeCode>();
 		var rPrimaryLayer = new Reference<Layer>();
+		var rProjectionType = new Reference<ProjectionTypeCode>();
 
-		polygon.calculateInitialProcessingModel(rGrowthModel, rProcessingModel, rPrimaryLayer);
+		polygon.calculateInitialProcessingModel(rGrowthModel, rProcessingModel, rPrimaryLayer, rProjectionType);
 
 		GrowthModelCode newGrowthModel = rGrowthModel.get();
 		if (newGrowthModel != currentGrowthModel && !doPreventRecursiveCalls) {
@@ -848,33 +849,34 @@ public class Layer implements Comparable<Layer> {
 	 * <li>If we are returning the nth species group alphabetically. A scan must be made of species in the stand in
 	 * alphabetical order until the requested species is located.
 	 * </ul>
-	 * 
+	 *
 	 * @param nthLeading the zero-based ordinal identifying the rank to be returned. If there are fewer species in the
 	 *                   layer than this number, <code>null</code> is returned.
 	 * @return as described
 	 */
 	public Stand determineLeadingSp0(Integer nthLeading) {
-		
+
 		Stand stand = null;
-		
+
 		if (siteSpecies != null) {
 			if (nthLeading < siteSpecies.size()) {
 				stand = siteSpecies.get(nthLeading).getStand();
 			}
 		} else if (unsortedSiteSpecies != null) {
-			
+
 			var leadingSp0 = unsortedSiteSpecies.stream().max(new Comparator<SiteSpecies>() {
 
 				@Override
 				public int compare(SiteSpecies o1, SiteSpecies o2) {
-					return (int)(o1.getTotalSpeciesPercent() - o2.getTotalSpeciesPercent());
-				}});
-			
+					return (int) (o1.getTotalSpeciesPercent() - o2.getTotalSpeciesPercent());
+				}
+			});
+
 			if (leadingSp0.isPresent()) {
 				stand = leadingSp0.get().getStand();
 			}
 		}
-		
+
 		return stand;
 	}
 
@@ -1066,13 +1068,13 @@ public class Layer implements Comparable<Layer> {
 	public Integer determineYearAtAge(double age) {
 
 		Integer calendarYear = null;
-		
+
 		var leadingSiteSp0 = determineLeadingSp0(0);
 		if (leadingSiteSp0 != null) {
-			
+
 			var measurementAge = Math.round(leadingSiteSp0.getSpeciesGroup().getTotalAge());
 			var measurementYear = polygon.getMeasurementYear();
-			calendarYear = (int)(measurementYear + Math.round(age) - measurementAge);
+			calendarYear = (int) (measurementYear + Math.round(age) - measurementAge);
 		}
 
 		return calendarYear;
@@ -1218,13 +1220,13 @@ public class Layer implements Comparable<Layer> {
 				unsortedSiteSpecies.add(newSiteSpeciesBuilder.hasBeenCombined(false).build());
 			}
 		}
-		
+
 		// not yet sorted...
 		siteSpecies = null;
 	}
-	
+
 	void doSortSiteSpecies(GrowthModelCode growthModelCode) {
-		
+
 		siteSpecies = unsortedSiteSpecies;
 
 		if (growthModelCode == GrowthModelCode.FIP) {

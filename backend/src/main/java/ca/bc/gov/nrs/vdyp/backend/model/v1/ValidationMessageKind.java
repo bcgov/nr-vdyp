@@ -83,9 +83,13 @@ public enum ValidationMessageKind {
 	), //
 	ASSIGNING_CONVERTED_ESTIMATED_SITE_INDEX(
 			"Assigning converted estimated site index of {0} to Species \"{1}\" and recomputing input height"
-	), // 
-	USING_SUPPLIED_BASAL_AREA_IN_PROJECTION("{}: starting value for basal area copied over for QA and alternative model used"), //
-	USING_SUPPLIED_TPH_IN_PROJECTION("{}: starting value for trees-per-hectare copied over for QA and alternative model used"), //
+	), //
+	USING_SUPPLIED_BASAL_AREA_IN_PROJECTION(
+			"{}: starting value for basal area copied over for QA and alternative model used"
+	), //
+	USING_SUPPLIED_TPH_IN_PROJECTION(
+			"{}: starting value for trees-per-hectare copied over for QA and alternative model used"
+	), //
 	MISSING_LEADING_SPECIES("{}: layer is missing a leading species"), //
 	;
 

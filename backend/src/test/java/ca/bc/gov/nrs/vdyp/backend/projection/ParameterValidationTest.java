@@ -568,9 +568,9 @@ class ParameterValidationTest {
 					.addSelectedDebugOptionsItem(DebugOption.DO_INCLUDE_DEBUG_ROUTINE_NAMES)
 					.addSelectedDebugOptionsItem(DebugOption.DO_INCLUDE_DEBUG_TIMESTAMPS)
 					.addSelectedExecutionOptionsItem(ExecutionOption.BACK_GROW_ENABLED)
-					.addSelectedExecutionOptionsItem(
-							ExecutionOption.DO_ALLOW_BA_AND_TPH_VALUE_SUBSTITUTION
-					).addSelectedExecutionOptionsItem(ExecutionOption.DO_ENABLE_DEBUG_LOGGING)
+					.addSelectedExecutionOptionsItem(ExecutionOption.DO_ALLOW_BA_AND_TPH_VALUE_SUBSTITUTION)
+					.addSelectedExecutionOptionsItem(ExecutionOption.DO_ENABLE_DEBUG_LOGGING)
+					.addSelectedExecutionOptionsItem(ExecutionOption.DO_DELAY_EXECUTION_FOLDER_DELETION)
 					.addSelectedExecutionOptionsItem(ExecutionOption.DO_ENABLE_ERROR_LOGGING)
 					.addSelectedExecutionOptionsItem(ExecutionOption.DO_ENABLE_PROGRESS_LOGGING)
 					.addSelectedExecutionOptionsItem(ExecutionOption.DO_FORCE_CURRENT_YEAR_INCLUSION_IN_YIELD_TABLES)
@@ -623,9 +623,7 @@ class ParameterValidationTest {
 		Assert.assertTrue(vp.containsOption(DebugOption.DO_INCLUDE_DEBUG_ROUTINE_NAMES));
 		Assert.assertTrue(vp.containsOption(DebugOption.DO_INCLUDE_DEBUG_TIMESTAMPS));
 		Assert.assertTrue(vp.containsOption(ExecutionOption.BACK_GROW_ENABLED));
-		Assert.assertTrue(
-				vp.containsOption(ExecutionOption.DO_ALLOW_BA_AND_TPH_VALUE_SUBSTITUTION)
-		);
+		Assert.assertTrue(vp.containsOption(ExecutionOption.DO_ALLOW_BA_AND_TPH_VALUE_SUBSTITUTION));
 		Assert.assertTrue(vp.containsOption(ExecutionOption.DO_ENABLE_DEBUG_LOGGING));
 		Assert.assertTrue(vp.containsOption(ExecutionOption.DO_ENABLE_ERROR_LOGGING));
 		Assert.assertTrue(vp.containsOption(ExecutionOption.DO_ENABLE_PROGRESS_LOGGING));

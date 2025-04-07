@@ -466,7 +466,7 @@ public class HcsvLayerRecordBean {
 				return false;
 			}
 
-			logger.debug("Performing validation of layer \"{}:{}\" in isolation", bean.featureId, bean.layerId);
+			logger.trace("Performing validation of layer \"{}:{}\" in isolation", bean.featureId, bean.layerId);
 
 			BeanValidatorHelper bvh = new BeanValidatorHelper(bean.featureId);
 

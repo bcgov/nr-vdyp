@@ -443,8 +443,8 @@ public class Species implements Comparable<Species> {
 							this
 					);
 					logger.debug("   FIP Inventory Standard");
-					logger.debug("   Non-Productive Polygon (%s)", polygon.getInventoryStandard());
-					logger.debug("   Total Age (%.3f) - Computed YTBH (%.3f) is <= 0.5", totalAge, yearsToBreastHeight);
+					logger.debug("   Non-Productive Polygon ({})", polygon.getInventoryStandard());
+					logger.debug("   Total Age ({}) - Computed YTBH ({}) is <= 0.5", totalAge, yearsToBreastHeight);
 					logger.debug("   Applying Special Case YTBH Calculation of: YTBH = MAX( 0.1, TotalAge - 0.6 )");
 
 					double newYearsToBreastHeight = totalAge - 0.6;
@@ -454,7 +454,7 @@ public class Species implements Comparable<Species> {
 
 					setYearsToBreastHeight(newYearsToBreastHeight);
 
-					logger.debug("   (Re)calculated Years to Breast Height to be %.3f", newYearsToBreastHeight);
+					logger.debug("   (Re)calculated Years to Breast Height to be {}", newYearsToBreastHeight);
 				}
 
 				if (!haveComputedTotalAge && totalAge == null && eval(dominantHeight) > 0.0 && eval(siteIndex) > 0.0) {
@@ -468,12 +468,12 @@ public class Species implements Comparable<Species> {
 							"{}: calculated Total Age using dominantHeightAndSiteIndexToAge with parameters:", this
 					);
 					logger.debug(
-							"   %32s: %s ('%s')", "Site Curve Number", siteCurve, SiteTool.getSICurveName(siteCurve)
+							"   {}: {} ('{}')", "Site Curve Number", siteCurve, SiteTool.getSICurveName(siteCurve)
 					);
-					logger.debug("   %32s: %.2d", "Dominant Height", dominantHeight);
-					logger.debug("   %32s: %.2d", "Site Index", siteIndex);
-					logger.debug("   %32s: %.2d", "Years to Breast Height", yearsToBreastHeight);
-					logger.debug("   %32s: %.2d", "Result", totalAge);
+					logger.debug("   {}: {}", "Dominant Height", dominantHeight);
+					logger.debug("   {}: {}", "Site Index", siteIndex);
+					logger.debug("   {}: {}", "Years to Breast Height", yearsToBreastHeight);
+					logger.debug("   {}: {}", "Result", totalAge);
 				}
 
 				if (!haveComputedDominantHeight && dominantHeight == null && eval(totalAge) > 0.0
@@ -489,17 +489,17 @@ public class Species implements Comparable<Species> {
 							this
 					);
 					logger.debug(
-							"   %32s: %s ('%s')", "Site Curve Number", siteCurve, SiteTool.getSICurveName(siteCurve)
+							"   {}: {} ('{}')", "Site Curve Number", siteCurve, SiteTool.getSICurveName(siteCurve)
 					);
-					logger.debug("   %32s: %.2d", "Total Age", totalAge);
-					logger.debug("   %32s: %.2d", "Site Index", siteIndex);
-					logger.debug("   %32s: %.2d", "Years to Breast Height", yearsToBreastHeight);
-					logger.debug("   %32s: %.2d", "Result", dominantHeight);
+					logger.debug("   {}: {}", "Total Age", totalAge);
+					logger.debug("   {}: {}", "Site Index", siteIndex);
+					logger.debug("   {}: {}", "Years to Breast Height", yearsToBreastHeight);
+					logger.debug("   {}: {}", "Result", dominantHeight);
 
 					// If the calculated height is <= 0.0, substitute a nominal height
 					if (dominantHeight <= 0.0) {
 						dominantHeight = 0.01;
-						logger.debug("   clamped computed Dominant Height to %.2d", dominantHeight);
+						logger.debug("   clamped computed Dominant Height to {}", dominantHeight);
 					}
 				}
 			} else if (!haveComputedSiteIndexCurve) {
@@ -529,7 +529,7 @@ public class Species implements Comparable<Species> {
 				keepTrying = true;
 				haveComputedTotalAge = true;
 
-				logger.debug("{}: calculated Total Age to be: %.2f", this, totalAge);
+				logger.debug("{}: calculated Total Age to be {}", this, totalAge);
 			}
 
 			if (!haveComputedAgeAtBreastHeight && ageAtBreastHeight == null && eval(totalAge) > 0.0

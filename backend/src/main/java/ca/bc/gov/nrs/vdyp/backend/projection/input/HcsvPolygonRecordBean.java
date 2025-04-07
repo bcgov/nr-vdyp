@@ -558,7 +558,7 @@ public class HcsvPolygonRecordBean {
 				return false;
 			}
 
-			logger.debug("Performing validation of polygon \"{}\" in isolation", bean.polyFeatureId);
+			logger.trace("Performing validation of polygon \"{}\" in isolation", bean.polyFeatureId);
 
 			BeanValidatorHelper bvh = new BeanValidatorHelper(bean.polyFeatureId);
 

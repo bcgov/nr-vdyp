@@ -11,8 +11,8 @@ public class StandYieldCalculationException extends AbstractProjectionRequestExc
 
 	private final int errorCode;
 
-	public StandYieldCalculationException(int errorCode, Exception e) {
-		super("StandYieldCalculation exception " + errorCode, e);
+	public StandYieldCalculationException(int errorCode, Exception cause) {
+		super("StandYieldCalculation exception " + errorCode, cause);
 		this.errorCode = errorCode;
 	}
 

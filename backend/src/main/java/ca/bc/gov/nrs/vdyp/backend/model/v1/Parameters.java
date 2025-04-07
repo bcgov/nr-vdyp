@@ -172,15 +172,14 @@ public class Parameters {
 		DO_INCLUDE_PROJECTED_MOF_BIOMASS("doIncludeProjectedMOFBiomass"), //
 		DO_INCLUDE_PROJECTED_CFS_BIOMASS("doIncludeProjectedCFSBiomass"), //
 		DO_INCLUDE_COLUMN_HEADERS_IN_YIELD_TABLE("doIncludeColumnHeadersInYieldTable"), //
-		DO_ALLOW_BA_AND_TPH_VALUE_SUBSTITUTION(
-				"doAllowBasalAreaAndTreesPerHectareValueSubstitution"
-		), //
+		DO_ALLOW_BA_AND_TPH_VALUE_SUBSTITUTION("doAllowBasalAreaAndTreesPerHectareValueSubstitution"), //
 		DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE(
 				"doIncludeSecondarySpeciesDominantHeightInYieldTable"
 		), //
 		DO_ENABLE_PROGRESS_LOGGING("doEnableProgressLogging"), //
 		DO_ENABLE_ERROR_LOGGING("doEnableErrorLogging"), //
-		DO_ENABLE_DEBUG_LOGGING("doEnableDebugLogging");
+		DO_ENABLE_DEBUG_LOGGING("doEnableDebugLogging"), //
+		DO_DELAY_EXECUTION_FOLDER_DELETION("doDelayExecutionFolderDeletion");
 
 		private String value;
 

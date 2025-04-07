@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.backend.projection;
 
 import java.io.ByteArrayInputStream;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -15,7 +16,6 @@ import org.slf4j.LoggerFactory;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonExecutionException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionInternalExecutionException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestValidationException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.YieldTableGenerationException;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
@@ -26,7 +26,7 @@ import ca.bc.gov.nrs.vdyp.backend.projection.input.AbstractPolygonStream;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Polygon;
 import ca.bc.gov.nrs.vdyp.backend.projection.output.IMessageLog;
 
-public class ProjectionRunner {
+public class ProjectionRunner implements Closeable {
 
 	private static final Logger logger = LoggerFactory.getLogger(ProjectionRunner.class);
 
@@ -58,7 +58,7 @@ public class ProjectionRunner {
 	}
 
 	public void run(Map<String, InputStream> streams) throws ProjectionRequestValidationException,
-			ProjectionInternalExecutionException, YieldTableGenerationException {
+			PolygonExecutionException, YieldTableGenerationException {
 
 		context.startRun();
 
@@ -114,14 +114,14 @@ public class ProjectionRunner {
 		// TODO: mimic VDYP7's Console_LogMetadata
 	}
 
-	public InputStream getYieldTable() throws ProjectionInternalExecutionException {
+	public InputStream getYieldTable() throws PolygonExecutionException {
 		if (context.isTrialRun()) {
 			return new ByteArrayInputStream(new byte[0]);
 		} else {
 			try {
 				return context.getYieldTable().getAsStream();
 			} catch (YieldTableGenerationException e) {
-				throw new ProjectionInternalExecutionException(e);
+				throw new PolygonExecutionException(e);
 			}
 		}
 	}
@@ -180,5 +180,10 @@ public class ProjectionRunner {
 
 	public ProjectionContext getContext() {
 		return context;
+	}
+
+	@Override
+	public void close() {
+		context.close();
 	}
 }

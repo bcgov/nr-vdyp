@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.NotFoundException;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ParameterDetailsMessage;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
+import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionContext;
 import ca.bc.gov.nrs.vdyp.backend.projection.ValidatedParameters;
 import ca.bc.gov.nrs.vdyp.backend.responses.v1.HelpResource;
 import ca.bc.gov.nrs.vdyp.backend.utils.ParameterDetailsMessageBuilder;
@@ -415,6 +416,14 @@ public class HelpService {
 				"including projection results in output", //
 				"the inclusion in the response of the output of all invocations of BACK and FORWARD during the projection run", //
 				Parameters.ExecutionOption.DO_INCLUDE_PROJECTION_FILES
+		);
+
+		addYesNoExecutionMessage(
+				messageList, //
+				"doDelayExecutionFolderDeletion", //
+				"retain execution folder", //
+				"retain the execution folder for " + ProjectionContext.EXECUTION_FOLDER_RETENTION_TIME_m + " minutes ", //
+				Parameters.ExecutionOption.DO_DELAY_EXECUTION_FOLDER_DELETION
 		);
 
 		messageList.sort(new Comparator<ParameterDetailsMessage>() {

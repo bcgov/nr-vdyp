@@ -84,7 +84,7 @@ public class FipStartOutputWriter extends AbstractOutputWriter implements Closea
 
 		Stand leadingStand = layer.determineLeadingSp0(0);
 		if (leadingStand != null) {
-			
+
 			Species leadingSpecies = leadingStand.getSpeciesByPercent().get(0);
 			if (leadingSpecies != null) {
 

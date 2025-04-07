@@ -60,4 +60,14 @@ public class Vdyp7Constants {
 	public static final double MIN_VETERAN_LAYER_DBH = 23.0;
 
 	public static final double LOW_SITE_INDEX_THRESHOLD = 2.0;
+	
+	// Constants related to stockability estimation
+	
+	public static final double DEAD_STOCKABLE = 85.0;
+	public static final double YEAR_LIMIT = 20.0;
+	public static final double YEAR_HALF = 65.0;
+	public static final double YEAR_MAX = 200.0;
+	public static final double P1_MAX = 0.85;
+	public static final double CC_COAST = 75.0;
+	public static final double CC_INTERIOR = 70.0;
 }

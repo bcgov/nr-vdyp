@@ -70,7 +70,7 @@ class HcsvSingleLayerSingleSp0sMultipleSp64sRuntimeStructureTest {
 			inputStreams.put(ParameterNames.HCSV_LAYERS_INPUT_DATA, layersStream);
 		}
 
-		String projectionId = ProjectionService.buildId(ProjectionRequestKind.HCSV);
+		String projectionId = ProjectionService.buildProjectionId(ProjectionRequestKind.HCSV);
 
 		var parameters = new Parameters().ageStart(100).ageEnd(400);
 		var context = new ProjectionContext(ProjectionRequestKind.HCSV, projectionId, parameters, false);

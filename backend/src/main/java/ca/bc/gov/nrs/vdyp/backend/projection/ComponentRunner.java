@@ -1,7 +1,6 @@
 package ca.bc.gov.nrs.vdyp.backend.projection;
 
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonExecutionException;
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionInternalExecutionException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.YieldTableGenerationException;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Polygon;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
@@ -15,7 +14,7 @@ public interface ComponentRunner {
 			throws PolygonExecutionException;
 
 	void runAdjust(Polygon polygon, ProjectionTypeCode projectionTypeCode, PolygonProjectionState state)
-			throws PolygonExecutionException, ProjectionInternalExecutionException;
+			throws PolygonExecutionException;
 
 	void runForward(Polygon polygon, ProjectionTypeCode projectionTypeCode, PolygonProjectionState state)
 			throws PolygonExecutionException;

@@ -139,7 +139,7 @@ public class YieldTable implements Closeable {
 		} catch (FileNotFoundException e) {
 			throw new IllegalStateException(
 					MessageFormat.format(
-							"Yield table path {} not found, despite our creating it", writer.getYieldTableFilePath()
+							"Yield table path {0} not found, despite our creating it", writer.getYieldTableFilePath()
 					)
 			);
 		}
@@ -786,19 +786,19 @@ public class YieldTable implements Closeable {
 			if (didCopyBasalArea && didCopyTreesPerHectare) {
 				context.addMessage(
 						Level.WARN,
-						"Starting values for basal area and trees-per-hectare copied over for QA and alternative model used for layer {}",
+						"Starting values for basal area and trees-per-hectare copied over for QA and alternative model used for layer {0}",
 						layer
 				);
 			} else if (didCopyBasalArea) {
 				context.addMessage(
 						Level.WARN,
-						"Starting values for basal area copied over for QA and alternative model used for layer {}",
+						"Starting values for basal area copied over for QA and alternative model used for layer {0}",
 						layer
 				);
 			} else if (didCopyTreesPerHectare) {
 				context.addMessage(
 						Level.WARN,
-						"Starting values for trees-per-hectare copied over for QA and alternative model used for layer {}",
+						"Starting values for trees-per-hectare copied over for QA and alternative model used for layer {0}",
 						layer
 				);
 			}
@@ -1127,19 +1127,19 @@ public class YieldTable implements Closeable {
 			if (didCopyBasalArea && didCopyTreesPerHectare) {
 				context.addMessage(
 						Level.WARN,
-						"Starting values for basal area and trees-per-hectare copied over for QA and alternative model used for Species {}",
+						"Starting values for basal area and trees-per-hectare copied over for QA and alternative model used for Species {0}",
 						species
 				);
 			} else if (didCopyBasalArea) {
 				context.addMessage(
 						Level.WARN,
-						"Starting values for basal area copied over for QA and alternative model used for Species {}",
+						"Starting values for basal area copied over for QA and alternative model used for Species {0}",
 						species
 				);
 			} else if (didCopyTreesPerHectare) {
 				context.addMessage(
 						Level.WARN,
-						"Starting values for trees-per-hectare copied over for QA and alternative model used for Species {}",
+						"Starting values for trees-per-hectare copied over for QA and alternative model used for Species {0}",
 						species
 				);
 			}

@@ -8,16 +8,15 @@ public class YieldTableGenerationException extends AbstractProjectionRequestExce
 
 	private static final long serialVersionUID = -4342933248690426666L;
 
-	public YieldTableGenerationException(Exception e) {
-		super(e);
+	public YieldTableGenerationException(Exception cause) {
+		super(cause);
 	}
 
-	public YieldTableGenerationException(String cause, Exception e) {
-		super(cause, e);
+	public YieldTableGenerationException(String message, Exception cause) {
+		super(message, cause);
 	}
 
-	public YieldTableGenerationException(String format) {
-		super(format);
+	public YieldTableGenerationException(String message) {
+		super(message);
 	}
-
 }

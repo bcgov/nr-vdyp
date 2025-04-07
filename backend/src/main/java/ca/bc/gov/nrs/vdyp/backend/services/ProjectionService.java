@@ -26,7 +26,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.Exceptions;
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionInternalExecutionException;
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonExecutionException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestValidationException;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.ParameterNames;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
@@ -76,7 +76,7 @@ public class ProjectionService {
 
 	public Response projectionDcsvPost(
 			Parameters parameters, FileUpload dcsvDataStream, Boolean trialRun, SecurityContext securityContext
-	) throws ProjectionRequestValidationException, ProjectionInternalExecutionException {
+	) throws ProjectionRequestValidationException, PolygonExecutionException {
 		return Response.serverError().status(Status.NOT_IMPLEMENTED).build();
 	}
 
@@ -84,7 +84,7 @@ public class ProjectionService {
 			Boolean trialRun, Parameters parameters, FileUpload polygonDataStream, FileUpload layersDataStream,
 			FileUpload historyDataStream, FileUpload nonVegetationDataStream, FileUpload otherVegetationDataStream,
 			FileUpload polygonIdDataStream, FileUpload speciesDataStream, FileUpload vriAdjustDataStream, Object object
-	) throws ProjectionRequestValidationException, ProjectionInternalExecutionException {
+	) throws ProjectionRequestValidationException, PolygonExecutionException {
 		return Response.serverError().status(Status.NOT_IMPLEMENTED).build();
 	}
 
@@ -92,7 +92,7 @@ public class ProjectionService {
 			ProjectionRequestKind kind, Map<String, InputStream> inputStreams, Boolean isTrialRun, Parameters params,
 			SecurityContext securityContext
 	) throws AbstractProjectionRequestException {
-		String projectionId = ProjectionService.buildId(kind);
+		String projectionId = ProjectionService.buildProjectionId(kind);
 
 		logger.info("<runProjection {} {}", kind, projectionId);
 
@@ -114,9 +114,7 @@ public class ProjectionService {
 
 		Response response;
 
-		var runner = new ProjectionRunner(ProjectionRequestKind.HCSV, projectionId, params, isTrialRun);
-
-		try {
+		try (ProjectionRunner runner = new ProjectionRunner(ProjectionRequestKind.HCSV, projectionId, params, isTrialRun)) {
 			logger.info("Running {} projection {}", kind, projectionId);
 
 			runner.run(inputStreams);
@@ -151,7 +149,7 @@ public class ProjectionService {
 			.ofPattern("yyyy_MM_dd_HH_mm_ss_SSSS");
 	private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH:mm:ss");
 
-	public static String buildId(ProjectionRequestKind projectionKind) {
+	public static String buildProjectionId(ProjectionRequestKind projectionKind) {
 		StringBuilder sb = new StringBuilder("projection-");
 		sb.append(projectionKind).append("-");
 		sb.append(dateTimeFormatterForFilenames.format(LocalDateTime.now()));
@@ -214,7 +212,7 @@ public class ProjectionService {
 					.header("content-disposition", "attachment;filename=\"" + outputFileName + "\"")
 					.header("content-type", "application/octet-stream").build();
 
-		} catch (ProjectionInternalExecutionException e) {
+		} catch (PolygonExecutionException e) {
 			String message = Exceptions.getMessage(e, "Projection, when creating output zip,");
 			logger.error(message, e);
 

@@ -695,8 +695,9 @@ public class Polygon implements Comparable<Polygon> {
 		var rGrowthModel = new Reference<GrowthModelCode>();
 		var rProcessingModel = new Reference<ProcessingModeCode>();
 		var rPrimaryLayer = new Reference<Layer>();
-		
-		calculateInitialProcessingModel(rGrowthModel, rProcessingModel, rPrimaryLayer);
+		var rProjectionType = new Reference<ProjectionTypeCode>();
+
+		calculateInitialProcessingModel(rGrowthModel, rProcessingModel, rPrimaryLayer, rProjectionType);
 
 		for (Layer layer : getLayers().values()) {
 			layer.doSortSiteSpecies(rGrowthModel.get());
@@ -861,7 +862,9 @@ public class Polygon implements Comparable<Polygon> {
 	/**
 	 * <b>V7Ext_InitialProcessingModeToBeUsed</b>
 	 * <p>
-	 * Determine the processing the stand will be initially subject to.
+	 * Determine the processing the stand will be initially subject to. This is determined from the characteristics of
+	 * the layer associated with the first projection type that has a layer from the list
+	 * <code>ACTUAL_PROJECTION_TYPES_LIST</code> whose order is crucial to this method working successfully.
 	 * <p>
 	 * The processing mode is specified according to how the stand is defined. The mode is completely defined by the
 	 * stand attributes and is not explicitly chosen by the caller.
@@ -882,7 +885,7 @@ public class Polygon implements Comparable<Polygon> {
 	 */
 	public void calculateInitialProcessingModel(
 			Reference<GrowthModelCode> rGrowthModel, Reference<ProcessingModeCode> rProcessingMode,
-			Reference<Layer> rPrimaryLayer
+			Reference<Layer> rPrimaryLayer, Reference<ProjectionTypeCode> rProjectionType
 	) throws PolygonValidationException {
 
 		if (rGrowthModel.isPresent() || rProcessingMode.isPresent()) {
@@ -904,6 +907,7 @@ public class Polygon implements Comparable<Polygon> {
 			if (ptPrimaryLayer != null) {
 
 				rPrimaryLayer.set(ptPrimaryLayer);
+				rProjectionType.set(pt);
 
 				logger.debug("{}: Projection type {}: primary layer determined to be: {}", this, pt, ptPrimaryLayer);
 
@@ -941,15 +945,6 @@ public class Polygon implements Comparable<Polygon> {
 		}
 	}
 
-	// Constants defined in the document:
-	private static final double DEAD_STOCKABLE = 85.0;
-	private static final double YEAR_LIMIT = 20.0;
-	private static final double YEAR_HALF = 65.0;
-	private static final double YEAR_MAX = 200.0;
-	private static final double P1_MAX = 0.85;
-	private static final double CC_COAST = 75.0;
-	private static final double CC_INTERIOR = 70.0;
-
 	/**
 	 * <b>lcl_CalculateStockability</b>
 	 * <p>
@@ -974,7 +969,7 @@ public class Polygon implements Comparable<Polygon> {
 
 		if (getDeadLayer() != null) {
 			// With no explicit stockability, and a dead layer, use DEAD_STOCKABLE == 85%
-			this.percentStockable = DEAD_STOCKABLE;
+			this.percentStockable = Vdyp7Constants.DEAD_STOCKABLE;
 			logger.debug(
 					"{}: no explicit stockability given and dead layer present; using stockability {}", this,
 					percentStockable
@@ -1033,13 +1028,13 @@ public class Polygon implements Comparable<Polygon> {
 
 		double p1;
 
-		if (years < YEAR_LIMIT) {
-			p1 = P1_MAX;
-		} else if (years > YEAR_MAX) {
+		if (years < Vdyp7Constants.YEAR_LIMIT) {
+			p1 = Vdyp7Constants.P1_MAX;
+		} else if (years > Vdyp7Constants.YEAR_MAX) {
 			p1 = 0;
 		} else {
-			var exponent = (years - YEAR_LIMIT) / YEAR_HALF;
-			var lP1 = Math.pow(0.5, exponent) - (1.0 - P1_MAX);
+			var exponent = (years - Vdyp7Constants.YEAR_LIMIT) / Vdyp7Constants.YEAR_HALF;
+			var lP1 = Math.pow(0.5, exponent) - (1.0 - Vdyp7Constants.P1_MAX);
 			if (lP1 < 0) {
 				p1 = 0;
 			} else {
@@ -1058,7 +1053,7 @@ public class Polygon implements Comparable<Polygon> {
 				crownClosure
 		);
 
-		var ccFullyStocked = isCoastal ? CC_COAST : CC_INTERIOR;
+		var ccFullyStocked = isCoastal ? Vdyp7Constants.CC_COAST : Vdyp7Constants.CC_INTERIOR;
 
 		double percentStocked;
 		if (crownClosure >= ccFullyStocked) {

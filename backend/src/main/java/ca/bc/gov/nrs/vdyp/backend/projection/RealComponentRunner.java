@@ -1,6 +1,5 @@
 package ca.bc.gov.nrs.vdyp.backend.projection;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.MessageFormat;
@@ -16,14 +15,12 @@ import org.slf4j.event.Level;
 
 import ca.bc.gov.nrs.vdyp.application.VdypApplication;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonExecutionException;
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionInternalExecutionException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.YieldTableGenerationException;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Polygon;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Vdyp7Constants;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
 import ca.bc.gov.nrs.vdyp.common.VdypApplicationInitializationException;
-import ca.bc.gov.nrs.vdyp.common.VdypApplicationProcessingException;
 import ca.bc.gov.nrs.vdyp.fip.FipStart;
 import ca.bc.gov.nrs.vdyp.forward.VdypForwardApplication;
 import ca.bc.gov.nrs.vdyp.vri.VriStart;
@@ -46,7 +43,9 @@ public class RealComponentRunner implements ComponentRunner {
 				state.setProcessingResults(ProjectionStageCode.Initial, projectionTypeCode, 0, -99);
 			} catch (VdypApplicationInitializationException e) {
 				throwInterpretedException(fipStartApplication, polygon, e);
-			} catch (VdypApplicationProcessingException e) {
+			} catch (Exception e) {
+				throwInterpretedException(fipStartApplication, polygon, e);
+			} catch (Error e) {
 				throwInterpretedException(fipStartApplication, polygon, e);
 			}
 		}
@@ -65,7 +64,9 @@ public class RealComponentRunner implements ComponentRunner {
 				state.setProcessingResults(ProjectionStageCode.Initial, projectionTypeCode, 0, -99);
 			} catch (VdypApplicationInitializationException e) {
 				throwInterpretedException(vriStartApplication, polygon, e);
-			} catch (VdypApplicationProcessingException e) {
+			} catch (Exception e) {
+				throwInterpretedException(vriStartApplication, polygon, e);
+			} catch (Error e) {
 				throwInterpretedException(vriStartApplication, polygon, e);
 			}
 		}
@@ -73,7 +74,7 @@ public class RealComponentRunner implements ComponentRunner {
 
 	@Override
 	public void runAdjust(Polygon polygon, ProjectionTypeCode projectionType, PolygonProjectionState state)
-			throws ProjectionInternalExecutionException {
+			throws PolygonExecutionException {
 
 		// ADJUST is currently not being run; we just copy the input to output.
 
@@ -86,7 +87,7 @@ public class RealComponentRunner implements ComponentRunner {
 
 	private void copyAdjustInputFilesToOutput(
 			Polygon polygon, PolygonProjectionState state, ProjectionTypeCode projectionType, Path rootExecutionFolder
-	) throws ProjectionInternalExecutionException {
+	) throws PolygonExecutionException {
 
 		Path executionFolder = Path.of(state.getExecutionFolder().toString(), projectionType.toString());
 
@@ -103,11 +104,19 @@ public class RealComponentRunner implements ComponentRunner {
 			Path utilizationsOutputFile = Path.of(executionFolder.toString(), "vu_adj.dat");
 			Files.copy(utilizationsInputFile, utilizationsOutputFile);
 
-		} catch (IOException e) {
-			throw new ProjectionInternalExecutionException(
-					MessageFormat
-							.format("{0}: encountered exception while running copyAdjustInputFilesToOutput", polygon),
-					e
+		} catch (Exception e) {
+			throw new PolygonExecutionException(
+					MessageFormat.format(
+							"{0}: encountered {1} while running copyAdjustInputFilesToOutput{2}", polygon,
+							e.getClass().getSimpleName(), e.getMessage() != null ? "; reason: " + e.getMessage() : "" 
+					), e
+			);
+		} catch (Error e) {
+			throw new PolygonExecutionException(
+					MessageFormat.format(
+							"{0}: encountered {1} while running copyAdjustInputFilesToOutput{2}", polygon,
+							e.getClass().getSimpleName(), e.getMessage() != null ? "; reason: " + e.getMessage() : "" 
+					), e
 			);
 		}
 	}
@@ -130,7 +139,9 @@ public class RealComponentRunner implements ComponentRunner {
 				state.setProcessingResults(ProjectionStageCode.Forward, projectionTypeCode, 0, -99);
 			} catch (VdypApplicationInitializationException e) {
 				throwInterpretedException(forwardApplication, polygon, e);
-			} catch (VdypApplicationProcessingException e) {
+			} catch (Exception e) {
+				throwInterpretedException(forwardApplication, polygon, e);
+			} catch (Error e) {
 				throwInterpretedException(forwardApplication, polygon, e);
 			}
 		}
@@ -153,6 +164,8 @@ public class RealComponentRunner implements ComponentRunner {
 			// app.doMain(controlFilePath.toAbsolutePath().toString());
 		} catch (Exception e) {
 			throw new PolygonExecutionException("Encountered exception while running BACK", e);
+		} catch (Error e) {
+			throw new PolygonExecutionException("Encountered error while running BACK", e);
 		}
 	}
 
@@ -232,13 +245,12 @@ public class RealComponentRunner implements ComponentRunner {
 		}
 	}
 
-	private void
-			throwInterpretedException(VdypApplication app, Polygon polygon, VdypApplicationInitializationException e)
-					throws PolygonExecutionException {
-		throw new PolygonExecutionException(buildMessage(app, polygon, "initializing", e), e);
+	private void throwInterpretedException(VdypApplication app, Polygon polygon, Exception e)
+			throws PolygonExecutionException {
+		throw new PolygonExecutionException(buildMessage(app, polygon, "running", e), e);
 	}
 
-	private void throwInterpretedException(VdypApplication app, Polygon polygon, VdypApplicationProcessingException e)
+	private void throwInterpretedException(VdypApplication app, Polygon polygon, Error e)
 			throws PolygonExecutionException {
 		throw new PolygonExecutionException(buildMessage(app, polygon, "running", e), e);
 	}
@@ -272,28 +284,30 @@ public class RealComponentRunner implements ComponentRunner {
 
 	private StringBuffer serializeCauses(StringBuffer s, List<String> messageList, Throwable e) {
 
-		var matcher = messagePattern.matcher(e.getMessage());
-
-		String message;
-		if (matcher.matches()) {
-			if (matcher.group(3) != null) {
-				message = matcher.group(3);
+		if (e.getMessage() != null) {
+			var matcher = messagePattern.matcher(e.getMessage());
+	
+			String message;
+			if (matcher.matches()) {
+				if (matcher.group(3) != null) {
+					message = matcher.group(3);
+				} else {
+					message = matcher.group(4);
+				}
 			} else {
-				message = matcher.group(4);
+				message = e.getMessage();
 			}
-		} else {
-			message = e.getMessage();
+	
+			if (!StringUtils.isBlank(message) && !containsSuffix(messageList, message)) {
+				s.append(": ").append(message);
+				messageList.add(message);
+			}
 		}
-
-		if (!StringUtils.isBlank(message) && !containsSuffix(messageList, message)) {
-			s.append(": ").append(message);
-			messageList.add(message);
-		}
-
+		
 		if (e.getCause() != null) {
 			serializeCauses(s, messageList, e.getCause());
 		}
-
+		
 		return s;
 	}
 

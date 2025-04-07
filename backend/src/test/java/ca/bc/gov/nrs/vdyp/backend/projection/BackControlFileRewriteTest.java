@@ -7,7 +7,7 @@ import java.nio.file.Path;
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionInternalExecutionException;
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonExecutionException;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Vdyp7Constants;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
 
@@ -37,7 +37,7 @@ class BackControlFileRewriteTest {
 			String contents = Files.readString(controlFile);
 
 			Assert.assertTrue(contents.indexOf("9999") >= 0);
-		} catch (IOException | ProjectionInternalExecutionException e) {
+		} catch (IOException | PolygonExecutionException e) {
 			Assert.fail(e.getMessage());
 		}
 	}
