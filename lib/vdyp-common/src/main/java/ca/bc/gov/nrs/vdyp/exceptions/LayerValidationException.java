@@ -8,17 +8,6 @@ public abstract class LayerValidationException extends StandProcessingException 
 
 	final LayerType layer;
 
-	protected static <T extends LayerValidationException> T
-			unwrap(RuntimeStandProcessingException cause, Class<T> klazz) {
-		var unwrapped = cause.getCause();
-		if (!klazz.isInstance(unwrapped)) {
-			throw new IllegalArgumentException(
-					"Could not unwrap RuntimeStandProcessingException to " + klazz.getCanonicalName(), cause
-			);
-		}
-		return klazz.cast(unwrapped);
-	}
-
 	protected LayerValidationException(
 			RuntimeStandProcessingException cause, Class<? extends LayerValidationException> klazz
 	) {

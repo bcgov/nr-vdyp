@@ -6,25 +6,29 @@ import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 
 /**
- * Crown closure is low or has not been set.
+ * Basal area estimated during preprocessing is low or has not been set.
  *
- * Equivalent to IPASS= -9 for VRI if PRIMARY, -1 if VETERAN
+ * Equivalent to IPASS= -13 for VRI
  */
-public class CrownClosureLowException extends LayerValueLowException {
+public class PreprocessEstimatedBaseAreaLowException extends LayerValueLowException {
 
 	private static final long serialVersionUID = 5267990153323800885L;
 
-	static final String DEFAULT_NAME = "Crown closure";
+	static final String DEFAULT_NAME = "Normative estimate of basal area";
 
-	public CrownClosureLowException(RuntimeStandProcessingException cause) {
-		super(cause, CrownClosureLowException.class);
+	public PreprocessEstimatedBaseAreaLowException(RuntimeStandProcessingException cause) {
+		super(cause, PreprocessEstimatedBaseAreaLowException.class);
 	}
 
-	public CrownClosureLowException(LayerType layer, Optional<Float> value, Optional<Float> threshold) {
+	public PreprocessEstimatedBaseAreaLowException(BaseAreaLowException cause) {
+		super(cause.getLayer(), DEFAULT_NAME, cause.getValue(), cause.getThreshold(), cause);
+	}
+
+	public PreprocessEstimatedBaseAreaLowException(LayerType layer, Optional<Float> value, Optional<Float> threshold) {
 		this(layer, DEFAULT_NAME, value, threshold);
 	}
 
-	public CrownClosureLowException(LayerType layer, String name, Optional<Float> value, Optional<Float> threshold) {
+	public PreprocessEstimatedBaseAreaLowException(LayerType layer, String name, Optional<Float> value, Optional<Float> threshold) {
 		super(layer, name, value, threshold);
 	}
 
@@ -38,9 +42,9 @@ public class CrownClosureLowException extends LayerValueLowException {
 	 * @param threshold
 	 * @return
 	 */
-	public static Optional<CrownClosureLowException>
+	public static Optional<PreprocessEstimatedBaseAreaLowException>
 			check(LayerType layer, String name, Optional<Float> value, float threshold) {
-		return LayerValueLowException.check(layer, name, value, threshold, CrownClosureLowException::new);
+		return LayerValueLowException.check(layer, name, value, threshold, PreprocessEstimatedBaseAreaLowException::new);
 	}
 
 	/**
@@ -48,25 +52,19 @@ public class CrownClosureLowException extends LayerValueLowException {
 	 * appropriate exception if it fails, an empty optional otherwise.
 	 *
 	 * @param layer
+	 * @param name
 	 * @param value
 	 * @param threshold
 	 * @return
 	 */
-	public static Optional<CrownClosureLowException> check(LayerType layer, Optional<Float> value, float threshold) {
+	public static Optional<PreprocessEstimatedBaseAreaLowException> check(LayerType layer, Optional<Float> value, float threshold) {
 		return check(layer, DEFAULT_NAME, value, threshold);
 	}
 
 	@Override
 	public Optional<Integer> getIpassCode(VdypApplicationIdentifier app) {
 		if (app == VdypApplicationIdentifier.VRI_START)
-			switch (getLayer()) {
-			case PRIMARY:
-				return Optional.of(-9);
-			case VETERAN:
-				return Optional.of(-11);
-			default:
-				break;
-			}
+			return Optional.of(-13);
 		return Optional.empty();
 	}
 

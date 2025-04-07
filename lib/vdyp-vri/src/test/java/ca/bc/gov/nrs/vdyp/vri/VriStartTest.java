@@ -58,6 +58,7 @@ import ca.bc.gov.nrs.vdyp.application.VdypStartApplication;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
+import ca.bc.gov.nrs.vdyp.exceptions.FatalProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BasalAreaYieldParser;
@@ -122,7 +123,7 @@ class VriStartTest {
 	@Nested
 	class EstimateBaseAreaYield {
 		@Test
-		void testCompute() throws StandProcessingException {
+		void testCompute() throws ProcessingException {
 			Map<String, Object> controlMap = VriTestUtils.loadControlMap();
 			VriStart app = new VriStart();
 			ApplicationTestUtils.setControlMap(app, controlMap);
@@ -933,7 +934,7 @@ class VriStartTest {
 		class FindRootOfErrorFunction {
 
 			@Test
-			void testSuccess() throws StandProcessingException {
+			void testSuccess() throws ProcessingException {
 				controlMap = VriTestUtils.loadControlMap();
 				VriStart app = new VriStart();
 				ApplicationTestUtils.setControlMap(app, controlMap);
@@ -1066,7 +1067,7 @@ class VriStartTest {
 			}
 
 			@Test
-			void testNoIntervalGuess() throws StandProcessingException {
+			void testNoIntervalGuess() throws ProcessingException {
 				controlMap = VriTestUtils.loadControlMap();
 
 				VriStart app = new VriStart() {
@@ -1217,7 +1218,7 @@ class VriStartTest {
 			}
 
 			@Test
-			void testTooManyEvaluationsGuess() throws StandProcessingException {
+			void testTooManyEvaluationsGuess() throws ProcessingException {
 				controlMap = VriTestUtils.loadControlMap();
 
 				float expectedX = 0.172142f;
@@ -1935,7 +1936,7 @@ class VriStartTest {
 		}
 
 		@Test
-		void testStandExceptionProcessingPrimaryLayer() throws Exception {
+		void testFatalExceptionProcessingPrimaryLayer() throws Exception {
 
 			TestUtils.populateControlMapBecReal(controlMap);
 
@@ -1967,7 +1968,7 @@ class VriStartTest {
 
 			EasyMock.expect(app.checkPolygon(poly)).andReturn(mode).once();
 			app.processPrimaryLayer(EasyMock.same(poly), EasyMock.anyObject(VdypLayer.Builder.class));
-			EasyMock.expectLastCall().andThrow(new StandProcessingException("Test Exception")).once();
+			EasyMock.expectLastCall().andThrow(new FatalProcessingException("Test Exception")).once();
 
 			control.replay();
 
@@ -3965,7 +3966,7 @@ class VriStartTest {
 	class EstimateQuadMeanDiameterYield {
 
 		@Test
-		void testCompute() throws StandProcessingException {
+		void testCompute() throws ProcessingException {
 
 			controlMap = VriTestUtils.loadControlMap();
 			VriStart app = new VriStart();

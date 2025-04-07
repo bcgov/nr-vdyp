@@ -37,6 +37,15 @@ public abstract class LayerValueLowException extends LayerValidationException {
 	}
 
 	protected LayerValueLowException(
+			LayerType layer, String name, Optional<? extends Number> value, Optional<? extends Number> threshold,
+			Throwable cause
+	) {
+		super(layer, getMessage(name, value, threshold), cause);
+		this.value = value.map(Number.class::cast);
+		this.threshold = threshold.map(Number.class::cast);
+	}
+
+	protected LayerValueLowException(
 			LayerType layer, String name, Optional<? extends Number> value, Optional<? extends Number> threshold
 	) {
 		super(layer, getMessage(name, value, threshold));

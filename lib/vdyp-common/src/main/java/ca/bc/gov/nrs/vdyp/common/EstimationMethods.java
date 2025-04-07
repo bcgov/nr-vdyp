@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.exceptions.BreastHeightAgeLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.FatalProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.math.FloatMath;
@@ -169,7 +170,7 @@ public class EstimationMethods {
 	 * @param standTreesPerHectare  Density opf the stand
 	 * @param standLoreyHeight      Lorey height of the stand
 	 * @return quadratic mean diameter of the species of interest
-	 * @throws ProcessingException
+	 * @throws FatalProcessingException
 	 */
 	public float estimateQuadMeanDiameterForSpecies(
 			VdypSpecies spec, // ISP, HLsp, DQsp
@@ -179,7 +180,7 @@ public class EstimationMethods {
 			float standBaseArea, // BA_TOT
 			float standTreesPerHectare, // TPH_TOT
 			float standLoreyHeight // HL_TOT
-	) throws ProcessingException {
+	) throws FatalProcessingException {
 		Map<String, Float> basalAreaFractionPerSpecies = new HashMap<>();
 		allSpecies.values().stream().forEach(s -> basalAreaFractionPerSpecies.put(s.getGenus(), s.getFractionGenus()));
 
@@ -216,7 +217,7 @@ public class EstimationMethods {
 			float standBaseArea, // BA_TOT
 			float standTreesPerHectare, // TPH_TOT
 			float standLoreyHeight // HL_TOT
-	) throws ProcessingException {
+	) throws FatalProcessingException {
 
 		float c = 0.00441786467f;
 
@@ -277,14 +278,14 @@ public class EstimationMethods {
 			float cc = -baseArea1 * standTreesPerHectare;
 			float term = bb * bb - 4 * aa * cc;
 			if (term <= 0f) {
-				throw new ProcessingException(
+				throw new FatalProcessingException(
 						"Term for trees per hectare calculation when estimating quadratic mean diameter for species "
 								+ spAlias + " was " + term + " but should be positive."
 				);
 			}
 			treesPerHectare1 = (-bb + sqrt(term)) / (2f * aa);
 			if (treesPerHectare1 <= 0f || treesPerHectare1 > standTreesPerHectare) {
-				throw new ProcessingException(
+				throw new FatalProcessingException(
 						"Trees per hectare 1 for species " + spAlias + " was " + treesPerHectare1
 								+ " but should be positive and less than or equal to stand trees per hectare "
 								+ standTreesPerHectare

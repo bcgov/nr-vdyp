@@ -51,6 +51,7 @@ import ca.bc.gov.nrs.vdyp.exceptions.LayerMissingException;
 import ca.bc.gov.nrs.vdyp.exceptions.LayerSpeciesDoNotSumTo100PercentException;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.UnsupportedSpeciesException;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.UpperCoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
@@ -401,7 +402,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	 * @return
 	 * @throws ProcessingException
 	 */
-	protected int findItg(List<S> primarySecondary) throws FatalProcessingException {
+	protected int findItg(List<S> primarySecondary) throws FatalProcessingException, UnsupportedSpeciesException {
 		var primary = primarySecondary.get(0);
 
 		if (primary.getPercentGenus() > 79.999) { // Copied from VDYP7
@@ -518,9 +519,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 			}
 			return 41;
 		default:
-			throw new FatalProcessingException(
-					MessageFormat.format("Unexpected primary species: {0}", primary.getGenus())
-			);
+			throw new UnsupportedSpeciesException(primary.getGenus());
 		}
 	}
 
@@ -667,7 +666,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 				.findFirst().orElseThrow();
 	}
 
-	protected L getPrimaryLayer(P poly) throws StandProcessingException {
+	protected L getPrimaryLayer(P poly) throws LayerMissingException {
 		L primaryLayer = poly.getLayers().get(LayerType.PRIMARY);
 		if (primaryLayer == null) {
 			throw new LayerMissingException(LayerType.PRIMARY);
@@ -675,14 +674,32 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		return primaryLayer;
 	}
 
-	protected Optional<L> getVeteranLayer(P poly) throws StandProcessingException {
+	protected Optional<L> getVeteranLayer(P poly) throws LayerMissingException {
 		return Utils.optSafe(poly.getLayers().get(LayerType.VETERAN));
 	}
 
+	/**
+	 * Throw the exception contained in the optional if there is one. This exists to make it easier to handle checked
+	 * exceptions inside of lambdas as an alternative to using subclasses of RuntimeExceptions as wrappers.
+	 */
 	protected static <E extends Throwable> void throwIfPresent(Optional<E> opt) throws E {
 		if (opt.isPresent()) {
 			throw opt.get();
 		}
+	}
+
+	/**
+	 * If the given optional contains an exception, throw it as a FatalProcessingException, wrapping it in a new
+	 * exception if necessary.
+	 */
+	protected static <E extends Throwable> void fatalIfPresent(Optional<E> opt) throws FatalProcessingException {
+		throwIfPresent(
+				opt.map(
+						ex -> ex instanceof FatalProcessingException
+								? (FatalProcessingException) ex
+								: new FatalProcessingException(opt.get())
+				)
+		);
 	}
 
 	protected static StandProcessingException
