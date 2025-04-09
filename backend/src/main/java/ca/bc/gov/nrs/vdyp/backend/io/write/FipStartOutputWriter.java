@@ -10,6 +10,7 @@ import ca.bc.gov.nrs.vdyp.backend.projection.model.Polygon;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Species;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Stand;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Vdyp7Constants;
+import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProcessingModeCode;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
 import ca.bc.gov.nrs.vdyp.backend.utils.Utils;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
@@ -52,10 +53,14 @@ public class FipStartOutputWriter extends AbstractOutputWriter implements Closea
 	 * V7W_FIP - Write the given polygon record to the polygon file
 	 *
 	 * @param polygon
+	 * @param projectionType the projection type (layer)
+	 * @param processingMode
 	 * @throws IOException
 	 */
-	public void writePolygon(Polygon polygon, ProjectionTypeCode projectionType, PolygonProjectionState state)
-			throws IOException {
+	public void writePolygon(
+			Polygon polygon, ProjectionTypeCode projectionType, ProcessingModeCode processingMode,
+			PolygonProjectionState state
+	) throws IOException {
 
 		writeFormat(
 				polygonFile, //
@@ -65,7 +70,7 @@ public class FipStartOutputWriter extends AbstractOutputWriter implements Closea
 				polygon.getForestInventoryZone() == null ? "" : polygon.getForestInventoryZone(), //
 				polygon.getBecZone() == null ? "" : polygon.getBecZone(), //
 				polygon.determineStockabilityByProjectionType(projectionType), //
-				state.getProcessingModeUsedByProjectionType(projectionType).value, //
+				processingMode.value, //
 				polygon.getNonProductiveDescriptor() == null ? "" : polygon.getNonProductiveDescriptor(), //
 				format(polygon.getYieldFactor(), 5, 2) //
 		);
@@ -157,11 +162,13 @@ public class FipStartOutputWriter extends AbstractOutputWriter implements Closea
 				SPECIES_FORMAT, //
 
 				stand.getLayer().getPolygon().buildPolygonDescriptor(), //
-				LayerType.PRIMARY.getAlias(), // vdypintperform.c lines 2634 - 2651 - always write "P" for the layer
-												// code.
-				stand.getSp0Code(), //
-				format(stand.getSpeciesGroup().getSpeciesPercent(), 6, 1), speciesDistributionTexts[0],
-				speciesDistributionTexts[1], speciesDistributionTexts[2], speciesDistributionTexts[3]
+				// vdypintperform.c lines 2634 - 2651 - always write "P" for the layer code.
+				LayerType.PRIMARY.getAlias(), stand.getSp0Code(), //
+				format(stand.getSpeciesGroup().getSpeciesPercent(), 6, 1), //
+				speciesDistributionTexts[0], //
+				speciesDistributionTexts[1], //
+				speciesDistributionTexts[2], //
+				speciesDistributionTexts[3]
 		);
 	}
 

@@ -90,13 +90,11 @@ public class PolygonProjectionRunner {
 	/**
 	 * Run the projection
 	 *
-	 * @throws PolygonExecutionException            if there's an exception caused by the input data during the
-	 *                                              projection
-	 * @throws PolygonExecutionException if there's an exception caused by the software during the projection
-	 * @throws YieldTableGenerationException        if there's an exception during yield table generation
+	 * @throws PolygonExecutionException     if there's an exception caused by the input data during the projection
+	 * @throws PolygonExecutionException     if there's an exception caused by the software during the projection
+	 * @throws YieldTableGenerationException if there's an exception during yield table generation
 	 */
-	void project()
-			throws PolygonExecutionException, YieldTableGenerationException {
+	void project() throws PolygonExecutionException, YieldTableGenerationException {
 
 		// Begin implementation based on code starting at line 2088 (call to "V7Ext_GetPolygonInfo") in vdyp7console.c.
 		// Note the funky error handling in this routine: "rtrnCode" is set to SUCCESS and is potentially set to
@@ -164,11 +162,15 @@ public class PolygonProjectionRunner {
 
 		logger.info("{}: performing initial processing", polygon);
 
+		ProjectionTypeCode primaryProjectionType;
 		try {
-			this.determineInitialProcessingModel(state);
+			primaryProjectionType = this.determineInitialProcessingModel(state);
 		} catch (PolygonValidationException e) {
 			throw new PolygonExecutionException(e);
 		}
+
+		GrowthModelCode initialGrowthModel = state.getGrowthModel(primaryProjectionType);
+		ProcessingModeCode initialProcessingMode = state.getProcessingMode(primaryProjectionType);
 
 		for (ProjectionTypeCode projectionType : ProjectionTypeCode.ACTUAL_PROJECTION_TYPES_LIST) {
 
@@ -182,14 +184,13 @@ public class PolygonProjectionRunner {
 
 			logger.info(
 					"{}: layer exists for projection type {} (processing mode {}); {} processing will occur for this type",
-					polygon, projectionType, state.getProcessingMode(projectionType),
-					state.getGrowthModel(projectionType)
+					polygon, projectionType, initialProcessingMode, initialGrowthModel
 			);
 
-			switch (state.getGrowthModel(projectionType)) {
+			switch (initialGrowthModel) {
 			case FIP: {
 
-				createFipInputData(projectionType, state);
+				createFipInputData(projectionType, initialProcessingMode, state);
 
 				componentRunner.runFipStart(polygon, projectionType, state);
 				logger.debug(
@@ -233,8 +234,8 @@ public class PolygonProjectionRunner {
 	/**
 	 * <b>V7Ext_InitialProcessingModeToBeUsed</b>
 	 * <p>
-	 * Determines the processing the stand will be initially subject to. The results are stored in the supplied
-	 * <code>state</code> object.
+	 * Determines the processing mode which to the stand will be initially subjected. The results are stored in the
+	 * supplied <code>state</code> object.
 	 * <p>
 	 * <b>Remarks</b>
 	 * <ul>
@@ -249,21 +250,23 @@ public class PolygonProjectionRunner {
 	 * </ul>
 	 *
 	 * @param state the initial state of the projection of the polygon to this point.
+	 * @return the projection type code
 	 * @throws PolygonValidationException if the polygon definition contains errors
 	 */
-	private void determineInitialProcessingModel(PolygonProjectionState state) throws PolygonValidationException {
+	private ProjectionTypeCode determineInitialProcessingModel(PolygonProjectionState state)
+			throws PolygonValidationException {
 
 		var rGrowthModel = new Reference<GrowthModelCode>();
 		var rProcessingMode = new Reference<ProcessingModeCode>();
 		var rPrimaryLayer = new Reference<Layer>();
 		var rProjectionType = new Reference<ProjectionTypeCode>();
-		
+
 		polygon.calculateInitialProcessingModel(rGrowthModel, rProcessingMode, rPrimaryLayer, rProjectionType);
 
 		Validate.isTrue(
 				rGrowthModel.isPresent() && rProcessingMode.isPresent(),
 				"PolygonProjectionRunner.determineInitialProcessingModel: at least one of rGrowthModel and rProcessingMode is not present"
-				);
+		);
 
 		if (!rPrimaryLayer.isPresent()) {
 			throw new PolygonValidationException(
@@ -273,7 +276,7 @@ public class PolygonProjectionRunner {
 
 		var primaryLayer = rPrimaryLayer.get();
 		var projectionType = rProjectionType.get();
-		
+
 		// Check if the stand is non-productive.
 		if (polygon.getNonProductiveDescriptor() != null) {
 			if (rPrimaryLayer.get().getSp0sAsSupplied().size() > 0) {
@@ -285,7 +288,8 @@ public class PolygonProjectionRunner {
 				polygon.disableProjectionsOfType(rPrimaryLayer.get().getAssignedProjectionType());
 
 				context.addMessage(
-						Level.ERROR, "Layer {0} is not completely, or is not consistently, defined; projection of layer disabled",
+						Level.ERROR,
+						"Layer {0} is not completely, or is not consistently, defined; projection of layer disabled",
 						primaryLayer
 				);
 			}
@@ -293,9 +297,11 @@ public class PolygonProjectionRunner {
 
 		Stand leadingSp0 = primaryLayer.determineLeadingSp0(0 /* leading */);
 		if (leadingSp0 == null) {
-			polygon.disableProjectionsOfType(projectionType);
 			context.addMessage(
 					Level.ERROR, "No leading Sp0 for primary layer {0}; projection of layer disabled", primaryLayer
+			);
+			throw new PolygonValidationException(
+					new ValidationMessage(ValidationMessageKind.NO_LEADING_SPECIES, primaryLayer)
 			);
 		} else {
 			logger.debug(
@@ -308,10 +314,13 @@ public class PolygonProjectionRunner {
 		logger.trace(
 				"Polygon {}: growth model {}; processing mode {}", this, rGrowthModel.get(), rProcessingMode.get()
 		);
+
+		return projectionType;
 	}
 
-	private void createFipInputData(ProjectionTypeCode projectionType, PolygonProjectionState state)
-			throws PolygonExecutionException {
+	private void createFipInputData(
+			ProjectionTypeCode projectionType, ProcessingModeCode processingMode, PolygonProjectionState state
+	) throws PolygonExecutionException {
 
 		Path stepExecutionFolder = Path.of(state.getExecutionFolder().toString(), projectionType.toString());
 
@@ -333,7 +342,7 @@ public class PolygonProjectionRunner {
 							polygonOutputStream, layersOutputStream, speciesOutputStream
 					)
 			) {
-				outputWriter.writePolygon(polygon, projectionType, state);
+				outputWriter.writePolygon(polygon, projectionType, processingMode, state);
 				outputWriter.writePolygonLayer(polygon.getLayerByProjectionType(projectionType));
 			}
 		} catch (Exception e) {
@@ -447,11 +456,11 @@ public class PolygonProjectionRunner {
 			);
 
 			Double primaryLayerAge = null;
-			
+
 			if (polygon.getPrimaryLayer() != null) {
 				primaryLayerAge = polygon.getPrimaryLayer().determineLayerAgeAtYear(polygon.getReferenceYear());
 			}
-			
+
 			if (primaryLayerAge == null) {
 				// determineLayerAgeAtYear may throw a ValidationException, although this error should
 				// have been detected before this point.
@@ -459,8 +468,8 @@ public class PolygonProjectionRunner {
 						MessageFormat.format(
 								"{0}: unable to project since cannot calculate the age of the primary layer {1} at year {2}",
 								polygon, polygon.getPrimaryLayer(), polygon.getReferenceYear()
-								)
-						);
+						)
+				);
 			}
 
 			switch (projectionType) {
