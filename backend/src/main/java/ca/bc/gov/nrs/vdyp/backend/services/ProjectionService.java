@@ -88,6 +88,8 @@ public class ProjectionService {
 		return Response.serverError().status(Status.NOT_IMPLEMENTED).build();
 	}
 
+	private ObjectMapper jsonObjectMapper = new ObjectMapper();
+
 	private Response runProjection(
 			ProjectionRequestKind kind, Map<String, InputStream> inputStreams, Boolean isTrialRun, Parameters params,
 			SecurityContext securityContext
@@ -98,9 +100,7 @@ public class ProjectionService {
 
 		try {
 			// Included to generate JSON text of parameters as needed
-			ObjectMapper mapper = new ObjectMapper();
-			String serializedParametersText = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(params);
-
+			String serializedParametersText = jsonObjectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(params);
 			logger.info(serializedParametersText);
 		} catch (JsonProcessingException e) {
 			logger.warn(MessageFormat.format("{0}: unable to log parameters JSON", projectionId), e);

@@ -66,10 +66,7 @@ public enum ValidationMessageKind {
 	), //
 	MISSING_SITE_INDEX_ERROR("Polygon {0} Layer {1}: unable to compute site index for species \"{2}\"."),
 	MISSING_YEARS_TO_BREAST_HEIGHT("Polygon {0} Layer {1}: species {2} missing years-to-breast-height value."), //
-	NO_LEADING_SPECIES("Polygon {0} Layer {1}: no leading site species could be found"), //
-	SPECIES_WITH_NO_STAND_OR_AGE(
-			"Polygon {0} Layer {1}: Species \"{2}\" has no age but requires that a new Stand be created, which requires the age be known"
-	), //
+	NO_LEADING_SPECIES("Layer {0}: no leading site species could be found"), //
 	PRIMARY_LAYER_NOT_FOUND("Polygon {0}: no primary layer found for any projection type"), //
 	ESTIMATED_SI_UNAVAILABLE(
 			"Estimated site index required but unavailable for species {0} at age {1}. Site index computed directly from age and height"
@@ -85,12 +82,12 @@ public enum ValidationMessageKind {
 			"Assigning converted estimated site index of {0} to Species \"{1}\" and recomputing input height"
 	), //
 	USING_SUPPLIED_BASAL_AREA_IN_PROJECTION(
-			"{}: starting value for basal area copied over for QA and alternative model used"
+			"{0}: starting value for basal area copied over for QA and alternative model used"
 	), //
 	USING_SUPPLIED_TPH_IN_PROJECTION(
-			"{}: starting value for trees-per-hectare copied over for QA and alternative model used"
+			"{0}: starting value for trees-per-hectare copied over for QA and alternative model used"
 	), //
-	MISSING_LEADING_SPECIES("{}: layer is missing a leading species"), //
+	MISSING_LEADING_SPECIES("{0}: layer is missing a leading species"), //
 	;
 
 	public enum Category {

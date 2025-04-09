@@ -64,14 +64,6 @@ public class PolygonProjectionState {
 		firstYearYieldsDisplayedByLayer = new HashMap<>();
 	}
 
-	public GrowthModelCode getGrowthModelUsedByProjectionType(ProjectionTypeCode projectionType) {
-		return growthModelByProjectionType.get(projectionType);
-	}
-
-	public ProcessingModeCode getProcessingModeUsedByProjectionType(ProjectionTypeCode projectionType) {
-		return processingModeByProjectionType.get(projectionType);
-	}
-
 	public Double getPercentForestedLandUsed(ProjectionTypeCode projectionType) {
 		return percentForestedLandUsedByProjectionType.get(projectionType);
 	}

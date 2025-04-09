@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -58,11 +59,11 @@ class HcsvProjectionEndpoint_44GrpATest extends HttpProjectionRequestTest {
 	void perTestSetup() {
 	}
 
-	// @Test
-	void run44GroupA_20929412_Test() throws IOException {
-		logger.info("Starting run44GroupA_20929412_Test");
+	@Test
+	void run44GroupA_SpecificPolygon_Test() throws IOException {
+		logger.info("Starting run44GroupA_SpecificPolygon_Test");
 
-		var zipEntries = runTest("20929412");
+		var zipEntries = runTest("19822790");
 
 		var errorEntryContent = zipEntries.get("ErrorLog.txt");
 		Assert.assertTrue(errorEntryContent.length() == 0);
@@ -70,7 +71,19 @@ class HcsvProjectionEndpoint_44GrpATest extends HttpProjectionRequestTest {
 		Assert.assertTrue(csvEntryContent.length() > 0);
 	}
 
-	@Test
+	// @Test
+	void run44GroupA_1816162_Test() throws IOException {
+		logger.info("Starting run44GroupA_SpecificPolygon_Test");
+
+		var zipEntries = runTest("1816162");
+
+		var errorEntryContent = zipEntries.get("ErrorLog.txt");
+		Assert.assertTrue(errorEntryContent.length() > 0);
+		var csvEntryContent = zipEntries.get("YieldTable.csv");
+		Assert.assertTrue(csvEntryContent.length() == 0);
+	}
+
+	// @Test
 	void run44GroupATest() throws IOException {
 
 		logger.info("Starting run44GroupATest");
@@ -84,6 +97,37 @@ class HcsvProjectionEndpoint_44GrpATest extends HttpProjectionRequestTest {
 		var statusStream = new FileOutputStream(statusFile.toFile());
 
 		var resultsList = runTestSet(fId -> true /* do all */, Optional.of(statusStream));
+
+		logger.info("run44GroupATest complete: {} results seen", resultsList);
+	}
+
+	// @Test
+	void runFiltered44GroupATest() throws IOException {
+
+		logger.info("Starting runFiltered44GroupATest");
+
+		Path testFolderPath = testHelper.getResourceFile(resourceFolderPath, "44GrpA_VDYP7_INPUT_POLY.csv").getParent();
+		Path statusFilePath = Path.of(testFolderPath.toString(), "RunStatus.txt");
+
+		Path polyIdFilePath = testHelper.getResourceFile(resourceFolderPath, "polyids.txt");
+
+		Predicate<String> predicate;
+		if (Files.exists(polyIdFilePath)) {
+			var polyIdSet = new HashSet<String>();
+			for (var line: Files.readAllLines(polyIdFilePath)) {
+				polyIdSet.add(line.strip());
+			}
+			predicate = fId -> polyIdSet.contains(fId);
+		} else {
+			predicate = fId -> true /* do all */;
+		}
+		
+		Files.deleteIfExists(statusFilePath);
+		Path statusFile = Files.createFile(statusFilePath);
+
+		var statusStream = new FileOutputStream(statusFile.toFile());
+
+		var resultsList = runTestSet(predicate, Optional.of(statusStream));
 
 		logger.info("run44GroupATest complete: {} results seen", resultsList);
 	}

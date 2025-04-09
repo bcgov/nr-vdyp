@@ -862,8 +862,8 @@ public class Polygon implements Comparable<Polygon> {
 	/**
 	 * <b>V7Ext_InitialProcessingModeToBeUsed</b>
 	 * <p>
-	 * Determine the processing the stand will be initially subject to. This is determined from the characteristics of
-	 * the layer associated with the first projection type that has a layer from the list
+	 * Determine the processing mode to which the stand will be initially subjected. This is determined from the
+	 * characteristics of the layer associated with the first projection type that has a layer from the list
 	 * <code>ACTUAL_PROJECTION_TYPES_LIST</code> whose order is crucial to this method working successfully.
 	 * <p>
 	 * The processing mode is specified according to how the stand is defined. The mode is completely defined by the
@@ -882,6 +882,8 @@ public class Polygon implements Comparable<Polygon> {
 	 *                        selection may be overridden when the model is actually run. This routine does, however,
 	 *                        identify the initial values which will be used.
 	 * @param rPrimaryLayer   the polygon layer determined to be its primary species
+	 * @param rProjectionType the first projection type that has a primary layer, in the order given by
+	 *                        <code>ProjectionTypeCode.ACTUAL_PROJECTION_TYPES_LIST</code>
 	 */
 	public void calculateInitialProcessingModel(
 			Reference<GrowthModelCode> rGrowthModel, Reference<ProcessingModeCode> rProcessingMode,
