@@ -78,7 +78,7 @@ public class VriStartOutputWriter extends AbstractOutputWriter implements Closea
 				polygon.buildPolygonDescriptor(), //
 				polygon.getBecZone() == null ? "" : polygon.getBecZone(), //
 				format(polygon.determineStockabilityByProjectionType(projectionType), 4, 0), //
-				state.getProcessingModeUsedByProjectionType(projectionType).value, //
+				state.getProcessingMode(projectionType).value, //
 				polygon.getNonProductiveDescriptor() == null ? "" : polygon.getNonProductiveDescriptor(), //
 				format(polygon.getYieldFactor(), 5, 2) //
 		);
@@ -145,7 +145,8 @@ public class VriStartOutputWriter extends AbstractOutputWriter implements Closea
 			for (int i = 0; i < 4; i++) {
 				if (i < stand.getSpeciesByPercent().size()) {
 					Species s = stand.getSpeciesByPercent().get(i);
-					speciesDistributionTexts[i] = String.format("%3s%5.1f", s.getSpeciesCode(), s.getSpeciesPercent());
+					var percentOfStand = 100.0 * s.getSpeciesPercent() / stand.getSpeciesGroup().getSpeciesPercent();
+					speciesDistributionTexts[i] = String.format("%3s%5.1f", s.getSpeciesCode(), percentOfStand);
 				} else {
 					speciesDistributionTexts[i] = "     0.0";
 				}
