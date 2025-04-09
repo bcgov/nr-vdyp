@@ -345,17 +345,27 @@ public class Species implements Comparable<Species> {
 		this.percentsPerDuplicate.put(0, speciesPercent);
 
 		if (totalAge == null && sp64.getTotalAge() != null) {
-
-			ageAtBreastHeight = sp64.getAgeAtBreastHeight();
-			dominantHeight = sp64.getDominantHeight();
-			siteCurve = sp64.getSiteCurve();
-			siteIndex = sp64.getSiteIndex();
 			suppliedDominantHeight = sp64.getSuppliedDominantHeight();
 			suppliedSiteIndex = sp64.getSiteIndex();
 			suppliedTotalAge = sp64.getSuppliedTotalAge();
-			totalAge = sp64.getTotalAge();
-			yearsToBreastHeight = sp64.getYearsToBreastHeight();
+
+			updateSiteInfo(sp64);
 		}
+	}
+
+	/**
+	 * Update the site information of this sp0 from that of the given sp64.
+	 *
+	 * @param sp64 the sp64 in question.
+	 */
+	public void updateSiteInfo(Species sp64) {
+		
+		ageAtBreastHeight = sp64.getAgeAtBreastHeight();
+		siteCurve = sp64.getSiteCurve();
+		totalAge = sp64.getTotalAge();
+		dominantHeight = sp64.getDominantHeight();
+		siteIndex = sp64.getSiteIndex();
+		yearsToBreastHeight = sp64.getYearsToBreastHeight();
 	}
 
 	/**

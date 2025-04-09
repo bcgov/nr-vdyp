@@ -1336,6 +1336,8 @@ public class Layer implements Comparable<Layer> {
 								donorSpecies.getDominantHeight(), donorSpecies.getSiteIndex()
 						);
 					}
+					
+					break;
 				}
 			}
 
@@ -1396,7 +1398,7 @@ public class Layer implements Comparable<Layer> {
 			}
 
 			if (amDone && stand != null && siteSpecies != null) {
-				speciesGroup.updateAfterSp64Added(siteSpecies);
+				speciesGroup.updateSiteInfo(siteSpecies);
 				speciesGroup.calculateUndefinedFieldValues();
 			}
 		}
