@@ -40,7 +40,7 @@ public class BaseAreaLowException extends LayerValueLowException {
 	 */
 	public static Optional<BaseAreaLowException>
 			check(LayerType layer, String name, Optional<Float> value, float threshold) {
-		return LayerValueLowException.check(layer, name, value, threshold, BaseAreaLowException::new);
+		return LayerValueLowException.checkExclusive(layer, name, value, threshold, BaseAreaLowException::new);
 	}
 
 	/**

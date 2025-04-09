@@ -753,7 +753,7 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 		for (var layer : layers.values()) {
 			if (!layer.getPolygonIdentifier().equals(polygon.getPolygonIdentifier())) {
 				throw fatalError(
-						"Record in layer file contains layer for polygon %s when expecting one for %s.",
+						"Record in layer file contains layer for polygon {0} when expecting one for {1}.",
 						layer.getPolygonIdentifier(), polygon.getPolygonIdentifier()
 				);
 			}
@@ -765,13 +765,13 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 			// Validate that species belong to the correct polygon
 			if (!spec.getPolygonIdentifier().equals(polygon.getPolygonIdentifier())) {
 				throw fatalError(
-						"Record in species file contains species for polygon %s when expecting one for %s.",
+						"Record in species file contains species for polygon {0} when expecting one for {1}.",
 						layer.getPolygonIdentifier(), polygon.getPolygonIdentifier()
 				);
 			}
 			if (Objects.isNull(layer)) {
 				throw fatalError(
-						"Species entry references layer of type \"%s\" of polygon %s but it is not present.",
+						"Species entry references layer of type \"{0}\" of polygon {1} but it is not present.",
 						spec.getLayerType(), polygon.getPolygonIdentifier()
 				);
 			}

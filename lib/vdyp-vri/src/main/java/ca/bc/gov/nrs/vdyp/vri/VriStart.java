@@ -1126,7 +1126,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		final float upperBoundsQuadMeanDiameter = upperBoundsQuadMeanDiameter(baseAreaGroup);
 
 		if (ageUse <= 0f) {
-			throw fatalError("Primary breast height age must be positive but was {0}", ageUse);
+			throw fatalError("Primary breast height age must be positive but was {0,number}", ageUse);
 		}
 
 		final float trAge = FloatMath.log(ageUse);
@@ -1229,7 +1229,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		int year = polygonIdentifier.getYear();
 
 		if (year < 1900) {
-			throw fatalError("Year for YOUNG stand should be at least 1900 but was {0}", year);
+			throw fatalError("Year for YOUNG stand should be at least 1900 but was {0,number,####}", year);
 		}
 
 		var bec = poly.getBiogeoclimaticZone();

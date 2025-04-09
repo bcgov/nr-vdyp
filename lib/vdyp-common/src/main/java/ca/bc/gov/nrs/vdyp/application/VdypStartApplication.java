@@ -35,6 +35,7 @@ import java.util.stream.IntStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.helpers.MessageFormatter;
 
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.EstimationMethods;
@@ -720,7 +721,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 	protected static FatalProcessingException fatalError(String template, Object... values) {
 
-		return new FatalProcessingException(String.format(template, values));
+		return new FatalProcessingException(MessageFormat.format(template, values));
 	}
 
 	protected static FatalProcessingException causedFatalError(String template, Throwable cause, Object... values) {

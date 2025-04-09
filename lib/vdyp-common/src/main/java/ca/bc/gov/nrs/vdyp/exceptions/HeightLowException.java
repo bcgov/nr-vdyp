@@ -41,7 +41,7 @@ public class HeightLowException extends LayerValueLowException {
 	 */
 	public static Optional<HeightLowException>
 			check(LayerType layer, String name, Optional<Float> value, float threshold) {
-		return LayerValueLowException.check(layer, name, value, threshold, HeightLowException::new);
+		return LayerValueLowException.checkExclusive(layer, name, value, threshold, HeightLowException::new);
 	}
 
 	/**

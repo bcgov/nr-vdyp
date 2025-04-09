@@ -56,7 +56,7 @@ public class SiteIndexLowException extends LayerValueLowException {
 	 */
 	public static Optional<SiteIndexLowException>
 			check(LayerType layer, String name, Optional<Float> value, float threshold) {
-		return LayerValueLowException.check(layer, name, value, threshold, SiteIndexLowException::new);
+		return LayerValueLowException.checkInclusive(layer, name, value, threshold, SiteIndexLowException::new);
 	}
 
 	/**

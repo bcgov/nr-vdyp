@@ -44,7 +44,9 @@ public class PreprocessEstimatedBaseAreaLowException extends LayerValueLowExcept
 	 */
 	public static Optional<PreprocessEstimatedBaseAreaLowException>
 			check(LayerType layer, String name, Optional<Float> value, float threshold) {
-		return LayerValueLowException.check(layer, name, value, threshold, PreprocessEstimatedBaseAreaLowException::new);
+		return LayerValueLowException.checkExclusive(
+				layer, name, value, threshold, PreprocessEstimatedBaseAreaLowException::new
+		);
 	}
 
 	/**

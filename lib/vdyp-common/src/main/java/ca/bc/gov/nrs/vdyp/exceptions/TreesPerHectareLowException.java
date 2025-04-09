@@ -40,7 +40,7 @@ public class TreesPerHectareLowException extends LayerValueLowException {
 	 */
 	public static Optional<TreesPerHectareLowException>
 			check(LayerType layer, String name, Optional<Float> value, float threshold) {
-		return LayerValueLowException.check(layer, name, value, threshold, TreesPerHectareLowException::new);
+		return LayerValueLowException.checkExclusive(layer, name, value, threshold, TreesPerHectareLowException::new);
 	}
 
 	/**

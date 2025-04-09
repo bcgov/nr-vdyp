@@ -2,6 +2,8 @@ package ca.bc.gov.nrs.vdyp.exceptions;
 
 import java.text.MessageFormat;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 
@@ -68,12 +70,33 @@ public abstract class LayerValueLowException extends LayerValidationException {
 
 	}
 
-	protected static <T extends LayerValueLowException, N extends Number> Optional<T>
-			check(LayerType layer, String name, Optional<N> value, N threshold, Constructor<T, N> constructor) {
-		if (value.map(v -> v.doubleValue() < threshold.doubleValue()).orElse(true)) {
+	private static <T extends LayerValueLowException, N extends Number> Optional<T>
+			check(
+					LayerType layer, String name, Optional<N> value, N threshold, boolean inclusive,
+					Constructor<T, N> constructor
+			) {
+		final Optional<Double> castValue = value.map(Number::doubleValue);
+		final double castThreshold = threshold.doubleValue();
+		final Function<Double, Boolean> test = inclusive ? v -> v < castThreshold : v -> v <= castThreshold;
+		final boolean fail = castValue.map(test).orElse(true);
+		if (fail) {
 			return Optional.of(constructor.build(layer, name, value, Optional.of(threshold)));
 		}
 		return Optional.empty();
+	}
+
+	protected static <T extends LayerValueLowException, N extends Number> Optional<T>
+			checkInclusive(
+					LayerType layer, String name, Optional<N> value, N threshold, Constructor<T, N> constructor
+			) {
+		return check(layer, name, value, threshold, true, constructor);
+	}
+
+	protected static <T extends LayerValueLowException, N extends Number> Optional<T>
+			checkExclusive(
+					LayerType layer, String name, Optional<N> value, N threshold, Constructor<T, N> constructor
+			) {
+		return check(layer, name, value, threshold, false, constructor);
 	}
 
 }

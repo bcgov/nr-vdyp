@@ -40,7 +40,7 @@ public class TotalAgeLowException extends LayerValueLowException {
 	 */
 	public static Optional<TotalAgeLowException>
 			check(LayerType layer, String name, Optional<Float> value, float threshold) {
-		return LayerValueLowException.check(layer, name, value, threshold, TotalAgeLowException::new);
+		return LayerValueLowException.checkExclusive(layer, name, value, threshold, TotalAgeLowException::new);
 	}
 
 	/**

@@ -47,7 +47,7 @@ public class ResultBaseAreaLowException extends LayerValueLowException {
 	 */
 	public static Optional<ResultBaseAreaLowException>
 			check(LayerType layer, String name, Optional<Float> value, float threshold) {
-		return LayerValueLowException.check(layer, name, value, threshold, ResultBaseAreaLowException::new);
+		return LayerValueLowException.checkExclusive(layer, name, value, threshold, ResultBaseAreaLowException::new);
 	}
 
 	/**

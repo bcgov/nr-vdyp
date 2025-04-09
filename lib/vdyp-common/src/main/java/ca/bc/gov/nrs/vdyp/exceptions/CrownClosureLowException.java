@@ -40,7 +40,7 @@ public class CrownClosureLowException extends LayerValueLowException {
 	 */
 	public static Optional<CrownClosureLowException>
 			check(LayerType layer, String name, Optional<Float> value, float threshold) {
-		return LayerValueLowException.check(layer, name, value, threshold, CrownClosureLowException::new);
+		return LayerValueLowException.checkExclusive(layer, name, value, threshold, CrownClosureLowException::new);
 	}
 
 	/**
