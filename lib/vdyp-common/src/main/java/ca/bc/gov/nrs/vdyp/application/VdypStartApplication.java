@@ -507,12 +507,12 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		var groupMap = Utils.<MatrixMap2<String, String, Integer>>expectParsedControl(
 				controlMap, ControlKey.DEFAULT_EQ_NUM, ca.bc.gov.nrs.vdyp.model.MatrixMap2.class
 		);
-		var modMap = Utils.<MatrixMap2<Integer, Integer, Optional<Integer>>>expectParsedControl(
+		var modMap = Utils.<MatrixMap2<Integer, Integer, Integer>>expectParsedControl(
 				controlMap, ControlKey.EQN_MODIFIERS, ca.bc.gov.nrs.vdyp.model.MatrixMap2.class
 		);
 		var group = groupMap.get(specAlias, bec.getGrowthBec().getAlias());
-		group = MatrixMap.safeGet(modMap, group, itg).orElse(group);
-		return group;
+		var modGroup = modMap.get(group, itg);
+		return modGroup > 0 ? modGroup : group;
 	}
 
 	protected VdypOutputWriter getVriWriter() {
