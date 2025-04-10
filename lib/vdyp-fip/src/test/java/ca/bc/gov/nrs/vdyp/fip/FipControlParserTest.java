@@ -1,18 +1,8 @@
 package ca.bc.gov.nrs.vdyp.fip;
 
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.coe;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.controlMapHasEntry;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.hasBec;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.mmEmpty;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.mmHasEntry;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.hasEntry;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.isA;
+import static org.hamcrest.Matchers.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -43,7 +33,7 @@ import ca.bc.gov.nrs.vdyp.model.SiteCurveAgeMaximum;
 import ca.bc.gov.nrs.vdyp.model.StockingClassFactor;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
-@SuppressWarnings({ "unused", "unchecked", "rawtypes" })
+@SuppressWarnings({ "unchecked", "rawtypes" })
 class FipControlParserTest {
 
 	@Test

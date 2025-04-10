@@ -1,14 +1,8 @@
 package ca.bc.gov.nrs.vdyp.io.parse.coe;
 
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.coe;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.controlMapHasEntry;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.mmAll;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.mmDimensions;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 
 import java.io.IOException;
 import java.util.Arrays;

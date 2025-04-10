@@ -7,7 +7,7 @@ import ca.bc.gov.nrs.vdyp.si32.cfs.CfsTreeSpecies;
 import ca.bc.gov.nrs.vdyp.si32.enumerations.SpeciesRegion;
 
 /**
- * Records all of the information regarding a particular CSF species.
+ * Records all of the information regarding a particular CFS species.
  */
 public record SpeciesDetails(
 
