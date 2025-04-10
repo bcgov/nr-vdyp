@@ -17,6 +17,8 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
@@ -428,6 +430,39 @@ public class Utils {
 		} else {
 			return Optional.of(i);
 		}
+	}
+
+	public static <T> String prettyList(Collection<T> items, String conjunction, Function<T, String> stringify) {
+
+		if (items.isEmpty()) {
+			return "";
+		}
+
+		if (items.size() == 1) {
+			return stringify.apply(items.iterator().next());
+		}
+
+		if (conjunction == null || conjunction.isEmpty()) {
+			items.stream().map(stringify).collect(Collectors.joining(", "));
+		}
+
+		if (items.size() == 2) {
+			final var it = items.iterator();
+			return String.format("%s %s %s", stringify.apply(it.next()), conjunction, stringify.apply(it.next()));
+		}
+
+		final var builder = new StringBuilder();
+		for (var it = items.iterator(); it.hasNext();) {
+			String item = stringify.apply(it.next());
+			if (!builder.isEmpty()) {
+				if (!it.hasNext()) {
+					builder.append(" ").append(conjunction);
+				}
+				builder.append(", ");
+			}
+			builder.append(item);
+		}
+		return builder.toString();
 	}
 
 	/**

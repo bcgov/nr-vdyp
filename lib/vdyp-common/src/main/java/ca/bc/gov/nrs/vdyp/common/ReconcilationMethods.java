@@ -5,8 +5,8 @@ import static ca.bc.gov.nrs.vdyp.math.FloatMath.*;
 import java.text.MessageFormat;
 import java.util.List;
 
-import ca.bc.gov.nrs.vdyp.application.ProcessingException;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
+import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
 

@@ -32,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.text.MessageFormat;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -53,13 +54,14 @@ import org.junit.jupiter.params.provider.EnumSource.Mode;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import ca.bc.gov.nrs.vdyp.application.ApplicationTestUtils;
-import ca.bc.gov.nrs.vdyp.application.ProcessingException;
-import ca.bc.gov.nrs.vdyp.application.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.application.VdypStartApplication;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
+import ca.bc.gov.nrs.vdyp.exceptions.FatalProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BasalAreaYieldParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BaseAreaCoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.HLNonprimaryCoefficientParser;
@@ -122,7 +124,7 @@ class VriStartTest {
 	@Nested
 	class EstimateBaseAreaYield {
 		@Test
-		void testCompute() throws StandProcessingException {
+		void testCompute() throws ProcessingException {
 			Map<String, Object> controlMap = VriTestUtils.loadControlMap();
 			VriStart app = new VriStart();
 			ApplicationTestUtils.setControlMap(app, controlMap);
@@ -933,7 +935,7 @@ class VriStartTest {
 		class FindRootOfErrorFunction {
 
 			@Test
-			void testSuccess() throws StandProcessingException {
+			void testSuccess() throws ProcessingException {
 				controlMap = VriTestUtils.loadControlMap();
 				VriStart app = new VriStart();
 				ApplicationTestUtils.setControlMap(app, controlMap);
@@ -1058,7 +1060,7 @@ class VriStartTest {
 				app.setDebugMode(1, 2);
 
 				assertThrows(
-						StandProcessingException.class,
+						FatalProcessingException.class,
 						() -> app.findRootForQuadMeanDiameterFractionalError(
 								x1, x2, resultPerSpecies, initialDqs, baseAreas, minDq, maxDq, tph
 						)
@@ -1066,7 +1068,7 @@ class VriStartTest {
 			}
 
 			@Test
-			void testNoIntervalGuess() throws StandProcessingException {
+			void testNoIntervalGuess() throws ProcessingException {
 				controlMap = VriTestUtils.loadControlMap();
 
 				VriStart app = new VriStart() {
@@ -1209,7 +1211,7 @@ class VriStartTest {
 				app.setDebugMode(1, 2);
 
 				assertThrows(
-						StandProcessingException.class,
+						FatalProcessingException.class,
 						() -> app.findRootForQuadMeanDiameterFractionalError(
 								x1, x2, resultPerSpecies, initialDqs, baseAreas, minDq, maxDq, tph
 						)
@@ -1217,7 +1219,7 @@ class VriStartTest {
 			}
 
 			@Test
-			void testTooManyEvaluationsGuess() throws StandProcessingException {
+			void testTooManyEvaluationsGuess() throws ProcessingException {
 				controlMap = VriTestUtils.loadControlMap();
 
 				float expectedX = 0.172142f;
@@ -1351,7 +1353,7 @@ class VriStartTest {
 				app.setDebugMode(1, 0);
 
 				assertThrows(
-						StandProcessingException.class,
+						FatalProcessingException.class,
 						() -> app.findRootForQuadMeanDiameterFractionalError(
 								x1, x2, resultPerSpecies, initialDqs, baseAreas, minDq, maxDq, tph
 						)
@@ -1935,7 +1937,7 @@ class VriStartTest {
 		}
 
 		@Test
-		void testStandExceptionProcessingPrimaryLayer() throws Exception {
+		void testFatalExceptionProcessingPrimaryLayer() throws Exception {
 
 			TestUtils.populateControlMapBecReal(controlMap);
 
@@ -1967,13 +1969,13 @@ class VriStartTest {
 
 			EasyMock.expect(app.checkPolygon(poly)).andReturn(mode).once();
 			app.processPrimaryLayer(EasyMock.same(poly), EasyMock.anyObject(VdypLayer.Builder.class));
-			EasyMock.expectLastCall().andThrow(new StandProcessingException("Test Exception")).once();
+			EasyMock.expectLastCall().andThrow(new FatalProcessingException("Test Exception")).once();
 
 			control.replay();
 
 			app.init(resolver, controlMap);
 
-			assertThrows(StandProcessingException.class, () -> app.processPolygon(0, poly));
+			assertThrows(FatalProcessingException.class, () -> app.processPolygon(0, poly));
 
 			app.close();
 
@@ -2499,8 +2501,8 @@ class VriStartTest {
 		assertThat(app.findSiteCurveNumber(Region.COASTAL, "YYY", "B"), is(SiteIndexEquation.getByIndex(42)));
 		assertThat(app.findSiteCurveNumber(Region.INTERIOR, "YYY", "B"), is(SiteIndexEquation.getByIndex(06)));
 
-		assertThrows(StandProcessingException.class, () -> app.findSiteCurveNumber(Region.COASTAL, "ZZZ"));
-		assertThrows(StandProcessingException.class, () -> app.findSiteCurveNumber(Region.INTERIOR, "ZZZ"));
+		assertThrows(FatalProcessingException.class, () -> app.findSiteCurveNumber(Region.COASTAL, "ZZZ"));
+		assertThrows(FatalProcessingException.class, () -> app.findSiteCurveNumber(Region.INTERIOR, "ZZZ"));
 
 		app.close();
 
@@ -3089,7 +3091,7 @@ class VriStartTest {
 
 			app.init(resolver, controlMap);
 
-			var ex = assertThrows(StandProcessingException.class, () -> app.processYoung(poly));
+			var ex = assertThrows(FatalProcessingException.class, () -> app.processYoung(poly));
 
 			assertThat(ex, hasProperty("message", is("Year for YOUNG stand should be at least 1900 but was 1899")));
 
@@ -3965,7 +3967,7 @@ class VriStartTest {
 	class EstimateQuadMeanDiameterYield {
 
 		@Test
-		void testCompute() throws StandProcessingException {
+		void testCompute() throws ProcessingException {
 
 			controlMap = VriTestUtils.loadControlMap();
 			VriStart app = new VriStart();
@@ -4017,7 +4019,7 @@ class VriStartTest {
 
 		@ParameterizedTest
 		@ValueSource(floats = { 0f, -1f, -Float.MIN_VALUE, -Float.MAX_VALUE, Float.NEGATIVE_INFINITY })
-		void testBreastHeightAgeLow(float breastHeightAge) throws StandProcessingException {
+		void testBreastHeightAgeLow(float breastHeightAge) throws FatalProcessingException {
 			controlMap = VriTestUtils.loadControlMap();
 			VriStart app = new VriStart();
 			ApplicationTestUtils.setControlMap(app, controlMap);
@@ -4062,11 +4064,11 @@ class VriStartTest {
 			var bec = Utils.expectParsedControl(controlMap, ControlKey.BEC_DEF, BecLookup.class).get("IDF").get();
 
 			var ex = assertThrows(
-					StandProcessingException.class,
+					FatalProcessingException.class,
 					() -> app.estimateQuadMeanDiameterYield(7.6f, breastHeightAge, Optional.empty(), species, bec, 61)
 			);
 
-			assertThat(ex, hasProperty("message", endsWith(Float.toString(breastHeightAge))));
+			assertThat(ex, hasProperty("message", endsWith(MessageFormat.format("{0,number}", breastHeightAge))));
 
 		}
 

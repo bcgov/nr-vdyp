@@ -29,9 +29,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-import ca.bc.gov.nrs.vdyp.application.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
+import ca.bc.gov.nrs.vdyp.exceptions.CrownClosureLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BecDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.DefaultEquationNumberParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.EquationModifierParser;
@@ -90,7 +92,7 @@ class ParsersTogetherTest {
 	}
 
 	@Test
-	void testPrimaryOnly() throws IOException, StandProcessingException, ResourceParseException {
+	void testPrimaryOnly() throws IOException, ProcessingException, ResourceParseException {
 		var app = new VriStart();
 
 		final var polygonId = new PolygonIdentifier("Test", 2024);
@@ -159,7 +161,7 @@ class ParsersTogetherTest {
 	}
 
 	@Test
-	void testAddsSpecies() throws IOException, StandProcessingException, ResourceParseException {
+	void testAddsSpecies() throws IOException, ProcessingException, ResourceParseException {
 		var app = new VriStart();
 
 		final var polygonId = new PolygonIdentifier("Test", 2024);
@@ -228,7 +230,7 @@ class ParsersTogetherTest {
 	}
 
 	@Test
-	void testVeteranOnly() throws IOException, StandProcessingException, ResourceParseException {
+	void testVeteranOnly() throws IOException, ProcessingException, ResourceParseException {
 		var app = new VriStart();
 
 		final var polygonId = new PolygonIdentifier("Test", 2024);
@@ -296,8 +298,7 @@ class ParsersTogetherTest {
 	}
 
 	@Test
-	void testApplyPercentAvailableToPrimaryLayer()
-			throws IOException, StandProcessingException, ResourceParseException {
+	void testApplyPercentAvailableToPrimaryLayer() throws IOException, ProcessingException, ResourceParseException {
 		var app = new VriStart();
 
 		final var polygonId = new PolygonIdentifier("Test", 2024);
@@ -385,7 +386,7 @@ class ParsersTogetherTest {
 	}
 
 	@Test
-	void testPrimaryWithSmallComputedDiameter() throws IOException, StandProcessingException, ResourceParseException {
+	void testPrimaryWithSmallComputedDiameter() throws IOException, ProcessingException, ResourceParseException {
 		var app = new VriStart();
 
 		final var polygonId = new PolygonIdentifier("Test", 2024);
@@ -450,7 +451,7 @@ class ParsersTogetherTest {
 	}
 
 	@Test
-	void testFindsPrimaryGenusAndITG() throws IOException, StandProcessingException, ResourceParseException {
+	void testFindsPrimaryGenusAndITG() throws IOException, ProcessingException, ResourceParseException {
 		var app = new VriStart();
 
 		final var polygonId = new PolygonIdentifier("Test", 2024);
@@ -541,7 +542,7 @@ class ParsersTogetherTest {
 	}
 
 	@Test
-	void testFindsGRPBA1() throws IOException, StandProcessingException, ResourceParseException {
+	void testFindsGRPBA1() throws IOException, ProcessingException, ResourceParseException {
 		var app = new VriStart();
 
 		final var polygonId = new PolygonIdentifier("Test", 2024);
@@ -632,7 +633,7 @@ class ParsersTogetherTest {
 	void testDefaultBaAndTphForVeteran(
 			Float vetBaseArea, Float vetTreesPerHectare, float vetCrownClosure, Float primeBaseArea,
 			float expectedBaseArea, float expectedTreesPerHectare
-	) throws IOException, StandProcessingException, ResourceParseException {
+	) throws IOException, ProcessingException, ResourceParseException {
 		var app = new VriStart();
 
 		final var polygonId = new PolygonIdentifier("Test", 2024);
@@ -769,10 +770,12 @@ class ParsersTogetherTest {
 		})));
 
 		var ex = assertThrows(
-				StandProcessingException.class, () -> app.getPolygon(polyStream, layerStream, speciesStream, siteStream)
+				CrownClosureLowException.class, () -> app.getPolygon(polyStream, layerStream, speciesStream, siteStream)
 		);
 
-		assertThat(ex, hasProperty("message", is("Expected a positive crown closure for veteran layer but was 0.0")));
+		assertThat(ex, hasProperty("layer", is(LayerType.VETERAN)));
+		assertThat(ex, hasProperty("value", present(is(0f))));
+		assertThat(ex, hasProperty("threshold", present(is(0f))));
 
 		app.close();
 	}

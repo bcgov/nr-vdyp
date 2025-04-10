@@ -35,6 +35,7 @@ import java.util.stream.IntStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.helpers.MessageFormatter;
 
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.EstimationMethods;
@@ -45,6 +46,13 @@ import ca.bc.gov.nrs.vdyp.common.VdypApplicationInitializationException;
 import ca.bc.gov.nrs.vdyp.common.VdypApplicationProcessingException;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMapImpl;
+import ca.bc.gov.nrs.vdyp.exceptions.BaseAreaLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.FatalProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.LayerMissingException;
+import ca.bc.gov.nrs.vdyp.exceptions.LayerSpeciesDoNotSumTo100PercentException;
+import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.UnsupportedSpeciesException;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.UpperCoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
@@ -275,7 +283,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	protected L requireLayer(P polygon, LayerType type) throws ProcessingException {
 		if (!polygon.getLayers().containsKey(type)) {
 			throw validationError(
-					"Polygon \"%s\" has no %s layer, or that layer has non-positive height or crown closure.",
+					-1, -1, "Polygon \"%s\" has no %s layer, or that layer has non-positive height or crown closure.",
 					polygon.getPolygonIdentifier(), type
 			);
 		}
@@ -291,15 +299,12 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	 * @return
 	 * @throws StandProcessingException
 	 */
-	protected float getPercentTotal(L layer) throws StandProcessingException {
+	protected float getPercentTotal(L layer) throws LayerSpeciesDoNotSumTo100PercentException {
 		var percentTotal = (float) layer.getSpecies().values().stream()//
 				.mapToDouble(BaseVdypSpecies::getPercentGenus)//
 				.sum();
 		if (Math.abs(percentTotal - 100f) > 0.01f) {
-			throw validationError(
-					"Polygon \"%s\" has %s layer where species entries have a percentage total that does not sum to 100%%.",
-					layer.getPolygonIdentifier(), LayerType.PRIMARY
-			);
+			throw new LayerSpeciesDoNotSumTo100PercentException(layer.getLayerType());
 		}
 		return percentTotal;
 	}
@@ -379,7 +384,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	 * @return
 	 * @throws ProcessingException
 	 */
-	protected int findItg(List<S> primarySecondary) throws StandProcessingException {
+	protected int findItg(List<S> primarySecondary) throws FatalProcessingException, UnsupportedSpeciesException {
 		var primary = primarySecondary.get(0);
 
 		if (primary.getPercentGenus() > 79.999) { // Copied from VDYP7
@@ -496,9 +501,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 			}
 			return 41;
 		default:
-			throw new StandProcessingException(
-					MessageFormat.format("Unexpected primary species: {0}", primary.getGenus())
-			);
+			throw new UnsupportedSpeciesException(primary.getGenus());
 		}
 	}
 
@@ -522,7 +525,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	protected float estimatePrimaryBaseArea(
 			L layer, BecDefinition bec, float yieldFactor, float breastHeightAge, float baseAreaOverstory,
 			float crownClosure
-	) throws LowValueException {
+	) throws BaseAreaLowException {
 		boolean lowCrownClosure = layer.getCrownClosure() < LOW_CROWN_CLOSURE;
 		crownClosure = lowCrownClosure ? LOW_CROWN_CLOSURE : crownClosure;
 
@@ -601,9 +604,10 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		baseArea *= yieldFactor;
 
 		// This is to prevent underflow errors in later calculations
-		if (baseArea <= 0.05f) {
-			throw new LowValueException("Estimated base area", baseArea, 0.05f);
-		}
+		throwIfPresent(
+				BaseAreaLowException.check(layer.getLayerType(), "Estimated base area", Optional.of(baseArea), 0.05f)
+		);
+
 		return baseArea;
 	}
 
@@ -632,7 +636,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 	protected float estimatePrimaryBaseArea(
 			L layer, BecDefinition bec, float yieldFactor, float breastHeightAge, float baseAreaOverstory
-	) throws LowValueException {
+	) throws BaseAreaLowException {
 		return estimatePrimaryBaseArea(
 				layer, bec, yieldFactor, breastHeightAge, baseAreaOverstory, layer.getCrownClosure()
 		);
@@ -644,27 +648,65 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 				.findFirst().orElseThrow();
 	}
 
-	protected L getPrimaryLayer(P poly) throws StandProcessingException {
+	protected L getPrimaryLayer(P poly) throws LayerMissingException {
 		L primaryLayer = poly.getLayers().get(LayerType.PRIMARY);
 		if (primaryLayer == null) {
-			throw new StandProcessingException("Polygon does not have a primary layer");
+			throw new LayerMissingException(LayerType.PRIMARY);
 		}
 		return primaryLayer;
 	}
 
-	protected Optional<L> getVeteranLayer(P poly) throws StandProcessingException {
+	protected Optional<L> getVeteranLayer(P poly) throws LayerMissingException {
 		return Utils.optSafe(poly.getLayers().get(LayerType.VETERAN));
 	}
 
+	/**
+	 * Throw the exception contained in the optional if there is one. This exists to make it easier to handle checked
+	 * exceptions inside of lambdas as an alternative to using subclasses of RuntimeExceptions as wrappers.
+	 */
 	protected static <E extends Throwable> void throwIfPresent(Optional<E> opt) throws E {
 		if (opt.isPresent()) {
 			throw opt.get();
 		}
 	}
 
-	protected static StandProcessingException validationError(String template, Object... values) {
+	/**
+	 * If the given optional contains an exception, throw it as a FatalProcessingException, wrapping it in a new
+	 * exception if necessary.
+	 */
+	protected static <E extends Throwable> void fatalIfPresent(Optional<E> opt) throws FatalProcessingException {
+		throwIfPresent(
+				opt.map(
+						ex -> ex instanceof FatalProcessingException ? (FatalProcessingException) ex
+								: new FatalProcessingException(opt.get())
+				)
+		);
+	}
 
-		return new StandProcessingException(String.format(template, values));
+	protected static StandProcessingException
+			validationError(Integer ipassFip, Integer ipassVri, String template, Object... values) {
+		// TODO this is temporary and should be removed
+
+		return new StandProcessingException(String.format(template, values)) {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public Optional<Integer> getIpassCode(VdypApplicationIdentifier app) {
+				// TODO Auto-generated method stub
+				return Optional.empty();
+			}
+
+		};
+	}
+
+	protected static FatalProcessingException fatalError(String template, Object... values) {
+
+		return new FatalProcessingException(MessageFormat.format(template, values));
+	}
+
+	protected static FatalProcessingException causedFatalError(String template, Throwable cause, Object... values) {
+
+		return new FatalProcessingException(String.format(template, values), cause);
 	}
 
 	/**

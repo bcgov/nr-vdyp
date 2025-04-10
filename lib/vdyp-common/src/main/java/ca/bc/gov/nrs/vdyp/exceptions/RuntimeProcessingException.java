@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.vdyp.application;
+package ca.bc.gov.nrs.vdyp.exceptions;
 
 public class RuntimeProcessingException extends RuntimeException {
 
