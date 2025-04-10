@@ -33,7 +33,7 @@ jobs:
 
   # https://github.com/bcgov/quickstart-openshift-helpers
   deploys:
-    if: ${{ github.head.ref == 'main' || github.head.ref == 'feature/yield-tables' }}
+    if: github.event.pull_request.draft == 'false'
     name: Deploys
     needs: [builds]
     uses: ./.github/workflows/.deployer.yml
