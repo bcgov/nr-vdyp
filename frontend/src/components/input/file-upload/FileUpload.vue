@@ -42,14 +42,13 @@
             <v-row class="mb-n10">
               <v-col cols="5">
                 <v-file-input
-                  label="Layer File"
-                  v-model="layerFile"
+                  :label="
+                    polygonFile ? 'Polygon File' : 'Select Polygon File...'
+                  "
+                  v-model="polygonFile"
                   show-size
                   chips
                   clearable
-                  flat
-                  persistent-placeholder
-                  placeholder="Select Eco Zone"
                   density="compact"
                   accept=".csv"
                 />
@@ -57,8 +56,8 @@
               <v-col class="col-space-3" />
               <v-col cols="5">
                 <v-file-input
-                  label="Polygon File"
-                  v-model="polygonFile"
+                  :label="layerFile ? 'Layer File' : 'Select Layer File...'"
+                  v-model="layerFile"
                   show-size
                   chips
                   clearable
