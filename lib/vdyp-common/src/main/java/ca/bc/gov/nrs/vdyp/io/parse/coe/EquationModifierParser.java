@@ -69,7 +69,7 @@ public class EquationModifierParser implements ControlMapSubResourceParser<Matri
 	 * For this matrix map, the default value is 0, as per VDYP7 RD_GMBA1.
 	 */
 	public static BiFunction<Integer, Integer, Integer> emptyDefault() {
-		return (k1, k2) -> Integer.valueOf(DEFAULT_VALUE);
+		return (k1, k2) -> DEFAULT_VALUE;
 	}
 
 	@Override
