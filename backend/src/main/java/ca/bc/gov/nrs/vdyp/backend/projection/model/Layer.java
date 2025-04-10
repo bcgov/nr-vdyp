@@ -1336,7 +1336,7 @@ public class Layer implements Comparable<Layer> {
 								donorSpecies.getDominantHeight(), donorSpecies.getSiteIndex()
 						);
 					}
-					
+
 					break;
 				}
 			}

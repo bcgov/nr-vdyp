@@ -22,14 +22,14 @@ public class ExceptionsTest {
 		var e3 = new PolygonExecutionException("validation error", new IllegalStateException("illegal"));
 		Assert.assertEquals("illegal", e3.getCause().getMessage());
 		Assert.assertEquals("validation error", e3.getMessage());
-		
+
 		var validationMessages = new ArrayList<ValidationMessage>();
 		validationMessages.add(new ValidationMessage(ValidationMessageKind.GENERIC, "validation failure"));
 		var e4_1 = new PolygonValidationException(validationMessages);
 		Assert.assertEquals("validation failure", e4_1.getMessage());
 		var e4 = new PolygonExecutionException(e4_1);
 		Assert.assertEquals("validation failure", e4.getMessage());
-		
+
 		var e5 = new PolygonExecutionException("validation error", new AssertionError());
 		Assert.assertEquals(null, e5.getCause().getMessage());
 		Assert.assertEquals("validation error", e5.getMessage());
@@ -71,7 +71,6 @@ public class ExceptionsTest {
 		Assert.assertEquals(12, e2.getErrorCode());
 		Assert.assertEquals(null, e2.getCause());
 	}
-
 
 	@Test
 	void YieldTableExceptionTest() {

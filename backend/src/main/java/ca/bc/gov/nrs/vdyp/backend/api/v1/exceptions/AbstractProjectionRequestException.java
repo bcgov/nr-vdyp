@@ -17,7 +17,7 @@ public abstract class AbstractProjectionRequestException extends Exception {
 	}
 
 	public AbstractProjectionRequestException(String message, List<ValidationMessage> validationMessages) {
-		super((message != null ? (message + ": ") : "") + buildMessage(validationMessages));
+		super( (message != null ? (message + ": ") : "") + buildMessage(validationMessages));
 		this.validationMessages = validationMessages;
 	}
 
@@ -56,7 +56,7 @@ public abstract class AbstractProjectionRequestException extends Exception {
 	public List<ValidationMessage> getValidationMessages() {
 		return validationMessages;
 	}
-	
+
 	private static String buildMessage(List<ValidationMessage> validationMessages) {
 		if (validationMessages.size() > 0) {
 			StringBuffer sb = new StringBuffer(validationMessages.get(0).toString());

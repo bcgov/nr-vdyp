@@ -33,9 +33,9 @@ public abstract class EquationGroupParser implements ControlMapSubResourceParser
 	private static final String BEC_ALIAS_KEY = "becAlias";
 	private static final String GROUP_ID_KEY = "grpId";
 
-	/** 
-	 * the lowest actual group number is one, but upstream logic may result in the 
-	 * "default" equation group number of zero being used. So we include "0" as a value.
+	/**
+	 * the lowest actual group number is one, but upstream logic may result in the "default" equation group number of
+	 * zero being used. So we include "0" as a value.
 	 */
 	public static final int MIN_GROUP = 0;
 	public static final int MAX_GROUP = 180;
@@ -126,14 +126,14 @@ public abstract class EquationGroupParser implements ControlMapSubResourceParser
 		if (!errors.isEmpty()) {
 			throw new ResourceParseValidException(String.join(System.lineSeparator(), errors));
 		}
-		
+
 		var result = new MatrixMap2Impl<>(sp0Keys, becKeys, (k1, k2) -> resultMap.get(k1).get(k2));
-		
+
 		// Provide default values for the hidden BECs. These values are needed since these BECs may
 		// be used in source data despite being "hidden".
-		
-		for (var bec: becKeys) {
-			for (var sp0Key: sp0Keys) {
+
+		for (var bec : becKeys) {
+			for (var sp0Key : sp0Keys) {
 				if (result.get(sp0Key, bec) == null) {
 					result.put(sp0Key, bec, DEFAULT_VALUE);
 				}

@@ -57,8 +57,8 @@ public class ProjectionRunner implements Closeable {
 		this.context = new ProjectionContext(kind, projectionId, parameters, isTrialRun);
 	}
 
-	public void run(Map<String, InputStream> streams) throws ProjectionRequestValidationException,
-			PolygonExecutionException, YieldTableGenerationException {
+	public void run(Map<String, InputStream> streams)
+			throws ProjectionRequestValidationException, PolygonExecutionException, YieldTableGenerationException {
 
 		context.startRun();
 

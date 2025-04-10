@@ -359,7 +359,7 @@ public class Species implements Comparable<Species> {
 	 * @param sp64 the sp64 in question.
 	 */
 	public void updateSiteInfo(Species sp64) {
-		
+
 		ageAtBreastHeight = sp64.getAgeAtBreastHeight();
 		siteCurve = sp64.getSiteCurve();
 		totalAge = sp64.getTotalAge();

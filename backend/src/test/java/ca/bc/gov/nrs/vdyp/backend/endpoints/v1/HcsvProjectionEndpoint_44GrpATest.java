@@ -59,11 +59,12 @@ class HcsvProjectionEndpoint_44GrpATest extends HttpProjectionRequestTest {
 	void perTestSetup() {
 	}
 
-	@Test
+	// @Test - uncomment and change runTest param to the polygon id from 44grpa that you want
+	// to run.
 	void run44GroupA_SpecificPolygon_Test() throws IOException {
 		logger.info("Starting run44GroupA_SpecificPolygon_Test");
 
-		var zipEntries = runTest("19822790");
+		var zipEntries = runTest("19976958");
 
 		var errorEntryContent = zipEntries.get("ErrorLog.txt");
 		Assert.assertTrue(errorEntryContent.length() == 0);
@@ -71,19 +72,7 @@ class HcsvProjectionEndpoint_44GrpATest extends HttpProjectionRequestTest {
 		Assert.assertTrue(csvEntryContent.length() > 0);
 	}
 
-	// @Test
-	void run44GroupA_1816162_Test() throws IOException {
-		logger.info("Starting run44GroupA_SpecificPolygon_Test");
-
-		var zipEntries = runTest("1816162");
-
-		var errorEntryContent = zipEntries.get("ErrorLog.txt");
-		Assert.assertTrue(errorEntryContent.length() > 0);
-		var csvEntryContent = zipEntries.get("YieldTable.csv");
-		Assert.assertTrue(csvEntryContent.length() == 0);
-	}
-
-	// @Test
+	// @Test - uncomment if you want to run the entire 44grpa polygon set
 	void run44GroupATest() throws IOException {
 
 		logger.info("Starting run44GroupATest");
@@ -102,6 +91,8 @@ class HcsvProjectionEndpoint_44GrpATest extends HttpProjectionRequestTest {
 	}
 
 	// @Test
+	// Uncomment if you want to run a subset of the 44grpa polygon set given in the file "polyids.txt"
+	// (placed alongside the polygon and layer files) that contains one polygon id per line.
 	void runFiltered44GroupATest() throws IOException {
 
 		logger.info("Starting runFiltered44GroupATest");
@@ -114,14 +105,14 @@ class HcsvProjectionEndpoint_44GrpATest extends HttpProjectionRequestTest {
 		Predicate<String> predicate;
 		if (Files.exists(polyIdFilePath)) {
 			var polyIdSet = new HashSet<String>();
-			for (var line: Files.readAllLines(polyIdFilePath)) {
+			for (var line : Files.readAllLines(polyIdFilePath)) {
 				polyIdSet.add(line.strip());
 			}
 			predicate = fId -> polyIdSet.contains(fId);
 		} else {
 			predicate = fId -> true /* do all */;
 		}
-		
+
 		Files.deleteIfExists(statusFilePath);
 		Path statusFile = Files.createFile(statusFilePath);
 
@@ -155,7 +146,7 @@ class HcsvProjectionEndpoint_44GrpATest extends HttpProjectionRequestTest {
 			if (featureSelector.test(featureId)) {
 
 				var fileContents = headerLine + "\n" + featureLine;
-				
+
 				Path inputPolygonFilePath = Files.createTempFile(featureId, ".csv");
 				inputPolygonFilePath = Files.write(inputPolygonFilePath, fileContents.getBytes());
 
@@ -190,7 +181,7 @@ class HcsvProjectionEndpoint_44GrpATest extends HttpProjectionRequestTest {
 				resultsByFeatureId.put(featureId, resultMap);
 			}
 		}
-		
+
 		return resultsByFeatureId;
 	}
 

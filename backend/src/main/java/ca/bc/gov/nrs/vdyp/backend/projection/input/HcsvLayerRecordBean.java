@@ -584,7 +584,8 @@ public class HcsvLayerRecordBean {
 				// the more common species precede the less common species.
 				if (sd.percent > highestSpeciesPercentageSeen) {
 					bvh.addValidationMessage(
-							ValidationMessageKind.PERCENTAGES_INCREASING, bean.featureId, bean.layerId, sd.layerSpeciesIndex, sd.percent
+							ValidationMessageKind.PERCENTAGES_INCREASING, bean.featureId, bean.layerId,
+							sd.layerSpeciesIndex, sd.percent
 					);
 				}
 

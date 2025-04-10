@@ -31,8 +31,7 @@ import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
  * @see ControlMapSubResourceParser
  * @author Kevin Smith, Vivid Solutions
  */
-public class EquationModifierParser
-		implements ControlMapSubResourceParser<MatrixMap2<Integer, Integer, Integer>> {
+public class EquationModifierParser implements ControlMapSubResourceParser<MatrixMap2<Integer, Integer, Integer>> {
 
 	// C_BAGRP1/BG1MODV
 	public static final Integer DEFAULT_VALUE = 0;

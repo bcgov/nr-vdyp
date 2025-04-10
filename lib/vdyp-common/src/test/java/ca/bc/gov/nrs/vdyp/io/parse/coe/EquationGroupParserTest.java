@@ -254,7 +254,6 @@ class EquationGroupParserTest {
 
 	}
 
-
 	@Test
 	void testDefaults() throws Exception {
 

@@ -100,7 +100,8 @@ public class ProjectionService {
 
 		try {
 			// Included to generate JSON text of parameters as needed
-			String serializedParametersText = jsonObjectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(params);
+			String serializedParametersText = jsonObjectMapper.writerWithDefaultPrettyPrinter()
+					.writeValueAsString(params);
 			logger.info(serializedParametersText);
 		} catch (JsonProcessingException e) {
 			logger.warn(MessageFormat.format("{0}: unable to log parameters JSON", projectionId), e);
@@ -114,7 +115,11 @@ public class ProjectionService {
 
 		Response response;
 
-		try (ProjectionRunner runner = new ProjectionRunner(ProjectionRequestKind.HCSV, projectionId, params, isTrialRun)) {
+		try (
+				ProjectionRunner runner = new ProjectionRunner(
+						ProjectionRequestKind.HCSV, projectionId, params, isTrialRun
+				)
+		) {
 			logger.info("Running {} projection {}", kind, projectionId);
 
 			runner.run(inputStreams);
