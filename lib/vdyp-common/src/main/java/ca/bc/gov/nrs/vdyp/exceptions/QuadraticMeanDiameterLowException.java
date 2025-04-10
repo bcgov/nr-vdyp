@@ -48,9 +48,8 @@ public class QuadraticMeanDiameterLowException extends LayerValueLowException {
 	 */
 	public static Optional<QuadraticMeanDiameterLowException>
 			check(LayerType layer, String name, Optional<Float> value, float threshold) {
-		return LayerValueLowException.checkExclusive(
-				layer, name, value, threshold, QuadraticMeanDiameterLowException::new
-		);
+		return LayerValueLowException
+				.checkExclusive(layer, name, value, threshold, QuadraticMeanDiameterLowException::new);
 	}
 
 	/**

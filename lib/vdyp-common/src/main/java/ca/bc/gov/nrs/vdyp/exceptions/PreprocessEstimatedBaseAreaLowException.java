@@ -28,7 +28,9 @@ public class PreprocessEstimatedBaseAreaLowException extends LayerValueLowExcept
 		this(layer, DEFAULT_NAME, value, threshold);
 	}
 
-	public PreprocessEstimatedBaseAreaLowException(LayerType layer, String name, Optional<Float> value, Optional<Float> threshold) {
+	public PreprocessEstimatedBaseAreaLowException(
+			LayerType layer, String name, Optional<Float> value, Optional<Float> threshold
+	) {
 		super(layer, name, value, threshold);
 	}
 
@@ -44,9 +46,8 @@ public class PreprocessEstimatedBaseAreaLowException extends LayerValueLowExcept
 	 */
 	public static Optional<PreprocessEstimatedBaseAreaLowException>
 			check(LayerType layer, String name, Optional<Float> value, float threshold) {
-		return LayerValueLowException.checkExclusive(
-				layer, name, value, threshold, PreprocessEstimatedBaseAreaLowException::new
-		);
+		return LayerValueLowException
+				.checkExclusive(layer, name, value, threshold, PreprocessEstimatedBaseAreaLowException::new);
 	}
 
 	/**
@@ -59,7 +60,8 @@ public class PreprocessEstimatedBaseAreaLowException extends LayerValueLowExcept
 	 * @param threshold
 	 * @return
 	 */
-	public static Optional<PreprocessEstimatedBaseAreaLowException> check(LayerType layer, Optional<Float> value, float threshold) {
+	public static Optional<PreprocessEstimatedBaseAreaLowException>
+			check(LayerType layer, Optional<Float> value, float threshold) {
 		return check(layer, DEFAULT_NAME, value, threshold);
 	}
 

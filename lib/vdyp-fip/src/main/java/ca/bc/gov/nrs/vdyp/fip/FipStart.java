@@ -300,7 +300,7 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 		fipLayer.setPrimaryGenus(Optional.of(primarySpecies.iterator().next().getGenus()));
 
 		// VDYP7 stores this in the common FIPL_1C/ITGL1 but only seems to use it
-		// locally.  FIP treats this as a fatal error while VRI treats it as a warning.
+		// locally. FIP treats this as a fatal error while VRI treats it as a warning.
 		final int itg;
 		try {
 			itg = findItg(primarySpecies);

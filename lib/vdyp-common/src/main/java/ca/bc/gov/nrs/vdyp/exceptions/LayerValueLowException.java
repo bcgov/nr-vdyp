@@ -70,11 +70,10 @@ public abstract class LayerValueLowException extends LayerValidationException {
 
 	}
 
-	private static <T extends LayerValueLowException, N extends Number> Optional<T>
-			check(
-					LayerType layer, String name, Optional<N> value, N threshold, boolean inclusive,
-					Constructor<T, N> constructor
-			) {
+	private static <T extends LayerValueLowException, N extends Number> Optional<T> check(
+			LayerType layer, String name, Optional<N> value, N threshold, boolean inclusive,
+			Constructor<T, N> constructor
+	) {
 		final Optional<Double> castValue = value.map(Number::doubleValue);
 		final double castThreshold = threshold.doubleValue();
 		final Function<Double, Boolean> test = inclusive ? v -> v < castThreshold : v -> v <= castThreshold;
@@ -85,17 +84,15 @@ public abstract class LayerValueLowException extends LayerValidationException {
 		return Optional.empty();
 	}
 
-	protected static <T extends LayerValueLowException, N extends Number> Optional<T>
-			checkInclusive(
-					LayerType layer, String name, Optional<N> value, N threshold, Constructor<T, N> constructor
-			) {
+	protected static <T extends LayerValueLowException, N extends Number> Optional<T> checkInclusive(
+			LayerType layer, String name, Optional<N> value, N threshold, Constructor<T, N> constructor
+	) {
 		return check(layer, name, value, threshold, true, constructor);
 	}
 
-	protected static <T extends LayerValueLowException, N extends Number> Optional<T>
-			checkExclusive(
-					LayerType layer, String name, Optional<N> value, N threshold, Constructor<T, N> constructor
-			) {
+	protected static <T extends LayerValueLowException, N extends Number> Optional<T> checkExclusive(
+			LayerType layer, String name, Optional<N> value, N threshold, Constructor<T, N> constructor
+	) {
 		return check(layer, name, value, threshold, false, constructor);
 	}
 

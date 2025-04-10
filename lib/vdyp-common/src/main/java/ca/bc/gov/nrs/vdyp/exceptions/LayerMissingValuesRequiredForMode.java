@@ -24,12 +24,8 @@ public class LayerMissingValuesRequiredForMode extends LayerValidationException 
 	final List<String> missingValues;
 
 	private static String getMessage(LayerType layer, Optional<PolygonMode> mode, List<String> values) {
-		return MessageFormat.format(
-				TEMPLATE,
-				layer,
-				Utils.optPretty(mode),
-				Utils.prettyList(values, "and", Object::toString)
-		);
+		return MessageFormat
+				.format(TEMPLATE, layer, Utils.optPretty(mode), Utils.prettyList(values, "and", Object::toString));
 
 	}
 

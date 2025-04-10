@@ -696,8 +696,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	protected static <E extends Throwable> void fatalIfPresent(Optional<E> opt) throws FatalProcessingException {
 		throwIfPresent(
 				opt.map(
-						ex -> ex instanceof FatalProcessingException
-								? (FatalProcessingException) ex
+						ex -> ex instanceof FatalProcessingException ? (FatalProcessingException) ex
 								: new FatalProcessingException(opt.get())
 				)
 		);

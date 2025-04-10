@@ -42,9 +42,8 @@ public class YearsToBreastHeightLowException extends LayerValueLowException {
 	 */
 	public static Optional<YearsToBreastHeightLowException>
 			check(LayerType layer, String name, Optional<Float> value, float threshold) {
-		return LayerValueLowException.checkExclusive(
-				layer, name, value, threshold, YearsToBreastHeightLowException::new
-		);
+		return LayerValueLowException
+				.checkExclusive(layer, name, value, threshold, YearsToBreastHeightLowException::new);
 	}
 
 	/**

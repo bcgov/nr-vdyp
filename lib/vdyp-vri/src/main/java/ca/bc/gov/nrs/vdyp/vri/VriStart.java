@@ -289,7 +289,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 				}
 				try {
 					if (!layerSpecies.isEmpty()) {
-						// Finding Primary Species and ITG was in VRI_CHK but they have been moved here so that 
+						// Finding Primary Species and ITG was in VRI_CHK but they have been moved here so that
 						// validation does not alter the data structure.
 						var primarySpecs = this.findPrimarySpecies(layerSpecies);
 						int itg;
@@ -340,7 +340,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			builder.treesPerHectare(0f);
 
 			float crownClosure = builder.getCrownClosure().filter(x -> x > 0f).orElseThrow(
-					() -> new CrownClosureLowException(LayerType.VETERAN, Optional.empty(), java.util.Optional.empty())
+					() -> new CrownClosureLowException(LayerType.VETERAN, builder.getCrownClosure(), Optional.of(0f))
 
 			);
 			// If the primary layer base area is positive, multiply that by veteran crown
@@ -468,8 +468,8 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 						var computed = resultVeteranLayer.getTreesPerHectareByUtilization().getAll();
 						if (FloatMath.abs(input - computed) / input > 0.0005) {
 							throw fatalError(
-									"Computed tree density sum {0} trees/ha did not match input {1} trees/ha",
-									computed, input
+									"Computed tree density sum {0} trees/ha did not match input {1} trees/ha", computed,
+									input
 							);
 						}
 
@@ -908,11 +908,11 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 
 		List<String> missingValues = new ArrayList<>();
 
-		// VDYP7 handles these with a different error code from the other low value/null checks so they get a different exception
+		// VDYP7 handles these with a different error code from the other low value/null checks so they get a different
+		// exception
 
 		final Optional<PolygonMode> mode = polygon.getMode();
-		if (mode.map(PolygonMode.YOUNG::equals).orElse(false)
-				&& layer.getLayerType() == LayerType.PRIMARY) {
+		if (mode.map(PolygonMode.YOUNG::equals).orElse(false) && layer.getLayerType() == LayerType.PRIMARY) {
 			if (ageTotal.map(x -> x <= 0f).orElse(true)) {
 				missingValues.add("Age Total");
 			}
@@ -1500,9 +1500,8 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		final float primaryTreesPerHectare = treesPerHectare(primaryBaseAreaFinal, normativeQuadMeanDiameter);
 
 		throwIfPresent(
-				PreprocessEstimatedBaseAreaLowException.check(
-						LayerType.PRIMARY, Optional.of(primaryBaseAreaFinal), 0.5f
-				)
+				PreprocessEstimatedBaseAreaLowException
+						.check(LayerType.PRIMARY, Optional.of(primaryBaseAreaFinal), 0.5f)
 		);
 
 		return VriPolygon.build(pBuilder -> {
