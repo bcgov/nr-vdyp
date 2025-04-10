@@ -281,23 +281,23 @@ const validateRange = (): boolean => {
  */
 const validateFiles = async (): Promise<boolean> => {
   const result = await fileUploadValidation.validateFiles(
-    layerFile.value,
     polygonFile.value,
+    layerFile.value,
   )
   if (!result.isValid) {
     let message = ''
     switch (result.errorType) {
-      case 'layerFileMissing':
-        message = MESSAGE.FILE_UPLOAD_ERR.LAYER_FILE_MISSING
-        break
       case 'polygonFileMissing':
         message = MESSAGE.FILE_UPLOAD_ERR.POLYGON_FILE_MISSING
         break
-      case 'layerFileNotCSVFormat':
-        message = MESSAGE.FILE_UPLOAD_ERR.LAYER_FILE_NOT_CSV_FORMAT
+      case 'layerFileMissing':
+        message = MESSAGE.FILE_UPLOAD_ERR.LAYER_FILE_MISSING
         break
       case 'polygonFileNotCSVFormat':
         message = MESSAGE.FILE_UPLOAD_ERR.POLYGON_FILE_NOT_CSV_FORMAT
+        break
+      case 'layerFileNotCSVFormat':
+        message = MESSAGE.FILE_UPLOAD_ERR.LAYER_FILE_NOT_CSV_FORMAT
         break
     }
     messageDialog.value = {

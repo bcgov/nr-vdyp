@@ -60,16 +60,9 @@ export const validateRange = (
 }
 
 export const validateFiles = async (
-  layerFile: File | null,
   polygonFile: File | null,
+  layerFile: File | null,
 ) => {
-  if (!layerFile) {
-    return {
-      isValid: false,
-      errorType: 'layerFileMissing',
-    }
-  }
-
   if (!polygonFile) {
     return {
       isValid: false,
@@ -77,10 +70,10 @@ export const validateFiles = async (
     }
   }
 
-  if (!(await fileUploadValidator.isCSVFile(layerFile))) {
+  if (!layerFile) {
     return {
       isValid: false,
-      errorType: 'layerFileNotCSVFormat',
+      errorType: 'layerFileMissing',
     }
   }
 
@@ -88,6 +81,13 @@ export const validateFiles = async (
     return {
       isValid: false,
       errorType: 'polygonFileNotCSVFormat',
+    }
+  }
+
+  if (!(await fileUploadValidator.isCSVFile(layerFile))) {
+    return {
+      isValid: false,
+      errorType: 'layerFileNotCSVFormat',
     }
   }
 

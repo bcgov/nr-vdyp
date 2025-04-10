@@ -81,46 +81,46 @@ describe('File Upload Validation Unit Tests', () => {
   })
 
   context('validateFiles', () => {
-    it('should return false if layer file is missing', async () => {
-      const result = await validateFiles(
-        null,
-        new File([''], 'polygon.csv', { type: 'text/csv' }),
-      )
-      expect(result.isValid).to.be.false
-      expect(result.errorType).to.equal('layerFileMissing')
-    })
-
     it('should return false if polygon file is missing', async () => {
       const result = await validateFiles(
-        new File([''], 'layer.csv', { type: 'text/csv' }),
         null,
+        new File([''], 'layer.csv', { type: 'text/csv' }),
       )
       expect(result.isValid).to.be.false
       expect(result.errorType).to.equal('polygonFileMissing')
     })
 
-    it('should return false if layer file is not in CSV format', async () => {
+    it('should return false if layer file is missing', async () => {
       const result = await validateFiles(
-        new File([''], 'layer.txt', { type: 'text/plain' }),
         new File([''], 'polygon.csv', { type: 'text/csv' }),
+        null,
       )
       expect(result.isValid).to.be.false
-      expect(result.errorType).to.equal('layerFileNotCSVFormat')
+      expect(result.errorType).to.equal('layerFileMissing')
     })
 
     it('should return false if polygon file is not in CSV format', async () => {
       const result = await validateFiles(
-        new File([''], 'layer.csv', { type: 'text/csv' }),
         new File([''], 'polygon.txt', { type: 'text/plain' }),
+        new File([''], 'layer.csv', { type: 'text/csv' }),
       )
       expect(result.isValid).to.be.false
       expect(result.errorType).to.equal('polygonFileNotCSVFormat')
     })
 
+    it('should return false if layer file is not in CSV format', async () => {
+      const result = await validateFiles(
+        new File([''], 'polygon.csv', { type: 'text/csv' }),
+        new File([''], 'layer.txt', { type: 'text/plain' }),
+      )
+      expect(result.isValid).to.be.false
+      expect(result.errorType).to.equal('layerFileNotCSVFormat')
+    })
+
     it('should return true if both files are valid CSV files', async () => {
       const result = await validateFiles(
-        new File([''], 'layer.csv', { type: 'text/csv' }),
         new File([''], 'polygon.csv', { type: 'text/csv' }),
+        new File([''], 'layer.csv', { type: 'text/csv' }),
       )
       expect(result.isValid).to.be.true
     })
