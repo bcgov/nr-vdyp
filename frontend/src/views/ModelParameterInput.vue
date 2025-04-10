@@ -168,7 +168,7 @@ const runModelHandler = async () => {
     isProgressVisible.value = true
     progressMessage.value = MESSAGE.PROGRESS_MSG.RUNNING_MODEL
 
-    await delay(500)
+    await delay(1000)
 
     reportingStore.modelParamDisableTabs()
     console.log(
