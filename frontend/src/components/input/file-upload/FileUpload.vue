@@ -82,6 +82,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useReportingStore } from '@/stores/reportingStore'
+import { useProjectionStore } from '@/stores/projectionStore'
 import {
   OutputFormatEnum,
   SelectedExecutionOptionsEnum,
@@ -101,8 +102,13 @@ import {
 import type { MessageDialog } from '@/interfaces/interfaces'
 import { CONSTANTS, MESSAGE, DEFAULTS } from '@/constants'
 import { fileUploadValidation } from '@/validation'
-import { delay, downloadFile, extractZipFileName } from '@/utils/util'
-import { logSuccessMessage } from '@/utils/messageHandler'
+import {
+  checkZipForErrors,
+  delay,
+  downloadFile,
+  extractZipFileName,
+} from '@/utils/util'
+import { logSuccessMessage, logErrorMessage } from '@/utils/messageHandler'
 
 const form = ref<HTMLFormElement>()
 
@@ -130,6 +136,7 @@ const messageDialog = ref<MessageDialog>({
   btnLabel: '',
 })
 
+const projectionStore = useProjectionStore()
 const reportingStore = useReportingStore()
 
 /**
@@ -424,7 +431,13 @@ const runModelHandler = async () => {
     isProgressVisible.value = true
     progressMessage.value = MESSAGE.PROGRESS_MSG.RUNNING_MODEL
 
-    await delay(1000)
+    await delay(500)
+
+    reportingStore.fileUploadDisableTabs()
+    console.log(
+      'fileUploadReportingTabsDisabled:',
+      reportingStore.fileUploadReportingTabsEnabled,
+    )
 
     const response = await projectionHcsvPost(getFormData(), false)
 
@@ -448,11 +461,23 @@ const runModelHandler = async () => {
       throw new Error('Response data is not a Blob')
     }
 
+    const hasErrors = await checkZipForErrors(resultBlob)
+
+    await projectionStore.handleZipResponse(resultBlob, zipFileName)
+
     downloadFile(resultBlob, zipFileName)
 
-    logSuccessMessage(MESSAGE.SUCCESS_MSG.FILE_UPLOAD_RUN_RESULT)
+    if (hasErrors) {
+      logErrorMessage(MESSAGE.SUCCESS_MSG.FILE_UPLOAD_RUN_RESULT_W_ERR)
+    } else {
+      logSuccessMessage(MESSAGE.SUCCESS_MSG.FILE_UPLOAD_RUN_RESULT)
+    }
 
     reportingStore.fileUploadEnableTabs()
+    console.log(
+      'fileUploadReportingTabsEnabled:',
+      reportingStore.fileUploadReportingTabsEnabled,
+    )
   } catch (error) {
     handleApiError(error, MESSAGE.FILE_UPLOAD_ERR.FAIL_RUN_MODEL)
   } finally {
