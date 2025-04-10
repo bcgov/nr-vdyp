@@ -240,3 +240,4 @@ $RECYCLE.BIN/
 # nohup logs
 nohup.out
 .quarkus
+backend/src/test/resources/test-data/hcsv/44grpa/polyids.txt

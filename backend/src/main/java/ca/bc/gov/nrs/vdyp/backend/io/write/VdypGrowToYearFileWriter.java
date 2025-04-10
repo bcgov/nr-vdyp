@@ -28,7 +28,7 @@ public class VdypGrowToYearFileWriter implements Closeable {
 
 		AbstractOutputWriter.writeFormat(
 				growToYearFile, //
-				AbstractOutputWriter.POLY_IDENTIFIER_FORMAT, //
+				AbstractOutputWriter.POLY_IDENTIFIER_FORMAT + "\n", //
 
 				polygon.buildPolygonDescriptor(growthTarget) //
 		);

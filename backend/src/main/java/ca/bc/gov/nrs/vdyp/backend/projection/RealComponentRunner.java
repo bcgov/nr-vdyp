@@ -108,14 +108,14 @@ public class RealComponentRunner implements ComponentRunner {
 			throw new PolygonExecutionException(
 					MessageFormat.format(
 							"{0}: encountered {1} while running copyAdjustInputFilesToOutput{2}", polygon,
-							e.getClass().getSimpleName(), e.getMessage() != null ? "; reason: " + e.getMessage() : "" 
+							e.getClass().getSimpleName(), e.getMessage() != null ? "; reason: " + e.getMessage() : ""
 					), e
 			);
 		} catch (Error e) {
 			throw new PolygonExecutionException(
 					MessageFormat.format(
 							"{0}: encountered {1} while running copyAdjustInputFilesToOutput{2}", polygon,
-							e.getClass().getSimpleName(), e.getMessage() != null ? "; reason: " + e.getMessage() : "" 
+							e.getClass().getSimpleName(), e.getMessage() != null ? "; reason: " + e.getMessage() : ""
 					), e
 			);
 		}
@@ -286,7 +286,7 @@ public class RealComponentRunner implements ComponentRunner {
 
 		if (e.getMessage() != null) {
 			var matcher = messagePattern.matcher(e.getMessage());
-	
+
 			String message;
 			if (matcher.matches()) {
 				if (matcher.group(3) != null) {
@@ -297,17 +297,17 @@ public class RealComponentRunner implements ComponentRunner {
 			} else {
 				message = e.getMessage();
 			}
-	
+
 			if (!StringUtils.isBlank(message) && !containsSuffix(messageList, message)) {
 				s.append(": ").append(message);
 				messageList.add(message);
 			}
 		}
-		
+
 		if (e.getCause() != null) {
 			serializeCauses(s, messageList, e.getCause());
 		}
-		
+
 		return s;
 	}
 
