@@ -31,6 +31,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
+import ca.bc.gov.nrs.vdyp.exceptions.CrownClosureLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BecDefinitionParser;
@@ -297,8 +298,7 @@ class ParsersTogetherTest {
 	}
 
 	@Test
-	void testApplyPercentAvailableToPrimaryLayer()
-			throws IOException, ProcessingException, ResourceParseException {
+	void testApplyPercentAvailableToPrimaryLayer() throws IOException, ProcessingException, ResourceParseException {
 		var app = new VriStart();
 
 		final var polygonId = new PolygonIdentifier("Test", 2024);
@@ -770,10 +770,12 @@ class ParsersTogetherTest {
 		})));
 
 		var ex = assertThrows(
-				StandProcessingException.class, () -> app.getPolygon(polyStream, layerStream, speciesStream, siteStream)
+				CrownClosureLowException.class, () -> app.getPolygon(polyStream, layerStream, speciesStream, siteStream)
 		);
 
-		assertThat(ex, hasProperty("message", is("Expected a positive crown closure for veteran layer but was 0.0")));
+		assertThat(ex, hasProperty("layer", is(LayerType.VETERAN)));
+		assertThat(ex, hasProperty("value", present(is(0f))));
+		assertThat(ex, hasProperty("threshold", present(is(0f))));
 
 		app.close();
 	}

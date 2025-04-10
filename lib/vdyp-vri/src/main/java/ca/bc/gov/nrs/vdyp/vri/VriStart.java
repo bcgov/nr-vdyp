@@ -863,6 +863,10 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 
 		BecDefinition bec = polygon.getBiogeoclimaticZone();
 
+		if (!polygon.getLayers().containsKey(LayerType.PRIMARY)) {
+			throw new LayerMissingException(LayerType.PRIMARY);
+		}
+
 		// At this point the Fortran implementation nulled the BA and TPH of Primary
 		// layers if the BA and TPH were present and resulted in a DQ <7.5
 		// I did that in getPolygon instead of here.
@@ -879,8 +883,11 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 
 		VriLayer veteranLayer = polygon.getLayers().get(LayerType.VETERAN);
 		if (veteranLayer != null) {
-			HeightLowException.check(
-					LayerType.VETERAN, veteranLayer.getPrimarySite().flatMap(VriSite::getHeight), veteranMinHeight
+			throwIfPresent(
+					HeightLowException.check(
+							LayerType.VETERAN, veteranLayer.getPrimarySite().flatMap(VriSite::getHeight),
+							veteranMinHeight
+					)
 			);
 		}
 
@@ -966,7 +973,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			switch (mode) {
 
 			case START:
-				throwIfPresent(SiteIndexLowException.check(LayerType.PRIMARY, primaryBreastHeightAge, 0f));
+				throwIfPresent(SiteIndexLowException.check(LayerType.PRIMARY, siteIndex, 0f));
 				throwIfPresent(TotalAgeLowException.check(LayerType.PRIMARY, ageTotal, 0f));
 				throwIfPresent(BreastHeightAgeLowException.check(LayerType.PRIMARY, primaryBreastHeightAge, 0f));
 				throwIfPresent(HeightLowException.check(LayerType.PRIMARY, height, 4.5f));
@@ -975,20 +982,20 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 				break;
 
 			case YOUNG:
-				throwIfPresent(SiteIndexLowException.check(LayerType.PRIMARY, primaryBreastHeightAge, 0f));
+				throwIfPresent(SiteIndexLowException.check(LayerType.PRIMARY, siteIndex, 0f));
 				throwIfPresent(TotalAgeLowException.check(LayerType.PRIMARY, ageTotal, 0f));
 				throwIfPresent(YearsToBreastHeightLowException.check(LayerType.PRIMARY, yearsToBreastHeight, 0f));
 				break;
 
 			case BATN:
-				throwIfPresent(SiteIndexLowException.check(LayerType.PRIMARY, primaryBreastHeightAge, 0f));
+				throwIfPresent(SiteIndexLowException.check(LayerType.PRIMARY, siteIndex, 0f));
 				throwIfPresent(TotalAgeLowException.check(LayerType.PRIMARY, ageTotal, 0f));
 				throwIfPresent(BreastHeightAgeLowException.check(LayerType.PRIMARY, primaryBreastHeightAge, 0f));
 				throwIfPresent(HeightLowException.check(LayerType.PRIMARY, height, 1.3f));
 				break;
 
 			case BATC:
-				throwIfPresent(SiteIndexLowException.check(LayerType.PRIMARY, primaryBreastHeightAge, 0f));
+				throwIfPresent(SiteIndexLowException.check(LayerType.PRIMARY, siteIndex, 0f));
 				throwIfPresent(TotalAgeLowException.check(LayerType.PRIMARY, ageTotal, 0f));
 				throwIfPresent(BreastHeightAgeLowException.check(LayerType.PRIMARY, primaryBreastHeightAge, 0f));
 				throwIfPresent(HeightLowException.check(LayerType.PRIMARY, height, 1.3f));
@@ -1533,8 +1540,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 	 * @throws StandProcessingException if no entry for any of the given species IDs is present.
 	 * @throws FatalProcessingException
 	 */
-	SiteIndexEquation findSiteCurveNumber(Region region, String... ids) throws 
-			FatalProcessingException {
+	SiteIndexEquation findSiteCurveNumber(Region region, String... ids) throws FatalProcessingException {
 		var scnMap = Utils.<MatrixMap2<String, Region, SiteIndexEquation>>expectParsedControl(
 				controlMap, ControlKey.SITE_CURVE_NUMBERS, MatrixMap2.class
 		);

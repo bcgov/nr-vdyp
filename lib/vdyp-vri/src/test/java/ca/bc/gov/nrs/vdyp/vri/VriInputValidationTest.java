@@ -1588,14 +1588,9 @@ class VriInputValidationTest {
 			});
 		});
 
-		var ex = assertThrows(StandProcessingException.class, () -> app.checkPolygon(poly));
-		assertThat(
-				ex,
-				hasProperty(
-						"message",
-						is("Veteran layer primary species height 34.0 should be greater than or equal to 36.0")
-				)
-		);
+		var ex = assertThrows(HeightLowException.class, () -> app.checkPolygon(poly));
+		assertThat(ex, hasProperty("value", present(is(34f))));
+		assertThat(ex, hasProperty("threshold", present(is(36f))));
 
 		app.close();
 	}

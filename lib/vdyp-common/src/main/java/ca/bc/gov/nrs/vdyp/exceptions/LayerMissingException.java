@@ -13,7 +13,7 @@ public class LayerMissingException extends LayerValidationException {
 
 	private static final long serialVersionUID = 5267990153323800885L;
 
-	static final String TEMPLATE = "Expected layer {} but it does not exist";
+	static final String TEMPLATE = "Expected layer {0} but it does not exist";
 
 	LayerMissingException(LayerType layer, Throwable cause) {
 		super(layer, MessageFormat.format(TEMPLATE, layer), cause);
