@@ -81,6 +81,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useReportingStore } from '@/stores/reportingStore'
 import {
   OutputFormatEnum,
   SelectedExecutionOptionsEnum,
@@ -125,7 +126,11 @@ const messageDialog = ref<MessageDialog>({
   dialog: false,
   title: '',
   message: '',
+  dialogWidth: undefined,
+  btnLabel: '',
 })
+
+const reportingStore = useReportingStore()
 
 /**
  * Updates the starting age value.
@@ -446,6 +451,8 @@ const runModelHandler = async () => {
     downloadFile(resultBlob, zipFileName)
 
     logSuccessMessage(MESSAGE.SUCCESS_MSG.FILE_UPLOAD_RUN_RESULT)
+
+    reportingStore.fileUploadEnableTabs()
   } catch (error) {
     handleApiError(error, MESSAGE.FILE_UPLOAD_ERR.FAIL_RUN_MODEL)
   } finally {
