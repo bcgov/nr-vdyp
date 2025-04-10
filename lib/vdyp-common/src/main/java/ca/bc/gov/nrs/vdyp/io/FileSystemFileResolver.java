@@ -48,4 +48,10 @@ public class FileSystemFileResolver implements FileResolver {
 	public FileSystemFileResolver relativeToParent(String path) throws IOException {
 		return new FileSystemFileResolver(toPath(path).getParent());
 	}
+
+	@Override
+	public String toString() {
+		return "FileSystemFileResolver ("
+				+ (currentDirectory.isEmpty() ? "absolute" : "relative [" + currentDirectory.get() + "]") + ")";
+	}
 }

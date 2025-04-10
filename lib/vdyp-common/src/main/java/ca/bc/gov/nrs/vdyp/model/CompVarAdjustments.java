@@ -126,7 +126,7 @@ public class CompVarAdjustments {
 		}
 
 		throw new IllegalArgumentException(
-				MessageFormat.format("getVolumeValue({}, {}) - UtilizationClass is invalid", uc, vv)
+				MessageFormat.format("getVolumeValue({0}, {1}) - UtilizationClass is invalid", uc, vv)
 		);
 	}
 }
