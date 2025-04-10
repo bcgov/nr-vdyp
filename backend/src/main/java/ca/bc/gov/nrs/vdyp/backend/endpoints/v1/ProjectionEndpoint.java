@@ -3,14 +3,13 @@ package ca.bc.gov.nrs.vdyp.backend.endpoints.v1;
 import java.io.FileInputStream;
 import java.io.IOException;
 
-import org.apache.commons.codec.binary.Base64InputStream;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.jboss.resteasy.reactive.PartType;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
 
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionInternalExecutionException;
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestException;
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.AbstractProjectionRequestException;
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonExecutionException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestValidationException;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.impl.Endpoint;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
@@ -57,7 +56,7 @@ public class ProjectionEndpoint implements Endpoint {
 			);
 		} catch (ProjectionRequestValidationException e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getValidationMessages()).build();
-		} catch (ProjectionInternalExecutionException e) {
+		} catch (PolygonExecutionException e) {
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e).build();
 		}
 	}
@@ -78,11 +77,20 @@ public class ProjectionEndpoint implements Endpoint {
 			@FormParam(value = ParameterNames.HCSV_LAYERS_INPUT_DATA) FileUpload layersDataStream //
 			// , @Context SecurityContext securityContext
 	) {
+		if (polygonDataStream == null) {
+			return Response.status(Status.BAD_REQUEST).entity("Projection request failed: no polygon data supplied")
+					.build();
+		}
+		if (layersDataStream == null) {
+			return Response.status(Status.BAD_REQUEST).entity("Projection request failed: no layer data supplied")
+					.build();
+		}
+
 		var polygonFile = polygonDataStream.uploadedFile().toFile();
 		var layerFile = layersDataStream.uploadedFile().toFile();
 		try {
-			try (var polyStream = new Base64InputStream(new FileInputStream(polygonFile))) {
-				try (var layersStream = new Base64InputStream(new FileInputStream(layerFile))) {
+			try (var polyStream = new FileInputStream(polygonFile)) {
+				try (var layersStream = new FileInputStream(layerFile)) {
 					return projectionService.projectionHcsvPost(
 							trialRun, parameters, polyStream, layersStream, null /* securityContext */
 					);
@@ -90,7 +98,7 @@ public class ProjectionEndpoint implements Endpoint {
 			}
 		} catch (ProjectionRequestValidationException e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getValidationMessages()).build();
-		} catch (ProjectionRequestException | IOException e) {
+		} catch (AbstractProjectionRequestException | IOException e) {
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e).build();
 		}
 	}
@@ -125,7 +133,7 @@ public class ProjectionEndpoint implements Endpoint {
 			);
 		} catch (ProjectionRequestValidationException e) {
 			return Response.status(Status.BAD_REQUEST).entity(e.getValidationMessages()).build();
-		} catch (ProjectionInternalExecutionException e) {
+		} catch (PolygonExecutionException e) {
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e).build();
 		}
 	}

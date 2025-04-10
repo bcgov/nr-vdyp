@@ -15,8 +15,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.api.helpers.TestHelper;
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.ParameterNames;
 import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionContext;
 import ca.bc.gov.nrs.vdyp.backend.projection.input.AbstractPolygonStream;
@@ -26,6 +26,7 @@ import ca.bc.gov.nrs.vdyp.backend.projection.model.Species;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Stand;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
 import ca.bc.gov.nrs.vdyp.backend.services.ProjectionService;
+import ca.bc.gov.nrs.vdyp.backend.utils.FileHelper;
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
@@ -47,11 +48,13 @@ class HcsvSingleLayerMultipleSp0sRuntimeStructureTest {
 	}
 
 	@Test
-	void testHcsvSingleLayerMultipleSp0s() throws IOException, ProjectionRequestException, PolygonValidationException {
+	void testHcsvSingleLayerMultipleSp0s()
+			throws IOException, AbstractProjectionRequestException, PolygonValidationException {
 
 		logger.info("Starting {}", this.getClass().getSimpleName());
 
-		Path resourceFolderPath = Path.of("VDYP7Console-sample-files", "hcsv", "single-layer-multiple-sp0s-fip");
+		Path resourceFolderPath = Path
+				.of(FileHelper.TEST_DATA_FILES, FileHelper.HCSV, "single-layer-multiple-sp0s-fip");
 
 		Map<String, InputStream> inputStreams = new HashMap<>();
 
@@ -66,7 +69,7 @@ class HcsvSingleLayerMultipleSp0sRuntimeStructureTest {
 			inputStreams.put(ParameterNames.HCSV_LAYERS_INPUT_DATA, layersStream);
 		}
 
-		String projectionId = ProjectionService.buildId(ProjectionRequestKind.HCSV);
+		String projectionId = ProjectionService.buildProjectionId(ProjectionRequestKind.HCSV);
 
 		var parameters = new Parameters().ageStart(100).ageEnd(400);
 		var context = new ProjectionContext(ProjectionRequestKind.HCSV, projectionId, parameters, false);
@@ -110,8 +113,8 @@ class HcsvSingleLayerMultipleSp0sRuntimeStructureTest {
 		Assert.assertFalse(siteSpecies0.getHasBeenCombined());
 		Assert.assertEquals(stand0, siteSpecies0.getStand());
 
-		Assert.assertEquals(1, stand0.getSpecies().size());
-		Species sp64_0_0 = stand0.getSpecies().get(0);
+		Assert.assertEquals(1, stand0.getSpeciesByPercent().size());
+		Species sp64_0_0 = stand0.getSpeciesByPercent().get(0);
 		Assert.assertEquals(stand0, sp64_0_0.getStand());
 		Assert.assertTrue(10.4 == sp64_0_0.getAgeAtBreastHeight());
 		Assert.assertTrue(21.0 == sp64_0_0.getDominantHeight());
@@ -155,8 +158,8 @@ class HcsvSingleLayerMultipleSp0sRuntimeStructureTest {
 		Assert.assertFalse(siteSpecies1.getHasBeenCombined());
 		Assert.assertEquals(stand1, siteSpecies1.getStand());
 
-		Assert.assertEquals(1, stand1.getSpecies().size());
-		Species sp64_1_0 = stand1.getSpecies().get(0);
+		Assert.assertEquals(1, stand1.getSpeciesByPercent().size());
+		Species sp64_1_0 = stand1.getSpeciesByPercent().get(0);
 		Assert.assertEquals(stand1, sp64_1_0.getStand());
 		Assert.assertNull(sp64_1_0.getAgeAtBreastHeight());
 		Assert.assertNull(sp64_1_0.getDominantHeight());

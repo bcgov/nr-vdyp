@@ -16,16 +16,20 @@ import static ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
-import ca.bc.gov.nrs.vdyp.backend.model.v1.Filters;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.FilterParameters;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.AgeYearRangeCombinationKind;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.DebugOption;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.MetadataToOutputDirective;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.OutputFormat;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ProgressFrequency;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.UtilizationClassSet;
+import ca.bc.gov.nrs.vdyp.si32.vdyp.SP0Name;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
 /**
@@ -59,8 +63,8 @@ public class ValidatedParameters {
 	private AgeYearRangeCombinationKind combineAgeYearRange;
 	private ProgressFrequency progressFrequency;
 	private MetadataToOutputDirective metadataToOutput;
-	private Filters filters;
-	private List<ValidatedUtilizationParameter> utils = new ArrayList<>();
+	private FilterParameters filters;
+	private Map<SP0Name, UtilizationClassSet> utils = new HashMap<>();
 
 	/**
 	 * Helper method that returns "true" iff the given option is in <code>selectedExecutionOptions</code>.
@@ -339,7 +343,7 @@ public class ValidatedParameters {
 	 *
 	 * @return forceYear
 	 */
-	public Integer getYearForcedIntoYearTable() {
+	public Integer getYearForcedIntoYieldTable() {
 		return yearForcedIntoYieldTable;
 	}
 
@@ -465,45 +469,41 @@ public class ValidatedParameters {
 	 *
 	 * @return filters
 	 */
-	public Filters getFilters() {
+	public FilterParameters getFilters() {
 		return filters;
 	}
 
-	public ValidatedParameters filters(Filters filters) {
+	public ValidatedParameters filters(FilterParameters filters) {
 		setFilters(filters);
 		return this;
 	}
 
-	public void setFilters(Filters filters) {
+	public void setFilters(FilterParameters filters) {
 		this.filters = filters == null ? null : filters.copy();
 	}
 
-	/**
-	 * Get utils
-	 *
-	 * @return utils
-	 */
-	public List<ValidatedUtilizationParameter> getUtils() {
-		return Collections.unmodifiableList(utils);
+	public Map<SP0Name, UtilizationClassSet> getUtils() {
+		return Collections.unmodifiableMap(utils);
 	}
 
-	public ValidatedParameters utils(List<ValidatedUtilizationParameter> utils) {
+	public ValidatedParameters utils(Map<SP0Name, UtilizationClassSet> utils) {
 		setUtils(utils);
 		return this;
 	}
 
-	public ValidatedParameters addUtilsItem(ValidatedUtilizationParameter utilsItem) {
+	public ValidatedParameters addUtilsItem(SP0Name sp0Name, UtilizationClassSet ucs) {
 		if (this.utils == null) {
-			this.utils = new ArrayList<>();
+			this.utils = new HashMap<>();
 		}
-		this.utils.add(utilsItem);
+
+		this.utils.put(sp0Name, ucs);
 		return this;
 	}
 
-	public void setUtils(List<ValidatedUtilizationParameter> utils) {
-		this.utils = new ArrayList<>();
+	public void setUtils(Map<SP0Name, UtilizationClassSet> utils) {
+		this.utils = new HashMap<>();
 		if (utils != null) {
-			utils.stream().forEach(u -> this.utils.add(u));
+			utils.entrySet().stream().forEach(e -> this.utils.put(e.getKey(), e.getValue()));
 		}
 	}
 
@@ -599,6 +599,7 @@ public class ValidatedParameters {
 		DEFAULT.selectedExecutionOptions = new ArrayList<>();
 		// exclude since false: BACK_GROW_ENABLED
 		DEFAULT.selectedExecutionOptions.add(FORWARD_GROW_ENABLED);
+		DEFAULT.selectedExecutionOptions.add(DO_INCLUDE_PROJECTION_FILES);
 		// exclude since false: DO_SAVE_INTERMEDIATE_FILES
 		// exclude since false: DO_FORCE_REFERENCE_YEAR_INCLUSION_IN_YIELD_TABLES
 		// exclude since false: DO_FORCE_CURRENT_YEAR_INCLUSION_IN_YIELD_TABLES
@@ -615,7 +616,7 @@ public class ValidatedParameters {
 		// exclude since false: DO_INCLUDE_PROJECTED_MOF_BIOMASS
 		// exclude since false: DO_INCLUDE_PROJECTED_CFS_BIOMASS
 		DEFAULT.selectedExecutionOptions.add(DO_INCLUDE_COLUMN_HEADERS_IN_YIELD_TABLE);
-		DEFAULT.selectedExecutionOptions.add(DO_ALLOW_BASAL_AREA_AND_TREES_PER_HECTARE_VALUE_SUBSTITUTION);
+		DEFAULT.selectedExecutionOptions.add(DO_ALLOW_BA_AND_TPH_VALUE_SUBSTITUTION);
 		// exclude since false: DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE
 
 		// exclude since false: DO_ENABLE_PROGRESS_LOGGING
@@ -642,7 +643,11 @@ public class ValidatedParameters {
 		DEFAULT.combineAgeYearRange = AgeYearRangeCombinationKind.INTERSECT;
 		DEFAULT.progressFrequency = new ProgressFrequency().intValue(1000);
 		DEFAULT.metadataToOutput = MetadataToOutputDirective.VERSION;
-		DEFAULT.filters = new Filters();
-		DEFAULT.utils = new ArrayList<>();
+		DEFAULT.filters = new FilterParameters();
+
+		DEFAULT.utils = new HashMap<>();
+		for (var sp0Name : SP0Name.values()) {
+			DEFAULT.utils.put(sp0Name, UtilizationClassSet._12_5);
+		}
 	}
 }

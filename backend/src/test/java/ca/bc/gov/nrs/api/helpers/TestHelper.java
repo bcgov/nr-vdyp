@@ -28,6 +28,7 @@ import com.opencsv.bean.CsvBindByName;
 import com.opencsv.bean.CsvBindByPosition;
 
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessageKind;
 import ca.bc.gov.nrs.vdyp.backend.projection.input.HcsvPolygonRecordBean;
@@ -44,7 +45,7 @@ public class TestHelper {
 
 		String resourceFilePath = Path.of(testResourceFolderPath.toString(), fileName).toString();
 
-		URL testFileURL = this.getClass().getClassLoader().getResource(resourceFilePath);
+		URL testFileURL = this.getClass().getResource("/" + resourceFilePath);
 		try {
 			File resourceFile = new File(testFileURL.toURI());
 			return Path.of(resourceFile.getAbsolutePath());
@@ -56,10 +57,12 @@ public class TestHelper {
 	public byte[] readZipEntry(ZipInputStream zipInputStream, ZipEntry zipEntry) throws IOException {
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		byte[] buffer = new byte[1024];
-		int bytesRead;
-		while ( (bytesRead = zipInputStream.read(buffer, 0, 1024)) != -1) {
-			baos.write(buffer, 0, bytesRead);
+		if (zipInputStream.available() > 0) {
+			byte[] buffer = new byte[1024];
+			int bytesRead;
+			while ( (bytesRead = zipInputStream.read(buffer, 0, 1024)) > 0) {
+				baos.write(buffer, 0, bytesRead);
+			}
 		}
 
 		return baos.toByteArray();
@@ -70,9 +73,12 @@ public class TestHelper {
 	}
 
 	public Parameters addSelectedOptions(Parameters params, Parameters.ExecutionOption... executionOptions) {
-
 		params.setSelectedExecutionOptions(List.of(executionOptions));
+		return params;
+	}
 
+	public Parameters addExcludedOptions(Parameters params, ExecutionOption executionOptions) {
+		params.setExcludedExecutionOptions(List.of(executionOptions));
 		return params;
 	}
 

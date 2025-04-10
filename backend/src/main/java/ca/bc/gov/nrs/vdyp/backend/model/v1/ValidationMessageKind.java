@@ -1,7 +1,7 @@
 package ca.bc.gov.nrs.vdyp.backend.model.v1;
 
 public enum ValidationMessageKind {
-	UNRECOGNIZED_OUTPUT_FORMAT("{0} is not a recognized output format"),
+	GENERIC("{0}"), UNRECOGNIZED_OUTPUT_FORMAT("{0} is not a recognized output format"),
 	UNSUPPORTED_OUTPUT_FORMAT("{0} is not a supported output format"),
 	UNRECOGNIZED_EXECUTION_OPTION("{0} is not a recognized execution option"),
 	UNRECOGNIZED_DEBUG_OPTION("{0} is not a recognized debug option"),
@@ -23,9 +23,9 @@ public enum ValidationMessageKind {
 	CANNOT_SPECIFY_BOTH_CFS_BIOMASS_AND_EITHER_MOF_OPTIONS(
 			"For CSV Yield Table of CFS Biomass, neither MoF Volume or Biomass may also be selected"
 	), //
-	INVALID_INTEGER_VALUE("Field \"{1}\"'s value \"{0}\" is not an integer"),
-	INTEGER_VALUE_TOO_LOW("Field \"{1}\"'s value \"{0}\" is not an integer"),
-	INTEGER_VALUE_TOO_HIGH("Field \"{1}\"'s value \"{0}\" is not an integer"),
+	INVALID_INTEGER_VALUE("Field \"{1}\"''s value \"{0}\" is not an integer"),
+	INTEGER_VALUE_TOO_LOW("Field \"{1}\"''s value \"{0}\" is below the minimum value \"{2}\""),
+	INTEGER_VALUE_TOO_HIGH("Field \"{1}\"''s value \"{0}\" is above the maximum value \"{2}\""),
 
 	EXPECTED_STREAMS_NOT_SUPPLIED("The following input file types were not supplied: {0}"),
 	UNEXPECTED_STREAMS_SUPPLIED("The following input file types were supplied, but not expected: {0}"),
@@ -54,19 +54,20 @@ public enum ValidationMessageKind {
 	), //
 	POLYGON_ALREADY_HAS_RANK_ONE_LAYER("Polygon {0}: polygon already has a rank 1 layer"),
 	PERCENTAGES_INCREASING("Polygon {0} Layer {1}: percent {2} at index {3} is larger than a preceding percentage"),
-	DUPLICATE_SPECIES("Polygon {0} Layer {1}: species '{2}' appears more than once in the layer definition"),
+	DUPLICATE_SPECIES("Polygon {0} Layer {1}: species \"{2}\" appears more than once in the layer definition"),
 	INCONSISTENT_SITE_INFO(
-			"Polygon {0} Layer {1}: species definitions for species '{3}' have inconsistent site information"
+			"Polygon {0} Layer {1}: species definitions for species \"{3}\" have inconsistent site information"
 	),
 	LOW_SITE_INDEX_ERROR(
-			"Polygon {0} Layer {1}: very low or null site index {2} for species '{3}'. Projected Dominant Height set to input height"
+			"Polygon {0} Layer {1}: very low or null site index {2} for species \"{3}\". {4} not calculated"
 	),
 	LOW_SITE_INDEX_WARNING(
-			"Polygon {0} Layer {1}: very low or null site index {2} for species '{3}'. Projected Dominant Height set to input height"
-	), NO_LEADING_SPECIES("Polygon {0} Layer {1}: no leading site species could be found"),
-	SPECIES_WITH_NO_STAND_OR_AGE(
-			"Polygon {0} Layer {1}: Species \"{2}\" has no age but requires that a new Stand be created, which requires the age be known"
-	), PRIMARY_LAYER_NOT_FOUND("Polygon {0}: no primary layer found for any projection type"), //
+			"Polygon {0} Layer {1}: very low or null site index {2} for species \"{3}\". {4} set to species {4} value prior to projection"
+	), //
+	MISSING_SITE_INDEX_ERROR("Polygon {0} Layer {1}: unable to compute site index for species \"{2}\"."),
+	MISSING_YEARS_TO_BREAST_HEIGHT("Polygon {0} Layer {1}: species {2} missing years-to-breast-height value."), //
+	NO_LEADING_SPECIES("Layer {0}: no leading site species could be found"), //
+	PRIMARY_LAYER_NOT_FOUND("Polygon {0}: no primary layer found for any projection type"), //
 	ESTIMATED_SI_UNAVAILABLE(
 			"Estimated site index required but unavailable for species {0} at age {1}. Site index computed directly from age and height"
 	), //
@@ -75,12 +76,18 @@ public enum ValidationMessageKind {
 	), //
 	ESTIMATE_APPLIED_FROM_OTHER_SPECIES("Estimated site index applied from older species {0} to younger species {1}"), //
 	ASSIGNING_ESTIMATED_SITE_INDEX(
-			"Directly assigning estimated site index of {0} to Species '{1}' and recomputing input height"
+			"Directly assigning estimated site index of {0} to Species \"{1}\" and recomputing input height"
 	), //
 	ASSIGNING_CONVERTED_ESTIMATED_SITE_INDEX(
-			"Assigning converted estimated site index of {0} to Species '{1}' and recomputing input height"
+			"Assigning converted estimated site index of {0} to Species \"{1}\" and recomputing input height"
 	), //
-	GENERIC("{0}");
+	USING_SUPPLIED_BASAL_AREA_IN_PROJECTION(
+			"{0}: starting value for basal area copied over for QA and alternative model used"
+	), //
+	USING_SUPPLIED_TPH_IN_PROJECTION(
+			"{0}: starting value for trees-per-hectare copied over for QA and alternative model used"
+	), //
+	MISSING_LEADING_SPECIES("{0}: layer is missing a leading species"), //
 	;
 
 	public enum Category {

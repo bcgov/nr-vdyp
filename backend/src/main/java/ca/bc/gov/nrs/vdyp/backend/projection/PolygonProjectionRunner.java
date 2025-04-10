@@ -2,18 +2,19 @@ package ca.bc.gov.nrs.vdyp.backend.projection;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.MessageFormat;
 import java.time.LocalDate;
 
+import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.event.Level;
 
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonExecutionException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionInternalExecutionException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.YieldTableGenerationException;
 import ca.bc.gov.nrs.vdyp.backend.io.write.FipStartOutputWriter;
 import ca.bc.gov.nrs.vdyp.backend.io.write.VdypGrowToYearFileWriter;
@@ -25,10 +26,12 @@ import ca.bc.gov.nrs.vdyp.backend.projection.model.Layer;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Polygon;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.ProjectionParameters;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Stand;
+import ca.bc.gov.nrs.vdyp.backend.projection.model.Vdyp7Constants;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.GrowthModelCode;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProcessingModeCode;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
 import ca.bc.gov.nrs.vdyp.backend.utils.ProjectionUtils;
+import ca.bc.gov.nrs.vdyp.backend.utils.Utils;
 import ca.bc.gov.nrs.vdyp.common.Reference;
 import ca.bc.gov.nrs.vdyp.math.VdypMath;
 
@@ -37,32 +40,34 @@ import ca.bc.gov.nrs.vdyp.math.VdypMath;
  */
 public class PolygonProjectionRunner {
 
-	static Logger logger = LoggerFactory.getLogger(PolygonProjectionRunner.class);
+	private static Logger logger = LoggerFactory.getLogger(PolygonProjectionRunner.class);
+
+	private static final String EXECUTION_FOLDER_TEMPLATE_ZIP_FILE_NAME = "ExecutionFolderTemplate.zip";
 
 	private Polygon polygon;
 	private ProjectionContext context;
-	private IComponentRunner componentRunner;
+	private ComponentRunner componentRunner;
 
 	private PolygonProjectionState state;
 	private ProjectionParameters projectionParameters;
 
 	/**
 	 * Create a runner for the given {@link Polygon}, in the given {@link ProjectionContext}, using the given
-	 * {@link ComponentRunner}.
+	 * {@link RealComponentRunner}.
 	 *
 	 * @param polygon         the polygon to project
 	 * @param context         the context in which the projection is to occur
 	 * @param componentRunner the component runner to use
 	 */
-	private PolygonProjectionRunner(Polygon polygon, ProjectionContext context, IComponentRunner componentRunner) {
+	private PolygonProjectionRunner(Polygon polygon, ProjectionContext context, ComponentRunner componentRunner) {
 
 		this.polygon = polygon;
 		this.context = context;
 		this.componentRunner = componentRunner;
 
 		this.projectionParameters = new ProjectionParameters.Builder() //
-				.enableBack(context.getValidatedParams().containsOption(ExecutionOption.BACK_GROW_ENABLED)) //
-				.enableForward(context.getValidatedParams().containsOption(ExecutionOption.FORWARD_GROW_ENABLED)) //
+				.enableBack(context.getParams().containsOption(ExecutionOption.BACK_GROW_ENABLED)) //
+				.enableForward(context.getParams().containsOption(ExecutionOption.FORWARD_GROW_ENABLED)) //
 				.measurementYear(polygon.getReferenceYear()).standAgeAtMeasurementYear(0).build();
 
 		this.state = new PolygonProjectionState();
@@ -70,14 +75,14 @@ public class PolygonProjectionRunner {
 
 	/**
 	 * Create a runner for the given {@link Polygon}, in the given {@link ProjectionContext}, using the given
-	 * {@link ComponentRunner}.
+	 * {@link RealComponentRunner}.
 	 *
 	 * @param polygon         the polygon to project
 	 * @param context         the context in which the projection is to occur
 	 * @param componentRunner the component runner to use
 	 */
 	public static PolygonProjectionRunner
-			of(Polygon polygon, ProjectionContext context, IComponentRunner componentRunner) {
+			of(Polygon polygon, ProjectionContext context, ComponentRunner componentRunner) {
 
 		return new PolygonProjectionRunner(polygon, context, componentRunner);
 	}
@@ -85,13 +90,11 @@ public class PolygonProjectionRunner {
 	/**
 	 * Run the projection
 	 *
-	 * @throws PolygonExecutionException            if there's an exception caused by the input data during the
-	 *                                              projection
-	 * @throws ProjectionInternalExecutionException if there's an exception caused by the software during the projection
-	 * @throws YieldTableGenerationException        if there's an exception during yield table generation
+	 * @throws PolygonExecutionException     if there's an exception caused by the input data during the projection
+	 * @throws PolygonExecutionException     if there's an exception caused by the software during the projection
+	 * @throws YieldTableGenerationException if there's an exception during yield table generation
 	 */
-	void project()
-			throws PolygonExecutionException, ProjectionInternalExecutionException, YieldTableGenerationException {
+	void project() throws PolygonExecutionException, YieldTableGenerationException {
 
 		// Begin implementation based on code starting at line 2088 (call to "V7Ext_GetPolygonInfo") in vdyp7console.c.
 		// Note the funky error handling in this routine: "rtrnCode" is set to SUCCESS and is potentially set to
@@ -116,15 +119,58 @@ public class PolygonProjectionRunner {
 		generateYieldTablesForPolygon();
 	}
 
+	private void buildPolygonProjectionExecutionStructure() throws PolygonExecutionException {
+
+		try {
+			Path executionFolderPath = Path.of(context.getExecutionFolder().toString(), polygon.toString());
+			Path executionFolder = Files.createDirectory(executionFolderPath);
+
+			for (ProjectionTypeCode projectionType : ProjectionTypeCode.ACTUAL_PROJECTION_TYPES_LIST) {
+
+				if (polygon.getLayerByProjectionType(projectionType) != null) {
+					ProjectionUtils.logger.debug("Populating execution folder for projectionType {}", projectionType);
+
+					InputStream is = ProjectionUtils.class.getClassLoader()
+							.getResourceAsStream(EXECUTION_FOLDER_TEMPLATE_ZIP_FILE_NAME);
+
+					ProjectionUtils.prepareProjectionTypeFolder(is, executionFolder, projectionType.toString());
+				}
+			}
+
+			state.setExecutionFolder(executionFolder);
+		} catch (IOException e) {
+			throw new PolygonExecutionException(e);
+		}
+	}
+
+	/**
+	 * <b>V7Ext_PerformInitialProcessing</b>
+	 * <p>
+	 * Runs the polygon through its initial processing making it capable of being projected to an arbitrary age or year.
+	 * <p>
+	 * <b>Remarks</b>
+	 * <ul>
+	 * <li>The polygon is processed through VRISTART or FIPSTART depending on the configuration of the polygon
+	 * parameters.
+	 * <li>Traps FIPSTART return codes of -4 in addition to -14.
+	 * <li>Prevents initial processing if the Projections OK flag has been reset.
+	 * </ul>
+	 *
+	 * @throws PolygonExecutionException to report a range of errors that may be encountered in this step.
+	 */
 	private void performInitialProcessing() throws PolygonExecutionException {
 
 		logger.info("{}: performing initial processing", polygon);
 
+		ProjectionTypeCode primaryProjectionType;
 		try {
-			this.determineInitialProcessingModel(state);
+			primaryProjectionType = this.determineInitialProcessingModel(state);
 		} catch (PolygonValidationException e) {
 			throw new PolygonExecutionException(e);
 		}
+
+		GrowthModelCode initialGrowthModel = state.getGrowthModel(primaryProjectionType);
+		ProcessingModeCode initialProcessingMode = state.getProcessingMode(primaryProjectionType);
 
 		for (ProjectionTypeCode projectionType : ProjectionTypeCode.ACTUAL_PROJECTION_TYPES_LIST) {
 
@@ -138,14 +184,13 @@ public class PolygonProjectionRunner {
 
 			logger.info(
 					"{}: layer exists for projection type {} (processing mode {}); {} processing will occur for this type",
-					polygon, projectionType, state.getProcessingMode(projectionType),
-					state.getGrowthModel(projectionType)
+					polygon, projectionType, initialProcessingMode, initialGrowthModel
 			);
 
-			switch (state.getGrowthModel(projectionType)) {
+			switch (initialGrowthModel) {
 			case FIP: {
 
-				createFipInputData(projectionType, state);
+				createFipInputData(projectionType, initialProcessingMode, state);
 
 				componentRunner.runFipStart(polygon, projectionType, state);
 				logger.debug(
@@ -179,76 +224,103 @@ public class PolygonProjectionRunner {
 				logger.error("{}: unrecognized growth model {}", polygon, state.getGrowthModel(projectionType));
 
 				context.addMessage(
-						"Attempt to process an unrecognized growth model {0}", state.getGrowthModel(projectionType)
+						Level.ERROR, "Attempt to process an unrecognized growth model {0}",
+						state.getGrowthModel(projectionType)
 				);
 			}
 		}
 	}
 
 	/**
-	 * Determine the processing model to which the stand will be initially subject.
+	 * <b>V7Ext_InitialProcessingModeToBeUsed</b>
+	 * <p>
+	 * Determines the processing mode which to the stand will be initially subjected. The results are stored in the
+	 * supplied <code>state</code> object.
+	 * <p>
+	 * <b>Remarks</b>
+	 * <ul>
+	 * <li>The processing mode is specified according to how the stand is defined. The mode is completely defined by the
+	 * stand attributes and is not explicitly chosen by the caller.
+	 * <li>The focus of the decision is the species group (sp0).
+	 * <li>Changed FIPSTART decision logic to look at Non-Productive status.
+	 * <li>Expanded the list of possible FIP non-productive codes to be any value rather than a subset.
+	 * <li>Handle sitution where polygon consists solely of a dead layer. Prior to this, if only a dead layer, then the
+	 * primary layer could not be found and an error is returned. Determine the processing model to which the stand will
+	 * be initially subject.
+	 * </ul>
 	 *
-	 * @return as described
+	 * @param state the initial state of the projection of the polygon to this point.
+	 * @return the projection type code
 	 * @throws PolygonValidationException if the polygon definition contains errors
 	 */
-	private void determineInitialProcessingModel(PolygonProjectionState state) throws PolygonValidationException {
+	private ProjectionTypeCode determineInitialProcessingModel(PolygonProjectionState state)
+			throws PolygonValidationException {
 
 		var rGrowthModel = new Reference<GrowthModelCode>();
 		var rProcessingMode = new Reference<ProcessingModeCode>();
 		var rPrimaryLayer = new Reference<Layer>();
+		var rProjectionType = new Reference<ProjectionTypeCode>();
 
-		polygon.calculateInitialProcessingModel(rGrowthModel, rProcessingMode, rPrimaryLayer);
+		polygon.calculateInitialProcessingModel(rGrowthModel, rProcessingMode, rPrimaryLayer, rProjectionType);
+
+		Validate.isTrue(
+				rGrowthModel.isPresent() && rProcessingMode.isPresent(),
+				"PolygonProjectionRunner.determineInitialProcessingModel: at least one of rGrowthModel and rProcessingMode is not present"
+		);
 
 		if (!rPrimaryLayer.isPresent()) {
 			throw new PolygonValidationException(
-					new ValidationMessage(ValidationMessageKind.PRIMARY_LAYER_NOT_FOUND, this)
+					new ValidationMessage(ValidationMessageKind.PRIMARY_LAYER_NOT_FOUND, polygon)
 			);
 		}
 
-		Layer selectedPrimaryLayer = rPrimaryLayer.get();
-		assert rGrowthModel.isPresent() && rProcessingMode.isPresent();
+		var primaryLayer = rPrimaryLayer.get();
+		var projectionType = rProjectionType.get();
 
-		for (ProjectionTypeCode pt : ProjectionTypeCode.ACTUAL_PROJECTION_TYPES_LIST) {
-
-			// Iterate until we find a projection type with a primary layer; that will determine
-			// the (initial) model for all projection types.
-
-			// Check if the stand is non-productive.
-			if (polygon.getNonProductiveDescriptor() != null) {
-				if (rPrimaryLayer.get().getSp0sAsSupplied().size() > 0) {
-					logger.debug(
-							"{}: stand labelled with Non Productive Code {}, but also contains a stand description.",
-							polygon, polygon.getNonProductiveDescriptor()
-					);
-				} else {
-					polygon.disableProjectionsOfType(pt);
-
-					context.addMessage(
-							"Layer {0} is not completely, or is not consistently, defined", selectedPrimaryLayer
-					);
-				}
-			}
-
-			Stand leadingSp0 = selectedPrimaryLayer.determineLeadingSp0(0 /* leading */);
-			if (leadingSp0 == null) {
-				polygon.disableProjectionsOfType(pt);
-				context.addMessage("Unable to locate a leading species for primary layer {}", selectedPrimaryLayer);
-			} else {
+		// Check if the stand is non-productive.
+		if (polygon.getNonProductiveDescriptor() != null) {
+			if (rPrimaryLayer.get().getSp0sAsSupplied().size() > 0) {
 				logger.debug(
-						"{} - {}: primary layer determined to be {} (percentage {})", polygon, pt, selectedPrimaryLayer,
-						leadingSp0.getSpeciesGroup().getSpeciesPercent()
+						"{}: stand labelled with Non-Productive Code {}, but also contains a stand description.",
+						polygon, polygon.getNonProductiveDescriptor()
+				);
+			} else {
+				polygon.disableProjectionsOfType(rPrimaryLayer.get().getAssignedProjectionType());
+
+				context.addMessage(
+						Level.ERROR,
+						"Layer {0} is not completely, or is not consistently, defined; projection of layer disabled",
+						primaryLayer
 				);
 			}
+		}
 
-			state.setGrowthModel(pt, rGrowthModel.get(), rProcessingMode.get());
-			logger.trace(
-					"Polygon {}: growth model {}; processing mode {}", this, rGrowthModel.get(), rProcessingMode.get()
+		Stand leadingSp0 = primaryLayer.determineLeadingSp0(0 /* leading */);
+		if (leadingSp0 == null) {
+			context.addMessage(
+					Level.ERROR, "No leading Sp0 for primary layer {0}; projection of layer disabled", primaryLayer
+			);
+			throw new PolygonValidationException(
+					new ValidationMessage(ValidationMessageKind.NO_LEADING_SPECIES, primaryLayer)
+			);
+		} else {
+			logger.debug(
+					"{} - {}: primary layer determined to be {} (percentage {})", polygon, projectionType, primaryLayer,
+					leadingSp0.getSpeciesGroup().getSpeciesPercent()
 			);
 		}
+
+		state.setGrowthModel(projectionType, rGrowthModel.get(), rProcessingMode.get());
+		logger.trace(
+				"Polygon {}: growth model {}; processing mode {}", this, rGrowthModel.get(), rProcessingMode.get()
+		);
+
+		return projectionType;
 	}
 
-	private void createFipInputData(ProjectionTypeCode projectionType, PolygonProjectionState state)
-			throws PolygonExecutionException {
+	private void createFipInputData(
+			ProjectionTypeCode projectionType, ProcessingModeCode processingMode, PolygonProjectionState state
+	) throws PolygonExecutionException {
 
 		Path stepExecutionFolder = Path.of(state.getExecutionFolder().toString(), projectionType.toString());
 
@@ -270,17 +342,20 @@ public class PolygonProjectionRunner {
 							polygonOutputStream, layersOutputStream, speciesOutputStream
 					)
 			) {
-				outputWriter.writePolygon(polygon, projectionType, state);
+				outputWriter.writePolygon(polygon, projectionType, processingMode, state);
 				outputWriter.writePolygonLayer(polygon.getLayerByProjectionType(projectionType));
 			}
-		} catch (IOException e) {
+		} catch (Exception e) {
 			throw new PolygonExecutionException(
-					MessageFormat.format("{0}: encountered exception while running createFipInputData", polygon), e
+					MessageFormat.format(
+							"{0}: encountered {1} while running creating FIP input data{2}", polygon,
+							e.getClass().getName(), e.getMessage() != null ? "; reason: " + e.getMessage() : ""
+					)
 			);
 		} finally {
-			close(speciesOutputStream);
-			close(layersOutputStream);
-			close(polygonOutputStream);
+			Utils.close(speciesOutputStream, "PolygonProjectionRunner.speciesOutputStream");
+			Utils.close(layersOutputStream, "PolygonProjectionRunner.layersOutputStream");
+			Utils.close(polygonOutputStream, "PolygonProjectionRunner.polygonOutputStream");
 		}
 	}
 
@@ -315,15 +390,18 @@ public class PolygonProjectionRunner {
 				outputWriter.writePolygon(polygon, projectionTypeCode, state);
 				outputWriter.writePolygonLayer(polygon.getLayerByProjectionType(projectionTypeCode));
 			}
-		} catch (IOException e) {
+		} catch (Exception e) {
 			throw new PolygonExecutionException(
-					MessageFormat.format("{0}: encountered exception while running createVriInputData", polygon), e
+					MessageFormat.format(
+							"{0}: encountered {1} while running creating VRI input data{2}", polygon,
+							e.getClass().getName(), e.getMessage() != null ? "; reason: " + e.getMessage() : ""
+					), e
 			);
 		} finally {
-			close(siteIndexOutputStream);
-			close(speciesOutputStream);
-			close(layersOutputStream);
-			close(polygonOutputStream);
+			Utils.close(siteIndexOutputStream, "PolygonProjectionRunner.siteIndexOutputStream");
+			Utils.close(speciesOutputStream, "PolygonProjectionRunner.speciesOutputStream");
+			Utils.close(layersOutputStream, "PolygonProjectionRunner.layersOutputStream");
+			Utils.close(polygonOutputStream, "PolygonProjectionRunner.polygonOutputStream");
 		}
 	}
 
@@ -347,11 +425,15 @@ public class PolygonProjectionRunner {
 		}
 	}
 
-	private void performProjection() throws PolygonExecutionException, ProjectionInternalExecutionException {
+	private void performProjection() throws PolygonExecutionException {
 
 		logger.info("{}: performing FORWARD/BACK", polygon);
 
-		var measurementYear = polygon.getReferenceYear();
+		if (polygon.getReferenceYear() == null) {
+			throw new IllegalStateException(MessageFormat.format("{0}: reference year is null", polygon));
+		}
+
+		var measurementYear = polygon.getReferenceYear().intValue();
 
 		for (ProjectionTypeCode projectionType : ProjectionTypeCode.ACTUAL_PROJECTION_TYPES_LIST) {
 
@@ -373,7 +455,22 @@ public class PolygonProjectionRunner {
 					state.getProcessingMode(projectionType)
 			);
 
-			var primaryLayerAge = polygon.getPrimaryLayer().determineLayerAgeAtYear(polygon.getReferenceYear());
+			Double primaryLayerAge = null;
+
+			if (polygon.getPrimaryLayer() != null) {
+				primaryLayerAge = polygon.getPrimaryLayer().determineLayerAgeAtYear(polygon.getReferenceYear());
+			}
+
+			if (primaryLayerAge == null) {
+				// determineLayerAgeAtYear may throw a ValidationException, although this error should
+				// have been detected before this point.
+				throw new PolygonExecutionException(
+						MessageFormat.format(
+								"{0}: unable to project since cannot calculate the age of the primary layer {1} at year {2}",
+								polygon, polygon.getPrimaryLayer(), polygon.getReferenceYear()
+						)
+				);
+			}
 
 			switch (projectionType) {
 			case PRIMARY:
@@ -398,12 +495,32 @@ public class PolygonProjectionRunner {
 			}
 
 			// Determine the stand age, based on the leading site Sp0.
-			var standAge = layer.determineLeadingSp0(0).getSpeciesGroup().getTotalAge();
+			var leadingSp0 = layer.determineLeadingSp0(0);
+			if (leadingSp0 == null) {
+				throw new PolygonExecutionException(
+						MessageFormat.format(
+								"{0}: unable to project since layer {1} has no leading Sp0 at year {2}", polygon, layer,
+								polygon.getReferenceYear()
+						)
+				);
+			}
+
+			var standAge = leadingSp0.getSpeciesGroup().getTotalAge();
 
 			int startYear = adjustMeasurementYearAsNecessary(
 					measurementYear, state.getStartAge(projectionType), standAge
 			);
 			int endYear = adjustMeasurementYearAsNecessary(measurementYear, state.getEndAge(projectionType), standAge);
+
+			// Impose a limit of 400 years of projection, as is done in VDYP7.
+
+			int yearsToGrowForward = VdypMath.clamp(endYear - measurementYear, 0, 400);
+			int yearsToGrowBack = VdypMath.clamp(measurementYear - startYear, 0, 400);
+
+			int projectionStartYear = measurementYear - yearsToGrowBack;
+			int firstRequestedYear = startYear;
+
+			context.recordProjectionDetails(polygon, projectionType, projectionStartYear, firstRequestedYear);
 
 			var doAllowForward = projectionParameters.isForwardEnabled();
 			var doAllowBack = projectionParameters.isBackEnabled();
@@ -412,12 +529,9 @@ public class PolygonProjectionRunner {
 				doAllowBack = false;
 			}
 
-			// Impose a limit of 400 years of projection, as is done in VDYP7.
-
 			Path executionFolder = Path.of(state.getExecutionFolder().toString(), projectionType.toString());
 
 			if (doAllowForward) {
-				int yearsToGrowForward = VdypMath.clamp(endYear - measurementYear, 0, 400);
 				if (yearsToGrowForward > 0) {
 
 					// TODO: there is logic in VDYP7Console that will try the projection a second time
@@ -425,16 +539,7 @@ public class PolygonProjectionRunner {
 					// no adjustments are supplied. Since we aren't using ADJUST at this time, there's no
 					// need to implement this logic.
 
-					try {
-						Path growToYearFile = Path.of(executionFolder.toString(), "vin_y1.dat");
-						FileOutputStream growToYearOutputStream = new FileOutputStream(growToYearFile.toFile());
-						try (var yearToGrowWriter = new VdypGrowToYearFileWriter(growToYearOutputStream)) {
-
-							yearToGrowWriter.writePolygon(polygon, measurementYear + yearsToGrowForward);
-						}
-					} catch (IOException e) {
-						throw new ProjectionInternalExecutionException(e);
-					}
+					generateYearToGrowFile(executionFolder, measurementYear, yearsToGrowForward);
 
 					componentRunner.runForward(polygon, projectionType, state);
 
@@ -450,18 +555,11 @@ public class PolygonProjectionRunner {
 			}
 
 			if (doAllowBack) {
-				int yearsToGrowBack = VdypMath.clamp(measurementYear - startYear, 0, 400);
 				if (yearsToGrowBack > 0) {
-					try {
-						Path growToYearFile = Path.of(executionFolder.toString(), "vin_y1.dat");
-						FileOutputStream growToYearOutputStream = new FileOutputStream(growToYearFile.toFile());
-						try (var yearToGrowWriter = new VdypGrowToYearFileWriter(growToYearOutputStream)) {
 
-							yearToGrowWriter.writePolygon(polygon, measurementYear + yearsToGrowBack);
-						}
-					} catch (IOException e) {
-						throw new ProjectionInternalExecutionException(e);
-					}
+					// BACK read the backwards growth target value from entry 101 in the
+					// control file. Adjust the control file to contain this value.
+					rewriteTargetYearToBackControlFile(context.getExecutionFolder(), yearsToGrowBack, projectionType);
 
 					componentRunner.runBack(polygon, projectionType, state);
 
@@ -482,7 +580,10 @@ public class PolygonProjectionRunner {
 
 		try {
 			Integer measurementYear = polygon.getMeasurementYear();
-			double standAgeAtMeasurementYear = Math.round(polygon.determineStandAgeAtYear(measurementYear));
+			Double standAgeAtMeasurementYear = polygon.determineStandAgeAtYear(measurementYear);
+			if (standAgeAtMeasurementYear != null) {
+				standAgeAtMeasurementYear = Double.valueOf(Math.round(standAgeAtMeasurementYear));
+			}
 
 			logger.debug(
 					"{}: determined age is {} at measurement year {}", polygon, standAgeAtMeasurementYear,
@@ -498,14 +599,14 @@ public class PolygonProjectionRunner {
 			// We need to make an allowance for the reference year and the current year. We need to
 			// check if they extend the range of years to be projected.
 
-			if (context.getValidatedParams().getSelectedExecutionOptions()
+			if (context.getParams().getSelectedExecutionOptions()
 					.contains(ExecutionOption.DO_FORCE_REFERENCE_YEAR_INCLUSION_IN_YIELD_TABLES)) {
 
-				if (startAge == null || standAgeAtMeasurementYear < startAge) {
+				if (startAge == null || standAgeAtMeasurementYear == null || standAgeAtMeasurementYear < startAge) {
 					startAge = standAgeAtMeasurementYear;
 				}
 
-				if (endAge == null || standAgeAtMeasurementYear > endAge) {
+				if (endAge == null || standAgeAtMeasurementYear == null || standAgeAtMeasurementYear > endAge) {
 					endAge = standAgeAtMeasurementYear;
 				}
 
@@ -514,7 +615,7 @@ public class PolygonProjectionRunner {
 				);
 			}
 
-			if (context.getValidatedParams().getSelectedExecutionOptions()
+			if (context.getParams().getSelectedExecutionOptions()
 					.contains(ExecutionOption.DO_FORCE_CURRENT_YEAR_INCLUSION_IN_YIELD_TABLES)) {
 
 				Double standAgeAtCurrentYear = polygon.determineStandAgeAtYear(LocalDate.now().getYear());
@@ -529,10 +630,10 @@ public class PolygonProjectionRunner {
 				logger.debug("{}: start and end age after considering current year: {}, {}", polygon, startAge, endAge);
 			}
 
-			if (context.getValidatedParams().getYearForcedIntoYearTable() != null) {
+			if (context.getParams().getYearForcedIntoYieldTable() != null) {
 
 				Double standAgeAtGivenYear = polygon
-						.determineStandAgeAtYear(context.getValidatedParams().getYearForcedIntoYearTable());
+						.determineStandAgeAtYear(context.getParams().getYearForcedIntoYieldTable());
 				if (startAge == null || standAgeAtGivenYear < startAge) {
 					startAge = standAgeAtGivenYear;
 				}
@@ -565,12 +666,12 @@ public class PolygonProjectionRunner {
 		Double calculatedAge = null;
 
 		Double ageAtYear = null;
-		if (context.getValidatedParams().getYearStart() != null) {
+		if (context.getParams().getYearStart() != null) {
 			Layer layer = polygon.findPrimaryLayerByProjectionType(ProjectionTypeCode.UNKNOWN);
-			ageAtYear = layer.determineLayerAgeAtYear(context.getValidatedParams().getYearStart());
+			ageAtYear = layer.determineLayerAgeAtYear(context.getParams().getYearStart());
 		}
 
-		Integer suppliedAgeStart = context.getValidatedParams().getAgeStart();
+		Integer suppliedAgeStart = context.getParams().getAgeStart();
 		if (ageAtYear != null && suppliedAgeStart != null) {
 			calculatedAge = Math.min(ageAtYear, suppliedAgeStart);
 		} else if (ageAtYear != null) {
@@ -598,12 +699,12 @@ public class PolygonProjectionRunner {
 		Double calculatedAge = null;
 
 		Double ageAtYearEnd = null;
-		if (context.getValidatedParams().getYearEnd() != null) {
+		if (context.getParams().getYearEnd() != null) {
 			Layer layer = polygon.findPrimaryLayerByProjectionType(ProjectionTypeCode.UNKNOWN);
-			ageAtYearEnd = layer.determineLayerAgeAtYear(context.getValidatedParams().getYearEnd());
+			ageAtYearEnd = layer.determineLayerAgeAtYear(context.getParams().getYearEnd());
 		}
 
-		Integer suppliedAgeEnd = context.getValidatedParams().getAgeEnd();
+		Integer suppliedAgeEnd = context.getParams().getAgeEnd();
 		if (ageAtYearEnd != null && suppliedAgeEnd != null) {
 			calculatedAge = Math.min(ageAtYearEnd, suppliedAgeEnd);
 		} else if (ageAtYearEnd != null) {
@@ -615,78 +716,6 @@ public class PolygonProjectionRunner {
 		logger.debug("{}: ending age of yield table has been determined to be {}", polygon, calculatedAge);
 
 		return calculatedAge;
-	}
-
-	private void generateYieldTablesForPolygon() throws YieldTableGenerationException {
-
-		boolean doGenerateDetailedTableHeader = true;
-
-		ValidatedParameters params = context.getValidatedParams();
-		if (params.containsOption(ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_POLYGON)
-				&& (params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES)
-						|| params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_BIOMASS))) {
-
-			componentRunner.generateYieldTableForPolygon(
-					context.getYieldTable(), polygon, state, doGenerateDetailedTableHeader
-			);
-			doGenerateDetailedTableHeader = false;
-
-			logger.debug("{}: generated polygon-level yield table", polygon);
-		}
-
-		if (params.containsOption(ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_POLYGON)
-				&& params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS)) {
-
-			context.getYieldTable().generateCfsBiomassTableForPolygon(polygon, state, doGenerateDetailedTableHeader);
-			doGenerateDetailedTableHeader = false;
-
-			logger.debug("{}: generated polygon-level CFS biomass table", polygon);
-		}
-
-		if (params.containsOption(ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER)) {
-
-			for (var layerReportingInfo : polygon.getReportingInfo().getLayerReportingInfos().values()) {
-
-				var layer = layerReportingInfo.getLayer();
-				if (state.wasLayerProcessed(layer)) {
-
-					doGenerateDetailedTableHeader = true;
-
-					if (params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES)
-							|| params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_BIOMASS)) {
-
-						componentRunner.generateYieldTableForPolygonLayer(
-								context.getYieldTable(), polygon, state, layerReportingInfo,
-								doGenerateDetailedTableHeader
-						);
-						doGenerateDetailedTableHeader = false;
-
-						logger.debug("{}: generated yield table", layerReportingInfo.getLayer());
-					}
-
-					if (params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS)) {
-						if (!layerReportingInfo.isDeadStemLayer()) {
-
-							context.getYieldTable().generateCfsBiomassTable(
-									polygon, state, layerReportingInfo, doGenerateDetailedTableHeader
-							);
-							doGenerateDetailedTableHeader = false;
-
-							logger.debug("{}: generated CFS biomass table", layer);
-						} else {
-							context.addMessage(
-									"{0}: Suppressing CFS biomass output for dead layer. The yield table will not be produced",
-									layer
-							);
-						}
-					}
-				} else {
-					context.addMessage(
-							"{0}: both Forward and Back not executed. Yield Table will not be produced.", layer
-					);
-				}
-			}
-		}
 	}
 
 	private int adjustMeasurementYearAsNecessary(int year, double suppliedAge, double standAge) {
@@ -702,36 +731,43 @@ public class PolygonProjectionRunner {
 		return year;
 	}
 
-	private void buildPolygonProjectionExecutionStructure() throws ProjectionInternalExecutionException {
-
+	private void generateYearToGrowFile(Path executionFolder, int measurementYear, int yearsToGrow)
+			throws PolygonExecutionException {
 		try {
-			Path executionFolderPath = Path.of(context.getExecutionFolder().toString(), polygon.toString());
-			Path executionFolder = Files.createDirectory(executionFolderPath);
+			Path growToYearFile = Path.of(executionFolder.toString(), "vin_y1.dat");
+			FileOutputStream growToYearOutputStream = new FileOutputStream(growToYearFile.toFile());
+			try (var yearToGrowWriter = new VdypGrowToYearFileWriter(growToYearOutputStream)) {
 
-			for (ProjectionTypeCode projectionType : ProjectionTypeCode.ACTUAL_PROJECTION_TYPES_LIST) {
-
-				if (polygon.getLayerByProjectionType(projectionType) != null) {
-					ProjectionUtils.logger.debug("Populating execution folder for projectionType {}", projectionType);
-					ProjectionUtils.prepareProjectionTypeFolder(
-							context.getRootFolder(), executionFolder, projectionType.toString(), "FIPSTART.CTR",
-							"VRISTART.CTR", "VRIADJST.CTR", "VDYP.CTR", "VDYPBACK.CTR"
-					);
-				}
+				yearToGrowWriter.writePolygon(polygon, measurementYear + yearsToGrow);
 			}
-
-			state.setExecutionFolder(executionFolder);
 		} catch (IOException e) {
-			throw new ProjectionInternalExecutionException(e);
+			throw new PolygonExecutionException(e);
 		}
 	}
 
-	private void close(OutputStream os) {
-		if (os != null) {
-			try {
-				os.close();
-			} catch (IOException e) {
-				throw new RuntimeException("Failed to close a given output stream");
-			}
+	static void rewriteTargetYearToBackControlFile(
+			Path executionFolder, int yearsToGrowBack, ProjectionTypeCode projectionType
+	) throws PolygonExecutionException {
+
+		Path controlFilePath = Path
+				.of(executionFolder.toString(), projectionType.toString(), Vdyp7Constants.BACK_CONTROL_FILE_NAME);
+		Path tempControlFilePath = Path.of(controlFilePath.toString() + ".tmp");
+
+		try {
+			var controlFileContents = Files.readString(controlFilePath);
+			var newControlFileContents = controlFileContents.replace("%YR%", String.format("%4d", yearsToGrowBack));
+			Files.write(tempControlFilePath, newControlFileContents.getBytes());
+			Files.delete(controlFilePath);
+			Files.move(tempControlFilePath, controlFilePath);
+		} catch (IOException e) {
+			throw new PolygonExecutionException(e);
 		}
+	}
+
+	private void generateYieldTablesForPolygon() throws YieldTableGenerationException {
+
+		logger.info("{}: performing Yield Table generation", polygon);
+
+		componentRunner.generateYieldTables(context, polygon, state);
 	}
 }

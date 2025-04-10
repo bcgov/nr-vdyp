@@ -8,20 +8,22 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hamcrest.Matchers;
+import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.api.helpers.TestHelper;
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestException;
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.ParameterNames;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ProjectionRequestKind;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessageKind;
+import ca.bc.gov.nrs.vdyp.backend.projection.input.AbstractPolygonStream;
 
 class StreamsValidationTest {
 
 	@Test
-	void testValidHcsvInputStreams() throws ProjectionRequestException {
+	void testValidHcsvInputStreams() throws AbstractProjectionRequestException {
 
 		Parameters p = TestHelper.buildValidParametersObject();
 		ProjectionContext s = new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
@@ -30,21 +32,27 @@ class StreamsValidationTest {
 		streams.put(ParameterNames.HCSV_POLYGON_INPUT_DATA, new ByteArrayInputStream(new byte[0]));
 		streams.put(ParameterNames.HCSV_LAYERS_INPUT_DATA, new ByteArrayInputStream(new byte[0]));
 
-		ProjectionRequestParametersValidator.validate(s);
+		AbstractPolygonStream.build(s, streams);
 	}
 
 	@Test
 	void testMissingHcsvInputStreams() {
 
-		Parameters p = TestHelper.buildValidParametersObject();
+		ProjectionContext s = null;
+		try {
+			Parameters p = TestHelper.buildValidParametersObject();
+			s = new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
+		} catch (AbstractProjectionRequestException e) {
+			Assert.fail();
+		}
 
 		Map<String, InputStream> streams = new HashMap<>();
 		streams.put(ParameterNames.HCSV_POLYGON_INPUT_DATA, new ByteArrayInputStream(new byte[0]));
 
 		try {
-			ProjectionContext s = new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
-			ProjectionRequestParametersValidator.validate(s);
-		} catch (ProjectionRequestException e) {
+			AbstractPolygonStream.build(s, streams);
+			Assert.fail();
+		} catch (AbstractProjectionRequestException e) {
 			TestHelper
 					.verifyMessageSetIs(e.getValidationMessages(), ValidationMessageKind.EXPECTED_STREAMS_NOT_SUPPLIED);
 
@@ -65,8 +73,9 @@ class StreamsValidationTest {
 
 		try {
 			ProjectionContext s = new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
-			ProjectionRequestParametersValidator.validate(s);
-		} catch (ProjectionRequestException e) {
+			AbstractPolygonStream.build(s, streams);
+			Assert.fail();
+		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), ValidationMessageKind.UNEXPECTED_STREAMS_SUPPLIED);
 
 			var message = e.getValidationMessages().get(0).getMessage();
@@ -85,8 +94,9 @@ class StreamsValidationTest {
 
 		try {
 			ProjectionContext s = new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
-			ProjectionRequestParametersValidator.validate(s);
-		} catch (ProjectionRequestException e) {
+			AbstractPolygonStream.build(s, streams);
+			Assert.fail();
+		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(
 					e.getValidationMessages(), ValidationMessageKind.UNEXPECTED_STREAMS_SUPPLIED,
 					ValidationMessageKind.EXPECTED_STREAMS_NOT_SUPPLIED
@@ -117,8 +127,9 @@ class StreamsValidationTest {
 
 		try {
 			ProjectionContext s = new ProjectionContext(ProjectionRequestKind.DCSV, "id", p, false);
-			ProjectionRequestParametersValidator.validate(s);
-		} catch (ProjectionRequestException e) {
+			AbstractPolygonStream.build(s, streams);
+			Assert.fail();
+		} catch (AbstractProjectionRequestException e) {
 			assertThat(e, Matchers.notNullValue());
 		}
 	}
@@ -140,9 +151,9 @@ class StreamsValidationTest {
 
 		try {
 			ProjectionContext s = new ProjectionContext(ProjectionRequestKind.SCSV, "id", p, false);
-			ProjectionRequestParametersValidator.validate(s);
-		} catch (ProjectionRequestException e) {
-			assertThat(e, Matchers.notNullValue());
+			AbstractPolygonStream.build(s, streams);
+		} catch (AbstractProjectionRequestException e) {
+			Assert.fail();
 		}
 	}
 
@@ -156,9 +167,9 @@ class StreamsValidationTest {
 
 		try {
 			ProjectionContext s = new ProjectionContext(ProjectionRequestKind.ICSV, "id", p, false);
-			ProjectionRequestParametersValidator.validate(s);
-		} catch (ProjectionRequestException e) {
-			assertThat(e, Matchers.notNullValue());
+			AbstractPolygonStream.build(s, streams);
+		} catch (AbstractProjectionRequestException e) {
+			Assert.fail();
 		}
 	}
 }

@@ -83,7 +83,7 @@ class ForwardSpeciesParserTest {
 				genera,
 				hasItem(
 						allOf(
-								hasProperty("polygonIdentifier", hasProperty("base", is("01002 S000001 00"))),
+								hasProperty("polygonIdentifier", hasProperty("base", is("01002 S000001 00     "))),
 								hasProperty("polygonIdentifier", hasProperty("year", is(1970))),
 								hasProperty("layerType", is(LayerType.PRIMARY)), hasProperty("genusIndex", is(15)),
 								hasProperty("genus", is("S")),
@@ -307,7 +307,7 @@ class ForwardSpeciesParserTest {
 				genera,
 				hasItems(
 						allOf(
-								hasProperty("polygonIdentifier", hasProperty("base", is("01002 S000002 00"))),
+								hasProperty("polygonIdentifier", hasProperty("base", is("01002 S000002 00     "))),
 								hasProperty("polygonIdentifier", hasProperty("year", is(1970))),
 								hasProperty("layerType", is(LayerType.PRIMARY)), hasProperty("genusIndex", is(15)),
 								hasProperty("genus", is("S")),
@@ -344,7 +344,7 @@ class ForwardSpeciesParserTest {
 								)
 						),
 						allOf(
-								hasProperty("polygonIdentifier", hasProperty("base", is("01002 S000002 00"))),
+								hasProperty("polygonIdentifier", hasProperty("base", is("01002 S000002 00     "))),
 								hasProperty("polygonIdentifier", hasProperty("year", is(1970))),
 								hasProperty("layerType", is(LayerType.VETERAN)), hasProperty("genusIndex", is(3)),
 								hasProperty("genus", is("B")),

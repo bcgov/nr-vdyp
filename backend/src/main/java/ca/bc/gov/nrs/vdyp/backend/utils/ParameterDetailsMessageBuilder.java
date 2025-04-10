@@ -13,16 +13,16 @@ public class ParameterDetailsMessageBuilder {
 	public static ParameterDetailsMessage build(
 			String field, String shortDescription, String parameterValue, String longDescription, String defaultValue
 	) {
-		ParameterDetailsMessage m = new ParameterDetailsMessage();
+		var mb = new ParameterDetailsMessage.Builder();
 
-		m.setDefaultValue(defaultValue);
-		m.setField(field);
-		m.setLongDescription(longDescription);
-		m.setParameterValue(parameterValue);
-		m.setShortDescription(shortDescription);
+		mb.defaultValue(defaultValue).field(field).longDescription(longDescription).parameterValue(parameterValue)
+				.shortDescription(shortDescription);
 
-		// logger.info("built ParameterDetailsMessage {}", shortDescription);
+		return mb.build();
+	}
 
-		return m;
+	public static ParameterDetailsMessage
+			build(String field, String shortDescription, String longDescription, String defaultValue) {
+		return build(field, shortDescription, null, longDescription, defaultValue);
 	}
 }

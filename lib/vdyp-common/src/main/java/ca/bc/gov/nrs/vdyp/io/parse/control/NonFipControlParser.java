@@ -66,6 +66,8 @@ public abstract class NonFipControlParser extends StartApplicationControlParser 
 
 		applyModifiers(map, inputFileParsers(), fileResolver);
 
+		applyModifiers(map, outputFiles(), fileResolver);
+
 		applyModifiers(map, siteCurves, fileResolver);
 
 		// Coeff for Empirical relationships

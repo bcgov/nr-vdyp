@@ -8,6 +8,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.text.MessageFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -20,15 +21,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.Exceptions;
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionInternalExecutionException;
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestException;
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonExecutionException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestValidationException;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.ParameterNames;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ProjectionRequestKind;
 import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionRunner;
 import ca.bc.gov.nrs.vdyp.backend.utils.FileHelper;
+import ca.bc.gov.nrs.vdyp.backend.utils.Utils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
@@ -41,7 +47,7 @@ import jakarta.ws.rs.core.SecurityContext;
  */
 public class ProjectionService {
 
-	private static final Logger logger = LoggerFactory.getLogger(ProjectionService.class);
+	public static final Logger logger = LoggerFactory.getLogger(ProjectionService.class);
 
 	public Response projectionHcsvPost(
 			Boolean trialRun, //
@@ -49,43 +55,19 @@ public class ProjectionService {
 			InputStream polygonStream, //
 			InputStream layersStream, //
 			SecurityContext securityContext
-	) throws ProjectionRequestException {
+	) throws AbstractProjectionRequestException {
 		Response response;
 
 		Map<String, InputStream> inputStreams = new HashMap<>();
 
 		try {
-			if (trialRun) {
-				if (polygonStream.available() == 0) {
-					polygonStream.close();
-					polygonStream = FileHelper
-							.getStubResourceFile(FileHelper.HCSV, FileHelper.VDYP_240, "VDYP7_INPUT_POLY.csv");
-				}
-
-				if (layersStream.available() == 0) {
-					layersStream.close();
-					layersStream = FileHelper
-							.getStubResourceFile(FileHelper.HCSV, FileHelper.VDYP_240, "VDYP7_INPUT_LAYER.csv");
-				}
-			}
-
 			inputStreams.put(ParameterNames.HCSV_POLYGON_INPUT_DATA, polygonStream);
 			inputStreams.put(ParameterNames.HCSV_LAYERS_INPUT_DATA, layersStream);
 
 			response = runProjection(ProjectionRequestKind.HCSV, inputStreams, trialRun, parameters, securityContext);
-		} catch (IOException e) {
-			String message = Exceptions.getMessage(e, "Projection, when opening input files,");
-
-			logger.error(message, e);
-
-			response = Response.serverError().status(500).entity(message).build();
 		} finally {
 			for (var entry : inputStreams.entrySet()) {
-				try {
-					entry.getValue().close();
-				} catch (IOException e) {
-					logger.warn("Unable to close {}; reason: {}", entry.getKey(), e.getMessage());
-				}
+				Utils.close(entry.getValue(), entry.getKey());
 			}
 		}
 
@@ -94,26 +76,36 @@ public class ProjectionService {
 
 	public Response projectionDcsvPost(
 			Parameters parameters, FileUpload dcsvDataStream, Boolean trialRun, SecurityContext securityContext
-	) throws ProjectionRequestValidationException, ProjectionInternalExecutionException {
-		return Response.serverError().status(501).build();
+	) throws ProjectionRequestValidationException, PolygonExecutionException {
+		return Response.serverError().status(Status.NOT_IMPLEMENTED).build();
 	}
 
 	public Response projectionScsvPost(
 			Boolean trialRun, Parameters parameters, FileUpload polygonDataStream, FileUpload layersDataStream,
 			FileUpload historyDataStream, FileUpload nonVegetationDataStream, FileUpload otherVegetationDataStream,
 			FileUpload polygonIdDataStream, FileUpload speciesDataStream, FileUpload vriAdjustDataStream, Object object
-	) throws ProjectionRequestValidationException, ProjectionInternalExecutionException {
-		return Response.serverError().status(501).build();
+	) throws ProjectionRequestValidationException, PolygonExecutionException {
+		return Response.serverError().status(Status.NOT_IMPLEMENTED).build();
 	}
+
+	private ObjectMapper jsonObjectMapper = new ObjectMapper();
 
 	private Response runProjection(
 			ProjectionRequestKind kind, Map<String, InputStream> inputStreams, Boolean isTrialRun, Parameters params,
 			SecurityContext securityContext
-	) throws ProjectionRequestException {
-
-		String projectionId = ProjectionService.buildId(kind);
+	) throws AbstractProjectionRequestException {
+		String projectionId = ProjectionService.buildProjectionId(kind);
 
 		logger.info("<runProjection {} {}", kind, projectionId);
+
+		try {
+			// Included to generate JSON text of parameters as needed
+			String serializedParametersText = jsonObjectMapper.writerWithDefaultPrettyPrinter()
+					.writeValueAsString(params);
+			logger.info(serializedParametersText);
+		} catch (JsonProcessingException e) {
+			logger.warn(MessageFormat.format("{0}: unable to log parameters JSON", projectionId), e);
+		}
 
 		boolean debugLoggingEnabled = params.getSelectedExecutionOptions()
 				.contains(Parameters.ExecutionOption.DO_ENABLE_DEBUG_LOGGING.toString());
@@ -121,12 +113,14 @@ public class ProjectionService {
 			MDC.put("projectionId", projectionId);
 		}
 
-		Response response = Response.serverError().status(500).build();
+		Response response;
 
-		try {
+		try (
+				ProjectionRunner runner = new ProjectionRunner(
+						ProjectionRequestKind.HCSV, projectionId, params, isTrialRun
+				)
+		) {
 			logger.info("Running {} projection {}", kind, projectionId);
-
-			var runner = new ProjectionRunner(ProjectionRequestKind.HCSV, projectionId, params, isTrialRun);
 
 			runner.run(inputStreams);
 
@@ -145,15 +139,11 @@ public class ProjectionService {
 
 			response = buildOutputZipFile(runner, debugLogStream);
 
-		} catch (Exception e) {
-			logger.error("Failure in runProjection", e);
 		} finally {
 			logger.info(FINALIZE_SESSION_MARKER, ">runProjection {} {}", kind, projectionId);
 
 			if (debugLoggingEnabled) {
 				MDC.remove("projectionId");
-				// TODO: uncomment once mechanism is validated
-				// FileHelper.delete(debugLogPath);
 			}
 		}
 
@@ -164,7 +154,7 @@ public class ProjectionService {
 			.ofPattern("yyyy_MM_dd_HH_mm_ss_SSSS");
 	private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH:mm:ss");
 
-	public static String buildId(ProjectionRequestKind projectionKind) {
+	public static String buildProjectionId(ProjectionRequestKind projectionKind) {
 		StringBuilder sb = new StringBuilder("projection-");
 		sb.append(projectionKind).append("-");
 		sb.append(dateTimeFormatterForFilenames.format(LocalDateTime.now()));
@@ -174,31 +164,46 @@ public class ProjectionService {
 	private Response buildOutputZipFile(ProjectionRunner runner, InputStream debugLogStream) {
 		logger.info("<buildOutputZipFile");
 
+		InputStream yieldTableStream = null;
+		InputStream progressLogStream = null;
+		InputStream errorLogStream = null;
+		Map<ProjectionRunner.ProjectionResultsKey, InputStream> projectionResults = null;
+
 		try {
-			InputStream yieldTableStream = runner.getYieldTable();
-			InputStream progressLogStream = runner.getProgressStream();
-			InputStream errorLogStream = runner.getErrorStream();
+			var baos = new ByteArrayOutputStream();
+			try (var zipOut = new ZipOutputStream(baos)) {
 
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			ZipOutputStream zipOut = new ZipOutputStream(baos);
+				yieldTableStream = runner.getYieldTable();
+				progressLogStream = runner.getProgressStream();
+				errorLogStream = runner.getErrorStream();
 
-			ZipEntry yieldTableZipEntry = new ZipEntry("YieldTable.csv");
-			zipOut.putNextEntry(yieldTableZipEntry);
-			zipOut.write(yieldTableStream.readAllBytes());
+				var yieldTableFileName = runner.getContext().getParams().getOutputFormat().getYieldTableFileName();
+				writeZipEntry(zipOut, yieldTableFileName, yieldTableStream.readAllBytes());
 
-			ZipEntry logOutputEntry = new ZipEntry("ProgressLog.txt");
-			zipOut.putNextEntry(logOutputEntry);
-			zipOut.write(progressLogStream.readAllBytes());
+				if (runner.getContext().getParams().containsOption(ExecutionOption.DO_ENABLE_PROGRESS_LOGGING)) {
+					writeZipEntry(zipOut, "ProgressLog.txt", runner.getProgressStream().readAllBytes());
+				}
 
-			ZipEntry errorOutputZipEntry = new ZipEntry("ErrorLog.txt");
-			zipOut.putNextEntry(errorOutputZipEntry);
-			zipOut.write(errorLogStream.readAllBytes());
+				if (runner.getContext().getParams().containsOption(ExecutionOption.DO_ENABLE_ERROR_LOGGING)) {
+					writeZipEntry(zipOut, "ErrorLog.txt", runner.getErrorStream().readAllBytes());
+				}
 
-			ZipEntry debugOutputZipEntry = new ZipEntry("DebugLog.txt");
-			zipOut.putNextEntry(debugOutputZipEntry);
-			zipOut.write(debugLogStream.readAllBytes());
+				if (runner.getContext().getParams().containsOption(ExecutionOption.DO_ENABLE_DEBUG_LOGGING)) {
+					writeZipEntry(zipOut, "DebugLog.txt", debugLogStream.readAllBytes());
+				}
 
-			zipOut.close();
+				projectionResults = runner.getProjectionResults();
+
+				for (var e : projectionResults.entrySet()) {
+					writeZipEntry(zipOut, e.getKey().toString(), e.getValue().readAllBytes());
+				}
+			} catch (IOException e) {
+				return Response.status(500)
+						.entity(
+								"Saw IOException closing zip file containing results" + e.getMessage() != null
+										? ": " + e.getMessage() : ""
+						).build();
+			}
 
 			byte[] resultingByteArray = baos.toByteArray();
 
@@ -209,13 +214,37 @@ public class ProjectionService {
 			var outputFileName = "vdyp-output-" + java.time.LocalDateTime.now().format(dateTimeFormatter) + ".zip";
 
 			return Response.ok(resultingByteArray).status(Status.CREATED)
-					.header("content-disposition", "attachment;filename=\"" + outputFileName + "\"").build();
+					.header("content-disposition", "attachment;filename=\"" + outputFileName + "\"")
+					.header("content-type", "application/octet-stream").build();
 
-		} catch (ProjectionInternalExecutionException | IOException e) {
+		} catch (PolygonExecutionException e) {
 			String message = Exceptions.getMessage(e, "Projection, when creating output zip,");
 			logger.error(message, e);
 
-			return Response.serverError().status(500).entity(message).build();
+			return Response.serverError().status(Status.INTERNAL_SERVER_ERROR).entity(message).build();
+		} finally {
+			if (errorLogStream != null) {
+				Utils.close(yieldTableStream, "ProjectionService.errorLog");
+			}
+			if (progressLogStream != null) {
+				Utils.close(yieldTableStream, "ProjectionService.progressLog");
+			}
+			if (yieldTableStream != null) {
+				Utils.close(yieldTableStream, "ProjectionService.yieldTable");
+			}
+
+			for (var e : projectionResults.entrySet()) {
+				if (e.getValue() != null) {
+					Utils.close(e.getValue(), e.getKey().toString());
+				}
+			}
 		}
+	}
+
+	private void writeZipEntry(ZipOutputStream zipOut, String entryName, byte[] entry) throws IOException {
+		ZipEntry projectionResultsEntry = new ZipEntry(entryName);
+		zipOut.putNextEntry(projectionResultsEntry);
+		zipOut.write(entry);
+		zipOut.closeEntry();
 	}
 }

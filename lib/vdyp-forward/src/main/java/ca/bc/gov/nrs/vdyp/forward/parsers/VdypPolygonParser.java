@@ -52,7 +52,8 @@ public class VdypPolygonParser implements ControlMapValueReplacer<Object, String
 				public boolean isStopLine(String line) {
 					return line.substring(0, Math.min(25, line.length())).trim().length() == 0;
 				}
-			}.strippedString(25, DESCRIPTION).space(1).value(4, BIOGEOCLIMATIC_ZONE, ControlledValueParser.BEC).space(1)
+			}.value(25, DESCRIPTION, ValueParser.STRING_UNSTRIPPED).space(1)
+					.value(4, BIOGEOCLIMATIC_ZONE, ControlledValueParser.BEC).space(1)
 					.value(1, FOREST_INVENTORY_ZONE, ValueParser.STRING_UNSTRIPPED) // TODO: add ValueParser.FIZ
 					.value(6, PERCENT_FOREST_LAND, ValueParser.FLOAT)
 					.value(3, INVENTORY_TYPE_GROUP, ControlledValueParser.optional(ValueParser.INTEGER))

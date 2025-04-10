@@ -81,13 +81,10 @@ public enum CfsBiomassConversionSupportedGenera implements SI32Enum<CfsBiomassCo
 	@Override
 	public String getText() {
 		if (this.equals(INVALID)) {
-			throw new UnsupportedOperationException(
-					MessageFormat
-							.format("Cannot call getText on {0} as it's not a standard member of the enumeration", this)
-			);
+			return "INV";
+		} else {
+			return this.toString();
 		}
-
-		return this.toString();
 	}
 
 	/**

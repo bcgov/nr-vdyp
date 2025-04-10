@@ -71,7 +71,6 @@ import ca.bc.gov.nrs.vdyp.model.CompatibilityVariableMode;
 import ca.bc.gov.nrs.vdyp.model.GenusDefinitionMap;
 import ca.bc.gov.nrs.vdyp.model.InputLayer;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
-import ca.bc.gov.nrs.vdyp.model.MatrixMap;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
 import ca.bc.gov.nrs.vdyp.model.Region;
@@ -123,24 +122,6 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	}
 
 	static final Set<String> HARDWOODS = Set.of("AC", "AT", "D", "E", "MB");
-
-	protected static void main(VdypStartApplication<?, ?, ?, ?> app, final String... args) {
-		var resolver = new FileSystemFileResolver();
-
-		try {
-			app.init(resolver, System.out, System.in, args);
-		} catch (Exception ex) {
-			log.error("Error during initialization", ex);
-			System.exit(CONFIG_LOAD_ERROR);
-		}
-
-		try {
-			app.process();
-		} catch (Exception ex) {
-			log.error("Error during processing", ex);
-			System.exit(PROCESSING_ERROR);
-		}
-	}
 
 	public void doMain(final String... args)
 			throws VdypApplicationInitializationException, VdypApplicationProcessingException {
@@ -528,12 +509,12 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		var groupMap = Utils.<MatrixMap2<String, String, Integer>>expectParsedControl(
 				controlMap, ControlKey.DEFAULT_EQ_NUM, ca.bc.gov.nrs.vdyp.model.MatrixMap2.class
 		);
-		var modMap = Utils.<MatrixMap2<Integer, Integer, Optional<Integer>>>expectParsedControl(
+		var modMap = Utils.<MatrixMap2<Integer, Integer, Integer>>expectParsedControl(
 				controlMap, ControlKey.EQN_MODIFIERS, ca.bc.gov.nrs.vdyp.model.MatrixMap2.class
 		);
 		var group = groupMap.get(specAlias, bec.getGrowthBec().getAlias());
-		group = MatrixMap.safeGet(modMap, group, itg).orElse(group);
-		return group;
+		var modGroup = modMap.get(group, itg);
+		return modGroup > 0 ? modGroup : group;
 	}
 
 	protected VdypOutputWriter getVriWriter() {

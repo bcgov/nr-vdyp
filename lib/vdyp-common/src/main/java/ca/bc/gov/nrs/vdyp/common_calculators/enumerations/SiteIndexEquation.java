@@ -165,6 +165,11 @@ public enum SiteIndexEquation {
 		}
 	}
 
+	@Override
+	public String toString() {
+		return "SiteIndex-" + n;
+	}
+
 	public int n() {
 		return n;
 	}
