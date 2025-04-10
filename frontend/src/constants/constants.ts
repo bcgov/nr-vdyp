@@ -97,7 +97,6 @@ export const NOTIFICATION = Object.freeze({
 })
 
 export const AXIOS = Object.freeze({
-  DEFAULT_TIMEOUT: 100000, // in milliseconds (100 sec)
   ACCEPT: 'application/json',
   CONTENT_TYPE: 'application/json',
 })

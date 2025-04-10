@@ -77,13 +77,10 @@ public enum CfsDeadConversionParams implements SI32Enum<CfsDeadConversionParams>
 	@Override
 	public String getText() {
 		if (this.equals(UNKNOWN)) {
-			throw new UnsupportedOperationException(
-					MessageFormat
-							.format("Cannot call getText on {0} as it's not a standard member of the enumeration", this)
-			);
+			return "UNK";
+		} else {
+			return this.toString();
 		}
-
-		return this.toString();
 	}
 
 	/**

@@ -52,7 +52,7 @@ class BecZoneMethodsTest {
 		assertThat(BecZone.IDF.getSpeciesRegion(), equalTo(SpeciesRegion.INTERIOR));
 		assertThat(BecZone.CDF.getOffset(), equalTo(BecZone.CDF.getIndex()));
 		assertThrows(UnsupportedOperationException.class, () -> BecZone.UNKNOWN.getOffset());
-		assertThrows(UnsupportedOperationException.class, () -> BecZone.UNKNOWN.getText());
+		assertThat(BecZone.UNKNOWN.getText(), equalTo("UNK"));
 		assertThat(BecZone.CDF.getText(), equalTo("CDF"));
 		assertThat(BecZone.forIndex(9), equalTo(BecZone.MS));
 		assertThat(BecZone.forIndex(9), not(equalTo(BecZone.CDF)));

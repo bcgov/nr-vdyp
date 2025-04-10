@@ -5,7 +5,6 @@ import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -40,7 +39,7 @@ class StubHcsvProjectionEndpointTest {
 	@Test
 	void testProjectionHscv_shouldReturnStatusOK() throws IOException {
 
-		Path resourceFolderPath = Path.of("VDYP7Console-sample-files", FileHelper.HCSV, FileHelper.VDYP_240);
+		Path resourceFolderPath = Path.of("test-data", FileHelper.HCSV, FileHelper.COMMON);
 
 		Parameters parameters = testHelper.addSelectedOptions(
 				new Parameters().ageStart(10).ageEnd(20), //
@@ -57,11 +56,11 @@ class StubHcsvProjectionEndpointTest {
 				.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
 				.multiPart(
 						ParameterNames.HCSV_POLYGON_INPUT_DATA,
-						Files.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_POLY.csv"))
+						testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_POLY.csv").toFile()
 				) //
 				.multiPart(
 						ParameterNames.HCSV_LAYERS_INPUT_DATA,
-						Files.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_LAYER.csv"))
+						testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_LAYER.csv").toFile()
 				) //
 				.post("/projection/hcsv?trialRun=true") //
 				.then().statusCode(201) //
@@ -78,7 +77,7 @@ class StubHcsvProjectionEndpointTest {
 		ZipEntry entry2 = zipFile.getNextEntry();
 		assertEquals("ProgressLog.txt", entry2.getName());
 		String entry2Content = new String(testHelper.readZipEntry(zipFile, entry2));
-		assertTrue(entry2Content.startsWith("Running Projection"));
+		assertTrue(entry2Content.contains("starting projection (type HCSV)"));
 
 		ZipEntry entry3 = zipFile.getNextEntry();
 		assertEquals("ErrorLog.txt", entry3.getName());
@@ -94,7 +93,7 @@ class StubHcsvProjectionEndpointTest {
 	@Test
 	void testProjectionHscv_testNoProgressLogging() throws IOException {
 
-		Path resourceFolderPath = Path.of("VDYP7Console-sample-files", FileHelper.HCSV, FileHelper.VDYP_240);
+		Path resourceFolderPath = Path.of("/test-data", FileHelper.HCSV, FileHelper.COMMON);
 
 		Parameters parameters = new Parameters().ageStart(10).ageEnd(20);
 
@@ -102,11 +101,11 @@ class StubHcsvProjectionEndpointTest {
 				.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
 				.multiPart(
 						ParameterNames.HCSV_POLYGON_INPUT_DATA,
-						Files.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_POLY.csv"))
+						testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_POLY.csv").toFile()
 				) //
 				.multiPart(
 						ParameterNames.HCSV_LAYERS_INPUT_DATA,
-						Files.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_LAYER.csv"))
+						testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_LAYER.csv").toFile()
 				) //
 				.post("/projection/hcsv?trialRun=true") //
 				.then().statusCode(201) //
@@ -120,19 +119,6 @@ class StubHcsvProjectionEndpointTest {
 		String entry1Content = new String(testHelper.readZipEntry(zipFile, entry1));
 		assertTrue(entry1Content.length() == 0);
 
-		ZipEntry entry2 = zipFile.getNextEntry();
-		assertEquals("ProgressLog.txt", entry2.getName());
-		String entry2Content = new String(testHelper.readZipEntry(zipFile, entry2));
-		assertTrue(entry2Content.isBlank());
-
-		ZipEntry entry3 = zipFile.getNextEntry();
-		assertEquals("ErrorLog.txt", entry3.getName());
-		String entry3Content = new String(testHelper.readZipEntry(zipFile, entry3));
-		assertTrue(entry3Content.isBlank());
-
-		ZipEntry entry4 = zipFile.getNextEntry();
-		assertEquals("DebugLog.txt", entry4.getName());
-		String entry4Content = new String(testHelper.readZipEntry(zipFile, entry4));
-		assertTrue(entry4Content.isBlank());
+		assertTrue(zipFile.getNextEntry() == null);
 	}
 }

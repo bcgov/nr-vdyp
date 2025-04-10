@@ -84,13 +84,10 @@ public enum CfsTreeClass implements SI32Enum<CfsTreeClass> {
 	@Override
 	public String getText() {
 		if (this.equals(UNKNOWN)) {
-			throw new UnsupportedOperationException(
-					MessageFormat
-							.format("Cannot call getText on {0} as it's not a standard member of the enumeration", this)
-			);
+			return "UNK";
+		} else {
+			return this.toString();
 		}
-
-		return this.toString();
 	}
 
 	public String getDescription() {

@@ -1,7 +1,7 @@
 import ReportingContainer from './ReportingContainer.vue'
 import { createPinia, setActivePinia } from 'pinia'
 import { useProjectionStore } from '@/stores/projectionStore'
-import { REPORTING_TAB } from '@/constants/constants'
+import { CONSTANTS } from '@/constants'
 import JSZip from 'jszip'
 
 describe('ReportingContainer.vue', () => {
@@ -36,7 +36,10 @@ describe('ReportingContainer.vue', () => {
               ),
             )
             .then((zipBlob) => {
-              projectionStore.handleZipResponse(zipBlob as Blob)
+              projectionStore.handleZipResponse(
+                zipBlob as Blob,
+                CONSTANTS.FILE_NAME.PROJECTION_RESULT_ZIP,
+              )
             })
         })
       })
@@ -46,7 +49,7 @@ describe('ReportingContainer.vue', () => {
   it('displays model report and verifies UI elements', () => {
     cy.mountWithVuetify(ReportingContainer, {
       props: {
-        tabname: REPORTING_TAB.MODEL_REPORT,
+        tabname: CONSTANTS.REPORTING_TAB.MODEL_REPORT,
       },
     }).then(() => {
       cy.get('button').contains('Print').should('exist').and('not.be.disabled')
@@ -67,7 +70,7 @@ describe('ReportingContainer.vue', () => {
   it('displays view log file and verifies UI elements', () => {
     cy.mountWithVuetify(ReportingContainer, {
       props: {
-        tabname: REPORTING_TAB.VIEW_LOG_FILE,
+        tabname: CONSTANTS.REPORTING_TAB.VIEW_LOG_FILE,
       },
     }).then(() => {
       cy.get('button').contains('Print').should('exist').and('not.be.disabled')
@@ -88,7 +91,7 @@ describe('ReportingContainer.vue', () => {
   it('displays view error message and verifies UI elements', () => {
     cy.mountWithVuetify(ReportingContainer, {
       props: {
-        tabname: REPORTING_TAB.VIEW_ERR_MSG,
+        tabname: CONSTANTS.REPORTING_TAB.VIEW_ERR_MSG,
       },
     }).then(() => {
       cy.get('button').contains('Print').should('exist').and('not.be.disabled')

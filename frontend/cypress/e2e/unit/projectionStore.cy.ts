@@ -1,7 +1,7 @@
 /// <reference types="cypress" />
 import { setActivePinia, createPinia } from 'pinia'
 import { useProjectionStore } from '@/stores/projectionStore'
-import { FILE_NAME } from '@/constants/constants'
+import { CONSTANTS } from '@/constants'
 import JSZip from 'jszip'
 
 describe('Projection Store Unit Tests', () => {
@@ -22,12 +22,18 @@ describe('Projection Store Unit Tests', () => {
 
   it('should handle ZIP response and populate store state', async () => {
     const zip = new JSZip()
-    zip.file(FILE_NAME.ERROR_TXT, 'Error log content')
-    zip.file(FILE_NAME.LOG_TXT, 'Log content')
-    zip.file(FILE_NAME.YIELD_TABLE_CSV, 'Header1,Header2\nValue1,Value2')
+    zip.file(CONSTANTS.FILE_NAME.ERROR_TXT, 'Error log content')
+    zip.file(CONSTANTS.FILE_NAME.LOG_TXT, 'Log content')
+    zip.file(
+      CONSTANTS.FILE_NAME.YIELD_TABLE_CSV,
+      'Header1,Header2\nValue1,Value2',
+    )
     const zipBlob = await zip.generateAsync({ type: 'blob' })
 
-    await store.handleZipResponse(zipBlob)
+    await store.handleZipResponse(
+      zipBlob,
+      CONSTANTS.FILE_NAME.PROJECTION_RESULT_ZIP,
+    )
 
     expect(store.errorMessages.length).to.be.greaterThan(0)
     expect(store.logMessages.length).to.be.greaterThan(0)

@@ -2,7 +2,7 @@ package ca.bc.gov.nrs.vdyp.backend.projection.model;
 
 import java.text.MessageFormat;
 
-import ca.bc.gov.nrs.vdyp.backend.model.v1.SeverityCode;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.MessageSeverityCode;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ReturnCode;
 
@@ -29,7 +29,7 @@ public class PolygonMessage {
 	private Stand stand;
 
 	/** The severity code associated with the message. */
-	private SeverityCode severity;
+	private MessageSeverityCode severity;
 
 	/** The return code for the operation with which this message is associated. */
 	private ReturnCode returnCode;
@@ -74,7 +74,7 @@ public class PolygonMessage {
 	}
 
 	/** @return the severity code associated with the message. */
-	public SeverityCode getSeverity() {
+	public MessageSeverityCode getSeverity() {
 		return severity;
 	}
 
@@ -129,9 +129,9 @@ public class PolygonMessage {
 			return this;
 		}
 
-		public Builder severity(SeverityCode severity) {
+		public Builder severity(MessageSeverityCode severity) {
 			polygonMessage.severity = severity;
-			return null;
+			return this;
 		}
 
 		public PolygonMessage build() {

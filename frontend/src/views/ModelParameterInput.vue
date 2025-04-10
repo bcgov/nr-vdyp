@@ -58,8 +58,8 @@ import type { Tab } from '@/interfaces/interfaces'
 import { CONSTANTS, MESSAGE, DEFAULTS } from '@/constants'
 import { handleApiError } from '@/services/apiErrorHandler'
 import { runModel } from '@/services/modelParameterService'
-import { delay } from '@/utils/util'
-import { logSuccessMessage } from '@/utils/messageHandler'
+import { checkZipForErrors, delay, extractZipFileName } from '@/utils/util'
+import { logSuccessMessage, logErrorMessage } from '@/utils/messageHandler'
 
 const modelSelection = ref<string>(DEFAULTS.DEFAULT_VALUES.MODEL_SELECTION)
 const isProgressVisible = ref(false)
@@ -130,12 +130,38 @@ const runModelHandler = async () => {
 
     await delay(1000)
 
-    const result = await runModel(modelParameterStore)
-    await projectionStore.handleZipResponse(result)
+    const response = await runModel(modelParameterStore)
 
-    logSuccessMessage(MESSAGE.SUCESS_MSG.INPUT_MODEL_PARAM_RUN_RESULT)
+    const zipFileName =
+      extractZipFileName(response.headers) ||
+      CONSTANTS.FILE_NAME.PROJECTION_RESULT_ZIP
+    console.debug('download zip file name:', zipFileName)
+
+    const resultBlob = response.data
+
+    const hasErrors = await checkZipForErrors(resultBlob)
+
+    await projectionStore.handleZipResponse(resultBlob, zipFileName)
+
+    if (hasErrors) {
+      logErrorMessage(MESSAGE.SUCCESS_MSG.INPUT_MODEL_PARAM_RUN_RESULT_W_ERR)
+    } else {
+      logSuccessMessage(MESSAGE.SUCCESS_MSG.INPUT_MODEL_PARAM_RUN_RESULT)
+    }
   } catch (error) {
-    handleApiError(error, MESSAGE.MODEL_PARAM_INPUT_ERR.FAIL_RUN_MODEL)
+    if ((error as any).response && (error as any).response.data) {
+      try {
+        const validationMessages = JSON.parse((error as any).response.data)
+        console.log('Validation Messages:', validationMessages)
+        alert(
+          `Validation Error: ${JSON.stringify(validationMessages, null, 2)}`,
+        )
+      } catch (parseError) {
+        handleApiError(error, MESSAGE.MODEL_PARAM_INPUT_ERR.FAIL_RUN_MODEL)
+      }
+    } else {
+      handleApiError(error, MESSAGE.MODEL_PARAM_INPUT_ERR.FAIL_RUN_MODEL)
+    }
   } finally {
     isProgressVisible.value = false
   }

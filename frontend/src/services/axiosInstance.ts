@@ -14,11 +14,13 @@ const axiosInstance: AxiosInstance = axios.create({
     Accept: AXIOS.ACCEPT,
     'Content-Type': AXIOS.CONTENT_TYPE,
   },
-  timeout: AXIOS.DEFAULT_TIMEOUT,
 })
 
 axiosInstance.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
+    console.debug(
+      `Request timeout: ${config.timeout}, ${config.headers}, method: ${config.method}, responseType: ${config.responseType}, url: ${config.url}`,
+    )
     // TODO - performance issues or network overhead issue?
     // then consider timer-based refresh + refresh token on 401 error
     // Ensure token is valid or refreshed

@@ -1,9 +1,8 @@
 export enum ParameterNamesEnum {
   TRIAL_RUN = 'trialRun',
-  // todo : changes after backend is done
-  PROJECTION_PARAMETERS = 'projectionParameters', // todo : change to "Projection Parameters"
-  HCSV_POLYGON_INPUT_DATA = 'polygonInputData', // todo : change to "HCSV-Polygon"
-  HCSV_LAYERS_INPUT_DATA = 'layersInputData', // todo :  change to "HCSV-Layers"
+  PROJECTION_PARAMETERS = 'Projection Parameters',
+  HCSV_POLYGON_INPUT_DATA = 'HCSV-Polygon',
+  HCSV_LAYERS_INPUT_DATA = 'HCSV-Layers',
   SCSV_POLYGON_INPUT_DATA = 'SCSV-Polygon',
   SCSV_LAYERS_INPUT_DATA = 'SCSV-Layers',
   SCSV_HISTORY_INPUT_DATA = 'SCSV-History',

@@ -1,4 +1,6 @@
 import type { NumStrNullType } from '@/types/types'
+import JSZip from 'jszip'
+import { CONSTANTS } from '@/constants'
 
 /**
  * Trims whitespace from a string value. Non-string values are returned unchanged.
@@ -296,4 +298,56 @@ export const downloadFile = (blob: Blob, fileName: string) => {
   a.click()
   document.body.removeChild(a)
   URL.revokeObjectURL(url)
+}
+
+/**
+ * Extracts the zip file name from the response headers.
+ * It checks for a 'content-disposition' header and extracts the file name.
+ * @param headers - The response headers object (either Axios or Fetch style)
+ * @returns The extracted zip file name or a default name if not found.
+ */
+export const extractZipFileName = (headers: any): string | null => {
+  let contentDisposition: string | undefined
+
+  // Support for both Axios (plain object) and Fetch (Headers instance)
+  if (typeof headers.get === 'function') {
+    contentDisposition = headers.get('content-disposition')
+  } else {
+    contentDisposition = headers['content-disposition']
+  }
+
+  if (contentDisposition) {
+    const fileNameMatch = contentDisposition.match(/filename="([^"]+)"/)
+    if (fileNameMatch && fileNameMatch[1]) {
+      return fileNameMatch[1]
+    }
+  }
+  return null
+}
+
+/**
+ * Checks if the ZIP file contains an Error.txt file with content.
+ * @param zipFile - The ZIP file Blob to check.
+ * @returns A boolean indicating whether the Error.txt file exists and has content.
+ * @throws Error if the ZIP file cannot be processed.
+ */
+export const checkZipForErrors = async (zipFile: Blob): Promise<boolean> => {
+  try {
+    const zip = await JSZip.loadAsync(zipFile)
+
+    const errorFile = zip.file(CONSTANTS.FILE_NAME.ERROR_TXT)
+    if (!errorFile) {
+      return false
+    }
+
+    const errorContent = await errorFile.async('string')
+    const errorLines = errorContent.split(/\r?\n/).filter((line) => {
+      const trimmedLine = line.trim()
+      return trimmedLine !== '' && trimmedLine !== 'null'
+    })
+    return errorLines.length > 0
+  } catch (error) {
+    console.error('Error checking ZIP file for errors:', error)
+    throw error
+  }
 }

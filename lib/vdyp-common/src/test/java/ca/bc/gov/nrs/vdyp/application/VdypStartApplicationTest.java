@@ -741,9 +741,7 @@ class VdypStartApplicationTest {
 			);
 			controlMap.put(
 					ControlKey.EQN_MODIFIERS.name(),
-					new MatrixMap2Impl(
-							Collections.singletonList(42), Collections.singletonList(37), (x, y) -> Optional.of(64)
-					)
+					new MatrixMap2Impl(Collections.singletonList(42), Collections.singletonList(37), (x, y) -> 64)
 			);
 
 			try (VdypStartApplication app = getTestUnit(mockControl)) {
@@ -772,9 +770,7 @@ class VdypStartApplicationTest {
 			);
 			controlMap.put(
 					ControlKey.EQN_MODIFIERS.name(),
-					new MatrixMap2Impl(
-							Collections.singletonList(42), Collections.singletonList(37), (x, y) -> Optional.empty()
-					)
+					new MatrixMap2Impl(Collections.singletonList(42), Collections.singletonList(37), (x, y) -> 0)
 			);
 
 			try (VdypStartApplication app = getTestUnit(mockControl)) {

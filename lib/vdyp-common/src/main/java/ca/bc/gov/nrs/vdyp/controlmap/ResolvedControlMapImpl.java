@@ -146,7 +146,7 @@ public class ResolvedControlMapImpl implements ResolvedControlMap {
 	}
 
 	@Override
-	public MatrixMap2<Integer, Integer, Optional<Integer>> getEquationModifierGroup() {
+	public MatrixMap2<Integer, Integer, Integer> getEquationModifierGroup() {
 		return this.get(ControlKey.BA_MODIFIERS, MatrixMap2.class);
 	}
 

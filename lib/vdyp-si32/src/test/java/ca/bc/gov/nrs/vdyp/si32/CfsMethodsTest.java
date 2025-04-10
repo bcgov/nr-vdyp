@@ -122,7 +122,7 @@ class CfsMethodsTest {
 		assertThrows(
 				UnsupportedOperationException.class, () -> CfsBiomassConversionSupportedEcoZone.UNKNOWN.getOffset()
 		);
-		assertThrows(UnsupportedOperationException.class, () -> CfsBiomassConversionSupportedEcoZone.UNKNOWN.getText());
+		assertThat(CfsBiomassConversionSupportedEcoZone.UNKNOWN.getText(), equalTo("UNK"));
 		assertThat(CfsBiomassConversionSupportedEcoZone.BOREAL_CORDILLERA.getText(), equalTo("BOREAL_CORDILLERA"));
 
 		CfsBiomassConversionSupportedEcoZone.Iterator i = new CfsBiomassConversionSupportedEcoZone.Iterator();
@@ -140,7 +140,7 @@ class CfsMethodsTest {
 		assertThrows(
 				UnsupportedOperationException.class, () -> CfsBiomassConversionSupportedGenera.INVALID.getOffset()
 		);
-		assertThrows(UnsupportedOperationException.class, () -> CfsBiomassConversionSupportedGenera.INVALID.getText());
+		assertThat(CfsBiomassConversionSupportedGenera.INVALID.getText(), equalTo("INV"));
 		assertThat(CfsBiomassConversionSupportedGenera.D.getText(), equalTo("D"));
 
 		CfsBiomassConversionSupportedGenera.Iterator i = new CfsBiomassConversionSupportedGenera.Iterator();
@@ -171,7 +171,7 @@ class CfsMethodsTest {
 		assertThat(CfsDeadConversionParams.PROP3.getIndex(), equalTo(2));
 		assertThat(CfsDeadConversionParams.PROP4.getOffset(), equalTo(CfsDeadConversionParams.PROP4.getIndex()));
 		assertThrows(UnsupportedOperationException.class, () -> CfsDeadConversionParams.UNKNOWN.getOffset());
-		assertThrows(UnsupportedOperationException.class, () -> CfsDeadConversionParams.UNKNOWN.getText());
+		assertThat(CfsDeadConversionParams.UNKNOWN.getText(), equalTo("UNK"));
 		assertThat(CfsDeadConversionParams.PROP1.getText(), equalTo("PROP1"));
 		assertThat(CfsDeadConversionParams.PROP1.getCategory(), equalTo("Dead"));
 		assertThat(CfsDeadConversionParams.PROP1.getShortName(), equalTo("P1"));
@@ -187,7 +187,7 @@ class CfsMethodsTest {
 		assertThat(CfsTreeClass.DEAD_POTENTIAL.getIndex(), equalTo(3));
 		assertThat(CfsTreeClass.DEAD_USELESS.getOffset(), equalTo(CfsTreeClass.DEAD_USELESS.getIndex()));
 		assertThrows(UnsupportedOperationException.class, () -> CfsTreeClass.UNKNOWN.getOffset());
-		assertThrows(UnsupportedOperationException.class, () -> CfsTreeClass.UNKNOWN.getText());
+		assertThat(CfsTreeClass.UNKNOWN.getText(), equalTo("UNK"));
 		assertThat(CfsTreeClass.MISSING.getText(), equalTo("MISSING"));
 		assertThat(CfsTreeClass.MISSING.getDescription(), equalTo("Missing"));
 		assertThat(CfsTreeClass.size(), equalTo(7));

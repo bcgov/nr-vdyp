@@ -3,9 +3,13 @@ package ca.bc.gov.nrs.vdyp.backend.projection;
 import static ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessageKind.*;
 import static ca.bc.gov.nrs.vdyp.backend.projection.ValidatedParameters.DEFAULT;
 
-import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestValidationException;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
@@ -14,7 +18,7 @@ import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.OutputFormat;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ProgressFrequency;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ProjectionRequestKind;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.UtilizationParameter;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.UtilizationClassSet;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessageKind;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Vdyp7Constants;
@@ -22,32 +26,32 @@ import ca.bc.gov.nrs.vdyp.si32.vdyp.SP0Name;
 
 public class ProjectionRequestParametersValidator {
 
+	private static final Logger logger = LoggerFactory.getLogger(ProjectionRequestParametersValidator.class);
+
 	private List<ValidationMessage> validationErrorMessages = new ArrayList<>();
 
-	static void validate(ProjectionContext context) throws ProjectionRequestValidationException {
+	static ValidatedParameters validate(Parameters params, ProjectionRequestKind requestKind)
+			throws ProjectionRequestValidationException {
 
 		var validator = new ProjectionRequestParametersValidator();
 
-		validator.validateState(context);
+		var validatedParameters = validator.validateRequestParametersIndividually(params);
+		validator.validateRequestParametersCollectively(validatedParameters, requestKind);
 
 		if (validator.validationErrorMessages.size() > 0) {
+			logger.error("Validation errors encountered:");
+			for (var m : validator.validationErrorMessages) {
+				logger.error(m.toString());
+			}
+
 			throw new ProjectionRequestValidationException(validator.validationErrorMessages);
 		}
+
+		return validatedParameters;
 	}
 
-	public List<ValidationMessage> getValidationMessages() {
-		return validationErrorMessages;
-	}
+	private ValidatedParameters validateRequestParametersIndividually(Parameters params) {
 
-	void validateState(ProjectionContext context) {
-
-		validateRequestParametersIndividually(context);
-		validateRequestParametersCollectively(context);
-	}
-
-	private void validateRequestParametersIndividually(ProjectionContext context) {
-
-		Parameters params = context.getRawParams();
 		ValidatedParameters vparams = new ValidatedParameters();
 
 		// Parameters.JSON_PROPERTY_OUTPUT_FORMAT
@@ -68,7 +72,9 @@ public class ProjectionRequestParametersValidator {
 		if (params.getSelectedExecutionOptions().size() == 0) {
 			vparams.selectedExecutionOptions(DEFAULT.getSelectedExecutionOptions());
 		} else {
-			List<ExecutionOption> selectedOptions = new ArrayList<>();
+			// Add the default Yes options, then the options explicitly Yes, then remove the options
+			// explicitly No.
+			Set<ExecutionOption> selectedOptions = new HashSet<>(List.copyOf(DEFAULT.getSelectedExecutionOptions()));
 			for (String optionText : params.getSelectedExecutionOptions()) {
 				try {
 					var e = Parameters.ExecutionOption.fromValue(optionText);
@@ -77,7 +83,15 @@ public class ProjectionRequestParametersValidator {
 					recordValidationMessage(UNRECOGNIZED_EXECUTION_OPTION, optionText);
 				}
 			}
-			vparams.selectedExecutionOptions(selectedOptions);
+			for (String optionText : params.getExcludedExecutionOptions()) {
+				try {
+					var e = Parameters.ExecutionOption.fromValue(optionText);
+					selectedOptions.remove(e);
+				} catch (IllegalArgumentException e) {
+					recordValidationMessage(UNRECOGNIZED_EXECUTION_OPTION, optionText);
+				}
+			}
+			vparams.selectedExecutionOptions(new ArrayList<>(selectedOptions));
 		}
 
 		// Parameters.JSON_PROPERTY_SELECTED_DEBUG_OPTIONS
@@ -85,7 +99,9 @@ public class ProjectionRequestParametersValidator {
 		if (params.getSelectedDebugOptions().size() == 0) {
 			vparams.selectedDebugOptions(DEFAULT.getSelectedDebugOptions());
 		} else {
-			List<DebugOption> selectedOptions = new ArrayList<>();
+			// Add the default Yes options, then the options explicitly Yes, then remove the options
+			// explicitly No.
+			Set<DebugOption> selectedOptions = new HashSet<>(List.copyOf(DEFAULT.getSelectedDebugOptions()));
 			for (String optionText : params.getSelectedDebugOptions()) {
 				try {
 					var e = Parameters.DebugOption.fromValue(optionText);
@@ -94,17 +110,25 @@ public class ProjectionRequestParametersValidator {
 					recordValidationMessage(UNRECOGNIZED_DEBUG_OPTION, optionText);
 				}
 			}
-			vparams.selectedDebugOptions(selectedOptions);
+			for (String optionText : params.getExcludedDebugOptions()) {
+				try {
+					var e = Parameters.DebugOption.fromValue(optionText);
+					selectedOptions.remove(e);
+				} catch (IllegalArgumentException e) {
+					recordValidationMessage(UNRECOGNIZED_DEBUG_OPTION, optionText);
+				}
+			}
+			vparams.selectedDebugOptions(new ArrayList<>(selectedOptions));
 		}
 
-		vparams.setMinAgeStart(DEFAULT.getMinAgeEnd());
+		vparams.setMinAgeStart(DEFAULT.getMinAgeStart());
 		vparams.setMaxAgeStart(DEFAULT.getMaxAgeStart());
 
 		// Parameters.JSON_PROPERTY_AGE_START
 		vparams.setAgeStart(
 				getIntegerValue(
 						params.getAgeStart(), DEFAULT.getAgeStart(), vparams.getMinAgeStart(), vparams.getMaxAgeStart(),
-						"ageEnd"
+						"ageStart"
 				)
 		);
 
@@ -155,7 +179,7 @@ public class ProjectionRequestParametersValidator {
 		// Parameters.JSON_PROPERTY_FORCE_YEAR
 		vparams.setYearForcedIntoYieldTable(
 				getIntegerValue(
-						params.getYearForcedIntoYieldTable(), DEFAULT.getYearForcedIntoYearTable(), null, null,
+						params.getYearForcedIntoYieldTable(), DEFAULT.getYearForcedIntoYieldTable(), null, null,
 						"forceYear"
 				)
 		);
@@ -207,55 +231,42 @@ public class ProjectionRequestParametersValidator {
 		}
 
 		// Parameters.JSON_PROPERTY_UTILS
-		if (params.getUtils() == null) {
-			vparams.setUtils(DEFAULT.getUtils());
-		} else {
-			List<ValidatedUtilizationParameter> upList = new ArrayList<>();
+		vparams.setUtils(DEFAULT.getUtils());
+		if (params.getUtils() != null) {
 			for (var up : params.getUtils()) {
 				boolean isValidUtilizationParameter = true;
 
-				if (SP0Name.forText(up.getSpeciesName()).equals(SP0Name.UNKNOWN)) {
+				var sp0Name = SP0Name.forText(up.getSpeciesName());
+				if (sp0Name.equals(SP0Name.UNKNOWN)) {
 					recordValidationMessage(UNRECOGNIZED_SPECIES_GROUP_NAME, up.getSpeciesName());
 					isValidUtilizationParameter = false;
 				}
 
-				UtilizationParameter.UtilizationClass uc = null;
+				UtilizationClassSet uc = null;
 				try {
-					uc = UtilizationParameter.UtilizationClass.fromValue(up.getUtilizationClass());
+					uc = UtilizationClassSet.fromValue(up.getUtilizationClass());
 				} catch (IllegalArgumentException e) {
 					recordValidationMessage(UNRECOGNIZED_UTILIZATION_CLASS_NAME, up.getUtilizationClass());
 					isValidUtilizationParameter = false;
 				}
 
 				if (isValidUtilizationParameter) {
-					upList.add(
-							new ValidatedUtilizationParameter().speciesName(up.getSpeciesName()).utilizationClass(uc)
-					);
+					vparams.addUtilsItem(sp0Name, uc);
 				}
 			}
-			vparams.setUtils(upList);
 		}
 
-		context.setValidatedParams(vparams);
+		return vparams;
 	}
 
-	private void validateRequestParametersCollectively(ProjectionContext context) {
+	private void validateRequestParametersCollectively(ValidatedParameters vparams, ProjectionRequestKind requestKind) {
 
-		if (context.getValidatedParams() == null) {
-			throw new IllegalStateException(
-					MessageFormat.format(
-							"{0}: parameters have not yet been individually validated.", context.getProjectionId()
-					)
-			);
-		}
-
-		ValidatedParameters vparams = context.getValidatedParams();
 		if (vparams.getOutputFormat() != null) {
 
 			if (!vparams.getOutputFormat().equals(OutputFormat.DCSV) //
 					&& vparams.getAgeStart() == null //
 					&& vparams.getYearStart() == null //
-					&& vparams.getYearForcedIntoYearTable() == null //
+					&& vparams.getYearForcedIntoYieldTable() == null //
 					&& !vparams.containsOption(ExecutionOption.DO_FORCE_CURRENT_YEAR_INCLUSION_IN_YIELD_TABLES) //
 					&& !vparams.containsOption(ExecutionOption.DO_FORCE_REFERENCE_YEAR_INCLUSION_IN_YIELD_TABLES)) {
 
@@ -265,16 +276,15 @@ public class ProjectionRequestParametersValidator {
 			if (!vparams.getOutputFormat().equals(OutputFormat.DCSV) //
 					&& vparams.getAgeEnd() == null //
 					&& vparams.getYearEnd() == null //
-					&& vparams.getYearForcedIntoYearTable() == null //
+					&& vparams.getYearForcedIntoYieldTable() == null //
 					&& !vparams.containsOption(ExecutionOption.DO_FORCE_CURRENT_YEAR_INCLUSION_IN_YIELD_TABLES) //
 					&& !vparams.containsOption(ExecutionOption.DO_FORCE_REFERENCE_YEAR_INCLUSION_IN_YIELD_TABLES)) {
 
 				recordValidationMessage(MISSING_END_CRITERIA);
 			}
 
-			if (context.getRequestKind() == ProjectionRequestKind.DCSV && vparams.getOutputFormat() != OutputFormat.DCSV
-					|| context.getRequestKind() != ProjectionRequestKind.DCSV
-							&& vparams.getOutputFormat() == OutputFormat.DCSV) {
+			if (requestKind == ProjectionRequestKind.DCSV && vparams.getOutputFormat() != OutputFormat.DCSV
+					|| requestKind != ProjectionRequestKind.DCSV && vparams.getOutputFormat() == OutputFormat.DCSV) {
 				recordValidationMessage(MISMATCHED_INPUT_OUTPUT_TYPES);
 			}
 
@@ -287,7 +297,7 @@ public class ProjectionRequestParametersValidator {
 				}
 
 				int forceParamCount = 0;
-				if (vparams.getYearForcedIntoYearTable() != null) {
+				if (vparams.getYearForcedIntoYieldTable() != null) {
 					forceParamCount += 1;
 				}
 				if (vparams.containsOption(ExecutionOption.DO_FORCE_CURRENT_YEAR_INCLUSION_IN_YIELD_TABLES)) {

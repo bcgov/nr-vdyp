@@ -38,13 +38,12 @@ const generateRandomNumber = (minDigits: number, maxDigits: number): string => {
 }
 
 /**
- * Generates a random polygon number by concatenating the map ID with a random number (1 to 8 digits).
- * @param mapId The map identifier.
- * @returns A random polygon number.
+ * Generates a fixed 8-digit random polygon number.
+ * @returns An 8-digit random polygon number as a string.
  */
-const generatePolygonNumber = (mapId: string): string => {
-  const randomPart = generateRandomNumber(1, 8)
-  return `${mapId}${randomPart}`
+const generatePolygonNumber = (): string => {
+  const randomPart = generateRandomNumber(8, 8)
+  return `${randomPart}`
 }
 
 /**
@@ -325,7 +324,7 @@ const createLayerData = (
 export const createCSVFiles = (modelParameterStore: any) => {
   const featureId = generateFeatureId()
   const mapId = BIZCONSTANTS.MAP_ID
-  const polygonNumber = generatePolygonNumber(mapId)
+  const polygonNumber = generatePolygonNumber()
   const treeCoverLayerEstimatedId = generateTreeCoverLayerEstimatedId()
 
   const polygonData = createPolygonData(

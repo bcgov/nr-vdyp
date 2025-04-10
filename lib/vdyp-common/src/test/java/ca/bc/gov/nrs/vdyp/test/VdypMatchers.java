@@ -595,7 +595,12 @@ public class VdypMatchers {
 	}
 
 	public static Matcher<PolygonIdentifier> isPolyId(String base, int year) {
-		return allOf(instanceOf(PolygonIdentifier.class), hasProperty("base", is(base)), hasProperty("year", is(year)));
+		var polyId = new PolygonIdentifier(base, year);
+		return allOf(
+				instanceOf(PolygonIdentifier.class), //
+				hasProperty("base", is(polyId.getBase())), //
+				hasProperty("year", is(polyId.getYear()))
+		);
 	}
 
 	public static Matcher<BecDefinition> isBec(String alias) {

@@ -3353,10 +3353,10 @@ public class ForwardProcessingEngine {
 			String primarySpeciesName = bank.speciesNames[highestPercentageIndex];
 			String becZoneAlias = bank.getBecZone().getAlias();
 
-			int defaultEquationGroup = fps.fcm.getDefaultEquationGroup().get(primarySpeciesName, becZoneAlias);
-			Optional<Integer> equationModifierGroup = fps.fcm.getEquationModifierGroup()
+			Integer defaultEquationGroup = fps.fcm.getDefaultEquationGroup().get(primarySpeciesName, becZoneAlias);
+			Integer equationModifierGroup = fps.fcm.getEquationModifierGroup()
 					.get(defaultEquationGroup, inventoryTypeGroup);
-			basalAreaGroup1 = equationModifierGroup.orElse(defaultEquationGroup);
+			basalAreaGroup1 = equationModifierGroup > 0 ? equationModifierGroup : defaultEquationGroup;
 
 			int primarySpeciesIndex = bank.speciesIndices[highestPercentageIndex];
 			int basalAreaGroup3 = defaultEquationGroups[primarySpeciesIndex];
