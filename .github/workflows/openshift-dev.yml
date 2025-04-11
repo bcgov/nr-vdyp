@@ -3,6 +3,7 @@ name: Build and Deploy to Openshift Dev
 on:
   workflow_dispatch:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
     paths:
       - "frontend/**"
       - "backend/**"
@@ -33,7 +34,6 @@ jobs:
 
   # https://github.com/bcgov/quickstart-openshift-helpers
   deploys:
-    if: ${{ github.head.ref == 'main' || github.head.ref == 'feature/yield-tables' }}
     name: Deploys
     needs: [builds]
     uses: ./.github/workflows/.deployer.yml
