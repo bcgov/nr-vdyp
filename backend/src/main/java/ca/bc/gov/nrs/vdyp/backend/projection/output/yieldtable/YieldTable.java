@@ -629,6 +629,87 @@ public class YieldTable implements Closeable {
 	}
 
 	/**
+	 * <b>V7Ext_GetProjectedPolygonVolumes</b>
+	 * <p>
+	 * Obtains the yields summarized at the polygon level for a specific stand total age.
+	 * <p>
+	 * Note that certain layers may not have been processed. As a result, those layers may result in no volumes despite
+	 * the presence of volumes on other layers.
+	 *
+	 * @param rowContext        the meta values of the row being generated
+	 * @param projectedPolygons the projections, by year, of this polygon
+	 * @param targetAge         the age (of the primary layer) for this row
+	 * @return the volume details for the given polygon
+	 * @throws StandYieldCalculationException
+	 */
+	private EntityVolumeDetails getProjectedPolygonVolumes(
+			YieldTableRowContext rowContext, Map<Integer, VdypPolygon> projectedPolygons, int targetAge
+	) throws StandYieldCalculationException {
+
+		Double wholeStemVolume = 0.0;
+		Double closeUtilizationVolume = 0.0;
+		Double cuVolumeLessDecay = 0.0;
+		Double cuVolumeLessDecayWastage = 0.0;
+		Double cuVolumeLessDecayWastageBreakage = 0.0;
+
+		var polygon = rowContext.getPolygon();
+		var primaryLayer = polygon.getPrimaryLayer();
+
+		if (primaryLayer == null) {
+			throw new IllegalStateException(
+					MessageFormat.format("{0}: primary layer not found", rowContext.getPolygon())
+			);
+		}
+
+		if (!rowContext.getPolygonProjectionState().didRunProjection()) {
+			throw new IllegalStateException(
+					MessageFormat.format("{0}: did not run projection", rowContext.getPolygon())
+			);
+		}
+
+		var primaryLayerYearAtAge = primaryLayer.determineYearAtAge(0);
+
+		for (var layer : polygon.getLayers().values()) {
+
+			if (rowContext.getPolygonProjectionState().didRunProjection()) {
+
+				var layerYearAtAge = layer.determineYearAtAge(0);
+				var ageOffset = primaryLayerYearAtAge - layerYearAtAge;
+				var ageToRequest = targetAge + ageOffset;
+
+				if (ageToRequest > 0) {
+					var layerVolumeDetails = getProjectedLayerStandVolumes(
+							rowContext, projectedPolygons, layer, ageToRequest
+					);
+
+					if (layerVolumeDetails.wholeStemVolume() != null) {
+						if (layerVolumeDetails.wholeStemVolume() != null) {
+							wholeStemVolume += layerVolumeDetails.wholeStemVolume();
+						}
+						if (layerVolumeDetails.closeUtilizationVolume() != null) {
+							closeUtilizationVolume += layerVolumeDetails.closeUtilizationVolume();
+						}
+						if (layerVolumeDetails.cuVolumeLessDecay() != null) {
+							cuVolumeLessDecay += layerVolumeDetails.cuVolumeLessDecay();
+						}
+						if (layerVolumeDetails.cuVolumeLessDecayWastage() != null) {
+							cuVolumeLessDecayWastage += layerVolumeDetails.cuVolumeLessDecayWastage();
+						}
+						if (layerVolumeDetails.cuVolumeLessDecayWastageBreakage() != null) {
+							cuVolumeLessDecayWastageBreakage += layerVolumeDetails.cuVolumeLessDecayWastageBreakage();
+						}
+					}
+				}
+			}
+		}
+
+		return new EntityVolumeDetails(
+				wholeStemVolume, closeUtilizationVolume, cuVolumeLessDecay, cuVolumeLessDecayWastage,
+				cuVolumeLessDecayWastageBreakage
+		);
+	}
+
+	/**
 	 * <b>V7Int_GetProjectedLayerStandGrowthInfo</b>
 	 * <p>
 	 * Obtains the density, height, basal area and diameter information for the entire stand at a specific layer at the
@@ -814,87 +895,6 @@ public class YieldTable implements Closeable {
 
 		return new EntityGrowthDetails(
 				siteIndex, dominantHeight, layerYields.loreyHeight(), diameter, treesPerHectare, basalArea
-		);
-	}
-
-	/**
-	 * <b>V7Ext_GetProjectedPolygonVolumes</b>
-	 * <p>
-	 * Obtains the yields summarized at the polygon level for a specific stand total age.
-	 * <p>
-	 * Note that certain layers may not have been processed. As a result, those layers may result in no volumes despite
-	 * the presence of volumes on other layers.
-	 *
-	 * @param rowContext        the meta values of the row being generated
-	 * @param projectedPolygons the projections, by year, of this polygon
-	 * @param targetAge         the age (of the primary layer) for this row
-	 * @return the volume details for the given polygon
-	 * @throws StandYieldCalculationException
-	 */
-	private EntityVolumeDetails getProjectedPolygonVolumes(
-			YieldTableRowContext rowContext, Map<Integer, VdypPolygon> projectedPolygons, int targetAge
-	) throws StandYieldCalculationException {
-
-		Double wholeStemVolume = 0.0;
-		Double closeUtilizationVolume = 0.0;
-		Double cuVolumeLessDecay = 0.0;
-		Double cuVolumeLessDecayWastage = 0.0;
-		Double cuVolumeLessDecayWastageBreakage = 0.0;
-
-		var polygon = rowContext.getPolygon();
-		var primaryLayer = polygon.getPrimaryLayer();
-
-		if (primaryLayer == null) {
-			throw new IllegalStateException(
-					MessageFormat.format("{0}: primary layer not found", rowContext.getPolygon())
-			);
-		}
-
-		if (!rowContext.getPolygonProjectionState().didRunProjection()) {
-			throw new IllegalStateException(
-					MessageFormat.format("{0}: did not run projection", rowContext.getPolygon())
-			);
-		}
-
-		var primaryLayerYearAtAge = primaryLayer.determineYearAtAge(0);
-
-		for (var layer : polygon.getLayers().values()) {
-
-			if (rowContext.getPolygonProjectionState().didRunProjection()) {
-
-				var layerYearAtAge = layer.determineYearAtAge(0);
-				var ageOffset = primaryLayerYearAtAge - layerYearAtAge;
-				var ageToRequest = targetAge + ageOffset;
-
-				if (ageToRequest > 0) {
-					var layerVolumeDetails = getProjectedLayerStandVolumes(
-							rowContext, projectedPolygons, layer, ageToRequest
-					);
-
-					if (layerVolumeDetails.wholeStemVolume() != null) {
-						if (layerVolumeDetails.wholeStemVolume() != null) {
-							wholeStemVolume += layerVolumeDetails.wholeStemVolume();
-						}
-						if (layerVolumeDetails.closeUtilizationVolume() != null) {
-							closeUtilizationVolume += layerVolumeDetails.closeUtilizationVolume();
-						}
-						if (layerVolumeDetails.cuVolumeLessDecay() != null) {
-							cuVolumeLessDecay += layerVolumeDetails.cuVolumeLessDecay();
-						}
-						if (layerVolumeDetails.cuVolumeLessDecayWastage() != null) {
-							cuVolumeLessDecayWastage += layerVolumeDetails.cuVolumeLessDecayWastage();
-						}
-						if (layerVolumeDetails.cuVolumeLessDecayWastageBreakage() != null) {
-							cuVolumeLessDecayWastageBreakage += layerVolumeDetails.cuVolumeLessDecayWastageBreakage();
-						}
-					}
-				}
-			}
-		}
-
-		return new EntityVolumeDetails(
-				wholeStemVolume, closeUtilizationVolume, cuVolumeLessDecay, cuVolumeLessDecayWastage,
-				cuVolumeLessDecayWastageBreakage
 		);
 	}
 
