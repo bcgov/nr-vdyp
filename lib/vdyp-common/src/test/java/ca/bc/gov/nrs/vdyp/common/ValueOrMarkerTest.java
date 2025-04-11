@@ -1,7 +1,6 @@
 package ca.bc.gov.nrs.vdyp.common;
 
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.isMarker;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.isValue;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.fail;

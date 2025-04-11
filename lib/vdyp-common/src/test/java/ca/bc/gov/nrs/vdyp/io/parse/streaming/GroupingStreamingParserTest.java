@@ -1,7 +1,6 @@
 package ca.bc.gov.nrs.vdyp.io.parse.streaming;
 
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.assertEmpty;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.assertNext;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 

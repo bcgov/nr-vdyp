@@ -10,8 +10,6 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
-import ca.bc.gov.nrs.vdyp.common_calculators.ForestInventoryZone;
-import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexForestInventoryZone;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.common.LineParser;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
@@ -55,7 +53,7 @@ public class VdypPolygonParser implements ControlMapValueReplacer<Object, String
 					return line.substring(0, Math.min(25, line.length())).trim().length() == 0;
 				}
 			}.strippedString(25, DESCRIPTION).space(1).value(4, BIOGEOCLIMATIC_ZONE, ControlledValueParser.BEC).space(1)
-					.value(1, FOREST_INVENTORY_ZONE, ValueParser.CHARACTER) // TODO: add ValueParser.FIZ
+					.value(1, FOREST_INVENTORY_ZONE, ValueParser.STRING_UNSTRIPPED) // TODO: add ValueParser.FIZ
 					.value(6, PERCENT_FOREST_LAND, ValueParser.FLOAT)
 					.value(3, INVENTORY_TYPE_GROUP, ControlledValueParser.optional(ValueParser.INTEGER))
 					.value(3, BASAL_AREA_GROUP, ValueParser.optional(ValueParser.INTEGER))
@@ -69,9 +67,10 @@ public class VdypPolygonParser implements ControlMapValueReplacer<Object, String
 				protected VdypPolygon convert(Map<String, Object> entry) throws ResourceParseException {
 					var descriptionText = (String) entry.get(DESCRIPTION);
 					var becAlias = (String) entry.get(BIOGEOCLIMATIC_ZONE);
-					var fizId = (Character) entry.get(FOREST_INVENTORY_ZONE);
+					var fizId = entry.get(FOREST_INVENTORY_ZONE);
 					var percentForestLand = (Float) entry.get(PERCENT_FOREST_LAND);
 					var inventoryTypeGroup = Utils.<Integer>optSafe(entry.get(INVENTORY_TYPE_GROUP));
+					@SuppressWarnings("unused")
 					var basalAreaGroup = Utils.<Integer>optSafe(entry.get(BASAL_AREA_GROUP));
 					var fipMode = Utils.<Integer>optSafe(entry.get(POLYGON_MODE));
 
@@ -82,12 +81,7 @@ public class VdypPolygonParser implements ControlMapValueReplacer<Object, String
 						throw new ResourceParseException(e);
 					}
 
-					if (ForestInventoryZone.toRegion(fizId) == SiteIndexForestInventoryZone.FIZ_UNKNOWN) {
-						throw new ResourceParseException(
-								"Forest Inventory Zone " + fizId
-										+ " is not a recognized FIZ (only 'A' ... 'L' are supported)"
-						);
-					}
+//					Note: Forest Inventory Zone is not required to have a non-empty value - " " is valid.
 
 					var description = PolygonIdentifier.split(descriptionText);
 

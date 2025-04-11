@@ -1,7 +1,6 @@
 package ca.bc.gov.nrs.vdyp.common;
 
-import static ca.bc.gov.nrs.vdyp.math.FloatMath.abs;
-import static ca.bc.gov.nrs.vdyp.math.FloatMath.sqrt;
+import static ca.bc.gov.nrs.vdyp.math.FloatMath.*;
 
 import java.text.MessageFormat;
 import java.util.List;
@@ -80,7 +79,6 @@ public class ReconcilationMethods {
 		}
 	}
 
-	@SuppressWarnings("java:S3655")
 	public static void reconcileComponentsMode1(
 			UtilizationVector baseAreaUtil, UtilizationVector treesPerHectareUtil,
 			UtilizationVector quadMeanDiameterUtil, float tphSumHigh
@@ -250,7 +248,6 @@ public class ReconcilationMethods {
 		}
 	}
 
-	@SuppressWarnings("java:S3655")
 	public static void reconcileComponentsMode3(
 			UtilizationVector baseAreaUtil, UtilizationVector treesPerHectareUtil,
 			UtilizationVector quadMeanDiameterUtil
