@@ -7,7 +7,7 @@ on:
     paths:
       - "frontend/**"
       - "backend/**"
-      - "charts/app/values-dev.yml"
+      - "charts/values-dev.yml"
 concurrency:
   # Cancel if re-attempted
   group: ${{ github.event_name }}
