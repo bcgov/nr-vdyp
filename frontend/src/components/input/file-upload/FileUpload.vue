@@ -42,14 +42,13 @@
             <v-row class="mb-n10">
               <v-col cols="5">
                 <v-file-input
-                  label="Layer File"
-                  v-model="layerFile"
+                  :label="
+                    polygonFile ? 'Polygon File' : 'Select Polygon File...'
+                  "
+                  v-model="polygonFile"
                   show-size
                   chips
                   clearable
-                  flat
-                  persistent-placeholder
-                  placeholder="Select Eco Zone"
                   density="compact"
                   accept=".csv"
                 />
@@ -57,8 +56,8 @@
               <v-col class="col-space-3" />
               <v-col cols="5">
                 <v-file-input
-                  label="Polygon File"
-                  v-model="polygonFile"
+                  :label="layerFile ? 'Layer File' : 'Select Layer File...'"
+                  v-model="layerFile"
                   show-size
                   chips
                   clearable
@@ -82,6 +81,8 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useReportingStore } from '@/stores/reportingStore'
+import { useProjectionStore } from '@/stores/projectionStore'
 import {
   OutputFormatEnum,
   SelectedExecutionOptionsEnum,
@@ -101,8 +102,13 @@ import {
 import type { MessageDialog } from '@/interfaces/interfaces'
 import { CONSTANTS, MESSAGE, DEFAULTS } from '@/constants'
 import { fileUploadValidation } from '@/validation'
-import { delay, downloadFile, extractZipFileName } from '@/utils/util'
-import { logSuccessMessage } from '@/utils/messageHandler'
+import {
+  checkZipForErrors,
+  delay,
+  downloadFile,
+  extractZipFileName,
+} from '@/utils/util'
+import { logSuccessMessage, logErrorMessage } from '@/utils/messageHandler'
 
 const form = ref<HTMLFormElement>()
 
@@ -126,7 +132,12 @@ const messageDialog = ref<MessageDialog>({
   dialog: false,
   title: '',
   message: '',
+  dialogWidth: undefined,
+  btnLabel: '',
 })
+
+const projectionStore = useProjectionStore()
+const reportingStore = useReportingStore()
 
 /**
  * Updates the starting age value.
@@ -277,23 +288,23 @@ const validateRange = (): boolean => {
  */
 const validateFiles = async (): Promise<boolean> => {
   const result = await fileUploadValidation.validateFiles(
-    layerFile.value,
     polygonFile.value,
+    layerFile.value,
   )
   if (!result.isValid) {
     let message = ''
     switch (result.errorType) {
-      case 'layerFileMissing':
-        message = MESSAGE.FILE_UPLOAD_ERR.LAYER_FILE_MISSING
-        break
       case 'polygonFileMissing':
         message = MESSAGE.FILE_UPLOAD_ERR.POLYGON_FILE_MISSING
         break
-      case 'layerFileNotCSVFormat':
-        message = MESSAGE.FILE_UPLOAD_ERR.LAYER_FILE_NOT_CSV_FORMAT
+      case 'layerFileMissing':
+        message = MESSAGE.FILE_UPLOAD_ERR.LAYER_FILE_MISSING
         break
       case 'polygonFileNotCSVFormat':
         message = MESSAGE.FILE_UPLOAD_ERR.POLYGON_FILE_NOT_CSV_FORMAT
+        break
+      case 'layerFileNotCSVFormat':
+        message = MESSAGE.FILE_UPLOAD_ERR.LAYER_FILE_NOT_CSV_FORMAT
         break
     }
     messageDialog.value = {
@@ -420,7 +431,13 @@ const runModelHandler = async () => {
     isProgressVisible.value = true
     progressMessage.value = MESSAGE.PROGRESS_MSG.RUNNING_MODEL
 
-    await delay(1000)
+    await delay(500)
+
+    reportingStore.fileUploadDisableTabs()
+    console.log(
+      'fileUploadReportingTabsDisabled:',
+      reportingStore.fileUploadReportingTabsEnabled,
+    )
 
     const response = await projectionHcsvPost(getFormData(), false)
 
@@ -444,9 +461,23 @@ const runModelHandler = async () => {
       throw new Error('Response data is not a Blob')
     }
 
+    const hasErrors = await checkZipForErrors(resultBlob)
+
+    await projectionStore.handleZipResponse(resultBlob, zipFileName)
+
     downloadFile(resultBlob, zipFileName)
 
-    logSuccessMessage(MESSAGE.SUCCESS_MSG.FILE_UPLOAD_RUN_RESULT)
+    if (hasErrors) {
+      logErrorMessage(MESSAGE.SUCCESS_MSG.FILE_UPLOAD_RUN_RESULT_W_ERR)
+    } else {
+      logSuccessMessage(MESSAGE.SUCCESS_MSG.FILE_UPLOAD_RUN_RESULT)
+    }
+
+    reportingStore.fileUploadEnableTabs()
+    console.log(
+      'fileUploadReportingTabsEnabled:',
+      reportingStore.fileUploadReportingTabsEnabled,
+    )
   } catch (error) {
     handleApiError(error, MESSAGE.FILE_UPLOAD_ERR.FAIL_RUN_MODEL)
   } finally {
