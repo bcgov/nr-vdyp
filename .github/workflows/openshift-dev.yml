@@ -4,9 +4,11 @@ on:
   workflow_dispatch:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+    branches: [main,feature/increase-app-cpu-quota]
     paths:
       - "frontend/**"
       - "backend/**"
+      - "charts/app/values-dev.yml"
 concurrency:
   # Cancel if re-attempted
   group: ${{ github.event_name }}
