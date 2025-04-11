@@ -68,10 +68,10 @@ spec:
             timeoutSeconds: 5
           resources: # this is optional
             limits:
-              cpu: 50m
+              cpu: 250m
               memory: 250Mi
             requests:
-              cpu: 20m
+              cpu: 50m
               memory: 150Mi
       {{- with .Values.backend.nodeSelector }}
       nodeSelector:
