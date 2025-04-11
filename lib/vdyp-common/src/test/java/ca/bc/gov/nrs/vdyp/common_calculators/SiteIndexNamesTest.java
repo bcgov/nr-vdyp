@@ -1,10 +1,8 @@
 package ca.bc.gov.nrs.vdyp.common_calculators;
 
-import static ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexSpecies.SI_SPEC_FDC;
-import static ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexSpecies.SI_SPEC_HWC;
+import static ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexSpecies.*;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.*;
 
 import org.junit.jupiter.api.Test;
 
