@@ -86,7 +86,7 @@ public class ForwardUtilizationParserTest {
 				utilizations,
 				hasItem(
 						allOf(
-								hasProperty("polygonId", hasProperty("name", is("01002 S000001 00"))),
+								hasProperty("polygonId", hasProperty("name", is("01002 S000001 00     "))),
 								hasProperty("polygonId", hasProperty("year", is(1970))),
 								hasProperty("layerType", is(LayerType.PRIMARY)),
 								hasProperty("genus", is(Optional.empty())),
@@ -143,7 +143,7 @@ public class ForwardUtilizationParserTest {
 				utilizations,
 				hasItems(
 						allOf(
-								hasProperty("polygonId", hasProperty("name", is("01002 S000001 00"))),
+								hasProperty("polygonId", hasProperty("name", is("01002 S000001 00     "))),
 								hasProperty("polygonId", hasProperty("year", is(1970))),
 								hasProperty("layerType", is(LayerType.PRIMARY)),
 								hasProperty("genus", is(Optional.empty())),
@@ -157,7 +157,7 @@ public class ForwardUtilizationParserTest {
 								hasProperty("genusIndex", is(0)), hasProperty("quadraticMeanDiameterAtBH", is(6.1f))
 						),
 						allOf(
-								hasProperty("polygonId", hasProperty("name", is("01002 S000001 00"))),
+								hasProperty("polygonId", hasProperty("name", is("01002 S000001 00     "))),
 								hasProperty("polygonId", hasProperty("year", is(1970))),
 								hasProperty("layerType", is(LayerType.PRIMARY)),
 								hasProperty("genus", is(Optional.empty())),

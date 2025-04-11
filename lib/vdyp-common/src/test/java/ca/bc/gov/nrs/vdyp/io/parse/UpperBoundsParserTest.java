@@ -28,10 +28,13 @@ class UpperBoundsParserTest {
 		Map<Integer, Coefficients> m = (Map<Integer, Coefficients>) controlMap
 				.get(ControlKey.BA_DQ_UPPER_BOUNDS.name());
 
-		assertThat(m, Matchers.aMapWithSize(UpperBoundsParser.LAST_BA_GROUP_ID));
+		assertThat(m, Matchers.aMapWithSize(UpperBoundsParser.LAST_BA_GROUP_ID + 1 /* include default */));
 		assertThat(m.get(1), Matchers.contains(74.78f, 76.10f));
 		assertThat(m.get(144), Matchers.contains(0.0f, 7.6f));
 		assertThat(m.get(171), Matchers.contains(125.12f, 49.80f));
+
+		// Default value
+		assertThat(m.get(0), Matchers.contains(0.0f, 7.6f));
 
 		// Test that defaults are applied
 		assertThat(m.get(UpperBoundsParser.LAST_BA_GROUP_ID), Matchers.contains(0.0f, 7.6f));
@@ -53,7 +56,7 @@ class UpperBoundsParserTest {
 		Map<Integer, Coefficients> m = (Map<Integer, Coefficients>) controlMap
 				.get(ControlKey.BA_DQ_UPPER_BOUNDS.name());
 
-		assertThat(m, Matchers.aMapWithSize(UpperBoundsParser.LAST_BA_GROUP_ID));
+		assertThat(m, Matchers.aMapWithSize(UpperBoundsParser.LAST_BA_GROUP_ID + 1 /* include default */));
 		assertThat(m.get(1), Matchers.contains(74.78f, 76.10f));
 		assertThat(m.get(11), Matchers.contains(50.77f, 34.70f));
 

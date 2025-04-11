@@ -45,6 +45,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.control.BaseControlParser;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ControlMapValueReplacer;
 import ca.bc.gov.nrs.vdyp.io.parse.control.NonFipControlParser;
+import ca.bc.gov.nrs.vdyp.io.parse.control.OutputFileLocationResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ResourceControlMapModifier;
 import ca.bc.gov.nrs.vdyp.io.parse.control.StartApplicationControlParser;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypLayer;
@@ -404,7 +405,12 @@ public class TestUtils {
 
 			@Override
 			public String toString(String filename) throws IOException {
-				return klazz.getResource(filename).getPath();
+				var resourceUrl = klazz.getResource(filename);
+				if (resourceUrl == null) {
+					return filename;
+				} else {
+					return resourceUrl.getPath();
+				}
 			}
 
 			@Override
@@ -478,11 +484,8 @@ public class TestUtils {
 		}
 
 		@Override
-		protected List<ControlKey> outputFileParsers() {
-			return List.of(
-					ControlKey.VDYP_OUTPUT_VDYP_POLYGON, ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SPECIES,
-					ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL
-			);
+		protected List<OutputFileLocationResolver> outputFiles() {
+			return List.of();
 		}
 
 		@Override

@@ -10,7 +10,9 @@ import ca.bc.gov.nrs.vdyp.backend.projection.model.Polygon;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Species;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Stand;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Vdyp7Constants;
+import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProcessingModeCode;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
+import ca.bc.gov.nrs.vdyp.backend.utils.Utils;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 
 /**
@@ -51,10 +53,14 @@ public class FipStartOutputWriter extends AbstractOutputWriter implements Closea
 	 * V7W_FIP - Write the given polygon record to the polygon file
 	 *
 	 * @param polygon
+	 * @param projectionType the projection type (layer)
+	 * @param processingMode
 	 * @throws IOException
 	 */
-	public void writePolygon(Polygon polygon, ProjectionTypeCode projectionType, PolygonProjectionState state)
-			throws IOException {
+	public void writePolygon(
+			Polygon polygon, ProjectionTypeCode projectionType, ProcessingModeCode processingMode,
+			PolygonProjectionState state
+	) throws IOException {
 
 		writeFormat(
 				polygonFile, //
@@ -64,7 +70,7 @@ public class FipStartOutputWriter extends AbstractOutputWriter implements Closea
 				polygon.getForestInventoryZone() == null ? "" : polygon.getForestInventoryZone(), //
 				polygon.getBecZone() == null ? "" : polygon.getBecZone(), //
 				polygon.determineStockabilityByProjectionType(projectionType), //
-				state.getProcessingModeUsedByProjectionType(projectionType).value, //
+				processingMode.value, //
 				polygon.getNonProductiveDescriptor() == null ? "" : polygon.getNonProductiveDescriptor(), //
 				format(polygon.getYieldFactor(), 5, 2) //
 		);
@@ -82,38 +88,44 @@ public class FipStartOutputWriter extends AbstractOutputWriter implements Closea
 		boolean speciesWritten = false;
 
 		Stand leadingStand = layer.determineLeadingSp0(0);
-		Species leadingSpecies = leadingStand.getSpecies().get(0);
+		if (leadingStand != null) {
 
-		writeFormat(
-				layersFile, //
-				LAYER_FORMAT, //
+			Species leadingSpecies = leadingStand.getSpeciesByPercent().get(0);
+			if (leadingSpecies != null) {
 
-				layer.getPolygon().buildPolygonDescriptor(), //
-				LayerType.PRIMARY.getAlias(), // vdypintperform.c lines 2634 - 2651 - always write "P" for the layer
-												// code.
-				format(leadingSpecies.getTotalAge(), 4, 0), //
-				format(leadingSpecies.getDominantHeight(), 5, 2), //
-				format(leadingSpecies.getSiteIndex(), 5, 2), //
-				format(layer.getCrownClosure(), 5), //
-				leadingStand.getSp0Code(), //
-				leadingSpecies.getSpeciesCode(), //
-				format(leadingSpecies.getYearsToBreastHeight(), 5, 2), //
-				' ', // stocking class - unknown
-				Vdyp7Constants.EMPTY_INT, // inventory type group - unknown
-				format(leadingSpecies.getAgeAtBreastHeight(), 6, 1), //
-				leadingSpecies.getSiteCurve() != null ? format(leadingSpecies.getSiteCurve().n(), 3)
-						: " " + Vdyp7Constants.EMPTY_INT
-		);
+				writeFormat(
+						layersFile, //
+						LAYER_FORMAT, //
 
-		for (Stand s : layer.getSp0sAsSupplied()) {
-			writeLayerSp0(s);
-			speciesWritten = true;
-		}
+						layer.getPolygon().buildPolygonDescriptor(), //
+						LayerType.PRIMARY.getAlias(), // vdypintperform.c lines 2634 - 2651 - always write "P" for the
+														// layer
+														// code.
+						format(leadingSpecies.getTotalAge(), 4, 0), //
+						format(leadingSpecies.getDominantHeight(), 5, 2), //
+						format(leadingSpecies.getSiteIndex(), 5, 2), //
+						format(layer.getCrownClosure(), 5), //
+						leadingStand.getSp0Code(), //
+						leadingSpecies.getSpeciesCode(), //
+						format(leadingSpecies.getYearsToBreastHeight(), 5, 2), //
+						' ', // stocking class - unknown
+						Vdyp7Constants.EMPTY_INT, // inventory type group - unknown
+						format(leadingSpecies.getAgeAtBreastHeight(), 6, 1), //
+						leadingSpecies.getSiteCurve() != null ? format(leadingSpecies.getSiteCurve().n(), 3)
+								: " " + Vdyp7Constants.EMPTY_INT
+				);
 
-		writeLayersEndRecord(layer.getPolygon());
+				for (Stand s : layer.getSp0sAsSupplied()) {
+					writeLayerSp0(s);
+					speciesWritten = true;
+				}
 
-		if (speciesWritten) {
-			writeSpeciesEndRecord(layer.getPolygon());
+				writeLayersEndRecord(layer.getPolygon());
+
+				if (speciesWritten) {
+					writeSpeciesEndRecord(layer.getPolygon());
+				}
+			}
 		}
 	}
 
@@ -137,8 +149,8 @@ public class FipStartOutputWriter extends AbstractOutputWriter implements Closea
 
 		String[] speciesDistributionTexts = new String[4];
 		for (int i = 0; i < 4; i++) {
-			if (i < stand.getSpecies().size()) {
-				Species s = stand.getSpecies().get(i);
+			if (i < stand.getSpeciesByPercent().size()) {
+				Species s = stand.getSpeciesByPercent().get(i);
 				speciesDistributionTexts[i] = String.format("%3s%5.1f", s.getSpeciesCode(), s.getSpeciesPercent());
 			} else {
 				speciesDistributionTexts[i] = "     0.0";
@@ -150,18 +162,20 @@ public class FipStartOutputWriter extends AbstractOutputWriter implements Closea
 				SPECIES_FORMAT, //
 
 				stand.getLayer().getPolygon().buildPolygonDescriptor(), //
-				LayerType.PRIMARY.getAlias(), // vdypintperform.c lines 2634 - 2651 - always write "P" for the layer
-												// code.
-				stand.getSp0Code(), //
-				format(stand.getSpeciesGroup().getSpeciesPercent(), 6, 1), speciesDistributionTexts[0],
-				speciesDistributionTexts[1], speciesDistributionTexts[2], speciesDistributionTexts[3]
+				// vdypintperform.c lines 2634 - 2651 - always write "P" for the layer code.
+				LayerType.PRIMARY.getAlias(), stand.getSp0Code(), //
+				format(stand.getSpeciesGroup().getSpeciesPercent(), 6, 1), //
+				speciesDistributionTexts[0], //
+				speciesDistributionTexts[1], //
+				speciesDistributionTexts[2], //
+				speciesDistributionTexts[3]
 		);
 	}
 
 	@Override
 	public void close() throws IOException {
-		polygonFile.close();
-		speciesFile.close();
-		layersFile.close();
+		Utils.close(polygonFile, "polygonFile");
+		Utils.close(speciesFile, "speciesFile");
+		Utils.close(layersFile, "layers");
 	}
 }

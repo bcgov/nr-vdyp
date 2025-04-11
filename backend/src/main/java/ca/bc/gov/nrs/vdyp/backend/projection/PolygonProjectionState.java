@@ -1,28 +1,22 @@
 package ca.bc.gov.nrs.vdyp.backend.projection;
 
+import static ca.bc.gov.nrs.vdyp.backend.projection.ProjectionStageCode.*;
+
 import java.nio.file.Path;
 import java.text.MessageFormat;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Layer;
-import ca.bc.gov.nrs.vdyp.backend.projection.model.PolygonMessage;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.GrowthModelCode;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProcessingModeCode;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
-
-import static ca.bc.gov.nrs.vdyp.backend.projection.ProjectionStageCode.*;
 
 public class PolygonProjectionState {
 
 	public record ModelReturnCodeKey(ProjectionStageCode stage, ProjectionTypeCode type) {
 	}
-
-	/** The messages generated during the projection of the polygon. */
-	private List<PolygonMessage> projectionMessages;
 
 	private Map<ProjectionTypeCode, Double> startAgeByProjectionType = null;
 	private Map<ProjectionTypeCode, Double> endAgeByProjectionType = null;
@@ -38,7 +32,7 @@ public class PolygonProjectionState {
 	private Map<ProjectionTypeCode, Double> percentForestedLandUsedByProjectionType;
 	private Map<ProjectionTypeCode, Double> yieldFactorByProjectionType;
 
-	private Map<String /* layer id */, Boolean> firstYearYieldsDisplayedByLayer;
+	private Map<String /* layer id */, Integer> firstYearYieldsDisplayedByLayer;
 
 	private Path executionFolder = null;
 
@@ -68,20 +62,6 @@ public class PolygonProjectionState {
 		}
 
 		firstYearYieldsDisplayedByLayer = new HashMap<>();
-
-		projectionMessages = new ArrayList<>();
-	}
-
-	public List<PolygonMessage> getProjectionMessages() {
-		return projectionMessages;
-	}
-
-	public GrowthModelCode getGrowthModelUsedByProjectionType(ProjectionTypeCode projectionType) {
-		return growthModelByProjectionType.get(projectionType);
-	}
-
-	public ProcessingModeCode getProcessingModeUsedByProjectionType(ProjectionTypeCode projectionType) {
-		return processingModeByProjectionType.get(projectionType);
 	}
 
 	public Double getPercentForestedLandUsed(ProjectionTypeCode projectionType) {
@@ -92,15 +72,11 @@ public class PolygonProjectionState {
 		return yieldFactorByProjectionType.get(projectionType);
 	}
 
-	public ProcessingResult getProcessingResult(ProjectionStageCode stage, ProjectionTypeCode type) {
-		return processingResultByStageAndProjectionType.get(new ModelReturnCodeKey(stage, type));
-	}
-
 	public Integer getFirstYearValidYields(ProjectionStageCode stage, ProjectionTypeCode type) {
 		return firstYearValidYieldByProjectionType.get(new ModelReturnCodeKey(stage, type));
 	}
 
-	public void setFirstYearYieldsDisplayed(Layer layer, boolean firstYearFieldsDisplayed) {
+	public void setFirstYearYieldsDisplayed(Layer layer, int year) {
 		if (firstYearYieldsDisplayedByLayer.containsKey(layer.getLayerId())) {
 			throw new IllegalStateException(
 					MessageFormat.format(
@@ -109,18 +85,10 @@ public class PolygonProjectionState {
 					)
 			);
 		}
-		firstYearYieldsDisplayedByLayer.put(layer.getLayerId(), firstYearFieldsDisplayed);
+		firstYearYieldsDisplayedByLayer.put(layer.getLayerId(), year);
 	}
 
-	public Boolean getFirstYearYieldsDisplayed(Layer layer) {
-		if (!firstYearYieldsDisplayedByLayer.containsKey(layer.getLayerId())) {
-			throw new IllegalStateException(
-					MessageFormat.format(
-							"getFirstYearYieldsDisplayed: firstYearYieldsDisplayed has not been set for layer {0}",
-							layer.getLayerId()
-					)
-			);
-		}
+	public Integer getFirstYearYieldsDisplayed(Layer layer) {
 		return firstYearYieldsDisplayedByLayer.get(layer.getLayerId());
 	}
 
@@ -241,14 +209,10 @@ public class PolygonProjectionState {
 
 		var key = new ModelReturnCodeKey(stage, projectionType);
 		if (processingResultByStageAndProjectionType.get(key) == null) {
-			throw new IllegalStateException(
-					MessageFormat.format(
-							"{0}.ProjectionState.setProcessingResults: processingResult has NOT been set for projection type {1} of stage {2}",
-							this.getClass().getName(), stage, projectionType
-					)
-			);
+			return ProcessingResult.PROCESSING_RESULT_NULL;
+		} else {
+			return processingResultByStageAndProjectionType.get(key);
 		}
-		return processingResultByStageAndProjectionType.get(key);
 	}
 
 	/**
@@ -348,13 +312,31 @@ public class PolygonProjectionState {
 		return executionFolder;
 	}
 
-	public boolean wasLayerProcessed(Layer layer) {
+	public boolean layerWasProjected(Layer layer) {
 
 		var projectionType = layer.getAssignedProjectionType();
 		return didRunProjectionStage(Forward, projectionType) || didRunProjectionStage(Back, projectionType);
 	}
 
 	public boolean didRunProjectionStage(ProjectionStageCode stage, ProjectionTypeCode projectionType) {
-		return getProcessingResult(stage, projectionType) != ProcessingResult.PROCESSING_RESULT_NULL;
+		return getProcessingResults(stage, projectionType) != ProcessingResult.PROCESSING_RESULT_NULL;
+	}
+
+	public boolean didRunProjection(ProjectionTypeCode projectionType) {
+		return didRunProjectionStage(ProjectionStageCode.Forward, projectionType)
+				|| didRunProjectionStage(ProjectionStageCode.Back, projectionType);
+	}
+
+	public boolean didRunProjectionStage(ProjectionStageCode stage) {
+		for (var projectionType : ProjectionTypeCode.values()) {
+			if (didRunProjectionStage(stage, projectionType)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public boolean didRunProjection() {
+		return didRunProjectionStage(ProjectionStageCode.Forward) || didRunProjectionStage(ProjectionStageCode.Back);
 	}
 }

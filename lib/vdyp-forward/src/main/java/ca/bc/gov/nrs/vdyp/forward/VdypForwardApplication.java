@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.vdyp.forward;
 
 import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.*;
 
+import java.io.Closeable;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
@@ -15,9 +16,11 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.application.VdypApplication;
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
+import ca.bc.gov.nrs.vdyp.common.VdypApplicationInitializationException;
+import ca.bc.gov.nrs.vdyp.common.VdypApplicationProcessingException;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
 
-public class VdypForwardApplication extends VdypApplication {
+public class VdypForwardApplication extends VdypApplication implements Closeable {
 
 	private static final Logger logger = LoggerFactory.getLogger(VdypForwardApplication.class);
 
@@ -41,9 +44,28 @@ public class VdypForwardApplication extends VdypApplication {
 	 */
 	public static void main(final Optional<Path> inputDir, final Optional<Path> outputDir, final String... args) {
 
-		var app = new VdypForwardApplication();
+		try (var app = new VdypForwardApplication()) {
+			app.doMain(inputDir, outputDir, args);
+		} catch (VdypApplicationInitializationException e) {
+			logger.error("Error during initialization", e);
+			System.exit(CONFIG_LOAD_ERROR);
+		} catch (VdypApplicationProcessingException e) {
+			logger.error("Error during processing", e);
+			System.exit(PROCESSING_ERROR);
+		}
+	}
 
-		app.logVersionInformation();
+	/**
+	 * @param inputDir  The directory to use as the current directory for input
+	 * @param outputDir The directory to use as the current directory for output
+	 * @param args      The command line arguments
+	 * @throws VdypApplicationInitializationException
+	 * @throws VdypApplicationProcessingException
+	 */
+	public void doMain(final Optional<Path> inputDir, final Optional<Path> outputDir, final String... args)
+			throws VdypApplicationInitializationException, VdypApplicationProcessingException {
+
+		logVersionInformation();
 
 		List<String> controlFileNames = null;
 
@@ -52,8 +74,7 @@ public class VdypForwardApplication extends VdypApplication {
 					args, DEFAULT_VDYP_CONTROL_FILE_NAME, VdypApplicationIdentifier.VDYP_FORWARD, System.out, System.in
 			);
 		} catch (Exception ex) {
-			logger.error("Error during initialization", ex);
-			System.exit(CONFIG_LOAD_ERROR);
+			throw new VdypApplicationInitializationException(ex);
 		}
 
 		var inputFileResolver = inputDir.map(FileSystemFileResolver::new).orElseGet(FileSystemFileResolver::new);
@@ -65,8 +86,7 @@ public class VdypForwardApplication extends VdypApplication {
 			processor.run(inputFileResolver, outputFileResolver, controlFileNames, vdypPassSet);
 
 		} catch (Exception ex) {
-			logger.error("Error during processing", ex);
-			System.exit(PROCESSING_ERROR);
+			throw new VdypApplicationProcessingException(ex);
 		}
 	}
 
@@ -79,5 +99,10 @@ public class VdypForwardApplication extends VdypApplication {
 	@Override
 	public VdypApplicationIdentifier getId() {
 		return VdypApplicationIdentifier.VDYP_FORWARD;
+	}
+
+	@Override
+	public void close() {
+		// Nothing to do
 	}
 }

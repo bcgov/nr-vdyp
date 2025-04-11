@@ -6,6 +6,7 @@ import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ControlMapValueReplacer;
 import ca.bc.gov.nrs.vdyp.io.parse.control.NonFipControlParser;
+import ca.bc.gov.nrs.vdyp.io.parse.control.OutputFileLocationResolver;
 
 /**
  * Parser for VRI control files
@@ -37,14 +38,14 @@ public class VriControlParser extends NonFipControlParser {
 
 				new VriSiteParser()
 		);
-
 	}
 
 	@Override
-	protected List<ControlKey> outputFileParsers() {
+	protected List<OutputFileLocationResolver> outputFiles() {
 		return List.of(
-				ControlKey.VDYP_OUTPUT_VDYP_POLYGON, ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SPECIES,
-				ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL
+				new OutputFileLocationResolver(ControlKey.VDYP_OUTPUT_VDYP_POLYGON), //
+				new OutputFileLocationResolver(ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SPECIES), //
+				new OutputFileLocationResolver(ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL)
 		);
 	}
 }

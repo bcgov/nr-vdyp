@@ -220,7 +220,7 @@ class ForwardPolygonParserTest {
 
 		poly = assertNext(stream); // 7
 
-		assertThat(poly, hasProperty("polygonIdentifier", hasProperty("name", is("01004 S000002 00"))));
+		assertThat(poly, hasProperty("polygonIdentifier", hasProperty("name", is("01004 S000002 00     "))));
 		assertThat(poly, hasProperty("polygonIdentifier", hasProperty("year", is(1953))));
 		assertThat(poly, hasProperty("biogeoclimaticZone", hasProperty("alias", is("CWH"))));
 		assertThat(poly, hasProperty("forestInventoryZone", is("B")));
@@ -230,7 +230,7 @@ class ForwardPolygonParserTest {
 
 		poly = assertNext(stream); // 8
 
-		assertThat(poly, hasProperty("polygonIdentifier", hasProperty("name", is("01004 S000036 00"))));
+		assertThat(poly, hasProperty("polygonIdentifier", hasProperty("name", is("01004 S000036 00     "))));
 		assertThat(poly, hasProperty("polygonIdentifier", hasProperty("year", is(1957))));
 		assertThat(poly, hasProperty("biogeoclimaticZone", hasProperty("alias", is("MH"))));
 		assertThat(poly, hasProperty("forestInventoryZone", is("B")));
@@ -240,7 +240,7 @@ class ForwardPolygonParserTest {
 
 		poly = assertNext(stream); // 9
 
-		assertThat(poly, hasProperty("polygonIdentifier", hasProperty("name", is("01004 S000037 00"))));
+		assertThat(poly, hasProperty("polygonIdentifier", hasProperty("name", is("01004 S000037 00     "))));
 		assertThat(poly, hasProperty("polygonIdentifier", hasProperty("year", is(1957))));
 		assertThat(poly, hasProperty("biogeoclimaticZone", hasProperty("alias", is("SBS"))));
 		assertThat(poly, hasProperty("forestInventoryZone", is("B")));
@@ -250,7 +250,7 @@ class ForwardPolygonParserTest {
 
 		poly = assertNext(stream); // 10
 
-		assertThat(poly, hasProperty("polygonIdentifier", hasProperty("name", is("01004 S000038 00"))));
+		assertThat(poly, hasProperty("polygonIdentifier", hasProperty("name", is("01004 S000038 00     "))));
 		assertThat(poly, hasProperty("polygonIdentifier", hasProperty("year", is(1957))));
 		assertThat(poly, hasProperty("biogeoclimaticZone", hasProperty("alias", is("CWH"))));
 		assertThat(poly, hasProperty("forestInventoryZone", is("B")));

@@ -3,28 +3,28 @@ package ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable;
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 
-import ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable.CSVYieldTableRecordBean.MultiFieldPrefixes;
-import ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable.CSVYieldTableRecordBean.MultiFieldSuffixes;
+import ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable.YieldTableRowValues.MultiFieldPrefixes;
+import ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable.YieldTableRowValues.MultiFieldSuffixes;
 
 public class CSVYieldTableRecordBeanTest {
 
 	@Test
 	void testLoading() {
-		CSVYieldTableRecordBean b = new CSVYieldTableRecordBean();
+		CSVYieldTableRowValuesBean b = new CSVYieldTableRowValuesBean();
 
 		int nextSetValue = 0;
 		for (var p : MultiFieldPrefixes.values()) {
 			for (var s : MultiFieldSuffixes.values()) {
-				if (CSVYieldTableRecordBean.isValidPrefixSuffixPair(p, s)) {
+				if (b.isValidPrefixSuffixPair(p, s)) {
 					for (var i = 1; i <= 6; i++) {
-						b.setSpeciesField(p, i, s, Integer.valueOf(nextSetValue).toString());
+						b.setSpeciesFieldValue(p, i, s, Integer.valueOf(nextSetValue).toString());
 					}
 				} else {
 					var setSuccessfully = false;
 					try {
-						b.setSpeciesField(p, 1, s, "");
+						b.setSpeciesFieldValue(p, 1, s, "");
 						setSuccessfully = true;
-					} catch (AssertionError e) {
+					} catch (IllegalArgumentException e) {
 						// expected
 					}
 					Assert.assertFalse(setSuccessfully);
@@ -35,16 +35,16 @@ public class CSVYieldTableRecordBeanTest {
 		int nextGetValue = 0;
 		for (var p : MultiFieldPrefixes.values()) {
 			for (var s : MultiFieldSuffixes.values()) {
-				if (CSVYieldTableRecordBean.isValidPrefixSuffixPair(p, s)) {
+				if (b.isValidPrefixSuffixPair(p, s)) {
 					for (var i = 1; i <= 6; i++) {
-						Assert.assertEquals(Integer.valueOf(nextGetValue).toString(), b.getSpeciesField(p, i, s));
+						Assert.assertEquals(Integer.valueOf(nextGetValue).toString(), b.getSpeciesFieldValue(p, i, s));
 					}
 				} else {
 					var setSuccessfully = false;
 					try {
-						b.getSpeciesField(p, 1, s);
+						b.getSpeciesFieldValue(p, 1, s);
 						setSuccessfully = true;
-					} catch (AssertionError e) {
+					} catch (IllegalArgumentException e) {
 						// expected
 					}
 					Assert.assertFalse(setSuccessfully);
