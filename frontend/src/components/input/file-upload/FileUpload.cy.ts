@@ -2,12 +2,14 @@ import { mount } from 'cypress/vue'
 import { createVuetify } from 'vuetify'
 import 'vuetify/styles'
 import FileUpload from './FileUpload.vue'
+import { setActivePinia, createPinia } from 'pinia'
 import { CONSTANTS, MESSAGE } from '@/constants'
 
 const vuetify = createVuetify()
 
 describe('FileUpload.vue', () => {
   beforeEach(() => {
+    setActivePinia(createPinia())
     cy.document().then((doc) => {
       const style = doc.createElement('style')
       style.innerHTML = `
@@ -32,8 +34,8 @@ describe('FileUpload.vue', () => {
     cy.get('[id="finishingAge"]').should('exist')
     cy.get('[id="ageIncrement"]').should('exist')
     cy.get('input[type="file"]').should('have.length', 2) // Layer file and Polygon file
-    cy.contains('Layer File').should('exist')
-    cy.contains('Polygon File').should('exist')
+    cy.contains('Select Polygon File...').should('exist')
+    cy.contains('Select Layer File...').should('exist')
     cy.get('button').contains('Run Model').should('exist')
   })
 
@@ -142,7 +144,9 @@ describe('FileUpload.vue', () => {
       .should('exist')
       .within(() => {
         cy.contains(MESSAGE.MSG_DIALOG_TITLE.INVALID_FILE).should('exist')
-        cy.contains(MESSAGE.FILE_UPLOAD_ERR.LAYER_FILE_MISSING).should('exist')
+        cy.contains(MESSAGE.FILE_UPLOAD_ERR.POLYGON_FILE_MISSING).should(
+          'exist',
+        )
       })
   })
 
@@ -176,7 +180,7 @@ describe('FileUpload.vue', () => {
       .should('exist')
       .within(() => {
         cy.contains(MESSAGE.MSG_DIALOG_TITLE.INVALID_FILE).should('exist')
-        cy.contains(MESSAGE.FILE_UPLOAD_ERR.LAYER_FILE_NOT_CSV_FORMAT).should(
+        cy.contains(MESSAGE.FILE_UPLOAD_ERR.POLYGON_FILE_NOT_CSV_FORMAT).should(
           'exist',
         )
       })
@@ -209,22 +213,22 @@ describe('FileUpload.vue', () => {
       })
 
     // Mock file uploads
+    const polygonFile = new File(['polygon content'], 'polygon.csv', {
+      type: 'text/csv',
+    })
     const layerFile = new File(['layer content'], 'layer.csv', {
       type: 'text/csv',
     })
-    const polygonFile = new File(['polygon content'], 'polygon.csv', {
-      type: 'text/csv',
+
+    cy.get('input[type="file"]').last().selectFile({
+      contents: polygonFile,
+      fileName: 'polygon.csv',
     })
 
     cy.get('input[type="file"]').first().selectFile({
       contents: layerFile,
       fileName: 'layer.csv',
       mimeType: 'text/csv',
-    })
-
-    cy.get('input[type="file"]').last().selectFile({
-      contents: polygonFile,
-      fileName: 'polygon.csv',
     })
 
     cy.get('button').contains('Run Model').click()

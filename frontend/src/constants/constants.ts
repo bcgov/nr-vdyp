@@ -125,6 +125,13 @@ export const MODEL_PARAM_TAB_NAME = Object.freeze({
   VIEW_ERROR_MESSAGES: 'View Error Messages',
 })
 
+export const FILE_UPLOAD_TAB_NAME = Object.freeze({
+  FILE_UPLOAD: 'File Upload',
+  MODEL_REPORT: 'Model Report',
+  VIEW_LOG_FILE: 'View Log File',
+  VIEW_ERROR_MESSAGES: 'View Error Messages',
+})
+
 export const FILE_NAME = Object.freeze({
   PROJECTION_RESULT_ZIP: 'vdyp-output.zip',
   ERROR_TXT: 'ErrorLog.txt',
