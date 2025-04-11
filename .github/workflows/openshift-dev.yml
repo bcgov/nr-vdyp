@@ -3,11 +3,13 @@ name: Build and Deploy to Openshift Dev
 on:
   workflow_dispatch:
   pull_request:
-    branches: [main,feature/increase-app-cpu-quota]
+    branches: 
+      - main
+      - feature/increase-app-cpu-quota
     paths:
       - "frontend/**"
       - "backend/**"
-      - "charts/values-dev.yml"
+      - "charts/app/values-dev.yml"
 concurrency:
   # Cancel if re-attempted
   group: ${{ github.event_name }}
