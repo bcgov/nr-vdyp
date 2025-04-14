@@ -16,7 +16,10 @@
     <template
       v-if="modelSelection === CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS"
     >
-      <AppTabs v-model:currentTab="activeTab" :tabs="tabs" />
+      <AppTabs
+        v-model:currentTab="modelParamActiveTab"
+        :tabs="modelParamTabs"
+      />
       <template v-if="isModelParameterPanelsVisible">
         <v-spacer class="space"></v-spacer>
         <SiteInfoPanel />
@@ -33,7 +36,10 @@
       </template>
     </template>
     <template v-else>
-      <FileUpload />
+      <AppTabs
+        v-model:currentTab="fileUploadActiveTab"
+        :tabs="fileUploadTabs"
+      />
     </template>
   </v-container>
 </template>
@@ -41,6 +47,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useModelParameterStore } from '@/stores/modelParameterStore'
 import { useProjectionStore } from '@/stores/projectionStore'
+import { useReportingStore } from '@/stores/reportingStore'
 import {
   AppProgressCircular,
   AppTabs,
@@ -64,33 +71,66 @@ import { logSuccessMessage, logErrorMessage } from '@/utils/messageHandler'
 const modelSelection = ref<string>(DEFAULTS.DEFAULT_VALUES.MODEL_SELECTION)
 const isProgressVisible = ref(false)
 const progressMessage = ref('')
-const activeTab = ref(0)
+const modelParamActiveTab = ref(0)
+const fileUploadActiveTab = ref(0)
 
 const modelParameterStore = useModelParameterStore()
 const projectionStore = useProjectionStore()
+const reportingStore = useReportingStore()
 
-const tabs: Tab[] = [
+const modelParamTabs = computed<Tab[]>(() => [
   {
     label: CONSTANTS.MODEL_PARAM_TAB_NAME.MODEL_PARAM_SELECTION,
     component: SpeciesInfoPanel,
     tabname: null,
+    disabled: false,
   },
   {
     label: CONSTANTS.MODEL_PARAM_TAB_NAME.MODEL_REPORT,
     component: ReportingContainer,
     tabname: CONSTANTS.REPORTING_TAB.MODEL_REPORT,
+    disabled: !reportingStore.modelParamReportingTabsEnabled,
   },
   {
     label: CONSTANTS.MODEL_PARAM_TAB_NAME.VIEW_LOG_FILE,
     component: ReportingContainer,
     tabname: CONSTANTS.REPORTING_TAB.VIEW_LOG_FILE,
+    disabled: !reportingStore.modelParamReportingTabsEnabled,
   },
   {
     label: CONSTANTS.MODEL_PARAM_TAB_NAME.VIEW_ERROR_MESSAGES,
     component: ReportingContainer,
     tabname: CONSTANTS.REPORTING_TAB.VIEW_ERR_MSG,
+    disabled: !reportingStore.modelParamReportingTabsEnabled,
   },
-]
+])
+
+const fileUploadTabs = computed<Tab[]>(() => [
+  {
+    label: CONSTANTS.FILE_UPLOAD_TAB_NAME.FILE_UPLOAD,
+    component: FileUpload,
+    tabname: null,
+    disabled: false,
+  },
+  {
+    label: CONSTANTS.FILE_UPLOAD_TAB_NAME.MODEL_REPORT,
+    component: ReportingContainer,
+    tabname: CONSTANTS.REPORTING_TAB.MODEL_REPORT,
+    disabled: !reportingStore.fileUploadReportingTabsEnabled,
+  },
+  {
+    label: CONSTANTS.FILE_UPLOAD_TAB_NAME.VIEW_LOG_FILE,
+    component: ReportingContainer,
+    tabname: CONSTANTS.REPORTING_TAB.VIEW_LOG_FILE,
+    disabled: !reportingStore.fileUploadReportingTabsEnabled,
+  },
+  {
+    label: CONSTANTS.FILE_UPLOAD_TAB_NAME.VIEW_ERROR_MESSAGES,
+    component: ReportingContainer,
+    tabname: CONSTANTS.REPORTING_TAB.VIEW_ERR_MSG,
+    disabled: !reportingStore.fileUploadReportingTabsEnabled,
+  },
+])
 
 /**
  * Computes whether the model parameter panels should be visible.
@@ -99,7 +139,7 @@ const tabs: Tab[] = [
 const isModelParameterPanelsVisible = computed(() => {
   return (
     modelSelection.value === CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS &&
-    activeTab.value === 0
+    modelParamActiveTab.value === 0
   )
 })
 
@@ -128,9 +168,17 @@ const runModelHandler = async () => {
     isProgressVisible.value = true
     progressMessage.value = MESSAGE.PROGRESS_MSG.RUNNING_MODEL
 
-    await delay(1000)
+    await delay(500)
+
+    reportingStore.modelParamDisableTabs()
+    console.log(
+      'modelParamReportingTabsDisabled:',
+      reportingStore.modelParamReportingTabsEnabled,
+    )
 
     const response = await runModel(modelParameterStore)
+
+    console.debug('Full response:', response)
 
     const zipFileName =
       extractZipFileName(response.headers) ||
@@ -138,6 +186,17 @@ const runModelHandler = async () => {
     console.debug('download zip file name:', zipFileName)
 
     const resultBlob = response.data
+
+    console.debug('resultBlob:', resultBlob, 'type:', resultBlob?.type)
+    console.debug('resultBlob size:', resultBlob.size)
+
+    if (!resultBlob) {
+      throw new Error('Response data is undefined')
+    }
+
+    if (!(resultBlob instanceof Blob)) {
+      throw new Error('Response data is not a Blob')
+    }
 
     const hasErrors = await checkZipForErrors(resultBlob)
 
@@ -148,6 +207,8 @@ const runModelHandler = async () => {
     } else {
       logSuccessMessage(MESSAGE.SUCCESS_MSG.INPUT_MODEL_PARAM_RUN_RESULT)
     }
+
+    reportingStore.modelParamEnableTabs()
   } catch (error) {
     if ((error as any).response && (error as any).response.data) {
       try {

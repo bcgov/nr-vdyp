@@ -11,6 +11,7 @@
       v-for="(tab, index) in tabs"
       :key="index"
       :class="{ 'first-tab': index === 0 }"
+      :disabled="tab.disabled"
     >
       {{ tab.label }}
     </v-tab>
