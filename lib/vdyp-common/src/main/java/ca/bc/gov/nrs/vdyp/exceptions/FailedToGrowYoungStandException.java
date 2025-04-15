@@ -15,6 +15,10 @@ public class FailedToGrowYoungStandException extends StandProcessingException {
 
 	static final String TEMPLATE = "Failed to grow YOUNG stand to required size";
 
+	public FailedToGrowYoungStandException(RuntimeStandProcessingException cause) {
+		super(unwrap(cause, FailedToGrowYoungStandException.class).getMessage(), cause);
+	}
+
 	public FailedToGrowYoungStandException(Throwable cause) {
 		super(TEMPLATE, cause);
 	}

@@ -10,7 +10,11 @@ import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
  */
 public class IncorrectLayerCodesException extends StandProcessingException {
 	private static final long serialVersionUID = -8897339909560075564L;
-	static final String TEMPLATE = "Invalid layer code {}";
+	static final String TEMPLATE = "Invalid layer code {0}";
+
+	public IncorrectLayerCodesException(RuntimeStandProcessingException cause) {
+		super(unwrap(cause, IncorrectLayerCodesException.class).getMessage(), cause);
+	}
 
 	public IncorrectLayerCodesException(String code) {
 		super(MessageFormat.format(TEMPLATE, code));

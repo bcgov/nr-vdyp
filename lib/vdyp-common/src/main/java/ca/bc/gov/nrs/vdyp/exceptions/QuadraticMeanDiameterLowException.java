@@ -17,15 +17,17 @@ public class QuadraticMeanDiameterLowException extends LayerValueLowException {
 
 	static final String DEFAULT_NAME = "Quadratic mean diameter";
 
-	QuadraticMeanDiameterLowException(RuntimeStandProcessingException cause) {
+	public QuadraticMeanDiameterLowException(RuntimeStandProcessingException cause) {
 		super(cause, QuadraticMeanDiameterLowException.class);
 	}
 
-	QuadraticMeanDiameterLowException(LayerType layer, Optional<Float> value, Optional<Float> threshold) {
+	public QuadraticMeanDiameterLowException(LayerType layer, Optional<Float> value, Optional<Float> threshold) {
 		this(layer, DEFAULT_NAME, value, threshold);
 	}
 
-	QuadraticMeanDiameterLowException(LayerType layer, String name, Optional<Float> value, Optional<Float> threshold) {
+	public QuadraticMeanDiameterLowException(
+			LayerType layer, String name, Optional<Float> value, Optional<Float> threshold
+	) {
 		super(layer, name, value, threshold);
 	}
 

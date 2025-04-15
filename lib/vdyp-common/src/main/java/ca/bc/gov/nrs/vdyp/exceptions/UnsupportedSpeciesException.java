@@ -22,8 +22,12 @@ public class UnsupportedSpeciesException extends StandProcessingException {
 	}
 
 	public UnsupportedSpeciesException(RuntimeStandProcessingException cause) {
-		super(cause);
-		this.species = unwrap(cause, UnsupportedSpeciesException.class).species;
+		this(cause, unwrap(cause, UnsupportedSpeciesException.class));
+	}
+
+	private UnsupportedSpeciesException(RuntimeStandProcessingException cause, UnsupportedSpeciesException unwrapped) {
+		super(unwrapped.getMessage(), cause);
+		this.species = unwrapped.getSpecies();
 	}
 
 	public UnsupportedSpeciesException(String species) {
@@ -36,6 +40,10 @@ public class UnsupportedSpeciesException extends StandProcessingException {
 		if (app == VdypApplicationIdentifier.VRI_START)
 			return Optional.of(-2);
 		return Optional.empty();
+	}
+
+	public String getSpecies() {
+		return species;
 	}
 
 }

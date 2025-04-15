@@ -3,7 +3,6 @@ package ca.bc.gov.nrs.vdyp.exceptions;
 import java.text.MessageFormat;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.function.Predicate;
 
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 

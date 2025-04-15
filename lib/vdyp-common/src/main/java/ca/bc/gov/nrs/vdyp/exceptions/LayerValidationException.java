@@ -11,13 +11,17 @@ public abstract class LayerValidationException extends StandProcessingException 
 	protected LayerValidationException(
 			RuntimeStandProcessingException cause, Class<? extends LayerValidationException> klazz
 	) {
-		super(cause);
-		this.layer = unwrap(cause, klazz).getLayer();
+		this(cause, unwrap(cause, klazz));
 	}
 
 	protected LayerValidationException(LayerType layer, String message) {
 		super(message);
 		this.layer = layer;
+	}
+
+	private LayerValidationException(RuntimeStandProcessingException cause, LayerValidationException unwrapped) {
+		super(unwrapped.getMessage(), cause);
+		this.layer = unwrapped.getLayer();
 	}
 
 	protected LayerValidationException(LayerType layer, String message, Throwable cause) {

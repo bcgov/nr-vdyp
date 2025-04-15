@@ -15,11 +15,15 @@ public class BecMissingException extends StandProcessingException {
 
 	static final String TEMPLATE_MISSING = "Required BEC was missing";
 
+	public BecMissingException(RuntimeStandProcessingException cause) {
+		super(unwrap(cause, BecMissingException.class).getMessage(), cause);
+	}
+
 	BecMissingException(Throwable cause) {
 		super(TEMPLATE_MISSING, cause);
 	}
 
-	BecMissingException() {
+	public BecMissingException() {
 		super(TEMPLATE_MISSING);
 	}
 

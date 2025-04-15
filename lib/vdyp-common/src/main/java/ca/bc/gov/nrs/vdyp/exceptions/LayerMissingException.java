@@ -23,6 +23,12 @@ public class LayerMissingException extends LayerValidationException {
 		super(layer, MessageFormat.format(TEMPLATE, layer));
 	}
 
+	public LayerMissingException(
+			RuntimeStandProcessingException cause
+	) {
+		super(cause, LayerMissingException.class);
+	}
+
 	@Override
 	public Optional<Integer> getIpassCode(VdypApplicationIdentifier app) {
 		if (app.isStart() && getLayer() == LayerType.PRIMARY)
