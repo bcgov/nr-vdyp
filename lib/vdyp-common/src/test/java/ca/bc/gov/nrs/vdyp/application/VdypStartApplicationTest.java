@@ -47,6 +47,7 @@ import ca.bc.gov.nrs.vdyp.exceptions.BaseAreaLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.LayerMissingException;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.UnsupportedSpeciesException;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BecDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
@@ -609,6 +610,106 @@ class VdypStartApplicationTest {
 				var result = app.findItg(primarySpecies);
 
 				assertEquals(1, result);
+
+			}
+			mockControl.verify();
+		}
+
+		@Test
+		void testBadPrimarySpecies() throws Exception {
+
+			var mockControl = EasyMock.createControl();
+
+			BaseVdypSpecies spec1 = mockSpecies(mockControl, "X", 100f);
+
+			try (VdypStartApplication app = getTestUnit(mockControl)) {
+				mockControl.replay();
+
+				Map<String, BaseVdypSpecies> allSpecies = new HashMap<>();
+				allSpecies.put(spec1.getGenus(), spec1);
+
+				List<BaseVdypSpecies> primarySpecies = List.of(spec1);
+
+				var ex = assertThrows(UnsupportedSpeciesException.class, () -> app.findItg(primarySpecies));
+
+				assertThat(ex, hasProperty("species", equalTo("X")));
+
+			}
+			mockControl.verify();
+		}
+
+		@Test
+		void testBadPrimarySpeciesWithMinorSecondary() throws Exception {
+
+			var mockControl = EasyMock.createControl();
+
+			BaseVdypSpecies spec1 = mockSpecies(mockControl, "X", 80f);
+			BaseVdypSpecies spec2 = mockSpecies(mockControl, "Z", 20f);
+
+			try (VdypStartApplication app = getTestUnit(mockControl)) {
+				mockControl.replay();
+
+				Map<String, BaseVdypSpecies> allSpecies = new HashMap<>();
+				allSpecies.put(spec1.getGenus(), spec1);
+				allSpecies.put(spec2.getGenus(), spec2);
+
+				List<BaseVdypSpecies> primarySpecies = List.of(spec1, spec2);
+
+				var ex = assertThrows(UnsupportedSpeciesException.class, () -> app.findItg(primarySpecies));
+
+				assertThat(ex, hasProperty("species", equalTo("X")));
+
+			}
+			mockControl.verify();
+		}
+
+		@Test
+		void testBadPrimarySpeciesWithMajorSecondary() throws Exception {
+
+			var mockControl = EasyMock.createControl();
+
+			BaseVdypSpecies spec1 = mockSpecies(mockControl, "X", 70f);
+			BaseVdypSpecies spec2 = mockSpecies(mockControl, "Z", 30f);
+
+			try (VdypStartApplication app = getTestUnit(mockControl)) {
+				mockControl.replay();
+
+				Map<String, BaseVdypSpecies> allSpecies = new HashMap<>();
+				allSpecies.put(spec1.getGenus(), spec1);
+				allSpecies.put(spec2.getGenus(), spec2);
+
+				List<BaseVdypSpecies> primarySpecies = List.of(spec1, spec2);
+
+				var ex = assertThrows(UnsupportedSpeciesException.class, () -> app.findItg(primarySpecies));
+
+				assertThat(ex, hasProperty("species", equalTo("X")));
+
+			}
+			mockControl.verify();
+		}
+
+		@Test
+		void testBadSecondary() throws Exception {
+
+			var mockControl = EasyMock.createControl();
+
+			BaseVdypSpecies spec1 = mockSpecies(mockControl, "PL", 70f);
+			BaseVdypSpecies spec2 = mockSpecies(mockControl, "Z", 30f);
+
+			try (VdypStartApplication app = getTestUnit(mockControl)) {
+				mockControl.replay();
+
+				Map<String, BaseVdypSpecies> allSpecies = new HashMap<>();
+				allSpecies.put(spec1.getGenus(), spec1);
+				allSpecies.put(spec2.getGenus(), spec2);
+
+				List<BaseVdypSpecies> primarySpecies = List.of(spec1, spec2);
+
+				var result = app.findItg(primarySpecies);
+
+				assertEquals(30, result); // The default for PL
+
+				// Might want an error instead?
 
 			}
 			mockControl.verify();

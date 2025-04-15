@@ -384,7 +384,10 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		var primary = primarySecondary.get(0);
 
 		if (primary.getPercentGenus() > 79.999) { // Copied from VDYP7
-			return ITG_PURE.get(primary.getGenus());
+			if (ITG_PURE.containsKey(primary.getGenus()))
+				return ITG_PURE.get(primary.getGenus());
+			else
+				throw new UnsupportedSpeciesException(primary.getGenus());
 		}
 		assert primarySecondary.size() == 2;
 
