@@ -42,8 +42,10 @@ import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.EstimationMethods;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common.VdypApplicationInitializationException;
+import ca.bc.gov.nrs.vdyp.common.VdypApplicationProcessingException;
 import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMapImpl;
 import ca.bc.gov.nrs.vdyp.exceptions.BaseAreaLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.FatalProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.LayerMissingException;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
@@ -161,10 +163,25 @@ class VdypStartApplicationTest {
 	}
 
 	@Test
-	void testApplicationExceptions() throws IOException, ResourceParseException {
+	void testApplicationInitExceptions() throws IOException, ResourceParseException {
 		try (var app = new TestStartApplication(controlMap, true)) {
 
 			assertThrows(VdypApplicationInitializationException.class, () -> app.doMain("bad path"));
+		}
+	}
+
+	@Test
+	void testApplicationProcessExceptions() throws IOException, ResourceParseException {
+		try (var app = new TestStartApplication(controlMap, false) {
+
+			@Override
+			public void process() throws ProcessingException {
+				throw new FatalProcessingException("Test");
+			}
+
+		}) {
+
+			assertThrows(VdypApplicationProcessingException.class, () -> app.doMain("bad path"));
 		}
 	}
 
