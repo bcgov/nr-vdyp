@@ -442,7 +442,7 @@ public class Utils {
 		}
 
 		if (conjunction == null || conjunction.isEmpty()) {
-			items.stream().map(stringify).collect(Collectors.joining(", "));
+			return items.stream().map(stringify).collect(Collectors.joining(", "));
 		}
 
 		if (items.size() == 2) {
@@ -454,10 +454,10 @@ public class Utils {
 		for (var it = items.iterator(); it.hasNext();) {
 			String item = stringify.apply(it.next());
 			if (!builder.isEmpty()) {
-				if (!it.hasNext()) {
-					builder.append(" ").append(conjunction);
-				}
 				builder.append(", ");
+				if (!it.hasNext()) {
+					builder.append(conjunction).append(" ");
+				}
 			}
 			builder.append(item);
 		}
