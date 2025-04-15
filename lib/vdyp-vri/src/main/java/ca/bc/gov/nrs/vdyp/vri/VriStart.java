@@ -349,7 +349,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		}
 	}
 
-	private void modifyPrimaryLayerBuild(
+	void modifyPrimaryLayerBuild(
 			BecDefinition bec, ca.bc.gov.nrs.vdyp.vri.model.VriLayer.Builder builder, List<VriSpecies> primarySpecs,
 			int itg
 	) {

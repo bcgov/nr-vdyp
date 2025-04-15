@@ -4074,6 +4074,50 @@ class VriStartTest {
 
 	}
 
+	@Test
+	void testModifyPrimaryLayerBuildLowDQ() throws IOException {
+		var control = EasyMock.createControl();
+
+		VriStart app = new VriStart();
+
+		MockFileResolver resolver = dummyInput();
+
+		TestUtils.populateControlMapGenusReal(controlMap);
+		TestUtils.populateControlMapBecReal(controlMap);
+		controlMap.put(
+				ControlKey.DEFAULT_EQ_NUM.name(),
+				new MatrixMap2Impl(List.of("D"), List.of("CDF"), (x, y) -> 42)
+		);
+		controlMap.put(
+				ControlKey.EQN_MODIFIERS.name(),
+				new MatrixMap2Impl(List.of(42), List.of(37), (x, y) -> 64)
+		);
+
+		var bec = Utils.getBec("CDF", controlMap);
+
+		control.replay();
+
+		app.init(resolver, controlMap);
+
+		var spec = VriSpecies.build(sBuilder -> {
+			sBuilder.polygonIdentifier("Test", 2025);
+			sBuilder.layerType(LayerType.PRIMARY);
+			sBuilder.genus("D", controlMap);
+			sBuilder.percentGenus(100f);
+		});
+
+		var builder = new ca.bc.gov.nrs.vdyp.vri.model.VriLayer.Builder();
+		builder.baseArea(2f);
+		builder.treesPerHectare(1_000_000);
+		app.modifyPrimaryLayerBuild(bec, builder, List.of(spec), 37);
+
+		app.close();
+
+		assertThat(builder.getBaseArea(), notPresent());
+		assertThat(builder.getTreesPerHectare(), notPresent());
+
+	}
+
 	/**
 	 * Matches a species entry with the given genus and a single species entry of 100%
 	 *
