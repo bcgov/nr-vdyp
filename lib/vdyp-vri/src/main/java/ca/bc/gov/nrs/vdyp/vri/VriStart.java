@@ -212,7 +212,12 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			throw fatalError("Species file has fewer records than polygon file.", ex);
 		}
 
-		Map<LayerType, VriLayer.Builder> layersBuilders = layerStream.next();
+		Map<LayerType, VriLayer.Builder> layersBuilders;
+		try {
+			layersBuilders = layerStream.next();
+		} catch (NoSuchElementException ex) {
+			throw fatalError("Layers file has fewer records than polygon file.", ex);
+		}
 
 		for (final var spec : species) {
 			var layerBuilder = layersBuilders.get(spec.getLayerType());
@@ -227,13 +232,13 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			// Validate that species belong to the correct polygon
 			if (!specWithSite.getPolygonIdentifier().equals(polygon.getPolygonIdentifier())) {
 				throw fatalError(
-						"Record in species file contains species for polygon %s when expecting one for %s.",
+						"Record in species file contains species for polygon {0} when expecting one for {1}.",
 						specWithSite.getPolygonIdentifier(), polygon.getPolygonIdentifier()
 				);
 			}
 			if (Objects.isNull(layerBuilder)) {
 				throw fatalError(
-						"Species entry references layer %s of polygon %s but it is not present.",
+						"Species entry references layer {0} of polygon {1} but it is not present.",
 						specWithSite.getLayerType(), polygon.getPolygonIdentifier()
 				);
 			}
@@ -243,18 +248,20 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			var specNames = sites.stream().map(site -> site.getSiteGenus()).collect(Collectors.joining(", "));
 			var layerType = sites.iterator().next().getLayerType();
 			throw fatalError(
-					"Site entries reference species %s of layer %s of polygon %s but they are not present.", specNames,
-					layerType, polygon.getPolygonIdentifier()
+					"Site entries reference species {0} of layer {1} of polygon {2} but they are not present.",
+					specNames, layerType, polygon.getPolygonIdentifier()
 			);
 		}
 
 		Map<LayerType, VriLayer> layers = getLayersForPolygon(polygon, bec, layersBuilders);
 
 		// Validate that layers belong to the correct polygon
+		// I don't think the preceding checks actually allow this to fail but it was in VDYP7 and I'm not entirely sure
+		// so i'll leave it in.
 		for (var layer : layers.values()) {
 			if (!layer.getPolygonIdentifier().equals(polygon.getPolygonIdentifier())) {
 				throw fatalError(
-						"Record in layer file contains layer for polygon %s when expecting one for %s.",
+						"Record in layer file contains layer for polygon {0} when expecting one for {1}.",
 						layer.getPolygonIdentifier(), polygon.getPolygonIdentifier()
 				);
 			}
@@ -309,8 +316,6 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 				return builder;
 			}).map(VriLayer.Builder::build).collect(Collectors.toUnmodifiableMap(VriLayer::getLayerType, x -> x));
 
-		} catch (NoSuchElementException ex) {
-			throw fatalError("Layers file has fewer records than polygon file.", ex);
 		} catch (RuntimeStandProcessingException ex) {
 			if (ex.getCause() instanceof CrownClosureLowException)
 				throw new CrownClosureLowException(ex);
