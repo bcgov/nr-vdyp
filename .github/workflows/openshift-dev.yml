@@ -36,6 +36,7 @@ jobs:
   deploys:
     name: Deploys
     needs: [builds]
+    if: ${{ github.head_ref != 'feature/frontend-updates' }}
     uses: ./.github/workflows/.deployer.yml
     secrets:
       inherit
