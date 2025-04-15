@@ -28,9 +28,9 @@ public class CustomMappingStrategy<T> extends HeaderColumnNameMappingStrategy<T>
 	@Override
 	public String[] generateHeader(T bean) throws CsvRequiredFieldEmptyException {
 		String[] header = new String[fields.length];
+		int position = 0;
 		for (Field f : fields) {
-			CsvBindByPosition position = f.getAnnotation(CsvBindByPosition.class);
-			header[position.position()] = getName(f);
+			header[position++] = getName(f);
 		}
 		headerIndex.initializeHeaderIndex(header);
 		return header;

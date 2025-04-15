@@ -48,7 +48,7 @@ public class PLOTSYYieldTableRecordBean implements YieldTableRowValues {
 	}
 
 	@Override
-	public void setCfsBiomassFoliage(String cfsBiomassFoliage) {
+	public void setCfsBiomassFoliage(Double cfsBiomassFoliage) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -58,7 +58,7 @@ public class PLOTSYYieldTableRecordBean implements YieldTableRowValues {
 	}
 
 	@Override
-	public void setCfsBiomassBranch(String cfsBiomassBranch) {
+	public void setCfsBiomassBranch(Double cfsBiomassBranch) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -68,7 +68,7 @@ public class PLOTSYYieldTableRecordBean implements YieldTableRowValues {
 	}
 
 	@Override
-	public void setCfsBiomassBark(String cfsBiomassBark) {
+	public void setCfsBiomassBark(Double cfsBiomassBark) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -78,7 +78,7 @@ public class PLOTSYYieldTableRecordBean implements YieldTableRowValues {
 	}
 
 	@Override
-	public void setCfsBiomassStem(String cfsBiomassStem) {
+	public void setCfsBiomassStem(Double cfsBiomassStem) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -88,7 +88,7 @@ public class PLOTSYYieldTableRecordBean implements YieldTableRowValues {
 	}
 
 	@Override
-	public void setMoFBiomassCuVolumeLessDecayWastageBreakage(String mofBiomassCuVolumeLessDecayWastageBreakage) {
+	public void setMoFBiomassCuVolumeLessDecayWastageBreakage(Double mofBiomassCuVolumeLessDecayWastageBreakage) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -98,7 +98,7 @@ public class PLOTSYYieldTableRecordBean implements YieldTableRowValues {
 	}
 
 	@Override
-	public void setMoFBiomassCuVolumeLessDecayWastage(String mofBiomassCuVolumeLessDecayWastage) {
+	public void setMoFBiomassCuVolumeLessDecayWastage(Double mofBiomassCuVolumeLessDecayWastage) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -108,7 +108,7 @@ public class PLOTSYYieldTableRecordBean implements YieldTableRowValues {
 	}
 
 	@Override
-	public void setMoFBiomassCuVolumeLessDecay(String mofBiomassCuVolumeLessDecay) {
+	public void setMoFBiomassCuVolumeLessDecay(Double mofBiomassCuVolumeLessDecay) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -118,7 +118,7 @@ public class PLOTSYYieldTableRecordBean implements YieldTableRowValues {
 	}
 
 	@Override
-	public void setMoFBiomassCloseUtilizationVolume(String mofBiomassCloseUtilizationVolume) {
+	public void setMoFBiomassCloseUtilizationVolume(Double mofBiomassCloseUtilizationVolume) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -128,7 +128,7 @@ public class PLOTSYYieldTableRecordBean implements YieldTableRowValues {
 	}
 
 	@Override
-	public void setMoFBiomassWholeStemVolume(String mofBiomassWholeStemVolume) {
+	public void setMoFBiomassWholeStemVolume(Double mofBiomassWholeStemVolume) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -138,7 +138,7 @@ public class PLOTSYYieldTableRecordBean implements YieldTableRowValues {
 	}
 
 	@Override
-	public void setCuVolumeLessDecayWastageBreakage(String cuVolumeLessDecayWastageBreakage) {
+	public void setCuVolumeLessDecayWastageBreakage(Double cuVolumeLessDecayWastageBreakage) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -148,7 +148,7 @@ public class PLOTSYYieldTableRecordBean implements YieldTableRowValues {
 	}
 
 	@Override
-	public void setCuVolumeLessDecayWastage(String cuVolumeLessDecayWastage) {
+	public void setCuVolumeLessDecayWastage(Double cuVolumeLessDecayWastage) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -158,7 +158,7 @@ public class PLOTSYYieldTableRecordBean implements YieldTableRowValues {
 	}
 
 	@Override
-	public void setCuVolumeLessDecay(String cuVolumeLessDecay) {
+	public void setCuVolumeLessDecay(Double cuVolumeLessDecay) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -168,7 +168,7 @@ public class PLOTSYYieldTableRecordBean implements YieldTableRowValues {
 	}
 
 	@Override
-	public void setCloseUtilizationVolume(String closeUtilizationVolume) {
+	public void setCloseUtilizationVolume(Double closeUtilizationVolume) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -178,7 +178,7 @@ public class PLOTSYYieldTableRecordBean implements YieldTableRowValues {
 	}
 
 	@Override
-	public void setWholeStemVolume(String wholeStemVolume) {
+	public void setWholeStemVolume(Double wholeStemVolume) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -188,7 +188,7 @@ public class PLOTSYYieldTableRecordBean implements YieldTableRowValues {
 	}
 
 	@Override
-	public void setBasalArea(String basalArea) {
+	public void setBasalArea(Double basalArea) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -198,7 +198,7 @@ public class PLOTSYYieldTableRecordBean implements YieldTableRowValues {
 	}
 
 	@Override
-	public void setTreesPerHectare(String treesPerHectare) {
+	public void setTreesPerHectare(Double treesPerHectare) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -208,7 +208,7 @@ public class PLOTSYYieldTableRecordBean implements YieldTableRowValues {
 	}
 
 	@Override
-	public void setDiameter(String diameter) {
+	public void setDiameter(Double diameter) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -218,7 +218,7 @@ public class PLOTSYYieldTableRecordBean implements YieldTableRowValues {
 	}
 
 	@Override
-	public void setLoreyHeight(String loreyHeight) {
+	public void setLoreyHeight(Double loreyHeight) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -228,7 +228,7 @@ public class PLOTSYYieldTableRecordBean implements YieldTableRowValues {
 	}
 
 	@Override
-	public void setSecondaryHeight(String secondaryHeight) {
+	public void setSecondaryHeight(Double secondaryHeight) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -238,7 +238,7 @@ public class PLOTSYYieldTableRecordBean implements YieldTableRowValues {
 	}
 
 	@Override
-	public void setDominantHeight(String dominantHeight) {
+	public void setDominantHeight(Double dominantHeight) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -248,7 +248,7 @@ public class PLOTSYYieldTableRecordBean implements YieldTableRowValues {
 	}
 
 	@Override
-	public void setSiteIndex(String siteIndex) {
+	public void setSiteIndex(Double siteIndex) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -258,7 +258,7 @@ public class PLOTSYYieldTableRecordBean implements YieldTableRowValues {
 	}
 
 	@Override
-	public void setPercentStockable(String percentStockable) {
+	public void setPercentStockable(Double percentStockable) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -268,7 +268,7 @@ public class PLOTSYYieldTableRecordBean implements YieldTableRowValues {
 	}
 
 	@Override
-	public void setTotalAge(String totalAge) {
+	public void setTotalAge(Integer totalAge) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -278,7 +278,7 @@ public class PLOTSYYieldTableRecordBean implements YieldTableRowValues {
 	}
 
 	@Override
-	public void setProjectionYear(String projectionYear) {
+	public void setProjectionYear(Integer projectionYear) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -298,7 +298,7 @@ public class PLOTSYYieldTableRecordBean implements YieldTableRowValues {
 	}
 
 	@Override
-	public void setPolygonId(String polygonId) {
+	public void setPolygonId(Long polygonId) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -328,7 +328,7 @@ public class PLOTSYYieldTableRecordBean implements YieldTableRowValues {
 	}
 
 	@Override
-	public void setFeatureId(String featureId) {
+	public void setFeatureId(Long featureId) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -338,7 +338,7 @@ public class PLOTSYYieldTableRecordBean implements YieldTableRowValues {
 	}
 
 	@Override
-	public void setTableNumber(String tableNumber) {
+	public void setTableNumber(int tableNumber) {
 		throw new UnsupportedOperationException();
 	}
 

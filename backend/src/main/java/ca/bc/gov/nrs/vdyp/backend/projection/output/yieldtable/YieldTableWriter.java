@@ -2,7 +2,6 @@ package ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable;
 
 import java.io.Closeable;
 import java.nio.file.Path;
-import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
 import org.apache.commons.lang3.Validate;
@@ -14,8 +13,6 @@ import ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable.YieldTableRowValu
 import ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable.YieldTableRowValues.MultiFieldSuffixes;
 
 abstract class YieldTableWriter<T extends YieldTableRowValues> implements Closeable {
-
-	protected static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH:mm:ss");
 
 	private final Class<T> rowValuesClass;
 	private final Path yieldTableFilePath;
@@ -43,14 +40,20 @@ abstract class YieldTableWriter<T extends YieldTableRowValues> implements Closea
 		}
 	}
 
-	protected void recordPerPolygonDetails(Polygon polygon, int yieldTableNumber) {
+	protected void recordPolygonAndLayerDetails(int yieldTableNumber, YieldTableRowContext rowContext) {
 		Validate.notNull(currentRecord, "YieldTableWriter: startNewRecord must be called once per row");
 
+		var polygon = rowContext.getPolygon();
+
 		currentRecord.setDistrict(polygon.getDistrict());
-		currentRecord.setFeatureId(Long.toString(polygon.getFeatureId()));
+		currentRecord.setFeatureId(polygon.getFeatureId());
 		currentRecord.setMapId(polygon.getMapSheet());
-		currentRecord.setPolygonId(polygon.getPolygonNumber() == null ? "" : Long.toString(polygon.getPolygonNumber()));
-		currentRecord.setTableNumber(Integer.toString(yieldTableNumber));
+		currentRecord.setPolygonId(polygon.getPolygonNumber());
+		currentRecord.setTableNumber(yieldTableNumber);
+
+		if (!rowContext.isPolygonTable()) {
+			currentRecord.setLayerId(rowContext.getLayerReportingInfo().getLayerID());
+		}
 	}
 
 	public void recordCalendarYearAndLayerAge(YieldTableRowContext rowContext) {
@@ -58,10 +61,10 @@ abstract class YieldTableWriter<T extends YieldTableRowValues> implements Closea
 		Validate.notNull(currentRecord, "YieldTableWriter: startNewRecord must be called once per row");
 
 		if (rowContext.getCurrentTableYear() != null) {
-			currentRecord.setProjectionYear(Integer.toString(rowContext.getCurrentTableYear()));
+			currentRecord.setProjectionYear(rowContext.getCurrentTableYear());
 		}
 		if (rowContext.getCurrentTableAge() != null) {
-			currentRecord.setTotalAge(Integer.toString(rowContext.getCurrentTableAge()));
+			currentRecord.setTotalAge(rowContext.getCurrentTableAge());
 		}
 	}
 
@@ -93,19 +96,19 @@ abstract class YieldTableWriter<T extends YieldTableRowValues> implements Closea
 		Validate.notNull(currentRecord, "YieldTableWriter: startNewRecord must be called once per row");
 
 		if (percentStockable != null) {
-			currentRecord.setPercentStockable(Double.toString(percentStockable));
+			currentRecord.setPercentStockable(percentStockable);
 		}
 
 		if (siteIndex != null) {
-			currentRecord.setSiteIndex(Double.toString(siteIndex));
+			currentRecord.setSiteIndex(siteIndex);
 		}
 
 		if (dominantHeight != null) {
-			currentRecord.setDominantHeight(Double.toString(dominantHeight));
+			currentRecord.setDominantHeight(dominantHeight);
 		}
 
 		if (secondaryHeight != null) {
-			currentRecord.setSecondaryHeight(Double.toString(secondaryHeight));
+			currentRecord.setSecondaryHeight(secondaryHeight);
 		}
 	}
 
@@ -114,42 +117,90 @@ abstract class YieldTableWriter<T extends YieldTableRowValues> implements Closea
 		Validate.notNull(currentRecord, "YieldTableWriter: startNewRecord must be called once per row");
 
 		if (growthDetails.loreyHeight() != null) {
-			currentRecord.setLoreyHeight(Double.toString(growthDetails.loreyHeight()));
+			currentRecord.setLoreyHeight(growthDetails.loreyHeight());
 		}
 
 		if (growthDetails.diameter() != null) {
-			currentRecord.setDiameter(Double.toString(growthDetails.diameter()));
+			currentRecord.setDiameter(growthDetails.diameter());
 		}
 
 		if (growthDetails.treesPerHectare() != null) {
-			currentRecord.setTreesPerHectare(Double.toString(growthDetails.treesPerHectare()));
+			currentRecord.setTreesPerHectare(growthDetails.treesPerHectare());
 		}
 
 		if (growthDetails.basalArea() != null) {
-			currentRecord.setBasalArea(Double.toString(growthDetails.basalArea()));
+			currentRecord.setBasalArea(growthDetails.basalArea());
 		}
 
 		if (volumeDetails.wholeStemVolume() != null) {
-			currentRecord.setWholeStemVolume(Double.toString(volumeDetails.wholeStemVolume()));
+			currentRecord.setWholeStemVolume(volumeDetails.wholeStemVolume());
 		}
 
 		if (volumeDetails.closeUtilizationVolume() != null) {
-			currentRecord.setCloseUtilizationVolume(Double.toString(volumeDetails.closeUtilizationVolume()));
+			currentRecord.setCloseUtilizationVolume(volumeDetails.closeUtilizationVolume());
 		}
 
 		if (volumeDetails.cuVolumeLessDecay() != null) {
-			currentRecord.setCuVolumeLessDecay(Double.toString(volumeDetails.cuVolumeLessDecay()));
+			currentRecord.setCuVolumeLessDecay(volumeDetails.cuVolumeLessDecay());
 		}
 
 		if (volumeDetails.cuVolumeLessDecayWastage() != null) {
-			currentRecord.setCuVolumeLessDecayWastage(Double.toString(volumeDetails.cuVolumeLessDecayWastage()));
+			currentRecord.setCuVolumeLessDecayWastage(volumeDetails.cuVolumeLessDecayWastage());
 		}
 
 		if (volumeDetails.cuVolumeLessDecayWastageBreakage() != null) {
-			currentRecord.setCuVolumeLessDecayWastageBreakage(
-					Double.toString(volumeDetails.cuVolumeLessDecayWastageBreakage())
-			);
+			currentRecord.setCuVolumeLessDecayWastageBreakage(volumeDetails.cuVolumeLessDecayWastageBreakage());
 		}
+	}
+
+	protected void recordPerSpeciesVolumeInfo(int spIndex, EntityVolumeDetails volume, EntityVolumeDetails mofBiomass) {
+
+		currentRecord.setSpeciesFieldValue(
+				MultiFieldPrefixes.SpeciesProjection, spIndex, MultiFieldSuffixes.WholeStemVolume,
+				volume.wholeStemVolume()
+		);
+		currentRecord.setSpeciesFieldValue(
+				MultiFieldPrefixes.SpeciesProjection, spIndex, MultiFieldSuffixes.CloseUtilizationVolume,
+				volume.closeUtilizationVolume()
+		);
+		currentRecord.setSpeciesFieldValue(
+				MultiFieldPrefixes.SpeciesProjection, spIndex, MultiFieldSuffixes.CuVolumeLessDecay,
+				volume.cuVolumeLessDecay()
+		);
+		currentRecord.setSpeciesFieldValue(
+				MultiFieldPrefixes.SpeciesProjection, spIndex, MultiFieldSuffixes.CuVolumeLessDecayWastage,
+				volume.cuVolumeLessDecayWastage()
+		);
+		currentRecord.setSpeciesFieldValue(
+				MultiFieldPrefixes.SpeciesProjection, spIndex, MultiFieldSuffixes.CuVolumeLessDecayWastageBreakage,
+				volume.cuVolumeLessDecayWastageBreakage()
+		);
+
+		currentRecord.setSpeciesFieldValue(
+				MultiFieldPrefixes.SpeciesProjection, spIndex, MultiFieldSuffixes.MoFBiomassWholeStemVolume,
+				mofBiomass.wholeStemVolume()
+		);
+		currentRecord.setSpeciesFieldValue(
+				MultiFieldPrefixes.SpeciesProjection, spIndex, MultiFieldSuffixes.MoFBiomassCloseUtilizationVolume,
+				mofBiomass.closeUtilizationVolume()
+		);
+		currentRecord.setSpeciesFieldValue(
+				MultiFieldPrefixes.SpeciesProjection, spIndex, MultiFieldSuffixes.MoFBiomassCuVolumeLessDecay,
+				mofBiomass.cuVolumeLessDecay()
+		);
+		currentRecord.setSpeciesFieldValue(
+				MultiFieldPrefixes.SpeciesProjection, spIndex, MultiFieldSuffixes.MoFBiomassCuVolumeLessDecayWastage,
+				mofBiomass.cuVolumeLessDecayWastage()
+		);
+		currentRecord.setSpeciesFieldValue(
+				MultiFieldPrefixes.SpeciesProjection, spIndex,
+				MultiFieldSuffixes.MoFBiomassCuVolumeLessDecayWastageBreakage,
+				mofBiomass.cuVolumeLessDecayWastageBreakage()
+		);
+	}
+
+	public void recordMode(String projectionMode) {
+		currentRecord.setMode(projectionMode);
 	}
 
 	void writeHeader() throws YieldTableGenerationException {
@@ -184,9 +235,5 @@ abstract class YieldTableWriter<T extends YieldTableRowValues> implements Closea
 		writeRecord();
 
 		currentRecord = null;
-	}
-
-	public void recordMode(String projectionMode) {
-		currentRecord.setMode(projectionMode);
 	}
 }

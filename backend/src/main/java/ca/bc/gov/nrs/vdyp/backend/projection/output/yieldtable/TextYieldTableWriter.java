@@ -54,20 +54,24 @@ class TextYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean>
 	}
 
 	@Override
-	protected void recordPerPolygonDetails(Polygon polygon, int yieldTableNumber) {
+	protected void recordPolygonAndLayerDetails(int yieldTableNumber, YieldTableRowContext rowContext) {
+		var polygon = rowContext.getPolygon();
+
 		currentRecord.setDistrict(polygon.getDistrict());
-		currentRecord.setFeatureId(Long.toString(polygon.getFeatureId()));
+		currentRecord.setFeatureId(polygon.getFeatureId());
 		currentRecord.setMapId(polygon.getMapSheet());
-		currentRecord.setPolygonId(polygon.getPolygonNumber() == null ? "" : Long.toString(polygon.getPolygonNumber()));
-		currentRecord.setTableNumber(Integer.toString(yieldTableNumber));
+		currentRecord.setPolygonId(polygon.getPolygonNumber());
+		currentRecord.setTableNumber(yieldTableNumber);
+
+		if (!rowContext.isPolygonTable()) {
+			currentRecord.setLayerId(rowContext.getLayerReportingInfo().getLayerID());
+		}
 	}
 
 	@Override
 	public void recordCalendarYearAndLayerAge(YieldTableRowContext rowContext) {
-		currentRecord.setProjectionYear(Integer.toString(rowContext.getCurrentTableYear()));
-		currentRecord.setTotalAge(
-				rowContext.getCurrentTableAge() == null ? null : Integer.toString(rowContext.getCurrentTableAge())
-		);
+		currentRecord.setProjectionYear(rowContext.getCurrentTableYear());
+		currentRecord.setTotalAge(rowContext.getCurrentTableAge());
 	}
 
 	@Override
@@ -80,8 +84,7 @@ class TextYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean>
 						MultiFieldPrefixes.Species, speciesIndex, MultiFieldSuffixes.Code, details.speciesCode()
 				);
 				currentRecord.setSpeciesFieldValue(
-						MultiFieldPrefixes.Species, speciesIndex, MultiFieldSuffixes.Percent,
-						Double.valueOf(details.speciesPercent()).toString()
+						MultiFieldPrefixes.Species, speciesIndex, MultiFieldSuffixes.Percent, details.speciesPercent()
 				);
 
 				speciesIndex += 1;
@@ -93,10 +96,10 @@ class TextYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean>
 	void recordSiteInformation(
 			Double percentStockable, Double siteIndex, Double dominantHeight, Double secondaryHeight
 	) {
-		currentRecord.setPercentStockable(Double.toString(percentStockable));
-		currentRecord.setSiteIndex(Double.toString(siteIndex));
-		currentRecord.setDominantHeight(Double.toString(dominantHeight));
-		currentRecord.setSecondaryHeight(secondaryHeight == null ? null : Double.toString(secondaryHeight));
+		currentRecord.setPercentStockable(percentStockable);
+		currentRecord.setSiteIndex(siteIndex);
+		currentRecord.setDominantHeight(dominantHeight);
+		currentRecord.setSecondaryHeight(secondaryHeight == null ? null : secondaryHeight);
 	}
 
 	@Override

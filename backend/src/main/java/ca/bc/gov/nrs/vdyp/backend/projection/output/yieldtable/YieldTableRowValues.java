@@ -47,6 +47,22 @@ interface YieldTableRowValues {
 						&& ! (s == MultiFieldSuffixes.Code || s == MultiFieldSuffixes.Percent);
 	}
 
+	default void setSpeciesFieldValue(
+			MultiFieldPrefixes prefix, int speciesNumber, MultiFieldSuffixes suffix, Double value
+	) {
+		if (value != null) {
+			setSpeciesFieldValue(prefix, speciesNumber, suffix, String.format("%.5f", value));
+		}
+	}
+
+	default void setSpeciesFieldValue(
+			MultiFieldPrefixes prefix, int speciesNumber, MultiFieldSuffixes suffix, Integer value
+	) {
+		if (value != null) {
+			setSpeciesFieldValue(prefix, speciesNumber, suffix, String.valueOf(value));
+		}
+	}
+
 	void setSpeciesFieldValue(MultiFieldPrefixes prefix, int speciesNumber, MultiFieldSuffixes suffix, String value);
 
 	String getSpeciesFieldValue(MultiFieldPrefixes prefix, int speciesNumber, MultiFieldSuffixes suffix);
@@ -55,99 +71,99 @@ interface YieldTableRowValues {
 
 	String getMode();
 
-	void setCfsBiomassFoliage(String cfsBiomassFoliage);
+	void setCfsBiomassFoliage(Double cfsBiomassFoliage);
 
 	String getCfsBiomassFoliage();
 
-	void setCfsBiomassBranch(String cfsBiomassBranch);
+	void setCfsBiomassBranch(Double cfsBiomassBranch);
 
 	String getCfsBiomassBranch();
 
-	void setCfsBiomassBark(String cfsBiomassBark);
+	void setCfsBiomassBark(Double cfsBiomassBark);
 
 	String getCfsBiomassBark();
 
-	void setCfsBiomassStem(String cfsBiomassStem);
+	void setCfsBiomassStem(Double cfsBiomassStem);
 
 	String getCfsBiomassStem();
 
-	void setMoFBiomassCuVolumeLessDecayWastageBreakage(String mofBiomassCuVolumeLessDecayWastageBreakage);
+	void setMoFBiomassCuVolumeLessDecayWastageBreakage(Double mofBiomassCuVolumeLessDecayWastageBreakage);
 
 	String getMoFBiomassCuVolumeLessDecayWastageBreakage();
 
-	void setMoFBiomassCuVolumeLessDecayWastage(String mofBiomassCuVolumeLessDecayWastage);
+	void setMoFBiomassCuVolumeLessDecayWastage(Double mofBiomassCuVolumeLessDecayWastage);
 
 	String getMoFBiomassCuVolumeLessDecayWastage();
 
-	void setMoFBiomassCuVolumeLessDecay(String mofBiomassCuVolumeLessDecay);
+	void setMoFBiomassCuVolumeLessDecay(Double mofBiomassCuVolumeLessDecay);
 
 	String getMoFBiomassCuVolumeLessDecay();
 
-	void setMoFBiomassCloseUtilizationVolume(String mofBiomassCloseUtilizationVolume);
+	void setMoFBiomassCloseUtilizationVolume(Double mofBiomassCloseUtilizationVolume);
 
 	String getMoFBiomassCloseUtilizationVolume();
 
-	void setMoFBiomassWholeStemVolume(String mofBiomassWholeStemVolume);
+	void setMoFBiomassWholeStemVolume(Double mofBiomassWholeStemVolume);
 
 	String getMoFBiomassWholeStemVolume();
 
-	void setCuVolumeLessDecayWastageBreakage(String cuVolumeLessDecayWastageBreakage);
+	void setCuVolumeLessDecayWastageBreakage(Double cuVolumeLessDecayWastageBreakage);
 
 	String getCuVolumeLessDecayWastageBreakage();
 
-	void setCuVolumeLessDecayWastage(String cuVolumeLessDecayWastage);
+	void setCuVolumeLessDecayWastage(Double cuVolumeLessDecayWastage);
 
 	String getCuVolumeLessDecayWastage();
 
-	void setCuVolumeLessDecay(String cuVolumeLessDecay);
+	void setCuVolumeLessDecay(Double cuVolumeLessDecay);
 
 	String getCuVolumeLessDecay();
 
-	void setCloseUtilizationVolume(String closeUtilizationVolume);
+	void setCloseUtilizationVolume(Double closeUtilizationVolume);
 
 	String getCloseUtilizationVolume();
 
-	void setWholeStemVolume(String wholeStemVolume);
+	void setWholeStemVolume(Double wholeStemVolume);
 
 	String getWholeStemVolume();
 
-	void setBasalArea(String basalArea);
+	void setBasalArea(Double basalArea);
 
 	String getBasalArea();
 
-	void setTreesPerHectare(String treesPerHectare);
+	void setTreesPerHectare(Double treesPerHectare);
 
 	String getTreesPerHectare();
 
-	void setDiameter(String diameter);
+	void setDiameter(Double diameter);
 
 	String getDiameter();
 
-	void setLoreyHeight(String loreyHeight);
+	void setLoreyHeight(Double loreyHeight);
 
 	String getLoreyHeight();
 
-	void setSecondaryHeight(String secondaryHeight);
+	void setSecondaryHeight(Double secondaryHeight);
 
 	String getSecondaryHeight();
 
-	void setDominantHeight(String dominantHeight);
+	void setDominantHeight(Double dominantHeight);
 
 	String getDominantHeight();
 
-	void setSiteIndex(String siteIndex);
+	void setSiteIndex(Double siteIndex);
 
 	String getSiteIndex();
 
-	void setPercentStockable(String percentStockable);
+	void setPercentStockable(Double percentStockable);
 
 	String getPercentStockable();
 
-	void setTotalAge(String totalAge);
+	void setTotalAge(Integer totalAge);
 
 	String getTotalAge();
 
-	void setProjectionYear(String projectionYear);
+	void setProjectionYear(Integer projectionYear);
 
 	String getProjectionYear();
 
@@ -155,7 +171,7 @@ interface YieldTableRowValues {
 
 	String getLayerId();
 
-	void setPolygonId(String polygonId);
+	void setPolygonId(Long polygonId);
 
 	String getPolygonId();
 
@@ -167,11 +183,11 @@ interface YieldTableRowValues {
 
 	String getDistrict();
 
-	void setFeatureId(String featureId);
+	void setFeatureId(Long featureId);
 
 	String getFeatureId();
 
-	void setTableNumber(String tableNumber);
+	void setTableNumber(int tableNumber);
 
 	String getTableNumber();
 }

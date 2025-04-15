@@ -24,7 +24,7 @@ public record LayerYields(
 		/** The stand calendar year at which these yields apply. */
 		int standYear,
 
-		/** The age of the species at the calendar year. */
+		/** The total age (ytbh + yabh) of the species at the calendar year. */
 		double speciesAge,
 
 		/** The dominant height of the layer. */

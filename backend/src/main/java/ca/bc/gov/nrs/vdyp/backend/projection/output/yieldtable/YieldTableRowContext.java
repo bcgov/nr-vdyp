@@ -32,40 +32,84 @@ class YieldTableRowContext {
 	 */
 	private final LayerReportingInfo layerReportingInfo;
 
+	/** The reference calendar year for the current table. */
 	private int referenceYear;
+	/** The age corresponding to referenceYear. */
 	private int referenceAge;
-	private int currentYear;
-	private int currentAge;
-	private int yearToAgeDifference;
-	private int numSpecies;
-	private int layerAgeOffset;
+
+	/** The reference year or year of death, whichever is lower. */
 	private int measurementYear;
+	/** The age corresponding to measurementYear. */
 	private int measurementAge;
 
+	/** The calendar year today. */
+	private int nowYear;
+	/** The age corresponding to nowYear. */
+	private int nowAge;
+
+	/** The amount to subtract from a calendar year to convert it to a yield table age. */
+	private int yearToAgeDifference;
+	/** The number of species found in the current yield table. */
+	private int numSpecies;
+	/** Records the number of years from the current layer's age to the stand total age. */
+	private int layerAgeOffset;
+
+	/** The calendar year at the start of the age range. */
 	private Integer yearAtStartAge;
-	private Integer yearAtEndAge;
+	/** The age corresponding to yearAtStartAge. */
 	private Integer ageAtStartYear;
+	/** The calendar year at the end of the age range. */
+	private Integer yearAtEndAge;
+	/** The age corresponding to yearAtEndAge. */
 	private Integer ageAtEndYear;
+
+	/** The calendar year when the layer was killed. If still alive, null */
 	private Integer yearAtDeath;
+	/** The age corresponding to yearAtDeath; null if none. */
 	private Integer ageAtDeath;
 
+	/**
+	 * Marks the start of the yield table gap (if one is required based on the age and year ranges and the combine
+	 * operator). Otherwise null.
+	 */
 	private Integer yearAtGapStart;
+	/** Marks the end of the yield table gap, if any. Otherwise null. */
 	private Integer yearAtGapEnd;
+	/** The age corresponding to yearAtGapStart; null if none. */
 	private Integer ageAtGapStart;
+	/** The age corresponding to yearAtGapEnd; null if none. */
 	private Integer ageAtGapEnd;
 
+	/** The year of the current yield table row being generated. */
 	private Integer currentTableYear;
+	/** The age corresponding to currentTableAge; null if none. */
 	private Integer currentTableAge;
+
+	/** The current year as we progress through each of the two ranges while producing the yield tables. */
 	private Integer currentYearRangeYear;
+	/** The age corresponding to currentYearRangeYear. */
 	private Integer currentAgeRangeYear;
+
+	/**
+	 * For the current table year, these members represent the year data to request. Normally the year will match the
+	 * current table year, however this mechanism allows us to select a different year's data for the current table row.
+	 * This is handy for the Veteran layer where we want to always display data from the reference year despite the year
+	 * of the yield table being displayed.
+	 */
 	private Integer currentTableYearToRequest;
+	/** The age corresponding to currentTableAgeToRequest. */
 	private Integer currentTableAgeToRequest;
+
+	/** Indicates whether or not the current year corresponds to a year range/increment */
 	private Boolean currentYearIsYearRow;
+	/** Indicates whether or not the current year corresponds to a age range/increment */
 	private Boolean currentYearIsAgeRow;
 
+	/** The calendar year the yields first become valid. */
 	private Integer yearYieldsValid;
 	// Removed as no longer used: private Integer ageYieldsValid;
 
+	/** The method by which the current layer was projected. */
 	private ProjectionTypeCode projectionType = ProjectionTypeCode.UNKNOWN;
 
 	private final List<YieldTableSpeciesDetails> sortedSpeciesArray;
@@ -119,7 +163,7 @@ class YieldTableRowContext {
 		assertEqualNullity(currentYearIsAgeRow, currentYearIsYearRow);
 		Validate.isTrue(referenceYear == referenceAge + yearToAgeDifference);
 		Validate.isTrue(measurementYear == measurementAge + yearToAgeDifference);
-		Validate.isTrue(currentYear == currentAge + yearToAgeDifference);
+		Validate.isTrue(nowYear == nowAge + yearToAgeDifference);
 		Validate.isTrue(numSpecies >= 0);
 		Validate.isTrue(layerAgeOffset == 0.0);
 	}
@@ -214,8 +258,8 @@ class YieldTableRowContext {
 
 		yearToAgeDifference = measurementYear - measurementAge;
 
-		currentYear = LocalDate.now().getYear();
-		currentAge = currentYear - yearToAgeDifference;
+		nowYear = LocalDate.now().getYear();
+		nowAge = nowYear - yearToAgeDifference;
 	}
 
 	private void calculateTableRangeInformation(ValidatedParameters params) {
@@ -550,12 +594,12 @@ class YieldTableRowContext {
 		return measurementAge;
 	}
 
-	public int getCurrentYear() {
-		return currentYear;
+	public int getNowYear() {
+		return nowYear;
 	}
 
-	public int getCurrentAge() {
-		return currentAge;
+	public int getNowAge() {
+		return nowAge;
 	}
 
 	public Integer getYearAtStartAge() {

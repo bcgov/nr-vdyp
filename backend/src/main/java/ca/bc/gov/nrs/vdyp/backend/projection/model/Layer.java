@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.StandYieldCalculationException;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.MessageSeverityCode;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessageKind;
@@ -24,6 +25,7 @@ import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ReturnCode;
 import ca.bc.gov.nrs.vdyp.backend.utils.Utils;
 import ca.bc.gov.nrs.vdyp.common.Reference;
 import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.CommonCalculatorException;
+import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexAgeType;
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.si32.site.SiteTool;
 
@@ -902,22 +904,33 @@ public class Layer implements Comparable<Layer> {
 		return species;
 	}
 
-	public Double determineLeadingSiteSpeciesHeight(int targetAge) {
-		if (siteSpecies == null || siteSpecies.size() == 0) {
-			throw new IllegalStateException(
-					"Layer.determineLeadingSiteSpeciesHeight: siteSpecies == null || siteSpecies.size() == 0"
+	/**
+	 * <b>lcl_DetermineLeadSiteSpeciesHeight</b>
+	 * <p>
+	 * Determine the dominant height of the leading site species for the identified age.
+	 * <p>
+	 *
+	 * @param targetAge the target age at which to compute dominant height.
+	 * @return as described. If an error occurs during calculation, <code>null</code> is returned.
+	 */
+	public Double determineLeadingSiteSpeciesHeight(int targetAge) throws StandYieldCalculationException {
+
+		var leadingSp64 = this.sp64s.get(0);
+
+		try {
+			return SiteTool.ageAndSiteIndexToHeight(
+					leadingSp64.getSiteCurve(), targetAge, SiteIndexAgeType.SI_AT_TOTAL, leadingSp64.getSiteIndex(),
+					leadingSp64.getYearsToBreastHeight()
 			);
-		}
-
-		var leadingSiteSpecies = siteSpecies.get(0);
-
-		if (!leadingSiteSpecies.getHasSiteInfo()) {
-			throw new IllegalStateException(
-					"Layer.determineLeadingSiteSpeciesHeight: ! leadingSiteSpecies.getHasSiteInfo()"
+		} catch (CommonCalculatorException e) {
+			logger.warn(
+					"{}: saw CommonCalculatorException during calculation of dominant height from age {},"
+							+ " site index {}, and ytbh {}",
+					this, targetAge, leadingSp64.getSiteIndex(), leadingSp64.getYearsToBreastHeight()
 			);
-		}
 
-		return leadingSiteSpecies.getStand().getSpeciesByPercent().get(0).getDominantHeight();
+			return null;
+		}
 	}
 
 	/**
@@ -977,6 +990,17 @@ public class Layer implements Comparable<Layer> {
 					MessageFormat.format("The parameter \"criteria\" (value {0}) is not a recognized value", criteria)
 			);
 		}
+	}
+
+	public Species getSp64(String speciesCode) {
+		for (var candidate : sp64s) {
+			if (candidate.getSpeciesCode().equals(speciesCode))
+				return candidate;
+		}
+
+		throw new IllegalArgumentException(
+				MessageFormat.format("{0}: species code {1} does not identify a sp64 in this layer", this, speciesCode)
+		);
 	}
 
 	/**

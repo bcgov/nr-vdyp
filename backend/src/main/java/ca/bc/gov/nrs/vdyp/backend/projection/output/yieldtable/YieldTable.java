@@ -13,6 +13,8 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.apache.commons.lang3.Validate;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
@@ -47,9 +49,14 @@ import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
+import ca.bc.gov.nrs.vdyp.si32.bec.BecZoneMethods;
 import ca.bc.gov.nrs.vdyp.si32.vdyp.SP0Name;
 
 public class YieldTable implements Closeable {
+
+	public static enum Category {
+		LAYER_MOFVOLUMES, LAYER_MOFBIOMASS, SPECIES_MOFVOLUME, SPECIES_MOFBIOMASS, LAYER_CFSBIOMASS;
+	}
 
 	private static final Logger logger = LoggerFactory.getLogger(YieldTable.class);
 
@@ -59,7 +66,7 @@ public class YieldTable implements Closeable {
 	private YieldTableWriter<? extends YieldTableRowValues> writer;
 	private Path yieldTableFilePath;
 
-	private int yieldTableCount = 0;
+	private int nextYieldTableNumber = 1;
 
 	private YieldTable(ProjectionContext context) throws YieldTableGenerationException {
 		this.context = context;
@@ -151,7 +158,7 @@ public class YieldTable implements Closeable {
 	) throws YieldTableGenerationException {
 
 		writer.writePolygonTableHeader(
-				polygon, Optional.ofNullable(layerReportingInfo), doGenerateDetailedTableHeader, yieldTableCount
+				polygon, Optional.ofNullable(layerReportingInfo), doGenerateDetailedTableHeader, nextYieldTableNumber
 		);
 
 		YieldTableRowIterator rowIterator = new YieldTableRowIterator(context, polygon, state, layerReportingInfo);
@@ -163,9 +170,9 @@ public class YieldTable implements Closeable {
 			}
 		}
 
-		writer.writePolygonTableTrailer(yieldTableCount);
+		writer.writePolygonTableTrailer(nextYieldTableNumber);
 
-		yieldTableCount += 1;
+		nextYieldTableNumber += 1;
 	}
 
 	private YieldTableWriter<? extends YieldTableRowValues> buildYieldTableWriter(OutputFormat outputFormat)
@@ -287,13 +294,13 @@ public class YieldTable implements Closeable {
 
 			ForwardDataStreamReader reader = new ForwardDataStreamReader(readerControlMap);
 
-			var vdypPolygon = reader.readNextPolygon();
+			var vdypPolygon = reader.readNextPolygon(false /* do not run post-create adjustments */);
 			while (vdypPolygon.isPresent()
 					&& expectedPolygonIdentifier.getBase().equals(vdypPolygon.get().getPolygonIdentifier().getBase())) {
 
 				projectionResultsByYear.put(vdypPolygon.get().getPolygonIdentifier().getYear(), vdypPolygon.get());
 
-				vdypPolygon = reader.readNextPolygon();
+				vdypPolygon = reader.readNextPolygon(false /* do not run post-create adjustments */);
 			}
 
 			if (projectionResultsByYear.size() == 0) {
@@ -396,7 +403,7 @@ public class YieldTable implements Closeable {
 				&& rowContext.getCurrentTableYear().equals(rowContext.getMeasurementYear())) {
 			doDisplayRow = true;
 		} else if (params.containsOption(ExecutionOption.DO_FORCE_CURRENT_YEAR_INCLUSION_IN_YIELD_TABLES)
-				&& rowContext.getCurrentTableYear().equals(rowContext.getCurrentYear())) {
+				&& rowContext.getCurrentTableYear().equals(rowContext.getNowYear())) {
 			doDisplayRow = true;
 		} else if (params.getYearForcedIntoYieldTable() != null
 				&& rowContext.getCurrentTableYear().equals(params.getYearForcedIntoYieldTable())) {
@@ -426,7 +433,7 @@ public class YieldTable implements Closeable {
 	 * @throws YieldTableGenerationException
 	 */
 	private void generateYieldTableRow(
-			YieldTableRowContext rowContext, Map<Integer, VdypPolygon> projectedPolygons,
+			YieldTableRowContext rowContext, Map<Integer, VdypPolygon> polygonProjectionsByYear,
 			YieldTableWriter<? extends YieldTableRowValues> writer
 	) throws YieldTableGenerationException {
 
@@ -434,16 +441,17 @@ public class YieldTable implements Closeable {
 
 		var targetAge = rowContext.getCurrentTableAgeToRequest() - rowContext.getLayerAgeOffset();
 
-		Integer DCSVLayerFieldOffset = null;
-		if (!rowContext.isPolygonTable()) {
-			if (rowContext.getLayerReportingInfo().getSourceLayerID() == 0) {
-				DCSVLayerFieldOffset = 0;
-			} else if (rowContext.getLayerReportingInfo().getSourceLayerID() == 1) {
-				DCSVLayerFieldOffset = DCSVField.DCSV_OFld__RS_FIRST - DCSVField.DCSV_OFld__R1_FIRST;
-			}
-		}
+//		Awaiting the implementation of DCSV...
+//
+//		Integer DCSVLayerFieldOffset = null;
+//		if (!rowContext.isPolygonTable()) {
+//			if (rowContext.getLayerReportingInfo().getSourceLayerID() == 0) {
+//				DCSVLayerFieldOffset = 0;
+//			} else if (rowContext.getLayerReportingInfo().getSourceLayerID() == 1) {
+//				DCSVLayerFieldOffset = DCSVField.DCSV_OFld__RS_FIRST - DCSVField.DCSV_OFld__R1_FIRST;
+//			}
+//		}
 
-		var becZone = rowContext.getPolygon().getBecZone();
 		Double percentStockable;
 		if (rowContext.isPolygonTable()) {
 			percentStockable = rowContext.getPolygon().getPercentStockable();
@@ -455,7 +463,7 @@ public class YieldTable implements Closeable {
 		writer.startNewRecord();
 
 		try {
-			writer.recordPerPolygonDetails(rowContext.getPolygon(), this.yieldTableCount);
+			writer.recordPolygonAndLayerDetails(this.nextYieldTableNumber, rowContext);
 
 			writer.recordCalendarYearAndLayerAge(rowContext);
 
@@ -466,11 +474,15 @@ public class YieldTable implements Closeable {
 				EntityGrowthDetails growthDetails;
 				EntityVolumeDetails volumeDetails;
 				if (rowContext.isPolygonTable()) {
-					growthDetails = getProjectedPolygonGrowthInfo(rowContext, projectedPolygons, targetAge);
-					volumeDetails = getProjectedPolygonVolumes(rowContext, projectedPolygons, targetAge);
+					growthDetails = getProjectedPolygonGrowthInfo(rowContext, polygonProjectionsByYear, targetAge);
+					volumeDetails = getProjectedPolygonVolumes(rowContext, polygonProjectionsByYear, targetAge);
 				} else {
-					growthDetails = getProjectedLayerStandGrowthInfo(rowContext, projectedPolygons, layer, targetAge);
-					volumeDetails = getProjectedLayerStandVolumes(rowContext, projectedPolygons, layer, targetAge);
+					growthDetails = getProjectedLayerStandGrowthInfo(
+							rowContext, polygonProjectionsByYear, layer, targetAge
+					);
+					volumeDetails = getProjectedLayerStandVolumes(
+							rowContext, polygonProjectionsByYear, layer, targetAge
+					);
 
 					var layerSp0sByPercent = layer.getSp0sByPercent();
 					if (layerSp0sByPercent.size() > 1 && context.getParams().containsOption(
@@ -480,7 +492,7 @@ public class YieldTable implements Closeable {
 						if (secondarySp0.getSpeciesByPercent().size() > 0) {
 							var secondarySp64 = secondarySp0.getSpeciesByPercent().get(0);
 							var speciesGrowthDetails = getProjectedLayerSpeciesGrowthInfo(
-									rowContext, projectedPolygons, secondarySp64, targetAge
+									rowContext, polygonProjectionsByYear, secondarySp64, targetAge
 							);
 							secondaryHeight = speciesGrowthDetails.dominantHeight();
 						}
@@ -511,24 +523,42 @@ public class YieldTable implements Closeable {
 						&& rowContext.getPolygonProjectionState().getFirstYearYieldsDisplayed(layer) == null
 						&& growthDetails.basalArea() != null) {
 					rowContext.getPolygonProjectionState()
-							.setFirstYearYieldsDisplayed(layer, rowContext.getCurrentYear());
+							.setFirstYearYieldsDisplayed(layer, rowContext.getCurrentTableYear());
 				}
 
 				writer.recordGrowthDetails(growthDetails, volumeDetails);
+
+				if (context.getYieldTableCategories().contains(Category.SPECIES_MOFVOLUME)) {
+
+					int spIndex = 1;
+					for (Species sp64 : layer.getSp64sByPercent()) {
+
+						var mofBiomassFactor = BecZoneMethods
+								.mofBiomassCoefficient(layer.getPolygon().getBecZone(), sp64.getSpeciesCode());
+
+						var speciesVolumeDetails = getProjectionLayerSpeciesVolumes(
+								rowContext, polygonProjectionsByYear, sp64, targetAge, mofBiomassFactor
+						);
+
+						writer.recordPerSpeciesVolumeInfo(
+								spIndex++, speciesVolumeDetails.getLeft(), speciesVolumeDetails.getRight()
+						);
+					}
+				}
 
 				if (context.getParams().containsOption(ExecutionOption.DO_INCLUDE_PROJECTION_MODE_IN_YIELD_TABLE)) {
 					if (rowContext.getCurrentTableYear() == null) {
 						throw new IllegalStateException("CurrentTableYear is null in generateYieldTableRow");
 					}
 
-					int currentTableYear = rowContext.getCurrentTableYear();
+					Integer currentTableYear = rowContext.getCurrentTableYear();
 
 					String projectionMode;
 					if (currentTableYear == rowContext.getMeasurementYear()) {
 						projectionMode = "Ref";
-					} else if (currentTableYear == rowContext.getCurrentYear()) {
+					} else if (currentTableYear == rowContext.getNowYear()) {
 						projectionMode = "Crnt";
-					} else if (currentTableYear == rowContext.getCurrentTableYear()) {
+					} else if (currentTableYear.equals(params.getYearForcedIntoYieldTable())) {
 						projectionMode = "Spcl";
 					} else if (rowContext.getYearAtDeath() != null && currentTableYear >= rowContext.getYearAtDeath()) {
 						projectionMode = "Atck";
@@ -552,6 +582,10 @@ public class YieldTable implements Closeable {
 		}
 	}
 
+	private double addSafe(double x, double y) {
+		return (x < 0) ? y : x + y;
+	}
+
 	/**
 	 * <b>V7Ext_GetProjectedPolygonGrowthInfo</b>
 	 * <p>
@@ -572,12 +606,12 @@ public class YieldTable implements Closeable {
 	 * <li>For TPH, Basal Area and Diameter: These values are based on the aggregate of all projected layers.
 	 * </ul>
 	 *
-	 * @param rowContext        the row object into which the growth information is written
-	 * @param projectedPolygons the result of the projection of the polygon and year given in <code>row</code>.
+	 * @param rowContext               the row object into which the growth information is written
+	 * @param polygonProjectionsByYear the result of the projection of the polygon and year given in <code>row</code>.
 	 * @throws StandYieldCalculationException
 	 */
 	private EntityGrowthDetails getProjectedPolygonGrowthInfo(
-			YieldTableRowContext rowContext, Map<Integer, VdypPolygon> projectedPolygons, int totalAge
+			YieldTableRowContext rowContext, Map<Integer, VdypPolygon> polygonProjectionsByYear, int totalAge
 	) throws StandYieldCalculationException {
 
 		if (totalAge < Vdyp7Constants.MIN_SPECIES_AGE || totalAge > Vdyp7Constants.MAX_SPECIES_AGE) {
@@ -604,7 +638,7 @@ public class YieldTable implements Closeable {
 
 				if (ageToRequest >= 0) {
 					var layerGrowthInfo = getProjectedLayerStandGrowthInfo(
-							rowContext, projectedPolygons, layer, ageToRequest
+							rowContext, polygonProjectionsByYear, layer, ageToRequest
 					);
 
 					if (layer.getAssignedProjectionType() == ProjectionTypeCode.PRIMARY) {
@@ -625,6 +659,87 @@ public class YieldTable implements Closeable {
 
 		return new EntityGrowthDetails(
 				siteIndex, dominantHeight, loreyHeight, totalDiameter, totalTreesPerHectare, totalBasalArea
+		);
+	}
+
+	/**
+	 * <b>V7Ext_GetProjectedPolygonVolumes</b>
+	 * <p>
+	 * Obtains the yields summarized at the polygon level for a specific stand total age.
+	 * <p>
+	 * Note that certain layers may not have been processed. As a result, those layers may result in no volumes despite
+	 * the presence of volumes on other layers.
+	 *
+	 * @param rowContext               the meta values of the row being generated
+	 * @param polygonProjectionsByYear the projections, by year, of this polygon
+	 * @param targetAge                the age (of the primary layer) for this row
+	 * @return the volume details for the given polygon
+	 * @throws StandYieldCalculationException
+	 */
+	private EntityVolumeDetails getProjectedPolygonVolumes(
+			YieldTableRowContext rowContext, Map<Integer, VdypPolygon> polygonProjectionsByYear, int targetAge
+	) throws StandYieldCalculationException {
+
+		Double wholeStemVolume = 0.0;
+		Double closeUtilizationVolume = 0.0;
+		Double cuVolumeLessDecay = 0.0;
+		Double cuVolumeLessDecayWastage = 0.0;
+		Double cuVolumeLessDecayWastageBreakage = 0.0;
+
+		var polygon = rowContext.getPolygon();
+		var primaryLayer = polygon.getPrimaryLayer();
+
+		if (primaryLayer == null) {
+			throw new IllegalStateException(
+					MessageFormat.format("{0}: primary layer not found", rowContext.getPolygon())
+			);
+		}
+
+		if (!rowContext.getPolygonProjectionState().didRunProjection()) {
+			throw new IllegalStateException(
+					MessageFormat.format("{0}: did not run projection", rowContext.getPolygon())
+			);
+		}
+
+		var primaryLayerYearAtAge = primaryLayer.determineYearAtAge(0);
+
+		for (var layer : polygon.getLayers().values()) {
+
+			if (rowContext.getPolygonProjectionState().didRunProjection()) {
+
+				var layerYearAtAge = layer.determineYearAtAge(0);
+				var ageOffset = primaryLayerYearAtAge - layerYearAtAge;
+				var ageToRequest = targetAge + ageOffset;
+
+				if (ageToRequest > 0) {
+					var layerVolumeDetails = getProjectedLayerStandVolumes(
+							rowContext, polygonProjectionsByYear, layer, ageToRequest
+					);
+
+					if (layerVolumeDetails.wholeStemVolume() != null) {
+						if (layerVolumeDetails.wholeStemVolume() != null) {
+							wholeStemVolume += layerVolumeDetails.wholeStemVolume();
+						}
+						if (layerVolumeDetails.closeUtilizationVolume() != null) {
+							closeUtilizationVolume += layerVolumeDetails.closeUtilizationVolume();
+						}
+						if (layerVolumeDetails.cuVolumeLessDecay() != null) {
+							cuVolumeLessDecay += layerVolumeDetails.cuVolumeLessDecay();
+						}
+						if (layerVolumeDetails.cuVolumeLessDecayWastage() != null) {
+							cuVolumeLessDecayWastage += layerVolumeDetails.cuVolumeLessDecayWastage();
+						}
+						if (layerVolumeDetails.cuVolumeLessDecayWastageBreakage() != null) {
+							cuVolumeLessDecayWastageBreakage += layerVolumeDetails.cuVolumeLessDecayWastageBreakage();
+						}
+					}
+				}
+			}
+		}
+
+		return new EntityVolumeDetails(
+				wholeStemVolume, closeUtilizationVolume, cuVolumeLessDecay, cuVolumeLessDecayWastage,
+				cuVolumeLessDecayWastageBreakage
 		);
 	}
 
@@ -661,14 +776,15 @@ public class YieldTable implements Closeable {
 	 * <li>Added support for optionally turning the substitution of BA/TPH on or off.
 	 * </ul>
 	 *
-	 * @param rowContext        the row object into which the growth information is written
-	 * @param projectedPolygons the result of projecting the polygon (all years)
-	 * @param vdypPolygon       the source of the growth information
-	 * @param totalAge          year for which the growth information is to be retrieved
+	 * @param rowContext               the row object into which the growth information is written
+	 * @param polygonProjectionsByYear the result of projecting the polygon (all years)
+	 * @param vdypPolygon              the source of the growth information
+	 * @param totalAge                 year for which the growth information is to be retrieved
 	 * @throws StandYieldCalculationException
 	 */
 	private EntityGrowthDetails getProjectedLayerStandGrowthInfo(
-			YieldTableRowContext rowContext, Map<Integer, VdypPolygon> projectedPolygons, Layer layer, int totalAge
+			YieldTableRowContext rowContext, Map<Integer, VdypPolygon> polygonProjectionsByYear, Layer layer,
+			int totalAge
 	) throws StandYieldCalculationException {
 
 		var leadingSpeciesSp0 = layer.determineLeadingSp0(0);
@@ -682,7 +798,7 @@ public class YieldTable implements Closeable {
 
 		var projectionYear = layer.determineYearAtAge(totalAge);
 
-		var layerYields = obtainStandYield(rowContext, projectedPolygons, layer, leadingSpeciesSp0, totalAge);
+		var layerYields = obtainStandYield(rowContext, polygonProjectionsByYear, layer, null, totalAge);
 
 		double diameter = layerYields.diameter();
 		double treesPerHectare = layerYields.treesPerHectare();
@@ -818,87 +934,6 @@ public class YieldTable implements Closeable {
 	}
 
 	/**
-	 * <b>V7Ext_GetProjectedPolygonVolumes</b>
-	 * <p>
-	 * Obtains the yields summarized at the polygon level for a specific stand total age.
-	 * <p>
-	 * Note that certain layers may not have been processed. As a result, those layers may result in no volumes despite
-	 * the presence of volumes on other layers.
-	 *
-	 * @param rowContext        the meta values of the row being generated
-	 * @param projectedPolygons the projections, by year, of this polygon
-	 * @param targetAge         the age (of the primary layer) for this row
-	 * @return the volume details for the given polygon
-	 * @throws StandYieldCalculationException
-	 */
-	private EntityVolumeDetails getProjectedPolygonVolumes(
-			YieldTableRowContext rowContext, Map<Integer, VdypPolygon> projectedPolygons, int targetAge
-	) throws StandYieldCalculationException {
-
-		Double wholeStemVolume = 0.0;
-		Double closeUtilizationVolume = 0.0;
-		Double cuVolumeLessDecay = 0.0;
-		Double cuVolumeLessDecayWastage = 0.0;
-		Double cuVolumeLessDecayWastageBreakage = 0.0;
-
-		var polygon = rowContext.getPolygon();
-		var primaryLayer = polygon.getPrimaryLayer();
-
-		if (primaryLayer == null) {
-			throw new IllegalStateException(
-					MessageFormat.format("{0}: primary layer not found", rowContext.getPolygon())
-			);
-		}
-
-		if (!rowContext.getPolygonProjectionState().didRunProjection()) {
-			throw new IllegalStateException(
-					MessageFormat.format("{0}: did not run projection", rowContext.getPolygon())
-			);
-		}
-
-		var primaryLayerYearAtAge = primaryLayer.determineYearAtAge(0);
-
-		for (var layer : polygon.getLayers().values()) {
-
-			if (rowContext.getPolygonProjectionState().didRunProjection()) {
-
-				var layerYearAtAge = layer.determineYearAtAge(0);
-				var ageOffset = primaryLayerYearAtAge - layerYearAtAge;
-				var ageToRequest = targetAge + ageOffset;
-
-				if (ageToRequest > 0) {
-					var layerVolumeDetails = getProjectedLayerStandVolumes(
-							rowContext, projectedPolygons, layer, ageToRequest
-					);
-
-					if (layerVolumeDetails.wholeStemVolume() != null) {
-						if (layerVolumeDetails.wholeStemVolume() != null) {
-							wholeStemVolume += layerVolumeDetails.wholeStemVolume();
-						}
-						if (layerVolumeDetails.closeUtilizationVolume() != null) {
-							closeUtilizationVolume += layerVolumeDetails.closeUtilizationVolume();
-						}
-						if (layerVolumeDetails.cuVolumeLessDecay() != null) {
-							cuVolumeLessDecay += layerVolumeDetails.cuVolumeLessDecay();
-						}
-						if (layerVolumeDetails.cuVolumeLessDecayWastage() != null) {
-							cuVolumeLessDecayWastage += layerVolumeDetails.cuVolumeLessDecayWastage();
-						}
-						if (layerVolumeDetails.cuVolumeLessDecayWastageBreakage() != null) {
-							cuVolumeLessDecayWastageBreakage += layerVolumeDetails.cuVolumeLessDecayWastageBreakage();
-						}
-					}
-				}
-			}
-		}
-
-		return new EntityVolumeDetails(
-				wholeStemVolume, closeUtilizationVolume, cuVolumeLessDecay, cuVolumeLessDecayWastage,
-				cuVolumeLessDecayWastageBreakage
-		);
-	}
-
-	/**
 	 * <b>V7Int_GetProjectedLayerStandVolumes</b>
 	 * <p>
 	 * Obtains the yields summarized at the layer level for a specific stand total age.
@@ -906,15 +941,16 @@ public class YieldTable implements Closeable {
 	 * Note that certain layers may not have been processed. As a result, those layers may result in no volumes despite
 	 * the presence of volumes on other layers.
 	 *
-	 * @param rowContext        the meta values of the row being generated
-	 * @param projectedPolygons the projections, by year, of this polygon
-	 * @param layer             the layer for which the projection values are to be retrieved
-	 * @param targetAge         the age (of the primary layer) for this row
+	 * @param rowContext               the meta values of the row being generated
+	 * @param polygonProjectionsByYear the projections, by year, of this polygon
+	 * @param layer                    the layer for which the projection values are to be retrieved
+	 * @param targetAge                the age (of the primary layer) for this row
 	 * @return the volume details for the given layer
 	 * @throws StandYieldCalculationException
 	 */
 	private EntityVolumeDetails getProjectedLayerStandVolumes(
-			YieldTableRowContext rowContext, Map<Integer, VdypPolygon> projectedPolygons, Layer layer, int targetAge
+			YieldTableRowContext rowContext, Map<Integer, VdypPolygon> polygonProjectionsByYear, Layer layer,
+			int targetAge
 	) throws StandYieldCalculationException {
 		if (!rowContext.getPolygonProjectionState().didRunProjection()) {
 			throw new IllegalStateException(
@@ -931,7 +967,7 @@ public class YieldTable implements Closeable {
 		boolean layerWasProjected = rowContext.getPolygonProjectionState().layerWasProjected(layer);
 
 		if (layerWasProjected && !layer.getDoSuppressPerHAYields()) {
-			var layerYields = obtainStandYield(rowContext, projectedPolygons, layer, null, targetAge);
+			var layerYields = obtainStandYield(rowContext, polygonProjectionsByYear, layer, null, targetAge);
 
 			wholeStemVolume = layerYields.wholeStemVolume();
 			closeUtilizationVolume = layerYields.closeUtilizationVolume();
@@ -959,22 +995,21 @@ public class YieldTable implements Closeable {
 	 * different site information supplied, we need to add special case processing which will generate an age and height
 	 * based on the original supplied age and height. See Cam's Feb 6, 2004 e-mail for details.
 	 *
-	 * <li>Now return a Dominant Site Species flag for the projected data if the VDYP7 calculations determined that the
+	 * <li>Return a Dominant Site Species flag for the projected data if the VDYP7 calculations determined that the
 	 * requested species was the first supplied SP64 of its corresponding SP0 group and that SP0 group was flagged as
 	 * dominant in the output calculations.
 	 *
-	 * <li>Now allow the retrieval of growth information for layers that were not processed.
+	 * <li>Allow the retrieval of growth information for layers that were not processed.
 	 *
-	 * <li>Based on direction from Sam Otukol, prevent projected (forward) heights from shrinking below input height.
-	 * Also, prevent projected (backwards) heights from exceeding input height. This check would apply to the leading
-	 * site species.
+	 * <li>Prevent projected (forward) heights from shrinking below input height. Also, prevent projected (backwards)
+	 * heights from exceeding input height. This check would apply to the leading site species.
 	 * <p>
 	 * Also, fill in Diameter when computable from BA and TPH and not already being returned.
 	 *
 	 * <li>When BA/TPH is not projected but available on input, copy it over as the projected BA/TPH. Pro-rate by
 	 * species percent on input.
 	 *
-	 * <li>Relaxed the above constraint so that either of input BA and TPH are copied individually over to the Projected
+	 * <li>Relax the above constraint so that either of input BA and TPH are copied individually over to the Projected
 	 * BA/TPH.
 	 *
 	 * <li>Further suppress this action if there is a VDYP7 Yield row predicted for the year in question.
@@ -985,15 +1020,16 @@ public class YieldTable implements Closeable {
 	 * <li>Added support for optionally turning the substitution of BA/TPH on or off.
 	 * </ul>
 	 *
-	 * @param rowContext        the meta values of the row being generated
-	 * @param projectedPolygons the projections, by year, of this polygon
-	 * @param species           the Species in question
-	 * @param targetAge         the age of the containing Layer
+	 * @param rowContext               the meta values of the row being generated
+	 * @param polygonProjectionsByYear the projections, by year, of this polygon
+	 * @param species                  the Species in question
+	 * @param targetAge                the age of the containing Layer
 	 *
 	 * @throws StandYieldCalculationException
 	 */
 	private EntityGrowthDetails getProjectedLayerSpeciesGrowthInfo(
-			YieldTableRowContext rowContext, Map<Integer, VdypPolygon> projectedPolygons, Species species, int targetAge
+			YieldTableRowContext rowContext, Map<Integer, VdypPolygon> polygonProjectionsByYear, Species species,
+			int targetAge
 	) throws StandYieldCalculationException {
 
 		if (targetAge < Vdyp7Constants.MIN_SPECIES_AGE || Vdyp7Constants.MAX_SPECIES_AGE > targetAge) {
@@ -1006,7 +1042,7 @@ public class YieldTable implements Closeable {
 
 		var measurementYear = polygon.getReferenceYear();
 
-		var layerYields = obtainStandYield(rowContext, projectedPolygons, layer, stand, targetAge);
+		var layerYields = obtainStandYield(rowContext, polygonProjectionsByYear, layer, stand, targetAge);
 
 		double factor;
 		if (species.getSpeciesPercent() > 0 && stand.getSpeciesGroup().getSpeciesPercent() > 0) {
@@ -1153,6 +1189,118 @@ public class YieldTable implements Closeable {
 	}
 
 	/**
+	 * V7Ext_GetProjectedLayerSpeciesVolumes
+	 * <p>
+	 * Obtains the yields summarized at the layer species for a specific stand total age.
+	 * <p>
+	 * Note that certain layers may not have been processed. As a result, those layers may result in no volumes despite
+	 * the presence of volumes on other layers.
+	 *
+	 * @param rowContext               the yield table row for which the information is being generated
+	 * @param polygonProjectionsByYear the results of the projection
+	 * @param sp64                     the sp64 in question
+	 * @param ageToRequest             the target age of the species
+	 * @param mofBiomassFactor         the factor by which to reduce the MoF biomass value
+	 *
+	 * @return a VolumeInfo record containing the volume information for the given species and age.
+	 * @throws StandYieldCalculationException when a failure occurs during yield calculations
+	 */
+	private Pair<EntityVolumeDetails /* volume */, EntityVolumeDetails /* MoF biomass */>
+			getProjectionLayerSpeciesVolumes(
+					YieldTableRowContext rowContext, Map<Integer, VdypPolygon> polygonProjectionsByYear, Species sp64,
+					int ageToRequest, double mofBiomassFactor
+			) throws StandYieldCalculationException {
+
+		EntityVolumeDetails volumeDetails = null;
+		EntityVolumeDetails mofBiomassDetails = null;
+		boolean detailsComputed = false;
+
+		double totalBiomassWS = 0.0;
+		double totalBiomassCU = 0.0;
+		double totalBiomassD = 0.0;
+		double totalBiomassDW = 0.0;
+		double totalBiomassDWB = 0.0;
+
+		Layer layer = sp64.getStand().getLayer();
+		if (!layer.getDoSuppressPerHAYields()) {
+
+			var percentageRatio = sp64.getSpeciesPercent() / sp64.getStand().getSpeciesGroup().getSpeciesPercent();
+
+			// TODO: determine whether the presence of duplicates alters this (vdyp7volumes 1351 - 1360).
+
+			Integer calendarYear = getCalendarYear(layer, ageToRequest);
+
+			var projectedPolygon = polygonProjectionsByYear.get(calendarYear);
+
+			if (projectedPolygon != null) {
+
+				LayerType layerType = getLayerType(layer.getAssignedProjectionType());
+
+				var vdypLayer = projectedPolygon.getLayers().get(layerType);
+				var vdypSpecies = vdypLayer.getSpeciesBySp0(sp64.getStand().getSp0Code());
+
+				float wholeStemVolumeFloat = vdypSpecies.getWholeStemVolumeByUtilization().get(UtilizationClass.ALL);
+				Double wholeStemVolume = null;
+				if (wholeStemVolumeFloat != Vdyp7Constants.EMPTY_DECIMAL) {
+					wholeStemVolume = Double.valueOf(wholeStemVolumeFloat) * percentageRatio;
+				}
+
+				float cuVolumeFloat = vdypSpecies.getCloseUtilizationVolumeByUtilization().get(UtilizationClass.ALL);
+				Double cuVolume = null;
+				if (cuVolumeFloat != Vdyp7Constants.EMPTY_DECIMAL) {
+					cuVolume = Double.valueOf(cuVolumeFloat) * percentageRatio;
+				}
+
+				float cuVolumeLessDecayFloat = vdypSpecies.getCloseUtilizationVolumeNetOfDecayByUtilization()
+						.get(UtilizationClass.ALL);
+				Double cuVolumeLessDecay = null;
+				if (cuVolumeLessDecayFloat != Vdyp7Constants.EMPTY_DECIMAL) {
+					cuVolumeLessDecay = Double.valueOf(cuVolumeLessDecayFloat) * percentageRatio;
+				}
+
+				float cuVolumeLessDecayWasteFloat = vdypSpecies
+						.getCloseUtilizationVolumeNetOfDecayAndWasteByUtilization().get(UtilizationClass.ALL);
+				Double cuVolumeLessDecayWaste = null;
+				if (cuVolumeLessDecayWasteFloat != Vdyp7Constants.EMPTY_DECIMAL) {
+					cuVolumeLessDecayWaste = Double.valueOf(cuVolumeLessDecayWasteFloat) * percentageRatio;
+				}
+
+				float cuVolumeLessDecayWasteBreakageFloat = vdypSpecies
+						.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization().get(UtilizationClass.ALL);
+				Double cuVolumeLessDecayWasteBreakage = null;
+				if (cuVolumeLessDecayWasteBreakageFloat != Vdyp7Constants.EMPTY_DECIMAL) {
+					cuVolumeLessDecayWasteBreakage = Double.valueOf(cuVolumeLessDecayWasteBreakageFloat)
+							* percentageRatio;
+				}
+
+				totalBiomassWS = addSafe(totalBiomassWS, wholeStemVolume * mofBiomassFactor);
+				totalBiomassCU = addSafe(totalBiomassCU, cuVolume * mofBiomassFactor);
+				totalBiomassD = addSafe(totalBiomassD, cuVolumeLessDecay * mofBiomassFactor);
+				totalBiomassDW = addSafe(totalBiomassDW, cuVolumeLessDecayWaste * mofBiomassFactor);
+				totalBiomassDWB = addSafe(totalBiomassDWB, cuVolumeLessDecayWasteBreakage * mofBiomassFactor);
+
+				volumeDetails = new EntityVolumeDetails(
+						wholeStemVolume, cuVolume, cuVolumeLessDecay, cuVolumeLessDecayWaste,
+						cuVolumeLessDecayWasteBreakage
+				);
+
+				mofBiomassDetails = new EntityVolumeDetails(
+						totalBiomassWS, totalBiomassCU, totalBiomassD, cuVolumeLessDecayWaste, totalBiomassDWB
+				);
+
+				detailsComputed = true;
+			}
+		}
+
+		if (!detailsComputed) {
+			volumeDetails = new EntityVolumeDetails(null, null, null, null, null);
+			mofBiomassDetails = new EntityVolumeDetails(null, null, null, null, null);
+		}
+
+		return new ImmutablePair<EntityVolumeDetails, EntityVolumeDetails>(volumeDetails, mofBiomassDetails);
+	}
+
+	/**
 	 * <b>V7Int_ObtainStandYield</b>
 	 * <p>
 	 * Extract the appropriate yield from the stand at the requested age. This method requires that the given layer was
@@ -1166,8 +1314,8 @@ public class YieldTable implements Closeable {
 	 * @throws YieldTableGenerationException
 	 */
 	private LayerYields obtainStandYield(
-			YieldTableRowContext rowContext, Map<Integer, VdypPolygon> projectedPolygons, Layer layer, Stand stand,
-			int ageToRequest
+			YieldTableRowContext rowContext, Map<Integer, VdypPolygon> polygonProjectionsByYear, Layer layer,
+			Stand stand, int ageToRequest
 	) throws StandYieldCalculationException {
 
 		Validate.notNull(rowContext, "YieldTable.obtainStandYield(): rowContext must not be null");
@@ -1183,6 +1331,165 @@ public class YieldTable implements Closeable {
 				rowContext.getPolygonProjectionState().layerWasProjected(layer),
 				MessageFormat.format("YieldTable.obtainStandYield(): layer {0} must have been projected", layer)
 		);
+
+		LayerYields layerYields;
+
+		Integer calendarYear = getCalendarYear(layer, ageToRequest);
+
+		Species sp0;
+		if (stand == null) {
+			sp0 = layer.getSp0sByPercent().get(0).getSpeciesGroup();
+		} else {
+			sp0 = stand.getSpeciesGroup();
+		}
+
+		var projectionType = layer.getAssignedProjectionType();
+		LayerType layerType = getLayerType(projectionType);
+
+		// Obtain the yields at the requested age.
+
+		// If the initial processing results ended up indicating a
+		// code of -14, we will not attempt to obtain projected
+		// values. This return code indicates the stand will never
+		// reach productive status and therefore there will never
+		// be projected values.
+		//
+		// This is not an error. It indicates the stand lies on
+		// some very poor ground for growing trees.
+
+		boolean doReprojectHeight;
+
+		switch (projectionType) {
+		case VETERAN:
+		case DO_NOT_PROJECT:
+		case UNKNOWN:
+			doReprojectHeight = true;
+			break;
+		case DEAD:
+		case PRIMARY:
+		case REGENERATION:
+		case RESIDUAL:
+			doReprojectHeight = false;
+			break;
+		default:
+			throw new IllegalStateException("Unknown projection type " + projectionType);
+		}
+
+		var initialProcessingResult = rowContext.getPolygonProjectionState()
+				.getProcessingResults(ProjectionStageCode.Initial, projectionType);
+		var runCode = initialProcessingResult.getRunCode().isPresent() ? initialProcessingResult.getRunCode().get() : 0;
+
+		if (layerType != null && runCode == -14) {
+			throw new StandYieldCalculationException(-14 /* ?!? */);
+		}
+
+		var projectedPolygon = polygonProjectionsByYear.get(calendarYear);
+		if (projectedPolygon != null && layerType != null) {
+
+			var projectedLayer = projectedPolygon.getLayers().get(layerType);
+			var projectedSp0 = projectedLayer.getSpeciesBySp0(sp0.getSpeciesCode());
+
+			boolean isDominantSpecies = projectedSp0.getSite().isPresent();
+
+			// VDYP7 projects the polygon over the entire requested range of years using some
+			// combination of Forward and Back. In VDYP8 we currently -do not- support Back,
+			// and so some years may be missing from polygonProjectionsByYear.
+
+			if (polygonProjectionsByYear.containsKey(calendarYear)) {
+
+				var sp0Name = SP0Name.forText(sp0.getSpeciesCode());
+				var ucReportingLevel = context.getParams().getUtils().get(sp0Name);
+
+				double totalAge = Vdyp7Constants.EMPTY_DECIMAL;
+				double dominantHeight = Vdyp7Constants.EMPTY_DECIMAL;
+				double siteIndex = Vdyp7Constants.EMPTY_DECIMAL;
+				int siteCurve = Vdyp7Constants.EMPTY_INT;
+
+				if (projectedSp0.getSite().isPresent()) {
+					var site = projectedSp0.getSite().get();
+
+					totalAge = site.getAgeTotal().map(v -> v.doubleValue()).orElse(null);
+					dominantHeight = site.getHeight().map(v -> v.doubleValue()).orElse(null);
+					siteIndex = site.getSiteIndex().map(v -> v.doubleValue()).orElse(null);
+					siteCurve = site.getSiteCurveNumber().orElse(null);
+				}
+
+				var treePerHectare = ucReportingLevel.sumOf(projectedSp0.getTreesPerHectareByUtilization());
+				var wholeStemVolume = ucReportingLevel.sumOf(projectedSp0.getWholeStemVolumeByUtilization());
+				var closeUtilizationVolume = ucReportingLevel
+						.sumOf(projectedSp0.getCloseUtilizationVolumeByUtilization());
+				var cuVolumeLessDecay = ucReportingLevel
+						.sumOf(projectedSp0.getCloseUtilizationVolumeNetOfDecayByUtilization());
+				var cuVolumeLessDecayWastage = ucReportingLevel
+						.sumOf(projectedSp0.getCloseUtilizationVolumeNetOfDecayAndWasteByUtilization());
+				var cuVolumeLessDecayWastageBreakage = ucReportingLevel
+						.sumOf(projectedSp0.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization());
+
+				var basalArea75cmPlus = UtilizationClassSet._7_5.sumOf(projectedSp0.getBaseAreaByUtilization());
+				var basalArea125cmPlus = UtilizationClassSet._12_5.sumOf(projectedSp0.getBaseAreaByUtilization());
+
+				var diameter = ucReportingLevel.sumOf(projectedSp0.getQuadraticMeanDiameterByUtilization());
+				var reportedStandPercent = projectedSp0.getPercentGenus();
+
+				double loreyHeight = projectedSp0.getLoreyHeightByUtilization().get(UtilizationClass.ALL);
+				if (ucReportingLevel == UtilizationClassSet._4_0 /* i.e., "ALL" + "SMALL" */) {
+					loreyHeight += projectedSp0.getLoreyHeightByUtilization().get(UtilizationClass.SMALL);
+				}
+
+				layerYields = new LayerYields(
+						true, isDominantSpecies, sp0.getSpeciesCode(), calendarYear, totalAge, dominantHeight,
+						loreyHeight, siteIndex, diameter, treePerHectare, wholeStemVolume, closeUtilizationVolume,
+						cuVolumeLessDecay, cuVolumeLessDecayWastage, cuVolumeLessDecayWastageBreakage,
+						basalArea75cmPlus, basalArea125cmPlus, reportedStandPercent, siteCurve
+				);
+			} else {
+				layerYields = new LayerYields(
+						false, false /* not dominant */, sp0.getSpeciesCode(), calendarYear, 0.0, 0.0, 0.0, 0.0, 0.0,
+						0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0
+				);
+			}
+		} else {
+			context.addMessage(
+					Level.WARN, "{0}: projected data for the {1} layer was not generated at calendar year {2,number,#}",
+					rowContext.getPolygon(), projectionType, calendarYear
+			);
+
+			layerYields = new LayerYields(
+					false, false, null, calendarYear, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+					0.0, 0
+			);
+		}
+
+		// TODO: handle "doReprojectHeight".
+
+		return layerYields;
+	}
+
+	private LayerType getLayerType(ProjectionTypeCode projectionType) {
+
+		LayerType layerType;
+		switch (projectionType) {
+		case VETERAN:
+			layerType = LayerType.PRIMARY;
+			break;
+		case DEAD:
+		case PRIMARY:
+		case REGENERATION:
+		case RESIDUAL:
+			layerType = LayerType.PRIMARY;
+			break;
+		case DO_NOT_PROJECT:
+		case UNKNOWN:
+			layerType = null;
+			break;
+		default:
+			throw new IllegalStateException("Unknown projection type " + projectionType);
+		}
+
+		return layerType;
+	}
+
+	private int getCalendarYear(Layer layer, int ageToRequest) throws StandYieldCalculationException {
 
 		var projectionType = layer.getAssignedProjectionType();
 
@@ -1233,142 +1540,7 @@ public class YieldTable implements Closeable {
 			throw new StandYieldCalculationException(calendarYear == null ? -9 : calendarYear);
 		}
 
-		// Obtain the yields at the requested age.
-
-		// If the initial processing results ended up indicating a
-		// code of -14, we will not attempt to obtain projected
-		// values. This return code indicates the stand will never
-		// reach productive status and therefore there will never
-		// be projected values.
-		//
-		// This is not an error. It indicates the stand lies on
-		// some very poor ground for growing trees.
-
-		Species sp0;
-		if (stand == null) {
-			sp0 = layer.getSp0sByPercent().get(0).getSpeciesGroup();
-		} else {
-			sp0 = stand.getSpeciesGroup();
-		}
-
-		boolean doReprojectHeight;
-		LayerType layerType;
-		switch (projectionType) {
-		case VETERAN:
-			layerType = LayerType.PRIMARY;
-			doReprojectHeight = true;
-			break;
-		case DEAD:
-		case PRIMARY:
-		case REGENERATION:
-		case RESIDUAL:
-			layerType = LayerType.PRIMARY;
-			doReprojectHeight = false;
-			break;
-		case DO_NOT_PROJECT:
-		case UNKNOWN:
-			layerType = null;
-			doReprojectHeight = true;
-			break;
-		default:
-			throw new IllegalStateException("Unknown projection type " + projectionType);
-		}
-
-		var initialProcessingResult = rowContext.getPolygonProjectionState()
-				.getProcessingResults(ProjectionStageCode.Initial, projectionType);
-		var runCode = initialProcessingResult.getRunCode().isPresent() ? initialProcessingResult.getRunCode().get() : 0;
-
-		if (layerType != null && runCode == -14) {
-			throw new StandYieldCalculationException(-14 /* ?!? */);
-		}
-
-		var projectedPolygon = projectedPolygons.get(calendarYear);
-		if (projectedPolygon != null) {
-			var projectedLayer = projectedPolygon.getLayers().get(layerType);
-			var projectedSp0 = projectedLayer.getSpeciesBySp0(sp0.getSpeciesCode());
-			var standYear = calendarYear;
-
-			boolean isDominantSpecies = projectedSp0.getSite().isPresent();
-
-			if (layerType != null) {
-
-				// VDYP7 projects the polygon over the entire requested range of years using some
-				// combination of Forward and Back. In VDYP8 we currently -do not- support Back,
-				// and so some years may be missing from projectedPolygons.
-
-				if (projectedPolygons.containsKey(calendarYear)) {
-
-					var sp0Name = SP0Name.forText(sp0.getSpeciesCode());
-					var ucReportingLevel = context.getParams().getUtils().get(sp0Name);
-
-					double totalAge = Vdyp7Constants.EMPTY_DECIMAL;
-					double ageAtBreastHeight = Vdyp7Constants.EMPTY_DECIMAL;
-					double dominantHeight = Vdyp7Constants.EMPTY_DECIMAL;
-					double siteIndex = Vdyp7Constants.EMPTY_DECIMAL;
-					int siteCurve = Vdyp7Constants.EMPTY_INT;
-
-					if (projectedSp0.getSite().isPresent()) {
-						var site = projectedSp0.getSite().get();
-
-						totalAge = site.getAgeTotal().map(v -> v.doubleValue()).orElse(null);
-						ageAtBreastHeight = site.getYearsAtBreastHeight().map(v -> v.doubleValue()).orElse(null);
-						dominantHeight = site.getHeight().map(v -> v.doubleValue()).orElse(null);
-						siteIndex = site.getSiteIndex().map(v -> v.doubleValue()).orElse(null);
-						siteCurve = site.getSiteCurveNumber().orElse(null);
-					}
-
-					var treePerHectare = ucReportingLevel.sumOf(projectedSp0.getTreesPerHectareByUtilization());
-					var wholeStemVolume = ucReportingLevel.sumOf(projectedSp0.getWholeStemVolumeByUtilization());
-					var closeUtilizationVolume = ucReportingLevel
-							.sumOf(projectedSp0.getCloseUtilizationVolumeByUtilization());
-					var cuVolumeLessDecay = ucReportingLevel
-							.sumOf(projectedSp0.getCloseUtilizationVolumeNetOfDecayByUtilization());
-					var cuVolumeLessDecayWastage = ucReportingLevel
-							.sumOf(projectedSp0.getCloseUtilizationVolumeNetOfDecayAndWasteByUtilization());
-					var cuVolumeLessDecayWastageBreakage = ucReportingLevel
-							.sumOf(projectedSp0.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization());
-
-					var basalArea75cmPlus = UtilizationClassSet._7_5.sumOf(projectedSp0.getBaseAreaByUtilization());
-					var basalArea125cmPlus = UtilizationClassSet._12_5.sumOf(projectedSp0.getBaseAreaByUtilization());
-
-					var diameter = ucReportingLevel.sumOf(projectedSp0.getQuadraticMeanDiameterByUtilization());
-					var reportedStandPercent = projectedSp0.getPercentGenus();
-
-					double loreyHeight;
-					if (ucReportingLevel == UtilizationClassSet._7_5 /* i.e., "ALL" */) {
-						loreyHeight = projectedSp0.getLoreyHeightByUtilization().get(UtilizationClass.ALL);
-					} else if (ucReportingLevel == UtilizationClassSet._4_0 /* i.e., "ALL" + "SMALL" */) {
-						loreyHeight = projectedSp0.getLoreyHeightByUtilization().get(UtilizationClass.ALL)
-								+ projectedSp0.getLoreyHeightByUtilization().get(UtilizationClass.SMALL);
-					} else {
-						loreyHeight = 0.0;
-					}
-
-					return new LayerYields(
-							true, isDominantSpecies, sp0.getSpeciesCode(), calendarYear, totalAge, loreyHeight,
-							siteIndex, diameter, treePerHectare, wholeStemVolume, closeUtilizationVolume,
-							cuVolumeLessDecay, cuVolumeLessDecayWastage, cuVolumeLessDecayWastageBreakage, ageToUse,
-							basalArea75cmPlus, basalArea125cmPlus, reportedStandPercent, siteCurve
-					);
-				}
-			} else {
-				return new LayerYields(
-						false, isDominantSpecies, sp0.getSpeciesCode(), calendarYear, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-						0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0
-				);
-			}
-		} else {
-			context.addMessage(
-					Level.WARN,
-					"{0}: projected data for the {1} layer was not generated at stand age {2}, calendar year {3,number,#}",
-					rowContext.getPolygon(), projectionType, ageToUse, calendarYear
-			);
-		}
-
-		return new LayerYields(
-				false, false, null, calendarYear, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-				0
-		);
+		return calendarYear;
 	}
 
 	private static Double computeDiameter(Double treesPerHectare, Double basalArea) {
