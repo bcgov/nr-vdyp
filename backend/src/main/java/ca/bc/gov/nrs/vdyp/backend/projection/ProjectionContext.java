@@ -14,8 +14,10 @@ import java.text.MessageFormat;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -59,6 +61,7 @@ public class ProjectionContext {
 	private final IMessageLog progressLog;
 	private final IMessageLog errorLog;
 	private Optional<YieldTable> yieldTable;
+	private Set<YieldTable.Category> yieldTableCategories;
 
 	private ExecutorService executorService;
 	private FileSystem resourceFileSystem;
@@ -102,9 +105,36 @@ public class ProjectionContext {
 
 		this.validatedParams = ProjectionRequestParametersValidator.validate(params, this.getRequestKind());
 
+		this.yieldTableCategories = new HashSet<YieldTable.Category>();
+
+		addActiveCategories();
+
 		applyVDYP7Limits();
 
 		buildProjectionExecutionStructure();
+	}
+
+	private void addActiveCategories() {
+		if (validatedParams.containsOption(ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER)
+				&& validatedParams.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_BIOMASS)) {
+			yieldTableCategories.add(YieldTable.Category.LAYER_MOFBIOMASS);
+		}
+		if (validatedParams.containsOption(ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER)
+				&& validatedParams.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES)) {
+			yieldTableCategories.add(YieldTable.Category.LAYER_MOFVOLUMES);
+		}
+		if (validatedParams.containsOption(ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER)
+				&& validatedParams.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS)) {
+			yieldTableCategories.add(YieldTable.Category.LAYER_CFSBIOMASS);
+		}
+		if (validatedParams.containsOption(ExecutionOption.DO_INCLUDE_SPECIES_PROJECTION)
+				&& validatedParams.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES)) {
+			yieldTableCategories.add(YieldTable.Category.SPECIES_MOFVOLUME);
+		}
+		if (validatedParams.containsOption(ExecutionOption.DO_INCLUDE_SPECIES_PROJECTION)
+				&& validatedParams.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_BIOMASS)) {
+			yieldTableCategories.add(YieldTable.Category.SPECIES_MOFBIOMASS);
+		}
 	}
 
 	public void recordProjectionDetails(
@@ -313,6 +343,10 @@ public class ProjectionContext {
 			yieldTable = Optional.of(YieldTable.of(this));
 		}
 		return yieldTable.get();
+	}
+
+	public Set<YieldTable.Category> getYieldTableCategories() {
+		return yieldTableCategories;
 	}
 
 	public Path getExecutionFolder() {

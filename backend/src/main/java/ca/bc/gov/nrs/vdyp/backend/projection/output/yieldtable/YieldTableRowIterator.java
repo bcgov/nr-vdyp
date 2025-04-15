@@ -76,8 +76,8 @@ class YieldTableRowIterator implements Iterator<YieldTableRowContext> {
 
 			if (params.containsOption(ExecutionOption.DO_FORCE_CURRENT_YEAR_INCLUSION_IN_YIELD_TABLES)) {
 				if (rowContext.getCurrentTableYear() == null
-						|| rowContext.getCurrentTableYear() > rowContext.getCurrentYear()) {
-					rowContext.setCurrentTableYear(rowContext.getCurrentYear());
+						|| rowContext.getCurrentTableYear() > rowContext.getNowYear()) {
+					rowContext.setCurrentTableYear(rowContext.getNowYear());
 				}
 			}
 
@@ -195,9 +195,9 @@ class YieldTableRowIterator implements Iterator<YieldTableRowContext> {
 		}
 
 		if (params.containsOption(ExecutionOption.DO_FORCE_CURRENT_YEAR_INCLUSION_IN_YIELD_TABLES)
-				&& rowContext.getCurrentTableYear() <= rowContext.getCurrentYear()
+				&& rowContext.getCurrentTableYear() <= rowContext.getNowYear()
 				&& (candidateYear == null || params.getYearForcedIntoYieldTable() < candidateYear)) {
-			candidateYear = rowContext.getCurrentYear();
+			candidateYear = rowContext.getNowYear();
 			hasSetNextAge = true;
 		}
 
@@ -239,7 +239,7 @@ class YieldTableRowIterator implements Iterator<YieldTableRowContext> {
 
 		if (rowContext.getCurrentTableYear() != null && rowContext.getCurrentTableYear() > rowContext.getYearAtEndAge()
 				&& rowContext.getCurrentTableYear() > rowContext.getMeasurementYear()
-				&& rowContext.getCurrentTableYear() > rowContext.getCurrentYear()
+				&& rowContext.getCurrentTableYear() > rowContext.getNowYear()
 				&& rowContext.getCurrentTableYear() > params.getYearForcedIntoYieldTable()) {
 
 			bAnotherRowToBePrinted = false;

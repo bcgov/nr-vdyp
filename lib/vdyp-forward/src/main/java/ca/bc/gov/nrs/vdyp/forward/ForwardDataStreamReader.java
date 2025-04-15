@@ -87,6 +87,10 @@ public class ForwardDataStreamReader {
 	}
 
 	public Optional<VdypPolygon> readNextPolygon() throws ProcessingException {
+		return readNextPolygon(true);
+	}
+
+	public Optional<VdypPolygon> readNextPolygon(boolean doRunPostCreateAdjustments) throws ProcessingException {
 
 		// Advance all the streams until the definition for the polygon is found.
 
@@ -214,7 +218,9 @@ public class ForwardDataStreamReader {
 
 				polygon.setLayers(layerMap);
 
-				UtilizationOperations.doPostCreateAdjustments(polygon);
+				if (doRunPostCreateAdjustments) {
+					UtilizationOperations.doPostCreateAdjustments(polygon);
+				}
 
 				return Optional.of(polygon);
 			} else {
@@ -326,6 +332,11 @@ public class ForwardDataStreamReader {
 			} else {
 				return false;
 			}
+		}
+
+		@Override
+		public String toString() {
+			return layerType.getAlias() + ':' + speciesIndex;
 		}
 
 		@Override

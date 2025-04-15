@@ -6,7 +6,6 @@ import com.opencsv.bean.StatefulBeanToCsv;
 
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.YieldTableGenerationException;
 import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionContext;
-import ca.bc.gov.nrs.vdyp.backend.projection.model.Polygon;
 
 class DCSVYieldTableWriter extends AbstractCSVTypeYieldTableWriter<DCSVYieldTableRecordBean> {
 
@@ -28,7 +27,7 @@ class DCSVYieldTableWriter extends AbstractCSVTypeYieldTableWriter<DCSVYieldTabl
 	}
 
 	@Override
-	protected void recordPerPolygonDetails(Polygon polygon, int yieldTableNumber) {
+	protected void recordPolygonAndLayerDetails(int yieldTableNumber, YieldTableRowContext rowContext) {
 		throw new UnsupportedOperationException("DCSVYieldTableWriter.recordPerPolygonDetails");
 	}
 
