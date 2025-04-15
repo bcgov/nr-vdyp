@@ -652,7 +652,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		return primaryLayer;
 	}
 
-	protected Optional<L> getVeteranLayer(P poly) throws LayerMissingException {
+	protected Optional<L> getVeteranLayer(P poly) {
 		return Utils.optSafe(poly.getLayers().get(LayerType.VETERAN));
 	}
 
