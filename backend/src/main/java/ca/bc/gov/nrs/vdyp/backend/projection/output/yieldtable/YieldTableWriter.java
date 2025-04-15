@@ -9,10 +9,10 @@ import org.apache.commons.lang3.Validate;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.YieldTableGenerationException;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.LayerReportingInfo;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Polygon;
-import ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable.YieldTableRowValues.MultiFieldPrefixes;
-import ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable.YieldTableRowValues.MultiFieldSuffixes;
+import ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable.YieldTableRowBean.MultiFieldPrefixes;
+import ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable.YieldTableRowBean.MultiFieldSuffixes;
 
-abstract class YieldTableWriter<T extends YieldTableRowValues> implements Closeable {
+abstract class YieldTableWriter<T extends YieldTableRowBean> implements Closeable {
 
 	private final Class<T> rowValuesClass;
 	private final Path yieldTableFilePath;

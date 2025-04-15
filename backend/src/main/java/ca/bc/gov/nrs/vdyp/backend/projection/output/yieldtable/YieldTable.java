@@ -63,7 +63,7 @@ public class YieldTable implements Closeable {
 	private final ProjectionContext context;
 	private final ValidatedParameters params;
 
-	private YieldTableWriter<? extends YieldTableRowValues> writer;
+	private YieldTableWriter<? extends YieldTableRowBean> writer;
 	private Path yieldTableFilePath;
 
 	private int nextYieldTableNumber = 1;
@@ -175,10 +175,10 @@ public class YieldTable implements Closeable {
 		nextYieldTableNumber += 1;
 	}
 
-	private YieldTableWriter<? extends YieldTableRowValues> buildYieldTableWriter(OutputFormat outputFormat)
+	private YieldTableWriter<? extends YieldTableRowBean> buildYieldTableWriter(OutputFormat outputFormat)
 			throws YieldTableGenerationException {
 
-		YieldTableWriter<? extends YieldTableRowValues> writer;
+		YieldTableWriter<? extends YieldTableRowBean> writer;
 
 		switch (outputFormat) {
 		case CSV_YIELD_TABLE:
@@ -434,7 +434,7 @@ public class YieldTable implements Closeable {
 	 */
 	private void generateYieldTableRow(
 			YieldTableRowContext rowContext, Map<Integer, VdypPolygon> polygonProjectionsByYear,
-			YieldTableWriter<? extends YieldTableRowValues> writer
+			YieldTableWriter<? extends YieldTableRowBean> writer
 	) throws YieldTableGenerationException {
 
 		var layer = rowContext.isPolygonTable() ? null : rowContext.getLayerReportingInfo().getLayer();

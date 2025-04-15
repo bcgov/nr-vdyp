@@ -3,14 +3,14 @@ package ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable;
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 
-import ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable.YieldTableRowValues.MultiFieldPrefixes;
-import ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable.YieldTableRowValues.MultiFieldSuffixes;
+import ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable.YieldTableRowBean.MultiFieldPrefixes;
+import ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable.YieldTableRowBean.MultiFieldSuffixes;
 
 public class TextYieldTableRecordBeanTest {
 
 	@Test
 	void testLoading() {
-		YieldTableRowValues b = new TextYieldTableRowValuesBean();
+		YieldTableRowBean b = new TextYieldTableRowValuesBean();
 
 		double nextSetValue = 0.0;
 		String nextCodeValue = "a";

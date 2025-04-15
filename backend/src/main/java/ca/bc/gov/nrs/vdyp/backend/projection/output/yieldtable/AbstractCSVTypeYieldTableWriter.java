@@ -14,7 +14,7 @@ import ca.bc.gov.nrs.vdyp.backend.projection.model.LayerReportingInfo;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Polygon;
 import ca.bc.gov.nrs.vdyp.backend.utils.Utils;
 
-abstract class AbstractCSVTypeYieldTableWriter<T extends YieldTableRowValues> extends YieldTableWriter<T> {
+abstract class AbstractCSVTypeYieldTableWriter<T extends YieldTableRowBean> extends YieldTableWriter<T> {
 
 	public static final String YIELD_TABLE_FILE_NAME = "Output_YldTbl.csv";
 

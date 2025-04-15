@@ -1,7 +1,7 @@
 package ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable;
 
-import static ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable.YieldTableRowValues.MultiFieldPrefixes.*;
-import static ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable.YieldTableRowValues.MultiFieldSuffixes.*;
+import static ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable.YieldTableRowBean.MultiFieldPrefixes.*;
+import static ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable.YieldTableRowBean.MultiFieldSuffixes.*;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -14,7 +14,7 @@ import org.apache.commons.lang3.Validate;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
 @RegisterForReflection
-class TextYieldTableRowValuesBean implements YieldTableRowValues {
+class TextYieldTableRowValuesBean implements YieldTableRowBean {
 
 	private String tableNumber;
 	private String featureId;

@@ -1,6 +1,6 @@
 package ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable;
 
-interface YieldTableRowValues {
+interface YieldTableRowBean {
 
 	enum MultiFieldPrefixes {
 		Species("SPECIES_"), SpeciesProjection("PRJ_SP");
