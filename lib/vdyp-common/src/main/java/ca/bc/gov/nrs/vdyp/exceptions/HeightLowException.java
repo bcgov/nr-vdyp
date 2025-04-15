@@ -1,6 +1,5 @@
 package ca.bc.gov.nrs.vdyp.exceptions;
 
-import java.text.MessageFormat;
 import java.util.Optional;
 
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
