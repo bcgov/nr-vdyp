@@ -3,6 +3,8 @@ package ca.bc.gov.nrs.vdyp.exceptions;
 import java.text.MessageFormat;
 import java.util.Optional;
 
+import javax.annotation.Nullable;
+
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.model.PolygonMode;
@@ -18,11 +20,12 @@ public class UnsupportedModeException extends StandProcessingException {
 
 	static final String TEMPLATE = "Mode {0} is not supported.";
 
-	final Optional<PolygonMode> mode;
+	@Nullable
+	private final PolygonMode mode;
 
 	public UnsupportedModeException(Optional<PolygonMode> mode) {
 		super(MessageFormat.format(TEMPLATE, Utils.optNa(mode)));
-		this.mode = mode;
+		this.mode = mode.orElse(null);
 	}
 
 	@Override
@@ -39,11 +42,11 @@ public class UnsupportedModeException extends StandProcessingException {
 
 	private UnsupportedModeException(RuntimeStandProcessingException cause, UnsupportedModeException unwrapped) {
 		super(unwrapped.getMessage(), cause);
-		this.mode = unwrapped.getMode();
+		this.mode = unwrapped.getMode().orElse(null);
 	}
 
 	public Optional<PolygonMode> getMode() {
-		return mode;
+		return Optional.ofNullable(mode);
 	}
 
 }

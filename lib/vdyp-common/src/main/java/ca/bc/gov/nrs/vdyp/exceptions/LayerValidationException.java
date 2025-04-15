@@ -6,7 +6,7 @@ public abstract class LayerValidationException extends StandProcessingException 
 
 	private static final long serialVersionUID = -4273805289141234254L;
 
-	final LayerType layer;
+	private final LayerType layer;
 
 	protected LayerValidationException(
 			RuntimeStandProcessingException cause, Class<? extends LayerValidationException> klazz

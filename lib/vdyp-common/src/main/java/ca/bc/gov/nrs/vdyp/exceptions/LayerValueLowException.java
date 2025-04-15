@@ -4,6 +4,8 @@ import java.text.MessageFormat;
 import java.util.Optional;
 import java.util.function.Function;
 
+import javax.annotation.Nullable;
+
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 
 /**
@@ -18,8 +20,10 @@ public abstract class LayerValueLowException extends LayerValidationException {
 	static final String TEMPLATE_LOW = "{0} of {1} was lower than expected {2}";
 	static final String TEMPLATE_MISSING = "Required {0} was missing";
 
-	final private Optional<Number> value;
-	final private Optional<Number> threshold;
+	@Nullable
+	private final Number value;
+	@Nullable
+	private final Number threshold;
 
 	static String getMessage(String name, Optional<? extends Number> value, Optional<? extends Number> threshold) {
 		if (threshold.isEmpty() && !value.isEmpty()) {
@@ -33,8 +37,8 @@ public abstract class LayerValueLowException extends LayerValidationException {
 			RuntimeStandProcessingException cause, Class<? extends LayerValueLowException> klazz
 	) {
 		super(cause, klazz);
-		this.value = unwrap(cause, klazz).getValue();
-		this.threshold = unwrap(cause, klazz).getThreshold();
+		this.value = unwrap(cause, klazz).getValue().orElse(null);
+		this.threshold = unwrap(cause, klazz).getThreshold().orElse(null);
 	}
 
 	protected LayerValueLowException(
@@ -42,24 +46,24 @@ public abstract class LayerValueLowException extends LayerValidationException {
 			Throwable cause
 	) {
 		super(layer, getMessage(name, value, threshold), cause);
-		this.value = value.map(Number.class::cast);
-		this.threshold = threshold.map(Number.class::cast);
+		this.value = value.map(Number.class::cast).orElse(null);
+		this.threshold = threshold.map(Number.class::cast).orElse(null);
 	}
 
 	protected LayerValueLowException(
 			LayerType layer, String name, Optional<? extends Number> value, Optional<? extends Number> threshold
 	) {
 		super(layer, getMessage(name, value, threshold));
-		this.value = value.map(Number.class::cast);
-		this.threshold = threshold.map(Number.class::cast);
+		this.value = value.map(Number.class::cast).orElse(null);
+		this.threshold = threshold.map(Number.class::cast).orElse(null);
 	}
 
 	public Optional<Number> getValue() {
-		return value;
+		return Optional.ofNullable(value);
 	}
 
 	public Optional<Number> getThreshold() {
-		return threshold;
+		return Optional.ofNullable(threshold);
 	}
 
 	@FunctionalInterface

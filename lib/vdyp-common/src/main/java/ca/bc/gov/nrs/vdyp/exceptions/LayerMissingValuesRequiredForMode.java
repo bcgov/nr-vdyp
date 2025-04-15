@@ -6,6 +6,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import javax.annotation.Nullable;
+
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
@@ -20,8 +22,9 @@ public class LayerMissingValuesRequiredForMode extends LayerValidationException 
 
 	static final String TEMPLATE = "{2} must be present and positive for a {0} layer in a polygon with mode {1}";
 
-	final Optional<PolygonMode> mode;
-	final List<String> missingValues;
+	@Nullable
+	private final PolygonMode mode;
+	private final ArrayList<String> missingValues;
 
 	private static String getMessage(LayerType layer, Optional<PolygonMode> mode, List<String> values) {
 		return MessageFormat
@@ -37,16 +40,16 @@ public class LayerMissingValuesRequiredForMode extends LayerValidationException 
 			RuntimeStandProcessingException wrapper, LayerMissingValuesRequiredForMode unwrapped
 	) {
 		super(unwrapped.getLayer(), unwrapped.getMessage(), wrapper);
-		this.mode = unwrapped.getMode();
-		this.missingValues = unwrapped.getMissingValues();
+		this.mode = unwrapped.mode;
+		this.missingValues = unwrapped.missingValues;
 	}
 
 	public LayerMissingValuesRequiredForMode(LayerType layer, Optional<PolygonMode> mode, List<String> values) {
 		super(layer, getMessage(layer, mode, values));
-		this.mode = mode;
-		List<String> list = new ArrayList<>(values.size());
+		this.mode = mode.orElse(null);
+		ArrayList<String> list = new ArrayList<>(values.size());
 		list.addAll(values);
-		this.missingValues = Collections.unmodifiableList(list);
+		this.missingValues = list;
 	}
 
 	@Override
@@ -57,11 +60,11 @@ public class LayerMissingValuesRequiredForMode extends LayerValidationException 
 	}
 
 	public Optional<PolygonMode> getMode() {
-		return this.mode;
+		return Optional.ofNullable(this.mode);
 	}
 
 	public List<String> getMissingValues() {
-		return this.missingValues;
+		return Collections.unmodifiableList(this.missingValues);
 	}
 
 }
