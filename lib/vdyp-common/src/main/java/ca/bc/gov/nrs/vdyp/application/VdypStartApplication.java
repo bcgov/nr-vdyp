@@ -281,10 +281,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 	protected L requireLayer(P polygon, LayerType type) throws ProcessingException {
 		if (!polygon.getLayers().containsKey(type)) {
-			throw validationError(
-					-1, -1, "Polygon \"%s\" has no %s layer, or that layer has non-positive height or crown closure.",
-					polygon.getPolygonIdentifier(), type
-			);
+			throw new LayerMissingException(type);
 		}
 
 		return polygon.getLayers().get(type);
@@ -680,22 +677,6 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 								: new FatalProcessingException(opt.get())
 				)
 		);
-	}
-
-	protected static StandProcessingException
-			validationError(Integer ipassFip, Integer ipassVri, String template, Object... values) {
-		// TODO this is temporary and should be removed
-
-		return new StandProcessingException(String.format(template, values)) {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public Optional<Integer> getIpassCode(VdypApplicationIdentifier app) {
-				// TODO Auto-generated method stub
-				return Optional.empty();
-			}
-
-		};
 	}
 
 	protected static FatalProcessingException fatalError(String template, Object... values) {

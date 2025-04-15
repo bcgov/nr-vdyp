@@ -44,6 +44,7 @@ import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common.VdypApplicationInitializationException;
 import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMapImpl;
 import ca.bc.gov.nrs.vdyp.exceptions.BaseAreaLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.LayerMissingException;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BecDefinitionParser;
@@ -1640,13 +1641,13 @@ class VdypStartApplicationTest {
 
 				var result = app.requireLayer(poly, LayerType.PRIMARY);
 				assertThat(result, is(layer));
-				var ex = assertThrows(StandProcessingException.class, () -> app.requireLayer(poly, LayerType.VETERAN));
+				var ex = assertThrows(LayerMissingException.class, () -> app.requireLayer(poly, LayerType.VETERAN));
 				assertThat(
 						ex,
 						hasProperty(
-								"message",
+								"layer",
 								is(
-										"Polygon \"TestPoly             2024\" has no VETERAN layer, or that layer has non-positive height or crown closure."
+										LayerType.VETERAN
 								)
 						)
 				);

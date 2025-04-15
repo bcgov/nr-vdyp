@@ -36,6 +36,7 @@ import ca.bc.gov.nrs.vdyp.application.VdypStartApplication;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.exceptions.HeightLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.LayerMissingException;
 import ca.bc.gov.nrs.vdyp.exceptions.LayerSpeciesDoNotSumTo100PercentException;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.SiteIndexLowException;
@@ -152,14 +153,13 @@ class FipStartTest {
 			});
 			polygon.setLayers(List.of(layer2));
 
-			var ex = assertThrows(StandProcessingException.class, () -> app.checkPolygon(polygon));
+			var ex = assertThrows(LayerMissingException.class, () -> app.checkPolygon(polygon));
 			assertThat(
 					ex,
 					hasProperty(
-							"message",
+							"layer",
 							is(
-									"Polygon \"" + polygonId + "\" has no " + LayerType.PRIMARY
-											+ " layer, or that layer has non-positive height or crown closure."
+									LayerType.PRIMARY
 							)
 					)
 			);
