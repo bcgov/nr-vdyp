@@ -56,8 +56,7 @@ class ExceptionsTest {
 
 	@ParameterizedTest
 	@MethodSource("exampleStandProcessingExceptions")
-	void testUnwrapRuntimeExceptionMessage(StandProcessingException ex)
-			throws Exception {
+	void testUnwrapRuntimeExceptionMessage(StandProcessingException ex) throws Exception {
 		var wrapper = new RuntimeStandProcessingException(ex);
 		var unwrapped = ex.getClass().getConstructor(RuntimeStandProcessingException.class).newInstance(wrapper);
 
@@ -66,8 +65,7 @@ class ExceptionsTest {
 
 	@ParameterizedTest
 	@MethodSource("exampleStandProcessingExceptions")
-	void testUnwrapRuntimeExceptionLayer(StandProcessingException ex)
-			throws Exception {
+	void testUnwrapRuntimeExceptionLayer(StandProcessingException ex) throws Exception {
 		assumeThat(ex, isA(LayerValidationException.class));
 		var wrapper = new RuntimeStandProcessingException(ex);
 		var unwrapped = ex.getClass().getConstructor(RuntimeStandProcessingException.class).newInstance(wrapper);
@@ -78,8 +76,7 @@ class ExceptionsTest {
 
 	@ParameterizedTest
 	@MethodSource("exampleStandProcessingExceptions")
-	void testUnwrapRuntimeExceptionValue(StandProcessingException ex)
-			throws Exception {
+	void testUnwrapRuntimeExceptionValue(StandProcessingException ex) throws Exception {
 		assumeThat(ex, isA(LayerValueLowException.class));
 		var wrapper = new RuntimeStandProcessingException(ex);
 		var unwrapped = ex.getClass().getConstructor(RuntimeStandProcessingException.class).newInstance(wrapper);
@@ -90,8 +87,7 @@ class ExceptionsTest {
 
 	@ParameterizedTest
 	@MethodSource("exampleStandProcessingExceptions")
-	void testUnwrapRuntimeExceptionThreshold(StandProcessingException ex)
-			throws Exception {
+	void testUnwrapRuntimeExceptionThreshold(StandProcessingException ex) throws Exception {
 		assumeThat(ex, isA(LayerValueLowException.class));
 		var wrapper = new RuntimeStandProcessingException(ex);
 		var unwrapped = ex.getClass().getConstructor(RuntimeStandProcessingException.class).newInstance(wrapper);
@@ -102,8 +98,7 @@ class ExceptionsTest {
 
 	@ParameterizedTest
 	@MethodSource("exampleStandProcessingExceptions")
-	void testUnwrapRuntimeExceptionIpass(StandProcessingException ex)
-			throws Exception {
+	void testUnwrapRuntimeExceptionIpass(StandProcessingException ex) throws Exception {
 		var wrapper = new RuntimeStandProcessingException(ex);
 		var unwrapped = ex.getClass().getConstructor(RuntimeStandProcessingException.class).newInstance(wrapper);
 
@@ -113,17 +108,18 @@ class ExceptionsTest {
 	}
 
 	@Test
-	void testUnwrapMismatch()
-			throws Exception {
+	void testUnwrapMismatch() {
 		var ex = new BecMissingException();
 		var wrapper = new RuntimeStandProcessingException(ex);
 		var thrown = assertThrows(IllegalArgumentException.class, () -> new BaseAreaLowException(wrapper));
 
 		assertThat(
-				thrown, hasProperty(
-						"message", equalTo(
-								"Could not unwrap RuntimeStandProcessingException to " + BaseAreaLowException.class
-										.getCanonicalName()
+				thrown,
+				hasProperty(
+						"message",
+						equalTo(
+								"Could not unwrap RuntimeStandProcessingException to "
+										+ BaseAreaLowException.class.getCanonicalName()
 						)
 				)
 		);

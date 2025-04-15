@@ -154,15 +154,7 @@ class FipStartTest {
 			polygon.setLayers(List.of(layer2));
 
 			var ex = assertThrows(LayerMissingException.class, () -> app.checkPolygon(polygon));
-			assertThat(
-					ex,
-					hasProperty(
-							"layer",
-							is(
-									LayerType.PRIMARY
-							)
-					)
-			);
+			assertThat(ex, hasProperty("layer", is(LayerType.PRIMARY)));
 		}
 	}
 

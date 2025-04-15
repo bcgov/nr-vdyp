@@ -722,7 +722,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 	}
 
 	private record VeteranResult(float treesPerHectare, boolean lowDq) {
-	};
+	}
 
 	private ResultWithStatus<Float, ResultWithStatus.BasicStatus>
 			processVeteranLayer(VriPolygon polygon, VdypLayer.Builder lBuilder) throws FatalProcessingException {

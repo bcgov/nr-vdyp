@@ -4084,14 +4084,9 @@ class VriStartTest {
 
 		TestUtils.populateControlMapGenusReal(controlMap);
 		TestUtils.populateControlMapBecReal(controlMap);
-		controlMap.put(
-				ControlKey.DEFAULT_EQ_NUM.name(),
-				new MatrixMap2Impl(List.of("D"), List.of("CDF"), (x, y) -> 42)
-		);
-		controlMap.put(
-				ControlKey.EQN_MODIFIERS.name(),
-				new MatrixMap2Impl(List.of(42), List.of(37), (x, y) -> 64)
-		);
+		controlMap
+				.put(ControlKey.DEFAULT_EQ_NUM.name(), new MatrixMap2Impl(List.of("D"), List.of("CDF"), (x, y) -> 42));
+		controlMap.put(ControlKey.EQN_MODIFIERS.name(), new MatrixMap2Impl(List.of(42), List.of(37), (x, y) -> 64));
 
 		var bec = Utils.getBec("CDF", controlMap);
 

@@ -23,9 +23,7 @@ public class LayerMissingException extends LayerValidationException {
 		super(layer, MessageFormat.format(TEMPLATE, layer));
 	}
 
-	public LayerMissingException(
-			RuntimeStandProcessingException cause
-	) {
+	public LayerMissingException(RuntimeStandProcessingException cause) {
 		super(cause, LayerMissingException.class);
 	}
 

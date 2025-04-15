@@ -671,16 +671,12 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	 * exception if necessary.
 	 */
 	protected static <E extends Throwable> void fatalIfPresent(Optional<E> opt) throws FatalProcessingException {
-		throwIfPresent(
-				opt.map(
-						ex -> {
-							if (ex instanceof FatalProcessingException fatal) {
-								return fatal;
-							}
-							return new FatalProcessingException(ex);
-						}
-				)
-		);
+		throwIfPresent(opt.map(ex -> {
+			if (ex instanceof FatalProcessingException fatal) {
+				return fatal;
+			}
+			return new FatalProcessingException(ex);
+		}));
 	}
 
 	protected static FatalProcessingException fatalError(String template, Object... values) {

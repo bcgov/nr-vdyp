@@ -1642,15 +1642,7 @@ class VdypStartApplicationTest {
 				var result = app.requireLayer(poly, LayerType.PRIMARY);
 				assertThat(result, is(layer));
 				var ex = assertThrows(LayerMissingException.class, () -> app.requireLayer(poly, LayerType.VETERAN));
-				assertThat(
-						ex,
-						hasProperty(
-								"layer",
-								is(
-										LayerType.VETERAN
-								)
-						)
-				);
+				assertThat(ex, hasProperty("layer", is(LayerType.VETERAN)));
 
 			}
 
