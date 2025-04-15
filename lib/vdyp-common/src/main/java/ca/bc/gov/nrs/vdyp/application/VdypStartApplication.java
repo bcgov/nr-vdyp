@@ -380,7 +380,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	 * @return
 	 * @throws ProcessingException
 	 */
-	protected int findItg(List<S> primarySecondary) throws FatalProcessingException, UnsupportedSpeciesException {
+	protected int findItg(List<S> primarySecondary) throws UnsupportedSpeciesException {
 		var primary = primarySecondary.get(0);
 
 		if (primary.getPercentGenus() > 79.999) { // Copied from VDYP7

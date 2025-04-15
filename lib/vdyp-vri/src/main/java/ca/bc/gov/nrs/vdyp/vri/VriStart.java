@@ -305,8 +305,6 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 					}
 				} catch (StandProcessingException ex) {
 					throw new RuntimeStandProcessingException(ex);
-				} catch (ProcessingException ex) {
-					throw new RuntimeProcessingException(ex);
 				}
 				return builder;
 			}).map(VriLayer.Builder::build).collect(Collectors.toUnmodifiableMap(VriLayer::getLayerType, x -> x));
