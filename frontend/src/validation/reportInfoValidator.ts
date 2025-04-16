@@ -2,6 +2,16 @@ import { ValidationBase } from './validationBase'
 import { CONSTANTS } from '@/constants'
 
 export class ReportInfoValidator extends ValidationBase {
+  validateRequiredFields(
+    startingAge: number | null,
+    finishingAge: number | null,
+    ageIncrement: number | null,
+  ): boolean {
+    return (
+      startingAge !== null && finishingAge !== null && ageIncrement !== null
+    )
+  }
+
   validateAgeComparison(
     startingAge: number | null,
     finishingAge: number | null,

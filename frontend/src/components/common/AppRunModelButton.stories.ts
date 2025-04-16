@@ -20,10 +20,6 @@ const meta: Meta<typeof AppRunModelButton> = {
       description: 'CSS class for the card actions element.',
       defaultValue: 'card-actions',
     },
-    runModel: {
-      action: 'runModel',
-      description: 'Emits when the "Run Model" button is clicked.',
-    },
   },
   tags: ['autodocs'],
 }

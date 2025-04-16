@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/vue3'
 import SpeciesListInput from './SpeciesListInput.vue'
-import type { SpeciesList } from '@/interfaces/interfaces'
 import { CONSTANTS, BIZCONSTANTS } from '@/constants'
+import { action } from '@storybook/addon-actions'
 
 const computedSpeciesOptions = Object.keys(BIZCONSTANTS.SPECIES_MAP).map(
   (code) => ({
@@ -51,10 +51,6 @@ const meta: Meta<typeof SpeciesListInput> = {
       description: 'Step value for the percent input.',
       defaultValue: CONSTANTS.NUM_INPUT_LIMITS.SPECIES_PERCENT_STEP,
     },
-    'update:speciesList': {
-      action: 'update:speciesList',
-      description: 'Event emitted when the species list is updated.',
-    },
   },
   tags: ['autodocs'],
 }
@@ -64,20 +60,20 @@ export default meta
 type Story = StoryObj<typeof SpeciesListInput>
 
 export const Default: Story = {
-  render: (args, { argTypes }) => ({
+  render: (args) => ({
     components: { SpeciesListInput },
-    props: Object.keys(argTypes),
+    setup() {
+      return {
+        args,
+        onUpdateSpeciesList: action('update:speciesList'),
+      }
+    },
     template: `
       <SpeciesListInput
-        v-bind="$props"
-        @update:speciesList="onSpeciesListUpdate"
+        v-bind="args"
+        @update:speciesList="onUpdateSpeciesList"
       />
     `,
-    methods: {
-      onSpeciesListUpdate(newSpeciesList: SpeciesList) {
-        console.log('Updated Species List:', newSpeciesList)
-      },
-    },
   }),
   args: {
     speciesList: [

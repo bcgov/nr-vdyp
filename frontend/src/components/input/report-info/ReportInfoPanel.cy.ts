@@ -2,6 +2,7 @@ import { mount } from 'cypress/vue'
 import { createVuetify } from 'vuetify'
 import 'vuetify/styles'
 import ReportInfoPanel from './ReportInfoPanel.vue'
+import { useAppStore } from '@/stores/appStore'
 import { useModelParameterStore } from '@/stores/modelParameterStore'
 import { setActivePinia, createPinia } from 'pinia'
 import { CONSTANTS, MESSAGE } from '@/constants'
@@ -24,10 +25,12 @@ describe('ReportInfoPanel.vue', () => {
 
   const mountComponent = (overrides = {}) => {
     const modelParameterStore = useModelParameterStore()
+    const appStore = useAppStore()
 
     modelParameterStore.setDefaultValues()
 
-    // Assume Species Info, Site Info, Stand Density are verified
+    appStore.modelSelection = CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS
+
     modelParameterStore.confirmPanel(
       CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO,
     )
