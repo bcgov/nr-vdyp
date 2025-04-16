@@ -1605,7 +1605,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 	/**
 	 * Process a polygon
-	 * 
+	 *
 	 * @param polygonsRead
 	 * @param polygon
 	 * @return

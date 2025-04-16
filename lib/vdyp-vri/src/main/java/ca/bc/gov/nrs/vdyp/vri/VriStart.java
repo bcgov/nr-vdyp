@@ -163,7 +163,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 
 			handleProcessing(combinedStream);
 		} catch (IOException | ResourceParseException ex) {
-			throw new ProcessingException("Error while reading or writing data.", ex);
+			throw new FatalProcessingException("Error while reading or writing data.", ex);
 		}
 	}
 
@@ -1227,18 +1227,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		var primaryLayer = poly.getLayers().get(LayerType.PRIMARY);
 		var primarySite = primaryLayer.getPrimarySite().orElseThrow();
 		try {
-			SiteIndexEquation siteCurve = primaryLayer.getPrimarySite() //
-					.flatMap(BaseVdypSite::getSiteCurveNumber) //
-					.map(SiteIndexEquation::getByIndex)//
-					.orElseGet(() -> {
-						try {
-							return this.findSiteCurveNumber(
-									bec.getRegion(), primarySite.getSiteSpecies(), primarySite.getSiteGenus()
-							);
-						} catch (FatalProcessingException e) {
-							throw new RuntimeProcessingException(e);
-						}
-					});
+			SiteIndexEquation siteCurve = getSiteCurveNumber(bec, primarySite);
 
 			float primaryAgeTotal = primarySite.getAgeTotal().orElseThrow(); // AGETOT_L1
 			float primaryYearsToBreastHeight = primarySite.getYearsToBreastHeight().orElseThrow(); // YTBH_L1
@@ -1534,6 +1523,24 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		throw new FatalProcessingException(
 				"Could not find Site Curve Number for inst of the following species: " + String.join(", ", ids)
 		);
+	}
+
+	SiteIndexEquation getSiteCurveNumber(BecDefinition bec, VriSite primarySite) throws FatalProcessingException {
+		try {
+			return primarySite.getSiteCurveNumber() //
+					.map(SiteIndexEquation::getByIndex)//
+					.orElseGet(() -> {
+						try {
+							return this.findSiteCurveNumber(
+									bec.getRegion(), primarySite.getSiteSpecies(), primarySite.getSiteGenus()
+							);
+						} catch (FatalProcessingException e) {
+							throw new RuntimeProcessingException(e);
+						}
+					});
+		} catch (RuntimeProcessingException ex) {
+			throw new FatalProcessingException(ex);
+		}
 	}
 
 	@Override

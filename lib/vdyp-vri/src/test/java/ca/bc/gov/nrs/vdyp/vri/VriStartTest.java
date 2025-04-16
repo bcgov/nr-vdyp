@@ -18,6 +18,7 @@ import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.anything;
 import static org.hamcrest.Matchers.blankString;
 import static org.hamcrest.Matchers.both;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasEntry;
@@ -2474,39 +2475,141 @@ class VriStartTest {
 		return stream;
 	}
 
-	@Test
-	void testFindSiteCurveNumber() throws Exception {
-		var control = EasyMock.createControl();
+	@Nested
+	class SiteCurveNumber {
+		@Test
+		void testFindSiteCurveNumber() throws Exception {
+			var control = EasyMock.createControl();
 
-		VriStart app = new VriStart();
+			VriStart app = new VriStart();
 
-		MockFileResolver resolver = dummyInput();
+			MockFileResolver resolver = dummyInput();
 
-		TestUtils.populateControlMapGenusReal(controlMap);
-		TestUtils.populateControlMapFromResource(controlMap, new SiteCurveParser(), "SIEQN.PRM");
+			TestUtils.populateControlMapGenusReal(controlMap);
+			TestUtils.populateControlMapFromResource(controlMap, new SiteCurveParser(), "SIEQN.PRM");
 
-		control.replay();
+			control.replay();
 
-		app.init(resolver, controlMap);
+			app.init(resolver, controlMap);
 
-		assertThat(app.findSiteCurveNumber(Region.COASTAL, "MB"), is(SiteIndexEquation.getByIndex(10)));
-		assertThat(app.findSiteCurveNumber(Region.INTERIOR, "MB"), is(SiteIndexEquation.getByIndex(10)));
+			assertThat(app.findSiteCurveNumber(Region.COASTAL, "MB"), is(SiteIndexEquation.getByIndex(10)));
+			assertThat(app.findSiteCurveNumber(Region.INTERIOR, "MB"), is(SiteIndexEquation.getByIndex(10)));
 
-		assertThat(app.findSiteCurveNumber(Region.COASTAL, "B"), is(SiteIndexEquation.getByIndex(12)));
-		assertThat(app.findSiteCurveNumber(Region.INTERIOR, "B"), is(SiteIndexEquation.getByIndex(42)));
+			assertThat(app.findSiteCurveNumber(Region.COASTAL, "B"), is(SiteIndexEquation.getByIndex(12)));
+			assertThat(app.findSiteCurveNumber(Region.INTERIOR, "B"), is(SiteIndexEquation.getByIndex(42)));
 
-		assertThat(app.findSiteCurveNumber(Region.COASTAL, "ZZZ", "B"), is(SiteIndexEquation.getByIndex(12)));
-		assertThat(app.findSiteCurveNumber(Region.INTERIOR, "ZZZ", "B"), is(SiteIndexEquation.getByIndex(42)));
+			assertThat(app.findSiteCurveNumber(Region.COASTAL, "ZZZ", "B"), is(SiteIndexEquation.getByIndex(12)));
+			assertThat(app.findSiteCurveNumber(Region.INTERIOR, "ZZZ", "B"), is(SiteIndexEquation.getByIndex(42)));
 
-		assertThat(app.findSiteCurveNumber(Region.COASTAL, "YYY", "B"), is(SiteIndexEquation.getByIndex(42)));
-		assertThat(app.findSiteCurveNumber(Region.INTERIOR, "YYY", "B"), is(SiteIndexEquation.getByIndex(06)));
+			assertThat(app.findSiteCurveNumber(Region.COASTAL, "YYY", "B"), is(SiteIndexEquation.getByIndex(42)));
+			assertThat(app.findSiteCurveNumber(Region.INTERIOR, "YYY", "B"), is(SiteIndexEquation.getByIndex(06)));
 
-		assertThrows(FatalProcessingException.class, () -> app.findSiteCurveNumber(Region.COASTAL, "ZZZ"));
-		assertThrows(FatalProcessingException.class, () -> app.findSiteCurveNumber(Region.INTERIOR, "ZZZ"));
+			assertThrows(FatalProcessingException.class, () -> app.findSiteCurveNumber(Region.COASTAL, "ZZZ"));
+			assertThrows(FatalProcessingException.class, () -> app.findSiteCurveNumber(Region.INTERIOR, "ZZZ"));
 
-		app.close();
+			app.close();
 
-		control.verify();
+			control.verify();
+		}
+
+		@Test
+		void testGetSiteCurveNumberByFinding() throws Exception {
+			var control = EasyMock.createControl();
+
+			VriStart app = new VriStart();
+
+			MockFileResolver resolver = dummyInput();
+
+			TestUtils.populateControlMapGenusReal(controlMap);
+			TestUtils.populateControlMapBecReal(controlMap);
+			TestUtils.populateControlMapFromResource(controlMap, new SiteCurveParser(), "SIEQN.PRM");
+			var bec = Utils.getBec("CDF", controlMap);
+
+			control.replay();
+
+			app.init(resolver, controlMap);
+
+			var site = VriSite.build(builder -> {
+				builder.polygonIdentifier("Test", 2025);
+				builder.layerType(LayerType.PRIMARY);
+				builder.siteSpecies("PL");
+				builder.siteGenus("PL");
+			});
+
+			var result = app.getSiteCurveNumber(bec, site);
+
+			assertThat(result, is(SiteIndexEquation.SI_BL_KURUCZ82));
+
+			app.close();
+
+			control.verify();
+		}
+
+		@Test
+		void testGetSiteCurveNumberDirectly() throws Exception {
+			var control = EasyMock.createControl();
+
+			VriStart app = new VriStart();
+
+			MockFileResolver resolver = dummyInput();
+
+			TestUtils.populateControlMapGenusReal(controlMap);
+			TestUtils.populateControlMapBecReal(controlMap);
+			TestUtils.populateControlMapFromResource(controlMap, new SiteCurveParser(), "SIEQN.PRM");
+			var bec = Utils.getBec("CDF", controlMap);
+
+			control.replay();
+
+			app.init(resolver, controlMap);
+
+			var site = VriSite.build(builder -> {
+				builder.polygonIdentifier("Test", 2025);
+				builder.layerType(LayerType.PRIMARY);
+				builder.siteSpecies("PL");
+				builder.siteGenus("PL");
+				builder.siteCurveNumber(58);
+			});
+
+			var result = app.getSiteCurveNumber(bec, site);
+
+			assertThat(result, is(SiteIndexEquation.SI_SS_NIGHGI));
+
+			app.close();
+
+			control.verify();
+		}
+
+		@Test
+		void testGetSiteCurveNumberFail() throws Exception {
+			var control = EasyMock.createControl();
+
+			VriStart app = new VriStart();
+
+			MockFileResolver resolver = dummyInput();
+
+			TestUtils.populateControlMapGenusReal(controlMap);
+			TestUtils.populateControlMapBecReal(controlMap);
+			TestUtils.populateControlMapFromResource(controlMap, new SiteCurveParser(), "SIEQN.PRM");
+			var bec = Utils.getBec("CDF", controlMap);
+
+			control.replay();
+
+			app.init(resolver, controlMap);
+
+			var site = VriSite.build(builder -> {
+				builder.polygonIdentifier("Test", 2025);
+				builder.layerType(LayerType.PRIMARY);
+				builder.siteSpecies("X");
+				builder.siteGenus("X");
+			});
+
+			var ex = assertThrows(FatalProcessingException.class, () -> app.getSiteCurveNumber(bec, site));
+			assertThat(ex, hasProperty("message", containsString("Could not find Site Curve Number")));
+
+			app.close();
+
+			control.verify();
+		}
 	}
 
 	@Nested
