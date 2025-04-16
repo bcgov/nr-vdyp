@@ -1561,6 +1561,9 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		}
 	}
 
+	/**
+	 * Main loop for processing
+	 */
 	protected void handleProcessing(CombinedPolygonStream<P> combinedStream) throws IOException, ResourceParseException,
 			FatalProcessingException, ProcessingException, StandProcessingException {
 		log.atDebug().setMessage("Start Stand processing").log();
@@ -1592,12 +1595,22 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 					throw ex; // Propagate if this is the last one
 				}
 
+				// Otherwise log a warning and move on to the next one.
+
 				log.atWarn().setMessage("Polygon {} bypassed").addArgument(polygon.getPolygonIdentifier()).setCause(ex);
 			}
 
 		}
 	}
 
+	/**
+	 * Process a polygon
+	 * 
+	 * @param polygonsRead
+	 * @param polygon
+	 * @return
+	 * @throws ProcessingException
+	 */
 	protected abstract Optional<VdypPolygon> processPolygon(int polygonsRead, P polygon) throws ProcessingException;
 
 	protected static interface CombinedPolygonStream<P extends BaseVdypPolygon<?, ?, ?, ?>> {

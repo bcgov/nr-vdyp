@@ -32,6 +32,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import ca.bc.gov.nrs.vdyp.application.VdypStartApplication.CombinedPolygonStream;
 import ca.bc.gov.nrs.vdyp.application.test.TestLayer;
 import ca.bc.gov.nrs.vdyp.application.test.TestPolygon;
 import ca.bc.gov.nrs.vdyp.application.test.TestSite;
@@ -45,6 +46,7 @@ import ca.bc.gov.nrs.vdyp.common.VdypApplicationInitializationException;
 import ca.bc.gov.nrs.vdyp.common.VdypApplicationProcessingException;
 import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMapImpl;
 import ca.bc.gov.nrs.vdyp.exceptions.BaseAreaLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.BecMissingException;
 import ca.bc.gov.nrs.vdyp.exceptions.FatalProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.LayerMissingException;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
@@ -54,6 +56,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.coe.BecDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
+import ca.bc.gov.nrs.vdyp.io.write.VdypOutputWriter;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypLayer;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies;
@@ -195,6 +198,234 @@ class VdypStartApplicationTest {
 		resolver.addStream("DUMMY2", (OutputStream) new ByteArrayOutputStream());
 		resolver.addStream("DUMMY3", (OutputStream) new ByteArrayOutputStream());
 		return resolver;
+	}
+
+	@Nested
+	class HandleProcessing {
+		@Test
+		void testEmpty() throws IOException, ResourceParseException, ProcessingException {
+
+			var control = EasyMock.createControl();
+			MockFileResolver resolver = dummyIo();
+
+			TestStartApplication app = EasyMock.partialMockBuilder(TestStartApplication.class)
+					.addMockedMethod("processPolygon").withConstructor(controlMap, false).createMock(control);
+
+			CombinedPolygonStream<TestPolygon> stream = control.createMock(CombinedPolygonStream.class);
+
+			EasyMock.expect(stream.hasNext()).andStubReturn(false);
+
+			control.replay();
+
+			app.init(resolver, controlMap);
+
+			app.handleProcessing(stream);
+
+			control.verify();
+
+			app.close();
+		}
+
+		@Test
+		void testOneSuccess() throws IOException, ResourceParseException, ProcessingException {
+
+			var control = EasyMock.createControl();
+			MockFileResolver resolver = dummyIo();
+
+			TestStartApplication app = EasyMock.partialMockBuilder(TestStartApplication.class)
+					.addMockedMethod("processPolygon").addMockedMethod("getVriWriter")
+					.withConstructor(controlMap, false).createMock(control);
+
+			TestPolygon testPoly = control.createMock(TestPolygon.class);
+			VdypPolygon resultPoly = control.createMock(VdypPolygon.class);
+
+			VdypOutputWriter writer = control.createMock(VdypOutputWriter.class);
+			EasyMock.expect(app.processPolygon(0, testPoly)).andReturn(Optional.of(resultPoly));
+			EasyMock.expect(app.getVriWriter()).andStubReturn(writer);
+
+			writer.writePolygonWithSpeciesAndUtilization(resultPoly);
+			EasyMock.expectLastCall().once();
+
+			CombinedPolygonStream<TestPolygon> stream = control.createMock(CombinedPolygonStream.class);
+
+			EasyMock.expect(stream.hasNext()).andReturn(true);
+			EasyMock.expect(stream.next()).andReturn(testPoly);
+			EasyMock.expect(stream.hasNext()).andStubReturn(false);
+
+			control.replay();
+
+			app.init(resolver, controlMap);
+
+			app.handleProcessing(stream);
+
+			control.verify();
+
+			app.close();
+		}
+
+		@Test
+		void testOneIgnore() throws IOException, ResourceParseException, ProcessingException {
+
+			var control = EasyMock.createControl();
+			MockFileResolver resolver = dummyIo();
+
+			TestStartApplication app = EasyMock.partialMockBuilder(TestStartApplication.class)
+					.addMockedMethod("processPolygon").addMockedMethod("getVriWriter")
+					.withConstructor(controlMap, false).createMock(control);
+
+			TestPolygon testPoly = control.createMock(TestPolygon.class);
+			VdypPolygon resultPoly = control.createMock(VdypPolygon.class);
+
+			VdypOutputWriter writer = control.createMock(VdypOutputWriter.class);
+			EasyMock.expect(app.processPolygon(0, testPoly)).andReturn(Optional.empty());
+			EasyMock.expect(app.getVriWriter()).andStubReturn(writer);
+
+			// writer.writePolygonWithSpeciesAndUtilization(resultPoly);
+			// EasyMock.expectLastCall().once();
+
+			CombinedPolygonStream<TestPolygon> stream = control.createMock(CombinedPolygonStream.class);
+
+			EasyMock.expect(stream.hasNext()).andReturn(true);
+			EasyMock.expect(stream.next()).andReturn(testPoly);
+			EasyMock.expect(stream.hasNext()).andStubReturn(false);
+
+			control.replay();
+
+			app.init(resolver, controlMap);
+
+			app.handleProcessing(stream);
+
+			control.verify();
+
+			app.close();
+		}
+
+		@Test
+		void testOneSkip() throws IOException, ResourceParseException, ProcessingException {
+
+			var control = EasyMock.createControl();
+			MockFileResolver resolver = dummyIo();
+
+			TestStartApplication app = EasyMock.partialMockBuilder(TestStartApplication.class)
+					.addMockedMethod("processPolygon").addMockedMethod("getVriWriter")
+					.withConstructor(controlMap, false).createMock(control);
+
+			TestPolygon testPoly = control.createMock(TestPolygon.class);
+			VdypPolygon resultPoly = control.createMock(VdypPolygon.class);
+
+			VdypOutputWriter writer = control.createMock(VdypOutputWriter.class);
+			EasyMock.expect(app.processPolygon(0, testPoly)).andThrow(new BecMissingException());
+			EasyMock.expect(app.getVriWriter()).andStubReturn(writer);
+
+			// writer.writePolygonWithSpeciesAndUtilization(resultPoly);
+			// EasyMock.expectLastCall().once();
+
+			CombinedPolygonStream<TestPolygon> stream = control.createMock(CombinedPolygonStream.class);
+
+			EasyMock.expect(stream.hasNext()).andReturn(true);
+			EasyMock.expect(stream.next()).andReturn(testPoly);
+			EasyMock.expect(stream.hasNext()).andStubReturn(false);
+
+			control.replay();
+
+			app.init(resolver, controlMap);
+
+			assertThrows(BecMissingException.class, () -> app.handleProcessing(stream));
+
+			control.verify();
+
+			app.close();
+		}
+
+		@Test
+		void testSkipThenSucceed() throws IOException, ResourceParseException, ProcessingException {
+
+			var control = EasyMock.createControl();
+			MockFileResolver resolver = dummyIo();
+
+			TestStartApplication app = EasyMock.partialMockBuilder(TestStartApplication.class)
+					.addMockedMethod("processPolygon").addMockedMethod("getVriWriter")
+					.withConstructor(controlMap, false).createMock(control);
+
+			TestPolygon testPoly1 = control.createMock(TestPolygon.class);
+			TestPolygon testPoly2 = control.createMock(TestPolygon.class);
+			VdypPolygon resultPoly = control.createMock(VdypPolygon.class);
+
+			EasyMock.expect(testPoly1.getPolygonIdentifier()).andStubReturn(new PolygonIdentifier("testPoly1", 2025));
+
+			VdypOutputWriter writer = control.createMock(VdypOutputWriter.class);
+			EasyMock.expect(app.processPolygon(0, testPoly1)).andThrow(new BecMissingException());
+			EasyMock.expect(app.processPolygon(0, testPoly2)).andReturn(Optional.of(resultPoly));
+			EasyMock.expect(app.getVriWriter()).andStubReturn(writer);
+
+			writer.writePolygonWithSpeciesAndUtilization(resultPoly);
+			EasyMock.expectLastCall().once();
+
+			CombinedPolygonStream<TestPolygon> stream = control.createMock(CombinedPolygonStream.class);
+
+			EasyMock.expect(stream.hasNext()).andReturn(true);
+			EasyMock.expect(stream.next()).andReturn(testPoly1);
+			EasyMock.expect(stream.hasNext()).andReturn(true);
+			EasyMock.expect(stream.hasNext()).andReturn(true);
+			EasyMock.expect(stream.next()).andReturn(testPoly2);
+			EasyMock.expect(stream.hasNext()).andStubReturn(false);
+
+			control.replay();
+
+			app.init(resolver, controlMap);
+
+			app.handleProcessing(stream);
+
+			control.verify();
+
+			app.close();
+		}
+
+		@Test
+		void testMultipleSuccess() throws IOException, ResourceParseException, ProcessingException {
+
+			var control = EasyMock.createControl();
+			MockFileResolver resolver = dummyIo();
+
+			TestStartApplication app = EasyMock.partialMockBuilder(TestStartApplication.class)
+					.addMockedMethod("processPolygon").addMockedMethod("getVriWriter")
+					.withConstructor(controlMap, false).createMock(control);
+
+			TestPolygon testPoly1 = control.createMock(TestPolygon.class);
+			TestPolygon testPoly2 = control.createMock(TestPolygon.class);
+			VdypPolygon resultPoly1 = control.createMock(VdypPolygon.class);
+			VdypPolygon resultPoly2 = control.createMock(VdypPolygon.class);
+
+			EasyMock.expect(testPoly1.getPolygonIdentifier()).andStubReturn(new PolygonIdentifier("testPoly1", 2025));
+
+			VdypOutputWriter writer = control.createMock(VdypOutputWriter.class);
+			EasyMock.expect(app.processPolygon(0, testPoly1)).andReturn(Optional.of(resultPoly1));
+			EasyMock.expect(app.processPolygon(1, testPoly2)).andReturn(Optional.of(resultPoly2));
+			EasyMock.expect(app.getVriWriter()).andStubReturn(writer);
+
+			writer.writePolygonWithSpeciesAndUtilization(resultPoly1);
+			writer.writePolygonWithSpeciesAndUtilization(resultPoly2);
+			EasyMock.expectLastCall().once();
+
+			CombinedPolygonStream<TestPolygon> stream = control.createMock(CombinedPolygonStream.class);
+
+			EasyMock.expect(stream.hasNext()).andReturn(true);
+			EasyMock.expect(stream.next()).andReturn(testPoly1);
+			EasyMock.expect(stream.hasNext()).andReturn(true);
+			EasyMock.expect(stream.next()).andReturn(testPoly2);
+			EasyMock.expect(stream.hasNext()).andStubReturn(false);
+
+			control.replay();
+
+			app.init(resolver, controlMap);
+
+			app.handleProcessing(stream);
+
+			control.verify();
+
+			app.close();
+		}
+
 	}
 
 	@Nested

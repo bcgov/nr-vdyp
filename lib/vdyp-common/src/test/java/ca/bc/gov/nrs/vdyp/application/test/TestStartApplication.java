@@ -100,7 +100,7 @@ public class TestStartApplication extends VdypStartApplication<TestPolygon, Test
 	}
 
 	@Override
-	protected Optional<VdypPolygon> processPolygon(int polygonsRead, TestPolygon polygon) throws ProcessingException {
+	public Optional<VdypPolygon> processPolygon(int polygonsRead, TestPolygon polygon) throws ProcessingException {
 		return Optional.empty();
 	}
 
