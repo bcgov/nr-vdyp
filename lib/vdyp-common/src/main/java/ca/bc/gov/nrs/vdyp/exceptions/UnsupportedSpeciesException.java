@@ -21,11 +21,11 @@ public class UnsupportedSpeciesException extends StandProcessingException {
 		this.species = species;
 	}
 
-	public UnsupportedSpeciesException(RuntimeStandProcessingException cause) {
+	public UnsupportedSpeciesException(RuntimeProcessingException cause) {
 		this(cause, unwrap(cause, UnsupportedSpeciesException.class));
 	}
 
-	private UnsupportedSpeciesException(RuntimeStandProcessingException cause, UnsupportedSpeciesException unwrapped) {
+	private UnsupportedSpeciesException(RuntimeProcessingException cause, UnsupportedSpeciesException unwrapped) {
 		super(unwrapped.getMessage(), cause);
 		this.species = unwrapped.getSpecies();
 	}

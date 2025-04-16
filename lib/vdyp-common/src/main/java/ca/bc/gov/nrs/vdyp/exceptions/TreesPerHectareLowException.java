@@ -16,7 +16,7 @@ public class TreesPerHectareLowException extends LayerValueLowException {
 
 	static final String DEFAULT_NAME = "Trees per hectare";
 
-	public TreesPerHectareLowException(RuntimeStandProcessingException cause) {
+	public TreesPerHectareLowException(RuntimeProcessingException cause) {
 		super(cause, TreesPerHectareLowException.class);
 	}
 

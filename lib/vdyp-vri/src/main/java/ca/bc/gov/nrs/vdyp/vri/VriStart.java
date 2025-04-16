@@ -298,14 +298,8 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 				return builder;
 			}).map(VriLayer.Builder::build).collect(Collectors.toUnmodifiableMap(VriLayer::getLayerType, x -> x));
 
-		} catch (RuntimeStandProcessingException ex) {
-			if (ex.getCause() instanceof CrownClosureLowException)
-				throw new CrownClosureLowException(ex);
-			if (ex.getCause() instanceof UnsupportedSpeciesException)
-				throw new UnsupportedSpeciesException(ex);
-			throw new IllegalStateException("Unexpected exception: " + ex.getCause().getClass(), ex);
 		} catch (RuntimeProcessingException ex) {
-			throw new FatalProcessingException(ex);
+			throw ex.unwrap();
 		}
 		return layers;
 	}

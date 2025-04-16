@@ -16,7 +16,7 @@ public class HeightLowException extends LayerValueLowException {
 
 	static final String DEFAULT_NAME = "Height";
 
-	public HeightLowException(RuntimeStandProcessingException cause) {
+	public HeightLowException(RuntimeProcessingException cause) {
 		super(cause, HeightLowException.class);
 	}
 

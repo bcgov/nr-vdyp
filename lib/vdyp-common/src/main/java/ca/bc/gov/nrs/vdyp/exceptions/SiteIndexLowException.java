@@ -16,7 +16,7 @@ public class SiteIndexLowException extends LayerValueLowException {
 
 	static final String DEFAULT_NAME = "Site index";
 
-	public SiteIndexLowException(RuntimeStandProcessingException cause) {
+	public SiteIndexLowException(RuntimeProcessingException cause) {
 		super(cause, SiteIndexLowException.class);
 	}
 

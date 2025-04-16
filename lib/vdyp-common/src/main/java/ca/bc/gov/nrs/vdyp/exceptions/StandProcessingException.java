@@ -38,12 +38,11 @@ public abstract class StandProcessingException extends ProcessingException {
 	 */
 	public abstract Optional<Integer> getIpassCode(VdypApplicationIdentifier app);
 
-	protected static <T extends StandProcessingException> T
-			unwrap(RuntimeStandProcessingException cause, Class<T> klazz) {
+	protected static <T extends StandProcessingException> T unwrap(RuntimeProcessingException cause, Class<T> klazz) {
 		var unwrapped = cause.getCause();
 		if (!klazz.isInstance(unwrapped)) {
 			final IllegalArgumentException ex = new IllegalArgumentException(
-					"Could not unwrap RuntimeStandProcessingException to " + klazz.getCanonicalName(), cause
+					"Could not unwrap RuntimeProcessingException to " + klazz.getCanonicalName(), cause
 			);
 			ex.addSuppressed(cause);
 			throw ex;

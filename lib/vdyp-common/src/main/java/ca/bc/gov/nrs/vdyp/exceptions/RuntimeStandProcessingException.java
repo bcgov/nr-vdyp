@@ -13,4 +13,9 @@ public class RuntimeStandProcessingException extends RuntimeProcessingException 
 		return (StandProcessingException) super.getCause();
 	}
 
+	@Override
+	public StandProcessingException unwrap() {
+		return (StandProcessingException) super.unwrap();
+	}
+
 }

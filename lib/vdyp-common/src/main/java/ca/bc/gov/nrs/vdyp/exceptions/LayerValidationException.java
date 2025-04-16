@@ -9,7 +9,7 @@ public abstract class LayerValidationException extends StandProcessingException 
 	private final LayerType layer;
 
 	protected LayerValidationException(
-			RuntimeStandProcessingException cause, Class<? extends LayerValidationException> klazz
+			RuntimeProcessingException cause, Class<? extends LayerValidationException> klazz
 	) {
 		this(cause, unwrap(cause, klazz));
 	}
@@ -19,7 +19,7 @@ public abstract class LayerValidationException extends StandProcessingException 
 		this.layer = layer;
 	}
 
-	private LayerValidationException(RuntimeStandProcessingException cause, LayerValidationException unwrapped) {
+	private LayerValidationException(RuntimeProcessingException cause, LayerValidationException unwrapped) {
 		super(unwrapped.getMessage(), cause);
 		this.layer = unwrapped.getLayer();
 	}

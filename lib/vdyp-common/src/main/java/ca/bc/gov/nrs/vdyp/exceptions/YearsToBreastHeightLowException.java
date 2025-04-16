@@ -16,7 +16,7 @@ public class YearsToBreastHeightLowException extends LayerValueLowException {
 
 	static final String DEFAULT_NAME = "Years to breast height";
 
-	public YearsToBreastHeightLowException(RuntimeStandProcessingException cause) {
+	public YearsToBreastHeightLowException(RuntimeProcessingException cause) {
 		super(cause, YearsToBreastHeightLowException.class);
 	}
 

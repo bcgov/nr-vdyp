@@ -12,7 +12,7 @@ public class IncorrectLayerCodesException extends StandProcessingException {
 	private static final long serialVersionUID = -8897339909560075564L;
 	static final String TEMPLATE = "Invalid layer code {0}";
 
-	public IncorrectLayerCodesException(RuntimeStandProcessingException cause) {
+	public IncorrectLayerCodesException(RuntimeProcessingException cause) {
 		super(unwrap(cause, IncorrectLayerCodesException.class).getMessage(), cause);
 	}
 

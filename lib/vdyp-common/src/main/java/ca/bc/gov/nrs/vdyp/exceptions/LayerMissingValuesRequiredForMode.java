@@ -32,12 +32,12 @@ public class LayerMissingValuesRequiredForMode extends LayerValidationException 
 
 	}
 
-	public LayerMissingValuesRequiredForMode(RuntimeStandProcessingException ex) {
+	public LayerMissingValuesRequiredForMode(RuntimeProcessingException ex) {
 		this(ex, unwrap(ex, LayerMissingValuesRequiredForMode.class));
 	}
 
 	private LayerMissingValuesRequiredForMode(
-			RuntimeStandProcessingException wrapper, LayerMissingValuesRequiredForMode unwrapped
+			RuntimeProcessingException wrapper, LayerMissingValuesRequiredForMode unwrapped
 	) {
 		super(unwrapped.getLayer(), unwrapped.getMessage(), wrapper);
 		this.mode = unwrapped.mode;

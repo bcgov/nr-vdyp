@@ -16,7 +16,7 @@ public class TotalAgeLowException extends LayerValueLowException {
 
 	static final String DEFAULT_NAME = "Total age";
 
-	public TotalAgeLowException(RuntimeStandProcessingException cause) {
+	public TotalAgeLowException(RuntimeProcessingException cause) {
 		super(cause, TotalAgeLowException.class);
 	}
 

@@ -56,9 +56,19 @@ class ExceptionsTest {
 
 	@ParameterizedTest
 	@MethodSource("exampleStandProcessingExceptions")
+	void testAutoUnwrap(StandProcessingException ex) throws Exception {
+		var wrapper = new RuntimeProcessingException(ex);
+		var unwrapped = wrapper.unwrap();
+
+		assertThat(unwrapped, isA(ex.getClass()));
+		assertThat(unwrapped, hasProperty("message", equalTo(ex.getMessage())));
+	}
+
+	@ParameterizedTest
+	@MethodSource("exampleStandProcessingExceptions")
 	void testUnwrapRuntimeExceptionMessage(StandProcessingException ex) throws Exception {
-		var wrapper = new RuntimeStandProcessingException(ex);
-		var unwrapped = ex.getClass().getConstructor(RuntimeStandProcessingException.class).newInstance(wrapper);
+		var wrapper = new RuntimeProcessingException(ex);
+		var unwrapped = ex.getClass().getConstructor(RuntimeProcessingException.class).newInstance(wrapper);
 
 		assertThat(unwrapped, hasProperty("message", equalTo(ex.getMessage())));
 	}
@@ -68,7 +78,7 @@ class ExceptionsTest {
 	void testUnwrapRuntimeExceptionLayer(StandProcessingException ex) throws Exception {
 		assumeThat(ex, isA(LayerValidationException.class));
 		var wrapper = new RuntimeStandProcessingException(ex);
-		var unwrapped = ex.getClass().getConstructor(RuntimeStandProcessingException.class).newInstance(wrapper);
+		var unwrapped = ex.getClass().getConstructor(RuntimeProcessingException.class).newInstance(wrapper);
 
 		final var cast = (LayerValidationException) ex;
 		assertThat(unwrapped, hasProperty("layer", equalTo(cast.getLayer())));
@@ -79,7 +89,7 @@ class ExceptionsTest {
 	void testUnwrapRuntimeExceptionValue(StandProcessingException ex) throws Exception {
 		assumeThat(ex, isA(LayerValueLowException.class));
 		var wrapper = new RuntimeStandProcessingException(ex);
-		var unwrapped = ex.getClass().getConstructor(RuntimeStandProcessingException.class).newInstance(wrapper);
+		var unwrapped = ex.getClass().getConstructor(RuntimeProcessingException.class).newInstance(wrapper);
 
 		final var cast = (LayerValueLowException) ex;
 		assertThat(unwrapped, hasProperty("value", equalTo(cast.getValue())));
@@ -90,7 +100,7 @@ class ExceptionsTest {
 	void testUnwrapRuntimeExceptionThreshold(StandProcessingException ex) throws Exception {
 		assumeThat(ex, isA(LayerValueLowException.class));
 		var wrapper = new RuntimeStandProcessingException(ex);
-		var unwrapped = ex.getClass().getConstructor(RuntimeStandProcessingException.class).newInstance(wrapper);
+		var unwrapped = ex.getClass().getConstructor(RuntimeProcessingException.class).newInstance(wrapper);
 
 		final var cast = (LayerValueLowException) ex;
 		assertThat(unwrapped, hasProperty("threshold", equalTo(cast.getThreshold())));
@@ -100,7 +110,7 @@ class ExceptionsTest {
 	@MethodSource("exampleStandProcessingExceptions")
 	void testUnwrapRuntimeExceptionIpass(StandProcessingException ex) throws Exception {
 		var wrapper = new RuntimeStandProcessingException(ex);
-		var unwrapped = ex.getClass().getConstructor(RuntimeStandProcessingException.class).newInstance(wrapper);
+		var unwrapped = ex.getClass().getConstructor(RuntimeProcessingException.class).newInstance(wrapper);
 
 		for (var app : VdypApplicationIdentifier.values()) {
 			assertThat(unwrapped.getIpassCode(app), equalTo(ex.getIpassCode(app)));
@@ -118,7 +128,7 @@ class ExceptionsTest {
 				hasProperty(
 						"message",
 						equalTo(
-								"Could not unwrap RuntimeStandProcessingException to "
+								"Could not unwrap RuntimeProcessingException to "
 										+ BaseAreaLowException.class.getCanonicalName()
 						)
 				)

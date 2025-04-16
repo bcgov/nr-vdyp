@@ -16,7 +16,7 @@ public class QuadraticMeanDiameterLowException extends LayerValueLowException {
 
 	static final String DEFAULT_NAME = "Quadratic mean diameter";
 
-	public QuadraticMeanDiameterLowException(RuntimeStandProcessingException cause) {
+	public QuadraticMeanDiameterLowException(RuntimeProcessingException cause) {
 		super(cause, QuadraticMeanDiameterLowException.class);
 	}
 

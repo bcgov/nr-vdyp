@@ -16,7 +16,7 @@ public class CrownClosureLowException extends LayerValueLowException {
 
 	static final String DEFAULT_NAME = "Crown closure";
 
-	public CrownClosureLowException(RuntimeStandProcessingException cause) {
+	public CrownClosureLowException(RuntimeProcessingException cause) {
 		super(cause, CrownClosureLowException.class);
 	}
 

@@ -26,7 +26,7 @@ public class LayerSpeciesDoNotSumTo100PercentException extends LayerValidationEx
 		super(layer, MessageFormat.format(TEMPLATE, layer));
 	}
 
-	public LayerSpeciesDoNotSumTo100PercentException(RuntimeStandProcessingException cause) {
+	public LayerSpeciesDoNotSumTo100PercentException(RuntimeProcessingException cause) {
 		super(cause, LayerSpeciesDoNotSumTo100PercentException.class);
 	}
 

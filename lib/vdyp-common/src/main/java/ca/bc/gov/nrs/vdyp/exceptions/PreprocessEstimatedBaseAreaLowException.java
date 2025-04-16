@@ -16,7 +16,7 @@ public class PreprocessEstimatedBaseAreaLowException extends LayerValueLowExcept
 
 	static final String DEFAULT_NAME = "Normative estimate of basal area";
 
-	public PreprocessEstimatedBaseAreaLowException(RuntimeStandProcessingException cause) {
+	public PreprocessEstimatedBaseAreaLowException(RuntimeProcessingException cause) {
 		super(cause, PreprocessEstimatedBaseAreaLowException.class);
 	}
 

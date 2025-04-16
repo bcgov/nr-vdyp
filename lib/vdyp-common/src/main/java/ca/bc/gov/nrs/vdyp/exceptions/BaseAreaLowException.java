@@ -16,7 +16,7 @@ public class BaseAreaLowException extends LayerValueLowException {
 
 	static final String DEFAULT_NAME = "Basal area";
 
-	public BaseAreaLowException(RuntimeStandProcessingException cause) {
+	public BaseAreaLowException(RuntimeProcessingException cause) {
 		super(cause, BaseAreaLowException.class);
 	}
 

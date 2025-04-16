@@ -36,11 +36,11 @@ public class UnsupportedModeException extends StandProcessingException {
 		return Optional.empty();
 	}
 
-	public UnsupportedModeException(RuntimeStandProcessingException cause) {
+	public UnsupportedModeException(RuntimeProcessingException cause) {
 		this(cause, unwrap(cause, UnsupportedModeException.class));
 	}
 
-	private UnsupportedModeException(RuntimeStandProcessingException cause, UnsupportedModeException unwrapped) {
+	private UnsupportedModeException(RuntimeProcessingException cause, UnsupportedModeException unwrapped) {
 		super(unwrapped.getMessage(), cause);
 		this.mode = unwrapped.getMode().orElse(null);
 	}

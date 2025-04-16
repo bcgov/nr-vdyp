@@ -33,9 +33,7 @@ public abstract class LayerValueLowException extends LayerValidationException {
 				.orElse(MessageFormat.format(TEMPLATE_MISSING, name));
 	}
 
-	protected LayerValueLowException(
-			RuntimeStandProcessingException cause, Class<? extends LayerValueLowException> klazz
-	) {
+	protected LayerValueLowException(RuntimeProcessingException cause, Class<? extends LayerValueLowException> klazz) {
 		super(cause, klazz);
 		this.value = unwrap(cause, klazz).getValue().orElse(null);
 		this.threshold = unwrap(cause, klazz).getThreshold().orElse(null);
