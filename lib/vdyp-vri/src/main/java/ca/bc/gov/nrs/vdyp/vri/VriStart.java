@@ -423,42 +423,53 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 				}
 
 			}));
-			result.ifPresent(resultPoly -> {
-				var resultPrimaryLayer = resultPoly.getLayers().get(LayerType.PRIMARY);
-				var resultVeteranLayer = resultPoly.getLayers().get(LayerType.VETERAN);
-
-				try {
-					getDqBySpecies(resultPrimaryLayer, bec.getRegion());
-
-					estimateSmallComponents(polygon, resultPrimaryLayer);
-
-					computeUtilizationComponentsPrimary(
-							bec, resultPrimaryLayer, VolumeComputeMode.BY_UTIL_WITH_WHOLE_STEM_BY_SPEC,
-							CompatibilityVariableMode.NONE
-					);
-
-					if (resultVeteranLayer != null) {
-						// YUCV
-						computeUtilizationComponentsVeteran(resultVeteranLayer, bec);
-
-						var input = inputTph.get();
-						var computed = resultVeteranLayer.getTreesPerHectareByUtilization().getAll();
-						if (FloatMath.abs(input - computed) / input > 0.0005) {
-							throw fatalError(
-									"Computed tree density sum {0} trees/ha did not match input {1} trees/ha", computed,
-									input
-							);
-						}
-
-					}
-				} catch (ProcessingException e) {
-					throw new RuntimeProcessingException(e);
-				}
-			});
+			if (result.isPresent()) {
+				postProcessPolygon(polygon, inputTph.get(), result.get());
+			}
 			return result;
 		} catch (RuntimeProcessingException e) {
-			throw e.getCause();
+			throw e.unwrap();
 		}
+	}
+
+	/**
+	 * Additional steps after primary processing is done. Validates result and fills in some utilization component
+	 * values
+	 *
+	 * @param sourcePoly
+	 * @param inputTph
+	 * @param resultPoly
+	 * @throws ProcessingException
+	 */
+	void postProcessPolygon(VriPolygon sourcePoly, Float inputTph, VdypPolygon resultPoly) throws ProcessingException {
+
+		var resultPrimaryLayer = resultPoly.getLayers().get(LayerType.PRIMARY);
+		var resultVeteranLayer = resultPoly.getLayers().get(LayerType.VETERAN);
+		var bec = sourcePoly.getBiogeoclimaticZone();
+
+		getDqBySpecies(resultPrimaryLayer, bec.getRegion());
+
+		estimateSmallComponents(sourcePoly, resultPrimaryLayer);
+
+		computeUtilizationComponentsPrimary(
+				bec, resultPrimaryLayer, VolumeComputeMode.BY_UTIL_WITH_WHOLE_STEM_BY_SPEC,
+				CompatibilityVariableMode.NONE
+		);
+
+		if (resultVeteranLayer != null) {
+			// YUCV
+			computeUtilizationComponentsVeteran(resultVeteranLayer, bec);
+
+			var input = inputTph;
+			var computed = resultVeteranLayer.getTreesPerHectareByUtilization().getAll();
+			if (FloatMath.abs(input - computed) / input > 0.0005) {
+				throw fatalError(
+						"Computed tree density sum {0} trees/ha did not match input {1} trees/ha", computed, input
+				);
+			}
+
+		}
+
 	}
 
 	void processPrimaryLayer(VriPolygon polygon, VdypLayer.Builder lBuilder) throws FatalProcessingException {

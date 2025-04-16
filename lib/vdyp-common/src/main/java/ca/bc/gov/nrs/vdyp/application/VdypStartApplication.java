@@ -1604,15 +1604,21 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	}
 
 	/**
-	 * Process a polygon
+	 * Process a source polygon into a VdypPolygon.
 	 *
-	 * @param polygonsRead
-	 * @param polygon
-	 * @return
-	 * @throws ProcessingException
+	 * @param polygonsRead The number of polygons that have been read for processing.
+	 * @param polygon      The source polygon to process.
+	 * @return the processed polygon, or empty if it should be skipped without a warning.
+	 * @throws StandProcessingException if the processing failed in a way that only affects this polygon
+	 * @throws FatalProcessingException if the processing failed in a way that should stop processing
 	 */
 	protected abstract Optional<VdypPolygon> processPolygon(int polygonsRead, P polygon) throws ProcessingException;
 
+	/**
+	 * Simple Iterator like interface for accessing the assembled output of several StreamingParsers
+	 *
+	 * @param <P> The polygon type this stream produces
+	 */
 	protected static interface CombinedPolygonStream<P extends BaseVdypPolygon<?, ?, ?, ?>> {
 		boolean hasNext() throws IOException, ResourceParseException;
 

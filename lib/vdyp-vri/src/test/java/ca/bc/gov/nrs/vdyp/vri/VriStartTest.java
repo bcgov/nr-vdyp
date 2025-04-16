@@ -46,6 +46,7 @@ import org.apache.commons.math3.exception.TooManyEvaluationsException;
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
 import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -86,6 +87,7 @@ import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
 import ca.bc.gov.nrs.vdyp.model.PolygonMode;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
+import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.test.MockFileResolver;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
@@ -2443,6 +2445,152 @@ class VriStartTest {
 							utilizationAllAndBiggest(167.61972f)
 					)
 			);
+
+			app.close();
+		}
+
+		@Test
+		void testProcessVeteranBadTphTotal() throws Exception {
+
+			controlMap = TestUtils.loadControlMap();
+
+			VriStart app = new VriStart();
+
+			MockFileResolver resolver = dummyInput();
+
+			var poly = VriPolygon.build(pb -> {
+				pb.polygonIdentifier("TestPoly", 2024);
+				pb.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+				pb.yieldFactor(1.0f);
+				pb.forestInventoryZone("");
+				pb.percentAvailable(85);
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.PRIMARY);
+					lb.crownClosure(40.2f);
+					lb.utilization(7.5f);
+					lb.baseArea(47.0588226f);
+					lb.treesPerHectare(764.705872f);
+					lb.utilization(7.5f);
+
+					lb.inventoryTypeGroup(14);
+					lb.empiricalRelationshipParameterIndex(33);
+
+					lb.primaryGenus("C");
+					// 1 3
+					lb.addSpecies(sb -> {
+						sb.genus("B", controlMap);
+						sb.percentGenus(10);
+						sb.addSp64Distribution("BL", 100);
+						sb.addSite(ib -> {
+							ib.siteSpecies("BL");
+							ib.siteCurveNumber(8);
+						});
+					});
+
+					// 2 4 (Primary)
+					lb.addSpecies(sb -> {
+						sb.genus("C", controlMap);
+						sb.percentGenus(50);
+						sb.addSp64Distribution("CW", 100);
+						sb.addSite(ib -> {
+							ib.siteCurveNumber(11);
+							ib.ageTotal(100);
+							ib.height(20f);
+							ib.siteIndex(12f);
+							ib.yearsToBreastHeight(10.9f);
+							ib.breastHeightAge(89.1f);
+							ib.ageTotal(100f);
+							ib.siteSpecies("CW");
+						});
+					});
+
+					// 3 8
+					lb.addSpecies(sb -> {
+						sb.genus("H", controlMap);
+						sb.percentGenus(40);
+						sb.addSp64Distribution("HW", 100);
+						sb.addSite(ib -> {
+							ib.siteCurveNumber(37);
+							ib.height(25f);
+							ib.siteIndex(12.6f);
+							ib.yearsToBreastHeight(9.7f);
+							ib.breastHeightAge(90.3f);
+							ib.ageTotal(100f);
+							ib.siteSpecies("HW");
+						});
+					});
+
+				});
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.VETERAN);
+					lb.crownClosure(50.8f);
+					lb.utilization(7.5f);
+					lb.baseArea(20f);
+					lb.treesPerHectare(123f);
+					lb.utilization(7.5f);
+
+					lb.inventoryTypeGroup(14);
+					// lb.empiricalRelationshipParameterIndex(33);
+
+					lb.primaryGenus("H"); // 3
+					// 1 3
+					lb.addSpecies(sb -> {
+						sb.genus("B", controlMap);
+						sb.percentGenus(20);
+						sb.addSp64Distribution("BL", 100);
+						sb.addSite(ib -> {
+							ib.siteSpecies("BL");
+							ib.siteCurveNumber(8);
+						});
+					});
+
+					// 2 4
+					lb.addSpecies(sb -> {
+						sb.genus("C", controlMap);
+						sb.percentGenus(30);
+						sb.addSp64Distribution("CW", 100);
+						sb.addSite(ib -> {
+							ib.siteCurveNumber(11);
+							ib.ageTotal(100);
+							ib.height(30f);
+							ib.siteIndex(14.3f);
+							ib.yearsToBreastHeight(10.9f);
+							ib.breastHeightAge(189.1f);
+							ib.ageTotal(200f);
+							ib.siteSpecies("CW");
+						});
+					});
+
+					// 3 8 (Primary)
+					lb.addSpecies(sb -> {
+						sb.genus("H", controlMap);
+						sb.percentGenus(50);
+						sb.addSp64Distribution("HW", 100);
+						sb.addSite(ib -> {
+							ib.siteCurveNumber(37);
+							ib.height(34f);
+							ib.siteIndex(14.6f);
+							ib.yearsToBreastHeight(9.7f);
+							ib.breastHeightAge(190.3f);
+							ib.ageTotal(200f);
+							ib.siteSpecies("HW");
+						});
+					});
+
+				});
+			});
+			// doesn't need to be a completely accurate mock for this test
+			var result = VdypPolygon.build(pb -> {
+				pb.adapt(poly, x -> x.get());
+				pb.adaptLayers(poly, (l, lb) -> {
+
+				});
+			});
+			app.init(resolver, controlMap);
+
+			// inputTph set to something utterly wrong should cause an error
+			var ex = assertThrows(FatalProcessingException.class, () -> app.postProcessPolygon(poly, 10000f, result));
+			assertThat(ex, hasProperty("message", containsString("10,000 trees/ha")));
 
 			app.close();
 		}
