@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.ToDoubleFunction;
@@ -53,7 +54,6 @@ import ca.bc.gov.nrs.vdyp.exceptions.HeightLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.ResultBaseAreaLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.SiteIndexLowException;
-import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.TotalAgeLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.UnsupportedModeException;
 import ca.bc.gov.nrs.vdyp.exceptions.UnsupportedSpeciesException;
@@ -127,52 +127,35 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 	// implemented.
 	@Override
 	public void process() throws ProcessingException {
-		int polygonsRead = 0;
-		int polygonsWritten = 0;
 		try (
 				var polyStream = this.<FipPolygon>getStreamingParser(ControlKey.FIP_INPUT_YIELD_POLY);
 				var layerStream = this.<Map<LayerType, FipLayer>>getStreamingParser(ControlKey.FIP_INPUT_YIELD_LAYER);
 				var speciesStream = this.<Collection<FipSpecies>>getStreamingParser(ControlKey.FIP_INPUT_YIELD_LX_SP0);
 		) {
-			log.atDebug().setMessage("Start Stand processing").log();
+			var combinedStream = new CombinedPolygonStream<FipPolygon>() {
 
-			while (polyStream.hasNext()) {
-
-				// FIP_GET
-				log.atInfo().setMessage("Getting polygon {}").addArgument(polygonsRead + 1).log();
-				var polygon = getPolygon(polyStream, layerStream, speciesStream);
-				try {
-
-					var resultPoly = processPolygon(polygonsRead, polygon);
-					if (resultPoly.isPresent()) {
-						polygonsRead++;
-
-						// Output
-						vriWriter.writePolygonWithSpeciesAndUtilization(resultPoly.get());
-
-						polygonsWritten++;
-					}
-
-					log.atInfo().setMessage("Read {} polygons and wrote {}").addArgument(polygonsRead)
-							.addArgument(polygonsWritten);
-
-				} catch (StandProcessingException ex) {
-					// TODO include some sort of hook for different forms of user output
-					// TODO Implement single stand mode that propagates the exception
-
-					log.atWarn().setMessage("Polygon {} bypassed").addArgument(polygon.getPolygonIdentifier())
-							.setCause(ex);
+				@Override
+				public boolean hasNext() throws IOException, ResourceParseException {
+					return polyStream.hasNext();
 				}
 
-			}
+				@Override
+				public FipPolygon next() throws FatalProcessingException, IOException, ResourceParseException {
+					return getPolygon(polyStream, layerStream, speciesStream);
+				}
+
+			};
+
+			handleProcessing(combinedStream);
 		} catch (IOException | ResourceParseException ex) {
-			throw new ProcessingException("Error while reading or writing data.", ex);
+			throw new FatalProcessingException("Error while reading or writing data.", ex);
 		}
 	}
 
 	static final EnumSet<PolygonMode> ACCEPTABLE_MODES = EnumSet.of(PolygonMode.START, PolygonMode.YOUNG);
 
-	Optional<VdypPolygon> processPolygon(int polygonsRead, FipPolygon polygon) throws ProcessingException {
+	@Override
+	protected Optional<VdypPolygon> processPolygon(int polygonsRead, FipPolygon polygon) throws ProcessingException {
 		VdypPolygon resultPoly;
 		log.atInfo().setMessage("Read polygon {}, preparing to process").addArgument(polygon.getPolygonIdentifier())
 				.log();

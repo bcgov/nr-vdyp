@@ -18,6 +18,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.control.ControlMapValueReplacer;
 import ca.bc.gov.nrs.vdyp.io.parse.control.NonFipControlParser;
 import ca.bc.gov.nrs.vdyp.io.parse.control.OutputFileLocationResolver;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies.Builder;
+import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 
 public class TestStartApplication extends VdypStartApplication<TestPolygon, TestLayer, TestSpecies, TestSite> {
 
@@ -96,6 +97,11 @@ public class TestStartApplication extends VdypStartApplication<TestPolygon, Test
 	@Override
 	protected String getDefaultControlFileName() {
 		return "test.ctr";
+	}
+
+	@Override
+	protected Optional<VdypPolygon> processPolygon(int polygonsRead, TestPolygon polygon) throws ProcessingException {
+		return Optional.empty();
 	}
 
 }

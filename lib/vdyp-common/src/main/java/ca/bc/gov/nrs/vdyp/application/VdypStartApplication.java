@@ -76,6 +76,7 @@ import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
+import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.VdypUtilizationHolder;
 import ca.bc.gov.nrs.vdyp.model.VolumeComputeMode;
@@ -1558,6 +1559,51 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		} catch (IllegalAccessException | InvocationTargetException ex) {
 			throw new IllegalStateException(ex);
 		}
+	}
+
+	protected void handleProcessing(CombinedPolygonStream<P> combinedStream) throws IOException, ResourceParseException,
+			FatalProcessingException, ProcessingException, StandProcessingException {
+		log.atDebug().setMessage("Start Stand processing").log();
+		int polygonsRead = 0;
+		int polygonsWritten = 0;
+
+		while (combinedStream.hasNext()) {
+
+			log.atInfo().setMessage("Getting polygon {}").addArgument(polygonsRead + 1).log();
+			var polygon = combinedStream.next();
+			try {
+
+				var resultPoly = processPolygon(polygonsRead, polygon);
+				if (resultPoly.isPresent()) {
+					polygonsRead++;
+
+					// Output
+					this.getVriWriter().writePolygonWithSpeciesAndUtilization(resultPoly.get());
+
+					polygonsWritten++;
+				}
+
+				log.atInfo().setMessage("Read {} polygons and wrote {}").addArgument(polygonsRead)
+						.addArgument(polygonsWritten);
+
+			} catch (StandProcessingException ex) {
+
+				if (!combinedStream.hasNext()) {
+					throw ex; // Propagate if this is the last one
+				}
+
+				log.atWarn().setMessage("Polygon {} bypassed").addArgument(polygon.getPolygonIdentifier()).setCause(ex);
+			}
+
+		}
+	}
+
+	protected abstract Optional<VdypPolygon> processPolygon(int polygonsRead, P polygon) throws ProcessingException;
+
+	protected static interface CombinedPolygonStream<P extends BaseVdypPolygon<?, ?, ?, ?>> {
+		boolean hasNext() throws IOException, ResourceParseException;
+
+		P next() throws ProcessingException, IOException, ResourceParseException;
 	}
 
 }

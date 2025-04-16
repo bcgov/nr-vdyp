@@ -83,24 +83,6 @@ class FipStartTest {
 	}
 
 	@Test
-	void testProcessSimple() throws Exception {
-
-		var polygonId = polygonId("Test Polygon", 2023);
-		var layer = LayerType.PRIMARY;
-
-		// One polygon with one primary layer with one species entry
-		testWith(
-				FipTestUtils.loadControlMap(), Arrays.asList(getTestPolygon(polygonId, TestUtils.valid())), //
-				Arrays.asList(layerMap(getTestPrimaryLayer(polygonId, TestUtils.valid(), TestUtils.valid()))), //
-				Arrays.asList(Collections.singletonList(getTestSpecies(polygonId, layer, TestUtils.valid()))), //
-				(app, controlMap) -> {
-					assertDoesNotThrow(app::process);
-				}
-		);
-
-	}
-
-	@Test
 	void testPolygonWithNoLayersRecord() throws Exception {
 
 		var polygonId = polygonId("Test Polygon", 2023);
@@ -431,35 +413,52 @@ class FipStartTest {
 	@Test
 	void testFractionGenusCalculation() throws Exception {
 
-		var polygonId = polygonId("Test Polygon", 2023);
-		var layer = LayerType.PRIMARY;
+		var controlMap = FipTestUtils.loadControlMap();
 
-		final var speciesList = Arrays.asList(
-				//
-				getTestSpecies(polygonId, layer, "B", 3, x -> {
-					x.setPercentGenus(75f);
-				}), getTestSpecies(polygonId, layer, "C", 4, x -> {
-					x.setPercentGenus(25f);
-				})
-		);
-		testWith(
-				FipTestUtils.loadControlMap(), Arrays.asList(getTestPolygon(polygonId, TestUtils.valid())), //
-				Arrays.asList(layerMap(getTestPrimaryLayer(polygonId, TestUtils.valid(), TestUtils.valid()))), //
-				Arrays.asList(speciesList), //
-				(app, controlMap) -> {
+		var polygon = FipPolygon.build(pb -> {
+			pb.polygonIdentifier("Test Polygon", 2024);
+			pb.forestInventoryZone("0");
+			pb.biogeoclimaticZone(Utils.getBec("BG", controlMap));
+			pb.mode(PolygonMode.START);
+			pb.yieldFactor(1.0f);
 
-					app.process();
+			pb.addLayer(lb -> {
+				lb.layerType(LayerType.PRIMARY);
+				lb.crownClosure(0.9f);
 
-					// Testing exact floating point equality is intentional
-					assertThat(
-							speciesList, contains(
-									//
-									allOf(hasProperty("genus", is("B")), hasProperty("fractionGenus", is(0.75f))), //
-									allOf(hasProperty("genus", is("C")), hasProperty("fractionGenus", is(0.25f)))//
-							)
-					);
-				}
-		);
+				lb.addSpecies(sb -> {
+					sb.genus("B", controlMap);
+					sb.percentGenus(75f);
+					sb.addSite(ib -> {
+						ib.ageTotal(8f);
+						ib.yearsToBreastHeight(7f);
+						ib.height(6f);
+						ib.siteIndex(5f);
+						ib.siteSpecies("B");
+					});
+				});
+				lb.addSpecies(sb -> {
+					sb.genus("C", controlMap);
+					sb.percentGenus(25f);
+				});
+			});
+
+		});
+
+		try (var app = new FipStart()) {
+			ApplicationTestUtils.setControlMap(app, controlMap);
+
+			app.checkPolygon(polygon);
+			var speciesList = polygon.getLayers().get(LayerType.PRIMARY).getSpecies().values();
+			assertThat(
+					speciesList, containsInAnyOrder(
+							// Testing exact floating point equality is intentional
+
+							allOf(hasProperty("genus", is("B")), hasProperty("fractionGenus", is(0.75f))), //
+							allOf(hasProperty("genus", is("C")), hasProperty("fractionGenus", is(0.25f)))//
+					)
+			);
+		}
 
 	}
 

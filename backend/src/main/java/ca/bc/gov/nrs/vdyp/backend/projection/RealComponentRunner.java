@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 
 import ca.bc.gov.nrs.vdyp.application.VdypApplication;
+import ca.bc.gov.nrs.vdyp.application.VdypStartApplication;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonExecutionException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.YieldTableGenerationException;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption;
@@ -22,6 +23,10 @@ import ca.bc.gov.nrs.vdyp.backend.projection.model.Vdyp7Constants;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
 import ca.bc.gov.nrs.vdyp.common.VdypApplicationInitializationException;
 import ca.bc.gov.nrs.vdyp.fip.FipStart;
+import ca.bc.gov.nrs.vdyp.fip.model.FipLayer;
+import ca.bc.gov.nrs.vdyp.fip.model.FipPolygon;
+import ca.bc.gov.nrs.vdyp.fip.model.FipSite;
+import ca.bc.gov.nrs.vdyp.fip.model.FipSpecies;
 import ca.bc.gov.nrs.vdyp.forward.VdypForwardApplication;
 import ca.bc.gov.nrs.vdyp.vri.VriStart;
 
@@ -33,7 +38,7 @@ public class RealComponentRunner implements ComponentRunner {
 	public void runFipStart(Polygon polygon, ProjectionTypeCode projectionTypeCode, PolygonProjectionState state)
 			throws PolygonExecutionException {
 
-		try (var fipStartApplication = new FipStart()) {
+		try (VdypStartApplication<FipPolygon, FipLayer, FipSpecies, FipSite> fipStartApplication = new FipStart()) {
 			try {
 				Path controlFilePath = Path.of(
 						state.getExecutionFolder().toString(), projectionTypeCode.toString(),

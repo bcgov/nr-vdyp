@@ -138,8 +138,6 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 	// implemented.
 	@Override
 	public void process() throws ProcessingException {
-		int polygonsRead = 0;
-		int polygonsWritten = 0;
 		try (
 				var polyStream = this.<VriPolygon>getStreamingParser(ControlKey.VRI_INPUT_YIELD_POLY);
 				var layerStream = this.<Map<LayerType, VriLayer.Builder>>getStreamingParser(
@@ -149,37 +147,21 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 						.<Collection<VriSpecies>>getStreamingParser(ControlKey.VRI_INPUT_YIELD_SPEC_DIST);
 				var siteStream = this.<Collection<VriSite>>getStreamingParser(ControlKey.VRI_INPUT_YIELD_HEIGHT_AGE_SI);
 		) {
-			log.atDebug().setMessage("Start Stand processing").log();
+			var combinedStream = new CombinedPolygonStream<VriPolygon>() {
 
-			while (polyStream.hasNext()) {
-
-				// FIP_GET
-				log.atInfo().setMessage("Getting polygon {}").addArgument(polygonsRead + 1).log();
-				var polygon = getPolygon(polyStream, layerStream, speciesStream, siteStream);
-				try {
-
-					var resultPoly = processPolygon(polygonsRead, polygon);
-					if (resultPoly.isPresent()) {
-						polygonsRead++;
-
-						// Output
-						getVriWriter().writePolygonWithSpeciesAndUtilization(resultPoly.get());
-
-						polygonsWritten++;
-					}
-
-					log.atInfo().setMessage("Read {} polygons and wrote {}").addArgument(polygonsRead)
-							.addArgument(polygonsWritten).log();
-
-				} catch (StandProcessingException ex) {
-					// TODO include some sort of hook for different forms of user output
-					// TODO Implement single stand mode that propagates the exception
-
-					log.atWarn().setMessage("Polygon {} bypassed").addArgument(polygon.getPolygonIdentifier())
-							.setCause(ex).log();
+				@Override
+				public boolean hasNext() throws IOException, ResourceParseException {
+					return polyStream.hasNext();
 				}
 
-			}
+				@Override
+				public VriPolygon next() throws ProcessingException, IOException, ResourceParseException {
+					return getPolygon(polyStream, layerStream, speciesStream, siteStream);
+				}
+
+			};
+
+			handleProcessing(combinedStream);
 		} catch (IOException | ResourceParseException ex) {
 			throw new ProcessingException("Error while reading or writing data.", ex);
 		}
@@ -378,7 +360,8 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 
 	static final EnumSet<PolygonMode> ACCEPTABLE_MODES = EnumSet.of(PolygonMode.START, PolygonMode.YOUNG);
 
-	Optional<VdypPolygon> processPolygon(int polygonsRead, VriPolygon polygon) throws ProcessingException {
+	@Override
+	protected Optional<VdypPolygon> processPolygon(int polygonsRead, VriPolygon polygon) throws ProcessingException {
 		log.atInfo().setMessage("Read polygon {}, preparing to process").addArgument(polygon.getPolygonIdentifier())
 				.log();
 		var bec = polygon.getBiogeoclimaticZone();
