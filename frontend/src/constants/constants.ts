@@ -59,6 +59,11 @@ export const MODEL_PARAMETER_PANEL = Object.freeze({
   REPORT_INFO: 'reportInfo',
 })
 
+export const FILE_UPLOAD_PANEL = Object.freeze({
+  REPORT_INFO: 'reportInfo',
+  ATTACHMENTS: 'attachments',
+})
+
 export const NUM_INPUT_LIMITS = Object.freeze({
   SPECIES_PERCENT_MAX: 100,
   SPECIES_PERCENT_MIN: 0,
@@ -110,7 +115,7 @@ export const MESSAGE_TYPE = Object.freeze({
 
 export const HEADER_SELECTION = Object.freeze({
   MODEL_PARAMETER_SELECTION: 'Model Parameter Selection',
-  FILE_UPLOAD: 'File upload',
+  FILE_UPLOAD: 'File Upload',
 })
 
 export const MODEL_SELECTION = Object.freeze({
@@ -119,14 +124,14 @@ export const MODEL_SELECTION = Object.freeze({
 })
 
 export const MODEL_PARAM_TAB_NAME = Object.freeze({
-  MODEL_PARAM_SELECTION: 'Model Parameter Selection',
+  MODEL_PARAM_SELECTION: 'Parameter Selection',
   MODEL_REPORT: 'Model Report',
   VIEW_LOG_FILE: 'View Log File',
   VIEW_ERROR_MESSAGES: 'View Error Messages',
 })
 
 export const FILE_UPLOAD_TAB_NAME = Object.freeze({
-  FILE_UPLOAD: 'File Upload',
+  FILE_UPLOAD: 'Parameter Selection',
   MODEL_REPORT: 'Model Report',
   VIEW_LOG_FILE: 'View Log File',
   VIEW_ERROR_MESSAGES: 'View Error Messages',
