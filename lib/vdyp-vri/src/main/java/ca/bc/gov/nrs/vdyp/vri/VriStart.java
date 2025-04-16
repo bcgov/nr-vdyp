@@ -914,14 +914,14 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		final Optional<PolygonMode> mode = polygon.getMode();
 		if (mode.map(PolygonMode.YOUNG::equals).orElse(false) && layer.getLayerType() == LayerType.PRIMARY) {
 			if (ageTotal.map(x -> x <= 0f).orElse(true)) {
-				missingValues.add("Age Total");
+				missingValues.add(AGE_TOTAL_PROPERTY_NAME);
 			}
 			if (yearsToBreastHeight.map(x -> x <= 0f).orElse(true)) {
-				missingValues.add("Trees Per Hectare");
+				missingValues.add(TREES_PER_HECTARE_PROPERTY_NAME);
 			}
 		} else {
 			if (height.map(x -> x <= 0f).orElse(true)) {
-				missingValues.add("Height");
+				missingValues.add(HEIGHT_PROPERTY_NAME);
 			}
 		}
 
