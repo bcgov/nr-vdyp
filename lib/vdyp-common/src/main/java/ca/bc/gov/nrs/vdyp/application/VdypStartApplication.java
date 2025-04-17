@@ -81,6 +81,14 @@ import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.VdypUtilizationHolder;
 import ca.bc.gov.nrs.vdyp.model.VolumeComputeMode;
 
+/**
+ * Base class for a start processing application. Provides shared framework between VRIStart and FIPStart
+ *
+ * @param <P> input polygon class
+ * @param <L> input layer class
+ * @param <S> input species class
+ * @param <I> input site class
+ */
 public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional<Float>, S, I>, L extends BaseVdypLayer<S, I> & InputLayer, S extends BaseVdypSpecies<I>, I extends BaseVdypSite>
 		extends VdypApplication implements Closeable {
 
@@ -278,14 +286,6 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	protected Coefficients getCoeForSpecies(BaseVdypSpecies<?> species, ControlKey controlKey) {
 		var coeMap = Utils.<Map<String, Coefficients>>expectParsedControl(controlMap, controlKey, java.util.Map.class);
 		return coeMap.get(species.getGenus());
-	}
-
-	protected L requireLayer(P polygon, LayerType type) throws ProcessingException {
-		if (!polygon.getLayers().containsKey(type)) {
-			throw new LayerMissingException(type);
-		}
-
-		return polygon.getLayers().get(type);
 	}
 
 	/**
@@ -649,6 +649,49 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	}
 
 	/**
+	 * Return the value of the given optional otherwise throw a FatalProcessingException
+	 * 
+	 * @param <T>  type of the value
+	 * @param opt  optional to check
+	 * @param name name of the field for the error message
+	 * @return the value of the optional
+	 * @throws FatalProcessingException if it is not present
+	 */
+	protected static <T> T require(Optional<T> opt, String name) throws FatalProcessingException {
+		return opt.orElseThrow(() -> new FatalProcessingException(name + " is not present"));
+	}
+
+	/**
+	 * Require that the optional value is present and has a positive value.
+	 * 
+	 * @param <T>  type of the value
+	 * @param opt  optional to check
+	 * @param name name to use in exception message
+	 * @return The value
+	 * @throws FatalProcessingException if it is not present or has a non-positive value
+	 */
+	protected static <T extends Number> T requirePositive(Optional<T> opt, String name)
+			throws FatalProcessingException {
+
+		T value = require(opt, name);
+
+		if (value.doubleValue() <= 0) {
+			throw new FatalProcessingException(name + " " + value + " is not positive");
+		}
+
+		return value;
+	}
+
+	static public <P extends BaseVdypPolygon<L, ?, ?, ?>, L extends BaseVdypLayer<?, ?>> L
+			requireLayer(P polygon, LayerType type) throws LayerMissingException {
+		if (!polygon.getLayers().containsKey(type)) {
+			throw new LayerMissingException(type);
+		}
+
+		return polygon.getLayers().get(type);
+	}
+
+	/**
 	 * Gets the PRIMARY layer from the given polygon
 	 *
 	 * @param <P>  The Polygon type
@@ -659,11 +702,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	 */
 	static public <P extends BaseVdypPolygon<L, ?, ?, ?>, L extends BaseVdypLayer<?, ?>> L getPrimaryLayer(P poly)
 			throws LayerMissingException {
-		L primaryLayer = poly.getLayers().get(LayerType.PRIMARY);
-		if (primaryLayer == null) {
-			throw new LayerMissingException(LayerType.PRIMARY);
-		}
-		return primaryLayer;
+		return requireLayer(poly, LayerType.PRIMARY);
 	}
 
 	/**
@@ -702,11 +741,26 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		}));
 	}
 
+	/**
+	 * Create a FatalProcessingException with its message created using {@link MessageFormat.format}
+	 *
+	 * @param template message template
+	 * @param values   objects to format
+	 * @return a constructed FatalProcessingException
+	 */
 	protected static FatalProcessingException fatalError(String template, Object... values) {
 
 		return new FatalProcessingException(MessageFormat.format(template, values));
 	}
 
+	/**
+	 * Create a FatalProcessingException with its message created using {@link MessageFormat.format}
+	 *
+	 * @param template message template
+	 * @param cause    the cause of the exception
+	 * @param values   objects to format
+	 * @return a constructed FatalProcessingException
+	 */
 	protected static FatalProcessingException causedFatalError(String template, Throwable cause, Object... values) {
 
 		return new FatalProcessingException(String.format(template, values), cause);

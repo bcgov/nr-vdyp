@@ -1980,26 +1980,6 @@ class VdypStartApplicationTest {
 	class UtilityMethods {
 
 		@Test
-		void testRequireLayer() throws ProcessingException, IOException {
-			var mockControl = EasyMock.createControl();
-			BaseVdypPolygon poly = mockControl.createMock(BaseVdypPolygon.class);
-			BaseVdypLayer layer = mockControl.createMock(BaseVdypLayer.class);
-			EasyMock.expect(poly.getLayers()).andStubReturn(Collections.singletonMap(LayerType.PRIMARY, layer));
-			EasyMock.expect(poly.getPolygonIdentifier()).andStubReturn(new PolygonIdentifier("TestPoly", 2024));
-
-			try (VdypStartApplication app = getTestUnit(mockControl)) {
-				mockControl.replay();
-
-				var result = app.requireLayer(poly, LayerType.PRIMARY);
-				assertThat(result, is(layer));
-				var ex = assertThrows(LayerMissingException.class, () -> app.requireLayer(poly, LayerType.VETERAN));
-				assertThat(ex, hasProperty("layer", is(LayerType.VETERAN)));
-
-			}
-
-		}
-
-		@Test
 		void testGetCoeForSpecies() throws Exception {
 			controlMap = TestUtils.loadControlMap();
 			try (var app = new TestStartApplication(controlMap, false)) {
@@ -2159,6 +2139,58 @@ class VdypStartApplicationTest {
 						FatalProcessingException.class, () -> VdypStartApplication.fatalIfPresent(Optional.of(cause))
 				);
 				assertThat(result, causedBy(sameInstance(cause)));
+			}
+
+			@Test
+			void testRequirePositiveWhenPositive() {
+				var result = assertDoesNotThrow(() -> VdypStartApplication.requirePositive(Optional.of(1f), "Test"));
+				assertThat(result, is(1f));
+			}
+
+			@Test
+			void testRequirePositiveWhenZero() {
+				var result = assertThrows(
+						FatalProcessingException.class, () -> VdypStartApplication.requirePositive(
+								Optional.of(0f), "Test"
+						)
+				);
+				assertThat(result, hasProperty("message", is("Test 0.0 is not positive")));
+			}
+
+			@Test
+			void testRequirePositiveWhenNegative() {
+				var result = assertThrows(
+						FatalProcessingException.class, () -> VdypStartApplication.requirePositive(
+								Optional.of(-1f), "Test"
+						)
+				);
+				assertThat(result, hasProperty("message", is("Test -1.0 is not positive")));
+			}
+
+			@Test
+			void testRequirePositiveWhenMissing() {
+				var result = assertThrows(
+						FatalProcessingException.class, () -> VdypStartApplication.requirePositive(
+								Optional.empty(), "Test"
+						)
+				);
+				assertThat(result, hasProperty("message", is("Test is not present")));
+			}
+
+			@Test
+			void testRequireWhenMissing() {
+				var result = assertThrows(
+						FatalProcessingException.class, () -> VdypStartApplication.require(
+								Optional.empty(), "Test"
+						)
+				);
+				assertThat(result, hasProperty("message", is("Test is not present")));
+			}
+
+			@Test
+			void testRequireWhenPresent() {
+				var result = assertDoesNotThrow(() -> VdypStartApplication.require(Optional.of("something"), "Test"));
+				assertThat(result, is("something"));
 			}
 		}
 	}

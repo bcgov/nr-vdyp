@@ -61,7 +61,6 @@ import ca.bc.gov.nrs.vdyp.exceptions.SiteIndexLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.TotalAgeLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.TreesPerHectareLowException;
-import ca.bc.gov.nrs.vdyp.exceptions.UnsupportedSpeciesException;
 import ca.bc.gov.nrs.vdyp.exceptions.YearsToBreastHeightLowException;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.control.BaseControlParser;
@@ -114,22 +113,6 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 				System.exit(PROCESSING_ERROR);
 			}
 		}
-	}
-
-	protected static <T extends Number> T requirePositive(Optional<T> opt, String name)
-			throws FatalProcessingException {
-
-		T value = require(opt, name);
-
-		if (value.doubleValue() <= 0) {
-			throw new FatalProcessingException(name + " " + value + " is not positive");
-		}
-
-		return value;
-	}
-
-	protected static <T> T require(Optional<T> opt, String name) throws FatalProcessingException {
-		return opt.orElseThrow(() -> new FatalProcessingException(name + " is not present"));
 	}
 
 	// VRI_SUB

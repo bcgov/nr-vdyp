@@ -791,7 +791,7 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 		// TODO finding all the things that are wrong rather than failing on just the
 		// first would be a good idea.
 
-		var primaryLayer = requireLayer(polygon, LayerType.PRIMARY);
+		var primaryLayer = getPrimaryLayer(polygon);
 
 		// FIXME VDYP7 actually tests if total age - YTBH is less than 0.5 but gives an
 		// error that total age is "less than" YTBH. Replicating that for now but
