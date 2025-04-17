@@ -648,7 +648,17 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 				.findFirst().orElseThrow();
 	}
 
-	protected L getPrimaryLayer(P poly) throws LayerMissingException {
+	/**
+	 * Gets the PRIMARY layer from the given polygon
+	 *
+	 * @param <P>  The Polygon type
+	 * @param <L>  The Layer type
+	 * @param poly the polygon
+	 * @return the PRIMARY layer
+	 * @throws LayerMissingException if the polygon does not have a PRIMARY layer
+	 */
+	static public <P extends BaseVdypPolygon<L, ?, ?, ?>, L extends BaseVdypLayer<?, ?>> L getPrimaryLayer(P poly)
+			throws LayerMissingException {
 		L primaryLayer = poly.getLayers().get(LayerType.PRIMARY);
 		if (primaryLayer == null) {
 			throw new LayerMissingException(LayerType.PRIMARY);
@@ -656,7 +666,16 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		return primaryLayer;
 	}
 
-	protected Optional<L> getVeteranLayer(P poly) {
+	/**
+	 * Gets the VETERAN layer from the given polygon
+	 *
+	 * @param <P>  The Polygon type
+	 * @param <L>  The Layer type
+	 * @param poly
+	 * @return the VETERAN layer, or empty if there is none
+	 */
+	static public <P extends BaseVdypPolygon<L, ?, ?, ?>, L extends BaseVdypLayer<?, ?>> Optional<L>
+			getVeteranLayer(P poly) {
 		return Utils.optSafe(poly.getLayers().get(LayerType.VETERAN));
 	}
 

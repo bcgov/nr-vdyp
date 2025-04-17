@@ -24,6 +24,7 @@ import java.util.function.Consumer;
 import org.easymock.Capture;
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
@@ -74,6 +75,7 @@ import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.VolumeComputeMode;
 import ca.bc.gov.nrs.vdyp.test.MockFileResolver;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
+import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
 class VdypStartApplicationTest {
@@ -2052,6 +2054,113 @@ class VdypStartApplicationTest {
 			);
 		}
 
+		@Test
+		void testGetPrimaryLayerPresent() {
+			var poly = VdypPolygon.build(pb -> {
+				pb.polygonIdentifier("Test", 2025);
+				pb.percentAvailable(75f);
+				pb.biogeoclimaticZone(new BecDefinition("T", Region.COASTAL, "Test"));
+				pb.forestInventoryZone("Z");
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.PRIMARY);
+				});
+			});
+
+			var result = assertDoesNotThrow(() -> VdypStartApplication.getPrimaryLayer(poly));
+			assertThat(result, sameInstance(poly.getLayers().get(LayerType.PRIMARY)));
+		}
+
+		@Test
+		void testGetPrimaryLayerNotPresent() {
+			var poly = VdypPolygon.build(pb -> {
+				pb.polygonIdentifier("Test", 2025);
+				pb.percentAvailable(75f);
+				pb.biogeoclimaticZone(new BecDefinition("T", Region.COASTAL, "Test"));
+				pb.forestInventoryZone("Z");
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.VETERAN);
+				});
+			});
+
+			var ex = assertThrows(LayerMissingException.class, () -> VdypStartApplication.getPrimaryLayer(poly));
+			assertThat(ex, hasProperty("layer", is(LayerType.PRIMARY)));
+		}
+
+		@Test
+		void testGetVeteranLayerPresent() {
+			var poly = VdypPolygon.build(pb -> {
+				pb.polygonIdentifier("Test", 2025);
+				pb.percentAvailable(75f);
+				pb.biogeoclimaticZone(new BecDefinition("T", Region.COASTAL, "Test"));
+				pb.forestInventoryZone("Z");
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.VETERAN);
+				});
+			});
+
+			var result = VdypStartApplication.getVeteranLayer(poly);
+			assertThat(result, present(sameInstance(poly.getLayers().get(LayerType.VETERAN))));
+		}
+
+		@Test
+		void testGetVeteranLayerNotPresent() {
+			var poly = VdypPolygon.build(pb -> {
+				pb.polygonIdentifier("Test", 2025);
+				pb.percentAvailable(75f);
+				pb.biogeoclimaticZone(new BecDefinition("T", Region.COASTAL, "Test"));
+				pb.forestInventoryZone("Z");
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.PRIMARY);
+				});
+			});
+
+			var result = VdypStartApplication.getVeteranLayer(poly);
+			assertThat(result, notPresent());
+		}
+
+		@Nested
+		class ExceptionUtilities {
+			@Test
+			void testThrowIfPresentWhenPresent() {
+				Exception expected = new Exception("Test");
+				var result = assertThrows(
+						Exception.class, () -> VdypStartApplication.throwIfPresent(Optional.of(expected))
+				);
+				assertThat(result, sameInstance(expected));
+			}
+
+			@Test
+			void testThrowIfPresentWhenEmpty() {
+				assertDoesNotThrow(() -> VdypStartApplication.throwIfPresent(Optional.empty()));
+			}
+
+			@Test
+			void testFatalIfPresentWhenFatalException() {
+				var cause = new FatalProcessingException("Test");
+				var result = assertThrows(
+						FatalProcessingException.class, () -> VdypStartApplication.fatalIfPresent(Optional.of(cause))
+				);
+				assertThat(result, sameInstance(cause));
+			}
+
+			@Test
+			void testFatalIfPresentWhenStandException() {
+				var cause = new BecMissingException();
+				var result = assertThrows(
+						FatalProcessingException.class, () -> VdypStartApplication.fatalIfPresent(Optional.of(cause))
+				);
+				assertThat(result, causedBy(sameInstance(cause)));
+			}
+
+			@Test
+			void testFatalIfPresentWhenOtherException() {
+				var cause = new IllegalArgumentException();
+				var result = assertThrows(
+						FatalProcessingException.class, () -> VdypStartApplication.fatalIfPresent(Optional.of(cause))
+				);
+				assertThat(result, causedBy(sameInstance(cause)));
+			}
+		}
 	}
 
 	@Test
