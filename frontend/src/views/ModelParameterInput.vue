@@ -14,7 +14,10 @@
     <div class="hr-line mb-5"></div>
     <v-spacer class="space"></v-spacer>
     <template
-      v-if="modelSelection === CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS"
+      v-if="
+        appStore.modelSelection ===
+        CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS
+      "
     >
       <AppTabs
         v-model:currentTab="modelParamActiveTab"
@@ -40,12 +43,24 @@
         v-model:currentTab="fileUploadActiveTab"
         :tabs="fileUploadTabs"
       />
+      <template v-if="isFileUploadPanelsVisible">
+        <v-spacer class="space"></v-spacer>
+        <AttachmentsPanel />
+        <AppRunModelButton
+          :isDisabled="!fileUploadStore.runModelEnabled"
+          cardClass="input-model-param-run-model-card"
+          cardActionsClass="card-actions"
+          @runModel="runModelHandler"
+        />
+      </template>
     </template>
   </v-container>
 </template>
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
+import { useAppStore } from '@/stores/appStore'
 import { useModelParameterStore } from '@/stores/modelParameterStore'
+import { useFileUploadStore } from '@/stores/fileUploadStore'
 import { useProjectionStore } from '@/stores/projectionStore'
 import { useReportingStore } from '@/stores/reportingStore'
 import {
@@ -59,22 +74,29 @@ import {
   SiteInfoPanel,
   StandDensityPanel,
   ReportInfoPanel,
-  FileUpload,
+  AttachmentsPanel,
 } from '@/components'
 import type { Tab } from '@/interfaces/interfaces'
-import { CONSTANTS, MESSAGE, DEFAULTS } from '@/constants'
+import { CONSTANTS, MESSAGE } from '@/constants'
 import { handleApiError } from '@/services/apiErrorHandler'
 import { runModel } from '@/services/modelParameterService'
-import { checkZipForErrors, delay, extractZipFileName } from '@/utils/util'
+import { runModelFileUpload } from '@/services/fileUploadService'
+import {
+  checkZipForErrors,
+  delay,
+  downloadFile,
+  extractZipFileName,
+} from '@/utils/util'
 import { logSuccessMessage, logErrorMessage } from '@/utils/messageHandler'
 
-const modelSelection = ref<string>(DEFAULTS.DEFAULT_VALUES.MODEL_SELECTION)
 const isProgressVisible = ref(false)
 const progressMessage = ref('')
 const modelParamActiveTab = ref(0)
 const fileUploadActiveTab = ref(0)
 
+const appStore = useAppStore()
 const modelParameterStore = useModelParameterStore()
+const fileUploadStore = useFileUploadStore()
 const projectionStore = useProjectionStore()
 const reportingStore = useReportingStore()
 
@@ -108,7 +130,7 @@ const modelParamTabs = computed<Tab[]>(() => [
 const fileUploadTabs = computed<Tab[]>(() => [
   {
     label: CONSTANTS.FILE_UPLOAD_TAB_NAME.FILE_UPLOAD,
-    component: FileUpload,
+    component: ReportInfoPanel,
     tabname: null,
     disabled: false,
   },
@@ -132,37 +154,95 @@ const fileUploadTabs = computed<Tab[]>(() => [
   },
 ])
 
-/**
- * Computes whether the model parameter panels should be visible.
- * Panels are visible when the model selection equals the constant for input model parameters and the active tab is 0.
- */
 const isModelParameterPanelsVisible = computed(() => {
   return (
-    modelSelection.value === CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS &&
+    appStore.modelSelection ===
+      CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS &&
     modelParamActiveTab.value === 0
   )
 })
 
-/**
- * Updates the model selection value.
- * @param newSelection - The new model selection string.
- */
-const updateModelSelection = (newSelection: string) => {
-  modelSelection.value = newSelection
-}
-
-/**
- * Sets default values in the model parameter store when the component is mounted.
- */
-onMounted(() => {
-  modelParameterStore.setDefaultValues()
+const isFileUploadPanelsVisible = computed(() => {
+  return (
+    appStore.modelSelection === CONSTANTS.MODEL_SELECTION.FILE_UPLOAD &&
+    fileUploadActiveTab.value === 0
+  )
 })
 
-/**
- * Handles the run model process.
- * This function shows a progress indicator, waits briefly, then runs the model using the modelParameterStore.
- * It processes the returned zip response, logs a success message, and handles any errors.
- */
+const updateModelSelection = (newSelection: string) => {
+  appStore.setModelSelection(newSelection)
+}
+
+onMounted(() => {
+  modelParameterStore.setDefaultValues()
+  fileUploadStore.setDefaultValues()
+})
+
+const processResponse = async (response: any) => {
+  const zipFileName =
+    extractZipFileName(response.headers) ||
+    CONSTANTS.FILE_NAME.PROJECTION_RESULT_ZIP
+
+  const resultBlob = response.data
+
+  console.debug('resultBlob:', resultBlob, 'type:', resultBlob?.type)
+  console.debug('resultBlob size:', resultBlob.size)
+
+  if (!resultBlob || !(resultBlob instanceof Blob)) {
+    throw new Error('Invalid response data')
+  }
+
+  const hasErrors = await checkZipForErrors(resultBlob)
+  await projectionStore.handleZipResponse(resultBlob, zipFileName)
+
+  if (appStore.modelSelection === CONSTANTS.MODEL_SELECTION.FILE_UPLOAD) {
+    downloadFile(resultBlob, zipFileName)
+  }
+
+  if (hasErrors) {
+    logErrorMessage(
+      appStore.modelSelection ===
+        CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS
+        ? MESSAGE.SUCCESS_MSG.INPUT_MODEL_PARAM_RUN_RESULT_W_ERR
+        : MESSAGE.SUCCESS_MSG.FILE_UPLOAD_RUN_RESULT_W_ERR,
+    )
+  } else {
+    logSuccessMessage(
+      appStore.modelSelection ===
+        CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS
+        ? MESSAGE.SUCCESS_MSG.INPUT_MODEL_PARAM_RUN_RESULT
+        : MESSAGE.SUCCESS_MSG.FILE_UPLOAD_RUN_RESULT,
+    )
+  }
+}
+
+const handleError = (error: any) => {
+  if (error.response && error.response.data) {
+    try {
+      const validationMessages = JSON.parse(error.response.data)
+      console.log('Validation Messages:', validationMessages)
+      alert(`Validation Error: ${JSON.stringify(validationMessages, null, 2)}`)
+    } catch (parseError) {
+      console.error('Failed to parse error response:', parseError)
+      handleApiError(
+        error,
+        appStore.modelSelection ===
+          CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS
+          ? MESSAGE.MODEL_PARAM_INPUT_ERR.FAIL_RUN_MODEL
+          : MESSAGE.FILE_UPLOAD_ERR.FAIL_RUN_MODEL,
+      )
+    }
+  } else {
+    handleApiError(
+      error,
+      appStore.modelSelection ===
+        CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS
+        ? MESSAGE.MODEL_PARAM_INPUT_ERR.FAIL_RUN_MODEL
+        : MESSAGE.FILE_UPLOAD_ERR.FAIL_RUN_MODEL,
+    )
+  }
+}
+
 const runModelHandler = async () => {
   try {
     isProgressVisible.value = true
@@ -170,59 +250,32 @@ const runModelHandler = async () => {
 
     await delay(500)
 
-    reportingStore.modelParamDisableTabs()
-    console.log(
-      'modelParamReportingTabsDisabled:',
-      reportingStore.modelParamReportingTabsEnabled,
-    )
+    if (
+      appStore.modelSelection ===
+      CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS
+    ) {
+      reportingStore.modelParamDisableTabs()
 
-    const response = await runModel(modelParameterStore)
+      const response = await runModel(modelParameterStore)
+      console.debug('Full response:', response)
 
-    console.debug('Full response:', response)
+      await processResponse(response)
 
-    const zipFileName =
-      extractZipFileName(response.headers) ||
-      CONSTANTS.FILE_NAME.PROJECTION_RESULT_ZIP
-    console.debug('download zip file name:', zipFileName)
+      reportingStore.modelParamEnableTabs()
+    } else if (
+      appStore.modelSelection === CONSTANTS.MODEL_SELECTION.FILE_UPLOAD
+    ) {
+      reportingStore.fileUploadDisableTabs()
 
-    const resultBlob = response.data
+      const response = await runModelFileUpload(fileUploadStore)
+      console.debug('Full response:', response)
 
-    console.debug('resultBlob:', resultBlob, 'type:', resultBlob?.type)
-    console.debug('resultBlob size:', resultBlob.size)
+      await processResponse(response)
 
-    if (!resultBlob) {
-      throw new Error('Response data is undefined')
+      reportingStore.fileUploadEnableTabs()
     }
-
-    if (!(resultBlob instanceof Blob)) {
-      throw new Error('Response data is not a Blob')
-    }
-
-    const hasErrors = await checkZipForErrors(resultBlob)
-
-    await projectionStore.handleZipResponse(resultBlob, zipFileName)
-
-    if (hasErrors) {
-      logErrorMessage(MESSAGE.SUCCESS_MSG.INPUT_MODEL_PARAM_RUN_RESULT_W_ERR)
-    } else {
-      logSuccessMessage(MESSAGE.SUCCESS_MSG.INPUT_MODEL_PARAM_RUN_RESULT)
-    }
-
-    reportingStore.modelParamEnableTabs()
   } catch (error) {
-    if ((error as any).response && (error as any).response.data) {
-      try {
-        const validationMessages = JSON.parse((error as any).response.data)
-        console.log('Validation Messages:', validationMessages)
-        alert(
-          `Validation Error: ${JSON.stringify(validationMessages, null, 2)}`,
-        )
-      } catch (parseError) {
-        handleApiError(error, MESSAGE.MODEL_PARAM_INPUT_ERR.FAIL_RUN_MODEL)
-      }
-    } else {
-      handleApiError(error, MESSAGE.MODEL_PARAM_INPUT_ERR.FAIL_RUN_MODEL)
-    }
+    handleError(error)
   } finally {
     isProgressVisible.value = false
   }
