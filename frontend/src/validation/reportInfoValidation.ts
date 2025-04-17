@@ -13,6 +13,23 @@ export const validateComparison = (
   return { isValid: true }
 }
 
+export const validateRequiredFields = (
+  startingAge: number | null,
+  finishingAge: number | null,
+  ageIncrement: number | null,
+) => {
+  if (
+    !reportInfoValidator.validateRequiredFields(
+      startingAge,
+      finishingAge,
+      ageIncrement,
+    )
+  ) {
+    return { isValid: false }
+  }
+  return { isValid: true }
+}
+
 export const validateRange = (
   startingAge: number | null,
   finishingAge: number | null,

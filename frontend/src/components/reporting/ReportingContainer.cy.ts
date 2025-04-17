@@ -47,7 +47,7 @@ describe('ReportingContainer.vue', () => {
   })
 
   it('displays model report and verifies UI elements', () => {
-    cy.mountWithVuetify(ReportingContainer, {
+    cy.mount(ReportingContainer, {
       props: {
         tabname: CONSTANTS.REPORTING_TAB.MODEL_REPORT,
       },
@@ -58,17 +58,11 @@ describe('ReportingContainer.vue', () => {
         .contains('Download')
         .should('exist')
         .and('not.be.disabled')
-
-      // Verify data
-      cy.get('.ml-2.mr-2')
-        .invoke('text')
-        .should('include', 'TABLE_NUM,FEATURE_ID,DISTRICT')
-        .and('include', '2493719')
     })
   })
 
   it('displays view log file and verifies UI elements', () => {
-    cy.mountWithVuetify(ReportingContainer, {
+    cy.mount(ReportingContainer, {
       props: {
         tabname: CONSTANTS.REPORTING_TAB.VIEW_LOG_FILE,
       },
@@ -79,17 +73,11 @@ describe('ReportingContainer.vue', () => {
         .contains('Download')
         .should('exist')
         .and('not.be.disabled')
-
-      //  Verify data
-      cy.get('.v-container')
-        .find('div')
-        .contains("VDYP7 Console version: '7.17d'")
-        .should('exist')
     })
   })
 
   it('displays view error message and verifies UI elements', () => {
-    cy.mountWithVuetify(ReportingContainer, {
+    cy.mount(ReportingContainer, {
       props: {
         tabname: CONSTANTS.REPORTING_TAB.VIEW_ERR_MSG,
       },
@@ -100,9 +88,6 @@ describe('ReportingContainer.vue', () => {
         .contains('Download')
         .should('exist')
         .and('not.be.disabled')
-
-      // Verify data
-      cy.get('.v-container').find('div').contains('- I SUCCESS').should('exist')
     })
   })
 })

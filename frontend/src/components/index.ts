@@ -19,7 +19,7 @@ export { default as SiteInfoPanel } from './input/site-info/SiteInfoPanel.vue'
 export { default as StandDensityPanel } from './input/stand-density/StandDensityPanel.vue'
 export { default as ReportInfoPanel } from './input/report-info/ReportInfoPanel.vue'
 
-export { default as FileUpload } from './input/file-upload/FileUpload.vue'
+export { default as AttachmentsPanel } from './input/attachments/AttachmentsPanel.vue'
 
 export { default as BCLogo } from './layout/BCLogo.vue'
 export { default as HeaderTitle } from './layout/HeaderTitle.vue'

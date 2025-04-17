@@ -23,12 +23,14 @@ const meta: Meta<typeof ReportConfiguration> = {
       defaultValue: DEFAULTS.DEFAULT_VALUES.AGE_INCREMENT,
     },
     volumeReported: {
-      control: { type: 'array' },
+      control: { type: 'check' },
+      options: OPTIONS.volumeReportedOptions.map((opt) => opt.value),
       description: 'Selected volume reported options',
       defaultValue: [],
     },
     includeInReport: {
-      control: { type: 'array' },
+      control: { type: 'check' },
+      options: OPTIONS.includeInReportOptions.map((opt) => opt.value),
       description: 'Selected include in report options',
       defaultValue: [OPTIONS.volumeReportedOptions[0].value],
     },
