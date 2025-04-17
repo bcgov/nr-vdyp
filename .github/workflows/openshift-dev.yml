@@ -36,7 +36,6 @@ jobs:
   deploys:
     name: Deploys
     needs: [builds]
-    if: ${{ github.head_ref != 'feature/frontend-VDYP-560-2' }}
     uses: ./.github/workflows/.deployer.yml
     secrets:
       inherit
