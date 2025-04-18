@@ -1,6 +1,5 @@
 package ca.bc.gov.nrs.vdyp.fip;
 
-import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
 
@@ -34,8 +33,7 @@ public class FipPolygonParser implements ControlMapValueReplacer<StreamingParser
 
 	@Override
 	public StreamingParserFactory<FipPolygon>
-			map(String fileName, FileResolver fileResolver, Map<String, Object> control)
-					throws IOException, ResourceParseException {
+			map(String fileName, FileResolver fileResolver, Map<String, Object> control) {
 		return () -> {
 			var lineParser = new LineParser().strippedString(25, POLYGON_IDENTIFIER).space(1)
 					.strippedString(1, FOREST_INVENTORY_ZONE).space(1).value(4, BIOGEOGRAPHIC_ZONE, ValueParser.BEC)

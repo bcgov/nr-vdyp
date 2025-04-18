@@ -88,7 +88,7 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 
 	public static final float TOLERANCE = 2.0e-3f;
 
-	public static void main(final String... args) throws IOException {
+	public static void main(final String... args) {
 
 		try (var app = new FipStart();) {
 			try {
