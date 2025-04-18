@@ -162,7 +162,7 @@ class Bank {
 	 * @param layer a (presumably modified) version of the layer.
 	 * @throws ProcessingException
 	 */
-	void refreshBank(VdypLayer layer) throws ProcessingException {
+	void refreshBank(VdypLayer layer) {
 
 		if (!this.layer.equals(layer)) {
 			throw new IllegalArgumentException(

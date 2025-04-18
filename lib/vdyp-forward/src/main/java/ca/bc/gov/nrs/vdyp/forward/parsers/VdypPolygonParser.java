@@ -1,6 +1,5 @@
 package ca.bc.gov.nrs.vdyp.forward.parsers;
 
-import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.Map;
 import java.util.Optional;
@@ -44,8 +43,7 @@ public class VdypPolygonParser implements ControlMapValueReplacer<Object, String
 
 	@Override
 	public StreamingParserFactory<VdypPolygon>
-			map(String fileName, FileResolver fileResolver, Map<String, Object> control)
-					throws IOException, ResourceParseException {
+			map(String fileName, FileResolver fileResolver, Map<String, Object> control) {
 		return () -> {
 			var lineParser = new LineParser() {
 				@Override

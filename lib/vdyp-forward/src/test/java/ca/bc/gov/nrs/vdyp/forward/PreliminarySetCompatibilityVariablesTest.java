@@ -6,15 +6,12 @@ import static ca.bc.gov.nrs.vdyp.model.VolumeVariable.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
-import java.io.IOException;
-
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.application.ProcessingException;
-import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.VdypEntity;
 
@@ -25,7 +22,7 @@ class PreliminarySetCompatibilityVariablesTest extends AbstractForwardProcessing
 
 	@Test
 	/** SET_COMPATIBILITY_VARIABLES */
-	void testSetCompatibilityVariables() throws ResourceParseException, IOException, ProcessingException {
+	void testSetCompatibilityVariables() throws ProcessingException {
 
 		var reader = new ForwardDataStreamReader(controlMap);
 		var polygon = reader.readNextPolygon().orElseThrow();

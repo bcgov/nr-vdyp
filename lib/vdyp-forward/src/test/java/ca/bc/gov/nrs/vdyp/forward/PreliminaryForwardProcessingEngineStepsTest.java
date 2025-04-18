@@ -31,7 +31,7 @@ class PreliminaryForwardProcessingEngineStepsTest extends AbstractForwardProcess
 	private static final Logger logger = LoggerFactory.getLogger(PreliminaryForwardProcessingEngineStepsTest.class);
 
 	@Test
-	void test() throws IOException, ResourceParseException, ProcessingException {
+	void test() throws ProcessingException {
 
 		ForwardProcessingEngine fpe = new ForwardProcessingEngine(controlMap);
 
@@ -56,7 +56,7 @@ class PreliminaryForwardProcessingEngineStepsTest extends AbstractForwardProcess
 
 	@Test
 	/** CALCULATE_COVERAGES */
-	void testFindPrimarySpecies() throws IOException, ResourceParseException, ProcessingException {
+	void testFindPrimarySpecies() throws ProcessingException {
 
 		// This tests ExecutionStep.CALCULATE_COVERAGES, but that code is stand-alone and can be
 		// tested independently.
@@ -205,8 +205,7 @@ class PreliminaryForwardProcessingEngineStepsTest extends AbstractForwardProcess
 
 	@Test
 	/** ESTIMATE_MISSING_SITE_INDICES, step 1 */
-	void testEstimateMissingSiteIndicesStep1() throws ProcessingException, IOException, ResourceParseException,
-			CurveErrorException, SpeciesErrorException, NoAnswerException {
+	void testEstimateMissingSiteIndicesStep1() throws ProcessingException, IOException, ResourceParseException {
 
 		buildPolygonParserForStream("testPolygon.dat", "01002 S000001 00     1970 CWH  A    99 37  1  1");
 

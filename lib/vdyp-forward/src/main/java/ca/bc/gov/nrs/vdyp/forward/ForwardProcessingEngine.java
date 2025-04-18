@@ -89,8 +89,7 @@ public class ForwardProcessingEngine {
 
 	private final boolean doCheckpoint;
 
-	public ForwardProcessingEngine(Map<String, Object> controlMap, Optional<VdypOutputWriter> outputWriter)
-			throws ProcessingException {
+	public ForwardProcessingEngine(Map<String, Object> controlMap, Optional<VdypOutputWriter> outputWriter) {
 		this.fps = new ForwardProcessingState(controlMap);
 		this.outputWriter = outputWriter;
 
@@ -98,7 +97,7 @@ public class ForwardProcessingEngine {
 		doCheckpoint = cv7Value == 1;
 	}
 
-	public ForwardProcessingEngine(Map<String, Object> controlMap) throws ProcessingException {
+	public ForwardProcessingEngine(Map<String, Object> controlMap) {
 		this(controlMap, Optional.empty());
 	}
 
@@ -1515,7 +1514,7 @@ public class ForwardProcessingEngine {
 	 *
 	 * @throws ProcessingException
 	 */
-	private void calculateSmallComponentYields(LayerProcessingState lps) throws ProcessingException {
+	private void calculateSmallComponentYields(LayerProcessingState lps) {
 
 		Bank bank = lps.getBank();
 
@@ -2642,8 +2641,7 @@ public class ForwardProcessingEngine {
 	 * @throws ProcessingException
 	 */
 	private HashMap<UtilizationClassVariable, Float>
-			calculateSmallCompatibilityVariables(int speciesIndex, ForwardControlVariables forwardControlVariables)
-					throws ProcessingException {
+			calculateSmallCompatibilityVariables(int speciesIndex, ForwardControlVariables forwardControlVariables) {
 
 		var lps = fps.getPrimaryLayerProcessingState();
 		Bank bank = lps.getBank();

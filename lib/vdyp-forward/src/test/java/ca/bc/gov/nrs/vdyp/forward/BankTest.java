@@ -40,7 +40,7 @@ class BankTest {
 	}
 
 	@Test
-	void testConstruction() throws IOException, ResourceParseException, ProcessingException {
+	void testConstruction() throws ProcessingException {
 
 		ForwardDataStreamReader reader = new ForwardDataStreamReader(controlMap);
 
@@ -101,7 +101,7 @@ class BankTest {
 	}
 
 	@Test
-	void testSetCopy() throws IOException, ResourceParseException, ProcessingException {
+	void testSetCopy() throws ProcessingException {
 
 		ForwardDataStreamReader reader = new ForwardDataStreamReader(controlMap);
 
@@ -121,7 +121,7 @@ class BankTest {
 	}
 
 	@Test
-	void testRemoveSmallLayers() throws IOException, ResourceParseException, ProcessingException {
+	void testRemoveSmallLayers() throws ProcessingException {
 
 		ForwardDataStreamReader reader = new ForwardDataStreamReader(controlMap);
 
@@ -150,7 +150,7 @@ class BankTest {
 	}
 
 	@Test
-	void testCopyConstructor() throws IOException, ResourceParseException, ProcessingException {
+	void testCopyConstructor() throws ProcessingException {
 
 		ForwardDataStreamReader reader = new ForwardDataStreamReader(controlMap);
 
@@ -168,7 +168,7 @@ class BankTest {
 	}
 
 	@Test
-	void testLayerUpdate() throws IOException, ResourceParseException, ProcessingException {
+	void testLayerUpdate() throws ProcessingException {
 
 		ForwardDataStreamReader reader = new ForwardDataStreamReader(controlMap);
 
