@@ -26,6 +26,7 @@ import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
+import ca.bc.gov.nrs.vdyp.model.NonprimaryHLCoefficients;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
@@ -142,14 +143,7 @@ public class EstimationMethods {
 	) throws ProcessingException {
 		var coeMap = controlMap.getHlNonPrimaryCoefficients();
 
-		var coe = coeMap.get(vspec, vspecPrime, bec.getRegion()).orElseThrow(
-				() -> new ProcessingException(
-						String.format(
-								"Could not find Lorey Height Nonprimary Coefficients for %s %s %s", vspec, vspecPrime,
-								bec.getRegion()
-						)
-				)
-		);
+		var coe = coeMap.get(vspec, vspecPrime, bec.getRegion()).orElseGet(() -> NonprimaryHLCoefficients.getDefault());
 		var heightToUse = coe.getEquationIndex() == 1 ? leadHeight : primaryHeight;
 		return 1.3f + coe.getCoe(1) * pow(heightToUse - 1.3f, coe.getCoe(2));
 	}

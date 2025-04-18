@@ -17,7 +17,7 @@ import ca.bc.gov.nrs.vdyp.test.TestUtils;
 class UpperBoundsParserTest {
 
 	@Test
-	void testParseSimple() throws Exception {
+	void testParseSimple() {
 
 		var parser = new UpperBoundsParser();
 		Map<String, Object> controlMap = new HashMap<>();
@@ -41,7 +41,7 @@ class UpperBoundsParserTest {
 	}
 
 	@Test
-	void testParseBlank() throws Exception {
+	void testParseBlank() {
 
 		var parser = new UpperBoundsParser();
 		Map<String, Object> controlMap = new HashMap<>();

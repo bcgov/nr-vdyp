@@ -227,7 +227,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 	protected abstract BaseControlParser getControlFileParser();
 
-	void closeVriWriter() throws IOException {
+	void closeVriWriter() {
 		if (vriWriter != null) {
 			vriWriter.close();
 			vriWriter = null;
@@ -260,11 +260,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 	@Override
 	public void close() {
-		try {
-			closeVriWriter();
-		} catch (IOException e) {
-			throw new IllegalStateException(e);
-		}
+		closeVriWriter();
 	}
 
 	protected Coefficients getCoeForSpecies(BaseVdypSpecies<?> species, ControlKey controlKey) {
@@ -652,7 +648,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		return primaryLayer;
 	}
 
-	protected Optional<L> getVeteranLayer(P poly) throws StandProcessingException {
+	protected Optional<L> getVeteranLayer(P poly) {
 		return Utils.optSafe(poly.getLayers().get(LayerType.VETERAN));
 	}
 
@@ -901,14 +897,13 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 	protected Map<String, Float> applyGroupsAndGetTargetPercentages(
 			BaseVdypPolygon<?, ?, ?, ?> fipPolygon, Collection<VdypSpecies> vdypSpecies
-	) throws ProcessingException {
+	) {
 
 		applyGroups(fipPolygon, vdypSpecies);
 		return getTargetPercentages(vdypSpecies);
 	}
 
-	protected void applyGroups(BaseVdypPolygon<?, ?, ?, ?> fipPolygon, Collection<VdypSpecies> vdypSpecies)
-			throws ProcessingException {
+	protected void applyGroups(BaseVdypPolygon<?, ?, ?, ?> fipPolygon, Collection<VdypSpecies> vdypSpecies) {
 		// Lookup volume group, Decay Group, and Breakage group for each species.
 
 		BecDefinition bec = fipPolygon.getBiogeoclimaticZone();
@@ -972,7 +967,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	 *
 	 * @throws ProcessingException
 	 */
-	public void estimateSmallComponents(P fPoly, VdypLayer layer) throws ProcessingException {
+	public void estimateSmallComponents(P fPoly, VdypLayer layer) {
 		float loreyHeightSum = 0f;
 		float baseAreaSum = 0f;
 		float treesPerHectareSum = 0f;

@@ -55,7 +55,7 @@ class ModifierParserTest {
 	}
 
 	@Test
-	void testMissingControlFile() throws Exception {
+	void testMissingControlFile() {
 		var parser = new ModifierParser(VdypApplicationIdentifier.FIP_START);
 
 		Map<String, Object> controlMap = new HashMap<>();

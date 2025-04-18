@@ -20,36 +20,36 @@ class SiteIndexYears2BreastHeightTest {
 	private static final double ERROR_TOLERANCE = 0.00001;
 
 	@Test
-	void testPpowPositive() throws CommonCalculatorException {
+	void testPpowPositive() {
 		assertThat(8.0, closeTo(SiteIndexUtilities.ppow(2.0, 3.0), ERROR_TOLERANCE));
 		assertThat(1.0, closeTo(SiteIndexUtilities.ppow(5.0, 0.0), ERROR_TOLERANCE));
 	}
 
 	@Test
-	void testPpowZero() throws CommonCalculatorException {
+	void testPpowZero() {
 		assertThat(0.0, closeTo(SiteIndexUtilities.ppow(0.0, 3.0), ERROR_TOLERANCE));
 	}
 
 	@Test
-	void testLlogPositive() throws CommonCalculatorException {
+	void testLlogPositive() {
 		assertThat(1.60943, closeTo(SiteIndexUtilities.llog(5.0), ERROR_TOLERANCE));
 		assertThat(11.51293, closeTo(SiteIndexUtilities.llog(100000.0), ERROR_TOLERANCE));
 	}
 
 	@Test
-	void testLlogZero() throws CommonCalculatorException {
+	void testLlogZero() {
 		assertThat(-11.51293, closeTo(SiteIndexUtilities.llog(0.0), ERROR_TOLERANCE));
 	}
 
 	@Nested
 	class si_y2bhTest {
 		@Test
-		void testSiteIndexInvalid() throws CommonCalculatorException {
+		void testSiteIndexInvalid() {
 			assertThrows(LessThan13Exception.class, () -> SiteIndexYears2BreastHeight.y2bh(null, 1));
 		}
 
 		@Test
-		void testSI_FDC_NIGHGI() throws CommonCalculatorException {
+		void testSI_FDC_NIGHGI() {
 			assertThrows(GrowthInterceptTotalException.class, () -> SiteIndexYears2BreastHeight.y2bh(SI_FDC_NIGHGI, 2));
 		}
 
@@ -237,45 +237,45 @@ class SiteIndexYears2BreastHeightTest {
 		}
 
 		@Test
-		void testSI_HWI_NIGHGI() throws CommonCalculatorException {
+		void testSI_HWI_NIGHGI() {
 			assertThrows(GrowthInterceptTotalException.class, () -> SiteIndexYears2BreastHeight.y2bh(SI_HWI_NIGHGI, 2));
 		}
 
 		@Test
-		void testSI_HWC_NIGHGI() throws CommonCalculatorException {
+		void testSI_HWC_NIGHGI() {
 			assertThrows(GrowthInterceptTotalException.class, () -> SiteIndexYears2BreastHeight.y2bh(SI_HWC_NIGHGI, 2));
 		}
 
 		@Test
-		void testSI_HWC_NIGHGI99() throws CommonCalculatorException {
+		void testSI_HWC_NIGHGI99() {
 			assertThrows(
 					GrowthInterceptTotalException.class, () -> SiteIndexYears2BreastHeight.y2bh(SI_HWC_NIGHGI99, 2)
 			);
 		}
 
 		@Test
-		void testSI_SS_NIGHGI99() throws CommonCalculatorException {
+		void testSI_SS_NIGHGI99() {
 			assertThrows(
 					GrowthInterceptTotalException.class, () -> SiteIndexYears2BreastHeight.y2bh(SI_SS_NIGHGI99, 2)
 			);
 		}
 
 		@Test
-		void testSI_SW_NIGHGI99() throws CommonCalculatorException {
+		void testSI_SW_NIGHGI99() {
 			assertThrows(
 					GrowthInterceptTotalException.class, () -> SiteIndexYears2BreastHeight.y2bh(SI_SW_NIGHGI99, 2)
 			);
 		}
 
 		@Test
-		void testSI_SW_NIGHGI2004() throws CommonCalculatorException {
+		void testSI_SW_NIGHGI2004() {
 			assertThrows(
 					GrowthInterceptTotalException.class, () -> SiteIndexYears2BreastHeight.y2bh(SI_SW_NIGHGI2004, 2)
 			);
 		}
 
 		@Test
-		void testSI_LW_NIGHGI() throws CommonCalculatorException {
+		void testSI_LW_NIGHGI() {
 			assertThrows(GrowthInterceptTotalException.class, () -> SiteIndexYears2BreastHeight.y2bh(SI_LW_NIGHGI, 2));
 		}
 
@@ -370,7 +370,7 @@ class SiteIndexYears2BreastHeightTest {
 		}
 
 		@Test
-		void testSI_PLI_NIGHGI97() throws CommonCalculatorException {
+		void testSI_PLI_NIGHGI97() {
 			SiteIndexEquation cuIndex = SI_PLI_NIGHGI97;
 
 			assertThrows(GrowthInterceptTotalException.class, () -> SiteIndexYears2BreastHeight.y2bh(cuIndex, 2.0));
@@ -527,7 +527,7 @@ class SiteIndexYears2BreastHeightTest {
 		}
 
 		@Test
-		void testSI_SE_NIGHGI() throws CommonCalculatorException {
+		void testSI_SE_NIGHGI() {
 			SiteIndexEquation cuIndex = SI_SE_NIGHGI;
 
 			assertThrows(GrowthInterceptTotalException.class, () -> SiteIndexYears2BreastHeight.y2bh(cuIndex, 2.0));
@@ -650,7 +650,7 @@ class SiteIndexYears2BreastHeightTest {
 		}
 
 		@Test
-		void testSI_SW_NIGHGI() throws CommonCalculatorException {
+		void testSI_SW_NIGHGI() {
 			SiteIndexEquation cuIndex = SI_SW_NIGHGI;
 
 			assertThrows(GrowthInterceptTotalException.class, () -> SiteIndexYears2BreastHeight.y2bh(cuIndex, 2.0));
@@ -850,7 +850,7 @@ class SiteIndexYears2BreastHeightTest {
 		}
 
 		@Test
-		void testSI_SS_NIGHGI() throws CommonCalculatorException {
+		void testSI_SS_NIGHGI() {
 			SiteIndexEquation cuIndex = SI_SS_NIGHGI;
 
 			assertThrows(GrowthInterceptTotalException.class, () -> SiteIndexYears2BreastHeight.y2bh(cuIndex, 2.0));
@@ -908,7 +908,7 @@ class SiteIndexYears2BreastHeightTest {
 		}
 
 		@Test
-		void testSI_CWI_NIGHGI() throws CommonCalculatorException {
+		void testSI_CWI_NIGHGI() {
 			SiteIndexEquation cuIndex = SI_CWI_NIGHGI;
 
 			assertThrows(GrowthInterceptTotalException.class, () -> SiteIndexYears2BreastHeight.y2bh(cuIndex, 2.0));
@@ -1068,7 +1068,7 @@ class SiteIndexYears2BreastHeightTest {
 		}
 
 		@Test
-		void testSI_BA_NIGHGI() throws CommonCalculatorException {
+		void testSI_BA_NIGHGI() {
 			SiteIndexEquation cuIndex = SI_BA_NIGHGI;
 
 			assertThrows(GrowthInterceptTotalException.class, () -> SiteIndexYears2BreastHeight.y2bh(cuIndex, 2.0));
@@ -1177,7 +1177,7 @@ class SiteIndexYears2BreastHeightTest {
 		}
 
 		@Test
-		void testSI_BL_THROWERGI() throws CommonCalculatorException {
+		void testSI_BL_THROWERGI() {
 			SiteIndexEquation cuIndex = SI_BL_THROWERGI;
 
 			assertThrows(GrowthInterceptTotalException.class, () -> SiteIndexYears2BreastHeight.y2bh(cuIndex, 2.0));
@@ -1201,7 +1201,7 @@ class SiteIndexYears2BreastHeightTest {
 		}
 
 		@Test
-		void testSI_FDI_NIGHGI() throws CommonCalculatorException {
+		void testSI_FDI_NIGHGI() {
 			SiteIndexEquation cuIndex = SI_FDI_NIGHGI;
 
 			assertThrows(GrowthInterceptTotalException.class, () -> SiteIndexYears2BreastHeight.y2bh(cuIndex, 2.0));
@@ -1532,7 +1532,7 @@ class SiteIndexYears2BreastHeightTest {
 		}
 
 		@Test
-		void testSI_PY_NIGHGI() throws CommonCalculatorException {
+		void testSI_PY_NIGHGI() {
 			SiteIndexEquation cuIndex = SI_PY_NIGHGI;
 
 			assertThrows(GrowthInterceptTotalException.class, () -> SiteIndexYears2BreastHeight.y2bh(cuIndex, 2.0));
@@ -1638,7 +1638,7 @@ class SiteIndexYears2BreastHeightTest {
 		}
 
 		@Test
-		void testSwitchDefault() throws CommonCalculatorException {
+		void testSwitchDefault() {
 			SiteIndexEquation cuIndex = null;
 			assertThrows(CurveErrorException.class, () -> SiteIndexYears2BreastHeight.y2bh(cuIndex, 2.0));
 		}

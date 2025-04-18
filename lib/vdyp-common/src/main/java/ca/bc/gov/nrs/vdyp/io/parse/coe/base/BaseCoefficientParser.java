@@ -221,6 +221,13 @@ public abstract class BaseCoefficientParser<T extends Coefficients, W, M extends
 		return result;
 	}
 
+	/**
+	 * Default implementation that does nothing, for data streams that require no validation.
+	 * @param result
+	 * @param parsed
+	 * @param keyRanges
+	 * @throws ResourceParseValidException
+	 */
 	protected void validate(M result, int parsed, List<Collection<?>> keyRanges) throws ResourceParseValidException {
 		// Do Nothing
 	}

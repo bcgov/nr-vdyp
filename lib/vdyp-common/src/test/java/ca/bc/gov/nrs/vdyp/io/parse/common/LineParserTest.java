@@ -67,7 +67,7 @@ class LineParserTest {
 	}
 
 	@Test
-	void testNumberParseErrors() throws Exception {
+	void testNumberParseErrors() {
 		var parser = new LineParser();
 		parser.integer(4, "part1").space(1).floating(5, "part2");
 
@@ -97,7 +97,7 @@ class LineParserTest {
 	}
 
 	@Test
-	void testValueParserError() throws Exception {
+	void testValueParserError() {
 		var parser = new LineParser();
 		parser.value(4, "part1", (s, c) -> {
 			throw new ValueParseException(s, "Testing");
