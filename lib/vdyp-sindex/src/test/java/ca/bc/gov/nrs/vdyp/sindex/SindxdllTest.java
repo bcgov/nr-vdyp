@@ -1141,14 +1141,14 @@ class SindxdllTest {
 	private static final double ERROR_TOLERANCE = 0.00001;
 
 	@Test
-	void testVersionNumber() throws CommonCalculatorException {
+	void testVersionNumber() {
 		int expectedValue = 151;
 		int actualValue = Sindxdll.VersionNumber();
 		assertEquals(expectedValue, actualValue);
 	}
 
 	@Test
-	void testFirstSpecies() throws CommonCalculatorException {
+	void testFirstSpecies() {
 		SiteIndexSpecies expectedValue = SiteIndexSpecies.SI_SPEC_A;
 		SiteIndexSpecies actualValue = SiteIndexSpecies.getFirstSpecies();
 		assertEquals(expectedValue, actualValue);
@@ -1167,7 +1167,7 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testNullIndex() throws CommonCalculatorException {
+		void testNullIndex() {
 			assertThrows(
 					SpeciesErrorException.class, () -> Sindxdll.NextSpecies(null),
 					"NextSpecies should throw SpeciesErrorException for invalid index"
@@ -1175,7 +1175,7 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testLastIndex() throws CommonCalculatorException {
+		void testLastIndex() {
 			assertThrows(
 					NoAnswerException.class, () -> Sindxdll.NextSpecies(SiteIndexSpecies.getLastSpecies()),
 					"NextSpecies should throw NoAnswerException for last defined species index"
@@ -1186,7 +1186,7 @@ class SindxdllTest {
 	@Nested
 	class SpecCodeTest {
 		@Test
-		void testNullIndex() throws CommonCalculatorException {
+		void testNullIndex() {
 			assertThrows(
 					IllegalArgumentException.class, () -> Sindxdll.SpecCode(null),
 					"SpecCode should throw IllegalArgumentException for invalid index"
@@ -1194,7 +1194,7 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testValidIndex() throws CommonCalculatorException {
+		void testValidIndex() {
 			SiteIndexSpecies validIndex = SiteIndexSpecies.SI_SPEC_A;
 			String expectedResult = "A";
 			String actualResult = Sindxdll.SpecCode(validIndex);
@@ -1206,7 +1206,7 @@ class SindxdllTest {
 	@Nested
 	class SpecNameTest {
 		@Test
-		void testNullIndex() throws CommonCalculatorException {
+		void testNullIndex() {
 			assertThrows(
 					IllegalArgumentException.class, () -> Sindxdll.SpecName(null),
 					"SpecName should throw IllegalArgumentException for invalid index"
@@ -1214,7 +1214,7 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testValidIndex() throws CommonCalculatorException {
+		void testValidIndex() {
 			SiteIndexSpecies validIndex = SiteIndexSpecies.SI_SPEC_A;
 			String expectedResult = "Aspen";
 			String actualResult = Sindxdll.SpecName(validIndex);
@@ -1226,7 +1226,7 @@ class SindxdllTest {
 	@Nested
 	class SpecUseTest {
 		@Test
-		void testNullIndex() throws CommonCalculatorException {
+		void testNullIndex() {
 			assertThrows(
 					SpeciesErrorException.class, () -> Sindxdll.SpecUse(null),
 					"SpecUse should throw SpeciesErrorException for invalid index"
@@ -1918,7 +1918,7 @@ class SindxdllTest {
 	@Nested
 	class DefCurveTest {
 		@Test
-		void testNullIndex() throws CommonCalculatorException {
+		void testNullIndex() {
 			assertThrows(
 					SpeciesErrorException.class, () -> Sindxdll.DefCurve(null),
 					"DefCurve should throw SpeciesErrorException for invalid index"
@@ -1926,7 +1926,7 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testLastSpeciesIndex() throws CommonCalculatorException {
+		void testLastSpeciesIndex() {
 			assertThrows(
 					NoAnswerException.class, () -> Sindxdll.DefCurve(SiteIndexSpecies.getLastSpecies()),
 					"DefCurve should throw NoAnswerException for last index"
@@ -1942,7 +1942,7 @@ class SindxdllTest {
 	@Nested
 	class DefGICurveTest {
 		@Test
-		void testNullIndex() throws CommonCalculatorException {
+		void testNullIndex() {
 			assertThrows(
 					SpeciesErrorException.class, () -> Sindxdll.DefGICurve(null),
 					"DefGICurve should throw SpeciesErrorException for invalid index"
@@ -2022,7 +2022,7 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testIndexNotInSwitch() throws CommonCalculatorException {
+		void testIndexNotInSwitch() {
 			assertThrows(
 					NoAnswerException.class, () -> Sindxdll.DefGICurve(SI_SPEC_B),
 					"DefGICurve should throw NoAnswerException for invalid index"
@@ -2043,7 +2043,7 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testEstNullIndex() throws CommonCalculatorException {
+		void testEstNullIndex() {
 			assertThrows(
 					SpeciesErrorException.class, () -> Sindxdll.DefCurveEst(null, SI_ESTAB_NAT),
 					"DefCurveEst should throw SpeciesErrorException for invalid index"
@@ -2063,14 +2063,14 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testInvalidEstablishment() throws CommonCalculatorException {
+		void testInvalidEstablishment() {
 			assertThrows(EstablishmentErrorException.class, () -> {
 				Sindxdll.DefCurveEst(SI_SPEC_SW, null);
 			});
 		}
 
 		@Test
-		void testNoCurvesDefined() throws CommonCalculatorException {
+		void testNoCurvesDefined() {
 			assertThrows(NoAnswerException.class, () -> {
 				Sindxdll.DefCurveEst(SI_SPEC_ABAL, SI_ESTAB_NAT);
 			});
@@ -2086,7 +2086,7 @@ class SindxdllTest {
 	@Nested
 	class FirstCurveTest {
 		@Test
-		void testNullIndex() throws CommonCalculatorException {
+		void testNullIndex() {
 			assertThrows(
 					SpeciesErrorException.class, () -> Sindxdll.FirstCurve(null),
 					"FirstCurve should throw SpeciesErrorException for invalid index"
@@ -2094,7 +2094,7 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testNoCurvesDefined() throws CommonCalculatorException {
+		void testNoCurvesDefined() {
 			assertThrows(
 					NoAnswerException.class, () -> Sindxdll.FirstCurve(SI_SPEC_A),
 					"FirstCurve should throw NoAnswerException for invalid index"
@@ -2111,7 +2111,7 @@ class SindxdllTest {
 	@Nested
 	class NextCurveTest {
 		@Test
-		void testNullSPIndex() throws CommonCalculatorException {
+		void testNullSPIndex() {
 			assertThrows(
 					SpeciesErrorException.class, () -> Sindxdll.NextCurve(null, null),
 					"NextCurve should throw SpeciesErrorException for invalid index"
@@ -2119,7 +2119,7 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testTooNullIndex() throws CommonCalculatorException {
+		void testTooNullIndex() {
 			assertThrows(
 					CurveErrorException.class, () -> Sindxdll.NextCurve(SI_SPEC_A, null),
 					"NextCurve should throw CurveErrorException for invalid index"
@@ -2127,7 +2127,7 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testCurveSpeciesMismatch() throws CommonCalculatorException {
+		void testCurveSpeciesMismatch() {
 			SiteIndexSpecies spIndex = SiteIndexSpecies.SI_SPEC_A;
 			SiteIndexEquation cuIndex = SiteIndexEquation.SI_ACT_THROWER;
 			assertThrows(CurveErrorException.class, () -> Sindxdll.NextCurve(spIndex, cuIndex));
@@ -2145,7 +2145,7 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testSI_ACB_HUANG() throws CommonCalculatorException {
+		void testSI_ACB_HUANG() {
 			SiteIndexEquation cuIndex = SI_ACB_HUANG;
 			SiteIndexSpecies spIndex = SI_SPEC_ACB;
 			assertThrows(NoAnswerException.class, () -> Sindxdll.NextCurve(spIndex, cuIndex));
@@ -2163,7 +2163,7 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testSI_ACT_THROWER() throws CommonCalculatorException {
+		void testSI_ACT_THROWER() {
 			SiteIndexSpecies spIndex = SI_SPEC_ACT;
 			SiteIndexEquation cuIndex = SI_ACT_THROWER;
 
@@ -2215,7 +2215,7 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testSI_AT_GOUDIE() throws CommonCalculatorException {
+		void testSI_AT_GOUDIE() {
 			SiteIndexSpecies spIndex = SI_SPEC_AT;
 			SiteIndexEquation index = SI_AT_GOUDIE;
 
@@ -2278,7 +2278,7 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testSI_BA_KURUCZ82() throws CommonCalculatorException {
+		void testSI_BA_KURUCZ82() {
 			SiteIndexSpecies spIndex = SI_SPEC_BA;
 			SiteIndexEquation cuIndex = SI_BA_KURUCZ82;
 
@@ -2319,7 +2319,7 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testSI_BL_KURUCZ82() throws CommonCalculatorException {
+		void testSI_BL_KURUCZ82() {
 			SiteIndexSpecies spIndex = SI_SPEC_BL;
 			SiteIndexEquation cuIndex = SI_BL_KURUCZ82;
 
@@ -2338,7 +2338,7 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testSI_BP_CURTIS() throws CommonCalculatorException {
+		void testSI_BP_CURTIS() {
 			SiteIndexSpecies spIndex = SI_SPEC_BP;
 			SiteIndexEquation cuIndex = SI_BP_CURTIS;
 
@@ -2379,7 +2379,7 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testSI_CWC_BARKER() throws CommonCalculatorException {
+		void testSI_CWC_BARKER() {
 			SiteIndexSpecies spIndex = SI_SPEC_CWC;
 			SiteIndexEquation cuIndex = SI_CWC_BARKER;
 
@@ -2398,7 +2398,7 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testSI_CWI_NIGHGI() throws CommonCalculatorException {
+		void testSI_CWI_NIGHGI() {
 			SiteIndexSpecies spIndex = SI_SPEC_CWI;
 			SiteIndexEquation cuIndex = SI_CWI_NIGHGI;
 
@@ -2417,7 +2417,7 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testSI_DR_HARRING() throws CommonCalculatorException {
+		void testSI_DR_HARRING() {
 			SiteIndexSpecies spIndex = SI_SPEC_DR;
 			SiteIndexEquation cuIndex = SI_DR_HARRING;
 
@@ -2425,7 +2425,7 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testSI_EP_NIGH() throws CommonCalculatorException {
+		void testSI_EP_NIGH() {
 			SiteIndexSpecies spIndex = SI_SPEC_EP;
 			SiteIndexEquation cuIndex = SI_EP_NIGH;
 
@@ -2488,7 +2488,7 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testSI_FDC_KING() throws CommonCalculatorException {
+		void testSI_FDC_KING() {
 			SiteIndexSpecies spIndex = SI_SPEC_FDC;
 			SiteIndexEquation cuIndex = SI_FDC_KING;
 
@@ -2628,7 +2628,7 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testSI_FDI_MONS_SAF() throws CommonCalculatorException {
+		void testSI_FDI_MONS_SAF() {
 			SiteIndexSpecies spIndex = SI_SPEC_FDI;
 			SiteIndexEquation cuIndex = SI_FDI_MONS_SAF;
 
@@ -2647,7 +2647,7 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testSI_HM_MEANS() throws CommonCalculatorException {
+		void testSI_HM_MEANS() {
 			SiteIndexSpecies spIndex = SI_SPEC_HM;
 			SiteIndexEquation cuIndex = SI_HM_MEANS;
 
@@ -2721,7 +2721,7 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testSI_HWC_WILEY_MB() throws CommonCalculatorException {
+		void testSI_HWC_WILEY_MB() {
 			SiteIndexSpecies spIndex = SI_SPEC_HWC;
 			SiteIndexEquation cuIndex = SI_HWC_WILEY_MB;
 
@@ -2740,7 +2740,7 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testSI_HWI_NIGHGI() throws CommonCalculatorException {
+		void testSI_HWI_NIGHGI() {
 			SiteIndexSpecies spIndex = SI_SPEC_HWI;
 			SiteIndexEquation cuIndex = SI_HWI_NIGHGI;
 
@@ -2770,7 +2770,7 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testSI_LW_MILNER() throws CommonCalculatorException {
+		void testSI_LW_MILNER() {
 			SiteIndexSpecies spIndex = SI_SPEC_LW;
 			SiteIndexEquation cuIndex = SI_LW_MILNER;
 
@@ -2789,7 +2789,7 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testSI_PJ_HUANGAC() throws CommonCalculatorException {
+		void testSI_PJ_HUANGAC() {
 			SiteIndexSpecies spIndex = SI_SPEC_PJ;
 			SiteIndexEquation cuIndex = SI_PJ_HUANGAC;
 
@@ -2918,7 +2918,7 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testSI_PLI_DEMPSTER() throws CommonCalculatorException {
+		void testSI_PLI_DEMPSTER() {
 			SiteIndexSpecies spIndex = SI_SPEC_PLI;
 			SiteIndexEquation cuIndex = SI_PLI_DEMPSTER;
 
@@ -2937,7 +2937,7 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testSI_PW_CURTIS() throws CommonCalculatorException {
+		void testSI_PW_CURTIS() {
 			SiteIndexSpecies spIndex = SI_SPEC_PW;
 			SiteIndexEquation cuIndex = SI_PW_CURTIS;
 
@@ -2989,7 +2989,7 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testSI_PY_HANN() throws CommonCalculatorException {
+		void testSI_PY_HANN() {
 			SiteIndexSpecies spIndex = SI_SPEC_PY;
 			SiteIndexEquation cuIndex = SI_PY_HANN;
 
@@ -3041,7 +3041,7 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testSI_SB_DEMPSTER() throws CommonCalculatorException {
+		void testSI_SB_DEMPSTER() {
 			SiteIndexSpecies spIndex = SI_SPEC_SB;
 			SiteIndexEquation cuIndex = SI_SB_DEMPSTER;
 
@@ -3082,7 +3082,7 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testSI_SE_NIGH() throws CommonCalculatorException {
+		void testSI_SE_NIGH() {
 			SiteIndexSpecies spIndex = SI_SPEC_SE;
 			SiteIndexEquation cuIndex = SI_SE_NIGH;
 
@@ -3134,7 +3134,7 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testSI_SS_BARKER() throws CommonCalculatorException {
+		void testSI_SS_BARKER() {
 			SiteIndexSpecies spIndex = SI_SPEC_SS;
 			SiteIndexEquation cuIndex = SI_SS_BARKER;
 
@@ -3285,7 +3285,7 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testSI_SW_GOUDIE_NAT() throws CommonCalculatorException {
+		void testSI_SW_GOUDIE_NAT() {
 			SiteIndexSpecies spIndex = SI_SPEC_SW;
 			SiteIndexEquation cuIndex = SI_SW_GOUDIE_NAT;
 
@@ -3297,7 +3297,7 @@ class SindxdllTest {
 	class CurveNameTest {
 
 		@Test
-		void testInvalidIndex() throws CommonCalculatorException {
+		void testInvalidIndex() {
 			SiteIndexEquation invalidIndex = null; // Choose an invalid index for testing
 			assertThrows(
 					CurveErrorException.class, () -> Sindxdll.CurveName(invalidIndex),
@@ -3318,7 +3318,7 @@ class SindxdllTest {
 	@Nested
 	class CurveUseTest {
 		@Test
-		void testInvalidIndex() throws CommonCalculatorException {
+		void testInvalidIndex() {
 			SiteIndexEquation invalidIndex = null; // Choose an invalid index for testing
 			assertThrows(
 					CurveErrorException.class, () -> Sindxdll.CurveUse(invalidIndex),
@@ -3339,7 +3339,7 @@ class SindxdllTest {
 	@Nested
 	class HtAgeToSITest {
 		@Test
-		void testHtAgeToSIError() throws CommonCalculatorException {
+		void testHtAgeToSIError() {
 			Reference<Double> site = new Reference<>();
 			assertThrows(
 					LessThan13Exception.class,
@@ -3365,7 +3365,7 @@ class SindxdllTest {
 	@Nested
 	class HtSIToAgeTest {
 		@Test
-		void testHtSIToAgeError() throws CommonCalculatorException {
+		void testHtSIToAgeError() {
 			Reference<Double> site = new Reference<>();
 			assertThrows(
 					LessThan13Exception.class, () -> Sindxdll.HtSIToAge(null, 0.0, SI_AT_BREAST, 1.2, (int) 0, site)
@@ -3397,7 +3397,7 @@ class SindxdllTest {
 	@Nested
 	class AgeSIToHtTest {
 		@Test
-		void testAgeSIToHtError() throws CommonCalculatorException {
+		void testAgeSIToHtError() {
 			Reference<Double> site = new Reference<>();
 			assertThrows(
 					LessThan13Exception.class, () -> Sindxdll.AgeSIToHt(null, 0.0, SI_AT_BREAST, 1.2, (int) 0, site)
@@ -3420,7 +3420,7 @@ class SindxdllTest {
 	@Nested
 	class AgeSIToHtSmoothTest {
 		@Test
-		void testAgeSIToHtError() throws CommonCalculatorException {
+		void testAgeSIToHtError() {
 			Reference<Double> height = new Reference<>();
 			assertThrows(
 					LessThan13Exception.class,
@@ -3446,7 +3446,7 @@ class SindxdllTest {
 	@Nested
 	class Y2BHTest {
 		@Test
-		void testY2BHError() throws CommonCalculatorException {
+		void testY2BHError() {
 			Reference<Double> site = new Reference<>();
 			assertThrows(LessThan13Exception.class, () -> Sindxdll.Y2BH(null, 1.0, site));
 		}
@@ -3466,7 +3466,7 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testY2BH05Error() throws CommonCalculatorException {
+		void testY2BH05Error() {
 			Reference<Double> site = new Reference<>();
 			assertThrows(LessThan13Exception.class, () -> Sindxdll.Y2BH05(null, 1.0, site));
 		}
@@ -3497,7 +3497,7 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testInvalidSourceSpeciesIndex() throws CommonCalculatorException {
+		void testInvalidSourceSpeciesIndex() {
 			Reference<Double> resultSiteIndex = new Reference<>();
 			assertThrows(SpeciesErrorException.class, () -> {
 				Sindxdll.SIToSI(null, 10.0, SI_SPEC_ABCO, resultSiteIndex);
@@ -3512,7 +3512,7 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testInvalidTargetSpeciesIndex() throws CommonCalculatorException {
+		void testInvalidTargetSpeciesIndex() {
 			Reference<Double> calculatedResult = new Reference<>();
 			assertThrows(SpeciesErrorException.class, () -> {
 				Sindxdll.SIToSI(SI_SPEC_ABAL, 10.0, null, calculatedResult);
@@ -3527,7 +3527,7 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testSameSpeciesYieldsNoConversionDefined() throws CommonCalculatorException {
+		void testSameSpeciesYieldsNoConversionDefined() {
 			Reference<Double> resultSiteIndex = new Reference<>();
 			assertThrows(NoAnswerException.class, () -> {
 				Sindxdll.SIToSI(SI_SPEC_AT, 10.0, SI_SPEC_AT, resultSiteIndex);
@@ -3538,7 +3538,7 @@ class SindxdllTest {
 	@Nested
 	class SCToSITest {
 		@Test
-		void testSCToSIError() throws CommonCalculatorException {
+		void testSCToSIError() {
 			Reference<Double> site = new Reference<>();
 			assertThrows(ClassErrorException.class, () -> Sindxdll.SCToSI(SI_SPEC_ACT, 'A', 'A', site));
 		}
@@ -3566,7 +3566,7 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testErrorCode() throws CommonCalculatorException {
+		void testErrorCode() {
 			assertThrows(CodeErrorException.class, () -> Sindxdll.SpecMap("Error causer"));
 		}
 	}
@@ -3581,7 +3581,7 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testErrorCode() throws CommonCalculatorException {
+		void testErrorCode() {
 			assertThrows(CodeErrorException.class, () -> Sindxdll.SpecRemap("Error causer", 'A'));
 		}
 	}
@@ -3589,7 +3589,7 @@ class SindxdllTest {
 	@Nested
 	class CurveSourceTest {
 		@Test
-		void testInvalidCurveIndex() throws CommonCalculatorException {
+		void testInvalidCurveIndex() {
 			assertThrows(IllegalArgumentException.class, () -> Sindxdll.CurveSource(null));
 		}
 
@@ -3601,21 +3601,21 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testSI_BA_NIGH() throws CommonCalculatorException {
+		void testSI_BA_NIGH() {
 			SiteIndexEquation cuIndex = SI_BA_NIGH;
 			SiteIndexEquation searchIndex = SI_BA_NIGHGI;
 			assertTrue(testHelperFunction(cuIndex, searchIndex));
 		}
 
 		@Test
-		void testSI_CWI_NIGHGI() throws CommonCalculatorException {
+		void testSI_CWI_NIGHGI() {
 			SiteIndexEquation cuIndex = SI_CWI_NIGHGI;
 			SiteIndexEquation searchIndex = SI_CWI_NIGH;
 			assertTrue(testHelperFunction(cuIndex, searchIndex));
 		}
 
 		@Test
-		void testSI_AT_HUANG() throws CommonCalculatorException {
+		void testSI_AT_HUANG() {
 			SiteIndexEquation[] cuIndices = { SI_AT_HUANG, SI_SB_HUANG, SI_FDI_HUANG_PLA, SI_FDI_HUANG_NAT,
 					SI_PLI_HUANG_PLA, SI_PLI_HUANG_NAT, SI_SW_HUANG_PLA, SI_SW_HUANG_NAT };
 			SiteIndexEquation cuIndex = SI_ACB_HUANG;
@@ -3625,7 +3625,7 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testSI_PLI_CIESZEWSKI_SI_SB_CIESZEWSKI_SI_SW_CIESZEWSKI() throws CommonCalculatorException {
+		void testSI_PLI_CIESZEWSKI_SI_SB_CIESZEWSKI_SI_SW_CIESZEWSKI() {
 			SiteIndexEquation[] cuIndices = { SI_PLI_CIESZEWSKI, SI_SB_CIESZEWSKI, SI_SW_CIESZEWSKI };
 			SiteIndexEquation cuIndex = SI_AT_CIESZEWSKI;
 			for (SiteIndexEquation index : cuIndices) {
@@ -3634,7 +3634,7 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testSI_PLI_DEMPSTER_SB_DEMPSTER_SW_DEMPSTER() throws CommonCalculatorException {
+		void testSI_PLI_DEMPSTER_SB_DEMPSTER_SW_DEMPSTER() {
 			SiteIndexEquation[] cuIndices = { SI_PLI_DEMPSTER, SI_SB_DEMPSTER, SI_SW_DEMPSTER };
 			SiteIndexEquation cuIndex = SI_AT_GOUDIE;
 			for (SiteIndexEquation index : cuIndices) {
@@ -3643,7 +3643,7 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testSI_SW_KER_PLA_SW_KER_NAT() throws CommonCalculatorException {
+		void testSI_SW_KER_PLA_SW_KER_NAT() {
 			SiteIndexEquation[] cuIndices = { SI_SW_KER_PLA, SI_SW_KER_NAT };
 			SiteIndexEquation cuIndex = SI_SB_KER;
 			for (SiteIndexEquation index : cuIndices) {
@@ -3652,14 +3652,14 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testSI_BL_KURUCZ82() throws CommonCalculatorException {
+		void testSI_BL_KURUCZ82() {
 			SiteIndexEquation cuIndex = SI_BL_KURUCZ82;
 			SiteIndexEquation searchIndex = SI_BA_KURUCZ82;
 			assertTrue(testHelperFunction(cuIndex, searchIndex));
 		}
 
 		@Test
-		void testSI_HWC_BARKER_SS_BARKER() throws CommonCalculatorException {
+		void testSI_HWC_BARKER_SS_BARKER() {
 			SiteIndexEquation[] cuIndices = { SI_HWC_BARKER, SI_SS_BARKER };
 			SiteIndexEquation cuIndex = SI_CWC_BARKER;
 			for (SiteIndexEquation index : cuIndices) {
@@ -3668,7 +3668,7 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testSI_LW_MILNER_PLI_MILNER_PY_MILNER() throws CommonCalculatorException {
+		void testSI_LW_MILNER_PLI_MILNER_PY_MILNER() {
 			SiteIndexEquation[] cuIndices = { SI_LW_MILNER, SI_PLI_MILNER, SI_PY_MILNER };
 			SiteIndexEquation cuIndex = SI_FDI_MILNER;
 			for (SiteIndexEquation index : cuIndices) {
@@ -3677,14 +3677,14 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testSI_FDI_VDP_WASH() throws CommonCalculatorException {
+		void testSI_FDI_VDP_WASH() {
 			SiteIndexEquation cuIndex = SI_FDI_VDP_WASH;
 			SiteIndexEquation searchIndex = SI_FDI_VDP_MONT;
 			assertTrue(testHelperFunction(cuIndex, searchIndex));
 		}
 
 		@Test
-		void testSI_FDI_MONS_GF_FDI_MONS_WRC_FDI_MONS_WH_FDI_MONS_SAF() throws CommonCalculatorException {
+		void testSI_FDI_MONS_GF_FDI_MONS_WRC_FDI_MONS_WH_FDI_MONS_SAF() {
 			SiteIndexEquation[] cuIndices = { SI_FDI_MONS_GF, SI_FDI_MONS_WRC, SI_FDI_MONS_WH, SI_FDI_MONS_SAF };
 			SiteIndexEquation cuIndex = SI_FDI_MONS_DF;
 			for (SiteIndexEquation index : cuIndices) {
@@ -3693,14 +3693,14 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testSI_SS_FARR() throws CommonCalculatorException {
+		void testSI_SS_FARR() {
 			SiteIndexEquation cuIndex = SI_SS_FARR;
 			SiteIndexEquation searchIndex = SI_HWC_FARR;
 			assertTrue(testHelperFunction(cuIndex, searchIndex));
 		}
 
 		@Test
-		void testSI_HWC_WILEY_BC_HWC_WILEY_MB() throws CommonCalculatorException {
+		void testSI_HWC_WILEY_BC_HWC_WILEY_MB() {
 			SiteIndexEquation[] cuIndices = { SI_HWC_WILEY_BC, SI_HWC_WILEY_MB };
 			SiteIndexEquation cuIndex = SI_HWC_WILEY;
 			for (SiteIndexEquation index : cuIndices) {
@@ -3709,14 +3709,14 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testSI_SW_THROWER() throws CommonCalculatorException {
+		void testSI_SW_THROWER() {
 			SiteIndexEquation cuIndex = SI_SW_THROWER;
 			SiteIndexEquation searchIndex = SI_PLI_THROWER;
 			assertTrue(testHelperFunction(cuIndex, searchIndex));
 		}
 
 		@Test
-		void testSI_PLI_GOUDIE_WET_SW_GOUDIE_PLA_SW_GOUDIE_NAT() throws CommonCalculatorException {
+		void testSI_PLI_GOUDIE_WET_SW_GOUDIE_PLA_SW_GOUDIE_NAT() {
 			SiteIndexEquation[] cuIndices = { SI_PLI_GOUDIE_WET, SI_SW_GOUDIE_PLA, SI_SW_GOUDIE_NAT };
 			SiteIndexEquation cuIndex = SI_PLI_GOUDIE_DRY;
 			for (SiteIndexEquation index : cuIndices) {
@@ -3725,7 +3725,7 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testSI_PLI_THROWER() throws CommonCalculatorException { // not in the switch statement but valid index
+		void testSI_PLI_THROWER() { // not in the switch statement but valid index
 			SiteIndexEquation cuIndex = SI_PLI_THROWER;
 			SiteIndexEquation searchIndex = SI_PLI_THROWER;
 			assertTrue(testHelperFunction(cuIndex, searchIndex));
@@ -3736,7 +3736,7 @@ class SindxdllTest {
 	@Nested
 	class CurveSourceNotesTest {
 		@Test
-		void testInvalidCurveIndex() throws CommonCalculatorException {
+		void testInvalidCurveIndex() {
 			assertThrows(IllegalArgumentException.class, () -> Sindxdll.CurveNotes(null));
 		}
 
@@ -3748,56 +3748,56 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testSI_BA_NIGH() throws CommonCalculatorException {
+		void testSI_BA_NIGH() {
 			SiteIndexEquation cuIndex = SI_BA_NIGH;
 			SiteIndexEquation searchIndex = SI_BA_NIGHGI;
 			assertTrue(testHelperFunction(cuIndex, searchIndex));
 		}
 
 		@Test
-		void testSI_CWI_NIGHGI() throws CommonCalculatorException {
+		void testSI_CWI_NIGHGI() {
 			SiteIndexEquation cuIndex = SI_CWI_NIGHGI;
 			SiteIndexEquation searchIndex = SI_CWI_NIGH;
 			assertTrue(testHelperFunction(cuIndex, searchIndex));
 		}
 
 		@Test
-		void testSI_FDI_HUANG_NAT() throws CommonCalculatorException {
+		void testSI_FDI_HUANG_NAT() {
 			SiteIndexEquation cuIndex = SI_FDI_HUANG_NAT;
 			SiteIndexEquation searchIndex = SI_FDI_HUANG_PLA;
 			assertTrue(testHelperFunction(cuIndex, searchIndex));
 		}
 
 		@Test
-		void testSI_PLI_HUANG_NAT() throws CommonCalculatorException {
+		void testSI_PLI_HUANG_NAT() {
 			SiteIndexEquation cuIndex = SI_PLI_HUANG_NAT;
 			SiteIndexEquation searchIndex = SI_PLI_HUANG_PLA;
 			assertTrue(testHelperFunction(cuIndex, searchIndex));
 		}
 
 		@Test
-		void testSI_SW_HUANG_NAT() throws CommonCalculatorException {
+		void testSI_SW_HUANG_NAT() {
 			SiteIndexEquation cuIndex = SI_SW_HUANG_NAT;
 			SiteIndexEquation searchIndex = SI_SW_HUANG_PLA;
 			assertTrue(testHelperFunction(cuIndex, searchIndex));
 		}
 
 		@Test
-		void testSI_SW_KER_NAT() throws CommonCalculatorException {
+		void testSI_SW_KER_NAT() {
 			SiteIndexEquation cuIndex = SI_SW_KER_NAT;
 			SiteIndexEquation searchIndex = SI_SW_KER_PLA;
 			assertTrue(testHelperFunction(cuIndex, searchIndex));
 		}
 
 		@Test
-		void testSI_FDI_VDP_WASH() throws CommonCalculatorException {
+		void testSI_FDI_VDP_WASH() {
 			SiteIndexEquation cuIndex = SI_FDI_VDP_WASH;
 			SiteIndexEquation searchIndex = SI_FDI_VDP_MONT;
 			assertTrue(testHelperFunction(cuIndex, searchIndex));
 		}
 
 		@Test
-		void testSI_FDI_MONS_GF_FDI_MONS_WRC_FDI_MONS_WH_FDI_MONS_SAF() throws CommonCalculatorException {
+		void testSI_FDI_MONS_GF_FDI_MONS_WRC_FDI_MONS_WH_FDI_MONS_SAF() {
 			SiteIndexEquation[] cuIndices = { SI_FDI_MONS_GF, SI_FDI_MONS_WRC, SI_FDI_MONS_WH, SI_FDI_MONS_SAF };
 			SiteIndexEquation cuIndex = SI_FDI_MONS_DF;
 			for (SiteIndexEquation index : cuIndices) {
@@ -3806,28 +3806,28 @@ class SindxdllTest {
 		}
 
 		@Test
-		void testSI_PLI_GOUDIE_WET() throws CommonCalculatorException {
+		void testSI_PLI_GOUDIE_WET() {
 			SiteIndexEquation cuIndex = SI_PLI_GOUDIE_WET;
 			SiteIndexEquation searchIndex = SI_PLI_GOUDIE_DRY;
 			assertTrue(testHelperFunction(cuIndex, searchIndex));
 		}
 
 		@Test
-		void testSI_SW_GOUDIE_NAT() throws CommonCalculatorException {
+		void testSI_SW_GOUDIE_NAT() {
 			SiteIndexEquation cuIndex = SI_SW_GOUDIE_NAT;
 			SiteIndexEquation searchIndex = SI_SW_GOUDIE_PLA;
 			assertTrue(testHelperFunction(cuIndex, searchIndex));
 		}
 
 		@Test
-		void testSI_PY_NIGHGI() throws CommonCalculatorException {
+		void testSI_PY_NIGHGI() {
 			SiteIndexEquation cuIndex = SI_PY_NIGHGI;
 			SiteIndexEquation searchIndex = SI_PY_NIGH;
 			assertTrue(testHelperFunction(cuIndex, searchIndex));
 		}
 
 		@Test
-		void testSI_PLI_THROWER() throws CommonCalculatorException { // not in the switch statement but valid index
+		void testSI_PLI_THROWER() { // not in the switch statement but valid index
 			SiteIndexEquation cuIndex = SI_PLI_THROWER;
 			SiteIndexEquation searchIndex = SI_PLI_THROWER;
 			assertTrue(testHelperFunction(cuIndex, searchIndex));
@@ -3838,7 +3838,7 @@ class SindxdllTest {
 	@Nested
 	class AgeToAgeTest {
 		@Test
-		void testAgeToAgeError() throws CommonCalculatorException {
+		void testAgeToAgeError() {
 			Reference<Double> age = new Reference<>();
 			assertThrows(
 					AgeTypeErrorException.class,
@@ -3863,7 +3863,7 @@ class SindxdllTest {
 	@Nested
 	class CurveToSpeciesTest {
 		@Test
-		void testCurveToSpeciesError() throws CommonCalculatorException {
+		void testCurveToSpeciesError() {
 			assertThrows(CurveErrorException.class, () -> Sindxdll.CurveToSpecies(null));
 		}
 
