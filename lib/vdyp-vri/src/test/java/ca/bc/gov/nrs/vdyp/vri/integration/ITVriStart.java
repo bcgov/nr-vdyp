@@ -1,8 +1,6 @@
 package ca.bc.gov.nrs.vdyp.vri.integration;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -24,17 +22,17 @@ import org.junit.jupiter.api.io.TempDir;
 
 import ca.bc.gov.nrs.vdyp.application.ProcessingException;
 import ca.bc.gov.nrs.vdyp.application.VdypStartApplication;
+import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
+import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
+import ca.bc.gov.nrs.vdyp.io.write.ControlFileWriter;
+import ca.bc.gov.nrs.vdyp.math.FloatMath;
+import ca.bc.gov.nrs.vdyp.test.TestUtils;
 import ca.bc.gov.nrs.vdyp.vri.VriStart;
 import ca.bc.gov.nrs.vdyp.vri.model.VriLayer;
 import ca.bc.gov.nrs.vdyp.vri.model.VriPolygon;
 import ca.bc.gov.nrs.vdyp.vri.model.VriSite;
 import ca.bc.gov.nrs.vdyp.vri.model.VriSpecies;
 import ca.bc.gov.nrs.vdyp.vri.test.VriTestUtils;
-import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
-import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
-import ca.bc.gov.nrs.vdyp.io.write.ControlFileWriter;
-import ca.bc.gov.nrs.vdyp.math.FloatMath;
-import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 class ITVriStart {
 
@@ -117,7 +115,7 @@ class ITVriStart {
 
 	@Disabled
 	@Test
-	void noControlFile() throws IOException, ResourceParseException, ProcessingException {
+	void noControlFile() {
 		try (VdypStartApplication<VriPolygon, VriLayer, VriSpecies, VriSite> app = new VriStart();) {
 
 			var resolver = new FileSystemFileResolver(configDir);
@@ -127,7 +125,7 @@ class ITVriStart {
 	}
 
 	@Test
-	void controlFileDoesntExist() throws IOException, ResourceParseException, ProcessingException {
+	void controlFileDoesntExist() {
 		try (VdypStartApplication<VriPolygon, VriLayer, VriSpecies, VriSite> app = new VriStart();) {
 
 			var resolver = new FileSystemFileResolver(configDir);

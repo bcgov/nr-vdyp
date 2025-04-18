@@ -1,6 +1,5 @@
 package ca.bc.gov.nrs.vdyp.vri;
 
-import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
 
@@ -32,8 +31,7 @@ public class VriPolygonParser implements ControlMapValueReplacer<StreamingParser
 
 	@Override
 	public StreamingParserFactory<VriPolygon>
-			map(String fileName, FileResolver fileResolver, Map<String, Object> control)
-					throws IOException, ResourceParseException {
+			map(String fileName, FileResolver fileResolver, Map<String, Object> control) {
 		return () -> {
 			var lineParser = new LineParser()//
 					.strippedString(25, POLYGON_IDENTIFIER) //
