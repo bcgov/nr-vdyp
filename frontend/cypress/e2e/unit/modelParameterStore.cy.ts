@@ -31,6 +31,11 @@ describe('ModelParameterStore Unit Tests', () => {
     expect(store.panelState.reportInfo.editable).to.be.false
 
     expect(store.runModelEnabled).to.be.false
+
+    expect(store.selectedAgeYearRange).to.be.null
+    expect(store.startYear).to.be.null
+    expect(store.endYear).to.be.null
+    expect(store.yearIncrement).to.be.null
   })
 
   it('should confirm panel and enable the next panel', () => {
@@ -99,6 +104,15 @@ describe('ModelParameterStore Unit Tests', () => {
     expect(store.speciesList[0].percent).to.equal('30.0')
     expect(store.becZone).to.equal(DEFAULTS.DEFAULT_VALUES.BEC_ZONE)
     expect(store.startingAge).to.equal(DEFAULTS.DEFAULT_VALUES.STARTING_AGE)
+    expect(store.finishingAge).to.equal(DEFAULTS.DEFAULT_VALUES.FINISHING_AGE)
+    expect(store.ageIncrement).to.equal(DEFAULTS.DEFAULT_VALUES.AGE_INCREMENT)
+
+    expect(store.selectedAgeYearRange).to.equal(
+      DEFAULTS.DEFAULT_VALUES.SELECTED_AGE_YEAR_RANGE,
+    )
+    expect(store.startYear).to.equal(DEFAULTS.DEFAULT_VALUES.START_YEAR)
+    expect(store.endYear).to.equal(DEFAULTS.DEFAULT_VALUES.END_YEAR)
+    expect(store.yearIncrement).to.equal(DEFAULTS.DEFAULT_VALUES.YEAR_INCREMENT)
   })
 
   it('should handle empty species list without errors', () => {
@@ -116,5 +130,27 @@ describe('ModelParameterStore Unit Tests', () => {
     store.confirmPanel(CONSTANTS.MODEL_PARAMETER_PANEL.REPORT_INFO)
 
     expect(store.runModelEnabled).to.be.true
+  })
+
+  it('should update year range properties correctly', () => {
+    store.startYear = 2020
+    store.endYear = 2030
+    store.yearIncrement = 2
+
+    expect(store.startYear).to.equal(2020)
+    expect(store.endYear).to.equal(2030)
+    expect(store.yearIncrement).to.equal(2)
+  })
+
+  it('should update age range properties correctly', () => {
+    store.selectedAgeYearRange = 'Custom Range'
+    store.startingAge = 15
+    store.finishingAge = 85
+    store.ageIncrement = 10
+
+    expect(store.selectedAgeYearRange).to.equal('Custom Range')
+    expect(store.startingAge).to.equal(15)
+    expect(store.finishingAge).to.equal(85)
+    expect(store.ageIncrement).to.equal(10)
   })
 })

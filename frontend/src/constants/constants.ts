@@ -28,6 +28,11 @@ export const SITE_SPECIES_VALUES = Object.freeze({
   SUPPLIED: 'Supplied',
 })
 
+export const AGE_YEAR_RANGE = Object.freeze({
+  AGE: 'age',
+  YEAR: 'year',
+})
+
 export const VOLUME_REPORTED = Object.freeze({
   WHOLE_STEM: 'Whole Stem',
   CLOSE_UTIL: 'Close Utilization',
@@ -59,6 +64,11 @@ export const MODEL_PARAMETER_PANEL = Object.freeze({
   REPORT_INFO: 'reportInfo',
 })
 
+export const FILE_UPLOAD_PANEL = Object.freeze({
+  REPORT_INFO: 'reportInfo',
+  ATTACHMENTS: 'attachments',
+})
+
 export const NUM_INPUT_LIMITS = Object.freeze({
   SPECIES_PERCENT_MAX: 100,
   SPECIES_PERCENT_MIN: 0,
@@ -81,6 +91,15 @@ export const NUM_INPUT_LIMITS = Object.freeze({
   AGE_INC_MAX: 350,
   AGE_INC_MIN: 1,
   AGE_INC_STEP: 5,
+  START_YEAR_MIN: 1900,
+  START_YEAR_MAX: 2100,
+  START_YEAR_STEP: 1,
+  END_YEAR_MIN: 1900,
+  END_YEAR_MAX: 2100,
+  END_YEAR_STEP: 1,
+  YEAR_INC_MIN: 1,
+  YEAR_INC_MAX: 50,
+  YEAR_INC_STEP: 1,
 })
 
 export const CONTINUOUS_INC_DEC = Object.freeze({
@@ -110,7 +129,7 @@ export const MESSAGE_TYPE = Object.freeze({
 
 export const HEADER_SELECTION = Object.freeze({
   MODEL_PARAMETER_SELECTION: 'Model Parameter Selection',
-  FILE_UPLOAD: 'File upload',
+  FILE_UPLOAD: 'File Upload',
 })
 
 export const MODEL_SELECTION = Object.freeze({
@@ -119,14 +138,14 @@ export const MODEL_SELECTION = Object.freeze({
 })
 
 export const MODEL_PARAM_TAB_NAME = Object.freeze({
-  MODEL_PARAM_SELECTION: 'Model Parameter Selection',
+  MODEL_PARAM_SELECTION: 'Parameter Selection',
   MODEL_REPORT: 'Model Report',
   VIEW_LOG_FILE: 'View Log File',
   VIEW_ERROR_MESSAGES: 'View Error Messages',
 })
 
 export const FILE_UPLOAD_TAB_NAME = Object.freeze({
-  FILE_UPLOAD: 'File Upload',
+  FILE_UPLOAD: 'Parameter Selection',
   MODEL_REPORT: 'Model Report',
   VIEW_LOG_FILE: 'View Log File',
   VIEW_ERROR_MESSAGES: 'View Error Messages',

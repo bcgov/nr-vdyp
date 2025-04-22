@@ -18,18 +18,6 @@ const meta: Meta<typeof AppPanelActions> = {
         'Determines whether the Confirm button is replaced by the Edit button.',
       defaultValue: false,
     },
-    clear: {
-      action: 'clear',
-      description: 'Emitted when the Clear button is clicked.',
-    },
-    confirm: {
-      action: 'confirm',
-      description: 'Emitted when the Confirm button is clicked.',
-    },
-    edit: {
-      action: 'edit',
-      description: 'Emitted when the Edit button is clicked.',
-    },
   },
 }
 

@@ -83,10 +83,6 @@ const meta: Meta<typeof AppSpinField> = {
       description: 'Number of decimal places allowed.',
       defaultValue: 2,
     },
-    'update:modelValue': {
-      action: 'update:modelValue',
-      description: 'Emits the updated value of the field.',
-    },
   },
   tags: ['autodocs'],
 }

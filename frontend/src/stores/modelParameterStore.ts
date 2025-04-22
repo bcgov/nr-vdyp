@@ -178,13 +178,20 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
   const percentStockableArea = ref<number | null>(null)
 
   // report info
+  const selectedAgeYearRange = ref<string | null>(null)
   const startingAge = ref<number | null>(null)
   const finishingAge = ref<number | null>(null)
   const ageIncrement = ref<number | null>(null)
+  const startYear = ref<number | null>(null)
+  const endYear = ref<number | null>(null)
+  const yearIncrement = ref<number | null>(null)
   const volumeReported = ref<string[]>([])
   const includeInReport = ref<string[]>([])
   const projectionType = ref<string | null>(null)
   const reportTitle = ref<string | null>(null)
+
+  //
+  const referenceYear = ref<number | null>(null)
 
   // set default values
   const setDefaultValues = () => {
@@ -207,12 +214,18 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     becZone.value = DEFAULTS.DEFAULT_VALUES.BEC_ZONE
     siteSpeciesValues.value = DEFAULTS.DEFAULT_VALUES.SITE_SPECIES_VALUES
     percentStockableArea.value = DEFAULTS.DEFAULT_VALUES.PERCENT_STOCKABLE_AREA
+    selectedAgeYearRange.value = DEFAULTS.DEFAULT_VALUES.SELECTED_AGE_YEAR_RANGE
     startingAge.value = DEFAULTS.DEFAULT_VALUES.STARTING_AGE
     finishingAge.value = DEFAULTS.DEFAULT_VALUES.FINISHING_AGE
     ageIncrement.value = DEFAULTS.DEFAULT_VALUES.AGE_INCREMENT
+    startYear.value = DEFAULTS.DEFAULT_VALUES.START_YEAR
+    endYear.value = DEFAULTS.DEFAULT_VALUES.END_YEAR
+    yearIncrement.value = DEFAULTS.DEFAULT_VALUES.YEAR_INCREMENT
     volumeReported.value = DEFAULTS.DEFAULT_VALUES.VOLUME_REPORTED
     projectionType.value = DEFAULTS.DEFAULT_VALUES.PROJECTION_TYPE
     reportTitle.value = DEFAULTS.DEFAULT_VALUES.REPORT_TITLE
+
+    referenceYear.value = new Date().getFullYear()
   }
 
   return {
@@ -240,15 +253,20 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     bha50SiteIndex,
     // stand density
     percentStockableArea,
-
     // report info
+    selectedAgeYearRange,
     startingAge,
     finishingAge,
     ageIncrement,
+    startYear,
+    endYear,
+    yearIncrement,
     volumeReported,
     includeInReport,
     projectionType,
     reportTitle,
+    //
+    referenceYear,
     // set default values
     setDefaultValues,
   }
