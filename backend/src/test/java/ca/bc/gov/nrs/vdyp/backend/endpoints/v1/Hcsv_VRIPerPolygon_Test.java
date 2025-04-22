@@ -26,14 +26,14 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.core.MediaType;
 
 @QuarkusTest
-class HcsvProjectionEndpoint_2MapsheetsTest {
+class Hcsv_VRIPerPolygon_Test {
 
-	private static final Logger logger = LoggerFactory.getLogger(HcsvProjectionEndpoint_2MapsheetsTest.class);
+	private static final Logger logger = LoggerFactory.getLogger(Hcsv_VRIPerPolygon_Test.class);
 
 	private final TestHelper testHelper;
 
 	@Inject
-	HcsvProjectionEndpoint_2MapsheetsTest(TestHelper testHelper) {
+	Hcsv_VRIPerPolygon_Test(TestHelper testHelper) {
 		this.testHelper = testHelper;
 	}
 
@@ -42,11 +42,11 @@ class HcsvProjectionEndpoint_2MapsheetsTest {
 	}
 
 	@Test
-	void run2MapsheetTest() throws IOException {
+	void testVRIPerPolygonYieldTable() throws IOException {
 
-		logger.info("Starting run2MapsheetTest");
+		logger.info("Starting testVRIPerPolygonYieldTable");
 
-		Path resourceFolderPath = Path.of(FileHelper.TEST_DATA_FILES, FileHelper.HCSV, "2-mapsheets-test");
+		Path resourceFolderPath = Path.of(FileHelper.TEST_DATA_FILES, FileHelper.HCSV, "VRI-PerPolygon");
 
 		Parameters parameters = testHelper.addSelectedOptions(
 				new Parameters(), //
@@ -55,7 +55,8 @@ class HcsvProjectionEndpoint_2MapsheetsTest {
 				Parameters.ExecutionOption.DO_ENABLE_ERROR_LOGGING, //
 				Parameters.ExecutionOption.DO_INCLUDE_PROJECTION_FILES, //
 				Parameters.ExecutionOption.FORWARD_GROW_ENABLED, //
-				Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES
+				Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES, //
+				Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_POLYGON
 		);
 		parameters.yearStart(2000).yearEnd(2050);
 
@@ -67,11 +68,11 @@ class HcsvProjectionEndpoint_2MapsheetsTest {
 				.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
 				.multiPart(
 						ParameterNames.HCSV_POLYGON_INPUT_DATA,
-						testHelper.getResourceFile(resourceFolderPath, "2_Mapsheets_VDYP7_INPUT_POLY.csv").toFile()
+						testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_POLY_VRI.csv").toFile()
 				) //
 				.multiPart(
 						ParameterNames.HCSV_LAYERS_INPUT_DATA,
-						testHelper.getResourceFile(resourceFolderPath, "2_Mapsheets_VDYP7_INPUT_LAYER.csv").toFile()
+						testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_LAYER_VRI.csv").toFile()
 				) //
 				.post("/projection/hcsv?trialRun=false") //
 				.then().statusCode(201) //
@@ -92,12 +93,10 @@ class HcsvProjectionEndpoint_2MapsheetsTest {
 
 		ZipEntry entry3 = zipFile.getNextEntry();
 		assertEquals("ErrorLog.txt", entry3.getName());
-		String entry3Content = new String(testHelper.readZipEntry(zipFile, entry3));
-		assertTrue(entry3Content.contains("no primary layer found for any projection type"));
 
 		ZipEntry entry4 = zipFile.getNextEntry();
 		assertEquals("DebugLog.txt", entry4.getName());
-		String entry4Content = new String(testHelper.readZipEntry(zipFile, entry4));
+		String entry4Content = new String(testHelper.readZipEntry(zipFile, entry2));
 		assertTrue(entry4Content.startsWith(LocalDate.now().format(DateTimeFormatter.ISO_DATE)));
 
 		ZipEntry projectionResultsEntry;

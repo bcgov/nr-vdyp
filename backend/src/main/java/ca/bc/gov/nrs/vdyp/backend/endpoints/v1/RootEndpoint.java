@@ -2,7 +2,6 @@ package ca.bc.gov.nrs.vdyp.backend.endpoints.v1;
 
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.NotFoundException;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.impl.Endpoint;
 import ca.bc.gov.nrs.vdyp.backend.services.RootService;
 import io.quarkus.runtime.annotations.RegisterForReflection;
@@ -27,8 +26,7 @@ public class RootEndpoint implements Endpoint {
 	@Tag(
 			name = "Get Root", description = "Returns the top level resource of the service, including links to all other top level resources."
 	)
-	public Response rootGet(@Context UriInfo uriInfo /* , @Context SecurityContext securityContext */)
-			throws NotFoundException {
+	public Response rootGet(@Context UriInfo uriInfo /* , @Context SecurityContext securityContext */) {
 		return Response.ok(rootResourceApi.rootGet(uriInfo, null)).build();
 	}
 }

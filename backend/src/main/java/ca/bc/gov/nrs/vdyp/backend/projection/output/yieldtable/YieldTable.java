@@ -24,7 +24,10 @@ import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.StandYieldCalculationExcepti
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.YieldTableGenerationException;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.OutputFormat;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.MessageSeverityCode;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.UtilizationClassSet;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.PolygonMessageKind;
 import ca.bc.gov.nrs.vdyp.backend.projection.PolygonProjectionState;
 import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionContext;
 import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionStageCode;
@@ -32,10 +35,12 @@ import ca.bc.gov.nrs.vdyp.backend.projection.ValidatedParameters;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Layer;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.LayerReportingInfo;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Polygon;
+import ca.bc.gov.nrs.vdyp.backend.projection.model.PolygonMessage;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Species;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Stand;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Vdyp7Constants;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
+import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ReturnCode;
 import ca.bc.gov.nrs.vdyp.backend.utils.Utils;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.forward.ForwardControlParser;
@@ -437,6 +442,7 @@ public class YieldTable implements Closeable {
 			YieldTableWriter<? extends YieldTableRowBean> writer
 	) throws YieldTableGenerationException {
 
+		var polygon = rowContext.getPolygon();
 		var layer = rowContext.isPolygonTable() ? null : rowContext.getLayerReportingInfo().getLayer();
 
 		var targetAge = rowContext.getCurrentTableAgeToRequest() - rowContext.getLayerAgeOffset();
@@ -454,10 +460,9 @@ public class YieldTable implements Closeable {
 
 		Double percentStockable;
 		if (rowContext.isPolygonTable()) {
-			percentStockable = rowContext.getPolygon().getPercentStockable();
+			percentStockable = polygon.getPercentStockable();
 		} else {
-			percentStockable = rowContext.getPolygon()
-					.determineStockabilityByProjectionType(layer.getAssignedProjectionType());
+			percentStockable = polygon.determineStockabilityByProjectionType(layer.getAssignedProjectionType());
 		}
 
 		writer.startNewRecord();
@@ -471,23 +476,45 @@ public class YieldTable implements Closeable {
 
 			Double secondaryHeight = null;
 			try {
-				EntityGrowthDetails growthDetails;
-				EntityVolumeDetails volumeDetails;
-				if (rowContext.isPolygonTable()) {
-					growthDetails = getProjectedPolygonGrowthInfo(rowContext, polygonProjectionsByYear, targetAge);
-					volumeDetails = getProjectedPolygonVolumes(rowContext, polygonProjectionsByYear, targetAge);
-				} else {
-					growthDetails = getProjectedLayerStandGrowthInfo(
-							rowContext, polygonProjectionsByYear, layer, targetAge
-					);
-					volumeDetails = getProjectedLayerStandVolumes(
-							rowContext, polygonProjectionsByYear, layer, targetAge
+				EntityGrowthDetails growthDetails = null;
+				EntityVolumeDetails volumeDetails = null;
+
+				try {
+					if (rowContext.isPolygonTable()) {
+						growthDetails = getProjectedPolygonGrowthInfo(rowContext, polygonProjectionsByYear, targetAge);
+						volumeDetails = getProjectedPolygonVolumes(rowContext, polygonProjectionsByYear, targetAge);
+					} else {
+						growthDetails = getProjectedLayerStandGrowthInfo(
+								rowContext, polygonProjectionsByYear, layer, targetAge
+						);
+						volumeDetails = getProjectedLayerStandVolumes(
+								rowContext, polygonProjectionsByYear, layer, targetAge
+						);
+					}
+
+					if (Utils.safeGet(growthDetails.basalArea()) <= 0
+							|| Utils.safeGet(growthDetails.treesPerHectare()) <= 0.0) {
+						// since one or both of basal area and tph are null, null out diameter, too.
+						growthDetails = new EntityGrowthDetails(
+								growthDetails.siteIndex(), growthDetails.dominantHeight(), growthDetails.loreyHeight(),
+								null, growthDetails.treesPerHectare(), growthDetails.basalArea()
+						);
+					}
+				} catch (StandYieldCalculationException e) {
+					logger.warn(
+							"{}: unable to get growth or volume details{}", polygon,
+							e.getMessage() != null ? "; reason: " + e.getMessage() : ""
 					);
 
+					// Continue, knowing the growthDetails and/or volumeDetails may be null.
+				}
+
+				if (context.getParams()
+						.containsOption(ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE)
+						&& !rowContext.isPolygonTable()) {
+
 					var layerSp0sByPercent = layer.getSp0sByPercent();
-					if (layerSp0sByPercent.size() > 1 && context.getParams().containsOption(
-							ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE
-					)) {
+					if (layerSp0sByPercent.size() > 1) {
 						var secondarySp0 = layerSp0sByPercent.get(1);
 						if (secondarySp0.getSpeciesByPercent().size() > 0) {
 							var secondarySp64 = secondarySp0.getSpeciesByPercent().get(0);
@@ -499,50 +526,53 @@ public class YieldTable implements Closeable {
 					}
 				}
 
-				if (Utils.safeGet(growthDetails.basalArea()) <= 0
-						|| Utils.safeGet(growthDetails.treesPerHectare()) <= 0.0) {
-					growthDetails = new EntityGrowthDetails(
-							growthDetails.siteIndex(), growthDetails.dominantHeight(), growthDetails.loreyHeight(),
-							null, growthDetails.treesPerHectare(), growthDetails.basalArea()
-					);
-				}
-
-				Double dominantHeight;
+				Double dominantHeight = null;
 				if (rowContext.isPolygonTable()) {
-					var primaryLayer = rowContext.getPolygon().getLayerByProjectionType(ProjectionTypeCode.PRIMARY);
-					dominantHeight = primaryLayer.determineLeadingSiteSpeciesHeight(targetAge);
+					var primaryLayer = polygon.findPrimaryLayerByProjectionType(ProjectionTypeCode.UNKNOWN);
+					if (primaryLayer != null) {
+						dominantHeight = primaryLayer.determineLeadingSiteSpeciesHeight(targetAge);
+					} else {
+						logger.warn(
+								"{}: unable to get leading species dominant height since polygon has no primary layer",
+								polygon
+						);
+					}
 				} else {
 					dominantHeight = layer.determineLeadingSiteSpeciesHeight(targetAge);
 				}
 
 				writer.recordSiteInformation(
-						percentStockable, growthDetails.siteIndex(), dominantHeight, secondaryHeight
+						percentStockable, growthDetails != null ? growthDetails.siteIndex() : null, dominantHeight,
+						secondaryHeight
 				);
 
-				if (!rowContext.isPolygonTable()
-						&& rowContext.getPolygonProjectionState().getFirstYearYieldsDisplayed(layer) == null
-						&& growthDetails.basalArea() != null) {
-					rowContext.getPolygonProjectionState()
-							.setFirstYearYieldsDisplayed(layer, rowContext.getCurrentTableYear());
-				}
+				if (growthDetails != null && volumeDetails != null) {
 
-				writer.recordGrowthDetails(growthDetails, volumeDetails);
+					if (!rowContext.isPolygonTable()
+							&& rowContext.getPolygonProjectionState().getFirstYearYieldsDisplayed(layer) == null
+							&& growthDetails.basalArea() != null) {
+						rowContext.getPolygonProjectionState()
+								.setFirstYearYieldsDisplayed(layer, rowContext.getCurrentTableYear());
+					}
 
-				if (context.getYieldTableCategories().contains(Category.SPECIES_MOFVOLUME)) {
+					writer.recordGrowthDetails(growthDetails, volumeDetails);
 
-					int spIndex = 1;
-					for (Species sp64 : layer.getSp64sByPercent()) {
+					if (context.getYieldTableCategories().contains(Category.SPECIES_MOFVOLUME)) {
 
-						var mofBiomassFactor = BecZoneMethods
-								.mofBiomassCoefficient(layer.getPolygon().getBecZone(), sp64.getSpeciesCode());
+						int spIndex = 1;
+						for (Species sp64 : layer.getSp64sByPercent()) {
 
-						var speciesVolumeDetails = getProjectionLayerSpeciesVolumes(
-								rowContext, polygonProjectionsByYear, sp64, targetAge, mofBiomassFactor
-						);
+							var mofBiomassFactor = BecZoneMethods
+									.mofBiomassCoefficient(layer.getPolygon().getBecZone(), sp64.getSpeciesCode());
 
-						writer.recordPerSpeciesVolumeInfo(
-								spIndex++, speciesVolumeDetails.getLeft(), speciesVolumeDetails.getRight()
-						);
+							var speciesVolumeDetails = getProjectionLayerSpeciesVolumes(
+									rowContext, polygonProjectionsByYear, sp64, targetAge, mofBiomassFactor
+							);
+
+							writer.recordPerSpeciesVolumeInfo(
+									spIndex++, speciesVolumeDetails.getLeft(), speciesVolumeDetails.getRight()
+							);
+						}
 					}
 				}
 
@@ -573,12 +603,11 @@ public class YieldTable implements Closeable {
 			} catch (StandYieldCalculationException e) {
 				logger.warn(
 						"{}: encountered StandYieldCalculationException during yield table row generation{}",
-						layer == null ? rowContext.getPolygon() : layer,
-						e.getMessage() == null ? "" : ": " + e.getMessage()
+						layer == null ? polygon : layer, e.getMessage() == null ? "" : ": " + e.getMessage()
 				);
 			}
 		} finally {
-			writer.endRecord();
+			writer.endRecord(rowContext);
 		}
 	}
 
@@ -619,6 +648,10 @@ public class YieldTable implements Closeable {
 		}
 
 		var primaryLayer = rowContext.getPolygon().getPrimaryLayer();
+		if (primaryLayer == null) {
+			throw new StandYieldCalculationException(-5);
+		}
+
 		var primaryLayerAge0Year = primaryLayer.determineYearAtAge(0);
 
 		Double siteIndex = null;
@@ -900,22 +933,35 @@ public class YieldTable implements Closeable {
 			}
 
 			if (didCopyBasalArea && didCopyTreesPerHectare) {
-				context.addMessage(
-						Level.WARN,
-						"Starting values for basal area and trees-per-hectare copied over for QA and alternative model used for layer {0}",
-						layer
+				layer.getPolygon().addMessage(
+						new PolygonMessage.Builder().layer(layer)
+								.details(
+										ReturnCode.ERROR_LAYERNOTPROCESSED, MessageSeverityCode.INFORMATION,
+										PolygonMessageKind.COPIED_BASAL_AREA_FROM_SUPPLIED_LAYER
+								).build()
+				);
+				layer.getPolygon().addMessage(
+						new PolygonMessage.Builder().layer(layer)
+								.details(
+										ReturnCode.ERROR_LAYERNOTPROCESSED, MessageSeverityCode.INFORMATION,
+										PolygonMessageKind.COPIED_TPH_FROM_SUPPLIED_LAYER
+								).build()
 				);
 			} else if (didCopyBasalArea) {
-				context.addMessage(
-						Level.WARN,
-						"Starting values for basal area copied over for QA and alternative model used for layer {0}",
-						layer
+				layer.getPolygon().addMessage(
+						new PolygonMessage.Builder().layer(layer)
+								.details(
+										ReturnCode.ERROR_LAYERNOTPROCESSED, MessageSeverityCode.INFORMATION,
+										PolygonMessageKind.COPIED_BASAL_AREA_FROM_SUPPLIED_LAYER
+								).build()
 				);
 			} else if (didCopyTreesPerHectare) {
-				context.addMessage(
-						Level.WARN,
-						"Starting values for trees-per-hectare copied over for QA and alternative model used for layer {0}",
-						layer
+				layer.getPolygon().addMessage(
+						new PolygonMessage.Builder().layer(layer)
+								.details(
+										ReturnCode.ERROR_LAYERNOTPROCESSED, MessageSeverityCode.INFORMATION,
+										PolygonMessageKind.COPIED_TPH_FROM_SUPPLIED_LAYER
+								).build()
 				);
 			}
 		}
@@ -1161,22 +1207,35 @@ public class YieldTable implements Closeable {
 			}
 
 			if (didCopyBasalArea && didCopyTreesPerHectare) {
-				context.addMessage(
-						Level.WARN,
-						"Starting values for basal area and trees-per-hectare copied over for QA and alternative model used for Species {0}",
-						species
+				layer.getPolygon().addMessage(
+						new PolygonMessage.Builder().species(species)
+								.details(
+										ReturnCode.ERROR_LAYERNOTPROCESSED, MessageSeverityCode.INFORMATION,
+										PolygonMessageKind.COPIED_BASAL_AREA_FROM_SUPPLIED_LAYER
+								).build()
+				);
+				layer.getPolygon().addMessage(
+						new PolygonMessage.Builder().species(species)
+								.details(
+										ReturnCode.ERROR_LAYERNOTPROCESSED, MessageSeverityCode.INFORMATION,
+										PolygonMessageKind.COPIED_TPH_FROM_SUPPLIED_LAYER
+								).build()
 				);
 			} else if (didCopyBasalArea) {
-				context.addMessage(
-						Level.WARN,
-						"Starting values for basal area copied over for QA and alternative model used for Species {0}",
-						species
+				layer.getPolygon().addMessage(
+						new PolygonMessage.Builder().species(species)
+								.details(
+										ReturnCode.ERROR_LAYERNOTPROCESSED, MessageSeverityCode.INFORMATION,
+										PolygonMessageKind.COPIED_BASAL_AREA_FROM_SUPPLIED_LAYER
+								).build()
 				);
 			} else if (didCopyTreesPerHectare) {
-				context.addMessage(
-						Level.WARN,
-						"Starting values for trees-per-hectare copied over for QA and alternative model used for Species {0}",
-						species
+				layer.getPolygon().addMessage(
+						new PolygonMessage.Builder().species(species)
+								.details(
+										ReturnCode.ERROR_LAYERNOTPROCESSED, MessageSeverityCode.INFORMATION,
+										PolygonMessageKind.COPIED_TPH_FROM_SUPPLIED_LAYER
+								).build()
 				);
 			}
 		}
@@ -1449,9 +1508,14 @@ public class YieldTable implements Closeable {
 				);
 			}
 		} else {
-			context.addMessage(
-					Level.WARN, "{0}: projected data for the {1} layer was not generated at calendar year {2,number,#}",
-					rowContext.getPolygon(), projectionType, calendarYear
+			var polygon = layer.getPolygon();
+
+			polygon.addMessage(
+					new PolygonMessage.Builder().layer(layer)
+							.details(
+									ReturnCode.ERROR_CORELIBRARYERROR, MessageSeverityCode.WARNING,
+									PolygonMessageKind.NO_PROJECTED_DATA, projectionType, calendarYear
+							).build()
 			);
 
 			layerYields = new LayerYields(

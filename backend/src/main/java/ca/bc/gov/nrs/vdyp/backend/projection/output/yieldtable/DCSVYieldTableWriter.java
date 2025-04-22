@@ -9,7 +9,7 @@ import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionContext;
 
 class DCSVYieldTableWriter extends AbstractCSVTypeYieldTableWriter<DCSVYieldTableRecordBean> {
 
-	private DCSVYieldTableWriter(ProjectionContext context) throws YieldTableGenerationException {
+	private DCSVYieldTableWriter(ProjectionContext context) {
 		super(DCSVYieldTableRecordBean.class, context);
 	}
 

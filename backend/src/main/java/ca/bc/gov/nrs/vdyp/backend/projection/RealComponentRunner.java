@@ -11,15 +11,20 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.event.Level;
 
 import ca.bc.gov.nrs.vdyp.application.VdypApplication;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonExecutionException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.YieldTableGenerationException;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.MessageSeverityCode;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.PolygonMessageKind;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessageKind;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Polygon;
+import ca.bc.gov.nrs.vdyp.backend.projection.model.PolygonMessage;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Vdyp7Constants;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
+import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ReturnCode;
 import ca.bc.gov.nrs.vdyp.common.VdypApplicationInitializationException;
 import ca.bc.gov.nrs.vdyp.fip.FipStart;
 import ca.bc.gov.nrs.vdyp.forward.VdypForwardApplication;
@@ -221,24 +226,29 @@ public class RealComponentRunner implements ComponentRunner {
 					if (params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS)) {
 						if (!layerReportingInfo.isDeadStemLayer()) {
 
-							context.getYieldTable().generateCfsBiomassTable(
+							yieldTable.generateCfsBiomassTable(
 									polygon, state, layerReportingInfo, doGenerateDetailedTableHeader
 							);
 							doGenerateDetailedTableHeader = false;
 
 							logger.debug("{}: generated CFS biomass table", layer);
 						} else {
-							context.addMessage(
-									Level.WARN,
-									"{0}: Suppressing CFS biomass output for dead layer. The yield table will not be produced",
-									layer
+							polygon.addMessage(
+									new PolygonMessage.Builder().layer(layer)
+											.details(
+													ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
+													PolygonMessageKind.NO_YIELD_TABLE_FOR_DEAD_LAYER
+											).build()
 							);
 						}
 					}
 				} else {
-					context.addMessage(
-							Level.WARN, "{0}: both Forward and Back not executed. Yield Table will not be produced.",
-							layer
+					polygon.addMessage(
+							new PolygonMessage.Builder().layer(layer)
+									.details(
+											ReturnCode.SUCCESS, MessageSeverityCode.INFORMATION,
+											PolygonMessageKind.LAYER_NOT_PROJECTED
+									).build()
 					);
 				}
 			}

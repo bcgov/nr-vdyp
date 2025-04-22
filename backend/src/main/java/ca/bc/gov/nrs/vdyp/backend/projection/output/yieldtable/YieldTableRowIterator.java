@@ -3,7 +3,6 @@ package ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.YieldTableGenerationException;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption;
 import ca.bc.gov.nrs.vdyp.backend.projection.PolygonProjectionState;
 import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionContext;
@@ -20,7 +19,7 @@ class YieldTableRowIterator implements Iterator<YieldTableRowContext> {
 	public YieldTableRowIterator(
 			ProjectionContext context, Polygon polygon, PolygonProjectionState state,
 			LayerReportingInfo layerReportingInfo
-	) throws YieldTableGenerationException {
+	) {
 		this.context = context;
 		this.rowContext = YieldTableRowContext.of(context, polygon, state, layerReportingInfo);
 
@@ -156,7 +155,7 @@ class YieldTableRowIterator implements Iterator<YieldTableRowContext> {
 		}
 
 		if (rowContext.getCurrentYearRangeYear() != null
-				&& rowContext.getCurrentYearRangeYear() > params.getYearEnd()) {
+				&& (params.getYearEnd() == null || rowContext.getCurrentYearRangeYear() > params.getYearEnd())) {
 			rowContext.setCurrentYearRangeYear(null);
 		}
 
@@ -167,8 +166,8 @@ class YieldTableRowIterator implements Iterator<YieldTableRowContext> {
 			rowContext.setCurrentAgeRangeYear(rowContext.getCurrentAgeRangeYear() + params.getAgeIncrement());
 		}
 
-		if (rowContext.getCurrentAgeRangeYear() != null
-				&& rowContext.getCurrentAgeRangeYear() > params.getAgeEnd() + rowContext.getYearToAgeDifference()) {
+		if (rowContext.getCurrentAgeRangeYear() != null && (params.getAgeEnd() == null
+				|| rowContext.getCurrentAgeRangeYear() > params.getAgeEnd() + rowContext.getYearToAgeDifference())) {
 			rowContext.setCurrentAgeRangeYear(null);
 		}
 
@@ -227,11 +226,11 @@ class YieldTableRowIterator implements Iterator<YieldTableRowContext> {
 		// Find out to which range (year or age) the current year corresponds.
 
 		rowContext.setCurrentYearIsYearRow(
-				rowContext.getCurrentYearRangeYear() != null && rowContext.getCurrentTableYear() != null
+				rowContext.getCurrentYearRangeYear() != null
 						&& rowContext.getCurrentYearRangeYear().equals(rowContext.getCurrentTableYear())
 		);
 		rowContext.setCurrentYearIsAgeRow(
-				rowContext.getCurrentAgeRangeYear() != null && rowContext.getCurrentTableYear() != null
+				rowContext.getCurrentAgeRangeYear() != null
 						&& rowContext.getCurrentAgeRangeYear().equals(rowContext.getCurrentTableYear())
 		);
 
@@ -240,7 +239,8 @@ class YieldTableRowIterator implements Iterator<YieldTableRowContext> {
 		if (rowContext.getCurrentTableYear() != null && rowContext.getCurrentTableYear() > rowContext.getYearAtEndAge()
 				&& rowContext.getCurrentTableYear() > rowContext.getMeasurementYear()
 				&& rowContext.getCurrentTableYear() > rowContext.getNowYear()
-				&& rowContext.getCurrentTableYear() > params.getYearForcedIntoYieldTable()) {
+				&& (params.getYearForcedIntoYieldTable() == null
+						|| rowContext.getCurrentTableYear() > params.getYearForcedIntoYieldTable())) {
 
 			bAnotherRowToBePrinted = false;
 		}

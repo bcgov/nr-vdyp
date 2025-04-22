@@ -9,7 +9,7 @@ import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionContext;
 
 class PLOTSYYieldTableWriter extends AbstractCSVTypeYieldTableWriter<PLOTSYYieldTableRecordBean> {
 
-	private PLOTSYYieldTableWriter(ProjectionContext context) throws YieldTableGenerationException {
+	private PLOTSYYieldTableWriter(ProjectionContext context) {
 		super(PLOTSYYieldTableRecordBean.class, context);
 	}
 
@@ -32,7 +32,7 @@ class PLOTSYYieldTableWriter extends AbstractCSVTypeYieldTableWriter<PLOTSYYield
 	}
 
 	@Override
-	public void recordSpeciesComposition(YieldTableRowContext rowContext) throws YieldTableGenerationException {
+	public void recordSpeciesComposition(YieldTableRowContext rowContext) {
 		throw new UnsupportedOperationException("PLOTSYYieldTableWriter.recordSpeciesComposition");
 	}
 

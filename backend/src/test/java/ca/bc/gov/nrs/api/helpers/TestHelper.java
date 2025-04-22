@@ -41,7 +41,7 @@ public class TestHelper {
 
 	public static final String ROOT_PATH = "/api/v8";
 
-	public Path getResourceFile(Path testResourceFolderPath, String fileName) throws IOException {
+	public Path getResourceFile(Path testResourceFolderPath, String fileName) {
 
 		String resourceFilePath = Path.of(testResourceFolderPath.toString(), fileName).toString();
 
@@ -68,7 +68,7 @@ public class TestHelper {
 		return baos.toByteArray();
 	}
 
-	public InputStream buildTestFile() throws IOException {
+	public InputStream buildTestFile() {
 		return new ByteArrayInputStream("Test data".getBytes());
 	}
 

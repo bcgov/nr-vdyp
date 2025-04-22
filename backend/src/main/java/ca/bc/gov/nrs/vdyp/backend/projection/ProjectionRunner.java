@@ -6,9 +6,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
+import java.text.MessageFormat;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +22,7 @@ import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestValidationE
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.YieldTableGenerationException;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.ProgressFrequency;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ProjectionRequestKind;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
 import ca.bc.gov.nrs.vdyp.backend.projection.input.AbstractPolygonStream;
@@ -58,7 +61,7 @@ public class ProjectionRunner implements Closeable {
 	}
 
 	public void run(Map<String, InputStream> streams)
-			throws ProjectionRequestValidationException, PolygonExecutionException, YieldTableGenerationException {
+			throws ProjectionRequestValidationException, YieldTableGenerationException {
 
 		context.startRun();
 
@@ -75,19 +78,74 @@ public class ProjectionRunner implements Closeable {
 				componentRunner = new RealComponentRunner();
 			}
 
+			Integer progressPeriod = context.getParams().getProgressFrequency().getIntValue();
+			boolean reportProgressByPeriod = progressPeriod != null;
+
 			Polygon polygon = null;
+			String lastMapsheet = "";
+			String lastMaintainer = "";
+
+			int nPolygonsProcessed = 0;
+			int nPolygonsSkipped = 0;
 
 			while (polygonStream.hasNextPolygon()) {
 				try {
 					polygon = polygonStream.getNextPolygon();
 
+					if (ProgressFrequency.MAPSHEET.equals(context.getParams().getProgressFrequency())
+							&& !lastMapsheet.equals(polygon.getMapSheet())
+							&& !lastMaintainer.equals(polygon.getDistrict())) {
+
+						lastMapsheet = polygon.getMapSheet();
+						lastMaintainer = polygon.getDistrict();
+
+						String message = MessageFormat
+								.format("Processing Map Sheet: \"{0}\", \"{1}\"...", lastMaintainer, lastMapsheet);
+
+						context.getProgressLog().addMessage(message);
+						logger.debug(message);
+					}
+
 					try {
 						if (polygon.doAllowProjection()) {
-							logger.info("Starting the projection of feature \"{}\"", polygon);
+
+							if (ProgressFrequency.POLYGON.equals(context.getParams().getProgressFrequency())) {
+
+								String message = MessageFormat.format(
+										"Processing Polygon {0,number,#}: \"{1}\", \"{2}\"-{3,number,#}",
+										polygon.getFeatureId(), lastMaintainer, lastMapsheet, polygon.getPolygonNumber()
+								);
+
+								context.getProgressLog().addMessage(message);
+								logger.debug(message);
+							}
+
+							nPolygonsProcessed += 1;
 							PolygonProjectionRunner.of(polygon, context, componentRunner).project();
+
 						} else {
-							logger.info("By request, the projection of feature \"{}\" has been skipped", polygon);
+
+							if (ProgressFrequency.POLYGON.equals(context.getParams().getProgressFrequency())) {
+
+								String message = MessageFormat.format(
+										"Skipping Polygon {0,number,#}: \"{1}\", \"{2}\"-{3,number,#}",
+										polygon.getFeatureId(), lastMaintainer, lastMapsheet, polygon.getPolygonNumber()
+								);
+
+								context.getProgressLog().addMessage(message);
+								logger.debug(message);
+							}
+
+							nPolygonsSkipped += 1;
 						}
+
+						int nPolygonsSeen = nPolygonsProcessed + nPolygonsSkipped;
+						if (reportProgressByPeriod && nPolygonsSeen % progressPeriod == 0) {
+							String message = MessageFormat.format("Processed {0} polygons...", nPolygonsSeen);
+							context.getProgressLog().addMessage(message);
+							logger.debug(message);
+						}
+
 					} catch (PolygonExecutionException e) {
 						IMessageLog errorLog = context.getErrorLog();
 						for (ValidationMessage m : e.getValidationMessages()) {
@@ -103,7 +161,24 @@ public class ProjectionRunner implements Closeable {
 					for (ValidationMessage m : e.getValidationMessages()) {
 						errorLog.addMessage(m.getKind().template, m.getArgs());
 					}
+
+					for (var message : polygon.getMessages()) {
+						errorLog.addMessage(message.toString());
+					}
 				}
+			}
+
+			int nPolygonsSeen = nPolygonsProcessed + nPolygonsSkipped;
+			if (reportProgressByPeriod && nPolygonsSeen % progressPeriod != 0) {
+				String message = MessageFormat.format("Processed {0} polygons...", nPolygonsSeen);
+				context.getProgressLog().addMessage(message);
+			}
+
+			if (!ProgressFrequency.NEVER.equals(context.getParams().getProgressFrequency())) {
+				context.getProgressLog().addMessage(
+						"Processing summary: {0} polygons processed + {1} skipped = {2} seen", nPolygonsProcessed,
+						nPolygonsSkipped, nPolygonsProcessed + nPolygonsSkipped
+				);
 			}
 		} finally {
 			context.endRun();
@@ -133,8 +208,9 @@ public class ProjectionRunner implements Closeable {
 		}
 	};
 
-	public Map<ProjectionResultsKey, InputStream> getProjectionResults() {
-		var projectionResults = new HashMap<ProjectionResultsKey, InputStream>();
+	public Iterator<Entry<ProjectionResultsKey, Path>> getProjectionResults() {
+
+		var projectionResults = new HashMap<ProjectionResultsKey, Path>();
 
 		if (context.getParams().containsOption(ExecutionOption.DO_INCLUDE_PROJECTION_FILES)) {
 
@@ -155,8 +231,7 @@ public class ProjectionRunner implements Closeable {
 											polygonId.toString(), projectionType.toString(), entry.getKey()
 									);
 
-									projectionResults
-											.put(key, Files.newInputStream(expectedFileName, StandardOpenOption.READ));
+									projectionResults.put(key, expectedFileName);
 								}
 							}
 						}
@@ -167,7 +242,7 @@ public class ProjectionRunner implements Closeable {
 			}
 		}
 
-		return projectionResults;
+		return projectionResults.entrySet().iterator();
 	}
 
 	public InputStream getProgressStream() {

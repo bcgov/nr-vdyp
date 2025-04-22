@@ -75,7 +75,7 @@ class TextYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean>
 	}
 
 	@Override
-	public void recordSpeciesComposition(YieldTableRowContext rowContext) throws YieldTableGenerationException {
+	public void recordSpeciesComposition(YieldTableRowContext rowContext) {
 
 		if (rowContext.getLayerReportingInfo() != null) {
 			int speciesIndex = 1;
@@ -107,10 +107,10 @@ class TextYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean>
 	}
 
 	@Override
-	protected void writeRecord() throws YieldTableGenerationException {
+	protected void writeRecord(YieldTableRowContext rowContext) throws YieldTableGenerationException {
 
 		writeCalendarYearAndLayerAge();
-		writeSpeciesComposition();
+		writeSpeciesComposition(rowContext);
 		writeProjectionGrowthInfo();
 
 		doWrite("\n");
@@ -187,37 +187,41 @@ class TextYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean>
 		}
 	}
 
-	private void writeSpeciesComposition() throws YieldTableGenerationException {
+	private void writeSpeciesComposition(YieldTableRowContext rowContext) throws YieldTableGenerationException {
 
-		int speciesIndex = 1;
-
-		String code = currentRecord
-				.getSpeciesFieldValue(MultiFieldPrefixes.Species, speciesIndex, MultiFieldSuffixes.Code);
-		while (code != null) {
-			String percentage = currentRecord
-					.getSpeciesFieldValue(MultiFieldPrefixes.Species, speciesIndex, MultiFieldSuffixes.Percent);
-			doWrite("%-3s %5.1f ", code, Double.parseDouble(percentage));
-
-			speciesIndex += 1;
-			code = currentRecord
-					.getSpeciesFieldValue(MultiFieldPrefixes.Species, speciesIndex, MultiFieldSuffixes.Code);
-		}
-
-		if (speciesIndex == 1) {
-			doWrite("%*s%3s%*s", (60 - 3) / 2, "", "N/A", 60 - ( ( (60 - 3) / 2) + 3), "");
+		if (rowContext.isPolygonTable()) {
+			doWrite("%28s%3s%29s", "", "N/A", "");
 		} else {
-			while (speciesIndex++ <= 6) {
-				doWrite("%-3s %5.1f ", "", 0.0);
+			int speciesIndex = 1;
+
+			String code = currentRecord
+					.getSpeciesFieldValue(MultiFieldPrefixes.Species, speciesIndex, MultiFieldSuffixes.Code);
+			while (code != null) {
+				String percentage = currentRecord
+						.getSpeciesFieldValue(MultiFieldPrefixes.Species, speciesIndex, MultiFieldSuffixes.Percent);
+				doWrite("%-3s %5.1f ", code, Double.parseDouble(percentage));
+
+				speciesIndex += 1;
+				code = currentRecord
+						.getSpeciesFieldValue(MultiFieldPrefixes.Species, speciesIndex, MultiFieldSuffixes.Code);
+			}
+
+			if (speciesIndex == 1) {
+				doWrite("%28s%3s%29s", "", "N/A", "");
+			} else {
+				while (speciesIndex++ <= 6) {
+					doWrite("%-3s %5.1f ", "", 0.0);
+				}
 			}
 		}
 	}
 
 	@Override
-	void writeProjectionGrowthInfo() throws YieldTableGenerationException {
+	protected void writeProjectionGrowthInfo() throws YieldTableGenerationException {
 		if (currentRecord.getPercentStockable() != null)
 			doWrite("%5.1f ", Double.parseDouble(currentRecord.getPercentStockable()));
 		else
-			doWrite("      ");
+			doWrite("%5s ", " ");
 
 		if (currentRecord.getSiteIndex() != null)
 			doWrite("%6.2f ", Double.parseDouble(currentRecord.getSiteIndex()));
@@ -227,14 +231,66 @@ class TextYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean>
 		if (currentRecord.getDominantHeight() != null)
 			doWrite("%6.2f ", Double.parseDouble(currentRecord.getDominantHeight()));
 		else
-			doWrite("       ");
+			doWrite("%6s ", " ");
 
 		if (context.getParams()
 				.containsOption(ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE)) {
 			if (currentRecord.getSecondaryHeight() != null)
 				doWrite("%6.2f ", Double.parseDouble(currentRecord.getSecondaryHeight()));
 			else
-				doWrite("       ");
+				doWrite("%6s ", " ");
+		}
+
+		if (currentRecord.getLoreyHeight() != null)
+			doWrite("%6.2f ", Double.parseDouble(currentRecord.getLoreyHeight()));
+		else
+			doWrite("%6s ", " ");
+
+		if (currentRecord.getDiameter() != null)
+			doWrite("%5.1f ", Double.parseDouble(currentRecord.getDiameter()));
+		else
+			doWrite("%5s ", " ");
+
+		if (currentRecord.getTreesPerHectare() != null)
+			doWrite("%8.2f ", Double.parseDouble(currentRecord.getTreesPerHectare()));
+		else
+			doWrite("%8s ", " ");
+
+		if (currentRecord.getBasalArea() != null)
+			doWrite("%8.4f ", Double.parseDouble(currentRecord.getBasalArea()));
+		else
+			doWrite("%8s ", " ");
+
+		if (currentRecord.getWholeStemVolume() != null)
+			doWrite("%6.1f ", Double.parseDouble(currentRecord.getWholeStemVolume()));
+		else
+			doWrite("%6s ", " ");
+
+		if (currentRecord.getCloseUtilizationVolume() != null)
+			doWrite("%6.1f ", Double.parseDouble(currentRecord.getCloseUtilizationVolume()));
+		else
+			doWrite("%6s ", " ");
+
+		if (currentRecord.getCuVolumeLessDecay() != null)
+			doWrite("%6.1f ", Double.parseDouble(currentRecord.getCuVolumeLessDecay()));
+		else
+			doWrite("%6s ", " ");
+
+		if (currentRecord.getCuVolumeLessDecayWastage() != null)
+			doWrite("%6.1f ", Double.parseDouble(currentRecord.getCuVolumeLessDecayWastage()));
+		else
+			doWrite("%6s ", " ");
+
+		if (currentRecord.getCuVolumeLessDecayWastageBreakage() != null)
+			doWrite("%6.1f ", Double.parseDouble(currentRecord.getCuVolumeLessDecayWastageBreakage()));
+		else
+			doWrite("%6s ", " ");
+
+		if (context.getParams().containsOption(ExecutionOption.DO_INCLUDE_SPECIES_PROJECTION)) {
+			if (currentRecord.getLoreyHeight() != null)
+				doWrite("%6.2f ", Double.parseDouble(currentRecord.getSecondaryHeight()));
+			else
+				doWrite("%6s ", " ");
 		}
 	}
 

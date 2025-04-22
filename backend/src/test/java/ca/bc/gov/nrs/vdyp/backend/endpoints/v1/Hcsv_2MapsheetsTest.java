@@ -26,14 +26,14 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.core.MediaType;
 
 @QuarkusTest
-class HcsvProjectionEndpoint_MissingTotalAgeTest {
+class Hcsv_2MapsheetsTest {
 
-	private static final Logger logger = LoggerFactory.getLogger(HcsvProjectionEndpoint_MissingTotalAgeTest.class);
+	private static final Logger logger = LoggerFactory.getLogger(Hcsv_2MapsheetsTest.class);
 
 	private final TestHelper testHelper;
 
 	@Inject
-	HcsvProjectionEndpoint_MissingTotalAgeTest(TestHelper testHelper) {
+	Hcsv_2MapsheetsTest(TestHelper testHelper) {
 		this.testHelper = testHelper;
 	}
 
@@ -42,12 +42,11 @@ class HcsvProjectionEndpoint_MissingTotalAgeTest {
 	}
 
 	@Test
-	void testMissingTotalAge() throws IOException {
+	void run2MapsheetTest() throws IOException {
 
-		logger.info("Starting testMissingTotalAge");
+		logger.info("Starting run2MapsheetTest");
 
-		Path resourceFolderPath = Path
-				.of(FileHelper.TEST_DATA_FILES, FileHelper.HCSV, "single-polygon-missing-total-age");
+		Path resourceFolderPath = Path.of(FileHelper.TEST_DATA_FILES, FileHelper.HCSV, "2-mapsheets-test");
 
 		Parameters parameters = testHelper.addSelectedOptions(
 				new Parameters(), //
@@ -68,11 +67,11 @@ class HcsvProjectionEndpoint_MissingTotalAgeTest {
 				.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
 				.multiPart(
 						ParameterNames.HCSV_POLYGON_INPUT_DATA,
-						testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_POLY.csv").toFile()
+						testHelper.getResourceFile(resourceFolderPath, "2_Mapsheets_VDYP7_INPUT_POLY.csv").toFile()
 				) //
 				.multiPart(
 						ParameterNames.HCSV_LAYERS_INPUT_DATA,
-						testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_LAYER.csv").toFile()
+						testHelper.getResourceFile(resourceFolderPath, "2_Mapsheets_VDYP7_INPUT_LAYER.csv").toFile()
 				) //
 				.post("/projection/hcsv?trialRun=false") //
 				.then().statusCode(201) //
@@ -84,7 +83,7 @@ class HcsvProjectionEndpoint_MissingTotalAgeTest {
 		ZipEntry entry1 = zipFile.getNextEntry();
 		assertEquals("YieldTable.csv", entry1.getName());
 		String entry1Content = new String(testHelper.readZipEntry(zipFile, entry1));
-		assertTrue(entry1Content.length() == 0);
+		assertTrue(entry1Content.length() > 0);
 
 		ZipEntry entry2 = zipFile.getNextEntry();
 		assertEquals("ProgressLog.txt", entry2.getName());
@@ -94,11 +93,7 @@ class HcsvProjectionEndpoint_MissingTotalAgeTest {
 		ZipEntry entry3 = zipFile.getNextEntry();
 		assertEquals("ErrorLog.txt", entry3.getName());
 		String entry3Content = new String(testHelper.readZipEntry(zipFile, entry3));
-		assertTrue(
-				entry3Content.contains(
-						"Species entry references layer of type \"PRIMARY\" of polygon 000A000  88584471    2024 but it is not present"
-				)
-		);
+		assertTrue(entry3Content.contains("no primary layer found for any projection type"));
 
 		ZipEntry entry4 = zipFile.getNextEntry();
 		assertEquals("DebugLog.txt", entry4.getName());
@@ -118,6 +113,6 @@ class HcsvProjectionEndpoint_MissingTotalAgeTest {
 
 			outputSeen = true;
 		}
-		Assert.assertFalse(outputSeen);
+		Assert.assertTrue(outputSeen);
 	}
 }

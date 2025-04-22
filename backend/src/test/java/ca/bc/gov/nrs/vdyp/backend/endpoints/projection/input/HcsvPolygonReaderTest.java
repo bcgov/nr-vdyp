@@ -106,7 +106,7 @@ public class HcsvPolygonReaderTest {
 	}
 
 	@Test
-	void testFileWithBlankLines() throws IOException {
+	void testFileWithBlankLines() {
 		byte[] csvBytes = new String(" \n \n\n").getBytes();
 
 		var polygonCsvStreamWithBlankLineFilter = new CsvToBeanBuilder<HcsvPolygonRecordBean>(
@@ -122,7 +122,7 @@ public class HcsvPolygonReaderTest {
 	}
 
 	@Test
-	void testFileWithBlankLinesAndNoBlankLineFilter() throws IOException {
+	void testFileWithBlankLinesAndNoBlankLineFilter() {
 		byte[] csvBytes = new String(" \n \n\n").getBytes();
 
 		var polygonCsvStreamWithoutBlankLineFilter = new CsvToBeanBuilder<HcsvPolygonRecordBean>(

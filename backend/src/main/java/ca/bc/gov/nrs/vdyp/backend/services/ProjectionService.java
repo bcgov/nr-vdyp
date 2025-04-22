@@ -7,7 +7,9 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.text.MessageFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -74,12 +76,14 @@ public class ProjectionService {
 		return response;
 	}
 
+	@SuppressWarnings("unused")
 	public Response projectionDcsvPost(
 			Parameters parameters, FileUpload dcsvDataStream, Boolean trialRun, SecurityContext securityContext
 	) throws ProjectionRequestValidationException, PolygonExecutionException {
 		return Response.serverError().status(Status.NOT_IMPLEMENTED).build();
 	}
 
+	@SuppressWarnings("unused")
 	public Response projectionScsvPost(
 			Boolean trialRun, Parameters parameters, FileUpload polygonDataStream, FileUpload layersDataStream,
 			FileUpload historyDataStream, FileUpload nonVegetationDataStream, FileUpload otherVegetationDataStream,
@@ -167,7 +171,6 @@ public class ProjectionService {
 		InputStream yieldTableStream = null;
 		InputStream progressLogStream = null;
 		InputStream errorLogStream = null;
-		Map<ProjectionRunner.ProjectionResultsKey, InputStream> projectionResults = null;
 
 		try {
 			var baos = new ByteArrayOutputStream();
@@ -192,15 +195,22 @@ public class ProjectionService {
 					writeZipEntry(zipOut, "DebugLog.txt", debugLogStream.readAllBytes());
 				}
 
-				projectionResults = runner.getProjectionResults();
+				var projectionResultsIterator = runner.getProjectionResults();
 
-				for (var e : projectionResults.entrySet()) {
-					writeZipEntry(zipOut, e.getKey().toString(), e.getValue().readAllBytes());
+				while (projectionResultsIterator.hasNext()) {
+					var entry = projectionResultsIterator.next();
+					var zipEntryName = entry.getKey().toString();
+					var projectionResultsFile = Files.newInputStream(entry.getValue(), StandardOpenOption.READ);
+					try {
+						writeZipEntry(zipOut, zipEntryName, projectionResultsFile.readAllBytes());
+					} finally {
+						Utils.close(projectionResultsFile, zipEntryName);
+					}
 				}
 			} catch (IOException e) {
 				return Response.status(500)
 						.entity(
-								"Saw IOException closing zip file containing results" + e.getMessage() != null
+								"Saw IOException when generating results zip file" + e.getMessage() != null
 										? ": " + e.getMessage() : ""
 						).build();
 			}
@@ -231,12 +241,6 @@ public class ProjectionService {
 			}
 			if (yieldTableStream != null) {
 				Utils.close(yieldTableStream, "ProjectionService.yieldTable");
-			}
-
-			for (var e : projectionResults.entrySet()) {
-				if (e.getValue() != null) {
-					Utils.close(e.getValue(), e.getKey().toString());
-				}
 			}
 		}
 	}

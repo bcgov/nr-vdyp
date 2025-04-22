@@ -58,12 +58,12 @@ abstract class AbstractCSVTypeYieldTableWriter<T extends YieldTableRowBean> exte
 	}
 
 	@Override
-	void writeProjectionGrowthInfo() {
+	protected void writeProjectionGrowthInfo() {
 		// Subsumed by "writeRecord"
 	}
 
 	@Override
-	protected void writeRecord() throws YieldTableGenerationException {
+	protected void writeRecord(YieldTableRowContext rowContext) throws YieldTableGenerationException {
 		try {
 			write(currentRecord);
 		} catch (CsvException e) {

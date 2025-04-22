@@ -26,14 +26,14 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.core.MediaType;
 
 @QuarkusTest
-class HcsvProjectionEndpoint_VRIPerPolygon_Test {
+class Hcsv_MissingTotalAgeTest {
 
-	private static final Logger logger = LoggerFactory.getLogger(HcsvProjectionEndpoint_VRIPerPolygon_Test.class);
+	private static final Logger logger = LoggerFactory.getLogger(Hcsv_MissingTotalAgeTest.class);
 
 	private final TestHelper testHelper;
 
 	@Inject
-	HcsvProjectionEndpoint_VRIPerPolygon_Test(TestHelper testHelper) {
+	Hcsv_MissingTotalAgeTest(TestHelper testHelper) {
 		this.testHelper = testHelper;
 	}
 
@@ -42,11 +42,12 @@ class HcsvProjectionEndpoint_VRIPerPolygon_Test {
 	}
 
 	@Test
-	void testVRIPerPolygonYieldTable() throws IOException {
+	void testMissingTotalAge() throws IOException {
 
-		logger.info("Starting testVRIPerPolygonYieldTable");
+		logger.info("Starting testMissingTotalAge");
 
-		Path resourceFolderPath = Path.of(FileHelper.TEST_DATA_FILES, FileHelper.HCSV, "VRI-PerPolygon");
+		Path resourceFolderPath = Path
+				.of(FileHelper.TEST_DATA_FILES, FileHelper.HCSV, "single-polygon-missing-total-age");
 
 		Parameters parameters = testHelper.addSelectedOptions(
 				new Parameters(), //
@@ -55,8 +56,7 @@ class HcsvProjectionEndpoint_VRIPerPolygon_Test {
 				Parameters.ExecutionOption.DO_ENABLE_ERROR_LOGGING, //
 				Parameters.ExecutionOption.DO_INCLUDE_PROJECTION_FILES, //
 				Parameters.ExecutionOption.FORWARD_GROW_ENABLED, //
-				Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES, //
-				Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_POLYGON
+				Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES
 		);
 		parameters.yearStart(2000).yearEnd(2050);
 
@@ -68,11 +68,11 @@ class HcsvProjectionEndpoint_VRIPerPolygon_Test {
 				.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
 				.multiPart(
 						ParameterNames.HCSV_POLYGON_INPUT_DATA,
-						testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_POLY_VRI.csv").toFile()
+						testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_POLY.csv").toFile()
 				) //
 				.multiPart(
 						ParameterNames.HCSV_LAYERS_INPUT_DATA,
-						testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_LAYER_VRI.csv").toFile()
+						testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_LAYER.csv").toFile()
 				) //
 				.post("/projection/hcsv?trialRun=false") //
 				.then().statusCode(201) //
@@ -84,7 +84,7 @@ class HcsvProjectionEndpoint_VRIPerPolygon_Test {
 		ZipEntry entry1 = zipFile.getNextEntry();
 		assertEquals("YieldTable.csv", entry1.getName());
 		String entry1Content = new String(testHelper.readZipEntry(zipFile, entry1));
-		assertTrue(entry1Content.length() > 0);
+		assertTrue(entry1Content.length() == 0);
 
 		ZipEntry entry2 = zipFile.getNextEntry();
 		assertEquals("ProgressLog.txt", entry2.getName());
@@ -93,10 +93,16 @@ class HcsvProjectionEndpoint_VRIPerPolygon_Test {
 
 		ZipEntry entry3 = zipFile.getNextEntry();
 		assertEquals("ErrorLog.txt", entry3.getName());
+		String entry3Content = new String(testHelper.readZipEntry(zipFile, entry3));
+		assertTrue(
+				entry3Content.contains(
+						"Species entry references layer of type \"PRIMARY\" of polygon 000A000  88584471    2024 but it is not present"
+				)
+		);
 
 		ZipEntry entry4 = zipFile.getNextEntry();
 		assertEquals("DebugLog.txt", entry4.getName());
-		String entry4Content = new String(testHelper.readZipEntry(zipFile, entry2));
+		String entry4Content = new String(testHelper.readZipEntry(zipFile, entry4));
 		assertTrue(entry4Content.startsWith(LocalDate.now().format(DateTimeFormatter.ISO_DATE)));
 
 		ZipEntry projectionResultsEntry;
@@ -112,6 +118,6 @@ class HcsvProjectionEndpoint_VRIPerPolygon_Test {
 
 			outputSeen = true;
 		}
-		Assert.assertTrue(outputSeen);
+		Assert.assertFalse(outputSeen);
 	}
 }

@@ -9,8 +9,6 @@ import java.util.function.BiFunction;
 
 import org.apache.commons.lang3.Validate;
 
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.YieldTableGenerationException;
 import ca.bc.gov.nrs.vdyp.backend.projection.PolygonProjectionState;
 import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionContext;
 import ca.bc.gov.nrs.vdyp.backend.projection.ValidatedParameters;
@@ -155,9 +153,9 @@ class YieldTableRowContext {
 	}
 
 	public void validate() {
-		assertBothNullOrPredicateTrue(yearAtStartAge, yearAtEndAge, (a, b) -> a < b);
+		assertBothNullOrPredicateTrue(yearAtStartAge, yearAtEndAge, (a, b) -> a <= b);
 		assertBothNullOrPredicateTrue(yearAtGapStart, yearAtGapEnd, (a, b) -> a < b);
-		assertBothNullOrPredicateTrue(ageAtStartYear, ageAtEndYear, (a, b) -> a < b);
+		assertBothNullOrPredicateTrue(ageAtStartYear, ageAtEndYear, (a, b) -> a <= b);
 		assertBothNullOrPredicateTrue(ageAtGapStart, ageAtGapEnd, (a, b) -> a < b);
 		assertBothNullOrPredicateTrue(currentTableYear, currentTableAge, (a, b) -> a == b + yearToAgeDifference);
 		assertEqualNullity(currentYearIsAgeRow, currentYearIsYearRow);
@@ -170,7 +168,9 @@ class YieldTableRowContext {
 
 	private <T> void assertBothNullOrPredicateTrue(T a, T b, BiFunction<T, T, Boolean> f) {
 		assertEqualNullity(yearAtStartAge, yearAtEndAge);
-		Validate.isTrue(a == null || f.apply(a, b), MessageFormat.format("f({0}, {1}) is false", a, b));
+		Validate.isTrue(
+				a == null || f.apply(a, b), MessageFormat.format("f({0, number, #}, {1, number, #}) is false", a, b)
+		);
 	}
 
 	private void assertEqualNullity(Object o1, Object o2) {
@@ -184,16 +184,13 @@ class YieldTableRowContext {
 		if (isPolygonTable()) {
 			layer = null;
 
-			try {
-				Double ageAtYear = polygon.determineStandAgeAtYear(getReferenceYear());
-				this.referenceAge = ageAtYear == null ? null : ageAtYear.intValue();
-			} catch (PolygonValidationException e) {
-				// There can't possibly still be a validation failure at this point.
-				throw new IllegalStateException(new YieldTableGenerationException(e));
-			}
+			Double ageAtYear = polygon.determineStandAgeAtYear(getReferenceYear());
+			this.referenceAge = ageAtYear == null ? null : ageAtYear.intValue();
 
 			var primaryLayer = polygon.getPrimaryLayer();
-			yearOfDeath = primaryLayer.getYearOfDeath();
+			if (primaryLayer != null) {
+				yearOfDeath = primaryLayer.getYearOfDeath();
+			}
 			if (yearOfDeath == null) {
 				yearOfDeath = polygon.getYearOfDeath();
 			}
@@ -238,12 +235,7 @@ class YieldTableRowContext {
 
 			Double relevantAge;
 			if (isPolygonTable()) {
-				try {
-					relevantAge = polygon.determineStandAgeAtYear(yearOfDeath);
-				} catch (PolygonValidationException e) {
-					// There can't possibly still be a validation failure at this point.
-					throw new IllegalStateException(new YieldTableGenerationException(e));
-				}
+				relevantAge = polygon.determineStandAgeAtYear(yearOfDeath);
 			} else {
 				Validate.isTrue(layer != null, "YieldTableRowIterator.createTableRow(): layer is null");
 				relevantAge = layer.determineLayerAgeAtYear(yearOfDeath);

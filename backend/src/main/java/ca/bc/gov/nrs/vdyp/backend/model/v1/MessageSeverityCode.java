@@ -20,36 +20,36 @@ import com.fasterxml.jackson.annotation.JsonValue;
  */
 public enum MessageSeverityCode {
 
-	INFORMATION("Information"),
+	INFORMATION("INFO"),
 
-	STATUS("Status"),
+	STATUS("STAT"),
 
-	WARNING("Warning"),
+	WARNING("WARN"),
 
-	ERROR("Error"),
+	ERROR("ERR"),
 
-	FATAL_ERROR("FatalError");
+	FATAL_ERROR("FATAL");
 
-	private String value;
+	private String text;
 
-	MessageSeverityCode(String value) {
-		this.value = value;
+	MessageSeverityCode(String text) {
+		this.text = text;
 	}
 
 	@JsonValue
-	public String getValue() {
-		return value;
+	public String getText() {
+		return text;
 	}
 
 	@Override
 	public String toString() {
-		return String.valueOf(value);
+		return String.valueOf(text);
 	}
 
 	@JsonCreator
 	public static MessageSeverityCode fromValue(String value) {
 		for (MessageSeverityCode b : MessageSeverityCode.values()) {
-			if (b.value.equals(value)) {
+			if (b.text.equals(value)) {
 				return b;
 			}
 		}

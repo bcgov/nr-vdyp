@@ -28,7 +28,7 @@
     </encoder>
   </appender>
 
-  <logger name="ca.bc.gov.nrs.vdyp" level="DEBUG" /> 
+  <logger name="ca.bc.gov.nrs.vdyp" level="INFO" /> 
 
   <root level="INFO">
     <appender-ref ref="sifter" />

@@ -17,13 +17,13 @@ public class FileHelper {
 	protected FileHelper() {
 	}
 
-	public static InputStream getStubResourceFile(String... pathComponents) throws IOException {
+	public static InputStream getStubResourceFile(String... pathComponents) {
 
 		String resourceFilePath = Path.of(STUBBED_RUNNER_DATA_FILES, pathComponents).toString();
 		return FileHelper.class.getClassLoader().getResourceAsStream(resourceFilePath);
 	}
 
-	public static InputStream getTestResourceFile(String... pathComponents) throws IOException {
+	public static InputStream getTestResourceFile(String... pathComponents) {
 
 		String resourceFilePath = Path.of(TEST_DATA_FILES, pathComponents).toString();
 		return FileHelper.class.getClassLoader().getResourceAsStream(resourceFilePath);

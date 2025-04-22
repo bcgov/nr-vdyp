@@ -17,6 +17,7 @@ import com.opencsv.exceptions.CsvConstraintViolationException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.MessageSeverityCode;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.PolygonMessageKind;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessageKind;
 import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionContext;
@@ -308,26 +309,26 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 		if (layer.getPercentStockable() != null && polygon.getPercentStockable() != null
 				&& layer.getPercentStockable() > polygon.getPercentStockable()) {
 
-			ValidationMessage message = new ValidationMessage(
-					ValidationMessageKind.LAYER_STOCKABILITY_EXCEEDS_POLYGON_STOCKABILITY, polygon, layer.getLayerId(),
-					layer.getPercentStockable(), polygon.getPercentStockable()
-			);
-
-			polygon.addDefinitionMessage(new PolygonMessage.Builder().layer(layer).message(message).build());
-			logger.error(
-					"Layer '{}' percent stockable ({}%) exceeds the polygon percent stockable ({}%)", polygon,
-					layer.getLayerId(), layer.getPercentStockable(), polygon.getPercentStockable()
+			polygon.addMessage(
+					new PolygonMessage.Builder().layer(layer)
+							.details(
+									ReturnCode.ERROR_INVALIDPARAMETER, MessageSeverityCode.ERROR,
+									PolygonMessageKind.LAYER_STOCKABILITY_EXCEEDS_POLYGON_STOCKABILITY,
+									layer.getPercentStockable(), polygon.getPercentStockable()
+							).build()
 			);
 		}
 
 		if ("1".equals(layer.getRankCode())) {
 			if (polygon.getRank1Layer() != null) {
 
-				ValidationMessage message = new ValidationMessage(
-						ValidationMessageKind.POLYGON_ALREADY_HAS_RANK_ONE_LAYER, polygon
+				polygon.addMessage(
+						new PolygonMessage.Builder().layer(layer)
+								.details(
+										ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
+										PolygonMessageKind.POLYGON_ALREADY_HAS_RANK_ONE_LAYER
+								).build()
 				);
-
-				polygon.addDefinitionMessage(new PolygonMessage.Builder().layer(layer).message(message).build());
 				logger.error("Polygon {} already has a rank one layer", polygon);
 			} else {
 				polygon.setRank1Layer(layer);
@@ -531,16 +532,12 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 				if (possibleDuplicate.getSpeciesCode().equals(sp64Details.speciesCode())) {
 					// We have a duplicate species
 
-					layer.getPolygon().addDefinitionMessage(
+					layer.getPolygon().addMessage(
 							new PolygonMessage.Builder() //
 									.stand(stand) //
-									.returnCode(ReturnCode.ERROR_SPECIESALREADYEXISTS) //
-									.severity(MessageSeverityCode.WARNING) //
-									.message(
-											new ValidationMessage(
-													ValidationMessageKind.DUPLICATE_SPECIES, layer.getPolygon(),
-													layer.getLayerId(), sp64Details.speciesCode()
-											)
+									.details(
+											ReturnCode.ERROR_SPECIESALREADYEXISTS, MessageSeverityCode.WARNING,
+											PolygonMessageKind.DUPLICATE_SPECIES, sp64Details.speciesCode()
 									).build()
 					);
 
@@ -551,16 +548,12 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 
 					if (!possibleDuplicate.equivalentSiteInfo(sp64Details)) {
 
-						layer.getPolygon().addDefinitionMessage(
+						layer.getPolygon().addMessage(
 								new PolygonMessage.Builder() //
 										.stand(stand) //
-										.returnCode(ReturnCode.ERROR_INVALIDSITEINFO)
-										.message(
-												new ValidationMessage(
-														ValidationMessageKind.INCONSISTENT_SITE_INFO,
-														layer.getPolygon(), layer.getLayerId(),
-														sp64Details.speciesCode()
-												)
+										.details(
+												ReturnCode.ERROR_INVALIDSITEINFO, MessageSeverityCode.WARNING,
+												PolygonMessageKind.INCONSISTENT_SITE_INFO, sp64Details.speciesCode()
 										) //
 										.build()
 						);

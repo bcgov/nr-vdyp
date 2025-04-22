@@ -7,7 +7,6 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.NotFoundException;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ParameterDetailsMessage;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionContext;
@@ -23,7 +22,7 @@ public class HelpService {
 
 	private static final Logger logger = LoggerFactory.getLogger(HelpService.class);
 
-	public HelpResource helpGet(UriInfo uriInfo, SecurityContext securityContext) throws NotFoundException {
+	public HelpResource helpGet(UriInfo uriInfo, SecurityContext securityContext) {
 
 		logger.info("<helpGet");
 

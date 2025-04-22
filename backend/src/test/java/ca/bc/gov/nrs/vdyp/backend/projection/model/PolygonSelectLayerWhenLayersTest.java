@@ -1,6 +1,5 @@
 package ca.bc.gov.nrs.vdyp.backend.projection.model;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 
@@ -23,7 +22,7 @@ public class PolygonSelectLayerWhenLayersTest {
 	private Polygon polygon;
 
 	@BeforeEach
-	void beforeEach() throws IOException, PolygonValidationException, AbstractProjectionRequestException {
+	void beforeEach() throws PolygonValidationException, AbstractProjectionRequestException {
 		var parameters = new Parameters().ageStart(10).ageEnd(20);
 
 		var streams = new HashMap<String, InputStream>();
@@ -45,68 +44,52 @@ public class PolygonSelectLayerWhenLayersTest {
 	}
 
 	@Test
-	void testSelectLayerWhenParameterNull() throws IOException {
+	void testSelectLayerWhenParameterNull() {
 
 		Assert.assertThrows(IllegalArgumentException.class, () -> polygon.findSpecificLayer(null));
 	}
 
 	@Test
 	void testSelectSpanningLayer() {
-		try {
-			var selectedLayer = polygon.findSpecificLayer(Vdyp7Constants.VDYP7_LAYER_ID_SPANNING);
-			Assert.assertNull(selectedLayer);
-		} catch (PolygonValidationException e) {
-			Assert.fail();
-		}
+		var selectedLayer = polygon.findSpecificLayer(Vdyp7Constants.VDYP7_LAYER_ID_SPANNING);
+		Assert.assertNull(selectedLayer);
 	}
 
 	@Test
 	void testSelectPrimaryLayer() {
-		try {
-			var selectedLayer = polygon.findSpecificLayer(Vdyp7Constants.VDYP7_LAYER_ID_PRIMARY);
-			Assert.assertEquals("13919428:1", selectedLayer.toString());
-		} catch (PolygonValidationException e) {
-			Assert.fail();
-		}
+		var selectedLayer = polygon.findSpecificLayer(Vdyp7Constants.VDYP7_LAYER_ID_PRIMARY);
+		Assert.assertEquals("13919428:1", selectedLayer.toString());
 	}
 
 	@Test
 	void testSelectDeadLayer() {
-		try {
-			var selectedLayer = polygon.findPrimaryLayerByProjectionType(ProjectionTypeCode.DEAD);
-			Assert.assertEquals("13919428:D", selectedLayer.toString());
-		} catch (PolygonValidationException e) {
+		var selectedLayer = polygon.findPrimaryLayerByProjectionType(ProjectionTypeCode.DEAD);
+		if (selectedLayer == null) {
 			Assert.fail();
+		} else {
+			Assert.assertEquals("13919428:D", selectedLayer.toString());
 		}
 	}
 
 	@Test
 	void testSelectResidualLayer() {
-		try {
-			var selectedLayer = polygon.findPrimaryLayerByProjectionType(ProjectionTypeCode.RESIDUAL);
-			Assert.assertNull(selectedLayer);
-		} catch (PolygonValidationException e) {
-			Assert.fail();
-		}
+		var selectedLayer = polygon.findPrimaryLayerByProjectionType(ProjectionTypeCode.RESIDUAL);
+		Assert.assertNull(selectedLayer);
 	}
 
 	@Test
 	void testSelectRegenerationLayer() {
-		try {
-			var selectedLayer = polygon.findPrimaryLayerByProjectionType(ProjectionTypeCode.REGENERATION);
-			Assert.assertEquals("13919428:2", selectedLayer.toString());
-		} catch (PolygonValidationException e) {
+		var selectedLayer = polygon.findPrimaryLayerByProjectionType(ProjectionTypeCode.REGENERATION);
+		if (selectedLayer == null) {
 			Assert.fail();
+		} else {
+			Assert.assertEquals("13919428:2", selectedLayer.toString());
 		}
 	}
 
 	@Test
 	void testSelectNamedLayer() {
-		try {
-			var selectedLayer = polygon.findSpecificLayer("1");
-			Assert.assertNotNull(selectedLayer);
-		} catch (PolygonValidationException e) {
-			Assert.fail();
-		}
+		var selectedLayer = polygon.findSpecificLayer("1");
+		Assert.assertNotNull(selectedLayer);
 	}
 }

@@ -173,7 +173,7 @@ public class FipStartOutputWriter extends AbstractOutputWriter implements Closea
 	}
 
 	@Override
-	public void close() throws IOException {
+	public void close() {
 		Utils.close(polygonFile, "polygonFile");
 		Utils.close(speciesFile, "speciesFile");
 		Utils.close(layersFile, "layers");

@@ -221,7 +221,7 @@ public class VriStartOutputWriter extends AbstractOutputWriter implements Closea
 	}
 
 	@Override
-	public void close() throws IOException {
+	public void close() {
 		Utils.close(polygonFile, "VriStartOutputWriter.polygonFile");
 		Utils.close(speciesFile, "VriStartOutputWriter.speciesFile");
 		Utils.close(layersFile, "VriStartOutputWriter.layersFile");

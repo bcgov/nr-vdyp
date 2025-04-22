@@ -3,7 +3,6 @@ package ca.bc.gov.nrs.vdyp.backend.projection;
 import static ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessageKind.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import java.io.IOException;
 import java.util.HashMap;
 
 import org.hamcrest.Matchers;
@@ -30,7 +29,7 @@ import jakarta.ws.rs.WebApplicationException;
 class ParameterValidationTest {
 
 	@Test
-	void testNoParametersSupplied() throws WebApplicationException, IOException {
+	void testNoParametersSupplied() throws WebApplicationException {
 
 		Parameters p = new Parameters();
 		try {
@@ -42,7 +41,7 @@ class ParameterValidationTest {
 	}
 
 	@Test
-	void testOnlyAgeStartParameterSupplied() throws WebApplicationException, IOException {
+	void testOnlyAgeStartParameterSupplied() throws WebApplicationException {
 
 		Parameters p = new Parameters().ageStart(1);
 		try {
@@ -54,7 +53,7 @@ class ParameterValidationTest {
 	}
 
 	@Test
-	void testAgeStartTooLowParameterSupplied() throws WebApplicationException, IOException {
+	void testAgeStartTooLowParameterSupplied() throws WebApplicationException {
 
 		Parameters p = new Parameters().ageEnd(400).ageStart(ValidatedParameters.DEFAULT.getMinAgeStart() - 1);
 		try {
@@ -66,7 +65,7 @@ class ParameterValidationTest {
 	}
 
 	@Test
-	void testAgeStartTooHighParameterSupplied() throws WebApplicationException, IOException {
+	void testAgeStartTooHighParameterSupplied() throws WebApplicationException {
 
 		Parameters p = new Parameters().ageEnd(400).ageStart(ValidatedParameters.DEFAULT.getMaxAgeStart() + 1);
 		try {
@@ -78,7 +77,7 @@ class ParameterValidationTest {
 	}
 
 	@Test
-	void testOnlyYearStartParameterSupplied() throws WebApplicationException, IOException {
+	void testOnlyYearStartParameterSupplied() throws WebApplicationException {
 
 		Parameters p = new Parameters().yearStart(ValidatedParameters.DEFAULT.getMinYearStart());
 		try {
@@ -90,7 +89,7 @@ class ParameterValidationTest {
 	}
 
 	@Test
-	void testYearStartTooLowParameterSupplied() throws WebApplicationException, IOException {
+	void testYearStartTooLowParameterSupplied() throws WebApplicationException {
 
 		try {
 			Parameters p = new Parameters().ageEnd(400).yearStart(ValidatedParameters.DEFAULT.getMinYearStart() - 1);
@@ -102,7 +101,7 @@ class ParameterValidationTest {
 	}
 
 	@Test
-	void testYearStartTooHighParameterSupplied() throws WebApplicationException, IOException {
+	void testYearStartTooHighParameterSupplied() throws WebApplicationException {
 
 		try {
 			Parameters p = new Parameters().ageEnd(400).yearStart(ValidatedParameters.DEFAULT.getMaxYearStart() + 1);
@@ -114,7 +113,7 @@ class ParameterValidationTest {
 	}
 
 	@Test
-	void testOnlyAgeEndParameterSupplied() throws WebApplicationException, IOException {
+	void testOnlyAgeEndParameterSupplied() throws WebApplicationException {
 
 		try {
 			Parameters p = new Parameters().ageEnd(400);
@@ -127,7 +126,7 @@ class ParameterValidationTest {
 	}
 
 	@Test
-	void testAgeEndTooLowParameterSupplied() throws WebApplicationException, IOException {
+	void testAgeEndTooLowParameterSupplied() throws WebApplicationException {
 
 		try {
 			Parameters p = new Parameters().ageStart(1).ageEnd(ValidatedParameters.DEFAULT.getMinAgeEnd() - 1);
@@ -140,7 +139,7 @@ class ParameterValidationTest {
 	}
 
 	@Test
-	void testAgeEndTooHighParameterSupplied() throws WebApplicationException, IOException {
+	void testAgeEndTooHighParameterSupplied() throws WebApplicationException {
 
 		try {
 			Parameters p = new Parameters().ageStart(1).ageEnd(ValidatedParameters.DEFAULT.getMaxAgeEnd() + 1);
@@ -153,7 +152,7 @@ class ParameterValidationTest {
 	}
 
 	@Test
-	void testOnlyYearEndParameterSupplied() throws WebApplicationException, IOException {
+	void testOnlyYearEndParameterSupplied() throws WebApplicationException {
 
 		try {
 			Parameters p = new Parameters().yearEnd(1500);
@@ -165,7 +164,7 @@ class ParameterValidationTest {
 	}
 
 	@Test
-	void testYearEndTooLowParameterSupplied() throws WebApplicationException, IOException {
+	void testYearEndTooLowParameterSupplied() throws WebApplicationException {
 
 		try {
 			Parameters p = new Parameters().yearStart(1500).yearEnd(ValidatedParameters.DEFAULT.getMinYearEnd() - 1);
@@ -177,7 +176,7 @@ class ParameterValidationTest {
 	}
 
 	@Test
-	void testYearEndTooHighParameterSupplied() throws WebApplicationException, IOException {
+	void testYearEndTooHighParameterSupplied() throws WebApplicationException {
 
 		try {
 			Parameters p = new Parameters().yearStart(1500).yearEnd(ValidatedParameters.DEFAULT.getMaxYearEnd() + 1);
@@ -189,7 +188,7 @@ class ParameterValidationTest {
 	}
 
 	@Test
-	void testAgeIncrementTooLowParameterSupplied() throws WebApplicationException, IOException {
+	void testAgeIncrementTooLowParameterSupplied() throws WebApplicationException {
 
 		try {
 			Parameters p = TestHelper.buildValidParametersObject()
@@ -202,7 +201,7 @@ class ParameterValidationTest {
 	}
 
 	@Test
-	void testAgeIncrementTooHighParameterSupplied() throws WebApplicationException, IOException {
+	void testAgeIncrementTooHighParameterSupplied() throws WebApplicationException {
 
 		try {
 			Parameters p = TestHelper.buildValidParametersObject()
@@ -215,7 +214,7 @@ class ParameterValidationTest {
 	}
 
 	@Test
-	void testValidAgeIncrementSupplied() throws WebApplicationException, IOException {
+	void testValidAgeIncrementSupplied() throws WebApplicationException {
 
 		try {
 			Parameters p = TestHelper.buildValidParametersObject()
@@ -227,7 +226,7 @@ class ParameterValidationTest {
 	}
 
 	@Test
-	void testValidAgeStartAndEndParameterSupplied() throws WebApplicationException, IOException {
+	void testValidAgeStartAndEndParameterSupplied() throws WebApplicationException {
 
 		try {
 			Parameters p = TestHelper.buildValidParametersObject();
@@ -238,7 +237,7 @@ class ParameterValidationTest {
 	}
 
 	@Test
-	void testValidYearStartAndEndParameterSupplied() throws WebApplicationException, IOException {
+	void testValidYearStartAndEndParameterSupplied() throws WebApplicationException {
 
 		try {
 			Parameters p = new Parameters().yearStart(1600).yearEnd(2100);
@@ -249,7 +248,7 @@ class ParameterValidationTest {
 	}
 
 	@Test
-	void testInvalidOutputFormatOptionSupplied() throws WebApplicationException, IOException {
+	void testInvalidOutputFormatOptionSupplied() throws WebApplicationException {
 
 		Parameters p = TestHelper.buildValidParametersObject();
 		p.setOutputFormat("bad output format");
@@ -263,7 +262,7 @@ class ParameterValidationTest {
 	}
 
 	@Test
-	void testValidOutputFormatOptionSupplied() throws WebApplicationException, IOException {
+	void testValidOutputFormatOptionSupplied() throws WebApplicationException {
 
 		Parameters p = TestHelper.buildValidParametersObject();
 		p.setOutputFormat(Parameters.OutputFormat.CSV_YIELD_TABLE);
@@ -276,7 +275,7 @@ class ParameterValidationTest {
 	}
 
 	@Test
-	void testInvalidCombineAgeYearRangeOptionSupplied() throws WebApplicationException, IOException {
+	void testInvalidCombineAgeYearRangeOptionSupplied() throws WebApplicationException {
 
 		Parameters p = TestHelper.buildValidParametersObject();
 		p.setCombineAgeYearRange("bad option");
@@ -290,7 +289,7 @@ class ParameterValidationTest {
 	}
 
 	@Test
-	void testValidCombineAgeYearRangeOptionSupplied() throws WebApplicationException, IOException {
+	void testValidCombineAgeYearRangeOptionSupplied() throws WebApplicationException {
 
 		Parameters p = TestHelper.buildValidParametersObject();
 		p.setCombineAgeYearRange(Parameters.AgeYearRangeCombinationKind.INTERSECT);
@@ -303,7 +302,7 @@ class ParameterValidationTest {
 	}
 
 	@Test
-	void testInvalidProcessFrequencySupplied() throws WebApplicationException, IOException {
+	void testInvalidProcessFrequencySupplied() throws WebApplicationException {
 
 		Parameters p = TestHelper.buildValidParametersObject();
 		p.setProgressFrequency("bad option");
@@ -317,7 +316,7 @@ class ParameterValidationTest {
 	}
 
 	@Test
-	void testValidProcessFrequencySupplied1() throws WebApplicationException, IOException {
+	void testValidProcessFrequencySupplied1() throws WebApplicationException {
 
 		Parameters p = TestHelper.buildValidParametersObject();
 		p.setProgressFrequency(ProgressFrequency.FrequencyKind.MAPSHEET);
@@ -330,7 +329,7 @@ class ParameterValidationTest {
 	}
 
 	@Test
-	void testValidProcessFrequencySupplied2() throws WebApplicationException, IOException {
+	void testValidProcessFrequencySupplied2() throws WebApplicationException {
 
 		Parameters p = TestHelper.buildValidParametersObject();
 		p.setProgressFrequency(100);
@@ -343,7 +342,7 @@ class ParameterValidationTest {
 	}
 
 	@Test
-	void testInvalidMetadataToOutputValueSupplied() throws WebApplicationException, IOException {
+	void testInvalidMetadataToOutputValueSupplied() throws WebApplicationException {
 
 		Parameters p = TestHelper.buildValidParametersObject();
 		p.setMetadataToOutput("bad option");
@@ -357,7 +356,7 @@ class ParameterValidationTest {
 	}
 
 	@Test
-	void testInvalidExecutionOptionSupplied() throws WebApplicationException, IOException {
+	void testInvalidExecutionOptionSupplied() throws WebApplicationException {
 
 		Parameters p = TestHelper.buildValidParametersObject();
 		p.addSelectedExecutionOptionsItem(ExecutionOption.BACK_GROW_ENABLED)
@@ -372,7 +371,7 @@ class ParameterValidationTest {
 	}
 
 	@Test
-	void testInvalidDebugOptionSupplied() throws WebApplicationException, IOException {
+	void testInvalidDebugOptionSupplied() throws WebApplicationException {
 
 		Parameters p = TestHelper.buildValidParametersObject();
 		p.addSelectedDebugOptionsItem(DebugOption.DO_INCLUDE_DEBUG_ENTRY_EXIT)
@@ -387,7 +386,7 @@ class ParameterValidationTest {
 	}
 
 	@Test
-	void testBadUtilizationParameterSpeciesSupplied() throws WebApplicationException, IOException {
+	void testBadUtilizationParameterSpeciesSupplied() throws WebApplicationException {
 
 		Parameters p = TestHelper.buildValidParametersObject();
 		var up = new UtilizationParameter().speciesName("bad species name").utilizationClass(UtilizationClassSet._12_5);
@@ -402,7 +401,7 @@ class ParameterValidationTest {
 	}
 
 	@Test
-	void testBadUtilizationParameterUtilizationClassSupplied() throws WebApplicationException, IOException {
+	void testBadUtilizationParameterUtilizationClassSupplied() throws WebApplicationException {
 
 		Parameters p = TestHelper.buildValidParametersObject();
 		var up = new UtilizationParameter().speciesName("D").utilizationClass("bad utilization class");
@@ -417,7 +416,7 @@ class ParameterValidationTest {
 	}
 
 	@Test
-	void testBadUtilizationParameterSupplied() throws WebApplicationException, IOException {
+	void testBadUtilizationParameterSupplied() throws WebApplicationException {
 
 		Parameters p = TestHelper.buildValidParametersObject();
 		var up = new UtilizationParameter().speciesName("bad species name").utilizationClass("bad utilization class");
@@ -434,7 +433,7 @@ class ParameterValidationTest {
 	}
 
 	@Test
-	void testValidUtilizationParameterSupplied() throws WebApplicationException, IOException {
+	void testValidUtilizationParameterSupplied() throws WebApplicationException {
 
 		Parameters p = TestHelper.buildValidParametersObject();
 		var up = new UtilizationParameter().speciesName("D").utilizationClass(UtilizationClassSet._12_5);
