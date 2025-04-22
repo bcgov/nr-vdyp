@@ -107,7 +107,7 @@ frontend:
         name: metrics
   ingress:
     annotations:
-      haproxy.router.openshift.io/timeout: 1800s # 30min
+      haproxy.router.openshift.io/timeout: 1800s # 30 minues
       route.openshift.io/termination: "edge"
   pdb:
     enabled: false # enable it in PRODUCTION for having pod disruption budget.
