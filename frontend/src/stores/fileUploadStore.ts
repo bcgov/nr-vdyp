@@ -70,9 +70,15 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
   }
 
   // report info
+  const selectedAgeYearRange = ref<string | null>(null)
   const startingAge = ref<number | null>(null)
   const finishingAge = ref<number | null>(null)
   const ageIncrement = ref<number | null>(null)
+
+  const startYear = ref<number | null>(null)
+  const endYear = ref<number | null>(null)
+  const yearIncrement = ref<number | null>(null)
+
   const volumeReported = ref<string[]>([])
   const includeInReport = ref<string[]>([])
   const projectionType = ref<string | null>(null)
@@ -84,9 +90,13 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
 
   // set default values
   const setDefaultValues = () => {
+    selectedAgeYearRange.value = DEFAULTS.DEFAULT_VALUES.SELECTED_AGE_YEAR_RANGE
     startingAge.value = DEFAULTS.DEFAULT_VALUES.STARTING_AGE
     finishingAge.value = DEFAULTS.DEFAULT_VALUES.FINISHING_AGE
     ageIncrement.value = DEFAULTS.DEFAULT_VALUES.AGE_INCREMENT
+    startYear.value = DEFAULTS.DEFAULT_VALUES.START_YEAR
+    endYear.value = DEFAULTS.DEFAULT_VALUES.END_YEAR
+    yearIncrement.value = DEFAULTS.DEFAULT_VALUES.YEAR_INCREMENT
     volumeReported.value = DEFAULTS.DEFAULT_VALUES.VOLUME_REPORTED
     projectionType.value = DEFAULTS.DEFAULT_VALUES.PROJECTION_TYPE
     reportTitle.value = DEFAULTS.DEFAULT_VALUES.REPORT_TITLE
@@ -101,9 +111,13 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
     confirmPanel,
     editPanel,
     // report info
+    selectedAgeYearRange,
     startingAge,
     finishingAge,
     ageIncrement,
+    startYear,
+    endYear,
+    yearIncrement,
     volumeReported,
     includeInReport,
     projectionType,

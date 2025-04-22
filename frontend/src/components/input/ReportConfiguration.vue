@@ -1,7 +1,25 @@
 <template>
   <div>
     <v-row>
-      <v-col cols="3">
+      <v-col cols="12">
+        <v-radio-group
+          v-model="selectedAgeYearRange"
+          inline
+          :disabled="isDisabled"
+        >
+          <v-radio
+            v-for="option in OPTIONS.ageYearRangeOptions"
+            :key="option.value"
+            :label="option.label"
+            :value="option.value"
+          ></v-radio>
+        </v-radio-group>
+      </v-col>
+    </v-row>
+  </div>
+  <div v-if="selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.AGE">
+    <v-row>
+      <v-col cols="2">
         <v-text-field
           id="startingAge"
           label="Starting Age"
@@ -19,7 +37,7 @@
         ></v-text-field>
       </v-col>
       <v-col class="col-space-3" />
-      <v-col cols="3">
+      <v-col cols="2">
         <v-text-field
           id="finishingAge"
           label="Finishing Age"
@@ -37,10 +55,10 @@
         ></v-text-field>
       </v-col>
       <v-col class="col-space-3" />
-      <v-col cols="3">
+      <v-col cols="2">
         <v-text-field
           id="ageIncrement"
-          label="Age Increment"
+          label="Increment"
           type="number"
           v-model.number="localAgeIncrement"
           :min="CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MIN"
@@ -52,6 +70,63 @@
           dense
           :disabled="isDisabled"
           @update:model-value="handleAgeIncrementInput"
+        ></v-text-field>
+      </v-col>
+    </v-row>
+  </div>
+  <div v-else>
+    <v-row>
+      <v-col cols="2">
+        <v-text-field
+          id="startYear"
+          label="Start Year"
+          type="number"
+          v-model.number="localStartYear"
+          :min="CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_MIN"
+          :max="CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_MAX"
+          :step="CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_STEP"
+          persistent-placeholder
+          placeholder=""
+          density="compact"
+          dense
+          :disabled="isDisabled"
+          @update:model-value="handleStartYearInput"
+        ></v-text-field>
+      </v-col>
+      <v-col class="col-space-3" />
+      <v-col cols="2">
+        <v-text-field
+          id="endYear"
+          label="End Year"
+          type="number"
+          v-model.number="localEndYear"
+          :min="CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_MIN"
+          :max="CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_MAX"
+          :step="CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_STEP"
+          persistent-placeholder
+          placeholder=""
+          density="compact"
+          dense
+          :disabled="isDisabled"
+          @update:model-value="handleEndYearInput"
+        ></v-text-field>
+      </v-col>
+      <v-col class="col-space-3" />
+      <v-col cols="2">
+        <v-text-field
+          id="yearIncrement"
+          label="Increment"
+          type="number"
+          v-model.number="localYearIncrement"
+          :min="CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_MIN"
+          :max="CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_MAX"
+          :step="CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_STEP"
+          persistent-placeholder
+          placeholder=""
+          density="compact"
+          dense
+          :disabled="isDisabled"
+          @update:model-value="handleYearIncrementInput"
         ></v-text-field>
       </v-col>
     </v-row>
@@ -145,13 +220,17 @@
 </template>
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
-import { CONSTANTS, OPTIONS } from '@/constants'
+import { CONSTANTS, DEFAULTS, OPTIONS } from '@/constants'
 import { parseNumberOrNull } from '@/utils/util'
 
 const props = defineProps<{
+  selectedAgeYearRange: string | null
   startingAge: number | null
   finishingAge: number | null
   ageIncrement: number | null
+  startYear: number | null
+  endYear: number | null
+  yearIncrement: number | null
   volumeReported: string[]
   includeInReport: string[]
   projectionType: string | null
@@ -160,24 +239,41 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits([
+  'update:selectedAgeYearRange',
   'update:startingAge',
   'update:finishingAge',
   'update:ageIncrement',
+  'update:startYear',
+  'update:endYear',
+  'update:yearIncrement',
   'update:volumeReported',
   'update:includeInReport',
   'update:projectionType',
   'update:reportTitle',
 ])
 
+const selectedAgeYearRange = ref<string>(
+  props.selectedAgeYearRange || DEFAULTS.DEFAULT_VALUES.SELECTED_AGE_YEAR_RANGE,
+)
 const localStartingAge = ref<number | null>(props.startingAge)
 const localFinishingAge = ref<number | null>(props.finishingAge)
 const localAgeIncrement = ref<number | null>(props.ageIncrement)
+const localStartYear = ref<number | null>(props.startYear)
+const localEndYear = ref<number | null>(props.endYear)
+const localYearIncrement = ref<number | null>(props.yearIncrement)
 const localVolumeReported = ref<string[]>([...props.volumeReported])
 const localIncludeInReport = ref<string[]>([...props.includeInReport])
 const localProjectionType = ref<string | null>(props.projectionType)
 const localReportTitle = ref<string | null>(props.reportTitle)
 
 // Watch props for changes (Prop -> Local State)
+watch(
+  () => props.selectedAgeYearRange,
+  (newVal) => {
+    selectedAgeYearRange.value =
+      newVal || DEFAULTS.DEFAULT_VALUES.SELECTED_AGE_YEAR_RANGE
+  },
+)
 watch(
   () => props.startingAge,
   (newVal) => {
@@ -194,6 +290,24 @@ watch(
   () => props.ageIncrement,
   (newVal) => {
     localAgeIncrement.value = newVal
+  },
+)
+watch(
+  () => props.startYear,
+  (newVal) => {
+    localStartYear.value = newVal
+  },
+)
+watch(
+  () => props.endYear,
+  (newVal) => {
+    localEndYear.value = newVal
+  },
+)
+watch(
+  () => props.yearIncrement,
+  (newVal) => {
+    localYearIncrement.value = newVal
   },
 )
 watch(
@@ -236,6 +350,9 @@ const isCulminationValuesEnabled = computed(() => {
 })
 
 // Watch local state for changes (Local State -> Parent Emit)
+watch(selectedAgeYearRange, (newVal) =>
+  emit('update:selectedAgeYearRange', newVal),
+)
 watch(localStartingAge, (newVal) => emit('update:startingAge', newVal))
 watch(localFinishingAge, (newVal) => emit('update:finishingAge', newVal))
 
@@ -249,6 +366,9 @@ watch([localStartingAge, localFinishingAge], () => {
 })
 
 watch(localAgeIncrement, (newVal) => emit('update:ageIncrement', newVal))
+watch(localStartYear, (newVal) => emit('update:startYear', newVal))
+watch(localEndYear, (newVal) => emit('update:endYear', newVal))
+watch(localYearIncrement, (newVal) => emit('update:yearIncrement', newVal))
 watch(localVolumeReported, (newVal) => {
   if (JSON.stringify(newVal) !== JSON.stringify(props.volumeReported)) {
     emit('update:volumeReported', [...newVal])
@@ -301,6 +421,18 @@ const handleFinishingAgeInput = (value: string) => {
 
 const handleAgeIncrementInput = (value: string) => {
   localAgeIncrement.value = parseNumberOrNull(value)
+}
+
+const handleStartYearInput = (value: string) => {
+  localStartYear.value = parseNumberOrNull(value)
+}
+
+const handleEndYearInput = (value: string) => {
+  localEndYear.value = parseNumberOrNull(value)
+}
+
+const handleYearIncrementInput = (value: string) => {
+  localYearIncrement.value = parseNumberOrNull(value)
 }
 </script>
 <style scoped></style>

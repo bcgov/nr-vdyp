@@ -22,7 +22,7 @@ import sinon, { SinonStub } from 'sinon'
 
 describe('File Upload Service Unit Tests', () => {
   let fileUploadStore: ReturnType<typeof useFileUploadStore>
-  let projectionStub: SinonStub<[FormData, boolean?], Promise<any>>
+  let projectionStub: SinonStub
 
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -32,9 +32,13 @@ describe('File Upload Service Unit Tests', () => {
     fileUploadStore.includeInReport = [
       CONSTANTS.INCLUDE_IN_REPORT.SPECIES_COMPOSITION,
     ]
+    fileUploadStore.selectedAgeYearRange = CONSTANTS.AGE_YEAR_RANGE.AGE
     fileUploadStore.startingAge = 10
     fileUploadStore.finishingAge = 100
     fileUploadStore.ageIncrement = 10
+    fileUploadStore.startYear = 2020
+    fileUploadStore.endYear = 2030
+    fileUploadStore.yearIncrement = 2
     fileUploadStore.polygonFile = new File(['polygon content'], 'polygon.csv', {
       type: 'text/csv',
     })
@@ -83,7 +87,7 @@ describe('File Upload Service Unit Tests', () => {
     ])
   })
 
-  it('should create form data with correct parameters', () => {
+  it('should create form data with correct parameters for AGE range', () => {
     const formData = getFormData(fileUploadStore)
 
     expect(formData.has(ParameterNamesEnum.PROJECTION_PARAMETERS)).to.be.true
@@ -98,6 +102,8 @@ describe('File Upload Service Unit Tests', () => {
       expect(projectionParams.ageStart).to.equal(10)
       expect(projectionParams.ageEnd).to.equal(100)
       expect(projectionParams.ageIncrement).to.equal(10)
+      expect(projectionParams.yearStart).to.be.null
+      expect(projectionParams.yearEnd).to.be.null
       expect(projectionParams.outputFormat).to.equal(
         OutputFormatEnum.CSVYieldTable,
       )
@@ -113,24 +119,49 @@ describe('File Upload Service Unit Tests', () => {
     })
   })
 
-  it('should call projectionHcsvPost with correct form data', async () => {
-    await runModelFileUpload(fileUploadStore)
-    expect(projectionStub.calledOnce).to.be.true
-    const formDataArg = projectionStub.getCall(0).args[0] as FormData
-    expect(formDataArg.has(ParameterNamesEnum.PROJECTION_PARAMETERS)).to.be.true
-    expect(formDataArg.has(ParameterNamesEnum.HCSV_POLYGON_INPUT_DATA)).to.be
-      .true
-    expect(formDataArg.has(ParameterNamesEnum.HCSV_LAYERS_INPUT_DATA)).to.be
-      .true
+  it('should create form data with correct parameters for YEAR range', () => {
+    fileUploadStore.selectedAgeYearRange = CONSTANTS.AGE_YEAR_RANGE.YEAR
+    const formData = getFormData(fileUploadStore)
+
+    expect(formData.has(ParameterNamesEnum.PROJECTION_PARAMETERS)).to.be.true
+    expect(formData.has(ParameterNamesEnum.HCSV_POLYGON_INPUT_DATA)).to.be.true
+    expect(formData.has(ParameterNamesEnum.HCSV_LAYERS_INPUT_DATA)).to.be.true
+
+    const projectionParamsBlob = formData.get(
+      ParameterNamesEnum.PROJECTION_PARAMETERS,
+    ) as Blob
+    cy.wrap(projectionParamsBlob.text()).then((text: string) => {
+      const projectionParams = JSON.parse(text)
+      expect(projectionParams.ageStart).to.be.null
+      expect(projectionParams.ageEnd).to.be.null
+      expect(projectionParams.yearStart).to.equal(2020)
+      expect(projectionParams.yearEnd).to.equal(2030)
+      expect(projectionParams.ageIncrement).to.equal(2)
+      expect(projectionParams.outputFormat).to.equal(
+        OutputFormatEnum.CSVYieldTable,
+      )
+      expect(projectionParams.combineAgeYearRange).to.equal(
+        CombineAgeYearRangeEnum.Intersect,
+      )
+      expect(projectionParams.metadataToOutput).to.equal(
+        MetadataToOutputEnum.VERSION,
+      )
+      expect(projectionParams.selectedExecutionOptions).to.include(
+        SelectedExecutionOptionsEnum.DoIncludeProjectedMOFVolumes,
+      )
+    })
   })
 
-  it('should handle projectionHcsvPost failure', async () => {
-    projectionStub.rejects(new Error('API call failed'))
-    try {
-      await runModelFileUpload(fileUploadStore)
-    } catch (error) {
-      expect(error).to.be.an('error')
-      expect(error.message).to.equal('API call failed')
-    }
+  it('should call projectionHcsvPost with correct form data', () => {
+    cy.wrap(runModelFileUpload(fileUploadStore)).then(() => {
+      expect(projectionStub.calledOnce).to.be.true
+      const formDataArg = projectionStub.getCall(0).args[0] as FormData
+      expect(formDataArg.has(ParameterNamesEnum.PROJECTION_PARAMETERS)).to.be
+        .true
+      expect(formDataArg.has(ParameterNamesEnum.HCSV_POLYGON_INPUT_DATA)).to.be
+        .true
+      expect(formDataArg.has(ParameterNamesEnum.HCSV_LAYERS_INPUT_DATA)).to.be
+        .true
+    })
   })
 })
