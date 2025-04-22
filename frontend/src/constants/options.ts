@@ -34,6 +34,11 @@ export const ecoZoneOptions = [
   { label: 'Taiga Plains', value: '4' },
 ]
 
+export const ageYearRangeOptions = [
+  { label: 'Age Range', value: CONSTANTS.AGE_YEAR_RANGE.AGE },
+  { label: 'Year Range', value: CONSTANTS.AGE_YEAR_RANGE.YEAR },
+]
+
 export const volumeReportedOptions = [
   { label: 'Whole Stem', value: CONSTANTS.VOLUME_REPORTED.WHOLE_STEM },
   { label: 'Close Utilization', value: CONSTANTS.VOLUME_REPORTED.CLOSE_UTIL },

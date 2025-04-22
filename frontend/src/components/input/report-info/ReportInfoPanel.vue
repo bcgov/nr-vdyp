@@ -28,17 +28,25 @@
         <v-expansion-panel-text class="expansion-panel-text mt-n2">
           <v-form ref="form">
             <ReportConfiguration
+              :selectedAgeYearRange="currentStore.selectedAgeYearRange"
               :startingAge="currentStore.startingAge"
               :finishingAge="currentStore.finishingAge"
               :ageIncrement="currentStore.ageIncrement"
+              :startYear="currentStore.startYear"
+              :endYear="currentStore.endYear"
+              :yearIncrement="currentStore.yearIncrement"
               :volumeReported="currentStore.volumeReported"
               :includeInReport="currentStore.includeInReport"
               :projectionType="currentStore.projectionType"
               :reportTitle="currentStore.reportTitle"
               :isDisabled="!isConfirmEnabled"
+              @update:selectedAgeYearRange="handleSelectedAgeYearRangeUpdate"
               @update:startingAge="handleStartingAgeUpdate"
               @update:finishingAge="handleFinishingAgeUpdate"
               @update:ageIncrement="handleAgeIncrementUpdate"
+              @update:startYear="handleStartYearUpdate"
+              @update:endYear="handleEndYearUpdate"
+              @update:yearIncrement="handleYearIncrementUpdate"
               @update:volumeReported="handleVolumeReportedUpdate"
               @update:includeInReport="handleIncludeInReportUpdate"
               @update:projectionType="handleProjectionTypeUpdate"
@@ -105,6 +113,10 @@ const isConfirmed = computed(
   () => currentStore.value.panelState[panelName.value].confirmed,
 )
 
+const handleSelectedAgeYearRangeUpdate = (value: string) => {
+  currentStore.value.selectedAgeYearRange = value
+}
+
 const handleStartingAgeUpdate = (value: number | null) => {
   currentStore.value.startingAge = value
 }
@@ -115,6 +127,18 @@ const handleFinishingAgeUpdate = (value: number | null) => {
 
 const handleAgeIncrementUpdate = (value: number | null) => {
   currentStore.value.ageIncrement = value
+}
+
+const handleStartYearUpdate = (value: number | null) => {
+  currentStore.value.startYear = value
+}
+
+const handleEndYearUpdate = (value: number | null) => {
+  currentStore.value.endYear = value
+}
+
+const handleYearIncrementUpdate = (value: number | null) => {
+  currentStore.value.yearIncrement = value
 }
 
 const handleVolumeReportedUpdate = (value: string[]) => {
@@ -134,74 +158,155 @@ const handleReportTitleUpdate = (value: string | null) => {
 }
 
 const validateComparison = (): boolean => {
-  const result = reportInfoValidation.validateComparison(
-    currentStore.value.startingAge,
-    currentStore.value.finishingAge,
-  )
-  if (!result.isValid) {
-    messageDialog.value = {
-      dialog: true,
-      title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
-      message: MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_COMP_FNSH_AGE,
-      btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+  if (
+    currentStore.value.selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.AGE
+  ) {
+    const result = reportInfoValidation.validateComparison(
+      currentStore.value.startingAge,
+      currentStore.value.finishingAge,
+    )
+    if (!result.isValid) {
+      messageDialog.value = {
+        dialog: true,
+        title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
+        message: MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_COMP_FNSH_AGE,
+        btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+      }
     }
+    return result.isValid
+  } else {
+    const result = reportInfoValidation.validateComparison(
+      currentStore.value.startYear,
+      currentStore.value.endYear,
+    )
+    if (!result.isValid) {
+      messageDialog.value = {
+        dialog: true,
+        title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
+        message: MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_COMP_END_YEAR,
+        btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+      }
+    }
+    return result.isValid
   }
-  return result.isValid
 }
 
 const validateRequiredFields = (): boolean => {
-  const result = reportInfoValidation.validateRequiredFields(
-    currentStore.value.startingAge,
-    currentStore.value.finishingAge,
-    currentStore.value.ageIncrement,
-  )
-  if (!result.isValid) {
-    messageDialog.value = {
-      dialog: true,
-      title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
-      message: MESSAGE.FILE_UPLOAD_ERR.RPT_VLD_REQUIRED_FIELDS,
-      btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+  if (
+    currentStore.value.selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.AGE
+  ) {
+    const result = reportInfoValidation.validateRequiredFields(
+      currentStore.value.startingAge,
+      currentStore.value.finishingAge,
+      currentStore.value.ageIncrement,
+    )
+    if (!result.isValid) {
+      messageDialog.value = {
+        dialog: true,
+        title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
+        message: MESSAGE.FILE_UPLOAD_ERR.RPT_VLD_REQUIRED_FIELDS_AGE,
+        btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+      }
     }
+    return result.isValid
+  } else {
+    const result = reportInfoValidation.validateRequiredFields(
+      currentStore.value.startYear,
+      currentStore.value.endYear,
+      currentStore.value.yearIncrement,
+    )
+    if (!result.isValid) {
+      const message = MESSAGE.FILE_UPLOAD_ERR.RPT_VLD_REQUIRED_FIELDS_YEAR
+      messageDialog.value = {
+        dialog: true,
+        title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
+        message: message,
+        btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+      }
+    }
+    return result.isValid
   }
-  return result.isValid
 }
 
 const validateRange = (): boolean => {
-  const result = reportInfoValidation.validateRange(
-    currentStore.value.startingAge,
-    currentStore.value.finishingAge,
-    currentStore.value.ageIncrement,
-  )
-  if (!result.isValid) {
-    let message = ''
-    switch (result.errorType) {
-      case 'startingAge':
-        message = MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_START_AGE_RNG(
-          CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MIN,
-          CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MAX,
-        )
-        break
-      case 'finishingAge':
-        message = MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_START_FNSH_RNG(
-          CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MIN,
-          CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MAX,
-        )
-        break
-      case 'ageIncrement':
-        message = MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_AGE_INC_RNG(
-          CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MIN,
-          CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MAX,
-        )
-        break
+  if (
+    currentStore.value.selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.AGE
+  ) {
+    const result = reportInfoValidation.validateAgeRange(
+      currentStore.value.startingAge,
+      currentStore.value.finishingAge,
+      currentStore.value.ageIncrement,
+    )
+    if (!result.isValid) {
+      let message = ''
+      switch (result.errorType) {
+        case 'startingAge':
+          message = MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_START_AGE_RNG(
+            CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MIN,
+            CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MAX,
+          )
+          break
+        case 'finishingAge':
+          message = MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_START_FNSH_RNG(
+            CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MIN,
+            CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MAX,
+          )
+          break
+        case 'ageIncrement':
+          message = MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_AGE_INC_RNG(
+            CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MIN,
+            CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MAX,
+          )
+          break
+      }
+      messageDialog.value = {
+        dialog: true,
+        title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
+        message: message,
+        btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+      }
     }
-    messageDialog.value = {
-      dialog: true,
-      title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
-      message: message,
-      btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+    return result.isValid
+  } else {
+    const result = reportInfoValidation.validateYearRange(
+      currentStore.value.startYear,
+      currentStore.value.endYear,
+      currentStore.value.yearIncrement,
+    )
+
+    if (!result.isValid) {
+      let message = ''
+
+      switch (result.errorType) {
+        case 'startYear':
+          message = MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_START_YEAR_RNG(
+            CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_MIN,
+            CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_MAX,
+          )
+          break
+        case 'endYear':
+          message = MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_END_YEAR_RNG(
+            CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_MIN,
+            CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_MAX,
+          )
+          break
+        case 'yearIncrement':
+          message = MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_YEAR_INC_RNG(
+            CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_MIN,
+            CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_MAX,
+          )
+          break
+      }
+
+      messageDialog.value = {
+        dialog: true,
+        title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
+        message: message,
+        btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+      }
     }
+    return result.isValid
   }
-  return result.isValid
 }
 
 const onConfirm = () => {
@@ -229,9 +334,13 @@ const onEdit = () => {
 }
 
 const onClear = () => {
+  currentStore.value.selectedAgeYearRange = CONSTANTS.AGE_YEAR_RANGE.AGE
   currentStore.value.startingAge = null
   currentStore.value.finishingAge = null
   currentStore.value.ageIncrement = null
+  currentStore.value.startYear = null
+  currentStore.value.endYear = null
+  currentStore.value.yearIncrement = null
   currentStore.value.volumeReported = []
   currentStore.value.includeInReport = []
   currentStore.value.reportTitle = null

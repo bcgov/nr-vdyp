@@ -28,6 +28,11 @@ export const SITE_SPECIES_VALUES = Object.freeze({
   SUPPLIED: 'Supplied',
 })
 
+export const AGE_YEAR_RANGE = Object.freeze({
+  AGE: 'age',
+  YEAR: 'year',
+})
+
 export const VOLUME_REPORTED = Object.freeze({
   WHOLE_STEM: 'Whole Stem',
   CLOSE_UTIL: 'Close Utilization',
@@ -86,6 +91,15 @@ export const NUM_INPUT_LIMITS = Object.freeze({
   AGE_INC_MAX: 350,
   AGE_INC_MIN: 1,
   AGE_INC_STEP: 5,
+  START_YEAR_MIN: 1900,
+  START_YEAR_MAX: 2100,
+  START_YEAR_STEP: 1,
+  END_YEAR_MIN: 1900,
+  END_YEAR_MAX: 2100,
+  END_YEAR_STEP: 1,
+  YEAR_INC_MIN: 1,
+  YEAR_INC_MAX: 50,
+  YEAR_INC_STEP: 1,
 })
 
 export const CONTINUOUS_INC_DEC = Object.freeze({
