@@ -9,7 +9,7 @@ global:
   #-- the tag of the image, it can be latest, 1.0.0 etc..., or the sha256 hash
   tag: ~
   #-- turn off autoscaling for the entire suite by setting this to false. default is true.
-  autoscaling: false
+  autoscaling: true
   #-- global secrets, can be accessed by sub-charts.
   secrets:
     enabled: true
@@ -107,7 +107,7 @@ frontend:
         name: metrics
   ingress:
     annotations:
-      haproxy.router.openshift.io/timeout: 300s # 5min
+      haproxy.router.openshift.io/timeout: 1800s # 30 minues
       route.openshift.io/termination: "edge"
   pdb:
     enabled: false # enable it in PRODUCTION for having pod disruption budget.
