@@ -223,6 +223,7 @@ public abstract class BaseCoefficientParser<T extends Coefficients, W, M extends
 
 	/**
 	 * Default implementation that does nothing, for data streams that require no validation.
+	 *
 	 * @param result
 	 * @param parsed
 	 * @param keyRanges

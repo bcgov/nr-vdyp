@@ -1160,8 +1160,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		return mode;
 	}
 
-	VdypPolygon createVdypPolygon(VriPolygon sourcePolygon, Map<LayerType, VdypLayer> processedLayers)
-			{
+	VdypPolygon createVdypPolygon(VriPolygon sourcePolygon, Map<LayerType, VdypLayer> processedLayers) {
 
 		// TODO expand this
 
