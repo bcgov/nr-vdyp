@@ -8,11 +8,11 @@ import java.util.Map;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 
-public class YieldTable {
+public class ResultYieldTable extends HashMap<String, Map<String, Map<String, Map<String, String>>>> {
 
-	private Map<String, Map<String, String>> content = new HashMap<>();
-
-	public YieldTable(String yieldTableContent) {
+	private static final long serialVersionUID = 1L;
+	
+	public ResultYieldTable(String yieldTableContent) {
 
 		CSVReader reader = new CSVReaderBuilder(new StringReader(yieldTableContent)).build();
 		try {
@@ -22,10 +22,11 @@ public class YieldTable {
 				var rowIterator = myEntries.iterator();
 				String[] columnNames = rowIterator.next();
 
+
 				rowIterator.forEachRemaining(fields -> {
 					if (fields.length != columnNames.length) {
 						throw new IllegalArgumentException(
-								"row " + content.size() + " has " + fields.length + " fields; expecting "
+								"row " + this.size() + " has " + fields.length + " fields; expecting "
 										+ columnNames.length
 						);
 					}
@@ -36,6 +37,14 @@ public class YieldTable {
 					for (var field : fields) {
 						row.put(columnNames[columnNumber++], field);
 					}
+
+					var featureId = row.get("FEATURE_ID");
+					var layerId = row.get("LAYER_ID");
+					var year = row.get("PROJECTION_YEAR");
+
+					this.computeIfAbsent(featureId, k -> new HashMap<String, Map<String, Map<String, String>>>())
+							.computeIfAbsent(year, k -> new HashMap<String, Map<String, String>>()) //
+							.put(layerId, row);
 				});
 			}
 		} catch (Exception e) {
