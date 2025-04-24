@@ -54,59 +54,6 @@ class TextYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean>
 	}
 
 	@Override
-	protected void recordPolygonAndLayerDetails(int yieldTableNumber, YieldTableRowContext rowContext) {
-		var polygon = rowContext.getPolygon();
-
-		currentRecord.setDistrict(polygon.getDistrict());
-		currentRecord.setFeatureId(polygon.getFeatureId());
-		currentRecord.setMapId(polygon.getMapSheet());
-		currentRecord.setPolygonId(polygon.getPolygonNumber());
-		currentRecord.setTableNumber(yieldTableNumber);
-
-		if (!rowContext.isPolygonTable()) {
-			currentRecord.setLayerId(rowContext.getLayerReportingInfo().getLayerID());
-		}
-	}
-
-	@Override
-	public void recordCalendarYearAndLayerAge(YieldTableRowContext rowContext) {
-		currentRecord.setProjectionYear(rowContext.getCurrentTableYear());
-		currentRecord.setTotalAge(rowContext.getCurrentTableAge());
-	}
-
-	@Override
-	public void recordSpeciesComposition(YieldTableRowContext rowContext) {
-
-		if (rowContext.getLayerReportingInfo() != null) {
-			int speciesIndex = 1;
-			for (var details : rowContext.getSortedSpeciesArray()) {
-				currentRecord.setSpeciesFieldValue(
-						MultiFieldPrefixes.Species, speciesIndex, MultiFieldSuffixes.Code, details.speciesCode()
-				);
-				currentRecord.setSpeciesFieldValue(
-						MultiFieldPrefixes.Species, speciesIndex, MultiFieldSuffixes.Percent, details.speciesPercent()
-				);
-
-				speciesIndex += 1;
-			}
-		}
-	}
-
-	@Override
-	void recordSiteInformation(
-			Double percentStockable, Double siteIndex, Double dominantHeight, Double secondaryHeight
-	) {
-		currentRecord.setPercentStockable(percentStockable);
-		currentRecord.setSiteIndex(siteIndex);
-		currentRecord.setDominantHeight(dominantHeight);
-		currentRecord.setSecondaryHeight(secondaryHeight == null ? null : secondaryHeight);
-	}
-
-	@Override
-	void recordGrowthDetails(EntityGrowthDetails growthDetails, EntityVolumeDetails entityVolumeDetails) {
-	}
-
-	@Override
 	protected void writeRecord(YieldTableRowContext rowContext) throws YieldTableGenerationException {
 
 		writeCalendarYearAndLayerAge();

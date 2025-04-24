@@ -17,17 +17,15 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.event.Level;
 
 import ca.bc.gov.nrs.vdyp.application.ProcessingException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.StandYieldCalculationException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.YieldTableGenerationException;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.MessageSeverityCode;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.OutputFormat;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.MessageSeverityCode;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.UtilizationClassSet;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.PolygonMessageKind;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.UtilizationClassSet;
 import ca.bc.gov.nrs.vdyp.backend.projection.PolygonProjectionState;
 import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionContext;
 import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionStageCode;
@@ -43,6 +41,7 @@ import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCo
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ReturnCode;
 import ca.bc.gov.nrs.vdyp.backend.utils.Utils;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
+import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.forward.ForwardControlParser;
 import ca.bc.gov.nrs.vdyp.forward.ForwardDataStreamReader;
 import ca.bc.gov.nrs.vdyp.forward.parsers.VdypPolygonParser;
@@ -54,6 +53,8 @@ import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
+import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
+import ca.bc.gov.nrs.vdyp.model.VdypUtilizationHolder;
 import ca.bc.gov.nrs.vdyp.si32.bec.BecZoneMethods;
 import ca.bc.gov.nrs.vdyp.si32.vdyp.SP0Name;
 
@@ -548,30 +549,31 @@ public class YieldTable implements Closeable {
 
 				if (growthDetails != null && volumeDetails != null) {
 
-					if (!rowContext.isPolygonTable()
-							&& rowContext.getPolygonProjectionState().getFirstYearYieldsDisplayed(layer) == null
-							&& growthDetails.basalArea() != null) {
-						rowContext.getPolygonProjectionState()
-								.setFirstYearYieldsDisplayed(layer, rowContext.getCurrentTableYear());
-					}
-
 					writer.recordGrowthDetails(growthDetails, volumeDetails);
 
-					if (context.getYieldTableCategories().contains(Category.SPECIES_MOFVOLUME)) {
+					if (!rowContext.isPolygonTable()) {
+						if (rowContext.getPolygonProjectionState().getFirstYearYieldsDisplayed(layer) == null
+								&& growthDetails.basalArea() != null) {
 
-						int spIndex = 1;
-						for (Species sp64 : layer.getSp64sByPercent()) {
+							rowContext.getPolygonProjectionState()
+									.setFirstYearYieldsDisplayed(layer, rowContext.getCurrentTableYear());
+						}
 
-							var mofBiomassFactor = BecZoneMethods
-									.mofBiomassCoefficient(layer.getPolygon().getBecZone(), sp64.getSpeciesCode());
+						if (context.getYieldTableCategories().contains(Category.SPECIES_MOFVOLUME)) {
+							int spIndex = 1;
+							for (Species sp64 : layer.getSp64sByPercent()) {
 
-							var speciesVolumeDetails = getProjectionLayerSpeciesVolumes(
-									rowContext, polygonProjectionsByYear, sp64, targetAge, mofBiomassFactor
-							);
+								var mofBiomassFactor = BecZoneMethods
+										.mofBiomassCoefficient(layer.getPolygon().getBecZone(), sp64.getSpeciesCode());
 
-							writer.recordPerSpeciesVolumeInfo(
-									spIndex++, speciesVolumeDetails.getLeft(), speciesVolumeDetails.getRight()
-							);
+								var speciesVolumeDetails = getProjectionLayerSpeciesVolumes(
+										rowContext, polygonProjectionsByYear, sp64, targetAge, mofBiomassFactor
+								);
+
+								writer.recordPerSpeciesVolumeInfo(
+										spIndex++, speciesVolumeDetails.getLeft(), speciesVolumeDetails.getRight()
+								);
+							}
 						}
 					}
 				}
@@ -595,7 +597,7 @@ public class YieldTable implements Closeable {
 					} else if (currentTableYear < rowContext.getMeasurementYear()) {
 						projectionMode = "Back";
 					} else {
-						projectionMode = "Fwrd";
+						projectionMode = "Frwd";
 					}
 
 					writer.recordMode(projectionMode);
@@ -1379,8 +1381,8 @@ public class YieldTable implements Closeable {
 
 		Validate.notNull(rowContext, "YieldTable.obtainStandYield(): rowContext must not be null");
 		Validate.notNull(layer, "YieldTable.obtainStandYield(): layer must not be null");
-		Validate.notNull(
-				ageToRequest > 0,
+		Validate.inclusiveBetween(
+				Vdyp7Constants.MIN_SPECIES_AGE, Vdyp7Constants.MAX_SPECIES_AGE, ageToRequest,
 				MessageFormat.format(
 						"YieldTable.obtainStandYield(): ageToRequest value {0} must be at least one", ageToRequest
 				)
@@ -1394,13 +1396,6 @@ public class YieldTable implements Closeable {
 		LayerYields layerYields;
 
 		Integer calendarYear = getCalendarYear(layer, ageToRequest);
-
-		Species sp0;
-		if (stand == null) {
-			sp0 = layer.getSp0sByPercent().get(0).getSpeciesGroup();
-		} else {
-			sp0 = stand.getSpeciesGroup();
-		}
 
 		var projectionType = layer.getAssignedProjectionType();
 		LayerType layerType = getLayerType(projectionType);
@@ -1416,6 +1411,7 @@ public class YieldTable implements Closeable {
 		// This is not an error. It indicates the stand lies on
 		// some very poor ground for growing trees.
 
+		@SuppressWarnings("unused")
 		boolean doReprojectHeight;
 
 		switch (projectionType) {
@@ -1445,10 +1441,15 @@ public class YieldTable implements Closeable {
 		var projectedPolygon = polygonProjectionsByYear.get(calendarYear);
 		if (projectedPolygon != null && layerType != null) {
 
+			Species sp0;
+			if (stand == null) {
+				sp0 = layer.getSp0sByPercent().get(0).getSpeciesGroup();
+			} else {
+				sp0 = stand.getSpeciesGroup();
+			}
+
 			var projectedLayer = projectedPolygon.getLayers().get(layerType);
 			var projectedSp0 = projectedLayer.getSpeciesBySp0(sp0.getSpeciesCode());
-
-			boolean isDominantSpecies = projectedSp0.getSite().isPresent();
 
 			// VDYP7 projects the polygon over the entire requested range of years using some
 			// combination of Forward and Back. In VDYP8 we currently -do not- support Back,
@@ -1459,47 +1460,8 @@ public class YieldTable implements Closeable {
 				var sp0Name = SP0Name.forText(sp0.getSpeciesCode());
 				var ucReportingLevel = context.getParams().getUtils().get(sp0Name);
 
-				double totalAge = Vdyp7Constants.EMPTY_DECIMAL;
-				double dominantHeight = Vdyp7Constants.EMPTY_DECIMAL;
-				double siteIndex = Vdyp7Constants.EMPTY_DECIMAL;
-				int siteCurve = Vdyp7Constants.EMPTY_INT;
-
-				if (projectedSp0.getSite().isPresent()) {
-					var site = projectedSp0.getSite().get();
-
-					totalAge = site.getAgeTotal().map(v -> v.doubleValue()).orElse(null);
-					dominantHeight = site.getHeight().map(v -> v.doubleValue()).orElse(null);
-					siteIndex = site.getSiteIndex().map(v -> v.doubleValue()).orElse(null);
-					siteCurve = site.getSiteCurveNumber().orElse(null);
-				}
-
-				var treePerHectare = ucReportingLevel.sumOf(projectedSp0.getTreesPerHectareByUtilization());
-				var wholeStemVolume = ucReportingLevel.sumOf(projectedSp0.getWholeStemVolumeByUtilization());
-				var closeUtilizationVolume = ucReportingLevel
-						.sumOf(projectedSp0.getCloseUtilizationVolumeByUtilization());
-				var cuVolumeLessDecay = ucReportingLevel
-						.sumOf(projectedSp0.getCloseUtilizationVolumeNetOfDecayByUtilization());
-				var cuVolumeLessDecayWastage = ucReportingLevel
-						.sumOf(projectedSp0.getCloseUtilizationVolumeNetOfDecayAndWasteByUtilization());
-				var cuVolumeLessDecayWastageBreakage = ucReportingLevel
-						.sumOf(projectedSp0.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization());
-
-				var basalArea75cmPlus = UtilizationClassSet._7_5.sumOf(projectedSp0.getBaseAreaByUtilization());
-				var basalArea125cmPlus = UtilizationClassSet._12_5.sumOf(projectedSp0.getBaseAreaByUtilization());
-
-				var diameter = ucReportingLevel.sumOf(projectedSp0.getQuadraticMeanDiameterByUtilization());
-				var reportedStandPercent = projectedSp0.getPercentGenus();
-
-				double loreyHeight = projectedSp0.getLoreyHeightByUtilization().get(UtilizationClass.ALL);
-				if (ucReportingLevel == UtilizationClassSet._4_0 /* i.e., "ALL" + "SMALL" */) {
-					loreyHeight += projectedSp0.getLoreyHeightByUtilization().get(UtilizationClass.SMALL);
-				}
-
-				layerYields = new LayerYields(
-						true, isDominantSpecies, sp0.getSpeciesCode(), calendarYear, totalAge, dominantHeight,
-						loreyHeight, siteIndex, diameter, treePerHectare, wholeStemVolume, closeUtilizationVolume,
-						cuVolumeLessDecay, cuVolumeLessDecayWastage, cuVolumeLessDecayWastageBreakage,
-						basalArea75cmPlus, basalArea125cmPlus, reportedStandPercent, siteCurve
+				layerYields = getYields(
+						calendarYear, ucReportingLevel, projectedSp0, stand == null ? projectedLayer : projectedSp0
 				);
 			} else {
 				layerYields = new LayerYields(
@@ -1519,14 +1481,70 @@ public class YieldTable implements Closeable {
 			);
 
 			layerYields = new LayerYields(
-					false, false, null, calendarYear, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-					0.0, 0
+					false, false /* not dominant */, null, calendarYear, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+					0.0, 0.0, 0.0, 0.0, 0.0, 0
 			);
 		}
 
 		// TODO: handle "doReprojectHeight".
 
 		return layerYields;
+	}
+
+	private LayerYields getYields(
+			int calendarYear, UtilizationClassSet ucReportingLevel, VdypSpecies projectedSp0,
+			VdypUtilizationHolder entity
+	) {
+
+		double totalAge = Vdyp7Constants.EMPTY_DECIMAL;
+		double dominantHeight = Vdyp7Constants.EMPTY_DECIMAL;
+		double siteIndex = Vdyp7Constants.EMPTY_DECIMAL;
+		int siteCurve = Vdyp7Constants.EMPTY_INT;
+		boolean isDominantSpecies = projectedSp0.getSite().isPresent();
+
+		if (isDominantSpecies) {
+			var site = projectedSp0.getSite().get();
+
+			totalAge = site.getAgeTotal().map(v -> v.doubleValue()).orElse(null);
+			dominantHeight = site.getHeight().map(v -> v.doubleValue()).orElse(null);
+			siteIndex = site.getSiteIndex().map(v -> v.doubleValue()).orElse(null);
+			siteCurve = site.getSiteCurveNumber().orElse(null);
+		}
+
+		var treesPerHectare = ucReportingLevel.sumOf(entity.getTreesPerHectareByUtilization());
+		var wholeStemVolume = ucReportingLevel.sumOf(entity.getWholeStemVolumeByUtilization());
+		var closeUtilizationVolume = ucReportingLevel.sumOf(entity.getCloseUtilizationVolumeByUtilization());
+		var cuVolumeLessDecay = ucReportingLevel.sumOf(entity.getCloseUtilizationVolumeNetOfDecayByUtilization());
+		var cuVolumeLessDecayWastage = ucReportingLevel
+				.sumOf(entity.getCloseUtilizationVolumeNetOfDecayAndWasteByUtilization());
+		var cuVolumeLessDecayWastageBreakage = ucReportingLevel
+				.sumOf(entity.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization());
+
+		var basalArea75cmPlus = UtilizationClassSet._7_5.sumOf(entity.getBaseAreaByUtilization());
+		var basalArea125cmPlus = UtilizationClassSet._12_5.sumOf(entity.getBaseAreaByUtilization());
+
+		double diameter;
+		if (basalArea75cmPlus > 0 && treesPerHectare > 0) {
+			diameter = BaseAreaTreeDensityDiameter.quadMeanDiameter(
+					Double.valueOf(basalArea75cmPlus).floatValue(), Double.valueOf(treesPerHectare).floatValue()
+			);
+		} else {
+			diameter = Vdyp7Constants.EMPTY_DECIMAL;
+		}
+
+		var reportedStandPercent = projectedSp0.getPercentGenus();
+
+		double loreyHeight = projectedSp0.getLoreyHeightByUtilization().get(UtilizationClass.ALL);
+		if (ucReportingLevel == UtilizationClassSet._4_0 /* i.e., "ALL" + "SMALL" */) {
+			loreyHeight += projectedSp0.getLoreyHeightByUtilization().get(UtilizationClass.SMALL);
+		}
+
+		return new LayerYields(
+				true, isDominantSpecies, projectedSp0.getGenus(), calendarYear, totalAge, dominantHeight, loreyHeight,
+				siteIndex, diameter, treesPerHectare, wholeStemVolume, closeUtilizationVolume, cuVolumeLessDecay,
+				cuVolumeLessDecayWastage, cuVolumeLessDecayWastageBreakage, basalArea75cmPlus, basalArea125cmPlus,
+				reportedStandPercent, siteCurve
+		);
 	}
 
 	private LayerType getLayerType(ProjectionTypeCode projectionType) {
@@ -1562,9 +1580,7 @@ public class YieldTable implements Closeable {
 		// Dead Layers:
 		// If we happen to be requesting information for the dead layer,
 		// clamp the age of the request so that it does not exceed the
-		// age at death. The projection ended at the year of death so
-		// the maximum age to request information out of VDYP7CORE is that
-		// year.
+		// age at death since the projection ended at the year of death.
 		//
 		// This implies that all yield curves flatten at year of death.
 		//
