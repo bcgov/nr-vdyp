@@ -15,7 +15,7 @@ import type { SpeciesGroup } from '@/interfaces/interfaces'
  * Generates a unique 9-digit or 10-digit feature ID using the current timestamp and random values.
  * @returns {number} A unique feature ID.
  */
-const generateFeatureId = (): number => {
+export const generateFeatureId = (): number => {
   const timestamp = Date.now()
   const timestampPart = timestamp % 100000000
   const randomPart = Math.floor(Math.random() * 99) + 1 // 1 to 99
@@ -41,7 +41,7 @@ const generateRandomNumber = (minDigits: number, maxDigits: number): string => {
  * Generates a fixed 8-digit random polygon number.
  * @returns An 8-digit random polygon number as a string.
  */
-const generatePolygonNumber = (): string => {
+export const generatePolygonNumber = (): string => {
   const randomPart = generateRandomNumber(8, 8)
   return `${randomPart}`
 }
@@ -50,7 +50,7 @@ const generatePolygonNumber = (): string => {
  * Generates a random TREE_COVER_LAYER_ESTIMATED_ID with 4 to 10 digits.
  * @returns A random TREE_COVER_LAYER_ESTIMATED_ID.
  */
-const generateTreeCoverLayerEstimatedId = (): string => {
+export const generateTreeCoverLayerEstimatedId = (): string => {
   return generateRandomNumber(4, 10)
 }
 
@@ -76,7 +76,7 @@ const convertToCSV = (data: CSVRowType): string => {
  * @param percentStockableArea The percent stockable area.
  * @returns The corresponding BCLCS Level 1 code.
  */
-const computeBclcsLevel1 = (
+export const computeBclcsLevel1 = (
   percentStockableArea: number | undefined,
 ): string => {
   const threshold = BIZCONSTANTS.BCLCS_LEVEL1_THRESHOLD
@@ -90,7 +90,7 @@ const computeBclcsLevel1 = (
  * @param percentStockableArea The percent stockable area.
  * @returns The corresponding BCLCS Level 2 code.
  */
-const computeBclcsLevel2 = (
+export const computeBclcsLevel2 = (
   percentStockableArea: number | undefined,
 ): string => {
   const threshold = BIZCONSTANTS.BCLCS_LEVEL2_THRESHOLD
@@ -104,7 +104,7 @@ const computeBclcsLevel2 = (
  * @param becZone The BEC zone.
  * @returns The corresponding BCLCS Level 3 code.
  */
-const computeBclcsLevel3 = (becZone: string | undefined): string => {
+export const computeBclcsLevel3 = (becZone: string | undefined): string => {
   return (becZone ?? BIZCONSTANTS.BCLCS_LEVEL3_DEFAULT) ===
     BIZCONSTANTS.BCLCS_LEVEL3_BECZONE_AT
     ? BIZCONSTANTS.BCLCS_LEVEL3_ALPINE
@@ -116,7 +116,7 @@ const computeBclcsLevel3 = (becZone: string | undefined): string => {
  * @param speciesGroups Array of species groups.
  * @returns The corresponding BCLCS Level 4 code.
  */
-const determineBclcsLevel4 = (speciesGroups: SpeciesGroup[]): string => {
+export const determineBclcsLevel4 = (speciesGroups: SpeciesGroup[]): string => {
   let coniferousTotal = 0
   let broadleafTotal = 0
 
@@ -145,7 +145,7 @@ const determineBclcsLevel4 = (speciesGroups: SpeciesGroup[]): string => {
  * @param percentStockableArea The percent stockable area.
  * @returns The corresponding BCLCS Level 5 code.
  */
-const determineBclcsLevel5 = (percentStockableArea: number): string => {
+export const determineBclcsLevel5 = (percentStockableArea: number): string => {
   if (percentStockableArea >= 61) return BIZCONSTANTS.BCLCS_LEVEL5_DE
   if (percentStockableArea >= 26) return BIZCONSTANTS.BCLCS_LEVEL5_OP
   return BIZCONSTANTS.BCLCS_LEVEL5_SP
@@ -156,7 +156,7 @@ const determineBclcsLevel5 = (percentStockableArea: number): string => {
  * @param speciesList The list of species objects.
  * @returns An array of objects with species code and percentage.
  */
-const getSpeciesData = (
+export const getSpeciesData = (
   speciesList: any[],
 ): { species: string; percent: string }[] => {
   return speciesList.map((item) => ({
@@ -174,7 +174,7 @@ const getSpeciesData = (
  * @param count The number of species to include.
  * @returns A flattened array of species codes and percentages.
  */
-const flattenSpeciesData = (
+export const flattenSpeciesData = (
   speciesData: { species: string; percent: string }[],
   count: number,
 ): any[] => {
@@ -216,7 +216,7 @@ const createPolygonData = (
   const bclcsLevel5 = determineBclcsLevel5(
     modelParameterStore.percentStockableArea,
   )
-  const referenceYear = '2024'
+  const referenceYear = modelParameterStore.referenceYear
 
   const row = [
     featureId, // FEATURE_ID
@@ -235,8 +235,8 @@ const createPolygonData = (
     '', // HERB_COVER_PATTERN_CODE
     '', // BRYOID_COVER_PCT
     modelParameterStore.becZone, // BEC_ZONE_CODE
-    modelParameterStore.ecoZone || '', // CFS_ECOZONE
-    modelParameterStore.percentStockableArea || '', // PRE_DISTURBANCE_STOCKABILITY
+    modelParameterStore.ecoZone ?? '', // CFS_ECOZONE
+    modelParameterStore.percentStockableArea ?? '', // PRE_DISTURBANCE_STOCKABILITY
     BIZCONSTANTS.YIELD_FACTOR_CD, // YIELD_FACTOR
     '', // NON_PRODUCTIVE_DESCRIPTOR_CD
     bclcsLevel1 || '', // BCLCS_LEVEL1_CODE
@@ -295,7 +295,7 @@ const createLayerData = (
     BIZCONSTANTS.FOREST_COVER_RANK_CD, // FOREST_COVER_RANK_CODE
     '', // NON_FOREST_DESCRIPTOR_CODE
     modelParameterStore.highestPercentSpecies, // EST_SITE_INDEX_SPECIES_CD
-    modelParameterStore.bha50SiteIndex || '', // ESTIMATED_SITE_INDEX
+    modelParameterStore.bha50SiteIndex ?? '', // ESTIMATED_SITE_INDEX
     '', // CROWN_CLOSURE
     '', // BASAL_AREA_75
     '', // STEMS_PER_HA_75
@@ -418,9 +418,26 @@ export const runModel = async (modelParameterStore: any) => {
   const selectedDebugOptions = buildSelectedDebugOptions()
 
   const projectionParameters: Parameters = {
-    ageStart: modelParameterStore.startingAge,
-    ageEnd: modelParameterStore.finishingAge,
-    ageIncrement: modelParameterStore.ageIncrement,
+    ageStart:
+      modelParameterStore.selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.AGE
+        ? modelParameterStore.startingAge
+        : null,
+    ageEnd:
+      modelParameterStore.selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.AGE
+        ? modelParameterStore.finishingAge
+        : null,
+    ageIncrement:
+      modelParameterStore.selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.YEAR
+        ? modelParameterStore.yearIncrement
+        : modelParameterStore.ageIncrement,
+    yearStart:
+      modelParameterStore.selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.YEAR
+        ? modelParameterStore.startYear
+        : null,
+    yearEnd:
+      modelParameterStore.selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.YEAR
+        ? modelParameterStore.endYear
+        : null,
     outputFormat: OutputFormatEnum.CSVYieldTable,
     selectedExecutionOptions: selectedExecutionOptions,
     selectedDebugOptions: selectedDebugOptions,
