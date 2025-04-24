@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.api.helpers.TestHelper;
+import ca.bc.gov.nrs.api.helpers.ResultYieldTable;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.backend.utils.FileHelper;
 import io.quarkus.test.junit.QuarkusTest;
@@ -26,14 +27,14 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.core.MediaType;
 
 @QuarkusTest
-class HcsvProjectionEndpoint_MissingTotalAgeTest {
+class Hcsv_VRIPerLayer_Test {
 
-	private static final Logger logger = LoggerFactory.getLogger(HcsvProjectionEndpoint_MissingTotalAgeTest.class);
+	private static final Logger logger = LoggerFactory.getLogger(Hcsv_VRIPerLayer_Test.class);
 
 	private final TestHelper testHelper;
 
 	@Inject
-	HcsvProjectionEndpoint_MissingTotalAgeTest(TestHelper testHelper) {
+	Hcsv_VRIPerLayer_Test(TestHelper testHelper) {
 		this.testHelper = testHelper;
 	}
 
@@ -42,12 +43,11 @@ class HcsvProjectionEndpoint_MissingTotalAgeTest {
 	}
 
 	@Test
-	void testMissingTotalAge() throws IOException {
+	void testVRIPerLayerYieldTable() throws IOException {
 
-		logger.info("Starting testMissingTotalAge");
+		logger.info("Starting testVRIPerLayerYieldTable");
 
-		Path resourceFolderPath = Path
-				.of(FileHelper.TEST_DATA_FILES, FileHelper.HCSV, "single-polygon-missing-total-age");
+		Path resourceFolderPath = Path.of(FileHelper.TEST_DATA_FILES, FileHelper.HCSV, "VRI-PerPolygon");
 
 		Parameters parameters = testHelper.addSelectedOptions(
 				new Parameters(), //
@@ -56,7 +56,8 @@ class HcsvProjectionEndpoint_MissingTotalAgeTest {
 				Parameters.ExecutionOption.DO_ENABLE_ERROR_LOGGING, //
 				Parameters.ExecutionOption.DO_INCLUDE_PROJECTION_FILES, //
 				Parameters.ExecutionOption.FORWARD_GROW_ENABLED, //
-				Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES
+				Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES, //
+				Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER
 		);
 		parameters.yearStart(2000).yearEnd(2050);
 
@@ -68,11 +69,11 @@ class HcsvProjectionEndpoint_MissingTotalAgeTest {
 				.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
 				.multiPart(
 						ParameterNames.HCSV_POLYGON_INPUT_DATA,
-						testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_POLY.csv").toFile()
+						testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_POLY_VRI.csv").toFile()
 				) //
 				.multiPart(
 						ParameterNames.HCSV_LAYERS_INPUT_DATA,
-						testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_LAYER.csv").toFile()
+						testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_LAYER_VRI.csv").toFile()
 				) //
 				.post("/projection/hcsv?trialRun=false") //
 				.then().statusCode(201) //
@@ -84,7 +85,11 @@ class HcsvProjectionEndpoint_MissingTotalAgeTest {
 		ZipEntry entry1 = zipFile.getNextEntry();
 		assertEquals("YieldTable.csv", entry1.getName());
 		String entry1Content = new String(testHelper.readZipEntry(zipFile, entry1));
-		assertTrue(entry1Content.length() == 0);
+		assertTrue(entry1Content.length() > 0);
+
+		var yieldTable = new ResultYieldTable(entry1Content);
+
+		Assert.assertTrue(yieldTable.containsKey("13919428"));
 
 		ZipEntry entry2 = zipFile.getNextEntry();
 		assertEquals("ProgressLog.txt", entry2.getName());
@@ -93,16 +98,10 @@ class HcsvProjectionEndpoint_MissingTotalAgeTest {
 
 		ZipEntry entry3 = zipFile.getNextEntry();
 		assertEquals("ErrorLog.txt", entry3.getName());
-		String entry3Content = new String(testHelper.readZipEntry(zipFile, entry3));
-		assertTrue(
-				entry3Content.contains(
-						"Species entry references layer of type \"PRIMARY\" of polygon 000A000  88584471    2024 but it is not present"
-				)
-		);
 
 		ZipEntry entry4 = zipFile.getNextEntry();
 		assertEquals("DebugLog.txt", entry4.getName());
-		String entry4Content = new String(testHelper.readZipEntry(zipFile, entry4));
+		String entry4Content = new String(testHelper.readZipEntry(zipFile, entry2));
 		assertTrue(entry4Content.startsWith(LocalDate.now().format(DateTimeFormatter.ISO_DATE)));
 
 		ZipEntry projectionResultsEntry;
@@ -118,6 +117,6 @@ class HcsvProjectionEndpoint_MissingTotalAgeTest {
 
 			outputSeen = true;
 		}
-		Assert.assertFalse(outputSeen);
+		Assert.assertTrue(outputSeen);
 	}
 }

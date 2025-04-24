@@ -1,34 +1,11 @@
 package ca.bc.gov.nrs.vdyp.vri;
 
-import static ca.bc.gov.nrs.vdyp.test.TestUtils.assertHasPrimaryLayer;
-import static ca.bc.gov.nrs.vdyp.test.TestUtils.assertHasVeteranLayer;
-import static ca.bc.gov.nrs.vdyp.test.TestUtils.assertOnlyPrimaryLayer;
+import static ca.bc.gov.nrs.vdyp.test.TestUtils.*;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.*;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.coe;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.isBec;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.isPolyId;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.utilization;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.utilizationAllAndBiggest;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.utilizationHeight;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.aMapWithSize;
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.anything;
-import static org.hamcrest.Matchers.blankString;
-import static org.hamcrest.Matchers.both;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.endsWith;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasEntry;
-import static org.hamcrest.Matchers.hasKey;
-import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -173,7 +150,7 @@ class VriStartTest {
 		}
 
 		@Test
-		void testGetCoefficients() throws StandProcessingException {
+		void testGetCoefficients() {
 			Map<String, Object> controlMap = VriTestUtils.loadControlMap();
 			VriStart app = new VriStart();
 			ApplicationTestUtils.setControlMap(app, controlMap);
@@ -551,7 +528,7 @@ class VriStartTest {
 		@Nested
 		class ErrorFunction {
 			@Test
-			void testCompute() throws StandProcessingException {
+			void testCompute() {
 
 				controlMap = VriTestUtils.loadControlMap();
 				VriStart app = new VriStart();
@@ -608,7 +585,7 @@ class VriStartTest {
 			}
 
 			@Test
-			void testComputeGraph() throws StandProcessingException {
+			void testComputeGraph() {
 
 				controlMap = VriTestUtils.loadControlMap();
 				VriStart app = new VriStart();
@@ -660,7 +637,7 @@ class VriStartTest {
 			}
 
 			@Test
-			void testComputeXClamppedHigh() throws StandProcessingException {
+			void testComputeXClamppedHigh() {
 
 				controlMap = VriTestUtils.loadControlMap();
 				VriStart app = new VriStart();
@@ -717,7 +694,7 @@ class VriStartTest {
 			}
 
 			@Test
-			void testComputeXClamppedLow() throws StandProcessingException {
+			void testComputeXClamppedLow() {
 
 				controlMap = VriTestUtils.loadControlMap();
 				VriStart app = new VriStart();
@@ -774,7 +751,7 @@ class VriStartTest {
 			}
 
 			@Test
-			void testComputeInitial() throws StandProcessingException {
+			void testComputeInitial() {
 
 				controlMap = VriTestUtils.loadControlMap();
 				VriStart app = new VriStart();
@@ -835,7 +812,7 @@ class VriStartTest {
 		@Nested
 		class ExpandIntervalOfRootFinder {
 			@Test
-			void testNoChange() throws StandProcessingException, IOException {
+			void testNoChange() {
 
 				UnivariateFunction errorFunc = x -> x;
 
@@ -852,7 +829,7 @@ class VriStartTest {
 			}
 
 			@Test
-			void testSimpleChange() throws StandProcessingException, IOException {
+			void testSimpleChange() {
 
 				UnivariateFunction errorFunc = x -> x;
 
@@ -874,7 +851,7 @@ class VriStartTest {
 
 			@ParameterizedTest
 			@CsvSource({ "1, 1", "-1, 1", "1, -1", "-1, -1" })
-			void testDifficultChange(float a, float b) throws StandProcessingException, IOException {
+			void testDifficultChange(float a, float b) {
 
 				UnivariateFunction errorFunc = x -> a * (Math.exp(b * x) - 0.000001);
 
@@ -896,7 +873,7 @@ class VriStartTest {
 
 			@ParameterizedTest
 			@ValueSource(floats = { 1, -1, 20, -20 })
-			void testTwoRoots(float a) throws StandProcessingException, IOException {
+			void testTwoRoots(float a) {
 
 				UnivariateFunction errorFunc = x -> a * (x * x - 0.5);
 
@@ -918,7 +895,7 @@ class VriStartTest {
 
 			@ParameterizedTest
 			@CsvSource({ "1, 1", "-1, 1", "1, -1", "-1, -1" })
-			void testImpossible(float a, float b) throws StandProcessingException, IOException {
+			void testImpossible(float a, float b) {
 
 				UnivariateFunction errorFunc = x -> a * (Math.exp(b * x) + 1);
 
@@ -1538,7 +1515,7 @@ class VriStartTest {
 		@Nested
 		class ApplyResults {
 			@Test
-			void testApply() throws ProcessingException {
+			void testApply() {
 
 				controlMap = VriTestUtils.loadControlMap();
 				VriStart app = new VriStart();
@@ -4270,7 +4247,7 @@ class VriStartTest {
 
 		@ParameterizedTest
 		@ValueSource(floats = { 0f, -1f, -Float.MIN_VALUE, -Float.MAX_VALUE, Float.NEGATIVE_INFINITY })
-		void testBreastHeightAgeLow(float breastHeightAge) throws FatalProcessingException {
+		void testBreastHeightAgeLow(float breastHeightAge) {
 			controlMap = VriTestUtils.loadControlMap();
 			VriStart app = new VriStart();
 			ApplicationTestUtils.setControlMap(app, controlMap);

@@ -22,7 +22,7 @@ import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
 class VdypLayerTest {
 
 	@Test
-	void build() throws Exception {
+	void build() {
 		var result = VdypLayer.build(builder -> {
 			builder.polygonIdentifier("Test", 2024);
 			builder.layerType(LayerType.PRIMARY);
@@ -53,14 +53,14 @@ class VdypLayerTest {
 	}
 
 	@Test
-	void buildNoProperties() throws Exception {
+	void buildNoProperties() {
 		var ex = assertThrows(IllegalStateException.class, () -> VdypLayer.build(builder -> {
 		}));
 		assertThat(ex, hasProperty("message", allOf(containsString("polygonIdentifier"), containsString("layer"))));
 	}
 
 	@Test
-	void buildForPolygon() throws Exception {
+	void buildForPolygon() {
 
 		Map<String, Object> controlMap = new HashMap<>();
 		TestUtils.populateControlMapBecReal(controlMap);
@@ -104,7 +104,7 @@ class VdypLayerTest {
 	}
 
 	@Test
-	void buildAddSpecies() throws Exception {
+	void buildAddSpecies() {
 		VdypSpecies mock = EasyMock.mock(VdypSpecies.class);
 		EasyMock.expect(mock.getLayerType()).andStubReturn(LayerType.PRIMARY);
 		EasyMock.expect(mock.getGenus()).andStubReturn("B");
@@ -225,7 +225,7 @@ class VdypLayerTest {
 	}
 
 	@Test
-	void buildCopySpecies() throws Exception {
+	void buildCopySpecies() {
 
 		var toCopy = VdypLayer.build(builder -> {
 			builder.polygonIdentifier("Test", 2024);

@@ -19,7 +19,7 @@ import ca.bc.gov.nrs.vdyp.test.TestUtils;
 class BasalAreaGrowthEmpiricalParserTest {
 
 	@Test
-	void testParseSimple() throws Exception {
+	void testParseSimple() {
 
 		var parser = new BasalAreaGrowthEmpiricalParser();
 

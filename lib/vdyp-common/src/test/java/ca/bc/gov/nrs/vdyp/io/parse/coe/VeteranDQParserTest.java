@@ -53,7 +53,7 @@ class VeteranDQParserTest {
 	}
 
 	@Test
-	void testParseBadSpecies() throws Exception {
+	void testParseBadSpecies() {
 
 		var parser = new VeteranDQParser();
 
@@ -69,7 +69,7 @@ class VeteranDQParserTest {
 	}
 
 	@Test
-	void testParseMissingCoefficient() throws Exception {
+	void testParseMissingCoefficient() {
 
 		var parser = new VeteranDQParser();
 

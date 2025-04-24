@@ -3,7 +3,6 @@ package ca.bc.gov.nrs.vdyp.backend.projection.model;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
@@ -26,7 +25,7 @@ public class PolygonLayerMergeTest {
 	private AbstractPolygonStream polygonStream;
 
 	@BeforeEach
-	void beforeEach() throws IOException, PolygonValidationException, AbstractProjectionRequestException {
+	void beforeEach() throws PolygonValidationException, AbstractProjectionRequestException {
 		var parameters = new Parameters().ageStart(10).ageEnd(20);
 
 		{

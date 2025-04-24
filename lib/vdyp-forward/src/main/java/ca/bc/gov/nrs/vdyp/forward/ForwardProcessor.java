@@ -191,11 +191,7 @@ public class ForwardProcessor {
 			}
 
 			outputWriter.ifPresent(ow -> {
-				try {
-					ow.close();
-				} catch (IOException e) {
-					throw new RuntimeException(e);
-				}
+				ow.close();
 			});
 		}
 	}

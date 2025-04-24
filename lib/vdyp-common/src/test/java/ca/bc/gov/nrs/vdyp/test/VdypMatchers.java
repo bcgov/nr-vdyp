@@ -4,7 +4,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -22,7 +21,6 @@ import org.hamcrest.TypeSafeDiagnosingMatcher;
 
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.ValueOrMarker;
-import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParser;
@@ -472,7 +470,7 @@ public class VdypMatchers {
 		};
 	}
 
-	public static <T> T assertNext(StreamingParser<T> stream) throws IOException, ResourceParseException {
+	public static <T> T assertNext(StreamingParser<T> stream) {
 		var hasNext = assertDoesNotThrow(() -> stream.hasNext());
 		assertThat(hasNext, is(true));
 		var next = assertDoesNotThrow(() -> stream.next());
@@ -480,7 +478,7 @@ public class VdypMatchers {
 		return next;
 	}
 
-	public static <T> void assertEmpty(StreamingParser<T> stream) throws IOException, ResourceParseException {
+	public static <T> void assertEmpty(StreamingParser<T> stream) {
 		var hasNext = assertDoesNotThrow(() -> stream.hasNext());
 		assertThat(hasNext, is(false));
 		assertThrows(NoSuchElementException.class, () -> stream.next());

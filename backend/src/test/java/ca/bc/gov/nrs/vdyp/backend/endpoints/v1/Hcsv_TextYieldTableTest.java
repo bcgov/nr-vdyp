@@ -19,21 +19,21 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.api.helpers.TestHelper;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.OutputFormat;
 import ca.bc.gov.nrs.vdyp.backend.utils.FileHelper;
 import io.quarkus.test.junit.QuarkusTest;
-import io.smallrye.common.constraint.Assert;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.MediaType;
 
 @QuarkusTest
-class HcsvProjectionEndpoint_2MapsheetsTest {
+class Hcsv_TextYieldTableTest {
 
-	private static final Logger logger = LoggerFactory.getLogger(HcsvProjectionEndpoint_2MapsheetsTest.class);
+	private static final Logger logger = LoggerFactory.getLogger(Hcsv_TextYieldTableTest.class);
 
 	private final TestHelper testHelper;
 
 	@Inject
-	HcsvProjectionEndpoint_2MapsheetsTest(TestHelper testHelper) {
+	Hcsv_TextYieldTableTest(TestHelper testHelper) {
 		this.testHelper = testHelper;
 	}
 
@@ -42,22 +42,24 @@ class HcsvProjectionEndpoint_2MapsheetsTest {
 	}
 
 	@Test
-	void run2MapsheetTest() throws IOException {
+	void testProjectionHscvVri_TextYieldTable() throws IOException {
 
-		logger.info("Starting run2MapsheetTest");
+		logger.info("Starting testProjectionHscvVri_TextYieldTable");
 
-		Path resourceFolderPath = Path.of(FileHelper.TEST_DATA_FILES, FileHelper.HCSV, "2-mapsheets-test");
+		Path resourceFolderPath = Path.of(FileHelper.TEST_DATA_FILES, FileHelper.HCSV, "VRI-PerPolygon");
 
 		Parameters parameters = testHelper.addSelectedOptions(
 				new Parameters(), //
 				Parameters.ExecutionOption.DO_ENABLE_DEBUG_LOGGING, //
 				Parameters.ExecutionOption.DO_ENABLE_PROGRESS_LOGGING, //
 				Parameters.ExecutionOption.DO_ENABLE_ERROR_LOGGING, //
-				Parameters.ExecutionOption.DO_INCLUDE_PROJECTION_FILES, //
 				Parameters.ExecutionOption.FORWARD_GROW_ENABLED, //
-				Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES
-		);
-		parameters.yearStart(2000).yearEnd(2050);
+				Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES, //
+				Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER, //
+				Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_POLYGON
+		).outputFormat(OutputFormat.YIELD_TABLE) //
+				.yearStart(2000) //
+				.yearEnd(2050);
 
 		// Included to generate JSON text of parameters as needed
 //		ObjectMapper mapper = new ObjectMapper();
@@ -67,11 +69,11 @@ class HcsvProjectionEndpoint_2MapsheetsTest {
 				.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
 				.multiPart(
 						ParameterNames.HCSV_POLYGON_INPUT_DATA,
-						testHelper.getResourceFile(resourceFolderPath, "2_Mapsheets_VDYP7_INPUT_POLY.csv").toFile()
+						testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_POLY_VRI.csv").toFile()
 				) //
 				.multiPart(
 						ParameterNames.HCSV_LAYERS_INPUT_DATA,
-						testHelper.getResourceFile(resourceFolderPath, "2_Mapsheets_VDYP7_INPUT_LAYER.csv").toFile()
+						testHelper.getResourceFile(resourceFolderPath, "VDYP7_INPUT_LAYER_VRI.csv").toFile()
 				) //
 				.post("/projection/hcsv?trialRun=false") //
 				.then().statusCode(201) //
@@ -81,7 +83,7 @@ class HcsvProjectionEndpoint_2MapsheetsTest {
 
 		ZipInputStream zipFile = new ZipInputStream(zipInputStream);
 		ZipEntry entry1 = zipFile.getNextEntry();
-		assertEquals("YieldTable.csv", entry1.getName());
+		assertEquals("YieldTable.txt", entry1.getName());
 		String entry1Content = new String(testHelper.readZipEntry(zipFile, entry1));
 		assertTrue(entry1Content.length() > 0);
 
@@ -92,27 +94,18 @@ class HcsvProjectionEndpoint_2MapsheetsTest {
 
 		ZipEntry entry3 = zipFile.getNextEntry();
 		assertEquals("ErrorLog.txt", entry3.getName());
-		String entry3Content = new String(testHelper.readZipEntry(zipFile, entry3));
-		assertTrue(entry3Content.contains("no primary layer found for any projection type"));
 
 		ZipEntry entry4 = zipFile.getNextEntry();
 		assertEquals("DebugLog.txt", entry4.getName());
-		String entry4Content = new String(testHelper.readZipEntry(zipFile, entry4));
+		String entry4Content = new String(testHelper.readZipEntry(zipFile, entry2));
 		assertTrue(entry4Content.startsWith(LocalDate.now().format(DateTimeFormatter.ISO_DATE)));
 
-		ZipEntry projectionResultsEntry;
-		var outputSeen = false;
-		while ( (projectionResultsEntry = zipFile.getNextEntry()) != null) {
-			logger.info("Name: {}", projectionResultsEntry.getName());
-			String entryContent = new String(testHelper.readZipEntry(zipFile, projectionResultsEntry));
-			if (entryContent.length() > 0) {
-				logger.info("Content: {}", entryContent.substring(0, Math.min(entryContent.length(), 60)));
-			} else {
-				logger.info("Content: <empty>");
-			}
+		ZipEntry entry = zipFile.getNextEntry();
+		while (entry != null) {
+			var contents = testHelper.readZipEntry(zipFile, entry);
+			logger.info("Saw projection file " + entry + " containing " + contents.length + " bytes");
 
-			outputSeen = true;
+			entry = zipFile.getNextEntry();
 		}
-		Assert.assertTrue(outputSeen);
 	}
 }

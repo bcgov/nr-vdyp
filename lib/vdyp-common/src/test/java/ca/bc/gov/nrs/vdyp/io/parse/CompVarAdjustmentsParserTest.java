@@ -26,7 +26,7 @@ import ca.bc.gov.nrs.vdyp.test.TestUtils;
 public class CompVarAdjustmentsParserTest {
 
 	@Test
-	void testParseSimple() throws Exception {
+	void testParseSimple() {
 
 		var parser = new CompVarAdjustmentsParser();
 
@@ -134,7 +134,7 @@ public class CompVarAdjustmentsParserTest {
 	}
 
 	@Test
-	void testParseBadIndex() throws Exception {
+	void testParseBadIndex() {
 
 		var parser = new CompVarAdjustmentsParser();
 

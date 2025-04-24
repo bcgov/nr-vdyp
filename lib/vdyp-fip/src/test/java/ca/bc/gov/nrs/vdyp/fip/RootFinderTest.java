@@ -3,7 +3,6 @@ package ca.bc.gov.nrs.vdyp.fip;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
 
@@ -30,7 +29,7 @@ class RootFinderTest {
 	private final double epsilon = 0.00001;
 
 	@Test
-	void testRootFunction() throws IOException {
+	void testRootFunction() {
 		var control = FipTestUtils.loadControlMap();
 		try (var app = new FipStart()) {
 			ApplicationTestUtils.setControlMap(app, control);
@@ -54,7 +53,7 @@ class RootFinderTest {
 	}
 
 	@Test
-	void testRootFunctionJacobian() throws IOException {
+	void testRootFunctionJacobian() {
 		var control = FipTestUtils.loadControlMap();
 		try (var app = new FipStart()) {
 			ApplicationTestUtils.setControlMap(app, control);
@@ -85,7 +84,7 @@ class RootFinderTest {
 	}
 
 	@Test
-	void testRootFunctionSolve() throws IOException {
+	void testRootFunctionSolve() {
 		var control = FipTestUtils.loadControlMap();
 		try (var app = new FipStart()) {
 			ApplicationTestUtils.setControlMap(app, control);

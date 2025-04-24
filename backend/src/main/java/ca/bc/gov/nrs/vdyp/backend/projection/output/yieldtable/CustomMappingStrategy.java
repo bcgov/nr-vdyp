@@ -8,7 +8,6 @@ import com.opencsv.bean.CsvBindByName;
 import com.opencsv.bean.CsvBindByPosition;
 import com.opencsv.bean.CsvCustomBindByName;
 import com.opencsv.bean.HeaderColumnNameMappingStrategy;
-import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 
 public class CustomMappingStrategy<T> extends HeaderColumnNameMappingStrategy<T> {
 
@@ -26,7 +25,7 @@ public class CustomMappingStrategy<T> extends HeaderColumnNameMappingStrategy<T>
 	}
 
 	@Override
-	public String[] generateHeader(T bean) throws CsvRequiredFieldEmptyException {
+	public String[] generateHeader(T bean) {
 		String[] header = new String[fields.length];
 		int position = 0;
 		for (Field f : fields) {

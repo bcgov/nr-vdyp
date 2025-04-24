@@ -1,7 +1,6 @@
 package ca.bc.gov.nrs.vdyp.backend.projection.model;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 
@@ -24,7 +23,7 @@ public class PolygonObjectTest {
 	private Polygon polygon2;
 
 	@BeforeEach
-	void beforeEach() throws IOException, PolygonValidationException, AbstractProjectionRequestException {
+	void beforeEach() throws PolygonValidationException, AbstractProjectionRequestException {
 		var parameters = new Parameters().ageStart(10).ageEnd(20);
 
 		{

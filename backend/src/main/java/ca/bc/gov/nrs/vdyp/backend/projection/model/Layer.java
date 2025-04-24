@@ -10,11 +10,10 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.event.Level;
 
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.StandYieldCalculationException;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.MessageSeverityCode;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.PolygonMessageKind;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessageKind;
 import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionContext;
@@ -510,14 +509,12 @@ public class Layer implements Comparable<Layer> {
 
 					sp64.setSiteIndex(sp64.determineSiteIndexFromDominantHeightAndAge());
 
-					polygon.addDefinitionMessage(
-							new PolygonMessage.Builder().returnCode(ReturnCode.SUCCESS).stand(speciesGroup)
-									.severity(MessageSeverityCode.WARNING)
-									.message(
-											new ValidationMessage(
-													ValidationMessageKind.ESTIMATED_SI_UNAVAILABLE,
-													sp64.getSpeciesCode(), sp64.getTotalAge()
-											)
+					polygon.addMessage(
+							new PolygonMessage.Builder().stand(speciesGroup)
+									.details(
+											ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
+											PolygonMessageKind.ESTIMATED_SI_UNAVAILABLE, sp64.getSpeciesCode(),
+											sp64.getTotalAge()
 									).build()
 					);
 
@@ -531,16 +528,12 @@ public class Layer implements Comparable<Layer> {
 
 				if (doRecomputeInputHeight) {
 
-					polygon.addDefinitionMessage(
+					polygon.addMessage(
 							new PolygonMessage.Builder() //
-									.returnCode(ReturnCode.SUCCESS) //
-									.stand(speciesGroup) //
-									.severity(MessageSeverityCode.INFORMATION) //
-									.message(
-											new ValidationMessage(
-													ValidationMessageKind.REASSIGNED_HEIGHT, this, sp64,
-													sp64.getSiteIndex(), sp64.getTotalAge(), sp64.getDominantHeight()
-											)
+									.stand(speciesGroup).details(
+											ReturnCode.SUCCESS, MessageSeverityCode.INFORMATION, //
+											PolygonMessageKind.REASSIGNED_HEIGHT, sp64.getSiteIndex(),
+											sp64.getTotalAge(), sp64.getDominantHeight()
 									).build()
 					);
 
@@ -730,16 +723,13 @@ public class Layer implements Comparable<Layer> {
 						s.setSiteIndex(estimatedSiteIndex);
 						s.setYearsToBreastHeight(null);
 
-						polygon.addDefinitionMessage(
+						polygon.addMessage(
 								new PolygonMessage.Builder() //
-										.returnCode(ReturnCode.SUCCESS) //
 										.stand(s.getStand()) //
-										.severity(MessageSeverityCode.INFORMATION) //
-										.message(
-												new ValidationMessage(
-														ValidationMessageKind.ASSIGNING_ESTIMATED_SITE_INDEX,
-														estimatedSiteIndex, s.getSpeciesCode()
-												)
+										.details(
+												ReturnCode.SUCCESS, MessageSeverityCode.INFORMATION, //
+												PolygonMessageKind.ASSIGNING_ESTIMATED_SITE_INDEX, estimatedSiteIndex,
+												s.getSpeciesCode()
 										).build()
 						);
 
@@ -751,16 +741,13 @@ public class Layer implements Comparable<Layer> {
 						s.setSiteIndex(targetSiteIndex);
 						s.setYearsToBreastHeight(null);
 
-						polygon.addDefinitionMessage(
+						polygon.addMessage(
 								new PolygonMessage.Builder() //
-										.returnCode(ReturnCode.SUCCESS) //
 										.stand(s.getStand()) //
-										.severity(MessageSeverityCode.INFORMATION) //
-										.message(
-												new ValidationMessage(
-														ValidationMessageKind.ASSIGNING_ESTIMATED_SITE_INDEX,
-														estimatedSiteIndex, s.getSpeciesCode()
-												)
+										.details(
+												ReturnCode.SUCCESS, MessageSeverityCode.INFORMATION, //
+												PolygonMessageKind.ASSIGNING_ESTIMATED_SITE_INDEX, estimatedSiteIndex,
+												s.getSpeciesCode()
 										).build()
 						);
 
@@ -780,16 +767,13 @@ public class Layer implements Comparable<Layer> {
 					}
 
 					if (estimatedSiteIndex != null && estimatedAge != null) {
-						polygon.addDefinitionMessage(
+						polygon.addMessage(
 								new PolygonMessage.Builder() //
-										.returnCode(ReturnCode.SUCCESS) //
 										.layer(this) //
-										.severity(MessageSeverityCode.INFORMATION) //
-										.message(
-												new ValidationMessage(
-														ValidationMessageKind.ESTIMATE_APPLIED_FROM_OTHER_SPECIES,
-														estimatedSiteIndexSpeciesCode, s.getSpeciesCode()
-												)
+										.details(
+												ReturnCode.SUCCESS, MessageSeverityCode.INFORMATION, //
+												PolygonMessageKind.ESTIMATE_APPLIED_FROM_OTHER_SPECIES,
+												estimatedSiteIndexSpeciesCode, s.getSpeciesCode()
 										).build()
 						);
 					}
@@ -814,14 +798,28 @@ public class Layer implements Comparable<Layer> {
 				if (leadingSp64 != null && leadingSp64.getDominantHeight() >= 10.0) {
 					var estimatedCrownClosure = SiteTool
 							.getSpeciesDefaultCrownClosure(leadingSp64.getSpeciesCode(), polygon.isCoastal());
+
 					logger.debug("{}: estimating crown closure of primary layer at {}", this, estimatedCrownClosure);
 					crownClosure = (short) estimatedCrownClosure;
+
+					getPolygon().addMessage(
+							new PolygonMessage.Builder().species(leadingSp64)
+									.details(
+											ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
+											PolygonMessageKind.USING_DEFAULT_CC, Double.valueOf(crownClosure),
+											getPolygon().isCoastal() ? "Coast" : "Interior"
+									).build()
+					);
+
 				} else if (leadingSp64 == null) {
-					polygon.disableProjectionsOfType(assignedProjectionType);
-					context.addMessage(
-							Level.WARN,
-							"{0}: Crown closure was not supplied and there is no leading sp64 from which it can be determined. Disabling projection",
-							this
+					getPolygon().disableProjectionsOfType(assignedProjectionType);
+
+					getPolygon().addMessage(
+							new PolygonMessage.Builder().layer(this)
+									.details(
+											ReturnCode.ERROR_SPECIESNOTFOUND, MessageSeverityCode.ERROR,
+											PolygonMessageKind.NO_CC, this
+									).build()
 					);
 					logger.debug("Disabling projections of type {}", assignedProjectionType);
 				}
@@ -913,7 +911,7 @@ public class Layer implements Comparable<Layer> {
 	 * @param targetAge the target age at which to compute dominant height.
 	 * @return as described. If an error occurs during calculation, <code>null</code> is returned.
 	 */
-	public Double determineLeadingSiteSpeciesHeight(int targetAge) throws StandYieldCalculationException {
+	public Double determineLeadingSiteSpeciesHeight(int targetAge) {
 
 		var leadingSp64 = this.sp64s.get(0);
 
@@ -1104,7 +1102,7 @@ public class Layer implements Comparable<Layer> {
 		return calendarYear;
 	}
 
-	public void determineAgeAtDeath() throws PolygonValidationException {
+	public void determineAgeAtDeath() {
 		ageAtDeath = determineLayerAgeAtYear(yearOfDeath);
 	}
 
@@ -1128,7 +1126,7 @@ public class Layer implements Comparable<Layer> {
 	 *
 	 * @throws PolygonValidationException
 	 */
-	public void doCompleteDefinition() throws PolygonValidationException {
+	public void doCompleteDefinition() {
 
 		if (getDoSuppressPerHAYields()) {
 
@@ -1317,7 +1315,7 @@ public class Layer implements Comparable<Layer> {
 				logger.error("{}: leading site species could not be determined; cannot continue", this);
 
 				throw new PolygonValidationException(
-						new ValidationMessage(ValidationMessageKind.NO_LEADING_SPECIES, polygon, getLayerId())
+						new ValidationMessage(ValidationMessageKind.NO_LEADING_SPECIES, this)
 				);
 			}
 

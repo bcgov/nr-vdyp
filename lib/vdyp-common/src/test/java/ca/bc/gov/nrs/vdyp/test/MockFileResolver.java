@@ -67,7 +67,7 @@ public class MockFileResolver extends FileSystemFileResolver {
 	}
 
 	@Override
-	public String toString(String filename) throws IOException {
+	public String toString(String filename) {
 		return "Mock(" + name + "):" + filename;
 	}
 

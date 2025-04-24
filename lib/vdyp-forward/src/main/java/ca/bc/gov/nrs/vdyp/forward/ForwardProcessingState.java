@@ -33,13 +33,13 @@ public class ForwardProcessingState {
 	/** The processing state of the veteran layer of <code>polygon</code> */
 	private Optional<LayerProcessingState> vlps;
 
-	public ForwardProcessingState(Map<String, Object> controlMap) throws ProcessingException {
+	public ForwardProcessingState(Map<String, Object> controlMap) {
 		this.fcm = new ForwardResolvedControlMapImpl(controlMap);
 		this.estimators = new EstimationMethods(this.fcm);
 		this.computers = new ComputationMethods(estimators, VdypApplicationIdentifier.VDYP_FORWARD);
 	}
 
-	public void setPolygon(VdypPolygon polygon) throws ProcessingException {
+	public void setPolygon(VdypPolygon polygon) {
 
 		this.polygon = polygon;
 

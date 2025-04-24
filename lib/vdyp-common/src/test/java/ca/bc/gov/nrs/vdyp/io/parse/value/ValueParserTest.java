@@ -101,7 +101,7 @@ class ValueParserTest {
 		}
 
 		@Test
-		void testValidateRangeInclusive() throws Exception {
+		void testValidateRangeInclusive() {
 			var unit = ValueParser.validateRangeInclusive(10f, 20f, "Test");
 
 			assertThat(unit.apply(10f), notPresent());
@@ -114,7 +114,7 @@ class ValueParserTest {
 		}
 
 		@Test
-		void testValidateRangeInclusiveBadRange() throws Exception {
+		void testValidateRangeInclusiveBadRange() {
 			assertThrows(IllegalArgumentException.class, () -> ValueParser.validateRangeInclusive(20f, 10f, "Test"));
 		}
 
@@ -227,7 +227,7 @@ class ValueParserTest {
 		}
 
 		@Test
-		void testMissingAValueError() throws Exception {
+		void testMissingAValueError() {
 			var parser = ValueParser.toMap(ValueParser.segmentList(3, ValueParser.INTEGER), "A", "B", "C");
 
 			var ex = assertThrows(ValueParseException.class, () -> parser.parse("  1  2"));
@@ -235,7 +235,7 @@ class ValueParserTest {
 		}
 
 		@Test
-		void testExtraAValueError() throws Exception {
+		void testExtraAValueError() {
 			var parser = ValueParser.toMap(ValueParser.segmentList(3, ValueParser.INTEGER), "A", "B", "C");
 
 			var ex = assertThrows(ValueParseException.class, () -> parser.parse("  1  2  3  4"));
@@ -261,7 +261,7 @@ class ValueParserTest {
 		}
 
 		@Test
-		void testWithDefaultsToFew() throws Exception {
+		void testWithDefaultsToFew() {
 			Map<String, Integer> defaults = new HashMap<>();
 			defaults.put("C", 5);
 			defaults.put("D", 6);
@@ -274,7 +274,7 @@ class ValueParserTest {
 		}
 
 		@Test
-		void tesWithDefaultsToMany() throws Exception {
+		void tesWithDefaultsToMany() {
 			Map<String, Integer> defaults = new HashMap<>();
 			defaults.put("C", 5);
 			defaults.put("D", 6);
@@ -287,7 +287,7 @@ class ValueParserTest {
 		}
 
 		@Test
-		void testDefaultsMustComeAfterRequired() throws Exception {
+		void testDefaultsMustComeAfterRequired() {
 			Map<String, Integer> defaults = new HashMap<>();
 			defaults.put("C", 5);
 			defaults.put("B", 6);

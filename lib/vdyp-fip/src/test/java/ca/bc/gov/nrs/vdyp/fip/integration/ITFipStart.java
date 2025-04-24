@@ -110,7 +110,7 @@ class ITFipStart {
 
 	@Disabled
 	@Test
-	void noControlFile() throws IOException, ResourceParseException, ProcessingException {
+	void noControlFile() {
 		try (VdypStartApplication<FipPolygon, FipLayer, FipSpecies, FipSite> app = new FipStart();) {
 
 			var resolver = new FileSystemFileResolver(configDir);
@@ -126,7 +126,7 @@ class ITFipStart {
 	}
 
 	@Test
-	void controlFileDoesntExist() throws IOException, ResourceParseException, ProcessingException {
+	void controlFileDoesntExist() {
 		try (VdypStartApplication<FipPolygon, FipLayer, FipSpecies, FipSite> app = new FipStart();) {
 
 			var resolver = new FileSystemFileResolver(configDir);

@@ -358,29 +358,29 @@ public class ProjectionContext {
 		return executionFolder;
 	}
 
-	public void addMessage(Level level, String message, Object... args) {
-		String messageText = MessageFormat.format(message, args);
-
-		switch (level) {
-		case ERROR:
-			errorLog.addMessage(messageText);
-			break;
-		case WARN:
-			logger.warn(messageText);
-			break;
-		case INFO:
-			logger.info(messageText);
-			break;
-		case DEBUG:
-			logger.debug(messageText);
-			break;
-		case TRACE:
-			logger.trace(messageText);
-			break;
-		default:
-			throw new IllegalStateException(
-					"Saw level \"" + level + "\", not supported in ProjectionContext.addMessage"
-			);
-		}
-	}
+//	public void addMessage(Level level, String message, Object... args) {
+//		String messageText = MessageFormat.format(message, args);
+//
+//		switch (level) {
+//		case ERROR:
+//			errorLog.addMessage(messageText);
+//			break;
+//		case WARN:
+//			logger.warn(messageText);
+//			break;
+//		case INFO:
+//			logger.info(messageText);
+//			break;
+//		case DEBUG:
+//			logger.debug(messageText);
+//			break;
+//		case TRACE:
+//			logger.trace(messageText);
+//			break;
+//		default:
+//			throw new IllegalStateException(
+//					"Saw level \"" + level + "\", not supported in ProjectionContext.addMessage"
+//			);
+//		}
+//	}
 }

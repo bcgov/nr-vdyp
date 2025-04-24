@@ -9,10 +9,10 @@ import org.apache.commons.lang3.Validate;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.YieldTableGenerationException;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.LayerReportingInfo;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Polygon;
-import ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable.YieldTableRowValues.MultiFieldPrefixes;
-import ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable.YieldTableRowValues.MultiFieldSuffixes;
+import ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable.YieldTableRowBean.MultiFieldPrefixes;
+import ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable.YieldTableRowBean.MultiFieldSuffixes;
 
-abstract class YieldTableWriter<T extends YieldTableRowValues> implements Closeable {
+abstract class YieldTableWriter<T extends YieldTableRowBean> implements Closeable {
 
 	private final Class<T> rowValuesClass;
 	private final Path yieldTableFilePath;
@@ -28,7 +28,7 @@ abstract class YieldTableWriter<T extends YieldTableRowValues> implements Closea
 		return yieldTableFilePath;
 	}
 
-	public void startNewRecord() {
+	void startNewRecord() {
 		if (currentRecord != null) {
 			throw new IllegalStateException("startNewRecord()");
 		}
@@ -56,7 +56,7 @@ abstract class YieldTableWriter<T extends YieldTableRowValues> implements Closea
 		}
 	}
 
-	public void recordCalendarYearAndLayerAge(YieldTableRowContext rowContext) {
+	void recordCalendarYearAndLayerAge(YieldTableRowContext rowContext) {
 
 		Validate.notNull(currentRecord, "YieldTableWriter: startNewRecord must be called once per row");
 
@@ -68,7 +68,7 @@ abstract class YieldTableWriter<T extends YieldTableRowValues> implements Closea
 		}
 	}
 
-	public void recordSpeciesComposition(YieldTableRowContext rowContext) throws YieldTableGenerationException {
+	void recordSpeciesComposition(YieldTableRowContext rowContext) {
 
 		Validate.notNull(currentRecord, "YieldTableWriter: startNewRecord must be called once per row");
 
@@ -199,15 +199,31 @@ abstract class YieldTableWriter<T extends YieldTableRowValues> implements Closea
 		);
 	}
 
-	public void recordMode(String projectionMode) {
+	void recordMode(String projectionMode) {
 		currentRecord.setMode(projectionMode);
 	}
 
+	/**
+	 * Write the yield table header into the output stream. This is a default method that does nothing, the requirement
+	 * for a number of the output formats.
+	 *
+	 * @throws YieldTableGenerationException
+	 */
 	void writeHeader() throws YieldTableGenerationException {
 		// Some formats will not have an overall header, or have one that
 		// is automatically produced.
 	}
 
+	/**
+	 * Write the per-polygon header, described by the following parameters, to the output. This is a default method that
+	 * does nothing, the requirement for a number of the output formats.
+	 *
+	 * @param polygon
+	 * @param layerReportingInfo
+	 * @param doGenerateDetailedHeader
+	 * @param yieldTableCount
+	 * @throws YieldTableGenerationException
+	 */
 	void writePolygonTableHeader(
 			Polygon polygon, Optional<LayerReportingInfo> layerReportingInfo, boolean doGenerateDetailedHeader,
 			Integer yieldTableCount
@@ -215,24 +231,38 @@ abstract class YieldTableWriter<T extends YieldTableRowValues> implements Closea
 		// Some formats have no per-polygon header.
 	}
 
-	abstract void writeProjectionGrowthInfo() throws YieldTableGenerationException;
+	protected abstract void writeRecord(YieldTableRowContext rowContext) throws YieldTableGenerationException;
 
-	void writePolygonTableTrailer(Integer yieldTableCount) throws YieldTableGenerationException {
+	protected abstract void writeProjectionGrowthInfo() throws YieldTableGenerationException;
+
+	/**
+	 * Write the per-polygon yield table trailer into the output stream. This is a default method that does nothing, the
+	 * requirement for a number of the output formats.
+	 *
+	 * @param yieldTableNumber the yield table number
+	 * @throws YieldTableGenerationException
+	 */
+	void writePolygonTableTrailer(Integer yieldTableNumber) throws YieldTableGenerationException {
 		// Some formats have no per-polygon trailer.
 	}
 
+	/**
+	 * Write the yield table trailer into the output stream. This is a default method that does nothing, the requirement
+	 * for a number of the output formats.
+	 *
+	 * @param yieldTableNumber the yield table number
+	 * @throws YieldTableGenerationException
+	 */
 	void writeTrailer() throws YieldTableGenerationException {
 		// Some formats have no trailer.
 	}
 
-	protected abstract void writeRecord() throws YieldTableGenerationException;
-
-	final void endRecord() throws YieldTableGenerationException {
+	final void endRecord(YieldTableRowContext rowContext) throws YieldTableGenerationException {
 		if (currentRecord == null) {
 			throw new IllegalStateException("endRecord()");
 		}
 
-		writeRecord();
+		writeRecord(rowContext);
 
 		currentRecord = null;
 	}

@@ -18,7 +18,6 @@ import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
-import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 
@@ -48,7 +47,7 @@ class Grow9PercentagesOfForestedLand {
 	}
 
 	@Test
-	void testStandardPath() throws ProcessingException, ValueParseException {
+	void testStandardPath() throws ProcessingException {
 
 		ForwardProcessingEngine fpe = new ForwardProcessingEngine(controlMap);
 

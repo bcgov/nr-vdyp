@@ -18,7 +18,7 @@ import ca.bc.gov.nrs.vdyp.test.TestUtils;
 class QuadraticMeanDiameterYieldParserTest {
 
 	@Test
-	void testParseSimple() throws Exception {
+	void testParseSimple() {
 
 		var parser = new QuadraticMeanDiameterYieldParser();
 

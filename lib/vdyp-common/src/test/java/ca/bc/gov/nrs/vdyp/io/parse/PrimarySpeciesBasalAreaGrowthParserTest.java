@@ -17,7 +17,7 @@ import ca.bc.gov.nrs.vdyp.test.TestUtils;
 public class PrimarySpeciesBasalAreaGrowthParserTest {
 
 	@Test
-	void testParseSimple() throws Exception {
+	void testParseSimple() {
 
 		var parser = new PrimarySpeciesBasalAreaGrowthParser();
 

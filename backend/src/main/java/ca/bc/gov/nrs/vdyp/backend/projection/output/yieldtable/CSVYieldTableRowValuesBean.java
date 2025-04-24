@@ -22,7 +22,7 @@ import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionContext;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
 @RegisterForReflection
-public class CSVYieldTableRowValuesBean implements YieldTableRowValues {
+public class CSVYieldTableRowValuesBean implements YieldTableRowBean {
 
 	@SuppressWarnings("unused")
 	private static final Logger logger = LoggerFactory.getLogger(CSVYieldTableRowValuesBean.class);

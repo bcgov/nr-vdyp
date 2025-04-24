@@ -41,7 +41,7 @@ class ComponentSizeParserTest {
 	}
 
 	@Test
-	void testParseBadSpecies() throws Exception {
+	void testParseBadSpecies() {
 
 		var is = TestUtils.makeInputStream("SX C  49.4 153.3 0.726 3.647");
 
@@ -57,7 +57,7 @@ class ComponentSizeParserTest {
 	}
 
 	@Test
-	void testParseBadRegion() throws Exception {
+	void testParseBadRegion() {
 
 		var is = TestUtils.makeInputStream("S1 X  49.4 153.3 0.726 3.647");
 

@@ -18,7 +18,7 @@ import ca.bc.gov.nrs.vdyp.test.TestUtils;
 class BasalAreaYieldParserTest {
 
 	@Test
-	void testParseSimple() throws Exception {
+	void testParseSimple() {
 
 		var parser = new BasalAreaYieldParser();
 

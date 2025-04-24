@@ -24,7 +24,6 @@ import java.util.function.Consumer;
 import org.easymock.Capture;
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
@@ -104,7 +103,7 @@ class VdypStartApplicationTest {
 
 		@Disabled
 		@Test
-		void testInitNoControlFile() throws IOException, ResourceParseException {
+		void testInitNoControlFile() {
 			var resolver1 = dummyIo();
 			resolver1.addError("test.ctr", () -> new FileNotFoundException());
 			MockFileResolver resolver = resolver1;
@@ -154,7 +153,7 @@ class VdypStartApplicationTest {
 	}
 
 	@Test
-	void testDebugGetSet() throws IOException {
+	void testDebugGetSet() {
 		try (var app = new TestStartApplication(controlMap, true)) {
 
 			for (int i = 0; i < 25; i++) {
@@ -168,7 +167,7 @@ class VdypStartApplicationTest {
 	}
 
 	@Test
-	void testApplicationInitExceptions() throws IOException, ResourceParseException {
+	void testApplicationInitExceptions() {
 		try (var app = new TestStartApplication(controlMap, true)) {
 
 			assertThrows(VdypApplicationInitializationException.class, () -> app.doMain("bad path"));
@@ -176,7 +175,7 @@ class VdypStartApplicationTest {
 	}
 
 	@Test
-	void testApplicationProcessExceptions() throws IOException, ResourceParseException {
+	void testApplicationProcessExceptions() {
 		try (var app = new TestStartApplication(controlMap, false) {
 
 			@Override
@@ -434,7 +433,7 @@ class VdypStartApplicationTest {
 	class GetStreamingParser {
 
 		@Test
-		void testSimple() throws IOException, ResourceParseException, ProcessingException {
+		void testSimple() throws IOException, ProcessingException {
 			StreamingParserFactory streamingParserFactory = EasyMock.createMock(StreamingParserFactory.class);
 			StreamingParser streamingParser = EasyMock.createMock(StreamingParser.class);
 
@@ -460,7 +459,7 @@ class VdypStartApplicationTest {
 		}
 
 		@Test
-		void testEntryMissing() throws IOException, ResourceParseException {
+		void testEntryMissing() throws IOException {
 
 			MockFileResolver resolver = dummyIo();
 
@@ -479,7 +478,7 @@ class VdypStartApplicationTest {
 		}
 
 		@Test
-		void testErrorOpeningFile() throws IOException, ResourceParseException {
+		void testErrorOpeningFile() throws IOException {
 			var mockControl = EasyMock.createControl();
 
 			StreamingParserFactory streamingParserFactory = mockControl.createMock(StreamingParserFactory.class);
@@ -510,7 +509,7 @@ class VdypStartApplicationTest {
 
 	}
 
-	protected VdypStartApplication getTestUnit(IMocksControl control) throws IOException {
+	protected VdypStartApplication getTestUnit(IMocksControl control) {
 
 		VdypStartApplication mock = EasyMock.createMockBuilder(VdypStartApplication.class)//
 				.addMockedMethods("getControlFileParser", "process", "getId", "copySpecies", "getDebugMode")//
@@ -1615,7 +1614,7 @@ class VdypStartApplicationTest {
 						"C:75.0 B:24.989" //
 				}
 		)
-		void testFail(String dist) throws Exception {
+		void testFail(String dist) {
 			controlMap = TestUtils.loadControlMap();
 			try (var app = new TestStartApplication(controlMap, false)) {
 
@@ -1640,7 +1639,7 @@ class VdypStartApplicationTest {
 	@Nested
 	class SmallComponents {
 		@Test
-		void testEstimate() throws ProcessingException, IOException {
+		void testEstimate() {
 			controlMap = TestUtils.loadControlMap();
 			try (var app = new TestStartApplication(controlMap, false)) {
 				ApplicationTestUtils.setControlMap(app, controlMap);
@@ -1784,7 +1783,7 @@ class VdypStartApplicationTest {
 	@Nested
 	class VeteranUtilization {
 		@Test
-		void testCompute() throws ProcessingException, IOException {
+		void testCompute() throws ProcessingException {
 			controlMap = TestUtils.loadControlMap();
 			var bec = Utils.getBec("IDF", controlMap);
 			try (var app = new TestStartApplication(controlMap, false)) {
@@ -1948,7 +1947,7 @@ class VdypStartApplicationTest {
 		}
 
 		@Test
-		void testApplyToObject() throws Exception {
+		void testApplyToObject() {
 			controlMap = TestUtils.loadControlMap();
 
 			try (var app = new TestStartApplication(controlMap, false)) {
@@ -1980,7 +1979,7 @@ class VdypStartApplicationTest {
 	class UtilityMethods {
 
 		@Test
-		void testGetCoeForSpecies() throws Exception {
+		void testGetCoeForSpecies() {
 			controlMap = TestUtils.loadControlMap();
 			try (var app = new TestStartApplication(controlMap, false)) {
 				var species = TestSpecies.build(sb -> {
@@ -2150,9 +2149,8 @@ class VdypStartApplicationTest {
 			@Test
 			void testRequirePositiveWhenZero() {
 				var result = assertThrows(
-						FatalProcessingException.class, () -> VdypStartApplication.requirePositive(
-								Optional.of(0f), "Test"
-						)
+						FatalProcessingException.class,
+						() -> VdypStartApplication.requirePositive(Optional.of(0f), "Test")
 				);
 				assertThat(result, hasProperty("message", is("Test 0.0 is not positive")));
 			}
@@ -2160,9 +2158,8 @@ class VdypStartApplicationTest {
 			@Test
 			void testRequirePositiveWhenNegative() {
 				var result = assertThrows(
-						FatalProcessingException.class, () -> VdypStartApplication.requirePositive(
-								Optional.of(-1f), "Test"
-						)
+						FatalProcessingException.class,
+						() -> VdypStartApplication.requirePositive(Optional.of(-1f), "Test")
 				);
 				assertThat(result, hasProperty("message", is("Test -1.0 is not positive")));
 			}
@@ -2170,9 +2167,8 @@ class VdypStartApplicationTest {
 			@Test
 			void testRequirePositiveWhenMissing() {
 				var result = assertThrows(
-						FatalProcessingException.class, () -> VdypStartApplication.requirePositive(
-								Optional.empty(), "Test"
-						)
+						FatalProcessingException.class,
+						() -> VdypStartApplication.requirePositive(Optional.empty(), "Test")
 				);
 				assertThat(result, hasProperty("message", is("Test is not present")));
 			}
@@ -2180,9 +2176,7 @@ class VdypStartApplicationTest {
 			@Test
 			void testRequireWhenMissing() {
 				var result = assertThrows(
-						FatalProcessingException.class, () -> VdypStartApplication.require(
-								Optional.empty(), "Test"
-						)
+						FatalProcessingException.class, () -> VdypStartApplication.require(Optional.empty(), "Test")
 				);
 				assertThat(result, hasProperty("message", is("Test is not present")));
 			}
@@ -2196,7 +2190,7 @@ class VdypStartApplicationTest {
 	}
 
 	@Test
-	void testComputeUtilizationComponentsPrimaryByUtilNoCV() throws ProcessingException, IOException {
+	void testComputeUtilizationComponentsPrimaryByUtilNoCV() throws ProcessingException {
 		controlMap = TestUtils.loadControlMap();
 		try (var app = new TestStartApplication(controlMap, false)) {
 

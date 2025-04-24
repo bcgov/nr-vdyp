@@ -465,7 +465,7 @@ public class VdypOutputWriter implements Closeable {
 	}
 
 	@Override
-	public void close() throws IOException {
+	public void close() {
 		Utils.close(polygonFile);
 		Utils.close(speciesFile);
 		Utils.close(utilizationFile);

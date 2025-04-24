@@ -119,7 +119,7 @@ class FipStartTest {
 	}
 
 	@Test
-	void testPolygonWithNoPrimaryLayer() throws Exception {
+	void testPolygonWithNoPrimaryLayer() {
 
 		// One polygon with one layer with one species entry, and type is VETERAN
 
@@ -164,7 +164,7 @@ class FipStartTest {
 	}
 
 	@Test
-	void testVeteranLayerHeightLessThanMinimum() throws Exception {
+	void testVeteranLayerHeightLessThanMinimum() {
 		var controlMap = FipTestUtils.loadControlMap();
 		try (var app = new FipStart()) {
 			ApplicationTestUtils.setControlMap(app, controlMap);
@@ -188,7 +188,7 @@ class FipStartTest {
 	}
 
 	@Test
-	void testPrimaryLayerYearsToBreastHeightLessThanMinimum() throws Exception {
+	void testPrimaryLayerYearsToBreastHeightLessThanMinimum() {
 
 		var controlMap = FipTestUtils.loadControlMap();
 		try (var app = new FipStart()) {
@@ -211,7 +211,7 @@ class FipStartTest {
 	}
 
 	@Test
-	void testPrimaryLayerTotalAgeLessThanYearsToBreastHeight() throws Exception {
+	void testPrimaryLayerTotalAgeLessThanYearsToBreastHeight() {
 
 		// FIXME VDYP7 actually tests if total age - YTBH is less than 0.5 but gives an
 		// error that total age is "less than" YTBH. Replicating that for now but
@@ -286,7 +286,7 @@ class FipStartTest {
 	}
 
 	@Test
-	void testOneSpeciesLessThan100Percent() throws Exception {
+	void testOneSpeciesLessThan100Percent() {
 
 		var controlMap = FipTestUtils.loadControlMap();
 		try (var app = new FipStart()) {
@@ -310,7 +310,7 @@ class FipStartTest {
 	}
 
 	@Test
-	void testOneSpeciesMoreThan100Percent() throws Exception {
+	void testOneSpeciesMoreThan100Percent() {
 
 		var controlMap = FipTestUtils.loadControlMap();
 		try (var app = new FipStart()) {
@@ -333,7 +333,7 @@ class FipStartTest {
 	}
 
 	@Test
-	void testTwoSpeciesSumTo100Percent() throws Exception {
+	void testTwoSpeciesSumTo100Percent() {
 
 		var controlMap = FipTestUtils.loadControlMap();
 		try (var app = new FipStart()) {
@@ -357,7 +357,7 @@ class FipStartTest {
 	}
 
 	@Test
-	void testTwoSpeciesSumToLessThan100Percent() throws Exception {
+	void testTwoSpeciesSumToLessThan100Percent() {
 
 		var controlMap = FipTestUtils.loadControlMap();
 		try (var app = new FipStart()) {
@@ -384,7 +384,7 @@ class FipStartTest {
 	}
 
 	@Test
-	void testTwoSpeciesSumToMoreThan100Percent() throws Exception {
+	void testTwoSpeciesSumToMoreThan100Percent() {
 
 		var controlMap = FipTestUtils.loadControlMap();
 		try (var app = new FipStart()) {
@@ -1602,14 +1602,14 @@ class FipStartTest {
 		FipStart app;
 
 		@BeforeEach
-		void setup() throws ProcessingException {
+		void setup() {
 			app = new FipStart();
 			ApplicationTestUtils.setControlMap(app, controlMap);
 			bec = Utils.getBec("CWH", controlMap);
 		}
 
 		@AfterEach
-		void teardown() throws IOException {
+		void teardown() {
 			app.close();
 		}
 
@@ -1845,7 +1845,7 @@ class FipStartTest {
 	}
 
 	@Test
-	void testEstimateVeteranLayerBaseArea() throws Exception {
+	void testEstimateVeteranLayerBaseArea() {
 
 		var controlMap = FipTestUtils.loadControlMap();
 
@@ -2990,7 +2990,7 @@ class FipStartTest {
 	}
 
 	@Test
-	void testApplyStockingFactor() throws ProcessingException {
+	void testApplyStockingFactor() {
 		var controlMap = FipTestUtils.loadControlMap();
 		@SuppressWarnings("unchecked")
 		var stockingClassMap = (MatrixMap2<Character, Region, Optional<StockingClassFactor>>) controlMap
@@ -3140,7 +3140,7 @@ class FipStartTest {
 	}
 
 	@Test
-	void testApplyStockingFactorNoFactorForLayer() throws ProcessingException {
+	void testApplyStockingFactorNoFactorForLayer() {
 		var controlMap = FipTestUtils.loadControlMap();
 		@SuppressWarnings("unchecked")
 		var stockingClassMap = (MatrixMap2<Character, Region, StockingClassFactor>) controlMap
@@ -3308,7 +3308,7 @@ class FipStartTest {
 	}
 
 	@Test
-	void testApplyStockingFactorNoFactorForClass() throws ProcessingException {
+	void testApplyStockingFactorNoFactorForClass() {
 		var controlMap = FipTestUtils.loadControlMap();
 		@SuppressWarnings("unchecked")
 		var stockingClassMap = (MatrixMap2<Character, Region, StockingClassFactor>) controlMap
@@ -3488,7 +3488,7 @@ class FipStartTest {
 	}
 
 	@Test
-	void testProcessPolygon() throws ProcessingException, IOException {
+	void testProcessPolygon() throws ProcessingException {
 		var controlMap = FipTestUtils.loadControlMap();
 
 		var poly = FipPolygon.build(builder -> {
@@ -3543,14 +3543,13 @@ class FipStartTest {
 		return stream;
 	}
 
-	private static void expectAllClosed(MockStreamingParser<?>... toClose) throws Exception {
+	private static void expectAllClosed(MockStreamingParser<?>... toClose) {
 		for (var x : toClose) {
 			x.expectClosed();
 		}
 	}
 
-	private static <T> void mockWith(MockStreamingParser<T> stream, List<T> results)
-			throws IOException, ResourceParseException {
+	private static <T> void mockWith(MockStreamingParser<T> stream, List<T> results) {
 		stream.addValues(results);
 	}
 

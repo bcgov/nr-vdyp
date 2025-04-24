@@ -18,6 +18,8 @@ import java.util.function.Predicate;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,9 +31,9 @@ import io.smallrye.common.constraint.Assert;
 import jakarta.ws.rs.core.MediaType;
 
 @QuarkusTest
-class HcsvProjectionEndpoint_44GrpATest extends HttpProjectionRequestTest {
+class Hcsv_44GrpATest extends HttpProjectionRequestTest {
 
-	private static final Logger logger = LoggerFactory.getLogger(HcsvProjectionEndpoint_44GrpATest.class);
+	private static final Logger logger = LoggerFactory.getLogger(Hcsv_44GrpATest.class);
 
 	private static Path resourceFolderPath;
 	private static Parameters parameters;
@@ -58,12 +60,12 @@ class HcsvProjectionEndpoint_44GrpATest extends HttpProjectionRequestTest {
 	void perTestSetup() {
 	}
 
-	// @Test - uncomment and change runTest param to the polygon id from 44grpa that you want
-	// to run.
+	// uncomment and change runTest param to the polygon id from 44grpa that you want to run.
+	// @Test
 	void run44GroupA_SpecificPolygon_Test() throws IOException {
 		logger.info("Starting run44GroupA_SpecificPolygon_Test");
 
-		var zipEntries = runTest("19976958");
+		var zipEntries = runTest("8489341");
 
 		var errorEntryContent = zipEntries.get("ErrorLog.txt");
 		Assert.assertTrue(errorEntryContent.length() == 0);
@@ -71,7 +73,25 @@ class HcsvProjectionEndpoint_44GrpATest extends HttpProjectionRequestTest {
 		Assert.assertTrue(csvEntryContent.length() > 0);
 	}
 
-	// @Test - uncomment if you want to run the entire 44grpa polygon set
+	// TODO: this test is disabled because despite no site index being set and that VriStart
+	// catches this, it does not report the error up to the backend and so no errors
+	// are reported. Despite this, processing does not continue and no yield table is
+	// generated.
+	@Disabled
+	@Test
+	void run44GroupA_8489341_Test() throws IOException {
+		logger.info("Starting run44GroupA_8489341_Test");
+
+		var zipEntries = runTest("8489341");
+
+		var errorEntryContent = zipEntries.get("ErrorLog.txt");
+		Assert.assertTrue(errorEntryContent.length() > 0);
+		var csvEntryContent = zipEntries.get("YieldTable.csv");
+		Assert.assertTrue(csvEntryContent.length() > 0);
+	}
+
+	// uncomment if you want to run the entire 44grpa polygon set
+	// @Test
 	void run44GroupATest() throws IOException {
 
 		logger.info("Starting run44GroupATest");
@@ -89,9 +109,9 @@ class HcsvProjectionEndpoint_44GrpATest extends HttpProjectionRequestTest {
 		logger.info("run44GroupATest complete: {} results seen", resultsList);
 	}
 
-	// @Test
 	// Uncomment if you want to run a subset of the 44grpa polygon set given in the file "polyids.txt"
 	// (placed alongside the polygon and layer files) that contains one polygon id per line.
+	// @Test
 	void runFiltered44GroupATest() throws IOException {
 
 		logger.info("Starting runFiltered44GroupATest");

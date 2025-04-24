@@ -1,14 +1,9 @@
 package ca.bc.gov.nrs.vdyp.vri;
 
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.*;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.ByteArrayOutputStream;
@@ -1165,7 +1160,7 @@ class ParsersTogetherTest {
 		}
 	)
 	void testDefaultBaAndTphForVeteranWhenZeroCrownClosure(Float vetBaseArea, Float vetTreesPerHectare)
-			throws IOException, StandProcessingException, ResourceParseException {
+			throws IOException {
 		var app = new VriStart();
 
 		final var polygonId = new PolygonIdentifier("Test", 2024);

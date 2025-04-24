@@ -243,7 +243,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 	protected abstract BaseControlParser getControlFileParser();
 
-	void closeVriWriter() throws IOException {
+	void closeVriWriter() {
 		if (vriWriter != null) {
 			vriWriter.close();
 			vriWriter = null;
@@ -276,11 +276,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 	@Override
 	public void close() {
-		try {
-			closeVriWriter();
-		} catch (IOException e) {
-			throw new IllegalStateException(e);
-		}
+		closeVriWriter();
 	}
 
 	protected Coefficients getCoeForSpecies(BaseVdypSpecies<?> species, ControlKey controlKey) {
@@ -650,7 +646,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 	/**
 	 * Return the value of the given optional otherwise throw a FatalProcessingException
-	 * 
+	 *
 	 * @param <T>  type of the value
 	 * @param opt  optional to check
 	 * @param name name of the field for the error message
@@ -663,7 +659,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 	/**
 	 * Require that the optional value is present and has a positive value.
-	 * 
+	 *
 	 * @param <T>  type of the value
 	 * @param opt  optional to check
 	 * @param name name to use in exception message
@@ -1000,14 +996,13 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 	protected Map<String, Float> applyGroupsAndGetTargetPercentages(
 			BaseVdypPolygon<?, ?, ?, ?> fipPolygon, Collection<VdypSpecies> vdypSpecies
-	) throws ProcessingException {
+	) {
 
 		applyGroups(fipPolygon, vdypSpecies);
 		return getTargetPercentages(vdypSpecies);
 	}
 
-	protected void applyGroups(BaseVdypPolygon<?, ?, ?, ?> fipPolygon, Collection<VdypSpecies> vdypSpecies)
-			throws ProcessingException {
+	protected void applyGroups(BaseVdypPolygon<?, ?, ?, ?> fipPolygon, Collection<VdypSpecies> vdypSpecies) {
 		// Lookup volume group, Decay Group, and Breakage group for each species.
 
 		BecDefinition bec = fipPolygon.getBiogeoclimaticZone();
@@ -1071,7 +1066,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	 *
 	 * @throws ProcessingException
 	 */
-	public void estimateSmallComponents(P fPoly, VdypLayer layer) throws ProcessingException {
+	public void estimateSmallComponents(P fPoly, VdypLayer layer) {
 		float loreyHeightSum = 0f;
 		float baseAreaSum = 0f;
 		float treesPerHectareSum = 0f;

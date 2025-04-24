@@ -1,7 +1,6 @@
 package ca.bc.gov.nrs.vdyp.backend.projection.model;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 
@@ -23,7 +22,7 @@ public class PolygonSelectLayerWhenNoLayersTest {
 	private Polygon polygon;
 
 	@BeforeEach
-	void beforeEach() throws IOException, PolygonValidationException, AbstractProjectionRequestException {
+	void beforeEach() throws PolygonValidationException, AbstractProjectionRequestException {
 		var parameters = new Parameters().ageStart(10).ageEnd(20);
 
 		var streams = new HashMap<String, InputStream>();
@@ -43,45 +42,31 @@ public class PolygonSelectLayerWhenNoLayersTest {
 	}
 
 	@Test
-	void testSelectLayerWhenParameterNull() throws IOException {
+	void testSelectLayerWhenParameterNull() {
 
 		try {
 			polygon.findSpecificLayer(null);
 			Assert.fail();
 		} catch (IllegalArgumentException e) {
 			Assert.assertEquals("findSpecificLayer: layerId is null", e.getLocalizedMessage());
-		} catch (PolygonValidationException e) {
-			Assert.fail();
 		}
 	}
 
 	@Test
 	void testSelectSpanningLayer() {
-		try {
-			var selectedLayer = polygon.findSpecificLayer(Vdyp7Constants.VDYP7_LAYER_ID_SPANNING);
-			Assert.assertNull(selectedLayer);
-		} catch (PolygonValidationException e) {
-			Assert.fail();
-		}
+		var selectedLayer = polygon.findSpecificLayer(Vdyp7Constants.VDYP7_LAYER_ID_SPANNING);
+		Assert.assertNull(selectedLayer);
 	}
 
 	@Test
 	void testSelectPrimaryLayer() {
-		try {
-			var selectedLayer = polygon.findSpecificLayer(Vdyp7Constants.VDYP7_LAYER_ID_PRIMARY);
-			Assert.assertNull(selectedLayer);
-		} catch (PolygonValidationException e) {
-			Assert.fail();
-		}
+		var selectedLayer = polygon.findSpecificLayer(Vdyp7Constants.VDYP7_LAYER_ID_PRIMARY);
+		Assert.assertNull(selectedLayer);
 	}
 
 	@Test
 	void testSelectNamedLayer() {
-		try {
-			var selectedLayer = polygon.findSpecificLayer("layer");
-			Assert.assertNull(selectedLayer);
-		} catch (PolygonValidationException e) {
-			Assert.fail();
-		}
+		var selectedLayer = polygon.findSpecificLayer("layer");
+		Assert.assertNull(selectedLayer);
 	}
 }

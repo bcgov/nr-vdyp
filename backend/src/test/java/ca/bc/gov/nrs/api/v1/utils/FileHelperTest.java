@@ -14,13 +14,13 @@ import ca.bc.gov.nrs.vdyp.backend.utils.FileHelper;
 public class FileHelperTest {
 
 	@Test
-	void testGetStubResourceFile() throws IOException {
+	void testGetStubResourceFile() {
 		InputStream is = FileHelper.getStubResourceFile("Output_Log.txt");
 		Assert.assertNotNull(is);
 	}
 
 	@Test
-	void testGetTestResourceFile() throws IOException {
+	void testGetTestResourceFile() {
 		InputStream is = FileHelper.getTestResourceFile(FileHelper.HCSV, FileHelper.COMMON, "Output_Log.txt");
 		Assert.assertNotNull(is);
 	}
