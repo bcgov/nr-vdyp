@@ -54,33 +54,33 @@ public class ResultYieldTable extends HashMap<String, Map<String, Map<String, Ma
 	}
 
 	public static void compareWithTolerance(ResultYieldTable yt1, ResultYieldTable yt2, double tolerance) {
-		
+
 		Assert.assertEquals(yt1.keySet(), yt2.keySet());
-		
-		for (var p1e: yt1.entrySet()) {
+
+		for (var p1e : yt1.entrySet()) {
 			var p1 = p1e.getValue();
 			var p2 = yt2.get(p1e.getKey());
-			
+
 			Assert.assertEquals(p1.keySet(), p2.keySet());
-			
-			for (var y1e: p1.entrySet()) {
+
+			for (var y1e : p1.entrySet()) {
 				var l1 = y1e.getValue();
 				var l2 = p2.get(y1e.getKey());
-				
+
 				Assert.assertEquals(l1.keySet(), l2.keySet());
-				
-				for (var l1e: l1.entrySet()) {
+
+				for (var l1e : l1.entrySet()) {
 					var r1 = l1e.getValue();
 					var r2 = l2.get(l1e.getKey());
-					
+
 					Assert.assertEquals(r1.keySet(), r2.keySet());
 
-					for (var field: r1.entrySet()) {
+					for (var field : r1.entrySet()) {
 						var f1 = field.getValue();
 						var f2 = r2.get(field.getKey());
-						
+
 						Assert.assertEquals(f1.getClass(), f2.getClass());
-	
+
 						try {
 							var f1AsInt = Integer.parseInt(f1);
 							var f2AsInt = Integer.parseInt(f2);
@@ -88,17 +88,17 @@ public class ResultYieldTable extends HashMap<String, Map<String, Map<String, Ma
 						} catch (NumberFormatException e) {
 							// drop through to next type
 						}
-						
+
 						try {
 							var f1AsDouble = Double.parseDouble(f1);
 							var f2AsDouble = Double.parseDouble(f2);
-							
+
 							var f1Lower = f1AsDouble * (1.0 - tolerance);
 							var f1Upper = f2AsDouble * (1.0 + tolerance);
-							
+
 							Assert.assertTrue(f1Lower <= f2AsDouble && f2AsDouble <= f1Upper);
 						} catch (NumberFormatException e) {
-							
+
 							// All other types
 							Assert.assertEquals(f1, f2);
 						}

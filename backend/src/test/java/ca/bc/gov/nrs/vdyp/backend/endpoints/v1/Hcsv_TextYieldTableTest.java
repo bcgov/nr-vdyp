@@ -5,13 +5,16 @@ import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.MessageFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import org.hamcrest.Matchers;
+import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -46,7 +49,8 @@ class Hcsv_TextYieldTableTest {
 
 		logger.info("Starting testProjectionHscvVri_TextYieldTable");
 
-		Path resourceFolderPath = Path.of(FileHelper.TEST_DATA_FILES, FileHelper.HCSV, "VRI-PerPolygon");
+		Path resourceFolderPath = Path
+				.of(FileHelper.TEST_DATA_FILES, FileHelper.HCSV, "single-polygon-text-yield-table");
 
 		Parameters parameters = testHelper.addSelectedOptions(
 				new Parameters(), //
@@ -87,6 +91,20 @@ class Hcsv_TextYieldTableTest {
 		String entry1Content = new String(testHelper.readZipEntry(zipFile, entry1));
 		assertTrue(entry1Content.length() > 0);
 
+		String expectedContent = new String(
+				Files.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "expected-yield-table.txt"))
+		);
+
+		expectedContent = removeTimestamp(expectedContent);
+		entry1Content = removeTimestamp(entry1Content);
+		for (int i = 0; i < expectedContent.length(); i++) {
+			if (entry1Content.charAt(i) != expectedContent.charAt(i)) {
+				Assert.fail(MessageFormat.format("{0} != {1}", entry1Content.charAt(i), expectedContent.charAt(i)));
+			}
+		}
+
+		assertEquals(expectedContent.length(), entry1Content.length());
+
 		ZipEntry entry2 = zipFile.getNextEntry();
 		assertEquals("ProgressLog.txt", entry2.getName());
 		String entry2Content = new String(testHelper.readZipEntry(zipFile, entry2));
@@ -107,5 +125,9 @@ class Hcsv_TextYieldTableTest {
 
 			entry = zipFile.getNextEntry();
 		}
+	}
+
+	private String removeTimestamp(String textYieldTable) {
+		return textYieldTable.substring(0, textYieldTable.indexOf("Run completed: "));
 	}
 }

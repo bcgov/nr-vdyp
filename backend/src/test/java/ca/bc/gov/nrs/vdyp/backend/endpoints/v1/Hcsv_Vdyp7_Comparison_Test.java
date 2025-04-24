@@ -44,9 +44,9 @@ class Hcsv_Vdyp7_Comparison_Test {
 	}
 
 	@Test
-	void testVRIPerPolygonYieldTable() throws IOException {
+	void testVdyp8VersusVdyp7YieldTables() throws IOException {
 
-		logger.info("Starting testVRIPerPolygonYieldTable");
+		logger.info("Starting testVdyp8VersusVdyp7YieldTables");
 
 		Path resourceFolderPath = Path.of(FileHelper.TEST_DATA_FILES, FileHelper.HCSV, "vdyp7-comparison-test");
 
@@ -88,12 +88,14 @@ class Hcsv_Vdyp7_Comparison_Test {
 		assertTrue(vdyp8YieldTableContent.length() > 0);
 
 		var vdyp8YieldTable = new ResultYieldTable(vdyp8YieldTableContent);
-		
-		String vdyp7YieldTableContent = new String(Files.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "vdyp7-yield-table.csv")));
+
+		String vdyp7YieldTableContent = new String(
+				Files.readAllBytes(testHelper.getResourceFile(resourceFolderPath, "vdyp7-yield-table.csv"))
+		);
 		var vdyp7YieldTable = new ResultYieldTable(vdyp7YieldTableContent);
 
 		ResultYieldTable.compareWithTolerance(vdyp7YieldTable, vdyp8YieldTable, 0.02);
-		
+
 		ZipEntry entry2 = zipFile.getNextEntry();
 		assertEquals("ProgressLog.txt", entry2.getName());
 		String entry2Content = new String(testHelper.readZipEntry(zipFile, entry2));

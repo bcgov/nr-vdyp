@@ -146,8 +146,11 @@ class TextYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean>
 			while (code != null) {
 				String percentage = currentRecord
 						.getSpeciesFieldValue(MultiFieldPrefixes.Species, speciesIndex, MultiFieldSuffixes.Percent);
-				doWrite("%-3s %5.1f ", code, Double.parseDouble(percentage));
-
+				if (percentage != null) {
+					doWrite("%-3s %5.1f ", code, Double.parseDouble(percentage));
+				} else {
+					doWrite("%-3s       ", code);
+				}
 				speciesIndex += 1;
 				code = currentRecord
 						.getSpeciesFieldValue(MultiFieldPrefixes.Species, speciesIndex, MultiFieldSuffixes.Code);
@@ -233,11 +236,11 @@ class TextYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean>
 		else
 			doWrite("%6s ", " ");
 
-		if (context.getParams().containsOption(ExecutionOption.DO_INCLUDE_SPECIES_PROJECTION)) {
-			if (currentRecord.getLoreyHeight() != null)
-				doWrite("%6.2f ", Double.parseDouble(currentRecord.getSecondaryHeight()));
+		if (context.getParams().containsOption(ExecutionOption.DO_INCLUDE_PROJECTION_MODE_IN_YIELD_TABLE)) {
+			if (currentRecord.getMode() != null)
+				doWrite("%5s ", currentRecord.getMode());
 			else
-				doWrite("%6s ", " ");
+				doWrite("      ");
 		}
 	}
 

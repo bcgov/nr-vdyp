@@ -82,8 +82,7 @@ abstract class YieldTableWriter<T extends YieldTableRowBean> implements Closeabl
 						MultiFieldPrefixes.Species, index, MultiFieldSuffixes.Code, sri.getSp64Name()
 				);
 				currentRecord.setSpeciesFieldValue(
-						MultiFieldPrefixes.Species, index, MultiFieldSuffixes.Percent,
-						Double.valueOf(sri.getSp64Percent()).toString()
+						MultiFieldPrefixes.Species, index, MultiFieldSuffixes.Percent, sri.getSp64Percent()
 				);
 				index += 1;
 			}
