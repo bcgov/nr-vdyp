@@ -68,9 +68,26 @@ export const getFormData = (
   fileUploadStore: ReturnType<typeof useFileUploadStore>,
 ) => {
   const projectionParameters = {
-    ageStart: fileUploadStore.startingAge,
-    ageEnd: fileUploadStore.finishingAge,
-    ageIncrement: fileUploadStore.ageIncrement,
+    ageStart:
+      fileUploadStore.selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.AGE
+        ? fileUploadStore.startingAge
+        : null,
+    ageEnd:
+      fileUploadStore.selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.AGE
+        ? fileUploadStore.finishingAge
+        : null,
+    ageIncrement:
+      fileUploadStore.selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.YEAR
+        ? fileUploadStore.yearIncrement
+        : fileUploadStore.ageIncrement,
+    yearStart:
+      fileUploadStore.selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.YEAR
+        ? fileUploadStore.startYear
+        : null,
+    yearEnd:
+      fileUploadStore.selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.YEAR
+        ? fileUploadStore.endYear
+        : null,
     outputFormat: OutputFormatEnum.CSVYieldTable,
     selectedExecutionOptions: getSelectedExecutionOptions(fileUploadStore),
     selectedDebugOptions: getSelectedDebugOptions(),
