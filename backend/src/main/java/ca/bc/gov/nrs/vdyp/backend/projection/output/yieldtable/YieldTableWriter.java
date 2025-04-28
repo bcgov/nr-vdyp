@@ -82,8 +82,7 @@ abstract class YieldTableWriter<T extends YieldTableRowBean> implements Closeabl
 						MultiFieldPrefixes.Species, index, MultiFieldSuffixes.Code, sri.getSp64Name()
 				);
 				currentRecord.setSpeciesFieldValue(
-						MultiFieldPrefixes.Species, index, MultiFieldSuffixes.Percent,
-						Double.valueOf(sri.getSp64Percent()).toString()
+						MultiFieldPrefixes.Species, index, MultiFieldSuffixes.Percent, sri.getSp64Percent()
 				);
 				index += 1;
 			}
@@ -116,41 +115,45 @@ abstract class YieldTableWriter<T extends YieldTableRowBean> implements Closeabl
 
 		Validate.notNull(currentRecord, "YieldTableWriter: startNewRecord must be called once per row");
 
-		if (growthDetails.loreyHeight() != null) {
+		if (containsValue(growthDetails.loreyHeight())) {
 			currentRecord.setLoreyHeight(growthDetails.loreyHeight());
 		}
 
-		if (growthDetails.diameter() != null) {
+		if (containsValue(growthDetails.diameter())) {
 			currentRecord.setDiameter(growthDetails.diameter());
 		}
 
-		if (growthDetails.treesPerHectare() != null) {
+		if (containsValue(growthDetails.treesPerHectare())) {
 			currentRecord.setTreesPerHectare(growthDetails.treesPerHectare());
 		}
 
-		if (growthDetails.basalArea() != null) {
+		if (containsValue(growthDetails.basalArea())) {
 			currentRecord.setBasalArea(growthDetails.basalArea());
 		}
 
-		if (volumeDetails.wholeStemVolume() != null) {
+		if (containsValue(volumeDetails.wholeStemVolume())) {
 			currentRecord.setWholeStemVolume(volumeDetails.wholeStemVolume());
 		}
 
-		if (volumeDetails.closeUtilizationVolume() != null) {
+		if (containsValue(volumeDetails.closeUtilizationVolume())) {
 			currentRecord.setCloseUtilizationVolume(volumeDetails.closeUtilizationVolume());
 		}
 
-		if (volumeDetails.cuVolumeLessDecay() != null) {
+		if (containsValue(volumeDetails.cuVolumeLessDecay())) {
 			currentRecord.setCuVolumeLessDecay(volumeDetails.cuVolumeLessDecay());
 		}
 
-		if (volumeDetails.cuVolumeLessDecayWastage() != null) {
+		if (containsValue(volumeDetails.cuVolumeLessDecayWastage())) {
 			currentRecord.setCuVolumeLessDecayWastage(volumeDetails.cuVolumeLessDecayWastage());
 		}
 
-		if (volumeDetails.cuVolumeLessDecayWastageBreakage() != null) {
+		if (containsValue(volumeDetails.cuVolumeLessDecayWastageBreakage())) {
 			currentRecord.setCuVolumeLessDecayWastageBreakage(volumeDetails.cuVolumeLessDecayWastageBreakage());
 		}
+	}
+
+	private boolean containsValue(Double value) {
+		return value != null && value > 0;
 	}
 
 	protected void recordPerSpeciesVolumeInfo(int spIndex, EntityVolumeDetails volume, EntityVolumeDetails mofBiomass) {
