@@ -500,7 +500,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 				});
 			} else {
 				var loreyHeight = vriSite
-						.flatMap(site -> site.getHeight().filter(x -> getDebugMode(2) != 1).map(height -> {
+						.flatMap(site -> site.getHeight().filter(x -> getDebugModes().getValue(2) != 1).map(height -> {
 							// DQsp
 							float speciesQuadMeanDiameter = Math.max(
 									UtilizationClass.U75TO125.lowBound, height / leadHeight * layerQuadMeanDiameter
@@ -587,10 +587,6 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		);
 
 		resultsPerSpecies.putAll(initialDqEstimate);
-
-		if (this.getDebugMode(9) > 0) {
-			// TODO
-		}
 
 		findRootForQuadMeanDiameterFractionalError(
 				-0.6f, 0.5f, resultsPerSpecies, initialDqEstimate, baseAreaPerSpecies, minPerSpecies, maxPerSpecies,
@@ -795,7 +791,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 	private Float enforceMinimumDiameter(Float baseArea, Float treesPerHectare) throws StandProcessingException {
 		final float quadMeanDiameter = BaseAreaTreeDensityDiameter.quadMeanDiameter(baseArea, treesPerHectare);
 		if (quadMeanDiameter < VETERAN_MIN_DQ) {
-			if (this.getId() == VdypApplicationIdentifier.VRI_START && this.getDebugMode(1) == 2) {
+			if (this.getId() == VdypApplicationIdentifier.VRI_START && this.getDebugModes().getValue(1) == 2) {
 				throw new StandProcessingException(
 						MessageFormat.format(MINIMUM_DIAMETER_FAIL_MESSAGE, quadMeanDiameter, VETERAN_MIN_DQ)
 				);
@@ -1540,6 +1536,21 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 					.quadMeanDiameterFractionalError(x, resultPerSpecies, initialDqs, baseAreas, minDq, maxDq, tph);
 			return lastFs[0];
 		};
+
+		if (this.getDebugModes().getValue(9) > 0) {
+			double f1 = errorFunc.value(-10f);
+			double f2 = errorFunc.value(10f);
+
+			if (f2 * f1 > 0d) {
+				float lowFactor = 1.0f - ((float) this.getDebugModes().getValue(9)) / 100f;
+				float highFactor = 1.0f + ((float) this.getDebugModes().getValue(9)) / 100f;
+				for (var key : maxDq.keySet()) {
+					minDq.put(key, 7.5f + lowFactor * (minDq.get(key) - 7.5f));
+					maxDq.put(key, 7.5f + highFactor * (maxDq.get(key) - 7.5f));
+				}
+			}
+		}
+
 		try {
 			double x = doSolve(min, max, errorFunc);
 
@@ -1621,7 +1632,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			throws StandProcessingException {
 		// Only do this in VRIStart
 
-		if (getDebugMode(1) == 2) {
+		if (getDebugModes().getValue(1) == 2) {
 			throw new StandProcessingException("Could not find solution for quadratic mean diameter", ex);
 		}
 
