@@ -54,6 +54,7 @@ import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.BecLookup;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
+import ca.bc.gov.nrs.vdyp.model.DebugSettings;
 import ca.bc.gov.nrs.vdyp.model.GenusDefinition;
 import ca.bc.gov.nrs.vdyp.model.GenusDefinitionMap;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
@@ -662,5 +663,30 @@ public class TestUtils {
 		}
 
 		return layer.getSpecies().get(ids[0]);
+	}
+
+	/**
+	 * Create a DebugSettings object with the specified flag set to the specified value. All others will be 0.
+	 *
+	 * @param index
+	 * @param value
+	 * @return
+	 */
+	public static DebugSettings debugSettingsSingle(int index, int value) {
+		var arr = new Integer[DebugSettings.MAX_DEBUG_SETTINGS];
+		Arrays.fill(arr, 0);
+		arr[index - 1] = value;
+		return new DebugSettings(arr);
+	}
+
+	/**
+	 * Create a DebugSettings object with the specified flags set
+	 *
+	 * @param values
+	 * @return
+	 */
+	public static DebugSettings debugSettings(int... values) {
+		Integer[] arr = Arrays.stream(values).mapToObj(i -> (Integer) i).toArray(Integer[]::new);
+		return new DebugSettings(arr);
 	}
 }

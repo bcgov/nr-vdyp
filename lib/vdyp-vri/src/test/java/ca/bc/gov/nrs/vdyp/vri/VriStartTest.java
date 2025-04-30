@@ -57,6 +57,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.BecLookup;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
+import ca.bc.gov.nrs.vdyp.model.DebugSettings;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
 import ca.bc.gov.nrs.vdyp.model.PolygonMode;
@@ -1035,7 +1036,7 @@ class VriStartTest {
 
 				var resultPerSpecies = new HashMap<String, Float>();
 
-				app.setDebugMode(1, 2);
+				app.setDebugModes(TestUtils.debugSettingsSingle(1, 2));
 
 				assertThrows(
 						FatalProcessingException.class,
@@ -1108,7 +1109,7 @@ class VriStartTest {
 
 				var resultPerSpecies = new HashMap<String, Float>();
 
-				app.setDebugMode(1, 0);
+				app.setDebugModes(TestUtils.debugSettingsSingle(1, 0));
 
 				var result = app.findRootForQuadMeanDiameterFractionalError(
 						x1, x2, resultPerSpecies, initialDqs, baseAreas, minDq, maxDq, tph
@@ -1186,7 +1187,7 @@ class VriStartTest {
 
 				var resultPerSpecies = new HashMap<String, Float>();
 
-				app.setDebugMode(1, 2);
+				app.setDebugModes(TestUtils.debugSettingsSingle(1, 2));
 
 				assertThrows(
 						FatalProcessingException.class,
@@ -1252,7 +1253,7 @@ class VriStartTest {
 
 				var resultPerSpecies = new HashMap<String, Float>();
 
-				app.setDebugMode(1, 0);
+				app.setDebugModes(TestUtils.debugSettingsSingle(1, 0));
 
 				var result = app.findRootForQuadMeanDiameterFractionalError(
 						x1, x2, resultPerSpecies, initialDqs, baseAreas, minDq, maxDq, tph
@@ -1328,7 +1329,7 @@ class VriStartTest {
 
 				var resultPerSpecies = new HashMap<String, Float>();
 
-				app.setDebugMode(1, 0);
+				app.setDebugModes(TestUtils.debugSettingsSingle(1, 0));
 
 				assertThrows(
 						FatalProcessingException.class,
@@ -1697,7 +1698,6 @@ class VriStartTest {
 					.addMockedMethod("processBatn") //
 					.addMockedMethod("checkPolygon") //
 					.addMockedMethod("processPrimaryLayer") //
-					.addMockedMethod("getDebugMode") //
 					.createMock(control);
 
 			MockFileResolver resolver = dummyInput();
@@ -1755,8 +1755,9 @@ class VriStartTest {
 			EasyMock.expect(app.processBatn(polyYoung)).andReturn(polyBatn).times(0, 1);
 			app.processPrimaryLayer(EasyMock.anyObject(VriPolygon.class), EasyMock.anyObject(VdypLayer.Builder.class));
 			EasyMock.expectLastCall().once();
-			EasyMock.expect(app.getDebugMode(9)).andStubReturn(0);
-			EasyMock.expect(app.getDebugMode(1)).andStubReturn(0);
+
+			// 1 and 9 set to 0
+			controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettings(0, 0, 0, 0, 0, 0, 0, 0, 0));
 
 			control.replay();
 

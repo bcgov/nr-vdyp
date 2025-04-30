@@ -796,8 +796,13 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		final float quadMeanDiameter = BaseAreaTreeDensityDiameter.quadMeanDiameter(baseArea, treesPerHectare);
 		boolean lowDq = false;
 		if (quadMeanDiameter < VETERAN_MIN_DQ) {
-			if (this.getId() == VdypApplicationIdentifier.VRI_START && this.getDebugModes().getValue(1) == 2) {
+<<<<<<< HEAD
+			if (this.getId() == VdypApplicationIdentifier.VRI_START && this.getDebugMode(1) == 2) {
 				throw new FatalProcessingException(
+=======
+			if (this.getId() == VdypApplicationIdentifier.VRI_START && this.getDebugModes().getValue(1) == 2) {
+				throw new StandProcessingException(
+>>>>>>> 11e5e5b52 (Load debug flags in Start applications and implement debug modes 22 and 9)
 						MessageFormat.format(MINIMUM_DIAMETER_FAIL_MESSAGE, quadMeanDiameter, VETERAN_MIN_DQ)
 				);
 			}
@@ -1652,8 +1657,13 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			throws FatalProcessingException {
 		// Only do this in VRIStart
 
-		if (getDebugModes().getValue(1) == 2) {
+<<<<<<< HEAD
+		if (getDebugMode(1) == 2) {
 			throw new FatalProcessingException("Could not find solution for quadratic mean diameter", ex);
+=======
+		if (getDebugModes().getValue(1) == 2) {
+			throw new StandProcessingException("Could not find solution for quadratic mean diameter", ex);
+>>>>>>> 11e5e5b52 (Load debug flags in Start applications and implement debug modes 22 and 9)
 		}
 
 		log.atWarn().setMessage("Could not find exact solution for quadratic mean diameter.  Using inexact estimate.")
