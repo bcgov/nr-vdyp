@@ -23,7 +23,8 @@ public class PolygonProjectionState {
 
 	// Per-projection type information
 
-	private Map<ModelReturnCodeKey, ProcessingResult> processingResultByStageAndProjectionType;
+	/** Entries are null if not run, Optional.empty() if successful, otherwise the resulting exception. */
+	private Map<ModelReturnCodeKey, Optional<Exception>> processingResultByStageAndProjectionType;
 
 	private Map<ModelReturnCodeKey, Integer> firstYearValidYieldByProjectionType;
 
@@ -54,8 +55,7 @@ public class PolygonProjectionState {
 				processingModeByProjectionType.put(t, ProcessingModeCode.getDefault());
 				percentForestedLandUsedByProjectionType.put(t, null);
 				yieldFactorByProjectionType.put(t, null);
-				processingResultByStageAndProjectionType
-						.put(new ModelReturnCodeKey(s, t), ProcessingResult.PROCESSING_RESULT_NULL);
+				processingResultByStageAndProjectionType.put(new ModelReturnCodeKey(s, t), null);
 
 				firstYearValidYieldByProjectionType.put(new ModelReturnCodeKey(s, t), -9999);
 			}
@@ -183,16 +183,10 @@ public class PolygonProjectionState {
 	}
 
 	public void setProcessingResults(
-			ProjectionStageCode stage, ProjectionTypeCode projectionType, int returnCode, int runCode
-	) {
-		setProcessingResults(stage, projectionType, returnCode, Optional.of(runCode));
-	}
-
-	public void setProcessingResults(
-			ProjectionStageCode stage, ProjectionTypeCode projectionType, int returnCode, Optional<Integer> runCode
+			ProjectionStageCode stage, ProjectionTypeCode projectionType, Optional<Exception> result
 	) {
 		var key = new ModelReturnCodeKey(stage, projectionType);
-		if (this.processingResultByStageAndProjectionType.get(key) != ProcessingResult.PROCESSING_RESULT_NULL) {
+		if (this.processingResultByStageAndProjectionType.get(key) != null) {
 			throw new IllegalStateException(
 					MessageFormat.format(
 							"{0}.ProjectionState.setProcessingResults: processingResult has already been set for projection type {1} of stage {2}",
@@ -201,15 +195,14 @@ public class PolygonProjectionState {
 			);
 		}
 
-		var processingResult = new ProcessingResult(returnCode, runCode);
-		this.processingResultByStageAndProjectionType.put(key, processingResult);
+		this.processingResultByStageAndProjectionType.put(key, result);
 	}
 
-	public ProcessingResult getProcessingResults(ProjectionStageCode stage, ProjectionTypeCode projectionType) {
+	public Optional<Exception> getProcessingResults(ProjectionStageCode stage, ProjectionTypeCode projectionType) {
 
 		var key = new ModelReturnCodeKey(stage, projectionType);
 		if (processingResultByStageAndProjectionType.get(key) == null) {
-			return ProcessingResult.PROCESSING_RESULT_NULL;
+			return Optional.empty();
 		} else {
 			return processingResultByStageAndProjectionType.get(key);
 		}
@@ -312,6 +305,10 @@ public class PolygonProjectionState {
 		return executionFolder;
 	}
 
+	public boolean polygonWasProjected() {
+		return didRunProjectionStage(ProjectionStageCode.Forward) || didRunProjectionStage(ProjectionStageCode.Back);
+	}
+
 	public boolean layerWasProjected(Layer layer) {
 
 		var projectionType = layer.getAssignedProjectionType();
@@ -319,7 +316,9 @@ public class PolygonProjectionState {
 	}
 
 	public boolean didRunProjectionStage(ProjectionStageCode stage, ProjectionTypeCode projectionType) {
-		return getProcessingResults(stage, projectionType) != ProcessingResult.PROCESSING_RESULT_NULL;
+		var key = new ModelReturnCodeKey(stage, projectionType);
+		return processingResultByStageAndProjectionType.containsKey(key)
+				&& processingResultByStageAndProjectionType.get(key) != null;
 	}
 
 	public boolean didRunProjection(ProjectionTypeCode projectionType) {
@@ -334,9 +333,5 @@ public class PolygonProjectionState {
 			}
 		}
 		return false;
-	}
-
-	public boolean didRunProjection() {
-		return didRunProjectionStage(ProjectionStageCode.Forward) || didRunProjectionStage(ProjectionStageCode.Back);
 	}
 }

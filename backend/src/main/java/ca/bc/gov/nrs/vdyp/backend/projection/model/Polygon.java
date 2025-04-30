@@ -310,7 +310,7 @@ public class Polygon implements Comparable<Polygon> {
 		return result;
 	}
 
-	public boolean isCoastal() {
+	public boolean getIsCoastal() {
 		return isCoastal;
 	}
 
@@ -350,7 +350,7 @@ public class Polygon implements Comparable<Polygon> {
 		return Collections.unmodifiableMap(nonVegetationTypes);
 	}
 
-	public boolean doAllowProjection() {
+	public boolean getDoAllowProjection() {
 		return doAllowProjection;
 	}
 
@@ -358,7 +358,7 @@ public class Polygon implements Comparable<Polygon> {
 		return doAllowProjectionOfType.containsKey(projectionType) && doAllowProjectionOfType.get(projectionType);
 	}
 
-	public boolean wereLayerAdjustmentsSupplied() {
+	public boolean getWereLayerAdjustmentsSupplied() {
 		return wereLayerAdjustmentsSupplied;
 	}
 
@@ -556,7 +556,7 @@ public class Polygon implements Comparable<Polygon> {
 			return this;
 		}
 
-		public Builder coastal(boolean isCoastal) {
+		public Builder isCoastal(boolean isCoastal) {
 			polygon.isCoastal = isCoastal;
 			return this;
 		}
@@ -628,46 +628,6 @@ public class Polygon implements Comparable<Polygon> {
 
 		public Builder layerByProjectionType(Map<ProjectionTypeCode, Layer> layerByProjectionType) {
 			polygon.layerByProjectionType = layerByProjectionType;
-			return this;
-		}
-
-		public Builder targetedPrimaryLayer(Layer targetedPrimaryLayer) {
-			polygon.targetedPrimaryLayer = targetedPrimaryLayer;
-			return this;
-		}
-
-		public Builder targetedVeteranLayer(Layer targetedVeteranLayer) {
-			polygon.targetedVeteranLayer = targetedVeteranLayer;
-			return this;
-		}
-
-		public Builder primaryLayer(Layer primaryLayer) {
-			polygon.primaryLayer = primaryLayer;
-			return this;
-		}
-
-		public Builder veteranLayer(Layer veteranLayer) {
-			polygon.veteranLayer = veteranLayer;
-			return this;
-		}
-
-		public Builder residualLayer(Layer residualLayer) {
-			polygon.residualLayer = residualLayer;
-			return this;
-		}
-
-		public Builder regenerationLayer(Layer regenerationLayer) {
-			polygon.regenerationLayer = regenerationLayer;
-			return this;
-		}
-
-		public Builder deadLayer(Layer deadLayer) {
-			polygon.deadLayer = deadLayer;
-			return this;
-		}
-
-		public Builder rank1Layer(Layer rank1Layer) {
-			polygon.rank1Layer = rank1Layer;
 			return this;
 		}
 

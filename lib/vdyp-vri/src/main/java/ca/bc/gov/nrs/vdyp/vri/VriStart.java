@@ -340,8 +340,6 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 	protected Optional<VdypPolygon> processPolygon(int polygonsRead, VriPolygon polygon) throws ProcessingException {
 		log.atInfo().setMessage("Read polygon {}, preparing to process").addArgument(polygon.getPolygonIdentifier())
 				.log();
-		var bec = polygon.getBiogeoclimaticZone();
-
 		var mode = polygon.getMode().orElse(PolygonMode.START);
 
 		if (mode == PolygonMode.DONT_PROCESS) {

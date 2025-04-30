@@ -45,27 +45,27 @@ public class PolygonDisableProjectionsOfTypeTest {
 
 	@Test
 	void testDisablingProjectionsOfType() {
-		Assert.assertTrue(polygon.doAllowProjection());
+		Assert.assertTrue(polygon.getDoAllowProjection());
 
 		for (var projectionType : ProjectionTypeCode.ACTUAL_PROJECTION_TYPES_LIST) {
 			Assert.assertTrue(polygon.doAllowProjectionOfType(projectionType));
 		}
 
 		polygon.disableProjectionsOfType(ProjectionTypeCode.PRIMARY);
-		Assert.assertTrue(polygon.doAllowProjection());
+		Assert.assertTrue(polygon.getDoAllowProjection());
 		Assert.assertFalse(polygon.doAllowProjectionOfType(ProjectionTypeCode.PRIMARY));
 	}
 
 	@Test
 	void testDisablingProjection() {
-		Assert.assertTrue(polygon.doAllowProjection());
+		Assert.assertTrue(polygon.getDoAllowProjection());
 
 		for (var projectionType : ProjectionTypeCode.ACTUAL_PROJECTION_TYPES_LIST) {
 			Assert.assertTrue(polygon.doAllowProjectionOfType(projectionType));
 		}
 
 		polygon.disableProjectionsOfType(ProjectionTypeCode.UNKNOWN);
-		Assert.assertFalse(polygon.doAllowProjection());
+		Assert.assertFalse(polygon.getDoAllowProjection());
 
 		for (var projectionType : ProjectionTypeCode.ACTUAL_PROJECTION_TYPES_LIST) {
 			Assert.assertTrue(polygon.doAllowProjectionOfType(projectionType));

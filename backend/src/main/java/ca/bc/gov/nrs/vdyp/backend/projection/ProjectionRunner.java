@@ -107,7 +107,7 @@ public class ProjectionRunner implements Closeable {
 					}
 
 					try {
-						if (polygon.doAllowProjection()) {
+						if (polygon.getDoAllowProjection()) {
 
 							if (ProgressFrequency.POLYGON.equals(context.getParams().getProgressFrequency())) {
 

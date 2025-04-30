@@ -36,6 +36,14 @@ import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ReturnCode;
 import ca.bc.gov.nrs.vdyp.backend.utils.ProjectionUtils;
 import ca.bc.gov.nrs.vdyp.backend.utils.Utils;
 import ca.bc.gov.nrs.vdyp.common.Reference;
+import ca.bc.gov.nrs.vdyp.exceptions.BecMissingException;
+import ca.bc.gov.nrs.vdyp.exceptions.FailedToGrowYoungStandException;
+import ca.bc.gov.nrs.vdyp.exceptions.PreprocessEstimatedBaseAreaLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.QuadraticMeanDiameterLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.ResultBaseAreaLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.TotalAgeLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.UnsupportedModeException;
 import ca.bc.gov.nrs.vdyp.math.VdypMath;
 
 /**
@@ -193,94 +201,89 @@ public class PolygonProjectionRunner {
 			switch (initialGrowthModel) {
 			case FIP: {
 
+				var doRetryUsingVriStart = false;
+
 				createFipInputData(projectionType, initialProcessingMode, state);
 
 				componentRunner.runFipStart(polygon, projectionType, state);
-				logger.debug(
-						"{}: performed FIP Model; FIPSTART return code: {}", polygon,
-						state.getProcessingResults(ProjectionStageCode.Initial, projectionType).getResultCode()
-				);
 
-				var fipResult = state.getProcessingResults(ProjectionStageCode.Initial, projectionType);
+				var oFipResult = state.getProcessingResults(ProjectionStageCode.Initial, projectionType);
 
-				// TODO - adjust to use exception mechanism
-
-				if (fipResult.getResultCode() == ReturnCode.ERROR_INVALIDPARAMETER.errorCode) {
-					polygon.addMessage(
-							new PolygonMessage.Builder().polygon(polygon)
-									.details(
-											ReturnCode.ERROR_LAYERNOTPROCESSED, MessageSeverityCode.INFORMATION,
-											PolygonMessageKind.BAD_STAND_DEFINITION
-									).build()
+				if (!oFipResult.isPresent()) {
+					logger.debug(
+							"{}: performed FIP Model successfully for projection type {}", polygon, projectionType
 					);
+				} else {
+					var fipResult = oFipResult.get();
+
+					logger.debug(
+							"{}: FIP Model failed for projection type {}{}", polygon, projectionType,
+							fipResult.getMessage() != null ? ": " + fipResult.getMessage() : ""
+					);
+
+					if (fipResult instanceof StandProcessingException spe) {
+
+						var layer = polygon.getLayerByProjectionType(projectionType);
+
+						doRetryUsingVriStart = FipStartProcessingResult.doRetryUsingVriStart(spe);
+
+						if (spe instanceof UnsupportedModeException) {
+							polygon.addMessage(
+									new PolygonMessage.Builder().polygon(polygon).layer(layer)
+											.details(
+													ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
+													PolygonMessageKind.LOW_SITE, spe.getErrorNumber().get()
+											).build()
+							);
+							break;
+						} else if (spe instanceof TotalAgeLowException) {
+							polygon.addMessage(
+									new PolygonMessage.Builder().polygon(polygon).layer(layer)
+											.details(
+													ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
+													PolygonMessageKind.BREAST_HEIGHT_AGE_TOO_YOUNG, "FipStart",
+													spe.getErrorNumber().get()
+											).build()
+							);
+							break;
+						} else if (spe instanceof BecMissingException || spe instanceof ResultBaseAreaLowException) {
+							polygon.addMessage(
+									new PolygonMessage.Builder().polygon(polygon).layer(layer)
+											.details(
+													ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
+													PolygonMessageKind.BREAST_HEIGHT_AGE_TOO_YOUNG, "FIPSTART",
+													spe.getErrorNumber().get()
+											).build()
+							);
+							doRetryUsingVriStart = true;
+							break;
+						} else {
+							polygon.addMessage(
+									new PolygonMessage.Builder().polygon(polygon).layer(layer).details(
+											ReturnCode.ERROR_CORELIBRARYERROR, MessageSeverityCode.ERROR,
+											PolygonMessageKind.GENERIC_FIPSTART_ERROR, spe.getErrorNumber().get()
+									).build()
+							);
+							break;
+						}
+					} else {
+						polygon.addMessage(
+								new PolygonMessage.Builder().polygon(polygon)
+										.details(
+												ReturnCode.ERROR_LAYERNOTPROCESSED, MessageSeverityCode.INFORMATION,
+												PolygonMessageKind.BAD_STAND_DEFINITION
+										).build()
+						);
+					}
 				}
 
-				if (fipResult.getRunCode().isPresent()) {
-					var runCode = fipResult.getRunCode().get();
-					var layer = polygon.getLayerByProjectionType(projectionType);
-
-					switch (runCode) {
-					case 0, -99:
-						// Normal, successful, execution
-						break;
-
-					case -4: {
-						polygon.addMessage(
-								new PolygonMessage.Builder().polygon(polygon).layer(layer)
-										.details(
-												ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
-												PolygonMessageKind.LOW_SITE, runCode
-										).build()
-						);
-						break;
-					}
-					case -6: {
-						polygon.addMessage(
-								new PolygonMessage.Builder().polygon(polygon).layer(layer)
-										.details(
-												ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
-												PolygonMessageKind.BREAST_HEIGHT_AGE_TOO_YOUNG, "FipStart", runCode
-										).build()
-						);
-						break;
-					}
-					case -12, -13: {
-						polygon.addMessage(
-								new PolygonMessage.Builder().polygon(polygon).layer(layer)
-										.details(
-												ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
-												PolygonMessageKind.BREAST_HEIGHT_AGE_TOO_YOUNG, "FIPSTART", runCode
-										).build()
-						);
-						break;
-					}
-					case -14: {
-						polygon.addMessage(
-								new PolygonMessage.Builder().polygon(polygon).layer(layer)
-										.details(
-												ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
-												PolygonMessageKind.NO_VIABLE_STAND_DESCRIPTION, "FIPSTART", runCode
-										).build()
-						);
-						break;
-					}
-					default: {
-						polygon.addMessage(
-								new PolygonMessage.Builder().polygon(polygon).layer(layer)
-										.details(
-												ReturnCode.ERROR_CORELIBRARYERROR, MessageSeverityCode.ERROR,
-												PolygonMessageKind.GENERIC_FIPSTART_ERROR, runCode
-										).build()
-						);
-						break;
-					}
-					}
-				}
-
-				if (fipResult.doRetryUsingVriStart()) {
+				if (doRetryUsingVriStart) {
 					logger.debug("{}: falling through to VRI Model", polygon);
 					state.modifyGrowthModel(projectionType, GrowthModelCode.VRI, ProcessingModeCode.VRI_VriYoung);
 				} else {
+					if (oFipResult.isPresent()) {
+						polygon.disableProjectionsOfType(projectionType);
+					}
 					break;
 				}
 			}
@@ -290,22 +293,34 @@ public class PolygonProjectionRunner {
 				createVriInputData(projectionType, state);
 
 				componentRunner.runVriStart(polygon, projectionType, state);
-				var vriResult = state.getProcessingResults(ProjectionStageCode.Initial, projectionType);
 
-				logger.debug("{}: performed VRI Model; VRISTART return code: {}", polygon, vriResult.getResultCode());
+				var oVriResult = state.getProcessingResults(ProjectionStageCode.Initial, projectionType);
+				if (!oVriResult.isPresent()) {
+					logger.debug(
+							"{}: performed VRI Model successfully for projection type {}", polygon, projectionType
+					);
+				} else {
+					logger.debug(
+							"{}: VRI Model failed for projection type {}: {}", polygon, projectionType,
+							oVriResult.toString()
+					);
 
-				if (vriResult.getRunCode().isPresent()) {
+					var vriResult = oVriResult.get();
 
-					var runCode = vriResult.getRunCode().get();
-					var layer = polygon.getLayerByProjectionType(projectionType);
+					logger.debug(
+							"{}: VRI Model failed for projection type {}{}", polygon, projectionType,
+							vriResult.getMessage() != null ? ": " + vriResult.getMessage() : ""
+					);
 
-					if (runCode == 0 || runCode == -99) {
-						// Normal, successful, execution
-					} else {
-						polygon.disableProjectionsOfType(projectionType);
+					polygon.disableProjectionsOfType(projectionType);
 
-						switch (runCode) {
-						case -7: {
+					if (vriResult instanceof StandProcessingException spe) {
+
+						var errorNumber = spe.getErrorNumber();
+						var layer = polygon.getLayerByProjectionType(projectionType);
+
+						if (vriResult instanceof QuadraticMeanDiameterLowException) {
+
 							polygon.addMessage(
 									new PolygonMessage.Builder().layer(layer)
 											.details(
@@ -313,45 +328,33 @@ public class PolygonProjectionRunner {
 													PolygonMessageKind.LAYER_DETAILS_MISSING
 											).build()
 							);
-							break;
-						}
-						case -13: {
+						} else if (vriResult instanceof PreprocessEstimatedBaseAreaLowException) {
 							polygon.addMessage(
 									new PolygonMessage.Builder().layer(layer)
 											.details(
 													ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
-													PolygonMessageKind.PREDICATED_BASAL_AREA_TOO_SMALL, runCode
+													PolygonMessageKind.PREDICATED_BASAL_AREA_TOO_SMALL, errorNumber
 											).build()
 							);
-							break;
-						}
-						case -14: {
+						} else if (vriResult instanceof FailedToGrowYoungStandException) {
 							polygon.addMessage(
-									new PolygonMessage.Builder().layer(layer)
-											.details(
-													ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
-													PolygonMessageKind.NO_VIABLE_STAND_DESCRIPTION, "VRISTART", runCode
-											).build()
+									new PolygonMessage.Builder().layer(layer).details(
+											ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
+											PolygonMessageKind.NO_VIABLE_STAND_DESCRIPTION, "VRISTART", errorNumber
+									).build()
 							);
-							break;
-						}
-						default: {
+						} else {
 							polygon.addMessage(
 									new PolygonMessage.Builder().layer(layer)
 											.details(
 													ReturnCode.ERROR_CORELIBRARYERROR, MessageSeverityCode.ERROR,
-													PolygonMessageKind.GENERIC_VRISTART_ERROR, runCode
+													PolygonMessageKind.GENERIC_VRISTART_ERROR, errorNumber
 											).build()
 							);
-							break;
-						}
 						}
 					}
 				}
-
-				break;
 			}
-
 			default: {
 				var currentGrowthModel = state.getGrowthModel(projectionType);
 
@@ -364,7 +367,9 @@ public class PolygonProjectionRunner {
 				);
 			}
 			}
+
 		}
+
 	}
 
 	/**
@@ -694,8 +699,10 @@ public class PolygonProjectionRunner {
 					componentRunner.runForward(polygon, projectionType, state);
 
 					logger.debug(
-							"{}: performed Forward; return code: {}", layer,
-							state.getProcessingResults(ProjectionStageCode.Forward, projectionType).getResultCode()
+							"{}: performed Forward; result: {}", layer,
+							state.getProcessingResults(ProjectionStageCode.Forward, projectionType)
+									.map(e -> e.getMessage() != null ? e.getMessage() : e.getClass().getName())
+									.orElse("success")
 					);
 				} else {
 					logger.info("{}: forward projection skipped because yearsToGrowForward is 0", layer);
@@ -714,8 +721,10 @@ public class PolygonProjectionRunner {
 					componentRunner.runBack(polygon, projectionType, state);
 
 					logger.debug(
-							"{}: performed Back; return code: {}", layer,
-							state.getProcessingResults(ProjectionStageCode.Back, projectionType).getResultCode()
+							"{}: performed Back; result: {}", layer,
+							state.getProcessingResults(ProjectionStageCode.Forward, projectionType)
+									.map(e -> e.getMessage() != null ? e.getMessage() : e.getClass().getName())
+									.orElse("success")
 					);
 				} else {
 					logger.info("{}: backwards projection skipped because yearsToGrowBack is 0", layer);

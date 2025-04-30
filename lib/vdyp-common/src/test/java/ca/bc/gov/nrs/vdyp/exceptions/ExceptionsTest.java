@@ -56,7 +56,7 @@ class ExceptionsTest {
 
 	@ParameterizedTest
 	@MethodSource("exampleStandProcessingExceptions")
-	void testAutoUnwrap(StandProcessingException ex) throws Exception {
+	void testAutoUnwrap(StandProcessingException ex) {
 		var wrapper = new RuntimeProcessingException(ex);
 		var unwrapped = wrapper.unwrap();
 

@@ -44,7 +44,6 @@ class NonFipControlParserTest {
 
 	@Test
 	void testParseByName() throws Exception {
-		BaseControlParser parser = getUnit();
 		var controlMap = new HashMap<String, Object>();
 		var resolver = TestUtils.fileResolver(TestUtils.class);
 		var names = List.of(CONTROL_FILE);

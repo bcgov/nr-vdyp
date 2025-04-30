@@ -61,15 +61,9 @@ public class ExceptionsTest {
 	@Test
 	void StandYieldCalculationExceptionTest() {
 
-		var e1 = new StandYieldCalculationException(12, new Exception("calculation exception"));
-		Assert.assertEquals("StandYieldCalculation exception 12", e1.getMessage());
-		Assert.assertEquals(12, e1.getErrorCode());
+		var e1 = new StandYieldCalculationException(new Exception("calculation exception"));
+		Assert.assertEquals("Exception: calculation exception", e1.getMessage());
 		Assert.assertEquals("Exception", e1.getCause().getClass().getSimpleName());
-
-		var e2 = new StandYieldCalculationException(12);
-		Assert.assertEquals("StandYieldCalculation exception 12", e2.getMessage());
-		Assert.assertEquals(12, e2.getErrorCode());
-		Assert.assertEquals(null, e2.getCause());
 	}
 
 	@Test

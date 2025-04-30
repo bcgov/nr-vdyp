@@ -23,7 +23,6 @@ import org.apache.commons.math3.exception.TooManyEvaluationsException;
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
 import org.hamcrest.Matcher;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -40,7 +39,6 @@ import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.exceptions.FatalProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
-import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BasalAreaYieldParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BaseAreaCoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.HLNonprimaryCoefficientParser;
@@ -4312,9 +4310,14 @@ class VriStartTest {
 
 		TestUtils.populateControlMapGenusReal(controlMap);
 		TestUtils.populateControlMapBecReal(controlMap);
-		controlMap
-				.put(ControlKey.DEFAULT_EQ_NUM.name(), new MatrixMap2Impl(List.of("D"), List.of("CDF"), (x, y) -> 42));
-		controlMap.put(ControlKey.EQN_MODIFIERS.name(), new MatrixMap2Impl(List.of(42), List.of(37), (x, y) -> 64));
+		controlMap.put(
+				ControlKey.DEFAULT_EQ_NUM.name(),
+				new MatrixMap2Impl<Object, Object, Object>(List.of("D"), List.of("CDF"), (x, y) -> 42)
+		);
+		controlMap.put(
+				ControlKey.EQN_MODIFIERS.name(),
+				new MatrixMap2Impl<Object, Object, Object>(List.of(42), List.of(37), (x, y) -> 64)
+		);
 
 		var bec = Utils.getBec("CDF", controlMap);
 

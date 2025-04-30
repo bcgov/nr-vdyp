@@ -19,8 +19,8 @@ public enum PolygonMessageKind {
 	ESTIMATED_SI_UNAVAILABLE(
 			"Estimated site index required but unavailable for species \"{0}\" at age {1}. Site index computed directly from age and height"
 	), //
-	GENERIC_FIPSTART_ERROR("an error occurred processing the FIPSTART model. FIPSTART return code: {0}"), //
-	GENERIC_VRISTART_ERROR("an error occurred processing the VRISTART model. VRISTART return code: {0}"), //
+	GENERIC_FIPSTART_ERROR("an error occurred processing the FIPSTART model{0}"), //
+	GENERIC_VRISTART_ERROR("an error occurred processing the VRISTART model{0}"), //
 	INCONSISTENT_SITE_INFO("species definitions for species \"{0}\" have inconsistent site information"),
 	LAYER_DETAILS_MISSING(
 			"VRISTART reported that basal area or trees-per-hectare was not supplied or quad-mean-diameter"

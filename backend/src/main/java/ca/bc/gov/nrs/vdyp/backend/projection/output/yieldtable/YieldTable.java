@@ -24,6 +24,7 @@ import ca.bc.gov.nrs.vdyp.backend.model.v1.MessageSeverityCode;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.OutputFormat;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.PolygonMessageKind;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.StandYieldMessageKind;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.UtilizationClassSet;
 import ca.bc.gov.nrs.vdyp.backend.projection.PolygonProjectionState;
 import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionContext;
@@ -40,6 +41,9 @@ import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCo
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ReturnCode;
 import ca.bc.gov.nrs.vdyp.backend.utils.Utils;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
+import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
+import ca.bc.gov.nrs.vdyp.exceptions.FailedToGrowYoungStandException;
+import ca.bc.gov.nrs.vdyp.exceptions.LayerMissingException;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.ForwardControlParser;
 import ca.bc.gov.nrs.vdyp.forward.ForwardDataStreamReader;
@@ -650,7 +654,7 @@ public class YieldTable implements Closeable {
 
 		var primaryLayer = rowContext.getPolygon().getPrimaryLayer();
 		if (primaryLayer == null) {
-			throw new StandYieldCalculationException(-5);
+			throw new StandYieldCalculationException(new LayerMissingException(LayerType.PRIMARY));
 		}
 
 		var primaryLayerAge0Year = primaryLayer.determineYearAtAge(0);
@@ -729,7 +733,7 @@ public class YieldTable implements Closeable {
 			);
 		}
 
-		if (!rowContext.getPolygonProjectionState().didRunProjection()) {
+		if (!rowContext.getPolygonProjectionState().polygonWasProjected()) {
 			throw new IllegalStateException(
 					MessageFormat.format("{0}: did not run projection", rowContext.getPolygon())
 			);
@@ -739,7 +743,7 @@ public class YieldTable implements Closeable {
 
 		for (var layer : polygon.getLayers().values()) {
 
-			if (rowContext.getPolygonProjectionState().didRunProjection()) {
+			if (rowContext.getPolygonProjectionState().polygonWasProjected()) {
 
 				var layerYearAtAge = layer.determineYearAtAge(0);
 				var ageOffset = primaryLayerYearAtAge - layerYearAtAge;
@@ -999,7 +1003,7 @@ public class YieldTable implements Closeable {
 			YieldTableRowContext rowContext, Map<Integer, VdypPolygon> polygonProjectionsByYear, Layer layer,
 			int targetAge
 	) throws StandYieldCalculationException {
-		if (!rowContext.getPolygonProjectionState().didRunProjection()) {
+		if (!rowContext.getPolygonProjectionState().polygonWasProjected()) {
 			throw new IllegalStateException(
 					MessageFormat.format("{0}: did not run projection", rowContext.getPolygon())
 			);
@@ -1080,7 +1084,10 @@ public class YieldTable implements Closeable {
 	) throws StandYieldCalculationException {
 
 		if (targetAge < Vdyp7Constants.MIN_SPECIES_AGE || Vdyp7Constants.MAX_SPECIES_AGE > targetAge) {
-			throw new StandYieldCalculationException(-2);
+			throw new StandYieldCalculationException(
+					StandYieldMessageKind.AGE_OUT_OF_RANGE, Double.valueOf(Vdyp7Constants.MIN_SPECIES_AGE),
+					Double.valueOf(Vdyp7Constants.MAX_SPECIES_AGE)
+			);
 		}
 
 		var stand = species.getStand();
@@ -1431,10 +1438,10 @@ public class YieldTable implements Closeable {
 
 		var initialProcessingResult = rowContext.getPolygonProjectionState()
 				.getProcessingResults(ProjectionStageCode.Initial, projectionType);
-		var runCode = initialProcessingResult.getRunCode().isPresent() ? initialProcessingResult.getRunCode().get() : 0;
 
-		if (layerType != null && runCode == -14) {
-			throw new StandYieldCalculationException(-14 /* ?!? */);
+		if (layerType != null
+				&& initialProcessingResult.map(r -> r instanceof FailedToGrowYoungStandException).orElse(false)) {
+			throw new StandYieldCalculationException(new FailedToGrowYoungStandException());
 		}
 
 		var projectedPolygon = polygonProjectionsByYear.get(calendarYear);
@@ -1616,7 +1623,7 @@ public class YieldTable implements Closeable {
 			calendarYear = layer.determineYearAtAge(ageToUse);
 		}
 		if (calendarYear == null || calendarYear < 0) {
-			throw new StandYieldCalculationException(calendarYear == null ? -9 : calendarYear);
+			throw new StandYieldCalculationException(StandYieldMessageKind.YEAR_OUT_OF_RANGE, calendarYear);
 		}
 
 		return calendarYear;

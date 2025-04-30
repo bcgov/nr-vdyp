@@ -380,7 +380,7 @@ public class Species implements Comparable<Species> {
 		Layer layer = this.stand.getLayer();
 		Polygon polygon = layer.getPolygon();
 
-		boolean isCoastal = polygon.isCoastal();
+		boolean isCoastal = polygon.getIsCoastal();
 
 		boolean haveComputedSiteIndexCurve = false;
 		boolean haveComputedTotalAge = false;

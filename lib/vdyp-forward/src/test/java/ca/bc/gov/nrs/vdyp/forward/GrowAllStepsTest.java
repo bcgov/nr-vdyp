@@ -101,6 +101,7 @@ class GrowAllStepsTest {
 		assertThat(forwardDataStreamReader.readNextPolygon().isEmpty(), is(true));
 	}
 
+	@SuppressWarnings("unused")
 	private static void comparePolygons(VdypPolygon a, VdypPolygon b, float tolerance) {
 
 		Float originalEpsilon = VdypMatchers.setEpsilon(tolerance);

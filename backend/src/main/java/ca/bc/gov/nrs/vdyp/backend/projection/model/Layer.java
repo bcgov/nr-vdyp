@@ -161,7 +161,7 @@ public class Layer implements Comparable<Layer> {
 		return vdyp7LayerCode;
 	}
 
-	public Boolean doIncludeWithProjection() {
+	public Boolean getDoIncludeWithProjection() {
 		return doIncludeWithProjection;
 	}
 
@@ -368,7 +368,7 @@ public class Layer implements Comparable<Layer> {
 			return this;
 		}
 
-		public Builder precentStockable(Double percentStockable) {
+		public Builder percentStockable(Double percentStockable) {
 			layer.percentStockable = percentStockable;
 			return this;
 		}
@@ -633,7 +633,7 @@ public class Layer implements Comparable<Layer> {
 
 		if (getEstimatedSiteIndex() != null) {
 
-			estimatedCurve = SiteTool.getSICurve(getEstimatedSiteIndexSpecies(), getPolygon().isCoastal());
+			estimatedCurve = SiteTool.getSICurve(getEstimatedSiteIndexSpecies(), getPolygon().getIsCoastal());
 			for (Species s : getSp64sAsSupplied()) {
 				estimatedAge = s.getTotalAge();
 				if (estimatedAge != null) {
@@ -653,7 +653,8 @@ public class Layer implements Comparable<Layer> {
 					if (s.getSiteCurve() != null) {
 						estimatedCurve = s.getSiteCurve();
 					} else {
-						estimatedCurve = SiteTool.getSICurve(getEstimatedSiteIndexSpecies(), getPolygon().isCoastal());
+						estimatedCurve = SiteTool
+								.getSICurve(getEstimatedSiteIndexSpecies(), getPolygon().getIsCoastal());
 					}
 
 					logger.debug(
@@ -702,7 +703,7 @@ public class Layer implements Comparable<Layer> {
 					);
 
 					if (estimatedSiteIndex != null && targetCurve == null) {
-						targetCurve = SiteTool.getSICurve(s.getSpeciesCode(), polygon.isCoastal());
+						targetCurve = SiteTool.getSICurve(s.getSpeciesCode(), polygon.getIsCoastal());
 						logger.debug("site index curve not supplied, using default {}", targetCurve.name());
 					}
 
@@ -797,7 +798,7 @@ public class Layer implements Comparable<Layer> {
 				Species leadingSp64 = this.determineLeadingSp64(0);
 				if (leadingSp64 != null && leadingSp64.getDominantHeight() >= 10.0) {
 					var estimatedCrownClosure = SiteTool
-							.getSpeciesDefaultCrownClosure(leadingSp64.getSpeciesCode(), polygon.isCoastal());
+							.getSpeciesDefaultCrownClosure(leadingSp64.getSpeciesCode(), polygon.getIsCoastal());
 
 					logger.debug("{}: estimating crown closure of primary layer at {}", this, estimatedCrownClosure);
 					crownClosure = (short) estimatedCrownClosure;
@@ -807,7 +808,7 @@ public class Layer implements Comparable<Layer> {
 									.details(
 											ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
 											PolygonMessageKind.USING_DEFAULT_CC, Double.valueOf(crownClosure),
-											getPolygon().isCoastal() ? "Coast" : "Interior"
+											getPolygon().getIsCoastal() ? "Coast" : "Interior"
 									).build()
 					);
 

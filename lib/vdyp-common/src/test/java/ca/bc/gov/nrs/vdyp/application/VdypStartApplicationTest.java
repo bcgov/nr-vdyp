@@ -57,8 +57,6 @@ import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.io.write.VdypOutputWriter;
-import ca.bc.gov.nrs.vdyp.model.BaseVdypLayer;
-import ca.bc.gov.nrs.vdyp.model.BaseVdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
@@ -74,7 +72,6 @@ import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.VolumeComputeMode;
 import ca.bc.gov.nrs.vdyp.test.MockFileResolver;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
-import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
 class VdypStartApplicationTest {
@@ -275,7 +272,6 @@ class VdypStartApplicationTest {
 					.withConstructor(controlMap, false).createMock(control);
 
 			TestPolygon testPoly = control.createMock(TestPolygon.class);
-			VdypPolygon resultPoly = control.createMock(VdypPolygon.class);
 
 			VdypOutputWriter writer = control.createMock(VdypOutputWriter.class);
 			EasyMock.expect(app.processPolygon(0, testPoly)).andReturn(Optional.empty());
@@ -312,7 +308,6 @@ class VdypStartApplicationTest {
 					.withConstructor(controlMap, false).createMock(control);
 
 			TestPolygon testPoly = control.createMock(TestPolygon.class);
-			VdypPolygon resultPoly = control.createMock(VdypPolygon.class);
 
 			VdypOutputWriter writer = control.createMock(VdypOutputWriter.class);
 			EasyMock.expect(app.processPolygon(0, testPoly)).andThrow(new BecMissingException());
@@ -865,7 +860,7 @@ class VdypStartApplicationTest {
 		}
 
 		@Test
-		void testBadPrimarySpecies() throws Exception {
+		void testBadPrimarySpecies() {
 
 			var mockControl = EasyMock.createControl();
 
@@ -888,7 +883,7 @@ class VdypStartApplicationTest {
 		}
 
 		@Test
-		void testBadPrimarySpeciesWithMinorSecondary() throws Exception {
+		void testBadPrimarySpeciesWithMinorSecondary() {
 
 			var mockControl = EasyMock.createControl();
 
@@ -913,7 +908,7 @@ class VdypStartApplicationTest {
 		}
 
 		@Test
-		void testBadPrimarySpeciesWithMajorSecondary() throws Exception {
+		void testBadPrimarySpeciesWithMajorSecondary() {
 
 			var mockControl = EasyMock.createControl();
 

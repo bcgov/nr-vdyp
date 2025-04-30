@@ -5,12 +5,6 @@ public class SpeciesReportingInfo implements Comparable<SpeciesReportingInfo> {
 	private String sp64Name;
 	private double sp64Percent;
 
-	private Double wholeStemVolume;
-	private Double closeUtilizationVolume;
-	private Double cuVolumeLessDecay;
-	private Double cuVolumeLessDecayWaste;
-	private Double cuVolumeLessDecayWastageBreakage;
-
 	private int asSuppliedIndex;
 
 	public String getSp64Name() {
@@ -38,31 +32,6 @@ public class SpeciesReportingInfo implements Comparable<SpeciesReportingInfo> {
 			return this;
 		}
 
-		public Builder wholeStemVolume(double wholeStemVolume) {
-			speciesReportingInfo.wholeStemVolume = wholeStemVolume;
-			return this;
-		}
-
-		public Builder closeUtilizationVolume(double closeUtilizationVolume) {
-			speciesReportingInfo.closeUtilizationVolume = closeUtilizationVolume;
-			return this;
-		}
-
-		public Builder cuVolumeLessDecay(double cuVolumeLessDecay) {
-			speciesReportingInfo.cuVolumeLessDecay = cuVolumeLessDecay;
-			return this;
-		}
-
-		public Builder cuVolumeLessDecayWaste(double cuVolumeLessDecayWaste) {
-			speciesReportingInfo.cuVolumeLessDecayWaste = cuVolumeLessDecayWaste;
-			return this;
-		}
-
-		public Builder cuVolumeLessDecayWastageBreakage(double cuVolumeLessDecayWastageBreakage) {
-			speciesReportingInfo.cuVolumeLessDecayWastageBreakage = cuVolumeLessDecayWastageBreakage;
-			return this;
-		}
-
 		public Builder asSuppliedIndex(int asSuppliedIndex) {
 			speciesReportingInfo.asSuppliedIndex = asSuppliedIndex;
 			return this;
@@ -81,27 +50,22 @@ public class SpeciesReportingInfo implements Comparable<SpeciesReportingInfo> {
 		}
 
 		public VolumeApplier wholeStemVolume(double wholeStemVolume) {
-			speciesReportingInfo.wholeStemVolume = wholeStemVolume;
 			return this;
 		}
 
 		public VolumeApplier closeUtilizationVolume(double closeUtilizationVolume) {
-			speciesReportingInfo.closeUtilizationVolume = closeUtilizationVolume;
 			return this;
 		}
 
 		public VolumeApplier cuVolumeLessDecay(double cuVolumeLessDecay) {
-			speciesReportingInfo.cuVolumeLessDecay = cuVolumeLessDecay;
 			return this;
 		}
 
 		public VolumeApplier cuVolumeLessDecayWaste(double cuVolumeLessDecayWaste) {
-			speciesReportingInfo.cuVolumeLessDecayWaste = cuVolumeLessDecayWaste;
 			return this;
 		}
 
 		public VolumeApplier cuVolumeLessDecayWastageBreakage(double cuVolumeLessDecayWastageBreakage) {
-			speciesReportingInfo.cuVolumeLessDecayWastageBreakage = cuVolumeLessDecayWastageBreakage;
 			return this;
 		}
 

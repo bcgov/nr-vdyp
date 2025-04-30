@@ -18,13 +18,12 @@ import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.YieldTableGenerationExceptio
 import ca.bc.gov.nrs.vdyp.backend.model.v1.MessageSeverityCode;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.PolygonMessageKind;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessageKind;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Polygon;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.PolygonMessage;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Vdyp7Constants;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ReturnCode;
+import ca.bc.gov.nrs.vdyp.common.VdypApplicationException;
 import ca.bc.gov.nrs.vdyp.common.VdypApplicationInitializationException;
 import ca.bc.gov.nrs.vdyp.fip.FipStart;
 import ca.bc.gov.nrs.vdyp.forward.VdypForwardApplication;
@@ -45,8 +44,8 @@ public class RealComponentRunner implements ComponentRunner {
 						Vdyp7Constants.FIP_START_CONTROL_FILE_NAME
 				);
 				fipStartApplication.doMain(controlFilePath.toAbsolutePath().toString());
-				state.setProcessingResults(ProjectionStageCode.Initial, projectionTypeCode, 0, -99);
-			} catch (VdypApplicationInitializationException e) {
+				state.setProcessingResults(ProjectionStageCode.Initial, projectionTypeCode, Optional.empty());
+			} catch (VdypApplicationException e) {
 				throwInterpretedException(fipStartApplication, polygon, e);
 			} catch (Exception e) {
 				throwInterpretedException(fipStartApplication, polygon, e);
@@ -66,8 +65,8 @@ public class RealComponentRunner implements ComponentRunner {
 						Vdyp7Constants.VRI_START_CONTROL_FILE_NAME
 				);
 				vriStartApplication.doMain(controlFilePath.toAbsolutePath().toString());
-				state.setProcessingResults(ProjectionStageCode.Initial, projectionTypeCode, 0, -99);
-			} catch (VdypApplicationInitializationException e) {
+				state.setProcessingResults(ProjectionStageCode.Initial, projectionTypeCode, Optional.empty());
+			} catch (VdypApplicationException e) {
 				throwInterpretedException(vriStartApplication, polygon, e);
 			} catch (Exception e) {
 				throwInterpretedException(vriStartApplication, polygon, e);
@@ -87,7 +86,7 @@ public class RealComponentRunner implements ComponentRunner {
 
 		copyAdjustInputFilesToOutput(polygon, state, projectionType, state.getExecutionFolder());
 
-		state.setProcessingResults(ProjectionStageCode.Adjust, projectionType, 0, -99);
+		state.setProcessingResults(ProjectionStageCode.Adjust, projectionType, Optional.empty());
 	}
 
 	private void copyAdjustInputFilesToOutput(
@@ -141,7 +140,7 @@ public class RealComponentRunner implements ComponentRunner {
 				Optional<Path> outputDir = Optional.empty();
 				forwardApplication.doMain(inputDir, outputDir, controlFilePath.toAbsolutePath().toString());
 
-				state.setProcessingResults(ProjectionStageCode.Forward, projectionTypeCode, 0, -99);
+				state.setProcessingResults(ProjectionStageCode.Forward, projectionTypeCode, Optional.empty());
 			} catch (VdypApplicationInitializationException e) {
 				throwInterpretedException(forwardApplication, polygon, e);
 			} catch (Exception e) {
@@ -252,6 +251,15 @@ public class RealComponentRunner implements ComponentRunner {
 					);
 				}
 			}
+		}
+	}
+
+	private void throwInterpretedException(VdypApplication app, Polygon polygon, VdypApplicationException e)
+			throws PolygonExecutionException {
+		if (e.getCause() instanceof Exception pe) {
+			throw new PolygonExecutionException(buildMessage(app, polygon, "running", pe), pe);
+		} else {
+			throw new PolygonExecutionException(buildMessage(app, polygon, "running", e), e);
 		}
 	}
 

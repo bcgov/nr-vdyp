@@ -204,8 +204,7 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 			polygon = new Polygon.Builder() //
 					.becZone(bec.getText()) //
 					.cfsEcoZone(nextPolygonRecord.getCfsEcoZoneCode()) //
-					.coastal(bec.getSpeciesRegion() == SpeciesRegion.COAST) //
-					.deadLayer(null) // set later
+					.isCoastal(bec.getSpeciesRegion() == SpeciesRegion.COAST) //
 					.district(null /* not available in HCSV input */) //
 					.doAllowProjection(true) //
 					.doAllowProjectionOfType(initializeProjectionMap(true)) //
@@ -213,7 +212,6 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 					.inventoryStandard(InventoryStandard.getFromCode(nextPolygonRecord.getInventoryStandardCode())) //
 					.mapSheet(nextPolygonRecord.getMapId()) //
 					.nonProductiveDescriptor(nextPolygonRecord.getNonProductiveDescriptorCode())
-					.nonVegetationTypes(null) //
 					.nonVegetationTypes(nonVegetationMap) //
 					.otherVegetationTypes(otherVegetationMap) //
 					.percentStockable(nextPolygonRecord.getPercentStockable()) //
@@ -241,7 +239,7 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 							.estimatedSiteIndexSpecies(nextLayerRecord.getEstimatedSiteIndexSpeciesCode()) //
 							.measuredUtilizationLevel(7.5 /* from lcl_CopyLayerDataIntoSnapshot, line 4596 */) //
 							.nonForestDescriptor(nextLayerRecord.getNonForestDescriptorCode()) //
-							.precentStockable(nextLayerRecord.getLayerStockability()) //
+							.percentStockable(nextLayerRecord.getLayerStockability()) //
 							.rankCode(nextLayerRecord.getForestCoverRankCode()) //
 							.treesPerHectare(nextLayerRecord.getStemsPerHectare()) //
 							.vdyp7LayerCode(nextLayerRecord.getTargetVdyp7LayerCode()) //

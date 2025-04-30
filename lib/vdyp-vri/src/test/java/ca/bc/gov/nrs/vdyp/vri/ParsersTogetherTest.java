@@ -31,7 +31,6 @@ import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.exceptions.CrownClosureLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.FatalProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
-import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BecDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.DefaultEquationNumberParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.EquationModifierParser;
@@ -296,7 +295,7 @@ class ParsersTogetherTest {
 	}
 
 	@Test
-	void testMissingSite() throws IOException, ProcessingException, ResourceParseException {
+	void testMissingSite() throws IOException {
 		var app = new VriStart();
 
 		final var polygonId = new PolygonIdentifier("Test", 2024);
@@ -348,7 +347,7 @@ class ParsersTogetherTest {
 	}
 
 	@Test
-	void testMissingSpecies() throws IOException, ProcessingException, ResourceParseException {
+	void testMissingSpecies() throws IOException {
 		var app = new VriStart();
 
 		final var polygonId = new PolygonIdentifier("Test", 2024);
@@ -400,7 +399,7 @@ class ParsersTogetherTest {
 	}
 
 	@Test
-	void testSpeciesForWrongPolygon() throws IOException, ProcessingException, ResourceParseException {
+	void testSpeciesForWrongPolygon() throws IOException {
 		var app = new VriStart();
 
 		final var polygonId = new PolygonIdentifier("Test", 2024);
@@ -461,7 +460,7 @@ class ParsersTogetherTest {
 	}
 
 	@Test
-	void testSpeciesForWrongLayer() throws IOException, ProcessingException, ResourceParseException {
+	void testSpeciesForWrongLayer() throws IOException {
 		var app = new VriStart();
 
 		final var polygonId = new PolygonIdentifier("Test", 2024);
@@ -523,7 +522,7 @@ class ParsersTogetherTest {
 
 	@Disabled("I don't think this error can actually happen as other errors will happen first")
 	@Test
-	void testLayerForWrongPoly() throws IOException, ProcessingException, ResourceParseException {
+	void testLayerForWrongPoly() throws IOException {
 		var app = new VriStart();
 
 		final var polygonId = new PolygonIdentifier("Test", 2024);
@@ -584,7 +583,7 @@ class ParsersTogetherTest {
 	}
 
 	@Test
-	void testMissingLayer() throws IOException, ProcessingException, ResourceParseException {
+	void testMissingLayer() throws IOException {
 		var app = new VriStart();
 
 		final var polygonId = new PolygonIdentifier("Test", 2024);
@@ -628,7 +627,7 @@ class ParsersTogetherTest {
 	}
 
 	@Test
-	void testCrownClosureLow() throws IOException, ProcessingException, ResourceParseException {
+	void testCrownClosureLow() throws IOException {
 		var app = new VriStart();
 
 		final var polygonId = new PolygonIdentifier("Test", 2024);
@@ -682,7 +681,7 @@ class ParsersTogetherTest {
 
 	@Disabled("Error shouldn't be possible due to prior checks")
 	@Test
-	void testBadSpeciesForITG() throws IOException, ProcessingException, ResourceParseException {
+	void testBadSpeciesForITG() throws IOException {
 		var app = new VriStart();
 
 		final var polygonId = new PolygonIdentifier("Test", 2024);
