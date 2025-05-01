@@ -150,25 +150,7 @@ class VdypStartApplicationTest {
 	}
 
 	@Test
-<<<<<<< HEAD
-	void testDebugGetSet() {
-		try (var app = new TestStartApplication(controlMap, true)) {
-
-			for (int i = 0; i < 25; i++) {
-				app.setDebugMode(0, i + 1);
-				assertThat(app.getDebugMode(0), equalTo(i + 1));
-			}
-
-			assertThrows(ArrayIndexOutOfBoundsException.class, () -> app.setDebugMode(-1, 1));
-			assertThrows(ArrayIndexOutOfBoundsException.class, () -> app.setDebugMode(25, 1));
-		}
-	}
-
-	@Test
-	void testApplicationInitExceptions() {
-=======
 	void testApplicationExceptions() throws IOException, ResourceParseException {
->>>>>>> 11e5e5b52 (Load debug flags in Start applications and implement debug modes 22 and 9)
 		try (var app = new TestStartApplication(controlMap, true)) {
 
 			assertThrows(VdypApplicationInitializationException.class, () -> app.doMain("bad path"));
@@ -967,7 +949,34 @@ class VdypStartApplicationTest {
 			mockControl.verify();
 
 		}
+<<<<<<< HEAD
+=======
 
+		@Test
+		void testDebug22Unknown() throws Exception {
+
+			var mockControl = EasyMock.createControl();
+
+			BaseVdypSpecies spec1 = mockSpecies(mockControl, "H", 50.0005f);
+			BaseVdypSpecies spec2 = mockSpecies(mockControl, "B", 49.9995f);
+
+			controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettingsSingle(22, 2));
+
+			try (VdypStartApplication app = getTestUnit(mockControl)) {
+
+
+				mockControl.replay();
+				app.init(dummyIo(), controlMap);
+
+				var allSpecies = List.of(spec1, spec2);
+
+				assertThrows(IllegalStateException.class, () -> app.findPrimarySpecies(allSpecies));
+			}
+			mockControl.verify();
+
+		}
+
+>>>>>>> 849740101 (Unit test for unknown debug22 mode)
 	}
 
 	@Nested
