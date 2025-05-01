@@ -701,6 +701,30 @@ class VdypStartApplicationTest {
 
 		}
 
+		@Test
+		void testDebug22Unknown() throws Exception {
+
+			var mockControl = EasyMock.createControl();
+
+			BaseVdypSpecies spec1 = mockSpecies(mockControl, "H", 50.0005f);
+			BaseVdypSpecies spec2 = mockSpecies(mockControl, "B", 49.9995f);
+
+			controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettingsSingle(22, 2));
+
+			try (VdypStartApplication app = getTestUnit(mockControl)) {
+
+
+				mockControl.replay();
+				app.init(dummyIo(), controlMap);
+
+				var allSpecies = List.of(spec1, spec2);
+
+				assertThrows(IllegalStateException.class, () -> app.findPrimarySpecies(allSpecies));
+			}
+			mockControl.verify();
+
+		}
+
 	}
 
 	@Nested
