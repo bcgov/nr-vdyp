@@ -1537,19 +1537,9 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			return lastFs[0];
 		};
 
-		if (this.getDebugModes().getValue(9) > 0) {
-			double f1 = errorFunc.value(-10f);
-			double f2 = errorFunc.value(10f);
-
-			if (f2 * f1 > 0d) {
-				float lowFactor = 1.0f - ((float) this.getDebugModes().getValue(9)) / 100f;
-				float highFactor = 1.0f + ((float) this.getDebugModes().getValue(9)) / 100f;
-				for (var key : maxDq.keySet()) {
-					minDq.put(key, 7.5f + lowFactor * (minDq.get(key) - 7.5f));
-					maxDq.put(key, 7.5f + highFactor * (maxDq.get(key) - 7.5f));
-				}
-			}
-		}
+		debugModeExpandRootSearchWindow(
+				Optional.of(getDebugModes().getValue(9)).filter(x -> x > 0), minDq, maxDq, errorFunc
+		);
 
 		try {
 			double x = doSolve(min, max, errorFunc);
@@ -1587,6 +1577,25 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			);
 
 		}
+	}
+
+	void debugModeExpandRootSearchWindow(
+			Optional<Integer> percentage, Map<String, Float> minDq, Map<String, Float> maxDq,
+			UnivariateFunction errorFunc
+	) {
+		percentage.map(p -> (float) p / 100f).ifPresent(p -> {
+			final double f1 = errorFunc.value(-10f);
+			final double f2 = errorFunc.value(10f);
+			final float base = 7.5f;
+			if (f2 * f1 > 0d) {
+				float lowFactor = 1.0f - p;
+				float highFactor = 1.0f + p;
+				for (var key : maxDq.keySet()) {
+					minDq.put(key, base + lowFactor * (minDq.get(key) - base));
+					maxDq.put(key, base + highFactor * (maxDq.get(key) - base));
+				}
+			}
+		});
 	}
 
 	double doSolve(float min, float max, UnivariateFunction errorFunc) {
