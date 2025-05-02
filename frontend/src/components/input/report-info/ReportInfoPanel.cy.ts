@@ -355,7 +355,9 @@ describe('ReportInfoPanel.vue', () => {
       .should('exist')
       .then((input) => {
         cy.wrap(input).clear()
-        cy.wrap(input).type('1001')
+        cy.wrap(input).type(
+          (CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MAX + 1).toString(),
+        )
       })
 
     cy.get('button').contains('Confirm').click()
@@ -379,7 +381,9 @@ describe('ReportInfoPanel.vue', () => {
       .should('exist')
       .then((input) => {
         cy.wrap(input).clear()
-        cy.wrap(input).type('501')
+        cy.wrap(input).type(
+          (CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MAX + 1).toString(),
+        )
       })
 
     cy.get('button').contains('Confirm').click()
@@ -410,7 +414,9 @@ describe('ReportInfoPanel.vue', () => {
       .should('exist')
       .then((input) => {
         cy.wrap(input).clear()
-        cy.wrap(input).type('1899')
+        cy.wrap(input).type(
+          (CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_MIN - 1).toString(),
+        )
       })
 
     cy.get('button').contains('Confirm').click()
@@ -441,7 +447,9 @@ describe('ReportInfoPanel.vue', () => {
       .should('exist')
       .then((input) => {
         cy.wrap(input).clear()
-        cy.wrap(input).type('2101')
+        cy.wrap(input).type(
+          (CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_MAX + 1).toString(),
+        )
       })
 
     cy.get('button').contains('Confirm').click()
@@ -472,7 +480,9 @@ describe('ReportInfoPanel.vue', () => {
       .should('exist')
       .then((input) => {
         cy.wrap(input).clear()
-        cy.wrap(input).type('501')
+        cy.wrap(input).type(
+          (CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_MAX + 1).toString(),
+        )
       })
 
     cy.get('button').contains('Confirm').click()
