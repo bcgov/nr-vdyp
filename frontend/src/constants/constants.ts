@@ -151,6 +151,20 @@ export const FILE_UPLOAD_TAB_NAME = Object.freeze({
   VIEW_ERROR_MESSAGES: 'View Error Messages',
 })
 
+export const MODEL_PARAM_TAB_INDEX = {
+  PARAM_SELECTION: 0,
+  MODEL_REPORT: 1,
+  VIEW_LOG_FILE: 2,
+  VIEW_ERROR_MESSAGES: 3,
+}
+
+export const FILE_UPLOAD_TAB_INDEX = {
+  PARAM_SELECTION: 0,
+  MODEL_REPORT: 1,
+  VIEW_LOG_FILE: 2,
+  VIEW_ERROR_MESSAGES: 3,
+}
+
 export const FILE_NAME = Object.freeze({
   PROJECTION_RESULT_ZIP: 'vdyp-output.zip',
   ERROR_TXT: 'ErrorLog.txt',
