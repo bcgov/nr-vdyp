@@ -9,7 +9,7 @@ import java.util.zip.ZipInputStream;
 
 import ca.bc.gov.nrs.api.helpers.TestHelper;
 
-public class HttpProjectionRequestTest {
+public class BaseHttpProjectionRequestTest {
 
 	protected static final TestHelper testHelper = new TestHelper();
 

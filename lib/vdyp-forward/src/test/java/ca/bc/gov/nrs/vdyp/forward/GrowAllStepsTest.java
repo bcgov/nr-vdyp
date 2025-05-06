@@ -104,7 +104,7 @@ class GrowAllStepsTest {
 	@SuppressWarnings("unused")
 	private static void comparePolygons(VdypPolygon a, VdypPolygon b, float tolerance) {
 
-		Float originalEpsilon = VdypMatchers.setEpsilon(tolerance);
+		double originalEpsilon = VdypMatchers.setEpsilon(tolerance);
 		try {
 			assertThat(a.getPolygonIdentifier().forYear(a.getTargetYear().get()), is(b.getPolygonIdentifier()));
 			assertThat(a.getBiogeoclimaticZone(), is(b.getBiogeoclimaticZone()));

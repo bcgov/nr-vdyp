@@ -1,5 +1,8 @@
 package ca.bc.gov.nrs.vdyp.backend.model.v1;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
+
 import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.backend.projection.model.History;
@@ -7,10 +10,6 @@ import ca.bc.gov.nrs.vdyp.backend.projection.model.Layer;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.LayerAdjustments;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Polygon;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
-import org.hamcrest.Matchers;
 
 public class LayerTest {
 

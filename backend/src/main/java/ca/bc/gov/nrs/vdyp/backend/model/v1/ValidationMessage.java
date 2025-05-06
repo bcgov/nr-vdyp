@@ -1,11 +1,14 @@
 package ca.bc.gov.nrs.vdyp.backend.model.v1;
 
+import java.io.Serializable;
 import java.text.MessageFormat;
 import java.util.Arrays;
 
 import ca.bc.gov.nrs.vdyp.backend.projection.model.PolygonMessage;
 
-public class ValidationMessage implements Comparable<ValidationMessage> {
+public class ValidationMessage implements Comparable<ValidationMessage>, Serializable {
+
+	private static final long serialVersionUID = 5071025981103618615L;
 
 	/** the kind of this ValidationMessage - an enum value and a template */
 	private final ValidationMessageKind kind;

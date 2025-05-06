@@ -16,15 +16,11 @@ public class PolygonExecutionException extends AbstractProjectionRequestExceptio
 		super(message, pve.getValidationMessages());
 	}
 
-	public PolygonExecutionException(Exception cause) {
+	public PolygonExecutionException(Throwable cause) {
 		super(cause);
 	}
 
-	public PolygonExecutionException(String message, Error cause) {
-		super(message, cause);
-	}
-
-	public PolygonExecutionException(String message, Exception cause) {
+	public PolygonExecutionException(String message, Throwable cause) {
 		super(message, cause);
 	}
 

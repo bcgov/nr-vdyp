@@ -21,7 +21,7 @@ public abstract class AbstractProjectionRequestException extends Exception {
 		this.validationMessages = validationMessages;
 	}
 
-	public AbstractProjectionRequestException(Exception cause) {
+	public AbstractProjectionRequestException(Throwable cause) {
 		super(cause);
 		validationMessages = new ArrayList<ValidationMessage>();
 		if (cause.getMessage() != null) {
@@ -29,7 +29,7 @@ public abstract class AbstractProjectionRequestException extends Exception {
 		}
 	}
 
-	public AbstractProjectionRequestException(String message, Exception e) {
+	public AbstractProjectionRequestException(String message, Throwable e) {
 		super(message, e);
 		validationMessages = new ArrayList<ValidationMessage>();
 		if (message != null) {
@@ -39,14 +39,6 @@ public abstract class AbstractProjectionRequestException extends Exception {
 
 	public AbstractProjectionRequestException(String message) {
 		super(message);
-		validationMessages = new ArrayList<ValidationMessage>();
-		if (message != null) {
-			validationMessages.add(new ValidationMessage(ValidationMessageKind.GENERIC, message));
-		}
-	}
-
-	public AbstractProjectionRequestException(String message, Error e) {
-		super(message, e);
 		validationMessages = new ArrayList<ValidationMessage>();
 		if (message != null) {
 			validationMessages.add(new ValidationMessage(ValidationMessageKind.GENERIC, message));

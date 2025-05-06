@@ -507,8 +507,8 @@ public class Species implements Comparable<Species> {
 					logger.debug("   {}: {}", "Years to Breast Height", yearsToBreastHeight);
 					logger.debug("   {}: {}", "Result", dominantHeight);
 
-					// If the calculated height is <= 0.0, substitute a nominal height
-					if (dominantHeight <= 0.0) {
+					// If the height could not be calculated, or is <= 0, substitute a nominal height
+					if (dominantHeight == null || dominantHeight <= 0) {
 						dominantHeight = 0.01;
 						logger.debug("   clamped computed Dominant Height to {}", dominantHeight);
 					}

@@ -44,8 +44,8 @@ public class ResultYieldTable extends HashMap<String, Map<String, Map<String, Ma
 					var year = row.get("PROJECTION_YEAR");
 
 					this.computeIfAbsent(featureId, k -> new HashMap<String, Map<String, Map<String, String>>>())
-							.computeIfAbsent(year, k -> new HashMap<String, Map<String, String>>()) //
-							.put(layerId, row);
+							.computeIfAbsent(layerId, k -> new HashMap<String, Map<String, String>>()) //
+							.put(year, row);
 				});
 			}
 		} catch (Exception e) {

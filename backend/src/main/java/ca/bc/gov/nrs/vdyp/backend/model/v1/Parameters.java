@@ -220,6 +220,9 @@ public class Parameters {
 
 	/**
 	 * Determines how the Age Range and Year Range are to be combined when producing yield tables.
+	 * <p>
+	 * <b>BIG NOTE</b>: VDYP7 -only- supports <b>INTERSECT</b>. So that's what we do. TODO: support the other
+	 * combination types.
 	 */
 	public enum AgeYearRangeCombinationKind {
 

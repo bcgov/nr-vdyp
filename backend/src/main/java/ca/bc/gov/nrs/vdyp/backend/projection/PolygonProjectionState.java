@@ -23,8 +23,11 @@ public class PolygonProjectionState {
 
 	// Per-projection type information
 
-	/** Entries are null if not run, Optional.empty() if successful, otherwise the resulting exception. */
-	private Map<ModelReturnCodeKey, Optional<Exception>> processingResultByStageAndProjectionType;
+	/**
+	 * Entries are Optional.empty() if not run; when run, contains Optional.empty() if successful, otherwise contains
+	 * the resulting exception.
+	 */
+	private Map<ModelReturnCodeKey, Optional<Optional<Throwable>>> processingResultByStageAndProjectionType;
 
 	private Map<ModelReturnCodeKey, Integer> firstYearValidYieldByProjectionType;
 
@@ -55,7 +58,7 @@ public class PolygonProjectionState {
 				processingModeByProjectionType.put(t, ProcessingModeCode.getDefault());
 				percentForestedLandUsedByProjectionType.put(t, null);
 				yieldFactorByProjectionType.put(t, null);
-				processingResultByStageAndProjectionType.put(new ModelReturnCodeKey(s, t), null);
+				processingResultByStageAndProjectionType.put(new ModelReturnCodeKey(s, t), Optional.empty());
 
 				firstYearValidYieldByProjectionType.put(new ModelReturnCodeKey(s, t), -9999);
 			}
@@ -183,10 +186,10 @@ public class PolygonProjectionState {
 	}
 
 	public void setProcessingResults(
-			ProjectionStageCode stage, ProjectionTypeCode projectionType, Optional<Exception> result
+			ProjectionStageCode stage, ProjectionTypeCode projectionType, Optional<Throwable> result
 	) {
 		var key = new ModelReturnCodeKey(stage, projectionType);
-		if (this.processingResultByStageAndProjectionType.get(key) != null) {
+		if (this.processingResultByStageAndProjectionType.get(key).isPresent()) {
 			throw new IllegalStateException(
 					MessageFormat.format(
 							"{0}.ProjectionState.setProcessingResults: processingResult has already been set for projection type {1} of stage {2}",
@@ -195,17 +198,13 @@ public class PolygonProjectionState {
 			);
 		}
 
-		this.processingResultByStageAndProjectionType.put(key, result);
+		this.processingResultByStageAndProjectionType.put(key, Optional.of(result));
 	}
 
-	public Optional<Exception> getProcessingResults(ProjectionStageCode stage, ProjectionTypeCode projectionType) {
+	public Optional<Throwable> getProcessingResults(ProjectionStageCode stage, ProjectionTypeCode projectionType) {
 
 		var key = new ModelReturnCodeKey(stage, projectionType);
-		if (processingResultByStageAndProjectionType.get(key) == null) {
-			return Optional.empty();
-		} else {
-			return processingResultByStageAndProjectionType.get(key);
-		}
+		return processingResultByStageAndProjectionType.get(key).get();
 	}
 
 	/**
@@ -318,7 +317,7 @@ public class PolygonProjectionState {
 	public boolean didRunProjectionStage(ProjectionStageCode stage, ProjectionTypeCode projectionType) {
 		var key = new ModelReturnCodeKey(stage, projectionType);
 		return processingResultByStageAndProjectionType.containsKey(key)
-				&& processingResultByStageAndProjectionType.get(key) != null;
+				&& processingResultByStageAndProjectionType.get(key).isPresent();
 	}
 
 	public boolean didRunProjection(ProjectionTypeCode projectionType) {

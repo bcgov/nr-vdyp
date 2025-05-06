@@ -1,6 +1,5 @@
 package ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable;
 
-import java.io.BufferedInputStream;
 import java.io.Closeable;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -121,15 +120,14 @@ public class YieldTable implements Closeable {
 	) throws YieldTableGenerationException {
 
 		if (layerReportingInfo == null) {
-			generateYieldTableForPolygon(polygon, state, doGenerateDetailedTableHeader);
-		} else {
-			var polygonProjectionResults = readProjectionResults(
-					polygon, state, layerReportingInfo.getProcessedAsVDYP7Layer()
-			);
-			generateYieldTable(
-					polygon, polygonProjectionResults, state, layerReportingInfo, doGenerateDetailedTableHeader
-			);
+			throw new IllegalArgumentException("generateYieldTableForPolygonLayer: layerReportingInfo cannot be null");
 		}
+
+		var polygonProjectionResults = readProjectionResults(
+				polygon, state, layerReportingInfo.getProcessedAsVDYP7Layer()
+		);
+
+		generateYieldTable(polygon, polygonProjectionResults, state, layerReportingInfo, doGenerateDetailedTableHeader);
 	}
 
 	public void generateCfsBiomassTableForPolygon(
@@ -147,18 +145,6 @@ public class YieldTable implements Closeable {
 
 	public void endGeneration() throws YieldTableGenerationException {
 		writer.writeTrailer();
-	}
-
-	public InputStream getAsInputStream() {
-		try {
-			return new BufferedInputStream(new FileInputStream(writer.getYieldTableFilePath().toFile()));
-		} catch (FileNotFoundException e) {
-			throw new IllegalStateException(
-					MessageFormat.format(
-							"Yield table path {0} not found, despite our creating it", writer.getYieldTableFilePath()
-					)
-			);
-		}
 	}
 
 	private void generateYieldTable(

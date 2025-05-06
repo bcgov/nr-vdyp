@@ -599,7 +599,7 @@ class ParameterValidationTest {
 					).ageEnd(10) //
 					.ageIncrement(3) //
 					.ageStart(20) //
-					.combineAgeYearRange(AgeYearRangeCombinationKind.DIFFERENCE) //
+					.combineAgeYearRange(AgeYearRangeCombinationKind.INTERSECT) //
 					.filters(
 							new FilterParameters().maintainer("maintainer").mapsheet("mapsheet").polygon("polygon")
 									.polygonId("polygonId")
@@ -648,7 +648,7 @@ class ParameterValidationTest {
 		Assert.assertEquals(Integer.valueOf(10), vp.getAgeEnd());
 		Assert.assertEquals(Integer.valueOf(3), vp.getAgeIncrement());
 		Assert.assertEquals(Integer.valueOf(20), vp.getAgeStart());
-		Assert.assertEquals(AgeYearRangeCombinationKind.DIFFERENCE, vp.getCombineAgeYearRange());
+		Assert.assertEquals(AgeYearRangeCombinationKind.INTERSECT, vp.getCombineAgeYearRange());
 		Assert.assertEquals(Integer.valueOf(2020), vp.getYearForcedIntoYieldTable());
 		Assert.assertEquals(MetadataToOutputDirective.ALL, vp.getMetadataToOutput());
 		Assert.assertEquals(OutputFormat.YIELD_TABLE, vp.getOutputFormat());

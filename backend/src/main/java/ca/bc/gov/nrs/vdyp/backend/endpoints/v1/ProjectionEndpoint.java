@@ -1,14 +1,15 @@
 package ca.bc.gov.nrs.vdyp.backend.endpoints.v1;
 
 import java.io.FileInputStream;
-import java.io.IOException;
 
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.jboss.resteasy.reactive.PartType;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
 
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.AbstractProjectionRequestException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonExecutionException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestValidationException;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.impl.Endpoint;
@@ -88,18 +89,24 @@ public class ProjectionEndpoint implements Endpoint {
 
 		var polygonFile = polygonDataStream.uploadedFile().toFile();
 		var layerFile = layersDataStream.uploadedFile().toFile();
+
 		try {
-			try (var polyStream = new FileInputStream(polygonFile)) {
-				try (var layersStream = new FileInputStream(layerFile)) {
-					return projectionService.projectionHcsvPost(
-							trialRun, parameters, polyStream, layersStream, null /* securityContext */
-					);
-				}
+			try (var polyStream = new FileInputStream(polygonFile); var layersStream = new FileInputStream(layerFile)) {
+				return projectionService.projectionHcsvPost(
+						trialRun, parameters, polyStream, layersStream, null /* securityContext */
+				);
+			} catch (ProjectionRequestValidationException e) {
+				return Response.status(Status.BAD_REQUEST).header("content-type", "application/json")
+						.entity(
+								serialize(
+										ValidationMessageListResource.class,
+										new ValidationMessageListResource(e.getValidationMessages())
+								)
+						).build();
 			}
-		} catch (ProjectionRequestValidationException e) {
-			return Response.status(Status.BAD_REQUEST).entity(e.getValidationMessages()).build();
-		} catch (AbstractProjectionRequestException | IOException e) {
-			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e).build();
+		} catch (Exception e) {
+			return Response.status(Status.INTERNAL_SERVER_ERROR)
+					.entity(e.getMessage() == null ? "unknown reason" : e.getMessage()).build();
 		}
 	}
 
@@ -136,5 +143,11 @@ public class ProjectionEndpoint implements Endpoint {
 		} catch (PolygonExecutionException e) {
 			return Response.status(Status.INTERNAL_SERVER_ERROR).entity(e).build();
 		}
+	}
+
+	private static ObjectMapper mapper = new ObjectMapper();
+
+	private <T> String serialize(Class<T> clazz, T entity) throws JsonProcessingException {
+		return mapper.writeValueAsString(entity);
 	}
 }

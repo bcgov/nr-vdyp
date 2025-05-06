@@ -1,3 +1,0 @@
-This file contains a description of each of the projection test scenarios.
-
-1: VRI, per polygon, one polygon

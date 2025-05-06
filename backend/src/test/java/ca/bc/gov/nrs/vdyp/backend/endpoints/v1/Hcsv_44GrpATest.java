@@ -15,7 +15,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import org.hamcrest.Matchers;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -31,7 +34,7 @@ import io.smallrye.common.constraint.Assert;
 import jakarta.ws.rs.core.MediaType;
 
 @QuarkusTest
-class Hcsv_44GrpATest extends HttpProjectionRequestTest {
+class Hcsv_44GrpATest extends BaseHttpProjectionRequestTest {
 
 	private static final Logger logger = LoggerFactory.getLogger(Hcsv_44GrpATest.class);
 
@@ -60,8 +63,10 @@ class Hcsv_44GrpATest extends HttpProjectionRequestTest {
 	void perTestSetup() {
 	}
 
-	// uncomment and change runTest param to the polygon id from 44grpa that you want to run.
-	// @Test
+	// Run a specific polygon from 44grpA. To do so, enable and change runTest param to the id
+	// of the polygon that you want to run.
+	@Disabled
+	@Test
 	void run44GroupA_SpecificPolygon_Test() throws IOException {
 		logger.info("Starting run44GroupA_SpecificPolygon_Test");
 
@@ -73,11 +78,8 @@ class Hcsv_44GrpATest extends HttpProjectionRequestTest {
 		Assert.assertTrue(csvEntryContent.length() > 0);
 	}
 
-	// TODO: this test is disabled because despite no site index being set and that VriStart
-	// catches this, it does not report the error up to the backend and so no errors
-	// are reported. Despite this, processing does not continue and no yield table is
-	// generated.
-	@Disabled
+	// This test reports a specific error in the processing of polygon 8489341.
+	// @Disabled
 	@Test
 	void run44GroupA_8489341_Test() throws IOException {
 		logger.info("Starting run44GroupA_8489341_Test");
@@ -85,13 +87,19 @@ class Hcsv_44GrpATest extends HttpProjectionRequestTest {
 		var zipEntries = runTest("8489341");
 
 		var errorEntryContent = zipEntries.get("ErrorLog.txt");
-		Assert.assertTrue(errorEntryContent.length() > 0);
+		assertThat(
+				errorEntryContent,
+				is(
+						"Polygon 8489341: encountered error in VRI_START when running polygon: Required Site index was missing\n"
+				)
+		);
 		var csvEntryContent = zipEntries.get("YieldTable.csv");
-		Assert.assertTrue(csvEntryContent.length() > 0);
+		assertThat(csvEntryContent.length(), is(0));
 	}
 
-	// uncomment if you want to run the entire 44grpa polygon set
-	// @Test
+	// Enable if you want to run the entire 44grpa polygon set. It takes a long time.
+	@Disabled
+	@Test
 	void run44GroupATest() throws IOException {
 
 		logger.info("Starting run44GroupATest");
@@ -109,9 +117,10 @@ class Hcsv_44GrpATest extends HttpProjectionRequestTest {
 		logger.info("run44GroupATest complete: {} results seen", resultsList);
 	}
 
-	// Uncomment if you want to run a subset of the 44grpa polygon set given in the file "polyids.txt"
+	// Enable when you want to run a subset of the 44grpa polygon set given in the file "polyids.txt"
 	// (placed alongside the polygon and layer files) that contains one polygon id per line.
-	// @Test
+	@Disabled
+	@Test
 	void runFiltered44GroupATest() throws IOException {
 
 		logger.info("Starting runFiltered44GroupATest");
@@ -142,7 +151,7 @@ class Hcsv_44GrpATest extends HttpProjectionRequestTest {
 		logger.info("run44GroupATest complete: {} results seen", resultsList);
 	}
 
-	Map<String, String> runTest(String featureId) throws IOException {
+	private Map<String, String> runTest(String featureId) throws IOException {
 		var zipEntriesMap = runTestSet(fId -> fId.equals(featureId), Optional.empty());
 
 		Assert.assertTrue(zipEntriesMap.size() == 1 && zipEntriesMap.containsKey(featureId));

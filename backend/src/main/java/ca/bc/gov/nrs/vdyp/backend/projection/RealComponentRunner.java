@@ -24,7 +24,6 @@ import ca.bc.gov.nrs.vdyp.backend.projection.model.Vdyp7Constants;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ReturnCode;
 import ca.bc.gov.nrs.vdyp.common.VdypApplicationException;
-import ca.bc.gov.nrs.vdyp.common.VdypApplicationInitializationException;
 import ca.bc.gov.nrs.vdyp.fip.FipStart;
 import ca.bc.gov.nrs.vdyp.forward.VdypForwardApplication;
 import ca.bc.gov.nrs.vdyp.vri.VriStart;
@@ -45,12 +44,8 @@ public class RealComponentRunner implements ComponentRunner {
 				);
 				fipStartApplication.doMain(controlFilePath.toAbsolutePath().toString());
 				state.setProcessingResults(ProjectionStageCode.Initial, projectionTypeCode, Optional.empty());
-			} catch (VdypApplicationException e) {
-				throwInterpretedException(fipStartApplication, polygon, e);
-			} catch (Exception e) {
-				throwInterpretedException(fipStartApplication, polygon, e);
-			} catch (Error e) {
-				throwInterpretedException(fipStartApplication, polygon, e);
+			} catch (Throwable t) {
+				throwInterpretedException(fipStartApplication, polygon, projectionTypeCode, state, t);
 			}
 		}
 	}
@@ -66,12 +61,8 @@ public class RealComponentRunner implements ComponentRunner {
 				);
 				vriStartApplication.doMain(controlFilePath.toAbsolutePath().toString());
 				state.setProcessingResults(ProjectionStageCode.Initial, projectionTypeCode, Optional.empty());
-			} catch (VdypApplicationException e) {
-				throwInterpretedException(vriStartApplication, polygon, e);
-			} catch (Exception e) {
-				throwInterpretedException(vriStartApplication, polygon, e);
-			} catch (Error e) {
-				throwInterpretedException(vriStartApplication, polygon, e);
+			} catch (Throwable t) {
+				throwInterpretedException(vriStartApplication, polygon, projectionTypeCode, state, t);
 			}
 		}
 	}
@@ -141,12 +132,8 @@ public class RealComponentRunner implements ComponentRunner {
 				forwardApplication.doMain(inputDir, outputDir, controlFilePath.toAbsolutePath().toString());
 
 				state.setProcessingResults(ProjectionStageCode.Forward, projectionTypeCode, Optional.empty());
-			} catch (VdypApplicationInitializationException e) {
-				throwInterpretedException(forwardApplication, polygon, e);
-			} catch (Exception e) {
-				throwInterpretedException(forwardApplication, polygon, e);
-			} catch (Error e) {
-				throwInterpretedException(forwardApplication, polygon, e);
+			} catch (Throwable t) {
+				throwInterpretedException(forwardApplication, polygon, projectionTypeCode, state, t);
 			}
 		}
 	}
@@ -254,23 +241,19 @@ public class RealComponentRunner implements ComponentRunner {
 		}
 	}
 
-	private void throwInterpretedException(VdypApplication app, Polygon polygon, VdypApplicationException e)
-			throws PolygonExecutionException {
-		if (e.getCause() instanceof Exception pe) {
-			throw new PolygonExecutionException(buildMessage(app, polygon, "running", pe), pe);
+	private void throwInterpretedException(
+			VdypApplication app, Polygon polygon, ProjectionTypeCode projectionTypeCode, PolygonProjectionState state,
+			Throwable e
+	) throws PolygonExecutionException {
+		if (e instanceof VdypApplicationException && e.getCause() != null) {
+			state.setProcessingResults(ProjectionStageCode.of(app), projectionTypeCode, Optional.of(e.getCause()));
+			var message = buildMessage(app, polygon, "running", e.getCause());
+			throw new PolygonExecutionException(message, e.getCause());
 		} else {
-			throw new PolygonExecutionException(buildMessage(app, polygon, "running", e), e);
+			state.setProcessingResults(ProjectionStageCode.of(app), projectionTypeCode, Optional.of(e));
+			var message = buildMessage(app, polygon, "running", e);
+			throw new PolygonExecutionException(message, e);
 		}
-	}
-
-	private void throwInterpretedException(VdypApplication app, Polygon polygon, Exception e)
-			throws PolygonExecutionException {
-		throw new PolygonExecutionException(buildMessage(app, polygon, "running", e), e);
-	}
-
-	private void throwInterpretedException(VdypApplication app, Polygon polygon, Error e)
-			throws PolygonExecutionException {
-		throw new PolygonExecutionException(buildMessage(app, polygon, "running", e), e);
 	}
 
 	private String buildMessage(VdypApplication app, Polygon polygon, String verb, Throwable e) {

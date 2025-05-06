@@ -354,6 +354,8 @@ public class PolygonProjectionRunner {
 						}
 					}
 				}
+
+				break;
 			}
 			default: {
 				var currentGrowthModel = state.getGrowthModel(projectionType);
@@ -818,10 +820,7 @@ public class PolygonProjectionRunner {
 
 		Double ageAtYear = null;
 		if (context.getParams().getYearStart() != null) {
-			Layer layer = polygon.findPrimaryLayerByProjectionType(ProjectionTypeCode.UNKNOWN);
-			if (layer != null) {
-				ageAtYear = layer.determineLayerAgeAtYear(context.getParams().getYearStart());
-			}
+			ageAtYear = polygon.determineStandAgeAtYear(context.getParams().getYearStart());
 		}
 
 		Integer suppliedAgeStart = context.getParams().getAgeStart();
@@ -852,14 +851,13 @@ public class PolygonProjectionRunner {
 
 		Double ageAtYearEnd = null;
 		if (context.getParams().getYearEnd() != null) {
-			Layer layer = polygon.findPrimaryLayerByProjectionType(ProjectionTypeCode.UNKNOWN);
-			if (layer != null) {
-				ageAtYearEnd = layer.determineLayerAgeAtYear(context.getParams().getYearEnd());
-			}
+			ageAtYearEnd = polygon.determineStandAgeAtYear(context.getParams().getYearEnd());
 		}
 
 		Integer suppliedAgeEnd = context.getParams().getAgeEnd();
 		if (ageAtYearEnd != null && suppliedAgeEnd != null) {
+			// Yes, min. The reason is that since ONLY AgeYearRangeCombinationKind.INTERSECT
+			// is supported, there's no need to project past the minimum of the two values.
 			calculatedAge = Math.min(ageAtYearEnd, suppliedAgeEnd);
 		} else if (ageAtYearEnd != null) {
 			calculatedAge = ageAtYearEnd;

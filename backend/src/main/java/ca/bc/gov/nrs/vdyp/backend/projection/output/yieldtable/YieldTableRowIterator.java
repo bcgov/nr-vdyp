@@ -28,7 +28,7 @@ class YieldTableRowIterator implements Iterator<YieldTableRowContext> {
 
 	@Override
 	public boolean hasNext() {
-		if (!rowIsCurrent) {
+		if (!rowIsCurrent && rowContext.getCurrentTableYear() != null) {
 			advanceToNextRow();
 		}
 		return rowIsCurrent;

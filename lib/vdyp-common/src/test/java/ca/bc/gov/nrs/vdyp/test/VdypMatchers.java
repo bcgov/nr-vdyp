@@ -4,6 +4,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +18,7 @@ import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
+import org.hamcrest.StringDescription;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
 
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
@@ -41,9 +43,9 @@ import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
  */
 public class VdypMatchers {
 
-	static final float EPSILON = 0.001f;
+	static final double EPSILON = 0.001;
 
-	private static float currentEpsilon = EPSILON;
+	private static double currentEpsilon = EPSILON;
 
 	/**
 	 * Change the <code>closeTo</code> tolerance. Recommended usage:
@@ -60,7 +62,7 @@ public class VdypMatchers {
 	 * @param newValue the new tolerance value
 	 * @return the tolerance value at the time this method was called
 	 */
-	public static float setEpsilon(float newValue) {
+	public static double setEpsilon(double newValue) {
 		var originalValue = currentEpsilon;
 		currentEpsilon = newValue;
 		return originalValue;
@@ -533,12 +535,21 @@ public class VdypMatchers {
 	}
 
 	public static Matcher<Float> closeTo(float expected) {
-		return closeTo(expected, currentEpsilon);
+		return closeTo(expected, (float) currentEpsilon);
 	}
 
 	public static Matcher<Float> closeTo(float expected, float threshold) {
 		float epsilon = Float.max(threshold * FloatMath.abs(expected), Float.MIN_VALUE);
 		return asFloat(Matchers.closeTo(expected, epsilon));
+	}
+
+	public static Matcher<Double> closeTo(double expected) {
+		return closeTo(expected, currentEpsilon);
+	}
+
+	public static Matcher<Double> closeTo(double expected, double threshold) {
+		double epsilon = Double.max(threshold * Math.abs(expected), Double.MIN_VALUE);
+		return Matchers.closeTo(expected, epsilon);
 	}
 
 	public static Matcher<String> hasLines(String... expectedLines) {
@@ -683,8 +694,107 @@ public class VdypMatchers {
 				mismatchDescription.appendText("]");
 				return matches;
 			}
-
 		};
 	}
 
+	public static Matcher<String> csvRowContaining(Object... fields) {
+		return new TypeSafeDiagnosingMatcher<String>() {
+
+			@Override
+			public void describeTo(Description description) {
+				description.appendValue("is a CSV row containing").appendValue(fields);
+			}
+
+			@Override
+			protected boolean matchesSafely(String row, Description mismatchDescription) {
+				var rowValues = removeDoubleQuotes(row.split(","));
+
+				var result = true;
+
+				if (rowValues.length != fields.length) {
+					mismatchDescription.appendText("given csv row does not have " + fields.length + " fields");
+					result = false;
+				} else {
+					var mismatches = new ArrayList<String>();
+
+					var valuesIndex = 0;
+					for (var field : fields) {
+						if (field == null) {
+							throw new IllegalArgumentException(
+									"Expected field values cannot be null. Field [" + valuesIndex + "] is"
+							);
+						}
+						var value = rowValues[valuesIndex];
+						if (field instanceof Matcher m) {
+
+							var thisResult = false;
+							Object failedComparisonObject = null;
+
+							// The problem here is that we don't know if the reason m.matches fails is
+							// because the argument is of the wrong type (and the next type should be
+							// attempted), or because the item is of the right type, the test failed
+							// "legitimately" (and the next type should not be attempted.) The effect
+							// of this is that the failure description may be uninformative or misleading.
+
+							// Try as a String
+							thisResult = m.matches(value);
+							failedComparisonObject = value;
+
+							var valueIsInteger = true;
+							if (!thisResult) {
+								// Try as an Integer
+								try {
+									var intValue = Integer.parseInt(value);
+									thisResult = m.matches(intValue);
+									failedComparisonObject = intValue;
+								} catch (NumberFormatException e) {
+									valueIsInteger = false;
+								}
+							}
+
+							if (!thisResult && !valueIsInteger) {
+								// Try as a Double
+								try {
+									var doubleValue = Double.parseDouble(value);
+									thisResult = m.matches(doubleValue);
+									failedComparisonObject = doubleValue;
+								} catch (NumberFormatException e) {
+									// fall through
+								}
+							}
+
+							if (!thisResult) {
+								var thisMismatchDescription = new StringDescription();
+								m.describeMismatch(failedComparisonObject, thisMismatchDescription);
+								mismatches.add(thisMismatchDescription.toString());
+								result = false;
+							}
+						} else if (!field.equals(value)) {
+							mismatches.add("csv[" + valuesIndex + "] != " + field.toString());
+							result = false;
+						}
+						valuesIndex += 1;
+					}
+
+					mismatchDescription.appendValueList("", ", ", "", mismatches);
+				}
+
+				return result;
+			}
+
+			private String[] removeDoubleQuotes(String[] fields) {
+
+				for (int i = 0; i < fields.length; i++) {
+					if (fields[i].length() > 1 && fields[i].charAt(0) == '"'
+							&& fields[i].charAt(fields[i].length() - 1) == '"') {
+						fields[i] = fields[i].substring(1, fields[i].length() - 1);
+					} else {
+						throw new IllegalArgumentException("Field \"" + fields[i] + "\" is not double-quoted");
+					}
+				}
+
+				return fields;
+			}
+		};
+	}
 }

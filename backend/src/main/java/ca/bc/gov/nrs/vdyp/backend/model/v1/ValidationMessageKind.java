@@ -41,6 +41,7 @@ public enum ValidationMessageKind {
 	PRIMARY_LAYER_NOT_FOUND("Polygon {0}: no primary layer found for any projection type"), //
 	UNEXPECTED_STREAMS_SUPPLIED("The following input file types were supplied, but not expected: {0}"),
 	UNRECOGNIZED_COMBINE_AGE_YEAR_RANGE_OPTION("{0} is not a recognized combine-year-age-range value"),
+	UNSUPPORTED_COMBINE_AGE_YEAR_RANGE_OPTION("only the INTERSECT combine-year-age-range option is supported"),
 	UNRECOGNIZED_DEBUG_OPTION("{0} is not a recognized debug option"),
 	UNRECOGNIZED_EXECUTION_OPTION("{0} is not a recognized execution option"),
 	UNRECOGNIZED_INVENTORY_STANDARD_CODE("Polygon {0}: inventory standard code {1} is not recognized"),

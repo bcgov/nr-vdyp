@@ -26,7 +26,7 @@ import ca.bc.gov.nrs.vdyp.backend.utils.FileHelper;
 import io.smallrye.common.constraint.Assert;
 import jakarta.ws.rs.core.MediaType;
 
-class BaseHcsvProjectionEndpoint_44GrpATest extends HttpProjectionRequestTest {
+class BaseHcsvProjectionEndpoint_44GrpATest extends BaseHttpProjectionRequestTest {
 
 	private static final Logger logger = LoggerFactory.getLogger(BaseHcsvProjectionEndpoint_44GrpATest.class);
 

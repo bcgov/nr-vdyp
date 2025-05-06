@@ -191,7 +191,10 @@ public class ProjectionRequestParametersValidator {
 			String rangeValue = params.getCombineAgeYearRange();
 			try {
 				var e = Parameters.AgeYearRangeCombinationKind.fromValue(rangeValue);
-				vparams.setCombineAgeYearRange(e);
+				if (e != DEFAULT.getCombineAgeYearRange()) {
+					recordValidationMessage(UNSUPPORTED_COMBINE_AGE_YEAR_RANGE_OPTION, rangeValue);
+				}
+				vparams.setCombineAgeYearRange(DEFAULT.getCombineAgeYearRange());
 			} catch (IllegalArgumentException e) {
 				recordValidationMessage(UNRECOGNIZED_COMBINE_AGE_YEAR_RANGE_OPTION, rangeValue);
 			}
