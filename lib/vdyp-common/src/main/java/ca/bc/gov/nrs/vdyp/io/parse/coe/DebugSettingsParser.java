@@ -23,8 +23,9 @@ public class DebugSettingsParser implements ValueParser<DebugSettings> {
 
 		string = string.trim();
 
+		// Ensure correct alignment to chop the string into 2 character sections.
 		if (string.length() % 2 == 1) {
-			string += " ";
+			string = " " + string;
 		}
 
 		List<Integer> debugSettingsValues = new ArrayList<>();
