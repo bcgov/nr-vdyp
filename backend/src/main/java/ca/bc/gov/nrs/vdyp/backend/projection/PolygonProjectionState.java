@@ -207,7 +207,9 @@ public class PolygonProjectionState {
 		if (processingResultByStageAndProjectionType.get(key).isPresent()) {
 			return processingResultByStageAndProjectionType.get(key).get();
 		} else {
-			throw new IllegalStateException("processingResultByStageAndProjectionType does not contain a value for key " + key.toString());
+			throw new IllegalStateException(
+					"processingResultByStageAndProjectionType does not contain a value for key " + key.toString()
+			);
 		}
 	}
 

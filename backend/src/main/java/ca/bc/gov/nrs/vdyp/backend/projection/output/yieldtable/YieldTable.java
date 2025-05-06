@@ -63,8 +63,8 @@ import ca.bc.gov.nrs.vdyp.si32.vdyp.SP0Name;
 public class YieldTable implements Closeable {
 
 	public static enum Category {
-		LAYER_MOFVOLUMES, LAYER_MOFBIOMASS, SPECIES_MOFVOLUME, SPECIES_MOFBIOMASS, LAYER_CFSBIOMASS,
-		PROJECTION_MODE, POLYGON_ID;
+		LAYER_MOFVOLUMES, LAYER_MOFBIOMASS, SPECIES_MOFVOLUME, SPECIES_MOFBIOMASS, LAYER_CFSBIOMASS, PROJECTION_MODE,
+		POLYGON_ID;
 	}
 
 	private static final Logger logger = LoggerFactory.getLogger(YieldTable.class);

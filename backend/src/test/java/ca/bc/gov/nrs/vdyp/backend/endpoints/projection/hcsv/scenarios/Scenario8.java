@@ -43,14 +43,15 @@ class Scenario8 extends Scenario {
 				Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER, //
 
 				Parameters.ExecutionOption.DO_INCLUDE_POLYGON_RECORD_ID_IN_YIELD_TABLE, //
-				
+
 				Parameters.ExecutionOption.DO_FORCE_REFERENCE_YEAR_INCLUSION_IN_YIELD_TABLES, //
 				Parameters.ExecutionOption.DO_FORCE_CURRENT_YEAR_INCLUSION_IN_YIELD_TABLES
 		);
-		
+
 		// This is included by default; exclude it explicitly here
-		parameters.addExcludedExecutionOptionsItem(Parameters.ExecutionOption.DO_INCLUDE_PROJECTION_MODE_IN_YIELD_TABLE);
-		
+		parameters
+				.addExcludedExecutionOptionsItem(Parameters.ExecutionOption.DO_INCLUDE_PROJECTION_MODE_IN_YIELD_TABLE);
+
 		parameters.yearStart(2100).yearEnd(2150).yearForcedIntoYieldTable(2151);
 
 		InputStream zipInputStream = runExpectedSuccessfulRequest(
@@ -60,16 +61,22 @@ class Scenario8 extends Scenario {
 
 		var resultYieldTable = assertYieldTableNext(zipFile, s -> s.length() > 0);
 
-		assertHasAgeRange(resultYieldTable, "13919428", "1", //
-				2013 /* reference year */, // 
+		assertHasAgeRange(
+				resultYieldTable, "13919428", "1", //
+				2013 /* reference year */, //
 				LocalDate.now().getYear() /* current year */, //
 				2151 /* by "forced year" parameter */, //
-				allOfRange(2100, 2150));
-		
+				allOfRange(2100, 2150)
+		);
+
 		var yieldTableRow = resultYieldTable.get("13919428").get("1").get("2100");
-		Assert.assertTrue(yieldTableRow.keySet().contains("POLYGON_ID")); /* DO_INCLUDE_POLYGON_RECORD_ID_IN_YIELD_TABLE */
-		Assert.assertFalse(yieldTableRow.keySet().contains("PRJ_MODE")); /* !DO_INCLUDE_PROJECTION_MODE_IN_YIELD_TABLE */
-		
+		Assert.assertTrue(
+				yieldTableRow.keySet().contains("POLYGON_ID")
+		); /* DO_INCLUDE_POLYGON_RECORD_ID_IN_YIELD_TABLE */
+		Assert.assertFalse(
+				yieldTableRow.keySet().contains("PRJ_MODE")
+		); /* !DO_INCLUDE_PROJECTION_MODE_IN_YIELD_TABLE */
+
 		assertProgressLogNext(zipFile, s -> s.contains("starting projection (type HCSV)"));
 
 		assertErrorLogNext(zipFile, s -> s.length() == 0);

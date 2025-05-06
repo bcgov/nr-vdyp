@@ -54,9 +54,9 @@ class Scenario1 extends Scenario {
 		assertHasAgeRange(resultYieldTable, "13919428", "1", allOfRange(2000, 2050));
 		var yieldTableRow = resultYieldTable.get("13919428").get("1").get("2000");
 		/* !DO_INCLUDE_POLYGON_RECORD_ID_IN_YIELD_TABLE - default off */
-		Assert.assertFalse(yieldTableRow.keySet().contains("POLYGON_ID")); 
+		Assert.assertFalse(yieldTableRow.keySet().contains("POLYGON_ID"));
 		/* DO_INCLUDE_PROJECTION_MODE_IN_YIELD_TABLE - default on */
-		Assert.assertTrue(yieldTableRow.keySet().contains("PRJ_MODE")); 
+		Assert.assertTrue(yieldTableRow.keySet().contains("PRJ_MODE"));
 
 		assertProgressLogNext(zipFile, s -> s.contains("starting projection (type HCSV)"));
 
