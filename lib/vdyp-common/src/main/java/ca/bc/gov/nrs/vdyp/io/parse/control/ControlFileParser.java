@@ -11,7 +11,6 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
-import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.io.parse.common.LineParser;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParser;
@@ -97,7 +96,7 @@ public class ControlFileParser implements ResourceParser<Map<String, Object>> {
 		result = lineParser.parse(input, result, (map, r, line) -> {
 			Integer index = (Integer) map.get("index");
 			String extend = (String) map.get("extend");
-			String restOfLine = Utils.<String>optSafe(map.get("restOfLine")).orElse("");
+			String restOfLine = (String) map.get("restOfLine");
 
 			// How long is the control value
 			int controlLength = Math

@@ -1,37 +1,16 @@
 package ca.bc.gov.nrs.vdyp.vri;
 
-import static ca.bc.gov.nrs.vdyp.test.TestUtils.assertHasPrimaryLayer;
-import static ca.bc.gov.nrs.vdyp.test.TestUtils.assertHasVeteranLayer;
-import static ca.bc.gov.nrs.vdyp.test.TestUtils.assertOnlyPrimaryLayer;
+import static ca.bc.gov.nrs.vdyp.test.TestUtils.*;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.*;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.coe;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.isBec;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.isPolyId;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.utilization;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.utilizationAllAndBiggest;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.utilizationHeight;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.aMapWithSize;
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.anything;
-import static org.hamcrest.Matchers.blankString;
-import static org.hamcrest.Matchers.both;
-import static org.hamcrest.Matchers.endsWith;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasEntry;
-import static org.hamcrest.Matchers.hasKey;
-import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.text.MessageFormat;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -44,7 +23,6 @@ import org.apache.commons.math3.exception.TooManyEvaluationsException;
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
 import org.hamcrest.Matcher;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -54,13 +32,13 @@ import org.junit.jupiter.params.provider.EnumSource.Mode;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import ca.bc.gov.nrs.vdyp.application.ApplicationTestUtils;
-import ca.bc.gov.nrs.vdyp.application.ProcessingException;
-import ca.bc.gov.nrs.vdyp.application.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.application.VdypStartApplication;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
+import ca.bc.gov.nrs.vdyp.exceptions.FatalProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BasalAreaYieldParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BaseAreaCoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.HLNonprimaryCoefficientParser;
@@ -79,12 +57,12 @@ import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.BecLookup;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
-import ca.bc.gov.nrs.vdyp.model.DebugSettings;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
 import ca.bc.gov.nrs.vdyp.model.PolygonMode;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
+import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.test.MockFileResolver;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
@@ -124,7 +102,7 @@ class VriStartTest {
 	@Nested
 	class EstimateBaseAreaYield {
 		@Test
-		void testCompute() throws StandProcessingException {
+		void testCompute() throws ProcessingException {
 			Map<String, Object> controlMap = VriTestUtils.loadControlMap();
 			VriStart app = new VriStart();
 			ApplicationTestUtils.setControlMap(app, controlMap);
@@ -170,7 +148,7 @@ class VriStartTest {
 		}
 
 		@Test
-		void testGetCoefficients() throws StandProcessingException {
+		void testGetCoefficients() {
 			Map<String, Object> controlMap = VriTestUtils.loadControlMap();
 			VriStart app = new VriStart();
 			ApplicationTestUtils.setControlMap(app, controlMap);
@@ -548,7 +526,7 @@ class VriStartTest {
 		@Nested
 		class ErrorFunction {
 			@Test
-			void testCompute() throws StandProcessingException {
+			void testCompute() {
 
 				controlMap = VriTestUtils.loadControlMap();
 				VriStart app = new VriStart();
@@ -605,7 +583,7 @@ class VriStartTest {
 			}
 
 			@Test
-			void testComputeGraph() throws StandProcessingException {
+			void testComputeGraph() {
 
 				controlMap = VriTestUtils.loadControlMap();
 				VriStart app = new VriStart();
@@ -657,7 +635,7 @@ class VriStartTest {
 			}
 
 			@Test
-			void testComputeXClamppedHigh() throws StandProcessingException {
+			void testComputeXClamppedHigh() {
 
 				controlMap = VriTestUtils.loadControlMap();
 				VriStart app = new VriStart();
@@ -714,7 +692,7 @@ class VriStartTest {
 			}
 
 			@Test
-			void testComputeXClamppedLow() throws StandProcessingException {
+			void testComputeXClamppedLow() {
 
 				controlMap = VriTestUtils.loadControlMap();
 				VriStart app = new VriStart();
@@ -771,7 +749,7 @@ class VriStartTest {
 			}
 
 			@Test
-			void testComputeInitial() throws StandProcessingException {
+			void testComputeInitial() {
 
 				controlMap = VriTestUtils.loadControlMap();
 				VriStart app = new VriStart();
@@ -832,7 +810,7 @@ class VriStartTest {
 		@Nested
 		class ExpandIntervalOfRootFinder {
 			@Test
-			void testNoChange() throws StandProcessingException, IOException {
+			void testNoChange() {
 
 				UnivariateFunction errorFunc = x -> x;
 
@@ -849,7 +827,7 @@ class VriStartTest {
 			}
 
 			@Test
-			void testSimpleChange() throws StandProcessingException, IOException {
+			void testSimpleChange() {
 
 				UnivariateFunction errorFunc = x -> x;
 
@@ -871,7 +849,7 @@ class VriStartTest {
 
 			@ParameterizedTest
 			@CsvSource({ "1, 1", "-1, 1", "1, -1", "-1, -1" })
-			void testDifficultChange(float a, float b) throws StandProcessingException, IOException {
+			void testDifficultChange(float a, float b) {
 
 				UnivariateFunction errorFunc = x -> a * (Math.exp(b * x) - 0.000001);
 
@@ -893,7 +871,7 @@ class VriStartTest {
 
 			@ParameterizedTest
 			@ValueSource(floats = { 1, -1, 20, -20 })
-			void testTwoRoots(float a) throws StandProcessingException, IOException {
+			void testTwoRoots(float a) {
 
 				UnivariateFunction errorFunc = x -> a * (x * x - 0.5);
 
@@ -915,7 +893,7 @@ class VriStartTest {
 
 			@ParameterizedTest
 			@CsvSource({ "1, 1", "-1, 1", "1, -1", "-1, -1" })
-			void testImpossible(float a, float b) throws StandProcessingException, IOException {
+			void testImpossible(float a, float b) {
 
 				UnivariateFunction errorFunc = x -> a * (Math.exp(b * x) + 1);
 
@@ -935,7 +913,7 @@ class VriStartTest {
 		class FindRootOfErrorFunction {
 
 			@Test
-			void testSuccess() throws StandProcessingException {
+			void testSuccess() throws ProcessingException {
 				controlMap = VriTestUtils.loadControlMap();
 				VriStart app = new VriStart();
 				ApplicationTestUtils.setControlMap(app, controlMap);
@@ -1057,10 +1035,10 @@ class VriStartTest {
 
 				var resultPerSpecies = new HashMap<String, Float>();
 
-				app.setDebugModes(TestUtils.debugSettingsSingle(1, 2));
+				app.setDebugMode(1, 2);
 
 				assertThrows(
-						StandProcessingException.class,
+						FatalProcessingException.class,
 						() -> app.findRootForQuadMeanDiameterFractionalError(
 								x1, x2, resultPerSpecies, initialDqs, baseAreas, minDq, maxDq, tph
 						)
@@ -1068,7 +1046,7 @@ class VriStartTest {
 			}
 
 			@Test
-			void testNoIntervalGuess() throws StandProcessingException {
+			void testNoIntervalGuess() throws ProcessingException {
 				controlMap = VriTestUtils.loadControlMap();
 
 				VriStart app = new VriStart() {
@@ -1130,7 +1108,7 @@ class VriStartTest {
 
 				var resultPerSpecies = new HashMap<String, Float>();
 
-				app.setDebugModes(TestUtils.debugSettingsSingle(1, 0));
+				app.setDebugMode(1, 0);
 
 				var result = app.findRootForQuadMeanDiameterFractionalError(
 						x1, x2, resultPerSpecies, initialDqs, baseAreas, minDq, maxDq, tph
@@ -1208,10 +1186,10 @@ class VriStartTest {
 
 				var resultPerSpecies = new HashMap<String, Float>();
 
-				app.setDebugModes(TestUtils.debugSettingsSingle(1, 2));
+				app.setDebugMode(1, 2);
 
 				assertThrows(
-						StandProcessingException.class,
+						FatalProcessingException.class,
 						() -> app.findRootForQuadMeanDiameterFractionalError(
 								x1, x2, resultPerSpecies, initialDqs, baseAreas, minDq, maxDq, tph
 						)
@@ -1219,7 +1197,7 @@ class VriStartTest {
 			}
 
 			@Test
-			void testTooManyEvaluationsGuess() throws StandProcessingException {
+			void testTooManyEvaluationsGuess() throws ProcessingException {
 				controlMap = VriTestUtils.loadControlMap();
 
 				float expectedX = 0.172142f;
@@ -1274,7 +1252,7 @@ class VriStartTest {
 
 				var resultPerSpecies = new HashMap<String, Float>();
 
-				app.setDebugModes(TestUtils.debugSettingsSingle(1, 0));
+				app.setDebugMode(1, 0);
 
 				var result = app.findRootForQuadMeanDiameterFractionalError(
 						x1, x2, resultPerSpecies, initialDqs, baseAreas, minDq, maxDq, tph
@@ -1350,10 +1328,10 @@ class VriStartTest {
 
 				var resultPerSpecies = new HashMap<String, Float>();
 
-				app.setDebugModes(TestUtils.debugSettingsSingle(1, 0));
+				app.setDebugMode(1, 0);
 
 				assertThrows(
-						StandProcessingException.class,
+						FatalProcessingException.class,
 						() -> app.findRootForQuadMeanDiameterFractionalError(
 								x1, x2, resultPerSpecies, initialDqs, baseAreas, minDq, maxDq, tph
 						)
@@ -1535,7 +1513,7 @@ class VriStartTest {
 		@Nested
 		class ApplyResults {
 			@Test
-			void testApply() throws ProcessingException {
+			void testApply() {
 
 				controlMap = VriTestUtils.loadControlMap();
 				VriStart app = new VriStart();
@@ -1719,6 +1697,7 @@ class VriStartTest {
 					.addMockedMethod("processBatn") //
 					.addMockedMethod("checkPolygon") //
 					.addMockedMethod("processPrimaryLayer") //
+					.addMockedMethod("getDebugMode") //
 					.createMock(control);
 
 			MockFileResolver resolver = dummyInput();
@@ -1776,9 +1755,8 @@ class VriStartTest {
 			EasyMock.expect(app.processBatn(polyYoung)).andReturn(polyBatn).times(0, 1);
 			app.processPrimaryLayer(EasyMock.anyObject(VriPolygon.class), EasyMock.anyObject(VdypLayer.Builder.class));
 			EasyMock.expectLastCall().once();
-
-			// 1 and 9 set to 0
-			controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettings(0, 0, 0, 0, 0, 0, 0, 0, 0));
+			EasyMock.expect(app.getDebugMode(9)).andStubReturn(0);
+			EasyMock.expect(app.getDebugMode(1)).andStubReturn(0);
 
 			control.replay();
 
@@ -1937,7 +1915,7 @@ class VriStartTest {
 		}
 
 		@Test
-		void testStandExceptionProcessingPrimaryLayer() throws Exception {
+		void testFatalExceptionProcessingPrimaryLayer() throws Exception {
 
 			TestUtils.populateControlMapBecReal(controlMap);
 
@@ -1969,13 +1947,13 @@ class VriStartTest {
 
 			EasyMock.expect(app.checkPolygon(poly)).andReturn(mode).once();
 			app.processPrimaryLayer(EasyMock.same(poly), EasyMock.anyObject(VdypLayer.Builder.class));
-			EasyMock.expectLastCall().andThrow(new StandProcessingException("Test Exception")).once();
+			EasyMock.expectLastCall().andThrow(new FatalProcessingException("Test Exception")).once();
 
 			control.replay();
 
 			app.init(resolver, controlMap);
 
-			assertThrows(StandProcessingException.class, () -> app.processPolygon(0, poly));
+			assertThrows(FatalProcessingException.class, () -> app.processPolygon(0, poly));
 
 			app.close();
 
@@ -2446,6 +2424,152 @@ class VriStartTest {
 			app.close();
 		}
 
+		@Test
+		void testProcessVeteranBadTphTotal() throws Exception {
+
+			controlMap = TestUtils.loadControlMap();
+
+			VriStart app = new VriStart();
+
+			MockFileResolver resolver = dummyInput();
+
+			var poly = VriPolygon.build(pb -> {
+				pb.polygonIdentifier("TestPoly", 2024);
+				pb.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+				pb.yieldFactor(1.0f);
+				pb.forestInventoryZone("");
+				pb.percentAvailable(85);
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.PRIMARY);
+					lb.crownClosure(40.2f);
+					lb.utilization(7.5f);
+					lb.baseArea(47.0588226f);
+					lb.treesPerHectare(764.705872f);
+					lb.utilization(7.5f);
+
+					lb.inventoryTypeGroup(14);
+					lb.empiricalRelationshipParameterIndex(33);
+
+					lb.primaryGenus("C");
+					// 1 3
+					lb.addSpecies(sb -> {
+						sb.genus("B", controlMap);
+						sb.percentGenus(10);
+						sb.addSp64Distribution("BL", 100);
+						sb.addSite(ib -> {
+							ib.siteSpecies("BL");
+							ib.siteCurveNumber(8);
+						});
+					});
+
+					// 2 4 (Primary)
+					lb.addSpecies(sb -> {
+						sb.genus("C", controlMap);
+						sb.percentGenus(50);
+						sb.addSp64Distribution("CW", 100);
+						sb.addSite(ib -> {
+							ib.siteCurveNumber(11);
+							ib.ageTotal(100);
+							ib.height(20f);
+							ib.siteIndex(12f);
+							ib.yearsToBreastHeight(10.9f);
+							ib.breastHeightAge(89.1f);
+							ib.ageTotal(100f);
+							ib.siteSpecies("CW");
+						});
+					});
+
+					// 3 8
+					lb.addSpecies(sb -> {
+						sb.genus("H", controlMap);
+						sb.percentGenus(40);
+						sb.addSp64Distribution("HW", 100);
+						sb.addSite(ib -> {
+							ib.siteCurveNumber(37);
+							ib.height(25f);
+							ib.siteIndex(12.6f);
+							ib.yearsToBreastHeight(9.7f);
+							ib.breastHeightAge(90.3f);
+							ib.ageTotal(100f);
+							ib.siteSpecies("HW");
+						});
+					});
+
+				});
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.VETERAN);
+					lb.crownClosure(50.8f);
+					lb.utilization(7.5f);
+					lb.baseArea(20f);
+					lb.treesPerHectare(123f);
+					lb.utilization(7.5f);
+
+					lb.inventoryTypeGroup(14);
+					// lb.empiricalRelationshipParameterIndex(33);
+
+					lb.primaryGenus("H"); // 3
+					// 1 3
+					lb.addSpecies(sb -> {
+						sb.genus("B", controlMap);
+						sb.percentGenus(20);
+						sb.addSp64Distribution("BL", 100);
+						sb.addSite(ib -> {
+							ib.siteSpecies("BL");
+							ib.siteCurveNumber(8);
+						});
+					});
+
+					// 2 4
+					lb.addSpecies(sb -> {
+						sb.genus("C", controlMap);
+						sb.percentGenus(30);
+						sb.addSp64Distribution("CW", 100);
+						sb.addSite(ib -> {
+							ib.siteCurveNumber(11);
+							ib.ageTotal(100);
+							ib.height(30f);
+							ib.siteIndex(14.3f);
+							ib.yearsToBreastHeight(10.9f);
+							ib.breastHeightAge(189.1f);
+							ib.ageTotal(200f);
+							ib.siteSpecies("CW");
+						});
+					});
+
+					// 3 8 (Primary)
+					lb.addSpecies(sb -> {
+						sb.genus("H", controlMap);
+						sb.percentGenus(50);
+						sb.addSp64Distribution("HW", 100);
+						sb.addSite(ib -> {
+							ib.siteCurveNumber(37);
+							ib.height(34f);
+							ib.siteIndex(14.6f);
+							ib.yearsToBreastHeight(9.7f);
+							ib.breastHeightAge(190.3f);
+							ib.ageTotal(200f);
+							ib.siteSpecies("HW");
+						});
+					});
+
+				});
+			});
+			// doesn't need to be a completely accurate mock for this test
+			var result = VdypPolygon.build(pb -> {
+				pb.adapt(poly, x -> x.get());
+				pb.adaptLayers(poly, (l, lb) -> {
+
+				});
+			});
+			app.init(resolver, controlMap);
+
+			// inputTph set to something utterly wrong should cause an error
+			var ex = assertThrows(FatalProcessingException.class, () -> app.postProcessPolygon(poly, 10000f, result));
+			assertThat(ex, hasProperty("message", containsString("10,000 trees/ha")));
+
+			app.close();
+		}
+
 	}
 
 	<T> void mockInputStreamFactory(
@@ -2474,39 +2598,141 @@ class VriStartTest {
 		return stream;
 	}
 
-	@Test
-	void testFindSiteCurveNumber() throws Exception {
-		var control = EasyMock.createControl();
+	@Nested
+	class SiteCurveNumber {
+		@Test
+		void testFindSiteCurveNumber() throws Exception {
+			var control = EasyMock.createControl();
 
-		VriStart app = new VriStart();
+			VriStart app = new VriStart();
 
-		MockFileResolver resolver = dummyInput();
+			MockFileResolver resolver = dummyInput();
 
-		TestUtils.populateControlMapGenusReal(controlMap);
-		TestUtils.populateControlMapFromResource(controlMap, new SiteCurveParser(), "SIEQN.PRM");
+			TestUtils.populateControlMapGenusReal(controlMap);
+			TestUtils.populateControlMapFromResource(controlMap, new SiteCurveParser(), "SIEQN.PRM");
 
-		control.replay();
+			control.replay();
 
-		app.init(resolver, controlMap);
+			app.init(resolver, controlMap);
 
-		assertThat(app.findSiteCurveNumber(Region.COASTAL, "MB"), is(SiteIndexEquation.getByIndex(10)));
-		assertThat(app.findSiteCurveNumber(Region.INTERIOR, "MB"), is(SiteIndexEquation.getByIndex(10)));
+			assertThat(app.findSiteCurveNumber(Region.COASTAL, "MB"), is(SiteIndexEquation.getByIndex(10)));
+			assertThat(app.findSiteCurveNumber(Region.INTERIOR, "MB"), is(SiteIndexEquation.getByIndex(10)));
 
-		assertThat(app.findSiteCurveNumber(Region.COASTAL, "B"), is(SiteIndexEquation.getByIndex(12)));
-		assertThat(app.findSiteCurveNumber(Region.INTERIOR, "B"), is(SiteIndexEquation.getByIndex(42)));
+			assertThat(app.findSiteCurveNumber(Region.COASTAL, "B"), is(SiteIndexEquation.getByIndex(12)));
+			assertThat(app.findSiteCurveNumber(Region.INTERIOR, "B"), is(SiteIndexEquation.getByIndex(42)));
 
-		assertThat(app.findSiteCurveNumber(Region.COASTAL, "ZZZ", "B"), is(SiteIndexEquation.getByIndex(12)));
-		assertThat(app.findSiteCurveNumber(Region.INTERIOR, "ZZZ", "B"), is(SiteIndexEquation.getByIndex(42)));
+			assertThat(app.findSiteCurveNumber(Region.COASTAL, "ZZZ", "B"), is(SiteIndexEquation.getByIndex(12)));
+			assertThat(app.findSiteCurveNumber(Region.INTERIOR, "ZZZ", "B"), is(SiteIndexEquation.getByIndex(42)));
 
-		assertThat(app.findSiteCurveNumber(Region.COASTAL, "YYY", "B"), is(SiteIndexEquation.getByIndex(42)));
-		assertThat(app.findSiteCurveNumber(Region.INTERIOR, "YYY", "B"), is(SiteIndexEquation.getByIndex(06)));
+			assertThat(app.findSiteCurveNumber(Region.COASTAL, "YYY", "B"), is(SiteIndexEquation.getByIndex(42)));
+			assertThat(app.findSiteCurveNumber(Region.INTERIOR, "YYY", "B"), is(SiteIndexEquation.getByIndex(06)));
 
-		assertThrows(StandProcessingException.class, () -> app.findSiteCurveNumber(Region.COASTAL, "ZZZ"));
-		assertThrows(StandProcessingException.class, () -> app.findSiteCurveNumber(Region.INTERIOR, "ZZZ"));
+			assertThrows(FatalProcessingException.class, () -> app.findSiteCurveNumber(Region.COASTAL, "ZZZ"));
+			assertThrows(FatalProcessingException.class, () -> app.findSiteCurveNumber(Region.INTERIOR, "ZZZ"));
 
-		app.close();
+			app.close();
 
-		control.verify();
+			control.verify();
+		}
+
+		@Test
+		void testGetSiteCurveNumberByFinding() throws Exception {
+			var control = EasyMock.createControl();
+
+			VriStart app = new VriStart();
+
+			MockFileResolver resolver = dummyInput();
+
+			TestUtils.populateControlMapGenusReal(controlMap);
+			TestUtils.populateControlMapBecReal(controlMap);
+			TestUtils.populateControlMapFromResource(controlMap, new SiteCurveParser(), "SIEQN.PRM");
+			var bec = Utils.getBec("CDF", controlMap);
+
+			control.replay();
+
+			app.init(resolver, controlMap);
+
+			var site = VriSite.build(builder -> {
+				builder.polygonIdentifier("Test", 2025);
+				builder.layerType(LayerType.PRIMARY);
+				builder.siteSpecies("PL");
+				builder.siteGenus("PL");
+			});
+
+			var result = app.getSiteCurveNumber(bec, site);
+
+			assertThat(result, is(SiteIndexEquation.SI_BL_KURUCZ82));
+
+			app.close();
+
+			control.verify();
+		}
+
+		@Test
+		void testGetSiteCurveNumberDirectly() throws Exception {
+			var control = EasyMock.createControl();
+
+			VriStart app = new VriStart();
+
+			MockFileResolver resolver = dummyInput();
+
+			TestUtils.populateControlMapGenusReal(controlMap);
+			TestUtils.populateControlMapBecReal(controlMap);
+			TestUtils.populateControlMapFromResource(controlMap, new SiteCurveParser(), "SIEQN.PRM");
+			var bec = Utils.getBec("CDF", controlMap);
+
+			control.replay();
+
+			app.init(resolver, controlMap);
+
+			var site = VriSite.build(builder -> {
+				builder.polygonIdentifier("Test", 2025);
+				builder.layerType(LayerType.PRIMARY);
+				builder.siteSpecies("PL");
+				builder.siteGenus("PL");
+				builder.siteCurveNumber(58);
+			});
+
+			var result = app.getSiteCurveNumber(bec, site);
+
+			assertThat(result, is(SiteIndexEquation.SI_SS_NIGHGI));
+
+			app.close();
+
+			control.verify();
+		}
+
+		@Test
+		void testGetSiteCurveNumberFail() throws Exception {
+			var control = EasyMock.createControl();
+
+			VriStart app = new VriStart();
+
+			MockFileResolver resolver = dummyInput();
+
+			TestUtils.populateControlMapGenusReal(controlMap);
+			TestUtils.populateControlMapBecReal(controlMap);
+			TestUtils.populateControlMapFromResource(controlMap, new SiteCurveParser(), "SIEQN.PRM");
+			var bec = Utils.getBec("CDF", controlMap);
+
+			control.replay();
+
+			app.init(resolver, controlMap);
+
+			var site = VriSite.build(builder -> {
+				builder.polygonIdentifier("Test", 2025);
+				builder.layerType(LayerType.PRIMARY);
+				builder.siteSpecies("X");
+				builder.siteGenus("X");
+			});
+
+			var ex = assertThrows(FatalProcessingException.class, () -> app.getSiteCurveNumber(bec, site));
+			assertThat(ex, hasProperty("message", containsString("Could not find Site Curve Number")));
+
+			app.close();
+
+			control.verify();
+		}
 	}
 
 	@Nested
@@ -3091,7 +3317,7 @@ class VriStartTest {
 
 			app.init(resolver, controlMap);
 
-			var ex = assertThrows(StandProcessingException.class, () -> app.processYoung(poly));
+			var ex = assertThrows(FatalProcessingException.class, () -> app.processYoung(poly));
 
 			assertThat(ex, hasProperty("message", is("Year for YOUNG stand should be at least 1900 but was 1899")));
 
@@ -3967,7 +4193,7 @@ class VriStartTest {
 	class EstimateQuadMeanDiameterYield {
 
 		@Test
-		void testCompute() throws StandProcessingException {
+		void testCompute() throws ProcessingException {
 
 			controlMap = VriTestUtils.loadControlMap();
 			VriStart app = new VriStart();
@@ -4019,7 +4245,7 @@ class VriStartTest {
 
 		@ParameterizedTest
 		@ValueSource(floats = { 0f, -1f, -Float.MIN_VALUE, -Float.MAX_VALUE, Float.NEGATIVE_INFINITY })
-		void testBreastHeightAgeLow(float breastHeightAge) throws StandProcessingException {
+		void testBreastHeightAgeLow(float breastHeightAge) {
 			controlMap = VriTestUtils.loadControlMap();
 			VriStart app = new VriStart();
 			ApplicationTestUtils.setControlMap(app, controlMap);
@@ -4064,135 +4290,58 @@ class VriStartTest {
 			var bec = Utils.expectParsedControl(controlMap, ControlKey.BEC_DEF, BecLookup.class).get("IDF").get();
 
 			var ex = assertThrows(
-					StandProcessingException.class,
+					FatalProcessingException.class,
 					() -> app.estimateQuadMeanDiameterYield(7.6f, breastHeightAge, Optional.empty(), species, bec, 61)
 			);
 
-			assertThat(ex, hasProperty("message", endsWith(Float.toString(breastHeightAge))));
+			assertThat(ex, hasProperty("message", endsWith(MessageFormat.format("{0,number}", breastHeightAge))));
 
 		}
 
 	}
 
-	@Nested
-	class DebugModeExpandRootSerchWindow {
-		@Test
-		void testNoDebug() throws IOException {
-			var control = EasyMock.createControl();
+	@Test
+	void testModifyPrimaryLayerBuildLowDQ() throws IOException {
+		var control = EasyMock.createControl();
 
-			// 1 and 9 set to 0
-			MockFileResolver resolver = dummyInput();
+		VriStart app = new VriStart();
 
-			VriStart app = new VriStart();
+		MockFileResolver resolver = dummyInput();
 
-			app.init(resolver, controlMap);
+		TestUtils.populateControlMapGenusReal(controlMap);
+		TestUtils.populateControlMapBecReal(controlMap);
+		controlMap.put(
+				ControlKey.DEFAULT_EQ_NUM.name(),
+				new MatrixMap2Impl<Object, Object, Object>(List.of("D"), List.of("CDF"), (x, y) -> 42)
+		);
+		controlMap.put(
+				ControlKey.EQN_MODIFIERS.name(),
+				new MatrixMap2Impl<Object, Object, Object>(List.of(42), List.of(37), (x, y) -> 64)
+		);
 
-			Map<String, Float> minDq = new HashMap<>();
-			Map<String, Float> maxDq = new HashMap<>();
+		var bec = Utils.getBec("CDF", controlMap);
 
-			minDq.put("A", 10f);
-			minDq.put("B", 15f);
+		control.replay();
 
-			maxDq.put("A", 20f);
-			maxDq.put("B", 25f);
+		app.init(resolver, controlMap);
 
-			UnivariateFunction func = control.createMock(UnivariateFunction.class);
+		var spec = VriSpecies.build(sBuilder -> {
+			sBuilder.polygonIdentifier("Test", 2025);
+			sBuilder.layerType(LayerType.PRIMARY);
+			sBuilder.genus("D", controlMap);
+			sBuilder.percentGenus(100f);
+		});
 
-			control.replay();
+		var builder = new ca.bc.gov.nrs.vdyp.vri.model.VriLayer.Builder();
+		builder.baseArea(2f);
+		builder.treesPerHectare(1_000_000);
+		app.modifyPrimaryLayerBuild(bec, builder, List.of(spec), 37);
 
-			app.debugModeExpandRootSearchWindow(Optional.empty(), minDq, maxDq, func);
+		app.close();
 
-			control.verify();
+		assertThat(builder.getBaseArea(), notPresent());
+		assertThat(builder.getTreesPerHectare(), notPresent());
 
-			// No Change
-			assertThat(minDq, hasEntry(is("A"), is(10f)));
-			assertThat(minDq, hasEntry(is("B"), is(15f)));
-			assertThat(maxDq, hasEntry(is("A"), is(20f)));
-			assertThat(maxDq, hasEntry(is("B"), is(25f)));
-
-			app.close();
-
-		}
-
-		@Test
-		void testDebug50PercentGoodWindow() throws IOException {
-			var control = EasyMock.createControl();
-
-			// 1 and 9 set to 0
-			MockFileResolver resolver = dummyInput();
-
-			VriStart app = new VriStart();
-
-			app.init(resolver, controlMap);
-
-			Map<String, Float> minDq = new HashMap<>();
-			Map<String, Float> maxDq = new HashMap<>();
-
-			minDq.put("A", 10f);
-			minDq.put("B", 15f);
-
-			maxDq.put("A", 20f);
-			maxDq.put("B", 25f);
-
-			UnivariateFunction func = control.createMock(UnivariateFunction.class);
-			EasyMock.expect(func.value(10d)).andReturn(1d);
-			EasyMock.expect(func.value(-10d)).andReturn(-1d);
-
-			control.replay();
-
-			app.debugModeExpandRootSearchWindow(Optional.of(50), minDq, maxDq, func);
-
-			control.verify();
-
-			// No Change
-			assertThat(minDq, hasEntry(is("A"), is(10f)));
-			assertThat(minDq, hasEntry(is("B"), is(15f)));
-			assertThat(maxDq, hasEntry(is("A"), is(20f)));
-			assertThat(maxDq, hasEntry(is("B"), is(25f)));
-
-			app.close();
-
-		}
-
-		@Test
-		void testDebug50PercentBadWindow() throws IOException {
-			var control = EasyMock.createControl();
-
-			// 1 and 9 set to 0
-			MockFileResolver resolver = dummyInput();
-
-			VriStart app = new VriStart();
-
-			app.init(resolver, controlMap);
-
-			Map<String, Float> minDq = new HashMap<>();
-			Map<String, Float> maxDq = new HashMap<>();
-
-			minDq.put("A", 10f);
-			minDq.put("B", 15f);
-
-			maxDq.put("A", 20f);
-			maxDq.put("B", 25f);
-
-			UnivariateFunction func = control.createMock(UnivariateFunction.class);
-			EasyMock.expect(func.value(10d)).andReturn(1d);
-			EasyMock.expect(func.value(-10d)).andReturn(1d);
-
-			control.replay();
-
-			app.debugModeExpandRootSearchWindow(Optional.of(50), minDq, maxDq, func);
-
-			control.verify();
-
-			// Limits expanded
-			assertThat(minDq, hasEntry(is("A"), closeTo(8.75f)));
-			assertThat(minDq, hasEntry(is("B"), closeTo(11.25f)));
-			assertThat(maxDq, hasEntry(is("A"), closeTo(26.25f)));
-			assertThat(maxDq, hasEntry(is("B"), closeTo(33.75f)));
-
-			app.close();
-
-		}
 	}
 
 	/**

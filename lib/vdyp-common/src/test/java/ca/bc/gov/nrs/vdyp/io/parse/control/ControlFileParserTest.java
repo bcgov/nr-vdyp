@@ -180,30 +180,6 @@ class ControlFileParserTest {
 	}
 
 	@Test
-	void testParsesEntriesEmptyContent() throws Exception {
-		var parser = makeParser();
-
-		String file = "015 \n";
-		try (InputStream is = new ByteArrayInputStream(file.getBytes())) {
-			var result = parser.parse(is);
-
-			assertThat(result.entrySet(), contains(controlEntry(equalTo(15), equalTo(" "), equalTo(""))));
-		}
-	}
-
-	@Test
-	void testParsesEntriesEmptyContentExtended() throws Exception {
-		var parser = makeParser();
-
-		String file = "016X\n";
-		try (InputStream is = new ByteArrayInputStream(file.getBytes())) {
-			var result = parser.parse(is);
-
-			assertThat(result.entrySet(), contains(controlEntry(equalTo(16), equalTo("X"), equalTo(""))));
-		}
-	}
-
-	@Test
 	void testParsesMultipleEntries() throws Exception {
 		var parser = makeParser();
 

@@ -1,13 +1,13 @@
 package ca.bc.gov.nrs.vdyp.vri;
 
-import static ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter.quadMeanDiameter;
-import static ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter.treesPerHectare;
+import static ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter.*;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.pow;
 import static java.lang.Math.max;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -29,13 +30,11 @@ import org.apache.commons.math3.exception.TooManyEvaluationsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ca.bc.gov.nrs.vdyp.application.ProcessingException;
-import ca.bc.gov.nrs.vdyp.application.RuntimeProcessingException;
-import ca.bc.gov.nrs.vdyp.application.RuntimeStandProcessingException;
-import ca.bc.gov.nrs.vdyp.application.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.application.VdypStartApplication;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
+import ca.bc.gov.nrs.vdyp.common.ResultWithStatus;
+import ca.bc.gov.nrs.vdyp.common.ResultWithStatus.BasicStatus;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common.ValueOrMarker;
 import ca.bc.gov.nrs.vdyp.common.VdypApplicationInitializationException;
@@ -45,6 +44,23 @@ import ca.bc.gov.nrs.vdyp.common_calculators.SiteIndex2Height;
 import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.CommonCalculatorException;
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexAgeType;
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
+import ca.bc.gov.nrs.vdyp.exceptions.BaseAreaLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.BreastHeightAgeLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.CrownClosureLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.FailedToGrowYoungStandException;
+import ca.bc.gov.nrs.vdyp.exceptions.FatalProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.HeightLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.LayerMissingException;
+import ca.bc.gov.nrs.vdyp.exceptions.LayerMissingValuesRequiredForMode;
+import ca.bc.gov.nrs.vdyp.exceptions.PreprocessEstimatedBaseAreaLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.RuntimeProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.RuntimeStandProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.SiteIndexLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.TotalAgeLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.TreesPerHectareLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.YearsToBreastHeightLowException;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.control.BaseControlParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
@@ -85,7 +101,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 	static final float VETERAN_MIN_HL = UtilizationClass.OVER225.lowBound; // Seems odd that that the min height is the
 																			// same as the min diameter
 
-	public static void main(final String... args) throws IOException {
+	public static void main(final String... args) {
 
 		try (var app = new VriStart();) {
 			try {
@@ -98,29 +114,12 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		}
 	}
 
-	protected static <T extends Number> T requirePositive(Optional<T> opt, String name)
-			throws StandProcessingException {
-		T value = require(opt, name);
-
-		if (value.doubleValue() <= 0) {
-			throw new StandProcessingException(name + " " + value + " is not positive");
-		}
-
-		return value;
-	}
-
-	protected static <T> T require(Optional<T> opt, String name) throws StandProcessingException {
-		return opt.orElseThrow(() -> new StandProcessingException(name + " is not present"));
-	}
-
 	// VRI_SUB
 	// TODO Fortran takes a vector of flags (FIPPASS) controlling which stages are
 	// implemented. FIPSTART always uses the same vector so far now that's not
 	// implemented.
 	@Override
 	public void process() throws ProcessingException {
-		int polygonsRead = 0;
-		int polygonsWritten = 0;
 		try (
 				var polyStream = this.<VriPolygon>getStreamingParser(ControlKey.VRI_INPUT_YIELD_POLY);
 				var layerStream = this.<Map<LayerType, VriLayer.Builder>>getStreamingParser(
@@ -130,46 +129,30 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 						.<Collection<VriSpecies>>getStreamingParser(ControlKey.VRI_INPUT_YIELD_SPEC_DIST);
 				var siteStream = this.<Collection<VriSite>>getStreamingParser(ControlKey.VRI_INPUT_YIELD_HEIGHT_AGE_SI);
 		) {
-			log.atDebug().setMessage("Start Stand processing").log();
+			var combinedStream = new CombinedPolygonStream<VriPolygon>() {
 
-			while (polyStream.hasNext()) {
-
-				// FIP_GET
-				log.atInfo().setMessage("Getting polygon {}").addArgument(polygonsRead + 1).log();
-				var polygon = getPolygon(polyStream, layerStream, speciesStream, siteStream);
-				try {
-
-					var resultPoly = processPolygon(polygonsRead, polygon);
-					if (resultPoly.isPresent()) {
-						polygonsRead++;
-
-						// Output
-						getVriWriter().writePolygonWithSpeciesAndUtilization(resultPoly.get());
-
-						polygonsWritten++;
-					}
-
-					log.atInfo().setMessage("Read {} polygons and wrote {}").addArgument(polygonsRead)
-							.addArgument(polygonsWritten).log();
-
-				} catch (StandProcessingException ex) {
-					// TODO include some sort of hook for different forms of user output
-					// TODO Implement single stand mode that propagates the exception
-
-					log.atWarn().setMessage("Polygon {} bypassed").addArgument(polygon.getPolygonIdentifier())
-							.setCause(ex).log();
+				@Override
+				public boolean hasNext() throws IOException, ResourceParseException {
+					return polyStream.hasNext();
 				}
 
-			}
+				@Override
+				public VriPolygon next() throws ProcessingException, IOException, ResourceParseException {
+					return getPolygon(polyStream, layerStream, speciesStream, siteStream);
+				}
+
+			};
+
+			handleProcessing(combinedStream);
 		} catch (IOException | ResourceParseException ex) {
-			throw new ProcessingException("Error while reading or writing data.", ex);
+			throw new FatalProcessingException("Error while reading or writing data.", ex);
 		}
 	}
 
 	VriPolygon getPolygon(
 			StreamingParser<VriPolygon> polyStream, StreamingParser<Map<LayerType, VriLayer.Builder>> layerStream,
 			StreamingParser<Collection<VriSpecies>> speciesStream, StreamingParser<Collection<VriSite>> siteStream
-	) throws StandProcessingException, IOException, ResourceParseException {
+	) throws ProcessingException, IOException, ResourceParseException {
 
 		log.trace("Getting polygon");
 		var polygon = polyStream.next();
@@ -183,17 +166,22 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		try {
 			sites = new LinkedList<>(siteStream.next());
 		} catch (NoSuchElementException ex) {
-			throw validationError("Sites file has fewer records than polygon file.", ex);
+			throw fatalError("Sites file has fewer records than polygon file.", ex);
 		}
 
 		Collection<VriSpecies> species;
 		try {
 			species = speciesStream.next();
 		} catch (NoSuchElementException ex) {
-			throw validationError("Species file has fewer records than polygon file.", ex);
+			throw fatalError("Species file has fewer records than polygon file.", ex);
 		}
 
-		Map<LayerType, VriLayer.Builder> layersBuilders = layerStream.next();
+		Map<LayerType, VriLayer.Builder> layersBuilders;
+		try {
+			layersBuilders = layerStream.next();
+		} catch (NoSuchElementException ex) {
+			throw fatalError("Layers file has fewer records than polygon file.", ex);
+		}
 
 		for (final var spec : species) {
 			var layerBuilder = layersBuilders.get(spec.getLayerType());
@@ -207,14 +195,14 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 
 			// Validate that species belong to the correct polygon
 			if (!specWithSite.getPolygonIdentifier().equals(polygon.getPolygonIdentifier())) {
-				throw validationError(
-						"Record in species file contains species for polygon %s when expecting one for %s.",
+				throw fatalError(
+						"Record in species file contains species for polygon {0} when expecting one for {1}.",
 						specWithSite.getPolygonIdentifier(), polygon.getPolygonIdentifier()
 				);
 			}
 			if (Objects.isNull(layerBuilder)) {
-				throw validationError(
-						"Species entry references layer %s of polygon %s but it is not present.",
+				throw fatalError(
+						"Species entry references layer {0} of polygon {1} but it is not present.",
 						specWithSite.getLayerType(), polygon.getPolygonIdentifier()
 				);
 			}
@@ -223,19 +211,21 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		if (!sites.isEmpty()) {
 			var specNames = sites.stream().map(site -> site.getSiteGenus()).collect(Collectors.joining(", "));
 			var layerType = sites.iterator().next().getLayerType();
-			throw validationError(
-					"Site entries reference species %s of layer %s of polygon %s but they are not present.", specNames,
-					layerType, polygon.getPolygonIdentifier()
+			throw fatalError(
+					"Site entries reference species {0} of layer {1} of polygon {2} but they are not present.",
+					specNames, layerType, polygon.getPolygonIdentifier()
 			);
 		}
 
 		Map<LayerType, VriLayer> layers = getLayersForPolygon(polygon, bec, layersBuilders);
 
 		// Validate that layers belong to the correct polygon
+		// I don't think the preceding checks actually allow this to fail but it was in VDYP7 and I'm not entirely sure
+		// so i'll leave it in.
 		for (var layer : layers.values()) {
 			if (!layer.getPolygonIdentifier().equals(polygon.getPolygonIdentifier())) {
-				throw validationError(
-						"Record in layer file contains layer for polygon %s when expecting one for %s.",
+				throw fatalError(
+						"Record in layer file contains layer for polygon {0} when expecting one for {1}.",
 						layer.getPolygonIdentifier(), polygon.getPolygonIdentifier()
 				);
 			}
@@ -249,7 +239,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 
 	private Map<LayerType, VriLayer>
 			getLayersForPolygon(VriPolygon polygon, BecDefinition bec, Map<LayerType, VriLayer.Builder> layersBuilders)
-					throws StandProcessingException {
+					throws ProcessingException {
 		log.trace("Getting layers for polygon {}", polygon.getPolygonIdentifier());
 		Map<LayerType, VriLayer> layers;
 		try {
@@ -265,39 +255,42 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 				if (layerType == LayerType.PRIMARY) {
 					builder.percentAvailable(polygon.getPercentAvailable().orElse(1f));
 				}
-				if (!layerSpecies.isEmpty()) {
-					var primarySpecs = this.findPrimarySpecies(layerSpecies);
-					int itg;
-					try {
+				try {
+					if (!layerSpecies.isEmpty()) {
+						// Finding Primary Species and ITG was in VRI_CHK but they have been moved here so that
+						// validation does not alter the data structure.
+						var primarySpecs = this.findPrimarySpecies(layerSpecies);
+						int itg;
 						itg = findItg(primarySpecs);
 
 						builder.inventoryTypeGroup(itg);
-					} catch (StandProcessingException ex) {
-						throw new RuntimeStandProcessingException(ex);
-					}
-					builder.primaryGenus(primarySpecs.get(0).getGenus());
 
-					if (layerType == LayerType.PRIMARY) {
-						modifyPrimaryLayerBuild(bec, builder, primarySpecs, itg);
+						builder.primaryGenus(primarySpecs.get(0).getGenus());
+
+						if (layerType == LayerType.PRIMARY) {
+							modifyPrimaryLayerBuild(bec, builder, primarySpecs, itg);
+						}
 					}
-				}
-				if (layerType == LayerType.VETERAN) {
-					modifyVeteranLayerBuild(layersBuilders, builder);
+					if (layerType == LayerType.VETERAN) {
+						modifyVeteranLayerBuild(layersBuilders, builder);
+					}
+				} catch (StandProcessingException ex) {
+					throw new RuntimeStandProcessingException(ex);
 				}
 				return builder;
 			}).map(VriLayer.Builder::build).collect(Collectors.toUnmodifiableMap(VriLayer::getLayerType, x -> x));
 
-		} catch (NoSuchElementException ex) {
-			throw validationError("Layers file has fewer records than polygon file.", ex);
-		} catch (RuntimeStandProcessingException ex) {
-			throw ex.getCause();
+		} catch (RuntimeProcessingException ex) {
+			throw ex.unwrap();
 		}
 		return layers;
 	}
 
 	private void modifyVeteranLayerBuild(
 			Map<LayerType, VriLayer.Builder> layersBuilders, ca.bc.gov.nrs.vdyp.vri.model.VriLayer.Builder builder
-	) {
+	) throws CrownClosureLowException {
+		// This was being done in VRI_CHK but I moved it here to when the object is
+		// being built instead.
 		if (builder.getBaseArea().map(x -> x <= 0f).orElse(true)
 				|| builder.getTreesPerHectare().map(x -> x <= 0f).orElse(true)) {
 			// BA or TPH missing from Veteran layer.
@@ -305,12 +298,8 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			builder.treesPerHectare(0f);
 
 			float crownClosure = builder.getCrownClosure().filter(x -> x > 0f).orElseThrow(
-					() -> new RuntimeStandProcessingException(
-							validationError(
-									"Expected a positive crown closure for veteran layer but was %s",
-									Utils.optNa(builder.getCrownClosure())
-							)
-					)
+					() -> new CrownClosureLowException(LayerType.VETERAN, builder.getCrownClosure(), Optional.of(0f))
+
 			);
 			// If the primary layer base area is positive, multiply that by veteran crown
 			// closure, otherwise just use half the veteran crown closure.
@@ -321,7 +310,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		}
 	}
 
-	private void modifyPrimaryLayerBuild(
+	void modifyPrimaryLayerBuild(
 			BecDefinition bec, ca.bc.gov.nrs.vdyp.vri.model.VriLayer.Builder builder, List<VriSpecies> primarySpecs,
 			int itg
 	) {
@@ -347,11 +336,10 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 
 	static final EnumSet<PolygonMode> ACCEPTABLE_MODES = EnumSet.of(PolygonMode.START, PolygonMode.YOUNG);
 
-	Optional<VdypPolygon> processPolygon(int polygonsRead, VriPolygon polygon) throws ProcessingException {
+	@Override
+	protected Optional<VdypPolygon> processPolygon(int polygonsRead, VriPolygon polygon) throws ProcessingException {
 		log.atInfo().setMessage("Read polygon {}, preparing to process").addArgument(polygon.getPolygonIdentifier())
 				.log();
-		var bec = polygon.getBiogeoclimaticZone();
-
 		var mode = polygon.getMode().orElse(PolygonMode.START);
 
 		if (mode == PolygonMode.DONT_PROCESS) {
@@ -384,6 +372,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			break;
 		}
 
+		AtomicInteger veteranWarnings = new AtomicInteger(0);
 		try {
 			var inputTph = new AtomicReference<Float>();
 			var result = Optional.of(VdypPolygon.build(pBuilder -> {
@@ -400,55 +389,70 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 				if (preProcessedPolygon.getLayers().containsKey(LayerType.VETERAN)) {
 					pBuilder.addLayer(lBuilder -> {
 						try {
-							inputTph.set(processVeteranLayer(preProcessedPolygon, lBuilder));
-						} catch (StandProcessingException e) {
-							throw new RuntimeStandProcessingException(e);
+							final ResultWithStatus<Float, BasicStatus> veteranResult = processVeteranLayer(
+									preProcessedPolygon, lBuilder
+							);
+							if (!veteranResult.status().isOK()) {
+								veteranWarnings.getAndIncrement();
+							}
+							inputTph.set(veteranResult.value());
+						} catch (ProcessingException e) {
+							throw new RuntimeProcessingException(e);
 						}
 					});
 				}
 
 			}));
-			result.ifPresent(resultPoly -> {
-				var resultPrimaryLayer = resultPoly.getLayers().get(LayerType.PRIMARY);
-				var resultVeteranLayer = resultPoly.getLayers().get(LayerType.VETERAN);
-
-				try {
-					getDqBySpecies(resultPrimaryLayer, bec.getRegion());
-
-					estimateSmallComponents(polygon, resultPrimaryLayer);
-
-					computeUtilizationComponentsPrimary(
-							bec, resultPrimaryLayer, VolumeComputeMode.BY_UTIL_WITH_WHOLE_STEM_BY_SPEC,
-							CompatibilityVariableMode.NONE
-					);
-
-					if (resultVeteranLayer != null) {
-						// YUCV
-						computeUtilizationComponentsVeteran(resultVeteranLayer, bec);
-
-						var input = inputTph.get();
-						var computed = resultVeteranLayer.getTreesPerHectareByUtilization().getAll();
-						if (FloatMath.abs(input - computed) / input > 0.0005) {
-							throw new StandProcessingException(
-									MessageFormat.format(
-											"Computed tree density sum {0} trees/ha did not match input {1} trees/ha",
-											computed, input
-									)
-							);
-						}
-
-					}
-				} catch (ProcessingException e) {
-					throw new RuntimeProcessingException(e);
-				}
-			});
+			if (result.isPresent()) {
+				postProcessPolygon(polygon, inputTph.get(), result.get());
+			}
 			return result;
 		} catch (RuntimeProcessingException e) {
-			throw e.getCause();
+			throw e.unwrap();
 		}
 	}
 
-	void processPrimaryLayer(VriPolygon polygon, VdypLayer.Builder lBuilder) throws ProcessingException {
+	/**
+	 * Additional steps after primary processing is done. Validates result and fills in some utilization component
+	 * values
+	 *
+	 * @param sourcePoly
+	 * @param inputTph
+	 * @param resultPoly
+	 * @throws ProcessingException
+	 */
+	void postProcessPolygon(VriPolygon sourcePoly, Float inputTph, VdypPolygon resultPoly) throws ProcessingException {
+
+		var resultPrimaryLayer = resultPoly.getLayers().get(LayerType.PRIMARY);
+		var resultVeteranLayer = resultPoly.getLayers().get(LayerType.VETERAN);
+		var bec = sourcePoly.getBiogeoclimaticZone();
+
+		getDqBySpecies(resultPrimaryLayer, bec.getRegion());
+
+		estimateSmallComponents(sourcePoly, resultPrimaryLayer);
+
+		computeUtilizationComponentsPrimary(
+				bec, resultPrimaryLayer, VolumeComputeMode.BY_UTIL_WITH_WHOLE_STEM_BY_SPEC,
+				CompatibilityVariableMode.NONE
+		);
+
+		if (resultVeteranLayer != null) {
+			// YUCV
+			computeUtilizationComponentsVeteran(resultVeteranLayer, bec);
+
+			var input = inputTph;
+			var computed = resultVeteranLayer.getTreesPerHectareByUtilization().getAll();
+			if (FloatMath.abs(input - computed) / input > 0.0005) {
+				throw fatalError(
+						"Computed tree density sum {0} trees/ha did not match input {1} trees/ha", computed, input
+				);
+			}
+
+		}
+
+	}
+
+	void processPrimaryLayer(VriPolygon polygon, VdypLayer.Builder lBuilder) throws FatalProcessingException {
 		var primaryLayer = polygon.getLayers().get(LayerType.PRIMARY);
 		var bec = polygon.getBiogeoclimaticZone();
 
@@ -469,7 +473,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		var primarySpeciesDensity = primarySpeciesPercent * primaryLayerDensity;
 
 		// HDL1 or HT_L1
-		var leadHeight = requirePositive(primarySiteIn.getHeight(), "Primary layer lead species height");
+		float leadHeight = requirePositive(primarySiteIn.getHeight(), "Height for primary layer");
 
 		// HLPL1
 		// EMP050 Method 1
@@ -500,7 +504,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 				});
 			} else {
 				var loreyHeight = vriSite
-						.flatMap(site -> site.getHeight().filter(x -> getDebugModes().getValue(2) != 1).map(height -> {
+						.flatMap(site -> site.getHeight().filter(x -> getDebugMode(2) != 1).map(height -> {
 							// DQsp
 							float speciesQuadMeanDiameter = Math.max(
 									UtilizationClass.U75TO125.lowBound, height / leadHeight * layerQuadMeanDiameter
@@ -557,7 +561,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 	}
 
 	// ROOTV01
-	void getDqBySpecies(VdypLayer layer, Region region) throws ProcessingException {
+	void getDqBySpecies(VdypLayer layer, Region region) throws FatalProcessingException {
 
 		// DQ_TOT
 		float quadMeanDiameterTotal = layer.getQuadraticMeanDiameterByUtilization().getAll();
@@ -587,6 +591,10 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		);
 
 		resultsPerSpecies.putAll(initialDqEstimate);
+
+		if (this.getDebugMode(9) > 0) {
+			// TODO
+		}
 
 		findRootForQuadMeanDiameterFractionalError(
 				-0.6f, 0.5f, resultsPerSpecies, initialDqEstimate, baseAreaPerSpecies, minPerSpecies, maxPerSpecies,
@@ -620,7 +628,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			VdypLayer layer, Region region, float quadMeanDiameterTotal, float baseAreaTotal, float treeDensityTotal,
 			float loreyHeightTotal, Map<String, Float> initialDqEstimate, Map<String, Float> baseAreaPerSpecies,
 			Map<String, Float> minPerSpecies, Map<String, Float> maxPerSpecies
-	) throws ProcessingException {
+	) throws FatalProcessingException {
 		for (var spec : layer.getSpecies().values()) {
 			// EMP060
 			float specDq = estimationMethods.estimateQuadMeanDiameterForSpecies(
@@ -684,7 +692,11 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		);
 	}
 
-	private float processVeteranLayer(VriPolygon polygon, VdypLayer.Builder lBuilder) throws StandProcessingException {
+	private record VeteranResult(float treesPerHectare, boolean lowDq) {
+	}
+
+	private ResultWithStatus<Float, ResultWithStatus.BasicStatus>
+			processVeteranLayer(VriPolygon polygon, VdypLayer.Builder lBuilder) throws FatalProcessingException {
 		var veteranLayer = polygon.getLayers().get(LayerType.VETERAN);
 		lBuilder.layerType(LayerType.VETERAN);
 
@@ -700,25 +712,18 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		float yearsToBreastHeight = primarySite.flatMap(VriSite::getYearsToBreastHeight).orElse(0f); // YTBHLV
 		float dominantHeight = primarySite.flatMap(VriSite::getHeight).orElse(0f); // HDLV
 
-		var baseArea = veteranLayer.getBaseArea()
-				.orElseThrow(() -> new StandProcessingException("Expected veteran layer to have a base area")); // BA_V1
-		var treesPerHectare = veteranLayer.getTreesPerHectare()
-				.orElseThrow(() -> new StandProcessingException("Expected veteran layer to have a trees per hectare")); // TPH_V1
+		float baseArea = requirePositive(veteranLayer.getBaseArea(), "Base area for veteran layer");
+		float treesPerHectare = requirePositive(veteranLayer.getTreesPerHectare(), "Tree density for veteran layer");
 
-		treesPerHectare = enforceMinimumDiameter(baseArea, treesPerHectare);
+		boolean lowDq = false;
+
+		{
+			var enforcedTph = enforceMinimumDiameter(baseArea, treesPerHectare);
+			treesPerHectare = enforcedTph.treesPerHectare();
+			lowDq = enforcedTph.lowDq();
+		}
 
 		float inputTreesPerHectare = treesPerHectare; // TPHInput
-
-		if (baseArea <= 0) {
-			throw new StandProcessingException(
-					MessageFormat.format("Veteran layer base area ({0}) was not positive", baseArea)
-			);
-		}
-		if (treesPerHectare <= 0) {
-			throw new StandProcessingException(
-					MessageFormat.format("Veteran layer trees per hectare ({0}) was not positive", baseArea)
-			);
-		}
 
 		lBuilder.adaptSpecies(veteranLayer, (sBuilder, spec) -> {
 			applyGroups(bec, spec.getGenus(), sBuilder);
@@ -780,7 +785,9 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			treesPerHectare = tphSum;
 		}
 
-		return inputTreesPerHectare;
+		return new ResultWithStatus<>(
+				inputTreesPerHectare, lowDq ? ResultWithStatus.BasicStatus.OK : ResultWithStatus.BasicStatus.WARNING
+		);
 	}
 
 	static final String MINIMUM_DIAMETER_BASE_MESSAGE = "Quadratic mean diameter {0} cm was lower than {1} cm";
@@ -788,18 +795,21 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			+ ", raising tree density to {2} trees/ha";
 	static final String MINIMUM_DIAMETER_FAIL_MESSAGE = MINIMUM_DIAMETER_BASE_MESSAGE + ".";
 
-	private Float enforceMinimumDiameter(Float baseArea, Float treesPerHectare) throws StandProcessingException {
+	private VeteranResult enforceMinimumDiameter(Float baseArea, Float treesPerHectare)
+			throws FatalProcessingException {
 		final float quadMeanDiameter = BaseAreaTreeDensityDiameter.quadMeanDiameter(baseArea, treesPerHectare);
+		boolean lowDq = false;
 		if (quadMeanDiameter < VETERAN_MIN_DQ) {
-			if (this.getId() == VdypApplicationIdentifier.VRI_START && this.getDebugModes().getValue(1) == 2) {
-				throw new StandProcessingException(
+			if (this.getId() == VdypApplicationIdentifier.VRI_START && this.getDebugMode(1) == 2) {
+				throw new FatalProcessingException(
 						MessageFormat.format(MINIMUM_DIAMETER_FAIL_MESSAGE, quadMeanDiameter, VETERAN_MIN_DQ)
 				);
 			}
 			treesPerHectare = BaseAreaTreeDensityDiameter.treesPerHectare(baseArea, VETERAN_MIN_DQ);
 			log.atWarn().setMessage(MINIMUM_DIAMETER_WARN_MESSAGE).addArgument(treesPerHectare);
+			lowDq = true;
 		}
-		return treesPerHectare;
+		return new VeteranResult(treesPerHectare, lowDq);
 	}
 
 	// EMP097 TODO move to EstimationMethods and this should probably be used in FipStart
@@ -821,6 +831,10 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 
 		BecDefinition bec = polygon.getBiogeoclimaticZone();
 
+		if (!polygon.getLayers().containsKey(LayerType.PRIMARY)) {
+			throw new LayerMissingException(LayerType.PRIMARY);
+		}
+
 		// At this point the Fortran implementation nulled the BA and TPH of Primary
 		// layers if the BA and TPH were present and resulted in a DQ <7.5
 		// I did that in getPolygon instead of here.
@@ -837,8 +851,12 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 
 		VriLayer veteranLayer = polygon.getLayers().get(LayerType.VETERAN);
 		if (veteranLayer != null) {
-			Optional<Float> veteranHeight = veteranLayer.getPrimarySite().flatMap(VriSite::getHeight);
-			validateMinimum("Veteran layer primary species height", veteranHeight, veteranMinHeight, true);
+			throwIfPresent(
+					HeightLowException.check(
+							LayerType.VETERAN, veteranLayer.getPrimarySite().flatMap(VriSite::getHeight),
+							veteranMinHeight
+					)
+			);
 		}
 
 		return mode;
@@ -849,23 +867,34 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			return;
 		if (layer.getLayerType() == LayerType.PRIMARY)
 			this.getPercentTotal(layer); // Validate that percent total is close to 100%
+
+		// VDYP7 figured out primary species and ITG group here but that has moved to getLayersForPolygon
 		Optional<VriSite> primarySite = layer.getPrimaryGenus().flatMap(id -> Utils.optSafe(layer.getSites().get(id)));
 		var ageTotal = primarySite.flatMap(VriSite::getAgeTotal);
 		var yearsToBreastHeight = primarySite.flatMap(VriSite::getYearsToBreastHeight);
 		var height = primarySite.flatMap(VriSite::getHeight);
-		if (polygon.getMode().map(x -> x == PolygonMode.YOUNG).orElse(false)
-				&& layer.getLayerType() == LayerType.PRIMARY) {
-			if (ageTotal.map(x -> x <= 0f).orElse(true) || yearsToBreastHeight.map(x -> x <= 0f).orElse(true)) {
-				throw validationError(
-						"Age Total and Trees Per Hectare must be positive for a PRIMARY layer in mode YOUNG"
-				);
+
+		List<String> missingValues = new ArrayList<>();
+
+		// VDYP7 handles these with a different error code from the other low value/null checks so they get a different
+		// exception
+
+		final Optional<PolygonMode> mode = polygon.getMode();
+		if (mode.map(PolygonMode.YOUNG::equals).orElse(false) && layer.getLayerType() == LayerType.PRIMARY) {
+			if (ageTotal.map(x -> x <= 0f).orElse(true)) {
+				missingValues.add(AGE_TOTAL_PROPERTY_NAME);
+			}
+			if (yearsToBreastHeight.map(x -> x <= 0f).orElse(true)) {
+				missingValues.add(TREES_PER_HECTARE_PROPERTY_NAME);
 			}
 		} else {
 			if (height.map(x -> x <= 0f).orElse(true)) {
-				throw validationError(
-						"Height must be positive for a VETERAN layer or a PRIMARY layer not in mode YOUNG"
-				);
+				missingValues.add(HEIGHT_PROPERTY_NAME);
 			}
+		}
+
+		if (!missingValues.isEmpty()) {
+			throw new LayerMissingValuesRequiredForMode(layer.getLayerType(), mode, missingValues);
 		}
 	}
 
@@ -878,7 +907,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 	static final String TREES_PER_HECTARE_PROPERTY_NAME = "Trees per hectare";
 	static final String CROWN_CLOSURE_PROPERTY_NAME = "Crown closure";
 
-	protected PolygonMode checkPolygonForMode(VriPolygon polygon, BecDefinition bec) throws StandProcessingException {
+	protected PolygonMode checkPolygonForMode(VriPolygon polygon, BecDefinition bec) throws ProcessingException {
 		VriLayer primaryLayer = polygon.getLayers().get(LayerType.PRIMARY);
 		Optional<VriSite> primarySite = primaryLayer.getPrimaryGenus()
 				.flatMap(id -> Utils.optSafe(primaryLayer.getSites().get(id)));
@@ -899,8 +928,8 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 							primaryLayer.getSpecies().values(), bec,
 							primaryLayer.getEmpiricalRelationshipParameterIndex()
 					);
-				} catch (StandProcessingException e) {
-					throw new RuntimeStandProcessingException(e);
+				} catch (FatalProcessingException e) {
+					throw new RuntimeProcessingException(e);
 				}
 			});
 			polygon.setMode(Optional.of(mode));
@@ -912,33 +941,33 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			switch (mode) {
 
 			case START:
-				validateMinimum(SITE_INDEX_PROPERTY_NAME, siteIndex, 0f, false);
-				validateMinimum(AGE_TOTAL_PROPERTY_NAME, ageTotal, 0f, false);
-				validateMinimum(BREAST_HEIGHT_AGE_PROPERTY_NAME, primaryBreastHeightAge, 0f, false);
-				validateMinimum(HEIGHT_PROPERTY_NAME, height, 4.5f, false);
-				validateMinimum(BASE_AREA_PROPERTY_NAME, baseArea, 0f, false);
-				validateMinimum(TREES_PER_HECTARE_PROPERTY_NAME, treesPerHectare, 0f, false);
+				throwIfPresent(SiteIndexLowException.check(LayerType.PRIMARY, siteIndex, 0f));
+				throwIfPresent(TotalAgeLowException.check(LayerType.PRIMARY, ageTotal, 0f));
+				throwIfPresent(BreastHeightAgeLowException.check(LayerType.PRIMARY, primaryBreastHeightAge, 0f));
+				throwIfPresent(HeightLowException.check(LayerType.PRIMARY, height, 4.5f));
+				throwIfPresent(BaseAreaLowException.check(LayerType.PRIMARY, baseArea, 0f));
+				throwIfPresent(TreesPerHectareLowException.check(LayerType.PRIMARY, treesPerHectare, 0f));
 				break;
 
 			case YOUNG:
-				validateMinimum(SITE_INDEX_PROPERTY_NAME, siteIndex, 0f, false);
-				validateMinimum(AGE_TOTAL_PROPERTY_NAME, ageTotal, 0f, false);
-				validateMinimum(YEARS_TO_BREAST_HEIGHT_PROPERTY_NAME, yearsToBreastHeight, 0f, false);
+				throwIfPresent(SiteIndexLowException.check(LayerType.PRIMARY, siteIndex, 0f));
+				throwIfPresent(TotalAgeLowException.check(LayerType.PRIMARY, ageTotal, 0f));
+				throwIfPresent(YearsToBreastHeightLowException.check(LayerType.PRIMARY, yearsToBreastHeight, 0f));
 				break;
 
 			case BATN:
-				validateMinimum(SITE_INDEX_PROPERTY_NAME, siteIndex, 0f, false);
-				validateMinimum(AGE_TOTAL_PROPERTY_NAME, ageTotal, 0f, false);
-				validateMinimum(BREAST_HEIGHT_AGE_PROPERTY_NAME, primaryBreastHeightAge, 0f, false);
-				validateMinimum(HEIGHT_PROPERTY_NAME, height, 1.3f, false);
+				throwIfPresent(SiteIndexLowException.check(LayerType.PRIMARY, siteIndex, 0f));
+				throwIfPresent(TotalAgeLowException.check(LayerType.PRIMARY, ageTotal, 0f));
+				throwIfPresent(BreastHeightAgeLowException.check(LayerType.PRIMARY, primaryBreastHeightAge, 0f));
+				throwIfPresent(HeightLowException.check(LayerType.PRIMARY, height, 1.3f));
 				break;
 
 			case BATC:
-				validateMinimum(SITE_INDEX_PROPERTY_NAME, siteIndex, 0f, false);
-				validateMinimum(AGE_TOTAL_PROPERTY_NAME, ageTotal, 0f, false);
-				validateMinimum(BREAST_HEIGHT_AGE_PROPERTY_NAME, primaryBreastHeightAge, 0f, false);
-				validateMinimum(HEIGHT_PROPERTY_NAME, height, 1.3f, false);
-				validateMinimum(CROWN_CLOSURE_PROPERTY_NAME, crownClosure, 0f, false);
+				throwIfPresent(SiteIndexLowException.check(LayerType.PRIMARY, siteIndex, 0f));
+				throwIfPresent(TotalAgeLowException.check(LayerType.PRIMARY, ageTotal, 0f));
+				throwIfPresent(BreastHeightAgeLowException.check(LayerType.PRIMARY, primaryBreastHeightAge, 0f));
+				throwIfPresent(HeightLowException.check(LayerType.PRIMARY, height, 1.3f));
+				throwIfPresent(CrownClosureLowException.check(LayerType.PRIMARY, Optional.of(crownClosure), 0f));
 				break;
 
 			case DONT_PROCESS:
@@ -947,25 +976,9 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 				break;
 			}
 			return mode;
-		} catch (RuntimeStandProcessingException e) {
-			throw e.getCause();
+		} catch (RuntimeProcessingException e) {
+			throw new FatalProcessingException(e);
 		}
-	}
-
-	void validateMinimum(String fieldName, float value, float minimum, boolean inclusive)
-			throws StandProcessingException {
-		if (value < minimum || (value == minimum && !inclusive))
-			throw validationError(
-					"%s %s should be %s %s", fieldName, value, inclusive ? "greater than or equal to" : "greater than",
-					minimum
-			);
-	}
-
-	void validateMinimum(String fieldName, Optional<Float> value, float minimum, boolean inclusive)
-			throws StandProcessingException {
-		validateMinimum(
-				fieldName, value.orElseThrow(() -> validationError("%s is not present", fieldName)), minimum, inclusive
-		);
 	}
 
 	// UPPERGEN Method 1
@@ -989,7 +1002,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 	float estimateBaseAreaYield(
 			float dominantHeight, float breastHeightAge, Optional<Float> baseAreaOverstory, boolean fullOccupancy,
 			Collection<? extends BaseVdypSpecies<? extends BaseVdypSite>> species, BecDefinition bec, int baseAreaGroup
-	) throws StandProcessingException {
+	) throws FatalProcessingException {
 		var coe = estimateBaseAreaYieldCoefficients(species, bec);
 
 		float upperBoundBaseArea = upperBoundsBaseArea(baseAreaGroup);
@@ -1014,7 +1027,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		// TODO getDebugMode(2)==1
 
 		if (ageToUse <= 0f) {
-			throw new StandProcessingException("Age was not positive");
+			throw fatalError("Age was not positive");
 		}
 
 		float trAge = FloatMath.log(ageToUse);
@@ -1074,12 +1087,12 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 	 * @param bec             BEC of the polygon
 	 * @param baseAreaGroup   Index of the base area group
 	 * @return DQ of primary layer (w DBH >= 7.5)
-	 * @throws StandProcessingException
+	 * @throws FatalProcessingException
 	 */
 	float estimateQuadMeanDiameterYield(
 			float dominantHeight, float breastHeightAge, Optional<Float> veteranBaseArea,
 			Collection<? extends BaseVdypSpecies<? extends BaseVdypSite>> species, BecDefinition bec, int baseAreaGroup
-	) throws StandProcessingException {
+	) throws FatalProcessingException {
 		final var coe = sumCoefficientsWeightedBySpeciesAndDecayBec(species, bec, ControlKey.DQ_YIELD, 6);
 
 		// TODO handle getDebugMode(2) case
@@ -1088,7 +1101,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		final float upperBoundsQuadMeanDiameter = upperBoundsQuadMeanDiameter(baseAreaGroup);
 
 		if (ageUse <= 0f) {
-			throw new StandProcessingException("Primary breast height age must be positive but was " + ageUse);
+			throw fatalError("Primary breast height age must be positive but was {0,number}", ageUse);
 		}
 
 		final float trAge = FloatMath.log(ageUse);
@@ -1105,7 +1118,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			Optional<Float> ageTotal, Optional<Float> yearsToBreastHeight, Optional<Float> height,
 			Optional<Float> baseArea, Optional<Float> treesPerHectare, Optional<Float> percentForest,
 			Collection<VriSpecies> species, BecDefinition bec, Optional<Integer> baseAreaGroup
-	) throws StandProcessingException {
+	) throws FatalProcessingException {
 		Optional<Float> ageBH = ageTotal.map(at -> at - yearsToBreastHeight.orElse(3f));
 
 		float bap;
@@ -1157,8 +1170,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		return mode;
 	}
 
-	VdypPolygon createVdypPolygon(VriPolygon sourcePolygon, Map<LayerType, VdypLayer> processedLayers)
-			throws ProcessingException {
+	VdypPolygon createVdypPolygon(VriPolygon sourcePolygon, Map<LayerType, VdypLayer> processedLayers) {
 
 		// TODO expand this
 
@@ -1185,13 +1197,13 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 	static record Increase(float dominantHeight, float ageIncrease) {
 	}
 
-	VriPolygon processYoung(VriPolygon poly) throws ProcessingException {
+	VriPolygon processYoung(VriPolygon poly) throws FatalProcessingException, FailedToGrowYoungStandException {
 
 		PolygonIdentifier polygonIdentifier = poly.getPolygonIdentifier();
 		int year = polygonIdentifier.getYear();
 
 		if (year < 1900) {
-			throw new StandProcessingException("Year for YOUNG stand should be at least 1900 but was " + year);
+			throw fatalError("Year for YOUNG stand should be at least 1900 but was {0,number,####}", year);
 		}
 
 		var bec = poly.getBiogeoclimaticZone();
@@ -1199,18 +1211,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		var primaryLayer = poly.getLayers().get(LayerType.PRIMARY);
 		var primarySite = primaryLayer.getPrimarySite().orElseThrow();
 		try {
-			SiteIndexEquation siteCurve = primaryLayer.getPrimarySite() //
-					.flatMap(BaseVdypSite::getSiteCurveNumber) //
-					.map(SiteIndexEquation::getByIndex)//
-					.orElseGet(() -> {
-						try {
-							return this.findSiteCurveNumber(
-									bec.getRegion(), primarySite.getSiteSpecies(), primarySite.getSiteGenus()
-							);
-						} catch (StandProcessingException e) {
-							throw new RuntimeStandProcessingException(e);
-						}
-					});
+			SiteIndexEquation siteCurve = getSiteCurveNumber(bec, primarySite);
 
 			float primaryAgeTotal = primarySite.getAgeTotal().orElseThrow(); // AGETOT_L1
 			float primaryYearsToBreastHeight = primarySite.getYearsToBreastHeight().orElseThrow(); // YTBH_L1
@@ -1287,9 +1288,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			});
 
 		} catch (RuntimeStandProcessingException e) {
-			throw e.getCause();
-		} catch (CommonCalculatorException e) {
-			throw new StandProcessingException(e);
+			throw new FatalProcessingException(e);
 		}
 	}
 
@@ -1297,7 +1296,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			BecDefinition bec, VriLayer primaryLayer, SiteIndexEquation siteCurve, float primaryBreastHeightAge0,
 			float siteIndex, float yeastToBreastHeight, float baseAreaTarget, float heightTarget, float ageTarget,
 			float dominantHeight0, int moreYears, float primaryHeight
-	) throws CommonCalculatorException, StandProcessingException {
+	) throws FatalProcessingException, FailedToGrowYoungStandException {
 		float dominantHeight;
 		float ageIncrease;
 		for (int increase = 0; increase <= moreYears; increase++) {
@@ -1307,9 +1306,14 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 
 				float ageD = primaryBreastHeightAge; // AGED
 
-				float dominantHeightD = (float) SiteIndex2Height.indexToHeight(
-						siteCurve, ageD, SiteIndexAgeType.SI_AT_BREAST, siteIndex, ageD, yeastToBreastHeight
-				); // HDD
+				float dominantHeightD;
+				try {
+					dominantHeightD = (float) SiteIndex2Height.indexToHeight(
+							siteCurve, ageD, SiteIndexAgeType.SI_AT_BREAST, siteIndex, ageD, yeastToBreastHeight
+					);
+				} catch (CommonCalculatorException e) {
+					throw new FatalProcessingException(e);
+				} // HDD
 
 				if (increase == 0) {
 					dominantHeight0 = dominantHeightD;
@@ -1339,7 +1343,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 				}
 			}
 		}
-		throw new StandProcessingException("Unable to increase to target height.");
+		throw new FailedToGrowYoungStandException();
 
 	}
 
@@ -1355,13 +1359,13 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		};
 	}
 
-	VriPolygon processBatc(VriPolygon poly) throws ProcessingException {
-
-		VriLayer primaryLayer = getPrimaryLayer(poly);
-		Optional<VriLayer> veteranLayer = getVeteranLayer(poly);
-		var bec = poly.getBiogeoclimaticZone();
+	VriPolygon processBatc(VriPolygon poly) throws FatalProcessingException, PreprocessEstimatedBaseAreaLowException {
 
 		try {
+			VriLayer primaryLayer = getPrimaryLayer(poly);
+			Optional<VriLayer> veteranLayer = getVeteranLayer(poly);
+			var bec = poly.getBiogeoclimaticZone();
+
 			//
 			final float percentForestLand = poly.getPercentAvailable().orElseGet(() -> {
 				try {
@@ -1406,28 +1410,30 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 
 			});
 
-		} catch (RuntimeProcessingException ex) {
-			throw ex.getCause();
+		} catch (RuntimeProcessingException | LayerMissingException ex) {
+			throw new FatalProcessingException(ex);
+		} catch (BaseAreaLowException e) {
+			throw new PreprocessEstimatedBaseAreaLowException(e);
 		}
 	}
 
-	VriPolygon processBatn(VriPolygon poly) throws ProcessingException {
+	VriPolygon processBatn(VriPolygon poly) throws FatalProcessingException, PreprocessEstimatedBaseAreaLowException {
 
 		final VriLayer primaryLayer = poly.getLayers().get(LayerType.PRIMARY);
 		final VriSite primarySite = primaryLayer.getPrimarySite()
-				.orElseThrow(() -> new StandProcessingException("Primary layer does not have a primary site"));
+				.orElseThrow(() -> new FatalProcessingException("Primary layer does not have a primary site"));
 		final Optional<VriLayer> veteranLayer = Utils.optSafe(poly.getLayers().get(LayerType.VETERAN));
 		BecDefinition bec = poly.getBiogeoclimaticZone();
 
 		final float primaryHeight = primarySite.getHeight()
-				.orElseThrow(() -> new StandProcessingException("Primary site does not have a height"));
+				.orElseThrow(() -> new FatalProcessingException("Primary site does not have a height"));
 		final float primaryBreastHeightAge = primarySite.getBreastHeightAge()
-				.orElseThrow(() -> new StandProcessingException("Primary site does not have a breast height age"));
+				.orElseThrow(() -> new FatalProcessingException("Primary site does not have a breast height age"));
 		final Optional<Float> veteranBaseArea = veteranLayer.flatMap(VriLayer::getBaseArea);
 
 		final int primaryEmpiricalRelationshipParameterIndex = primaryLayer.getEmpiricalRelationshipParameterIndex()
 				.orElseThrow(
-						() -> new StandProcessingException(
+						() -> new FatalProcessingException(
 								"Primary layer does not have an empirical relationship parameter index"
 						)
 				);
@@ -1449,11 +1455,10 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 
 		final float primaryTreesPerHectare = treesPerHectare(primaryBaseAreaFinal, normativeQuadMeanDiameter);
 
-		if (primaryBaseAreaFinal < 0.5f) {
-			throw new StandProcessingException(
-					"Normative esitimate " + primaryBaseAreaFinal + " of base area was less than 0.5."
-			);
-		}
+		throwIfPresent(
+				PreprocessEstimatedBaseAreaLowException
+						.check(LayerType.PRIMARY, Optional.of(primaryBaseAreaFinal), 0.5f)
+		);
 
 		return VriPolygon.build(pBuilder -> {
 			pBuilder.copy(poly);
@@ -1488,8 +1493,9 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 	 * @param ids
 	 * @return
 	 * @throws StandProcessingException if no entry for any of the given species IDs is present.
+	 * @throws FatalProcessingException
 	 */
-	SiteIndexEquation findSiteCurveNumber(Region region, String... ids) throws StandProcessingException {
+	SiteIndexEquation findSiteCurveNumber(Region region, String... ids) throws FatalProcessingException {
 		var scnMap = Utils.<MatrixMap2<String, Region, SiteIndexEquation>>expectParsedControl(
 				controlMap, ControlKey.SITE_CURVE_NUMBERS, MatrixMap2.class
 		);
@@ -1498,9 +1504,27 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			if (scnMap.hasM(id, region))
 				return scnMap.get(id, region);
 		}
-		throw new StandProcessingException(
+		throw new FatalProcessingException(
 				"Could not find Site Curve Number for inst of the following species: " + String.join(", ", ids)
 		);
+	}
+
+	SiteIndexEquation getSiteCurveNumber(BecDefinition bec, VriSite primarySite) throws FatalProcessingException {
+		try {
+			return primarySite.getSiteCurveNumber() //
+					.map(SiteIndexEquation::getByIndex)//
+					.orElseGet(() -> {
+						try {
+							return this.findSiteCurveNumber(
+									bec.getRegion(), primarySite.getSiteSpecies(), primarySite.getSiteGenus()
+							);
+						} catch (FatalProcessingException e) {
+							throw new RuntimeProcessingException(e);
+						}
+					});
+		} catch (RuntimeProcessingException ex) {
+			throw new FatalProcessingException(ex);
+		}
 	}
 
 	@Override
@@ -1516,7 +1540,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 	float findRootForQuadMeanDiameterFractionalError(
 			float min, float max, Map<String, Float> resultPerSpecies, Map<String, Float> initialDqs,
 			Map<String, Float> baseAreas, Map<String, Float> minDq, Map<String, Float> maxDq, float tph
-	) throws StandProcessingException {
+	) throws FatalProcessingException {
 
 		// Note, this function has side effects in that it modifies resultPerSpecies. This is intentional, the goal is
 		// to apply adjustment factor x to the values in initialDqs until the combination of their values has minimal
@@ -1536,11 +1560,6 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 					.quadMeanDiameterFractionalError(x, resultPerSpecies, initialDqs, baseAreas, minDq, maxDq, tph);
 			return lastFs[0];
 		};
-
-		debugModeExpandRootSearchWindow(
-				Optional.of(getDebugModes().getValue(9)).filter(x -> x > 0), minDq, maxDq, errorFunc
-		);
-
 		try {
 			double x = doSolve(min, max, errorFunc);
 
@@ -1572,30 +1591,11 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 				}
 			}
 
-			throw new StandProcessingException(
+			throw new FatalProcessingException(
 					"Could not find solution for quadratic mean diameter.  There appears to be a discontinuity.", ex
 			);
 
 		}
-	}
-
-	void debugModeExpandRootSearchWindow(
-			Optional<Integer> percentage, Map<String, Float> minDq, Map<String, Float> maxDq,
-			UnivariateFunction errorFunc
-	) {
-		percentage.map(p -> (float) p / 100f).ifPresent(p -> {
-			final double f1 = errorFunc.value(-10f);
-			final double f2 = errorFunc.value(10f);
-			final float base = 7.5f;
-			if (f2 * f1 > 0d) {
-				float lowFactor = 1.0f - p;
-				float highFactor = 1.0f + p;
-				for (var key : maxDq.keySet()) {
-					minDq.put(key, base + lowFactor * (minDq.get(key) - base));
-					maxDq.put(key, base + highFactor * (maxDq.get(key) - base));
-				}
-			}
-		});
 	}
 
 	double doSolve(float min, float max, UnivariateFunction errorFunc) {
@@ -1638,11 +1638,11 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 	}
 
 	private void handleRootForQuadMeanDiameterFractionalErrorException(RuntimeException ex)
-			throws StandProcessingException {
+			throws FatalProcessingException {
 		// Only do this in VRIStart
 
-		if (getDebugModes().getValue(1) == 2) {
-			throw new StandProcessingException("Could not find solution for quadratic mean diameter", ex);
+		if (getDebugMode(1) == 2) {
+			throw new FatalProcessingException("Could not find solution for quadratic mean diameter", ex);
 		}
 
 		log.atWarn().setMessage("Could not find exact solution for quadratic mean diameter.  Using inexact estimate.")
