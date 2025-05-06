@@ -204,7 +204,11 @@ public class PolygonProjectionState {
 	public Optional<Throwable> getProcessingResults(ProjectionStageCode stage, ProjectionTypeCode projectionType) {
 
 		var key = new ModelReturnCodeKey(stage, projectionType);
-		return processingResultByStageAndProjectionType.get(key).get();
+		if (processingResultByStageAndProjectionType.get(key).isPresent()) {
+			return processingResultByStageAndProjectionType.get(key).get();
+		} else {
+			throw new IllegalStateException("processingResultByStageAndProjectionType does not contain a value for key " + key.toString());
+		}
 	}
 
 	/**
