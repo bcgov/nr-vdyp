@@ -36,7 +36,6 @@ jobs:
   deploys:
     name: Deploys
     needs: [builds]
-    if: ${{ github.head_ref != 'feature/VDYP-570' }}
     uses: ./.github/workflows/.deployer.yml
     secrets:
       inherit
