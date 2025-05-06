@@ -195,7 +195,7 @@ class YieldTableRowIterator implements Iterator<YieldTableRowContext> {
 
 		if (params.containsOption(ExecutionOption.DO_FORCE_CURRENT_YEAR_INCLUSION_IN_YIELD_TABLES)
 				&& rowContext.getCurrentTableYear() <= rowContext.getNowYear()
-				&& (candidateYear == null || params.getYearForcedIntoYieldTable() < candidateYear)) {
+				&& (candidateYear == null || rowContext.getNowYear() < candidateYear)) {
 			candidateYear = rowContext.getNowYear();
 			hasSetNextAge = true;
 		}
@@ -236,9 +236,10 @@ class YieldTableRowIterator implements Iterator<YieldTableRowContext> {
 
 		// Check if we have passed the end of the table range.
 
-		if (rowContext.getCurrentTableYear() != null && rowContext.getCurrentTableYear() > rowContext.getYearAtEndAge()
-				&& rowContext.getCurrentTableYear() > rowContext.getMeasurementYear()
-				&& rowContext.getCurrentTableYear() > rowContext.getNowYear()
+		if (rowContext.getCurrentTableYear() != null //
+				&& rowContext.getCurrentTableYear() > rowContext.getYearAtEndAge() //
+				&& rowContext.getCurrentTableYear() > rowContext.getMeasurementYear() //
+				&& rowContext.getCurrentTableYear() > rowContext.getNowYear() //
 				&& (params.getYearForcedIntoYieldTable() == null
 						|| rowContext.getCurrentTableYear() > params.getYearForcedIntoYieldTable())) {
 

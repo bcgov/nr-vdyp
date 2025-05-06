@@ -31,7 +31,7 @@ public class CSVYieldTableRowValuesBean implements YieldTableRowBean {
 			createCsvOutputStream(FileWriter writer, ProjectionContext context) {
 
 		var doGenerateHeader = context.getParams()
-				.containsOption(ExecutionOption.DO_INCLUDE_COLUMN_HEADERS_IN_YIELD_TABLE);
+				.containsOption(ExecutionOption.DO_INCLUDE_FILE_HEADER);
 
 		if (doGenerateHeader) {
 
@@ -85,6 +85,7 @@ public class CSVYieldTableRowValuesBean implements YieldTableRowBean {
 //  { "(POLYGON_ID)"(,                     csvFldType_LONG,   10, 0, "", TRUE },  /* csvYldTbl_PolygonID                    */)
 	@CsvBindByName(column = "POLYGON_ID")
 	@CsvBindByPosition(position = 4)
+	@OptionalField(category = YieldTable.Category.POLYGON_ID)
 	private String polygonId;
 
 //  { "(LAYER_ID)"(,                       csvFldType_CHAR,    1, 0, "", TRUE },  /* csvYldTbl_LayerID                      */)
@@ -649,6 +650,7 @@ public class CSVYieldTableRowValuesBean implements YieldTableRowBean {
 //  { "(PRJ_MODE)"(,                       csvFldType_CHAR,    4, 0, "", TRUE }   /* csvYldTbl_ProjectionMode               */)
 	@CsvBindByName(column = "PRJ_MODE")
 	@CsvBindByPosition(position = 102)
+	@OptionalField(category = YieldTable.Category.PROJECTION_MODE)
 	private String mode;
 
 	private static Map<String, Field> csvFields = new HashMap<>();

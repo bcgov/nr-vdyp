@@ -6,6 +6,7 @@ import static org.junit.Assert.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.function.Predicate;
 import java.util.stream.IntStream;
 import java.util.zip.ZipEntry;
@@ -121,7 +122,7 @@ public class Scenario {
 			}
 		} else {
 
-			var yearsInTable = yearsTable.keySet();
+			var yearsInTable = new HashSet<String>(yearsTable.keySet());
 
 			for (Object yearSpec : yearSpecs) {
 				if (yearSpec instanceof Integer year) {
@@ -133,7 +134,7 @@ public class Scenario {
 						yearsInTable.remove(yearText);
 					}
 				} else if (yearSpec instanceof IntStream years) {
-					for (String yearText : years.boxed().map(y -> Integer.valueOf(y).toString()).toList()) {
+					for (String yearText : years.boxed().map(y -> y.toString()).toList()) {
 						var key = Integer.valueOf(yearText).toString();
 						if (!yearsInTable.contains(key)) {
 							logger.error("Yield table does not contain entry for year " + yearText);

@@ -135,6 +135,12 @@ public class ProjectionContext {
 				&& validatedParams.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_BIOMASS)) {
 			yieldTableCategories.add(YieldTable.Category.SPECIES_MOFBIOMASS);
 		}
+		if (validatedParams.containsOption(ExecutionOption.DO_INCLUDE_PROJECTION_MODE_IN_YIELD_TABLE)) {
+			yieldTableCategories.add(YieldTable.Category.PROJECTION_MODE);
+		}
+		if (validatedParams.containsOption(ExecutionOption.DO_INCLUDE_POLYGON_RECORD_ID_IN_YIELD_TABLE)) {
+			yieldTableCategories.add(YieldTable.Category.POLYGON_ID);
+		}
 	}
 
 	public void recordProjectionDetails(

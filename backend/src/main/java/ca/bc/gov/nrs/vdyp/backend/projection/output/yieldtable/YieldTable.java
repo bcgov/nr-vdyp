@@ -63,7 +63,8 @@ import ca.bc.gov.nrs.vdyp.si32.vdyp.SP0Name;
 public class YieldTable implements Closeable {
 
 	public static enum Category {
-		LAYER_MOFVOLUMES, LAYER_MOFBIOMASS, SPECIES_MOFVOLUME, SPECIES_MOFBIOMASS, LAYER_CFSBIOMASS;
+		LAYER_MOFVOLUMES, LAYER_MOFBIOMASS, SPECIES_MOFVOLUME, SPECIES_MOFBIOMASS, LAYER_CFSBIOMASS,
+		PROJECTION_MODE, POLYGON_ID;
 	}
 
 	private static final Logger logger = LoggerFactory.getLogger(YieldTable.class);
@@ -406,7 +407,7 @@ public class YieldTable implements Closeable {
 		}
 
 		if (!doDisplayRow) {
-			logger.debug(
+			logger.info(
 					"{}: excluding row for year {} from yield table. Reason: {}",
 					rowContext.getLayerReportingInfo() == null ? rowContext.getPolygon()
 							: rowContext.getLayerReportingInfo(),
