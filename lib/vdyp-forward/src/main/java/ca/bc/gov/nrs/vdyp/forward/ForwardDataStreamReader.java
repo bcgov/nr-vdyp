@@ -17,6 +17,8 @@ import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.forward.controlmap.ForwardResolvedControlMapImpl;
+import ca.bc.gov.nrs.vdyp.forward.model.ControlVariable;
+import ca.bc.gov.nrs.vdyp.forward.model.ForwardControlVariables;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
@@ -59,8 +61,15 @@ public class ForwardDataStreamReader {
 			speciesUtilizationStream = ((StreamingParserFactory<Collection<VdypUtilization>>) speciesUtilizationStreamFactory)
 					.get();
 
+			var forwardControl = Utils.expectParsedControl(
+					resolvedControlMap.getControlMap(), ControlKey.VTROL, ForwardControlVariables.class
+			);
+
 			polygonDescriptionStream = Optional.empty();
-			if (controlMap.containsKey(ControlKey.FORWARD_INPUT_GROWTO.name())) {
+			if (controlMap.containsKey(ControlKey.FORWARD_INPUT_GROWTO.name()) // Growth file specified
+					&& forwardControl.getControlVariable(ControlVariable.GROW_TARGET_1) < 0 // Fixed growth time not
+																							// specified
+			) {
 				var polygonDescriptionStreamFactory = Utils
 						.<StreamingParserFactory<PolygonIdentifier>>expectParsedControl(
 								controlMap, ControlKey.FORWARD_INPUT_GROWTO, StreamingParserFactory.class

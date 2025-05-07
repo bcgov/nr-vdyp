@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.application.ProcessingException;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
+import ca.bc.gov.nrs.vdyp.forward.model.ForwardControlVariables;
 import ca.bc.gov.nrs.vdyp.forward.parsers.VdypPolygonParser;
 import ca.bc.gov.nrs.vdyp.forward.parsers.VdypSpeciesParser;
 import ca.bc.gov.nrs.vdyp.forward.parsers.VdypUtilizationParser;
@@ -28,6 +29,7 @@ import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BecDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.GenusDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
+import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
@@ -39,7 +41,7 @@ class ForwardProcessorCheckpointGenerationTest {
 	private static Set<ForwardPass> vdypPassSet = new HashSet<>(Arrays.asList(PASS_1, PASS_2, PASS_3, PASS_4, PASS_5));
 
 	@Test
-	void test() throws IOException, ResourceParseException, ProcessingException {
+	void test() throws IOException, ResourceParseException, ProcessingException, ValueParseException {
 
 		ForwardProcessor fp = new ForwardProcessor();
 
@@ -80,6 +82,7 @@ class ForwardProcessorCheckpointGenerationTest {
 				ControlKey.SP0_DEF.name(),
 				genusDefinitionParser.parse(TestUtils.class, "coe/SP0DEF_v0.dat", Collections.emptyMap())
 		);
+		controlMap.put(ControlKey.VTROL.name(), new ForwardControlVariables(new Integer[] { -1, 1, 2, 2, 1, 1, 1 }));
 
 		var reader = new ForwardDataStreamReader(controlMap);
 		Optional<VdypPolygon> polygon = reader.readNextPolygon();

@@ -124,7 +124,7 @@ public class DebugSettingsParserTest {
 		}
 	}
 
-	//" 0 0 0 0 0 0 0 050 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0"
+	// " 0 0 0 0 0 0 0 050 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0"
 
 	public static Matcher<DebugSettings> debugFlag(int i, Matcher<Integer> valueMatcher) {
 		return (Matcher<DebugSettings>) new TypeSafeDiagnosingMatcher<DebugSettings>() {

@@ -713,7 +713,6 @@ class VdypStartApplicationTest {
 
 			try (VdypStartApplication app = getTestUnit(mockControl)) {
 
-
 				mockControl.replay();
 				app.init(dummyIo(), controlMap);
 
