@@ -6,6 +6,7 @@
     :centerActive="true"
     :showArrows="true"
     height="60px"
+    :key="tabKey"
   >
     <v-tab
       v-for="(tab, index) in tabs"
@@ -40,6 +41,19 @@ const emit = defineEmits(['update:currentTab'])
 
 // Create a local copy of currentTab to avoid mutating props
 const localCurrentTab = ref<number>(props.currentTab)
+// Add a key to force re-render when currentTab changes
+const tabKey = ref<number>(0)
+
+// Watch for changes in props.currentTab to sync with localCurrentTab
+watch(
+  () => props.currentTab,
+  (newValue) => {
+    if (newValue !== localCurrentTab.value) {
+      localCurrentTab.value = newValue
+      tabKey.value += 1 // Force re-render of v-tabs
+    }
+  },
+)
 
 // Watch for changes in localCurrentTab and emit updates to the parent
 watch(localCurrentTab, (newValue) => {
@@ -51,6 +65,7 @@ const handleTabUpdate = (newValue: unknown) => {
   if (typeof newValue === 'number') {
     localCurrentTab.value = newValue
     emit('update:currentTab', newValue)
+    tabKey.value += 1 // Force re-render of v-tabs
   }
 }
 </script>
