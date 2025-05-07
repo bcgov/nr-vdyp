@@ -4,9 +4,8 @@ import static ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessageKind.*;
 import static ca.bc.gov.nrs.vdyp.backend.projection.ValidatedParameters.DEFAULT;
 
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.EnumSet;
 import java.util.List;
-import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,7 +40,7 @@ public class ProjectionRequestParametersValidator {
 		if (validator.validationErrorMessages.size() > 0) {
 			logger.error("Validation errors encountered:");
 			for (var m : validator.validationErrorMessages) {
-				logger.error(m.toString());
+				logger.error("    " + m.toString());
 			}
 
 			throw new ProjectionRequestValidationException(validator.validationErrorMessages);
@@ -74,7 +73,7 @@ public class ProjectionRequestParametersValidator {
 		} else {
 			// Add the default Yes options, then the options explicitly Yes, then remove the options
 			// explicitly No.
-			Set<ExecutionOption> selectedOptions = new HashSet<>(List.copyOf(DEFAULT.getSelectedExecutionOptions()));
+			EnumSet<ExecutionOption> selectedOptions = EnumSet.copyOf(DEFAULT.getSelectedExecutionOptions());
 			for (String optionText : params.getSelectedExecutionOptions()) {
 				try {
 					var e = Parameters.ExecutionOption.fromValue(optionText);
@@ -91,7 +90,7 @@ public class ProjectionRequestParametersValidator {
 					recordValidationMessage(UNRECOGNIZED_EXECUTION_OPTION, optionText);
 				}
 			}
-			vparams.selectedExecutionOptions(new ArrayList<>(selectedOptions));
+			vparams.selectedExecutionOptions(selectedOptions);
 		}
 
 		// Parameters.JSON_PROPERTY_SELECTED_DEBUG_OPTIONS
@@ -101,7 +100,7 @@ public class ProjectionRequestParametersValidator {
 		} else {
 			// Add the default Yes options, then the options explicitly Yes, then remove the options
 			// explicitly No.
-			Set<DebugOption> selectedOptions = new HashSet<>(List.copyOf(DEFAULT.getSelectedDebugOptions()));
+			EnumSet<DebugOption> selectedOptions = EnumSet.copyOf(DEFAULT.getSelectedDebugOptions());
 			for (String optionText : params.getSelectedDebugOptions()) {
 				try {
 					var e = Parameters.DebugOption.fromValue(optionText);
@@ -118,7 +117,7 @@ public class ProjectionRequestParametersValidator {
 					recordValidationMessage(UNRECOGNIZED_DEBUG_OPTION, optionText);
 				}
 			}
-			vparams.selectedDebugOptions(new ArrayList<>(selectedOptions));
+			vparams.selectedDebugOptions(selectedOptions);
 		}
 
 		vparams.setMinAgeStart(DEFAULT.getMinAgeStart());

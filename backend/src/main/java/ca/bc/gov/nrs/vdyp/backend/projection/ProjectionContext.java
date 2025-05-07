@@ -18,6 +18,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -269,24 +270,38 @@ public class ProjectionContext {
 					LocalDateTime.now().plusMinutes(EXECUTION_FOLDER_RETENTION_TIME_m)
 			);
 
-			executorService.submit(new ExecutionFolderRemover(EXECUTION_FOLDER_RETENTION_TIME_m * 60 * 1000L));
+			executorService.submit(new ExecutionFolderRemover(executionFolder, EXECUTION_FOLDER_RETENTION_TIME_m * 60 * 1000L));
 		} else {
 			logger.info("Deleting execution folder {}", executionFolder);
-			new ExecutionFolderRemover(0 /* no delay */).run();
+			ExecutionFolderRemover.doRemove(executionFolder);
 		}
 	}
 
-	private class ExecutionFolderRemover implements Runnable {
+	private static class ExecutionFolderRemover implements Callable<Boolean> {
 
+		private Path executionFolder;
 		private long delay_ms = 0;
 
-		public ExecutionFolderRemover(long delay_ms) {
+		public ExecutionFolderRemover(Path executionFolder, long delay_ms) {
 			this.delay_ms = delay_ms;
+			this.executionFolder = executionFolder;
 		}
 
 		@Override
-		public void run() {
-			Utils.sleep(delay_ms);
+		public Boolean call() throws InterruptedException {
+			try {
+				Thread.sleep(delay_ms);
+			} catch (InterruptedException e) {
+				logger.error("Saw unexpected InterruptedException during \"sleep\" of " + delay_ms + "ms", e);
+				throw e;
+			}
+			
+			doRemove(executionFolder);
+			
+			return true;
+		}
+		
+		static void doRemove(Path executionFolder) {
 
 			FileVisitor<Path> visitor = new SimpleFileVisitor<Path>() {
 				@Override
@@ -363,30 +378,4 @@ public class ProjectionContext {
 		}
 		return executionFolder;
 	}
-
-//	public void addMessage(Level level, String message, Object... args) {
-//		String messageText = MessageFormat.format(message, args);
-//
-//		switch (level) {
-//		case ERROR:
-//			errorLog.addMessage(messageText);
-//			break;
-//		case WARN:
-//			logger.warn(messageText);
-//			break;
-//		case INFO:
-//			logger.info(messageText);
-//			break;
-//		case DEBUG:
-//			logger.debug(messageText);
-//			break;
-//		case TRACE:
-//			logger.trace(messageText);
-//			break;
-//		default:
-//			throw new IllegalStateException(
-//					"Saw level \"" + level + "\", not supported in ProjectionContext.addMessage"
-//			);
-//		}
-//	}
 }

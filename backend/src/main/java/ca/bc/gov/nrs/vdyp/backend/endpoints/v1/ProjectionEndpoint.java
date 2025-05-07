@@ -91,7 +91,10 @@ public class ProjectionEndpoint implements Endpoint {
 		var layerFile = layersDataStream.uploadedFile().toFile();
 
 		try {
-			try (var polyStream = new FileInputStream(polygonFile); var layersStream = new FileInputStream(layerFile)) {
+			try (
+					var polyStream = new FileInputStream(polygonFile); //
+					var layersStream = new FileInputStream(layerFile)
+			) {
 				return projectionService.projectionHcsvPost(
 						trialRun, parameters, polyStream, layersStream, null /* securityContext */
 				);

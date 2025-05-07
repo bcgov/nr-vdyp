@@ -12,20 +12,12 @@ public class Utils {
 
 	private static final Logger logger = LoggerFactory.getLogger(Utils.class);
 
-	public static void sleep(long n_ms) {
-		try {
-			Thread.sleep(n_ms);
-		} catch (InterruptedException e) {
-			logger.error("Saw InterruptedException during \"sleep\" of " + n_ms + "ms");
-			throw new RuntimeException("Unexpected InterruptException seen");
-		}
-	}
-
 	public static <T extends Closeable> void close(T s, String streamName) {
 		if (s != null) {
 			try {
 				s.close();
 			} catch (IOException e) {
+				logger.error("Saw IOException during close of " + streamName, e);
 				throw new RuntimeException(
 						"Failed to close " + s.getClass().getName() + " stream with name " + streamName, e
 				);

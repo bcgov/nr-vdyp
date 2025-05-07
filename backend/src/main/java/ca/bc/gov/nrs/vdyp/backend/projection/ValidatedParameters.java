@@ -14,10 +14,9 @@ package ca.bc.gov.nrs.vdyp.backend.projection;
 
 import static ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption.*;
 
-import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -42,8 +41,8 @@ public class ValidatedParameters {
 	public static final ValidatedParameters DEFAULT;
 
 	private OutputFormat outputFormat;
-	private List<ExecutionOption> selectedExecutionOptions = new ArrayList<>();
-	private List<DebugOption> selectedDebugOptions = new ArrayList<>();
+	private EnumSet<ExecutionOption> selectedExecutionOptions = EnumSet.noneOf(ExecutionOption.class);
+	private EnumSet<DebugOption> selectedDebugOptions = EnumSet.noneOf(DebugOption.class);
 	private Integer ageStart;
 	private Integer minAgeStart;
 	private Integer maxAgeStart;
@@ -109,28 +108,22 @@ public class ValidatedParameters {
 	 *
 	 * @return selectedExecutionOptions
 	 */
-	public List<ExecutionOption> getSelectedExecutionOptions() {
-		return Collections.unmodifiableList(selectedExecutionOptions);
+	EnumSet<ExecutionOption> getSelectedExecutionOptions() {
+		return selectedExecutionOptions;
 	}
 
-	public ValidatedParameters selectedExecutionOptions(List<ExecutionOption> selectedExecutionOptions) {
+	public ValidatedParameters selectedExecutionOptions(EnumSet<ExecutionOption> selectedExecutionOptions) {
 		setSelectedExecutionOptions(selectedExecutionOptions);
 		return this;
 	}
 
 	public ValidatedParameters addSelectedExecutionOptionsItem(ExecutionOption selectedExecutionOptionsItem) {
-		if (this.selectedExecutionOptions == null) {
-			this.selectedExecutionOptions = new ArrayList<>();
-		}
 		this.selectedExecutionOptions.add(selectedExecutionOptionsItem);
 		return this;
 	}
 
-	public void setSelectedExecutionOptions(List<ExecutionOption> selectedExecutionOptions) {
-		this.selectedExecutionOptions = new ArrayList<>();
-		if (selectedExecutionOptions != null) {
-			selectedExecutionOptions.stream().forEach(o -> this.selectedExecutionOptions.add(o));
-		}
+	public void setSelectedExecutionOptions(EnumSet<ExecutionOption> selectedExecutionOptions) {
+		this.selectedExecutionOptions = EnumSet.copyOf(selectedExecutionOptions);
 	}
 
 	/**
@@ -138,28 +131,22 @@ public class ValidatedParameters {
 	 *
 	 * @return selectedDebugOptions
 	 */
-	public List<DebugOption> getSelectedDebugOptions() {
-		return Collections.unmodifiableList(selectedDebugOptions);
+	public EnumSet<DebugOption> getSelectedDebugOptions() {
+		return selectedDebugOptions;
 	}
 
-	public ValidatedParameters selectedDebugOptions(List<DebugOption> selectedDebugOptions) {
+	public ValidatedParameters selectedDebugOptions(EnumSet<DebugOption> selectedDebugOptions) {
 		setSelectedDebugOptions(selectedDebugOptions);
 		return this;
 	}
 
 	public ValidatedParameters addSelectedDebugOptionsItem(DebugOption selectedDebugOptionsItem) {
-		if (this.selectedDebugOptions == null) {
-			this.selectedDebugOptions = new ArrayList<>();
-		}
 		this.selectedDebugOptions.add(selectedDebugOptionsItem);
 		return this;
 	}
 
-	public void setSelectedDebugOptions(List<DebugOption> selectedDebugOptions) {
-		this.selectedDebugOptions = new ArrayList<>();
-		if (selectedDebugOptions != null) {
-			selectedDebugOptions.stream().forEach(o -> this.selectedDebugOptions.add(o));
-		}
+	public void setSelectedDebugOptions(EnumSet<DebugOption> selectedDebugOptions) {
+		this.selectedDebugOptions = EnumSet.copyOf(selectedDebugOptions);
 	}
 
 	/**
@@ -596,7 +583,7 @@ public class ValidatedParameters {
 
 		DEFAULT.outputFormat = OutputFormat.CSV_YIELD_TABLE;
 
-		DEFAULT.selectedExecutionOptions = new ArrayList<>();
+		DEFAULT.selectedExecutionOptions = EnumSet.noneOf(ExecutionOption.class);
 		// exclude since false: BACK_GROW_ENABLED
 		DEFAULT.selectedExecutionOptions.add(FORWARD_GROW_ENABLED);
 		DEFAULT.selectedExecutionOptions.add(DO_INCLUDE_PROJECTION_FILES);
@@ -623,7 +610,7 @@ public class ValidatedParameters {
 		// exclude since false: DO_ENABLE_ERROR_LOGGING
 		// exclude since false: DO_ENABLE_DEBUG_LOGGING
 
-		DEFAULT.selectedDebugOptions = new ArrayList<>();
+		DEFAULT.selectedDebugOptions = EnumSet.noneOf(DebugOption.class);
 		// exclude since false: selectedDebugOptions.doIncludeDebugTimestamps
 		// exclude since false: selectedDebugOptions.doIncludeDebugRoutineNames
 		// exclude since false: selectedDebugOptions.doIncludeDebugEntryExit

@@ -107,35 +107,25 @@ public class ProjectionRunner implements Closeable {
 					}
 
 					try {
+
+						if (ProgressFrequency.POLYGON.equals(context.getParams().getProgressFrequency())) {
+
+							String message = MessageFormat.format(
+									"{4} Polygon {0,number,#}: \"{1}\", \"{2}\"-{3,number,#}", polygon.getFeatureId(),
+									lastMaintainer, lastMapsheet, polygon.getPolygonNumber(),
+									polygon.getDoAllowProjection() ? "Processing" : "Skipping"
+							);
+
+							context.getProgressLog().addMessage(message);
+							logger.debug(message);
+						}
+
 						if (polygon.getDoAllowProjection()) {
-
-							if (ProgressFrequency.POLYGON.equals(context.getParams().getProgressFrequency())) {
-
-								String message = MessageFormat.format(
-										"Processing Polygon {0,number,#}: \"{1}\", \"{2}\"-{3,number,#}",
-										polygon.getFeatureId(), lastMaintainer, lastMapsheet, polygon.getPolygonNumber()
-								);
-
-								context.getProgressLog().addMessage(message);
-								logger.debug(message);
-							}
 
 							nPolygonsProcessed += 1;
 							PolygonProjectionRunner.of(polygon, context, componentRunner).project();
 
 						} else {
-
-							if (ProgressFrequency.POLYGON.equals(context.getParams().getProgressFrequency())) {
-
-								String message = MessageFormat.format(
-										"Skipping Polygon {0,number,#}: \"{1}\", \"{2}\"-{3,number,#}",
-										polygon.getFeatureId(), lastMaintainer, lastMapsheet, polygon.getPolygonNumber()
-								);
-
-								context.getProgressLog().addMessage(message);
-								logger.debug(message);
-							}
-
 							nPolygonsSkipped += 1;
 						}
 

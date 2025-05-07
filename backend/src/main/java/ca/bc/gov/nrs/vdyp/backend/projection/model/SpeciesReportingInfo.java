@@ -42,38 +42,6 @@ public class SpeciesReportingInfo implements Comparable<SpeciesReportingInfo> {
 		}
 	}
 
-	public static class VolumeApplier {
-		private SpeciesReportingInfo speciesReportingInfo;
-
-		public VolumeApplier(SpeciesReportingInfo speciesReportingInfo) {
-			this.speciesReportingInfo = speciesReportingInfo;
-		}
-
-		public VolumeApplier wholeStemVolume(double wholeStemVolume) {
-			return this;
-		}
-
-		public VolumeApplier closeUtilizationVolume(double closeUtilizationVolume) {
-			return this;
-		}
-
-		public VolumeApplier cuVolumeLessDecay(double cuVolumeLessDecay) {
-			return this;
-		}
-
-		public VolumeApplier cuVolumeLessDecayWaste(double cuVolumeLessDecayWaste) {
-			return this;
-		}
-
-		public VolumeApplier cuVolumeLessDecayWastageBreakage(double cuVolumeLessDecayWastageBreakage) {
-			return this;
-		}
-
-		public SpeciesReportingInfo apply() {
-			return speciesReportingInfo;
-		}
-	}
-
 	@Override
 	/**
 	 * Implementation of the default sort order - by percentage, decreasing. In the event of ties, in the order
