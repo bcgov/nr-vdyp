@@ -448,8 +448,7 @@ public class HelpService {
 						"selectedExecutionOptions." + field, //
 						"Allow " + shortDescription, //
 						"Enables " + longDescription, //
-						ValidatedParameters.DEFAULT.containsOption(executionOption) ? "Selected"
-								: "Not Selected"
+						ValidatedParameters.DEFAULT.containsOption(executionOption) ? "Selected" : "Not Selected"
 				)
 		);
 
@@ -458,8 +457,7 @@ public class HelpService {
 						"excludedExecutionOptions." + field, //
 						"Disallow " + shortDescription, //
 						"Disables " + longDescription, //
-						ValidatedParameters.DEFAULT.containsOption(executionOption)
-								? "Not Excluded" : "Excluded"
+						ValidatedParameters.DEFAULT.containsOption(executionOption) ? "Not Excluded" : "Excluded"
 				)
 		);
 	}
