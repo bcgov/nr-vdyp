@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.vdyp.backend.endpoints.v1;
+package ca.bc.gov.nrs.vdyp.backend.endpoints.projection.hcsv._44grpA;
 
 import java.io.IOException;
 
@@ -11,7 +11,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.common.constraint.Assert;
 
 @QuarkusTest
-class Hcsv_OneDeadLayerTest extends BaseHcsvProjectionEndpoint_44GrpATest {
+class Hcsv_OneDeadLayerTest extends BaseHcsv_44GrpATest {
 
 	private static final Logger logger = LoggerFactory.getLogger(Hcsv_OneDeadLayerTest.class);
 

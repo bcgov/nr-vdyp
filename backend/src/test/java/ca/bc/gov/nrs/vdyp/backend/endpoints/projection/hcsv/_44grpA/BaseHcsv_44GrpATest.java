@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.vdyp.backend.endpoints.v1;
+package ca.bc.gov.nrs.vdyp.backend.endpoints.projection.hcsv._44grpA;
 
 import static io.restassured.RestAssured.given;
 
@@ -21,14 +21,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.api.helpers.TestHelper;
+import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.BaseHttpProjectionRequestTest;
+import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.ParameterNames;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.backend.utils.FileHelper;
 import io.smallrye.common.constraint.Assert;
 import jakarta.ws.rs.core.MediaType;
 
-class BaseHcsvProjectionEndpoint_44GrpATest extends BaseHttpProjectionRequestTest {
+class BaseHcsv_44GrpATest extends BaseHttpProjectionRequestTest {
 
-	private static final Logger logger = LoggerFactory.getLogger(BaseHcsvProjectionEndpoint_44GrpATest.class);
+	private static final Logger logger = LoggerFactory.getLogger(BaseHcsv_44GrpATest.class);
 
 	private static Path resourceFolderPath;
 	protected static Parameters parameters;

@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.vdyp.backend.endpoints.v1;
+package ca.bc.gov.nrs.vdyp.backend.endpoints.projection.hcsv._44grpA;
 
 import static io.restassured.RestAssured.given;
 
@@ -27,6 +27,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.api.helpers.TestHelper;
+import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.BaseHttpProjectionRequestTest;
+import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.ParameterNames;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.backend.utils.FileHelper;
 import io.quarkus.test.junit.QuarkusTest;

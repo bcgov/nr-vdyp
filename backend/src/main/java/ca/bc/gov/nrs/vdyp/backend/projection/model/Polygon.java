@@ -223,10 +223,10 @@ public class Polygon implements Comparable<Polygon> {
 		layers = new HashMap<>();
 
 		// Initialize the known Layer Ids
-		Layer compositeLayer = new Layer.Builder().layerId(Vdyp7Constants.VDYP7_LAYER_ID_PRIMARY).build();
-		layers.put(compositeLayer.getLayerId(), compositeLayer);
-		Layer spanningLayer = new Layer.Builder().layerId(Vdyp7Constants.VDYP7_LAYER_ID_SPANNING).build();
-		layers.put(spanningLayer.getLayerId(), spanningLayer);
+//		Layer compositeLayer = new Layer.Builder().layerId(Vdyp7Constants.VDYP7_LAYER_ID_PRIMARY).build();
+//		layers.put(compositeLayer.getLayerId(), compositeLayer);
+//		Layer spanningLayer = new Layer.Builder().layerId(Vdyp7Constants.VDYP7_LAYER_ID_SPANNING).build();
+//		layers.put(spanningLayer.getLayerId(), spanningLayer);
 
 		layerByProjectionType = new HashMap<>();
 

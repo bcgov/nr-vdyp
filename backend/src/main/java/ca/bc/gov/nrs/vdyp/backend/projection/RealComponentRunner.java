@@ -1,10 +1,13 @@
 package ca.bc.gov.nrs.vdyp.backend.projection;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -23,9 +26,17 @@ import ca.bc.gov.nrs.vdyp.backend.projection.model.PolygonMessage;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Vdyp7Constants;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ReturnCode;
+import ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable.NullProjectionResultsReader;
+import ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable.ProjectionResultsBuilder;
+import ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable.ProjectionResultsReader;
+import ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable.RealProjectionResultsReader;
 import ca.bc.gov.nrs.vdyp.common.VdypApplicationException;
 import ca.bc.gov.nrs.vdyp.fip.FipStart;
+import ca.bc.gov.nrs.vdyp.forward.ForwardControlParser;
 import ca.bc.gov.nrs.vdyp.forward.VdypForwardApplication;
+import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
+import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
+import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.vri.VriStart;
 
 public class RealComponentRunner implements ComponentRunner {
@@ -163,18 +174,18 @@ public class RealComponentRunner implements ComponentRunner {
 	@Override
 	public void generateYieldTables(ProjectionContext context, Polygon polygon, PolygonProjectionState state)
 			throws YieldTableGenerationException {
+		ValidatedParameters params = context.getParams();
 
 		var yieldTable = context.getYieldTable();
-
 		boolean doGenerateDetailedTableHeader = true;
-
-		ValidatedParameters params = context.getParams();
 
 		if (params.containsOption(ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_POLYGON)
 				&& (params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES)
 						|| params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_BIOMASS))) {
 
-			yieldTable.generateYieldTableForPolygon(polygon, state, doGenerateDetailedTableHeader);
+			var projectionResults = getProjectionResults(polygon, ProjectionTypeCode.PRIMARY, state);
+
+			yieldTable.generateYieldTableForPolygon(polygon, projectionResults, state, doGenerateDetailedTableHeader);
 			doGenerateDetailedTableHeader = false;
 
 			logger.debug("{}: generated polygon-level yield table", polygon);
@@ -201,8 +212,12 @@ public class RealComponentRunner implements ComponentRunner {
 					if (params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES)
 							|| params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_BIOMASS)) {
 
+						var projectionResults = getProjectionResults(
+								polygon, layerReportingInfo.getProcessedAsVDYP7Layer(), state
+						);
+
 						yieldTable.generateYieldTableForPolygonLayer(
-								polygon, state, layerReportingInfo, doGenerateDetailedTableHeader
+								polygon, projectionResults, state, layerReportingInfo, doGenerateDetailedTableHeader
 						);
 						doGenerateDetailedTableHeader = false;
 
@@ -238,6 +253,48 @@ public class RealComponentRunner implements ComponentRunner {
 					);
 				}
 			}
+		}
+
+	}
+
+	private Map<Integer, VdypPolygon>
+			getProjectionResults(Polygon polygon, ProjectionTypeCode projectionType, PolygonProjectionState state)
+					throws YieldTableGenerationException {
+
+		Path stepExecutionFolder = Path.of(state.getExecutionFolder().toString(), projectionType.toString());
+		var vdypControlFileResolver = new FileSystemFileResolver(stepExecutionFolder);
+
+		try {
+			ProjectionResultsReader forwardReader = new NullProjectionResultsReader();
+
+			if (state.didRunProjectionStage(ProjectionStageCode.Forward, projectionType)) {
+
+				try (var fis = vdypControlFileResolver.resolveForInput(Vdyp7Constants.FORWARD_CONTROL_FILE_NAME)) {
+					var forwardControlFileParser = new ForwardControlParser();
+					Map<String, Object> forwardControlMap = forwardControlFileParser
+							.parse(fis, vdypControlFileResolver, new HashMap<>());
+					forwardReader = new RealProjectionResultsReader(forwardControlMap);
+				}
+			}
+
+			ProjectionResultsReader backReader = new NullProjectionResultsReader();
+
+			if (state.didRunProjectionStage(ProjectionStageCode.Back, projectionType)) {
+
+				try (var bis = vdypControlFileResolver.resolveForInput(Vdyp7Constants.BACK_CONTROL_FILE_NAME)) {
+					var backwardsControlFileParser = new ForwardControlParser();
+					Map<String, Object> backwardsControlMap = backwardsControlFileParser
+							.parse(bis, vdypControlFileResolver, new HashMap<>());
+					backReader = new RealProjectionResultsReader(backwardsControlMap);
+				}
+			}
+
+			var projectionResults = ProjectionResultsBuilder
+					.read(polygon, state, projectionType, forwardReader, backReader);
+
+			return projectionResults;
+		} catch (ResourceParseException | IOException e) {
+			throw new YieldTableGenerationException(e);
 		}
 	}
 

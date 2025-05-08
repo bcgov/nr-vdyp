@@ -270,7 +270,9 @@ public class ProjectionContext {
 					LocalDateTime.now().plusMinutes(EXECUTION_FOLDER_RETENTION_TIME_m)
 			);
 
-			executorService.submit(new ExecutionFolderRemover(executionFolder, EXECUTION_FOLDER_RETENTION_TIME_m * 60 * 1000L));
+			executorService.submit(
+					new ExecutionFolderRemover(executionFolder, EXECUTION_FOLDER_RETENTION_TIME_m * 60 * 1000L)
+			);
 		} else {
 			logger.info("Deleting execution folder {}", executionFolder);
 			ExecutionFolderRemover.doRemove(executionFolder);
@@ -295,12 +297,12 @@ public class ProjectionContext {
 				logger.error("Saw unexpected InterruptedException during \"sleep\" of " + delay_ms + "ms", e);
 				throw e;
 			}
-			
+
 			doRemove(executionFolder);
-			
+
 			return true;
 		}
-		
+
 		static void doRemove(Path executionFolder) {
 
 			FileVisitor<Path> visitor = new SimpleFileVisitor<Path>() {

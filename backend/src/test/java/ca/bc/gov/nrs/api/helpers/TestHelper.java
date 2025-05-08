@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.lang.reflect.Modifier;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.MessageFormat;
 import java.util.Comparator;
@@ -32,6 +33,14 @@ import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessageKind;
 import ca.bc.gov.nrs.vdyp.backend.projection.input.HcsvPolygonRecordBean;
+import ca.bc.gov.nrs.vdyp.common.ControlKey;
+import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
+import ca.bc.gov.nrs.vdyp.forward.ForwardDataStreamReader;
+import ca.bc.gov.nrs.vdyp.forward.parsers.VdypPolygonParser;
+import ca.bc.gov.nrs.vdyp.forward.parsers.VdypSpeciesParser;
+import ca.bc.gov.nrs.vdyp.forward.parsers.VdypUtilizationParser;
+import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
+import ca.bc.gov.nrs.vdyp.test.TestUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
@@ -222,5 +231,45 @@ public class TestHelper {
 				map.put(fieldName, new FieldMetadata(columnName, fieldOrdering));
 			}
 		}
+	}
+
+	public ForwardDataStreamReader buildForwardDataStreamReader(
+			InputStream polygonStream, InputStream speciesStream, InputStream utilizationsStream
+	) throws IOException {
+
+		var readerControlMap = new HashMap<String, Object>();
+
+		var polygonFile = Files.createTempFile("polygon", null);
+		Files.write(polygonFile, polygonStream.readAllBytes());
+		var speciesFile = Files.createTempFile("species", null);
+		Files.write(speciesFile, speciesStream.readAllBytes());
+		var utilizationsFile = Files.createTempFile("utilizations", null);
+		Files.write(utilizationsFile, utilizationsStream.readAllBytes());
+
+		var absolutePathFileResolver = new FileSystemFileResolver();
+		readerControlMap.put(
+				ControlKey.FORWARD_INPUT_VDYP_POLY.name(),
+				new VdypPolygonParser().map(polygonFile.toString(), absolutePathFileResolver, readerControlMap)
+		);
+		readerControlMap.put(
+				ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SPECIES.name(),
+				new VdypSpeciesParser().map(speciesFile.toString(), absolutePathFileResolver, readerControlMap)
+		);
+		readerControlMap.put(
+				ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name(),
+				new VdypUtilizationParser().map(utilizationsFile.toString(), absolutePathFileResolver, readerControlMap)
+		);
+
+		TestUtils.populateControlMapBecReal(readerControlMap);
+		TestUtils.populateControlMapGenusReal(readerControlMap);
+
+		ForwardDataStreamReader reader;
+		try {
+			reader = new ForwardDataStreamReader(readerControlMap);
+		} catch (ProcessingException e) {
+			throw new IOException(e.getMessage(), e);
+		}
+
+		return reader;
 	}
 }

@@ -185,7 +185,7 @@ class YieldTableRowContext {
 			layer = null;
 
 			Double ageAtYear = polygon.determineStandAgeAtYear(getReferenceYear());
-			this.referenceAge = ageAtYear == null ? null : ageAtYear.intValue();
+			this.referenceAge = ageAtYear == null ? 0 : ageAtYear.intValue();
 
 			var primaryLayer = polygon.getPrimaryLayer();
 			if (primaryLayer != null) {
@@ -215,7 +215,7 @@ class YieldTableRowContext {
 			}
 
 			Double ageAtYear = layer.determineLayerAgeAtYear(getReferenceYear());
-			referenceAge = ageAtYear == null ? null : ageAtYear.intValue();
+			referenceAge = ageAtYear == null ? 0 : ageAtYear.intValue();
 
 			numSpecies = layer.getSp64sAsSupplied().size();
 		}
@@ -254,6 +254,40 @@ class YieldTableRowContext {
 		nowAge = nowYear - yearToAgeDifference;
 	}
 
+	/**
+	 * <b>lcl_ComputeTableRangeInformation</b>
+	 * <p>
+	 * Fills in table age/year range information given the stream parameters and the current layer reference
+	 * information. Specifically, the year-at-start/end and age-at-start/end values are determined. If there is a gap
+	 * (there can be at most one), year-at-gap-start/end and age-at-gap-start/end are determined. Finally, the current
+	 * year and age are determined.
+	 * <p>
+	 * This method takes into consideration the <b>AgeYearRangeCombinationKind</b> parameter (UNION, INTERSECT and
+	 * DIFFERENCE), which determines how to combine the age and year range (when both are given.)
+	 * <p>
+	 * There may be no gap, in which case the four gap values remain null. It may also be that the resulting range is
+	 * empty (when both age and year ranges are specified, they don't overlap, and INTERSECT is the combination
+	 * strategy) - in this case, the at-start/end values are null, too.
+	 * <p>
+	 * This routine populates the following members of this YieldTableRowContext:
+	 * <ul>
+	 * <li>yearAtStartAge
+	 * <li>ageAtStartYear
+	 * <li>yearAtGapStart
+	 * <li>ageAtGapStart
+	 * <li>yearAtGapEnd
+	 * <li>ageAtGapEnd
+	 * <li>yearAtEndAge
+	 * <li>ageAtEndYear
+	 * <li>currentYear
+	 * <li>currentAge
+	 * </ul>
+	 * If we are producing a yield table for a Dead Stem layer, only produce a single row corresponding to the year of
+	 * death.
+	 * <p>
+	 *
+	 * @param params the parameter values for this projection
+	 */
 	private void calculateTableRangeInformation(ValidatedParameters params) {
 
 		var startAge = params.getAgeStart();
@@ -320,14 +354,14 @@ class YieldTableRowContext {
 			Validate.isTrue(
 					ageRangeStartYear < ageRangeEndYear,
 					MessageFormat.format(
-							"YieldTableRow.calculateTableRangeInformation(): {0} was not less than {1}",
+							"YieldTableRow.calculateTableRangeInformation(): age {0} was not less than {1}",
 							ageRangeStartYear, ageRangeEndYear
 					)
 			);
 			Validate.isTrue(
 					ageRangeStartYear < ageRangeEndYear,
 					MessageFormat.format(
-							"YieldTableRow.calculateTableRangeInformation(): {0} was not less than {1}",
+							"YieldTableRow.calculateTableRangeInformation(): year {0} was not less than {1}",
 							yearRangeStartYear, yearRangeEndYear
 					)
 			);

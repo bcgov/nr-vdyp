@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.vdyp.backend.endpoints.projection.input;
+package ca.bc.gov.nrs.vdyp.backend.endpoints.projection.hcsv.input;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;

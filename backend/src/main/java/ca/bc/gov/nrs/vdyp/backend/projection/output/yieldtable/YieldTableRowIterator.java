@@ -237,7 +237,8 @@ class YieldTableRowIterator implements Iterator<YieldTableRowContext> {
 		// Check if we have passed the end of the table range.
 
 		if (rowContext.getCurrentTableYear() != null //
-				&& rowContext.getCurrentTableYear() > rowContext.getYearAtEndAge() //
+				&& (rowContext.getYearAtEndAge() != null
+						&& rowContext.getCurrentTableYear() > rowContext.getYearAtEndAge()) //
 				&& rowContext.getCurrentTableYear() > rowContext.getMeasurementYear() //
 				&& rowContext.getCurrentTableYear() > rowContext.getNowYear() //
 				&& (params.getYearForcedIntoYieldTable() == null

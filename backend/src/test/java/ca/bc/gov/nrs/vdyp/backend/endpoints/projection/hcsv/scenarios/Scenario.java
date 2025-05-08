@@ -6,7 +6,9 @@ import static org.junit.Assert.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.IntStream;
 import java.util.zip.ZipEntry;
@@ -40,11 +42,7 @@ public class Scenario {
 			throws IOException {
 
 		String content = assertLogEntry(zipFile, "YieldTable.csv", predicate);
-		if (content.length() > 0) {
-			return new ResultYieldTable(content);
-		} else {
-			return null;
-		}
+		return new ResultYieldTable(content);
 	}
 
 	protected void assertProgressLogNext(ZipInputStream zipFile, Predicate<String> predicate) throws IOException {
@@ -107,55 +105,47 @@ public class Scenario {
 
 		var polygonLayersTable = resultYieldTable.get(polygonId);
 		if (polygonLayersTable == null) {
-			throw new IllegalArgumentException("polygon " + polygonId + " is not in the yield table");
+			polygonLayersTable = new HashMap<String, Map<String, Map<String, String>>>();
 		}
 
 		var yearsTable = polygonLayersTable.get(layerId);
-
 		if (yearsTable == null) {
-			if (yearSpecs.length > 0) {
-				throw new IllegalArgumentException(
-						"polygon " + polygonId + " layer " + layerId + " is not in the yield table"
-				);
-			} else {
-				// no table entries, but no year specs, so ok.
-			}
-		} else {
+			yearsTable = new HashMap<String, Map<String, String>>();
+		}
 
-			var yearsInTable = new HashSet<String>(yearsTable.keySet());
+		var yearsInTable = new HashSet<String>(yearsTable.keySet());
 
-			for (Object yearSpec : yearSpecs) {
-				if (yearSpec instanceof Integer year) {
-					var yearText = year.toString();
-					if (!yearsInTable.contains(yearText)) {
-						logger.error("Yield table does not contain entry for year " + year);
+		for (Object yearSpec : yearSpecs) {
+			if (yearSpec instanceof Integer year) {
+				var yearText = year.toString();
+				if (!yearsInTable.contains(yearText)) {
+					logger.error("Yield table does not contain entry for year " + year);
+					assertFailureSeen = true;
+				} else {
+					yearsInTable.remove(yearText);
+				}
+			} else if (yearSpec instanceof IntStream years) {
+				for (String yearText : years.boxed().map(y -> y.toString()).toList()) {
+					var key = Integer.valueOf(yearText).toString();
+					if (!yearsInTable.contains(key)) {
+						logger.error("Yield table does not contain entry for year " + yearText);
 						assertFailureSeen = true;
 					} else {
 						yearsInTable.remove(yearText);
 					}
-				} else if (yearSpec instanceof IntStream years) {
-					for (String yearText : years.boxed().map(y -> y.toString()).toList()) {
-						var key = Integer.valueOf(yearText).toString();
-						if (!yearsInTable.contains(key)) {
-							logger.error("Yield table does not contain entry for year " + yearText);
-							assertFailureSeen = true;
-						} else {
-							yearsInTable.remove(yearText);
-						}
-					}
-				} else {
-					throw new IllegalArgumentException("yearSpecs must be Integers or IntStreams");
 				}
+			} else {
+				throw new IllegalArgumentException("yearSpecs must be Integers or IntStreams");
 			}
+		}
 
-			if (!yearsInTable.isEmpty()) {
-				for (var year : yearsInTable.stream().sorted().toList()) {
-					logger.error("Range does not contain entry for year " + year);
-				}
-				Assert.fail();
-			} else if (assertFailureSeen) {
-				Assert.fail();
+		if (!yearsInTable.isEmpty()) {
+			for (var year : yearsInTable.stream().sorted().toList()) {
+				logger.error("Range does not contain entry for year " + year);
 			}
+			Assert.fail();
+		} else if (assertFailureSeen) {
+			Assert.fail();
 		}
 	}
 }

@@ -3,11 +3,9 @@ package ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable;
 import java.io.Closeable;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.text.MessageFormat;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -39,20 +37,10 @@ import ca.bc.gov.nrs.vdyp.backend.projection.model.Vdyp7Constants;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ReturnCode;
 import ca.bc.gov.nrs.vdyp.backend.utils.Utils;
-import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.exceptions.FailedToGrowYoungStandException;
 import ca.bc.gov.nrs.vdyp.exceptions.LayerMissingException;
-import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
-import ca.bc.gov.nrs.vdyp.forward.ForwardControlParser;
-import ca.bc.gov.nrs.vdyp.forward.ForwardDataStreamReader;
-import ca.bc.gov.nrs.vdyp.forward.parsers.VdypPolygonParser;
-import ca.bc.gov.nrs.vdyp.forward.parsers.VdypSpeciesParser;
-import ca.bc.gov.nrs.vdyp.forward.parsers.VdypUtilizationParser;
-import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
-import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
-import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
@@ -62,7 +50,7 @@ import ca.bc.gov.nrs.vdyp.si32.vdyp.SP0Name;
 
 public class YieldTable implements Closeable {
 
-	public static enum Category {
+	public enum Category {
 		LAYER_MOFVOLUMES, LAYER_MOFBIOMASS, SPECIES_MOFVOLUME, SPECIES_MOFBIOMASS, LAYER_CFSBIOMASS, PROJECTION_MODE,
 		POLYGON_ID;
 	}
@@ -93,10 +81,9 @@ public class YieldTable implements Closeable {
 	}
 
 	public void generateYieldTableForPolygon(
-			Polygon polygon, PolygonProjectionState state, boolean doGenerateDetailedTableHeader
+			Polygon polygon, Map<Integer, VdypPolygon> projectionResults, PolygonProjectionState state,
+			boolean doGenerateDetailedTableHeader
 	) throws YieldTableGenerationException {
-
-		var projectionResults = readProjectionResults(polygon, state, ProjectionTypeCode.PRIMARY);
 
 		generateYieldTable(polygon, projectionResults, state, null, doGenerateDetailedTableHeader);
 	}
@@ -116,19 +103,15 @@ public class YieldTable implements Closeable {
 	 *                                      only the table number is generated.
 	 */
 	public void generateYieldTableForPolygonLayer(
-			Polygon polygon, PolygonProjectionState state, LayerReportingInfo layerReportingInfo,
-			boolean doGenerateDetailedTableHeader
+			Polygon polygon, Map<Integer, VdypPolygon> projectionResults, PolygonProjectionState state,
+			LayerReportingInfo layerReportingInfo, boolean doGenerateDetailedTableHeader
 	) throws YieldTableGenerationException {
 
 		if (layerReportingInfo == null) {
 			throw new IllegalArgumentException("generateYieldTableForPolygonLayer: layerReportingInfo cannot be null");
 		}
 
-		var polygonProjectionResults = readProjectionResults(
-				polygon, state, layerReportingInfo.getProcessedAsVDYP7Layer()
-		);
-
-		generateYieldTable(polygon, polygonProjectionResults, state, layerReportingInfo, doGenerateDetailedTableHeader);
+		generateYieldTable(polygon, projectionResults, state, layerReportingInfo, doGenerateDetailedTableHeader);
 	}
 
 	public void generateCfsBiomassTableForPolygon(
@@ -198,135 +181,6 @@ public class YieldTable implements Closeable {
 		return writer;
 	}
 
-	private Map<Integer, VdypPolygon>
-			readProjectionResults(Polygon polygon, PolygonProjectionState state, ProjectionTypeCode projectionType)
-					throws YieldTableGenerationException {
-
-		var resultsByYear = new HashMap<Integer, VdypPolygon>();
-
-		if (state.didRunProjectionStage(ProjectionStageCode.Forward, projectionType)) {
-			var componentResultsByYear = getComponentProjectionResultsByYear(
-					Vdyp7Constants.FORWARD_CONTROL_FILE_NAME, polygon, state, projectionType
-			);
-			for (var e : componentResultsByYear.entrySet()) {
-				var year = e.getKey();
-				VdypPolygon forwardVdypPolygon = e.getValue();
-
-				resultsByYear.put(year, forwardVdypPolygon);
-			}
-		}
-
-		if (state.didRunProjectionStage(ProjectionStageCode.Back, projectionType)) {
-			var componentResultsByYear = getComponentProjectionResultsByYear(
-					Vdyp7Constants.BACK_CONTROL_FILE_NAME, polygon, state, projectionType
-			);
-			for (var e : componentResultsByYear.entrySet()) {
-				var year = e.getKey();
-				VdypPolygon backVdypPolygon = e.getValue();
-
-				if (resultsByYear.containsKey(year)) {
-					throw new IllegalStateException(
-							MessageFormat.format(
-									"{0}: contains both FORWARD and BACK results for the same year {1}", polygon,
-									e.getKey()
-							)
-					);
-				} else {
-					resultsByYear.put(year, backVdypPolygon);
-				}
-			}
-		}
-
-		return resultsByYear;
-	}
-
-	private Map<Integer, VdypPolygon> getComponentProjectionResultsByYear(
-			String controlFileName, Polygon polygon, PolygonProjectionState state, ProjectionTypeCode projectionType
-	) throws YieldTableGenerationException {
-
-		var parser = new ForwardControlParser();
-
-		Path stepExecutionFolder = Path.of(state.getExecutionFolder().toString(), projectionType.toString());
-
-		var vdypControlFileResolver = new FileSystemFileResolver(stepExecutionFolder);
-
-		var expectedPolygonIdentifier = new PolygonIdentifier(
-				polygon.getMapSheet(), polygon.getPolygonNumber(), polygon.getDistrict(), 0 /* expect any year */
-		);
-
-		try (var is = vdypControlFileResolver.resolveForInput(controlFileName)) {
-
-			Map<String, Object> controlMap = parser.parse(is, vdypControlFileResolver, new HashMap<>());
-
-			Object polygonFileLocation = controlMap.get(ControlKey.VDYP_OUTPUT_VDYP_POLYGON.name());
-			Object speciesFileLocation = controlMap.get(ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SPECIES.name());
-			Object utilizationsFileLocation = controlMap.get(ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name());
-
-			var readerControlMap = new HashMap<String, Object>();
-			readerControlMap.put(ControlKey.FORWARD_INPUT_VDYP_POLY.name(), polygonFileLocation);
-			readerControlMap.put(ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SPECIES.name(), speciesFileLocation);
-			readerControlMap.put(ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name(), utilizationsFileLocation);
-
-			var absolutePathFileResolver = new FileSystemFileResolver();
-			readerControlMap.put(
-					ControlKey.FORWARD_INPUT_VDYP_POLY.name(),
-					new VdypPolygonParser()
-							.map(polygonFileLocation.toString(), absolutePathFileResolver, readerControlMap)
-			);
-			readerControlMap.put(
-					ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SPECIES.name(),
-					new VdypSpeciesParser()
-							.map(speciesFileLocation.toString(), absolutePathFileResolver, readerControlMap)
-			);
-			readerControlMap.put(
-					ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name(),
-					new VdypUtilizationParser()
-							.map(utilizationsFileLocation.toString(), absolutePathFileResolver, readerControlMap)
-			);
-			readerControlMap.put(ControlKey.BEC_DEF.name(), controlMap.get(ControlKey.BEC_DEF.name()));
-			readerControlMap.put(ControlKey.SP0_DEF.name(), controlMap.get(ControlKey.SP0_DEF.name()));
-
-			var projectionResultsByYear = new HashMap<Integer, VdypPolygon>();
-
-			ForwardDataStreamReader reader = new ForwardDataStreamReader(readerControlMap);
-
-			var vdypPolygon = reader.readNextPolygon(false /* do not run post-create adjustments */);
-			while (vdypPolygon.isPresent()
-					&& expectedPolygonIdentifier.getBase().equals(vdypPolygon.get().getPolygonIdentifier().getBase())) {
-
-				projectionResultsByYear.put(vdypPolygon.get().getPolygonIdentifier().getYear(), vdypPolygon.get());
-
-				vdypPolygon = reader.readNextPolygon(false /* do not run post-create adjustments */);
-			}
-
-			if (projectionResultsByYear.size() == 0) {
-				recordPolygonProjectionInformationMissing(polygon);
-			}
-
-			if (vdypPolygon.isPresent()) {
-				throw new YieldTableGenerationException(
-						MessageFormat.format(
-								"Expected exactly one polygon in the output of {0}, but saw {1} as well",
-								controlFileName, vdypPolygon.get().getPolygonIdentifier()
-						)
-				);
-			}
-
-			return projectionResultsByYear;
-
-		} catch (ResourceParseException | ProcessingException | IOException e) {
-			throw new YieldTableGenerationException(e);
-		}
-	}
-
-	private void recordPolygonProjectionInformationMissing(Polygon polygon) {
-		String message = MessageFormat.format(
-				"Expected, but did not find, a polygon {0,number,#} in the output of Forward",
-				polygon.getPolygonNumber()
-		);
-		logger.warn("{}: {}", polygon, message);
-	}
-
 	/**
 	 * <b>lcl_bDisplayCurrentYear</b>
 	 * <p>
@@ -348,6 +202,7 @@ public class YieldTable implements Closeable {
 			doDisplayRow = false;
 		}
 
+		// Does the current year lie in the gap (if any)?
 		if (doDisplayRow //
 				&& rowContext.getYearAtGapStart() != null //
 				&& rowContext.getCurrentTableYear() > rowContext.getYearAtGapStart() //
@@ -360,13 +215,13 @@ public class YieldTable implements Closeable {
 			doDisplayRow = false;
 		}
 
-		if (doDisplayRow && //
-				(rowContext.getYearAtStartAge() == null //
-						|| rowContext.getCurrentTableYear() < rowContext.getYearAtStartAge() //
+		// Does the current year lie outside of the range (if any)?
+		if (doDisplayRow && rowContext.getYearAtStartAge() != null //
+				&& (rowContext.getCurrentTableYear() < rowContext.getYearAtStartAge() //
 						|| rowContext.getCurrentTableYear() > rowContext.getYearAtEndAge())) {
 
 			reasonNotDisplayed = MessageFormat.format(
-					"current year {0} not in age range [{1}, {2}]", rowContext.getCurrentTableYear(),
+					"current year {0} not in year range [{1}, {2}]", rowContext.getCurrentTableYear(),
 					rowContext.getYearAtStartAge(), rowContext.getYearAtEndAge()
 			);
 			doDisplayRow = false;
@@ -380,11 +235,13 @@ public class YieldTable implements Closeable {
 
 			if (rowContext.getCurrentYearIsYearRow()
 					&& params.containsOption(ExecutionOption.DO_INCLUDE_YEAR_ROWS_IN_YIELD_TABLE)) {
+				reasonNotDisplayed = null;
 				doDisplayRow = true;
 			}
 
 			if (rowContext.getCurrentYearIsAgeRow()
 					&& params.containsOption(ExecutionOption.DO_INCLUDE_AGE_ROWS_IN_YIELD_TABLE)) {
+				reasonNotDisplayed = null;
 				doDisplayRow = true;
 			}
 
@@ -636,7 +493,10 @@ public class YieldTable implements Closeable {
 	) throws StandYieldCalculationException {
 
 		if (totalAge < Vdyp7Constants.MIN_SPECIES_AGE || totalAge > Vdyp7Constants.MAX_SPECIES_AGE) {
-			throw new IllegalArgumentException("getProjectionPolygonGrowthInfo: targetAge");
+			throw new StandYieldCalculationException(
+					StandYieldMessageKind.AGE_OUT_OF_RANGE, Vdyp7Constants.MIN_SPECIES_AGE,
+					Vdyp7Constants.MAX_SPECIES_AGE
+			);
 		}
 
 		var primaryLayer = rowContext.getPolygon().getPrimaryLayer();
@@ -717,12 +577,6 @@ public class YieldTable implements Closeable {
 		if (primaryLayer == null) {
 			throw new IllegalStateException(
 					MessageFormat.format("{0}: primary layer not found", rowContext.getPolygon())
-			);
-		}
-
-		if (!rowContext.getPolygonProjectionState().polygonWasProjected()) {
-			throw new IllegalStateException(
-					MessageFormat.format("{0}: did not run projection", rowContext.getPolygon())
 			);
 		}
 
@@ -990,11 +844,6 @@ public class YieldTable implements Closeable {
 			YieldTableRowContext rowContext, Map<Integer, VdypPolygon> polygonProjectionsByYear, Layer layer,
 			int targetAge
 	) throws StandYieldCalculationException {
-		if (!rowContext.getPolygonProjectionState().polygonWasProjected()) {
-			throw new IllegalStateException(
-					MessageFormat.format("{0}: did not run projection", rowContext.getPolygon())
-			);
-		}
 
 		Double wholeStemVolume = 0.0;
 		Double closeUtilizationVolume = 0.0;
