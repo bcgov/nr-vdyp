@@ -796,8 +796,13 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		final float quadMeanDiameter = BaseAreaTreeDensityDiameter.quadMeanDiameter(baseArea, treesPerHectare);
 		boolean lowDq = false;
 		if (quadMeanDiameter < VETERAN_MIN_DQ) {
-			if (this.getId() == VdypApplicationIdentifier.VRI_START && this.getDebugModes().getValue(1) == 2) {
+<<<<<<< HEAD
+			if (this.getId() == VdypApplicationIdentifier.VRI_START && this.getDebugMode(1) == 2) {
 				throw new FatalProcessingException(
+=======
+			if (this.getId() == VdypApplicationIdentifier.VRI_START && this.getDebugModes().getValue(1) == 2) {
+				throw new StandProcessingException(
+>>>>>>> 11e5e5b52 (Load debug flags in Start applications and implement debug modes 22 and 9)
 						MessageFormat.format(MINIMUM_DIAMETER_FAIL_MESSAGE, quadMeanDiameter, VETERAN_MIN_DQ)
 				);
 			}
@@ -1557,9 +1562,19 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			return lastFs[0];
 		};
 
-		debugModeExpandRootSearchWindow(
-				Optional.of(getDebugModes().getValue(9)).filter(x -> x > 0), minDq, maxDq, errorFunc
-		);
+		if (this.getDebugModes().getValue(9) > 0) {
+			double f1 = errorFunc.value(-10f);
+			double f2 = errorFunc.value(10f);
+
+			if (f2 * f1 > 0d) {
+				float lowFactor = 1.0f - ((float) this.getDebugModes().getValue(9)) / 100f;
+				float highFactor = 1.0f + ((float) this.getDebugModes().getValue(9)) / 100f;
+				for (var key : maxDq.keySet()) {
+					minDq.put(key, 7.5f + lowFactor * (minDq.get(key) - 7.5f));
+					maxDq.put(key, 7.5f + highFactor * (maxDq.get(key) - 7.5f));
+				}
+			}
+		}
 
 		try {
 			double x = doSolve(min, max, errorFunc);
@@ -1597,25 +1612,6 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			);
 
 		}
-	}
-
-	void debugModeExpandRootSearchWindow(
-			Optional<Integer> percentage, Map<String, Float> minDq, Map<String, Float> maxDq,
-			UnivariateFunction errorFunc
-	) {
-		percentage.map(p -> (float) p / 100f).ifPresent(p -> {
-			final double f1 = errorFunc.value(-10f);
-			final double f2 = errorFunc.value(10f);
-			final float base = 7.5f;
-			if (f2 * f1 > 0d) {
-				float lowFactor = 1.0f - p;
-				float highFactor = 1.0f + p;
-				for (var key : maxDq.keySet()) {
-					minDq.put(key, base + lowFactor * (minDq.get(key) - base));
-					maxDq.put(key, base + highFactor * (maxDq.get(key) - base));
-				}
-			}
-		});
 	}
 
 	double doSolve(float min, float max, UnivariateFunction errorFunc) {
@@ -1661,8 +1657,13 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			throws FatalProcessingException {
 		// Only do this in VRIStart
 
-		if (getDebugModes().getValue(1) == 2) {
+<<<<<<< HEAD
+		if (getDebugMode(1) == 2) {
 			throw new FatalProcessingException("Could not find solution for quadratic mean diameter", ex);
+=======
+		if (getDebugModes().getValue(1) == 2) {
+			throw new StandProcessingException("Could not find solution for quadratic mean diameter", ex);
+>>>>>>> 11e5e5b52 (Load debug flags in Start applications and implement debug modes 22 and 9)
 		}
 
 		log.atWarn().setMessage("Could not find exact solution for quadratic mean diameter.  Using inexact estimate.")

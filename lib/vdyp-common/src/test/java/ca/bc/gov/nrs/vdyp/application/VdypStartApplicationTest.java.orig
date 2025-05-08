@@ -949,6 +949,8 @@ class VdypStartApplicationTest {
 			mockControl.verify();
 
 		}
+<<<<<<< HEAD
+=======
 
 		@Test
 		void testDebug22Unknown() throws Exception {
@@ -962,6 +964,7 @@ class VdypStartApplicationTest {
 
 			try (VdypStartApplication app = getTestUnit(mockControl)) {
 
+
 				mockControl.replay();
 				app.init(dummyIo(), controlMap);
 
@@ -973,6 +976,7 @@ class VdypStartApplicationTest {
 
 		}
 
+>>>>>>> 849740101 (Unit test for unknown debug22 mode)
 	}
 
 	@Nested

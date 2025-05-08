@@ -67,6 +67,7 @@ import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.CompatibilityVariableMode;
+import ca.bc.gov.nrs.vdyp.model.DebugSettings;
 import ca.bc.gov.nrs.vdyp.model.GenusDefinitionMap;
 import ca.bc.gov.nrs.vdyp.model.InputLayer;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
@@ -118,15 +119,14 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		map.put("Y", 9);
 	});
 
-	// TODO Should probably handle this with enums instead for clarity.
-	private int[] debugModes = new int[25];
+	private Optional<DebugSettings> debugModes = Optional.empty();
 
-	public int getDebugMode(int index) {
-		return debugModes[index];
+	public DebugSettings getDebugModes() {
+		return debugModes.orElseThrow(() -> new IllegalStateException("Can not get debug modes before initialization"));
 	}
 
-	public void setDebugMode(int index, int mode) {
-		debugModes[index] = mode;
+	public void setDebugModes(DebugSettings newDebugModes) {
+		debugModes = Optional.of(newDebugModes);
 	}
 
 	static final Set<String> HARDWOODS = Set.of("AC", "AT", "D", "E", "MB");
@@ -253,6 +253,10 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	protected void setControlMap(Map<String, Object> controlMap) {
 		this.controlMap = controlMap;
 		this.estimationMethods = new EstimationMethods(new ResolvedControlMapImpl(controlMap));
+		this.debugModes = Optional.of(
+				Utils.parsedControl(controlMap, ControlKey.DEBUG_SWITCHES, DebugSettings.class)
+						.orElse(new DebugSettings())
+		);
 	}
 
 	protected <T> StreamingParser<T> getStreamingParser(ControlKey key) throws ProcessingException {
@@ -315,6 +319,26 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 				// Resolve ties using SP0 preference order which is equal to index.
 				Utils.compareUsing(spec -> sp0Lookup.getByAlias(spec.getGenus()).getIndex())
 		);
+		final Comparator<BaseVdypSpecies<?>> percentGenusDescendingFudged = (sp1, sp2) -> {
+			int i1 = sp0Lookup.getByAlias(sp1.getGenus()).getIndex();
+			int i2 = sp0Lookup.getByAlias(sp2.getGenus()).getIndex();
+			float adjustmentFactor = i1 < i2 ? 0.9995f : 1.0005f;
+			return (int) Math.signum(sp2.getPercentGenus() * adjustmentFactor - sp1.getPercentGenus());
+		};
+
+		final Comparator<BaseVdypSpecies<?>> comparatorToUse;
+		switch (this.getDebugModes().getValue(22)) {
+		case 0:
+			comparatorToUse = percentGenusDescending;
+			break;
+		case 1:
+			comparatorToUse = percentGenusDescendingFudged;
+			break;
+		default:
+			throw new IllegalStateException(
+					MessageFormat.format("Debug flag 22 value of {0} is unknown", this.getDebugModes().getValue(22))
+			);
+		}
 
 		if (allSpecies.isEmpty()) {
 			throw new IllegalArgumentException("Can not find primary species as there are no species");
@@ -349,20 +373,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 			// There's only one
 			result.addAll(combined.values());
 		} else {
-			switch (this.getDebugMode(22)) {
-			case 0:
-				combined.values().stream().sorted(percentGenusDescending).limit(2).forEach(result::add);
-				break;
-			case 1:
-				// TODO
-				throw new UnsupportedOperationException(
-						MessageFormat.format("Debug flag 22 value of {0} is not supported", this.getDebugMode(22))
-				);
-			default:
-				throw new IllegalStateException(
-						MessageFormat.format("Debug flag 22 value of {0} is unknown", this.getDebugMode(22))
-				);
-			}
+			combined.values().stream().sorted(comparatorToUse).limit(2).forEach(result::add);
 		}
 
 		assert !result.isEmpty();
