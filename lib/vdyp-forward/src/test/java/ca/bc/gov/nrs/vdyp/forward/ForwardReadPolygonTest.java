@@ -1,5 +1,7 @@
 package ca.bc.gov.nrs.vdyp.forward;
 
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
@@ -18,6 +20,7 @@ import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
+import ca.bc.gov.nrs.vdyp.forward.model.ForwardControlVariables;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
@@ -35,6 +38,7 @@ class ForwardReadPolygonTest {
 
 		var parser = new ForwardControlParser();
 		Map<String, Object> controlMap = parse(parser, "VDYP.CTR");
+		controlMap.put(ControlKey.VTROL.name(), new ForwardControlVariables(new Integer[] { -1, 1, 2, 2, 1, 1, 1 }));
 
 		try {
 			var polygonDescriptionStreamFactory = controlMap.get(ControlKey.FORWARD_INPUT_GROWTO.name());
@@ -84,6 +88,127 @@ class ForwardReadPolygonTest {
 					});
 				}
 			}
+			assertThat(polygon, hasProperty("targetYear", present(is(1990))));// VTROL 1 was negative
+		} catch (ResourceParseException | IOException e) {
+			throw new ProcessingException(e);
+		}
+	}
+
+	@Test
+	void testReadPolygonsWithControlSpecifiedGrowthYear() throws Exception {
+
+		var parser = new ForwardControlParser();
+		Map<String, Object> controlMap = parse(parser, "VDYP.CTR");
+		controlMap.put(ControlKey.VTROL.name(), new ForwardControlVariables(new Integer[] { 130, 1, 2, 2, 1, 1, 1 }));
+		try {
+			var polygonDescriptionStreamFactory = controlMap.get(ControlKey.FORWARD_INPUT_VDYP_POLY.name());
+			var polygonDescriptionStream = ((StreamingParserFactory<PolygonIdentifier>) polygonDescriptionStreamFactory)
+					.get();
+
+			ForwardDataStreamReader reader = new ForwardDataStreamReader(controlMap);
+
+			// Fetch the next polygon to process.
+			List<VdypPolygon> polygons = new ArrayList<>();
+
+			while (polygonDescriptionStream.hasNext()) {
+
+				var polygon = reader.readNextPolygon();
+				if (polygon.isPresent()) {
+					polygons.add(polygon.get());
+				} else {
+					break;
+				}
+			}
+
+			assertThat(polygons, Matchers.hasSize(10));
+
+			var polygon = polygons.get(0);
+
+			assertThat(polygon.getPolygonIdentifier().toStringCompact(), is("01002 S000001 00(1970)"));
+
+			for (VdypLayer layer : polygon.getLayers().values()) {
+				assertThat(layer.getPolygonIdentifier().getName(), is(polygon.getPolygonIdentifier().getName()));
+				assertThat(layer.getPolygonIdentifier().getYear(), is(polygon.getPolygonIdentifier().getYear()));
+
+				assertThat(UtilizationClass.values().length, is(layer.getBaseAreaByUtilization().size()));
+
+				var speciesMap = layer.getSpecies();
+				for (VdypSpecies species : speciesMap.values()) {
+					assertThat(species, hasProperty("layerType", is(layer.getLayerType())));
+					assertThat(species, hasProperty("polygonIdentifier", is(polygon.getPolygonIdentifier())));
+
+					species.getSite().ifPresent(site -> {
+						assertThat(
+								site,
+								allOf(
+										hasProperty("polygonIdentifier", is(polygon.getPolygonIdentifier())),
+										hasProperty("layerType", is(layer.getLayerType()))
+								)
+						);
+					});
+				}
+			}
+			assertThat(polygon, hasProperty("targetYear", notPresent())); // VTROL 1 was positive
+		} catch (ResourceParseException | IOException e) {
+			throw new ProcessingException(e);
+		}
+	}
+
+	@Test
+	void testReadPolygonsWithNoGrowthFile() throws Exception {
+
+		var parser = new ForwardControlParser();
+		Map<String, Object> controlMap = parse(parser, "VDYP.CTR");
+		controlMap.remove(ControlKey.FORWARD_INPUT_GROWTO.name());
+		try {
+			var polygonDescriptionStreamFactory = controlMap.get(ControlKey.FORWARD_INPUT_VDYP_POLY.name());
+			var polygonDescriptionStream = ((StreamingParserFactory<PolygonIdentifier>) polygonDescriptionStreamFactory)
+					.get();
+
+			ForwardDataStreamReader reader = new ForwardDataStreamReader(controlMap);
+
+			// Fetch the next polygon to process.
+			List<VdypPolygon> polygons = new ArrayList<>();
+
+			while (polygonDescriptionStream.hasNext()) {
+
+				var polygon = reader.readNextPolygon();
+				if (polygon.isPresent()) {
+					polygons.add(polygon.get());
+				} else {
+					break;
+				}
+			}
+
+			assertThat(polygons, Matchers.hasSize(10));
+
+			var polygon = polygons.get(0);
+
+			assertThat(polygon.getPolygonIdentifier().toStringCompact(), is("01002 S000001 00(1970)"));
+
+			for (VdypLayer layer : polygon.getLayers().values()) {
+				assertThat(layer.getPolygonIdentifier().getName(), is(polygon.getPolygonIdentifier().getName()));
+				assertThat(layer.getPolygonIdentifier().getYear(), is(polygon.getPolygonIdentifier().getYear()));
+
+				assertThat(UtilizationClass.values().length, is(layer.getBaseAreaByUtilization().size()));
+
+				var speciesMap = layer.getSpecies();
+				for (VdypSpecies species : speciesMap.values()) {
+					assertThat(species, hasProperty("layerType", is(layer.getLayerType())));
+					assertThat(species, hasProperty("polygonIdentifier", is(polygon.getPolygonIdentifier())));
+
+					species.getSite().ifPresent(site -> {
+						assertThat(
+								site,
+								allOf(
+										hasProperty("polygonIdentifier", is(polygon.getPolygonIdentifier())),
+										hasProperty("layerType", is(layer.getLayerType()))
+								)
+						);
+					});
+				}
+			}
+			assertThat(polygon, hasProperty("targetYear", notPresent())); // Growth file was missing
 		} catch (ResourceParseException | IOException e) {
 			throw new ProcessingException(e);
 		}
