@@ -61,15 +61,15 @@ public class ForwardDataStreamReader {
 			speciesUtilizationStream = ((StreamingParserFactory<Collection<VdypUtilization>>) speciesUtilizationStreamFactory)
 					.get();
 
-			var forwardControl = Utils.expectParsedControl(
+			boolean growthTargetSpecified = Utils.parsedControl(
 					resolvedControlMap.getControlMap(), ControlKey.VTROL, ForwardControlVariables.class
-			);
+			).map(
+					vtrol -> vtrol.getControlVariable(ControlVariable.GROW_TARGET_1) >= 0
+			).orElse(false);
 
 			polygonDescriptionStream = Optional.empty();
 			if (controlMap.containsKey(ControlKey.FORWARD_INPUT_GROWTO.name()) // Growth file specified
-					&& forwardControl.getControlVariable(ControlVariable.GROW_TARGET_1) < 0 // Fixed growth time not
-																							// specified
-			) {
+					&& !growthTargetSpecified) {
 				var polygonDescriptionStreamFactory = Utils
 						.<StreamingParserFactory<PolygonIdentifier>>expectParsedControl(
 								controlMap, ControlKey.FORWARD_INPUT_GROWTO, StreamingParserFactory.class
