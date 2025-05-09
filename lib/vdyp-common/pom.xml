@@ -92,7 +92,7 @@
 								<goal>test-jar</goal>
 							</goals>
 							<configuration>
-								<classifier>common-test-jar</classifier>
+								<classifier>tests</classifier>
 							</configuration>
 						</execution>
 					</executions>

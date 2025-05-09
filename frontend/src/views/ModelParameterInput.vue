@@ -57,7 +57,7 @@
   </v-container>
 </template>
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, nextTick } from 'vue'
 import { useAppStore } from '@/stores/appStore'
 import { useModelParameterStore } from '@/stores/modelParameterStore'
 import { useFileUploadStore } from '@/stores/fileUploadStore'
@@ -158,14 +158,16 @@ const isModelParameterPanelsVisible = computed(() => {
   return (
     appStore.modelSelection ===
       CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS &&
-    modelParamActiveTab.value === 0
+    modelParamActiveTab.value ===
+      CONSTANTS.MODEL_PARAM_TAB_INDEX.PARAM_SELECTION
   )
 })
 
 const isFileUploadPanelsVisible = computed(() => {
   return (
     appStore.modelSelection === CONSTANTS.MODEL_SELECTION.FILE_UPLOAD &&
-    fileUploadActiveTab.value === 0
+    fileUploadActiveTab.value ===
+      CONSTANTS.FILE_UPLOAD_TAB_INDEX.PARAM_SELECTION
   )
 })
 
@@ -178,7 +180,7 @@ onMounted(() => {
   fileUploadStore.setDefaultValues()
 })
 
-const processResponse = async (response: any) => {
+const processResponse = async (response: any): Promise<boolean> => {
   const zipFileName =
     extractZipFileName(response.headers) ||
     CONSTANTS.FILE_NAME.PROJECTION_RESULT_ZIP
@@ -214,6 +216,7 @@ const processResponse = async (response: any) => {
         : MESSAGE.SUCCESS_MSG.FILE_UPLOAD_RUN_RESULT,
     )
   }
+  return hasErrors
 }
 
 const handleError = (error: any) => {
@@ -259,9 +262,20 @@ const runModelHandler = async () => {
       const response = await runModel(modelParameterStore)
       console.debug('Full response:', response)
 
-      await processResponse(response)
+      const hasErrors = await processResponse(response)
 
       reportingStore.modelParamEnableTabs()
+
+      await nextTick() // Ensure UI updates before switching tabs
+      setTimeout(() => {
+        modelParamActiveTab.value = hasErrors
+          ? CONSTANTS.MODEL_PARAM_TAB_INDEX.VIEW_ERROR_MESSAGES
+          : CONSTANTS.MODEL_PARAM_TAB_INDEX.MODEL_REPORT
+        console.log(
+          'After tab switch (Input Model):',
+          modelParamActiveTab.value,
+        )
+      }, 100) // Switching tabs after a small delay
     } else if (
       appStore.modelSelection === CONSTANTS.MODEL_SELECTION.FILE_UPLOAD
     ) {
@@ -270,12 +284,24 @@ const runModelHandler = async () => {
       const response = await runModelFileUpload(fileUploadStore)
       console.debug('Full response:', response)
 
-      await processResponse(response)
+      const hasErrors = await processResponse(response)
 
       reportingStore.fileUploadEnableTabs()
+
+      await nextTick() // Ensure UI updates before switching tabs
+      setTimeout(() => {
+        fileUploadActiveTab.value = hasErrors
+          ? CONSTANTS.FILE_UPLOAD_TAB_INDEX.VIEW_ERROR_MESSAGES
+          : CONSTANTS.FILE_UPLOAD_TAB_INDEX.MODEL_REPORT
+        console.log(
+          'After tab switch (File Upload):',
+          fileUploadActiveTab.value,
+        )
+      }, 100) // Switching tabs after a small delay
     }
   } catch (error) {
     handleError(error)
+    console.error('Error during model execution:', error)
   } finally {
     isProgressVisible.value = false
   }
