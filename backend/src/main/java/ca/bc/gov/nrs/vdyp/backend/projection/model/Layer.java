@@ -1130,26 +1130,25 @@ public class Layer implements Comparable<Layer> {
 	public void doCompleteDefinition() {
 
 		if (getDoSuppressPerHAYields()) {
-
 			setAssignedProjectionType(ProjectionTypeCode.UNKNOWN);
-		}
-
-		if (getAssignedProjectionType() == ProjectionTypeCode.UNKNOWN) {
-
-			var layerProjectionType = determineProjectionType(polygon);
-
-			if (ProjectionTypeCode.ACTUAL_PROJECTION_TYPES_SET.contains(layerProjectionType)) {
-				setAssignedProjectionType(layerProjectionType);
-			} else if (layerProjectionType.equals(ProjectionTypeCode.UNKNOWN)) {
-				// If the layer still does not have a projection type, suppress projection.
-				setDoSuppressPerHAYields(true);
-			} else if (layerProjectionType.equals(ProjectionTypeCode.DO_NOT_PROJECT)) {
-				// If the layer is marked to not be projected, suppress projection.
-				setDoSuppressPerHAYields(true);
-			} else {
-				throw new IllegalStateException(
-						MessageFormat.format("Unrecognized ProjectionTypeCode {0}", layerProjectionType)
-				);
+		} else {
+			if (getAssignedProjectionType() == ProjectionTypeCode.UNKNOWN) {
+	
+				var layerProjectionType = determineProjectionType(polygon);
+	
+				if (ProjectionTypeCode.ACTUAL_PROJECTION_TYPES_SET.contains(layerProjectionType)) {
+					setAssignedProjectionType(layerProjectionType);
+				} else if (layerProjectionType.equals(ProjectionTypeCode.UNKNOWN)) {
+					// If the layer still does not have a projection type, suppress projection.
+					setDoSuppressPerHAYields(true);
+				} else if (layerProjectionType.equals(ProjectionTypeCode.DO_NOT_PROJECT)) {
+					// If the layer is marked to not be projected, suppress projection.
+					setDoSuppressPerHAYields(true);
+				} else {
+					throw new IllegalStateException(
+							MessageFormat.format("Unrecognized ProjectionTypeCode {0}", layerProjectionType)
+					);
+				}
 			}
 		}
 	}
