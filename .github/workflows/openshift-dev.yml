@@ -1,5 +1,7 @@
 name: Build and Deploy to Openshift Dev When PR
-
+permissions:
+  contents: read
+  
 on:
   pull_request:
     paths:
