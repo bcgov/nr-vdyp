@@ -1,7 +1,14 @@
-name: Build and Deploy to Openshift Test
+name: Deploy Using Maven and Helm
 
 on:
-  workflow_dispatch:
+  workflow_call:
+    inputs:
+      target_environment:
+        required: true
+        type: string
+      ref:
+        required: false
+        type: string
 
 concurrency:
   # Cancel if re-attempted
@@ -35,8 +42,8 @@ jobs:
       oc_namespace: ${{ secrets.OC_NAMESPACE }}
       oc_token: ${{ secrets.OC_TOKEN }}
     with:
-      environment: test
-      values: "values-test.yaml"
+      environment: ${{ inputs.target_environment }}
+      values: "values-${{ inputs.target_environment }}.yaml"
       triggers: ('backend/' 'frontend/')
       params: --set global.secrets.persist=false
 

@@ -1,0 +1,25 @@
+name: Build and Deploy to Openshift Target Environment
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_environment:
+        description: 'Target environment'
+        required: true
+        type: choice
+        options:
+          - dev
+          - test
+          - prod
+
+concurrency:
+  # Cancel if re-attempted
+  group: ${{ github.event_name }}
+  cancel-in-progress: true
+
+jobs:
+  call-shared:
+    uses: ./.github/workflows/openshift-shared.yml
+    with:
+      target_environment: ${{ inputs.target_environment }}
+      ref: ${{ github.head_ref }}
