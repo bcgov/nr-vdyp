@@ -30,7 +30,7 @@ public class BecZoneMethods {
 		becZoneToIndexMap.put("MH", BecZone.MH);
 		becZoneToIndexMap.put("MS", BecZone.MS);
 		becZoneToIndexMap.put("PP", BecZone.PP);
-		becZoneToIndexMap.put("SBSP", BecZone.SBPS);
+		becZoneToIndexMap.put("SBPS", BecZone.SBPS);
 		becZoneToIndexMap.put("SBS", BecZone.SBS);
 		becZoneToIndexMap.put("SWB", BecZone.SWB);
 	}
@@ -48,7 +48,7 @@ public class BecZoneMethods {
 		enumToBecZoneMap.put(BecZone.MH, "MH");
 		enumToBecZoneMap.put(BecZone.MS, "MS");
 		enumToBecZoneMap.put(BecZone.PP, "PP");
-		enumToBecZoneMap.put(BecZone.SBPS, "SBSP");
+		enumToBecZoneMap.put(BecZone.SBPS, "SBPS");
 		enumToBecZoneMap.put(BecZone.SBS, "SBS");
 		enumToBecZoneMap.put(BecZone.SWB, "SWB");
 	}

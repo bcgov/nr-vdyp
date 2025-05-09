@@ -24,24 +24,24 @@ class SiteIndex2HeightTest {
 	private static final double ERROR_TOLERANCE = 0.00001;
 
 	@Test
-	void testPpowPositive() throws CommonCalculatorException {
+	void testPpowPositive() {
 		assertThat(8.0, closeTo(SiteIndexUtilities.ppow(2.0, 3.0), ERROR_TOLERANCE));
 		assertThat(1.0, closeTo(SiteIndexUtilities.ppow(5.0, 0.0), ERROR_TOLERANCE));
 	}
 
 	@Test
-	void testPpowZero() throws CommonCalculatorException {
+	void testPpowZero() {
 		assertThat(0.0, closeTo(SiteIndexUtilities.ppow(0.0, 3.0), ERROR_TOLERANCE));
 	}
 
 	@Test
-	void testLlogPositive() throws CommonCalculatorException {
+	void testLlogPositive() {
 		assertThat(1.60943, closeTo(SiteIndexUtilities.llog(5.0), ERROR_TOLERANCE));
 		assertThat(11.51293, closeTo(SiteIndexUtilities.llog(100000.0), ERROR_TOLERANCE));
 	}
 
 	@Test
-	void testLlogZero() throws CommonCalculatorException {
+	void testLlogZero() {
 		assertThat(-11.51293, closeTo(SiteIndexUtilities.llog(0.0), ERROR_TOLERANCE));
 	}
 
@@ -49,7 +49,7 @@ class SiteIndex2HeightTest {
 	class Index_to_heightTest {
 
 		@Test
-		void testInvalidSiteIndex() throws CommonCalculatorException {
+		void testInvalidSiteIndex() {
 			assertThrows(
 					LessThan13Exception.class,
 					() -> SiteIndex2Height.indexToHeight(null, 0.0, SI_AT_TOTAL, 1.2, 0.0, 0.0)
@@ -438,7 +438,7 @@ class SiteIndex2HeightTest {
 		}
 
 		@Test
-		void testDefaultSwitchStatement() throws CommonCalculatorException {
+		void testDefaultSwitchStatement() {
 			assertThrows(
 					CurveErrorException.class,
 					() -> SiteIndex2Height.indexToHeight(null, 5, SI_AT_BREAST, 1.31, 1.5, 0.0)
@@ -450,7 +450,7 @@ class SiteIndex2HeightTest {
 	@Nested
 	class testGiSi2Ht {
 		@Test
-		void testBhageLessThanHalf() throws CommonCalculatorException {
+		void testBhageLessThanHalf() {
 			assertThrows(GrowthInterceptMinimumException.class, () -> SiteIndex2Height.giSi2Ht(null, 0.0, 0.0));
 		}
 
@@ -464,7 +464,7 @@ class SiteIndex2HeightTest {
 		}
 
 		@Test
-		void testConvergenceError() throws CommonCalculatorException {
+		void testConvergenceError() {
 			assertThrows(NoAnswerException.class, () -> {
 				SiteIndex2Height.giSi2Ht(SI_FDC_COCHRAN, 5.0, 2000.0);
 			});
@@ -479,7 +479,7 @@ class SiteIndex2HeightTest {
 	}
 
 	@Test
-	void testHuGarciaQ() throws CommonCalculatorException {
+	void testHuGarciaQ() {
 		// the way I've done these tests is to validate them with the original C code and
 		// compare them with the output of the java code
 
@@ -501,7 +501,7 @@ class SiteIndex2HeightTest {
 	}
 
 	@Test
-	void testHuGarciaH() throws CommonCalculatorException {
+	void testHuGarciaH() {
 		double q = 05;
 		double bhage = 10.0;
 

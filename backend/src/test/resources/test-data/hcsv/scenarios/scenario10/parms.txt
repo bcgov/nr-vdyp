@@ -1,0 +1,79 @@
+# Line starting with ‘#’ are ignored, if you want that line being processed, just remove # before the line
+
+-ini C:\source\vdyp\VDYP_Master\Binaries\Eclipse\Win10\Win32Dbg\VDYP_CFG\VDYP.ini 
+#reads VDYP7 INI
+-c   C:\source\vdyp\VDYP_Master\Binaries\Eclipse\Win10\Win32Dbg\VDYP_CFG\
+#names the root folder containing VDYP7 configuration files
+
+-v7save yes
+
+-dbg yes
+-d C:\source\vdyp\scenarios\scenario7
+-ifmt hcsv
+#identifies the input file format
+
+-ofmt csvyieldtable
+#identifies output file format to be CSV format
+
+-ip C:\source\vdyp\scenarios\scenario7\VDYP7_INPUT_POLY_VRI.csv
+-il C:\source\vdyp\scenarios\scenario7\VDYP7_INPUT_LAYER_VRI.csv
+#identifies input polygon definition file and layer definition file's location
+
+-o C:\source\vdyp\scenarios\scenario7\Output_YldTbl.csv
+-e C:\source\vdyp\scenarios\scenario7\Output_Error.txt
+-l C:\source\vdyp\scenarios\scenario7\Output_Log.txt
+#identifies output yield tables, logging file and error file's name and location
+
+-back No
+#allow the model to project backward
+-forward Yes
+#allow the model to project forward
+-includeprojmode Yes
+#indicates how the projected values were projected
+
+-util AC=7.5  
+-util AT=7.5   
+-util B=7.5   
+-util C=7.5   
+-util D=7.5  
+-util E=7.5  
+-util F=7.5   
+-util H=7.5    
+-util L=7.5   
+-util MB=7.5  
+-util PA=7.5 
+-util PL=7.5   
+-util PW=7.5 
+-util PY=7.5  
+-util S=7.5  
+-util Y=7.5
+#set the utilization level you would like reported volume and other attributes projected at
+
+-yearstart 2020
+-yearend 2050
+-agestart 167
+-ageend 177
+#specifies the starting and the ending age or the starting and ending year range for the resulting yield table
+
+-inc 1
+#specifies the increment in years
+
+-forceRefYear Yes
+#indicate whether to include the projection at the Reference Year in the yield table
+-forceCrntYear Yes
+#indicate whether to include the projection at the current calendar year in the yield table
+-forceYear 2051
+#indicate which year you want to specifically include in the resulting yield table
+
+-includeagerows No
+-includeyearrows No
+
+-yieldtableincpolyid No
+#includes the polygon identifier in the resulting yield table
+-projectedByPolygon Yes
+#produces projected value by polygon
+-projectedVolumes Yes
+#includes volume estimation in the resulting yield tables
+#-projectedCFSBiomass Yes
+#includes biomass estimation in the resulting yield tables
+#if you want to project biomass, the output format needs to be YieldTable: -ofmt YieldTable

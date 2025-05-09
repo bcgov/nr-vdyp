@@ -1,6 +1,6 @@
 package ca.bc.gov.nrs.vdyp.backend.projection.output.yieldtable;
 
-public enum DCSVField {
+enum DCSVField {
 	DCSV_OFld__FEATURE_ID, //
 	DCSV_OFld__MAP_ID, //
 	DCSV_OFld__OPENING_ID, //

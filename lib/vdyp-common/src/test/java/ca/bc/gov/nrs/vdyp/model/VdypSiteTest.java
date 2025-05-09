@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 class VdypSiteTest {
 
 	@Test
-	void build() throws Exception {
+	void build() {
 		var site1 = VdypSite.build(builder -> {
 			builder.polygonIdentifier("Test", 2024);
 			builder.layerType(LayerType.PRIMARY);
@@ -77,7 +77,7 @@ class VdypSiteTest {
 	}
 
 	@Test
-	void buildNoProperties() throws Exception {
+	void buildNoProperties() {
 		var ex = assertThrows(IllegalStateException.class, () -> VdypSite.build(builder -> {
 		}));
 		assertThat(
@@ -93,7 +93,7 @@ class VdypSiteTest {
 	}
 
 	@Test
-	void buildCopy() throws Exception {
+	void buildCopy() {
 		var result = VdypSite.build(builder -> {
 			builder.polygonIdentifier("Test", 2024);
 			builder.layerType(LayerType.PRIMARY);

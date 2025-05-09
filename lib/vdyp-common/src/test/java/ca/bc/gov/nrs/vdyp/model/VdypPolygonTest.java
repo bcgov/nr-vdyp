@@ -81,7 +81,7 @@ class VdypPolygonTest {
 	}
 
 	@Test
-	void buildNoProperties() throws Exception {
+	void buildNoProperties() {
 		var ex = assertThrows(IllegalStateException.class, () -> VdypPolygon.build(builder -> {
 		}));
 		assertThat(
@@ -91,7 +91,7 @@ class VdypPolygonTest {
 	}
 
 	@Test
-	void buildAddLayer() throws Exception {
+	void buildAddLayer() {
 		Map<String, Object> controlMap = new HashMap<>();
 		TestUtils.populateControlMapBecReal(controlMap);
 
@@ -114,7 +114,7 @@ class VdypPolygonTest {
 	}
 
 	@Test
-	void buildAddLayerSubBuild() throws Exception {
+	void buildAddLayerSubBuild() {
 		Map<String, Object> controlMap = new HashMap<>();
 		TestUtils.populateControlMapBecReal(controlMap);
 
@@ -139,7 +139,7 @@ class VdypPolygonTest {
 	}
 
 	@Test
-	void copyWithoutLayers() throws Exception {
+	void copyWithoutLayers() {
 
 		var controlMap = TestUtils.loadControlMap();
 
@@ -166,7 +166,7 @@ class VdypPolygonTest {
 	}
 
 	@Test
-	void copyWithLayers() throws Exception {
+	void copyWithLayers() {
 
 		var controlMap = TestUtils.loadControlMap();
 

@@ -4,35 +4,41 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption;
+import ca.bc.gov.nrs.vdyp.backend.projection.PolygonProjectionState;
 import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionContext;
+import ca.bc.gov.nrs.vdyp.backend.projection.model.LayerReportingInfo;
+import ca.bc.gov.nrs.vdyp.backend.projection.model.Polygon;
 
-public class YieldTableRowIterator implements Iterator<YieldTableData> {
+class YieldTableRowIterator implements Iterator<YieldTableRowContext> {
 
 	private final ProjectionContext context;
-	private YieldTableData row;
+	private YieldTableRowContext rowContext;
 
 	private boolean rowIsCurrent;
 
-	public YieldTableRowIterator(ProjectionContext context, YieldTableData row) {
+	public YieldTableRowIterator(
+			ProjectionContext context, Polygon polygon, PolygonProjectionState state,
+			LayerReportingInfo layerReportingInfo
+	) {
 		this.context = context;
-		this.row = row;
+		this.rowContext = YieldTableRowContext.of(context, polygon, state, layerReportingInfo);
 
 		establishStartRow();
 	}
 
 	@Override
 	public boolean hasNext() {
-		if (!rowIsCurrent) {
+		if (!rowIsCurrent && rowContext.getCurrentTableYear() != null) {
 			advanceToNextRow();
 		}
 		return rowIsCurrent;
 	}
 
 	@Override
-	public YieldTableData next() {
+	public YieldTableRowContext next() {
 		if (rowIsCurrent) {
 			rowIsCurrent = false;
-			return row;
+			return rowContext;
 		} else {
 			throw new NoSuchElementException("YieldTableRowIterator.next() called when there is no next row");
 		}
@@ -50,60 +56,69 @@ public class YieldTableRowIterator implements Iterator<YieldTableData> {
 	 */
 	private void establishStartRow() {
 
-		var params = context.getValidatedParams();
+		var params = context.getParams();
 
-		if (row.getYearAtDeath() == null) {
+		if (rowContext.getYearAtDeath() == null) {
 
-			row.setCurrentYearRangeYear(params.getYearStart());
-			row.setCurrentAgeRangeYear(
-					params.getAgeStart() == null ? null : params.getAgeStart() + row.getYearToAgeDifference()
+			rowContext.setCurrentYearRangeYear(params.getYearStart());
+			rowContext.setCurrentAgeRangeYear(
+					params.getAgeStart() == null ? null : params.getAgeStart() + rowContext.getYearToAgeDifference()
 			);
-			row.setCurrentTableYear(row.getYearAtStartAge());
+			rowContext.setCurrentTableYear(rowContext.getYearAtStartAge());
 
 			if (params.containsOption(ExecutionOption.DO_FORCE_REFERENCE_YEAR_INCLUSION_IN_YIELD_TABLES)) {
-				if (row.getCurrentTableYear() == null || row.getCurrentTableYear() > row.getMeasurementYear()) {
-					row.setCurrentTableYear(row.getMeasurementYear());
+				if (rowContext.getCurrentTableYear() == null
+						|| rowContext.getCurrentTableYear() > rowContext.getMeasurementYear()) {
+					rowContext.setCurrentTableYear(rowContext.getMeasurementYear());
 				}
 			}
 
 			if (params.containsOption(ExecutionOption.DO_FORCE_CURRENT_YEAR_INCLUSION_IN_YIELD_TABLES)) {
-				if (row.getCurrentTableYear() == null || row.getCurrentTableYear() > row.getCurrentYear()) {
-					row.setCurrentTableYear(row.getCurrentYear());
+				if (rowContext.getCurrentTableYear() == null
+						|| rowContext.getCurrentTableYear() > rowContext.getNowYear()) {
+					rowContext.setCurrentTableYear(rowContext.getNowYear());
 				}
 			}
 
-			if (params.getYearForcedIntoYearTable() != null) {
-				if (row.getCurrentTableYear() == null
-						|| row.getCurrentTableYear() > params.getYearForcedIntoYearTable()) {
-					row.setCurrentTableYear(params.getYearForcedIntoYearTable());
+			if (params.getYearForcedIntoYieldTable() != null) {
+				if (rowContext.getCurrentTableYear() == null
+						|| rowContext.getCurrentTableYear() > params.getYearForcedIntoYieldTable()) {
+					rowContext.setCurrentTableYear(params.getYearForcedIntoYieldTable());
 				}
 			}
 
 		} else {
-			row.setCurrentYearRangeYear(row.getYearAtDeath());
-			row.setCurrentAgeRangeYear(row.getAgeAtDeath());
-			row.setCurrentTableYear(row.getYearAtDeath());
+			rowContext.setCurrentYearRangeYear(rowContext.getYearAtDeath());
+			rowContext.setCurrentAgeRangeYear(rowContext.getAgeAtDeath());
+			rowContext.setCurrentTableYear(rowContext.getYearAtDeath());
 		}
 
 		// Find out to which range (year or age) the current year corresponds.
 
-		row.setCurrentYearIsYearRow(row.getCurrentYearRangeYear().equals(row.getCurrentTableYear()));
-		row.setCurrentYearIsAgeRow(row.getCurrentAgeRangeYear().equals(row.getCurrentTableYear()));
+		rowContext.setCurrentYearIsYearRow(
+				rowContext.getCurrentYearRangeYear() != null && rowContext.getCurrentTableYear() != null
+						&& rowContext.getCurrentYearRangeYear().equals(rowContext.getCurrentTableYear())
+		);
+		rowContext.setCurrentYearIsAgeRow(
+				rowContext.getCurrentAgeRangeYear() != null && rowContext.getCurrentTableYear() != null
+						&& rowContext.getCurrentAgeRangeYear().equals(rowContext.getCurrentTableYear())
+		);
 
 		// Compute the total stand age of the current year.
 
-		if (row.getCurrentTableYear() != null && row.getYearToAgeDifference() != null) {
-
-			row.setCurrentTableAge(row.getCurrentTableYear() - row.getYearToAgeDifference());
+		if (rowContext.getCurrentTableYear() != null) {
+			rowContext.setCurrentTableAge(rowContext.getCurrentTableYear() - rowContext.getYearToAgeDifference());
 		}
 
 		// Compute the year data to request based on the current table year.
 
-		row.setCurrentTableYearToRequest(row.getCurrentTableYear());
-		row.setCurrentTableAgeToRequest(row.getCurrentTableAge());
+		rowContext.setCurrentTableYearToRequest(rowContext.getCurrentTableYear());
+		rowContext.setCurrentTableAgeToRequest(rowContext.getCurrentTableAge());
 
 		// Finally, is the set of rows empty or not?
-		rowIsCurrent = row.getCurrentTableYear() != null;
+		rowIsCurrent = rowContext.getCurrentTableYear() != null;
+
+		rowContext.validate();
 	}
 
 	/**
@@ -119,7 +134,7 @@ public class YieldTableRowIterator implements Iterator<YieldTableData> {
 	 * case, if the '-inc' command line parameter is supplied, it reaches here as '0'.
 	 */
 	private void advanceToNextRow() {
-		var params = context.getValidatedParams();
+		var params = context.getParams();
 
 		boolean bAnotherRowToBePrinted = true;
 		boolean hasSetNextAge = false;
@@ -130,101 +145,116 @@ public class YieldTableRowIterator implements Iterator<YieldTableData> {
 		// advancement would take place. By advancing the minimum step, we avoid
 		// that problem.
 
-		row.setCurrentTableYear(row.getCurrentTableYear() + 1);
+		rowContext.setCurrentTableYear(rowContext.getCurrentTableYear() + 1);
 
 		// If we are above the year range current year, advance that counter.
 
-		while (row.getCurrentYearRangeYear() != null && row.getCurrentYearRangeYear() < row.getCurrentTableYear()) {
-			row.setCurrentYearRangeYear(row.getCurrentYearRangeYear() + params.getAgeIncrement());
+		while (rowContext.getCurrentYearRangeYear() != null
+				&& rowContext.getCurrentYearRangeYear() < rowContext.getCurrentTableYear()) {
+			rowContext.setCurrentYearRangeYear(rowContext.getCurrentYearRangeYear() + params.getAgeIncrement());
 		}
 
-		if (row.getCurrentYearRangeYear() != null && row.getCurrentYearRangeYear() > params.getYearEnd()) {
-			row.setCurrentYearRangeYear(null);
+		if (rowContext.getCurrentYearRangeYear() != null
+				&& (params.getYearEnd() == null || rowContext.getCurrentYearRangeYear() > params.getYearEnd())) {
+			rowContext.setCurrentYearRangeYear(null);
 		}
 
 		// If we are above the age range current year, advance that counter.
 
-		while (row.getCurrentAgeRangeYear() != null && row.getCurrentAgeRangeYear() < row.getCurrentTableYear()) {
-			row.setCurrentAgeRangeYear(row.getCurrentAgeRangeYear() + params.getAgeIncrement());
+		while (rowContext.getCurrentAgeRangeYear() != null
+				&& rowContext.getCurrentAgeRangeYear() < rowContext.getCurrentTableYear()) {
+			rowContext.setCurrentAgeRangeYear(rowContext.getCurrentAgeRangeYear() + params.getAgeIncrement());
 		}
 
-		if (row.getCurrentAgeRangeYear() != null
-				&& row.getCurrentAgeRangeYear() > params.getAgeEnd() + row.getYearToAgeDifference()) {
-			row.setCurrentAgeRangeYear(null);
+		if (rowContext.getCurrentAgeRangeYear() != null && (params.getAgeEnd() == null
+				|| rowContext.getCurrentAgeRangeYear() > params.getAgeEnd() + rowContext.getYearToAgeDifference())) {
+			rowContext.setCurrentAgeRangeYear(null);
 		}
 
 		// Now find the next lowest target year we will want to display.
 
 		Integer candidateYear = null;
 
-		if (row.getCurrentYearRangeYear() != null) {
-			candidateYear = row.getCurrentYearRangeYear();
+		if (rowContext.getCurrentYearRangeYear() != null) {
+			candidateYear = rowContext.getCurrentYearRangeYear();
 			hasSetNextAge = true;
 		}
 
-		if (row.getCurrentAgeRangeYear() != null
-				&& (candidateYear == null || row.getCurrentAgeRangeYear() <= candidateYear)) {
-			candidateYear = row.getCurrentAgeRangeYear();
+		if (rowContext.getCurrentAgeRangeYear() != null
+				&& (candidateYear == null || rowContext.getCurrentAgeRangeYear() <= candidateYear)) {
+			candidateYear = rowContext.getCurrentAgeRangeYear();
 			hasSetNextAge = true;
 		}
 
 		if (params.containsOption(ExecutionOption.DO_FORCE_REFERENCE_YEAR_INCLUSION_IN_YIELD_TABLES)
-				&& (row.getCurrentTableYear() <= row.getMeasurementYear())
-				&& (candidateYear == null || row.getMeasurementYear() < candidateYear)) {
-			candidateYear = row.getMeasurementYear();
+				&& (rowContext.getCurrentTableYear() <= rowContext.getMeasurementYear())
+				&& (candidateYear == null || rowContext.getMeasurementYear() < candidateYear)) {
+			candidateYear = rowContext.getMeasurementYear();
 			hasSetNextAge = true;
 		}
 
 		if (params.containsOption(ExecutionOption.DO_FORCE_CURRENT_YEAR_INCLUSION_IN_YIELD_TABLES)
-				&& row.getCurrentTableYear() <= row.getCurrentYear()
-				&& (candidateYear == null || params.getYearForcedIntoYearTable() < candidateYear)) {
-			candidateYear = row.getCurrentYear();
+				&& rowContext.getCurrentTableYear() <= rowContext.getNowYear()
+				&& (candidateYear == null || rowContext.getNowYear() < candidateYear)) {
+			candidateYear = rowContext.getNowYear();
 			hasSetNextAge = true;
 		}
 
-		if (params.getYearForcedIntoYearTable() != null
-				&& row.getCurrentTableYear() <= params.getYearForcedIntoYearTable()
-				&& (candidateYear == null || params.getYearForcedIntoYearTable() < candidateYear)) {
-			candidateYear = params.getYearForcedIntoYearTable();
+		if (params.getYearForcedIntoYieldTable() != null
+				&& rowContext.getCurrentTableYear() <= params.getYearForcedIntoYieldTable()
+				&& (candidateYear == null || params.getYearForcedIntoYieldTable() < candidateYear)) {
+			candidateYear = params.getYearForcedIntoYieldTable();
 			hasSetNextAge = true;
 		}
 
 		// Compute the total stand age of the current year.
 
-		row.setCurrentTableYear(candidateYear);
-
-		if (row.getCurrentTableYear() != null && row.getYearToAgeDifference() != null) {
-			row.setCurrentTableAge(row.getCurrentTableYear() - row.getYearToAgeDifference());
+		rowContext.setCurrentTableYear(candidateYear);
+		if (candidateYear != null) {
+			rowContext.setCurrentTableAge(candidateYear - rowContext.getYearToAgeDifference());
+		} else {
+			rowContext.setCurrentTableAge(null);
 		}
 
 		// Compute the year data to request based on the current table year. Before we used to make adjustments
 		// based on Projection Type, but adjustment is now being done within the Extended Core Modules. Now, the
 		// requested age is always the same as the current table year and age.
 
-		row.setCurrentTableYearToRequest(row.getCurrentTableYear());
-		row.setCurrentTableAgeToRequest(row.getCurrentTableAge());
+		rowContext.setCurrentTableYearToRequest(rowContext.getCurrentTableYear());
+		rowContext.setCurrentTableAgeToRequest(rowContext.getCurrentTableAge());
 
 		// Find out to which range (year or age) the current year corresponds.
 
-		row.setCurrentYearIsYearRow(row.getCurrentYearRangeYear().equals(row.getCurrentTableYear()));
-		row.setCurrentYearIsAgeRow(row.getCurrentAgeRangeYear().equals(row.getCurrentTableYear()));
+		rowContext.setCurrentYearIsYearRow(
+				rowContext.getCurrentYearRangeYear() != null
+						&& rowContext.getCurrentYearRangeYear().equals(rowContext.getCurrentTableYear())
+		);
+		rowContext.setCurrentYearIsAgeRow(
+				rowContext.getCurrentAgeRangeYear() != null
+						&& rowContext.getCurrentAgeRangeYear().equals(rowContext.getCurrentTableYear())
+		);
 
 		// Check if we have passed the end of the table range.
 
-		if (row.getCurrentTableYear() != null && row.getCurrentTableYear() > row.getYearAtEndAge()
-				&& row.getCurrentTableYear() > row.getMeasurementYear()
-				&& row.getCurrentTableYear() > row.getCurrentYear()
-				&& row.getCurrentTableYear() > params.getYearForcedIntoYearTable()) {
+		if (rowContext.getCurrentTableYear() != null //
+				&& (rowContext.getYearAtEndAge() != null
+						&& rowContext.getCurrentTableYear() > rowContext.getYearAtEndAge()) //
+				&& rowContext.getCurrentTableYear() > rowContext.getMeasurementYear() //
+				&& rowContext.getCurrentTableYear() > rowContext.getNowYear() //
+				&& (params.getYearForcedIntoYieldTable() == null
+						|| rowContext.getCurrentTableYear() > params.getYearForcedIntoYieldTable())) {
 
 			bAnotherRowToBePrinted = false;
 		}
 
-		if (row.getYearAtDeath() != null && row.getYearAtDeath() > 0)
+		if (rowContext.getYearAtDeath() != null)
 			bAnotherRowToBePrinted = false;
 
 		if (bAnotherRowToBePrinted)
 			bAnotherRowToBePrinted = hasSetNextAge;
 
 		rowIsCurrent = bAnotherRowToBePrinted;
+
+		rowContext.validate();
 	}
 }

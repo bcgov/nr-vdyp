@@ -22,7 +22,7 @@ import ca.bc.gov.nrs.vdyp.test.TestUtils;
 public class DqGrowthFiatParserTest {
 
 	@Test
-	void testParseSimple() throws Exception {
+	void testParseSimple() {
 
 		var parser = new DqGrowthFiatParser();
 

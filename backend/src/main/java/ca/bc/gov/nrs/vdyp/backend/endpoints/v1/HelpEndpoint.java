@@ -2,7 +2,6 @@ package ca.bc.gov.nrs.vdyp.backend.endpoints.v1;
 
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.NotFoundException;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.impl.Endpoint;
 import ca.bc.gov.nrs.vdyp.backend.services.HelpService;
 import io.quarkus.runtime.annotations.RegisterForReflection;
@@ -25,8 +24,7 @@ public class HelpEndpoint implements Endpoint {
 	@Tag(
 			name = "Get Help", description = "returns a detailed description of the parameters available when executing a projection."
 	)
-	public Response helpGet(@Context UriInfo uriInfo /* , @Context SecurityContext securityContext */)
-			throws NotFoundException {
+	public Response helpGet(@Context UriInfo uriInfo /* , @Context SecurityContext securityContext */) {
 		return Response.ok(helpService.helpGet(uriInfo, null /* securityContext */)).build();
 	}
 }

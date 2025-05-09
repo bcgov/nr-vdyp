@@ -14,7 +14,7 @@ class SiteClassCode2SiteIndexTest {
 	private static final char[] validSiteCl = { 'G', 'M', 'P', 'L' };
 
 	@Test
-	void testClassErrorExcepion() throws CommonCalculatorException {
+	void testClassErrorExcepion() {
 		assertThrows(ClassErrorException.class, () -> SiteClassCode2SiteIndex.classToIndex(SI_SPEC_ACT, 'A', 'A'));
 	}
 
@@ -291,7 +291,7 @@ class SiteClassCode2SiteIndexTest {
 	}
 
 	@Test
-	void testSpeciesErrorException() throws CommonCalculatorException {
+	void testSpeciesErrorException() {
 		assertThrows(
 				SpeciesErrorException.class, () -> SiteClassCode2SiteIndex.classToIndex(null, validSiteCl[3], 'X')
 		);

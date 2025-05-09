@@ -1,6 +1,5 @@
 package ca.bc.gov.nrs.vdyp.vri;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -44,8 +43,7 @@ public class VriSiteParser implements ControlMapValueReplacer<StreamingParserFac
 
 	@Override
 	public StreamingParserFactory<Collection<VriSite>>
-			map(String fileName, FileResolver fileResolver, Map<String, Object> control)
-					throws IOException, ResourceParseException {
+			map(String fileName, FileResolver fileResolver, Map<String, Object> control) {
 		return () -> {
 			var lineParser = new LineParser() {
 			} //

@@ -13,7 +13,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
 class VdypForwardControlVariablesParserTest {
 
 	@Test
-	void testNullInput() throws Exception {
+	void testNullInput() {
 		try {
 			var parser = new ForwardControlVariableParser();
 			parser.parse(null);
@@ -24,7 +24,7 @@ class VdypForwardControlVariablesParserTest {
 	}
 
 	@Test
-	void testEmptyInput() throws Exception {
+	void testEmptyInput() {
 		try {
 			var parser = new ForwardControlVariableParser();
 			parser.parse("   ");
@@ -35,7 +35,7 @@ class VdypForwardControlVariablesParserTest {
 	}
 
 	@Test
-	void testInvalidInput() throws Exception {
+	void testInvalidInput() {
 		try {
 			var parser = new ForwardControlVariableParser();
 			parser.parse("a b c");

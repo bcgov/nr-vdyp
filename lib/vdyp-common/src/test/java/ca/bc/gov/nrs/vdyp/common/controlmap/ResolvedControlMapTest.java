@@ -3,7 +3,6 @@ package ca.bc.gov.nrs.vdyp.common.controlmap;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
 
@@ -12,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.controlmap.CachingResolvedControlMapImpl;
-import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.model.BecLookup;
 import ca.bc.gov.nrs.vdyp.model.GenusDefinitionMap;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
@@ -24,7 +22,7 @@ public class ResolvedControlMapTest {
 	private static final Logger logger = LoggerFactory.getLogger(ResolvedControlMapTest.class);
 
 	@Test
-	void testCachingResolvedControlMap() throws IOException, ResourceParseException {
+	void testCachingResolvedControlMap() {
 		logger.info(this.getClass().getName() + ":testCachingResolvedControlMap running...");
 
 		var rawControlMap = TestUtils.loadControlMap(Path.of("VDYP.CTR"));

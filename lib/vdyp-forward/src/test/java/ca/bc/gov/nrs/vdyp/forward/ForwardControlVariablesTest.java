@@ -69,7 +69,7 @@ class ForwardControlVariablesTest {
 	}
 
 	@Test
-	void testInvalidInput2To5() throws ValueParseException {
+	void testInvalidInput2To5() {
 		assertThrows(ValueParseException.class, () -> new ForwardControlVariables(new Integer[] { 0, 3, 3, 4, 2, 2 }));
 		assertThrows(ValueParseException.class, () -> new ForwardControlVariables(new Integer[] { 0, 0, 3, 4, 2, 2 }));
 		assertThrows(ValueParseException.class, () -> new ForwardControlVariables(new Integer[] { 0, 0, 0, 4, 2, 2 }));

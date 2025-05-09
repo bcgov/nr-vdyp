@@ -41,7 +41,7 @@ class UpperCoefficientParserTest {
 	}
 
 	@Test
-	void testParseBadSpecies() throws Exception {
+	void testParseBadSpecies() {
 
 		var parser = new UpperCoefficientParser();
 
@@ -59,7 +59,7 @@ class UpperCoefficientParserTest {
 	}
 
 	@Test
-	void testParseBadRegion() throws Exception {
+	void testParseBadRegion() {
 
 		var parser = new UpperCoefficientParser();
 

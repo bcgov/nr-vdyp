@@ -98,7 +98,7 @@ class UtilComponentBaseAreaParserTest {
 	}
 
 	@Test
-	void testParseBadSpecies() throws Exception {
+	void testParseBadSpecies() {
 
 		var parser = new UtilComponentBaseAreaParser();
 
@@ -114,7 +114,7 @@ class UtilComponentBaseAreaParserTest {
 	}
 
 	@Test
-	void testParseBadBec() throws Exception {
+	void testParseBadBec() {
 
 		var parser = new UtilComponentBaseAreaParser();
 
@@ -130,7 +130,7 @@ class UtilComponentBaseAreaParserTest {
 	}
 
 	@Test
-	void testParseBadBau() throws Exception {
+	void testParseBadBau() {
 
 		var parser = new UtilComponentBaseAreaParser();
 
@@ -146,7 +146,7 @@ class UtilComponentBaseAreaParserTest {
 	}
 
 	@Test
-	void testParseMissingCoefficient() throws Exception {
+	void testParseMissingCoefficient() {
 
 		var parser = new UtilComponentBaseAreaParser();
 

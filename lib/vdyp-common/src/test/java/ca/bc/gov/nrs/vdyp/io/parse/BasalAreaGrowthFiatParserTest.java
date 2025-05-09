@@ -20,7 +20,7 @@ import ca.bc.gov.nrs.vdyp.test.TestUtils;
 class BasalAreaGrowthFiatParserTest {
 
 	@Test
-	void testParseSimple() throws Exception {
+	void testParseSimple() {
 
 		var parser = new BasalAreaGrowthFiatParser();
 
@@ -53,7 +53,7 @@ class BasalAreaGrowthFiatParserTest {
 	}
 
 	@Test
-	void testParseMissingInteriorRegion() throws Exception {
+	void testParseMissingInteriorRegion() {
 
 		var parser = new BasalAreaGrowthFiatParser();
 
@@ -66,7 +66,7 @@ class BasalAreaGrowthFiatParserTest {
 	}
 
 	@Test
-	void testParseMissingCoastalRegion() throws Exception {
+	void testParseMissingCoastalRegion() {
 
 		var parser = new BasalAreaGrowthFiatParser();
 
@@ -79,7 +79,7 @@ class BasalAreaGrowthFiatParserTest {
 	}
 
 	@Test
-	void testParseMissingRegions() throws Exception {
+	void testParseMissingRegions() {
 
 		var parser = new BasalAreaGrowthFiatParser();
 
@@ -92,7 +92,7 @@ class BasalAreaGrowthFiatParserTest {
 	}
 
 	@Test
-	void testParseMissingAges() throws Exception {
+	void testParseMissingAges() {
 
 		var parser = new BasalAreaGrowthFiatParser();
 
@@ -108,7 +108,7 @@ class BasalAreaGrowthFiatParserTest {
 	}
 
 	@Test
-	void testDuplicatedLines() throws Exception {
+	void testDuplicatedLines() {
 
 		var parser = new BasalAreaGrowthFiatParser();
 

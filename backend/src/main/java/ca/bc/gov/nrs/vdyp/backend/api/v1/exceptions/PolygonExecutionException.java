@@ -1,14 +1,30 @@
 package ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions;
 
-public class PolygonExecutionException extends ProjectionRequestException {
+/**
+ * Exceptions thrown during the execution of the projection of a single polygon. These exceptions are meant to be caught
+ * and handled at a point that allows projection (of the next polygon) to continue.
+ */
+public class PolygonExecutionException extends AbstractProjectionRequestException {
 
 	private static final long serialVersionUID = 663894496709845053L;
 
 	public PolygonExecutionException(PolygonValidationException pve) {
-		super(pve);
+		super(pve.getValidationMessages());
 	}
 
-	public PolygonExecutionException(String cause, Exception e) {
-		super(cause, e);
+	public PolygonExecutionException(String message, PolygonValidationException pve) {
+		super(message, pve.getValidationMessages());
+	}
+
+	public PolygonExecutionException(Throwable cause) {
+		super(cause);
+	}
+
+	public PolygonExecutionException(String message, Throwable cause) {
+		super(message, cause);
+	}
+
+	public PolygonExecutionException(String message) {
+		super(message);
 	}
 }

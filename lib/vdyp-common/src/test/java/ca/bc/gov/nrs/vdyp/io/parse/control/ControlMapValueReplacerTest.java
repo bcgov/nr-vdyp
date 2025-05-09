@@ -37,8 +37,7 @@ class ControlMapValueReplacerTest {
 			}
 
 			@Override
-			public Integer map(String rawValue, FileResolver fileResolver, Map<String, Object> control)
-					throws ResourceParseException, IOException {
+			public Integer map(String rawValue, FileResolver fileResolver, Map<String, Object> control) {
 				assertThat(rawValue, is("TEST"));
 				return 42;
 			}
@@ -54,7 +53,7 @@ class ControlMapValueReplacerTest {
 	}
 
 	@Test
-	void testNull() throws ResourceParseException, IOException {
+	void testNull() {
 		var unit = new ControlMapValueReplacer<Integer, String>() {
 
 			@Override
@@ -68,8 +67,7 @@ class ControlMapValueReplacerTest {
 			}
 
 			@Override
-			public Integer map(String rawValue, FileResolver fileResolver, Map<String, Object> control)
-					throws ResourceParseException, IOException {
+			public Integer map(String rawValue, FileResolver fileResolver, Map<String, Object> control) {
 				assertThat(rawValue, is("TEST"));
 				return 42;
 			}
@@ -87,7 +85,7 @@ class ControlMapValueReplacerTest {
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
-	void testEmptyOptional() throws ResourceParseException, IOException {
+	void testEmptyOptional() {
 		var unit = new ControlMapValueReplacer<Integer, String>() {
 
 			@Override
@@ -101,8 +99,7 @@ class ControlMapValueReplacerTest {
 			}
 
 			@Override
-			public Integer map(String rawValue, FileResolver fileResolver, Map<String, Object> control)
-					throws ResourceParseException, IOException {
+			public Integer map(String rawValue, FileResolver fileResolver, Map<String, Object> control) {
 				assertThat(rawValue, is("TEST"));
 				return 42;
 			}
@@ -135,8 +132,7 @@ class ControlMapValueReplacerTest {
 			}
 
 			@Override
-			public Integer map(String rawValue, FileResolver fileResolver, Map<String, Object> control)
-					throws ResourceParseException, IOException {
+			public Integer map(String rawValue, FileResolver fileResolver, Map<String, Object> control) {
 				assertThat(rawValue, is("TEST"));
 				return 42;
 			}
@@ -166,14 +162,13 @@ class ControlMapValueReplacerTest {
 			}
 
 			@Override
-			public Integer map(String rawValue, FileResolver fileResolver, Map<String, Object> control)
-					throws ResourceParseException, IOException {
+			public Integer map(String rawValue, FileResolver fileResolver, Map<String, Object> control) {
 				fail();
 				return 42;
 			}
 
 			@Override
-			public Integer defaultModification(Map<String, Object> control) throws ResourceParseValidException {
+			public Integer defaultModification(Map<String, Object> control) {
 				return 64;
 			}
 
@@ -203,14 +198,13 @@ class ControlMapValueReplacerTest {
 			}
 
 			@Override
-			public Integer map(String rawValue, FileResolver fileResolver, Map<String, Object> control)
-					throws ResourceParseException, IOException {
+			public Integer map(String rawValue, FileResolver fileResolver, Map<String, Object> control) {
 				assertThat(rawValue, is("TEST"));
 				return 42;
 			}
 
 			@Override
-			public Integer defaultModification(Map<String, Object> control) throws ResourceParseValidException {
+			public Integer defaultModification(Map<String, Object> control) {
 				fail();
 				return 64;
 			}

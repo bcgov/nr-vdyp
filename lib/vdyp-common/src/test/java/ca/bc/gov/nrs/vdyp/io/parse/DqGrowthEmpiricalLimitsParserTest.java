@@ -16,7 +16,7 @@ import ca.bc.gov.nrs.vdyp.test.TestUtils;
 public class DqGrowthEmpiricalLimitsParserTest {
 
 	@Test
-	void testParseSimple() throws Exception {
+	void testParseSimple() {
 
 		var parser = new DqGrowthEmpiricalLimitsParser();
 

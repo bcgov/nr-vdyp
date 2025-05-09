@@ -42,7 +42,7 @@ class CoefficientParserTest {
 	}
 
 	@Test
-	void testBadBec() throws Exception {
+	void testBadBec() {
 
 		var parser = new CoefficientParser(TEST_KEY) {
 		};
@@ -61,7 +61,7 @@ class CoefficientParserTest {
 	}
 
 	@Test
-	void testBadIndex() throws Exception {
+	void testBadIndex() {
 
 		var parser = new CoefficientParser(TEST_KEY) {
 		};

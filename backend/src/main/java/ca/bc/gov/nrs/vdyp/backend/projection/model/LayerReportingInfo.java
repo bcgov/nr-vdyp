@@ -3,6 +3,8 @@ package ca.bc.gov.nrs.vdyp.backend.projection.model;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.lang3.Validate;
+
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
 
 public class LayerReportingInfo {
@@ -52,7 +54,9 @@ public class LayerReportingInfo {
 	 * @param sris the child SpeciesReportingInfo elements. This list is sorted here by the default sort order.
 	 */
 	public void setSpeciesReportingInfos(List<SpeciesReportingInfo> sris) {
-		assert orderedSpecies == null;
+		Validate.isTrue(
+				orderedSpecies == null, "LayerReportingInfo.setSpeciesReportingInfos: orderedSpecies must be null"
+		);
 		Collections.sort(sris);
 		orderedSpecies = sris;
 	}
@@ -63,8 +67,8 @@ public class LayerReportingInfo {
 	 * @return as described
 	 */
 	public List<SpeciesReportingInfo> getOrderedSpecies() {
-		assert orderedSpecies != null;
-		return orderedSpecies;
+		Validate.notNull(orderedSpecies, "LayerReportingInfo.getOrderedSpecies: orderedSpecies must be not null");
+		return Collections.unmodifiableList(orderedSpecies);
 	}
 
 	public static class Builder {

@@ -3,7 +3,6 @@ package ca.bc.gov.nrs.vdyp.model;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,7 +11,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
-import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 class GenusDefinitionMapTest {
@@ -20,7 +18,7 @@ class GenusDefinitionMapTest {
 	private Map<String, Object> controlMap = new HashMap<>();
 
 	@BeforeEach
-	void before() throws IOException, ResourceParseException {
+	void before() {
 
 		TestUtils.populateControlMapGenusReal(controlMap);
 	}

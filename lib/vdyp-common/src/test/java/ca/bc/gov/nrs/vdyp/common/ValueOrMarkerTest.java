@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 public class ValueOrMarkerTest {
 
 	@Test
-	public void testMarker() throws Exception {
+	public void testMarker() {
 		var builder = ValueOrMarker.builder(Float.class, String.class);
 
 		var vm = builder.marker("Test");
@@ -26,7 +26,7 @@ public class ValueOrMarkerTest {
 	}
 
 	@Test
-	public void testValue() throws Exception {
+	public void testValue() {
 		var builder = ValueOrMarker.builder(Float.class, String.class);
 
 		var vm = builder.value(1.0f);

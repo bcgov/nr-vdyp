@@ -3098,7 +3098,7 @@ class Height2SiteIndexTest {
 		}
 
 		@Test
-		void testInvalidSI_SS_NIGHGI99() throws CommonCalculatorException {
+		void testInvalidSI_SS_NIGHGI99() {
 			// checks minimum and maximum for bhage
 			double height = 1.3;
 			assertThrows(

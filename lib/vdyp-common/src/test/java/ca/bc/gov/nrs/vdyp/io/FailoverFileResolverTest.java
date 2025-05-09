@@ -1,8 +1,7 @@
 package ca.bc.gov.nrs.vdyp.io;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.sameInstance;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.ByteArrayOutputStream;
@@ -39,7 +38,7 @@ public class FailoverFileResolverTest {
 	}
 
 	@Test
-	void testOneDelegateFileMissing() throws IOException {
+	void testOneDelegateFileMissing() {
 		var delegate1 = new MockFileResolver("delegate1");
 
 		delegate1.addError("inputFile", () -> new NoSuchFileException("The file is missing and no failover"));
@@ -98,7 +97,7 @@ public class FailoverFileResolverTest {
 	}
 
 	@Test
-	void testTwoDelegatesBothFail() throws IOException {
+	void testTwoDelegatesBothFail() {
 		var delegate1 = new MockFileResolver("delegate1");
 		var delegate2 = new MockFileResolver("delegate2");
 

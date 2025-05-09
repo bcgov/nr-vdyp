@@ -61,7 +61,7 @@ class SiteCurveParserTest {
 	}
 
 	@Test
-	void testMissingSpecies() throws Exception {
+	void testMissingSpecies() {
 		var parser = new SiteCurveParser();
 		var is = TestUtils.makeInputStream("S1 001002");
 

@@ -40,7 +40,7 @@ class UtilizationClassTest {
 	}
 
 	@Test
-	void dontAcceptBadIndex() throws Exception {
+	void dontAcceptBadIndex() {
 		assertThat(assertThrows(IllegalArgumentException.class, () -> {
 			UtilizationClass.getByIndex(-2);
 		}), hasProperty("message", is("UtilizationClass index -2 is not recognized")));
@@ -51,7 +51,7 @@ class UtilizationClassTest {
 	}
 
 	@Test
-	void dontAcceptBadIndexString() throws Exception {
+	void dontAcceptBadIndexString() {
 		assertThat(assertThrows(IllegalArgumentException.class, () -> {
 			UtilizationClass.getByIndex("-2");
 		}), hasProperty("message", is("UtilizationClass index -2 is not recognized")));

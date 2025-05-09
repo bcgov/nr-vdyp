@@ -1,11 +1,8 @@
 package ca.bc.gov.nrs.vdyp.test_oracle;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.endsWith;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasEntry;
-import static org.hamcrest.Matchers.matchesRegex;
+import static org.hamcrest.Matchers.*;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;

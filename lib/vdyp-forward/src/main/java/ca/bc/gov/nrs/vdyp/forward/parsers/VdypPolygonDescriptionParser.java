@@ -1,6 +1,5 @@
 package ca.bc.gov.nrs.vdyp.forward.parsers;
 
-import java.io.IOException;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -35,7 +34,7 @@ public class VdypPolygonDescriptionParser implements ControlMapValueReplacer<Obj
 
 		if (matcher.matches() && matcher.group(2) != null) {
 			year = Integer.parseInt(matcher.group(2));
-			name = matcher.group(1).trim();
+			name = matcher.group(1);
 		} else {
 			throw new ResourceParseException(
 					"Polygon description " + description + " did not end with a four-digit year value."
@@ -49,15 +48,14 @@ public class VdypPolygonDescriptionParser implements ControlMapValueReplacer<Obj
 
 	@Override
 	public StreamingParserFactory<PolygonIdentifier>
-			map(String fileName, FileResolver fileResolver, Map<String, Object> control)
-					throws IOException, ResourceParseException {
+			map(String fileName, FileResolver fileResolver, Map<String, Object> control) {
 		return () -> {
 			var lineParser = new LineParser() {
 				@Override
 				public boolean isStopLine(String line) {
 					return line.substring(0, Math.min(25, line.length())).trim().length() == 0;
 				}
-			}.strippedString(25, DESCRIPTION);
+			}.value(25, DESCRIPTION, ValueParser.STRING_UNSTRIPPED);
 
 			var is = fileResolver.resolveForInput(fileName);
 

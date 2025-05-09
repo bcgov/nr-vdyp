@@ -17,7 +17,7 @@ import ca.bc.gov.nrs.vdyp.application.InitializationIncompleteException;
 class VdypSpeciesTest {
 
 	@Test
-	void build() throws Exception {
+	void build() {
 		var species1 = VdypSpecies.build(builder -> {
 			builder.polygonIdentifier("Test", 2024);
 			builder.layerType(LayerType.PRIMARY);
@@ -128,7 +128,7 @@ class VdypSpeciesTest {
 	}
 
 	@Test
-	void buildNoProperties() throws Exception {
+	void buildNoProperties() {
 		var ex = assertThrows(IllegalStateException.class, () -> VdypSpecies.build(builder -> {
 		}));
 		assertThat(
@@ -141,7 +141,7 @@ class VdypSpeciesTest {
 	}
 
 	@Test
-	void buildForLayer() throws Exception {
+	void buildForLayer() {
 
 		var layer = VdypLayer.build(builder -> {
 			builder.polygonIdentifier("Test", 2024);
@@ -176,7 +176,7 @@ class VdypSpeciesTest {
 	}
 
 	@Test
-	void buildAddSpeciesPercent() throws Exception {
+	void buildAddSpeciesPercent() {
 		var result = VdypSpecies.build(builder -> {
 			builder.polygonIdentifier("Test", 2024);
 			builder.layerType(LayerType.PRIMARY);
@@ -203,7 +203,7 @@ class VdypSpeciesTest {
 	}
 
 	@Test
-	void adaptSite() throws Exception {
+	void adaptSite() {
 		var toCopy = VdypSpecies.build(builder -> {
 			builder.polygonIdentifier("Test", 2024);
 			builder.layerType(LayerType.PRIMARY);

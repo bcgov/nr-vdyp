@@ -1,6 +1,5 @@
 package ca.bc.gov.nrs.vdyp.forward.parsers;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -47,8 +46,7 @@ public class VdypUtilizationParser implements ControlMapValueReplacer<Object, St
 
 	@Override
 	public StreamingParserFactory<Collection<VdypUtilization>>
-			map(String fileName, FileResolver fileResolver, Map<String, Object> control)
-					throws IOException, ResourceParseException {
+			map(String fileName, FileResolver fileResolver, Map<String, Object> control) {
 		return () -> {
 			var lineParser = new LineParser() //
 					.strippedString(25, DESCRIPTION) //

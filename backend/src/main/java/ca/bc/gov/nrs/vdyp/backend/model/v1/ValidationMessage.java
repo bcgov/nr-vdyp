@@ -1,9 +1,14 @@
 package ca.bc.gov.nrs.vdyp.backend.model.v1;
 
+import java.io.Serializable;
 import java.text.MessageFormat;
 import java.util.Arrays;
 
-public class ValidationMessage implements Comparable<ValidationMessage> {
+import ca.bc.gov.nrs.vdyp.backend.projection.model.PolygonMessage;
+
+public class ValidationMessage implements Comparable<ValidationMessage>, Serializable {
+
+	private static final long serialVersionUID = 5071025981103618615L;
 
 	/** the kind of this ValidationMessage - an enum value and a template */
 	private final ValidationMessageKind kind;
@@ -11,7 +16,7 @@ public class ValidationMessage implements Comparable<ValidationMessage> {
 	/** the arguments that, when applied to the template of kind, produce the message */
 	private final Object[] args;
 
-	/** the resultion message, calculated from <code>kind</code> and <code>args</code> */
+	/** the resultion message */
 	private final String message;
 
 	public ValidationMessage(ValidationMessageKind kind, Object... args) {
@@ -19,6 +24,12 @@ public class ValidationMessage implements Comparable<ValidationMessage> {
 		this.args = args;
 
 		this.message = MessageFormat.format(kind.template, args);
+	}
+
+	public ValidationMessage(PolygonMessage polygonMessage) {
+		this.kind = null;
+		this.args = null;
+		this.message = polygonMessage.toString();
 	}
 
 	/** the kind of this ValidationMessage - an enum value and a template */

@@ -31,7 +31,7 @@ class SmallComponentProbabilityParserTest {
 	}
 
 	@Test
-	void testParseBadSpecies() throws Exception {
+	void testParseBadSpecies() {
 
 		var is = TestUtils.makeInputStream("SX   0.48205   0.00000 -0.011862  -0.10014");
 

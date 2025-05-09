@@ -13,9 +13,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import ca.bc.gov.nrs.vdyp.application.ProcessingException;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMapImpl;
+import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.model.BecLookup;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
@@ -508,7 +508,7 @@ class EstimationMethodsTest {
 		}
 
 		@Test
-		void testClampSimple() throws Exception {
+		void testClampSimple() {
 			var limits = new ComponentSizeLimits(48.3f, 68.7f, 0.729f, 1.718f);
 			float standTreesPerHectare = 620.5049f;
 			float minQuadMeanDiameter = 7.6f;
@@ -529,7 +529,7 @@ class EstimationMethodsTest {
 		}
 
 		@Test
-		void testClampToLow2() throws Exception {
+		void testClampToLow2() {
 			var limits = new ComponentSizeLimits(48.3f, 68.7f, 0.729f, 1.718f);
 			float standTreesPerHectare = 620.5049f;
 			float minQuadMeanDiameter = 7.6f;
@@ -555,7 +555,7 @@ class EstimationMethodsTest {
 		}
 
 		@Test
-		void testClampToLow1() throws Exception {
+		void testClampToLow1() {
 			var limits = new ComponentSizeLimits(48.3f, 68.7f, 0.729f, 1.718f);
 			float standTreesPerHectare = 620.5049f;
 			float minQuadMeanDiameter = 7.6f;
@@ -581,7 +581,7 @@ class EstimationMethodsTest {
 		}
 
 		@Test
-		void testClampToHigh1() throws Exception {
+		void testClampToHigh1() {
 			var limits = new ComponentSizeLimits(48.3f, 68.7f, 0.729f, 1.718f);
 			float standTreesPerHectare = 620.5049f;
 			float minQuadMeanDiameter = 7.6f;
@@ -755,14 +755,14 @@ class EstimationMethodsTest {
 	class PrimaryLeadHeightConversion {
 
 		@Test
-		void testPrimaryHeightFromLeadHeight() throws Exception {
+		void testPrimaryHeightFromLeadHeight() {
 			float result = emp.primaryHeightFromLeadHeight(20.0f, "B", Region.COASTAL, 40.260403f);
 
 			assertThat(result, closeTo(19.870464f));
 		}
 
 		@Test
-		void testLeadHeightFromPrimaryHeight() throws Exception {
+		void testLeadHeightFromPrimaryHeight() {
 			float result = emp.leadHeightFromPrimaryHeight(19.870464f, "B", Region.COASTAL, 40.260403f);
 
 			assertThat(result, closeTo(20));

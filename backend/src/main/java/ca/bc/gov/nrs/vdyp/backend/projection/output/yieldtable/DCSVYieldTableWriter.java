@@ -6,12 +6,10 @@ import com.opencsv.bean.StatefulBeanToCsv;
 
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.YieldTableGenerationException;
 import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionContext;
-import ca.bc.gov.nrs.vdyp.backend.projection.model.LayerReportingInfo;
-import ca.bc.gov.nrs.vdyp.backend.projection.model.Polygon;
 
-public class DCSVYieldTableWriter extends AbstractCSVTypeYieldTableWriter<DCSVYieldTableRecordBean> {
+class DCSVYieldTableWriter extends AbstractCSVTypeYieldTableWriter<DCSVYieldTableRecordBean> {
 
-	private DCSVYieldTableWriter(ProjectionContext context) throws YieldTableGenerationException {
+	private DCSVYieldTableWriter(ProjectionContext context) {
 		super(DCSVYieldTableRecordBean.class, context);
 	}
 
@@ -29,25 +27,29 @@ public class DCSVYieldTableWriter extends AbstractCSVTypeYieldTableWriter<DCSVYi
 	}
 
 	@Override
-	protected DCSVYieldTableRecordBean convertToTargetFormat(YieldTableData data) {
-		throw new UnsupportedOperationException("DCSVYieldTableWriter.convertToTargetFormat");
+	protected void recordPolygonAndLayerDetails(int yieldTableNumber, YieldTableRowContext rowContext) {
+		throw new UnsupportedOperationException("DCSVYieldTableWriter.recordPerPolygonDetails");
 	}
 
 	@Override
-	public void writeHeader(
-			Polygon polygonReportingInfo, LayerReportingInfo layerReportingInfo, boolean doGenerateDetailedTableHeader,
-			Integer yieldTableCount
-	) {
-		throw new UnsupportedOperationException("DCSVYieldTableWriter.writeHeader");
-	}
-
-	@Override
-	public void writeCalendarYearAndLayerAge(YieldTableData row) {
+	public void recordCalendarYearAndLayerAge(YieldTableRowContext rowContext) {
 		throw new UnsupportedOperationException("DCSVYieldTableWriter.writeCalendarYearAndLayerAge");
 	}
 
 	@Override
-	public void writeSpeciesComposition(YieldTableData row) throws YieldTableGenerationException {
+	public void recordSpeciesComposition(YieldTableRowContext rowContext) {
 		throw new UnsupportedOperationException("DCSVYieldTableWriter.writeSpeciesComposition");
+	}
+
+	@Override
+	void recordSiteInformation(
+			Double percentStockable, Double siteIndex, Double dominantHeight, Double secondaryHeight
+	) {
+		throw new UnsupportedOperationException("DCSVYieldTableWriter.recordSiteInformation");
+	}
+
+	@Override
+	void recordGrowthDetails(EntityGrowthDetails growthDetails, EntityVolumeDetails entityVolumeDetails) {
+		throw new UnsupportedOperationException("DCSVYieldTableWriter.recordGrowthDetails");
 	}
 }

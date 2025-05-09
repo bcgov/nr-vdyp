@@ -12,8 +12,8 @@ import org.hamcrest.Matcher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import ca.bc.gov.nrs.vdyp.application.ProcessingException;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
+import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.model.GenusDefinitionMap;
@@ -40,7 +40,7 @@ class BankTest {
 	}
 
 	@Test
-	void testConstruction() throws IOException, ResourceParseException, ProcessingException {
+	void testConstruction() throws ProcessingException {
 
 		ForwardDataStreamReader reader = new ForwardDataStreamReader(controlMap);
 
@@ -101,7 +101,7 @@ class BankTest {
 	}
 
 	@Test
-	void testSetCopy() throws IOException, ResourceParseException, ProcessingException {
+	void testSetCopy() throws ProcessingException {
 
 		ForwardDataStreamReader reader = new ForwardDataStreamReader(controlMap);
 
@@ -121,7 +121,7 @@ class BankTest {
 	}
 
 	@Test
-	void testRemoveSmallLayers() throws IOException, ResourceParseException, ProcessingException {
+	void testRemoveSmallLayers() throws ProcessingException {
 
 		ForwardDataStreamReader reader = new ForwardDataStreamReader(controlMap);
 
@@ -150,7 +150,7 @@ class BankTest {
 	}
 
 	@Test
-	void testCopyConstructor() throws IOException, ResourceParseException, ProcessingException {
+	void testCopyConstructor() throws ProcessingException {
 
 		ForwardDataStreamReader reader = new ForwardDataStreamReader(controlMap);
 
@@ -168,7 +168,7 @@ class BankTest {
 	}
 
 	@Test
-	void testLayerUpdate() throws IOException, ResourceParseException, ProcessingException {
+	void testLayerUpdate() throws ProcessingException {
 
 		ForwardDataStreamReader reader = new ForwardDataStreamReader(controlMap);
 

@@ -33,7 +33,7 @@ public enum ProjectionTypeCode {
 	UNKNOWN("Unknown", null);
 
 	/**
-	 * All projection types that may be associated with a layer that will be projected. ORDER MATTERS - do NOT change.
+	 * All projection types that may be associated with a layer that will be projected. ORDER MATTERS - DO *NOT* CHANGE.
 	 */
 	public final static List<ProjectionTypeCode> ACTUAL_PROJECTION_TYPES_LIST = Collections
 			.unmodifiableList(List.of(PRIMARY, VETERAN, RESIDUAL, REGENERATION, DEAD));

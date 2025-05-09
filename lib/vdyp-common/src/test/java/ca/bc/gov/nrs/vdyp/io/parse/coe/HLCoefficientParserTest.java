@@ -67,7 +67,7 @@ class HLCoefficientParserTest {
 	}
 
 	@Test
-	void testParseBadSpecies() throws Exception {
+	void testParseBadSpecies() {
 
 		var parser = new HLPrimarySpeciesEqnP1Parser() {
 		};
@@ -83,7 +83,7 @@ class HLCoefficientParserTest {
 	}
 
 	@Test
-	void testParseBadRegion() throws Exception {
+	void testParseBadRegion() {
 
 		var parser = new HLPrimarySpeciesEqnP1Parser() {
 		};

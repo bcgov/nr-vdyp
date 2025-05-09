@@ -14,8 +14,14 @@ import ca.bc.gov.nrs.vdyp.backend.utils.FileHelper;
 public class FileHelperTest {
 
 	@Test
-	void testGetStubResourceFile() throws IOException {
-		InputStream is = FileHelper.getStubResourceFile(FileHelper.HCSV, FileHelper.VDYP_240, "Output_Log.txt");
+	void testGetStubResourceFile() {
+		InputStream is = FileHelper.getStubResourceFile("Output_Log.txt");
+		Assert.assertNotNull(is);
+	}
+
+	@Test
+	void testGetTestResourceFile() {
+		InputStream is = FileHelper.getTestResourceFile(FileHelper.HCSV, FileHelper.COMMON, "Output_Log.txt");
 		Assert.assertNotNull(is);
 	}
 

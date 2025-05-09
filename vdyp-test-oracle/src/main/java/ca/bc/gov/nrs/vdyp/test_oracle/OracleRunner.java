@@ -1,11 +1,5 @@
 package ca.bc.gov.nrs.vdyp.test_oracle;
 
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.apache.commons.io.FileUtils;
-
-import ca.bc.gov.nrs.vdyp.common.Utils;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
@@ -18,9 +12,15 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.commons.io.FileUtils;
+
+import ca.bc.gov.nrs.vdyp.common.Utils;
 
 public class OracleRunner {
 

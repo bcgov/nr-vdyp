@@ -8,7 +8,10 @@ import org.slf4j.LoggerFactory;
 import com.opencsv.bean.StatefulBeanToCsv;
 import com.opencsv.bean.StatefulBeanToCsvBuilder;
 
-public class PLOTSYYieldTableRecordBean {
+import io.quarkus.runtime.annotations.RegisterForReflection;
+
+@RegisterForReflection
+public class PLOTSYYieldTableRecordBean extends UnsupportedYieldTableRecordBean {
 
 	@SuppressWarnings("unused")
 	private static final Logger logger = LoggerFactory.getLogger(PLOTSYYieldTableRecordBean.class);
@@ -16,5 +19,9 @@ public class PLOTSYYieldTableRecordBean {
 	public static StatefulBeanToCsv<PLOTSYYieldTableRecordBean> createCsvOutputStream(FileWriter writer) {
 		return new StatefulBeanToCsvBuilder<PLOTSYYieldTableRecordBean>(writer) //
 				.build();
+	}
+
+	public PLOTSYYieldTableRecordBean() {
+		// default constructor necessary for reflection
 	}
 }

@@ -318,7 +318,7 @@ public class LineParser {
 			}
 		}
 
-		public boolean hasNext() throws IOException, ResourceParseLineException {
+		public boolean hasNext() throws IOException {
 			if (nextLine.isEmpty()) {
 				nextLine = Optional.of(doGetNextLine());
 			}

@@ -1,6 +1,5 @@
 package ca.bc.gov.nrs.vdyp.fip;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -46,8 +45,7 @@ public class FipSpeciesParser
 
 	@Override
 	public StreamingParserFactory<Collection<FipSpecies>>
-			map(String fileName, FileResolver fileResolver, Map<String, Object> controlMap)
-					throws IOException, ResourceParseException {
+			map(String fileName, FileResolver fileResolver, Map<String, Object> controlMap) {
 		return () -> {
 			var lineParser = new LineParser().strippedString(25, FipPolygonParser.POLYGON_IDENTIFIER).space(1).value(
 					1, FipLayerParser.LAYER,

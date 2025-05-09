@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 class GenusDefinitionTest {
 
 	@Test
-	void testSimpleDefinition() throws Exception {
+	void testSimpleDefinition() {
 		GenusDefinition g1a = new GenusDefinition("A", 1, "A");
 		GenusDefinition g1b = new GenusDefinition("A", 1, "A");
 		GenusDefinition g2 = new GenusDefinition("B", 1, "B");

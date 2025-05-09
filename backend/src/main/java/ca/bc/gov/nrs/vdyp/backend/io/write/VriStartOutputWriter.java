@@ -14,6 +14,7 @@ import ca.bc.gov.nrs.vdyp.backend.projection.model.Species;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Stand;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.Vdyp7Constants;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
+import ca.bc.gov.nrs.vdyp.backend.utils.Utils;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 
 /**
@@ -77,7 +78,7 @@ public class VriStartOutputWriter extends AbstractOutputWriter implements Closea
 				polygon.buildPolygonDescriptor(), //
 				polygon.getBecZone() == null ? "" : polygon.getBecZone(), //
 				format(polygon.determineStockabilityByProjectionType(projectionType), 4, 0), //
-				state.getProcessingModeUsedByProjectionType(projectionType).value, //
+				state.getProcessingMode(projectionType).value, //
 				polygon.getNonProductiveDescriptor() == null ? "" : polygon.getNonProductiveDescriptor(), //
 				format(polygon.getYieldFactor(), 5, 2) //
 		);
@@ -122,7 +123,7 @@ public class VriStartOutputWriter extends AbstractOutputWriter implements Closea
 
 		Stand leadingSite = layer.getSp0sByPercent().get(0);
 		if (leadingSite != null) {
-			if (leadingSite.getSpeciesGroup().getDominantHeight() > 6.0) {
+			if (Utils.safeGet(leadingSite.getSpeciesGroup().getDominantHeight()) > 6.0) {
 				logger.debug(
 						"{}: height {} of leading species is tall enough to suppress secondary species heights less than breast height",
 						layer, leadingSite.getSpeciesGroup().getDominantHeight()
@@ -142,9 +143,10 @@ public class VriStartOutputWriter extends AbstractOutputWriter implements Closea
 
 			String[] speciesDistributionTexts = new String[4];
 			for (int i = 0; i < 4; i++) {
-				if (i < stand.getSpecies().size()) {
-					Species s = stand.getSpecies().get(i);
-					speciesDistributionTexts[i] = String.format("%3s%5.1f", s.getSpeciesCode(), s.getSpeciesPercent());
+				if (i < stand.getSpeciesByPercent().size()) {
+					Species s = stand.getSpeciesByPercent().get(i);
+					var percentOfStand = 100.0 * s.getSpeciesPercent() / stand.getSpeciesGroup().getSpeciesPercent();
+					speciesDistributionTexts[i] = String.format("%3s%5.1f", s.getSpeciesCode(), percentOfStand);
 				} else {
 					speciesDistributionTexts[i] = "     0.0";
 				}
@@ -193,7 +195,7 @@ public class VriStartOutputWriter extends AbstractOutputWriter implements Closea
 					format(sp0.getDominantHeight(), 5, 2), //
 					format(sp0.getSiteIndex(), 5, 2), //
 					sp0.getSpeciesCode(), //
-					stand.getSpecies().get(0).getSpeciesCode(), //
+					stand.getSpeciesByPercent().get(0).getSpeciesCode(), //
 					format(sp0.getYearsToBreastHeight(), 5, 2), //
 					format(sp0.getAgeAtBreastHeight(), 6, 1), //
 					sp0.getSiteCurve() == null ? " " + Vdyp7Constants.EMPTY_INT : format(sp0.getSiteCurve().n(), 3)
@@ -219,9 +221,9 @@ public class VriStartOutputWriter extends AbstractOutputWriter implements Closea
 	}
 
 	@Override
-	public void close() throws IOException {
-		polygonFile.close();
-		speciesFile.close();
-		layersFile.close();
+	public void close() {
+		Utils.close(polygonFile, "VriStartOutputWriter.polygonFile");
+		Utils.close(speciesFile, "VriStartOutputWriter.speciesFile");
+		Utils.close(layersFile, "VriStartOutputWriter.layersFile");
 	}
 }

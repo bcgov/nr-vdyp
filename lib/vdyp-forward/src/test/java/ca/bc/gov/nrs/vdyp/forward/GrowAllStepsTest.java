@@ -12,16 +12,15 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ca.bc.gov.nrs.vdyp.application.ProcessingException;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMapImpl;
+import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.forward.test.Vdyp7OutputControlParser;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
-import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
@@ -66,7 +65,7 @@ class GrowAllStepsTest {
 	};
 
 	@Test
-	void testStandardPath() throws ProcessingException, ValueParseException {
+	void testStandardPath() throws ProcessingException {
 
 		ForwardProcessingEngine fpe = new ForwardProcessingEngine(controlMap);
 
@@ -102,9 +101,10 @@ class GrowAllStepsTest {
 		assertThat(forwardDataStreamReader.readNextPolygon().isEmpty(), is(true));
 	}
 
+	@SuppressWarnings("unused")
 	private static void comparePolygons(VdypPolygon a, VdypPolygon b, float tolerance) {
 
-		Float originalEpsilon = VdypMatchers.setEpsilon(tolerance);
+		double originalEpsilon = VdypMatchers.setEpsilon(tolerance);
 		try {
 			assertThat(a.getPolygonIdentifier().forYear(a.getTargetYear().get()), is(b.getPolygonIdentifier()));
 			assertThat(a.getBiogeoclimaticZone(), is(b.getBiogeoclimaticZone()));

@@ -2,19 +2,16 @@ package ca.bc.gov.nrs.vdyp.forward;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import java.io.IOException;
-
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 
-import ca.bc.gov.nrs.vdyp.application.ProcessingException;
-import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
+import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.model.VdypEntity;
 
 public class SetEquationGroupsTest extends AbstractForwardProcessingEngineTest {
 
 	@Test
-	void testSetEquationGroups() throws ResourceParseException, IOException, ProcessingException {
+	void testSetEquationGroups() throws ProcessingException {
 
 		var reader = new ForwardDataStreamReader(controlMap);
 		var polygon = reader.readNextPolygon().get();

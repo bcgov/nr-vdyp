@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 class BecLookupTest {
 
 	@Test
-	void testSimpleGet() throws Exception {
+	void testSimpleGet() {
 		BecDefinition essf = new BecDefinition("ESSF", Region.INTERIOR, "ESSF Test");
 		var lookup = new BecLookup(Arrays.asList(essf));
 		var result = lookup.get("ESSF");
@@ -22,7 +22,7 @@ class BecLookupTest {
 	}
 
 	@Test
-	void testGetMissing() throws Exception {
+	void testGetMissing() {
 		List<BecDefinition> essf = Arrays.asList(new BecDefinition("ESSF", Region.INTERIOR, "ESSF Test"));
 		var lookup = new BecLookup(essf);
 		var result = lookup.get("XX");
@@ -31,7 +31,7 @@ class BecLookupTest {
 	}
 
 	@Test
-	void testGetBecs() throws Exception {
+	void testGetBecs() {
 		BecDefinition bg = new BecDefinition("BG", Region.INTERIOR, "BG Test");
 		BecDefinition essf = new BecDefinition("ESSF", Region.INTERIOR, "ESSF Test");
 		var lookup = new BecLookup(Arrays.asList(bg, essf));
@@ -45,7 +45,7 @@ class BecLookupTest {
 	}
 
 	@Test
-	void testGetGrowthBecs() throws Exception {
+	void testGetGrowthBecs() {
 		BecDefinition essf = new BecDefinition("ESSF", Region.INTERIOR, "ESSF Test");
 		BecDefinition at = new BecDefinition(
 				"AT", Region.INTERIOR, "AT Test", Optional.of(essf), Optional.empty(), Optional.empty()
@@ -61,7 +61,7 @@ class BecLookupTest {
 	}
 
 	@Test
-	void testGetCoastalBecs() throws Exception {
+	void testGetCoastalBecs() {
 		BecDefinition cdf = new BecDefinition("CDF", Region.COASTAL, "CDF Test");
 		BecDefinition cwh = new BecDefinition("CWH", Region.COASTAL, "CWH Test");
 		BecDefinition bg = new BecDefinition("BG", Region.INTERIOR, "BG Test");
@@ -77,7 +77,7 @@ class BecLookupTest {
 	}
 
 	@Test
-	void testGetInteriorBecs() throws Exception {
+	void testGetInteriorBecs() {
 		BecDefinition cdf = new BecDefinition("CDF", Region.COASTAL, "CDF Test");
 		BecDefinition cwh = new BecDefinition("CWH", Region.COASTAL, "CWH Test");
 		BecDefinition bg = new BecDefinition("BG", Region.INTERIOR, "BG Test");
@@ -93,7 +93,7 @@ class BecLookupTest {
 	}
 
 	@Test
-	void testGetByBlankScope() throws Exception {
+	void testGetByBlankScope() {
 		BecDefinition cdf = new BecDefinition("CDF", Region.COASTAL, "CDF Test");
 		BecDefinition cwh = new BecDefinition("CWH", Region.COASTAL, "CWH Test");
 		BecDefinition bg = new BecDefinition("BG", Region.INTERIOR, "BG Test");
@@ -112,7 +112,7 @@ class BecLookupTest {
 	}
 
 	@Test
-	void testGetByRegionScope() throws Exception {
+	void testGetByRegionScope() {
 		BecDefinition cdf = new BecDefinition("CDF", Region.COASTAL, "CDF Test");
 		BecDefinition cwh = new BecDefinition("CWH", Region.COASTAL, "CWH Test");
 		BecDefinition bg = new BecDefinition("BG", Region.INTERIOR, "BG Test");
@@ -128,7 +128,7 @@ class BecLookupTest {
 	}
 
 	@Test
-	void testGetByBecScope() throws Exception {
+	void testGetByBecScope() {
 		BecDefinition cdf = new BecDefinition("CDF", Region.COASTAL, "CDF Test");
 		BecDefinition cwh = new BecDefinition("CWH", Region.COASTAL, "CWH Test");
 		BecDefinition bg = new BecDefinition("BG", Region.INTERIOR, "BG Test");
@@ -141,7 +141,7 @@ class BecLookupTest {
 	}
 
 	@Test
-	void testGetByMissingScope() throws Exception {
+	void testGetByMissingScope() {
 		BecDefinition cdf = new BecDefinition("CDF", Region.COASTAL, "CDF Test");
 		BecDefinition cwh = new BecDefinition("CWH", Region.COASTAL, "CWH Test");
 		BecDefinition bg = new BecDefinition("BG", Region.INTERIOR, "BG Test");
