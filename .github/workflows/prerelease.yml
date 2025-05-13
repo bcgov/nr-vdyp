@@ -3,6 +3,10 @@ on:
   release:
     types: [prereleased]
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   tag-builds:
     runs-on: ubuntu-latest
