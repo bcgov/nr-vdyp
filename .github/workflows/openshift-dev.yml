@@ -18,6 +18,8 @@ jobs:
   builds:
     name: Builds
     runs-on: ubuntu-22.04
+    outputs:
+      pr: ${{ steps.pr.outputs.pr }}
     strategy:
       matrix:
         package: [backend, frontend]
@@ -30,7 +32,11 @@ jobs:
           tag: ${{ github.event.number }}
           tag_fallback: latest
           triggers: ('${{ matrix.package }}/')
-          
+
+      - name: Get PR Data
+        id: pr
+        uses: bcgov-nr/action-get-pr@v0.0.1          
+
   call-shared:
     uses: ./.github/workflows/openshift-shared.yml
     needs: [builds]
@@ -38,3 +44,4 @@ jobs:
     with:
       target_environment: 'dev'
       ref: ${{ github.head_ref }}
+      tag: ${{ needs.builds.outputs.pr }}
