@@ -25,18 +25,28 @@ jobs:
         package: [backend, frontend]
     timeout-minutes: 10
     steps:
-      - uses: bcgov-nr/action-builder-ghcr@v2.2.0
+      - name: Get PR Data
+        id: pr
+        uses: bcgov-nr/action-get-pr@v0.0.1    
+
+      - name: Build and Tag Packages with pr number
+        uses: bcgov-nr/action-builder-ghcr@v2.2.0
         with:
           keep_versions: 50
           package: ${{ matrix.package }}
-          tag: ${{ github.event.number }}
+          tag: ${{ steps.pr.outputs.pr }}
           tag_fallback: latest
           triggers: ('${{ matrix.package }}/')
 
-      - name: Get PR Data
-        id: pr
-        uses: bcgov-nr/action-get-pr@v0.0.1          
+      - name: Pull PR-tagged image
+        run: |
+          docker pull ghcr.io/${{ github.repository }}/${{ matrix.package }}:${{ steps.pr.outputs.pr }}
 
+      - name: Tag and push as latest
+        run: |
+          docker tag ghcr.io/${{ github.repository }}/${{ matrix.package }}:${{ steps.pr.outputs.pr }} ghcr.io/${{ github.repository }}/${{ matrix.package }}:latest
+          docker push ghcr.io/${{ github.repository }}/${{ matrix.package }}:latest
+  
   call-shared:
     uses: ./.github/workflows/openshift-shared.yml
     needs: [builds]
