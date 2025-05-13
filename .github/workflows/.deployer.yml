@@ -88,11 +88,7 @@ jobs:
     steps:
       ### tag and release
 
-      # Variables
-      - name: Get PR Data
-        id: pr
-        uses: bcgov-nr/action-get-pr@v0.0.1
-      
+      # Variables      
       - name: Set TAG and RELEASE vars for later use
         id: vars
         run: |
