@@ -37,3 +37,4 @@ jobs:
     with:
       target_environment: ${{ inputs.target_environment }}
       ref:  ${{ github.ref }}
+      tag: 'latest'
