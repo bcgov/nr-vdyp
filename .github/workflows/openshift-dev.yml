@@ -14,8 +14,26 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # https://github.com/bcgov-nr/action-builder-ghcr
+  builds:
+    name: Builds
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        package: [backend, frontend]
+    timeout-minutes: 10
+    steps:
+      - uses: bcgov-nr/action-builder-ghcr@v2.2.0
+        with:
+          keep_versions: 50
+          package: ${{ matrix.package }}
+          tag: ${{ github.event.number }}
+          tag_fallback: latest
+          triggers: ('${{ matrix.package }}/')
+          
   call-shared:
     uses: ./.github/workflows/openshift-shared.yml
+    needs: [builds]
     secrets: inherit
     with:
       target_environment: 'dev'
