@@ -11,11 +11,6 @@ on:
         required: false
         type: string
 
-concurrency:
-  # Cancel if re-attempted
-  group: ${{ github.event_name }}
-  cancel-in-progress: true
-
 jobs:
   # https://github.com/bcgov-nr/action-builder-ghcr
   builds:
