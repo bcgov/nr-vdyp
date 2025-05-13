@@ -91,7 +91,7 @@ jobs:
           tag=${{ inputs.tag }}
 
           # Release name includes run numbers to ensure uniqueness
-          release=${{ github.event.repository.name }}-${{ inputs.environment || inputs.tag }}
+          release=${{ github.event.repository.name }}-${{ inputs.environment }}
 
           # Summary
           echo "tag=${tag}"
@@ -132,7 +132,7 @@ jobs:
         run: |
           # Helm package
           sed -i 's/^name:.*/name: ${{ github.event.repository.name }}/' Chart.yaml
-          helm package -u . --app-version="tag-${{ steps.vars.outputs.tag }}_run-${{ github.run_number }}" --version=${{ steps.vars.outputs.tag }}
+          helm package -u . --app-version="tag-${{ steps.vars.outputs.tag }}_run-${{ github.run_number }}" --version=${{ inputs.tag }}
 
       # Deploy Helm chart as atomic, with timeout
       - name: Atomic Helm Deployment
@@ -152,7 +152,7 @@ jobs:
             --install --wait --atomic ${{ steps.vars.outputs.release }} \
             --timeout ${{ inputs.timeout-minutes }}m \
             --values ${{ inputs.values }} \
-            ./${{ github.event.repository.name }}-${{ steps.vars.outputs.tag }}.tgz
+            ./${{ github.event.repository.name }}-${{ inputs.tag  }}.tgz
 
       # Deploy Helm chart without atomic or timeout
       - name: Non-Atomic Helm Deployment
@@ -171,7 +171,7 @@ jobs:
             --set frontend.env.VITE_SSO_REDIRECT_URI=${{ secrets.VITE_SSO_REDIRECT_URI }} \
             --set frontend.env.VITE_API_URL=${{ secrets.VITE_API_URL }} \
             --install --wait --values ${{ inputs.values }} \
-            ./${{ github.event.repository.name }}-${{ steps.vars.outputs.tag }}.tgz
+            ./${{ github.event.repository.name }}-${{ inputs.tag }}.tgz
 
       # Helm release history
       - name: Helm Release History

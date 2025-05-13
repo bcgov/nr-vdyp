@@ -26,8 +26,7 @@ jobs:
       tag: ${{ inputs.tag }}
       values: "values-${{ inputs.target_environment }}.yaml"
       triggers: ('backend/' 'frontend/')
-      params: |
-        --set global.secrets.persist=false \
+      params: --set global.secrets.persist=false \
 
   # tests:
   #   name: Tests
