@@ -1,0 +1,39 @@
+name: Build and Deploy to Openshift Target Environment
+permissions:
+  contents: read
+  
+on:
+  workflow_dispatch:
+    inputs:
+      target_environment:
+        description: 'Target environment'
+        required: true
+        type: choice
+        options:
+          - dev
+          - test
+          - prod
+
+concurrency:
+  # Cancel if re-attempted
+  group: ${{ github.event_name }}
+  cancel-in-progress: true
+
+jobs:
+  confirm-input:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if deploying test/prod from wrong branch
+        if: |
+          inputs.target_environment != 'dev' && github.ref != 'refs/heads/main'
+        run: |
+          echo "❌ You can only deploy to test or prod from the main branch."
+          exit 1
+
+  call-shared:
+    needs: confirm-input
+    uses: ./.github/workflows/openshift-shared.yml
+    secrets: inherit
+    with:
+      target_environment: ${{ inputs.target_environment }}
+      ref:  ${{ github.ref }}
