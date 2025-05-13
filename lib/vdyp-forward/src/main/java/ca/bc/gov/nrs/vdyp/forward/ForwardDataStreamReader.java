@@ -17,6 +17,7 @@ import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMap;
 import ca.bc.gov.nrs.vdyp.forward.controlmap.ForwardResolvedControlMapImpl;
+import ca.bc.gov.nrs.vdyp.forward.parsers.VdypPolygonParser.VdypPolygonStreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
@@ -36,7 +37,7 @@ public class ForwardDataStreamReader {
 
 	private final ResolvedControlMap resolvedControlMap;
 
-	private final StreamingParser<VdypPolygon> polygonStream;
+	private final VdypPolygonStreamingParser polygonStream;
 	private final StreamingParser<Collection<VdypSpecies>> layerSpeciesStream;
 	private final StreamingParser<Collection<VdypUtilization>> speciesUtilizationStream;
 	Optional<StreamingParser<PolygonIdentifier>> polygonDescriptionStream;
@@ -49,7 +50,8 @@ public class ForwardDataStreamReader {
 			Map<String, Object> controlMap = resolvedControlMap.getControlMap();
 
 			var polygonStreamFactory = controlMap.get(ControlKey.FORWARD_INPUT_VDYP_POLY.name());
-			polygonStream = ((StreamingParserFactory<VdypPolygon>) polygonStreamFactory).get();
+			polygonStream = (VdypPolygonStreamingParser) ((StreamingParserFactory<VdypPolygon>) polygonStreamFactory)
+					.get();
 
 			var layerSpeciesStreamFactory = controlMap.get(ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SPECIES.name());
 			layerSpeciesStream = ((StreamingParserFactory<Collection<VdypSpecies>>) layerSpeciesStreamFactory).get();
@@ -184,6 +186,7 @@ public class ForwardDataStreamReader {
 						builder.inventoryTypeGroup(polygon.getInventoryTypeGroup());
 						builder.addSpecies(primaryLayerSpecies.values());
 						builder.primaryGenus(primarySp0);
+						builder.empiricalRelationshipParameterIndex(this.polygonStream.getBasalAreaGroup());
 					});
 
 					setUtilizations(primaryLayer, defaultSpeciesUtilization);

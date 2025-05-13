@@ -664,7 +664,7 @@ public class TestUtils {
 
 	/**
 	 * Create a DebugSettings object with the specified flag set to the specified value. All others will be 0.
-	 * 
+	 *
 	 * @param index
 	 * @param value
 	 * @return
@@ -678,7 +678,7 @@ public class TestUtils {
 
 	/**
 	 * Create a DebugSettings object with the specified flags set
-	 * 
+	 *
 	 * @param values
 	 * @return
 	 */
