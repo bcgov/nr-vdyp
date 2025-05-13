@@ -86,19 +86,14 @@ jobs:
     outputs:
       triggered: ${{ steps.triggers.outputs.triggered }}
     steps:
-      ### Triggers, tag and release
-
-      # Check triggers (omitted or matched) for deployment
-      - uses: bcgov-nr/action-diff-triggers@v0.2.0
-        id: triggers
-        with:
-          triggers: ${{ inputs.triggers }}
+      ### tag and release
 
       # Variables
-      - if: steps.triggers.outputs.triggered == 'true'
+      - name: Get PR Data
         id: pr
         uses: bcgov-nr/action-get-pr@v0.0.1
-      - if: steps.triggers.outputs.triggered == 'true'
+      
+      - name: Set TAG and RELEASE vars for later use
         id: vars
         run: |
           # Vars: tag and release
@@ -120,14 +115,15 @@ jobs:
       ### Deploy
 
       # OC Login
-      - if: steps.triggers.outputs.triggered == 'true'
+      - name: OpenShift Login
         run: |
           # OC Login
           oc login --token=${{ secrets.oc_token }} --server=${{ inputs.oc_server }}
           oc project ${{ secrets.oc_namespace }} # Safeguard!
 
       # Only stop pre-existing deployments on PRs (status = pending-upgrade)
-      - if: steps.triggers.outputs.triggered == 'true' && github.event_name == 'pull_request'
+      - if: github.event_name == 'pull_request'
+        name: Interrupt existing PR based deployments if we are PR based
         run: |
           # Interrupt any previous deployments (PR only)
           PREVIOUS=$(helm status ${{ steps.vars.outputs.release }} -o json | jq .info.status || true)
@@ -138,11 +134,11 @@ jobs:
           fi
 
       # Package Helm chart
-      - if: steps.triggers.outputs.triggered == 'true'
+      - name: Checkout Helm Chart
         uses: actions/checkout@v4
         with:
             ref: ${{ inputs.ref || 'main' }}  # fallback if ref is not provided
-      - if: steps.triggers.outputs.triggered == 'true'
+      - name: Congfigure Helm
         working-directory: ${{ inputs.directory }}
         run: |
           # Helm package
@@ -150,7 +146,8 @@ jobs:
           helm package -u . --app-version="tag-${{ steps.vars.outputs.tag }}_run-${{ github.run_number }}" --version=${{ steps.pr.outputs.pr }}
 
       # Deploy Helm chart as atomic, with timeout
-      - if: steps.triggers.outputs.triggered == 'true' && inputs.atomic != 'false'
+      - name: Atomic Helm Deployment
+        if: inputs.atomic != 'false'
         working-directory: ${{ inputs.directory }}
         run: |
           # Helm upgrade/rollout - atomic, timeout
@@ -170,7 +167,8 @@ jobs:
             ./${{ github.event.repository.name }}-${{ steps.pr.outputs.pr }}.tgz
 
       # Deploy Helm chart without atomic or timeout
-      - if: steps.triggers.outputs.triggered == 'true' && inputs.atomic == 'false'
+      - name: Non-Atomic Helm Deployment
+        if: inputs.atomic == 'false'
         working-directory: ${{ inputs.directory }}
         run: |
           # Helm upgrade/rollout - non-atomic, no timeout
@@ -183,7 +181,7 @@ jobs:
             ./${{ github.event.repository.name }}-${{ steps.pr.outputs.pr }}.tgz
 
       # Helm release history
-      - if: steps.triggers.outputs.triggered == 'true'
+      - name: Helm Release History
         run: |
           # Helm release history
           helm history ${{ steps.vars.outputs.release }}
@@ -191,7 +189,7 @@ jobs:
       ### Cleanup
 
       # Completed pod cleanup
-      - if: steps.triggers.outputs.triggered == 'true'
+      - name: Pod Cleanup
         run: |
           # Completed pod cleanup
           oc delete po --field-selector=status.phase==Succeeded || true
