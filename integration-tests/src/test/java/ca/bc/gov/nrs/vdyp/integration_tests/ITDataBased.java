@@ -17,6 +17,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.BiPredicate;
+import java.util.function.IntFunction;
+import java.util.function.IntUnaryOperator;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -437,7 +439,7 @@ class ITDataBased {
 
 		assertFileMatches(
 				outputDir.resolve(POLYGON_OUTPUT_NAME), expectedDir.resolve(fileName(outputState, Data.Polygon)),
-				this::polygonLinesMatchIgnoreFizAndGroups
+				this::polygonLinesMatch
 		);
 		assertFileMatches(
 				outputDir.resolve(SPECIES_OUTPUT_NAME), expectedDir.resolve(fileName(outputState, Data.Species)),
@@ -541,33 +543,8 @@ class ITDataBased {
 
 		List<BiPredicate<String, String>> checks = List.of(
 				stringsEqual(), stringsEqual(), stringsEqual(), floatStringsWithin(), intStringsEqual(),
-				intStringsEqual(), intStringsEqual()
-		);
-
-		if (actualMatch.groupCount() != expectedMatch.groupCount()) {
-			return false;
-		}
-		for (int i = 0; i < expectedMatch.groupCount(); i++) {
-			if (!checks.get(i).test(actualMatch.group(i + 1), expectedMatch.group(i + 1))) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	boolean polygonLinesMatchIgnoreFizAndGroups(String actual, String expected) {
-		var actualMatch = POLY_LINE_MATCHER.matcher(actual);
-		var expectedMatch = POLY_LINE_MATCHER.matcher(expected);
-		if (!actualMatch.find()) {
-			return false;
-		}
-		if (!expectedMatch.find()) {
-			return false;
-		}
-
-		List<BiPredicate<String, String>> checks = List.of(
-				stringsEqual(), stringsEqual(), ignoreStrings(), floatStringsWithin(), intStringsEqual(),
-				ignoreStrings(), ignoreStrings()
+				intStringsEqual(), intStringsEqual(i -> i == 0 ? 1 : i) // Treat none specified as equivalent to the
+																		// default of mode 1
 		);
 
 		if (actualMatch.groupCount() != expectedMatch.groupCount()) {
@@ -737,6 +714,26 @@ class ITDataBased {
 				}
 				int actualValue = Integer.parseInt(actual.strip());
 				int expectedValue = Integer.parseInt(expected.strip());
+
+				return actualValue == expectedValue;
+			}
+		};
+	}
+
+	BiPredicate<String, String> intStringsEqual(IntUnaryOperator normalize) {
+		return new BiPredicate<>() {
+
+			@Override
+			public boolean test(String actual, String expected) {
+				if (actual == null && expected == null) {
+					return true;
+				}
+
+				if (actual == null || expected == null) {
+					return false;
+				}
+				int actualValue = normalize.applyAsInt(Integer.parseInt(actual.strip()));
+				int expectedValue = normalize.applyAsInt(Integer.parseInt(expected.strip()));
 
 				return actualValue == expectedValue;
 			}
