@@ -3,11 +3,14 @@ permissions:
   contents: read
   
 on:
-  pull_request:
+  push:
+    branches:
+      - main
     paths:
       - "frontend/**"
       - "backend/**"
       - "charts/app/values-dev.yml"
+      - ".github/workflows/**"
 concurrency:
   # Cancel if re-attempted
   group: ${{ github.event_name }}

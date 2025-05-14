@@ -37,13 +37,10 @@ on:
         required: false
         type: string
       tag:
-        description: Specify a tag to deploy; defaults to PR number
+        description: Specify a tag to deploy; use SemVer or PR Number
         required: false
         type: string
-      triggers:
-        description: Paths used to trigger a deployment; e.g. ('./backend/' './frontend/)
-        required: false
-        type: string
+
 
       ### Usually a bad idea / not recommended
       timeout-minutes:
@@ -132,7 +129,7 @@ jobs:
         run: |
           # Helm package
           sed -i 's/^name:.*/name: ${{ github.event.repository.name }}/' Chart.yaml
-          helm package -u . --app-version="tag-${{ steps.vars.outputs.tag }}_run-${{ github.run_number }}" --version=${{ inputs.tag }}
+          helm package -u . --app-version="tag-${{ steps.vars.outputs.tag }}_run-${{ github.run_number }}" --version=${{ steps.vars.outputs.tag }}
 
       # Deploy Helm chart as atomic, with timeout
       - name: Atomic Helm Deployment
@@ -152,7 +149,7 @@ jobs:
             --install --wait --atomic ${{ steps.vars.outputs.release }} \
             --timeout ${{ inputs.timeout-minutes }}m \
             --values ${{ inputs.values }} \
-            ./${{ github.event.repository.name }}-${{ inputs.tag  }}.tgz
+            ./${{ github.event.repository.name }}-${{ steps.vars.outputs.tag }}.tgz
 
       # Deploy Helm chart without atomic or timeout
       - name: Non-Atomic Helm Deployment
