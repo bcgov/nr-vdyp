@@ -8,9 +8,10 @@ on:
     branches:
       - main
     paths:
-      - "frontend/**"
       - "backend/**"
       - "charts/app/values-dev.yml"
+      - "frontend/**"
+      - "lib/**"
       - ".github/workflows/openshift-*.yml"
 concurrency:
   # Cancel if re-attempted
