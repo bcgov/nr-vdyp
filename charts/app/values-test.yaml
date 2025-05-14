@@ -9,7 +9,7 @@ global:
   #-- the tag of the image, it can be latest, 1.0.0 etc..., or the sha256 hash
   tag: ~
   #-- turn off autoscaling for the entire suite by setting this to false. default is true.
-  autoscaling: false
+  autoscaling: true
   #-- global secrets, can be accessed by sub-charts.
   secrets:
     enabled: true
@@ -32,9 +32,9 @@ backend:
     #-- enable or disable autoscaling.
     enabled: true
     #-- the minimum number of replicas.
-    minReplicas: 3
+    minReplicas: 1
     #-- the maximum number of replicas.
-    maxReplicas: 7
+    maxReplicas: 3
     #-- the target cpu utilization percentage, is from request cpu and NOT LIMIT CPU.
     targetCPUUtilizationPercentage: 80
   #-- vault, for injecting secrets from vault. it is optional and is an object. it creates an initContainer which reads from vault and app container can source those secrets. for referring to a working example with vault follow this link: https://github.com/bcgov/onroutebc/blob/main/charts/onroutebc/values.yaml#L171-L186
@@ -54,7 +54,7 @@ backend:
     #-- resources specific to vault initContainer. it is optional and is an object.
     resources:
       limits:
-        cpu: 50m
+        cpu: 250m
         memory: 50Mi
       requests:
         cpu: 50m
@@ -107,10 +107,17 @@ frontend:
         name: metrics
   ingress:
     annotations:
+      haproxy.router.openshift.io/timeout: 1800s # 30 minutes
       route.openshift.io/termination: "edge"
   pdb:
     enabled: false # enable it in PRODUCTION for having pod disruption budget.
     minAvailable: 1 # the minimum number of pods that must be available during the disruption budget.
+  env:
+    VITE_SSO_AUTH_SERVER_URL: ~
+    VITE_SSO_CLIENT_ID: ~
+    VITE_SSO_REALM: ~
+    VITE_SSO_REDIRECT_URI: ~
+    VITE_API_URL: ~
 
 crunchy: # enable it for TEST and PROD, for PR based pipelines simply use single postgres
   enabled: false

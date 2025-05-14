@@ -9,7 +9,7 @@ on:
       ### Typical / recommended
       atomic:
         description: Atomic deployment?  That means fail all or nothing
-        default: true
+        default: 'true'
         required: false
         type: string
       directory:
@@ -31,14 +31,16 @@ on:
         default: ''
         required: false
         type: string
+      ref:
+        description: 'Reference for checkout action'
+        default: 'main'
+        required: false
+        type: string
       tag:
-        description: Specify a tag to deploy; defaults to PR number
+        description: Specify a tag to deploy; use SemVer or PR Number
         required: false
         type: string
-      triggers:
-        description: Paths used to trigger a deployment; e.g. ('./backend/' './frontend/)
-        required: false
-        type: string
+
 
       ### Usually a bad idea / not recommended
       timeout-minutes:
@@ -52,17 +54,20 @@ on:
         required: false
         type: string
 
-    outputs:
-      triggered:
-        description: 'Has a deployment has been triggered?'
-        value: ${{ jobs.deployer.outputs.triggered }}
-
     secrets:
       oc_namespace:
-        description: OpenShift namespace
         required: true
       oc_token:
-        description: OpenShift token
+        required: true
+      VITE_SSO_AUTH_SERVER_URL:
+        required: true
+      VITE_SSO_CLIENT_ID:
+        required: true
+      VITE_SSO_REALM:
+        required: true
+      VITE_SSO_REDIRECT_URI:
+        required: true
+      VITE_API_URL:
         required: true
 
 jobs:
@@ -70,31 +75,20 @@ jobs:
     name: Helm
     environment: ${{ inputs.environment }}
     runs-on: ubuntu-22.04
-    outputs:
-      triggered: ${{ steps.triggers.outputs.triggered }}
     steps:
-      ### Triggers, tag and release
+      ### tag and release
 
-      # Check triggers (omitted or matched) for deployment
-      - uses: bcgov-nr/action-diff-triggers@v0.2.0
-        id: triggers
-        with:
-          triggers: ${{ inputs.triggers }}
-
-      # Variables
-      - if: steps.triggers.outputs.triggered == 'true'
-        id: pr
-        uses: bcgov-nr/action-get-pr@v0.0.1
-      - if: steps.triggers.outputs.triggered == 'true'
+      # Variables      
+      - name: Set TAG and RELEASE vars for later use
         id: vars
         run: |
           # Vars: tag and release
 
           # Tag defaults to PR number, but can be overridden by inputs.tag
-          tag=${{ inputs.tag || steps.pr.outputs.pr }}
+          tag=${{ inputs.tag }}
 
           # Release name includes run numbers to ensure uniqueness
-          release=${{ github.event.repository.name }}-${{ inputs.environment || steps.pr.outputs.pr }}
+          release=${{ github.event.repository.name }}-${{ inputs.environment }}
 
           # Summary
           echo "tag=${tag}"
@@ -107,14 +101,15 @@ jobs:
       ### Deploy
 
       # OC Login
-      - if: steps.triggers.outputs.triggered == 'true'
+      - name: OpenShift Login
         run: |
           # OC Login
           oc login --token=${{ secrets.oc_token }} --server=${{ inputs.oc_server }}
           oc project ${{ secrets.oc_namespace }} # Safeguard!
 
       # Only stop pre-existing deployments on PRs (status = pending-upgrade)
-      - if: steps.triggers.outputs.triggered == 'true' && github.event_name == 'pull_request'
+      - if: github.event_name == 'pull_request'
+        name: Interrupt existing PR based deployments if we are PR based
         run: |
           # Interrupt any previous deployments (PR only)
           PREVIOUS=$(helm status ${{ steps.vars.outputs.release }} -o json | jq .info.status || true)
@@ -125,36 +120,40 @@ jobs:
           fi
 
       # Package Helm chart
-      - if: steps.triggers.outputs.triggered == 'true'
+      - name: Checkout Helm Chart
         uses: actions/checkout@v4
-      - if: steps.triggers.outputs.triggered == 'true'
+        with:
+            ref: ${{ inputs.ref || 'main' }}  # fallback if ref is not provided
+      - name: Congfigure Helm
         working-directory: ${{ inputs.directory }}
         run: |
           # Helm package
           sed -i 's/^name:.*/name: ${{ github.event.repository.name }}/' Chart.yaml
-          helm package -u . --app-version="tag-${{ steps.vars.outputs.tag }}_run-${{ github.run_number }}" --version=${{ steps.pr.outputs.pr }}
+          helm package -u . --app-version="tag-${{ steps.vars.outputs.tag }}_run-${{ github.run_number }}" --version=${{ steps.vars.outputs.tag }}
 
       # Deploy Helm chart as atomic, with timeout
-      - if: steps.triggers.outputs.triggered == 'true' && inputs.atomic != 'false'
+      - name: Atomic Helm Deployment
+        if: inputs.atomic != 'false'
         working-directory: ${{ inputs.directory }}
         run: |
           # Helm upgrade/rollout - atomic, timeout
           helm upgrade \
             --set-string global.repository=${{ github.repository }} \
             --set-string global.tag=${{ steps.vars.outputs.tag }} \
+            ${{ inputs.params }} \
             --set frontend.env.VITE_SSO_AUTH_SERVER_URL=${{ secrets.VITE_SSO_AUTH_SERVER_URL }} \
             --set frontend.env.VITE_SSO_CLIENT_ID=${{ secrets.VITE_SSO_CLIENT_ID }} \
             --set frontend.env.VITE_SSO_REALM=${{ secrets.VITE_SSO_REALM }} \
             --set frontend.env.VITE_SSO_REDIRECT_URI=${{ secrets.VITE_SSO_REDIRECT_URI }} \
             --set frontend.env.VITE_API_URL=${{ secrets.VITE_API_URL }} \
-            ${{ inputs.params }} \
             --install --wait --atomic ${{ steps.vars.outputs.release }} \
             --timeout ${{ inputs.timeout-minutes }}m \
             --values ${{ inputs.values }} \
-            ./${{ github.event.repository.name }}-${{ steps.pr.outputs.pr }}.tgz
+            ./${{ github.event.repository.name }}-${{ steps.vars.outputs.tag }}.tgz
 
       # Deploy Helm chart without atomic or timeout
-      - if: steps.triggers.outputs.triggered == 'true' && inputs.atomic == 'false'
+      - name: Non-Atomic Helm Deployment
+        if: inputs.atomic == 'false'
         working-directory: ${{ inputs.directory }}
         run: |
           # Helm upgrade/rollout - non-atomic, no timeout
@@ -163,11 +162,16 @@ jobs:
             --set-string global.tag=${{ steps.vars.outputs.tag }} \
             ${{ inputs.params }} \
             ${{ steps.vars.outputs.release }} \
+            --set frontend.env.VITE_SSO_AUTH_SERVER_URL=${{ secrets.VITE_SSO_AUTH_SERVER_URL }} \
+            --set frontend.env.VITE_SSO_CLIENT_ID=${{ secrets.VITE_SSO_CLIENT_ID }} \
+            --set frontend.env.VITE_SSO_REALM=${{ secrets.VITE_SSO_REALM }} \
+            --set frontend.env.VITE_SSO_REDIRECT_URI=${{ secrets.VITE_SSO_REDIRECT_URI }} \
+            --set frontend.env.VITE_API_URL=${{ secrets.VITE_API_URL }} \
             --install --wait --values ${{ inputs.values }} \
-            ./${{ github.event.repository.name }}-${{ steps.pr.outputs.pr }}.tgz
+            ./${{ github.event.repository.name }}-${{ inputs.tag }}.tgz
 
       # Helm release history
-      - if: steps.triggers.outputs.triggered == 'true'
+      - name: Helm Release History
         run: |
           # Helm release history
           helm history ${{ steps.vars.outputs.release }}
@@ -175,7 +179,7 @@ jobs:
       ### Cleanup
 
       # Completed pod cleanup
-      - if: steps.triggers.outputs.triggered == 'true'
+      - name: Pod Cleanup
         run: |
           # Completed pod cleanup
           oc delete po --field-selector=status.phase==Succeeded || true
