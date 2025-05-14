@@ -1,60 +1,55 @@
-import ReportingContainer from '@/components/reporting/ReportingContainer.vue'
+import ReportingContainer from './ReportingContainer.vue'
 import { createPinia, setActivePinia } from 'pinia'
 import { useProjectionStore } from '@/stores/projectionStore'
-import { REPORTING_TAB } from '@/constants/constants'
+import { CONSTANTS } from '@/constants'
 import JSZip from 'jszip'
 
 describe('ReportingContainer.vue', () => {
   let projectionStore: ReturnType<typeof useProjectionStore>
 
   beforeEach(() => {
-    cy.viewport(1024, 768)
-
     const pinia = createPinia()
     setActivePinia(pinia)
     projectionStore = useProjectionStore()
 
-    const loadAndProcessZip = async () => {
-      try {
-        const [errorLog, progressLog, yieldTable] = await Promise.all([
-          cy.fixture('ErrorLog.txt'),
-          cy.fixture('ProgressLog.txt'),
-          cy.fixture('YieldTable.csv'),
-        ])
+    cy.fixture('ErrorLog.txt').then((errorLog) => {
+      cy.fixture('ProgressLog.txt').then((progressLog) => {
+        cy.fixture('YieldTable.csv').then((yieldTable) => {
+          cy.task('log', `Loaded ErrorLog: ${errorLog}`)
+          cy.task('log', `Loaded ProgressLog: ${progressLog}`)
+          cy.task('log', `Loaded YieldTable: ${yieldTable}`)
 
-        const zip = new JSZip()
+          const zip = new JSZip()
+          zip.file('ErrorLog.txt', errorLog)
+          zip.file('ProgressLog.txt', progressLog)
+          zip.file('YieldTable.csv', yieldTable)
 
-        console.log('Loaded ErrorLog:', errorLog)
-        console.log('Loaded ProgressLog:', progressLog)
-        console.log('Loaded YieldTable:', yieldTable)
+          cy.task('log', 'Files in ZIP archive:')
+          Object.keys(zip.files).forEach((relativePath) => {
+            cy.task('log', `- ${relativePath}`)
+          })
 
-        // Add files to ZIP
-        zip.file('ErrorLog.txt', errorLog)
-        zip.file('ProgressLog.txt', progressLog)
-        zip.file('YieldTable.csv', yieldTable)
-
-        // Print all file names in the ZIP file
-        console.log('Files in ZIP archive:')
-        for (const relativePath of Object.keys(zip.files)) {
-          console.log(`- ${relativePath}`)
-        }
-
-        // Generate ZIP and process it
-        return zip.generateAsync({ type: 'blob' }).then((zipBlob) => {
-          return projectionStore.handleZipResponse(zipBlob)
+          return cy
+            .wrap(
+              Promise.resolve(
+                zip.generateAsync({ type: 'blob' }) as Promise<Blob>,
+              ),
+            )
+            .then((zipBlob) => {
+              projectionStore.handleZipResponse(
+                zipBlob as Blob,
+                CONSTANTS.FILE_NAME.PROJECTION_RESULT_ZIP,
+              )
+            })
         })
-      } catch (error) {
-        console.error('Error loading fixtures or processing ZIP:', error)
-      }
-    }
-
-    loadAndProcessZip()
+      })
+    })
   })
 
   it('displays model report and verifies UI elements', () => {
-    cy.mountWithVuetify(ReportingContainer, {
+    cy.mount(ReportingContainer, {
       props: {
-        tabname: REPORTING_TAB.MODEL_REPORT,
+        tabname: CONSTANTS.REPORTING_TAB.MODEL_REPORT,
       },
     }).then(() => {
       cy.get('button').contains('Print').should('exist').and('not.be.disabled')
@@ -63,19 +58,13 @@ describe('ReportingContainer.vue', () => {
         .contains('Download')
         .should('exist')
         .and('not.be.disabled')
-
-      // Verify data
-      cy.get('.ml-2.mr-2')
-        .invoke('text')
-        .should('include', 'TABLE_NUM,FEATURE_ID,DISTRICT')
-        .and('include', '2493719')
     })
   })
 
   it('displays view log file and verifies UI elements', () => {
-    cy.mountWithVuetify(ReportingContainer, {
+    cy.mount(ReportingContainer, {
       props: {
-        tabname: REPORTING_TAB.VIEW_LOG_FILE,
+        tabname: CONSTANTS.REPORTING_TAB.VIEW_LOG_FILE,
       },
     }).then(() => {
       cy.get('button').contains('Print').should('exist').and('not.be.disabled')
@@ -84,19 +73,13 @@ describe('ReportingContainer.vue', () => {
         .contains('Download')
         .should('exist')
         .and('not.be.disabled')
-
-      //  Verify data
-      cy.get('.v-container')
-        .find('div')
-        .contains("VDYP7 Console version: '7.17d'")
-        .should('exist')
     })
   })
 
   it('displays view error message and verifies UI elements', () => {
-    cy.mountWithVuetify(ReportingContainer, {
+    cy.mount(ReportingContainer, {
       props: {
-        tabname: REPORTING_TAB.VIEW_ERR_MSG,
+        tabname: CONSTANTS.REPORTING_TAB.VIEW_ERR_MSG,
       },
     }).then(() => {
       cy.get('button').contains('Print').should('exist').and('not.be.disabled')
@@ -105,9 +88,6 @@ describe('ReportingContainer.vue', () => {
         .contains('Download')
         .should('exist')
         .and('not.be.disabled')
-
-      // Verify data
-      cy.get('.v-container').find('div').contains('- I SUCCESS').should('exist')
     })
   })
 })

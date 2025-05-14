@@ -2,14 +2,11 @@ package ca.bc.gov.nrs.vdyp.io.parse.control;
 
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.anEmptyMap;
-import static org.hamcrest.Matchers.hasEntry;
-import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.is;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -51,7 +48,7 @@ class ControlMapValueReplacerTest {
 
 		controlMap.put(ControlKey.FIP_INPUT_YIELD_LAYER.name(), "TEST");
 
-		unit.modify(controlMap, null);
+		unit.modify(controlMap, Collections.emptyMap());
 
 		assertThat(controlMap, hasEntry(is(ControlKey.FIP_INPUT_YIELD_LAYER.name()), is(42)));
 	}
@@ -149,7 +146,7 @@ class ControlMapValueReplacerTest {
 
 		controlMap.put(ControlKey.FIP_INPUT_YIELD_LAYER.name(), Optional.of("TEST"));
 
-		unit.modify(controlMap, null);
+		unit.modify(controlMap, Collections.emptyMap());
 
 		assertThat(controlMap, hasEntry(is(ControlKey.FIP_INPUT_YIELD_LAYER.name()), is(42)));
 	}
@@ -224,7 +221,7 @@ class ControlMapValueReplacerTest {
 
 		controlMap.put(ControlKey.FIP_INPUT_YIELD_LAYER.name(), Optional.of("TEST"));
 
-		unit.modify(controlMap, null);
+		unit.modify(controlMap, Collections.emptyMap());
 
 		assertThat(controlMap, hasEntry(is(ControlKey.FIP_INPUT_YIELD_LAYER.name()), is(42)));
 	}

@@ -1,6 +1,8 @@
 package ca.bc.gov.nrs.vdyp.application.test;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -27,10 +29,12 @@ public class TestStartApplication extends VdypStartApplication<TestPolygon, Test
 	}
 
 	@Override
-	public void init(FileSystemFileResolver resolver, String... controlFilePaths)
-			throws IOException, ResourceParseException {
+	public void init(
+			FileSystemFileResolver resolver, PrintStream writeToIfNoArgs, InputStream readFromIfNoArgs,
+			String... controlFilePaths
+	) throws IOException, ResourceParseException {
 		if (realInit) {
-			super.init(resolver, controlFilePaths);
+			super.init(resolver, writeToIfNoArgs, readFromIfNoArgs, controlFilePaths);
 		}
 	}
 
@@ -87,6 +91,11 @@ public class TestStartApplication extends VdypStartApplication<TestPolygon, Test
 	protected float getYieldFactor(TestPolygon polygon) {
 		// TODO Auto-generated method stub
 		return 1;
+	}
+
+	@Override
+	protected String getDefaultControlFileName() {
+		return "test.ctr";
 	}
 
 }

@@ -3,6 +3,8 @@ export const SVC_ERR = Object.freeze({
   REQUEST_TIMEOUT: 'Request timed out. Please try again. (Error: Timeout)',
   SERVICE_UNAVAILABLE:
     'The service is currently unavailable. Please try later. (Error: Unavailable)',
+  BAD_GATEWAY:
+    'The server was unable to complete your request. Please try again later. (Error: Bad Gateway)',
   GATEWAY_TIMEOUT:
     'The server did not respond in time. Please try again later. (Error: Gateway Timeout)',
   INTERNAL_SERVER_ERROR:
@@ -79,12 +81,20 @@ export const MDL_PRM_INPUT_ERR = Object.freeze({
     "'Percent Stockable Area' must range from 0 and 100",
   RPT_VLD_COMP_FNSH_AGE:
     "'Finish Age' must be at least as great as the 'Start Age'",
+  RPT_VLD_COMP_END_YEAR:
+    "'End Year' must be at least as great as the 'Start Year'",
   RPT_VLD_START_AGE_RNG: (startAgeMin: number, startAgeMax: number) =>
     `'Starting Age' must range from ${startAgeMin} and ${startAgeMax}`,
   RPT_VLD_START_FNSH_RNG: (fnshAgeMin: number, fnshAgeMax: number) =>
     `'Finishing Age' must range from ${fnshAgeMin} and ${fnshAgeMax}`,
   RPT_VLD_AGE_INC_RNG: (ageIncMin: number, ageIncMax: number) =>
-    `'Age Increment' must range from ${ageIncMin} and ${ageIncMax}`,
+    `'Increment' must range from ${ageIncMin} and ${ageIncMax}`,
+  RPT_VLD_START_YEAR_RNG: (startYearMin: number, startYearMax: number) =>
+    `'Start Year' must range from ${startYearMin} and ${startYearMax}`,
+  RPT_VLD_END_YEAR_RNG: (endYearMin: number, endYearMax: number) =>
+    `'End Year' must range from ${endYearMin} and ${endYearMax}`,
+  RPT_VLD_YEAR_INC_RNG: (yearIncMin: number, yearIncMax: number) =>
+    `'Increment' must range from ${yearIncMin} and ${yearIncMax}`,
 })
 
 export const FILE_UPLOAD_ERR = Object.freeze({
@@ -95,8 +105,10 @@ export const FILE_UPLOAD_ERR = Object.freeze({
     'The uploaded Layer file is not in CSV format. Please upload a valid CSV file.',
   POLYGON_FILE_NOT_CSV_FORMAT:
     'The uploaded Polygon file is not in CSV format. Please upload a valid CSV file.',
-  RPT_VLD_REQUIRED_FIELDS:
-    'All required fields (Starting Age, Finishing Age, Age Increment) must be filled.',
+  RPT_VLD_REQUIRED_FIELDS_AGE:
+    'All required fields (Starting Age, Finishing Age, Increment) must be filled.',
+  RPT_VLD_REQUIRED_FIELDS_YEAR:
+    'All required fields (Start Year, End Year, Increment) must be filled.',
   MISSING_RESPONSED_FILE:
     'The response is missing one or more required files. Please contact support or try again later.',
   INVALID_RESPONSED_FILE:
@@ -108,16 +120,25 @@ export const FILE_DOWNLOAD_ERR = Object.freeze({
   NO_DATA: 'No data available to download.',
 })
 
+export const MODEL_PARAM_INPUT_ERR = Object.freeze({
+  FAIL_RUN_MODEL: 'Failed to run the projection model.',
+})
+
 export const PRINT_ERR = Object.freeze({
-  NO_DATA: 'No data available to download.',
+  NO_DATA: 'No data available to print.',
 })
 
 export const PROGRESS_MSG = Object.freeze({
   RUNNING_MODEL: 'Running Model...',
 })
 
-export const SUCESS_MSG = Object.freeze({
-  FILE_UPLOAD_RUN_RESULT: 'File successfully downloaded.',
+export const SUCCESS_MSG = Object.freeze({
+  FILE_UPLOAD_RUN_RESULT:
+    'File successfully downloaded. Please check the results in the report tab.',
+  FILE_UPLOAD_RUN_RESULT_W_ERR:
+    'File successfully downloaded with errors - check error log',
   INPUT_MODEL_PARAM_RUN_RESULT:
-    'Projection completed successfully. Please check the results in the report tabs.',
+    'Model run completed successfully. Please check the results in the report tab.',
+  INPUT_MODEL_PARAM_RUN_RESULT_W_ERR:
+    'Model run completed with errors - check error log',
 })

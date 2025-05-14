@@ -32,7 +32,7 @@ export class BaseAPI {
 }
 
 export class RequiredError extends Error {
-  name: 'RequiredError' = 'RequiredError'
+  readonly name = 'RequiredError'
   constructor(
     public field: string,
     msg?: string,

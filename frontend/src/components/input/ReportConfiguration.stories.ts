@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/vue3'
 import ReportConfiguration from './ReportConfiguration.vue'
-import { CONSTANTS, OPTIONS } from '@/constants'
+import { DEFAULTS, OPTIONS } from '@/constants'
 
 const meta: Meta<typeof ReportConfiguration> = {
   title: 'components/input/ReportConfiguration',
@@ -10,27 +10,44 @@ const meta: Meta<typeof ReportConfiguration> = {
     startingAge: {
       control: { type: 'number' },
       description: 'The starting age for the report configuration',
-      defaultValue: null,
+      defaultValue: DEFAULTS.DEFAULT_VALUES.STARTING_AGE,
     },
     finishingAge: {
       control: { type: 'number' },
       description: 'The finishing age for the report configuration',
-      defaultValue: null,
+      defaultValue: DEFAULTS.DEFAULT_VALUES.FINISHING_AGE,
     },
     ageIncrement: {
       control: { type: 'number' },
       description: 'The age increment for the report configuration',
-      defaultValue: null,
+      defaultValue: DEFAULTS.DEFAULT_VALUES.AGE_INCREMENT,
+    },
+    startYear: {
+      control: { type: 'number' },
+      description: 'The start year for the report configuration',
+      defaultValue: DEFAULTS.DEFAULT_VALUES.START_YEAR,
+    },
+    endYear: {
+      control: { type: 'number' },
+      description: 'The end year for the report configuration',
+      defaultValue: DEFAULTS.DEFAULT_VALUES.END_YEAR,
+    },
+    yearIncrement: {
+      control: { type: 'number' },
+      description: 'The year increment for the report configuration',
+      defaultValue: DEFAULTS.DEFAULT_VALUES.YEAR_INCREMENT,
     },
     volumeReported: {
-      control: { type: 'array' },
+      control: { type: 'check' },
+      options: OPTIONS.volumeReportedOptions.map((opt) => opt.value),
       description: 'Selected volume reported options',
       defaultValue: [],
     },
     includeInReport: {
-      control: { type: 'array' },
+      control: { type: 'check' },
+      options: OPTIONS.includeInReportOptions.map((opt) => opt.value),
       description: 'Selected include in report options',
-      defaultValue: [],
+      defaultValue: [OPTIONS.volumeReportedOptions[0].value],
     },
     projectionType: {
       control: {
@@ -43,7 +60,7 @@ const meta: Meta<typeof ReportConfiguration> = {
     reportTitle: {
       control: { type: 'text' },
       description: 'The report title',
-      defaultValue: '',
+      defaultValue: DEFAULTS.DEFAULT_VALUES.REPORT_TITLE,
     },
     isDisabled: {
       control: { type: 'boolean' },
@@ -58,26 +75,32 @@ type Story = StoryObj<typeof ReportConfiguration>
 
 export const DefaultConfiguration: Story = {
   args: {
-    startingAge: CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MIN,
-    finishingAge: CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MIN,
-    ageIncrement: CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MIN,
+    startingAge: DEFAULTS.DEFAULT_VALUES.STARTING_AGE,
+    finishingAge: DEFAULTS.DEFAULT_VALUES.FINISHING_AGE,
+    ageIncrement: DEFAULTS.DEFAULT_VALUES.AGE_INCREMENT,
+    startYear: DEFAULTS.DEFAULT_VALUES.START_YEAR,
+    endYear: DEFAULTS.DEFAULT_VALUES.END_YEAR,
+    yearIncrement: DEFAULTS.DEFAULT_VALUES.YEAR_INCREMENT,
     volumeReported: [OPTIONS.volumeReportedOptions[0].value],
-    includeInReport: [OPTIONS.includeInReportOptions[0].value],
-    projectionType: OPTIONS.projectionTypeOptions[0].value,
-    reportTitle: 'Sample Report Title',
+    includeInReport: [],
+    projectionType: DEFAULTS.DEFAULT_VALUES.PROJECTION_TYPE,
+    reportTitle: DEFAULTS.DEFAULT_VALUES.REPORT_TITLE,
     isDisabled: false,
   },
 }
 
 export const DisabledConfiguration: Story = {
   args: {
-    startingAge: CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MIN,
-    finishingAge: CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MIN,
-    ageIncrement: CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MIN,
+    startingAge: DEFAULTS.DEFAULT_VALUES.STARTING_AGE,
+    finishingAge: DEFAULTS.DEFAULT_VALUES.FINISHING_AGE,
+    ageIncrement: DEFAULTS.DEFAULT_VALUES.AGE_INCREMENT,
+    startYear: DEFAULTS.DEFAULT_VALUES.START_YEAR,
+    endYear: DEFAULTS.DEFAULT_VALUES.END_YEAR,
+    yearIncrement: DEFAULTS.DEFAULT_VALUES.YEAR_INCREMENT,
     volumeReported: [OPTIONS.volumeReportedOptions[0].value],
-    includeInReport: [OPTIONS.includeInReportOptions[0].value],
-    projectionType: OPTIONS.projectionTypeOptions[0].value,
-    reportTitle: 'Disabled Report Title',
+    includeInReport: [],
+    projectionType: DEFAULTS.DEFAULT_VALUES.PROJECTION_TYPE,
+    reportTitle: DEFAULTS.DEFAULT_VALUES.REPORT_TITLE,
     isDisabled: true,
   },
 }

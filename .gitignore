@@ -210,6 +210,9 @@ buildNumber.properties
 # JDT-specific (Eclipse Java Development Tools)
 .classpath
 
+# IntelliJ folder
+.idea/
+
 ### Windows ###
 # Windows thumbnail cache files
 Thumbs.db
@@ -241,3 +244,4 @@ $RECYCLE.BIN/
 # nohup logs
 nohup.out
 .quarkus
+backend/src/test/resources/test-data/hcsv/44grpa/polyids.txt

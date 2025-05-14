@@ -14,6 +14,7 @@ import java.beans.PropertyDescriptor;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -40,6 +41,8 @@ import ca.bc.gov.nrs.vdyp.common.EstimationMethods;
 import ca.bc.gov.nrs.vdyp.common.ReconcilationMethods;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common.ValueOrMarker;
+import ca.bc.gov.nrs.vdyp.common.VdypApplicationInitializationException;
+import ca.bc.gov.nrs.vdyp.common.VdypApplicationProcessingException;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMapImpl;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
@@ -57,6 +60,7 @@ import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.CompatibilityVariableMode;
+import ca.bc.gov.nrs.vdyp.model.DebugSettings;
 import ca.bc.gov.nrs.vdyp.model.GenusDefinitionMap;
 import ca.bc.gov.nrs.vdyp.model.InputLayer;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
@@ -100,24 +104,23 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		map.put("Y", 9);
 	});
 
-	// TODO Should probably handle this with enums instead for clarity.
-	private int[] debugModes = new int[25];
+	private Optional<DebugSettings> debugModes = Optional.empty();
 
-	public int getDebugMode(int index) {
-		return debugModes[index];
+	public DebugSettings getDebugModes() {
+		return debugModes.orElseThrow(() -> new IllegalStateException("Can not get debug modes before initialization"));
 	}
 
-	public void setDebugMode(int index, int mode) {
-		debugModes[index] = mode;
+	public void setDebugModes(DebugSettings newDebugModes) {
+		debugModes = Optional.of(newDebugModes);
 	}
 
 	static final Set<String> HARDWOODS = Set.of("AC", "AT", "D", "E", "MB");
 
-	protected static void doMain(VdypStartApplication<?, ?, ?, ?> app, final String... args) {
+	protected static void main(VdypStartApplication<?, ?, ?, ?> app, final String... args) {
 		var resolver = new FileSystemFileResolver();
 
 		try {
-			app.init(resolver, args);
+			app.init(resolver, System.out, System.in, args);
 		} catch (Exception ex) {
 			log.error("Error during initialization", ex);
 			System.exit(CONFIG_LOAD_ERROR);
@@ -128,6 +131,25 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		} catch (Exception ex) {
 			log.error("Error during processing", ex);
 			System.exit(PROCESSING_ERROR);
+		}
+	}
+
+	public void doMain(final String... args)
+			throws VdypApplicationInitializationException, VdypApplicationProcessingException {
+		var resolver = new FileSystemFileResolver();
+
+		try {
+			init(resolver, System.out, System.in, args);
+		} catch (Exception ex) {
+			log.error("Error during initialization", ex);
+			throw new VdypApplicationInitializationException(ex);
+		}
+
+		try {
+			process();
+		} catch (Exception ex) {
+			log.error("Error during processing", ex);
+			throw new VdypApplicationProcessingException(ex);
 		}
 	}
 
@@ -190,30 +212,19 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	 * @throws IOException
 	 * @throws ResourceParseException
 	 */
-	public void init(FileSystemFileResolver resolver, String... controlFilePaths)
-			throws IOException, ResourceParseException {
+	public void init(
+			FileSystemFileResolver resolver, PrintStream writeToIfNoArgs, InputStream readFromIfNoArgs,
+			String... controlFilePaths
+	) throws IOException, ResourceParseException {
 
-		// Load the control map
+		var controlFileNames = VdypApplication.getControlMapFileNames(
+				controlFilePaths, getDefaultControlFileName(), getId(), writeToIfNoArgs, readFromIfNoArgs
+		);
 
-		if (controlFilePaths.length < 1) {
-			throw new IllegalArgumentException("At least one control file must be specified.");
-		}
-
-		BaseControlParser parser = getControlFileParser();
-		List<InputStream> resources = new ArrayList<>(controlFilePaths.length);
-		try {
-			for (String path : controlFilePaths) {
-				resources.add(resolver.resolveForInput(path));
-			}
-
-			init(resolver, parser.parse(resources, resolver, controlMap));
-
-		} finally {
-			for (var resource : resources) {
-				resource.close();
-			}
-		}
+		init(resolver, getControlFileParser().parseByName(controlFileNames, resolver, controlMap));
 	}
+
+	protected abstract String getDefaultControlFileName();
 
 	/**
 	 * Initialize application
@@ -245,6 +256,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	protected void setControlMap(Map<String, Object> controlMap) {
 		this.controlMap = controlMap;
 		this.estimationMethods = new EstimationMethods(new ResolvedControlMapImpl(controlMap));
+		this.debugModes = Utils.parsedControl(controlMap, ControlKey.DEBUG_SWITCHES, DebugSettings.class);
 	}
 
 	protected <T> StreamingParser<T> getStreamingParser(ControlKey key) throws ProcessingException {
@@ -267,8 +279,12 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	public abstract void process() throws ProcessingException;
 
 	@Override
-	public void close() throws IOException {
-		closeVriWriter();
+	public void close() {
+		try {
+			closeVriWriter();
+		} catch (IOException e) {
+			throw new IllegalStateException(e);
+		}
 	}
 
 	protected Coefficients getCoeForSpecies(BaseVdypSpecies<?> species, ControlKey controlKey) {
@@ -321,6 +337,26 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 				// Resolve ties using SP0 preference order which is equal to index.
 				Utils.compareUsing(spec -> sp0Lookup.getByAlias(spec.getGenus()).getIndex())
 		);
+		final Comparator<BaseVdypSpecies<?>> percentGenusDescendingFudged = (sp1, sp2) -> {
+			int i1 = sp0Lookup.getByAlias(sp1.getGenus()).getIndex();
+			int i2 = sp0Lookup.getByAlias(sp2.getGenus()).getIndex();
+			float adjustmentFactor = i1 < i2 ? 0.9995f : 1.0005f;
+			return (int) Math.signum(sp2.getPercentGenus() * adjustmentFactor - sp1.getPercentGenus());
+		};
+
+		final Comparator<BaseVdypSpecies<?>> comparatorToUse;
+		switch (this.getDebugModes().getValue(22)) {
+		case 0:
+			comparatorToUse = percentGenusDescending;
+			break;
+		case 1:
+			comparatorToUse = percentGenusDescendingFudged;
+			break;
+		default:
+			throw new IllegalStateException(
+					MessageFormat.format("Debug flag 22 value of {0} is unknown", this.getDebugModes().getValue(22))
+			);
+		}
 
 		if (allSpecies.isEmpty()) {
 			throw new IllegalArgumentException("Can not find primary species as there are no species");
@@ -355,20 +391,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 			// There's only one
 			result.addAll(combined.values());
 		} else {
-			switch (this.getDebugMode(22)) {
-			case 0:
-				combined.values().stream().sorted(percentGenusDescending).limit(2).forEach(result::add);
-				break;
-			case 1:
-				// TODO
-				throw new UnsupportedOperationException(
-						MessageFormat.format("Debug flag 22 value of {0} is not supported", this.getDebugMode(22))
-				);
-			default:
-				throw new IllegalStateException(
-						MessageFormat.format("Debug flag 22 value of {0} is unknown", this.getDebugMode(22))
-				);
-			}
+			combined.values().stream().sorted(comparatorToUse).limit(2).forEach(result::add);
 		}
 
 		assert !result.isEmpty();
@@ -383,7 +406,6 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	 * @return
 	 * @throws ProcessingException
 	 */
-	@SuppressWarnings("java:S3776")
 	protected int findItg(List<S> primarySecondary) throws StandProcessingException {
 		var primary = primarySecondary.get(0);
 

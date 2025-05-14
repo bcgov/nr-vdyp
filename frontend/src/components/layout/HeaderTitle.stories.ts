@@ -23,17 +23,10 @@ type Story = StoryObj<typeof meta>
 export const Default: Story = {
   args: {
     text: 'VARIABLE DENSITY YIELD PROJECTION',
-  },
-}
-
-export const CustomStyle: Story = {
-  args: {
-    text: 'Custom Styled Header Title',
     style: {
-      textAlign: 'left',
-      fontWeight: 'bold',
-      fontSize: '24px',
-      color: '#1976d2',
+      textAlign: 'center',
+      flex: 1,
+      fontWeight: 300,
     },
   },
 }

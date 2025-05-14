@@ -1,9 +1,6 @@
 package ca.bc.gov.nrs.vdyp.forward;
 
-import static ca.bc.gov.nrs.vdyp.math.FloatMath.clamp;
-import static ca.bc.gov.nrs.vdyp.math.FloatMath.exp;
-import static ca.bc.gov.nrs.vdyp.math.FloatMath.log;
-import static ca.bc.gov.nrs.vdyp.math.FloatMath.pow;
+import static ca.bc.gov.nrs.vdyp.math.FloatMath.*;
 import static java.lang.Math.max;
 
 import java.io.IOException;
@@ -1497,8 +1494,9 @@ public class ForwardProcessingEngine {
 				logBaDeltaProportion = a0 + a1 * logBaProportionStart + a2 * baStart;
 			} else {
 				throw new ProcessingException(
-						MessageFormat
-								.format("Model value {} for polygon stratum {} is out of range", model, psStratumNumber)
+						MessageFormat.format(
+								"Model value {0} for polygon stratum {1} is out of range", model, psStratumNumber
+						)
 				);
 			}
 
@@ -2371,8 +2369,7 @@ public class ForwardProcessingEngine {
 		}
 	}
 
-	@SuppressWarnings({ "java:S3776", "java:S128" // This is using case fall through. The lack of breaks is intentional.
-	})
+	@SuppressWarnings("java:S128") // This is using case fall through. The lack of breaks is intentional.
 	private void writeCurrentPolygon(int startYear, int currentYear, int endYear) throws ProcessingException {
 
 		try {
@@ -3450,7 +3447,6 @@ public class ForwardProcessingEngine {
 	 * @return as described
 	 * @throws ProcessingException if primaryGenus is not a known genus
 	 */
-	@SuppressWarnings("java:S3776")
 	static int findInventoryTypeGroup(String primarySp0, Optional<String> optionalSecondarySp0, float primaryPercentage)
 			throws ProcessingException {
 

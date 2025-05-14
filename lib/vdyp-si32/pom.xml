@@ -1,20 +1,20 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-				 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
 
-  <artifactId>vdyp-si32</artifactId>
-  
-  
-  <name>Variable Density Yield Project - SI32</name>
-  <url>http://maven.apache.org</url>
+	<artifactId>vdyp-si32</artifactId>
 
-  <parent>
-    <groupId>ca.bc.gov.nrs.vdyp</groupId>
-    <artifactId>vdyp-lib</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-  </parent>
+	<name>Variable Density Yield Project - SI32</name>
+	<url>http://maven.apache.org</url>
 
-  <build>
+	<parent>
+		<groupId>ca.bc.gov.nrs.vdyp</groupId>
+		<artifactId>vdyp-lib</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+	</parent>
+
+	<build>
 		<pluginManagement>
 			<plugins>
 				<plugin>
@@ -46,14 +46,24 @@
 		</dependency>
 
 		<dependency>
-		    <groupId>org.apache.commons</groupId>
-		    <artifactId>commons-lang3</artifactId>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-jdk14</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
 		</dependency>
 
 		<dependency>
 			<groupId>ca.bc.gov.nrs.vdyp</groupId>
 			<artifactId>vdyp-common</artifactId>
 			<version>${project.version}</version>
+			<classifier>tests</classifier>
 			<type>test-jar</type>
 			<scope>test</scope>
 		</dependency>

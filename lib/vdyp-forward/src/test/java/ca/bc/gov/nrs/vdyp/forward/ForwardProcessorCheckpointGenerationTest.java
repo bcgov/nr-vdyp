@@ -1,10 +1,6 @@
 package ca.bc.gov.nrs.vdyp.forward;
 
-import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.PASS_1;
-import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.PASS_2;
-import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.PASS_3;
-import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.PASS_4;
-import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.PASS_5;
+import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.*;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -24,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.application.ProcessingException;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
+import ca.bc.gov.nrs.vdyp.forward.model.ForwardControlVariables;
 import ca.bc.gov.nrs.vdyp.forward.parsers.VdypPolygonParser;
 import ca.bc.gov.nrs.vdyp.forward.parsers.VdypSpeciesParser;
 import ca.bc.gov.nrs.vdyp.forward.parsers.VdypUtilizationParser;
@@ -32,6 +29,7 @@ import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BecDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.GenusDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
+import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
@@ -43,7 +41,7 @@ class ForwardProcessorCheckpointGenerationTest {
 	private static Set<ForwardPass> vdypPassSet = new HashSet<>(Arrays.asList(PASS_1, PASS_2, PASS_3, PASS_4, PASS_5));
 
 	@Test
-	void test() throws IOException, ResourceParseException, ProcessingException {
+	void test() throws IOException, ResourceParseException, ProcessingException, ValueParseException {
 
 		ForwardProcessor fp = new ForwardProcessor();
 
@@ -56,25 +54,23 @@ class ForwardProcessorCheckpointGenerationTest {
 
 		fp.run(inputFileResolver, vdyp8OutputResolver, List.of("VDYP-Checkpoint.CTR"), vdypPassSet);
 
-		var vdyp8InputResolver = new FileSystemFileResolver(vdyp8OutputPath);
-
 		// Verify that polygons are output 14 times for each year of growth.
 
 		Map<String, Object> controlMap = new HashMap<>();
 		var polygonParser = new VdypPolygonParser();
 		controlMap.put(
 				ControlKey.FORWARD_INPUT_VDYP_POLY.name(),
-				polygonParser.map("vp_grow2.dat", vdyp8InputResolver, controlMap)
+				polygonParser.map("vp_grow2.dat", vdyp8OutputResolver, controlMap)
 		);
 		var speciesParser = new VdypSpeciesParser();
 		controlMap.put(
 				ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SPECIES.name(),
-				speciesParser.map("vs_grow2.dat", vdyp8InputResolver, controlMap)
+				speciesParser.map("vs_grow2.dat", vdyp8OutputResolver, controlMap)
 		);
 		var utilizationParser = new VdypUtilizationParser();
 		controlMap.put(
 				ControlKey.FORWARD_INPUT_VDYP_LAYER_BY_SP0_BY_UTIL.name(),
-				utilizationParser.map("vu_grow2.dat", vdyp8InputResolver, controlMap)
+				utilizationParser.map("vu_grow2.dat", vdyp8OutputResolver, controlMap)
 		);
 		var becDefinitionParser = new BecDefinitionParser();
 		controlMap.put(
@@ -86,6 +82,7 @@ class ForwardProcessorCheckpointGenerationTest {
 				ControlKey.SP0_DEF.name(),
 				genusDefinitionParser.parse(TestUtils.class, "coe/SP0DEF_v0.dat", Collections.emptyMap())
 		);
+		controlMap.put(ControlKey.VTROL.name(), new ForwardControlVariables(new Integer[] { -1, 1, 2, 2, 1, 1, 1 }));
 
 		var reader = new ForwardDataStreamReader(controlMap);
 		Optional<VdypPolygon> polygon = reader.readNextPolygon();

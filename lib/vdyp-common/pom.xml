@@ -27,8 +27,8 @@
 		</dependency>
 
 		<dependency>
-		    <groupId>org.apache.commons</groupId>
-		    <artifactId>commons-lang3</artifactId>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
 		</dependency>
 
 		<dependency>
@@ -50,7 +50,7 @@
 			<artifactId>junit-jupiter-params</artifactId>
 			<scope>test</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.hamcrest</groupId>
 			<artifactId>hamcrest</artifactId>
@@ -91,6 +91,9 @@
 							<goals>
 								<goal>test-jar</goal>
 							</goals>
+							<configuration>
+								<classifier>tests</classifier>
+							</configuration>
 						</execution>
 					</executions>
 				</plugin>

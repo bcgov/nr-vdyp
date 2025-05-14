@@ -1,13 +1,8 @@
 package ca.bc.gov.nrs.vdyp.test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.aMapWithSize;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasKey;
-import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.is;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.io.ByteArrayInputStream;
@@ -16,6 +11,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Path;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -24,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -56,6 +53,7 @@ import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.BecLookup;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
+import ca.bc.gov.nrs.vdyp.model.DebugSettings;
 import ca.bc.gov.nrs.vdyp.model.GenusDefinition;
 import ca.bc.gov.nrs.vdyp.model.GenusDefinitionMap;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
@@ -133,6 +131,21 @@ public class TestUtils {
 		var result = new MockFileResolver("TEST");
 		result.addStream(expectedFilename, is);
 		return result;
+	}
+
+	public static Map<String, FileResolver> fileResolverContext(String expectedFilename, InputStream is) {
+		return new AbstractMap<String, FileResolver>() {
+
+			@Override
+			public FileResolver get(Object key) {
+				return TestUtils.fileResolver(expectedFilename, is);
+			}
+
+			@Override
+			public Set<Entry<String, FileResolver>> entrySet() {
+				return null;
+			}
+		};
 	}
 
 	/**
@@ -402,10 +415,21 @@ public class TestUtils {
 			}
 
 			@Override
+			public FileResolver relativeToParent(String path) throws IOException {
+				if (path.contains("\\") || path.contains("/"))
+					fail("Should not be requesting relative file resolver " + path);
+				return this;
+			}
+
+			@Override
 			public Path toPath(String filename) throws IOException {
 				return Path.of(toString(filename));
 			}
 
+			@Override
+			public String toString() {
+				return "Dynamic FileResolver for class " + klazz.getName();
+			}
 		};
 	}
 
@@ -456,7 +480,10 @@ public class TestUtils {
 
 		@Override
 		protected List<ControlKey> outputFileParsers() {
-			return Collections.emptyList();
+			return List.of(
+					ControlKey.VDYP_OUTPUT_VDYP_POLYGON, ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SPECIES,
+					ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL
+			);
 		}
 
 		@Override
@@ -633,5 +660,30 @@ public class TestUtils {
 		}
 
 		return layer.getSpecies().get(ids[0]);
+	}
+
+	/**
+	 * Create a DebugSettings object with the specified flag set to the specified value. All others will be 0.
+	 *
+	 * @param index
+	 * @param value
+	 * @return
+	 */
+	public static DebugSettings debugSettingsSingle(int index, int value) {
+		var arr = new Integer[DebugSettings.MAX_DEBUG_SETTINGS];
+		Arrays.fill(arr, 0);
+		arr[index - 1] = value;
+		return new DebugSettings(arr);
+	}
+
+	/**
+	 * Create a DebugSettings object with the specified flags set
+	 *
+	 * @param values
+	 * @return
+	 */
+	public static DebugSettings debugSettings(int... values) {
+		Integer[] arr = Arrays.stream(values).mapToObj(i -> (Integer) i).toArray(Integer[]::new);
+		return new DebugSettings(arr);
 	}
 }

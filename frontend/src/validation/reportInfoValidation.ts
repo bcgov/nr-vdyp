@@ -1,44 +1,101 @@
-import { ValidationBase } from './validationBase'
-import { NUM_INPUT_LIMITS } from '@/constants/constants'
+import { ReportInfoValidator } from '@/validation/reportInfoValidator'
 
-export class ReportInfoValidation extends ValidationBase {
-  validateAgeComparison(
-    finishingAge: number | null,
-    startingAge: number | null,
-  ): boolean {
-    if (finishingAge !== null && startingAge !== null) {
-      return finishingAge >= startingAge
+const reportInfoValidator = new ReportInfoValidator()
+
+/**
+ * Validates that the end value is greater than or equal to the start value.
+ * @param startValue - The starting value (e.g., startingAge or startYear)
+ * @param endValue - The ending value (e.g., finishingAge or endYear)
+ * @returns Object - Validation result
+ */
+export const validateComparison = (
+  startValue: number | null,
+  endValue: number | null,
+) => {
+  if (!reportInfoValidator.validateAgeComparison(startValue, endValue)) {
+    return { isValid: false }
+  }
+  return { isValid: true }
+}
+
+/**
+ * Validates that all required fields are provided.
+ * @param startValue - The starting value (e.g., startingAge or startYear)
+ * @param endValue - The ending value (e.g., finishingAge or endYear)
+ * @param incrementValue - The increment value (e.g., ageIncrement or yearIncrement)
+ * @returns Object - Validation result
+ */
+export const validateRequiredFields = (
+  startValue: number | null,
+  endValue: number | null,
+  incrementValue: number | null,
+) => {
+  if (
+    !reportInfoValidator.validateRequiredFields(
+      startValue,
+      endValue,
+      incrementValue,
+    )
+  ) {
+    return { isValid: false }
+  }
+  return { isValid: true }
+}
+
+export const validateAgeRange = (
+  startingAge: number | null,
+  finishingAge: number | null,
+  ageIncrement: number | null,
+) => {
+  if (!reportInfoValidator.validateStartingAgeRange(startingAge)) {
+    return {
+      isValid: false,
+      errorType: 'startingAge',
     }
-    return true
   }
 
-  validateStartingAgeRange(startingAge: number | null): boolean {
-    if (startingAge !== null) {
-      return (
-        startingAge >= NUM_INPUT_LIMITS.STARTING_AGE_MIN &&
-        startingAge <= NUM_INPUT_LIMITS.STARTING_AGE_MAX
-      )
+  if (!reportInfoValidator.validateFinishingAgeRange(finishingAge)) {
+    return {
+      isValid: false,
+      errorType: 'finishingAge',
     }
-    return true
   }
 
-  validateFinishingAgeRange(finishingAge: number | null): boolean {
-    if (finishingAge !== null) {
-      return (
-        finishingAge >= NUM_INPUT_LIMITS.FINISHING_AGE_MIN &&
-        finishingAge <= NUM_INPUT_LIMITS.FINISHING_AGE_MAX
-      )
+  if (!reportInfoValidator.validateAgeIncrementRange(ageIncrement)) {
+    return {
+      isValid: false,
+      errorType: 'ageIncrement',
     }
-    return true
   }
 
-  validateAgeIncrementRange(ageIncrement: number | null): boolean {
-    if (ageIncrement !== null) {
-      return (
-        ageIncrement >= NUM_INPUT_LIMITS.AGE_INC_MIN &&
-        ageIncrement <= NUM_INPUT_LIMITS.AGE_INC_MAX
-      )
+  return { isValid: true }
+}
+
+export const validateYearRange = (
+  startYear: number | null,
+  endYear: number | null,
+  yearIncrement: number | null,
+) => {
+  if (!reportInfoValidator.validateStartYearRange(startYear)) {
+    return {
+      isValid: false,
+      errorType: 'startYear',
     }
-    return true
   }
+
+  if (!reportInfoValidator.validateEndYearRange(endYear)) {
+    return {
+      isValid: false,
+      errorType: 'endYear',
+    }
+  }
+
+  if (!reportInfoValidator.validateYearIncrementRange(yearIncrement)) {
+    return {
+      isValid: false,
+      errorType: 'yearIncrement',
+    }
+  }
+
+  return { isValid: true }
 }

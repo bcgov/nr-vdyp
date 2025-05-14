@@ -1,0 +1,44 @@
+name: Deploy Using Maven and Helm
+permissions:
+  contents: read
+on:
+  workflow_call:
+    inputs:
+      target_environment:
+        required: true
+        type: string
+      ref:
+        required: false
+        type: string
+      tag:
+        required: false
+        type: string
+
+jobs:
+  # https://github.com/bcgov/quickstart-openshift-helpers
+  deploys:
+    name: Deploys
+    uses: ./.github/workflows/.deployer.yml
+    secrets: inherit
+    with:
+      environment: ${{ inputs.target_environment }}
+      ref: ${{ inputs.ref || 'main' }}  # fallback if ref is not provided
+      tag: ${{ inputs.tag }}
+      values: "values-${{ inputs.target_environment }}.yaml"
+      params: --set global.secrets.persist=false 
+
+  # tests:
+  #   name: Tests
+  #   if: needs.deploys.outputs.triggered == 'true'
+  #   needs: [deploys]
+  #   uses: ./.github/workflows/.tests.yml
+  #   with:
+  #     target: ${{ github.event.number }}
+
+  results:
+    name: PR Results
+    needs: [deploys]
+    if: always() && (!failure()) && (!cancelled())
+    runs-on: ubuntu-22.04
+    steps:
+      - run: echo "Success!"

@@ -1,8 +1,7 @@
 package ca.bc.gov.nrs.vdyp.common.controlmap;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 
 import java.io.IOException;
 import java.nio.file.Path;

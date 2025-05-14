@@ -20,6 +20,7 @@
 		<junit.version>5.9.2</junit.version>
 		<hamcrest.version>2.2</hamcrest.version>
 		<easymock.version>5.2.0</easymock.version>
+		<logback-version>1.4.14</logback-version>
 
 		<skipTests>false</skipTests>
 		<skipUnitTests>${skipTests}</skipUnitTests>
@@ -31,6 +32,8 @@
 		<module>lib</module>
 		<module>buildtools</module>
 		<module>backend</module>
+		<module>vdyp-test-oracle</module>
+		<module>integration-tests</module>
 	</modules>
 
 	<dependencyManagement>
@@ -62,8 +65,20 @@
 				<groupId>org.slf4j</groupId>
 				<artifactId>slf4j-jdk14</artifactId>
 				<version>2.0.7</version>
+				<scope>test</scope>
 			</dependency>
 
+			<dependency>
+				<groupId>ch.qos.logback</groupId>
+				<artifactId>logback-classic</artifactId>
+				<version>${logback-version}</version>
+			</dependency>
+			<dependency>
+				<groupId>ch.qos.logback</groupId>
+				<artifactId>logback-core</artifactId>
+				<version>${logback-version}</version>
+			</dependency>
+	
 			<dependency>
 				<groupId>org.junit.jupiter</groupId>
 				<artifactId>junit-jupiter-engine</artifactId>

@@ -38,6 +38,8 @@ import ca.bc.gov.nrs.vdyp.application.VdypStartApplication;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common.ValueOrMarker;
+import ca.bc.gov.nrs.vdyp.common.VdypApplicationInitializationException;
+import ca.bc.gov.nrs.vdyp.common.VdypApplicationProcessingException;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.common_calculators.SiteIndex2Height;
 import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.CommonCalculatorException;
@@ -86,8 +88,13 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 	public static void main(final String... args) throws IOException {
 
 		try (var app = new VriStart();) {
-
-			doMain(app, args);
+			try {
+				app.doMain(args);
+			} catch (VdypApplicationInitializationException e) {
+				System.exit(CONFIG_LOAD_ERROR);
+			} catch (VdypApplicationProcessingException e) {
+				System.exit(PROCESSING_ERROR);
+			}
 		}
 	}
 
@@ -493,7 +500,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 				});
 			} else {
 				var loreyHeight = vriSite
-						.flatMap(site -> site.getHeight().filter(x -> getDebugMode(2) != 1).map(height -> {
+						.flatMap(site -> site.getHeight().filter(x -> getDebugModes().getValue(2) != 1).map(height -> {
 							// DQsp
 							float speciesQuadMeanDiameter = Math.max(
 									UtilizationClass.U75TO125.lowBound, height / leadHeight * layerQuadMeanDiameter
@@ -580,10 +587,6 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		);
 
 		resultsPerSpecies.putAll(initialDqEstimate);
-
-		if (this.getDebugMode(9) > 0) {
-			// TODO
-		}
 
 		findRootForQuadMeanDiameterFractionalError(
 				-0.6f, 0.5f, resultsPerSpecies, initialDqEstimate, baseAreaPerSpecies, minPerSpecies, maxPerSpecies,
@@ -788,7 +791,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 	private Float enforceMinimumDiameter(Float baseArea, Float treesPerHectare) throws StandProcessingException {
 		final float quadMeanDiameter = BaseAreaTreeDensityDiameter.quadMeanDiameter(baseArea, treesPerHectare);
 		if (quadMeanDiameter < VETERAN_MIN_DQ) {
-			if (this.getId() == VdypApplicationIdentifier.VRI_START && this.getDebugMode(1) == 2) {
+			if (this.getId() == VdypApplicationIdentifier.VRI_START && this.getDebugModes().getValue(1) == 2) {
 				throw new StandProcessingException(
 						MessageFormat.format(MINIMUM_DIAMETER_FAIL_MESSAGE, quadMeanDiameter, VETERAN_MIN_DQ)
 				);
@@ -1533,6 +1536,11 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 					.quadMeanDiameterFractionalError(x, resultPerSpecies, initialDqs, baseAreas, minDq, maxDq, tph);
 			return lastFs[0];
 		};
+
+		debugModeExpandRootSearchWindow(
+				Optional.of(getDebugModes().getValue(9)).filter(x -> x > 0), minDq, maxDq, errorFunc
+		);
+
 		try {
 			double x = doSolve(min, max, errorFunc);
 
@@ -1569,6 +1577,25 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			);
 
 		}
+	}
+
+	void debugModeExpandRootSearchWindow(
+			Optional<Integer> percentage, Map<String, Float> minDq, Map<String, Float> maxDq,
+			UnivariateFunction errorFunc
+	) {
+		percentage.map(p -> (float) p / 100f).ifPresent(p -> {
+			final double f1 = errorFunc.value(-10f);
+			final double f2 = errorFunc.value(10f);
+			final float base = 7.5f;
+			if (f2 * f1 > 0d) {
+				float lowFactor = 1.0f - p;
+				float highFactor = 1.0f + p;
+				for (var key : maxDq.keySet()) {
+					minDq.put(key, base + lowFactor * (minDq.get(key) - base));
+					maxDq.put(key, base + highFactor * (maxDq.get(key) - base));
+				}
+			}
+		});
 	}
 
 	double doSolve(float min, float max, UnivariateFunction errorFunc) {
@@ -1614,7 +1641,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			throws StandProcessingException {
 		// Only do this in VRIStart
 
-		if (getDebugMode(1) == 2) {
+		if (getDebugModes().getValue(1) == 2) {
 			throw new StandProcessingException("Could not find solution for quadratic mean diameter", ex);
 		}
 
@@ -1691,5 +1718,10 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 		}
 
 		throw new NoBracketingException(currentX, lastX, currentF, lastF);
+	}
+
+	@Override
+	protected String getDefaultControlFileName() {
+		return "vristart.ctr";
 	}
 }

@@ -1,19 +1,8 @@
 package ca.bc.gov.nrs.vdyp.io.parse.control;
 
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.coe;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.controlMapHasEntry;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.hasBec;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.mmEmpty;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.mmHasEntry;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.hasEntry;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.isA;
+import static org.hamcrest.Matchers.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -21,6 +10,7 @@ import java.io.InputStream;
 import java.io.SequenceInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.hamcrest.Matcher;
@@ -43,13 +33,29 @@ import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.SiteCurveAgeMaximum;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
-@SuppressWarnings({ "unused", "unchecked", "rawtypes" })
+@SuppressWarnings({ "unchecked", "rawtypes" })
 class NonFipControlParserTest {
 
 	static final String CONTROL_FILE = "VRISTART.CTR";
 
 	private StartApplicationControlParser getUnit() {
 		return TestUtils.startAppControlParser();
+	}
+
+	@Test
+	void testParseByName() throws Exception {
+		BaseControlParser parser = getUnit();
+		var controlMap = new HashMap<String, Object>();
+		var resolver = TestUtils.fileResolver(TestUtils.class);
+		var names = List.of(CONTROL_FILE);
+		var result = getUnit().parseByName(names, resolver, controlMap);
+		assertThat(
+				result,
+				(Matcher) controlMapHasEntry(
+						ControlKey.BEC_DEF,
+						allOf(instanceOf(BecLookup.class), hasBec("AT", present(instanceOf(BecDefinition.class))))
+				)
+		);
 	}
 
 	// Most of these tests are the same as in FipControlParserTest TODO consider

@@ -1,7 +1,25 @@
 <template>
   <div>
     <v-row>
-      <v-col cols="3">
+      <v-col cols="12">
+        <v-radio-group
+          v-model="selectedAgeYearRange"
+          inline
+          :disabled="isDisabled"
+        >
+          <v-radio
+            v-for="option in OPTIONS.ageYearRangeOptions"
+            :key="option.value"
+            :label="option.label"
+            :value="option.value"
+          ></v-radio>
+        </v-radio-group>
+      </v-col>
+    </v-row>
+  </div>
+  <div v-if="selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.AGE">
+    <v-row>
+      <v-col cols="2">
         <v-text-field
           id="startingAge"
           label="Starting Age"
@@ -15,10 +33,11 @@
           density="compact"
           dense
           :disabled="isDisabled"
+          @update:model-value="handleStartingAgeInput"
         ></v-text-field>
       </v-col>
       <v-col class="col-space-3" />
-      <v-col cols="3">
+      <v-col cols="2">
         <v-text-field
           id="finishingAge"
           label="Finishing Age"
@@ -32,13 +51,14 @@
           density="compact"
           dense
           :disabled="isDisabled"
+          @update:model-value="handleFinishingAgeInput"
         ></v-text-field>
       </v-col>
       <v-col class="col-space-3" />
-      <v-col cols="3">
+      <v-col cols="2">
         <v-text-field
           id="ageIncrement"
-          label="Age Increment"
+          label="Increment"
           type="number"
           v-model.number="localAgeIncrement"
           :min="CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MIN"
@@ -49,13 +69,71 @@
           density="compact"
           dense
           :disabled="isDisabled"
+          @update:model-value="handleAgeIncrementInput"
+        ></v-text-field>
+      </v-col>
+    </v-row>
+  </div>
+  <div v-else>
+    <v-row>
+      <v-col cols="2">
+        <v-text-field
+          id="startYear"
+          label="Start Year"
+          type="number"
+          v-model.number="localStartYear"
+          :min="CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_MIN"
+          :max="CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_MAX"
+          :step="CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_STEP"
+          persistent-placeholder
+          placeholder=""
+          density="compact"
+          dense
+          :disabled="isDisabled"
+          @update:model-value="handleStartYearInput"
+        ></v-text-field>
+      </v-col>
+      <v-col class="col-space-3" />
+      <v-col cols="2">
+        <v-text-field
+          id="endYear"
+          label="End Year"
+          type="number"
+          v-model.number="localEndYear"
+          :min="CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_MIN"
+          :max="CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_MAX"
+          :step="CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_STEP"
+          persistent-placeholder
+          placeholder=""
+          density="compact"
+          dense
+          :disabled="isDisabled"
+          @update:model-value="handleEndYearInput"
+        ></v-text-field>
+      </v-col>
+      <v-col class="col-space-3" />
+      <v-col cols="2">
+        <v-text-field
+          id="yearIncrement"
+          label="Increment"
+          type="number"
+          v-model.number="localYearIncrement"
+          :min="CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_MIN"
+          :max="CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_MAX"
+          :step="CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_STEP"
+          persistent-placeholder
+          placeholder=""
+          density="compact"
+          dense
+          :disabled="isDisabled"
+          @update:model-value="handleYearIncrementInput"
         ></v-text-field>
       </v-col>
     </v-row>
   </div>
   <div class="ml-4 mt-5">
     <div class="ml-n4 mt-n5">
-      <span class="text-h7">Volume Reported</span>
+      <span class="text-h7">Volumes Reported</span>
     </div>
     <v-row class="ml-n6">
       <v-col cols="12" style="padding-top: 0px">
@@ -70,7 +148,8 @@
               :label="option.label"
               :value="option.value"
               hide-details
-              :disabled="isDisabled"
+              :disabled="isVolumeReportedDisabled"
+              data-testid="volume-reported"
             ></v-checkbox>
           </v-col>
         </v-row>
@@ -94,7 +173,7 @@
               :label="option.label"
               :value="option.value"
               hide-details
-              :disabled="isDisabled"
+              :disabled="getIncludeInReportDisabled(option.value)"
             ></v-checkbox>
           </v-col>
           <v-col style="max-width: 20% !important">
@@ -140,13 +219,18 @@
   </div>
 </template>
 <script setup lang="ts">
-import { ref, watch } from 'vue'
-import { CONSTANTS, OPTIONS } from '@/constants'
+import { ref, watch, computed } from 'vue'
+import { CONSTANTS, DEFAULTS, OPTIONS } from '@/constants'
+import { parseNumberOrNull } from '@/utils/util'
 
 const props = defineProps<{
+  selectedAgeYearRange: string | null
   startingAge: number | null
   finishingAge: number | null
   ageIncrement: number | null
+  startYear: number | null
+  endYear: number | null
+  yearIncrement: number | null
   volumeReported: string[]
   includeInReport: string[]
   projectionType: string | null
@@ -155,24 +239,41 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits([
+  'update:selectedAgeYearRange',
   'update:startingAge',
   'update:finishingAge',
   'update:ageIncrement',
+  'update:startYear',
+  'update:endYear',
+  'update:yearIncrement',
   'update:volumeReported',
   'update:includeInReport',
   'update:projectionType',
   'update:reportTitle',
 ])
 
+const selectedAgeYearRange = ref<string>(
+  props.selectedAgeYearRange || DEFAULTS.DEFAULT_VALUES.SELECTED_AGE_YEAR_RANGE,
+)
 const localStartingAge = ref<number | null>(props.startingAge)
 const localFinishingAge = ref<number | null>(props.finishingAge)
 const localAgeIncrement = ref<number | null>(props.ageIncrement)
+const localStartYear = ref<number | null>(props.startYear)
+const localEndYear = ref<number | null>(props.endYear)
+const localYearIncrement = ref<number | null>(props.yearIncrement)
 const localVolumeReported = ref<string[]>([...props.volumeReported])
 const localIncludeInReport = ref<string[]>([...props.includeInReport])
 const localProjectionType = ref<string | null>(props.projectionType)
 const localReportTitle = ref<string | null>(props.reportTitle)
 
 // Watch props for changes (Prop -> Local State)
+watch(
+  () => props.selectedAgeYearRange,
+  (newVal) => {
+    selectedAgeYearRange.value =
+      newVal || DEFAULTS.DEFAULT_VALUES.SELECTED_AGE_YEAR_RANGE
+  },
+)
 watch(
   () => props.startingAge,
   (newVal) => {
@@ -189,6 +290,24 @@ watch(
   () => props.ageIncrement,
   (newVal) => {
     localAgeIncrement.value = newVal
+  },
+)
+watch(
+  () => props.startYear,
+  (newVal) => {
+    localStartYear.value = newVal
+  },
+)
+watch(
+  () => props.endYear,
+  (newVal) => {
+    localEndYear.value = newVal
+  },
+)
+watch(
+  () => props.yearIncrement,
+  (newVal) => {
+    localYearIncrement.value = newVal
   },
 )
 watch(
@@ -220,10 +339,36 @@ watch(
   },
 )
 
+// Calculating whether the "Culmination Values" checkbox is enabled
+const isCulminationValuesEnabled = computed(() => {
+  return (
+    localStartingAge.value !== null &&
+    localStartingAge.value <= 10 &&
+    localFinishingAge.value !== null &&
+    localFinishingAge.value >= 300
+  )
+})
+
 // Watch local state for changes (Local State -> Parent Emit)
+watch(selectedAgeYearRange, (newVal) =>
+  emit('update:selectedAgeYearRange', newVal),
+)
 watch(localStartingAge, (newVal) => emit('update:startingAge', newVal))
 watch(localFinishingAge, (newVal) => emit('update:finishingAge', newVal))
+
+watch([localStartingAge, localFinishingAge], () => {
+  if (!isCulminationValuesEnabled.value) {
+    // Remove the selection if "Culmination Values" is disabled
+    localIncludeInReport.value = localIncludeInReport.value.filter(
+      (item) => item !== CONSTANTS.INCLUDE_IN_REPORT.CULMINATION_VALUES,
+    )
+  }
+})
+
 watch(localAgeIncrement, (newVal) => emit('update:ageIncrement', newVal))
+watch(localStartYear, (newVal) => emit('update:startYear', newVal))
+watch(localEndYear, (newVal) => emit('update:endYear', newVal))
+watch(localYearIncrement, (newVal) => emit('update:yearIncrement', newVal))
 watch(localVolumeReported, (newVal) => {
   if (JSON.stringify(newVal) !== JSON.stringify(props.volumeReported)) {
     emit('update:volumeReported', [...newVal])
@@ -234,7 +379,60 @@ watch(localIncludeInReport, (newVal) => {
     emit('update:includeInReport', [...newVal])
   }
 })
-watch(localProjectionType, (newVal) => emit('update:projectionType', newVal))
+
+watch(localProjectionType, (newVal) => {
+  if (newVal === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS) {
+    // Reset the "Volumes Reported" checkbox and force select only 'Close Utilization' checkbox
+    localVolumeReported.value = [CONSTANTS.VOLUME_REPORTED.CLOSE_UTIL]
+    emit('update:volumeReported', [...localVolumeReported.value])
+  }
+
+  emit('update:projectionType', newVal)
+})
+
 watch(localReportTitle, (newVal) => emit('update:reportTitle', newVal))
+
+// Decide whether to disable the "Volumes Reported" checkbox
+const isVolumeReportedDisabled = computed(() => {
+  return (
+    localProjectionType.value === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS ||
+    props.isDisabled
+  )
+})
+
+// Decide to enable/disable the "Include in Report" checkbox
+const getIncludeInReportDisabled = (value: string) => {
+  if (value === CONSTANTS.INCLUDE_IN_REPORT.CULMINATION_VALUES) {
+    return !isCulminationValuesEnabled.value
+  } else if (value === CONSTANTS.INCLUDE_IN_REPORT.COMPUTED_MAI) {
+    return localProjectionType.value === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
+  }
+  return props.isDisabled
+}
+
+const handleStartingAgeInput = (value: string) => {
+  // Convert an empty string to null
+  localStartingAge.value = parseNumberOrNull(value)
+}
+
+const handleFinishingAgeInput = (value: string) => {
+  localFinishingAge.value = parseNumberOrNull(value)
+}
+
+const handleAgeIncrementInput = (value: string) => {
+  localAgeIncrement.value = parseNumberOrNull(value)
+}
+
+const handleStartYearInput = (value: string) => {
+  localStartYear.value = parseNumberOrNull(value)
+}
+
+const handleEndYearInput = (value: string) => {
+  localEndYear.value = parseNumberOrNull(value)
+}
+
+const handleYearIncrementInput = (value: string) => {
+  localYearIncrement.value = parseNumberOrNull(value)
+}
 </script>
 <style scoped></style>

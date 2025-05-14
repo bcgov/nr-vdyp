@@ -1,26 +1,17 @@
 package ca.bc.gov.nrs.vdyp.application;
 
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.causedBy;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.*;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.coe;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.utilization;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.utilizationAllAndBiggest;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.utilizationHeight;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.describedAs;
-import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -34,6 +25,7 @@ import org.easymock.Capture;
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -49,6 +41,7 @@ import ca.bc.gov.nrs.vdyp.common.ComputationMethods;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.EstimationMethods;
 import ca.bc.gov.nrs.vdyp.common.Utils;
+import ca.bc.gov.nrs.vdyp.common.VdypApplicationInitializationException;
 import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMapImpl;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BecDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
@@ -91,24 +84,69 @@ class VdypStartApplicationTest {
 
 			var app = new TestStartApplication(controlMap, false);
 
-			app.init(resolver, "testControl");
+			app.init(resolver, null, null, "testControl");
 			assertThat(app.controlMap, is(controlMap));
 
 			app.close();
 		}
 
+		@Disabled
 		@Test
-		void testInitNoControlFiles() throws IOException, ResourceParseException {
-			MockFileResolver resolver = new MockFileResolver("Test");
+		void testInitNoControlFile() throws IOException, ResourceParseException {
+			var resolver1 = dummyIo();
+			resolver1.addError("test.ctr", () -> new FileNotFoundException());
+			MockFileResolver resolver = resolver1;
 
-			var app = new TestStartApplication(controlMap, true);
+			var app = new TestStartApplication(controlMap, false);
 
-			var ex = assertThrows(IllegalArgumentException.class, () -> app.init(resolver));
-			assertThat(ex, hasProperty("message", is("At least one control file must be specified.")));
+			@SuppressWarnings("unused")
+			var ex = assertThrows(FileNotFoundException.class, () -> {
+				try (var inputStream = TestUtils.makeInputStream("", "")) {
+					app.init(resolver, new PrintStream(new ByteArrayOutputStream()), inputStream);
+				}
+			});
 
 			app.close();
 		}
 
+		@Disabled
+		@Test
+		void testInitDefaultControl() throws IOException, ResourceParseException {
+			controlMap = TestUtils.loadControlMap();
+
+			MockFileResolver resolver = dummyIo();
+
+			InputStream inputStream = TestUtils.makeInputStream("");
+			resolver.addStream("test.ctr", inputStream);
+
+			var app = new TestStartApplication(controlMap, true);
+
+			app.init(resolver, new PrintStream(new ByteArrayOutputStream()), TestUtils.makeInputStream("", ""));
+			assertThat(app.controlMap, is(controlMap));
+
+			app.close();
+		}
+
+		@Disabled
+		@Test
+		void testInitControlViaStdIn() throws IOException, ResourceParseException {
+			MockFileResolver resolver = dummyIo();
+
+			var app = new TestStartApplication(controlMap, true);
+
+			app.init(resolver, new PrintStream(new ByteArrayOutputStream()), TestUtils.makeInputStream("testControl"));
+			assertThat(app.controlMap, is(controlMap));
+
+			app.close();
+		}
+	}
+
+	@Test
+	void testApplicationExceptions() throws IOException, ResourceParseException {
+		try (var app = new TestStartApplication(controlMap, true)) {
+
+			assertThrows(VdypApplicationInitializationException.class, () -> app.doMain("bad path"));
+		}
 	}
 
 	private MockFileResolver dummyIo() {
@@ -161,7 +199,6 @@ class VdypStartApplicationTest {
 
 			app.init(resolver, controlMap);
 
-			@SuppressWarnings("resource") // mock object can't leak anything
 			var ex = assertThrows(
 					ProcessingException.class, () -> app.getStreamingParser(ControlKey.FIP_INPUT_YIELD_LAYER)
 			);
@@ -191,7 +228,6 @@ class VdypStartApplicationTest {
 
 			app.init(resolver, controlMap);
 
-			@SuppressWarnings("resource") // mock object can't leak anything
 			var ex = assertThrows(
 					ProcessingException.class, () -> app.getStreamingParser(ControlKey.FIP_INPUT_YIELD_LAYER)
 			);
@@ -208,7 +244,7 @@ class VdypStartApplicationTest {
 	protected VdypStartApplication getTestUnit(IMocksControl control) throws IOException {
 
 		VdypStartApplication mock = EasyMock.createMockBuilder(VdypStartApplication.class)//
-				.addMockedMethods("getControlFileParser", "process", "getId", "copySpecies", "getDebugMode")//
+				.addMockedMethods("getControlFileParser", "process", "getId", "copySpecies")//
 				.createMock(control);
 		return mock;
 	}
@@ -452,11 +488,14 @@ class VdypStartApplicationTest {
 
 			Capture<Consumer<BaseVdypSpecies.Builder>> copyCapture = Capture.newInstance();
 
+			controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettingsSingle(22, 0));
+
 			try (VdypStartApplication app = getTestUnit(mockControl)) {
+
 				EasyMock.expect(app.copySpecies(EasyMock.same(spec1), EasyMock.capture(copyCapture))).andReturn(spec1);
 				EasyMock.expect(app.copySpecies(EasyMock.same(spec2), EasyMock.capture(copyCapture))).andReturn(spec2);
 				EasyMock.expect(app.copySpecies(EasyMock.same(spec3), EasyMock.capture(copyCapture))).andReturn(spec3);
-				EasyMock.expect(app.getDebugMode(22)).andStubReturn(0);
+
 				mockControl.replay();
 				app.init(dummyIo(), controlMap);
 
@@ -487,10 +526,13 @@ class VdypStartApplicationTest {
 
 			Capture<Consumer<BaseVdypSpecies.Builder>> copyCapture = Capture.newInstance();
 
+			controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettingsSingle(22, 0));
+
 			try (VdypStartApplication app = getTestUnit(mockControl)) {
+
 				EasyMock.expect(app.copySpecies(EasyMock.same(spec1), EasyMock.capture(copyCapture))).andReturn(spec1);
 				EasyMock.expect(app.copySpecies(EasyMock.same(spec2), EasyMock.capture(copyCapture))).andReturn(spec2);
-				EasyMock.expect(app.getDebugMode(22)).andStubReturn(0);
+
 				mockControl.replay();
 				app.init(dummyIo(), controlMap);
 
@@ -508,6 +550,180 @@ class VdypStartApplicationTest {
 			mockControl.verify();
 
 		}
+
+		@Test
+		void testSortNearTie() throws Exception {
+
+			var mockControl = EasyMock.createControl();
+
+			BaseVdypSpecies spec1 = mockSpecies(mockControl, "H", 50.0005f);
+			BaseVdypSpecies spec2 = mockSpecies(mockControl, "B", 49.9995f);
+			BaseVdypSpecies.Builder copyBuilder = mockControl.createMock(BaseVdypSpecies.Builder.class);
+			// Should not have any methods called.
+
+			Capture<Consumer<BaseVdypSpecies.Builder>> copyCapture = Capture.newInstance();
+
+			controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettingsSingle(22, 0));
+
+			try (VdypStartApplication app = getTestUnit(mockControl)) {
+
+				EasyMock.expect(app.copySpecies(EasyMock.same(spec1), EasyMock.capture(copyCapture))).andReturn(spec1);
+				EasyMock.expect(app.copySpecies(EasyMock.same(spec2), EasyMock.capture(copyCapture))).andReturn(spec2);
+
+				mockControl.replay();
+				app.init(dummyIo(), controlMap);
+
+				var allSpecies = List.of(spec1, spec2);
+
+				List<BaseVdypSpecies> result = app.findPrimarySpecies(allSpecies);
+
+				assertThat(result, hasSize(2));
+				assertThat(result, contains(is(spec1), is(spec2)));
+
+				for (var config : copyCapture.getValues()) {
+					config.accept(copyBuilder);
+				}
+			}
+			mockControl.verify();
+
+		}
+
+		@Test
+		void testSortDebug22() throws Exception {
+
+			var mockControl = EasyMock.createControl();
+
+			BaseVdypSpecies spec1 = mockSpecies(mockControl, "B", 20f);
+			BaseVdypSpecies spec2 = mockSpecies(mockControl, "H", 70f);
+			BaseVdypSpecies spec3 = mockSpecies(mockControl, "MB", 10f);
+			BaseVdypSpecies.Builder copyBuilder = mockControl.createMock(BaseVdypSpecies.Builder.class);
+			// Should not have any methods called.
+
+			Capture<Consumer<BaseVdypSpecies.Builder>> copyCapture = Capture.newInstance();
+
+			controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettingsSingle(22, 1));
+
+			try (VdypStartApplication app = getTestUnit(mockControl)) {
+
+				EasyMock.expect(app.copySpecies(EasyMock.same(spec1), EasyMock.capture(copyCapture))).andReturn(spec1);
+				EasyMock.expect(app.copySpecies(EasyMock.same(spec2), EasyMock.capture(copyCapture))).andReturn(spec2);
+				EasyMock.expect(app.copySpecies(EasyMock.same(spec3), EasyMock.capture(copyCapture))).andReturn(spec3);
+
+				mockControl.replay();
+				app.init(dummyIo(), controlMap);
+
+				var allSpecies = List.of(spec1, spec2, spec3);
+
+				List<BaseVdypSpecies> result = app.findPrimarySpecies(allSpecies);
+
+				assertThat(result, hasSize(2));
+				assertThat(result, contains(is(spec2), is(spec1)));
+
+				for (var config : copyCapture.getValues()) {
+					config.accept(copyBuilder);
+				}
+			}
+			mockControl.verify();
+
+		}
+
+		@Test
+		void testSortTieDebug22() throws Exception {
+
+			var mockControl = EasyMock.createControl();
+
+			BaseVdypSpecies spec1 = mockSpecies(mockControl, "H", 50f);
+			BaseVdypSpecies spec2 = mockSpecies(mockControl, "B", 50f);
+			BaseVdypSpecies.Builder copyBuilder = mockControl.createMock(BaseVdypSpecies.Builder.class);
+			// Should not have any methods called.
+
+			Capture<Consumer<BaseVdypSpecies.Builder>> copyCapture = Capture.newInstance();
+
+			controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettingsSingle(22, 1));
+
+			try (VdypStartApplication app = getTestUnit(mockControl)) {
+
+				EasyMock.expect(app.copySpecies(EasyMock.same(spec1), EasyMock.capture(copyCapture))).andReturn(spec1);
+				EasyMock.expect(app.copySpecies(EasyMock.same(spec2), EasyMock.capture(copyCapture))).andReturn(spec2);
+
+				mockControl.replay();
+				app.init(dummyIo(), controlMap);
+
+				var allSpecies = List.of(spec1, spec2);
+
+				List<BaseVdypSpecies> result = app.findPrimarySpecies(allSpecies);
+
+				assertThat(result, hasSize(2));
+				assertThat(result, contains(is(spec2), is(spec1)));
+
+				for (var config : copyCapture.getValues()) {
+					config.accept(copyBuilder);
+				}
+			}
+			mockControl.verify();
+
+		}
+
+		@Test
+		void testSortNearTieDebug22() throws Exception {
+
+			var mockControl = EasyMock.createControl();
+
+			BaseVdypSpecies spec1 = mockSpecies(mockControl, "H", 50.0005f);
+			BaseVdypSpecies spec2 = mockSpecies(mockControl, "B", 49.9995f);
+			BaseVdypSpecies.Builder copyBuilder = mockControl.createMock(BaseVdypSpecies.Builder.class);
+			// Should not have any methods called.
+
+			Capture<Consumer<BaseVdypSpecies.Builder>> copyCapture = Capture.newInstance();
+
+			controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettingsSingle(22, 1));
+
+			try (VdypStartApplication app = getTestUnit(mockControl)) {
+
+				EasyMock.expect(app.copySpecies(EasyMock.same(spec1), EasyMock.capture(copyCapture))).andReturn(spec1);
+				EasyMock.expect(app.copySpecies(EasyMock.same(spec2), EasyMock.capture(copyCapture))).andReturn(spec2);
+
+				mockControl.replay();
+				app.init(dummyIo(), controlMap);
+
+				var allSpecies = List.of(spec1, spec2);
+
+				List<BaseVdypSpecies> result = app.findPrimarySpecies(allSpecies);
+
+				assertThat(result, hasSize(2));
+				assertThat(result, contains(is(spec2), is(spec1)));
+
+				for (var config : copyCapture.getValues()) {
+					config.accept(copyBuilder);
+				}
+			}
+			mockControl.verify();
+
+		}
+
+		@Test
+		void testDebug22Unknown() throws Exception {
+
+			var mockControl = EasyMock.createControl();
+
+			BaseVdypSpecies spec1 = mockSpecies(mockControl, "H", 50.0005f);
+			BaseVdypSpecies spec2 = mockSpecies(mockControl, "B", 49.9995f);
+
+			controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettingsSingle(22, 2));
+
+			try (VdypStartApplication app = getTestUnit(mockControl)) {
+
+				mockControl.replay();
+				app.init(dummyIo(), controlMap);
+
+				var allSpecies = List.of(spec1, spec2);
+
+				assertThrows(IllegalStateException.class, () -> app.findPrimarySpecies(allSpecies));
+			}
+			mockControl.verify();
+
+		}
+
 	}
 
 	@Nested

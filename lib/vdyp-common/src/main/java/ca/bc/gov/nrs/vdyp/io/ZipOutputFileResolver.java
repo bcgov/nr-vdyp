@@ -48,6 +48,11 @@ public class ZipOutputFileResolver implements FileResolver {
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
+	public ZipOutputFileResolver relativeToParent(String path) throws IOException {
+		throw new UnsupportedOperationException();
+	}
+
 	private static final int BUFFER_SIZE = 64 * 1024;
 
 	public void generate(Path zipFile) throws IOException {

@@ -27,11 +27,16 @@ export const siteSpeciesValuesOptions = [
 ]
 
 export const ecoZoneOptions = [
-  { label: 'Boreal Cordillera', value: '1' },
-  { label: 'Boreal Plains', value: '2' },
-  { label: 'Montane Cordillera', value: '3' },
-  { label: 'Pacific Maritime', value: '4' },
-  { label: 'Taiga Plains', value: '5' },
+  { label: 'Boreal Cordillera', value: '12' },
+  { label: 'Boreal Plains', value: '9' },
+  { label: 'Montane Cordillera', value: '14' },
+  { label: 'Pacific Maritime', value: '13' },
+  { label: 'Taiga Plains', value: '4' },
+]
+
+export const ageYearRangeOptions = [
+  { label: 'Age Range', value: CONSTANTS.AGE_YEAR_RANGE.AGE },
+  { label: 'Year Range', value: CONSTANTS.AGE_YEAR_RANGE.YEAR },
 ]
 
 export const volumeReportedOptions = [

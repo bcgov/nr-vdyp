@@ -1,6 +1,7 @@
 import {
   PANEL,
   MODEL_PARAMETER_PANEL,
+  FILE_UPLOAD_PANEL,
   SORT_ORDER,
   MESSAGE_TYPE,
   REPORTING_TAB,
@@ -18,6 +19,10 @@ export type PanelName =
   | typeof MODEL_PARAMETER_PANEL.SITE_INFO
   | typeof MODEL_PARAMETER_PANEL.STAND_DENSITY
   | typeof MODEL_PARAMETER_PANEL.REPORT_INFO
+
+export type FileUploadPanelName =
+  | typeof FILE_UPLOAD_PANEL.REPORT_INFO
+  | typeof FILE_UPLOAD_PANEL.ATTACHMENTS
 
 export type PanelState = typeof PANEL.OPEN | typeof PANEL.CLOSE
 
@@ -41,3 +46,5 @@ export type Variant =
   | 'solo'
   | 'solo-inverted'
   | 'solo-filled'
+
+export type NumStrNullType = number | string | null

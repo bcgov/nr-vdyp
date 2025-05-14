@@ -1,17 +1,8 @@
 package ca.bc.gov.nrs.vdyp.io.parse.control;
 
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.parseAs;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasEntry;
-import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.stringContainsInOrder;
+import static org.hamcrest.Matchers.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -185,6 +176,30 @@ class ControlFileParserTest {
 			var result = parser.parse(is);
 
 			assertThat(result.entrySet(), empty());
+		}
+	}
+
+	@Test
+	void testParsesEntriesEmptyContent() throws Exception {
+		var parser = makeParser();
+
+		String file = "015 \n";
+		try (InputStream is = new ByteArrayInputStream(file.getBytes())) {
+			var result = parser.parse(is);
+
+			assertThat(result.entrySet(), contains(controlEntry(equalTo(15), equalTo(" "), equalTo(""))));
+		}
+	}
+
+	@Test
+	void testParsesEntriesEmptyContentExtended() throws Exception {
+		var parser = makeParser();
+
+		String file = "016X\n";
+		try (InputStream is = new ByteArrayInputStream(file.getBytes())) {
+			var result = parser.parse(is);
+
+			assertThat(result.entrySet(), contains(controlEntry(equalTo(16), equalTo("X"), equalTo(""))));
 		}
 	}
 

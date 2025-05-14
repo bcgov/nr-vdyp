@@ -54,7 +54,7 @@ public abstract class NonFipControlParser extends StartApplicationControlParser 
 	}
 
 	@Override
-	protected void applyAllModifiers(Map<String, Object> map, FileResolver fileResolver)
+	protected void applyAllModifiers(Map<String, Object> map, Map<String, FileResolver> fileResolver)
 			throws ResourceParseException, IOException {
 		applyModifiers(map, basicDefinitions, fileResolver);
 

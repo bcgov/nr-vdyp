@@ -215,7 +215,7 @@ public enum SiteIndexSpecies {
 		}
 
 		if (e == null) {
-			throw new IllegalArgumentException(MessageFormat.format("Index {} doesn't exist in SiteIndexSpecies", n));
+			throw new IllegalArgumentException(MessageFormat.format("Index {0} doesn't exist in SiteIndexSpecies", n));
 		} else {
 			return e;
 		}

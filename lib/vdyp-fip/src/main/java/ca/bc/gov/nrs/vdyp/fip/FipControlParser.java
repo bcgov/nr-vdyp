@@ -27,7 +27,6 @@ import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParser;
  *
  */
 public class FipControlParser extends StartApplicationControlParser {
-	@SuppressWarnings("unused")
 	private static final Logger log = LoggerFactory.getLogger(FipControlParser.class);
 
 	public FipControlParser() {
@@ -72,7 +71,7 @@ public class FipControlParser extends StartApplicationControlParser {
 	);
 
 	@Override
-	protected void applyAllModifiers(Map<String, Object> map, FileResolver fileResolver)
+	protected void applyAllModifiers(Map<String, Object> map, Map<String, FileResolver> fileResolver)
 			throws ResourceParseException, IOException {
 		applyModifiers(map, basicDefinitions, fileResolver);
 

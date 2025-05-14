@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.vdyp.io.parse.control;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -11,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
+import ca.bc.gov.nrs.vdyp.io.FailoverFileResolver;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.DebugSettingsParser;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
@@ -18,8 +20,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParser;
 
 public abstract class BaseControlParser {
 
-	@SuppressWarnings("unused")
-	private static final Logger log = LoggerFactory.getLogger(BaseControlParser.class);
+	private static final Logger logger = LoggerFactory.getLogger(BaseControlParser.class);
 
 	protected static final ValueParser<String> FILENAME = String::strip;
 
@@ -39,9 +40,6 @@ public abstract class BaseControlParser {
 	}
 
 	protected ControlFileParser controlParser = new ControlFileParser();
-
-	protected BaseControlParser() {
-	}
 
 	/**
 	 * This method is to be called after the concrete Control Parsers are initialized. This can be from the constructors
@@ -77,10 +75,11 @@ public abstract class BaseControlParser {
 	protected abstract List<ResourceControlMapModifier> configurationFileParsers();
 
 	protected void applyModifiers(
-			Map<String, Object> control, List<? extends ControlMapModifier> modifiers, FileResolver fileResolver
+			Map<String, Object> control, List<? extends ControlMapModifier> modifiers,
+			Map<String, FileResolver> fileResolverContext
 	) throws ResourceParseException, IOException {
 		for (var modifier : modifiers) {
-			modifier.modify(control, fileResolver);
+			modifier.modify(control, fileResolverContext);
 		}
 	}
 
@@ -92,16 +91,48 @@ public abstract class BaseControlParser {
 	public Map<String, Object> parse(List<InputStream> resources, FileResolver fileResolver, Map<String, Object> map)
 			throws IOException, ResourceParseException {
 
+		Map<String, FileResolver> resolverContext = new HashMap<>();
 		for (var is : resources) {
-			map.putAll(controlParser.parse(is, map));
+			var newEntries = controlParser.parse(is, map);
+			map.putAll(newEntries);
+			for (var changedKey : newEntries.keySet()) {
+				resolverContext.put(changedKey, fileResolver);
+			}
 		}
 
-		applyAllModifiers(map, fileResolver);
+		resolverContext.put(null, fileResolver); // Default file resolver
+
+		applyAllModifiers(map, resolverContext);
 
 		return map;
 	}
 
-	protected abstract void applyAllModifiers(Map<String, Object> map, FileResolver fileResolver)
+	public Map<String, Object>
+			parseByName(List<String> resourceNames, FileResolver fileResolver, Map<String, Object> map)
+					throws IOException, ResourceParseException {
+
+		Map<String, FileResolver> resolverContext = new HashMap<>();
+		for (var resourceName : resourceNames) {
+			logger.info("Resolving and parsing {}", resourceName);
+			try (var is = fileResolver.resolveForInput(resourceName)) {
+
+				var newEntries = controlParser.parse(is, map);
+				map.putAll(newEntries);
+				for (var changedKey : newEntries.keySet()) {
+					resolverContext.put(
+							changedKey,
+							new FailoverFileResolver(fileResolver.relativeToParent(resourceName), fileResolver)
+					);
+				}
+			}
+		}
+
+		applyAllModifiers(map, resolverContext);
+
+		return map;
+	}
+
+	protected abstract void applyAllModifiers(Map<String, Object> map, Map<String, FileResolver> fileResolverContext)
 			throws ResourceParseException, IOException;
 
 	protected abstract VdypApplicationIdentifier getProgramId();

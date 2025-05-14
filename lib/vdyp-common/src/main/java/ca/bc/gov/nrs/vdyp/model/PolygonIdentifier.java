@@ -5,9 +5,11 @@ import java.util.function.IntUnaryOperator;
 
 public class PolygonIdentifier {
 
-	public static final int ID_LENGTH = 25;
+	public static final int MAPSHEET_LENGTH = 9;
+	public static final int POLYGON_NUMBER_LENGTH = 12;
 	public static final int YEAR_LENGTH = 4;
-	public static final int BASE_LENGTH = ID_LENGTH - YEAR_LENGTH;
+	public static final int BASE_LENGTH = MAPSHEET_LENGTH + POLYGON_NUMBER_LENGTH;
+	public static final int ID_LENGTH = BASE_LENGTH + YEAR_LENGTH;
 
 	private final String base;
 	private final int year;
@@ -19,6 +21,11 @@ public class PolygonIdentifier {
 			throw new IllegalArgumentException("Polygon identifier year " + year + " must be positive.");
 		this.base = base;
 		this.year = year;
+	}
+
+	public PolygonIdentifier(String mapSheet, Long polygonNumber, int measurementYear) {
+		this.base = mapSheet + "         ".substring(mapSheet.length()) + polygonNumber;
+		this.year = measurementYear;
 	}
 
 	public static PolygonIdentifier split(String polygonIdentifier) throws IllegalArgumentException {

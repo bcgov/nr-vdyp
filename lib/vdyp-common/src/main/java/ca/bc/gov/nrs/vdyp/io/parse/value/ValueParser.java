@@ -227,7 +227,7 @@ public interface ValueParser<T> extends ControlledValueParser<T> {
 	 */
 	public static final ValueParser<Character> CHARACTER = s -> {
 		if (s.isBlank()) {
-			throw new ValueParseException("Character is blank");
+			throw new ValueParseException(s, "Character is blank");
 		}
 		return s.charAt(0);
 	};

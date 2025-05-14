@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/vue3'
 import AppSpinField from './AppSpinField.vue'
+import { CONSTANTS } from '@/constants'
 
 const meta: Meta<typeof AppSpinField> = {
   title: 'components/common/AppSpinField',
@@ -82,10 +83,6 @@ const meta: Meta<typeof AppSpinField> = {
       description: 'Number of decimal places allowed.',
       defaultValue: 2,
     },
-    'update:modelValue': {
-      action: 'update:modelValue',
-      description: 'Emits the updated value of the field.',
-    },
   },
   tags: ['autodocs'],
 }
@@ -110,15 +107,15 @@ export const Default: Story = {
     max: 60,
     min: 0,
     step: 1,
-    placeholder: 'Enter a value...',
-    persistentPlaceholder: false,
+    placeholder: '',
+    persistentPlaceholder: true,
     hideDetails: true,
-    density: 'default',
-    dense: false,
-    customStyle: '',
-    variant: 'filled',
+    density: 'compact',
+    dense: true,
+    customStyle: 'padding-left: 15px',
+    variant: 'plain',
     disabled: false,
-    interval: 100,
+    interval: CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL,
     decimalAllowNumber: 2,
   },
 }
@@ -136,39 +133,5 @@ export const Disabled: Story = {
   args: {
     ...Default.args,
     disabled: true,
-  },
-}
-
-export const Compact: Story = {
-  render: (args) => ({
-    components: { AppSpinField },
-    setup() {
-      return { args }
-    },
-    template: `
-      <AppSpinField v-bind="args" @update:modelValue="args['update:modelValue']" />
-    `,
-  }),
-  args: {
-    ...Default.args,
-    density: 'compact',
-    placeholder: 'Compact mode',
-  },
-}
-
-export const CustomStep: Story = {
-  render: (args) => ({
-    components: { AppSpinField },
-    setup() {
-      return { args }
-    },
-    template: `
-      <AppSpinField v-bind="args" @update:modelValue="args['update:modelValue']" />
-    `,
-  }),
-  args: {
-    ...Default.args,
-    step: 5,
-    placeholder: 'Step of 5',
   },
 }

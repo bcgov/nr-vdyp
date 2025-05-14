@@ -1,394 +1,353 @@
-export class Util {
-  /**
-   * VALIDATATING
-   */
-  public static readonly isZeroValue = (value: any): boolean => {
-    if (value === null || value === undefined) {
-      return false
-    }
+import type { NumStrNullType } from '@/types/types'
+import JSZip from 'jszip'
+import { CONSTANTS } from '@/constants'
 
-    const trimmedValue = this.trimValue(value)
-
-    if (typeof trimmedValue === 'string' && trimmedValue.trim() === '') {
-      return false
-    }
-
-    const numericValue = Number(trimmedValue)
-
-    return !isNaN(numericValue) && numericValue === 0
+/**
+ * Trims whitespace from a string value. Non-string values are returned unchanged.
+ *
+ * @param value - The value to trim (accepts any type)
+ * @returns {any} Trimmed string if input is a string, otherwise the original value
+ * @example
+ *   trimValue("  hello  ") // "hello"
+ *   trimValue(123) // 123
+ *   trimValue(null) // null
+ */
+export const trimValue = (value: any): any => {
+  if (typeof value === 'string') {
+    return value.trim()
   }
+  return value
+}
 
-  public static readonly isEmptyOrZero = (
-    value: number | string | null,
-  ): boolean => {
-    const trimmedValue = this.trimValue(value)
-    return this.isZeroValue(trimmedValue) || this.isBlank(trimmedValue)
-  }
-
-  // undefined, null, NaN, 0, "" (empty string), and false
-  // isBlank(" ") = false
-  static isBlank(item: any): boolean {
-    if (item === undefined || item === null || Number.isNaN(item)) {
-      return true
-    } else if (Array.isArray(item)) {
-      return item.length === 0
-    } else if (typeof item === 'string') {
-      return item.trim().length === 0
-    }
-    return false
-  }
-
-  static areEqual(array1: Array<any>, array2: Array<any>): boolean {
-    if (array1.length === array2.length) {
-      return array1.every((element, index) => {
-        if (element === array2[index]) {
-          return true
-        }
-
-        return false
-      })
-    }
-
-    return false
-  }
-
-  static isJson(str: any) {
-    try {
-      JSON.parse(str)
-    } catch (e) {
-      return false
-    }
+/**
+ * Checks if the given value is "blank". Considers undefined, null, NaN, empty arrays, and whitespace-only strings as "blank".
+ * Note that a space-only string (" ") is trimmed to length 0 and returns true, but false itself is not considered "blank".
+ *
+ * @param item - The value to check (accepts any type)
+ * @returns {boolean} True if the value is "blank", false otherwise
+ * @example
+ *   isBlank(undefined) // true
+ *   isBlank(null) // true
+ *   isBlank(NaN) // true
+ *   isBlank([]) // true
+ *   isBlank("  ") // true
+ *   isBlank("text") // false
+ *   isBlank(false) // false
+ */
+export const isBlank = (item: any): boolean => {
+  if (item === undefined || item === null || Number.isNaN(item)) {
     return true
+  } else if (Array.isArray(item)) {
+    return item.length === 0
+  } else if (typeof item === 'string') {
+    return item.trim().length === 0
+  }
+  return false
+}
+
+/**
+ * Checks if the given value is zero. Null, undefined, and empty strings are not considered zero.
+ * Handles string representations of numbers (e.g., "0") and returns false for invalid numbers.
+ *
+ * @param value - The value to check (accepts any type)
+ * @returns {boolean} True if the value is 0, false otherwise
+ * @example
+ *   isZeroValue(0) // true
+ *   isZeroValue("0") // true
+ *   isZeroValue("") // false
+ *   isZeroValue(null) // false
+ *   isZeroValue("abc") // false
+ */
+export const isZeroValue = (value: any): boolean => {
+  if (value === null || value === undefined) {
+    return false
   }
 
-  static isURL(input: string): boolean {
-    // Regular expression for URL validation
-    const urlRegex = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/
-    return urlRegex.test(input)
+  const trimmedValue = trimValue(value)
+
+  if (typeof trimmedValue === 'string' && trimmedValue.trim() === '') {
+    return false
   }
 
-  /**
-   * FORMATTING
-   */
+  const numericValue = Number(trimmedValue)
 
-  /**
-   * Returns the parameter of the given date type as a string with a certain pattern.
-   * @param date
-   * @returns YYYY-MM-DD hh:mm:ss
-   */
-  static formatDateTime(date: Date | null): string | null {
-    if (!date) {
-      return null
-    }
+  return !isNaN(numericValue) && numericValue === 0
+}
 
-    const year = new Intl.DateTimeFormat('en', { year: 'numeric' }).format(date)
-    const month = new Intl.DateTimeFormat('en', { month: '2-digit' }).format(
-      date,
-    )
-    const day = new Intl.DateTimeFormat('en', { day: '2-digit' }).format(date)
+/**
+ * Checks if the given value is empty or zero. Returns true if the value is null, undefined, an empty string, or 0.
+ * Uses trimValue internally to trim the value before calling isZeroValue and isBlank.
+ *
+ * @param value - The value to check (number, string, or null)
+ * @returns {boolean} True if the value is empty or 0, false otherwise
+ * @example
+ *   isEmptyOrZero(0) // true
+ *   isEmptyOrZero("") // true
+ *   isEmptyOrZero(null) // true
+ *   isEmptyOrZero("  ") // true
+ *   isEmptyOrZero("1") // false
+ */
+export const isEmptyOrZero = (value: NumStrNullType): boolean => {
+  const trimmedValue = trimValue(value)
+  return isZeroValue(trimmedValue) || isBlank(trimmedValue)
+}
 
-    const hour = date.getHours().toString().padStart(2, '0')
-    const minute = date.getMinutes().toString().padStart(2, '0')
-    const second = date.getSeconds().toString().padStart(2, '0')
-
-    return `${year}-${month}-${day} ${hour}:${minute}:${second}`
-  }
-
-  static formatLargeNumber(number: number, decimalPlaces = 10): string | null {
-    if (number) {
-      return number.toFixed(decimalPlaces).replace(/\.?0+$/, '') // Remove trailing zeros
-    } else {
-      return null
-    }
-  }
-
-  static formatNumberFractionGroup(
-    minimumFractionDigits: number,
-    maximumFractionDigits: number,
-  ): any {
-    return new Intl.NumberFormat('en-US', {
-      minimumFractionDigits: minimumFractionDigits,
-      maximumFractionDigits: maximumFractionDigits,
-      useGrouping: true,
-    })
-  }
-
-  static formatNumberGroup(): any {
-    return new Intl.NumberFormat('en-US', {
-      useGrouping: true,
-    })
-  }
-
-  /**
-   * converts a given Unix timestamp to a Date object.
-   * @param {number} unixTimestamp - Unix timestamps in seconds
-   * @returns {Date | null} the converted Date object or null if the conversion failed
-   */
-  static formatUnixTimestampToDate(timestamp: number): Date | null {
-    try {
-      const date = new Date(timestamp * 1000) // Convert seconds to milliseconds
-      return date
-    } catch (error) {
-      console.error('Failed to convert timestamp to date:', error)
-      return null
-    }
-  }
-
-  /**
-   * INSERTING
-   */
-  static insertComma(item: string): string {
-    if (!Util.isBlank(item)) {
-      return ', '
-    } else {
-      return ''
-    }
-  }
-
-  static insertBR(item: string): string {
-    if (!Util.isBlank(item)) {
-      return '<br/>'
-    } else {
-      return ''
-    }
-  }
-
-  /**
-   * CONVERTING
-   */
-
-  public static readonly trimValue = (value: any): any => {
-    if (typeof value === 'string') {
-      return value.trim()
-    }
-    return value
-  }
-
-  /**
-   * Converts the input to a number if it's a string and returns it,
-   * otherwise returns the input unchanged if it's a number.
-   * The conversion only occurs if the input is not blank.
-   *
-   * @param item - The input to be processed (string or number or null).
-   * @returns The processed input: number or unchanged if blank or not a string.
-   */
-  static toNumber(item: string | number | null): number | null {
-    if (Util.isBlank(item)) {
-      return null
-    }
-
-    if (typeof item === 'string') {
-      const convertedNumber = Number(this.trimValue(item))
-      return isNaN(convertedNumber) ? null : convertedNumber
-    }
-
-    if (typeof item === 'number') {
-      return item
-    }
-
+/**
+ * Parses a string or number into a number, returning null for invalid or empty inputs.
+ * Empty strings and null values are explicitly handled as null.
+ *
+ * @param value - The value to parse (string, number, or null)
+ * @returns {number | null} Parsed number or null if parsing fails
+ * @example
+ *   parseNumberOrNull("123") // 123
+ *   parseNumberOrNull("") // null
+ *   parseNumberOrNull(null) // null
+ *   parseNumberOrNull("abc") // null
+ */
+export const parseNumberOrNull = (
+  value: string | number | null,
+): number | null => {
+  if (value === '' || value === null) {
     return null
   }
 
-  static arrayToString(array: Array<any>, separator: string): string {
-    if (array) {
-      return array.join(separator)
+  const parsedValue = Number(value)
+
+  return isNaN(parsedValue) ? null : parsedValue
+}
+
+/**
+ * Formats a Date object into a string with the format "YYYY-MM-DD HH:MM:SS".
+ * Returns null if the input date is null or invalid.
+ *
+ * @param date - The Date object to format, or null
+ * @returns {string | null} Formatted date-time string (e.g., "2025-02-28 14:30:00") or null if input is invalid
+ * @example
+ *   formatDateTime(new Date(2025, 1, 28, 14, 30, 0)) // "2025-02-28 14:30:00"
+ *   formatDateTime(null) // null
+ */
+export const formatDateTime = (date: Date | null): string | null => {
+  if (!date) {
+    return null
+  }
+
+  const year = new Intl.DateTimeFormat('en', { year: 'numeric' }).format(date)
+  const month = new Intl.DateTimeFormat('en', { month: '2-digit' }).format(date)
+  const day = new Intl.DateTimeFormat('en', { day: '2-digit' }).format(date)
+
+  const hour = date.getHours().toString().padStart(2, '0')
+  const minute = date.getMinutes().toString().padStart(2, '0')
+  const second = date.getSeconds().toString().padStart(2, '0')
+
+  return `${year}-${month}-${day} ${hour}:${minute}:${second}`
+}
+
+/**
+ * Converts a Unix timestamp (in seconds) to a Date object.
+ * Returns null if the conversion fails due to an invalid timestamp.
+ *
+ * @param timestamp - Unix timestamp in seconds (e.g., 1677655800)
+ * @returns {Date | null} Converted Date object or null if conversion fails
+ * @example
+ *   formatUnixTimestampToDate(1677655800) // Date object for "2025-02-28 14:30:00 UTC"
+ *   formatUnixTimestampToDate(NaN) // null
+ */
+export const formatUnixTimestampToDate = (timestamp: number): Date | null => {
+  try {
+    const date = new Date(timestamp * 1000) // Convert seconds to milliseconds
+    return date
+  } catch (error) {
+    console.error('Failed to convert timestamp to date:', error)
+    return null
+  }
+}
+
+/**
+ * Creates a delay for the specified number of milliseconds, returning a Promise that resolves afterward.
+ *
+ * @param ms - The delay duration in milliseconds
+ * @returns {Promise<any>} A Promise that resolves after the delay
+ * @example
+ *   await delay(1000) // Waits 1 second, then resolves
+ */
+export const delay = (ms: number): Promise<any> => {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+/**
+ * Increases the numeric value extracted from an input string by a specified step,
+ * ensuring the result stays within the provided minimum and maximum limits.
+ * Non-numeric characters are stripped, and invalid or null inputs default to the step value.
+ *
+ * @param value - The input value as a string (e.g., "10.5") or null, potentially containing non-numeric characters
+ * @param max - The maximum allowable value; if exceeded, returns this value
+ * @param min - The minimum allowable value; if undercut, returns this value
+ * @param step - The amount by which to increase the numeric value
+ * @returns {number} The new value, constrained within the [min, max] range
+ * @example
+ *   increaseItemBySpinButton("10", 20, 0, 5) // 15
+ *   increaseItemBySpinButton(null, 20, 0, 5) // 5
+ *   increaseItemBySpinButton("10a", 20, 0, 5) // 15
+ *   increaseItemBySpinButton("25", 20, 0, 5) // 20
+ *   increaseItemBySpinButton("-5", 20, 0, 5) // 0
+ */
+export const increaseItemBySpinButton = (
+  value: string | null,
+  max: number,
+  min: number,
+  step: number,
+): number => {
+  let newValue
+
+  // If value is null, assign step value and format
+  if (!value) {
+    newValue = step
+  } else {
+    // extract only numbers, commas, and minus signs
+    const extractedValue = value.replace(/[^\d.-]/g, '')
+
+    const numericValue = parseFloat(extractedValue)
+
+    // Check if the extracted value is a valid number
+    if (isNaN(numericValue)) {
+      newValue = step // Assign step value if invalid
     } else {
-      return ''
+      newValue = numericValue + step
+    }
+
+    if (newValue < min) {
+      // 0
+      newValue = min // 0
     }
   }
 
-  /**
-   * EXTRACTING
-   */
-
-  /**
-   * Extracts the numeric value from a given string.
-   * It parses the leading numeric part of the string, ignoring any following non-numeric characters.
-   * If the input string does not contain a valid numeric prefix, the function returns 0.
-   *
-   * @param input - The input string that may contain numeric values.
-   * @returns A number parsed from the leading numeric part of the string, or 0 if no valid number is found.
-   */
-  static extractNumeric(input: string): number {
-    const match = input.match(/^\s*-?\d+(\.\d+)?/)
-    return match ? parseFloat(match[0]) : 0
+  if (newValue > max) {
+    newValue = max
   }
 
-  static translateCode(code: string, codeList: Array<any>): string {
-    if (code && codeList && codeList.length > 0) {
-      return codeList.find((c) => c.codeName === code).description
+  return newValue
+}
+
+/**
+ * Decreases the numeric value extracted from an input string by a specified step,
+ * ensuring the result stays within the provided minimum and maximum limits.
+ * Non-numeric characters are stripped, and invalid or null inputs default to the minimum value.
+ *
+ * @param value - The input value as a string (e.g., "10.5") or null, potentially containing non-numeric characters
+ * @param max - The maximum allowable value; if exceeded, returns this value
+ * @param min - The minimum allowable value; if undercut, returns this value
+ * @param step - The amount by which to decrease the numeric value
+ * @returns {number} The new value, constrained within the [min, max] range
+ * @example
+ *   decrementItemBySpinButton("10", 20, 0, 5) // 5
+ *   decrementItemBySpinButton(null, 20, 0, 5) // 0
+ *   decrementItemBySpinButton("10a", 20, 0, 5) // 5
+ *   decrementItemBySpinButton("2", 20, 0, 5) // 0
+ *   decrementItemBySpinButton("25", 20, 0, 5) // 20
+ */
+export const decrementItemBySpinButton = (
+  value: string | null,
+  max: number,
+  min: number,
+  step: number,
+): number => {
+  let newValue
+  if (!value) {
+    newValue = min // 0
+  } else {
+    // extract only numbers, commas, and minus signs
+    const extractedValue = value.replace(/[^\d.-]/g, '')
+
+    const numericValue = parseFloat(extractedValue)
+
+    if (isNaN(numericValue)) {
+      newValue = min // 0
     } else {
-      return ''
-    }
-  }
-  static userIdConversion(item: string): string {
-    if (item && item.indexOf('\\') !== -1) {
-      return item.split('\\')[1]
-    } else {
-      return item
-    }
-  }
-
-  /**
-   * Extracts all CSS styles from the provided style sheets that are either inline or belong to the same origin.
-   * This function iterates through each style sheet and retrieves the CSS rules, appending them to a single string.
-   *
-   * @param {StyleSheetList} styleSheets - The list of style sheets from the document to extract CSS from.
-   * @returns {string} A concatenated string of all CSS rules from the provided style sheets.
-   */
-  static extractStylesFromDocument(styleSheets: StyleSheetList): string {
-    let styles = ''
-    for (const sheet of Array.from(styleSheets)) {
-      if (!sheet.href || sheet.href.startsWith(window.location.origin)) {
-        try {
-          if (sheet.cssRules) {
-            for (const rule of Array.from(sheet.cssRules)) {
-              styles += rule.cssText
-            }
-          }
-        } catch (e) {
-          console.warn('Could not access stylesheet:', sheet, e)
-        }
-      }
+      newValue = numericValue - step
     }
 
-    return styles
-  }
-
-  /**
-   * SPLITING
-   */
-  static splitStringByCharCamelCase(inString: string): string {
-    return !Util.isBlank(inString)
-      ? inString.replace(/([a-z0-9])([A-Z])/g, '$1 $2')
-      : ''
-  }
-
-  /**
-   * MISCELLANEOUS
-   */
-  static flattenArray(inputArray: any[]): any[] {
-    const result: any[] = []
-
-    const flattenHelper = function (arr: any[]) {
-      for (const element of arr) {
-        if (Array.isArray(element) && Array.isArray(element[0])) {
-          flattenHelper(element)
-        } else {
-          result.push(element)
-        }
-      }
-    }
-
-    flattenHelper(inputArray)
-    return result
-  }
-
-  static openRequestedPopup(
-    url: string,
-    windowsName: string,
-    windowFeatures?: string,
-  ): void {
-    if (Util.isBlank(windowFeatures))
-      windowFeatures = 'toolbar=0,location=0,menubar=0'
-    window.open(url, windowsName, windowFeatures)
-  }
-
-  static async delay(ms: number): Promise<any> {
-    return new Promise((resolve) => setTimeout(resolve, ms))
-  }
-
-  static deepCopy(obj: any): any {
-    return JSON.parse(JSON.stringify(obj)) as typeof obj
-  }
-
-  /**
-   * Increases the numeric value extracted from the input string by a specified step,
-   * ensuring that the result stays within the provided minimum and maximum limits.
-   *
-   * @param value - The input value as a string (e.g., '10.5') or null. It can contain numeric and non-numeric characters.
-   * @param max - The maximum allowable value. If the calculated value exceeds this, the maximum value is returned.
-   * @param min - The minimum allowable value. If the calculated value is lower than this, the minimum value is returned.
-   * @param step - The amount by which to increase the numeric value.
-   * @returns The new value, ensuring it is within the [min, max] range.
-   */
-  static increaseItemBySpinButton(
-    value: string | null,
-    max: number,
-    min: number,
-    step: number,
-  ): number {
-    let newValue
-
-    // If value is null, assign step value and format
-    if (!value) {
-      newValue = step
-    } else {
-      // extract only numbers, commas, and minus signs
-      const extractedValue = value.replace(/[^\d.-]/g, '')
-
-      const numericValue = parseFloat(extractedValue)
-
-      // Check if the extracted value is a valid number
-      if (isNaN(numericValue)) {
-        newValue = step // Assign step value if invalid
-      } else {
-        newValue = numericValue + step
-      }
-
-      if (newValue < min) {
-        // 0
-        newValue = min // 0
-      }
+    if (newValue < min) {
+      newValue = min // 0
     }
 
     if (newValue > max) {
       newValue = max
     }
-
-    return newValue
   }
 
-  /**
-   * Decreases the numeric value extracted from the input string by a specified step,
-   * ensuring that the result stays within the provided minimum and maximum limits.
-   *
-   * @param value - The input value as a string (e.g., '10.5') or null. It can contain numeric and non-numeric characters.
-   * @param max - The maximum allowable value. If the calculated value exceeds this, the maximum value is returned.
-   * @param min - The minimum allowable value. If the calculated value is lower than this, the minimum value is returned.
-   * @param step - The amount by which to decrease the numeric value.
-   * @returns The new value, ensuring it is within the [min, max] range.
-   */
-  static decrementItemBySpinButton(
-    value: string | null,
-    max: number,
-    min: number,
-    step: number,
-  ): number {
-    let newValue
-    if (!value) {
-      newValue = min // 0
-    } else {
-      // extract only numbers, commas, and minus signs
-      const extractedValue = value.replace(/[^\d.-]/g, '')
+  return newValue
+}
 
-      const numericValue = parseFloat(extractedValue)
+/**
+ * Downloads a Blob as a file by triggering a browser download.
+ * Creates a temporary URL and simulates a link click to download the file,
+ * regardless of whether the file is a CSV, ZIP, or any other type.
+ *
+ * @param blob - The Blob object containing the file data.
+ * @param fileName - The name of the file to save (e.g., "data.zip" or "data.csv").
+ * @example
+ *   const fileBlob = new Blob(["sample content"], { type: "application/octet-stream" });
+ *   downloadFile(fileBlob, "example.zip"); // Downloads "example.zip"
+ */
+export const downloadFile = (blob: Blob, fileName: string) => {
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = fileName
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
 
-      if (isNaN(numericValue)) {
-        newValue = min // 0
-      } else {
-        newValue = numericValue - step
-      }
+/**
+ * Extracts the zip file name from the response headers.
+ * It checks for a 'content-disposition' header and extracts the file name.
+ * @param headers - The response headers object (either Axios or Fetch style)
+ * @returns The extracted zip file name or a default name if not found.
+ */
+export const extractZipFileName = (headers: any): string | null => {
+  let contentDisposition: string | undefined
 
-      if (newValue < min) {
-        newValue = min // 0
-      }
+  // Support for both Axios (plain object) and Fetch (Headers instance)
+  if (typeof headers.get === 'function') {
+    contentDisposition = headers.get('content-disposition')
+  } else {
+    contentDisposition = headers['content-disposition']
+  }
 
-      if (newValue > max) {
-        newValue = max
-      }
+  if (contentDisposition) {
+    const fileNameMatch = contentDisposition.match(/filename="([^"]+)"/)
+    if (fileNameMatch && fileNameMatch[1]) {
+      return fileNameMatch[1]
+    }
+  }
+  return null
+}
+
+/**
+ * Checks if the ZIP file contains an Error.txt file with content.
+ * @param zipFile - The ZIP file Blob to check.
+ * @returns A boolean indicating whether the Error.txt file exists and has content.
+ * @throws Error if the ZIP file cannot be processed.
+ */
+export const checkZipForErrors = async (zipFile: Blob): Promise<boolean> => {
+  try {
+    const zip = await JSZip.loadAsync(zipFile)
+
+    const errorFile = zip.file(CONSTANTS.FILE_NAME.ERROR_TXT)
+    if (!errorFile) {
+      return false
     }
 
-    return newValue
+    const errorContent = await errorFile.async('string')
+    const errorLines = errorContent.split(/\r?\n/).filter((line) => {
+      const trimmedLine = line.trim()
+      return trimmedLine !== '' && trimmedLine !== 'null'
+    })
+    return errorLines.length > 0
+  } catch (error) {
+    console.error('Error checking ZIP file for errors:', error)
+    throw error
   }
 }

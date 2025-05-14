@@ -48,6 +48,8 @@ import ca.bc.gov.nrs.vdyp.application.VdypStartApplication;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common.ValueOrMarker;
+import ca.bc.gov.nrs.vdyp.common.VdypApplicationInitializationException;
+import ca.bc.gov.nrs.vdyp.common.VdypApplicationProcessingException;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.fip.model.FipLayer;
 import ca.bc.gov.nrs.vdyp.fip.model.FipLayerPrimary;
@@ -89,7 +91,13 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 	public static void main(final String... args) throws IOException {
 
 		try (var app = new FipStart();) {
-			doMain(app, args);
+			try {
+				app.doMain(args);
+			} catch (VdypApplicationInitializationException e) {
+				System.exit(CONFIG_LOAD_ERROR);
+			} catch (VdypApplicationProcessingException e) {
+				System.exit(PROCESSING_ERROR);
+			}
 		}
 	}
 
@@ -748,8 +756,8 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 			}
 			if (Objects.isNull(layer)) {
 				throw validationError(
-						"Species entry references layer %s of polygon %s but it is not present.", layer,
-						polygon.getPolygonIdentifier()
+						"Species entry references layer of type \"%s\" of polygon %s but it is not present.",
+						spec.getLayerType(), polygon.getPolygonIdentifier()
 				);
 			}
 			speciesPerLayerMap.get(spec.getLayerType()).put(spec.getGenus(), spec);
@@ -1083,6 +1091,11 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 	protected float getYieldFactor(FipPolygon polygon) {
 		return polygon.getYieldFactor();
 		// TODO Make an InputPolygon interface that has this.
+	}
+
+	@Override
+	protected String getDefaultControlFileName() {
+		return "fipstart.ctr";
 	}
 
 }

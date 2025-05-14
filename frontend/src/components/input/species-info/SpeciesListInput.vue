@@ -71,8 +71,12 @@
 import { ref, onBeforeUnmount, watch, type PropType } from 'vue'
 import { CONSTANTS, MESSAGE } from '@/constants'
 import type { SpeciesList } from '@/interfaces/interfaces'
-import { SpeciesInfoValidation } from '@/validation/speciesInfoValidation'
-import { Util } from '@/utils/util'
+import { speciesInfoValidation } from '@/validation'
+import {
+  increaseItemBySpinButton,
+  decrementItemBySpinButton,
+  isEmptyOrZero,
+} from '@/utils/util'
 import { cloneDeep } from 'lodash'
 
 const props = defineProps({
@@ -105,8 +109,6 @@ const props = defineProps({
 const emit = defineEmits(['update:speciesList'])
 
 const localSpeciesList = ref(cloneDeep(props.speciesList))
-
-const speciesInfoValidator = new SpeciesInfoValidation()
 
 // Watch for external speciesList changes
 watch(
@@ -153,13 +155,8 @@ const updateValue = (action: 'increment' | 'decrement', index: number) => {
   const localPercent = localSpeciesList.value[index].percent
   let newValue =
     action === 'increment'
-      ? Util.increaseItemBySpinButton(
-          localPercent,
-          props.max,
-          props.min,
-          props.step,
-        )
-      : Util.decrementItemBySpinButton(
+      ? increaseItemBySpinButton(localPercent, props.max, props.min, props.step)
+      : decrementItemBySpinButton(
           localPercent,
           props.max,
           props.min,
@@ -170,7 +167,7 @@ const updateValue = (action: 'increment' | 'decrement', index: number) => {
     CONSTANTS.NUM_INPUT_LIMITS.SPECIES_PERCENT_DECIMAL_NUM,
   )
 
-  if (Util.isEmptyOrZero(localSpeciesList.value[index].percent)) {
+  if (isEmptyOrZero(localSpeciesList.value[index].percent)) {
     localSpeciesList.value[index].species = null
   }
 }
@@ -219,9 +216,9 @@ const triggerSpeciesSortByPercent = () => {
   })
 }
 
-const validatePercent = (percent: any): boolean | string => {
-  const isValid = speciesInfoValidator.validatePercent(percent)
-  if (!isValid) {
+const validatePercent = (percent: string | null): boolean | string => {
+  const validationResult = speciesInfoValidation.validatePercent(percent)
+  if (!validationResult.isValid) {
     return MESSAGE.MDL_PRM_INPUT_ERR.SPCZ_VLD_INPUT_RANGE(
       CONSTANTS.NUM_INPUT_LIMITS.SPECIES_PERCENT_MIN,
       CONSTANTS.NUM_INPUT_LIMITS.SPECIES_PERCENT_MAX,
@@ -286,7 +283,7 @@ const handlePercentInput = (index: number) => {
   localSpeciesList.value[index].percent = cleanedValue
 
   // If the value is 0.0, set the species to null
-  if (Util.isEmptyOrZero(localSpeciesList.value[index].percent)) {
+  if (isEmptyOrZero(localSpeciesList.value[index].percent)) {
     localSpeciesList.value[index].species = null
   }
 }

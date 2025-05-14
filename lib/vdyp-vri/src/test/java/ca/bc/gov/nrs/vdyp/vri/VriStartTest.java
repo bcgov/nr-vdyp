@@ -44,6 +44,7 @@ import org.apache.commons.math3.exception.TooManyEvaluationsException;
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
 import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -78,6 +79,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.BecLookup;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
+import ca.bc.gov.nrs.vdyp.model.DebugSettings;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2Impl;
 import ca.bc.gov.nrs.vdyp.model.PolygonMode;
@@ -1055,7 +1057,7 @@ class VriStartTest {
 
 				var resultPerSpecies = new HashMap<String, Float>();
 
-				app.setDebugMode(1, 2);
+				app.setDebugModes(TestUtils.debugSettingsSingle(1, 2));
 
 				assertThrows(
 						StandProcessingException.class,
@@ -1128,7 +1130,7 @@ class VriStartTest {
 
 				var resultPerSpecies = new HashMap<String, Float>();
 
-				app.setDebugMode(1, 0);
+				app.setDebugModes(TestUtils.debugSettingsSingle(1, 0));
 
 				var result = app.findRootForQuadMeanDiameterFractionalError(
 						x1, x2, resultPerSpecies, initialDqs, baseAreas, minDq, maxDq, tph
@@ -1206,7 +1208,7 @@ class VriStartTest {
 
 				var resultPerSpecies = new HashMap<String, Float>();
 
-				app.setDebugMode(1, 2);
+				app.setDebugModes(TestUtils.debugSettingsSingle(1, 2));
 
 				assertThrows(
 						StandProcessingException.class,
@@ -1272,7 +1274,7 @@ class VriStartTest {
 
 				var resultPerSpecies = new HashMap<String, Float>();
 
-				app.setDebugMode(1, 0);
+				app.setDebugModes(TestUtils.debugSettingsSingle(1, 0));
 
 				var result = app.findRootForQuadMeanDiameterFractionalError(
 						x1, x2, resultPerSpecies, initialDqs, baseAreas, minDq, maxDq, tph
@@ -1348,7 +1350,7 @@ class VriStartTest {
 
 				var resultPerSpecies = new HashMap<String, Float>();
 
-				app.setDebugMode(1, 0);
+				app.setDebugModes(TestUtils.debugSettingsSingle(1, 0));
 
 				assertThrows(
 						StandProcessingException.class,
@@ -1717,7 +1719,6 @@ class VriStartTest {
 					.addMockedMethod("processBatn") //
 					.addMockedMethod("checkPolygon") //
 					.addMockedMethod("processPrimaryLayer") //
-					.addMockedMethod("getDebugMode") //
 					.createMock(control);
 
 			MockFileResolver resolver = dummyInput();
@@ -1775,8 +1776,9 @@ class VriStartTest {
 			EasyMock.expect(app.processBatn(polyYoung)).andReturn(polyBatn).times(0, 1);
 			app.processPrimaryLayer(EasyMock.anyObject(VriPolygon.class), EasyMock.anyObject(VdypLayer.Builder.class));
 			EasyMock.expectLastCall().once();
-			EasyMock.expect(app.getDebugMode(9)).andStubReturn(0);
-			EasyMock.expect(app.getDebugMode(1)).andStubReturn(0);
+
+			// 1 and 9 set to 0
+			controlMap.put(ControlKey.DEBUG_SWITCHES.name(), TestUtils.debugSettings(0, 0, 0, 0, 0, 0, 0, 0, 0));
 
 			control.replay();
 
@@ -4070,6 +4072,127 @@ class VriStartTest {
 
 		}
 
+	}
+
+	@Nested
+	class DebugModeExpandRootSerchWindow {
+		@Test
+		void testNoDebug() throws IOException {
+			var control = EasyMock.createControl();
+
+			// 1 and 9 set to 0
+			MockFileResolver resolver = dummyInput();
+
+			VriStart app = new VriStart();
+
+			app.init(resolver, controlMap);
+
+			Map<String, Float> minDq = new HashMap<>();
+			Map<String, Float> maxDq = new HashMap<>();
+
+			minDq.put("A", 10f);
+			minDq.put("B", 15f);
+
+			maxDq.put("A", 20f);
+			maxDq.put("B", 25f);
+
+			UnivariateFunction func = control.createMock(UnivariateFunction.class);
+
+			control.replay();
+
+			app.debugModeExpandRootSearchWindow(Optional.empty(), minDq, maxDq, func);
+
+			control.verify();
+
+			// No Change
+			assertThat(minDq, hasEntry(is("A"), is(10f)));
+			assertThat(minDq, hasEntry(is("B"), is(15f)));
+			assertThat(maxDq, hasEntry(is("A"), is(20f)));
+			assertThat(maxDq, hasEntry(is("B"), is(25f)));
+
+			app.close();
+
+		}
+
+		@Test
+		void testDebug50PercentGoodWindow() throws IOException {
+			var control = EasyMock.createControl();
+
+			// 1 and 9 set to 0
+			MockFileResolver resolver = dummyInput();
+
+			VriStart app = new VriStart();
+
+			app.init(resolver, controlMap);
+
+			Map<String, Float> minDq = new HashMap<>();
+			Map<String, Float> maxDq = new HashMap<>();
+
+			minDq.put("A", 10f);
+			minDq.put("B", 15f);
+
+			maxDq.put("A", 20f);
+			maxDq.put("B", 25f);
+
+			UnivariateFunction func = control.createMock(UnivariateFunction.class);
+			EasyMock.expect(func.value(10d)).andReturn(1d);
+			EasyMock.expect(func.value(-10d)).andReturn(-1d);
+
+			control.replay();
+
+			app.debugModeExpandRootSearchWindow(Optional.of(50), minDq, maxDq, func);
+
+			control.verify();
+
+			// No Change
+			assertThat(minDq, hasEntry(is("A"), is(10f)));
+			assertThat(minDq, hasEntry(is("B"), is(15f)));
+			assertThat(maxDq, hasEntry(is("A"), is(20f)));
+			assertThat(maxDq, hasEntry(is("B"), is(25f)));
+
+			app.close();
+
+		}
+
+		@Test
+		void testDebug50PercentBadWindow() throws IOException {
+			var control = EasyMock.createControl();
+
+			// 1 and 9 set to 0
+			MockFileResolver resolver = dummyInput();
+
+			VriStart app = new VriStart();
+
+			app.init(resolver, controlMap);
+
+			Map<String, Float> minDq = new HashMap<>();
+			Map<String, Float> maxDq = new HashMap<>();
+
+			minDq.put("A", 10f);
+			minDq.put("B", 15f);
+
+			maxDq.put("A", 20f);
+			maxDq.put("B", 25f);
+
+			UnivariateFunction func = control.createMock(UnivariateFunction.class);
+			EasyMock.expect(func.value(10d)).andReturn(1d);
+			EasyMock.expect(func.value(-10d)).andReturn(1d);
+
+			control.replay();
+
+			app.debugModeExpandRootSearchWindow(Optional.of(50), minDq, maxDq, func);
+
+			control.verify();
+
+			// Limits expanded
+			assertThat(minDq, hasEntry(is("A"), closeTo(8.75f)));
+			assertThat(minDq, hasEntry(is("B"), closeTo(11.25f)));
+			assertThat(maxDq, hasEntry(is("A"), closeTo(26.25f)));
+			assertThat(maxDq, hasEntry(is("B"), closeTo(33.75f)));
+
+			app.close();
+
+		}
 	}
 
 	/**

@@ -1,13 +1,7 @@
 package ca.bc.gov.nrs.vdyp.forward;
 
-import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.PASS_1;
-import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.PASS_2;
-import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.PASS_3;
-import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.PASS_4;
-import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.PASS_5;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static ca.bc.gov.nrs.vdyp.forward.ForwardPass.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -27,6 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.application.ProcessingException;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
+import ca.bc.gov.nrs.vdyp.forward.model.ForwardControlVariables;
 import ca.bc.gov.nrs.vdyp.forward.parsers.VdypPolygonParser;
 import ca.bc.gov.nrs.vdyp.forward.parsers.VdypSpeciesParser;
 import ca.bc.gov.nrs.vdyp.forward.parsers.VdypUtilizationParser;
@@ -38,6 +33,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.coe.DecayEquationGroupParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.GenusDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.VolumeEquationGroupParser;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
+import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
@@ -62,7 +58,7 @@ class ForwardProcessorEndToEndTest {
 	private int nAbove10Percent = 0;
 
 	@Test
-	void test() throws IOException, ResourceParseException, ProcessingException {
+	void test() throws IOException, ResourceParseException, ProcessingException, ValueParseException {
 
 		ForwardProcessor fp = new ForwardProcessor();
 
@@ -118,6 +114,8 @@ class ForwardProcessorEndToEndTest {
 				ControlKey.VOLUME_EQN_GROUPS.name(),
 				volumeGroupsParser.parse(TestUtils.class, "coe/VGRPDEF1.DAT", vdyp8ControlMap)
 		);
+		vdyp8ControlMap
+				.put(ControlKey.VTROL.name(), new ForwardControlVariables(new Integer[] { -1, 1, 2, 2, 1, 1, 1 }));
 
 		FileResolver vdyp7InputResolver = TestUtils.fileResolver(TestUtils.class);
 
@@ -154,6 +152,8 @@ class ForwardProcessorEndToEndTest {
 				ControlKey.VOLUME_EQN_GROUPS.name(),
 				volumeGroupsParser.parse(TestUtils.class, "coe/VGRPDEF1.DAT", vdyp7ControlMap)
 		);
+		vdyp7ControlMap
+				.put(ControlKey.VTROL.name(), new ForwardControlVariables(new Integer[] { -1, 1, 2, 2, 1, 1, 1 }));
 
 		var vdyp8Reader = new ForwardDataStreamReader(vdyp8ControlMap);
 		var vdyp7Reader = new ForwardDataStreamReader(vdyp7ControlMap);

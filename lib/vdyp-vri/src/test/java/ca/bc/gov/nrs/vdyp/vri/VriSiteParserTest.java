@@ -44,7 +44,7 @@ class VriSiteParserTest {
 		controlMap.put(KEY, FILENAME);
 		TestUtils.populateControlMapBecReal(controlMap);
 
-		var fileResolver = TestUtils.fileResolver(FILENAME, TestUtils.makeInputStream(/* empty */));
+		var fileResolver = TestUtils.fileResolverContext(FILENAME, TestUtils.makeInputStream(/* empty */));
 
 		parser.modify(controlMap, fileResolver);
 
@@ -70,7 +70,7 @@ class VriSiteParserTest {
 		controlMap.put(KEY, FILENAME);
 		TestUtils.populateControlMapGenusReal(controlMap);
 
-		var fileResolver = TestUtils.fileResolver(
+		var fileResolver = TestUtils.fileResolverContext(
 				FILENAME,
 				TestUtils.makeInputStream(
 						"082F074/0071         2001 P 200 28.0 14.3        C CW 10.9          189.1 11",
@@ -118,7 +118,7 @@ class VriSiteParserTest {
 		controlMap.put(KEY, FILENAME);
 		TestUtils.populateControlMapGenusReal(controlMap);
 
-		var fileResolver = TestUtils.fileResolver(
+		var fileResolver = TestUtils.fileResolverContext(
 				FILENAME,
 				TestUtils.makeInputStream(
 						"082F074/0071         2001 X 100 28.0 14.3        C CW 10.9          189.1 11",
@@ -169,7 +169,7 @@ class VriSiteParserTest {
 		controlMap.put(KEY, FILENAME);
 		TestUtils.populateControlMapGenusReal(controlMap);
 
-		var fileResolver = TestUtils.fileResolver(
+		var fileResolver = TestUtils.fileResolverContext(
 				FILENAME,
 				TestUtils.makeInputStream(
 						"082F074/0071         2001 P 200 28.0 14.3        C CW 10.9          189.1 11",
@@ -230,7 +230,7 @@ class VriSiteParserTest {
 		controlMap.put(KEY, FILENAME);
 		TestUtils.populateControlMapGenusReal(controlMap);
 
-		var fileResolver = TestUtils.fileResolver(
+		var fileResolver = TestUtils.fileResolverContext(
 				FILENAME,
 				TestUtils.makeInputStream(
 						"082F074/0071         2001 P 200 28.0 14.3        C CW 10.9          189.1 11",
@@ -292,7 +292,7 @@ class VriSiteParserTest {
 		controlMap.put(KEY, FILENAME);
 		TestUtils.populateControlMapGenusReal(controlMap);
 
-		var fileResolver = TestUtils.fileResolver(
+		var fileResolver = TestUtils.fileResolverContext(
 				FILENAME,
 				TestUtils.makeInputStream(
 						"082F074/0072         2002 P 200 28.0 14.3        C CW 10.9          189.1 11",
@@ -363,7 +363,7 @@ class VriSiteParserTest {
 		controlMap.put(KEY, FILENAME);
 		TestUtils.populateControlMapGenusReal(controlMap);
 
-		var fileResolver = TestUtils.fileResolver(
+		var fileResolver = TestUtils.fileResolverContext(
 				FILENAME,
 				TestUtils.makeInputStream(
 						"082F074/0071         2001 P  -9 28.0 14.3        C CW 10.9            0.0 11",
@@ -405,7 +405,7 @@ class VriSiteParserTest {
 		controlMap.put(KEY, FILENAME);
 		TestUtils.populateControlMapGenusReal(controlMap);
 
-		var fileResolver = TestUtils.fileResolver(
+		var fileResolver = TestUtils.fileResolverContext(
 				FILENAME, TestUtils.makeInputStream(
 						// YTBH differs from Age Total by more than 0.5
 						"082F074/0071         2001 P  20 28.0 14.3        C CW 19.4            0.0 11",
@@ -447,7 +447,7 @@ class VriSiteParserTest {
 		controlMap.put(KEY, FILENAME);
 		TestUtils.populateControlMapGenusReal(controlMap);
 
-		var fileResolver = TestUtils.fileResolver(
+		var fileResolver = TestUtils.fileResolverContext(
 				FILENAME, TestUtils.makeInputStream(
 						// YTBH differs from Age Total by less than 0.5
 						"082F074/0071         2001 P  20 28.0 14.3        C CW 19.6            0.0 11",
@@ -489,7 +489,7 @@ class VriSiteParserTest {
 		controlMap.put(KEY, FILENAME);
 		TestUtils.populateControlMapGenusReal(controlMap);
 
-		var fileResolver = TestUtils.fileResolver(
+		var fileResolver = TestUtils.fileResolverContext(
 				FILENAME, TestUtils.makeInputStream(
 						// height empty, ageTotal within 0.6 of 1, siteIndex >=3
 						"082F074/0071         2001 P   1 -9.0 14.3        C CW 19.6            0.0 11",
@@ -534,7 +534,7 @@ class VriSiteParserTest {
 		controlMap.put(KEY, FILENAME);
 		TestUtils.populateControlMapGenusReal(controlMap);
 
-		var fileResolver = TestUtils.fileResolver(
+		var fileResolver = TestUtils.fileResolverContext(
 				FILENAME,
 				TestUtils.makeInputStream(
 						"082F074/0071         2001 P 1.7 -9.0 14.3        C CW 19.6            0.0 11",

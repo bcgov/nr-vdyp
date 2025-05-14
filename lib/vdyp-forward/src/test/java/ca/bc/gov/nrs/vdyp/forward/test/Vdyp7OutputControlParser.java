@@ -134,7 +134,7 @@ public class Vdyp7OutputControlParser extends BaseControlParser {
 	}
 
 	@Override
-	protected void applyAllModifiers(Map<String, Object> map, FileResolver fileResolver)
+	protected void applyAllModifiers(Map<String, Object> map, Map<String, FileResolver> fileResolver)
 			throws ResourceParseException, IOException {
 
 		// FORWARD_INPUT_GROWTO is optional; if missing, the polygon list is read from the
@@ -168,4 +168,5 @@ public class Vdyp7OutputControlParser extends BaseControlParser {
 			}
 		}
 	}
+
 }

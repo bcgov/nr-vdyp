@@ -1,4 +1,4 @@
-import ModelSelection from '@/components/projection-setup/ModelSelection.vue'
+import ModelSelection from './ModelSelection.vue'
 import { createVuetify } from 'vuetify'
 import { MODEL_SELECTION } from '@/constants/constants'
 
@@ -6,8 +6,6 @@ describe('ModelSelection.vue', () => {
   const vuetify = createVuetify()
 
   beforeEach(() => {
-    cy.viewport(1024, 768)
-
     cy.document().then((doc) => {
       const style = doc.createElement('style')
       style.innerHTML = `

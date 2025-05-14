@@ -1,5 +1,4 @@
-import { mount } from 'cypress/vue'
-import AppTabs from '@/components/core/AppTabs.vue'
+import AppTabs from './AppTabs.vue'
 import { createVuetify } from 'vuetify'
 import 'vuetify/styles'
 
@@ -13,7 +12,6 @@ describe('AppTabs.vue', () => {
   ]
 
   beforeEach(() => {
-    cy.viewport(1024, 768)
     cy.document().then((doc) => {
       const style = doc.createElement('style')
       style.innerHTML = `
@@ -26,7 +24,7 @@ describe('AppTabs.vue', () => {
   })
 
   it('renders the tabs and selects the default tab', () => {
-    mount(AppTabs, {
+    cy.mount(AppTabs, {
       global: {
         plugins: [vuetify],
       },
@@ -47,7 +45,7 @@ describe('AppTabs.vue', () => {
   it('switches tabs and emits the correct event', () => {
     const onUpdateCurrentTabSpy = cy.spy().as('updateCurrentTabSpy')
 
-    mount(AppTabs, {
+    cy.mount(AppTabs, {
       global: {
         plugins: [vuetify],
       },
@@ -69,7 +67,7 @@ describe('AppTabs.vue', () => {
   })
 
   it('switches to the third tab and updates the tab content', () => {
-    mount(AppTabs, {
+    cy.mount(AppTabs, {
       global: {
         plugins: [vuetify],
       },

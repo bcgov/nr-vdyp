@@ -28,6 +28,11 @@ export const SITE_SPECIES_VALUES = Object.freeze({
   SUPPLIED: 'Supplied',
 })
 
+export const AGE_YEAR_RANGE = Object.freeze({
+  AGE: 'age',
+  YEAR: 'year',
+})
+
 export const VOLUME_REPORTED = Object.freeze({
   WHOLE_STEM: 'Whole Stem',
   CLOSE_UTIL: 'Close Utilization',
@@ -59,6 +64,11 @@ export const MODEL_PARAMETER_PANEL = Object.freeze({
   REPORT_INFO: 'reportInfo',
 })
 
+export const FILE_UPLOAD_PANEL = Object.freeze({
+  REPORT_INFO: 'reportInfo',
+  ATTACHMENTS: 'attachments',
+})
+
 export const NUM_INPUT_LIMITS = Object.freeze({
   SPECIES_PERCENT_MAX: 100,
   SPECIES_PERCENT_MIN: 0,
@@ -81,6 +91,15 @@ export const NUM_INPUT_LIMITS = Object.freeze({
   AGE_INC_MAX: 350,
   AGE_INC_MIN: 1,
   AGE_INC_STEP: 5,
+  START_YEAR_MIN: 1400,
+  START_YEAR_MAX: 2500,
+  START_YEAR_STEP: 1,
+  END_YEAR_MIN: 1400,
+  END_YEAR_MAX: 2500,
+  END_YEAR_STEP: 1,
+  YEAR_INC_MIN: 1,
+  YEAR_INC_MAX: 350,
+  YEAR_INC_STEP: 1,
 })
 
 export const CONTINUOUS_INC_DEC = Object.freeze({
@@ -97,7 +116,6 @@ export const NOTIFICATION = Object.freeze({
 })
 
 export const AXIOS = Object.freeze({
-  DEFAULT_TIMEOUT: 100000, // in milliseconds (100 sec)
   ACCEPT: 'application/json',
   CONTENT_TYPE: 'application/json',
 })
@@ -111,7 +129,7 @@ export const MESSAGE_TYPE = Object.freeze({
 
 export const HEADER_SELECTION = Object.freeze({
   MODEL_PARAMETER_SELECTION: 'Model Parameter Selection',
-  FILE_UPLOAD: 'File upload',
+  FILE_UPLOAD: 'File Upload',
 })
 
 export const MODEL_SELECTION = Object.freeze({
@@ -120,26 +138,45 @@ export const MODEL_SELECTION = Object.freeze({
 })
 
 export const MODEL_PARAM_TAB_NAME = Object.freeze({
-  MODEL_PARAM_SELECTION: 'Model Parameter Selection',
+  MODEL_PARAM_SELECTION: 'Parameter Selection',
   MODEL_REPORT: 'Model Report',
   VIEW_LOG_FILE: 'View Log File',
   VIEW_ERROR_MESSAGES: 'View Error Messages',
 })
 
+export const FILE_UPLOAD_TAB_NAME = Object.freeze({
+  FILE_UPLOAD: 'Parameter Selection',
+  MODEL_REPORT: 'Model Report',
+  VIEW_LOG_FILE: 'View Log File',
+  VIEW_ERROR_MESSAGES: 'View Error Messages',
+})
+
+export const MODEL_PARAM_TAB_INDEX = {
+  PARAM_SELECTION: 0,
+  MODEL_REPORT: 1,
+  VIEW_LOG_FILE: 2,
+  VIEW_ERROR_MESSAGES: 3,
+}
+
+export const FILE_UPLOAD_TAB_INDEX = {
+  PARAM_SELECTION: 0,
+  MODEL_REPORT: 1,
+  VIEW_LOG_FILE: 2,
+  VIEW_ERROR_MESSAGES: 3,
+}
+
 export const FILE_NAME = Object.freeze({
   PROJECTION_RESULT_ZIP: 'vdyp-output.zip',
   ERROR_TXT: 'ErrorLog.txt',
   LOG_TXT: 'ProgressLog.txt',
+  DEBUG_TXT: 'DebugLog.txt',
   YIELD_TABLE_CSV: 'YieldTable.csv',
+  INPUT_POLY_CSV: 'VDYP7_INPUT_POLY.csv',
+  INPUT_LAYER_CSV: 'VDYP7_INPUT_LAYER.csv',
 })
 
 export const BUTTON_LABEL = Object.freeze({
   CONT_EDIT: 'Continue Editing',
-})
-
-export const INVENTORY_CODES = Object.freeze({
-  FIP: 'F',
-  VRI: 'V',
 })
 
 export const REPORTING_TAB = Object.freeze({
