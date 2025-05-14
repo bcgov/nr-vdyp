@@ -1,5 +1,7 @@
 package ca.bc.gov.nrs.vdyp.forward.parsers;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.text.MessageFormat;
 import java.util.Map;
 import java.util.Optional;
@@ -60,53 +62,7 @@ public class VdypPolygonParser implements ControlMapValueReplacer<Object, String
 
 			var is = fileResolver.resolveForInput(fileName);
 
-			return new AbstractStreamingParser<VdypPolygon>(is, lineParser, control) {
-
-				@Override
-				protected VdypPolygon convert(Map<String, Object> entry) throws ResourceParseException {
-					var descriptionText = (String) entry.get(DESCRIPTION);
-					var becAlias = (String) entry.get(BIOGEOCLIMATIC_ZONE);
-					var fizId = entry.get(FOREST_INVENTORY_ZONE);
-					var percentForestLand = (Float) entry.get(PERCENT_FOREST_LAND);
-					var inventoryTypeGroup = Utils.<Integer>optSafe(entry.get(INVENTORY_TYPE_GROUP));
-					@SuppressWarnings("unused")
-					var basalAreaGroup = Utils.<Integer>optSafe(entry.get(BASAL_AREA_GROUP));
-					var fipMode = Utils.<Integer>optSafe(entry.get(POLYGON_MODE));
-
-					BecDefinition bec;
-					try {
-						bec = Utils.getBec(becAlias, control);
-					} catch (IllegalArgumentException e) {
-						throw new ResourceParseException(e);
-					}
-
-//					Note: Forest Inventory Zone is not required to have a non-empty value - " " is valid.
-
-					var description = PolygonIdentifier.split(descriptionText);
-
-					if (percentForestLand <= 0.0) {
-						// VDYPGETP.for lines 146 - 154
-						logger.warn(
-								MessageFormat.format(
-										"Polygon {0} percent-forested-land value {1} is <= 0.0; replacing with default {2}",
-										description.getName(), percentForestLand, DEFAULT_FORESTED_LAND_PERCENTAGE
-								)
-						);
-						percentForestLand = DEFAULT_FORESTED_LAND_PERCENTAGE;
-					}
-
-					final float percentAvailable = percentForestLand;
-
-					return VdypPolygon.build(builder -> {
-						builder.polygonIdentifier(descriptionText);
-						builder.biogeoclimaticZone(bec);
-						builder.forestInventoryZone(fizId.toString());
-						fipMode.ifPresentOrElse(m -> builder.mode(PolygonMode.getByCode(m)), () -> Optional.empty());
-						builder.percentAvailable(percentAvailable);
-						builder.inventoryTypeGroup(inventoryTypeGroup);
-					});
-				}
-			};
+			return new VdypPolygonStreamingParser(is, lineParser, control, control);
 		};
 	}
 
@@ -114,4 +70,70 @@ public class VdypPolygonParser implements ControlMapValueReplacer<Object, String
 	public ValueParser<Object> getValueParser() {
 		return FILENAME;
 	}
+
+	public static class VdypPolygonStreamingParser extends AbstractStreamingParser<VdypPolygon> {
+		private final Map<String, Object> control;
+		private Optional<Integer> basalAreaGroup = Optional.empty();
+
+		public VdypPolygonStreamingParser(
+				InputStream is, LineParser lineParser, Map<String, Object> control, Map<String, Object> control2
+		) {
+			super(is, lineParser, control);
+			this.control = control2;
+		}
+
+		/**
+		 * Get the basal area group value for the most recently read polygon. The file structure stores it on the
+		 * polygon but the in memory data model stores it on the primary layer so this needs to be accessible to the
+		 * layer parser.
+		 */
+		public Optional<Integer> getBasalAreaGroup() {
+			return basalAreaGroup;
+		}
+
+		@Override
+		protected VdypPolygon convert(Map<String, Object> entry) throws ResourceParseException {
+			var descriptionText = (String) entry.get(DESCRIPTION);
+			var becAlias = (String) entry.get(BIOGEOCLIMATIC_ZONE);
+			var fizId = entry.get(FOREST_INVENTORY_ZONE);
+			var percentForestLand = (Float) entry.get(PERCENT_FOREST_LAND);
+			var inventoryTypeGroup = Utils.<Integer>optSafe(entry.get(INVENTORY_TYPE_GROUP));
+			this.basalAreaGroup = Utils.<Integer>optSafe(entry.get(BASAL_AREA_GROUP));
+			var fipMode = Utils.<Integer>optSafe(entry.get(POLYGON_MODE));
+
+			BecDefinition bec;
+			try {
+				bec = Utils.getBec(becAlias, control);
+			} catch (IllegalArgumentException e) {
+				throw new ResourceParseException(e);
+			}
+
+			// Note: Forest Inventory Zone is not required to have a non-empty value - " " is valid.
+
+			var description = PolygonIdentifier.split(descriptionText);
+
+			if (percentForestLand <= 0.0) {
+				// VDYPGETP.for lines 146 - 154
+				logger.warn(
+						MessageFormat.format(
+								"Polygon {0} percent-forested-land value {1} is <= 0.0; replacing with default {2}",
+								description.getName(), percentForestLand, DEFAULT_FORESTED_LAND_PERCENTAGE
+						)
+				);
+				percentForestLand = DEFAULT_FORESTED_LAND_PERCENTAGE;
+			}
+
+			final float percentAvailable = percentForestLand;
+
+			return VdypPolygon.build(builder -> {
+				builder.polygonIdentifier(descriptionText);
+				builder.biogeoclimaticZone(bec);
+				builder.forestInventoryZone(fizId.toString());
+				fipMode.ifPresentOrElse(m -> builder.mode(PolygonMode.getByCode(m)), () -> Optional.empty());
+				builder.percentAvailable(percentAvailable);
+				builder.inventoryTypeGroup(inventoryTypeGroup);
+			});
+		}
+	}
+
 }

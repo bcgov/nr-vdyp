@@ -1133,9 +1133,9 @@ public class Layer implements Comparable<Layer> {
 			setAssignedProjectionType(ProjectionTypeCode.UNKNOWN);
 		} else {
 			if (getAssignedProjectionType() == ProjectionTypeCode.UNKNOWN) {
-	
+
 				var layerProjectionType = determineProjectionType(polygon);
-	
+
 				if (ProjectionTypeCode.ACTUAL_PROJECTION_TYPES_SET.contains(layerProjectionType)) {
 					setAssignedProjectionType(layerProjectionType);
 				} else if (layerProjectionType.equals(ProjectionTypeCode.UNKNOWN)) {

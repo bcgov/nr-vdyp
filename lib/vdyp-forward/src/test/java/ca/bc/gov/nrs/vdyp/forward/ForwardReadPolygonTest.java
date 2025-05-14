@@ -23,6 +23,7 @@ import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.model.ForwardControlVariables;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
+import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
@@ -65,6 +66,10 @@ class ForwardReadPolygonTest {
 			var polygon = polygons.get(0);
 
 			assertThat(polygon.getPolygonIdentifier().toStringCompact(), is("01002 S000001 00(1970)"));
+			assertThat(
+					polygon.getLayers().get(LayerType.PRIMARY),
+					hasProperty("empiricalRelationshipParameterIndex", present(is(1)))
+			);
 
 			for (VdypLayer layer : polygon.getLayers().values()) {
 				assertThat(layer.getPolygonIdentifier().getName(), is(polygon.getPolygonIdentifier().getName()));

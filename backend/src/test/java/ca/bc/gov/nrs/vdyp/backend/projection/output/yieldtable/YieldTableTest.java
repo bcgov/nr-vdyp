@@ -27,7 +27,7 @@ import ca.bc.gov.nrs.vdyp.backend.utils.FileHelper;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 class YieldTableTest {
-	
+
 	public static final Logger logger = LoggerFactory.getLogger(YieldTableTest.class);
 
 	private static final String POLYGON_CSV_HEADER_LINE = //
@@ -54,7 +54,8 @@ class YieldTableTest {
 	private static long TEST_POLYGON_NUMBER = 12345678;
 
 	private static TestHelper testHelper;
-	private static Path relativeResourcePath = Path.of(FileHelper.TEST_DATA_FILES, FileHelper.YIELD_TABLE_TEST_DATA, "1");
+	private static Path relativeResourcePath = Path
+			.of(FileHelper.TEST_DATA_FILES, FileHelper.YIELD_TABLE_TEST_DATA, "1");
 
 	@BeforeAll
 	public static void startUp() {
@@ -167,7 +168,9 @@ class YieldTableTest {
 			var projectionResults = ProjectionResultsBuilder
 					.read(polygon, state, ProjectionTypeCode.PRIMARY, forwardReader, backReader);
 
-			yieldTable.generateYieldTableForPolygon(polygon, projectionResults, state, false /* don't generate detailed table header */);
+			yieldTable.generateYieldTableForPolygon(
+					polygon, projectionResults, state, false /* don't generate detailed table header */
+			);
 		} finally {
 			yieldTable.endGeneration();
 			yieldTable.close();
@@ -177,7 +180,7 @@ class YieldTableTest {
 		Assert.assertTrue(resultYieldTable.containsKey("13919428"));
 		Assert.assertTrue(resultYieldTable.get("13919428").containsKey(""));
 	}
-	
+
 	@Test
 	void testGetDoSuppressPerHAYields() throws AbstractProjectionRequestException, IOException {
 
@@ -224,7 +227,7 @@ class YieldTableTest {
 			var vdypSpeciesStream = Files.newInputStream(vdypSpeciesStreamFile);
 			var vdypUtilizationsStreamFile = testHelper.getResourceFile(relativeResourcePath, "vu_grow.dat");
 			var vdypUtilizationsStream = Files.newInputStream(vdypUtilizationsStreamFile);
-			
+
 			resourceFolderPath = vdypPolygonStreamFile.getParent().toAbsolutePath();
 
 			ProjectionResultsReader forwardReader = new TestProjectionResultsReader(
@@ -235,7 +238,9 @@ class YieldTableTest {
 			var projectionResults = ProjectionResultsBuilder
 					.read(polygon, state, ProjectionTypeCode.PRIMARY, forwardReader, backReader);
 
-			yieldTable.generateYieldTableForPolygon(polygon, projectionResults, state, false /* don't generate detailed table header */);
+			yieldTable.generateYieldTableForPolygon(
+					polygon, projectionResults, state, false /* don't generate detailed table header */
+			);
 		} finally {
 			yieldTable.endGeneration();
 			yieldTable.close();
@@ -245,10 +250,12 @@ class YieldTableTest {
 		var csvFilePath = Path.of(resourceFolderPath.toString(), "outputYieldTable.csv");
 		Files.write(csvFilePath, csvContent);
 		logger.info("Resulting CSV file written to " + csvFilePath);
-		
+
 		var vdyp8ResultYieldTable = new ResultYieldTable(new String(csvContent));
-		var vdyp7ResultYieldTable = new ResultYieldTable(Files.readString(Path.of(resourceFolderPath.toString(), "vdyp7_Output_YldTbl-do-suppress.csv")));
-		
+		var vdyp7ResultYieldTable = new ResultYieldTable(
+				Files.readString(Path.of(resourceFolderPath.toString(), "vdyp7_Output_YldTbl-do-suppress.csv"))
+		);
+
 		ResultYieldTable.compareWithTolerance(vdyp7ResultYieldTable, vdyp8ResultYieldTable, 0.01);
 	}
 }
