@@ -39,6 +39,7 @@ jobs:
           package: ${{ matrix.package }}
           tag: ${{ steps.pr.outputs.pr }}
           tag_fallback: latest
+          token: ${{ secrets.GITHUB_TOKEN }}
           triggers: ('${{ matrix.package }}/')
 
       - name: Login to GitHub Container Registry
