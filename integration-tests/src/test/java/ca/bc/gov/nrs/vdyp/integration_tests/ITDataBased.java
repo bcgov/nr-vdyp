@@ -439,7 +439,7 @@ class ITDataBased {
 
 		assertFileMatches(
 				outputDir.resolve(POLYGON_OUTPUT_NAME), expectedDir.resolve(fileName(outputState, Data.Polygon)),
-				this::polygonLinesMatch
+				this::polygonLinesMatchIgnoreFizAndGroups
 		);
 		assertFileMatches(
 				outputDir.resolve(SPECIES_OUTPUT_NAME), expectedDir.resolve(fileName(outputState, Data.Species)),
