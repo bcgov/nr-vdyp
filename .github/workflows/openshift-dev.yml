@@ -2,7 +2,7 @@ name: Build and Deploy to Openshift Dev When PR
 permissions:
   contents: read
   packages: write
-  
+
 on:
   push:
     branches:
@@ -11,7 +11,7 @@ on:
       - "frontend/**"
       - "backend/**"
       - "charts/app/values-dev.yml"
-      - ".github/workflows/**"
+      - ".github/workflows/openshift-dev.yml"
 concurrency:
   # Cancel if re-attempted
   group: ${{ github.event_name }}
@@ -42,6 +42,8 @@ jobs:
           tag_fallback: latest
           token: ${{ secrets.GITHUB_TOKEN }}
           triggers: ('${{ matrix.package }}/')
+          build_context: .
+          build_file: ./${{ matrix.package}}/Dockerfile
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
