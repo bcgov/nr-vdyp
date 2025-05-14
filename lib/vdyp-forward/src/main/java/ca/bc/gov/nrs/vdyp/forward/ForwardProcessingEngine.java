@@ -2369,6 +2369,7 @@ public class ForwardProcessingEngine {
 		}
 	}
 
+	@SuppressWarnings("java:S128") // This is using case fall through. The lack of breaks is intentional.
 	private void writeCurrentPolygon(int startYear, int currentYear, int endYear) throws ProcessingException {
 
 		try {
