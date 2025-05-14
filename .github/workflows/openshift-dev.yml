@@ -42,7 +42,7 @@ jobs:
           tag: ${{ steps.pr.outputs.pr }}
           tag_fallback: latest
           token: ${{ secrets.GITHUB_TOKEN }}
-          triggers: ('${{ matrix.package }}/')
+          #triggers: ('${{ matrix.package }}/')
           build_context: .
           build_file: ./${{ matrix.package}}/Dockerfile
 
@@ -52,10 +52,6 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN}}
-
-      - name: Pull PR-tagged image
-        run: |
-          docker pull ghcr.io/${{ github.repository }}/${{ matrix.package }}:${{ steps.pr.outputs.pr }}
 
       - name: Tag and push as latest
         run: |
