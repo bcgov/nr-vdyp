@@ -11,7 +11,7 @@ on:
       - "frontend/**"
       - "backend/**"
       - "charts/app/values-dev.yml"
-      - ".github/workflows/openshift-dev.yml"
+      - ".github/workflows/openshift-*.yml"
 concurrency:
   # Cancel if re-attempted
   group: ${{ github.event_name }}
