@@ -209,6 +209,9 @@ buildNumber.properties
 # JDT-specific (Eclipse Java Development Tools)
 .classpath
 
+# IntelliJ folder
+.idea/
+
 ### Windows ###
 # Windows thumbnail cache files
 Thumbs.db
