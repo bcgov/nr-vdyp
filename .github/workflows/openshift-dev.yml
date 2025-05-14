@@ -53,10 +53,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN}}
 
-      - name: Pull PR-tagged image
-        run: |
-          docker pull ghcr.io/${{ github.repository }}/${{ matrix.package }}:${{ steps.pr.outputs.pr }}
-
       - name: Tag and push as latest
         run: |
           docker tag ghcr.io/${{ github.repository }}/${{ matrix.package }}:${{ steps.pr.outputs.pr }} ghcr.io/${{ github.repository }}/${{ matrix.package }}:latest
