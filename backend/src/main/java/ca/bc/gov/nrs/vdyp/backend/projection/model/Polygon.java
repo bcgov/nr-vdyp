@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
@@ -762,85 +763,87 @@ public class Polygon implements Comparable<Polygon> {
 
 		for (Layer layer : getLayers().values()) {
 
-			if (layer.getSp0sAsSupplied().size() == 0) {
-				// The layer has no stands - nothing to do
-				continue;
-			}
+			tweakPercentages(layer).ifPresent(this::addMessage);
+		}
+	}
 
-			double sumStandPercentages = layer.getSp0sAsSupplied().stream()
-					.map(sp0 -> sp0.getSpeciesGroup().getSpeciesPercent()).reduce(0.0, (a, b) -> a + b);
+	Optional<PolygonMessage> tweakPercentages(Layer layer) {
+		if (layer.getSp0sAsSupplied().size() == 0) {
+			return Optional.empty();
+		}
 
-			double difference = Math.abs(sumStandPercentages - 100.0);
-			double absDifference = Math.abs(difference);
+		double sumStandPercentages = layer.getSp0sAsSupplied().stream()
+				.map(sp0 -> sp0.getSpeciesGroup().getSpeciesPercent()).reduce(0.0, (a, b) -> a + b);
 
-			if (absDifference > 0.01 /* not close enough */) {
-				if (absDifference <= 1.0) {
+		double difference = 100.0 - sumStandPercentages;
+		double absDifference = Math.abs(difference);
 
-					/*
-					 * The stand has a percentage that needs adjusting. Determine the SP0 and SP64 to which the
-					 * adjustment is to be performed.
-					 *
-					 * If the stand is less than 100%, add the difference to the leading sp0.
-					 *
-					 * If the stand is more than 100%, subtract the difference from the last sp0. Ensure we have
-					 * selected a species with a species percent at least as great as percent we are subtracting -
-					 * negative percentages are not allowed.
-					 *
-					 * Finally, if the adjusted sp64 is a duplicate, always increase the first duplicate and reduce the
-					 * last duplicate.
-					 */
+		if (absDifference > 0.01 /* not close enough */) {
+			if (absDifference <= 1.0) {
 
-					Species targetSp0, targetSp64;
-					int duplicatedSpeciesIndex;
-					if (sumStandPercentages < 100.0) {
-						Stand targetStand = layer.getSp0sByPercent().get(0);
-						targetSp0 = targetStand.getSpeciesGroup();
-						targetSp64 = targetStand.getSpeciesByPercent().get(0);
-						duplicatedSpeciesIndex = 0;
-					} else {
-						Stand targetStand = null;
-						for (int i = layer.getSp0sByPercent().size() - 1; i >= 0; i--) {
-							if (layer.getSp0sByPercent().get(i).getSpeciesGroup()
-									.getSpeciesPercent() >= absDifference) {
-								targetStand = layer.getSp0sByPercent().get(i);
-								break;
-							}
+				/*
+				 * The stand has a percentage that needs adjusting. Determine the SP0 and SP64 to which the
+				 * adjustment is to be performed.
+				 *
+				 * If the stand is less than 100%, add the difference to the leading sp0.
+				 *
+				 * If the stand is more than 100%, subtract the difference from the last sp0. Ensure we have
+				 * selected a species with a species percent at least as great as percent we are subtracting -
+				 * negative percentages are not allowed.
+				 *
+				 * Finally, if the adjusted sp64 is a duplicate, always increase the first duplicate and reduce the
+				 * last duplicate.
+				 */
+
+				Species targetSp0, targetSp64;
+				int duplicatedSpeciesIndex;
+				if (sumStandPercentages < 100.0) {
+					Stand targetStand = layer.getSp0sByPercent().get(0);
+					targetSp0 = targetStand.getSpeciesGroup();
+					targetSp64 = targetStand.getSpeciesByPercent().get(0);
+					duplicatedSpeciesIndex = 0;
+				} else {
+					Stand targetStand = null;
+					for (int i = layer.getSp0sByPercent().size() - 1; i >= 0; i--) {
+						if (layer.getSp0sByPercent().get(i).getSpeciesGroup()
+								.getSpeciesPercent() >= absDifference) {
+							targetStand = layer.getSp0sByPercent().get(i);
+							break;
 						}
-
-						/* -some- sp0 has to have its % > difference... */
-						Validate.isTrue(
-								targetStand != null,
-								"Polygon.doAdjustAllLayersSpeciesPercents: targetStand must not be null"
-						);
-
-						targetSp0 = targetStand.getSpeciesGroup();
-						targetSp64 = targetStand.getSpeciesByPercent()
-								.get(targetStand.getSpeciesByPercent().size() - 1);
-						duplicatedSpeciesIndex = targetSp64.getNDuplicates();
 					}
 
-					targetSp0.adjustSpeciesPercent(difference, 0);
-					targetSp64.adjustSpeciesPercent(difference, duplicatedSpeciesIndex);
-
-					logger.debug(
-							"{}: adjusted percentage of layer {}, sp0 {}, sp64 {}, duplicate {} by {}", this, layer,
-							targetSp0, targetSp64, duplicatedSpeciesIndex, difference
+					/* -some- sp0 has to have its % > difference... */
+					Validate.isTrue(
+							targetStand != null,
+							"Polygon.doAdjustAllLayersSpeciesPercents: targetStand must not be null"
 					);
 
-				} else {
-					disableProjectionsOfType(layer.determineProjectionType(this));
-
-					addMessage(
-							new PolygonMessage.Builder().polygon(this).layer(layer)
-									.details(
-											ReturnCode.ERROR_PERCENTNOT100, MessageSeverityCode.ERROR,
-											PolygonMessageKind.LAYER_PERCENTAGES_TOO_INACCURATE,
-											Double.valueOf(sumStandPercentages)
-									).build()
-					);
+					targetSp0 = targetStand.getSpeciesGroup();
+					targetSp64 = targetStand.getSpeciesByPercent()
+							.get(targetStand.getSpeciesByPercent().size() - 1);
+					duplicatedSpeciesIndex = targetSp64.getNDuplicates();
 				}
+
+				targetSp0.adjustSpeciesPercent(difference, 0);
+				targetSp64.adjustSpeciesPercent(difference, duplicatedSpeciesIndex);
+
+				logger.debug(
+						"{}: adjusted percentage of layer {}, sp0 {}, sp64 {}, duplicate {} by {}", this, layer,
+						targetSp0, targetSp64, duplicatedSpeciesIndex, difference
+				);
+			} else {
+				disableProjectionsOfType(layer.determineProjectionType(this));
+				return Optional.of(
+						new PolygonMessage.Builder().layer(layer)
+								.details(
+										ReturnCode.ERROR_PERCENTNOT100, MessageSeverityCode.ERROR,
+										PolygonMessageKind.LAYER_PERCENTAGES_TOO_INACCURATE,
+										Double.valueOf(sumStandPercentages)
+								).build()
+				);
 			}
 		}
+		return Optional.empty();
 	}
 
 	/**

@@ -82,6 +82,10 @@ public class PolygonMessage {
 		return severity;
 	}
 
+	public PolygonMessageKind getKind() {
+		return kind;
+	}
+
 	@Override
 	public String toString() {
 
