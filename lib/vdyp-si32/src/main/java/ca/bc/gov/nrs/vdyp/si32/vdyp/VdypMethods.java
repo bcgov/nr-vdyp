@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.CodeErrorException;
 import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.CommonCalculatorException;
 import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.CurveErrorException;
-import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.ForestInventoryZoneException;
 import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.NoAnswerException;
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexSpecies;
@@ -190,7 +189,7 @@ public class VdypMethods {
 
 				try {
 					s = Sindxdll.SpecRemap(speciesName, fiz);
-				} catch (CodeErrorException | ForestInventoryZoneException e) {
+				} catch (CodeErrorException e) {
 					// fall through
 				}
 

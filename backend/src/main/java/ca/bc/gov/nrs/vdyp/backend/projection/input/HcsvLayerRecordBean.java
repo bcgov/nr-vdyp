@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,6 +14,7 @@ import com.opencsv.bean.BeanVerifier;
 import com.opencsv.bean.CsvBindByPosition;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
+import com.opencsv.bean.exceptionhandler.CsvExceptionHandler;
 import com.opencsv.bean.processor.ConvertEmptyOrBlankStringsToNull;
 import com.opencsv.bean.processor.PreAssignmentProcessor;
 import com.opencsv.exceptions.CsvConstraintViolationException;
@@ -25,10 +27,23 @@ import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.Vdyp7LayerTypeCo
 import ca.bc.gov.nrs.vdyp.backend.utils.CsvRecordBeanHelper;
 import ca.bc.gov.nrs.vdyp.si32.site.SiteTool;
 import ca.bc.gov.nrs.vdyp.si32.vdyp.SpeciesTable;
+import io.quarkus.runtime.annotations.RegisterForReflection;
 
+@RegisterForReflection
 public class HcsvLayerRecordBean {
 
 	private static final Logger logger = LoggerFactory.getLogger(HcsvLayerRecordBean.class);
+
+	public static CsvToBean<HcsvLayerRecordBean>
+			createHcsvLayerStream(CsvExceptionHandler exceptionHandler, InputStream layersCsvStream) {
+		return new CsvToBeanBuilder<HcsvLayerRecordBean>(new BufferedReader(new InputStreamReader(layersCsvStream))) //
+				.withSeparator(',') //
+				.withType(HcsvLayerRecordBean.class) //
+				.withFilter(new HcsvLineFilter(true, true)) //
+				.withVerifier(new HcsvLayerRecordBeanValidator()) //
+				.withExceptionHandler(exceptionHandler) //
+				.build();
+	}
 
 	public static CsvToBean<HcsvLayerRecordBean> createHcsvLayerStream(InputStream layersCsvStream) {
 		return new CsvToBeanBuilder<HcsvLayerRecordBean>(new BufferedReader(new InputStreamReader(layersCsvStream))) //
@@ -230,7 +245,7 @@ public class HcsvLayerRecordBean {
 	private String closeUtilizationVolumeLessDecayAndWastagePerHectare125Adjustment;
 
 	public long getFeatureId() {
-		assert featureId != null;
+		Validate.notNull(featureId, "HcsvLayerRecordBean.getFeatureId: featureId must not be null");
 		return CsvRecordBeanHelper.parseLongAcceptNull(featureId);
 	}
 
@@ -440,7 +455,6 @@ public class HcsvLayerRecordBean {
 	 * independently of context.
 	 *
 	 * @return completed record
-	 * @throws PolygonValidationException
 	 */
 	private static class HcsvLayerRecordBeanValidator implements BeanVerifier<HcsvLayerRecordBean> {
 
@@ -452,7 +466,7 @@ public class HcsvLayerRecordBean {
 				return false;
 			}
 
-			logger.debug("Performing validation of layer \"{}:{}\" in isolation", bean.featureId, bean.layerId);
+			logger.trace("Performing validation of layer \"{}:{}\" in isolation", bean.featureId, bean.layerId);
 
 			BeanValidatorHelper bvh = new BeanValidatorHelper(bean.featureId);
 
@@ -570,7 +584,8 @@ public class HcsvLayerRecordBean {
 				// the more common species precede the less common species.
 				if (sd.percent > highestSpeciesPercentageSeen) {
 					bvh.addValidationMessage(
-							ValidationMessageKind.PERCENTAGES_INCREASING, bean.layerId, sd.layerSpeciesIndex, sd.percent
+							ValidationMessageKind.PERCENTAGES_INCREASING, bean.featureId, bean.layerId,
+							sd.layerSpeciesIndex, sd.percent
 					);
 				}
 

@@ -2,7 +2,7 @@ package ca.bc.gov.nrs.vdyp.math;
 
 import java.io.IOException;
 
-import ca.bc.gov.nrs.vdyp.application.ProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 
 public class FloatMath {
 

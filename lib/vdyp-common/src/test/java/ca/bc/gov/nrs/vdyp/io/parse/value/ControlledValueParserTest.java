@@ -31,7 +31,7 @@ class ControlledValueParserTest {
 
 	@ParameterizedTest
 	@ValueSource(strings = { "BAD", " XX", "  X", "   ", "X  " })
-	void testParseBadBec(String badId) throws Exception {
+	void testParseBadBec(String badId) {
 		BecLookup becLookup = EasyMock.createMock(BecLookup.class);
 		EasyMock.expect(becLookup.getBecAliases()).andStubReturn(Collections.singletonList("TST"));
 		EasyMock.replay(becLookup);
@@ -52,7 +52,7 @@ class ControlledValueParserTest {
 
 	@ParameterizedTest
 	@ValueSource(strings = { "  ", "-2", " 5", " X" })
-	void testParseBadUtilClass(String uc) throws Exception {
+	void testParseBadUtilClass(String uc) {
 		Map<String, Object> control = Collections.emptyMap(); // Doesn't actually need to be a ControlledValueParser but
 																// it's here with the BEC parser
 		assertThrows(ValueParseException.class, () -> {

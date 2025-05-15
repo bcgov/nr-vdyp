@@ -112,7 +112,7 @@ class FipControlParserTest {
 				result, (Matcher) controlMapHasEntry(
 						ControlKey.EQN_MODIFIERS, allOf(
 								// Default Equation
-								isA(MatrixMap2.class), mmHasEntry(present(is(34)), 33, 9)
+								isA(MatrixMap2.class), mmHasEntry(is(34), 33, 9)
 						)
 				)
 		);

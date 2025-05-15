@@ -45,6 +45,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.control.BaseControlParser;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ControlMapValueReplacer;
 import ca.bc.gov.nrs.vdyp.io.parse.control.NonFipControlParser;
+import ca.bc.gov.nrs.vdyp.io.parse.control.OutputFileLocationResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ResourceControlMapModifier;
 import ca.bc.gov.nrs.vdyp.io.parse.control.StartApplicationControlParser;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypLayer;
@@ -81,7 +82,7 @@ public class TestUtils {
 		}
 
 		@Override
-		public void write(int b) throws IOException {
+		public void write(int b) {
 			if (isOpen) {
 				realStream.write(b);
 			} else {
@@ -90,7 +91,7 @@ public class TestUtils {
 		}
 
 		@Override
-		public void close() throws IOException {
+		public void close() {
 			isOpen = false;
 		}
 
@@ -398,24 +399,29 @@ public class TestUtils {
 			}
 
 			@Override
-			public OutputStream resolveForOutput(String filename) throws IOException {
+			public OutputStream resolveForOutput(String filename) {
 				fail("Should not be opening file " + filename + " for output");
 				return null;
 			}
 
 			@Override
-			public String toString(String filename) throws IOException {
-				return klazz.getResource(filename).getPath();
+			public String toString(String filename) {
+				var resourceUrl = klazz.getResource(filename);
+				if (resourceUrl == null) {
+					return filename;
+				} else {
+					return resourceUrl.getPath();
+				}
 			}
 
 			@Override
-			public FileResolver relative(String path) throws IOException {
+			public FileResolver relative(String path) {
 				fail("Should not be requesting relative file resolver " + path);
 				return null;
 			}
 
 			@Override
-			public FileResolver relativeToParent(String path) throws IOException {
+			public FileResolver relativeToParent(String path) {
 				if (path.contains("\\") || path.contains("/"))
 					fail("Should not be requesting relative file resolver " + path);
 				return this;
@@ -479,11 +485,8 @@ public class TestUtils {
 		}
 
 		@Override
-		protected List<ControlKey> outputFileParsers() {
-			return List.of(
-					ControlKey.VDYP_OUTPUT_VDYP_POLYGON, ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SPECIES,
-					ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL
-			);
+		protected List<OutputFileLocationResolver> outputFiles() {
+			return List.of();
 		}
 
 		@Override

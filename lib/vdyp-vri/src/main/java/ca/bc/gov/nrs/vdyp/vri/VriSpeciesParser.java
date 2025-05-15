@@ -1,6 +1,5 @@
 package ca.bc.gov.nrs.vdyp.vri;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -49,8 +48,7 @@ public class VriSpeciesParser
 
 	@Override
 	public StreamingParserFactory<Collection<VriSpecies>>
-			map(String fileName, FileResolver fileResolver, Map<String, Object> control)
-					throws IOException, ResourceParseException {
+			map(String fileName, FileResolver fileResolver, Map<String, Object> control) {
 		return () -> {
 			var lineParser = new LineParser() {
 

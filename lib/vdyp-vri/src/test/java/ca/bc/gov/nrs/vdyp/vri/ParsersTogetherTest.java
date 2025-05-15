@@ -1,13 +1,9 @@
 package ca.bc.gov.nrs.vdyp.vri;
 
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.*;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.ByteArrayOutputStream;
@@ -25,13 +21,16 @@ import org.easymock.IMocksControl;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-import ca.bc.gov.nrs.vdyp.application.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
+import ca.bc.gov.nrs.vdyp.exceptions.CrownClosureLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.FatalProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BecDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.DefaultEquationNumberParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.EquationModifierParser;
@@ -90,7 +89,7 @@ class ParsersTogetherTest {
 	}
 
 	@Test
-	void testPrimaryOnly() throws IOException, StandProcessingException, ResourceParseException {
+	void testPrimaryOnly() throws IOException, ProcessingException, ResourceParseException {
 		var app = new VriStart();
 
 		final var polygonId = new PolygonIdentifier("Test", 2024);
@@ -160,7 +159,7 @@ class ParsersTogetherTest {
 	}
 
 	@Test
-	void testAddsSpecies() throws IOException, StandProcessingException, ResourceParseException {
+	void testAddsSpecies() throws IOException, ProcessingException, ResourceParseException {
 		var app = new VriStart();
 
 		final var polygonId = new PolygonIdentifier("Test", 2024);
@@ -230,7 +229,7 @@ class ParsersTogetherTest {
 	}
 
 	@Test
-	void testVeteranOnly() throws IOException, StandProcessingException, ResourceParseException {
+	void testVeteranOnly() throws IOException, ProcessingException, ResourceParseException {
 		var app = new VriStart();
 
 		final var polygonId = new PolygonIdentifier("Test", 2024);
@@ -299,8 +298,454 @@ class ParsersTogetherTest {
 	}
 
 	@Test
-	void testApplyPercentAvailableToPrimaryLayer()
-			throws IOException, StandProcessingException, ResourceParseException {
+	void testMissingSite() throws IOException {
+		var app = new VriStart();
+
+		final var polygonId = new PolygonIdentifier("Test", 2024);
+		final var layerType = LayerType.VETERAN;
+
+		mockControl.replay();
+
+		app.init(resolver, controlMap);
+
+		var polyStream = new MockStreamingParser<VriPolygon>();
+		var layerStream = new MockStreamingParser<Map<LayerType, VriLayer.Builder>>();
+		var speciesStream = new MockStreamingParser<Collection<VriSpecies>>();
+		var siteStream = new MockStreamingParser<Collection<VriSite>>();
+
+		polyStream.addValue(VriPolygon.build(polyBuilder -> {
+			polyBuilder.polygonIdentifier(polygonId);
+			polyBuilder.percentAvailable(Optional.of(100.0f));
+			polyBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+			polyBuilder.yieldFactor(0.9f);
+		}));
+
+		var layerBuilder = new VriLayer.Builder();
+		layerBuilder.polygonIdentifier(polygonId);
+		layerBuilder.layerType(layerType);
+		layerBuilder.crownClosure(95f);
+		layerBuilder.utilization(0.6f);
+		layerBuilder.baseArea(20);
+		layerBuilder.treesPerHectare(300);
+		layerStream.addValue(Collections.singletonMap(layerType, layerBuilder));
+
+		speciesStream.addValue(Collections.singleton(VriSpecies.build(specBuilder -> {
+			specBuilder.polygonIdentifier(polygonId);
+			specBuilder.layerType(layerType);
+			specBuilder.genus("B", controlMap);
+			specBuilder.percentGenus(100f);
+		})));
+		/*
+		 * siteStream.addValue(Collections.singleton(VriSite.build(siteBuilder -> {
+		 * siteBuilder.polygonIdentifier(polygonId); siteBuilder.layerType(layerType); siteBuilder.siteGenus("B");
+		 * siteBuilder.siteSpecies("B"); })));
+		 */
+
+		var ex = assertThrows(
+				FatalProcessingException.class, () -> app.getPolygon(polyStream, layerStream, speciesStream, siteStream)
+		);
+		assertThat(ex, hasProperty("message", equalTo("Sites file has fewer records than polygon file.")));
+
+		app.close();
+	}
+
+	@Test
+	void testMissingSpecies() throws IOException {
+		var app = new VriStart();
+
+		final var polygonId = new PolygonIdentifier("Test", 2024);
+		final var layerType = LayerType.VETERAN;
+
+		mockControl.replay();
+
+		app.init(resolver, controlMap);
+
+		var polyStream = new MockStreamingParser<VriPolygon>();
+		var layerStream = new MockStreamingParser<Map<LayerType, VriLayer.Builder>>();
+		var speciesStream = new MockStreamingParser<Collection<VriSpecies>>();
+		var siteStream = new MockStreamingParser<Collection<VriSite>>();
+
+		polyStream.addValue(VriPolygon.build(polyBuilder -> {
+			polyBuilder.polygonIdentifier(polygonId);
+			polyBuilder.percentAvailable(Optional.of(100.0f));
+			polyBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+			polyBuilder.yieldFactor(0.9f);
+		}));
+
+		var layerBuilder = new VriLayer.Builder();
+		layerBuilder.polygonIdentifier(polygonId);
+		layerBuilder.layerType(layerType);
+		layerBuilder.crownClosure(95f);
+		layerBuilder.utilization(0.6f);
+		layerBuilder.baseArea(20);
+		layerBuilder.treesPerHectare(300);
+		layerStream.addValue(Collections.singletonMap(layerType, layerBuilder));
+
+		/*
+		 * speciesStream.addValue(Collections.singleton(VriSpecies.build(specBuilder -> {
+		 * specBuilder.polygonIdentifier(polygonId); specBuilder.layerType(layerType); specBuilder.genus("B",
+		 * controlMap); specBuilder.percentGenus(100f); })));
+		 */
+		siteStream.addValue(Collections.singleton(VriSite.build(siteBuilder -> {
+			siteBuilder.polygonIdentifier(polygonId);
+			siteBuilder.layerType(layerType);
+			siteBuilder.siteGenus("B");
+			siteBuilder.siteSpecies("B");
+		})));
+
+		var ex = assertThrows(
+				FatalProcessingException.class, () -> app.getPolygon(polyStream, layerStream, speciesStream, siteStream)
+		);
+		assertThat(ex, hasProperty("message", equalTo("Species file has fewer records than polygon file.")));
+
+		app.close();
+	}
+
+	@Test
+	void testSpeciesForWrongPolygon() throws IOException {
+		var app = new VriStart();
+
+		final var polygonId = new PolygonIdentifier("Test", 2024);
+		final var layerType = LayerType.PRIMARY;
+
+		mockControl.replay();
+
+		app.init(resolver, controlMap);
+
+		var polyStream = new MockStreamingParser<VriPolygon>();
+		var layerStream = new MockStreamingParser<Map<LayerType, VriLayer.Builder>>();
+		var speciesStream = new MockStreamingParser<Collection<VriSpecies>>();
+		var siteStream = new MockStreamingParser<Collection<VriSite>>();
+
+		polyStream.addValue(VriPolygon.build(polyBuilder -> {
+			polyBuilder.polygonIdentifier(polygonId);
+			polyBuilder.percentAvailable(Optional.of(100.0f));
+			polyBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+			polyBuilder.yieldFactor(0.9f);
+		}));
+
+		var layerBuilder = new VriLayer.Builder();
+		layerBuilder.polygonIdentifier(polygonId);
+		layerBuilder.layerType(layerType);
+		layerBuilder.crownClosure(95f);
+		layerBuilder.utilization(0.6f);
+		layerBuilder.baseArea(20);
+		layerBuilder.treesPerHectare(300);
+		layerStream.addValue(Collections.singletonMap(layerType, layerBuilder));
+
+		speciesStream.addValue(Collections.singleton(VriSpecies.build(specBuilder -> {
+			specBuilder.polygonIdentifier("Wrong", 2000);
+			specBuilder.layerType(layerType);
+			specBuilder.genus("B", controlMap);
+			specBuilder.percentGenus(100f);
+		})));
+		siteStream.addValue(Collections.singleton(VriSite.build(siteBuilder -> {
+			siteBuilder.polygonIdentifier(polygonId);
+			siteBuilder.layerType(layerType);
+			siteBuilder.siteGenus("B");
+			siteBuilder.siteSpecies("B");
+		})));
+
+		var ex = assertThrows(
+				FatalProcessingException.class, () -> app.getPolygon(polyStream, layerStream, speciesStream, siteStream)
+		);
+		assertThat(
+				ex,
+				hasProperty(
+						"message",
+						equalTo(
+								"Record in species file contains species for polygon Wrong                2000 when expecting one for Test                 2024."
+						)
+				)
+		);
+
+		app.close();
+	}
+
+	@Test
+	void testSpeciesForWrongLayer() throws IOException {
+		var app = new VriStart();
+
+		final var polygonId = new PolygonIdentifier("Test", 2024);
+		final var layerType = LayerType.PRIMARY;
+
+		mockControl.replay();
+
+		app.init(resolver, controlMap);
+
+		var polyStream = new MockStreamingParser<VriPolygon>();
+		var layerStream = new MockStreamingParser<Map<LayerType, VriLayer.Builder>>();
+		var speciesStream = new MockStreamingParser<Collection<VriSpecies>>();
+		var siteStream = new MockStreamingParser<Collection<VriSite>>();
+
+		polyStream.addValue(VriPolygon.build(polyBuilder -> {
+			polyBuilder.polygonIdentifier(polygonId);
+			polyBuilder.percentAvailable(Optional.of(100.0f));
+			polyBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+			polyBuilder.yieldFactor(0.9f);
+		}));
+
+		var layerBuilder = new VriLayer.Builder();
+		layerBuilder.polygonIdentifier(polygonId);
+		layerBuilder.layerType(layerType);
+		layerBuilder.crownClosure(95f);
+		layerBuilder.utilization(0.6f);
+		layerBuilder.baseArea(20);
+		layerBuilder.treesPerHectare(300);
+		layerStream.addValue(Collections.singletonMap(layerType, layerBuilder));
+
+		speciesStream.addValue(Collections.singleton(VriSpecies.build(specBuilder -> {
+			specBuilder.polygonIdentifier(polygonId);
+			specBuilder.layerType(LayerType.VETERAN);
+			specBuilder.genus("B", controlMap);
+			specBuilder.percentGenus(100f);
+		})));
+		siteStream.addValue(Collections.singleton(VriSite.build(siteBuilder -> {
+			siteBuilder.polygonIdentifier(polygonId);
+			siteBuilder.layerType(layerType);
+			siteBuilder.siteGenus("B");
+			siteBuilder.siteSpecies("B");
+		})));
+
+		var ex = assertThrows(
+				FatalProcessingException.class, () -> app.getPolygon(polyStream, layerStream, speciesStream, siteStream)
+		);
+		assertThat(
+				ex,
+				hasProperty(
+						"message",
+						equalTo(
+								"Species entry references layer VETERAN of polygon Test                 2024 but it is not present."
+						)
+				)
+		);
+
+		app.close();
+	}
+
+	@Disabled("I don't think this error can actually happen as other errors will happen first")
+	@Test
+	void testLayerForWrongPoly() throws IOException {
+		var app = new VriStart();
+
+		final var polygonId = new PolygonIdentifier("Test", 2024);
+		final var layerType = LayerType.PRIMARY;
+
+		mockControl.replay();
+
+		app.init(resolver, controlMap);
+
+		var polyStream = new MockStreamingParser<VriPolygon>();
+		var layerStream = new MockStreamingParser<Map<LayerType, VriLayer.Builder>>();
+		var speciesStream = new MockStreamingParser<Collection<VriSpecies>>();
+		var siteStream = new MockStreamingParser<Collection<VriSite>>();
+
+		polyStream.addValue(VriPolygon.build(polyBuilder -> {
+			polyBuilder.polygonIdentifier(polygonId);
+			polyBuilder.percentAvailable(Optional.of(100.0f));
+			polyBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+			polyBuilder.yieldFactor(0.9f);
+		}));
+
+		var layerBuilder = new VriLayer.Builder();
+		layerBuilder.polygonIdentifier("Wrong", 2000);
+		layerBuilder.layerType(layerType);
+		layerBuilder.crownClosure(95f);
+		layerBuilder.utilization(0.6f);
+		layerBuilder.baseArea(20);
+		layerBuilder.treesPerHectare(300);
+		layerStream.addValue(Collections.singletonMap(layerType, layerBuilder));
+
+		speciesStream.addValue(Collections.singleton(VriSpecies.build(specBuilder -> {
+			specBuilder.polygonIdentifier("Wrong", 2000);
+			specBuilder.layerType(layerType);
+			specBuilder.genus("B", controlMap);
+			specBuilder.percentGenus(100f);
+		})));
+		siteStream.addValue(Collections.singleton(VriSite.build(siteBuilder -> {
+			siteBuilder.polygonIdentifier("Wrong", 2000);
+			siteBuilder.layerType(layerType);
+			siteBuilder.siteGenus("B");
+			siteBuilder.siteSpecies("B");
+		})));
+
+		var ex = assertThrows(
+				FatalProcessingException.class, () -> app.getPolygon(polyStream, layerStream, speciesStream, siteStream)
+		);
+		assertThat(
+				ex,
+				hasProperty(
+						"message",
+						equalTo(
+								"Record in layer file contains layer for polygon Wrong                2000 when expecting one for Test                 2024."
+						)
+				)
+		);
+
+		app.close();
+	}
+
+	@Test
+	void testMissingLayer() throws IOException {
+		var app = new VriStart();
+
+		final var polygonId = new PolygonIdentifier("Test", 2024);
+		final var layerType = LayerType.PRIMARY;
+
+		mockControl.replay();
+
+		app.init(resolver, controlMap);
+
+		var polyStream = new MockStreamingParser<VriPolygon>();
+		var layerStream = new MockStreamingParser<Map<LayerType, VriLayer.Builder>>();
+		var speciesStream = new MockStreamingParser<Collection<VriSpecies>>();
+		var siteStream = new MockStreamingParser<Collection<VriSite>>();
+
+		polyStream.addValue(VriPolygon.build(polyBuilder -> {
+			polyBuilder.polygonIdentifier(polygonId);
+			polyBuilder.percentAvailable(Optional.of(100.0f));
+			polyBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+			polyBuilder.yieldFactor(0.9f);
+		}));
+
+		speciesStream.addValue(Collections.singleton(VriSpecies.build(specBuilder -> {
+			specBuilder.polygonIdentifier(polygonId);
+			specBuilder.layerType(LayerType.VETERAN);
+			specBuilder.genus("B", controlMap);
+			specBuilder.percentGenus(100f);
+		})));
+		siteStream.addValue(Collections.singleton(VriSite.build(siteBuilder -> {
+			siteBuilder.polygonIdentifier(polygonId);
+			siteBuilder.layerType(layerType);
+			siteBuilder.siteGenus("B");
+			siteBuilder.siteSpecies("B");
+		})));
+
+		var ex = assertThrows(
+				FatalProcessingException.class, () -> app.getPolygon(polyStream, layerStream, speciesStream, siteStream)
+		);
+		assertThat(ex, hasProperty("message", equalTo("Layers file has fewer records than polygon file.")));
+
+		app.close();
+	}
+
+	@Test
+	void testCrownClosureLow() throws IOException {
+		var app = new VriStart();
+
+		final var polygonId = new PolygonIdentifier("Test", 2024);
+		final var layerType = LayerType.VETERAN; // Needs to be veteran
+
+		mockControl.replay();
+
+		app.init(resolver, controlMap);
+
+		var polyStream = new MockStreamingParser<VriPolygon>();
+		var layerStream = new MockStreamingParser<Map<LayerType, VriLayer.Builder>>();
+		var speciesStream = new MockStreamingParser<Collection<VriSpecies>>();
+		var siteStream = new MockStreamingParser<Collection<VriSite>>();
+
+		polyStream.addValue(VriPolygon.build(polyBuilder -> {
+			polyBuilder.polygonIdentifier(polygonId);
+			polyBuilder.percentAvailable(Optional.of(100.0f));
+			polyBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+			polyBuilder.yieldFactor(0.9f);
+		}));
+
+		var layerBuilder = new VriLayer.Builder();
+		layerBuilder.polygonIdentifier(polygonId);
+		layerBuilder.layerType(layerType);
+		layerBuilder.crownClosure(0f); // Low
+		layerBuilder.utilization(0.6f);
+		layerBuilder.baseArea(0f); // Low
+		layerBuilder.treesPerHectare(300);
+		layerStream.addValue(Collections.singletonMap(layerType, layerBuilder));
+
+		speciesStream.addValue(Collections.singleton(VriSpecies.build(specBuilder -> {
+			specBuilder.polygonIdentifier(polygonId);
+			specBuilder.layerType(layerType);
+			specBuilder.genus("B", controlMap);
+			specBuilder.percentGenus(100f);
+		})));
+		siteStream.addValue(Collections.singleton(VriSite.build(siteBuilder -> {
+			siteBuilder.polygonIdentifier(polygonId);
+			siteBuilder.layerType(layerType);
+			siteBuilder.siteGenus("B");
+			siteBuilder.siteSpecies("B");
+		})));
+
+		var ex = assertThrows(
+				CrownClosureLowException.class, () -> app.getPolygon(polyStream, layerStream, speciesStream, siteStream)
+		);
+		assertThat(ex, hasProperty("value", present(is(0f))));
+
+		app.close();
+	}
+
+	@Disabled("Error shouldn't be possible due to prior checks")
+	@Test
+	void testBadSpeciesForITG() throws IOException {
+		var app = new VriStart();
+
+		final var polygonId = new PolygonIdentifier("Test", 2024);
+		final var layerType = LayerType.PRIMARY;
+
+		mockControl.replay();
+
+		app.init(resolver, controlMap);
+
+		var polyStream = new MockStreamingParser<VriPolygon>();
+		var layerStream = new MockStreamingParser<Map<LayerType, VriLayer.Builder>>();
+		var speciesStream = new MockStreamingParser<Collection<VriSpecies>>();
+		var siteStream = new MockStreamingParser<Collection<VriSite>>();
+
+		polyStream.addValue(VriPolygon.build(polyBuilder -> {
+			polyBuilder.polygonIdentifier(polygonId);
+			polyBuilder.percentAvailable(Optional.of(100.0f));
+			polyBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+			polyBuilder.yieldFactor(0.9f);
+		}));
+
+		var layerBuilder = new VriLayer.Builder();
+		layerBuilder.polygonIdentifier(polygonId);
+		layerBuilder.layerType(layerType);
+		layerBuilder.crownClosure(95f);
+		layerBuilder.utilization(0.6f);
+		layerBuilder.baseArea(20);
+		layerBuilder.treesPerHectare(300);
+		layerStream.addValue(Collections.singletonMap(layerType, layerBuilder));
+
+		speciesStream.addValue(Collections.singleton(VriSpecies.build(specBuilder -> {
+			specBuilder.polygonIdentifier(polygonId);
+			specBuilder.layerType(layerType);
+			specBuilder.genus("X", controlMap);
+			specBuilder.percentGenus(100f);
+		})));
+		siteStream.addValue(Collections.singleton(VriSite.build(siteBuilder -> {
+			siteBuilder.polygonIdentifier(polygonId);
+			siteBuilder.layerType(layerType);
+			siteBuilder.siteGenus("X");
+			siteBuilder.siteSpecies("X");
+		})));
+
+		var ex = assertThrows(
+				FatalProcessingException.class, () -> app.getPolygon(polyStream, layerStream, speciesStream, siteStream)
+		);
+		assertThat(
+				ex,
+				hasProperty(
+						"message",
+						equalTo(
+								"Species entry references layer VETERAN of polygon Test                 2024 but it is not present."
+						)
+				)
+		);
+
+		app.close();
+	}
+
+	@Test
+	void testApplyPercentAvailableToPrimaryLayer() throws IOException, ProcessingException, ResourceParseException {
 		var app = new VriStart();
 
 		final var polygonId = new PolygonIdentifier("Test", 2024);
@@ -389,7 +834,7 @@ class ParsersTogetherTest {
 	}
 
 	@Test
-	void testPrimaryWithSmallComputedDiameter() throws IOException, StandProcessingException, ResourceParseException {
+	void testPrimaryWithSmallComputedDiameter() throws IOException, ProcessingException, ResourceParseException {
 		var app = new VriStart();
 
 		final var polygonId = new PolygonIdentifier("Test", 2024);
@@ -455,7 +900,7 @@ class ParsersTogetherTest {
 	}
 
 	@Test
-	void testFindsPrimaryGenusAndITG() throws IOException, StandProcessingException, ResourceParseException {
+	void testFindsPrimaryGenusAndITG() throws IOException, ProcessingException, ResourceParseException {
 		var app = new VriStart();
 
 		final var polygonId = new PolygonIdentifier("Test", 2024);
@@ -547,7 +992,7 @@ class ParsersTogetherTest {
 	}
 
 	@Test
-	void testFindsGRPBA1() throws IOException, StandProcessingException, ResourceParseException {
+	void testFindsGRPBA1() throws IOException, ProcessingException, ResourceParseException {
 		var app = new VriStart();
 
 		final var polygonId = new PolygonIdentifier("Test", 2024);
@@ -639,7 +1084,7 @@ class ParsersTogetherTest {
 	void testDefaultBaAndTphForVeteran(
 			Float vetBaseArea, Float vetTreesPerHectare, float vetCrownClosure, Float primeBaseArea,
 			float expectedBaseArea, float expectedTreesPerHectare
-	) throws IOException, StandProcessingException, ResourceParseException {
+	) throws IOException, ProcessingException, ResourceParseException {
 		var app = new VriStart();
 
 		final var polygonId = new PolygonIdentifier("Test", 2024);
@@ -722,7 +1167,7 @@ class ParsersTogetherTest {
 		}
 	)
 	void testDefaultBaAndTphForVeteranWhenZeroCrownClosure(Float vetBaseArea, Float vetTreesPerHectare)
-			throws IOException, StandProcessingException, ResourceParseException {
+			throws IOException {
 		var app = new VriStart();
 
 		final var polygonId = new PolygonIdentifier("Test", 2024);
@@ -778,10 +1223,12 @@ class ParsersTogetherTest {
 		})));
 
 		var ex = assertThrows(
-				StandProcessingException.class, () -> app.getPolygon(polyStream, layerStream, speciesStream, siteStream)
+				CrownClosureLowException.class, () -> app.getPolygon(polyStream, layerStream, speciesStream, siteStream)
 		);
 
-		assertThat(ex, hasProperty("message", is("Expected a positive crown closure for veteran layer but was 0.0")));
+		assertThat(ex, hasProperty("layer", is(LayerType.VETERAN)));
+		assertThat(ex, hasProperty("value", present(is(0f))));
+		assertThat(ex, hasProperty("threshold", present(is(0f))));
 
 		app.close();
 	}

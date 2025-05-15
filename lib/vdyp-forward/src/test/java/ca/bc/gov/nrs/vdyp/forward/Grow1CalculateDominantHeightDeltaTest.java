@@ -25,8 +25,8 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ca.bc.gov.nrs.vdyp.application.ProcessingException;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
+import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.ExecutionStep;
 import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
@@ -89,7 +89,7 @@ class Grow1CalculateDominantHeightDeltaTest {
 		VdypPolygon polygon;
 		do {
 			polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
-		} while (!polygon.getPolygonIdentifier().getName().equals("01003AS000001 00"));
+		} while (!polygon.getPolygonIdentifier().getName().equals("01003AS000001 00     "));
 
 		fpe.fps.setPolygon(polygon);
 
@@ -112,7 +112,7 @@ class Grow1CalculateDominantHeightDeltaTest {
 		VdypPolygon polygon;
 		do {
 			polygon = forwardDataStreamReader.readNextPolygon().orElseThrow();
-		} while (!polygon.getPolygonIdentifier().getName().equals("01003AS000001 00"));
+		} while (!polygon.getPolygonIdentifier().getName().equals("01003AS000001 00     "));
 
 		fpe.fps.setPolygon(polygon);
 

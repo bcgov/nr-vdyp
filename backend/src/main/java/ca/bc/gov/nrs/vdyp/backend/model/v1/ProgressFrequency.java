@@ -29,6 +29,10 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 @RegisterForReflection
 public class ProgressFrequency {
 
+	public static final ProgressFrequency MAPSHEET = new ProgressFrequency(FrequencyKind.MAPSHEET);
+	public static final ProgressFrequency POLYGON = new ProgressFrequency(FrequencyKind.POLYGON);
+	public static final ProgressFrequency NEVER = new ProgressFrequency(FrequencyKind.NEVER);
+
 	public static final String JSON_PROPERTY_INT_VALUE_NAME = "intValue";
 	@JsonProperty(JSON_PROPERTY_INT_VALUE_NAME)
 	private Integer intValue;
@@ -158,12 +162,10 @@ public class ProgressFrequency {
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append("class ParametersProgressFrequency {\n");
 		if (intValue != null)
-			sb.append("   Every ").append(intValue).append(" polygons\n");
+			sb.append("Every ").append(intValue).append(" polygons");
 		else if (enumValue != null)
-			sb.append("   ").append(enumValue).append("\n");
-		sb.append("}");
+			sb.append(enumValue.getValue());
 		return sb.toString();
 	}
 

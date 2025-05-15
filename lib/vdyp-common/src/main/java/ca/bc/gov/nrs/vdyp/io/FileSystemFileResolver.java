@@ -35,7 +35,7 @@ public class FileSystemFileResolver implements FileResolver {
 	}
 
 	@Override
-	public String toString(String filename) throws IOException {
+	public String toString(String filename) {
 		return String.format("file:%s", toPath(filename));
 	}
 

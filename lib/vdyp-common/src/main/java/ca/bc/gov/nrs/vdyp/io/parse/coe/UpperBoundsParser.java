@@ -38,6 +38,7 @@ import ca.bc.gov.nrs.vdyp.model.Coefficients;
  */
 public class UpperBoundsParser implements ControlMapSubResourceParser<Map<Integer, Coefficients>> {
 
+	public static final int FIRST_BA_GROUP_ID = 1;
 	public static final int LAST_BA_GROUP_ID = 180;
 
 	private static final Coefficients defaultCoefficients = new Coefficients(new float[] { 0.0f, 7.6f }, 1);
@@ -77,7 +78,7 @@ public class UpperBoundsParser implements ControlMapSubResourceParser<Map<Intege
 			var maxBaKey = (float) value.get(MAX_BA_KEY);
 			var maxDqKey = (float) value.get(MAX_DQ_KEY);
 
-			if (baGroupId < 0 || baGroupId >= LAST_BA_GROUP_ID) {
+			if (baGroupId < FIRST_BA_GROUP_ID || baGroupId >= LAST_BA_GROUP_ID) {
 				throw new ValueParseException(
 						MessageFormat.format(
 								"Line {0}: Basal Area Group Id {0} is out of range; expecting a value from 1 to {1}",
@@ -91,7 +92,8 @@ public class UpperBoundsParser implements ControlMapSubResourceParser<Map<Intege
 			return r;
 		}, control);
 
-		IntStream.rangeClosed(1, LAST_BA_GROUP_ID).forEach(i -> {
+		/** The value "0" is the default BA group; the range of real values starts at one. */
+		IntStream.rangeClosed(0, LAST_BA_GROUP_ID).forEach(i -> {
 			if (!result.containsKey(i))
 				result.put(i, defaultCoefficients);
 		});

@@ -39,7 +39,7 @@ public class CachingResolvedControlMapImpl implements ResolvedControlMap {
 	private final Optional<Map<Integer, SiteCurveAgeMaximum>> maximumAgeBySiteCurveNumber;
 	private final Optional<Map<Integer, Coefficients>> upperBounds;
 	private final Optional<MatrixMap2<String, String, Integer>> defaultEquationGroup;
-	private final Optional<MatrixMap2<Integer, Integer, Optional<Integer>>> equationModifierGroup;
+	private final Optional<MatrixMap2<Integer, Integer, Integer>> equationModifierGroup;
 	private final Optional<MatrixMap2<String, Region, Coefficients>> hl1Coefficients;
 	private final Optional<MatrixMap2<String, Region, Coefficients>> hl2Coefficients;
 	private final Optional<MatrixMap2<String, Region, Coefficients>> hl3Coefficients;
@@ -207,7 +207,7 @@ public class CachingResolvedControlMapImpl implements ResolvedControlMap {
 	}
 
 	@Override
-	public MatrixMap2<Integer, Integer, Optional<Integer>> getEquationModifierGroup() {
+	public MatrixMap2<Integer, Integer, Integer> getEquationModifierGroup() {
 		return equationModifierGroup.orElseThrow(() -> new NoSuchElementException("equationModifierGroup"));
 	}
 

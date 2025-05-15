@@ -55,11 +55,6 @@ public class ParameterDetailsMessage implements Serializable {
 	@JsonProperty(JSON_PROPERTY_DEFAULT_VALUE)
 	private String defaultValue;
 
-	public ParameterDetailsMessage field(String field) {
-		this.field = field;
-		return this;
-	}
-
 	/**
 	 * the parameter name
 	 *
@@ -69,15 +64,6 @@ public class ParameterDetailsMessage implements Serializable {
 
 	public String getField() {
 		return field;
-	}
-
-	public void setField(String field) {
-		this.field = field;
-	}
-
-	public ParameterDetailsMessage shortDescription(String shortDescription) {
-		this.shortDescription = shortDescription;
-		return this;
 	}
 
 	/**
@@ -91,15 +77,6 @@ public class ParameterDetailsMessage implements Serializable {
 		return shortDescription;
 	}
 
-	public void setShortDescription(String shortDescription) {
-		this.shortDescription = shortDescription;
-	}
-
-	public ParameterDetailsMessage parameterValue(String parameterValue) {
-		this.parameterValue = parameterValue;
-		return this;
-	}
-
 	/**
 	 * if the parameter has a value, a description of the value
 	 *
@@ -109,15 +86,6 @@ public class ParameterDetailsMessage implements Serializable {
 
 	public String getParameterValue() {
 		return parameterValue;
-	}
-
-	public void setParameterValue(String parameterValue) {
-		this.parameterValue = parameterValue;
-	}
-
-	public ParameterDetailsMessage longDescription(String longDescription) {
-		this.longDescription = longDescription;
-		return this;
 	}
 
 	/**
@@ -131,15 +99,6 @@ public class ParameterDetailsMessage implements Serializable {
 		return longDescription;
 	}
 
-	public void setLongDescription(String longDescription) {
-		this.longDescription = longDescription;
-	}
-
-	public ParameterDetailsMessage defaultValue(String defaultValue) {
-		this.defaultValue = defaultValue;
-		return this;
-	}
-
 	/**
 	 * the default value used if the parameter is not specified
 	 *
@@ -151,8 +110,50 @@ public class ParameterDetailsMessage implements Serializable {
 		return defaultValue;
 	}
 
-	public void setDefaultValue(String defaultValue) {
-		this.defaultValue = defaultValue;
+	public static class Builder {
+		private ParameterDetailsMessage m = new ParameterDetailsMessage();
+
+		public Builder field(String field) {
+			m.field = field;
+			return this;
+		}
+
+		public Builder shortDescription(String shortDescription) {
+			m.shortDescription = shortDescription;
+			return this;
+		}
+
+		public Builder parameterValue(String parameterValue) {
+			m.parameterValue = parameterValue;
+			return this;
+		}
+
+		public Builder longDescription(String longDescription) {
+			m.longDescription = longDescription;
+			return this;
+		}
+
+		public Builder defaultValue(String defaultValue) {
+			m.defaultValue = defaultValue;
+			return this;
+		}
+
+		public ParameterDetailsMessage build() {
+			if (m.field == null) {
+				throw new IllegalStateException("field is a required field of ParameterDetailsMessage");
+			}
+			if (m.shortDescription == null) {
+				throw new IllegalStateException("shortDescription is a required field of ParameterDetailsMessage");
+			}
+			if (m.longDescription == null) {
+				throw new IllegalStateException("longDescription is a required field of ParameterDetailsMessage");
+			}
+			if (m.defaultValue == null) {
+				throw new IllegalStateException("defaultValue is a required field of ParameterDetailsMessage");
+			}
+
+			return m;
+		}
 	}
 
 	@Override

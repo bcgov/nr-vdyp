@@ -1,10 +1,12 @@
 package ca.bc.gov.nrs.vdyp.fip;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.ValueOrMarker;
@@ -13,7 +15,6 @@ import ca.bc.gov.nrs.vdyp.fip.model.FipLayerPrimary;
 import ca.bc.gov.nrs.vdyp.io.EndOfRecord;
 import ca.bc.gov.nrs.vdyp.io.FileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.common.LineParser;
-import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ControlMapValueReplacer;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.AbstractStreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.GroupingStreamingParser;
@@ -24,6 +25,8 @@ import ca.bc.gov.nrs.vdyp.model.LayerType;
 
 public class FipLayerParser
 		implements ControlMapValueReplacer<StreamingParserFactory<Map<LayerType, FipLayer>>, String> {
+
+	private static final Logger logger = LoggerFactory.getLogger(FipLayerParser.class);
 
 	static final String LAYER = "LAYER"; // LAYER
 	static final String AGE_TOTAL = "AGE_TOTAL"; // AGETOT
@@ -45,8 +48,7 @@ public class FipLayerParser
 
 	@Override
 	public StreamingParserFactory<Map<LayerType, FipLayer>>
-			map(String fileName, FileResolver fileResolver, Map<String, Object> control)
-					throws IOException, ResourceParseException {
+			map(String fileName, FileResolver fileResolver, Map<String, Object> control) {
 		return () -> {
 			var lineParser = new LineParser() //
 					.strippedString(25, FipPolygonParser.POLYGON_IDENTIFIER).space(1) //
@@ -150,9 +152,16 @@ public class FipLayerParser
 				@Override
 				protected boolean skip(ValueOrMarker<Optional<FipLayer>, EndOfRecord> nextChild) {
 					return nextChild.getValue().map(x -> x.map(layer -> {
-						// TODO log this
+						var willSkip = layer.getHeightSafe() <= 0f || layer.getCrownClosure() <= 0f;
+						if (willSkip) {
+							logger.info(
+									"{}: skipping FipLayer because height ({}) and/or crown closure ({}) has not been provided",
+									layer.toString(), layer.getHeightSafe(), layer.getCrownClosure()
+							);
+						}
+
 						// If the layer is present but has height or closure that's not positive, ignore
-						return layer.getHeightSafe() <= 0f || layer.getCrownClosure() <= 0f;
+						return willSkip;
 					}).orElse(true)) // If the layer is not present (Unknown layer type) ignore
 							.orElse(false); // If it's a marker, let it through so the stop method can see it.
 				}
@@ -165,9 +174,8 @@ public class FipLayerParser
 				@Override
 				protected Map<LayerType, FipLayer>
 						convert(List<ValueOrMarker<Optional<FipLayer>, EndOfRecord>> children) {
-					return children.stream().map(ValueOrMarker::getValue).map(Optional::get) // Should never be empty as
-							// we've filtered out
-							// markers
+					return children.stream().map(ValueOrMarker::getValue).map(Optional::get)
+							// Should never be empty as we've filtered out markers
 							.flatMap(Optional::stream) // Skip if empty (and unknown layer type)
 							.collect(Collectors.toMap(FipLayer::getLayerType, x -> x));
 				}

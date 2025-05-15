@@ -54,7 +54,10 @@ public abstract class BaseControlParser {
 						.record(subResourceParser.getControlKey(), subResourceParser.getValueParser())
 		);
 
-		outputFileParsers().forEach(key -> controlParser.record(key, ValueParser.FILENAME));
+		outputFiles().forEach(
+				outputFileLocationResolver -> controlParser
+						.record(outputFileLocationResolver.getControlKey(), outputFileLocationResolver.getValueParser())
+		);
 
 		configurationFileParsers().forEach(
 				subResourceParser -> controlParser
@@ -70,7 +73,7 @@ public abstract class BaseControlParser {
 
 	protected abstract List<ControlMapValueReplacer<Object, String>> inputFileParsers();
 
-	protected abstract List<ControlKey> outputFileParsers();
+	protected abstract List<OutputFileLocationResolver> outputFiles();
 
 	protected abstract List<ResourceControlMapModifier> configurationFileParsers();
 

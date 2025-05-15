@@ -254,6 +254,30 @@ class EquationGroupParserTest {
 
 	}
 
+	@Test
+	void testDefaults() throws Exception {
+
+		var parser = new DefaultEquationNumberParser();
+
+		var controlMap = makeControlMap();
+
+		List<String> hiddenBecs = Arrays.asList("B3");
+		parser.setHiddenBecs(hiddenBecs);
+
+		var is = TestUtils.makeInputStream(
+				"S1 B1   011", //
+				"S1 B2   012", //
+				"S1 B4   014", //
+				"S2 B1   021", //
+				"S2 B2   022", //
+				"S2 B4   024"
+		);
+
+		var result = parser.parse(is, Collections.unmodifiableMap(controlMap));
+
+		assertThat(result, mmHasEntry(is(EquationGroupParser.DEFAULT_VALUE), "S1", "B3"));
+	}
+
 	private HashMap<String, Object> makeControlMapSingle() {
 		var controlMap = new HashMap<String, Object>();
 

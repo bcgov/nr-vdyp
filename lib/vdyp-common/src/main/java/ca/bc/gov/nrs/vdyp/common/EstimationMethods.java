@@ -17,15 +17,19 @@ import java.util.function.Predicate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ca.bc.gov.nrs.vdyp.application.ProcessingException;
-import ca.bc.gov.nrs.vdyp.application.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMap;
+import ca.bc.gov.nrs.vdyp.exceptions.BreastHeightAgeLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.FatalProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.math.FloatMath;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
 import ca.bc.gov.nrs.vdyp.model.ComponentSizeLimits;
+import ca.bc.gov.nrs.vdyp.model.NonprimaryHLCoefficients;
+import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
@@ -142,14 +146,7 @@ public class EstimationMethods {
 	) throws ProcessingException {
 		var coeMap = controlMap.getHlNonPrimaryCoefficients();
 
-		var coe = coeMap.get(vspec, vspecPrime, bec.getRegion()).orElseThrow(
-				() -> new ProcessingException(
-						String.format(
-								"Could not find Lorey Height Nonprimary Coefficients for %s %s %s", vspec, vspecPrime,
-								bec.getRegion()
-						)
-				)
-		);
+		var coe = coeMap.get(vspec, vspecPrime, bec.getRegion()).orElseGet(() -> NonprimaryHLCoefficients.getDefault());
 		var heightToUse = coe.getEquationIndex() == 1 ? leadHeight : primaryHeight;
 		return 1.3f + coe.getCoe(1) * pow(heightToUse - 1.3f, coe.getCoe(2));
 	}
@@ -167,7 +164,7 @@ public class EstimationMethods {
 	 * @param standTreesPerHectare  Density opf the stand
 	 * @param standLoreyHeight      Lorey height of the stand
 	 * @return quadratic mean diameter of the species of interest
-	 * @throws ProcessingException
+	 * @throws FatalProcessingException
 	 */
 	public float estimateQuadMeanDiameterForSpecies(
 			VdypSpecies spec, // ISP, HLsp, DQsp
@@ -177,7 +174,7 @@ public class EstimationMethods {
 			float standBaseArea, // BA_TOT
 			float standTreesPerHectare, // TPH_TOT
 			float standLoreyHeight // HL_TOT
-	) throws ProcessingException {
+	) throws FatalProcessingException {
 		Map<String, Float> basalAreaFractionPerSpecies = new HashMap<>();
 		allSpecies.values().stream().forEach(s -> basalAreaFractionPerSpecies.put(s.getGenus(), s.getFractionGenus()));
 
@@ -214,7 +211,7 @@ public class EstimationMethods {
 			float standBaseArea, // BA_TOT
 			float standTreesPerHectare, // TPH_TOT
 			float standLoreyHeight // HL_TOT
-	) throws ProcessingException {
+	) throws FatalProcessingException {
 
 		float c = 0.00441786467f;
 
@@ -275,14 +272,14 @@ public class EstimationMethods {
 			float cc = -baseArea1 * standTreesPerHectare;
 			float term = bb * bb - 4 * aa * cc;
 			if (term <= 0f) {
-				throw new ProcessingException(
+				throw new FatalProcessingException(
 						"Term for trees per hectare calculation when estimating quadratic mean diameter for species "
 								+ spAlias + " was " + term + " but should be positive."
 				);
 			}
 			treesPerHectare1 = (-bb + sqrt(term)) / (2f * aa);
 			if (treesPerHectare1 <= 0f || treesPerHectare1 > standTreesPerHectare) {
-				throw new ProcessingException(
+				throw new FatalProcessingException(
 						"Trees per hectare 1 for species " + spAlias + " was " + treesPerHectare1
 								+ " but should be positive and less than or equal to stand trees per hectare "
 								+ standTreesPerHectare
@@ -843,7 +840,7 @@ public class EstimationMethods {
 		}
 
 		if (ageToUse <= 0f) {
-			throw new StandProcessingException("Age was not positive");
+			throw new BreastHeightAgeLowException(LayerType.PRIMARY, Optional.of(ageToUse), Optional.of(0f));
 		}
 
 		float trAge = FloatMath.log(ageToUse);
@@ -902,7 +899,7 @@ public class EstimationMethods {
 		}
 
 		if (ageUse <= 0f) {
-			throw new StandProcessingException("Primary breast height age must be positive but was " + ageUse);
+			throw new BreastHeightAgeLowException(LayerType.PRIMARY, Optional.of(ageUse), Optional.of(0f));
 		}
 
 		final float trAge = FloatMath.log(ageUse);

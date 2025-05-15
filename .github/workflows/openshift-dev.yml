@@ -4,11 +4,16 @@ permissions:
   packages: write
 
 on:
-  workflow_dispatch:
-
   push:
     branches:
       - main
+    paths:
+      - "backend/**"
+      - "charts/app/values-dev.yml"
+      - "frontend/**"
+      - "lib/**"
+      - ".github/workflows/openshift-*.yml"
+  pull_request:
     paths:
       - "backend/**"
       - "charts/app/values-dev.yml"

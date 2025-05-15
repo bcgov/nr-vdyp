@@ -2975,8 +2975,7 @@ public class Sindxdll {
 	 * @throws CodeErrorException           when species code is unknown
 	 * @throws ForestInventoryZoneException when FIZ code is unknown
 	 */
-	public static SiteIndexSpecies SpecRemap(String sc, char fiz)
-			throws CodeErrorException, ForestInventoryZoneException {
+	public static SiteIndexSpecies SpecRemap(String sc, char fiz) throws CodeErrorException {
 		return SpecRMap.species_remap(sc, fiz);
 	}
 

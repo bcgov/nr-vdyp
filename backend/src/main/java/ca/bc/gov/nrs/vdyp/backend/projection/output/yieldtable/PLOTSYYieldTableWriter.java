@@ -6,12 +6,10 @@ import com.opencsv.bean.StatefulBeanToCsv;
 
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.YieldTableGenerationException;
 import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionContext;
-import ca.bc.gov.nrs.vdyp.backend.projection.model.LayerReportingInfo;
-import ca.bc.gov.nrs.vdyp.backend.projection.model.Polygon;
 
-public class PLOTSYYieldTableWriter extends AbstractCSVTypeYieldTableWriter<PLOTSYYieldTableRecordBean> {
+class PLOTSYYieldTableWriter extends AbstractCSVTypeYieldTableWriter<PLOTSYYieldTableRecordBean> {
 
-	private PLOTSYYieldTableWriter(ProjectionContext context) throws YieldTableGenerationException {
+	private PLOTSYYieldTableWriter(ProjectionContext context) {
 		super(PLOTSYYieldTableRecordBean.class, context);
 	}
 
@@ -29,25 +27,29 @@ public class PLOTSYYieldTableWriter extends AbstractCSVTypeYieldTableWriter<PLOT
 	}
 
 	@Override
-	protected PLOTSYYieldTableRecordBean convertToTargetFormat(YieldTableData data) {
-		throw new UnsupportedOperationException("PLOTSYYieldTableWriter.convertToTargetFormat");
+	public void recordCalendarYearAndLayerAge(YieldTableRowContext rowContext) {
+		throw new UnsupportedOperationException("PLOTSYYieldTableWriter.recordCalendarYearAndLayerAge");
 	}
 
 	@Override
-	public void writeHeader(
-			Polygon polygonReportingInfo, LayerReportingInfo layerReportingInfo, boolean doGenerateDetailedTableHeader,
-			Integer yieldTableCount
+	public void recordSpeciesComposition(YieldTableRowContext rowContext) {
+		throw new UnsupportedOperationException("PLOTSYYieldTableWriter.recordSpeciesComposition");
+	}
+
+	@Override
+	protected void recordPolygonAndLayerDetails(int yieldTableNumber, YieldTableRowContext rowContext) {
+		throw new UnsupportedOperationException("PLOTSYYieldTableWriter.recordPerPolygonDetails");
+	}
+
+	@Override
+	void recordSiteInformation(
+			Double percentStockable, Double siteIndex, Double dominantHeight, Double secondaryHeight
 	) {
-		throw new UnsupportedOperationException("PLOTSYYieldTableWriter.writeHeader");
+		throw new UnsupportedOperationException("PLOTSYYieldTableWriter.recordSiteInformation");
 	}
 
 	@Override
-	public void writeCalendarYearAndLayerAge(YieldTableData row) throws YieldTableGenerationException {
-		throw new UnsupportedOperationException("PLOTSYYieldTableWriter.writeCalendarYearAndLayerAge");
-	}
-
-	@Override
-	public void writeSpeciesComposition(YieldTableData row) throws YieldTableGenerationException {
-		throw new UnsupportedOperationException("PLOTSYYieldTableWriter.writeSpeciesComposition");
+	void recordGrowthDetails(EntityGrowthDetails growthDetails, EntityVolumeDetails entityVolumeDetails) {
+		throw new UnsupportedOperationException("PLOTSYYieldTableWriter.recordGrowthDetails");
 	}
 }

@@ -172,4 +172,56 @@ class UtilsTest {
 			);
 		}
 	}
+
+	@Nested
+	class PrettyList {
+		@Test
+		void single() {
+			var result = Utils.prettyList(List.of("test"), "and", Object::toString);
+			assertThat(result, equalTo("test"));
+		}
+
+		@Test
+		void empty() {
+			var result = Utils.prettyList(List.of(), "and", Object::toString);
+			assertThat(result, equalTo(""));
+		}
+
+		@Test
+		void two() {
+			var result = Utils.prettyList(List.of("test1", "test2"), "and", Object::toString);
+			assertThat(result, equalTo("test1 and test2"));
+		}
+
+		@Test
+		void twoNullConjunction() {
+			var result = Utils.prettyList(List.of("test1", "test2"), null, Object::toString);
+			assertThat(result, equalTo("test1, test2"));
+		}
+
+		@Test
+		void threeNullConjunction() {
+			var result = Utils.prettyList(List.of("test1", "test2", "test3"), null, Object::toString);
+			assertThat(result, equalTo("test1, test2, test3"));
+		}
+
+		@Test
+		void twoEmptyConjunction() {
+			var result = Utils.prettyList(List.of("test1", "test2"), "", Object::toString);
+			assertThat(result, equalTo("test1, test2"));
+		}
+
+		@Test
+		void threeEmptyConjunction() {
+			var result = Utils.prettyList(List.of("test1", "test2", "test3"), "", Object::toString);
+			assertThat(result, equalTo("test1, test2, test3"));
+		}
+
+		@Test
+		void three() {
+			var result = Utils.prettyList(List.of("test1", "test2", "test3"), "and", Object::toString);
+			assertThat(result, equalTo("test1, test2, and test3"));
+		}
+	}
+
 }

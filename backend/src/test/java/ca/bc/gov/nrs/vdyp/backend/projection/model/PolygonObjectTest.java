@@ -1,7 +1,6 @@
 package ca.bc.gov.nrs.vdyp.backend.projection.model;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 
@@ -9,8 +8,8 @@ import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.ParameterNames;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ProjectionRequestKind;
@@ -24,12 +23,12 @@ public class PolygonObjectTest {
 	private Polygon polygon2;
 
 	@BeforeEach
-	void beforeEach() throws IOException, PolygonValidationException, ProjectionRequestException {
+	void beforeEach() throws PolygonValidationException, AbstractProjectionRequestException {
 		var parameters = new Parameters().ageStart(10).ageEnd(20);
 
 		{
 			var polygonStreamFile = FileHelper
-					.getStubResourceFile(FileHelper.HCSV, FileHelper.VDYP_240, "VDYP7_INPUT_POLY.csv");
+					.getTestResourceFile(FileHelper.HCSV, FileHelper.COMMON, "VDYP7_INPUT_POLY.csv");
 
 			var streams = new HashMap<String, InputStream>();
 			streams.put(ParameterNames.HCSV_POLYGON_INPUT_DATA, polygonStreamFile);
@@ -46,7 +45,7 @@ public class PolygonObjectTest {
 
 		{
 			var polygonStreamFile = FileHelper
-					.getStubResourceFile(FileHelper.HCSV, FileHelper.VDYP_240, "VDYP7_INPUT_POLY.csv");
+					.getTestResourceFile(FileHelper.HCSV, FileHelper.COMMON, "VDYP7_INPUT_POLY.csv");
 
 			var streams = new HashMap<String, InputStream>();
 			streams.put(ParameterNames.HCSV_POLYGON_INPUT_DATA, polygonStreamFile);

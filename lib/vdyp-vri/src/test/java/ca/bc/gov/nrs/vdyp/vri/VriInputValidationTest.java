@@ -1,11 +1,9 @@
 package ca.bc.gov.nrs.vdyp.vri;
 
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.startsWith;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
@@ -18,9 +16,19 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-import ca.bc.gov.nrs.vdyp.application.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.Utils;
+import ca.bc.gov.nrs.vdyp.exceptions.BaseAreaLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.BreastHeightAgeLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.CrownClosureLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.HeightLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.LayerMissingException;
+import ca.bc.gov.nrs.vdyp.exceptions.LayerSpeciesDoNotSumTo100PercentException;
+import ca.bc.gov.nrs.vdyp.exceptions.SiteIndexLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.TotalAgeLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.TreesPerHectareLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.YearsToBreastHeightLowException;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BasalAreaYieldParser;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.UpperBoundsParser;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
@@ -227,7 +235,7 @@ class VriInputValidationTest {
 			});
 		});
 
-		assertThrows(StandProcessingException.class, () -> app.checkPolygon(poly));
+		assertThrows(LayerSpeciesDoNotSumTo100PercentException.class, () -> app.checkPolygon(poly));
 
 		app.close();
 	}
@@ -240,7 +248,7 @@ class VriInputValidationTest {
 
 		app.init(resolver, controlMap);
 
-		VriPolygon.build(pBuilder -> {
+		var poly = VriPolygon.build(pBuilder -> {
 			pBuilder.polygonIdentifier("082F074/0071         2001");
 			pBuilder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
 			pBuilder.forestInventoryZone(" ");
@@ -304,6 +312,9 @@ class VriInputValidationTest {
 
 			});
 		});
+
+		var ex = assertThrows(LayerMissingException.class, () -> app.checkPolygon(poly));
+		assertThat(ex, hasProperty("layer", is(LayerType.PRIMARY)));
 
 		app.close();
 	}
@@ -802,9 +813,9 @@ class VriInputValidationTest {
 			var result = assertDoesNotThrow(() -> app.checkPolygonForMode(poly, bec));
 			assertThat(result, is(mode));
 		} else {
-			var ex = assertThrows(StandProcessingException.class, () -> app.checkPolygonForMode(poly, bec));
+			var ex = assertThrows(SiteIndexLowException.class, () -> app.checkPolygonForMode(poly, bec));
 
-			assertThat(ex, hasProperty("message", is("Site index is not present")));
+			assertThat(ex, hasProperty("value", notPresent()));
 		}
 
 		app.close();
@@ -864,9 +875,9 @@ class VriInputValidationTest {
 			var result = assertDoesNotThrow(() -> app.checkPolygonForMode(poly, bec));
 			assertThat(result, is(mode));
 		} else {
-			var ex = assertThrows(StandProcessingException.class, () -> app.checkPolygonForMode(poly, bec));
-
-			assertThat(ex, hasProperty("message", is("Site index 0.0 should be greater than 0.0")));
+			var ex = assertThrows(SiteIndexLowException.class, () -> app.checkPolygonForMode(poly, bec));
+			assertThat(ex, hasProperty("value", present(is(0f))));
+			assertThat(ex, hasProperty("threshold", present(is(0f))));
 		}
 
 		app.close();
@@ -929,9 +940,9 @@ class VriInputValidationTest {
 			var result = assertDoesNotThrow(() -> app.checkPolygonForMode(poly, bec));
 			assertThat(result, is(mode));
 		} else {
-			var ex = assertThrows(StandProcessingException.class, () -> app.checkPolygonForMode(poly, bec));
+			var ex = assertThrows(TotalAgeLowException.class, () -> app.checkPolygonForMode(poly, bec));
 
-			assertThat(ex, hasProperty("message", is("Age total is not present")));
+			assertThat(ex, hasProperty("value", notPresent()));
 		}
 
 		app.close();
@@ -992,9 +1003,9 @@ class VriInputValidationTest {
 			var result = assertDoesNotThrow(() -> app.checkPolygonForMode(poly, bec));
 			assertThat(result, is(mode));
 		} else {
-			var ex = assertThrows(StandProcessingException.class, () -> app.checkPolygonForMode(poly, bec));
-
-			assertThat(ex, hasProperty("message", is("Age total 0.0 should be greater than 0.0")));
+			var ex = assertThrows(TotalAgeLowException.class, () -> app.checkPolygonForMode(poly, bec));
+			assertThat(ex, hasProperty("value", present(is(0f))));
+			assertThat(ex, hasProperty("threshold", present(is(0f))));
 		}
 
 		app.close();
@@ -1058,9 +1069,9 @@ class VriInputValidationTest {
 			var result = assertDoesNotThrow(() -> app.checkPolygonForMode(poly, bec));
 			assertThat(result, is(mode));
 		} else {
-			var ex = assertThrows(StandProcessingException.class, () -> app.checkPolygonForMode(poly, bec));
-
-			assertThat(ex, hasProperty("message", is("Breast height age 0.0 should be greater than 0.0")));
+			var ex = assertThrows(BreastHeightAgeLowException.class, () -> app.checkPolygonForMode(poly, bec));
+			assertThat(ex, hasProperty("value", present(is(0f))));
+			assertThat(ex, hasProperty("threshold", present(is(0f))));
 		}
 
 		app.close();
@@ -1122,9 +1133,9 @@ class VriInputValidationTest {
 			var result = assertDoesNotThrow(() -> app.checkPolygonForMode(poly, bec));
 			assertThat(result, is(mode));
 		} else {
-			var ex = assertThrows(StandProcessingException.class, () -> app.checkPolygonForMode(poly, bec));
-
-			assertThat(ex, hasProperty("message", is("Years to breast height 0.0 should be greater than 0.0")));
+			var ex = assertThrows(YearsToBreastHeightLowException.class, () -> app.checkPolygonForMode(poly, bec));
+			assertThat(ex, hasProperty("value", present(is(0f))));
+			assertThat(ex, hasProperty("threshold", present(is(0f))));
 		}
 
 		app.close();
@@ -1141,7 +1152,7 @@ class VriInputValidationTest {
 																						// check in this case
 	)
 
-	void testFailIfYearsToBreastHeightLow(String modeName, String heightS, String passFail) throws Exception {
+	void testFailIfHeightLow(String modeName, String heightS, String passFail) throws Exception {
 
 		PolygonMode mode = PolygonMode.valueOf(modeName);
 		boolean pass = passFail.equals("pass");
@@ -1195,9 +1206,10 @@ class VriInputValidationTest {
 			var result = assertDoesNotThrow(() -> app.checkPolygonForMode(poly, bec));
 			assertThat(result, is(mode));
 		} else {
-			var ex = assertThrows(StandProcessingException.class, () -> app.checkPolygonForMode(poly, bec));
+			var ex = assertThrows(HeightLowException.class, () -> app.checkPolygonForMode(poly, bec));
+			assertThat(ex, hasProperty("value", present(is(Float.parseFloat(heightS)))));
+			assertThat(ex, hasProperty("threshold", present(any(Float.class))));
 
-			assertThat(ex, hasProperty("message", startsWith("Height " + heightS + " should be greater than ")));
 		}
 
 		app.close();
@@ -1259,9 +1271,9 @@ class VriInputValidationTest {
 			var result = assertDoesNotThrow(() -> app.checkPolygonForMode(poly, bec));
 			assertThat(result, is(mode));
 		} else {
-			var ex = assertThrows(StandProcessingException.class, () -> app.checkPolygonForMode(poly, bec));
-
-			assertThat(ex, hasProperty("message", is("Base area 0.0 should be greater than 0.0")));
+			var ex = assertThrows(BaseAreaLowException.class, () -> app.checkPolygonForMode(poly, bec));
+			assertThat(ex, hasProperty("value", present(is(0f))));
+			assertThat(ex, hasProperty("threshold", present(is(0f))));
 		}
 
 		app.close();
@@ -1326,9 +1338,9 @@ class VriInputValidationTest {
 			var result = assertDoesNotThrow(() -> app.checkPolygonForMode(poly, bec));
 			assertThat(result, is(mode));
 		} else {
-			var ex = assertThrows(StandProcessingException.class, () -> app.checkPolygonForMode(poly, bec));
-
-			assertThat(ex, hasProperty("message", is("Trees per hectare 0.0 should be greater than 0.0")));
+			var ex = assertThrows(TreesPerHectareLowException.class, () -> app.checkPolygonForMode(poly, bec));
+			assertThat(ex, hasProperty("value", present(is(0f))));
+			assertThat(ex, hasProperty("threshold", present(is(0f))));
 		}
 
 		app.close();
@@ -1390,9 +1402,9 @@ class VriInputValidationTest {
 			var result = assertDoesNotThrow(() -> app.checkPolygonForMode(poly, bec));
 			assertThat(result, is(mode));
 		} else {
-			var ex = assertThrows(StandProcessingException.class, () -> app.checkPolygonForMode(poly, bec));
-
-			assertThat(ex, hasProperty("message", is("Crown closure 0.0 should be greater than 0.0")));
+			var ex = assertThrows(CrownClosureLowException.class, () -> app.checkPolygonForMode(poly, bec));
+			assertThat(ex, hasProperty("value", present(is(0f))));
+			assertThat(ex, hasProperty("threshold", present(is(0f))));
 		}
 
 		app.close();
@@ -1571,14 +1583,9 @@ class VriInputValidationTest {
 			});
 		});
 
-		var ex = assertThrows(StandProcessingException.class, () -> app.checkPolygon(poly));
-		assertThat(
-				ex,
-				hasProperty(
-						"message",
-						is("Veteran layer primary species height 34.0 should be greater than or equal to 36.0")
-				)
-		);
+		var ex = assertThrows(HeightLowException.class, () -> app.checkPolygon(poly));
+		assertThat(ex, hasProperty("value", present(is(34f))));
+		assertThat(ex, hasProperty("threshold", present(is(36f))));
 
 		app.close();
 	}

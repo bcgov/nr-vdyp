@@ -8,6 +8,9 @@ import org.glassfish.jersey.internal.inject.InstanceBinding;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.osgi.framework.SynchronousBundleListener;
 
+import com.opencsv.bean.processor.ConvertEmptyOrBlankStringsToDefault;
+import com.opencsv.bean.processor.ConvertEmptyOrBlankStringsToNull;
+
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
 @RegisterForReflection(
@@ -17,6 +20,8 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 				SynchronousBundleListener.class, //
 				InstanceBinding.class, //
 				LocalizationMessages.class, //
+				ConvertEmptyOrBlankStringsToNull.class, //
+				ConvertEmptyOrBlankStringsToDefault.class //
 		}
 )
 public class VdypBackendReflectionConfiguration {

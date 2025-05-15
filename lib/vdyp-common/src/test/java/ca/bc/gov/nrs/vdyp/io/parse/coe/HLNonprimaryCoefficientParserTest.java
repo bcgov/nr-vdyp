@@ -32,7 +32,7 @@ class HLNonprimaryCoefficientParserTest {
 	}
 
 	@Test
-	void testParseBadSpecies1() throws Exception {
+	void testParseBadSpecies1() {
 
 		var parser = new HLNonprimaryCoefficientParser();
 
@@ -47,7 +47,7 @@ class HLNonprimaryCoefficientParserTest {
 	}
 
 	@Test
-	void testParseBadSpecies2() throws Exception {
+	void testParseBadSpecies2() {
 
 		var parser = new HLNonprimaryCoefficientParser();
 
@@ -62,7 +62,7 @@ class HLNonprimaryCoefficientParserTest {
 	}
 
 	@Test
-	void testParseBadRegion() throws Exception {
+	void testParseBadRegion() {
 
 		var parser = new HLNonprimaryCoefficientParser();
 
@@ -77,7 +77,7 @@ class HLNonprimaryCoefficientParserTest {
 	}
 
 	@Test
-	void testParseMissingCoefficient() throws Exception {
+	void testParseMissingCoefficient() {
 
 		var parser = new HLNonprimaryCoefficientParser();
 

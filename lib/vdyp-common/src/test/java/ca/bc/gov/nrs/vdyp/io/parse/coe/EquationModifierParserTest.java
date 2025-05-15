@@ -1,6 +1,6 @@
 package ca.bc.gov.nrs.vdyp.io.parse.coe;
 
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.*;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.mmHasEntry;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
@@ -24,8 +24,10 @@ class EquationModifierParserTest {
 
 		var result = parser.parse(is, controlMap);
 
-		assertThat(result, mmHasEntry(present(is(26)), 25, 18));
-		// indexed
+		assertThat(result, mmHasEntry(is(26), 25, 18));
+
+		// test defaults
+		assertThat(result, mmHasEntry(is(EquationModifierParser.DEFAULT_VALUE), 12, 16));
 	}
 
 }

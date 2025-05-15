@@ -3,14 +3,15 @@ package ca.bc.gov.nrs.vdyp.backend.projection.model;
 public class SpeciesReportingInfo implements Comparable<SpeciesReportingInfo> {
 
 	private String sp64Name;
-	private Double sp64Percent;
+	private double sp64Percent;
+
 	private int asSuppliedIndex;
 
 	public String getSp64Name() {
 		return sp64Name;
 	}
 
-	public Double getSp64Percent() {
+	public double getSp64Percent() {
 		return sp64Percent;
 	}
 
@@ -26,7 +27,7 @@ public class SpeciesReportingInfo implements Comparable<SpeciesReportingInfo> {
 			return this;
 		}
 
-		public Builder sp64Percent(Double sp64Percent) {
+		public Builder sp64Percent(double sp64Percent) {
 			speciesReportingInfo.sp64Percent = sp64Percent;
 			return this;
 		}

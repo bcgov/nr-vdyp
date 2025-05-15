@@ -64,13 +64,13 @@ public class MockStreamingParser<T> implements StreamingParser<T> {
 	}
 
 	@Override
-	public boolean hasNext() throws IOException, ResourceParseException {
+	public boolean hasNext() {
 		var current = remaining.peek();
 		return current != null && current.hasNext;
 	}
 
 	@Override
-	public void close() throws IOException {
+	public void close() {
 		closed = true;
 	}
 

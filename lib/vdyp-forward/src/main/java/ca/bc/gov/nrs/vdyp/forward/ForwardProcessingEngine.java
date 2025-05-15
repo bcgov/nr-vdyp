@@ -18,9 +18,6 @@ import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ca.bc.gov.nrs.vdyp.application.ProcessingException;
-import ca.bc.gov.nrs.vdyp.application.RuntimeProcessingException;
-import ca.bc.gov.nrs.vdyp.application.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.EstimationMethods;
 import ca.bc.gov.nrs.vdyp.common.ReconcilationMethods;
@@ -33,6 +30,9 @@ import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.NoAnswerException
 import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.SpeciesErrorException;
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexAgeType;
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
+import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.RuntimeProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.model.ControlVariable;
 import ca.bc.gov.nrs.vdyp.forward.model.ForwardControlVariables;
 import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings;
@@ -89,8 +89,7 @@ public class ForwardProcessingEngine {
 
 	private final boolean doCheckpoint;
 
-	public ForwardProcessingEngine(Map<String, Object> controlMap, Optional<VdypOutputWriter> outputWriter)
-			throws ProcessingException {
+	public ForwardProcessingEngine(Map<String, Object> controlMap, Optional<VdypOutputWriter> outputWriter) {
 		this.fps = new ForwardProcessingState(controlMap);
 		this.outputWriter = outputWriter;
 
@@ -98,7 +97,7 @@ public class ForwardProcessingEngine {
 		doCheckpoint = cv7Value == 1;
 	}
 
-	public ForwardProcessingEngine(Map<String, Object> controlMap) throws ProcessingException {
+	public ForwardProcessingEngine(Map<String, Object> controlMap) {
 		this(controlMap, Optional.empty());
 	}
 
@@ -1515,7 +1514,7 @@ public class ForwardProcessingEngine {
 	 *
 	 * @throws ProcessingException
 	 */
-	private void calculateSmallComponentYields(LayerProcessingState lps) throws ProcessingException {
+	private void calculateSmallComponentYields(LayerProcessingState lps) {
 
 		Bank bank = lps.getBank();
 
@@ -2643,8 +2642,7 @@ public class ForwardProcessingEngine {
 	 * @throws ProcessingException
 	 */
 	private HashMap<UtilizationClassVariable, Float>
-			calculateSmallCompatibilityVariables(int speciesIndex, ForwardControlVariables forwardControlVariables)
-					throws ProcessingException {
+			calculateSmallCompatibilityVariables(int speciesIndex, ForwardControlVariables forwardControlVariables) {
 
 		var lps = fps.getPrimaryLayerProcessingState();
 		Bank bank = lps.getBank();
@@ -3354,10 +3352,10 @@ public class ForwardProcessingEngine {
 			String primarySpeciesName = bank.speciesNames[highestPercentageIndex];
 			String becZoneAlias = bank.getBecZone().getAlias();
 
-			int defaultEquationGroup = fps.fcm.getDefaultEquationGroup().get(primarySpeciesName, becZoneAlias);
-			Optional<Integer> equationModifierGroup = fps.fcm.getEquationModifierGroup()
+			Integer defaultEquationGroup = fps.fcm.getDefaultEquationGroup().get(primarySpeciesName, becZoneAlias);
+			Integer equationModifierGroup = fps.fcm.getEquationModifierGroup()
 					.get(defaultEquationGroup, inventoryTypeGroup);
-			basalAreaGroup1 = equationModifierGroup.orElse(defaultEquationGroup);
+			basalAreaGroup1 = equationModifierGroup > 0 ? equationModifierGroup : defaultEquationGroup;
 
 			int primarySpeciesIndex = bank.speciesIndices[highestPercentageIndex];
 			int basalAreaGroup3 = defaultEquationGroups[primarySpeciesIndex];

@@ -39,7 +39,7 @@ public interface ResolvedControlMap {
 	MatrixMap2<String, String, Integer> getDefaultEquationGroup();
 
 	/** 31 - EQN_MODIFIERS */
-	MatrixMap2<Integer, Integer, Optional<Integer>> getEquationModifierGroup();
+	MatrixMap2<Integer, Integer, Integer> getEquationModifierGroup();
 
 	/** 50 - HL_PRIMARY_SP_EQN_P1 */
 	MatrixMap2<String, Region, Coefficients> getHl1Coefficients();

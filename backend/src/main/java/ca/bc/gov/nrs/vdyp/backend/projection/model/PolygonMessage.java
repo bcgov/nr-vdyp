@@ -2,8 +2,8 @@ package ca.bc.gov.nrs.vdyp.backend.projection.model;
 
 import java.text.MessageFormat;
 
-import ca.bc.gov.nrs.vdyp.backend.model.v1.SeverityCode;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.MessageSeverityCode;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.PolygonMessageKind;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ReturnCode;
 
 /**
@@ -18,24 +18,33 @@ public class PolygonMessage {
 
 	/**
 	 * The specific layer to which this message applies. <code>null</code> indicates this a polygon level message and
-	 * does not apply to a particular layer.
+	 * does not apply to a particular layer (layer).
 	 */
 	private Layer layer;
 
 	/**
-	 * The specific Species Group (SP0) to which this message is associated. If not known or not applicable, this member
-	 * is to be <code>null</code>.
+	 * The specific Species Group to which this message is associated. If not known or not applicable, this member is to
+	 * be <code>null</code> (standComponent).
 	 */
 	private Stand stand;
 
-	/** The severity code associated with the message. */
-	private SeverityCode severity;
+	/**
+	 * The specific Species (SP0) to which this message is associated. If not known or not applicable, this member is to
+	 * be <code>null</code> (speciesComponent)
+	 */
+	private Species species;
 
-	/** The return code for the operation with which this message is associated. */
+	/** The severity code associated with the message (severity) */
+	private MessageSeverityCode severity;
+
+	/** The return code for the operation with which this message is associated (errorCode) */
 	private ReturnCode returnCode;
 
-	/** The message associated with the text of the message, including the template, arguments and severity */
-	private ValidationMessage message;
+	/** The template of the message */
+	private PolygonMessageKind kind;
+
+	/** The template arguments */
+	private Object[] args;
 
 	private PolygonMessage() {
 	}
@@ -63,19 +72,39 @@ public class PolygonMessage {
 		return stand;
 	}
 
-	/** @return the return code for the operation with which this message is associated. */
+	/** @return the return code for the operation with which this message is associated (iErrorCode) */
 	public ReturnCode getReturnCode() {
 		return returnCode;
 	}
 
-	/** @return the message code associated with the text of the message. */
-	public ValidationMessage getMessage() {
-		return message;
+	/** @return the severity code associated with the message. */
+	public MessageSeverityCode getSeverity() {
+		return severity;
 	}
 
-	/** @return the severity code associated with the message. */
-	public SeverityCode getSeverity() {
-		return severity;
+	public PolygonMessageKind getKind() {
+		return kind;
+	}
+
+	@Override
+	public String toString() {
+
+		StringBuilder sb = new StringBuilder();
+		if (species != null) {
+			sb.append(species.toString());
+		} else if (layer != null) {
+			sb.append(layer.toString());
+		} else if (stand != null) {
+			sb.append(stand.toString());
+		} else if (polygon != null) {
+			sb.append(polygon.toString());
+		}
+
+		sb.append(' ').append(severity.getText()).append(": ");
+
+		sb.append(MessageFormat.format(kind.getTemplate(), args));
+
+		return sb.toString();
 	}
 
 	public static class Builder {
@@ -87,13 +116,8 @@ public class PolygonMessage {
 		}
 
 		public Builder layer(Layer layer) {
-			if (polygonMessage.polygon != null && layer.getPolygon() != polygonMessage.polygon) {
-				throw new IllegalArgumentException(
-						MessageFormat.format(
-								"PolygonMessage: layer {0}'s polygon {1} does not match polygon {2}", layer,
-								layer.getPolygon(), polygonMessage.polygon
-						)
-				);
+			if (polygonMessage.polygon != null || polygonMessage.stand != null || polygonMessage.species != null) {
+				throw new IllegalArgumentException("PolygonMessage: species one of polygon, layer, stand or species");
 			}
 
 			polygonMessage.layer = layer;
@@ -103,13 +127,8 @@ public class PolygonMessage {
 		}
 
 		public Builder stand(Stand stand) {
-			if (polygonMessage.layer != null && stand.getLayer() != polygonMessage.layer) {
-				throw new IllegalArgumentException(
-						MessageFormat.format(
-								"PolygonMessage: stand {0}'s layer {1} does not match layer {2}", stand,
-								stand.getLayer(), polygonMessage.layer
-						)
-				);
+			if (polygonMessage.polygon != null || polygonMessage.stand != null || polygonMessage.species != null) {
+				throw new IllegalArgumentException("PolygonMessage: species one of polygon, layer, stand or species");
 			}
 
 			polygonMessage.stand = stand;
@@ -119,27 +138,35 @@ public class PolygonMessage {
 			return this;
 		}
 
-		public Builder returnCode(ReturnCode errorCode) {
-			polygonMessage.returnCode = errorCode;
+		public Builder species(Species species) {
+			if (polygonMessage.polygon != null || polygonMessage.stand != null || polygonMessage.species != null) {
+				throw new IllegalArgumentException("PolygonMessage: species one of polygon, layer, stand or species");
+			}
+
+			polygonMessage.species = species;
+			polygonMessage.stand = species.getStand();
+			polygonMessage.layer = polygonMessage.stand.getLayer();
+			polygonMessage.polygon = polygonMessage.layer.getPolygon();
+
 			return this;
 		}
 
-		public Builder message(ValidationMessage message) {
-			polygonMessage.message = message;
-			return this;
-		}
-
-		public Builder severity(SeverityCode severity) {
+		public Builder
+				details(ReturnCode returnCode, MessageSeverityCode severity, PolygonMessageKind kind, Object... args) {
+			polygonMessage.returnCode = returnCode;
 			polygonMessage.severity = severity;
-			return null;
+			polygonMessage.kind = kind;
+			polygonMessage.args = args;
+
+			return this;
 		}
 
 		public PolygonMessage build() {
 			if (polygonMessage.polygon == null) {
 				throw new IllegalStateException("PolygonMessage: polygon not specified at build time");
 			}
-			if (polygonMessage.message == null) {
-				throw new IllegalStateException("PolygonMessage: message not specified at build time");
+			if (polygonMessage.kind == null) {
+				throw new IllegalStateException("PolygonMessage: template not specified at build time");
 			}
 			if (polygonMessage.returnCode == null) {
 				throw new IllegalStateException("PolygonMessage: returnCode not specified at build time");

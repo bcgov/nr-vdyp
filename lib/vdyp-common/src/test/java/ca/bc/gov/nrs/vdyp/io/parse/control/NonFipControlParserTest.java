@@ -44,7 +44,6 @@ class NonFipControlParserTest {
 
 	@Test
 	void testParseByName() throws Exception {
-		BaseControlParser parser = getUnit();
 		var controlMap = new HashMap<String, Object>();
 		var resolver = TestUtils.fileResolver(TestUtils.class);
 		var names = List.of(CONTROL_FILE);
@@ -137,7 +136,7 @@ class NonFipControlParserTest {
 				result, (Matcher) controlMapHasEntry(
 						ControlKey.EQN_MODIFIERS, allOf(
 								// Default Equation
-								isA(MatrixMap2.class), mmHasEntry(present(is(34)), 33, 9)
+								isA(MatrixMap2.class), mmHasEntry(is(34), 33, 9)
 						)
 				)
 		);

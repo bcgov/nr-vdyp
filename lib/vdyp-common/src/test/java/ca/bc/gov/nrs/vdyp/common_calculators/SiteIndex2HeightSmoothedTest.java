@@ -19,7 +19,7 @@ class SiteIndex2HeightSmoothedTest {
 	@Nested
 	class IndexToHeightSmoothedTest {
 		@Test
-		void testInvalidSiteIndex() throws CommonCalculatorException {
+		void testInvalidSiteIndex() {
 			assertThrows(
 					LessThan13Exception.class,
 					() -> SiteIndex2HeightSmoothed.indexToHeightSmoothed(null, 0.0, SI_AT_TOTAL, 1.2, 0.0, 0.0, 0.0)
@@ -27,7 +27,7 @@ class SiteIndex2HeightSmoothedTest {
 		}
 
 		@Test
-		void testInvalidY2BH() throws CommonCalculatorException {
+		void testInvalidY2BH() {
 			assertThrows(
 					NoAnswerException.class,
 					() -> SiteIndex2HeightSmoothed.indexToHeightSmoothed(null, 0.0, SI_AT_TOTAL, 1.31, -1.0, 0.0, 0.0)
@@ -48,7 +48,7 @@ class SiteIndex2HeightSmoothedTest {
 		}
 
 		@Test
-		void testIterationCannotConverge() throws CommonCalculatorException {
+		void testIterationCannotConverge() {
 			assertThrows(
 					NoAnswerException.class,
 					() -> SiteIndex2HeightSmoothed

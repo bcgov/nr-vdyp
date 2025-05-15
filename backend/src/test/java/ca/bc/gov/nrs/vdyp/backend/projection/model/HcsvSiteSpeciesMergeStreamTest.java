@@ -3,7 +3,6 @@ package ca.bc.gov.nrs.vdyp.backend.projection.model;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
@@ -12,8 +11,8 @@ import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.ParameterNames;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ProjectionRequestKind;
@@ -27,14 +26,14 @@ public class HcsvSiteSpeciesMergeStreamTest {
 	private AbstractPolygonStream polygonStream;
 
 	@BeforeEach
-	void beforeEach() throws IOException, PolygonValidationException, ProjectionRequestException {
+	void beforeEach() throws PolygonValidationException, AbstractProjectionRequestException {
 		var parameters = new Parameters().ageStart(10).ageEnd(20);
 
 		{
 			var polygonStreamFile = FileHelper
-					.getStubResourceFile(FileHelper.HCSV, FileHelper.VDYP_240, "VDYP7_INPUT_MULTI_POLY.csv");
+					.getTestResourceFile(FileHelper.HCSV, FileHelper.COMMON, "VDYP7_INPUT_MULTI_POLY.csv");
 			var layerStreamFile = FileHelper
-					.getStubResourceFile(FileHelper.HCSV, FileHelper.VDYP_240, "VDYP7_INPUT_MULTI_POLY_LAYER.csv");
+					.getTestResourceFile(FileHelper.HCSV, FileHelper.COMMON, "VDYP7_INPUT_MULTI_POLY_LAYER.csv");
 
 			var streams = new HashMap<String, InputStream>();
 			streams.put(ParameterNames.HCSV_POLYGON_INPUT_DATA, polygonStreamFile);
@@ -113,7 +112,7 @@ public class HcsvSiteSpeciesMergeStreamTest {
 						) //
 						,
 						hasProperty(
-								"species",
+								"speciesByPercent",
 								contains(
 										List.of(
 												allOf(
@@ -138,7 +137,7 @@ public class HcsvSiteSpeciesMergeStreamTest {
 								)
 						), //
 						hasProperty(
-								"species",
+								"speciesByPercent",
 								contains(
 										List.of(
 												allOf(
@@ -152,12 +151,12 @@ public class HcsvSiteSpeciesMergeStreamTest {
 		);
 
 		assertThat(
-				p1Layer1.getSp0sAsSupplied().get(0).getSpecies(),
+				p1Layer1.getSp0sAsSupplied().get(0).getSpeciesByPercent(),
 				contains(List.of(hasProperty("speciesCode", is("PLI"))))
 		);
 
 		assertThat(
-				p1Layer1.getSp0sAsSupplied().get(1).getSpecies(),
+				p1Layer1.getSp0sAsSupplied().get(1).getSpeciesByPercent(),
 				contains(List.of(hasProperty("speciesCode", is("SX"))))
 		);
 

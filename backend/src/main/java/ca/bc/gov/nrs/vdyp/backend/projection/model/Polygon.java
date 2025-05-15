@@ -5,11 +5,15 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
+import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.MessageSeverityCode;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.PolygonMessageKind;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessageKind;
 import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionContext;
@@ -25,7 +29,6 @@ import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProcessingModeCo
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ReturnCode;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.SilviculturalBaseCode;
-import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.UtilizationClassCode;
 import ca.bc.gov.nrs.vdyp.backend.utils.NullMath;
 import ca.bc.gov.nrs.vdyp.common.Reference;
 import ca.bc.gov.nrs.vdyp.math.VdypMath;
@@ -46,9 +49,6 @@ public class Polygon implements Comparable<Polygon> {
 
 	/** The polygon's "polygon number" */
 	private Long polygonNumber;
-
-	/** The reporting levels for each of the possible SP0s when predicting yields. */
-	private Map<String, UtilizationClassCode> reportingLevelBySp0;
 
 	/** The district responsible for the map */
 	private String district;
@@ -168,7 +168,7 @@ public class Polygon implements Comparable<Polygon> {
 	private Layer rank1Layer;
 
 	/** Messages generated during the definition of the polygon */
-	private ArrayList<PolygonMessage> definitionMessages;
+	private ArrayList<PolygonMessage> messages;
 
 	/** If false, projection is turned off globally for this polygon */
 	private Boolean doAllowProjection;
@@ -224,10 +224,10 @@ public class Polygon implements Comparable<Polygon> {
 		layers = new HashMap<>();
 
 		// Initialize the known Layer Ids
-		Layer compositeLayer = new Layer.Builder().layerId(Vdyp7Constants.VDYP7_LAYER_ID_PRIMARY).build();
-		layers.put(compositeLayer.getLayerId(), compositeLayer);
-		Layer spanningLayer = new Layer.Builder().layerId(Vdyp7Constants.VDYP7_LAYER_ID_SPANNING).build();
-		layers.put(spanningLayer.getLayerId(), spanningLayer);
+//		Layer compositeLayer = new Layer.Builder().layerId(Vdyp7Constants.VDYP7_LAYER_ID_PRIMARY).build();
+//		layers.put(compositeLayer.getLayerId(), compositeLayer);
+//		Layer spanningLayer = new Layer.Builder().layerId(Vdyp7Constants.VDYP7_LAYER_ID_SPANNING).build();
+//		layers.put(spanningLayer.getLayerId(), spanningLayer);
 
 		layerByProjectionType = new HashMap<>();
 
@@ -241,11 +241,10 @@ public class Polygon implements Comparable<Polygon> {
 		rank1Layer = null;
 
 		history = null;
-		reportingLevelBySp0 = null;
 
 		reportingInfo = null;
 
-		definitionMessages = new ArrayList<>();
+		messages = new ArrayList<>();
 	}
 
 	public long getFeatureId() {
@@ -254,10 +253,6 @@ public class Polygon implements Comparable<Polygon> {
 
 	public Long getPolygonNumber() {
 		return polygonNumber;
-	}
-
-	public Map<String, UtilizationClassCode> getReportingLevelBySp0() {
-		return Collections.unmodifiableMap(reportingLevelBySp0);
 	}
 
 	public String getDistrict() {
@@ -316,7 +311,7 @@ public class Polygon implements Comparable<Polygon> {
 		return result;
 	}
 
-	public boolean isCoastal() {
+	public boolean getIsCoastal() {
 		return isCoastal;
 	}
 
@@ -356,7 +351,7 @@ public class Polygon implements Comparable<Polygon> {
 		return Collections.unmodifiableMap(nonVegetationTypes);
 	}
 
-	public boolean doAllowProjection() {
+	public boolean getDoAllowProjection() {
 		return doAllowProjection;
 	}
 
@@ -364,7 +359,7 @@ public class Polygon implements Comparable<Polygon> {
 		return doAllowProjectionOfType.containsKey(projectionType) && doAllowProjectionOfType.get(projectionType);
 	}
 
-	public boolean wereLayerAdjustmentsSupplied() {
+	public boolean getWereLayerAdjustmentsSupplied() {
 		return wereLayerAdjustmentsSupplied;
 	}
 
@@ -416,8 +411,8 @@ public class Polygon implements Comparable<Polygon> {
 		return reportingInfo;
 	}
 
-	public List<PolygonMessage> getDefinitionMessages() {
-		return Collections.unmodifiableList(definitionMessages);
+	public List<PolygonMessage> getMessages() {
+		return Collections.unmodifiableList(messages);
 	}
 
 	// MUTABLE data - this may vary over the lifetime of the object, but not after
@@ -433,9 +428,26 @@ public class Polygon implements Comparable<Polygon> {
 		}
 	}
 
-	public void addDefinitionMessage(PolygonMessage message) {
+	public void addMessage(PolygonMessage message) {
 		ensureUnlocked();
-		definitionMessages.add(message);
+
+		switch (message.getSeverity()) {
+		case FATAL_ERROR:
+		case ERROR:
+			logger.error(message.toString());
+			break;
+		case WARNING:
+			logger.warn(message.toString());
+			break;
+		case INFORMATION:
+		case STATUS:
+			logger.info(message.toString());
+			break;
+		default:
+			throw new IllegalArgumentException("Unknown message severity " + message.getSeverity() + " seen");
+		}
+
+		messages.add(message);
 	}
 
 	public void setLayerSummarizationMode(LayerSummarizationModeCode layerSummarizationMode) {
@@ -485,7 +497,10 @@ public class Polygon implements Comparable<Polygon> {
 
 	void setLayerByProjectionType(ProjectionTypeCode layerProjectionType, Layer layer) {
 		ensureUnlocked();
-		assert layerByProjectionType.get(layerProjectionType) == null;
+		Validate.isTrue(
+				!layerByProjectionType.containsKey(layerProjectionType),
+				"Polygon.setLayerByProjectionType: map entry must not already exist"
+		);
 		layerByProjectionType.put(layerProjectionType, layer);
 	}
 
@@ -499,11 +514,6 @@ public class Polygon implements Comparable<Polygon> {
 
 		public Builder polygonNumber(Long polygonNumber) {
 			polygon.polygonNumber = polygonNumber;
-			return this;
-		}
-
-		public Builder reportingLevelBySp0(Map<String, UtilizationClassCode> reportingLevelBySp0) {
-			polygon.reportingLevelBySp0 = reportingLevelBySp0;
 			return this;
 		}
 
@@ -547,7 +557,7 @@ public class Polygon implements Comparable<Polygon> {
 			return this;
 		}
 
-		public Builder coastal(boolean isCoastal) {
+		public Builder isCoastal(boolean isCoastal) {
 			polygon.isCoastal = isCoastal;
 			return this;
 		}
@@ -622,46 +632,6 @@ public class Polygon implements Comparable<Polygon> {
 			return this;
 		}
 
-		public Builder targetedPrimaryLayer(Layer targetedPrimaryLayer) {
-			polygon.targetedPrimaryLayer = targetedPrimaryLayer;
-			return this;
-		}
-
-		public Builder targetedVeteranLayer(Layer targetedVeteranLayer) {
-			polygon.targetedVeteranLayer = targetedVeteranLayer;
-			return this;
-		}
-
-		public Builder primaryLayer(Layer primaryLayer) {
-			polygon.primaryLayer = primaryLayer;
-			return this;
-		}
-
-		public Builder veteranLayer(Layer veteranLayer) {
-			polygon.veteranLayer = veteranLayer;
-			return this;
-		}
-
-		public Builder residualLayer(Layer residualLayer) {
-			polygon.residualLayer = residualLayer;
-			return this;
-		}
-
-		public Builder regenerationLayer(Layer regenerationLayer) {
-			polygon.regenerationLayer = regenerationLayer;
-			return this;
-		}
-
-		public Builder deadLayer(Layer deadLayer) {
-			polygon.deadLayer = deadLayer;
-			return this;
-		}
-
-		public Builder rank1Layer(Layer rank1Layer) {
-			polygon.rank1Layer = rank1Layer;
-			return this;
-		}
-
 		public Builder history(History history) {
 			polygon.history = history;
 			return this;
@@ -695,15 +665,20 @@ public class Polygon implements Comparable<Polygon> {
 			layer.doCompleteDefinition();
 		}
 
+		for (Layer layer : getLayers().values()) {
+			layer.doBuildSiteSpecies();
+			layer.doCompleteSiteSpeciesSiteIndexInfo();
+		}
+
 		var rGrowthModel = new Reference<GrowthModelCode>();
 		var rProcessingModel = new Reference<ProcessingModeCode>();
 		var rPrimaryLayer = new Reference<Layer>();
+		var rProjectionType = new Reference<ProjectionTypeCode>();
 
-		calculateInitialProcessingModel(rGrowthModel, rProcessingModel, rPrimaryLayer);
+		calculateInitialProcessingModel(rGrowthModel, rProcessingModel, rPrimaryLayer, rProjectionType);
 
 		for (Layer layer : getLayers().values()) {
-			layer.doBuildSiteSpecies(rGrowthModel.get());
-			layer.doCompleteSiteSpeciesSiteIndexInfo();
+			layer.doSortSiteSpecies(rGrowthModel.get());
 		}
 
 		Layer deadLayer = getDeadLayer();
@@ -732,13 +707,13 @@ public class Polygon implements Comparable<Polygon> {
 			if (primaryLayer != null) {
 				if (primaryLayer.getBasalArea() == null) {
 					context.getErrorLog().addMessage(
-							"Layer {}: VRI Inventory Standard but basal area value missing on primary layer; will be estimated",
+							"Layer {0} Warning: VRI Inventory Standard but basal area value missing on primary layer; will be estimated",
 							primaryLayer
 					);
 				}
 				if (primaryLayer.getTreesPerHectare() == null) {
 					context.getErrorLog().addMessage(
-							"Layer {}: VRI Inventory Standard but trees-per-hectare value missing on primary layer; will be estimated",
+							"Layer {0} Warning: VRI Inventory Standard but trees-per-hectare value missing on primary layer; will be estimated",
 							primaryLayer
 					);
 				}
@@ -747,13 +722,13 @@ public class Polygon implements Comparable<Polygon> {
 			if (veteranLayer != null) {
 				if (veteranLayer.getBasalArea() == null) {
 					context.getErrorLog().addMessage(
-							"Layer {}: VRI Inventory Standard but basal area value missing on veteran layer; will be estimated",
+							"Layer {0} Warning: VRI Inventory Standard but basal area value missing on veteran layer; will be estimated",
 							veteranLayer
 					);
 				}
 				if (veteranLayer.getTreesPerHectare() == null) {
 					context.getErrorLog().addMessage(
-							"Layer {}: VRI Inventory Standard but trees-per-hectare value missing on veteran layer; will be estimated",
+							"Layer {0} Warning: VRI Inventory Standard but trees-per-hectare value missing on veteran layer; will be estimated",
 							veteranLayer
 					);
 				}
@@ -776,89 +751,131 @@ public class Polygon implements Comparable<Polygon> {
 	}
 
 	/**
-	 * <code>lcl_AdjustAllLayersSpeciesPercents</code>
-	 *
+	 * <b>lcl_AdjustAllLayersSpeciesPercents</b> and <b>lcl_AdjustOneLayerSpeciesPercents</b>
+	 * <p>
 	 * Adjust the percents of all Layers for which the sum of the percentages of their Stands is between 99 and 99.99 or
 	 * between 100.01 and 101 to be 100. If the percentage is beyond this range, it is an error. If it is within 0.01 of
 	 * 100, nothing is done.
 	 *
-	 * @param context
+	 * @param context the projection context of the operation
 	 */
 	private void doAdjustAllLayersSpeciesPercents(ProjectionContext context) {
 
-		for (Layer l : getLayers().values()) {
+		for (Layer layer : getLayers().values()) {
 
-			if (l.getSp0sAsSupplied().size() == 0) {
-				// The layer has no stands - nothing to do
-				continue;
-			}
-
-			double sumStandPercentages = l.getSp0sAsSupplied().stream()
-					.map(sp0 -> sp0.getSpeciesGroup().getSpeciesPercent()).reduce(0.0, (a, b) -> a + b);
-			double difference = Math.abs(sumStandPercentages - 100.0);
-			double absDifference = Math.abs(difference);
-			if (absDifference > 0.01 /* not close enough */) {
-				if (absDifference <= 1.0) {
-
-					/*
-					 * The stand has a percentage that needs adjusting. Determine the SP0 and SP64 to which the
-					 * adjustment is to be performed.
-					 *
-					 * If the stand is less than 100%, add the difference to the leading sp0.
-					 *
-					 * If the stand is more than 100%, subtract the difference from the last sp0. Ensure we have
-					 * selected a species with a species percent at least as great as percent we are subtracting -
-					 * negative percentages are not allowed.
-					 *
-					 * Finally, if the adjusted sp64 is a duplicate, always increase the first duplicate and reduce the
-					 * last duplicate.
-					 */
-
-					Species targetSp0, targetSp64;
-					int duplicatedSpeciesIndex;
-					if (sumStandPercentages < 100.0) {
-						Stand targetStand = l.getSp0sByPercent().get(0);
-						targetSp0 = targetStand.getSpeciesGroup();
-						targetSp64 = targetStand.getSpecies().get(0);
-						duplicatedSpeciesIndex = 0;
-					} else {
-						Stand targetStand = null;
-						for (int i = l.getSp0sByPercent().size() - 1; i >= 0; i--) {
-							if (l.getSp0sByPercent().get(i).getSpeciesGroup().getSpeciesPercent() >= absDifference) {
-								targetStand = l.getSp0sByPercent().get(i);
-								break;
-							}
-						}
-						assert targetStand != null; /* -some- sp0 has to have its % > difference... */
-
-						targetSp0 = targetStand.getSpeciesGroup();
-						targetSp64 = targetStand.getSpecies().get(targetStand.getSpecies().size() - 1);
-						duplicatedSpeciesIndex = targetSp64.getNDuplicates();
-					}
-
-					targetSp0.adjustSpeciesPercent(difference, 0);
-					targetSp64.adjustSpeciesPercent(difference, duplicatedSpeciesIndex);
-
-					logger.debug(
-							"{}: adjusted percentage of layer {}, sp0 {}, sp64 {}, duplicate {} by {}", this, l,
-							targetSp0, targetSp64, duplicatedSpeciesIndex, difference
-					);
-
-				} else {
-					disableProjectionsOfType(l.determineProjectionType(this));
-					context.addMessage(
-							"Layer {0} percent is different from 100% by more than 1%; can't project (percent = {1})",
-							l, sumStandPercentages
-					);
-				}
-			}
+			tweakPercentages(layer).ifPresent(this::addMessage);
 		}
 	}
 
+	Optional<PolygonMessage> tweakPercentages(Layer layer) {
+		if (layer.getSp0sAsSupplied().size() == 0) {
+			return Optional.empty();
+		}
+
+		double sumStandPercentages = layer.getSp0sAsSupplied().stream()
+				.map(sp0 -> sp0.getSpeciesGroup().getSpeciesPercent()).reduce(0.0, (a, b) -> a + b);
+
+		double difference = 100.0 - sumStandPercentages;
+		double absDifference = Math.abs(difference);
+
+		if (absDifference > 0.01 /* not close enough */) {
+			if (absDifference <= 1.0) {
+
+				/*
+				 * The stand has a percentage that needs adjusting. Determine the SP0 and SP64 to which the
+				 * adjustment is to be performed.
+				 *
+				 * If the stand is less than 100%, add the difference to the leading sp0.
+				 *
+				 * If the stand is more than 100%, subtract the difference from the last sp0. Ensure we have
+				 * selected a species with a species percent at least as great as percent we are subtracting -
+				 * negative percentages are not allowed.
+				 *
+				 * Finally, if the adjusted sp64 is a duplicate, always increase the first duplicate and reduce the
+				 * last duplicate.
+				 */
+
+				Species targetSp0, targetSp64;
+				int duplicatedSpeciesIndex;
+				if (sumStandPercentages < 100.0) {
+					Stand targetStand = layer.getSp0sByPercent().get(0);
+					targetSp0 = targetStand.getSpeciesGroup();
+					targetSp64 = targetStand.getSpeciesByPercent().get(0);
+					duplicatedSpeciesIndex = 0;
+				} else {
+					Stand targetStand = null;
+					for (int i = layer.getSp0sByPercent().size() - 1; i >= 0; i--) {
+						if (layer.getSp0sByPercent().get(i).getSpeciesGroup()
+								.getSpeciesPercent() >= absDifference) {
+							targetStand = layer.getSp0sByPercent().get(i);
+							break;
+						}
+					}
+
+					/* -some- sp0 has to have its % > difference... */
+					Validate.isTrue(
+							targetStand != null,
+							"Polygon.doAdjustAllLayersSpeciesPercents: targetStand must not be null"
+					);
+
+					targetSp0 = targetStand.getSpeciesGroup();
+					targetSp64 = targetStand.getSpeciesByPercent()
+							.get(targetStand.getSpeciesByPercent().size() - 1);
+					duplicatedSpeciesIndex = targetSp64.getNDuplicates();
+				}
+
+				targetSp0.adjustSpeciesPercent(difference, 0);
+				targetSp64.adjustSpeciesPercent(difference, duplicatedSpeciesIndex);
+
+				logger.debug(
+						"{}: adjusted percentage of layer {}, sp0 {}, sp64 {}, duplicate {} by {}", this, layer,
+						targetSp0, targetSp64, duplicatedSpeciesIndex, difference
+				);
+			} else {
+				disableProjectionsOfType(layer.determineProjectionType(this));
+				return Optional.of(
+						new PolygonMessage.Builder().layer(layer)
+								.details(
+										ReturnCode.ERROR_PERCENTNOT100, MessageSeverityCode.ERROR,
+										PolygonMessageKind.LAYER_PERCENTAGES_TOO_INACCURATE,
+										Double.valueOf(sumStandPercentages)
+								).build()
+				);
+			}
+		}
+		return Optional.empty();
+	}
+
+	/**
+	 * <b>V7Ext_InitialProcessingModeToBeUsed</b>
+	 * <p>
+	 * Determine the processing mode to which the stand will be initially subjected. This is determined from the
+	 * characteristics of the layer associated with the first projection type that has a layer from the list
+	 * <code>ACTUAL_PROJECTION_TYPES_LIST</code> whose order is crucial to this method working successfully.
+	 * <p>
+	 * The processing mode is specified according to how the stand is defined. The mode is completely defined by the
+	 * stand attributes and is not explicitly chosen by the caller.
+	 * <p>
+	 * <b>Remarks</b>
+	 * <ul>
+	 * <li>Focus of the decision has been changed from leading SP64 to SP0.
+	 * <li>FIPSTART decision logic looks at Non-Productive status.
+	 * <li>The list of possible FIP non-productive codes is any value rather than a subset.
+	 * </ul>
+	 *
+	 * @param rGrowthModel    on output, will specify the underlying growth model which will be used to perform initial
+	 *                        processing based on the properties currently assigned to the polygon.
+	 * @param rProcessingMode on output, will specify the processing mode initially used to process the stand. This
+	 *                        selection may be overridden when the model is actually run. This routine does, however,
+	 *                        identify the initial values which will be used.
+	 * @param rPrimaryLayer   the polygon layer determined to be its primary species
+	 * @param rProjectionType the first projection type that has a primary layer, in the order given by
+	 *                        <code>ProjectionTypeCode.ACTUAL_PROJECTION_TYPES_LIST</code>
+	 */
 	public void calculateInitialProcessingModel(
 			Reference<GrowthModelCode> rGrowthModel, Reference<ProcessingModeCode> rProcessingMode,
-			Reference<Layer> rPrimaryLayer
-	) throws PolygonValidationException {
+			Reference<Layer> rPrimaryLayer, Reference<ProjectionTypeCode> rProjectionType
+	) {
 
 		if (rGrowthModel.isPresent() || rProcessingMode.isPresent()) {
 			throw new IllegalStateException(
@@ -879,6 +896,7 @@ public class Polygon implements Comparable<Polygon> {
 			if (ptPrimaryLayer != null) {
 
 				rPrimaryLayer.set(ptPrimaryLayer);
+				rProjectionType.set(pt);
 
 				logger.debug("{}: Projection type {}: primary layer determined to be: {}", this, pt, ptPrimaryLayer);
 
@@ -916,15 +934,6 @@ public class Polygon implements Comparable<Polygon> {
 		}
 	}
 
-	// Constants defined in the document:
-	private static final double DEAD_STOCKABLE = 85.0;
-	private static final double YEAR_LIMIT = 20.0;
-	private static final double YEAR_HALF = 65.0;
-	private static final double YEAR_MAX = 200.0;
-	private static final double P1_MAX = 0.85;
-	private static final double CC_COAST = 75.0;
-	private static final double CC_INTERIOR = 70.0;
-
 	/**
 	 * <b>lcl_CalculateStockability</b>
 	 * <p>
@@ -949,7 +958,7 @@ public class Polygon implements Comparable<Polygon> {
 
 		if (getDeadLayer() != null) {
 			// With no explicit stockability, and a dead layer, use DEAD_STOCKABLE == 85%
-			this.percentStockable = DEAD_STOCKABLE;
+			this.percentStockable = Vdyp7Constants.DEAD_STOCKABLE;
 			logger.debug(
 					"{}: no explicit stockability given and dead layer present; using stockability {}", this,
 					percentStockable
@@ -963,7 +972,7 @@ public class Polygon implements Comparable<Polygon> {
 
 		if (primaryLayer != null) {
 			var leadingSpecies = primaryLayer.determineLeadingSp0(0);
-			if (leadingSpecies == null || leadingSpecies.getSpecies().size() == 0) {
+			if (leadingSpecies == null || leadingSpecies.getSpeciesByPercent().size() == 0) {
 				throw new PolygonValidationException(
 						new ValidationMessage(ValidationMessageKind.NO_LEADING_SPECIES, this, primaryLayer)
 				);
@@ -1008,13 +1017,13 @@ public class Polygon implements Comparable<Polygon> {
 
 		double p1;
 
-		if (years < YEAR_LIMIT) {
-			p1 = P1_MAX;
-		} else if (years > YEAR_MAX) {
+		if (years < Vdyp7Constants.YEAR_LIMIT) {
+			p1 = Vdyp7Constants.P1_MAX;
+		} else if (years > Vdyp7Constants.YEAR_MAX) {
 			p1 = 0;
 		} else {
-			var exponent = (years - YEAR_LIMIT) / YEAR_HALF;
-			var lP1 = Math.pow(0.5, exponent) - (1.0 - P1_MAX);
+			var exponent = (years - Vdyp7Constants.YEAR_LIMIT) / Vdyp7Constants.YEAR_HALF;
+			var lP1 = Math.pow(0.5, exponent) - (1.0 - Vdyp7Constants.P1_MAX);
 			if (lP1 < 0) {
 				p1 = 0;
 			} else {
@@ -1033,7 +1042,7 @@ public class Polygon implements Comparable<Polygon> {
 				crownClosure
 		);
 
-		var ccFullyStocked = isCoastal ? CC_COAST : CC_INTERIOR;
+		var ccFullyStocked = isCoastal ? Vdyp7Constants.CC_COAST : Vdyp7Constants.CC_INTERIOR;
 
 		double percentStocked;
 		if (crownClosure >= ccFullyStocked) {
@@ -1350,9 +1359,15 @@ public class Polygon implements Comparable<Polygon> {
 		} else if (primaryLayer != null) {
 			primaryPercentStockable = polygonPercentStockable - veteranPercentStockable - deadPercentStockable
 					- regenerationPercentStockable;
+			if (primaryPercentStockable <= 1.0) {
+				primaryPercentStockable = 1.0;
+			}
 		} else if (residualLayer != null) {
 			residualPercentStockable = polygonPercentStockable - veteranPercentStockable - deadPercentStockable
 					- regenerationPercentStockable;
+			if (residualPercentStockable <= 1.0) {
+				residualPercentStockable = 1.0;
+			}
 		}
 
 		switch (projectionType) {
@@ -1371,12 +1386,18 @@ public class Polygon implements Comparable<Polygon> {
 		}
 	}
 
-	public double determineStandAgeAtYear(Integer year) throws PolygonValidationException {
+	public Double determineStandAgeAtYear(Integer year) {
+		Double standAgeAtYear = null;
+
 		Layer primaryLayer = findPrimaryLayerByProjectionType(ProjectionTypeCode.UNKNOWN);
-		return primaryLayer.determineLayerAgeAtYear(year);
+		if (primaryLayer != null) {
+			standAgeAtYear = primaryLayer.determineLayerAgeAtYear(year);
+		}
+
+		return standAgeAtYear;
 	}
 
-	public Layer findSpecificLayer(String layerId) throws PolygonValidationException {
+	public Layer findSpecificLayer(String layerId) {
 
 		Layer selectedLayer = null;
 
@@ -1398,14 +1419,17 @@ public class Polygon implements Comparable<Polygon> {
 		return selectedLayer;
 	}
 
-	private final String POLYGON_DESCRIPTOR_FORMAT = "%-7s%10d%3s%5d";
+	private final String POLYGON_DESCRIPTOR_FORMAT = "%-7s%10s%-3s%5d";
 
 	public String buildPolygonDescriptor(int year) {
 
 		String mapSheet = this.mapSheet.length() > 7 ? this.mapSheet.substring(0, 7) : this.mapSheet;
 		String district = this.district == null ? ""
 				: this.district.length() > 3 ? this.district.substring(0, 3) : this.district;
-		return String.format(POLYGON_DESCRIPTOR_FORMAT, mapSheet, polygonNumber, district, year);
+		var descriptor = String
+				.format(POLYGON_DESCRIPTOR_FORMAT, mapSheet, Long.toString(polygonNumber), district, year);
+
+		return descriptor;
 	}
 
 	public String buildPolygonDescriptor() {
@@ -1461,7 +1485,19 @@ public class Polygon implements Comparable<Polygon> {
 		}
 	}
 
-	public Layer findPrimaryLayerByProjectionType(ProjectionTypeCode projectionType) throws PolygonValidationException {
+	/**
+	 * <b>V7Int_DetermineProjectionTypePrimaryLayer</b>
+	 * <p>
+	 * For a given projection type, determine the 'primary' layer for that projection type.
+	 * <p>
+	 * Passing ProjectionTypeCode.UNKNOWN indicates to this routine to scan from the first projection type through to
+	 * the last projection type, returning the first primary layer it finds in any of the projection types.
+	 *
+	 * @param projectionType the projection type for which you want the primary layer.
+	 * @return the Layer for the given Projection Type. <code>null</code> is returned if there is no primary layer for
+	 *         the given projection type The there is no layer for that projection type.
+	 */
+	public Layer findPrimaryLayerByProjectionType(ProjectionTypeCode projectionType) {
 
 		Layer primaryLayer = null;
 
@@ -1497,19 +1533,33 @@ public class Polygon implements Comparable<Polygon> {
 		return primaryLayer;
 	}
 
-	private Layer determinePrimaryLayer() throws PolygonValidationException {
+	private Layer determinePrimaryLayer() {
 
 		if (getPrimaryLayer() == null) {
-			mergeLayers();
+			try {
+				mergeLayers();
+			} catch (PolygonValidationException e) {
+				logger.warn(
+						"{}: saw PolygonValidationException when determining primary layer{}", this,
+						e.getMessage() != null ? "; reason = " + e.getMessage() : ""
+				);
+			}
 		}
 
 		return getPrimaryLayer();
 	}
 
-	private Layer determineVeteranLayer() throws PolygonValidationException {
+	private Layer determineVeteranLayer() {
 
 		if (getVeteranLayer() == null) {
-			mergeLayers();
+			try {
+				mergeLayers();
+			} catch (PolygonValidationException e) {
+				logger.warn(
+						"{}: saw PolygonValidationException when determining primary layer{}", this,
+						e.getMessage() != null ? "; reason = " + e.getMessage() : ""
+				);
+			}
 		}
 
 		return getVeteranLayer();
@@ -1631,12 +1681,6 @@ public class Polygon implements Comparable<Polygon> {
 
 			// Find the first live-stem Layer that satisfies the criteria. If none do, choose any
 			// live-stem Layer.
-			//
-			// NOTE: the original VDYP7 code finds the first live stem layer, then the second, and
-			// if the first doesn't qualify as a primary layer it simply chooses the second (assuming
-			// one exists) without regard to its qualifications. This seems odd and incomplete, so
-			// here we find the first live-stem layer that is qualified to be a primary and - if none
-			// exist - return the first found.
 			Layer fallbackChoice = null;
 
 			for (Layer candidate : getLayers().values().stream().filter(l -> !l.getIsDeadLayer()).toList()) {
@@ -1662,14 +1706,13 @@ public class Polygon implements Comparable<Polygon> {
 			}
 
 			if (selectedPrimaryLayer != null) {
-				var message = new PolygonMessage.Builder().layer(selectedPrimaryLayer).returnCode(ReturnCode.SUCCESS)
-						.message(
-								new ValidationMessage(
-										ValidationMessageKind.NO_PRIMARY_LAYER_SUPPLIED, this,
-										selectedPrimaryLayer.getLayerId()
-								)
+				var message = new PolygonMessage.Builder().layer(selectedPrimaryLayer)
+						.details(
+								ReturnCode.SUCCESS, MessageSeverityCode.INFORMATION,
+								PolygonMessageKind.NO_PRIMARY_LAYER_SUPPLIED, selectedPrimaryLayer.getLayerId()
 						).build();
-				addDefinitionMessage(message);
+
+				addMessage(message);
 			}
 		}
 

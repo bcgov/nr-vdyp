@@ -32,6 +32,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import ca.bc.gov.nrs.vdyp.application.VdypStartApplication.CombinedPolygonStream;
 import ca.bc.gov.nrs.vdyp.application.test.TestLayer;
 import ca.bc.gov.nrs.vdyp.application.test.TestPolygon;
 import ca.bc.gov.nrs.vdyp.application.test.TestSite;
@@ -42,13 +43,20 @@ import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.common.EstimationMethods;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.common.VdypApplicationInitializationException;
+import ca.bc.gov.nrs.vdyp.common.VdypApplicationProcessingException;
 import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMapImpl;
+import ca.bc.gov.nrs.vdyp.exceptions.BaseAreaLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.BecMissingException;
+import ca.bc.gov.nrs.vdyp.exceptions.FatalProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.LayerMissingException;
+import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.UnsupportedSpeciesException;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.BecDefinitionParser;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
-import ca.bc.gov.nrs.vdyp.model.BaseVdypLayer;
-import ca.bc.gov.nrs.vdyp.model.BaseVdypPolygon;
+import ca.bc.gov.nrs.vdyp.io.write.VdypOutputWriter;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.BecDefinition;
 import ca.bc.gov.nrs.vdyp.model.Coefficients;
@@ -92,7 +100,7 @@ class VdypStartApplicationTest {
 
 		@Disabled
 		@Test
-		void testInitNoControlFile() throws IOException, ResourceParseException {
+		void testInitNoControlFile() {
 			var resolver1 = dummyIo();
 			resolver1.addError("test.ctr", () -> new FileNotFoundException());
 			MockFileResolver resolver = resolver1;
@@ -149,6 +157,21 @@ class VdypStartApplicationTest {
 		}
 	}
 
+	@Test
+	void testApplicationProcessExceptions() {
+		try (var app = new TestStartApplication(controlMap, false) {
+
+			@Override
+			public void process() throws ProcessingException {
+				throw new FatalProcessingException("Test");
+			}
+
+		}) {
+
+			assertThrows(VdypApplicationProcessingException.class, () -> app.doMain("bad path"));
+		}
+	}
+
 	private MockFileResolver dummyIo() {
 		controlMap.put(ControlKey.VDYP_OUTPUT_VDYP_POLYGON.name(), "DUMMY1");
 		controlMap.put(ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SPECIES.name(), "DUMMY2");
@@ -162,10 +185,236 @@ class VdypStartApplicationTest {
 	}
 
 	@Nested
+	class HandleProcessing {
+		@Test
+		void testEmpty() throws IOException, ResourceParseException, ProcessingException {
+
+			var control = EasyMock.createControl();
+			MockFileResolver resolver = dummyIo();
+
+			TestStartApplication app = EasyMock.partialMockBuilder(TestStartApplication.class)
+					.addMockedMethod("processPolygon").withConstructor(controlMap, false).createMock(control);
+
+			CombinedPolygonStream<TestPolygon> stream = control.createMock(CombinedPolygonStream.class);
+
+			EasyMock.expect(stream.hasNext()).andStubReturn(false);
+
+			control.replay();
+
+			app.init(resolver, controlMap);
+
+			app.handleProcessing(stream);
+
+			control.verify();
+
+			app.close();
+		}
+
+		@Test
+		void testOneSuccess() throws IOException, ResourceParseException, ProcessingException {
+
+			var control = EasyMock.createControl();
+			MockFileResolver resolver = dummyIo();
+
+			TestStartApplication app = EasyMock.partialMockBuilder(TestStartApplication.class)
+					.addMockedMethod("processPolygon").addMockedMethod("getVriWriter")
+					.withConstructor(controlMap, false).createMock(control);
+
+			TestPolygon testPoly = control.createMock(TestPolygon.class);
+			VdypPolygon resultPoly = control.createMock(VdypPolygon.class);
+
+			VdypOutputWriter writer = control.createMock(VdypOutputWriter.class);
+			EasyMock.expect(app.processPolygon(0, testPoly)).andReturn(Optional.of(resultPoly));
+			EasyMock.expect(app.getVriWriter()).andStubReturn(writer);
+
+			writer.writePolygonWithSpeciesAndUtilization(resultPoly);
+			EasyMock.expectLastCall().once();
+
+			CombinedPolygonStream<TestPolygon> stream = control.createMock(CombinedPolygonStream.class);
+
+			EasyMock.expect(stream.hasNext()).andReturn(true);
+			EasyMock.expect(stream.next()).andReturn(testPoly);
+			EasyMock.expect(stream.hasNext()).andStubReturn(false);
+
+			control.replay();
+
+			app.init(resolver, controlMap);
+
+			app.handleProcessing(stream);
+
+			control.verify();
+
+			app.close();
+		}
+
+		@Test
+		void testOneIgnore() throws IOException, ResourceParseException, ProcessingException {
+
+			var control = EasyMock.createControl();
+			MockFileResolver resolver = dummyIo();
+
+			TestStartApplication app = EasyMock.partialMockBuilder(TestStartApplication.class)
+					.addMockedMethod("processPolygon").addMockedMethod("getVriWriter")
+					.withConstructor(controlMap, false).createMock(control);
+
+			TestPolygon testPoly = control.createMock(TestPolygon.class);
+
+			VdypOutputWriter writer = control.createMock(VdypOutputWriter.class);
+			EasyMock.expect(app.processPolygon(0, testPoly)).andReturn(Optional.empty());
+			EasyMock.expect(app.getVriWriter()).andStubReturn(writer);
+
+			// writer.writePolygonWithSpeciesAndUtilization(resultPoly);
+			// EasyMock.expectLastCall().once();
+
+			CombinedPolygonStream<TestPolygon> stream = control.createMock(CombinedPolygonStream.class);
+
+			EasyMock.expect(stream.hasNext()).andReturn(true);
+			EasyMock.expect(stream.next()).andReturn(testPoly);
+			EasyMock.expect(stream.hasNext()).andStubReturn(false);
+
+			control.replay();
+
+			app.init(resolver, controlMap);
+
+			app.handleProcessing(stream);
+
+			control.verify();
+
+			app.close();
+		}
+
+		@Test
+		void testOneSkip() throws IOException, ResourceParseException, ProcessingException {
+
+			var control = EasyMock.createControl();
+			MockFileResolver resolver = dummyIo();
+
+			TestStartApplication app = EasyMock.partialMockBuilder(TestStartApplication.class)
+					.addMockedMethod("processPolygon").addMockedMethod("getVriWriter")
+					.withConstructor(controlMap, false).createMock(control);
+
+			TestPolygon testPoly = control.createMock(TestPolygon.class);
+
+			VdypOutputWriter writer = control.createMock(VdypOutputWriter.class);
+			EasyMock.expect(app.processPolygon(0, testPoly)).andThrow(new BecMissingException());
+			EasyMock.expect(app.getVriWriter()).andStubReturn(writer);
+
+			// writer.writePolygonWithSpeciesAndUtilization(resultPoly);
+			// EasyMock.expectLastCall().once();
+
+			CombinedPolygonStream<TestPolygon> stream = control.createMock(CombinedPolygonStream.class);
+
+			EasyMock.expect(stream.hasNext()).andReturn(true);
+			EasyMock.expect(stream.next()).andReturn(testPoly);
+			EasyMock.expect(stream.hasNext()).andStubReturn(false);
+
+			control.replay();
+
+			app.init(resolver, controlMap);
+
+			assertThrows(BecMissingException.class, () -> app.handleProcessing(stream));
+
+			control.verify();
+
+			app.close();
+		}
+
+		@Test
+		void testSkipThenSucceed() throws IOException, ResourceParseException, ProcessingException {
+
+			var control = EasyMock.createControl();
+			MockFileResolver resolver = dummyIo();
+
+			TestStartApplication app = EasyMock.partialMockBuilder(TestStartApplication.class)
+					.addMockedMethod("processPolygon").addMockedMethod("getVriWriter")
+					.withConstructor(controlMap, false).createMock(control);
+
+			TestPolygon testPoly1 = control.createMock(TestPolygon.class);
+			TestPolygon testPoly2 = control.createMock(TestPolygon.class);
+			VdypPolygon resultPoly = control.createMock(VdypPolygon.class);
+
+			EasyMock.expect(testPoly1.getPolygonIdentifier()).andStubReturn(new PolygonIdentifier("testPoly1", 2025));
+
+			VdypOutputWriter writer = control.createMock(VdypOutputWriter.class);
+			EasyMock.expect(app.processPolygon(0, testPoly1)).andThrow(new BecMissingException());
+			EasyMock.expect(app.processPolygon(0, testPoly2)).andReturn(Optional.of(resultPoly));
+			EasyMock.expect(app.getVriWriter()).andStubReturn(writer);
+
+			writer.writePolygonWithSpeciesAndUtilization(resultPoly);
+			EasyMock.expectLastCall().once();
+
+			CombinedPolygonStream<TestPolygon> stream = control.createMock(CombinedPolygonStream.class);
+
+			EasyMock.expect(stream.hasNext()).andReturn(true);
+			EasyMock.expect(stream.next()).andReturn(testPoly1);
+			EasyMock.expect(stream.hasNext()).andReturn(true);
+			EasyMock.expect(stream.hasNext()).andReturn(true);
+			EasyMock.expect(stream.next()).andReturn(testPoly2);
+			EasyMock.expect(stream.hasNext()).andStubReturn(false);
+
+			control.replay();
+
+			app.init(resolver, controlMap);
+
+			app.handleProcessing(stream);
+
+			control.verify();
+
+			app.close();
+		}
+
+		@Test
+		void testMultipleSuccess() throws IOException, ResourceParseException, ProcessingException {
+
+			var control = EasyMock.createControl();
+			MockFileResolver resolver = dummyIo();
+
+			TestStartApplication app = EasyMock.partialMockBuilder(TestStartApplication.class)
+					.addMockedMethod("processPolygon").addMockedMethod("getVriWriter")
+					.withConstructor(controlMap, false).createMock(control);
+
+			TestPolygon testPoly1 = control.createMock(TestPolygon.class);
+			TestPolygon testPoly2 = control.createMock(TestPolygon.class);
+			VdypPolygon resultPoly1 = control.createMock(VdypPolygon.class);
+			VdypPolygon resultPoly2 = control.createMock(VdypPolygon.class);
+
+			EasyMock.expect(testPoly1.getPolygonIdentifier()).andStubReturn(new PolygonIdentifier("testPoly1", 2025));
+
+			VdypOutputWriter writer = control.createMock(VdypOutputWriter.class);
+			EasyMock.expect(app.processPolygon(0, testPoly1)).andReturn(Optional.of(resultPoly1));
+			EasyMock.expect(app.processPolygon(1, testPoly2)).andReturn(Optional.of(resultPoly2));
+			EasyMock.expect(app.getVriWriter()).andStubReturn(writer);
+
+			writer.writePolygonWithSpeciesAndUtilization(resultPoly1);
+			writer.writePolygonWithSpeciesAndUtilization(resultPoly2);
+			EasyMock.expectLastCall().once();
+
+			CombinedPolygonStream<TestPolygon> stream = control.createMock(CombinedPolygonStream.class);
+
+			EasyMock.expect(stream.hasNext()).andReturn(true);
+			EasyMock.expect(stream.next()).andReturn(testPoly1);
+			EasyMock.expect(stream.hasNext()).andReturn(true);
+			EasyMock.expect(stream.next()).andReturn(testPoly2);
+			EasyMock.expect(stream.hasNext()).andStubReturn(false);
+
+			control.replay();
+
+			app.init(resolver, controlMap);
+
+			app.handleProcessing(stream);
+
+			control.verify();
+
+			app.close();
+		}
+
+	}
+
+	@Nested
 	class GetStreamingParser {
 
 		@Test
-		void testSimple() throws IOException, ResourceParseException, ProcessingException {
+		void testSimple() throws IOException, ProcessingException {
 			StreamingParserFactory streamingParserFactory = EasyMock.createMock(StreamingParserFactory.class);
 			StreamingParser streamingParser = EasyMock.createMock(StreamingParser.class);
 
@@ -191,7 +440,7 @@ class VdypStartApplicationTest {
 		}
 
 		@Test
-		void testEntryMissing() throws IOException, ResourceParseException {
+		void testEntryMissing() throws IOException {
 
 			MockFileResolver resolver = dummyIo();
 
@@ -210,7 +459,7 @@ class VdypStartApplicationTest {
 		}
 
 		@Test
-		void testErrorOpeningFile() throws IOException, ResourceParseException {
+		void testErrorOpeningFile() throws IOException {
 			var mockControl = EasyMock.createControl();
 
 			StreamingParserFactory streamingParserFactory = mockControl.createMock(StreamingParserFactory.class);
@@ -241,7 +490,7 @@ class VdypStartApplicationTest {
 
 	}
 
-	protected VdypStartApplication getTestUnit(IMocksControl control) throws IOException {
+	protected VdypStartApplication getTestUnit(IMocksControl control) {
 
 		VdypStartApplication mock = EasyMock.createMockBuilder(VdypStartApplication.class)//
 				.addMockedMethods("getControlFileParser", "process", "getId", "copySpecies")//
@@ -776,6 +1025,106 @@ class VdypStartApplicationTest {
 			mockControl.verify();
 		}
 
+		@Test
+		void testBadPrimarySpecies() {
+
+			var mockControl = EasyMock.createControl();
+
+			BaseVdypSpecies spec1 = mockSpecies(mockControl, "X", 100f);
+
+			try (VdypStartApplication app = getTestUnit(mockControl)) {
+				mockControl.replay();
+
+				Map<String, BaseVdypSpecies> allSpecies = new HashMap<>();
+				allSpecies.put(spec1.getGenus(), spec1);
+
+				List<BaseVdypSpecies> primarySpecies = List.of(spec1);
+
+				var ex = assertThrows(UnsupportedSpeciesException.class, () -> app.findItg(primarySpecies));
+
+				assertThat(ex, hasProperty("species", equalTo("X")));
+
+			}
+			mockControl.verify();
+		}
+
+		@Test
+		void testBadPrimarySpeciesWithMinorSecondary() {
+
+			var mockControl = EasyMock.createControl();
+
+			BaseVdypSpecies spec1 = mockSpecies(mockControl, "X", 80f);
+			BaseVdypSpecies spec2 = mockSpecies(mockControl, "Z", 20f);
+
+			try (VdypStartApplication app = getTestUnit(mockControl)) {
+				mockControl.replay();
+
+				Map<String, BaseVdypSpecies> allSpecies = new HashMap<>();
+				allSpecies.put(spec1.getGenus(), spec1);
+				allSpecies.put(spec2.getGenus(), spec2);
+
+				List<BaseVdypSpecies> primarySpecies = List.of(spec1, spec2);
+
+				var ex = assertThrows(UnsupportedSpeciesException.class, () -> app.findItg(primarySpecies));
+
+				assertThat(ex, hasProperty("species", equalTo("X")));
+
+			}
+			mockControl.verify();
+		}
+
+		@Test
+		void testBadPrimarySpeciesWithMajorSecondary() {
+
+			var mockControl = EasyMock.createControl();
+
+			BaseVdypSpecies spec1 = mockSpecies(mockControl, "X", 70f);
+			BaseVdypSpecies spec2 = mockSpecies(mockControl, "Z", 30f);
+
+			try (VdypStartApplication app = getTestUnit(mockControl)) {
+				mockControl.replay();
+
+				Map<String, BaseVdypSpecies> allSpecies = new HashMap<>();
+				allSpecies.put(spec1.getGenus(), spec1);
+				allSpecies.put(spec2.getGenus(), spec2);
+
+				List<BaseVdypSpecies> primarySpecies = List.of(spec1, spec2);
+
+				var ex = assertThrows(UnsupportedSpeciesException.class, () -> app.findItg(primarySpecies));
+
+				assertThat(ex, hasProperty("species", equalTo("X")));
+
+			}
+			mockControl.verify();
+		}
+
+		@Test
+		void testBadSecondary() throws Exception {
+
+			var mockControl = EasyMock.createControl();
+
+			BaseVdypSpecies spec1 = mockSpecies(mockControl, "PL", 70f);
+			BaseVdypSpecies spec2 = mockSpecies(mockControl, "Z", 30f);
+
+			try (VdypStartApplication app = getTestUnit(mockControl)) {
+				mockControl.replay();
+
+				Map<String, BaseVdypSpecies> allSpecies = new HashMap<>();
+				allSpecies.put(spec1.getGenus(), spec1);
+				allSpecies.put(spec2.getGenus(), spec2);
+
+				List<BaseVdypSpecies> primarySpecies = List.of(spec1, spec2);
+
+				var result = app.findItg(primarySpecies);
+
+				assertEquals(30, result); // The default for PL
+
+				// Might want an error instead?
+
+			}
+			mockControl.verify();
+		}
+
 		void assertItgMixed(VdypStartApplication app, int expected, String primary, String... secondary)
 				throws ProcessingException {
 			for (var sec : secondary) {
@@ -904,9 +1253,7 @@ class VdypStartApplicationTest {
 			);
 			controlMap.put(
 					ControlKey.EQN_MODIFIERS.name(),
-					new MatrixMap2Impl(
-							Collections.singletonList(42), Collections.singletonList(37), (x, y) -> Optional.of(64)
-					)
+					new MatrixMap2Impl(Collections.singletonList(42), Collections.singletonList(37), (x, y) -> 64)
 			);
 
 			try (VdypStartApplication app = getTestUnit(mockControl)) {
@@ -935,9 +1282,7 @@ class VdypStartApplicationTest {
 			);
 			controlMap.put(
 					ControlKey.EQN_MODIFIERS.name(),
-					new MatrixMap2Impl(
-							Collections.singletonList(42), Collections.singletonList(37), (x, y) -> Optional.empty()
-					)
+					new MatrixMap2Impl(Collections.singletonList(42), Collections.singletonList(37), (x, y) -> 0)
 			);
 
 			try (VdypStartApplication app = getTestUnit(mockControl)) {
@@ -1103,12 +1448,12 @@ class VdypStartApplicationTest {
 				});
 
 				var ex = assertThrows(
-						LowValueException.class,
+						BaseAreaLowException.class,
 						() -> app.estimatePrimaryBaseArea(layer, bec, 1f, 79.5999985f, 3.13497972f)
 				);
 
-				assertThat(ex, hasProperty("value", is(0f)));
-				assertThat(ex, hasProperty("threshold", is(0.05f)));
+				assertThat(ex, hasProperty("value", present(is(0f))));
+				assertThat(ex, hasProperty("threshold", present(is(0.05f))));
 			}
 		}
 
@@ -1430,7 +1775,7 @@ class VdypStartApplicationTest {
 						"C:75.0 B:24.989" //
 				}
 		)
-		void testFail(String dist) throws Exception {
+		void testFail(String dist) {
 			controlMap = TestUtils.loadControlMap();
 			try (var app = new TestStartApplication(controlMap, false)) {
 
@@ -1455,7 +1800,7 @@ class VdypStartApplicationTest {
 	@Nested
 	class SmallComponents {
 		@Test
-		void testEstimate() throws ProcessingException, IOException {
+		void testEstimate() {
 			controlMap = TestUtils.loadControlMap();
 			try (var app = new TestStartApplication(controlMap, false)) {
 				ApplicationTestUtils.setControlMap(app, controlMap);
@@ -1599,7 +1944,7 @@ class VdypStartApplicationTest {
 	@Nested
 	class VeteranUtilization {
 		@Test
-		void testCompute() throws ProcessingException, IOException {
+		void testCompute() throws ProcessingException {
 			controlMap = TestUtils.loadControlMap();
 			var bec = Utils.getBec("IDF", controlMap);
 			try (var app = new TestStartApplication(controlMap, false)) {
@@ -1763,7 +2108,7 @@ class VdypStartApplicationTest {
 		}
 
 		@Test
-		void testApplyToObject() throws Exception {
+		void testApplyToObject() {
 			controlMap = TestUtils.loadControlMap();
 
 			try (var app = new TestStartApplication(controlMap, false)) {
@@ -1795,35 +2140,7 @@ class VdypStartApplicationTest {
 	class UtilityMethods {
 
 		@Test
-		void testRequireLayer() throws ProcessingException, IOException {
-			var mockControl = EasyMock.createControl();
-			BaseVdypPolygon poly = mockControl.createMock(BaseVdypPolygon.class);
-			BaseVdypLayer layer = mockControl.createMock(BaseVdypLayer.class);
-			EasyMock.expect(poly.getLayers()).andStubReturn(Collections.singletonMap(LayerType.PRIMARY, layer));
-			EasyMock.expect(poly.getPolygonIdentifier()).andStubReturn(new PolygonIdentifier("TestPoly", 2024));
-
-			try (VdypStartApplication app = getTestUnit(mockControl)) {
-				mockControl.replay();
-
-				var result = app.requireLayer(poly, LayerType.PRIMARY);
-				assertThat(result, is(layer));
-				var ex = assertThrows(StandProcessingException.class, () -> app.requireLayer(poly, LayerType.VETERAN));
-				assertThat(
-						ex,
-						hasProperty(
-								"message",
-								is(
-										"Polygon \"TestPoly             2024\" has no VETERAN layer, or that layer has non-positive height or crown closure."
-								)
-						)
-				);
-
-			}
-
-		}
-
-		@Test
-		void testGetCoeForSpecies() throws Exception {
+		void testGetCoeForSpecies() {
 			controlMap = TestUtils.loadControlMap();
 			try (var app = new TestStartApplication(controlMap, false)) {
 				var species = TestSpecies.build(sb -> {
@@ -1877,10 +2194,164 @@ class VdypStartApplicationTest {
 			);
 		}
 
+		@Test
+		void testGetPrimaryLayerPresent() {
+			var poly = VdypPolygon.build(pb -> {
+				pb.polygonIdentifier("Test", 2025);
+				pb.percentAvailable(75f);
+				pb.biogeoclimaticZone(new BecDefinition("T", Region.COASTAL, "Test"));
+				pb.forestInventoryZone("Z");
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.PRIMARY);
+				});
+			});
+
+			var result = assertDoesNotThrow(() -> VdypStartApplication.getPrimaryLayer(poly));
+			assertThat(result, sameInstance(poly.getLayers().get(LayerType.PRIMARY)));
+		}
+
+		@Test
+		void testGetPrimaryLayerNotPresent() {
+			var poly = VdypPolygon.build(pb -> {
+				pb.polygonIdentifier("Test", 2025);
+				pb.percentAvailable(75f);
+				pb.biogeoclimaticZone(new BecDefinition("T", Region.COASTAL, "Test"));
+				pb.forestInventoryZone("Z");
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.VETERAN);
+				});
+			});
+
+			var ex = assertThrows(LayerMissingException.class, () -> VdypStartApplication.getPrimaryLayer(poly));
+			assertThat(ex, hasProperty("layer", is(LayerType.PRIMARY)));
+		}
+
+		@Test
+		void testGetVeteranLayerPresent() {
+			var poly = VdypPolygon.build(pb -> {
+				pb.polygonIdentifier("Test", 2025);
+				pb.percentAvailable(75f);
+				pb.biogeoclimaticZone(new BecDefinition("T", Region.COASTAL, "Test"));
+				pb.forestInventoryZone("Z");
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.VETERAN);
+				});
+			});
+
+			var result = VdypStartApplication.getVeteranLayer(poly);
+			assertThat(result, present(sameInstance(poly.getLayers().get(LayerType.VETERAN))));
+		}
+
+		@Test
+		void testGetVeteranLayerNotPresent() {
+			var poly = VdypPolygon.build(pb -> {
+				pb.polygonIdentifier("Test", 2025);
+				pb.percentAvailable(75f);
+				pb.biogeoclimaticZone(new BecDefinition("T", Region.COASTAL, "Test"));
+				pb.forestInventoryZone("Z");
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.PRIMARY);
+				});
+			});
+
+			var result = VdypStartApplication.getVeteranLayer(poly);
+			assertThat(result, notPresent());
+		}
+
+		@Nested
+		class ExceptionUtilities {
+			@Test
+			void testThrowIfPresentWhenPresent() {
+				Exception expected = new Exception("Test");
+				var result = assertThrows(
+						Exception.class, () -> VdypStartApplication.throwIfPresent(Optional.of(expected))
+				);
+				assertThat(result, sameInstance(expected));
+			}
+
+			@Test
+			void testThrowIfPresentWhenEmpty() {
+				assertDoesNotThrow(() -> VdypStartApplication.throwIfPresent(Optional.empty()));
+			}
+
+			@Test
+			void testFatalIfPresentWhenFatalException() {
+				var cause = new FatalProcessingException("Test");
+				var result = assertThrows(
+						FatalProcessingException.class, () -> VdypStartApplication.fatalIfPresent(Optional.of(cause))
+				);
+				assertThat(result, sameInstance(cause));
+			}
+
+			@Test
+			void testFatalIfPresentWhenStandException() {
+				var cause = new BecMissingException();
+				var result = assertThrows(
+						FatalProcessingException.class, () -> VdypStartApplication.fatalIfPresent(Optional.of(cause))
+				);
+				assertThat(result, causedBy(sameInstance(cause)));
+			}
+
+			@Test
+			void testFatalIfPresentWhenOtherException() {
+				var cause = new IllegalArgumentException();
+				var result = assertThrows(
+						FatalProcessingException.class, () -> VdypStartApplication.fatalIfPresent(Optional.of(cause))
+				);
+				assertThat(result, causedBy(sameInstance(cause)));
+			}
+
+			@Test
+			void testRequirePositiveWhenPositive() {
+				var result = assertDoesNotThrow(() -> VdypStartApplication.requirePositive(Optional.of(1f), "Test"));
+				assertThat(result, is(1f));
+			}
+
+			@Test
+			void testRequirePositiveWhenZero() {
+				var result = assertThrows(
+						FatalProcessingException.class,
+						() -> VdypStartApplication.requirePositive(Optional.of(0f), "Test")
+				);
+				assertThat(result, hasProperty("message", is("Test 0.0 is not positive")));
+			}
+
+			@Test
+			void testRequirePositiveWhenNegative() {
+				var result = assertThrows(
+						FatalProcessingException.class,
+						() -> VdypStartApplication.requirePositive(Optional.of(-1f), "Test")
+				);
+				assertThat(result, hasProperty("message", is("Test -1.0 is not positive")));
+			}
+
+			@Test
+			void testRequirePositiveWhenMissing() {
+				var result = assertThrows(
+						FatalProcessingException.class,
+						() -> VdypStartApplication.requirePositive(Optional.empty(), "Test")
+				);
+				assertThat(result, hasProperty("message", is("Test is not present")));
+			}
+
+			@Test
+			void testRequireWhenMissing() {
+				var result = assertThrows(
+						FatalProcessingException.class, () -> VdypStartApplication.require(Optional.empty(), "Test")
+				);
+				assertThat(result, hasProperty("message", is("Test is not present")));
+			}
+
+			@Test
+			void testRequireWhenPresent() {
+				var result = assertDoesNotThrow(() -> VdypStartApplication.require(Optional.of("something"), "Test"));
+				assertThat(result, is("something"));
+			}
+		}
 	}
 
 	@Test
-	void testComputeUtilizationComponentsPrimaryByUtilNoCV() throws ProcessingException, IOException {
+	void testComputeUtilizationComponentsPrimaryByUtilNoCV() throws ProcessingException {
 		controlMap = TestUtils.loadControlMap();
 		try (var app = new TestStartApplication(controlMap, false)) {
 

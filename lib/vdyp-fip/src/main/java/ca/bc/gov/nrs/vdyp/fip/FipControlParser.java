@@ -17,6 +17,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.coe.StockingClassFactorParser;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ControlMapModifier;
 import ca.bc.gov.nrs.vdyp.io.parse.control.ControlMapValueReplacer;
+import ca.bc.gov.nrs.vdyp.io.parse.control.OutputFileLocationResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.control.StartApplicationControlParser;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParser;
 
@@ -83,6 +84,8 @@ public class FipControlParser extends StartApplicationControlParser {
 
 		applyModifiers(map, inputFileParsers(), fileResolver);
 
+		applyModifiers(map, outputFiles(), fileResolver);
+
 		applyModifiers(map, fipstartOnly, fileResolver);
 
 		applyModifiers(map, siteCurves, fileResolver);
@@ -122,10 +125,11 @@ public class FipControlParser extends StartApplicationControlParser {
 	}
 
 	@Override
-	protected List<ControlKey> outputFileParsers() {
+	protected List<OutputFileLocationResolver> outputFiles() {
 		return List.of(
-				ControlKey.VDYP_OUTPUT_VDYP_POLYGON, ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SPECIES,
-				ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL
+				new OutputFileLocationResolver(ControlKey.VDYP_OUTPUT_VDYP_POLYGON), //
+				new OutputFileLocationResolver(ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SPECIES), //
+				new OutputFileLocationResolver(ControlKey.VDYP_OUTPUT_VDYP_LAYER_BY_SP0_BY_UTIL)
 		);
 	}
 

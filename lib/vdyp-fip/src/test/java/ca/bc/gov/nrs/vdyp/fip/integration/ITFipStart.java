@@ -22,8 +22,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.CleanupMode;
 import org.junit.jupiter.api.io.TempDir;
 
-import ca.bc.gov.nrs.vdyp.application.ProcessingException;
 import ca.bc.gov.nrs.vdyp.application.VdypStartApplication;
+import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.fip.FipStart;
 import ca.bc.gov.nrs.vdyp.fip.model.FipLayer;
 import ca.bc.gov.nrs.vdyp.fip.model.FipPolygon;
@@ -110,7 +110,7 @@ class ITFipStart {
 
 	@Disabled
 	@Test
-	void noControlFile() throws IOException, ResourceParseException, ProcessingException {
+	void noControlFile() {
 		try (VdypStartApplication<FipPolygon, FipLayer, FipSpecies, FipSite> app = new FipStart();) {
 
 			var resolver = new FileSystemFileResolver(configDir);
@@ -126,7 +126,7 @@ class ITFipStart {
 	}
 
 	@Test
-	void controlFileDoesntExist() throws IOException, ResourceParseException, ProcessingException {
+	void controlFileDoesntExist() {
 		try (VdypStartApplication<FipPolygon, FipLayer, FipSpecies, FipSite> app = new FipStart();) {
 
 			var resolver = new FileSystemFileResolver(configDir);

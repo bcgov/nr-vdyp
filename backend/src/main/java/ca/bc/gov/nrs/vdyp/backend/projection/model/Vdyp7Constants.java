@@ -2,6 +2,12 @@ package ca.bc.gov.nrs.vdyp.backend.projection.model;
 
 public class Vdyp7Constants {
 
+	public static final String FIP_START_CONTROL_FILE_NAME = "FIPSTART.CTR";
+	public static final String VRI_START_CONTROL_FILE_NAME = "VRISTART.CTR";
+	public static final String ADJUST_CONTROL_FILE_NAME = "VRIADJST.CTR";
+	public static final String FORWARD_CONTROL_FILE_NAME = "VDYP.CTR";
+	public static final String BACK_CONTROL_FILE_NAME = "VDYPBACK.CTR";
+
 	public static final double EMPTY_DECIMAL = -9.0f;
 	public static final String EMPTY_DECIMAL_TEXT = Double.toString(EMPTY_DECIMAL);
 	public static final int EMPTY_INT = -9;
@@ -54,4 +60,14 @@ public class Vdyp7Constants {
 	public static final double MIN_VETERAN_LAYER_DBH = 23.0;
 
 	public static final double LOW_SITE_INDEX_THRESHOLD = 2.0;
+
+	// Constants related to stockability estimation
+
+	public static final double DEAD_STOCKABLE = 85.0;
+	public static final double YEAR_LIMIT = 20.0;
+	public static final double YEAR_HALF = 65.0;
+	public static final double YEAR_MAX = 200.0;
+	public static final double P1_MAX = 0.85;
+	public static final double CC_COAST = 75.0;
+	public static final double CC_INTERIOR = 70.0;
 }

@@ -45,6 +45,13 @@ import ca.bc.gov.nrs.vdyp.common.VdypApplicationInitializationException;
 import ca.bc.gov.nrs.vdyp.common.VdypApplicationProcessingException;
 import ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter;
 import ca.bc.gov.nrs.vdyp.controlmap.ResolvedControlMapImpl;
+import ca.bc.gov.nrs.vdyp.exceptions.BaseAreaLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.FatalProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.LayerMissingException;
+import ca.bc.gov.nrs.vdyp.exceptions.LayerSpeciesDoNotSumTo100PercentException;
+import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.UnsupportedSpeciesException;
 import ca.bc.gov.nrs.vdyp.io.FileSystemFileResolver;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.UpperCoefficientParser;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
@@ -64,17 +71,25 @@ import ca.bc.gov.nrs.vdyp.model.DebugSettings;
 import ca.bc.gov.nrs.vdyp.model.GenusDefinitionMap;
 import ca.bc.gov.nrs.vdyp.model.InputLayer;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
-import ca.bc.gov.nrs.vdyp.model.MatrixMap;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap2;
 import ca.bc.gov.nrs.vdyp.model.MatrixMap3;
 import ca.bc.gov.nrs.vdyp.model.Region;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
+import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.VdypUtilizationHolder;
 import ca.bc.gov.nrs.vdyp.model.VolumeComputeMode;
 
+/**
+ * Base class for a start processing application. Provides shared framework between VRIStart and FIPStart
+ *
+ * @param <P> input polygon class
+ * @param <L> input layer class
+ * @param <S> input species class
+ * @param <I> input site class
+ */
 public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional<Float>, S, I>, L extends BaseVdypLayer<S, I> & InputLayer, S extends BaseVdypSpecies<I>, I extends BaseVdypSite>
 		extends VdypApplication implements Closeable {
 
@@ -115,24 +130,6 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	}
 
 	static final Set<String> HARDWOODS = Set.of("AC", "AT", "D", "E", "MB");
-
-	protected static void main(VdypStartApplication<?, ?, ?, ?> app, final String... args) {
-		var resolver = new FileSystemFileResolver();
-
-		try {
-			app.init(resolver, System.out, System.in, args);
-		} catch (Exception ex) {
-			log.error("Error during initialization", ex);
-			System.exit(CONFIG_LOAD_ERROR);
-		}
-
-		try {
-			app.process();
-		} catch (Exception ex) {
-			log.error("Error during processing", ex);
-			System.exit(PROCESSING_ERROR);
-		}
-	}
 
 	public void doMain(final String... args)
 			throws VdypApplicationInitializationException, VdypApplicationProcessingException {
@@ -246,7 +243,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 	protected abstract BaseControlParser getControlFileParser();
 
-	void closeVriWriter() throws IOException {
+	void closeVriWriter() {
 		if (vriWriter != null) {
 			vriWriter.close();
 			vriWriter = null;
@@ -256,7 +253,10 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	protected void setControlMap(Map<String, Object> controlMap) {
 		this.controlMap = controlMap;
 		this.estimationMethods = new EstimationMethods(new ResolvedControlMapImpl(controlMap));
-		this.debugModes = Utils.parsedControl(controlMap, ControlKey.DEBUG_SWITCHES, DebugSettings.class);
+		this.debugModes = Optional.of(
+				Utils.parsedControl(controlMap, ControlKey.DEBUG_SWITCHES, DebugSettings.class)
+						.orElse(new DebugSettings())
+		);
 	}
 
 	protected <T> StreamingParser<T> getStreamingParser(ControlKey key) throws ProcessingException {
@@ -280,27 +280,12 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 	@Override
 	public void close() {
-		try {
-			closeVriWriter();
-		} catch (IOException e) {
-			throw new IllegalStateException(e);
-		}
+		closeVriWriter();
 	}
 
 	protected Coefficients getCoeForSpecies(BaseVdypSpecies<?> species, ControlKey controlKey) {
 		var coeMap = Utils.<Map<String, Coefficients>>expectParsedControl(controlMap, controlKey, java.util.Map.class);
 		return coeMap.get(species.getGenus());
-	}
-
-	protected L requireLayer(P polygon, LayerType type) throws ProcessingException {
-		if (!polygon.getLayers().containsKey(type)) {
-			throw validationError(
-					"Polygon \"%s\" has no %s layer, or that layer has non-positive height or crown closure.",
-					polygon.getPolygonIdentifier(), type
-			);
-		}
-
-		return polygon.getLayers().get(type);
 	}
 
 	/**
@@ -311,15 +296,12 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	 * @return
 	 * @throws StandProcessingException
 	 */
-	protected float getPercentTotal(L layer) throws StandProcessingException {
+	protected float getPercentTotal(L layer) throws LayerSpeciesDoNotSumTo100PercentException {
 		var percentTotal = (float) layer.getSpecies().values().stream()//
 				.mapToDouble(BaseVdypSpecies::getPercentGenus)//
 				.sum();
 		if (Math.abs(percentTotal - 100f) > 0.01f) {
-			throw validationError(
-					"Polygon \"%s\" has %s layer where species entries have a percentage total that does not sum to 100%%.",
-					layer.getPolygonIdentifier(), LayerType.PRIMARY
-			);
+			throw new LayerSpeciesDoNotSumTo100PercentException(layer.getLayerType());
 		}
 		return percentTotal;
 	}
@@ -406,11 +388,14 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	 * @return
 	 * @throws ProcessingException
 	 */
-	protected int findItg(List<S> primarySecondary) throws StandProcessingException {
+	protected int findItg(List<S> primarySecondary) throws UnsupportedSpeciesException {
 		var primary = primarySecondary.get(0);
 
 		if (primary.getPercentGenus() > 79.999) { // Copied from VDYP7
-			return ITG_PURE.get(primary.getGenus());
+			if (ITG_PURE.containsKey(primary.getGenus()))
+				return ITG_PURE.get(primary.getGenus());
+			else
+				throw new UnsupportedSpeciesException(primary.getGenus());
 		}
 		assert primarySecondary.size() == 2;
 
@@ -523,9 +508,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 			}
 			return 41;
 		default:
-			throw new StandProcessingException(
-					MessageFormat.format("Unexpected primary species: {0}", primary.getGenus())
-			);
+			throw new UnsupportedSpeciesException(primary.getGenus());
 		}
 	}
 
@@ -533,12 +516,12 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		var groupMap = Utils.<MatrixMap2<String, String, Integer>>expectParsedControl(
 				controlMap, ControlKey.DEFAULT_EQ_NUM, ca.bc.gov.nrs.vdyp.model.MatrixMap2.class
 		);
-		var modMap = Utils.<MatrixMap2<Integer, Integer, Optional<Integer>>>expectParsedControl(
+		var modMap = Utils.<MatrixMap2<Integer, Integer, Integer>>expectParsedControl(
 				controlMap, ControlKey.EQN_MODIFIERS, ca.bc.gov.nrs.vdyp.model.MatrixMap2.class
 		);
 		var group = groupMap.get(specAlias, bec.getGrowthBec().getAlias());
-		group = MatrixMap.safeGet(modMap, group, itg).orElse(group);
-		return group;
+		var modGroup = modMap.get(group, itg);
+		return modGroup > 0 ? modGroup : group;
 	}
 
 	protected VdypOutputWriter getVriWriter() {
@@ -549,7 +532,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	protected float estimatePrimaryBaseArea(
 			L layer, BecDefinition bec, float yieldFactor, float breastHeightAge, float baseAreaOverstory,
 			float crownClosure
-	) throws LowValueException {
+	) throws BaseAreaLowException {
 		boolean lowCrownClosure = layer.getCrownClosure() < LOW_CROWN_CLOSURE;
 		crownClosure = lowCrownClosure ? LOW_CROWN_CLOSURE : crownClosure;
 
@@ -628,9 +611,10 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		baseArea *= yieldFactor;
 
 		// This is to prevent underflow errors in later calculations
-		if (baseArea <= 0.05f) {
-			throw new LowValueException("Estimated base area", baseArea, 0.05f);
-		}
+		throwIfPresent(
+				BaseAreaLowException.check(layer.getLayerType(), "Estimated base area", Optional.of(baseArea), 0.05f)
+		);
+
 		return baseArea;
 	}
 
@@ -659,7 +643,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 	protected float estimatePrimaryBaseArea(
 			L layer, BecDefinition bec, float yieldFactor, float breastHeightAge, float baseAreaOverstory
-	) throws LowValueException {
+	) throws BaseAreaLowException {
 		return estimatePrimaryBaseArea(
 				layer, bec, yieldFactor, breastHeightAge, baseAreaOverstory, layer.getCrownClosure()
 		);
@@ -671,27 +655,122 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 				.findFirst().orElseThrow();
 	}
 
-	protected L getPrimaryLayer(P poly) throws StandProcessingException {
-		L primaryLayer = poly.getLayers().get(LayerType.PRIMARY);
-		if (primaryLayer == null) {
-			throw new StandProcessingException("Polygon does not have a primary layer");
-		}
-		return primaryLayer;
+	/**
+	 * Return the value of the given optional otherwise throw a FatalProcessingException
+	 *
+	 * @param <T>  type of the value
+	 * @param opt  optional to check
+	 * @param name name of the field for the error message
+	 * @return the value of the optional
+	 * @throws FatalProcessingException if it is not present
+	 */
+	protected static <T> T require(Optional<T> opt, String name) throws FatalProcessingException {
+		return opt.orElseThrow(() -> new FatalProcessingException(name + " is not present"));
 	}
 
-	protected Optional<L> getVeteranLayer(P poly) throws StandProcessingException {
+	/**
+	 * Require that the optional value is present and has a positive value.
+	 *
+	 * @param <T>  type of the value
+	 * @param opt  optional to check
+	 * @param name name to use in exception message
+	 * @return The value
+	 * @throws FatalProcessingException if it is not present or has a non-positive value
+	 */
+	protected static <T extends Number> T requirePositive(Optional<T> opt, String name)
+			throws FatalProcessingException {
+
+		T value = require(opt, name);
+
+		if (value.doubleValue() <= 0) {
+			throw new FatalProcessingException(name + " " + value + " is not positive");
+		}
+
+		return value;
+	}
+
+	static public <P extends BaseVdypPolygon<L, ?, ?, ?>, L extends BaseVdypLayer<?, ?>> L
+			requireLayer(P polygon, LayerType type) throws LayerMissingException {
+		if (!polygon.getLayers().containsKey(type)) {
+			throw new LayerMissingException(type);
+		}
+
+		return polygon.getLayers().get(type);
+	}
+
+	/**
+	 * Gets the PRIMARY layer from the given polygon
+	 *
+	 * @param <P>  The Polygon type
+	 * @param <L>  The Layer type
+	 * @param poly the polygon
+	 * @return the PRIMARY layer
+	 * @throws LayerMissingException if the polygon does not have a PRIMARY layer
+	 */
+	static public <P extends BaseVdypPolygon<L, ?, ?, ?>, L extends BaseVdypLayer<?, ?>> L getPrimaryLayer(P poly)
+			throws LayerMissingException {
+		return requireLayer(poly, LayerType.PRIMARY);
+	}
+
+	/**
+	 * Gets the VETERAN layer from the given polygon
+	 *
+	 * @param <P>  The Polygon type
+	 * @param <L>  The Layer type
+	 * @param poly
+	 * @return the VETERAN layer, or empty if there is none
+	 */
+	static public <P extends BaseVdypPolygon<L, ?, ?, ?>, L extends BaseVdypLayer<?, ?>> Optional<L>
+			getVeteranLayer(P poly) {
 		return Utils.optSafe(poly.getLayers().get(LayerType.VETERAN));
 	}
 
+	/**
+	 * Throw the exception contained in the optional if there is one. This exists to make it easier to handle checked
+	 * exceptions inside of lambdas as an alternative to using subclasses of RuntimeExceptions as wrappers.
+	 */
 	protected static <E extends Throwable> void throwIfPresent(Optional<E> opt) throws E {
 		if (opt.isPresent()) {
 			throw opt.get();
 		}
 	}
 
-	protected static StandProcessingException validationError(String template, Object... values) {
+	/**
+	 * If the given optional contains an exception, throw it as a FatalProcessingException, wrapping it in a new
+	 * exception if necessary.
+	 */
+	protected static <E extends Throwable> void fatalIfPresent(Optional<E> opt) throws FatalProcessingException {
+		throwIfPresent(opt.map(ex -> {
+			if (ex instanceof FatalProcessingException fatal) {
+				return fatal;
+			}
+			return new FatalProcessingException(ex);
+		}));
+	}
 
-		return new StandProcessingException(String.format(template, values));
+	/**
+	 * Create a FatalProcessingException with its message created using {@link MessageFormat.format}
+	 *
+	 * @param template message template
+	 * @param values   objects to format
+	 * @return a constructed FatalProcessingException
+	 */
+	protected static FatalProcessingException fatalError(String template, Object... values) {
+
+		return new FatalProcessingException(MessageFormat.format(template, values));
+	}
+
+	/**
+	 * Create a FatalProcessingException with its message created using {@link MessageFormat.format}
+	 *
+	 * @param template message template
+	 * @param cause    the cause of the exception
+	 * @param values   objects to format
+	 * @return a constructed FatalProcessingException
+	 */
+	protected static FatalProcessingException causedFatalError(String template, Throwable cause, Object... values) {
+
+		return new FatalProcessingException(String.format(template, values), cause);
 	}
 
 	/**
@@ -928,14 +1007,13 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 
 	protected Map<String, Float> applyGroupsAndGetTargetPercentages(
 			BaseVdypPolygon<?, ?, ?, ?> fipPolygon, Collection<VdypSpecies> vdypSpecies
-	) throws ProcessingException {
+	) {
 
 		applyGroups(fipPolygon, vdypSpecies);
 		return getTargetPercentages(vdypSpecies);
 	}
 
-	protected void applyGroups(BaseVdypPolygon<?, ?, ?, ?> fipPolygon, Collection<VdypSpecies> vdypSpecies)
-			throws ProcessingException {
+	protected void applyGroups(BaseVdypPolygon<?, ?, ?, ?> fipPolygon, Collection<VdypSpecies> vdypSpecies) {
 		// Lookup volume group, Decay Group, and Breakage group for each species.
 
 		BecDefinition bec = fipPolygon.getBiogeoclimaticZone();
@@ -999,7 +1077,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 	 *
 	 * @throws ProcessingException
 	 */
-	public void estimateSmallComponents(P fPoly, VdypLayer layer) throws ProcessingException {
+	public void estimateSmallComponents(P fPoly, VdypLayer layer) {
 		float loreyHeightSum = 0f;
 		float baseAreaSum = 0f;
 		float treesPerHectareSum = 0f;
@@ -1560,6 +1638,70 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		} catch (IllegalAccessException | InvocationTargetException ex) {
 			throw new IllegalStateException(ex);
 		}
+	}
+
+	/**
+	 * Main loop for processing
+	 */
+	protected void handleProcessing(CombinedPolygonStream<P> combinedStream) throws IOException, ResourceParseException,
+			FatalProcessingException, ProcessingException, StandProcessingException {
+		log.atDebug().setMessage("Start Stand processing").log();
+		int polygonsRead = 0;
+		int polygonsWritten = 0;
+
+		while (combinedStream.hasNext()) {
+
+			log.atInfo().setMessage("Getting polygon {}").addArgument(polygonsRead + 1).log();
+			var polygon = combinedStream.next();
+			try {
+
+				var resultPoly = processPolygon(polygonsRead, polygon);
+				if (resultPoly.isPresent()) {
+					polygonsRead++;
+
+					// Output
+					this.getVriWriter().writePolygonWithSpeciesAndUtilization(resultPoly.get());
+
+					polygonsWritten++;
+				}
+
+				log.atInfo().setMessage("Read {} polygons and wrote {}").addArgument(polygonsRead)
+						.addArgument(polygonsWritten);
+
+			} catch (StandProcessingException ex) {
+
+				if (!combinedStream.hasNext()) {
+					throw ex; // Propagate if this is the last one
+				}
+
+				// Otherwise log a warning and move on to the next one.
+
+				log.atWarn().setMessage("Polygon {} bypassed").addArgument(polygon.getPolygonIdentifier()).setCause(ex);
+			}
+
+		}
+	}
+
+	/**
+	 * Process a source polygon into a VdypPolygon.
+	 *
+	 * @param polygonsRead The number of polygons that have been read for processing.
+	 * @param polygon      The source polygon to process.
+	 * @return the processed polygon, or empty if it should be skipped without a warning.
+	 * @throws StandProcessingException if the processing failed in a way that only affects this polygon
+	 * @throws FatalProcessingException if the processing failed in a way that should stop processing
+	 */
+	protected abstract Optional<VdypPolygon> processPolygon(int polygonsRead, P polygon) throws ProcessingException;
+
+	/**
+	 * Simple Iterator like interface for accessing the assembled output of several StreamingParsers
+	 *
+	 * @param <P> The polygon type this stream produces
+	 */
+	protected static interface CombinedPolygonStream<P extends BaseVdypPolygon<?, ?, ?, ?>> {
+		boolean hasNext() throws IOException, ResourceParseException;
+
+		P next() throws ProcessingException, IOException, ResourceParseException;
 	}
 
 }
