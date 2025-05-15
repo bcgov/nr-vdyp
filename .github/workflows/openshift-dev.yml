@@ -41,8 +41,6 @@ jobs:
         id: pr
         uses: bcgov-nr/action-get-pr@v0.0.1    
 
-      - name: 
-
       - name: Build and Tag Packages with pr number
         uses: bcgov-nr/action-builder-ghcr@v2.2.0
         with:
