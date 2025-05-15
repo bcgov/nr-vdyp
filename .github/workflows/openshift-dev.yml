@@ -4,6 +4,8 @@ permissions:
   packages: write
 
 on:
+  workflow_dispatch:
+
   push:
     branches:
       - main
@@ -46,19 +48,18 @@ jobs:
           build_context: .
           build_file: ./${{ matrix.package}}/Dockerfile
 
-      - name: Login to GitHub Container Registry
+      - if: github.event_name == 'push'
+        name: Login to GitHub Container Registry
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN}}
 
-      - name: Pull PR-tagged image
+      - if: github.event_name == 'push'
+        name: Pull PR-tagged image Tag and push as latest
         run: |
           docker pull ghcr.io/${{ github.repository }}/${{ matrix.package }}:${{ steps.pr.outputs.pr }}
-
-      - name: Tag and push as latest
-        run: |
           docker tag ghcr.io/${{ github.repository }}/${{ matrix.package }}:${{ steps.pr.outputs.pr }} ghcr.io/${{ github.repository }}/${{ matrix.package }}:latest
           docker push ghcr.io/${{ github.repository }}/${{ matrix.package }}:latest
   
