@@ -4,11 +4,16 @@ permissions:
   packages: write
 
 on:
-  workflow_dispatch:
-
   push:
     branches:
       - main
+    paths:
+      - "backend/**"
+      - "charts/app/values-dev.yml"
+      - "frontend/**"
+      - "lib/**"
+      - ".github/workflows/openshift-*.yml"
+  pull_request:
     paths:
       - "backend/**"
       - "charts/app/values-dev.yml"
@@ -35,6 +40,8 @@ jobs:
       - name: Get PR Data
         id: pr
         uses: bcgov-nr/action-get-pr@v0.0.1    
+
+      - name: 
 
       - name: Build and Tag Packages with pr number
         uses: bcgov-nr/action-builder-ghcr@v2.2.0
