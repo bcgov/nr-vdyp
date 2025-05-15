@@ -62,11 +62,12 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN}}
 
       - if: github.event_name == 'push'
-        name: Pull PR-tagged image Tag and push as latest
+        name: Tag build as latest
         run: |
-          docker pull ghcr.io/${{ github.repository }}/${{ matrix.package }}:${{ steps.pr.outputs.pr }}
-          docker tag ghcr.io/${{ github.repository }}/${{ matrix.package }}:${{ steps.pr.outputs.pr }} ghcr.io/${{ github.repository }}/${{ matrix.package }}:latest
-          docker push ghcr.io/${{ github.repository }}/${{ matrix.package }}:latest
+          docker buildx imagetools create \
+            --tag ghcr.io/${{ github.repository }}/${{ matrix.package }}:latest \
+            ghcr.io/${{ github.repository }}/${{ matrix.package }}:${{ steps.pr.outputs.pr }}
+       
   
   call-shared:
     uses: ./.github/workflows/openshift-shared.yml
