@@ -585,7 +585,7 @@ public class Parameters {
 	}
 
 	public Parameters ageEnd(String ageEndText) {
-		setAgeEnd(ageEnd);
+		setAgeEnd(ageEndText);
 		return this;
 	}
 
