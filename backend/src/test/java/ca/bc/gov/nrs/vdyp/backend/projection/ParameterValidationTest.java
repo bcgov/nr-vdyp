@@ -6,9 +6,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import java.util.HashMap;
 
 import org.hamcrest.Matchers;
-import org.junit.Assert;
 import org.junit.jupiter.api.Test;
-
 import ca.bc.gov.nrs.api.helpers.TestHelper;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.FilterParameters;
@@ -25,6 +23,7 @@ import ca.bc.gov.nrs.vdyp.backend.model.v1.UtilizationClassSet;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.UtilizationParameter;
 import ca.bc.gov.nrs.vdyp.si32.vdyp.SP0Name;
 import jakarta.ws.rs.WebApplicationException;
+import static org.junit.jupiter.api.Assertions.*;
 
 class ParameterValidationTest {
 
@@ -34,7 +33,7 @@ class ParameterValidationTest {
 		Parameters p = new Parameters();
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
-			Assert.fail();
+			fail();
 		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), MISSING_START_CRITERIA, MISSING_END_CRITERIA);
 		}
@@ -46,7 +45,7 @@ class ParameterValidationTest {
 		Parameters p = new Parameters().ageStart(1);
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
-			Assert.fail();
+			fail();
 		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), MISSING_END_CRITERIA);
 		}
@@ -58,7 +57,7 @@ class ParameterValidationTest {
 		Parameters p = new Parameters().ageEnd(400).ageStart(ValidatedParameters.DEFAULT.getMinAgeStart() - 1);
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
-			Assert.fail();
+			fail();
 		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), MISSING_START_CRITERIA, INTEGER_VALUE_TOO_LOW);
 		}
@@ -70,7 +69,7 @@ class ParameterValidationTest {
 		Parameters p = new Parameters().ageEnd(400).ageStart(ValidatedParameters.DEFAULT.getMaxAgeStart() + 1);
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
-			Assert.fail();
+			fail();
 		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), MISSING_START_CRITERIA, INTEGER_VALUE_TOO_HIGH);
 		}
@@ -82,7 +81,7 @@ class ParameterValidationTest {
 		Parameters p = new Parameters().yearStart(ValidatedParameters.DEFAULT.getMinYearStart());
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
-			Assert.fail();
+			fail();
 		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), MISSING_END_CRITERIA);
 		}
@@ -94,7 +93,7 @@ class ParameterValidationTest {
 		try {
 			Parameters p = new Parameters().ageEnd(400).yearStart(ValidatedParameters.DEFAULT.getMinYearStart() - 1);
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
-			Assert.fail();
+			fail();
 		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), MISSING_START_CRITERIA, INTEGER_VALUE_TOO_LOW);
 		}
@@ -106,7 +105,7 @@ class ParameterValidationTest {
 		try {
 			Parameters p = new Parameters().ageEnd(400).yearStart(ValidatedParameters.DEFAULT.getMaxYearStart() + 1);
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
-			Assert.fail();
+			fail();
 		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), MISSING_START_CRITERIA, INTEGER_VALUE_TOO_HIGH);
 		}
@@ -118,7 +117,7 @@ class ParameterValidationTest {
 		try {
 			Parameters p = new Parameters().ageEnd(400);
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
-			Assert.fail();
+			fail();
 		} catch (AbstractProjectionRequestException e) {
 
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), MISSING_START_CRITERIA);
@@ -131,7 +130,7 @@ class ParameterValidationTest {
 		try {
 			Parameters p = new Parameters().ageStart(1).ageEnd(ValidatedParameters.DEFAULT.getMinAgeEnd() - 1);
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
-			Assert.fail();
+			fail();
 		} catch (AbstractProjectionRequestException e) {
 
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), MISSING_END_CRITERIA, INTEGER_VALUE_TOO_LOW);
@@ -144,7 +143,7 @@ class ParameterValidationTest {
 		try {
 			Parameters p = new Parameters().ageStart(1).ageEnd(ValidatedParameters.DEFAULT.getMaxAgeEnd() + 1);
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
-			Assert.fail();
+			fail();
 		} catch (AbstractProjectionRequestException e) {
 
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), MISSING_END_CRITERIA, INTEGER_VALUE_TOO_HIGH);
@@ -157,7 +156,7 @@ class ParameterValidationTest {
 		try {
 			Parameters p = new Parameters().yearEnd(1500);
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
-			Assert.fail();
+			fail();
 		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), MISSING_START_CRITERIA);
 		}
@@ -169,7 +168,7 @@ class ParameterValidationTest {
 		try {
 			Parameters p = new Parameters().yearStart(1500).yearEnd(ValidatedParameters.DEFAULT.getMinYearEnd() - 1);
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
-			Assert.fail();
+			fail();
 		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), MISSING_END_CRITERIA, INTEGER_VALUE_TOO_LOW);
 		}
@@ -181,7 +180,7 @@ class ParameterValidationTest {
 		try {
 			Parameters p = new Parameters().yearStart(1500).yearEnd(ValidatedParameters.DEFAULT.getMaxYearEnd() + 1);
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
-			Assert.fail();
+			fail();
 		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), MISSING_END_CRITERIA, INTEGER_VALUE_TOO_HIGH);
 		}
@@ -194,7 +193,7 @@ class ParameterValidationTest {
 			Parameters p = TestHelper.buildValidParametersObject()
 					.ageIncrement(ValidatedParameters.DEFAULT.getMinAgeIncrement() - 1);
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
-			Assert.fail();
+			fail();
 		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), INTEGER_VALUE_TOO_LOW);
 		}
@@ -207,7 +206,7 @@ class ParameterValidationTest {
 			Parameters p = TestHelper.buildValidParametersObject()
 					.ageIncrement(ValidatedParameters.DEFAULT.getMaxAgeIncrement() + 1);
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
-			Assert.fail();
+			fail();
 		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), INTEGER_VALUE_TOO_HIGH);
 		}
@@ -221,7 +220,7 @@ class ParameterValidationTest {
 					.ageIncrement(ValidatedParameters.DEFAULT.getMaxAgeIncrement());
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
 		} catch (AbstractProjectionRequestException e) {
-			Assert.fail();
+			fail();
 		}
 	}
 
@@ -232,7 +231,7 @@ class ParameterValidationTest {
 			Parameters p = TestHelper.buildValidParametersObject();
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
 		} catch (AbstractProjectionRequestException e) {
-			Assert.fail();
+			fail();
 		}
 	}
 
@@ -243,7 +242,7 @@ class ParameterValidationTest {
 			Parameters p = new Parameters().yearStart(1600).yearEnd(2100);
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
 		} catch (AbstractProjectionRequestException e) {
-			Assert.fail();
+			fail();
 		}
 	}
 
@@ -255,7 +254,7 @@ class ParameterValidationTest {
 
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
-			Assert.fail();
+			fail();
 		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), UNRECOGNIZED_OUTPUT_FORMAT);
 		}
@@ -270,7 +269,7 @@ class ParameterValidationTest {
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
 		} catch (AbstractProjectionRequestException e) {
-			Assert.fail();
+			fail();
 		}
 	}
 
@@ -282,7 +281,7 @@ class ParameterValidationTest {
 
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
-			Assert.fail();
+			fail();
 		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), UNRECOGNIZED_COMBINE_AGE_YEAR_RANGE_OPTION);
 		}
@@ -297,7 +296,7 @@ class ParameterValidationTest {
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
 		} catch (AbstractProjectionRequestException e) {
-			Assert.fail();
+			fail();
 		}
 	}
 
@@ -309,7 +308,7 @@ class ParameterValidationTest {
 
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
-			Assert.fail();
+			fail();
 		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), INVALID_PROCESS_FREQUENCY_VALUE);
 		}
@@ -324,7 +323,7 @@ class ParameterValidationTest {
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
 		} catch (AbstractProjectionRequestException e) {
-			Assert.fail();
+			fail();
 		}
 	}
 
@@ -337,7 +336,7 @@ class ParameterValidationTest {
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
 		} catch (AbstractProjectionRequestException e) {
-			Assert.fail();
+			fail();
 		}
 	}
 
@@ -349,7 +348,7 @@ class ParameterValidationTest {
 
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
-			Assert.fail();
+			fail();
 		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), INVALID_METADATA_TO_OUTPUT_VALUE);
 		}
@@ -364,7 +363,7 @@ class ParameterValidationTest {
 
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
-			Assert.fail();
+			fail();
 		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), UNRECOGNIZED_EXECUTION_OPTION);
 		}
@@ -379,7 +378,7 @@ class ParameterValidationTest {
 
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
-			Assert.fail();
+			fail();
 		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), UNRECOGNIZED_DEBUG_OPTION);
 		}
@@ -394,7 +393,7 @@ class ParameterValidationTest {
 
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
-			Assert.fail();
+			fail();
 		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), UNRECOGNIZED_SPECIES_GROUP_NAME);
 		}
@@ -409,7 +408,7 @@ class ParameterValidationTest {
 
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
-			Assert.fail();
+			fail();
 		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), UNRECOGNIZED_UTILIZATION_CLASS_NAME);
 		}
@@ -424,7 +423,7 @@ class ParameterValidationTest {
 
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
-			Assert.fail();
+			fail();
 		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(
 					e.getValidationMessages(), UNRECOGNIZED_SPECIES_GROUP_NAME, UNRECOGNIZED_UTILIZATION_CLASS_NAME
@@ -442,7 +441,7 @@ class ParameterValidationTest {
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
 		} catch (AbstractProjectionRequestException e) {
-			Assert.fail();
+			fail();
 		}
 	}
 
@@ -454,7 +453,7 @@ class ParameterValidationTest {
 
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
-			Assert.fail();
+			fail();
 		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), INVALID_INTEGER_VALUE);
 		}
@@ -469,7 +468,7 @@ class ParameterValidationTest {
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
 		} catch (AbstractProjectionRequestException e) {
-			Assert.fail();
+			fail();
 		}
 	}
 
@@ -481,7 +480,7 @@ class ParameterValidationTest {
 
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
-			Assert.fail();
+			fail();
 		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(
 					e.getValidationMessages(), AGE_RANGES_IGNORED_WHEN_DCSV_OUTPUT,
@@ -498,7 +497,7 @@ class ParameterValidationTest {
 
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
-			Assert.fail();
+			fail();
 		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(
 					e.getValidationMessages(), AGE_RANGES_IGNORED_WHEN_DCSV_OUTPUT, MISMATCHED_INPUT_OUTPUT_TYPES
@@ -515,7 +514,7 @@ class ParameterValidationTest {
 
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
-			Assert.fail();
+			fail();
 		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(
 					e.getValidationMessages(), CANNOT_SPECIFY_BOTH_CFS_AND_MOF_BIOMASS_OUTPUT,
@@ -533,7 +532,7 @@ class ParameterValidationTest {
 
 		try {
 			new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
-			Assert.fail();
+			fail();
 		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(
 					e.getValidationMessages(), CANNOT_SPECIFY_BOTH_CFS_BIOMASS_AND_EITHER_MOF_OPTIONS
@@ -550,7 +549,7 @@ class ParameterValidationTest {
 
 		try {
 			new ProjectionContext(ProjectionRequestKind.DCSV, "id", p, false);
-			Assert.fail();
+			fail();
 		} catch (AbstractProjectionRequestException e) {
 			TestHelper.verifyMessageSetIs(e.getValidationMessages(), INVALID_CFS_BIOMASS_OUTPUT_FORMAT);
 		}
@@ -559,14 +558,15 @@ class ParameterValidationTest {
 	@Test
 	void testValidFullParameterCreation() {
 
-		ProjectionContext s1 = null;
+        ProjectionContext s1 = null;
+        ProjectionContext s2 = null;
 
 		try {
 			Parameters p = new Parameters().addSelectedDebugOptionsItem(DebugOption.DO_INCLUDE_DEBUG_ENTRY_EXIT)
 					.addSelectedDebugOptionsItem(DebugOption.DO_INCLUDE_DEBUG_INDENT_BLOCKS)
 					.addSelectedDebugOptionsItem(DebugOption.DO_INCLUDE_DEBUG_ROUTINE_NAMES)
-					.addSelectedDebugOptionsItem(DebugOption.DO_INCLUDE_DEBUG_TIMESTAMPS)
-					.addSelectedExecutionOptionsItem(ExecutionOption.BACK_GROW_ENABLED)
+					.addExcludedDebugOptionsItem(DebugOption.DO_INCLUDE_DEBUG_TIMESTAMPS)
+					.addExcludedExecutionOptionsItem(ExecutionOption.BACK_GROW_ENABLED)
 					.addSelectedExecutionOptionsItem(ExecutionOption.DO_ALLOW_BA_AND_TPH_VALUE_SUBSTITUTION)
 					.addSelectedExecutionOptionsItem(ExecutionOption.DO_ENABLE_DEBUG_LOGGING)
 					.addSelectedExecutionOptionsItem(ExecutionOption.DO_DELAY_EXECUTION_FOLDER_DELETION)
@@ -610,56 +610,58 @@ class ParameterValidationTest {
 					.yearEnd(2024) //
 					.yearStart(2015);
 
-			s1 = new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
+            s1 = new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
+            s2 = new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
 		} catch (AbstractProjectionRequestException e) {
-			Assert.fail();
+			fail();
 		}
 
 		var vp = s1.getParams();
+        var v2 = s2.getParams();
 
-		Assert.assertTrue(vp.containsOption(DebugOption.DO_INCLUDE_DEBUG_ENTRY_EXIT));
-		Assert.assertTrue(vp.containsOption(DebugOption.DO_INCLUDE_DEBUG_INDENT_BLOCKS));
-		Assert.assertTrue(vp.containsOption(DebugOption.DO_INCLUDE_DEBUG_ROUTINE_NAMES));
-		Assert.assertTrue(vp.containsOption(DebugOption.DO_INCLUDE_DEBUG_TIMESTAMPS));
-		Assert.assertTrue(vp.containsOption(ExecutionOption.BACK_GROW_ENABLED));
-		Assert.assertTrue(vp.containsOption(ExecutionOption.DO_ALLOW_BA_AND_TPH_VALUE_SUBSTITUTION));
-		Assert.assertTrue(vp.containsOption(ExecutionOption.DO_ENABLE_DEBUG_LOGGING));
-		Assert.assertTrue(vp.containsOption(ExecutionOption.DO_ENABLE_ERROR_LOGGING));
-		Assert.assertTrue(vp.containsOption(ExecutionOption.DO_ENABLE_PROGRESS_LOGGING));
-		Assert.assertTrue(vp.containsOption(ExecutionOption.DO_FORCE_CURRENT_YEAR_INCLUSION_IN_YIELD_TABLES));
-		Assert.assertTrue(vp.containsOption(ExecutionOption.DO_FORCE_REFERENCE_YEAR_INCLUSION_IN_YIELD_TABLES));
-		Assert.assertTrue(vp.containsOption(ExecutionOption.DO_INCLUDE_AGE_ROWS_IN_YIELD_TABLE));
-		Assert.assertTrue(vp.containsOption(ExecutionOption.DO_INCLUDE_COLUMN_HEADERS_IN_YIELD_TABLE));
-		Assert.assertTrue(vp.containsOption(ExecutionOption.DO_INCLUDE_FILE_HEADER));
-		Assert.assertTrue(vp.containsOption(ExecutionOption.DO_INCLUDE_POLYGON_RECORD_ID_IN_YIELD_TABLE));
-		Assert.assertTrue(vp.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_BIOMASS));
-		Assert.assertTrue(vp.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES));
-		Assert.assertTrue(vp.containsOption(ExecutionOption.DO_INCLUDE_PROJECTION_MODE_IN_YIELD_TABLE));
-		Assert.assertTrue(
+		assertTrue(vp.containsOption(DebugOption.DO_INCLUDE_DEBUG_ENTRY_EXIT));
+		assertTrue(vp.containsOption(DebugOption.DO_INCLUDE_DEBUG_INDENT_BLOCKS));
+		assertTrue(vp.containsOption(DebugOption.DO_INCLUDE_DEBUG_ROUTINE_NAMES));
+		assertFalse(vp.containsOption(DebugOption.DO_INCLUDE_DEBUG_TIMESTAMPS));
+		assertFalse(vp.containsOption(ExecutionOption.BACK_GROW_ENABLED));
+		assertTrue(vp.containsOption(ExecutionOption.DO_ALLOW_BA_AND_TPH_VALUE_SUBSTITUTION));
+		assertTrue(vp.containsOption(ExecutionOption.DO_ENABLE_DEBUG_LOGGING));
+		assertTrue(vp.containsOption(ExecutionOption.DO_ENABLE_ERROR_LOGGING));
+		assertTrue(vp.containsOption(ExecutionOption.DO_ENABLE_PROGRESS_LOGGING));
+		assertTrue(vp.containsOption(ExecutionOption.DO_FORCE_CURRENT_YEAR_INCLUSION_IN_YIELD_TABLES));
+		assertTrue(vp.containsOption(ExecutionOption.DO_FORCE_REFERENCE_YEAR_INCLUSION_IN_YIELD_TABLES));
+		assertTrue(vp.containsOption(ExecutionOption.DO_INCLUDE_AGE_ROWS_IN_YIELD_TABLE));
+		assertTrue(vp.containsOption(ExecutionOption.DO_INCLUDE_COLUMN_HEADERS_IN_YIELD_TABLE));
+		assertTrue(vp.containsOption(ExecutionOption.DO_INCLUDE_FILE_HEADER));
+		assertTrue(vp.containsOption(ExecutionOption.DO_INCLUDE_POLYGON_RECORD_ID_IN_YIELD_TABLE));
+		assertTrue(vp.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_BIOMASS));
+		assertTrue(vp.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES));
+		assertTrue(vp.containsOption(ExecutionOption.DO_INCLUDE_PROJECTION_MODE_IN_YIELD_TABLE));
+		assertTrue(
 				vp.containsOption(ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE)
 		);
-		Assert.assertTrue(vp.containsOption(ExecutionOption.DO_INCLUDE_SPECIES_PROJECTION));
-		Assert.assertTrue(vp.containsOption(ExecutionOption.DO_INCLUDE_YEAR_ROWS_IN_YIELD_TABLE));
-		Assert.assertTrue(vp.containsOption(ExecutionOption.DO_SAVE_INTERMEDIATE_FILES));
-		Assert.assertTrue(vp.containsOption(ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER));
-		Assert.assertTrue(vp.containsOption(ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_POLYGON));
-		Assert.assertTrue(vp.containsOption(ExecutionOption.FORWARD_GROW_ENABLED));
+		assertTrue(vp.containsOption(ExecutionOption.DO_INCLUDE_SPECIES_PROJECTION));
+		assertTrue(vp.containsOption(ExecutionOption.DO_INCLUDE_YEAR_ROWS_IN_YIELD_TABLE));
+		assertTrue(vp.containsOption(ExecutionOption.DO_SAVE_INTERMEDIATE_FILES));
+		assertTrue(vp.containsOption(ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER));
+		assertTrue(vp.containsOption(ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_POLYGON));
+		assertTrue(vp.containsOption(ExecutionOption.FORWARD_GROW_ENABLED));
 
-		Assert.assertEquals(Integer.valueOf(10), vp.getAgeEnd());
-		Assert.assertEquals(Integer.valueOf(3), vp.getAgeIncrement());
-		Assert.assertEquals(Integer.valueOf(20), vp.getAgeStart());
-		Assert.assertEquals(AgeYearRangeCombinationKind.INTERSECT, vp.getCombineAgeYearRange());
-		Assert.assertEquals(Integer.valueOf(2020), vp.getYearForcedIntoYieldTable());
-		Assert.assertEquals(MetadataToOutputDirective.ALL, vp.getMetadataToOutput());
-		Assert.assertEquals(OutputFormat.YIELD_TABLE, vp.getOutputFormat());
-		Assert.assertEquals(FrequencyKind.MAPSHEET, vp.getProgressFrequency().getEnumValue());
-		Assert.assertEquals(Integer.valueOf(2024), vp.getYearEnd());
-		Assert.assertEquals(Integer.valueOf(2015), vp.getYearStart());
+		assertEquals(Integer.valueOf(10), vp.getAgeEnd());
+		assertEquals(Integer.valueOf(3), vp.getAgeIncrement());
+		assertEquals(Integer.valueOf(20), vp.getAgeStart());
+		assertEquals(AgeYearRangeCombinationKind.INTERSECT, vp.getCombineAgeYearRange());
+		assertEquals(Integer.valueOf(2020), vp.getYearForcedIntoYieldTable());
+		assertEquals(MetadataToOutputDirective.ALL, vp.getMetadataToOutput());
+		assertEquals(OutputFormat.YIELD_TABLE, vp.getOutputFormat());
+		assertEquals(FrequencyKind.MAPSHEET, vp.getProgressFrequency().getEnumValue());
+		assertEquals(Integer.valueOf(2024), vp.getYearEnd());
+		assertEquals(Integer.valueOf(2015), vp.getYearStart());
 
-		Assert.assertEquals("maintainer", vp.getFilters().getMaintainer());
-		Assert.assertEquals("mapsheet", vp.getFilters().getMapsheet());
-		Assert.assertEquals("polygon", vp.getFilters().getPolygon());
-		Assert.assertEquals("polygonId", vp.getFilters().getPolygonId());
+		assertEquals("maintainer", vp.getFilters().getMaintainer());
+		assertEquals("mapsheet", vp.getFilters().getMapsheet());
+		assertEquals("polygon", vp.getFilters().getPolygon());
+		assertEquals("polygonId", vp.getFilters().getPolygonId());
 
 		var expectedMap = new HashMap<SP0Name, UtilizationClassSet>();
 		expectedMap.put(SP0Name.forText("C"), UtilizationClassSet._4_0);
@@ -668,9 +670,14 @@ class ParameterValidationTest {
 			assertThat(vp.getUtils(), Matchers.hasEntry(entry.getKey(), entry.getValue()));
 		}
 		for (var sp0Name : SP0Name.values()) {
-			Assert.assertTrue(
+			assertTrue(
 					expectedMap.containsKey(sp0Name) || vp.getUtils().get(sp0Name).equals(UtilizationClassSet._12_5)
 			);
 		}
+
+        assertTrue(vp.equals(vp));
+        assertEquals(vp, v2);
+        assertEquals(vp.hashCode(), v2.hashCode());
+        assertEquals(vp.toString(), v2.toString());
 	}
 }
