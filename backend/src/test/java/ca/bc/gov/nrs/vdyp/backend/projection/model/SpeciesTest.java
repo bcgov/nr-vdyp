@@ -5,6 +5,7 @@ import static org.hamcrest.Matchers.closeTo;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.List;
@@ -269,12 +270,13 @@ class SpeciesTest {
             assertThat(unit.getYearsToBreastHeight(), is(expectedValue));
         }
 
+        // Values verified via VDYP7 Testing
         static Stream<Arguments> siteIndexFromAgeAndDominantHeight() {
             return Stream.of(
-                    Arguments.of(30.0, 1.3, null), // force an invalid computed siteindex
+                    Arguments.of(30.0, 1.3, 2.6), // force an invalid computed siteindex
                     Arguments.of(2000.0, 2.0, null), // Trigger Business logic for too low Site index
                     Arguments.of(10.0, 2.0, null), // age too low to trigger site index calculation
-                    Arguments.of(42.0, 42.0, 45.06) //randomly chosen data for a valid computation
+                    Arguments.of(42.0, 42.0, 46.51) //randomly chosen data for a valid computation
             );
         }
 
@@ -284,7 +286,6 @@ class SpeciesTest {
             var unit = baseConfig(new Species.Builder())
                     .totalAge(totalAge)
                     .dominantHeight(dominantHeight)
-                    .siteCurve(SiteIndexEquation.SI_ACB_HUANG)
                     .siteIndex(null)
                     .build();
 
@@ -298,7 +299,8 @@ class SpeciesTest {
             }
         }
 
-        // TODO CONFIRM THE MATH IN THE FORTRAN AND SET THE EXPECTED VALUES FOR EACH
+        // NOTE This is not how data is passed via the HCSV so these tests are more about setting values at all
+        // rather than the values being correct. Value correctness is handled by lower level unit tests
         static Stream<Arguments> ageFromDominantHeightAndSiteIndex() {
             return Stream.of(
                     Arguments.of(42.0, 10.0, 1.9, SiteIndexEquation.SI_PLI_NIGHGI97, null),
@@ -333,7 +335,8 @@ class SpeciesTest {
             }
         }
 
-        // TODO CONFIRM THE MATH IN THE FORTRAN AND SET THE EXPECTED VALUES FOR EACH
+        // NOTE This is not how data is passed via the HCSV so these tests are more about setting values at all
+        // rather than the values being correct. Value correctness is handled by lower level unit tests
         static Stream<Arguments> dominantHeightFromAgeAndSiteIndex() {
             return Stream.of(
                     Arguments.of(42.0, 42.0, 1.9, SiteIndexEquation.SI_ACB_HUANG, 0.01), // siteindex too low
