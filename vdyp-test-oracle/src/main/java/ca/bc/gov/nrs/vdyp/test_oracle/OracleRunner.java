@@ -2,11 +2,18 @@ package ca.bc.gov.nrs.vdyp.test_oracle;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.CopyOption;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -378,5 +385,84 @@ public class OracleRunner {
 	protected CompletableFuture<Void> run(ProcessBuilder builder) throws IOException {
 		return builder.start().onExit().thenAccept(proc -> {
 		});
+	}
+
+	static class Execution {
+		public final Layer layer;
+		public final String polygonId;
+		public final Path dir;
+		public final Map<String, Integer> lines;
+
+		public Execution(String polygonId, Path dir, Map<String, Integer> lines) {
+			super();
+			this.layer = null;
+			this.polygonId = polygonId;
+			this.dir = dir;
+			this.lines = lines;
+		}
+
+	};
+
+	void removeInitialLines(Path file, int lines) throws IOException {
+		Path temp = file.resolveSibling(file.getFileName().toString() + "_TEMP");
+		try (
+				var in = Files.newBufferedReader(file);
+				var out = Files.newBufferedWriter(temp)
+		) {
+			for (int i = 0; i < lines; i++) {
+				in.readLine();
+			}
+			in.transferTo(out);
+		}
+		Files.move(temp, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+	}
+
+	public void separateExecutions(Path configDir) throws IOException {
+		final List<Execution> executions = new ArrayList<>();
+
+		try (var dirStream = Files.newDirectoryStream(configDir, "execution-*")) {
+			for (var executionDir : dirStream) {
+				final Map<String, Integer> lineMap = new HashMap<>();
+				String polygonId = null;
+				try (var fileStream = Files.newDirectoryStream(executionDir, "?-SAVE_*")) {
+					for (var file : fileStream) {
+						int lines = 0;
+
+						try (var lineIt = FileUtils.lineIterator(file.toFile())) {
+
+							while (lineIt.hasNext()) {
+								String line = lineIt.next();
+								polygonId = line.substring(0, 21);
+								lines++;
+							}
+						}
+						if (lines > 0) {
+							lineMap.put(file.getFileName().toString(), lines);
+						}
+					}
+				}
+				if (!lineMap.isEmpty()) {
+					executions.add(new Execution(polygonId, executionDir, lineMap));
+				}
+			}
+		}
+
+		// We want the executions in order of number of lines
+		Comparator<Execution> comp = Utils.compareUsing(e -> e.lines.values().stream().mapToInt(x -> x).sum());
+		executions.sort(comp);
+
+		Execution previous = null;
+		for (var execution : executions) {
+			for (var entry : execution.lines.entrySet()) {
+				int previousLines = 0;
+				if (null != previous) {
+					previousLines = previous.lines.getOrDefault(entry.getKey(), 0);
+				}
+				int actualLines = entry.getValue() - previousLines;
+				removeInitialLines(execution.dir.resolve(entry.getKey()), previousLines);
+			}
+
+			previous = execution;
+		}
 	}
 }
