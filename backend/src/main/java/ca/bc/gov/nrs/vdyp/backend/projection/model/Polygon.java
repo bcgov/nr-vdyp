@@ -281,7 +281,7 @@ public class Polygon implements Comparable<Polygon> {
 
 	/**
 	 * Getter. Note that VDYP7 has a function called "V7Ext_PolygonReferenceYear" which does not necessarily return this
-	 * value - see {@link Polygon.getMeasurementYear()}
+	 * value - see {@link this.getMeasurementYear()}
 	 *
 	 * @return the reference year value, which may be null.
 	 */
@@ -972,7 +972,7 @@ public class Polygon implements Comparable<Polygon> {
 
 		if (primaryLayer != null) {
 			var leadingSpecies = primaryLayer.determineLeadingSp0(0);
-			if (leadingSpecies == null || leadingSpecies.getSpeciesByPercent().size() == 0) {
+			if (leadingSpecies == null || leadingSpecies.getSpeciesByPercent().isEmpty()) {
 				throw new PolygonValidationException(
 						new ValidationMessage(ValidationMessageKind.NO_LEADING_SPECIES, this, primaryLayer)
 				);
@@ -1295,12 +1295,12 @@ public class Polygon implements Comparable<Polygon> {
 		Layer residualLayer = getResidualLayer();
 
 		if (polygonPercentStockable == null) {
-			polygonPercentStockable = 85.0; /* where does this come from??? */
+			polygonPercentStockable = 85.0; /* where does this come from??? PM 05-25: Seems like default max poly stockability */
 		}
 
 		if (deadLayer != null) {
 			Double m = NullMath
-					.max(getPercentStockableDead(), deadLayer.getPercentStockable(), (a, b) -> Math.max(a, b), null);
+					.max(getPercentStockableDead(), deadLayer.getPercentStockable(), (a,b) -> Math.max(a,b), null);
 			if (m != null && getPercentStockable() != null) {
 				deadPercentStockable = getPercentStockable() * m / 100.0;
 			}
@@ -1313,7 +1313,7 @@ public class Polygon implements Comparable<Polygon> {
 			regenerationPercentStockable = deadPercentStockable;
 		} else if (regenerationLayer != null) {
 			Double m = NullMath.max(
-					getPercentStockableDead(), regenerationLayer.getPercentStockable(), (a, b) -> Math.max(a, b), null
+					getPercentStockableDead(), regenerationLayer.getPercentStockable(), (a,b) -> Math.max(a,b), null
 			);
 			if (m != null && getPercentStockable() != null) {
 				regenerationPercentStockable = getPercentStockable() * m / 100.0;
@@ -1352,7 +1352,7 @@ public class Polygon implements Comparable<Polygon> {
 				}
 			} else {
 
-				residualPercentStockable = deadPercentStockable <= 1.0 ? 1.0 : deadPercentStockable;
+				residualPercentStockable = Math.max(deadPercentStockable, 1.0);
 				primaryPercentStockable -= residualPercentStockable;
 			}
 
@@ -1756,7 +1756,7 @@ public class Polygon implements Comparable<Polygon> {
 
 						String rankCode = candidate.getRankCode();
 						if (rankCode == null && candidate.doesHeightExceed(Vdyp7Constants.MIN_VETERAN_LAYER_HEIGHT)
-								&& candidate.getSp0sAsSupplied().size() > 0) {
+								&& !candidate.getSp0sAsSupplied().isEmpty()) {
 							veteranLayer = candidate;
 							break;
 						}
@@ -1802,7 +1802,7 @@ public class Polygon implements Comparable<Polygon> {
 			} else {
 				for (Layer candidate : getLayers().values()) {
 
-					if (candidate != getPrimaryLayer() && "1".equals(candidate.getRankCode())) {
+					if (candidate != getPrimaryLayer() && "1".equals(candidate.getLayerId())) {
 
 						Species leadSp64 = candidate.determineLeadingSp64(0);
 						if (leadSp64 != null) {
