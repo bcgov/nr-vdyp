@@ -403,7 +403,7 @@ public class OracleRunner {
 
 	};
 
-	void removeInitialLines(Path file, int lines) throws IOException {
+	boolean removeInitialLines(Path file, int lines) throws IOException {
 		Path temp = file.resolveSibling(file.getFileName().toString() + "_TEMP");
 		try (
 				var in = Files.newBufferedReader(file);
@@ -412,9 +412,15 @@ public class OracleRunner {
 			for (int i = 0; i < lines; i++) {
 				in.readLine();
 			}
+
 			in.transferTo(out);
 		}
 		Files.move(temp, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+		if (Files.size(file) == 0) {
+			Files.delete(file);
+			return true;
+		}
+		return false;
 	}
 
 	public void separateExecutions(Path configDir) throws IOException {
@@ -442,7 +448,7 @@ public class OracleRunner {
 					}
 				}
 				if (!lineMap.isEmpty()) {
-					executions.add(new Execution(polygonId, executionDir, lineMap));
+					executions.add(new Execution(polygonId.trim(), executionDir, lineMap));
 				}
 			}
 		}
@@ -453,15 +459,29 @@ public class OracleRunner {
 
 		Execution previous = null;
 		for (var execution : executions) {
+			Layer layer = null;
 			for (var entry : execution.lines.entrySet()) {
 				int previousLines = 0;
 				if (null != previous) {
 					previousLines = previous.lines.getOrDefault(entry.getKey(), 0);
 				}
 				int actualLines = entry.getValue() - previousLines;
-				removeInitialLines(execution.dir.resolve(entry.getKey()), previousLines);
+				Path file = execution.dir.resolve(entry.getKey());
+				if (!removeInitialLines(file, previousLines)) {
+					Layer currentLayer = Layer.byCode(file.getFileName().toString().substring(0, 1));
+					if (layer == null) {
+						layer = currentLayer;
+					} else if (layer != currentLayer) {
+						throw new IllegalStateException("Could not separate layers in " + execution.dir);
+					}
+				}
 			}
 
+			Files.move(
+					execution.dir, execution.dir.resolveSibling(
+							"execution-" + execution.polygonId + "-" + layer.filename
+					)
+			);
 			previous = execution;
 		}
 	}

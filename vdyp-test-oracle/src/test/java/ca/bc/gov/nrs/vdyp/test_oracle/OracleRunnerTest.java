@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.vdyp.test_oracle;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -261,7 +262,7 @@ class OracleRunnerTest {
 		void assertSeparated(String executionId, String polygonId, Layer layer, String tag) throws IOException {
 			String content = FileUtils.readFileToString(
 					configDir
-							.resolve("execution-" + executionId)
+							.resolve("execution-" + polygonId + "-" + layer.filename)
 							.resolve(layer.code + "-SAVE_VDYP7_" + tag + ".dat")
 							.toFile(),
 					StandardCharsets.UTF_8
@@ -274,6 +275,15 @@ class OracleRunnerTest {
 							)
 					)
 			);
+
+			for (Layer shouldBeRemoved : Layer.values()) {
+				if (shouldBeRemoved == layer)
+					continue;
+				Path path = configDir
+						.resolve("execution-" + polygonId + "-" + layer.filename)
+						.resolve(shouldBeRemoved.code + "-SAVE_VDYP7_" + tag + ".dat");
+				assertFalse(Files.exists(path), path + " should not exist");
+			}
 		}
 
 		void assertSeparated(String executionId, String polygonId, Layer layer) throws IOException {
