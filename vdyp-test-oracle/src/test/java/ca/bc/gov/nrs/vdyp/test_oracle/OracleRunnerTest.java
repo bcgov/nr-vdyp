@@ -140,23 +140,7 @@ class OracleRunnerTest {
 					assertThat(tempDir, fileExists("test1/input/VDYP7_INPUT_POLY.csv"));
 					assertThat(tempDir, fileExists("test1/input/VDYP7_INPUT_LAYER.csv"));
 
-					for (var layer : layers) {
-						for (var tag : new String[] { "7INPP", "7INPS", "7INPU", //
-								"7OUTP", "7OUTS", "7OUTU", "7OUTC", //
-								"AJSTA", "AJSTP", "AJSTS", "AJSTU", //
-								"BINPP", "BINPS", "BINPU", //
-								"BOUTP", "BOUTS", "BOUTU", "BOUTC", //
-								"GROW", //
-								"VRII", "VRIL", "VRIP", "VRIS" //
-						}) {
-							FileUtils.touch(
-									installDir.resolve("VDYP_CFG/" + layer.code + "-SAVE_VDYP7_" + tag + ".dat")
-											.toFile()
-							);
-						}
-						FileUtils.touch(installDir.resolve("VDYP_CFG/" + layer.code + "-VDYP7_VDYP.ctl").toFile());
-						FileUtils.touch(installDir.resolve("VDYP_CFG/" + layer.code + "-VDYP7_BACK.ctl").toFile());
-					}
+					addExecution("Polygon 1", Layer.PRIMARY);
 
 					FileUtils.touch(tempDir.resolve("test1/output/Output_YldTbl.csv").toFile());
 
@@ -207,57 +191,57 @@ class OracleRunnerTest {
 		void manipulate(Path path) throws IOException;
 	}
 
+	String addExecution(final String polygonId, final Layer layer) throws IOException {
+		final String executionId = UUID.randomUUID().toString();
+		Path executionDir = Files.createDirectories(configDir.resolve("execution-" + executionId));
+
+		for (var tag : new String[] { "7INPP", "7INPS", "7INPU", //
+				"7OUTP", "7OUTS", "7OUTU", "7OUTC", //
+				"AJSTA", "AJSTP", "AJSTS", "AJSTU", //
+				"BINPP", "BINPS", "BINPU", //
+				"BOUTP", "BOUTS", "BOUTU", "BOUTC", //
+				"GROW", //
+				"VRII", "VRIL", "VRIP", "VRIS" //
+		}) {
+			FileUtils.write(
+					configDir.resolve(layer.code + "-SAVE_VDYP7_" + tag + ".dat").toFile(),
+					String.format(
+							"%-21s%d Execution %s %s %s line %d\n",
+							polygonId, 2025, executionId, layer, tag, 1
+					),
+					StandardCharsets.UTF_8,
+					true // Append to the file
+			);
+
+		}
+		FileUtils.write(
+				configDir.resolve(layer.code + "-VDYP7_VDYP.ctl").toFile(),
+				"Execution " + executionId + " forward control\n",
+				StandardCharsets.UTF_8,
+				false // Overwrite the file
+		);
+
+		FileUtils.write(
+				configDir.resolve(layer.code + "-VDYP7_BACK.ctl").toFile(),
+				"Execution " + executionId + " back control\n",
+				StandardCharsets.UTF_8,
+				false // Overwrite the file
+		);
+
+		try (
+				var stream = Files.newDirectoryStream(
+						configDir, (Path f) -> Files.isRegularFile(f)
+				)
+		) {
+			for (var toCopy : stream) {
+				FileUtils.copyToDirectory(toCopy.toFile(), executionDir.toFile());
+			}
+		}
+		return executionId;
+	}
+
 	@Nested
 	class Separator {
-
-		String addExecution(final String polygonId, final Layer layer) throws IOException {
-			final String executionId = UUID.randomUUID().toString();
-			Path executionDir = Files.createDirectories(configDir.resolve("execution-" + executionId));
-
-			for (var tag : new String[] { "7INPP", "7INPS", "7INPU", //
-					"7OUTP", "7OUTS", "7OUTU", "7OUTC", //
-					"AJSTA", "AJSTP", "AJSTS", "AJSTU", //
-					"BINPP", "BINPS", "BINPU", //
-					"BOUTP", "BOUTS", "BOUTU", "BOUTC", //
-					"GROW", //
-					"VRII", "VRIL", "VRIP", "VRIS" //
-			}) {
-				FileUtils.write(
-						configDir.resolve(layer.code + "-SAVE_VDYP7_" + tag + ".dat").toFile(),
-						String.format(
-								"%-21s%d Execution %s %s %s line %d\n",
-								polygonId, 2025, executionId, layer, tag, 1
-						),
-						StandardCharsets.UTF_8,
-						true // Append to the file
-				);
-
-			}
-			FileUtils.write(
-					configDir.resolve(layer.code + "-VDYP7_VDYP.ctl").toFile(),
-					"Execution " + executionId + " forward control\n",
-					StandardCharsets.UTF_8,
-					false // Overwrite the file
-			);
-
-			FileUtils.write(
-					configDir.resolve(layer.code + "-VDYP7_BACK.ctl").toFile(),
-					"Execution " + executionId + " back control\n",
-					StandardCharsets.UTF_8,
-					false // Overwrite the file
-			);
-
-			try (
-					var stream = Files.newDirectoryStream(
-							configDir, (Path f) -> Files.isRegularFile(f)
-					)
-			) {
-				for (var toCopy : stream) {
-					FileUtils.copyToDirectory(toCopy.toFile(), executionDir.toFile());
-				}
-			}
-			return executionId;
-		}
 
 		void assertSeparated(String executionId, String polygonId, Layer layer, String tag) throws IOException {
 			String content = FileUtils.readFileToString(

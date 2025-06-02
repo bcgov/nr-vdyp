@@ -472,6 +472,8 @@ public class OracleRunner {
 					if (layer == null) {
 						layer = currentLayer;
 					} else if (layer != currentLayer) {
+						// During an execution, only the files for a single layer should have been appended to and 
+						// removeInitialLines should have removed all files which did not change
 						throw new IllegalStateException("Could not separate layers in " + execution.dir);
 					}
 				}
