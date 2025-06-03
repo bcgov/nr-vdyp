@@ -13,11 +13,13 @@ import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.cli.CommandLine;
@@ -50,15 +52,22 @@ public class OracleRunner {
 		}
 	}
 
-	public static Path getSourceFile(IntermediateStage stage, ModelObject obj, Layer layer) {
+	public static Path getSourceFile(String polygonId, IntermediateStage stage, ModelObject obj, Layer layer) {
 		final String extension = obj == ModelObject.CONTROL ? "ctl" : "dat";
 		final String savePrefix = obj == ModelObject.CONTROL ? "" : "SAVE_";
-		return Path.of(String.format("%s-%sVDYP7_%s.%s", layer.code, savePrefix, obj.getStageCode(stage), extension));
+		return Path.of(
+				String.format("execution-%s-%s", polygonId, layer.filename),
+				String.format("%s-%sVDYP7_%s.%s", layer.code, savePrefix, obj.getStageCode(stage), extension)
+		);
 	}
 
-	public static Path getDestFile(IntermediateStage stage, ModelObject obj, Layer layer) {
+	public static Path getDestFile(String polygonId, IntermediateStage stage, ModelObject obj, Layer layer) {
 		final String extension = obj == ModelObject.CONTROL ? "ctl" : "dat";
-		return Path.of(stage.filename, layer.filename, String.format("%s.%s", obj.filename, extension));
+		return Path.of(
+				stage.filename,
+				String.format("%s-%s", polygonId, layer.filename),
+				String.format("%s.%s", obj.filename, extension)
+		);
 	}
 
 	public static enum Layer {
@@ -313,22 +322,29 @@ public class OracleRunner {
 
 		final var activeStages = EnumSet.noneOf(IntermediateStage.class);
 		final var activeLayers = EnumSet.noneOf(Layer.class);
+		final Set<String> activePolygons = new HashSet<>();
 
-		findActiveLayersAndStages(intermediateDir, activeStages, activeLayers);
+		separateExecutions(intermediateDir);
+
+		findActiveLayersStagesPolygons(intermediateDir, activeStages, activeLayers, activePolygons);
 
 		for (final var stage : activeStages) {
 			final var stageDir = finalSubdir.resolve(stage.filename);
 			Files.createDirectory(stageDir);
 
 			for (final var layer : activeLayers) {
-				final var layerDir = stageDir.resolve(layer.filename);
-				Files.createDirectory(layerDir);
-				for (var fileType : stage.files) {
-					final var sourceFile = intermediateDir.resolve(getSourceFile(stage, fileType, layer));
-					final var destFile = finalSubdir.resolve(getDestFile(stage, fileType, layer));
-					if (Files.exists(sourceFile)) {
-						System.out.printf("  Copying %s to %s", sourceFile, destFile).println();
-						Files.copy(sourceFile, destFile);
+				for (final var polygonId : activePolygons) {
+					final var layerDir = stageDir.resolve(polygonId + "-" + layer.filename);
+					Files.createDirectory(layerDir);
+					for (var fileType : stage.files) {
+						final var sourceFile = intermediateDir.resolve(
+								getSourceFile(polygonId, stage, fileType, layer)
+						);
+						final var destFile = finalSubdir.resolve(getDestFile(polygonId, stage, fileType, layer));
+						if (Files.exists(sourceFile)) {
+							System.out.printf("  Copying %s to %s", sourceFile, destFile).println();
+							Files.copy(sourceFile, destFile);
+						}
 					}
 				}
 			}
@@ -337,9 +353,14 @@ public class OracleRunner {
 		copyFiles(outputSubdir, outputDir, file -> file.getFileName().toString().startsWith("Output_"));
 	}
 
-	private void findActiveLayersAndStages(
-			Path intermediateDir, final EnumSet<IntermediateStage> activeStages, final EnumSet<Layer> activeLayers
-	) {
+	Pattern EXECUTION = Pattern.compile("^execution\\-(.+?)-(\\w+)$");
+
+	private void findActiveLayersStagesPolygons(
+			final Path intermediateDir,
+			final EnumSet<IntermediateStage> activeStages,
+			final EnumSet<Layer> activeLayers,
+			final Set<String> activePolygons
+	) throws IOException {
 		final var it = FileUtils.iterateFiles(intermediateDir.toFile(), new String[] { "dat", "ctl" }, false);
 		while (it.hasNext()) {
 			final var file = it.next();
@@ -351,6 +372,18 @@ public class OracleRunner {
 					activeStages.add(IntermediateStage.byCode(stage));
 				}
 				activeLayers.add(Layer.byCode(layer));
+			}
+		}
+
+		try (var stream = Files.newDirectoryStream(intermediateDir, "execution-*")) {
+			for (Path dir : stream) {
+				Matcher match = EXECUTION.matcher(dir.getFileName().toString());
+				if (match.find()) {
+					String polygonId = match.group(1);
+					activePolygons.add(polygonId);
+				} else {
+					throw new IllegalStateException("Unexpected execution directory " + dir.getFileName());
+				}
 			}
 		}
 	}
