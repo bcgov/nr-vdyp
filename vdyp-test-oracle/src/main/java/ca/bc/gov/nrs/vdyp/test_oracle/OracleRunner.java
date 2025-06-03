@@ -262,6 +262,8 @@ public class OracleRunner {
 			}
 			var builder = new ProcessBuilder();
 
+			builder.inheritIO();
+
 			builder.directory(inputSubdir.toFile());
 
 			builder.environment().putAll(env);
@@ -505,11 +507,16 @@ public class OracleRunner {
 						layer = currentLayer;
 					} else if (layer != currentLayer) {
 						// During an execution, only the files for a single layer should have been
-						// appended to and
-						// removeInitialLines should have removed all files which did not change
+						// appended to and removeInitialLines should have removed all files which
+						// did not change
 						throw new IllegalStateException("Could not separate layers in " + execution.dir);
 					}
 				}
+			}
+
+			if (layer == null) {
+				// Nothing happened in this execution
+				Files.delete(execution.dir);
 			}
 
 			Files.move(
