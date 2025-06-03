@@ -10,10 +10,12 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Deque;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -64,8 +66,7 @@ public class OracleRunner {
 	public static Path getDestFile(String polygonId, IntermediateStage stage, ModelObject obj, Layer layer) {
 		final String extension = obj == ModelObject.CONTROL ? "ctl" : "dat";
 		return Path.of(
-				stage.filename,
-				String.format("%s-%s", polygonId, layer.filename),
+				stage.filename, String.format("%s-%s", polygonId, layer.filename),
 				String.format("%s.%s", obj.filename, extension)
 		);
 	}
@@ -337,9 +338,8 @@ public class OracleRunner {
 					final var layerDir = stageDir.resolve(polygonId + "-" + layer.filename);
 					Files.createDirectory(layerDir);
 					for (var fileType : stage.files) {
-						final var sourceFile = intermediateDir.resolve(
-								getSourceFile(polygonId, stage, fileType, layer)
-						);
+						final var sourceFile = intermediateDir
+								.resolve(getSourceFile(polygonId, stage, fileType, layer));
 						final var destFile = finalSubdir.resolve(getDestFile(polygonId, stage, fileType, layer));
 						if (Files.exists(sourceFile)) {
 							System.out.printf("  Copying %s to %s", sourceFile, destFile).println();
@@ -356,10 +356,8 @@ public class OracleRunner {
 	Pattern EXECUTION = Pattern.compile("^execution\\-(.+?)-(\\w+)$");
 
 	private void findActiveLayersStagesPolygons(
-			final Path intermediateDir,
-			final EnumSet<IntermediateStage> activeStages,
-			final EnumSet<Layer> activeLayers,
-			final Set<String> activePolygons
+			final Path intermediateDir, final EnumSet<IntermediateStage> activeStages,
+			final EnumSet<Layer> activeLayers, final Set<String> activePolygons
 	) throws IOException {
 		final var it = FileUtils.iterateFiles(intermediateDir.toFile(), new String[] { "dat", "ctl" }, false);
 		while (it.hasNext()) {
@@ -438,10 +436,7 @@ public class OracleRunner {
 
 	boolean removeInitialLines(Path file, int lines) throws IOException {
 		Path temp = file.resolveSibling(file.getFileName().toString() + "_TEMP");
-		try (
-				var in = Files.newBufferedReader(file);
-				var out = Files.newBufferedWriter(temp)
-		) {
+		try (var in = Files.newBufferedReader(file); var out = Files.newBufferedWriter(temp)) {
 			for (int i = 0; i < lines; i++) {
 				in.readLine();
 			}
@@ -462,7 +457,7 @@ public class OracleRunner {
 		try (var dirStream = Files.newDirectoryStream(configDir, "execution-*")) {
 			for (var executionDir : dirStream) {
 				final Map<String, Integer> lineMap = new HashMap<>();
-				String polygonId = null;
+				Deque<String> polygonIds = new LinkedList<>();
 				try (var fileStream = Files.newDirectoryStream(executionDir, "?-SAVE_*")) {
 					for (var file : fileStream) {
 						int lines = 0;
@@ -471,7 +466,12 @@ public class OracleRunner {
 
 							while (lineIt.hasNext()) {
 								String line = lineIt.next();
-								polygonId = line.substring(0, 21);
+								String polygonId = line.substring(0, 21).trim();
+								// We want to know the order that we first see the IDs so we can take the last
+								// one to first appear as the one that was added in this execution.
+								if (!polygonIds.contains(polygonId)) {
+									polygonIds.addLast(polygonId);
+								}
 								lines++;
 							}
 						}
@@ -481,7 +481,7 @@ public class OracleRunner {
 					}
 				}
 				if (!lineMap.isEmpty()) {
-					executions.add(new Execution(polygonId.trim(), executionDir, lineMap));
+					executions.add(new Execution(polygonIds.getLast(), executionDir, lineMap));
 				}
 			}
 		}
@@ -498,14 +498,14 @@ public class OracleRunner {
 				if (null != previous) {
 					previousLines = previous.lines.getOrDefault(entry.getKey(), 0);
 				}
-				int actualLines = entry.getValue() - previousLines;
 				Path file = execution.dir.resolve(entry.getKey());
 				if (!removeInitialLines(file, previousLines)) {
 					Layer currentLayer = Layer.byCode(file.getFileName().toString().substring(0, 1));
 					if (layer == null) {
 						layer = currentLayer;
 					} else if (layer != currentLayer) {
-						// During an execution, only the files for a single layer should have been appended to and 
+						// During an execution, only the files for a single layer should have been
+						// appended to and
 						// removeInitialLines should have removed all files which did not change
 						throw new IllegalStateException("Could not separate layers in " + execution.dir);
 					}
@@ -513,9 +513,8 @@ public class OracleRunner {
 			}
 
 			Files.move(
-					execution.dir, execution.dir.resolveSibling(
-							"execution-" + execution.polygonId + "-" + layer.filename
-					)
+					execution.dir,
+					execution.dir.resolveSibling("execution-" + execution.polygonId + "-" + layer.filename)
 			);
 			previous = execution;
 		}

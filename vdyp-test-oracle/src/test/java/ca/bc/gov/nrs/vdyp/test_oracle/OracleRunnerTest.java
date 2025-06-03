@@ -95,11 +95,12 @@ class OracleRunnerTest {
 					assertThat(
 							builder.command(),
 							contains(
-									endsWith("VDYP7Console.exe"), equalTo("-p"), endsWith("test1/input/parms.txt"),
-									equalTo("-env"), matchesRegex("InputFileDir=.*?/test1/input"), equalTo("-env"),
-									matchesRegex("OutputFileDir=.*?/test1/output"), equalTo("-env"),
+									endsWith("VDYP7Console.exe"), equalTo("-p"),
+									matchesRegex(".*?test1[/\\\\]input[/\\\\]parms.txt"), equalTo("-env"),
+									matchesRegex("InputFileDir=.*?[/\\\\]test1[/\\\\]input"), equalTo("-env"),
+									matchesRegex("OutputFileDir=.*?[/\\\\]test1[/\\\\]output"), equalTo("-env"),
 									equalTo("InstallDir=" + installDir.toString()), equalTo("-env"),
-									matchesRegex("ParmsFileDir=.*?/test1/input")
+									matchesRegex("ParmsFileDir=.*?[/\\\\]test1[/\\\\]input")
 							)
 					);
 					assertThat(builder.directory(), equalTo(tempDir.resolve("test1/input").toAbsolutePath().toFile()));
@@ -122,16 +123,16 @@ class OracleRunnerTest {
 							hasEntry(
 									equalTo(OracleRunner.PARAM_DIR_ENV),
 									equalTo(
-											tempDir.resolve("test1/input").toAbsolutePath().toString() // Same as input dir
+											tempDir.resolve("test1/input").toAbsolutePath().toString() // Same as input
+																										// dir
 									)
 							)
 					);
 					assertThat(
 							builder.environment(),
 							hasEntry(
-									equalTo(OracleRunner.INSTALL_DIR_ENV), equalTo(
-											installDir.toAbsolutePath().toString()
-									)
+									equalTo(OracleRunner.INSTALL_DIR_ENV),
+									equalTo(installDir.toAbsolutePath().toString())
 							)
 					);
 
@@ -184,26 +185,30 @@ class OracleRunnerTest {
 					assertThat(
 							builder.command(),
 							contains(
-									endsWith("VDYP7Console.exe"), equalTo("-p"), endsWith("test1/input/parms.txt"),
-									equalTo("-env"), matchesRegex("InputFileDir=.*?/test1/input"), equalTo("-env"),
-									matchesRegex("OutputFileDir=.*?/test1/output"), equalTo("-env"),
+									endsWith("VDYP7Console.exe"), equalTo("-p"),
+									matchesRegex(".*?test1[/\\\\]input[/\\\\]parms.txt"), equalTo("-env"),
+									matchesRegex("InputFileDir=.*?[/\\\\]test1[/\\\\]input"), equalTo("-env"),
+									matchesRegex("OutputFileDir=.*?[/\\\\]test1[/\\\\]output"), equalTo("-env"),
 									equalTo("InstallDir=" + installDir.toString()), equalTo("-env"),
-									matchesRegex("ParmsFileDir=.*?/test1/input")
+									matchesRegex("ParmsFileDir=.*?[/\\\\]test1[/\\\\]input")
 							)
 					);
-					assertThat(builder.directory(), equalTo(tempDir.resolve("test1/input").toAbsolutePath().toFile()));
+					assertThat(
+							builder.directory(),
+							equalTo(tempDir.resolve("test1").resolve("input").toAbsolutePath().toFile())
+					);
 					assertThat(
 							builder.environment(),
 							hasEntry(
 									equalTo(OracleRunner.INPUT_DIR_ENV),
-									equalTo(tempDir.resolve("test1/input").toAbsolutePath().toString())
+									equalTo(tempDir.resolve("test1").resolve("input").toAbsolutePath().toString())
 							)
 					);
 					assertThat(
 							builder.environment(),
 							hasEntry(
 									equalTo(OracleRunner.OUTPUT_DIR_ENV),
-									equalTo(tempDir.resolve("test1/output").toAbsolutePath().toString())
+									equalTo(tempDir.resolve("test1").resolve("output").toAbsolutePath().toString())
 							)
 					);
 					assertThat(
@@ -211,16 +216,18 @@ class OracleRunnerTest {
 							hasEntry(
 									equalTo(OracleRunner.PARAM_DIR_ENV),
 									equalTo(
-											tempDir.resolve("test1/input").toAbsolutePath().toString() // Same as input dir
+											tempDir.resolve("test1").resolve("input").toAbsolutePath().toString() // Same
+																													// as
+																													// input
+																													// dir
 									)
 							)
 					);
 					assertThat(
 							builder.environment(),
 							hasEntry(
-									equalTo(OracleRunner.INSTALL_DIR_ENV), equalTo(
-											installDir.toAbsolutePath().toString()
-									)
+									equalTo(OracleRunner.INSTALL_DIR_ENV),
+									equalTo(installDir.toAbsolutePath().toString())
 							)
 					);
 
@@ -274,11 +281,12 @@ class OracleRunnerTest {
 					assertThat(
 							builder.command(),
 							contains(
-									endsWith("VDYP7Console.exe"), equalTo("-p"), endsWith("test1/input/parms.txt"),
-									equalTo("-env"), matchesRegex("InputFileDir=.*?/test1/input"), equalTo("-env"),
-									matchesRegex("OutputFileDir=.*?/test1/output"), equalTo("-env"),
+									endsWith("VDYP7Console.exe"), equalTo("-p"),
+									matchesRegex(".*?test1[/\\\\]input[/\\\\]parms.txt"), equalTo("-env"),
+									matchesRegex("InputFileDir=.*?[/\\\\]test1[/\\\\]input"), equalTo("-env"),
+									matchesRegex("OutputFileDir=.*?[/\\\\]test1[/\\\\]output"), equalTo("-env"),
 									equalTo("InstallDir=" + installDir.toString()), equalTo("-env"),
-									matchesRegex("ParmsFileDir=.*?/test1/input")
+									matchesRegex("ParmsFileDir=.*?[/\\\\]test1[/\\\\]input")
 							)
 					);
 					assertThat(builder.directory(), equalTo(tempDir.resolve("test1/input").toAbsolutePath().toFile()));
@@ -301,16 +309,16 @@ class OracleRunnerTest {
 							hasEntry(
 									equalTo(OracleRunner.PARAM_DIR_ENV),
 									equalTo(
-											tempDir.resolve("test1/input").toAbsolutePath().toString() // Same as input dir
+											tempDir.resolve("test1/input").toAbsolutePath().toString() // Same as input
+																										// dir
 									)
 							)
 					);
 					assertThat(
 							builder.environment(),
 							hasEntry(
-									equalTo(OracleRunner.INSTALL_DIR_ENV), equalTo(
-											installDir.toAbsolutePath().toString()
-									)
+									equalTo(OracleRunner.INSTALL_DIR_ENV),
+									equalTo(installDir.toAbsolutePath().toString())
 							)
 					);
 
@@ -399,34 +407,28 @@ class OracleRunnerTest {
 			FileUtils.write(
 					configDir.resolve(layer.code + "-SAVE_VDYP7_" + tag + ".dat").toFile(),
 					String.format(
-							"%-21s%d Execution %s %s %s %s line %d\n",
-							polygonId, 2025, executionId, layer, tag, niceExecutionId, 1
-					),
-					StandardCharsets.UTF_8,
-					true // Append to the file
+							"%-21s%d Execution %s %s %s %s line %d" + System.lineSeparator(), polygonId, 2025,
+							executionId, layer, tag, niceExecutionId, 1
+					), StandardCharsets.UTF_8, true // Append to the file
 			);
 
 		}
+		System.lineSeparator();
 		FileUtils.write(
 				configDir.resolve(layer.code + "-VDYP7_VDYP.ctl").toFile(),
 				"Execution " + polygonId + " " + layer + " " + executionId + " forward control " + niceExecutionId
-						+ "\n",
-				StandardCharsets.UTF_8,
-				false // Overwrite the file
+						+ System.lineSeparator(),
+				StandardCharsets.UTF_8, false // Overwrite the file
 		);
 
 		FileUtils.write(
 				configDir.resolve(layer.code + "-VDYP7_BACK.ctl").toFile(),
-				"Execution " + polygonId + " " + layer + " " + executionId + " back control " + niceExecutionId + "\n",
-				StandardCharsets.UTF_8,
-				false // Overwrite the file
+				"Execution " + polygonId + " " + layer + " " + executionId + " back control " + niceExecutionId
+						+ System.lineSeparator(),
+				StandardCharsets.UTF_8, false // Overwrite the file
 		);
 
-		try (
-				var stream = Files.newDirectoryStream(
-						configDir, (Path f) -> Files.isRegularFile(f)
-				)
-		) {
+		try (var stream = Files.newDirectoryStream(configDir, (Path f) -> Files.isRegularFile(f))) {
 			for (var toCopy : stream) {
 				FileUtils.copyToDirectory(toCopy.toFile(), executionDir.toFile());
 			}
@@ -439,18 +441,17 @@ class OracleRunnerTest {
 
 		void assertSeparated(String executionId, String polygonId, Layer layer, String tag) throws IOException {
 			String content = FileUtils.readFileToString(
-					configDir
-							.resolve("execution-" + polygonId + "-" + layer.filename)
-							.resolve(layer.code + "-SAVE_VDYP7_" + tag + ".dat")
-							.toFile(),
+					configDir.resolve("execution-" + polygonId + "-" + layer.filename)
+							.resolve(layer.code + "-SAVE_VDYP7_" + tag + ".dat").toFile(),
 					StandardCharsets.UTF_8
 			);
 
 			assertThat(
-					content, equalTo(
+					content,
+					equalTo(
 							String.format(
-									"%-21s%d Execution %s %s %s %s-%s line %d\n", polygonId, 2025, executionId, layer,
-									tag, polygonId, layer.filename, 1
+									"%-21s%d Execution %s %s %s %s-%s line %d" + System.lineSeparator(), polygonId,
+									2025, executionId, layer, tag, polygonId, layer.filename, 1
 							)
 					)
 			);
@@ -481,9 +482,7 @@ class OracleRunnerTest {
 					"GROW", //
 					"VRII", "VRIL", "VRIP", "VRIS" //
 			}) {
-				assertSeparated(
-						executionId, polygonId, layer, tag
-				);
+				assertSeparated(executionId, polygonId, layer, tag);
 			}
 		}
 
