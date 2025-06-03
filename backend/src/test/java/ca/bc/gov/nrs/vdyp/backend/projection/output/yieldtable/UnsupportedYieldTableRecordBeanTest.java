@@ -25,16 +25,13 @@ public class UnsupportedYieldTableRecordBeanTest {
 
 	static Stream<String> properties() throws IntrospectionException {
 		return Arrays.stream(Introspector.getBeanInfo(UnsupportedYieldTableRecordBean.class).getPropertyDescriptors())
-				.map(pd -> pd.getName())
-				.filter(name -> !name.equals("class"));
+				.map(pd -> pd.getName()).filter(name -> !name.equals("class"));
 	}
 
 	static Stream<Arguments> propertiesWithExamples() throws IntrospectionException {
 		return Stream.of(
-				Arguments.of("mode", "Test"),
-				Arguments.of("cfsBiomassFoliage", (Double) 42.0),
-				Arguments.of("cfsBiomassBranch", (Double) 42.0),
-				Arguments.of("cfsBiomassBark", (Double) 42.0),
+				Arguments.of("mode", "Test"), Arguments.of("cfsBiomassFoliage", (Double) 42.0),
+				Arguments.of("cfsBiomassBranch", (Double) 42.0), Arguments.of("cfsBiomassBark", (Double) 42.0),
 				Arguments.of("cfsBiomassStem", (Double) 42.0),
 				Arguments.of("moFBiomassCuVolumeLessDecayWastageBreakage", (Double) 42.0),
 				Arguments.of("moFBiomassCuVolumeLessDecayWastage", (Double) 42.0),
@@ -43,23 +40,14 @@ public class UnsupportedYieldTableRecordBeanTest {
 				Arguments.of("moFBiomassWholeStemVolume", (Double) 42.0),
 				Arguments.of("cuVolumeLessDecayWastageBreakage", (Double) 42.0),
 				Arguments.of("cuVolumeLessDecayWastage", (Double) 42.0),
-				Arguments.of("cuVolumeLessDecay", (Double) 42.0),
-				Arguments.of("closeUtilizationVolume", (Double) 42.0),
-				Arguments.of("wholeStemVolume", (Double) 42.0),
-				Arguments.of("basalArea", (Double) 42.0),
-				Arguments.of("treesPerHectare", (Double) 42.0),
-				Arguments.of("diameter", (Double) 42.0),
-				Arguments.of("loreyHeight", (Double) 42.0),
-				Arguments.of("secondaryHeight", (Double) 42.0),
-				Arguments.of("dominantHeight", (Double) 42.0),
-				Arguments.of("siteIndex", (Double) 42.0),
-				Arguments.of("percentStockable", (Double) 42.0),
-				Arguments.of("totalAge", (Integer) 42),
-				Arguments.of("projectionYear", (Integer) 42),
-				Arguments.of("layerId", "Test"),
-				Arguments.of("mapId", "Test"),
-				Arguments.of("district", "Test"),
-				Arguments.of("featureId", (Long) 42l)
+				Arguments.of("cuVolumeLessDecay", (Double) 42.0), Arguments.of("closeUtilizationVolume", (Double) 42.0),
+				Arguments.of("wholeStemVolume", (Double) 42.0), Arguments.of("basalArea", (Double) 42.0),
+				Arguments.of("treesPerHectare", (Double) 42.0), Arguments.of("diameter", (Double) 42.0),
+				Arguments.of("loreyHeight", (Double) 42.0), Arguments.of("secondaryHeight", (Double) 42.0),
+				Arguments.of("dominantHeight", (Double) 42.0), Arguments.of("siteIndex", (Double) 42.0),
+				Arguments.of("percentStockable", (Double) 42.0), Arguments.of("totalAge", (Integer) 42),
+				Arguments.of("projectionYear", (Integer) 42), Arguments.of("layerId", "Test"),
+				Arguments.of("mapId", "Test"), Arguments.of("district", "Test"), Arguments.of("featureId", (Long) 42l)
 		);
 	}
 
@@ -73,17 +61,14 @@ public class UnsupportedYieldTableRecordBeanTest {
 
 	@ParameterizedTest
 	@MethodSource("propertiesWithExamples")
-	void testSetters(String property, Object example) throws IllegalAccessException, InvocationTargetException,
-			NoSuchMethodException, IntrospectionException {
+	void testSetters(String property, Object example)
+			throws IllegalAccessException, InvocationTargetException, NoSuchMethodException, IntrospectionException {
 		UnsupportedYieldTableRecordBean b = new UnsupportedYieldTableRecordBean();
 
-		final Method setter = UnsupportedYieldTableRecordBean.class.getMethod(
-				"set" + StringUtils.capitalise(property), example.getClass()
-		);
+		final Method setter = UnsupportedYieldTableRecordBean.class
+				.getMethod("set" + StringUtils.capitalise(property), example.getClass());
 		;
-		var ex = assertThrows(
-				InvocationTargetException.class, () -> setter.invoke(b, example)
-		);
+		var ex = assertThrows(InvocationTargetException.class, () -> setter.invoke(b, example));
 		assertThat(ex, causedBy(instanceOf(UnsupportedOperationException.class)));
 	}
 
