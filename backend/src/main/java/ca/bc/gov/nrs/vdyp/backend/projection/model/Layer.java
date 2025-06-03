@@ -655,7 +655,7 @@ public class Layer implements Comparable<Layer> {
 						estimatedCurve = s.getSiteCurve();
 					} else {
 						estimatedCurve = SiteTool
-								.getSICurve(SiteTool.getSpeciesShortName(VdypMethods.speciesIndex(estimatedSiteIndexSpeciesCode)),
+								.getSICurve(getEstimatedSiteIndexSpecies(),
                                         getPolygon().getIsCoastal());
 					}
 
