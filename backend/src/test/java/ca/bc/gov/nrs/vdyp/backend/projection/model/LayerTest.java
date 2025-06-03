@@ -418,8 +418,7 @@ public class LayerTest {
     @Test
     void testDetermineLayerAgeAtYear() throws PolygonValidationException
     {
-        //polygon = new Polygon.Builder().referenceYear(2020).build();
-
+        //polygon reference year defaults to 0 instead of null
         layer = new Layer.Builder()
                 .layerId("TEST")
                 .polygon(polygon)
@@ -435,14 +434,14 @@ public class LayerTest {
         assertThrows(IllegalArgumentException.class,()-> layer.determineLayerAgeAtYear(2501));
 
         Double age = layer.determineLayerAgeAtYear(2499);
-        assertNull(age);// NO SP0
+        assertNull(age); // need to complete definition before you get values
 
         layer.doCompleteDefinition();
         layer.doBuildSiteSpecies();
         layer.doCompleteSiteSpeciesSiteIndexInfo();
 
         age = layer.determineLayerAgeAtYear(2499);
-        assertNull(age); // no reference Year for the polygon
+        assertThat(age, is(2599.0));// Should reference year oin polygon default to null instead of 0?
 
         polygon = new Polygon.Builder().referenceYear(2020).build();
 
