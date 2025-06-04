@@ -268,12 +268,14 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 
 			polygon.doCompleteDefinition(context);
 
-		} catch (Exception e) {
-			if (! (e instanceof PolygonValidationException)) {
-				var message = new ValidationMessage(ValidationMessageKind.GENERIC, e.getMessage());
-				throw new PolygonValidationException(message);
-			}
-		}
+        } catch (Exception e) {
+            if (!(e instanceof PolygonValidationException)) {
+                var message = new ValidationMessage(ValidationMessageKind.GENERIC, e.getMessage());
+                throw new PolygonValidationException(message);
+            } else {
+                throw e;
+            }
+        }
 
 		logger.info("Successfully read polygon with feature id \"{}\"", polygon.getFeatureId());
 
