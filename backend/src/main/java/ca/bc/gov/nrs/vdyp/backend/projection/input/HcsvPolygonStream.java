@@ -72,7 +72,7 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 	}
 
 	@Override
-	public Polygon getNextPolygon() throws PolygonValidationException {
+	public Polygon getNextPolygon() throws PolygonValidationException,IllegalStateException {
 
 		if (nextPolygonRecord == null) {
 			throw new IllegalStateException("Attempt to read past end of polygon input stream");
@@ -92,13 +92,13 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 		}
 
 		if (validationExceptionSeenDuringBuild != null) {
-			if (validationMessagesSeenDuringRead.size() > 0) {
+			if (!validationMessagesSeenDuringRead.isEmpty()) {
 				validationMessagesSeenDuringRead.addAll(validationExceptionSeenDuringBuild.getValidationMessages());
 				throw new PolygonValidationException(validationMessagesSeenDuringRead);
 			} else {
 				throw validationExceptionSeenDuringBuild;
 			}
-		} else if (validationMessagesSeenDuringRead.size() > 0) {
+		} else if (!validationMessagesSeenDuringRead.isEmpty()) {
 			throw new PolygonValidationException(validationMessagesSeenDuringRead);
 		}
 

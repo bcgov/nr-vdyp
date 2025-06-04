@@ -3,39 +3,58 @@ package ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations;
 import java.text.MessageFormat;
 
 public enum Vdyp7LayerTypeCode {
-	PRIMARY("P", ProjectionTypeCode.PRIMARY), //
-	VETERAN("V", ProjectionTypeCode.VETERAN), //
-	REGEN("Y", ProjectionTypeCode.REGENERATION), //
-	RESIDUAL("R", ProjectionTypeCode.RESIDUAL), //
-	DEAD("D", ProjectionTypeCode.DEAD);
+	PRIMARY("P"), //
+	VETERAN("V"), //
+	REGEN("Y"), //
+	RESIDUAL("R"), //
+	DEAD("D");
 
 	public final String code;
-	public final ProjectionTypeCode projectionType;
 
-	Vdyp7LayerTypeCode(String code, ProjectionTypeCode projectionType) {
+	Vdyp7LayerTypeCode(String code) {
 		this.code = code;
-		this.projectionType = projectionType;
 	}
 
-	/**
-	 * Convert from a ProjectionType to a Vdyp7LayerTypeCode.
-	 *
-	 * @param projectionType the projection type to be mapped
-	 * @return the equivalent SpecialLayerType
-	 * @see ProjectionType
-	 */
-	public Vdyp7LayerTypeCode fromProjectionType(ProjectionTypeCode projectionType) {
+    /**
+     * Convert from a String code to a Vdyp7LayerTypeCode.
+     *
+     * @param vdypCode the projection type to be mapped
+     * @return the equivalent Vdyp7LayerTypeCode
+     */
+    public static Vdyp7LayerTypeCode fromCode(String vdypCode) {
+        for (var e : Vdyp7LayerTypeCode.values()) {
+            if (e.code.equals(vdypCode)) {
+                return e;
+            }
+        }
 
-		for (var e : Vdyp7LayerTypeCode.values()) {
-			if (e.projectionType.equals(projectionType)) {
-				return e;
-			}
-		}
+        throw new IllegalArgumentException(
+                MessageFormat.format("Code {0} does not have an equivalent Vdyp7LayerTypeCode", vdypCode)
+        );
+    }
 
-		throw new IllegalStateException(
-				MessageFormat.format("ProjectionType {0} does not have an equivalent SpecialLayerType", projectionType)
-		);
-	}
+    /**
+     * Convert from a ProjectionType to a Vdyp7LayerTypeCode.
+     *
+     * @param projectionType the projection type to be mapped
+     * @return the equivalent SpecialLayerType
+     * @see ProjectionTypeCode
+     */
+    public static Vdyp7LayerTypeCode fromProjectionType(ProjectionTypeCode projectionType) {
+        for (var e : ProjectionTypeCode.values()) {
+            if (e.equals(projectionType)) {
+                for (var c : Vdyp7LayerTypeCode.values()) {
+                    if (c.code.equals(e.specialLayerTypeCodeText)) {
+                        return c;
+                    }
+                }
+            }
+        }
+
+        throw new IllegalStateException(
+                MessageFormat.format("ProjectionType {0} does not have an equivalent SpecialLayerType", projectionType)
+        );
+    }
 
 	/**
 	 * Return <code>true</code> iff <code>candidate</code> is the text of the <code>code</code> of a SpecialLayerType.
