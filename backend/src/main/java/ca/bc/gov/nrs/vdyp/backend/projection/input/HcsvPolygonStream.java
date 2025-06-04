@@ -201,26 +201,27 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 
 			var layers = new HashMap<String /* layer id */, Layer>();
 
-			polygon = new Polygon.Builder() //
-					.becZone(bec.getText()) //
-					.cfsEcoZone(nextPolygonRecord.getCfsEcoZoneCode()) //
-					.isCoastal(bec.getSpeciesRegion() == SpeciesRegion.COAST) //
-					.district(null /* not available in HCSV input */) //
-					.doAllowProjection(true) //
-					.doAllowProjectionOfType(initializeProjectionMap(true)) //
-					.featureId(nextPolygonRecord.getFeatureId()) //
-					.inventoryStandard(InventoryStandard.getFromCode(nextPolygonRecord.getInventoryStandardCode())) //
-					.mapSheet(nextPolygonRecord.getMapId()) //
-					.nonProductiveDescriptor(nextPolygonRecord.getNonProductiveDescriptorCode())
-					.nonVegetationTypes(nonVegetationMap) //
-					.otherVegetationTypes(otherVegetationMap) //
-					.percentStockable(nextPolygonRecord.getPercentStockable()) //
-					.percentStockableDead(nextPolygonRecord.getPercentDead()) //
-					.polygonNumber(nextPolygonRecord.getPolygonNumber()) //
-					.referenceYear(nextPolygonRecord.getReferenceYear()) //
-					.reportingInfo(polygonReportingInfo) //
-					.layers(layers) //
-					.build();
+            polygon = new Polygon.Builder() //
+                    .becZone(bec.getText()) //
+                    .cfsEcoZone(nextPolygonRecord.getCfsEcoZoneCode()) //
+                    .isCoastal(bec.getSpeciesRegion() == SpeciesRegion.COAST) //
+                    .district(null /* not available in HCSV input */) //
+                    .doAllowProjection(true) //
+                    .doAllowProjectionOfType(initializeProjectionMap(true)) //
+                    .featureId(nextPolygonRecord.getFeatureId()) //
+                    .inventoryStandard(InventoryStandard.getFromCode(nextPolygonRecord.getInventoryStandardCode())) //
+                    .mapSheet(nextPolygonRecord.getMapId()) //
+                    .nonProductiveDescriptor(nextPolygonRecord.getNonProductiveDescriptorCode())
+                    .nonVegetationTypes(nonVegetationMap) //
+                    .otherVegetationTypes(otherVegetationMap) //
+                    .percentStockable(nextPolygonRecord.getPercentStockable()) //
+                    .percentStockableDead(nextPolygonRecord.getPercentDead()) //
+                    .polygonNumber(nextPolygonRecord.getPolygonNumber()) //
+                    .referenceYear(nextPolygonRecord.getReferenceYear()) //
+                    .yearOfDeath(nextPolygonRecord.getYearOfDeath()) //
+                    .reportingInfo(polygonReportingInfo) //
+                    .layers(layers) //
+                    .build();
 
 			int layerOrderNumber = 0;
 			while (nextLayerRecord != null && nextLayerRecord.getFeatureId() == polygonFeatureId) {
