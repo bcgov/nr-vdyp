@@ -2,7 +2,6 @@ package ca.bc.gov.nrs.vdyp.test_oracle;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.CopyOption;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -11,13 +10,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Deque;
-import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -454,69 +453,28 @@ public class OracleRunner {
 	}
 
 	public void separateExecutions(Path configDir) throws IOException {
-		final List<Execution> executions = new ArrayList<>();
 
-		try (var dirStream = Files.newDirectoryStream(configDir, "execution-*")) {
-			for (var executionDir : dirStream) {
-				final Map<String, Integer> lineMap = new HashMap<>();
-				Deque<String> polygonIds = new LinkedList<>();
-				try (var fileStream = Files.newDirectoryStream(executionDir, "?-SAVE_*")) {
-					for (var file : fileStream) {
-						int lines = 0;
-
-						try (var lineIt = FileUtils.lineIterator(file.toFile())) {
-
-							while (lineIt.hasNext()) {
-								String line = lineIt.next();
-								String polygonId = line.substring(0, 21).trim();
-								// We want to know the order that we first see the IDs so we can take the last
-								// one to first appear as the one that was added in this execution.
-								if (!polygonIds.contains(polygonId)) {
-									polygonIds.addLast(polygonId);
-								}
-								lines++;
-							}
-						}
-						if (lines > 0) {
-							lineMap.put(file.getFileName().toString(), lines);
-						}
-					}
-				}
-				if (!lineMap.isEmpty()) {
-					executions.add(new Execution(polygonIds.getLast(), executionDir, lineMap));
-				}
-			}
-		}
+		final List<Execution> executions = findExecutions(configDir);
 
 		// We want the executions in order of number of lines
 		Comparator<Execution> comp = Utils.compareUsing(e -> e.lines.values().stream().mapToInt(x -> x).sum());
 		executions.sort(comp);
 
+		processExecutions(executions);
+	}
+
+	private void processExecutions(final List<Execution> executions) throws IOException {
 		Execution previous = null;
 		for (var execution : executions) {
 			Layer layer = null;
 			for (var entry : execution.lines.entrySet()) {
-				int previousLines = 0;
-				if (null != previous) {
-					previousLines = previous.lines.getOrDefault(entry.getKey(), 0);
-				}
-				Path file = execution.dir.resolve(entry.getKey());
-				if (!removeInitialLines(file, previousLines)) {
-					Layer currentLayer = Layer.byCode(file.getFileName().toString().substring(0, 1));
-					if (layer == null) {
-						layer = currentLayer;
-					} else if (layer != currentLayer) {
-						// During an execution, only the files for a single layer should have been
-						// appended to and removeInitialLines should have removed all files which
-						// did not change
-						throw new IllegalStateException("Could not separate layers in " + execution.dir);
-					}
-				}
+				layer = processExecutionFile(previous, execution, layer, entry);
 			}
 
 			if (layer == null) {
 				// Nothing happened in this execution
 				Files.delete(execution.dir);
+				continue;
 			}
 
 			Files.move(
@@ -524,6 +482,69 @@ public class OracleRunner {
 					execution.dir.resolveSibling("execution-" + execution.polygonId + "-" + layer.filename)
 			);
 			previous = execution;
+		}
+	}
+
+	private Layer
+			processExecutionFile(Execution previous, Execution execution, Layer layer, Entry<String, Integer> entry)
+					throws IOException {
+		int previousLines = 0;
+		if (null != previous) {
+			previousLines = previous.lines.getOrDefault(entry.getKey(), 0);
+		}
+		Path file = execution.dir.resolve(entry.getKey());
+		if (!removeInitialLines(file, previousLines)) {
+			Layer currentLayer = Layer.byCode(file.getFileName().toString().substring(0, 1));
+			if (layer == null) {
+				layer = currentLayer;
+			} else if (layer != currentLayer) {
+				// During an execution, only the files for a single layer should have been
+				// appended to and removeInitialLines should have removed all files which
+				// did not change
+				throw new IllegalStateException("Could not separate layers in " + execution.dir);
+			}
+		}
+		return layer;
+	}
+
+	private List<Execution> findExecutions(Path configDir) throws IOException {
+		final List<Execution> executions = new ArrayList<>();
+
+		try (var dirStream = Files.newDirectoryStream(configDir, "execution-*")) {
+			for (var executionDir : dirStream) {
+				analyzeExecution(executions, executionDir);
+			}
+		}
+		return executions;
+	}
+
+	private void analyzeExecution(final List<Execution> executions, Path executionDir) throws IOException {
+		final Map<String, Integer> lineMap = new HashMap<>();
+		Deque<String> polygonIds = new LinkedList<>();
+		try (var fileStream = Files.newDirectoryStream(executionDir, "?-SAVE_*")) {
+			for (var file : fileStream) {
+				int lines = 0;
+
+				try (var lineIt = FileUtils.lineIterator(file.toFile())) {
+
+					while (lineIt.hasNext()) {
+						String line = lineIt.next();
+						String polygonId = line.substring(0, 21).trim();
+						// We want to know the order that we first see the IDs so we can take the last
+						// one to first appear as the one that was added in this execution.
+						if (!polygonIds.contains(polygonId)) {
+							polygonIds.addLast(polygonId);
+						}
+						lines++;
+					}
+				}
+				if (lines > 0) {
+					lineMap.put(file.getFileName().toString(), lines);
+				}
+			}
+		}
+		if (!lineMap.isEmpty()) {
+			executions.add(new Execution(polygonIds.getLast(), executionDir, lineMap));
 		}
 	}
 }
