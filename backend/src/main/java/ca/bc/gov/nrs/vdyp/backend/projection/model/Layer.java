@@ -655,8 +655,7 @@ public class Layer implements Comparable<Layer> {
 						estimatedCurve = s.getSiteCurve();
 					} else {
 						estimatedCurve = SiteTool
-								.getSICurve(getEstimatedSiteIndexSpecies(),
-                                        getPolygon().getIsCoastal());
+								.getSICurve(getEstimatedSiteIndexSpecies(), getPolygon().getIsCoastal());
 					}
 
 					logger.debug(
@@ -1429,7 +1428,7 @@ public class Layer implements Comparable<Layer> {
 
 	@Override
 	public int compareTo(Layer that) {
-        int polygonValue = this.polygon.compareTo(that.polygon);
+		int polygonValue = this.polygon.compareTo(that.polygon);
 		if (polygonValue == 0) {
 			return this.layerId.compareTo(that.layerId);
 		} else {

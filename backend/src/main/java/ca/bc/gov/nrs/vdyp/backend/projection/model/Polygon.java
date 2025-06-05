@@ -782,17 +782,17 @@ public class Polygon implements Comparable<Polygon> {
 			if (absDifference <= 1.0) {
 
 				/*
-				 * The stand has a percentage that needs adjusting. Determine the SP0 and SP64 to which the
-				 * adjustment is to be performed.
+				 * The stand has a percentage that needs adjusting. Determine the SP0 and SP64 to which the adjustment
+				 * is to be performed.
 				 *
 				 * If the stand is less than 100%, add the difference to the leading sp0.
 				 *
-				 * If the stand is more than 100%, subtract the difference from the last sp0. Ensure we have
-				 * selected a species with a species percent at least as great as percent we are subtracting -
-				 * negative percentages are not allowed.
+				 * If the stand is more than 100%, subtract the difference from the last sp0. Ensure we have selected a
+				 * species with a species percent at least as great as percent we are subtracting - negative percentages
+				 * are not allowed.
 				 *
-				 * Finally, if the adjusted sp64 is a duplicate, always increase the first duplicate and reduce the
-				 * last duplicate.
+				 * Finally, if the adjusted sp64 is a duplicate, always increase the first duplicate and reduce the last
+				 * duplicate.
 				 */
 
 				Species targetSp0, targetSp64;
@@ -805,8 +805,7 @@ public class Polygon implements Comparable<Polygon> {
 				} else {
 					Stand targetStand = null;
 					for (int i = layer.getSp0sByPercent().size() - 1; i >= 0; i--) {
-						if (layer.getSp0sByPercent().get(i).getSpeciesGroup()
-								.getSpeciesPercent() >= absDifference) {
+						if (layer.getSp0sByPercent().get(i).getSpeciesGroup().getSpeciesPercent() >= absDifference) {
 							targetStand = layer.getSp0sByPercent().get(i);
 							break;
 						}
@@ -819,8 +818,7 @@ public class Polygon implements Comparable<Polygon> {
 					);
 
 					targetSp0 = targetStand.getSpeciesGroup();
-					targetSp64 = targetStand.getSpeciesByPercent()
-							.get(targetStand.getSpeciesByPercent().size() - 1);
+					targetSp64 = targetStand.getSpeciesByPercent().get(targetStand.getSpeciesByPercent().size() - 1);
 					duplicatedSpeciesIndex = targetSp64.getNDuplicates();
 				}
 
@@ -834,12 +832,10 @@ public class Polygon implements Comparable<Polygon> {
 			} else {
 				disableProjectionsOfType(layer.determineProjectionType(this));
 				return Optional.of(
-						new PolygonMessage.Builder().layer(layer)
-								.details(
-										ReturnCode.ERROR_PERCENTNOT100, MessageSeverityCode.ERROR,
-										PolygonMessageKind.LAYER_PERCENTAGES_TOO_INACCURATE,
-										Double.valueOf(sumStandPercentages)
-								).build()
+						new PolygonMessage.Builder().layer(layer).details(
+								ReturnCode.ERROR_PERCENTNOT100, MessageSeverityCode.ERROR,
+								PolygonMessageKind.LAYER_PERCENTAGES_TOO_INACCURATE, Double.valueOf(sumStandPercentages)
+						).build()
 				);
 			}
 		}
@@ -1295,12 +1291,15 @@ public class Polygon implements Comparable<Polygon> {
 		Layer residualLayer = getResidualLayer();
 
 		if (polygonPercentStockable == null) {
-			polygonPercentStockable = 85.0; /* where does this come from??? PM 05-25: Seems like default max poly stockability */
+			polygonPercentStockable = 85.0; /*
+											 * where does this come from??? PM 05-25: Seems like default max poly
+											 * stockability
+											 */
 		}
 
 		if (deadLayer != null) {
 			Double m = NullMath
-					.max(getPercentStockableDead(), deadLayer.getPercentStockable(), (a,b) -> Math.max(a,b), null);
+					.max(getPercentStockableDead(), deadLayer.getPercentStockable(), (a, b) -> Math.max(a, b), null);
 			if (m != null && getPercentStockable() != null) {
 				deadPercentStockable = getPercentStockable() * m / 100.0;
 			}
@@ -1313,7 +1312,7 @@ public class Polygon implements Comparable<Polygon> {
 			regenerationPercentStockable = deadPercentStockable;
 		} else if (regenerationLayer != null) {
 			Double m = NullMath.max(
-					getPercentStockableDead(), regenerationLayer.getPercentStockable(), (a,b) -> Math.max(a,b), null
+					getPercentStockableDead(), regenerationLayer.getPercentStockable(), (a, b) -> Math.max(a, b), null
 			);
 			if (m != null && getPercentStockable() != null) {
 				regenerationPercentStockable = getPercentStockable() * m / 100.0;
