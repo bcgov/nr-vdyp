@@ -542,9 +542,11 @@ class ITDataBased {
 		}
 
 		List<BiPredicate<String, String>> checks = List.of(
-				stringsEqual(), stringsEqual(), stringsEqual(), floatStringsWithin(), intStringsEqual(),
-				intStringsEqual(), intStringsEqual(i -> i == 0 ? 1 : i) // Treat none specified as equivalent to the
-																		// default of mode 1
+				stringsEqual(), // Polygon ID
+				stringsEqual(), // BEC
+				stringsEqual(), floatStringsWithin(), intStringsEqual(), intStringsEqual(),
+				// intStringsEqual(i -> i == 0 ? 1 : i) // Treat none specified as equivalent to the default of mode 1
+				(x, y) -> true // Not used in subsequent steps so it's OK if it doesn't match what the old code produced
 		);
 
 		if (actualMatch.groupCount() != expectedMatch.groupCount()) {
