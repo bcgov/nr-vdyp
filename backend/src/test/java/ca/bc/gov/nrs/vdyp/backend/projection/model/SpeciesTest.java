@@ -31,6 +31,7 @@ class SpeciesTest {
 		var polygon = new Polygon.Builder().build();
 		var layer = new Layer.Builder().polygon(polygon).layerId("Test").build();
 		var stand = new Stand.Builder().sp0Code("P").layer(layer).build();
+		var speciesBuilder =
 		assertThrows(IllegalStateException.class, () -> new Species.Builder().speciesCode("PL").build());
 		assertThrows(IllegalStateException.class, () -> new Species.Builder().stand(stand).build());
 		assertThrows(IllegalStateException.class, () -> new Species.Builder().stand(stand).speciesCode("PL").build());

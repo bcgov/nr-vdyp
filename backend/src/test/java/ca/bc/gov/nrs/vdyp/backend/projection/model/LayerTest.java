@@ -165,7 +165,7 @@ public class LayerTest {
 	@Test
 	void testDuplicateStand() {
 		layer = buildLayer(Map.of());
-		Stand stand = addStand(layer, "PL");
+		addStand(layer, "PL");
 		assertThrows(IllegalStateException.class, () -> addStand(layer, "PL"));
 	}
 
@@ -261,7 +261,7 @@ public class LayerTest {
 			Map<String, Object> params = Map.of("sp64", "PL", "perc", 100.0, "age", 100.0, "h", 50.0);
 
 			Stand stand = addStand(layer, "PL");
-			Species sp64 = addSpecies(layer, stand, params);
+			addSpecies(layer, stand, params);
 
 			layer.doCompleteDefinition();
 			layer.doBuildSiteSpecies();
@@ -298,7 +298,7 @@ public class LayerTest {
 			Map<String, Object> params = Map.of("sp64", "PL", "perc", 100.0, "age", 30.0, "h", 9.0);
 
 			Stand stand = addStand(layer, "PL");
-			Species sp64 = addSpecies(layer, stand, params);
+			addSpecies(layer, stand, params);
 
 			layer.doCompleteDefinition();
 			layer.doBuildSiteSpecies();
@@ -315,7 +315,7 @@ public class LayerTest {
 			Map<String, Object> params = Map.of("sp64", "PL", "perc", 100.0, "age", 100.0, "h", 50.0);
 
 			Stand stand = addStand(layer, "PL");
-			Species sp64 = addSpecies(layer, stand, params);
+			addSpecies(layer, stand, params);
 
 			layer.doCompleteDefinition();
 			layer.doBuildSiteSpecies();
@@ -338,7 +338,7 @@ public class LayerTest {
 		Map<String, Object> params = Map.of("sp64", "PL", "perc", 100.0, "age", 100.0, "h", 50.0);
 
 		Stand stand = addStand(layer, "PL");
-		Species sp64 = addSpecies(layer, stand, params);
+		addSpecies(layer, stand, params);
 
 		assertThat(layer.doesHeightExceed(100.0), is(false));
 		assertThat(layer.doesHeightExceed(50.0), is(true));
@@ -392,7 +392,7 @@ public class LayerTest {
 		Map<String, Object> params = Map.of("sp64", "PL", "perc", 100.0, "age", 100.0, "h", 50.0);
 
 		Stand stand = addStand(layer, "PL");
-		Species sp64 = addSpecies(layer, stand, params);
+		addSpecies(layer, stand, params);
 
 		assertThrows(IllegalArgumentException.class, () -> layer.determineLayerAgeAtYear(null));
 		assertThrows(IllegalArgumentException.class, () -> layer.determineLayerAgeAtYear(1399));
@@ -412,7 +412,7 @@ public class LayerTest {
 
 		layer = new Layer.Builder().layerId("TEST").polygon(polygon).doSuppressPerHAYields(false).build();
 		stand = addStand(layer, "PL");
-		sp64 = addSpecies(layer, stand, params);
+		addSpecies(layer, stand, params);
 
 		layer.doCompleteDefinition();
 		layer.doBuildSiteSpecies();
@@ -434,8 +434,8 @@ public class LayerTest {
 
 		Stand stand = addStand(layer, "FD");
 		Species sp64 = addSpecies(layer, stand, params);
-		Species sp642 = addSpecies(layer, stand, params2);
-		Species sp643 = addSpecies(layer, stand, params3);
+		addSpecies(layer, stand, params2);
+		addSpecies(layer, stand, params3);
 
 		layer.doBuildSiteSpecies();
 		layer.doCompleteSiteSpeciesSiteIndexInfo();

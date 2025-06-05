@@ -95,10 +95,10 @@ public class ParametersTest {
 				new ByteArrayInputStream(json)
 		);
 
-		assertTrue(op.equals(op));
-		assertFalse(op.equals(null));
-		assertFalse(op.equals(provider));
-		assertTrue(op.equals(np));
+		assertEquals(op, op);
+		assertNotEquals(null, op);
+        assertNotEquals(op, provider);
+        assertEquals(op, np);
 
 		assertEquals(op.hashCode(), np.hashCode());
 		assertEquals(op.toString(), np.toString());
@@ -108,7 +108,7 @@ public class ParametersTest {
 
 		np.setProgressFrequency(FrequencyKind.POLYGON.getValue());
 
-		assertFalse(op.equals(np));
+        assertNotEquals(op, np);
 	}
 
 	@Test
@@ -128,13 +128,13 @@ public class ParametersTest {
 
 		ProgressFrequency pf1 = new ProgressFrequency(12);
 		ProgressFrequency pf2 = new ProgressFrequency(ProgressFrequency.FrequencyKind.MAPSHEET);
-		assertTrue(pf1.equals(pf1));
+        assertEquals(pf1, pf1);
 		assertEquals(Integer.valueOf(12).hashCode(), pf1.hashCode());
 		assertEquals(ProgressFrequency.FrequencyKind.MAPSHEET.hashCode(), pf2.hashCode());
 		assertEquals(17, new ProgressFrequency().hashCode());
 
-		assertTrue(pf1.toString().indexOf("12") != -1);
-		assertTrue(pf2.toString().indexOf("mapsheet") != -1);
+		assertTrue(pf1.toString().contains("12"));
+		assertTrue(pf2.toString().contains("mapsheet"));
 
 		Parameters p1 = new Parameters();
 		p1.progressFrequency(12);
@@ -165,13 +165,13 @@ public class ParametersTest {
 		var up2 = new UtilizationParameter().speciesName("C").utilizationClass(UtilizationClassSet._12_5);
 		var up3 = new UtilizationParameter().speciesName("C").utilizationClass(UtilizationClassSet._22_5);
 
-		assertTrue(up1.equals(up1));
-		assertTrue(up1.hashCode() == up1.hashCode());
-		assertFalse(up2.equals(up3));
-		assertFalse(up2.equals("C"));
+        assertEquals(up1, up1);
+        assertEquals(up1.hashCode(), up1.hashCode());
+        assertNotEquals(up2, up3);
+        assertNotEquals("C", up2);
 
-		assertTrue(up1.toString().indexOf("speciesName: AL") != -1);
-		assertTrue(up1.toString().indexOf("utilizationClass: 12.5") != -1);
+		assertTrue(up1.toString().contains("speciesName: AL"));
+		assertTrue(up1.toString().contains("utilizationClass: 12.5"));
 	}
 
 	@Test

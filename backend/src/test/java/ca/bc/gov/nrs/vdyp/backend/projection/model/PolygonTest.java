@@ -471,27 +471,27 @@ public class PolygonTest {
 				}
 			}
 
-			var layer = layerBuilder.build();
+			var myLayer = layerBuilder.build();
 
-			setupBaseTestSpecies(layer);
-			polygon.getLayers().put(layer.getLayerId(), layer);
+			setupBaseTestSpecies(myLayer);
+			polygon.getLayers().put(myLayer.getLayerId(), myLayer);
 
 			if (code == ProjectionTypeCode.VETERAN && (Boolean) params.getOrDefault("force", false)) {
-				polygon.setTargetedVeteranLayer(layer);
+				polygon.setTargetedVeteranLayer(myLayer);
 			}
 
-			if ("1".equals(layer.getRankCode())) {
-				polygon.setRank1Layer(layer);
+			if ("1".equals(myLayer.getRankCode())) {
+				polygon.setRank1Layer(myLayer);
 			}
 			switch (code) {
 			case DEAD:
-				polygon.assignDeadLayer(layer, 1950, layer.getPercentStockable());
+				polygon.assignDeadLayer(myLayer, 1950, myLayer.getPercentStockable());
 				break;
 			case RESIDUAL:
-				polygon.setResidualLayer(layer);
+				polygon.setResidualLayer(myLayer);
 				break;
 			case REGENERATION:
-				polygon.setRegenerationLayer(layer);
+				polygon.setRegenerationLayer(myLayer);
 				break;
 			}
 		}
