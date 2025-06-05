@@ -10,11 +10,6 @@ const meta: Meta<typeof TopProjectYear> = {
       description: 'The title displayed in the component.',
       defaultValue: 'Projects',
     },
-    year: {
-      control: 'text',
-      description: 'The year displayed in the component.',
-      defaultValue: '2024/2025',
-    },
   },
   tags: ['autodocs'],
 }
@@ -26,6 +21,5 @@ type Story = StoryObj<typeof TopProjectYear>
 export const Default: Story = {
   args: {
     title: 'Projects',
-    year: '2024/2025',
   },
 }
