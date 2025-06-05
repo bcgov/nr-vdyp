@@ -517,17 +517,13 @@ public class PolygonTest {
         }
 
         @BeforeEach
-        void setup() {
-            try {
+        void setup() throws AbstractProjectionRequestException {
                 history = new History.Builder().build();
                 params = new Parameters().ageStart(0).ageEnd(100);
                 context = new ProjectionContext(
                         ProjectionRequestKind.HCSV,
                         "Test",
                         params, false);
-            } catch (AbstractProjectionRequestException e) {
-                // No action
-            }
         }
 
         void setupBaseTestSpecies(Layer layer)
@@ -975,7 +971,7 @@ public class PolygonTest {
         }
 
         @Nested
-        class SelectPrimaryAdnVeteranLayers{
+        class SelectPrimaryAndVeteranLayers{
             @BeforeEach
             void setup() {
                 try {
