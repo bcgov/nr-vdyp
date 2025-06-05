@@ -2,8 +2,11 @@ package ca.bc.gov.nrs.vdyp.backend.projection;
 
 import static ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessageKind.*;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.contains;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
@@ -215,14 +218,19 @@ class ParameterValidationTest {
 
 		Parameters p = TestHelper.buildValidParametersObject()
 				.ageIncrement(ValidatedParameters.DEFAULT.getMaxAgeIncrement());
-		new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
+        ProjectionContext context = new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
+
+        assertThat(context.getParams().getAgeIncrement(), is(ValidatedParameters.DEFAULT.getMaxAgeIncrement()));
 	}
 
 	@Test
 	void testValidAgeStartAndEndParameterSupplied() throws WebApplicationException, AbstractProjectionRequestException {
 
 		Parameters p = TestHelper.buildValidParametersObject();
-		new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
+        ProjectionContext context = new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
+
+        assertThat(context.getParams().getAgeStart(), is(1));
+        assertThat(context.getParams().getAgeEnd(), is(400));
 	}
 
 	@Test
@@ -230,7 +238,10 @@ class ParameterValidationTest {
 			throws WebApplicationException, AbstractProjectionRequestException {
 
 		Parameters p = new Parameters().yearStart(1600).yearEnd(2100);
-		new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
+        ProjectionContext context =new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
+
+        assertThat(context.getParams().getYearStart(), is(1600));
+        assertThat(context.getParams().getYearEnd(), is(2100));
 	}
 
 	@Test
@@ -253,7 +264,8 @@ class ParameterValidationTest {
 		Parameters p = TestHelper.buildValidParametersObject();
 		p.setOutputFormat(Parameters.OutputFormat.CSV_YIELD_TABLE);
 
-		new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
+		ProjectionContext context = new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
+        assertThat(context.getParams().getOutputFormat(), is(OutputFormat.CSV_YIELD_TABLE));
 	}
 
 	@Test
@@ -277,11 +289,12 @@ class ParameterValidationTest {
 		Parameters p = TestHelper.buildValidParametersObject();
 		p.setCombineAgeYearRange(Parameters.AgeYearRangeCombinationKind.INTERSECT);
 
-		new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
+		ProjectionContext context = new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
+        assertThat(context.getParams().getCombineAgeYearRange(), is(AgeYearRangeCombinationKind.INTERSECT));
 	}
 
 	@Test
-	void testInvalidProcessFrequencySupplied() throws WebApplicationException, AbstractProjectionRequestException {
+	void testInvalidProgressFrequencySupplied() throws WebApplicationException, AbstractProjectionRequestException {
 
 		Parameters p = TestHelper.buildValidParametersObject();
 		p.setProgressFrequency("bad option");
@@ -295,22 +308,23 @@ class ParameterValidationTest {
 	}
 
 	@Test
-	void testValidProcessFrequencySupplied1() throws WebApplicationException, AbstractProjectionRequestException {
+	void testValidProgressFrequencySupplied1() throws WebApplicationException, AbstractProjectionRequestException {
 
 		Parameters p = TestHelper.buildValidParametersObject();
 		p.setProgressFrequency(ProgressFrequency.FrequencyKind.MAPSHEET);
 
-		new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
-
+		ProjectionContext context = new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
+        assertThat(context.getParams().getProgressFrequency(), is(FrequencyKind.MAPSHEET));
 	}
 
 	@Test
-	void testValidProcessFrequencySupplied2() throws WebApplicationException, AbstractProjectionRequestException {
+	void testValidProgressFrequencySupplied2() throws WebApplicationException, AbstractProjectionRequestException {
 
 		Parameters p = TestHelper.buildValidParametersObject();
 		p.setProgressFrequency(100);
 
-		new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
+        ProjectionContext context = new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
+        assertThat(context.getParams().getProgressFrequency(), is(100));
 
 	}
 
@@ -412,8 +426,8 @@ class ParameterValidationTest {
 		var up = new UtilizationParameter().speciesName("D").utilizationClass(UtilizationClassSet._12_5);
 		p.addUtilsItem(up);
 
-		new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
-
+        ProjectionContext context = new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
+        assertThat(context.getParams().getUtils().get(SP0Name.D), is(UtilizationClassSet._12_5));
 	}
 
 	@Test
@@ -436,7 +450,8 @@ class ParameterValidationTest {
 		Parameters p = TestHelper.buildValidParametersObject();
 		p.yearForcedIntoYieldTable(2020);
 
-		new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
+		ProjectionContext context = new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
+        assertThat(context.getParams().getYearForcedIntoYieldTable(), is(2020));
 	}
 
 	@Test
