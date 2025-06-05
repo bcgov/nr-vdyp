@@ -196,9 +196,8 @@ public class PolygonTest {
 			assertThat(layer.getSp0sAsSupplied(), iterableWithSize(1));
 			assertThat(layer.getSp0sAsSupplied().get(0), hasProperty("speciesByPercent", iterableWithSize(1)));
 			assertThat(
-					layer.getSp0sAsSupplied().get(0).getSpeciesByPercent().get(0), hasProperty(
-							"speciesPercent", closeTo(100d, 0.1d)
-					)
+					layer.getSp0sAsSupplied().get(0).getSpeciesByPercent().get(0),
+					hasProperty("speciesPercent", closeTo(100d, 0.1d))
 			);
 
 		}
@@ -244,9 +243,8 @@ public class PolygonTest {
 			assertThat(layer.getSp0sAsSupplied(), iterableWithSize(1));
 			assertThat(layer.getSp0sAsSupplied().get(0), hasProperty("speciesByPercent", iterableWithSize(1)));
 			assertThat(
-					layer.getSp0sAsSupplied().get(0).getSpeciesByPercent().get(0), hasProperty(
-							"speciesPercent", closeTo(100d, 0.1d)
-					)
+					layer.getSp0sAsSupplied().get(0).getSpeciesByPercent().get(0),
+					hasProperty("speciesPercent", closeTo(100d, 0.1d))
 			);
 
 		}
@@ -292,9 +290,8 @@ public class PolygonTest {
 			assertThat(layer.getSp0sAsSupplied(), iterableWithSize(1));
 			assertThat(layer.getSp0sAsSupplied().get(0), hasProperty("speciesByPercent", iterableWithSize(1)));
 			assertThat(
-					layer.getSp0sAsSupplied().get(0).getSpeciesByPercent().get(0), hasProperty(
-							"speciesPercent", closeTo(100d, 0.1d)
-					)
+					layer.getSp0sAsSupplied().get(0).getSpeciesByPercent().get(0),
+					hasProperty("speciesPercent", closeTo(100d, 0.1d))
 			);
 
 		}
@@ -340,9 +337,8 @@ public class PolygonTest {
 			assertThat(layer.getSp0sAsSupplied(), iterableWithSize(1));
 			assertThat(layer.getSp0sAsSupplied().get(0), hasProperty("speciesByPercent", iterableWithSize(1)));
 			assertThat(
-					layer.getSp0sAsSupplied().get(0).getSpeciesByPercent().get(0), hasProperty(
-							"speciesPercent", closeTo(102, 0.1d)
-					)
+					layer.getSp0sAsSupplied().get(0).getSpeciesByPercent().get(0),
+					hasProperty("speciesPercent", closeTo(102, 0.1d))
 			);
 
 		}
@@ -388,9 +384,8 @@ public class PolygonTest {
 			assertThat(layer.getSp0sAsSupplied(), iterableWithSize(1));
 			assertThat(layer.getSp0sAsSupplied().get(0), hasProperty("speciesByPercent", iterableWithSize(1)));
 			assertThat(
-					layer.getSp0sAsSupplied().get(0).getSpeciesByPercent().get(0), hasProperty(
-							"speciesPercent", closeTo(98d, 0.1d)
-					)
+					layer.getSp0sAsSupplied().get(0).getSpeciesByPercent().get(0),
+					hasProperty("speciesPercent", closeTo(98d, 0.1d))
 			);
 
 		}
