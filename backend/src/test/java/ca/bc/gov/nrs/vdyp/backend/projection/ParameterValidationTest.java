@@ -645,7 +645,7 @@ class ParameterValidationTest {
 			);
 		}
 
-        assertEquals(vp, vp);
+        assertTrue(vp.equals(vp));
 		assertEquals(vp, v2);
 		assertEquals(vp.hashCode(), v2.hashCode());
 		assertEquals(vp.toString(), v2.toString());

@@ -95,9 +95,9 @@ public class ParametersTest {
 				new ByteArrayInputStream(json)
 		);
 
-		assertEquals(op, op);
+		assertTrue(op.equals(op));
 		assertNotEquals(null, op);
-        assertNotEquals(op, provider);
+        assertFalse(op.equals(provider));
         assertEquals(op, np);
 
 		assertEquals(op.hashCode(), np.hashCode());
@@ -128,7 +128,7 @@ public class ParametersTest {
 
 		ProgressFrequency pf1 = new ProgressFrequency(12);
 		ProgressFrequency pf2 = new ProgressFrequency(ProgressFrequency.FrequencyKind.MAPSHEET);
-        assertEquals(pf1, pf1);
+        assertTrue(pf1.equals(pf1));
 		assertEquals(Integer.valueOf(12).hashCode(), pf1.hashCode());
 		assertEquals(ProgressFrequency.FrequencyKind.MAPSHEET.hashCode(), pf2.hashCode());
 		assertEquals(17, new ProgressFrequency().hashCode());
@@ -165,10 +165,10 @@ public class ParametersTest {
 		var up2 = new UtilizationParameter().speciesName("C").utilizationClass(UtilizationClassSet._12_5);
 		var up3 = new UtilizationParameter().speciesName("C").utilizationClass(UtilizationClassSet._22_5);
 
-        assertEquals(up1, up1);
+        assertTrue(up1.equals(up1));
         assertEquals(up1.hashCode(), up1.hashCode());
         assertNotEquals(up2, up3);
-        assertNotEquals("C", up2);
+        assertFalse("C".equals(up2));
 
 		assertTrue(up1.toString().contains("speciesName: AL"));
 		assertTrue(up1.toString().contains("utilizationClass: 12.5"));
