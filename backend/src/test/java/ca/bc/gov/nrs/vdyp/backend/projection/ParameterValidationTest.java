@@ -3,10 +3,8 @@ package ca.bc.gov.nrs.vdyp.backend.projection;
 import static ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessageKind.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.contains;
 
 import java.util.HashMap;
-import java.util.Map;
 
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
@@ -294,7 +292,7 @@ class ParameterValidationTest {
 	}
 
 	@Test
-	void testInvalidProgressFrequencySupplied() throws WebApplicationException, AbstractProjectionRequestException {
+	void testInvalidProgressFrequencySupplied() throws WebApplicationException{
 
 		Parameters p = TestHelper.buildValidParametersObject();
 		p.setProgressFrequency("bad option");
@@ -647,7 +645,7 @@ class ParameterValidationTest {
 			);
 		}
 
-		assertTrue(vp.equals(vp));
+        assertEquals(vp, vp);
 		assertEquals(vp, v2);
 		assertEquals(vp.hashCode(), v2.hashCode());
 		assertEquals(vp.toString(), v2.toString());
