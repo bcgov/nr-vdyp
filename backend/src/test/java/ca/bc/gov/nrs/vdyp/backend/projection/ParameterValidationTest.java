@@ -314,7 +314,7 @@ class ParameterValidationTest {
 		p.setProgressFrequency(ProgressFrequency.FrequencyKind.MAPSHEET);
 
 		ProjectionContext context = new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
-        assertThat(context.getParams().getProgressFrequency(), is(FrequencyKind.MAPSHEET));
+        assertThat(context.getParams().getProgressFrequency().getEnumValue(), is(FrequencyKind.MAPSHEET));
 	}
 
 	@Test
@@ -324,7 +324,7 @@ class ParameterValidationTest {
 		p.setProgressFrequency(100);
 
         ProjectionContext context = new ProjectionContext(ProjectionRequestKind.HCSV, "id", p, false);
-        assertThat(context.getParams().getProgressFrequency(), is(100));
+        assertThat(context.getParams().getProgressFrequency().getIntValue(), is(100));
 
 	}
 
