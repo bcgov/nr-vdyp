@@ -476,12 +476,12 @@ public class PolygonTest {
             if (params != null) {
                 for (var param : params.entrySet()) {
                     switch (param.getKey()) {
-                        case "cc" -> layerBuilder = layerBuilder.crownClosure((short) param.getValue());
-                        case "tph" -> layerBuilder = layerBuilder.treesPerHectare((Double) param.getValue());
-                        case "rankCode" -> layerBuilder = layerBuilder.rankCode((String) param.getValue());
-                        case "ba" -> layerBuilder = layerBuilder.basalArea((Double) param.getValue());
-                        case "ps" -> layerBuilder = layerBuilder.percentStockable((Double) param.getValue());
-                        case "id" -> layerBuilder = layerBuilder.layerId((String) param.getValue());
+                        case "cc" -> layerBuilder.crownClosure((short) param.getValue());
+                        case "tph" -> layerBuilder.treesPerHectare((Double) param.getValue());
+                        case "rankCode" -> layerBuilder.rankCode((String) param.getValue());
+                        case "ba" -> layerBuilder.basalArea((Double) param.getValue());
+                        case "ps" -> layerBuilder.percentStockable((Double) param.getValue());
+                        case "id" -> layerBuilder.layerId((String) param.getValue());
                         case "age" -> leadingSpeciesAge = (Double) param.getValue();
                         case "height" -> leadingSpeciesHeight = (Double) param.getValue();
                     }

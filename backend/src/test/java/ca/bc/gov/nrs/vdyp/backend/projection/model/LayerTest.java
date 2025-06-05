@@ -51,28 +51,28 @@ public class LayerTest {
                 .polygon(polygon).layerId("1");
         for(Map.Entry<String, Object> p : params.entrySet()) {
             switch (p.getKey()) {
-                case "adjustments" -> layerBuilder = layerBuilder.adjustments((LayerAdjustments) p.getValue());
-                case "ageAtDeath" -> layerBuilder = layerBuilder.ageAtDeath((Double) p.getValue());
+                case "adjustments" -> layerBuilder.adjustments((LayerAdjustments) p.getValue());
+                case "ageAtDeath" -> layerBuilder.ageAtDeath((Double) p.getValue());
                 case "assignedProjectionType" ->
-                        layerBuilder = layerBuilder.assignedProjectionType((ProjectionTypeCode) p.getValue());
-                case "basalArea" -> layerBuilder = layerBuilder.basalArea((Double) p.getValue());
-                case "crownClosure" -> layerBuilder = layerBuilder.crownClosure((Short) p.getValue());
+                        layerBuilder.assignedProjectionType((ProjectionTypeCode) p.getValue());
+                case "basalArea" -> layerBuilder.basalArea((Double) p.getValue());
+                case "crownClosure" -> layerBuilder.crownClosure((Short) p.getValue());
                 case "doIncludeWithProjection" ->
-                        layerBuilder = layerBuilder.doIncludeWithProjection((Boolean) p.getValue());
+                        layerBuilder.doIncludeWithProjection((Boolean) p.getValue());
                 case "doSuppressPerHAYields" ->
-                        layerBuilder = layerBuilder.doSuppressPerHAYields((Boolean) p.getValue());
-                case "estimatedSiteIndex" -> layerBuilder = layerBuilder.estimatedSiteIndex((Double) p.getValue());
+                        layerBuilder.doSuppressPerHAYields((Boolean) p.getValue());
+                case "estimatedSiteIndex" -> layerBuilder.estimatedSiteIndex((Double) p.getValue());
                 case "estimatedSiteIndexSpecies" ->
-                        layerBuilder = layerBuilder.estimatedSiteIndexSpecies((String) p.getValue());
-                case "history" -> layerBuilder = layerBuilder.history((History) p.getValue());
-                case "isDeadLayer" -> layerBuilder = layerBuilder.isDeadLayer((Boolean) p.getValue());
+                        layerBuilder.estimatedSiteIndexSpecies((String) p.getValue());
+                case "history" -> layerBuilder.history((History) p.getValue());
+                case "isDeadLayer" -> layerBuilder.isDeadLayer((Boolean) p.getValue());
                 case "measuredUtilizationLevel" ->
-                        layerBuilder = layerBuilder.measuredUtilizationLevel((Double) p.getValue());
-                case "nonForestDescriptor" -> layerBuilder = layerBuilder.nonForestDescriptor((String) p.getValue());
-                case "rankCode" -> layerBuilder = layerBuilder.rankCode((String) p.getValue());
-                case "treesPerHectare" -> layerBuilder = layerBuilder.treesPerHectare((Double) p.getValue());
-                case "vdyp7LayerCode" -> layerBuilder = layerBuilder.vdyp7LayerCode((ProjectionTypeCode) p.getValue());
-                case "yearOfDeath" -> layerBuilder = layerBuilder.yearOfDeath((Integer) p.getValue());
+                        layerBuilder.measuredUtilizationLevel((Double) p.getValue());
+                case "nonForestDescriptor" -> layerBuilder.nonForestDescriptor((String) p.getValue());
+                case "rankCode" -> layerBuilder.rankCode((String) p.getValue());
+                case "treesPerHectare" -> layerBuilder.treesPerHectare((Double) p.getValue());
+                case "vdyp7LayerCode" -> layerBuilder.vdyp7LayerCode((ProjectionTypeCode) p.getValue());
+                case "yearOfDeath" -> layerBuilder.yearOfDeath((Integer) p.getValue());
             }
         }
         layer = layerBuilder.build();
