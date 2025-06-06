@@ -25,7 +25,7 @@ import ca.bc.gov.nrs.vdyp.backend.projection.model.Polygon;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.InventoryStandard;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
 
-public class HcsvPolygonStreamTest {
+class HcsvPolygonStreamTest {
     Parameters p;
     ProjectionContext context;
     final String hcsvPolygonFileContents =
@@ -99,72 +99,28 @@ public class HcsvPolygonStreamTest {
             assertThrows(PolygonValidationException.class, () -> unit.getNextPolygon());
         }
 
+		static Stream<String> invalidLayerData() {
+			return Stream.of(
+					"1,P,,1,,,,5,1.000050,150,PLI,60.00,PLI,40.0,,,,,,,,,60,9.00,50,8.0,,,,,,,,", // Duplicate Species
+					",P,,1,,,,5,1.000050,150,PLI,100.00,,,,,,,,,,,60,9.00,,,,,,,,,,", // No LayerID
+					"1,P,,1,,,,5,1.000050,150,,20.00,,,,,,,,,,,60,9.00,,,,,,,,,,", // Missing Species Code
+					"1,P,,1,,XXX,5.0,5,1.000050,150,PLI,20.00,,,,,,,,,,,60,9.00,,,,,,,,,,", // Site Species Invalid
+					"1,P,,1,,,,5,1.000050,150,XXX,20.00,,,,,,,,,,,60,9.00,,,,,,,,,,", // Layer Species Code Invalid
+					"1,P,,1,,,,5,1.000050,150,PLI,20.00,FD,80.0,,,,,,,,,60,9.00,,,,,,,,,," // non descending order
+			);
+		}
 
-        @Test
-        void testDuplicateSpeciesError() throws AbstractProjectionRequestException {
+		@ParameterizedTest
+		@MethodSource("invalidLayerData")
+		void testInvalidLayerData(String invalidLayerData) throws AbstractProjectionRequestException {
             String hcsvLayerFileContents =
                     layerFileHeader +
-                            defaultLayerPrefix + "1,P,,1,,,,5,1.000050,150,PLI,60.00,PLI,40.0,,,,,,,,,60,9.00,50,8.0,,,,,,,,\n"; // Duplicate Species Defined
+							defaultLayerPrefix + invalidLayerData + "\n";
 
             HcsvPolygonStream unit = new HcsvPolygonStream(context, new ByteArrayInputStream(hcsvPolygonFileContents.getBytes()), new ByteArrayInputStream(hcsvLayerFileContents.getBytes()));
 
             assertThrows(PolygonValidationException.class, () -> unit.getNextPolygon());
         }
-
-        @Test
-        void testNoLayerIdError() throws AbstractProjectionRequestException {
-            String hcsvLayerFileContents =
-                    layerFileHeader +
-                            defaultLayerPrefix + ",P,,1,,,,5,1.000050,150,PLI,100.00,,,,,,,,,,,60,9.00,,,,,,,,,,\n"; // Duplicate Species Defined
-
-            HcsvPolygonStream unit = new HcsvPolygonStream(context, new ByteArrayInputStream(hcsvPolygonFileContents.getBytes()), new ByteArrayInputStream(hcsvLayerFileContents.getBytes()));
-
-            assertThrows(PolygonValidationException.class, () -> unit.getNextPolygon());
-        }
-
-        @Test
-        void testMissingSpeciesCodeError() throws AbstractProjectionRequestException {
-            String hcsvLayerFileContents =
-                    layerFileHeader +
-                            defaultLayerPrefix + "1,P,,1,,,,5,1.000050,150,,20.00,,,,,,,,,,,60,9.00,,,,,,,,,,\n"; // Missing Species Code
-
-            HcsvPolygonStream unit = new HcsvPolygonStream(context, new ByteArrayInputStream(hcsvPolygonFileContents.getBytes()), new ByteArrayInputStream(hcsvLayerFileContents.getBytes()));
-
-            assertThrows(PolygonValidationException.class, () -> unit.getNextPolygon());
-        }
-
-        @Test
-        void testLayerEstimatedSpeciesCodeInvalidError() throws AbstractProjectionRequestException {
-            String hcsvLayerFileContents =
-                    layerFileHeader +
-                            defaultLayerPrefix + "1,P,,1,,XXX,5.0,5,1.000050,150,PLI,20.00,,,,,,,,,,,60,9.00,,,,,,,,,,\n"; // Estimated Site Species Invalid
-
-            HcsvPolygonStream unit = new HcsvPolygonStream(context, new ByteArrayInputStream(hcsvPolygonFileContents.getBytes()), new ByteArrayInputStream(hcsvLayerFileContents.getBytes()));
-
-            assertThrows(PolygonValidationException.class, () -> unit.getNextPolygon());
-        }
-
-        @Test
-        void testLayerSpeciesCode1InvalidError() throws AbstractProjectionRequestException {
-            String hcsvLayerFileContents =
-                    layerFileHeader +
-                            defaultLayerPrefix + "1,P,,1,,,,5,1.000050,150,XXX,20.00,,,,,,,,,,,60,9.00,,,,,,,,,,\n"; // Estimated Site Species Invalid
-
-            HcsvPolygonStream unit = new HcsvPolygonStream(context, new ByteArrayInputStream(hcsvPolygonFileContents.getBytes()), new ByteArrayInputStream(hcsvLayerFileContents.getBytes()));
-
-            assertThrows(PolygonValidationException.class, () -> unit.getNextPolygon());
-        }
-
-        @Test
-        void testSpeciesInNonDescendingOrderError() throws AbstractProjectionRequestException {
-            String hcsvLayerFileContents = layerFileHeader +
-                    defaultLayerPrefix + "1,P,,1,,,,5,1.000050,150,PLI,20.00,FD,80.0,,,,,,,,,60,9.00,,,,,,,,,,\n"; // Species in non descending order
-
-            HcsvPolygonStream unit = new HcsvPolygonStream(context, new ByteArrayInputStream(hcsvPolygonFileContents.getBytes()), new ByteArrayInputStream(hcsvLayerFileContents.getBytes()));
-
-            assertThrows(PolygonValidationException.class, () -> unit.getNextPolygon());
-        }
-
 
         @Test
         void testNonVegCoverExceed100PercentError() throws AbstractProjectionRequestException {
