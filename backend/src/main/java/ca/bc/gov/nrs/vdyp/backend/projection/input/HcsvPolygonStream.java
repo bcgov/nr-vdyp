@@ -218,7 +218,6 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
                     .percentStockableDead(nextPolygonRecord.getPercentDead()) //
                     .polygonNumber(nextPolygonRecord.getPolygonNumber()) //
                     .referenceYear(nextPolygonRecord.getReferenceYear()) //
-                    .yearOfDeath(nextPolygonRecord.getYearOfDeath()) //
                     .reportingInfo(polygonReportingInfo) //
                     .layers(layers) //
                     .build();
