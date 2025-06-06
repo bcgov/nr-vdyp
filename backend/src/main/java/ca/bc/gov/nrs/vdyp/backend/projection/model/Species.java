@@ -658,7 +658,7 @@ public class Species implements Comparable<Species> {
 				}
 			}
 
-			if (siteIndexTooLow && yearsToBreastHeight > 0) {
+			if (!siteIndexTooLow && yearsToBreastHeight > 0) {
 				try {
 					computedHeight = SiteTool.ageAndSiteIndexToHeight(
 							siteCurve, totalAge, SiteIndexAgeType.SI_AT_TOTAL, siteIndex, yearsToBreastHeight

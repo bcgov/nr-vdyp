@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import ca.bc.gov.nrs.vdyp.si32.vdyp.VdypMethods;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -794,7 +795,6 @@ public class Layer implements Comparable<Layer> {
 
 			if (this == polygon.getLayerByProjectionType(ProjectionTypeCode.UNKNOWN)) {
 				// this is the primary layer
-
 				Species leadingSp64 = this.determineLeadingSp64(0);
 				if (leadingSp64 != null && leadingSp64.getDominantHeight() >= 10.0) {
 					var estimatedCrownClosure = SiteTool
@@ -858,7 +858,6 @@ public class Layer implements Comparable<Layer> {
 	public Stand determineLeadingSp0(Integer nthLeading) {
 
 		Stand stand = null;
-
 		if (siteSpecies != null) {
 			if (nthLeading < siteSpecies.size()) {
 				stand = siteSpecies.get(nthLeading).getStand();
@@ -913,9 +912,7 @@ public class Layer implements Comparable<Layer> {
 	 * @return as described. If an error occurs during calculation, <code>null</code> is returned.
 	 */
 	public Double determineLeadingSiteSpeciesHeight(int targetAge) {
-
 		var leadingSp64 = this.sp64s.get(0);
-
 		try {
 			return SiteTool.ageAndSiteIndexToHeight(
 					leadingSp64.getSiteCurve(), targetAge, SiteIndexAgeType.SI_AT_TOTAL, leadingSp64.getSiteIndex(),
@@ -936,18 +933,16 @@ public class Layer implements Comparable<Layer> {
 	 * Return true iff this layer contains at least one sp64 with a height, and the leading sp64 of all sp0s is at least
 	 * the given height.
 	 *
-	 * @param minVeteranLayerHeight the height lower bound
+	 * @param minHeight the height lower bound
 	 * @return as described
 	 */
 	public Boolean doesHeightExceed(Double minHeight) {
-
 		boolean heightRequirementMet = true;
 		boolean haveSeenSp64WithHeight = false;
 
 		for (Integer sp64Index = 0; sp64Index < sp64s.size(); sp64Index++) {
 
 			var sp64 = findNthSpeciesByCriteria(sp64Index, SpeciesSelectionCriteria.AS_SUPPLIED);
-
 			if (sp64.getDominantHeight() != null) {
 				haveSeenSp64WithHeight = true;
 				if (sp64.getDominantHeight() < minHeight) {
@@ -968,7 +963,6 @@ public class Layer implements Comparable<Layer> {
 	 * @return as described
 	 */
 	public Species findNthSpeciesByCriteria(Integer n, SpeciesSelectionCriteria criteria) {
-
 		if (0 > n || n >= this.sp64s.size()) {
 			throw new IllegalArgumentException(
 					MessageFormat.format(
@@ -996,7 +990,6 @@ public class Layer implements Comparable<Layer> {
 			if (candidate.getSpeciesCode().equals(speciesCode))
 				return candidate;
 		}
-
 		throw new IllegalArgumentException(
 				MessageFormat.format("{0}: species code {1} does not identify a sp64 in this layer", this, speciesCode)
 		);
@@ -1012,7 +1005,6 @@ public class Layer implements Comparable<Layer> {
 	public ProjectionTypeCode determineProjectionType(Polygon polygon) {
 
 		var projectionType = this.getAssignedProjectionType();
-
 		if (projectionType == ProjectionTypeCode.UNKNOWN) {
 			if (this == polygon.getDeadLayer()) {
 				projectionType = ProjectionTypeCode.DEAD;
@@ -1053,7 +1045,6 @@ public class Layer implements Comparable<Layer> {
 	public Double determineLayerAgeAtYear(Integer year) {
 
 		Double layerAge = null;
-
 		if (year == null || year < Vdyp7Constants.MIN_CALENDAR_YEAR || year > Vdyp7Constants.MAX_CALENDAR_YEAR) {
 			throw new IllegalArgumentException(
 					MessageFormat.format(
@@ -1091,7 +1082,6 @@ public class Layer implements Comparable<Layer> {
 	public Integer determineYearAtAge(double age) {
 
 		Integer calendarYear = null;
-
 		var leadingSiteSp0 = determineLeadingSp0(0);
 		if (leadingSiteSp0 != null) {
 
@@ -1108,7 +1098,6 @@ public class Layer implements Comparable<Layer> {
 	}
 
 	public void setAsDeadLayer(Integer yearOfDeath, Double percentStockKilled) {
-
 		this.vdyp7LayerCode = ProjectionTypeCode.DEAD;
 		this.isDeadLayer = true;
 		this.percentStockable = percentStockKilled;
@@ -1128,7 +1117,6 @@ public class Layer implements Comparable<Layer> {
 	 * @throws PolygonValidationException
 	 */
 	public void doCompleteDefinition() {
-
 		if (getDoSuppressPerHAYields()) {
 			setAssignedProjectionType(ProjectionTypeCode.UNKNOWN);
 		} else {
@@ -1172,7 +1160,6 @@ public class Layer implements Comparable<Layer> {
 	 * information but the secondary SP0 does, the primary SP0 loses its identity to the secondary SP0", but this is not
 	 * implemented in the original code.
 	 *
-	 * @param growthModelCode
 	 */
 	void doBuildSiteSpecies() {
 
@@ -1412,7 +1399,6 @@ public class Layer implements Comparable<Layer> {
 				}
 
 				// Now reset dominant height and recompute it from the values assigned above.
-
 				siteSpecies.resetDominantHeight();
 				siteSpecies.calculateUndefinedFieldValues();
 
@@ -1442,10 +1428,11 @@ public class Layer implements Comparable<Layer> {
 
 	@Override
 	public int compareTo(Layer that) {
-		if (this.polygon.compareTo(that.polygon) == 0) {
+		int polygonValue = this.polygon.compareTo(that.polygon);
+		if (polygonValue == 0) {
 			return this.layerId.compareTo(that.layerId);
 		} else {
-			return 0;
+			return polygonValue;
 		}
 	}
 

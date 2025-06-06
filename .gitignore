@@ -244,3 +244,6 @@ $RECYCLE.BIN/
 nohup.out
 .quarkus
 backend/src/test/resources/test-data/hcsv/44grpa/polyids.txt
+
+#local docker enviornment files
+.env.*
