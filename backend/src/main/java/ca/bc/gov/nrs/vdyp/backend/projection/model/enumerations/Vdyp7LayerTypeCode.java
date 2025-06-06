@@ -33,29 +33,6 @@ public enum Vdyp7LayerTypeCode {
         );
     }
 
-    /**
-     * Convert from a ProjectionType to a Vdyp7LayerTypeCode.
-     *
-     * @param projectionType the projection type to be mapped
-     * @return the equivalent SpecialLayerType
-     * @see ProjectionTypeCode
-     */
-    public static Vdyp7LayerTypeCode fromProjectionType(ProjectionTypeCode projectionType) {
-        for (var e : ProjectionTypeCode.values()) {
-            if (e.equals(projectionType)) {
-                for (var c : Vdyp7LayerTypeCode.values()) {
-                    if (c.code.equals(e.specialLayerTypeCodeText)) {
-                        return c;
-                    }
-                }
-            }
-        }
-
-        throw new IllegalStateException(
-                MessageFormat.format("ProjectionType {0} does not have an equivalent SpecialLayerType", projectionType)
-        );
-    }
-
 	/**
 	 * Return <code>true</code> iff <code>candidate</code> is the text of the <code>code</code> of a SpecialLayerType.
 	 *
