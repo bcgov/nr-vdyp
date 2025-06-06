@@ -37,7 +37,7 @@ public class ProjectionRequestParametersValidator {
 		var validatedParameters = validator.validateRequestParametersIndividually(params);
 		validator.validateRequestParametersCollectively(validatedParameters, requestKind);
 
-		if (validator.validationErrorMessages.size() > 0) {
+		if (!validator.validationErrorMessages.isEmpty()) {
 			logger.error("Validation errors encountered:");
 			for (var m : validator.validationErrorMessages) {
 				logger.error("    " + m.toString());
@@ -68,7 +68,7 @@ public class ProjectionRequestParametersValidator {
 
 		// Parameters.JSON_PROPERTY_SELECTED_EXECUTION_OPTIONS
 
-		if (params.getSelectedExecutionOptions().size() == 0) {
+		if (params.getSelectedExecutionOptions().isEmpty()) {
 			vparams.selectedExecutionOptions(DEFAULT.getSelectedExecutionOptions());
 		} else {
 			// Add the default Yes options, then the options explicitly Yes, then remove the options
