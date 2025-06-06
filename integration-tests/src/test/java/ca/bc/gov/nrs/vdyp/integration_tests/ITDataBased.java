@@ -1,5 +1,7 @@
 package ca.bc.gov.nrs.vdyp.integration_tests;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.BufferedReader;
@@ -10,12 +12,15 @@ import java.io.PrintStream;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.BiPredicate;
 import java.util.function.IntFunction;
 import java.util.function.IntUnaryOperator;
@@ -479,6 +484,7 @@ class ITDataBased {
 		) {
 			assertFileMatches(testPath.toString(), expectedPath.toString(), testStream, expectedStream, compare);
 		}
+
 	}
 
 	public void assertFileMatches(
@@ -495,36 +501,98 @@ class ITDataBased {
 		}
 	}
 
+	// TODO change to a record once a release of Eclipse JDT that fixes 
+	// https://github.com/eclipse-jdt/eclipse.jdt.core/issues/3745 is available
+	static class LineMatchError {
+		final long lineNumber;
+		final String expected;
+		final String actual;
+
+		public LineMatchError(long lineNumber, String expected, String actual) {
+			super();
+			this.lineNumber = lineNumber;
+			this.expected = expected;
+			this.actual = actual;
+		}
+	}
+
 	public void assertFileMatches(
 			String testPath, String expectedPath, BufferedReader testStream, BufferedReader expectedStream,
 			BiPredicate<String, String> compare
 	) throws IOException {
 
-		for (int i = 1; true; i++) {
+		long actualCount = 0;
+		long expectedCount = 0;
+		Optional<LineMatchError> firstMismatch = Optional.empty();
+		Optional<LineMatchError> firstMissingUnexpected = Optional.empty();
+		for (int lineNumber = 1; true; lineNumber++) {
 			String testLine = testStream.readLine();
 			String expectedLine = expectedStream.readLine();
-
+			if (testLine != null) {
+				actualCount = lineNumber;
+			}
+			if (expectedLine != null) {
+				expectedCount = lineNumber;
+			}
+			final long constActualCount = actualCount;
+			final long constExpectedCount = expectedCount;
+			final long constLineNumber = lineNumber;
 			if (testLine == null && expectedLine == null) {
+				// End of the file
+				if (!firstMissingUnexpected.isPresent() && !firstMismatch.isPresent()) {
+					// Everything is fine
+					return;
+				}
+				// Report whether the files have the same number of lines, if not, what's the first missing/unexpected line,
+				// and if any lines present in both files don't match what's the first one.
+				fail(
+						Stream.<String>concat(
+								firstMissingUnexpected.stream().map(error -> {
+									if (error.expected == null) {
+										return "File " + testPath + " had " + constActualCount + " lines  but "
+												+ expectedPath
+												+ " had " + constExpectedCount
+												+ ".  The first unexpected line (" + error.lineNumber + ") was:\n"
+												+ error.actual;
+									}
+									return "File " + testPath + " had " + constActualCount + " lines  but "
+											+ expectedPath
+											+ " had " + constExpectedCount
+											+ ".  The first missing line (" + error.lineNumber + ") was:\n"
+											+ error.expected;
+								}),
+								firstMismatch.stream().map(
+										error -> "File " + testPath + " did not match " + expectedPath
+												+ ". The first line ("
+												+ error.lineNumber
+												+ ") to not match was: \n [Expected]: " + error.expected
+												+ "\n   [Actual]: "
+												+ error.actual
+								)
+						).collect(Collectors.joining("\n and \n"))
+				);
+
 				return;
 			}
+
 			if (testLine == null) {
-				fail(
-						"File " + testPath + " did not match " + expectedPath
-								+ ". Missing expected lines. The first missing line (" + i + ") was:\n" + expectedLine
+				firstMissingUnexpected = Optional.of(
+						firstMissingUnexpected.orElseGet(
+								() -> new LineMatchError(constLineNumber, expectedLine, testLine)
+						)
 				);
+				continue;
 			}
 			if (expectedLine == null) {
-				fail(
-						"File " + testPath + " did not match " + expectedPath
-								+ ". Unexpected lines at the end. The first unexpected line (" + i + ") was:\n"
-								+ testLine
+				firstMissingUnexpected = Optional.of(
+						firstMissingUnexpected.orElseGet(
+								() -> new LineMatchError(constLineNumber, expectedLine, testLine)
+						)
 				);
 			}
-
 			if (!compare.test(testLine, expectedLine)) {
-				fail(
-						"File " + testPath + " did not match " + expectedPath + ". The first line (" + i
-								+ ") to not match was: \n [Expected]: " + expectedLine + "\n   [Actual]: " + testLine
+				firstMismatch = Optional.of(
+						firstMismatch.orElseGet(() -> new LineMatchError(constLineNumber, expectedLine, testLine))
 				);
 			}
 
