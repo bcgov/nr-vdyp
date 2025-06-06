@@ -1291,12 +1291,15 @@ public class Polygon implements Comparable<Polygon> {
 		Layer residualLayer = getResidualLayer();
 
 		if (polygonPercentStockable == null) {
-			polygonPercentStockable = 85.0; /* where does this come from??? PM 05-25: Seems like default max poly stockability */
+			polygonPercentStockable = 85.0; /*
+											 * where does this come from??? PM 05-25: Seems like default max poly
+											 * stockability
+											 */
 		}
 
 		if (deadLayer != null) {
 			Double m = NullMath
-					.max(getPercentStockableDead(), deadLayer.getPercentStockable(), (a,b) -> Math.max(a,b), null);
+					.max(getPercentStockableDead(), deadLayer.getPercentStockable(), (a, b) -> Math.max(a, b), null);
 			if (m != null && getPercentStockable() != null) {
 				deadPercentStockable = getPercentStockable() * m / 100.0;
 			}
@@ -1309,7 +1312,7 @@ public class Polygon implements Comparable<Polygon> {
 			regenerationPercentStockable = deadPercentStockable;
 		} else if (regenerationLayer != null) {
 			Double m = NullMath.max(
-					getPercentStockableDead(), regenerationLayer.getPercentStockable(), (a,b) -> Math.max(a,b), null
+					getPercentStockableDead(), regenerationLayer.getPercentStockable(), (a, b) -> Math.max(a, b), null
 			);
 			if (m != null && getPercentStockable() != null) {
 				regenerationPercentStockable = getPercentStockable() * m / 100.0;

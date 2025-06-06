@@ -31,101 +31,90 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 public class LayerTest {
-    ProjectionContext context;
-    Parameters params;
-    History history;
-    Polygon polygon;
-    Layer layer;
-    LayerAdjustments layerAdjustments;
+	ProjectionContext context;
+	Parameters params;
+	History history;
+	Polygon polygon;
+	Layer layer;
+	LayerAdjustments layerAdjustments;
 
-    @BeforeEach
-    void setup() throws AbstractProjectionRequestException {
-        params = new Parameters().ageStart(0).ageEnd(100);
-        context = new ProjectionContext(ProjectionRequestKind.HCSV,"Test", params, false);
-        polygon = new Polygon.Builder().build();
-    }
+	@BeforeEach
+	void setup() throws AbstractProjectionRequestException {
+		params = new Parameters().ageStart(0).ageEnd(100);
+		context = new ProjectionContext(ProjectionRequestKind.HCSV, "Test", params, false);
+		polygon = new Polygon.Builder().build();
+	}
 
-    Layer buildLayer(Map<String,Object> params)
-    {
-        var layerBuilder = new Layer.Builder() //
-                .polygon(polygon).layerId("1");
-        for(Map.Entry<String, Object> p : params.entrySet()) {
-            switch (p.getKey()) {
-                case "adjustments" -> layerBuilder = layerBuilder.adjustments((LayerAdjustments) p.getValue());
-                case "ageAtDeath" -> layerBuilder = layerBuilder.ageAtDeath((Double) p.getValue());
-                case "assignedProjectionType" ->
-                        layerBuilder = layerBuilder.assignedProjectionType((ProjectionTypeCode) p.getValue());
-                case "basalArea" -> layerBuilder = layerBuilder.basalArea((Double) p.getValue());
-                case "crownClosure" -> layerBuilder = layerBuilder.crownClosure((Short) p.getValue());
-                case "doIncludeWithProjection" ->
-                        layerBuilder = layerBuilder.doIncludeWithProjection((Boolean) p.getValue());
-                case "doSuppressPerHAYields" ->
-                        layerBuilder = layerBuilder.doSuppressPerHAYields((Boolean) p.getValue());
-                case "estimatedSiteIndex" -> layerBuilder = layerBuilder.estimatedSiteIndex((Double) p.getValue());
-                case "estimatedSiteIndexSpecies" ->
-                        layerBuilder = layerBuilder.estimatedSiteIndexSpecies((String) p.getValue());
-                case "history" -> layerBuilder = layerBuilder.history((History) p.getValue());
-                case "isDeadLayer" -> layerBuilder = layerBuilder.isDeadLayer((Boolean) p.getValue());
-                case "measuredUtilizationLevel" ->
-                        layerBuilder = layerBuilder.measuredUtilizationLevel((Double) p.getValue());
-                case "nonForestDescriptor" -> layerBuilder = layerBuilder.nonForestDescriptor((String) p.getValue());
-                case "rankCode" -> layerBuilder = layerBuilder.rankCode((String) p.getValue());
-                case "treesPerHectare" -> layerBuilder = layerBuilder.treesPerHectare((Double) p.getValue());
-                case "vdyp7LayerCode" -> layerBuilder = layerBuilder.vdyp7LayerCode((ProjectionTypeCode) p.getValue());
-                case "yearOfDeath" -> layerBuilder = layerBuilder.yearOfDeath((Integer) p.getValue());
-            }
-        }
-        layer = layerBuilder.build();
-        return layer;
+	Layer buildLayer(Map<String, Object> params) {
+		var layerBuilder = new Layer.Builder() //
+				.polygon(polygon).layerId("1");
+		for (Map.Entry<String, Object> p : params.entrySet()) {
+			switch (p.getKey()) {
+			case "adjustments" -> layerBuilder.adjustments((LayerAdjustments) p.getValue());
+			case "ageAtDeath" -> layerBuilder.ageAtDeath((Double) p.getValue());
+			case "assignedProjectionType" -> layerBuilder.assignedProjectionType((ProjectionTypeCode) p.getValue());
+			case "basalArea" -> layerBuilder.basalArea((Double) p.getValue());
+			case "crownClosure" -> layerBuilder.crownClosure((Short) p.getValue());
+			case "doIncludeWithProjection" -> layerBuilder.doIncludeWithProjection((Boolean) p.getValue());
+			case "doSuppressPerHAYields" -> layerBuilder.doSuppressPerHAYields((Boolean) p.getValue());
+			case "estimatedSiteIndex" -> layerBuilder.estimatedSiteIndex((Double) p.getValue());
+			case "estimatedSiteIndexSpecies" -> layerBuilder.estimatedSiteIndexSpecies((String) p.getValue());
+			case "history" -> layerBuilder.history((History) p.getValue());
+			case "isDeadLayer" -> layerBuilder.isDeadLayer((Boolean) p.getValue());
+			case "measuredUtilizationLevel" -> layerBuilder.measuredUtilizationLevel((Double) p.getValue());
+			case "nonForestDescriptor" -> layerBuilder.nonForestDescriptor((String) p.getValue());
+			case "rankCode" -> layerBuilder.rankCode((String) p.getValue());
+			case "treesPerHectare" -> layerBuilder.treesPerHectare((Double) p.getValue());
+			case "vdyp7LayerCode" -> layerBuilder.vdyp7LayerCode((ProjectionTypeCode) p.getValue());
+			case "yearOfDeath" -> layerBuilder.yearOfDeath((Integer) p.getValue());
+			}
+		}
+		layer = layerBuilder.build();
+		return layer;
 
-    }
+	}
 
-    Stand addStand(Layer layer, String sp64Code)
-    {
-        var stand =  new Stand.Builder()
-                .layer(layer)
-                .sp0Code(VdypMethods.getVDYP7Species(sp64Code))
-                .build();
-        var sp0 = new Species.Builder().stand(stand).speciesCode(VdypMethods.getVDYP7Species(sp64Code)).speciesPercent(0).build();
-        stand.addSpeciesGroup(sp0, layer.getSp0sAsSupplied().size());
+	Stand addStand(Layer layer, String sp64Code) {
+		var stand = new Stand.Builder().layer(layer).sp0Code(VdypMethods.getVDYP7Species(sp64Code)).build();
+		var sp0 = new Species.Builder().stand(stand).speciesCode(VdypMethods.getVDYP7Species(sp64Code))
+				.speciesPercent(0).build();
+		stand.addSpeciesGroup(sp0, layer.getSp0sAsSupplied().size());
 
-        layer.addStand(stand);
-        return stand;
-    }
-    Species addSpecies(Layer layer, Stand stand, Map<String, Object> speciesData)
-    {
-        var builder = new Species.Builder().stand(stand);
+		layer.addStand(stand);
+		return stand;
+	}
 
-        for (var p : speciesData.entrySet())
-        {
-            switch (p.getKey())
-            {
-                case "sp64" -> builder = builder.speciesCode((String) p.getValue());
-                case "perc" -> builder = builder.speciesPercent((Double) p.getValue());
-                case "aabh" -> builder = builder.ageAtBreastHeight((Double) p.getValue());
-                case "age" -> builder = builder.totalAge((Double) p.getValue());
-                case "h" -> builder = builder.dominantHeight((Double) p.getValue());
-                case "sc" -> builder = builder.siteCurve((SiteIndexEquation) p.getValue());
-                case "si" -> builder = builder.siteIndex((Double) p.getValue());
-                case "y2bh" -> builder = builder.yearsToBreastHeight((Double)p.getValue());
-            }
-        }
-        var species = builder.build();
+	Species addSpecies(Layer layer, Stand stand, Map<String, Object> speciesData) {
+		var builder = new Species.Builder().stand(stand);
 
-        stand.addSp64(species);
-        layer.addSp64(species);
-        return species;
-    }
+		for (var p : speciesData.entrySet()) {
+			switch (p.getKey()) {
+			case "sp64" -> builder = builder.speciesCode((String) p.getValue());
+			case "perc" -> builder = builder.speciesPercent((Double) p.getValue());
+			case "aabh" -> builder = builder.ageAtBreastHeight((Double) p.getValue());
+			case "age" -> builder = builder.totalAge((Double) p.getValue());
+			case "h" -> builder = builder.dominantHeight((Double) p.getValue());
+			case "sc" -> builder = builder.siteCurve((SiteIndexEquation) p.getValue());
+			case "si" -> builder = builder.siteIndex((Double) p.getValue());
+			case "y2bh" -> builder = builder.yearsToBreastHeight((Double) p.getValue());
+			}
+		}
+		var species = builder.build();
 
-    @Test
-    void TestLayerBuilderNoLayerId() {
-        assertThrows(IllegalStateException.class, () -> new Layer.Builder().build());
-    }
+		stand.addSp64(species);
+		layer.addSp64(species);
+		return species;
+	}
 
-    @Test
-    void TestLayerBuilder() {
-        layerAdjustments = new LayerAdjustments();
-        history = new History.Builder().build();
+	@Test
+	void TestLayerBuilderNoLayerId() {
+		assertThrows(IllegalStateException.class, () -> new Layer.Builder().build());
+	}
+
+	@Test
+	void TestLayerBuilder() {
+		layerAdjustments = new LayerAdjustments();
+		history = new History.Builder().build();
 		var layer = new Layer.Builder() //
 				.adjustments(layerAdjustments) //
 				.ageAtDeath(20.0) //
@@ -173,318 +162,284 @@ public class LayerTest {
 		);
 	}
 
-    @Test
-    void testDuplicateStand()
-    {
-        layer = buildLayer(Map.of());
-        Stand stand = addStand( layer,"PL");
-        assertThrows(IllegalStateException.class, () -> addStand( layer, "PL"));
-    }
+	@Test
+	void testDuplicateStand() {
+		layer = buildLayer(Map.of());
+		addStand(layer, "PL");
+		assertThrows(IllegalStateException.class, () -> addStand(layer, "PL"));
+	}
 
-    @Test
-    void testDuplicateSpecies()
-    {
-        layer = buildLayer(Map.of());
-        Map<String, Object> params = Map.of("sp64","PL", "perc", 100.0);
+	@Test
+	void testDuplicateSpecies() {
+		layer = buildLayer(Map.of());
+		Map<String, Object> params = Map.of("sp64", "PL", "perc", 100.0);
 
-        Stand stand = addStand( layer,"PL");
-        addSpecies( layer,stand, params);
-        assertThrows(IllegalStateException.class, () -> addSpecies( layer,stand, params));
-    }
+		Stand stand = addStand(layer, "PL");
+		addSpecies(layer, stand, params);
+		assertThrows(IllegalStateException.class, () -> addSpecies(layer, stand, params));
+	}
 
-    @Nested
-    class EstimatedSiteIndex {
+	@Nested
+	class EstimatedSiteIndex {
 
-        @Test
-        void testLayerSuppliedEstimatedSiteIndexAndSpecies() throws PolygonValidationException {
-            layer = buildLayer(Map.of(
-                    "estimatedSiteIndex" , 25.0,
-                    "estimatedSiteIndexSpecies","FD"
-            ));
-            Map<String, Object> params = Map.of("sp64", "PL", "perc", 100.0, "age", 29.0, "si", 24.0);
+		@Test
+		void testLayerSuppliedEstimatedSiteIndexAndSpecies() throws PolygonValidationException {
+			layer = buildLayer(Map.of("estimatedSiteIndex", 25.0, "estimatedSiteIndexSpecies", "FD"));
+			Map<String, Object> params = Map.of("sp64", "PL", "perc", 100.0, "age", 29.0, "si", 24.0);
 
-            Stand stand = addStand( layer, "PL");
-            Species sp64 = addSpecies( layer,stand, params);
+			Stand stand = addStand(layer, "PL");
+			Species sp64 = addSpecies(layer, stand, params);
 
-            layer.doBuildSiteSpecies();
-            layer.doCompleteSiteSpeciesSiteIndexInfo();
-            layer.calculateEstimatedSiteIndex(context, GrowthModelCode.VRI, false);
+			layer.doBuildSiteSpecies();
+			layer.doCompleteSiteSpeciesSiteIndexInfo();
+			layer.calculateEstimatedSiteIndex(context, GrowthModelCode.VRI, false);
 
-            assertNotNull(sp64.getSiteIndex());
-            assertThat(sp64.getSiteIndex(), not(stand.getSpeciesGroup().getSiteIndex())); //TODO revisit why these should be different
-        }
+			assertNotNull(sp64.getSiteIndex());
+			assertThat(sp64.getSiteIndex(), not(stand.getSpeciesGroup().getSiteIndex())); // TODO revisit why these
+																							// should be different
+		}
 
-        static Stream<Arguments> siteIndexParameters()
-        {
-            return Stream.of(
-                    Arguments.of(// Species Supplied EstimatedSiteIndex
-                            Map.of("growthModelCode",GrowthModelCode.FIP),
-                            List.of(Map.of("sp64", "PL", "perc", 100.0, "age", 29.0, "si", 25.0))
-                    ),
-                    Arguments.of(// Species Supplied Age and Height Estimate
-                            Map.of("growthModelCode",GrowthModelCode.VRI),
-                            List.of(Map.of("sp64", "PL", "perc", 100.0, "age", 29.0, "h", 10.0))
-                    ),
-                    Arguments.of(// Species Supplied Age and Height Estimate Older Leading sp64
-                            Map.of("growthModelCode",GrowthModelCode.VRI),
-                            List.of(Map.of("sp64", "PL", "perc", 100.0, "age", 100.0, "h", 50.0))
-                    ),
-                    Arguments.of(// Species Supplied Age and Height Secondary Species
-                            Map.of("growthModelCode",GrowthModelCode.VRI),
-                            List.of(
-                                    Map.of("sp64", "FD", "perc", 90.0, "age", 100.0, "h", 50.0),
-                                    Map.of("sp64", "PY", "perc", 10.0))
-                    )
-            );
-        }
+		static Stream<Arguments> siteIndexParameters() {
+			return Stream.of(
+					Arguments.of(
+						// Species Supplied EstimatedSiteIndex
+							Map.of("growthModelCode", GrowthModelCode.FIP),
+							List.of(Map.of("sp64", "PL", "perc", 100.0, "age", 29.0, "si", 25.0))
+					),
+					Arguments.of(
+						// Species Supplied Age and Height Estimate
+							Map.of("growthModelCode", GrowthModelCode.VRI),
+							List.of(Map.of("sp64", "PL", "perc", 100.0, "age", 29.0, "h", 10.0))
+					),
+					Arguments.of(
+						// Species Supplied Age and Height Estimate Older Leading sp64
+							Map.of("growthModelCode", GrowthModelCode.VRI),
+							List.of(Map.of("sp64", "PL", "perc", 100.0, "age", 100.0, "h", 50.0))
+					),
+					Arguments.of(
+						// Species Supplied Age and Height Secondary Species
+							Map.of("growthModelCode", GrowthModelCode.VRI),
+							List.of(
+									Map.of("sp64", "FD", "perc", 90.0, "age", 100.0, "h", 50.0),
+									Map.of("sp64", "PY", "perc", 10.0)
+							)
+					)
+			);
+		}
 
-        @ParameterizedTest
-        @MethodSource("siteIndexParameters")
-        void testSpeciesSuppliedEstimatedSiteIndex(Map<String, Object> layerParams, List<Map<String,Object>> speciesParamsList) throws PolygonValidationException {
-            layer = buildLayer(layerParams);
+		@ParameterizedTest
+		@MethodSource("siteIndexParameters")
+		void testSpeciesSuppliedEstimatedSiteIndex(
+				Map<String, Object> layerParams, List<Map<String, Object>> speciesParamsList
+		) throws PolygonValidationException {
+			layer = buildLayer(layerParams);
 
-            Map<String, Object> firstSpeciesParam = speciesParamsList.get(0);
-            Stand stand = addStand( layer,(String) firstSpeciesParam.get("sp64"));
-            Species sp64 = addSpecies( layer,stand, firstSpeciesParam);
+			Map<String, Object> firstSpeciesParam = speciesParamsList.get(0);
+			Stand stand = addStand(layer, (String) firstSpeciesParam.get("sp64"));
+			Species sp64 = addSpecies(layer, stand, firstSpeciesParam);
 
-            if (speciesParamsList.size() > 1)
-            {
-                for (int i = 1; i < speciesParamsList.size(); i++)
-                {
-                    addSpecies( layer,stand, speciesParamsList.get(i));
-                }
-            }
+			if (speciesParamsList.size() > 1) {
+				for (int i = 1; i < speciesParamsList.size(); i++) {
+					addSpecies(layer, stand, speciesParamsList.get(i));
+				}
+			}
 
-            layer.doBuildSiteSpecies();
-            layer.doCompleteSiteSpeciesSiteIndexInfo();
-            layer.calculateEstimatedSiteIndex(context, (GrowthModelCode)layerParams.get("growthModelCode"), false);
+			layer.doBuildSiteSpecies();
+			layer.doCompleteSiteSpeciesSiteIndexInfo();
+			layer.calculateEstimatedSiteIndex(context, (GrowthModelCode) layerParams.get("growthModelCode"), false);
 
-            assertNotNull(sp64.getSiteIndex());
-            assertThat(sp64.getSiteIndex(), is(stand.getSpeciesGroup().getSiteIndex()));
-        }
-    }
+			assertNotNull(sp64.getSiteIndex());
+			assertThat(sp64.getSiteIndex(), is(stand.getSpeciesGroup().getSiteIndex()));
+		}
+	}
 
+	@Nested
+	class EstimateCrownClosure {
+		@Test
+		void testSuppliedCrownClosure() throws PolygonValidationException {
+			layer = buildLayer(Map.of("crownClosure", (short) 5, "doSuppressPerHAYields", true));
+			Map<String, Object> params = Map.of("sp64", "PL", "perc", 100.0, "age", 100.0, "h", 50.0);
 
-    @Nested
-    class EstimateCrownClosure
-    {
-        @Test
-        void testSuppliedCrownClosure() throws PolygonValidationException
-        {
-            layer = buildLayer(Map.of(
-                    "crownClosure" , (short)5,
-                    "doSuppressPerHAYields",true
-            ));
-            Map<String, Object> params = Map.of("sp64", "PL", "perc", 100.0, "age", 100.0, "h", 50.0);
+			Stand stand = addStand(layer, "PL");
+			addSpecies(layer, stand, params);
 
-            Stand stand = addStand( layer,"PL");
-            Species sp64 = addSpecies( layer,stand, params);
+			layer.doCompleteDefinition();
+			layer.doBuildSiteSpecies();
+			layer.doCompleteSiteSpeciesSiteIndexInfo();
 
-            layer.doCompleteDefinition();
-            layer.doBuildSiteSpecies();
-            layer.doCompleteSiteSpeciesSiteIndexInfo();
+			layer.estimateCrownClosure(context);
 
-            layer.estimateCrownClosure(context);
+			// make sure crown closure was not taken from layer
+			assertNotNull(layer.getCrownClosure());
+			assertThat(layer.getCrownClosure(), is((short) 5));
+		}
 
-            // make sure crown closure was not taken from layer
-            assertNotNull(layer.getCrownClosure());
-            assertThat(layer.getCrownClosure(), is((short)5));
-        }
-        @Test
-        void testNotSuppliedNoLeadingSpecies() throws PolygonValidationException
-        {
-            layer = buildLayer(Map.of(
-                    "assignedProjectionType" , ProjectionTypeCode.PRIMARY,
-                    "doSuppressPerHAYields",true
-            ));
+		@Test
+		void testNotSuppliedNoLeadingSpecies() throws PolygonValidationException {
+			layer = buildLayer(
+					Map.of("assignedProjectionType", ProjectionTypeCode.PRIMARY, "doSuppressPerHAYields", true)
+			);
 
+			addStand(layer, "PL");
 
-            addStand( layer,"PL");
+			layer.doCompleteDefinition();
+			layer.doBuildSiteSpecies();
+			layer.doCompleteSiteSpeciesSiteIndexInfo();
+			layer.estimateCrownClosure(context);
 
-            layer.doCompleteDefinition();
-            layer.doBuildSiteSpecies();
-            layer.doCompleteSiteSpeciesSiteIndexInfo();
-            layer.estimateCrownClosure(context);
+			// Projections not allowed no leading species
+			assertThat(polygon.doAllowProjectionOfType(layer.getAssignedProjectionType()), is(false));
 
-            // Projections not allowed no leading species
-            assertThat(polygon.doAllowProjectionOfType(layer.getAssignedProjectionType()), is(false));
+		}
 
-        }
-        @Test
-        void testNotSuppliedLeadingSpeciesTooShort() throws PolygonValidationException
-        {
-            layer= buildLayer(Map.of(
-                    "doSuppressPerHAYields",true
-            ));
-            Map<String, Object> params = Map.of("sp64", "PL", "perc", 100.0, "age", 30.0, "h", 9.0);
+		@Test
+		void testNotSuppliedLeadingSpeciesTooShort() throws PolygonValidationException {
+			layer = buildLayer(Map.of("doSuppressPerHAYields", true));
+			Map<String, Object> params = Map.of("sp64", "PL", "perc", 100.0, "age", 30.0, "h", 9.0);
 
-            Stand stand = addStand( layer,"PL");
-            Species sp64 = addSpecies( layer,stand, params);
+			Stand stand = addStand(layer, "PL");
+			addSpecies(layer, stand, params);
 
-            layer.doCompleteDefinition();
-            layer.doBuildSiteSpecies();
-            layer.doCompleteSiteSpeciesSiteIndexInfo();
-            layer.estimateCrownClosure(context);
+			layer.doCompleteDefinition();
+			layer.doBuildSiteSpecies();
+			layer.doCompleteSiteSpeciesSiteIndexInfo();
+			layer.estimateCrownClosure(context);
 
-            // Could not calculate crown closure
-            assertNull(layer.getCrownClosure());
-        }
+			// Could not calculate crown closure
+			assertNull(layer.getCrownClosure());
+		}
 
-        @Test
-        void testNotSuppliedCalculateFromLeadingSpecies() throws PolygonValidationException
-        {
-            layer= buildLayer(Map.of(
-                    "doSuppressPerHAYields",true
-            ));
-            Map<String, Object> params = Map.of("sp64", "PL", "perc", 100.0, "age", 100.0, "h", 50.0);
+		@Test
+		void testNotSuppliedCalculateFromLeadingSpecies() throws PolygonValidationException {
+			layer = buildLayer(Map.of("doSuppressPerHAYields", true));
+			Map<String, Object> params = Map.of("sp64", "PL", "perc", 100.0, "age", 100.0, "h", 50.0);
 
-            Stand stand = addStand( layer,"PL");
-            Species sp64 = addSpecies( layer,stand, params);
+			Stand stand = addStand(layer, "PL");
+			addSpecies(layer, stand, params);
 
-            layer.doCompleteDefinition();
-            layer.doBuildSiteSpecies();
-            layer.doCompleteSiteSpeciesSiteIndexInfo();
-            layer.estimateCrownClosure(context);
+			layer.doCompleteDefinition();
+			layer.doBuildSiteSpecies();
+			layer.doCompleteSiteSpeciesSiteIndexInfo();
+			layer.estimateCrownClosure(context);
 
-            //Make sure estimate was pulled from the default for the species
-            assertNotNull(layer.getCrownClosure());
-            assertThat(layer.getCrownClosure(), is((short)SiteTool.getSpeciesDefaultCrownClosure("PL", polygon.getIsCoastal())));
-        }
-    }
+			// Make sure estimate was pulled from the default for the species
+			assertNotNull(layer.getCrownClosure());
+			assertThat(
+					layer.getCrownClosure(),
+					is((short) SiteTool.getSpeciesDefaultCrownClosure("PL", polygon.getIsCoastal()))
+			);
+		}
+	}
 
+	@Test
+	void testDoesHeightExceedErrorHandling() {
+		layer = new Layer.Builder().layerId("TEST").polygon(polygon).doSuppressPerHAYields(false)
+				.assignedProjectionType(ProjectionTypeCode.VETERAN).build();
+		Map<String, Object> params = Map.of("sp64", "PL", "perc", 100.0, "age", 100.0, "h", 50.0);
 
-    @Test
-    void testDoesHeightExceedErrorHandling()
-    {
-        layer = new Layer.Builder()
-                .layerId("TEST")
-                .polygon(polygon)
-                .doSuppressPerHAYields(false)
-                .assignedProjectionType(ProjectionTypeCode.VETERAN)
-                .build();
-        Map<String, Object> params = Map.of("sp64", "PL", "perc", 100.0, "age", 100.0, "h", 50.0);
+		Stand stand = addStand(layer, "PL");
+		addSpecies(layer, stand, params);
 
-        Stand stand = addStand( layer,"PL");
-        Species sp64 = addSpecies( layer,stand, params);
+		assertThat(layer.doesHeightExceed(100.0), is(false));
+		assertThat(layer.doesHeightExceed(50.0), is(true));
+	}
 
-        assertThat(layer.doesHeightExceed(100.0), is(false));
-        assertThat(layer.doesHeightExceed(50.0), is(true));
-    }
+	@Test
+	void testFindNthSpeciesByCriteria() {
+		layer = new Layer.Builder().layerId("TEST").polygon(polygon).build();
+		Map<String, Object> params = Map.of("sp64", "PY", "perc", 20.0);
+		Map<String, Object> params2 = Map.of("sp64", "FD", "perc", 30.0, "age", 200.0, "h", 27.0);
+		Map<String, Object> params3 = Map.of("sp64", "LW", "perc", 50.0, "age", 100.0, "h", 15.0);
 
+		Stand stand = addStand(layer, "FD");
+		Species sp64 = addSpecies(layer, stand, params);
+		Species sp642 = addSpecies(layer, stand, params2);
+		Species sp643 = addSpecies(layer, stand, params3);
 
-    @Test
-    void testFindNthSpeciesByCriteria()
-    {
-        layer = new Layer.Builder()
-                .layerId("TEST")
-                .polygon(polygon)
-                .build();
-        Map<String, Object> params = Map.of("sp64", "PY", "perc", 20.0);
-        Map<String, Object> params2 = Map.of("sp64", "FD", "perc", 30.0, "age", 200.0, "h", 27.0);
-        Map<String, Object> params3 = Map.of("sp64", "LW", "perc", 50.0, "age", 100.0, "h", 15.0);
+		assertThrows(
+				IllegalArgumentException.class,
+				() -> layer.findNthSpeciesByCriteria(-1, SpeciesSelectionCriteria.BY_NAME)
+		);
+		assertThrows(
+				IllegalArgumentException.class,
+				() -> layer.findNthSpeciesByCriteria(3, SpeciesSelectionCriteria.BY_NAME)
+		);
+		Species found = layer.findNthSpeciesByCriteria(0, SpeciesSelectionCriteria.AS_SUPPLIED);
+		assertThat(found, is(sp64));
+		found = layer.findNthSpeciesByCriteria(0, SpeciesSelectionCriteria.BY_NAME);
+		assertThat(found, is(sp642));
+		found = layer.findNthSpeciesByCriteria(0, SpeciesSelectionCriteria.BY_PERCENT);
+		assertThat(found, is(sp643));
+	}
 
-        Stand stand = addStand( layer,"FD");
-        Species sp64 = addSpecies( layer,stand, params);
-        Species sp642 = addSpecies( layer,stand, params2);
-        Species sp643 = addSpecies( layer,stand, params3);
+	@Test
+	void testGetSP64() {
+		layer = new Layer.Builder().layerId("TEST").polygon(polygon).build();
+		Map<String, Object> params = Map.of("sp64", "PL", "perc", 100.0, "age", 100.0, "h", 50.0);
 
-        assertThrows(IllegalArgumentException.class,()-> layer.findNthSpeciesByCriteria(-1, SpeciesSelectionCriteria.BY_NAME));
-        assertThrows(IllegalArgumentException.class,()-> layer.findNthSpeciesByCriteria(3, SpeciesSelectionCriteria.BY_NAME));
-        Species found = layer.findNthSpeciesByCriteria(0, SpeciesSelectionCriteria.AS_SUPPLIED);
-        assertThat(found, is(sp64));
-        found = layer.findNthSpeciesByCriteria(0, SpeciesSelectionCriteria.BY_NAME);
-        assertThat(found, is(sp642));
-        found = layer.findNthSpeciesByCriteria(0, SpeciesSelectionCriteria.BY_PERCENT);
-        assertThat(found, is(sp643));
-    }
+		Stand stand = addStand(layer, "PL");
+		Species sp64 = addSpecies(layer, stand, params);
 
-    @Test
-    void testGetSP64()
-    {
-        layer = new Layer.Builder()
-                .layerId("TEST")
-                .polygon(polygon)
-                .build();
-        Map<String, Object> params = Map.of("sp64", "PL", "perc", 100.0, "age", 100.0, "h", 50.0);
+		assertThrows(IllegalArgumentException.class, () -> layer.getSp64("CW"));
+		Species found = layer.getSp64("PL");
+		assertThat(found, is(sp64));
+	}
 
-        Stand stand = addStand( layer,"PL");
-        Species sp64 = addSpecies( layer,stand, params);
+	@Test
+	void testDetermineLayerAgeAtYear() throws PolygonValidationException {
+		// polygon reference year defaults to 0 instead of null
+		layer = new Layer.Builder().layerId("TEST").polygon(polygon).doSuppressPerHAYields(false).build();
+		Map<String, Object> params = Map.of("sp64", "PL", "perc", 100.0, "age", 100.0, "h", 50.0);
 
-        assertThrows(IllegalArgumentException.class,()-> layer.getSp64("CW"));
-        Species found = layer.getSp64("PL");
-        assertThat(found, is(sp64));
-    }
+		Stand stand = addStand(layer, "PL");
+		addSpecies(layer, stand, params);
 
-    @Test
-    void testDetermineLayerAgeAtYear() throws PolygonValidationException
-    {
-        //polygon reference year defaults to 0 instead of null
-        layer = new Layer.Builder()
-                .layerId("TEST")
-                .polygon(polygon)
-                .doSuppressPerHAYields(false)
-                .build();
-        Map<String, Object> params = Map.of("sp64", "PL", "perc", 100.0, "age", 100.0, "h", 50.0);
+		assertThrows(IllegalArgumentException.class, () -> layer.determineLayerAgeAtYear(null));
+		assertThrows(IllegalArgumentException.class, () -> layer.determineLayerAgeAtYear(1399));
+		assertThrows(IllegalArgumentException.class, () -> layer.determineLayerAgeAtYear(2501));
 
-        Stand stand = addStand( layer,"PL");
-        Species sp64 = addSpecies( layer,stand, params);
+		Double age = layer.determineLayerAgeAtYear(2499);
+		assertNull(age); // need to complete definition before you get values
 
-        assertThrows(IllegalArgumentException.class,()-> layer.determineLayerAgeAtYear(null));
-        assertThrows(IllegalArgumentException.class,()-> layer.determineLayerAgeAtYear(1399));
-        assertThrows(IllegalArgumentException.class,()-> layer.determineLayerAgeAtYear(2501));
+		layer.doCompleteDefinition();
+		layer.doBuildSiteSpecies();
+		layer.doCompleteSiteSpeciesSiteIndexInfo();
 
-        Double age = layer.determineLayerAgeAtYear(2499);
-        assertNull(age); // need to complete definition before you get values
+		age = layer.determineLayerAgeAtYear(2499);
+		assertThat(age, is(2599.0));// Should reference year oin polygon default to null instead of 0?
 
-        layer.doCompleteDefinition();
-        layer.doBuildSiteSpecies();
-        layer.doCompleteSiteSpeciesSiteIndexInfo();
+		polygon = new Polygon.Builder().referenceYear(2020).build();
 
-        age = layer.determineLayerAgeAtYear(2499);
-        assertThat(age, is(2599.0));// Should reference year oin polygon default to null instead of 0?
+		layer = new Layer.Builder().layerId("TEST").polygon(polygon).doSuppressPerHAYields(false).build();
+		stand = addStand(layer, "PL");
+		addSpecies(layer, stand, params);
 
-        polygon = new Polygon.Builder().referenceYear(2020).build();
+		layer.doCompleteDefinition();
+		layer.doBuildSiteSpecies();
+		layer.doCompleteSiteSpeciesSiteIndexInfo();
+		age = layer.determineLayerAgeAtYear(2499);
+		assertThat(age, is(579.0));
 
-        layer = new Layer.Builder()
-                .layerId("TEST")
-                .polygon(polygon)
-                .doSuppressPerHAYields(false)
-                .build();
-        stand = addStand( layer,"PL");
-        sp64 = addSpecies( layer,stand, params);
+		age = layer.determineLayerAgeAtYear(1919);
+		assertThat(age, is(0.0));
+	}
 
-        layer.doCompleteDefinition();
-        layer.doBuildSiteSpecies();
-        layer.doCompleteSiteSpeciesSiteIndexInfo();
-        age = layer.determineLayerAgeAtYear(2499);
-        assertThat(age, is(579.0));
+	@Test
+	void testDoCompleteSiteSpeciesInfo() throws PolygonValidationException {
+		layer = new Layer.Builder().layerId("TEST").crownClosure((short) 3).treesPerHectare(12.0).basalArea(0.8656)
+				.polygon(polygon).build();
+		Map<String, Object> params = Map.of("sp64", "FD", "perc", 50.0, "age", 200.0, "h", 27.0);
+		Map<String, Object> params2 = Map.of("sp64", "LW", "perc", 30.0, "age", 100.0, "h", 15.0);
+		Map<String, Object> params3 = Map.of("sp64", "PY", "perc", 20.0);
 
-        age = layer.determineLayerAgeAtYear(1919);
-        assertThat(age, is(0.0));
-    }
+		Stand stand = addStand(layer, "FD");
+		Species sp64 = addSpecies(layer, stand, params);
+		addSpecies(layer, stand, params2);
+		addSpecies(layer, stand, params3);
 
-    @Test
-    void testDoCompleteSiteSpeciesInfo() throws PolygonValidationException
-    {
-        layer = new Layer.Builder()
-                .layerId("TEST")
-                .crownClosure((short)3)
-                .treesPerHectare(12.0)
-                .basalArea(0.8656)
-                .polygon(polygon)
-                .build();
-        Map<String, Object> params = Map.of("sp64", "FD", "perc", 50.0, "age", 200.0, "h", 27.0);
-        Map<String, Object> params2 = Map.of("sp64", "LW", "perc", 30.0, "age", 100.0, "h", 15.0);
-        Map<String, Object> params3 = Map.of("sp64", "PY", "perc", 20.0);
+		layer.doBuildSiteSpecies();
+		layer.doCompleteSiteSpeciesSiteIndexInfo();
 
-        Stand stand = addStand( layer,"FD");
-        Species sp64 = addSpecies( layer,stand, params);
-        Species sp642 = addSpecies( layer,stand, params2);
-        Species sp643 = addSpecies( layer,stand, params3);
-
-        layer.doBuildSiteSpecies();
-        layer.doCompleteSiteSpeciesSiteIndexInfo();
-
-        assertThat(sp64.getTotalAge(), is(100.0));
-    }
+		assertThat(sp64.getTotalAge(), is(100.0));
+	}
 }
