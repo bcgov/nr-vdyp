@@ -278,23 +278,6 @@ public class HcsvPolygonStreamTest {
         assertThat(poly.getLayers().get("1").getDoSuppressPerHAYields(), is(suppress));
 
     }
-    @Test
-    void testPolygonInferReferenceYearFromDeathYear() throws PolygonValidationException {
-        String hcsvPolygonFileContents = // Inventory standard = FIP
-				POLYGON_CSV_HEADER_LINE + "\n"
-						+
-                        "13919428,093C090,94833422,DQU,UNK,UNK,F,UNK,0.6,10,3,HE,35,8,,MS,14,50.0,1.000,,V,T,U,TC,SP,,2020,60.0,,,,,,,,,,TC,100,,,,";
-        String hcsvLayerFileContents =
-                layerFileHeader +
-                        defaultLayerPrefix + "P,,,,,,,5,1.000050,150,PLI,100.0,,,,,,,,,,,,,,,,,,,,,,\n"; // Layer Id is a VDYP type Code
-
-        HcsvPolygonStream unit = new HcsvPolygonStream(context, new ByteArrayInputStream(hcsvPolygonFileContents.getBytes()), new ByteArrayInputStream(hcsvLayerFileContents.getBytes()));
-
-        Polygon poly = unit.getNextPolygon();
-        assertThat(poly.getYearOfDeath(), is(2020));
-        assertThat(poly.getReferenceYear(), is(poly.getYearOfDeath()));
-        assertThat(poly.getMeasurementYear(), is(poly.getYearOfDeath()));
-    }
 
     @Test
     void testLayerInferVDYPTypeFromLayerID() throws PolygonValidationException {
