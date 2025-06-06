@@ -34,7 +34,7 @@ public abstract class AbstractYieldTableRecordBeanTest {
 				Arguments.of("dominantHeight", 42.0), Arguments.of("siteIndex", 42.0),
 				Arguments.of("percentStockable", 42.0), Arguments.of("totalAge", 42),
 				Arguments.of("projectionYear", 42), Arguments.of("layerId", "Test"), Arguments.of("mapId", "Test"),
-				Arguments.of("district", "Test"), Arguments.of("featureId", (Long) 42l)
+				Arguments.of("district", "Test"), Arguments.of("featureId", 42L)
 		);
 	}
 
