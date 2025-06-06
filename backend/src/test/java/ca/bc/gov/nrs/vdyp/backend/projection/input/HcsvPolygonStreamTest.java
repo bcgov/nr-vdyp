@@ -124,12 +124,15 @@ class HcsvPolygonStreamTest {
 
         @Test
         void testNonVegCoverExceed100PercentError() throws AbstractProjectionRequestException {
-            String hcsvPolygonFileContents = // Non veg cover exceed 100
+			String myHcsvPolygonFileContents = // Non veg cover exceed 100
 					POLYGON_CSV_HEADER_LINE + "\n"
 							+
                             "13919428,093C090,94833422,DQU,UNK,UNK,I,UNK,0.6,10,3,HE,35,8,,MS,14,50.0,1.000,,V,T,U,TC,SP,2013,2013,60.0,LA,50,,BS,50,,,50,,TC,100,,,,";
 
-            HcsvPolygonStream unit = new HcsvPolygonStream(context, new ByteArrayInputStream(hcsvPolygonFileContents.getBytes()), new ByteArrayInputStream("".getBytes()));
+			HcsvPolygonStream unit = new HcsvPolygonStream(
+					context, new ByteArrayInputStream(myHcsvPolygonFileContents.getBytes()),
+					new ByteArrayInputStream("".getBytes())
+			);
 
             // No Polygon because polygon was invalid
             assertThrows(IllegalStateException.class, () -> unit.getNextPolygon());
@@ -137,12 +140,15 @@ class HcsvPolygonStreamTest {
 
         @Test
         void testNonTreeCoverExceed100PercentError() throws AbstractProjectionRequestException {
-            String hcsvPolygonFileContents = // Non tree cover exceed 100
+			String myHcsvPolygonFileContents = // Non tree cover exceed 100
 					POLYGON_CSV_HEADER_LINE + "\n"
 							+
                             "13919428,093C090,94833422,DQU,UNK,UNK,I,UNK,0.6,35,3,HE,35,8,35,MS,14,50.0,1.000,,V,T,U,TC,SP,2013,2013,60.0,LA,50,,BS,50,,,50,,TC,100,,,,";
 
-            HcsvPolygonStream unit = new HcsvPolygonStream(context, new ByteArrayInputStream(hcsvPolygonFileContents.getBytes()), new ByteArrayInputStream("".getBytes()));
+			HcsvPolygonStream unit = new HcsvPolygonStream(
+					context, new ByteArrayInputStream(myHcsvPolygonFileContents.getBytes()),
+					new ByteArrayInputStream("".getBytes())
+			);
 
             // No Polygon because polygon was invalid
             assertThrows(IllegalStateException.class, () -> unit.getNextPolygon());
@@ -150,12 +156,15 @@ class HcsvPolygonStreamTest {
 
         @Test
         void testNoBECZoneError() throws AbstractProjectionRequestException {
-            String hcsvPolygonFileContents = // Non tree cover exceed 100
+			String myHcsvPolygonFileContents = // Non tree cover exceed 100
 					POLYGON_CSV_HEADER_LINE + "\n"
 							+
                             "13919428,093C090,94833422,DQU,UNK,UNK,I,UNK,0.6,10,3,HE,35,8,,,14,50.0,1.000,,V,T,U,TC,SP,2013,2013,60.0,LA,50,,BS,50,,,50,,TC,100,,,,";
 
-            HcsvPolygonStream unit = new HcsvPolygonStream(context, new ByteArrayInputStream(hcsvPolygonFileContents.getBytes()), new ByteArrayInputStream("".getBytes()));
+			HcsvPolygonStream unit = new HcsvPolygonStream(
+					context, new ByteArrayInputStream(myHcsvPolygonFileContents.getBytes()),
+					new ByteArrayInputStream("".getBytes())
+			);
 
             // No Polygon because polygon was invalid
             assertThrows(IllegalStateException.class, () -> unit.getNextPolygon());
@@ -218,14 +227,17 @@ class HcsvPolygonStreamTest {
     @ParameterizedTest
     @MethodSource("nonForestDescriptorValues")
     void testNonForestDescriptorSetsSuppressHAYFields(String inventoryStandard, String nonForestDescriptor, boolean suppress) throws PolygonValidationException {
-        String hcsvPolygonFileContents = // Inventory standard = Silviculture
+		String myHcsvPolygonFileContents = // Inventory standard = Silviculture
 				POLYGON_CSV_HEADER_LINE + "\n"
 						+
                         "13919428,093C090,94833422,DQU,UNK,UNK,"+inventoryStandard+",UNK,0.6,10,3,HE,35,8,,MS,14,50.0,1.000,,V,T,U,TC,SP,2013,2013,60.0,,,,,,,,,,TC,100,,,,";
         String hcsvLayerFileContents = layerFileHeader +
                 defaultLayerPrefix + "1,P,,,"+nonForestDescriptor+",,,5,1.000050,150,,,,,,,,,,,,,,,,,,,,,,,,\n"; // Has non forest descriptor
 
-        HcsvPolygonStream unit = new HcsvPolygonStream(context, new ByteArrayInputStream(hcsvPolygonFileContents.getBytes()), new ByteArrayInputStream(hcsvLayerFileContents.getBytes()));
+		HcsvPolygonStream unit = new HcsvPolygonStream(
+				context, new ByteArrayInputStream(myHcsvPolygonFileContents.getBytes()),
+				new ByteArrayInputStream(hcsvLayerFileContents.getBytes())
+		);
 
         Polygon poly = unit.getNextPolygon();
         if ("I".equals(inventoryStandard) || "F".equals(inventoryStandard)) {
@@ -237,7 +249,7 @@ class HcsvPolygonStreamTest {
 
     @Test
     void testLayerInferVDYPTypeFromLayerID() throws PolygonValidationException {
-        String hcsvPolygonFileContents = // Inventory standard = FIP
+		String myHcsvPolygonFileContents = // Inventory standard = FIP
 				POLYGON_CSV_HEADER_LINE + "\n"
 						+
                         "13919428,093C090,94833422,DQU,UNK,UNK,F,UNK,0.6,10,3,HE,35,8,,MS,14,50.0,1.000,,V,T,U,TC,SP,2013,2013,60.0,,,,,,,,,,TC,100,,,,";
@@ -245,7 +257,10 @@ class HcsvPolygonStreamTest {
                 layerFileHeader +
                         defaultLayerPrefix + "P,,,,,,,5,1.000050,150,PLI,100.0,,,,,,,,,,,,,,,,,,,,,,\n"; // Layer Id is a VDYP type Code
 
-        HcsvPolygonStream unit = new HcsvPolygonStream(context, new ByteArrayInputStream(hcsvPolygonFileContents.getBytes()), new ByteArrayInputStream(hcsvLayerFileContents.getBytes()));
+		HcsvPolygonStream unit = new HcsvPolygonStream(
+				context, new ByteArrayInputStream(myHcsvPolygonFileContents.getBytes()),
+				new ByteArrayInputStream(hcsvLayerFileContents.getBytes())
+		);
 
         Polygon poly = unit.getNextPolygon();
         assertThat(poly.getLayers().get("P").getVdyp7LayerCode(), is(ProjectionTypeCode.PRIMARY));
@@ -263,7 +278,7 @@ class HcsvPolygonStreamTest {
     @ParameterizedTest
     @MethodSource("BecZoneReplacements")
     void testSubstituteATForUnusedBECZones(String input, String output) throws PolygonValidationException {
-        String hcsvPolygonFileContents =
+		String myHcsvPolygonFileContents =
 				POLYGON_CSV_HEADER_LINE + "\n"
 						+
                         "13919428,093C090,94833422,DQU,UNK,UNK,F,UNK,0.6,10,3,HE,35,8,,"+input+",14,50.0,1.000,,V,T,U,TC,SP,2013,2013,60.0,,,,,,,,,,TC,100,,,,";
@@ -271,7 +286,10 @@ class HcsvPolygonStreamTest {
                 layerFileHeader +
                         defaultLayerPrefix + "1,P,,,,,,5,1.000050,150,PLI,100.0,,,,,,,,,,,,,,,,,,,,,,\n"; // normal
 
-        HcsvPolygonStream unit = new HcsvPolygonStream(context, new ByteArrayInputStream(hcsvPolygonFileContents.getBytes()), new ByteArrayInputStream(hcsvLayerFileContents.getBytes()));
+		HcsvPolygonStream unit = new HcsvPolygonStream(
+				context, new ByteArrayInputStream(myHcsvPolygonFileContents.getBytes()),
+				new ByteArrayInputStream(hcsvLayerFileContents.getBytes())
+		);
 
         Polygon poly = unit.getNextPolygon();
         assertThat(poly.getBecZone(), is(output));
