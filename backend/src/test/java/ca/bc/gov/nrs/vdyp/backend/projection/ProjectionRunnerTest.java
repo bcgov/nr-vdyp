@@ -6,8 +6,12 @@ import static org.hamcrest.Matchers.is;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.ParameterNames;
@@ -36,6 +40,43 @@ public class ProjectionRunnerTest {
 					+ ",SPECIES_PCT_4,SPECIES_CD_5,SPECIES_PCT_5,SPECIES_CD_6,SPECIES_PCT_6,EST_AGE_SPP1,"
 					+ "EST_HEIGHT_SPP1,EST_AGE_SPP2,EST_HEIGHT_SPP2,ADJ_IND,LOREY_HEIGHT_75,BASAL_AREA_125,"
 					+ "WS_VOL_PER_HA_75,WS_VOL_PER_HA_125,CU_VOL_PER_HA_125,D_VOL_PER_HA_125,DW_VOL_PER_HA_125";
+
+	static Stream<Arguments> nonProductiveAndStandData() {
+		return Stream.of(
+				Arguments.of("NPD", "PLI,100.00,,,,,,,,,,,180,18.00", true), // Non Productive and stand data
+				Arguments.of("NPD", ",,,,,,,,,,,,,", false), // Non Productive No Stand Data
+				Arguments.of("", ",,,,,,,,,,,,,", false) // No Stand Data
+		);
+	}
+
+	@ParameterizedTest
+	@MethodSource("nonProductiveAndStandData")
+	void testNonProductiveAndStand(String nonProductiveCode, String standData, Boolean expectResults)
+			throws AbstractProjectionRequestException, IOException {
+		params = new Parameters().ageStart(0).ageEnd(190).progressFrequency(ProgressFrequency.FrequencyKind.POLYGON)
+				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.DO_ENABLE_PROGRESS_LOGGING);
+		unit = new ProjectionRunner(ProjectionRequestKind.HCSV, "TEST", params, false);
+
+		var polygonInputStream = TestUtils.makeInputStream(
+				//
+				POLYGON_CSV_HEADER_LINE,
+				"13919428,093C090,94833422,DQU,UNK,UNK,V,UNK,0.6,10,3,HE,35,8,,MS,14,50.0,1.000," + nonProductiveCode
+						+ ",V,T,U,TC,SP,2013,2013,60.0,,,,,,,,,,TC,100,,,,"
+		);
+		var layersInputStream = TestUtils.makeInputStream(
+				//
+				LAYER_CSV_HEADER_LINE,
+				"13919428,14321066,093C090,94833422,3,V,,,,,,5,10.000010,300," + standData + ",,,,,,,,,,"
+		);
+
+		Map<String, InputStream> streams = Map.of(
+				ParameterNames.HCSV_POLYGON_INPUT_DATA, polygonInputStream, ParameterNames.HCSV_LAYERS_INPUT_DATA,
+				layersInputStream
+		);
+		unit.run(streams);
+
+		assertThat(unit.getProjectionResults().hasNext(), is(expectResults));
+	}
 
 	ProjectionRunner unit;
 	Parameters params;
@@ -71,6 +112,32 @@ public class ProjectionRunnerTest {
 	}
 
 	@Test
+	void testAllowBack() throws AbstractProjectionRequestException, IOException {
+		params = new Parameters().ageStart(0).ageEnd(100)
+				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.BACK_GROW_ENABLED)
+				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.DO_ENABLE_PROGRESS_LOGGING);
+		unit = new ProjectionRunner(ProjectionRequestKind.HCSV, "TEST", params, false);
+
+		var polygonInputStream = TestUtils.makeInputStream(
+				//
+				POLYGON_CSV_HEADER_LINE,
+				"13919428,093C090,94833422,DQU,UNK,UNK,V,UNK,0.6,10,3,HE,35,8,,MS,14,50.0,1.000,,V,T,U,TC,SP,2013,2013,60.0,,,,,,,,,,TC,100,,,,"
+		);
+		var layersInputStream = TestUtils.makeInputStream(
+				//
+				LAYER_CSV_HEADER_LINE,
+				"13919428,14321066,093C090,94833422,1,P,,1,,,,20,10.000010,300,PLI,60.00,SX,40.00,,,,,,,,,180,18.00,180,23.00,,,,,,,,"
+		);
+
+		Map<String, InputStream> streams = Map.of(
+				ParameterNames.HCSV_POLYGON_INPUT_DATA, polygonInputStream, ParameterNames.HCSV_LAYERS_INPUT_DATA,
+				layersInputStream
+		);
+		unit.run(streams);
+		// TODO this is throwing and exception and I am not sure why
+	}
+
+	@Test
 	void testPolygonProgressFrequency() throws AbstractProjectionRequestException, IOException {
 		params = new Parameters().ageStart(0).ageEnd(100).progressFrequency(ProgressFrequency.FrequencyKind.POLYGON)
 				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.DO_ENABLE_PROGRESS_LOGGING);
@@ -100,30 +167,23 @@ public class ProjectionRunnerTest {
 		assertThat(progressLog.contains("Processing Polygon 13919428:"), is(true));
 		assertThat(progressLog.contains("Processing Polygon 13919429:"), is(true));
 	}
-
-	@Test
-	void testFIPStartResultExceptions() throws AbstractProjectionRequestException, IOException {
-		params = new Parameters().ageStart(0).ageEnd(100)
-				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.DO_ENABLE_PROGRESS_LOGGING);
-		unit = new ProjectionRunner(ProjectionRequestKind.HCSV, "TEST", params, false);
-
-		var polygonInputStream = TestUtils.makeInputStream(
-				//
-				POLYGON_CSV_HEADER_LINE,
-				"13919428,093C090,94833422,DQU,UNK,UNK,F,UNK,0.6,10,3,HE,35,8,,MS,14,50.0,1.000,,V,T,U,TC,SP,2013,2013,60.0,,,,,,,,,,TC,100,,,,"
-		);
-		var layersInputStream = TestUtils.makeInputStream(
-				//
-				LAYER_CSV_HEADER_LINE,
-				"13919428,14321066,093C090,94833422,1,V,,1,,,,20,0.1,,PLI,60.00,SX,40.00,,,,,,,,,180,18.00,180,23.00,,,,,,,,"
-		);
-
-		Map<String, InputStream> streams = Map.of(
-				ParameterNames.HCSV_POLYGON_INPUT_DATA, polygonInputStream, ParameterNames.HCSV_LAYERS_INPUT_DATA,
-				layersInputStream
-		);
-		unit.run(streams);
-
-	}
+	/*
+	 * There is not one case of Failed FIP start that I could hit that wasn't handled in advance of hitting FIPStart
+	 * 
+	 * @Test void testFIPStartResultExceptions() throws AbstractProjectionRequestException, IOException { params = new
+	 * Parameters().ageStart(0).ageEnd(100)
+	 * .addSelectedExecutionOptionsItem(Parameters.ExecutionOption.DO_ENABLE_PROGRESS_LOGGING); unit = new
+	 * ProjectionRunner(ProjectionRequestKind.HCSV, "TEST", params, false);
+	 * 
+	 * var polygonInputStream = TestUtils.makeInputStream( // POLYGON_CSV_HEADER_LINE,
+	 * "13919428,093C090,94833422,DQU,UNK,UNK,F,UNK,0.6,10,3,HE,35,8,,MS,14,50.0,1.000,,V,T,U,TC,SP,2013,2013,60.0,,,,,,,,,,TC,100,,,,"
+	 * ); var layersInputStream = TestUtils.makeInputStream( // LAYER_CSV_HEADER_LINE,
+	 * "13919428,14321066,093C090,94833422,1,V,,1,,,,20,0.1,,PLI,60.00,SX,40.00,,,,,,,,,180,18.00,180,23.00,,,,,,,," );
+	 * 
+	 * Map<String, InputStream> streams = Map.of( ParameterNames.HCSV_POLYGON_INPUT_DATA, polygonInputStream,
+	 * ParameterNames.HCSV_LAYERS_INPUT_DATA, layersInputStream ); unit.run(streams);
+	 * 
+	 * }
+	 */
 
 }
