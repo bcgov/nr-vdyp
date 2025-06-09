@@ -115,7 +115,7 @@ public class ProjectionRunnerTest {
 		var layersInputStream = TestUtils.makeInputStream(
 				//
 				LAYER_CSV_HEADER_LINE,
-				"13919428,14321066,093C090,94833422,1,V,,1,,,,20,10.000010,300,PLI,60.00,SX,40.00,,,,,,,,,180,18.00,180,23.00,,,,,,,,"
+				"13919428,14321066,093C090,94833422,1,V,,1,,,,20,0.1,,PLI,60.00,SX,40.00,,,,,,,,,180,18.00,180,23.00,,,,,,,,"
 		);
 
 		Map<String, InputStream> streams = Map.of(
