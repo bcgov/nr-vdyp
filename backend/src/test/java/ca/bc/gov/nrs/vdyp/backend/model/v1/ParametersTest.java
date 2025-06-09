@@ -1,14 +1,16 @@
 package ca.bc.gov.nrs.vdyp.backend.model.v1;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
-import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionRequestParametersValidator;
-import ca.bc.gov.nrs.vdyp.backend.projection.ValidatedParameters;
-import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,8 +24,6 @@ import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.OutputFormat;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ProgressFrequency.FrequencyKind;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 public class ParametersTest {
 
@@ -97,8 +97,8 @@ public class ParametersTest {
 
 		assertTrue(op.equals(op));
 		assertNotEquals(null, op);
-        assertFalse(op.equals(provider));
-        assertEquals(op, np);
+		assertFalse(op.equals(provider));
+		assertEquals(op, np);
 
 		assertEquals(op.hashCode(), np.hashCode());
 		assertEquals(op.toString(), np.toString());
@@ -108,7 +108,7 @@ public class ParametersTest {
 
 		np.setProgressFrequency(FrequencyKind.POLYGON.getValue());
 
-        assertNotEquals(op, np);
+		assertNotEquals(op, np);
 	}
 
 	@Test
@@ -128,7 +128,7 @@ public class ParametersTest {
 
 		ProgressFrequency pf1 = new ProgressFrequency(12);
 		ProgressFrequency pf2 = new ProgressFrequency(ProgressFrequency.FrequencyKind.MAPSHEET);
-        assertTrue(pf1.equals(pf1));
+		assertTrue(pf1.equals(pf1));
 		assertEquals(Integer.valueOf(12).hashCode(), pf1.hashCode());
 		assertEquals(ProgressFrequency.FrequencyKind.MAPSHEET.hashCode(), pf2.hashCode());
 		assertEquals(17, new ProgressFrequency().hashCode());
@@ -165,10 +165,10 @@ public class ParametersTest {
 		var up2 = new UtilizationParameter().speciesName("C").utilizationClass(UtilizationClassSet._12_5);
 		var up3 = new UtilizationParameter().speciesName("C").utilizationClass(UtilizationClassSet._22_5);
 
-        assertTrue(up1.equals(up1));
-        assertEquals(up1.hashCode(), up1.hashCode());
-        assertNotEquals(up2, up3);
-        assertFalse("C".equals(up2));
+		assertTrue(up1.equals(up1));
+		assertEquals(up1.hashCode(), up1.hashCode());
+		assertNotEquals(up2, up3);
+		assertFalse("C".equals(up2));
 
 		assertTrue(up1.toString().contains("speciesName: AL"));
 		assertTrue(up1.toString().contains("utilizationClass: 12.5"));
