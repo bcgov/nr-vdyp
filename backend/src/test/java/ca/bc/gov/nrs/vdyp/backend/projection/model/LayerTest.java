@@ -1,10 +1,24 @@
 package ca.bc.gov.nrs.vdyp.backend.projection.model;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.hasProperty;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Stream;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
@@ -12,23 +26,10 @@ import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ProjectionRequestKind;
 import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionContext;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.GrowthModelCode;
+import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.si32.site.SiteTool;
 import ca.bc.gov.nrs.vdyp.si32.vdyp.VdypMethods;
-import io.quarkus.test.InjectMock;
-import org.gradle.api.specs.Spec;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-
-import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
-
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Stream;
 
 public class LayerTest {
 	ProjectionContext context;
@@ -202,22 +203,22 @@ public class LayerTest {
 		static Stream<Arguments> siteIndexParameters() {
 			return Stream.of(
 					Arguments.of(
-						// Species Supplied EstimatedSiteIndex
+							// Species Supplied EstimatedSiteIndex
 							Map.of("growthModelCode", GrowthModelCode.FIP),
 							List.of(Map.of("sp64", "PL", "perc", 100.0, "age", 29.0, "si", 25.0))
 					),
 					Arguments.of(
-						// Species Supplied Age and Height Estimate
+							// Species Supplied Age and Height Estimate
 							Map.of("growthModelCode", GrowthModelCode.VRI),
 							List.of(Map.of("sp64", "PL", "perc", 100.0, "age", 29.0, "h", 10.0))
 					),
 					Arguments.of(
-						// Species Supplied Age and Height Estimate Older Leading sp64
+							// Species Supplied Age and Height Estimate Older Leading sp64
 							Map.of("growthModelCode", GrowthModelCode.VRI),
 							List.of(Map.of("sp64", "PL", "perc", 100.0, "age", 100.0, "h", 50.0))
 					),
 					Arguments.of(
-						// Species Supplied Age and Height Secondary Species
+							// Species Supplied Age and Height Secondary Species
 							Map.of("growthModelCode", GrowthModelCode.VRI),
 							List.of(
 									Map.of("sp64", "FD", "perc", 90.0, "age", 100.0, "h", 50.0),
