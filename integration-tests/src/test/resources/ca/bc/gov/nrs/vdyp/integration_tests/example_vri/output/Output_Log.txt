@@ -1,16 +1,16 @@
 
 VDYP7 Console version: '7.40b'
 
-INI File:       'C:\Program Files\VDYP7-with-intermediate-output-patch\VDYP_CFG\VDYP.ini'
+INI File:       'C:\Program Files\VDYP7\VDYP_CFG\VDYP.ini'
 Input Path:     ''
-HCSV Poly Inp:  'C:\temp\tmp\example_package\input\VDYP7_INPUT_POLY.csv'
-HCSV Layer Inp: 'C:\temp\tmp\example_package\input\VDYP7_INPUT_LAYER.csv'
-Output Path:    'C:\temp\tmp\example_package\output\Output_YldTbl.csv'
-Error File:     'C:\temp\tmp\example_package\output\Output_Error.txt'
-Log File:       'C:\temp\tmp\example_package\output\Output_Log.txt'
+HCSV Poly Inp:  'C:\Users\fdhks\Desktop\temp\basic\input\VDYP7_INPUT_POLY.csv'
+HCSV Layer Inp: 'C:\Users\fdhks\Desktop\temp\basic\input\VDYP7_INPUT_LAYER.csv'
+Output Path:    'C:\Users\fdhks\Desktop\temp\basic\output\Output_YldTbl.csv'
+Error File:     'C:\Users\fdhks\Desktop\temp\basic\output\Output_Error.txt'
+Log File:       'C:\Users\fdhks\Desktop\temp\basic\output\Output_Log.txt'
 Debug Folder:   ''
 Debug Mode:     'Inactive'
-Log Cfg File:   'C:\Program Files\VDYP7-with-intermediate-output-patch\VDYP_CFG\VDYP7LoggingConfig.txt'
+Log Cfg File:   'C:\Program Files\VDYP7\VDYP_CFG\VDYP7LoggingConfig.txt'
 Start Age:     0
 End Age:       250
 Start Year:    N/A
