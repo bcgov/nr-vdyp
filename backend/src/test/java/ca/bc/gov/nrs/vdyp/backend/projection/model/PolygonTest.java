@@ -2,17 +2,31 @@ package ca.bc.gov.nrs.vdyp.backend.projection.model;
 
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
-import static org.hamcrest.Matchers.allOf;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.closeTo;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.iterableWithSize;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Stream;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
+import ca.bc.gov.nrs.vdyp.backend.model.v1.PolygonMessageKind;
 import ca.bc.gov.nrs.vdyp.backend.model.v1.ProjectionRequestKind;
 import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionContext;
 import ca.bc.gov.nrs.vdyp.backend.projection.input.HcsvPolygonRecordBean;
@@ -23,25 +37,7 @@ import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.NonVegetationTyp
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.OtherVegetationTypeCode;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
 import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.SilviculturalBaseCode;
-import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
-import ca.bc.gov.nrs.vdyp.si32.enumerations.SpeciesRegion;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-
-import ca.bc.gov.nrs.vdyp.backend.model.v1.PolygonMessageKind;
 import ca.bc.gov.nrs.vdyp.si32.site.SiteTool;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
-
-import java.beans.IntrospectionException;
-import java.util.Arrays;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Stream;
 
 public class PolygonTest {
 
@@ -738,7 +734,7 @@ public class PolygonTest {
 				return Stream.of(
 						Arguments.of(
 								new LayersCase(
-									// Happy Path
+										// Happy Path
 										ProjectionTypeCode.ACTUAL_PROJECTION_TYPES_LIST,
 										Map.of(
 												ProjectionTypeCode.VETERAN,
@@ -758,7 +754,7 @@ public class PolygonTest {
 						),
 						Arguments.of(
 								new LayersCase(
-									// Nominal Dead
+										// Nominal Dead
 										List.of(ProjectionTypeCode.PRIMARY, ProjectionTypeCode.DEAD),
 										Map.of(
 												ProjectionTypeCode.PRIMARY, Map.of("ps", 10.0, "cc", (short) 11),
@@ -768,7 +764,7 @@ public class PolygonTest {
 						),
 						Arguments.of(
 								new LayersCase(
-									// Nominal Regeneration
+										// Nominal Regeneration
 										List.of(ProjectionTypeCode.PRIMARY, ProjectionTypeCode.REGENERATION),
 										Map.of(
 												ProjectionTypeCode.PRIMARY, Map.of("ps", 10.0, "cc", (short) 11),
@@ -778,7 +774,7 @@ public class PolygonTest {
 						),
 						Arguments.of(
 								new LayersCase(
-									// Nominal Veteran
+										// Nominal Veteran
 										List.of(ProjectionTypeCode.PRIMARY, ProjectionTypeCode.VETERAN),
 										Map.of(
 												ProjectionTypeCode.PRIMARY, Map.of("ps", 10.0, "cc", (short) 11),
@@ -792,7 +788,7 @@ public class PolygonTest {
 						),
 						Arguments.of(
 								new LayersCase(
-									// Nominal Residual
+										// Nominal Residual
 										List.of(ProjectionTypeCode.PRIMARY, ProjectionTypeCode.RESIDUAL),
 										Map.of(
 												ProjectionTypeCode.PRIMARY,
@@ -803,7 +799,7 @@ public class PolygonTest {
 						),
 						Arguments.of(
 								new LayersCase(
-									// Nominal Primary
+										// Nominal Primary
 										List.of(ProjectionTypeCode.PRIMARY, ProjectionTypeCode.RESIDUAL),
 										Map.of(
 												ProjectionTypeCode.RESIDUAL,
@@ -814,7 +810,7 @@ public class PolygonTest {
 						),
 						Arguments.of(
 								new LayersCase(
-									// non basal area primary without dead
+										// non basal area primary without dead
 										List.of(ProjectionTypeCode.PRIMARY, ProjectionTypeCode.RESIDUAL),
 										Map.of(
 												ProjectionTypeCode.PRIMARY,
@@ -825,7 +821,7 @@ public class PolygonTest {
 						),
 						Arguments.of(
 								new LayersCase(
-									// non basal area primary with dead
+										// non basal area primary with dead
 										List.of(
 												ProjectionTypeCode.PRIMARY, ProjectionTypeCode.RESIDUAL,
 												ProjectionTypeCode.DEAD
@@ -844,7 +840,7 @@ public class PolygonTest {
 						),
 						Arguments.of(
 								new LayersCase(
-									// nominal no residual Primary
+										// nominal no residual Primary
 										List.of(ProjectionTypeCode.PRIMARY, ProjectionTypeCode.DEAD),
 										Map.of(
 												ProjectionTypeCode.PRIMARY,
@@ -856,7 +852,7 @@ public class PolygonTest {
 						),
 						Arguments.of(
 								new LayersCase(
-									// no residual Primary
+										// no residual Primary
 										List.of(ProjectionTypeCode.PRIMARY, ProjectionTypeCode.VETERAN),
 										Map.of(
 												ProjectionTypeCode.PRIMARY, Map.of("cc", (short) 11),
@@ -919,7 +915,7 @@ public class PolygonTest {
 			static Stream<Arguments> selectImportantLayersCases() {
 				return Stream.of(
 						Arguments.of(
-							// FIP Veteran layer CC too high
+								// FIP Veteran layer CC too high
 								InventoryStandard.FIP,
 								new LayersCase(
 										List.of(ProjectionTypeCode.PRIMARY, ProjectionTypeCode.VETERAN),
@@ -935,7 +931,7 @@ public class PolygonTest {
 								), Map.of(ProjectionTypeCode.PRIMARY, true)
 						),
 						Arguments.of(
-							// rank code disqualify veeran
+								// rank code disqualify veeran
 								InventoryStandard.FIP,
 								new LayersCase(
 										List.of(ProjectionTypeCode.PRIMARY, ProjectionTypeCode.VETERAN),
@@ -950,7 +946,7 @@ public class PolygonTest {
 								), Map.of(ProjectionTypeCode.PRIMARY, true)
 						),
 						Arguments.of(
-							// Valid setup
+								// Valid setup
 								InventoryStandard.FIP,
 								new LayersCase(
 										List.of(ProjectionTypeCode.PRIMARY, ProjectionTypeCode.VETERAN),
@@ -965,7 +961,7 @@ public class PolygonTest {
 								), Map.of(ProjectionTypeCode.PRIMARY, true, ProjectionTypeCode.VETERAN, true)
 						),
 						Arguments.of(
-							// Targetted veteran
+								// Targetted veteran
 								InventoryStandard.FIP,
 								new LayersCase(
 										List.of(ProjectionTypeCode.PRIMARY, ProjectionTypeCode.VETERAN),

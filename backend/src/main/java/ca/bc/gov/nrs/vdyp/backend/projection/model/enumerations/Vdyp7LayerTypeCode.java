@@ -15,23 +15,23 @@ public enum Vdyp7LayerTypeCode {
 		this.code = code;
 	}
 
-    /**
-     * Convert from a String code to a Vdyp7LayerTypeCode.
-     *
-     * @param vdypCode the projection type to be mapped
-     * @return the equivalent Vdyp7LayerTypeCode
-     */
-    public static Vdyp7LayerTypeCode fromCode(String vdypCode) {
-        for (var e : Vdyp7LayerTypeCode.values()) {
-            if (e.code.equals(vdypCode)) {
-                return e;
-            }
-        }
+	/**
+	 * Convert from a String code to a Vdyp7LayerTypeCode.
+	 *
+	 * @param vdypCode the projection type to be mapped
+	 * @return the equivalent Vdyp7LayerTypeCode
+	 */
+	public static Vdyp7LayerTypeCode fromCode(String vdypCode) {
+		for (var e : Vdyp7LayerTypeCode.values()) {
+			if (e.code.equals(vdypCode)) {
+				return e;
+			}
+		}
 
-        throw new IllegalArgumentException(
-                MessageFormat.format("Code {0} does not have an equivalent Vdyp7LayerTypeCode", vdypCode)
-        );
-    }
+		throw new IllegalArgumentException(
+				MessageFormat.format("Code {0} does not have an equivalent Vdyp7LayerTypeCode", vdypCode)
+		);
+	}
 
 	/**
 	 * Return <code>true</code> iff <code>candidate</code> is the text of the <code>code</code> of a SpecialLayerType.

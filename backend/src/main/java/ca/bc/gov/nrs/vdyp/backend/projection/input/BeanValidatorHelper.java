@@ -143,7 +143,7 @@ public class BeanValidatorHelper {
 		if (code != null) {
 			try {
 				validator.accept(code);
-                return true;
+				return true;
 			} catch (IllegalArgumentException e) {
 				addValidationMessage(ValidationMessageKind.INVALID_CODE, fieldName, code);
 			}

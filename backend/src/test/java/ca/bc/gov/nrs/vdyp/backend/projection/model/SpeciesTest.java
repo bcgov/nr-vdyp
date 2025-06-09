@@ -2,25 +2,21 @@ package ca.bc.gov.nrs.vdyp.backend.projection.model;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.closeTo;
-import static org.hamcrest.Matchers.greaterThan;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.List;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
-import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.InventoryStandard;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.InventoryStandard;
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
 
 class SpeciesTest {
@@ -31,8 +27,9 @@ class SpeciesTest {
 		var polygon = new Polygon.Builder().build();
 		var layer = new Layer.Builder().polygon(polygon).layerId("Test").build();
 		var stand = new Stand.Builder().sp0Code("P").layer(layer).build();
-		var speciesBuilder =
-		assertThrows(IllegalStateException.class, () -> new Species.Builder().speciesCode("PL").build());
+		var speciesBuilder = assertThrows(
+				IllegalStateException.class, () -> new Species.Builder().speciesCode("PL").build()
+		);
 		assertThrows(IllegalStateException.class, () -> new Species.Builder().stand(stand).build());
 		assertThrows(IllegalStateException.class, () -> new Species.Builder().stand(stand).speciesCode("PL").build());
 	}

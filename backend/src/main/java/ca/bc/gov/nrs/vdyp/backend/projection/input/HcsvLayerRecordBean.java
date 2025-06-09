@@ -542,7 +542,8 @@ public class HcsvLayerRecordBean {
 			if (bean.targetVdyp7LayerCode == null) {
 				if (Vdyp7LayerTypeCode.isLayerIdAVdyp7LayerType(bean.layerId)) {
 					Vdyp7LayerTypeCode layerType = Vdyp7LayerTypeCode.fromCode(bean.layerId);
-					bean.targetVdyp7LayerCode = ProjectionTypeCode.fromVdyp7LayerType(layerType).specialLayerTypeCodeText;
+					bean.targetVdyp7LayerCode = ProjectionTypeCode
+							.fromVdyp7LayerType(layerType).specialLayerTypeCodeText;
 				}
 			}
 
