@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.backend.projection;
 
-import static ca.bc.gov.nrs.vdyp.backend.projection.ProjectionStageCode.*;
+import static ca.bc.gov.nrs.vdyp.backend.projection.ProjectionStageCode.Back;
+import static ca.bc.gov.nrs.vdyp.backend.projection.ProjectionStageCode.Forward;
 
 import java.nio.file.Path;
 import java.text.MessageFormat;
