@@ -209,7 +209,7 @@ public class PolygonProjectionRunner {
 
 				var oFipResult = state.getProcessingResults(ProjectionStageCode.Initial, projectionType);
 
-				if (!oFipResult.isPresent()) {
+				if (oFipResult.isEmpty()) {
 					logger.debug(
 							"{}: performed FIP Model successfully for projection type {}", polygon, projectionType
 					);
