@@ -33,7 +33,7 @@ public class ProjectionRunnerTest {
 	@ParameterizedTest
 	@MethodSource("nonProductiveAndStandData")
 	void testNonProductiveAndStand(String nonProductiveCode, String standData, Boolean expectResults)
-			throws AbstractProjectionRequestException, IOException {
+			throws AbstractProjectionRequestException {
 		params = new Parameters().ageStart(0).ageEnd(190).progressFrequency(ProgressFrequency.FrequencyKind.POLYGON)
 				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.DO_ENABLE_PROGRESS_LOGGING);
 		unit = new ProjectionRunner(ProjectionRequestKind.HCSV, "TEST", params, false);
@@ -93,7 +93,7 @@ public class ProjectionRunnerTest {
 	}
 
 	@Test
-	void testAllowBack() throws AbstractProjectionRequestException, IOException {
+	void testAllowBack() throws AbstractProjectionRequestException {
 		params = new Parameters().ageStart(0).ageEnd(100)
 				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.BACK_GROW_ENABLED)
 				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.DO_ENABLE_PROGRESS_LOGGING);
