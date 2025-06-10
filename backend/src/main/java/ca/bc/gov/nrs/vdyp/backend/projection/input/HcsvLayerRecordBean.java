@@ -541,8 +541,9 @@ public class HcsvLayerRecordBean {
 			// V7Ext_AddLayer, 2672
 			if (bean.targetVdyp7LayerCode == null) {
 				if (Vdyp7LayerTypeCode.isLayerIdAVdyp7LayerType(bean.layerId)) {
-					Vdyp7LayerTypeCode layerType = Vdyp7LayerTypeCode.valueOf(bean.layerId);
-					bean.targetVdyp7LayerCode = ProjectionTypeCode.fromVdyp7LayerType(layerType).name();
+					Vdyp7LayerTypeCode layerType = Vdyp7LayerTypeCode.fromCode(bean.layerId);
+					bean.targetVdyp7LayerCode = ProjectionTypeCode
+							.fromVdyp7LayerType(layerType).specialLayerTypeCodeText;
 				}
 			}
 
@@ -633,7 +634,7 @@ public class HcsvLayerRecordBean {
 
 			// Now, throw if there's been any validation errors.
 
-			if (bvh.getValidationMessages().size() > 0) {
+			if (!bvh.getValidationMessages().isEmpty()) {
 				throw new CsvConstraintViolationException(new LayerValidationException(bvh.getValidationMessages()));
 			}
 
