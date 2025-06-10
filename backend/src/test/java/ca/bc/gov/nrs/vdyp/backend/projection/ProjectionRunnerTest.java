@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.backend.projection;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.is;
 
 import java.io.IOException;
@@ -93,7 +94,7 @@ public class ProjectionRunnerTest {
 	}
 
 	@Test
-	void testAllowBack() throws AbstractProjectionRequestException {
+	void testAllowBack() throws AbstractProjectionRequestException, IOException {
 		params = new Parameters().ageStart(0).ageEnd(100)
 				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.BACK_GROW_ENABLED)
 				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.DO_ENABLE_PROGRESS_LOGGING);
@@ -115,7 +116,8 @@ public class ProjectionRunnerTest {
 				layersInputStream
 		);
 		unit.run(streams);
-		// TODO this is throwing and exception and I am not sure why
+		String results = new String(unit.getYieldTable().readAllBytes());
+		assertThat(results.length(), greaterThan(0));
 	}
 
 	@Test
