@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.vdyp.backend.projection;
+package ca.bc.gov.nrs.vdyp.ecore.projection;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
@@ -14,11 +14,11 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.AbstractProjectionRequestException;
-import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.ParameterNames;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.ProgressFrequency;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.ProjectionRequestKind;
+import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.AbstractProjectionRequestException;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProgressFrequency;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind;
+import ca.bc.gov.nrs.vdyp.ecore.utils.ParameterNames;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 public class ProjectionRunnerTest {
@@ -35,7 +35,7 @@ public class ProjectionRunnerTest {
 	@MethodSource("nonProductiveAndStandData")
 	void testNonProductiveAndStand(String nonProductiveCode, String standData, Boolean expectResults)
 			throws AbstractProjectionRequestException {
-		params = new Parameters().ageStart(0).ageEnd(190).progressFrequency(ProgressFrequency.FrequencyKind.POLYGON)
+		params = new Parameters().ageStart(0).ageEnd(200).progressFrequency(ProgressFrequency.FrequencyKind.POLYGON)
 				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.DO_ENABLE_PROGRESS_LOGGING);
 		unit = new ProjectionRunner(ProjectionRequestKind.HCSV, "TEST", params, false);
 
@@ -122,7 +122,7 @@ public class ProjectionRunnerTest {
 
 	@Test
 	void testPolygonProgressFrequency() throws AbstractProjectionRequestException, IOException {
-		params = new Parameters().ageStart(0).ageEnd(100).progressFrequency(ProgressFrequency.FrequencyKind.POLYGON)
+		params = new Parameters().ageStart(0).ageEnd(190).progressFrequency(ProgressFrequency.FrequencyKind.POLYGON)
 				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.DO_ENABLE_PROGRESS_LOGGING);
 		unit = new ProjectionRunner(ProjectionRequestKind.HCSV, "TEST", params, false);
 

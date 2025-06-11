@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.vdyp.backend.projection;
+package ca.bc.gov.nrs.vdyp.ecore.projection;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -10,10 +10,10 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonExecutionException;
-import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.GrowthModelCode;
-import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProcessingModeCode;
-import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
+import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.PolygonExecutionException;
+import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.GrowthModelCode;
+import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProcessingModeCode;
+import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProjectionTypeCode;
 
 public class PolygonProjectionStateTest {
 	PolygonProjectionState unit;
