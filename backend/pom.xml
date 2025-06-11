@@ -32,6 +32,12 @@
         <version>${quarkus.platform.version}</version>
         <type>pom</type>
         <scope>import</scope>
+				<exclusions>
+					<exclusion>
+						<groupId>org.slf4j</groupId>
+						<artifactId>slf4j-jboss-logmanager</artifactId>
+					</exclusion>
+				</exclusions>
       </dependency>
     </dependencies>
   </dependencyManagement>
