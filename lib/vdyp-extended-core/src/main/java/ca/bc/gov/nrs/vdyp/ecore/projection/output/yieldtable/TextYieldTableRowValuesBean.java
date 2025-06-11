@@ -12,7 +12,7 @@ import java.util.Map;
 
 import org.apache.commons.lang3.Validate;
 
-class TextYieldTableRowValuesBean implements YieldTableRowBean {
+public class TextYieldTableRowValuesBean implements YieldTableRowBean {
 
 	private String tableNumber;
 	private String featureId;
