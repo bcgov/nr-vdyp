@@ -7,7 +7,7 @@ import java.lang.reflect.Type;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;

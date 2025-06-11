@@ -16,9 +16,9 @@ import org.slf4j.LoggerFactory;
 import com.opencsv.bean.CsvToBeanBuilder;
 
 import ca.bc.gov.nrs.api.helpers.TestHelper;
-import ca.bc.gov.nrs.vdyp.backend.projection.input.HcsvLayerRecordBean;
-import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.ProjectionTypeCode;
-import ca.bc.gov.nrs.vdyp.backend.utils.FileHelper;
+import ca.bc.gov.nrs.vdyp.ecore.projection.input.HcsvLayerRecordBean;
+import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProjectionTypeCode;
+import ca.bc.gov.nrs.vdyp.ecore.utils.FileHelper;
 
 public class HcsvLayerReaderTest {
 

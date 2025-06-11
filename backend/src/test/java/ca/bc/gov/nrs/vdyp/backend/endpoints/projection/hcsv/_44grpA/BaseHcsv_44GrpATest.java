@@ -23,8 +23,8 @@ import org.slf4j.LoggerFactory;
 import ca.bc.gov.nrs.api.helpers.TestHelper;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.BaseHttpProjectionRequestTest;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.ParameterNames;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
-import ca.bc.gov.nrs.vdyp.backend.utils.FileHelper;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
+import ca.bc.gov.nrs.vdyp.ecore.utils.FileHelper;
 import io.smallrye.common.constraint.Assert;
 import jakarta.ws.rs.core.MediaType;
 
