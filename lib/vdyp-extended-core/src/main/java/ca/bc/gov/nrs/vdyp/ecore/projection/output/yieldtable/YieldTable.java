@@ -95,7 +95,7 @@ public class YieldTable implements Closeable {
 	 * <p>
 	 *
 	 * @param polygon                       the polygon for which a yield table is to be generated
-	 * @param polygonAfterProjection        the result of projecting the polygon
+	 * @param projectionResults             the result of projecting the polygon
 	 * @param layerReportingInfo            the layer of the polygon. May be null, indicating that the yield table
 	 *                                      summarizes information at the polygon level only.
 	 * @param state                         the current state of the (completed) projection of <code>polygon</code>
@@ -280,9 +280,9 @@ public class YieldTable implements Closeable {
 	 * <p>
 	 * Writes <code>row</code> out to <code>writer</code>.
 	 *
-	 * @param rowContext the context of the row to be written
-	 * @param writer     the target writer
-	 * @param projection
+	 * @param rowContext               the context of the row to be written
+	 * @param polygonProjectionsByYear Map of years to projected Polygon values
+	 * @param writer                   the target writer
 	 * @throws YieldTableGenerationException
 	 */
 	private void generateYieldTableRow(
@@ -657,7 +657,7 @@ public class YieldTable implements Closeable {
 	 *
 	 * @param rowContext               the row object into which the growth information is written
 	 * @param polygonProjectionsByYear the result of projecting the polygon (all years)
-	 * @param vdypPolygon              the source of the growth information
+	 * @param layer                    the source of the growth information
 	 * @param totalAge                 year for which the growth information is to be retrieved
 	 * @throws StandYieldCalculationException
 	 */
