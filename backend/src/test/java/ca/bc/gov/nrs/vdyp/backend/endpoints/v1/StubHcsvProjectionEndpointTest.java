@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import ca.bc.gov.nrs.api.helpers.TestHelper;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.utils.FileHelper;
+import ca.bc.gov.nrs.vdyp.ecore.utils.ParameterNames;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.MediaType;

@@ -16,7 +16,6 @@ import org.junit.jupiter.api.Test;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ca.bc.gov.nrs.api.helpers.TestHelper;
-import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.ParameterNames;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.ValidationMessageListResource;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.ValidationMessageResource;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
@@ -24,6 +23,7 @@ import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters.AgeYearRangeCombinationKind;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters.OutputFormat;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessage;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessageKind;
+import ca.bc.gov.nrs.vdyp.ecore.utils.ParameterNames;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.MediaType;
