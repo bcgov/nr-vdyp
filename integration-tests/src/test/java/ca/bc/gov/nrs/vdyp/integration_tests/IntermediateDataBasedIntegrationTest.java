@@ -23,21 +23,22 @@ import ca.bc.gov.nrs.vdyp.test.TestUtils;
 import io.github.classgraph.ClassGraph;
 
 public abstract class IntermediateDataBasedIntegrationTest extends BaseDataBasedIntegrationTest {
-	@TempDir(cleanup = CleanupMode.ON_SUCCESS)
-	static Path configDir;
 
 	@TempDir(cleanup = CleanupMode.ON_SUCCESS)
-	Path testConfigDir;
+	protected static Path configDir;
 
 	@TempDir(cleanup = CleanupMode.ON_SUCCESS)
-	Path outputDir;
+	protected Path testConfigDir;
 
-	static enum State {
+	@TempDir(cleanup = CleanupMode.ON_SUCCESS)
+	protected Path outputDir;
+
+	protected static enum State {
 		FipInput("FIP", "fipInput"), VriInput("VRI", "vriInput"), ForwardInput("7INP", "forwardInput"),
 		ForwardOutput("7OUT", "forwardOutput");
 
-		final String prefix;
-		final Path dir;
+		public final String prefix;
+		public final Path dir;
 
 		State(String prefix, String dir) {
 			this.prefix = prefix;
@@ -45,7 +46,7 @@ public abstract class IntermediateDataBasedIntegrationTest extends BaseDataBased
 		}
 	}
 
-	static enum Data {
+	protected static enum Data {
 		Polygon("P"), Layer("L"), Species("S"), Site("I"), Utilization("U"), Compatibility("C"), GrowTo("GROW");
 
 		final String suffix;
@@ -69,16 +70,16 @@ public abstract class IntermediateDataBasedIntegrationTest extends BaseDataBased
 		DATA_FILENAMES = Collections.unmodifiableMap(map);
 	}
 
-	static final String POLYGON_OUTPUT_NAME = "poly.dat";
-	static final String SPECIES_OUTPUT_NAME = "spec.dat";
-	static final String UTILIZATION_OUTPUT_NAME = "util.dat";
-	static final String COMPATIBILITY_OUTPUT_NAME = "compat.dat";
+	protected static final String POLYGON_OUTPUT_NAME = "poly.dat";
+	protected static final String SPECIES_OUTPUT_NAME = "spec.dat";
+	protected static final String UTILIZATION_OUTPUT_NAME = "util.dat";
+	protected static final String COMPATIBILITY_OUTPUT_NAME = "compat.dat";
 
-	static final Pattern POLY_LINE_MATCHER = Pattern
+	protected static final Pattern POLY_LINE_MATCHER = Pattern
 			.compile("^(.{25}) (.{4}) (.{1})(.{6})(.{3})(.{3})(.{3})$", Pattern.MULTILINE);
-	static final Pattern UTIL_LINE_MATCHER = Pattern
+	protected static final Pattern UTIL_LINE_MATCHER = Pattern
 			.compile("^(.{27})(?:(.{9})(.{9})(.{9})(.{9})(.{9})(.{9})(.{9})(.{9})(.{9})(.{6}))?$", Pattern.MULTILINE);
-	static final Pattern SPEC_LINE_MATCHER = Pattern.compile(
+	protected static final Pattern SPEC_LINE_MATCHER = Pattern.compile(
 			"^(.{25}) (.?) (?:(.{2}) (.{2}) (.{3})(.{5})(.{8})(.{8})(.{8})(.{6})(.{6})(.{6})(.{6})(.{6})(.{2})(.{3}))?$",
 			Pattern.MULTILINE
 	);
@@ -89,7 +90,7 @@ public abstract class IntermediateDataBasedIntegrationTest extends BaseDataBased
 	 * @throws IOException
 	 */
 	@BeforeAll
-	static void initConfigDir() throws IOException {
+	protected static void initConfigDir() throws IOException {
 
 		final Path coeDir = configDir.resolve("coe/");
 		Files.createDirectory(coeDir);
@@ -108,15 +109,15 @@ public abstract class IntermediateDataBasedIntegrationTest extends BaseDataBased
 		}
 	}
 
-	static String fileName(State state, Data data) {
+	protected static String fileName(State state, Data data) {
 		return DATA_FILENAMES.get(data);
 	}
 
-	static Path dataPath(State state, Data data) {
+	protected static Path dataPath(State state, Data data) {
 		return state.dir.resolve(fileName(state, data));
 	}
 
-	boolean polygonLinesMatch(String actual, String expected) {
+	protected boolean polygonLinesMatch(String actual, String expected) {
 		var actualMatch = POLY_LINE_MATCHER.matcher(actual);
 		var expectedMatch = POLY_LINE_MATCHER.matcher(expected);
 		if (!actualMatch.find()) {
@@ -145,7 +146,7 @@ public abstract class IntermediateDataBasedIntegrationTest extends BaseDataBased
 		return true;
 	}
 
-	boolean utilLinesMatch(String actual, String expected) {
+	protected boolean utilLinesMatch(String actual, String expected) {
 		var actualMatch = UTIL_LINE_MATCHER.matcher(actual);
 		var expectedMatch = UTIL_LINE_MATCHER.matcher(expected);
 		if (!actualMatch.find()) {
@@ -183,7 +184,7 @@ public abstract class IntermediateDataBasedIntegrationTest extends BaseDataBased
 		return true;
 	}
 
-	boolean specLinesMatch(String actual, String expected) {
+	protected boolean specLinesMatch(String actual, String expected) {
 		var actualMatch = SPEC_LINE_MATCHER.matcher(actual);
 		var expectedMatch = SPEC_LINE_MATCHER.matcher(expected);
 		if (!actualMatch.find()) {
@@ -227,7 +228,7 @@ public abstract class IntermediateDataBasedIntegrationTest extends BaseDataBased
 		return true;
 	}
 
-	BiPredicate<String, String> floatStringsWithin(float relativeThreshold, float absoluteThreshold) {
+	protected BiPredicate<String, String> floatStringsWithin(float relativeThreshold, float absoluteThreshold) {
 
 		return new BiPredicate<>() {
 
@@ -253,11 +254,11 @@ public abstract class IntermediateDataBasedIntegrationTest extends BaseDataBased
 
 	}
 
-	BiPredicate<String, String> floatStringsWithin() {
+	protected BiPredicate<String, String> floatStringsWithin() {
 		return floatStringsWithin(0.015f, 0.01f);
 	}
 
-	BiPredicate<String, String> floatStringsDefaultZero(BiPredicate<String, String> test) {
+	protected BiPredicate<String, String> floatStringsDefaultZero(BiPredicate<String, String> test) {
 		return (String actual, String expected) -> {
 			if (actual == null && expected == null) {
 				return true;
@@ -283,11 +284,11 @@ public abstract class IntermediateDataBasedIntegrationTest extends BaseDataBased
 		};
 	}
 
-	BiPredicate<String, String> ignoreStrings() {
+	protected BiPredicate<String, String> ignoreStrings() {
 		return (s1, s2) -> true;
 	}
 
-	BiPredicate<String, String> intStringsEqual() {
+	protected BiPredicate<String, String> intStringsEqual() {
 		return new BiPredicate<>() {
 
 			@Override
@@ -307,7 +308,7 @@ public abstract class IntermediateDataBasedIntegrationTest extends BaseDataBased
 		};
 	}
 
-	BiPredicate<String, String> intStringsEqual(IntUnaryOperator normalize) {
+	protected BiPredicate<String, String> intStringsEqual(IntUnaryOperator normalize) {
 		return new BiPredicate<>() {
 
 			@Override
@@ -327,7 +328,7 @@ public abstract class IntermediateDataBasedIntegrationTest extends BaseDataBased
 		};
 	}
 
-	BiPredicate<String, String> stringsEqual() {
+	protected BiPredicate<String, String> stringsEqual() {
 		return new BiPredicate<>() {
 
 			@Override

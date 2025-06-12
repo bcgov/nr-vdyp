@@ -22,13 +22,13 @@ import org.junit.jupiter.params.provider.Arguments;
 
 import io.github.classgraph.ClassGraph;
 
-abstract class BaseDataBasedIntegrationTest {
+public abstract class BaseDataBasedIntegrationTest {
 
 	/**
 	 * Directory containing the integration test data. Do not alter this during the tests.
 	 */
 	@TempDir(cleanup = CleanupMode.ON_SUCCESS)
-	static Path testDataDir;
+	protected static Path testDataDir;
 
 	/**
 	 * Copy a classpath resource to a filesystem location
@@ -39,7 +39,7 @@ abstract class BaseDataBasedIntegrationTest {
 	 * @return
 	 * @throws IOException
 	 */
-	static Path copyResource(Class<?> klazz, String path, Path destination) throws IOException {
+	protected static Path copyResource(Class<?> klazz, String path, Path destination) throws IOException {
 		Path result = destination.resolve(path);
 
 		try (var is = klazz.getResourceAsStream(path)) {
@@ -56,10 +56,11 @@ abstract class BaseDataBasedIntegrationTest {
 	 * @throws IOException
 	 */
 	@BeforeAll
-	static void initTestData() throws IOException {
+	protected static void initTestData() throws IOException {
 
 		try (
-				var scan = new ClassGraph().verbose().addClassLoader(ITDataBased.class.getClassLoader())
+				var scan = new ClassGraph().verbose()
+						.addClassLoader(BaseDataBasedIntegrationTest.class.getClassLoader())
 						.acceptPaths("ca/bc/gov/nrs/vdyp/integration_tests").scan()
 		) {
 			for (var resource : scan.getResourcesMatchingWildcard("ca/bc/gov/nrs/vdyp/integration_tests/**")) {
@@ -82,11 +83,11 @@ abstract class BaseDataBasedIntegrationTest {
 
 	}
 
-	static Stream<String> testNameProvider() throws IOException {
+	protected static Stream<String> testNameProvider() throws IOException {
 		return Files.list(testDataDir).map(p -> p.getFileName().toString());
 	}
 
-	static Collection<Arguments> testNameAndLayerProvider() throws IOException {
+	protected static Collection<Arguments> testNameAndLayerProvider() throws IOException {
 		try {
 			return Files.list(testDataDir).filter(p -> Files.isDirectory(p)).flatMap(p -> {
 				try {
