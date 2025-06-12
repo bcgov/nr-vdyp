@@ -284,7 +284,7 @@ public class RealComponentRunner implements ComponentRunner {
 			if (state.didRunProjectionStage(ProjectionStageCode.Back, projectionType)) {
 
 				try (var bis = vdypControlFileResolver.resolveForInput(Vdyp7Constants.BACK_CONTROL_FILE_NAME)) {
-					// FIXME back not implemented yet
+					// FIXME See VDYP-157
 					// var backwardsControlFileParser = new ForwardControlParser();
 					// Map<String, Object> backwardsControlMap = backwardsControlFileParser
 					// .parse(bis, vdypControlFileResolver, new HashMap<>());
