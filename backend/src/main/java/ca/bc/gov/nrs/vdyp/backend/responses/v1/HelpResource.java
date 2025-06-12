@@ -22,7 +22,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-import ca.bc.gov.nrs.vdyp.backend.model.v1.ParameterDetailsMessage;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.ParameterDetailsMessage;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import jakarta.ws.rs.core.UriInfo;
 

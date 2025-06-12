@@ -1,7 +1,8 @@
 package ca.bc.gov.nrs.vdyp.backend.endpoints.projection.hcsv.scenarios;
 
 import static io.restassured.RestAssured.given;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,9 +22,9 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.api.helpers.ResultYieldTable;
 import ca.bc.gov.nrs.api.helpers.TestHelper;
-import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.ParameterNames;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
-import ca.bc.gov.nrs.vdyp.backend.utils.FileHelper;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
+import ca.bc.gov.nrs.vdyp.ecore.utils.FileHelper;
+import ca.bc.gov.nrs.vdyp.ecore.utils.ParameterNames;
 import jakarta.ws.rs.core.MediaType;
 
 public class Scenario {

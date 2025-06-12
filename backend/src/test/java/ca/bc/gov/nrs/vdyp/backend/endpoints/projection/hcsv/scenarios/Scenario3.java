@@ -3,7 +3,9 @@ package ca.bc.gov.nrs.vdyp.backend.endpoints.projection.hcsv.scenarios;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.csvRowContaining;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.arrayWithSize;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -15,7 +17,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.api.helpers.TestHelper;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 

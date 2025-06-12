@@ -1,5 +1,7 @@
 package ca.bc.gov.nrs.api.helpers;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -21,19 +23,18 @@ import java.util.TreeMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.opencsv.bean.CsvBindByName;
 import com.opencsv.bean.CsvBindByPosition;
 
-import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessageKind;
-import ca.bc.gov.nrs.vdyp.backend.projection.input.HcsvPolygonRecordBean;
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters.ExecutionOption;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessage;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessageKind;
+import ca.bc.gov.nrs.vdyp.ecore.projection.input.HcsvPolygonRecordBean;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.ForwardDataStreamReader;
 import ca.bc.gov.nrs.vdyp.forward.parsers.VdypPolygonParser;
@@ -81,7 +82,7 @@ public class TestHelper {
 		return new ByteArrayInputStream("Test data".getBytes());
 	}
 
-	public Parameters addSelectedOptions(Parameters params, Parameters.ExecutionOption... executionOptions) {
+	public Parameters addSelectedOptions(Parameters params, ExecutionOption... executionOptions) {
 		params.setSelectedExecutionOptions(List.of(executionOptions));
 		return params;
 	}
@@ -99,7 +100,7 @@ public class TestHelper {
 			presentKinds.add(message.getKind());
 		}
 
-		Assert.assertEquals(expectedKinds, presentKinds);
+		assertEquals(expectedKinds, presentKinds);
 	}
 
 	public static Parameters buildValidParametersObject() {

@@ -7,12 +7,12 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ca.bc.gov.nrs.vdyp.backend.model.v1.ParameterDetailsMessage;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
-import ca.bc.gov.nrs.vdyp.backend.projection.ProjectionContext;
-import ca.bc.gov.nrs.vdyp.backend.projection.ValidatedParameters;
 import ca.bc.gov.nrs.vdyp.backend.responses.v1.HelpResource;
-import ca.bc.gov.nrs.vdyp.backend.utils.ParameterDetailsMessageBuilder;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.ParameterDetailsMessage;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
+import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionContext;
+import ca.bc.gov.nrs.vdyp.ecore.projection.ValidatedParameters;
+import ca.bc.gov.nrs.vdyp.ecore.utils.ParameterDetailsMessageBuilder;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.core.SecurityContext;
 import jakarta.ws.rs.core.UriInfo;

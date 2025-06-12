@@ -1,6 +1,8 @@
 package ca.bc.gov.nrs.vdyp.backend.endpoints.projection.hcsv._44grpA;
 
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -15,10 +17,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
 import org.hamcrest.Matchers;
-
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -28,9 +27,9 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.api.helpers.TestHelper;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.BaseHttpProjectionRequestTest;
-import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.ParameterNames;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
-import ca.bc.gov.nrs.vdyp.backend.utils.FileHelper;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
+import ca.bc.gov.nrs.vdyp.ecore.utils.FileHelper;
+import ca.bc.gov.nrs.vdyp.ecore.utils.ParameterNames;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.common.constraint.Assert;
 import jakarta.ws.rs.core.MediaType;

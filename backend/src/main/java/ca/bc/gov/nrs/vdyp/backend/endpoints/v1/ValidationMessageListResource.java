@@ -8,9 +8,9 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessage;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.ValidationMessageKind;
 import ca.bc.gov.nrs.vdyp.backend.responses.v1.ResourceTypes;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessage;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessageKind;
 
 @JsonSubTypes(
 	{ @Type(value = ValidationMessageListResource.class, name = ResourceTypes.VALIDATION_MESSAGE_LIST_RESOURCE) }

@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters.ExecutionOption;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters.ExecutionOption;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.common.constraint.Assert;
 

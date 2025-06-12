@@ -18,12 +18,12 @@ import com.opencsv.exceptions.CsvConstraintViolationException;
 
 import ca.bc.gov.nrs.api.helpers.TestHelper;
 import ca.bc.gov.nrs.api.helpers.TestHelper.ValueOverride;
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonValidationException;
-import ca.bc.gov.nrs.vdyp.backend.projection.input.HcsvLineFilter;
-import ca.bc.gov.nrs.vdyp.backend.projection.input.HcsvPolygonRecordBean;
-import ca.bc.gov.nrs.vdyp.backend.projection.input.InventoryStandardCode;
-import ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations.CfsEcoZoneCode;
-import ca.bc.gov.nrs.vdyp.backend.utils.FileHelper;
+import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.PolygonValidationException;
+import ca.bc.gov.nrs.vdyp.ecore.projection.input.HcsvLineFilter;
+import ca.bc.gov.nrs.vdyp.ecore.projection.input.HcsvPolygonRecordBean;
+import ca.bc.gov.nrs.vdyp.ecore.projection.input.InventoryStandardCode;
+import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.CfsEcoZoneCode;
+import ca.bc.gov.nrs.vdyp.ecore.utils.FileHelper;
 
 public class HcsvPolygonReaderTest {
 
