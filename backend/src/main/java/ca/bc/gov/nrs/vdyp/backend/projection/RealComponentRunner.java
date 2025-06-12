@@ -164,6 +164,8 @@ public class RealComponentRunner implements ComponentRunner {
 
 			// VdypBackApplication app = new VdypBackApplication();
 			// app.doMain(controlFilePath.toAbsolutePath().toString());
+
+			state.setProcessingResults(ProjectionStageCode.Back, projectionTypeCode, Optional.empty());
 		} catch (Exception e) {
 			throw new PolygonExecutionException("Encountered exception while running BACK", e);
 		} catch (Error e) {
@@ -282,10 +284,11 @@ public class RealComponentRunner implements ComponentRunner {
 			if (state.didRunProjectionStage(ProjectionStageCode.Back, projectionType)) {
 
 				try (var bis = vdypControlFileResolver.resolveForInput(Vdyp7Constants.BACK_CONTROL_FILE_NAME)) {
-					var backwardsControlFileParser = new ForwardControlParser();
-					Map<String, Object> backwardsControlMap = backwardsControlFileParser
-							.parse(bis, vdypControlFileResolver, new HashMap<>());
-					backReader = new RealProjectionResultsReader(backwardsControlMap);
+					// FIXME See VDYP-157
+					// var backwardsControlFileParser = new ForwardControlParser();
+					// Map<String, Object> backwardsControlMap = backwardsControlFileParser
+					// .parse(bis, vdypControlFileResolver, new HashMap<>());
+					// backReader = new RealProjectionResultsReader(backwardsControlMap);
 				}
 			}
 
