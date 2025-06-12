@@ -364,7 +364,7 @@ public class YieldTable implements Closeable {
 					var layerSp0sByPercent = layer.getSp0sByPercent();
 					if (layerSp0sByPercent.size() > 1) {
 						var secondarySp0 = layerSp0sByPercent.get(1);
-						if (secondarySp0.getSpeciesByPercent().size() > 0) {
+						if (!secondarySp0.getSpeciesByPercent().isEmpty()) {
 							var secondarySp64 = secondarySp0.getSpeciesByPercent().get(0);
 							var speciesGrowthDetails = getProjectedLayerSpeciesGrowthInfo(
 									rowContext, polygonProjectionsByYear, secondarySp64, targetAge
@@ -919,7 +919,7 @@ public class YieldTable implements Closeable {
 			int targetAge
 	) throws StandYieldCalculationException {
 
-		if (targetAge < Vdyp7Constants.MIN_SPECIES_AGE || Vdyp7Constants.MAX_SPECIES_AGE > targetAge) {
+		if (targetAge < Vdyp7Constants.MIN_SPECIES_AGE || Vdyp7Constants.MAX_SPECIES_AGE < targetAge) {
 			throw new StandYieldCalculationException(
 					StandYieldMessageKind.AGE_OUT_OF_RANGE, Double.valueOf(Vdyp7Constants.MIN_SPECIES_AGE),
 					Double.valueOf(Vdyp7Constants.MAX_SPECIES_AGE)
