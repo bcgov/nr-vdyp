@@ -29,10 +29,19 @@
 			<type>test-jar</type>
 			<scope>test</scope>
 		</dependency>
+		
+		<dependency>
+			<groupId>ca.bc.gov.nrs.vdyp</groupId>
+			<artifactId>vdyp-integration-tests</artifactId>
+			<version>${project.version}</version>
+			<classifier>tests</classifier>
+			<type>test-jar</type>
+			<scope>test</scope>
+		</dependency>
 
 		<dependency>
-		    <groupId>org.apache.commons</groupId>
-		    <artifactId>commons-lang3</artifactId>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
 		</dependency>
 
 		<dependency>
@@ -47,6 +56,11 @@
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-api</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-params</artifactId>
 			<scope>test</scope>
 		</dependency>
 
@@ -73,7 +87,7 @@
 		<filters>
 			<filter>src/main/resources/application.properties</filter>
 		</filters>
-   		<resources>
+		<resources>
 			<resource>
 				<directory>src/main/resources</directory>
 				<filtering>true</filtering>

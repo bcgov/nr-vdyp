@@ -29,6 +29,7 @@
 
 	<modules>
 		<module>vdyp-common</module>
+		<module>vdyp-integration-tests</module>
 		<module>vdyp-fip</module>
 		<module>vdyp-vri</module>
 		<module>vdyp-sindex</module>
