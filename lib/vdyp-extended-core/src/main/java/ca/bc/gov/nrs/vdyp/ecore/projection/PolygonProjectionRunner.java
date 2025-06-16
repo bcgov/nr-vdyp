@@ -724,9 +724,7 @@ public class PolygonProjectionRunner {
 
 					logger.debug(
 							"{}: performed Back; result: {}", layer,
-							state.getProcessingResults(
-									ProjectionStageCode.Back, projectionType
-							)
+							state.getProcessingResults(ProjectionStageCode.Back, projectionType)
 									.map(e -> e.getMessage() != null ? e.getMessage() : e.getClass().getName())
 									.orElse("success")
 					);
