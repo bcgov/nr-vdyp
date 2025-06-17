@@ -718,13 +718,13 @@ public class PolygonProjectionRunner {
 
 					// BACK read the backwards growth target value from entry 101 in the
 					// control file. Adjust the control file to contain this value.
-					rewriteTargetYearToBackControlFile(context.getExecutionFolder(), yearsToGrowBack, projectionType);
+					rewriteTargetYearToBackControlFile(state.getExecutionFolder(), yearsToGrowBack, projectionType);
 
 					componentRunner.runBack(polygon, projectionType, state);
 
 					logger.debug(
 							"{}: performed Back; result: {}", layer,
-							state.getProcessingResults(ProjectionStageCode.Forward, projectionType)
+							state.getProcessingResults(ProjectionStageCode.Back, projectionType)
 									.map(e -> e.getMessage() != null ? e.getMessage() : e.getClass().getName())
 									.orElse("success")
 					);

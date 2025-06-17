@@ -3,37 +3,33 @@ package ca.bc.gov.nrs.vdyp.backend.projection.model.enumerations;
 import java.text.MessageFormat;
 
 public enum Vdyp7LayerTypeCode {
-	PRIMARY("P", ProjectionTypeCode.PRIMARY), //
-	VETERAN("V", ProjectionTypeCode.VETERAN), //
-	REGEN("Y", ProjectionTypeCode.REGENERATION), //
-	RESIDUAL("R", ProjectionTypeCode.RESIDUAL), //
-	DEAD("D", ProjectionTypeCode.DEAD);
+	PRIMARY("P"), //
+	VETERAN("V"), //
+	REGEN("Y"), //
+	RESIDUAL("R"), //
+	DEAD("D");
 
 	public final String code;
-	public final ProjectionTypeCode projectionType;
 
-	Vdyp7LayerTypeCode(String code, ProjectionTypeCode projectionType) {
+	Vdyp7LayerTypeCode(String code) {
 		this.code = code;
-		this.projectionType = projectionType;
 	}
 
 	/**
-	 * Convert from a ProjectionType to a Vdyp7LayerTypeCode.
+	 * Convert from a String code to a Vdyp7LayerTypeCode.
 	 *
-	 * @param projectionType the projection type to be mapped
-	 * @return the equivalent SpecialLayerType
-	 * @see ProjectionType
+	 * @param vdypCode the projection type to be mapped
+	 * @return the equivalent Vdyp7LayerTypeCode
 	 */
-	public Vdyp7LayerTypeCode fromProjectionType(ProjectionTypeCode projectionType) {
-
+	public static Vdyp7LayerTypeCode fromCode(String vdypCode) {
 		for (var e : Vdyp7LayerTypeCode.values()) {
-			if (e.projectionType.equals(projectionType)) {
+			if (e.code.equals(vdypCode)) {
 				return e;
 			}
 		}
 
-		throw new IllegalStateException(
-				MessageFormat.format("ProjectionType {0} does not have an equivalent SpecialLayerType", projectionType)
+		throw new IllegalArgumentException(
+				MessageFormat.format("Code {0} does not have an equivalent Vdyp7LayerTypeCode", vdypCode)
 		);
 	}
 

@@ -26,6 +26,15 @@ import ca.bc.gov.nrs.vdyp.test_oracle.OracleRunner.Layer;
 
 class OracleRunnerTest {
 
+	private static final String[] TAGS = new String[] { "7INPP", "7INPS", "7INPU", //
+			"7OUTP", "7OUTS", "7OUTU", "7OUTC", //
+			"AJSTA", "AJSTP", "AJSTS", "AJSTU", //
+			"BINPP", "BINPS", "BINPU", //
+			"BOUTP", "BOUTS", "BOUTU", "BOUTC", //
+			"GROW", //
+			"VRII", "VRIL", "VRIP", "VRIS" //
+	};
+
 	@TempDir
 	Path installDir;
 
@@ -61,7 +70,6 @@ class OracleRunnerTest {
 
 		String[] FILES = new String[] { "parms.txt", "RunVDYP7.cmd", "VDYP7_INPUT_LAYER.csv", "VDYP7_INPUT_POLY.csv" };
 		String[] INPUT1_TESTS = new String[] { "test1" };
-		String[] INPUT2_TESTS = new String[] { "test1", "test2" };
 
 		void setupInput1() throws IOException {
 			for (String testName : INPUT1_TESTS) {
@@ -89,54 +97,7 @@ class OracleRunnerTest {
 
 				@Override
 				protected CompletableFuture<Void> run(ProcessBuilder builder) throws IOException {
-					assertThat(
-							builder.command(),
-							contains(
-									endsWith("VDYP7Console.exe"), equalTo("-p"),
-									matchesRegex(".*?test1[/\\\\]input[/\\\\]parms.txt"), equalTo("-env"),
-									matchesRegex("InputFileDir=.*?[/\\\\]test1[/\\\\]input"), equalTo("-env"),
-									matchesRegex("OutputFileDir=.*?[/\\\\]test1[/\\\\]output"), equalTo("-env"),
-									equalTo("InstallDir=" + installDir.toString()), equalTo("-env"),
-									matchesRegex("ParmsFileDir=.*?[/\\\\]test1[/\\\\]input")
-							)
-					);
-					assertThat(builder.directory(), equalTo(tempDir.resolve("test1/input").toAbsolutePath().toFile()));
-					assertThat(
-							builder.environment(),
-							hasEntry(
-									equalTo(OracleRunner.INPUT_DIR_ENV),
-									equalTo(tempDir.resolve("test1/input").toAbsolutePath().toString())
-							)
-					);
-					assertThat(
-							builder.environment(),
-							hasEntry(
-									equalTo(OracleRunner.OUTPUT_DIR_ENV),
-									equalTo(tempDir.resolve("test1/output").toAbsolutePath().toString())
-							)
-					);
-					assertThat(
-							builder.environment(),
-							hasEntry(
-									equalTo(OracleRunner.PARAM_DIR_ENV),
-									equalTo(
-											tempDir.resolve("test1/input").toAbsolutePath().toString() // Same as input
-																										// dir
-									)
-							)
-					);
-					assertThat(
-							builder.environment(),
-							hasEntry(
-									equalTo(OracleRunner.INSTALL_DIR_ENV),
-									equalTo(installDir.toAbsolutePath().toString())
-							)
-					);
-
-					assertThat(tempDir, fileExists("test1/input/RunVDYP7.cmd"));
-					assertThat(tempDir, fileExists("test1/input/parms.txt"));
-					assertThat(tempDir, fileExists("test1/input/VDYP7_INPUT_POLY.csv"));
-					assertThat(tempDir, fileExists("test1/input/VDYP7_INPUT_LAYER.csv"));
+					assertRuntimeEnvironment(builder, "test1");
 
 					addExecution("Polygon 1", Layer.PRIMARY);
 
@@ -179,59 +140,7 @@ class OracleRunnerTest {
 
 				@Override
 				protected CompletableFuture<Void> run(ProcessBuilder builder) throws IOException {
-					assertThat(
-							builder.command(),
-							contains(
-									endsWith("VDYP7Console.exe"), equalTo("-p"),
-									matchesRegex(".*?test1[/\\\\]input[/\\\\]parms.txt"), equalTo("-env"),
-									matchesRegex("InputFileDir=.*?[/\\\\]test1[/\\\\]input"), equalTo("-env"),
-									matchesRegex("OutputFileDir=.*?[/\\\\]test1[/\\\\]output"), equalTo("-env"),
-									equalTo("InstallDir=" + installDir.toString()), equalTo("-env"),
-									matchesRegex("ParmsFileDir=.*?[/\\\\]test1[/\\\\]input")
-							)
-					);
-					assertThat(
-							builder.directory(),
-							equalTo(tempDir.resolve("test1").resolve("input").toAbsolutePath().toFile())
-					);
-					assertThat(
-							builder.environment(),
-							hasEntry(
-									equalTo(OracleRunner.INPUT_DIR_ENV),
-									equalTo(tempDir.resolve("test1").resolve("input").toAbsolutePath().toString())
-							)
-					);
-					assertThat(
-							builder.environment(),
-							hasEntry(
-									equalTo(OracleRunner.OUTPUT_DIR_ENV),
-									equalTo(tempDir.resolve("test1").resolve("output").toAbsolutePath().toString())
-							)
-					);
-					assertThat(
-							builder.environment(),
-							hasEntry(
-									equalTo(OracleRunner.PARAM_DIR_ENV),
-									equalTo(
-											tempDir.resolve("test1").resolve("input").toAbsolutePath().toString() // Same
-																													// as
-																													// input
-																													// dir
-									)
-							)
-					);
-					assertThat(
-							builder.environment(),
-							hasEntry(
-									equalTo(OracleRunner.INSTALL_DIR_ENV),
-									equalTo(installDir.toAbsolutePath().toString())
-							)
-					);
-
-					assertThat(tempDir, fileExists("test1/input/RunVDYP7.cmd"));
-					assertThat(tempDir, fileExists("test1/input/parms.txt"));
-					assertThat(tempDir, fileExists("test1/input/VDYP7_INPUT_POLY.csv"));
-					assertThat(tempDir, fileExists("test1/input/VDYP7_INPUT_LAYER.csv"));
+					assertRuntimeEnvironment(builder, "test1");
 
 					addExecution("Polygon 1", Layer.PRIMARY);
 					addExecution("Polygon 1", Layer.VETERAN);
@@ -275,54 +184,7 @@ class OracleRunnerTest {
 
 				@Override
 				protected CompletableFuture<Void> run(ProcessBuilder builder) throws IOException {
-					assertThat(
-							builder.command(),
-							contains(
-									endsWith("VDYP7Console.exe"), equalTo("-p"),
-									matchesRegex(".*?test1[/\\\\]input[/\\\\]parms.txt"), equalTo("-env"),
-									matchesRegex("InputFileDir=.*?[/\\\\]test1[/\\\\]input"), equalTo("-env"),
-									matchesRegex("OutputFileDir=.*?[/\\\\]test1[/\\\\]output"), equalTo("-env"),
-									equalTo("InstallDir=" + installDir.toString()), equalTo("-env"),
-									matchesRegex("ParmsFileDir=.*?[/\\\\]test1[/\\\\]input")
-							)
-					);
-					assertThat(builder.directory(), equalTo(tempDir.resolve("test1/input").toAbsolutePath().toFile()));
-					assertThat(
-							builder.environment(),
-							hasEntry(
-									equalTo(OracleRunner.INPUT_DIR_ENV),
-									equalTo(tempDir.resolve("test1/input").toAbsolutePath().toString())
-							)
-					);
-					assertThat(
-							builder.environment(),
-							hasEntry(
-									equalTo(OracleRunner.OUTPUT_DIR_ENV),
-									equalTo(tempDir.resolve("test1/output").toAbsolutePath().toString())
-							)
-					);
-					assertThat(
-							builder.environment(),
-							hasEntry(
-									equalTo(OracleRunner.PARAM_DIR_ENV),
-									equalTo(
-											tempDir.resolve("test1/input").toAbsolutePath().toString() // Same as input
-																										// dir
-									)
-							)
-					);
-					assertThat(
-							builder.environment(),
-							hasEntry(
-									equalTo(OracleRunner.INSTALL_DIR_ENV),
-									equalTo(installDir.toAbsolutePath().toString())
-							)
-					);
-
-					assertThat(tempDir, fileExists("test1/input/RunVDYP7.cmd"));
-					assertThat(tempDir, fileExists("test1/input/parms.txt"));
-					assertThat(tempDir, fileExists("test1/input/VDYP7_INPUT_POLY.csv"));
-					assertThat(tempDir, fileExists("test1/input/VDYP7_INPUT_LAYER.csv"));
+					assertRuntimeEnvironment(builder, "test1");
 
 					addExecution("Polygon 1", Layer.PRIMARY);
 					addExecution("Polygon 2", Layer.PRIMARY);
@@ -381,6 +243,55 @@ class OracleRunnerTest {
 				}
 			}
 		}
+
+		private void assertRuntimeEnvironment(ProcessBuilder builder, String testName) {
+			assertThat(
+					builder.command(),
+					contains(
+							endsWith("VDYP7Console.exe"), equalTo("-p"),
+							matchesRegex(".*?" + testName + "[/\\\\]input[/\\\\]parms.txt"), equalTo("-env"),
+							matchesRegex("InputFileDir=.*?[/\\\\]" + testName + "[/\\\\]input"), equalTo("-env"),
+							matchesRegex("OutputFileDir=.*?[/\\\\]" + testName + "[/\\\\]output"), equalTo("-env"),
+							equalTo("InstallDir=" + installDir.toString()), equalTo("-env"),
+							matchesRegex("ParmsFileDir=.*?[/\\\\]" + testName + "[/\\\\]input")
+					)
+			);
+			assertThat(
+					builder.directory(), equalTo(tempDir.resolve(testName).resolve("input").toAbsolutePath().toFile())
+			);
+			assertThat(
+					builder.environment(),
+					hasEntry(
+							equalTo(OracleRunner.INPUT_DIR_ENV),
+							equalTo(tempDir.resolve(testName).resolve("input").toAbsolutePath().toString())
+					)
+			);
+			assertThat(
+					builder.environment(),
+					hasEntry(
+							equalTo(OracleRunner.OUTPUT_DIR_ENV),
+							equalTo(tempDir.resolve(testName).resolve("output").toAbsolutePath().toString())
+					)
+			);
+			assertThat(
+					builder.environment(),
+					hasEntry(
+							equalTo(OracleRunner.PARAM_DIR_ENV),
+							equalTo(tempDir.resolve(testName).resolve("input").toAbsolutePath().toString()
+							// Same as input dir
+							)
+					)
+			);
+			assertThat(
+					builder.environment(),
+					hasEntry(equalTo(OracleRunner.INSTALL_DIR_ENV), equalTo(installDir.toAbsolutePath().toString()))
+			);
+
+			assertThat(tempDir, fileExists(testName + "/input/RunVDYP7.cmd"));
+			assertThat(tempDir, fileExists(testName + "/input/parms.txt"));
+			assertThat(tempDir, fileExists(testName + "/input/VDYP7_INPUT_POLY.csv"));
+			assertThat(tempDir, fileExists(testName + "/input/VDYP7_INPUT_LAYER.csv"));
+		}
 	}
 
 	@FunctionalInterface
@@ -393,14 +304,7 @@ class OracleRunnerTest {
 		final String niceExecutionId = String.format("%s-%s", polygonId, layer.filename);
 		Path executionDir = Files.createDirectories(configDir.resolve("execution-" + executionId));
 
-		for (var tag : new String[] { "7INPP", "7INPS", "7INPU", //
-				"7OUTP", "7OUTS", "7OUTU", "7OUTC", //
-				"AJSTA", "AJSTP", "AJSTS", "AJSTU", //
-				"BINPP", "BINPS", "BINPU", //
-				"BOUTP", "BOUTS", "BOUTU", "BOUTC", //
-				"GROW", //
-				"VRII", "VRIL", "VRIP", "VRIS" //
-		}) {
+		for (var tag : TAGS) {
 			FileUtils.write(
 					configDir.resolve(layer.code + "-SAVE_VDYP7_" + tag + ".dat").toFile(),
 					String.format(
@@ -471,14 +375,7 @@ class OracleRunnerTest {
 		}
 
 		void assertSeparated(String executionId, String polygonId, Layer layer) throws IOException {
-			for (String tag : new String[] { "7INPP", "7INPS", "7INPU", //
-					"7OUTP", "7OUTS", "7OUTU", "7OUTC", //
-					"AJSTA", "AJSTP", "AJSTS", "AJSTU", //
-					"BINPP", "BINPS", "BINPU", //
-					"BOUTP", "BOUTS", "BOUTU", "BOUTC", //
-					"GROW", //
-					"VRII", "VRIL", "VRIP", "VRIS" //
-			}) {
+			for (String tag : TAGS) {
 				assertSeparated(executionId, polygonId, layer, tag);
 			}
 		}
@@ -657,4 +554,5 @@ class OracleRunnerTest {
 
 		};
 	}
+
 }
