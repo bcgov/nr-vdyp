@@ -28,16 +28,16 @@ public class PolygonProjectionState {
 	 * Entries are Optional.empty() if not run; when run, contains Optional.empty() if successful, otherwise contains
 	 * the resulting exception.
 	 */
-	private Map<ModelReturnCodeKey, Optional<Optional<Throwable>>> processingResultByStageAndProjectionType;
+	private final Map<ModelReturnCodeKey, Optional<Optional<Throwable>>> processingResultByStageAndProjectionType;
 
-	private Map<ModelReturnCodeKey, Integer> firstYearValidYieldByProjectionType;
+	private final Map<ModelReturnCodeKey, Integer> firstYearValidYieldByProjectionType;
 
 	private Map<ProjectionTypeCode, GrowthModelCode> growthModelByProjectionType;
 	private Map<ProjectionTypeCode, ProcessingModeCode> processingModeByProjectionType;
 	private Map<ProjectionTypeCode, Double> percentForestedLandUsedByProjectionType;
 	private Map<ProjectionTypeCode, Double> yieldFactorByProjectionType;
 
-	private Map<String /* layer id */, Integer> firstYearYieldsDisplayedByLayer;
+	private final Map<String /* layer id */, Integer> firstYearYieldsDisplayedByLayer;
 
 	private Path executionFolder = null;
 
@@ -222,7 +222,7 @@ public class PolygonProjectionState {
 
 	/**
 	 * Set <code>startAge</code> and <code>endAge</code> as the start and end ages for -all- projection types. Later
-	 * (via calls to {@link updateProjectionRange}) these values may be adjusted for specific projection types.
+	 * (via calls to {@link this.updateProjectionRange}) these values may be adjusted for specific projection types.
 	 *
 	 * @param startAge the start age to use for all projection types
 	 * @param endAge   the end age to use for all projection types
