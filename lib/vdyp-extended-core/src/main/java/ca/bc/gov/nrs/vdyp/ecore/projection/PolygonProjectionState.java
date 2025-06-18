@@ -186,6 +186,12 @@ public class PolygonProjectionState {
 		return processingModeByProjectionType.get(projectionType);
 	}
 
+	public void resetProcessingResults(ProjectionStageCode stage, ProjectionTypeCode projectionType) {
+		var key = new ModelReturnCodeKey(stage, projectionType);
+
+		this.processingResultByStageAndProjectionType.put(key, Optional.empty());
+	}
+
 	public void setProcessingResults(
 			ProjectionStageCode stage, ProjectionTypeCode projectionType, Optional<Throwable> result
 	) {

@@ -12,6 +12,7 @@ import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.common.Reference;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.PolygonExecutionException;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.PolygonValidationException;
@@ -209,7 +210,7 @@ public class PolygonProjectionRunner {
 
 				var oFipResult = state.getProcessingResults(ProjectionStageCode.Initial, projectionType);
 
-				if (!oFipResult.isPresent()) {
+				if (oFipResult.isEmpty()) {
 					logger.debug(
 							"{}: performed FIP Model successfully for projection type {}", polygon, projectionType
 					);
@@ -224,47 +225,50 @@ public class PolygonProjectionRunner {
 					if (fipResult instanceof StandProcessingException spe) {
 
 						var layer = polygon.getLayerByProjectionType(projectionType);
-
 						doRetryUsingVriStart = FipStartProcessingResult.doRetryUsingVriStart(spe);
 
 						if (spe instanceof UnsupportedModeException) {
 							polygon.addMessage(
-									new PolygonMessage.Builder().polygon(polygon).layer(layer)
+									new PolygonMessage.Builder().layer(
+											layer
+									)
 											.details(
 													ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
-													PolygonMessageKind.LOW_SITE, spe.getErrorNumber().get()
+													PolygonMessageKind.LOW_SITE,
+													spe.getIpassCode(VdypApplicationIdentifier.FIP_START)
 											).build()
 							);
-							break;
 						} else if (spe instanceof TotalAgeLowException) {
 							polygon.addMessage(
-									new PolygonMessage.Builder().polygon(polygon).layer(layer)
+									new PolygonMessage.Builder().layer(
+											layer
+									)
 											.details(
 													ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
 													PolygonMessageKind.BREAST_HEIGHT_AGE_TOO_YOUNG, "FipStart",
-													spe.getErrorNumber().get()
+													spe.getIpassCode(VdypApplicationIdentifier.FIP_START)
 											).build()
 							);
-							break;
 						} else if (spe instanceof BecMissingException || spe instanceof ResultBaseAreaLowException) {
 							polygon.addMessage(
-									new PolygonMessage.Builder().polygon(polygon).layer(layer)
+									new PolygonMessage.Builder().layer(
+											layer
+									)
 											.details(
 													ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
 													PolygonMessageKind.BREAST_HEIGHT_AGE_TOO_YOUNG, "FIPSTART",
-													spe.getErrorNumber().get()
+													spe.getIpassCode(VdypApplicationIdentifier.FIP_START)
 											).build()
 							);
 							doRetryUsingVriStart = true;
-							break;
 						} else {
 							polygon.addMessage(
-									new PolygonMessage.Builder().polygon(polygon).layer(layer).details(
+									new PolygonMessage.Builder().layer(layer).details(
 											ReturnCode.ERROR_CORELIBRARYERROR, MessageSeverityCode.ERROR,
-											PolygonMessageKind.GENERIC_FIPSTART_ERROR, spe.getErrorNumber().get()
+											PolygonMessageKind.GENERIC_FIPSTART_ERROR,
+											spe.getIpassCode(VdypApplicationIdentifier.FIP_START)
 									).build()
 							);
-							break;
 						}
 					} else {
 						polygon.addMessage(
@@ -280,6 +284,8 @@ public class PolygonProjectionRunner {
 				if (doRetryUsingVriStart) {
 					logger.debug("{}: falling through to VRI Model", polygon);
 					state.modifyGrowthModel(projectionType, GrowthModelCode.VRI, ProcessingModeCode.VRI_VriYoung);
+					// VRI and FIP share a projectionStageCode
+					state.resetProcessingResults(ProjectionStageCode.Initial, projectionType);
 				} else {
 					if (oFipResult.isPresent()) {
 						polygon.disableProjectionsOfType(projectionType);
