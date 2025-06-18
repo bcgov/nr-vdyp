@@ -2,7 +2,8 @@ package ca.bc.gov.nrs.vdyp.ecore.projection;
 
 import java.util.Set;
 
-import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
+import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
+import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
 
 public class FipStartProcessingResult {
 
@@ -31,7 +32,8 @@ public class FipStartProcessingResult {
 
 	private static Set<Integer> fipStartRetryUsingVriStartRunCodes = Set.of(-4, -6, -12, -13);
 
-	public static boolean doRetryUsingVriStart(ProcessingException e) {
-		return e.getErrorNumber().map(n -> fipStartRetryUsingVriStartRunCodes.contains(n)).orElse(false);
+	public static boolean doRetryUsingVriStart(StandProcessingException e) {
+		return e.getIpassCode(VdypApplicationIdentifier.FIP_START)
+				.map(n -> fipStartRetryUsingVriStartRunCodes.contains(n)).orElse(false);
 	}
 }
