@@ -62,6 +62,14 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
+      <groupId>ca.bc.gov.nrs.vdyp</groupId>
+      <artifactId>vdyp-integration-tests</artifactId>
+      <version>${project.version}</version>
+      <classifier>tests</classifier>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>com.opencsv</groupId>
       <artifactId>opencsv</artifactId>
       <exclusions>
