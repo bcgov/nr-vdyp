@@ -318,7 +318,7 @@ public class PolygonProjectionRunner {
 
 					if (vriResult instanceof StandProcessingException spe) {
 
-						var errorNumber = spe.getErrorNumber();
+						var errorNumber = spe.getIpassCode(VdypApplicationIdentifier.VRI_START);
 						var layer = polygon.getLayerByProjectionType(projectionType);
 
 						if (vriResult instanceof QuadraticMeanDiameterLowException) {
