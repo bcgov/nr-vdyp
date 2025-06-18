@@ -307,8 +307,8 @@ public class RealComponentRunner implements ComponentRunner {
 	) throws PolygonExecutionException {
 		if (e instanceof VdypApplicationException && e.getCause() != null) {
 			state.setProcessingResults(ProjectionStageCode.of(app), projectionTypeCode, Optional.of(e.getCause()));
-			var message = buildMessage(app, polygon, "running", e.getCause());
-			// VdypApplication exceptions are expected to be processed as a result returned of other
+			// VdypApplication exceptions are expected to be processed as a result returned from the VdypApplication
+			// they came from do not rethrow
 		} else {
 			state.setProcessingResults(ProjectionStageCode.of(app), projectionTypeCode, Optional.of(e));
 			var message = buildMessage(app, polygon, "running", e);
