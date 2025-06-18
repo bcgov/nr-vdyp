@@ -52,16 +52,16 @@ import ca.bc.gov.nrs.vdyp.math.VdypMath;
  */
 public class PolygonProjectionRunner {
 
-	private static Logger logger = LoggerFactory.getLogger(PolygonProjectionRunner.class);
+	private final static Logger logger = LoggerFactory.getLogger(PolygonProjectionRunner.class);
 
 	private static final String EXECUTION_FOLDER_TEMPLATE_ZIP_FILE_NAME = "ExecutionFolderTemplate.zip";
 
-	private Polygon polygon;
-	private ProjectionContext context;
-	private ComponentRunner componentRunner;
+	private final Polygon polygon;
+	private final ProjectionContext context;
+	private final ComponentRunner componentRunner;
 
-	private PolygonProjectionState state;
-	private ProjectionParameters projectionParameters;
+	private final PolygonProjectionState state;
+	private final ProjectionParameters projectionParameters;
 
 	/**
 	 * Create a runner for the given {@link Polygon}, in the given {@link ProjectionContext}, using the given
@@ -301,15 +301,11 @@ public class PolygonProjectionRunner {
 				componentRunner.runVriStart(polygon, projectionType, state);
 
 				var oVriResult = state.getProcessingResults(ProjectionStageCode.Initial, projectionType);
-				if (!oVriResult.isPresent()) {
+				if (oVriResult.isEmpty()) {
 					logger.debug(
 							"{}: performed VRI Model successfully for projection type {}", polygon, projectionType
 					);
 				} else {
-					logger.debug(
-							"{}: VRI Model failed for projection type {}: {}", polygon, projectionType,
-							oVriResult.toString()
-					);
 
 					var vriResult = oVriResult.get();
 
@@ -428,7 +424,7 @@ public class PolygonProjectionRunner {
 
 		// Check if the stand is non-productive.
 		if (polygon.getNonProductiveDescriptor() != null) {
-			if (primaryLayer.getSp0sAsSupplied().size() > 0) {
+			if (!primaryLayer.getSp0sAsSupplied().isEmpty()) {
 				logger.debug(
 						"{}: stand labelled with Non-Productive Code {}, but also contains a stand description.",
 						polygon, polygon.getNonProductiveDescriptor()
@@ -818,7 +814,6 @@ public class PolygonProjectionRunner {
 	 * are supplied. If only the latter has a value, it is used. Otherwise, AgeStart is used (even if null.)
 	 *
 	 * @return as described
-	 * @throws PolygonValidationException
 	 */
 	private Double calculateStartAge() {
 
