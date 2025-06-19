@@ -295,6 +295,8 @@ public class PolygonProjectionRunner {
 										VdypApplicationIdentifier.FIP_START, polygon, "running", oFipResult.get()
 								)
 						);
+
+						throw new PolygonExecutionException(oFipResult.get());
 					}
 					break;
 				}
