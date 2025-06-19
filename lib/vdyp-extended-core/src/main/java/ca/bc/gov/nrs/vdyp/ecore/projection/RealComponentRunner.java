@@ -308,7 +308,7 @@ public class RealComponentRunner implements ComponentRunner {
 			// they came from do not rethrow
 		} else {
 			state.setProcessingResults(ProjectionStageCode.of(app), projectionTypeCode, Optional.of(e));
-			var message = ErrorMessageUtils.BuildMessage(app.getId(), polygon, "running", e);
+			var message = ErrorMessageUtils.BuildVDYPApplicationErrorMessage(app.getId(), polygon, "running", e);
 			throw new PolygonExecutionException(message, e);
 		}
 	}
