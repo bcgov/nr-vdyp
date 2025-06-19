@@ -151,4 +151,67 @@ public class ProjectionRunnerTest {
 		assertThat(progressLog.contains("Processing Polygon 13919429:"), is(true));
 	}
 
+	@Test
+	void testTooYoungFIPStartFallthroughVRI() throws AbstractProjectionRequestException, IOException {
+		params = new Parameters().ageStart(0).ageEnd(190).progressFrequency(ProgressFrequency.FrequencyKind.POLYGON)
+				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.DO_ENABLE_PROGRESS_LOGGING);
+		unit = new ProjectionRunner(ProjectionRequestKind.HCSV, "TEST", params, false);
+
+		var polygonInputStream = TestUtils.makeInputStream(
+				//
+				TestUtils.POLYGON_CSV_HEADER_LINE,
+				"13919428,093C090,94833422,DQU,UNK,UNK,F,UNK,0.6,10,3,HE,35,8,,MS,14,50.0,1.000,,V,T,U,TC,SP,2013,2013,60.0,,,,,,,,,,TC,100,,,,"
+		);
+		var layersInputStream = TestUtils.makeInputStream(
+				//
+				TestUtils.LAYER_CSV_HEADER_LINE,
+				"13919428,14321066,093C090,94833422,1,P,,1,,,,20,,300,PLI,100.00,,,,,,,,,,,7,1.52,,,,,,,,,,"
+		);
+
+		Map<String, InputStream> streams = Map.of(
+				ParameterNames.HCSV_POLYGON_INPUT_DATA, polygonInputStream, ParameterNames.HCSV_LAYERS_INPUT_DATA,
+				layersInputStream
+		);
+		unit.run(streams);
+
+		InputStream progressStream = unit.getProgressStream();
+		InputStream errorStream = unit.getErrorStream();
+		String progressLog = new String(progressStream.readAllBytes());
+		String errorLog = new String(errorStream.readAllBytes());
+		assertThat(progressLog.contains("Processing Polygon 13919428:"), is(true));
+		assertThat(progressLog.contains("VRI_START"), is(true));
+
+	}
+
+	@Test
+	void testValidFIPStart() throws AbstractProjectionRequestException, IOException {
+		params = new Parameters().ageStart(0).ageEnd(190).progressFrequency(ProgressFrequency.FrequencyKind.POLYGON)
+				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.DO_ENABLE_PROGRESS_LOGGING);
+		unit = new ProjectionRunner(ProjectionRequestKind.HCSV, "TEST", params, false);
+
+		var polygonInputStream = TestUtils.makeInputStream(
+				//
+				TestUtils.POLYGON_CSV_HEADER_LINE,
+				"13919428,093C090,94833422,DQU,UNK,UNK,F,UNK,0.6,10,3,HE,35,8,,MS,14,50.0,1.000,,V,T,U,TC,SP,2013,2013,60.0,,,,,,,,,,TC,100,,,,"
+		);
+		var layersInputStream = TestUtils.makeInputStream(
+				//
+				TestUtils.LAYER_CSV_HEADER_LINE,
+				"13919428,14321066,093C090,94833422,1,P,,1,,,,20,,300,PLI,100.00,,,,,,,,,,,7,5,,,,,,,,,,"
+		);
+
+		Map<String, InputStream> streams = Map.of(
+				ParameterNames.HCSV_POLYGON_INPUT_DATA, polygonInputStream, ParameterNames.HCSV_LAYERS_INPUT_DATA,
+				layersInputStream
+		);
+		unit.run(streams);
+
+		InputStream progressStream = unit.getProgressStream();
+		InputStream errorStream = unit.getErrorStream();
+		String progressLog = new String(progressStream.readAllBytes());
+		String errorLog = new String(errorStream.readAllBytes());
+		assertThat(progressLog.contains("Processing Polygon 13919428:"), is(true));
+
+	}
+
 }
