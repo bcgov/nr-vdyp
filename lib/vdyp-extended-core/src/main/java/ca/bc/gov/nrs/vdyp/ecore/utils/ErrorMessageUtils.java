@@ -11,7 +11,9 @@ import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon;
 
 public class ErrorMessageUtils {
-	public static String BuildMessage(VdypApplicationIdentifier appId, Polygon polygon, String verb, Throwable e) {
+	public static String BuildVDYPApplicationErrorMessage(
+			VdypApplicationIdentifier appId, Polygon polygon, String verb, Throwable e
+	) {
 		return MessageFormat.format(
 				"Polygon {0}: encountered error in {1} when {2} polygon{3}", polygon, appId, verb, serializeCauses(e)
 		);
@@ -40,17 +42,15 @@ public class ErrorMessageUtils {
 	private static StringBuffer serializeCauses(StringBuffer s, List<String> messageList, Throwable e) {
 
 		if (e.getMessage() != null) {
-			var matcher = messagePattern.matcher(e.getMessage());
+			String message = e.getMessage();
+			var matcher = messagePattern.matcher(message);
 
-			String message;
 			if (matcher.matches()) {
 				if (matcher.group(3) != null) {
 					message = matcher.group(3);
 				} else {
 					message = matcher.group(4);
 				}
-			} else {
-				message = e.getMessage();
 			}
 
 			if (!StringUtils.isBlank(message) && !containsSuffix(messageList, message)) {
