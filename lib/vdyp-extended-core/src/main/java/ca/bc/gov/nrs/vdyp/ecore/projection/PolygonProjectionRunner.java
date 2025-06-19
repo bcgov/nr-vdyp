@@ -35,6 +35,7 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.GrowthModelCode;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProcessingModeCode;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProjectionTypeCode;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ReturnCode;
+import ca.bc.gov.nrs.vdyp.ecore.utils.ErrorMessageUtils;
 import ca.bc.gov.nrs.vdyp.ecore.utils.ProjectionUtils;
 import ca.bc.gov.nrs.vdyp.ecore.utils.Utils;
 import ca.bc.gov.nrs.vdyp.exceptions.BecMissingException;
@@ -289,6 +290,11 @@ public class PolygonProjectionRunner {
 				} else {
 					if (oFipResult.isPresent()) {
 						polygon.disableProjectionsOfType(projectionType);
+						context.getErrorLog().addMessage(
+								ErrorMessageUtils.BuildMessage(
+										VdypApplicationIdentifier.FIP_START, polygon, "running", oFipResult.get()
+								)
+						);
 					}
 					break;
 				}
@@ -355,8 +361,13 @@ public class PolygonProjectionRunner {
 							);
 						}
 					}
-				}
 
+					context.getErrorLog().addMessage(
+							ErrorMessageUtils.BuildMessage(
+									VdypApplicationIdentifier.VRI_START, polygon, "running", oVriResult.get()
+							)
+					);
+				}
 				break;
 			}
 			default: {
