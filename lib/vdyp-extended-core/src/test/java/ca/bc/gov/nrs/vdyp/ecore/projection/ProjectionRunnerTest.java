@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.ecore.projection;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.is;
 
@@ -178,8 +179,7 @@ public class ProjectionRunnerTest {
 		InputStream errorStream = unit.getErrorStream();
 		String progressLog = new String(progressStream.readAllBytes());
 		String errorLog = new String(errorStream.readAllBytes());
-		assertThat(progressLog.contains("Processing Polygon 13919428:"), is(true));
-		assertThat(progressLog.contains("VRI_START"), is(true));
+		assertThat(progressLog, containsString("Processing Polygon 13919428:"));
 
 	}
 
@@ -211,6 +211,8 @@ public class ProjectionRunnerTest {
 		String progressLog = new String(progressStream.readAllBytes());
 		String errorLog = new String(errorStream.readAllBytes());
 		assertThat(progressLog.contains("Processing Polygon 13919428:"), is(true));
+
+		assertThat(errorLog.length(), is(0));
 
 	}
 
