@@ -667,7 +667,7 @@ public class Polygon implements Comparable<Polygon> {
 
 		for (Layer layer : getLayers().values()) {
 			layer.doBuildSiteSpecies();
-			layer.doCompleteSiteSpeciesSiteIndexInfo();
+			layer.doCompleteSiteSpeciesSiteIndexInfo(context);
 		}
 
 		var rGrowthModel = new Reference<GrowthModelCode>();

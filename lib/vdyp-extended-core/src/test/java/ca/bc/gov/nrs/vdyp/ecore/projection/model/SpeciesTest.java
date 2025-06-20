@@ -144,7 +144,7 @@ class SpeciesTest {
 					.dominantHeight(Vdyp7Constants.EMPTY_DECIMAL).totalAge(Vdyp7Constants.EMPTY_DECIMAL)
 					.yearsToBreastHeight(Vdyp7Constants.EMPTY_DECIMAL).build();
 
-			unit.calculateUndefinedFieldValues();
+			unit.calculateUndefinedFieldValues(null);
 
 			assertThat(unit.getSiteIndex(), is((Double) null));
 			assertThat(unit.getDominantHeight(), is((Double) null));
@@ -153,7 +153,7 @@ class SpeciesTest {
 
 			unit.setSiteCurve(SiteIndexEquation.SI_ACB_HUANG);
 
-			unit.calculateUndefinedFieldValues();
+			unit.calculateUndefinedFieldValues(null);
 
 			assertThat(unit.getSiteIndex(), is((Double) null));
 			assertThat(unit.getDominantHeight(), is((Double) null));
@@ -166,7 +166,7 @@ class SpeciesTest {
 		void testMinimalTotalAgeCalculation() {
 			var unit = baseConfig(new Species.Builder()).ageAtBreastHeight(42.0).yearsToBreastHeight(42.0).build();
 
-			unit.calculateUndefinedFieldValues();
+			unit.calculateUndefinedFieldValues(null);
 
 			assertThat(unit.getTotalAge(), is(83.5));
 
@@ -176,7 +176,7 @@ class SpeciesTest {
 		void testMinimalYearsToBreastHeight() {
 			var unit = baseConfig(new Species.Builder()).totalAge(42.0).yearsToBreastHeight(21.0).build();
 
-			unit.calculateUndefinedFieldValues();
+			unit.calculateUndefinedFieldValues(null);
 
 			assertThat(unit.getTotalAge(), is(42.0));
 
@@ -204,7 +204,7 @@ class SpeciesTest {
 			var unit = baseConfig(new Species.Builder()).stand(stand).totalAge(totalAge)
 					.yearsToBreastHeight(yearsToBreastHeight).build();
 
-			unit.calculateUndefinedFieldValues();
+			unit.calculateUndefinedFieldValues(null);
 
 			assertThat(unit.getYearsToBreastHeight(), is(expectedValue));
 		}
@@ -225,7 +225,7 @@ class SpeciesTest {
 			var unit = baseConfig(new Species.Builder()).totalAge(totalAge).dominantHeight(dominantHeight)
 					.siteIndex(null).build();
 
-			unit.calculateUndefinedFieldValues();
+			unit.calculateUndefinedFieldValues(null);
 
 			assertThat(unit.getSiteIndex(), is(expectedSiteIndex));
 			if (expectedSiteIndex == null) {
@@ -254,7 +254,7 @@ class SpeciesTest {
 			var unit = baseConfig(new Species.Builder()).totalAge(null).yearsToBreastHeight(yearsToBreastHeight)
 					.dominantHeight(dominantHeight).siteIndex(siteIndex).siteCurve(siteCurve).build();
 
-			unit.calculateUndefinedFieldValues();
+			unit.calculateUndefinedFieldValues(null);
 
 			if (expected == null) {
 				assertThat(unit.getTotalAge(), is(expected));
@@ -282,7 +282,7 @@ class SpeciesTest {
 			var unit = baseConfig(new Species.Builder()).dominantHeight(null).yearsToBreastHeight(yearsToBreastHeight)
 					.totalAge(age).siteIndex(siteIndex).siteCurve(siteCurve).build();
 
-			unit.calculateUndefinedFieldValues();
+			unit.calculateUndefinedFieldValues(null);
 
 			if (expected == 0.01) {
 				// dominant height is set nominally on failure

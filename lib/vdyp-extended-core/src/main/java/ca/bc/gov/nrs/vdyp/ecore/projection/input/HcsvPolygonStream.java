@@ -613,7 +613,7 @@ public class HcsvPolygonStream extends AbstractPolygonStream {
 			}
 		}
 
-		sp64.calculateUndefinedFieldValues();
+		sp64.calculateUndefinedFieldValues(context);
 
 		stand.addSp64(sp64);
 		layer.addSp64(sp64);

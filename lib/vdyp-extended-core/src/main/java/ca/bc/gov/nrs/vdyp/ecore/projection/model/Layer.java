@@ -17,7 +17,6 @@ import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexAgeType;
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.PolygonValidationException;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.MessageSeverityCode;
-import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.PolygonMessageKind;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessage;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessageKind;
@@ -526,7 +525,7 @@ public class Layer implements Comparable<Layer> {
 					);
 				}
 
-				sp64.calculateUndefinedFieldValues();
+				sp64.calculateUndefinedFieldValues(context);
 
 				if (doRecomputeInputHeight) {
 
@@ -647,7 +646,7 @@ public class Layer implements Comparable<Layer> {
 
 				if (Utils.safeGet(s.getTotalAge()) >= 30.0 && s.getDominantHeight() != null) {
 
-					s.calculateUndefinedFieldValues();
+					s.calculateUndefinedFieldValues(context);
 
 					estimatedSiteIndex = s.getSiteIndex();
 					estimatedSiteIndexSpeciesCode = s.getSpeciesCode();
@@ -795,9 +794,9 @@ public class Layer implements Comparable<Layer> {
 		if (crownClosure == null) {
 			boolean getLeadingSpeciesDefault = false;
 			Species leadingSp64 = null;
-			boolean doAggresiveEstimation = context.getParams()
-					.containsOption(Parameters.ExecutionOption.ALLOW_AGGRESSIVE_VALUE_ESTIMATION)
-					&& this == polygon.getLayerByProjectionType(ProjectionTypeCode.PRIMARY);
+			boolean doAggresiveEstimation = false;// context.getParams()
+			// .containsOption(Parameters.ExecutionOption.ALLOW_AGGRESSIVE_VALUE_ESTIMATION)
+			// && this == polygon.getLayerByProjectionType(ProjectionTypeCode.PRIMARY);
 
 			if (this == polygon.getLayerByProjectionType(ProjectionTypeCode.UNKNOWN) || doAggresiveEstimation) {
 				leadingSp64 = this.determineLeadingSp64(0);
@@ -1275,7 +1274,7 @@ public class Layer implements Comparable<Layer> {
 	 *
 	 * @throws PolygonValidationException
 	 */
-	void doCompleteSiteSpeciesSiteIndexInfo() throws PolygonValidationException {
+	void doCompleteSiteSpeciesSiteIndexInfo(ProjectionContext context) throws PolygonValidationException {
 
 		boolean amDone = false;
 
@@ -1325,7 +1324,7 @@ public class Layer implements Comparable<Layer> {
 
 			} else {
 
-				siteSpecies.calculateUndefinedFieldValues();
+				siteSpecies.calculateUndefinedFieldValues(context);
 				speciesGroup.setSiteCurve(siteSpecies.getSiteCurve());
 			}
 		}
@@ -1342,7 +1341,7 @@ public class Layer implements Comparable<Layer> {
 						&& !siteSpecies.getSpeciesCode().equals(candidateDonorSpecies.getSpeciesCode())) {
 
 					if (candidateDonorSpecies.getSiteIndex() == null) {
-						candidateDonorSpecies.calculateUndefinedFieldValues();
+						candidateDonorSpecies.calculateUndefinedFieldValues(context);
 					}
 
 					donorSpecies = candidateDonorSpecies;
@@ -1409,14 +1408,14 @@ public class Layer implements Comparable<Layer> {
 
 				// Now reset dominant height and recompute it from the values assigned above.
 				siteSpecies.resetDominantHeight();
-				siteSpecies.calculateUndefinedFieldValues();
+				siteSpecies.calculateUndefinedFieldValues(context);
 
 				amDone = true;
 			}
 
 			if (amDone && stand != null && siteSpecies != null) {
 				speciesGroup.updateSiteInfo(siteSpecies);
-				speciesGroup.calculateUndefinedFieldValues();
+				speciesGroup.calculateUndefinedFieldValues(context);
 			}
 		}
 	}

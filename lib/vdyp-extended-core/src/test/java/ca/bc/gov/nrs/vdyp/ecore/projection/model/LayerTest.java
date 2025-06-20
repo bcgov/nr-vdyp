@@ -192,7 +192,7 @@ public class LayerTest {
 			Species sp64 = addSpecies(layer, stand, params);
 
 			layer.doBuildSiteSpecies();
-			layer.doCompleteSiteSpeciesSiteIndexInfo();
+			layer.doCompleteSiteSpeciesSiteIndexInfo(context);
 			layer.calculateEstimatedSiteIndex(context, GrowthModelCode.VRI, false);
 
 			assertNotNull(sp64.getSiteIndex());
@@ -247,7 +247,7 @@ public class LayerTest {
 			}
 
 			layer.doBuildSiteSpecies();
-			layer.doCompleteSiteSpeciesSiteIndexInfo();
+			layer.doCompleteSiteSpeciesSiteIndexInfo(context);
 			layer.calculateEstimatedSiteIndex(context, (GrowthModelCode) layerParams.get("growthModelCode"), false);
 
 			assertNotNull(sp64.getSiteIndex());
@@ -267,7 +267,7 @@ public class LayerTest {
 
 			layer.doCompleteDefinition();
 			layer.doBuildSiteSpecies();
-			layer.doCompleteSiteSpeciesSiteIndexInfo();
+			layer.doCompleteSiteSpeciesSiteIndexInfo(context);
 
 			layer.estimateCrownClosure(context);
 
@@ -286,10 +286,10 @@ public class LayerTest {
 
 			layer.doCompleteDefinition();
 			layer.doBuildSiteSpecies();
-			layer.doCompleteSiteSpeciesSiteIndexInfo();
+			layer.doCompleteSiteSpeciesSiteIndexInfo(context);
 			layer.estimateCrownClosure(context);
 
-			// Projections not allowed no leading species
+			// Projections not allowed with no leading species
 			assertThat(polygon.doAllowProjectionOfType(layer.getAssignedProjectionType()), is(false));
 
 		}
@@ -304,7 +304,7 @@ public class LayerTest {
 
 			layer.doCompleteDefinition();
 			layer.doBuildSiteSpecies();
-			layer.doCompleteSiteSpeciesSiteIndexInfo();
+			layer.doCompleteSiteSpeciesSiteIndexInfo(context);
 			layer.estimateCrownClosure(context);
 
 			// Could not calculate crown closure
@@ -321,7 +321,7 @@ public class LayerTest {
 
 			layer.doCompleteDefinition();
 			layer.doBuildSiteSpecies();
-			layer.doCompleteSiteSpeciesSiteIndexInfo();
+			layer.doCompleteSiteSpeciesSiteIndexInfo(context);
 			polygon.setLayerByProjectionType(ProjectionTypeCode.VETERAN, layer);
 			layer.estimateCrownClosure(context);
 
@@ -339,7 +339,7 @@ public class LayerTest {
 
 			layer.doCompleteDefinition();
 			layer.doBuildSiteSpecies();
-			layer.doCompleteSiteSpeciesSiteIndexInfo();
+			layer.doCompleteSiteSpeciesSiteIndexInfo(context);
 			layer.estimateCrownClosure(context);
 
 			// Make sure estimate was pulled from the default for the species
@@ -365,7 +365,7 @@ public class LayerTest {
 
 			layer.doCompleteDefinition();
 			layer.doBuildSiteSpecies();
-			layer.doCompleteSiteSpeciesSiteIndexInfo();
+			layer.doCompleteSiteSpeciesSiteIndexInfo(context);
 			polygon.setPrimaryLayer(layer);
 			polygon.setLayerByProjectionType(ProjectionTypeCode.PRIMARY, layer);
 			layer.estimateCrownClosure(context);
@@ -393,7 +393,7 @@ public class LayerTest {
 
 			layer.doCompleteDefinition();
 			layer.doBuildSiteSpecies();
-			layer.doCompleteSiteSpeciesSiteIndexInfo();
+			layer.doCompleteSiteSpeciesSiteIndexInfo(context);
 			layer.estimateCrownClosure(context);
 
 			// Make sure estimate was pulled from the default for the species
@@ -473,7 +473,7 @@ public class LayerTest {
 
 		layer.doCompleteDefinition();
 		layer.doBuildSiteSpecies();
-		layer.doCompleteSiteSpeciesSiteIndexInfo();
+		layer.doCompleteSiteSpeciesSiteIndexInfo(context);
 
 		age = layer.determineLayerAgeAtYear(2499);
 		assertThat(age, is(2599.0));// Should reference year oin polygon default to null instead of 0?
@@ -486,7 +486,7 @@ public class LayerTest {
 
 		layer.doCompleteDefinition();
 		layer.doBuildSiteSpecies();
-		layer.doCompleteSiteSpeciesSiteIndexInfo();
+		layer.doCompleteSiteSpeciesSiteIndexInfo(context);
 		age = layer.determineLayerAgeAtYear(2499);
 		assertThat(age, is(579.0));
 
@@ -508,7 +508,7 @@ public class LayerTest {
 		addSpecies(layer, stand, params3);
 
 		layer.doBuildSiteSpecies();
-		layer.doCompleteSiteSpeciesSiteIndexInfo();
+		layer.doCompleteSiteSpeciesSiteIndexInfo(context);
 
 		assertThat(sp64.getTotalAge(), is(100.0));
 	}

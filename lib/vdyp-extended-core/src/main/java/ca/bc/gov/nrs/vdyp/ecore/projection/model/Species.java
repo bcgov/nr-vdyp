@@ -14,7 +14,9 @@ import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexAgeType;
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEstimationType;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.MessageSeverityCode;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.PolygonMessageKind;
+import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionContext;
 import ca.bc.gov.nrs.vdyp.ecore.projection.input.HcsvLayerRecordBean.SpeciesDetails;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.InventoryStandard;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ReturnCode;
@@ -375,7 +377,7 @@ public class Species implements Comparable<Species> {
 	 * This species has been added to a layer (and polygon.) Infer the values of undefined fields from the context,
 	 * where possible.
 	 */
-	public void calculateUndefinedFieldValues() {
+	public void calculateUndefinedFieldValues(ProjectionContext context) {
 
 		Layer layer = this.stand.getLayer();
 		Polygon polygon = layer.getPolygon();
@@ -558,6 +560,20 @@ public class Species implements Comparable<Species> {
 				haveComputedAgeAtBreastHeight = true;
 
 				logger.debug("{}: calculated Years to Breast Height to be: {}", this, yearsToBreastHeightRef.get());
+			}
+
+			if (context != null
+					&& context.getParams().containsOption(Parameters.ExecutionOption.ALLOW_AGGRESSIVE_VALUE_ESTIMATION)
+					&& ageAtBreastHeight == null && totalAge == null && dominantHeight == null && siteIndex != null
+					&& yearsToBreastHeight != null) {
+				/*
+				 * 2004/03/17 In this case we have a species with an associated site index value but no age/height pair.
+				 * Based on e-mails and conversations with Cam today, we need to consider and perform the following: -
+				 * The underlying models require an age (but not height) - The BHAge will be assumed to be 1.0 (*Peter
+				 * Minter Note: this is Age at Breast Height) - Total Age will be determined from this.
+				 */
+				keepTrying = true;
+				ageAtBreastHeight = 1.0;
 			}
 		}
 
