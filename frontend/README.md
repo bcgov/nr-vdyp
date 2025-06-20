@@ -1,6 +1,7 @@
-# VDYP
+# VDYP Frontend
 
-Web based user interface for the Variable Density Yield Projection (VDYP).
+This is the VDYP frontend. It implements a Vue frontend with Keycloak
+authentication support.
 
 ## Getting Started
 
@@ -44,9 +45,12 @@ npx cypress run --e2e --spec "cypress/e2e/unit/**/*.cy.ts"
 
 ## Storybook
 
-Storybook is a frontend workshop for building UI components and pages in
-isolation. To start Storybook, run the following command:
-
 ```bash
 npm run storybook
+```
+
+### Lints and fixes files
+
+```sh
+npm run lint
 ```
