@@ -17,7 +17,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.common.RuntimeResourceParseException;
  */
 public class ParamsReader {
 
-	static final Pattern PARAM_LINE_MATCHER = Pattern.compile("^\\-(\\w+)\\s+(.*)$");
+	static final Pattern PARAM_LINE_MATCHER = Pattern.compile("^\\-(\\w+)\\s+(\\w.*)$");
 
 	Parameters loadParametersFile(Path paramFile) throws IOException, ResourceParseException {
 		Parameters params = new Parameters();
