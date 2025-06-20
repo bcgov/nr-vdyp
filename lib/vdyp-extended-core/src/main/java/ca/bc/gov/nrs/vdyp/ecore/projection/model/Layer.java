@@ -17,6 +17,7 @@ import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexAgeType;
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.PolygonValidationException;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.MessageSeverityCode;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.PolygonMessageKind;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessage;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessageKind;
@@ -25,6 +26,7 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.GrowthModelCode;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProcessingModeCode;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProjectionTypeCode;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ReturnCode;
+import ca.bc.gov.nrs.vdyp.ecore.utils.NullMath;
 import ca.bc.gov.nrs.vdyp.ecore.utils.Utils;
 import ca.bc.gov.nrs.vdyp.si32.site.SiteTool;
 
@@ -791,47 +793,55 @@ public class Layer implements Comparable<Layer> {
 	public void estimateCrownClosure(ProjectionContext context) {
 
 		if (crownClosure == null) {
+			boolean getLeadingSpeciesDefault = false;
+			Species leadingSp64 = null;
+			boolean doAggresiveEstimation = context.getParams()
+					.containsOption(Parameters.ExecutionOption.ALLOW_AGGRESSIVE_VALUE_ESTIMATION)
+					&& this == polygon.getLayerByProjectionType(ProjectionTypeCode.PRIMARY);
 
-			if (this == polygon.getLayerByProjectionType(ProjectionTypeCode.UNKNOWN)) {
-				// this is the primary layer
-				Species leadingSp64 = this.determineLeadingSp64(0);
-				if (leadingSp64 != null && leadingSp64.getDominantHeight() >= 10.0) {
-					var estimatedCrownClosure = SiteTool
-							.getSpeciesDefaultCrownClosure(leadingSp64.getSpeciesCode(), polygon.getIsCoastal());
-
-					logger.debug("{}: estimating crown closure of primary layer at {}", this, estimatedCrownClosure);
-					crownClosure = (short) estimatedCrownClosure;
-
-					getPolygon().addMessage(
-							new PolygonMessage.Builder().species(leadingSp64)
-									.details(
-											ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
-											PolygonMessageKind.USING_DEFAULT_CC, Double.valueOf(crownClosure),
-											getPolygon().getIsCoastal() ? "Coast" : "Interior"
-									).build()
-					);
-
-				} else if (leadingSp64 == null) {
-					getPolygon().disableProjectionsOfType(assignedProjectionType);
-
-					getPolygon().addMessage(
-							new PolygonMessage.Builder().layer(this)
-									.details(
-											ReturnCode.ERROR_SPECIESNOTFOUND, MessageSeverityCode.ERROR,
-											PolygonMessageKind.NO_CC, this
-									).build()
-					);
-					logger.debug("Disabling projections of type {}", assignedProjectionType);
+			if (this == polygon.getLayerByProjectionType(ProjectionTypeCode.UNKNOWN) || doAggresiveEstimation) {
+				leadingSp64 = this.determineLeadingSp64(0);
+				if (leadingSp64 != null
+						&& (NullMath.op(leadingSp64.getDominantHeight(), 10.0, (a, b) -> a.compareTo(b) >= 0, -9.0)
+								|| doAggresiveEstimation)) {
+					getLeadingSpeciesDefault = true;
 				}
-			} else if (this == polygon.getLayerByProjectionType(ProjectionTypeCode.VETERAN)) {
-				// this is the veteran layer
-
-				short estimatedCrownClosure = 4;
-				logger.debug("{}: estimating crown closure of veteran layer at {}", this, estimatedCrownClosure);
-				crownClosure = estimatedCrownClosure;
-			} else {
-				// do nothing - no need to estimate crown closure for non-primary, non-veteran layer
 			}
+
+			if (getLeadingSpeciesDefault) {
+				var estimatedCrownClosure = SiteTool
+						.getSpeciesDefaultCrownClosure(leadingSp64.getSpeciesCode(), polygon.getIsCoastal());
+
+				logger.debug("{}: estimating crown closure of primary layer at {}", this, estimatedCrownClosure);
+				crownClosure = (short) estimatedCrownClosure;
+
+				getPolygon().addMessage(
+						new PolygonMessage.Builder().species(leadingSp64).details(
+								ReturnCode.SUCCESS, MessageSeverityCode.WARNING, PolygonMessageKind.USING_DEFAULT_CC,
+								Double.valueOf(crownClosure), getPolygon().getIsCoastal() ? "Coast" : "Interior"
+						).build()
+				);
+
+			} else if (leadingSp64 == null) {
+				getPolygon().disableProjectionsOfType(assignedProjectionType);
+
+				getPolygon().addMessage(
+						new PolygonMessage.Builder().layer(this)
+								.details(
+										ReturnCode.ERROR_SPECIESNOTFOUND, MessageSeverityCode.ERROR,
+										PolygonMessageKind.NO_CC, this
+								).build()
+				);
+				logger.debug("Disabling projections of type {}", assignedProjectionType);
+			}
+		} else if (this == polygon.getLayerByProjectionType(ProjectionTypeCode.VETERAN)) {
+			// this is the veteran layer
+
+			short estimatedCrownClosure = 4;
+			logger.debug("{}: estimating crown closure of veteran layer at {}", this, estimatedCrownClosure);
+			crownClosure = estimatedCrownClosure;
+		} else {
+			// do nothing - no need to estimate crown closure for non-primary, non-veteran layer
 		}
 	}
 

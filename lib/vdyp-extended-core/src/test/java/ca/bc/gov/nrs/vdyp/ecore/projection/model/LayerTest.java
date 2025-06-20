@@ -197,8 +197,9 @@ public class LayerTest {
 
 			assertNotNull(sp64.getSiteIndex());
 			assertThat(sp64.getSiteIndex(), not(stand.getSpeciesGroup().getSiteIndex())); // TODO revisit why these
-																							// should be different
+			// should be different
 		}
+
 
 		static Stream<Arguments> siteIndexParameters() {
 			return Stream.of(
@@ -311,6 +312,24 @@ public class LayerTest {
 		}
 
 		@Test
+		void testSuppliedLeadingVeteranLayer() throws PolygonValidationException {
+			layer = buildLayer(Map.of("doSuppressPerHAYields", true, "crownClosure", (short) 10));
+			Map<String, Object> params = Map.of("sp64", "PL", "perc", 100.0, "age", 30.0, "h", 9.0);
+
+			Stand stand = addStand(layer, "PL");
+			addSpecies(layer, stand, params);
+
+			layer.doCompleteDefinition();
+			layer.doBuildSiteSpecies();
+			layer.doCompleteSiteSpeciesSiteIndexInfo();
+			polygon.setLayerByProjectionType(ProjectionTypeCode.VETERAN, layer);
+			layer.estimateCrownClosure(context);
+
+			// Could not calculate crown closure
+			assertThat(layer.getCrownClosure(), is((short) 4));
+		}
+
+		@Test
 		void testNotSuppliedCalculateFromLeadingSpecies() throws PolygonValidationException {
 			layer = buildLayer(Map.of("doSuppressPerHAYields", true));
 			Map<String, Object> params = Map.of("sp64", "PL", "perc", 100.0, "age", 100.0, "h", 50.0);
@@ -324,11 +343,61 @@ public class LayerTest {
 			layer.estimateCrownClosure(context);
 
 			// Make sure estimate was pulled from the default for the species
-			assertNotNull(layer.getCrownClosure());
 			assertThat(
 					layer.getCrownClosure(),
 					is((short) SiteTool.getSpeciesDefaultCrownClosure("PL", polygon.getIsCoastal()))
 			);
+		}
+
+		@Test
+		void testAggressiveEstimation() throws AbstractProjectionRequestException {
+			params = new Parameters().ageStart(0).ageEnd(100)
+					.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.ALLOW_AGGRESSIVE_VALUE_ESTIMATION);
+			context = new ProjectionContext(ProjectionRequestKind.HCSV, "Test", params, false);
+			polygon = new Polygon.Builder().build();
+			layer = buildLayer(
+					Map.of("doSuppressPerHAYields", true, "assignedProjectionType", ProjectionTypeCode.PRIMARY)
+			);
+			Map<String, Object> params = Map.of("sp64", "PL", "perc", 100.0);
+
+			Stand stand = addStand(layer, "PL");
+			addSpecies(layer, stand, params);
+
+			layer.doCompleteDefinition();
+			layer.doBuildSiteSpecies();
+			layer.doCompleteSiteSpeciesSiteIndexInfo();
+			polygon.setPrimaryLayer(layer);
+			polygon.setLayerByProjectionType(ProjectionTypeCode.PRIMARY, layer);
+			layer.estimateCrownClosure(context);
+
+			// Make sure estimate was pulled from the default for the species
+			assertThat(
+					layer.getCrownClosure(),
+					is((short) SiteTool.getSpeciesDefaultCrownClosure("PL", polygon.getIsCoastal()))
+			);
+		}
+
+		@Test
+		void testAggressiveEstimationNotPrimary() throws AbstractProjectionRequestException {
+			params = new Parameters().ageStart(0).ageEnd(100)
+					.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.ALLOW_AGGRESSIVE_VALUE_ESTIMATION);
+			context = new ProjectionContext(ProjectionRequestKind.HCSV, "Test", params, false);
+			polygon = new Polygon.Builder().build();
+			layer = buildLayer(
+					Map.of("doSuppressPerHAYields", true, "assignedProjectionType", ProjectionTypeCode.PRIMARY)
+			);
+			Map<String, Object> params = Map.of("sp64", "PL", "perc", 100.0, "age", 100.0, "h", 9.0);
+
+			Stand stand = addStand(layer, "PL");
+			addSpecies(layer, stand, params);
+
+			layer.doCompleteDefinition();
+			layer.doBuildSiteSpecies();
+			layer.doCompleteSiteSpeciesSiteIndexInfo();
+			layer.estimateCrownClosure(context);
+
+			// Make sure estimate was pulled from the default for the species
+			assertNull(layer.getCrownClosure());
 		}
 	}
 
