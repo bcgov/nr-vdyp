@@ -17,6 +17,7 @@ import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexAgeType;
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.PolygonValidationException;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.MessageSeverityCode;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.PolygonMessageKind;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessage;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessageKind;
@@ -794,9 +795,9 @@ public class Layer implements Comparable<Layer> {
 		if (crownClosure == null) {
 			boolean getLeadingSpeciesDefault = false;
 			Species leadingSp64 = null;
-			boolean doAggresiveEstimation = false;// context.getParams()
-			// .containsOption(Parameters.ExecutionOption.ALLOW_AGGRESSIVE_VALUE_ESTIMATION)
-			// && this == polygon.getLayerByProjectionType(ProjectionTypeCode.PRIMARY);
+			boolean doAggresiveEstimation = context.getParams()
+					.containsOption(Parameters.ExecutionOption.ALLOW_AGGRESSIVE_VALUE_ESTIMATION)
+					&& this == polygon.getLayerByProjectionType(ProjectionTypeCode.PRIMARY);
 
 			if (this == polygon.getLayerByProjectionType(ProjectionTypeCode.UNKNOWN) || doAggresiveEstimation) {
 				leadingSp64 = this.determineLeadingSp64(0);
