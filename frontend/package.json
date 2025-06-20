@@ -15,10 +15,10 @@
     "format": "prettier --write src/",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "comp-test-open": "npx cypress open --component --browser chrome",
-    "comp-test-all": "npx cypress run --component --spec \"src/components/**/*.cy.ts\"",
-    "e2e-test-open": "npx cypress open --e2e --browser chrome",
-    "unit-test-all": "npx cypress run --e2e --spec \"cypress/e2e/unit/**/*.cy.ts\""
+    "test:comp-open": "npx cypress open --component --browser chrome",
+    "test:comp": "npx cypress run --component --spec \"src/components/**/*.cy.ts\"",
+    "test:e2e-open": "npx cypress open --e2e --browser chrome",
+    "test:unit": "npx cypress run --e2e --spec \"cypress/e2e/unit/**/*.cy.ts\""
   },
   "keywords": [],
   "author": "Vivid Solutions Inc.",
