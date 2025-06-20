@@ -222,7 +222,7 @@ const createPolygonData = (
     featureId, // FEATURE_ID
     mapId, // MAP_ID
     polygonNumber, // POLYGON_NUMBER
-    '', // ORG_UNIT
+    BIZCONSTANTS.UNKNOWN_CD, // ORG_UNIT
     BIZCONSTANTS.UNKNOWN_CD, // TSA_NAME
     BIZCONSTANTS.UNKNOWN_CD, // TFL_NAME
     derivedByCode || '', // INVENTORY_STANDARD_CODE

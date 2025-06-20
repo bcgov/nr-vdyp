@@ -5,52 +5,94 @@ authentication support.
 
 ## Getting Started
 
-## Local Development
+### 1. Local Development
 
-To start the development server, run the following command:
+Start the development server to work on the project locally.
+
+Start Development Server:
 
 ```bash
 npm run dev
 ```
 
-To start the development server in debug mode, run the following command:
+Start Development Server in Debug Mode:
 
 ```bash
 npm run dev-debug
 ```
 
-## Cypress Testing
+### 2. Code Quality & Validation
 
-Cypress is used for end-to-end, component testing, unit testing.
+Ensure code quality and type safety before building.
 
-### Run Component Tests
-
-```bash
-npx cypress open --component --browser chrome
-```
+Run Type Checking:
 
 ```bash
-npx cypress run --component --spec "src/components/**/*.cy.ts"
+npm run type-check
 ```
 
-### Run E2E Tests
-
-```bash
-npx cypress open --e2e --browser chrome
-```
-
-```bash
-npx cypress run --e2e --spec "cypress/e2e/unit/**/*.cy.ts"
-```
-
-## Storybook
-
-```bash
-npm run storybook
-```
-
-### Lints and fixes files
+Lint and Fix Files:
 
 ```sh
 npm run lint
+```
+
+### 3. Building the Project
+
+Prepare the project for production or preview.
+
+Build the Project (with Type Checking):
+
+```bash
+npm run build
+```
+
+Build the Project Only (without Type Checking):
+
+```bash
+npm run build-only
+```
+
+Preview the Built Project:
+
+```bash
+npm run preview
+```
+
+### 4. Testing
+
+Run various tests to validate the application.
+
+Open Component Tests (Interactive Mode):
+
+```bash
+npm run test:comp-open
+```
+
+Run Component Tests:
+
+```bash
+npm run test:comp
+```
+
+Run Unit Tests:
+
+```bash
+npm run test:unit
+```
+
+Open E2E Tests (Interactive Mode):
+
+```bash
+npm run test:e2e-open
+```
+
+### 5. Storybook
+
+Develop and document UI components using Storybook.
+
+Run Storybook Development Server:
+
+```bash
+npm run storybook
 ```
