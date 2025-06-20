@@ -822,7 +822,7 @@ public class Layer implements Comparable<Layer> {
 						).build()
 				);
 
-			} else if (leadingSp64 == null) {
+			} else if (this == polygon.getLayerByProjectionType(ProjectionTypeCode.UNKNOWN) && leadingSp64 == null) {
 				getPolygon().disableProjectionsOfType(assignedProjectionType);
 
 				getPolygon().addMessage(
@@ -833,15 +833,15 @@ public class Layer implements Comparable<Layer> {
 								).build()
 				);
 				logger.debug("Disabling projections of type {}", assignedProjectionType);
-			}
-		} else if (this == polygon.getLayerByProjectionType(ProjectionTypeCode.VETERAN)) {
-			// this is the veteran layer
+			} else if (this == polygon.getLayerByProjectionType(ProjectionTypeCode.VETERAN)) {
+				// this is the veteran layer
 
-			short estimatedCrownClosure = 4;
-			logger.debug("{}: estimating crown closure of veteran layer at {}", this, estimatedCrownClosure);
-			crownClosure = estimatedCrownClosure;
-		} else {
-			// do nothing - no need to estimate crown closure for non-primary, non-veteran layer
+				short estimatedCrownClosure = 4;
+				logger.debug("{}: estimating crown closure of veteran layer at {}", this, estimatedCrownClosure);
+				crownClosure = estimatedCrownClosure;
+			} else {
+				// do nothing - no need to estimate crown closure for non-primary, non-veteran layer
+			}
 		}
 	}
 
