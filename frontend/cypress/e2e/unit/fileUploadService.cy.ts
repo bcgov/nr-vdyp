@@ -18,7 +18,8 @@ import {
 import * as apiActions from '@/services/apiActions'
 import { CONSTANTS } from '@/constants'
 import { createPinia, setActivePinia } from 'pinia'
-import sinon, { SinonStub } from 'sinon'
+import sinon from 'sinon'
+import type { SinonStub } from 'sinon'
 
 describe('File Upload Service Unit Tests', () => {
   let fileUploadStore: ReturnType<typeof useFileUploadStore>
@@ -97,26 +98,29 @@ describe('File Upload Service Unit Tests', () => {
     const projectionParamsBlob = formData.get(
       ParameterNamesEnum.PROJECTION_PARAMETERS,
     ) as Blob
-    cy.wrap(projectionParamsBlob.text()).then((text: string) => {
-      const projectionParams = JSON.parse(text)
-      expect(projectionParams.ageStart).to.equal(10)
-      expect(projectionParams.ageEnd).to.equal(100)
-      expect(projectionParams.ageIncrement).to.equal(10)
-      expect(projectionParams.yearStart).to.be.null
-      expect(projectionParams.yearEnd).to.be.null
-      expect(projectionParams.outputFormat).to.equal(
-        OutputFormatEnum.CSVYieldTable,
-      )
-      expect(projectionParams.combineAgeYearRange).to.equal(
-        CombineAgeYearRangeEnum.Intersect,
-      )
-      expect(projectionParams.metadataToOutput).to.equal(
-        MetadataToOutputEnum.VERSION,
-      )
-      expect(projectionParams.selectedExecutionOptions).to.include(
-        SelectedExecutionOptionsEnum.DoIncludeProjectedMOFVolumes,
-      )
-    })
+
+    cy.wrap(projectionParamsBlob)
+      .then((blob) => blob.text())
+      .then((text) => {
+        const projectionParams = JSON.parse(text)
+        expect(projectionParams.ageStart).to.equal(10)
+        expect(projectionParams.ageEnd).to.equal(100)
+        expect(projectionParams.ageIncrement).to.equal(10)
+        expect(projectionParams.yearStart).to.be.null
+        expect(projectionParams.yearEnd).to.be.null
+        expect(projectionParams.outputFormat).to.equal(
+          OutputFormatEnum.CSVYieldTable,
+        )
+        expect(projectionParams.combineAgeYearRange).to.equal(
+          CombineAgeYearRangeEnum.Intersect,
+        )
+        expect(projectionParams.metadataToOutput).to.equal(
+          MetadataToOutputEnum.VERSION,
+        )
+        expect(projectionParams.selectedExecutionOptions).to.include(
+          SelectedExecutionOptionsEnum.DoIncludeProjectedMOFVolumes,
+        )
+      })
   })
 
   it('should create form data with correct parameters for YEAR range', () => {
@@ -130,26 +134,29 @@ describe('File Upload Service Unit Tests', () => {
     const projectionParamsBlob = formData.get(
       ParameterNamesEnum.PROJECTION_PARAMETERS,
     ) as Blob
-    cy.wrap(projectionParamsBlob.text()).then((text: string) => {
-      const projectionParams = JSON.parse(text)
-      expect(projectionParams.ageStart).to.be.null
-      expect(projectionParams.ageEnd).to.be.null
-      expect(projectionParams.yearStart).to.equal(2020)
-      expect(projectionParams.yearEnd).to.equal(2030)
-      expect(projectionParams.ageIncrement).to.equal(2)
-      expect(projectionParams.outputFormat).to.equal(
-        OutputFormatEnum.CSVYieldTable,
-      )
-      expect(projectionParams.combineAgeYearRange).to.equal(
-        CombineAgeYearRangeEnum.Intersect,
-      )
-      expect(projectionParams.metadataToOutput).to.equal(
-        MetadataToOutputEnum.VERSION,
-      )
-      expect(projectionParams.selectedExecutionOptions).to.include(
-        SelectedExecutionOptionsEnum.DoIncludeProjectedMOFVolumes,
-      )
-    })
+
+    cy.wrap(projectionParamsBlob)
+      .then((blob) => blob.text())
+      .then((text) => {
+        const projectionParams = JSON.parse(text)
+        expect(projectionParams.ageStart).to.be.null
+        expect(projectionParams.ageEnd).to.be.null
+        expect(projectionParams.yearStart).to.equal(2020)
+        expect(projectionParams.yearEnd).to.equal(2030)
+        expect(projectionParams.ageIncrement).to.equal(2)
+        expect(projectionParams.outputFormat).to.equal(
+          OutputFormatEnum.CSVYieldTable,
+        )
+        expect(projectionParams.combineAgeYearRange).to.equal(
+          CombineAgeYearRangeEnum.Intersect,
+        )
+        expect(projectionParams.metadataToOutput).to.equal(
+          MetadataToOutputEnum.VERSION,
+        )
+        expect(projectionParams.selectedExecutionOptions).to.include(
+          SelectedExecutionOptionsEnum.DoIncludeProjectedMOFVolumes,
+        )
+      })
   })
 
   it('should call projectionHcsvPost with correct form data', () => {

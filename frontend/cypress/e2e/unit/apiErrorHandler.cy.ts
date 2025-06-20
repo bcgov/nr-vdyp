@@ -3,6 +3,7 @@
 import { handleApiError } from '@/services/apiErrorHandler'
 import { SVC_ERR } from '@/constants/message'
 import axios, { AxiosError } from 'axios'
+import type { AxiosRequestHeaders, InternalAxiosRequestConfig } from 'axios'
 import { setActivePinia, createPinia } from 'pinia'
 import { useNotificationStore } from '@/stores/common/notificationStore'
 import { StatusCodes } from 'http-status-codes'
@@ -36,14 +37,14 @@ describe('apiErrorHandler Unit Tests', () => {
       response: {
         status: StatusCodes.INTERNAL_SERVER_ERROR,
         data: 'Server Error',
-        headers: {},
+        headers: {} as AxiosRequestHeaders,
         statusText: '',
-        config: undefined,
+        config: {} as InternalAxiosRequestConfig,
       },
       message: 'Internal server error',
       name: 'AxiosError',
       config: {
-        headers: undefined,
+        headers: {} as AxiosRequestHeaders,
       },
       toJSON: () => ({}),
     }
@@ -72,7 +73,7 @@ describe('apiErrorHandler Unit Tests', () => {
       message: 'Network Error',
       name: 'AxiosError',
       config: {
-        headers: undefined,
+        headers: {} as AxiosRequestHeaders,
       },
       toJSON: () => ({}),
     }
@@ -96,7 +97,7 @@ describe('apiErrorHandler Unit Tests', () => {
       message: 'Invalid configuration',
       name: 'AxiosError',
       config: {
-        headers: undefined,
+        headers: {} as AxiosRequestHeaders,
       },
       toJSON: () => ({}),
     }
