@@ -1,6 +1,5 @@
 package ca.bc.gov.nrs.vdyp.forward.parsers;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.text.MessageFormat;
 import java.util.Map;

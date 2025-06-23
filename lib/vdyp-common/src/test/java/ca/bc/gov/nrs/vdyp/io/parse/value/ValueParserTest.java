@@ -12,6 +12,8 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 
@@ -298,6 +300,33 @@ class ValueParserTest {
 							.toMap(ValueParser.segmentList(3, ValueParser.INTEGER), defaults, "A", "B", "C", "D")
 			);
 			assertThat(ex, hasProperty("message", is("Keys with defaults must follow those without")));
+		}
+	}
+
+	@Nested
+	class BooleanParser {
+
+		@ParameterizedTest
+		@ValueSource(
+				strings = { "y", "Y", "t", "T", "yes", "YES", "true", "TRUE", "1", "35874983", "+1", "+35874983", "-1",
+						"-83792842" }
+		)
+		void testPermissiveTrue(String toParse) throws ValueParseException {
+			boolean b = ValueParser.LOGICAL_PERMISSIVE.parse(toParse);
+			assertThat(b, is(true));
+		}
+
+		@ParameterizedTest
+		@ValueSource(strings = { "n", "N", "f", "F", "no", "NO", "false", "FALSE", "0", "+0", "-0", "000000000" })
+		void testPermissiveFalse(String toParse) throws ValueParseException {
+			boolean b = ValueParser.LOGICAL_PERMISSIVE.parse(toParse);
+			assertThat(b, is(false));
+		}
+
+		@ParameterizedTest
+		@ValueSource(strings = { "", "   ", "bad value", "-true", "-false", "+true", "+false" })
+		void testPermissiveInvalid(String toParse) throws ValueParseException {
+			assertThrows(ValueParseException.class, () -> ValueParser.LOGICAL_PERMISSIVE.parse(toParse));
 		}
 	}
 
