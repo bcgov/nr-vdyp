@@ -1032,7 +1032,13 @@ public class Polygon implements Comparable<Polygon> {
 			);
 		}
 
-		var crownClosure = Math.max(0.0, primaryLayer.getCrownClosure());
+		short crownClosure = 0;
+		if (primaryLayer != null) {
+			NullMath.max(
+					crownClosure, primaryLayer.getCrownClosure(), (a, b) -> (short) Math.max(a, b),
+					Vdyp7Constants.EMPTY_SHORT
+			);
+		}
 		logger.debug(
 				"{}: crown closure: primary layer crown closure: {}; value used: {}", primaryLayer.getCrownClosure(),
 				crownClosure
