@@ -12,6 +12,7 @@ import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.common.Reference;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.PolygonExecutionException;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.PolygonValidationException;
@@ -34,6 +35,7 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.GrowthModelCode;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProcessingModeCode;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProjectionTypeCode;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ReturnCode;
+import ca.bc.gov.nrs.vdyp.ecore.utils.ErrorMessageUtils;
 import ca.bc.gov.nrs.vdyp.ecore.utils.ProjectionUtils;
 import ca.bc.gov.nrs.vdyp.ecore.utils.Utils;
 import ca.bc.gov.nrs.vdyp.exceptions.BecMissingException;
@@ -51,16 +53,16 @@ import ca.bc.gov.nrs.vdyp.math.VdypMath;
  */
 public class PolygonProjectionRunner {
 
-	private static Logger logger = LoggerFactory.getLogger(PolygonProjectionRunner.class);
+	private final static Logger logger = LoggerFactory.getLogger(PolygonProjectionRunner.class);
 
 	private static final String EXECUTION_FOLDER_TEMPLATE_ZIP_FILE_NAME = "ExecutionFolderTemplate.zip";
 
-	private Polygon polygon;
-	private ProjectionContext context;
-	private ComponentRunner componentRunner;
+	private final Polygon polygon;
+	private final ProjectionContext context;
+	private final ComponentRunner componentRunner;
 
-	private PolygonProjectionState state;
-	private ProjectionParameters projectionParameters;
+	private final PolygonProjectionState state;
+	private final ProjectionParameters projectionParameters;
 
 	/**
 	 * Create a runner for the given {@link Polygon}, in the given {@link ProjectionContext}, using the given
@@ -209,7 +211,7 @@ public class PolygonProjectionRunner {
 
 				var oFipResult = state.getProcessingResults(ProjectionStageCode.Initial, projectionType);
 
-				if (!oFipResult.isPresent()) {
+				if (oFipResult.isEmpty()) {
 					logger.debug(
 							"{}: performed FIP Model successfully for projection type {}", polygon, projectionType
 					);
@@ -224,47 +226,50 @@ public class PolygonProjectionRunner {
 					if (fipResult instanceof StandProcessingException spe) {
 
 						var layer = polygon.getLayerByProjectionType(projectionType);
-
 						doRetryUsingVriStart = FipStartProcessingResult.doRetryUsingVriStart(spe);
 
 						if (spe instanceof UnsupportedModeException) {
 							polygon.addMessage(
-									new PolygonMessage.Builder().polygon(polygon).layer(layer)
+									new PolygonMessage.Builder().layer(
+											layer
+									)
 											.details(
 													ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
-													PolygonMessageKind.LOW_SITE, spe.getErrorNumber().get()
+													PolygonMessageKind.LOW_SITE,
+													spe.getIpassCode(VdypApplicationIdentifier.FIP_START)
 											).build()
 							);
-							break;
 						} else if (spe instanceof TotalAgeLowException) {
 							polygon.addMessage(
-									new PolygonMessage.Builder().polygon(polygon).layer(layer)
+									new PolygonMessage.Builder().layer(
+											layer
+									)
 											.details(
 													ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
 													PolygonMessageKind.BREAST_HEIGHT_AGE_TOO_YOUNG, "FipStart",
-													spe.getErrorNumber().get()
+													spe.getIpassCode(VdypApplicationIdentifier.FIP_START)
 											).build()
 							);
-							break;
 						} else if (spe instanceof BecMissingException || spe instanceof ResultBaseAreaLowException) {
 							polygon.addMessage(
-									new PolygonMessage.Builder().polygon(polygon).layer(layer)
+									new PolygonMessage.Builder().layer(
+											layer
+									)
 											.details(
 													ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
 													PolygonMessageKind.BREAST_HEIGHT_AGE_TOO_YOUNG, "FIPSTART",
-													spe.getErrorNumber().get()
+													spe.getIpassCode(VdypApplicationIdentifier.FIP_START)
 											).build()
 							);
 							doRetryUsingVriStart = true;
-							break;
 						} else {
 							polygon.addMessage(
-									new PolygonMessage.Builder().polygon(polygon).layer(layer).details(
+									new PolygonMessage.Builder().layer(layer).details(
 											ReturnCode.ERROR_CORELIBRARYERROR, MessageSeverityCode.ERROR,
-											PolygonMessageKind.GENERIC_FIPSTART_ERROR, spe.getErrorNumber().get()
+											PolygonMessageKind.GENERIC_FIPSTART_ERROR,
+											spe.getIpassCode(VdypApplicationIdentifier.FIP_START)
 									).build()
 							);
-							break;
 						}
 					} else {
 						polygon.addMessage(
@@ -280,9 +285,18 @@ public class PolygonProjectionRunner {
 				if (doRetryUsingVriStart) {
 					logger.debug("{}: falling through to VRI Model", polygon);
 					state.modifyGrowthModel(projectionType, GrowthModelCode.VRI, ProcessingModeCode.VRI_VriYoung);
+					// VRI and FIP share a projectionStageCode
+					state.resetProcessingResults(ProjectionStageCode.Initial, projectionType);
 				} else {
 					if (oFipResult.isPresent()) {
 						polygon.disableProjectionsOfType(projectionType);
+						context.getErrorLog().addMessage(
+								ErrorMessageUtils.BuildVDYPApplicationErrorMessage(
+										VdypApplicationIdentifier.FIP_START, polygon, "running", oFipResult.get()
+								)
+						);
+
+						throw new PolygonExecutionException(oFipResult.get());
 					}
 					break;
 				}
@@ -295,15 +309,11 @@ public class PolygonProjectionRunner {
 				componentRunner.runVriStart(polygon, projectionType, state);
 
 				var oVriResult = state.getProcessingResults(ProjectionStageCode.Initial, projectionType);
-				if (!oVriResult.isPresent()) {
+				if (oVriResult.isEmpty()) {
 					logger.debug(
 							"{}: performed VRI Model successfully for projection type {}", polygon, projectionType
 					);
 				} else {
-					logger.debug(
-							"{}: VRI Model failed for projection type {}: {}", polygon, projectionType,
-							oVriResult.toString()
-					);
 
 					var vriResult = oVriResult.get();
 
@@ -316,7 +326,7 @@ public class PolygonProjectionRunner {
 
 					if (vriResult instanceof StandProcessingException spe) {
 
-						var errorNumber = spe.getErrorNumber();
+						var errorNumber = spe.getIpassCode(VdypApplicationIdentifier.VRI_START);
 						var layer = polygon.getLayerByProjectionType(projectionType);
 
 						if (vriResult instanceof QuadraticMeanDiameterLowException) {
@@ -353,8 +363,13 @@ public class PolygonProjectionRunner {
 							);
 						}
 					}
-				}
 
+					context.getErrorLog().addMessage(
+							ErrorMessageUtils.BuildVDYPApplicationErrorMessage(
+									VdypApplicationIdentifier.VRI_START, polygon, "running", oVriResult.get()
+							)
+					);
+				}
 				break;
 			}
 			default: {
@@ -422,7 +437,7 @@ public class PolygonProjectionRunner {
 
 		// Check if the stand is non-productive.
 		if (polygon.getNonProductiveDescriptor() != null) {
-			if (primaryLayer.getSp0sAsSupplied().size() > 0) {
+			if (!primaryLayer.getSp0sAsSupplied().isEmpty()) {
 				logger.debug(
 						"{}: stand labelled with Non-Productive Code {}, but also contains a stand description.",
 						polygon, polygon.getNonProductiveDescriptor()
@@ -812,7 +827,6 @@ public class PolygonProjectionRunner {
 	 * are supplied. If only the latter has a value, it is used. Otherwise, AgeStart is used (even if null.)
 	 *
 	 * @return as described
-	 * @throws PolygonValidationException
 	 */
 	private Double calculateStartAge() {
 

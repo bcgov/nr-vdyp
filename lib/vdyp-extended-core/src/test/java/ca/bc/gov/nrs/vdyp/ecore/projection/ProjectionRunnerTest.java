@@ -151,4 +151,5 @@ public class ProjectionRunnerTest {
 		assertThat(progressLog.contains("Processing Polygon 13919429:"), is(true));
 	}
 
+
 }
