@@ -1035,11 +1035,11 @@ public class Polygon implements Comparable<Polygon> {
 		var crownClosure = 0;
 		if (primaryLayer != null && primaryLayer.getCrownClosure() != null) {
 			crownClosure = (short) Math.max(crownClosure, primaryLayer.getCrownClosure());
+			logger.debug(
+					"{}: crown closure: primary layer crown closure: {}; value used: {}", primaryLayer,
+					primaryLayer.getCrownClosure(), crownClosure
+			);
 		}
-		logger.debug(
-				"{}: crown closure: primary layer crown closure: {}; value used: {}", primaryLayer.getCrownClosure(),
-				crownClosure
-		);
 
 		var ccFullyStocked = isCoastal ? Vdyp7Constants.CC_COAST : Vdyp7Constants.CC_INTERIOR;
 
