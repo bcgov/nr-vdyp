@@ -1272,151 +1272,124 @@ public class Layer implements Comparable<Layer> {
 	 * @throws PolygonValidationException
 	 */
 	void doCompleteSiteSpeciesSiteIndexInfo(ProjectionContext context) throws PolygonValidationException {
-
-		boolean amDone = false;
-
-		if (this.sp64s.size() == 0) {
-			amDone = true;
+		if (this.sp64s.isEmpty()) {
 			logger.debug("Layer \"{}\" does not have a stand description. Cannot complete site index info.", this);
+			return;
 		}
 
-		Stand stand = null;
-		Species siteSpecies = null;
-		Species speciesGroup = null;
+		Stand stand = determineLeadingSp0(0 /* first */);
+		Species siteSpecies = determineLeadingSp64(0 /* first */);
+		if (stand == null || siteSpecies == null) {
+			logger.error("{}: leading site species could not be determined; cannot continue", this);
 
-		if (!amDone) {
-			stand = determineLeadingSp0(0 /* first */);
-			siteSpecies = determineLeadingSp64(0 /* first */);
+			throw new PolygonValidationException(new ValidationMessage(ValidationMessageKind.NO_LEADING_SPECIES, this));
+		}
+		logger.debug(
+				"{}: located Site SP0 \"{}\" with site info: Age: {}, Ht: {}, SI: {}", this,
+				stand.getSpeciesGroup().getSpeciesCode(), stand.getSpeciesGroup().getTotalAge(),
+				stand.getSpeciesGroup().getDominantHeight(), stand.getSpeciesGroup().getSiteIndex()
+		);
+		logger.debug(
+				"{}: located Site SP64 \"{}\" with site info: Age: {}, Ht: {}, SI: {}", this,
+				siteSpecies.getSpeciesCode(), siteSpecies.getTotalAge(), siteSpecies.getDominantHeight(),
+				siteSpecies.getSiteIndex()
+		);
 
-			if (stand != null) {
-				logger.debug(
-						"{}: located Site SP0 \"{}\" with site info: Age: {}, Ht: {}, SI: {}", this,
-						stand.getSpeciesGroup().getSpeciesCode(), stand.getSpeciesGroup().getTotalAge(),
-						stand.getSpeciesGroup().getDominantHeight(), stand.getSpeciesGroup().getSiteIndex()
-				);
-			}
-			if (siteSpecies != null) {
-				logger.debug(
-						"{}: located Site SP64 \"{}\" with site info: Age: {}, Ht: {}, SI: {}", this,
-						siteSpecies.getSpeciesCode(), siteSpecies.getTotalAge(), siteSpecies.getDominantHeight(),
-						siteSpecies.getSiteIndex()
-				);
-			}
+		Species speciesGroup = stand.getSpeciesGroup();
 
-			if (stand == null || siteSpecies == null) {
-				logger.error("{}: leading site species could not be determined; cannot continue", this);
+		if (siteSpecies.getTotalAge() != null && siteSpecies.getDominantHeight() != null
+				&& siteSpecies.getSiteIndex() != null) {
 
-				throw new PolygonValidationException(
-						new ValidationMessage(ValidationMessageKind.NO_LEADING_SPECIES, this)
-				);
-			}
-
-			speciesGroup = stand.getSpeciesGroup();
-
-			if (siteSpecies.getTotalAge() != null && siteSpecies.getDominantHeight() != null
-					&& siteSpecies.getSiteIndex() != null) {
-
-				logger.debug("{}: leading site species {} already has site information", this, siteSpecies);
-				amDone = true;
-
-			} else {
-
-				siteSpecies.calculateUndefinedFieldValues(context);
-				speciesGroup.setSiteCurve(siteSpecies.getSiteCurve());
+			logger.debug("{}: leading site species {} already has site information", this, siteSpecies);
+		} else {
+			siteSpecies.calculateUndefinedFieldValues(context);
+			speciesGroup.setSiteCurve(siteSpecies.getSiteCurve());
+			Species donorSpecies = getDonorSpeciesForSiteInfo(context, siteSpecies);
+			if (donorSpecies != null) {
+				copyDonorSpeciesSiteInfo(context, siteSpecies, donorSpecies, speciesGroup);
 			}
 		}
-
-		Species donorSpecies = null;
-
-		if (!amDone) {
-
-			var sp64sByName = getSp64sByName();
-
-			for (var candidateDonorSpecies : sp64sByName) {
-
-				if (candidateDonorSpecies.getTotalAge() != null && candidateDonorSpecies.getDominantHeight() != null
-						&& !siteSpecies.getSpeciesCode().equals(candidateDonorSpecies.getSpeciesCode())) {
-
-					if (candidateDonorSpecies.getSiteIndex() == null) {
-						candidateDonorSpecies.calculateUndefinedFieldValues(context);
-					}
-
-					donorSpecies = candidateDonorSpecies;
-
-					if (donorSpecies != null) {
-						logger.debug(
-								"{}: located Donor SP64 \"{}\" with site info: Age: {}, Ht: {}, SI: {}", this,
-								donorSpecies.getSpeciesCode(), donorSpecies.getTotalAge(),
-								donorSpecies.getDominantHeight(), donorSpecies.getSiteIndex()
-						);
-					}
-
-					break;
-				}
-			}
-
-			if (donorSpecies == null) {
-				amDone = true;
-				logger.debug("{}: unable to find donor species", this);
-			}
-		}
-
-		if (siteSpecies != null && donorSpecies != null) {
-
-			if (!amDone) {
-
-				// Copy donor species age to the site species.
-
-				siteSpecies.setTotalAge(donorSpecies.getTotalAge());
-
-				logger.debug(
-						"{}: set site species {} age from donor species {} to {}", this, siteSpecies.getSpeciesCode(),
-						donorSpecies.getSpeciesCode(), donorSpecies.getTotalAge()
-				);
-
-				// Attempt to convert and copy (or, failing that, just copy) site index to site species
-
-				var donorSiteIndex = donorSpecies.getSiteIndex() == null ? Vdyp7Constants.EMPTY_DECIMAL
-						: donorSpecies.getSiteIndex();
-				try {
-					double siteIndex = SiteTool.convertSiteIndexBetweenCurves(
-							donorSpecies.getSiteCurve(), donorSiteIndex, siteSpecies.getSiteCurve()
-					);
-
-					speciesGroup.setSiteIndex(siteIndex);
-					siteSpecies.setSiteIndex(siteIndex);
-
-					logger.debug(
-							"{}: donor {} site index {} converted to {} and assigned to site species {}", this,
-							donorSpecies.getSpeciesCode(), donorSiteIndex, siteSpecies.getSiteIndex(),
-							siteSpecies.getSpeciesCode()
-					);
-
-				} catch (CommonCalculatorException e) {
-
-					speciesGroup.setSiteIndex(donorSiteIndex);
-					siteSpecies.setSiteIndex(donorSiteIndex);
-
-					logger.debug(
-							"{}: no conversion of site index from {} to {}. Assigned straight copy of donor site index value {} to site species",
-							this, donorSpecies.getSpeciesCode(), siteSpecies.getSpeciesCode(), donorSiteIndex
-					);
-				}
-
-				// Now reset dominant height and recompute it from the values assigned above.
-				siteSpecies.resetDominantHeight();
-				siteSpecies.calculateUndefinedFieldValues(context);
-
-				amDone = true;
-			}
-
-			if (amDone && stand != null && siteSpecies != null) {
-				speciesGroup.updateSiteInfo(siteSpecies);
-				speciesGroup.calculateUndefinedFieldValues(context);
-			}
-		}
+		speciesGroup.updateSiteInfo(siteSpecies);
+		speciesGroup.calculateUndefinedFieldValues(context);
 	}
 
+	private Species getDonorSpeciesForSiteInfo(ProjectionContext context, Species siteSpecies) {
+		Species donorSpecies = null;
+
+		var sp64sByName = getSp64sByName();
+
+		for (var candidateDonorSpecies : sp64sByName) {
+
+			if (candidateDonorSpecies.getTotalAge() != null && candidateDonorSpecies.getDominantHeight() != null
+					&& !siteSpecies.getSpeciesCode().equals(candidateDonorSpecies.getSpeciesCode())) {
+
+				if (candidateDonorSpecies.getSiteIndex() == null) {
+					candidateDonorSpecies.calculateUndefinedFieldValues(context);
+				}
+
+				donorSpecies = candidateDonorSpecies;
+
+				logger.debug(
+						"{}: located Donor SP64 \"{}\" with site info: Age: {}, Ht: {}, SI: {}", this,
+						donorSpecies.getSpeciesCode(), donorSpecies.getTotalAge(), donorSpecies.getDominantHeight(),
+						donorSpecies.getSiteIndex()
+				);
+
+				break;
+			}
+		}
+
+		if (donorSpecies == null) {
+			logger.debug("{}: unable to find donor species", this);
+		}
+		return donorSpecies;
+	}
+
+	private void copyDonorSpeciesSiteInfo(
+			ProjectionContext context, Species siteSpecies, Species donorSpecies, Species speciesGroup
+	) {
+		// Copy donor species age to the site species.
+
+		siteSpecies.setTotalAge(donorSpecies.getTotalAge());
+
+		logger.debug(
+				"{}: set site species {} age from donor species {} to {}", this, siteSpecies.getSpeciesCode(),
+				donorSpecies.getSpeciesCode(), donorSpecies.getTotalAge()
+		);
+
+		// Attempt to convert and copy (or, failing that, just copy) site index to site species
+
+		var donorSiteIndex = donorSpecies.getSiteIndex() == null ? Vdyp7Constants.EMPTY_DECIMAL
+				: donorSpecies.getSiteIndex();
+		try {
+			double siteIndex = SiteTool.convertSiteIndexBetweenCurves(
+					donorSpecies.getSiteCurve(), donorSiteIndex, siteSpecies.getSiteCurve()
+			);
+
+			speciesGroup.setSiteIndex(siteIndex);
+			siteSpecies.setSiteIndex(siteIndex);
+
+			logger.debug(
+					"{}: donor {} site index {} converted to {} and assigned to site species {}", this,
+					donorSpecies.getSpeciesCode(), donorSiteIndex, siteSpecies.getSiteIndex(),
+					siteSpecies.getSpeciesCode()
+			);
+
+		} catch (CommonCalculatorException e) {
+
+			speciesGroup.setSiteIndex(donorSiteIndex);
+			siteSpecies.setSiteIndex(donorSiteIndex);
+
+			logger.debug(
+					"{}: no conversion of site index from {} to {}. Assigned straight copy of donor site index value {} to site species",
+					this, donorSpecies.getSpeciesCode(), siteSpecies.getSpeciesCode(), donorSiteIndex
+			);
+		}
+
+		// Now reset dominant height and recompute it from the values assigned above.
+		siteSpecies.resetDominantHeight();
+		siteSpecies.calculateUndefinedFieldValues(context);
+	}
 	@Override
 	public boolean equals(Object o) {
 		if (o instanceof Layer that) {
