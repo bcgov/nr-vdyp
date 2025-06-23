@@ -312,8 +312,8 @@ public class LayerTest {
 		}
 
 		@Test
-		void testSuppliedLeadingVeteranLayer() throws PolygonValidationException {
-			layer = buildLayer(Map.of("doSuppressPerHAYields", true, "crownClosure", (short) 10));
+		void testNotSuppliedLeadingVeteranLayer() throws PolygonValidationException {
+			layer = buildLayer(Map.of("doSuppressPerHAYields", true));
 			Map<String, Object> params = Map.of("sp64", "PL", "perc", 100.0, "age", 30.0, "h", 9.0);
 
 			Stand stand = addStand(layer, "PL");
