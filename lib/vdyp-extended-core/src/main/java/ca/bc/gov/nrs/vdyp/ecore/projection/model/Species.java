@@ -567,10 +567,10 @@ public class Species implements Comparable<Species> {
 					&& ageAtBreastHeight == null && totalAge == null && dominantHeight == null && siteIndex != null
 					&& yearsToBreastHeight != null) {
 				/*
-				 * 2004/03/17 In this case we have a species with an associated site index value but no age/height pair.
-				 * Based on e-mails and conversations with Cam today, we need to consider and perform the following: -
-				 * The underlying models require an age (but not height) - The BHAge will be assumed to be 1.0 (*Peter
-				 * Minter Note: this is Age at Breast Height) - Total Age will be determined from this.
+				 * Mimic WinVDYP value estimation for Model Parameters 2004/03/17 In this case we have a species with an
+				 * associated site index value but no age/height pair. Based on e-mails and conversations with Cam
+				 * today, we need to consider and perform the following: - The underlying models require an age (but not
+				 * height) - The BHAge will be assumed to be 1.0 - Total Age will be determined from this.
 				 */
 				keepTrying = true;
 				ageAtBreastHeight = 1.0;
