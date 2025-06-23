@@ -11,6 +11,8 @@ import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.UtilizationParameter;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.common.RuntimeResourceParseException;
+import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
+import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParser;
 
 /**
  * Tool to read the VDYP7 params.txt file format and produce a Parameters object from it
@@ -31,29 +33,29 @@ public class ParamsReader {
 
 	private static void setExecutionOption(Parameters params, Parameters.ExecutionOption option, String value)
 			throws ResourceParseException {
-		switch (value.toLowerCase()) {
-		case "yes":
-			params.addSelectedExecutionOptionsItem(option);
-			break;
-		case "no":
-			params.addExcludedExecutionOptionsItem(option);
-			break;
-		default:
-			throw new ResourceParseException("unexpected value \"" + value + "\" for " + option);
+		try {
+			boolean parsedValue = ValueParser.LOGICAL_PERMISSIVE.parse(value);
+			if (parsedValue) {
+				params.addSelectedExecutionOptionsItem(option);
+			} else {
+				params.addExcludedExecutionOptionsItem(option);
+			}
+		} catch (ValueParseException e) {
+			throw new ResourceParseException("unexpected value \"" + value + "\" for " + option, e);
 		}
 	}
 
 	private static void setDebugOption(Parameters params, Parameters.DebugOption option, String value)
 			throws ResourceParseException {
-		switch (value.toLowerCase()) {
-		case "yes":
-			params.addSelectedDebugOptionsItem(option);
-			break;
-		case "no":
-			params.addExcludedDebugOptionsItem(option);
-			break;
-		default:
-			throw new ResourceParseException("unexpected value \"" + value + "\" for " + option);
+		try {
+			boolean parsedValue = ValueParser.LOGICAL_PERMISSIVE.parse(value);
+			if (parsedValue) {
+				params.addSelectedDebugOptionsItem(option);
+			} else {
+				params.addExcludedDebugOptionsItem(option);
+			}
+		} catch (ValueParseException e) {
+			throw new ResourceParseException("unexpected value \"" + value + "\" for " + option, e);
 		}
 	}
 
