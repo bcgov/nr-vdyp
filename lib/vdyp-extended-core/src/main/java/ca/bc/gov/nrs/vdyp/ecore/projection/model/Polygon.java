@@ -1081,8 +1081,9 @@ public class Polygon implements Comparable<Polygon> {
 			var percentAbsorbable = estimatedPercentStockable + percentNonStockable + percentUnaccounted;
 			double percentStockableAbsorbable, percentUnaccountedAbsorbable;
 			if (percentAbsorbable > 0) {
-				percentStockableAbsorbable = percentCrownSpaces * (estimatedPercentStockable / percentAbsorbable);
-				percentUnaccountedAbsorbable = percentCrownSpaces * (percentUnaccounted / percentAbsorbable);
+				percentStockableAbsorbable = percentCrownSpaces
+						* ((double) estimatedPercentStockable / percentAbsorbable);
+				percentUnaccountedAbsorbable = percentCrownSpaces * ((double) percentUnaccounted / percentAbsorbable);
 			} else {
 				percentStockableAbsorbable = 0;
 				percentUnaccountedAbsorbable = 0;
