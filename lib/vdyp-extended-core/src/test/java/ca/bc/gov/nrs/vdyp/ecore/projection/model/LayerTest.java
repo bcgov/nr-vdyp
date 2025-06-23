@@ -48,7 +48,7 @@ public class LayerTest {
 
 	Layer buildLayer(Map<String, Object> params) {
 		var layerBuilder = new Layer.Builder() //
-				.polygon(polygon).layerId("1");
+				.polygon(polygon).layerId((String) params.getOrDefault("id", "1"));
 		for (Map.Entry<String, Object> p : params.entrySet()) {
 			switch (p.getKey()) {
 			case "adjustments" -> layerBuilder.adjustments((LayerAdjustments) p.getValue());
@@ -259,7 +259,7 @@ public class LayerTest {
 	class EstimateCrownClosure {
 		@Test
 		void testSuppliedCrownClosure() throws PolygonValidationException {
-			layer = buildLayer(Map.of("crownClosure", (short) 5, "doSuppressPerHAYields", true));
+			layer = buildLayer(Map.of("crownClosure", (short) 5, "doSuppressPerHAYields", false));
 			Map<String, Object> params = Map.of("sp64", "PL", "perc", 100.0, "age", 100.0, "h", 50.0);
 
 			Stand stand = addStand(layer, "PL");
@@ -279,7 +279,7 @@ public class LayerTest {
 		@Test
 		void testNotSuppliedNoLeadingSpecies() throws PolygonValidationException {
 			layer = buildLayer(
-					Map.of("assignedProjectionType", ProjectionTypeCode.PRIMARY, "doSuppressPerHAYields", true)
+					Map.of("assignedProjectionType", ProjectionTypeCode.PRIMARY, "doSuppressPerHAYields", false)
 			);
 
 			addStand(layer, "PL");
@@ -287,6 +287,7 @@ public class LayerTest {
 			layer.doCompleteDefinition();
 			layer.doBuildSiteSpecies();
 			layer.doCompleteSiteSpeciesSiteIndexInfo(context);
+			polygon.setTargetedPrimaryLayer(layer);
 			layer.estimateCrownClosure(context);
 
 			// Projections not allowed with no leading species
@@ -296,7 +297,7 @@ public class LayerTest {
 
 		@Test
 		void testNotSuppliedLeadingSpeciesTooShort() throws PolygonValidationException {
-			layer = buildLayer(Map.of("doSuppressPerHAYields", true));
+			layer = buildLayer(Map.of("doSuppressPerHAYields", false));
 			Map<String, Object> params = Map.of("sp64", "PL", "perc", 100.0, "age", 30.0, "h", 9.0);
 
 			Stand stand = addStand(layer, "PL");
@@ -305,6 +306,7 @@ public class LayerTest {
 			layer.doCompleteDefinition();
 			layer.doBuildSiteSpecies();
 			layer.doCompleteSiteSpeciesSiteIndexInfo(context);
+			polygon.setTargetedPrimaryLayer(layer);
 			layer.estimateCrownClosure(context);
 
 			// Could not calculate crown closure
@@ -313,16 +315,27 @@ public class LayerTest {
 
 		@Test
 		void testNotSuppliedLeadingVeteranLayer() throws PolygonValidationException {
-			layer = buildLayer(Map.of("doSuppressPerHAYields", true));
-			Map<String, Object> params = Map.of("sp64", "PL", "perc", 100.0, "age", 30.0, "h", 9.0);
+			var primaryLayer = buildLayer(Map.of("doSuppressPerHAYields", false, "id", "1"));
+			Map<String, Object> primaryParams = Map.of("sp64", "PL", "perc", 100.0, "age", 30.0, "h", 9.0);
 
-			Stand stand = addStand(layer, "PL");
-			addSpecies(layer, stand, params);
+			Stand primaryStand = addStand(primaryLayer, "PL");
+			addSpecies(primaryLayer, primaryStand, primaryParams);
 
 			layer.doCompleteDefinition();
 			layer.doBuildSiteSpecies();
 			layer.doCompleteSiteSpeciesSiteIndexInfo(context);
-			polygon.setLayerByProjectionType(ProjectionTypeCode.VETERAN, layer);
+			polygon.setTargetedPrimaryLayer(primaryLayer);
+
+			layer = buildLayer(Map.of("doSuppressPerHAYields", false, "id", "2"));
+			Map<String, Object> params = Map.of("sp64", "PL", "perc", 100.0, "age", 100.0, "h", 42.0);
+
+			Stand stand = addStand(layer, "PL");
+			addSpecies(layer, stand, params);
+			polygon.setTargetedVeteranLayer(layer);
+
+			layer.doCompleteDefinition();
+			layer.doBuildSiteSpecies();
+			layer.doCompleteSiteSpeciesSiteIndexInfo(context);
 			layer.estimateCrownClosure(context);
 
 			// Could not calculate crown closure
@@ -331,7 +344,7 @@ public class LayerTest {
 
 		@Test
 		void testNotSuppliedCalculateFromLeadingSpecies() throws PolygonValidationException {
-			layer = buildLayer(Map.of("doSuppressPerHAYields", true));
+			layer = buildLayer(Map.of("doSuppressPerHAYields", false));
 			Map<String, Object> params = Map.of("sp64", "PL", "perc", 100.0, "age", 100.0, "h", 50.0);
 
 			Stand stand = addStand(layer, "PL");
@@ -340,6 +353,7 @@ public class LayerTest {
 			layer.doCompleteDefinition();
 			layer.doBuildSiteSpecies();
 			layer.doCompleteSiteSpeciesSiteIndexInfo(context);
+			polygon.setTargetedPrimaryLayer(layer);
 			layer.estimateCrownClosure(context);
 
 			// Make sure estimate was pulled from the default for the species
@@ -356,7 +370,7 @@ public class LayerTest {
 			context = new ProjectionContext(ProjectionRequestKind.HCSV, "Test", params, false);
 			polygon = new Polygon.Builder().build();
 			layer = buildLayer(
-					Map.of("doSuppressPerHAYields", true, "assignedProjectionType", ProjectionTypeCode.PRIMARY)
+					Map.of("doSuppressPerHAYields", false, "assignedProjectionType", ProjectionTypeCode.PRIMARY)
 			);
 			Map<String, Object> params = Map.of("sp64", "PL", "perc", 100.0);
 
@@ -384,7 +398,7 @@ public class LayerTest {
 			context = new ProjectionContext(ProjectionRequestKind.HCSV, "Test", params, false);
 			polygon = new Polygon.Builder().build();
 			layer = buildLayer(
-					Map.of("doSuppressPerHAYields", true, "assignedProjectionType", ProjectionTypeCode.PRIMARY)
+					Map.of("doSuppressPerHAYields", false, "assignedProjectionType", ProjectionTypeCode.PRIMARY)
 			);
 			Map<String, Object> params = Map.of("sp64", "PL", "perc", 100.0, "age", 100.0, "h", 9.0);
 

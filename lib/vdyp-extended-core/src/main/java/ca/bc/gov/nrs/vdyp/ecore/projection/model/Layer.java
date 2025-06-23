@@ -793,47 +793,43 @@ public class Layer implements Comparable<Layer> {
 	public void estimateCrownClosure(ProjectionContext context) {
 
 		if (crownClosure == null) {
-			boolean getLeadingSpeciesDefault = false;
-			Species leadingSp64 = null;
-			boolean doAggresiveEstimation = context.getParams()
-					.containsOption(Parameters.ExecutionOption.ALLOW_AGGRESSIVE_VALUE_ESTIMATION)
-					&& this == polygon.getLayerByProjectionType(ProjectionTypeCode.PRIMARY);
+			if (this == polygon.findPrimaryLayerByProjectionType(ProjectionTypeCode.UNKNOWN)) {
+				Species leadingSp64 = this.determineLeadingSp64(0);
+				boolean doAggressiveEstimation = context.getParams()
+						.containsOption(Parameters.ExecutionOption.ALLOW_AGGRESSIVE_VALUE_ESTIMATION);
 
-			if (this == polygon.getLayerByProjectionType(ProjectionTypeCode.UNKNOWN) || doAggresiveEstimation) {
-				leadingSp64 = this.determineLeadingSp64(0);
 				if (leadingSp64 != null
 						&& (NullMath.op(leadingSp64.getDominantHeight(), 10.0, (a, b) -> a.compareTo(b) >= 0, -9.0)
-								|| doAggresiveEstimation)) {
-					getLeadingSpeciesDefault = true;
-				}
-			}
+								|| doAggressiveEstimation)) {
 
-			if (getLeadingSpeciesDefault) {
-				var estimatedCrownClosure = SiteTool
+					var estimatedCrownClosure = SiteTool
 						.getSpeciesDefaultCrownClosure(leadingSp64.getSpeciesCode(), polygon.getIsCoastal());
 
-				logger.debug("{}: estimating crown closure of primary layer at {}", this, estimatedCrownClosure);
-				crownClosure = (short) estimatedCrownClosure;
+					logger.debug("{}: estimating crown closure of primary layer at {}", this, estimatedCrownClosure);
+					crownClosure = (short) estimatedCrownClosure;
 
-				getPolygon().addMessage(
-						new PolygonMessage.Builder().species(leadingSp64).details(
-								ReturnCode.SUCCESS, MessageSeverityCode.WARNING, PolygonMessageKind.USING_DEFAULT_CC,
-								Double.valueOf(crownClosure), getPolygon().getIsCoastal() ? "Coast" : "Interior"
-						).build()
-				);
+					getPolygon().addMessage(
+							new PolygonMessage.Builder().species(leadingSp64)
+									.details(
+											ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
+											PolygonMessageKind.USING_DEFAULT_CC, Double.valueOf(crownClosure),
+											getPolygon().getIsCoastal() ? "Coast" : "Interior"
+									).build()
+					);
 
-			} else if (this == polygon.getLayerByProjectionType(ProjectionTypeCode.UNKNOWN) && leadingSp64 == null) {
-				getPolygon().disableProjectionsOfType(assignedProjectionType);
+				} else if (leadingSp64 == null) {
+					getPolygon().disableProjectionsOfType(assignedProjectionType);
 
-				getPolygon().addMessage(
-						new PolygonMessage.Builder().layer(this)
-								.details(
-										ReturnCode.ERROR_SPECIESNOTFOUND, MessageSeverityCode.ERROR,
-										PolygonMessageKind.NO_CC, this
-								).build()
-				);
-				logger.debug("Disabling projections of type {}", assignedProjectionType);
-			} else if (this == polygon.getLayerByProjectionType(ProjectionTypeCode.VETERAN)) {
+					getPolygon().addMessage(
+							new PolygonMessage.Builder().layer(this)
+									.details(
+											ReturnCode.ERROR_SPECIESNOTFOUND, MessageSeverityCode.ERROR,
+											PolygonMessageKind.NO_CC, this
+									).build()
+					);
+					logger.debug("Disabling projections of type {}", assignedProjectionType);
+				}
+			} else if (this == polygon.findPrimaryLayerByProjectionType(ProjectionTypeCode.VETERAN)) {
 				// this is the veteran layer
 
 				short estimatedCrownClosure = 4;
