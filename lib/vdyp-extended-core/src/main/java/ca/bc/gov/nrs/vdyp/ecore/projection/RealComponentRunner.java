@@ -4,14 +4,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.MessageFormat;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.regex.Pattern;
 
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,6 +27,7 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.NullProjectionResul
 import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.ProjectionResultsBuilder;
 import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.ProjectionResultsReader;
 import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.RealProjectionResultsReader;
+import ca.bc.gov.nrs.vdyp.ecore.utils.ErrorMessageUtils;
 import ca.bc.gov.nrs.vdyp.fip.FipStart;
 import ca.bc.gov.nrs.vdyp.forward.ForwardControlParser;
 import ca.bc.gov.nrs.vdyp.forward.VdypForwardApplication;
@@ -307,77 +304,14 @@ public class RealComponentRunner implements ComponentRunner {
 	) throws PolygonExecutionException {
 		if (e instanceof VdypApplicationException && e.getCause() != null) {
 			state.setProcessingResults(ProjectionStageCode.of(app), projectionTypeCode, Optional.of(e.getCause()));
-			var message = buildMessage(app, polygon, "running", e.getCause());
-			throw new PolygonExecutionException(message, e.getCause());
+			// VdypApplication exceptions are expected to be processed as a result returned from the VdypApplication
+			// they came from do not rethrow
 		} else {
 			state.setProcessingResults(ProjectionStageCode.of(app), projectionTypeCode, Optional.of(e));
-			var message = buildMessage(app, polygon, "running", e);
+			var message = ErrorMessageUtils.BuildVDYPApplicationErrorMessage(app.getId(), polygon, "running", e);
 			throw new PolygonExecutionException(message, e);
 		}
 	}
 
-	private String buildMessage(VdypApplication app, Polygon polygon, String verb, Throwable e) {
-		return MessageFormat.format(
-				"Polygon {0}: encountered error in {1} when {2} polygon{3}", polygon, app.getId(), verb,
-				serializeCauses(e)
-		);
-	}
 
-	/**
-	 * Return the reasons of the cause chain of <code>e</code>, making every effort to remove duplication as well as
-	 * class names that prefix the individual exceptions.
-	 *
-	 * @param e the exception in question
-	 * @return as described
-	 */
-	private String serializeCauses(Throwable e) {
-		var messageList = new ArrayList<String>();
-		return serializeCauses(new StringBuffer(), messageList, e).toString();
-	}
-
-	/**
-	 * A regular expression that allows us to extract the message from a string possibly prefixed with a Java class name
-	 * and possibly suffixed with a "." Group 3 applies if the message is suffixed with "." and group 4 otherwise. All
-	 * messages -should- match this pattern, but if cases have been missed the method will simply take the whole
-	 * message.
-	 */
-	private static final Pattern messagePattern = Pattern.compile("(^[a-zA-Z_0-9\\.]+: )?+((.+)\\.|(.*[^\\.]))$");
-
-	private StringBuffer serializeCauses(StringBuffer s, List<String> messageList, Throwable e) {
-
-		if (e.getMessage() != null) {
-			var matcher = messagePattern.matcher(e.getMessage());
-
-			String message;
-			if (matcher.matches()) {
-				if (matcher.group(3) != null) {
-					message = matcher.group(3);
-				} else {
-					message = matcher.group(4);
-				}
-			} else {
-				message = e.getMessage();
-			}
-
-			if (!StringUtils.isBlank(message) && !containsSuffix(messageList, message)) {
-				s.append(": ").append(message);
-				messageList.add(message);
-			}
-		}
-
-		if (e.getCause() != null) {
-			serializeCauses(s, messageList, e.getCause());
-		}
-
-		return s;
-	}
-
-	private boolean containsSuffix(List<String> messageList, String message) {
-		for (var m : messageList) {
-			if (m.endsWith(message)) {
-				return true;
-			}
-		}
-		return false;
-	}
 }
