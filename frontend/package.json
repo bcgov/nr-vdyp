@@ -14,7 +14,11 @@
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
     "format": "prettier --write src/",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "test:comp-open": "npx cypress open --component --browser chrome",
+    "test:comp": "npx cypress run --component --spec \"src/components/**/*.cy.ts\"",
+    "test:e2e-open": "npx cypress open --e2e --browser chrome",
+    "test:unit": "npx cypress run --e2e --spec \"cypress/e2e/unit/**/*.cy.ts\""
   },
   "keywords": [],
   "author": "Vivid Solutions Inc.",
