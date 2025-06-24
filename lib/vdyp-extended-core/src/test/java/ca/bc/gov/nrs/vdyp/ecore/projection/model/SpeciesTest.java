@@ -17,6 +17,10 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
+import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.AbstractProjectionRequestException;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind;
+import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionContext;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.InventoryStandard;
 
 class SpeciesTest {
@@ -291,6 +295,22 @@ class SpeciesTest {
 			} else {
 				assertThat(unit.getDominantHeight(), closeTo(expected, ERROR_TOLERANCE));
 			}
+		}
+
+		@Test
+		void testAggressiveAgeCalculation() throws AbstractProjectionRequestException {
+			var unit = baseConfig(new Species.Builder()).dominantHeight(null).totalAge(null).siteIndex(16.3).build();
+
+			var context = new ProjectionContext(
+					ProjectionRequestKind.HCSV, "TEST",
+					new Parameters().ageStart(0).ageEnd(100).addSelectedExecutionOptionsItem(
+							Parameters.ExecutionOption.ALLOW_AGGRESSIVE_VALUE_ESTIMATION
+					), false
+			);
+			unit.calculateUndefinedFieldValues(context);
+			assertThat(unit.getTotalAge(), is(7.0));
+
+			assertThat(unit.getDominantHeight(), closeTo(1.36, 0.01));
 		}
 
 		@ParameterizedTest
