@@ -571,9 +571,26 @@ public class Species implements Comparable<Species> {
 				 * associated site index value but no age/height pair. Based on e-mails and conversations with Cam
 				 * today, we need to consider and perform the following: - The underlying models require an age (but not
 				 * height) - The BHAge will be assumed to be 1.0 - Total Age will be determined from this.
+				 *
+				 * Note for VDYP8 like for like. While that age is calculated and passed in as the age to use it is
+				 * truncated to the closest short because that is how the engine treats estimated age, do not actually
+				 * SET ageAtBreastHeight to 1. use that value to calculate an age and then use that age as though it
+				 * were passed in
+				 * 
 				 */
 				keepTrying = true;
-				ageAtBreastHeight = 1.0;
+				var ageAtBreastHeightRef = new Reference<Double>(1.0);
+				var yearsToBreastHeightRef = new Reference<Double>(yearsToBreastHeight);
+				var computedTotalAgeRef = new Reference<Double>(Vdyp7Constants.EMPTY_DECIMAL);
+
+				SiteTool.fillInAgeTriplet(computedTotalAgeRef, ageAtBreastHeightRef, yearsToBreastHeightRef);
+
+				haveComputedTotalAge = true;
+				totalAge = Math.floor(computedTotalAgeRef.get());
+				logger.debug(
+						"{}: using WinVDYP estimation technique assuming age at Breast Height 1.0 to calculate a total age of {}",
+						this, totalAge
+				);
 			}
 		}
 
