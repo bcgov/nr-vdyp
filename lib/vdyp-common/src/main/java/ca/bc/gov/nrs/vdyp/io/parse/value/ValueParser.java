@@ -223,6 +223,34 @@ public interface ValueParser<T> extends ControlledValueParser<T> {
 	};
 
 	/**
+	 * Parser that tries to interpret the string as a boolean in multiple ways. This is a generalization/unification of
+	 * boolean parsers from VDYP7 including <tt>lcl_InterpretStringAsBoolean</tt> and the integer based parsers from
+	 * control/COE files.
+	 *
+	 * @return <tt>true</tt> for non-zero integer or any string beginning with <tt>'y'</tt> or <tt>'t'</tt> ignoring
+	 *         case. <tt>false</tt> for 0 or any string beginning with <tt>'n'</tt> or <tt>'f'</tt> ignoring case.
+	 * @throws ValueParseException for a blank/empty string or any other string it can't find a boolean value for.
+	 */
+	public static final ValueParser<Boolean> LOGICAL_PERMISSIVE = s -> {
+
+		final var trimmed = s.trim().toLowerCase();
+		if (trimmed.isEmpty()) {
+			throw new ValueParseException("Boolean value is blank");
+		}
+		int firstChar = trimmed.charAt(0);
+		switch (firstChar) {
+		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '-':
+			return LOGICAL.parse(trimmed);
+		case 'y', 't':
+			return true;
+		case 'n', 'f':
+			return false;
+		default:
+			throw new ValueParseException("Unexpected value when expecting a boolean: \"" + trimmed + "\"");
+		}
+	};
+
+	/**
 	 * Parser for Characters
 	 */
 	public static final ValueParser<Character> CHARACTER = s -> {

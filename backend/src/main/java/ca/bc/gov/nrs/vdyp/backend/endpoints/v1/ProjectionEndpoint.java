@@ -10,11 +10,12 @@ import org.jboss.resteasy.reactive.multipart.FileUpload;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.PolygonExecutionException;
-import ca.bc.gov.nrs.vdyp.backend.api.v1.exceptions.ProjectionRequestValidationException;
 import ca.bc.gov.nrs.vdyp.backend.endpoints.v1.impl.Endpoint;
-import ca.bc.gov.nrs.vdyp.backend.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.backend.services.ProjectionService;
+import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.PolygonExecutionException;
+import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.ProjectionRequestValidationException;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
+import ca.bc.gov.nrs.vdyp.ecore.utils.ParameterNames;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;

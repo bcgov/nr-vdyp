@@ -32,6 +32,12 @@
         <version>${quarkus.platform.version}</version>
         <type>pom</type>
         <scope>import</scope>
+				<exclusions>
+					<exclusion>
+						<groupId>org.slf4j</groupId>
+						<artifactId>slf4j-jboss-logmanager</artifactId>
+					</exclusion>
+				</exclusions>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -61,6 +67,11 @@
       <artifactId>vdyp-forward</artifactId>
       <version>${project.version}</version>
     </dependency>
+		<dependency>
+			<groupId>ca.bc.gov.nrs.vdyp</groupId>
+			<artifactId>vdyp-extended-core</artifactId>
+			<version>${project.version}</version>
+		</dependency>
     <dependency>
       <groupId>ca.bc.gov.nrs.vdyp</groupId>
       <artifactId>vdyp-integration-tests</artifactId>
@@ -111,11 +122,12 @@
       <groupId>org.glassfish.jersey.core</groupId>
       <artifactId>jersey-common</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.codehaus.janino</groupId>
-      <artifactId>janino</artifactId>
-    </dependency>
-    <dependency>
+		<dependency>
+			<groupId>org.codehaus.janino</groupId>
+			<artifactId>janino</artifactId>
+		</dependency>
+
+		<dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-flyway</artifactId>
       <exclusions>
