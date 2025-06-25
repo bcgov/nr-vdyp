@@ -554,6 +554,7 @@ public class Layer implements Comparable<Layer> {
 					sp0.setDominantHeight(sp64.getDominantHeight());
 					sp0.setSiteIndex(sp64.getSiteIndex());
 					sp0.setTotalAge(sp64.getTotalAge());
+					sp0.setYearsToBreastHeight(sp64.getYearsToBreastHeight());
 					sp0.setSiteCurve(sp64.getSiteCurve());
 				}
 
