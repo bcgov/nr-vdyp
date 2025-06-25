@@ -90,9 +90,9 @@ export const useAuthStore = defineStore('auth', {
       const roles = this.getAllRoles()
       return roles.includes(role)
     },
-    async logout() {
+    logout(userLogout = keycloakLogout) {
       this.clearUser()
-      keycloakLogout()
+      userLogout()
     },
   },
 })

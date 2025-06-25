@@ -117,8 +117,9 @@ export const getFormData = (
 
 export const runModelFileUpload = async (
   fileUploadStore: ReturnType<typeof useFileUploadStore>,
+  projectionHcsvPostFunc = projectionHcsvPost,
 ) => {
   const formData = getFormData(fileUploadStore)
-  const response = await projectionHcsvPost(formData, false)
+  const response = await projectionHcsvPostFunc(formData, false)
   return response
 }

@@ -15,15 +15,11 @@ import {
   CombineAgeYearRangeEnum,
   MetadataToOutputEnum,
 } from '@/services/vdyp-api'
-import * as apiActions from '@/services/apiActions'
 import { CONSTANTS } from '@/constants'
 import { createPinia, setActivePinia } from 'pinia'
-import sinon from 'sinon'
-import type { SinonStub } from 'sinon'
 
 describe('File Upload Service Unit Tests', () => {
   let fileUploadStore: ReturnType<typeof useFileUploadStore>
-  let projectionStub: SinonStub
 
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -46,14 +42,6 @@ describe('File Upload Service Unit Tests', () => {
     fileUploadStore.layerFile = new File(['layer content'], 'layer.csv', {
       type: 'text/csv',
     })
-
-    projectionStub = sinon
-      .stub(apiActions, 'projectionHcsvPost')
-      .resolves(new Blob(['mock response'], { type: 'application/json' }))
-  })
-
-  afterEach(() => {
-    sinon.restore()
   })
 
   it('should return correct selected execution options for volume projection', () => {
@@ -64,6 +52,23 @@ describe('File Upload Service Unit Tests', () => {
       SelectedExecutionOptionsEnum.DoIncludeProjectedMOFVolumes,
       SelectedExecutionOptionsEnum.DoIncludeSpeciesProjection,
     ])
+  })
+
+  it('should call projectionHcsvPost with correct form data', () => {
+    const projectionStub = cy
+      .stub()
+      .resolves(new Blob(['mock response'], { type: 'application/json' }))
+
+    runModelFileUpload(fileUploadStore, projectionStub).then(() => {
+      expect(projectionStub.calledOnce).to.be.true
+      const formDataArg = projectionStub.getCall(0).args[0] as FormData
+      expect(formDataArg.has(ParameterNamesEnum.PROJECTION_PARAMETERS)).to.be
+        .true
+      expect(formDataArg.has(ParameterNamesEnum.HCSV_POLYGON_INPUT_DATA)).to.be
+        .true
+      expect(formDataArg.has(ParameterNamesEnum.HCSV_LAYERS_INPUT_DATA)).to.be
+        .true
+    })
   })
 
   it('should return correct selected execution options for CFS biomass projection', () => {
@@ -157,18 +162,5 @@ describe('File Upload Service Unit Tests', () => {
           SelectedExecutionOptionsEnum.DoIncludeProjectedMOFVolumes,
         )
       })
-  })
-
-  it('should call projectionHcsvPost with correct form data', () => {
-    cy.wrap(runModelFileUpload(fileUploadStore)).then(() => {
-      expect(projectionStub.calledOnce).to.be.true
-      const formDataArg = projectionStub.getCall(0).args[0] as FormData
-      expect(formDataArg.has(ParameterNamesEnum.PROJECTION_PARAMETERS)).to.be
-        .true
-      expect(formDataArg.has(ParameterNamesEnum.HCSV_POLYGON_INPUT_DATA)).to.be
-        .true
-      expect(formDataArg.has(ParameterNamesEnum.HCSV_LAYERS_INPUT_DATA)).to.be
-        .true
-    })
   })
 })

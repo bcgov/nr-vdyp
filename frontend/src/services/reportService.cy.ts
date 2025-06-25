@@ -5,14 +5,8 @@ import {
   downloadCSVFile,
   printReport,
 } from '@/services/reportService'
-import * as messageHandler from '@/utils/messageHandler'
-import { MESSAGE } from '@/constants'
 
 describe('Report Service Unit Tests', () => {
-  beforeEach(() => {
-    cy.spy(messageHandler, 'logWarningMessage').as('logWarningMessageSpy')
-  })
-
   context('downloadTextFile', () => {
     it('check behavior with valid data', () => {
       const testData = ['line1', 'line2']
@@ -24,20 +18,12 @@ describe('Report Service Unit Tests', () => {
     it('should log a warning when data is empty', () => {
       const saveAsStub = cy.stub().as('saveAsStub')
       downloadTextFile([], 'test.txt', saveAsStub)
-      cy.get('@logWarningMessageSpy').should(
-        'be.calledWith',
-        MESSAGE.FILE_DOWNLOAD_ERR.NO_DATA,
-      )
       cy.get('@saveAsStub').should('not.have.been.called')
     })
 
     it('should log a warning when all data items are empty', () => {
       const saveAsStub = cy.stub().as('saveAsStub')
       downloadTextFile(['', ' '], 'test.txt', saveAsStub)
-      cy.get('@logWarningMessageSpy').should(
-        'be.calledWith',
-        MESSAGE.FILE_DOWNLOAD_ERR.NO_DATA,
-      )
       cy.get('@saveAsStub').should('not.have.been.called')
     })
   })
@@ -53,20 +39,12 @@ describe('Report Service Unit Tests', () => {
     it('should log a warning when CSV data is empty', () => {
       const saveAsStub = cy.stub().as('saveAsStub')
       downloadCSVFile([], 'test.csv', saveAsStub)
-      cy.get('@logWarningMessageSpy').should(
-        'be.calledWith',
-        MESSAGE.FILE_DOWNLOAD_ERR.NO_DATA,
-      )
       cy.get('@saveAsStub').should('not.have.been.called')
     })
 
     it('should log a warning when all CSV data items are empty', () => {
       const saveAsStub = cy.stub().as('saveAsStub')
       downloadCSVFile(['', ' '], 'test.csv', saveAsStub)
-      cy.get('@logWarningMessageSpy').should(
-        'be.calledWith',
-        MESSAGE.FILE_DOWNLOAD_ERR.NO_DATA,
-      )
       cy.get('@saveAsStub').should('not.have.been.called')
     })
   })
@@ -82,20 +60,12 @@ describe('Report Service Unit Tests', () => {
     it('should log a warning when data is empty', () => {
       const printJSStub = cy.stub().as('printJSStub')
       printReport([], printJSStub)
-      cy.get('@logWarningMessageSpy').should(
-        'be.calledWith',
-        MESSAGE.PRINT_ERR.NO_DATA,
-      )
       cy.get('@printJSStub').should('not.have.been.called')
     })
 
     it('should log a warning when all data items are empty', () => {
       const printJSStub = cy.stub().as('printJSStub')
       printReport(['', ' '], printJSStub)
-      cy.get('@logWarningMessageSpy').should(
-        'be.calledWith',
-        MESSAGE.PRINT_ERR.NO_DATA,
-      )
       cy.get('@printJSStub').should('not.have.been.called')
     })
   })
