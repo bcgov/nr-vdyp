@@ -17,6 +17,10 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
+import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.AbstractProjectionRequestException;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind;
+import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionContext;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.InventoryStandard;
 
 class SpeciesTest {
@@ -144,7 +148,7 @@ class SpeciesTest {
 					.dominantHeight(Vdyp7Constants.EMPTY_DECIMAL).totalAge(Vdyp7Constants.EMPTY_DECIMAL)
 					.yearsToBreastHeight(Vdyp7Constants.EMPTY_DECIMAL).build();
 
-			unit.calculateUndefinedFieldValues();
+			unit.calculateUndefinedFieldValues(null);
 
 			assertThat(unit.getSiteIndex(), is((Double) null));
 			assertThat(unit.getDominantHeight(), is((Double) null));
@@ -153,7 +157,7 @@ class SpeciesTest {
 
 			unit.setSiteCurve(SiteIndexEquation.SI_ACB_HUANG);
 
-			unit.calculateUndefinedFieldValues();
+			unit.calculateUndefinedFieldValues(null);
 
 			assertThat(unit.getSiteIndex(), is((Double) null));
 			assertThat(unit.getDominantHeight(), is((Double) null));
@@ -166,7 +170,7 @@ class SpeciesTest {
 		void testMinimalTotalAgeCalculation() {
 			var unit = baseConfig(new Species.Builder()).ageAtBreastHeight(42.0).yearsToBreastHeight(42.0).build();
 
-			unit.calculateUndefinedFieldValues();
+			unit.calculateUndefinedFieldValues(null);
 
 			assertThat(unit.getTotalAge(), is(83.5));
 
@@ -176,7 +180,7 @@ class SpeciesTest {
 		void testMinimalYearsToBreastHeight() {
 			var unit = baseConfig(new Species.Builder()).totalAge(42.0).yearsToBreastHeight(21.0).build();
 
-			unit.calculateUndefinedFieldValues();
+			unit.calculateUndefinedFieldValues(null);
 
 			assertThat(unit.getTotalAge(), is(42.0));
 
@@ -204,7 +208,7 @@ class SpeciesTest {
 			var unit = baseConfig(new Species.Builder()).stand(stand).totalAge(totalAge)
 					.yearsToBreastHeight(yearsToBreastHeight).build();
 
-			unit.calculateUndefinedFieldValues();
+			unit.calculateUndefinedFieldValues(null);
 
 			assertThat(unit.getYearsToBreastHeight(), is(expectedValue));
 		}
@@ -225,7 +229,7 @@ class SpeciesTest {
 			var unit = baseConfig(new Species.Builder()).totalAge(totalAge).dominantHeight(dominantHeight)
 					.siteIndex(null).build();
 
-			unit.calculateUndefinedFieldValues();
+			unit.calculateUndefinedFieldValues(null);
 
 			assertThat(unit.getSiteIndex(), is(expectedSiteIndex));
 			if (expectedSiteIndex == null) {
@@ -254,7 +258,7 @@ class SpeciesTest {
 			var unit = baseConfig(new Species.Builder()).totalAge(null).yearsToBreastHeight(yearsToBreastHeight)
 					.dominantHeight(dominantHeight).siteIndex(siteIndex).siteCurve(siteCurve).build();
 
-			unit.calculateUndefinedFieldValues();
+			unit.calculateUndefinedFieldValues(null);
 
 			if (expected == null) {
 				assertThat(unit.getTotalAge(), is(expected));
@@ -282,7 +286,7 @@ class SpeciesTest {
 			var unit = baseConfig(new Species.Builder()).dominantHeight(null).yearsToBreastHeight(yearsToBreastHeight)
 					.totalAge(age).siteIndex(siteIndex).siteCurve(siteCurve).build();
 
-			unit.calculateUndefinedFieldValues();
+			unit.calculateUndefinedFieldValues(null);
 
 			if (expected == 0.01) {
 				// dominant height is set nominally on failure
@@ -291,6 +295,22 @@ class SpeciesTest {
 			} else {
 				assertThat(unit.getDominantHeight(), closeTo(expected, ERROR_TOLERANCE));
 			}
+		}
+
+		@Test
+		void testAggressiveAgeCalculation() throws AbstractProjectionRequestException {
+			var unit = baseConfig(new Species.Builder()).dominantHeight(null).totalAge(null).siteIndex(16.3).build();
+
+			var context = new ProjectionContext(
+					ProjectionRequestKind.HCSV, "TEST",
+					new Parameters().ageStart(0).ageEnd(100).addSelectedExecutionOptionsItem(
+							Parameters.ExecutionOption.ALLOW_AGGRESSIVE_VALUE_ESTIMATION
+					), false
+			);
+			unit.calculateUndefinedFieldValues(context);
+			assertThat(unit.getTotalAge(), is(7.0));
+
+			assertThat(unit.getDominantHeight(), closeTo(1.36, 0.01));
 		}
 
 		@ParameterizedTest
