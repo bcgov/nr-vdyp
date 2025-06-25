@@ -19,9 +19,7 @@ import {
   ParameterNamesEnum,
   MetadataToOutputEnum,
 } from '@/services/vdyp-api'
-import * as apiActions from '@/services/apiActions'
 import { BIZCONSTANTS, CONSTANTS, DEFAULTS, OPTIONS } from '@/constants'
-import sinon from 'sinon'
 
 describe('Model Parameter Service Unit Tests', () => {
   const mockModelParameterStore = {
@@ -49,18 +47,6 @@ describe('Model Parameter Service Unit Tests', () => {
     yearIncrement: DEFAULTS.DEFAULT_VALUES.YEAR_INCREMENT,
     includeInReport: [],
   }
-
-  let projectionStub: sinon.SinonStub
-
-  beforeEach(() => {
-    projectionStub = sinon
-      .stub(apiActions, 'projectionHcsvPost')
-      .resolves(new Blob(['mock response'], { type: 'application/json' }))
-  })
-
-  afterEach(() => {
-    projectionStub.restore()
-  })
 
   it('should generate a valid feature ID', () => {
     const featureId = generateFeatureId()
@@ -161,8 +147,12 @@ describe('Model Parameter Service Unit Tests', () => {
   })
 
   it('should call projectionHcsvPost once', () => {
-    cy.wrap(runModel(mockModelParameterStore)).then(() => {
-      expect(projectionStub.calledOnce).to.be.true
+    const projectionStub = cy
+      .stub()
+      .resolves(new Blob(['mock response'], { type: 'application/json' }))
+
+    cy.wrap(runModel(mockModelParameterStore, projectionStub)).then(() => {
+      expect(projectionStub).to.be.calledOnce
     })
   })
 
@@ -215,8 +205,12 @@ describe('Model Parameter Service Unit Tests', () => {
   })
 
   it('should call projectionHcsvPost with correct form data', () => {
-    cy.wrap(runModel(mockModelParameterStore)).then(() => {
-      expect(projectionStub.calledOnce).to.be.true
+    const projectionStub = cy
+      .stub()
+      .resolves(new Blob(['mock response'], { type: 'application/json' }))
+
+    cy.wrap(runModel(mockModelParameterStore, projectionStub)).then(() => {
+      expect(projectionStub).to.be.calledOnce
       const formDataArg = projectionStub.getCall(0).args[0] as FormData
 
       expect(formDataArg.has(ParameterNamesEnum.HCSV_POLYGON_INPUT_DATA)).to.be
@@ -258,7 +252,11 @@ describe('Model Parameter Service Unit Tests', () => {
       incSecondaryHeight: true,
     }
 
-    cy.wrap(runModel(updatedModelParameterStore)).then(() => {
+    const projectionStub = cy
+      .stub()
+      .resolves(new Blob(['mock response'], { type: 'application/json' }))
+
+    cy.wrap(runModel(updatedModelParameterStore, projectionStub)).then(() => {
       const formDataArg = projectionStub.getCall(0).args[0] as FormData
       const projectionParamsBlob = formDataArg.get(
         ParameterNamesEnum.PROJECTION_PARAMETERS,
@@ -276,7 +274,11 @@ describe('Model Parameter Service Unit Tests', () => {
   })
 
   it('should contain expected execution options', () => {
-    cy.wrap(runModel(mockModelParameterStore)).then(() => {
+    const projectionStub = cy
+      .stub()
+      .resolves(new Blob(['mock response'], { type: 'application/json' }))
+
+    cy.wrap(runModel(mockModelParameterStore, projectionStub)).then(() => {
       const formDataArg = projectionStub.getCall(0).args[0] as FormData
       const projectionParamsBlob = formDataArg.get(
         ParameterNamesEnum.PROJECTION_PARAMETERS,
@@ -300,8 +302,12 @@ describe('Model Parameter Service Unit Tests', () => {
       speciesList: new Array(6).fill({ species: null, percent: '0.0' }),
     }
 
-    cy.wrap(runModel(emptySpeciesStore)).then(() => {
-      expect(projectionStub.calledOnce).to.be.true
+    const projectionStub = cy
+      .stub()
+      .resolves(new Blob(['mock response'], { type: 'application/json' }))
+
+    cy.wrap(runModel(emptySpeciesStore, projectionStub)).then(() => {
+      expect(projectionStub).to.be.calledOnce
     })
   })
 
@@ -325,7 +331,11 @@ describe('Model Parameter Service Unit Tests', () => {
       selectedAgeYearRange: CONSTANTS.AGE_YEAR_RANGE.YEAR,
     }
 
-    cy.wrap(runModel(yearRangeStore)).then(() => {
+    const projectionStub = cy
+      .stub()
+      .resolves(new Blob(['mock response'], { type: 'application/json' }))
+
+    cy.wrap(runModel(yearRangeStore, projectionStub)).then(() => {
       const formDataArg = projectionStub.getCall(0).args[0] as FormData
       const projectionParamsBlob = formDataArg.get(
         ParameterNamesEnum.PROJECTION_PARAMETERS,
