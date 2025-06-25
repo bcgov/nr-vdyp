@@ -554,7 +554,7 @@ public class Species implements Comparable<Species> {
 
 				SiteTool.fillInAgeTriplet(computedTotalAgeRef, ageAtBreastHeightRef, yearsToBreastHeightRef);
 
-				setAgeAtBreastHeight(yearsToBreastHeightRef.get());
+				setAgeAtBreastHeight(ageAtBreastHeightRef.get());
 
 				keepTrying = true;
 				haveComputedAgeAtBreastHeight = true;
