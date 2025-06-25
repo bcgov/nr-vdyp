@@ -50,5 +50,22 @@ export default defineConfig(({ mode }) => {
     preview: {
       port: 5173,
     },
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules/vuetify')) {
+              return 'vuetify'
+            }
+            if (id.includes('node_modules/@mdi')) {
+              return 'mdi'
+            }
+            if (id.includes('node_modules')) {
+              return 'vendor'
+            }
+          },
+        },
+      },
+    },
   }
 })
