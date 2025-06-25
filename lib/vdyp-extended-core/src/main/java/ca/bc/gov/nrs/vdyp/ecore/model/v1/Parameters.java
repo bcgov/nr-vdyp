@@ -139,7 +139,7 @@ public class Parameters {
 		@JsonCreator
 		public static OutputFormat fromValue(String value) {
 			for (OutputFormat b : OutputFormat.values()) {
-				if (b.value.equals(value)) {
+				if (b.value.equalsIgnoreCase(value)) {
 					return b;
 				}
 			}
