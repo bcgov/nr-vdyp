@@ -367,6 +367,7 @@ const buildSelectedExecutionOptions = (
     SelectedExecutionOptionsEnum.DoEnableProgressLogging,
     SelectedExecutionOptionsEnum.DoEnableErrorLogging,
     SelectedExecutionOptionsEnum.DoEnableDebugLogging,
+    SelectedExecutionOptionsEnum.AllowAggressiveValueEstimation,
   ]
   if (modelParameterStore.projectionType === CONSTANTS.PROJECTION_TYPE.VOLUME) {
     options.push(SelectedExecutionOptionsEnum.DoIncludeProjectedMOFVolumes)
