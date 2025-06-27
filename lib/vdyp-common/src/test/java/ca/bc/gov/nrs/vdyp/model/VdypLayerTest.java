@@ -6,6 +6,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.aMapWithSize;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.anEmptyMap;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasProperty;
@@ -109,10 +110,13 @@ class VdypLayerTest {
 		});
 
 		List<VdypSite> sites = result.getPriorityOrderedSites();
-		assertThat(sites.size(), is(3));
-		assertThat(sites.get(0).getSiteGenus(), is("PL"));
-		assertThat(sites.get(1).getSiteGenus(), is("AC"));
-		assertThat(sites.get(2).getSiteGenus(), is("B"));
+		assertThat(
+				sites, contains(
+						hasProperty("siteGenus", is("PL")), //
+						hasProperty("siteGenus", is("AC")), //
+						hasProperty("siteGenus", is("B"))
+				)
+		);
 	}
 
 	@Test
