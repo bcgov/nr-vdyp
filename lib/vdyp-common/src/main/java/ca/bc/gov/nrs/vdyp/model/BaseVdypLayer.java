@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -70,6 +71,19 @@ public abstract class BaseVdypLayer<S extends BaseVdypSpecies<I>, I extends Base
 	public LinkedHashMap<String, I> getSites() {
 		var result = new LinkedHashMap<String, I>(speciesBySp0.size());
 		speciesBySp0.forEach((key, spec) -> spec.getSite().ifPresent(site -> result.put(key, site)));
+		return result;
+	}
+
+	public List<I> getPriorityOrderedSites() {
+		var result = new LinkedList<I>();
+		Optional<I> primarySite = getPrimarySite();
+		for (var siteEntry : speciesByIndex.values()) {
+			I check = siteEntry.getSite().orElse(null);
+			if (!Objects.equals(primarySite.orElse(null), check)) {
+				result.addLast(check);
+			}
+		}
+		primarySite.ifPresent(result::addFirst);
 		return result;
 	}
 
