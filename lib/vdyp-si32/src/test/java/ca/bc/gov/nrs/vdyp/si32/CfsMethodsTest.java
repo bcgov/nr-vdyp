@@ -2,7 +2,9 @@ package ca.bc.gov.nrs.vdyp.si32;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
@@ -20,6 +22,7 @@ import ca.bc.gov.nrs.vdyp.si32.cfs.CfsSpeciesMethods;
 import ca.bc.gov.nrs.vdyp.si32.cfs.CfsTreeClass;
 import ca.bc.gov.nrs.vdyp.si32.cfs.CfsTreeGenus;
 import ca.bc.gov.nrs.vdyp.si32.cfs.CfsTreeSpecies;
+import ca.bc.gov.nrs.vdyp.si32.site.SiteTool;
 import ca.bc.gov.nrs.vdyp.si32.vdyp.SP0Name;
 
 class CfsMethodsTest {
@@ -195,5 +198,9 @@ class CfsMethodsTest {
 		CfsTreeClass.Iterator i = new CfsTreeClass.Iterator();
 		assertTrue(i.hasNext());
 		assertThat(i.next(), equalTo(CfsTreeClass.MISSING));
+
+		CfsBiomassConversionSupportedSpecies species = SiteTool.lcl_MoFSP64ToCFSSpecies("BL");
+		assertThat(species.getIndex(), is(6));
+		assertThat(species.getText(), is("BL"));
 	}
 }
