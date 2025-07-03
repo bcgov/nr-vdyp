@@ -19,10 +19,10 @@ public class CfsBiomassConversionCoefficientsDead {
 
 	public static CfsBiomassConversionCoefficientsDetails
 			get(int cfsSupportedEcoZoneIndex, int cfsSupportedGeneraIndex) {
-		return array[cfsSupportedEcoZoneIndex][cfsSupportedGeneraIndex];
+		return deadCoeffByZoneAndGenus[cfsSupportedEcoZoneIndex][cfsSupportedGeneraIndex];
 	}
 
-	private static final CfsBiomassConversionCoefficientsDetails[][] array = new CfsBiomassConversionCoefficientsDetails[][] {
+	private static final CfsBiomassConversionCoefficientsDetails[][] deadCoeffByZoneAndGenus = new CfsBiomassConversionCoefficientsDetails[][] {
 			{ //
 					new CfsBiomassConversionCoefficientsDetails(
 							true,
@@ -392,7 +392,8 @@ public class CfsBiomassConversionCoefficientsDead {
 	static {
 		new CfsBiomassConversionCoefficientsHelper<CfsBiomassConversionSupportedEcoZone, CfsBiomassConversionSupportedGenera, CfsDeadConversionParams>()
 				.validateCoefficientArray(
-						CfsBiomassConversionCoefficientsDead.class, array, CfsBiomassConversionSupportedEcoZone.class,
+						CfsBiomassConversionCoefficientsDead.class, deadCoeffByZoneAndGenus,
+						CfsBiomassConversionSupportedEcoZone.class,
 						CfsBiomassConversionSupportedGenera.class, CfsDeadConversionParams.class
 				);
 	}

@@ -18,10 +18,10 @@ package ca.bc.gov.nrs.vdyp.si32.cfs;
 public class CfsBiomassConversionCoefficientsForSpecies {
 
 	public static CfsBiomassConversionCoefficientsDetails get(int cfsSupportedEcoZone, int cfsSupportedSpeciesIndex) {
-		return array[cfsSupportedEcoZone][cfsSupportedSpeciesIndex];
+		return coeffByZoneAndSpecies[cfsSupportedEcoZone][cfsSupportedSpeciesIndex];
 	}
 
-	private static final CfsBiomassConversionCoefficientsDetails[][] array = new CfsBiomassConversionCoefficientsDetails[][] {
+	private static final CfsBiomassConversionCoefficientsDetails[][] coeffByZoneAndSpecies = new CfsBiomassConversionCoefficientsDetails[][] {
 			{
 					// Order of values:
 					// containsData
@@ -1339,7 +1339,7 @@ public class CfsBiomassConversionCoefficientsForSpecies {
 	static {
 		new CfsBiomassConversionCoefficientsHelper<CfsBiomassConversionSupportedEcoZone, CfsBiomassConversionSupportedSpecies, CfsLiveConversionParams>()
 				.validateCoefficientArray(
-						CfsBiomassConversionCoefficientsForSpecies.class, array,
+						CfsBiomassConversionCoefficientsForSpecies.class, coeffByZoneAndSpecies,
 						CfsBiomassConversionSupportedEcoZone.class, CfsBiomassConversionSupportedSpecies.class,
 						CfsLiveConversionParams.class
 				);
