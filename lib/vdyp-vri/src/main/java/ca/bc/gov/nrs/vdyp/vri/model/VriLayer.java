@@ -20,7 +20,7 @@ public class VriLayer extends BaseVdypLayer<VriSpecies, VriSite> implements Inpu
 	private final Optional<Float> baseArea; // VRIL/BAL
 	private final Optional<Float> treesPerHectare; // VRIL/TPHL
 	private final float utilization; // VRIL/UTLL
-	public final Optional<String> primaryGenus; // FIPL_1C/JPRIME_L1 ISPP
+	protected Optional<String> primaryGenus; // FIPL_1C/JPRIME_L1 ISPP
 	private final Optional<String> secondaryGenus; // FIPL_1C/JPRIME_L1 ISPS
 	private final Optional<Integer> empiricalRelationshipParameterIndex; // INXL1/GRPBA1
 	private final float ageIncrease; // YOUNG1/AGE_INCR
@@ -56,6 +56,10 @@ public class VriLayer extends BaseVdypLayer<VriSpecies, VriSite> implements Inpu
 
 	public float getUtilization() {
 		return utilization;
+	}
+
+	public void setPrimaryGenusForCalculation(Optional<String> primaryGenus) {
+		this.primaryGenus = primaryGenus;
 	}
 
 	@Override

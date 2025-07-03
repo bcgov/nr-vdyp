@@ -63,19 +63,26 @@ describe('AttachmentsPanel.vue', () => {
       type: 'text/csv',
     })
 
-    cy.get('.v-file-input').first().should('not.be.disabled')
-    cy.get('.v-file-input').last().should('not.be.disabled')
+    cy.get('input[id="polygon-file-input"]').should('not.be.disabled')
+    cy.get('input[id="layer-file-input"]').should('not.be.disabled')
 
-    cy.get('.v-file-input').first().find('input[type="file"]').selectFile({
-      contents: polygonFile,
-      fileName: 'polygon.csv',
-      mimeType: 'text/csv',
-    })
-    cy.get('.v-file-input').last().find('input[type="file"]').selectFile({
-      contents: layerFile,
-      fileName: 'layer.csv',
-      mimeType: 'text/csv',
-    })
+    cy.get('#polygon-file-input').should('exist').selectFile(
+      {
+        contents: polygonFile,
+        fileName: 'polygon.csv',
+        mimeType: 'text/csv',
+      },
+      { force: true },
+    )
+
+    cy.get('#layer-file-input').should('exist').selectFile(
+      {
+        contents: layerFile,
+        fileName: 'layer.csv',
+        mimeType: 'text/csv',
+      },
+      { force: true },
+    )
 
     cy.contains('polygon.csv').should('exist')
     cy.contains('layer.csv').should('exist')
@@ -105,19 +112,27 @@ describe('AttachmentsPanel.vue', () => {
     const invalidFile = new File(['invalid content'], 'invalid.txt', {
       type: 'text/plain',
     })
-    cy.get('input[type="file"]').first().selectFile({
-      contents: invalidFile,
-      fileName: 'invalid.txt',
-      mimeType: 'text/plain',
-    })
-
-    const polygonFile = new File(['polygon content'], 'polygon.csv', {
+    const layerFile = new File(['layer content'], 'layer.csv', {
       type: 'text/csv',
     })
-    cy.get('input[type="file"]').last().selectFile({
-      contents: polygonFile,
-      fileName: 'polygon.csv',
-    })
+
+    cy.get('#polygon-file-input').should('exist').selectFile(
+      {
+        contents: invalidFile,
+        fileName: 'invalid.txt',
+        mimeType: 'text/plain',
+      },
+      { force: true },
+    )
+
+    cy.get('#layer-file-input').should('exist').selectFile(
+      {
+        contents: layerFile,
+        fileName: 'layer.csv',
+        mimeType: 'text/csv',
+      },
+      { force: true },
+    )
 
     cy.get('button').contains('Confirm').click()
 
@@ -145,16 +160,23 @@ describe('AttachmentsPanel.vue', () => {
       type: 'text/csv',
     })
 
-    cy.get('.v-file-input').first().find('input[type="file"]').selectFile({
-      contents: polygonFile,
-      fileName: 'polygon.csv',
-      mimeType: 'text/csv',
-    })
-    cy.get('.v-file-input').last().find('input[type="file"]').selectFile({
-      contents: layerFile,
-      fileName: 'layer.csv',
-      mimeType: 'text/csv',
-    })
+    cy.get('#polygon-file-input').should('exist').selectFile(
+      {
+        contents: polygonFile,
+        fileName: 'polygon.csv',
+        mimeType: 'text/csv',
+      },
+      { force: true },
+    )
+
+    cy.get('#layer-file-input').should('exist').selectFile(
+      {
+        contents: layerFile,
+        fileName: 'layer.csv',
+        mimeType: 'text/csv',
+      },
+      { force: true },
+    )
 
     cy.get('button').contains('Confirm').click()
 
@@ -172,11 +194,14 @@ describe('AttachmentsPanel.vue', () => {
       type: 'text/csv',
     })
 
-    cy.get('.v-file-input').first().find('input[type="file"]').selectFile({
-      contents: polygonFile,
-      fileName: 'polygon.csv',
-      mimeType: 'text/csv',
-    })
+    cy.get('#polygon-file-input').should('exist').selectFile(
+      {
+        contents: polygonFile,
+        fileName: 'polygon.csv',
+        mimeType: 'text/csv',
+      },
+      { force: true },
+    )
 
     cy.contains('polygon.csv').should('exist')
 
@@ -199,16 +224,23 @@ describe('AttachmentsPanel.vue', () => {
       type: 'text/csv',
     })
 
-    cy.get('.v-file-input').first().find('input[type="file"]').selectFile({
-      contents: polygonFile,
-      fileName: 'polygon.csv',
-      mimeType: 'text/csv',
-    })
-    cy.get('.v-file-input').last().find('input[type="file"]').selectFile({
-      contents: layerFile,
-      fileName: 'layer.csv',
-      mimeType: 'text/csv',
-    })
+    cy.get('#polygon-file-input').should('exist').selectFile(
+      {
+        contents: polygonFile,
+        fileName: 'polygon.csv',
+        mimeType: 'text/csv',
+      },
+      { force: true },
+    )
+
+    cy.get('#layer-file-input').should('exist').selectFile(
+      {
+        contents: layerFile,
+        fileName: 'layer.csv',
+        mimeType: 'text/csv',
+      },
+      { force: true },
+    )
 
     cy.get('button').contains('Confirm').click()
 

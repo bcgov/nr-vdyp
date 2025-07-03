@@ -1,9 +1,13 @@
 package ca.bc.gov.nrs.vdyp.vri;
 
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.*;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.notPresent;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.Matchers.any;
+import static org.hamcrest.Matchers.hasProperty;
+import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
@@ -374,11 +378,11 @@ class VriInputValidationTest {
 					sBuilder.percentGenus(30f);
 					sBuilder.addSp64Distribution("CW", 100);
 					sBuilder.addSite(iBuilder -> {
-						iBuilder.ageTotal(200);
+						// iBuilder.ageTotal(200);
 						iBuilder.height(28.0f);
 						iBuilder.siteIndex(14.3f);
 						iBuilder.siteSpecies("CW");
-						iBuilder.yearsToBreastHeight(10.9f);
+						// iBuilder.yearsToBreastHeight(10.9f);
 						iBuilder.breastHeightAge(189.1f);
 						iBuilder.siteCurveNumber(11);
 					});
@@ -718,7 +722,7 @@ class VriInputValidationTest {
 					sBuilder.addSp64Distribution("CW", 100);
 					sBuilder.addSite(iBuilder -> {
 						iBuilder.ageTotal(200);
-						iBuilder.height(28.0f);
+						// iBuilder.height(28.0f);
 						iBuilder.siteIndex(14.3f);
 						iBuilder.siteSpecies("CW");
 						iBuilder.yearsToBreastHeight(10.9f);

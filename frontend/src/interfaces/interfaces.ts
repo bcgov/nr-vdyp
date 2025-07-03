@@ -1,12 +1,4 @@
-import type { MessageType, SortOrder } from '@/types/types'
-
-export interface NotificationState {
-  isShow: boolean
-  message: string
-  type: MessageType
-  color: MessageType
-  timeoutId: number | null
-}
+import type { SortOrder } from '@/types/types'
 
 export interface MessageDialog {
   dialog: boolean

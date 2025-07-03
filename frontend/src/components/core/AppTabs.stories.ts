@@ -1,7 +1,7 @@
-import type { Meta, StoryObj } from '@storybook/vue3'
+import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import AppTabs from './AppTabs.vue'
 import { MODEL_PARAM_TAB_NAME, REPORTING_TAB } from '@/constants/constants'
-import { action } from '@storybook/addon-actions'
+import { action } from 'storybook/actions'
 
 const meta: Meta<typeof AppTabs> = {
   title: 'components/core/AppTabs',

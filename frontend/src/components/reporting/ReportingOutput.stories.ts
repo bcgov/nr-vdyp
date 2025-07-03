@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/vue3'
+import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import ReportingOutput from './ReportingOutput.vue'
 
 const meta: Meta<typeof ReportingOutput> = {
