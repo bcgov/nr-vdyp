@@ -7,7 +7,7 @@ WORKDIR /app
 COPY ${CONTEXT}/*.json ${CONTEXT}/*.ts ${CONTEXT}/index.html ./
 COPY ${CONTEXT}/public ./public
 COPY ${CONTEXT}/src ./src
-RUN npm ci --ignore-scripts --no-update-notifier && \
+RUN npm ci --ignore-scripts --no-update-notifier --omit=dev && \
     npm run build-only
 
 # Deploy using Caddy to host static files
