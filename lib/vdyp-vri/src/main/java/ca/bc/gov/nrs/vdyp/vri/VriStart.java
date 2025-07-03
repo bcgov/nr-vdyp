@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.vri;
 
-import static ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter.*;
+import static ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter.quadMeanDiameter;
+import static ca.bc.gov.nrs.vdyp.common_calculators.BaseAreaTreeDensityDiameter.treesPerHectare;
 import static ca.bc.gov.nrs.vdyp.math.FloatMath.pow;
 import static java.lang.Math.max;
 
@@ -865,30 +866,34 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 			this.getPercentTotal(layer); // Validate that percent total is close to 100%
 
 		// VDYP7 figured out primary species and ITG group here but that has moved to getLayersForPolygon
-		Optional<VriSite> primarySite = layer.getPrimaryGenus().flatMap(id -> Utils.optSafe(layer.getSites().get(id)));
-		var ageTotal = primarySite.flatMap(VriSite::getAgeTotal);
-		var yearsToBreastHeight = primarySite.flatMap(VriSite::getYearsToBreastHeight);
-		var height = primarySite.flatMap(VriSite::getHeight);
-
 		List<String> missingValues = new ArrayList<>();
-
-		// VDYP7 handles these with a different error code from the other low value/null checks so they get a different
-		// exception
-
 		final Optional<PolygonMode> mode = polygon.getMode();
-		if (mode.map(PolygonMode.YOUNG::equals).orElse(false) && layer.getLayerType() == LayerType.PRIMARY) {
-			if (ageTotal.map(x -> x <= 0f).orElse(true)) {
-				missingValues.add(AGE_TOTAL_PROPERTY_NAME);
+
+		for (var site : layer.getPriorityOrderedSites()) {
+			var ageTotal = site.getAgeTotal();
+			var yearsToBreastHeight = site.getYearsToBreastHeight();
+			var height = site.getHeight();
+
+			// VDYP7 handles these with a different error code from the other low value/null checks so they get a
+			// different exception
+			missingValues.clear();
+			if (mode.map(PolygonMode.YOUNG::equals).orElse(false) && layer.getLayerType() == LayerType.PRIMARY) {
+				if (ageTotal.map(x -> x <= 0f).orElse(true)) {
+					missingValues.add(AGE_TOTAL_PROPERTY_NAME);
+				}
+				if (yearsToBreastHeight.map(x -> x <= 0f).orElse(true)) {
+					missingValues.add(YEARS_TO_BREAST_HEIGHT_PROPERTY_NAME);
+				}
+			} else {
+				if (height.map(x -> x <= 0f).orElse(true)) {
+					missingValues.add(HEIGHT_PROPERTY_NAME);
+				}
 			}
-			if (yearsToBreastHeight.map(x -> x <= 0f).orElse(true)) {
-				missingValues.add(TREES_PER_HECTARE_PROPERTY_NAME);
-			}
-		} else {
-			if (height.map(x -> x <= 0f).orElse(true)) {
-				missingValues.add(HEIGHT_PROPERTY_NAME);
+			if (missingValues.isEmpty()) {
+				layer.setPrimaryGenusForCalculation(Optional.of(site.getSiteGenus()));
+				break;
 			}
 		}
-
 		if (!missingValues.isEmpty()) {
 			throw new LayerMissingValuesRequiredForMode(layer.getLayerType(), mode, missingValues);
 		}
@@ -905,8 +910,7 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 
 	protected PolygonMode checkPolygonForMode(VriPolygon polygon, BecDefinition bec) throws ProcessingException {
 		VriLayer primaryLayer = polygon.getLayers().get(LayerType.PRIMARY);
-		Optional<VriSite> primarySite = primaryLayer.getPrimaryGenus()
-				.flatMap(id -> Utils.optSafe(primaryLayer.getSites().get(id)));
+		Optional<VriSite> primarySite = primaryLayer.getPrimarySite();
 		var ageTotal = primarySite.flatMap(VriSite::getAgeTotal);
 		var height = primarySite.flatMap(VriSite::getHeight);
 		var siteIndex = primarySite.flatMap(VriSite::getSiteIndex);
