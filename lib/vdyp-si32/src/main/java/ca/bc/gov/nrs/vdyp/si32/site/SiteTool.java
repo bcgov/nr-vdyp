@@ -741,7 +741,7 @@ public class SiteTool {
 	/**
 	 * Lookup the dead conversion parameters for the given Eco Zone and species code.
 	 *
-	 * @param ecoZone  Cfs Biomass Coversion supported Eco Zone
+	 * @param ecoZone  Cfs Biomass Conversion supported Eco Zone
 	 * @param sp64Code MoF SP64 species code
 	 * @return the complete dead conversion parameters for the given eco zone and species code
 	 */
