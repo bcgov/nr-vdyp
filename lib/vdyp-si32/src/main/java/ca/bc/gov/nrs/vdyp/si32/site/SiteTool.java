@@ -690,7 +690,7 @@ public class SiteTool {
 	 * @return the complete live conversion parameters for the given eco zone and species code
 	 */
 	public static CfsBiomassConversionCoefficientsDetails
-			LookupLiveCfsConversionParams(CfsBiomassConversionSupportedEcoZone ecoZone, String sp64Code) {
+			lookupLiveCfsConversionParams(CfsBiomassConversionSupportedEcoZone ecoZone, String sp64Code) {
 		logger.debug("LookupLiveCfsConversionParams: ecoZone={}, sp64Code={}", ecoZone, sp64Code);
 
 		CfsBiomassConversionCoefficientsDetails result = CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY;
@@ -746,7 +746,7 @@ public class SiteTool {
 	 * @return the complete dead conversion parameters for the given eco zone and species code
 	 */
 	public static CfsBiomassConversionCoefficientsDetails
-			LookupDeadCfsConversionParams(CfsBiomassConversionSupportedEcoZone ecoZone, String sp64Code) {
+			lookupDeadCfsConversionParams(CfsBiomassConversionSupportedEcoZone ecoZone, String sp64Code) {
 		logger.debug("LookupDeadCfsConversionParams: ecoZone={}, sp64Code={}", ecoZone, sp64Code);
 
 		CfsBiomassConversionCoefficientsDetails result = CfsBiomassConversionCoefficientsDetails.DEAD_EMPTY;
