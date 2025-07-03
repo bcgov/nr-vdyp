@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/vue3'
+import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import { createPinia, setActivePinia } from 'pinia'
 import ReportingContainer from './ReportingContainer.vue'
 import { useProjectionStore } from '@/stores/projectionStore'

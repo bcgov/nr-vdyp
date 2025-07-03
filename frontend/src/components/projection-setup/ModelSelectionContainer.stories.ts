@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/vue3'
+import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import ModelSelectionContainer from './ModelSelectionContainer.vue'
 import { createVuetify } from 'vuetify'
 import { VApp } from 'vuetify/components'
