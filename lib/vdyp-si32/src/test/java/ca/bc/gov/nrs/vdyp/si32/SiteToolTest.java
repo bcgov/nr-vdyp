@@ -334,11 +334,11 @@ class SiteToolTest {
 
 	@Test
 	void testBadValuesLiveCoefficients() {
-		CfsBiomassConversionCoefficientsDetails answer = SiteTool.LookupLiveCfsConversionParams(null, null);
+		CfsBiomassConversionCoefficientsDetails answer = SiteTool.lookupLiveCfsConversionParams(null, null);
 		assertThat(answer.containsData(), is(false));
-		answer = SiteTool.LookupLiveCfsConversionParams(CfsBiomassConversionSupportedEcoZone.UNKNOWN, null);
+		answer = SiteTool.lookupLiveCfsConversionParams(CfsBiomassConversionSupportedEcoZone.UNKNOWN, null);
 		assertThat(answer.containsData(), is(false));
-		answer = SiteTool.LookupLiveCfsConversionParams(CfsBiomassConversionSupportedEcoZone.UNKNOWN, "BAD");
+		answer = SiteTool.lookupLiveCfsConversionParams(CfsBiomassConversionSupportedEcoZone.UNKNOWN, "BAD");
 		assertThat(answer.containsData(), is(false));
 	}
 
@@ -386,18 +386,18 @@ class SiteToolTest {
 	@ParameterizedTest
 	@MethodSource("cfsLiveCoefficientByEcoZoneAndSpecies")
 	void testLiveCoefficients(CfsBiomassConversionSupportedEcoZone zone, String mofSp64, float[] expected) {
-		CfsBiomassConversionCoefficientsDetails answer = SiteTool.LookupLiveCfsConversionParams(zone, mofSp64);
+		CfsBiomassConversionCoefficientsDetails answer = SiteTool.lookupLiveCfsConversionParams(zone, mofSp64);
 		assertThat(answer.containsData(), is(true));
 		assertArrayEquals(expected, answer.parms());
 	}
 
 	@Test
 	void testBadValuesDeadCoefficients() {
-		CfsBiomassConversionCoefficientsDetails answer = SiteTool.LookupDeadCfsConversionParams(null, null);
+		CfsBiomassConversionCoefficientsDetails answer = SiteTool.lookupDeadCfsConversionParams(null, null);
 		assertThat(answer.containsData(), is(false));
-		answer = SiteTool.LookupDeadCfsConversionParams(CfsBiomassConversionSupportedEcoZone.UNKNOWN, null);
+		answer = SiteTool.lookupDeadCfsConversionParams(CfsBiomassConversionSupportedEcoZone.UNKNOWN, null);
 		assertThat(answer.containsData(), is(false));
-		answer = SiteTool.LookupDeadCfsConversionParams(CfsBiomassConversionSupportedEcoZone.UNKNOWN, "BAD");
+		answer = SiteTool.lookupDeadCfsConversionParams(CfsBiomassConversionSupportedEcoZone.UNKNOWN, "BAD");
 		assertThat(answer.containsData(), is(false));
 	}
 
@@ -415,7 +415,7 @@ class SiteToolTest {
 	@ParameterizedTest
 	@MethodSource("cfsDeadCoefficientByEcoZoneAndSpecies")
 	void testDeadCoefficients(CfsBiomassConversionSupportedEcoZone zone, String mofSp64, float[] expected) {
-		CfsBiomassConversionCoefficientsDetails answer = SiteTool.LookupDeadCfsConversionParams(zone, mofSp64);
+		CfsBiomassConversionCoefficientsDetails answer = SiteTool.lookupDeadCfsConversionParams(zone, mofSp64);
 		assertThat(answer.containsData(), is(true));
 		assertArrayEquals(expected, answer.parms());
 	}
