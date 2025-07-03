@@ -21,7 +21,7 @@ public class CfsBiomassConversionCoefficientsForGenus {
 		return coeffByZoneAndGenus[cfsSupportedEcoZone][cfsSupportedGeneraIndex];
 	}
 
-	private final static CfsBiomassConversionCoefficientsDetails[][] coeffByZoneAndGenus = new CfsBiomassConversionCoefficientsDetails[][] {
+	private static final CfsBiomassConversionCoefficientsDetails[][] coeffByZoneAndGenus = new CfsBiomassConversionCoefficientsDetails[][] {
 			{
 					// Order of values:
 					// containsData
