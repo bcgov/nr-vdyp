@@ -1,49 +1,74 @@
 import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
 import type { MessageType } from '@/types/types'
 import { NOTIFICATION, MESSAGE_TYPE } from '@/constants/constants'
-import type { NotificationState } from '@/interfaces/interfaces'
 
-export const useNotificationStore = defineStore({
-  id: 'notificationStore',
-  state: (): NotificationState => ({
-    isShow: false,
-    message: '',
-    type: '',
-    color: '',
-    timeoutId: null,
-  }),
-  getters: {},
-  actions: {
-    resetMessage() {
-      this.isShow = false
-      if (this.timeoutId) {
-        clearTimeout(this.timeoutId)
-        this.timeoutId = null
-      }
-    },
-    showMessage(message: string, type: MessageType = '') {
-      this.resetMessage()
-      this.message = message
-      this.type = type
-      this.color = type
-      this.isShow = true
+export const useNotificationStore = defineStore('notificationStore', () => {
+  const isShow = ref<boolean>(false)
+  const message = ref<string>('')
+  const type = ref<MessageType>('')
+  const color = ref<string>('')
+  const timeoutId = ref<number | null>(null)
 
-      // Automatically close messages after NOTIFICATION.SHOW_TIME
-      this.timeoutId = setTimeout(() => {
-        this.isShow = false
-      }, NOTIFICATION.SHOW_TIME) as unknown as number
-    },
-    showSuccessMessage(message: string) {
-      this.showMessage(message, MESSAGE_TYPE.SUCCESS)
-    },
-    showErrorMessage(message: string) {
-      this.showMessage(message, MESSAGE_TYPE.ERROR)
-    },
-    showInfoMessage(message: string) {
-      this.showMessage(message, MESSAGE_TYPE.INFO)
-    },
-    showWarningMessage(message: string) {
-      this.showMessage(message, MESSAGE_TYPE.WARNING)
-    },
-  },
+  const getIsShow = computed(() => isShow.value)
+  const getMessage = computed(() => message.value)
+  const getType = computed(() => type.value)
+  const getColor = computed(() => color.value)
+  const getTimeoutId = computed(() => timeoutId.value)
+
+  const resetMessage = () => {
+    isShow.value = false
+    if (timeoutId.value) {
+      clearTimeout(timeoutId.value)
+      timeoutId.value = null
+    }
+  }
+
+  const showMessage = (messageParam: string, typeParam: MessageType = '') => {
+    resetMessage()
+    message.value = messageParam
+    type.value = typeParam
+    color.value = typeParam
+    isShow.value = true
+
+    // Automatically close messages after NOTIFICATION.SHOW_TIME
+    timeoutId.value = setTimeout(() => {
+      isShow.value = false
+    }, NOTIFICATION.SHOW_TIME) as unknown as number
+  }
+
+  const showSuccessMessage = (messageParam: string) => {
+    showMessage(messageParam, MESSAGE_TYPE.SUCCESS)
+  }
+
+  const showErrorMessage = (messageParam: string) => {
+    showMessage(messageParam, MESSAGE_TYPE.ERROR)
+  }
+
+  const showInfoMessage = (messageParam: string) => {
+    showMessage(messageParam, MESSAGE_TYPE.INFO)
+  }
+
+  const showWarningMessage = (messageParam: string) => {
+    showMessage(messageParam, MESSAGE_TYPE.WARNING)
+  }
+
+  return {
+    isShow,
+    message,
+    type,
+    color,
+    timeoutId,
+    getIsShow,
+    getMessage,
+    getType,
+    getColor,
+    getTimeoutId,
+    resetMessage,
+    showMessage,
+    showSuccessMessage,
+    showErrorMessage,
+    showInfoMessage,
+    showWarningMessage,
+  }
 })

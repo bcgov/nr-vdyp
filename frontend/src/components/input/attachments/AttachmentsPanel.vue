@@ -31,6 +31,7 @@
               <v-row>
                 <v-col cols="5">
                   <v-file-input
+                    id="polygon-file-input"
                     :label="
                       fileUploadStore.polygonFile
                         ? 'Polygon File'
@@ -48,6 +49,7 @@
                 <v-col class="col-space-3" />
                 <v-col cols="5">
                   <v-file-input
+                    id="layer-file-input"
                     :label="
                       fileUploadStore.layerFile
                         ? 'Layer File'
