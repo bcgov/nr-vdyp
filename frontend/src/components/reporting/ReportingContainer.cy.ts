@@ -15,21 +15,10 @@ describe('ReportingContainer.vue', () => {
     cy.fixture('ErrorLog.txt').then((errorLog) => {
       cy.fixture('ProgressLog.txt').then((progressLog) => {
         cy.fixture('YieldTable.csv').then((yieldTable) => {
-          // logging
-          // cy.task('log', `Loaded ErrorLog: ${errorLog}`)
-          // cy.task('log', `Loaded ProgressLog: ${progressLog}`)
-          // cy.task('log', `Loaded YieldTable: ${yieldTable}`)
-
           const zip = new JSZip()
           zip.file('ErrorLog.txt', errorLog)
           zip.file('ProgressLog.txt', progressLog)
           zip.file('YieldTable.csv', yieldTable)
-
-          // cy.task('log', 'Files in ZIP archive:')
-          // Object.keys(zip.files).forEach((relativePath) => {
-          //   cy.task('log', `- ${relativePath}`)
-          // })
-
           return cy
             .wrap(
               Promise.resolve(
