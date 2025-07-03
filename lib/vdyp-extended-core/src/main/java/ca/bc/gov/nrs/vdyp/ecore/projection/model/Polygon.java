@@ -667,7 +667,7 @@ public class Polygon implements Comparable<Polygon> {
 
 		for (Layer layer : getLayers().values()) {
 			layer.doBuildSiteSpecies();
-			layer.doCompleteSiteSpeciesSiteIndexInfo();
+			layer.doCompleteSiteSpeciesSiteIndexInfo(context);
 		}
 
 		var rGrowthModel = new Reference<GrowthModelCode>();
@@ -1032,11 +1032,14 @@ public class Polygon implements Comparable<Polygon> {
 			);
 		}
 
-		var crownClosure = Math.max(0.0, primaryLayer.getCrownClosure());
-		logger.debug(
-				"{}: crown closure: primary layer crown closure: {}; value used: {}", primaryLayer.getCrownClosure(),
-				crownClosure
-		);
+		var crownClosure = 0;
+		if (primaryLayer != null && primaryLayer.getCrownClosure() != null) {
+			crownClosure = (short) Math.max(crownClosure, primaryLayer.getCrownClosure());
+			logger.debug(
+					"{}: crown closure: primary layer crown closure: {}; value used: {}", primaryLayer,
+					primaryLayer.getCrownClosure(), crownClosure
+			);
+		}
 
 		var ccFullyStocked = isCoastal ? Vdyp7Constants.CC_COAST : Vdyp7Constants.CC_INTERIOR;
 
@@ -1078,8 +1081,9 @@ public class Polygon implements Comparable<Polygon> {
 			var percentAbsorbable = estimatedPercentStockable + percentNonStockable + percentUnaccounted;
 			double percentStockableAbsorbable, percentUnaccountedAbsorbable;
 			if (percentAbsorbable > 0) {
-				percentStockableAbsorbable = percentCrownSpaces * (estimatedPercentStockable / percentAbsorbable);
-				percentUnaccountedAbsorbable = percentCrownSpaces * (percentUnaccounted / percentAbsorbable);
+				percentStockableAbsorbable = percentCrownSpaces
+						* ((double) estimatedPercentStockable / percentAbsorbable);
+				percentUnaccountedAbsorbable = percentCrownSpaces * ((double) percentUnaccounted / percentAbsorbable);
 			} else {
 				percentStockableAbsorbable = 0;
 				percentUnaccountedAbsorbable = 0;

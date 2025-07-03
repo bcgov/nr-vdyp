@@ -1,8 +1,16 @@
 package ca.bc.gov.nrs.vdyp.model;
 
-import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.*;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.isPolyId;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.present;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.aMapWithSize;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.anEmptyMap;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasEntry;
+import static org.hamcrest.Matchers.hasProperty;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.Collections;
@@ -50,6 +58,65 @@ class VdypLayerTest {
 		assertThat(result, hasProperty("yearsToBreastHeight", present(is(2f))));
 		assertThat(result, hasProperty("height", present(is(10f))));
 		assertThat(result, hasProperty("species", aMapWithSize(1)));
+	}
+
+	@Test
+	void testGetPriorityOrderedSites() {
+		var result = VdypLayer.build(builder -> {
+			builder.polygonIdentifier("Test", 2024);
+			builder.layerType(LayerType.PRIMARY);
+
+			builder.primaryGenus("PL");
+
+			builder.addSpecies(specBuilder -> {
+				specBuilder.genus("AC", 1);
+				specBuilder.percentGenus(45);
+				specBuilder.volumeGroup(-1);
+				specBuilder.decayGroup(-1);
+				specBuilder.breakageGroup(-1);
+				specBuilder.addSite(siteBuilder -> {
+					siteBuilder.height(10f);
+					siteBuilder.ageTotal(42f);
+					siteBuilder.yearsToBreastHeight(2f);
+					siteBuilder.siteCurveNumber(0);
+				});
+			});
+			builder.addSpecies(specBuilder -> {
+				specBuilder.genus("PL", 12);
+				specBuilder.percentGenus(45);
+				specBuilder.volumeGroup(-1);
+				specBuilder.decayGroup(-1);
+				specBuilder.breakageGroup(-1);
+				specBuilder.addSite(siteBuilder -> {
+					siteBuilder.height(10f);
+					siteBuilder.ageTotal(42f);
+					siteBuilder.yearsToBreastHeight(2f);
+					siteBuilder.siteCurveNumber(0);
+				});
+			});
+			builder.addSpecies(specBuilder -> {
+				specBuilder.genus("B", 8);
+				specBuilder.percentGenus(10);
+				specBuilder.volumeGroup(-1);
+				specBuilder.decayGroup(-1);
+				specBuilder.breakageGroup(-1);
+				specBuilder.addSite(siteBuilder -> {
+					siteBuilder.height(10f);
+					siteBuilder.ageTotal(42f);
+					siteBuilder.yearsToBreastHeight(2f);
+					siteBuilder.siteCurveNumber(0);
+				});
+			});
+		});
+
+		List<VdypSite> sites = result.getPriorityOrderedSites();
+		assertThat(
+				sites, contains(
+						hasProperty("siteGenus", is("PL")), //
+						hasProperty("siteGenus", is("AC")), //
+						hasProperty("siteGenus", is("B"))
+				)
+		);
 	}
 
 	@Test

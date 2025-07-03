@@ -19,9 +19,7 @@ import {
   ParameterNamesEnum,
   MetadataToOutputEnum,
 } from '@/services/vdyp-api'
-import * as apiActions from '@/services/apiActions'
 import { BIZCONSTANTS, CONSTANTS, DEFAULTS, OPTIONS } from '@/constants'
-import sinon from 'sinon'
 
 describe('Model Parameter Service Unit Tests', () => {
   const mockModelParameterStore = {
@@ -49,18 +47,6 @@ describe('Model Parameter Service Unit Tests', () => {
     yearIncrement: DEFAULTS.DEFAULT_VALUES.YEAR_INCREMENT,
     includeInReport: [],
   }
-
-  let projectionStub: sinon.SinonStub
-
-  beforeEach(() => {
-    projectionStub = sinon
-      .stub(apiActions, 'projectionHcsvPost')
-      .resolves(new Blob(['mock response'], { type: 'application/json' }))
-  })
-
-  afterEach(() => {
-    projectionStub.restore()
-  })
 
   it('should generate a valid feature ID', () => {
     const featureId = generateFeatureId()
@@ -161,8 +147,12 @@ describe('Model Parameter Service Unit Tests', () => {
   })
 
   it('should call projectionHcsvPost once', () => {
-    cy.wrap(runModel(mockModelParameterStore)).then(() => {
-      expect(projectionStub.calledOnce).to.be.true
+    const projectionStub = cy
+      .stub()
+      .resolves(new Blob(['mock response'], { type: 'application/json' }))
+
+    cy.wrap(runModel(mockModelParameterStore, projectionStub)).then(() => {
+      expect(projectionStub).to.be.calledOnce
     })
   })
 
@@ -179,40 +169,48 @@ describe('Model Parameter Service Unit Tests', () => {
           ? BIZCONSTANTS.INVENTORY_CODES.VRI
           : ''
 
-    cy.wrap(blobPolygon.text()).then((text) => {
-      expect(text).to.include(derivedByCode)
-      expect(text).to.include(mockModelParameterStore.becZone)
-      expect(text).to.include(mockModelParameterStore.ecoZone)
-      expect(text).to.include(mockModelParameterStore.percentStockableArea)
-      expect(text).to.include(
-        computeBclcsLevel1(mockModelParameterStore.percentStockableArea),
-      )
-      expect(text).to.include(
-        computeBclcsLevel2(mockModelParameterStore.percentStockableArea),
-      )
-      expect(text).to.include(
-        computeBclcsLevel3(mockModelParameterStore.becZone),
-      )
-      expect(text).to.include(
-        determineBclcsLevel4(mockModelParameterStore.speciesGroups),
-      )
-      expect(text).to.include(
-        determineBclcsLevel5(mockModelParameterStore.percentStockableArea),
-      )
-    })
+    cy.wrap(blobPolygon)
+      .then((blob) => blob.text())
+      .then((text) => {
+        expect(text).to.include(derivedByCode)
+        expect(text).to.include(mockModelParameterStore.becZone)
+        expect(text).to.include(mockModelParameterStore.ecoZone)
+        expect(text).to.include(mockModelParameterStore.percentStockableArea)
+        expect(text).to.include(
+          computeBclcsLevel1(mockModelParameterStore.percentStockableArea),
+        )
+        expect(text).to.include(
+          computeBclcsLevel2(mockModelParameterStore.percentStockableArea),
+        )
+        expect(text).to.include(
+          computeBclcsLevel3(mockModelParameterStore.becZone),
+        )
+        expect(text).to.include(
+          determineBclcsLevel4(mockModelParameterStore.speciesGroups),
+        )
+        expect(text).to.include(
+          determineBclcsLevel5(mockModelParameterStore.percentStockableArea),
+        )
+      })
 
-    cy.wrap(blobLayer.text()).then((text) => {
-      expect(text).to.include(mockModelParameterStore.highestPercentSpecies)
-      expect(text).to.include('PL,30.0')
-      expect(text).to.include('AC,30.0')
-      expect(text).to.include('H,30.0')
-      expect(text).to.include('S,10.0')
-    })
+    cy.wrap(blobLayer)
+      .then((blob) => blob.text())
+      .then((text) => {
+        expect(text).to.include(mockModelParameterStore.highestPercentSpecies)
+        expect(text).to.include('PL,30.0')
+        expect(text).to.include('AC,30.0')
+        expect(text).to.include('H,30.0')
+        expect(text).to.include('S,10.0')
+      })
   })
 
   it('should call projectionHcsvPost with correct form data', () => {
-    cy.wrap(runModel(mockModelParameterStore)).then(() => {
-      expect(projectionStub.calledOnce).to.be.true
+    const projectionStub = cy
+      .stub()
+      .resolves(new Blob(['mock response'], { type: 'application/json' }))
+
+    cy.wrap(runModel(mockModelParameterStore, projectionStub)).then(() => {
+      expect(projectionStub).to.be.calledOnce
       const formDataArg = projectionStub.getCall(0).args[0] as FormData
 
       expect(formDataArg.has(ParameterNamesEnum.HCSV_POLYGON_INPUT_DATA)).to.be
@@ -225,23 +223,26 @@ describe('Model Parameter Service Unit Tests', () => {
       const projectionParamsBlob = formDataArg.get(
         ParameterNamesEnum.PROJECTION_PARAMETERS,
       ) as Blob
-      cy.wrap(projectionParamsBlob.text()).then((text: string) => {
-        const projectionParams = JSON.parse(text)
-        expect(projectionParams.ageStart).to.equal(
-          mockModelParameterStore.startingAge,
-        )
-        expect(projectionParams.ageEnd).to.equal(
-          mockModelParameterStore.finishingAge,
-        )
-        expect(projectionParams.yearStart).to.be.null
-        expect(projectionParams.yearEnd).to.be.null
-        expect(projectionParams.ageIncrement).to.equal(
-          mockModelParameterStore.ageIncrement,
-        )
-        expect(projectionParams.metadataToOutput).to.equal(
-          MetadataToOutputEnum.NONE,
-        )
-      })
+
+      cy.wrap(projectionParamsBlob)
+        .then((blob) => blob.text())
+        .then((text) => {
+          const projectionParams = JSON.parse(text)
+          expect(projectionParams.ageStart).to.equal(
+            mockModelParameterStore.startingAge,
+          )
+          expect(projectionParams.ageEnd).to.equal(
+            mockModelParameterStore.finishingAge,
+          )
+          expect(projectionParams.yearStart).to.be.null
+          expect(projectionParams.yearEnd).to.be.null
+          expect(projectionParams.ageIncrement).to.equal(
+            mockModelParameterStore.ageIncrement,
+          )
+          expect(projectionParams.metadataToOutput).to.equal(
+            MetadataToOutputEnum.NONE,
+          )
+        })
     })
   })
 
@@ -251,35 +252,47 @@ describe('Model Parameter Service Unit Tests', () => {
       incSecondaryHeight: true,
     }
 
-    cy.wrap(runModel(updatedModelParameterStore)).then(() => {
+    const projectionStub = cy
+      .stub()
+      .resolves(new Blob(['mock response'], { type: 'application/json' }))
+
+    cy.wrap(runModel(updatedModelParameterStore, projectionStub)).then(() => {
       const formDataArg = projectionStub.getCall(0).args[0] as FormData
       const projectionParamsBlob = formDataArg.get(
         ParameterNamesEnum.PROJECTION_PARAMETERS,
       ) as Blob
 
-      cy.wrap(projectionParamsBlob.text()).then((text: string) => {
-        const projectionParams = JSON.parse(text)
-        expect(projectionParams.selectedExecutionOptions).to.include(
-          SelectedExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
-        )
-      })
+      cy.wrap(projectionParamsBlob)
+        .then((blob) => blob.text())
+        .then((text) => {
+          const projectionParams = JSON.parse(text)
+          expect(projectionParams.selectedExecutionOptions).to.include(
+            SelectedExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
+          )
+        })
     })
   })
 
   it('should contain expected execution options', () => {
-    cy.wrap(runModel(mockModelParameterStore)).then(() => {
+    const projectionStub = cy
+      .stub()
+      .resolves(new Blob(['mock response'], { type: 'application/json' }))
+
+    cy.wrap(runModel(mockModelParameterStore, projectionStub)).then(() => {
       const formDataArg = projectionStub.getCall(0).args[0] as FormData
       const projectionParamsBlob = formDataArg.get(
         ParameterNamesEnum.PROJECTION_PARAMETERS,
       ) as Blob
 
-      cy.wrap(projectionParamsBlob.text()).then((text: string) => {
-        const projectionParams = JSON.parse(text)
-        expect(projectionParams.selectedExecutionOptions).to.include(
-          SelectedExecutionOptionsEnum.DoEnableProgressLogging,
-          SelectedExecutionOptionsEnum.DoEnableErrorLogging,
-        )
-      })
+      cy.wrap(projectionParamsBlob)
+        .then((blob) => blob.text())
+        .then((text) => {
+          const projectionParams = JSON.parse(text)
+          expect(projectionParams.selectedExecutionOptions).to.include(
+            SelectedExecutionOptionsEnum.DoEnableProgressLogging,
+            SelectedExecutionOptionsEnum.DoEnableErrorLogging,
+          )
+        })
     })
   })
 
@@ -289,8 +302,12 @@ describe('Model Parameter Service Unit Tests', () => {
       speciesList: new Array(6).fill({ species: null, percent: '0.0' }),
     }
 
-    cy.wrap(runModel(emptySpeciesStore)).then(() => {
-      expect(projectionStub.calledOnce).to.be.true
+    const projectionStub = cy
+      .stub()
+      .resolves(new Blob(['mock response'], { type: 'application/json' }))
+
+    cy.wrap(runModel(emptySpeciesStore, projectionStub)).then(() => {
+      expect(projectionStub).to.be.calledOnce
     })
   })
 
@@ -301,9 +318,11 @@ describe('Model Parameter Service Unit Tests', () => {
     }
 
     const { blobPolygon } = createCSVFiles(invalidStore)
-    cy.wrap(blobPolygon.text()).then((text) => {
-      expect(text).not.to.include(DEFAULTS.DEFAULT_VALUES.BEC_ZONE)
-    })
+    cy.wrap(blobPolygon)
+      .then((blob) => blob.text())
+      .then((text) => {
+        expect(text).not.to.include(DEFAULTS.DEFAULT_VALUES.BEC_ZONE)
+      })
   })
 
   it('should use year range parameters when selectedAgeYearRange is YEAR', () => {
@@ -312,22 +331,28 @@ describe('Model Parameter Service Unit Tests', () => {
       selectedAgeYearRange: CONSTANTS.AGE_YEAR_RANGE.YEAR,
     }
 
-    cy.wrap(runModel(yearRangeStore)).then(() => {
+    const projectionStub = cy
+      .stub()
+      .resolves(new Blob(['mock response'], { type: 'application/json' }))
+
+    cy.wrap(runModel(yearRangeStore, projectionStub)).then(() => {
       const formDataArg = projectionStub.getCall(0).args[0] as FormData
       const projectionParamsBlob = formDataArg.get(
         ParameterNamesEnum.PROJECTION_PARAMETERS,
       ) as Blob
 
-      cy.wrap(projectionParamsBlob.text()).then((text: string) => {
-        const projectionParams = JSON.parse(text)
-        expect(projectionParams.ageStart).to.be.null
-        expect(projectionParams.ageEnd).to.be.null
-        expect(projectionParams.yearStart).to.equal(yearRangeStore.startYear)
-        expect(projectionParams.yearEnd).to.equal(yearRangeStore.endYear)
-        expect(projectionParams.ageIncrement).to.equal(
-          yearRangeStore.yearIncrement,
-        )
-      })
+      cy.wrap(projectionParamsBlob)
+        .then((blob) => blob.text())
+        .then((text) => {
+          const projectionParams = JSON.parse(text)
+          expect(projectionParams.ageStart).to.be.null
+          expect(projectionParams.ageEnd).to.be.null
+          expect(projectionParams.yearStart).to.equal(yearRangeStore.startYear)
+          expect(projectionParams.yearEnd).to.equal(yearRangeStore.endYear)
+          expect(projectionParams.ageIncrement).to.equal(
+            yearRangeStore.yearIncrement,
+          )
+        })
     })
   })
 })

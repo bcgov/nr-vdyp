@@ -175,7 +175,7 @@ public class PolygonTest {
 			stand.addSpeciesGroup(sp0, layer.getSp0sAsSupplied().size());
 			layer.addStand(stand);
 
-			sp64.calculateUndefinedFieldValues();
+			sp64.calculateUndefinedFieldValues(null);
 
 			stand.addSp64(sp64);
 			layer.addSp64(sp64);
@@ -222,7 +222,7 @@ public class PolygonTest {
 			stand.addSpeciesGroup(sp0, layer.getSp0sAsSupplied().size());
 			layer.addStand(stand);
 
-			sp64.calculateUndefinedFieldValues();
+			sp64.calculateUndefinedFieldValues(null);
 
 			stand.addSp64(sp64);
 			layer.addSp64(sp64);
@@ -269,7 +269,7 @@ public class PolygonTest {
 			stand.addSpeciesGroup(sp0, layer.getSp0sAsSupplied().size());
 			layer.addStand(stand);
 
-			sp64.calculateUndefinedFieldValues();
+			sp64.calculateUndefinedFieldValues(null);
 
 			stand.addSp64(sp64);
 			layer.addSp64(sp64);
@@ -316,7 +316,7 @@ public class PolygonTest {
 			stand.addSpeciesGroup(sp0, layer.getSp0sAsSupplied().size());
 			layer.addStand(stand);
 
-			sp64.calculateUndefinedFieldValues();
+			sp64.calculateUndefinedFieldValues(null);
 
 			stand.addSp64(sp64);
 			layer.addSp64(sp64);
@@ -363,7 +363,7 @@ public class PolygonTest {
 			stand.addSpeciesGroup(sp0, layer.getSp0sAsSupplied().size());
 			layer.addStand(stand);
 
-			sp64.calculateUndefinedFieldValues();
+			sp64.calculateUndefinedFieldValues(null);
 
 			stand.addSp64(sp64);
 			layer.addSp64(sp64);
@@ -512,7 +512,7 @@ public class PolygonTest {
 			stand.addSpeciesGroup(sp0, layer.getSp0sAsSupplied().size());
 			layer.addStand(stand);
 
-			sp64.calculateUndefinedFieldValues();
+			sp64.calculateUndefinedFieldValues(context);
 
 			stand.addSp64(sp64);
 			layer.addSp64(sp64);

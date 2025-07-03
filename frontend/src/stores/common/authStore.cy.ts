@@ -2,7 +2,6 @@
 
 import { setActivePinia, createPinia } from 'pinia'
 import { useAuthStore } from '@/stores/common/authStore'
-import * as keycloakService from '@/services/keycloak'
 
 describe('Auth Store Unit Tests', () => {
   let authStore: ReturnType<typeof useAuthStore>
@@ -10,7 +9,6 @@ describe('Auth Store Unit Tests', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     authStore = useAuthStore()
-    cy.stub(keycloakService, 'logout').as('keycloakLogoutStub').resolves()
   })
 
   it('should set user and store in sessionStorage', () => {
@@ -105,12 +103,13 @@ describe('Auth Store Unit Tests', () => {
   })
 
   it('should logout the user', () => {
-    authStore.logout()
+    const logoutStub = cy.stub().as('logoutStub').resolves()
+    authStore.logout(logoutStub)
 
     expect(authStore.user).to.be.null
     expect(authStore.authenticated).to.be.false
 
-    cy.get('@keycloakLogoutStub').should('have.been.calledOnce')
+    cy.get('@logoutStub').should('have.been.calledOnce')
   })
 
   it('should handle invalid ID tokens', () => {

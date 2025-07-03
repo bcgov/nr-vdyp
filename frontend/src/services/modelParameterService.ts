@@ -222,7 +222,7 @@ const createPolygonData = (
     featureId, // FEATURE_ID
     mapId, // MAP_ID
     polygonNumber, // POLYGON_NUMBER
-    '', // ORG_UNIT
+    BIZCONSTANTS.UNKNOWN_CD, // ORG_UNIT
     BIZCONSTANTS.UNKNOWN_CD, // TSA_NAME
     BIZCONSTANTS.UNKNOWN_CD, // TFL_NAME
     derivedByCode || '', // INVENTORY_STANDARD_CODE
@@ -367,6 +367,7 @@ const buildSelectedExecutionOptions = (
     SelectedExecutionOptionsEnum.DoEnableProgressLogging,
     SelectedExecutionOptionsEnum.DoEnableErrorLogging,
     SelectedExecutionOptionsEnum.DoEnableDebugLogging,
+    SelectedExecutionOptionsEnum.AllowAggressiveValueEstimation,
   ]
   if (modelParameterStore.projectionType === CONSTANTS.PROJECTION_TYPE.VOLUME) {
     options.push(SelectedExecutionOptionsEnum.DoIncludeProjectedMOFVolumes)
@@ -407,9 +408,16 @@ const buildSelectedDebugOptions = (): SelectedDebugOptionsEnum[] => {
 /**
  * Runs the model by sending the generated CSV files and projection parameters to the projection service.
  * @param modelParameterStore The store containing model parameters.
+ * @param projectionHcsvPostFunc Optional custom projection function (defaults to projectionHcsvPost).
  * @returns The result from the projectionHcsvPost API call.
  */
-export const runModel = async (modelParameterStore: any) => {
+export const runModel = async (
+  modelParameterStore: any,
+  projectionHcsvPostFunc: (
+    formData: FormData,
+    trialRun: boolean,
+  ) => Promise<any> = projectionHcsvPost,
+) => {
   const { blobPolygon, blobLayer } = createCSVFiles(modelParameterStore)
   const formData = new FormData()
 
@@ -461,6 +469,6 @@ export const runModel = async (modelParameterStore: any) => {
     CONSTANTS.FILE_NAME.INPUT_LAYER_CSV,
   )
 
-  const result = await projectionHcsvPost(formData, false)
+  const result = await projectionHcsvPostFunc(formData, false)
   return result
 }

@@ -22,4 +22,7 @@ export enum SelectedExecutionOptionsEnum {
   DoEnableProgressLogging = 'doEnableProgressLogging',
   DoEnableErrorLogging = 'doEnableErrorLogging',
   DoEnableDebugLogging = 'doEnableDebugLogging',
+  AllowAggressiveValueEstimation = 'allowAggressiveValueEstimation',
+  DoIncludeProjectionFiles = 'doIncludeProjectionFiles',
+  DoDelayExecutionFolderDeletion = 'doDelayExecutionFolderDeletion',
 }
