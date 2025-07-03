@@ -1,0 +1,5 @@
+                                                 - I SUCCESS - Substitution of Supplied BA/TPH as Projected values has been disabled.
+    092G056 0 0 870       (Rcrd ID: 2437813  ) 1 - I SUCCESS - Directly assigning Estimated SI of 15.00 to Species 'CW' and recomputing input height.
+    092G056 0 0 870       (Rcrd ID: 2437813  ) 1 - I SUCCESS - Based on Estimated SI of 15.00, recomputed input height for species 'CW' at reference age 21.0 to be 3.98m
+    092G056 0 0 870       (Rcrd ID: 2437813  )   - I LAYERNOTPROCESSED - Stand definition insufficient for FIPSTART Processing.
+    092G056 0 0 870       (Rcrd ID: 2437813  ) 1 - W SUCCESS - Primary Layer height was too short to generate a stand description. VDYP7CORE return code: 'Ht L1 too low' (-4)

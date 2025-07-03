@@ -9,15 +9,21 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import java.util.zip.ZipInputStream;
 
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.io.CleanupMode;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ca.bc.gov.nrs.api.helpers.ResultYieldTable;
 import ca.bc.gov.nrs.api.helpers.TestHelper;
 import ca.bc.gov.nrs.vdyp.ecore.io.read.ParamsReader;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
@@ -32,6 +38,9 @@ class ITDataDriven extends BaseDataBasedIntegrationTest {
 
 	protected static final Logger logger = LoggerFactory.getLogger(ITDataDriven.class);
 
+	@TempDir(cleanup = CleanupMode.ON_SUCCESS)
+	protected static Path outputDir;
+
 	static final String PARAMETERS_FILE = "parms.txt";
 
 	static final String VARIABLE_PATTERN = "\\$\\((\\w+)\\)[\\\\/]?"; // Matches / after the variable to make paths
@@ -45,16 +54,16 @@ class ITDataDriven extends BaseDataBasedIntegrationTest {
 				.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
 				.multiPart(ParameterNames.HCSV_POLYGON_INPUT_DATA, dataDir.resolve(polygonFileName).toFile()) //
 				.multiPart(ParameterNames.HCSV_LAYERS_INPUT_DATA, dataDir.resolve(layerFileName).toFile()) //
-																											// TODO
-																											// select
-																											// endpoint
-																											// based on
-																											// input
-																											// format
-																											// specified
-																											// in
-																											// parameters
-																											// file
+				// TODO
+				// select
+				// endpoint
+				// based on
+				// input
+				// format
+				// specified
+				// in
+				// parameters
+				// file
 				.post("/projection/hcsv?trialRun=false") //
 				.then().statusCode(201) //
 				.and().contentType("application/octet-stream") //
@@ -68,7 +77,7 @@ class ITDataDriven extends BaseDataBasedIntegrationTest {
 
 	@ParameterizedTest
 	@MethodSource("testNameProvider")
-	void test(String testName) throws IOException, ResourceParseException {
+	void testEndToEnd(String testName) throws IOException, ResourceParseException {
 
 		Path testDir = testDataDir.resolve(testName);
 		Path dataDir = testDir.resolve("input");
@@ -77,7 +86,7 @@ class ITDataDriven extends BaseDataBasedIntegrationTest {
 		Assumptions.assumeTrue(Files.exists(dataDir), "No input data");
 		Assumptions.assumeTrue(Files.exists(expectedDir), "No expected output data");
 
-		doSkip(testDir, "testFipStart");
+		doSkip(testDir, "testEndToEnd");
 
 		Map<String, List<String>> paramMap = new HashMap<>();
 		var parameters = new Parameters();
@@ -88,12 +97,64 @@ class ITDataDriven extends BaseDataBasedIntegrationTest {
 
 		var polyFile = lastItem(paramMap.get("ip")).replaceAll(VARIABLE_PATTERN, "");
 		var layerFile = lastItem(paramMap.get("il")).replaceAll(VARIABLE_PATTERN, "");
+		var yieldFile = lastItem(paramMap.get("o")).replaceAll(VARIABLE_PATTERN, "");
 
 		logger.atInfo().setMessage("Using poly file {} and layer file {} in {}").addArgument(polyFile)
 				.addArgument(layerFile).addArgument(dataDir).log();
 		try (InputStream zipInputStream = runExpectedSuccessfulRequest(dataDir, polyFile, layerFile, parameters);) {
+			ZipInputStream zipFile = new ZipInputStream(zipInputStream);
 
+			logger.atInfo().setMessage("Extracting ZIP file to {}").addArgument(outputDir).log();
+			// Extract the zip file and store all its contents in outputDir
+			while (true) {
+				var entry = zipFile.getNextEntry();
+				if (entry == null) {
+					break;
+				}
+				logger.atInfo().setMessage("Extracting {} from zip file").addArgument(entry.getName()).log();
+				try (var out = Files.newOutputStream(outputDir.resolve(entry.getName()));) {
+					while (zipFile.available() > 0) {
+						byte[] buffer = new byte[1024];
+						int bytesRead;
+						while ( (bytesRead = zipFile.read(buffer, 0, 1024)) > 0) {
+							out.write(buffer, 0, bytesRead);
+						}
+					}
+				}
+			}
+			logger.atInfo().setMessage("ZIP file extracted").log();
 		}
 
+		ResultYieldTable actualYieldTable;
+		ResultYieldTable expectedYieldTable;
+		try (var reader = Files.newBufferedReader(outputDir.resolve("YieldTable.csv"))) {
+			actualYieldTable = new ResultYieldTable(reader);
+		}
+		try (var reader = Files.newBufferedReader(expectedDir.resolve(yieldFile))) {
+			expectedYieldTable = new ResultYieldTable(reader);
+		}
+
+		// FIXME VDYP-604 Remove the predicate to ignore columns affected by VDYP-604 once it is fixed
+		ResultYieldTable.compareWithTolerance(expectedYieldTable, actualYieldTable, 0.02, IGNORE_COLUMNS);
 	}
+
+	/**
+	 * Rudimentary regexp combiner that creates a pattern that matches if either provided regexp matches. Doesn't
+	 * account for regexp options.
+	 *
+	 * @param p1
+	 * @param p2
+	 * @return
+	 */
+	static Pattern eitherRegexp(Pattern p1, Pattern p2) {
+		return Pattern.compile("(?:" + p1.toString() + ")|(?:" + p2.toString() + ")");
+	}
+
+	// FIXME VDYP-604 Remove these once VDYP-604 is fixed.
+	static final Pattern BASE_604_AFFECTED = Pattern.compile("PRJ_TPH|PRJ_LOREY_HT|PRJ_DIAMETER|PRJ_BA");
+	static final Pattern VOLUME_604_AFFECTED = Pattern.compile("PRJ_(SP\\d_)?VOL_(?:D|DW|DWB|CU|WS)");
+
+	static final Predicate<String> IGNORE_COLUMNS = eitherRegexp(BASE_604_AFFECTED, VOLUME_604_AFFECTED)
+			.asMatchPredicate();
+
 }

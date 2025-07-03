@@ -1,0 +1,73 @@
+# Line starting with ‘#’ are ignored, if you want that line being processed, just remove # before the line
+
+-ini $(InstallDir)\VDYP_CFG\VDYP.ini 
+#reads VDYP7 INI
+-c   $(InstallDir)\VDYP_CFG\
+#names the root folder containing VDYP7 configuration files
+
+-ifmt hcsv
+#identifies the input file format
+
+-ofmt csvyieldtable
+#identifies output file format to be CSV format
+
+-ip $(InputFileDir)\VDYP7_INPUT_POLY.csv
+-il $(InputFileDir)\VDYP7_INPUT_LAYER.csv
+#identifies input polygon definition file and layer definition file's location
+
+-o $(OutputFileDir)\Output_YldTbl.csv
+-e $(OutputFileDir)\Output_Error.txt
+-l $(OutputFileDir)\Output_Log.txt
+#identifies output yield tables, logging file and error file's name and location
+
+-back No
+#allow the model to project backward
+-forward Yes
+#allow the model to project forward
+-includeprojmode Yes
+#indicates how the projected values were projected
+
+-util AC=7.5  
+-util AT=7.5   
+-util B=7.5   
+-util C=7.5   
+-util D=7.5  
+-util E=7.5  
+-util F=7.5   
+-util H=7.5    
+-util L=7.5   
+-util MB=7.5  
+-util PA=7.5 
+-util PL=7.5   
+-util PW=7.5 
+-util PY=7.5  
+-util S=7.5  
+-util Y=7.5
+#set the utilization level you would like reported volume and other attributes projected at
+
+-yearstart 2023
+-yearend 2123
+#-agestart 0
+#-ageend 250
+#specifies the starting and the ending age or the starting and ending year range for the resulting yield table
+
+-inc 10
+#specifies the increment in years
+
+#-forceRefYear Yes
+#indicate whether to include the projection at the Reference Year in the yield table
+#-forceCrntYear Yes
+#indicate whether to include the projection at the current calendar year in the yield table
+#-forceYear  1999
+#indicate which year you want to specifically include in the resulting yield table
+
+-yieldtableincpolyid  Yes
+#includes the polygon identifier in the resulting yield table
+-projectedBySpecies Yes
+#produces projected value by species
+-projectedVolumes Yes
+#includes volume estimation in the resulting yield tables
+#-projectedCFSBiomass Yes
+#includes biomass estimation in the resulting yield tables
+#if you want to project biomass, the output format needs to be YieldTable: -ofmt YieldTable
+-v7save Yes

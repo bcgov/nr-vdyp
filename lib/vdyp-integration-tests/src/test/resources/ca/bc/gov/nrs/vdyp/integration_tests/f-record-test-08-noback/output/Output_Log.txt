@@ -1,0 +1,32 @@
+
+VDYP7 Console version: '7.40b'
+
+INI File:       'C:\Program Files\VDYP7\VDYP_CFG\VDYP.ini'
+Input Path:     ''
+HCSV Poly Inp:  'C:\Users\fdhks\Desktop\temp\f-record-test-08-noback\input\VDYP7_INPUT_POLY.csv'
+HCSV Layer Inp: 'C:\Users\fdhks\Desktop\temp\f-record-test-08-noback\input\VDYP7_INPUT_LAYER.csv'
+Output Path:    'C:\Users\fdhks\Desktop\temp\f-record-test-08-noback\output\Output_YldTbl.csv'
+Error File:     'C:\Users\fdhks\Desktop\temp\f-record-test-08-noback\output\Output_Error.txt'
+Log File:       'C:\Users\fdhks\Desktop\temp\f-record-test-08-noback\output\Output_Log.txt'
+Debug Folder:   ''
+Debug Mode:     'Inactive'
+Log Cfg File:   'C:\Program Files\VDYP7\VDYP_CFG\VDYP7LoggingConfig.txt'
+Start Age:     N/A
+End Age:       N/A
+Start Year:    2023
+End Year:      2123
+Increment:     10
+Inc. Ref Year:     No
+Inc. Crnt Year:    No
+Inc. Spcl Year:    Yes (-9)
+Back Grow Enabled: No
+Forward Grow Enabled: Yes
+
+Processing Polygon 2437813: '' '092G056'-870   
+
+Processing Summary:
+	Polygons Processed:       1
+	Polygons Skipped:         0
+	                    -------
+	                          1
+
