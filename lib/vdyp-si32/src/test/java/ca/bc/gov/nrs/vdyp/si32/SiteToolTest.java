@@ -1,14 +1,27 @@
 package ca.bc.gov.nrs.vdyp.si32;
 
-import static ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexAgeType.*;
-import static ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation.*;
-import static ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEstimationType.*;
+import static ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexAgeType.SI_AT_BREAST;
+import static ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexAgeType.SI_AT_TOTAL;
+import static ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation.SI_ACT_THROWER;
+import static ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation.SI_AT_CHEN;
+import static ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation.SI_AT_GOUDIE;
+import static ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation.SI_FDI_THROWER;
+import static ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation.SI_SW_HU_GARCIA;
+import static ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEstimationType.SI_EST_DIRECT;
+import static ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEstimationType.SI_EST_ITERATE;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import ca.bc.gov.nrs.vdyp.common.Reference;
 import ca.bc.gov.nrs.vdyp.common_calculators.SiteIndexNames;
@@ -16,6 +29,8 @@ import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.CommonCalculatorE
 import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.LessThan13Exception;
 import ca.bc.gov.nrs.vdyp.common_calculators.custom_exceptions.NoAnswerException;
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
+import ca.bc.gov.nrs.vdyp.si32.cfs.CfsBiomassConversionCoefficientsDetails;
+import ca.bc.gov.nrs.vdyp.si32.cfs.CfsBiomassConversionSupportedEcoZone;
 import ca.bc.gov.nrs.vdyp.si32.cfs.CfsBiomassConversionSupportedGenera;
 import ca.bc.gov.nrs.vdyp.si32.cfs.CfsBiomassConversionSupportedSpecies;
 import ca.bc.gov.nrs.vdyp.si32.cfs.CfsDeadConversionParams;
@@ -316,4 +331,93 @@ class SiteToolTest {
 		double factor = Math.pow(10.0, precision);
 		return Math.round(d * factor) / factor;
 	}
+
+	@Test
+	void testBadValuesLiveCoefficients() {
+		CfsBiomassConversionCoefficientsDetails answer = SiteTool.LookupLiveCfsConversionParams(null, null);
+		assertThat(answer.containsData(), is(false));
+		answer = SiteTool.LookupLiveCfsConversionParams(CfsBiomassConversionSupportedEcoZone.UNKNOWN, null);
+		assertThat(answer.containsData(), is(false));
+		answer = SiteTool.LookupLiveCfsConversionParams(CfsBiomassConversionSupportedEcoZone.UNKNOWN, "BAD");
+		assertThat(answer.containsData(), is(false));
+	}
+
+	static Stream<Arguments> cfsLiveCoefficientByEcoZoneAndSpecies() {
+		return Stream.of(
+				Arguments.of(
+						// Known Species for eco zone
+						CfsBiomassConversionSupportedEcoZone.BOREAL_PLAINS, "FDC",
+						new float[] { 0.61495547f, 0.94445681f, 15.60925025f, -0.98799751f, 0.99656179f, 3.65329157f,
+								0.54870672f, -0.83582989f, 0.99627406f, 1.02299762f, -1.40325200f, 0.00004760f,
+								-0.06294830f, -0.38615170f, 0.00011320f, -0.19501550f, -0.11680800f, 0.00008170f,
+								-0.33527570f, 0.59098570f, 1855.68858950f, 0.45328151f, 0.69287488f, 0.09997755f,
+								0.11581675f, 0.22025293f, 0.13382703f, 0.22648801f, 0.05748134f }
+				),
+				Arguments.of(
+						// known genus for eco zone
+						CfsBiomassConversionSupportedEcoZone.TAIGA_PLAINS, "BA",
+						new float[] { 0.62123600f, 0.92745332f, 19.30602940f, -0.94332226f, 0.92391419f, 5.50265387f,
+								0.14752324f, -0.49851762f, 0.98816410f, 1.06044551f, -0.40594000f, 0.00205040f,
+								-0.35415510f, 0.40718550f, 0.00015900f, -0.39484070f, 0.48957120f, -0.00012160f,
+								-0.48394590f, 39.64644616f, 266.25940420f, 0.56054960f, 0.69704505f, 0.10552136f,
+								0.11022134f, 0.18914164f, 0.11958752f, 0.14478740f, 0.07314609f }
+				),
+				Arguments.of(
+						// unknown species and genus for eco zone softwood
+						CfsBiomassConversionSupportedEcoZone.TAIGA_PLAINS, "JR",
+						new float[] { 1.10569830f, 0.81758788f, 99.99999999f, -1.38307410f, 1.06044355f, 9.09948714f,
+								0.95217531f, -0.01430719f, 0.11594155f, 1.02036282f, -1.53866200f, -0.00020320f,
+								-0.08322460f, -2.58313000f, -0.00221930f, 0.10208420f, -1.60939000f, -0.00005150f,
+								-0.14558330f, 0.41433015f, 753.09896287f, 0.69804346f, 0.82829281f, 0.13018607f,
+								0.08786734f, 0.06259323f, 0.02314516f, 0.10917725f, 0.06069470f }
+				),
+				Arguments.of(
+						// unknown species and genus for eco zone hardwood
+						CfsBiomassConversionSupportedEcoZone.TAIGA_PLAINS, "DM",
+						new float[] { 1.52128657f, 0.78020277f, 60.22191801f, -1.08440396f, 0.82555881f, 6.83453138f,
+								0.95217531f, -0.01430719f, 0.11594155f, 1.02036282f, -1.58397100f, -0.00021960f,
+								0.00547460f, -1.78569000f, -0.00055610f, -0.07375640f, -2.02195000f, -0.00103160f,
+								-0.23426020f, 0.24238936f, 997.95058130f, 0.69195659f, 0.80753904f, 0.14324682f,
+								0.13820026f, 0.10266800f, 0.04669479f, 0.06212858f, 0.00756591f }
+				)
+		);
+	}
+
+	@ParameterizedTest
+	@MethodSource("cfsLiveCoefficientByEcoZoneAndSpecies")
+	void testLiveCoefficients(CfsBiomassConversionSupportedEcoZone zone, String mofSp64, float[] expected) {
+		CfsBiomassConversionCoefficientsDetails answer = SiteTool.LookupLiveCfsConversionParams(zone, mofSp64);
+		assertThat(answer.containsData(), is(true));
+		assertArrayEquals(expected, answer.parms());
+	}
+
+	@Test
+	void testBadValuesDeadCoefficients() {
+		CfsBiomassConversionCoefficientsDetails answer = SiteTool.LookupDeadCfsConversionParams(null, null);
+		assertThat(answer.containsData(), is(false));
+		answer = SiteTool.LookupDeadCfsConversionParams(CfsBiomassConversionSupportedEcoZone.UNKNOWN, null);
+		assertThat(answer.containsData(), is(false));
+		answer = SiteTool.LookupDeadCfsConversionParams(CfsBiomassConversionSupportedEcoZone.UNKNOWN, "BAD");
+		assertThat(answer.containsData(), is(false));
+	}
+
+	static Stream<Arguments> cfsDeadCoefficientByEcoZoneAndSpecies() {
+		return Stream.of(
+				Arguments.of(
+						// Known Genus
+						CfsBiomassConversionSupportedEcoZone.BOREAL_CORDILLERA, "M",
+						new float[] { 0.18500000f, 0.07400000f, 0.11500000f, 0.18600000f, 0.09600000f, 348.00000000f,
+								520.50000000f, 699.00000000f, 1022.50000000f }
+				)
+		);
+	}
+
+	@ParameterizedTest
+	@MethodSource("cfsDeadCoefficientByEcoZoneAndSpecies")
+	void testDeadCoefficients(CfsBiomassConversionSupportedEcoZone zone, String mofSp64, float[] expected) {
+		CfsBiomassConversionCoefficientsDetails answer = SiteTool.LookupDeadCfsConversionParams(zone, mofSp64);
+		assertThat(answer.containsData(), is(true));
+		assertArrayEquals(expected, answer.parms());
+	}
+
 }
