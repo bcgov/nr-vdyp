@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/vue3'
+import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import UserMenu from './UserMenu.vue'
 import { createPinia, setActivePinia } from 'pinia'
 import { useAuthStore } from '@/stores/common/authStore'

@@ -1,7 +1,7 @@
-import type { Meta, StoryObj } from '@storybook/vue3'
+import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import SpeciesListInput from './SpeciesListInput.vue'
 import { CONSTANTS, BIZCONSTANTS } from '@/constants'
-import { action } from '@storybook/addon-actions'
+import { action } from 'storybook/actions'
 
 const computedSpeciesOptions = Object.keys(BIZCONSTANTS.SPECIES_MAP).map(
   (code) => ({

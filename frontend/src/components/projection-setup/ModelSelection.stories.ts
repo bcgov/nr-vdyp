@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/vue3'
+import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import ModelSelection from './ModelSelection.vue'
 
 const meta: Meta<typeof ModelSelection> = {
