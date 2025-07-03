@@ -804,7 +804,7 @@ public class Layer implements Comparable<Layer> {
 								|| doAggressiveEstimation)) {
 
 					var estimatedCrownClosure = SiteTool
-						.getSpeciesDefaultCrownClosure(leadingSp64.getSpeciesCode(), polygon.getIsCoastal());
+							.getSpeciesDefaultCrownClosure(leadingSp64.getSpeciesCode(), polygon.getIsCoastal());
 
 					logger.debug("{}: estimating crown closure of primary layer at {}", this, estimatedCrownClosure);
 					crownClosure = (short) estimatedCrownClosure;
@@ -1391,6 +1391,7 @@ public class Layer implements Comparable<Layer> {
 		siteSpecies.resetDominantHeight();
 		siteSpecies.calculateUndefinedFieldValues(context);
 	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (o instanceof Layer that) {

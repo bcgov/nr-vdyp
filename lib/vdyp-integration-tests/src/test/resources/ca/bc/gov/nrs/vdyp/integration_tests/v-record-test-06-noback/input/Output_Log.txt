@@ -1,0 +1,31 @@
+
+VDYP7 Console version: '7.17d'
+
+INI File:       'c:\progra~1\vdyp7\VDYP.ini'
+Input Path:     ''
+HCSV Poly Inp:  'D:\VDYP7_TEST\VDYP7_INPUT_POLY.csv'
+HCSV Layer Inp: 'D:\VDYP7_TEST\VDYP7_INPUT_LAYER.csv'
+Output Path:    'D:\VDYP7_TEST\Output_YldTbl.csv'
+Error File:     'D:\VDYP7_TEST\Output_Error.txt'
+Log File:       'D:\VDYP7_TEST\Output_Log.txt'
+Debug Folder:   ''
+Debug Mode:     'Inactive'
+Start Age:     N/A
+End Age:       N/A
+Start Year:    2023
+End Year:      2123
+Increment:     10
+Inc. Ref Year:     No
+Inc. Crnt Year:    No
+Inc. Spcl Year:    Yes (-9)
+Back Grow Enabled: Yes
+Forward Grow Enabled: Yes
+
+Processing Polygon 2408578: '' '092G010'-382   
+
+Processing Summary:
+	Polygons Processed:       1
+	Polygons Skipped:         0
+	                    -------
+	                          1
+

@@ -63,7 +63,7 @@ class Scenario10 extends Scenario {
 
 		ZipEntry entry = zipFile.getNextEntry();
 		while (entry != null) {
-			var contents = testHelper.readZipEntry(zipFile, entry);
+			var contents = TestHelper.readZipEntry(zipFile, entry);
 			logger.info("Saw projection file " + entry + " containing " + contents.length + " bytes");
 
 			entry = zipFile.getNextEntry();

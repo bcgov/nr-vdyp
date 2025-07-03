@@ -1,0 +1,4 @@
+                                                 - I SUCCESS - BACK GROW has been disabled. No projection will occur prior to Reference Year for any polygon.
+                                                 - I SUCCESS - Substitution of Supplied BA/TPH as Projected values has been disabled.
+    092O022 0 0 280       (Rcrd ID: 2086846  )   - I LAYERNOTPROCESSED - Stand definition insufficient for FIPSTART Processing.
+    092O022 0 0 280       (Rcrd ID: 2086846  ) 1 - W SUCCESS - Primary Layer height was too short to generate a stand description. VDYP7CORE return code: 'Ht L1 too low' (-4)

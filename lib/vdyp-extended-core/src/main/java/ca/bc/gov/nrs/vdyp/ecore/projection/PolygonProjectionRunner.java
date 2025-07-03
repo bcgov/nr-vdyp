@@ -230,9 +230,7 @@ public class PolygonProjectionRunner {
 
 						if (spe instanceof UnsupportedModeException) {
 							polygon.addMessage(
-									new PolygonMessage.Builder().layer(
-											layer
-									)
+									new PolygonMessage.Builder().layer(layer)
 											.details(
 													ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
 													PolygonMessageKind.LOW_SITE,
@@ -241,9 +239,7 @@ public class PolygonProjectionRunner {
 							);
 						} else if (spe instanceof TotalAgeLowException) {
 							polygon.addMessage(
-									new PolygonMessage.Builder().layer(
-											layer
-									)
+									new PolygonMessage.Builder().layer(layer)
 											.details(
 													ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
 													PolygonMessageKind.BREAST_HEIGHT_AGE_TOO_YOUNG, "FipStart",
@@ -252,9 +248,7 @@ public class PolygonProjectionRunner {
 							);
 						} else if (spe instanceof BecMissingException || spe instanceof ResultBaseAreaLowException) {
 							polygon.addMessage(
-									new PolygonMessage.Builder().layer(
-											layer
-									)
+									new PolygonMessage.Builder().layer(layer)
 											.details(
 													ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
 													PolygonMessageKind.BREAST_HEIGHT_AGE_TOO_YOUNG, "FIPSTART",
@@ -264,11 +258,12 @@ public class PolygonProjectionRunner {
 							doRetryUsingVriStart = true;
 						} else {
 							polygon.addMessage(
-									new PolygonMessage.Builder().layer(layer).details(
-											ReturnCode.ERROR_CORELIBRARYERROR, MessageSeverityCode.ERROR,
-											PolygonMessageKind.GENERIC_FIPSTART_ERROR,
-											spe.getIpassCode(VdypApplicationIdentifier.FIP_START)
-									).build()
+									new PolygonMessage.Builder().layer(layer)
+											.details(
+													ReturnCode.ERROR_CORELIBRARYERROR, MessageSeverityCode.ERROR,
+													PolygonMessageKind.GENERIC_FIPSTART_ERROR,
+													spe.getIpassCode(VdypApplicationIdentifier.FIP_START)
+											).build()
 							);
 						}
 					} else {

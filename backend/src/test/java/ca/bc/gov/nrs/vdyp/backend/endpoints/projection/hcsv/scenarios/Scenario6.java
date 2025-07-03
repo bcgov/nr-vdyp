@@ -60,7 +60,7 @@ class Scenario6 extends Scenario {
 
 		ZipEntry entry1 = zipFile.getNextEntry();
 		assertEquals("YieldTable.txt", entry1.getName());
-		String entry1Content = new String(testHelper.readZipEntry(zipFile, entry1));
+		String entry1Content = new String(TestHelper.readZipEntry(zipFile, entry1));
 		assertTrue(entry1Content.length() > 0);
 
 		String expectedContent = new String(
@@ -85,7 +85,7 @@ class Scenario6 extends Scenario {
 
 		ZipEntry entry = zipFile.getNextEntry();
 		while (entry != null) {
-			var contents = testHelper.readZipEntry(zipFile, entry);
+			var contents = TestHelper.readZipEntry(zipFile, entry);
 			logger.info("Saw projection file " + entry + " containing " + contents.length + " bytes");
 
 			entry = zipFile.getNextEntry();

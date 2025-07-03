@@ -275,12 +275,18 @@ public class OracleRunner {
 				if (paramsText.startsWith("\uFEFF")) {
 					paramsText = paramsText.substring(1, paramsText.length());
 				}
+				// if -ini points to a file that doesn't exist, parms file parsing fails silently and subsequent
+				// parameters aren't added.
+				// This tends to lead to unexpected errors about required parameters like -c not being set.
+				// So we force -ini to point to a file that should exist
+				paramsText = Pattern.compile("^\\-ini\\s.*$", Pattern.CASE_INSENSITIVE & Pattern.MULTILINE)
+						.matcher(paramsText).replaceAll("-ini $(InstallDir)\\VDYP_CFG\\vdyp.ini");
 				// paramsText = subPattern.matcher(paramsText).replaceAll(m ->
 				// env.get(m.group()));
 				var saveIntermediatesPattern = Pattern
 						.compile("^-v7save\s+yes", Pattern.CASE_INSENSITIVE & Pattern.MULTILINE);
 				if (!saveIntermediatesPattern.matcher(paramsText).matches()) {
-					paramsText += "\r\n-v7save Yes\r\n";
+					paramsText += "\n-v7save Yes\n";
 				}
 				FileUtils.writeStringToFile(paramFile.toFile(), paramsText, StandardCharsets.UTF_8);
 			}
@@ -308,7 +314,7 @@ public class OracleRunner {
 			);
 
 			Path intermediateDir = installDir.resolve("VDYP_CFG");
-			deleteFiles(intermediateDir, file -> INTERMEDIATE_FILE.matcher(file.getFileName().toString()).matches());
+			cleanConfigDir(intermediateDir);
 
 			System.out.format("Running %s\n", builder.command());
 			System.out.format("PWD=%s\n", builder.directory());
@@ -437,7 +443,7 @@ public class OracleRunner {
 
 			if (layer == null) {
 				// Nothing happened in this execution
-				Files.delete(execution.dir);
+				FileUtils.deleteDirectory(execution.dir.toFile());
 				continue;
 			}
 
@@ -552,6 +558,19 @@ public class OracleRunner {
 
 	void deleteDir(Path dir) throws IOException {
 		FileUtils.deleteDirectory(dir.toFile());
+	}
+
+	/**
+	 * Remove intermediate files and execution directories from previous runs
+	 *
+	 * @param configDir
+	 * @throws IOException
+	 */
+	private void cleanConfigDir(Path configDir) throws IOException {
+		deleteFiles(configDir, file -> INTERMEDIATE_FILE.matcher(file.getFileName().toString()).matches());
+		for (var dir : Files.newDirectoryStream(configDir, "execution-*")) {
+			deleteDir(dir);
+		}
 	}
 
 	protected CompletableFuture<Void> run(ProcessBuilder builder) throws IOException {

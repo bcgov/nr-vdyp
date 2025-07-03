@@ -61,7 +61,7 @@ class Scenario4 extends Scenario {
 		ZipInputStream zipFile = new ZipInputStream(zipInputStream);
 		ZipEntry entry1 = zipFile.getNextEntry();
 		assertEquals("YieldTable.csv", entry1.getName());
-		String entry1Content = new String(testHelper.readZipEntry(zipFile, entry1));
+		String entry1Content = new String(TestHelper.readZipEntry(zipFile, entry1));
 
 		var csvLines = entry1Content.split("\n");
 		assertThat(csvLines, arrayWithSize(104));
@@ -102,7 +102,7 @@ class Scenario4 extends Scenario {
 		var outputSeen = false;
 		while ( (projectionResultsEntry = zipFile.getNextEntry()) != null) {
 			logger.info("Name: {}", projectionResultsEntry.getName());
-			String entryContent = new String(testHelper.readZipEntry(zipFile, projectionResultsEntry));
+			String entryContent = new String(TestHelper.readZipEntry(zipFile, projectionResultsEntry));
 			if (entryContent.length() > 0) {
 				logger.info("Content: {}", entryContent.substring(0, Math.min(entryContent.length(), 60)));
 			} else {

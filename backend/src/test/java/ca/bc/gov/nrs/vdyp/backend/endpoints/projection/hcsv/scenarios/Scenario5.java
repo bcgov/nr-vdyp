@@ -66,7 +66,7 @@ class Scenario5 extends Scenario {
 		var outputSeen = false;
 		while ( (projectionResultsEntry = zipFile.getNextEntry()) != null) {
 			logger.info("Name: {}", projectionResultsEntry.getName());
-			String entryContent = new String(testHelper.readZipEntry(zipFile, projectionResultsEntry));
+			String entryContent = new String(TestHelper.readZipEntry(zipFile, projectionResultsEntry));
 			if (entryContent.length() > 0) {
 				logger.info("Content: {}", entryContent.substring(0, Math.min(entryContent.length(), 60)));
 			} else {

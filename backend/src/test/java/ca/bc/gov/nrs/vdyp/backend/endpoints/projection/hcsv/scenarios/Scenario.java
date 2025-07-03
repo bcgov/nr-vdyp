@@ -39,32 +39,33 @@ public class Scenario {
 		this.scenarioResourcePath = Path.of(FileHelper.TEST_DATA_FILES, "hcsv", "scenarios", scenarioName);
 	}
 
-	protected ResultYieldTable assertYieldTableNext(ZipInputStream zipFile, Predicate<String> predicate)
+	protected static ResultYieldTable assertYieldTableNext(ZipInputStream zipFile, Predicate<String> predicate)
 			throws IOException {
 
 		String content = assertLogEntry(zipFile, "YieldTable.csv", predicate);
 		return new ResultYieldTable(content);
 	}
 
-	protected void assertProgressLogNext(ZipInputStream zipFile, Predicate<String> predicate) throws IOException {
+	protected static void assertProgressLogNext(ZipInputStream zipFile, Predicate<String> predicate)
+			throws IOException {
 		assertLogEntry(zipFile, "ProgressLog.txt", predicate);
 	}
 
-	protected void assertErrorLogNext(ZipInputStream zipFile, Predicate<String> predicate) throws IOException {
+	protected static void assertErrorLogNext(ZipInputStream zipFile, Predicate<String> predicate) throws IOException {
 		assertLogEntry(zipFile, "ErrorLog.txt", predicate);
 	}
 
-	protected void assertDebugLogNext(ZipInputStream zipFile, Predicate<String> predicate) throws IOException {
+	protected static void assertDebugLogNext(ZipInputStream zipFile, Predicate<String> predicate) throws IOException {
 		assertLogEntry(zipFile, "DebugLog.txt", predicate);
 	}
 
-	private String assertLogEntry(ZipInputStream zipFile, String entryName, Predicate<String> predicate)
+	private static String assertLogEntry(ZipInputStream zipFile, String entryName, Predicate<String> predicate)
 			throws IOException {
 
 		ZipEntry entry = zipFile.getNextEntry();
 		assertEquals(entryName, entry.getName());
 
-		String entryContent = new String(testHelper.readZipEntry(zipFile, entry));
+		String entryContent = new String(TestHelper.readZipEntry(zipFile, entry));
 
 		if (predicate != null) {
 			assertTrue(predicate.test(entryContent));

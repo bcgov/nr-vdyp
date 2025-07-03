@@ -35,8 +35,8 @@ class ITDataBased extends IntermediateDataBasedIntegrationTest {
 		Path dataDir = testDir.resolve(inputState.dir).resolve(layer);
 		Path expectedDir = testDir.resolve(outputState.dir).resolve(layer);
 
-		Assumptions.assumeTrue(Files.exists(dataDir), "No input data");
-		Assumptions.assumeTrue(Files.exists(expectedDir), "No expected output data");
+		Assumptions.assumeTrue(Files.exists(dataDir), "No input data: " + dataDir);
+		Assumptions.assumeTrue(Files.exists(expectedDir), "No expected output data" + expectedDir);
 
 		doSkip(testDir, "testFipStart");
 

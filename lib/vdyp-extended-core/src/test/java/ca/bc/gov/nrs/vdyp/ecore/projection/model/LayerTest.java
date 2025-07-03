@@ -200,7 +200,6 @@ public class LayerTest {
 			// should be different
 		}
 
-
 		static Stream<Arguments> siteIndexParameters() {
 			return Stream.of(
 					Arguments.of(
