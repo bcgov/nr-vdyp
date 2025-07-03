@@ -114,7 +114,8 @@ public enum CfsBiomassConversionSupportedGenera implements SI32Enum<CfsBiomassCo
 	public static CfsBiomassConversionSupportedGenera
 			fromEcoZoneAndSpecies(CfsBiomassConversionSupportedEcoZone ecoZone, String sp64Code) {
 
-		if (ecoZone == CfsBiomassConversionSupportedEcoZone.UNKNOWN)
+		if (ecoZone == null || ecoZone == CfsBiomassConversionSupportedEcoZone.UNKNOWN || sp64Code == null
+				|| sp64Code.isEmpty())
 			return CfsBiomassConversionSupportedGenera.INVALID;
 
 		if (universalSpeciesToGenusMap.containsKey(sp64Code)) {
