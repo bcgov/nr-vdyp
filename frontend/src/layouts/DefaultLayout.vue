@@ -1,10 +1,10 @@
 <template>
-  <v-navigation-drawer app v-model="drawer" permanent>
+  <v-navigation-drawer app v-model="drawer" :rail="isRail" permanent>
     <v-list density="compact" class="nv-project-menu">
       <router-link to="/" class="link-no-decoration">
         <v-list-item
           link
-          prepend-icon="mdi-clipboard-text"
+          prepend-icon="mdi-folder"
           class="nv-menu-item"
           value="projects"
         >
@@ -12,9 +12,55 @@
         </v-list-item>
       </router-link>
     </v-list>
-
     <div class="nv-drawer-footer">
-      <span class="ml-2 app-build-release">Release: {{ appVersion }}</span>
+      <!-- on collapsed navi -->
+      <div v-if="isRail">
+        <div
+          class="collapsed-build-release-area"
+          @click="toggleVersion"
+          style="cursor: pointer"
+        >
+          {{ showVersion ? `v${appVersion}` : `#${buildNumber}` }}
+        </div>
+        <v-tooltip
+          :text="isRail ? 'Expand sidebar' : 'Collapse sidebar'"
+          location="right"
+        >
+          <template v-slot:activator="{ props }">
+            <v-icon
+              v-bind="props"
+              @click="toggleRail"
+              class="collapsed-icon-area"
+              style="color: #000000"
+              icon="mdi-arrow-collapse-right"
+            />
+          </template>
+        </v-tooltip>
+      </div>
+      <!-- on expanded navi -->
+      <div v-else class="expanded-footer">
+        <span
+          class="expanded-build-release-area"
+          @click="toggleVersion"
+          style="cursor: pointer"
+        >
+          {{ showVersion ? `Version: ${appVersion}` : `Build: ${buildNumber}` }}
+        </span>
+        <v-tooltip
+          :text="isRail ? 'Expand sidebar' : 'Collapse sidebar'"
+          location="right"
+        >
+          <template v-slot:activator="{ props }">
+            <v-icon
+              v-bind="props"
+              @click="toggleRail"
+              class="expanded-icon-area"
+              style="color: #000000"
+              icon="mdi-arrow-collapse-left"
+            />
+          </template>
+        </v-tooltip>
+      </div>
     </div>
   </v-navigation-drawer>
 
@@ -25,9 +71,20 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { BUILD_NUMBER } from '@/constants/buildNumber'
 
 const appVersion = import.meta.env.PACKAGE_VERSION
 const drawer = ref(true)
+const showVersion = ref(true)
+const isRail = ref(false)
+const buildNumber = BUILD_NUMBER
+
+const toggleRail = () => {
+  isRail.value = !isRail.value
+}
+const toggleVersion = () => {
+  showVersion.value = !showVersion.value
+}
 </script>
 
 <style scoped>
@@ -68,9 +125,72 @@ const drawer = ref(true)
   position: absolute;
   bottom: 0;
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.app-build-release {
-  color: #f6f6f6;
+.v-navigation-drawer--rail .nv-menu-item-title {
+  display: none;
+}
+
+.v-navigation-drawer--rail .nv-menu-item {
+  padding: 0 0 0 48px;
+  justify-content: center;
+  width: 100%;
+}
+
+.collapsed-build-release-area {
+  margin-bottom: 4px;
+  padding: 5px;
+}
+
+.collapsed-build-release-area:hover {
+  background-color: #e0e0e0;
+  border-radius: 4px;
+  padding: 5px;
+}
+
+.collapsed-icon-area {
+  cursor: pointer;
+  justify-content: center;
+  padding: 20px;
+}
+
+.collapsed-icon-area:hover {
+  background-color: #e0e0e0;
+  border-radius: 4px;
+  padding: 20px;
+}
+
+.expanded-footer {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+}
+
+.expanded-build-release-area {
+  padding: 5px 10px 5px 10px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.expanded-build-release-area:hover {
+  background-color: #e0e0e0;
+  border-radius: 4px;
+}
+
+.expanded-icon-area {
+  cursor: pointer;
+  padding: 20px;
+  margin-right: 10px;
+}
+
+.expanded-icon-area:hover {
+  background-color: #e0e0e0;
+  border-radius: 4px;
+  padding: 20px;
+  margin-right: 10px;
 }
 </style>
