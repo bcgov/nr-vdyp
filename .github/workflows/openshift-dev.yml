@@ -39,7 +39,15 @@ jobs:
     steps:
       - name: Get PR Data
         id: pr
-        uses: bcgov-nr/action-get-pr@v0.0.1    
+        uses: bcgov-nr/action-get-pr@v0.0.1
+
+      - name: Inject and Verify GitHub Build Number
+        if: matrix.package == 'frontend'
+        run: |
+          echo "export const BUILD_NUMBER = '${{ github.run_number }}';" > frontend/src/constants/buildNumber.ts
+          echo "Build number injected: ${{ github.run_number }}"
+          echo "Contents of buildNumber.ts:"
+          cat frontend/src/constants/buildNumber.ts
 
       - name: Build and Tag Packages with pr number
         uses: bcgov-nr/action-builder-ghcr@v2.2.0
