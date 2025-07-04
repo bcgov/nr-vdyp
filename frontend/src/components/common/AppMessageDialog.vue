@@ -4,6 +4,7 @@
     @update:model-value="updateDialog"
     persistent
     :max-width="computedDialogWidth"
+    :scroll-strategy="computedScrollStrategy"
   >
     <v-card :style="computedDialogStyle">
       <v-card-title :style="computedHeaderStyle" class="popup-header">
@@ -54,6 +55,7 @@ const props = defineProps<{
   headerBackground?: string
   headerColor?: string
   actionsBackground?: string
+  scrollStrategy?: any
 }>()
 
 const emit = defineEmits(['update:dialog', 'close'])
@@ -82,6 +84,10 @@ const computedDialogStyle = computed(() => {
   return {
     borderRadius: `${props.dialogBorderRadius ?? 8}px`,
   }
+})
+
+const computedScrollStrategy = computed(() => {
+  return props.scrollStrategy ?? 'block'
 })
 
 // Emit updates for dialog visibility

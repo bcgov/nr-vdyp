@@ -27,6 +27,7 @@ describe('<AppMessageDialog />', () => {
     message: MDL_PRM_INPUT_ERR.SPCZ_VLD_TOTAL_PCT,
     dialogWidth: 400,
     btnLabel: BUTTON_LABEL.CONT_EDIT,
+    scrollStrategy: 'none',
   }
 
   it('renders with default props', () => {
@@ -120,22 +121,5 @@ describe('<AppMessageDialog />', () => {
 
     // Check if the dialog is not exist
     cy.get('.v-dialog').should('not.exist')
-  })
-
-  it('renders with default props', () => {
-    cy.mount(AppMessageDialog, { props: defaultProps })
-
-    cy.get('.v-dialog').should('be.visible')
-
-    cy.get('.v-overlay__content').should(
-      'have.css',
-      'justify-content',
-      'center',
-    )
-    cy.get('.v-overlay__content').should('have.css', 'align-items', 'center')
-
-    cy.get('.popup-header').should('contain', defaultProps.title)
-    cy.get('.v-card-text').should('contain', defaultProps.message)
-    cy.get('button').should('contain', defaultProps.btnLabel)
   })
 })
