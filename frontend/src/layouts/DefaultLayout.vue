@@ -1,8 +1,23 @@
 <template>
   <v-navigation-drawer app v-model="drawer" :rail="isRail" permanent>
+    <!-- menu -->
     <v-list density="compact" class="nv-project-menu">
       <router-link to="/" class="link-no-decoration">
+        <v-tooltip v-if="isRail" :text="'Projects'" location="right">
+          <template v-slot:activator="{ props }">
+            <v-list-item
+              v-bind="props"
+              link
+              prepend-icon="mdi-folder"
+              class="nv-menu-item"
+              value="projects"
+            >
+              <span class="nv-menu-item-title">Projects</span>
+            </v-list-item>
+          </template>
+        </v-tooltip>
         <v-list-item
+          v-else
           link
           prepend-icon="mdi-folder"
           class="nv-menu-item"
@@ -12,6 +27,7 @@
         </v-list-item>
       </router-link>
     </v-list>
+    <!-- version info -->
     <div class="nv-drawer-footer">
       <!-- on collapsed navi -->
       <div v-if="isRail">
