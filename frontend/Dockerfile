@@ -29,9 +29,8 @@ RUN update-ca-certificates
 ARG CONTEXT="./frontend"
 COPY --from=build /app/dist /srv
 COPY ${CONTEXT}/Caddyfile /etc/caddy/Caddyfile
-RUN caddy fmt --overwrite /etc/caddy/Caddyfile
-
-RUN chmod 755 /usr/bin/caddy
+RUN caddy fmt --overwrite /etc/caddy/Caddyfile && \
+    chmod 755 /usr/bin/caddy
 
 # Ports, health check and non-root user
 EXPOSE 3000 3001
