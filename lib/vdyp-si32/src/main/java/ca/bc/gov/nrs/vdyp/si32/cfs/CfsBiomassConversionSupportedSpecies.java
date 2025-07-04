@@ -10,8 +10,8 @@ import ca.bc.gov.nrs.vdyp.si32.enumerations.SI32Enum;
  * <ul>
  * <li><b>UNKNOWN</b> indicates an uninitialized or error condition. This value should never be used to indicate an
  * actual species index value.
- * <li><b>others</b> indices into the appropriate dimension for the {@link CfsBiomassConversionCoefficients} array for
- * the indicated CFS Species.
+ * <li><b>others</b> indices into the appropriate dimension for the {@link CfsBiomassConversionCoefficientsDetails}
+ * array for the indicated CFS Species.
  * </ul>
  * <b>Remarks</b>
  * <p>
@@ -117,7 +117,7 @@ public enum CfsBiomassConversionSupportedSpecies implements SI32Enum<CfsBiomassC
 		if (this.equals(UNKNOWN)) {
 			throw new UnsupportedOperationException(
 					MessageFormat.format(
-							"Cannot call getIndex on {0} as it's not a standard member of the enumeration", this
+							"Cannot call getText on {0} as it's not a standard member of the enumeration", this
 					)
 			);
 		}

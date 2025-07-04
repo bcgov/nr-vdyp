@@ -14,6 +14,11 @@ import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexAgeType;
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEstimationType;
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexSpecies;
+import ca.bc.gov.nrs.vdyp.si32.cfs.CfsBiomassConversionCoefficientsDead;
+import ca.bc.gov.nrs.vdyp.si32.cfs.CfsBiomassConversionCoefficientsDetails;
+import ca.bc.gov.nrs.vdyp.si32.cfs.CfsBiomassConversionCoefficientsForGenus;
+import ca.bc.gov.nrs.vdyp.si32.cfs.CfsBiomassConversionCoefficientsForSpecies;
+import ca.bc.gov.nrs.vdyp.si32.cfs.CfsBiomassConversionSupportedEcoZone;
 import ca.bc.gov.nrs.vdyp.si32.cfs.CfsBiomassConversionSupportedGenera;
 import ca.bc.gov.nrs.vdyp.si32.cfs.CfsBiomassConversionSupportedSpecies;
 import ca.bc.gov.nrs.vdyp.si32.cfs.CfsDeadConversionParams;
@@ -594,8 +599,8 @@ public class SiteTool {
 	 * For a specific species, returns the default Crown Closure associated with that species within a particular region
 	 * of the province.
 	 *
-	 * @param spName    the short ("code") name to be looked up.
-	 * @param isCoastal if <code>true</code>, region is Coastal. Otherwise, the region is Interior.
+	 * @param sp64CodeName the short ("code") name to be looked up.
+	 * @param isCoastal    if <code>true</code>, region is Coastal. Otherwise, the region is Interior.
 	 *
 	 * @return the default CC associated with the species in that particular region and -1.0 if the species was not
 	 *         recognized or no default CC has been assigned to that species and region.
@@ -676,4 +681,89 @@ public class SiteTool {
 
 		return rtrnCode;
 	}
+
+	/**
+	 * Lookup the live conversion parameters for the given Eco Zone and species code.
+	 *
+	 * @param ecoZone  a CFS Biomass Conversion supported Eco Zone
+	 * @param sp64Code a MoF SP64 species code
+	 * @return the complete live conversion parameters for the given eco zone and species code
+	 */
+	public static CfsBiomassConversionCoefficientsDetails
+			lookupLiveCfsConversionParams(CfsBiomassConversionSupportedEcoZone ecoZone, String sp64Code) {
+		logger.debug("LookupLiveCfsConversionParams: ecoZone={}, sp64Code={}", ecoZone, sp64Code);
+
+		CfsBiomassConversionCoefficientsDetails result = CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY;
+		if (ecoZone == null || ecoZone == CfsBiomassConversionSupportedEcoZone.UNKNOWN || sp64Code == null
+				|| sp64Code.isEmpty()) {
+			return result;
+		}
+
+		// Try to get it for the species first
+		CfsBiomassConversionSupportedSpecies species = SiteTool.lcl_MoFSP64ToCFSSpecies(sp64Code);
+		if (species != CfsBiomassConversionSupportedSpecies.UNKNOWN) {
+			logger.debug("Supplied SP64 maps to Internal Species Index: '{}' ({})", sp64Code, species.getIndex());
+			result = CfsBiomassConversionCoefficientsForSpecies.get(ecoZone.getIndex(), species.getIndex());
+			if (result.containsData()) {
+				logger.debug("Found Params based on Eco Zone and Species.");
+				return result;
+			}
+		}
+
+		// If the species is not found, we can try to find it by genus
+		CfsBiomassConversionSupportedGenera genus = CfsBiomassConversionSupportedGenera
+				.fromEcoZoneAndSpecies(ecoZone, sp64Code);
+		logger.debug("Direct Species to Internal Genus conversion; parameters not found, trying EcoZone/SP0 lookup.");
+		logger.debug("Converting species '{}' into corresponding SP0: '{}'", sp64Code, genus);
+		if (genus != CfsBiomassConversionSupportedGenera.INVALID) {
+			result = CfsBiomassConversionCoefficientsForGenus.get(ecoZone.getIndex(), genus.getIndex());
+			if (result.containsData()) {
+				logger.debug("Found Params based on Eco Zone and SP0.");
+				return result;
+			}
+		}
+
+		logger.debug("Falling through to default Hardwood/Conifer Params lookup.");
+		boolean isSoftwood = SiteTool.getIsSoftwood(sp64Code);
+		if (isSoftwood) {
+			result = CfsBiomassConversionCoefficientsForGenus
+					.get(ecoZone.getIndex(), CfsBiomassConversionSupportedGenera.ZC.getIndex());
+			logger.debug("Live conversion params based on EcoZone Softwood defaults");
+		} else {
+			result = CfsBiomassConversionCoefficientsForGenus
+					.get(ecoZone.getIndex(), CfsBiomassConversionSupportedGenera.ZH.getIndex());
+			logger.debug("Live conversion params based on EcoZone Hardwood defaults");
+		}
+
+		return result;
+	}
+
+	/**
+	 * Lookup the dead conversion parameters for the given Eco Zone and species code.
+	 *
+	 * @param ecoZone  Cfs Biomass Conversion supported Eco Zone
+	 * @param sp64Code MoF SP64 species code
+	 * @return the complete dead conversion parameters for the given eco zone and species code
+	 */
+	public static CfsBiomassConversionCoefficientsDetails
+			lookupDeadCfsConversionParams(CfsBiomassConversionSupportedEcoZone ecoZone, String sp64Code) {
+		logger.debug("LookupDeadCfsConversionParams: ecoZone={}, sp64Code={}", ecoZone, sp64Code);
+
+		CfsBiomassConversionCoefficientsDetails result = CfsBiomassConversionCoefficientsDetails.DEAD_EMPTY;
+
+		// If conversion species is not found, we can try to find it by genus
+		CfsBiomassConversionSupportedGenera genus = CfsBiomassConversionSupportedGenera
+				.fromEcoZoneAndSpecies(ecoZone, sp64Code);
+		if (genus != CfsBiomassConversionSupportedGenera.INVALID) {
+			logger.debug("Converting species '{}' into corresponding SP0: '{}'", sp64Code, genus);
+			result = CfsBiomassConversionCoefficientsDead.get(ecoZone.getIndex(), genus.getIndex());
+			if (result.containsData()) {
+				logger.debug("Found Params based on Eco Zone and SP0.");
+				return result;
+			}
+		}
+
+		return result;
+	}
+
 }
