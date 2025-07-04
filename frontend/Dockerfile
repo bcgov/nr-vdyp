@@ -13,7 +13,7 @@ RUN echo "export const BUILD_NUMBER = '${BUILD_NUMBER}'" > src/constants/buildNu
     npm run build-only
 
 # Deploy using Caddy to host static files
-FROM caddy:2.8.4-alpine
+FROM caddy:2.10.0-alpine
 
 # Install packages and ensure permissions in one RUN command
 RUN apk add --no-cache ca-certificates && \
