@@ -2,12 +2,14 @@
 # Node Bullseye has npm
 FROM node:22.17.0-bullseye-slim AS build
 ARG CONTEXT="./frontend"
+ARG BUILD_NUMBER
 # Install packages, build and keep only prod packages
 WORKDIR /app
 COPY ${CONTEXT}/*.json ${CONTEXT}/*.ts ${CONTEXT}/index.html ./
 COPY ${CONTEXT}/public ./public
 COPY ${CONTEXT}/src ./src
-RUN npm ci --ignore-scripts --no-update-notifier --omit=dev && \
+RUN echo "export const BUILD_NUMBER = '${BUILD_NUMBER}'" > src/constants/buildNumber.ts && \
+    npm ci --ignore-scripts --no-update-notifier --omit=dev && \
     npm run build-only
 
 # Deploy using Caddy to host static files
