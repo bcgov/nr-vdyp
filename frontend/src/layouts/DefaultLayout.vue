@@ -32,7 +32,7 @@
               @click="toggleRail"
               class="collapsed-icon-area"
               style="color: #000000"
-              icon="mdi-arrow-collapse-right"
+              icon="mdi-chevron-double-right"
             />
           </template>
         </v-tooltip>
@@ -56,7 +56,7 @@
               @click="toggleRail"
               class="expanded-icon-area"
               style="color: #000000"
-              icon="mdi-arrow-collapse-left"
+              icon="mdi-chevron-double-left"
             />
           </template>
         </v-tooltip>
