@@ -1,0 +1,6 @@
+                                                 - I SUCCESS - Substitution of Supplied BA/TPH as Projected values has been disabled.
+    093C033 0 0 393       (Rcrd ID: 4347171  ) 1 - I SUCCESS - Directly assigning Estimated SI of 4.00 to Species 'PL' and recomputing input height.
+    093C033 0 0 393       (Rcrd ID: 4347171  ) 1 - I SUCCESS - Based on Estimated SI of 4.00, recomputed input height for species 'PL' at reference age 10.0 to be 0.32m
+    093C033 0 0 393       (Rcrd ID: 4347171  )   - I LAYERNOTPROCESSED - Stand definition insufficient for FIPSTART Processing.
+    093C033 0 0 393       (Rcrd ID: 4347171  ) 1 - W SUCCESS - Breast Height Age too young to generate a stand description. VDYP7CORE return code: 'Unknown error' (-6)
+    093C033 0 0 393       (Rcrd ID: 4347171  ) 1 - I INVALIDSITEINFO - Height 3.9 at Projection Year 2023 is too short to generate yields for species 'PL'

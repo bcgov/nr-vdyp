@@ -4,11 +4,15 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.both;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasEntry;
+import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.not;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import org.hamcrest.Matchers;
@@ -270,8 +274,8 @@ class TestParamsReader {
 		var params = new Parameters();
 
 		var lines = Stream.of(
-				String.format("-%s %s", "util", "A=7.5"), String.format("-%s %s", "util", "B=12.5"),
-				String.format("-%s %s", "util", "A=22.5")
+				String.format("-%s %s", "util", "C=Excl"), String.format("-%s %s", "util", "A=7.5"),
+				String.format("-%s %s", "util", "B=12.5"), String.format("-%s %s", "util", "A=22.5")
 		);
 
 		ParamsReader.parseParameters(params, lines);
@@ -280,9 +284,9 @@ class TestParamsReader {
 				params,
 				hasProperty(
 						"utils",
-						Matchers.hasItem(
-								both(hasProperty("speciesName", equalTo("A")))
-										.and(hasProperty("utilizationClass", equalTo("7.5")))
+						hasItem(
+								both(hasProperty("speciesName", equalTo("C")))
+										.and(hasProperty("utilizationClass", equalTo("Excl")))
 						)
 				)
 		);
@@ -290,9 +294,9 @@ class TestParamsReader {
 				params,
 				hasProperty(
 						"utils",
-						Matchers.hasItem(
+						hasItem(
 								both(hasProperty("speciesName", equalTo("A")))
-										.and(hasProperty("utilizationClass", equalTo("22.5")))
+										.and(hasProperty("utilizationClass", equalTo("7.5+")))
 						)
 				)
 		);
@@ -300,9 +304,19 @@ class TestParamsReader {
 				params,
 				hasProperty(
 						"utils",
-						Matchers.hasItem(
+						hasItem(
+								both(hasProperty("speciesName", equalTo("A")))
+										.and(hasProperty("utilizationClass", equalTo("22.5+")))
+						)
+				)
+		);
+		assertThat(
+				params,
+				hasProperty(
+						"utils",
+						hasItem(
 								both(hasProperty("speciesName", equalTo("B")))
-										.and(hasProperty("utilizationClass", equalTo("12.5")))
+										.and(hasProperty("utilizationClass", equalTo("12.5+")))
 						)
 				)
 		);
@@ -330,6 +344,18 @@ class TestParamsReader {
 		assertThat(params, hasProperty("filters", hasProperty("mapsheet", equalTo("42"))));
 		assertThat(params, hasProperty("filters", hasProperty("polygon", equalTo("642"))));
 		assertThat(params, hasProperty("filters", hasProperty("polygonId", equalTo("TEST 2003"))));
+
+	}
+
+	@Test
+	void testNonWordCharacters() throws ResourceParseException {
+		Map<String, List<String>> params = new HashMap<>();
+
+		var lines = Stream.of(String.format("-%s %s", "ini", "$(test)/blah"));
+
+		ParamsReader.parseParameters(params, lines);
+
+		assertThat(params, hasEntry(equalTo("ini"), contains(equalTo("$(test)/blah"))));
 
 	}
 }

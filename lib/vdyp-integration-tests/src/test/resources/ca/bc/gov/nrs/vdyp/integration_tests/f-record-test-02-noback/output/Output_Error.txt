@@ -1,0 +1,4 @@
+                                                 - I SUCCESS - Substitution of Supplied BA/TPH as Projected values has been disabled.
+    082L047 0 0 654       (Rcrd ID: 1833936  ) 1 - W INCONSISTENT_DATA - Unable to project layer due to Non-Forest Descriptor: 'NCBR'
+    082L047 0 0 654       (Rcrd ID: 1833936  ) 1 - E SPECIESNOTFOUND - Unable to locate a Leading Species on Primary Layer ('1').
+    082L047 0 0 654       (Rcrd ID: 1833936  ) 1 - E SPECIESNOTFOUND - Primary Layer ('1') with Non-Forest Code: 'NCBR ' has no leading species. FIPSTART processing aborted.

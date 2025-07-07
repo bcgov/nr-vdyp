@@ -1,0 +1,40 @@
+
+VDYP7 Console version: '7.40b'
+
+INI File:       'C:\Program Files\VDYP7\VDYP_CFG\VDYP.ini'
+Input Path:     ''
+HCSV Poly Inp:  'C:\Users\fdhks\Desktop\temp\basic-noback\input\VDYP7_INPUT_POLY.csv'
+HCSV Layer Inp: 'C:\Users\fdhks\Desktop\temp\basic-noback\input\VDYP7_INPUT_LAYER.csv'
+Output Path:    'C:\Users\fdhks\Desktop\temp\basic-noback\output\Output_YldTbl.csv'
+Error File:     'C:\Users\fdhks\Desktop\temp\basic-noback\output\Output_Error.txt'
+Log File:       'C:\Users\fdhks\Desktop\temp\basic-noback\output\Output_Log.txt'
+Debug Folder:   ''
+Debug Mode:     'Inactive'
+Log Cfg File:   'C:\Program Files\VDYP7\VDYP_CFG\VDYP7LoggingConfig.txt'
+Start Age:     0
+End Age:       250
+Start Year:    N/A
+End Year:      N/A
+Increment:     10
+Inc. Ref Year:     No
+Inc. Crnt Year:    No
+Inc. Spcl Year:    Yes (-9)
+Back Grow Enabled: No
+Forward Grow Enabled: Yes
+
+Processing Polygon 2493719: '' '092H014'-600   
+Processing Polygon 2558002: '' '092H073'-2185  
+Processing Polygon 6212668: '' '092H025'-388   
+Processing Polygon 8489172: '' '092G089'-51042508
+Processing Polygon 9884561: '' '083D056'-30790200
+Processing Polygon 13727877: '' '093C085'-3402903
+Processing Polygon 14330826: '' '093G045'-85306886
+Processing Polygon 14473383: '' '092G028'-7489355
+Processing Polygon 15138818: '' '093C080'-42373828
+
+Processing Summary:
+	Polygons Processed:       9
+	Polygons Skipped:         0
+	                    -------
+	                          9
+

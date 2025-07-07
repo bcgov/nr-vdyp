@@ -1,12 +1,16 @@
 package ca.bc.gov.nrs.api.helpers;
 
+import static org.hamcrest.Matchers.hasKey;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.Reader;
 import java.io.StringReader;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Predicate;
 
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
@@ -16,8 +20,12 @@ public class ResultYieldTable extends HashMap<String, Map<String, Map<String, Ma
 	private static final long serialVersionUID = 1L;
 
 	public ResultYieldTable(String yieldTableContent) {
+		this(new StringReader(yieldTableContent));
+	}
 
-		CSVReader reader = new CSVReaderBuilder(new StringReader(yieldTableContent)).build();
+	public ResultYieldTable(Reader yieldTableContent) {
+
+		CSVReader reader = new CSVReaderBuilder(yieldTableContent).build();
 		try {
 			List<String[]> myEntries = reader.readAll();
 			if (myEntries.size() > 1) {
@@ -54,54 +62,77 @@ public class ResultYieldTable extends HashMap<String, Map<String, Map<String, Ma
 		}
 	}
 
-	public static void compareWithTolerance(ResultYieldTable yt1, ResultYieldTable yt2, double tolerance) {
+	public static void
+			compareWithTolerance(ResultYieldTable expectedTable, ResultYieldTable actualTable, double tolerance) {
+		compareWithTolerance(expectedTable, actualTable, tolerance, hasKey -> false);
+	}
 
-		assertEquals(yt1.keySet(), yt2.keySet());
+	public static void compareWithTolerance(
+			ResultYieldTable expectedTable, ResultYieldTable actualTable, double tolerance,
+			Predicate<String> ignoredFields
+	) {
 
-		for (var p1e : yt1.entrySet()) {
-			var p1 = p1e.getValue();
-			var p2 = yt2.get(p1e.getKey());
+		assertEquals(expectedTable.keySet(), actualTable.keySet(), "Feature IDs don't match expected");
 
-			assertEquals(p1.keySet(), p2.keySet());
+		for (var featureEntry : expectedTable.entrySet()) {
+			var expectedFeature = featureEntry.getValue();
+			var actualFeature = actualTable.get(featureEntry.getKey());
+			var featureId = featureEntry.getKey();
+			assertEquals(
+					expectedFeature.keySet(), actualFeature.keySet(),
+					"Layer IDs for " + featureId + " don't match expected"
+			);
 
-			for (var y1e : p1.entrySet()) {
-				var l1 = y1e.getValue();
-				var l2 = p2.get(y1e.getKey());
+			for (var layerEntry : expectedFeature.entrySet()) {
+				var expectedLayer = layerEntry.getValue();
+				var actualLayer = actualFeature.get(layerEntry.getKey());
+				var layerId = featureId + ":" + layerEntry.getKey();
+				assertEquals(
+						expectedLayer.keySet(), actualLayer.keySet(), "Years  for " + layerId + " don't match expected"
+				);
 
-				assertEquals(l1.keySet(), l2.keySet());
+				for (var rowEntry : expectedLayer.entrySet()) {
+					var expectedRow = rowEntry.getValue();
+					var actualRow = actualLayer.get(rowEntry.getKey());
+					var yearId = layerId + ":" + rowEntry.getKey();
+					assertEquals(
+							expectedRow.keySet(), actualRow.keySet(), "Fields for " + yearId + " don't match expected"
+					);
 
-				for (var l1e : l1.entrySet()) {
-					var r1 = l1e.getValue();
-					var r2 = l2.get(l1e.getKey());
+					for (var field : expectedRow.entrySet()) {
+						if (ignoredFields.test(field.getKey())) {
+							continue;
+						}
+						var fieldId = yearId + ":" + field.getKey();
+						var expectedField = field.getValue();
+						var actualField = actualRow.get(field.getKey());
 
-					assertEquals(r1.keySet(), r2.keySet());
-
-					for (var field : r1.entrySet()) {
-						var f1 = field.getValue();
-						var f2 = r2.get(field.getKey());
-
-						assertEquals(f1.getClass(), f2.getClass());
+						assertEquals(
+								expectedField.getClass(), actualField.getClass(), "Mismatched types for " + fieldId
+						);
 
 						try {
-							var f1AsInt = Integer.parseInt(f1);
-							var f2AsInt = Integer.parseInt(f2);
-							assertEquals(f1AsInt, f2AsInt);
+							var expectedAsInt = Integer.parseInt(expectedField);
+							var actualAsInt = Integer.parseInt(actualField);
+							assertEquals(expectedAsInt, actualAsInt, fieldId + " doesn't match");
 						} catch (NumberFormatException e) {
 							// drop through to next type
 						}
 
 						try {
-							var f1AsDouble = Double.parseDouble(f1);
-							var f2AsDouble = Double.parseDouble(f2);
+							var expectedAsDouble = Double.parseDouble(expectedField);
+							var actualAsDouble = Double.parseDouble(actualField);
 
-							var f1Lower = f1AsDouble * (1.0 - tolerance);
-							var f1Upper = f2AsDouble * (1.0 + tolerance);
-
-							assertTrue(f1Lower <= f2AsDouble && f2AsDouble <= f1Upper);
+							assertEquals(
+									expectedAsDouble, actualAsDouble, expectedAsDouble * tolerance,
+									fieldId + " doesn't match "
+											+ 100 * (expectedAsDouble - actualAsDouble) / expectedAsDouble
+											+ "% difference"
+							);
 						} catch (NumberFormatException e) {
 
 							// All other types
-							assertEquals(f1, f2);
+							assertEquals(expectedField, actualField, fieldId + " doesn't match");
 						}
 					}
 				}

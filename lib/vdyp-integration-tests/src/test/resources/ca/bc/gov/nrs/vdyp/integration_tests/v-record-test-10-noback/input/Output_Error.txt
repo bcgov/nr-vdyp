@@ -1,0 +1,5 @@
+                                                 - I SUCCESS - Substitution of Supplied BA/TPH as Projected values has been disabled.
+    093G072 0 0 79112176  (Rcrd ID: 12746468 ) 1 - I SUCCESS - Directly assigning Estimated SI of 19.00 to Species 'PLI' and recomputing input height.
+    093G072 0 0 79112176  (Rcrd ID: 12746468 ) 1 - I SUCCESS - Directly assigning Estimated SI of 19.00 to Species 'AT' and recomputing input height.
+    093G072 0 0 79112176  (Rcrd ID: 12746468 ) 1 - I SUCCESS - Based on Estimated SI of 19.00, recomputed input height for species 'PLI' at reference age 12.0 to be 3.21m
+    093G072 0 0 79112176  (Rcrd ID: 12746468 ) 1 - I SUCCESS - Based on Estimated SI of 19.00, recomputed input height for species 'AT' at reference age 3.0 to be 1.03m

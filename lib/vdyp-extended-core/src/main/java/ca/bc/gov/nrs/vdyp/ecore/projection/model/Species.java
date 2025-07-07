@@ -576,7 +576,7 @@ public class Species implements Comparable<Species> {
 				 * truncated to the closest short because that is how the engine treats estimated age, do not actually
 				 * SET ageAtBreastHeight to 1. use that value to calculate an age and then use that age as though it
 				 * were passed in
-				 * 
+				 *
 				 */
 				keepTrying = true;
 				var ageAtBreastHeightRef = new Reference<Double>(1.0);

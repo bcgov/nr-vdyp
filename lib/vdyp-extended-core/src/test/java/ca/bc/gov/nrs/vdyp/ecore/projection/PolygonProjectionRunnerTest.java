@@ -1,20 +1,33 @@
 package ca.bc.gov.nrs.vdyp.ecore.projection;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.PolygonExecutionException;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.MessageSeverityCode;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.PolygonMessageKind;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProgressFrequency;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.History;
@@ -27,7 +40,22 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.model.SpeciesReportingInfo;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Stand;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.InventoryStandard;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProjectionTypeCode;
+import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ReturnCode;
 import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.YieldTable;
+import ca.bc.gov.nrs.vdyp.exceptions.BecMissingException;
+import ca.bc.gov.nrs.vdyp.exceptions.BreastHeightAgeLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.CrownClosureLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.HeightLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.IncorrectLayerCodesException;
+import ca.bc.gov.nrs.vdyp.exceptions.LayerMissingException;
+import ca.bc.gov.nrs.vdyp.exceptions.LayerSpeciesDoNotSumTo100PercentException;
+import ca.bc.gov.nrs.vdyp.exceptions.ResultBaseAreaLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.SiteIndexLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
+import ca.bc.gov.nrs.vdyp.exceptions.TotalAgeLowException;
+import ca.bc.gov.nrs.vdyp.exceptions.UnsupportedModeException;
+import ca.bc.gov.nrs.vdyp.model.LayerType;
+import ca.bc.gov.nrs.vdyp.model.PolygonMode;
 import ca.bc.gov.nrs.vdyp.si32.vdyp.VdypMethods;
 
 public class PolygonProjectionRunnerTest {
@@ -133,5 +161,92 @@ public class PolygonProjectionRunnerTest {
 		var content = new String(yieldTable.getAsStream().readAllBytes());
 		assertThat(content.length(), greaterThan(0));
 		assertThat(content, containsString("13919428"));
+	}
+
+	/**
+	 * Examples of stand exeptions that can be produced by VRIStart
+	 */
+	static List<Arguments> fipErrors() {
+		return List.of(
+				Arguments.of(
+						new UnsupportedModeException(Optional.empty()), false, ReturnCode.SUCCESS,
+						PolygonMessageKind.LOW_SITE, MessageSeverityCode.WARNING
+				),
+				Arguments.of(
+						new UnsupportedModeException(Optional.of(PolygonMode.BATC)), false, ReturnCode.SUCCESS,
+						PolygonMessageKind.LOW_SITE, MessageSeverityCode.WARNING
+				),
+
+				Arguments.of(
+						new TotalAgeLowException(LayerType.PRIMARY, Optional.of(10f), Optional.of(12f)), false,
+						ReturnCode.SUCCESS, PolygonMessageKind.BREAST_HEIGHT_AGE_TOO_YOUNG, MessageSeverityCode.WARNING
+				),
+
+				Arguments.of(
+						new BecMissingException(), true, ReturnCode.SUCCESS,
+						PolygonMessageKind.BREAST_HEIGHT_AGE_TOO_YOUNG, MessageSeverityCode.WARNING
+				),
+				Arguments.of(
+						new ResultBaseAreaLowException(LayerType.PRIMARY, Optional.of(10f), Optional.of(12f)), true,
+						ReturnCode.SUCCESS, PolygonMessageKind.BREAST_HEIGHT_AGE_TOO_YOUNG, MessageSeverityCode.WARNING
+				),
+
+				Arguments.of(
+						new BreastHeightAgeLowException(LayerType.PRIMARY, Optional.of(10f), Optional.of(12f)), false,
+						ReturnCode.ERROR_CORELIBRARYERROR, PolygonMessageKind.GENERIC_FIPSTART_ERROR,
+						MessageSeverityCode.ERROR
+				),
+				Arguments.of(
+						new CrownClosureLowException(LayerType.PRIMARY, Optional.of(0.5f), Optional.of(0.75f)), false,
+						ReturnCode.ERROR_CORELIBRARYERROR, PolygonMessageKind.GENERIC_FIPSTART_ERROR,
+						MessageSeverityCode.ERROR
+				),
+				Arguments.of(
+						new HeightLowException(LayerType.PRIMARY, Optional.of(0.5f), Optional.of(0.75f)), false,
+						ReturnCode.ERROR_CORELIBRARYERROR, PolygonMessageKind.GENERIC_FIPSTART_ERROR,
+						MessageSeverityCode.ERROR
+				),
+				Arguments.of(
+						new IncorrectLayerCodesException("X"), false, ReturnCode.ERROR_CORELIBRARYERROR,
+						PolygonMessageKind.GENERIC_FIPSTART_ERROR, MessageSeverityCode.ERROR
+				),
+				Arguments.of(
+						new LayerMissingException(LayerType.PRIMARY), false, ReturnCode.ERROR_CORELIBRARYERROR,
+						PolygonMessageKind.GENERIC_FIPSTART_ERROR, MessageSeverityCode.ERROR
+				),
+				Arguments.of(
+						new LayerSpeciesDoNotSumTo100PercentException(LayerType.PRIMARY), false,
+						ReturnCode.ERROR_CORELIBRARYERROR, PolygonMessageKind.GENERIC_FIPSTART_ERROR,
+						MessageSeverityCode.ERROR
+				),
+				Arguments.of(
+						new SiteIndexLowException(LayerType.PRIMARY, Optional.of(0.5f), Optional.of(0.75f)), false,
+						ReturnCode.ERROR_CORELIBRARYERROR, PolygonMessageKind.GENERIC_FIPSTART_ERROR,
+						MessageSeverityCode.ERROR
+				)
+		);
+	}
+
+	@ParameterizedTest
+	@MethodSource("fipErrors")
+	void testHandleFipError(
+			StandProcessingException ex, boolean expectedRetryVri, ReturnCode returnCode, PolygonMessageKind kind,
+			MessageSeverityCode severity
+	) throws AbstractProjectionRequestException, IOException {
+		boolean actualRetryVri = PolygonProjectionRunner.handleFipError(polygon, ex, layer);
+		var actualMessages = polygon.getMessages();
+
+		assertThat("retry using VRI", actualRetryVri, is(expectedRetryVri));
+
+		assertThat(
+				"messages", actualMessages,
+				contains(
+						allOf(
+								hasProperty("layer", sameInstance(layer)), hasProperty("returnCode", is(returnCode)),
+								hasProperty("kind", is(kind)), hasProperty("severity", is(severity)),
+								hasProperty("stand", nullValue())
+						)
+				)
+		);
 	}
 }
