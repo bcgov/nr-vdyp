@@ -23,10 +23,10 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.model.Layer;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
-public class CfsBiomassCalculatorTest {
+class CfsBiomassCalculatorTest {
 
-	private final static String TEST_PROJECTION_ID = "TestProjectionId";
-	private final static long TEST_POLYGON_NUMBER = 12345678;
+	private static final String TEST_PROJECTION_ID = "TestProjectionId";
+	private static final long TEST_POLYGON_NUMBER = 12345678;
 
 	static Stream<Arguments> biomassAmounts() {
 		return Stream.of(
