@@ -21,7 +21,7 @@ import ca.bc.gov.nrs.vdyp.si32.site.SiteTool;
  *
  */
 public class CfsBiomassCalculator {
-	private static final Logger logger = LoggerFactory.getLogger(SiteTool.class);
+	private static final Logger logger = LoggerFactory.getLogger(CfsBiomassCalculator.class);
 
 	/**
 	 * Calculates CFS Biomass Volume Details for a Polygon.
