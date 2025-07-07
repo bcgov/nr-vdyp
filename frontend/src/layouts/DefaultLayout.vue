@@ -80,17 +80,30 @@
     </div>
   </v-navigation-drawer>
 
-  <div class="main-layout-container">
+  <div
+    :style="{ marginLeft: isRail ? '24px' : '0' }"
+    class="main-layout-container"
+  >
     <slot />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { APP_VERSION } from '@/constants/versionNumber'
+import { ref, computed } from 'vue'
+import { APP_VERSION } from '@/constants/appVersion'
 import { BUILD_NUMBER } from '@/constants/buildNumber'
 
-const appVersion = APP_VERSION // import.meta.env.PACKAGE_VERSION
+const appVersion = computed(() => {
+  if (APP_VERSION) {
+    const baseVersion = APP_VERSION.replace(
+      /(-snapshot|-SNAPSHOT|-Snapshot)/i,
+      '',
+    )
+    return `${baseVersion}.${BUILD_NUMBER || ''}`
+  }
+  return ''
+})
+
 const drawer = ref(true)
 const showVersion = ref(true)
 const isRail = ref(false)
@@ -145,6 +158,10 @@ const toggleVersion = () => {
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+.v-navigation-drawer--rail {
+  width: 80px !important;
 }
 
 .v-navigation-drawer--rail .nv-menu-item-title {
