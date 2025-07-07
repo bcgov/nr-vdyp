@@ -3,6 +3,7 @@
 FROM node:22.17.0-bullseye-slim AS build
 ARG CONTEXT="./frontend"
 ARG BUILD_NUMBER
+ARG VERSION
 # Install packages, build and keep only prod packages
 WORKDIR /app
 COPY ${CONTEXT}/*.json ${CONTEXT}/*.ts ${CONTEXT}/index.html ./
