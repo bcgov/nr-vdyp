@@ -46,12 +46,12 @@ jobs:
           java-version: "17"
           distribution: "temurin"
 
-      - name: Extract project version from pom.xml
-        id: get_version
+      - name: Extract project app version from pom.xml
+        id: get_app_version
         run: |
-          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-          echo "Extracted VERSION: $VERSION"
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          APP_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          echo "Extracted APP_VERSION: $APP_VERSION"
+          echo "APP_VERSION=$APP_VERSION" >> $GITHUB_ENV
 
       - name: Get PR Data
         id: pr
@@ -70,7 +70,7 @@ jobs:
           build_file: ./${{ matrix.package}}/Dockerfile
           build_args: |
             BUILD_NUMBER=${{ github.run_number }}
-            VERSION=${{ env.VERSION }}
+            APP_VERSION=${{ env.APP_VERSION }}
 
       - if: github.event_name == 'push'
         name: Login to GitHub Container Registry
