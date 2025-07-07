@@ -73,11 +73,12 @@ public enum CfsBiomassConversionSupportedEcoZone implements SI32Enum<CfsBiomassC
 					ecoZone = BOREAL_PLAINS;
 				} else if (becSubZone.equalsIgnoreCase("wk")) {
 					ecoZone = BOREAL_PLAINS;
-				} else if (mapSheet != null && mapSheet.startsWith("093")) {
-					ecoZone = BOREAL_PLAINS; /* 9 */
-				} else if (mapSheet != null && mapSheet.startsWith("104")) {
-					ecoZone = BOREAL_CORDILLERA; /* 12 */
 				}
+			}
+			if (mapSheet != null && mapSheet.startsWith("093")) {
+				ecoZone = BOREAL_PLAINS; /* 9 */
+			} else if (mapSheet != null && mapSheet.startsWith("104")) {
+				ecoZone = BOREAL_CORDILLERA; /* 12 */
 			}
 			break;
 

@@ -103,4 +103,53 @@ class CfsBioMassConversionCoefficientsTests {
 
 		assertThat(CfsBiomassConversionSupportedGenera.fromEcoZoneAndSpecies(ecoZone, sp64), is(expectedGenus));
 	}
+
+	static Stream<Arguments> cfsSupportedEcoZonesByCode() {
+		return Stream.of(
+				Arguments.of((short) 4, CfsBiomassConversionSupportedEcoZone.TAIGA_PLAINS),
+				Arguments.of((short) 9, CfsBiomassConversionSupportedEcoZone.BOREAL_PLAINS),
+				Arguments.of((short) 12, CfsBiomassConversionSupportedEcoZone.BOREAL_CORDILLERA),
+				Arguments.of((short) 13, CfsBiomassConversionSupportedEcoZone.PACIFIC_MARITIME),
+				Arguments.of((short) 14, CfsBiomassConversionSupportedEcoZone.MONTANE_CORDILLERA),
+				Arguments.of((short) 1, CfsBiomassConversionSupportedEcoZone.UNKNOWN)
+		);
+	}
+
+	@ParameterizedTest
+	@MethodSource("cfsSupportedEcoZonesByCode")
+	void testGetSupportedEcozoneByCode(short code, CfsBiomassConversionSupportedEcoZone expectedEcoZone) {
+		assertThat(CfsBiomassConversionSupportedEcoZone.of(code), is(expectedEcoZone));
+	}
+
+	static Stream<Arguments> cfsSupportedEcoZonesByBecZoneDData() {
+		return Stream.of(
+				Arguments.of("BWBS", null, null, "", CfsBiomassConversionSupportedEcoZone.TAIGA_PLAINS),
+				Arguments.of("BWBS", "DK", "1", "", CfsBiomassConversionSupportedEcoZone.BOREAL_CORDILLERA),
+				Arguments.of("BWBS", "mw", "1", "", CfsBiomassConversionSupportedEcoZone.BOREAL_PLAINS),
+				Arguments.of("BWBS", "wk", "X", "", CfsBiomassConversionSupportedEcoZone.BOREAL_PLAINS),
+				Arguments.of("BWBS", null, null, "093", CfsBiomassConversionSupportedEcoZone.BOREAL_PLAINS),
+				Arguments.of("BWBS", "BS", null, "104", CfsBiomassConversionSupportedEcoZone.BOREAL_CORDILLERA),
+				Arguments.of("AT", null, null, "", CfsBiomassConversionSupportedEcoZone.MONTANE_CORDILLERA),
+				Arguments.of("AT", null, null, "092", CfsBiomassConversionSupportedEcoZone.PACIFIC_MARITIME),
+				Arguments.of("CWH", null, null, "", CfsBiomassConversionSupportedEcoZone.PACIFIC_MARITIME),
+				Arguments.of("ICH", null, null, "", CfsBiomassConversionSupportedEcoZone.MONTANE_CORDILLERA),
+				Arguments.of("ICH", "MC", null, "", CfsBiomassConversionSupportedEcoZone.PACIFIC_MARITIME),
+				Arguments.of("MS", null, null, "", CfsBiomassConversionSupportedEcoZone.MONTANE_CORDILLERA),
+				Arguments.of("ESSF", null, null, "", CfsBiomassConversionSupportedEcoZone.MONTANE_CORDILLERA),
+				Arguments.of("SWB", null, null, "", CfsBiomassConversionSupportedEcoZone.BOREAL_CORDILLERA),
+				Arguments.of("BADVALUE", null, null, "", CfsBiomassConversionSupportedEcoZone.UNKNOWN)
+		);
+	}
+
+	@ParameterizedTest
+	@MethodSource("cfsSupportedEcoZonesByBecZoneDData")
+	void testGetSupportedEcozoneByBecZone(
+			String becZone, String subBec, String variant, String mapSheet,
+			CfsBiomassConversionSupportedEcoZone expectedEcoZone
+	) {
+		assertThat(
+				CfsBiomassConversionSupportedEcoZone.fromBecZoneData(becZone, subBec, variant, mapSheet),
+				is(expectedEcoZone)
+		);
+	}
 }
