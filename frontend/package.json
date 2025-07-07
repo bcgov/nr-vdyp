@@ -1,6 +1,6 @@
 {
   "name": "vdyp",
-  "version": "0.0.1.120",
+  "version": "8.0.0",
   "private": true,
   "type": "module",
   "description": "Variable Density Yield Projection",
@@ -40,7 +40,6 @@
     "pinia": "3.0.3",
     "print-js": "1.6.0",
     "vdyp": "file:",
-    "vite-plugin-package-version": "1.1.0",
     "vue": "3.5.17",
     "vue-router": "4.5.1",
     "vuetify": "3.8.11"

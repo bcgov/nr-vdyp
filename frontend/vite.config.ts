@@ -2,7 +2,6 @@ import { fileURLToPath, URL } from 'node:url'
 import { defineConfig, loadEnv } from 'vite'
 import Vue from '@vitejs/plugin-vue'
 import Vuetify from 'vite-plugin-vuetify'
-import packageVersion from 'vite-plugin-package-version'
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -28,7 +27,6 @@ export default defineConfig(({ mode }) => {
         },
       },
       Vue(),
-      packageVersion(),
       Vuetify({
         autoImport: true,
       }),
