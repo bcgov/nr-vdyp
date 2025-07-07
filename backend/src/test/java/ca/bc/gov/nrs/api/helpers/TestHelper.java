@@ -64,7 +64,7 @@ public class TestHelper {
 		}
 	}
 
-	public byte[] readZipEntry(ZipInputStream zipInputStream, ZipEntry zipEntry) throws IOException {
+	public static byte[] readZipEntry(ZipInputStream zipInputStream, ZipEntry zipEntry) throws IOException {
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		if (zipInputStream.available() > 0) {

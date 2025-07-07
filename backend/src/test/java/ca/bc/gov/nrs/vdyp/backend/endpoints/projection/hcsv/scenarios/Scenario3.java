@@ -52,7 +52,7 @@ class Scenario3 extends Scenario {
 		ZipEntry entry1 = zipFile.getNextEntry();
 		Assert.assertEquals("YieldTable.csv", entry1.getName());
 
-		String[] csvLines = new String(testHelper.readZipEntry(zipFile, entry1)).split("\n");
+		String[] csvLines = new String(TestHelper.readZipEntry(zipFile, entry1)).split("\n");
 		assertThat(csvLines, arrayWithSize(2));
 		assertThat(csvLines[0], startsWith("\"TABLE_NUM\",\"FEATURE_ID\""));
 

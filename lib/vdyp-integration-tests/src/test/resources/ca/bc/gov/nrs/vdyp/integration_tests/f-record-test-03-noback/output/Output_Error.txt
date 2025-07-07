@@ -1,0 +1,6 @@
+                                                 - I SUCCESS - BACK GROW has been disabled. No projection will occur prior to Reference Year for any polygon.
+                                                 - I SUCCESS - Substitution of Supplied BA/TPH as Projected values has been disabled.
+    082L083 0 0 208       (Rcrd ID: 1859144  ) 1 - I SUCCESS - Directly assigning Estimated SI of 12.00 to Species 'FD' and recomputing input height.
+    082L083 0 0 208       (Rcrd ID: 1859144  ) 1 - I SUCCESS - Based on Estimated SI of 12.00, recomputed input height for species 'FD' at reference age 20.0 to be 3.02m
+    082L083 0 0 208       (Rcrd ID: 1859144  )   - I LAYERNOTPROCESSED - Stand definition insufficient for FIPSTART Processing.
+    082L083 0 0 208       (Rcrd ID: 1859144  ) 1 - W SUCCESS - Primary Layer height was too short to generate a stand description. VDYP7CORE return code: 'Ht L1 too low' (-4)

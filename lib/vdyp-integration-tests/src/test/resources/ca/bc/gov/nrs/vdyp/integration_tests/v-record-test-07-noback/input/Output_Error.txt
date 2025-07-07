@@ -1,0 +1,2 @@
+                                                 - I SUCCESS - Substitution of Supplied BA/TPH as Projected values has been disabled.
+    092G020 0 0 326       (Rcrd ID: 2409763  ) 1 - I SUCCESS - Layer '1' is not the Primary, Veteran or a Targeted Layer. Yield Table will not be produced.
