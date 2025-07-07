@@ -37,6 +37,22 @@ jobs:
         package: [backend, frontend]
     timeout-minutes: 10
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up JDK for Maven
+        uses: actions/setup-java@v3
+        with:
+          java-version: "17"
+          distribution: "temurin"
+
+      - name: Extract project version from pom.xml
+        id: get_version
+        run: |
+          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          echo "Extracted VERSION: $VERSION"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
       - name: Get PR Data
         id: pr
         uses: bcgov-nr/action-get-pr@v0.0.1
@@ -52,7 +68,9 @@ jobs:
           #triggers: ('${{ matrix.package }}/')
           build_context: .
           build_file: ./${{ matrix.package}}/Dockerfile
-          build_args: BUILD_NUMBER=${{ github.run_number }}
+          build_args: |
+            BUILD_NUMBER=${{ github.run_number }}
+            VERSION=${{ env.VERSION }}
 
       - if: github.event_name == 'push'
         name: Login to GitHub Container Registry
