@@ -53,6 +53,7 @@ public class OracleRunner {
 	);
 
 	static final Pattern EXECUTION = Pattern.compile("^execution\\-(.+?)-(\\w+)$");
+	private static final String EXECUTION_GLOB = "execution-*";
 
 	public static void main(String[] args) throws InterruptedException {
 		try {
@@ -395,7 +396,7 @@ public class OracleRunner {
 	private List<Execution> findExecutions(Path configDir) throws IOException {
 		final List<Execution> executions = new ArrayList<>();
 
-		try (var dirStream = Files.newDirectoryStream(configDir, "execution-*")) {
+		try (var dirStream = Files.newDirectoryStream(configDir, EXECUTION_GLOB)) {
 			for (var executionDir : dirStream) {
 				analyzeExecution(executions, executionDir);
 			}
@@ -520,7 +521,7 @@ public class OracleRunner {
 			}
 		}
 
-		try (var stream = Files.newDirectoryStream(intermediateDir, "execution-*")) {
+		try (var stream = Files.newDirectoryStream(intermediateDir, EXECUTION_GLOB)) {
 			for (Path dir : stream) {
 				Matcher match = EXECUTION.matcher(dir.getFileName().toString());
 				if (match.find()) {
@@ -568,8 +569,10 @@ public class OracleRunner {
 	 */
 	private void cleanConfigDir(Path configDir) throws IOException {
 		deleteFiles(configDir, file -> INTERMEDIATE_FILE.matcher(file.getFileName().toString()).matches());
-		for (var dir : Files.newDirectoryStream(configDir, "execution-*")) {
-			deleteDir(dir);
+		try (DirectoryStream<Path> executionDirs = Files.newDirectoryStream(configDir, EXECUTION_GLOB);) {
+			for (var dir : executionDirs) {
+				deleteDir(dir);
+			}
 		}
 	}
 
