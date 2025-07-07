@@ -228,44 +228,7 @@ public class PolygonProjectionRunner {
 						var layer = polygon.getLayerByProjectionType(projectionType);
 						doRetryUsingVriStart = FipStartProcessingResult.doRetryUsingVriStart(spe);
 
-						if (spe instanceof UnsupportedModeException) {
-							polygon.addMessage(
-									new PolygonMessage.Builder().layer(layer)
-											.details(
-													ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
-													PolygonMessageKind.LOW_SITE,
-													spe.getIpassCode(VdypApplicationIdentifier.FIP_START)
-											).build()
-							);
-						} else if (spe instanceof TotalAgeLowException) {
-							polygon.addMessage(
-									new PolygonMessage.Builder().layer(layer)
-											.details(
-													ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
-													PolygonMessageKind.BREAST_HEIGHT_AGE_TOO_YOUNG, "FipStart",
-													spe.getIpassCode(VdypApplicationIdentifier.FIP_START)
-											).build()
-							);
-						} else if (spe instanceof BecMissingException || spe instanceof ResultBaseAreaLowException) {
-							polygon.addMessage(
-									new PolygonMessage.Builder().layer(layer)
-											.details(
-													ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
-													PolygonMessageKind.BREAST_HEIGHT_AGE_TOO_YOUNG, "FIPSTART",
-													spe.getIpassCode(VdypApplicationIdentifier.FIP_START)
-											).build()
-							);
-							doRetryUsingVriStart = true;
-						} else {
-							polygon.addMessage(
-									new PolygonMessage.Builder().layer(layer)
-											.details(
-													ReturnCode.ERROR_CORELIBRARYERROR, MessageSeverityCode.ERROR,
-													PolygonMessageKind.GENERIC_FIPSTART_ERROR,
-													spe.getIpassCode(VdypApplicationIdentifier.FIP_START)
-											).build()
-							);
-						}
+						doRetryUsingVriStart |= handleFipError(polygon, spe, layer);
 					} else {
 						polygon.addMessage(
 								new PolygonMessage.Builder().polygon(polygon)
@@ -382,6 +345,56 @@ public class PolygonProjectionRunner {
 
 		}
 
+	}
+
+	static boolean handleFipError(Polygon polygon, StandProcessingException spe, Layer layer) {
+
+		if (spe instanceof UnsupportedModeException) {
+			polygon.addMessage(
+					new PolygonMessage.Builder().layer(layer)
+							.details(
+									ReturnCode.SUCCESS, MessageSeverityCode.WARNING, PolygonMessageKind.LOW_SITE,
+									spe.getIpassCode(VdypApplicationIdentifier.FIP_START)
+							).build()
+			);
+			return false;
+		}
+
+		if (spe instanceof TotalAgeLowException) {
+			polygon.addMessage(
+					new PolygonMessage.Builder().layer(layer)
+							.details(
+									ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
+									PolygonMessageKind.BREAST_HEIGHT_AGE_TOO_YOUNG, "FipStart",
+									spe.getIpassCode(VdypApplicationIdentifier.FIP_START)
+							).build()
+			);
+			return false;
+		}
+
+		if (spe instanceof BecMissingException || spe instanceof ResultBaseAreaLowException) {
+			polygon.addMessage(
+					new PolygonMessage.Builder().layer(layer)
+							.details(
+									ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
+									PolygonMessageKind.BREAST_HEIGHT_AGE_TOO_YOUNG, "FIPSTART",
+									spe.getIpassCode(VdypApplicationIdentifier.FIP_START)
+							).build()
+			);
+			return true;
+		}
+
+		{
+			polygon.addMessage(
+					new PolygonMessage.Builder().layer(layer)
+							.details(
+									ReturnCode.ERROR_CORELIBRARYERROR, MessageSeverityCode.ERROR,
+									PolygonMessageKind.GENERIC_FIPSTART_ERROR,
+									spe.getIpassCode(VdypApplicationIdentifier.FIP_START)
+							).build()
+			);
+			return false;
+		}
 	}
 
 	/**
