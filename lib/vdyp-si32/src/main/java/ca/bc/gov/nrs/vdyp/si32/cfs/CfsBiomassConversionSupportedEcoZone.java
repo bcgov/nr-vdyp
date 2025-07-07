@@ -88,9 +88,7 @@ public enum CfsBiomassConversionSupportedEcoZone implements SI32Enum<CfsBiomassC
 				ecoZone = PACIFIC_MARITIME;
 			break;
 
-		case CDF:
-		case CWH:
-		case MH:
+		case CDF, CWH, MH:
 			ecoZone = PACIFIC_MARITIME; /* 13 */
 			break;
 
@@ -101,13 +99,7 @@ public enum CfsBiomassConversionSupportedEcoZone implements SI32Enum<CfsBiomassC
 			}
 			break;
 
-		case BG:
-		case ESSF:
-		case IDF:
-		case MS:
-		case PP:
-		case SBPS:
-		case SBS:
+		case BG, ESSF, IDF, MS, PP, SBPS, SBS:
 			ecoZone = MONTANE_CORDILLERA; /* 14 */
 			break;
 
