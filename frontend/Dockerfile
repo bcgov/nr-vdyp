@@ -9,6 +9,7 @@ COPY ${CONTEXT}/*.json ${CONTEXT}/*.ts ${CONTEXT}/index.html ./
 COPY ${CONTEXT}/public ./public
 COPY ${CONTEXT}/src ./src
 RUN echo "export const BUILD_NUMBER = '${BUILD_NUMBER}'" > src/constants/buildNumber.ts && \
+    echo "export const APP_VERSION = '${VERSION}'" > src/constants/versionNumber.ts && \
     npm ci --ignore-scripts --no-update-notifier --omit=dev && \
     npm run build-only
 

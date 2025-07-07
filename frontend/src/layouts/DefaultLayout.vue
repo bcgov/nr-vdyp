@@ -87,9 +87,10 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { APP_VERSION } from '@/constants/versionNumber'
 import { BUILD_NUMBER } from '@/constants/buildNumber'
 
-const appVersion = import.meta.env.PACKAGE_VERSION
+const appVersion = APP_VERSION // import.meta.env.PACKAGE_VERSION
 const drawer = ref(true)
 const showVersion = ref(true)
 const isRail = ref(false)
