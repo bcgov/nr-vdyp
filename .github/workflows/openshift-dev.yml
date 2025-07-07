@@ -51,7 +51,7 @@ jobs:
         run: |
           APP_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
           echo "Extracted APP_VERSION: $APP_VERSION"
-          echo "APP_VERSION=$APP_VERSION" >> $GITHUB_ENV
+          echo "::set-output name=APP_VERSION::$APP_VERSION"
 
       - name: Get PR Data
         id: pr
@@ -70,7 +70,7 @@ jobs:
           build_file: ./${{ matrix.package}}/Dockerfile
           build_args: |
             BUILD_NUMBER=${{ github.run_number }}
-            APP_VERSION=${{ env.APP_VERSION }}
+            APP_VERSION=${{ steps.get_app_version.outputs.APP_VERSION }}
 
       - if: github.event_name == 'push'
         name: Login to GitHub Container Registry
