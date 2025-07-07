@@ -3,12 +3,14 @@
 FROM node:22.17.0-bullseye-slim AS build
 ARG CONTEXT="./frontend"
 ARG BUILD_NUMBER
+ARG APP_VERSION
 # Install packages, build and keep only prod packages
 WORKDIR /app
 COPY ${CONTEXT}/*.json ${CONTEXT}/*.ts ${CONTEXT}/index.html ./
 COPY ${CONTEXT}/public ./public
 COPY ${CONTEXT}/src ./src
 RUN echo "export const BUILD_NUMBER = '${BUILD_NUMBER}'" > src/constants/buildNumber.ts && \
+    echo "export const APP_VERSION = '${APP_VERSION}'" > src/constants/appVersion.ts && \
     npm ci --ignore-scripts --no-update-notifier --omit=dev && \
     npm run build-only
 
