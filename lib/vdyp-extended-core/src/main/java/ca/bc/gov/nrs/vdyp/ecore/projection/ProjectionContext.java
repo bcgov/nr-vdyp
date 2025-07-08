@@ -47,7 +47,7 @@ public class ProjectionContext {
 	public static final int EXECUTION_FOLDER_RETENTION_TIME_m = 30;
 
 	private record ProjectionDetails(int startYear, int firstRequestedYear) {
-	};
+	}
 
 	private final String projectionId;
 	private long startTime_ms;

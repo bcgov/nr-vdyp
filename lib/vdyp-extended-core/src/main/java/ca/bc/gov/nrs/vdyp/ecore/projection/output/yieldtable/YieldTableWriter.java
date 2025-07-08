@@ -277,8 +277,7 @@ abstract class YieldTableWriter<T extends YieldTableRowBean> implements Closeabl
 	 * Write the yield table trailer into the output stream. This is a default method that does nothing, the requirement
 	 * for a number of the output formats.
 	 *
-	 * @param yieldTableNumber the yield table number
-	 * @throws YieldTableGenerationException
+	 * @throws YieldTableGenerationException if any error occurs while writing the trailer
 	 */
 	void writeTrailer() throws YieldTableGenerationException {
 		// Some formats have no trailer.

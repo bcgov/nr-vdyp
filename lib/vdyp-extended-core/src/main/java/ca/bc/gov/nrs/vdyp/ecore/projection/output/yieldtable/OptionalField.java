@@ -12,10 +12,10 @@ public @interface OptionalField {
 	/**
 	 * The yield table category that this field will appear in
 	 */
-	public YieldTable.Category category() default YieldTable.Category.NONE;
+	YieldTable.Category category() default YieldTable.Category.NONE;
 
 	/**
 	 * The yield table categories that this field will appear in. This overrules the category() value if set
 	 */
-	public YieldTable.Category[] categories() default {};
+	YieldTable.Category[] categories() default {};
 }
