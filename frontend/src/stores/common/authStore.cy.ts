@@ -94,7 +94,17 @@ describe('Auth Store Unit Tests', () => {
   })
 
   it('should verify user has a specific role', () => {
-    authStore.getAllRoles = cy.stub().returns(['admin', 'user'])
+    // Set user with a valid ID token containing roles
+    const mockToken = JSON.stringify({
+      client_roles: ['admin', 'user'],
+    })
+    const base64Token = btoa(mockToken)
+    authStore.setUser({
+      accessToken: '',
+      refToken: '',
+      idToken: `mock.${base64Token}.token`,
+    })
+
     const hasAdminRole = authStore.hasRole('admin')
     const hasGuestRole = authStore.hasRole('guest')
 
