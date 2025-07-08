@@ -201,7 +201,9 @@ public class RealComponentRunner implements ComponentRunner {
 				logger.debug("{}: generated polygon-level CFS biomass table", polygon);
 			}
 
-		} else if (params.containsOption(ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER)) {
+		}
+
+		if (params.containsOption(ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER)) {
 
 			for (var layerReportingInfo : polygon.getReportingInfo().getLayerReportingInfos().values()) {
 
