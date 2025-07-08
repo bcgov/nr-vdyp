@@ -216,10 +216,6 @@ public class RealComponentRunner implements ComponentRunner {
 					if (params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES)
 							|| params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_BIOMASS)) {
 
-						var projectionResults = getProjectionResults(
-								polygon, layerReportingInfo.getProcessedAsVDYP7Layer(), state
-						);
-
 						yieldTable.generateYieldTableForPolygonLayer(
 								polygon, projectionResults, state, layerReportingInfo, doGenerateDetailedTableHeader
 						);
@@ -231,8 +227,8 @@ public class RealComponentRunner implements ComponentRunner {
 					if (params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS)) {
 						if (!layerReportingInfo.isDeadStemLayer()) {
 
-							yieldTable.generateCfsBiomassTable(
-									polygon, state, layerReportingInfo, doGenerateDetailedTableHeader
+							yieldTable.generateCfsBiomassTableForPolygonLayer(
+									polygon, projectionResults, state, layerReportingInfo, doGenerateDetailedTableHeader
 							);
 							doGenerateDetailedTableHeader = false;
 

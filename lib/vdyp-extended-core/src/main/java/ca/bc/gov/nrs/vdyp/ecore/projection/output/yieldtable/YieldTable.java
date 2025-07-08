@@ -51,8 +51,8 @@ import ca.bc.gov.nrs.vdyp.si32.vdyp.SP0Name;
 public class YieldTable implements Closeable {
 
 	public enum Category {
-		LAYER_MOFVOLUMES, LAYER_MOFBIOMASS, SPECIES_MOFVOLUME, SPECIES_MOFBIOMASS, LAYER_CFSBIOMASS, PROJECTION_MODE,
-		POLYGON_ID;
+		LAYER_MOFVOLUMES, LAYER_MOFBIOMASS, SPECIES_MOFVOLUME, SPECIES_MOFBIOMASS, CFSBIOMASS, PROJECTION_MODE,
+		POLYGON_ID, NONE;
 	}
 
 	private static final Logger logger = LoggerFactory.getLogger(YieldTable.class);
@@ -115,16 +115,59 @@ public class YieldTable implements Closeable {
 	}
 
 	public void generateCfsBiomassTableForPolygon(
-			Polygon polygon, PolygonProjectionState state, boolean doGenerateDetailedTableHeader
-	) {
-		generateCfsBiomassTable(polygon, state, null, doGenerateDetailedTableHeader);
+			Polygon polygon, Map<Integer, VdypPolygon> projectionResults, PolygonProjectionState state,
+			boolean doGenerateDetailedTableHeader
+	) throws YieldTableGenerationException {
+		generateCfsBiomassTable(polygon, projectionResults, state, null, doGenerateDetailedTableHeader);
 	}
 
+	public void generateCfsBiomassTableForPolygonLayer(
+			Polygon polygon, Map<Integer, VdypPolygon> projectionResults, PolygonProjectionState state,
+			LayerReportingInfo layerReportingInfo, boolean doGenerateDetailedTableHeader
+	) throws YieldTableGenerationException {
+		if (layerReportingInfo == null) {
+			throw new IllegalArgumentException(
+					"generateCfsBiomassTableForPolygonLayer: layerReportingInfo cannot be null"
+			);
+		}
+		generateCfsBiomassTable(polygon, projectionResults, state, layerReportingInfo, doGenerateDetailedTableHeader);
+	}
+
+	/**
+	 * <b>lcl_GenerateCFSBiomassTable</b>
+	 * <p>
+	 * Generate a single CFS Biomass yield table.
+	 * <p>
+	 *
+	 * @param polygon                       the polygon for which a yield table is to be generated
+	 * @param projectionResults             the result of projecting the polygon
+	 * @param state                         the current state of the (completed) projection of <code>polygon</code>
+	 * @param layerReportingInfo            the layer of the polygon. May be null, indicating that the CFS Biomass yield
+	 *                                      table summarizes information at the polygon level only.
+	 * @param doGenerateDetailedTableHeader if true, displays all the expected details in the table header. If false,
+	 *                                      only the table number is generated.
+	 */
 	public void generateCfsBiomassTable(
-			Polygon polygon, PolygonProjectionState state, LayerReportingInfo layerReportingInfo,
+			Polygon polygon, Map<Integer, VdypPolygon> projectionResults, PolygonProjectionState state,
+			LayerReportingInfo layerReportingInfo,
 			boolean doGenerateDetailedTableHeader
-	) {
-		// TODO Implement this
+	) throws YieldTableGenerationException {
+		writer.writePolygonTableHeader(
+				polygon, Optional.ofNullable(layerReportingInfo), doGenerateDetailedTableHeader, nextYieldTableNumber
+		);
+
+		YieldTableRowIterator rowIterator = new YieldTableRowIterator(context, polygon, state, layerReportingInfo);
+		while (rowIterator.hasNext()) {
+
+			YieldTableRowContext rowContext = rowIterator.next();
+			if (rowIsToBeGenerated(rowContext)) {
+				generateYieldTableRow(rowContext, projectionResults, writer);
+			}
+		}
+
+		writer.writePolygonTableTrailer(nextYieldTableNumber);
+
+		nextYieldTableNumber += 1;
 	}
 
 	public void endGeneration() throws YieldTableGenerationException {
@@ -142,7 +185,6 @@ public class YieldTable implements Closeable {
 
 		YieldTableRowIterator rowIterator = new YieldTableRowIterator(context, polygon, state, layerReportingInfo);
 		while (rowIterator.hasNext()) {
-
 			YieldTableRowContext rowContext = rowIterator.next();
 			if (rowIsToBeGenerated(rowContext)) {
 				generateYieldTableRow(rowContext, polygonProjectionResults, writer);
@@ -422,6 +464,18 @@ public class YieldTable implements Closeable {
 								);
 							}
 						}
+					}
+
+					if (context.getYieldTableCategories().contains(Category.CFSBIOMASS)) {
+						CfsBiomassVolumeDetails cfsBiomass;
+						if (rowContext.isPolygonTable()) {
+							cfsBiomass = CfsBiomassCalculator
+									.calculateBiomassPolygonVolumeDetails(volumeDetails, polygon);
+						} else {
+							cfsBiomass = CfsBiomassCalculator
+									.calculateBiomassLayerVolumeDetails(volumeDetails, polygon, layer);
+						}
+						writer.recordCfsBiomassDetails(volumeDetails, cfsBiomass);
 					}
 				}
 

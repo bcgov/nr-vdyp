@@ -152,6 +152,30 @@ abstract class YieldTableWriter<T extends YieldTableRowBean> implements Closeabl
 		}
 	}
 
+	void recordCfsBiomassDetails(EntityVolumeDetails volumeDetails, CfsBiomassVolumeDetails cfsBiomassVolumeDetails) {
+
+		Validate.notNull(currentRecord, "YieldTableWriter: startNewRecord must be called once per row");
+
+		if (containsValue(volumeDetails.closeUtilizationVolume())) {
+			currentRecord.setCloseUtilizationVolume(volumeDetails.closeUtilizationVolume());
+		}
+
+		if (containsValue(cfsBiomassVolumeDetails.bioStemwood())) {
+			currentRecord.setCfsBiomassStem(cfsBiomassVolumeDetails.bioStemwood());
+		}
+
+		if (containsValue(cfsBiomassVolumeDetails.bioBark())) {
+			currentRecord.setCfsBiomassBark(cfsBiomassVolumeDetails.bioBark());
+		}
+
+		if (containsValue(cfsBiomassVolumeDetails.bioBranches())) {
+			currentRecord.setCfsBiomassBranch(cfsBiomassVolumeDetails.bioBranches());
+		}
+		if (containsValue(cfsBiomassVolumeDetails.bioFoliage())) {
+			currentRecord.setCfsBiomassFoliage(cfsBiomassVolumeDetails.bioFoliage());
+		}
+	}
+
 	private boolean containsValue(Double value) {
 		return value != null && value > 0;
 	}

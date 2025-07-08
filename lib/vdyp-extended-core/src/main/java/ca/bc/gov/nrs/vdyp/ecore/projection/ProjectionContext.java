@@ -124,9 +124,8 @@ public class ProjectionContext {
 				&& validatedParams.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES)) {
 			yieldTableCategories.add(YieldTable.Category.LAYER_MOFVOLUMES);
 		}
-		if (validatedParams.containsOption(ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER)
-				&& validatedParams.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS)) {
-			yieldTableCategories.add(YieldTable.Category.LAYER_CFSBIOMASS);
+		if (validatedParams.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS)) {
+			yieldTableCategories.add(YieldTable.Category.CFSBIOMASS);
 		}
 		if (validatedParams.containsOption(ExecutionOption.DO_INCLUDE_SPECIES_PROJECTION)
 				&& validatedParams.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES)) {
