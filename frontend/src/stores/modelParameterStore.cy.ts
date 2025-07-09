@@ -153,4 +153,105 @@ describe('ModelParameterStore Unit Tests', () => {
     expect(store.finishingAge).to.equal(85)
     expect(store.ageIncrement).to.equal(10)
   })
+
+  it('should handle full panel confirmation flow', () => {
+    const panelOrder = [
+      CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO,
+      CONSTANTS.MODEL_PARAMETER_PANEL.SITE_INFO,
+      CONSTANTS.MODEL_PARAMETER_PANEL.STAND_DENSITY,
+      CONSTANTS.MODEL_PARAMETER_PANEL.REPORT_INFO,
+    ]
+
+    panelOrder.forEach((panel, index) => {
+      store.confirmPanel(panel)
+      expect(store.panelState[panel].confirmed).to.be.true
+      expect(store.panelState[panel].editable).to.be.false
+
+      if (index < panelOrder.length - 1) {
+        const nextPanel = panelOrder[index + 1]
+        expect(store.panelOpenStates[nextPanel]).to.equal(CONSTANTS.PANEL.OPEN)
+        expect(store.panelState[nextPanel].editable).to.be.true
+        expect(store.runModelEnabled).to.be.false
+      } else {
+        expect(store.runModelEnabled).to.be.true
+      }
+    })
+  })
+
+  it('should reset subsequent panels when editing a confirmed panel', () => {
+    store.confirmPanel(CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO)
+    store.confirmPanel(CONSTANTS.MODEL_PARAMETER_PANEL.SITE_INFO)
+    store.editPanel(CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO)
+
+    expect(store.panelState.speciesInfo.confirmed).to.be.false
+    expect(store.panelState.speciesInfo.editable).to.be.true
+
+    expect(store.panelState.siteInfo.confirmed).to.be.false
+    expect(store.panelState.siteInfo.editable).to.be.false
+    expect(store.panelOpenStates.siteInfo).to.equal(CONSTANTS.PANEL.CLOSE)
+
+    expect(store.panelState.standDensity.confirmed).to.be.false
+    expect(store.panelState.standDensity.editable).to.be.false
+    expect(store.panelOpenStates.standDensity).to.equal(CONSTANTS.PANEL.CLOSE)
+
+    expect(store.panelState.reportInfo.confirmed).to.be.false
+    expect(store.panelState.reportInfo.editable).to.be.false
+    expect(store.panelOpenStates.reportInfo).to.equal(CONSTANTS.PANEL.CLOSE)
+
+    expect(store.runModelEnabled).to.be.false
+  })
+
+  it('should handle species list with duplicates', () => {
+    store.speciesList = [
+      { species: 'PL', percent: '20.0' },
+      { species: 'AC', percent: '30.0' },
+      { species: 'PL', percent: '50.0' },
+    ]
+    store.updateSpeciesGroup()
+
+    expect(store.speciesGroups.length).to.equal(2)
+    expect(store.speciesGroups[0].group).to.equal('PL')
+    expect(store.speciesGroups[0].percent).to.equal('70.0')
+    expect(store.speciesGroups[1].group).to.equal('AC')
+    expect(store.speciesGroups[1].percent).to.equal('30.0')
+  })
+
+  it('should handle species list with zero percentages', () => {
+    store.speciesList = [
+      { species: 'PL', percent: '0.0' },
+      { species: 'AC', percent: '0.0' },
+    ]
+    store.updateSpeciesGroup()
+
+    expect(store.speciesGroups.length).to.equal(0)
+    expect(store.totalSpeciesPercent).to.equal('0.0')
+  })
+
+  it('should update computed properties correctly', () => {
+    store.speciesList = [
+      { species: 'PL', percent: '50.0' },
+      { species: 'AC', percent: '50.0' },
+    ]
+    expect(store.totalSpeciesPercent).to.equal('100.0')
+
+    store.updateSpeciesGroup()
+    expect(store.totalSpeciesGroupPercent).to.equal(100)
+  })
+
+  it('should set reference year to current year', () => {
+    store.setDefaultValues()
+    const currentYear = new Date().getFullYear()
+    expect(store.referenceYear).to.equal(currentYear)
+  })
+
+  it('should set highest percent species correctly', () => {
+    store.speciesList = [
+      { species: 'PL', percent: '60.0' },
+      { species: 'AC', percent: '40.0' },
+    ]
+    store.updateSpeciesGroup()
+
+    expect(store.highestPercentSpecies).to.equal('PL')
+    expect(store.selectedSiteSpecies).to.equal('PL')
+  })
 })
