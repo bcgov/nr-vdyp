@@ -58,8 +58,12 @@ class TextYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean>
 
 		writeCalendarYearAndLayerAge();
 		writeSpeciesComposition(rowContext);
-		writeProjectionGrowthInfo();
-
+		if (context.getYieldTableCategories().contains(YieldTable.Category.CFSBIOMASS)) {
+			writeCFSBiomassInfo();
+		} else {
+			writeProjectionGrowthInfo();
+		}
+		writeRecordMode();
 		doWrite("\n");
 	}
 
@@ -101,21 +105,39 @@ class TextYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean>
 			doWrite("\n");
 
 			if (params.containsOption(ExecutionOption.DO_INCLUDE_COLUMN_HEADERS_IN_YIELD_TABLE)) {
-				doWrite(
-						"Year  Age                      Stand Composition                      %% Stk   SI   D Hgt  %sL Hgt   Dia    TPH       BA      Vws    Vcu    Vd     Vdw   Vdwb  %s\n",
-						(params.containsOption(
-								ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE
-						) ? "S Hgt  " : ""),
-						(params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTION_MODE_IN_YIELD_TABLE) ? "Mode" : "")
-				);
 
-				doWrite(
-						"---- ---- ----------------------------------------------------------- ----- ------ ------ %s------ ----- -------- -------- ------ ------ ------ ------ ------ %s\n",
-						(params.containsOption(
-								ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE
-						) ? "------ " : ""),
-						(params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTION_MODE_IN_YIELD_TABLE) ? "----" : "")
-				);
+				String projectionMode = "";
+				String projectionModeLine = "";
+				if (params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTION_MODE_IN_YIELD_TABLE)) {
+					projectionMode = "Mode";
+					projectionModeLine = "----";
+				}
+
+				if (params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS)) {
+					doWrite(
+							"Year  Age                      Stand Composition                       Vcu    Bstem   Bbark  Bbranch   Bfol  %s\n",
+							projectionMode
+					);
+
+					doWrite(
+							"---- ---- ----------------------------------------------------------- ------ ------- ------- ------- ------- %s\n",
+							projectionModeLine
+					);
+				} else {
+					doWrite(
+							"Year  Age                      Stand Composition                      %% Stk   SI   D Hgt  %sL Hgt   Dia    TPH       BA      Vws    Vcu    Vd     Vdw   Vdwb  %s\n",
+							(params.containsOption(
+									ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE
+							) ? "S Hgt  " : ""), projectionMode
+					);
+
+					doWrite(
+							"---- ---- ----------------------------------------------------------- ----- ------ ------ %s------ ----- -------- -------- ------ ------ ------ ------ ------ %s\n",
+							(params.containsOption(
+									ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE
+							) ? "------ " : ""), projectionModeLine
+					);
+				}
 			}
 		}
 	}
@@ -236,6 +258,37 @@ class TextYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean>
 		else
 			doWrite("%6s ", " ");
 
+	}
+
+	protected void writeCFSBiomassInfo() throws YieldTableGenerationException {
+		if (currentRecord.getCloseUtilizationVolume() != null)
+			doWrite("%6.1f ", Double.parseDouble(currentRecord.getCloseUtilizationVolume()));
+		else
+			doWrite("%6s ", " ");
+
+		if (currentRecord.getCfsBiomassStem() != null)
+			doWrite("%7.2f ", Double.parseDouble(currentRecord.getCfsBiomassStem()));
+		else
+			doWrite("%7s ", " ");
+
+		if (currentRecord.getCfsBiomassBark() != null)
+			doWrite("%7.2f ", Double.parseDouble(currentRecord.getCfsBiomassBark()));
+		else
+			doWrite("%7s ", " ");
+
+		if (currentRecord.getCfsBiomassBranch() != null)
+			doWrite("%7.2f ", Double.parseDouble(currentRecord.getCfsBiomassBranch()));
+		else
+			doWrite("%7s ", " ");
+
+		if (currentRecord.getCfsBiomassFoliage() != null)
+			doWrite("%7.2f ", Double.parseDouble(currentRecord.getCfsBiomassFoliage()));
+		else
+			doWrite("%7s ", " ");
+
+	}
+
+	protected void writeRecordMode() throws YieldTableGenerationException {
 		if (context.getParams().containsOption(ExecutionOption.DO_INCLUDE_PROJECTION_MODE_IN_YIELD_TABLE)) {
 			if (currentRecord.getMode() != null)
 				doWrite("%5s ", currentRecord.getMode());
