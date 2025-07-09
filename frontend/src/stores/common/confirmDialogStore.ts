@@ -1,71 +1,71 @@
 import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
 
 interface DialogOptions {
   width: number
   noconfirm: boolean
 }
 
-interface ConfirmDialogState {
-  dialog: boolean
-  resolve: ((value: boolean) => void) | null
-  title: string | null
-  message: string | null
-  options: DialogOptions
-}
+export const useConfirmDialogStore = defineStore('confirmDialog', () => {
+  const dialog = ref<boolean>(false)
+  const resolve = ref<((value: boolean) => void) | null>(null)
+  const title = ref<string | null>(null)
+  const message = ref<string | null>(null)
+  const options = ref<DialogOptions>({ width: 400, noconfirm: false })
 
-export const useConfirmDialogStore = defineStore('confirmDialog', {
-  state: (): ConfirmDialogState => ({
-    dialog: false,
-    resolve: null,
-    title: null,
-    message: null,
-    options: {
-      width: 400,
-      noconfirm: false,
-    },
-  }),
+  const getIsOpen = computed(() => dialog.value)
+  const getDialogTitle = computed(() => title.value)
+  const getDialogMessage = computed(() => message.value)
+  const getDialogOptions = computed(() => options.value)
 
-  getters: {
-    isOpen: (state) => state.dialog,
-    dialogTitle: (state) => state.title,
-    dialogMessage: (state) => state.message,
-    dialogOptions: (state) => state.options,
-  },
+  const openDialog = (
+    newTitle: string,
+    newMessage: string,
+    newOptions?: Partial<DialogOptions>,
+  ): Promise<boolean> => {
+    dialog.value = true
+    title.value = newTitle
+    message.value = newMessage
+    if (newOptions) {
+      options.value = { ...options.value, ...newOptions }
+    }
+    return new Promise<boolean>((resolvePromise) => {
+      resolve.value = resolvePromise
+    })
+  }
 
-  actions: {
-    openDialog(
-      newTitle: string,
-      newMessage: string,
-      newOptions?: Partial<DialogOptions>,
-    ): Promise<boolean> {
-      this.dialog = true
-      this.title = newTitle
-      this.message = newMessage
-      if (newOptions) {
-        this.options = { ...this.options, ...newOptions }
-      }
-      return new Promise<boolean>((resolve) => {
-        this.resolve = resolve
-      })
-    },
+  const agree = () => {
+    if (resolve.value) resolve.value(true)
+    dialog.value = false
+    resetState()
+  }
 
-    agree() {
-      if (this.resolve) this.resolve(true)
-      this.dialog = false
-      this.resetState()
-    },
+  const cancel = () => {
+    if (resolve.value) resolve.value(false)
+    dialog.value = false
+    resetState()
+  }
 
-    cancel() {
-      if (this.resolve) this.resolve(false)
-      this.dialog = false
-      this.resetState()
-    },
+  const resetState = () => {
+    resolve.value = null
+    title.value = ''
+    message.value = ''
+    options.value = { width: 400, noconfirm: false }
+  }
 
-    resetState() {
-      this.resolve = null
-      this.title = ''
-      this.message = ''
-      this.options = { width: 400, noconfirm: false }
-    },
-  },
+  return {
+    dialog,
+    resolve,
+    title,
+    message,
+    options,
+    getIsOpen,
+    getDialogTitle,
+    getDialogMessage,
+    getDialogOptions,
+    openDialog,
+    agree,
+    cancel,
+    resetState,
+  }
 })
