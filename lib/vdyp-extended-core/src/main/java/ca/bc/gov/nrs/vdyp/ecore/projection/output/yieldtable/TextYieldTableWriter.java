@@ -58,7 +58,7 @@ class TextYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean>
 
 		writeCalendarYearAndLayerAge();
 		writeSpeciesComposition(rowContext);
-		if (context.getYieldTableCategories().contains(YieldTable.Category.CFSBIOMASS)) {
+		if (isCurrentlyWritingCategory(YieldTable.Category.CFSBIOMASS)) {
 			writeCFSBiomassInfo();
 		} else {
 			writeProjectionGrowthInfo();
@@ -88,7 +88,6 @@ class TextYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean>
 				layerId = "N/A";
 				processingMode = "Summary";
 			}
-			;
 
 			var reportingInfo = polygon.getReportingInfo();
 
@@ -97,49 +96,49 @@ class TextYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean>
 					reportingInfo.getMapSheet(), reportingInfo.getPolygonNumber(), layerId, processingMode
 			);
 
-			if (params.containsOption(ExecutionOption.DO_INCLUDE_POLYGON_RECORD_ID_IN_YIELD_TABLE)) {
+			if (isCurrentlyWritingCategory(YieldTable.Category.POLYGON_ID)) {
 
 				doWrite("   (Rcrd ID: %d)", reportingInfo.getFeatureId());
 			}
 
 			doWrite("\n");
+		}
+		if (params.containsOption(ExecutionOption.DO_INCLUDE_COLUMN_HEADERS_IN_YIELD_TABLE)) {
 
-			if (params.containsOption(ExecutionOption.DO_INCLUDE_COLUMN_HEADERS_IN_YIELD_TABLE)) {
+			String projectionMode = "";
+			String projectionModeLine = "";
+			if (isCurrentlyWritingCategory(YieldTable.Category.PROJECTION_MODE)) {
+				projectionMode = "Mode";
+				projectionModeLine = "----";
+			}
 
-				String projectionMode = "";
-				String projectionModeLine = "";
-				if (params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTION_MODE_IN_YIELD_TABLE)) {
-					projectionMode = "Mode";
-					projectionModeLine = "----";
-				}
+			if (isCurrentlyWritingCategory(YieldTable.Category.CFSBIOMASS)) {
+				doWrite(
+						"Year  Age                      Stand Composition                       Vcu    Bstem   Bbark  Bbranch   Bfol  %s\n",
+						projectionMode
+				);
 
-				if (params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS)) {
-					doWrite(
-							"Year  Age                      Stand Composition                       Vcu    Bstem   Bbark  Bbranch   Bfol  %s\n",
-							projectionMode
-					);
+				doWrite(
+						"---- ---- ----------------------------------------------------------- ------ ------- ------- ------- ------- %s\n",
+						projectionModeLine
+				);
+			} else {
+				doWrite(
+						"Year  Age                      Stand Composition                      %% Stk   SI   D Hgt  %sL Hgt   Dia    TPH       BA      Vws    Vcu    Vd     Vdw   Vdwb  %s\n",
+						(params.containsOption(
+								ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE
+						) ? "S Hgt  " : ""), projectionMode
+				);
 
-					doWrite(
-							"---- ---- ----------------------------------------------------------- ------ ------- ------- ------- ------- %s\n",
-							projectionModeLine
-					);
-				} else {
-					doWrite(
-							"Year  Age                      Stand Composition                      %% Stk   SI   D Hgt  %sL Hgt   Dia    TPH       BA      Vws    Vcu    Vd     Vdw   Vdwb  %s\n",
-							(params.containsOption(
-									ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE
-							) ? "S Hgt  " : ""), projectionMode
-					);
-
-					doWrite(
-							"---- ---- ----------------------------------------------------------- ----- ------ ------ %s------ ----- -------- -------- ------ ------ ------ ------ ------ %s\n",
-							(params.containsOption(
-									ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE
-							) ? "------ " : ""), projectionModeLine
-					);
-				}
+				doWrite(
+						"---- ---- ----------------------------------------------------------- ----- ------ ------ %s------ ----- -------- -------- ------ ------ ------ ------ ------ %s\n",
+						(params.containsOption(
+								ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE
+						) ? "------ " : ""), projectionModeLine
+				);
 			}
 		}
+
 	}
 
 	private void writeCalendarYearAndLayerAge() throws YieldTableGenerationException {
@@ -289,7 +288,7 @@ class TextYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean>
 	}
 
 	protected void writeRecordMode() throws YieldTableGenerationException {
-		if (context.getParams().containsOption(ExecutionOption.DO_INCLUDE_PROJECTION_MODE_IN_YIELD_TABLE)) {
+		if (isCurrentlyWritingCategory(YieldTable.Category.PROJECTION_MODE)) {
 			if (currentRecord.getMode() != null)
 				doWrite("%5s ", currentRecord.getMode());
 			else

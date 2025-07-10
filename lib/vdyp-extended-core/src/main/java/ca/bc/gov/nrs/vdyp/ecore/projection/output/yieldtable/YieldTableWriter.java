@@ -2,11 +2,15 @@ package ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable;
 
 import java.io.Closeable;
 import java.nio.file.Path;
+import java.util.EnumSet;
 import java.util.Optional;
 
 import org.apache.commons.lang3.Validate;
 
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.YieldTableGenerationException;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
+import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionContext;
+import ca.bc.gov.nrs.vdyp.ecore.projection.ValidatedParameters;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.LayerReportingInfo;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon;
 import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.YieldTableRowBean.MultiFieldPrefixes;
@@ -228,6 +232,82 @@ abstract class YieldTableWriter<T extends YieldTableRowBean> implements Closeabl
 
 	void recordMode(String projectionMode) {
 		currentRecord.setMode(projectionMode);
+	}
+
+	protected EnumSet<YieldTable.Category> currentCategories = EnumSet.noneOf(YieldTable.Category.class);
+
+	public void setPrioritizedCurrentCategories(ProjectionContext context) {
+		// clear the current categories
+		currentCategories = EnumSet.noneOf(YieldTable.Category.class);
+		ValidatedParameters params = context.getParams();
+		if (params.containsOption(Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS)) {
+			extractCFSCategories(params);
+		} else {
+			extractMofCategories(params);
+		}
+	}
+
+	public void setMOFCategories(ProjectionContext context) {
+		// clear the current categories
+		currentCategories = EnumSet.noneOf(YieldTable.Category.class);
+
+		ValidatedParameters params = context.getParams();
+		extractMofCategories(params);
+	}
+
+	private void extractMofCategories(ValidatedParameters params) {
+		// add the relevant ones
+		if (params.containsOption(Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER)
+				&& params.containsOption(Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_BIOMASS)) {
+			currentCategories.add(YieldTable.Category.LAYER_MOFBIOMASS);
+		}
+		if (params.containsOption(Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER)
+				&& params.containsOption(Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES)) {
+			currentCategories.add(YieldTable.Category.LAYER_MOFVOLUMES);
+		}
+		if (params.containsOption(Parameters.ExecutionOption.DO_INCLUDE_SPECIES_PROJECTION)
+				&& params.containsOption(Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES)) {
+			currentCategories.add(YieldTable.Category.SPECIES_MOFVOLUME);
+		}
+		if (params.containsOption(Parameters.ExecutionOption.DO_INCLUDE_SPECIES_PROJECTION)
+				&& params.containsOption(Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_BIOMASS)) {
+			currentCategories.add(YieldTable.Category.SPECIES_MOFBIOMASS);
+		}
+
+		extractGenericCategories(params);
+	}
+
+	public void setCFSCategories(ProjectionContext context) {
+		// clear the current categories
+		currentCategories = EnumSet.noneOf(YieldTable.Category.class);
+		ValidatedParameters params = context.getParams();
+		extractCFSCategories(params);
+		extractGenericCategories(params);
+	}
+
+	private void extractCFSCategories(ValidatedParameters params) {
+// set the relevant ones (this is a little silly currently)
+		if (params.containsOption(Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS)) {
+			currentCategories.add(YieldTable.Category.CFSBIOMASS);
+		}
+	}
+
+	private void extractGenericCategories(ValidatedParameters params) {
+
+		if (params.containsOption(Parameters.ExecutionOption.DO_INCLUDE_PROJECTION_MODE_IN_YIELD_TABLE)) {
+			currentCategories.add(YieldTable.Category.PROJECTION_MODE);
+		}
+		if (params.containsOption(Parameters.ExecutionOption.DO_INCLUDE_POLYGON_RECORD_ID_IN_YIELD_TABLE)) {
+			currentCategories.add(YieldTable.Category.POLYGON_ID);
+		}
+	}
+
+	public boolean isCurrentlyWritingCategory(YieldTable.Category category) {
+		return currentCategories.contains(category);
+	}
+
+	public EnumSet<YieldTable.Category> getCurrentCategories() {
+		return currentCategories;
 	}
 
 	/**

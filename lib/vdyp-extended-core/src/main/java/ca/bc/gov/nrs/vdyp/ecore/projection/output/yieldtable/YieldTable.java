@@ -152,6 +152,30 @@ public class YieldTable implements Closeable {
 			LayerReportingInfo layerReportingInfo,
 			boolean doGenerateDetailedTableHeader
 	) throws YieldTableGenerationException {
+
+		writer.setCFSCategories(context);
+
+		writeCategorizedYieldTable(
+				polygon, projectionResults, state, layerReportingInfo, doGenerateDetailedTableHeader
+		);
+	}
+
+	/**
+	 * Given the properly set categories generate a yield tale running only the relevant portions.
+	 * 
+	 * @param polygon                       the polygon for which a yield table is to be generated
+	 * @param projectionResults             map of year to the result of projecting the polygon to that year
+	 * @param state                         the current state of the (completed) projection of <code>polygon</code>
+	 * @param layerReportingInfo            the layer of the polygon. May be null, indicating that the CFS Biomass yield
+	 *                                      * table summarizes information at the polygon level only.
+	 * @param doGenerateDetailedTableHeader if true, displays all the expected details in the table header. If false, *
+	 *                                      only the table number is generated.
+	 * @throws YieldTableGenerationException in the event of a write error or calculation error
+	 */
+	private void writeCategorizedYieldTable(
+			Polygon polygon, Map<Integer, VdypPolygon> projectionResults, PolygonProjectionState state,
+			LayerReportingInfo layerReportingInfo, boolean doGenerateDetailedTableHeader
+	) throws YieldTableGenerationException {
 		writer.writePolygonTableHeader(
 				polygon, Optional.ofNullable(layerReportingInfo), doGenerateDetailedTableHeader, nextYieldTableNumber
 		);
@@ -178,22 +202,10 @@ public class YieldTable implements Closeable {
 			Polygon polygon, Map<Integer, VdypPolygon> polygonProjectionResults, PolygonProjectionState state,
 			LayerReportingInfo layerReportingInfo, boolean doGenerateDetailedTableHeader
 	) throws YieldTableGenerationException {
-
-		writer.writePolygonTableHeader(
-				polygon, Optional.ofNullable(layerReportingInfo), doGenerateDetailedTableHeader, nextYieldTableNumber
+		writer.setMOFCategories(context);
+		writeCategorizedYieldTable(
+				polygon, polygonProjectionResults, state, layerReportingInfo, doGenerateDetailedTableHeader
 		);
-
-		YieldTableRowIterator rowIterator = new YieldTableRowIterator(context, polygon, state, layerReportingInfo);
-		while (rowIterator.hasNext()) {
-			YieldTableRowContext rowContext = rowIterator.next();
-			if (rowIsToBeGenerated(rowContext)) {
-				generateYieldTableRow(rowContext, polygonProjectionResults, writer);
-			}
-		}
-
-		writer.writePolygonTableTrailer(nextYieldTableNumber);
-
-		nextYieldTableNumber += 1;
 	}
 
 	private YieldTableWriter<? extends YieldTableRowBean> buildYieldTableWriter(OutputFormat outputFormat)
@@ -431,7 +443,7 @@ public class YieldTable implements Closeable {
 					dominantHeight = layer.determineLeadingSiteSpeciesHeight(targetAge);
 				}
 
-				if (!context.getYieldTableCategories().contains(Category.CFSBIOMASS)) {
+				if (!writer.isCurrentlyWritingCategory(Category.CFSBIOMASS)) {
 					writer.recordSiteInformation(
 							percentStockable, growthDetails != null ? growthDetails.siteIndex() : null, dominantHeight,
 							secondaryHeight
@@ -440,7 +452,7 @@ public class YieldTable implements Closeable {
 
 				if (growthDetails != null && volumeDetails != null) {
 
-					if (!context.getYieldTableCategories().contains(Category.CFSBIOMASS)) {
+					if (!writer.isCurrentlyWritingCategory(Category.CFSBIOMASS)) {
 						writer.recordGrowthDetails(growthDetails, volumeDetails);
 					}
 					if (!rowContext.isPolygonTable()) {
@@ -451,7 +463,7 @@ public class YieldTable implements Closeable {
 									.setFirstYearYieldsDisplayed(layer, rowContext.getCurrentTableYear());
 						}
 
-						if (context.getYieldTableCategories().contains(Category.SPECIES_MOFVOLUME)) {
+						if (writer.isCurrentlyWritingCategory(Category.SPECIES_MOFVOLUME)) {
 							int spIndex = 1;
 							for (Species sp64 : layer.getSp64sByPercent()) {
 
@@ -469,7 +481,7 @@ public class YieldTable implements Closeable {
 						}
 					}
 
-					if (context.getYieldTableCategories().contains(Category.CFSBIOMASS)) {
+					if (writer.isCurrentlyWritingCategory(Category.CFSBIOMASS)) {
 						CfsBiomassVolumeDetails cfsBiomass;
 						if (rowContext.isPolygonTable()) {
 							cfsBiomass = CfsBiomassCalculator

@@ -26,15 +26,15 @@ public class CSVYieldTableRowValuesBean implements YieldTableRowBean {
 	@SuppressWarnings("unused")
 	private static final Logger logger = LoggerFactory.getLogger(CSVYieldTableRowValuesBean.class);
 
-	public static StatefulBeanToCsv<CSVYieldTableRowValuesBean>
-			createCsvOutputStream(FileWriter writer, ProjectionContext context) {
+	static StatefulBeanToCsv<CSVYieldTableRowValuesBean>
+			createCsvOutputStream(FileWriter writer, ProjectionContext context, CSVYieldTableWriter yieldTableWriter) {
 
 		var doGenerateHeader = context.getParams().containsOption(ExecutionOption.DO_INCLUDE_FILE_HEADER);
 
 		if (doGenerateHeader) {
 
 			var unfilteredFields = CSVYieldTableRowValuesBean.class.getDeclaredFields();
-			EnumSet<YieldTable.Category> activeCategories = EnumSet.copyOf(context.getYieldTableCategories());
+			EnumSet<YieldTable.Category> activeCategories = yieldTableWriter.getCurrentCategories();
 			var filteredFields = Stream.of(unfilteredFields) //
 					.filter(m -> m.isAnnotationPresent(CsvBindByPosition.class)) //
 					.filter(
