@@ -57,7 +57,7 @@ public class TestProjectionResultsReader implements ProjectionResultsReader {
 			if (vdypPolygon.isPresent()) {
 				throw new YieldTableGenerationException(
 						MessageFormat.format(
-								"Expected exactly one polygon in the Forward output, but saw {1} as well",
+								"Expected exactly one polygon in the Forward output, but saw {0} as well",
 								vdypPolygon.get().getPolygonIdentifier()
 						)
 				);

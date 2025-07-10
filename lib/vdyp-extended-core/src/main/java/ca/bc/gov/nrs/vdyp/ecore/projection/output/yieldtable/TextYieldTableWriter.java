@@ -58,8 +58,12 @@ class TextYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean>
 
 		writeCalendarYearAndLayerAge();
 		writeSpeciesComposition(rowContext);
-		writeProjectionGrowthInfo();
-
+		if (isCurrentlyWritingCategory(YieldTable.Category.CFSBIOMASS)) {
+			writeCFSBiomassInfo();
+		} else {
+			writeProjectionGrowthInfo();
+		}
+		writeRecordMode();
 		doWrite("\n");
 	}
 
@@ -84,7 +88,6 @@ class TextYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean>
 				layerId = "N/A";
 				processingMode = "Summary";
 			}
-			;
 
 			var reportingInfo = polygon.getReportingInfo();
 
@@ -93,31 +96,49 @@ class TextYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean>
 					reportingInfo.getMapSheet(), reportingInfo.getPolygonNumber(), layerId, processingMode
 			);
 
-			if (params.containsOption(ExecutionOption.DO_INCLUDE_POLYGON_RECORD_ID_IN_YIELD_TABLE)) {
+			if (isCurrentlyWritingCategory(YieldTable.Category.POLYGON_ID)) {
 
 				doWrite("   (Rcrd ID: %d)", reportingInfo.getFeatureId());
 			}
 
 			doWrite("\n");
+		}
+		if (params.containsOption(ExecutionOption.DO_INCLUDE_COLUMN_HEADERS_IN_YIELD_TABLE)) {
 
-			if (params.containsOption(ExecutionOption.DO_INCLUDE_COLUMN_HEADERS_IN_YIELD_TABLE)) {
+			String projectionMode = "";
+			String projectionModeLine = "";
+			if (isCurrentlyWritingCategory(YieldTable.Category.PROJECTION_MODE)) {
+				projectionMode = "Mode";
+				projectionModeLine = "----";
+			}
+
+			if (isCurrentlyWritingCategory(YieldTable.Category.CFSBIOMASS)) {
+				doWrite(
+						"Year  Age                      Stand Composition                       Vcu    Bstem   Bbark  Bbranch   Bfol  %s\n",
+						projectionMode
+				);
+
+				doWrite(
+						"---- ---- ----------------------------------------------------------- ------ ------- ------- ------- ------- %s\n",
+						projectionModeLine
+				);
+			} else {
 				doWrite(
 						"Year  Age                      Stand Composition                      %% Stk   SI   D Hgt  %sL Hgt   Dia    TPH       BA      Vws    Vcu    Vd     Vdw   Vdwb  %s\n",
 						(params.containsOption(
 								ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE
-						) ? "S Hgt  " : ""),
-						(params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTION_MODE_IN_YIELD_TABLE) ? "Mode" : "")
+						) ? "S Hgt  " : ""), projectionMode
 				);
 
 				doWrite(
 						"---- ---- ----------------------------------------------------------- ----- ------ ------ %s------ ----- -------- -------- ------ ------ ------ ------ ------ %s\n",
 						(params.containsOption(
 								ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE
-						) ? "------ " : ""),
-						(params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTION_MODE_IN_YIELD_TABLE) ? "----" : "")
+						) ? "------ " : ""), projectionModeLine
 				);
 			}
 		}
+
 	}
 
 	private void writeCalendarYearAndLayerAge() throws YieldTableGenerationException {
@@ -236,7 +257,38 @@ class TextYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean>
 		else
 			doWrite("%6s ", " ");
 
-		if (context.getParams().containsOption(ExecutionOption.DO_INCLUDE_PROJECTION_MODE_IN_YIELD_TABLE)) {
+	}
+
+	protected void writeCFSBiomassInfo() throws YieldTableGenerationException {
+		if (currentRecord.getCloseUtilizationVolume() != null)
+			doWrite("%6.1f ", Double.parseDouble(currentRecord.getCloseUtilizationVolume()));
+		else
+			doWrite("%6s ", " ");
+
+		if (currentRecord.getCfsBiomassStem() != null)
+			doWrite("%7.2f ", Double.parseDouble(currentRecord.getCfsBiomassStem()));
+		else
+			doWrite("%7s ", " ");
+
+		if (currentRecord.getCfsBiomassBark() != null)
+			doWrite("%7.2f ", Double.parseDouble(currentRecord.getCfsBiomassBark()));
+		else
+			doWrite("%7s ", " ");
+
+		if (currentRecord.getCfsBiomassBranch() != null)
+			doWrite("%7.2f ", Double.parseDouble(currentRecord.getCfsBiomassBranch()));
+		else
+			doWrite("%7s ", " ");
+
+		if (currentRecord.getCfsBiomassFoliage() != null)
+			doWrite("%7.2f ", Double.parseDouble(currentRecord.getCfsBiomassFoliage()));
+		else
+			doWrite("%7s ", " ");
+
+	}
+
+	protected void writeRecordMode() throws YieldTableGenerationException {
+		if (isCurrentlyWritingCategory(YieldTable.Category.PROJECTION_MODE)) {
 			if (currentRecord.getMode() != null)
 				doWrite("%5s ", currentRecord.getMode());
 			else

@@ -17,6 +17,7 @@ class CSVYieldTableWriter extends AbstractCSVTypeYieldTableWriter<CSVYieldTableR
 
 		CSVYieldTableWriter writer = new CSVYieldTableWriter(context);
 
+		writer.setPrioritizedCurrentCategories(context);
 		writer.initialize();
 
 		return writer;
@@ -24,6 +25,6 @@ class CSVYieldTableWriter extends AbstractCSVTypeYieldTableWriter<CSVYieldTableR
 
 	@Override
 	protected StatefulBeanToCsv<CSVYieldTableRowValuesBean> createCsvOutputStream(FileWriter fileWriter) {
-		return CSVYieldTableRowValuesBean.createCsvOutputStream(fileWriter, context);
+		return CSVYieldTableRowValuesBean.createCsvOutputStream(fileWriter, context, this);
 	}
 }
