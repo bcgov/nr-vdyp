@@ -81,12 +81,7 @@ import { CONSTANTS, MESSAGE } from '@/constants'
 import { handleApiError } from '@/services/apiErrorHandler'
 import { runModel } from '@/services/modelParameterService'
 import { runModelFileUpload } from '@/services/fileUploadService'
-import {
-  checkZipForErrors,
-  delay,
-  downloadFile,
-  extractZipFileName,
-} from '@/utils/util'
+import { checkZipForErrors, delay, extractZipFileName } from '@/utils/util'
 import { logSuccessMessage, logErrorMessage } from '@/utils/messageHandler'
 
 const isProgressVisible = ref(false)
@@ -196,10 +191,6 @@ const processResponse = async (response: any): Promise<boolean> => {
 
   const hasErrors = await checkZipForErrors(resultBlob)
   await projectionStore.handleZipResponse(resultBlob, zipFileName)
-
-  if (appStore.modelSelection === CONSTANTS.MODEL_SELECTION.FILE_UPLOAD) {
-    downloadFile(resultBlob, zipFileName)
-  }
 
   if (hasErrors) {
     logErrorMessage(
