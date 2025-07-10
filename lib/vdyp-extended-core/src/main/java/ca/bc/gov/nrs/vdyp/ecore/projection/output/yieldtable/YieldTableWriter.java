@@ -282,14 +282,15 @@ abstract class YieldTableWriter<T extends YieldTableRowBean> implements Closeabl
 		currentCategories = EnumSet.noneOf(YieldTable.Category.class);
 		ValidatedParameters params = context.getParams();
 		extractCFSCategories(params);
-		extractGenericCategories(params);
 	}
 
 	private void extractCFSCategories(ValidatedParameters params) {
-// set the relevant ones (this is a little silly currently)
+		// set the relevant ones (this is a little silly currently)
 		if (params.containsOption(Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS)) {
 			currentCategories.add(YieldTable.Category.CFSBIOMASS);
 		}
+
+		extractGenericCategories(params);
 	}
 
 	private void extractGenericCategories(ValidatedParameters params) {
