@@ -211,7 +211,7 @@ public class YieldTable implements Closeable {
 	private YieldTableWriter<? extends YieldTableRowBean> buildYieldTableWriter(OutputFormat outputFormat)
 			throws YieldTableGenerationException {
 
-		YieldTableWriter<? extends YieldTableRowBean> writer = switch (outputFormat) {
+		YieldTableWriter<? extends YieldTableRowBean> builtWriter = switch (outputFormat) {
 		case CSV_YIELD_TABLE -> CSVYieldTableWriter.of(context);
 		case DCSV -> DCSVYieldTableWriter.of(context);
 		case PLOTSY -> PLOTSYYieldTableWriter.of(context);
@@ -219,9 +219,9 @@ public class YieldTable implements Closeable {
 		default -> throw new IllegalStateException("Unrecognized output format " + outputFormat);
 		};
 
-		yieldTableFilePath = writer.getYieldTableFilePath();
+		yieldTableFilePath = builtWriter.getYieldTableFilePath();
 
-		return writer;
+		return builtWriter;
 	}
 
 	/**

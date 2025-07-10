@@ -38,7 +38,7 @@ import ca.bc.gov.nrs.vdyp.vri.VriStart;
 
 public class RealComponentRunner implements ComponentRunner {
 
-	private final static Logger logger = LoggerFactory.getLogger(RealComponentRunner.class);
+	private static final Logger logger = LoggerFactory.getLogger(RealComponentRunner.class);
 
 	@Override
 	public void runFipStart(Polygon polygon, ProjectionTypeCode projectionTypeCode, PolygonProjectionState state)
