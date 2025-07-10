@@ -52,7 +52,7 @@ public class YieldTable implements Closeable {
 
 	public enum Category {
 		LAYER_MOFVOLUMES, LAYER_MOFBIOMASS, SPECIES_MOFVOLUME, SPECIES_MOFBIOMASS, CFSBIOMASS, PROJECTION_MODE,
-		POLYGON_ID, NONE;
+		POLYGON_ID, NONE
 	}
 
 	private static final Logger logger = LoggerFactory.getLogger(YieldTable.class);
@@ -211,24 +211,13 @@ public class YieldTable implements Closeable {
 	private YieldTableWriter<? extends YieldTableRowBean> buildYieldTableWriter(OutputFormat outputFormat)
 			throws YieldTableGenerationException {
 
-		YieldTableWriter<? extends YieldTableRowBean> writer;
-
-		switch (outputFormat) {
-		case CSV_YIELD_TABLE:
-			writer = CSVYieldTableWriter.of(context);
-			break;
-		case DCSV:
-			writer = DCSVYieldTableWriter.of(context);
-			break;
-		case PLOTSY:
-			writer = PLOTSYYieldTableWriter.of(context);
-			break;
-		case YIELD_TABLE:
-			writer = TextYieldTableWriter.of(context);
-			break;
-		default:
-			throw new IllegalStateException("Unrecognized output format " + outputFormat);
-		}
+		YieldTableWriter<? extends YieldTableRowBean> writer = switch (outputFormat) {
+		case CSV_YIELD_TABLE -> CSVYieldTableWriter.of(context);
+		case DCSV -> DCSVYieldTableWriter.of(context);
+		case PLOTSY -> PLOTSYYieldTableWriter.of(context);
+		case YIELD_TABLE -> TextYieldTableWriter.of(context);
+		default -> throw new IllegalStateException("Unrecognized output format " + outputFormat);
+		};
 
 		yieldTableFilePath = writer.getYieldTableFilePath();
 

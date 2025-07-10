@@ -663,7 +663,7 @@ public class CSVYieldTableRowValuesBean implements YieldTableRowBean {
 	@OptionalField(category = YieldTable.Category.PROJECTION_MODE)
 	private String mode;
 
-	private static Map<String, Field> csvFields = new HashMap<>();
+	private static final Map<String, Field> csvFields = new HashMap<>();
 
 	static {
 		for (Field f : CSVYieldTableRowValuesBean.class.getDeclaredFields()) {
