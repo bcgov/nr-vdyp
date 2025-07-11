@@ -56,12 +56,12 @@ export const volumeReportedOptions = [
 export const includeInReportOptions = [
   { label: 'Computed MAI', value: CONSTANTS.INCLUDE_IN_REPORT.COMPUTED_MAI },
   {
-    label: 'Species Composition',
-    value: CONSTANTS.INCLUDE_IN_REPORT.SPECIES_COMPOSITION,
-  },
-  {
     label: 'Culmination Values',
     value: CONSTANTS.INCLUDE_IN_REPORT.CULMINATION_VALUES,
+  },
+  {
+    label: 'By Species',
+    value: CONSTANTS.INCLUDE_IN_REPORT.BY_SPECIES,
   },
 ]
 

@@ -384,7 +384,7 @@ const buildSelectedExecutionOptions = (
   if (
     modelParameterStore.includeInReport &&
     modelParameterStore.includeInReport.includes(
-      CONSTANTS.INCLUDE_IN_REPORT.SPECIES_COMPOSITION,
+      CONSTANTS.INCLUDE_IN_REPORT.BY_SPECIES,
     )
   ) {
     options.push(SelectedExecutionOptionsEnum.DoIncludeSpeciesProjection)
