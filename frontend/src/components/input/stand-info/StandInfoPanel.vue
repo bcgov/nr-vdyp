@@ -9,20 +9,20 @@
       @update:dialog="(value) => (messageDialog.dialog = value)"
       @close="handleDialogClose"
     />
-    <v-expansion-panels v-model="panelOpenStates.standDensity">
+    <v-expansion-panels v-model="panelOpenStates.standInfo">
       <v-expansion-panel hide-actions>
         <v-expansion-panel-title>
           <v-row no-gutters class="expander-header">
             <!-- Place an arrow icon to the left of the title -->
             <v-col cols="auto" class="expansion-panel-icon-col">
               <v-icon class="expansion-panel-icon">{{
-                panelOpenStates.standDensity === CONSTANTS.PANEL.OPEN
+                panelOpenStates.standInfo === CONSTANTS.PANEL.OPEN
                   ? 'mdi-chevron-up'
                   : 'mdi-chevron-down'
               }}</v-icon>
             </v-col>
             <v-col>
-              <span class="text-h6">Stand Density</span>
+              <span class="text-h6">Stand Information</span>
             </v-col>
           </v-row>
         </v-expansion-panel-title>
@@ -73,7 +73,7 @@ import { useModelParameterStore } from '@/stores/modelParameterStore'
 import { AppMessageDialog, AppPanelActions } from '@/components'
 import { CONSTANTS, MESSAGE } from '@/constants'
 import type { MessageDialog } from '@/interfaces/interfaces'
-import { standDensityValidation } from '@/validation'
+import { standInfoValidation } from '@/validation'
 import { isEmptyOrZero } from '@/utils/util'
 
 const form = ref<HTMLFormElement>()
@@ -89,7 +89,7 @@ const messageDialog = ref<MessageDialog>({
 const { panelOpenStates, percentStockableArea } =
   storeToRefs(modelParameterStore)
 
-const panelName = CONSTANTS.MODEL_PARAMETER_PANEL.STAND_DENSITY
+const panelName = CONSTANTS.MODEL_PARAMETER_PANEL.STAND_INFO
 const isConfirmEnabled = computed(
   () => modelParameterStore.panelState[panelName].editable,
 )
@@ -99,7 +99,7 @@ const isConfirmed = computed(
 
 const onConfirm = () => {
   // validation - range
-  const rangeResult = standDensityValidation.validateRange(
+  const rangeResult = standInfoValidation.validateRange(
     percentStockableArea.value,
   )
   if (!rangeResult.isValid) {

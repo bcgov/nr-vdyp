@@ -15,7 +15,7 @@ describe('ModelParameterStore Unit Tests', () => {
   it('should initialize with default values', () => {
     expect(store.panelOpenStates.speciesInfo).to.equal(CONSTANTS.PANEL.OPEN)
     expect(store.panelOpenStates.siteInfo).to.equal(CONSTANTS.PANEL.CLOSE)
-    expect(store.panelOpenStates.standDensity).to.equal(CONSTANTS.PANEL.CLOSE)
+    expect(store.panelOpenStates.standInfo).to.equal(CONSTANTS.PANEL.CLOSE)
     expect(store.panelOpenStates.reportInfo).to.equal(CONSTANTS.PANEL.CLOSE)
 
     expect(store.panelState.speciesInfo.confirmed).to.be.false
@@ -24,8 +24,8 @@ describe('ModelParameterStore Unit Tests', () => {
     expect(store.panelState.siteInfo.confirmed).to.be.false
     expect(store.panelState.siteInfo.editable).to.be.false
 
-    expect(store.panelState.standDensity.confirmed).to.be.false
-    expect(store.panelState.standDensity.editable).to.be.false
+    expect(store.panelState.standInfo.confirmed).to.be.false
+    expect(store.panelState.standInfo.editable).to.be.false
 
     expect(store.panelState.reportInfo.confirmed).to.be.false
     expect(store.panelState.reportInfo.editable).to.be.false
@@ -59,9 +59,9 @@ describe('ModelParameterStore Unit Tests', () => {
     expect(store.panelState.siteInfo.confirmed).to.be.false
     expect(store.panelState.siteInfo.editable).to.be.false
 
-    expect(store.panelOpenStates.standDensity).to.equal(CONSTANTS.PANEL.CLOSE)
-    expect(store.panelState.standDensity.confirmed).to.be.false
-    expect(store.panelState.standDensity.editable).to.be.false
+    expect(store.panelOpenStates.standInfo).to.equal(CONSTANTS.PANEL.CLOSE)
+    expect(store.panelState.standInfo.confirmed).to.be.false
+    expect(store.panelState.standInfo.editable).to.be.false
 
     expect(store.panelOpenStates.reportInfo).to.equal(CONSTANTS.PANEL.CLOSE)
     expect(store.panelState.reportInfo.confirmed).to.be.false
@@ -126,7 +126,7 @@ describe('ModelParameterStore Unit Tests', () => {
   it('should enable run model button when all panels are confirmed', () => {
     store.confirmPanel(CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO)
     store.confirmPanel(CONSTANTS.MODEL_PARAMETER_PANEL.SITE_INFO)
-    store.confirmPanel(CONSTANTS.MODEL_PARAMETER_PANEL.STAND_DENSITY)
+    store.confirmPanel(CONSTANTS.MODEL_PARAMETER_PANEL.STAND_INFO)
     store.confirmPanel(CONSTANTS.MODEL_PARAMETER_PANEL.REPORT_INFO)
 
     expect(store.runModelEnabled).to.be.true
@@ -158,7 +158,7 @@ describe('ModelParameterStore Unit Tests', () => {
     const panelOrder = [
       CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO,
       CONSTANTS.MODEL_PARAMETER_PANEL.SITE_INFO,
-      CONSTANTS.MODEL_PARAMETER_PANEL.STAND_DENSITY,
+      CONSTANTS.MODEL_PARAMETER_PANEL.STAND_INFO,
       CONSTANTS.MODEL_PARAMETER_PANEL.REPORT_INFO,
     ]
 
@@ -190,9 +190,9 @@ describe('ModelParameterStore Unit Tests', () => {
     expect(store.panelState.siteInfo.editable).to.be.false
     expect(store.panelOpenStates.siteInfo).to.equal(CONSTANTS.PANEL.CLOSE)
 
-    expect(store.panelState.standDensity.confirmed).to.be.false
-    expect(store.panelState.standDensity.editable).to.be.false
-    expect(store.panelOpenStates.standDensity).to.equal(CONSTANTS.PANEL.CLOSE)
+    expect(store.panelState.standInfo.confirmed).to.be.false
+    expect(store.panelState.standInfo.editable).to.be.false
+    expect(store.panelOpenStates.standInfo).to.equal(CONSTANTS.PANEL.CLOSE)
 
     expect(store.panelState.reportInfo.confirmed).to.be.false
     expect(store.panelState.reportInfo.editable).to.be.false

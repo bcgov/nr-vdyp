@@ -27,7 +27,7 @@
         <v-spacer class="space"></v-spacer>
         <SiteInfoPanel />
         <v-spacer class="space"></v-spacer>
-        <StandDensityPanel />
+        <StandInfoPanel />
         <v-spacer class="space"></v-spacer>
         <ReportInfoPanel />
         <AppRunModelButton
@@ -72,7 +72,7 @@ import {
   ReportingContainer,
   SpeciesInfoPanel,
   SiteInfoPanel,
-  StandDensityPanel,
+  StandInfoPanel,
   ReportInfoPanel,
   AttachmentsPanel,
 } from '@/components'

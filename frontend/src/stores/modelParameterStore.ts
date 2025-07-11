@@ -10,7 +10,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
   const panelOpenStates = ref<Record<PanelName, PanelState>>({
     speciesInfo: CONSTANTS.PANEL.OPEN,
     siteInfo: CONSTANTS.PANEL.CLOSE,
-    standDensity: CONSTANTS.PANEL.CLOSE,
+    standInfo: CONSTANTS.PANEL.CLOSE,
     reportInfo: CONSTANTS.PANEL.CLOSE,
   })
 
@@ -20,7 +20,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
   >({
     speciesInfo: { confirmed: false, editable: true },
     siteInfo: { confirmed: false, editable: false },
-    standDensity: { confirmed: false, editable: false },
+    standInfo: { confirmed: false, editable: false },
     reportInfo: { confirmed: false, editable: false },
   })
 
@@ -48,7 +48,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     const panelOrder: PanelName[] = [
       CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO,
       CONSTANTS.MODEL_PARAMETER_PANEL.SITE_INFO,
-      CONSTANTS.MODEL_PARAMETER_PANEL.STAND_DENSITY,
+      CONSTANTS.MODEL_PARAMETER_PANEL.STAND_INFO,
       CONSTANTS.MODEL_PARAMETER_PANEL.REPORT_INFO,
     ]
     const currentIndex = panelOrder.indexOf(panelName)
@@ -74,7 +74,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     const panelOrder: PanelName[] = [
       CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO,
       CONSTANTS.MODEL_PARAMETER_PANEL.SITE_INFO,
-      CONSTANTS.MODEL_PARAMETER_PANEL.STAND_DENSITY,
+      CONSTANTS.MODEL_PARAMETER_PANEL.STAND_INFO,
       CONSTANTS.MODEL_PARAMETER_PANEL.REPORT_INFO,
     ]
     const currentIndex = panelOrder.indexOf(panelName)
@@ -174,7 +174,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
   const siteSpeciesValues = ref<string | null>(null)
   const bha50SiteIndex = ref<string | null>(null)
 
-  // stand density
+  // stand information
   const percentStockableArea = ref<number | null>(null)
 
   // report info
@@ -251,7 +251,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     incSecondaryHeight,
     siteSpeciesValues,
     bha50SiteIndex,
-    // stand density
+    // stand info
     percentStockableArea,
     // report info
     selectedAgeYearRange,

@@ -1,9 +1,9 @@
 /// <reference types="cypress" />
 
-import { validateRange } from '@/validation/standDensityValidation'
+import { validateRange } from '@/validation/standInfoValidation'
 import { CONSTANTS } from '@/constants'
 
-describe('Stand Density Validation Unit Tests', () => {
+describe('Stand Information Validation Unit Tests', () => {
   context('validateRange', () => {
     it('should return true for valid percentStockableArea within range', () => {
       expect(

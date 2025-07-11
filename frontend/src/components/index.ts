@@ -16,7 +16,7 @@ export { default as SpeciesGroupsDisplay } from './input/species-info/SpeciesGro
 export { default as SpeciesInfoPanel } from './input/species-info/SpeciesInfoPanel.vue'
 
 export { default as SiteInfoPanel } from './input/site-info/SiteInfoPanel.vue'
-export { default as StandDensityPanel } from './input/stand-density/StandDensityPanel.vue'
+export { default as StandInfoPanel } from './input/stand-info/StandInfoPanel.vue'
 export { default as ReportInfoPanel } from './input/report-info/ReportInfoPanel.vue'
 
 export { default as AttachmentsPanel } from './input/attachments/AttachmentsPanel.vue'
