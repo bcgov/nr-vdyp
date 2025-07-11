@@ -1,15 +1,15 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import { createPinia, setActivePinia } from 'pinia'
 import { useModelParameterStore } from '@/stores/modelParameterStore'
-import StandDensityPanel from './StandDensityPanel.vue'
+import StandInfoPanel from './StandInfoPanel.vue'
 import { CONSTANTS } from '@/constants'
 
 const pinia = createPinia()
 setActivePinia(pinia)
 
-const meta: Meta<typeof StandDensityPanel> = {
-  title: 'components/input/stand-density/StandDensityPanel',
-  component: StandDensityPanel,
+const meta: Meta<typeof StandInfoPanel> = {
+  title: 'components/input/stand-info/StandInfoPanel',
+  component: StandInfoPanel,
   decorators: [
     (story) => {
       const modelParameterStore = useModelParameterStore()
@@ -33,16 +33,16 @@ const meta: Meta<typeof StandDensityPanel> = {
 
 export default meta
 
-type Story = StoryObj<typeof StandDensityPanel>
+type Story = StoryObj<typeof StandInfoPanel>
 
 export const Default: Story = {
   render: () => {
     const modelParameterStore = useModelParameterStore()
-    modelParameterStore.editPanel(CONSTANTS.MODEL_PARAMETER_PANEL.STAND_DENSITY)
+    modelParameterStore.editPanel(CONSTANTS.MODEL_PARAMETER_PANEL.STAND_INFO)
 
     return {
-      components: { StandDensityPanel },
-      template: '<StandDensityPanel />',
+      components: { StandInfoPanel },
+      template: '<StandInfoPanel />',
     }
   },
 }
@@ -50,13 +50,11 @@ export const Default: Story = {
 export const Confirmed: Story = {
   render: () => {
     const modelParameterStore = useModelParameterStore()
-    modelParameterStore.confirmPanel(
-      CONSTANTS.MODEL_PARAMETER_PANEL.STAND_DENSITY,
-    )
+    modelParameterStore.confirmPanel(CONSTANTS.MODEL_PARAMETER_PANEL.STAND_INFO)
 
     return {
-      components: { StandDensityPanel },
-      template: '<StandDensityPanel />',
+      components: { StandInfoPanel },
+      template: '<StandInfoPanel />',
     }
   },
 }

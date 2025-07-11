@@ -60,7 +60,7 @@ export const SPECIAL_INDICATORS = Object.freeze({
 export const MODEL_PARAMETER_PANEL = Object.freeze({
   SPECIES_INFO: 'speciesInfo',
   SITE_INFO: 'siteInfo',
-  STAND_DENSITY: 'standDensity',
+  STAND_INFO: 'standInfo',
   REPORT_INFO: 'reportInfo',
 })
 
