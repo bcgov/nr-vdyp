@@ -56,7 +56,11 @@ public enum PolygonMessageKind {
 	PREDICATED_BASAL_AREA_TOO_SMALL("predicted basal area too small to be used. VRISTART return code: {0}"), //
 	REASSIGNED_HEIGHT("based on estimated site index of {0}, recomputed input height at age {1} to be {2}"), //
 	UNRECOGNIZED_GROWTH_MODEL("attempt to process an unrecognized growth model {0}"), //
-	USING_DEFAULT_CC("CC was not supplied. Using a default CC of {0}% for this (leading) species ({1})"), //
+	USING_DEFAULT_CC("CC was not supplied. Using a default CC of {0}% for this (leading) species ({1})"),
+	CFS_BIO_NOT_ALL_PROP_CALCULATED(
+			"Not all CFS Biomass Proportions could be calculated. Proportions: Stemwood: {0}, Bark: {1}, Branches: {2}, Foliage: {3}"
+	), //
+	CFS_BIO_PROP_DO_NOT_SUM_TO_ONE("CFS Biomass Proportions sum to {} not 1.0."), //
 	;
 
 	public enum Category {
