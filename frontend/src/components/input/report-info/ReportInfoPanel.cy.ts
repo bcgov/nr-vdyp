@@ -41,7 +41,7 @@ describe('ReportInfoPanel.vue', () => {
         CONSTANTS.MODEL_PARAMETER_PANEL.SITE_INFO,
       )
       modelParameterStore.confirmPanel(
-        CONSTANTS.MODEL_PARAMETER_PANEL.STAND_DENSITY,
+        CONSTANTS.MODEL_PARAMETER_PANEL.STAND_INFO,
       )
 
       modelParameterStore.selectedAgeYearRange = CONSTANTS.AGE_YEAR_RANGE.AGE

@@ -26,9 +26,7 @@ describe('File Upload Service Unit Tests', () => {
     fileUploadStore = useFileUploadStore()
 
     fileUploadStore.projectionType = CONSTANTS.PROJECTION_TYPE.VOLUME
-    fileUploadStore.includeInReport = [
-      CONSTANTS.INCLUDE_IN_REPORT.SPECIES_COMPOSITION,
-    ]
+    fileUploadStore.includeInReport = [CONSTANTS.INCLUDE_IN_REPORT.BY_SPECIES]
     fileUploadStore.selectedAgeYearRange = CONSTANTS.AGE_YEAR_RANGE.AGE
     fileUploadStore.startingAge = 10
     fileUploadStore.finishingAge = 100

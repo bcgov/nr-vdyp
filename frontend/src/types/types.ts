@@ -17,7 +17,7 @@ export type MessageType =
 export type PanelName =
   | typeof MODEL_PARAMETER_PANEL.SPECIES_INFO
   | typeof MODEL_PARAMETER_PANEL.SITE_INFO
-  | typeof MODEL_PARAMETER_PANEL.STAND_DENSITY
+  | typeof MODEL_PARAMETER_PANEL.STAND_INFO
   | typeof MODEL_PARAMETER_PANEL.REPORT_INFO
 
 export type FileUploadPanelName =

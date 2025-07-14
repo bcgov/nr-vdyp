@@ -52,6 +52,8 @@ export const MSG_DIALOG_TITLE = Object.freeze({
   NO_MODIFY: 'No Modifications!',
   MISSING_FILE: 'Missing File',
   INVALID_FILE: 'Invalid File!',
+  POLYGON_FILE_HEADER_MISMATCH: 'Polygon File Header Mismatch!',
+  LAYER_FILE_HEADER_MISMATCH: 'Layer File Header Mismatch!',
 })
 
 export const MDL_PRM_INPUT_HINT = Object.freeze({
@@ -134,7 +136,7 @@ export const PROGRESS_MSG = Object.freeze({
 
 export const SUCCESS_MSG = Object.freeze({
   FILE_UPLOAD_RUN_RESULT:
-    'File successfully downloaded. Please check the results in the report tab.',
+    'Model run completed successfully. Please check the results in the report tab.',
   FILE_UPLOAD_RUN_RESULT_W_ERR:
     'File successfully downloaded with errors - check error log',
   INPUT_MODEL_PARAM_RUN_RESULT:

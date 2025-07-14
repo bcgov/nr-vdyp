@@ -5,8 +5,15 @@ import {
   validateRequiredFields,
   validateRange,
   validateFiles,
+  validatePolygonHeader,
+  validateLayerHeader,
 } from '@/validation/fileUploadValidation'
-import { CONSTANTS } from '@/constants'
+import { CONSTANTS, CSVHEADERS } from '@/constants'
+
+// Helper function to create a File object from content
+const createFile = (content: any, fileName: any, mimeType: any) => {
+  return new File([content], fileName, { type: mimeType })
+}
 
 describe('File Upload Validation Unit Tests', () => {
   context('validateComparison', () => {
@@ -84,7 +91,7 @@ describe('File Upload Validation Unit Tests', () => {
     it('should return false if polygon file is missing', async () => {
       const result = await validateFiles(
         null,
-        new File([''], 'layer.csv', { type: 'text/csv' }),
+        createFile('', 'layer.csv', 'text/csv'),
       )
       expect(result.isValid).to.be.false
       expect(result.errorType).to.equal('polygonFileMissing')
@@ -92,7 +99,7 @@ describe('File Upload Validation Unit Tests', () => {
 
     it('should return false if layer file is missing', async () => {
       const result = await validateFiles(
-        new File([''], 'polygon.csv', { type: 'text/csv' }),
+        createFile('', 'polygon.csv', 'text/csv'),
         null,
       )
       expect(result.isValid).to.be.false
@@ -101,8 +108,8 @@ describe('File Upload Validation Unit Tests', () => {
 
     it('should return false if polygon file is not in CSV format', async () => {
       const result = await validateFiles(
-        new File([''], 'polygon.txt', { type: 'text/plain' }),
-        new File([''], 'layer.csv', { type: 'text/csv' }),
+        createFile('', 'polygon.txt', 'text/plain'),
+        createFile('', 'layer.csv', 'text/csv'),
       )
       expect(result.isValid).to.be.false
       expect(result.errorType).to.equal('polygonFileNotCSVFormat')
@@ -110,8 +117,8 @@ describe('File Upload Validation Unit Tests', () => {
 
     it('should return false if layer file is not in CSV format', async () => {
       const result = await validateFiles(
-        new File([''], 'polygon.csv', { type: 'text/csv' }),
-        new File([''], 'layer.txt', { type: 'text/plain' }),
+        createFile('', 'polygon.csv', 'text/csv'),
+        createFile('', 'layer.txt', 'text/plain'),
       )
       expect(result.isValid).to.be.false
       expect(result.errorType).to.equal('layerFileNotCSVFormat')
@@ -119,10 +126,86 @@ describe('File Upload Validation Unit Tests', () => {
 
     it('should return true if both files are valid CSV files', async () => {
       const result = await validateFiles(
-        new File([''], 'polygon.csv', { type: 'text/csv' }),
-        new File([''], 'layer.csv', { type: 'text/csv' }),
+        createFile('', 'polygon.csv', 'text/csv'),
+        createFile('', 'layer.csv', 'text/csv'),
       )
       expect(result.isValid).to.be.true
+    })
+  })
+
+  context('validatePolygonHeader', () => {
+    it('should return true for a valid polygon header', async () => {
+      const validHeader = CSVHEADERS.POLYGON_HEADERS.join(',')
+      const file = createFile(validHeader, 'polygon.csv', 'text/csv')
+      const result = await validatePolygonHeader(file)
+      expect(result.isValid).to.be.true
+      expect(result.details.missing).to.deep.equal([])
+      expect(result.details.extra).to.deep.equal([])
+      expect(result.details.mismatches).to.deep.equal([])
+    })
+
+    it('should return false for a polygon header with missing columns', async () => {
+      const incompleteHeader = CSVHEADERS.POLYGON_HEADERS.slice(1).join(',')
+      const file = createFile(incompleteHeader, 'polygon.csv', 'text/csv')
+      const result = await validatePolygonHeader(file)
+      expect(result.isValid).to.be.false
+      expect(result.details.missing).to.include(CSVHEADERS.POLYGON_HEADERS[0])
+    })
+
+    it('should return false for a polygon header with extra columns', async () => {
+      const extraHeader = `${CSVHEADERS.POLYGON_HEADERS.join(',')},EXTRA_COLUMN`
+      const file = createFile(extraHeader, 'polygon.csv', 'text/csv')
+      const result = await validatePolygonHeader(file)
+      expect(result.isValid).to.be.false
+      expect(result.details.extra).to.include('EXTRA_COLUMN')
+    })
+
+    it('should return false for a polygon header with mismatched columns', async () => {
+      const mismatchedHeader = CSVHEADERS.POLYGON_HEADERS.map((h, i) =>
+        i === 0 ? 'WRONG_COLUMN' : h,
+      ).join(',')
+      const file = createFile(mismatchedHeader, 'polygon.csv', 'text/csv')
+      const result = await validatePolygonHeader(file)
+      expect(result.isValid).to.be.false
+      expect(result.details.mismatches.length).to.be.greaterThan(0)
+    })
+  })
+
+  context('validateLayerHeader', () => {
+    it('should return true for a valid layer header', async () => {
+      const validHeader = CSVHEADERS.LAYER_HEADERS.join(',')
+      const file = createFile(validHeader, 'layer.csv', 'text/csv')
+      const result = await validateLayerHeader(file)
+      expect(result.isValid).to.be.true
+      expect(result.details.missing).to.deep.equal([])
+      expect(result.details.extra).to.deep.equal([])
+      expect(result.details.mismatches).to.deep.equal([])
+    })
+
+    it('should return false for a layer header with missing columns', async () => {
+      const incompleteHeader = CSVHEADERS.LAYER_HEADERS.slice(1).join(',')
+      const file = createFile(incompleteHeader, 'layer.csv', 'text/csv')
+      const result = await validateLayerHeader(file)
+      expect(result.isValid).to.be.false
+      expect(result.details.missing).to.include(CSVHEADERS.LAYER_HEADERS[0])
+    })
+
+    it('should return false for a layer header with extra columns', async () => {
+      const extraHeader = `${CSVHEADERS.LAYER_HEADERS.join(',')},EXTRA_COLUMN`
+      const file = createFile(extraHeader, 'layer.csv', 'text/csv')
+      const result = await validateLayerHeader(file)
+      expect(result.isValid).to.be.false
+      expect(result.details.extra).to.include('EXTRA_COLUMN')
+    })
+
+    it('should return false for a layer header with mismatched columns', async () => {
+      const mismatchedHeader = CSVHEADERS.LAYER_HEADERS.map((h, i) =>
+        i === 0 ? 'WRONG_COLUMN' : h,
+      ).join(',')
+      const file = createFile(mismatchedHeader, 'layer.csv', 'text/csv')
+      const result = await validateLayerHeader(file)
+      expect(result.isValid).to.be.false
+      expect(result.details.mismatches.length).to.be.greaterThan(0)
     })
   })
 })

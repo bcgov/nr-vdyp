@@ -404,8 +404,6 @@ const isVolumeReportedDisabled = computed(() => {
 const getIncludeInReportDisabled = (value: string) => {
   if (value === CONSTANTS.INCLUDE_IN_REPORT.CULMINATION_VALUES) {
     return !isCulminationValuesEnabled.value
-  } else if (value === CONSTANTS.INCLUDE_IN_REPORT.COMPUTED_MAI) {
-    return localProjectionType.value === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
   }
   return props.isDisabled
 }

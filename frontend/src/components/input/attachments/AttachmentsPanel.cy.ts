@@ -209,43 +209,4 @@ describe('AttachmentsPanel.vue', () => {
 
     cy.contains('polygon.csv').should('not.exist')
   })
-
-  it('enables edit mode when edit button is clicked', () => {
-    mount(AttachmentsPanel, {
-      global: {
-        plugins: [vuetify],
-      },
-    })
-
-    const polygonFile = new File(['polygon content'], 'polygon.csv', {
-      type: 'text/csv',
-    })
-    const layerFile = new File(['layer content'], 'layer.csv', {
-      type: 'text/csv',
-    })
-
-    cy.get('#polygon-file-input').should('exist').selectFile(
-      {
-        contents: polygonFile,
-        fileName: 'polygon.csv',
-        mimeType: 'text/csv',
-      },
-      { force: true },
-    )
-
-    cy.get('#layer-file-input').should('exist').selectFile(
-      {
-        contents: layerFile,
-        fileName: 'layer.csv',
-        mimeType: 'text/csv',
-      },
-      { force: true },
-    )
-
-    cy.get('button').contains('Confirm').click()
-
-    cy.get('button').contains('Edit').click()
-
-    cy.get('.v-file-input').first().should('not.be.disabled')
-  })
 })

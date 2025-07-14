@@ -22,7 +22,7 @@ const meta: Meta<typeof ReportInfoPanel> = {
         CONSTANTS.MODEL_PARAMETER_PANEL.SITE_INFO,
       )
       modelParameterStore.confirmPanel(
-        CONSTANTS.MODEL_PARAMETER_PANEL.STAND_DENSITY,
+        CONSTANTS.MODEL_PARAMETER_PANEL.STAND_INFO,
       )
 
       return {

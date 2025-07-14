@@ -298,10 +298,6 @@ describe('ReportConfiguration.vue', () => {
     cy.get('[data-testid="volume-reported"] input[type="checkbox"]').should(
       'be.disabled',
     )
-
-    cy.contains('.v-input', CONSTANTS.INCLUDE_IN_REPORT.COMPUTED_MAI)
-      .find('input[type="checkbox"]')
-      .should('be.disabled')
   })
 
   it('enables Culmination Values checkbox when Starting Age <= 10 and Finishing Age >= 300', () => {

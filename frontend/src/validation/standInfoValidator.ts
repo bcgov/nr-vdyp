@@ -1,7 +1,7 @@
 import { ValidationBase } from './validationBase'
 import { CONSTANTS } from '@/constants'
 
-export class StandDensityValidator extends ValidationBase {
+export class StandInfoValidator extends ValidationBase {
   validatePercentStockableAreaRange(psa: number | null): boolean {
     if (!psa) return true
 
