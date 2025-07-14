@@ -1,14 +1,14 @@
 import { mount } from 'cypress/vue'
 import { createVuetify } from 'vuetify'
 import 'vuetify/styles'
-import StandDensityPanel from './StandDensityPanel.vue'
+import StandInfoPanel from './StandInfoPanel.vue'
 import { useModelParameterStore } from '@/stores/modelParameterStore'
 import { setActivePinia, createPinia } from 'pinia'
 import { CONSTANTS, MESSAGE } from '@/constants'
 
 const vuetify = createVuetify()
 
-describe('StandDensityPanel.vue', () => {
+describe('StandInfoPanel.vue', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     cy.document().then((doc) => {
@@ -35,7 +35,7 @@ describe('StandDensityPanel.vue', () => {
 
     modelParameterStore.percentStockableArea = 50
 
-    mount(StandDensityPanel, {
+    mount(StandInfoPanel, {
       global: {
         plugins: [vuetify],
       },
@@ -49,7 +49,9 @@ describe('StandDensityPanel.vue', () => {
     mountComponent()
 
     // Checking the Expansion panel status
-    cy.get('.v-expansion-panel-title').contains('Stand Density').should('exist')
+    cy.get('.v-expansion-panel-title')
+      .contains('Stand Information')
+      .should('exist')
 
     // Verify that the input field is rendered and has the expected value
     cy.get('[data-testid="percent-stockable-area"] input')
@@ -74,9 +76,7 @@ describe('StandDensityPanel.vue', () => {
 
     // Wait for the Pinia store state to update
     cy.wrap(useModelParameterStore())
-      .its(
-        `panelState.${CONSTANTS.MODEL_PARAMETER_PANEL.STAND_DENSITY}.confirmed`,
-      )
+      .its(`panelState.${CONSTANTS.MODEL_PARAMETER_PANEL.STAND_INFO}.confirmed`)
       .should('be.true')
 
     // Verify that the Edit button is now rendered
@@ -123,7 +123,7 @@ describe('StandDensityPanel.vue', () => {
 
     // Ensure the panel state is set to non-editable
     cy.wrap(store).then(() => {
-      store.panelState.standDensity.editable = false
+      store.panelState.standInfo.editable = false
     })
 
     // Verify that the % Stockable Area text field is disabled

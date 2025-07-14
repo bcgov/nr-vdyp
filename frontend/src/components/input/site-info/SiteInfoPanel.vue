@@ -110,7 +110,7 @@
                 style="display: inline-flex; align-items: center"
               >
                 <v-col cols="auto" style="margin-bottom: 20px">
-                  <div class="mt-2">Site Species Values:</div>
+                  <div class="mt-2">Site Index:</div>
                 </v-col>
                 <v-col cols="auto">
                   <v-radio-group

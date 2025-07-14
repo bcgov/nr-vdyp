@@ -47,7 +47,7 @@ export const isBlank = (item: any): boolean => {
 
 /**
  * Checks if the given value is zero. Null, undefined, and empty strings are not considered zero.
- * Handles string representations of numbers (e.g., "0") and returns false for invalid numbers.
+ * Handles string representations of numbers (e.g., "0") and returns false for invalid numbers or non-string/number types.
  *
  * @param value - The value to check (accepts any type)
  * @returns {boolean} True if the value is 0, false otherwise
@@ -57,9 +57,15 @@ export const isBlank = (item: any): boolean => {
  *   isZeroValue("") // false
  *   isZeroValue(null) // false
  *   isZeroValue("abc") // false
+ *   isZeroValue({}) // false
  */
 export const isZeroValue = (value: any): boolean => {
   if (value === null || value === undefined) {
+    return false
+  }
+
+  // Explicitly check for string or number types
+  if (typeof value !== 'string' && typeof value !== 'number') {
     return false
   }
 
@@ -178,12 +184,14 @@ export const delay = (ms: number): Promise<any> => {
  * Increases the numeric value extracted from an input string by a specified step,
  * ensuring the result stays within the provided minimum and maximum limits.
  * Non-numeric characters are stripped, and invalid or null inputs default to the step value.
+ * Throws an error if step is not positive.
  *
  * @param value - The input value as a string (e.g., "10.5") or null, potentially containing non-numeric characters
  * @param max - The maximum allowable value; if exceeded, returns this value
  * @param min - The minimum allowable value; if undercut, returns this value
- * @param step - The amount by which to increase the numeric value
+ * @param step - The amount by which to increase the numeric value (must be positive)
  * @returns {number} The new value, constrained within the [min, max] range
+ * @throws {Error} If step is not a positive number
  * @example
  *   increaseItemBySpinButton("10", 20, 0, 5) // 15
  *   increaseItemBySpinButton(null, 20, 0, 5) // 5
@@ -197,6 +205,10 @@ export const increaseItemBySpinButton = (
   min: number,
   step: number,
 ): number => {
+  if (step <= 0) {
+    throw new Error('Step must be a positive number')
+  }
+
   let newValue
 
   // If value is null, assign step value and format
@@ -216,8 +228,7 @@ export const increaseItemBySpinButton = (
     }
 
     if (newValue < min) {
-      // 0
-      newValue = min // 0
+      newValue = min
     }
   }
 
@@ -232,12 +243,14 @@ export const increaseItemBySpinButton = (
  * Decreases the numeric value extracted from an input string by a specified step,
  * ensuring the result stays within the provided minimum and maximum limits.
  * Non-numeric characters are stripped, and invalid or null inputs default to the minimum value.
+ * Throws an error if step is not positive.
  *
  * @param value - The input value as a string (e.g., "10.5") or null, potentially containing non-numeric characters
  * @param max - The maximum allowable value; if exceeded, returns this value
  * @param min - The minimum allowable value; if undercut, returns this value
- * @param step - The amount by which to decrease the numeric value
+ * @param step - The amount by which to decrease the numeric value (must be positive)
  * @returns {number} The new value, constrained within the [min, max] range
+ * @throws {Error} If step is not a positive number
  * @example
  *   decrementItemBySpinButton("10", 20, 0, 5) // 5
  *   decrementItemBySpinButton(null, 20, 0, 5) // 0
@@ -251,9 +264,13 @@ export const decrementItemBySpinButton = (
   min: number,
   step: number,
 ): number => {
+  if (step <= 0) {
+    throw new Error('Step must be a positive number')
+  }
+
   let newValue
   if (!value) {
-    newValue = min // 0
+    newValue = min
   } else {
     // extract only numbers, commas, and minus signs
     const extractedValue = value.replace(/[^\d.-]/g, '')
@@ -261,13 +278,13 @@ export const decrementItemBySpinButton = (
     const numericValue = parseFloat(extractedValue)
 
     if (isNaN(numericValue)) {
-      newValue = min // 0
+      newValue = min
     } else {
       newValue = numericValue - step
     }
 
     if (newValue < min) {
-      newValue = min // 0
+      newValue = min
     }
 
     if (newValue > max) {
@@ -350,4 +367,42 @@ export const checkZipForErrors = async (zipFile: Blob): Promise<boolean> => {
     console.error('Error checking ZIP file for errors:', error)
     throw error
   }
+}
+
+/**
+ * Sanitizes a file name by allowing only alphanumeric characters, dot, underscore, and hyphen.
+ * Replaces disallowed characters with underscore, consolidates consecutive underscores, removes leading/trailing underscores,
+ * and handles file extensions by preserving the last dot and ensuring no trailing underscore before it.
+ *
+ * @param name - The input string to sanitize as a file name
+ * @returns {string} The sanitized file name
+ * @example
+ *   sanitizeFileName("test__file!.zip") // "test_file.zip"
+ *   sanitizeFileName("file@name#$.zip") // "file_name.zip"
+ *   sanitizeFileName("valid.file_name-123.zip") // "valid.file_name-123.zip"
+ */
+export const sanitizeFileName = (name: string) => {
+  // Find the last occurrence of '.' to separate extension
+  const lastDotIndex = name.lastIndexOf('.')
+  let baseName = name
+  let extension = ''
+
+  if (lastDotIndex !== -1) {
+    extension = name.substring(lastDotIndex) // e.g., '.zip'
+    baseName = name.substring(0, lastDotIndex) // e.g., 'valid.file_name-123'
+  }
+
+  // Allow only alphanumeric characters, dot, underscore, and hyphen in base name
+  let sanitized = baseName.replace(/[^a-zA-Z0-9._-]/g, '_')
+  // Replace consecutive underscores with a single underscore
+  sanitized = sanitized.replace(/_+/g, '_')
+  // Remove leading and trailing underscores with explicit grouping
+  sanitized = sanitized.replace(/(^_+)|(_+$)/g, '')
+  // Remove trailing underscore before extension if it exists
+  if (extension && sanitized.endsWith('_')) {
+    sanitized = sanitized.slice(0, -1)
+  }
+
+  // Combine sanitized base name with extension
+  return sanitized + extension
 }

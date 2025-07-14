@@ -27,7 +27,7 @@
         <v-spacer class="space"></v-spacer>
         <SiteInfoPanel />
         <v-spacer class="space"></v-spacer>
-        <StandDensityPanel />
+        <StandInfoPanel />
         <v-spacer class="space"></v-spacer>
         <ReportInfoPanel />
         <AppRunModelButton
@@ -72,20 +72,20 @@ import {
   ReportingContainer,
   SpeciesInfoPanel,
   SiteInfoPanel,
-  StandDensityPanel,
+  StandInfoPanel,
   ReportInfoPanel,
   AttachmentsPanel,
 } from '@/components'
 import type { Tab } from '@/interfaces/interfaces'
-import { CONSTANTS, MESSAGE } from '@/constants'
+import { CONSTANTS, DEFAULTS, MESSAGE } from '@/constants'
 import { handleApiError } from '@/services/apiErrorHandler'
 import { runModel } from '@/services/modelParameterService'
 import { runModelFileUpload } from '@/services/fileUploadService'
 import {
   checkZipForErrors,
   delay,
-  downloadFile,
   extractZipFileName,
+  sanitizeFileName,
 } from '@/utils/util'
 import { logSuccessMessage, logErrorMessage } from '@/utils/messageHandler'
 
@@ -194,12 +194,28 @@ const processResponse = async (response: any): Promise<boolean> => {
     throw new Error('Invalid response data')
   }
 
-  const hasErrors = await checkZipForErrors(resultBlob)
-  await projectionStore.handleZipResponse(resultBlob, zipFileName)
+  const reportTitle =
+    appStore.modelSelection === CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS
+      ? modelParameterStore.reportTitle
+      : fileUploadStore.reportTitle
 
-  if (appStore.modelSelection === CONSTANTS.MODEL_SELECTION.FILE_UPLOAD) {
-    downloadFile(resultBlob, zipFileName)
+  let finalFileName = zipFileName
+
+  if (
+    reportTitle &&
+    reportTitle !== DEFAULTS.DEFAULT_VALUES.REPORT_TITLE &&
+    zipFileName.startsWith('vdyp-output')
+  ) {
+    const sanitizedTitle = sanitizeFileName(reportTitle)
+    const timestampPart = zipFileName.substring('vdyp-output'.length)
+    // Limit the total file name to 200 characters to account for operating system file name length restrictions
+    const maxTitleLength = 200 - timestampPart.length
+    const truncatedTitle = sanitizedTitle.substring(0, maxTitleLength)
+    finalFileName = truncatedTitle + timestampPart
   }
+
+  const hasErrors = await checkZipForErrors(resultBlob)
+  await projectionStore.handleZipResponse(resultBlob, finalFileName)
 
   if (hasErrors) {
     logErrorMessage(

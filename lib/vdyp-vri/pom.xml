@@ -12,14 +12,14 @@
 	<parent>
 		<groupId>ca.bc.gov.nrs.vdyp</groupId>
 		<artifactId>vdyp-lib</artifactId>
-		<version>0.0.1-SNAPSHOT</version>
+		<version>8.0.0-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
 		<dependency>
 			<groupId>ca.bc.gov.nrs.vdyp</groupId>
 			<artifactId>vdyp-common</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>8.0.0-SNAPSHOT</version>
 		</dependency>
 
 		<dependency>

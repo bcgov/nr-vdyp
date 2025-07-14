@@ -74,11 +74,12 @@ describe('Auth Store Unit Tests', () => {
       client_roles: ['admin'],
     })
     const base64Token = btoa(mockToken)
-    authStore.user = {
+    const user = {
       accessToken: '',
       refToken: '',
       idToken: `mock.${base64Token}.token`,
     }
+    authStore.setUser(user)
 
     const parsed = authStore.parseIdToken()
 
@@ -94,7 +95,17 @@ describe('Auth Store Unit Tests', () => {
   })
 
   it('should verify user has a specific role', () => {
-    authStore.getAllRoles = cy.stub().returns(['admin', 'user'])
+    // Set user with a valid ID token containing roles
+    const mockToken = JSON.stringify({
+      client_roles: ['admin', 'user'],
+    })
+    const base64Token = btoa(mockToken)
+    authStore.setUser({
+      accessToken: '',
+      refToken: '',
+      idToken: `mock.${base64Token}.token`,
+    })
+
     const hasAdminRole = authStore.hasRole('admin')
     const hasGuestRole = authStore.hasRole('guest')
 
@@ -113,11 +124,12 @@ describe('Auth Store Unit Tests', () => {
   })
 
   it('should handle invalid ID tokens', () => {
-    authStore.user = {
+    const user = {
       accessToken: '',
       refToken: '',
       idToken: 'invalid.token',
     }
+    authStore.setUser(user)
 
     cy.spy(console, 'error').as('consoleError')
 
@@ -128,5 +140,74 @@ describe('Auth Store Unit Tests', () => {
       'have.been.calledWithMatch',
       'Invalid ID Token format',
     )
+  })
+
+  it('should not load user if sessionStorage is empty', () => {
+    sessionStorage.removeItem('authUser')
+    authStore.loadUserFromStorage()
+
+    expect(authStore.user).to.be.null
+    expect(authStore.authenticated).to.be.false
+  })
+
+  it('should update user correctly', () => {
+    const initialUser = {
+      accessToken: 'initial_access',
+      refToken: 'initial_refresh',
+      idToken: 'initial_id',
+    }
+    authStore.setUser(initialUser)
+
+    const updatedUser = {
+      accessToken: 'updated_access',
+      refToken: 'updated_refresh',
+      idToken: 'updated_id',
+    }
+    authStore.setUser(updatedUser)
+
+    expect(authStore.user).to.deep.equal(updatedUser)
+    expect(authStore.authenticated).to.be.true
+    cy.wrap(sessionStorage.getItem('authUser')).should(
+      'equal',
+      JSON.stringify(updatedUser),
+    )
+  })
+
+  it('should handle malformed ID tokens', () => {
+    const malformedTokens = [
+      'token.without.dots',
+      'token.with.one.dot',
+      'token.with.three.dots.but.invalid.base64',
+    ]
+
+    cy.spy(console, 'error').as('consoleError')
+
+    malformedTokens.forEach((token) => {
+      const user = {
+        accessToken: '',
+        refToken: '',
+        idToken: token,
+      }
+      authStore.setUser(user)
+      const parsed = authStore.parseIdToken()
+      expect(parsed).to.be.null
+    })
+
+    cy.get('@consoleError').should('have.been.calledThrice')
+  })
+
+  it('should correctly reflect computed properties', () => {
+    expect(authStore.getAuthenticated).to.be.false
+    expect(authStore.getUser).to.be.null
+
+    const user = {
+      accessToken: 'access_token',
+      refToken: 'refresh_token',
+      idToken: 'id_token',
+    }
+    authStore.setUser(user)
+
+    expect(authStore.getAuthenticated).to.be.true
+    expect(authStore.getUser).to.deep.equal(user)
   })
 })

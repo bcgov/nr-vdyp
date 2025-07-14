@@ -138,4 +138,65 @@ describe('FileUploadStore Unit Tests', () => {
     expect(store.polygonFile).to.equal(polygonFile)
     expect(store.layerFile).to.equal(layerFile)
   })
+
+  it('should handle full confirmation flow', () => {
+    // Initial state
+    expect(store.panelOpenStates.reportInfo).to.equal(CONSTANTS.PANEL.OPEN)
+    expect(store.panelState.reportInfo.editable).to.be.true
+    expect(store.panelOpenStates.attachments).to.equal(CONSTANTS.PANEL.CLOSE)
+    expect(store.panelState.attachments.editable).to.be.false
+    expect(store.runModelEnabled).to.be.false
+
+    // Confirm reportInfo
+    store.confirmPanel(CONSTANTS.FILE_UPLOAD_PANEL.REPORT_INFO)
+    expect(store.panelState.reportInfo.confirmed).to.be.true
+    expect(store.panelState.reportInfo.editable).to.be.false
+    expect(store.panelOpenStates.attachments).to.equal(CONSTANTS.PANEL.OPEN)
+    expect(store.panelState.attachments.editable).to.be.true
+    expect(store.runModelEnabled).to.be.false
+
+    // Confirm attachments
+    store.confirmPanel(CONSTANTS.FILE_UPLOAD_PANEL.ATTACHMENTS)
+    expect(store.panelState.attachments.confirmed).to.be.true
+    expect(store.panelState.attachments.editable).to.be.false
+    expect(store.runModelEnabled).to.be.true
+  })
+
+  it('should reset subsequent panels when editing a confirmed panel', () => {
+    // Confirm both panels
+    store.confirmPanel(CONSTANTS.FILE_UPLOAD_PANEL.REPORT_INFO)
+    store.confirmPanel(CONSTANTS.FILE_UPLOAD_PANEL.ATTACHMENTS)
+    expect(store.runModelEnabled).to.be.true
+
+    // Edit reportInfo
+    store.editPanel(CONSTANTS.FILE_UPLOAD_PANEL.REPORT_INFO)
+    expect(store.panelState.reportInfo.confirmed).to.be.false
+    expect(store.panelState.reportInfo.editable).to.be.true
+    expect(store.panelOpenStates.attachments).to.equal(CONSTANTS.PANEL.CLOSE)
+    expect(store.panelState.attachments.confirmed).to.be.false
+    expect(store.panelState.attachments.editable).to.be.false
+    expect(store.runModelEnabled).to.be.false
+  })
+
+  it('should not enable run model button when not all panels are confirmed', () => {
+    store.confirmPanel(CONSTANTS.FILE_UPLOAD_PANEL.REPORT_INFO)
+    expect(store.runModelEnabled).to.be.false
+  })
+
+  it('should handle setting and unsetting attachment files', () => {
+    const polygonFile = new File(['polygon'], 'polygon.csv', {
+      type: 'text/csv',
+    })
+    const layerFile = new File(['layer'], 'layer.csv', { type: 'text/csv' })
+
+    store.polygonFile = polygonFile
+    store.layerFile = layerFile
+    expect(store.polygonFile).to.equal(polygonFile)
+    expect(store.layerFile).to.equal(layerFile)
+
+    store.polygonFile = null
+    store.layerFile = null
+    expect(store.polygonFile).to.be.null
+    expect(store.layerFile).to.be.null
+  })
 })
