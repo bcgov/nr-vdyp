@@ -93,3 +93,11 @@ export const validateFiles = async (
 
   return { isValid: true }
 }
+
+export const validatePolygonHeader = async (file: File) => {
+  return fileUploadValidator.validatePolygonHeader(file)
+}
+
+export const validateLayerHeader = async (file: File) => {
+  return fileUploadValidator.validateLayerHeader(file)
+}

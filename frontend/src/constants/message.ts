@@ -52,6 +52,8 @@ export const MSG_DIALOG_TITLE = Object.freeze({
   NO_MODIFY: 'No Modifications!',
   MISSING_FILE: 'Missing File',
   INVALID_FILE: 'Invalid File!',
+  POLYGON_FILE_HEADER_MISMATCH: 'Polygon File Header Mismatch!',
+  LAYER_FILE_HEADER_MISMATCH: 'Layer File Header Mismatch!',
 })
 
 export const MDL_PRM_INPUT_HINT = Object.freeze({
