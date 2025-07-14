@@ -159,7 +159,7 @@ public class ProjectionRunnerTest {
 
 	@Test
 	void testAllowBack() throws AbstractProjectionRequestException, IOException {
-		params = new Parameters().yearStart(0).yearEnd(
+		params = new Parameters().ageStart(0).ageEnd(
 				100
 		)
 				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.BACK_GROW_ENABLED)
