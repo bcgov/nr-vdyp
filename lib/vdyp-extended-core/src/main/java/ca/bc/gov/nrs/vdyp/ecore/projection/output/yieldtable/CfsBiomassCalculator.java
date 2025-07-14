@@ -238,6 +238,8 @@ public class CfsBiomassCalculator {
 			if (propFoliage > 0.0)
 				bioFoliage = (bioStemwood / propStemwood) * propFoliage;
 		}
+		// Dead biomass is calculated but never used in VDYP7, so we will not calculate it here unless we decide to use
+		// it
 		double bioDead = -9.0; // propDead * (bioStemwood / propStemwood);
 
 		return new CfsBiomassVolumeDetails(
