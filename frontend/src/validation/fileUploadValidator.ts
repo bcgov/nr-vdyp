@@ -1,5 +1,5 @@
 import { ValidationBase } from './validationBase'
-import { CONSTANTS } from '@/constants'
+import { CONSTANTS, CSVHEADERS } from '@/constants'
 
 export class FileUploadValidator extends ValidationBase {
   validateRequiredFields(
@@ -66,5 +66,76 @@ export class FileUploadValidator extends ValidationBase {
     }
 
     return true
+  }
+
+  private async getHeaderValidationDetails(
+    file: File,
+    expectedHeaders: string[],
+  ): Promise<{
+    isValid: boolean
+    details: { missing: string[]; extra: string[]; mismatches: string[] }
+  }> {
+    const reader = new FileReader()
+    const fileContent = await new Promise<string>((resolve) => {
+      reader.onload = () => resolve(reader.result as string)
+      reader.readAsText(file)
+    })
+    const actualHeaders = fileContent
+      .split('\n')[0]
+      .split(',')
+      .map((h) => h.trim())
+
+    const missing: string[] = []
+    const extra: string[] = []
+    const mismatches: string[] = []
+
+    // Find missing and extra regardless of length
+    const expectedSet = new Set(expectedHeaders)
+    const actualSet = new Set(actualHeaders)
+    expectedHeaders.forEach((h) => {
+      if (!actualSet.has(h)) missing.push(h)
+    })
+    actualHeaders.forEach((h) => {
+      if (!expectedSet.has(h)) extra.push(h)
+    })
+
+    // Only check mismatches if lengths are equal (to avoid unnecessary details)
+    if (actualHeaders.length === expectedHeaders.length) {
+      for (let i = 0; i < expectedHeaders.length; i++) {
+        if (actualHeaders[i] !== expectedHeaders[i]) {
+          mismatches.push(
+            `Position ${i + 1}: Expected '${expectedHeaders[i]}', found '${actualHeaders[i]}'`,
+          )
+        }
+      }
+    }
+
+    const isValid =
+      missing.length === 0 && extra.length === 0 && mismatches.length === 0
+    return { isValid, details: { missing, extra, mismatches } }
+  }
+
+  async validatePolygonHeader(file: File): Promise<{
+    isValid: boolean
+    details: { missing: string[]; extra: string[]; mismatches: string[] }
+    expected: string[]
+  }> {
+    const { isValid, details } = await this.getHeaderValidationDetails(
+      file,
+      CSVHEADERS.POLYGON_HEADERS,
+    )
+    return { isValid, details, expected: CSVHEADERS.POLYGON_HEADERS }
+  }
+
+  async validateLayerHeader(file: File): Promise<{
+    isValid: boolean
+    details: { missing: string[]; extra: string[]; mismatches: string[] }
+    expected: string[]
+  }> {
+    const { isValid, details } = await this.getHeaderValidationDetails(
+      file,
+      CSVHEADERS.LAYER_HEADERS,
+    )
+    return { isValid, details, expected: CSVHEADERS.LAYER_HEADERS }
   }
 }

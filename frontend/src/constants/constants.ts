@@ -43,8 +43,8 @@ export const VOLUME_REPORTED = Object.freeze({
 
 export const INCLUDE_IN_REPORT = Object.freeze({
   COMPUTED_MAI: 'Computed MAI',
-  SPECIES_COMPOSITION: 'Species Composition',
   CULMINATION_VALUES: 'Culmination Values',
+  BY_SPECIES: 'By Species',
 })
 
 export const PROJECTION_TYPE = Object.freeze({

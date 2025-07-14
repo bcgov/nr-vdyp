@@ -107,6 +107,20 @@ const isConfirmed = computed(
   () => fileUploadStore.panelState[panelName].confirmed,
 )
 
+const formatErrColumnList = (
+  columns: string[],
+  maxItems: number,
+  errName: string,
+): string => {
+  if (columns.length <= maxItems) {
+    return columns.join(', ')
+  } else {
+    const displayed = columns.slice(0, maxItems).join(', ')
+    const remaining = columns.length - maxItems
+    return `${displayed}, and ${remaining} more ${errName} columns`
+  }
+}
+
 const validateFiles = async (): Promise<boolean> => {
   const result = await fileUploadValidation.validateFiles(
     fileUploadStore.polygonFile,
@@ -134,8 +148,104 @@ const validateFiles = async (): Promise<boolean> => {
       message: message,
       btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
     }
+
+    return false
   }
-  return result.isValid
+
+  let message = ''
+  const MAX_DISPLAY_ERR_ITEMS = 2
+
+  // Polygon file header validation with details
+  if (fileUploadStore.polygonFile) {
+    const polygonResult = await fileUploadValidation.validatePolygonHeader(
+      fileUploadStore.polygonFile,
+    )
+    if (!polygonResult.isValid) {
+      const { details } = polygonResult
+      if (details.missing.length > 0) {
+        message +=
+          'Missing columns:\n' +
+          formatErrColumnList(
+            details.missing,
+            MAX_DISPLAY_ERR_ITEMS,
+            'missing',
+          ) +
+          '\n\n'
+      }
+      if (details.extra.length > 0) {
+        message +=
+          'Extra columns:\n' +
+          formatErrColumnList(details.extra, MAX_DISPLAY_ERR_ITEMS, 'extra') +
+          '\n\n'
+      }
+      if (details.mismatches.length > 0) {
+        message +=
+          'Mismatches:\n' +
+          formatErrColumnList(
+            details.mismatches,
+            MAX_DISPLAY_ERR_ITEMS,
+            'mismatch',
+          ) +
+          '\n\n'
+      }
+      message += 'Please ensure the headers match the required order.'
+      messageDialog.value = {
+        dialog: true,
+        title: MESSAGE.MSG_DIALOG_TITLE.POLYGON_FILE_HEADER_MISMATCH,
+        message,
+        btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+        dialogWidth: 500,
+      }
+      return false
+    }
+  }
+
+  // Layer file header validation with details
+  if (fileUploadStore.layerFile) {
+    const layerResult = await fileUploadValidation.validateLayerHeader(
+      fileUploadStore.layerFile,
+    )
+    if (!layerResult.isValid) {
+      const { details } = layerResult
+      if (details.missing.length > 0) {
+        message +=
+          'Missing columns:\n' +
+          formatErrColumnList(
+            details.missing,
+            MAX_DISPLAY_ERR_ITEMS,
+            'missing',
+          ) +
+          '\n\n'
+      }
+      if (details.extra.length > 0) {
+        message +=
+          'Extra columns:\n' +
+          formatErrColumnList(details.extra, MAX_DISPLAY_ERR_ITEMS, 'extra') +
+          '\n\n'
+      }
+      if (details.mismatches.length > 0) {
+        message +=
+          'Mismatches:\n' +
+          formatErrColumnList(
+            details.mismatches,
+            MAX_DISPLAY_ERR_ITEMS,
+            'mismatch',
+          ) +
+          '\n\n'
+      }
+      message += 'Please ensure the headers match the required order.'
+      messageDialog.value = {
+        dialog: true,
+        title: MESSAGE.MSG_DIALOG_TITLE.LAYER_FILE_HEADER_MISMATCH,
+        message,
+        btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+        dialogWidth: 500,
+      }
+      return false
+    }
+  }
+
+  return true
 }
 
 const onConfirm = async () => {

@@ -42,7 +42,7 @@ export const getSelectedExecutionOptions = (
   if (
     fileUploadStore.includeInReport &&
     fileUploadStore.includeInReport.includes(
-      CONSTANTS.INCLUDE_IN_REPORT.SPECIES_COMPOSITION,
+      CONSTANTS.INCLUDE_IN_REPORT.BY_SPECIES,
     )
   ) {
     selectedExecutionOptions.push(
