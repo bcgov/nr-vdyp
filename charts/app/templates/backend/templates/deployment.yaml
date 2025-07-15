@@ -43,7 +43,7 @@ spec:
             - name: LOG_LEVEL
               value: info
             - name: QUARKUS_OIDC_AUTH_SERVER_URL
-              value: { { .Values.backend.env.QUARKUS_OIDC_AUTH_SERVER_URL | quote } }
+              value: {{ .Values.backend.env.QUARKUS_OIDC_AUTH_SERVER_URL | quote }}
             - name: QUARKUS_OIDC_APPLICATION_TYPE
               value: "service"
             - name: QUARKUS_OIDC_CREDENTIALS_SECRET
