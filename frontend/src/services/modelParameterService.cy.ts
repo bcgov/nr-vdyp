@@ -46,6 +46,7 @@ describe('Model Parameter Service Unit Tests', () => {
     endYear: DEFAULTS.DEFAULT_VALUES.END_YEAR,
     yearIncrement: DEFAULTS.DEFAULT_VALUES.YEAR_INCREMENT,
     includeInReport: [],
+    forwardBackwardGrow: [], // Default to empty array
   }
 
   it('should generate a valid feature ID', () => {
@@ -241,6 +242,102 @@ describe('Model Parameter Service Unit Tests', () => {
           )
           expect(projectionParams.metadataToOutput).to.equal(
             MetadataToOutputEnum.NONE,
+          )
+          expect(projectionParams.selectedExecutionOptions).not.to.include(
+            SelectedExecutionOptionsEnum.ForwardGrowEnabled,
+          )
+          expect(projectionParams.selectedExecutionOptions).not.to.include(
+            SelectedExecutionOptionsEnum.BackGrowEnabled,
+          )
+        })
+    })
+  })
+
+  it('should include ForwardGrowEnabled when forwardBackwardGrow includes FORWARD', () => {
+    const updatedStore = {
+      ...mockModelParameterStore,
+      forwardBackwardGrow: [CONSTANTS.FORWARD_BACKWARD_GROW.FORWARD],
+    }
+    const projectionStub = cy
+      .stub()
+      .resolves(new Blob(['mock response'], { type: 'application/json' }))
+
+    cy.wrap(runModel(updatedStore, projectionStub)).then(() => {
+      const formDataArg = projectionStub.getCall(0).args[0] as FormData
+      const projectionParamsBlob = formDataArg.get(
+        ParameterNamesEnum.PROJECTION_PARAMETERS,
+      ) as Blob
+
+      cy.wrap(projectionParamsBlob)
+        .then((blob) => blob.text())
+        .then((text) => {
+          const projectionParams = JSON.parse(text)
+          expect(projectionParams.selectedExecutionOptions).to.include(
+            SelectedExecutionOptionsEnum.ForwardGrowEnabled,
+          )
+          expect(projectionParams.selectedExecutionOptions).not.to.include(
+            SelectedExecutionOptionsEnum.BackGrowEnabled,
+          )
+        })
+    })
+  })
+
+  it('should include BackGrowEnabled when forwardBackwardGrow includes BACKWARD', () => {
+    const updatedStore = {
+      ...mockModelParameterStore,
+      forwardBackwardGrow: [CONSTANTS.FORWARD_BACKWARD_GROW.BACKWARD],
+    }
+    const projectionStub = cy
+      .stub()
+      .resolves(new Blob(['mock response'], { type: 'application/json' }))
+
+    cy.wrap(runModel(updatedStore, projectionStub)).then(() => {
+      const formDataArg = projectionStub.getCall(0).args[0] as FormData
+      const projectionParamsBlob = formDataArg.get(
+        ParameterNamesEnum.PROJECTION_PARAMETERS,
+      ) as Blob
+
+      cy.wrap(projectionParamsBlob)
+        .then((blob) => blob.text())
+        .then((text) => {
+          const projectionParams = JSON.parse(text)
+          expect(projectionParams.selectedExecutionOptions).not.to.include(
+            SelectedExecutionOptionsEnum.ForwardGrowEnabled,
+          )
+          expect(projectionParams.selectedExecutionOptions).to.include(
+            SelectedExecutionOptionsEnum.BackGrowEnabled,
+          )
+        })
+    })
+  })
+
+  it('should include both ForwardGrowEnabled and BackGrowEnabled when forwardBackwardGrow includes both', () => {
+    const updatedStore = {
+      ...mockModelParameterStore,
+      forwardBackwardGrow: [
+        CONSTANTS.FORWARD_BACKWARD_GROW.FORWARD,
+        CONSTANTS.FORWARD_BACKWARD_GROW.BACKWARD,
+      ],
+    }
+    const projectionStub = cy
+      .stub()
+      .resolves(new Blob(['mock response'], { type: 'application/json' }))
+
+    cy.wrap(runModel(updatedStore, projectionStub)).then(() => {
+      const formDataArg = projectionStub.getCall(0).args[0] as FormData
+      const projectionParamsBlob = formDataArg.get(
+        ParameterNamesEnum.PROJECTION_PARAMETERS,
+      ) as Blob
+
+      cy.wrap(projectionParamsBlob)
+        .then((blob) => blob.text())
+        .then((text) => {
+          const projectionParams = JSON.parse(text)
+          expect(projectionParams.selectedExecutionOptions).to.include(
+            SelectedExecutionOptionsEnum.ForwardGrowEnabled,
+          )
+          expect(projectionParams.selectedExecutionOptions).to.include(
+            SelectedExecutionOptionsEnum.BackGrowEnabled,
           )
         })
     })

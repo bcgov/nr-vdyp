@@ -34,6 +34,10 @@ describe('File Upload Service Unit Tests', () => {
     fileUploadStore.startYear = 2020
     fileUploadStore.endYear = 2030
     fileUploadStore.yearIncrement = 2
+    fileUploadStore.forwardBackwardGrow = [
+      CONSTANTS.FORWARD_BACKWARD_GROW.FORWARD,
+      CONSTANTS.FORWARD_BACKWARD_GROW.BACKWARD,
+    ]
     fileUploadStore.polygonFile = new File(['polygon content'], 'polygon.csv', {
       type: 'text/csv',
     })
@@ -46,10 +50,54 @@ describe('File Upload Service Unit Tests', () => {
     const options = getSelectedExecutionOptions(fileUploadStore)
     expect(options).to.include.members([
       SelectedExecutionOptionsEnum.ForwardGrowEnabled,
+      SelectedExecutionOptionsEnum.BackGrowEnabled,
       SelectedExecutionOptionsEnum.DoIncludeFileHeader,
       SelectedExecutionOptionsEnum.DoIncludeProjectedMOFVolumes,
       SelectedExecutionOptionsEnum.DoIncludeSpeciesProjection,
     ])
+  })
+
+  it('should return correct selected execution options for CFS biomass projection', () => {
+    fileUploadStore.projectionType = CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
+    fileUploadStore.includeInReport = []
+    const options = getSelectedExecutionOptions(fileUploadStore)
+    expect(options).to.include(SelectedExecutionOptionsEnum.ForwardGrowEnabled)
+    expect(options).to.include(SelectedExecutionOptionsEnum.BackGrowEnabled)
+    expect(options).to.include(
+      SelectedExecutionOptionsEnum.DoIncludeProjectedCFSBiomass,
+    )
+    expect(options).not.to.include(
+      SelectedExecutionOptionsEnum.DoIncludeSpeciesProjection,
+    )
+  })
+
+  it('should return selected execution options with only ForwardGrowEnabled when forwardBackwardGrow includes FORWARD', () => {
+    fileUploadStore.forwardBackwardGrow = [
+      CONSTANTS.FORWARD_BACKWARD_GROW.FORWARD,
+    ]
+    const options = getSelectedExecutionOptions(fileUploadStore)
+    expect(options).to.include(SelectedExecutionOptionsEnum.ForwardGrowEnabled)
+    expect(options).not.to.include(SelectedExecutionOptionsEnum.BackGrowEnabled)
+  })
+
+  it('should return selected execution options with only BackGrowEnabled when forwardBackwardGrow includes BACKWARD', () => {
+    fileUploadStore.forwardBackwardGrow = [
+      CONSTANTS.FORWARD_BACKWARD_GROW.BACKWARD,
+    ]
+    const options = getSelectedExecutionOptions(fileUploadStore)
+    expect(options).not.to.include(
+      SelectedExecutionOptionsEnum.ForwardGrowEnabled,
+    )
+    expect(options).to.include(SelectedExecutionOptionsEnum.BackGrowEnabled)
+  })
+
+  it('should not include ForwardGrowEnabled or BackGrowEnabled when forwardBackwardGrow is empty', () => {
+    fileUploadStore.forwardBackwardGrow = []
+    const options = getSelectedExecutionOptions(fileUploadStore)
+    expect(options).not.to.include(
+      SelectedExecutionOptionsEnum.ForwardGrowEnabled,
+    )
+    expect(options).not.to.include(SelectedExecutionOptionsEnum.BackGrowEnabled)
   })
 
   it('should call projectionHcsvPost with correct form data', () => {
@@ -67,18 +115,6 @@ describe('File Upload Service Unit Tests', () => {
       expect(formDataArg.has(ParameterNamesEnum.HCSV_LAYERS_INPUT_DATA)).to.be
         .true
     })
-  })
-
-  it('should return correct selected execution options for CFS biomass projection', () => {
-    fileUploadStore.projectionType = CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
-    fileUploadStore.includeInReport = []
-    const options = getSelectedExecutionOptions(fileUploadStore)
-    expect(options).to.include(
-      SelectedExecutionOptionsEnum.DoIncludeProjectedCFSBiomass,
-    )
-    expect(options).not.to.include(
-      SelectedExecutionOptionsEnum.DoIncludeSpeciesProjection,
-    )
   })
 
   it('should return default selected debug options', () => {
@@ -121,6 +157,12 @@ describe('File Upload Service Unit Tests', () => {
           MetadataToOutputEnum.VERSION,
         )
         expect(projectionParams.selectedExecutionOptions).to.include(
+          SelectedExecutionOptionsEnum.ForwardGrowEnabled,
+        )
+        expect(projectionParams.selectedExecutionOptions).to.include(
+          SelectedExecutionOptionsEnum.BackGrowEnabled,
+        )
+        expect(projectionParams.selectedExecutionOptions).to.include(
           SelectedExecutionOptionsEnum.DoIncludeProjectedMOFVolumes,
         )
       })
@@ -155,6 +197,12 @@ describe('File Upload Service Unit Tests', () => {
         )
         expect(projectionParams.metadataToOutput).to.equal(
           MetadataToOutputEnum.VERSION,
+        )
+        expect(projectionParams.selectedExecutionOptions).to.include(
+          SelectedExecutionOptionsEnum.ForwardGrowEnabled,
+        )
+        expect(projectionParams.selectedExecutionOptions).to.include(
+          SelectedExecutionOptionsEnum.BackGrowEnabled,
         )
         expect(projectionParams.selectedExecutionOptions).to.include(
           SelectedExecutionOptionsEnum.DoIncludeProjectedMOFVolumes,

@@ -37,6 +37,12 @@ const meta: Meta<typeof ReportConfiguration> = {
       description: 'The year increment for the report configuration',
       defaultValue: DEFAULTS.DEFAULT_VALUES.YEAR_INCREMENT,
     },
+    forwardBackwardGrow: {
+      control: { type: 'check' },
+      options: OPTIONS.forwardBackwardGrowOptions.map((opt) => opt.value),
+      description: 'Selected forward and backward grow options',
+      defaultValue: [],
+    },
     volumeReported: {
       control: { type: 'check' },
       options: OPTIONS.volumeReportedOptions.map((opt) => opt.value),
@@ -81,6 +87,10 @@ export const DefaultConfiguration: Story = {
     startYear: DEFAULTS.DEFAULT_VALUES.START_YEAR,
     endYear: DEFAULTS.DEFAULT_VALUES.END_YEAR,
     yearIncrement: DEFAULTS.DEFAULT_VALUES.YEAR_INCREMENT,
+    forwardBackwardGrow: [
+      OPTIONS.forwardBackwardGrowOptions[0].value,
+      OPTIONS.forwardBackwardGrowOptions[1].value,
+    ],
     volumeReported: [OPTIONS.volumeReportedOptions[0].value],
     includeInReport: [],
     projectionType: DEFAULTS.DEFAULT_VALUES.PROJECTION_TYPE,
@@ -97,6 +107,10 @@ export const DisabledConfiguration: Story = {
     startYear: DEFAULTS.DEFAULT_VALUES.START_YEAR,
     endYear: DEFAULTS.DEFAULT_VALUES.END_YEAR,
     yearIncrement: DEFAULTS.DEFAULT_VALUES.YEAR_INCREMENT,
+    forwardBackwardGrow: [
+      OPTIONS.forwardBackwardGrowOptions[0].value,
+      OPTIONS.forwardBackwardGrowOptions[1].value,
+    ],
     volumeReported: [OPTIONS.volumeReportedOptions[0].value],
     includeInReport: [],
     projectionType: DEFAULTS.DEFAULT_VALUES.PROJECTION_TYPE,

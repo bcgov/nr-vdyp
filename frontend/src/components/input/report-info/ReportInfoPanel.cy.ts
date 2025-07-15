@@ -6,9 +6,16 @@ import { useAppStore } from '@/stores/appStore'
 import { useModelParameterStore } from '@/stores/modelParameterStore'
 import { useFileUploadStore } from '@/stores/fileUploadStore'
 import { setActivePinia, createPinia } from 'pinia'
-import { CONSTANTS, MESSAGE } from '@/constants'
+import { CONSTANTS, DEFAULTS, MESSAGE } from '@/constants'
 
-const vuetify = createVuetify()
+const vuetify = createVuetify({
+  defaults: {
+    global: {
+      // Disable Vuetify transitions globally for faster tests
+      transition: false,
+    },
+  },
+})
 
 describe('ReportInfoPanel.vue', () => {
   beforeEach(() => {
@@ -51,6 +58,9 @@ describe('ReportInfoPanel.vue', () => {
       modelParameterStore.startYear = 2020
       modelParameterStore.endYear = 2030
       modelParameterStore.yearIncrement = 2
+      modelParameterStore.forwardBackwardGrow = [
+        ...DEFAULTS.DEFAULT_VALUES.FORWARD_BACKWARD_GROW,
+      ]
       modelParameterStore.volumeReported = [
         CONSTANTS.VOLUME_REPORTED.WHOLE_STEM,
       ]
@@ -70,6 +80,9 @@ describe('ReportInfoPanel.vue', () => {
       fileUploadStore.startYear = 2020
       fileUploadStore.endYear = 2030
       fileUploadStore.yearIncrement = 2
+      modelParameterStore.forwardBackwardGrow = [
+        ...DEFAULTS.DEFAULT_VALUES.FORWARD_BACKWARD_GROW,
+      ]
       fileUploadStore.volumeReported = [CONSTANTS.VOLUME_REPORTED.WHOLE_STEM]
       fileUploadStore.includeInReport = [
         CONSTANTS.INCLUDE_IN_REPORT.COMPUTED_MAI,
@@ -548,5 +561,51 @@ describe('ReportInfoPanel.vue', () => {
     cy.get('button:contains("Confirm")').should('be.disabled')
 
     cy.get('button').contains('Edit').should('not.be.visible')
+  })
+
+  it('renders forwardBackwardGrow checkboxes correctly', () => {
+    mountComponent({}, CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS)
+
+    cy.get('[data-testid="forward-backward-grow"]')
+      .should('have.length', 2) // Assuming two options: Forward and Backward
+      .each(($checkbox) => {
+        cy.wrap($checkbox).should('exist')
+      })
+  })
+
+  it('has correct initial state for forwardBackwardGrow', () => {
+    const store = mountComponent(
+      {},
+      CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS,
+    )
+
+    cy.wrap(store.forwardBackwardGrow).should('deep.equal', [
+      CONSTANTS.FORWARD_BACKWARD_GROW.FORWARD,
+      CONSTANTS.FORWARD_BACKWARD_GROW.BACKWARD,
+    ])
+
+    cy.get('[data-testid="forward-backward-grow"] input[type="checkbox"]').each(
+      ($checkbox) => {
+        cy.wrap($checkbox).should('be.checked')
+      },
+    )
+  })
+
+  it('disables forwardBackwardGrow checkboxes when panel is not editable', () => {
+    const store = mountComponent(
+      {},
+      CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS,
+    )
+
+    cy.wrap(store).then(() => {
+      store.panelState[CONSTANTS.MODEL_PARAMETER_PANEL.REPORT_INFO].editable =
+        false
+    })
+
+    cy.get('[data-testid="forward-backward-grow"] input[type="checkbox"]').each(
+      ($checkbox) => {
+        cy.wrap($checkbox).should('be.disabled')
+      },
+    )
   })
 })

@@ -36,6 +36,7 @@ describe('ModelParameterStore Unit Tests', () => {
     expect(store.startYear).to.be.null
     expect(store.endYear).to.be.null
     expect(store.yearIncrement).to.be.null
+    expect(store.forwardBackwardGrow).to.deep.equal([])
   })
 
   it('should confirm panel and enable the next panel', () => {
@@ -113,6 +114,9 @@ describe('ModelParameterStore Unit Tests', () => {
     expect(store.startYear).to.equal(DEFAULTS.DEFAULT_VALUES.START_YEAR)
     expect(store.endYear).to.equal(DEFAULTS.DEFAULT_VALUES.END_YEAR)
     expect(store.yearIncrement).to.equal(DEFAULTS.DEFAULT_VALUES.YEAR_INCREMENT)
+    expect(store.forwardBackwardGrow).to.deep.equal(
+      DEFAULTS.DEFAULT_VALUES.FORWARD_BACKWARD_GROW,
+    )
   })
 
   it('should handle empty species list without errors', () => {
@@ -152,6 +156,18 @@ describe('ModelParameterStore Unit Tests', () => {
     expect(store.startingAge).to.equal(15)
     expect(store.finishingAge).to.equal(85)
     expect(store.ageIncrement).to.equal(10)
+  })
+
+  it('should update forwardBackwardGrow correctly', () => {
+    store.forwardBackwardGrow = [
+      CONSTANTS.FORWARD_BACKWARD_GROW.FORWARD,
+      CONSTANTS.FORWARD_BACKWARD_GROW.BACKWARD,
+    ]
+
+    expect(store.forwardBackwardGrow).to.deep.equal([
+      CONSTANTS.FORWARD_BACKWARD_GROW.FORWARD,
+      CONSTANTS.FORWARD_BACKWARD_GROW.BACKWARD,
+    ])
   })
 
   it('should handle full panel confirmation flow', () => {

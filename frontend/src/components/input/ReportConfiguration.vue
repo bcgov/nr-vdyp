@@ -17,117 +17,136 @@
       </v-col>
     </v-row>
   </div>
-  <div v-if="selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.AGE">
+  <div>
     <v-row>
-      <v-col cols="2">
-        <v-text-field
-          id="startingAge"
-          label="Starting Age"
-          type="number"
-          v-model.number="localStartingAge"
-          :min="CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MIN"
-          :max="CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MAX"
-          :step="CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_STEP"
-          persistent-placeholder
-          placeholder=""
-          density="compact"
-          dense
-          :disabled="isDisabled"
-          @update:model-value="handleStartingAgeInput"
-        ></v-text-field>
-      </v-col>
+      <template v-if="selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.AGE">
+        <v-col cols="2">
+          <v-text-field
+            id="startingAge"
+            label="Starting Age"
+            type="number"
+            v-model.number="localStartingAge"
+            :min="CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MIN"
+            :max="CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_MAX"
+            :step="CONSTANTS.NUM_INPUT_LIMITS.STARTING_AGE_STEP"
+            persistent-placeholder
+            placeholder=""
+            density="compact"
+            dense
+            :disabled="isDisabled"
+            @update:model-value="handleStartingAgeInput"
+          ></v-text-field>
+        </v-col>
+        <v-col class="col-space-3" />
+        <v-col cols="2">
+          <v-text-field
+            id="finishingAge"
+            label="Finishing Age"
+            type="number"
+            v-model.number="localFinishingAge"
+            :min="CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MIN"
+            :max="CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MAX"
+            :step="CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_STEP"
+            persistent-placeholder
+            placeholder=""
+            density="compact"
+            dense
+            :disabled="isDisabled"
+            @update:model-value="handleFinishingAgeInput"
+          ></v-text-field>
+        </v-col>
+        <v-col class="col-space-3" />
+        <v-col cols="2">
+          <v-text-field
+            id="ageIncrement"
+            label="Increment"
+            type="number"
+            v-model.number="localAgeIncrement"
+            :min="CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MIN"
+            :max="CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MAX"
+            :step="CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_STEP"
+            persistent-placeholder
+            placeholder=""
+            density="compact"
+            dense
+            :disabled="isDisabled"
+            @update:model-value="handleAgeIncrementInput"
+          ></v-text-field>
+        </v-col>
+      </template>
+      <template v-else>
+        <v-col cols="2">
+          <v-text-field
+            id="startYear"
+            label="Start Year"
+            type="number"
+            v-model.number="localStartYear"
+            :min="CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_MIN"
+            :max="CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_MAX"
+            :step="CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_STEP"
+            persistent-placeholder
+            placeholder=""
+            density="compact"
+            dense
+            :disabled="isDisabled"
+            @update:model-value="handleStartYearInput"
+          ></v-text-field>
+        </v-col>
+        <v-col class="col-space-3" />
+        <v-col cols="2">
+          <v-text-field
+            id="endYear"
+            label="End Year"
+            type="number"
+            v-model.number="localEndYear"
+            :min="CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_MIN"
+            :max="CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_MAX"
+            :step="CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_STEP"
+            persistent-placeholder
+            placeholder=""
+            density="compact"
+            dense
+            :disabled="isDisabled"
+            @update:model-value="handleEndYearInput"
+          ></v-text-field>
+        </v-col>
+        <v-col class="col-space-3" />
+        <v-col cols="2">
+          <v-text-field
+            id="yearIncrement"
+            label="Increment"
+            type="number"
+            v-model.number="localYearIncrement"
+            :min="CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_MIN"
+            :max="CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_MAX"
+            :step="CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_STEP"
+            persistent-placeholder
+            placeholder=""
+            density="compact"
+            dense
+            :disabled="isDisabled"
+            @update:model-value="handleYearIncrementInput"
+          ></v-text-field>
+        </v-col>
+      </template>
       <v-col class="col-space-3" />
-      <v-col cols="2">
-        <v-text-field
-          id="finishingAge"
-          label="Finishing Age"
-          type="number"
-          v-model.number="localFinishingAge"
-          :min="CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MIN"
-          :max="CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MAX"
-          :step="CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_STEP"
-          persistent-placeholder
-          placeholder=""
-          density="compact"
-          dense
-          :disabled="isDisabled"
-          @update:model-value="handleFinishingAgeInput"
-        ></v-text-field>
-      </v-col>
-      <v-col class="col-space-3" />
-      <v-col cols="2">
-        <v-text-field
-          id="ageIncrement"
-          label="Increment"
-          type="number"
-          v-model.number="localAgeIncrement"
-          :min="CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MIN"
-          :max="CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MAX"
-          :step="CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_STEP"
-          persistent-placeholder
-          placeholder=""
-          density="compact"
-          dense
-          :disabled="isDisabled"
-          @update:model-value="handleAgeIncrementInput"
-        ></v-text-field>
-      </v-col>
-    </v-row>
-  </div>
-  <div v-else>
-    <v-row>
-      <v-col cols="2">
-        <v-text-field
-          id="startYear"
-          label="Start Year"
-          type="number"
-          v-model.number="localStartYear"
-          :min="CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_MIN"
-          :max="CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_MAX"
-          :step="CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_STEP"
-          persistent-placeholder
-          placeholder=""
-          density="compact"
-          dense
-          :disabled="isDisabled"
-          @update:model-value="handleStartYearInput"
-        ></v-text-field>
-      </v-col>
-      <v-col class="col-space-3" />
-      <v-col cols="2">
-        <v-text-field
-          id="endYear"
-          label="End Year"
-          type="number"
-          v-model.number="localEndYear"
-          :min="CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_MIN"
-          :max="CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_MAX"
-          :step="CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_STEP"
-          persistent-placeholder
-          placeholder=""
-          density="compact"
-          dense
-          :disabled="isDisabled"
-          @update:model-value="handleEndYearInput"
-        ></v-text-field>
-      </v-col>
-      <v-col class="col-space-3" />
-      <v-col cols="2">
-        <v-text-field
-          id="yearIncrement"
-          label="Increment"
-          type="number"
-          v-model.number="localYearIncrement"
-          :min="CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_MIN"
-          :max="CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_MAX"
-          :step="CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_STEP"
-          persistent-placeholder
-          placeholder=""
-          density="compact"
-          dense
-          :disabled="isDisabled"
-          @update:model-value="handleYearIncrementInput"
-        ></v-text-field>
+      <v-col cols="auto">
+        <v-row>
+          <v-col
+            cols="auto"
+            v-for="(option, index) in OPTIONS.forwardBackwardGrowOptions"
+            :key="index"
+          >
+            <v-checkbox
+              v-model="localForwardBackwardGrow"
+              :label="option.label"
+              :value="option.value"
+              hide-details
+              :disabled="isForwardBackwardGrowDisabled"
+              data-testid="forward-backward-grow"
+            ></v-checkbox>
+          </v-col>
+        </v-row>
       </v-col>
     </v-row>
   </div>
@@ -231,6 +250,7 @@ const props = defineProps<{
   startYear: number | null
   endYear: number | null
   yearIncrement: number | null
+  forwardBackwardGrow: string[]
   volumeReported: string[]
   includeInReport: string[]
   projectionType: string | null
@@ -246,6 +266,7 @@ const emit = defineEmits([
   'update:startYear',
   'update:endYear',
   'update:yearIncrement',
+  'update:forwardBackwardGrow',
   'update:volumeReported',
   'update:includeInReport',
   'update:projectionType',
@@ -261,6 +282,7 @@ const localAgeIncrement = ref<number | null>(props.ageIncrement)
 const localStartYear = ref<number | null>(props.startYear)
 const localEndYear = ref<number | null>(props.endYear)
 const localYearIncrement = ref<number | null>(props.yearIncrement)
+const localForwardBackwardGrow = ref<string[]>([...props.forwardBackwardGrow])
 const localVolumeReported = ref<string[]>([...props.volumeReported])
 const localIncludeInReport = ref<string[]>([...props.includeInReport])
 const localProjectionType = ref<string | null>(props.projectionType)
@@ -308,6 +330,16 @@ watch(
   () => props.yearIncrement,
   (newVal) => {
     localYearIncrement.value = newVal
+  },
+)
+watch(
+  () => props.forwardBackwardGrow,
+  (newVal) => {
+    if (
+      JSON.stringify(newVal) !== JSON.stringify(localForwardBackwardGrow.value)
+    ) {
+      localForwardBackwardGrow.value = [...newVal]
+    }
   },
 )
 watch(
@@ -369,6 +401,11 @@ watch(localAgeIncrement, (newVal) => emit('update:ageIncrement', newVal))
 watch(localStartYear, (newVal) => emit('update:startYear', newVal))
 watch(localEndYear, (newVal) => emit('update:endYear', newVal))
 watch(localYearIncrement, (newVal) => emit('update:yearIncrement', newVal))
+watch(localForwardBackwardGrow, (newVal) => {
+  if (JSON.stringify(newVal) !== JSON.stringify(props.forwardBackwardGrow)) {
+    emit('update:forwardBackwardGrow', [...newVal])
+  }
+})
 watch(localVolumeReported, (newVal) => {
   if (JSON.stringify(newVal) !== JSON.stringify(props.volumeReported)) {
     emit('update:volumeReported', [...newVal])
@@ -391,6 +428,11 @@ watch(localProjectionType, (newVal) => {
 })
 
 watch(localReportTitle, (newVal) => emit('update:reportTitle', newVal))
+
+// Decide whether to disable the "Backward / Forward" checkbox
+const isForwardBackwardGrowDisabled = computed(() => {
+  return props.isDisabled
+})
 
 // Decide whether to disable the "Volumes Reported" checkbox
 const isVolumeReportedDisabled = computed(() => {

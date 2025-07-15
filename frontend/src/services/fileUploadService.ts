@@ -14,7 +14,6 @@ export const getSelectedExecutionOptions = (
   fileUploadStore: ReturnType<typeof useFileUploadStore>,
 ) => {
   const selectedExecutionOptions = [
-    SelectedExecutionOptionsEnum.ForwardGrowEnabled,
     SelectedExecutionOptionsEnum.DoIncludeFileHeader,
     SelectedExecutionOptionsEnum.DoIncludeProjectionModeInYieldTable,
     SelectedExecutionOptionsEnum.DoIncludeAgeRowsInYieldTable,
@@ -48,6 +47,23 @@ export const getSelectedExecutionOptions = (
     selectedExecutionOptions.push(
       SelectedExecutionOptionsEnum.DoIncludeSpeciesProjection,
     )
+  }
+
+  if (
+    fileUploadStore.forwardBackwardGrow.includes(
+      CONSTANTS.FORWARD_BACKWARD_GROW.FORWARD,
+    )
+  ) {
+    selectedExecutionOptions.push(
+      SelectedExecutionOptionsEnum.ForwardGrowEnabled,
+    )
+  }
+  if (
+    fileUploadStore.forwardBackwardGrow.includes(
+      CONSTANTS.FORWARD_BACKWARD_GROW.BACKWARD,
+    )
+  ) {
+    selectedExecutionOptions.push(SelectedExecutionOptionsEnum.BackGrowEnabled)
   }
 
   return selectedExecutionOptions

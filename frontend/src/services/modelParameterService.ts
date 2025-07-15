@@ -361,7 +361,6 @@ const buildSelectedExecutionOptions = (
   modelParameterStore: any,
 ): SelectedExecutionOptionsEnum[] => {
   const options: SelectedExecutionOptionsEnum[] = [
-    SelectedExecutionOptionsEnum.ForwardGrowEnabled,
     SelectedExecutionOptionsEnum.DoIncludeAgeRowsInYieldTable,
     SelectedExecutionOptionsEnum.DoIncludeColumnHeadersInYieldTable,
     SelectedExecutionOptionsEnum.DoEnableProgressLogging,
@@ -369,6 +368,7 @@ const buildSelectedExecutionOptions = (
     SelectedExecutionOptionsEnum.DoEnableDebugLogging,
     SelectedExecutionOptionsEnum.AllowAggressiveValueEstimation,
   ]
+
   if (modelParameterStore.projectionType === CONSTANTS.PROJECTION_TYPE.VOLUME) {
     options.push(SelectedExecutionOptionsEnum.DoIncludeProjectedMOFVolumes)
   } else if (
@@ -376,11 +376,13 @@ const buildSelectedExecutionOptions = (
   ) {
     options.push(SelectedExecutionOptionsEnum.DoIncludeProjectedCFSBiomass)
   }
+
   if (modelParameterStore.incSecondaryHeight) {
     options.push(
       SelectedExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
     )
   }
+
   if (
     modelParameterStore.includeInReport &&
     modelParameterStore.includeInReport.includes(
@@ -389,6 +391,22 @@ const buildSelectedExecutionOptions = (
   ) {
     options.push(SelectedExecutionOptionsEnum.DoIncludeSpeciesProjection)
   }
+
+  if (
+    modelParameterStore.forwardBackwardGrow.includes(
+      CONSTANTS.FORWARD_BACKWARD_GROW.FORWARD,
+    )
+  ) {
+    options.push(SelectedExecutionOptionsEnum.ForwardGrowEnabled)
+  }
+  if (
+    modelParameterStore.forwardBackwardGrow.includes(
+      CONSTANTS.FORWARD_BACKWARD_GROW.BACKWARD,
+    )
+  ) {
+    options.push(SelectedExecutionOptionsEnum.BackGrowEnabled)
+  }
+
   return options
 }
 

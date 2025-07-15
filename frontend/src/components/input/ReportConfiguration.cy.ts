@@ -2,7 +2,7 @@ import { mount } from 'cypress/vue'
 import { createVuetify } from 'vuetify'
 import 'vuetify/styles'
 import ReportConfiguration from './ReportConfiguration.vue'
-import { CONSTANTS } from '@/constants'
+import { CONSTANTS, DEFAULTS, OPTIONS } from '@/constants'
 import { useAppStore } from '@/stores/appStore'
 import { createPinia, setActivePinia } from 'pinia'
 
@@ -33,6 +33,7 @@ describe('ReportConfiguration.vue', () => {
     startYear: 2020,
     endYear: 2030,
     yearIncrement: 2,
+    forwardBackwardGrow: [...DEFAULTS.DEFAULT_VALUES.FORWARD_BACKWARD_GROW],
     volumeReported: [CONSTANTS.VOLUME_REPORTED.WHOLE_STEM],
     includeInReport: [CONSTANTS.INCLUDE_IN_REPORT.COMPUTED_MAI],
     projectionType: CONSTANTS.PROJECTION_TYPE.VOLUME,
@@ -136,6 +137,47 @@ describe('ReportConfiguration.vue', () => {
     cy.get('.v-select').find('input').should('have.value', props.projectionType)
 
     cy.get('input[id="reportTitle"]').should('have.value', props.reportTitle)
+  })
+
+  it('renders forwardBackwardGrow checkboxes correctly', () => {
+    mount(ReportConfiguration, {
+      props,
+      global: {
+        plugins: [vuetify],
+      },
+    })
+
+    for (const option of OPTIONS.forwardBackwardGrowOptions) {
+      const isChecked = props.forwardBackwardGrow.includes(option.value)
+      cy.contains('.v-input', option.label)
+        .find('input[type="checkbox"]')
+        .should(isChecked ? 'be.checked' : 'not.be.checked')
+    }
+  })
+
+  it('emits update:forwardBackwardGrow when checkboxes are toggled', () => {
+    const onUpdateSpy = cy.spy().as('updateSpy')
+
+    const initialForwardBackwardGrow = [CONSTANTS.FORWARD_BACKWARD_GROW.FORWARD]
+
+    mount(ReportConfiguration, {
+      props: {
+        ...props,
+        forwardBackwardGrow: initialForwardBackwardGrow,
+        'onUpdate:forwardBackwardGrow': onUpdateSpy,
+      },
+      global: {
+        plugins: [vuetify],
+      },
+    })
+
+    cy.contains('.v-input', 'Forward').find('input[type="checkbox"]').uncheck()
+    cy.get('@updateSpy').should('have.been.calledWith', [])
+
+    cy.contains('.v-input', 'Backward').find('input[type="checkbox"]').check()
+    cy.get('@updateSpy').should('have.been.calledWith', [
+      CONSTANTS.FORWARD_BACKWARD_GROW.BACKWARD,
+    ])
   })
 
   it('emits events when input values are changed for AGE range', () => {
@@ -362,6 +404,11 @@ describe('ReportConfiguration.vue', () => {
     cy.get('.v-field__input input').should('be.disabled')
     cy.get('.v-select input').should('be.disabled')
     cy.get('.v-checkbox input[type="checkbox"]').should('be.disabled')
+    cy.get('[data-testid="forward-backward-grow"] input[type="checkbox"]').each(
+      ($checkbox) => {
+        cy.wrap($checkbox).should('be.disabled')
+      },
+    )
   })
 
   it('enables all inputs when "isDisabled" is false', () => {
@@ -377,5 +424,10 @@ describe('ReportConfiguration.vue', () => {
     cy.get('.v-field__input input').should('not.be.disabled')
     cy.get('.v-select input').should('not.be.disabled')
     cy.get('.v-checkbox input[type="checkbox"]').should('not.be.disabled')
+    cy.get('[data-testid="forward-backward-grow"] input[type="checkbox"]').each(
+      ($checkbox) => {
+        cy.wrap($checkbox).should('not.be.disabled')
+      },
+    )
   })
 })
