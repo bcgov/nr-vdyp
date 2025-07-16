@@ -2,39 +2,70 @@ import { useFileUploadStore } from '@/stores/fileUploadStore'
 import { CONSTANTS } from '@/constants'
 import {
   OutputFormatEnum,
-  SelectedExecutionOptionsEnum,
-  SelectedDebugOptionsEnum,
+  ExecutionOptionsEnum,
+  DebugOptionsEnum,
   MetadataToOutputEnum,
   CombineAgeYearRangeEnum,
   ParameterNamesEnum,
+  type Parameters,
 } from '@/services/vdyp-api'
 import { projectionHcsvPost } from '@/services/apiActions'
 
-export const getSelectedExecutionOptions = (
+/**
+ * Builds an array of selected and excluded execution options based on the file upload store.
+ * @param fileUploadStore The store containing model parameters.
+ * @returns An object containing selected and excluded execution option enums.
+ */
+export const buildExecutionOptions = (
   fileUploadStore: ReturnType<typeof useFileUploadStore>,
-) => {
+): {
+  selectedExecutionOptions: ExecutionOptionsEnum[]
+  excludedExecutionOptions: ExecutionOptionsEnum[]
+} => {
   const selectedExecutionOptions = [
-    SelectedExecutionOptionsEnum.DoIncludeFileHeader,
-    SelectedExecutionOptionsEnum.DoIncludeProjectionModeInYieldTable,
-    SelectedExecutionOptionsEnum.DoIncludeAgeRowsInYieldTable,
-    SelectedExecutionOptionsEnum.DoIncludeYearRowsInYieldTable,
-    SelectedExecutionOptionsEnum.DoSummarizeProjectionByLayer,
-    SelectedExecutionOptionsEnum.DoIncludeColumnHeadersInYieldTable,
-    SelectedExecutionOptionsEnum.DoAllowBasalAreaAndTreesPerHectareValueSubstitution,
-    SelectedExecutionOptionsEnum.DoEnableProgressLogging,
-    SelectedExecutionOptionsEnum.DoEnableErrorLogging,
-    SelectedExecutionOptionsEnum.DoEnableDebugLogging,
+    ExecutionOptionsEnum.DoIncludeFileHeader,
+    ExecutionOptionsEnum.DoIncludeProjectionModeInYieldTable,
+    ExecutionOptionsEnum.DoIncludeAgeRowsInYieldTable,
+    ExecutionOptionsEnum.DoIncludeYearRowsInYieldTable,
+    ExecutionOptionsEnum.DoSummarizeProjectionByLayer,
+    ExecutionOptionsEnum.DoIncludeColumnHeadersInYieldTable,
+    ExecutionOptionsEnum.DoAllowBasalAreaAndTreesPerHectareValueSubstitution,
+    ExecutionOptionsEnum.DoEnableProgressLogging,
+    ExecutionOptionsEnum.DoEnableErrorLogging,
+    ExecutionOptionsEnum.DoEnableDebugLogging,
+  ]
+
+  const excludedExecutionOptions: ExecutionOptionsEnum[] = [
+    ExecutionOptionsEnum.DoSaveIntermediateFiles,
+    ExecutionOptionsEnum.DoForceReferenceYearInclusionInYieldTables,
+    ExecutionOptionsEnum.DoForceCurrentYearInclusionInYieldTables,
+    ExecutionOptionsEnum.DoIncludePolygonRecordIdInYieldTable,
+    ExecutionOptionsEnum.DoSummarizeProjectionByPolygon,
+    ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
+    ExecutionOptionsEnum.AllowAggressiveValueEstimation,
+    ExecutionOptionsEnum.DoIncludeProjectionFiles,
+    ExecutionOptionsEnum.DoDelayExecutionFolderDeletion,
   ]
 
   if (fileUploadStore.projectionType === CONSTANTS.PROJECTION_TYPE.VOLUME) {
     selectedExecutionOptions.push(
-      SelectedExecutionOptionsEnum.DoIncludeProjectedMOFVolumes,
+      ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes,
     )
-  } else if (
+  } else {
+    excludedExecutionOptions.push(
+      ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes,
+    )
+  }
+
+  if (
     fileUploadStore.projectionType === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
   ) {
     selectedExecutionOptions.push(
-      SelectedExecutionOptionsEnum.DoIncludeProjectedCFSBiomass,
+      ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass,
+    )
+  } else {
+    excludedExecutionOptions.push(
+      ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass,
     )
   }
 
@@ -45,45 +76,56 @@ export const getSelectedExecutionOptions = (
     )
   ) {
     selectedExecutionOptions.push(
-      SelectedExecutionOptionsEnum.DoIncludeSpeciesProjection,
+      ExecutionOptionsEnum.DoIncludeSpeciesProjection,
+    )
+  } else {
+    excludedExecutionOptions.push(
+      ExecutionOptionsEnum.DoIncludeSpeciesProjection,
     )
   }
 
-  if (
-    fileUploadStore.forwardBackwardGrow.includes(
-      CONSTANTS.FORWARD_BACKWARD_GROW.FORWARD,
-    )
-  ) {
-    selectedExecutionOptions.push(
-      SelectedExecutionOptionsEnum.ForwardGrowEnabled,
-    )
-  }
-  if (
-    fileUploadStore.forwardBackwardGrow.includes(
-      CONSTANTS.FORWARD_BACKWARD_GROW.BACKWARD,
-    )
-  ) {
-    selectedExecutionOptions.push(SelectedExecutionOptionsEnum.BackGrowEnabled)
+  if (fileUploadStore.isForwardGrowEnabled) {
+    selectedExecutionOptions.push(ExecutionOptionsEnum.ForwardGrowEnabled)
+  } else {
+    excludedExecutionOptions.push(ExecutionOptionsEnum.ForwardGrowEnabled)
   }
 
-  return selectedExecutionOptions
+  if (fileUploadStore.isBackwardGrowEnabled) {
+    selectedExecutionOptions.push(ExecutionOptionsEnum.BackGrowEnabled)
+  } else {
+    excludedExecutionOptions.push(ExecutionOptionsEnum.BackGrowEnabled)
+  }
+
+  return { selectedExecutionOptions, excludedExecutionOptions }
 }
 
-export const getSelectedDebugOptions = () => {
-  const selectedDebugOptions: Array<SelectedDebugOptionsEnum> = [
-    SelectedDebugOptionsEnum.DoIncludeDebugTimestamps,
-    SelectedDebugOptionsEnum.DoIncludeDebugEntryExit,
-    SelectedDebugOptionsEnum.DoIncludeDebugIndentBlocks,
-    SelectedDebugOptionsEnum.DoIncludeDebugRoutineNames,
+/**
+ * Builds an array of selected and excluded debug options.
+ * @returns An object containing selected and excluded debug option enums.
+ */
+export const buildDebugOptions = (): {
+  selectedDebugOptions: DebugOptionsEnum[]
+  excludedDebugOptions: DebugOptionsEnum[]
+} => {
+  const selectedDebugOptions: DebugOptionsEnum[] = [
+    DebugOptionsEnum.DoIncludeDebugTimestamps,
+    DebugOptionsEnum.DoIncludeDebugEntryExit,
+    DebugOptionsEnum.DoIncludeDebugIndentBlocks,
+    DebugOptionsEnum.DoIncludeDebugRoutineNames,
   ]
+  const excludedDebugOptions: DebugOptionsEnum[] = []
 
-  return selectedDebugOptions
+  return { selectedDebugOptions, excludedDebugOptions }
 }
 
 export const getFormData = (
   fileUploadStore: ReturnType<typeof useFileUploadStore>,
 ) => {
-  const projectionParameters = {
+  const { selectedExecutionOptions, excludedExecutionOptions } =
+    buildExecutionOptions(fileUploadStore)
+  const { selectedDebugOptions, excludedDebugOptions } = buildDebugOptions()
+
+  const projectionParameters: Parameters = {
     ageStart:
       fileUploadStore.selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.AGE
         ? fileUploadStore.startingAge
@@ -105,8 +147,10 @@ export const getFormData = (
         ? fileUploadStore.endYear
         : null,
     outputFormat: OutputFormatEnum.CSVYieldTable,
-    selectedExecutionOptions: getSelectedExecutionOptions(fileUploadStore),
-    selectedDebugOptions: getSelectedDebugOptions(),
+    selectedExecutionOptions: selectedExecutionOptions,
+    excludedExecutionOptions: excludedExecutionOptions,
+    selectedDebugOptions: selectedDebugOptions,
+    excludedDebugOptions: excludedDebugOptions,
     combineAgeYearRange: CombineAgeYearRangeEnum.Intersect,
     metadataToOutput: MetadataToOutputEnum.VERSION,
   }

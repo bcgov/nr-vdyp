@@ -1,5 +1,3 @@
-import { SelectedExecutionOptionsEnum } from '@/services/vdyp-api/models/selected-execution-options-enum'
-
 export const KEYCLOAK = Object.freeze({
   PKCE_METHOD: 'S256',
   ONLOAD: 'check-sso',
@@ -33,11 +31,6 @@ export const SITE_SPECIES_VALUES = Object.freeze({
 export const AGE_YEAR_RANGE = Object.freeze({
   AGE: 'age',
   YEAR: 'year',
-})
-
-export const FORWARD_BACKWARD_GROW = Object.freeze({
-  FORWARD: SelectedExecutionOptionsEnum.ForwardGrowEnabled,
-  BACKWARD: SelectedExecutionOptionsEnum.BackGrowEnabled,
 })
 
 export const VOLUME_REPORTED = Object.freeze({

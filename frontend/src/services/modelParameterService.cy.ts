@@ -15,9 +15,10 @@ import {
   flattenSpeciesData,
 } from '@/services/modelParameterService'
 import {
-  SelectedExecutionOptionsEnum,
+  ExecutionOptionsEnum,
   ParameterNamesEnum,
   MetadataToOutputEnum,
+  OutputFormatEnum,
 } from '@/services/vdyp-api'
 import { BIZCONSTANTS, CONSTANTS, DEFAULTS, OPTIONS } from '@/constants'
 
@@ -45,8 +46,12 @@ describe('Model Parameter Service Unit Tests', () => {
     startYear: DEFAULTS.DEFAULT_VALUES.START_YEAR,
     endYear: DEFAULTS.DEFAULT_VALUES.END_YEAR,
     yearIncrement: DEFAULTS.DEFAULT_VALUES.YEAR_INCREMENT,
+    isForwardGrowEnabled: DEFAULTS.DEFAULT_VALUES.IS_FORWARD_GROW_ENABLED,
+    isBackwardGrowEnabled: DEFAULTS.DEFAULT_VALUES.IS_BACKWARD_GROW_ENABLED,
     includeInReport: [],
-    forwardBackwardGrow: [], // Default to empty array
+    projectionType: CONSTANTS.PROJECTION_TYPE.VOLUME,
+    bha50SiteIndex: null,
+    referenceYear: new Date().getFullYear(),
   }
 
   it('should generate a valid feature ID', () => {
@@ -150,7 +155,7 @@ describe('Model Parameter Service Unit Tests', () => {
   it('should call projectionHcsvPost once', () => {
     const projectionStub = cy
       .stub()
-      .resolves(new Blob(['mock response'], { type: 'application/json' }))
+      .resolves(new Blob(['mock response'], { type: 'application/zip' }))
 
     cy.wrap(runModel(mockModelParameterStore, projectionStub)).then(() => {
       expect(projectionStub).to.be.calledOnce
@@ -192,12 +197,14 @@ describe('Model Parameter Service Unit Tests', () => {
         expect(text).to.include(
           determineBclcsLevel5(mockModelParameterStore.percentStockableArea),
         )
+        expect(text).to.include(mockModelParameterStore.referenceYear)
       })
 
     cy.wrap(blobLayer)
       .then((blob) => blob.text())
       .then((text) => {
         expect(text).to.include(mockModelParameterStore.highestPercentSpecies)
+        expect(text).to.include(mockModelParameterStore.bha50SiteIndex ?? '')
         expect(text).to.include('PL,30.0')
         expect(text).to.include('AC,30.0')
         expect(text).to.include('H,30.0')
@@ -208,7 +215,7 @@ describe('Model Parameter Service Unit Tests', () => {
   it('should call projectionHcsvPost with correct form data', () => {
     const projectionStub = cy
       .stub()
-      .resolves(new Blob(['mock response'], { type: 'application/json' }))
+      .resolves(new Blob(['mock response'], { type: 'application/zip' }))
 
     cy.wrap(runModel(mockModelParameterStore, projectionStub)).then(() => {
       expect(projectionStub).to.be.calledOnce
@@ -240,14 +247,29 @@ describe('Model Parameter Service Unit Tests', () => {
           expect(projectionParams.ageIncrement).to.equal(
             mockModelParameterStore.ageIncrement,
           )
+          expect(projectionParams.outputFormat).to.equal(
+            OutputFormatEnum.CSVYieldTable,
+          )
           expect(projectionParams.metadataToOutput).to.equal(
             MetadataToOutputEnum.NONE,
           )
-          expect(projectionParams.selectedExecutionOptions).not.to.include(
-            SelectedExecutionOptionsEnum.ForwardGrowEnabled,
+          expect(projectionParams.selectedExecutionOptions).to.include(
+            ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes,
           )
           expect(projectionParams.selectedExecutionOptions).not.to.include(
-            SelectedExecutionOptionsEnum.BackGrowEnabled,
+            ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass,
+          )
+          expect(projectionParams.selectedExecutionOptions).to.include(
+            ExecutionOptionsEnum.ForwardGrowEnabled,
+          )
+          expect(projectionParams.excludedExecutionOptions).not.to.include(
+            ExecutionOptionsEnum.ForwardGrowEnabled,
+          )
+          expect(projectionParams.selectedExecutionOptions).to.include(
+            ExecutionOptionsEnum.BackGrowEnabled,
+          )
+          expect(projectionParams.excludedExecutionOptions).not.to.include(
+            ExecutionOptionsEnum.BackGrowEnabled,
           )
         })
     })
@@ -256,11 +278,12 @@ describe('Model Parameter Service Unit Tests', () => {
   it('should include ForwardGrowEnabled when forwardBackwardGrow includes FORWARD', () => {
     const updatedStore = {
       ...mockModelParameterStore,
-      forwardBackwardGrow: [CONSTANTS.FORWARD_BACKWARD_GROW.FORWARD],
+      isForwardGrowEnabled: true,
+      isBackwardGrowEnabled: false,
     }
     const projectionStub = cy
       .stub()
-      .resolves(new Blob(['mock response'], { type: 'application/json' }))
+      .resolves(new Blob(['mock response'], { type: 'application/zip' }))
 
     cy.wrap(runModel(updatedStore, projectionStub)).then(() => {
       const formDataArg = projectionStub.getCall(0).args[0] as FormData
@@ -273,10 +296,10 @@ describe('Model Parameter Service Unit Tests', () => {
         .then((text) => {
           const projectionParams = JSON.parse(text)
           expect(projectionParams.selectedExecutionOptions).to.include(
-            SelectedExecutionOptionsEnum.ForwardGrowEnabled,
+            ExecutionOptionsEnum.ForwardGrowEnabled,
           )
           expect(projectionParams.selectedExecutionOptions).not.to.include(
-            SelectedExecutionOptionsEnum.BackGrowEnabled,
+            ExecutionOptionsEnum.BackGrowEnabled,
           )
         })
     })
@@ -285,11 +308,12 @@ describe('Model Parameter Service Unit Tests', () => {
   it('should include BackGrowEnabled when forwardBackwardGrow includes BACKWARD', () => {
     const updatedStore = {
       ...mockModelParameterStore,
-      forwardBackwardGrow: [CONSTANTS.FORWARD_BACKWARD_GROW.BACKWARD],
+      isForwardGrowEnabled: false,
+      isBackwardGrowEnabled: true,
     }
     const projectionStub = cy
       .stub()
-      .resolves(new Blob(['mock response'], { type: 'application/json' }))
+      .resolves(new Blob(['mock response'], { type: 'application/zip' }))
 
     cy.wrap(runModel(updatedStore, projectionStub)).then(() => {
       const formDataArg = projectionStub.getCall(0).args[0] as FormData
@@ -302,10 +326,10 @@ describe('Model Parameter Service Unit Tests', () => {
         .then((text) => {
           const projectionParams = JSON.parse(text)
           expect(projectionParams.selectedExecutionOptions).not.to.include(
-            SelectedExecutionOptionsEnum.ForwardGrowEnabled,
+            ExecutionOptionsEnum.ForwardGrowEnabled,
           )
           expect(projectionParams.selectedExecutionOptions).to.include(
-            SelectedExecutionOptionsEnum.BackGrowEnabled,
+            ExecutionOptionsEnum.BackGrowEnabled,
           )
         })
     })
@@ -314,14 +338,12 @@ describe('Model Parameter Service Unit Tests', () => {
   it('should include both ForwardGrowEnabled and BackGrowEnabled when forwardBackwardGrow includes both', () => {
     const updatedStore = {
       ...mockModelParameterStore,
-      forwardBackwardGrow: [
-        CONSTANTS.FORWARD_BACKWARD_GROW.FORWARD,
-        CONSTANTS.FORWARD_BACKWARD_GROW.BACKWARD,
-      ],
+      isForwardGrowEnabled: true,
+      isBackwardGrowEnabled: true,
     }
     const projectionStub = cy
       .stub()
-      .resolves(new Blob(['mock response'], { type: 'application/json' }))
+      .resolves(new Blob(['mock response'], { type: 'application/zip' }))
 
     cy.wrap(runModel(updatedStore, projectionStub)).then(() => {
       const formDataArg = projectionStub.getCall(0).args[0] as FormData
@@ -334,10 +356,10 @@ describe('Model Parameter Service Unit Tests', () => {
         .then((text) => {
           const projectionParams = JSON.parse(text)
           expect(projectionParams.selectedExecutionOptions).to.include(
-            SelectedExecutionOptionsEnum.ForwardGrowEnabled,
+            ExecutionOptionsEnum.ForwardGrowEnabled,
           )
           expect(projectionParams.selectedExecutionOptions).to.include(
-            SelectedExecutionOptionsEnum.BackGrowEnabled,
+            ExecutionOptionsEnum.BackGrowEnabled,
           )
         })
     })
@@ -351,7 +373,7 @@ describe('Model Parameter Service Unit Tests', () => {
 
     const projectionStub = cy
       .stub()
-      .resolves(new Blob(['mock response'], { type: 'application/json' }))
+      .resolves(new Blob(['mock response'], { type: 'application/zip' }))
 
     cy.wrap(runModel(updatedModelParameterStore, projectionStub)).then(() => {
       const formDataArg = projectionStub.getCall(0).args[0] as FormData
@@ -364,7 +386,7 @@ describe('Model Parameter Service Unit Tests', () => {
         .then((text) => {
           const projectionParams = JSON.parse(text)
           expect(projectionParams.selectedExecutionOptions).to.include(
-            SelectedExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
+            ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
           )
         })
     })
@@ -373,7 +395,7 @@ describe('Model Parameter Service Unit Tests', () => {
   it('should contain expected execution options', () => {
     const projectionStub = cy
       .stub()
-      .resolves(new Blob(['mock response'], { type: 'application/json' }))
+      .resolves(new Blob(['mock response'], { type: 'application/zip' }))
 
     cy.wrap(runModel(mockModelParameterStore, projectionStub)).then(() => {
       const formDataArg = projectionStub.getCall(0).args[0] as FormData
@@ -386,8 +408,8 @@ describe('Model Parameter Service Unit Tests', () => {
         .then((text) => {
           const projectionParams = JSON.parse(text)
           expect(projectionParams.selectedExecutionOptions).to.include(
-            SelectedExecutionOptionsEnum.DoEnableProgressLogging,
-            SelectedExecutionOptionsEnum.DoEnableErrorLogging,
+            ExecutionOptionsEnum.DoEnableProgressLogging,
+            ExecutionOptionsEnum.DoEnableErrorLogging,
           )
         })
     })
@@ -401,7 +423,7 @@ describe('Model Parameter Service Unit Tests', () => {
 
     const projectionStub = cy
       .stub()
-      .resolves(new Blob(['mock response'], { type: 'application/json' }))
+      .resolves(new Blob(['mock response'], { type: 'application/zip' }))
 
     cy.wrap(runModel(emptySpeciesStore, projectionStub)).then(() => {
       expect(projectionStub).to.be.calledOnce
@@ -430,7 +452,7 @@ describe('Model Parameter Service Unit Tests', () => {
 
     const projectionStub = cy
       .stub()
-      .resolves(new Blob(['mock response'], { type: 'application/json' }))
+      .resolves(new Blob(['mock response'], { type: 'application/zip' }))
 
     cy.wrap(runModel(yearRangeStore, projectionStub)).then(() => {
       const formDataArg = projectionStub.getCall(0).args[0] as FormData

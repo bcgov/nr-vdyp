@@ -1,10 +1,9 @@
-export enum SelectedExecutionOptionsEnum {
+export enum ExecutionOptionsEnum {
   BackGrowEnabled = 'backGrowEnabled',
   ForwardGrowEnabled = 'forwardGrowEnabled',
   DoSaveIntermediateFiles = 'doSaveIntermediateFiles',
   DoForceReferenceYearInclusionInYieldTables = 'doForceReferenceYearInclusionInYieldTables',
   DoForceCurrentYearInclusionInYieldTables = 'doForceCurrentYearInclusionInYieldTables',
-  DoForceCalendarYearInclusionInYieldTables = 'doForceCalendarYearInclusionInYieldTables',
   DoIncludeFileHeader = 'doIncludeFileHeader',
   DoIncludeProjectionModeInYieldTable = 'doIncludeProjectionModeInYieldTable',
   DoIncludeAgeRowsInYieldTable = 'doIncludeAgeRowsInYieldTable',

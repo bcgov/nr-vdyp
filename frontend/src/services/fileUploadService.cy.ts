@@ -1,21 +1,21 @@
 /// <reference types="cypress" />
 
 import {
-  getSelectedExecutionOptions,
-  getSelectedDebugOptions,
+  buildExecutionOptions,
+  buildDebugOptions,
   getFormData,
   runModelFileUpload,
 } from '@/services/fileUploadService'
 import { useFileUploadStore } from '@/stores/fileUploadStore'
 import {
-  SelectedExecutionOptionsEnum,
-  SelectedDebugOptionsEnum,
+  ExecutionOptionsEnum,
+  DebugOptionsEnum,
   ParameterNamesEnum,
   OutputFormatEnum,
   CombineAgeYearRangeEnum,
   MetadataToOutputEnum,
 } from '@/services/vdyp-api'
-import { CONSTANTS } from '@/constants'
+import { CONSTANTS, DEFAULTS } from '@/constants'
 import { createPinia, setActivePinia } from 'pinia'
 
 describe('File Upload Service Unit Tests', () => {
@@ -34,10 +34,10 @@ describe('File Upload Service Unit Tests', () => {
     fileUploadStore.startYear = 2020
     fileUploadStore.endYear = 2030
     fileUploadStore.yearIncrement = 2
-    fileUploadStore.forwardBackwardGrow = [
-      CONSTANTS.FORWARD_BACKWARD_GROW.FORWARD,
-      CONSTANTS.FORWARD_BACKWARD_GROW.BACKWARD,
-    ]
+    fileUploadStore.isForwardGrowEnabled =
+      DEFAULTS.DEFAULT_VALUES.IS_FORWARD_GROW_ENABLED
+    fileUploadStore.isBackwardGrowEnabled =
+      DEFAULTS.DEFAULT_VALUES.IS_BACKWARD_GROW_ENABLED
     fileUploadStore.polygonFile = new File(['polygon content'], 'polygon.csv', {
       type: 'text/csv',
     })
@@ -47,57 +47,103 @@ describe('File Upload Service Unit Tests', () => {
   })
 
   it('should return correct selected execution options for volume projection', () => {
-    const options = getSelectedExecutionOptions(fileUploadStore)
-    expect(options).to.include.members([
-      SelectedExecutionOptionsEnum.ForwardGrowEnabled,
-      SelectedExecutionOptionsEnum.BackGrowEnabled,
-      SelectedExecutionOptionsEnum.DoIncludeFileHeader,
-      SelectedExecutionOptionsEnum.DoIncludeProjectedMOFVolumes,
-      SelectedExecutionOptionsEnum.DoIncludeSpeciesProjection,
+    const { selectedExecutionOptions, excludedExecutionOptions } =
+      buildExecutionOptions(fileUploadStore)
+    expect(selectedExecutionOptions).to.include.members([
+      ExecutionOptionsEnum.ForwardGrowEnabled,
+      ExecutionOptionsEnum.BackGrowEnabled,
+      ExecutionOptionsEnum.DoIncludeFileHeader,
+      ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes,
+      ExecutionOptionsEnum.DoIncludeSpeciesProjection,
+    ])
+    expect(excludedExecutionOptions).to.include.members([
+      ExecutionOptionsEnum.DoSaveIntermediateFiles,
+      ExecutionOptionsEnum.DoForceReferenceYearInclusionInYieldTables,
+      ExecutionOptionsEnum.DoForceCurrentYearInclusionInYieldTables,
+      ExecutionOptionsEnum.DoIncludePolygonRecordIdInYieldTable,
+      ExecutionOptionsEnum.DoSummarizeProjectionByPolygon,
+      ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
+      ExecutionOptionsEnum.AllowAggressiveValueEstimation,
+      ExecutionOptionsEnum.DoIncludeProjectionFiles,
+      ExecutionOptionsEnum.DoDelayExecutionFolderDeletion,
     ])
   })
 
   it('should return correct selected execution options for CFS biomass projection', () => {
     fileUploadStore.projectionType = CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
     fileUploadStore.includeInReport = []
-    const options = getSelectedExecutionOptions(fileUploadStore)
-    expect(options).to.include(SelectedExecutionOptionsEnum.ForwardGrowEnabled)
-    expect(options).to.include(SelectedExecutionOptionsEnum.BackGrowEnabled)
-    expect(options).to.include(
-      SelectedExecutionOptionsEnum.DoIncludeProjectedCFSBiomass,
+    const { selectedExecutionOptions, excludedExecutionOptions } =
+      buildExecutionOptions(fileUploadStore)
+    expect(selectedExecutionOptions).to.include(
+      ExecutionOptionsEnum.ForwardGrowEnabled,
     )
-    expect(options).not.to.include(
-      SelectedExecutionOptionsEnum.DoIncludeSpeciesProjection,
+    expect(selectedExecutionOptions).to.include(
+      ExecutionOptionsEnum.BackGrowEnabled,
+    )
+    expect(selectedExecutionOptions).to.include(
+      ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass,
+    )
+    expect(selectedExecutionOptions).not.to.include(
+      ExecutionOptionsEnum.DoIncludeSpeciesProjection,
+    )
+    expect(excludedExecutionOptions).to.include(
+      ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes,
+    )
+    expect(excludedExecutionOptions).to.include(
+      ExecutionOptionsEnum.DoIncludeSpeciesProjection,
     )
   })
 
   it('should return selected execution options with only ForwardGrowEnabled when forwardBackwardGrow includes FORWARD', () => {
-    fileUploadStore.forwardBackwardGrow = [
-      CONSTANTS.FORWARD_BACKWARD_GROW.FORWARD,
-    ]
-    const options = getSelectedExecutionOptions(fileUploadStore)
-    expect(options).to.include(SelectedExecutionOptionsEnum.ForwardGrowEnabled)
-    expect(options).not.to.include(SelectedExecutionOptionsEnum.BackGrowEnabled)
+    fileUploadStore.isForwardGrowEnabled = true
+    fileUploadStore.isBackwardGrowEnabled = false
+
+    const { selectedExecutionOptions, excludedExecutionOptions } =
+      buildExecutionOptions(fileUploadStore)
+    expect(selectedExecutionOptions).to.include(
+      ExecutionOptionsEnum.ForwardGrowEnabled,
+    )
+    expect(selectedExecutionOptions).not.to.include(
+      ExecutionOptionsEnum.BackGrowEnabled,
+    )
+    expect(excludedExecutionOptions).to.include(
+      ExecutionOptionsEnum.BackGrowEnabled,
+    )
   })
 
   it('should return selected execution options with only BackGrowEnabled when forwardBackwardGrow includes BACKWARD', () => {
-    fileUploadStore.forwardBackwardGrow = [
-      CONSTANTS.FORWARD_BACKWARD_GROW.BACKWARD,
-    ]
-    const options = getSelectedExecutionOptions(fileUploadStore)
-    expect(options).not.to.include(
-      SelectedExecutionOptionsEnum.ForwardGrowEnabled,
+    fileUploadStore.isForwardGrowEnabled = false
+    fileUploadStore.isBackwardGrowEnabled = true
+
+    const { selectedExecutionOptions, excludedExecutionOptions } =
+      buildExecutionOptions(fileUploadStore)
+    expect(selectedExecutionOptions).not.to.include(
+      ExecutionOptionsEnum.ForwardGrowEnabled,
     )
-    expect(options).to.include(SelectedExecutionOptionsEnum.BackGrowEnabled)
+    expect(selectedExecutionOptions).to.include(
+      ExecutionOptionsEnum.BackGrowEnabled,
+    )
+    expect(excludedExecutionOptions).to.include(
+      ExecutionOptionsEnum.ForwardGrowEnabled,
+    )
   })
 
   it('should not include ForwardGrowEnabled or BackGrowEnabled when forwardBackwardGrow is empty', () => {
-    fileUploadStore.forwardBackwardGrow = []
-    const options = getSelectedExecutionOptions(fileUploadStore)
-    expect(options).not.to.include(
-      SelectedExecutionOptionsEnum.ForwardGrowEnabled,
+    fileUploadStore.isForwardGrowEnabled = false
+    fileUploadStore.isBackwardGrowEnabled = false
+
+    const { selectedExecutionOptions, excludedExecutionOptions } =
+      buildExecutionOptions(fileUploadStore)
+    expect(selectedExecutionOptions).not.to.include(
+      ExecutionOptionsEnum.ForwardGrowEnabled,
     )
-    expect(options).not.to.include(SelectedExecutionOptionsEnum.BackGrowEnabled)
+    expect(selectedExecutionOptions).not.to.include(
+      ExecutionOptionsEnum.BackGrowEnabled,
+    )
+    expect(excludedExecutionOptions).to.include.members([
+      ExecutionOptionsEnum.ForwardGrowEnabled,
+      ExecutionOptionsEnum.BackGrowEnabled,
+    ])
   })
 
   it('should call projectionHcsvPost with correct form data', () => {
@@ -114,17 +160,62 @@ describe('File Upload Service Unit Tests', () => {
         .true
       expect(formDataArg.has(ParameterNamesEnum.HCSV_LAYERS_INPUT_DATA)).to.be
         .true
+
+      const projectionParamsBlob = formDataArg.get(
+        ParameterNamesEnum.PROJECTION_PARAMETERS,
+      ) as Blob
+
+      cy.wrap(projectionParamsBlob)
+        .then((blob) => blob.text())
+        .then((text) => {
+          const projectionParams = JSON.parse(text)
+          expect(projectionParams.ageStart).to.equal(10)
+          expect(projectionParams.ageEnd).to.equal(100)
+          expect(projectionParams.ageIncrement).to.equal(10)
+          expect(projectionParams.yearStart).to.be.null
+          expect(projectionParams.yearEnd).to.be.null
+          expect(projectionParams.outputFormat).to.equal(
+            OutputFormatEnum.CSVYieldTable,
+          )
+          expect(projectionParams.combineAgeYearRange).to.equal(
+            CombineAgeYearRangeEnum.Intersect,
+          )
+          expect(projectionParams.metadataToOutput).to.equal(
+            MetadataToOutputEnum.VERSION,
+          )
+          expect(projectionParams.selectedExecutionOptions).to.include(
+            ExecutionOptionsEnum.ForwardGrowEnabled,
+          )
+          expect(projectionParams.selectedExecutionOptions).to.include(
+            ExecutionOptionsEnum.BackGrowEnabled,
+          )
+          expect(projectionParams.selectedExecutionOptions).to.include(
+            ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes,
+          )
+          expect(projectionParams.excludedExecutionOptions).to.include.members([
+            ExecutionOptionsEnum.DoSaveIntermediateFiles,
+            ExecutionOptionsEnum.DoForceReferenceYearInclusionInYieldTables,
+            ExecutionOptionsEnum.DoForceCurrentYearInclusionInYieldTables,
+            ExecutionOptionsEnum.DoIncludePolygonRecordIdInYieldTable,
+            ExecutionOptionsEnum.DoSummarizeProjectionByPolygon,
+            ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
+            ExecutionOptionsEnum.AllowAggressiveValueEstimation,
+            ExecutionOptionsEnum.DoIncludeProjectionFiles,
+            ExecutionOptionsEnum.DoDelayExecutionFolderDeletion,
+          ])
+        })
     })
   })
 
   it('should return default selected debug options', () => {
-    const debugOptions = getSelectedDebugOptions()
-    expect(debugOptions).to.deep.equal([
-      SelectedDebugOptionsEnum.DoIncludeDebugTimestamps,
-      SelectedDebugOptionsEnum.DoIncludeDebugEntryExit,
-      SelectedDebugOptionsEnum.DoIncludeDebugIndentBlocks,
-      SelectedDebugOptionsEnum.DoIncludeDebugRoutineNames,
+    const { selectedDebugOptions, excludedDebugOptions } = buildDebugOptions()
+    expect(selectedDebugOptions).to.deep.equal([
+      DebugOptionsEnum.DoIncludeDebugTimestamps,
+      DebugOptionsEnum.DoIncludeDebugEntryExit,
+      DebugOptionsEnum.DoIncludeDebugIndentBlocks,
+      DebugOptionsEnum.DoIncludeDebugRoutineNames,
     ])
+    expect(excludedDebugOptions).to.be.empty
   })
 
   it('should create form data with correct parameters for AGE range', () => {
@@ -157,14 +248,32 @@ describe('File Upload Service Unit Tests', () => {
           MetadataToOutputEnum.VERSION,
         )
         expect(projectionParams.selectedExecutionOptions).to.include(
-          SelectedExecutionOptionsEnum.ForwardGrowEnabled,
+          ExecutionOptionsEnum.ForwardGrowEnabled,
         )
         expect(projectionParams.selectedExecutionOptions).to.include(
-          SelectedExecutionOptionsEnum.BackGrowEnabled,
+          ExecutionOptionsEnum.BackGrowEnabled,
         )
         expect(projectionParams.selectedExecutionOptions).to.include(
-          SelectedExecutionOptionsEnum.DoIncludeProjectedMOFVolumes,
+          ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes,
         )
+        expect(projectionParams.excludedExecutionOptions).to.include.members([
+          ExecutionOptionsEnum.DoSaveIntermediateFiles,
+          ExecutionOptionsEnum.DoForceReferenceYearInclusionInYieldTables,
+          ExecutionOptionsEnum.DoForceCurrentYearInclusionInYieldTables,
+          ExecutionOptionsEnum.DoIncludePolygonRecordIdInYieldTable,
+          ExecutionOptionsEnum.DoSummarizeProjectionByPolygon,
+          ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
+          ExecutionOptionsEnum.AllowAggressiveValueEstimation,
+          ExecutionOptionsEnum.DoIncludeProjectionFiles,
+          ExecutionOptionsEnum.DoDelayExecutionFolderDeletion,
+        ])
+        expect(projectionParams.selectedDebugOptions).to.deep.equal([
+          DebugOptionsEnum.DoIncludeDebugTimestamps,
+          DebugOptionsEnum.DoIncludeDebugEntryExit,
+          DebugOptionsEnum.DoIncludeDebugIndentBlocks,
+          DebugOptionsEnum.DoIncludeDebugRoutineNames,
+        ])
+        expect(projectionParams.excludedDebugOptions).to.be.empty
       })
   })
 
@@ -199,14 +308,32 @@ describe('File Upload Service Unit Tests', () => {
           MetadataToOutputEnum.VERSION,
         )
         expect(projectionParams.selectedExecutionOptions).to.include(
-          SelectedExecutionOptionsEnum.ForwardGrowEnabled,
+          ExecutionOptionsEnum.ForwardGrowEnabled,
         )
         expect(projectionParams.selectedExecutionOptions).to.include(
-          SelectedExecutionOptionsEnum.BackGrowEnabled,
+          ExecutionOptionsEnum.BackGrowEnabled,
         )
         expect(projectionParams.selectedExecutionOptions).to.include(
-          SelectedExecutionOptionsEnum.DoIncludeProjectedMOFVolumes,
+          ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes,
         )
+        expect(projectionParams.excludedExecutionOptions).to.include.members([
+          ExecutionOptionsEnum.DoSaveIntermediateFiles,
+          ExecutionOptionsEnum.DoForceReferenceYearInclusionInYieldTables,
+          ExecutionOptionsEnum.DoForceCurrentYearInclusionInYieldTables,
+          ExecutionOptionsEnum.DoIncludePolygonRecordIdInYieldTable,
+          ExecutionOptionsEnum.DoSummarizeProjectionByPolygon,
+          ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
+          ExecutionOptionsEnum.AllowAggressiveValueEstimation,
+          ExecutionOptionsEnum.DoIncludeProjectionFiles,
+          ExecutionOptionsEnum.DoDelayExecutionFolderDeletion,
+        ])
+        expect(projectionParams.selectedDebugOptions).to.deep.equal([
+          DebugOptionsEnum.DoIncludeDebugTimestamps,
+          DebugOptionsEnum.DoIncludeDebugEntryExit,
+          DebugOptionsEnum.DoIncludeDebugIndentBlocks,
+          DebugOptionsEnum.DoIncludeDebugRoutineNames,
+        ])
+        expect(projectionParams.excludedDebugOptions).to.be.empty
       })
   })
 })

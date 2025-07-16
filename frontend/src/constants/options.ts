@@ -39,11 +39,6 @@ export const ageYearRangeOptions = [
   { label: 'Year Range', value: CONSTANTS.AGE_YEAR_RANGE.YEAR },
 ]
 
-export const forwardBackwardGrowOptions = [
-  { label: 'Backward', value: CONSTANTS.FORWARD_BACKWARD_GROW.BACKWARD },
-  { label: 'Forward', value: CONSTANTS.FORWARD_BACKWARD_GROW.FORWARD },
-]
-
 export const volumeReportedOptions = [
   { label: 'Whole Stem', value: CONSTANTS.VOLUME_REPORTED.WHOLE_STEM },
   { label: 'Close Utilization', value: CONSTANTS.VOLUME_REPORTED.CLOSE_UTIL },

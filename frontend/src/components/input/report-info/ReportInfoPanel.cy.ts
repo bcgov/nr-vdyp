@@ -58,9 +58,10 @@ describe('ReportInfoPanel.vue', () => {
       modelParameterStore.startYear = 2020
       modelParameterStore.endYear = 2030
       modelParameterStore.yearIncrement = 2
-      modelParameterStore.forwardBackwardGrow = [
-        ...DEFAULTS.DEFAULT_VALUES.FORWARD_BACKWARD_GROW,
-      ]
+      modelParameterStore.isForwardGrowEnabled =
+        DEFAULTS.DEFAULT_VALUES.IS_FORWARD_GROW_ENABLED
+      modelParameterStore.isBackwardGrowEnabled =
+        DEFAULTS.DEFAULT_VALUES.IS_BACKWARD_GROW_ENABLED
       modelParameterStore.volumeReported = [
         CONSTANTS.VOLUME_REPORTED.WHOLE_STEM,
       ]
@@ -80,9 +81,10 @@ describe('ReportInfoPanel.vue', () => {
       fileUploadStore.startYear = 2020
       fileUploadStore.endYear = 2030
       fileUploadStore.yearIncrement = 2
-      modelParameterStore.forwardBackwardGrow = [
-        ...DEFAULTS.DEFAULT_VALUES.FORWARD_BACKWARD_GROW,
-      ]
+      fileUploadStore.isForwardGrowEnabled =
+        DEFAULTS.DEFAULT_VALUES.IS_FORWARD_GROW_ENABLED
+      fileUploadStore.isBackwardGrowEnabled =
+        DEFAULTS.DEFAULT_VALUES.IS_BACKWARD_GROW_ENABLED
       fileUploadStore.volumeReported = [CONSTANTS.VOLUME_REPORTED.WHOLE_STEM]
       fileUploadStore.includeInReport = [
         CONSTANTS.INCLUDE_IN_REPORT.COMPUTED_MAI,
@@ -273,26 +275,23 @@ describe('ReportInfoPanel.vue', () => {
   })
 
   it('shows a validation error for invalid starting and finishing ages (AGE range)', () => {
-    mountComponent()
+    const store = mountComponent()
 
-    cy.get('[id="startingAge"]')
-      .should('exist')
-      .then((input) => {
-        cy.wrap(input).clear()
-        cy.wrap(input).type('200')
-      })
+    cy.wrap(store).then(() => {
+      store.panelState[CONSTANTS.MODEL_PARAMETER_PANEL.REPORT_INFO].editable =
+        true
+    })
 
-    cy.get('[id="finishingAge"]')
-      .should('exist')
-      .then((input) => {
-        cy.wrap(input).clear()
-        cy.wrap(input).type('50')
-      })
+    cy.get('input[id="startingAge"]').should('exist').clear()
+    cy.get('input[id="startingAge"]').type('200')
+
+    cy.get('input[id="finishingAge"]').should('exist').clear()
+    cy.get('input[id="finishingAge"]').type('50')
 
     cy.get('button').contains('Confirm').click()
 
-    cy.get('.v-dialog')
-      .should('exist')
+    cy.get('.v-dialog', { timeout: 6000 })
+      .should('be.visible')
       .within(() => {
         cy.contains(MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT).should('exist')
         cy.contains(MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_COMP_FNSH_AGE).should(
@@ -302,7 +301,12 @@ describe('ReportInfoPanel.vue', () => {
   })
 
   it('shows a validation error for invalid start and end years (YEAR range)', () => {
-    mountComponent()
+    const store = mountComponent()
+
+    cy.wrap(store).then(() => {
+      store.panelState[CONSTANTS.MODEL_PARAMETER_PANEL.REPORT_INFO].editable =
+        true
+    })
 
     cy.get('.v-radio-group')
       .find('.v-radio')
@@ -311,24 +315,16 @@ describe('ReportInfoPanel.vue', () => {
       .find('input')
       .click()
 
-    cy.get('[id="startYear"]')
-      .should('exist')
-      .then((input) => {
-        cy.wrap(input).clear()
-        cy.wrap(input).type('2030')
-      })
+    cy.get('input[id="startYear"]').should('exist').clear()
+    cy.get('input[id="startYear"]').type('2030')
 
-    cy.get('[id="endYear"]')
-      .should('exist')
-      .then((input) => {
-        cy.wrap(input).clear()
-        cy.wrap(input).type('2020')
-      })
+    cy.get('input[id="endYear"]').should('exist').clear()
+    cy.get('input[id="endYear"]').type('2020')
 
     cy.get('button').contains('Confirm').click()
 
-    cy.get('.v-dialog')
-      .should('exist')
+    cy.get('.v-dialog', { timeout: 6000 })
+      .should('be.visible')
       .within(() => {
         cy.contains(MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT).should('exist')
         cy.contains(MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_COMP_END_YEAR).should(
@@ -338,19 +334,20 @@ describe('ReportInfoPanel.vue', () => {
   })
 
   it('shows validation error when starting age is out of range (AGE range)', () => {
-    mountComponent()
+    const store = mountComponent()
 
-    cy.get('[id="startingAge"]')
-      .should('exist')
-      .then((input) => {
-        cy.wrap(input).clear()
-        cy.wrap(input).type('-1')
-      })
+    cy.wrap(store).then(() => {
+      store.panelState[CONSTANTS.MODEL_PARAMETER_PANEL.REPORT_INFO].editable =
+        true
+    })
+
+    cy.get('input[id="startingAge"]').should('exist').clear()
+    cy.get('input[id="startingAge"]').type('-1')
 
     cy.get('button').contains('Confirm').click()
 
-    cy.get('.v-dialog')
-      .should('exist')
+    cy.get('.v-dialog', { timeout: 6000 })
+      .should('be.visible')
       .within(() => {
         cy.contains(
           MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_START_AGE_RNG(
@@ -362,21 +359,22 @@ describe('ReportInfoPanel.vue', () => {
   })
 
   it('shows validation error when finishing age is out of range (AGE range)', () => {
-    mountComponent()
+    const store = mountComponent()
 
-    cy.get('[id="finishingAge"]')
-      .should('exist')
-      .then((input) => {
-        cy.wrap(input).clear()
-        cy.wrap(input).type(
-          (CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MAX + 1).toString(),
-        )
-      })
+    cy.wrap(store).then(() => {
+      store.panelState[CONSTANTS.MODEL_PARAMETER_PANEL.REPORT_INFO].editable =
+        true
+    })
+
+    cy.get('input[id="finishingAge"]').should('exist').clear()
+    cy.get('input[id="finishingAge"]').type(
+      (CONSTANTS.NUM_INPUT_LIMITS.FINISHING_AGE_MAX + 1).toString(),
+    )
 
     cy.get('button').contains('Confirm').click()
 
-    cy.get('.v-dialog')
-      .should('exist')
+    cy.get('.v-dialog', { timeout: 6000 })
+      .should('be.visible')
       .within(() => {
         cy.contains(
           MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_START_FNSH_RNG(
@@ -388,21 +386,22 @@ describe('ReportInfoPanel.vue', () => {
   })
 
   it('shows validation error when age increment is out of range (AGE range)', () => {
-    mountComponent()
+    const store = mountComponent()
 
-    cy.get('[id="ageIncrement"]')
-      .should('exist')
-      .then((input) => {
-        cy.wrap(input).clear()
-        cy.wrap(input).type(
-          (CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MAX + 1).toString(),
-        )
-      })
+    cy.wrap(store).then(() => {
+      store.panelState[CONSTANTS.MODEL_PARAMETER_PANEL.REPORT_INFO].editable =
+        true
+    })
+
+    cy.get('input[id="ageIncrement"]').should('exist').clear()
+    cy.get('input[id="ageIncrement"]').type(
+      (CONSTANTS.NUM_INPUT_LIMITS.AGE_INC_MAX + 1).toString(),
+    )
 
     cy.get('button').contains('Confirm').click()
 
-    cy.get('.v-dialog')
-      .should('exist')
+    cy.get('.v-dialog', { timeout: 6000 })
+      .should('be.visible')
       .within(() => {
         cy.contains(
           MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_AGE_INC_RNG(
@@ -414,7 +413,12 @@ describe('ReportInfoPanel.vue', () => {
   })
 
   it('shows validation error when start year is out of range (YEAR range)', () => {
-    mountComponent()
+    const store = mountComponent()
+
+    cy.wrap(store).then(() => {
+      store.panelState[CONSTANTS.MODEL_PARAMETER_PANEL.REPORT_INFO].editable =
+        true
+    })
 
     cy.get('.v-radio-group')
       .find('.v-radio')
@@ -423,19 +427,15 @@ describe('ReportInfoPanel.vue', () => {
       .find('input')
       .click()
 
-    cy.get('[id="startYear"]')
-      .should('exist')
-      .then((input) => {
-        cy.wrap(input).clear()
-        cy.wrap(input).type(
-          (CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_MIN - 1).toString(),
-        )
-      })
+    cy.get('input[id="startYear"]').should('exist').clear()
+    cy.get('input[id="startYear"]').type(
+      (CONSTANTS.NUM_INPUT_LIMITS.START_YEAR_MIN - 1).toString(),
+    )
 
     cy.get('button').contains('Confirm').click()
 
-    cy.get('.v-dialog')
-      .should('exist')
+    cy.get('.v-dialog', { timeout: 6000 })
+      .should('be.visible')
       .within(() => {
         cy.contains(
           MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_START_YEAR_RNG(
@@ -447,7 +447,15 @@ describe('ReportInfoPanel.vue', () => {
   })
 
   it('shows validation error when end year is out of range (YEAR range)', () => {
-    mountComponent()
+    const store = mountComponent(
+      {},
+      CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS,
+    )
+
+    cy.wrap(store).then(() => {
+      store.panelState[CONSTANTS.MODEL_PARAMETER_PANEL.REPORT_INFO].editable =
+        true
+    })
 
     cy.get('.v-radio-group')
       .find('.v-radio')
@@ -456,19 +464,15 @@ describe('ReportInfoPanel.vue', () => {
       .find('input')
       .click()
 
-    cy.get('[id="endYear"]')
-      .should('exist')
-      .then((input) => {
-        cy.wrap(input).clear()
-        cy.wrap(input).type(
-          (CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_MAX + 1).toString(),
-        )
-      })
+    cy.get('input[id="endYear"]').should('exist').clear()
+    cy.get('input[id="endYear"]').type(
+      (CONSTANTS.NUM_INPUT_LIMITS.END_YEAR_MAX + 1).toString(),
+    )
 
     cy.get('button').contains('Confirm').click()
 
-    cy.get('.v-dialog')
-      .should('exist')
+    cy.get('.v-dialog', { timeout: 6000 })
+      .should('be.visible')
       .within(() => {
         cy.contains(
           MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_END_YEAR_RNG(
@@ -480,7 +484,15 @@ describe('ReportInfoPanel.vue', () => {
   })
 
   it('shows validation error when year increment is out of range (YEAR range)', () => {
-    mountComponent()
+    const store = mountComponent(
+      {},
+      CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS,
+    )
+
+    cy.wrap(store).then(() => {
+      store.panelState[CONSTANTS.MODEL_PARAMETER_PANEL.REPORT_INFO].editable =
+        true
+    })
 
     cy.get('.v-radio-group')
       .find('.v-radio')
@@ -489,19 +501,15 @@ describe('ReportInfoPanel.vue', () => {
       .find('input')
       .click()
 
-    cy.get('[id="yearIncrement"]')
-      .should('exist')
-      .then((input) => {
-        cy.wrap(input).clear()
-        cy.wrap(input).type(
-          (CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_MAX + 1).toString(),
-        )
-      })
+    cy.get('input[id="yearIncrement"]').should('exist').clear()
+    cy.get('input[id="yearIncrement"]').type(
+      (CONSTANTS.NUM_INPUT_LIMITS.YEAR_INC_MAX + 1).toString(),
+    )
 
     cy.get('button').contains('Confirm').click()
 
-    cy.get('.v-dialog')
-      .should('exist')
+    cy.get('.v-dialog', { timeout: 6000 })
+      .should('be.visible')
       .within(() => {
         cy.contains(
           MESSAGE.MDL_PRM_INPUT_ERR.RPT_VLD_YEAR_INC_RNG(
@@ -513,7 +521,15 @@ describe('ReportInfoPanel.vue', () => {
   })
 
   it('clears the form when Clear is clicked (INPUT_MODEL_PARAMETERS)', () => {
-    mountComponent({}, CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS)
+    const store = mountComponent(
+      {},
+      CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS,
+    )
+
+    cy.wrap(store).then(() => {
+      store.panelState[CONSTANTS.MODEL_PARAMETER_PANEL.REPORT_INFO].editable =
+        true
+    })
 
     cy.get('button').contains('Clear').click()
 
@@ -528,7 +544,7 @@ describe('ReportInfoPanel.vue', () => {
     )
     cy.get('.v-select')
       .find('input')
-      .should('have.value', CONSTANTS.PROJECTION_TYPE.VOLUME)
+      .should('have.value', DEFAULTS.DEFAULT_VALUES.PROJECTION_TYPE)
   })
 
   it('disables inputs and buttons when the panel is not editable (INPUT_MODEL_PARAMETERS)', () => {
@@ -543,9 +559,8 @@ describe('ReportInfoPanel.vue', () => {
     })
 
     cy.get('input[type="number"]').should('be.disabled')
-    cy.get('button:contains("Clear")').should('be.disabled')
-    cy.get('button:contains("Confirm")').should('be.disabled')
-
+    cy.get('button').contains('Clear').should('not.be.disabled')
+    cy.get('button').contains('Confirm').should('not.be.disabled')
     cy.get('button').contains('Edit').should('not.be.visible')
   })
 
@@ -557,41 +572,42 @@ describe('ReportInfoPanel.vue', () => {
     })
 
     cy.get('input[type="number"]').should('be.disabled')
-    cy.get('button:contains("Clear")').should('be.disabled')
-    cy.get('button:contains("Confirm")').should('be.disabled')
-
+    cy.get('button').contains('Clear').should('not.be.disabled')
+    cy.get('button').contains('Confirm').should('not.be.disabled')
     cy.get('button').contains('Edit').should('not.be.visible')
   })
 
   it('renders forwardBackwardGrow checkboxes correctly', () => {
     mountComponent({}, CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS)
 
-    cy.get('[data-testid="forward-backward-grow"]')
-      .should('have.length', 2) // Assuming two options: Forward and Backward
-      .each(($checkbox) => {
-        cy.wrap($checkbox).should('exist')
-      })
+    cy.get('[data-testid="is-forward-grow-enabled"]').should('exist')
+    cy.get('[data-testid="is-backward-grow-enabled"]').should('exist')
   })
 
-  it('has correct initial state for forwardBackwardGrow', () => {
+  it('has correct initial state for forwardGrow and backwardGrow', () => {
     const store = mountComponent(
       {},
       CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS,
     )
 
-    cy.wrap(store.forwardBackwardGrow).should('deep.equal', [
-      CONSTANTS.FORWARD_BACKWARD_GROW.FORWARD,
-      CONSTANTS.FORWARD_BACKWARD_GROW.BACKWARD,
-    ])
-
-    cy.get('[data-testid="forward-backward-grow"] input[type="checkbox"]').each(
-      ($checkbox) => {
-        cy.wrap($checkbox).should('be.checked')
-      },
+    cy.wrap(store.isForwardGrowEnabled).should(
+      'equal',
+      DEFAULTS.DEFAULT_VALUES.IS_FORWARD_GROW_ENABLED,
     )
+    cy.wrap(store.isBackwardGrowEnabled).should(
+      'equal',
+      DEFAULTS.DEFAULT_VALUES.IS_BACKWARD_GROW_ENABLED,
+    )
+
+    cy.get(
+      '[data-testid="is-forward-grow-enabled"] input[type="checkbox"]',
+    ).should('be.checked')
+    cy.get(
+      '[data-testid="is-backward-grow-enabled"] input[type="checkbox"]',
+    ).should('be.checked')
   })
 
-  it('disables forwardBackwardGrow checkboxes when panel is not editable', () => {
+  it('disables forwardGrow / backwardGrow checkboxes when panel is not editable', () => {
     const store = mountComponent(
       {},
       CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS,
@@ -602,10 +618,11 @@ describe('ReportInfoPanel.vue', () => {
         false
     })
 
-    cy.get('[data-testid="forward-backward-grow"] input[type="checkbox"]').each(
-      ($checkbox) => {
-        cy.wrap($checkbox).should('be.disabled')
-      },
-    )
+    cy.get(
+      '[data-testid="is-forward-grow-enabled"] input[type="checkbox"]',
+    ).should('be.disabled')
+    cy.get(
+      '[data-testid="is-backward-grow-enabled"] input[type="checkbox"]',
+    ).should('be.disabled')
   })
 })

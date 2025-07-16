@@ -132,18 +132,22 @@
       <v-col class="col-space-3" />
       <v-col cols="auto">
         <v-row>
-          <v-col
-            cols="auto"
-            v-for="(option, index) in OPTIONS.forwardBackwardGrowOptions"
-            :key="index"
-          >
+          <v-col cols="auto">
             <v-checkbox
-              v-model="localForwardBackwardGrow"
-              :label="option.label"
-              :value="option.value"
+              v-model="localIsForwardGrowEnabled"
+              label="Forward"
               hide-details
-              :disabled="isForwardBackwardGrowDisabled"
-              data-testid="forward-backward-grow"
+              :disabled="isForwardGrowDisabled"
+              data-testid="is-forward-grow-enabled"
+            ></v-checkbox>
+          </v-col>
+          <v-col cols="auto">
+            <v-checkbox
+              v-model="localIsBackwardGrowEnabled"
+              label="Backward"
+              hide-details
+              :disabled="isBackwardGrowDisabled"
+              data-testid="is-backward-grow-enabled"
             ></v-checkbox>
           </v-col>
         </v-row>
@@ -250,7 +254,8 @@ const props = defineProps<{
   startYear: number | null
   endYear: number | null
   yearIncrement: number | null
-  forwardBackwardGrow: string[]
+  isForwardGrowEnabled: boolean
+  isBackwardGrowEnabled: boolean
   volumeReported: string[]
   includeInReport: string[]
   projectionType: string | null
@@ -266,7 +271,8 @@ const emit = defineEmits([
   'update:startYear',
   'update:endYear',
   'update:yearIncrement',
-  'update:forwardBackwardGrow',
+  'update:isForwardGrowEnabled',
+  'update:isBackwardGrowEnabled',
   'update:volumeReported',
   'update:includeInReport',
   'update:projectionType',
@@ -282,7 +288,8 @@ const localAgeIncrement = ref<number | null>(props.ageIncrement)
 const localStartYear = ref<number | null>(props.startYear)
 const localEndYear = ref<number | null>(props.endYear)
 const localYearIncrement = ref<number | null>(props.yearIncrement)
-const localForwardBackwardGrow = ref<string[]>([...props.forwardBackwardGrow])
+const localIsForwardGrowEnabled = ref<boolean>(props.isForwardGrowEnabled)
+const localIsBackwardGrowEnabled = ref<boolean>(props.isBackwardGrowEnabled)
 const localVolumeReported = ref<string[]>([...props.volumeReported])
 const localIncludeInReport = ref<string[]>([...props.includeInReport])
 const localProjectionType = ref<string | null>(props.projectionType)
@@ -333,12 +340,23 @@ watch(
   },
 )
 watch(
-  () => props.forwardBackwardGrow,
+  () => props.isForwardGrowEnabled,
   (newVal) => {
     if (
-      JSON.stringify(newVal) !== JSON.stringify(localForwardBackwardGrow.value)
+      JSON.stringify(newVal) !== JSON.stringify(localIsForwardGrowEnabled.value)
     ) {
-      localForwardBackwardGrow.value = [...newVal]
+      localIsForwardGrowEnabled.value = newVal
+    }
+  },
+)
+watch(
+  () => props.isBackwardGrowEnabled,
+  (newVal) => {
+    if (
+      JSON.stringify(newVal) !==
+      JSON.stringify(localIsBackwardGrowEnabled.value)
+    ) {
+      localIsBackwardGrowEnabled.value = newVal
     }
   },
 )
@@ -401,9 +419,14 @@ watch(localAgeIncrement, (newVal) => emit('update:ageIncrement', newVal))
 watch(localStartYear, (newVal) => emit('update:startYear', newVal))
 watch(localEndYear, (newVal) => emit('update:endYear', newVal))
 watch(localYearIncrement, (newVal) => emit('update:yearIncrement', newVal))
-watch(localForwardBackwardGrow, (newVal) => {
-  if (JSON.stringify(newVal) !== JSON.stringify(props.forwardBackwardGrow)) {
-    emit('update:forwardBackwardGrow', [...newVal])
+watch(localIsForwardGrowEnabled, (newVal) => {
+  if (JSON.stringify(newVal) !== JSON.stringify(props.isForwardGrowEnabled)) {
+    emit('update:isForwardGrowEnabled', newVal)
+  }
+})
+watch(localIsBackwardGrowEnabled, (newVal) => {
+  if (JSON.stringify(newVal) !== JSON.stringify(props.isBackwardGrowEnabled)) {
+    emit('update:isBackwardGrowEnabled', newVal)
   }
 })
 watch(localVolumeReported, (newVal) => {
@@ -430,7 +453,10 @@ watch(localProjectionType, (newVal) => {
 watch(localReportTitle, (newVal) => emit('update:reportTitle', newVal))
 
 // Decide whether to disable the "Backward / Forward" checkbox
-const isForwardBackwardGrowDisabled = computed(() => {
+const isForwardGrowDisabled = computed(() => {
+  return props.isDisabled
+})
+const isBackwardGrowDisabled = computed(() => {
   return props.isDisabled
 })
 

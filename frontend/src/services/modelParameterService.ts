@@ -1,8 +1,8 @@
 import { BIZCONSTANTS, CONSTANTS, CSVHEADERS } from '@/constants'
 import {
   OutputFormatEnum,
-  SelectedExecutionOptionsEnum,
-  SelectedDebugOptionsEnum,
+  ExecutionOptionsEnum,
+  DebugOptionsEnum,
   MetadataToOutputEnum,
   ParameterNamesEnum,
   type Parameters,
@@ -353,33 +353,70 @@ export const createCSVFiles = (modelParameterStore: any) => {
 }
 
 /**
- * Builds an array of selected execution options based on the model parameter store.
+ * Builds an array of selected and excluded execution options based on the model parameter store.
  * @param modelParameterStore The store containing model parameters.
- * @returns An array of execution option enums.
+ * @returns An object containing selected and excluded execution option enums.
  */
-const buildSelectedExecutionOptions = (
+const buildExecutionOptions = (
   modelParameterStore: any,
-): SelectedExecutionOptionsEnum[] => {
-  const options: SelectedExecutionOptionsEnum[] = [
-    SelectedExecutionOptionsEnum.DoIncludeAgeRowsInYieldTable,
-    SelectedExecutionOptionsEnum.DoIncludeColumnHeadersInYieldTable,
-    SelectedExecutionOptionsEnum.DoEnableProgressLogging,
-    SelectedExecutionOptionsEnum.DoEnableErrorLogging,
-    SelectedExecutionOptionsEnum.DoEnableDebugLogging,
-    SelectedExecutionOptionsEnum.AllowAggressiveValueEstimation,
+): {
+  selectedExecutionOptions: ExecutionOptionsEnum[]
+  excludedExecutionOptions: ExecutionOptionsEnum[]
+} => {
+  const selectedExecutionOptions: ExecutionOptionsEnum[] = [
+    ExecutionOptionsEnum.DoIncludeAgeRowsInYieldTable,
+    ExecutionOptionsEnum.DoIncludeColumnHeadersInYieldTable,
+    ExecutionOptionsEnum.DoEnableProgressLogging,
+    ExecutionOptionsEnum.DoEnableErrorLogging,
+    ExecutionOptionsEnum.DoEnableDebugLogging,
+    ExecutionOptionsEnum.AllowAggressiveValueEstimation,
+    ExecutionOptionsEnum.DoIncludeFileHeader,
+    ExecutionOptionsEnum.DoSummarizeProjectionByLayer,
+  ]
+
+  const excludedExecutionOptions: ExecutionOptionsEnum[] = [
+    ExecutionOptionsEnum.DoSaveIntermediateFiles,
+    ExecutionOptionsEnum.DoForceReferenceYearInclusionInYieldTables,
+    ExecutionOptionsEnum.DoForceCurrentYearInclusionInYieldTables,
+    ExecutionOptionsEnum.DoIncludeProjectionModeInYieldTable,
+    ExecutionOptionsEnum.DoIncludeYearRowsInYieldTable,
+    ExecutionOptionsEnum.DoIncludePolygonRecordIdInYieldTable,
+    ExecutionOptionsEnum.DoSummarizeProjectionByPolygon,
+    ExecutionOptionsEnum.DoIncludeProjectedMOFBiomass,
+    ExecutionOptionsEnum.DoAllowBasalAreaAndTreesPerHectareValueSubstitution,
+    ExecutionOptionsEnum.DoIncludeProjectionFiles,
+    ExecutionOptionsEnum.DoDelayExecutionFolderDeletion,
   ]
 
   if (modelParameterStore.projectionType === CONSTANTS.PROJECTION_TYPE.VOLUME) {
-    options.push(SelectedExecutionOptionsEnum.DoIncludeProjectedMOFVolumes)
-  } else if (
+    selectedExecutionOptions.push(
+      ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes,
+    )
+  } else {
+    excludedExecutionOptions.push(
+      ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes,
+    )
+  }
+
+  if (
     modelParameterStore.projectionType === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
   ) {
-    options.push(SelectedExecutionOptionsEnum.DoIncludeProjectedCFSBiomass)
+    selectedExecutionOptions.push(
+      ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass,
+    )
+  } else {
+    excludedExecutionOptions.push(
+      ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass,
+    )
   }
 
   if (modelParameterStore.incSecondaryHeight) {
-    options.push(
-      SelectedExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
+    selectedExecutionOptions.push(
+      ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
+    )
+  } else {
+    excludedExecutionOptions.push(
+      ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
     )
   }
 
@@ -389,38 +426,47 @@ const buildSelectedExecutionOptions = (
       CONSTANTS.INCLUDE_IN_REPORT.BY_SPECIES,
     )
   ) {
-    options.push(SelectedExecutionOptionsEnum.DoIncludeSpeciesProjection)
+    selectedExecutionOptions.push(
+      ExecutionOptionsEnum.DoIncludeSpeciesProjection,
+    )
+  } else {
+    excludedExecutionOptions.push(
+      ExecutionOptionsEnum.DoIncludeSpeciesProjection,
+    )
   }
 
-  if (
-    modelParameterStore.forwardBackwardGrow.includes(
-      CONSTANTS.FORWARD_BACKWARD_GROW.FORWARD,
-    )
-  ) {
-    options.push(SelectedExecutionOptionsEnum.ForwardGrowEnabled)
-  }
-  if (
-    modelParameterStore.forwardBackwardGrow.includes(
-      CONSTANTS.FORWARD_BACKWARD_GROW.BACKWARD,
-    )
-  ) {
-    options.push(SelectedExecutionOptionsEnum.BackGrowEnabled)
+  if (modelParameterStore.isForwardGrowEnabled) {
+    selectedExecutionOptions.push(ExecutionOptionsEnum.ForwardGrowEnabled)
+  } else {
+    excludedExecutionOptions.push(ExecutionOptionsEnum.ForwardGrowEnabled)
   }
 
-  return options
+  if (modelParameterStore.isBackwardGrowEnabled) {
+    selectedExecutionOptions.push(ExecutionOptionsEnum.BackGrowEnabled)
+  } else {
+    excludedExecutionOptions.push(ExecutionOptionsEnum.BackGrowEnabled)
+  }
+
+  return { selectedExecutionOptions, excludedExecutionOptions }
 }
 
 /**
- * Builds an array of selected debug options.
- * @returns An array of debug option enums.
+ * Builds an array of selected and excluded debug options.
+ * @returns An object containing selected and excluded debug option enums.
  */
-const buildSelectedDebugOptions = (): SelectedDebugOptionsEnum[] => {
-  return [
-    SelectedDebugOptionsEnum.DoIncludeDebugTimestamps,
-    SelectedDebugOptionsEnum.DoIncludeDebugEntryExit,
-    SelectedDebugOptionsEnum.DoIncludeDebugIndentBlocks,
-    SelectedDebugOptionsEnum.DoIncludeDebugRoutineNames,
+const buildDebugOptions = (): {
+  selectedDebugOptions: DebugOptionsEnum[]
+  excludedDebugOptions: DebugOptionsEnum[]
+} => {
+  const selectedDebugOptions: DebugOptionsEnum[] = [
+    DebugOptionsEnum.DoIncludeDebugTimestamps,
+    DebugOptionsEnum.DoIncludeDebugEntryExit,
+    DebugOptionsEnum.DoIncludeDebugIndentBlocks,
+    DebugOptionsEnum.DoIncludeDebugRoutineNames,
   ]
+  const excludedDebugOptions: DebugOptionsEnum[] = []
+
+  return { selectedDebugOptions, excludedDebugOptions }
 }
 
 /**
@@ -439,9 +485,9 @@ export const runModel = async (
   const { blobPolygon, blobLayer } = createCSVFiles(modelParameterStore)
   const formData = new FormData()
 
-  const selectedExecutionOptions =
-    buildSelectedExecutionOptions(modelParameterStore)
-  const selectedDebugOptions = buildSelectedDebugOptions()
+  const { selectedExecutionOptions, excludedExecutionOptions } =
+    buildExecutionOptions(modelParameterStore)
+  const { selectedDebugOptions, excludedDebugOptions } = buildDebugOptions()
 
   const projectionParameters: Parameters = {
     ageStart:
@@ -466,7 +512,9 @@ export const runModel = async (
         : null,
     outputFormat: OutputFormatEnum.CSVYieldTable,
     selectedExecutionOptions: selectedExecutionOptions,
+    excludedExecutionOptions: excludedExecutionOptions,
     selectedDebugOptions: selectedDebugOptions,
+    excludedDebugOptions: excludedDebugOptions,
     metadataToOutput: MetadataToOutputEnum.NONE,
   }
 

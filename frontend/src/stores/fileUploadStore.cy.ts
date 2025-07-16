@@ -31,7 +31,8 @@ describe('FileUploadStore Unit Tests', () => {
     expect(store.startYear).to.be.null
     expect(store.endYear).to.be.null
     expect(store.yearIncrement).to.be.null
-    expect(store.forwardBackwardGrow).to.deep.equal([])
+    expect(store.isForwardGrowEnabled).to.be.true
+    expect(store.isBackwardGrowEnabled).to.be.true
     expect(store.volumeReported).to.deep.equal([])
     expect(store.includeInReport).to.deep.equal([])
     expect(store.projectionType).to.be.null
@@ -82,8 +83,11 @@ describe('FileUploadStore Unit Tests', () => {
     expect(store.startYear).to.equal(DEFAULTS.DEFAULT_VALUES.START_YEAR)
     expect(store.endYear).to.equal(DEFAULTS.DEFAULT_VALUES.END_YEAR)
     expect(store.yearIncrement).to.equal(DEFAULTS.DEFAULT_VALUES.YEAR_INCREMENT)
-    expect(store.forwardBackwardGrow).to.deep.equal(
-      DEFAULTS.DEFAULT_VALUES.FORWARD_BACKWARD_GROW,
+    expect(store.isForwardGrowEnabled).to.equal(
+      DEFAULTS.DEFAULT_VALUES.IS_FORWARD_GROW_ENABLED,
+    )
+    expect(store.isBackwardGrowEnabled).to.equal(
+      DEFAULTS.DEFAULT_VALUES.IS_BACKWARD_GROW_ENABLED,
     )
     expect(store.volumeReported).to.deep.equal(
       DEFAULTS.DEFAULT_VALUES.VOLUME_REPORTED,
@@ -121,19 +125,15 @@ describe('FileUploadStore Unit Tests', () => {
     store.includeInReport = ['Computed MAI']
     store.projectionType = 'Volume'
     store.reportTitle = 'Test Report'
-    store.forwardBackwardGrow = [
-      CONSTANTS.FORWARD_BACKWARD_GROW.FORWARD,
-      CONSTANTS.FORWARD_BACKWARD_GROW.BACKWARD,
-    ]
+    store.isForwardGrowEnabled = true
+    store.isBackwardGrowEnabled = true
 
     expect(store.volumeReported).to.deep.equal(['Whole Stem'])
     expect(store.includeInReport).to.deep.equal(['Computed MAI'])
     expect(store.projectionType).to.equal('Volume')
     expect(store.reportTitle).to.equal('Test Report')
-    expect(store.forwardBackwardGrow).to.deep.equal([
-      CONSTANTS.FORWARD_BACKWARD_GROW.FORWARD,
-      CONSTANTS.FORWARD_BACKWARD_GROW.BACKWARD,
-    ])
+    expect(store.isForwardGrowEnabled).to.be.true
+    expect(store.isBackwardGrowEnabled).to.be.true
   })
 
   it('should update attachment files correctly', () => {

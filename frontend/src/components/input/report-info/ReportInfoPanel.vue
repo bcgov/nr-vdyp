@@ -35,7 +35,8 @@
               :startYear="currentStore.startYear"
               :endYear="currentStore.endYear"
               :yearIncrement="currentStore.yearIncrement"
-              :forwardBackwardGrow="currentStore.forwardBackwardGrow"
+              :isForwardGrowEnabled="currentStore.isForwardGrowEnabled"
+              :isBackwardGrowEnabled="currentStore.isBackwardGrowEnabled"
               :volumeReported="currentStore.volumeReported"
               :includeInReport="currentStore.includeInReport"
               :projectionType="currentStore.projectionType"
@@ -48,7 +49,8 @@
               @update:startYear="handleStartYearUpdate"
               @update:endYear="handleEndYearUpdate"
               @update:yearIncrement="handleYearIncrementUpdate"
-              @update:forwardBackwardGrow="handleForwardBackwardGrowUpdate"
+              @update:isForwardGrowEnabled="handleIsForwardGrowEnabledUpdate"
+              @update:isBackwardGrowEnabled="handleIsBackwardGrowEnabledUpdate"
               @update:volumeReported="handleVolumeReportedUpdate"
               @update:includeInReport="handleIncludeInReportUpdate"
               @update:projectionType="handleProjectionTypeUpdate"
@@ -143,8 +145,12 @@ const handleYearIncrementUpdate = (value: number | null) => {
   currentStore.value.yearIncrement = value
 }
 
-const handleForwardBackwardGrowUpdate = (value: string[]) => {
-  currentStore.value.forwardBackwardGrow = [...value]
+const handleIsForwardGrowEnabledUpdate = (value: boolean) => {
+  currentStore.value.isForwardGrowEnabled = value
+}
+
+const handleIsBackwardGrowEnabledUpdate = (value: boolean) => {
+  currentStore.value.isBackwardGrowEnabled = value
 }
 
 const handleVolumeReportedUpdate = (value: string[]) => {
@@ -347,7 +353,10 @@ const onClear = () => {
   currentStore.value.startYear = null
   currentStore.value.endYear = null
   currentStore.value.yearIncrement = null
-  currentStore.value.forwardBackwardGrow = []
+  currentStore.value.isForwardGrowEnabled =
+    DEFAULTS.DEFAULT_VALUES.IS_FORWARD_GROW_ENABLED
+  currentStore.value.isBackwardGrowEnabled =
+    DEFAULTS.DEFAULT_VALUES.IS_BACKWARD_GROW_ENABLED
   currentStore.value.volumeReported = []
   currentStore.value.includeInReport = []
   currentStore.value.reportTitle = null

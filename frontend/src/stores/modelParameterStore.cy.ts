@@ -32,11 +32,40 @@ describe('ModelParameterStore Unit Tests', () => {
 
     expect(store.runModelEnabled).to.be.false
 
+    expect(store.derivedBy).to.be.null
+    expect(store.speciesList).to.deep.equal([
+      { species: null, percent: null },
+      { species: null, percent: null },
+      { species: null, percent: null },
+      { species: null, percent: null },
+      { species: null, percent: null },
+      { species: null, percent: null },
+    ])
+    expect(store.speciesGroups).to.deep.equal([])
+    expect(store.highestPercentSpecies).to.be.null
+    expect(store.selectedSiteSpecies).to.be.null
+    expect(store.totalSpeciesPercent).to.equal('0.0')
+    expect(store.totalSpeciesGroupPercent).to.equal(0)
+    expect(store.becZone).to.be.null
+    expect(store.ecoZone).to.be.null
+    expect(store.incSecondaryHeight).to.be.false
+    expect(store.siteSpeciesValues).to.be.null
+    expect(store.bha50SiteIndex).to.be.null
+    expect(store.percentStockableArea).to.be.null
     expect(store.selectedAgeYearRange).to.be.null
+    expect(store.startingAge).to.be.null
+    expect(store.finishingAge).to.be.null
+    expect(store.ageIncrement).to.be.null
     expect(store.startYear).to.be.null
     expect(store.endYear).to.be.null
     expect(store.yearIncrement).to.be.null
-    expect(store.forwardBackwardGrow).to.deep.equal([])
+    expect(store.isForwardGrowEnabled).to.be.true
+    expect(store.isBackwardGrowEnabled).to.be.true
+    expect(store.volumeReported).to.deep.equal([])
+    expect(store.includeInReport).to.deep.equal([])
+    expect(store.projectionType).to.be.null
+    expect(store.reportTitle).to.be.null
+    expect(store.referenceYear).to.be.null
   })
 
   it('should confirm panel and enable the next panel', () => {
@@ -95,28 +124,53 @@ describe('ModelParameterStore Unit Tests', () => {
     expect(store.speciesGroups[0].percent).to.equal('80.0')
     expect(store.speciesGroups[1].group).to.equal('AC')
     expect(store.speciesGroups[1].percent).to.equal('20.0')
+    expect(store.highestPercentSpecies).to.equal('PL')
+    expect(store.selectedSiteSpecies).to.equal('PL')
   })
 
   it('should set default values correctly', () => {
     store.setDefaultValues()
 
     expect(store.derivedBy).to.equal(DEFAULTS.DEFAULT_VALUES.DERIVED_BY)
-    expect(store.speciesList[0].species).to.equal('PL')
-    expect(store.speciesList[0].percent).to.equal('30.0')
+    expect(store.speciesList).to.deep.equal([
+      { species: 'PL', percent: '30.0' },
+      { species: 'AC', percent: '30.0' },
+      { species: 'H', percent: '30.0' },
+      { species: 'S', percent: '10.0' },
+      { species: null, percent: '0.0' },
+      { species: null, percent: '0.0' },
+    ])
+    expect(store.speciesGroups.length).to.be.greaterThan(0)
     expect(store.becZone).to.equal(DEFAULTS.DEFAULT_VALUES.BEC_ZONE)
-    expect(store.startingAge).to.equal(DEFAULTS.DEFAULT_VALUES.STARTING_AGE)
-    expect(store.finishingAge).to.equal(DEFAULTS.DEFAULT_VALUES.FINISHING_AGE)
-    expect(store.ageIncrement).to.equal(DEFAULTS.DEFAULT_VALUES.AGE_INCREMENT)
-
+    expect(store.siteSpeciesValues).to.equal(
+      DEFAULTS.DEFAULT_VALUES.SITE_SPECIES_VALUES,
+    )
+    expect(store.percentStockableArea).to.equal(
+      DEFAULTS.DEFAULT_VALUES.PERCENT_STOCKABLE_AREA,
+    )
     expect(store.selectedAgeYearRange).to.equal(
       DEFAULTS.DEFAULT_VALUES.SELECTED_AGE_YEAR_RANGE,
     )
+    expect(store.startingAge).to.equal(DEFAULTS.DEFAULT_VALUES.STARTING_AGE)
+    expect(store.finishingAge).to.equal(DEFAULTS.DEFAULT_VALUES.FINISHING_AGE)
+    expect(store.ageIncrement).to.equal(DEFAULTS.DEFAULT_VALUES.AGE_INCREMENT)
     expect(store.startYear).to.equal(DEFAULTS.DEFAULT_VALUES.START_YEAR)
     expect(store.endYear).to.equal(DEFAULTS.DEFAULT_VALUES.END_YEAR)
     expect(store.yearIncrement).to.equal(DEFAULTS.DEFAULT_VALUES.YEAR_INCREMENT)
-    expect(store.forwardBackwardGrow).to.deep.equal(
-      DEFAULTS.DEFAULT_VALUES.FORWARD_BACKWARD_GROW,
+    expect(store.isForwardGrowEnabled).to.equal(
+      DEFAULTS.DEFAULT_VALUES.IS_FORWARD_GROW_ENABLED,
     )
+    expect(store.isBackwardGrowEnabled).to.equal(
+      DEFAULTS.DEFAULT_VALUES.IS_BACKWARD_GROW_ENABLED,
+    )
+    expect(store.volumeReported).to.deep.equal(
+      DEFAULTS.DEFAULT_VALUES.VOLUME_REPORTED,
+    )
+    expect(store.projectionType).to.equal(
+      DEFAULTS.DEFAULT_VALUES.PROJECTION_TYPE,
+    )
+    expect(store.reportTitle).to.equal(DEFAULTS.DEFAULT_VALUES.REPORT_TITLE)
+    expect(store.referenceYear).to.equal(new Date().getFullYear())
   })
 
   it('should handle empty species list without errors', () => {
@@ -125,6 +179,8 @@ describe('ModelParameterStore Unit Tests', () => {
 
     expect(store.speciesGroups.length).to.equal(0)
     expect(store.highestPercentSpecies).to.be.null
+    expect(store.selectedSiteSpecies).to.be.null
+    expect(store.totalSpeciesPercent).to.equal('0.0')
   })
 
   it('should enable run model button when all panels are confirmed', () => {
@@ -158,16 +214,20 @@ describe('ModelParameterStore Unit Tests', () => {
     expect(store.ageIncrement).to.equal(10)
   })
 
-  it('should update forwardBackwardGrow correctly', () => {
-    store.forwardBackwardGrow = [
-      CONSTANTS.FORWARD_BACKWARD_GROW.FORWARD,
-      CONSTANTS.FORWARD_BACKWARD_GROW.BACKWARD,
-    ]
+  it('should update report info properties correctly', () => {
+    store.isForwardGrowEnabled = true
+    store.isBackwardGrowEnabled = true
+    store.volumeReported = ['Whole Stem']
+    store.includeInReport = ['Computed MAI']
+    store.projectionType = 'Volume'
+    store.reportTitle = 'Test Report'
 
-    expect(store.forwardBackwardGrow).to.deep.equal([
-      CONSTANTS.FORWARD_BACKWARD_GROW.FORWARD,
-      CONSTANTS.FORWARD_BACKWARD_GROW.BACKWARD,
-    ])
+    expect(store.isForwardGrowEnabled).to.be.true
+    expect(store.isBackwardGrowEnabled).to.be.true
+    expect(store.volumeReported).to.deep.equal(['Whole Stem'])
+    expect(store.includeInReport).to.deep.equal(['Computed MAI'])
+    expect(store.projectionType).to.equal('Volume')
+    expect(store.reportTitle).to.equal('Test Report')
   })
 
   it('should handle full panel confirmation flow', () => {
