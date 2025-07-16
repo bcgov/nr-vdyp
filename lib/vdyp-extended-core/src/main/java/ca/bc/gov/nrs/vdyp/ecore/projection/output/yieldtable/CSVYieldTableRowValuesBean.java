@@ -3,10 +3,11 @@ package ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable;
 import java.io.FileWriter;
 import java.lang.reflect.Field;
 import java.text.MessageFormat;
+import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
@@ -25,19 +26,23 @@ public class CSVYieldTableRowValuesBean implements YieldTableRowBean {
 	@SuppressWarnings("unused")
 	private static final Logger logger = LoggerFactory.getLogger(CSVYieldTableRowValuesBean.class);
 
-	public static StatefulBeanToCsv<CSVYieldTableRowValuesBean>
-			createCsvOutputStream(FileWriter writer, ProjectionContext context) {
+	static StatefulBeanToCsv<CSVYieldTableRowValuesBean>
+			createCsvOutputStream(FileWriter writer, ProjectionContext context, CSVYieldTableWriter yieldTableWriter) {
 
 		var doGenerateHeader = context.getParams().containsOption(ExecutionOption.DO_INCLUDE_FILE_HEADER);
 
 		if (doGenerateHeader) {
 
 			var unfilteredFields = CSVYieldTableRowValuesBean.class.getDeclaredFields();
-			var filteredFields = List.of(unfilteredFields).stream() //
+			EnumSet<YieldTable.Category> activeCategories = yieldTableWriter.getCurrentCategories();
+			var filteredFields = Stream.of(unfilteredFields) //
 					.filter(m -> m.isAnnotationPresent(CsvBindByPosition.class)) //
 					.filter(
 							m -> !m.isAnnotationPresent(OptionalField.class)
-									|| isActiveCategory(context, m.getAnnotation(OptionalField.class).category())
+									|| isActiveCategory(
+											activeCategories, m.getAnnotation(OptionalField.class).category(),
+											m.getAnnotation(OptionalField.class).categories()
+									)
 					) //
 					.collect(Collectors.toList());
 
@@ -50,9 +55,17 @@ public class CSVYieldTableRowValuesBean implements YieldTableRowBean {
 		}
 	}
 
-	private static boolean isActiveCategory(ProjectionContext context, YieldTable.Category category) {
-
-		return context.getYieldTableCategories().contains(category);
+	private static boolean isActiveCategory(
+			EnumSet<YieldTable.Category> activeCategories, YieldTable.Category category,
+			YieldTable.Category[] categories
+	) {
+		// categories is checked first
+		for (var c : categories) {
+			if (activeCategories.contains(c)) {
+				return true;
+			}
+		}
+		return activeCategories.contains(category);
 	}
 
 	public CSVYieldTableRowValuesBean() {
@@ -209,7 +222,7 @@ public class CSVYieldTableRowValuesBean implements YieldTableRowBean {
 //  { "(PRJ_VOL_CU)"(,                     csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionVolCU              */)
 	@CsvBindByName(column = "PRJ_VOL_CU")
 	@CsvBindByPosition(position = 29)
-	@OptionalField(category = YieldTable.Category.LAYER_MOFVOLUMES)
+	@OptionalField(categories = { YieldTable.Category.LAYER_MOFVOLUMES, YieldTable.Category.CFSBIOMASS })
 	private String closeUtilizationVolume;
 
 //  { "(PRJ_VOL_D)"(,                      csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionVolD               */)
@@ -623,25 +636,25 @@ public class CSVYieldTableRowValuesBean implements YieldTableRowBean {
 //  { "(PRJ_CFS_BIO_STEM)"(,               csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionCFSBiomassStem     */)
 	@CsvBindByName(column = "PRJ_CFS_BIO_STEM")
 	@CsvBindByPosition(position = 98)
-	@OptionalField(category = YieldTable.Category.LAYER_CFSBIOMASS)
+	@OptionalField(category = YieldTable.Category.CFSBIOMASS)
 	private String cfsBiomassStem;
 
 //  { "(PRJ_CFS_BIO_BARK)"(,               csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionCFSBiomassBark     */)
 	@CsvBindByName(column = "PRJ_CFS_BIO_BARK")
 	@CsvBindByPosition(position = 99)
-	@OptionalField(category = YieldTable.Category.LAYER_CFSBIOMASS)
+	@OptionalField(category = YieldTable.Category.CFSBIOMASS)
 	private String cfsBiomassBark;
 
 //  { "(PRJ_CFS_BIO_BRANCH)"(,             csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionCFSBiomassBranch   */)
 	@CsvBindByName(column = "PRJ_CFS_BIO_BRANCH")
 	@CsvBindByPosition(position = 100)
-	@OptionalField(category = YieldTable.Category.LAYER_CFSBIOMASS)
+	@OptionalField(category = YieldTable.Category.CFSBIOMASS)
 	private String cfsBiomassBranch;
 
 //  { "(PRJ_CFS_BIO_FOLIAGE)"(,            csvFldType_SINGLE, 10, 5, "", TRUE },  /* csvYldTbl_ProjectionCFSBiomassFoliage  */)
 	@CsvBindByName(column = "PRJ_CFS_BIO_FOLIAGE")
 	@CsvBindByPosition(position = 101)
-	@OptionalField(category = YieldTable.Category.LAYER_CFSBIOMASS)
+	@OptionalField(category = YieldTable.Category.CFSBIOMASS)
 	private String cfsBiomassFoliage;
 
 //  { "(PRJ_MODE)"(,                       csvFldType_CHAR,    4, 0, "", TRUE }   /* csvYldTbl_ProjectionMode               */)
@@ -650,7 +663,7 @@ public class CSVYieldTableRowValuesBean implements YieldTableRowBean {
 	@OptionalField(category = YieldTable.Category.PROJECTION_MODE)
 	private String mode;
 
-	private static Map<String, Field> csvFields = new HashMap<>();
+	private static final Map<String, Field> csvFields = new HashMap<>();
 
 	static {
 		for (Field f : CSVYieldTableRowValuesBean.class.getDeclaredFields()) {
