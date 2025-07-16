@@ -38,7 +38,7 @@ import ca.bc.gov.nrs.vdyp.vri.VriStart;
 
 public class RealComponentRunner implements ComponentRunner {
 
-	private static Logger logger = LoggerFactory.getLogger(RealComponentRunner.class);
+	private static final Logger logger = LoggerFactory.getLogger(RealComponentRunner.class);
 
 	@Override
 	public void runFipStart(Polygon polygon, ProjectionTypeCode projectionTypeCode, PolygonProjectionState state)
@@ -178,25 +178,29 @@ public class RealComponentRunner implements ComponentRunner {
 		var yieldTable = context.getYieldTable();
 		boolean doGenerateDetailedTableHeader = true;
 
-		if (params.containsOption(ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_POLYGON)
-				&& (params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES)
-						|| params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_BIOMASS))) {
+		if (params.containsOption(ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_POLYGON)) {
 
 			var projectionResults = getProjectionResults(polygon, ProjectionTypeCode.PRIMARY, state);
 
-			yieldTable.generateYieldTableForPolygon(polygon, projectionResults, state, doGenerateDetailedTableHeader);
-			doGenerateDetailedTableHeader = false;
+			if (params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES)
+					|| params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_BIOMASS)) {
 
-			logger.debug("{}: generated polygon-level yield table", polygon);
-		}
+				yieldTable
+						.generateYieldTableForPolygon(polygon, projectionResults, state, doGenerateDetailedTableHeader);
+				doGenerateDetailedTableHeader = false;
 
-		if (params.containsOption(ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_POLYGON)
-				&& params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS)) {
+				logger.debug("{}: generated polygon-level yield table", polygon);
+			}
 
-			yieldTable.generateCfsBiomassTableForPolygon(polygon, state, doGenerateDetailedTableHeader);
-			doGenerateDetailedTableHeader = false;
+			if (params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS)) {
+				yieldTable.generateCfsBiomassTableForPolygon(
+						polygon, projectionResults, state, doGenerateDetailedTableHeader
+				);
+				doGenerateDetailedTableHeader = false;
 
-			logger.debug("{}: generated polygon-level CFS biomass table", polygon);
+				logger.debug("{}: generated polygon-level CFS biomass table", polygon);
+			}
+
 		}
 
 		if (params.containsOption(ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER)) {
@@ -208,12 +212,11 @@ public class RealComponentRunner implements ComponentRunner {
 
 					doGenerateDetailedTableHeader = true;
 
+					var projectionResults = getProjectionResults(
+							polygon, layerReportingInfo.getProcessedAsVDYP7Layer(), state
+					);
 					if (params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES)
 							|| params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_BIOMASS)) {
-
-						var projectionResults = getProjectionResults(
-								polygon, layerReportingInfo.getProcessedAsVDYP7Layer(), state
-						);
 
 						yieldTable.generateYieldTableForPolygonLayer(
 								polygon, projectionResults, state, layerReportingInfo, doGenerateDetailedTableHeader
@@ -226,8 +229,8 @@ public class RealComponentRunner implements ComponentRunner {
 					if (params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS)) {
 						if (!layerReportingInfo.isDeadStemLayer()) {
 
-							yieldTable.generateCfsBiomassTable(
-									polygon, state, layerReportingInfo, doGenerateDetailedTableHeader
+							yieldTable.generateCfsBiomassTableForPolygonLayer(
+									polygon, projectionResults, state, layerReportingInfo, doGenerateDetailedTableHeader
 							);
 							doGenerateDetailedTableHeader = false;
 

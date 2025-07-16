@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.ecore.projection;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.is;
 
@@ -94,8 +95,73 @@ public class ProjectionRunnerTest {
 	}
 
 	@Test
+	void testGenerateCFSBiomassByPolygon() throws AbstractProjectionRequestException, IOException {
+		params = new Parameters().yearStart(2013).yearEnd(2113)
+				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.DO_ENABLE_PROGRESS_LOGGING)
+				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS)
+				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_POLYGON)
+				// excluded....
+				.addExcludedExecutionOptionsItem(Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES);
+		unit = new ProjectionRunner(ProjectionRequestKind.HCSV, "TEST", params, false);
+
+		var polygonInputStream = TestUtils.makeInputStream(
+				//
+				TestUtils.POLYGON_CSV_HEADER_LINE,
+				"13919428,093C090,94833422,DQU,UNK,UNK,V,UNK,0.6,10,3,HE,35,8,,MS,14,50.0,1.000,,V,T,U,TC,SP,2013,2013,60.0,,,,,,,,,,TC,100,,,,"
+		);
+		var layersInputStream = TestUtils.makeInputStream(
+				//
+				TestUtils.LAYER_CSV_HEADER_LINE,
+				"13919428,14321066,093C090,94833422,1,P,,1,,,,20,10.000010,300,PLI,60.00,SX,40.00,,,,,,,,,180,18.00,180,23.00,,,,,,,,"
+		);
+
+		Map<String, InputStream> streams = Map.of(
+				ParameterNames.HCSV_POLYGON_INPUT_DATA, polygonInputStream, ParameterNames.HCSV_LAYERS_INPUT_DATA,
+				layersInputStream
+		);
+		unit.run(streams);
+
+		String results = new String(unit.getYieldTable().readAllBytes());
+		assertThat(results.length(), greaterThan(0));
+		assertThat(results, containsString("CFS_BIO"));
+	}
+
+	@Test
+	void testGenerateMOFBiomassByPolygon() throws AbstractProjectionRequestException, IOException {
+		params = new Parameters().yearStart(2013).yearEnd(2113)
+				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_POLYGON)
+				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.DO_ENABLE_PROGRESS_LOGGING)
+				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES)
+				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_BIOMASS);
+		unit = new ProjectionRunner(ProjectionRequestKind.HCSV, "TEST", params, false);
+
+		var polygonInputStream = TestUtils.makeInputStream(
+				//
+				TestUtils.POLYGON_CSV_HEADER_LINE,
+				"13919428,093C090,94833422,DQU,UNK,UNK,V,UNK,0.6,10,3,HE,35,8,,MS,14,50.0,1.000,,V,T,U,TC,SP,2013,2013,60.0,,,,,,,,,,TC,100,,,,"
+		);
+		var layersInputStream = TestUtils.makeInputStream(
+				//
+				TestUtils.LAYER_CSV_HEADER_LINE,
+				"13919428,14321066,093C090,94833422,1,P,,1,,,,20,10.000010,300,PLI,60.00,SX,40.00,,,,,,,,,180,18.00,180,23.00,,,,,,,,"
+		);
+
+		Map<String, InputStream> streams = Map.of(
+				ParameterNames.HCSV_POLYGON_INPUT_DATA, polygonInputStream, ParameterNames.HCSV_LAYERS_INPUT_DATA,
+				layersInputStream
+		);
+		unit.run(streams);
+
+		String results = new String(unit.getYieldTable().readAllBytes());
+		assertThat(results.length(), greaterThan(0));
+		assertThat(results, containsString("MoF_BIO"));
+	}
+
+	@Test
 	void testAllowBack() throws AbstractProjectionRequestException, IOException {
-		params = new Parameters().ageStart(0).ageEnd(100)
+		params = new Parameters().ageStart(0).ageEnd(
+				100
+		)
 				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.BACK_GROW_ENABLED)
 				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.DO_ENABLE_PROGRESS_LOGGING);
 		unit = new ProjectionRunner(ProjectionRequestKind.HCSV, "TEST", params, false);

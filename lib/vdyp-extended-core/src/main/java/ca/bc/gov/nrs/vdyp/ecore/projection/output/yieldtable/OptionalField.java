@@ -9,5 +9,13 @@ import java.lang.annotation.Target;
 @Retention(RUNTIME)
 @Target(FIELD)
 public @interface OptionalField {
-	public YieldTable.Category category();
+	/**
+	 * The yield table category that this field will appear in
+	 */
+	YieldTable.Category category() default YieldTable.Category.NONE;
+
+	/**
+	 * The yield table categories that this field will appear in. This overrules the category() value if set
+	 */
+	YieldTable.Category[] categories() default {};
 }
