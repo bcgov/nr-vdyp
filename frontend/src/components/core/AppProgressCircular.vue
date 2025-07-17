@@ -22,8 +22,6 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps } from 'vue'
-
 defineProps({
   isShow: { type: Boolean, default: false },
   showMessage: { type: Boolean, default: true },
