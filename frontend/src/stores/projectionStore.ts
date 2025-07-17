@@ -126,6 +126,7 @@ export const useProjectionStore = defineStore('projectionStore', () => {
   return {
     errorMessages,
     logMessages,
+    debugMessages,
     yieldTable,
     yieldTableArray,
     rawResultZipFile,
