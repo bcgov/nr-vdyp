@@ -70,8 +70,7 @@ public class CfsBiomassConversionCoefficientsForGenus {
 									0.00205040f, -0.35415510f, 0.40718550f, 0.00015900f, -0.39484070f, 0.48957120f,
 									-0.00012160f, -0.48394590f, 39.64644616f, 266.25940420f, 0.56054960f, 0.69704505f,
 									0.10552136f, 0.11022134f, 0.18914164f, 0.11958752f, 0.14478740f, 0.07314609f }
-					),
-					CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
+					), CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
 					CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
 					new CfsBiomassConversionCoefficientsDetails(
 							true,
@@ -80,8 +79,7 @@ public class CfsBiomassConversionCoefficientsForGenus {
 									0.00003310f, -0.03969230f, -2.00615700f, -0.00204870f, 0.10301540f, -2.14700900f,
 									-0.00123410f, -0.12901470f, 0.25627796f, 454.14807021f, 0.69104251f, 0.77260407f,
 									0.13358280f, 0.12696204f, 0.11021858f, 0.07706247f, 0.06515611f, 0.02337143f }
-					),
-					CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
+					), CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
 					CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
 					CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
 					new CfsBiomassConversionCoefficientsDetails(
@@ -91,8 +89,7 @@ public class CfsBiomassConversionCoefficientsForGenus {
 									-0.24264460f, -2.82064400f, -0.01062890f, 0.37359610f, -2.06120800f, 0.00053430f,
 									-0.16929620f, 0.50567326f, 72.27241858f, 0.72316860f, 0.75461402f, 0.12680788f,
 									0.09175900f, 0.08103621f, 0.10579828f, 0.06898732f, 0.04782870f }
-					),
-					CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
+					), CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
 					new CfsBiomassConversionCoefficientsDetails(
 							true,
 							new float[] { 1.11524473f, 0.84169055f, 20.60369700f, -0.58616931f, 0.00000001f,
@@ -100,8 +97,7 @@ public class CfsBiomassConversionCoefficientsForGenus {
 									-0.00002470f, -0.09903390f, -1.81417200f, -0.00062740f, -0.08014660f, -1.37449000f,
 									-0.00063830f, -0.23191160f, 0.83204805f, 568.79515544f, 0.67950647f, 0.82613837f,
 									0.11026074f, 0.08391108f, 0.09609572f, 0.05663432f, 0.11413707f, 0.03331623f }
-					),
-					CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
+					), CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
 					CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
 					new CfsBiomassConversionCoefficientsDetails(
 							true,
@@ -110,8 +106,7 @@ public class CfsBiomassConversionCoefficientsForGenus {
 									-0.00040550f, -0.03374770f, -2.45555900f, -0.00149860f, 0.03946860f, -1.61498800f,
 									-0.00020820f, -0.13928020f, 0.30162951f, 762.59457018f, 0.69908945f, 0.82285440f,
 									0.12665245f, 0.09252088f, 0.06404602f, 0.02927097f, 0.11021208f, 0.05535374f }
-					),
-					CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
+					), CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
 					CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
 					CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
 					CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
@@ -147,8 +142,7 @@ public class CfsBiomassConversionCoefficientsForGenus {
 									-0.00020440f, -0.07845520f, 0.74642220f, -0.00028490f, -0.37654620f, 0.40160500f,
 									-0.00051830f, -0.39382150f, 5.78922549f, 475.65127586f, 0.37599847f, 0.70017385f,
 									0.08112996f, 0.10188997f, 0.32334657f, 0.12609197f, 0.21952501f, 0.07184420f }
-					),
-					CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
+					), CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
 					CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
 					new CfsBiomassConversionCoefficientsDetails(
 							true,
@@ -157,8 +151,7 @@ public class CfsBiomassConversionCoefficientsForGenus {
 									0.00150430f, -0.14650710f, -1.63293500f, -0.00093830f, 0.04912600f, -2.73702000f,
 									-0.00446580f, 0.05602320f, 1.42087907f, 226.24300731f, 0.66172058f, 0.70129971f,
 									0.14957244f, 0.13149960f, 0.14144737f, 0.14476799f, 0.04725962f, 0.02243270f }
-					),
-					CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
+					), CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
 					CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
 					CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
 					new CfsBiomassConversionCoefficientsDetails(
@@ -168,8 +161,7 @@ public class CfsBiomassConversionCoefficientsForGenus {
 									-0.00003810f, 0.06769770f, -1.76185300f, -0.00011640f, -0.06103690f, -1.94045600f,
 									-0.00012810f, -0.13599980f, 3.85755740f, 795.06432589f, 0.73110412f, 0.76791169f,
 									0.08102680f, 0.11201413f, 0.10985001f, 0.07993896f, 0.07801907f, 0.04013522f }
-					),
-					CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
+					), CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
 					new CfsBiomassConversionCoefficientsDetails(
 							true,
 							new float[] { 0.87341785f, 0.88584353f, 18.49059513f, -0.81688612f, 0.74475979f,
@@ -177,8 +169,7 @@ public class CfsBiomassConversionCoefficientsForGenus {
 									-0.00016140f, -0.05956620f, -0.99845870f, -0.00078900f, -0.17691240f, -0.89145050f,
 									-0.00119050f, -0.27904040f, 1.55186635f, 602.98422592f, 0.60581000f, 0.82832204f,
 									0.08757288f, 0.08296154f, 0.15986540f, 0.06101709f, 0.14675173f, 0.02769933f }
-					),
-					CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
+					), CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
 					CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
 					new CfsBiomassConversionCoefficientsDetails(
 							true,
@@ -187,8 +178,7 @@ public class CfsBiomassConversionCoefficientsForGenus {
 									-0.00028190f, -0.02135110f, -0.72406220f, -0.00076990f, -0.16885150f, -0.30348010f,
 									-0.00061290f, -0.35807330f, 2.31853307f, 762.47661989f, 0.53566152f, 0.80172981f,
 									0.08549513f, 0.09351294f, 0.18522504f, 0.07038498f, 0.19361830f, 0.03437227f }
-					),
-					CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
+					), CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
 					CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
 					CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
 					CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
@@ -224,8 +214,7 @@ public class CfsBiomassConversionCoefficientsForGenus {
 									-0.00020440f, -0.07845520f, 0.74642220f, -0.00028490f, -0.37654620f, 0.40160500f,
 									-0.00051830f, -0.39382150f, 5.78922549f, 475.65127586f, 0.37599847f, 0.70017385f,
 									0.08112996f, 0.10188997f, 0.32334657f, 0.12609197f, 0.21952501f, 0.07184420f }
-					),
-					CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
+					), CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
 					CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
 					new CfsBiomassConversionCoefficientsDetails(
 							true,
@@ -234,8 +223,7 @@ public class CfsBiomassConversionCoefficientsForGenus {
 									0.00081880f, -0.12336360f, -1.41422400f, -0.00104250f, -0.03766460f, -1.95898400f,
 									-0.00020870f, -0.18615050f, 9.03693839f, 313.08661895f, 0.66902232f, 0.73923055f,
 									0.12753262f, 0.12299555f, 0.14586392f, 0.10437158f, 0.05758114f, 0.03340232f }
-					),
-					CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
+					), CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
 					CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
 					CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
 					CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
@@ -247,8 +235,7 @@ public class CfsBiomassConversionCoefficientsForGenus {
 									0.00383030f, -0.24264460f, -2.82064400f, -0.01062890f, 0.37359610f, -2.06120800f,
 									0.00053430f, -0.16929620f, 0.50567326f, 72.27241858f, 0.72316860f, 0.75461402f,
 									0.12680788f, 0.09175900f, 0.08103621f, 0.10579828f, 0.06898732f, 0.04782870f }
-					),
-					CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
+					), CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
 					CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
 					new CfsBiomassConversionCoefficientsDetails(
 							true,
@@ -257,8 +244,7 @@ public class CfsBiomassConversionCoefficientsForGenus {
 									-0.00047030f, -0.06626670f, -0.99576940f, -0.00132930f, -0.09669010f, -0.79102100f,
 									-0.00132050f, -0.22242250f, 0.39409858f, 663.54261911f, 0.54559901f, 0.80880496f,
 									0.11328608f, 0.08932838f, 0.17116682f, 0.06594113f, 0.16994809f, 0.03592553f }
-					),
-					CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
+					), CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
 					CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
 					CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
 					CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
@@ -342,8 +328,7 @@ public class CfsBiomassConversionCoefficientsForGenus {
 									-0.00004250f, -0.01024570f, 0.33021410f, -0.00015300f, -0.30612350f, 0.46850620f,
 									-0.00027800f, -0.43642600f, 0.41108922f, 3462.67458580f, 0.36219768f, 0.81991878f,
 									0.06038491f, 0.11043117f, 0.30050578f, 0.05538696f, 0.27691162f, 0.01426309f }
-					),
-					CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
+					), CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
 					new CfsBiomassConversionCoefficientsDetails(
 							true,
 							new float[] { 0.59524454f, 0.95946064f, 0.99561952f, -0.00000001f, 0.01076243f, 1.00638191f,
@@ -407,8 +392,7 @@ public class CfsBiomassConversionCoefficientsForGenus {
 									0.00004840f, -0.04432050f, -0.44199880f, -0.00039210f, -0.12287190f, -0.03352580f,
 									0.00060350f, -0.51184090f, 5.80790313f, 1074.61155770f, 0.51130851f, 0.71742579f,
 									0.09720869f, 0.11712380f, 0.24474769f, 0.12826961f, 0.14673511f, 0.03718080f }
-					),
-					CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
+					), CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
 					new CfsBiomassConversionCoefficientsDetails(
 							true,
 							new float[] { 0.48709928f, 0.96734384f, 26.48860333f, -0.95979582f, 0.94482724f,
@@ -473,8 +457,7 @@ public class CfsBiomassConversionCoefficientsForGenus {
 									0.00004760f, -0.06294830f, -0.38615170f, 0.00011320f, -0.19501550f, -0.11680800f,
 									0.00008170f, -0.33527570f, 0.59098570f, 1855.68858950f, 0.45328151f, 0.69287488f,
 									0.09997755f, 0.11581675f, 0.22025293f, 0.13382703f, 0.22648801f, 0.05748134f }
-					),
-					CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
+					), CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
 					new CfsBiomassConversionCoefficientsDetails(
 							true,
 							new float[] { 0.47454907f, 0.98260486f, 16.70139891f, -0.73662534f, 0.76729925f,
@@ -530,8 +513,7 @@ public class CfsBiomassConversionCoefficientsForGenus {
 									0.00002450f, -0.12396780f, -0.34735010f, -0.00014560f, -0.24093310f, 0.09661250f,
 									-0.00020260f, -0.41447830f, 0.41950119f, 1105.81627740f, 0.44950661f, 0.78770374f,
 									0.09340985f, 0.08693745f, 0.21135973f, 0.08745613f, 0.24572381f, 0.03790268f }
-					),
-					CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
+					), CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
 					new CfsBiomassConversionCoefficientsDetails(
 							true,
 							new float[] { 0.84945579f, 0.90640025f, 39.10988503f, -1.09616671f, 1.03953801f,
@@ -547,8 +529,7 @@ public class CfsBiomassConversionCoefficientsForGenus {
 									0.00029920f, -0.12317990f, -0.56233390f, 0.00016490f, -0.20800120f, -0.55519280f,
 									-0.00025920f, -0.28653120f, 0.18979415f, 2571.70932790f, 0.50922886f, 0.71271393f,
 									0.10239754f, 0.14399744f, 0.20604212f, 0.12116144f, 0.18233148f, 0.02212719f }
-					),
-					CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
+					), CfsBiomassConversionCoefficientsDetails.LIVE_EMPTY, //
 					new CfsBiomassConversionCoefficientsDetails(
 							true,
 							new float[] { 0.71277167f, 0.91839618f, 18.91496167f, -0.95750355f, 0.95031550f,
@@ -570,8 +551,8 @@ public class CfsBiomassConversionCoefficientsForGenus {
 		new CfsBiomassConversionCoefficientsHelper<CfsBiomassConversionSupportedEcoZone, CfsBiomassConversionSupportedGenera, CfsLiveConversionParams>()
 				.validateCoefficientArray(
 						CfsBiomassConversionCoefficientsDead.class, coeffByZoneAndGenus,
-						CfsBiomassConversionSupportedEcoZone.class,
-						CfsBiomassConversionSupportedGenera.class, CfsLiveConversionParams.class
+						CfsBiomassConversionSupportedEcoZone.class, CfsBiomassConversionSupportedGenera.class,
+						CfsLiveConversionParams.class
 				);
 	}
 }

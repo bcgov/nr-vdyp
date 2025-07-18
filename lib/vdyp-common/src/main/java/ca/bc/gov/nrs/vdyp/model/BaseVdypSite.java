@@ -18,11 +18,12 @@ public abstract class BaseVdypSite {
 	private final Optional<Float> ageTotal; // LVCOM3/AGETOTLV, L1COM3/AGETOTL1, VRISI/VR_TAGE
 	private final Optional<Float> height; // LVCOM3/HDLV, L1COM3/HDL1, VRISI/VR_HD
 	private final Optional<Float> yearsToBreastHeight; // LVCOM3/YTBHLV, L1COM3/YTBHL1, VRISI/VR_YTBH
+	private final Optional<Float> yearsAtBreastHeight; // VRISI/VR_SCN
 
 	protected BaseVdypSite(
 			PolygonIdentifier polygonIdentifier, LayerType layerType, String siteGenus,
 			Optional<Integer> siteCurveNumber, Optional<Float> siteIndex, Optional<Float> height,
-			Optional<Float> ageTotal, Optional<Float> yearsToBreastHeight
+			Optional<Float> ageTotal, Optional<Float> yearsToBreastHeight, Optional<Float> yearsAtBreastHeight
 	) {
 		super();
 		this.polygonIdentifier = polygonIdentifier;
@@ -33,6 +34,7 @@ public abstract class BaseVdypSite {
 		this.height = height;
 		this.ageTotal = ageTotal;
 		this.yearsToBreastHeight = yearsToBreastHeight;
+		this.yearsAtBreastHeight = yearsAtBreastHeight;
 	}
 
 	public PolygonIdentifier getPolygonIdentifier() {
@@ -67,9 +69,24 @@ public abstract class BaseVdypSite {
 		return yearsToBreastHeight;
 	}
 
+	/**
+	 * Computed from ageTotal and yearsToBreastHeight.
+	 */
 	@Computed
+	public Optional<Float> getComputedYearsAtBreastHeight(float offset) {
+		return Utils.mapBoth(getYearsToBreastHeight(), getAgeTotal(), (ytbh, at) -> at - ytbh + offset);
+	}
+
+	/**
+	 * Computed from ageTotal and yearsToBreastHeight. This may differ from yearsAtBreastHeight by up to 0.5 years;
+	 */
+	@Computed
+	public Optional<Float> getComputedYearsAtBreastHeight() {
+		return getComputedYearsAtBreastHeight(0f);
+	}
+
 	public Optional<Float> getYearsAtBreastHeight() {
-		return Utils.mapBoth(ageTotal, yearsToBreastHeight, (age, ytbh) -> age - ytbh);
+		return yearsAtBreastHeight;
 	}
 
 	@Override
@@ -104,6 +121,7 @@ public abstract class BaseVdypSite {
 		protected Optional<Float> ageTotal = Optional.empty();
 		protected Optional<Float> height = Optional.empty();
 		protected Optional<Float> yearsToBreastHeight = Optional.empty();
+		protected Optional<Float> yearsAtBreastHeight = Optional.empty();
 
 		public Builder<T> polygonIdentifier(PolygonIdentifier polygonIdentifier) {
 			this.polygonIdentifier = Optional.of(polygonIdentifier);
@@ -168,6 +186,31 @@ public abstract class BaseVdypSite {
 			return this;
 		}
 
+		public Builder<T> yearsAtBreastHeight(Optional<Float> yearsAtBreastHeight) {
+			this.yearsAtBreastHeight = yearsAtBreastHeight;
+			return this;
+		}
+
+		/**
+		 * Compute yearsAtBreastHeight from yearsAtBreastHeight and ageTotal
+		 *
+		 * @return
+		 */
+		public Builder<T> yearsAtBreastHeightAuto() {
+			return yearsAtBreastHeightAuto(0.0f);
+		}
+
+		/**
+		 * Compute yearsAtBreastHeight from yearsAtBreastHeight and ageTotal
+		 *
+		 * @return
+		 */
+		public Builder<T> yearsAtBreastHeightAuto(float offset) {
+			this.yearsAtBreastHeight = Utils
+					.mapBoth(ageTotal, yearsToBreastHeight, (total, ytbh) -> total - ytbh + offset);
+			return this;
+		}
+
 		public Builder<T> ageTotal(float ageTotal) {
 			return ageTotal(Optional.of(ageTotal));
 		}
@@ -180,11 +223,16 @@ public abstract class BaseVdypSite {
 			return yearsToBreastHeight(Optional.of(yearsToBreastHeight));
 		}
 
+		public Builder<T> yearsAtBreastHeight(float yearsAtBreastHeight) {
+			return yearsAtBreastHeight(Optional.of(yearsAtBreastHeight));
+		}
+
 		public Builder<T> adapt(BaseVdypSite source) {
 			polygonIdentifier(source.getPolygonIdentifier());
 			layerType(source.getLayerType());
 			ageTotal(source.getAgeTotal());
 			yearsToBreastHeight(source.getYearsToBreastHeight());
+			yearsAtBreastHeight(source.getYearsAtBreastHeight());
 			height(source.getHeight());
 			siteIndex(source.getSiteIndex());
 			siteCurveNumber(source.getSiteCurveNumber());

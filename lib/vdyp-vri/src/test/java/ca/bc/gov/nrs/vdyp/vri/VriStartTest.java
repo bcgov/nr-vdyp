@@ -2017,7 +2017,7 @@ class VriStartTest {
 							ib.height(7.6f);
 							ib.siteIndex(19.7f);
 							ib.yearsToBreastHeight(9);
-							ib.breastHeightAge(15);
+							ib.yearsAtBreastHeight(15);
 							ib.siteSpecies("FD");
 						});
 					});
@@ -2059,8 +2059,8 @@ class VriStartTest {
 			var resultLayer = assertOnlyPrimaryLayer(result);
 
 			assertThat(resultLayer, hasProperty("ageTotal", present(closeTo(24))));
-			assertThat(resultLayer, hasProperty("breastHeightAge", present(closeTo(15))));
 			assertThat(resultLayer, hasProperty("yearsToBreastHeight", present(closeTo(9))));
+			assertThat(resultLayer, hasProperty("yearsAtBreastHeight", present(closeTo(15))));
 
 			assertThat(resultLayer, hasProperty("primaryGenus", present(is("F"))));
 
@@ -2173,6 +2173,211 @@ class VriStartTest {
 		}
 
 		@Test
+		void testProcessPrimaryWithOffsetAges() throws Exception {
+
+			controlMap = TestUtils.loadControlMap();
+
+			VriStart app = new VriStart();
+
+			MockFileResolver resolver = dummyInput();
+
+			var poly = VriPolygon.build(pb -> {
+				pb.polygonIdentifier("TestPoly", 2024);
+				pb.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+				pb.yieldFactor(1.0f);
+				pb.mode(PolygonMode.BATN);
+				pb.forestInventoryZone("");
+				pb.percentAvailable(85);
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.PRIMARY);
+					lb.crownClosure(30f);
+					lb.utilization(7.5f);
+
+					lb.inventoryTypeGroup(3);
+					lb.empiricalRelationshipParameterIndex(61);
+
+					lb.primaryGenus("F");
+					// 1
+					lb.addSpecies(sb -> {
+						sb.genus("B", controlMap);
+						sb.percentGenus(10);
+						sb.addSp64Distribution("BL", 100);
+						sb.addSite(ib -> {
+							ib.siteSpecies("BL");
+						});
+					});
+
+					// 2
+					lb.addSpecies(sb -> {
+						sb.genus("C", controlMap);
+						sb.percentGenus(20);
+						sb.addSp64Distribution("CW", 100);
+						sb.addSite(ib -> {
+							ib.siteCurveNumber(11);
+							ib.siteSpecies("CW");
+						});
+					});
+
+					// 3
+					lb.addSpecies(sb -> {
+						sb.genus("F", controlMap);
+						sb.percentGenus(30);
+						sb.addSp64Distribution("FD", 100);
+						sb.addSite(ib -> {
+							ib.siteCurveNumber(23);
+							ib.ageTotal(24);
+							ib.height(7.6f);
+							ib.siteIndex(19.7f);
+							ib.yearsToBreastHeight(9);
+							ib.yearsAtBreastHeight(15.5f);
+							ib.siteSpecies("FD");
+						});
+					});
+
+					// 4
+					lb.addSpecies(sb -> {
+						sb.genus("H", controlMap);
+						sb.percentGenus(30);
+						sb.addSp64Distribution("HW", 100);
+						sb.addSite(ib -> {
+							ib.siteCurveNumber(37);
+							ib.siteSpecies("HW");
+						});
+					});
+
+					// 5
+					lb.addSpecies(sb -> {
+						sb.genus("S", controlMap);
+						sb.percentGenus(10);
+						sb.addSp64Distribution("S", 100);
+						sb.addSite(ib -> {
+							ib.siteCurveNumber(71);
+							ib.siteSpecies("S");
+						});
+					});
+				});
+			});
+
+			app.init(resolver, controlMap);
+
+			var result = app.processPolygon(0, poly).get();
+
+			assertThat(result, hasProperty("polygonIdentifier", isPolyId("TestPoly", 2024)));
+			assertThat(result, hasProperty("biogeoclimaticZone", hasProperty("alias", is("IDF"))));
+			assertThat(result, hasProperty("forestInventoryZone", blankString()));
+			assertThat(result, hasProperty("mode", present(is(PolygonMode.BATN))));
+			assertThat(result, hasProperty("percentAvailable", is(85f)));
+
+			var resultLayer = assertOnlyPrimaryLayer(result);
+
+			assertThat(resultLayer, hasProperty("ageTotal", present(closeTo(24))));
+			assertThat(resultLayer, hasProperty("yearsToBreastHeight", present(closeTo(9))));
+			assertThat(resultLayer, hasProperty("yearsAtBreastHeight", present(closeTo(15.5f))));
+
+			assertThat(resultLayer, hasProperty("primaryGenus", present(is("F"))));
+
+			assertThat(resultLayer, hasProperty("height", present(closeTo(7.6f))));
+			assertThat(resultLayer, hasProperty("inventoryTypeGroup", present(is(3))));
+			assertThat(resultLayer, hasProperty("empiricalRelationshipParameterIndex", present(is(61))));
+
+			assertThat(
+					resultLayer, hasProperty("loreyHeightByUtilization", utilizationHeight(4.14067888f, 6.61390257f))
+			);
+			assertThat(
+					resultLayer,
+					hasProperty("baseAreaByUtilization", utilization(0.06802f, 6.344f, 4.239f, 1.017f, 0.574f, 0.514f))
+			);
+			assertThat(
+					resultLayer,
+					hasProperty(
+							"quadraticMeanDiameterByUtilization",
+							utilization(5.590f, 10.399f, 9.114f, 13.923f, 18.676f, 25.387f)
+					)
+			);
+			assertThat(
+					resultLayer,
+					hasProperty(
+							"treesPerHectareByUtilization",
+							utilization(27.72f, 746.95f, 649.03f, 66.823f, 20.953f, 10.151f)
+					)
+			);
+
+			assertThat(
+					resultLayer,
+					hasProperty(
+							"closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization",
+							utilization(0, 4.7503f, 0.050328f, 1.6000f, 1.6287f, 1.4712f)
+					)
+			);
+			assertThat(
+					resultLayer.getSpecies(),
+					allOf(aMapWithSize(5), hasKey("B"), hasKey("C"), hasKey("F"), hasKey("H"), hasKey("S"))
+			);
+
+			VdypSpecies resultSpecB = TestUtils.assertHasSpecies(resultLayer, "B", "C", "F", "H", "S");
+
+			assertThat(
+					resultSpecB,
+					hasProperty(
+							"baseAreaByUtilization",
+							utilization(0.011637f, 0.63447f, 0.23894f, 0.19680f, 0.10285f, 0.09586f)
+					)
+			);
+			assertThat(
+					resultSpecB,
+					hasProperty(
+							"quadraticMeanDiameterByUtilization",
+							utilization(5.6167f, 12.9619f, 9.9395f, 14.3500f, 19.17902f, 27.5482f)
+					)
+			);
+			assertThat(
+					resultSpecB,
+					hasProperty(
+							"treesPerHectareByUtilization",
+							utilization(4.6965f, 48.0821f, 30.7646f, 12.1538f, 3.5571f, 1.6064f)
+					)
+			);
+
+			assertThat(
+					resultSpecB,
+					hasProperty(
+							"wholeStemVolumeByUtilization",
+							utilization(0.024424f, 2.41399f, 0.74364f, 0.75179f, 0.45503f, 0.46354f)
+					)
+			);
+			assertThat(
+					resultSpecB,
+					hasProperty(
+							"closeUtilizationVolumeByUtilization",
+							utilization(0, 1.2910f, 0.02357f, 0.46481f, 0.37971f, 0.42281f)
+					)
+			);
+			assertThat(
+					resultSpecB,
+					hasProperty(
+							"closeUtilizationVolumeNetOfDecayByUtilization",
+							utilization(0, 1.2517f, 0.02304f, 0.45406f, 0.37044f, 0.40412f)
+					)
+			);
+			assertThat(
+					resultSpecB,
+					hasProperty(
+							"closeUtilizationVolumeNetOfDecayAndWasteByUtilization",
+							utilization(0, 1.23818f, 0.022856f, 0.45018f, 0.36700f, 0.39814f)
+					)
+			);
+			assertThat(
+					resultSpecB,
+					hasProperty(
+							"closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization",
+							utilization(0, 1.21225f, 0.022386f, 0.44089f, 0.35939f, 0.38959f)
+					)
+			);
+
+			app.close();
+		}
+
+		@Test
 		void testProcessVeteran() throws Exception {
 
 			controlMap = TestUtils.loadControlMap();
@@ -2221,7 +2426,7 @@ class VriStartTest {
 							ib.height(20f);
 							ib.siteIndex(12f);
 							ib.yearsToBreastHeight(10.9f);
-							ib.breastHeightAge(89.1f);
+							ib.yearsAtBreastHeight(89.1f);
 							ib.ageTotal(100f);
 							ib.siteSpecies("CW");
 						});
@@ -2237,7 +2442,7 @@ class VriStartTest {
 							ib.height(25f);
 							ib.siteIndex(12.6f);
 							ib.yearsToBreastHeight(9.7f);
-							ib.breastHeightAge(90.3f);
+							ib.yearsAtBreastHeight(90.3f);
 							ib.ageTotal(100f);
 							ib.siteSpecies("HW");
 						});
@@ -2278,7 +2483,7 @@ class VriStartTest {
 							ib.height(30f);
 							ib.siteIndex(14.3f);
 							ib.yearsToBreastHeight(10.9f);
-							ib.breastHeightAge(189.1f);
+							ib.yearsAtBreastHeight(189.1f);
 							ib.ageTotal(200f);
 							ib.siteSpecies("CW");
 						});
@@ -2294,7 +2499,7 @@ class VriStartTest {
 							ib.height(34f);
 							ib.siteIndex(14.6f);
 							ib.yearsToBreastHeight(9.7f);
-							ib.breastHeightAge(190.3f);
+							ib.yearsAtBreastHeight(190.3f);
 							ib.ageTotal(200f);
 							ib.siteSpecies("HW");
 						});
@@ -2316,8 +2521,8 @@ class VriStartTest {
 			var primaryLayer = assertHasPrimaryLayer(result);
 
 			assertThat(primaryLayer, hasProperty("ageTotal", present(closeTo(100))));
-			assertThat(primaryLayer, hasProperty("breastHeightAge", present(closeTo(89.1f))));
 			assertThat(primaryLayer, hasProperty("yearsToBreastHeight", present(closeTo(10.9f))));
+			assertThat(primaryLayer, hasProperty("yearsAtBreastHeight", present(closeTo(89.1f))));
 
 			assertThat(primaryLayer, hasProperty("primaryGenus", present(is("C"))));
 
@@ -2396,8 +2601,8 @@ class VriStartTest {
 			);
 
 			assertThat(veteranLayer, hasProperty("ageTotal", present(closeTo(200))));
-			assertThat(veteranLayer, hasProperty("breastHeightAge", present(closeTo(190.3f))));
 			assertThat(veteranLayer, hasProperty("yearsToBreastHeight", present(closeTo(9.7f))));
+			assertThat(veteranLayer, hasProperty("yearsAtBreastHeight", present(closeTo(190.3f))));
 
 			assertThat(veteranLayer, hasProperty("primaryGenus", present(is("H"))));
 
@@ -2473,7 +2678,7 @@ class VriStartTest {
 							ib.height(20f);
 							ib.siteIndex(12f);
 							ib.yearsToBreastHeight(10.9f);
-							ib.breastHeightAge(89.1f);
+							ib.yearsAtBreastHeight(89.1f);
 							ib.ageTotal(100f);
 							ib.siteSpecies("CW");
 						});
@@ -2489,7 +2694,7 @@ class VriStartTest {
 							ib.height(25f);
 							ib.siteIndex(12.6f);
 							ib.yearsToBreastHeight(9.7f);
-							ib.breastHeightAge(90.3f);
+							ib.yearsAtBreastHeight(90.3f);
 							ib.ageTotal(100f);
 							ib.siteSpecies("HW");
 						});
@@ -2530,7 +2735,7 @@ class VriStartTest {
 							ib.height(30f);
 							ib.siteIndex(14.3f);
 							ib.yearsToBreastHeight(10.9f);
-							ib.breastHeightAge(189.1f);
+							ib.yearsAtBreastHeight(189.1f);
 							ib.ageTotal(200f);
 							ib.siteSpecies("CW");
 						});
@@ -2546,7 +2751,7 @@ class VriStartTest {
 							ib.height(34f);
 							ib.siteIndex(14.6f);
 							ib.yearsToBreastHeight(9.7f);
-							ib.breastHeightAge(190.3f);
+							ib.yearsAtBreastHeight(190.3f);
 							ib.ageTotal(200f);
 							ib.siteSpecies("HW");
 						});
@@ -2801,7 +3006,7 @@ class VriStartTest {
 							sib.siteIndex(19.7f);
 							sib.height(7.6f);
 							sib.yearsToBreastHeight(9);
-							sib.breastHeightAge(15);
+							sib.yearsAtBreastHeight(15);
 							sib.ageTotal(24);
 						});
 					});
@@ -2899,7 +3104,7 @@ class VriStartTest {
 								hasProperty("height", notPresent()), //
 								hasProperty("ageTotal", notPresent()), //
 								hasProperty("yearsToBreastHeight", notPresent()), //
-								hasProperty("breastHeightAge", notPresent())
+								hasProperty("yearsAtBreastHeight", notPresent())
 						)
 				);
 			}
@@ -2913,7 +3118,7 @@ class VriStartTest {
 							hasProperty("height", present(closeTo(7.6f))), //
 							hasProperty("ageTotal", present(closeTo(24f))), //
 							hasProperty("yearsToBreastHeight", present(closeTo(9f))), //
-							hasProperty("breastHeightAge", present(closeTo(15f)))
+							hasProperty("yearsAtBreastHeight", present(closeTo(15f)))
 					)
 			);
 
@@ -2989,7 +3194,7 @@ class VriStartTest {
 							sib.siteIndex(19.7f);
 							sib.height(7.6f);
 							sib.yearsToBreastHeight(9);
-							sib.breastHeightAge(15);
+							sib.yearsAtBreastHeight(15);
 							sib.ageTotal(24);
 						});
 					});
@@ -3087,7 +3292,7 @@ class VriStartTest {
 								hasProperty("height", notPresent()), //
 								hasProperty("ageTotal", notPresent()), //
 								hasProperty("yearsToBreastHeight", notPresent()), //
-								hasProperty("breastHeightAge", notPresent())
+								hasProperty("yearsAtBreastHeight", notPresent())
 						)
 				);
 			}
@@ -3101,7 +3306,7 @@ class VriStartTest {
 							hasProperty("height", present(closeTo(8.43922043f))), //
 							hasProperty("ageTotal", present(closeTo(26f))), //
 							hasProperty("yearsToBreastHeight", present(closeTo(9f))), //
-							hasProperty("breastHeightAge", present(closeTo(17f)))
+							hasProperty("yearsAtBreastHeight", present(closeTo(17f)))
 					)
 			);
 
@@ -3175,7 +3380,7 @@ class VriStartTest {
 							sib.siteIndex(19.7f);
 							sib.height(6f); // Set this low so we have to increment year
 							sib.yearsToBreastHeight(9);
-							sib.breastHeightAge(15);
+							sib.yearsAtBreastHeight(15);
 							sib.ageTotal(24);
 						});
 					});
@@ -3273,7 +3478,7 @@ class VriStartTest {
 								hasProperty("height", notPresent()), //
 								hasProperty("ageTotal", notPresent()), //
 								hasProperty("yearsToBreastHeight", notPresent()), //
-								hasProperty("breastHeightAge", notPresent())
+								hasProperty("yearsAtBreastHeight", notPresent())
 						)
 				);
 			}
@@ -3287,7 +3492,7 @@ class VriStartTest {
 							hasProperty("height", present(closeTo(7.6620512f))), //
 							hasProperty("ageTotal", present(closeTo(28f))), //
 							hasProperty("yearsToBreastHeight", present(closeTo(9f))), //
-							hasProperty("breastHeightAge", present(closeTo(19f)))
+							hasProperty("yearsAtBreastHeight", present(closeTo(19f)))
 					)
 			);
 
@@ -3401,7 +3606,7 @@ class VriStartTest {
 							sib.siteIndex(19.7f);
 							sib.height(7.6f);
 							sib.yearsToBreastHeight(9);
-							sib.breastHeightAge(15);
+							sib.yearsAtBreastHeight(15);
 							sib.ageTotal(24);
 						});
 					});
@@ -3502,7 +3707,7 @@ class VriStartTest {
 								hasProperty("height", notPresent()), //
 								hasProperty("ageTotal", notPresent()), //
 								hasProperty("yearsToBreastHeight", notPresent()), //
-								hasProperty("breastHeightAge", notPresent())
+								hasProperty("yearsAtBreastHeight", notPresent())
 						)
 				);
 			}
@@ -3516,7 +3721,7 @@ class VriStartTest {
 							hasProperty("height", present(closeTo(7.6f))), //
 							hasProperty("ageTotal", present(closeTo(24f))), //
 							hasProperty("yearsToBreastHeight", present(closeTo(9f))), //
-							hasProperty("breastHeightAge", present(closeTo(15f)))
+							hasProperty("yearsAtBreastHeight", present(closeTo(15f)))
 					)
 			);
 
@@ -3596,7 +3801,7 @@ class VriStartTest {
 							sib.siteIndex(19.7f);
 							sib.height(7.6f);
 							sib.yearsToBreastHeight(9);
-							sib.breastHeightAge(15);
+							sib.yearsAtBreastHeight(15);
 							sib.ageTotal(24);
 						});
 					});
@@ -3658,7 +3863,7 @@ class VriStartTest {
 							sib.siteIndex(19.7f);
 							sib.height(7.6f);
 							sib.yearsToBreastHeight(9);
-							sib.breastHeightAge(15);
+							sib.yearsAtBreastHeight(15);
 							sib.ageTotal(24);
 						});
 					});
@@ -3730,7 +3935,7 @@ class VriStartTest {
 								hasProperty("height", notPresent()), //
 								hasProperty("ageTotal", notPresent()), //
 								hasProperty("yearsToBreastHeight", notPresent()), //
-								hasProperty("breastHeightAge", notPresent())
+								hasProperty("yearsAtBreastHeight", notPresent())
 						)
 				);
 			}
@@ -3744,7 +3949,7 @@ class VriStartTest {
 							hasProperty("height", present(closeTo(7.6f))), //
 							hasProperty("ageTotal", present(closeTo(24f))), //
 							hasProperty("yearsToBreastHeight", present(closeTo(9f))), //
-							hasProperty("breastHeightAge", present(closeTo(15f)))
+							hasProperty("yearsAtBreastHeight", present(closeTo(15f)))
 					)
 			);
 
@@ -3832,7 +4037,7 @@ class VriStartTest {
 							sib.siteIndex(19.7f);
 							sib.height(7.6f);
 							sib.yearsToBreastHeight(9);
-							sib.breastHeightAge(15);
+							sib.yearsAtBreastHeight(15);
 							sib.ageTotal(24);
 						});
 					});
@@ -3933,7 +4138,7 @@ class VriStartTest {
 								hasProperty("height", notPresent()), //
 								hasProperty("ageTotal", notPresent()), //
 								hasProperty("yearsToBreastHeight", notPresent()), //
-								hasProperty("breastHeightAge", notPresent())
+								hasProperty("yearsAtBreastHeight", notPresent())
 						)
 				);
 			}
@@ -3947,7 +4152,7 @@ class VriStartTest {
 							hasProperty("height", present(closeTo(7.6f))), //
 							hasProperty("ageTotal", present(closeTo(24f))), //
 							hasProperty("yearsToBreastHeight", present(closeTo(9f))), //
-							hasProperty("breastHeightAge", present(closeTo(15f)))
+							hasProperty("yearsAtBreastHeight", present(closeTo(15f)))
 					)
 			);
 
@@ -4031,7 +4236,7 @@ class VriStartTest {
 							sib.siteIndex(19.7f);
 							sib.height(7.6f);
 							sib.yearsToBreastHeight(9);
-							sib.breastHeightAge(15);
+							sib.yearsAtBreastHeight(15);
 							sib.ageTotal(24);
 						});
 					});
@@ -4093,7 +4298,7 @@ class VriStartTest {
 							sib.siteIndex(19.7f);
 							sib.height(7.6f);
 							sib.yearsToBreastHeight(9);
-							sib.breastHeightAge(15);
+							sib.yearsAtBreastHeight(15);
 							sib.ageTotal(24);
 						});
 					});
@@ -4165,7 +4370,7 @@ class VriStartTest {
 								hasProperty("height", notPresent()), //
 								hasProperty("ageTotal", notPresent()), //
 								hasProperty("yearsToBreastHeight", notPresent()), //
-								hasProperty("breastHeightAge", notPresent())
+								hasProperty("yearsAtBreastHeight", notPresent())
 						)
 				);
 			}
@@ -4179,7 +4384,7 @@ class VriStartTest {
 							hasProperty("height", present(closeTo(7.6f))), //
 							hasProperty("ageTotal", present(closeTo(24f))), //
 							hasProperty("yearsToBreastHeight", present(closeTo(9f))), //
-							hasProperty("breastHeightAge", present(closeTo(15f)))
+							hasProperty("yearsAtBreastHeight", present(closeTo(15f)))
 					)
 			);
 

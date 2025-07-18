@@ -106,7 +106,7 @@ public enum CfsBiomassConversionSupportedGenera implements SI32Enum<CfsBiomassCo
 
 	/**
 	 * Returns the genus for the given ecozone and species code.
-	 * 
+	 *
 	 * @param ecoZone  Cfs Biomass Conversion Supported EcoZone
 	 * @param sp64Code MoF Species Code (SP64)
 	 * @return Genus for the given ecozone and species code, or INVALID if not found.
@@ -129,6 +129,7 @@ public enum CfsBiomassConversionSupportedGenera implements SI32Enum<CfsBiomassCo
 
 		return CfsBiomassConversionSupportedGenera.INVALID;
 	}
+
 	/**
 	 * @return the number of non-housekeeping entries in the enumeration
 	 */

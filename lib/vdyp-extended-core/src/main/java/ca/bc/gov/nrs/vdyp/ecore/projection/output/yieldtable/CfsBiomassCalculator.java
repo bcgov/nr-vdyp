@@ -252,7 +252,7 @@ public class CfsBiomassCalculator {
 	 * Determines the proportion of CFS Biomass to use based on the close utilization volume and conversion
 	 * coefficients. This influencing factor is if the close Utilization Volume it outside of the minimum or maximum
 	 * thresholds.
-	 * 
+	 *
 	 * @param volume       Close utilization volume
 	 * @param coefficients The CfsBiomassConversionCoefficientsDetails containing the conversion parameters.
 	 * @return The CfsBioProportionToUse indicating which proportions to use.
@@ -374,13 +374,13 @@ public class CfsBiomassCalculator {
 		 * coefficients.getParm(CfsDeadConversionParams.V4); propIntervalStart =
 		 * coefficients.getParm(CfsDeadConversionParams.PROP5); propIntervalEnd =
 		 * coefficients.getParm(CfsDeadConversionParams.PROP5); }
-		 * 
+		 *
 		 * if (Math.abs(volIntervalEnd - volIntervalStart) <= 1.0E-5) { // If the volume is exactly equal to the end of
 		 * the interval, return the end of the interval return propIntervalEnd; }
-		 * 
+		 *
 		 * double volFactor = (volume - volIntervalStart)/(volIntervalEnd - volIntervalStart); return propIntervalStart
 		 * + (volFactor * (propIntervalEnd - propIntervalStart));
-		 * 
+		 *
 		 */
 
 	}

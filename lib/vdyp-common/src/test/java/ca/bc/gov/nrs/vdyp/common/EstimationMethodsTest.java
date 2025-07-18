@@ -467,16 +467,17 @@ class EstimationMethodsTest {
 			spec3.getLoreyHeightByUtilization().setCoe(0, 33.6889763f);
 			spec3.setFractionGenus(0.695440531f);
 
-			var spec4 = VdypSpecies.build(layer, builder -> {
-				builder.genus("H", controlMap);
-				builder.volumeGroup(37);
-				builder.decayGroup(31);
-				builder.breakageGroup(17);
-				builder.percentGenus(9f);
-				builder.addSite(siteBuilder -> {
-					siteBuilder.ageTotal(55f);
-					siteBuilder.yearsToBreastHeight(1f);
-					siteBuilder.height(32.2999992f);
+			var spec4 = VdypSpecies.build(layer, lb -> {
+				lb.genus("H", controlMap);
+				lb.volumeGroup(37);
+				lb.decayGroup(31);
+				lb.breakageGroup(17);
+				lb.percentGenus(9f);
+				lb.addSite(ib -> {
+					ib.ageTotal(55f);
+					ib.yearsToBreastHeight(1f);
+					ib.yearsAtBreastHeightAuto();
+					ib.height(32.2999992f);
 				});
 			});
 			spec4.getLoreyHeightByUtilization().setCoe(0, 24.3451157f);

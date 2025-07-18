@@ -91,7 +91,7 @@ class VriSiteParserTest {
 						hasProperty("siteGenus", is("C")), //
 						hasProperty("siteSpecies", is("CW")), //
 						hasProperty("yearsToBreastHeight", present(closeTo(10.9f))), //
-						hasProperty("breastHeightAge", present(closeTo(189.1f))), //
+						hasProperty("yearsAtBreastHeight", present(closeTo(189.1f))), //
 						hasProperty("siteCurveNumber", present(is(11)))
 				)
 		);
@@ -140,7 +140,7 @@ class VriSiteParserTest {
 								hasProperty("siteGenus", is("C")), //
 								hasProperty("siteSpecies", is("CW")), //
 								hasProperty("yearsToBreastHeight", present(closeTo(10.9f))), //
-								hasProperty("breastHeightAge", present(closeTo(189.1f))), //
+								hasProperty("yearsAtBreastHeight", present(closeTo(189.1f))), //
 								hasProperty("siteCurveNumber", present(is(11)))
 
 						)
@@ -191,7 +191,7 @@ class VriSiteParserTest {
 								hasProperty("siteGenus", is("C")), //
 								hasProperty("siteSpecies", is("CW")), //
 								hasProperty("yearsToBreastHeight", present(closeTo(10.9f))), //
-								hasProperty("breastHeightAge", present(closeTo(189.1f))), //
+								hasProperty("yearsAtBreastHeight", present(closeTo(189.1f))), //
 								hasProperty("siteCurveNumber", present(is(11)))
 						),
 						allOf(
@@ -201,7 +201,7 @@ class VriSiteParserTest {
 								hasProperty("siteGenus", is("H")), //
 								hasProperty("siteSpecies", is("HW")), //
 								hasProperty("yearsToBreastHeight", present(closeTo(9.7f))), //
-								hasProperty("breastHeightAge", present(closeTo(190.3f))), //
+								hasProperty("yearsAtBreastHeight", present(closeTo(190.3f))), //
 								hasProperty("siteCurveNumber", present(is(37)))
 						)
 				)
@@ -253,7 +253,7 @@ class VriSiteParserTest {
 								hasProperty("siteGenus", is("C")), //
 								hasProperty("siteSpecies", is("CW")), //
 								hasProperty("yearsToBreastHeight", present(closeTo(10.9f))), //
-								hasProperty("breastHeightAge", present(closeTo(189.1f))), //
+								hasProperty("yearsAtBreastHeight", present(closeTo(189.1f))), //
 								hasProperty("siteCurveNumber", present(is(11)))
 						),
 						allOf(
@@ -264,7 +264,7 @@ class VriSiteParserTest {
 								hasProperty("siteGenus", is("H")), //
 								hasProperty("siteSpecies", is("HW")), //
 								hasProperty("yearsToBreastHeight", present(closeTo(9.7f))), //
-								hasProperty("breastHeightAge", present(closeTo(190.3f))), //
+								hasProperty("yearsAtBreastHeight", present(closeTo(190.3f))), //
 								hasProperty("siteCurveNumber", present(is(37)))
 						)
 				)
@@ -317,7 +317,7 @@ class VriSiteParserTest {
 						hasProperty("siteGenus", is("C")), //
 						hasProperty("siteSpecies", is("CW")), //
 						hasProperty("yearsToBreastHeight", present(closeTo(10.9f))), //
-						hasProperty("breastHeightAge", present(closeTo(189.1f))), //
+						hasProperty("yearsAtBreastHeight", present(closeTo(189.1f))), //
 						hasProperty("siteCurveNumber", present(is(11)))
 				)
 		);
@@ -335,7 +335,7 @@ class VriSiteParserTest {
 						hasProperty("siteGenus", is("H")), //
 						hasProperty("siteSpecies", is("HW")), //
 						hasProperty("yearsToBreastHeight", present(closeTo(9.7f))), //
-						hasProperty("breastHeightAge", present(closeTo(190.3f))), //
+						hasProperty("yearsAtBreastHeight", present(closeTo(190.3f))), //
 						hasProperty("siteCurveNumber", present(is(37)))
 				)
 
@@ -379,7 +379,7 @@ class VriSiteParserTest {
 		assertThat(
 				sites.iterator().next(), allOf(
 						hasProperty("ageTotal", notPresent()), //
-						hasProperty("breastHeightAge", notPresent())
+						hasProperty("yearsAtBreastHeight", notPresent())
 				)
 		);
 
@@ -421,7 +421,7 @@ class VriSiteParserTest {
 		assertThat(
 				sites.iterator().next(), allOf(
 						hasProperty("ageTotal", present(closeTo(20f))), //
-						hasProperty("breastHeightAge", notPresent())
+						hasProperty("yearsAtBreastHeight", notPresent())
 				)
 		);
 
@@ -463,7 +463,7 @@ class VriSiteParserTest {
 		assertThat(
 				sites.iterator().next(), allOf(
 						hasProperty("ageTotal", present(closeTo(20f))), //
-						hasProperty("breastHeightAge", present(closeTo(0f)))
+						hasProperty("yearsAtBreastHeight", present(closeTo(0f)))
 				)
 		);
 

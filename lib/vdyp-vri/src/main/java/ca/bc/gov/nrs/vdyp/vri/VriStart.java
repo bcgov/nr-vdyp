@@ -1272,14 +1272,16 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 
 							site.getAgeTotal().map(x -> x + inc.ageIncrease).ifPresentOrElse(ageTotal -> {
 								iBuilder.ageTotal(ageTotal);
-								iBuilder.breastHeightAge(
+								iBuilder.yearsAtBreastHeight(
 										site.getYearsToBreastHeight()//
-												.map(ytbh -> ageTotal - ytbh)
-												.or(() -> site.getBreastHeightAge().map(bha -> bha + inc.ageIncrease))
+												.map(ytbh -> ageTotal - ytbh).or(
+														() -> site.getYearsAtBreastHeight()
+																.map(bha -> bha + inc.ageIncrease)
+												)
 								);
-							}, () -> iBuilder
-									.breastHeightAge(site.getBreastHeightAge().map(bha -> bha + inc.ageIncrease))
-							);
+							}, () -> iBuilder.yearsAtBreastHeight(
+									site.getYearsAtBreastHeight().map(bha -> bha + inc.ageIncrease)
+							));
 
 						});
 						lBuilder.ageIncrease(inc.ageIncrease());
@@ -1420,21 +1422,27 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 	VriPolygon processBatn(VriPolygon poly) throws FatalProcessingException, PreprocessEstimatedBaseAreaLowException {
 
 		final VriLayer primaryLayer = poly.getLayers().get(LayerType.PRIMARY);
-		final VriSite primarySite = primaryLayer.getPrimarySite()
-				.orElseThrow(() -> new FatalProcessingException("Primary layer does not have a primary site"));
+		final VriSite primarySite = primaryLayer.getPrimarySite().orElseThrow(
+				() -> new FatalProcessingException("Primary layer, " + primaryLayer + ", does not have a primary site")
+		);
 		final Optional<VriLayer> veteranLayer = Utils.optSafe(poly.getLayers().get(LayerType.VETERAN));
 		BecDefinition bec = poly.getBiogeoclimaticZone();
 
-		final float primaryHeight = primarySite.getHeight()
-				.orElseThrow(() -> new FatalProcessingException("Primary site does not have a height"));
-		final float primaryBreastHeightAge = primarySite.getBreastHeightAge()
-				.orElseThrow(() -> new FatalProcessingException("Primary site does not have a breast height age"));
+		final float primaryHeight = primarySite.getHeight().orElseThrow(
+				() -> new FatalProcessingException("Primary site, " + primarySite + ", does not have a height")
+		);
+		final float primaryBreastHeightAge = primarySite.getYearsAtBreastHeight().orElseThrow(
+				() -> new FatalProcessingException(
+						"Primary site, " + primarySite + ", does not have a breast height age"
+				)
+		);
 		final Optional<Float> veteranBaseArea = veteranLayer.flatMap(VriLayer::getBaseArea);
 
 		final int primaryEmpiricalRelationshipParameterIndex = primaryLayer.getEmpiricalRelationshipParameterIndex()
 				.orElseThrow(
 						() -> new FatalProcessingException(
-								"Primary layer does not have an empirical relationship parameter index"
+								"Primary layer, " + primaryLayer
+										+ ", does not have an empirical relationship parameter index"
 						)
 				);
 

@@ -2,7 +2,7 @@ package ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable;
 
 /**
  * All fields (interim and final) for Calculated Cfs Biomass Volume.
- * 
+ *
  * @param cfsBiomassMerch    Merchantable biomass volume
  * @param cfsBiomassNonMerch Non-Merchantable biomass volume
  * @param cfsBiomassSapling  Sapling biomass volume

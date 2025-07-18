@@ -31,23 +31,24 @@ class VdypLayerTest {
 
 	@Test
 	void build() {
-		var result = VdypLayer.build(builder -> {
-			builder.polygonIdentifier("Test", 2024);
-			builder.layerType(LayerType.PRIMARY);
+		var result = VdypLayer.build(lb -> {
+			lb.polygonIdentifier("Test", 2024);
+			lb.layerType(LayerType.PRIMARY);
 
-			builder.primaryGenus("PL");
+			lb.primaryGenus("PL");
 
-			builder.addSpecies(specBuilder -> {
-				specBuilder.genus("PL", 12);
-				specBuilder.percentGenus(100);
-				specBuilder.volumeGroup(-1);
-				specBuilder.decayGroup(-1);
-				specBuilder.breakageGroup(-1);
-				specBuilder.addSite(siteBuilder -> {
-					siteBuilder.height(10f);
-					siteBuilder.ageTotal(42f);
-					siteBuilder.yearsToBreastHeight(2f);
-					siteBuilder.siteCurveNumber(0);
+			lb.addSpecies(sb -> {
+				sb.genus("PL", 12);
+				sb.percentGenus(100);
+				sb.volumeGroup(-1);
+				sb.decayGroup(-1);
+				sb.breakageGroup(-1);
+				sb.addSite(ib -> {
+					ib.height(10f);
+					ib.ageTotal(42f);
+					ib.yearsToBreastHeight(2f);
+					ib.yearsAtBreastHeightAuto();
+					ib.siteCurveNumber(0);
 				});
 			});
 		});
@@ -68,43 +69,46 @@ class VdypLayerTest {
 
 			builder.primaryGenus("PL");
 
-			builder.addSpecies(specBuilder -> {
-				specBuilder.genus("AC", 1);
-				specBuilder.percentGenus(45);
-				specBuilder.volumeGroup(-1);
-				specBuilder.decayGroup(-1);
-				specBuilder.breakageGroup(-1);
-				specBuilder.addSite(siteBuilder -> {
-					siteBuilder.height(10f);
-					siteBuilder.ageTotal(42f);
-					siteBuilder.yearsToBreastHeight(2f);
-					siteBuilder.siteCurveNumber(0);
+			builder.addSpecies(sb -> {
+				sb.genus("AC", 1);
+				sb.percentGenus(45);
+				sb.volumeGroup(-1);
+				sb.decayGroup(-1);
+				sb.breakageGroup(-1);
+				sb.addSite(ib -> {
+					ib.height(10f);
+					ib.ageTotal(42f);
+					ib.yearsToBreastHeight(2f);
+					ib.yearsAtBreastHeightAuto();
+					ib.siteCurveNumber(0);
 				});
 			});
-			builder.addSpecies(specBuilder -> {
-				specBuilder.genus("PL", 12);
-				specBuilder.percentGenus(45);
-				specBuilder.volumeGroup(-1);
-				specBuilder.decayGroup(-1);
-				specBuilder.breakageGroup(-1);
-				specBuilder.addSite(siteBuilder -> {
-					siteBuilder.height(10f);
-					siteBuilder.ageTotal(42f);
-					siteBuilder.yearsToBreastHeight(2f);
-					siteBuilder.siteCurveNumber(0);
+			builder.addSpecies(sb -> {
+				sb.genus("PL", 12);
+				sb.percentGenus(45);
+				sb.volumeGroup(-1);
+				sb.decayGroup(-1);
+				sb.breakageGroup(-1);
+				sb.addSite(ib -> {
+					ib.height(10f);
+					ib.ageTotal(42f);
+					ib.yearsToBreastHeight(2f);
+					ib.yearsAtBreastHeightAuto();
+					ib.siteCurveNumber(0);
 				});
 			});
-			builder.addSpecies(specBuilder -> {
-				specBuilder.genus("B", 8);
-				specBuilder.percentGenus(10);
-				specBuilder.volumeGroup(-1);
-				specBuilder.decayGroup(-1);
-				specBuilder.breakageGroup(-1);
-				specBuilder.addSite(siteBuilder -> {
-					siteBuilder.height(10f);
-					siteBuilder.ageTotal(42f);
-					siteBuilder.yearsToBreastHeight(2f);
-					siteBuilder.siteCurveNumber(0);
+			builder.addSpecies(sb -> {
+				sb.genus("B", 8);
+				sb.percentGenus(10);
+				sb.volumeGroup(-1);
+				sb.decayGroup(-1);
+				sb.breakageGroup(-1);
+				sb.addSite(ib -> {
+					ib.height(10f);
+					ib.ageTotal(42f);
+					ib.yearsToBreastHeight(2f);
+					ib.yearsAtBreastHeightAuto();
+					ib.siteCurveNumber(0);
 				});
 			});
 		});
@@ -140,22 +144,23 @@ class VdypLayerTest {
 			builder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
 		});
 
-		var result = VdypLayer.build(poly, builder -> {
-			builder.layerType(LayerType.PRIMARY);
+		var result = VdypLayer.build(poly, lb -> {
+			lb.layerType(LayerType.PRIMARY);
 
-			builder.primaryGenus("PL");
+			lb.primaryGenus("PL");
 
-			builder.addSpecies(specBuilder -> {
-				specBuilder.genus("PL", 12);
-				specBuilder.percentGenus(100);
-				specBuilder.volumeGroup(-1);
-				specBuilder.decayGroup(-1);
-				specBuilder.breakageGroup(-1);
-				specBuilder.addSite(siteBuilder -> {
-					siteBuilder.height(10f);
-					siteBuilder.ageTotal(42f);
-					siteBuilder.yearsToBreastHeight(2f);
-					siteBuilder.siteCurveNumber(0);
+			lb.addSpecies(sb -> {
+				sb.genus("PL", 12);
+				sb.percentGenus(100);
+				sb.volumeGroup(-1);
+				sb.decayGroup(-1);
+				sb.breakageGroup(-1);
+				sb.addSite(ib -> {
+					ib.height(10f);
+					ib.ageTotal(42f);
+					ib.yearsToBreastHeight(2f);
+					ib.yearsAtBreastHeightAuto();
+					ib.siteCurveNumber(0);
 				});
 			});
 		});
@@ -176,29 +181,30 @@ class VdypLayerTest {
 		EasyMock.expect(mock.getLayerType()).andStubReturn(LayerType.PRIMARY);
 		EasyMock.expect(mock.getGenus()).andStubReturn("B");
 		EasyMock.replay(mock);
-		var result = VdypLayer.build(builder -> {
-			builder.polygonIdentifier("Test", 2024);
-			builder.layerType(LayerType.PRIMARY);
-			builder.addSpecies(specBuilder -> {
-				specBuilder.genus("PL", 12);
-				specBuilder.percentGenus(100);
-				specBuilder.volumeGroup(-1);
-				specBuilder.decayGroup(-1);
-				specBuilder.breakageGroup(-1);
-				specBuilder.addSite(siteBuilder -> {
-					siteBuilder.height(10f);
-					siteBuilder.ageTotal(42f);
-					siteBuilder.yearsToBreastHeight(2f);
-					siteBuilder.siteCurveNumber(0);
+		var result = VdypLayer.build(lb -> {
+			lb.polygonIdentifier("Test", 2024);
+			lb.layerType(LayerType.PRIMARY);
+			lb.addSpecies(sb -> {
+				sb.genus("PL", 12);
+				sb.percentGenus(100);
+				sb.volumeGroup(-1);
+				sb.decayGroup(-1);
+				sb.breakageGroup(-1);
+				sb.addSite(ib -> {
+					ib.height(10f);
+					ib.ageTotal(42f);
+					ib.yearsToBreastHeight(2f);
+					ib.yearsAtBreastHeightAuto();
+					ib.siteCurveNumber(0);
 				});
 			});
 
-			builder.addSpecies(specBuilder -> {
-				specBuilder.genus("B", 3);
-				specBuilder.percentGenus(90f);
-				specBuilder.volumeGroup(10);
-				specBuilder.decayGroup(10);
-				specBuilder.breakageGroup(10);
+			lb.addSpecies(sb -> {
+				sb.genus("B", 3);
+				sb.percentGenus(90f);
+				sb.volumeGroup(10);
+				sb.decayGroup(10);
+				sb.breakageGroup(10);
 			});
 		});
 		assertThat(result, hasProperty("species", hasEntry(is("B"), hasProperty("genus", is("B")))));
@@ -259,10 +265,10 @@ class VdypLayerTest {
 		var result = VdypLayer.build(builder -> {
 
 			builder.adapt(toCopy);
-			builder.adaptSpecies(toCopy, (siteBuilder, site) -> {
-				siteBuilder.volumeGroup(1);
-				siteBuilder.decayGroup(2);
-				siteBuilder.breakageGroup(3);
+			builder.adaptSpecies(toCopy, (ib, site) -> {
+				ib.volumeGroup(1);
+				ib.decayGroup(2);
+				ib.breakageGroup(3);
 			});
 
 		});

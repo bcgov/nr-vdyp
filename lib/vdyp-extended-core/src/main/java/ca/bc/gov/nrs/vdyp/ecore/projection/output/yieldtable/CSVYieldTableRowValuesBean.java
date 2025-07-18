@@ -38,11 +38,10 @@ public class CSVYieldTableRowValuesBean implements YieldTableRowBean {
 			var filteredFields = Stream.of(unfilteredFields) //
 					.filter(m -> m.isAnnotationPresent(CsvBindByPosition.class)) //
 					.filter(
-							m -> !m.isAnnotationPresent(OptionalField.class)
-									|| isActiveCategory(
-											activeCategories, m.getAnnotation(OptionalField.class).category(),
-											m.getAnnotation(OptionalField.class).categories()
-									)
+							m -> !m.isAnnotationPresent(OptionalField.class) || isActiveCategory(
+									activeCategories, m.getAnnotation(OptionalField.class).category(),
+									m.getAnnotation(OptionalField.class).categories()
+							)
 					) //
 					.collect(Collectors.toList());
 
