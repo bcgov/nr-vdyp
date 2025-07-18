@@ -1331,6 +1331,7 @@ class VdypStartApplicationTest {
 							ib.height(38.2999992f);
 							ib.siteIndex(28.6000004f);
 							ib.yearsToBreastHeight(5.4000001f);
+							ib.yearsAtBreastHeightAuto();
 							ib.siteCurveNumber(34);
 						});
 					});
@@ -1368,6 +1369,7 @@ class VdypStartApplicationTest {
 							ib.height(10.1667995f); // Altered this in the debugger while running VDYP7
 							ib.siteIndex(28.6000004f);
 							ib.yearsToBreastHeight(5.4000001f);
+							ib.yearsAtBreastHeightAuto();
 							ib.siteCurveNumber(34);
 						});
 					});
@@ -1405,6 +1407,7 @@ class VdypStartApplicationTest {
 							ib.height(38.2999992f);
 							ib.siteIndex(28.6000004f);
 							ib.yearsToBreastHeight(5.4000001f);
+							ib.yearsAtBreastHeightAuto();
 							ib.siteCurveNumber(34);
 						});
 					});
@@ -1442,6 +1445,7 @@ class VdypStartApplicationTest {
 							ib.height(7f); // Altered this in the debugger while running VDYP7
 							ib.siteIndex(28.6000004f);
 							ib.yearsToBreastHeight(5.4000001f);
+							ib.yearsAtBreastHeightAuto();
 							ib.siteCurveNumber(34);
 						});
 					});
@@ -1489,6 +1493,7 @@ class VdypStartApplicationTest {
 							ib.height(38.2999992f);
 							ib.siteIndex(28.6000004f);
 							ib.yearsToBreastHeight(5.4000001f);
+							ib.yearsAtBreastHeightAuto();
 							ib.siteCurveNumber(34);
 						});
 					});
@@ -1527,6 +1532,7 @@ class VdypStartApplicationTest {
 							ib.height(4.74730005f);
 							ib.siteIndex(28.6000004f);
 							ib.yearsToBreastHeight(5.4000001f);
+							ib.yearsAtBreastHeightAuto();
 							ib.siteCurveNumber(34);
 						});
 					});
@@ -1565,6 +1571,7 @@ class VdypStartApplicationTest {
 							ib.height(80f);
 							ib.siteIndex(28.6000004f);
 							ib.yearsToBreastHeight(5.4000001f);
+							ib.yearsAtBreastHeightAuto();
 							ib.siteCurveNumber(34);
 						});
 					});
@@ -1633,6 +1640,7 @@ class VdypStartApplicationTest {
 								ib.height(15f);
 								ib.siteIndex(5f);
 								ib.yearsToBreastHeight(8.5f);
+								ib.yearsAtBreastHeightAuto();
 							});
 						});
 						lb.addSpecies(sb -> {
@@ -1692,6 +1700,7 @@ class VdypStartApplicationTest {
 								ib.height(24.3f);
 								ib.siteIndex(28.7f);
 								ib.yearsToBreastHeight(7.1f);
+								ib.yearsAtBreastHeightAuto();
 							});
 
 						});
@@ -1714,6 +1723,7 @@ class VdypStartApplicationTest {
 								ib.height(26.2f);
 								ib.siteIndex(16.7f);
 								ib.yearsToBreastHeight(7.1f);
+								ib.yearsAtBreastHeightAuto();
 							});
 						});
 					});
@@ -1866,10 +1876,11 @@ class VdypStartApplicationTest {
 						sb.treesPerHectare(152.482513f);
 						sb.quadMeanDiameter(21.4343796f);
 						sb.wholeStemVolume(470.388489f);
-						sb.addSite(siteBuilder -> {
-							siteBuilder.ageTotal(55f);
-							siteBuilder.yearsToBreastHeight(1f);
-							siteBuilder.height(31f);
+						sb.addSite(ib -> {
+							ib.ageTotal(55f);
+							ib.yearsToBreastHeight(1f);
+							ib.yearsAtBreastHeightAuto();
+							ib.height(31f);
 						});
 
 					});
@@ -2001,6 +2012,7 @@ class VdypStartApplicationTest {
 						sb.addSite(siteBuilder -> {
 							siteBuilder.ageTotal(200f);
 							siteBuilder.yearsToBreastHeight(9.7f);
+							siteBuilder.yearsAtBreastHeightAuto();
 							siteBuilder.height(34f);
 							siteBuilder.siteCurveNumber(37);
 							siteBuilder.siteIndex(14.6f);
@@ -2055,8 +2067,8 @@ class VdypStartApplicationTest {
 				);
 
 				assertThat(layer, hasProperty("ageTotal", present(closeTo(200))));
-				assertThat(layer, hasProperty("breastHeightAge", present(closeTo(190.3f))));
 				assertThat(layer, hasProperty("yearsToBreastHeight", present(closeTo(9.7f))));
+				assertThat(layer, hasProperty("yearsAtBreastHeight", present(closeTo(190.3f))));
 
 				assertThat(layer, hasProperty("primaryGenus", present(is("H"))));
 
@@ -2395,16 +2407,17 @@ class VdypStartApplicationTest {
 			spec1.getQuadraticMeanDiameterByUtilization().setSmall(6.60561657f);
 			spec1.getWholeStemVolumeByUtilization().setSmall(0.0411359742f);
 
-			var spec2 = VdypSpecies.build(layer, builder -> {
-				builder.genus("PL", controlMap);
-				builder.percentGenus(88.9432907f);
-				builder.volumeGroup(54);
-				builder.decayGroup(42);
-				builder.breakageGroup(24);
-				builder.addSite(siteBuilder -> {
-					siteBuilder.ageTotal(55f);
-					siteBuilder.yearsToBreastHeight(3.5f);
-					siteBuilder.height(20f);
+			var spec2 = VdypSpecies.build(layer, lb -> {
+				lb.genus("PL", controlMap);
+				lb.percentGenus(88.9432907f);
+				lb.volumeGroup(54);
+				lb.decayGroup(42);
+				lb.breakageGroup(24);
+				lb.addSite(ib -> {
+					ib.ageTotal(55f);
+					ib.yearsToBreastHeight(3.5f);
+					ib.yearsAtBreastHeightAuto();
+					ib.height(20f);
 				});
 			});
 
@@ -2555,22 +2568,23 @@ class VdypStartApplicationTest {
 	TestLayer getTestPrimaryLayer(
 			PolygonIdentifier polygonId, Consumer<TestLayer.Builder> mutator, Consumer<TestSite.Builder> siteMutator
 	) {
-		var result = TestLayer.build(builder -> {
-			builder.polygonIdentifier(polygonId);
-			builder.layerType(LayerType.PRIMARY);
-			builder.addSpecies(specBuilder -> {
-				specBuilder.genus("B", controlMap);
-				specBuilder.addSite(siteBuilder -> {
-					siteBuilder.ageTotal(8f);
-					siteBuilder.yearsToBreastHeight(7f);
-					siteBuilder.height(6f);
-					siteBuilder.siteIndex(5f);
-					siteMutator.accept(siteBuilder);
+		var result = TestLayer.build(lb -> {
+			lb.polygonIdentifier(polygonId);
+			lb.layerType(LayerType.PRIMARY);
+			lb.addSpecies(sb -> {
+				sb.genus("B", controlMap);
+				sb.addSite(ib -> {
+					ib.ageTotal(8f);
+					ib.yearsToBreastHeight(7f);
+					ib.yearsAtBreastHeightAuto();
+					ib.height(6f);
+					ib.siteIndex(5f);
+					siteMutator.accept(ib);
 				});
 			});
 
-			builder.crownClosure(0.9f);
-			mutator.accept(builder);
+			lb.crownClosure(0.9f);
+			mutator.accept(lb);
 		});
 
 		return result;
@@ -2579,23 +2593,24 @@ class VdypStartApplicationTest {
 	TestLayer getTestVeteranLayer(
 			PolygonIdentifier polygonId, Consumer<TestLayer.Builder> mutator, Consumer<TestSite.Builder> siteMutator
 	) {
-		var result = TestLayer.build(builder -> {
-			builder.polygonIdentifier(polygonId);
-			builder.layerType(LayerType.VETERAN);
+		var result = TestLayer.build(lb -> {
+			lb.polygonIdentifier(polygonId);
+			lb.layerType(LayerType.VETERAN);
 
-			builder.addSpecies(specBuilder -> {
-				specBuilder.genus("B", controlMap);
-				specBuilder.addSite(siteBuilder -> {
-					siteBuilder.ageTotal(8f);
-					siteBuilder.yearsToBreastHeight(7f);
-					siteBuilder.height(6f);
-					siteBuilder.siteIndex(5f);
-					siteMutator.accept(siteBuilder);
+			lb.addSpecies(sb -> {
+				sb.genus("B", controlMap);
+				sb.addSite(ib -> {
+					ib.ageTotal(8f);
+					ib.yearsToBreastHeight(7f);
+					ib.yearsAtBreastHeightAuto();
+					ib.height(6f);
+					ib.siteIndex(5f);
+					siteMutator.accept(ib);
 				});
 			});
 
-			builder.crownClosure(0.9f);
-			mutator.accept(builder);
+			lb.crownClosure(0.9f);
+			mutator.accept(lb);
 		});
 
 		return result;

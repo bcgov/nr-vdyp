@@ -3,7 +3,9 @@ package ca.bc.gov.nrs.vdyp.fip.model;
 import java.util.Optional;
 import java.util.function.Consumer;
 
+import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.model.BaseVdypSite;
+import ca.bc.gov.nrs.vdyp.model.BaseVdypSite.Builder;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
 
@@ -14,9 +16,12 @@ public class FipSite extends BaseVdypSite {
 	public FipSite(
 			PolygonIdentifier polygonIdentifier, LayerType layer, String siteGenus, Optional<Integer> siteCurveNumber,
 			Optional<Float> siteIndex, Optional<Float> height, Optional<Float> ageTotal,
-			Optional<Float> yearsToBreastHeight, Optional<String> siteSpecies
+			Optional<Float> yearsToBreastHeight, Optional<Float> yearsAtBreastHeight, Optional<String> siteSpecies
 	) {
-		super(polygonIdentifier, layer, siteGenus, siteCurveNumber, siteIndex, height, ageTotal, yearsToBreastHeight);
+		super(
+				polygonIdentifier, layer, siteGenus, siteCurveNumber, siteIndex, height, ageTotal, yearsToBreastHeight,
+				yearsAtBreastHeight
+		);
 		this.siteSpecies = siteSpecies;
 	}
 
@@ -61,6 +66,7 @@ public class FipSite extends BaseVdypSite {
 					this.height, //
 					this.ageTotal, //
 					this.yearsToBreastHeight, //
+					this.yearsAtBreastHeight, //
 					this.siteSpecies //
 			);
 		}

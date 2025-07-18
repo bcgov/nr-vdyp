@@ -12,11 +12,11 @@ public class TestSite extends BaseVdypSite {
 	protected TestSite(
 			PolygonIdentifier polygonIdentifier, LayerType layerType, String siteGenus,
 			Optional<Integer> siteCurveNumber, Optional<Float> siteIndex, Optional<Float> height,
-			Optional<Float> ageTotal, Optional<Float> yearsToBreastHeight
+			Optional<Float> ageTotal, Optional<Float> yearsToBreastHeight, Optional<Float> yearsAtBreastHeight
 	) {
 		super(
 				polygonIdentifier, layerType, siteGenus, siteCurveNumber, siteIndex, height, ageTotal,
-				yearsToBreastHeight
+				yearsToBreastHeight, yearsAtBreastHeight
 		);
 	}
 
@@ -40,7 +40,8 @@ public class TestSite extends BaseVdypSite {
 					this.siteIndex, //
 					this.height, //
 					this.ageTotal, //
-					this.yearsToBreastHeight //
+					this.yearsToBreastHeight, //
+					this.yearsAtBreastHeight //
 			);
 		}
 	}

@@ -22,6 +22,7 @@ class VdypSiteTest {
 			builder.siteGenus("B");
 			builder.siteIndex(42.5f);
 			builder.yearsToBreastHeight(5.0f);
+			builder.yearsAtBreastHeightAuto();
 		});
 		assertThat(site1, hasProperty("polygonIdentifier", isPolyId("Test", 2024)));
 		assertThat(site1, hasProperty("layerType", is(LayerType.PRIMARY)));
@@ -45,6 +46,7 @@ class VdypSiteTest {
 			builder.siteGenus("B");
 			builder.siteIndex(42.5f);
 			builder.yearsToBreastHeight(5.0f);
+			builder.yearsAtBreastHeightAuto();
 		});
 
 		assertThat(site1.equals(site2), is(false));
@@ -58,6 +60,7 @@ class VdypSiteTest {
 			builder.siteGenus("C");
 			builder.siteIndex(42.5f);
 			builder.yearsToBreastHeight(5.0f);
+			builder.yearsAtBreastHeightAuto();
 		});
 
 		assertThat(site1.equals(site3), is(false));
@@ -71,6 +74,7 @@ class VdypSiteTest {
 			builder.siteGenus("B");
 			builder.siteIndex(42.5f);
 			builder.yearsToBreastHeight(5.0f);
+			builder.yearsAtBreastHeightAuto();
 		});
 
 		assertThat(site1.equals(site4), is(false));
@@ -103,6 +107,7 @@ class VdypSiteTest {
 			builder.siteGenus("B");
 			builder.siteIndex(42.5f);
 			builder.yearsToBreastHeight(5.0f);
+			builder.yearsAtBreastHeightAuto();
 		});
 
 		var copiedResult = VdypSite.build(builder -> builder.copy(result));

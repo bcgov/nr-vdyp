@@ -652,6 +652,7 @@ public class FipStart extends VdypStartApplication<FipPolygon, FipLayer, FipSpec
 						sb.adaptSiteFrom(fipSpec, (ib, fipSite) -> {
 							ib.ageTotal(ageTotal);
 							ib.yearsToBreastHeight(yearsToBreastHeight);
+							ib.yearsAtBreastHeightAuto();
 						});
 					});
 					vs.setLoreyHeightByUtilization(new UtilizationVector(0f, height));

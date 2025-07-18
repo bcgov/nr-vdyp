@@ -159,9 +159,7 @@ public class ProjectionRunnerTest {
 
 	@Test
 	void testAllowBack() throws AbstractProjectionRequestException, IOException {
-		params = new Parameters().ageStart(0).ageEnd(
-				100
-		)
+		params = new Parameters().ageStart(0).ageEnd(100)
 				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.BACK_GROW_ENABLED)
 				.addSelectedExecutionOptionsItem(Parameters.ExecutionOption.DO_ENABLE_PROGRESS_LOGGING);
 		unit = new ProjectionRunner(ProjectionRequestKind.HCSV, "TEST", params, false);

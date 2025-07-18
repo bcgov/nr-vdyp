@@ -1215,7 +1215,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 		float logit = //
 				a0 + //
 						a1 * coast + //
-						a2 * layer.getBreastHeightAge().orElse(0f) + //
+						a2 * layer.getComputedYearsAtBreastHeight().orElse(0f) + //
 						a3 * spec.getLoreyHeightByUtilization().getAll();
 
 		return exp(logit) / (1.0f + exp(logit));
@@ -1363,7 +1363,7 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 				// EMP093
 				estimationMethods.estimateNetDecayVolume(
 						spec.getGenus(), bec.getRegion(), UtilizationClass.ALL, adjustCloseUtil, spec.getDecayGroup(),
-						vdypLayer.getBreastHeightAge().orElse(0f), quadMeanDiameterUtil, closeVolumeUtil,
+						vdypLayer.getComputedYearsAtBreastHeight().orElse(0f), quadMeanDiameterUtil, closeVolumeUtil,
 						closeVolumeNetDecayUtil
 				);
 
@@ -1584,8 +1584,8 @@ public abstract class VdypStartApplication<P extends BaseVdypPolygon<L, Optional
 				// EMP093
 				estimationMethods.estimateNetDecayVolume(
 						vdypSpecies.getGenus(), bec.getRegion(), utilizationClass, adjust, vdypSpecies.getDecayGroup(),
-						vdypLayer.getBreastHeightAge().orElse(0f), quadMeanDiameterUtil, closeUtilizationVolumeUtil,
-						closeUtilizationNetOfDecayUtil
+						vdypLayer.getComputedYearsAtBreastHeight().orElse(0f), quadMeanDiameterUtil,
+						closeUtilizationVolumeUtil, closeUtilizationNetOfDecayUtil
 				);
 
 				adjust.setCoe(4, volumeAdjustCoe.getCoe(4));

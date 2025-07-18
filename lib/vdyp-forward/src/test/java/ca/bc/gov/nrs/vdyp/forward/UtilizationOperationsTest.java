@@ -87,6 +87,7 @@ class UtilizationOperationsTest {
 						tb.height(35.3f);
 						tb.ageTotal(55.0f);
 						tb.yearsToBreastHeight(1.0f);
+						tb.yearsAtBreastHeightAuto();
 						tb.siteCurveNumber(13);
 						tb.layerType(LayerType.PRIMARY);
 						tb.polygonIdentifier(polyId);

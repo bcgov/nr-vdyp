@@ -391,6 +391,7 @@ class Bank {
 				siteBuilder.siteCurveNumber(Utils.optInt(this.siteCurveNumbers[index]));
 				siteBuilder.siteIndex(Utils.optFloat(this.siteIndices[index]));
 				siteBuilder.yearsToBreastHeight(Utils.optFloat(this.yearsToBreastHeight[index]));
+				siteBuilder.yearsAtBreastHeight(Utils.optFloat(this.yearsAtBreastHeight[index]));
 			})), () -> {
 				VdypSite site = VdypSite.build(siteBuilder -> {
 					siteBuilder.polygonIdentifier(species.getPolygonIdentifier());
@@ -401,6 +402,7 @@ class Bank {
 					siteBuilder.siteCurveNumber(Utils.optInt(this.siteCurveNumbers[index]));
 					siteBuilder.siteIndex(Utils.optFloat(this.siteIndices[index]));
 					siteBuilder.yearsToBreastHeight(Utils.optFloat(this.yearsToBreastHeight[index]));
+					siteBuilder.yearsAtBreastHeight(Utils.optFloat(this.yearsAtBreastHeight[index]));
 				});
 
 				speciesBuilder.addSite(site);
