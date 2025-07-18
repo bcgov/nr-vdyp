@@ -79,6 +79,9 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
   const endYear = ref<number | null>(null)
   const yearIncrement = ref<number | null>(null)
 
+  const isForwardGrowEnabled = ref<boolean>(true)
+  const isBackwardGrowEnabled = ref<boolean>(true)
+
   const volumeReported = ref<string[]>([])
   const includeInReport = ref<string[]>([])
   const projectionType = ref<string | null>(null)
@@ -97,6 +100,9 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
     startYear.value = DEFAULTS.DEFAULT_VALUES.START_YEAR
     endYear.value = DEFAULTS.DEFAULT_VALUES.END_YEAR
     yearIncrement.value = DEFAULTS.DEFAULT_VALUES.YEAR_INCREMENT
+    isForwardGrowEnabled.value = DEFAULTS.DEFAULT_VALUES.IS_FORWARD_GROW_ENABLED
+    isBackwardGrowEnabled.value =
+      DEFAULTS.DEFAULT_VALUES.IS_BACKWARD_GROW_ENABLED
     volumeReported.value = DEFAULTS.DEFAULT_VALUES.VOLUME_REPORTED
     projectionType.value = DEFAULTS.DEFAULT_VALUES.PROJECTION_TYPE
     reportTitle.value = DEFAULTS.DEFAULT_VALUES.REPORT_TITLE
@@ -118,6 +124,8 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
     startYear,
     endYear,
     yearIncrement,
+    isForwardGrowEnabled,
+    isBackwardGrowEnabled,
     volumeReported,
     includeInReport,
     projectionType,

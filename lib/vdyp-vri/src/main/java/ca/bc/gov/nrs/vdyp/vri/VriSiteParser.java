@@ -118,7 +118,7 @@ public class VriSiteParser implements ControlMapValueReplacer<StreamingParserFac
 							);
 							siteBuilder.ageTotal(ageTotal);
 							siteBuilder.yearsToBreastHeight(yearsToBreastHeight);
-							siteBuilder.breastHeightAge(
+							siteBuilder.yearsAtBreastHeight(
 									// breastHeightAge can only be 0.0 if ageTotal and yearsToBreastHeight are
 									// both present and within 0.5 of each other. Otherwise 0 means it's not
 									// present. per VDYP7 Fortran

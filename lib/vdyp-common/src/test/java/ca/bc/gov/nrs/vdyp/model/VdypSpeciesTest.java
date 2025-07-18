@@ -155,11 +155,12 @@ class VdypSpeciesTest {
 			builder.volumeGroup(1);
 			builder.decayGroup(2);
 			builder.breakageGroup(3);
-			builder.addSite(siteBuilder -> {
-				siteBuilder.siteCurveNumber(0);
-				siteBuilder.ageTotal(42f);
-				siteBuilder.yearsToBreastHeight(2f);
-				siteBuilder.height(10f);
+			builder.addSite(ib -> {
+				ib.siteCurveNumber(0);
+				ib.ageTotal(42f);
+				ib.yearsToBreastHeight(2f);
+				ib.yearsAtBreastHeightAuto();
+				ib.height(10f);
 			});
 		});
 
@@ -216,6 +217,7 @@ class VdypSpeciesTest {
 			builder.addSite(ib -> {
 				ib.ageTotal(42);
 				ib.yearsToBreastHeight(5);
+				ib.yearsAtBreastHeightAuto();
 				ib.siteCurveNumber(2);
 				ib.siteIndex(5.5f);
 			});

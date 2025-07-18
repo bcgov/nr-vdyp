@@ -11,24 +11,21 @@ import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
 public class VriSite extends BaseVdypSite {
 
 	private final String siteSpecies; // VRISIA/VR_SP64
-	private final Optional<Float> breastHeightAge; // VRISI/VR_SCN
 
 	public VriSite(
 			PolygonIdentifier polygonIdentifier, LayerType layer, String siteGenus, Optional<Integer> siteCurveNumber,
 			Optional<Float> siteIndex, Optional<Float> height, Optional<Float> ageTotal,
 			Optional<Float> yearsToBreastHeight, String siteSpecies, Optional<Float> breastHeightAge
 	) {
-		super(polygonIdentifier, layer, siteGenus, siteCurveNumber, siteIndex, height, ageTotal, yearsToBreastHeight);
+		super(
+				polygonIdentifier, layer, siteGenus, siteCurveNumber, siteIndex, height, ageTotal, yearsToBreastHeight,
+				breastHeightAge
+		);
 		this.siteSpecies = siteSpecies;
-		this.breastHeightAge = breastHeightAge;
 	}
 
 	public String getSiteSpecies() {
 		return siteSpecies;
-	}
-
-	public Optional<Float> getBreastHeightAge() {
-		return breastHeightAge;
 	}
 
 	/**
@@ -47,7 +44,6 @@ public class VriSite extends BaseVdypSite {
 	public static class Builder extends BaseVdypSite.Builder<VriSite> {
 
 		protected Optional<String> siteSpecies = Optional.empty();
-		Optional<Float> breastHeightAge = Optional.empty();
 
 		public Builder siteSpecies(Optional<String> siteSpecies) {
 			this.siteSpecies = siteSpecies;
@@ -56,15 +52,6 @@ public class VriSite extends BaseVdypSite {
 
 		public Builder siteSpecies(String string) {
 			return siteSpecies(Optional.of(string));
-		}
-
-		public Builder breastHeightAge(Optional<Float> breastHeightAge) {
-			this.breastHeightAge = breastHeightAge;
-			return this;
-		}
-
-		public Builder breastHeightAge(float breastHeightAge) {
-			return breastHeightAge(Optional.of(breastHeightAge));
 		}
 
 		@Override
@@ -77,7 +64,6 @@ public class VriSite extends BaseVdypSite {
 		public Builder copy(VriSite toCopy) {
 			super.copy(toCopy);
 			siteSpecies(toCopy.getSiteSpecies());
-			breastHeightAge(toCopy.getBreastHeightAge());
 			return this;
 		}
 
@@ -93,7 +79,7 @@ public class VriSite extends BaseVdypSite {
 					this.ageTotal, //
 					this.yearsToBreastHeight, //
 					this.siteSpecies.get(), //
-					this.breastHeightAge
+					this.yearsAtBreastHeight
 			);
 		}
 	}

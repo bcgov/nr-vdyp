@@ -149,8 +149,7 @@ public class YieldTable implements Closeable {
 	 */
 	public void generateCfsBiomassTable(
 			Polygon polygon, Map<Integer, VdypPolygon> projectionResults, PolygonProjectionState state,
-			LayerReportingInfo layerReportingInfo,
-			boolean doGenerateDetailedTableHeader
+			LayerReportingInfo layerReportingInfo, boolean doGenerateDetailedTableHeader
 	) throws YieldTableGenerationException {
 
 		writer.setCFSCategories(context);
@@ -162,7 +161,7 @@ public class YieldTable implements Closeable {
 
 	/**
 	 * Given the properly set categories generate a yield tale running only the relevant portions.
-	 * 
+	 *
 	 * @param polygon                       the polygon for which a yield table is to be generated
 	 * @param projectionResults             map of year to the result of projecting the polygon to that year
 	 * @param state                         the current state of the (completed) projection of <code>polygon</code>

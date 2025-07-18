@@ -172,6 +172,8 @@ public class VdypSpeciesParser implements ControlMapValueReplacer<Object, String
 
 						var inferredTotalAge = iTotalAge;
 						var inferredYearsToBreastHeight = iYearsToBreastHeight;
+						var inferYearsAtBreastHeight = (yearsAtBreastHeight == null || yearsAtBreastHeight.isNaN()
+								|| yearsAtBreastHeight <= 0f);
 
 						return VdypSpecies.build(speciesBuilder -> {
 							speciesBuilder.sp64DistributionSet(speciesDistributionSet);
@@ -189,6 +191,11 @@ public class VdypSpeciesParser implements ControlMapValueReplacer<Object, String
 									siteBuilder.siteGenus(genus);
 									siteBuilder.siteIndex(siteIndex);
 									siteBuilder.yearsToBreastHeight(inferredYearsToBreastHeight);
+									if (inferYearsAtBreastHeight) {
+										siteBuilder.yearsAtBreastHeightAuto();
+									} else {
+										siteBuilder.yearsAtBreastHeight(yearsAtBreastHeight);
+									}
 								});
 							}
 						});

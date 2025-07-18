@@ -143,31 +143,32 @@ class VdypOutputWriterTest {
 	void testWritePolygon() throws IOException {
 		try (var unit = new VdypOutputWriter(controlMap, fileResolver);) {
 
-			VdypPolygon polygon = VdypPolygon.build(builder -> {
+			VdypPolygon polygon = VdypPolygon.build(pb -> {
 
-				builder.polygonIdentifier("082E004    615       1988");
-				builder.percentAvailable(90f);
-				builder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
-				builder.forestInventoryZone("D");
-				builder.mode(PolygonMode.START);
+				pb.polygonIdentifier("082E004    615       1988");
+				pb.percentAvailable(90f);
+				pb.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+				pb.forestInventoryZone("D");
+				pb.mode(PolygonMode.START);
 			});
-			var layer = VdypLayer.build(polygon, builder -> {
-				builder.polygonIdentifier("082E004    615       1988");
-				builder.layerType(LayerType.PRIMARY);
+			var layer = VdypLayer.build(polygon, lb -> {
+				lb.polygonIdentifier("082E004    615       1988");
+				lb.layerType(LayerType.PRIMARY);
 
-				builder.addSpecies(specBuilder -> {
-					specBuilder.genus("PL", controlMap);
-					specBuilder.percentGenus(100);
-					specBuilder.volumeGroup(1);
-					specBuilder.decayGroup(2);
-					specBuilder.breakageGroup(3);
+				lb.addSpecies(sb -> {
+					sb.genus("PL", controlMap);
+					sb.percentGenus(100);
+					sb.volumeGroup(1);
+					sb.decayGroup(2);
+					sb.breakageGroup(3);
 
-					specBuilder.addSite(siteBuilder -> {
-						siteBuilder.height(15f);
-						siteBuilder.siteIndex(14.7f);
-						siteBuilder.ageTotal(60f);
-						siteBuilder.yearsToBreastHeight(8.5f);
-						siteBuilder.siteCurveNumber(0);
+					sb.addSite(ib -> {
+						ib.height(15f);
+						ib.siteIndex(14.7f);
+						ib.ageTotal(60f);
+						ib.yearsToBreastHeight(8.5f);
+						ib.yearsAtBreastHeightAuto();
+						ib.siteCurveNumber(0);
 					});
 				});
 			});
@@ -188,26 +189,27 @@ class VdypOutputWriterTest {
 	void testWriteSpecies() throws IOException {
 		try (var unit = new VdypOutputWriter(controlMap, fileResolver);) {
 
-			var layer = VdypLayer.build(builder -> {
-				builder.polygonIdentifier("082E004    615       1988");
-				builder.layerType(LayerType.PRIMARY);
+			var layer = VdypLayer.build(lb -> {
+				lb.polygonIdentifier("082E004    615       1988");
+				lb.layerType(LayerType.PRIMARY);
 
-				builder.primaryGenus("PL");
+				lb.primaryGenus("PL");
 
-				builder.addSpecies(specBuilder -> {
-					specBuilder.genus("PL", controlMap);
-					specBuilder.percentGenus(100);
-					specBuilder.volumeGroup(0);
-					specBuilder.decayGroup(0);
-					specBuilder.breakageGroup(0);
-					specBuilder.addSp64Distribution("PL", 100);
+				lb.addSpecies(sb -> {
+					sb.genus("PL", controlMap);
+					sb.percentGenus(100);
+					sb.volumeGroup(0);
+					sb.decayGroup(0);
+					sb.breakageGroup(0);
+					sb.addSp64Distribution("PL", 100);
 
-					specBuilder.addSite(siteBuilder -> {
-						siteBuilder.height(15f);
-						siteBuilder.siteIndex(14.7f);
-						siteBuilder.ageTotal(60f);
-						siteBuilder.yearsToBreastHeight(8.5f);
-						siteBuilder.siteCurveNumber(0);
+					sb.addSite(ib -> {
+						ib.height(15f);
+						ib.siteIndex(14.7f);
+						ib.ageTotal(60f);
+						ib.yearsToBreastHeight(8.5f);
+						ib.yearsAtBreastHeightAuto();
+						ib.siteCurveNumber(0);
 					});
 				});
 			});
@@ -235,22 +237,23 @@ class VdypOutputWriterTest {
 
 				builder.percentAvailable(100f);
 			});
-			var layer = VdypLayer.build(polygon, builder -> {
-				builder.layerType(LayerType.PRIMARY);
+			var layer = VdypLayer.build(polygon, lb -> {
+				lb.layerType(LayerType.PRIMARY);
 
-				builder.addSpecies(specBuilder -> {
-					specBuilder.genus("PL", controlMap);
-					specBuilder.percentGenus(100);
-					specBuilder.volumeGroup(1);
-					specBuilder.decayGroup(2);
-					specBuilder.breakageGroup(3);
+				lb.addSpecies(sb -> {
+					sb.genus("PL", controlMap);
+					sb.percentGenus(100);
+					sb.volumeGroup(1);
+					sb.decayGroup(2);
+					sb.breakageGroup(3);
 
-					specBuilder.addSite(siteBuilder -> {
-						siteBuilder.height(15f);
-						siteBuilder.siteIndex(14.7f);
-						siteBuilder.ageTotal(60f);
-						siteBuilder.yearsToBreastHeight(8.5f);
-						siteBuilder.siteCurveNumber(0);
+					sb.addSite(ib -> {
+						ib.height(15f);
+						ib.siteIndex(14.7f);
+						ib.ageTotal(60f);
+						ib.yearsToBreastHeight(8.5f);
+						ib.yearsAtBreastHeightAuto();
+						ib.siteCurveNumber(0);
 					});
 				});
 
@@ -322,22 +325,23 @@ class VdypOutputWriterTest {
 
 				builder.percentAvailable(100f);
 			});
-			var layer = VdypLayer.build(polygon, builder -> {
-				builder.layerType(LayerType.PRIMARY);
+			var layer = VdypLayer.build(polygon, lb -> {
+				lb.layerType(LayerType.PRIMARY);
 
-				builder.addSpecies(specBuilder -> {
-					specBuilder.genus("PL", controlMap);
-					specBuilder.percentGenus(100);
-					specBuilder.volumeGroup(1);
-					specBuilder.decayGroup(2);
-					specBuilder.breakageGroup(3);
+				lb.addSpecies(sb -> {
+					sb.genus("PL", controlMap);
+					sb.percentGenus(100);
+					sb.volumeGroup(1);
+					sb.decayGroup(2);
+					sb.breakageGroup(3);
 
-					specBuilder.addSite(siteBuilder -> {
-						siteBuilder.height(15f);
-						siteBuilder.siteIndex(14.7f);
-						siteBuilder.ageTotal(60f);
-						siteBuilder.yearsToBreastHeight(8.5f);
-						siteBuilder.siteCurveNumber(0);
+					sb.addSite(ib -> {
+						ib.height(15f);
+						ib.siteIndex(14.7f);
+						ib.ageTotal(60f);
+						ib.yearsToBreastHeight(8.5f);
+						ib.yearsAtBreastHeightAuto();
+						ib.siteCurveNumber(0);
 					});
 				});
 			});
@@ -470,35 +474,36 @@ class VdypOutputWriterTest {
 
 	private VdypPolygon buildTestPolygonAndChildren() {
 
-		VdypPolygon polygon = VdypPolygon.build(builder -> {
+		VdypPolygon polygon = VdypPolygon.build(pb -> {
 
-			builder.polygonIdentifier("082E004    615       1988");
-			builder.percentAvailable(100f);
-			builder.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
-			builder.forestInventoryZone("D");
-			builder.mode(PolygonMode.START);
+			pb.polygonIdentifier("082E004    615       1988");
+			pb.percentAvailable(100f);
+			pb.biogeoclimaticZone(Utils.getBec("IDF", controlMap));
+			pb.forestInventoryZone("D");
+			pb.mode(PolygonMode.START);
 
 		});
 
-		var layer = VdypLayer.build(polygon, builder -> {
-			builder.layerType(LayerType.PRIMARY);
+		var layer = VdypLayer.build(polygon, lb -> {
+			lb.layerType(LayerType.PRIMARY);
 
-			builder.primaryGenus("PL");
+			lb.primaryGenus("PL");
 
-			builder.addSpecies(specBuilder -> {
-				specBuilder.genus("PL", controlMap);
-				specBuilder.percentGenus(100);
-				specBuilder.volumeGroup(0);
-				specBuilder.decayGroup(0);
-				specBuilder.breakageGroup(0);
-				specBuilder.addSp64Distribution("PL", 100);
+			lb.addSpecies(sb -> {
+				sb.genus("PL", controlMap);
+				sb.percentGenus(100);
+				sb.volumeGroup(0);
+				sb.decayGroup(0);
+				sb.breakageGroup(0);
+				sb.addSp64Distribution("PL", 100);
 
-				specBuilder.addSite(siteBuilder -> {
-					siteBuilder.height(15f);
-					siteBuilder.siteIndex(14.7f);
-					siteBuilder.ageTotal(60f);
-					siteBuilder.yearsToBreastHeight(8.5f);
-					siteBuilder.siteCurveNumber(0);
+				sb.addSite(ib -> {
+					ib.height(15f);
+					ib.siteIndex(14.7f);
+					ib.ageTotal(60f);
+					ib.yearsToBreastHeight(8.5f);
+					ib.yearsAtBreastHeightAuto();
+					ib.siteCurveNumber(0);
 				});
 			});
 		});

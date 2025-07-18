@@ -8,9 +8,12 @@ public class VdypSite extends BaseVdypSite {
 	public VdypSite(
 			PolygonIdentifier polygonIdentifier, LayerType layer, String siteGenus, Optional<Integer> siteCurveNumber,
 			Optional<Float> siteIndex, Optional<Float> height, Optional<Float> ageTotal,
-			Optional<Float> yearsToBreastHeight
+			Optional<Float> yearsToBreastHeight, Optional<Float> yearsAtBreastHeight
 	) {
-		super(polygonIdentifier, layer, siteGenus, siteCurveNumber, siteIndex, height, ageTotal, yearsToBreastHeight);
+		super(
+				polygonIdentifier, layer, siteGenus, siteCurveNumber, siteIndex, height, ageTotal, yearsToBreastHeight,
+				yearsAtBreastHeight
+		);
 	}
 
 	/**
@@ -59,7 +62,7 @@ public class VdypSite extends BaseVdypSite {
 		protected VdypSite doBuild() {
 			return new VdypSite(
 					polygonIdentifier.get(), layerType.get(), siteGenus.get(), siteCurveNumber, siteIndex, height,
-					ageTotal, yearsToBreastHeight
+					ageTotal, yearsToBreastHeight, yearsAtBreastHeight
 			);
 		}
 	}

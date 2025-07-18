@@ -3,25 +3,27 @@ import type { Filters } from './filters'
 import { MetadataToOutputEnum } from './metadata-to-output-enum'
 import { OutputFormatEnum } from './output-format-enum'
 import type { ProgressFrequency } from './progress-frequency'
-import { SelectedDebugOptionsEnum } from './selected-debug-options-enum'
-import { SelectedExecutionOptionsEnum } from './selected-execution-options-enum'
+import { DebugOptionsEnum } from './debug-options-enum'
+import { ExecutionOptionsEnum } from './execution-options-enum'
 import type { UtilizationParameter } from './utilization-parameter'
 export interface Parameters {
   outputFormat?: OutputFormatEnum
-  selectedExecutionOptions?: Array<SelectedExecutionOptionsEnum>
-  selectedDebugOptions?: Array<SelectedDebugOptionsEnum>
-  ageStart?: number
-  minAgeStart?: number
-  maxAgeStart?: number
-  ageEnd?: number
-  minAgeEnd?: number
-  maxAgeEnd?: number
-  yearStart?: number
-  yearEnd?: number
-  forceYear?: number
-  ageIncrement?: number
-  minAgeIncrement?: number
-  maxAgeIncrement?: number
+  selectedExecutionOptions?: Array<ExecutionOptionsEnum>
+  excludedExecutionOptions?: Array<ExecutionOptionsEnum>
+  selectedDebugOptions?: Array<DebugOptionsEnum>
+  excludedDebugOptions?: Array<DebugOptionsEnum>
+  ageStart?: number | null
+  minAgeStart?: number | null
+  maxAgeStart?: number | null
+  ageEnd?: number | null
+  minAgeEnd?: number | null
+  maxAgeEnd?: number | null
+  yearStart?: number | null
+  yearEnd?: number | null
+  forceYear?: number | null
+  ageIncrement?: number | null
+  minAgeIncrement?: number | null
+  maxAgeIncrement?: number | null
   combineAgeYearRange?: CombineAgeYearRangeEnum
   progressFrequency?: ProgressFrequency
   metadataToOutput?: MetadataToOutputEnum

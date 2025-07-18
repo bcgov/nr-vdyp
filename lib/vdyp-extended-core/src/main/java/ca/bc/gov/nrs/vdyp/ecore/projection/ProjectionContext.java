@@ -108,7 +108,6 @@ public class ProjectionContext {
 		buildProjectionExecutionStructure();
 	}
 
-
 	public void recordProjectionDetails(
 			Polygon polygon, ProjectionTypeCode projectionType, int projectionStartYear, int firstRequestedYear
 	) {
@@ -332,6 +331,7 @@ public class ProjectionContext {
 		}
 		return yieldTable.get();
 	}
+
 	public Path getExecutionFolder() {
 		if (this.executionFolder == null) {
 			throw new IllegalStateException(
