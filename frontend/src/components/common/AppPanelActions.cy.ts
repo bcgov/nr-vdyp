@@ -3,7 +3,14 @@ import { createVuetify } from 'vuetify'
 import 'vuetify/styles'
 import AppPanelActions from './AppPanelActions.vue'
 
-const vuetify = createVuetify()
+const vuetify = createVuetify({
+  defaults: {
+    global: {
+      // Disable Vuetify transitions globally for faster tests
+      transition: false,
+    },
+  },
+})
 
 describe('AppPanelActions.vue', () => {
   beforeEach(() => {
@@ -69,12 +76,9 @@ describe('AppPanelActions.vue', () => {
     cy.contains('button', 'Edit').should('exist').and('not.be.disabled')
   })
 
-  it('emits events when buttons are clicked', () => {
+  it('emits events when clear button is clicked', () => {
     const onClearSpy = cy.spy().as('clearSpy')
-    const onConfirmSpy = cy.spy().as('confirmSpy')
-    const onEditSpy = cy.spy().as('editSpy')
 
-    // Mount with isConfirmed = false
     mount(AppPanelActions, {
       props: {
         isConfirmEnabled: true,
@@ -85,33 +89,46 @@ describe('AppPanelActions.vue', () => {
       },
       attrs: {
         onClear: onClearSpy,
-        onConfirm: onConfirmSpy,
-        onEdit: onEditSpy,
       },
     })
 
-    // Click Clear button
     cy.contains('button', 'Clear').click()
     cy.get('@clearSpy').should('have.been.called')
+  })
 
-    // Click Confirm button
+  it('emits events when confirm button is clicked', () => {
+    const onConfirmSpy = cy.spy().as('confirmSpy')
+
+    mount(AppPanelActions, {
+      props: {
+        isConfirmEnabled: true,
+        isConfirmed: false,
+      },
+      global: {
+        plugins: [vuetify],
+      },
+      attrs: {
+        onConfirm: onConfirmSpy,
+      },
+    })
+
     cy.contains('button', 'Confirm').click()
     cy.get('@confirmSpy').should('have.been.called')
+  })
 
-    // Re-mount with isConfirmed = true
+  it('emits events when edit button is clicked', () => {
+    const onEditSpy = cy.spy().as('editSpy')
+
     mount(AppPanelActions, {
       props: { isConfirmEnabled: true, isConfirmed: true },
       global: {
         plugins: [vuetify],
       },
       attrs: {
-        onClear: onClearSpy,
-        onConfirm: onConfirmSpy,
         onEdit: onEditSpy,
       },
     })
 
-    // Click Edit button
     cy.contains('button', 'Edit').click({ force: true })
     cy.get('@editSpy').should('have.been.called')
   })

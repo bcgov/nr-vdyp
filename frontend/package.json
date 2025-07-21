@@ -15,10 +15,11 @@
     "format": "prettier --write src/",
     "storybook": "storybook dev -p 6006 --no-open",
     "build-storybook": "storybook build",
+    "optimize": "vite optimize",
     "test:comp-open": "npx cypress open --component --browser chrome",
-    "test:comp": "npx cypress run --component --spec \"src/components/**/*.cy.ts\"",
-    "test:unit": "npx cypress run --component --spec \"src/services/*.cy.ts\",\"src/stores/**/*.cy.ts\",\"src/validation/*.cy.ts\",\"src/utils/*.cy.ts\"",
-    "test:e2e-open": "npx cypress open --e2e --browser chrome"
+    "test:e2e-open": "npx cypress open --e2e --browser chrome",
+    "test:comp": "npm run optimize && npx cypress run --component --spec \"src/components/**/*.cy.ts\"",
+    "test:unit": "npm run optimize && npx cypress run --component --spec \"src/services/*.cy.ts\",\"src/stores/**/*.cy.ts\",\"src/validation/*.cy.ts\",\"src/utils/*.cy.ts\""
   },
   "keywords": [],
   "author": "Vivid Solutions Inc.",
