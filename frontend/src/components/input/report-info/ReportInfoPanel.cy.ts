@@ -33,7 +33,7 @@ describe('ReportInfoPanel.vue', () => {
 
   const mountComponent = (
     overrides = {},
-    modelSelection = CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS,
+    modelSelection: string = CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS,
   ) => {
     const modelParameterStore = useModelParameterStore()
     const fileUploadStore = useFileUploadStore()
@@ -72,7 +72,15 @@ describe('ReportInfoPanel.vue', () => {
       modelParameterStore.reportTitle = 'Sample Report'
     } else {
       fileUploadStore.setDefaultValues()
-      fileUploadStore.confirmPanel(CONSTANTS.FILE_UPLOAD_PANEL.REPORT_INFO)
+      modelParameterStore.confirmPanel(
+        CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO,
+      )
+      modelParameterStore.confirmPanel(
+        CONSTANTS.MODEL_PARAMETER_PANEL.SITE_INFO,
+      )
+      modelParameterStore.confirmPanel(
+        CONSTANTS.MODEL_PARAMETER_PANEL.STAND_INFO,
+      )
 
       fileUploadStore.selectedAgeYearRange = CONSTANTS.AGE_YEAR_RANGE.AGE
       fileUploadStore.startingAge = 10
@@ -95,11 +103,17 @@ describe('ReportInfoPanel.vue', () => {
 
     appStore.modelSelection = modelSelection
 
+    const isModelParametersMode =
+      modelSelection === CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS
+
     mount(ReportInfoPanel, {
       global: {
         plugins: [vuetify],
       },
-      ...overrides,
+      props: {
+        isModelParametersMode,
+        ...overrides,
+      },
     })
 
     return modelSelection === CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS
@@ -201,7 +215,7 @@ describe('ReportInfoPanel.vue', () => {
   })
 
   it('renders correctly with initial state for AGE range (FILE_UPLOAD)', () => {
-    mountComponent({})
+    mountComponent({}, CONSTANTS.MODEL_SELECTION.FILE_UPLOAD)
 
     cy.get('.v-expansion-panel-title')
       .contains('Report Information')
@@ -263,7 +277,7 @@ describe('ReportInfoPanel.vue', () => {
   })
 
   it('changes to Confirm state and renders the Edit button (FILE_UPLOAD)', () => {
-    const store = mountComponent({})
+    const store = mountComponent({}, CONSTANTS.MODEL_SELECTION.FILE_UPLOAD)
 
     cy.get('button').contains('Confirm').click()
 
@@ -275,7 +289,10 @@ describe('ReportInfoPanel.vue', () => {
   })
 
   it('shows a validation error for invalid starting and finishing ages (AGE range)', () => {
-    const store = mountComponent()
+    const store = mountComponent(
+      {},
+      CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS,
+    )
 
     cy.wrap(store).then(() => {
       store.panelState[CONSTANTS.MODEL_PARAMETER_PANEL.REPORT_INFO].editable =
@@ -301,7 +318,10 @@ describe('ReportInfoPanel.vue', () => {
   })
 
   it('shows a validation error for invalid start and end years (YEAR range)', () => {
-    const store = mountComponent()
+    const store = mountComponent(
+      {},
+      CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS,
+    )
 
     cy.wrap(store).then(() => {
       store.panelState[CONSTANTS.MODEL_PARAMETER_PANEL.REPORT_INFO].editable =
@@ -334,7 +354,10 @@ describe('ReportInfoPanel.vue', () => {
   })
 
   it('shows validation error when starting age is out of range (AGE range)', () => {
-    const store = mountComponent()
+    const store = mountComponent(
+      {},
+      CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS,
+    )
 
     cy.wrap(store).then(() => {
       store.panelState[CONSTANTS.MODEL_PARAMETER_PANEL.REPORT_INFO].editable =
@@ -359,7 +382,10 @@ describe('ReportInfoPanel.vue', () => {
   })
 
   it('shows validation error when finishing age is out of range (AGE range)', () => {
-    const store = mountComponent()
+    const store = mountComponent(
+      {},
+      CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS,
+    )
 
     cy.wrap(store).then(() => {
       store.panelState[CONSTANTS.MODEL_PARAMETER_PANEL.REPORT_INFO].editable =
@@ -386,7 +412,10 @@ describe('ReportInfoPanel.vue', () => {
   })
 
   it('shows validation error when age increment is out of range (AGE range)', () => {
-    const store = mountComponent()
+    const store = mountComponent(
+      {},
+      CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS,
+    )
 
     cy.wrap(store).then(() => {
       store.panelState[CONSTANTS.MODEL_PARAMETER_PANEL.REPORT_INFO].editable =
@@ -413,7 +442,10 @@ describe('ReportInfoPanel.vue', () => {
   })
 
   it('shows validation error when start year is out of range (YEAR range)', () => {
-    const store = mountComponent()
+    const store = mountComponent(
+      {},
+      CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS,
+    )
 
     cy.wrap(store).then(() => {
       store.panelState[CONSTANTS.MODEL_PARAMETER_PANEL.REPORT_INFO].editable =
@@ -565,7 +597,7 @@ describe('ReportInfoPanel.vue', () => {
   })
 
   it('disables inputs and buttons when the panel is not editable (FILE_UPLOAD)', () => {
-    const store = mountComponent({})
+    const store = mountComponent({}, CONSTANTS.MODEL_SELECTION.FILE_UPLOAD)
 
     cy.wrap(store).then(() => {
       store.panelState[CONSTANTS.FILE_UPLOAD_PANEL.REPORT_INFO].editable = false
@@ -624,5 +656,19 @@ describe('ReportInfoPanel.vue', () => {
     cy.get(
       '[data-testid="is-backward-grow-enabled"] input[type="checkbox"]',
     ).should('be.disabled')
+  })
+
+  it('passes isModelParametersMode prop correctly (INPUT_MODEL_PARAMETERS)', () => {
+    mountComponent({}, CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS)
+    cy.contains('span.text-h7', 'Minimum DBH Limit by Species Group').should(
+      'be.visible',
+    )
+  })
+
+  it('passes isModelParametersMode prop correctly (FILE_UPLOAD)', () => {
+    mountComponent({}, CONSTANTS.MODEL_SELECTION.FILE_UPLOAD)
+    cy.contains('span.text-h7', 'Minimum DBH Limit by Species Group').should(
+      'not.exist',
+    )
   })
 })

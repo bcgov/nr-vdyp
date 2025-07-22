@@ -1,9 +1,10 @@
+// cypress/support/component.ts
+
 import './commands'
 
 import { mount as cypressMount } from 'cypress/vue'
 import { createVuetify } from 'vuetify'
-import * as components from 'vuetify/components'
-import * as directives from 'vuetify/directives'
+import * as directives from 'vuetify/directives' // Keep directives as they need explicit registration
 import { VApp } from 'vuetify/components'
 import { createPinia } from 'pinia'
 import { h } from 'vue'
@@ -15,8 +16,7 @@ import '@bcgov/bc-sans/css/BCSans.css'
 import '../../src/styles/style.scss'
 
 const vuetify = createVuetify({
-  components,
-  directives,
+  directives, // Only directives; components will be auto-imported via vite-plugin-vuetify
 })
 
 const pinia = createPinia()
@@ -50,7 +50,6 @@ function mountWithVuetify(component: any, options: any = {}) {
   return cypressMount(component, options)
 }
 
-// Type declaration for Cypress commands
 declare global {
   namespace Cypress {
     interface Chainable {

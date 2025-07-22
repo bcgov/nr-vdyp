@@ -129,7 +129,7 @@
           ></v-text-field>
         </v-col>
       </template>
-      <v-col class="col-space-3" />
+      <v-col class="col-space-4" />
       <v-col cols="auto">
         <v-row>
           <v-col cols="auto">
@@ -240,11 +240,44 @@
       </v-col>
     </v-row>
   </div>
+  <div class="ml-4 mt-10" v-if="isModelParametersMode">
+    <div class="ml-n4 mt-n5">
+      <span class="text-h7">Minimum DBH Limit by Species Group</span>
+    </div>
+    <v-container fluid class="ml-n6 mt-5">
+      <v-row v-for="(group, index) in speciesGroups" :key="index">
+        <v-col style="max-width: 5%; padding-top: 0px; padding-left: 20px">
+          {{ `${group.group}` }}
+        </v-col>
+        <v-col cols="8">
+          <v-slider
+            v-model="utilizationSliderValues[index]"
+            :min="0"
+            :max="4"
+            :ticks="utilizationSliderTickLabels"
+            show-ticks="always"
+            step="1"
+            tick-size="0"
+            color="#e0e0e0"
+            thumb-color="#767676"
+            thumb-size="12"
+            track-size="7"
+            track-color="transparent"
+            :disabled="isDisabled"
+            @update:model-value="updateMinDBH(index, $event)"
+          ></v-slider>
+        </v-col>
+      </v-row>
+    </v-container>
+  </div>
 </template>
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
 import { CONSTANTS, DEFAULTS, OPTIONS } from '@/constants'
 import { parseNumberOrNull } from '@/utils/util'
+import { useModelParameterStore } from '@/stores/modelParameterStore'
+
+const modelParameterStore = useModelParameterStore()
 
 const props = defineProps<{
   selectedAgeYearRange: string | null
@@ -261,6 +294,7 @@ const props = defineProps<{
   projectionType: string | null
   reportTitle: string | null
   isDisabled: boolean
+  isModelParametersMode: boolean
 }>()
 
 const emit = defineEmits([
@@ -278,6 +312,12 @@ const emit = defineEmits([
   'update:projectionType',
   'update:reportTitle',
 ])
+
+const utilizationSliderValues = ref<number[]>([])
+
+const utilizationClassOptions = OPTIONS.utilizationClassOptions
+
+const speciesGroups = computed(() => modelParameterStore.speciesGroups)
 
 const selectedAgeYearRange = ref<string>(
   props.selectedAgeYearRange || DEFAULTS.DEFAULT_VALUES.SELECTED_AGE_YEAR_RANGE,
@@ -452,6 +492,19 @@ watch(localProjectionType, (newVal) => {
 
 watch(localReportTitle, (newVal) => emit('update:reportTitle', newVal))
 
+// Watch speciesGroups for changes and sync utilization sliderValues (with immediate: true for initial load)
+watch(
+  speciesGroups,
+  (newGroups) => {
+    utilizationSliderValues.value = newGroups.map((group) =>
+      utilizationClassOptions.findIndex(
+        (opt) => opt.value === group.minimumDBHLimit,
+      ),
+    )
+  },
+  { immediate: true },
+)
+
 // Decide whether to disable the "Backward / Forward" checkbox
 const isForwardGrowDisabled = computed(() => {
   return props.isDisabled
@@ -475,6 +528,14 @@ const getIncludeInReportDisabled = (value: string) => {
   }
   return props.isDisabled
 }
+
+const utilizationSliderTickLabels = utilizationClassOptions.reduce(
+  (acc, opt) => {
+    acc[opt.index] = opt.label
+    return acc
+  },
+  {} as Record<number, string>,
+)
 
 const handleStartingAgeInput = (value: string) => {
   // Convert an empty string to null
@@ -500,5 +561,15 @@ const handleEndYearInput = (value: string) => {
 const handleYearIncrementInput = (value: string) => {
   localYearIncrement.value = parseNumberOrNull(value)
 }
+
+// Update minimum DBH limit in the store based on slider value
+const updateMinDBH = (index: number, value: number) => {
+  if (speciesGroups.value[index]) {
+    const enumValue = utilizationClassOptions[value]?.value
+    if (enumValue !== undefined) {
+      speciesGroups.value[index].minimumDBHLimit = enumValue
+    }
+  }
+}
 </script>
-<style scoped></style>
+<style scoped />

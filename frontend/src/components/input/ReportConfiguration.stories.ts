@@ -1,10 +1,36 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
+import { createPinia, setActivePinia } from 'pinia'
+import { useModelParameterStore } from '@/stores/modelParameterStore'
 import ReportConfiguration from './ReportConfiguration.vue'
-import { DEFAULTS, OPTIONS } from '@/constants'
+import { CONSTANTS, DEFAULTS, OPTIONS } from '@/constants'
+
+const pinia = createPinia()
+setActivePinia(pinia)
 
 const meta: Meta<typeof ReportConfiguration> = {
   title: 'components/input/ReportConfiguration',
   component: ReportConfiguration,
+  decorators: [
+    (story) => {
+      const modelParameterStore = useModelParameterStore()
+      modelParameterStore.setDefaultValues()
+
+      modelParameterStore.confirmPanel(
+        CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO,
+      )
+      modelParameterStore.confirmPanel(
+        CONSTANTS.MODEL_PARAMETER_PANEL.SITE_INFO,
+      )
+      modelParameterStore.confirmPanel(
+        CONSTANTS.MODEL_PARAMETER_PANEL.STAND_INFO,
+      )
+
+      return {
+        components: { story },
+        template: `<div><story /></div>`,
+      }
+    },
+  ],
   tags: ['autodocs'],
   argTypes: {
     startingAge: {
@@ -77,6 +103,12 @@ const meta: Meta<typeof ReportConfiguration> = {
       description: 'Disables the entire form when set to true',
       defaultValue: false,
     },
+    isModelParametersMode: {
+      control: { type: 'boolean' },
+      description:
+        'Toggles visibility of Minimum DBH Limit by Species Group section',
+      defaultValue: true,
+    },
   },
 }
 
@@ -98,6 +130,7 @@ export const DefaultConfiguration: Story = {
     projectionType: DEFAULTS.DEFAULT_VALUES.PROJECTION_TYPE,
     reportTitle: DEFAULTS.DEFAULT_VALUES.REPORT_TITLE,
     isDisabled: false,
+    isModelParametersMode: true,
   },
 }
 
@@ -116,5 +149,25 @@ export const DisabledConfiguration: Story = {
     projectionType: DEFAULTS.DEFAULT_VALUES.PROJECTION_TYPE,
     reportTitle: DEFAULTS.DEFAULT_VALUES.REPORT_TITLE,
     isDisabled: true,
+    isModelParametersMode: true,
+  },
+}
+
+export const FileUploadMode: Story = {
+  args: {
+    startingAge: DEFAULTS.DEFAULT_VALUES.STARTING_AGE,
+    finishingAge: DEFAULTS.DEFAULT_VALUES.FINISHING_AGE,
+    ageIncrement: DEFAULTS.DEFAULT_VALUES.AGE_INCREMENT,
+    startYear: DEFAULTS.DEFAULT_VALUES.START_YEAR,
+    endYear: DEFAULTS.DEFAULT_VALUES.END_YEAR,
+    yearIncrement: DEFAULTS.DEFAULT_VALUES.YEAR_INCREMENT,
+    isForwardGrowEnabled: DEFAULTS.DEFAULT_VALUES.IS_FORWARD_GROW_ENABLED,
+    isBackwardGrowEnabled: DEFAULTS.DEFAULT_VALUES.IS_BACKWARD_GROW_ENABLED,
+    volumeReported: [OPTIONS.volumeReportedOptions[0].value],
+    includeInReport: [],
+    projectionType: DEFAULTS.DEFAULT_VALUES.PROJECTION_TYPE,
+    reportTitle: DEFAULTS.DEFAULT_VALUES.REPORT_TITLE,
+    isDisabled: false,
+    isModelParametersMode: false,
   },
 }

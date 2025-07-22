@@ -330,4 +330,40 @@ describe('ModelParameterStore Unit Tests', () => {
     expect(store.highestPercentSpecies).to.equal('PL')
     expect(store.selectedSiteSpecies).to.equal('PL')
   })
+
+  it('should set minimumDBHLimit from DEFAULTS.SPECIES_GROUP_DEFAULT_UTILIZATION_MAP in updateSpeciesGroup', () => {
+    store.speciesList = [
+      { species: 'PL', percent: '50.0' },
+      { species: 'AC', percent: '50.0' },
+    ]
+    store.updateSpeciesGroup()
+
+    expect(store.speciesGroups.length).to.equal(2)
+    expect(store.speciesGroups[0].group).to.equal('PL')
+    expect(store.speciesGroups[0].percent).to.equal('50.0')
+    expect(store.speciesGroups[0].siteSpecies).to.equal('PL')
+    expect(store.speciesGroups[0].minimumDBHLimit).to.equal(
+      DEFAULTS.SPECIES_GROUP_DEFAULT_UTILIZATION_MAP['PL'],
+    )
+
+    expect(store.speciesGroups[1].group).to.equal('AC')
+    expect(store.speciesGroups[1].percent).to.equal('50.0')
+    expect(store.speciesGroups[1].siteSpecies).to.equal('AC')
+    expect(store.speciesGroups[1].minimumDBHLimit).to.equal(
+      DEFAULTS.SPECIES_GROUP_DEFAULT_UTILIZATION_MAP['AC'],
+    )
+  })
+
+  it('should handle unmapped species group with default minimumDBHLimit', () => {
+    store.speciesList = [{ species: 'XX', percent: '100.0' }]
+    store.updateSpeciesGroup()
+
+    expect(store.speciesGroups.length).to.equal(1)
+    expect(store.speciesGroups[0].group).to.equal('XX')
+    expect(store.speciesGroups[0].percent).to.equal('100.0')
+    expect(store.speciesGroups[0].siteSpecies).to.equal('XX')
+    expect(store.speciesGroups[0].minimumDBHLimit).to.equal(
+      DEFAULTS.SPECIES_GROUP_DEFAULT_UTILIZATION_MAP['XX'] || undefined,
+    )
+  })
 })
