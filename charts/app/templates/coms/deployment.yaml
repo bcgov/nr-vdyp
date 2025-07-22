@@ -43,24 +43,24 @@ spec:
               value: {{ .Values.coms.env.BASICAUTH_USERNAME | quote }}
             - name: BASICAUTH_PASSWORD
               value: {{ .Values.coms.env.BASICAUTH_PASSWORD | quote }}
-            - name: DB_HOST
-              value: {{ .Values.coms.env.DB_HOST | quote }}
-            - name: DB_PORT
-              value: {{ .Values.coms.env.DB_PORT | quote }}
-            - name: DB_USERNAME
-              value: {{ .Values.coms.env.DB_USERNAME | quote }}
-            - name: DB_PASSWORD
-              value: {{ .Values.coms.env.DB_PASSWORD | quote }}
-            - name: DB_DATABASE
-              value: {{ .Values.coms.env.DB_DATABASE | quote }}
-            - name: KC_ENABLED
-              value: {{ .Values.coms.env.KC_ENABLED | quote }}
-            - name: KC_PUBLICKEY
-              value: {{ .Values.coms.env.KC_PUBLICKEY | quote }}
-            - name: KC_REALM
-              value: {{ .Values.coms.env.KC_REALM | quote }}
-            - name: KC_SERVERURL
-              value: {{ .Values.coms.env.KC_SERVERURL | quote }}
+#            - name: DB_HOST
+#              value: {{ .Values.coms.env.DB_HOST | quote }}
+#            - name: DB_PORT
+#              value: {{ .Values.coms.env.DB_PORT | quote }}
+#            - name: DB_USERNAME
+#              value: {{ .Values.coms.env.DB_USERNAME | quote }}
+#            - name: DB_PASSWORD
+#              value: {{ .Values.coms.env.DB_PASSWORD | quote }}
+#            - name: DB_DATABASE
+#              value: {{ .Values.coms.env.DB_DATABASE | quote }}
+#            - name: KC_ENABLED
+#              value: {{ .Values.coms.env.KC_ENABLED | quote }}
+#            - name: KC_PUBLICKEY
+#              value: {{ .Values.coms.env.KC_PUBLICKEY | quote }}
+#            - name: KC_REALM
+#              value: {{ .Values.coms.env.KC_REALM | quote }}
+#            - name: KC_SERVERURL
+#              value: {{ .Values.coms.env.KC_SERVERURL | quote }}
           ports:
             - containerPort: {{ .Values.coms.service.port }}
           readinessProbe:
