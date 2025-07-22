@@ -18,6 +18,12 @@ spec:
       containers:
         - name: {{ include "coms.fullname" . }}
           image: "{{ .Values.coms.image.repository }}:{{ .Values.coms.image.tag }}"
+          command:
+            - sh
+            - -c
+            - |
+              npm run migrate &&
+              npm start
           imagePullPolicy: Always
           envFrom:
             - secretRef:
