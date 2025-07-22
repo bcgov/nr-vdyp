@@ -150,13 +150,17 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     }
 
     // Convert groupMap to speciesGroups array
-    speciesGroups.value = Object.keys(groupMap).map((key) => ({
-      group: BIZCONSTANTS.SPECIES_GROUP_MAP[key] || key,
-      percent: groupMap[key].toFixed(
-        CONSTANTS.NUM_INPUT_LIMITS.SPECIES_PERCENT_DECIMAL_NUM,
-      ),
-      siteSpecies: key,
-    }))
+    speciesGroups.value = Object.keys(groupMap).map((key) => {
+      const group = BIZCONSTANTS.SPECIES_GROUP_MAP[key] || key
+      return {
+        group,
+        percent: groupMap[key].toFixed(
+          CONSTANTS.NUM_INPUT_LIMITS.SPECIES_PERCENT_DECIMAL_NUM,
+        ),
+        siteSpecies: key,
+        minimumDBHLimit: DEFAULTS.SPECIES_GROUP_DEFAULT_UTILIZATION_MAP[group],
+      }
+    })
 
     speciesGroups.value.sort(
       (a, b) => parseFloat(b.percent) - parseFloat(a.percent),
@@ -208,10 +212,6 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     ]
 
     updateSpeciesGroup()
-
-    speciesGroups.value = speciesGroups.value.map((group) => ({
-      ...group,
-    }))
 
     becZone.value = DEFAULTS.DEFAULT_VALUES.BEC_ZONE
     siteSpeciesValues.value = DEFAULTS.DEFAULT_VALUES.SITE_SPECIES_VALUES

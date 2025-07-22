@@ -183,6 +183,20 @@ input[type='number']::-webkit-outer-spin-button {
   opacity: 1;
 }
 
+/* SLIDER */
+.v-slider-track__tick-label {
+  top: -50px; /* Move the label to the top of the slider */
+}
+
+.v-slider-track__fill {
+  display: none; /* Hide the tracking line */
+}
+
+.v-slider-track {
+  border: 2px solid #e0e0e0;
+  background-color: transparent !important;
+}
+
 /* etc */
 
 .readonly-text {
@@ -217,6 +231,10 @@ input[type='number']::-webkit-outer-spin-button {
 
 .col-space-3 {
   max-width: 3%;
+}
+
+.col-space-4 {
+  max-width: 4%;
 }
 
 .col-space-6 {

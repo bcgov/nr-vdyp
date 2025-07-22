@@ -1,5 +1,5 @@
-import { ValueEnum } from './value-enum'
+import { UtilizationClassSetEnum } from './utilization-class-set-enum'
 export interface UtilizationParameter {
   speciesName?: string
-  value?: ValueEnum
+  utilizationClass?: UtilizationClassSetEnum
 }

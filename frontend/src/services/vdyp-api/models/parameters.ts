@@ -28,5 +28,5 @@ export interface Parameters {
   progressFrequency?: ProgressFrequency
   metadataToOutput?: MetadataToOutputEnum
   filters?: Filters
-  utils?: Array<UtilizationParameter>
+  utils?: Array<UtilizationParameter> // Species Utilization Level
 }

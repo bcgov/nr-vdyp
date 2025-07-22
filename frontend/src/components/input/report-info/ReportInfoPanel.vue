@@ -42,6 +42,7 @@
               :projectionType="currentStore.projectionType"
               :reportTitle="currentStore.reportTitle"
               :isDisabled="!isConfirmEnabled"
+              :isModelParametersMode="isModelParametersMode"
               @update:selectedAgeYearRange="handleSelectedAgeYearRangeUpdate"
               @update:startingAge="handleStartingAgeUpdate"
               @update:finishingAge="handleFinishingAgeUpdate"
@@ -115,6 +116,12 @@ const isConfirmEnabled = computed(
 )
 const isConfirmed = computed(
   () => currentStore.value.panelState[panelName.value].confirmed,
+)
+
+const isModelParametersMode = computed(
+  () =>
+    appStore.modelSelection ===
+    CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS,
 )
 
 const handleSelectedAgeYearRangeUpdate = (value: string) => {
