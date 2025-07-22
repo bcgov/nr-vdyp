@@ -1,0 +1,79 @@
+{{- if .Values.coms.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "common.fullname" (dict "Release" .Release "Chart" .Chart "Values" .Values "Name" "coms") }}
+  labels:
+    app.kubernetes.io/name: coms
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.coms.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: coms
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: coms
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: coms
+          image: "{{ .Values.coms.image.repository }}:{{ .Values.coms.image.tag }}"
+          imagePullPolicy: Always
+          envFrom:
+            - secretRef:
+                name: {{ .Release.Name }}
+          env:
+            - name: OBJECTSTORAGE_ENABLED
+              value: {{ .Values.coms.env.OBJECTSTORAGE_ENABLED | quote }}
+            - name: OBJECTSTORAGE_ACCESSKEYID
+              value: {{ .Values.coms.env.OBJECTSTORAGE_ACCESSKEYID | quote }}
+            - name: OBJECTSTORAGE_SECRETACCESSKEY
+              value: {{ .Values.coms.env.OBJECTSTORAGE_SECRETACCESSKEY | quote }}
+            - name: OBJECTSTORAGE_BUCKET
+              value: {{ .Values.coms.env.OBJECTSTORAGE_BUCKET | quote }}
+            - name: OBJECTSTORAGE_ENDPOINT
+              value: {{ .Values.coms.env.OBJECTSTORAGE_ENDPOINT | quote }}
+            - name: OBJECTSTORAGE_KEY
+              value: {{ .Values.coms.env.OBJECTSTORAGE_KEY | quote }}
+            - name: S3ACCESSMODE_ENABLES
+              value: {{ .Values.coms.env.S3ACCESSMODE_ENABLES | quote }}
+            - name: BASICAUTH_ENABLED
+              value: {{ .Values.coms.env.BASICAUTH_ENABLED | quote }}
+            - name: BASICAUTH_USERNAME
+              value: {{ .Values.coms.env.BASICAUTH_USERNAME | quote }}
+            - name: BASICAUTH_PASSWORD
+              value: {{ .Values.coms.env.BASICAUTH_PASSWORD | quote }}
+            - name: DB_HOST
+              value: {{ .Values.coms.env.DB_HOST | quote }}
+            - name: DB_PORT
+              value: {{ .Values.coms.env.DB_PORT | quote }}
+            - name: DB_USERNAME
+              value: {{ .Values.coms.env.DB_USERNAME | quote }}
+            - name: DB_PASSWORD
+              value: {{ .Values.coms.env.DB_PASSWORD | quote }}
+            - name: DB_DATABASE
+              value: {{ .Values.coms.env.DB_DATABASE | quote }}
+            - name: KC_ENABLED
+              value: {{ .Values.coms.env.KC_ENABLED | quote }}
+            - name: KC_PUBLICKEY
+              value: {{ .Values.coms.env.KC_PUBLICKEY | quote }}
+            - name: KC_REALM
+              value: {{ .Values.coms.env.KC_REALM | quote }}
+            - name: KC_SERVERURL
+              value: {{ .Values.coms.env.KC_SERVERURL | quote }}
+          ports:
+            - containerPort: {{ .Values.coms.service.port }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.coms.service.port }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.coms.service.port }}
+          resources:
+            {{- toYaml .Values.coms.resources | nindent 12 }}
+{{- end }}
