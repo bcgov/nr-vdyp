@@ -129,6 +129,7 @@ jobs:
       # Deploy Helm chart as atomic, with timeout
       - name: Atomic Helm Deployment
         id: helm_upgrade
+        continue-on-error: true
         working-directory: ${{ inputs.directory }}
         run: |
           # Helm upgrade/rollout - atomic, timeout
