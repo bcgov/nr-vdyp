@@ -9,14 +9,14 @@ on:
       - main
     paths:
       - "backend/**"
-      - "charts/app/values-dev.yml"
+      - "charts/**"
       - "frontend/**"
       - "lib/**"
       - ".github/workflows/openshift-*.yml"
   pull_request:
     paths:
       - "backend/**"
-      - "charts/app/values-dev.yml"
+      - "charts/**"
       - "frontend/**"
       - "lib/**"
       - ".github/workflows/openshift-*.yml"
