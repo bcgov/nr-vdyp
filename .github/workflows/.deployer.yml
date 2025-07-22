@@ -128,12 +128,11 @@ jobs:
 
       # Deploy Helm chart as atomic, with timeout
       - name: Atomic Helm Deployment
-        if: inputs.atomic != 'false'
+        id: helm_upgrade
         working-directory: ${{ inputs.directory }}
         run: |
           # Helm upgrade/rollout - atomic, timeout
           helm upgrade \
-            --debug \
             --set-string global.repository=${{ github.repository }} \
             --set-string global.tag=${{ steps.vars.outputs.tag }} \
             ${{ inputs.params }} \
@@ -166,6 +165,19 @@ jobs:
             --timeout ${{ inputs.timeout-minutes }}m \
             --values ${{ inputs.values }} \
             ./${{ github.event.repository.name }}-${{ steps.vars.outputs.tag }}.tgz
+
+      - name: Dump COMS Secret and events on failure
+        if: steps.helm_upgrade.outputs.exit_code != '0'
+        run: |
+          echo "🔍 Describing the failed Secret (nr-vdyp-dev):"
+          oc describe secret nr-vdyp-dev -n ${{ secrets.OC_NAMESPACE }}
+          echo
+          echo "🔍 Recent events involving the Secret:"
+          oc get events -n ${{ secrets.OC_NAMESPACE }} \
+            --field-selector involvedObject.name=nr-vdyp-dev,type=Warning \
+            --sort-by='.metadata.creationTimestamp'
+          # now fail the step so the job stops in red
+          exit 1
 
       # Helm release history
       - name: Helm Release History
