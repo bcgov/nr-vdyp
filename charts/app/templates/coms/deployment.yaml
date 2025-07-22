@@ -63,11 +63,11 @@ spec:
             - containerPort: {{ .Values.coms.service.port }}
           readinessProbe:
             httpGet:
-              path: /health
+              path: /api/v1
               port: {{ .Values.coms.service.port }}
           livenessProbe:
             httpGet:
-              path: /health
+              path: /api/v1
               port: {{ .Values.coms.service.port }}
           resources:
             {{- toYaml .Values.coms.resources | nindent 12 }}
