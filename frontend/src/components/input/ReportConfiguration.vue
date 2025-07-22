@@ -246,8 +246,8 @@
     </div>
     <v-container fluid class="ml-n6 mt-5">
       <v-row v-for="(group, index) in speciesGroups" :key="index">
-        <v-col cols="2" style="padding-top: 0px">
-          {{ `${group.group} - ${getSpeciesFullName(group.group)}` }}
+        <v-col style="max-width: 5%; padding-top: 0px; padding-left: 20px">
+          {{ `${group.group}` }}
         </v-col>
         <v-col cols="8">
           <v-slider
@@ -273,7 +273,7 @@
 </template>
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
-import { CONSTANTS, BIZCONSTANTS, DEFAULTS, OPTIONS } from '@/constants'
+import { CONSTANTS, DEFAULTS, OPTIONS } from '@/constants'
 import { parseNumberOrNull } from '@/utils/util'
 import { useModelParameterStore } from '@/stores/modelParameterStore'
 
@@ -527,15 +527,6 @@ const getIncludeInReportDisabled = (value: string) => {
     return !isCulminationValuesEnabled.value
   }
   return props.isDisabled
-}
-
-const getSpeciesFullName = (code: string) => {
-  const validCodes = Object.keys(BIZCONSTANTS.SPECIES_MAP) as Array<
-    keyof typeof BIZCONSTANTS.SPECIES_MAP
-  >
-  return validCodes.includes(code as keyof typeof BIZCONSTANTS.SPECIES_MAP)
-    ? `${BIZCONSTANTS.SPECIES_MAP[code as keyof typeof BIZCONSTANTS.SPECIES_MAP]}`
-    : ''
 }
 
 const utilizationSliderTickLabels = utilizationClassOptions.reduce(
