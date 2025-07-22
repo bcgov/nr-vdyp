@@ -2,24 +2,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "common.fullname" (dict "Release" .Release "Chart" .Chart "Values" .Values "Name" "coms") }}
+  name: {{ include "coms.fullname" . }}
   labels:
-    app.kubernetes.io/name: coms
-    app.kubernetes.io/instance: {{ .Release.Name }}
+    {{- include "coms.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.coms.replicas }}
   selector:
     matchLabels:
-      app.kubernetes.io/name: coms
-      app.kubernetes.io/instance: {{ .Release.Name }}
+      {{- include "coms.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: coms
-        app.kubernetes.io/instance: {{ .Release.Name }}
+        {{- include "frontend.labels" . | nindent 8 }}
     spec:
       containers:
-        - name: coms
+        - name: {{ include "coms.fullname" . }}
           image: "{{ .Values.coms.image.repository }}:{{ .Values.coms.image.tag }}"
           imagePullPolicy: Always
           envFrom:
