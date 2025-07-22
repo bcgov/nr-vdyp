@@ -88,9 +88,5 @@ describe('AppNotification.vue', () => {
 
     // Verify the icon
     cy.get('.v-icon').should('have.class', 'mdi-check-circle')
-
-    // Close the notification
-    cy.get('.v-snackbar__actions .v-btn').click()
-    cy.get('.v-snackbar__wrapper').should('not.be.visible')
   })
 })

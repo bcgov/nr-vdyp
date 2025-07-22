@@ -21,6 +21,7 @@ import {
   OutputFormatEnum,
 } from '@/services/vdyp-api'
 import { BIZCONSTANTS, CONSTANTS, DEFAULTS, OPTIONS } from '@/constants'
+import { UtilizationClassSetEnum } from '@/services/vdyp-api/models/utilization-class-set-enum'
 
 describe('Model Parameter Service Unit Tests', () => {
   const mockModelParameterStore = {
@@ -471,6 +472,71 @@ describe('Model Parameter Service Unit Tests', () => {
           expect(projectionParams.ageIncrement).to.equal(
             yearRangeStore.yearIncrement,
           )
+        })
+    })
+  })
+
+  it('should generate utils array correctly from speciesGroups', () => {
+    const mockModelParameterStoreWithSpecies = {
+      ...mockModelParameterStore,
+      speciesGroups: [
+        { group: 'PL', minimumDBHLimit: UtilizationClassSetEnum._225 },
+        { group: 'AC', minimumDBHLimit: UtilizationClassSetEnum._125 },
+      ],
+    }
+
+    const projectionStub = cy
+      .stub()
+      .resolves(new Blob(['mock response'], { type: 'application/zip' }))
+
+    cy.wrap(runModel(mockModelParameterStoreWithSpecies, projectionStub)).then(
+      () => {
+        const formDataArg = projectionStub.getCall(0).args[0] as FormData
+        const projectionParamsBlob = formDataArg.get(
+          ParameterNamesEnum.PROJECTION_PARAMETERS,
+        ) as Blob
+
+        cy.wrap(projectionParamsBlob)
+          .then((blob) => blob.text())
+          .then((text) => {
+            const projectionParams = JSON.parse(text)
+            expect(projectionParams.utils).to.be.an('array').with.lengthOf(2)
+            expect(projectionParams.utils[0]).to.deep.equal({
+              speciesName: 'PL',
+              utilizationClass: UtilizationClassSetEnum._225,
+            })
+            expect(projectionParams.utils[1]).to.deep.equal({
+              speciesName: 'AC',
+              utilizationClass: UtilizationClassSetEnum._125,
+            })
+          })
+      },
+    )
+  })
+
+  it('should handle empty speciesGroups with empty utils array', () => {
+    const mockModelParameterStoreWithEmptySpecies = {
+      ...mockModelParameterStore,
+      speciesGroups: [],
+    }
+
+    const projectionStub = cy
+      .stub()
+      .resolves(new Blob(['mock response'], { type: 'application/zip' }))
+
+    cy.wrap(
+      runModel(mockModelParameterStoreWithEmptySpecies, projectionStub),
+    ).then(() => {
+      const formDataArg = projectionStub.getCall(0).args[0] as FormData
+      const projectionParamsBlob = formDataArg.get(
+        ParameterNamesEnum.PROJECTION_PARAMETERS,
+      ) as Blob
+
+      cy.wrap(projectionParamsBlob)
+        .then((blob) => blob.text())
+        .then((text) => {
+          const projectionParams = JSON.parse(text)
+          expect(projectionParams.utils).to.be.an('array').with.lengthOf(0)
         })
     })
   })

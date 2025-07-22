@@ -1,4 +1,5 @@
 import type { SortOrder } from '@/types/types'
+import { UtilizationClassSetEnum } from '@/services/vdyp-api/models/utilization-class-set-enum'
 
 export interface MessageDialog {
   dialog: boolean
@@ -40,6 +41,7 @@ export interface SpeciesGroup {
   group: string
   percent: string
   siteSpecies: string
+  minimumDBHLimit?: UtilizationClassSetEnum
 }
 
 export interface Tab {

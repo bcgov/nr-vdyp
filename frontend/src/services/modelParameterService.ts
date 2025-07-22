@@ -10,6 +10,7 @@ import {
 import { projectionHcsvPost } from '@/services/apiActions'
 import type { CSVRowType } from '@/types/types'
 import type { SpeciesGroup } from '@/interfaces/interfaces'
+import type { UtilizationParameter } from '@/services/vdyp-api/models/utilization-parameter'
 
 /**
  * Generates a unique 9-digit or 10-digit feature ID using the current timestamp and random values.
@@ -516,6 +517,13 @@ export const runModel = async (
     selectedDebugOptions: selectedDebugOptions,
     excludedDebugOptions: excludedDebugOptions,
     metadataToOutput: MetadataToOutputEnum.NONE,
+    utils: modelParameterStore.speciesGroups.map(
+      (sg: SpeciesGroup) =>
+        ({
+          speciesName: sg.group,
+          utilizationClass: sg.minimumDBHLimit,
+        }) as UtilizationParameter,
+    ),
   }
 
   formData.append(

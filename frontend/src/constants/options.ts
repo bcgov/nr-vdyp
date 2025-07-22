@@ -1,4 +1,5 @@
 import * as CONSTANTS from '@/constants/constants'
+import { UtilizationClassSetEnum } from '@/services/vdyp-api/models/utilization-class-set-enum'
 
 export const derivedByOptions = [
   { label: 'Volume', value: 'Volume' },
@@ -79,4 +80,13 @@ export const modelSelectionOptions = [
     label: 'Input Model Parameters',
     value: CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS,
   },
+]
+
+// Utilization class options with (slider) index, label, and enum value mapping
+export const utilizationClassOptions = [
+  { index: 0, label: '4.0 cm+', value: UtilizationClassSetEnum._40 },
+  { index: 1, label: '7.5 cm+', value: UtilizationClassSetEnum._75 },
+  { index: 2, label: '12.5 cm+', value: UtilizationClassSetEnum._125 },
+  { index: 3, label: '17.5 cm+', value: UtilizationClassSetEnum._175 },
+  { index: 4, label: '22.5 cm+', value: UtilizationClassSetEnum._225 },
 ]

@@ -2,6 +2,7 @@ import { mount } from 'cypress/vue'
 import { createVuetify } from 'vuetify'
 import 'vuetify/styles'
 import ReportConfiguration from './ReportConfiguration.vue'
+import { useModelParameterStore } from '@/stores/modelParameterStore'
 import { CONSTANTS, DEFAULTS } from '@/constants'
 import { useAppStore } from '@/stores/appStore'
 import { createPinia, setActivePinia } from 'pinia'
@@ -40,6 +41,7 @@ describe('ReportConfiguration.vue', () => {
     projectionType: CONSTANTS.PROJECTION_TYPE.VOLUME,
     reportTitle: 'Test Report',
     isDisabled: false,
+    isModelParametersMode: true,
   }
 
   it('renders correctly with initial props for AGE range', () => {
@@ -428,5 +430,48 @@ describe('ReportConfiguration.vue', () => {
     cy.get(
       '[data-testid="is-backward-grow-enabled"] input[type="checkbox"]',
     ).should('not.be.disabled')
+  })
+
+  it('renders Minimum DBH Limit by Species Group when isModelParametersMode is true', () => {
+    const modelParameterStore = useModelParameterStore()
+    const appStore = useAppStore()
+
+    appStore.modelSelection = CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS
+
+    modelParameterStore.setDefaultValues()
+    modelParameterStore.confirmPanel(
+      CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO,
+    )
+    modelParameterStore.confirmPanel(CONSTANTS.MODEL_PARAMETER_PANEL.SITE_INFO)
+    modelParameterStore.confirmPanel(CONSTANTS.MODEL_PARAMETER_PANEL.STAND_INFO)
+
+    mount(ReportConfiguration, {
+      props,
+      global: {
+        plugins: [vuetify],
+      },
+    })
+
+    cy.contains('span.text-h7', 'Minimum DBH Limit by Species Group').should(
+      'be.visible',
+    )
+
+    cy.get('.v-slider', { timeout: 6000 }).should('exist')
+  })
+
+  it('does not render Minimum DBH Limit by Species Group when isModelParametersMode is false', () => {
+    mount(ReportConfiguration, {
+      props: {
+        ...props,
+        isModelParametersMode: false,
+      },
+      global: {
+        plugins: [vuetify],
+      },
+    })
+
+    cy.contains('span.text-h7', 'Minimum DBH Limit by Species Group').should(
+      'not.exist',
+    )
   })
 })
