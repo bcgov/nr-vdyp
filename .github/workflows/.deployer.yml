@@ -170,7 +170,6 @@ jobs:
           set -e
 
       - name: Dump COMS Secret and events on failure
-        if: steps.helm_upgrade.outputs.exit_code != '0'
         run: |
           echo "🔍 Describing the failed Secret (nr-vdyp-dev):"
           oc describe secret nr-vdyp-dev -n ${{ secrets.OC_NAMESPACE }}
