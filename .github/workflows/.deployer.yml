@@ -143,10 +143,10 @@ jobs:
             --set frontend.env.VITE_API_URL=${{ secrets.VITE_API_URL }} \
             --set-string coms.image.tag=${{ vars.COMS_TAG }} \
             --set-string coms.env.OBJECTSTORAGE_ENABLED=true \
-            --set-string coms.env.OBJECTSTORAGE_ACCESSKEYID=${{ secrets.OBJECTSTORAGE_ACCESSKEYID }} \
-            --set-string coms.env.OBJECTSTORAGE_SECRETACCESSKEY=${{ secrets.OBJECTSTORAGE_SECRETACCESSKEY }} \
-            --set-string coms.env.OBJECTSTORAGE_BUCKET=${{ secrets.OBJECTSTORAGE_BUCKET }} \
-            --set-string coms.env.OBJECTSTORAGE_ENDPOINT=${{ secrets.OBJECTSTORAGE_ENDPOINT }} \
+            --set-string coms.env.OBJECTSTORAGE_ACCESSKEYID=todo \
+            --set-string coms.env.OBJECTSTORAGE_SECRETACCESSKEY=todo \
+            --set-string coms.env.OBJECTSTORAGE_BUCKET=todo \
+            --set-string coms.env.OBJECTSTORAGE_ENDPOINT=todo \
             --set-string coms.env.OBJECTSTORAGE_KEY=${{ secrets.OBJECTSTORAGE_KEY }} \
             --set-string coms.env.S3ACCESSMODE_ENABLES=true \
             --set-string coms.env.BASICAUTH_ENABLED=true \
