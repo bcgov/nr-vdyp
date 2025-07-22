@@ -45,10 +45,6 @@ spec:
               value: {{ .Values.coms.env.BASICAUTH_PASSWORD | quote }}
             - name: DB_PORT
               value: "5432"
-            - name: DB_USERNAME
-              value: {{ .Values.coms.env.DB_USERNAME | quote }}
-            - name: DB_DATABASE
-              value: {{ .Values.coms.env.DB_DATABASE | quote }}
             - name: KC_ENABLED
               value: {{ .Values.coms.env.KC_ENABLED | quote }}
             - name: KC_PUBLICKEY
