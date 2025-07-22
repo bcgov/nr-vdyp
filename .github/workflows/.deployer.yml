@@ -165,6 +165,9 @@ jobs:
             --timeout ${{ inputs.timeout-minutes }}m \
             --values ${{ inputs.values }} \
             ./${{ github.event.repository.name }}-${{ steps.vars.outputs.tag }}.tgz
+          EXIT_CODE=$?
+          echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
+          set -e
 
       - name: Dump COMS Secret and events on failure
         if: steps.helm_upgrade.outputs.exit_code != '0'
