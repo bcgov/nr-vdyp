@@ -132,6 +132,7 @@ jobs:
         run: |
           # Helm upgrade/rollout - atomic, timeout
           helm upgrade \
+            --values ${{ inputs.values }} \
             --set-string global.repository=${{ github.repository }} \
             --set-string global.tag=${{ steps.vars.outputs.tag }} \
             ${{ inputs.params }} \
@@ -161,7 +162,6 @@ jobs:
             --set-string coms.env.KC_SERVERURL=${{ secrets.VITE_SSO_AUTH_SERVER_URL }} \
             --install --wait --atomic ${{ steps.vars.outputs.release }} \
             --timeout ${{ inputs.timeout-minutes }}m \
-            --values ${{ inputs.values }} \
             ./${{ github.event.repository.name }}-${{ steps.vars.outputs.tag }}.tgz
 
       # Helm release history
