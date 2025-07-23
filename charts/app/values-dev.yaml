@@ -23,7 +23,7 @@ global:
   databaseAlias: bitnami-pg
   postgresql:
     auth:
-      postgresPassword: unused
+      password: unused
 #-- the components of the application, backend.
 backend:
   #-- enable or disable backend
