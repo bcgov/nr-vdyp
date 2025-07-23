@@ -227,8 +227,8 @@ bitnami-pg:
     tag: 15.8.0
   auth:
     existingSecret: '{{ .Release.Name }}'
-    username: 'quickstart'
-    database: quickstart
+    username: ~
+    database: ~
   shmVolume:
     enabled: false
   backup:
