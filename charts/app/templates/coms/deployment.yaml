@@ -18,7 +18,7 @@ spec:
       initContainers:
         - name: wait-for-postgres
           # any image with `pg_isready` will do—Bitnami’s Postgres cli image is handy
-          image: ghcr.io/bitnami/bitnami-shell:latest
+          image: bitnami/postgresql:latest
           command:
             - sh
             - -c
