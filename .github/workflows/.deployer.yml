@@ -138,7 +138,7 @@ jobs:
             ${{ inputs.params }} \
             --set global.secrets.databaseName=${{ vars.VDYP_DB_DATABASE }} \
             --set global.secrets.databaseUser=${{ vars.VDYP_DB_USER }} \
-            --set global.secrets.databasePassword=${{ vars.VDYP_DB_PASSWORD }} \
+            --set global.secrets.databasePassword=${{ secrets.VDYP_DB_PASSWORD }} \
             --set backend.env.QUARKUS_OIDC_AUTH_SERVER_URL=${{ secrets.VITE_SSO_AUTH_SERVER_URL }}/realms/${{ secrets.VITE_SSO_REALM }} \
             --set frontend.env.VITE_SSO_AUTH_SERVER_URL=${{ secrets.VITE_SSO_AUTH_SERVER_URL }} \
             --set frontend.env.VITE_SSO_CLIENT_ID=${{ secrets.VITE_SSO_CLIENT_ID }} \
