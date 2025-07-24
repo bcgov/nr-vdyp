@@ -301,8 +301,8 @@ const createLayerData = (
     '', // BASAL_AREA_75
     '', // STEMS_PER_HA_75
     ...speciesRow, // Species codes and percentages (6 pairs)
-    '', // EST_AGE_SPP1
-    '', // EST_HEIGHT_SPP1
+    modelParameterStore.spzAge, // EST_AGE_SPP1
+    modelParameterStore.spzHeight, // EST_HEIGHT_SPP1
     '', // EST_AGE_SPP2
     '', // EST_HEIGHT_SPP2
     '', // ADJ_IND

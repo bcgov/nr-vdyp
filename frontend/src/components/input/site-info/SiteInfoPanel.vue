@@ -119,17 +119,107 @@
                     :disabled="isSiteSpeciesValueDisabled || !isConfirmEnabled"
                   >
                     <v-radio
-                      v-for="option in OPTIONS.siteSpeciesValuesOptions"
-                      :key="option.value"
-                      :label="option.label"
-                      :value="option.value"
+                      style="width: 110px"
+                      :key="OPTIONS.siteSpeciesValuesOptions[0].value"
+                      :label="OPTIONS.siteSpeciesValuesOptions[0].label"
+                      :value="OPTIONS.siteSpeciesValuesOptions[0].value"
+                    ></v-radio>
+                    <v-radio
+                      class="pl-7"
+                      :key="OPTIONS.siteSpeciesValuesOptions[1].value"
+                      :label="OPTIONS.siteSpeciesValuesOptions[1].label"
+                      :value="OPTIONS.siteSpeciesValuesOptions[1].value"
+                    ></v-radio>
+                  </v-radio-group>
+                </v-col>
+              </v-row>
+              <v-row class="mt-n5">
+                <v-col cols="auto" style="margin-bottom: 20px">
+                  <div class="mt-2">Age Years:</div>
+                </v-col>
+                <v-col cols="auto">
+                  <v-radio-group
+                    v-model="ageType"
+                    inline
+                    :disabled="isAgeTypeDisabled || !isConfirmEnabled"
+                  >
+                    <v-radio
+                      style="width: 110px"
+                      :key="OPTIONS.ageTypeOptions[0].value"
+                      :label="OPTIONS.ageTypeOptions[0].label"
+                      :value="OPTIONS.ageTypeOptions[0].value"
+                    ></v-radio>
+                    <v-radio
+                      class="pl-7"
+                      :key="OPTIONS.ageTypeOptions[1].value"
+                      :label="OPTIONS.ageTypeOptions[1].label"
+                      :value="OPTIONS.ageTypeOptions[1].value"
                     ></v-radio>
                   </v-radio-group>
                 </v-col>
               </v-row>
               <v-row>
                 <v-col cols="6">
-                  <v-row style="height: 70px !important">
+                  <v-row class="mb-2">
+                    <v-col cols="6">
+                      <v-text-field
+                        label="Years"
+                        type="number"
+                        v-model.number="spzAge"
+                        :max="CONSTANTS.NUM_INPUT_LIMITS.SPZ_AGE_MAX"
+                        :min="CONSTANTS.NUM_INPUT_LIMITS.SPZ_AGE_MIN"
+                        :step="CONSTANTS.NUM_INPUT_LIMITS.SPZ_AGE_STEP"
+                        persistent-placeholder
+                        :placeholder="spzAgePlaceholder"
+                        hide-details
+                        density="compact"
+                        dense
+                        :disabled="isSpzAgeDisabled || !isConfirmEnabled"
+                        data-testid="spz-age"
+                      ></v-text-field>
+                      <v-label
+                        v-show="isZeroValue(spzAge)"
+                        style="font-size: 12px"
+                        >{{
+                          MESSAGE.MDL_PRM_INPUT_HINT.SITE_ZERO_NOT_KNOW
+                        }}</v-label
+                      >
+                    </v-col>
+                    <v-col class="col-space-6" />
+                    <v-col>
+                      <AppSpinField
+                        label="Height in Meters"
+                        :model-value="spzHeight"
+                        :max="CONSTANTS.NUM_INPUT_LIMITS.SPZ_HEIGHT_MAX"
+                        :min="CONSTANTS.NUM_INPUT_LIMITS.SPZ_HEIGHT_MIN"
+                        :step="CONSTANTS.NUM_INPUT_LIMITS.SPZ_HEIGHT_STEP"
+                        :persistent-placeholder="true"
+                        :placeholder="spzHeightPlaceholder"
+                        :hideDetails="true"
+                        density="compact"
+                        :dense="true"
+                        customStyle="padding-left: 0px"
+                        :disabled="isSpzHeightDisabled || !isConfirmEnabled"
+                        :interval="CONSTANTS.CONTINUOUS_INC_DEC.INTERVAL"
+                        :decimalAllowNumber="
+                          CONSTANTS.NUM_INPUT_LIMITS.SPZ_HEIGHT_DECIMAL_NUM
+                        "
+                        data-testid="spz-height"
+                        @update:modelValue="handleSpzHeightUpdate"
+                      />
+                      <v-label
+                        v-show="isZeroValue(spzHeight)"
+                        style="font-size: 12px"
+                        >{{
+                          MESSAGE.MDL_PRM_INPUT_HINT.SITE_ZERO_NOT_KNOW
+                        }}</v-label
+                      >
+                    </v-col>
+                  </v-row>
+                </v-col>
+                <v-col class="col-space-6" />
+                <v-col>
+                  <v-row>
                     <v-col cols="6">
                       <AppSpinField
                         label="BHA 50 Site Index"
@@ -142,8 +232,7 @@
                         :hideDetails="true"
                         density="compact"
                         :dense="true"
-                        customStyle="padding-left: 15px"
-                        variant="plain"
+                        customStyle="padding-left: 10px"
                         :disabled="
                           isBHA50SiteIndexDisabled || !isConfirmEnabled
                         "
@@ -211,6 +300,9 @@ const {
   ecoZone,
   incSecondaryHeight,
   siteSpeciesValues,
+  ageType,
+  spzAge,
+  spzHeight,
   bha50SiteIndex,
 } = storeToRefs(modelParameterStore)
 
@@ -231,12 +323,47 @@ const siteSpeciesOptions = computed(() =>
 
 const isIncSecondaryHeightDisabled = ref(false)
 const isSiteSpeciesValueDisabled = ref(false)
+const isAgeTypeDisabled = ref(false)
+const isSpzAgeDisabled = ref(false)
+const isSpzHeightDisabled = ref(false)
 const isBHA50SiteIndexDisabled = ref(false)
+
+const spzAgePlaceholder = ref('')
+const spzHeightPlaceholder = ref('')
+
+const handleSiteSpeciesValuesState = (newSiteSpeciesValues: string | null) => {
+  if (newSiteSpeciesValues === CONSTANTS.SITE_SPECIES_VALUES.COMPUTED) {
+    isAgeTypeDisabled.value = false
+    isSpzAgeDisabled.value = false
+    isSpzHeightDisabled.value = false
+    isBHA50SiteIndexDisabled.value = true
+
+    spzAge.value = DEFAULTS.DEFAULT_VALUES.SPZ_AGE
+    spzHeight.value = DEFAULTS.DEFAULT_VALUES.SPZ_HEIGHT
+
+    spzAgePlaceholder.value = ''
+    spzHeightPlaceholder.value = ''
+  } else if (newSiteSpeciesValues === CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED) {
+    isAgeTypeDisabled.value = true
+    isSpzAgeDisabled.value = true
+    isSpzHeightDisabled.value = true
+    isBHA50SiteIndexDisabled.value = false
+
+    spzAge.value = null
+    spzHeight.value = null
+
+    spzAgePlaceholder.value = CONSTANTS.SPECIAL_INDICATORS.NA
+    spzHeightPlaceholder.value = CONSTANTS.SPECIAL_INDICATORS.NA
+  }
+}
 
 const handleDerivedByChange = (
   newDerivedBy: string | null,
   newSiteSpecies: string | null,
+  newSiteSpeciesValues: string | null,
 ) => {
+  if (!newDerivedBy) return
+
   if (newDerivedBy === CONSTANTS.DERIVED_BY.VOLUME) {
     incSecondaryHeight.value = false
     isIncSecondaryHeightDisabled.value = true
@@ -245,15 +372,20 @@ const handleDerivedByChange = (
     isSiteSpeciesValueDisabled.value =
       newSiteSpecies !== highestPercentSpecies.value
   }
+  handleSiteSpeciesValuesState(newSiteSpeciesValues)
 }
 
 watch(
   [derivedBy, selectedSiteSpecies, siteSpeciesValues],
-  ([newDerivedBy, newSiteSpecies]) => {
-    handleDerivedByChange(newDerivedBy, newSiteSpecies)
+  ([newDerivedBy, newSiteSpecies, newSiteSpeciesValues]) => {
+    handleDerivedByChange(newDerivedBy, newSiteSpecies, newSiteSpeciesValues)
   },
   { immediate: true },
 )
+
+const handleSpzHeightUpdate = (value: string | null) => {
+  spzHeight.value = value
+}
 
 const handleBha50SiteIndexUpdate = (value: string | null) => {
   bha50SiteIndex.value = value
@@ -270,27 +402,53 @@ const formattingValues = (): void => {
 const onConfirm = () => {
   // validation - required fields
   const requiredResult = siteInfoValidation.validateRequiredFields(
+    siteSpeciesValues.value,
+    spzAge.value,
+    spzHeight.value,
     bha50SiteIndex.value,
   )
   if (!requiredResult.isValid) {
     messageDialog.value = {
       dialog: true,
       title: MESSAGE.MSG_DIALOG_TITLE.MISSING_INFO,
-      message: MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SPCZ_REQ_SI_VAL(
-        selectedSiteSpecies.value,
-      ),
+      message:
+        siteSpeciesValues.value === CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
+          ? MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SPCZ_REQ_VALS_SUP(
+              selectedSiteSpecies.value,
+            )
+          : MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SPCZ_REQ_SI_VAL(
+              selectedSiteSpecies.value,
+            ),
       btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
     }
     return
   }
 
   // validation - range
-  const rangeResult = siteInfoValidation.validateRange(bha50SiteIndex.value)
+  const rangeResult = siteInfoValidation.validateRange(
+    spzAge.value,
+    spzHeight.value,
+    bha50SiteIndex.value,
+  )
   if (!rangeResult.isValid) {
+    let message = ''
+
+    switch (rangeResult.errorType) {
+      case 'spzAge':
+        message = MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_AGE_RNG
+        break
+      case 'spzHeight':
+        message = MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_HIGHT_RNG
+        break
+      case 'bha50SiteIndex':
+        message = MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SI_RNG
+        break
+    }
+
     messageDialog.value = {
       dialog: true,
       title: MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT,
-      message: MESSAGE.MDL_PRM_INPUT_ERR.SITE_VLD_SI_RNG,
+      message: message,
       btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
     }
     return
@@ -318,16 +476,22 @@ const onEdit = () => {
 }
 
 const onClear = () => {
-  if (form.value) {
-    form.value.reset()
-  }
-
-  selectedSiteSpecies.value = highestPercentSpecies.value
-
   becZone.value = DEFAULTS.DEFAULT_VALUES.BEC_ZONE
+  ecoZone.value = null
+  incSecondaryHeight.value = false
+  selectedSiteSpecies.value = highestPercentSpecies.value
   siteSpeciesValues.value = DEFAULTS.DEFAULT_VALUES.SITE_SPECIES_VALUES
+  ageType.value = DEFAULTS.DEFAULT_VALUES.AGE_TYPE
 
-  handleDerivedByChange(derivedBy.value, selectedSiteSpecies.value)
+  handleDerivedByChange(
+    derivedBy.value,
+    selectedSiteSpecies.value,
+    siteSpeciesValues.value,
+  )
+
+  spzAge.value = DEFAULTS.DEFAULT_VALUES.SPZ_AGE
+  spzHeight.value = DEFAULTS.DEFAULT_VALUES.SPZ_HEIGHT
+  bha50SiteIndex.value = DEFAULTS.DEFAULT_VALUES.BHA50_SITE_INDEX
 }
 
 const handleDialogClose = () => {}

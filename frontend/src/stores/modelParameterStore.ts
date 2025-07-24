@@ -176,6 +176,9 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
   const ecoZone = ref<string | null>(null)
   const incSecondaryHeight = ref(false)
   const siteSpeciesValues = ref<string | null>(null)
+  const ageType = ref<string | null>(null)
+  const spzAge = ref<number | null>(null)
+  const spzHeight = ref<string | null>(null)
   const bha50SiteIndex = ref<string | null>(null)
 
   // stand information
@@ -215,6 +218,10 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
 
     becZone.value = DEFAULTS.DEFAULT_VALUES.BEC_ZONE
     siteSpeciesValues.value = DEFAULTS.DEFAULT_VALUES.SITE_SPECIES_VALUES
+    ageType.value = DEFAULTS.DEFAULT_VALUES.AGE_TYPE
+    spzAge.value = DEFAULTS.DEFAULT_VALUES.SPZ_AGE
+    spzHeight.value = DEFAULTS.DEFAULT_VALUES.SPZ_HEIGHT
+    bha50SiteIndex.value = DEFAULTS.DEFAULT_VALUES.BHA50_SITE_INDEX
     percentStockableArea.value = DEFAULTS.DEFAULT_VALUES.PERCENT_STOCKABLE_AREA
     selectedAgeYearRange.value = DEFAULTS.DEFAULT_VALUES.SELECTED_AGE_YEAR_RANGE
     startingAge.value = DEFAULTS.DEFAULT_VALUES.STARTING_AGE
@@ -255,6 +262,9 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     ecoZone,
     incSecondaryHeight,
     siteSpeciesValues,
+    ageType,
+    spzAge,
+    spzHeight,
     bha50SiteIndex,
     // stand info
     percentStockableArea,

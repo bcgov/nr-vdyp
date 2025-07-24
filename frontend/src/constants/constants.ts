@@ -26,6 +26,12 @@ export const DERIVED_BY = Object.freeze({
 
 export const SITE_SPECIES_VALUES = Object.freeze({
   SUPPLIED: 'Supplied',
+  COMPUTED: 'Computed',
+})
+
+export const AGE_TYPE = Object.freeze({
+  TOTAL: 'Total',
+  BREAST: 'Breast',
 })
 
 export const AGE_YEAR_RANGE = Object.freeze({
@@ -75,6 +81,13 @@ export const NUM_INPUT_LIMITS = Object.freeze({
   SPECIES_PERCENT_STEP: 5,
   SPECIES_PERCENT_DECIMAL_NUM: 1,
   TOTAL_SPECIES_PERCENT: 100,
+  SPZ_AGE_MAX: 500,
+  SPZ_AGE_MIN: 0,
+  SPZ_AGE_STEP: 10,
+  SPZ_HEIGHT_MAX: 99.9,
+  SPZ_HEIGHT_MIN: 0,
+  SPZ_HEIGHT_STEP: 1,
+  SPZ_HEIGHT_DECIMAL_NUM: 2,
   BHA50_SITE_INDEX_MAX: 60,
   BHA50_SITE_INDEX_MIN: 0,
   BHA50_SITE_INDEX_STEP: 1,
