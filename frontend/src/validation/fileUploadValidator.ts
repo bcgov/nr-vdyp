@@ -61,7 +61,10 @@ export class FileUploadValidator extends ValidationBase {
 
     // Check MIME type
     const validMimeType = 'text/csv'
-    if (file.type !== validMimeType) {
+    if (
+      file.type !== validMimeType &&
+      file.type !== 'application/vnd.ms-excel' /* firefox */
+    ) {
       return false
     }
 

@@ -13,7 +13,6 @@
       :density="density"
       :dense="dense"
       :style="customStyle"
-      :variant="variant"
       :disabled="disabled"
       @update:modelValue="handleUpdateModelValue"
     ></v-text-field>
@@ -38,7 +37,6 @@
         {{ CONSTANTS.SPIN_BUTTON.DOWN }}
       </div>
     </div>
-    <div class="spin-text-field-bottom-line"></div>
   </div>
 </template>
 
@@ -170,7 +168,7 @@ const handleUpdateModelValue = (newValue: string) => {
 .spin-box {
   position: absolute;
   right: 15px;
-  top: 8px;
+  top: 17px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -183,15 +181,16 @@ const handleUpdateModelValue = (newValue: string) => {
 
 /* mouse over */
 .spin-box div:hover {
-  background-color: #d3d3d3 !important;
+  color: #8a8a8a !important;
 }
 
 .spin-up-arrow-button {
-  cursor: pointer;
+  cursor: default;
   font-size: 7px;
   width: 10px;
   height: 10px;
-  background-color: #f2f0f0;
+  color: #898989 !important;
+  background-color: #fbfbfb;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -201,27 +200,18 @@ const handleUpdateModelValue = (newValue: string) => {
 }
 
 .spin-down-arrow-button {
-  cursor: pointer;
+  cursor: default;
   font-size: 7px;
   width: 10px;
   height: 10px;
-  background-color: #f2f0f0;
+  color: #898989 !important;
+  background-color: #fbfbfb;
   display: flex;
   justify-content: center;
   align-items: center;
   transform: scaleX(1.5);
   padding-top: 3px;
   padding-bottom: 2px;
-}
-
-/* bottom line under text field */
-.spin-text-field-bottom-line {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background-color: #ababab;
 }
 
 .spin-box .disabled {
