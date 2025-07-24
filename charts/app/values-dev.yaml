@@ -16,6 +16,9 @@ global:
     databasePassword: ~
     databaseUser: ~
     databaseName: ~
+    COMS_DB_PASSWORD: ~
+    VDYP_DB_PASSWORD: ~
+    BATCH_DB_PASSWORD: ~
     persist: true
   #-- domain of the application, it is required, apps.silver.devops.gov.bc.ca for silver cluster and apps.devops.gov.bc.ca for gold cluster
   domain: "apps.silver.devops.gov.bc.ca" # it is apps.gold.devops.gov.bc.ca for gold cluster
@@ -251,10 +254,8 @@ bitnami-pg:
     podSecurityContext:
       enabled: false
     initdb:
-      scripts: # remove the below script, if POSTGIS is not required.
-        postgis.sh: |
-          #!/bin/sh
-          PGPASSWORD=$POSTGRES_PASSWORD psql -U postgres -d postgres -c "CREATE EXTENSION postgis;"
+      scriptsSecret: '{{ .Release.Name }}-initdb-scripts'
+
     resources:
       requests:
         cpu: 50m
@@ -362,4 +363,10 @@ coms:
     DB_USERNAME: ~
     DB_PASSWORD: ~
     DB_DATABASE: ~
+
+  batch:
+    enabled: true
+    env:
+      BATCH_DB_USER: ~
+      BATCH_DB_DATABASE: ~
 
