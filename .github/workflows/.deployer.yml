@@ -147,7 +147,7 @@ jobs:
             --set backend.env.QUARKUS_OIDC_AUTH_SERVER_URL=${{ secrets.VITE_SSO_AUTH_SERVER_URL }}/realms/${{ secrets.VITE_SSO_REALM }} \
             --set backend.env.VDYP_DB_USER=${{ vars.VDYP_DB_USER }} \
             --set backend.env.VDYP_DB_DATABASE=${{ vars.VDYP_DB_DATABASE }} \
-            --set batch.env.BATCH_DB_USER=${{ vars.BATCH_DB_USER }} \
+            --set batch.env.BATCH_DB_USER=${{ vars.BATCH_DB_USERNAME }} \
             --set batch.env.BATCH_DB_DATABASE=${{ vars.BATCH_DB_DATABASE }} \
             --set frontend.env.VITE_SSO_AUTH_SERVER_URL=${{ secrets.VITE_SSO_AUTH_SERVER_URL }} \
             --set frontend.env.VITE_SSO_CLIENT_ID=${{ secrets.VITE_SSO_CLIENT_ID }} \
