@@ -50,6 +50,9 @@ describe('ModelParameterStore Unit Tests', () => {
     expect(store.ecoZone).to.be.null
     expect(store.incSecondaryHeight).to.be.false
     expect(store.siteSpeciesValues).to.be.null
+    expect(store.ageType).to.be.null
+    expect(store.spzAge).to.be.null
+    expect(store.spzHeight).to.be.null
     expect(store.bha50SiteIndex).to.be.null
     expect(store.percentStockableArea).to.be.null
     expect(store.selectedAgeYearRange).to.be.null
@@ -144,6 +147,12 @@ describe('ModelParameterStore Unit Tests', () => {
     expect(store.becZone).to.equal(DEFAULTS.DEFAULT_VALUES.BEC_ZONE)
     expect(store.siteSpeciesValues).to.equal(
       DEFAULTS.DEFAULT_VALUES.SITE_SPECIES_VALUES,
+    )
+    expect(store.ageType).to.equal(DEFAULTS.DEFAULT_VALUES.AGE_TYPE)
+    expect(store.spzAge).to.equal(DEFAULTS.DEFAULT_VALUES.SPZ_AGE)
+    expect(store.spzHeight).to.equal(DEFAULTS.DEFAULT_VALUES.SPZ_HEIGHT)
+    expect(store.bha50SiteIndex).to.equal(
+      DEFAULTS.DEFAULT_VALUES.BHA50_SITE_INDEX,
     )
     expect(store.percentStockableArea).to.equal(
       DEFAULTS.DEFAULT_VALUES.PERCENT_STOCKABLE_AREA,

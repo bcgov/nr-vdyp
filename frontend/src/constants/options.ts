@@ -25,6 +25,12 @@ export const becZoneOptions = [
 
 export const siteSpeciesValuesOptions = [
   { label: 'Supplied', value: CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED },
+  { label: 'Computed', value: CONSTANTS.SITE_SPECIES_VALUES.COMPUTED },
+]
+
+export const ageTypeOptions = [
+  { label: 'Total', value: CONSTANTS.AGE_TYPE.TOTAL },
+  { label: 'Breast', value: CONSTANTS.AGE_TYPE.BREAST },
 ]
 
 export const ecoZoneOptions = [
