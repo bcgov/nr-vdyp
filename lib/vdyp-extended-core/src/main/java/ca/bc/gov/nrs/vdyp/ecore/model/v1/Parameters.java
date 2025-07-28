@@ -97,6 +97,8 @@ public class Parameters {
 	private List<UtilizationParameter> utils = new ArrayList<>();
 
 	public enum OutputFormat {
+		TEXT_REPORT("TextReport", "YieldReport.txt"),
+
 		YIELD_TABLE("YieldTable", "YieldTable.txt"),
 
 		CSV_YIELD_TABLE("CSVYieldTable", "YieldTable.csv"),

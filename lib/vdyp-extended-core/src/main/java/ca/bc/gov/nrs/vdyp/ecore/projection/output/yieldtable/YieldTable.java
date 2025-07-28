@@ -215,6 +215,7 @@ public class YieldTable implements Closeable {
 		case DCSV -> DCSVYieldTableWriter.of(context);
 		case PLOTSY -> PLOTSYYieldTableWriter.of(context);
 		case YIELD_TABLE -> TextYieldTableWriter.of(context);
+		case TEXT_REPORT -> FullReportYieldTableWriter.of(context);
 		default -> throw new IllegalStateException("Unrecognized output format " + outputFormat);
 		};
 

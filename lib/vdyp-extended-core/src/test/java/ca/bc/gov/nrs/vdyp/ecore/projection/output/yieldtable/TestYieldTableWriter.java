@@ -17,10 +17,6 @@ public class TestYieldTableWriter extends YieldTableWriter<CSVYieldTableRowValue
 	}
 
 	@Override
-	protected void writeProjectionGrowthInfo() throws YieldTableGenerationException {
-	}
-
-	@Override
 	public void close() throws IOException {
 
 	}
