@@ -55,6 +55,11 @@ describe('ModelParameterStore Unit Tests', () => {
     expect(store.spzHeight).to.be.null
     expect(store.bha50SiteIndex).to.be.null
     expect(store.percentStockableArea).to.be.null
+    expect(store.basalArea).to.be.null
+    expect(store.treesPerHectare).to.be.null
+    expect(store.minDBHLimit).to.be.null
+    expect(store.currentDiameter).to.be.null
+    expect(store.crownClosure).to.be.null
     expect(store.selectedAgeYearRange).to.be.null
     expect(store.startingAge).to.be.null
     expect(store.finishingAge).to.be.null
@@ -157,6 +162,13 @@ describe('ModelParameterStore Unit Tests', () => {
     expect(store.percentStockableArea).to.equal(
       DEFAULTS.DEFAULT_VALUES.PERCENT_STOCKABLE_AREA,
     )
+    expect(store.basalArea).to.equal(null)
+    expect(store.treesPerHectare).to.equal(null)
+    expect(store.minDBHLimit).to.equal(DEFAULTS.DEFAULT_VALUES.MIN_DBH_LIMIT)
+    expect(store.currentDiameter).to.equal(
+      DEFAULTS.DEFAULT_VALUES.CURRENT_DIAMETER,
+    )
+    expect(store.crownClosure).to.equal(DEFAULTS.DEFAULT_VALUES.CROWN_CLOSURE)
     expect(store.selectedAgeYearRange).to.equal(
       DEFAULTS.DEFAULT_VALUES.SELECTED_AGE_YEAR_RANGE,
     )
@@ -374,5 +386,30 @@ describe('ModelParameterStore Unit Tests', () => {
     expect(store.speciesGroups[0].minimumDBHLimit).to.equal(
       DEFAULTS.SPECIES_GROUP_DEFAULT_UTILIZATION_MAP['XX'] || undefined,
     )
+  })
+
+  it('should update basalArea correctly', () => {
+    store.basalArea = '10.5'
+    expect(store.basalArea).to.equal('10.5')
+  })
+
+  it('should update treesPerHectare correctly', () => {
+    store.treesPerHectare = '200.0'
+    expect(store.treesPerHectare).to.equal('200.0')
+  })
+
+  it('should update minDBHLimit correctly', () => {
+    store.minDBHLimit = '12.7'
+    expect(store.minDBHLimit).to.equal('12.7')
+  })
+
+  it('should update currentDiameter correctly', () => {
+    store.currentDiameter = '15.3 cm'
+    expect(store.currentDiameter).to.equal('15.3 cm')
+  })
+
+  it('should update crownClosure correctly', () => {
+    store.crownClosure = 75
+    expect(store.crownClosure).to.equal(75)
   })
 })

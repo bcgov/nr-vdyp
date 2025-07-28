@@ -4,7 +4,7 @@ import 'vuetify/styles'
 import StandInfoPanel from './StandInfoPanel.vue'
 import { useModelParameterStore } from '@/stores/modelParameterStore'
 import { setActivePinia, createPinia } from 'pinia'
-import { CONSTANTS, MESSAGE } from '@/constants'
+import { DEFAULTS, CONSTANTS, MESSAGE } from '@/constants'
 
 const vuetify = createVuetify()
 
@@ -33,7 +33,20 @@ describe('StandInfoPanel.vue', () => {
     )
     modelParameterStore.confirmPanel(CONSTANTS.MODEL_PARAMETER_PANEL.SITE_INFO)
 
-    modelParameterStore.percentStockableArea = 50
+    // Set conditions to enable Stand Info fields
+    modelParameterStore.derivedBy = CONSTANTS.DERIVED_BY.BASAL_AREA
+    modelParameterStore.siteSpeciesValues =
+      CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
+
+    // Set default values for new fields
+    modelParameterStore.percentStockableArea =
+      DEFAULTS.DEFAULT_VALUES.PERCENT_STOCKABLE_AREA
+    modelParameterStore.basalArea = DEFAULTS.DEFAULT_VALUES.BASAL_AREA
+    modelParameterStore.treesPerHectare = DEFAULTS.DEFAULT_VALUES.TPH
+    modelParameterStore.minDBHLimit = DEFAULTS.DEFAULT_VALUES.MIN_DBH_LIMIT
+    modelParameterStore.currentDiameter =
+      DEFAULTS.DEFAULT_VALUES.CURRENT_DIAMETER
+    modelParameterStore.crownClosure = DEFAULTS.DEFAULT_VALUES.CROWN_CLOSURE
 
     mount(StandInfoPanel, {
       global: {
@@ -53,16 +66,79 @@ describe('StandInfoPanel.vue', () => {
       .contains('Stand Information')
       .should('exist')
 
-    // Verify that the input field is rendered and has the expected value
+    // Verify % Stockable Area
     cy.get('[data-testid="percent-stockable-area"] input')
       .should('exist')
-      .and('have.value', '50')
+      .and('have.value', DEFAULTS.DEFAULT_VALUES.PERCENT_STOCKABLE_AREA)
       .and('have.attr', 'type', 'number')
-      .and('have.attr', 'max', '100')
-      .and('have.attr', 'min', '0')
-      .and('have.attr', 'step', '5')
+      .and(
+        'have.attr',
+        'max',
+        CONSTANTS.NUM_INPUT_LIMITS.PERCENT_STOCKABLE_AREA_MAX,
+      )
+      .and(
+        'have.attr',
+        'min',
+        CONSTANTS.NUM_INPUT_LIMITS.PERCENT_STOCKABLE_AREA_MIN,
+      )
+      .and(
+        'have.attr',
+        'step',
+        CONSTANTS.NUM_INPUT_LIMITS.PERCENT_STOCKABLE_AREA_STEP,
+      )
 
-    // // Verify that the AppPanelActions buttons are rendered
+    // Verify Crown Closure
+    cy.get('[data-testid="crown-closure"] input')
+      .should('exist')
+      .and('have.value', '')
+      .and('have.attr', 'type', 'number')
+      .and('have.attr', 'max', CONSTANTS.NUM_INPUT_LIMITS.CROWN_CLOSURE_MAX)
+      .and('have.attr', 'min', CONSTANTS.NUM_INPUT_LIMITS.CROWN_CLOSURE_MIN)
+      .and('have.attr', 'step', CONSTANTS.NUM_INPUT_LIMITS.CROWN_CLOSURE_STEP)
+
+    // Verify Basal Area
+    cy.get('[data-testid="basal-area"] input')
+      .should('exist')
+      .and('have.value', DEFAULTS.DEFAULT_VALUES.BASAL_AREA)
+      .and('have.attr', 'type', 'text')
+      .and(
+        'have.attr',
+        'max',
+        String(CONSTANTS.NUM_INPUT_LIMITS.BASAL_AREA_MAX),
+      )
+      .and(
+        'have.attr',
+        'min',
+        String(CONSTANTS.NUM_INPUT_LIMITS.BASAL_AREA_MIN),
+      )
+      .and(
+        'have.attr',
+        'step',
+        String(CONSTANTS.NUM_INPUT_LIMITS.BASAL_AREA_STEP),
+      )
+
+    // Verify TPH
+    cy.get('[data-testid="trees-per-hectare"] input')
+      .should('exist')
+      .and('have.value', DEFAULTS.DEFAULT_VALUES.TPH)
+      .and('have.attr', 'type', 'text')
+      .and('have.attr', 'max', String(CONSTANTS.NUM_INPUT_LIMITS.TPH_MAX))
+      .and('have.attr', 'min', String(CONSTANTS.NUM_INPUT_LIMITS.TPH_MIN))
+      .and('have.attr', 'step', String(CONSTANTS.NUM_INPUT_LIMITS.TPH_STEP))
+
+    // Verify Min DBH Limit
+    cy.get('[data-testid="min-dbh-limit"] input')
+      .should('exist')
+      .and('have.value', DEFAULTS.DEFAULT_VALUES.MIN_DBH_LIMIT)
+      .and('be.disabled')
+
+    // Verify Current Diameter (visible when conditions are met)
+    cy.get('[data-testid="current-diameter"] input')
+      .should('exist')
+      .and('have.value', DEFAULTS.DEFAULT_VALUES.CURRENT_DIAMETER)
+      .and('be.disabled')
+
+    // Verify AppPanelActions buttons
     cy.get('button').contains('Clear').should('exist')
     cy.get('button').contains('Confirm').should('exist')
     cy.get('button').contains('Edit').should('not.be.visible')
@@ -81,19 +157,37 @@ describe('StandInfoPanel.vue', () => {
 
     // Verify that the Edit button is now rendered
     cy.get('button').contains('Edit').should('exist')
+
+    // Verify inputs remain with values after confirm
+    cy.get('[data-testid="percent-stockable-area"] input').should(
+      'have.value',
+      DEFAULTS.DEFAULT_VALUES.PERCENT_STOCKABLE_AREA,
+    )
+    cy.get('[data-testid="crown-closure"] input').should('have.value', '')
+    cy.get('[data-testid="basal-area"] input').should(
+      'have.value',
+      DEFAULTS.DEFAULT_VALUES.BASAL_AREA,
+    )
+    cy.get('[data-testid="trees-per-hectare"] input').should(
+      'have.value',
+      DEFAULTS.DEFAULT_VALUES.TPH,
+    )
+    cy.get('[data-testid="min-dbh-limit"] input').should(
+      'have.value',
+      DEFAULTS.DEFAULT_VALUES.MIN_DBH_LIMIT,
+    )
+    cy.get('[data-testid="current-diameter"] input').should(
+      'have.value',
+      DEFAULTS.DEFAULT_VALUES.CURRENT_DIAMETER,
+    )
   })
 
   it('shows a validation error for invalid % Stockable Area', () => {
     mountComponent()
 
     // Setting % Stockable Area to an invalid value
-    cy.get('input[type="number"]').then((input) => {
-      // Clear the input value
-      cy.wrap(input).clear()
-
-      // Type a new invalid value
-      cy.wrap(input).type('200')
-    })
+    cy.get('[data-testid="percent-stockable-area"] input').clear()
+    cy.get('[data-testid="percent-stockable-area"] input').type('200')
 
     // Click the Confirm button
     cy.get('button').contains('Confirm').click()
@@ -109,13 +203,75 @@ describe('StandInfoPanel.vue', () => {
       })
   })
 
+  it('shows a validation error for invalid Basal Area', () => {
+    mountComponent()
+
+    // Setting Basal Area to an invalid value
+    cy.get('[data-testid="basal-area"] input').clear()
+    cy.get('[data-testid="basal-area"] input').type('1000')
+
+    // Click the Confirm button
+    cy.get('button').contains('Confirm').click()
+
+    // Ensure the dialog appears and contains the error message
+    cy.get('.v-dialog')
+      .should('exist')
+      .within(() => {
+        cy.contains(MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT).should('exist')
+        cy.contains(MESSAGE.MDL_PRM_INPUT_ERR.DENSITY_VLD_BSL_AREA_RNG).should(
+          'exist',
+        )
+      })
+  })
+
+  it('shows a validation error for invalid TPH', () => {
+    mountComponent()
+
+    // Setting TPH to an invalid value
+    cy.get('[data-testid="trees-per-hectare"] input').clear()
+    cy.get('[data-testid="trees-per-hectare"] input').type('10000')
+
+    // Click the Confirm button
+    cy.get('button').contains('Confirm').click()
+
+    // Ensure the dialog appears and contains the error message
+    cy.get('.v-dialog')
+      .should('exist')
+      .within(() => {
+        cy.contains(MESSAGE.MSG_DIALOG_TITLE.INVALID_INPUT).should('exist')
+        cy.contains(MESSAGE.MDL_PRM_INPUT_ERR.DENSITY_VLD_TPH_RNG).should(
+          'exist',
+        )
+      })
+  })
+
   it('clears the form when Clear is clicked', () => {
     mountComponent()
 
     cy.get('button').contains('Clear').click()
 
-    // Verify that % Stockable Area is initialized
-    cy.get('input[type="number"]').should('have.value', '')
+    // Verify that all fields are cleared or reset
+    cy.get('[data-testid="percent-stockable-area"] input').should(
+      'have.value',
+      DEFAULTS.DEFAULT_VALUES.PERCENT_STOCKABLE_AREA,
+    )
+    cy.get('[data-testid="crown-closure"] input').should('have.value', '')
+    cy.get('[data-testid="basal-area"] input').should(
+      'have.value',
+      DEFAULTS.DEFAULT_VALUES.BASAL_AREA,
+    )
+    cy.get('[data-testid="trees-per-hectare"] input').should(
+      'have.value',
+      DEFAULTS.DEFAULT_VALUES.TPH,
+    )
+    cy.get('[data-testid="min-dbh-limit"] input').should(
+      'have.value',
+      DEFAULTS.DEFAULT_VALUES.MIN_DBH_LIMIT,
+    )
+    cy.get('[data-testid="current-diameter"] input').should(
+      'have.value',
+      DEFAULTS.DEFAULT_VALUES.CURRENT_DIAMETER,
+    )
   })
 
   it('disables inputs and buttons when the panel is not editable', () => {
@@ -126,8 +282,13 @@ describe('StandInfoPanel.vue', () => {
       store.panelState.standInfo.editable = false
     })
 
-    // Verify that the % Stockable Area text field is disabled
-    cy.get('input[type="number"]').should('be.disabled')
+    // Verify that all input fields are disabled
+    cy.get('[data-testid="percent-stockable-area"] input').should('be.disabled')
+    cy.get('[data-testid="crown-closure"] input').should('be.disabled')
+    cy.get('[data-testid="basal-area"] input').should('be.disabled')
+    cy.get('[data-testid="trees-per-hectare"] input').should('be.disabled')
+    cy.get('[data-testid="min-dbh-limit"] input').should('be.disabled')
+    cy.get('[data-testid="current-diameter"] input').should('be.disabled')
 
     // Verify that the Clear and Confirm buttons are disabled
     cy.get('button:contains("Clear")')
@@ -139,5 +300,19 @@ describe('StandInfoPanel.vue', () => {
 
     // Verify that the Edit button is not visible
     cy.get('button').contains('Edit').should('not.be.visible')
+  })
+
+  it('updates Current Diameter when Basal Area and TPH change', () => {
+    mountComponent()
+
+    // Set initial values
+    cy.get('[data-testid="basal-area"] input').clear()
+    cy.get('[data-testid="basal-area"] input').type('10.0')
+    cy.get('[data-testid="trees-per-hectare"] input').clear()
+    cy.get('[data-testid="trees-per-hectare"] input').type('100.0')
+
+    cy.get('[data-testid="current-diameter"] input')
+      .should('have.value', '35.7 cm')
+      .and('be.disabled')
   })
 })
