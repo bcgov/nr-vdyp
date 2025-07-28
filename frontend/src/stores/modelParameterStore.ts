@@ -183,6 +183,11 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
 
   // stand information
   const percentStockableArea = ref<number | null>(null)
+  const basalArea = ref<string | null>(null)
+  const treesPerHectare = ref<string | null>(null)
+  const minDBHLimit = ref<string | null>(null)
+  const currentDiameter = ref<string | null>(null)
+  const crownClosure = ref<number | null>(null)
 
   // report info
   const selectedAgeYearRange = ref<string | null>(null)
@@ -223,6 +228,9 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     spzHeight.value = DEFAULTS.DEFAULT_VALUES.SPZ_HEIGHT
     bha50SiteIndex.value = DEFAULTS.DEFAULT_VALUES.BHA50_SITE_INDEX
     percentStockableArea.value = DEFAULTS.DEFAULT_VALUES.PERCENT_STOCKABLE_AREA
+    crownClosure.value = DEFAULTS.DEFAULT_VALUES.CROWN_CLOSURE
+    minDBHLimit.value = DEFAULTS.DEFAULT_VALUES.MIN_DBH_LIMIT
+    currentDiameter.value = DEFAULTS.DEFAULT_VALUES.CURRENT_DIAMETER
     selectedAgeYearRange.value = DEFAULTS.DEFAULT_VALUES.SELECTED_AGE_YEAR_RANGE
     startingAge.value = DEFAULTS.DEFAULT_VALUES.STARTING_AGE
     finishingAge.value = DEFAULTS.DEFAULT_VALUES.FINISHING_AGE
@@ -268,6 +276,12 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     bha50SiteIndex,
     // stand info
     percentStockableArea,
+    basalArea,
+    treesPerHectare,
+    minDBHLimit,
+    currentDiameter,
+    crownClosure,
+
     // report info
     selectedAgeYearRange,
     startingAge,

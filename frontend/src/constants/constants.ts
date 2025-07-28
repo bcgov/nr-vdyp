@@ -39,6 +39,14 @@ export const AGE_YEAR_RANGE = Object.freeze({
   YEAR: 'year',
 })
 
+export const MINIMUM_DBH_LIMITS = Object.freeze({
+  CM4_0: '4.0 cm+',
+  CM7_5: '7.5 cm+',
+  CM12_5: '12.5 cm+',
+  CM17_5: '17.5 cm+',
+  CM22_5: '22.5 cm+',
+})
+
 export const VOLUME_REPORTED = Object.freeze({
   WHOLE_STEM: 'Whole Stem',
   CLOSE_UTIL: 'Close Utilization',
@@ -95,6 +103,17 @@ export const NUM_INPUT_LIMITS = Object.freeze({
   PERCENT_STOCKABLE_AREA_MAX: 100,
   PERCENT_STOCKABLE_AREA_MIN: 0,
   PERCENT_STOCKABLE_AREA_STEP: 5,
+  CROWN_CLOSURE_MAX: 100,
+  CROWN_CLOSURE_MIN: 0,
+  CROWN_CLOSURE_STEP: 5,
+  TPH_MAX: 9999.9,
+  TPH_MIN: 0.1,
+  TPH_STEP: 250,
+  TPH_DECIMAL_NUM: 2,
+  BASAL_AREA_MAX: 250,
+  BASAL_AREA_MIN: 0.1,
+  BASAL_AREA_STEP: 2.5,
+  BASAL_AREA_DECIMAL_NUM: 4,
   STARTING_AGE_MAX: 500,
   STARTING_AGE_MIN: 0,
   STARTING_AGE_STEP: 10,
@@ -190,6 +209,8 @@ export const FILE_NAME = Object.freeze({
 
 export const BUTTON_LABEL = Object.freeze({
   CONT_EDIT: 'Continue Editing',
+  CONF_YES: 'Yes',
+  CONF_NO: 'No',
 })
 
 export const REPORTING_TAB = Object.freeze({

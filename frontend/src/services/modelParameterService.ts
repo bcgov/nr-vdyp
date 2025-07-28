@@ -297,9 +297,9 @@ const createLayerData = (
     '', // NON_FOREST_DESCRIPTOR_CODE
     modelParameterStore.highestPercentSpecies, // EST_SITE_INDEX_SPECIES_CD
     modelParameterStore.bha50SiteIndex ?? '', // ESTIMATED_SITE_INDEX
-    '', // CROWN_CLOSURE
-    '', // BASAL_AREA_75
-    '', // STEMS_PER_HA_75
+    modelParameterStore.crownClosure, // CROWN_CLOSURE
+    modelParameterStore.basalArea, // BASAL_AREA_75
+    modelParameterStore.treesPerHectare, // STEMS_PER_HA_75
     ...speciesRow, // Species codes and percentages (6 pairs)
     modelParameterStore.spzAge, // EST_AGE_SPP1
     modelParameterStore.spzHeight, // EST_HEIGHT_SPP1
