@@ -15,6 +15,8 @@ import {
   extractZipFileName,
   checkZipForErrors,
   sanitizeFileName,
+  convertToNumberSafely,
+  extractLeadingNumber,
 } from '@/utils/util'
 import JSZip from 'jszip'
 import { CONSTANTS } from '@/constants'
@@ -322,6 +324,59 @@ describe('Util Functions Unit Tests', () => {
         'valid.file_name-123.zip',
       )
       expect(sanitizeFileName('test__file_.zip')).to.equal('test_file.zip')
+    })
+  })
+
+  describe('convertToNumberSafely', () => {
+    it('should convert valid string numbers to numbers', () => {
+      expect(convertToNumberSafely('123')).to.equal(123)
+      expect(convertToNumberSafely('0')).to.equal(0)
+      expect(convertToNumberSafely('-5.5')).to.equal(-5.5)
+    })
+
+    it('should return null for blank inputs', () => {
+      expect(convertToNumberSafely('')).to.be.null
+      expect(convertToNumberSafely(null)).to.be.null
+      expect(convertToNumberSafely('  ')).to.be.null
+    })
+
+    it('should return null for invalid strings', () => {
+      expect(convertToNumberSafely('abc')).to.be.null
+      expect(convertToNumberSafely('12.34.56')).to.be.null
+    })
+
+    it('should preserve existing numbers', () => {
+      expect(convertToNumberSafely(42)).to.equal(42)
+      expect(convertToNumberSafely(-10.5)).to.equal(-10.5)
+    })
+
+    it('should handle mixed input types', () => {
+      expect(convertToNumberSafely('  10  ')).to.equal(10)
+      expect(convertToNumberSafely('  -5.0  ')).to.equal(-5)
+    })
+  })
+
+  describe('extractLeadingNumber', () => {
+    it('should extract leading number from valid strings', () => {
+      expect(extractLeadingNumber('123abc')).to.equal(123)
+      expect(extractLeadingNumber('-12.5test')).to.equal(-12.5)
+      expect(extractLeadingNumber('10.0more')).to.equal(10)
+    })
+
+    it('should return null for invalid or no leading number', () => {
+      expect(extractLeadingNumber('abc123')).to.be.null
+      expect(extractLeadingNumber('')).to.be.null
+      expect(extractLeadingNumber(null)).to.be.null
+    })
+
+    it('should handle whitespace', () => {
+      expect(extractLeadingNumber('  15text')).to.equal(15)
+      expect(extractLeadingNumber('  -5.5text')).to.equal(-5.5)
+    })
+
+    it('should ignore subsequent non-numeric characters', () => {
+      expect(extractLeadingNumber('12.34abc')).to.equal(12.34)
+      expect(extractLeadingNumber('-10.5xyz')).to.equal(-10.5)
     })
   })
 })
