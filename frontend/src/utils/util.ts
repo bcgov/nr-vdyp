@@ -123,6 +123,52 @@ export const parseNumberOrNull = (
 }
 
 /**
+ * Safely converts a string or number to a number, handling invalid inputs gracefully.
+ * Returns null if the input is blank (null, undefined, empty array, whitespace-only string),
+ * or if the string cannot be parsed to a valid number. Preserves existing numbers unchanged.
+ *
+ * @param item - The input value (number, string, or null) to convert
+ * @returns {number | null} The converted number or null if conversion fails or input is blank
+ * @example
+ *   convertToNumberSafely("123") // 123
+ *   convertToNumberSafely("  0  ") // 0
+ *   convertToNumberSafely("") // null
+ *   convertToNumberSafely(null) // null
+ *   convertToNumberSafely("abc") // null
+ *   convertToNumberSafely(42) // 42
+ */
+export const convertToNumberSafely = (item: NumStrNullType): number | null => {
+  if (isBlank(item)) return null
+  if (typeof item === 'string') {
+    const trimmed = trimValue(item)
+    const convertedNumber = Number(trimmed)
+    return isNaN(convertedNumber) ? null : convertedNumber
+  }
+  if (typeof item === 'number') return item
+  return null
+}
+
+/**
+ * Extracts the leading numeric value from a string, including optional negative sign and decimal.
+ * Returns the parsed number from the start of the string, ignoring subsequent non-numeric characters.
+ * Returns null if no valid leading number is found or if the input string does not start with a number.
+ *
+ * @param input - The input string that may contain a leading numeric value
+ * @returns {number | null} The parsed leading number or null if no valid number is found at the start
+ * @example
+ *   extractLeadingNumber("123abc") // 123
+ *   extractLeadingNumber("-12.5test") // -12.5
+ *   extractLeadingNumber("abc123") // null
+ *   extractLeadingNumber("  10.0  ") // 10
+ *   extractLeadingNumber("") // null
+ */
+export const extractLeadingNumber = (input: string | null): number | null => {
+  if (input == null) return null
+  const match = input.match(/^\s*-?\d+(\.\d+)?/)
+  return match ? parseFloat(match[0]) : null
+}
+
+/**
  * Formats a Date object into a string with the format "YYYY-MM-DD HH:MM:SS".
  * Returns null if the input date is null or invalid.
  *

@@ -59,6 +59,8 @@ export const MSG_DIALOG_TITLE = Object.freeze({
 export const MDL_PRM_INPUT_HINT = Object.freeze({
   SITE_ZERO_NOT_KNOW: 'A value of zero indicates not known.',
   SITE_DFT_COMPUTED: 'A default will be computed when the model is run.',
+  DENSITY_PCC_APPLY_DFT: 'Applying Default of 50%',
+  DENSITY_WO_AGE: 'Density Measurements cannot be supplied without an Age.',
 })
 
 export const MDL_PRM_INPUT_ERR = Object.freeze({
@@ -85,6 +87,11 @@ export const MDL_PRM_INPUT_ERR = Object.freeze({
     `The species '${selectedSiteSpeciesValue}' must have an BHA 50 Site Index value supplied`,
   DENSITY_VLD_PCT_STCB_AREA_RNG:
     "'Percent Stockable Area' must range from 0 and 100",
+  DENSITY_VLD_BSL_AREA_RNG: "'Basal Area' must range from 0.1000 and 250.0000",
+  DENSITY_VLD_TPH_RNG: "'Trees per Hectare' must range from 0.10 and 9999.90",
+  DENSITY_VLD_CROWN_CLOSURE_RNG: "'Crown Closure' must range from 0 and 100",
+  DENSITY_VLD_BSL_AREA_OVER_HEIGHT:
+    'Basal Area is above a likely maximum for the entered height. Do you wish to proceed?',
   RPT_VLD_COMP_FNSH_AGE:
     "'Finish Age' must be at least as great as the 'Start Age'",
   RPT_VLD_COMP_END_YEAR:
