@@ -491,6 +491,7 @@ public class ValidatedParameters {
 
 	static {
 		DEFAULT = new ValidatedParameters();
+		DEFAULT.setReportTitle("");
 
 		DEFAULT.ageStart = null;
 		DEFAULT.ageEnd = null;
