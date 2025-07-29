@@ -51,3 +51,6 @@ export const SPECIES_GROUP_DEFAULT_UTILIZATION_MAP: {
   S: UtilizationClassSetEnum._75,
   Y: UtilizationClassSetEnum._75,
 }
+
+// default value for Crown Closure if 0
+export const CROWN_CLOSURE_DEFAULT_IF_INVALID = '50'

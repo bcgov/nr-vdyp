@@ -1,4 +1,4 @@
-import { BIZCONSTANTS, CONSTANTS, CSVHEADERS } from '@/constants'
+import { BIZCONSTANTS, CONSTANTS, CSVHEADERS, DEFAULTS } from '@/constants'
 import {
   OutputFormatEnum,
   ExecutionOptionsEnum,
@@ -11,6 +11,7 @@ import { projectionHcsvPost } from '@/services/apiActions'
 import type { CSVRowType } from '@/types/types'
 import type { SpeciesGroup } from '@/interfaces/interfaces'
 import type { UtilizationParameter } from '@/services/vdyp-api/models/utilization-parameter'
+import { isBlank } from '@/utils/util'
 
 /**
  * Generates a unique 9-digit or 10-digit feature ID using the current timestamp and random values.
@@ -285,6 +286,15 @@ const createLayerData = (
 ): CSVRowType => {
   const speciesData = getSpeciesData(modelParameterStore.speciesList)
   const speciesRow = flattenSpeciesData(speciesData, 6)
+  const crownClosure =
+    modelParameterStore.derivedBy === CONSTANTS.DERIVED_BY.VOLUME &&
+    modelParameterStore.siteSpeciesValues ===
+      CONSTANTS.SITE_SPECIES_VALUES.COMPUTED &&
+    (isBlank(modelParameterStore.crownClosure) ||
+      modelParameterStore.crownClosure === 0)
+      ? DEFAULTS.CROWN_CLOSURE_DEFAULT_IF_INVALID
+      : modelParameterStore.crownClosure
+
   const row = [
     featureId, // FEATURE_ID
     treeCoverLayerEstimatedId, // TREE_COVER_LAYER_ESTIMATED_ID
@@ -297,7 +307,7 @@ const createLayerData = (
     '', // NON_FOREST_DESCRIPTOR_CODE
     modelParameterStore.highestPercentSpecies, // EST_SITE_INDEX_SPECIES_CD
     modelParameterStore.bha50SiteIndex ?? '', // ESTIMATED_SITE_INDEX
-    modelParameterStore.crownClosure, // CROWN_CLOSURE
+    crownClosure, // CROWN_CLOSURE
     modelParameterStore.basalArea, // BASAL_AREA_75
     modelParameterStore.treesPerHectare, // STEMS_PER_HA_75
     ...speciesRow, // Species codes and percentages (6 pairs)
