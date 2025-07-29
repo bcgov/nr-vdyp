@@ -81,11 +81,53 @@ describe('Auth Store Unit Tests', () => {
     }
     authStore.setUser(user)
 
-    const parsed = authStore.parseIdToken()
+    const parsed = authStore.getParsedIdToken()
 
     expect(parsed?.name).to.equal('John Doe')
     expect(parsed?.exp).to.equal(123456)
     expect(parsed?.client_roles).to.include('admin')
+  })
+
+  it('should parse a valid Access token', () => {
+    const mockToken = JSON.stringify({
+      iss: 'https://example.com',
+      sub: 'user123',
+      exp: 123456,
+    })
+    const base64Token = btoa(mockToken)
+    const user = {
+      accessToken: `mock.${base64Token}.token`,
+      refToken: '',
+      idToken: '',
+    }
+    authStore.setUser(user)
+
+    const parsed = authStore.getParsedAccessToken()
+
+    expect(parsed?.iss).to.equal('https://example.com')
+    expect(parsed?.sub).to.equal('user123')
+    expect(parsed?.exp).to.equal(123456)
+  })
+
+  it('should parse a valid Refresh token', () => {
+    const mockToken = JSON.stringify({
+      iss: 'https://example.com',
+      sub: 'user123',
+      exp: 123456,
+    })
+    const base64Token = btoa(mockToken)
+    const user = {
+      accessToken: '',
+      refToken: `mock.${base64Token}.token`,
+      idToken: '',
+    }
+    authStore.setUser(user)
+
+    const parsed = authStore.getParsedRefreshToken()
+
+    expect(parsed?.iss).to.equal('https://example.com')
+    expect(parsed?.sub).to.equal('user123')
+    expect(parsed?.exp).to.equal(123456)
   })
 
   it('should return an empty roles array when ID token is not set', () => {
@@ -123,23 +165,63 @@ describe('Auth Store Unit Tests', () => {
     cy.get('@logoutStub').should('have.been.calledOnce')
   })
 
-  it('should handle invalid ID tokens', () => {
-    const user = {
-      accessToken: '',
-      refToken: '',
-      idToken: 'invalid.token',
-    }
-    authStore.setUser(user)
+  it('should handle invalid tokens (Access, Refresh, ID)', () => {
+    const malformedTokens = [
+      { type: 'access', token: 'invalid.token' },
+      { type: 'refresh', token: 'invalid.token' },
+      { type: 'id', token: 'invalid.token' },
+    ]
 
     cy.spy(console, 'error').as('consoleError')
 
-    const parsed = authStore.parseIdToken()
+    malformedTokens.forEach(({ type, token }) => {
+      const user = {
+        accessToken: type === 'access' ? token : '',
+        refToken: type === 'refresh' ? token : '',
+        idToken: type === 'id' ? token : '',
+      }
+      authStore.setUser(user)
+      const parsed =
+        type === 'access'
+          ? authStore.getParsedAccessToken()
+          : type === 'refresh'
+            ? authStore.getParsedRefreshToken()
+            : authStore.getParsedIdToken()
+      expect(parsed).to.be.null
+    })
 
-    expect(parsed).to.be.null
-    cy.get('@consoleError').should(
-      'have.been.calledWithMatch',
-      'Invalid ID Token format',
-    )
+    cy.get('@consoleError')
+      .should('have.been.calledWithMatch', 'Invalid token format')
+      .and('have.callCount', 3) // Expect 3 calls for 3 tokens
+  })
+
+  it('should handle malformed tokens with varying formats', () => {
+    const malformedTokens = [
+      'token.without.dots',
+      'token.with.one.dot',
+      'token.with.three.dots.but.invalid.base64',
+    ]
+
+    cy.spy(console, 'error').as('consoleError')
+
+    malformedTokens.forEach((token) => {
+      const user = {
+        accessToken: token,
+        refToken: token,
+        idToken: token,
+      }
+      authStore.setUser(user)
+      const parsedAccess = authStore.getParsedAccessToken()
+      const parsedRefresh = authStore.getParsedRefreshToken()
+      const parsedId = authStore.getParsedIdToken()
+      expect(parsedAccess).to.be.null
+      expect(parsedRefresh).to.be.null
+      expect(parsedId).to.be.null
+    })
+
+    cy.get('@consoleError')
+      .should('have.been.calledWithMatch', 'Invalid token format')
+      .and('have.callCount', 9) // Expect 9 calls (3 tokens x 3 types)
   })
 
   it('should not load user if sessionStorage is empty', () => {
@@ -171,29 +253,6 @@ describe('Auth Store Unit Tests', () => {
       'equal',
       JSON.stringify(updatedUser),
     )
-  })
-
-  it('should handle malformed ID tokens', () => {
-    const malformedTokens = [
-      'token.without.dots',
-      'token.with.one.dot',
-      'token.with.three.dots.but.invalid.base64',
-    ]
-
-    cy.spy(console, 'error').as('consoleError')
-
-    malformedTokens.forEach((token) => {
-      const user = {
-        accessToken: '',
-        refToken: '',
-        idToken: token,
-      }
-      authStore.setUser(user)
-      const parsed = authStore.parseIdToken()
-      expect(parsed).to.be.null
-    })
-
-    cy.get('@consoleError').should('have.been.calledThrice')
   })
 
   it('should correctly reflect computed properties', () => {
