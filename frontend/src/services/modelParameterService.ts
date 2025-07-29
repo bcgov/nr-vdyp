@@ -292,8 +292,22 @@ const createLayerData = (
       CONSTANTS.SITE_SPECIES_VALUES.COMPUTED &&
     (isBlank(modelParameterStore.crownClosure) ||
       modelParameterStore.crownClosure === 0)
-      ? DEFAULTS.CROWN_CLOSURE_DEFAULT_IF_INVALID
+      ? DEFAULTS.CROWN_CLOSURE_DEFAULT_4PROJ
       : modelParameterStore.crownClosure
+
+  const basalArea =
+    modelParameterStore.derivedBy === CONSTANTS.DERIVED_BY.BASAL_AREA &&
+    modelParameterStore.siteSpeciesValues ===
+      CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
+      ? modelParameterStore.basalArea
+      : DEFAULTS.BASAL_AREA_DEFAULT_4PROJ
+
+  const treesPerHectare =
+    modelParameterStore.derivedBy === CONSTANTS.DERIVED_BY.BASAL_AREA &&
+    modelParameterStore.siteSpeciesValues ===
+      CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
+      ? modelParameterStore.treesPerHectare
+      : DEFAULTS.TPH_DEFAULT_4PROJ
 
   const row = [
     featureId, // FEATURE_ID
@@ -308,8 +322,8 @@ const createLayerData = (
     modelParameterStore.highestPercentSpecies, // EST_SITE_INDEX_SPECIES_CD
     modelParameterStore.bha50SiteIndex ?? '', // ESTIMATED_SITE_INDEX
     crownClosure, // CROWN_CLOSURE
-    modelParameterStore.basalArea, // BASAL_AREA_75
-    modelParameterStore.treesPerHectare, // STEMS_PER_HA_75
+    basalArea, // BASAL_AREA_75
+    treesPerHectare, // STEMS_PER_HA_75
     ...speciesRow, // Species codes and percentages (6 pairs)
     modelParameterStore.spzAge, // EST_AGE_SPP1
     modelParameterStore.spzHeight, // EST_HEIGHT_SPP1

@@ -52,5 +52,7 @@ export const SPECIES_GROUP_DEFAULT_UTILIZATION_MAP: {
   Y: UtilizationClassSetEnum._75,
 }
 
-// default value for Crown Closure if 0
-export const CROWN_CLOSURE_DEFAULT_IF_INVALID = '50'
+// default value for projection
+export const CROWN_CLOSURE_DEFAULT_4PROJ = 50
+export const BASAL_AREA_DEFAULT_4PROJ = DEFAULT_VALUES.BASAL_AREA
+export const TPH_DEFAULT_4PROJ = DEFAULT_VALUES.TPH
