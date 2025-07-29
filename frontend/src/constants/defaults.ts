@@ -51,3 +51,8 @@ export const SPECIES_GROUP_DEFAULT_UTILIZATION_MAP: {
   S: UtilizationClassSetEnum._75,
   Y: UtilizationClassSetEnum._75,
 }
+
+// default value for projection
+export const CROWN_CLOSURE_DEFAULT_4PROJ = 50
+export const BASAL_AREA_DEFAULT_4PROJ = DEFAULT_VALUES.BASAL_AREA
+export const TPH_DEFAULT_4PROJ = DEFAULT_VALUES.TPH
