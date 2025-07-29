@@ -232,6 +232,12 @@ public class ProjectionRequestParametersValidator {
 			vparams.setFilters(params.getFilters());
 		}
 
+		if (params.getReportTitle() == null) {
+			vparams.setReportTitle(DEFAULT.getReportTitle());
+		} else {
+			vparams.setReportTitle(params.getReportTitle());
+		}
+
 		// Parameters.JSON_PROPERTY_UTILS
 		vparams.setUtils(DEFAULT.getUtils());
 		if (params.getUtils() != null) {
