@@ -36,6 +36,10 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 			addColumn(header, width, "%" + width + "s");
 		}
 
+		public void addBreakColumn(boolean included) {
+			addColumn("|", 1, "|", included);
+		}
+
 		public void addColumn(String header, int width, String format) {
 			addColumn(header, width, format, true);
 		}
@@ -56,6 +60,22 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 
 		public void startNewRow() {
 			currentRow = new ArrayList<>();
+		}
+
+		public void addCellAsDouble(Object value) {
+			if (value == null) {
+				addCell(null);
+			} else {
+				addCell(Double.parseDouble(value.toString()));
+			}
+		}
+
+		public void addCellAsInteger(Object value) {
+			if (value == null) {
+				addCell(null);
+			} else {
+				addCell(Integer.parseInt(value.toString()));
+			}
 		}
 
 		public void addCell(Object value) {
@@ -84,7 +104,7 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 			int lineLength = 0;
 			String currentSuperHeader = null;
 			int numColumns = columns.size();
-			for (int endOffset = 1; endOffset <= longestHeaderLength; endOffset++) {
+			for (int endOffset = longestHeaderLength; endOffset >= 1; endOffset--) {
 				sb = new StringBuilder();
 				for (int colIndex = 0; colIndex < numColumns; colIndex++) {
 					Column column = columns.get(colIndex);
@@ -135,13 +155,24 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 		}
 
 		public void printRow() throws YieldTableGenerationException {
-			int numColumns = columns.size();
-			for (int j = 0; j < numColumns; j++) {
-				Column column = columns.get(j);
-				if (column.included()) {
-					Object cellData = currentRow.get(j);
-					doWrite(column.format(), cellData);
+			String lastFormat = "";
+			int index = 0;
+			Object data = null;
+			try {
+				int numColumns = columns.size();
+				for (int j = 0; j < numColumns; j++) {
+					Column column = columns.get(j);
+					if (column.included() && currentRow.size() > j) {
+						Object cellData = currentRow.get(j);
+						if (cellData == null && !column.format().equals("|")) {
+							doWrite(" ".repeat(column.width() + 1));
+						} else {
+							doWrite(column.format(), cellData);
+						}
+					}
 				}
+			} catch (Exception e) {
+				throw new RuntimeException(e);
 			}
 			doWrite("\n");
 		}
@@ -177,52 +208,66 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 		textFileTable.startNewRow();
 	}
 
+	protected Double getMAI(String value, int currentAge) {
+		if (value == null || currentAge <= 0) {
+			return null;
+		}
+		return Double.parseDouble(value) / currentAge;
+	}
+
 	@Override
 	protected void writeRecord(YieldTableRowContext rowContext) throws YieldTableGenerationException {
 
-		textFileTable.addCell(Integer.parseInt(currentRecord.getTotalAge())); // TOT AGE
-		textFileTable.addCell(Double.parseDouble(currentRecord.getDominantHeight())); // Height
-		textFileTable.addCell(Double.parseDouble(currentRecord.getSecondaryHeight())); // Secondary Height
-		textFileTable.addCell(Double.parseDouble(currentRecord.getLoreyHeight())); /// lorey Height
-		textFileTable.addCell(Double.parseDouble(currentRecord.getDiameter()));// "Quad Stnd DIA (cm)";
-		textFileTable.addCell(Double.parseDouble(currentRecord.getBasalArea()));// "BA (m**2/ha)");//Basal Area
-		textFileTable.addCell(Integer.parseInt(currentRecord.getTreesPerHectare()));// TPH
+		try {
+			int currentAge = rowContext.getCurrentTableAge();
+			textFileTable.addCellAsInteger(currentRecord.getTotalAge()); // TOT AGE
+			textFileTable.addCellAsDouble(currentRecord.getDominantHeight()); // Height
+			textFileTable.addCellAsDouble(currentRecord.getSecondaryHeight()); // Secondary Height
+			textFileTable.addCellAsDouble(currentRecord.getLoreyHeight()); /// lorey Height
+			textFileTable.addCellAsDouble(currentRecord.getDiameter());// "Quad Stnd DIA (cm)";
+			textFileTable.addCellAsDouble(currentRecord.getBasalArea());// "BA (m**2/ha)");//Basal Area
+			textFileTable.addCellAsDouble(currentRecord.getTreesPerHectare());// TPH
 
-		textFileTable.addCell(Double.parseDouble(currentRecord.getWholeStemVolume())); // whole stem volume
-		textFileTable.addCell(Double.parseDouble(currentRecord.getWholeStemVolume())); // FIX ME whole Stem Volume MAI
+			textFileTable.addCellAsDouble(currentRecord.getWholeStemVolume()); // whole stem volume
+			textFileTable.addCell(getMAI(currentRecord.getWholeStemVolume(), currentAge)); // whole Stem Volume MAI
 
-		textFileTable.addCell(Double.parseDouble(currentRecord.getCloseUtilizationVolume())); // close util volume
-		textFileTable.addCell(Double.parseDouble(currentRecord.getCloseUtilizationVolume())); // FIX ME close util MAI
+			textFileTable.addCellAsDouble(currentRecord.getCloseUtilizationVolume()); // close util volume
+			textFileTable.addCell(getMAI(currentRecord.getCloseUtilizationVolume(), currentAge)); // close util MAI
 
-		textFileTable.addCell(Double.parseDouble(currentRecord.getCuVolumeLessDecay())); // Net decay valume
-		textFileTable.addCell(Double.parseDouble(currentRecord.getCuVolumeLessDecay())); // FIX ME Net decay valume MAI
+			textFileTable.addCellAsDouble(currentRecord.getCuVolumeLessDecay()); // Net decay valume
+			textFileTable.addCell(getMAI(currentRecord.getCuVolumeLessDecay(), currentAge)); // Net decay valume MAI
 
-		textFileTable.addCell(Double.parseDouble(currentRecord.getCuVolumeLessDecayWastage())); // Net decay wastage
-																								// volume
-		textFileTable.addCell(Double.parseDouble(currentRecord.getCuVolumeLessDecayWastage())); // FIX ME Net decay
-																								// wastage MAI
+			textFileTable.addCellAsDouble(currentRecord.getCuVolumeLessDecayWastage()); // Net decay wastage
+			// volume
+			textFileTable.addCell(getMAI(currentRecord.getCuVolumeLessDecayWastage(), currentAge)); // Net decay
+			// wastage MAI
 
-		textFileTable.addCell(Double.parseDouble(currentRecord.getCuVolumeLessDecayWastageBreakage())); // close util
-																										// less decay
-																										// wastage and
-																										// breakage
-																										// volume
-		textFileTable.addCell(Double.parseDouble(currentRecord.getCuVolumeLessDecayWastageBreakage())); // FIX ME close
-																										// util less
-																										// decay wastage
-																										// and breakage
-																										// MAI
+			textFileTable.addCellAsDouble(currentRecord.getCuVolumeLessDecayWastageBreakage()); // close util
+			// less decay
+			// wastage and
+			// breakage
+			// volume
+			textFileTable.addCell(getMAI(currentRecord.getCuVolumeLessDecayWastageBreakage(), currentAge)); // FIX ME
+																											// close
+			// util less
+			// decay wastage
+			// and breakage
+			// MAI
 
-		textFileTable.addCell(Double.parseDouble(currentRecord.getCfsBiomassStem())); // CFS Stem Biomass
-		textFileTable.addCell(Double.parseDouble(currentRecord.getCfsBiomassBark())); // CFS Bark Biomass
-		textFileTable.addCell(Double.parseDouble(currentRecord.getCfsBiomassBranch())); // CFS Branch Biomass
-		textFileTable.addCell(Double.parseDouble(currentRecord.getCfsBiomassFoliage())); // CFS Foliage Biomass
+			textFileTable.addCellAsDouble(currentRecord.getCfsBiomassStem()); // CFS Stem Biomass
+			textFileTable.addCellAsDouble(currentRecord.getCfsBiomassBark()); // CFS Bark Biomass
+			textFileTable.addCellAsDouble(currentRecord.getCfsBiomassBranch()); // CFS Branch Biomass
+			textFileTable.addCellAsDouble(currentRecord.getCfsBiomassFoliage()); // CFS Foliage Biomass
 
-		/*
-		 * boolean includeSpeciesComposition = false; for(int specIndex = 0; specIndex < 7; specIndex++) {
-		 * textFileTable.addColumn("Sp" + (specIndex + 1) + " Code", 3, includeSpeciesComposition); }
-		 */
-
+			/*
+			 * boolean includeSpeciesComposition = false; for(int specIndex = 0; specIndex < 7; specIndex++) {
+			 * textFileTable.addColumn("Sp" + (specIndex + 1) + " Code", 3, includeSpeciesComposition); }
+			 */
+		} catch (Exception e) {
+			throw new YieldTableGenerationException(
+					"Error writing yield table record for polygon: " + rowContext.getPolygon().getPolygonNumber(), e
+			);
+		}
 		// Print out all the relevant information
 		textFileTable.printRow();
 	}
@@ -233,64 +278,81 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 			Integer yieldTableCount
 	) throws YieldTableGenerationException {
 
+		textFileTable = new TextFileTable();
 		var params = context.getParams();
 		textFileTable.addColumn("TOT AGE", 3, "%3d");
-		textFileTable.addColumn("Site HT (m)", 4, "%3.1f");
+		textFileTable.addColumn("Site HT (m)", 4, "%4.1f");
 		textFileTable.addColumn(
-				"Scnd HT (m)", 4, "%3.1f",
+				"Scnd HT (m)", 4, "%4.1f",
 				params.containsOption(ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE)
 		);
-		textFileTable.addColumn("Lorey HT (m)", 5, "%4.1f");
-		textFileTable.addColumn("Quad Stnd DIA (cm)", 4, "%3.1f");
-		textFileTable.addColumn("BA (m**2/ha)", 9, "%8.1f");
-		textFileTable.addColumn("TPH (trees/ha)", 10, "%10d");
+		textFileTable.addColumn("Lorey HT (m)", 5, "%5.1f");
+		textFileTable.addColumn("Quad Stnd DIA (cm)", 4, "%4.1f");
+		textFileTable.addColumn("BA (m**2/ha)", 9, "%9.1f");
+		textFileTable.addColumn("TPH (trees/ha)", 10, "%10.0f");
 
 		boolean showBioMassColumns = isCurrentlyWritingCategory(YieldTable.Category.CFSBIOMASS);
 		boolean showMofVolumeColumns = isCurrentlyWritingCategory(YieldTable.Category.LAYER_MOFVOLUMES);
-		boolean includeMAI = false;
-		textFileTable.addColumn("|", 1, "|", showMofVolumeColumns);
+		boolean includeMAI = params.containsOption(ExecutionOption.REPORT_INCLUDE_VOLUME_MAI);
+		boolean showStemVolume = showMofVolumeColumns
+				&& params.containsOption(ExecutionOption.REPORT_INCLUDE_WHOLE_STEM_VOLUME);
+		textFileTable.addBreakColumn(showMofVolumeColumns);
 		textFileTable.addColumn(
-				(includeMAI ? "" : "Whole Stem ") + "VOLUME (m**3/ha)", 11, "%10.1f", showMofVolumeColumns,
+				(includeMAI ? "" : "Whole Stem ") + "VOLUME (m**3/ha)", 11, "%11.1f", showStemVolume,
 				includeMAI ? "Whole Stem" : null
 		);
-		textFileTable.addColumn("MAI (m**3/ha)", 11, "%10.1f", showMofVolumeColumns && includeMAI, "Whole Stem");
+		textFileTable.addColumn("MAI (m**3/ha)", 11, "%11.1f", showStemVolume && includeMAI, "Whole Stem");
 
-		boolean showCloseUtilization = showBioMassColumns || showMofVolumeColumns;
-		textFileTable.addColumn("|", 1, "|", showCloseUtilization);
+		boolean showCloseUtilization = showBioMassColumns || (showMofVolumeColumns
+				&& params.containsOption(ExecutionOption.REPORT_INCLUDE_CLOSE_UTILIZATION_VOLUME));
+		textFileTable.addBreakColumn(showCloseUtilization);
 		textFileTable.addColumn(
-				(includeMAI ? "" : "Close Utilization ") + "VOLUME (m**3/ha)", 11, "%10.1f", showMofVolumeColumns,
+				(includeMAI ? "" : "Close Utilization ") + "VOLUME (m**3/ha)", 11, "%11.1f", showCloseUtilization,
 				includeMAI ? "Close Utilization" : null
 		);
-		textFileTable.addColumn("MAI (m**3/ha)", 11, "%10.1f", showMofVolumeColumns && includeMAI, "Close Utilization");
+		textFileTable.addColumn("MAI (m**3/ha)", 11, "%11.1f", showCloseUtilization && includeMAI, "Close Utilization");
 
-		textFileTable.addColumn("|", 1, "|", showMofVolumeColumns);
+		boolean showNetDecayVolume = showMofVolumeColumns
+				&& params.containsOption(ExecutionOption.REPORT_INCLUDE_NET_DECAY_VOLUME);
+		textFileTable.addBreakColumn(showNetDecayVolume);
 		textFileTable.addColumn(
-				(includeMAI ? "" : "Net Decay ") + "VOLUME (m**3/ha)", 11, "%10.1f", showMofVolumeColumns,
+				(includeMAI ? "" : "Net Decay ") + "VOLUME (m**3/ha)", 11, "%11.1f", showNetDecayVolume,
 				includeMAI ? "Net Decay" : null
 		);
-		textFileTable.addColumn("MAI (m**3/ha)", 11, "%10.1f", showMofVolumeColumns && includeMAI, "Net Decay");
+		textFileTable.addColumn("MAI (m**3/ha)", 11, "%11.1f", showNetDecayVolume && includeMAI, "Net Decay");
 
-		textFileTable.addColumn("|", 1, "|", showMofVolumeColumns);
+		boolean showNetDecayWastageVolume = showMofVolumeColumns
+				&& params.containsOption(ExecutionOption.REPORT_INCLUDE_ND_WASTE_VOLUME);
+		textFileTable.addBreakColumn(showNetDecayWastageVolume);
 		textFileTable.addColumn(
-				(includeMAI ? "" : "Net_Decay and_Waste ") + "VOLUME (m**3/ha)", 11, "%10.1f", showMofVolumeColumns,
+				(includeMAI ? "" : "Net_Decay and_Waste ") + "VOLUME (m**3/ha)", 11, "%11.1f",
+				showNetDecayWastageVolume,
 				includeMAI ? "Net Decay and Waste" : null
 		);
 		textFileTable
-				.addColumn("MAI (m**3/ha)", 11, "%10.1f", showMofVolumeColumns && includeMAI, "Net Decay and Waste");
+				.addColumn(
+						"MAI (m**3/ha)", 11, "%11.1f", showNetDecayWastageVolume && includeMAI, "Net Decay and Waste"
+				);
 
-		textFileTable.addColumn("|", 1, "|", showMofVolumeColumns);
+		boolean showMofVolumeBreakageColumns = showMofVolumeColumns
+				&& params.containsOption(ExecutionOption.REPORT_INCLUDE_ND_WAST_BRKG_VOLUME);
+		textFileTable.addBreakColumn(showMofVolumeBreakageColumns);
 		textFileTable.addColumn(
-				(includeMAI ? "" : "Net_Decay Waste,_Brkg ") + "VOLUME (m**3/ha)", 11, "%10.1f", showMofVolumeColumns,
+				(includeMAI ? "" : "Net_Decay Waste,_Brkg ") + "VOLUME (m**3/ha)", 11, "%11.1f",
+				showMofVolumeBreakageColumns,
 				includeMAI ? "Net Decay Waste, Brkg" : null
 		);
 		textFileTable
-				.addColumn("MAI (m**3/ha)", 11, "%10.1f", showMofVolumeColumns && includeMAI, "Net Decay Waste, Brkg");
+				.addColumn(
+						"MAI (m**3/ha)", 11, "%11.1f", showMofVolumeBreakageColumns && includeMAI,
+						"Net Decay Waste, Brkg"
+				);
 
-		textFileTable.addColumn("|", 1, "|", showBioMassColumns);
-		textFileTable.addColumn("Stem (tons/ha)", 12, "%11.1f", showBioMassColumns, "CFS Biomass");
-		textFileTable.addColumn("Bark (tons/ha)", 12, "%11.1f", showBioMassColumns, "CFS Biomass");
-		textFileTable.addColumn("Branch (tons/ha)", 12, "%11.1f", showBioMassColumns, "CFS Biomass");
-		textFileTable.addColumn("Foliage (tons/ha)", 12, "%11.1f", showBioMassColumns, "CFS Biomass");
+		textFileTable.addBreakColumn(showBioMassColumns);
+		textFileTable.addColumn("Stem (tons/ha)", 12, "%12.1f", showBioMassColumns, "CFS Biomass");
+		textFileTable.addColumn("Bark (tons/ha)", 12, "%12.1f", showBioMassColumns, "CFS Biomass");
+		textFileTable.addColumn("Branch (tons/ha)", 12, "%12.1f", showBioMassColumns, "CFS Biomass");
+		textFileTable.addColumn("Foliage (tons/ha)", 12, "%12.1f", showBioMassColumns, "CFS Biomass");
 
 		/*
 		 * TODO species Composition boolean includeSpeciesComposition = false; textFileTable.addColumn("|", 1, "|",
