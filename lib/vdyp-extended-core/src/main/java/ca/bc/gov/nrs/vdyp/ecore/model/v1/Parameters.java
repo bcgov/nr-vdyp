@@ -88,6 +88,10 @@ public class Parameters {
 	@JsonProperty(JSON_PROPERTY_METADATA_TO_OUTPUT)
 	private String metadataToOutput;
 
+	public static final String JSON_PROPERTY_REPORT_TITLE = "reportTitle";
+	@JsonProperty(JSON_PROPERTY_REPORT_TITLE)
+	private String reportTitle;
+
 	public static final String JSON_PROPERTY_FILTERS = "filters";
 	@JsonProperty(JSON_PROPERTY_FILTERS)
 	public FilterParameters filters;
@@ -95,6 +99,7 @@ public class Parameters {
 	public static final String JSON_PROPERTY_UTILS = "utils";
 	@JsonProperty(JSON_PROPERTY_UTILS)
 	private List<UtilizationParameter> utils = new ArrayList<>();
+
 
 	public enum OutputFormat {
 		TEXT_REPORT("TextReport", "YieldReport.txt"),
@@ -178,8 +183,15 @@ public class Parameters {
 		DO_ENABLE_PROGRESS_LOGGING("doEnableProgressLogging"), //
 		DO_ENABLE_ERROR_LOGGING("doEnableErrorLogging"), //
 		DO_ENABLE_DEBUG_LOGGING("doEnableDebugLogging"), //
-		DO_DELAY_EXECUTION_FOLDER_DELETION("doDelayExecutionFolderDeletion"),
-		ALLOW_AGGRESSIVE_VALUE_ESTIMATION("allowAggressiveValueEstimation");
+		DO_DELAY_EXECUTION_FOLDER_DELETION("doDelayExecutionFolderDeletion"), //
+		ALLOW_AGGRESSIVE_VALUE_ESTIMATION("allowAggressiveValueEstimation"), //
+		REPORT_INCLUDE_WHOLE_STEM_VOLUME("reportIncludeWholeStemVolume"), //
+		REPORT_INCLUDE_CLOSE_UTILIZATION_VOLUME("reportIncludeCloseUtilizationVolume"), //
+		REPORT_INCLUDE_NET_DECAY_VOLUME("reportIncludeNetDecayVolume"), //
+		REPORT_INCLUDE_ND_WASTE_VOLUME("reportIncludeNDWasteVolume"), //
+		REPORT_INCLUDE_ND_WAST_BRKG_VOLUME("reportIncludeNDWasteBrkgVolume"), //
+		REPORT_INCLUDE_VOLUME_MAI("reportIncludeVolumeMAI"), //
+		REPORT_INCLUDE_SPEC_COMP("reportIncludeSpeciesComp");
 
 		private String value;
 
@@ -859,6 +871,18 @@ public class Parameters {
 		return this;
 	}
 
+	public String getReportTitle() {
+		return reportTitle;
+	}
+
+	public Parameters reportTitle(String reportTitle) {
+		setReportTitle(reportTitle);
+		return this;
+	}
+
+	public void setReportTitle(String reportTitle) {
+		this.reportTitle = reportTitle;
+	}
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) {

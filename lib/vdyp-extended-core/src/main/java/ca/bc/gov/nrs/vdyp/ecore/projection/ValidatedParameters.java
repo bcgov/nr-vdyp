@@ -62,6 +62,7 @@ public class ValidatedParameters {
 	private MetadataToOutputDirective metadataToOutput;
 	private FilterParameters filters;
 	private Map<SP0Name, UtilizationClassSet> utils = new HashMap<>();
+	private String reportTitle;
 
 	/**
 	 * Helper method that returns "true" iff the given option is in <code>selectedExecutionOptions</code>.
@@ -400,6 +401,14 @@ public class ValidatedParameters {
 		if (utils != null) {
 			utils.entrySet().stream().forEach(e -> this.utils.put(e.getKey(), e.getValue()));
 		}
+	}
+
+	public void setReportTitle(String reportTitle) {
+		this.reportTitle = reportTitle;
+	}
+
+	public String getReportTitle() {
+		return reportTitle;
 	}
 
 	@Override
