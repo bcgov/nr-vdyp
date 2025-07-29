@@ -49,40 +49,112 @@ export const useAuthStore = defineStore('authStore', () => {
     }
   }
 
-  const parseIdToken = () => {
-    if (!user.value || !user.value.idToken) return null
+  const parseToken = (
+    token: string | undefined,
+  ): Record<string, any> | null => {
+    if (!token) return null
 
     try {
-      const idTokenParts = user.value.idToken.split('.')
+      const tokenParts = token.split('.')
 
-      if (idTokenParts.length !== 3) {
-        console.error('Invalid ID Token format')
+      if (tokenParts.length !== 3) {
+        console.error('Invalid token format')
         return null
       }
 
-      const idTokenParsed = JSON.parse(atob(idTokenParts[1]))
-
-      return {
-        auth_time: idTokenParsed.auth_time ?? null,
-        client_roles: idTokenParsed.client_roles ?? [],
-        display_name: idTokenParsed.display_name ?? null,
-        email: idTokenParsed.email ?? null,
-        exp: idTokenParsed.exp ?? null,
-        family_name: idTokenParsed.family_name ?? null,
-        given_name: idTokenParsed.given_name ?? null,
-        idir_username: idTokenParsed.idir_username ?? null,
-        name: idTokenParsed.name ?? null,
-        preferred_username: idTokenParsed.preferred_username ?? null,
-        user_principal_name: idTokenParsed.user_principal_name ?? null,
-      }
+      const tokenParsed = JSON.parse(atob(tokenParts[1]))
+      return tokenParsed
     } catch (error) {
-      console.error('Failed to parse ID Token:', error)
+      console.error('Failed to parse token:', error)
       return null
     }
   }
 
+  const getParsedAccessToken = () => {
+    const parsed = parseToken(user.value?.accessToken)
+    if (!parsed) return null
+
+    return {
+      aud: parsed.aud ?? null,
+      azp: parsed.azp ?? null,
+      client_roles: parsed.client_roles ?? [],
+      display_name: parsed.display_name ?? null,
+      email: parsed.email ?? null,
+      email_verified: parsed.email_verified ?? null,
+      exp: parsed.exp ?? null,
+      family_name: parsed.family_name ?? null,
+      given_name: parsed.given_name ?? null,
+      iat: parsed.iat ?? null,
+      identity_provider: parsed.identity_provider ?? null,
+      idir_user_guid: parsed.idir_user_guid ?? null,
+      idir_username: parsed.idir_username ?? null,
+      iss: parsed.iss ?? null,
+      jti: parsed.jti ?? null,
+      name: parsed.name ?? null,
+      nonce: parsed.nonce ?? null,
+      preferred_username: parsed.preferred_username ?? null,
+      scope: parsed.scope ?? null,
+      session_state: parsed.session_state ?? null,
+      sid: parsed.sid ?? null,
+      sub: parsed.sub ?? null,
+      typ: parsed.typ ?? null,
+      user_principal_name: parsed.user_principal_name ?? null,
+    }
+  }
+
+  const getParsedRefreshToken = () => {
+    const parsed = parseToken(user.value?.refToken)
+    if (!parsed) return null
+
+    return {
+      aud: parsed.aud ?? null,
+      azp: parsed.azp ?? [],
+      exp: parsed.exp ?? null,
+      iat: parsed.iat ?? null,
+      iss: parsed.iss ?? null,
+      jti: parsed.jti ?? null,
+      nonce: parsed.nonce ?? null,
+      scope: parsed.scope ?? null,
+      sid: parsed.sid ?? null,
+      sub: parsed.sub ?? null,
+      typ: parsed.typ ?? null,
+    }
+  }
+
+  const getParsedIdToken = () => {
+    const parsed = parseToken(user.value?.idToken)
+    if (!parsed) return null
+
+    return {
+      at_hash: parsed.at_hash ?? null,
+      aud: parsed.aud ?? null,
+      azp: parsed.azp ?? null,
+      client_roles: parsed.client_roles ?? [],
+      display_name: parsed.display_name ?? null,
+      email: parsed.email ?? null,
+      email_verified: parsed.email_verified ?? null,
+      exp: parsed.exp ?? null,
+      family_name: parsed.family_name ?? null,
+      given_name: parsed.given_name ?? null,
+      iat: parsed.iat ?? null,
+      identity_provider: parsed.identity_provider ?? null,
+      idir_user_guid: parsed.idir_user_guid ?? null,
+      idir_username: parsed.idir_username ?? null,
+      iss: parsed.iss ?? null,
+      jti: parsed.jti ?? null,
+      name: parsed.name ?? null,
+      nonce: parsed.nonce ?? null,
+      preferred_username: parsed.preferred_username ?? null,
+      session_state: parsed.session_state ?? null,
+      sid: parsed.sid ?? null,
+      sub: parsed.sub ?? null,
+      typ: parsed.typ ?? null,
+      user_principal_name: parsed.user_principal_name ?? null,
+    }
+  }
+
   const getAllRoles = () => {
-    const parsedToken = parseIdToken()
+    const parsedToken = getParsedIdToken()
     if (parsedToken && Array.isArray(parsedToken.client_roles)) {
       return parsedToken.client_roles
     }
@@ -110,7 +182,9 @@ export const useAuthStore = defineStore('authStore', () => {
     setUser,
     clearUser,
     loadUserFromStorage,
-    parseIdToken,
+    getParsedAccessToken,
+    getParsedRefreshToken,
+    getParsedIdToken,
     getAllRoles,
     hasRole,
     logout,

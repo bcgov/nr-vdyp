@@ -5,6 +5,7 @@ import type {
   InternalAxiosRequestConfig,
 } from 'axios'
 import { useAuthStore } from '@/stores/common/authStore'
+import { handleTokenValidation } from '@/services/keycloak'
 import { AXIOS } from '@/constants/constants'
 import { logErrorMessage } from '@/utils/messageHandler'
 import { AXIOS_INST_ERR } from '@/constants/message'
@@ -21,12 +22,13 @@ axiosInstance.interceptors.request.use(
     console.debug(
       `Request timeout: ${config.timeout}, ${config.headers}, method: ${config.method}, responseType: ${config.responseType}, url: ${config.url}`,
     )
-    // TODO - performance issues or network overhead issue?
-    // then consider timer-based refresh + refresh token on 401 error
-    // Ensure token is valid or refreshed
 
     const authStore = useAuthStore()
     if (authStore && authStore.user && authStore.user.accessToken) {
+      // Validate and refresh token if necessary
+      await handleTokenValidation()
+
+      // After validation/refresh, set the latest token
       const token = authStore.user.accessToken
       if (token && config.headers) {
         config.headers.Authorization = `Bearer ${token}`
@@ -49,14 +51,24 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response: AxiosResponse) => response,
   async (error) => {
-    // TODO - 401 Unauthorized handling: Retry after token renewal
-    // TODO - Other alternatives => axios-auth-refresh npm package
+    const originalRequest = error.config
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true
+      const authStore = useAuthStore()
+
+      // Validate and refresh token safely
+      await handleTokenValidation()
+
+      // After refresh, retry with new token
+      if (authStore.user?.accessToken) {
+        originalRequest.headers.Authorization = `Bearer ${authStore.user.accessToken}`
+        return axiosInstance(originalRequest)
+      }
+    }
 
     return Promise.reject(convertToAxiosError(error))
   },
 )
-
-// TODO - If don't need 401 Unauthorized handling in interceptors.response, use the following
 
 // convert an error object to AxiosError
 const convertToAxiosError = (error: unknown): Error => {
@@ -66,7 +78,5 @@ const convertToAxiosError = (error: unknown): Error => {
 
   return new Error(String(error))
 }
-
-// TODO - Other alternatives => axios-auth-refresh npm package
 
 export default axiosInstance
