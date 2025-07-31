@@ -8,6 +8,9 @@ services:
       POSTGRES_PASSWORD: ${VDYP_DB_PASSWORD}
       POSTGRES_DB: ${VDYP_DB_DATABASE}
     volumes:
+      # your init scripts (e.g. 1-schema.sql, 2-seed.sh) live here
+      - ./initdb:/docker-entrypoint-initdb.d
+      # persistent data volume
       - db_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
