@@ -11,10 +11,20 @@ import java.util.Optional;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.YieldTableGenerationException;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters.ExecutionOption;
 import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionContext;
+import ca.bc.gov.nrs.vdyp.ecore.projection.model.Layer;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.LayerReportingInfo;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon;
+import ca.bc.gov.nrs.vdyp.ecore.projection.model.Species;
+import ca.bc.gov.nrs.vdyp.ecore.projection.model.Stand;
+import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.InventoryStandard;
 import ca.bc.gov.nrs.vdyp.ecore.utils.Utils;
+import ca.bc.gov.nrs.vdyp.si32.site.SiteTool;
+import ca.bc.gov.nrs.vdyp.si32.vdyp.SP0Name;
 
+/**
+ * Write a yield table in the format required by Input Model Parameters Report. This class makes some assumptions that
+ * it will only be run for a single polygon and layer as that is how the Inpt Model Parameters Report is run
+ */
 class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean> {
 
 	public static final String YIELD_TABLE_FILE_NAME = "YieldReport.txt";
@@ -23,6 +33,8 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 
 	private OutputStream outputStream;
 	private TextFileTable textFileTable;
+
+	private boolean writeTopHeader = true;
 
 	private class TextFileTable {
 		private record Column(String[] headerWords, int width, String format, boolean included, String superHeader) {
@@ -99,7 +111,7 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 			}
 		}
 
-		public void printHeader() throws YieldTableGenerationException {
+		public void printTableHeader() throws YieldTableGenerationException {
 			StringBuilder sb;
 			int lineLength = 0;
 			String currentSuperHeader = null;
@@ -272,11 +284,47 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 		textFileTable.printRow();
 	}
 
+	private String centerString(String ogString, int numCharacters) {
+		int padding = numCharacters - ogString.length();
+		return " ".repeat(padding / 2) + ogString + " ".repeat(padding - (padding / 2));
+	}
+
 	@Override
 	public void writePolygonTableHeader(
 			Polygon polygon, Optional<LayerReportingInfo> layerReportingInfo, boolean doGenerateDetailedTableHeader,
 			Integer yieldTableCount
 	) throws YieldTableGenerationException {
+
+		if (writeTopHeader) {
+			writeTopHeader = false;
+			int lineChars = 80;
+			StringBuilder titleLine = new StringBuilder();
+			String title = context.getParams().getReportTitle();
+			if (lineChars < title.length()) {
+				doWrite(centerString(title, lineChars));
+			} else {
+				String[] titleWords = title.split(" ");
+				for (String word : titleWords) {
+					if (titleLine.length() + word.length() + 1 > lineChars) {
+						doWrite(centerString(titleLine.toString(), lineChars));
+						titleLine = new StringBuilder();
+					}
+					titleLine.append(word).append(" ");
+				}
+				if (!titleLine.isEmpty()) {
+					doWrite(centerString(titleLine.toString(), lineChars));
+				}
+			}
+
+			doWrite(centerString("VDYP Yield Table Report", lineChars));
+			Layer layer = polygon.getPrimaryLayer();
+			titleLine = new StringBuilder();
+			for (Species species : layer.getSp64sAsSupplied()) {
+				String append = SiteTool.getSpeciesFullName(species.getSpeciesCode()) + " ("
+						+ species.getSpeciesPercent() + "%) ";
+
+			}
+		}
 
 		textFileTable = new TextFileTable();
 		var params = context.getParams();
@@ -326,27 +374,22 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 		textFileTable.addBreakColumn(showNetDecayWastageVolume);
 		textFileTable.addColumn(
 				(includeMAI ? "" : "Net_Decay and_Waste ") + "VOLUME (m**3/ha)", 11, "%11.1f",
-				showNetDecayWastageVolume,
-				includeMAI ? "Net Decay and Waste" : null
+				showNetDecayWastageVolume, includeMAI ? "Net Decay and Waste" : null
 		);
-		textFileTable
-				.addColumn(
-						"MAI (m**3/ha)", 11, "%11.1f", showNetDecayWastageVolume && includeMAI, "Net Decay and Waste"
-				);
+		textFileTable.addColumn(
+				"MAI (m**3/ha)", 11, "%11.1f", showNetDecayWastageVolume && includeMAI, "Net Decay and Waste"
+		);
 
 		boolean showMofVolumeBreakageColumns = showMofVolumeColumns
 				&& params.containsOption(ExecutionOption.REPORT_INCLUDE_ND_WAST_BRKG_VOLUME);
 		textFileTable.addBreakColumn(showMofVolumeBreakageColumns);
 		textFileTable.addColumn(
 				(includeMAI ? "" : "Net_Decay Waste,_Brkg ") + "VOLUME (m**3/ha)", 11, "%11.1f",
-				showMofVolumeBreakageColumns,
-				includeMAI ? "Net Decay Waste, Brkg" : null
+				showMofVolumeBreakageColumns, includeMAI ? "Net Decay Waste, Brkg" : null
 		);
-		textFileTable
-				.addColumn(
-						"MAI (m**3/ha)", 11, "%11.1f", showMofVolumeBreakageColumns && includeMAI,
-						"Net Decay Waste, Brkg"
-				);
+		textFileTable.addColumn(
+				"MAI (m**3/ha)", 11, "%11.1f", showMofVolumeBreakageColumns && includeMAI, "Net Decay Waste, Brkg"
+		);
 
 		textFileTable.addBreakColumn(showBioMassColumns);
 		textFileTable.addColumn("Stem (tons/ha)", 12, "%12.1f", showBioMassColumns, "CFS Biomass");
@@ -361,7 +404,7 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 		 */
 
 		// Print out all the relevant information
-		textFileTable.printHeader();
+		textFileTable.printTableHeader();
 
 	}
 
@@ -377,6 +420,109 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 	@Override
 	public void writeTrailer() throws YieldTableGenerationException {
 		// Write all the required META DATA
+		writeNotes();
+		writeTableProperties();
+		writeSpeciesParameters();
+		writeSiteIndexCurvesUsed();
+		writeAdditionalStandAttributes();
+	}
+
+	private void writeNotes() {
+		// WHERE ARE THE NOTES STORED? DO WE STORE THEM?
+	}
+
+	private void writeTableProperties() throws YieldTableGenerationException {
+		List<String> entries = new ArrayList<>();
+		entries.add("VDYP UI Version Number... 8.0");
+		entries.add("VDYP Version Number... 8.0");
+		entries.add("VDYP SI Version Number... 8.0");
+		entries.add("SIMDEX Version Number... 8.0");
+		Layer layer = lastPolygonForTrailer.getPrimaryLayer();
+		int speciesNum = 1;
+		for (Species species : layer.getSp64sAsSupplied()) {
+			entries.add(
+					"Species " + speciesNum++ + "............. " + species.getSpeciesCode() + " ("
+							+ species.getSpeciesPercent() + "%)"
+			);
+		}
+		if (lastPolygonForTrailer.getInventoryStandard() == InventoryStandard.FIP) {
+			entries.add("FIP Calc Mode.......... 1");
+		} else {
+			entries.add("VRI Calc Mode.......... 1");
+		}
+		entries.add("BEC Zone................. " + lastPolygonForTrailer.getBecZone());
+		entries.add(
+				"Incl Second Species Ht... " + (context.getParams()
+						.containsOption(ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE)
+								? "1" : "N/A")
+		);
+		entries.add("% Crown Closure Supplied. " + layer.getCrownClosure());
+		entries.add("% Stockable Area Supplied " + layer.getPercentStockable());
+		entries.add("CFS Eco Zone............. " + lastPolygonForTrailer.getCfsEcoZone());
+		entries.add(
+				"Trees Per Hectare........ " + layer.getTreesPerHectare() != null
+						? layer.getTreesPerHectare().toString() : "<Not Used>"
+		);
+		entries.add(
+				"Measured Basal Area........ " + layer.getBasalArea() != null ? layer.getBasalArea().toString()
+						: "<Not Used>"
+		);
+		entries.add("Starting Total Age....... " + context.getParams().getAgeStart());
+		entries.add("Finishing Total Age...... " + context.getParams().getAgeEnd());
+		entries.add("Age Increment............ " + context.getParams().getAgeIncrement());
+		entries.add("");
+		for (Stand stand : layer.getSp0sAsSupplied()) {
+			SP0Name speciesGroup = SP0Name.forText(stand.getSpeciesGroup().getSpeciesCode());
+			entries.add(
+					"Min DBH Limit: " + speciesGroup.getText() + "........ "
+							+ context.getParams().getUtils().get(speciesGroup) + "cm"
+			);
+		}
+		doWrite("TABLE PROPERTIES...\n\n");
+		for (int i = 0; i < (entries.size()) / 2; i++) {
+			int j = i + (entries.size()) / 2;
+			if (j < entries.size()) {
+				doWrite("%-40s %s\n", entries.get(i), entries.get(j));
+			} else {
+				doWrite("%-40s\n", entries.get(i));
+			}
+		}
+		doWrite("\n");
+	}
+
+	private void writeSpeciesParameters() throws YieldTableGenerationException {
+		doWrite("Species Parameters...\n");
+		doWrite("Species |  %% Comp | Tot Age |  BH Age |  Height |    SI   |  YTBH   \n");
+		doWrite("--------+---------+---------+---------+---------+---------+---------\n");
+		Layer layer = lastPolygonForTrailer.getPrimaryLayer();
+		for (Species species : layer.getSp64sAsSupplied()) {
+			String speciesCode = species.getSpeciesCode();
+			Double percentComposition = species.getSpeciesPercent();
+			Double totalAge = species.getTotalAge();
+			Double bhAge = species.getAgeAtBreastHeight();
+			Double height = species.getDominantHeight();
+			Double siteIndex = species.getSiteIndex();
+			Double ytbH = species.getYearsToBreastHeight();
+
+			doWrite(
+					"%-6s  |  %5.1f  |  %5.0f  |  %5.0f  |  %5.2f  |  %5.2f  |  %5.2f  \n", //
+					speciesCode, percentComposition, totalAge, bhAge, height, siteIndex, ytbH
+			);
+		}
+		doWrite("\n");
+	}
+
+	private void writeSiteIndexCurvesUsed() throws YieldTableGenerationException {
+		doWrite("Site Index Curves Used...\n");
+
+		doWrite("\n");
+	}
+
+	private void writeAdditionalStandAttributes() throws YieldTableGenerationException {
+		// This is where adjust details are written, but none are currently applied
+		doWrite("Additional Stand Attributes:\n");
+		doWrite("----------------------------\n\n");
+		doWrite("        None Applied.");
 	}
 
 	private void doWrite(String message, Object... args) throws YieldTableGenerationException {
