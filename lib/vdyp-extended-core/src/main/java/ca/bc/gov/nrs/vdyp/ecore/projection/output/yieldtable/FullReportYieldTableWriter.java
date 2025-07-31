@@ -365,9 +365,13 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 
 	}
 
+	Polygon lastPolygonForTrailer;
+
 	@Override
-	public void writePolygonTableTrailer(Integer yieldTableCount) throws YieldTableGenerationException {
+	public void writePolygonTableTrailer(Integer yieldTableCount, Polygon polygon)
+			throws YieldTableGenerationException {
 		// No data written here
+		this.lastPolygonForTrailer = polygon;
 	}
 
 	@Override

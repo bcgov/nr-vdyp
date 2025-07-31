@@ -296,7 +296,8 @@ class TextYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean>
 	}
 
 	@Override
-	public void writePolygonTableTrailer(Integer yieldTableCount) throws YieldTableGenerationException {
+	public void writePolygonTableTrailer(Integer yieldTableCount, Polygon polygon)
+			throws YieldTableGenerationException {
 		doWrite("^^^^^^^^^^ Table Number: %-10d\n", yieldTableCount);
 	}
 
