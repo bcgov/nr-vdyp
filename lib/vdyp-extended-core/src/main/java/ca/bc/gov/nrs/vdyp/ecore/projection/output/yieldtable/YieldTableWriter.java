@@ -346,10 +346,9 @@ abstract class YieldTableWriter<T extends YieldTableRowBean> implements Closeabl
 	 * requirement for a number of the output formats.
 	 *
 	 * @param yieldTableNumber the yield table number
-	 * @param polygon          the polygon for the trailer
 	 * @throws YieldTableGenerationException
 	 */
-	void writePolygonTableTrailer(Integer yieldTableNumber, Polygon polygon) throws YieldTableGenerationException {
+	void writePolygonTableTrailer(Integer yieldTableNumber) throws YieldTableGenerationException {
 		// Some formats have no per-polygon trailer.
 	}
 
