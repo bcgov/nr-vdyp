@@ -100,7 +100,6 @@ public class Parameters {
 	@JsonProperty(JSON_PROPERTY_UTILS)
 	private List<UtilizationParameter> utils = new ArrayList<>();
 
-
 	public enum OutputFormat {
 		TEXT_REPORT("TextReport", "YieldReport.txt"),
 
@@ -883,6 +882,7 @@ public class Parameters {
 	public void setReportTitle(String reportTitle) {
 		this.reportTitle = reportTitle;
 	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) {
