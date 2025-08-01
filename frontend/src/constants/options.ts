@@ -90,9 +90,29 @@ export const modelSelectionOptions = [
 
 // Utilization class options with (slider) index, label, and enum value mapping
 export const utilizationClassOptions = [
-  { index: 0, label: '4.0 cm+', value: UtilizationClassSetEnum._40 },
-  { index: 1, label: '7.5 cm+', value: UtilizationClassSetEnum._75 },
-  { index: 2, label: '12.5 cm+', value: UtilizationClassSetEnum._125 },
-  { index: 3, label: '17.5 cm+', value: UtilizationClassSetEnum._175 },
-  { index: 4, label: '22.5 cm+', value: UtilizationClassSetEnum._225 },
+  {
+    index: 0,
+    label: CONSTANTS.MINIMUM_DBH_LIMITS.CM4_0,
+    value: UtilizationClassSetEnum._40,
+  },
+  {
+    index: 1,
+    label: CONSTANTS.MINIMUM_DBH_LIMITS.CM7_5,
+    value: UtilizationClassSetEnum._75,
+  },
+  {
+    index: 2,
+    label: CONSTANTS.MINIMUM_DBH_LIMITS.CM12_5,
+    value: UtilizationClassSetEnum._125,
+  },
+  {
+    index: 3,
+    label: CONSTANTS.MINIMUM_DBH_LIMITS.CM17_5,
+    value: UtilizationClassSetEnum._175,
+  },
+  {
+    index: 4,
+    label: CONSTANTS.MINIMUM_DBH_LIMITS.CM22_5,
+    value: UtilizationClassSetEnum._225,
+  },
 ]

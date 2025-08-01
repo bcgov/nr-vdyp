@@ -2,7 +2,6 @@ import Keycloak from 'keycloak-js'
 import { useAuthStore } from '@/stores/common/authStore'
 import type { KeycloakInitOptions } from 'keycloak-js'
 import { KEYCLOAK } from '@/constants/constants'
-import { formatUnixTimestampToDate } from '@/utils/util'
 import * as messageHandler from '@/utils/messageHandler'
 import { env } from '@/env'
 import { AUTH_ERR } from '@/constants/message'
@@ -16,6 +15,10 @@ const ssoClientId = env.VITE_SSO_CLIENT_ID
 const ssoRealm = env.VITE_SSO_REALM
 const ssoRedirectUrl = env.VITE_SSO_REDIRECT_URI
 
+/**
+ * Creates or returns the singleton Keycloak instance.
+ * @returns {Keycloak} The Keycloak instance.
+ */
 const createKeycloakInstance = (): Keycloak => {
   if (!keycloakInstance) {
     keycloakInstance = new Keycloak({
@@ -38,6 +41,10 @@ const loginOptions = {
   redirectUri: ssoRedirectUrl as string,
 }
 
+/**
+ * Initializes Keycloak, loads stored tokens if available, validates them, and handles login if needed.
+ * @returns {Promise<Keycloak | undefined>} The initialized Keycloak instance or undefined on failure.
+ */
 export const initializeKeycloak = async (): Promise<Keycloak | undefined> => {
   const pinia = getActivePinia()
   const notificationStore = pinia ? useNotificationStore(pinia) : null
@@ -73,6 +80,9 @@ export const initializeKeycloak = async (): Promise<Keycloak | undefined> => {
         )
         return undefined
       }
+
+      // Perform token validation and refresh if expired
+      await handleTokenValidation()
 
       return keycloakInstance
     }
@@ -112,7 +122,8 @@ export const initializeKeycloak = async (): Promise<Keycloak | undefined> => {
         idToken: keycloakInstance.idToken,
       })
 
-      // TODO - need to set up periodic token refresh?
+      // Perform token validation and refresh if expired
+      await handleTokenValidation()
 
       return keycloakInstance
     } else {
@@ -128,6 +139,11 @@ export const initializeKeycloak = async (): Promise<Keycloak | undefined> => {
   }
 }
 
+/**
+ * Validates the access token by checking issuer and subject.
+ * @param {string} accessToken - The access token to validate.
+ * @returns {boolean} True if valid, false otherwise.
+ */
 const validateAccessToken = (accessToken: string): boolean => {
   if (!accessToken) {
     console.error('Access token is missing.')
@@ -156,6 +172,10 @@ const validateAccessToken = (accessToken: string): boolean => {
   }
 }
 
+/**
+ * Initializes Keycloak and sets up authentication from stored tokens if available.
+ * @returns {Promise<boolean>} True if initialization succeeds, false otherwise.
+ */
 export const initializeKeycloakAndAuth = async (): Promise<boolean> => {
   try {
     if (!keycloakInstance) {
@@ -165,7 +185,7 @@ export const initializeKeycloakAndAuth = async (): Promise<boolean> => {
     const authStore = useAuthStore()
 
     // not initialized, the token not be refreshed
-    if (!keycloakInstance.clientId) {
+    if (keycloakInstance.clientId === undefined || !keycloakInstance.clientId) {
       if (!authStore || !authStore.user) {
         logErrorAndLogout(
           AUTH_ERR.AUTH_010,
@@ -221,8 +241,13 @@ const logErrorAndLogout = (
   logout()
 }
 
-// If the token expires within minValidity seconds (minValidity is optional, if not specified 5 is used) the token is refreshed.
-// If -1 is passed as the minValidity, the token will be forcibly refreshed.
+/**
+ * Refreshes the token if it expires within the specified minValidity seconds.
+ * If the token expires within minValidity seconds (minValidity is optional, if not specified 5 is used) the token is refreshed.
+ * If -1 is passed as the minValidity, the token will be forcibly refreshed.
+ * @param {number} [minValidity] - Minimum validity in seconds; -1 forces refresh.
+ * @returns {Promise<boolean>} True if refreshed, false if valid or failed.
+ */
 export const refreshToken = async (minValidity?: number): Promise<boolean> => {
   try {
     const initialized = await initializeKeycloakAndAuth()
@@ -260,8 +285,8 @@ export const refreshToken = async (minValidity?: number): Promise<boolean> => {
 }
 
 /**
- * checks if the access token is valid, refreshes it if not, and stores it afterwards.
- * @returns null if valid, or null if the token has been refreshed. If the token fails to refresh or it is not available, return an error message.
+ * Validates the access token, refreshes if expired, and updates storage.
+ * @returns {Promise<void>} Resolves on success, logs error on failure.
  */
 export const handleTokenValidation = async (): Promise<void> => {
   try {
@@ -275,40 +300,12 @@ export const handleTokenValidation = async (): Promise<void> => {
     }
 
     const authStore = useAuthStore()
+    const parsedAccessToken = authStore.getParsedAccessToken()
+    const currentTime = Math.floor(Date.now() / 1000)
 
-    const currentTime = Date.now()
-    const authTimeInUnixTime = getAuthTimeInUnixTime(
-      authStore.user!.accessToken,
-    )
-    const sessionDuration = currentTime - authTimeInUnixTime
-
-    // force session logout when the maximum session time is exceeded
-    if (sessionDuration > KEYCLOAK.MAX_SESSION_DURATION) {
-      logErrorAndLogout(
-        AUTH_ERR.AUTH_031,
-        `Forced out due to maximum session timeout (Error: AUTH_031) => session-duration:${sessionDuration} > max:${KEYCLOAK.MAX_SESSION_DURATION}`,
-      )
-      return
+    if (parsedAccessToken?.exp && parsedAccessToken.exp < currentTime) {
+      await refreshToken(KEYCLOAK.UPDATE_TOKEN_MIN_VALIDITY)
     }
-
-    console.log(
-      `----------------current time: ${new Date(currentTime).toString()}`,
-    )
-    console.log(
-      `access token expired date(1): ${getTokenExpirationDate(authStore.user!.accessToken)}`,
-    )
-    console.log(
-      `access token expired?: ${keycloakInstance.isTokenExpired(KEYCLOAK.IS_TOKEN_EXP_MIN_VALIDITY)}`,
-    )
-
-    if (keycloakInstance.isTokenExpired(KEYCLOAK.IS_TOKEN_EXP_MIN_VALIDITY)) {
-      const refreshed = await refreshToken(KEYCLOAK.UPDATE_TOKEN_MIN_VALIDITY)
-      console.log(`access token refreshed? ${refreshed}`)
-    }
-
-    console.log(
-      `access token expired date(2): ${getTokenExpirationDate(authStore.user!.accessToken)}`,
-    )
   } catch (err) {
     logErrorAndLogout(
       AUTH_ERR.AUTH_032,
@@ -318,6 +315,9 @@ export const handleTokenValidation = async (): Promise<void> => {
   }
 }
 
+/**
+ * Clears user data and redirects to logout URL.
+ */
 export const logout = (): void => {
   const authStore = useAuthStore()
   authStore.clearUser()
@@ -329,33 +329,3 @@ export const logout = (): void => {
       ssoClientId,
   )}`
 }
-
-const getAuthTimeInUnixTime = (accessToken: string): number => {
-  try {
-    const accessTokenParsed = JSON.parse(atob(accessToken.split('.')[1]))
-    console.log(
-      `auth_time: ${accessTokenParsed.auth_time} (${formatUnixTimestampToDate(accessTokenParsed.auth_time)})`,
-    )
-    return accessTokenParsed.auth_time * 1000 // convert to milliseconds
-  } catch (error) {
-    console.error('Failed to parse auth_time from ID Token:', error)
-    return Date.now() // the current time on failure
-  }
-}
-
-const getTokenExpirationDate = (token: string): Date | null => {
-  try {
-    const tokenParsed = JSON.parse(atob(token.split('.')[1]))
-    if (!tokenParsed.exp) {
-      return null
-    }
-
-    const expirationDate = formatUnixTimestampToDate(tokenParsed.exp)
-    return expirationDate
-  } catch (error) {
-    console.error('Failed to parse token expiration:', error)
-    return null
-  }
-}
-
-// TODO - need to set up periodic token refresh?

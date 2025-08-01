@@ -15,12 +15,18 @@ const meta: Meta<typeof StandInfoPanel> = {
       const modelParameterStore = useModelParameterStore()
       modelParameterStore.setDefaultValues()
 
+      // Confirm previous panels
       modelParameterStore.confirmPanel(
         CONSTANTS.MODEL_PARAMETER_PANEL.SPECIES_INFO,
       )
       modelParameterStore.confirmPanel(
         CONSTANTS.MODEL_PARAMETER_PANEL.SITE_INFO,
       )
+
+      // Set conditions to make Current Diameter visible
+      modelParameterStore.derivedBy = CONSTANTS.DERIVED_BY.BASAL_AREA
+      modelParameterStore.siteSpeciesValues =
+        CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
 
       return {
         components: { story },
@@ -40,6 +46,11 @@ export const Default: Story = {
     const modelParameterStore = useModelParameterStore()
     modelParameterStore.editPanel(CONSTANTS.MODEL_PARAMETER_PANEL.STAND_INFO)
 
+    // Ensure Current Diameter is visible by setting dependent states
+    modelParameterStore.derivedBy = CONSTANTS.DERIVED_BY.BASAL_AREA
+    modelParameterStore.siteSpeciesValues =
+      CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
+
     return {
       components: { StandInfoPanel },
       template: '<StandInfoPanel />',
@@ -51,6 +62,11 @@ export const Confirmed: Story = {
   render: () => {
     const modelParameterStore = useModelParameterStore()
     modelParameterStore.confirmPanel(CONSTANTS.MODEL_PARAMETER_PANEL.STAND_INFO)
+
+    // Ensure Current Diameter is visible by setting dependent states
+    modelParameterStore.derivedBy = CONSTANTS.DERIVED_BY.BASAL_AREA
+    modelParameterStore.siteSpeciesValues =
+      CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
 
     return {
       components: { StandInfoPanel },

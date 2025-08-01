@@ -1,3 +1,5 @@
+export { default as AppConfirmDialog } from './common/AppConfirmDialog.vue'
+export { default as AppDialogDragger } from './common/AppDialogDragger.vue'
 export { default as AppMessageDialog } from './common/AppMessageDialog.vue'
 export { default as AppNotification } from './common/AppNotification.vue'
 export { default as AppPanelActions } from './common/AppPanelActions.vue'

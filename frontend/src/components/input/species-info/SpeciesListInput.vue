@@ -326,7 +326,7 @@ onBeforeUnmount(() => {
 }
 
 .spin-up-arrow-button {
-  cursor: pointer;
+  cursor: default;
   font-size: 7px;
   width: 10px;
   height: 10px;
@@ -340,7 +340,7 @@ onBeforeUnmount(() => {
 }
 
 .spin-down-arrow-button {
-  cursor: pointer;
+  cursor: default;
   font-size: 7px;
   width: 10px;
   height: 10px;

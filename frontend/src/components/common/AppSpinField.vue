@@ -1,7 +1,6 @@
 <template>
   <div style="position: relative; width: 100%">
     <v-text-field
-      :label="label"
       type="text"
       v-model="localValue"
       :max="max"
@@ -15,7 +14,11 @@
       :style="customStyle"
       :disabled="disabled"
       @update:modelValue="handleUpdateModelValue"
-    ></v-text-field>
+    >
+      <template v-slot:label>
+        <span v-html="label"></span>
+      </template>
+    </v-text-field>
     <!-- Spin Buttons -->
     <div class="spin-box">
       <div

@@ -240,3 +240,17 @@ input[type='number']::-webkit-outer-spin-button {
 .col-space-6 {
   max-width: 6%;
 }
+
+/* Indenting the label and output value of a read-only text field */
+[data-testid='species-groups-container'] .v-field__field,
+[data-testid='species-groups-container'] .v-field__outline {
+  padding-left: 16px;
+}
+[data-testid='min-dbh-limit'] .v-field__field,
+[data-testid='min-dbh-limit'] .v-field__outline {
+  padding-left: 16px;
+}
+[data-testid='current-diameter'] .v-field__field,
+[data-testid='current-diameter'] .v-field__outline {
+  padding-left: 16px;
+}

@@ -1,4 +1,4 @@
-import { BIZCONSTANTS, CONSTANTS, CSVHEADERS } from '@/constants'
+import { BIZCONSTANTS, CONSTANTS, CSVHEADERS, DEFAULTS } from '@/constants'
 import {
   OutputFormatEnum,
   ExecutionOptionsEnum,
@@ -11,6 +11,7 @@ import { projectionHcsvPost } from '@/services/apiActions'
 import type { CSVRowType } from '@/types/types'
 import type { SpeciesGroup } from '@/interfaces/interfaces'
 import type { UtilizationParameter } from '@/services/vdyp-api/models/utilization-parameter'
+import { isBlank } from '@/utils/util'
 
 /**
  * Generates a unique 9-digit or 10-digit feature ID using the current timestamp and random values.
@@ -285,6 +286,29 @@ const createLayerData = (
 ): CSVRowType => {
   const speciesData = getSpeciesData(modelParameterStore.speciesList)
   const speciesRow = flattenSpeciesData(speciesData, 6)
+  const crownClosure =
+    modelParameterStore.derivedBy === CONSTANTS.DERIVED_BY.VOLUME &&
+    modelParameterStore.siteSpeciesValues ===
+      CONSTANTS.SITE_SPECIES_VALUES.COMPUTED &&
+    (isBlank(modelParameterStore.crownClosure) ||
+      modelParameterStore.crownClosure === 0)
+      ? DEFAULTS.CROWN_CLOSURE_DEFAULT_4PROJ
+      : modelParameterStore.crownClosure
+
+  const basalArea =
+    modelParameterStore.derivedBy === CONSTANTS.DERIVED_BY.BASAL_AREA &&
+    modelParameterStore.siteSpeciesValues ===
+      CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
+      ? modelParameterStore.basalArea
+      : DEFAULTS.BASAL_AREA_DEFAULT_4PROJ
+
+  const treesPerHectare =
+    modelParameterStore.derivedBy === CONSTANTS.DERIVED_BY.BASAL_AREA &&
+    modelParameterStore.siteSpeciesValues ===
+      CONSTANTS.SITE_SPECIES_VALUES.COMPUTED
+      ? modelParameterStore.treesPerHectare
+      : DEFAULTS.TPH_DEFAULT_4PROJ
+
   const row = [
     featureId, // FEATURE_ID
     treeCoverLayerEstimatedId, // TREE_COVER_LAYER_ESTIMATED_ID
@@ -297,9 +321,9 @@ const createLayerData = (
     '', // NON_FOREST_DESCRIPTOR_CODE
     modelParameterStore.highestPercentSpecies, // EST_SITE_INDEX_SPECIES_CD
     modelParameterStore.bha50SiteIndex ?? '', // ESTIMATED_SITE_INDEX
-    '', // CROWN_CLOSURE
-    '', // BASAL_AREA_75
-    '', // STEMS_PER_HA_75
+    crownClosure, // CROWN_CLOSURE
+    basalArea, // BASAL_AREA_75
+    treesPerHectare, // STEMS_PER_HA_75
     ...speciesRow, // Species codes and percentages (6 pairs)
     modelParameterStore.spzAge, // EST_AGE_SPP1
     modelParameterStore.spzHeight, // EST_HEIGHT_SPP1

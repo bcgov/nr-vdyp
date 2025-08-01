@@ -44,7 +44,7 @@ const props = defineProps({
 })
 
 const authStore = useAuthStore()
-const userInfo = computed(() => authStore.parseIdToken())
+const userInfo = computed(() => authStore.getParsedIdToken())
 
 const displayName = computed(() => {
   if (userInfo.value || props.givenName || props.familyName) {
