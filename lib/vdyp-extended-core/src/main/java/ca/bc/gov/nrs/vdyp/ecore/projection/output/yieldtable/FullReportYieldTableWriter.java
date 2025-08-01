@@ -529,10 +529,35 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 			Double siteIndex = species.getSiteIndex();
 			Double ytbH = species.getYearsToBreastHeight();
 
-			doWrite(
-					"%-6s  |  %5.1f  |  %5.0f  |  %5.0f  |  %5.2f  |  %5.2f  |  %5.2f  \n", //
-					speciesCode, percentComposition, totalAge, bhAge, height, siteIndex, ytbH
-			);
+			doWrite("%-6s  |", speciesCode);
+			doWrite("  %5.1f  |", percentComposition);
+
+			if (totalAge == null) {
+				doWrite("  %5s  |", "N/A");
+			} else {
+				doWrite("  %5.0f  |", totalAge);
+			}
+			if (bhAge == null) {
+				doWrite("  %5s  |", "N/A");
+			} else {
+				doWrite("  %5.0f  |", bhAge);
+			}
+			if (height == null) {
+				doWrite("  %5s  |", "N/A");
+			} else {
+				doWrite("  %5.2f  |", height);
+			}
+			if (siteIndex == null) {
+				doWrite("  %5s  |", "N/A");
+			} else {
+				doWrite("  %5.2f  |", siteIndex);
+			}
+			if (ytbH == null) {
+				doWrite("  %5s  ", "N/A");
+			} else {
+				doWrite("  %5.2f  ", ytbH);
+			}
+			doWrite("\n");
 		}
 		doWrite("\n");
 	}
