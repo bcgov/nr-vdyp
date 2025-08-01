@@ -38,11 +38,50 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 	private boolean writeTopHeader = true;
 
 	private class TextFileTable {
-		private record Column(String[] headerWords, int width, String format, boolean included, String superHeader) {
+		private class Column {
+			private final String[] headerWords;
+			private final int width;
+			private final String format;
+			private final boolean included;
+			private final String superHeader;
+			private final String header;
+
+			Column(String header, int width, String format, boolean included, String superHeader) {
+				this.header = header;
+				this.width = width;
+				this.format = format;
+				this.included = included;
+				this.superHeader = superHeader;
+				this.headerWords = header.split(" ");
+			}
+
+			public String header() {
+				return header;
+			}
+
+			public String[] headerWords() {
+				return headerWords;
+			}
+
+			public String superHeader() {
+				return superHeader;
+			}
+
+			public int width() {
+				return width;
+			}
+
+			public String format() {
+				return format;
+			}
+
+			public boolean included() {
+				return included;
+			}
 		}
 
 		int longestHeaderLength = 0;
-		List<Column> columns = new ArrayList();
+		List<Column> columns = new ArrayList<>();
 		List<Object> currentRow;
 
 		public void addColumn(String header, int width) {
@@ -63,7 +102,7 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 
 		public void addColumn(String header, int width, String format, boolean included, String superHeader) {
 			Column column = new Column(
-					header.split(" "), width, format.equals("|") ? format : format + " ", included, superHeader
+					header, width, format.equals("|") ? format : format + " ", included, superHeader
 			);
 			if (column.headerWords.length > longestHeaderLength)
 				longestHeaderLength = column.headerWords.length;
@@ -413,7 +452,7 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 		textFileTable.addColumn("Foliage (tons/ha)", 12, "%12.1f", showBioMassColumns, "CFS Biomass");
 
 		/*
-		 * Waiting to see if the Species compostion option is droped from this report TODO species Composition boolean
+		 * Waiting to see if the Species composition option is dropped from this report TODO species Composition boolean
 		 * includeSpeciesComposition = false; textFileTable.addColumn("|", 1, "|", includeSpeciesComposition); for(int
 		 * specIndex = 0; specIndex < 7; specIndex++) { textFileTable.addColumn((specIndex + 1), 3, "%2.1f",
 		 * includeSpeciesComposition, "Spec Composition"); }
