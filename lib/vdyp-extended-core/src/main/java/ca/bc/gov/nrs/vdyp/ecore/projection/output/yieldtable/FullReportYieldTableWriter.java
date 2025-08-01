@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.YieldTableGenerationException;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters.ExecutionOption;
 import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionContext;
@@ -604,7 +605,24 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 	private void writeSiteIndexCurvesUsed() throws YieldTableGenerationException {
 		doWrite("Site Index Curves Used...\n");
 
+		List<DominantSpeciesAges> dominantSpeciesAges = new ArrayList<>();// TODO Get these from something
+																			// getAgeCurves();
+
+		doWrite("  Age Range | Species | SI Curve Name                                     \n");
+		doWrite(" -----------+---------+-------------------------------------------------\n");
+
+		for (DominantSpeciesAges dominantSpeciesAge : dominantSpeciesAges) {
+			doWrite("%10s  |", dominantSpeciesAge.startingAge + "-" + dominantSpeciesAge.endingAge);
+			SiteIndexEquation siCurve = SiteTool
+					.getSICurve(dominantSpeciesAge.speciesCode, lastPolygonForTrailer.getIsCoastal());
+			doWrite("%7s  |", SiteTool.getSiteCurveSINDEXSpecies(siCurve));
+			doWrite(" %s\n", siCurve + " - " + SiteTool.getSICurveName(siCurve));
+		}
+
 		doWrite("\n");
+	}
+
+	private record DominantSpeciesAges(String speciesCode, int startingAge, int endingAge) {
 	}
 
 	private void writeAdditionalStandAttributes() throws YieldTableGenerationException {
