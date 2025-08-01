@@ -14,6 +14,7 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionContext;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Layer;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.LayerReportingInfo;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon;
+import ca.bc.gov.nrs.vdyp.ecore.projection.model.PolygonMessage;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Species;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Stand;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.InventoryStandard;
@@ -286,27 +287,29 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 
 	private String centerString(String ogString, int numCharacters) {
 		int padding = numCharacters - ogString.length();
-		return " ".repeat(padding / 2) + ogString + " ".repeat(padding - (padding / 2));
+		return " ".repeat(padding / 2) + ogString;
 	}
 
+	Polygon lastPolygonForTrailer;
 	@Override
 	public void writePolygonTableHeader(
 			Polygon polygon, Optional<LayerReportingInfo> layerReportingInfo, boolean doGenerateDetailedTableHeader,
 			Integer yieldTableCount
 	) throws YieldTableGenerationException {
 
+		lastPolygonForTrailer = polygon;
 		if (writeTopHeader) {
 			writeTopHeader = false;
 			int lineChars = 80;
 			StringBuilder titleLine = new StringBuilder();
 			String title = context.getParams().getReportTitle();
-			if (lineChars < title.length()) {
+			if (lineChars >= title.length()) {
 				doWrite(centerString(title, lineChars));
 			} else {
 				String[] titleWords = title.split(" ");
 				for (String word : titleWords) {
 					if (titleLine.length() + word.length() + 1 > lineChars) {
-						doWrite(centerString(titleLine.toString(), lineChars));
+						doWrite(centerString(titleLine.toString() + "\n", lineChars));
 						titleLine = new StringBuilder();
 					}
 					titleLine.append(word).append(" ");
@@ -315,17 +318,29 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 					doWrite(centerString(titleLine.toString(), lineChars));
 				}
 			}
+			doWrite("\n\n");
 
-			doWrite(centerString("VDYP Yield Table Report", lineChars));
+			doWrite(centerString("VDYP Yield Table Report\n", lineChars));
 			Layer layer = polygon.getPrimaryLayer();
 			titleLine = new StringBuilder();
-			for (Species species : layer.getSp64sAsSupplied()) {
+			List<Species> speciesList = layer.getSp64sAsSupplied();
+			for (int i = 0; i < speciesList.size(); i++) {
+				Species species = speciesList.get(i);
 				String append = SiteTool.getSpeciesFullName(species.getSpeciesCode()) + " ("
-						+ species.getSpeciesPercent() + "%) ";
-
+						+ species.getSpeciesPercent() + "%%)" + (i < speciesList.size() - 1 ? ", " : "");
+				if (titleLine.length() + append.length() > lineChars) {
+					doWrite(centerString(titleLine.toString(), lineChars));
+					titleLine = new StringBuilder();
+				}
+				titleLine.append(append);
 			}
+			if (!titleLine.isEmpty()) {
+				doWrite(centerString(titleLine.toString(), lineChars));
+			}
+			doWrite("\n");
 		}
 
+		doWrite("\n");
 		textFileTable = new TextFileTable();
 		var params = context.getParams();
 		textFileTable.addColumn("TOT AGE", 3, "%3d");
@@ -398,9 +413,10 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 		textFileTable.addColumn("Foliage (tons/ha)", 12, "%12.1f", showBioMassColumns, "CFS Biomass");
 
 		/*
-		 * TODO species Composition boolean includeSpeciesComposition = false; textFileTable.addColumn("|", 1, "|",
-		 * includeSpeciesComposition); for(int specIndex = 0; specIndex < 7; specIndex++) {
-		 * textFileTable.addColumn((specIndex + 1), 3, "%2.1f", includeSpeciesComposition, "Spec Composition"); }
+		 * Waiting to see if the Species compostion option is droped from this report TODO species Composition boolean
+		 * includeSpeciesComposition = false; textFileTable.addColumn("|", 1, "|", includeSpeciesComposition); for(int
+		 * specIndex = 0; specIndex < 7; specIndex++) { textFileTable.addColumn((specIndex + 1), 3, "%2.1f",
+		 * includeSpeciesComposition, "Spec Composition"); }
 		 */
 
 		// Print out all the relevant information
@@ -408,13 +424,11 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 
 	}
 
-	Polygon lastPolygonForTrailer;
+
 
 	@Override
 	public void writePolygonTableTrailer(Integer yieldTableCount)
 			throws YieldTableGenerationException {
-		// No data written here
-		this.lastPolygonForTrailer = polygon;
 	}
 
 	@Override
@@ -427,28 +441,36 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 		writeAdditionalStandAttributes();
 	}
 
-	private void writeNotes() {
+	private void writeNotes() throws YieldTableGenerationException {
 		// WHERE ARE THE NOTES STORED? DO WE STORE THEM?
+		doWrite("\n");
+		List<PolygonMessage> messages = lastPolygonForTrailer.getMessages();
+		for (PolygonMessage message : messages) {
+			doWrite("%s\n", message.getSimpleMessageText());
+		}
+		doWrite("\n");
 	}
 
 	private void writeTableProperties() throws YieldTableGenerationException {
+		doWrite("\n");
 		List<String> entries = new ArrayList<>();
 		entries.add("VDYP UI Version Number... 8.0");
-		entries.add("VDYP Version Number... 8.0");
+		entries.add("Server Version Number.... 8.0");
 		entries.add("VDYP SI Version Number... 8.0");
-		entries.add("SIMDEX Version Number... 8.0");
+		entries.add("SINDEX Version Number.... 8.0");
 		Layer layer = lastPolygonForTrailer.getPrimaryLayer();
 		int speciesNum = 1;
 		for (Species species : layer.getSp64sAsSupplied()) {
 			entries.add(
-					"Species " + speciesNum++ + "............. " + species.getSpeciesCode() + " ("
+					"Species " + speciesNum++ + "................ " + String.format("%-3s", species.getSpeciesCode())
+							+ " ("
 							+ species.getSpeciesPercent() + "%)"
 			);
 		}
 		if (lastPolygonForTrailer.getInventoryStandard() == InventoryStandard.FIP) {
-			entries.add("FIP Calc Mode.......... 1");
+			entries.add("FIP Calc Mode............ 1");
 		} else {
-			entries.add("VRI Calc Mode.......... 1");
+			entries.add("VRI Calc Mode............ 1");
 		}
 		entries.add("BEC Zone................. " + lastPolygonForTrailer.getBecZone());
 		entries.add(
@@ -460,27 +482,30 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 		entries.add("% Stockable Area Supplied " + layer.getPercentStockable());
 		entries.add("CFS Eco Zone............. " + lastPolygonForTrailer.getCfsEcoZone());
 		entries.add(
-				"Trees Per Hectare........ " + layer.getTreesPerHectare() != null
-						? layer.getTreesPerHectare().toString() : "<Not Used>"
+				"Trees Per Hectare........ "
+						+ (layer.getTreesPerHectare() != null ? layer.getTreesPerHectare().toString() : "<Not Used>")
 		);
 		entries.add(
-				"Measured Basal Area........ " + layer.getBasalArea() != null ? layer.getBasalArea().toString()
-						: "<Not Used>"
+				"Measured Basal Area...... "
+						+ (layer.getBasalArea() != null ? layer.getBasalArea().toString() : "<Not Used>")
 		);
 		entries.add("Starting Total Age....... " + context.getParams().getAgeStart());
 		entries.add("Finishing Total Age...... " + context.getParams().getAgeEnd());
 		entries.add("Age Increment............ " + context.getParams().getAgeIncrement());
-		entries.add("");
 		for (Stand stand : layer.getSp0sAsSupplied()) {
 			SP0Name speciesGroup = SP0Name.forText(stand.getSpeciesGroup().getSpeciesCode());
 			entries.add(
-					"Min DBH Limit: " + speciesGroup.getText() + "........ "
-							+ context.getParams().getUtils().get(speciesGroup) + "cm"
+					"Min DBH Limit: " + (String.format("%-3s", speciesGroup.getText()).replaceAll(" ", "."))
+							+ "....... "
+							+ (context.getParams().getUtils().get(speciesGroup).toString().replaceAll("\\+", "cm+"))
 			);
 		}
 		doWrite("TABLE PROPERTIES...\n\n");
-		for (int i = 0; i < (entries.size()) / 2; i++) {
-			int j = i + (entries.size()) / 2;
+		int size = entries.size();
+		// split point (second column starts here)
+		int half = (size + 1) / 2;
+		for (int i = 0; i < half; i++) {
+			int j = i + half;
 			if (j < entries.size()) {
 				doWrite("%-40s %s\n", entries.get(i), entries.get(j));
 			} else {
