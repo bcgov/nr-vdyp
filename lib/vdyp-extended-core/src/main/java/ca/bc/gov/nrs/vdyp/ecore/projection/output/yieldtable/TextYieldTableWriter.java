@@ -187,7 +187,6 @@ class TextYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean>
 		}
 	}
 
-	@Override
 	protected void writeProjectionGrowthInfo() throws YieldTableGenerationException {
 		if (currentRecord.getPercentStockable() != null)
 			doWrite("%5.1f ", Double.parseDouble(currentRecord.getPercentStockable()));
@@ -297,7 +296,8 @@ class TextYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean>
 	}
 
 	@Override
-	public void writePolygonTableTrailer(Integer yieldTableCount) throws YieldTableGenerationException {
+	public void writePolygonTableTrailer(Integer yieldTableCount)
+			throws YieldTableGenerationException {
 		doWrite("^^^^^^^^^^ Table Number: %-10d\n", yieldTableCount);
 	}
 

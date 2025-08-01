@@ -341,8 +341,6 @@ abstract class YieldTableWriter<T extends YieldTableRowBean> implements Closeabl
 
 	protected abstract void writeRecord(YieldTableRowContext rowContext) throws YieldTableGenerationException;
 
-	protected abstract void writeProjectionGrowthInfo() throws YieldTableGenerationException;
-
 	/**
 	 * Write the per-polygon yield table trailer into the output stream. This is a default method that does nothing, the
 	 * requirement for a number of the output formats.

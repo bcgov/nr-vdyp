@@ -11,6 +11,18 @@ on:
       tag:
         required: true
         type: string
+  workflow_dispatch:
+    inputs:
+      target_environment:
+        description: Target environment to deploy to
+        required: true
+        default: dev
+        options:
+          - dev
+      tag:
+        description: Tag to deploy; use SemVer or PR Number
+        required: true
+        type: string
 
 concurrency:
   # Cancel if re-attempted

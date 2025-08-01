@@ -1,0 +1,21 @@
+{{- if .Values.coms.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "coms.fullname" . }}
+  labels:
+    {{- include "coms.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.coms.service.type }}
+  ports:
+    - name: http
+      #-- the port for the service. the service will be accessible on this port within the namespace.
+      port: {{ .Values.coms.service.port | int}}
+      #-- the container port where the application is listening on
+      targetPort: {{ .Values.coms.service.port | int}}
+      #-- the protocol for the port. it can be TCP or UDP. TCP is the default and is recommended.
+      protocol: TCP
+  selector:
+    {{- include "coms.selectorLabels" . | nindent 4 }}
+{{- end }}

@@ -1,5 +1,56 @@
 services:
 
+  db:
+    image: postgres:14
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${VDYP_DB_USER}
+      POSTGRES_PASSWORD: ${VDYP_DB_PASSWORD}
+      POSTGRES_DB: ${VDYP_DB_DATABASE}
+    volumes:
+      # your init scripts (e.g. 1-schema.sql, 2-seed.sh) live here
+      - ./initdb:/docker-entrypoint-initdb.d
+      # persistent data volume
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  coms:
+    image: ghcr.io/bcgov/common-object-management-service:${COMS_TAG:-latest}
+    ports:
+      - "3000:3000"
+    entrypoint:
+      - sh
+      - -c
+      - |
+        npm run migrate &&
+        npm start
+    environment:
+      # Object storage – replace or override in your .env
+      OBJECTSTORAGE_ENABLED: "true"
+      OBJECTSTORAGE_ACCESSKEYID: ${OBJECTSTORAGE_ACCESSKEYID}
+      OBJECTSTORAGE_SECRETACCESSKEY: ${OBJECTSTORAGE_SECRETACCESSKEY}
+      OBJECTSTORAGE_BUCKET: ${OBJECTSTORAGE_BUCKET}
+      OBJECTSTORAGE_ENDPOINT: ${OBJECTSTORAGE_ENDPOINT}
+      OBJECTSTORAGE_KEY: ${OBJECTSTORAGE_KEY}
+
+      S3ACCESSMODE_ENABLES: "true"
+      BASICAUTH_ENABLED: "true"
+      BASICAUTH_USERNAME: ${COMS_SERVICE_USERNAME}
+      BASICAUTH_PASSWORD: ${COMS_SERVICE_PASSWORD}
+
+      # DB connection
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USERNAME: ${VDYP_DB_USER}
+      DB_PASSWORD: ${VDYP_DB_PASSWORD}
+      DB_DATABASE: ${VDYP_DB_DATABASE}
+
+      KC_ENABLED: "true"
+      KC_PUBLICKEY: ${COMS_KEYCLOAK_PUBLICKEY}
+      KC_REALM: ${COMS_KEYCLOAK_REALM}
+      KC_SERVERURL: ${COMS_KEYCLOAK_SERVER_URL}
+
   vdyp-backend:
     build:
       context: ./
@@ -29,3 +80,6 @@ services:
         limits:
           cpus: "0.5"
           memory: 512M
+
+volumes:
+  db_data:
