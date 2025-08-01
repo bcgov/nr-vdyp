@@ -339,10 +339,12 @@ public class ProjectionRequestParametersValidator {
 
 		if (vparams.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS) //
 				&& vparams.getOutputFormat() != OutputFormat.CSV_YIELD_TABLE //
-				&& vparams.getOutputFormat() != OutputFormat.YIELD_TABLE) {
+				&& vparams.getOutputFormat() != OutputFormat.YIELD_TABLE //
+				&& vparams.getOutputFormat() != OutputFormat.TEXT_REPORT) {
 
 			recordValidationMessage(
-					INVALID_CFS_BIOMASS_OUTPUT_FORMAT, OutputFormat.CSV_YIELD_TABLE, OutputFormat.YIELD_TABLE
+					INVALID_CFS_BIOMASS_OUTPUT_FORMAT, OutputFormat.CSV_YIELD_TABLE, OutputFormat.YIELD_TABLE,
+					OutputFormat.TEXT_REPORT
 			);
 		}
 
