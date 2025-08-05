@@ -433,17 +433,17 @@ public class YieldTable implements Closeable {
 				}
 
 				// if (!writer.isCurrentlyWritingCategory(Category.CFSBIOMASS)) {
-					writer.recordSiteInformation(
-							percentStockable, growthDetails != null ? growthDetails.siteIndex() : null, dominantHeight,
-							secondaryHeight
-					);
-					// }
+				writer.recordSiteInformation(
+						percentStockable, growthDetails != null ? growthDetails.siteIndex() : null, dominantHeight,
+						secondaryHeight
+				);
+				// }
 
 				if (growthDetails != null && volumeDetails != null) {
 
 					// if (!writer.isCurrentlyWritingCategory(Category.CFSBIOMASS)) {
-						writer.recordGrowthDetails(growthDetails, volumeDetails);
-						// }
+					writer.recordGrowthDetails(growthDetails, volumeDetails);
+					// }
 					if (!rowContext.isPolygonTable()) {
 						if (rowContext.getPolygonProjectionState().getFirstYearYieldsDisplayed(layer) == null
 								&& growthDetails.basalArea() != null) {
@@ -506,6 +506,35 @@ public class YieldTable implements Closeable {
 					}
 
 					writer.recordMode(projectionMode);
+				}
+
+				// if the format is text report we need to record the dominant species at this age for the Site Curve
+				// table from the report
+				if (context.getParams().getOutputFormat() == OutputFormat.TEXT_REPORT) {
+					String dominantSpeciesCode = null;
+					Layer primaryLayer = polygon.findPrimaryLayerByProjectionType(ProjectionTypeCode.UNKNOWN);
+					if (primaryLayer != null
+							&& rowContext.getPolygonProjectionState().layerWasProjected(primaryLayer)) {
+						// look through the sp0s as supplied until you find the dominant one, then record the sp0 code
+						// to the writer
+						// this is to replace the overkill from V7Ext_GetProjectedLayerGroupGrowthInfo which is only
+						// used for WinVDYP7 to determine the dominant species at any given age increment
+						// calling obtain stand yield is slight overkill here but it is the least code duplication
+						// there is a fiar bit of boiler plate to access a specifics stand information
+						for (Stand sp0 : primaryLayer.getSp0sAsSupplied()) {
+							LayerYields yield = obtainStandYield(
+									rowContext, polygonProjectionsByYear, primaryLayer, sp0,
+									rowContext.getCurrentTableAge()
+							);
+							if (yield.bYieldsPredicted() && yield.isDominantSp0()) {
+								dominantSpeciesCode = yield.sp0Name();
+								break; // exit at the first dominant species found
+							}
+						}
+					}
+					if (dominantSpeciesCode != null) {
+						writer.recordDominantSpeciesByAge(rowContext.getCurrentTableAge(), dominantSpeciesCode);
+					}
 				}
 			} catch (StandYieldCalculationException e) {
 				logger.warn(
@@ -1238,7 +1267,7 @@ public class YieldTable implements Closeable {
 
 		Stand leadSpcs = layer.determineLeadingSp0(0);
 
-		// TODO check that this is the right way to get a species form a layer
+		// TODO check that this is the right way to get a species from a layer
 		// check that it is the correct stand at the correct time shoudl this be a variable thing
 		// from the year after the projection is done? otherwise how would it vary
 		// Check that the underlying function is efficient enough to trust this

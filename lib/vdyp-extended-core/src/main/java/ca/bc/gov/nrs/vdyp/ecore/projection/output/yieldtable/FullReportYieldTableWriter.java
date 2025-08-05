@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
 import java.util.Optional;
 
@@ -331,6 +333,7 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 	}
 
 	Polygon lastPolygonForTrailer;
+
 	@Override
 	public void writePolygonTableHeader(
 			Polygon polygon, Optional<LayerReportingInfo> layerReportingInfo, boolean doGenerateDetailedTableHeader,
@@ -382,6 +385,9 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 
 		doWrite("\n");
 		textFileTable = new TextFileTable();
+		dominantSpeciesAges.clear(); // If we are starting a new polygon header for soem reason we need to clear the
+										// dominant heights
+
 		var params = context.getParams();
 		textFileTable.addColumn("TOT AGE", 3, "%3d");
 		textFileTable.addColumn("Site HT (m)", 4, "%4.1f");
@@ -464,11 +470,8 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 
 	}
 
-
-
 	@Override
-	public void writePolygonTableTrailer(Integer yieldTableCount)
-			throws YieldTableGenerationException {
+	public void writePolygonTableTrailer(Integer yieldTableCount) throws YieldTableGenerationException {
 	}
 
 	@Override
@@ -503,8 +506,7 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 		for (Species species : layer.getSp64sAsSupplied()) {
 			entries.add(
 					"Species " + speciesNum++ + "................ " + String.format("%-3s", species.getSpeciesCode())
-							+ " ("
-							+ species.getSpeciesPercent() + "%)"
+							+ " (" + species.getSpeciesPercent() + "%)"
 			);
 		}
 		if (lastPolygonForTrailer.getInventoryStandard() == InventoryStandard.FIP) {
@@ -602,11 +604,33 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 		doWrite("\n");
 	}
 
+	class DominantSpeciesAges {
+		int startingAge;
+		int endingAge;
+		String speciesCode;
+	}
+
+	private final Deque<DominantSpeciesAges> dominantSpeciesAges = new ArrayDeque<>();
+
+	@Override
+	public void recordDominantSpeciesByAge(int age, String dominantSpeciesCode) {
+		DominantSpeciesAges lastItem = dominantSpeciesAges.peekLast();
+		if (lastItem == null || !lastItem.speciesCode.equals(dominantSpeciesCode)) {
+			if (lastItem != null) {
+				lastItem.endingAge = age - 1;
+			}
+			DominantSpeciesAges newItem = new DominantSpeciesAges();
+			newItem.startingAge = age;
+			newItem.speciesCode = dominantSpeciesCode;
+			dominantSpeciesAges.add(newItem);
+		} else {
+			lastItem.endingAge = age;
+		}
+
+	}
+
 	private void writeSiteIndexCurvesUsed() throws YieldTableGenerationException {
 		doWrite("Site Index Curves Used...\n");
-
-		List<DominantSpeciesAges> dominantSpeciesAges = new ArrayList<>();// TODO Get these from something
-																			// getAgeCurves();
 
 		doWrite("  Age Range | Species | SI Curve Name                                     \n");
 		doWrite(" -----------+---------+-------------------------------------------------\n");
@@ -620,9 +644,6 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 		}
 
 		doWrite("\n");
-	}
-
-	private record DominantSpeciesAges(String speciesCode, int startingAge, int endingAge) {
 	}
 
 	private void writeAdditionalStandAttributes() throws YieldTableGenerationException {
