@@ -834,5 +834,10 @@ class YieldTableTest {
 		assertThat(content.length(), greaterThan(0));
 		assertThat(content, containsString("VDYP Yield Table Report"));
 		assertThat(content, containsString("My Testing VDYP Yield Table Report"));
+		assertThat(content, containsString("TABLE PROPERTIES..."));
+		assertThat(content, containsString("CFS Biomass"));
+		assertThat(content, containsString("Species Parameters..."));
+		assertThat(content, containsString("Site Index Curves Used..."));
+		assertThat(content, containsString("Additional Stand Attributes:"));
 	}
 }
