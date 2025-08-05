@@ -230,6 +230,10 @@ abstract class YieldTableWriter<T extends YieldTableRowBean> implements Closeabl
 		);
 	}
 
+	protected void recordDominantSpeciesByAge(int age, String speciesCode) {
+		// Only required for Specific Yield Table output
+	}
+
 	void recordMode(String projectionMode) {
 		currentRecord.setMode(projectionMode);
 	}

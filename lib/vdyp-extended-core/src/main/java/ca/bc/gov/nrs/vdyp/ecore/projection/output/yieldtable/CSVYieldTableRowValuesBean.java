@@ -1045,4 +1045,5 @@ public class CSVYieldTableRowValuesBean implements YieldTableRowBean {
 	public String getCuVolumeLessDecay() {
 		return cuVolumeLessDecay;
 	}
+
 }
