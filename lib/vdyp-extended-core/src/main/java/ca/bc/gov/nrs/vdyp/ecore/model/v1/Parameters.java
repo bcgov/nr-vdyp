@@ -190,7 +190,8 @@ public class Parameters {
 		REPORT_INCLUDE_ND_WASTE_VOLUME("reportIncludeNDWasteVolume"), //
 		REPORT_INCLUDE_ND_WAST_BRKG_VOLUME("reportIncludeNDWasteBrkgVolume"), //
 		REPORT_INCLUDE_VOLUME_MAI("reportIncludeVolumeMAI"), //
-		REPORT_INCLUDE_SPEC_COMP("reportIncludeSpeciesComp");
+		REPORT_INCLUDE_SPEC_COMP("reportIncludeSpeciesComp"), //
+		REPORT_INCLUDE_CULMINATION_VALUES("reportIncludeCulminationValues");
 
 		private String value;
 
