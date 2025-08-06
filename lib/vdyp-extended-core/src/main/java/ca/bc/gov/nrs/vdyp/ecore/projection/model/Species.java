@@ -52,6 +52,7 @@ public class Species implements Comparable<Species> {
 	private Double siteIndex;
 	private Double yearsToBreastHeight;
 	private SiteIndexEquation siteCurve;
+	private boolean haveComputedSiteIndex;
 
 	private Double suppliedTotalAge;
 	private Double suppliedDominantHeight;
@@ -97,6 +98,10 @@ public class Species implements Comparable<Species> {
 
 	public Double getSiteIndex() {
 		return siteIndex;
+	}
+
+	public boolean getHaveComputedSiteIndex() {
+		return haveComputedSiteIndex;
 	}
 
 	public Double getYearsToBreastHeight() {
@@ -389,7 +394,7 @@ public class Species implements Comparable<Species> {
 		boolean haveComputedAgeAtBreastHeight = false;
 		boolean haveComputedYearsToBreastHeight = false;
 		boolean haveComputedDominantHeight = false;
-		boolean haveComputedSiteIndex = false;
+		haveComputedSiteIndex = false;
 
 		boolean keepTrying = true;
 		while (keepTrying) {
