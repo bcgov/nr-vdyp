@@ -13,6 +13,7 @@ import java.util.Optional;
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.YieldTableGenerationException;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters.ExecutionOption;
+import ca.bc.gov.nrs.vdyp.ecore.projection.PolygonProjectionState;
 import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionContext;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Layer;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.LayerReportingInfo;
@@ -20,7 +21,10 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.PolygonMessage;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Species;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Stand;
+import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.GrowthModelCode;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.InventoryStandard;
+import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProcessingModeCode;
+import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProjectionTypeCode;
 import ca.bc.gov.nrs.vdyp.ecore.utils.Utils;
 import ca.bc.gov.nrs.vdyp.si32.site.SiteTool;
 import ca.bc.gov.nrs.vdyp.si32.vdyp.SP0Name;
@@ -498,10 +502,21 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 		doWrite("\n");
 		List<String> entries = new ArrayList<>();
 		entries.add("VDYP UI Version Number... 8.0");
-		entries.add("Server Version Number.... 8.0");
+		entries.add("VDYP SRVR Version Number. 8.0");
 		entries.add("VDYP SI Version Number... 8.0");
 		entries.add("SINDEX Version Number.... 8.0");
+
+		if (lastPolygonForTrailer == null) {
+			return;
+		}
 		Layer layer = lastPolygonForTrailer.getPrimaryLayer();
+		if (layer == null) {
+			return;
+		}
+		if (state == null) {
+			return;
+		}
+
 		int speciesNum = 1;
 		for (Species species : layer.getSp64sAsSupplied()) {
 			entries.add(
@@ -509,31 +524,86 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 							+ " (" + species.getSpeciesPercent() + "%)"
 			);
 		}
-		if (lastPolygonForTrailer.getInventoryStandard() == InventoryStandard.FIP) {
-			entries.add("FIP Calc Mode............ 1");
-		} else {
-			entries.add("VRI Calc Mode............ 1");
+
+		GrowthModelCode growthModel = state.getGrowthModel(ProjectionTypeCode.PRIMARY);
+		ProcessingModeCode processingMode = state.getProcessingMode(ProjectionTypeCode.PRIMARY);
+		boolean isFIP = growthModel == GrowthModelCode.FIP;
+
+		if (growthModel != GrowthModelCode.UNKNOWN) {
+			entries.add(growthModel + " Calc Mode............. " + processingMode.value);
 		}
+
 		entries.add("BEC Zone................. " + lastPolygonForTrailer.getBecZone());
-		entries.add(
-				"Incl Second Species Ht... " + (context.getParams()
-						.containsOption(ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE)
-								? "1" : "N/A")
-		);
-		entries.add("% Crown Closure Supplied. " + layer.getCrownClosure());
+		String entry = "Incl Second Species Ht... ";
+		if (isFIP) {
+			entry += "N/A";
+		} else if (context.getParams()
+				.containsOption(ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE)) {
+			entry += "Yes";
+			List<Stand> stands = layer.getSp0sByPercent();
+			if (stands != null && stands.size() > 1) {
+				entry += " (" + stands.get(1).getSp0Code() + ")";
+			}
+		} else {
+			entry += "No";
+		}
+		entries.add(entry);
+
+		entry = "% Crown Closure Supplied. ";
+		if (lastPolygonForTrailer.getInventoryStandard() == InventoryStandard.VRI
+				|| lastPolygonForTrailer.getPrimaryLayer().getCrownClosure() <= 0) {
+			entry += "<Not Used>";
+		} else {
+			entry += lastPolygonForTrailer.getPrimaryLayer().getCrownClosure();
+		}
+		entries.add(entry);
+
 		entries.add("% Stockable Area Supplied " + layer.getPercentStockable());
 		entries.add("CFS Eco Zone............. " + lastPolygonForTrailer.getCfsEcoZone());
-		entries.add(
-				"Trees Per Hectare........ "
-						+ (layer.getTreesPerHectare() != null ? layer.getTreesPerHectare().toString() : "<Not Used>")
-		);
-		entries.add(
-				"Measured Basal Area...... "
-						+ (layer.getBasalArea() != null ? layer.getBasalArea().toString() : "<Not Used>")
-		);
+
+		Species firstSpecies = layer.getSp64sByPercent() != null && !layer.getSp64sByPercent().isEmpty()
+				? layer.getSp64sByPercent().get(0) : null;
+
+		boolean gotAgeHeightSITriplet = firstSpecies != null && firstSpecies.getDominantHeight() != null
+				&& firstSpecies.getDominantHeight() > 0 && firstSpecies.getTotalAge() != null
+				&& firstSpecies.getTotalAge() > 0 && firstSpecies.getSiteIndex() != null
+				&& firstSpecies.getSiteIndex() > 0;
+
+		// don't show VRI parameters if the growth model is FIP
+		boolean suppressVRIParamDisplay = growthModel == GrowthModelCode.FIP;
+		// Two VRI modes also don't show the VRI parameters
+		suppressVRIParamDisplay = suppressVRIParamDisplay && (processingMode == ProcessingModeCode.VRI_VriYoung
+				|| processingMode == ProcessingModeCode.VRI_CrownClosure);
+		// If you have an Age Triplet and the DOminant height is less than 10 then do not show the VRI parameters
+		suppressVRIParamDisplay = suppressVRIParamDisplay && gotAgeHeightSITriplet
+				&& firstSpecies.getDominantHeight() < 10;
+		// If SI is supplied, then show BA/TPH as N/A in report, as they are on the form.
+		suppressVRIParamDisplay = suppressVRIParamDisplay && !firstSpecies.getHaveComputedSiteIndex();
+		suppressVRIParamDisplay = suppressVRIParamDisplay && layer.getBasalArea() == null;
+
+		String tphEntry = "Trees Per Hectare........ ";
+		String basalEntry = "Measured Basal Area...... ";
+		if (suppressVRIParamDisplay) {
+			tphEntry += "<Not Used>";
+			basalEntry += "<Not Used>";
+		} else {
+			tphEntry += layer.getTreesPerHectare();
+			basalEntry += layer.getBasalArea();
+		}
+
+		entries.add(tphEntry);
+		entries.add(basalEntry);
+
 		entries.add("Starting Total Age....... " + context.getParams().getAgeStart());
 		entries.add("Finishing Total Age...... " + context.getParams().getAgeEnd());
 		entries.add("Age Increment............ " + context.getParams().getAgeIncrement());
+
+		entries.add(
+				"Projected Values......... "
+						+ (context.getParams().containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS)
+								? "CFS Biomass" : "Volume")
+		);
+
 		for (Stand stand : layer.getSp0sAsSupplied()) {
 			SP0Name speciesGroup = SP0Name.forText(stand.getSpeciesGroup().getSpeciesCode());
 			entries.add(
@@ -562,12 +632,19 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 		doWrite("Species |  %% Comp | Tot Age |  BH Age |  Height |    SI   |  YTBH   \n");
 		doWrite("--------+---------+---------+---------+---------+---------+---------\n");
 		Layer layer = lastPolygonForTrailer.getPrimaryLayer();
-		for (Species species : layer.getSp64sAsSupplied()) {
+		List<Species> sp64s = layer.getSp64sAsSupplied();
+		int size = sp64s.size();
+		boolean isFIP = state.getGrowthModel(ProjectionTypeCode.PRIMARY) == GrowthModelCode.FIP;
+		for (int index = 0; index < size; index++) {
+			Species species = sp64s.get(index);
 			String speciesCode = species.getSpeciesCode();
 			Double percentComposition = species.getSpeciesPercent();
-			Double totalAge = species.getTotalAge();
-			Double bhAge = species.getAgeAtBreastHeight();
-			Double height = species.getDominantHeight();
+
+			// suppress age/ht info for secondary species when FIPSTart is used
+			Double totalAge = isFIP && index > 0 ? null : species.getTotalAge();
+			Double bhAge = isFIP && index > 0 ? null : species.getAgeAtBreastHeight();
+			Double height = isFIP && index > 0 ? null : species.getDominantHeight();
+
 			Double siteIndex = species.getSiteIndex();
 			Double ytbH = species.getYearsToBreastHeight();
 
@@ -627,6 +704,13 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 			lastItem.endingAge = age;
 		}
 
+	}
+
+	private PolygonProjectionState state;
+
+	@Override
+	protected void recordPolygonProjectionState(PolygonProjectionState state) {
+		this.state = state;
 	}
 
 	private void writeSiteIndexCurvesUsed() throws YieldTableGenerationException {
