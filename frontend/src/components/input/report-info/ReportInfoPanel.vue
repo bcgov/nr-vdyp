@@ -37,6 +37,25 @@
               :yearIncrement="currentStore.yearIncrement"
               :isForwardGrowEnabled="currentStore.isForwardGrowEnabled"
               :isBackwardGrowEnabled="currentStore.isBackwardGrowEnabled"
+              :isWholeStemEnabled="currentStore.isWholeStemEnabled"
+              :isCloseUtilEnabled="currentStore.isCloseUtilEnabled"
+              :isNetDecayEnabled="currentStore.isNetDecayEnabled"
+              :isNetDecayWasteEnabled="currentStore.isNetDecayWasteEnabled"
+              :isNetDecayWasteBreakageEnabled="
+                currentStore.isNetDecayWasteBreakageEnabled
+              "
+              :isComputedMAIEnabled="currentStore.isComputedMAIEnabled"
+              :isCulminationValuesEnabled="
+                currentStore.isCulminationValuesEnabled
+              "
+              :isBySpeciesEnabled="currentStore.isBySpeciesEnabled"
+              :isByLayerEnabled="currentStore.isByLayerEnabled"
+              :isProjectionModeEnabled="currentStore.isProjectionModeEnabled"
+              :isPolygonIDEnabled="currentStore.isPolygonIDEnabled"
+              :isCurrentYearEnabled="currentStore.isCurrentYearEnabled"
+              :isReferenceYearEnabled="currentStore.isReferenceYearEnabled"
+              :incSecondaryHeight="currentStore.incSecondaryHeight"
+              :specificYear="currentStore.specificYear"
               :volumeReported="currentStore.volumeReported"
               :includeInReport="currentStore.includeInReport"
               :projectionType="currentStore.projectionType"
@@ -52,6 +71,31 @@
               @update:yearIncrement="handleYearIncrementUpdate"
               @update:isForwardGrowEnabled="handleIsForwardGrowEnabledUpdate"
               @update:isBackwardGrowEnabled="handleIsBackwardGrowEnabledUpdate"
+              @update:isWholeStemEnabled="handleIsWholeStemEnabledUpdate"
+              @update:isCloseUtilEnabled="handleIsCloseUtilEnabledUpdate"
+              @update:isNetDecayEnabled="handleIsNetDecayEnabledUpdate"
+              @update:isNetDecayWasteEnabled="
+                handleIsNetDecayWasteEnabledUpdate
+              "
+              @update:isNetDecayWasteBreakageEnabled="
+                handleIsNetDecayWasteBreakageEnabledUpdate
+              "
+              @update:isComputedMAIEnabled="handleIsComputedMAIEnabledUpdate"
+              @update:isCulminationValuesEnabled="
+                handleIsCulminationValuesEnabledUpdate
+              "
+              @update:isBySpeciesEnabled="handleIsBySpeciesEnabledUpdate"
+              @update:isByLayerEnabled="handleIsByLayerEnabledUpdate"
+              @update:isProjectionModeEnabled="
+                handleIsProjectionModeEnabledUpdate
+              "
+              @update:isPolygonIDEnabled="handleIsPolygonIDEnabledUpdate"
+              @update:isCurrentYearEnabled="handleIsCurrentYearEnabledUpdate"
+              @update:isReferenceYearEnabled="
+                handleIsReferenceYearEnabledUpdate
+              "
+              @update:incSecondaryHeight="handleIncSecondaryHeightUpdate"
+              @update:specificYear="handleSpecificYearUpdate"
               @update:volumeReported="handleVolumeReportedUpdate"
               @update:includeInReport="handleIncludeInReportUpdate"
               @update:projectionType="handleProjectionTypeUpdate"
@@ -158,6 +202,66 @@ const handleIsForwardGrowEnabledUpdate = (value: boolean) => {
 
 const handleIsBackwardGrowEnabledUpdate = (value: boolean) => {
   currentStore.value.isBackwardGrowEnabled = value
+}
+
+const handleIsWholeStemEnabledUpdate = (value: boolean) => {
+  currentStore.value.isWholeStemEnabled = value
+}
+
+const handleIsCloseUtilEnabledUpdate = (value: boolean) => {
+  currentStore.value.isCloseUtilEnabled = value
+}
+
+const handleIsNetDecayEnabledUpdate = (value: boolean) => {
+  currentStore.value.isNetDecayEnabled = value
+}
+
+const handleIsNetDecayWasteEnabledUpdate = (value: boolean) => {
+  currentStore.value.isNetDecayWasteEnabled = value
+}
+
+const handleIsNetDecayWasteBreakageEnabledUpdate = (value: boolean) => {
+  currentStore.value.isNetDecayWasteBreakageEnabled = value
+}
+
+const handleIsComputedMAIEnabledUpdate = (value: boolean) => {
+  currentStore.value.isComputedMAIEnabled = value
+}
+
+const handleIsCulminationValuesEnabledUpdate = (value: boolean) => {
+  currentStore.value.isCulminationValuesEnabled = value
+}
+
+const handleIsBySpeciesEnabledUpdate = (value: boolean) => {
+  currentStore.value.isBySpeciesEnabled = value
+}
+
+const handleIsByLayerEnabledUpdate = (value: boolean) => {
+  currentStore.value.isByLayerEnabled = value
+}
+
+const handleIsProjectionModeEnabledUpdate = (value: boolean) => {
+  currentStore.value.isProjectionModeEnabled = value
+}
+
+const handleIsPolygonIDEnabledUpdate = (value: boolean) => {
+  currentStore.value.isPolygonIDEnabled = value
+}
+
+const handleIsCurrentYearEnabledUpdate = (value: boolean) => {
+  currentStore.value.isCurrentYearEnabled = value
+}
+
+const handleIsReferenceYearEnabledUpdate = (value: boolean) => {
+  currentStore.value.isReferenceYearEnabled = value
+}
+
+const handleIncSecondaryHeightUpdate = (value: boolean) => {
+  currentStore.value.incSecondaryHeight = value
+}
+
+const handleSpecificYearUpdate = (value: number | null) => {
+  currentStore.value.specificYear = value
 }
 
 const handleVolumeReportedUpdate = (value: string[]) => {
@@ -364,6 +468,34 @@ const onClear = () => {
     DEFAULTS.DEFAULT_VALUES.IS_FORWARD_GROW_ENABLED
   currentStore.value.isBackwardGrowEnabled =
     DEFAULTS.DEFAULT_VALUES.IS_BACKWARD_GROW_ENABLED
+  currentStore.value.isWholeStemEnabled =
+    DEFAULTS.DEFAULT_VALUES.IS_WHOLE_STEM_ENABLED
+  currentStore.value.isCloseUtilEnabled =
+    DEFAULTS.DEFAULT_VALUES.IS_CLOSE_UTIL_ENABLED
+  currentStore.value.isNetDecayEnabled =
+    DEFAULTS.DEFAULT_VALUES.IS_NET_DECAY_ENABLED
+  currentStore.value.isNetDecayWasteEnabled =
+    DEFAULTS.DEFAULT_VALUES.IS_NET_DECAY_WASTE_ENABLED
+  currentStore.value.isNetDecayWasteBreakageEnabled =
+    DEFAULTS.DEFAULT_VALUES.IS_NET_DECAY_WASTE_BREAKAGE_ENABLED
+  currentStore.value.isComputedMAIEnabled =
+    DEFAULTS.DEFAULT_VALUES.IS_COMPUTED_MAI_ENABLED
+  currentStore.value.isCulminationValuesEnabled =
+    DEFAULTS.DEFAULT_VALUES.IS_CULMINATION_VALUES_ENABLED
+  currentStore.value.isBySpeciesEnabled =
+    DEFAULTS.DEFAULT_VALUES.IS_BY_SPECIES_ENABLED
+  currentStore.value.isByLayerEnabled = DEFAULTS.DEFAULT_VALUES.IS_LAYER_ENABLED
+  currentStore.value.isProjectionModeEnabled =
+    DEFAULTS.DEFAULT_VALUES.IS_PROJECTION_MODE_ENABLED
+  currentStore.value.isPolygonIDEnabled =
+    DEFAULTS.DEFAULT_VALUES.IS_POLYGON_ID_ENABLED
+  currentStore.value.isCurrentYearEnabled =
+    DEFAULTS.DEFAULT_VALUES.IS_CURRENT_YEAR_ENABLED
+  currentStore.value.isReferenceYearEnabled =
+    DEFAULTS.DEFAULT_VALUES.IS_REFERENCE_YEAR_ENABLED
+  currentStore.value.incSecondaryHeight =
+    DEFAULTS.DEFAULT_VALUES.INC_SECONDARY_HEIGHT
+  currentStore.value.specificYear = null
   currentStore.value.volumeReported = []
   currentStore.value.includeInReport = []
   currentStore.value.reportTitle = null

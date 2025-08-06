@@ -535,7 +535,7 @@ export const runModel = async (
       modelParameterStore.selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.YEAR
         ? modelParameterStore.endYear
         : null,
-    outputFormat: OutputFormatEnum.CSVYieldTable,
+    outputFormat: OutputFormatEnum.CSVYieldTable, // TODO - All of new parameter will only work for new outputFormat TextReport (see VDYP-695 comment)
     selectedExecutionOptions: selectedExecutionOptions,
     excludedExecutionOptions: excludedExecutionOptions,
     selectedDebugOptions: selectedDebugOptions,

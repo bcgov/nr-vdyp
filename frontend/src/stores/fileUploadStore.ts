@@ -82,6 +82,23 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
   const isForwardGrowEnabled = ref<boolean>(true)
   const isBackwardGrowEnabled = ref<boolean>(true)
 
+  const isWholeStemEnabled = ref<boolean>(true)
+  const isCloseUtilEnabled = ref<boolean>(false)
+  const isNetDecayEnabled = ref<boolean>(false)
+  const isNetDecayWasteEnabled = ref<boolean>(false)
+  const isNetDecayWasteBreakageEnabled = ref<boolean>(false)
+
+  const isComputedMAIEnabled = ref<boolean>(false)
+  const isCulminationValuesEnabled = ref<boolean>(false)
+  const isBySpeciesEnabled = ref<boolean>(false)
+  const isByLayerEnabled = ref<boolean>(false)
+  const isProjectionModeEnabled = ref<boolean>(false)
+  const isPolygonIDEnabled = ref<boolean>(false)
+  const isCurrentYearEnabled = ref<boolean>(false)
+  const isReferenceYearEnabled = ref<boolean>(false)
+  const incSecondaryHeight = ref<boolean>(false)
+  const specificYear = ref<number | null>(null)
+
   const volumeReported = ref<string[]>([])
   const includeInReport = ref<string[]>([])
   const projectionType = ref<string | null>(null)
@@ -103,6 +120,7 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
     isForwardGrowEnabled.value = DEFAULTS.DEFAULT_VALUES.IS_FORWARD_GROW_ENABLED
     isBackwardGrowEnabled.value =
       DEFAULTS.DEFAULT_VALUES.IS_BACKWARD_GROW_ENABLED
+    isWholeStemEnabled.value = DEFAULTS.DEFAULT_VALUES.IS_WHOLE_STEM_ENABLED
     volumeReported.value = DEFAULTS.DEFAULT_VALUES.VOLUME_REPORTED
     projectionType.value = DEFAULTS.DEFAULT_VALUES.PROJECTION_TYPE
     reportTitle.value = DEFAULTS.DEFAULT_VALUES.REPORT_TITLE
@@ -126,6 +144,21 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
     yearIncrement,
     isForwardGrowEnabled,
     isBackwardGrowEnabled,
+    isWholeStemEnabled,
+    isCloseUtilEnabled,
+    isNetDecayEnabled,
+    isNetDecayWasteEnabled,
+    isNetDecayWasteBreakageEnabled,
+    isComputedMAIEnabled,
+    isCulminationValuesEnabled,
+    isBySpeciesEnabled,
+    isByLayerEnabled,
+    isProjectionModeEnabled,
+    isPolygonIDEnabled,
+    isCurrentYearEnabled,
+    isReferenceYearEnabled,
+    incSecondaryHeight,
+    specificYear,
     volumeReported,
     includeInReport,
     projectionType,
