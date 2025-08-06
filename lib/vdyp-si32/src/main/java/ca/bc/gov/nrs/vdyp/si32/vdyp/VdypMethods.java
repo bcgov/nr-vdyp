@@ -505,7 +505,9 @@ public class VdypMethods {
 	 * Clear the species table including all manually set site curves.
 	 */
 	public static void clear() {
-		// FIXME  it would be far better if we used instanced singletons instead of static methods with state but that's a significant change to the SINDEX library and all the dependant code.
+		// FIXME it would be far better if we used instanced singletons instead of static methods with state but that's
+		// a significant change to the SINDEX library and all the dependant code.
+		// See VDYP-732
 		speciesTable = new SpeciesTable();
 	}
 }

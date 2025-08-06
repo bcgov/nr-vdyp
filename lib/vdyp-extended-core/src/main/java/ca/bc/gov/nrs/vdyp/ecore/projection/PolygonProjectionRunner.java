@@ -7,7 +7,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.MessageFormat;
 import java.time.LocalDate;
+import java.util.EnumMap;
 import java.util.EnumSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.Validate;
@@ -106,24 +108,28 @@ public class PolygonProjectionRunner {
 		return new PolygonProjectionRunner(polygon, context, componentRunner);
 	}
 
-	static final Set<SiteIndexEquation> CURVES_TO_REMAP = EnumSet.of(
-			SiteIndexEquation.SI_SW_GOUDNIGH, SiteIndexEquation.SI_SW_GOUDIE_PLAAC
-	);
-	static final SiteIndexEquation REMAP_CURVES_TO = SiteIndexEquation.SI_SW_GOUDIE_NATAC;
+	static final Map<SiteIndexEquation, SiteIndexEquation> CURVES_TO_REMAP = new EnumMap(SiteIndexEquation.class);
+
+	static {
+		CURVES_TO_REMAP.put(SiteIndexEquation.SI_ACB_HUANG, SiteIndexEquation.SI_SW_GOUDIE_NATAC);
+		CURVES_TO_REMAP.put(SiteIndexEquation.SI_SW_GOUDIE_PLAAC, SiteIndexEquation.SI_SW_GOUDIE_NATAC);
+	}
 
 	/**
 	 * Forces all site curves into the cache and applies remapping.
-	 * 
+	 *
 	 * This remaps the curves used for Spruce from plantation to age corrected natural. If the SINDEX library is updated
 	 * this remapping may need to change as well.
 	 */
 	// Adapts VDYP7 V7Ext_InitializeExtended
 	public static void initializeSiteIndexCurves() {
+		// TODO See VDYP-732
 		for (String key : VdypMethods.getSpeciesNames()) {
 			for (var region : SpeciesRegion.values()) {
 				var curve = VdypMethods.getCurrentSICurve(key, region);
-				if (CURVES_TO_REMAP.contains(curve)) {
-					VdypMethods.setCurrentSICurve(key, region, REMAP_CURVES_TO);
+				var newCurve = CURVES_TO_REMAP.get(curve);
+				if (newCurve != null) {
+					VdypMethods.setCurrentSICurve(key, region, newCurve);
 				}
 			}
 		}

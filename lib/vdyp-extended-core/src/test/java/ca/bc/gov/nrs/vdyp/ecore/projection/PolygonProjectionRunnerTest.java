@@ -258,8 +258,10 @@ public class PolygonProjectionRunnerTest {
 		for (var species : VdypMethods.getSpeciesNames()) {
 			for (var region : SpeciesRegion.values()) {
 				var curve = VdypMethods.getCurrentSICurve(species, region);
-				if (PolygonProjectionRunner.CURVES_TO_REMAP.contains(curve)) {
-					result.add(Arguments.of(species, region, curve, PolygonProjectionRunner.REMAP_CURVES_TO));
+				if (PolygonProjectionRunner.CURVES_TO_REMAP.containsKey(curve)) {
+					result.add(
+							Arguments.of(species, region, curve, PolygonProjectionRunner.CURVES_TO_REMAP.get(curve))
+					);
 				}
 			}
 		}
@@ -272,7 +274,7 @@ public class PolygonProjectionRunnerTest {
 		for (var species : VdypMethods.getSpeciesNames()) {
 			for (var region : SpeciesRegion.values()) {
 				var curve = VdypMethods.getCurrentSICurve(species, region);
-				if (!PolygonProjectionRunner.CURVES_TO_REMAP.contains(curve)) {
+				if (!PolygonProjectionRunner.CURVES_TO_REMAP.containsKey(curve)) {
 					result.add(Arguments.of(species, region, curve));
 				}
 			}
@@ -301,9 +303,8 @@ public class PolygonProjectionRunnerTest {
 
 	@ParameterizedTest
 	@MethodSource("dontRemap")
-	void testRemapSiteCurvesDoesnAffectOtherCurves(
-			String species, SpeciesRegion region, SiteIndexEquation oldCurve
-	) throws AbstractProjectionRequestException, IOException {
+	void testRemapSiteCurvesDoesnAffectOtherCurves(String species, SpeciesRegion region, SiteIndexEquation oldCurve)
+			throws AbstractProjectionRequestException, IOException {
 		VdypMethods.clear();
 		VdypMethods.getSpeciesNames();
 

@@ -54,6 +54,7 @@ public class ProjectionService {
 
 	static {
 		// FIXME Would be better if we moved the stateful parts of the SINDEX library to an instanced singleton.
+		// See VDYP-732
 		PolygonProjectionRunner.initializeSiteIndexCurves();
 	}
 
