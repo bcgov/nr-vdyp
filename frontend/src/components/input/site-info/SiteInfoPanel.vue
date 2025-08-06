@@ -65,21 +65,6 @@
                     </v-col>
                   </v-row>
                 </v-col>
-                <v-col class="col-space-6" />
-                <v-col>
-                  <v-row>
-                    <v-col cols="12">
-                      <v-checkbox
-                        label="Include Secondary Dominant Height in Yield Table"
-                        v-model="incSecondaryHeight"
-                        hide-details="auto"
-                        :disabled="
-                          isIncSecondaryHeightDisabled || !isConfirmEnabled
-                        "
-                      ></v-checkbox>
-                    </v-col>
-                  </v-row>
-                </v-col>
               </v-row>
               <div class="hr-line"></div>
               <v-row class="mt-7">
@@ -298,7 +283,6 @@ const {
   selectedSiteSpecies,
   becZone,
   ecoZone,
-  incSecondaryHeight,
   siteSpeciesValues,
   ageType,
   spzAge,
@@ -321,7 +305,6 @@ const siteSpeciesOptions = computed(() =>
   })),
 )
 
-const isIncSecondaryHeightDisabled = ref(false)
 const isSiteSpeciesValueDisabled = ref(false)
 const isAgeTypeDisabled = ref(false)
 const isSpzAgeDisabled = ref(false)
@@ -364,11 +347,7 @@ const handleDerivedByChange = (
 ) => {
   if (!newDerivedBy) return
 
-  if (newDerivedBy === CONSTANTS.DERIVED_BY.VOLUME) {
-    incSecondaryHeight.value = false
-    isIncSecondaryHeightDisabled.value = true
-  } else if (newDerivedBy === CONSTANTS.DERIVED_BY.BASAL_AREA) {
-    isIncSecondaryHeightDisabled.value = false
+  if (newDerivedBy === CONSTANTS.DERIVED_BY.BASAL_AREA) {
     isSiteSpeciesValueDisabled.value =
       newSiteSpecies !== highestPercentSpecies.value
   }
@@ -478,7 +457,6 @@ const onEdit = () => {
 const onClear = () => {
   becZone.value = DEFAULTS.DEFAULT_VALUES.BEC_ZONE
   ecoZone.value = null
-  incSecondaryHeight.value = false
   selectedSiteSpecies.value = highestPercentSpecies.value
   siteSpeciesValues.value = DEFAULTS.DEFAULT_VALUES.SITE_SPECIES_VALUES
   ageType.value = DEFAULTS.DEFAULT_VALUES.AGE_TYPE

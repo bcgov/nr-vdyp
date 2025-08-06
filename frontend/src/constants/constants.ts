@@ -132,6 +132,9 @@ export const NUM_INPUT_LIMITS = Object.freeze({
   YEAR_INC_MIN: 1,
   YEAR_INC_MAX: 350,
   YEAR_INC_STEP: 1,
+  SPECIFIC_YEAR_MIN: 1400,
+  SPECIFIC_YEAR_MAX: 2500,
+  SPECIFIC_YEAR_STEP: 1,
 })
 
 export const CONTINUOUS_INC_DEC = Object.freeze({

@@ -71,12 +71,6 @@ describe('SiteInfoPanel.vue', () => {
       .contains('Boreal Cordillera')
       .should('exist')
 
-    // Verify checkbox
-    cy.get('label')
-      .contains('Include Secondary Dominant Height in Yield Table')
-      .should('exist')
-    cy.get('input[type="checkbox"]').should('not.be.checked')
-
     // Verify Site Species select (disabled)
     cy.get('label').contains('Site Species').should('exist')
     cy.get('[data-testid="selected-site-species"] .v-field').should(
@@ -353,7 +347,7 @@ describe('SiteInfoPanel.vue', () => {
     cy.get('.v-radio-group').each(($radioGroup) => {
       cy.wrap($radioGroup).should('have.class', 'v-input--disabled')
     })
-    cy.get('input[type="checkbox"]').should('be.disabled')
+
     cy.get('button:contains("Clear")').should('be.disabled')
     cy.get('button:contains("Confirm")').should('be.disabled')
 
