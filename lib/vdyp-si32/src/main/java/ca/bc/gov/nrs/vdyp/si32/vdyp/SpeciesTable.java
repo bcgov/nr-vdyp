@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.si32.cfs.CfsTreeSpecies;
@@ -964,6 +965,13 @@ public class SpeciesTable {
 						false, getDefaultCrownClosure(61.0f, 61.0f), getDefaultSiteIndexCurves()
 				)
 		);
+	}
+
+	/**
+	 * Returns the set of all species ids
+	 */
+	public Set<String> getKeys() {
+		return this.speciesByTextMap.keySet();
 	}
 
 	private static float[] getDefaultCrownClosure(float coastal, float interior) {

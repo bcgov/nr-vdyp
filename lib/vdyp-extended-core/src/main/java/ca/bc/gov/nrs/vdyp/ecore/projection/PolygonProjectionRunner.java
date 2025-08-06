@@ -7,6 +7,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.MessageFormat;
 import java.time.LocalDate;
+import java.util.EnumSet;
+import java.util.Set;
 
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
@@ -14,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.application.VdypApplicationIdentifier;
 import ca.bc.gov.nrs.vdyp.common.Reference;
+import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.PolygonExecutionException;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.PolygonValidationException;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.YieldTableGenerationException;
@@ -47,6 +50,9 @@ import ca.bc.gov.nrs.vdyp.exceptions.StandProcessingException;
 import ca.bc.gov.nrs.vdyp.exceptions.TotalAgeLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.UnsupportedModeException;
 import ca.bc.gov.nrs.vdyp.math.VdypMath;
+import ca.bc.gov.nrs.vdyp.si32.enumerations.SpeciesRegion;
+import ca.bc.gov.nrs.vdyp.si32.vdyp.SpeciesTable;
+import ca.bc.gov.nrs.vdyp.si32.vdyp.VdypMethods;
 
 /**
  * This class is the internal representation of a Polygon to be projected.
@@ -98,6 +104,29 @@ public class PolygonProjectionRunner {
 			of(Polygon polygon, ProjectionContext context, ComponentRunner componentRunner) {
 
 		return new PolygonProjectionRunner(polygon, context, componentRunner);
+	}
+
+	static final Set<SiteIndexEquation> CURVES_TO_REMAP = EnumSet.of(
+			SiteIndexEquation.SI_SW_GOUDNIGH, SiteIndexEquation.SI_SW_GOUDIE_PLAAC
+	);
+	static final SiteIndexEquation REMAP_CURVES_TO = SiteIndexEquation.SI_SW_GOUDIE_NATAC;
+
+	/**
+	 * Forces all site curves into the cache and applies remapping.
+	 * 
+	 * This remaps the curves used for Spruce from plantation to age corrected natural. If the SINDEX library is updated
+	 * this remapping may need to change as well.
+	 */
+	// Adapts VDYP7 V7Ext_InitializeExtended
+	public static void initializeSiteIndexCurves() {
+		for (String key : VdypMethods.getSpeciesNames()) {
+			for (var region : SpeciesRegion.values()) {
+				var curve = VdypMethods.getCurrentSICurve(key, region);
+				if (CURVES_TO_REMAP.contains(curve)) {
+					VdypMethods.setCurrentSICurve(key, region, REMAP_CURVES_TO);
+				}
+			}
+		}
 	}
 
 	/**

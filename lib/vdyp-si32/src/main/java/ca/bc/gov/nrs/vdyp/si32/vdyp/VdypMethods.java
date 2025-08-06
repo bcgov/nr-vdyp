@@ -4,6 +4,7 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -491,5 +492,20 @@ public class VdypMethods {
 		}
 
 		return sp0Index;
+	}
+
+	/**
+	 * Get all species names
+	 */
+	public static Set<String> getSpeciesNames() {
+		return speciesTable.getKeys();
+	}
+
+	/**
+	 * Clear the species table including all manually set site curves.
+	 */
+	public static void clear() {
+		// FIXME  it would be far better if we used instanced singletons instead of static methods with state but that's a significant change to the SINDEX library and all the dependant code.
+		speciesTable = new SpeciesTable();
 	}
 }
