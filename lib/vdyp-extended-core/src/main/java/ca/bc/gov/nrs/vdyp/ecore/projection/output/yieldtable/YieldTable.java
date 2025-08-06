@@ -175,6 +175,8 @@ public class YieldTable implements Closeable {
 			Polygon polygon, Map<Integer, VdypPolygon> projectionResults, PolygonProjectionState state,
 			LayerReportingInfo layerReportingInfo, boolean doGenerateDetailedTableHeader
 	) throws YieldTableGenerationException {
+		writer.recordPolygonProjectionState(state);
+
 		writer.writePolygonTableHeader(
 				polygon, Optional.ofNullable(layerReportingInfo), doGenerateDetailedTableHeader, nextYieldTableNumber
 		);
