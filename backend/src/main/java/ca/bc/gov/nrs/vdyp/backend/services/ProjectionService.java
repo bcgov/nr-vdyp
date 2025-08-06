@@ -33,6 +33,7 @@ import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.ProjectionRequestValidationExc
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters.ExecutionOption;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind;
+import ca.bc.gov.nrs.vdyp.ecore.projection.PolygonProjectionRunner;
 import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionRunner;
 import ca.bc.gov.nrs.vdyp.ecore.utils.FileHelper;
 import ca.bc.gov.nrs.vdyp.ecore.utils.ParameterNames;
@@ -50,6 +51,11 @@ import jakarta.ws.rs.core.SecurityContext;
 public class ProjectionService {
 
 	public static final Logger logger = LoggerFactory.getLogger(ProjectionService.class);
+
+	static {
+		// FIXME Would be better if we moved the stateful parts of the SINDEX library to an instanced singleton.
+		PolygonProjectionRunner.initializeSiteIndexCurves();
+	}
 
 	public Response projectionHcsvPost(
 			Boolean trialRun, //
