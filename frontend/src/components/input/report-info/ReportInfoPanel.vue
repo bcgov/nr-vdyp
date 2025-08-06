@@ -484,7 +484,8 @@ const onClear = () => {
     DEFAULTS.DEFAULT_VALUES.IS_CULMINATION_VALUES_ENABLED
   currentStore.value.isBySpeciesEnabled =
     DEFAULTS.DEFAULT_VALUES.IS_BY_SPECIES_ENABLED
-  currentStore.value.isByLayerEnabled = DEFAULTS.DEFAULT_VALUES.IS_LAYER_ENABLED
+  currentStore.value.isByLayerEnabled =
+    DEFAULTS.DEFAULT_VALUES.IS_BY_LAYER_ENABLED
   currentStore.value.isProjectionModeEnabled =
     DEFAULTS.DEFAULT_VALUES.IS_PROJECTION_MODE_ENABLED
   currentStore.value.isPolygonIDEnabled =

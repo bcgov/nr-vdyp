@@ -969,21 +969,6 @@ const isincSecondaryHeightDeactivated = computed(() => {
 const isSpecificYearDeactivated = computed(() => {
   return props.isDisabled
 })
-// Decide whether to disable the "Volumes Reported" checkbox
-// const isVolumeReportedDisabled = computed(() => {
-//   return (
-//     localProjectionType.value === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS ||
-//     props.isDisabled
-//   )
-// })
-
-// // Decide to enable/disable the "Include in Report" checkbox
-// const getIncludeInReportDisabled = (value: string) => {
-//   if (value === CONSTANTS.INCLUDE_IN_REPORT.CULMINATION_VALUES) {
-//     return !canCulminationValuesSelectionActivated.value
-//   }
-//   return props.isDisabled
-// }
 
 const utilizationSliderTickLabels = utilizationClassOptions.reduce(
   (acc, opt) => {
