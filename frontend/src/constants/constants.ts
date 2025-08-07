@@ -69,6 +69,7 @@ export const PROJECTION_TYPE = Object.freeze({
 export const SPECIAL_INDICATORS = Object.freeze({
   NA: 'N/A',
   NOT_USED: '<Not Used>',
+  COMPUTED: 'Computed',
 })
 
 export const MODEL_PARAMETER_PANEL = Object.freeze({

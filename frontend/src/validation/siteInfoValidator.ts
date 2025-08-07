@@ -10,11 +10,7 @@ export class SiteInfoValidator extends ValidationBase {
     bha50SiteIndex: string | null,
   ): boolean {
     if (siteSpeciesValues === CONSTANTS.SITE_SPECIES_VALUES.COMPUTED) {
-      return !(
-        isEmptyOrZero(spzAge) ||
-        isEmptyOrZero(spzHeight) ||
-        isEmptyOrZero(bha50SiteIndex)
-      )
+      return !(isEmptyOrZero(spzAge) || isEmptyOrZero(spzHeight))
     } else if (siteSpeciesValues === CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED) {
       return !isEmptyOrZero(bha50SiteIndex)
     }
