@@ -82,7 +82,7 @@ export const MDL_PRM_INPUT_ERR = Object.freeze({
   SITE_VLD_HIGHT_RNG: "'Height in Meters' must range from 0.00 and 99.90",
   SITE_VLD_SI_RNG: "'BHA 50 Site Index' must range from 0.00 and 60.00",
   SITE_VLD_SPCZ_REQ_VALS_SUP: (selectedSiteSpeciesValue: string | null) =>
-    `The species '${selectedSiteSpeciesValue}' must have Years/Height in Meters/BHA 50 Site Index values supplied`,
+    `The species '${selectedSiteSpeciesValue}' must have Years/Height in Meters values supplied`,
   SITE_VLD_SPCZ_REQ_SI_VAL: (selectedSiteSpeciesValue: string | null) =>
     `The species '${selectedSiteSpeciesValue}' must have an BHA 50 Site Index value supplied`,
   DENSITY_VLD_PCT_STCB_AREA_RNG:
