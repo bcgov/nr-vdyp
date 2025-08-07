@@ -23,6 +23,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.PolygonExecutionException;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.MessageSeverityCode;
@@ -56,6 +57,7 @@ import ca.bc.gov.nrs.vdyp.exceptions.TotalAgeLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.UnsupportedModeException;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.PolygonMode;
+import ca.bc.gov.nrs.vdyp.si32.enumerations.SpeciesRegion;
 import ca.bc.gov.nrs.vdyp.si32.vdyp.VdypMethods;
 
 public class PolygonProjectionRunnerTest {
@@ -249,4 +251,72 @@ public class PolygonProjectionRunnerTest {
 				)
 		);
 	}
+
+	static List<Arguments> toRemap() {
+		var result = new ArrayList<Arguments>();
+		VdypMethods.clear();
+		for (var species : VdypMethods.getSpeciesNames()) {
+			for (var region : SpeciesRegion.values()) {
+				var curve = VdypMethods.getCurrentSICurve(species, region);
+				if (PolygonProjectionRunner.CURVES_TO_REMAP.containsKey(curve)) {
+					result.add(
+							Arguments.of(species, region, curve, PolygonProjectionRunner.CURVES_TO_REMAP.get(curve))
+					);
+				}
+			}
+		}
+		return result;
+	}
+
+	static List<Arguments> dontRemap() {
+		var result = new ArrayList<Arguments>();
+		VdypMethods.clear();
+		for (var species : VdypMethods.getSpeciesNames()) {
+			for (var region : SpeciesRegion.values()) {
+				var curve = VdypMethods.getCurrentSICurve(species, region);
+				if (!PolygonProjectionRunner.CURVES_TO_REMAP.containsKey(curve)) {
+					result.add(Arguments.of(species, region, curve));
+				}
+			}
+		}
+		return result;
+	}
+
+	@ParameterizedTest
+	@MethodSource("toRemap")
+	void testRemapSiteCurves(
+			String species, SpeciesRegion region, SiteIndexEquation oldCurve, SiteIndexEquation newCurve
+	) throws AbstractProjectionRequestException, IOException {
+		VdypMethods.clear();
+		VdypMethods.getSpeciesNames();
+
+		var oldResult = VdypMethods.getCurrentSICurve(species, region);
+		assertThat("Without remapping", oldResult, is(oldCurve));
+		try {
+			PolygonProjectionRunner.initializeSiteIndexCurves();
+			var newResult = VdypMethods.getCurrentSICurve(species, region);
+			assertThat("With remapping", newResult, is(newCurve));
+		} finally {
+			VdypMethods.clear();
+		}
+	}
+
+	@ParameterizedTest
+	@MethodSource("dontRemap")
+	void testRemapSiteCurvesDoesnAffectOtherCurves(String species, SpeciesRegion region, SiteIndexEquation oldCurve)
+			throws AbstractProjectionRequestException, IOException {
+		VdypMethods.clear();
+		VdypMethods.getSpeciesNames();
+
+		var oldResult = VdypMethods.getCurrentSICurve(species, region);
+		assertThat("Without remapping", oldResult, is(oldCurve));
+		try {
+			PolygonProjectionRunner.initializeSiteIndexCurves();
+			var newResult = VdypMethods.getCurrentSICurve(species, region);
+			assertThat("With remapping", newResult, is(oldCurve));
+		} finally {
+			VdypMethods.clear();
+		}
+	}
+
 }

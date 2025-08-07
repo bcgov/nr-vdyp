@@ -65,21 +65,6 @@
                     </v-col>
                   </v-row>
                 </v-col>
-                <v-col class="col-space-6" />
-                <v-col>
-                  <v-row>
-                    <v-col cols="12">
-                      <v-checkbox
-                        label="Include Secondary Dominant Height in Yield Table"
-                        v-model="incSecondaryHeight"
-                        hide-details="auto"
-                        :disabled="
-                          isIncSecondaryHeightDisabled || !isConfirmEnabled
-                        "
-                      ></v-checkbox>
-                    </v-col>
-                  </v-row>
-                </v-col>
               </v-row>
               <div class="hr-line"></div>
               <v-row class="mt-7">
@@ -228,7 +213,7 @@
                         :min="CONSTANTS.NUM_INPUT_LIMITS.BHA50_SITE_INDEX_MIN"
                         :step="CONSTANTS.NUM_INPUT_LIMITS.BHA50_SITE_INDEX_STEP"
                         :persistent-placeholder="true"
-                        placeholder=""
+                        :placeholder="bha50SiteIndexPlaceholder"
                         :hideDetails="true"
                         density="compact"
                         :dense="true"
@@ -298,7 +283,6 @@ const {
   selectedSiteSpecies,
   becZone,
   ecoZone,
-  incSecondaryHeight,
   siteSpeciesValues,
   ageType,
   spzAge,
@@ -321,7 +305,6 @@ const siteSpeciesOptions = computed(() =>
   })),
 )
 
-const isIncSecondaryHeightDisabled = ref(false)
 const isSiteSpeciesValueDisabled = ref(false)
 const isAgeTypeDisabled = ref(false)
 const isSpzAgeDisabled = ref(false)
@@ -330,6 +313,7 @@ const isBHA50SiteIndexDisabled = ref(false)
 
 const spzAgePlaceholder = ref('')
 const spzHeightPlaceholder = ref('')
+const bha50SiteIndexPlaceholder = ref('')
 
 const handleSiteSpeciesValuesState = (newSiteSpeciesValues: string | null) => {
   if (newSiteSpeciesValues === CONSTANTS.SITE_SPECIES_VALUES.COMPUTED) {
@@ -340,9 +324,11 @@ const handleSiteSpeciesValuesState = (newSiteSpeciesValues: string | null) => {
 
     spzAge.value = DEFAULTS.DEFAULT_VALUES.SPZ_AGE
     spzHeight.value = DEFAULTS.DEFAULT_VALUES.SPZ_HEIGHT
+    bha50SiteIndex.value = ''
 
     spzAgePlaceholder.value = ''
     spzHeightPlaceholder.value = ''
+    bha50SiteIndexPlaceholder.value = CONSTANTS.SPECIAL_INDICATORS.COMPUTED
   } else if (newSiteSpeciesValues === CONSTANTS.SITE_SPECIES_VALUES.SUPPLIED) {
     isAgeTypeDisabled.value = true
     isSpzAgeDisabled.value = true
@@ -351,9 +337,11 @@ const handleSiteSpeciesValuesState = (newSiteSpeciesValues: string | null) => {
 
     spzAge.value = null
     spzHeight.value = null
+    bha50SiteIndex.value = DEFAULTS.DEFAULT_VALUES.BHA50_SITE_INDEX
 
     spzAgePlaceholder.value = CONSTANTS.SPECIAL_INDICATORS.NA
     spzHeightPlaceholder.value = CONSTANTS.SPECIAL_INDICATORS.NA
+    bha50SiteIndexPlaceholder.value = ''
   }
 }
 
@@ -364,11 +352,7 @@ const handleDerivedByChange = (
 ) => {
   if (!newDerivedBy) return
 
-  if (newDerivedBy === CONSTANTS.DERIVED_BY.VOLUME) {
-    incSecondaryHeight.value = false
-    isIncSecondaryHeightDisabled.value = true
-  } else if (newDerivedBy === CONSTANTS.DERIVED_BY.BASAL_AREA) {
-    isIncSecondaryHeightDisabled.value = false
+  if (newDerivedBy === CONSTANTS.DERIVED_BY.BASAL_AREA) {
     isSiteSpeciesValueDisabled.value =
       newSiteSpecies !== highestPercentSpecies.value
   }
@@ -478,7 +462,6 @@ const onEdit = () => {
 const onClear = () => {
   becZone.value = DEFAULTS.DEFAULT_VALUES.BEC_ZONE
   ecoZone.value = null
-  incSecondaryHeight.value = false
   selectedSiteSpecies.value = highestPercentSpecies.value
   siteSpeciesValues.value = DEFAULTS.DEFAULT_VALUES.SITE_SPECIES_VALUES
   ageType.value = DEFAULTS.DEFAULT_VALUES.AGE_TYPE
@@ -491,7 +474,8 @@ const onClear = () => {
 
   spzAge.value = DEFAULTS.DEFAULT_VALUES.SPZ_AGE
   spzHeight.value = DEFAULTS.DEFAULT_VALUES.SPZ_HEIGHT
-  bha50SiteIndex.value = DEFAULTS.DEFAULT_VALUES.BHA50_SITE_INDEX
+  bha50SiteIndex.value = ''
+  bha50SiteIndexPlaceholder.value = CONSTANTS.SPECIAL_INDICATORS.COMPUTED
 }
 
 const handleDialogClose = () => {}

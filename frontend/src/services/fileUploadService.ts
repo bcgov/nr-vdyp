@@ -24,10 +24,8 @@ export const buildExecutionOptions = (
 } => {
   const selectedExecutionOptions = [
     ExecutionOptionsEnum.DoIncludeFileHeader,
-    ExecutionOptionsEnum.DoIncludeProjectionModeInYieldTable,
     ExecutionOptionsEnum.DoIncludeAgeRowsInYieldTable,
     ExecutionOptionsEnum.DoIncludeYearRowsInYieldTable,
-    ExecutionOptionsEnum.DoSummarizeProjectionByLayer,
     ExecutionOptionsEnum.DoIncludeColumnHeadersInYieldTable,
     ExecutionOptionsEnum.DoAllowBasalAreaAndTreesPerHectareValueSubstitution,
     ExecutionOptionsEnum.DoEnableProgressLogging,
@@ -37,14 +35,11 @@ export const buildExecutionOptions = (
 
   const excludedExecutionOptions: ExecutionOptionsEnum[] = [
     ExecutionOptionsEnum.DoSaveIntermediateFiles,
-    ExecutionOptionsEnum.DoForceReferenceYearInclusionInYieldTables,
-    ExecutionOptionsEnum.DoForceCurrentYearInclusionInYieldTables,
-    ExecutionOptionsEnum.DoIncludePolygonRecordIdInYieldTable,
     ExecutionOptionsEnum.DoSummarizeProjectionByPolygon,
-    ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
     ExecutionOptionsEnum.AllowAggressiveValueEstimation,
     ExecutionOptionsEnum.DoIncludeProjectionFiles,
     ExecutionOptionsEnum.DoDelayExecutionFolderDeletion,
+    ExecutionOptionsEnum.DoIncludeProjectedMOFBiomass,
   ]
 
   if (fileUploadStore.projectionType === CONSTANTS.PROJECTION_TYPE.VOLUME) {
@@ -94,6 +89,66 @@ export const buildExecutionOptions = (
     selectedExecutionOptions.push(ExecutionOptionsEnum.BackGrowEnabled)
   } else {
     excludedExecutionOptions.push(ExecutionOptionsEnum.BackGrowEnabled)
+  }
+
+  if (fileUploadStore.isByLayerEnabled) {
+    selectedExecutionOptions.push(
+      ExecutionOptionsEnum.DoSummarizeProjectionByLayer,
+    )
+  } else {
+    excludedExecutionOptions.push(
+      ExecutionOptionsEnum.DoSummarizeProjectionByLayer,
+    )
+  }
+
+  if (fileUploadStore.isProjectionModeEnabled) {
+    selectedExecutionOptions.push(
+      ExecutionOptionsEnum.DoIncludeProjectionModeInYieldTable,
+    )
+  } else {
+    excludedExecutionOptions.push(
+      ExecutionOptionsEnum.DoIncludeProjectionModeInYieldTable,
+    )
+  }
+
+  if (fileUploadStore.isPolygonIDEnabled) {
+    selectedExecutionOptions.push(
+      ExecutionOptionsEnum.DoIncludePolygonRecordIdInYieldTable,
+    )
+  } else {
+    excludedExecutionOptions.push(
+      ExecutionOptionsEnum.DoIncludePolygonRecordIdInYieldTable,
+    )
+  }
+
+  if (fileUploadStore.isCurrentYearEnabled) {
+    selectedExecutionOptions.push(
+      ExecutionOptionsEnum.DoForceCurrentYearInclusionInYieldTables,
+    )
+  } else {
+    excludedExecutionOptions.push(
+      ExecutionOptionsEnum.DoForceCurrentYearInclusionInYieldTables,
+    )
+  }
+
+  if (fileUploadStore.isReferenceYearEnabled) {
+    selectedExecutionOptions.push(
+      ExecutionOptionsEnum.DoForceReferenceYearInclusionInYieldTables,
+    )
+  } else {
+    excludedExecutionOptions.push(
+      ExecutionOptionsEnum.DoForceReferenceYearInclusionInYieldTables,
+    )
+  }
+
+  if (fileUploadStore.incSecondaryHeight) {
+    selectedExecutionOptions.push(
+      ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
+    )
+  } else {
+    excludedExecutionOptions.push(
+      ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
+    )
   }
 
   return { selectedExecutionOptions, excludedExecutionOptions }
@@ -146,7 +201,7 @@ export const getFormData = (
       fileUploadStore.selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.YEAR
         ? fileUploadStore.endYear
         : null,
-    outputFormat: OutputFormatEnum.CSVYieldTable,
+    outputFormat: OutputFormatEnum.CSVYieldTable, // TODO - All of new parameter will only work for new outputFormat TextReport (see VDYP-695 comment)
     selectedExecutionOptions: selectedExecutionOptions,
     excludedExecutionOptions: excludedExecutionOptions,
     selectedDebugOptions: selectedDebugOptions,

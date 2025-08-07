@@ -38,16 +38,6 @@ describe('Site Info Validation Unit Tests', () => {
           '20.0',
         ).isValid,
       ).to.be.false
-
-      // bha50SiteIndex zero, others valid
-      expect(
-        validateRequiredFields(
-          CONSTANTS.SITE_SPECIES_VALUES.COMPUTED,
-          50,
-          '15.0',
-          '0',
-        ).isValid,
-      ).to.be.false
     })
 
     it('should return true when siteSpeciesValues is Computed and all fields are valid', () => {

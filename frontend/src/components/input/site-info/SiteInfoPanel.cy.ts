@@ -71,12 +71,6 @@ describe('SiteInfoPanel.vue', () => {
       .contains('Boreal Cordillera')
       .should('exist')
 
-    // Verify checkbox
-    cy.get('label')
-      .contains('Include Secondary Dominant Height in Yield Table')
-      .should('exist')
-    cy.get('input[type="checkbox"]').should('not.be.checked')
-
     // Verify Site Species select (disabled)
     cy.get('label').contains('Site Species').should('exist')
     cy.get('[data-testid="selected-site-species"] .v-field').should(
@@ -108,13 +102,11 @@ describe('SiteInfoPanel.vue', () => {
 
     // Verify input fields
     cy.get('label').contains('Years').should('exist')
+    cy.get('[data-testid="spz-age"] input').should('have.value', '60')
     cy.get('label').contains('Height in Meters').should('exist')
+    cy.get('[data-testid="spz-height"] input').should('have.value', '17.00')
     cy.get('label').contains('BHA 50 Site Index').should('exist')
-    cy.get('[data-testid="bha-50-site-index"] .v-field').should(
-      'have.class',
-      'v-field--disabled',
-    ) // Disabled in Computed mode
-
+    cy.get('[data-testid="bha-50-site-index"] input').should('have.value', '')
     // Verify AppPanelActions buttons (Edit should not be visible in initial state)
     cy.get('button').contains('Clear').should('exist')
     cy.get('button').contains('Confirm').should('exist')
@@ -140,6 +132,9 @@ describe('SiteInfoPanel.vue', () => {
 
     // Verify that the Edit button is now rendered
     cy.get('button').contains('Edit').should('exist')
+    // Verify values are stored
+    cy.wrap(store).its('spzAge').should('eq', 50)
+    cy.wrap(store).its('spzHeight').should('eq', '15.5')
   })
 
   it('changes to Confirm state in Supplied mode', () => {
@@ -162,6 +157,8 @@ describe('SiteInfoPanel.vue', () => {
     cy.wrap(store)
       .its(`panelState.${CONSTANTS.MODEL_PARAMETER_PANEL.SITE_INFO}.confirmed`)
       .should('be.true')
+    // Verify value is stored
+    cy.wrap(store).its('bha50SiteIndex').should('eq', '19.20')
   })
 
   it('shows validation error for missing required fields in Computed mode', () => {
@@ -312,10 +309,7 @@ describe('SiteInfoPanel.vue', () => {
     cy.wrap(store)
       .its('spzHeight')
       .should('eq', DEFAULTS.DEFAULT_VALUES.SPZ_HEIGHT)
-    cy.wrap(store)
-      .its('bha50SiteIndex')
-      .should('eq', DEFAULTS.DEFAULT_VALUES.BHA50_SITE_INDEX)
-
+    cy.wrap(store).its('bha50SiteIndex').should('eq', '')
     // Check for UI updates
     cy.get('.v-select__selection-text').first().should('contain.text', 'IDF') // BEC Zone reset (partial match for displayed label)
     cy.get('.v-radio-group')
@@ -353,7 +347,7 @@ describe('SiteInfoPanel.vue', () => {
     cy.get('.v-radio-group').each(($radioGroup) => {
       cy.wrap($radioGroup).should('have.class', 'v-input--disabled')
     })
-    cy.get('input[type="checkbox"]').should('be.disabled')
+
     cy.get('button:contains("Clear")').should('be.disabled')
     cy.get('button:contains("Confirm")').should('be.disabled')
 
