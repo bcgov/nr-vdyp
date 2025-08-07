@@ -12,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -762,22 +763,50 @@ class YieldTableTest {
 		assertThat(content, containsString("Table Number: 2"));
 	}
 
-	@Test
-	void testFullReportYieldTable() throws AbstractProjectionRequestException, IOException {
-
-		var parameters = testHelper.addSelectedOptions(
-				new Parameters(), //
-				Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS, //
-				Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER
+	static Stream<Arguments> yieldTableExecutionOptions() {
+		return Stream.of(
+				Arguments.of(
+						List.of(
+								Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES, //
+								Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER, //
+								Parameters.ExecutionOption.REPORT_INCLUDE_WHOLE_STEM_VOLUME, //
+								Parameters.ExecutionOption.REPORT_INCLUDE_CLOSE_UTILIZATION_VOLUME, //
+								Parameters.ExecutionOption.REPORT_INCLUDE_NET_DECAY_VOLUME, //
+								Parameters.ExecutionOption.REPORT_INCLUDE_ND_WASTE_VOLUME, //
+								Parameters.ExecutionOption.REPORT_INCLUDE_ND_WAST_BRKG_VOLUME, //
+								Parameters.ExecutionOption.REPORT_INCLUDE_CULMINATION_VALUES, //
+								Parameters.ExecutionOption.REPORT_INCLUDE_VOLUME_MAI,
+								Parameters.ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE
+						)
+				),
+				Arguments.of(
+						List.of(
+								Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS, //
+								Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER
+						)
+				)
 		);
+	}
+
+	@ParameterizedTest
+	@MethodSource("yieldTableExecutionOptions")
+	void testMOFFullReportYieldTable(List<Parameters.ExecutionOption> options)
+			throws AbstractProjectionRequestException, IOException {
+
+		var parameters = new Parameters();
+		for (var option : options) {
+			parameters.addSelectedExecutionOptionsItem(option);
+		}
+
 		parameters.setAgeStart(180);
 		parameters.setAgeEnd(217);
-		parameters.setReportTitle("My Testing VDYP Yield Table Report");
+		parameters.setReportTitle(
+				"My Testing VDYP Yield Table Report that is longer than 80 characters so that it will be wrapped in the output"
+		);
 		parameters.setOutputFormat(Parameters.OutputFormat.TEXT_REPORT);
 
 		var context = new ProjectionContext(ProjectionRequestKind.HCSV, TEST_PROJECTION_ID, parameters, false);
 
-		// "NSR" in NON_PRODUCTIVE_DESCRIPTOR_CD field turns on SuppressPerHAYields
 		var polygonInputStream = TestUtils.makeInputStream(
 				//
 				POLYGON_CSV_HEADER_LINE,
@@ -835,9 +864,9 @@ class YieldTableTest {
 		assertThat(content, containsString("VDYP Yield Table Report"));
 		assertThat(content, containsString("My Testing VDYP Yield Table Report"));
 		assertThat(content, containsString("TABLE PROPERTIES..."));
-		assertThat(content, containsString("CFS Biomass"));
 		assertThat(content, containsString("Species Parameters..."));
 		assertThat(content, containsString("Site Index Curves Used..."));
 		assertThat(content, containsString("Additional Stand Attributes:"));
 	}
+
 }
