@@ -69,10 +69,6 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 				this.headerWords = header.split(" ");
 			}
 
-			public String header() {
-				return header;
-			}
-
 			public String[] headerWords() {
 				return headerWords;
 			}
@@ -97,10 +93,6 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 		int longestHeaderLength = 0;
 		List<Column> columns = new ArrayList<>();
 		List<Object> currentRow;
-
-		public void addColumn(String header, int width) {
-			addColumn(header, width, "%" + width + "s");
-		}
 
 		public void addBreakColumn(boolean included) {
 			addColumn("|", 1, "|", included);

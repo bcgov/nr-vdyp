@@ -777,20 +777,22 @@ class YieldTableTest {
 								Parameters.ExecutionOption.REPORT_INCLUDE_CULMINATION_VALUES, //
 								Parameters.ExecutionOption.REPORT_INCLUDE_VOLUME_MAI,
 								Parameters.ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE
-						)
+						),
+						"My Testing VDYP Yield Table Report that is longer than 80 characters so that it will be wrapped in the output"
 				),
 				Arguments.of(
 						List.of(
 								Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS, //
 								Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER
-						)
+						), //
+						"My Testing VDYP Yield Table Report"
 				)
 		);
 	}
 
 	@ParameterizedTest
 	@MethodSource("yieldTableExecutionOptions")
-	void testMOFFullReportYieldTable(List<Parameters.ExecutionOption> options)
+	void testMOFFullReportYieldTable(List<Parameters.ExecutionOption> options, String reportTitle)
 			throws AbstractProjectionRequestException, IOException {
 
 		var parameters = new Parameters();
