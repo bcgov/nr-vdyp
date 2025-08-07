@@ -49,7 +49,6 @@ describe('Model Parameter Service Unit Tests', () => {
     yearIncrement: DEFAULTS.DEFAULT_VALUES.YEAR_INCREMENT,
     isForwardGrowEnabled: DEFAULTS.DEFAULT_VALUES.IS_FORWARD_GROW_ENABLED,
     isBackwardGrowEnabled: DEFAULTS.DEFAULT_VALUES.IS_BACKWARD_GROW_ENABLED,
-    includeInReport: [],
     projectionType: CONSTANTS.PROJECTION_TYPE.VOLUME,
     bha50SiteIndex: null,
     referenceYear: new Date().getFullYear(),

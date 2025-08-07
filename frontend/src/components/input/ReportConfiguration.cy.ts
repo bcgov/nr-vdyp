@@ -53,8 +53,6 @@ describe('ReportConfiguration.vue', () => {
     isReferenceYearEnabled: DEFAULTS.DEFAULT_VALUES.IS_REFERENCE_YEAR_ENABLED,
     incSecondaryHeight: DEFAULTS.DEFAULT_VALUES.INC_SECONDARY_HEIGHT,
     specificYear: null,
-    volumeReported: [CONSTANTS.VOLUME_REPORTED.WHOLE_STEM],
-    includeInReport: [CONSTANTS.INCLUDE_IN_REPORT.COMPUTED_MAI],
     projectionType: CONSTANTS.PROJECTION_TYPE.VOLUME,
     reportTitle: 'Test Report',
     isDisabled: false,
@@ -92,22 +90,14 @@ describe('ReportConfiguration.vue', () => {
     cy.get('input[id="startYear"]').should('not.exist')
     cy.get('input[id="endYear"]').should('not.exist')
     cy.get('input[id="yearIncrement"]').should('not.exist')
-
-    for (const value of props.volumeReported) {
-      cy.contains('.v-input', value)
-        .find('input[type="checkbox"]')
-        .should('be.checked')
-    }
-
-    for (const value of props.includeInReport) {
-      cy.contains('.v-input', value)
-        .find('input[type="checkbox"]')
-        .should('be.checked')
-    }
-
+    cy.get('input[id="specificYear"]').should('not.exist')
+    cy.get(
+      '[data-testid="inc-secondary-height"] input[type="checkbox"]',
+    ).should('not.be.checked')
     cy.get('.v-select').find('input').should('have.value', props.projectionType)
 
     cy.get('input[id="reportTitle"]').should('have.value', props.reportTitle)
+    cy.get('.v-slider').should('exist') // Minimum DBH Limit sliders
   })
 
   it('renders correctly with initial props for YEAR range', () => {
@@ -141,22 +131,14 @@ describe('ReportConfiguration.vue', () => {
     cy.get('input[id="startingAge"]').should('not.exist')
     cy.get('input[id="finishingAge"]').should('not.exist')
     cy.get('input[id="ageIncrement"]').should('not.exist')
-
-    for (const value of props.volumeReported) {
-      cy.contains('.v-input', value)
-        .find('input[type="checkbox"]')
-        .should('be.checked')
-    }
-
-    for (const value of props.includeInReport) {
-      cy.contains('.v-input', value)
-        .find('input[type="checkbox"]')
-        .should('be.checked')
-    }
-
+    cy.get('input[id="specificYear"]').should('have.value', '')
+    cy.get(
+      '[data-testid="inc-secondary-height"] input[type="checkbox"]',
+    ).should('not.be.checked')
     cy.get('.v-select').find('input').should('have.value', props.projectionType)
 
     cy.get('input[id="reportTitle"]').should('have.value', props.reportTitle)
+    cy.get('.v-slider').should('exist') // Minimum DBH Limit sliders
   })
 
   it('emits update:isForwardGrowEnabled when Forward checkbox is toggled', () => {
@@ -172,8 +154,9 @@ describe('ReportConfiguration.vue', () => {
         plugins: [vuetify],
       },
     })
-
-    cy.contains('.v-input', 'Forward').find('input[type="checkbox"]').uncheck()
+    cy.get(
+      '[data-testid="is-forward-grow-enabled"] input[type="checkbox"]',
+    ).uncheck()
     cy.get('@updateSpy').should('have.been.calledWith', false)
   })
 
@@ -190,8 +173,9 @@ describe('ReportConfiguration.vue', () => {
         plugins: [vuetify],
       },
     })
-
-    cy.contains('.v-input', 'Backward').find('input[type="checkbox"]').uncheck()
+    cy.get(
+      '[data-testid="is-backward-grow-enabled"] input[type="checkbox"]',
+    ).uncheck()
     cy.get('@updateSpy').should('have.been.calledWith', false)
   })
 
@@ -208,10 +192,10 @@ describe('ReportConfiguration.vue', () => {
         'onUpdate:startYear': onUpdateSpy,
         'onUpdate:endYear': onUpdateSpy,
         'onUpdate:yearIncrement': onUpdateSpy,
-        'onUpdate:volumeReported': onUpdateSpy,
-        'onUpdate:includeInReport': onUpdateSpy,
         'onUpdate:projectionType': onUpdateSpy,
         'onUpdate:reportTitle': onUpdateSpy,
+        'onUpdate:specificYear': onUpdateSpy,
+        'onUpdate:incSecondaryHeight': onUpdateSpy,
       },
       global: {
         plugins: [vuetify],
@@ -230,6 +214,10 @@ describe('ReportConfiguration.vue', () => {
     cy.get('input[id="ageIncrement"]').type('10')
     cy.get('@updateSpy').should('have.been.calledWith', 10)
 
+    cy.get(
+      '[data-testid="inc-secondary-height"] input[type="checkbox"]',
+    ).check()
+    cy.get('@updateSpy').should('have.been.calledWith', true)
     cy.get('.v-select').click()
     cy.get('.v-list-item')
       .contains(CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS)
@@ -243,6 +231,9 @@ describe('ReportConfiguration.vue', () => {
     cy.get('input[id="reportTitle"]').type('Updated Report Title')
     cy.get('@updateSpy').should('have.been.calledWith', 'Updated Report Title')
 
+    cy.get('input[id="specificYear"]').clear()
+    cy.get('input[id="specificYear"]').type('2025')
+    cy.get('@updateSpy').should('have.been.calledWith', 2025)
     cy.get('.v-radio-group')
       .find('.v-radio')
       .contains('Year', { matchCase: false })
@@ -269,10 +260,10 @@ describe('ReportConfiguration.vue', () => {
         'onUpdate:startYear': onUpdateSpy,
         'onUpdate:endYear': onUpdateSpy,
         'onUpdate:yearIncrement': onUpdateSpy,
-        'onUpdate:volumeReported': onUpdateSpy,
-        'onUpdate:includeInReport': onUpdateSpy,
         'onUpdate:projectionType': onUpdateSpy,
         'onUpdate:reportTitle': onUpdateSpy,
+        'onUpdate:specificYear': onUpdateSpy,
+        'onUpdate:incSecondaryHeight': onUpdateSpy,
       },
       global: {
         plugins: [vuetify],
@@ -289,19 +280,22 @@ describe('ReportConfiguration.vue', () => {
       'have.been.calledWith',
       CONSTANTS.AGE_YEAR_RANGE.AGE,
     )
-
-    cy.get('input[id="startingAge"]').clear()
-    cy.get('input[id="startingAge"]').type('1')
-    cy.get('@updateSpy').should('have.been.calledWith', 1)
-
-    cy.get('input[id="finishingAge"]').clear()
-    cy.get('input[id="finishingAge"]').type('200')
-    cy.get('@updateSpy').should('have.been.calledWith', 200)
-
-    cy.get('input[id="ageIncrement"]').clear()
-    cy.get('input[id="ageIncrement"]').type('3')
+    cy.get('input[id="startYear"]').clear()
+    cy.get('input[id="startYear"]').type('2021')
+    cy.get('@updateSpy').should('have.been.calledWith', 2021)
+    cy.get('input[id="endYear"]').clear()
+    cy.get('input[id="endYear"]').type('2030')
+    cy.get('@updateSpy').should('have.been.calledWith', 2030)
+    cy.get('input[id="yearIncrement"]').clear()
+    cy.get('input[id="yearIncrement"]').type('3')
     cy.get('@updateSpy').should('have.been.calledWith', 3)
-
+    cy.get(
+      '[data-testid="inc-secondary-height"] input[type="checkbox"]',
+    ).check()
+    cy.get('@updateSpy').should('have.been.calledWith', true)
+    cy.get('input[id="specificYear"]').clear()
+    cy.get('input[id="specificYear"]').type('2025')
+    cy.get('@updateSpy').should('have.been.calledWith', 2025)
     cy.get('.v-select').click()
     cy.get('.v-list-item')
       .contains(CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS)
@@ -334,25 +328,22 @@ describe('ReportConfiguration.vue', () => {
       'have.value',
       CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS,
     )
-
-    cy.contains('.v-input', CONSTANTS.VOLUME_REPORTED.CLOSE_UTIL)
-      .find('input[type="checkbox"]')
-      .should('be.checked')
-
-    cy.get('[data-testid="volume-reported"] input[type="checkbox"]').each(
-      ($el) => {
-        cy.wrap($el)
-          .closest('.v-input')
-          .invoke('text')
-          .then((parentText) => {
-            if (!parentText.includes(CONSTANTS.VOLUME_REPORTED.CLOSE_UTIL)) {
-              cy.wrap($el).should('not.be.checked')
-            }
-          })
-      },
-    )
-
-    cy.get('[data-testid="volume-reported"] input[type="checkbox"]').should(
+    cy.get(
+      '[data-testid="is-close-util-enabled"] input[type="checkbox"]',
+    ).should('be.checked')
+    cy.get(
+      '[data-testid="is-whole-stem-enabled"] input[type="checkbox"]',
+    ).should('not.be.checked')
+    cy.get(
+      '[data-testid="is-net-decay-enabled"] input[type="checkbox"]',
+    ).should('not.be.checked')
+    cy.get(
+      '[data-testid="is-net-decay-waste-enabled"] input[type="checkbox"]',
+    ).should('not.be.checked')
+    cy.get(
+      '[data-testid="is-net-decay-waste-breakage-enabled"] input[type="checkbox"]',
+    ).should('not.be.checked')
+    cy.get('[data-testid*="volume-reported"] input[type="checkbox"]').should(
       'be.disabled',
     )
   })
@@ -366,16 +357,13 @@ describe('ReportConfiguration.vue', () => {
         plugins: [vuetify],
       },
     })
-
     cy.get('input[id="startingAge"]').clear()
     cy.get('input[id="startingAge"]').type('10')
-
     cy.get('input[id="finishingAge"]').clear()
     cy.get('input[id="finishingAge"]').type('300')
-
-    cy.contains('.v-input', CONSTANTS.INCLUDE_IN_REPORT.CULMINATION_VALUES)
-      .find('input[type="checkbox"]')
-      .should('not.be.disabled')
+    cy.get(
+      '[data-testid="is-culmination-values-enabled"] input[type="checkbox"]',
+    ).should('not.be.disabled')
   })
 
   it('disables Culmination Values checkbox when Starting Age > 10 or Finishing Age < 300', () => {
@@ -387,22 +375,18 @@ describe('ReportConfiguration.vue', () => {
         plugins: [vuetify],
       },
     })
-
     cy.get('input[id="startingAge"]').clear()
     cy.get('input[id="startingAge"]').type('11')
-
-    cy.contains('.v-input', CONSTANTS.INCLUDE_IN_REPORT.CULMINATION_VALUES)
-      .find('input[type="checkbox"]')
-      .should('be.disabled')
-
+    cy.get(
+      '[data-testid="is-culmination-values-enabled"] input[type="checkbox"]',
+    ).should('be.disabled')
     cy.get('input[id="startingAge"]').clear()
     cy.get('input[id="startingAge"]').type('10')
     cy.get('input[id="finishingAge"]').clear()
     cy.get('input[id="finishingAge"]').type('299')
-
-    cy.contains('.v-input', CONSTANTS.INCLUDE_IN_REPORT.CULMINATION_VALUES)
-      .find('input[type="checkbox"]')
-      .should('be.disabled')
+    cy.get(
+      '[data-testid="is-culmination-values-enabled"] input[type="checkbox"]',
+    ).should('be.disabled')
   })
 
   it('disables all inputs when "isDisabled" is true', () => {
@@ -415,16 +399,11 @@ describe('ReportConfiguration.vue', () => {
         plugins: [vuetify],
       },
     })
-
     cy.get('.v-field__input input').should('be.disabled')
     cy.get('.v-select input').should('be.disabled')
     cy.get('.v-checkbox input[type="checkbox"]').should('be.disabled')
-    cy.get(
-      '[data-testid="is-forward-grow-enabled"] input[type="checkbox"]',
-    ).should('be.disabled')
-    cy.get(
-      '[data-testid="is-backward-grow-enabled"] input[type="checkbox"]',
-    ).should('be.disabled')
+    cy.get('[data-testid*="is-"] input[type="checkbox"]').should('be.disabled')
+    cy.get('.v-slider').should('be.disabled')
   })
 
   it('enables all inputs when "isDisabled" is false', () => {
@@ -436,17 +415,13 @@ describe('ReportConfiguration.vue', () => {
         plugins: [vuetify],
       },
     })
-
     cy.get('.v-field__input input').should('not.be.disabled')
     cy.get('.v-select input').should('not.be.disabled')
     cy.get('.v-checkbox input[type="checkbox"]').should('not.be.disabled')
-
-    cy.get(
-      '[data-testid="is-forward-grow-enabled"] input[type="checkbox"]',
-    ).should('not.be.disabled')
-    cy.get(
-      '[data-testid="is-backward-grow-enabled"] input[type="checkbox"]',
-    ).should('not.be.disabled')
+    cy.get('[data-testid*="is-"] input[type="checkbox"]').should(
+      'not.be.disabled',
+    )
+    cy.get('.v-slider').should('not.be.disabled')
   })
 
   it('renders Minimum DBH Limit by Species Group when isModelParametersMode is true', () => {
@@ -468,12 +443,19 @@ describe('ReportConfiguration.vue', () => {
         plugins: [vuetify],
       },
     })
-
     cy.contains('span.text-h7', 'Minimum DBH Limit by Species Group').should(
       'be.visible',
     )
-
-    cy.get('.v-slider', { timeout: 6000 }).should('exist')
+    cy.get('.v-slider', { timeout: 6000 }).should(
+      'have.length',
+      modelParameterStore.speciesGroups.length,
+    )
+    cy.get('.v-slider').each(($slider, index) => {
+      cy.wrap($slider).should(
+        'have.value',
+        modelParameterStore.speciesGroups[index].minimumDBHLimit,
+      )
+    })
   })
 
   it('does not render Minimum DBH Limit by Species Group when isModelParametersMode is false', () => {

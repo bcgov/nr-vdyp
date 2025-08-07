@@ -69,8 +69,6 @@ describe('ModelParameterStore Unit Tests', () => {
     expect(store.yearIncrement).to.be.null
     expect(store.isForwardGrowEnabled).to.be.true
     expect(store.isBackwardGrowEnabled).to.be.true
-    expect(store.volumeReported).to.deep.equal([])
-    expect(store.includeInReport).to.deep.equal([])
     expect(store.projectionType).to.be.null
     expect(store.reportTitle).to.be.null
     expect(store.referenceYear).to.be.null
@@ -184,9 +182,6 @@ describe('ModelParameterStore Unit Tests', () => {
     expect(store.isBackwardGrowEnabled).to.equal(
       DEFAULTS.DEFAULT_VALUES.IS_BACKWARD_GROW_ENABLED,
     )
-    expect(store.volumeReported).to.deep.equal(
-      DEFAULTS.DEFAULT_VALUES.VOLUME_REPORTED,
-    )
     expect(store.projectionType).to.equal(
       DEFAULTS.DEFAULT_VALUES.PROJECTION_TYPE,
     )
@@ -238,15 +233,11 @@ describe('ModelParameterStore Unit Tests', () => {
   it('should update report info properties correctly', () => {
     store.isForwardGrowEnabled = true
     store.isBackwardGrowEnabled = true
-    store.volumeReported = ['Whole Stem']
-    store.includeInReport = ['Computed MAI']
     store.projectionType = 'Volume'
     store.reportTitle = 'Test Report'
 
     expect(store.isForwardGrowEnabled).to.be.true
     expect(store.isBackwardGrowEnabled).to.be.true
-    expect(store.volumeReported).to.deep.equal(['Whole Stem'])
-    expect(store.includeInReport).to.deep.equal(['Computed MAI'])
     expect(store.projectionType).to.equal('Volume')
     expect(store.reportTitle).to.equal('Test Report')
   })

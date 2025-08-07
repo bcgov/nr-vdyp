@@ -62,12 +62,6 @@ describe('ReportInfoPanel.vue', () => {
         DEFAULTS.DEFAULT_VALUES.IS_FORWARD_GROW_ENABLED
       modelParameterStore.isBackwardGrowEnabled =
         DEFAULTS.DEFAULT_VALUES.IS_BACKWARD_GROW_ENABLED
-      modelParameterStore.volumeReported = [
-        CONSTANTS.VOLUME_REPORTED.WHOLE_STEM,
-      ]
-      modelParameterStore.includeInReport = [
-        CONSTANTS.INCLUDE_IN_REPORT.COMPUTED_MAI,
-      ]
       modelParameterStore.projectionType = CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
       modelParameterStore.reportTitle = 'Sample Report'
     } else {
@@ -93,10 +87,6 @@ describe('ReportInfoPanel.vue', () => {
         DEFAULTS.DEFAULT_VALUES.IS_FORWARD_GROW_ENABLED
       fileUploadStore.isBackwardGrowEnabled =
         DEFAULTS.DEFAULT_VALUES.IS_BACKWARD_GROW_ENABLED
-      fileUploadStore.volumeReported = [CONSTANTS.VOLUME_REPORTED.WHOLE_STEM]
-      fileUploadStore.includeInReport = [
-        CONSTANTS.INCLUDE_IN_REPORT.COMPUTED_MAI,
-      ]
       fileUploadStore.projectionType = CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
       fileUploadStore.reportTitle = 'Sample Report'
     }

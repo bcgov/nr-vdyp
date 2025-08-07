@@ -46,32 +46,6 @@ export const ageYearRangeOptions = [
   { label: 'Year Range', value: CONSTANTS.AGE_YEAR_RANGE.YEAR },
 ]
 
-export const volumeReportedOptions = [
-  { label: 'Whole Stem', value: CONSTANTS.VOLUME_REPORTED.WHOLE_STEM },
-  { label: 'Close Utilization', value: CONSTANTS.VOLUME_REPORTED.CLOSE_UTIL },
-  { label: 'Net Decay', value: CONSTANTS.VOLUME_REPORTED.NET_DECAY },
-  {
-    label: 'Net Decay and Waste',
-    value: CONSTANTS.VOLUME_REPORTED.NET_DECAY_WASTE,
-  },
-  {
-    label: 'Net Decay, Waste and Breakage',
-    value: CONSTANTS.VOLUME_REPORTED.NET_DECAY_WASTE_BREAKAGE,
-  },
-]
-
-export const includeInReportOptions = [
-  { label: 'Computed MAI', value: CONSTANTS.INCLUDE_IN_REPORT.COMPUTED_MAI },
-  {
-    label: 'Culmination Values',
-    value: CONSTANTS.INCLUDE_IN_REPORT.CULMINATION_VALUES,
-  },
-  {
-    label: 'By Species',
-    value: CONSTANTS.INCLUDE_IN_REPORT.BY_SPECIES,
-  },
-]
-
 export const projectionTypeOptions = [
   { label: 'Volume', value: CONSTANTS.PROJECTION_TYPE.VOLUME },
   { label: 'CFS Biomass', value: CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS },
