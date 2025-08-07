@@ -177,6 +177,26 @@ public class YieldTable implements Closeable {
 	) throws YieldTableGenerationException {
 		writer.recordPolygonProjectionState(state);
 
+		if (context.getParams().containsOption(ExecutionOption.REPORT_INCLUDE_CULMINATION_VALUES)) {
+			YieldTableRowIterator culminationIterator = new YieldTableRowIterator(
+					context, polygon, state, layerReportingInfo, 1
+			);
+			while (culminationIterator.hasNext()) {
+
+				YieldTableRowContext rowContext = culminationIterator.next();
+				if (rowIsToBeGenerated(rowContext)) {
+					try {
+						EntityVolumeDetails volume = getProjectedLayerStandVolumes(
+								rowContext, projectionResults, layerReportingInfo.getLayer(),
+								rowContext.getCurrentTableAge()
+						);
+						writer.recordCulminationValues(rowContext.getCurrentTableAge(), volume);
+					} catch (Exception ex) {
+					}
+				}
+			}
+		}
+
 		writer.writePolygonTableHeader(
 				polygon, Optional.ofNullable(layerReportingInfo), doGenerateDetailedTableHeader, nextYieldTableNumber
 		);

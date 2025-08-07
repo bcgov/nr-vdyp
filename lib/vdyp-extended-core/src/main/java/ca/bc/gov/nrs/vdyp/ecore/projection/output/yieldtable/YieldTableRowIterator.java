@@ -13,16 +13,27 @@ class YieldTableRowIterator implements Iterator<YieldTableRowContext> {
 
 	private final ProjectionContext context;
 	private YieldTableRowContext rowContext;
-
+	private final int ageIncrement;
 	private boolean rowIsCurrent;
 
 	public YieldTableRowIterator(
 			ProjectionContext context, Polygon polygon, PolygonProjectionState state,
 			LayerReportingInfo layerReportingInfo
 	) {
+		this(context, polygon, state, layerReportingInfo, null);
+	}
+
+	public YieldTableRowIterator(
+			ProjectionContext context, Polygon polygon, PolygonProjectionState state,
+			LayerReportingInfo layerReportingInfo, Integer ageIncrementOverride
+	) {
 		this.context = context;
 		this.rowContext = YieldTableRowContext.of(context, polygon, state, layerReportingInfo);
-
+		if (ageIncrementOverride != null) {
+			ageIncrement = ageIncrementOverride;
+		} else {
+			ageIncrement = context.getParams().getAgeIncrement();
+		}
 		establishStartRow();
 	}
 
@@ -151,7 +162,7 @@ class YieldTableRowIterator implements Iterator<YieldTableRowContext> {
 
 		while (rowContext.getCurrentYearRangeYear() != null
 				&& rowContext.getCurrentYearRangeYear() < rowContext.getCurrentTableYear()) {
-			rowContext.setCurrentYearRangeYear(rowContext.getCurrentYearRangeYear() + params.getAgeIncrement());
+			rowContext.setCurrentYearRangeYear(rowContext.getCurrentYearRangeYear() + ageIncrement);
 		}
 
 		if (rowContext.getCurrentYearRangeYear() != null
@@ -163,7 +174,7 @@ class YieldTableRowIterator implements Iterator<YieldTableRowContext> {
 
 		while (rowContext.getCurrentAgeRangeYear() != null
 				&& rowContext.getCurrentAgeRangeYear() < rowContext.getCurrentTableYear()) {
-			rowContext.setCurrentAgeRangeYear(rowContext.getCurrentAgeRangeYear() + params.getAgeIncrement());
+			rowContext.setCurrentAgeRangeYear(rowContext.getCurrentAgeRangeYear() + ageIncrement);
 		}
 
 		if (rowContext.getCurrentAgeRangeYear() != null && (params.getAgeEnd() == null

@@ -7,8 +7,13 @@ import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.common_calculators.enumerations.SiteIndexEquation;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.YieldTableGenerationException;
@@ -36,12 +41,14 @@ import ca.bc.gov.nrs.vdyp.si32.vdyp.SP0Name;
 class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean> {
 
 	public static final String YIELD_TABLE_FILE_NAME = "YieldReport.txt";
+	private static final Logger logger = LoggerFactory.getLogger(FullReportYieldTableWriter.class);
 
 	private final ProjectionContext context;
 
 	private OutputStream outputStream;
 	private TextFileTable textFileTable;
 
+	private Map<String, CulminationValue> culminationValuesByType = new HashMap<>();
 	private boolean writeTopHeader = true;
 
 	private class TextFileTable {
@@ -387,6 +394,10 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 			doWrite("\n");
 		}
 
+		if (context.getParams().containsOption(ExecutionOption.REPORT_INCLUDE_CULMINATION_VALUES)) {
+			writeCulminationValues();
+		}
+
 		doWrite("\n");
 		textFileTable = new TextFileTable();
 		dominantSpeciesAges.clear(); // If we are starting a new polygon header for soem reason we need to clear the
@@ -474,12 +485,55 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 
 	}
 
+	private void writeCulminationValues() throws YieldTableGenerationException {
+		boolean includeMai = context.getParams().containsOption(ExecutionOption.REPORT_INCLUDE_VOLUME_MAI);
+		doWrite("\n\n");
+		doWrite(centerString("CULMINATION VALUES\n\n", 80));
+		if (context.getParams().containsOption(ExecutionOption.REPORT_INCLUDE_WHOLE_STEM_VOLUME)) {
+			writeCulminationValue("Whole Stem", culminationValuesByType.get("WholeStemVolume"), includeMai);
+		}
+		if (context.getParams().containsOption(ExecutionOption.REPORT_INCLUDE_CLOSE_UTILIZATION_VOLUME)) {
+			writeCulminationValue(
+					"Close Utilization", culminationValuesByType.get("CloseUtilizationVolume"), includeMai
+			);
+		}
+		if (context.getParams().containsOption(ExecutionOption.REPORT_INCLUDE_NET_DECAY_VOLUME)) {
+			writeCulminationValue("Decay Only", culminationValuesByType.get("CuVolumeLessDecay"), includeMai);
+		}
+		if (context.getParams().containsOption(ExecutionOption.REPORT_INCLUDE_ND_WASTE_VOLUME)) {
+			writeCulminationValue("Decay, Waste", culminationValuesByType.get("CuVolumeLessDecayWastage"), includeMai);
+		}
+		if (context.getParams().containsOption(ExecutionOption.REPORT_INCLUDE_ND_WAST_BRKG_VOLUME)) {
+			writeCulminationValue(
+					"Decay, Waste, Breakage", culminationValuesByType.get("CuVolumeLessDecayWastageBreakage"),
+					includeMai
+			);
+		}
+
+	}
+
+	private void writeCulminationValue(String label, CulminationValue value, boolean includeMai)
+			throws YieldTableGenerationException {
+		if (value == null) {
+			return;
+		}
+		StringBuilder sb = new StringBuilder();
+		sb.append(String.format("%26s: %9s: %6.1f %6s: %3d", label, "VOLUME", value.value, "AGE", value.age));
+		if (includeMai) {
+			sb.append(String.format(" %6s: %6.1f", "MAI", value.mai));
+		}
+		doWrite(sb.toString() + "\n");
+
+	}
+
 	@Override
 	public void writePolygonTableTrailer(Integer yieldTableCount) throws YieldTableGenerationException {
 	}
 
 	@Override
 	public void writeTrailer() throws YieldTableGenerationException {
+		if (lastPolygonForTrailer == null)
+			return;
 		// Write all the required META DATA
 		writeNotes();
 		writeTableProperties();
@@ -526,11 +580,19 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 		}
 
 		GrowthModelCode growthModel = state.getGrowthModel(ProjectionTypeCode.PRIMARY);
+
 		ProcessingModeCode processingMode = state.getProcessingMode(ProjectionTypeCode.PRIMARY);
+		// set the defaults to actual start codes...
+		if (processingMode == ProcessingModeCode.VRI_Default) {
+			processingMode = ProcessingModeCode.VRI_VriStart;
+		} else if (processingMode == ProcessingModeCode.FIP_Default) {
+			processingMode = ProcessingModeCode.FIP_FipStart;
+		}
+
 		boolean isFIP = growthModel == GrowthModelCode.FIP;
 
 		if (growthModel != GrowthModelCode.UNKNOWN) {
-			entries.add(growthModel + " Calc Mode............. " + processingMode.value);
+			entries.add(growthModel + " Calc Mode............ " + processingMode.value);
 		}
 
 		entries.add("BEC Zone................. " + lastPolygonForTrailer.getBecZone());
@@ -704,6 +766,37 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 			lastItem.endingAge = age;
 		}
 
+	}
+
+	protected record CulminationValue(int age, double mai, double value) {
+	}
+
+	@Override
+	protected void recordCulminationValues(int age, EntityVolumeDetails entityVolumeDetails) {
+		try {
+			recordCulminationValue("WholeStemVolume", entityVolumeDetails.wholeStemVolume(), age);
+			recordCulminationValue("CloseUtilizationVolume", entityVolumeDetails.closeUtilizationVolume(), age);
+			recordCulminationValue("CuVolumeLessDecay", entityVolumeDetails.cuVolumeLessDecay(), age);
+			recordCulminationValue("CuVolumeLessDecayWastage", entityVolumeDetails.cuVolumeLessDecayWastage(), age);
+			recordCulminationValue(
+					"CuVolumeLessDecayWastageBreakage", entityVolumeDetails.cuVolumeLessDecayWastageBreakage(), age
+			);
+		} catch (Exception e) {
+			int a = 1;
+		}
+	}
+
+	private void recordCulminationValue(String label, Double baseValue, int age) {
+		if (baseValue != null && baseValue > 0) {
+			double mai = baseValue / age;
+			CulminationValue existing = culminationValuesByType.getOrDefault(label, null);
+			if (existing == null || mai > existing.mai) {
+				logger.info(
+						"Recording culmination value for {}: age={}, mai={}, baseValue={}", label, age, mai, baseValue
+				);
+				culminationValuesByType.put(label, new CulminationValue(age, mai, baseValue));
+			}
+		}
 	}
 
 	private PolygonProjectionState state;

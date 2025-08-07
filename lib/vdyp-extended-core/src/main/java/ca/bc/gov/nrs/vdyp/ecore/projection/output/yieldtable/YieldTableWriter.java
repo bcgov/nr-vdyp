@@ -236,6 +236,11 @@ abstract class YieldTableWriter<T extends YieldTableRowBean> implements Closeabl
 	}
 
 	protected void recordPolygonProjectionState(PolygonProjectionState state) {
+		// Only required for Specific Yield Table output
+	}
+
+	protected void recordCulminationValues(int age, EntityVolumeDetails entityVolumeDetails) {
+		// Only required for Specific Yield Table output
 
 	}
 
