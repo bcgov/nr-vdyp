@@ -26,7 +26,6 @@ describe('File Upload Service Unit Tests', () => {
     fileUploadStore = useFileUploadStore()
 
     fileUploadStore.projectionType = CONSTANTS.PROJECTION_TYPE.VOLUME
-    fileUploadStore.includeInReport = [CONSTANTS.INCLUDE_IN_REPORT.BY_SPECIES]
     fileUploadStore.selectedAgeYearRange = CONSTANTS.AGE_YEAR_RANGE.AGE
     fileUploadStore.startingAge = 10
     fileUploadStore.finishingAge = 100
@@ -71,7 +70,6 @@ describe('File Upload Service Unit Tests', () => {
 
   it('should return correct selected execution options for CFS biomass projection', () => {
     fileUploadStore.projectionType = CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
-    fileUploadStore.includeInReport = []
     const { selectedExecutionOptions, excludedExecutionOptions } =
       buildExecutionOptions(fileUploadStore)
     expect(selectedExecutionOptions).to.include(

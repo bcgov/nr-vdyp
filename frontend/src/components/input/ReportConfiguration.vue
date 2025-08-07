@@ -167,7 +167,7 @@
         </v-col>
       </template>
       <v-col class="col-space-4" />
-      <v-col cols="auto">
+      <v-col cols="auto" style="margin-left: 2px; margin-top: 2px">
         <v-row>
           <v-col cols="auto">
             <v-checkbox
@@ -287,6 +287,15 @@
                 data-testid="is-by-species-enabled"
               ></v-checkbox>
             </v-col>
+            <v-col style="max-width: 20%">
+              <v-checkbox
+                v-model="localIncSecondaryHeight"
+                label="Secondary Species Height"
+                hide-details
+                :disabled="isincSecondaryHeightDeactivated"
+                data-testid="inc-secondary-height"
+              ></v-checkbox>
+            </v-col>
           </v-row>
         </template>
         <template v-else>
@@ -337,17 +346,6 @@
               ></v-checkbox>
             </v-col>
           </v-row>
-          <v-row class="mt-n7">
-            <v-col style="max-width: 20%">
-              <v-checkbox
-                v-model="localIncSecondaryHeight"
-                label="Secondary Species Height"
-                hide-details
-                :disabled="isincSecondaryHeightDeactivated"
-                data-testid="inc-secondary-height"
-              ></v-checkbox>
-            </v-col>
-          </v-row>
           <v-row class="mt-n5">
             <v-col cols="2">
               <v-text-field
@@ -395,7 +393,7 @@
             thumb-size="12"
             track-size="7"
             track-color="transparent"
-            :disabled="isDisabled"
+            :disabled="isMinDBHDeactivated"
             @update:model-value="updateMinDBH(index, $event)"
           ></v-slider>
         </v-col>
@@ -405,7 +403,7 @@
 </template>
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
-import { CONSTANTS, DEFAULTS, OPTIONS } from '@/constants'
+import { BIZCONSTANTS, CONSTANTS, DEFAULTS, OPTIONS } from '@/constants'
 import { parseNumberOrNull } from '@/utils/util'
 import { useAppStore } from '@/stores/appStore'
 import { useModelParameterStore } from '@/stores/modelParameterStore'
@@ -438,8 +436,6 @@ const props = defineProps<{
   isReferenceYearEnabled: boolean
   incSecondaryHeight: boolean
   specificYear: number | null
-  volumeReported: string[]
-  includeInReport: string[]
   projectionType: string | null
   reportTitle: string | null
   isDisabled: boolean
@@ -471,8 +467,6 @@ const emit = defineEmits([
   'update:isReferenceYearEnabled',
   'update:incSecondaryHeight',
   'update:specificYear',
-  'update:volumeReported',
-  'update:includeInReport',
   'update:projectionType',
   'update:reportTitle',
 ])
@@ -513,8 +507,6 @@ const localIsCurrentYearEnabled = ref<boolean>(props.isCurrentYearEnabled)
 const localIsReferenceYearEnabled = ref<boolean>(props.isReferenceYearEnabled)
 const localIncSecondaryHeight = ref<boolean>(props.incSecondaryHeight)
 const localSpecificYear = ref<number | null>(props.specificYear)
-const localVolumeReported = ref<string[]>([...props.volumeReported])
-const localIncludeInReport = ref<string[]>([...props.includeInReport])
 const localProjectionType = ref<string | null>(props.projectionType)
 const localReportTitle = ref<string | null>(props.reportTitle)
 
@@ -735,22 +727,6 @@ watch(
   },
 )
 watch(
-  () => props.volumeReported,
-  (newVal) => {
-    if (JSON.stringify(newVal) !== JSON.stringify(localVolumeReported.value)) {
-      localVolumeReported.value = [...newVal]
-    }
-  },
-)
-watch(
-  () => props.includeInReport,
-  (newVal) => {
-    if (JSON.stringify(newVal) !== JSON.stringify(localIncludeInReport.value)) {
-      localIncludeInReport.value = [...newVal]
-    }
-  },
-)
-watch(
   () => props.projectionType,
   (newVal) => {
     localProjectionType.value = newVal
@@ -763,32 +739,12 @@ watch(
   },
 )
 
-// Calculating whether the "Culmination Values" checkbox is enabled
-const canCulminationValuesSelectionActivated = computed(() => {
-  return (
-    localStartingAge.value !== null &&
-    localStartingAge.value <= 10 &&
-    localFinishingAge.value !== null &&
-    localFinishingAge.value >= 300
-  )
-})
-
 // Watch local state for changes (Local State -> Parent Emit)
 watch(selectedAgeYearRange, (newVal) =>
   emit('update:selectedAgeYearRange', newVal),
 )
 watch(localStartingAge, (newVal) => emit('update:startingAge', newVal))
 watch(localFinishingAge, (newVal) => emit('update:finishingAge', newVal))
-
-watch([localStartingAge, localFinishingAge], () => {
-  if (!canCulminationValuesSelectionActivated.value) {
-    // Remove the selection if "Culmination Values" is disabled
-    localIncludeInReport.value = localIncludeInReport.value.filter(
-      (item) => item !== CONSTANTS.INCLUDE_IN_REPORT.CULMINATION_VALUES,
-    )
-  }
-})
-
 watch(localAgeIncrement, (newVal) => emit('update:ageIncrement', newVal))
 watch(localStartYear, (newVal) => emit('update:startYear', newVal))
 watch(localEndYear, (newVal) => emit('update:endYear', newVal))
@@ -880,29 +836,24 @@ watch(localIncSecondaryHeight, (newVal) => {
     emit('update:incSecondaryHeight', newVal)
   }
 })
-watch(localSpecificYear, (newVal) => emit('update:specificYear', newVal))
-watch(localVolumeReported, (newVal) => {
-  if (JSON.stringify(newVal) !== JSON.stringify(props.volumeReported)) {
-    emit('update:volumeReported', [...newVal])
-  }
-})
-watch(localIncludeInReport, (newVal) => {
-  if (JSON.stringify(newVal) !== JSON.stringify(props.includeInReport)) {
-    emit('update:includeInReport', [...newVal])
-  }
-})
-
 watch(localProjectionType, (newVal) => {
-  if (newVal === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS) {
-    // Reset the "Volumes Reported" checkbox and force select only 'Close Utilization' checkbox
-    localVolumeReported.value = [CONSTANTS.VOLUME_REPORTED.CLOSE_UTIL]
-    emit('update:volumeReported', [...localVolumeReported.value])
+  if (JSON.stringify(newVal) !== JSON.stringify(props.projectionType)) {
+    emit('update:projectionType', newVal)
   }
-
-  emit('update:projectionType', newVal)
 })
-
 watch(localReportTitle, (newVal) => emit('update:reportTitle', newVal))
+
+const isCulminationValuesEligible = (
+  _startingAge: number | null,
+  _finishingAge: number | null,
+) => {
+  return (
+    _startingAge !== null &&
+    _startingAge <= 10 &&
+    _finishingAge !== null &&
+    _finishingAge >= 300
+  )
+}
 
 // Watch speciesGroups for changes and sync utilization sliderValues (with immediate: true for initial load)
 watch(
@@ -916,8 +867,53 @@ watch(
   },
   { immediate: true },
 )
+// Watch for projectionType to manage objects in the 'Volumes Reported' and 'Mimimum DBH Limit by Species Group' states
+watch(localProjectionType, (newVal) => {
+  if (newVal === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS) {
+    localIsWholeStemEnabled.value = false
+    localIsCloseUtilEnabled.value = true
+    localIsNetDecayEnabled.value = false
+    localIsNetDecayWasteEnabled.value = false
+    localIsNetDecayWasteBreakageEnabled.value = false
+    // Update minimum DBH limits for CFS Biomass
+    speciesGroups.value.forEach((group) => {
+      if (BIZCONSTANTS.CFS_BIOMASS_SPECIES_GROUP_UTILIZATION_MAP[group.group]) {
+        group.minimumDBHLimit =
+          BIZCONSTANTS.CFS_BIOMASS_SPECIES_GROUP_UTILIZATION_MAP[group.group]
+      }
+    })
+    // Sync slider values with updated minimum DBH limits
+    utilizationSliderValues.value = speciesGroups.value.map((group) =>
+      utilizationClassOptions.findIndex(
+        (opt) => opt.value === group.minimumDBHLimit,
+      ),
+    )
+  }
+})
+// Watch startingAge and finishingAge to manage CulminationValues state
+watch(
+  [localStartingAge, localFinishingAge],
+  ([newStartingAge, newFinishingAge]) => {
+    if (!isCulminationValuesEligible(newStartingAge, newFinishingAge)) {
+      localIsCulminationValuesEnabled.value = false
+    }
+  },
+)
+// Watch derivedBy to manage Secondary Species Height state
+watch(
+  () => modelParameterStore.derivedBy,
+  (newDerivedBy) => {
+    if (newDerivedBy === CONSTANTS.DERIVED_BY.VOLUME) {
+      localIncSecondaryHeight.value = false
+    }
+  },
+  { immediate: true },
+)
 
-// Decide whether to disable the "Backward / Forward" checkbox
+const isCFOBiomassSelected = computed(() => {
+  return localProjectionType.value === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
+})
+
 const isForwardGrowDeactivated = computed(() => {
   return props.isDisabled
 })
@@ -925,25 +921,32 @@ const isBackwardGrowDeactivated = computed(() => {
   return props.isDisabled
 })
 const isWholeStemDeactivated = computed(() => {
-  return props.isDisabled
+  return props.isDisabled || isCFOBiomassSelected.value
 })
 const isCloseUtilDeactivated = computed(() => {
-  return props.isDisabled
+  return props.isDisabled || isCFOBiomassSelected.value
 })
 const isNetDecayDeactivated = computed(() => {
-  return props.isDisabled
+  return props.isDisabled || isCFOBiomassSelected.value
 })
 const isNetDecayWasteDeactivated = computed(() => {
-  return props.isDisabled
+  return props.isDisabled || isCFOBiomassSelected.value
 })
 const isNetDecayWasteBreakageDeactivated = computed(() => {
-  return props.isDisabled
+  return props.isDisabled || isCFOBiomassSelected.value
 })
 const isComputedMAIDeactivated = computed(() => {
-  return props.isDisabled
+  return props.isDisabled || isCFOBiomassSelected.value
 })
+
 const isCulminationValuesDeactivated = computed(() => {
-  return props.isDisabled
+  return (
+    props.isDisabled ||
+    !isCulminationValuesEligible(
+      localStartingAge.value,
+      localFinishingAge.value,
+    )
+  )
 })
 const isBySpeciesDeactivated = computed(() => {
   return props.isDisabled
@@ -964,10 +967,16 @@ const isReferenceYearDeactivated = computed(() => {
   return props.isDisabled
 })
 const isincSecondaryHeightDeactivated = computed(() => {
-  return props.isDisabled
+  return (
+    props.isDisabled ||
+    modelParameterStore.derivedBy === CONSTANTS.DERIVED_BY.VOLUME
+  )
 })
 const isSpecificYearDeactivated = computed(() => {
   return props.isDisabled
+})
+const isMinDBHDeactivated = computed(() => {
+  return props.isDisabled || isCFOBiomassSelected.value
 })
 
 const utilizationSliderTickLabels = utilizationClassOptions.reduce(

@@ -216,8 +216,6 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
   const incSecondaryHeight = ref<boolean>(false)
   const specificYear = ref<number | null>(null)
 
-  const volumeReported = ref<string[]>([])
-  const includeInReport = ref<string[]>([])
   const projectionType = ref<string | null>(null)
   const reportTitle = ref<string | null>(null)
 
@@ -259,7 +257,6 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     isBackwardGrowEnabled.value =
       DEFAULTS.DEFAULT_VALUES.IS_BACKWARD_GROW_ENABLED
     isWholeStemEnabled.value = DEFAULTS.DEFAULT_VALUES.IS_WHOLE_STEM_ENABLED
-    volumeReported.value = DEFAULTS.DEFAULT_VALUES.VOLUME_REPORTED
     projectionType.value = DEFAULTS.DEFAULT_VALUES.PROJECTION_TYPE
     reportTitle.value = DEFAULTS.DEFAULT_VALUES.REPORT_TITLE
 
@@ -324,8 +321,6 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     isReferenceYearEnabled,
     incSecondaryHeight,
     specificYear,
-    volumeReported,
-    includeInReport,
     projectionType,
     reportTitle,
     //

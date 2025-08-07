@@ -445,21 +445,6 @@ const buildExecutionOptions = (
     )
   }
 
-  if (
-    modelParameterStore.includeInReport &&
-    modelParameterStore.includeInReport.includes(
-      CONSTANTS.INCLUDE_IN_REPORT.BY_SPECIES,
-    )
-  ) {
-    selectedExecutionOptions.push(
-      ExecutionOptionsEnum.DoIncludeSpeciesProjection,
-    )
-  } else {
-    excludedExecutionOptions.push(
-      ExecutionOptionsEnum.DoIncludeSpeciesProjection,
-    )
-  }
-
   if (modelParameterStore.isForwardGrowEnabled) {
     selectedExecutionOptions.push(ExecutionOptionsEnum.ForwardGrowEnabled)
   } else {

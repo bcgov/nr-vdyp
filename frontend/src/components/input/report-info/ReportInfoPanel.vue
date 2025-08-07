@@ -56,8 +56,6 @@
               :isReferenceYearEnabled="currentStore.isReferenceYearEnabled"
               :incSecondaryHeight="currentStore.incSecondaryHeight"
               :specificYear="currentStore.specificYear"
-              :volumeReported="currentStore.volumeReported"
-              :includeInReport="currentStore.includeInReport"
               :projectionType="currentStore.projectionType"
               :reportTitle="currentStore.reportTitle"
               :isDisabled="!isConfirmEnabled"
@@ -96,8 +94,6 @@
               "
               @update:incSecondaryHeight="handleIncSecondaryHeightUpdate"
               @update:specificYear="handleSpecificYearUpdate"
-              @update:volumeReported="handleVolumeReportedUpdate"
-              @update:includeInReport="handleIncludeInReportUpdate"
               @update:projectionType="handleProjectionTypeUpdate"
               @update:reportTitle="handleReportTitleUpdate"
             />
@@ -262,14 +258,6 @@ const handleIncSecondaryHeightUpdate = (value: boolean) => {
 
 const handleSpecificYearUpdate = (value: number | null) => {
   currentStore.value.specificYear = value
-}
-
-const handleVolumeReportedUpdate = (value: string[]) => {
-  currentStore.value.volumeReported = [...value]
-}
-
-const handleIncludeInReportUpdate = (value: string[]) => {
-  currentStore.value.includeInReport = [...value]
 }
 
 const handleProjectionTypeUpdate = (value: string | null) => {
@@ -497,8 +485,6 @@ const onClear = () => {
   currentStore.value.incSecondaryHeight =
     DEFAULTS.DEFAULT_VALUES.INC_SECONDARY_HEIGHT
   currentStore.value.specificYear = null
-  currentStore.value.volumeReported = []
-  currentStore.value.includeInReport = []
   currentStore.value.reportTitle = null
   currentStore.value.projectionType = DEFAULTS.DEFAULT_VALUES.PROJECTION_TYPE
 }

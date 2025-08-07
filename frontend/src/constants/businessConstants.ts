@@ -1,3 +1,5 @@
+import { UtilizationClassSetEnum } from '@/services/vdyp-api/models/utilization-class-set-enum'
+
 // Mapping species code and species names
 export const SPECIES_MAP = {
   AC: 'Poplar',
@@ -68,6 +70,28 @@ export const SPECIES_GROUP_MAP: { [key: string]: string } = {
   SS: 'S',
   SW: 'S',
   YC: 'Y',
+}
+
+// Mapping Species Group to Default Utilization Level for CFS Biomass
+export const CFS_BIOMASS_SPECIES_GROUP_UTILIZATION_MAP: {
+  [key: string]: UtilizationClassSetEnum
+} = {
+  AC: UtilizationClassSetEnum._125,
+  AT: UtilizationClassSetEnum._125,
+  B: UtilizationClassSetEnum._175,
+  C: UtilizationClassSetEnum._175,
+  D: UtilizationClassSetEnum._125,
+  E: UtilizationClassSetEnum._125,
+  F: UtilizationClassSetEnum._175,
+  H: UtilizationClassSetEnum._175,
+  L: UtilizationClassSetEnum._125,
+  MB: UtilizationClassSetEnum._125,
+  PA: UtilizationClassSetEnum._125,
+  PL: UtilizationClassSetEnum._125,
+  PW: UtilizationClassSetEnum._125,
+  PY: UtilizationClassSetEnum._125,
+  S: UtilizationClassSetEnum._175,
+  Y: UtilizationClassSetEnum._175,
 }
 
 export const CONIFEROUS_SPECIES = new Set([
