@@ -22,9 +22,9 @@ import {
   downloadCSVFile,
   printReport,
 } from '@/services/reportService'
+import { useAppStore } from '@/stores/appStore'
 import { useProjectionStore } from '@/stores/projectionStore'
-import { FILE_NAME, REPORTING_TAB } from '@/constants/constants'
-import { FILE_DOWNLOAD_ERR } from '@/constants/message'
+import { CONSTANTS, MESSAGE } from '@/constants'
 import type { ReportingTab } from '@/types/types'
 import * as messageHandler from '@/utils/messageHandler'
 import { downloadFile } from '@/utils/util'
@@ -36,14 +36,22 @@ const props = defineProps({
   },
 })
 
+const appStore = useAppStore()
 const projectionStore = useProjectionStore()
 const data = computed(() => {
   switch (props.tabname) {
-    case REPORTING_TAB.MODEL_REPORT:
-      return [...projectionStore.yieldTableArray]
-    case REPORTING_TAB.VIEW_ERR_MSG:
+    case CONSTANTS.REPORTING_TAB.MODEL_REPORT:
+      if (
+        appStore.modelSelection ===
+        CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS
+      ) {
+        return [...projectionStore.txtYieldLines]
+      } else {
+        return [...projectionStore.csvYieldLines]
+      }
+    case CONSTANTS.REPORTING_TAB.VIEW_ERR_MSG:
       return [...projectionStore.errorMessages]
-    case REPORTING_TAB.VIEW_LOG_FILE:
+    case CONSTANTS.REPORTING_TAB.VIEW_LOG_FILE:
       return [...projectionStore.logMessages]
     default:
       return []
@@ -51,7 +59,7 @@ const data = computed(() => {
 })
 
 const rawResults = computed(() => {
-  if (props.tabname === REPORTING_TAB.MODEL_REPORT) {
+  if (props.tabname === CONSTANTS.REPORTING_TAB.MODEL_REPORT) {
     return projectionStore.rawResultZipFile
   }
   return null
@@ -62,18 +70,25 @@ const isRawResultsButtonDisabled = computed(() => !rawResults.value)
 
 const handleDownload = () => {
   if (!data.value || data.value.length === 0) {
-    messageHandler.logErrorMessage(FILE_DOWNLOAD_ERR.NO_DATA)
+    messageHandler.logErrorMessage(MESSAGE.FILE_DOWNLOAD_ERR.NO_DATA)
     return
   }
   switch (props.tabname) {
-    case REPORTING_TAB.MODEL_REPORT:
-      downloadCSVFile(data.value, FILE_NAME.YIELD_TABLE_CSV)
+    case CONSTANTS.REPORTING_TAB.MODEL_REPORT:
+      if (
+        appStore.modelSelection ===
+        CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS
+      ) {
+        downloadTextFile(data.value, CONSTANTS.FILE_NAME.YIELD_TABLE_TXT)
+      } else {
+        downloadCSVFile(data.value, CONSTANTS.FILE_NAME.YIELD_TABLE_CSV)
+      }
       break
-    case REPORTING_TAB.VIEW_ERR_MSG:
-      downloadTextFile(data.value, FILE_NAME.ERROR_TXT)
+    case CONSTANTS.REPORTING_TAB.VIEW_ERR_MSG:
+      downloadTextFile(data.value, CONSTANTS.FILE_NAME.ERROR_TXT)
       break
-    case REPORTING_TAB.VIEW_LOG_FILE:
-      downloadTextFile(data.value, FILE_NAME.LOG_TXT)
+    case CONSTANTS.REPORTING_TAB.VIEW_LOG_FILE:
+      downloadTextFile(data.value, CONSTANTS.FILE_NAME.LOG_TXT)
       break
   }
 }
@@ -83,7 +98,7 @@ const handleDownloadRawResult = () => {
     !projectionStore.rawResultZipFile ||
     !projectionStore.rawResultZipFileName
   ) {
-    messageHandler.logErrorMessage(FILE_DOWNLOAD_ERR.NO_DATA)
+    messageHandler.logErrorMessage(MESSAGE.FILE_DOWNLOAD_ERR.NO_DATA)
     return
   }
 

@@ -13,6 +13,7 @@ import {
   determineBclcsLevel5,
   getSpeciesData,
   flattenSpeciesData,
+  generateRandomNumber,
 } from '@/services/modelParameterService'
 import {
   ExecutionOptionsEnum,
@@ -52,12 +53,35 @@ describe('Model Parameter Service Unit Tests', () => {
     projectionType: CONSTANTS.PROJECTION_TYPE.VOLUME,
     bha50SiteIndex: null,
     referenceYear: new Date().getFullYear(),
+    reportTitle: 'Test Report',
+    siteSpeciesValues: CONSTANTS.SITE_SPECIES_VALUES.COMPUTED,
+    crownClosure: 0,
+    basalArea: 0,
+    treesPerHectare: 0,
+    spzAge: 50,
+    spzHeight: 20,
+    isWholeStemEnabled: false,
+    isCloseUtilEnabled: false,
+    isNetDecayEnabled: false,
+    isNetDecayWasteEnabled: false,
+    isNetDecayWasteBreakageEnabled: false,
+    isComputedMAIEnabled: false,
+    isCulminationValuesEnabled: false,
   }
 
   it('should generate a valid feature ID', () => {
     const featureId = generateFeatureId()
     expect(String(featureId).length).to.be.within(9, 10)
     expect(Number.isInteger(featureId)).to.be.true
+  })
+
+  it('should generate a valid feature ID with random and timestamp parts', () => {
+    const featureId = generateFeatureId()
+    const featureIdStr = String(featureId)
+    expect(featureIdStr.length).to.be.within(9, 10)
+    expect(Number.isInteger(featureId)).to.be.true
+    const randomPart = parseInt(featureIdStr.substring(0, 2))
+    expect(randomPart).to.be.within(1, 99)
   })
 
   it('should generate an 8-digit polygon number', () => {
@@ -70,6 +94,36 @@ describe('Model Parameter Service Unit Tests', () => {
     const treeCoverLayerEstimatedId = generateTreeCoverLayerEstimatedId()
     expect(treeCoverLayerEstimatedId.length).to.be.within(4, 10)
     expect(Number.isInteger(Number(treeCoverLayerEstimatedId))).to.be.true
+  })
+
+  it('should generate a random number within specified digit range', () => {
+    const random4to6 = generateRandomNumber(4, 6)
+    expect(random4to6.length).to.be.within(4, 6)
+    expect(Number.isInteger(Number(random4to6))).to.be.true
+
+    const random8 = generateRandomNumber(8, 8)
+    expect(random8.length).to.equal(8)
+    expect(Number.isInteger(Number(random8))).to.be.true
+
+    expect(() => generateRandomNumber(5, 4)).to.throw(
+      'minDigits must be less than or equal to maxDigits',
+    )
+  })
+
+  it('should generate random number with correct boundaries', () => {
+    const oneDigit = generateRandomNumber(1, 1)
+    expect(oneDigit.length).to.equal(1)
+    expect(Number(oneDigit)).to.be.within(1, 9)
+
+    const twoDigit = generateRandomNumber(2, 2)
+    expect(twoDigit.length).to.equal(2)
+    expect(Number(twoDigit)).to.be.within(10, 99)
+
+    const rangeDigit = generateRandomNumber(3, 5)
+    expect(rangeDigit.length).to.be.within(3, 5)
+    const rangeNumber = Number(rangeDigit)
+    expect(rangeNumber).to.be.at.least(100)
+    expect(rangeNumber).to.be.at.most(99999)
   })
 
   it('should compute BCLCS Level 1 correctly', () => {
@@ -142,6 +196,18 @@ describe('Model Parameter Service Unit Tests', () => {
     expect(result[2].percent).to.equal('')
   })
 
+  it('should handle special cases in getSpeciesData', () => {
+    const specialCases = [
+      { species: 'PL', percent: 0 },
+      { species: null, percent: '15.0' },
+      { species: 'AC', percent: null },
+    ]
+    const result = getSpeciesData(specialCases)
+    expect(result[0].percent).to.equal('')
+    expect(result[1].percent).to.equal('')
+    expect(result[2].percent).to.equal('')
+  })
+
   it('should flatten species data correctly', () => {
     const speciesData = [
       { species: 'PL', percent: '30.0' },
@@ -150,6 +216,19 @@ describe('Model Parameter Service Unit Tests', () => {
     ]
     const result = flattenSpeciesData(speciesData, 2)
     expect(result).to.deep.equal(['PL', '30.0', 'AC', '20.0'])
+  })
+
+  it('should handle edge cases in flattenSpeciesData', () => {
+    const speciesData = [
+      { species: 'PL', percent: '30.0' },
+      { species: 'AC', percent: '20.0' },
+    ]
+
+    const result1 = flattenSpeciesData(speciesData, 5)
+    expect(result1).to.deep.equal(['PL', '30.0', 'AC', '20.0'])
+
+    const result2 = flattenSpeciesData(speciesData, 0)
+    expect(result2).to.deep.equal([])
   })
 
   it('should call projectionHcsvPost once', () => {
@@ -212,6 +291,25 @@ describe('Model Parameter Service Unit Tests', () => {
       })
   })
 
+  it('should handle default values in layer CSV creation', () => {
+    const storeWithDefaults = {
+      ...mockModelParameterStore,
+      derivedBy: CONSTANTS.DERIVED_BY.VOLUME,
+      siteSpeciesValues: CONSTANTS.SITE_SPECIES_VALUES.COMPUTED,
+      crownClosure: 0,
+      basalArea: 0,
+      treesPerHectare: 0,
+    }
+
+    const { blobLayer } = createCSVFiles(storeWithDefaults)
+
+    cy.wrap(blobLayer)
+      .then((blob) => blob.text())
+      .then((text) => {
+        expect(text).to.include(DEFAULTS.CROWN_CLOSURE_DEFAULT_4PROJ.toString())
+      })
+  })
+
   it('should call projectionHcsvPost with correct form data', () => {
     const projectionStub = cy
       .stub()
@@ -248,7 +346,7 @@ describe('Model Parameter Service Unit Tests', () => {
             mockModelParameterStore.ageIncrement,
           )
           expect(projectionParams.outputFormat).to.equal(
-            OutputFormatEnum.CSVYieldTable,
+            OutputFormatEnum.TextReport,
           )
           expect(projectionParams.metadataToOutput).to.equal(
             MetadataToOutputEnum.NONE,
@@ -270,6 +368,138 @@ describe('Model Parameter Service Unit Tests', () => {
           )
           expect(projectionParams.excludedExecutionOptions).not.to.include(
             ExecutionOptionsEnum.BackGrowEnabled,
+          )
+        })
+    })
+  })
+
+  it('should include volume-related options when enabled', () => {
+    const volumeEnabledStore = {
+      ...mockModelParameterStore,
+      isWholeStemEnabled: true,
+      isCloseUtilEnabled: true,
+      isNetDecayEnabled: true,
+      isNetDecayWasteEnabled: true,
+      isNetDecayWasteBreakageEnabled: true,
+      isComputedMAIEnabled: true,
+      isCulminationValuesEnabled: true,
+    }
+
+    const projectionStub = cy
+      .stub()
+      .resolves(new Blob(['mock response'], { type: 'application/zip' }))
+
+    cy.wrap(runModel(volumeEnabledStore, projectionStub)).then(() => {
+      const formDataArg = projectionStub.getCall(0).args[0] as FormData
+      const projectionParamsBlob = formDataArg.get(
+        ParameterNamesEnum.PROJECTION_PARAMETERS,
+      ) as Blob
+
+      cy.wrap(projectionParamsBlob)
+        .then((blob) => blob.text())
+        .then((text) => {
+          const projectionParams = JSON.parse(text)
+          expect(projectionParams.selectedExecutionOptions).to.include(
+            ExecutionOptionsEnum.ReportIncludeWholeStemVolume,
+          )
+          expect(projectionParams.selectedExecutionOptions).to.include(
+            ExecutionOptionsEnum.ReportIncludeCloseUtilizationVolume,
+          )
+          expect(projectionParams.selectedExecutionOptions).to.include(
+            ExecutionOptionsEnum.ReportIncludeNetDecayVolume,
+          )
+          expect(projectionParams.selectedExecutionOptions).to.include(
+            ExecutionOptionsEnum.ReportIncludeNDWasteVolume,
+          )
+          expect(projectionParams.selectedExecutionOptions).to.include(
+            ExecutionOptionsEnum.ReportIncludeNDWasteBrkgVolume,
+          )
+          expect(projectionParams.selectedExecutionOptions).to.include(
+            ExecutionOptionsEnum.ReportIncludeVolumeMAI,
+          )
+          expect(projectionParams.selectedExecutionOptions).to.include(
+            ExecutionOptionsEnum.ReportIncludeCulminationValues,
+          )
+        })
+    })
+  })
+
+  it('should exclude volume-related options when disabled', () => {
+    const volumeDisabledStore = {
+      ...mockModelParameterStore,
+      isWholeStemEnabled: false,
+      isCloseUtilEnabled: false,
+      isNetDecayEnabled: false,
+      isNetDecayWasteEnabled: false,
+      isNetDecayWasteBreakageEnabled: false,
+      isComputedMAIEnabled: false,
+      isCulminationValuesEnabled: false,
+    }
+
+    const projectionStub = cy
+      .stub()
+      .resolves(new Blob(['mock response'], { type: 'application/zip' }))
+
+    cy.wrap(runModel(volumeDisabledStore, projectionStub)).then(() => {
+      const formDataArg = projectionStub.getCall(0).args[0] as FormData
+      const projectionParamsBlob = formDataArg.get(
+        ParameterNamesEnum.PROJECTION_PARAMETERS,
+      ) as Blob
+
+      cy.wrap(projectionParamsBlob)
+        .then((blob) => blob.text())
+        .then((text) => {
+          const projectionParams = JSON.parse(text)
+          expect(projectionParams.excludedExecutionOptions).to.include(
+            ExecutionOptionsEnum.ReportIncludeWholeStemVolume,
+          )
+          expect(projectionParams.excludedExecutionOptions).to.include(
+            ExecutionOptionsEnum.ReportIncludeCloseUtilizationVolume,
+          )
+          expect(projectionParams.excludedExecutionOptions).to.include(
+            ExecutionOptionsEnum.ReportIncludeNetDecayVolume,
+          )
+          expect(projectionParams.excludedExecutionOptions).to.include(
+            ExecutionOptionsEnum.ReportIncludeNDWasteVolume,
+          )
+          expect(projectionParams.excludedExecutionOptions).to.include(
+            ExecutionOptionsEnum.ReportIncludeNDWasteBrkgVolume,
+          )
+          expect(projectionParams.excludedExecutionOptions).to.include(
+            ExecutionOptionsEnum.ReportIncludeVolumeMAI,
+          )
+          expect(projectionParams.excludedExecutionOptions).to.include(
+            ExecutionOptionsEnum.ReportIncludeCulminationValues,
+          )
+        })
+    })
+  })
+
+  it('should include CFS Biomass options when projection type is CFS_BIOMASS', () => {
+    const cfsBiomassStore = {
+      ...mockModelParameterStore,
+      projectionType: CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS,
+    }
+
+    const projectionStub = cy
+      .stub()
+      .resolves(new Blob(['mock response'], { type: 'application/zip' }))
+
+    cy.wrap(runModel(cfsBiomassStore, projectionStub)).then(() => {
+      const formDataArg = projectionStub.getCall(0).args[0] as FormData
+      const projectionParamsBlob = formDataArg.get(
+        ParameterNamesEnum.PROJECTION_PARAMETERS,
+      ) as Blob
+
+      cy.wrap(projectionParamsBlob)
+        .then((blob) => blob.text())
+        .then((text) => {
+          const projectionParams = JSON.parse(text)
+          expect(projectionParams.selectedExecutionOptions).to.include(
+            ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass,
+          )
+          expect(projectionParams.excludedExecutionOptions).to.include(
+            ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes,
           )
         })
     })
@@ -536,6 +766,77 @@ describe('Model Parameter Service Unit Tests', () => {
         .then((text) => {
           const projectionParams = JSON.parse(text)
           expect(projectionParams.utils).to.be.an('array').with.lengthOf(0)
+        })
+    })
+  })
+
+  it('should apply correct default values for basal area derived parameters', () => {
+    const basalAreaStore = {
+      ...mockModelParameterStore,
+      derivedBy: CONSTANTS.DERIVED_BY.BASAL_AREA,
+      siteSpeciesValues: CONSTANTS.SITE_SPECIES_VALUES.COMPUTED,
+      basalArea: 25.5,
+      treesPerHectare: 850,
+    }
+
+    const { blobLayer } = createCSVFiles(basalAreaStore)
+
+    cy.wrap(blobLayer)
+      .then((blob) => blob.text())
+      .then((text) => {
+        expect(text).to.include('25.5')
+        expect(text).to.include('850')
+      })
+  })
+
+  it('should always include debug options', () => {
+    const projectionStub = cy
+      .stub()
+      .resolves(new Blob(['mock response'], { type: 'application/zip' }))
+    cy.wrap(runModel(mockModelParameterStore, projectionStub)).then(() => {
+      const formDataArg = projectionStub.getCall(0).args[0] as FormData
+      const projectionParamsBlob = formDataArg.get(
+        ParameterNamesEnum.PROJECTION_PARAMETERS,
+      ) as Blob
+      cy.wrap(projectionParamsBlob)
+        .then((blob) => blob.text())
+        .then((text) => {
+          const projectionParams = JSON.parse(text)
+          expect(projectionParams.selectedDebugOptions).to.include.members([
+            'doIncludeDebugTimestamps',
+            'doIncludeDebugEntryExit',
+            'doIncludeDebugIndentBlocks',
+            'doIncludeDebugRoutineNames',
+          ])
+          expect(projectionParams.excludedDebugOptions).to.be.an('array').that
+            .is.empty
+        })
+    })
+  })
+
+  it('should include reportTitle in projection parameters', () => {
+    const storeWithTitle = {
+      ...mockModelParameterStore,
+      reportTitle: 'Custom Test Report Title',
+    }
+
+    const projectionStub = cy
+      .stub()
+      .resolves(new Blob(['mock response'], { type: 'application/zip' }))
+
+    cy.wrap(runModel(storeWithTitle, projectionStub)).then(() => {
+      const formDataArg = projectionStub.getCall(0).args[0] as FormData
+      const projectionParamsBlob = formDataArg.get(
+        ParameterNamesEnum.PROJECTION_PARAMETERS,
+      ) as Blob
+
+      cy.wrap(projectionParamsBlob)
+        .then((blob) => blob.text())
+        .then((text) => {
+          const projectionParams = JSON.parse(text)
+          expect(projectionParams.reportTitle).to.equal(
+            'Custom Test Report Title',
+          )
         })
     })
   })

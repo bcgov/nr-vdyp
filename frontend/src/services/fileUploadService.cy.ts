@@ -25,6 +25,7 @@ describe('File Upload Service Unit Tests', () => {
     setActivePinia(createPinia())
     fileUploadStore = useFileUploadStore()
 
+    // Set default values
     fileUploadStore.projectionType = CONSTANTS.PROJECTION_TYPE.VOLUME
     fileUploadStore.selectedAgeYearRange = CONSTANTS.AGE_YEAR_RANGE.AGE
     fileUploadStore.startingAge = 10
@@ -37,6 +38,13 @@ describe('File Upload Service Unit Tests', () => {
       DEFAULTS.DEFAULT_VALUES.IS_FORWARD_GROW_ENABLED
     fileUploadStore.isBackwardGrowEnabled =
       DEFAULTS.DEFAULT_VALUES.IS_BACKWARD_GROW_ENABLED
+    fileUploadStore.isByLayerEnabled = false
+    fileUploadStore.isProjectionModeEnabled = false
+    fileUploadStore.isPolygonIDEnabled = false
+    fileUploadStore.isCurrentYearEnabled = false
+    fileUploadStore.isReferenceYearEnabled = false
+    fileUploadStore.incSecondaryHeight = false
+
     fileUploadStore.polygonFile = new File(['polygon content'], 'polygon.csv', {
       type: 'text/csv',
     })
@@ -48,23 +56,35 @@ describe('File Upload Service Unit Tests', () => {
   it('should return correct selected execution options for volume projection', () => {
     const { selectedExecutionOptions, excludedExecutionOptions } =
       buildExecutionOptions(fileUploadStore)
+
     expect(selectedExecutionOptions).to.include.members([
       ExecutionOptionsEnum.ForwardGrowEnabled,
       ExecutionOptionsEnum.BackGrowEnabled,
       ExecutionOptionsEnum.DoIncludeFileHeader,
       ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes,
-      ExecutionOptionsEnum.DoIncludeSpeciesProjection,
+      ExecutionOptionsEnum.DoSummarizeProjectionByPolygon,
+      ExecutionOptionsEnum.DoIncludeAgeRowsInYieldTable,
+      ExecutionOptionsEnum.DoIncludeYearRowsInYieldTable,
+      ExecutionOptionsEnum.DoIncludeColumnHeadersInYieldTable,
+      ExecutionOptionsEnum.DoAllowBasalAreaAndTreesPerHectareValueSubstitution,
+      ExecutionOptionsEnum.DoEnableProgressLogging,
+      ExecutionOptionsEnum.DoEnableErrorLogging,
+      ExecutionOptionsEnum.DoEnableDebugLogging,
     ])
+
     expect(excludedExecutionOptions).to.include.members([
       ExecutionOptionsEnum.DoSaveIntermediateFiles,
       ExecutionOptionsEnum.DoForceReferenceYearInclusionInYieldTables,
       ExecutionOptionsEnum.DoForceCurrentYearInclusionInYieldTables,
       ExecutionOptionsEnum.DoIncludePolygonRecordIdInYieldTable,
-      ExecutionOptionsEnum.DoSummarizeProjectionByPolygon,
+      ExecutionOptionsEnum.DoSummarizeProjectionByLayer,
       ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
       ExecutionOptionsEnum.AllowAggressiveValueEstimation,
       ExecutionOptionsEnum.DoIncludeProjectionFiles,
       ExecutionOptionsEnum.DoDelayExecutionFolderDeletion,
+      ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass,
+      ExecutionOptionsEnum.DoIncludeProjectedMOFBiomass,
+      ExecutionOptionsEnum.DoIncludeProjectionModeInYieldTable,
     ])
   })
 
@@ -72,23 +92,108 @@ describe('File Upload Service Unit Tests', () => {
     fileUploadStore.projectionType = CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
     const { selectedExecutionOptions, excludedExecutionOptions } =
       buildExecutionOptions(fileUploadStore)
-    expect(selectedExecutionOptions).to.include(
+
+    expect(selectedExecutionOptions).to.include.members([
       ExecutionOptionsEnum.ForwardGrowEnabled,
-    )
-    expect(selectedExecutionOptions).to.include(
       ExecutionOptionsEnum.BackGrowEnabled,
-    )
-    expect(selectedExecutionOptions).to.include(
       ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass,
-    )
-    expect(selectedExecutionOptions).not.to.include(
-      ExecutionOptionsEnum.DoIncludeSpeciesProjection,
-    )
-    expect(excludedExecutionOptions).to.include(
+    ])
+
+    expect(excludedExecutionOptions).to.include.members([
       ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes,
+      ExecutionOptionsEnum.DoIncludeProjectedMOFBiomass,
+    ])
+  })
+
+  it('should handle isByLayerEnabled correctly', () => {
+    fileUploadStore.isByLayerEnabled = true
+    const { selectedExecutionOptions, excludedExecutionOptions } =
+      buildExecutionOptions(fileUploadStore)
+
+    expect(selectedExecutionOptions).to.include(
+      ExecutionOptionsEnum.DoSummarizeProjectionByLayer,
     )
     expect(excludedExecutionOptions).to.include(
-      ExecutionOptionsEnum.DoIncludeSpeciesProjection,
+      ExecutionOptionsEnum.DoSummarizeProjectionByPolygon,
+    )
+
+    // Test opposite case
+    fileUploadStore.isByLayerEnabled = false
+    const {
+      selectedExecutionOptions: selected2,
+      excludedExecutionOptions: excluded2,
+    } = buildExecutionOptions(fileUploadStore)
+
+    expect(selected2).to.include(
+      ExecutionOptionsEnum.DoSummarizeProjectionByPolygon,
+    )
+    expect(excluded2).to.include(
+      ExecutionOptionsEnum.DoSummarizeProjectionByLayer,
+    )
+  })
+
+  it('should handle isProjectionModeEnabled correctly', () => {
+    fileUploadStore.isProjectionModeEnabled = true
+    const { selectedExecutionOptions, excludedExecutionOptions } =
+      buildExecutionOptions(fileUploadStore)
+
+    expect(selectedExecutionOptions).to.include(
+      ExecutionOptionsEnum.DoIncludeProjectionModeInYieldTable,
+    )
+    expect(excludedExecutionOptions).not.to.include(
+      ExecutionOptionsEnum.DoIncludeProjectionModeInYieldTable,
+    )
+  })
+
+  it('should handle isPolygonIDEnabled correctly', () => {
+    fileUploadStore.isPolygonIDEnabled = true
+    const { selectedExecutionOptions, excludedExecutionOptions } =
+      buildExecutionOptions(fileUploadStore)
+
+    expect(selectedExecutionOptions).to.include(
+      ExecutionOptionsEnum.DoIncludePolygonRecordIdInYieldTable,
+    )
+    expect(excludedExecutionOptions).not.to.include(
+      ExecutionOptionsEnum.DoIncludePolygonRecordIdInYieldTable,
+    )
+  })
+
+  it('should handle isCurrentYearEnabled correctly', () => {
+    fileUploadStore.isCurrentYearEnabled = true
+    const { selectedExecutionOptions, excludedExecutionOptions } =
+      buildExecutionOptions(fileUploadStore)
+
+    expect(selectedExecutionOptions).to.include(
+      ExecutionOptionsEnum.DoForceCurrentYearInclusionInYieldTables,
+    )
+    expect(excludedExecutionOptions).not.to.include(
+      ExecutionOptionsEnum.DoForceCurrentYearInclusionInYieldTables,
+    )
+  })
+
+  it('should handle isReferenceYearEnabled correctly', () => {
+    fileUploadStore.isReferenceYearEnabled = true
+    const { selectedExecutionOptions, excludedExecutionOptions } =
+      buildExecutionOptions(fileUploadStore)
+
+    expect(selectedExecutionOptions).to.include(
+      ExecutionOptionsEnum.DoForceReferenceYearInclusionInYieldTables,
+    )
+    expect(excludedExecutionOptions).not.to.include(
+      ExecutionOptionsEnum.DoForceReferenceYearInclusionInYieldTables,
+    )
+  })
+
+  it('should handle incSecondaryHeight correctly', () => {
+    fileUploadStore.incSecondaryHeight = true
+    const { selectedExecutionOptions, excludedExecutionOptions } =
+      buildExecutionOptions(fileUploadStore)
+
+    expect(selectedExecutionOptions).to.include(
+      ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
+    )
+    expect(excludedExecutionOptions).not.to.include(
+      ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
     )
   })
 
@@ -195,11 +300,12 @@ describe('File Upload Service Unit Tests', () => {
             ExecutionOptionsEnum.DoForceReferenceYearInclusionInYieldTables,
             ExecutionOptionsEnum.DoForceCurrentYearInclusionInYieldTables,
             ExecutionOptionsEnum.DoIncludePolygonRecordIdInYieldTable,
-            ExecutionOptionsEnum.DoSummarizeProjectionByPolygon,
+            ExecutionOptionsEnum.DoSummarizeProjectionByLayer,
             ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
             ExecutionOptionsEnum.AllowAggressiveValueEstimation,
             ExecutionOptionsEnum.DoIncludeProjectionFiles,
             ExecutionOptionsEnum.DoDelayExecutionFolderDeletion,
+            ExecutionOptionsEnum.DoIncludeProjectedMOFBiomass,
           ])
         })
     })
@@ -259,11 +365,12 @@ describe('File Upload Service Unit Tests', () => {
           ExecutionOptionsEnum.DoForceReferenceYearInclusionInYieldTables,
           ExecutionOptionsEnum.DoForceCurrentYearInclusionInYieldTables,
           ExecutionOptionsEnum.DoIncludePolygonRecordIdInYieldTable,
-          ExecutionOptionsEnum.DoSummarizeProjectionByPolygon,
+          ExecutionOptionsEnum.DoSummarizeProjectionByLayer,
           ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
           ExecutionOptionsEnum.AllowAggressiveValueEstimation,
           ExecutionOptionsEnum.DoIncludeProjectionFiles,
           ExecutionOptionsEnum.DoDelayExecutionFolderDeletion,
+          ExecutionOptionsEnum.DoIncludeProjectedMOFBiomass,
         ])
         expect(projectionParams.selectedDebugOptions).to.deep.equal([
           DebugOptionsEnum.DoIncludeDebugTimestamps,
@@ -319,11 +426,12 @@ describe('File Upload Service Unit Tests', () => {
           ExecutionOptionsEnum.DoForceReferenceYearInclusionInYieldTables,
           ExecutionOptionsEnum.DoForceCurrentYearInclusionInYieldTables,
           ExecutionOptionsEnum.DoIncludePolygonRecordIdInYieldTable,
-          ExecutionOptionsEnum.DoSummarizeProjectionByPolygon,
+          ExecutionOptionsEnum.DoSummarizeProjectionByLayer,
           ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
           ExecutionOptionsEnum.AllowAggressiveValueEstimation,
           ExecutionOptionsEnum.DoIncludeProjectionFiles,
           ExecutionOptionsEnum.DoDelayExecutionFolderDeletion,
+          ExecutionOptionsEnum.DoIncludeProjectedMOFBiomass,
         ])
         expect(projectionParams.selectedDebugOptions).to.deep.equal([
           DebugOptionsEnum.DoIncludeDebugTimestamps,
@@ -333,5 +441,38 @@ describe('File Upload Service Unit Tests', () => {
         ])
         expect(projectionParams.excludedDebugOptions).to.be.empty
       })
+  })
+
+  it('should handle all boolean options enabled', () => {
+    // Enable all boolean options
+    fileUploadStore.isByLayerEnabled = true
+    fileUploadStore.isProjectionModeEnabled = true
+    fileUploadStore.isPolygonIDEnabled = true
+    fileUploadStore.isCurrentYearEnabled = true
+    fileUploadStore.isReferenceYearEnabled = true
+    fileUploadStore.incSecondaryHeight = true
+
+    const { selectedExecutionOptions, excludedExecutionOptions } =
+      buildExecutionOptions(fileUploadStore)
+
+    expect(selectedExecutionOptions).to.include.members([
+      ExecutionOptionsEnum.DoSummarizeProjectionByLayer,
+      ExecutionOptionsEnum.DoIncludeProjectionModeInYieldTable,
+      ExecutionOptionsEnum.DoIncludePolygonRecordIdInYieldTable,
+      ExecutionOptionsEnum.DoForceCurrentYearInclusionInYieldTables,
+      ExecutionOptionsEnum.DoForceReferenceYearInclusionInYieldTables,
+      ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
+    ])
+
+    expect(excludedExecutionOptions).to.include(
+      ExecutionOptionsEnum.DoSummarizeProjectionByPolygon,
+    )
+    expect(excludedExecutionOptions).not.to.include.members([
+      ExecutionOptionsEnum.DoIncludeProjectionModeInYieldTable,
+      ExecutionOptionsEnum.DoIncludePolygonRecordIdInYieldTable,
+      ExecutionOptionsEnum.DoForceCurrentYearInclusionInYieldTables,
+      ExecutionOptionsEnum.DoForceReferenceYearInclusionInYieldTables,
+      ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
+    ])
   })
 })

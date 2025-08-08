@@ -30,7 +30,10 @@ export const generateFeatureId = (): number => {
  * @param maxDigits Maximum number of digits (inclusive).
  * @returns A random number as a string.
  */
-const generateRandomNumber = (minDigits: number, maxDigits: number): string => {
+export const generateRandomNumber = (
+  minDigits: number,
+  maxDigits: number,
+): string => {
   if (minDigits > maxDigits) {
     throw new Error('minDigits must be less than or equal to maxDigits')
   }
@@ -316,7 +319,7 @@ const createLayerData = (
     polygonNumber, // POLYGON_NUMBER
     BIZCONSTANTS.LAYER_LEVEL_CD, // LAYER_LEVEL_CODE
     BIZCONSTANTS.VDYP7_LAYER_CD, // VDYP7_LAYER_CD
-    '', // LAYER_STOCKABILITY
+    modelParameterStore.percentStockableArea ?? '', // LAYER_STOCKABILITY
     BIZCONSTANTS.FOREST_COVER_RANK_CD, // FOREST_COVER_RANK_CODE
     '', // NON_FOREST_DESCRIPTOR_CODE
     modelParameterStore.highestPercentSpecies, // EST_SITE_INDEX_SPECIES_CD
@@ -435,16 +438,6 @@ const buildExecutionOptions = (
     )
   }
 
-  if (modelParameterStore.incSecondaryHeight) {
-    selectedExecutionOptions.push(
-      ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
-    )
-  } else {
-    excludedExecutionOptions.push(
-      ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
-    )
-  }
-
   if (modelParameterStore.isForwardGrowEnabled) {
     selectedExecutionOptions.push(ExecutionOptionsEnum.ForwardGrowEnabled)
   } else {
@@ -455,6 +448,82 @@ const buildExecutionOptions = (
     selectedExecutionOptions.push(ExecutionOptionsEnum.BackGrowEnabled)
   } else {
     excludedExecutionOptions.push(ExecutionOptionsEnum.BackGrowEnabled)
+  }
+
+  if (modelParameterStore.incSecondaryHeight) {
+    selectedExecutionOptions.push(
+      ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
+    )
+  } else {
+    excludedExecutionOptions.push(
+      ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
+    )
+  }
+
+  if (modelParameterStore.isWholeStemEnabled) {
+    selectedExecutionOptions.push(
+      ExecutionOptionsEnum.ReportIncludeWholeStemVolume,
+    )
+  } else {
+    excludedExecutionOptions.push(
+      ExecutionOptionsEnum.ReportIncludeWholeStemVolume,
+    )
+  }
+
+  if (modelParameterStore.isCloseUtilEnabled) {
+    selectedExecutionOptions.push(
+      ExecutionOptionsEnum.ReportIncludeCloseUtilizationVolume,
+    )
+  } else {
+    excludedExecutionOptions.push(
+      ExecutionOptionsEnum.ReportIncludeCloseUtilizationVolume,
+    )
+  }
+
+  if (modelParameterStore.isNetDecayEnabled) {
+    selectedExecutionOptions.push(
+      ExecutionOptionsEnum.ReportIncludeNetDecayVolume,
+    )
+  } else {
+    excludedExecutionOptions.push(
+      ExecutionOptionsEnum.ReportIncludeNetDecayVolume,
+    )
+  }
+
+  if (modelParameterStore.isNetDecayWasteEnabled) {
+    selectedExecutionOptions.push(
+      ExecutionOptionsEnum.ReportIncludeNDWasteVolume,
+    )
+  } else {
+    excludedExecutionOptions.push(
+      ExecutionOptionsEnum.ReportIncludeNDWasteVolume,
+    )
+  }
+
+  if (modelParameterStore.isNetDecayWasteBreakageEnabled) {
+    selectedExecutionOptions.push(
+      ExecutionOptionsEnum.ReportIncludeNDWasteBrkgVolume,
+    )
+  } else {
+    excludedExecutionOptions.push(
+      ExecutionOptionsEnum.ReportIncludeNDWasteBrkgVolume,
+    )
+  }
+
+  if (modelParameterStore.isComputedMAIEnabled) {
+    selectedExecutionOptions.push(ExecutionOptionsEnum.ReportIncludeVolumeMAI)
+  } else {
+    excludedExecutionOptions.push(ExecutionOptionsEnum.ReportIncludeVolumeMAI)
+  }
+
+  if (modelParameterStore.isCulminationValuesEnabled) {
+    selectedExecutionOptions.push(
+      ExecutionOptionsEnum.ReportIncludeCulminationValues,
+    )
+  } else {
+    excludedExecutionOptions.push(
+      ExecutionOptionsEnum.ReportIncludeCulminationValues,
+    )
   }
 
   return { selectedExecutionOptions, excludedExecutionOptions }
@@ -520,7 +589,8 @@ export const runModel = async (
       modelParameterStore.selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.YEAR
         ? modelParameterStore.endYear
         : null,
-    outputFormat: OutputFormatEnum.CSVYieldTable, // TODO - All of new parameter will only work for new outputFormat TextReport (see VDYP-695 comment)
+    reportTitle: modelParameterStore.reportTitle,
+    outputFormat: OutputFormatEnum.TextReport,
     selectedExecutionOptions: selectedExecutionOptions,
     excludedExecutionOptions: excludedExecutionOptions,
     selectedDebugOptions: selectedDebugOptions,

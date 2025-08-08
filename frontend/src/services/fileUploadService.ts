@@ -35,11 +35,19 @@ export const buildExecutionOptions = (
 
   const excludedExecutionOptions: ExecutionOptionsEnum[] = [
     ExecutionOptionsEnum.DoSaveIntermediateFiles,
-    ExecutionOptionsEnum.DoSummarizeProjectionByPolygon,
     ExecutionOptionsEnum.AllowAggressiveValueEstimation,
     ExecutionOptionsEnum.DoIncludeProjectionFiles,
     ExecutionOptionsEnum.DoDelayExecutionFolderDeletion,
     ExecutionOptionsEnum.DoIncludeProjectedMOFBiomass,
+    ExecutionOptionsEnum.DoIncludeSpeciesProjection,
+    ExecutionOptionsEnum.ReportIncludeWholeStemVolume,
+    ExecutionOptionsEnum.ReportIncludeCloseUtilizationVolume,
+    ExecutionOptionsEnum.ReportIncludeNetDecayVolume,
+    ExecutionOptionsEnum.ReportIncludeNDWasteVolume,
+    ExecutionOptionsEnum.ReportIncludeNDWasteBrkgVolume,
+    ExecutionOptionsEnum.ReportIncludeVolumeMAI,
+    ExecutionOptionsEnum.ReportIncludeSpeciesComp,
+    ExecutionOptionsEnum.ReportIncludeCulminationValues,
   ]
 
   if (fileUploadStore.projectionType === CONSTANTS.PROJECTION_TYPE.VOLUME) {
@@ -80,7 +88,13 @@ export const buildExecutionOptions = (
     selectedExecutionOptions.push(
       ExecutionOptionsEnum.DoSummarizeProjectionByLayer,
     )
+    excludedExecutionOptions.push(
+      ExecutionOptionsEnum.DoSummarizeProjectionByPolygon,
+    )
   } else {
+    selectedExecutionOptions.push(
+      ExecutionOptionsEnum.DoSummarizeProjectionByPolygon,
+    )
     excludedExecutionOptions.push(
       ExecutionOptionsEnum.DoSummarizeProjectionByLayer,
     )
@@ -186,7 +200,7 @@ export const getFormData = (
       fileUploadStore.selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.YEAR
         ? fileUploadStore.endYear
         : null,
-    outputFormat: OutputFormatEnum.CSVYieldTable, // TODO - All of new parameter will only work for new outputFormat TextReport (see VDYP-695 comment)
+    outputFormat: OutputFormatEnum.CSVYieldTable,
     selectedExecutionOptions: selectedExecutionOptions,
     excludedExecutionOptions: excludedExecutionOptions,
     selectedDebugOptions: selectedDebugOptions,
