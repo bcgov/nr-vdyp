@@ -62,6 +62,7 @@ public class ValidatedParameters {
 	private MetadataToOutputDirective metadataToOutput;
 	private FilterParameters filters;
 	private Map<SP0Name, UtilizationClassSet> utils = new HashMap<>();
+	private String reportTitle;
 
 	/**
 	 * Helper method that returns "true" iff the given option is in <code>selectedExecutionOptions</code>.
@@ -402,6 +403,14 @@ public class ValidatedParameters {
 		}
 	}
 
+	public void setReportTitle(String reportTitle) {
+		this.reportTitle = reportTitle;
+	}
+
+	public String getReportTitle() {
+		return reportTitle;
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) {
@@ -482,6 +491,7 @@ public class ValidatedParameters {
 
 	static {
 		DEFAULT = new ValidatedParameters();
+		DEFAULT.setReportTitle("");
 
 		DEFAULT.ageStart = null;
 		DEFAULT.ageEnd = null;

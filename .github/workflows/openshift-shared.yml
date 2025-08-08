@@ -25,7 +25,6 @@ jobs:
       ref: ${{ inputs.ref || 'main' }}  # fallback if ref is not provided
       tag: ${{ inputs.tag }}
       values: "values-${{ inputs.target_environment }}.yaml"
-      params: --set global.secrets.persist=false 
 
   # tests:
   #   name: Tests

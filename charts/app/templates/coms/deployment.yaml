@@ -1,0 +1,110 @@
+{{- if .Values.coms.enabled }}
+{{- $host := printf "%s-%s" .Release.Name .Values.global.databaseAlias }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "coms.fullname" . }}
+  labels:
+    {{- include "coms.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.coms.replicas }}
+  selector:
+    matchLabels:
+      {{- include "coms.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "coms.labels" . | nindent 8 }}
+    spec:
+      initContainers:
+        - name: wait-for-postgres
+          # any image with `pg_isready` will do—Bitnami’s Postgres cli image is handy
+          image: bitnami/postgresql:latest
+          command:
+            - sh
+            - -c
+            - |
+              echo "⏳ Waiting for Postgres at $DB_HOST:$DB_PORT…"
+              until pg_isready -h "$DB_HOST" -p "$DB_PORT" -U "DB_USERNAME"; do
+                sleep 2
+              done
+              echo "✅ Postgres is ready!"
+          envFrom:
+            - secretRef:
+                name: {{ .Release.Name }}
+          env:
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_HOST
+              value: {{$host}}
+            - name: DB_USERNAME
+              value: {{.Values.coms.env.DB_USERNAME }}
+
+      containers:
+        - name: {{ include "coms.fullname" . }}
+          image: "{{ .Values.coms.image.repository }}:{{ .Values.coms.image.tag }}"
+          command:
+            - sh
+            - -c
+            - |
+              npm run migrate &&
+              npm start
+          imagePullPolicy: Always
+          envFrom:
+            - secretRef:
+                name: {{ .Release.Name }}
+          env:
+            - name: OBJECTSTORAGE_ENABLED
+              value: {{ .Values.coms.env.OBJECTSTORAGE_ENABLED | quote }}
+            - name: OBJECTSTORAGE_ACCESSKEYID
+              value: {{ .Values.coms.env.OBJECTSTORAGE_ACCESSKEYID | quote }}
+            - name: OBJECTSTORAGE_SECRETACCESSKEY
+              value: {{ .Values.coms.env.OBJECTSTORAGE_SECRETACCESSKEY | quote }}
+            - name: OBJECTSTORAGE_BUCKET
+              value: {{ .Values.coms.env.OBJECTSTORAGE_BUCKET | quote }}
+            - name: OBJECTSTORAGE_ENDPOINT
+              value: {{ .Values.coms.env.OBJECTSTORAGE_ENDPOINT | quote }}
+            - name: OBJECTSTORAGE_KEY
+              value: {{ .Values.coms.env.OBJECTSTORAGE_KEY | quote }}
+            - name: S3ACCESSMODE_ENABLES
+              value: {{ .Values.coms.env.S3ACCESSMODE_ENABLES | quote }}
+            - name: BASICAUTH_ENABLED
+              value: {{ .Values.coms.env.BASICAUTH_ENABLED | quote }}
+            - name: BASICAUTH_USERNAME
+              value: {{ .Values.coms.env.BASICAUTH_USERNAME | quote }}
+            - name: BASICAUTH_PASSWORD
+              value: {{ .Values.coms.env.BASICAUTH_PASSWORD | quote }}
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_HOST
+              value: {{$host}}
+            - name: DB_NAME
+              value: {{.Values.coms.env.DB_DATABASE }}
+            - name: DB_USERNAME
+              value: {{.Values.coms.env.DB_USERNAME }}
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}
+                  key: COMS_DB_PASSWORD
+            - name: KC_ENABLED
+              value: {{ .Values.coms.env.KC_ENABLED | quote }}
+            - name: KC_PUBLICKEY
+              value: {{ .Values.coms.env.KC_PUBLICKEY | quote }}
+            - name: KC_REALM
+              value: {{ .Values.coms.env.KC_REALM | quote }}
+            - name: KC_SERVERURL
+              value: {{ .Values.coms.env.KC_SERVERURL | quote }}
+          ports:
+            - containerPort: {{ .Values.coms.service.port }}
+          readinessProbe:
+            httpGet:
+              path: /api/v1
+              port: {{ .Values.coms.service.port }}
+          livenessProbe:
+            httpGet:
+              path: /api/v1
+              port: {{ .Values.coms.service.port }}
+          resources:
+            {{- toYaml .Values.coms.resources | nindent 12 }}
+{{- end }}

@@ -12,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -761,4 +762,113 @@ class YieldTableTest {
 		assertThat(content, containsString("Mode"));
 		assertThat(content, containsString("Table Number: 2"));
 	}
+
+	static Stream<Arguments> yieldTableExecutionOptions() {
+		return Stream.of(
+				Arguments.of(
+						List.of(
+								Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES, //
+								Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER, //
+								Parameters.ExecutionOption.REPORT_INCLUDE_WHOLE_STEM_VOLUME, //
+								Parameters.ExecutionOption.REPORT_INCLUDE_CLOSE_UTILIZATION_VOLUME, //
+								Parameters.ExecutionOption.REPORT_INCLUDE_NET_DECAY_VOLUME, //
+								Parameters.ExecutionOption.REPORT_INCLUDE_ND_WASTE_VOLUME, //
+								Parameters.ExecutionOption.REPORT_INCLUDE_ND_WAST_BRKG_VOLUME, //
+								Parameters.ExecutionOption.REPORT_INCLUDE_CULMINATION_VALUES, //
+								Parameters.ExecutionOption.REPORT_INCLUDE_VOLUME_MAI,
+								Parameters.ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE
+						),
+						"My Testing VDYP Yield Table Report that is longer than 80 characters so that it will be wrapped in the output"
+				),
+				Arguments.of(
+						List.of(
+								Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS, //
+								Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER
+						), //
+						"My Testing VDYP Yield Table Report"
+				)
+		);
+	}
+
+	@ParameterizedTest
+	@MethodSource("yieldTableExecutionOptions")
+	void testMOFFullReportYieldTable(List<Parameters.ExecutionOption> options, String reportTitle)
+			throws AbstractProjectionRequestException, IOException {
+
+		var parameters = new Parameters();
+		for (var option : options) {
+			parameters.addSelectedExecutionOptionsItem(option);
+		}
+
+		parameters.setAgeStart(180);
+		parameters.setAgeEnd(217);
+		parameters.setReportTitle(
+				"My Testing VDYP Yield Table Report that is longer than 80 characters so that it will be wrapped in the output"
+		);
+		parameters.setOutputFormat(Parameters.OutputFormat.TEXT_REPORT);
+
+		var context = new ProjectionContext(ProjectionRequestKind.HCSV, TEST_PROJECTION_ID, parameters, false);
+
+		var polygonInputStream = TestUtils.makeInputStream(
+				//
+				POLYGON_CSV_HEADER_LINE,
+				"13919428,093C090,94833422,DQU,UNK,UNK,V,UNK,0.6,10,3,HE,35,8,,MS,14,50.0,1.000,NP,V,T,U,TC,SP,2013,2013,60.0,,,,,,,,,,TC,100,,,,"
+		);
+		var layersInputStream = TestUtils.makeInputStream(
+				//
+				LAYER_CSV_HEADER_LINE,
+				"13919428,14321066,093C090,94833422,1,P,,1,,,,20,10.000010,300,PLI,60.00,SX,40.00,,,,,,,,,180,18.00,180,23.00,,,,,,,,"
+		);
+
+		var polygonStream = new HcsvPolygonStream(context, polygonInputStream, layersInputStream);
+
+		var polygon = polygonStream.getNextPolygon();
+
+		Path resourceFolderPath;
+		var yieldTable = YieldTable.of(context);
+		try {
+			yieldTable.startGeneration();
+
+			var state = new PolygonProjectionState();
+			state.setProcessingResults(ProjectionStageCode.Initial, ProjectionTypeCode.PRIMARY, Optional.empty());
+			state.setProcessingResults(ProjectionStageCode.Forward, ProjectionTypeCode.PRIMARY, Optional.empty());
+
+			var vdypPolygonStreamFile = testHelper.getResourceFile(relativeResourcePath, "vp_grow.dat");
+			var vdypPolygonStream = Files.newInputStream(vdypPolygonStreamFile);
+			var vdypSpeciesStreamFile = testHelper.getResourceFile(relativeResourcePath, "vs_grow.dat");
+			var vdypSpeciesStream = Files.newInputStream(vdypSpeciesStreamFile);
+			var vdypUtilizationsStreamFile = testHelper.getResourceFile(relativeResourcePath, "vu_grow.dat");
+			var vdypUtilizationsStream = Files.newInputStream(vdypUtilizationsStreamFile);
+
+			ProjectionResultsReader forwardReader = new TestProjectionResultsReader(
+					testHelper, vdypPolygonStream, vdypSpeciesStream, vdypUtilizationsStream
+			);
+			ProjectionResultsReader backReader = new NullProjectionResultsReader();
+
+			var projectionResults = ProjectionResultsBuilder
+					.read(polygon, state, ProjectionTypeCode.PRIMARY, forwardReader, backReader);
+			for (var layerReportingInfo : polygon.getReportingInfo().getLayerReportingInfos().values()) {
+				var layer = layerReportingInfo.getLayer();
+				if (state.layerWasProjected(layer)) {
+					yieldTable.generateCfsBiomassTableForPolygonLayer(
+							polygon, projectionResults, state, layerReportingInfo, true
+					);
+				}
+			}
+		} finally {
+			yieldTable.endGeneration();
+			yieldTable.close();
+		}
+
+		var content = new String(yieldTable.getAsStream().readAllBytes());
+
+		assertThat(content.length(), greaterThan(0));
+		assertThat(content, containsString("VDYP Yield Table Report"));
+		assertThat(content, containsString("My Testing VDYP Yield Table Report"));
+		assertThat(content, containsString("TABLE PROPERTIES..."));
+		assertThat(content, containsString("Species Parameters..."));
+		assertThat(content, containsString("Site Index Curves Used..."));
+		assertThat(content, containsString("Additional Stand Attributes:"));
+	}
+
 }

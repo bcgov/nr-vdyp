@@ -9,6 +9,7 @@ import org.apache.commons.lang3.Validate;
 
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.YieldTableGenerationException;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
+import ca.bc.gov.nrs.vdyp.ecore.projection.PolygonProjectionState;
 import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionContext;
 import ca.bc.gov.nrs.vdyp.ecore.projection.ValidatedParameters;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.LayerReportingInfo;
@@ -230,6 +231,19 @@ abstract class YieldTableWriter<T extends YieldTableRowBean> implements Closeabl
 		);
 	}
 
+	protected void recordDominantSpeciesByAge(int age, String speciesCode) {
+		// Only required for Specific Yield Table output
+	}
+
+	protected void recordPolygonProjectionState(PolygonProjectionState state) {
+		// Only required for Specific Yield Table output
+	}
+
+	protected void recordCulminationValues(int age, EntityVolumeDetails entityVolumeDetails) {
+		// Only required for Specific Yield Table output
+
+	}
+
 	void recordMode(String projectionMode) {
 		currentRecord.setMode(projectionMode);
 	}
@@ -340,8 +354,6 @@ abstract class YieldTableWriter<T extends YieldTableRowBean> implements Closeabl
 	}
 
 	protected abstract void writeRecord(YieldTableRowContext rowContext) throws YieldTableGenerationException;
-
-	protected abstract void writeProjectionGrowthInfo() throws YieldTableGenerationException;
 
 	/**
 	 * Write the per-polygon yield table trailer into the output stream. This is a default method that does nothing, the

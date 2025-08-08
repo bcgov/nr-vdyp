@@ -363,6 +363,10 @@ public class Polygon implements Comparable<Polygon> {
 		return wereLayerAdjustmentsSupplied;
 	}
 
+	public Layer getLayerById(String layerId) {
+		return layers.getOrDefault(layerId, null);
+	}
+
 	public Map<String, Layer> getLayers() {
 		return layers;
 	}

@@ -190,4 +190,5 @@ interface YieldTableRowBean {
 	void setTableNumber(int tableNumber);
 
 	String getTableNumber();
+
 }

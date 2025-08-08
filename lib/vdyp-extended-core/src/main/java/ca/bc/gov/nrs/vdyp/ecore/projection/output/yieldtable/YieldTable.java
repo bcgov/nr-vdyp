@@ -175,6 +175,28 @@ public class YieldTable implements Closeable {
 			Polygon polygon, Map<Integer, VdypPolygon> projectionResults, PolygonProjectionState state,
 			LayerReportingInfo layerReportingInfo, boolean doGenerateDetailedTableHeader
 	) throws YieldTableGenerationException {
+		writer.recordPolygonProjectionState(state);
+
+		if (context.getParams().containsOption(ExecutionOption.REPORT_INCLUDE_CULMINATION_VALUES)) {
+			YieldTableRowIterator culminationIterator = new YieldTableRowIterator(
+					context, polygon, state, layerReportingInfo, 1
+			);
+			while (culminationIterator.hasNext()) {
+
+				YieldTableRowContext rowContext = culminationIterator.next();
+				if (rowIsToBeGenerated(rowContext)) {
+					try {
+						EntityVolumeDetails volume = getProjectedLayerStandVolumes(
+								rowContext, projectionResults, layerReportingInfo.getLayer(),
+								rowContext.getCurrentTableAge()
+						);
+						writer.recordCulminationValues(rowContext.getCurrentTableAge(), volume);
+					} catch (Exception ex) {
+					}
+				}
+			}
+		}
+
 		writer.writePolygonTableHeader(
 				polygon, Optional.ofNullable(layerReportingInfo), doGenerateDetailedTableHeader, nextYieldTableNumber
 		);
@@ -215,6 +237,7 @@ public class YieldTable implements Closeable {
 		case DCSV -> DCSVYieldTableWriter.of(context);
 		case PLOTSY -> PLOTSYYieldTableWriter.of(context);
 		case YIELD_TABLE -> TextYieldTableWriter.of(context);
+		case TEXT_REPORT -> FullReportYieldTableWriter.of(context);
 		default -> throw new IllegalStateException("Unrecognized output format " + outputFormat);
 		};
 
@@ -431,18 +454,18 @@ public class YieldTable implements Closeable {
 					dominantHeight = layer.determineLeadingSiteSpeciesHeight(targetAge);
 				}
 
-				if (!writer.isCurrentlyWritingCategory(Category.CFSBIOMASS)) {
-					writer.recordSiteInformation(
-							percentStockable, growthDetails != null ? growthDetails.siteIndex() : null, dominantHeight,
-							secondaryHeight
-					);
-				}
+				// if (!writer.isCurrentlyWritingCategory(Category.CFSBIOMASS)) {
+				writer.recordSiteInformation(
+						percentStockable, growthDetails != null ? growthDetails.siteIndex() : null, dominantHeight,
+						secondaryHeight
+				);
+				// }
 
 				if (growthDetails != null && volumeDetails != null) {
 
-					if (!writer.isCurrentlyWritingCategory(Category.CFSBIOMASS)) {
-						writer.recordGrowthDetails(growthDetails, volumeDetails);
-					}
+					// if (!writer.isCurrentlyWritingCategory(Category.CFSBIOMASS)) {
+					writer.recordGrowthDetails(growthDetails, volumeDetails);
+					// }
 					if (!rowContext.isPolygonTable()) {
 						if (rowContext.getPolygonProjectionState().getFirstYearYieldsDisplayed(layer) == null
 								&& growthDetails.basalArea() != null) {
@@ -505,6 +528,35 @@ public class YieldTable implements Closeable {
 					}
 
 					writer.recordMode(projectionMode);
+				}
+
+				// if the format is text report we need to record the dominant species at this age for the Site Curve
+				// table from the report
+				if (context.getParams().getOutputFormat() == OutputFormat.TEXT_REPORT) {
+					String dominantSpeciesCode = null;
+					Layer primaryLayer = polygon.findPrimaryLayerByProjectionType(ProjectionTypeCode.UNKNOWN);
+					if (primaryLayer != null
+							&& rowContext.getPolygonProjectionState().layerWasProjected(primaryLayer)) {
+						// look through the sp0s as supplied until you find the dominant one, then record the sp0 code
+						// to the writer
+						// this is to replace the overkill from V7Ext_GetProjectedLayerGroupGrowthInfo which is only
+						// used for WinVDYP7 to determine the dominant species at any given age increment
+						// calling obtain stand yield is slight overkill here but it is the least code duplication
+						// there is a fiar bit of boiler plate to access a specifics stand information
+						for (Stand sp0 : primaryLayer.getSp0sAsSupplied()) {
+							LayerYields yield = obtainStandYield(
+									rowContext, polygonProjectionsByYear, primaryLayer, sp0,
+									rowContext.getCurrentTableAge()
+							);
+							if (yield.bYieldsPredicted() && yield.isDominantSp0()) {
+								dominantSpeciesCode = yield.sp0Name();
+								break; // exit at the first dominant species found
+							}
+						}
+					}
+					if (dominantSpeciesCode != null) {
+						writer.recordDominantSpeciesByAge(rowContext.getCurrentTableAge(), dominantSpeciesCode);
+					}
 				}
 			} catch (StandYieldCalculationException e) {
 				logger.warn(

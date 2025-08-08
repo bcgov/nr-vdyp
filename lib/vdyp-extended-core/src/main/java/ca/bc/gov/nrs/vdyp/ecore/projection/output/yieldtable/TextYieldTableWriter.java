@@ -187,7 +187,6 @@ class TextYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean>
 		}
 	}
 
-	@Override
 	protected void writeProjectionGrowthInfo() throws YieldTableGenerationException {
 		if (currentRecord.getPercentStockable() != null)
 			doWrite("%5.1f ", Double.parseDouble(currentRecord.getPercentStockable()));

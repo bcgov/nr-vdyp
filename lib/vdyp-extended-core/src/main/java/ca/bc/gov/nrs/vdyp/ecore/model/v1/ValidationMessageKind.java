@@ -12,7 +12,7 @@ public enum ValidationMessageKind {
 	EXPECTED_STREAMS_NOT_SUPPLIED("The following input file types were not supplied: {0}"),
 	INTEGER_VALUE_TOO_HIGH("Field \"{1}\"''s value \"{0}\" is above the maximum value \"{2}\""),
 	INTEGER_VALUE_TOO_LOW("Field \"{1}\"''s value \"{0}\" is below the minimum value \"{2}\""),
-	INVALID_CFS_BIOMASS_OUTPUT_FORMAT("CFS Biomass output is only supported for {0} and {1} output formats"),
+	INVALID_CFS_BIOMASS_OUTPUT_FORMAT("CFS Biomass output is only supported for {0}, {1}, and {2} output formats"),
 	INVALID_CODE("Polygon {0}: field \"{1}\" value \"{2}\" is not a recognized value for this code"),
 	INVALID_METADATA_TO_OUTPUT_VALUE("{0} is not a recognized metadata-to-output value"),
 	INVALID_PROCESS_FREQUENCY_VALUE("{0} is not a recognized progress-frequency value"),
