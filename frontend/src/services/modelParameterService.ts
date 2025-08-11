@@ -11,7 +11,7 @@ import { projectionHcsvPost } from '@/services/apiActions'
 import type { CSVRowType } from '@/types/types'
 import type { SpeciesGroup } from '@/interfaces/interfaces'
 import type { UtilizationParameter } from '@/services/vdyp-api/models/utilization-parameter'
-import { isBlank } from '@/utils/util'
+import { isBlank, addExecutionOptionsFromMappings } from '@/utils/util'
 
 /**
  * Generates a unique 9-digit or 10-digit feature ID using the current timestamp and random values.
@@ -30,7 +30,10 @@ export const generateFeatureId = (): number => {
  * @param maxDigits Maximum number of digits (inclusive).
  * @returns A random number as a string.
  */
-const generateRandomNumber = (minDigits: number, maxDigits: number): string => {
+export const generateRandomNumber = (
+  minDigits: number,
+  maxDigits: number,
+): string => {
   if (minDigits > maxDigits) {
     throw new Error('minDigits must be less than or equal to maxDigits')
   }
@@ -316,7 +319,7 @@ const createLayerData = (
     polygonNumber, // POLYGON_NUMBER
     BIZCONSTANTS.LAYER_LEVEL_CD, // LAYER_LEVEL_CODE
     BIZCONSTANTS.VDYP7_LAYER_CD, // VDYP7_LAYER_CD
-    '', // LAYER_STOCKABILITY
+    modelParameterStore.percentStockableArea ?? '', // LAYER_STOCKABILITY
     BIZCONSTANTS.FOREST_COVER_RANK_CD, // FOREST_COVER_RANK_CODE
     '', // NON_FOREST_DESCRIPTOR_CODE
     modelParameterStore.highestPercentSpecies, // EST_SITE_INDEX_SPECIES_CD
@@ -413,49 +416,66 @@ const buildExecutionOptions = (
     ExecutionOptionsEnum.DoDelayExecutionFolderDeletion,
   ]
 
-  if (modelParameterStore.projectionType === CONSTANTS.PROJECTION_TYPE.VOLUME) {
-    selectedExecutionOptions.push(
-      ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes,
-    )
-  } else {
-    excludedExecutionOptions.push(
-      ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes,
-    )
-  }
+  const optionMappings = [
+    {
+      flag:
+        modelParameterStore.projectionType === CONSTANTS.PROJECTION_TYPE.VOLUME,
+      option: ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes,
+    },
+    {
+      flag:
+        modelParameterStore.projectionType ===
+        CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS,
+      option: ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass,
+    },
+    {
+      flag: modelParameterStore.isForwardGrowEnabled,
+      option: ExecutionOptionsEnum.ForwardGrowEnabled,
+    },
+    {
+      flag: modelParameterStore.isBackwardGrowEnabled,
+      option: ExecutionOptionsEnum.BackGrowEnabled,
+    },
+    {
+      flag: modelParameterStore.incSecondaryHeight,
+      option:
+        ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
+    },
+    {
+      flag: modelParameterStore.isWholeStemEnabled,
+      option: ExecutionOptionsEnum.ReportIncludeWholeStemVolume,
+    },
+    {
+      flag: modelParameterStore.isCloseUtilEnabled,
+      option: ExecutionOptionsEnum.ReportIncludeCloseUtilizationVolume,
+    },
+    {
+      flag: modelParameterStore.isNetDecayEnabled,
+      option: ExecutionOptionsEnum.ReportIncludeNetDecayVolume,
+    },
+    {
+      flag: modelParameterStore.isNetDecayWasteEnabled,
+      option: ExecutionOptionsEnum.ReportIncludeNDWasteVolume,
+    },
+    {
+      flag: modelParameterStore.isNetDecayWasteBreakageEnabled,
+      option: ExecutionOptionsEnum.ReportIncludeNDWasteBrkgVolume,
+    },
+    {
+      flag: modelParameterStore.isComputedMAIEnabled,
+      option: ExecutionOptionsEnum.ReportIncludeVolumeMAI,
+    },
+    {
+      flag: modelParameterStore.isCulminationValuesEnabled,
+      option: ExecutionOptionsEnum.ReportIncludeCulminationValues,
+    },
+  ]
 
-  if (
-    modelParameterStore.projectionType === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
-  ) {
-    selectedExecutionOptions.push(
-      ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass,
-    )
-  } else {
-    excludedExecutionOptions.push(
-      ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass,
-    )
-  }
-
-  if (modelParameterStore.incSecondaryHeight) {
-    selectedExecutionOptions.push(
-      ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
-    )
-  } else {
-    excludedExecutionOptions.push(
-      ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
-    )
-  }
-
-  if (modelParameterStore.isForwardGrowEnabled) {
-    selectedExecutionOptions.push(ExecutionOptionsEnum.ForwardGrowEnabled)
-  } else {
-    excludedExecutionOptions.push(ExecutionOptionsEnum.ForwardGrowEnabled)
-  }
-
-  if (modelParameterStore.isBackwardGrowEnabled) {
-    selectedExecutionOptions.push(ExecutionOptionsEnum.BackGrowEnabled)
-  } else {
-    excludedExecutionOptions.push(ExecutionOptionsEnum.BackGrowEnabled)
-  }
+  addExecutionOptionsFromMappings(
+    selectedExecutionOptions,
+    excludedExecutionOptions,
+    optionMappings,
+  )
 
   return { selectedExecutionOptions, excludedExecutionOptions }
 }
@@ -520,7 +540,8 @@ export const runModel = async (
       modelParameterStore.selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.YEAR
         ? modelParameterStore.endYear
         : null,
-    outputFormat: OutputFormatEnum.CSVYieldTable, // TODO - All of new parameter will only work for new outputFormat TextReport (see VDYP-695 comment)
+    reportTitle: modelParameterStore.reportTitle,
+    outputFormat: OutputFormatEnum.TextReport,
     selectedExecutionOptions: selectedExecutionOptions,
     excludedExecutionOptions: excludedExecutionOptions,
     selectedDebugOptions: selectedDebugOptions,

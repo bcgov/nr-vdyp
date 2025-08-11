@@ -15,7 +15,7 @@ const meta: Meta<typeof ReportingContainer> = {
       const projectionStore = useProjectionStore()
       projectionStore.loadSampleData().then(() => {
         console.log('Sample data loaded:', {
-          MODEL_REPORT: projectionStore.yieldTableArray,
+          MODEL_REPORT: projectionStore.csvYieldLines,
           VIEW_ERR_MSG: projectionStore.errorMessages,
           VIEW_LOG_FILE: projectionStore.logMessages,
         })
