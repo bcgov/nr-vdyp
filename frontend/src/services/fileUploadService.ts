@@ -10,6 +10,7 @@ import {
   type Parameters,
 } from '@/services/vdyp-api'
 import { projectionHcsvPost } from '@/services/apiActions'
+import { addExecutionOptionsFromMappings } from '@/utils/util'
 
 /**
  * Builds an array of selected and excluded execution options based on the file upload store.
@@ -50,105 +51,62 @@ export const buildExecutionOptions = (
     ExecutionOptionsEnum.ReportIncludeCulminationValues,
   ]
 
-  if (fileUploadStore.projectionType === CONSTANTS.PROJECTION_TYPE.VOLUME) {
-    selectedExecutionOptions.push(
-      ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes,
-    )
-  } else {
-    excludedExecutionOptions.push(
-      ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes,
-    )
-  }
+  const optionMappings = [
+    {
+      flag: fileUploadStore.projectionType === CONSTANTS.PROJECTION_TYPE.VOLUME,
+      option: ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes,
+    },
+    {
+      flag:
+        fileUploadStore.projectionType ===
+        CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS,
+      option: ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass,
+    },
+    {
+      flag: fileUploadStore.isForwardGrowEnabled,
+      option: ExecutionOptionsEnum.ForwardGrowEnabled,
+    },
+    {
+      flag: fileUploadStore.isBackwardGrowEnabled,
+      option: ExecutionOptionsEnum.BackGrowEnabled,
+    },
+    //
+    {
+      flag: fileUploadStore.isByLayerEnabled,
+      option: ExecutionOptionsEnum.DoSummarizeProjectionByLayer,
+    },
+    {
+      flag: !fileUploadStore.isByLayerEnabled,
+      option: ExecutionOptionsEnum.DoSummarizeProjectionByPolygon,
+    },
+    {
+      flag: fileUploadStore.isProjectionModeEnabled,
+      option: ExecutionOptionsEnum.DoIncludeProjectionModeInYieldTable,
+    },
+    {
+      flag: fileUploadStore.isPolygonIDEnabled,
+      option: ExecutionOptionsEnum.DoIncludePolygonRecordIdInYieldTable,
+    },
+    {
+      flag: fileUploadStore.isCurrentYearEnabled,
+      option: ExecutionOptionsEnum.DoForceCurrentYearInclusionInYieldTables,
+    },
+    {
+      flag: fileUploadStore.isReferenceYearEnabled,
+      option: ExecutionOptionsEnum.DoForceReferenceYearInclusionInYieldTables,
+    },
+    {
+      flag: fileUploadStore.incSecondaryHeight,
+      option:
+        ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
+    },
+  ]
 
-  if (
-    fileUploadStore.projectionType === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
-  ) {
-    selectedExecutionOptions.push(
-      ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass,
-    )
-  } else {
-    excludedExecutionOptions.push(
-      ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass,
-    )
-  }
-
-  if (fileUploadStore.isForwardGrowEnabled) {
-    selectedExecutionOptions.push(ExecutionOptionsEnum.ForwardGrowEnabled)
-  } else {
-    excludedExecutionOptions.push(ExecutionOptionsEnum.ForwardGrowEnabled)
-  }
-
-  if (fileUploadStore.isBackwardGrowEnabled) {
-    selectedExecutionOptions.push(ExecutionOptionsEnum.BackGrowEnabled)
-  } else {
-    excludedExecutionOptions.push(ExecutionOptionsEnum.BackGrowEnabled)
-  }
-
-  if (fileUploadStore.isByLayerEnabled) {
-    selectedExecutionOptions.push(
-      ExecutionOptionsEnum.DoSummarizeProjectionByLayer,
-    )
-    excludedExecutionOptions.push(
-      ExecutionOptionsEnum.DoSummarizeProjectionByPolygon,
-    )
-  } else {
-    selectedExecutionOptions.push(
-      ExecutionOptionsEnum.DoSummarizeProjectionByPolygon,
-    )
-    excludedExecutionOptions.push(
-      ExecutionOptionsEnum.DoSummarizeProjectionByLayer,
-    )
-  }
-
-  if (fileUploadStore.isProjectionModeEnabled) {
-    selectedExecutionOptions.push(
-      ExecutionOptionsEnum.DoIncludeProjectionModeInYieldTable,
-    )
-  } else {
-    excludedExecutionOptions.push(
-      ExecutionOptionsEnum.DoIncludeProjectionModeInYieldTable,
-    )
-  }
-
-  if (fileUploadStore.isPolygonIDEnabled) {
-    selectedExecutionOptions.push(
-      ExecutionOptionsEnum.DoIncludePolygonRecordIdInYieldTable,
-    )
-  } else {
-    excludedExecutionOptions.push(
-      ExecutionOptionsEnum.DoIncludePolygonRecordIdInYieldTable,
-    )
-  }
-
-  if (fileUploadStore.isCurrentYearEnabled) {
-    selectedExecutionOptions.push(
-      ExecutionOptionsEnum.DoForceCurrentYearInclusionInYieldTables,
-    )
-  } else {
-    excludedExecutionOptions.push(
-      ExecutionOptionsEnum.DoForceCurrentYearInclusionInYieldTables,
-    )
-  }
-
-  if (fileUploadStore.isReferenceYearEnabled) {
-    selectedExecutionOptions.push(
-      ExecutionOptionsEnum.DoForceReferenceYearInclusionInYieldTables,
-    )
-  } else {
-    excludedExecutionOptions.push(
-      ExecutionOptionsEnum.DoForceReferenceYearInclusionInYieldTables,
-    )
-  }
-
-  if (fileUploadStore.incSecondaryHeight) {
-    selectedExecutionOptions.push(
-      ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
-    )
-  } else {
-    excludedExecutionOptions.push(
-      ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
-    )
-  }
+  addExecutionOptionsFromMappings(
+    selectedExecutionOptions,
+    excludedExecutionOptions,
+    optionMappings,
+  )
 
   return { selectedExecutionOptions, excludedExecutionOptions }
 }

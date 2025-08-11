@@ -11,7 +11,7 @@ import { projectionHcsvPost } from '@/services/apiActions'
 import type { CSVRowType } from '@/types/types'
 import type { SpeciesGroup } from '@/interfaces/interfaces'
 import type { UtilizationParameter } from '@/services/vdyp-api/models/utilization-parameter'
-import { isBlank } from '@/utils/util'
+import { isBlank, addExecutionOptionsFromMappings } from '@/utils/util'
 
 /**
  * Generates a unique 9-digit or 10-digit feature ID using the current timestamp and random values.
@@ -416,115 +416,66 @@ const buildExecutionOptions = (
     ExecutionOptionsEnum.DoDelayExecutionFolderDeletion,
   ]
 
-  if (modelParameterStore.projectionType === CONSTANTS.PROJECTION_TYPE.VOLUME) {
-    selectedExecutionOptions.push(
-      ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes,
-    )
-  } else {
-    excludedExecutionOptions.push(
-      ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes,
-    )
-  }
+  const optionMappings = [
+    {
+      flag:
+        modelParameterStore.projectionType === CONSTANTS.PROJECTION_TYPE.VOLUME,
+      option: ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes,
+    },
+    {
+      flag:
+        modelParameterStore.projectionType ===
+        CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS,
+      option: ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass,
+    },
+    {
+      flag: modelParameterStore.isForwardGrowEnabled,
+      option: ExecutionOptionsEnum.ForwardGrowEnabled,
+    },
+    {
+      flag: modelParameterStore.isBackwardGrowEnabled,
+      option: ExecutionOptionsEnum.BackGrowEnabled,
+    },
+    {
+      flag: modelParameterStore.incSecondaryHeight,
+      option:
+        ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
+    },
+    {
+      flag: modelParameterStore.isWholeStemEnabled,
+      option: ExecutionOptionsEnum.ReportIncludeWholeStemVolume,
+    },
+    {
+      flag: modelParameterStore.isCloseUtilEnabled,
+      option: ExecutionOptionsEnum.ReportIncludeCloseUtilizationVolume,
+    },
+    {
+      flag: modelParameterStore.isNetDecayEnabled,
+      option: ExecutionOptionsEnum.ReportIncludeNetDecayVolume,
+    },
+    {
+      flag: modelParameterStore.isNetDecayWasteEnabled,
+      option: ExecutionOptionsEnum.ReportIncludeNDWasteVolume,
+    },
+    {
+      flag: modelParameterStore.isNetDecayWasteBreakageEnabled,
+      option: ExecutionOptionsEnum.ReportIncludeNDWasteBrkgVolume,
+    },
+    {
+      flag: modelParameterStore.isComputedMAIEnabled,
+      option: ExecutionOptionsEnum.ReportIncludeVolumeMAI,
+    },
+    {
+      flag: modelParameterStore.isCulminationValuesEnabled,
+      option: ExecutionOptionsEnum.ReportIncludeCulminationValues,
+    },
+  ]
 
-  if (
-    modelParameterStore.projectionType === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS
-  ) {
-    selectedExecutionOptions.push(
-      ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass,
-    )
-  } else {
-    excludedExecutionOptions.push(
-      ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass,
-    )
-  }
-
-  if (modelParameterStore.isForwardGrowEnabled) {
-    selectedExecutionOptions.push(ExecutionOptionsEnum.ForwardGrowEnabled)
-  } else {
-    excludedExecutionOptions.push(ExecutionOptionsEnum.ForwardGrowEnabled)
-  }
-
-  if (modelParameterStore.isBackwardGrowEnabled) {
-    selectedExecutionOptions.push(ExecutionOptionsEnum.BackGrowEnabled)
-  } else {
-    excludedExecutionOptions.push(ExecutionOptionsEnum.BackGrowEnabled)
-  }
-
-  if (modelParameterStore.incSecondaryHeight) {
-    selectedExecutionOptions.push(
-      ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
-    )
-  } else {
-    excludedExecutionOptions.push(
-      ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
-    )
-  }
-
-  if (modelParameterStore.isWholeStemEnabled) {
-    selectedExecutionOptions.push(
-      ExecutionOptionsEnum.ReportIncludeWholeStemVolume,
-    )
-  } else {
-    excludedExecutionOptions.push(
-      ExecutionOptionsEnum.ReportIncludeWholeStemVolume,
-    )
-  }
-
-  if (modelParameterStore.isCloseUtilEnabled) {
-    selectedExecutionOptions.push(
-      ExecutionOptionsEnum.ReportIncludeCloseUtilizationVolume,
-    )
-  } else {
-    excludedExecutionOptions.push(
-      ExecutionOptionsEnum.ReportIncludeCloseUtilizationVolume,
-    )
-  }
-
-  if (modelParameterStore.isNetDecayEnabled) {
-    selectedExecutionOptions.push(
-      ExecutionOptionsEnum.ReportIncludeNetDecayVolume,
-    )
-  } else {
-    excludedExecutionOptions.push(
-      ExecutionOptionsEnum.ReportIncludeNetDecayVolume,
-    )
-  }
-
-  if (modelParameterStore.isNetDecayWasteEnabled) {
-    selectedExecutionOptions.push(
-      ExecutionOptionsEnum.ReportIncludeNDWasteVolume,
-    )
-  } else {
-    excludedExecutionOptions.push(
-      ExecutionOptionsEnum.ReportIncludeNDWasteVolume,
-    )
-  }
-
-  if (modelParameterStore.isNetDecayWasteBreakageEnabled) {
-    selectedExecutionOptions.push(
-      ExecutionOptionsEnum.ReportIncludeNDWasteBrkgVolume,
-    )
-  } else {
-    excludedExecutionOptions.push(
-      ExecutionOptionsEnum.ReportIncludeNDWasteBrkgVolume,
-    )
-  }
-
-  if (modelParameterStore.isComputedMAIEnabled) {
-    selectedExecutionOptions.push(ExecutionOptionsEnum.ReportIncludeVolumeMAI)
-  } else {
-    excludedExecutionOptions.push(ExecutionOptionsEnum.ReportIncludeVolumeMAI)
-  }
-
-  if (modelParameterStore.isCulminationValuesEnabled) {
-    selectedExecutionOptions.push(
-      ExecutionOptionsEnum.ReportIncludeCulminationValues,
-    )
-  } else {
-    excludedExecutionOptions.push(
-      ExecutionOptionsEnum.ReportIncludeCulminationValues,
-    )
-  }
+  addExecutionOptionsFromMappings(
+    selectedExecutionOptions,
+    excludedExecutionOptions,
+    optionMappings,
+  )
 
   return { selectedExecutionOptions, excludedExecutionOptions }
 }
