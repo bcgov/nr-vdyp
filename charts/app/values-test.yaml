@@ -324,3 +324,43 @@ backup:
         requests:
           cpu: 20m
           memory: 128Mi
+coms:
+  enabled: true
+  image:
+    repository: ghcr.io/bcgov/common-object-management-service
+    tag: ~
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 150Mi
+    limits:
+      cpu: 250m
+      memory: 250Mi
+  service:
+    port: 3000
+  route:
+    enabled: true
+    tls: edge
+  env:
+    OBJECTSTORAGE_ENABLED: ~
+    OBJECTSTORAGE_ACCESSKEYID: ~
+    OBJECTSTORAGE_SECRETACCESSKEY: ~
+    OBJECTSTORAGE_BUCKET: ~
+    OBJECTSTORAGE_ENDPOINT: ~
+    OBJECTSTORAGE_KEY: ~
+    S3ACCESSMODE_ENABLED: ~
+    BASICAUTH_ENABLED: ~
+    BASICAUTH_USERNAME: ~
+    BASICAUTH_PASSWORD: ~
+    DB_HOST: ~
+    DB_PORT: "5432"
+    DB_USERNAME: ~
+    DB_PASSWORD: ~
+    DB_DATABASE: ~
+
+  batch:
+    enabled: true
+    env:
+      BATCH_DB_USER: ~
+      BATCH_DB_DATABASE: ~
