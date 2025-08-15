@@ -16,11 +16,17 @@ global:
     databasePassword: ~
     databaseUser: ~
     databaseName: ~
+    COMS_DB_PASSWORD: ~
+    VDYP_DB_PASSWORD: ~
+    BATCH_DB_PASSWORD: ~
     persist: true
   #-- domain of the application, it is required, apps.silver.devops.gov.bc.ca for silver cluster and apps.devops.gov.bc.ca for gold cluster
   domain: "apps.silver.devops.gov.bc.ca" # it is apps.gold.devops.gov.bc.ca for gold cluster
   #-- the database Alias gives a nice way to switch to different databases, crunchy, patroni ... etc.
   databaseAlias: bitnami-pg
+  postgresql:
+    auth:
+      password: unused
 #-- the components of the application, backend.
 backend:
   #-- enable or disable backend
@@ -127,15 +133,15 @@ crunchy: # enable it for TEST and PROD, for PR based pipelines simply use single
   crunchyImage: artifacts.developer.gov.bc.ca/bcgov-docker-local/crunchy-postgres-gis:ubi8-15.2-3.3-0
 
   postgresVersion: 15
-  postGISVersion: "3.3"
+  postGISVersion: '3.3'
   imagePullPolicy: Always
   instances:
     name: ha # high availability
     replicas: 1 # 2 or 3 for high availability in TEST and PROD.
     metadata:
       annotations:
-        prometheus.io/scrape: "true"
-        prometheus.io/port: "9187"
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '9187'
     dataVolumeClaimSpec:
       storage: 120Mi
       storageClassName: netapp-block-standard
@@ -223,15 +229,15 @@ bitnami-pg:
     repository: bcgov/nr-containers/bitnami/postgresql
     tag: 15.8.0
   auth:
-    existingSecret: "{{ .Release.Name }}"
-    username: "quickstart"
-    database: quickstart
+    existingSecret: '{{ .Release.Name }}'
+    username: ~
+    database: ~
   shmVolume:
     enabled: false
   backup:
     enabled: false
     cronjob:
-      containerSecurityContext: {}
+      containerSecurityContext: { }
       podSecurityContext:
         enabled: false
       storage:
@@ -248,10 +254,7 @@ bitnami-pg:
     podSecurityContext:
       enabled: false
     initdb:
-      scripts: # remove the below script, if POSTGIS is not required.
-        postgis.sh: |
-          #!/bin/sh
-          PGPASSWORD=$POSTGRES_PASSWORD psql -U postgres -d postgres -c "CREATE EXTENSION postgis;"
+      scriptsSecret: '{{ .Release.Name }}-initdb-scripts'
     resources:
       requests:
         cpu: 50m
@@ -281,8 +284,8 @@ backup:
     startingDeadlineSeconds: 3600
   containers:
     - name: backup
-      registry: "docker.io"
-      repository: "bcgovimages" # example, it includes registry and repository
+      registry: 'docker.io'
+      repository: 'bcgovimages' # example, it includes registry and repository
       image: backup-container # the exact component name, be it backend, api-1 etc...
       tag: latest # the tag of the image, it can be latest, 1.0.0 etc..., or the sha256 hash
       command:
@@ -299,15 +302,15 @@ backup:
           - name: BACKUP_STRATEGY
             value: "rolling"
           - name: NUM_BACKUPS
-            value: "5"
+            value: '5'
           - name: DAILY_BACKUPS
-            value: "7"
+            value: '7'
           - name: WEEKLY_BACKUPS
-            value: "4"
+            value: '4'
           - name: MONTHLY_BACKUPS
-            value: "1"
+            value: '1'
           - name: DATABASE_SERVICE_NAME # depends on which chart being used, adjust accordingly.
-            value: "{{.Release.Name}}-{{.Values.global.databaseAlias}}"
+            value: '{{.Release.Name}}-{{.Values.global.databaseAlias}}'
           - name: DEFAULT_PORT
             value: "5432"
         fromGlobalSecret:
@@ -324,3 +327,43 @@ backup:
         requests:
           cpu: 20m
           memory: 128Mi
+coms:
+  enabled: true
+  image:
+    repository: ghcr.io/bcgov/common-object-management-service
+    tag: ~
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 150Mi
+    limits:
+      cpu: 250m
+      memory: 250Mi
+  service:
+    port: 3000
+  route:
+    enabled: true
+    tls: edge
+  env:
+    OBJECTSTORAGE_ENABLED: ~
+    OBJECTSTORAGE_ACCESSKEYID: ~
+    OBJECTSTORAGE_SECRETACCESSKEY: ~
+    OBJECTSTORAGE_BUCKET: ~
+    OBJECTSTORAGE_ENDPOINT: ~
+    OBJECTSTORAGE_KEY: ~
+    S3ACCESSMODE_ENABLED: ~
+    BASICAUTH_ENABLED: ~
+    BASICAUTH_USERNAME: ~
+    BASICAUTH_PASSWORD: ~
+    DB_HOST: ~
+    DB_PORT: "5432"
+    DB_USERNAME: ~
+    DB_PASSWORD: ~
+    DB_DATABASE: ~
+
+  batch:
+    enabled: true
+    env:
+      BATCH_DB_USER: ~
+      BATCH_DB_DATABASE: ~

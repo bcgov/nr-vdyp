@@ -160,9 +160,9 @@ jobs:
             --set-string coms.env.OBJECTSTORAGE_ENABLED=true \
             --set-string coms.env.OBJECTSTORAGE_ACCESSKEYID=todo \
             --set-string coms.env.OBJECTSTORAGE_SECRETACCESSKEY=todo \
-            --set-string coms.env.OBJECTSTORAGE_BUCKET=todo \
-            --set-string coms.env.OBJECTSTORAGE_ENDPOINT=todo \
-            --set-string coms.env.OBJECTSTORAGE_KEY=${{ secrets.OBJECTSTORAGE_KEY }} \
+            --set-string coms.env.OBJECTSTORAGE_BUCKET=${{ vars.OBJECTSTORAGE_BUCKET }} \
+            --set-string coms.env.OBJECTSTORAGE_ENDPOINT=${{ vars.OBJECTSTORAGE_ENDPOINT }} \
+            --set-string coms.env.OBJECTSTORAGE_KEY=${{ vars.OBJECTSTORAGE_KEY }} \
             --set-string coms.env.S3ACCESSMODE_ENABLES=true \
             --set-string coms.env.BASICAUTH_ENABLED=true \
             --set-string coms.env.BASICAUTH_USERNAME=${{ secrets.COMS_SERVICE_USERNAME }} \
