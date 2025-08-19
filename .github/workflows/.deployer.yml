@@ -158,8 +158,8 @@ jobs:
             --set coms.env.DB_DATABASE=${{ vars.COMS_DB_DATABASE }} \
             --set-string coms.image.tag=${{ vars.COMS_TAG }} \
             --set-string coms.env.OBJECTSTORAGE_ENABLED=true \
-            --set-string coms.env.OBJECTSTORAGE_ACCESSKEYID=todo \
-            --set-string coms.env.OBJECTSTORAGE_SECRETACCESSKEY=todo \
+            --set-string coms.env.OBJECTSTORAGE_ACCESSKEYID=${{ vars.OBJECTSTORAGE_ACCESSKEYID }} \
+            --set-string coms.env.OBJECTSTORAGE_SECRETACCESSKEY=${{ secrets.OBJECTSTORAGE_SECRETACCESSKEY }} \
             --set-string coms.env.OBJECTSTORAGE_BUCKET=${{ vars.OBJECTSTORAGE_BUCKET }} \
             --set-string coms.env.OBJECTSTORAGE_ENDPOINT=${{ vars.OBJECTSTORAGE_ENDPOINT }} \
             --set-string coms.env.OBJECTSTORAGE_KEY=${{ vars.OBJECTSTORAGE_KEY }} \
