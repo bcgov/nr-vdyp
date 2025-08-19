@@ -1,0 +1,33 @@
+version: "3.9"
+services:
+  postgres:
+    image: postgres:16
+    container_name: dbtest-postgres
+    environment:
+      POSTGRES_USER: tester
+      POSTGRES_PASSWORD: testerpw
+      POSTGRES_DB: appdb
+    ports:
+      - "5432:5432"
+    volumes:
+      # Anything in this folder is executed ONCE on first startup
+      - ./ddl:/docker-entrypoint-initdb.d:ro
+      # Persist data between runs; delete this to reset
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tester -d appdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  adminer:
+    image: adminer
+    container_name: dbtest-adminer
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:

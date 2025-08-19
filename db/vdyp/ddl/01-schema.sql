@@ -1,0 +1,1 @@
+CREATE SCHEMA IF NOT EXISTS app_nrs_vdyp;
