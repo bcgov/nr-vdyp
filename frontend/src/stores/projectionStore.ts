@@ -3,18 +3,27 @@ import { ref } from 'vue'
 import JSZip from 'jszip'
 import { messageResult } from '@/utils/messageHandler'
 import { CONSTANTS, MESSAGE } from '@/constants'
+import { useAppStore } from '@/stores/appStore'
 
 export const useProjectionStore = defineStore('projectionStore', () => {
   const errorMessages = ref<string[]>([])
   const logMessages = ref<string[]>([])
   const debugMessages = ref<string[]>([])
-  const yieldTable = ref<string>('') // raw CSV
-  const yieldTableArray = ref<string[]>([]) // Array of CSV lines
+  const rawYieldData = ref<string>('')
+  const csvYieldLines = ref<string[]>([])
+  const txtYieldLines = ref<string[]>([])
   const rawResultZipFile = ref<Blob | null>(null) // zip file
   const rawResultZipFileName = ref<string>('')
 
   const handleZipResponse = async (zipFile: Blob, zipFileName: string) => {
     try {
+      errorMessages.value = []
+      logMessages.value = []
+      debugMessages.value = []
+      rawYieldData.value = ''
+      csvYieldLines.value = []
+      txtYieldLines.value = []
+
       rawResultZipFile.value = zipFile
       rawResultZipFileName.value = zipFileName
 
@@ -26,12 +35,20 @@ export const useProjectionStore = defineStore('projectionStore', () => {
         console.log(`- ${relativePath}`)
       }
 
+      const appStore = useAppStore()
+      const yieldFileName =
+        appStore.modelSelection ===
+        CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS
+          ? CONSTANTS.FILE_NAME.YIELD_TABLE_TXT
+          : CONSTANTS.FILE_NAME.YIELD_TABLE_CSV
+
       const requiredFiles = {
         error: CONSTANTS.FILE_NAME.ERROR_TXT,
         log: CONSTANTS.FILE_NAME.LOG_TXT,
-        yield: CONSTANTS.FILE_NAME.YIELD_TABLE_CSV,
+        yield: yieldFileName,
       }
 
+      console.log(`yieldFileName:${yieldFileName}`)
       const errorFile = zip.file(requiredFiles.error)
       const logFile = zip.file(requiredFiles.log)
       const yieldFile = zip.file(requiredFiles.yield)
@@ -50,14 +67,19 @@ export const useProjectionStore = defineStore('projectionStore', () => {
 
       errorMessages.value = (await errorFile.async('string')).split(/\r?\n/)
       logMessages.value = (await logFile.async('string')).split(/\r?\n/)
-      yieldTable.value = await yieldFile.async('string')
+      rawYieldData.value = await yieldFile.async('string')
 
-      if (yieldTable.value) {
-        yieldTableArray.value = yieldTable.value
-          .split(/\r?\n/)
-          .filter((line) => line.trim() !== '') // Remove blank lines
-      } else {
-        yieldTableArray.value = []
+      if (rawYieldData.value) {
+        if (
+          appStore.modelSelection ===
+          CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS
+        ) {
+          txtYieldLines.value = rawYieldData.value.split(/\r?\n/)
+        } else {
+          csvYieldLines.value = rawYieldData.value
+            .split(/\r?\n/)
+            .filter((line) => line.trim() !== '') // Remove blank lines
+        }
       }
 
       // Optional
@@ -127,8 +149,9 @@ export const useProjectionStore = defineStore('projectionStore', () => {
     errorMessages,
     logMessages,
     debugMessages,
-    yieldTable,
-    yieldTableArray,
+    rawYieldData,
+    csvYieldLines,
+    txtYieldLines,
     rawResultZipFile,
     rawResultZipFileName,
     handleZipResponse,

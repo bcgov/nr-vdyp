@@ -1,6 +1,7 @@
 import type { NumStrNullType } from '@/types/types'
 import JSZip from 'jszip'
 import { CONSTANTS } from '@/constants'
+import { ExecutionOptionsEnum } from '@/services/vdyp-api'
 
 /**
  * Trims whitespace from a string value. Non-string values are returned unchanged.
@@ -451,4 +452,27 @@ export const sanitizeFileName = (name: string) => {
 
   // Combine sanitized base name with extension
   return sanitized + extension
+}
+
+/**
+ * Adds execution options to selected or excluded arrays based on flag mappings.
+ *
+ * @param selected - Array for selected options.
+ * @param excluded - Array for excluded options.
+ * @param mappings - Array of { flag: boolean, option: ExecutionOptionsEnum } mappings.
+ * @example
+ * addExecutionOptionsFromMappings(selectedOptions, excludedOptions, [{ flag: true, option: ExecutionOptionsEnum.SomeOption }])
+ */
+export const addExecutionOptionsFromMappings = (
+  selected: ExecutionOptionsEnum[],
+  excluded: ExecutionOptionsEnum[],
+  mappings: { flag: boolean; option: ExecutionOptionsEnum }[],
+) => {
+  mappings.forEach(({ flag, option }) => {
+    if (flag) {
+      selected.push(option)
+    } else {
+      excluded.push(option)
+    }
+  })
 }

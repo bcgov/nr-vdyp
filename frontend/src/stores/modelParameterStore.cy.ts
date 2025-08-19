@@ -48,7 +48,6 @@ describe('ModelParameterStore Unit Tests', () => {
     expect(store.totalSpeciesGroupPercent).to.equal(0)
     expect(store.becZone).to.be.null
     expect(store.ecoZone).to.be.null
-    expect(store.incSecondaryHeight).to.be.false
     expect(store.siteSpeciesValues).to.be.null
     expect(store.ageType).to.be.null
     expect(store.spzAge).to.be.null
@@ -69,6 +68,21 @@ describe('ModelParameterStore Unit Tests', () => {
     expect(store.yearIncrement).to.be.null
     expect(store.isForwardGrowEnabled).to.be.true
     expect(store.isBackwardGrowEnabled).to.be.true
+    expect(store.isWholeStemEnabled).to.be.true
+    expect(store.isCloseUtilEnabled).to.be.false
+    expect(store.isNetDecayEnabled).to.be.false
+    expect(store.isNetDecayWasteEnabled).to.be.false
+    expect(store.isNetDecayWasteBreakageEnabled).to.be.false
+    expect(store.isComputedMAIEnabled).to.be.false
+    expect(store.isCulminationValuesEnabled).to.be.false
+    expect(store.isBySpeciesEnabled).to.be.false
+    expect(store.isByLayerEnabled).to.be.false
+    expect(store.isProjectionModeEnabled).to.be.false
+    expect(store.isPolygonIDEnabled).to.be.false
+    expect(store.isCurrentYearEnabled).to.be.false
+    expect(store.isReferenceYearEnabled).to.be.false
+    expect(store.incSecondaryHeight).to.be.false
+    expect(store.specificYear).to.be.null
     expect(store.projectionType).to.be.null
     expect(store.reportTitle).to.be.null
     expect(store.referenceYear).to.be.null
@@ -181,6 +195,9 @@ describe('ModelParameterStore Unit Tests', () => {
     )
     expect(store.isBackwardGrowEnabled).to.equal(
       DEFAULTS.DEFAULT_VALUES.IS_BACKWARD_GROW_ENABLED,
+    )
+    expect(store.isWholeStemEnabled).to.equal(
+      DEFAULTS.DEFAULT_VALUES.IS_WHOLE_STEM_ENABLED,
     )
     expect(store.projectionType).to.equal(
       DEFAULTS.DEFAULT_VALUES.PROJECTION_TYPE,
@@ -402,5 +419,106 @@ describe('ModelParameterStore Unit Tests', () => {
   it('should update crownClosure correctly', () => {
     store.crownClosure = 75
     expect(store.crownClosure).to.equal(75)
+  })
+
+  it('should update volume and utilization options correctly', () => {
+    store.isWholeStemEnabled = false
+    store.isCloseUtilEnabled = true
+    store.isNetDecayEnabled = true
+    store.isNetDecayWasteEnabled = true
+    store.isNetDecayWasteBreakageEnabled = true
+
+    expect(store.isWholeStemEnabled).to.be.false
+    expect(store.isCloseUtilEnabled).to.be.true
+    expect(store.isNetDecayEnabled).to.be.true
+    expect(store.isNetDecayWasteEnabled).to.be.true
+    expect(store.isNetDecayWasteBreakageEnabled).to.be.true
+  })
+
+  it('should update yield table options correctly', () => {
+    store.isComputedMAIEnabled = true
+    store.isCulminationValuesEnabled = true
+    store.isBySpeciesEnabled = true
+    store.isByLayerEnabled = true
+
+    expect(store.isComputedMAIEnabled).to.be.true
+    expect(store.isCulminationValuesEnabled).to.be.true
+    expect(store.isBySpeciesEnabled).to.be.true
+    expect(store.isByLayerEnabled).to.be.true
+  })
+
+  it('should update additional report options correctly', () => {
+    store.isProjectionModeEnabled = true
+    store.isPolygonIDEnabled = true
+    store.isCurrentYearEnabled = true
+    store.isReferenceYearEnabled = true
+    store.incSecondaryHeight = true
+
+    expect(store.isProjectionModeEnabled).to.be.true
+    expect(store.isPolygonIDEnabled).to.be.true
+    expect(store.isCurrentYearEnabled).to.be.true
+    expect(store.isReferenceYearEnabled).to.be.true
+    expect(store.incSecondaryHeight).to.be.true
+  })
+
+  it('should update specificYear correctly', () => {
+    store.specificYear = 2025
+    expect(store.specificYear).to.equal(2025)
+  })
+
+  it('should handle all boolean options in combination', () => {
+    store.isWholeStemEnabled = false
+    store.isCloseUtilEnabled = true
+    store.isNetDecayEnabled = true
+    store.isNetDecayWasteEnabled = true
+    store.isNetDecayWasteBreakageEnabled = true
+    store.isComputedMAIEnabled = true
+    store.isCulminationValuesEnabled = true
+    store.isBySpeciesEnabled = true
+    store.isByLayerEnabled = true
+    store.isProjectionModeEnabled = true
+    store.isPolygonIDEnabled = true
+    store.isCurrentYearEnabled = true
+    store.isReferenceYearEnabled = true
+    store.incSecondaryHeight = true
+    store.specificYear = 2050
+
+    expect(store.isWholeStemEnabled).to.be.false
+    expect(store.isCloseUtilEnabled).to.be.true
+    expect(store.isNetDecayEnabled).to.be.true
+    expect(store.isNetDecayWasteEnabled).to.be.true
+    expect(store.isNetDecayWasteBreakageEnabled).to.be.true
+    expect(store.isComputedMAIEnabled).to.be.true
+    expect(store.isCulminationValuesEnabled).to.be.true
+    expect(store.isBySpeciesEnabled).to.be.true
+    expect(store.isByLayerEnabled).to.be.true
+    expect(store.isProjectionModeEnabled).to.be.true
+    expect(store.isPolygonIDEnabled).to.be.true
+    expect(store.isCurrentYearEnabled).to.be.true
+    expect(store.isReferenceYearEnabled).to.be.true
+    expect(store.incSecondaryHeight).to.be.true
+    expect(store.specificYear).to.equal(2050)
+  })
+
+  it('should maintain boolean option states independently', () => {
+    // Test that changing one boolean doesn't affect others
+    store.isWholeStemEnabled = false
+    expect(store.isCloseUtilEnabled).to.be.false // Should remain at default
+    expect(store.isNetDecayEnabled).to.be.false // Should remain at default
+
+    store.isCloseUtilEnabled = true
+    expect(store.isWholeStemEnabled).to.be.false // Should not change
+    expect(store.isNetDecayEnabled).to.be.false // Should remain at default
+  })
+
+  it('should handle null and undefined values for specificYear', () => {
+    store.specificYear = null
+    expect(store.specificYear).to.be.null
+
+    store.specificYear = 2030
+    expect(store.specificYear).to.equal(2030)
+
+    store.specificYear = null
+    expect(store.specificYear).to.be.null
   })
 })

@@ -27,6 +27,7 @@ export interface Parameters {
   combineAgeYearRange?: CombineAgeYearRangeEnum
   progressFrequency?: ProgressFrequency
   metadataToOutput?: MetadataToOutputEnum
+  reportTitle?: string | null
   filters?: Filters
   utils?: Array<UtilizationParameter> // Species Utilization Level
 }
