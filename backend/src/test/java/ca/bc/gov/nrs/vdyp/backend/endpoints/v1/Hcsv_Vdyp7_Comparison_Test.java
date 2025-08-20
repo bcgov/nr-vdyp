@@ -118,7 +118,9 @@ class Hcsv_Vdyp7_Comparison_Test {
 
 		// FIXME VDYP-604 stop ignoring columns once fixed
 		ResultYieldTable
-				.compareWithTolerance(vdyp7YieldTable, vdyp8YieldTable, 0.02, IGNORE_COLUMNS.asMatchPredicate());
+				.compareWithTolerance(
+						vdyp7YieldTable, vdyp8YieldTable, 0.02, IGNORE_COLUMNS_EXCEPT_LH.asMatchPredicate()
+				);
 
 		ZipEntry entry2 = zipFile.getNextEntry();
 		assertEquals("ProgressLog.txt", entry2.getName());
@@ -158,5 +160,7 @@ class Hcsv_Vdyp7_Comparison_Test {
 	// FIXME VDYP-604 Remove these once VDYP-604 is fixed.
 	static final Pattern IGNORE_COLUMNS = Pattern
 			.compile("PRJ_TPH|PRJ_LOREY_HT|PRJ_DIAMETER|PRJ_BA|PRJ_(SP\\d_)?VOL_(?:D|DW|DWB|CU|WS)");
+	static final Pattern IGNORE_COLUMNS_EXCEPT_LH = Pattern
+			.compile("PRJ_TPH|PRJ_DIAMETER|PRJ_BA|PRJ_(SP\\d_)?VOL_(?:D|DW|DWB|CU|WS)");
 
 }
