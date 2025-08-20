@@ -16,6 +16,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import org.hamcrest.Matchers;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -27,6 +28,9 @@ import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.utils.FileHelper;
 import ca.bc.gov.nrs.vdyp.ecore.utils.ParameterNames;
 import io.quarkus.test.junit.QuarkusTest;
+import io.restassured.RestAssured;
+import io.restassured.config.HttpClientConfig;
+import io.restassured.config.RestAssuredConfig;
 import io.smallrye.common.constraint.Assert;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.MediaType;
@@ -45,6 +49,19 @@ class Hcsv_Vdyp7_Comparison_Test {
 
 	@BeforeEach
 	void setup() {
+		var socketTimeout = RestAssured.config().getHttpClientConfig().params().get("http.socket.timeout");
+		var connectionTimeout = RestAssured.config().getHttpClientConfig().params().get("http.connection.timeout");
+		RestAssured.config = RestAssuredConfig.config()
+				.httpClient(
+						HttpClientConfig.httpClientConfig()
+								.setParam("http.socket.timeout", 24 * 60 * 60 * 1000)
+								.setParam("http.connection.timeout", 24 * 60 * 60 * 1000)
+				);
+	}
+
+	@AfterEach
+	void teardown() {
+		RestAssured.reset();
 	}
 
 	@Test
