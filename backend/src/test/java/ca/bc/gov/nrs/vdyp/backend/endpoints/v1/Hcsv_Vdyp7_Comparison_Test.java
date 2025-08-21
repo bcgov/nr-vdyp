@@ -51,12 +51,10 @@ class Hcsv_Vdyp7_Comparison_Test {
 	void setup() {
 		var socketTimeout = RestAssured.config().getHttpClientConfig().params().get("http.socket.timeout");
 		var connectionTimeout = RestAssured.config().getHttpClientConfig().params().get("http.connection.timeout");
-		RestAssured.config = RestAssuredConfig.config()
-				.httpClient(
-						HttpClientConfig.httpClientConfig()
-								.setParam("http.socket.timeout", 24 * 60 * 60 * 1000)
-								.setParam("http.connection.timeout", 24 * 60 * 60 * 1000)
-				);
+		RestAssured.config = RestAssuredConfig.config().httpClient(
+				HttpClientConfig.httpClientConfig().setParam("http.socket.timeout", 24 * 60 * 60 * 1000)
+						.setParam("http.connection.timeout", 24 * 60 * 60 * 1000)
+		);
 	}
 
 	@AfterEach
@@ -117,10 +115,9 @@ class Hcsv_Vdyp7_Comparison_Test {
 		var vdyp7YieldTable = new ResultYieldTable(vdyp7YieldTableContent);
 
 		// FIXME VDYP-604 stop ignoring columns once fixed
-		ResultYieldTable
-				.compareWithTolerance(
-						vdyp7YieldTable, vdyp8YieldTable, 0.02, IGNORE_COLUMNS_EXCEPT_LH.asMatchPredicate()
-				);
+		ResultYieldTable.compareWithTolerance(
+				vdyp7YieldTable, vdyp8YieldTable, 0.02, IGNORE_COLUMNS_EXCEPT_LH.asMatchPredicate()
+		);
 
 		ZipEntry entry2 = zipFile.getNextEntry();
 		assertEquals("ProgressLog.txt", entry2.getName());
