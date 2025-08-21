@@ -2,9 +2,12 @@ package ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable;
 
 import static ca.bc.gov.nrs.vdyp.test.TestUtils.LAYER_CSV_HEADER_LINE;
 import static ca.bc.gov.nrs.vdyp.test.TestUtils.POLYGON_CSV_HEADER_LINE;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.hasEntry;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -30,6 +33,8 @@ import ca.bc.gov.nrs.api.helpers.TestProjectionResultsReader;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.UtilizationClassSet;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.UtilizationParameter;
 import ca.bc.gov.nrs.vdyp.ecore.projection.PolygonProjectionState;
 import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionContext;
 import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionStageCode;
@@ -37,7 +42,9 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.input.HcsvPolygonStream;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProjectionTypeCode;
 import ca.bc.gov.nrs.vdyp.ecore.utils.FileHelper;
+import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParser;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
+import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
 
 class YieldTableTest {
 
@@ -231,6 +238,74 @@ class YieldTableTest {
 		var resultYieldTable = new ResultYieldTable(new String(yieldTable.getAsStream().readAllBytes()));
 		assertTrue(resultYieldTable.containsKey("13919428"));
 		assertTrue(resultYieldTable.get("13919428").containsKey(""));
+	}
+
+	@Test
+	void testIncludeSmall() throws AbstractProjectionRequestException, IOException {
+
+		var parameters = new Parameters();
+		parameters.setYearStart(2025);
+		parameters.setYearEnd(2030);
+
+		// Include small utilization class
+		parameters
+				.addUtilsItem(new UtilizationParameter().speciesName("PL").utilizationClass(UtilizationClassSet._4_0));
+
+		var context = new ProjectionContext(ProjectionRequestKind.HCSV, TEST_PROJECTION_ID, parameters, false);
+
+		var polygonInputStream = TestUtils.makeInputStream(
+				//
+				POLYGON_CSV_HEADER_LINE,
+				"13919428,093C090,94833422,DQU,UNK,UNK,V,UNK,0.6,10,3,HE,35,8,,MS,14,50.0,1.000,,V,T,U,TC,SP,2013,2013,60.0,,,,,,,,,,TC,100,,,,"
+		);
+		var layersInputStream = TestUtils.makeInputStream(
+				//
+				LAYER_CSV_HEADER_LINE,
+				"13919428,14321066,093C090,94833422,1,P,,1,,,,20,10.000010,300,PLI,60.00,SX,40.00,,,,,,,,,180,18.00,180,23.00,,,,,,,,"
+		);
+
+		var polygonStream = new HcsvPolygonStream(context, polygonInputStream, layersInputStream);
+
+		var polygon = polygonStream.getNextPolygon();
+
+		var yieldTable = YieldTable.of(context);
+		try {
+			yieldTable.startGeneration();
+
+			var state = new PolygonProjectionState();
+			state.setProcessingResults(ProjectionStageCode.Initial, ProjectionTypeCode.PRIMARY, Optional.empty());
+			state.setProcessingResults(ProjectionStageCode.Forward, ProjectionTypeCode.PRIMARY, Optional.empty());
+
+			var vdypPolygonStreamFile = testHelper.getResourceFile(relativeResourcePath, "vp_grow.dat");
+			var vdypPolygonStream = Files.newInputStream(vdypPolygonStreamFile);
+			var vdypSpeciesStreamFile = testHelper.getResourceFile(relativeResourcePath, "vs_grow.dat");
+			var vdypSpeciesStream = Files.newInputStream(vdypSpeciesStreamFile);
+			var vdypUtilizationsStreamFile = testHelper.getResourceFile(relativeResourcePath, "vu_grow.dat");
+			var vdypUtilizationsStream = Files.newInputStream(vdypUtilizationsStreamFile);
+
+			ProjectionResultsReader forwardReader = new TestProjectionResultsReader(
+					testHelper, vdypPolygonStream, vdypSpeciesStream, vdypUtilizationsStream
+			);
+			ProjectionResultsReader backReader = new NullProjectionResultsReader();
+
+			var projectionResults = ProjectionResultsBuilder
+					.read(polygon, state, ProjectionTypeCode.PRIMARY, forwardReader, backReader);
+
+			yieldTable.generateYieldTableForPolygon(
+					polygon, projectionResults, state, false /* don't generate detailed table header */
+			);
+		} finally {
+			yieldTable.endGeneration();
+			yieldTable.close();
+		}
+
+		var resultYieldTable = new ResultYieldTable(new String(yieldTable.getAsStream().readAllBytes()));
+		assertThat(
+				resultYieldTable,
+				VdypMatchers.recursiveHasEntry(is("13919428"), is(""), is("2029"), is("PRJ_LOREY_HT"))
+						.withValue(VdypMatchers.parseAs(closeTo(21.3734f), ValueParser.FLOAT))
+		);
+
 	}
 
 	@Test

@@ -1389,7 +1389,7 @@ public class YieldTable implements Closeable {
 			throw new StandYieldCalculationException(new FailedToGrowYoungStandException());
 		}
 
-		// vdyp7core_requestyeardata?
+		// vdyp7core_requestyeardata
 		var projectedPolygon = polygonProjectionsByYear.get(calendarYear);
 		if (projectedPolygon != null && layerType != null) {
 
@@ -1407,7 +1407,8 @@ public class YieldTable implements Closeable {
 			// combination of Forward and Back. In VDYP8 we currently -do not- support Back,
 			// and so some years may be missing from polygonProjectionsByYear.
 
-			// Shouldn't this always be true because projectedPolygon != null ?
+			// If projectedPolygon != null then polygonProjectionsByYear.containsKey(calendarYear) must be true so why
+			// check?
 			if (polygonProjectionsByYear.containsKey(calendarYear)) {
 
 				var sp0Name = SP0Name.forText(sp0.getSpeciesCode());
