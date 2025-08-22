@@ -1407,22 +1407,13 @@ public class YieldTable implements Closeable {
 			// combination of Forward and Back. In VDYP8 we currently -do not- support Back,
 			// and so some years may be missing from polygonProjectionsByYear.
 
-			// If projectedPolygon != null then polygonProjectionsByYear.containsKey(calendarYear) must be true so why
-			// check?
-			if (polygonProjectionsByYear.containsKey(calendarYear)) {
+			var sp0Name = SP0Name.forText(sp0.getSpeciesCode());
+			var ucReportingLevel = context.getParams().getUtils().get(sp0Name);
 
-				var sp0Name = SP0Name.forText(sp0.getSpeciesCode());
-				var ucReportingLevel = context.getParams().getUtils().get(sp0Name);
+			layerYields = getYields(
+					calendarYear, ucReportingLevel, projectedSp0, stand == null ? projectedLayer : projectedSp0
+			);
 
-				layerYields = getYields(
-						calendarYear, ucReportingLevel, projectedSp0, stand == null ? projectedLayer : projectedSp0
-				);
-			} else {
-				layerYields = new LayerYields(
-						false, false /* not dominant */, sp0.getSpeciesCode(), calendarYear, 0.0, 0.0, 0.0, 0.0, 0.0,
-						0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0
-				);
-			}
 		} else {
 			var polygon = layer.getPolygon();
 
