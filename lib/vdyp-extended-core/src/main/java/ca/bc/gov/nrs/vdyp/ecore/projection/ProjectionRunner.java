@@ -1,6 +1,5 @@
 package ca.bc.gov.nrs.vdyp.ecore.projection;
 
-import java.io.ByteArrayInputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -177,18 +176,6 @@ public class ProjectionRunner implements Closeable {
 
 	private void logApplicationMetadata() {
 		// TODO: mimic VDYP7's Console_LogMetadata
-	}
-
-	public InputStream getYieldTable() throws PolygonExecutionException {
-		if (context.isTrialRun()) {
-			return new ByteArrayInputStream(new byte[0]);
-		} else {
-			try {
-				return context.getYieldTable().getAsStream();
-			} catch (YieldTableGenerationException e) {
-				throw new PolygonExecutionException(e);
-			}
-		}
 	}
 
 	public static record ProjectionResultsKey(String polygonId, String projectionType, String entryName) {

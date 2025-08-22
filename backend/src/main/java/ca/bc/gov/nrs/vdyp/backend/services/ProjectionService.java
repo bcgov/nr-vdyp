@@ -35,6 +35,7 @@ import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters.ExecutionOption;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind;
 import ca.bc.gov.nrs.vdyp.ecore.projection.PolygonProjectionRunner;
 import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionRunner;
+import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.YieldTable;
 import ca.bc.gov.nrs.vdyp.ecore.utils.FileHelper;
 import ca.bc.gov.nrs.vdyp.ecore.utils.ParameterNames;
 import ca.bc.gov.nrs.vdyp.ecore.utils.Utils;
@@ -183,12 +184,14 @@ public class ProjectionService {
 			var baos = new ByteArrayOutputStream();
 			try (var zipOut = new ZipOutputStream(baos)) {
 
-				yieldTableStream = runner.getYieldTable();
 				progressLogStream = runner.getProgressStream();
 				errorLogStream = runner.getErrorStream();
 
-				var yieldTableFileName = runner.getContext().getParams().getOutputFormat().getYieldTableFileName();
-				writeZipEntry(zipOut, yieldTableFileName, yieldTableStream.readAllBytes());
+				for (YieldTable yieldTable : runner.getContext().getYieldTables()) {
+					var yieldTableFileName = yieldTable.getOutputFormat().getYieldTableFileName();
+					yieldTableStream = yieldTable.getAsStream();
+					writeZipEntry(zipOut, yieldTableFileName, yieldTableStream.readAllBytes());
+				}
 
 				if (runner.getContext().getParams().containsOption(ExecutionOption.DO_ENABLE_PROGRESS_LOGGING)) {
 					writeZipEntry(zipOut, "ProgressLog.txt", runner.getProgressStream().readAllBytes());
@@ -234,7 +237,7 @@ public class ProjectionService {
 					.header("content-disposition", "attachment;filename=\"" + outputFileName + "\"")
 					.header("content-type", "application/octet-stream").build();
 
-		} catch (PolygonExecutionException e) {
+		} catch (Exception e) {
 			String message = Exceptions.getMessage(e, "Projection, when creating output zip,");
 			logger.error(message, e);
 

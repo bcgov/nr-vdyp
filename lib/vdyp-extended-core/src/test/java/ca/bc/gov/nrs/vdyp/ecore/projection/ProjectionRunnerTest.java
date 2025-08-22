@@ -19,6 +19,7 @@ import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.AbstractProjectionRequestExcep
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProgressFrequency;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind;
+import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.YieldTable;
 import ca.bc.gov.nrs.vdyp.ecore.utils.ParameterNames;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
@@ -121,7 +122,8 @@ public class ProjectionRunnerTest {
 		);
 		unit.run(streams);
 
-		String results = new String(unit.getYieldTable().readAllBytes());
+		YieldTable yieldTable = unit.getContext().getYieldTables().get(0);
+		String results = new String(yieldTable.getAsStream().readAllBytes());
 		assertThat(results.length(), greaterThan(0));
 		assertThat(results, containsString("CFS_BIO"));
 	}
@@ -152,7 +154,8 @@ public class ProjectionRunnerTest {
 		);
 		unit.run(streams);
 
-		String results = new String(unit.getYieldTable().readAllBytes());
+		YieldTable yieldTable = unit.getContext().getYieldTables().get(0);
+		String results = new String(yieldTable.getAsStream().readAllBytes());
 		assertThat(results.length(), greaterThan(0));
 		assertThat(results, containsString("MoF_BIO"));
 	}
@@ -180,7 +183,8 @@ public class ProjectionRunnerTest {
 				layersInputStream
 		);
 		unit.run(streams);
-		String results = new String(unit.getYieldTable().readAllBytes());
+		YieldTable yieldTable = unit.getContext().getYieldTables().get(0);
+		String results = new String(yieldTable.getAsStream().readAllBytes());
 		assertThat(results.length(), greaterThan(0));
 	}
 

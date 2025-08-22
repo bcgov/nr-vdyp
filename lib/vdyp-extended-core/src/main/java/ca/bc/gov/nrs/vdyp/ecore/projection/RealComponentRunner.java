@@ -27,6 +27,7 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.NullProjectionResul
 import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.ProjectionResultsBuilder;
 import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.ProjectionResultsReader;
 import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.RealProjectionResultsReader;
+import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.YieldTable;
 import ca.bc.gov.nrs.vdyp.ecore.utils.ErrorMessageUtils;
 import ca.bc.gov.nrs.vdyp.fip.FipStart;
 import ca.bc.gov.nrs.vdyp.forward.ForwardControlParser;
@@ -175,88 +176,91 @@ public class RealComponentRunner implements ComponentRunner {
 			throws YieldTableGenerationException {
 		ValidatedParameters params = context.getParams();
 
-		var yieldTable = context.getYieldTable();
-		boolean doGenerateDetailedTableHeader = true;
+		var tables = context.getYieldTables();
+		for (YieldTable yieldTable : tables) {
+			boolean doGenerateDetailedTableHeader = true;
 
-		if (params.containsOption(ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_POLYGON)) {
+			if (params.containsOption(ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_POLYGON)) {
 
-			var projectionResults = getProjectionResults(polygon, ProjectionTypeCode.PRIMARY, state);
+				var projectionResults = getProjectionResults(polygon, ProjectionTypeCode.PRIMARY, state);
 
-			if (params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES)
-					|| params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_BIOMASS)) {
+				if (params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES)
+						|| params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_BIOMASS)) {
 
-				yieldTable
-						.generateYieldTableForPolygon(polygon, projectionResults, state, doGenerateDetailedTableHeader);
-				doGenerateDetailedTableHeader = false;
-
-				logger.debug("{}: generated polygon-level yield table", polygon);
-			}
-
-			if (params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS)) {
-				yieldTable.generateCfsBiomassTableForPolygon(
-						polygon, projectionResults, state, doGenerateDetailedTableHeader
-				);
-				doGenerateDetailedTableHeader = false;
-
-				logger.debug("{}: generated polygon-level CFS biomass table", polygon);
-			}
-
-		}
-
-		if (params.containsOption(ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER)) {
-
-			for (var layerReportingInfo : polygon.getReportingInfo().getLayerReportingInfos().values()) {
-
-				var layer = layerReportingInfo.getLayer();
-				if (state.layerWasProjected(layer)) {
-
-					doGenerateDetailedTableHeader = true;
-
-					var projectionResults = getProjectionResults(
-							polygon, layerReportingInfo.getProcessedAsVDYP7Layer(), state
+					yieldTable.generateYieldTableForPolygon(
+							polygon, projectionResults, state, doGenerateDetailedTableHeader
 					);
-					if (params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES)
-							|| params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_BIOMASS)) {
+					doGenerateDetailedTableHeader = false;
 
-						yieldTable.generateYieldTableForPolygonLayer(
-								polygon, projectionResults, state, layerReportingInfo, doGenerateDetailedTableHeader
+					logger.debug("{}: generated polygon-level yield table", polygon);
+				}
+
+				if (params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS)) {
+					yieldTable.generateCfsBiomassTableForPolygon(
+							polygon, projectionResults, state, doGenerateDetailedTableHeader
+					);
+					doGenerateDetailedTableHeader = false;
+
+					logger.debug("{}: generated polygon-level CFS biomass table", polygon);
+				}
+
+			}
+
+			if (params.containsOption(ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER)) {
+
+				for (var layerReportingInfo : polygon.getReportingInfo().getLayerReportingInfos().values()) {
+
+					var layer = layerReportingInfo.getLayer();
+					if (state.layerWasProjected(layer)) {
+
+						doGenerateDetailedTableHeader = true;
+
+						var projectionResults = getProjectionResults(
+								polygon, layerReportingInfo.getProcessedAsVDYP7Layer(), state
 						);
-						doGenerateDetailedTableHeader = false;
+						if (params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES)
+								|| params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_MOF_BIOMASS)) {
 
-						logger.debug("{}: generated yield table", layerReportingInfo.getLayer());
-					}
-
-					if (params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS)) {
-						if (!layerReportingInfo.isDeadStemLayer()) {
-
-							yieldTable.generateCfsBiomassTableForPolygonLayer(
+							yieldTable.generateYieldTableForPolygonLayer(
 									polygon, projectionResults, state, layerReportingInfo, doGenerateDetailedTableHeader
 							);
 							doGenerateDetailedTableHeader = false;
 
-							logger.debug("{}: generated CFS biomass table", layer);
-						} else {
-							polygon.addMessage(
-									new PolygonMessage.Builder().layer(layer)
-											.details(
-													ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
-													PolygonMessageKind.NO_YIELD_TABLE_FOR_DEAD_LAYER
-											).build()
-							);
+							logger.debug("{}: generated yield table", layerReportingInfo.getLayer());
 						}
+
+						if (params.containsOption(ExecutionOption.DO_INCLUDE_PROJECTED_CFS_BIOMASS)) {
+							if (!layerReportingInfo.isDeadStemLayer()) {
+
+								yieldTable.generateCfsBiomassTableForPolygonLayer(
+										polygon, projectionResults, state, layerReportingInfo,
+										doGenerateDetailedTableHeader
+								);
+								doGenerateDetailedTableHeader = false;
+
+								logger.debug("{}: generated CFS biomass table", layer);
+							} else {
+								polygon.addMessage(
+										new PolygonMessage.Builder().layer(layer)
+												.details(
+														ReturnCode.SUCCESS, MessageSeverityCode.WARNING,
+														PolygonMessageKind.NO_YIELD_TABLE_FOR_DEAD_LAYER
+												).build()
+								);
+							}
+						}
+					} else {
+						polygon.addMessage(
+								new PolygonMessage.Builder().layer(layer)
+										.details(
+												ReturnCode.SUCCESS, MessageSeverityCode.INFORMATION,
+												PolygonMessageKind.LAYER_NOT_PROJECTED
+										).build()
+						);
 					}
-				} else {
-					polygon.addMessage(
-							new PolygonMessage.Builder().layer(layer)
-									.details(
-											ReturnCode.SUCCESS, MessageSeverityCode.INFORMATION,
-											PolygonMessageKind.LAYER_NOT_PROJECTED
-									).build()
-					);
 				}
 			}
 		}
-
 	}
 
 	private Map<Integer, VdypPolygon>

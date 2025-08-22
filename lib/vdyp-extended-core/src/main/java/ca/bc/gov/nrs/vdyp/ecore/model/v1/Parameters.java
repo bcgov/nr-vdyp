@@ -182,6 +182,7 @@ public class Parameters {
 		DO_ENABLE_PROGRESS_LOGGING("doEnableProgressLogging"), //
 		DO_ENABLE_ERROR_LOGGING("doEnableErrorLogging"), //
 		DO_ENABLE_DEBUG_LOGGING("doEnableDebugLogging"), //
+		DO_ENABLE_PROJECTION_REPORT("doEnableProjectionReport"), //
 		DO_DELAY_EXECUTION_FOLDER_DELETION("doDelayExecutionFolderDeletion"), //
 		ALLOW_AGGRESSIVE_VALUE_ESTIMATION("allowAggressiveValueEstimation"), //
 		REPORT_INCLUDE_WHOLE_STEM_VOLUME("reportIncludeWholeStemVolume"), //
