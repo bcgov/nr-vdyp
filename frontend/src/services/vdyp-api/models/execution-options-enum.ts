@@ -22,6 +22,7 @@ export enum ExecutionOptionsEnum {
   DoEnableProgressLogging = 'doEnableProgressLogging',
   DoEnableErrorLogging = 'doEnableErrorLogging',
   DoEnableDebugLogging = 'doEnableDebugLogging',
+  DoEnableProjectionReport = 'doEnableProjectionReport',
   DoDelayExecutionFolderDeletion = 'doDelayExecutionFolderDeletion',
   AllowAggressiveValueEstimation = 'allowAggressiveValueEstimation',
   ReportIncludeWholeStemVolume = 'reportIncludeWholeStemVolume',

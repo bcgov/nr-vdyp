@@ -397,6 +397,7 @@ const buildExecutionOptions = (
     ExecutionOptionsEnum.DoEnableProgressLogging,
     ExecutionOptionsEnum.DoEnableErrorLogging,
     ExecutionOptionsEnum.DoEnableDebugLogging,
+    ExecutionOptionsEnum.DoEnableProjectionReport,
     ExecutionOptionsEnum.AllowAggressiveValueEstimation,
     ExecutionOptionsEnum.DoIncludeFileHeader,
     ExecutionOptionsEnum.DoSummarizeProjectionByLayer,
@@ -541,7 +542,7 @@ export const runModel = async (
         ? modelParameterStore.endYear
         : null,
     reportTitle: modelParameterStore.reportTitle,
-    outputFormat: OutputFormatEnum.TextReport,
+    outputFormat: OutputFormatEnum.CSVYieldTable,
     selectedExecutionOptions: selectedExecutionOptions,
     excludedExecutionOptions: excludedExecutionOptions,
     selectedDebugOptions: selectedDebugOptions,
