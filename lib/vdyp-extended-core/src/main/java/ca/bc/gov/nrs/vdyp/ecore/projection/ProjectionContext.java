@@ -60,9 +60,7 @@ public class ProjectionContext {
 
 	private final IMessageLog progressLog;
 	private final IMessageLog errorLog;
-	private List<YieldTable> yieldTableList = new ArrayList<YieldTable>();
-	// private Optional<YieldTable> yieldTable;
-	// private YieldTable reportTable = null;
+	private List<YieldTable> yieldTableList = new ArrayList<>();
 
 	private ExecutorService executorService;
 	private FileSystem resourceFileSystem;
