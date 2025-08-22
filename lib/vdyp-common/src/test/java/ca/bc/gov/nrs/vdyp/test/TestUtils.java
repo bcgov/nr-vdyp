@@ -715,4 +715,22 @@ public class TestUtils {
 		Integer[] arr = Arrays.stream(values).mapToObj(i -> (Integer) i).toArray(Integer[]::new);
 		return new DebugSettings(arr);
 	}
+
+	/**
+	 * Workaround for a bug in the Eclipse debugger when using expressions/conditions with multidimensional arrays.
+	 *
+	 * @return
+	 */
+	static float getBankEntry(float[][] array, int i1, int i2) {
+		return array[i1][i2];
+	}
+
+	/**
+	 * Workaround for a bug in the Eclipse debugger when using expressions/conditions with multidimensional arrays.
+	 *
+	 * @return
+	 */
+	static boolean bankEntryWithin(float[][] array, int i1, int i2, float expected, float epsilon) {
+		return Math.abs(getBankEntry(array, i1, i2) - expected) <= epsilon;
+	}
 }

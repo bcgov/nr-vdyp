@@ -1389,6 +1389,7 @@ public class YieldTable implements Closeable {
 			throw new StandYieldCalculationException(new FailedToGrowYoungStandException());
 		}
 
+		// vdyp7core_requestyeardata
 		var projectedPolygon = polygonProjectionsByYear.get(calendarYear);
 		if (projectedPolygon != null && layerType != null) {
 
@@ -1406,20 +1407,13 @@ public class YieldTable implements Closeable {
 			// combination of Forward and Back. In VDYP8 we currently -do not- support Back,
 			// and so some years may be missing from polygonProjectionsByYear.
 
-			if (polygonProjectionsByYear.containsKey(calendarYear)) {
+			var sp0Name = SP0Name.forText(sp0.getSpeciesCode());
+			var ucReportingLevel = context.getParams().getUtils().get(sp0Name);
 
-				var sp0Name = SP0Name.forText(sp0.getSpeciesCode());
-				var ucReportingLevel = context.getParams().getUtils().get(sp0Name);
+			layerYields = getYields(
+					calendarYear, ucReportingLevel, projectedSp0, stand == null ? projectedLayer : projectedSp0
+			);
 
-				layerYields = getYields(
-						calendarYear, ucReportingLevel, projectedSp0, stand == null ? projectedLayer : projectedSp0
-				);
-			} else {
-				layerYields = new LayerYields(
-						false, false /* not dominant */, sp0.getSpeciesCode(), calendarYear, 0.0, 0.0, 0.0, 0.0, 0.0,
-						0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0
-				);
-			}
 		} else {
 			var polygon = layer.getPolygon();
 
@@ -1485,9 +1479,9 @@ public class YieldTable implements Closeable {
 
 		var reportedStandPercent = projectedSp0.getPercentGenus();
 
-		double loreyHeight = projectedSp0.getLoreyHeightByUtilization().get(UtilizationClass.ALL);
+		double loreyHeight = entity.getLoreyHeightByUtilization().get(UtilizationClass.ALL);
 		if (ucReportingLevel == UtilizationClassSet._4_0 /* i.e., "ALL" + "SMALL" */) {
-			loreyHeight += projectedSp0.getLoreyHeightByUtilization().get(UtilizationClass.SMALL);
+			loreyHeight += entity.getLoreyHeightByUtilization().get(UtilizationClass.SMALL);
 		}
 
 		return new LayerYields(

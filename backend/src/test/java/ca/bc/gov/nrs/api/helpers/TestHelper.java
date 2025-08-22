@@ -87,7 +87,7 @@ public class TestHelper {
 		return params;
 	}
 
-	public Parameters addExcludedOptions(Parameters params, ExecutionOption executionOptions) {
+	public Parameters addExcludedOptions(Parameters params, ExecutionOption... executionOptions) {
 		params.setExcludedExecutionOptions(List.of(executionOptions));
 		return params;
 	}
