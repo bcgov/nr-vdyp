@@ -10,6 +10,7 @@ export const useProjectionStore = defineStore('projectionStore', () => {
   const logMessages = ref<string[]>([])
   const debugMessages = ref<string[]>([])
   const rawYieldData = ref<string>('')
+  const rawTextReportData = ref<string>('')
   const csvYieldLines = ref<string[]>([])
   const txtYieldLines = ref<string[]>([])
   const rawResultZipFile = ref<Blob | null>(null) // zip file
@@ -21,6 +22,7 @@ export const useProjectionStore = defineStore('projectionStore', () => {
       logMessages.value = []
       debugMessages.value = []
       rawYieldData.value = ''
+      rawTextReportData.value = ''
       csvYieldLines.value = []
       txtYieldLines.value = []
 
@@ -36,19 +38,13 @@ export const useProjectionStore = defineStore('projectionStore', () => {
       }
 
       const appStore = useAppStore()
-      const yieldFileName =
-        appStore.modelSelection ===
-        CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS
-          ? CONSTANTS.FILE_NAME.YIELD_TABLE_TXT
-          : CONSTANTS.FILE_NAME.YIELD_TABLE_CSV
 
       const requiredFiles = {
         error: CONSTANTS.FILE_NAME.ERROR_TXT,
         log: CONSTANTS.FILE_NAME.LOG_TXT,
-        yield: yieldFileName,
+        yield: CONSTANTS.FILE_NAME.YIELD_TABLE_CSV,
       }
 
-      console.log(`yieldFileName:${yieldFileName}`)
       const errorFile = zip.file(requiredFiles.error)
       const logFile = zip.file(requiredFiles.log)
       const yieldFile = zip.file(requiredFiles.yield)
@@ -69,17 +65,20 @@ export const useProjectionStore = defineStore('projectionStore', () => {
       logMessages.value = (await logFile.async('string')).split(/\r?\n/)
       rawYieldData.value = await yieldFile.async('string')
 
+      // Load the report if it exists the CSV otherwise
+      if (
+        appStore.modelSelection ===
+        CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS
+      ){
+        const textReportFile = zip.file(CONSTANTS.FILE_NAME.YIELD_TABLE_TXT) 
+        rawTextReportData.value = await textReportFile.async('string')
+          txtYieldLines.value = rawTextReportData.value.split(/\r?\n/)
+      } 
+      
       if (rawYieldData.value) {
-        if (
-          appStore.modelSelection ===
-          CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS
-        ) {
-          txtYieldLines.value = rawYieldData.value.split(/\r?\n/)
-        } else {
-          csvYieldLines.value = rawYieldData.value
-            .split(/\r?\n/)
-            .filter((line) => line.trim() !== '') // Remove blank lines
-        }
+        csvYieldLines.value = rawYieldData.value
+          .split(/\r?\n/)
+          .filter((line) => line.trim() !== '') // Remove blank lines
       }
 
       // Optional

@@ -12,10 +12,11 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.text.MessageFormat;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -59,7 +60,7 @@ public class ProjectionContext {
 
 	private final IMessageLog progressLog;
 	private final IMessageLog errorLog;
-	private Optional<YieldTable> yieldTable;
+	private List<YieldTable> yieldTableList = new ArrayList<>();
 
 	private ExecutorService executorService;
 	private FileSystem resourceFileSystem;
@@ -98,7 +99,6 @@ public class ProjectionContext {
 			progressLog = new NullMessageLog(Level.INFO);
 		}
 
-		this.yieldTable = Optional.empty();
 		this.executorService = Executors.newSingleThreadExecutor();
 
 		this.validatedParams = ProjectionRequestParametersValidator.validate(params, this.getRequestKind());
@@ -148,7 +148,10 @@ public class ProjectionContext {
 		startTime_ms = System.currentTimeMillis();
 
 		try {
-			getYieldTable().startGeneration();
+			createYieldTables();
+			for (YieldTable yieldTable : yieldTableList) {
+				yieldTable.startGeneration();
+			}
 		} catch (YieldTableGenerationException e) {
 			errorLog.addMessage(
 					"Encountered error starting the generation of this projection's yield table{}",
@@ -198,7 +201,9 @@ public class ProjectionContext {
 	public void endRun() {
 		try {
 			try {
-				getYieldTable().endGeneration();
+				for (YieldTable yieldTable : yieldTableList) {
+					yieldTable.endGeneration();
+				}
 			} catch (YieldTableGenerationException e) {
 				errorLog.addMessage(
 						"Encountered error starting the generation of this projection's yield table{}",
@@ -213,10 +218,8 @@ public class ProjectionContext {
 					endTime_ms - startTime_ms
 			);
 		} finally {
-			try {
-				getYieldTable().close();
-			} catch (YieldTableGenerationException e) {
-				logger.error("Encountered exception closing the yield table of projection " + projectionId, e);
+			for (YieldTable yieldTable : yieldTableList) {
+				yieldTable.close();
 			}
 		}
 	}
@@ -324,12 +327,18 @@ public class ProjectionContext {
 		return errorLog;
 	}
 
-	public YieldTable getYieldTable() throws YieldTableGenerationException {
-
-		if (yieldTable.isEmpty()) {
-			yieldTable = Optional.of(YieldTable.of(this));
+	public void createYieldTables() throws YieldTableGenerationException {
+		if (!yieldTableList.isEmpty())
+			return;
+		yieldTableList.add(YieldTable.of(this, getParams().getOutputFormat()));
+		if (getParams().getOutputFormat() != Parameters.OutputFormat.TEXT_REPORT
+				&& getParams().containsOption(ExecutionOption.DO_ENABLE_PROJECTION_REPORT)) {
+			yieldTableList.add(YieldTable.of(this, Parameters.OutputFormat.TEXT_REPORT));
 		}
-		return yieldTable.get();
+	}
+
+	public List<YieldTable> getYieldTables() {
+		return Collections.unmodifiableList(yieldTableList);
 	}
 
 	public Path getExecutionFolder() {

@@ -64,16 +64,28 @@ public class YieldTable implements Closeable {
 	private Path yieldTableFilePath;
 
 	private int nextYieldTableNumber = 1;
+	private OutputFormat outputFormat;
 
-	private YieldTable(ProjectionContext context) throws YieldTableGenerationException {
+	public OutputFormat getOutputFormat() {
+		return outputFormat;
+	}
+
+	private YieldTable(ProjectionContext context, OutputFormat outputFormat) throws YieldTableGenerationException {
 		this.context = context;
 		this.params = context.getParams();
-		this.writer = buildYieldTableWriter(params.getOutputFormat());
+		this.writer = buildYieldTableWriter(outputFormat);
+		this.outputFormat = outputFormat;
 	}
 
 	public static YieldTable of(ProjectionContext context) throws YieldTableGenerationException {
 
-		return new YieldTable(context);
+		return new YieldTable(context, context.getParams().getOutputFormat());
+	}
+
+	public static YieldTable of(ProjectionContext context, OutputFormat outputFormat)
+			throws YieldTableGenerationException {
+
+		return new YieldTable(context, outputFormat);
 	}
 
 	public void startGeneration() throws YieldTableGenerationException {
@@ -532,7 +544,7 @@ public class YieldTable implements Closeable {
 
 				// if the format is text report we need to record the dominant species at this age for the Site Curve
 				// table from the report
-				if (context.getParams().getOutputFormat() == OutputFormat.TEXT_REPORT) {
+				if (outputFormat == OutputFormat.TEXT_REPORT) {
 					String dominantSpeciesCode = null;
 					Layer primaryLayer = polygon.findPrimaryLayerByProjectionType(ProjectionTypeCode.UNKNOWN);
 					if (primaryLayer != null
