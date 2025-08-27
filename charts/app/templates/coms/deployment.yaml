@@ -66,8 +66,6 @@ spec:
               value: {{ .Values.coms.env.OBJECTSTORAGE_ENDPOINT | quote }}
             - name: OBJECTSTORAGE_KEY
               value: {{ .Values.coms.env.OBJECTSTORAGE_KEY | quote }}
-            - name: S3ACCESSMODE_ENABLES
-              value: {{ .Values.coms.env.S3ACCESSMODE_ENABLES | quote }}
             - name: BASICAUTH_ENABLED
               value: {{ .Values.coms.env.BASICAUTH_ENABLED | quote }}
             - name: BASICAUTH_USERNAME
