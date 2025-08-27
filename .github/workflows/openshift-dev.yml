@@ -15,6 +15,7 @@ on:
       - "frontend/**"
       - "lib/**"
       - ".github/workflows/openshift-*.yml"
+      - ".github/workflows/.deployer.yml"
   pull_request:
     paths:
       - "backend/**"
@@ -22,6 +23,7 @@ on:
       - "frontend/**"
       - "lib/**"
       - ".github/workflows/openshift-*.yml"
+      - ".github/workflows/.deployer.yml"
 concurrency:
   # Cancel if re-attempted
   group: ${{ github.event_name }}

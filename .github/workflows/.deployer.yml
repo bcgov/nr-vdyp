@@ -158,14 +158,13 @@ jobs:
             --set coms.env.DB_DATABASE=${{ vars.COMS_DB_DATABASE }} \
             --set-string coms.image.tag=${{ vars.COMS_TAG }} \
             --set-string coms.env.OBJECTSTORAGE_ENABLED=true \
-            --set-string coms.env.OBJECTSTORAGE_ACCESSKEYID=todo \
-            --set-string coms.env.OBJECTSTORAGE_SECRETACCESSKEY=todo \
+            --set-string coms.env.OBJECTSTORAGE_ACCESSKEYID=${{ vars.OBJECTSTORAGE_ACCESSKEYID }} \
+            --set-string coms.env.OBJECTSTORAGE_SECRETACCESSKEY=${{ secrets.OBJECTSTORAGE_SECRETACCESSKEY }} \
             --set-string coms.env.OBJECTSTORAGE_BUCKET=${{ vars.OBJECTSTORAGE_BUCKET }} \
             --set-string coms.env.OBJECTSTORAGE_ENDPOINT=${{ vars.OBJECTSTORAGE_ENDPOINT }} \
             --set-string coms.env.OBJECTSTORAGE_KEY=${{ vars.OBJECTSTORAGE_KEY }} \
-            --set-string coms.env.S3ACCESSMODE_ENABLES=true \
             --set-string coms.env.BASICAUTH_ENABLED=true \
-            --set-string coms.env.BASICAUTH_USERNAME=${{ secrets.COMS_SERVICE_USERNAME }} \
+            --set-string coms.env.BASICAUTH_USERNAME=${{ vars.COMS_SERVICE_USERNAME }} \
             --set-string coms.env.BASICAUTH_PASSWORD=${{ secrets.COMS_SERVICE_PASSWORD }} \
             --set-string coms.env.KC_ENABLED=true \
             --set-string coms.env.KC_PUBLICKEY=${{ secrets.COMS_KEYCLOAK_PUBLICKEY }} \
