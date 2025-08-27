@@ -57,6 +57,18 @@ const data = computed(() => {
       return []
   }
 })
+const downloadData = computed(() => {
+  switch (props.tabname) {
+    case CONSTANTS.REPORTING_TAB.MODEL_REPORT:
+        return [...projectionStore.csvYieldLines]
+    case CONSTANTS.REPORTING_TAB.VIEW_ERR_MSG:
+      return [...projectionStore.errorMessages]
+    case CONSTANTS.REPORTING_TAB.VIEW_LOG_FILE:
+      return [...projectionStore.logMessages]
+    default:
+      return []
+  }
+})
 
 const rawResults = computed(() => {
   if (props.tabname === CONSTANTS.REPORTING_TAB.MODEL_REPORT) {
@@ -75,14 +87,11 @@ const handleDownload = () => {
   }
   switch (props.tabname) {
     case CONSTANTS.REPORTING_TAB.MODEL_REPORT:
-      if (
-        appStore.modelSelection ===
-        CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS
-      ) {
-        downloadTextFile(data.value, CONSTANTS.FILE_NAME.YIELD_TABLE_TXT)
-      } else {
-        downloadCSVFile(data.value, CONSTANTS.FILE_NAME.YIELD_TABLE_CSV)
+      if (!downloadData.value || downloadData.value.length === 0) {
+        messageHandler.logErrorMessage(MESSAGE.FILE_DOWNLOAD_ERR.NO_DATA)
+        return
       }
+      downloadCSVFile(downloadData.value, CONSTANTS.FILE_NAME.YIELD_TABLE_CSV)
       break
     case CONSTANTS.REPORTING_TAB.VIEW_ERR_MSG:
       downloadTextFile(data.value, CONSTANTS.FILE_NAME.ERROR_TXT)

@@ -797,4 +797,37 @@ public class VdypMatchers {
 			}
 		};
 	}
+
+	public static interface RecursiveHasEntryBuilder {
+		Matcher<Map<?, ?>> withValue(Matcher<?> valueMatcher);
+	}
+
+	/**
+	 * Creates a matcher for a nested set of maps. recursiveHasEntry(is("a"), is("b"), is("c")).withValue(is("x"))
+	 * matches if the given value is a map with an entry a, that is a map with an entry b, which is a map with entry c,
+	 * which has a value of "x". This is equivalent to hasEntry(is("a"), hasEntry(is("b"), hasEntry(is("c"), is("x"))))
+	 *
+	 * @param keys
+	 * @return
+	 */
+	public static RecursiveHasEntryBuilder recursiveHasEntry(Matcher<?>... keys) {
+		if (keys.length == 0) {
+			throw new IllegalArgumentException("At least one key matcher must be provided");
+		}
+		return new RecursiveHasEntryBuilder() {
+
+			@Override
+			public Matcher<Map<?, ?>> withValue(Matcher<?> valueMatcher) {
+				Matcher<?> matcher = valueMatcher;
+				for (int i = keys.length - 1; i >= 0; i--) {
+					matcher = hasEntry(is(keys[i]), matcher);
+				}
+				@SuppressWarnings("unchecked") // Since there is at least one key, the value matcher must have been
+												// wrapped with at least one hasEntry matcher
+				var result = (Matcher<Map<?, ?>>) matcher;
+				return result;
+			}
+
+		};
+	}
 }

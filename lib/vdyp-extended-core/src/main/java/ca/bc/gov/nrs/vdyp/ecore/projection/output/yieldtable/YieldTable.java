@@ -64,16 +64,28 @@ public class YieldTable implements Closeable {
 	private Path yieldTableFilePath;
 
 	private int nextYieldTableNumber = 1;
+	private OutputFormat outputFormat;
 
-	private YieldTable(ProjectionContext context) throws YieldTableGenerationException {
+	public OutputFormat getOutputFormat() {
+		return outputFormat;
+	}
+
+	private YieldTable(ProjectionContext context, OutputFormat outputFormat) throws YieldTableGenerationException {
 		this.context = context;
 		this.params = context.getParams();
-		this.writer = buildYieldTableWriter(params.getOutputFormat());
+		this.writer = buildYieldTableWriter(outputFormat);
+		this.outputFormat = outputFormat;
 	}
 
 	public static YieldTable of(ProjectionContext context) throws YieldTableGenerationException {
 
-		return new YieldTable(context);
+		return new YieldTable(context, context.getParams().getOutputFormat());
+	}
+
+	public static YieldTable of(ProjectionContext context, OutputFormat outputFormat)
+			throws YieldTableGenerationException {
+
+		return new YieldTable(context, outputFormat);
 	}
 
 	public void startGeneration() throws YieldTableGenerationException {
@@ -532,7 +544,7 @@ public class YieldTable implements Closeable {
 
 				// if the format is text report we need to record the dominant species at this age for the Site Curve
 				// table from the report
-				if (context.getParams().getOutputFormat() == OutputFormat.TEXT_REPORT) {
+				if (outputFormat == OutputFormat.TEXT_REPORT) {
 					String dominantSpeciesCode = null;
 					Layer primaryLayer = polygon.findPrimaryLayerByProjectionType(ProjectionTypeCode.UNKNOWN);
 					if (primaryLayer != null
@@ -1389,6 +1401,7 @@ public class YieldTable implements Closeable {
 			throw new StandYieldCalculationException(new FailedToGrowYoungStandException());
 		}
 
+		// vdyp7core_requestyeardata
 		var projectedPolygon = polygonProjectionsByYear.get(calendarYear);
 		if (projectedPolygon != null && layerType != null) {
 
@@ -1406,20 +1419,13 @@ public class YieldTable implements Closeable {
 			// combination of Forward and Back. In VDYP8 we currently -do not- support Back,
 			// and so some years may be missing from polygonProjectionsByYear.
 
-			if (polygonProjectionsByYear.containsKey(calendarYear)) {
+			var sp0Name = SP0Name.forText(sp0.getSpeciesCode());
+			var ucReportingLevel = context.getParams().getUtils().get(sp0Name);
 
-				var sp0Name = SP0Name.forText(sp0.getSpeciesCode());
-				var ucReportingLevel = context.getParams().getUtils().get(sp0Name);
+			layerYields = getYields(
+					calendarYear, ucReportingLevel, projectedSp0, stand == null ? projectedLayer : projectedSp0
+			);
 
-				layerYields = getYields(
-						calendarYear, ucReportingLevel, projectedSp0, stand == null ? projectedLayer : projectedSp0
-				);
-			} else {
-				layerYields = new LayerYields(
-						false, false /* not dominant */, sp0.getSpeciesCode(), calendarYear, 0.0, 0.0, 0.0, 0.0, 0.0,
-						0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0
-				);
-			}
 		} else {
 			var polygon = layer.getPolygon();
 
@@ -1485,9 +1491,9 @@ public class YieldTable implements Closeable {
 
 		var reportedStandPercent = projectedSp0.getPercentGenus();
 
-		double loreyHeight = projectedSp0.getLoreyHeightByUtilization().get(UtilizationClass.ALL);
+		double loreyHeight = entity.getLoreyHeightByUtilization().get(UtilizationClass.ALL);
 		if (ucReportingLevel == UtilizationClassSet._4_0 /* i.e., "ALL" + "SMALL" */) {
-			loreyHeight += projectedSp0.getLoreyHeightByUtilization().get(UtilizationClass.SMALL);
+			loreyHeight += entity.getLoreyHeightByUtilization().get(UtilizationClass.SMALL);
 		}
 
 		return new LayerYields(

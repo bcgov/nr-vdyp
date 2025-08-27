@@ -16,7 +16,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -138,7 +137,8 @@ public class PolygonProjectionRunnerTest {
 		var unit = PolygonProjectionRunner.of(polygon, context, componentRunner);
 		unit.project();
 		String progress = new String(context.getProgressLog().getAsStream().readAllBytes());
-		YieldTable yieldTable = context.getYieldTable();
+		context.createYieldTables();
+		YieldTable yieldTable = context.getYieldTables().get(0);
 		yieldTable.startGeneration();
 		yieldTable.endGeneration();
 
@@ -155,10 +155,12 @@ public class PolygonProjectionRunnerTest {
 		polygon.doCompleteDefinition(context);
 		var componentRunner = new RealComponentRunner();
 		var unit = PolygonProjectionRunner.of(polygon, context, componentRunner);
+
+		// Need to start the run in the context before projection to provide yield tables to fill
+		context.startRun();
 		unit.project();
-		YieldTable yieldTable = context.getYieldTable();
-		yieldTable.startGeneration();
-		yieldTable.endGeneration();
+		context.endRun();
+		YieldTable yieldTable = context.getYieldTables().get(0);
 
 		var content = new String(yieldTable.getAsStream().readAllBytes());
 		assertThat(content.length(), greaterThan(0));
