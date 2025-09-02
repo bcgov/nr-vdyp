@@ -401,6 +401,11 @@ const buildExecutionOptions = (
     ExecutionOptionsEnum.AllowAggressiveValueEstimation,
     ExecutionOptionsEnum.DoIncludeFileHeader,
     ExecutionOptionsEnum.DoSummarizeProjectionByLayer,
+    ExecutionOptionsEnum.ReportIncludeWholeStemVolume,
+    ExecutionOptionsEnum.ReportIncludeCloseUtilizationVolume,
+    ExecutionOptionsEnum.ReportIncludeNetDecayVolume,
+    ExecutionOptionsEnum.ReportIncludeNDWasteVolume,
+    ExecutionOptionsEnum.ReportIncludeNDWasteBrkgVolume,
   ]
 
   const excludedExecutionOptions: ExecutionOptionsEnum[] = [
@@ -441,26 +446,6 @@ const buildExecutionOptions = (
       flag: modelParameterStore.incSecondaryHeight,
       option:
         ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
-    },
-    {
-      flag: modelParameterStore.isWholeStemEnabled,
-      option: ExecutionOptionsEnum.ReportIncludeWholeStemVolume,
-    },
-    {
-      flag: modelParameterStore.isCloseUtilEnabled,
-      option: ExecutionOptionsEnum.ReportIncludeCloseUtilizationVolume,
-    },
-    {
-      flag: modelParameterStore.isNetDecayEnabled,
-      option: ExecutionOptionsEnum.ReportIncludeNetDecayVolume,
-    },
-    {
-      flag: modelParameterStore.isNetDecayWasteEnabled,
-      option: ExecutionOptionsEnum.ReportIncludeNDWasteVolume,
-    },
-    {
-      flag: modelParameterStore.isNetDecayWasteBreakageEnabled,
-      option: ExecutionOptionsEnum.ReportIncludeNDWasteBrkgVolume,
     },
     {
       flag: modelParameterStore.isComputedMAIEnabled,

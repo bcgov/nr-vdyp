@@ -47,14 +47,6 @@ export const MINIMUM_DBH_LIMITS = Object.freeze({
   CM22_5: '22.5 cm+',
 })
 
-export const VOLUME_REPORTED = Object.freeze({
-  WHOLE_STEM: 'Whole Stem',
-  CLOSE_UTIL: 'Close Utilization',
-  NET_DECAY: 'Net Decay',
-  NET_DECAY_WASTE: 'Net Decay and Waste',
-  NET_DECAY_WASTE_BREAKAGE: 'Net Decay, Waste and Breakage',
-})
-
 export const INCLUDE_IN_REPORT = Object.freeze({
   COMPUTED_MAI: 'Computed MAI',
   CULMINATION_VALUES: 'Culmination Values',

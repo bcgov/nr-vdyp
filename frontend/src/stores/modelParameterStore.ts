@@ -199,12 +199,6 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
   const isForwardGrowEnabled = ref<boolean>(true)
   const isBackwardGrowEnabled = ref<boolean>(true)
 
-  const isWholeStemEnabled = ref<boolean>(true)
-  const isCloseUtilEnabled = ref<boolean>(false)
-  const isNetDecayEnabled = ref<boolean>(false)
-  const isNetDecayWasteEnabled = ref<boolean>(false)
-  const isNetDecayWasteBreakageEnabled = ref<boolean>(false)
-
   const isComputedMAIEnabled = ref<boolean>(false)
   const isCulminationValuesEnabled = ref<boolean>(false)
   const isBySpeciesEnabled = ref<boolean>(false)
@@ -256,7 +250,6 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     isForwardGrowEnabled.value = DEFAULTS.DEFAULT_VALUES.IS_FORWARD_GROW_ENABLED
     isBackwardGrowEnabled.value =
       DEFAULTS.DEFAULT_VALUES.IS_BACKWARD_GROW_ENABLED
-    isWholeStemEnabled.value = DEFAULTS.DEFAULT_VALUES.IS_WHOLE_STEM_ENABLED
     projectionType.value = DEFAULTS.DEFAULT_VALUES.PROJECTION_TYPE
     reportTitle.value = DEFAULTS.DEFAULT_VALUES.REPORT_TITLE
 
@@ -306,11 +299,6 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     yearIncrement,
     isForwardGrowEnabled,
     isBackwardGrowEnabled,
-    isWholeStemEnabled,
-    isCloseUtilEnabled,
-    isNetDecayEnabled,
-    isNetDecayWasteEnabled,
-    isNetDecayWasteBreakageEnabled,
     isComputedMAIEnabled,
     isCulminationValuesEnabled,
     isBySpeciesEnabled,

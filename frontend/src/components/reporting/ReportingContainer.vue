@@ -8,7 +8,7 @@
       @download="handleDownload"
       @downloadrawresult="handleDownloadRawResult"
     />
-    <ReportingOutput :data="downloadData" />
+    <ReportingOutput :data="data" />
   </v-container>
 </template>
 
@@ -22,6 +22,7 @@ import {
   downloadCSVFile,
   printReport,
 } from '@/services/reportService'
+import { useAppStore } from '@/stores/appStore'
 import { useProjectionStore } from '@/stores/projectionStore'
 import { CONSTANTS, MESSAGE } from '@/constants'
 import type { ReportingTab } from '@/types/types'
@@ -34,12 +35,20 @@ const props = defineProps({
     required: true,
   },
 })
-
+const appStore = useAppStore()
 const projectionStore = useProjectionStore()
-const downloadData = computed(() => {
+
+const data = computed(() => {
   switch (props.tabname) {
     case CONSTANTS.REPORTING_TAB.MODEL_REPORT:
-      return [...projectionStore.csvYieldLines]
+      if (
+        appStore.modelSelection ===
+        CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS
+      ) {
+        return [...projectionStore.txtYieldLines]
+      } else {
+        return [...projectionStore.csvYieldLines]
+      }
     case CONSTANTS.REPORTING_TAB.VIEW_ERR_MSG:
       return [...projectionStore.errorMessages]
     case CONSTANTS.REPORTING_TAB.VIEW_LOG_FILE:
@@ -47,6 +56,13 @@ const downloadData = computed(() => {
     default:
       return []
   }
+})
+
+// For downloads, always use CSV format for MODEL_REPORT
+const downloadData = computed(() => {
+  if (props.tabname === CONSTANTS.REPORTING_TAB.MODEL_REPORT)
+    return [...projectionStore.csvYieldLines]
+  else return data.value
 })
 
 const rawResults = computed(() => {

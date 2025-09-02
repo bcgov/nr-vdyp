@@ -37,13 +37,6 @@
               :yearIncrement="currentStore.yearIncrement"
               :isForwardGrowEnabled="currentStore.isForwardGrowEnabled"
               :isBackwardGrowEnabled="currentStore.isBackwardGrowEnabled"
-              :isWholeStemEnabled="currentStore.isWholeStemEnabled"
-              :isCloseUtilEnabled="currentStore.isCloseUtilEnabled"
-              :isNetDecayEnabled="currentStore.isNetDecayEnabled"
-              :isNetDecayWasteEnabled="currentStore.isNetDecayWasteEnabled"
-              :isNetDecayWasteBreakageEnabled="
-                currentStore.isNetDecayWasteBreakageEnabled
-              "
               :isComputedMAIEnabled="currentStore.isComputedMAIEnabled"
               :isCulminationValuesEnabled="
                 currentStore.isCulminationValuesEnabled
@@ -69,15 +62,6 @@
               @update:yearIncrement="handleYearIncrementUpdate"
               @update:isForwardGrowEnabled="handleIsForwardGrowEnabledUpdate"
               @update:isBackwardGrowEnabled="handleIsBackwardGrowEnabledUpdate"
-              @update:isWholeStemEnabled="handleIsWholeStemEnabledUpdate"
-              @update:isCloseUtilEnabled="handleIsCloseUtilEnabledUpdate"
-              @update:isNetDecayEnabled="handleIsNetDecayEnabledUpdate"
-              @update:isNetDecayWasteEnabled="
-                handleIsNetDecayWasteEnabledUpdate
-              "
-              @update:isNetDecayWasteBreakageEnabled="
-                handleIsNetDecayWasteBreakageEnabledUpdate
-              "
               @update:isComputedMAIEnabled="handleIsComputedMAIEnabledUpdate"
               @update:isCulminationValuesEnabled="
                 handleIsCulminationValuesEnabledUpdate
@@ -198,26 +182,6 @@ const handleIsForwardGrowEnabledUpdate = (value: boolean) => {
 
 const handleIsBackwardGrowEnabledUpdate = (value: boolean) => {
   currentStore.value.isBackwardGrowEnabled = value
-}
-
-const handleIsWholeStemEnabledUpdate = (value: boolean) => {
-  currentStore.value.isWholeStemEnabled = value
-}
-
-const handleIsCloseUtilEnabledUpdate = (value: boolean) => {
-  currentStore.value.isCloseUtilEnabled = value
-}
-
-const handleIsNetDecayEnabledUpdate = (value: boolean) => {
-  currentStore.value.isNetDecayEnabled = value
-}
-
-const handleIsNetDecayWasteEnabledUpdate = (value: boolean) => {
-  currentStore.value.isNetDecayWasteEnabled = value
-}
-
-const handleIsNetDecayWasteBreakageEnabledUpdate = (value: boolean) => {
-  currentStore.value.isNetDecayWasteBreakageEnabled = value
 }
 
 const handleIsComputedMAIEnabledUpdate = (value: boolean) => {
@@ -456,16 +420,6 @@ const onClear = () => {
     DEFAULTS.DEFAULT_VALUES.IS_FORWARD_GROW_ENABLED
   currentStore.value.isBackwardGrowEnabled =
     DEFAULTS.DEFAULT_VALUES.IS_BACKWARD_GROW_ENABLED
-  currentStore.value.isWholeStemEnabled =
-    DEFAULTS.DEFAULT_VALUES.IS_WHOLE_STEM_ENABLED
-  currentStore.value.isCloseUtilEnabled =
-    DEFAULTS.DEFAULT_VALUES.IS_CLOSE_UTIL_ENABLED
-  currentStore.value.isNetDecayEnabled =
-    DEFAULTS.DEFAULT_VALUES.IS_NET_DECAY_ENABLED
-  currentStore.value.isNetDecayWasteEnabled =
-    DEFAULTS.DEFAULT_VALUES.IS_NET_DECAY_WASTE_ENABLED
-  currentStore.value.isNetDecayWasteBreakageEnabled =
-    DEFAULTS.DEFAULT_VALUES.IS_NET_DECAY_WASTE_BREAKAGE_ENABLED
   currentStore.value.isComputedMAIEnabled =
     DEFAULTS.DEFAULT_VALUES.IS_COMPUTED_MAI_ENABLED
   currentStore.value.isCulminationValuesEnabled =
