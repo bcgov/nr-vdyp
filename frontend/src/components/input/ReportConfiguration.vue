@@ -815,7 +815,6 @@ const utilizationSliderTickLabels = utilizationClassOptions.reduce(
 )
 
 const handleStartingAgeInput = (value: string) => {
-  // Convert an empty string to null
   localStartingAge.value = parseNumberOrNull(value)
 }
 
