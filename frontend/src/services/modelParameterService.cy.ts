@@ -346,7 +346,7 @@ describe('Model Parameter Service Unit Tests', () => {
             mockModelParameterStore.ageIncrement,
           )
           expect(projectionParams.outputFormat).to.equal(
-            OutputFormatEnum.TextReport,
+            OutputFormatEnum.CSVYieldTable,
           )
           expect(projectionParams.metadataToOutput).to.equal(
             MetadataToOutputEnum.NONE,

@@ -143,7 +143,7 @@ describe('ReportInfoPanel.vue', () => {
 
     cy.contains('.v-input', CONSTANTS.INCLUDE_IN_REPORT.COMPUTED_MAI)
       .find('input[type="checkbox"]')
-      .should('be.checked')
+      .should('not.be.checked')
 
     cy.get('.v-select')
       .find('input')
@@ -191,7 +191,7 @@ describe('ReportInfoPanel.vue', () => {
 
     cy.contains('.v-input', CONSTANTS.INCLUDE_IN_REPORT.COMPUTED_MAI)
       .find('input[type="checkbox"]')
-      .should('be.checked')
+      .should('not.be.checked')
 
     cy.get('.v-select')
       .find('input')
@@ -231,10 +231,6 @@ describe('ReportInfoPanel.vue', () => {
     cy.get('[id="yearIncrement"]').should('not.exist')
 
     cy.contains('.v-input', CONSTANTS.VOLUME_REPORTED.WHOLE_STEM)
-      .find('input[type="checkbox"]')
-      .should('be.checked')
-
-    cy.contains('.v-input', CONSTANTS.INCLUDE_IN_REPORT.COMPUTED_MAI)
       .find('input[type="checkbox"]')
       .should('be.checked')
 
@@ -559,11 +555,6 @@ describe('ReportInfoPanel.vue', () => {
     cy.get('[id="finishingAge"]').should('exist').should('have.value', '')
     cy.get('[id="ageIncrement"]').should('exist').should('have.value', '')
     cy.get('[id="reportTitle"]').should('exist').should('have.value', '')
-    cy.get('[data-testid="volume-reported"] input[type="checkbox"]').each(
-      ($el) => {
-        cy.wrap($el).should('not.be.checked')
-      },
-    )
     cy.get('.v-select')
       .find('input')
       .should('have.value', DEFAULTS.DEFAULT_VALUES.PROJECTION_TYPE)

@@ -8,7 +8,7 @@
       @download="handleDownload"
       @downloadrawresult="handleDownloadRawResult"
     />
-    <ReportingOutput :data="data" />
+    <ReportingOutput :data="downloadData" />
   </v-container>
 </template>
 
@@ -22,7 +22,6 @@ import {
   downloadCSVFile,
   printReport,
 } from '@/services/reportService'
-import { useAppStore } from '@/stores/appStore'
 import { useProjectionStore } from '@/stores/projectionStore'
 import { CONSTANTS, MESSAGE } from '@/constants'
 import type { ReportingTab } from '@/types/types'
@@ -36,31 +35,11 @@ const props = defineProps({
   },
 })
 
-const appStore = useAppStore()
 const projectionStore = useProjectionStore()
-const data = computed(() => {
-  switch (props.tabname) {
-    case CONSTANTS.REPORTING_TAB.MODEL_REPORT:
-      if (
-        appStore.modelSelection ===
-        CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS
-      ) {
-        return [...projectionStore.txtYieldLines]
-      } else {
-        return [...projectionStore.csvYieldLines]
-      }
-    case CONSTANTS.REPORTING_TAB.VIEW_ERR_MSG:
-      return [...projectionStore.errorMessages]
-    case CONSTANTS.REPORTING_TAB.VIEW_LOG_FILE:
-      return [...projectionStore.logMessages]
-    default:
-      return []
-  }
-})
 const downloadData = computed(() => {
   switch (props.tabname) {
     case CONSTANTS.REPORTING_TAB.MODEL_REPORT:
-        return [...projectionStore.csvYieldLines]
+      return [...projectionStore.csvYieldLines]
     case CONSTANTS.REPORTING_TAB.VIEW_ERR_MSG:
       return [...projectionStore.errorMessages]
     case CONSTANTS.REPORTING_TAB.VIEW_LOG_FILE:
@@ -77,11 +56,13 @@ const rawResults = computed(() => {
   return null
 })
 
-const isButtonDisabled = computed(() => !data.value || data.value.length === 0)
+const isButtonDisabled = computed(
+  () => !downloadData.value || downloadData.value.length === 0,
+)
 const isRawResultsButtonDisabled = computed(() => !rawResults.value)
 
 const handleDownload = () => {
-  if (!data.value || data.value.length === 0) {
+  if (!downloadData.value || downloadData.value.length === 0) {
     messageHandler.logErrorMessage(MESSAGE.FILE_DOWNLOAD_ERR.NO_DATA)
     return
   }
@@ -94,10 +75,10 @@ const handleDownload = () => {
       downloadCSVFile(downloadData.value, CONSTANTS.FILE_NAME.YIELD_TABLE_CSV)
       break
     case CONSTANTS.REPORTING_TAB.VIEW_ERR_MSG:
-      downloadTextFile(data.value, CONSTANTS.FILE_NAME.ERROR_TXT)
+      downloadTextFile(downloadData.value, CONSTANTS.FILE_NAME.ERROR_TXT)
       break
     case CONSTANTS.REPORTING_TAB.VIEW_LOG_FILE:
-      downloadTextFile(data.value, CONSTANTS.FILE_NAME.LOG_TXT)
+      downloadTextFile(downloadData.value, CONSTANTS.FILE_NAME.LOG_TXT)
       break
   }
 }
@@ -118,7 +99,7 @@ const handleDownloadRawResult = () => {
 }
 
 const handlePrint = () => {
-  printReport(data.value)
+  printReport(downloadData.value)
 }
 </script>
 

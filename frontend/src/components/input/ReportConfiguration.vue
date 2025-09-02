@@ -275,7 +275,7 @@
                 label="Culmination Values"
                 hide-details
                 :disabled="isCulminationValuesDeactivated"
-                data-testid="is-colmination-values-enabled"
+                data-testid="is-culmination-values-enabled"
               ></v-checkbox>
             </v-col>
             <v-col style="max-width: 20%">
