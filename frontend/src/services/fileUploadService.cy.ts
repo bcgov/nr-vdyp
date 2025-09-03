@@ -44,6 +44,7 @@ describe('File Upload Service Unit Tests', () => {
     fileUploadStore.isCurrentYearEnabled = false
     fileUploadStore.isReferenceYearEnabled = false
     fileUploadStore.incSecondaryHeight = false
+    fileUploadStore.specificYear = 2025
 
     fileUploadStore.polygonFile = new File(['polygon content'], 'polygon.csv', {
       type: 'text/csv',
@@ -286,6 +287,7 @@ describe('File Upload Service Unit Tests', () => {
           expect(projectionParams.metadataToOutput).to.equal(
             MetadataToOutputEnum.VERSION,
           )
+          expect(projectionParams.forceYear).to.equal(2025)
           expect(projectionParams.selectedExecutionOptions).to.include(
             ExecutionOptionsEnum.ForwardGrowEnabled,
           )
@@ -351,6 +353,7 @@ describe('File Upload Service Unit Tests', () => {
         expect(projectionParams.metadataToOutput).to.equal(
           MetadataToOutputEnum.VERSION,
         )
+        expect(projectionParams.forceYear).to.equal(2025)
         expect(projectionParams.selectedExecutionOptions).to.include(
           ExecutionOptionsEnum.ForwardGrowEnabled,
         )
@@ -412,6 +415,7 @@ describe('File Upload Service Unit Tests', () => {
         expect(projectionParams.metadataToOutput).to.equal(
           MetadataToOutputEnum.VERSION,
         )
+        expect(projectionParams.forceYear).to.equal(2025)
         expect(projectionParams.selectedExecutionOptions).to.include(
           ExecutionOptionsEnum.ForwardGrowEnabled,
         )

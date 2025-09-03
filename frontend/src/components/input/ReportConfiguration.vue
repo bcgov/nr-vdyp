@@ -686,6 +686,7 @@ watch(localIncSecondaryHeight, (newVal) => {
     emit('update:incSecondaryHeight', newVal)
   }
 })
+watch(localSpecificYear, (newVal) => emit('update:specificYear', newVal))
 watch(localProjectionType, (newVal) => {
   if (JSON.stringify(newVal) !== JSON.stringify(props.projectionType)) {
     emit('update:projectionType', newVal)

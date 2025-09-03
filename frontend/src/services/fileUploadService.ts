@@ -158,6 +158,7 @@ export const getFormData = (
       fileUploadStore.selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.YEAR
         ? fileUploadStore.endYear
         : null,
+    forceYear: fileUploadStore.specificYear,
     outputFormat: OutputFormatEnum.CSVYieldTable,
     selectedExecutionOptions: selectedExecutionOptions,
     excludedExecutionOptions: excludedExecutionOptions,
