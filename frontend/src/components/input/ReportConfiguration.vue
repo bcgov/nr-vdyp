@@ -1,5 +1,5 @@
 <template>
-  <div class="ml-4 mt-5">
+  <div class="ml-4 mt-5 mb-5">
     <div class="ml-n4 mt-n5">
       <span class="text-h7">Report Title</span>
     </div>
@@ -14,7 +14,7 @@
           placeholder="Enter a report title..."
           density="compact"
           dense
-          style="max-width: 95% !important"
+          style="max-width: 97% !important"
           :disabled="isDisabled"
         ></v-text-field>
       </v-col>
@@ -36,9 +36,12 @@
       </v-col>
     </v-row>
   </div>
-  <div>
+  <div
+    class="ml-n2"
+    v-if="appStore.modelSelection === CONSTANTS.MODEL_SELECTION.FILE_UPLOAD"
+  >
     <v-row>
-      <v-col cols="12">
+      <v-col cols="12" class="mb-n8">
         <v-radio-group
           v-model="selectedAgeYearRange"
           inline
@@ -54,7 +57,7 @@
       </v-col>
     </v-row>
   </div>
-  <div>
+  <div class="ml-4">
     <v-row>
       <template v-if="selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.AGE">
         <v-col cols="2">
@@ -75,7 +78,7 @@
           ></v-text-field>
         </v-col>
         <v-col class="col-space-3" />
-        <v-col cols="2">
+        <v-col cols="2" class="ml-2">
           <v-text-field
             id="finishingAge"
             label="Finishing Age"
@@ -93,7 +96,7 @@
           ></v-text-field>
         </v-col>
         <v-col class="col-space-3" />
-        <v-col cols="2">
+        <v-col cols="2" class="ml-2">
           <v-text-field
             id="ageIncrement"
             label="Increment"
@@ -130,7 +133,7 @@
           ></v-text-field>
         </v-col>
         <v-col class="col-space-3" />
-        <v-col cols="2">
+        <v-col cols="2" class="ml-2">
           <v-text-field
             id="endYear"
             label="End Year"
@@ -148,7 +151,7 @@
           ></v-text-field>
         </v-col>
         <v-col class="col-space-3" />
-        <v-col cols="2">
+        <v-col cols="2" class="ml-2">
           <v-text-field
             id="yearIncrement"
             label="Increment"
@@ -167,7 +170,7 @@
         </v-col>
       </template>
       <v-col class="col-space-4" />
-      <v-col cols="auto" style="margin-left: 2px; margin-top: 2px">
+      <v-col cols="auto" class="ml-n5 mt-0">
         <v-row>
           <v-col cols="auto">
             <v-checkbox
@@ -196,7 +199,7 @@
       <span class="text-h7">Include in Report</span>
     </div>
     <v-row class="ml-n6">
-      <v-col cols="12" style="padding-top: 0px">
+      <v-col cols="12" style="padding-top: 1px">
         <template
           v-if="
             appStore.modelSelection ===
@@ -290,7 +293,7 @@
               ></v-checkbox>
             </v-col>
           </v-row>
-          <v-row class="mt-n5">
+          <v-row class="mt-n7 ml-0">
             <v-col cols="2">
               <v-text-field
                 id="specificYear"
