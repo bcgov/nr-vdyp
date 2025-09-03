@@ -101,8 +101,8 @@ class TextYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean>
 				doWrite("   (Rcrd ID: %d)", reportingInfo.getFeatureId());
 			}
 
-			doWrite("\n");
 		}
+		doWrite("\n");
 		if (params.containsOption(ExecutionOption.DO_INCLUDE_COLUMN_HEADERS_IN_YIELD_TABLE)) {
 
 			String projectionMode = "";
