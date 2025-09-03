@@ -7,6 +7,8 @@ metadata:
   labels:
     {{- include "coms.labels" . | nindent 4 }}
 spec:
+  strategy:
+    type: Recreate
   replicas: {{ .Values.coms.replicas }}
   selector:
     matchLabels:

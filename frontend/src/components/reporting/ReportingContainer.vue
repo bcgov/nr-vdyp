@@ -35,9 +35,9 @@ const props = defineProps({
     required: true,
   },
 })
-
 const appStore = useAppStore()
 const projectionStore = useProjectionStore()
+
 const data = computed(() => {
   switch (props.tabname) {
     case CONSTANTS.REPORTING_TAB.MODEL_REPORT:
@@ -57,17 +57,12 @@ const data = computed(() => {
       return []
   }
 })
+
+// For downloads, always use CSV format for MODEL_REPORT
 const downloadData = computed(() => {
-  switch (props.tabname) {
-    case CONSTANTS.REPORTING_TAB.MODEL_REPORT:
-        return [...projectionStore.csvYieldLines]
-    case CONSTANTS.REPORTING_TAB.VIEW_ERR_MSG:
-      return [...projectionStore.errorMessages]
-    case CONSTANTS.REPORTING_TAB.VIEW_LOG_FILE:
-      return [...projectionStore.logMessages]
-    default:
-      return []
-  }
+  if (props.tabname === CONSTANTS.REPORTING_TAB.MODEL_REPORT)
+    return [...projectionStore.csvYieldLines]
+  else return data.value
 })
 
 const rawResults = computed(() => {
@@ -77,11 +72,13 @@ const rawResults = computed(() => {
   return null
 })
 
-const isButtonDisabled = computed(() => !data.value || data.value.length === 0)
+const isButtonDisabled = computed(
+  () => !downloadData.value || downloadData.value.length === 0,
+)
 const isRawResultsButtonDisabled = computed(() => !rawResults.value)
 
 const handleDownload = () => {
-  if (!data.value || data.value.length === 0) {
+  if (!downloadData.value || downloadData.value.length === 0) {
     messageHandler.logErrorMessage(MESSAGE.FILE_DOWNLOAD_ERR.NO_DATA)
     return
   }
@@ -94,10 +91,10 @@ const handleDownload = () => {
       downloadCSVFile(downloadData.value, CONSTANTS.FILE_NAME.YIELD_TABLE_CSV)
       break
     case CONSTANTS.REPORTING_TAB.VIEW_ERR_MSG:
-      downloadTextFile(data.value, CONSTANTS.FILE_NAME.ERROR_TXT)
+      downloadTextFile(downloadData.value, CONSTANTS.FILE_NAME.ERROR_TXT)
       break
     case CONSTANTS.REPORTING_TAB.VIEW_LOG_FILE:
-      downloadTextFile(data.value, CONSTANTS.FILE_NAME.LOG_TXT)
+      downloadTextFile(downloadData.value, CONSTANTS.FILE_NAME.LOG_TXT)
       break
   }
 }
@@ -118,7 +115,7 @@ const handleDownloadRawResult = () => {
 }
 
 const handlePrint = () => {
-  printReport(data.value)
+  printReport(downloadData.value)
 }
 </script>
 

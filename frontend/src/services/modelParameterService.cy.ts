@@ -60,11 +60,6 @@ describe('Model Parameter Service Unit Tests', () => {
     treesPerHectare: 0,
     spzAge: 50,
     spzHeight: 20,
-    isWholeStemEnabled: false,
-    isCloseUtilEnabled: false,
-    isNetDecayEnabled: false,
-    isNetDecayWasteEnabled: false,
-    isNetDecayWasteBreakageEnabled: false,
     isComputedMAIEnabled: false,
     isCulminationValuesEnabled: false,
   }
@@ -346,7 +341,7 @@ describe('Model Parameter Service Unit Tests', () => {
             mockModelParameterStore.ageIncrement,
           )
           expect(projectionParams.outputFormat).to.equal(
-            OutputFormatEnum.TextReport,
+            OutputFormatEnum.CSVYieldTable,
           )
           expect(projectionParams.metadataToOutput).to.equal(
             MetadataToOutputEnum.NONE,
@@ -376,11 +371,6 @@ describe('Model Parameter Service Unit Tests', () => {
   it('should include volume-related options when enabled', () => {
     const volumeEnabledStore = {
       ...mockModelParameterStore,
-      isWholeStemEnabled: true,
-      isCloseUtilEnabled: true,
-      isNetDecayEnabled: true,
-      isNetDecayWasteEnabled: true,
-      isNetDecayWasteBreakageEnabled: true,
       isComputedMAIEnabled: true,
       isCulminationValuesEnabled: true,
     }
@@ -418,57 +408,6 @@ describe('Model Parameter Service Unit Tests', () => {
             ExecutionOptionsEnum.ReportIncludeVolumeMAI,
           )
           expect(projectionParams.selectedExecutionOptions).to.include(
-            ExecutionOptionsEnum.ReportIncludeCulminationValues,
-          )
-        })
-    })
-  })
-
-  it('should exclude volume-related options when disabled', () => {
-    const volumeDisabledStore = {
-      ...mockModelParameterStore,
-      isWholeStemEnabled: false,
-      isCloseUtilEnabled: false,
-      isNetDecayEnabled: false,
-      isNetDecayWasteEnabled: false,
-      isNetDecayWasteBreakageEnabled: false,
-      isComputedMAIEnabled: false,
-      isCulminationValuesEnabled: false,
-    }
-
-    const projectionStub = cy
-      .stub()
-      .resolves(new Blob(['mock response'], { type: 'application/zip' }))
-
-    cy.wrap(runModel(volumeDisabledStore, projectionStub)).then(() => {
-      const formDataArg = projectionStub.getCall(0).args[0] as FormData
-      const projectionParamsBlob = formDataArg.get(
-        ParameterNamesEnum.PROJECTION_PARAMETERS,
-      ) as Blob
-
-      cy.wrap(projectionParamsBlob)
-        .then((blob) => blob.text())
-        .then((text) => {
-          const projectionParams = JSON.parse(text)
-          expect(projectionParams.excludedExecutionOptions).to.include(
-            ExecutionOptionsEnum.ReportIncludeWholeStemVolume,
-          )
-          expect(projectionParams.excludedExecutionOptions).to.include(
-            ExecutionOptionsEnum.ReportIncludeCloseUtilizationVolume,
-          )
-          expect(projectionParams.excludedExecutionOptions).to.include(
-            ExecutionOptionsEnum.ReportIncludeNetDecayVolume,
-          )
-          expect(projectionParams.excludedExecutionOptions).to.include(
-            ExecutionOptionsEnum.ReportIncludeNDWasteVolume,
-          )
-          expect(projectionParams.excludedExecutionOptions).to.include(
-            ExecutionOptionsEnum.ReportIncludeNDWasteBrkgVolume,
-          )
-          expect(projectionParams.excludedExecutionOptions).to.include(
-            ExecutionOptionsEnum.ReportIncludeVolumeMAI,
-          )
-          expect(projectionParams.excludedExecutionOptions).to.include(
             ExecutionOptionsEnum.ReportIncludeCulminationValues,
           )
         })

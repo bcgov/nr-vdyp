@@ -193,62 +193,6 @@
   </div>
   <div class="ml-4 mt-5">
     <div class="ml-n4 mt-n5">
-      <span class="text-h7">Volumes Reported</span>
-    </div>
-    <v-row class="ml-n6">
-      <v-col cols="12" style="padding-top: 0px">
-        <v-row>
-          <v-col style="max-width: 20%">
-            <v-checkbox
-              v-model="localIsWholeStemEnabled"
-              label="Whole Stem"
-              hide-details
-              :disabled="isWholeStemDeactivated"
-              data-testid="is-whole-stem-enabled"
-            ></v-checkbox>
-          </v-col>
-          <v-col style="max-width: 20%">
-            <v-checkbox
-              v-model="localIsCloseUtilEnabled"
-              label="Close Utilization"
-              hide-details
-              :disabled="isCloseUtilDeactivated"
-              data-testid="is-close-util-enabled"
-            ></v-checkbox>
-          </v-col>
-          <v-col style="max-width: 20%">
-            <v-checkbox
-              v-model="localIsNetDecayEnabled"
-              label="Net Decay"
-              hide-details
-              :disabled="isNetDecayDeactivated"
-              data-testid="is-net-decay-enabled"
-            ></v-checkbox>
-          </v-col>
-          <v-col style="max-width: 20%">
-            <v-checkbox
-              v-model="localIsNetDecayWasteEnabled"
-              label="Net Decay and Waste"
-              hide-details
-              :disabled="isNetDecayWasteDeactivated"
-              data-testid="is-net-decay-waste-enabled"
-            ></v-checkbox>
-          </v-col>
-          <v-col style="max-width: 20%">
-            <v-checkbox
-              v-model="localIsNetDecayWasteBreakageEnabled"
-              label="Net Decay, Waste and Breakage"
-              hide-details
-              :disabled="isNetDecayWasteBreakageDeactivated"
-              data-testid="is-net-decay-waste-breakage-enabled"
-            ></v-checkbox>
-          </v-col>
-        </v-row>
-      </v-col>
-    </v-row>
-  </div>
-  <div class="ml-4 mt-5">
-    <div class="ml-n4 mt-n5">
       <span class="text-h7">Include in Report</span>
     </div>
     <v-row class="ml-n6">
@@ -275,7 +219,7 @@
                 label="Culmination Values"
                 hide-details
                 :disabled="isCulminationValuesDeactivated"
-                data-testid="is-colmination-values-enabled"
+                data-testid="is-culmination-values-enabled"
               ></v-checkbox>
             </v-col>
             <v-col style="max-width: 20%">
@@ -421,11 +365,6 @@ const props = defineProps<{
   yearIncrement: number | null
   isForwardGrowEnabled: boolean
   isBackwardGrowEnabled: boolean
-  isWholeStemEnabled: boolean
-  isCloseUtilEnabled: boolean
-  isNetDecayEnabled: boolean
-  isNetDecayWasteEnabled: boolean
-  isNetDecayWasteBreakageEnabled: boolean
   isComputedMAIEnabled: boolean
   isCulminationValuesEnabled: boolean
   isBySpeciesEnabled: boolean
@@ -452,11 +391,6 @@ const emit = defineEmits([
   'update:yearIncrement',
   'update:isForwardGrowEnabled',
   'update:isBackwardGrowEnabled',
-  'update:isWholeStemEnabled',
-  'update:isCloseUtilEnabled',
-  'update:isNetDecayEnabled',
-  'update:isNetDecayWasteEnabled',
-  'update:isNetDecayWasteBreakageEnabled',
   'update:isComputedMAIEnabled',
   'update:isCulminationValuesEnabled',
   'update:isBySpeciesEnabled',
@@ -488,13 +422,6 @@ const localEndYear = ref<number | null>(props.endYear)
 const localYearIncrement = ref<number | null>(props.yearIncrement)
 const localIsForwardGrowEnabled = ref<boolean>(props.isForwardGrowEnabled)
 const localIsBackwardGrowEnabled = ref<boolean>(props.isBackwardGrowEnabled)
-const localIsWholeStemEnabled = ref<boolean>(props.isWholeStemEnabled)
-const localIsCloseUtilEnabled = ref<boolean>(props.isCloseUtilEnabled)
-const localIsNetDecayEnabled = ref<boolean>(props.isNetDecayEnabled)
-const localIsNetDecayWasteEnabled = ref<boolean>(props.isNetDecayWasteEnabled)
-const localIsNetDecayWasteBreakageEnabled = ref<boolean>(
-  props.isNetDecayWasteBreakageEnabled,
-)
 const localIsComputedMAIEnabled = ref<boolean>(props.isComputedMAIEnabled)
 const localIsCulminationValuesEnabled = ref<boolean>(
   props.isCulminationValuesEnabled,
@@ -572,58 +499,6 @@ watch(
       JSON.stringify(localIsBackwardGrowEnabled.value)
     ) {
       localIsBackwardGrowEnabled.value = newVal
-    }
-  },
-)
-watch(
-  () => props.isWholeStemEnabled,
-  (newVal) => {
-    if (
-      JSON.stringify(newVal) !== JSON.stringify(localIsWholeStemEnabled.value)
-    ) {
-      localIsWholeStemEnabled.value = newVal
-    }
-  },
-)
-watch(
-  () => props.isCloseUtilEnabled,
-  (newVal) => {
-    if (
-      JSON.stringify(newVal) !== JSON.stringify(localIsCloseUtilEnabled.value)
-    ) {
-      localIsCloseUtilEnabled.value = newVal
-    }
-  },
-)
-watch(
-  () => props.isNetDecayEnabled,
-  (newVal) => {
-    if (
-      JSON.stringify(newVal) !== JSON.stringify(localIsNetDecayEnabled.value)
-    ) {
-      localIsNetDecayEnabled.value = newVal
-    }
-  },
-)
-watch(
-  () => props.isNetDecayWasteEnabled,
-  (newVal) => {
-    if (
-      JSON.stringify(newVal) !==
-      JSON.stringify(localIsNetDecayWasteEnabled.value)
-    ) {
-      localIsNetDecayWasteEnabled.value = newVal
-    }
-  },
-)
-watch(
-  () => props.isNetDecayWasteBreakageEnabled,
-  (newVal) => {
-    if (
-      JSON.stringify(newVal) !==
-      JSON.stringify(localIsNetDecayWasteBreakageEnabled.value)
-    ) {
-      localIsNetDecayWasteBreakageEnabled.value = newVal
     }
   },
 )
@@ -759,34 +634,6 @@ watch(localIsBackwardGrowEnabled, (newVal) => {
     emit('update:isBackwardGrowEnabled', newVal)
   }
 })
-watch(localIsWholeStemEnabled, (newVal) => {
-  if (JSON.stringify(newVal) !== JSON.stringify(props.isWholeStemEnabled)) {
-    emit('update:isWholeStemEnabled', newVal)
-  }
-})
-watch(localIsCloseUtilEnabled, (newVal) => {
-  if (JSON.stringify(newVal) !== JSON.stringify(props.isCloseUtilEnabled)) {
-    emit('update:isCloseUtilEnabled', newVal)
-  }
-})
-watch(localIsNetDecayEnabled, (newVal) => {
-  if (JSON.stringify(newVal) !== JSON.stringify(props.isNetDecayEnabled)) {
-    emit('update:isNetDecayEnabled', newVal)
-  }
-})
-watch(localIsNetDecayWasteEnabled, (newVal) => {
-  if (JSON.stringify(newVal) !== JSON.stringify(props.isNetDecayWasteEnabled)) {
-    emit('update:isNetDecayWasteEnabled', newVal)
-  }
-})
-watch(localIsNetDecayWasteBreakageEnabled, (newVal) => {
-  if (
-    JSON.stringify(newVal) !==
-    JSON.stringify(props.isNetDecayWasteBreakageEnabled)
-  ) {
-    emit('update:isNetDecayWasteBreakageEnabled', newVal)
-  }
-})
 watch(localIsComputedMAIEnabled, (newVal) => {
   if (JSON.stringify(newVal) !== JSON.stringify(props.isComputedMAIEnabled)) {
     emit('update:isComputedMAIEnabled', newVal)
@@ -870,11 +717,6 @@ watch(
 // Watch for projectionType to manage objects in the 'Volumes Reported' and 'Mimimum DBH Limit by Species Group' states
 watch(localProjectionType, (newVal) => {
   if (newVal === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS) {
-    localIsWholeStemEnabled.value = false
-    localIsCloseUtilEnabled.value = true
-    localIsNetDecayEnabled.value = false
-    localIsNetDecayWasteEnabled.value = false
-    localIsNetDecayWasteBreakageEnabled.value = false
     // Update minimum DBH limits for CFS Biomass
     speciesGroups.value.forEach((group) => {
       if (BIZCONSTANTS.CFS_BIOMASS_SPECIES_GROUP_UTILIZATION_MAP[group.group]) {
@@ -919,21 +761,6 @@ const isForwardGrowDeactivated = computed(() => {
 })
 const isBackwardGrowDeactivated = computed(() => {
   return props.isDisabled
-})
-const isWholeStemDeactivated = computed(() => {
-  return props.isDisabled || isCFOBiomassSelected.value
-})
-const isCloseUtilDeactivated = computed(() => {
-  return props.isDisabled || isCFOBiomassSelected.value
-})
-const isNetDecayDeactivated = computed(() => {
-  return props.isDisabled || isCFOBiomassSelected.value
-})
-const isNetDecayWasteDeactivated = computed(() => {
-  return props.isDisabled || isCFOBiomassSelected.value
-})
-const isNetDecayWasteBreakageDeactivated = computed(() => {
-  return props.isDisabled || isCFOBiomassSelected.value
 })
 const isComputedMAIDeactivated = computed(() => {
   return props.isDisabled || isCFOBiomassSelected.value
@@ -988,7 +815,6 @@ const utilizationSliderTickLabels = utilizationClassOptions.reduce(
 )
 
 const handleStartingAgeInput = (value: string) => {
-  // Convert an empty string to null
   localStartingAge.value = parseNumberOrNull(value)
 }
 
