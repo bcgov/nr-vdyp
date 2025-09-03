@@ -443,17 +443,21 @@ const buildExecutionOptions = (
       option: ExecutionOptionsEnum.BackGrowEnabled,
     },
     {
-      flag: modelParameterStore.incSecondaryHeight,
-      option:
-        ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
-    },
-    {
       flag: modelParameterStore.isComputedMAIEnabled,
       option: ExecutionOptionsEnum.ReportIncludeVolumeMAI,
     },
     {
       flag: modelParameterStore.isCulminationValuesEnabled,
       option: ExecutionOptionsEnum.ReportIncludeCulminationValues,
+    },
+    {
+      flag: modelParameterStore.isBySpeciesEnabled,
+      option: ExecutionOptionsEnum.DoIncludeSpeciesProjection,
+    },
+    {
+      flag: modelParameterStore.incSecondaryHeight,
+      option:
+        ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
     },
   ]
 

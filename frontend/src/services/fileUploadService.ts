@@ -40,7 +40,6 @@ export const buildExecutionOptions = (
     ExecutionOptionsEnum.DoIncludeProjectionFiles,
     ExecutionOptionsEnum.DoDelayExecutionFolderDeletion,
     ExecutionOptionsEnum.DoIncludeProjectedMOFBiomass,
-    ExecutionOptionsEnum.DoIncludeSpeciesProjection,
     ExecutionOptionsEnum.ReportIncludeWholeStemVolume,
     ExecutionOptionsEnum.ReportIncludeCloseUtilizationVolume,
     ExecutionOptionsEnum.ReportIncludeNetDecayVolume,
@@ -70,7 +69,6 @@ export const buildExecutionOptions = (
       flag: fileUploadStore.isBackwardGrowEnabled,
       option: ExecutionOptionsEnum.BackGrowEnabled,
     },
-    //
     {
       flag: fileUploadStore.isByLayerEnabled,
       option: ExecutionOptionsEnum.DoSummarizeProjectionByLayer,
@@ -78,6 +76,10 @@ export const buildExecutionOptions = (
     {
       flag: !fileUploadStore.isByLayerEnabled,
       option: ExecutionOptionsEnum.DoSummarizeProjectionByPolygon,
+    },
+    {
+      flag: fileUploadStore.isBySpeciesEnabled,
+      option: ExecutionOptionsEnum.DoIncludeSpeciesProjection,
     },
     {
       flag: fileUploadStore.isProjectionModeEnabled,
@@ -94,11 +96,6 @@ export const buildExecutionOptions = (
     {
       flag: fileUploadStore.isReferenceYearEnabled,
       option: ExecutionOptionsEnum.DoForceReferenceYearInclusionInYieldTables,
-    },
-    {
-      flag: fileUploadStore.incSecondaryHeight,
-      option:
-        ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
     },
   ]
 

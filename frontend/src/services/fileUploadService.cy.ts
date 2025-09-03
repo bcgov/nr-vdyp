@@ -43,7 +43,7 @@ describe('File Upload Service Unit Tests', () => {
     fileUploadStore.isPolygonIDEnabled = false
     fileUploadStore.isCurrentYearEnabled = false
     fileUploadStore.isReferenceYearEnabled = false
-    fileUploadStore.incSecondaryHeight = false
+    fileUploadStore.isBySpeciesEnabled = false
     fileUploadStore.specificYear = 2025
 
     fileUploadStore.polygonFile = new File(['polygon content'], 'polygon.csv', {
@@ -59,11 +59,7 @@ describe('File Upload Service Unit Tests', () => {
       buildExecutionOptions(fileUploadStore)
 
     expect(selectedExecutionOptions).to.include.members([
-      ExecutionOptionsEnum.ForwardGrowEnabled,
-      ExecutionOptionsEnum.BackGrowEnabled,
       ExecutionOptionsEnum.DoIncludeFileHeader,
-      ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes,
-      ExecutionOptionsEnum.DoSummarizeProjectionByPolygon,
       ExecutionOptionsEnum.DoIncludeAgeRowsInYieldTable,
       ExecutionOptionsEnum.DoIncludeYearRowsInYieldTable,
       ExecutionOptionsEnum.DoIncludeColumnHeadersInYieldTable,
@@ -75,17 +71,18 @@ describe('File Upload Service Unit Tests', () => {
 
     expect(excludedExecutionOptions).to.include.members([
       ExecutionOptionsEnum.DoSaveIntermediateFiles,
-      ExecutionOptionsEnum.DoForceReferenceYearInclusionInYieldTables,
-      ExecutionOptionsEnum.DoForceCurrentYearInclusionInYieldTables,
-      ExecutionOptionsEnum.DoIncludePolygonRecordIdInYieldTable,
-      ExecutionOptionsEnum.DoSummarizeProjectionByLayer,
-      ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
       ExecutionOptionsEnum.AllowAggressiveValueEstimation,
       ExecutionOptionsEnum.DoIncludeProjectionFiles,
       ExecutionOptionsEnum.DoDelayExecutionFolderDeletion,
-      ExecutionOptionsEnum.DoIncludeProjectedCFSBiomass,
       ExecutionOptionsEnum.DoIncludeProjectedMOFBiomass,
-      ExecutionOptionsEnum.DoIncludeProjectionModeInYieldTable,
+      ExecutionOptionsEnum.ReportIncludeWholeStemVolume,
+      ExecutionOptionsEnum.ReportIncludeCloseUtilizationVolume,
+      ExecutionOptionsEnum.ReportIncludeNetDecayVolume,
+      ExecutionOptionsEnum.ReportIncludeNDWasteVolume,
+      ExecutionOptionsEnum.ReportIncludeNDWasteBrkgVolume,
+      ExecutionOptionsEnum.ReportIncludeVolumeMAI,
+      ExecutionOptionsEnum.ReportIncludeSpeciesComp,
+      ExecutionOptionsEnum.ReportIncludeCulminationValues,
     ])
   })
 
@@ -185,16 +182,16 @@ describe('File Upload Service Unit Tests', () => {
     )
   })
 
-  it('should handle incSecondaryHeight correctly', () => {
-    fileUploadStore.incSecondaryHeight = true
+  it('should handle isBySpeciesEnabled correctly', () => {
+    fileUploadStore.isBySpeciesEnabled = true
     const { selectedExecutionOptions, excludedExecutionOptions } =
       buildExecutionOptions(fileUploadStore)
 
     expect(selectedExecutionOptions).to.include(
-      ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
+      ExecutionOptionsEnum.DoIncludeSpeciesProjection,
     )
     expect(excludedExecutionOptions).not.to.include(
-      ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
+      ExecutionOptionsEnum.DoIncludeSpeciesProjection,
     )
   })
 
@@ -365,15 +362,18 @@ describe('File Upload Service Unit Tests', () => {
         )
         expect(projectionParams.excludedExecutionOptions).to.include.members([
           ExecutionOptionsEnum.DoSaveIntermediateFiles,
-          ExecutionOptionsEnum.DoForceReferenceYearInclusionInYieldTables,
-          ExecutionOptionsEnum.DoForceCurrentYearInclusionInYieldTables,
-          ExecutionOptionsEnum.DoIncludePolygonRecordIdInYieldTable,
-          ExecutionOptionsEnum.DoSummarizeProjectionByLayer,
-          ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
           ExecutionOptionsEnum.AllowAggressiveValueEstimation,
           ExecutionOptionsEnum.DoIncludeProjectionFiles,
           ExecutionOptionsEnum.DoDelayExecutionFolderDeletion,
           ExecutionOptionsEnum.DoIncludeProjectedMOFBiomass,
+          ExecutionOptionsEnum.ReportIncludeWholeStemVolume,
+          ExecutionOptionsEnum.ReportIncludeCloseUtilizationVolume,
+          ExecutionOptionsEnum.ReportIncludeNetDecayVolume,
+          ExecutionOptionsEnum.ReportIncludeNDWasteVolume,
+          ExecutionOptionsEnum.ReportIncludeNDWasteBrkgVolume,
+          ExecutionOptionsEnum.ReportIncludeVolumeMAI,
+          ExecutionOptionsEnum.ReportIncludeSpeciesComp,
+          ExecutionOptionsEnum.ReportIncludeCulminationValues,
         ])
         expect(projectionParams.selectedDebugOptions).to.deep.equal([
           DebugOptionsEnum.DoIncludeDebugTimestamps,
@@ -427,15 +427,18 @@ describe('File Upload Service Unit Tests', () => {
         )
         expect(projectionParams.excludedExecutionOptions).to.include.members([
           ExecutionOptionsEnum.DoSaveIntermediateFiles,
-          ExecutionOptionsEnum.DoForceReferenceYearInclusionInYieldTables,
-          ExecutionOptionsEnum.DoForceCurrentYearInclusionInYieldTables,
-          ExecutionOptionsEnum.DoIncludePolygonRecordIdInYieldTable,
-          ExecutionOptionsEnum.DoSummarizeProjectionByLayer,
-          ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
           ExecutionOptionsEnum.AllowAggressiveValueEstimation,
           ExecutionOptionsEnum.DoIncludeProjectionFiles,
           ExecutionOptionsEnum.DoDelayExecutionFolderDeletion,
           ExecutionOptionsEnum.DoIncludeProjectedMOFBiomass,
+          ExecutionOptionsEnum.ReportIncludeWholeStemVolume,
+          ExecutionOptionsEnum.ReportIncludeCloseUtilizationVolume,
+          ExecutionOptionsEnum.ReportIncludeNetDecayVolume,
+          ExecutionOptionsEnum.ReportIncludeNDWasteVolume,
+          ExecutionOptionsEnum.ReportIncludeNDWasteBrkgVolume,
+          ExecutionOptionsEnum.ReportIncludeVolumeMAI,
+          ExecutionOptionsEnum.ReportIncludeSpeciesComp,
+          ExecutionOptionsEnum.ReportIncludeCulminationValues,
         ])
         expect(projectionParams.selectedDebugOptions).to.deep.equal([
           DebugOptionsEnum.DoIncludeDebugTimestamps,
@@ -454,18 +457,29 @@ describe('File Upload Service Unit Tests', () => {
     fileUploadStore.isPolygonIDEnabled = true
     fileUploadStore.isCurrentYearEnabled = true
     fileUploadStore.isReferenceYearEnabled = true
-    fileUploadStore.incSecondaryHeight = true
+    fileUploadStore.isBySpeciesEnabled = true
 
     const { selectedExecutionOptions, excludedExecutionOptions } =
       buildExecutionOptions(fileUploadStore)
 
     expect(selectedExecutionOptions).to.include.members([
+      ExecutionOptionsEnum.ForwardGrowEnabled,
+      ExecutionOptionsEnum.BackGrowEnabled,
+      ExecutionOptionsEnum.DoIncludeFileHeader,
+      ExecutionOptionsEnum.DoIncludeProjectedMOFVolumes,
       ExecutionOptionsEnum.DoSummarizeProjectionByLayer,
       ExecutionOptionsEnum.DoIncludeProjectionModeInYieldTable,
       ExecutionOptionsEnum.DoIncludePolygonRecordIdInYieldTable,
       ExecutionOptionsEnum.DoForceCurrentYearInclusionInYieldTables,
       ExecutionOptionsEnum.DoForceReferenceYearInclusionInYieldTables,
-      ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
+      ExecutionOptionsEnum.DoIncludeSpeciesProjection,
+      ExecutionOptionsEnum.DoIncludeAgeRowsInYieldTable,
+      ExecutionOptionsEnum.DoIncludeYearRowsInYieldTable,
+      ExecutionOptionsEnum.DoIncludeColumnHeadersInYieldTable,
+      ExecutionOptionsEnum.DoAllowBasalAreaAndTreesPerHectareValueSubstitution,
+      ExecutionOptionsEnum.DoEnableProgressLogging,
+      ExecutionOptionsEnum.DoEnableErrorLogging,
+      ExecutionOptionsEnum.DoEnableDebugLogging,
     ])
 
     expect(excludedExecutionOptions).to.include(
@@ -476,7 +490,7 @@ describe('File Upload Service Unit Tests', () => {
       ExecutionOptionsEnum.DoIncludePolygonRecordIdInYieldTable,
       ExecutionOptionsEnum.DoForceCurrentYearInclusionInYieldTables,
       ExecutionOptionsEnum.DoForceReferenceYearInclusionInYieldTables,
-      ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
+      ExecutionOptionsEnum.DoIncludeSpeciesProjection,
     ])
   })
 })

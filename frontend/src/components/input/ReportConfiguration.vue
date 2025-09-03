@@ -19,7 +19,7 @@
         ></v-text-field>
       </v-col>
       <v-col class="col-space-2" />
-      <v-col cols="2">
+      <v-col cols="3">
         <v-select
           label="Projection Type"
           :items="OPTIONS.projectionTypeOptions"
@@ -169,28 +169,25 @@
           ></v-text-field>
         </v-col>
       </template>
-      <v-col class="col-space-4" />
-      <v-col cols="auto" class="ml-n5 mt-0">
-        <v-row>
-          <v-col cols="auto">
-            <v-checkbox
-              v-model="localIsForwardGrowEnabled"
-              label="Forward"
-              hide-details
-              :disabled="isForwardGrowDeactivated"
-              data-testid="is-forward-grow-enabled"
-            ></v-checkbox>
-          </v-col>
-          <v-col cols="auto">
-            <v-checkbox
-              v-model="localIsBackwardGrowEnabled"
-              label="Backward"
-              hide-details
-              :disabled="isBackwardGrowDeactivated"
-              data-testid="is-backward-grow-enabled"
-            ></v-checkbox>
-          </v-col>
-        </v-row>
+      <v-col class="col-space-3" />
+      <v-col cols="2">
+        <v-checkbox
+          v-model="localIsForwardGrowEnabled"
+          label="Forward"
+          hide-details
+          :disabled="isForwardGrowDeactivated"
+          data-testid="is-forward-grow-enabled"
+        ></v-checkbox>
+      </v-col>
+      <v-col class="col-space-3" />
+      <v-col cols="2" class="ml-2">
+        <v-checkbox
+          v-model="localIsBackwardGrowEnabled"
+          label="Backward"
+          hide-details
+          :disabled="isBackwardGrowDeactivated"
+          data-testid="is-backward-grow-enabled"
+        ></v-checkbox>
       </v-col>
     </v-row>
   </div>
@@ -207,7 +204,7 @@
           "
         >
           <v-row>
-            <v-col style="max-width: 20%">
+            <v-col cols="2">
               <v-checkbox
                 v-model="localIsComputedMAIEnabled"
                 label="Computed MAI"
@@ -216,7 +213,8 @@
                 data-testid="is-computed-mai-enabled"
               ></v-checkbox>
             </v-col>
-            <v-col style="max-width: 20%">
+            <v-col class="col-space-3" />
+            <v-col cols="2" class="ml-2">
               <v-checkbox
                 v-model="localIsCulminationValuesEnabled"
                 label="Culmination Values"
@@ -225,7 +223,8 @@
                 data-testid="is-culmination-values-enabled"
               ></v-checkbox>
             </v-col>
-            <v-col style="max-width: 20%">
+            <v-col class="col-space-3" />
+            <v-col cols="2" class="ml-1">
               <v-checkbox
                 v-model="localIsBySpeciesEnabled"
                 label="By Species"
@@ -234,7 +233,8 @@
                 data-testid="is-by-species-enabled"
               ></v-checkbox>
             </v-col>
-            <v-col style="max-width: 20%">
+            <v-col class="col-space-3" />
+            <v-col cols="2" class="ml-2">
               <v-checkbox
                 v-model="localIncSecondaryHeight"
                 label="Secondary Species Height"
@@ -247,7 +247,7 @@
         </template>
         <template v-else>
           <v-row>
-            <v-col style="max-width: 20%">
+            <v-col cols="2">
               <v-checkbox
                 v-model="localIsByLayerEnabled"
                 label="By Layer"
@@ -256,7 +256,18 @@
                 data-testid="is-by-layer-enabled"
               ></v-checkbox>
             </v-col>
-            <v-col style="max-width: 20%">
+            <v-col class="col-space-3" />
+            <v-col cols="2" class="ml-2">
+              <v-checkbox
+                v-model="localIsBySpeciesEnabled"
+                label="By Species"
+                hide-details
+                :disabled="isBySpeciesDeactivated"
+                data-testid="is-by-species-enabled"
+              ></v-checkbox>
+            </v-col>
+            <v-col class="col-space-3" />
+            <v-col cols="2" class="ml-1">
               <v-checkbox
                 v-model="localIsProjectionModeEnabled"
                 label="Projection Mode"
@@ -265,7 +276,8 @@
                 data-testid="is-projection-mode-enabled"
               ></v-checkbox>
             </v-col>
-            <v-col style="max-width: 20%">
+            <v-col class="col-space-3" />
+            <v-col cols="2" class="ml-2">
               <v-checkbox
                 v-model="localIsPolygonIDEnabled"
                 label="Polygon ID"
@@ -274,7 +286,8 @@
                 data-testid="is-polygon-id-enabled"
               ></v-checkbox>
             </v-col>
-            <v-col style="max-width: 20%">
+            <v-col class="col-space-3" />
+            <v-col cols="2" class="ml-1">
               <v-checkbox
                 v-model="localIsCurrentYearEnabled"
                 label="Current Year"
@@ -283,7 +296,9 @@
                 data-testid="is-current-year-enabled"
               ></v-checkbox>
             </v-col>
-            <v-col style="max-width: 20%">
+          </v-row>
+          <v-row class="mt-n7">
+            <v-col cols="2">
               <v-checkbox
                 v-model="localIsReferenceYearEnabled"
                 label="Reference Year"
@@ -292,9 +307,8 @@
                 data-testid="is-reference-year-enabled"
               ></v-checkbox>
             </v-col>
-          </v-row>
-          <v-row class="mt-n7 ml-0">
-            <v-col cols="2">
+            <v-col class="col-space-3" />
+            <v-col cols="2" class="ml-4">
               <v-text-field
                 id="specificYear"
                 label="Specific Year"
@@ -316,7 +330,6 @@
       </v-col>
     </v-row>
   </div>
-
   <div class="ml-4 mt-10" v-if="isModelParametersMode">
     <div class="ml-n4 mt-n5">
       <span class="text-h7">Minimum DBH Limit by Species Group</span>

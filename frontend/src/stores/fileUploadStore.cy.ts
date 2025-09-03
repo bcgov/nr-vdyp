@@ -13,6 +13,8 @@ describe('FileUploadStore Unit Tests', () => {
   })
 
   it('should initialize with default values', () => {
+    store.setDefaultValues()
+
     expect(store.panelOpenStates.reportInfo).to.equal(CONSTANTS.PANEL.OPEN)
     expect(store.panelOpenStates.attachments).to.equal(CONSTANTS.PANEL.CLOSE)
 
@@ -24,18 +26,28 @@ describe('FileUploadStore Unit Tests', () => {
 
     expect(store.runModelEnabled).to.be.false
 
-    expect(store.selectedAgeYearRange).to.be.null
-    expect(store.startingAge).to.be.null
-    expect(store.finishingAge).to.be.null
-    expect(store.ageIncrement).to.be.null
-    expect(store.startYear).to.be.null
-    expect(store.endYear).to.be.null
-    expect(store.yearIncrement).to.be.null
-    expect(store.isForwardGrowEnabled).to.be.true
-    expect(store.isBackwardGrowEnabled).to.be.true
-    expect(store.projectionType).to.be.null
-    expect(store.reportTitle).to.be.null
-
+    expect(store.selectedAgeYearRange).to.equal(
+      DEFAULTS.DEFAULT_VALUES.SELECTED_AGE_YEAR_RANGE,
+    )
+    expect(store.startingAge).to.equal(DEFAULTS.DEFAULT_VALUES.STARTING_AGE)
+    expect(store.finishingAge).to.equal(DEFAULTS.DEFAULT_VALUES.FINISHING_AGE)
+    expect(store.ageIncrement).to.equal(DEFAULTS.DEFAULT_VALUES.AGE_INCREMENT)
+    expect(store.startYear).to.equal(DEFAULTS.DEFAULT_VALUES.START_YEAR)
+    expect(store.endYear).to.equal(DEFAULTS.DEFAULT_VALUES.END_YEAR)
+    expect(store.yearIncrement).to.equal(DEFAULTS.DEFAULT_VALUES.YEAR_INCREMENT)
+    expect(store.isForwardGrowEnabled).to.equal(
+      DEFAULTS.DEFAULT_VALUES.IS_FORWARD_GROW_ENABLED,
+    )
+    expect(store.isBackwardGrowEnabled).to.equal(
+      DEFAULTS.DEFAULT_VALUES.IS_BACKWARD_GROW_ENABLED,
+    )
+    expect(store.isByLayerEnabled).to.equal(
+      DEFAULTS.DEFAULT_VALUES.IS_BY_LAYER_ENABLED,
+    )
+    expect(store.projectionType).to.equal(
+      DEFAULTS.DEFAULT_VALUES.PROJECTION_TYPE,
+    )
+    expect(store.reportTitle).to.equal(DEFAULTS.DEFAULT_VALUES.REPORT_TITLE)
     expect(store.polygonFile).to.be.null
     expect(store.layerFile).to.be.null
   })
@@ -87,6 +99,9 @@ describe('FileUploadStore Unit Tests', () => {
     expect(store.isBackwardGrowEnabled).to.equal(
       DEFAULTS.DEFAULT_VALUES.IS_BACKWARD_GROW_ENABLED,
     )
+    expect(store.isByLayerEnabled).to.equal(
+      DEFAULTS.DEFAULT_VALUES.IS_BY_LAYER_ENABLED,
+    )
     expect(store.projectionType).to.equal(
       DEFAULTS.DEFAULT_VALUES.PROJECTION_TYPE,
     )
@@ -120,11 +135,13 @@ describe('FileUploadStore Unit Tests', () => {
     store.reportTitle = 'Test Report'
     store.isForwardGrowEnabled = true
     store.isBackwardGrowEnabled = true
+    store.isByLayerEnabled = false
 
     expect(store.projectionType).to.equal('Volume')
     expect(store.reportTitle).to.equal('Test Report')
     expect(store.isForwardGrowEnabled).to.be.true
     expect(store.isBackwardGrowEnabled).to.be.true
+    expect(store.isByLayerEnabled).to.be.false
   })
 
   it('should update attachment files correctly', () => {

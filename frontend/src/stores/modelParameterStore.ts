@@ -202,7 +202,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
   const isComputedMAIEnabled = ref<boolean>(false)
   const isCulminationValuesEnabled = ref<boolean>(false)
   const isBySpeciesEnabled = ref<boolean>(false)
-  const isByLayerEnabled = ref<boolean>(false)
+  const isByLayerEnabled = ref<boolean>(true)
   const isProjectionModeEnabled = ref<boolean>(false)
   const isPolygonIDEnabled = ref<boolean>(false)
   const isCurrentYearEnabled = ref<boolean>(false)
@@ -251,6 +251,7 @@ export const useModelParameterStore = defineStore('modelParameter', () => {
     isBackwardGrowEnabled.value =
       DEFAULTS.DEFAULT_VALUES.IS_BACKWARD_GROW_ENABLED
     projectionType.value = DEFAULTS.DEFAULT_VALUES.PROJECTION_TYPE
+    isByLayerEnabled.value = DEFAULTS.DEFAULT_VALUES.IS_BY_LAYER_ENABLED
     reportTitle.value = DEFAULTS.DEFAULT_VALUES.REPORT_TITLE
 
     referenceYear.value = new Date().getFullYear()
