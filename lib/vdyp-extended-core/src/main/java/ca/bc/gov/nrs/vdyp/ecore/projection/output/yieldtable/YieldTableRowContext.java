@@ -311,10 +311,10 @@ class YieldTableRowContext {
 		boolean ageSupplied = startAge != null && endAge != null;
 		boolean yearSupplied = startYear != null && endYear != null;
 
-		Validate.isTrue(
-				ageSupplied || yearSupplied,
-				"YieldTableRow.calculateTableRangeInformation(): neither age nor year was supplied"
-		);
+		if (!ageSupplied && !yearSupplied) {
+			// If the projection has no year or age range there is nothing to do in this method.
+			return;
+		}
 
 		if (/* case 1 */ ageSupplied && !yearSupplied) {
 			this.ageAtStartYear = startAge;
