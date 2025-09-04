@@ -108,7 +108,7 @@ class TextYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean>
 			String projectionMode = "";
 			String projectionModeLine = "";
 			if (isCurrentlyWritingCategory(YieldTable.Category.PROJECTION_MODE)) {
-				projectionMode = "Mode";
+				projectionMode = " Mode";
 				projectionModeLine = "----";
 			}
 
