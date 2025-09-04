@@ -64,8 +64,14 @@ describe('ReportConfiguration.vue', () => {
   }
 
   it('renders correctly with initial props for AGE range', () => {
+    const appStore = useAppStore()
+    appStore.modelSelection = CONSTANTS.MODEL_SELECTION.FILE_UPLOAD
+
     mount(ReportConfiguration, {
-      props,
+      props: {
+        ...props,
+        isModelParametersMode: false,
+      },
       global: {
         plugins: [vuetify],
       },
@@ -94,14 +100,14 @@ describe('ReportConfiguration.vue', () => {
     cy.get('input[id="startYear"]').should('not.exist')
     cy.get('input[id="endYear"]').should('not.exist')
     cy.get('input[id="yearIncrement"]').should('not.exist')
-    cy.get('input[id="specificYear"]').should('not.exist')
+    cy.get('input[id="specificYear"]').should('exist')
     cy.get(
       '[data-testid="inc-secondary-height"] input[type="checkbox"]',
-    ).should('not.be.checked')
+    ).should('not.exist')
     cy.get('.v-select').find('input').should('have.value', props.projectionType)
 
     cy.get('input[id="reportTitle"]').should('have.value', props.reportTitle)
-    cy.get('.v-slider').should('exist')
+    cy.get('.v-slider').should('not.exist')
   })
 
   it('renders correctly with initial props for YEAR range', () => {

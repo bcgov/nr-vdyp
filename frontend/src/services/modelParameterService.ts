@@ -443,17 +443,21 @@ const buildExecutionOptions = (
       option: ExecutionOptionsEnum.BackGrowEnabled,
     },
     {
-      flag: modelParameterStore.incSecondaryHeight,
-      option:
-        ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
-    },
-    {
       flag: modelParameterStore.isComputedMAIEnabled,
       option: ExecutionOptionsEnum.ReportIncludeVolumeMAI,
     },
     {
       flag: modelParameterStore.isCulminationValuesEnabled,
       option: ExecutionOptionsEnum.ReportIncludeCulminationValues,
+    },
+    {
+      flag: modelParameterStore.isBySpeciesEnabled,
+      option: ExecutionOptionsEnum.DoIncludeSpeciesProjection,
+    },
+    {
+      flag: modelParameterStore.incSecondaryHeight,
+      option:
+        ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
     },
   ]
 
@@ -506,26 +510,11 @@ export const runModel = async (
   const { selectedDebugOptions, excludedDebugOptions } = buildDebugOptions()
 
   const projectionParameters: Parameters = {
-    ageStart:
-      modelParameterStore.selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.AGE
-        ? modelParameterStore.startingAge
-        : null,
-    ageEnd:
-      modelParameterStore.selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.AGE
-        ? modelParameterStore.finishingAge
-        : null,
-    ageIncrement:
-      modelParameterStore.selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.YEAR
-        ? modelParameterStore.yearIncrement
-        : modelParameterStore.ageIncrement,
-    yearStart:
-      modelParameterStore.selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.YEAR
-        ? modelParameterStore.startYear
-        : null,
-    yearEnd:
-      modelParameterStore.selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.YEAR
-        ? modelParameterStore.endYear
-        : null,
+    ageStart: modelParameterStore.startingAge,
+    ageEnd: modelParameterStore.finishingAge,
+    ageIncrement: modelParameterStore.ageIncrement,
+    yearStart: null,
+    yearEnd: null,
     reportTitle: modelParameterStore.reportTitle,
     outputFormat: OutputFormatEnum.CSVYieldTable,
     selectedExecutionOptions: selectedExecutionOptions,

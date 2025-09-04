@@ -71,7 +71,7 @@ describe('ModelParameterStore Unit Tests', () => {
     expect(store.isComputedMAIEnabled).to.be.false
     expect(store.isCulminationValuesEnabled).to.be.false
     expect(store.isBySpeciesEnabled).to.be.false
-    expect(store.isByLayerEnabled).to.be.false
+    expect(store.isByLayerEnabled).to.be.true
     expect(store.isProjectionModeEnabled).to.be.false
     expect(store.isPolygonIDEnabled).to.be.false
     expect(store.isCurrentYearEnabled).to.be.false
@@ -190,6 +190,9 @@ describe('ModelParameterStore Unit Tests', () => {
     )
     expect(store.isBackwardGrowEnabled).to.equal(
       DEFAULTS.DEFAULT_VALUES.IS_BACKWARD_GROW_ENABLED,
+    )
+    expect(store.isByLayerEnabled).to.equal(
+      DEFAULTS.DEFAULT_VALUES.IS_BY_LAYER_ENABLED,
     )
     expect(store.projectionType).to.equal(
       DEFAULTS.DEFAULT_VALUES.PROJECTION_TYPE,

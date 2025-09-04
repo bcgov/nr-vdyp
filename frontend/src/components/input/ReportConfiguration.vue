@@ -1,5 +1,5 @@
 <template>
-  <div class="ml-4 mt-5">
+  <div class="ml-4 mt-5 mb-5">
     <div class="ml-n4 mt-n5">
       <span class="text-h7">Report Title</span>
     </div>
@@ -14,12 +14,12 @@
           placeholder="Enter a report title..."
           density="compact"
           dense
-          style="max-width: 95% !important"
+          style="max-width: 97% !important"
           :disabled="isDisabled"
         ></v-text-field>
       </v-col>
       <v-col class="col-space-2" />
-      <v-col cols="2">
+      <v-col cols="3">
         <v-select
           label="Projection Type"
           :items="OPTIONS.projectionTypeOptions"
@@ -36,9 +36,12 @@
       </v-col>
     </v-row>
   </div>
-  <div>
+  <div
+    class="ml-n2"
+    v-if="appStore.modelSelection === CONSTANTS.MODEL_SELECTION.FILE_UPLOAD"
+  >
     <v-row>
-      <v-col cols="12">
+      <v-col cols="12" class="mb-n8">
         <v-radio-group
           v-model="selectedAgeYearRange"
           inline
@@ -54,7 +57,7 @@
       </v-col>
     </v-row>
   </div>
-  <div>
+  <div class="ml-4">
     <v-row>
       <template v-if="selectedAgeYearRange === CONSTANTS.AGE_YEAR_RANGE.AGE">
         <v-col cols="2">
@@ -75,7 +78,7 @@
           ></v-text-field>
         </v-col>
         <v-col class="col-space-3" />
-        <v-col cols="2">
+        <v-col cols="2" class="ml-2">
           <v-text-field
             id="finishingAge"
             label="Finishing Age"
@@ -93,7 +96,7 @@
           ></v-text-field>
         </v-col>
         <v-col class="col-space-3" />
-        <v-col cols="2">
+        <v-col cols="2" class="ml-2">
           <v-text-field
             id="ageIncrement"
             label="Increment"
@@ -130,7 +133,7 @@
           ></v-text-field>
         </v-col>
         <v-col class="col-space-3" />
-        <v-col cols="2">
+        <v-col cols="2" class="ml-2">
           <v-text-field
             id="endYear"
             label="End Year"
@@ -148,7 +151,7 @@
           ></v-text-field>
         </v-col>
         <v-col class="col-space-3" />
-        <v-col cols="2">
+        <v-col cols="2" class="ml-2">
           <v-text-field
             id="yearIncrement"
             label="Increment"
@@ -166,28 +169,25 @@
           ></v-text-field>
         </v-col>
       </template>
-      <v-col class="col-space-4" />
-      <v-col cols="auto" style="margin-left: 2px; margin-top: 2px">
-        <v-row>
-          <v-col cols="auto">
-            <v-checkbox
-              v-model="localIsForwardGrowEnabled"
-              label="Forward"
-              hide-details
-              :disabled="isForwardGrowDeactivated"
-              data-testid="is-forward-grow-enabled"
-            ></v-checkbox>
-          </v-col>
-          <v-col cols="auto">
-            <v-checkbox
-              v-model="localIsBackwardGrowEnabled"
-              label="Backward"
-              hide-details
-              :disabled="isBackwardGrowDeactivated"
-              data-testid="is-backward-grow-enabled"
-            ></v-checkbox>
-          </v-col>
-        </v-row>
+      <v-col class="col-space-3" />
+      <v-col cols="2">
+        <v-checkbox
+          v-model="localIsForwardGrowEnabled"
+          label="Forward"
+          hide-details
+          :disabled="isForwardGrowDeactivated"
+          data-testid="is-forward-grow-enabled"
+        ></v-checkbox>
+      </v-col>
+      <v-col class="col-space-3" />
+      <v-col cols="2" class="ml-2">
+        <v-checkbox
+          v-model="localIsBackwardGrowEnabled"
+          label="Backward"
+          hide-details
+          :disabled="isBackwardGrowDeactivated"
+          data-testid="is-backward-grow-enabled"
+        ></v-checkbox>
       </v-col>
     </v-row>
   </div>
@@ -196,7 +196,7 @@
       <span class="text-h7">Include in Report</span>
     </div>
     <v-row class="ml-n6">
-      <v-col cols="12" style="padding-top: 0px">
+      <v-col cols="12" style="padding-top: 1px">
         <template
           v-if="
             appStore.modelSelection ===
@@ -204,7 +204,7 @@
           "
         >
           <v-row>
-            <v-col style="max-width: 20%">
+            <v-col cols="2">
               <v-checkbox
                 v-model="localIsComputedMAIEnabled"
                 label="Computed MAI"
@@ -213,7 +213,8 @@
                 data-testid="is-computed-mai-enabled"
               ></v-checkbox>
             </v-col>
-            <v-col style="max-width: 20%">
+            <v-col class="col-space-3" />
+            <v-col cols="2" class="ml-2">
               <v-checkbox
                 v-model="localIsCulminationValuesEnabled"
                 label="Culmination Values"
@@ -222,7 +223,8 @@
                 data-testid="is-culmination-values-enabled"
               ></v-checkbox>
             </v-col>
-            <v-col style="max-width: 20%">
+            <v-col class="col-space-3" />
+            <v-col cols="2" class="ml-1">
               <v-checkbox
                 v-model="localIsBySpeciesEnabled"
                 label="By Species"
@@ -231,7 +233,8 @@
                 data-testid="is-by-species-enabled"
               ></v-checkbox>
             </v-col>
-            <v-col style="max-width: 20%">
+            <v-col class="col-space-3" />
+            <v-col cols="2" class="ml-2">
               <v-checkbox
                 v-model="localIncSecondaryHeight"
                 label="Secondary Species Height"
@@ -244,7 +247,7 @@
         </template>
         <template v-else>
           <v-row>
-            <v-col style="max-width: 20%">
+            <v-col cols="2">
               <v-checkbox
                 v-model="localIsByLayerEnabled"
                 label="By Layer"
@@ -253,7 +256,18 @@
                 data-testid="is-by-layer-enabled"
               ></v-checkbox>
             </v-col>
-            <v-col style="max-width: 20%">
+            <v-col class="col-space-3" />
+            <v-col cols="2" class="ml-2">
+              <v-checkbox
+                v-model="localIsBySpeciesEnabled"
+                label="By Species"
+                hide-details
+                :disabled="isBySpeciesDeactivated"
+                data-testid="is-by-species-enabled"
+              ></v-checkbox>
+            </v-col>
+            <v-col class="col-space-3" />
+            <v-col cols="2" class="ml-1">
               <v-checkbox
                 v-model="localIsProjectionModeEnabled"
                 label="Projection Mode"
@@ -262,7 +276,8 @@
                 data-testid="is-projection-mode-enabled"
               ></v-checkbox>
             </v-col>
-            <v-col style="max-width: 20%">
+            <v-col class="col-space-3" />
+            <v-col cols="2" class="ml-2">
               <v-checkbox
                 v-model="localIsPolygonIDEnabled"
                 label="Polygon ID"
@@ -271,7 +286,8 @@
                 data-testid="is-polygon-id-enabled"
               ></v-checkbox>
             </v-col>
-            <v-col style="max-width: 20%">
+            <v-col class="col-space-3" />
+            <v-col cols="2" class="ml-1">
               <v-checkbox
                 v-model="localIsCurrentYearEnabled"
                 label="Current Year"
@@ -280,7 +296,9 @@
                 data-testid="is-current-year-enabled"
               ></v-checkbox>
             </v-col>
-            <v-col style="max-width: 20%">
+          </v-row>
+          <v-row class="mt-n7">
+            <v-col cols="2">
               <v-checkbox
                 v-model="localIsReferenceYearEnabled"
                 label="Reference Year"
@@ -289,9 +307,8 @@
                 data-testid="is-reference-year-enabled"
               ></v-checkbox>
             </v-col>
-          </v-row>
-          <v-row class="mt-n5">
-            <v-col cols="2">
+            <v-col class="col-space-3" />
+            <v-col cols="2" class="ml-4">
               <v-text-field
                 id="specificYear"
                 label="Specific Year"
@@ -313,7 +330,6 @@
       </v-col>
     </v-row>
   </div>
-
   <div class="ml-4 mt-10" v-if="isModelParametersMode">
     <div class="ml-n4 mt-n5">
       <span class="text-h7">Minimum DBH Limit by Species Group</span>
@@ -683,6 +699,7 @@ watch(localIncSecondaryHeight, (newVal) => {
     emit('update:incSecondaryHeight', newVal)
   }
 })
+watch(localSpecificYear, (newVal) => emit('update:specificYear', newVal))
 watch(localProjectionType, (newVal) => {
   if (JSON.stringify(newVal) !== JSON.stringify(props.projectionType)) {
     emit('update:projectionType', newVal)

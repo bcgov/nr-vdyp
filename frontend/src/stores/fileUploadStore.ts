@@ -74,11 +74,9 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
   const startingAge = ref<number | null>(null)
   const finishingAge = ref<number | null>(null)
   const ageIncrement = ref<number | null>(null)
-
   const startYear = ref<number | null>(null)
   const endYear = ref<number | null>(null)
   const yearIncrement = ref<number | null>(null)
-
   const isForwardGrowEnabled = ref<boolean>(true)
   const isBackwardGrowEnabled = ref<boolean>(true)
 
@@ -112,6 +110,8 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
     isForwardGrowEnabled.value = DEFAULTS.DEFAULT_VALUES.IS_FORWARD_GROW_ENABLED
     isBackwardGrowEnabled.value =
       DEFAULTS.DEFAULT_VALUES.IS_BACKWARD_GROW_ENABLED
+    isByLayerEnabled.value = DEFAULTS.DEFAULT_VALUES.IS_BY_LAYER_ENABLED
+    isPolygonIDEnabled.value = DEFAULTS.DEFAULT_VALUES.IS_POLYGON_ID_ENABLED
     projectionType.value = DEFAULTS.DEFAULT_VALUES.PROJECTION_TYPE
     reportTitle.value = DEFAULTS.DEFAULT_VALUES.REPORT_TITLE
   }
