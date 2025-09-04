@@ -68,6 +68,32 @@ class TextYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean>
 	}
 
 	@Override
+	void writeHeader() throws YieldTableGenerationException {
+
+		doWrite("VDYP7 Console Version:             8.0\n");
+		doWrite("VDYP7 Extended Core DLL Version:   8.0\n");
+		doWrite("VDYP7CORE DLL Version:             8.0\n");
+		doWrite("Supporting Calc Library Version:   8.0\n");
+		doWrite("VRIADJST Calc DLL Version:         8.0\n");
+		doWrite("VDYPBACK Calc DLL Version:         8.0\n");
+		doWrite("FIPSTART Calc DLL Version:         8.0\n");
+		doWrite("VDYP7 Calc DLL Version:            8.0\n");
+		doWrite("VRISTART Calc DLL Version:         8.0\n");
+		doWrite("Calc DLL I/O Support Version:      8.0\n");
+		doWrite("VDYP7 Low Level I/O DLL Version:   8.0\n");
+		doWrite("VDYP SI Wrapper Version:           8.0\n");
+		doWrite("SINDEX Version:                    8.0\n");
+		doWrite("Batch Parameters:\n");
+		doWrite("Project Age Range:\n");
+		doWrite("Start Age:     N/A\n");
+		doWrite("End Age:       N/A\n");
+		doWrite("Start Year:    N/A\n");
+		doWrite("End Year:      N/A\n");
+		doWrite("Increment:     5\n");
+		doWrite("\n");
+	}
+
+	@Override
 	public void writePolygonTableHeader(
 			Polygon polygon, Optional<LayerReportingInfo> layerReportingInfo, boolean doGenerateDetailedTableHeader,
 			Integer yieldTableCount
