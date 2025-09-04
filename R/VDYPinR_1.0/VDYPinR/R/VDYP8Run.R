@@ -1,13 +1,12 @@
-#' The function is to run VDYP7 in R environment
+#' The function is to run VDYP8 in R environment
 #'
 #' @description This function is to prepare two input files (\code{polyFile} and \code{layerFile});
-#'              to prepare VDYP configuration and cmd file; to run VDYP7; and load VDYP7 output into
-#'              R environment. This function does not support debug mode. To run debug mode, you may
-#'              use \code{\link{VDYP7Debug}}.
+#'              to prepare VDYP configuration and cmd file; to run VDYP8; and load VDYP8 output into
+#'              R environment. 
 #'
-#' @param polyFile data.frame or data.table, The poly file for VDYP7 run.
+#' @param polyFile data.frame or data.table, The poly file for VDYP8 run.
 #'
-#' @param layerFile data.frame or data.table, The layer file for VDYP7 run.
+#' @param layerFile data.frame or data.table, The layer file for VDYP8 run.
 #'
 #' @param utilTable data.frame or data.table,
 #'                  The table contains utilization level for 16 species groups. It can be generated
@@ -41,6 +40,7 @@
 #' @param projVolume logical, whether allow the output include volume. Default is \code{TRUE}.
 #' @param projBiomass logical, whether allow the output include biomass. Default is \code{FALSE}.
 #' @param logFile logical, whether output meta data. Default is \code{FALSE}.
+#' @param saveIntermediate logical, whether output the intermediate files from VDYP projection Default is \code{FALSE}.
 #'
 #' @return a list that contains
 #'         1) simulated stand yield table (equivalent to \code{-o} in VDYP7 console);
@@ -103,7 +103,8 @@ VDYP8Run <- function(polyFile,
                      projBySpecies = TRUE,
                      projVolume = TRUE,
                      projBiomass = FALSE,
-                     logFile = FALSE){
+                     logFile = FALSE,
+                     saveIntermediate = FALSE){
   if(projByLayer == FALSE){
     stop("projByLayer must be TRUE, otherwise no yield table will be produced.")
   }
@@ -135,6 +136,7 @@ VDYP8Run <- function(polyFile,
   
   polyFileLocation <- file.path(temppath, "polyfile.csv")
   layerFileLocation <- file.path(temppath, "layerfile.csv")
+  paramFileLocation <- file.path(temppath, "parameters.json")
   
   write.table(polyFile,
               file = polyFileLocation,
@@ -145,7 +147,7 @@ VDYP8Run <- function(polyFile,
   totalNumberOfFeature <- length(unique(polyFile$FEATURE_ID))
   
   #Build JSON
-  jsonArr <- list("outputFormat"="CSVYieldTable")
+  jsonArr <- list()
   
   #Execution options
   flags = c(backward, 
@@ -162,9 +164,9 @@ VDYP8Run <- function(polyFile,
             projBiomass,
             TRUE,
             TRUE,
-            TRUE,
-            FALSE,
-            FALSE
+            logFile,
+            saveIntermediate,
+            saveIntermediate
             )
   executionOptions = c("backGrowEnabled", 
                        "forwardGrowEnabled", 
@@ -193,13 +195,14 @@ VDYP8Run <- function(polyFile,
   # Need to add support later if necessary
   
   # TODO Some special cases about the yield table.... leaving for now, request Text Yield Table in the certain conditions
-  #if(logFile | projBiomass){
-  #  yieldtableoption <- "YieldTable"
-  #  yieldtableformat <- "csv"
-  #} else {
-    yieldtableoption <- "csvyieldtable"
+  if(logFile | projBiomass){
+    yieldtableoption <- "YieldTable"
+    yieldtableformat <- "txt"
+  } else {
+    yieldtableoption <- "CSVYieldTable"
     yieldtableformat <- "csv"
-  #}
+  }
+  jsonArr[["outputFormat"]] <- yieldtableoption
   
   #Utilization Level logic
   utilTable[, .(
@@ -211,9 +214,12 @@ VDYP8Run <- function(polyFile,
   if(!is.null(timeSeries)){
     timeStart <- paste0(timeSeries,"Start");
     timeEnd <- paste0(timeSeries,"End");
+    jsonArr[[timeStart]] <- startTime
+    jsonArr[[timeEnd]] <- endTime
   }
-  jsonArr[[timeStart]] <- startTime
-  jsonArr[[timeEnd]] <- endTime
+  else{
+    # Do I pass anything in in this case?
+  }
   jsonArr[["ageIncrement"]] <- timeIncrement
 
   if(!is.null(forceYear)){
@@ -223,8 +229,7 @@ VDYP8Run <- function(polyFile,
   jsonArr[["selectedDebugOptions"]] = as.list("doIncludeDebugTimestamps","doIncludeDebugEntryExit","doIncludeDebugIndentBlocks","doIncludeDebugRoutineNames")
   
   json  <- jsonlite::toJSON(jsonArr, pretty = TRUE, auto_unbox = TRUE)
-  #json <- "{\"ageStart\":0,\"ageEnd\":250,\"ageIncrement\":25,\"outputFormat\":\"CSVYieldTable\",\"reportTitle\":\"A Test Report to determine if a very long title will wrap and both lines will be centered\",\"selectedExecutionOptions\":[\"forwardGrowEnabled\",\"doForceReferenceYearInclusionInYieldTables\",\"doSummarizeProjectionByLayer\",\"doIncludeFileHeader\",\"doIncludeProjectionFiles\",\"doIncludeProjectionModeInYieldTable\",\"doIncludeProjectionFiles\",\"doIncludeAgeRowsInYieldTable\",\"doIncludeYearRowsInYieldTable\",\"doSummarizeProjectionByPolygon\",\"doIncludeColumnHeadersInYieldTable\",\"doAllowBasalAreaAndTreesPerHectareValueSubstitution\",\"doEnableProgressLogging\",\"doEnableErrorLogging\",\"doEnableDebugLogging\",\"doIncludeProjectedCFSBiomass\"],\"selectedDebugOptions\":[\"doIncludeDebugTimestamps\",\"doIncludeDebugEntryExit\",\"doIncludeDebugIndentBlocks\",\"doIncludeDebugRoutineNames\"],\"combineAgeYearRange\":\"intersect\",\"metadataToOutput\":\"VERSION\"}"
-  #cat(json)
+  writeLines(json, paramFileLocation)
   
   endpoint <- paste0(BaseRESTAPIURL, "projection/hcsv")
   # Build and send request
@@ -251,33 +256,34 @@ VDYP8Run <- function(polyFile,
   # 3. Unzip into a dedicated subfolder
   unzip(zip_path, exdir = temppath)
   
-  # 4. Locate YieldTable.csv
-  yield_path <- file.path(temppath, "YieldTable.csv")
+  # 4. Locate YieldTable
+  yield_path <- file.path(temppath, paste0("YieldTable.",yieldtableformat))
   stopifnot(file.exists(yield_path))
   
-  yieldTable <- read.table(file.path(temppath,
-                                     paste0("YieldTable.", yieldtableformat)),
+  yieldTable <- read.table(yield_path,
                            sep = ",", header = TRUE,
                            stringsAsFactors = FALSE)
   
   #TODO this is problematic... We may have to implement a different output type to support it. IF we were to implement the Biomass AND Volume instead that may be perferable
-  #if(projBiomass | logFile){
-  #  yieldTable_all <- extractBYTable(rawYieldTable = yieldTable,
-  #                                   volIncluded = projVolume,
-  #                                   biomIncluded = projBiomass)
-  #  yieldTable <- yieldTable_all$yieldTable
-  #}
+  if(projBiomass | logFile){
+    yieldTable_all <- extractBYTable(rawYieldTable = yieldTable,
+                                     volIncluded = projVolume,
+                                     biomIncluded = projBiomass)
+    yieldTable <- yieldTable_all$yieldTable
+  }
   
   
   errorReport <- readLines(file.path(temppath, "ErrorLog.txt"),
                            warn = FALSE)
   logReport <- readLines(file.path(temppath, "ProgressLog.txt"),
                          warn = FALSE)
-  #if(logFile){
-  #  vdyp7log <- yieldTable_all$logfile
-  #} else {
+  if (logFile){
+    vdyp7log <- readLines(file.path(temppath, "DebugLog.txt"),
+                            warn = FALSE)
+  } else {
     vdyp7log <- NULL
-  #}
+  }
+    
   processNumberOfFeature <- logReport[grep("Polygons Processed:", logReport)]
   processNumberOfFeature <- as.numeric(unlist(strsplit(processNumberOfFeature, ":"))[2])
   processNumberOfFeature_line <- paste0(processNumberOfFeature,
