@@ -253,7 +253,7 @@ test_that("VDYP8Run.R: check the volume projection.", {
   ## forceRefYear = false
   testrun1_vol_byspecies2 <- VDYP8Run(polyFile = polyfile,
                                       layerFile = layerfile,
-                                      BaseRESTAPIURL = "http://localhost:8080/api/v8/",
+                                      BaseRESTAPIURL = "https://nr-vdyp-test-backend.apps.silver.devops.gov.bc.ca/api/v8/",
                                       utilTable = utilTableGenerator(all = 17.5,
                                                                      askForConfirm = FALSE),
                                       timeSeries = "age",
@@ -270,7 +270,7 @@ test_that("VDYP8Run.R: check the volume projection.", {
   # force current year
   testrun1_vol_byspecies3 <- VDYP8Run(polyFile = polyfile,
                                       layerFile = layerfile,
-                                      BaseRESTAPIURL = "http://localhost:8080/api/v8/",
+                                      BaseRESTAPIURL = "https://nr-vdyp-test-backend.apps.silver.devops.gov.bc.ca/api/v8/",
                                       utilTable = utilTableGenerator(all = 17.5,
                                                                      askForConfirm = FALSE),
                                       timeSeries = "age",
@@ -284,7 +284,7 @@ test_that("VDYP8Run.R: check the volume projection.", {
   # check force year
   testrun1_vol_byspecies4 <- VDYP8Run(polyFile = polyfile,
                                       layerFile = layerfile,
-                                      BaseRESTAPIURL = "http://localhost:8080/api/v8/",
+                                      BaseRESTAPIURL = "https://nr-vdyp-test-backend.apps.silver.devops.gov.bc.ca/api/v8/",
                                       utilTable = utilTableGenerator(all = 17.5,
                                                                      askForConfirm = FALSE),
                                       timeSeries = "age",
@@ -302,7 +302,7 @@ test_that("VDYP8Run.R: check the volume projection.", {
   ## a special case project to a force year
   testrun1_vol_byspecies5 <- VDYP8Run(polyFile = polyfile,
                                       layerFile = layerfile,
-                                      BaseRESTAPIURL = "http://localhost:8080/api/v8/",
+                                      BaseRESTAPIURL = "https://nr-vdyp-test-backend.apps.silver.devops.gov.bc.ca/api/v8/",
                                       utilTable = utilTableGenerator(all = 17.5,
                                                                      askForConfirm = FALSE),
                                       timeSeries = NULL,
@@ -329,7 +329,7 @@ test_that("VDYP8Run.R: check the volume projection.", {
   ## a special case only project to a force year
   testrun1_vol_byspecies6 <- VDYP8Run(polyFile = polyfile,
                                       layerFile = layerfile,
-                                      BaseRESTAPIURL = "http://localhost:8080/api/v8/",
+                                      BaseRESTAPIURL = "https://nr-vdyp-test-backend.apps.silver.devops.gov.bc.ca/api/v8/",
                                       utilTable = utilTableGenerator(all = 17.5,
                                                                      askForConfirm = FALSE),
                                       timeSeries = NULL,
@@ -344,7 +344,7 @@ test_that("VDYP8Run.R: check the volume projection.", {
   ## turn the logfile on, so that the intermediate output format is txt
   testrun1_vol_byspecies7 <- VDYP8Run(polyFile = polyfile,
                                       layerFile = layerfile,
-                                      BaseRESTAPIURL = "http://localhost:8080/api/v8/",
+                                      BaseRESTAPIURL = "https://nr-vdyp-test-backend.apps.silver.devops.gov.bc.ca/api/v8/",
                                       utilTable = utilTableGenerator(all = 17.5,
                                                                      askForConfirm = FALSE),
                                       timeSeries = NULL,
@@ -396,7 +396,7 @@ test_that("VDYP8Run.R: check the volume projection.", {
   ## test secondary ht projection
   testrun1_vol_byspecies8 <- VDYP8Run(polyFile = polyfile[FEATURE_ID == 16160455,],
                                       layerFile = layerfile[FEATURE_ID == 16160455,],
-                                      BaseRESTAPIURL = "http://localhost:8080/api/v8/",
+                                      BaseRESTAPIURL = "https://nr-vdyp-test-backend.apps.silver.devops.gov.bc.ca/api/v8/",
                                       utilTable = utilTableGenerator(all = 17.5,
                                                                      askForConfirm = FALSE),
                                       timeSeries = "age",
@@ -417,7 +417,7 @@ test_that("VDYP8Run.R: check the volume projection.", {
   
   testrun1_vol_byspecies9 <- VDYP8Run(polyFile = polyfile[FEATURE_ID == 16160455,],
                                       layerFile = layerfile[FEATURE_ID == 16160455,],
-                                      BaseRESTAPIURL = "http://localhost:8080/api/v8/",
+                                      BaseRESTAPIURL = "https://nr-vdyp-test-backend.apps.silver.devops.gov.bc.ca/api/v8/",
                                       utilTable = utilTableGenerator(all = 17.5,
                                                                      askForConfirm = FALSE),
                                       timeSeries = "age",

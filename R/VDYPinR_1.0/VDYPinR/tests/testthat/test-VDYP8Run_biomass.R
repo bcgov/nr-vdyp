@@ -102,7 +102,7 @@ test_that("VDYP8Run.R: check the biomass projection.", {
   ## project biomass with volume
   testrun1 <- VDYP8Run(polyFile = polyfile,
                                      layerFile = layerfile,
-                       BaseRESTAPIURL = "http://localhost:8080/api/v8/",
+                       BaseRESTAPIURL = "https://nr-vdyp-test-backend.apps.silver.devops.gov.bc.ca/api/v8/",
                                      utilTable = utilTableGenerator(all = 17.5,
                                                                     askForConfirm = FALSE),
                                      timeSeries = "age",
@@ -128,7 +128,7 @@ test_that("VDYP8Run.R: check the biomass projection.", {
   # biomass only
   testrun2 <- VDYP8Run(polyFile = polyfile,
                        layerFile = layerfile,
-                       BaseRESTAPIURL = "http://localhost:8080/api/v8/",
+                       BaseRESTAPIURL = "https://nr-vdyp-test-backend.apps.silver.devops.gov.bc.ca/api/v8/",
                        utilTable = utilTableGenerator(all = 17.5,
                                                       askForConfirm = FALSE),
                        timeSeries = "age",
@@ -148,7 +148,7 @@ test_that("VDYP8Run.R: check the biomass projection.", {
 
   testrun3 <- VDYP8Run(polyFile = polyfile,
                        layerFile = layerfile,
-                       BaseRESTAPIURL = "http://localhost:8080/api/v8/",
+                       BaseRESTAPIURL = "https://nr-vdyp-test-backend.apps.silver.devops.gov.bc.ca/api/v8/",
                        utilTable = utilTableGenerator(all = 17.5,
                                                       askForConfirm = FALSE),
                        timeSeries = NULL,
@@ -178,7 +178,7 @@ test_that("VDYP8Run.R: check the biomass projection.", {
   ## when the biomass set to true, there is only one utiltable
   testrun4 <- VDYP8Run(polyFile = polyfile,
                        layerFile = layerfile,
-                       BaseRESTAPIURL = "http://localhost:8080/api/v8/",
+                       BaseRESTAPIURL = "https://nr-vdyp-test-backend.apps.silver.devops.gov.bc.ca/api/v8/",
                        utilTable = utilTableGenerator(biomass = TRUE,
                                                       askForConfirm = FALSE),
                        timeSeries = "age",

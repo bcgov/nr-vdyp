@@ -83,7 +83,7 @@
 VDYP8Run <- function(polyFile,
                      layerFile,
                      utilTable,
-                     BaseRESTAPIURL = "http://localhost:8080/api/v8/",
+                     BaseRESTAPIURL = "https://nr-vdyp-test-backend.apps.silver.devops.gov.bc.ca/api/v8/",
                      timeSeries,
                      startTime,
                      endTime,
