@@ -1,6 +1,6 @@
 Package: VDYPinR
-Title: Happy VDYP7inR
-Version: 1.0
+Title: Happy VDYPinR
+Version: 1.1
 Authors@R: 
     c(person(given = "Yong",
              family = "Luo",
@@ -8,7 +8,7 @@ Authors@R:
              email = "yong.luo@gov.bc.ca"),
       person(given = "Province of British Columbia",
              role = "cph"))
-Description: Running VDYP7 in R.
+Description: Running VDYP7 (And VDYP8) in R.
 License: Apache License (== 2.0) | file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
