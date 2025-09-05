@@ -68,15 +68,10 @@ describe('ModelParameterStore Unit Tests', () => {
     expect(store.yearIncrement).to.be.null
     expect(store.isForwardGrowEnabled).to.be.true
     expect(store.isBackwardGrowEnabled).to.be.true
-    expect(store.isWholeStemEnabled).to.be.true
-    expect(store.isCloseUtilEnabled).to.be.false
-    expect(store.isNetDecayEnabled).to.be.false
-    expect(store.isNetDecayWasteEnabled).to.be.false
-    expect(store.isNetDecayWasteBreakageEnabled).to.be.false
     expect(store.isComputedMAIEnabled).to.be.false
     expect(store.isCulminationValuesEnabled).to.be.false
     expect(store.isBySpeciesEnabled).to.be.false
-    expect(store.isByLayerEnabled).to.be.false
+    expect(store.isByLayerEnabled).to.be.true
     expect(store.isProjectionModeEnabled).to.be.false
     expect(store.isPolygonIDEnabled).to.be.false
     expect(store.isCurrentYearEnabled).to.be.false
@@ -196,8 +191,8 @@ describe('ModelParameterStore Unit Tests', () => {
     expect(store.isBackwardGrowEnabled).to.equal(
       DEFAULTS.DEFAULT_VALUES.IS_BACKWARD_GROW_ENABLED,
     )
-    expect(store.isWholeStemEnabled).to.equal(
-      DEFAULTS.DEFAULT_VALUES.IS_WHOLE_STEM_ENABLED,
+    expect(store.isByLayerEnabled).to.equal(
+      DEFAULTS.DEFAULT_VALUES.IS_BY_LAYER_ENABLED,
     )
     expect(store.projectionType).to.equal(
       DEFAULTS.DEFAULT_VALUES.PROJECTION_TYPE,
@@ -421,20 +416,6 @@ describe('ModelParameterStore Unit Tests', () => {
     expect(store.crownClosure).to.equal(75)
   })
 
-  it('should update volume and utilization options correctly', () => {
-    store.isWholeStemEnabled = false
-    store.isCloseUtilEnabled = true
-    store.isNetDecayEnabled = true
-    store.isNetDecayWasteEnabled = true
-    store.isNetDecayWasteBreakageEnabled = true
-
-    expect(store.isWholeStemEnabled).to.be.false
-    expect(store.isCloseUtilEnabled).to.be.true
-    expect(store.isNetDecayEnabled).to.be.true
-    expect(store.isNetDecayWasteEnabled).to.be.true
-    expect(store.isNetDecayWasteBreakageEnabled).to.be.true
-  })
-
   it('should update yield table options correctly', () => {
     store.isComputedMAIEnabled = true
     store.isCulminationValuesEnabled = true
@@ -467,11 +448,6 @@ describe('ModelParameterStore Unit Tests', () => {
   })
 
   it('should handle all boolean options in combination', () => {
-    store.isWholeStemEnabled = false
-    store.isCloseUtilEnabled = true
-    store.isNetDecayEnabled = true
-    store.isNetDecayWasteEnabled = true
-    store.isNetDecayWasteBreakageEnabled = true
     store.isComputedMAIEnabled = true
     store.isCulminationValuesEnabled = true
     store.isBySpeciesEnabled = true
@@ -483,11 +459,6 @@ describe('ModelParameterStore Unit Tests', () => {
     store.incSecondaryHeight = true
     store.specificYear = 2050
 
-    expect(store.isWholeStemEnabled).to.be.false
-    expect(store.isCloseUtilEnabled).to.be.true
-    expect(store.isNetDecayEnabled).to.be.true
-    expect(store.isNetDecayWasteEnabled).to.be.true
-    expect(store.isNetDecayWasteBreakageEnabled).to.be.true
     expect(store.isComputedMAIEnabled).to.be.true
     expect(store.isCulminationValuesEnabled).to.be.true
     expect(store.isBySpeciesEnabled).to.be.true
@@ -498,17 +469,6 @@ describe('ModelParameterStore Unit Tests', () => {
     expect(store.isReferenceYearEnabled).to.be.true
     expect(store.incSecondaryHeight).to.be.true
     expect(store.specificYear).to.equal(2050)
-  })
-
-  it('should maintain boolean option states independently', () => {
-    // Test that changing one boolean doesn't affect others
-    store.isWholeStemEnabled = false
-    expect(store.isCloseUtilEnabled).to.be.false // Should remain at default
-    expect(store.isNetDecayEnabled).to.be.false // Should remain at default
-
-    store.isCloseUtilEnabled = true
-    expect(store.isWholeStemEnabled).to.be.false // Should not change
-    expect(store.isNetDecayEnabled).to.be.false // Should remain at default
   })
 
   it('should handle null and undefined values for specificYear', () => {

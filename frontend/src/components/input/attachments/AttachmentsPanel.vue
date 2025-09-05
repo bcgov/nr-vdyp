@@ -27,7 +27,7 @@
         </v-expansion-panel-title>
         <v-expansion-panel-text class="expansion-panel-text mt-n2">
           <v-form ref="form">
-            <div class="ml-4 mt-10 mb-10">
+            <div class="ml-2 mt-10 mb-10">
               <v-row>
                 <v-col cols="5">
                   <v-file-input

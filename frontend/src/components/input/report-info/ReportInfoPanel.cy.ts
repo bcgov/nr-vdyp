@@ -111,7 +111,7 @@ describe('ReportInfoPanel.vue', () => {
       : fileUploadStore
   }
 
-  it('renders correctly with initial state for AGE range (INPUT_MODEL_PARAMETERS)', () => {
+  it('renders correctly with initial state for AGE range', () => {
     mountComponent({}, CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS)
 
     cy.get('.v-expansion-panel-title')
@@ -137,13 +137,9 @@ describe('ReportInfoPanel.vue', () => {
     cy.get('[id="endYear"]').should('not.exist')
     cy.get('[id="yearIncrement"]').should('not.exist')
 
-    cy.contains('.v-input', CONSTANTS.VOLUME_REPORTED.WHOLE_STEM)
-      .find('input[type="checkbox"]')
-      .should('be.checked')
-
     cy.contains('.v-input', CONSTANTS.INCLUDE_IN_REPORT.COMPUTED_MAI)
       .find('input[type="checkbox"]')
-      .should('be.checked')
+      .should('not.be.checked')
 
     cy.get('.v-select')
       .find('input')
@@ -156,8 +152,8 @@ describe('ReportInfoPanel.vue', () => {
     cy.get('button').contains('Edit').should('not.be.visible')
   })
 
-  it('renders correctly with initial state for YEAR range (INPUT_MODEL_PARAMETERS)', () => {
-    mountComponent({}, CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS)
+  it('renders correctly with initial state for YEAR range', () => {
+    mountComponent({}, CONSTANTS.MODEL_SELECTION.FILE_UPLOAD)
 
     cy.get('.v-radio-group')
       .find('.v-radio')
@@ -185,14 +181,6 @@ describe('ReportInfoPanel.vue', () => {
     cy.get('[id="finishingAge"]').should('not.exist')
     cy.get('[id="ageIncrement"]').should('not.exist')
 
-    cy.contains('.v-input', CONSTANTS.VOLUME_REPORTED.WHOLE_STEM)
-      .find('input[type="checkbox"]')
-      .should('be.checked')
-
-    cy.contains('.v-input', CONSTANTS.INCLUDE_IN_REPORT.COMPUTED_MAI)
-      .find('input[type="checkbox"]')
-      .should('be.checked')
-
     cy.get('.v-select')
       .find('input')
       .should('have.value', CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS)
@@ -204,7 +192,7 @@ describe('ReportInfoPanel.vue', () => {
     cy.get('button').contains('Edit').should('not.be.visible')
   })
 
-  it('renders correctly with initial state for AGE range (FILE_UPLOAD)', () => {
+  it('renders correctly with initial state for AGE range', () => {
     mountComponent({}, CONSTANTS.MODEL_SELECTION.FILE_UPLOAD)
 
     cy.get('.v-expansion-panel-title')
@@ -230,14 +218,6 @@ describe('ReportInfoPanel.vue', () => {
     cy.get('[id="endYear"]').should('not.exist')
     cy.get('[id="yearIncrement"]').should('not.exist')
 
-    cy.contains('.v-input', CONSTANTS.VOLUME_REPORTED.WHOLE_STEM)
-      .find('input[type="checkbox"]')
-      .should('be.checked')
-
-    cy.contains('.v-input', CONSTANTS.INCLUDE_IN_REPORT.COMPUTED_MAI)
-      .find('input[type="checkbox"]')
-      .should('be.checked')
-
     cy.get('.v-select')
       .find('input')
       .should('have.value', CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS)
@@ -249,7 +229,7 @@ describe('ReportInfoPanel.vue', () => {
     cy.get('button').contains('Edit').should('not.be.visible')
   })
 
-  it('changes to Confirm state and renders the Edit button (INPUT_MODEL_PARAMETERS)', () => {
+  it('changes to Confirm state and renders the Edit button', () => {
     const store = mountComponent(
       {},
       CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS,
@@ -266,7 +246,7 @@ describe('ReportInfoPanel.vue', () => {
     cy.get('button').contains('Edit').should('exist')
   })
 
-  it('changes to Confirm state and renders the Edit button (FILE_UPLOAD)', () => {
+  it('changes to Confirm state and renders the Edit button', () => {
     const store = mountComponent({}, CONSTANTS.MODEL_SELECTION.FILE_UPLOAD)
 
     cy.get('button').contains('Confirm').click()
@@ -308,10 +288,7 @@ describe('ReportInfoPanel.vue', () => {
   })
 
   it('shows a validation error for invalid start and end years (YEAR range)', () => {
-    const store = mountComponent(
-      {},
-      CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS,
-    )
+    const store = mountComponent({}, CONSTANTS.MODEL_SELECTION.FILE_UPLOAD)
 
     cy.wrap(store).then(() => {
       store.panelState[CONSTANTS.MODEL_PARAMETER_PANEL.REPORT_INFO].editable =
@@ -432,10 +409,7 @@ describe('ReportInfoPanel.vue', () => {
   })
 
   it('shows validation error when start year is out of range (YEAR range)', () => {
-    const store = mountComponent(
-      {},
-      CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS,
-    )
+    const store = mountComponent({}, CONSTANTS.MODEL_SELECTION.FILE_UPLOAD)
 
     cy.wrap(store).then(() => {
       store.panelState[CONSTANTS.MODEL_PARAMETER_PANEL.REPORT_INFO].editable =
@@ -469,10 +443,7 @@ describe('ReportInfoPanel.vue', () => {
   })
 
   it('shows validation error when end year is out of range (YEAR range)', () => {
-    const store = mountComponent(
-      {},
-      CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS,
-    )
+    const store = mountComponent({}, CONSTANTS.MODEL_SELECTION.FILE_UPLOAD)
 
     cy.wrap(store).then(() => {
       store.panelState[CONSTANTS.MODEL_PARAMETER_PANEL.REPORT_INFO].editable =
@@ -506,10 +477,7 @@ describe('ReportInfoPanel.vue', () => {
   })
 
   it('shows validation error when year increment is out of range (YEAR range)', () => {
-    const store = mountComponent(
-      {},
-      CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS,
-    )
+    const store = mountComponent({}, CONSTANTS.MODEL_SELECTION.FILE_UPLOAD)
 
     cy.wrap(store).then(() => {
       store.panelState[CONSTANTS.MODEL_PARAMETER_PANEL.REPORT_INFO].editable =
@@ -542,7 +510,7 @@ describe('ReportInfoPanel.vue', () => {
       })
   })
 
-  it('clears the form when Clear is clicked (INPUT_MODEL_PARAMETERS)', () => {
+  it('clears the form when Clear is clicked', () => {
     const store = mountComponent(
       {},
       CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS,
@@ -559,17 +527,12 @@ describe('ReportInfoPanel.vue', () => {
     cy.get('[id="finishingAge"]').should('exist').should('have.value', '')
     cy.get('[id="ageIncrement"]').should('exist').should('have.value', '')
     cy.get('[id="reportTitle"]').should('exist').should('have.value', '')
-    cy.get('[data-testid="volume-reported"] input[type="checkbox"]').each(
-      ($el) => {
-        cy.wrap($el).should('not.be.checked')
-      },
-    )
     cy.get('.v-select')
       .find('input')
       .should('have.value', DEFAULTS.DEFAULT_VALUES.PROJECTION_TYPE)
   })
 
-  it('disables inputs and buttons when the panel is not editable (INPUT_MODEL_PARAMETERS)', () => {
+  it('disables inputs and buttons when the panel is not editable', () => {
     const store = mountComponent(
       {},
       CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS,
@@ -586,7 +549,7 @@ describe('ReportInfoPanel.vue', () => {
     cy.get('button').contains('Edit').should('not.be.visible')
   })
 
-  it('disables inputs and buttons when the panel is not editable (FILE_UPLOAD)', () => {
+  it('disables inputs and buttons when the panel is not editable', () => {
     const store = mountComponent({}, CONSTANTS.MODEL_SELECTION.FILE_UPLOAD)
 
     cy.wrap(store).then(() => {
@@ -648,14 +611,14 @@ describe('ReportInfoPanel.vue', () => {
     ).should('be.disabled')
   })
 
-  it('passes isModelParametersMode prop correctly (INPUT_MODEL_PARAMETERS)', () => {
+  it('passes isModelParametersMode prop correctly', () => {
     mountComponent({}, CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS)
     cy.contains('span.text-h7', 'Minimum DBH Limit by Species Group').should(
       'be.visible',
     )
   })
 
-  it('passes isModelParametersMode prop correctly (FILE_UPLOAD)', () => {
+  it('passes isModelParametersMode prop correctly', () => {
     mountComponent({}, CONSTANTS.MODEL_SELECTION.FILE_UPLOAD)
     cy.contains('span.text-h7', 'Minimum DBH Limit by Species Group').should(
       'not.exist',

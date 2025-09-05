@@ -71,8 +71,10 @@ export const useProjectionStore = defineStore('projectionStore', () => {
         CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS
       ){
         const textReportFile = zip.file(CONSTANTS.FILE_NAME.YIELD_TABLE_TXT) 
-        rawTextReportData.value = await textReportFile.async('string')
+        if (textReportFile) {
+          rawTextReportData.value = await textReportFile.async('string')
           txtYieldLines.value = rawTextReportData.value.split(/\r?\n/)
+        }
       } 
       
       if (rawYieldData.value) {

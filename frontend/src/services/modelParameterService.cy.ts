@@ -60,13 +60,9 @@ describe('Model Parameter Service Unit Tests', () => {
     treesPerHectare: 0,
     spzAge: 50,
     spzHeight: 20,
-    isWholeStemEnabled: false,
-    isCloseUtilEnabled: false,
-    isNetDecayEnabled: false,
-    isNetDecayWasteEnabled: false,
-    isNetDecayWasteBreakageEnabled: false,
     isComputedMAIEnabled: false,
     isCulminationValuesEnabled: false,
+    isBySpeciesEnabled: false,
   }
 
   it('should generate a valid feature ID', () => {
@@ -346,7 +342,7 @@ describe('Model Parameter Service Unit Tests', () => {
             mockModelParameterStore.ageIncrement,
           )
           expect(projectionParams.outputFormat).to.equal(
-            OutputFormatEnum.TextReport,
+            OutputFormatEnum.CSVYieldTable,
           )
           expect(projectionParams.metadataToOutput).to.equal(
             MetadataToOutputEnum.NONE,
@@ -376,11 +372,6 @@ describe('Model Parameter Service Unit Tests', () => {
   it('should include volume-related options when enabled', () => {
     const volumeEnabledStore = {
       ...mockModelParameterStore,
-      isWholeStemEnabled: true,
-      isCloseUtilEnabled: true,
-      isNetDecayEnabled: true,
-      isNetDecayWasteEnabled: true,
-      isNetDecayWasteBreakageEnabled: true,
       isComputedMAIEnabled: true,
       isCulminationValuesEnabled: true,
     }
@@ -418,57 +409,6 @@ describe('Model Parameter Service Unit Tests', () => {
             ExecutionOptionsEnum.ReportIncludeVolumeMAI,
           )
           expect(projectionParams.selectedExecutionOptions).to.include(
-            ExecutionOptionsEnum.ReportIncludeCulminationValues,
-          )
-        })
-    })
-  })
-
-  it('should exclude volume-related options when disabled', () => {
-    const volumeDisabledStore = {
-      ...mockModelParameterStore,
-      isWholeStemEnabled: false,
-      isCloseUtilEnabled: false,
-      isNetDecayEnabled: false,
-      isNetDecayWasteEnabled: false,
-      isNetDecayWasteBreakageEnabled: false,
-      isComputedMAIEnabled: false,
-      isCulminationValuesEnabled: false,
-    }
-
-    const projectionStub = cy
-      .stub()
-      .resolves(new Blob(['mock response'], { type: 'application/zip' }))
-
-    cy.wrap(runModel(volumeDisabledStore, projectionStub)).then(() => {
-      const formDataArg = projectionStub.getCall(0).args[0] as FormData
-      const projectionParamsBlob = formDataArg.get(
-        ParameterNamesEnum.PROJECTION_PARAMETERS,
-      ) as Blob
-
-      cy.wrap(projectionParamsBlob)
-        .then((blob) => blob.text())
-        .then((text) => {
-          const projectionParams = JSON.parse(text)
-          expect(projectionParams.excludedExecutionOptions).to.include(
-            ExecutionOptionsEnum.ReportIncludeWholeStemVolume,
-          )
-          expect(projectionParams.excludedExecutionOptions).to.include(
-            ExecutionOptionsEnum.ReportIncludeCloseUtilizationVolume,
-          )
-          expect(projectionParams.excludedExecutionOptions).to.include(
-            ExecutionOptionsEnum.ReportIncludeNetDecayVolume,
-          )
-          expect(projectionParams.excludedExecutionOptions).to.include(
-            ExecutionOptionsEnum.ReportIncludeNDWasteVolume,
-          )
-          expect(projectionParams.excludedExecutionOptions).to.include(
-            ExecutionOptionsEnum.ReportIncludeNDWasteBrkgVolume,
-          )
-          expect(projectionParams.excludedExecutionOptions).to.include(
-            ExecutionOptionsEnum.ReportIncludeVolumeMAI,
-          )
-          expect(projectionParams.excludedExecutionOptions).to.include(
             ExecutionOptionsEnum.ReportIncludeCulminationValues,
           )
         })
@@ -622,6 +562,66 @@ describe('Model Parameter Service Unit Tests', () => {
     })
   })
 
+  it('should include DoIncludeSpeciesProjection when isBySpeciesEnabled is true', () => {
+    const updatedModelParameterStore = {
+      ...mockModelParameterStore,
+      isBySpeciesEnabled: true,
+    }
+
+    const projectionStub = cy
+      .stub()
+      .resolves(new Blob(['mock response'], { type: 'application/zip' }))
+
+    cy.wrap(runModel(updatedModelParameterStore, projectionStub)).then(() => {
+      const formDataArg = projectionStub.getCall(0).args[0] as FormData
+      const projectionParamsBlob = formDataArg.get(
+        ParameterNamesEnum.PROJECTION_PARAMETERS,
+      ) as Blob
+
+      cy.wrap(projectionParamsBlob)
+        .then((blob) => blob.text())
+        .then((text) => {
+          const projectionParams = JSON.parse(text)
+          expect(projectionParams.selectedExecutionOptions).to.include(
+            ExecutionOptionsEnum.DoIncludeSpeciesProjection,
+          )
+          expect(projectionParams.excludedExecutionOptions).not.to.include(
+            ExecutionOptionsEnum.DoIncludeSpeciesProjection,
+          )
+        })
+    })
+  })
+
+  it('should exclude DoIncludeSpeciesProjection when isBySpeciesEnabled is false', () => {
+    const updatedModelParameterStore = {
+      ...mockModelParameterStore,
+      isBySpeciesEnabled: false,
+    }
+
+    const projectionStub = cy
+      .stub()
+      .resolves(new Blob(['mock response'], { type: 'application/zip' }))
+
+    cy.wrap(runModel(updatedModelParameterStore, projectionStub)).then(() => {
+      const formDataArg = projectionStub.getCall(0).args[0] as FormData
+      const projectionParamsBlob = formDataArg.get(
+        ParameterNamesEnum.PROJECTION_PARAMETERS,
+      ) as Blob
+
+      cy.wrap(projectionParamsBlob)
+        .then((blob) => blob.text())
+        .then((text) => {
+          const projectionParams = JSON.parse(text)
+          expect(projectionParams.selectedExecutionOptions).not.to.include(
+            ExecutionOptionsEnum.DoIncludeSpeciesProjection,
+          )
+          expect(projectionParams.excludedExecutionOptions).to.include(
+            ExecutionOptionsEnum.DoIncludeSpeciesProjection,
+          )
+        })
+    })
+  })
+
   it('should contain expected execution options', () => {
     const projectionStub = cy
       .stub()
@@ -674,7 +674,7 @@ describe('Model Parameter Service Unit Tests', () => {
       })
   })
 
-  it('should use year range parameters when selectedAgeYearRange is YEAR', () => {
+  it('should use age range parameters regardless of selectedAgeYearRange setting', () => {
     const yearRangeStore = {
       ...mockModelParameterStore,
       selectedAgeYearRange: CONSTANTS.AGE_YEAR_RANGE.YEAR,
@@ -694,12 +694,12 @@ describe('Model Parameter Service Unit Tests', () => {
         .then((blob) => blob.text())
         .then((text) => {
           const projectionParams = JSON.parse(text)
-          expect(projectionParams.ageStart).to.be.null
-          expect(projectionParams.ageEnd).to.be.null
-          expect(projectionParams.yearStart).to.equal(yearRangeStore.startYear)
-          expect(projectionParams.yearEnd).to.equal(yearRangeStore.endYear)
+          expect(projectionParams.ageStart).to.equal(yearRangeStore.startingAge)
+          expect(projectionParams.ageEnd).to.equal(yearRangeStore.finishingAge)
+          expect(projectionParams.yearStart).to.be.null
+          expect(projectionParams.yearEnd).to.be.null
           expect(projectionParams.ageIncrement).to.equal(
-            yearRangeStore.yearIncrement,
+            yearRangeStore.ageIncrement,
           )
         })
     })

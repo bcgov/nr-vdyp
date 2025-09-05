@@ -33,6 +33,7 @@ describe('Projection Store Unit Tests', () => {
     const zip = new JSZip()
     zip.file(CONSTANTS.FILE_NAME.ERROR_TXT, 'Error log content')
     zip.file(CONSTANTS.FILE_NAME.LOG_TXT, 'Log content')
+    zip.file(CONSTANTS.FILE_NAME.YIELD_TABLE_CSV, 'CSV content')
     zip.file(CONSTANTS.FILE_NAME.YIELD_TABLE_TXT, 'Line1\n\nLine2\nLine3')
     const zipBlob = await zip.generateAsync({ type: 'blob' })
 
@@ -42,9 +43,9 @@ describe('Projection Store Unit Tests', () => {
     )
     expect(store.errorMessages).to.deep.equal(['Error log content'])
     expect(store.logMessages).to.deep.equal(['Log content'])
-    expect(store.rawYieldData).to.equal('Line1\n\nLine2\nLine3')
+    expect(store.rawYieldData).to.equal('CSV content')
     expect(store.txtYieldLines).to.deep.equal(['Line1', '', 'Line2', 'Line3'])
-    expect(store.csvYieldLines).to.be.empty
+    expect(store.csvYieldLines).to.deep.equal(['CSV content'])
     expect(store.rawResultZipFile).to.equal(zipBlob)
     expect(store.rawResultZipFileName).to.equal(
       CONSTANTS.FILE_NAME.PROJECTION_RESULT_ZIP,
@@ -137,6 +138,7 @@ describe('Projection Store Unit Tests', () => {
     const zip1 = new JSZip()
     zip1.file(CONSTANTS.FILE_NAME.ERROR_TXT, 'Error1')
     zip1.file(CONSTANTS.FILE_NAME.LOG_TXT, 'Log1')
+    zip1.file(CONSTANTS.FILE_NAME.YIELD_TABLE_CSV, 'CSV1')
     zip1.file(CONSTANTS.FILE_NAME.YIELD_TABLE_TXT, 'Line1\nLine2')
     const zipBlob1 = await zip1.generateAsync({ type: 'blob' })
 
@@ -145,7 +147,7 @@ describe('Projection Store Unit Tests', () => {
     expect(store.errorMessages).to.deep.equal(['Error1'])
     expect(store.logMessages).to.deep.equal(['Log1'])
     expect(store.txtYieldLines).to.deep.equal(['Line1', 'Line2'])
-    expect(store.csvYieldLines).to.be.empty
+    expect(store.csvYieldLines).to.deep.equal(['CSV1'])
 
     // Second ZIP with FILE_UPLOAD
     appStore.modelSelection = CONSTANTS.MODEL_SELECTION.FILE_UPLOAD

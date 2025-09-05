@@ -74,19 +74,11 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
   const startingAge = ref<number | null>(null)
   const finishingAge = ref<number | null>(null)
   const ageIncrement = ref<number | null>(null)
-
   const startYear = ref<number | null>(null)
   const endYear = ref<number | null>(null)
   const yearIncrement = ref<number | null>(null)
-
   const isForwardGrowEnabled = ref<boolean>(true)
   const isBackwardGrowEnabled = ref<boolean>(true)
-
-  const isWholeStemEnabled = ref<boolean>(true)
-  const isCloseUtilEnabled = ref<boolean>(false)
-  const isNetDecayEnabled = ref<boolean>(false)
-  const isNetDecayWasteEnabled = ref<boolean>(false)
-  const isNetDecayWasteBreakageEnabled = ref<boolean>(false)
 
   const isComputedMAIEnabled = ref<boolean>(false)
   const isCulminationValuesEnabled = ref<boolean>(false)
@@ -118,7 +110,8 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
     isForwardGrowEnabled.value = DEFAULTS.DEFAULT_VALUES.IS_FORWARD_GROW_ENABLED
     isBackwardGrowEnabled.value =
       DEFAULTS.DEFAULT_VALUES.IS_BACKWARD_GROW_ENABLED
-    isWholeStemEnabled.value = DEFAULTS.DEFAULT_VALUES.IS_WHOLE_STEM_ENABLED
+    isByLayerEnabled.value = DEFAULTS.DEFAULT_VALUES.IS_BY_LAYER_ENABLED
+    isPolygonIDEnabled.value = DEFAULTS.DEFAULT_VALUES.IS_POLYGON_ID_ENABLED
     projectionType.value = DEFAULTS.DEFAULT_VALUES.PROJECTION_TYPE
     reportTitle.value = DEFAULTS.DEFAULT_VALUES.REPORT_TITLE
   }
@@ -141,11 +134,6 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
     yearIncrement,
     isForwardGrowEnabled,
     isBackwardGrowEnabled,
-    isWholeStemEnabled,
-    isCloseUtilEnabled,
-    isNetDecayEnabled,
-    isNetDecayWasteEnabled,
-    isNetDecayWasteBreakageEnabled,
     isComputedMAIEnabled,
     isCulminationValuesEnabled,
     isBySpeciesEnabled,
