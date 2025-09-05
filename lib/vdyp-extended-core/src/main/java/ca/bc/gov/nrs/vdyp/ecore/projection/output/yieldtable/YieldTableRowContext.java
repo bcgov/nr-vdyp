@@ -311,18 +311,18 @@ class YieldTableRowContext {
 		boolean ageSupplied = startAge != null && endAge != null;
 		boolean yearSupplied = startYear != null && endYear != null;
 
-		Validate.isTrue(
-				ageSupplied || yearSupplied,
-				"YieldTableRow.calculateTableRangeInformation(): neither age nor year was supplied"
-		);
+		if (!ageSupplied && !yearSupplied) {
+			// If the projection has no year or age range there is nothing to do in this method.
+			return;
+		}
 
-		if (/* case 1 */ ageSupplied && !yearSupplied) {
+		if (/* case 1 ageSupplied && */ !yearSupplied) {
 			this.ageAtStartYear = startAge;
 			this.ageAtEndYear = endAge;
 
 			this.yearAtStartAge = startAge + yearToAgeDifference;
 			this.yearAtEndAge = endAge + yearToAgeDifference;
-		} else if (/* case 2 */ yearSupplied && !ageSupplied) {
+		} else if (/* case 2 yearSupplied && */ !ageSupplied) {
 			this.yearAtStartAge = startYear;
 			this.yearAtEndAge = endYear;
 
@@ -359,7 +359,7 @@ class YieldTableRowContext {
 					)
 			);
 			Validate.isTrue(
-					ageRangeStartYear < ageRangeEndYear,
+					yearRangeStartYear < yearRangeEndYear,
 					MessageFormat.format(
 							"YieldTableRow.calculateTableRangeInformation(): year {0} was not less than {1}",
 							yearRangeStartYear, yearRangeEndYear
@@ -399,7 +399,7 @@ class YieldTableRowContext {
 			}
 
 			/* cases 5, 8 */
-			else if (yearRangeStartYear <= ageRangeStartYear && yearRangeEndYear > ageRangeEndYear) {
+			else if (yearRangeStartYear <= ageRangeStartYear /* && yearRangeEndYear > ageRangeEndYear */) {
 				range1Start = yearRangeStartYear;
 				range1End = yearRangeEndYear;
 
@@ -408,7 +408,7 @@ class YieldTableRowContext {
 			}
 
 			/* cases 9, 10 */
-			else if (yearRangeStartYear > ageRangeStartYear && yearRangeEndYear <= ageRangeEndYear) {
+			else if (/* yearRangeStartYear > ageRangeStartYear && */ yearRangeEndYear <= ageRangeEndYear) {
 				range1Start = ageRangeStartYear;
 				range1End = ageRangeEndYear;
 
@@ -417,21 +417,12 @@ class YieldTableRowContext {
 			}
 
 			/* cases 11, 12 */
-			else if (yearRangeStartYear <= ageRangeEndYear && yearRangeEndYear > ageRangeEndYear) {
+			else /* if (yearRangeStartYear <= ageRangeEndYear && yearRangeEndYear > ageRangeEndYear) */ {
 				range1Start = ageRangeStartYear;
 				range1End = yearRangeEndYear;
 
 				range2Start = yearRangeStartYear;
 				range2End = ageRangeEndYear;
-			}
-
-			else {
-				throw new IllegalStateException(
-						MessageFormat.format(
-								"Year start/end ({0}/{1}) and Age start/end ({2}/{3}) relationship incorrectly not implemented",
-								yearRangeStartYear, yearRangeEndYear, ageRangeStartYear, ageRangeEndYear
-						)
-				);
 			}
 
 			// Combine the two ranges.
