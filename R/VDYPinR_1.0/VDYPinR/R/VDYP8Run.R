@@ -118,8 +118,8 @@ VDYP8Run <- function(polyFile,
   layerFile <- data.table(layerFile)
   systemtime_start <- Sys.time()
   ## prepare a temp folder to save input data
-  ## temppath1 <- tempdir()
-  temppath1 <- "C:/VDYP7inR/examples/tempfolder"
+   temppath1 <- tempdir()
+  ##temppath1 <- "C:/VDYP7inR/examples/tempfolder"
   makedir <- TRUE
   folderindex <- 1
   while (makedir) {
