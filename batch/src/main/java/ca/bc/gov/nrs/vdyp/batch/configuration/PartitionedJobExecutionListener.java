@@ -136,8 +136,7 @@ public class PartitionedJobExecutionListener implements JobExecutionListener {
 				}
 				mergePartitionFiles(actualPartitionSize, jobExecutionId, actualOutputDirectory);
 			} catch (Exception e) {
-				logger.error("Failed to merge VDYP partition files: {}", e.getMessage());
-				e.printStackTrace();
+				logger.error("Failed to merge VDYP partition files: {}", e.getMessage(), e);
 			}
 
 			logger.info(separator);

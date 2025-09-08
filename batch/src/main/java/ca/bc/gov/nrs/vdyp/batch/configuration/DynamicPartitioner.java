@@ -141,8 +141,7 @@ public class DynamicPartitioner implements Partitioner {
 			return recordCount;
 
 		} catch (IOException e) {
-			logger.error("[VDYP Partitioner] Error reading CSV file: {}", e.getMessage());
-			e.printStackTrace();
+			logger.error("[VDYP Partitioner] Error reading CSV file: {}", e.getMessage(), e);
 			return 0;
 		}
 	}
