@@ -1,0 +1,29 @@
+[
+  {
+    "name": "java.lang.String"
+  },
+  {
+    "name": "java.math.BigDecimal"
+  },
+  {
+    "name": "java.time.LocalDateTime"
+  },
+  {
+    "name": "java.util.Date"
+  },
+  {
+    "name": "java.sql.Timestamp"
+  },
+  {
+    "name": "org.springframework.batch.core.JobExecution"
+  },
+  {
+    "name": "org.springframework.batch.core.StepExecution"
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.batch.model.BatchRecord"
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics"
+  }
+]

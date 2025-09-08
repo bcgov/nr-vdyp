@@ -212,6 +212,10 @@ buildNumber.properties
 # IntelliJ folder
 .idea/
 
+# Visual Studio Code
+.vscode/
+launch.json
+
 ### Windows ###
 # Windows thumbnail cache files
 Thumbs.db
