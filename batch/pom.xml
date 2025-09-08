@@ -153,6 +153,8 @@
                         <buildArg>-H:ConfigurationFileDirectories=src/main/resources/META-INF/native-image/</buildArg>
                     </buildArgs>
                 </configuration>
+                <!-- Temporarily commented out to avoid GraalVM native-image requirement in CI/CD -->
+                <!--
                 <executions>
                     <execution>
                         <id>build-native</id>
@@ -162,6 +164,7 @@
                         </goals>
                     </execution>
                 </executions>
+                -->
             </plugin>
         </plugins>
     </build>
