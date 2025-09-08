@@ -147,9 +147,11 @@ public class BatchMetrics {
 		private String errorMessage;
 		private LocalDateTime timestamp;
 		private String partitionName;
+		private Long lineNumber;
 
 		public SkipDetail(
-				Long recordId, String recordData, String errorType, String errorMessage, String partitionName
+				Long recordId, String recordData, String errorType, String errorMessage, String partitionName,
+				Long lineNumber
 		) {
 			this.recordId = recordId;
 			this.recordData = recordData;
@@ -157,6 +159,7 @@ public class BatchMetrics {
 			this.errorMessage = errorMessage;
 			this.timestamp = LocalDateTime.now();
 			this.partitionName = partitionName;
+			this.lineNumber = lineNumber;
 		}
 
 		public Long getRecordId() {
@@ -206,6 +209,14 @@ public class BatchMetrics {
 		public void setPartitionName(String partitionName) {
 			this.partitionName = partitionName;
 		}
+
+		public Long getLineNumber() {
+			return lineNumber;
+		}
+
+		public void setLineNumber(Long lineNumber) {
+			this.lineNumber = lineNumber;
+		}
 	}
 
 	/**
@@ -220,6 +231,7 @@ public class BatchMetrics {
 		private int skipCount = 0;
 		private LocalDateTime startTime;
 		private LocalDateTime endTime;
+		private String exitCode;
 
 		public PartitionMetrics(String partitionName) {
 			this.partitionName = partitionName;
@@ -288,6 +300,14 @@ public class BatchMetrics {
 
 		public void setEndTime(LocalDateTime endTime) {
 			this.endTime = endTime;
+		}
+
+		public String getExitCode() {
+			return exitCode;
+		}
+
+		public void setExitCode(String exitCode) {
+			this.exitCode = exitCode;
 		}
 	}
 

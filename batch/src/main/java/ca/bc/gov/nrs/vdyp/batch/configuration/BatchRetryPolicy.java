@@ -30,7 +30,7 @@ public class BatchRetryPolicy extends SimpleRetryPolicy {
 
 	// To track retry state for individual records
 	private static class RetryInfo {
-		BatchRecord record;
+		BatchRecord batchRecord;
 		Long recordId;
 		int attemptCount = 0;
 		Throwable lastError;
@@ -106,8 +106,8 @@ public class BatchRetryPolicy extends SimpleRetryPolicy {
 			// Record retry attempt in metrics
 			if (metricsCollector != null && currentJobExecutionId != null) {
 				metricsCollector.recordRetryAttempt(
-						currentJobExecutionId, recordId, retryInfo.record, retryInfo.attemptCount, lastThrowable, false,
-						currentPartitionName
+						currentJobExecutionId, recordId, retryInfo.batchRecord, retryInfo.attemptCount, lastThrowable,
+						false, currentPartitionName
 				);
 			}
 
@@ -148,14 +148,14 @@ public class BatchRetryPolicy extends SimpleRetryPolicy {
 		return canRetry;
 	}
 
-	public void registerRecord(Long recordId, BatchRecord record) {
+	public void registerRecord(Long recordId, BatchRecord batchRecord) {
 		String retryKey = createRetryKey(recordId);
 		RetryInfo retryInfo = retryInfoMap.computeIfAbsent(retryKey, k -> new RetryInfo());
-		retryInfo.record = record;
+		retryInfo.batchRecord = batchRecord;
 		retryInfo.recordId = recordId;
 	}
 
-	public void onRetrySuccess(Long recordId, BatchRecord record) {
+	public void onRetrySuccess(Long recordId, BatchRecord batchRecord) {
 		String retryKey = createRetryKey(recordId);
 		RetryInfo retryInfo = retryInfoMap.get(retryKey);
 
@@ -194,7 +194,7 @@ public class BatchRetryPolicy extends SimpleRetryPolicy {
 			// Record successful retry in metrics
 			if (metricsCollector != null && currentJobExecutionId != null) {
 				metricsCollector.recordRetryAttempt(
-						currentJobExecutionId, recordId, record, retryInfo.attemptCount, null, true,
+						currentJobExecutionId, recordId, batchRecord, retryInfo.attemptCount, null, true,
 						currentPartitionName
 				);
 			}

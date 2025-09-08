@@ -57,7 +57,7 @@ public class BatchSkipPolicy implements SkipPolicy {
 		if (shouldSkip) {
 			// Extract record information if possible
 			Long recordId = extractRecordId(t);
-			BatchRecord record = extractRecord(t);
+			BatchRecord batchRecord = extractRecord(t);
 			Long lineNumber = extractLineNumber(t);
 
 			// Get current step execution context safely
@@ -88,7 +88,7 @@ public class BatchSkipPolicy implements SkipPolicy {
 			// Record the skip in metrics
 			if (metricsCollector != null && currentJobExecutionId != null) {
 				metricsCollector
-						.recordSkip(currentJobExecutionId, recordId, record, t, currentPartitionName, lineNumber);
+						.recordSkip(currentJobExecutionId, recordId, batchRecord, t, currentPartitionName, lineNumber);
 			}
 
 			// Log detailed skip information
@@ -162,9 +162,9 @@ public class BatchSkipPolicy implements SkipPolicy {
 			}
 
 			// Fallback: create a basic record with the extracted ID for tracking
-			BatchRecord record = new BatchRecord();
-			record.setId(recordId);
-			return record;
+			BatchRecord batchRecord = new BatchRecord();
+			batchRecord.setId(recordId);
+			return batchRecord;
 		}
 		return null;
 	}
@@ -189,10 +189,10 @@ public class BatchSkipPolicy implements SkipPolicy {
 	/**
 	 * Store record data before skip processing for later retrieval.
 	 */
-	public static void cacheRecordData(Long recordId, BatchRecord record, String threadName) {
-		if (recordId != null && record != null) {
+	public static void cacheRecordData(Long recordId, BatchRecord batchRecord, String threadName) {
+		if (recordId != null && batchRecord != null) {
 			String key = recordId + "_" + threadName;
-			recordDataCache.put(key, record);
+			recordDataCache.put(key, batchRecord);
 		}
 	}
 

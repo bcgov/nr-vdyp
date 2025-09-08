@@ -65,9 +65,10 @@ public class BatchMetricsCollector {
 			if (partitionMetrics != null) {
 				partitionMetrics.setEndTime(LocalDateTime.now());
 				partitionMetrics.setRecordsWritten((int) writeCount);
+				partitionMetrics.setExitCode(exitCode);
 				logger.info(
-						"[{}] Completed partition metrics for job {}, written: {}", partitionName, jobExecutionId,
-						writeCount
+						"[{}] Completed partition metrics for job {}, written: {}, exitCode: {}", partitionName, jobExecutionId,
+						writeCount, exitCode
 				);
 			}
 		}
@@ -95,7 +96,7 @@ public class BatchMetricsCollector {
 	 * Record a retry attempt.
 	 */
 	public void recordRetryAttempt(
-			Long jobExecutionId, Long recordId, BatchRecord record, int attemptNumber, Throwable error,
+			Long jobExecutionId, Long recordId, BatchRecord batchRecord, int attemptNumber, Throwable error,
 			boolean successful, String partitionName
 	) {
 		BatchMetrics metrics = getJobMetrics(jobExecutionId);
@@ -113,7 +114,7 @@ public class BatchMetricsCollector {
 			String errorMessage = error != null ? error.getMessage() : "No error message";
 
 			BatchMetrics.RetryDetail retryDetail = new BatchMetrics.RetryDetail(
-					recordId, record != null ? record.toString() : "null", attemptNumber, errorType, errorMessage,
+					recordId, batchRecord != null ? batchRecord.toString() : "null", attemptNumber, errorType, errorMessage,
 					successful, partitionName
 			);
 
@@ -125,7 +126,7 @@ public class BatchMetricsCollector {
 	 * Record a skip event.
 	 */
 	public void recordSkip(
-			Long jobExecutionId, Long recordId, BatchRecord record, Throwable error, String partitionName,
+			Long jobExecutionId, Long recordId, BatchRecord batchRecord, Throwable error, String partitionName,
 			Long lineNumber
 	) {
 		BatchMetrics metrics = getJobMetrics(jobExecutionId);
@@ -138,10 +139,10 @@ public class BatchMetricsCollector {
 
 			// Create skip detail
 			String errorMessage = error != null ? error.getMessage() : "No error message";
-			String recordData = record != null ? record.toString() : "null";
+			String recordData = batchRecord != null ? batchRecord.toString() : "null";
 
 			BatchMetrics.SkipDetail skipDetail = new BatchMetrics.SkipDetail(
-					recordId, recordData, errorType, errorMessage, partitionName
+					recordId, recordData, errorType, errorMessage, partitionName, lineNumber
 			);
 
 			metrics.getSkipDetails().add(skipDetail);
