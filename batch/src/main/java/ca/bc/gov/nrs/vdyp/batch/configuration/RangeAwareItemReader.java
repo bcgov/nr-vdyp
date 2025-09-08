@@ -94,9 +94,10 @@ public class RangeAwareItemReader implements ItemReader<BatchRecord>, ItemStream
             this.inputResource = new org.springframework.core.io.FileSystemResource(inputFilePath);
         }
 
-        if (inputResource == null) {
+        // Check if the resource actually exists
+        if (!inputResource.exists()) {
             throw new IllegalStateException(
-                    "VDYP input resource not set. Cannot initialize reader for partition: " + partitionName);
+                    "VDYP input resource does not exist: " + inputFilePath + ". Cannot initialize reader for partition: " + partitionName);
         }
 
         // Create a new, independent delegate reader for this VDYP partition

@@ -46,7 +46,9 @@ public class BatchController {
 
 			logger.info("=== VDYP Batch Job Start Request ===");
 			if (request != null) {
-				logger.info("Request details: {}", request.toString());
+				logger.info("Request details - inputFilePath: {}, outputFilePath: {}, partitionSize: {}, maxRetryAttempts: {}, retryBackoffPeriod: {}, maxSkipCount: {}",
+					request.getInputFilePath(), request.getOutputFilePath(), request.getPartitionSize(),
+					request.getMaxRetryAttempts(), request.getRetryBackoffPeriod(), request.getMaxSkipCount());
 			}
 
 			Map<String, Object> response = new HashMap<>();

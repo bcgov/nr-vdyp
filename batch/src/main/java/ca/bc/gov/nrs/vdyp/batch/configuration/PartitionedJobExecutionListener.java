@@ -13,6 +13,7 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 
 /**
  * Job execution listener for partitioned VDYP batch job.
@@ -187,19 +188,21 @@ public class PartitionedJobExecutionListener implements JobExecutionListener {
 			for (int i = 0; i < partitionCount; i++) {
 				String partitionFile = outputDirectory + "/" + filePrefix + "_partition" + i + ".csv";
 				if (Files.exists(Paths.get(partitionFile))) {
-					long partitionLines = Files.lines(Paths.get(partitionFile)).skip(1) // Skip header
-							.peek(line -> {
-								try {
-									writer.write(line);
-									writer.newLine();
-								} catch (Exception e) {
-									logger.error("Error writing VDYP line: {}", e.getMessage());
-								}
-							}).count();
+					try (Stream<String> lines = Files.lines(Paths.get(partitionFile))) {
+						long partitionLines = lines.skip(1) // Skip header
+								.peek(line -> {
+									try {
+										writer.write(line);
+										writer.newLine();
+									} catch (Exception e) {
+										logger.error("Error writing VDYP line: {}", e.getMessage());
+									}
+								}).count();
 
-					totalLines += partitionLines;
-					mergedFiles++;
-					logger.info("Merged VDYP partition file: {} ({} records)", partitionFile, partitionLines);
+						totalLines += partitionLines;
+						mergedFiles++;
+						logger.info("Merged VDYP partition file: {} ({} records)", partitionFile, partitionLines);
+					}
 				} else {
 					logger.warn("VDYP partition file not found: {}", partitionFile);
 				}
@@ -214,7 +217,9 @@ public class PartitionedJobExecutionListener implements JobExecutionListener {
 		);
 
 		logger.info("Final merged VDYP output created: {}", finalOutputPath);
-		long lineCount = Files.lines(Paths.get(finalOutputPath)).count();
-		logger.info("Total lines in merged VDYP file: {} (including header)", lineCount);
+		try (Stream<String> lines = Files.lines(Paths.get(finalOutputPath))) {
+			long lineCount = lines.count();
+			logger.info("Total lines in merged VDYP file: {} (including header)", lineCount);
+		}
 	}
 }
