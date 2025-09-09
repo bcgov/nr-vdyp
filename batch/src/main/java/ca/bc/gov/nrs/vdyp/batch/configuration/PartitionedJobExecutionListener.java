@@ -16,7 +16,6 @@ import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Job execution listener for partitioned VDYP batch job.
@@ -197,7 +196,7 @@ public class PartitionedJobExecutionListener implements JobExecutionListener {
 				String partitionFile = outputDirectory + File.separator + filePrefix + "_partition" + i + ".csv";
 				if (Files.exists(Paths.get(partitionFile))) {
 					try (Stream<String> lines = Files.lines(Paths.get(partitionFile))) {
-						List<String> partitionLinesList = lines.skip(1).collect(Collectors.toList());
+						List<String> partitionLinesList = lines.skip(1).toList();
 						
 						for (String line : partitionLinesList) {
 							try {
