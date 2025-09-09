@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.annotation.BeforeStep;
 import org.springframework.batch.item.ItemProcessor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.lang.NonNull;
 
@@ -19,11 +18,8 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 
 	private static final Logger logger = LoggerFactory.getLogger(VdypProjectionProcessor.class);
 
-	@Autowired
-	private BatchRetryPolicy retryPolicy;
-
-	@Autowired
-	private BatchMetricsCollector metricsCollector;
+	private final BatchRetryPolicy retryPolicy;
+	private final BatchMetricsCollector metricsCollector;
 
 	// Partition context information
 	private String partitionName = "unknown";
@@ -41,6 +37,11 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 
 	@Value("${batch.validation.max-polygon-id-length:50}")
 	private int maxPolygonIdLength;
+
+	public VdypProjectionProcessor(BatchRetryPolicy retryPolicy, BatchMetricsCollector metricsCollector) {
+		this.retryPolicy = retryPolicy;
+		this.metricsCollector = metricsCollector;
+	}
 
 	/**
 	 * Initialize processor with step execution context.

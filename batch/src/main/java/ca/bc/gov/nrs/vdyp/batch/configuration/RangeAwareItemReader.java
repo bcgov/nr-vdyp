@@ -9,7 +9,6 @@ import org.springframework.batch.item.ItemStreamException;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.file.FlatFileParseException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.lang.NonNull;
 
@@ -19,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -43,11 +43,9 @@ public class RangeAwareItemReader implements ItemReader<BatchRecord>, ItemStream
 	private Long jobExecutionId;
 
 	// Metrics collector for skip tracking
-	@Autowired
-	private BatchMetricsCollector metricsCollector;
+	private final BatchMetricsCollector metricsCollector;
 
-	@Autowired
-	private BatchProperties batchProperties;
+	private final BatchProperties batchProperties;
 
 	private static final String UNKNOWN = "unknown";
 
@@ -57,8 +55,10 @@ public class RangeAwareItemReader implements ItemReader<BatchRecord>, ItemStream
 
 	private Resource inputResource;
 
-	public RangeAwareItemReader(Resource resource) {
+	public RangeAwareItemReader(Resource resource, BatchMetricsCollector metricsCollector, BatchProperties batchProperties) {
 		this.inputResource = resource;
+		this.metricsCollector = metricsCollector;
+		this.batchProperties = batchProperties;
 	}
 
 	public void setInputResource(Resource resource) {
@@ -161,7 +161,7 @@ public class RangeAwareItemReader implements ItemReader<BatchRecord>, ItemStream
 	 * Reads the next BatchRecord that falls within the partition's line range.
 	 */
 	@Override
-	public BatchRecord read() throws Exception {
+	public BatchRecord read() throws ItemStreamException {
 		if (!readerOpened) {
 			open(new ExecutionContext());
 		}
@@ -176,7 +176,7 @@ public class RangeAwareItemReader implements ItemReader<BatchRecord>, ItemStream
 	/**
 	 * Reads the next valid record within the partition range.
 	 */
-	private BatchRecord readNextValidRecord() throws Exception {
+	private BatchRecord readNextValidRecord() throws ItemStreamException {
 		while (true) {
 			try {
 				BatchRecord batchRecord = delegate.read();
@@ -194,8 +194,11 @@ public class RangeAwareItemReader implements ItemReader<BatchRecord>, ItemStream
 
 			} catch (FlatFileParseException e) {
 				handleSkipEvent(e, "VDYP_FILE_PARSE_ERROR", currentLine);
+			} catch (IllegalArgumentException e) {
+				handleSkipEvent(e, "VDYP_DATA_VALIDATION_ERROR", currentLine);
 			} catch (Exception e) {
 				handleSkipEvent(e, "VDYP_READER_ERROR", currentLine);
+				throw new ItemStreamException("Error reading VDYP record at line " + currentLine, e);
 			}
 		}
 	}
@@ -213,7 +216,7 @@ public class RangeAwareItemReader implements ItemReader<BatchRecord>, ItemStream
 	/**
 	 * Processes a record checking if it's within the partition range.
 	 */
-	private BatchRecord processRecordWithinRange(BatchRecord batchRecord) throws Exception {
+	private BatchRecord processRecordWithinRange(BatchRecord batchRecord) throws IllegalArgumentException {
 		if (currentLine < startLine) {
 			skippedCount++;
 			return null; // Not in range yet
@@ -245,7 +248,7 @@ public class RangeAwareItemReader implements ItemReader<BatchRecord>, ItemStream
 	/**
 	 * Process a successfully read data record, applying data validation.
 	 */
-	private BatchRecord processVdypRecord(BatchRecord batchRecord) throws Exception {
+	private BatchRecord processVdypRecord(BatchRecord batchRecord) throws IllegalArgumentException {
 		Long recordId = batchRecord.getId();
 
 		if (recordId == null) {
@@ -357,7 +360,7 @@ public class RangeAwareItemReader implements ItemReader<BatchRecord>, ItemStream
 		}
 	}
 
-	public ConcurrentHashMap<String, AtomicLong> getSkipStatistics() {
+	public ConcurrentMap<String, AtomicLong> getSkipStatistics() {
 		return new ConcurrentHashMap<>(skipReasonCounts);
 	}
 

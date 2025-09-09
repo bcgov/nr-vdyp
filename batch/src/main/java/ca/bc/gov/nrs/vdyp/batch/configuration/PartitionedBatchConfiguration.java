@@ -17,7 +17,6 @@ import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.file.FlatFileItemWriter;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -27,6 +26,7 @@ import org.springframework.lang.NonNull;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
 
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.stream.Collectors;
@@ -43,7 +43,9 @@ public class PartitionedBatchConfiguration {
 	private final BatchMetricsCollector metricsCollector;
 	private final BatchProperties batchProperties;
 
-	public PartitionedBatchConfiguration(JobRepository jobRepository, BatchMetricsCollector metricsCollector, BatchProperties batchProperties) {
+	public PartitionedBatchConfiguration(
+			JobRepository jobRepository, BatchMetricsCollector metricsCollector, BatchProperties batchProperties
+	) {
 		this.jobRepository = jobRepository;
 		this.metricsCollector = metricsCollector;
 		this.batchProperties = batchProperties;
@@ -144,12 +146,18 @@ public class PartitionedBatchConfiguration {
 	}
 
 	@Bean
-	public DynamicPartitionHandler dynamicPartitionHandler(TaskExecutor taskExecutor, Step workerStep, DynamicPartitioner dynamicPartitioner, BatchProperties batchProperties) {
+	public DynamicPartitionHandler dynamicPartitionHandler(
+			TaskExecutor taskExecutor, Step workerStep, DynamicPartitioner dynamicPartitioner,
+			BatchProperties batchProperties
+	) {
 		return new DynamicPartitionHandler(taskExecutor, workerStep, dynamicPartitioner, batchProperties);
 	}
 
 	@Bean
-	public Step masterStep(TaskExecutor taskExecutor, Step workerStep, DynamicPartitioner dynamicPartitioner, DynamicPartitionHandler dynamicPartitionHandler) {
+	public Step masterStep(
+			TaskExecutor taskExecutor, Step workerStep, DynamicPartitioner dynamicPartitioner,
+			DynamicPartitionHandler dynamicPartitionHandler
+	) {
 		return new StepBuilder("masterStep", jobRepository).partitioner("workerStep", dynamicPartitioner)
 				.partitionHandler(dynamicPartitionHandler).build();
 	}
@@ -159,7 +167,8 @@ public class PartitionedBatchConfiguration {
 	 */
 	@Bean
 	public Step workerStep(
-			BatchRetryPolicy retryPolicy, BatchSkipPolicy skipPolicy, PlatformTransactionManager transactionManager
+			BatchRetryPolicy retryPolicy, BatchSkipPolicy skipPolicy, PlatformTransactionManager transactionManager,
+			BatchMetricsCollector metricsCollector, BatchProperties batchProperties
 	) {
 		int chunkSize = batchProperties.getPartitioning().getChunkSize();
 		if (chunkSize <= 0) {
@@ -169,8 +178,8 @@ public class PartitionedBatchConfiguration {
 		}
 
 		return new StepBuilder("workerStep", jobRepository)
-				.<BatchRecord, BatchRecord>chunk(chunkSize, transactionManager).reader(partitionReader())
-				.processor(vdypProjectionProcessor()).writer(partitionWriter(null, null)).faultTolerant()
+				.<BatchRecord, BatchRecord>chunk(chunkSize, transactionManager).reader(partitionReader(metricsCollector, batchProperties))
+				.processor(vdypProjectionProcessor(retryPolicy, metricsCollector)).writer(partitionWriter(null, null)).faultTolerant()
 				.retryPolicy(retryPolicy).skipPolicy(skipPolicy).listener(new StepExecutionListener() {
 					@Override
 					public void beforeStep(@NonNull StepExecution stepExecution) {
@@ -215,8 +224,8 @@ public class PartitionedBatchConfiguration {
 	@Bean
 	@ConditionalOnProperty(name = "batch.job.auto-create", havingValue = "true", matchIfMissing = false)
 	public Job partitionedJob(PartitionedJobExecutionListener jobExecutionListener, Step masterStep) {
-		return new JobBuilder("VdypPartitionedJob", jobRepository).incrementer(new RunIdIncrementer())
-				.start(masterStep).listener(new JobExecutionListener() {
+		return new JobBuilder("VdypPartitionedJob", jobRepository).incrementer(new RunIdIncrementer()).start(masterStep)
+				.listener(new JobExecutionListener() {
 					@Override
 					public void beforeJob(@NonNull JobExecution jobExecution) {
 						// Initialize job metrics
@@ -258,8 +267,8 @@ public class PartitionedBatchConfiguration {
 
 	@Bean
 	@StepScope
-	public RangeAwareItemReader partitionReader() {
-		return new RangeAwareItemReader(null);
+	public RangeAwareItemReader partitionReader(BatchMetricsCollector metricsCollector, BatchProperties batchProperties) {
+		return new RangeAwareItemReader(null, metricsCollector, batchProperties);
 	}
 
 	@Bean
@@ -290,7 +299,7 @@ public class PartitionedBatchConfiguration {
 			throw new IllegalStateException("batch.output.csv-header must be configured in application.properties");
 		}
 
-		String partitionOutputPath = actualOutputDirectory + "/" + filePrefix + "_" + actualPartitionName + ".csv";
+		String partitionOutputPath = actualOutputDirectory + File.separator + filePrefix + "_" + actualPartitionName + ".csv";
 
 		try {
 			Files.createDirectories(Paths.get(actualOutputDirectory));
@@ -305,12 +314,10 @@ public class PartitionedBatchConfiguration {
 			logger.info("[{}] VDYP Writer: Writing header to file {}", actualPartitionName, partitionOutputPath);
 			w.write(csvHeader);
 		});
-		writer.setLineAggregator(item -> {
-			return item.getId() + ","
-					+ (item.getData() != null ? "\"" + item.getData().replace("\"", "\"\"") + "\"" : "") + ","
-					+ (item.getPolygonId() != null ? item.getPolygonId() : "") + ","
-					+ (item.getLayerId() != null ? item.getLayerId() : "") + "," + "PROCESSED";
-		});
+		writer.setLineAggregator(item -> item.getId() + ","
+				+ (item.getData() != null ? "\"" + item.getData().replace("\"", "\"\"") + "\"" : "") + ","
+				+ (item.getPolygonId() != null ? item.getPolygonId() : "") + ","
+				+ (item.getLayerId() != null ? item.getLayerId() : "") + "," + "PROCESSED");
 
 		logger.info("[{}] VDYP Writer configured for output path: {}", actualPartitionName, partitionOutputPath);
 
@@ -319,7 +326,7 @@ public class PartitionedBatchConfiguration {
 
 	@Bean
 	@StepScope
-	public VdypProjectionProcessor vdypProjectionProcessor() {
-		return new VdypProjectionProcessor();
+	public VdypProjectionProcessor vdypProjectionProcessor(BatchRetryPolicy retryPolicy, BatchMetricsCollector metricsCollector) {
+		return new VdypProjectionProcessor(retryPolicy, metricsCollector);
 	}
 }

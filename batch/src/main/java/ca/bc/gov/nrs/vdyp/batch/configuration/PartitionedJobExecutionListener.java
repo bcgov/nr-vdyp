@@ -4,10 +4,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobExecutionListener;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -15,6 +15,8 @@ import java.time.LocalDateTime;
 import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Job execution listener for partitioned VDYP batch job.
@@ -24,12 +26,15 @@ public class PartitionedJobExecutionListener implements JobExecutionListener {
 
 	private static final Logger logger = LoggerFactory.getLogger(PartitionedJobExecutionListener.class);
 
-	@Autowired
-	private BatchProperties batchProperties;
+	private final BatchProperties batchProperties;
 
 	// Thread safety for afterJob execution - using job execution ID as key
 	private final ConcurrentHashMap<Long, Boolean> jobCompletionTracker = new ConcurrentHashMap<>();
 	private final Object lock = new Object();
+
+	public PartitionedJobExecutionListener(BatchProperties batchProperties) {
+		this.batchProperties = batchProperties;
+	}
 
 	@Override
 	public void beforeJob(@NonNull JobExecution jobExecution) {
@@ -159,7 +164,8 @@ public class PartitionedJobExecutionListener implements JobExecutionListener {
 	/**
 	 * Merges all VDYP partition output files into a single file.
 	 */
-	private void mergePartitionFiles(int partitionCount, Long jobExecutionId, String outputDirectory) throws IOException {
+	private void mergePartitionFiles(int partitionCount, Long jobExecutionId, String outputDirectory)
+			throws IOException {
 		String filePrefix = batchProperties.getOutput().getFilePrefix();
 		if (filePrefix == null) {
 			throw new IllegalStateException("batch.output.file-prefix must be configured in application.properties");
@@ -170,10 +176,11 @@ public class PartitionedJobExecutionListener implements JobExecutionListener {
 			throw new IllegalStateException("batch.output.csv-header must be configured in application.properties");
 		}
 
-		String finalOutputPath = outputDirectory + "/" + filePrefix + "_merged.csv";
+		String finalOutputPath = outputDirectory + File.separator + filePrefix + "_merged.csv";
 
 		// Add job execution ID to avoid conflicts in concurrent executions
-		String tempMergeFile = outputDirectory + "/" + filePrefix + "_merged_temp_" + jobExecutionId + ".csv";
+		String tempMergeFile = outputDirectory + File.separator + filePrefix + "_merged_temp_" + jobExecutionId
+				+ ".csv";
 
 		logger.info("Starting VDYP file merge for {} partitions...", partitionCount);
 
@@ -187,19 +194,21 @@ public class PartitionedJobExecutionListener implements JobExecutionListener {
 
 			// Merge partition files
 			for (int i = 0; i < partitionCount; i++) {
-				String partitionFile = outputDirectory + "/" + filePrefix + "_partition" + i + ".csv";
+				String partitionFile = outputDirectory + File.separator + filePrefix + "_partition" + i + ".csv";
 				if (Files.exists(Paths.get(partitionFile))) {
 					try (Stream<String> lines = Files.lines(Paths.get(partitionFile))) {
-						long partitionLines = lines.skip(1) // Skip header
-								.peek(line -> {
-									try {
-										writer.write(line);
-										writer.newLine();
-									} catch (Exception e) {
-										logger.error("Error writing VDYP line: {}", e.getMessage());
-									}
-								}).count();
+						List<String> partitionLinesList = lines.skip(1).collect(Collectors.toList());
+						
+						for (String line : partitionLinesList) {
+							try {
+								writer.write(line);
+								writer.newLine();
+							} catch (Exception e) {
+								logger.error("Error writing VDYP line: {}", e.getMessage());
+							}
+						}
 
+						long partitionLines = partitionLinesList.size();
 						totalLines += partitionLines;
 						mergedFiles++;
 						logger.info("Merged VDYP partition file: {} ({} records)", partitionFile, partitionLines);

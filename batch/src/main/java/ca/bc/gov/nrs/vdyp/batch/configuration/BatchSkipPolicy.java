@@ -91,8 +91,8 @@ public class BatchSkipPolicy implements SkipPolicy {
 			var stepContext = StepSynchronizationManager.getContext();
 			if (stepContext != null) {
 				StepExecution currentStepExecution = stepContext.getStepExecution();
-				currentJobExecutionId = updateJobExecutionId(currentStepExecution, currentJobExecutionId);
-				currentPartitionName = updatePartitionName(currentStepExecution, currentPartitionName);
+				currentJobExecutionId = updateJobExecutionId(currentStepExecution);
+				currentPartitionName = updatePartitionName(currentStepExecution);
 			}
 		} catch (Exception e) {
 			logger.warn("[VDYP Skip Policy] Warning: Could not access step context: {}", e.getMessage());
@@ -101,11 +101,11 @@ public class BatchSkipPolicy implements SkipPolicy {
 		return new ExecutionContext(currentJobExecutionId, currentPartitionName);
 	}
 
-	private Long updateJobExecutionId(StepExecution stepExecution, Long currentJobExecutionId) {
+	private Long updateJobExecutionId(StepExecution stepExecution) {
 		return stepExecution.getJobExecutionId();
 	}
 
-	private String updatePartitionName(StepExecution stepExecution, String currentPartitionName) {
+	private String updatePartitionName(StepExecution stepExecution) {
 		String retrievedPartitionName = stepExecution.getExecutionContext().getString("partitionName", UNKNOWN);
 		partitionName = retrievedPartitionName;
 		return retrievedPartitionName;

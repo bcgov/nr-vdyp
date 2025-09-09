@@ -10,7 +10,6 @@ import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException;
 import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException;
 import org.springframework.batch.core.repository.JobRestartException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,17 +33,17 @@ public class BatchController {
 	private static final String JOB_TYPE = "jobType";
 	private static final String NOTE = "note";
 
-	@Autowired
-	private JobLauncher jobLauncher;
+	private final JobLauncher jobLauncher;
+	private final Job partitionedJob;
+	private final JobExplorer jobExplorer;
+	private final BatchMetricsCollector metricsCollector;
 
-	@Autowired(required = false)
-	private Job partitionedJob;
-
-	@Autowired
-	private JobExplorer jobExplorer;
-
-	@Autowired
-	private BatchMetricsCollector metricsCollector;
+	public BatchController(JobLauncher jobLauncher, Job partitionedJob, JobExplorer jobExplorer, BatchMetricsCollector metricsCollector) {
+		this.jobLauncher = jobLauncher;
+		this.partitionedJob = partitionedJob;
+		this.jobExplorer = jobExplorer;
+		this.metricsCollector = metricsCollector;
+	}
 
 	/**
 	 * Start a new batch job execution with configuration options.
