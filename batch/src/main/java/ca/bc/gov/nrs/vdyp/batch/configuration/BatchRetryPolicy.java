@@ -125,17 +125,9 @@ public class BatchRetryPolicy extends SimpleRetryPolicy {
 			var stepContext = StepSynchronizationManager.getContext();
 			if (stepContext != null) {
 				StepExecution currentStepExecution = stepContext.getStepExecution();
-				if (currentStepExecution != null) {
-					Long retrievedJobId = currentStepExecution.getJobExecutionId();
-					if (retrievedJobId != null) {
-						currentJobExecutionId = retrievedJobId;
-					}
-					String retrievedPartitionName = currentStepExecution.getExecutionContext()
-							.getString(PARTITION_NAME, UNKNOWN);
-					if (retrievedPartitionName != null) {
-						currentPartitionName = retrievedPartitionName;
-					}
-				}
+				currentJobExecutionId = currentStepExecution.getJobExecutionId();
+				currentPartitionName = currentStepExecution.getExecutionContext()
+						.getString(PARTITION_NAME, UNKNOWN);
 			}
 		} catch (Exception e) {
 			logger.warn("[VDYP Retry Policy] Warning: Could not access step context in canRetry: {}", e.getMessage());

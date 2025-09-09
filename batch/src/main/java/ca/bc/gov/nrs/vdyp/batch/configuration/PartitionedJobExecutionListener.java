@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
@@ -85,7 +86,7 @@ public class PartitionedJobExecutionListener implements JobExecutionListener {
 		// Use synchronization to ensure only one thread processes this job completion
 		synchronized (lock) {
 			// Double-check after acquiring lock
-			if (jobCompletionTracker.get(jobExecutionId)) {
+			if (Boolean.TRUE.equals(jobCompletionTracker.get(jobExecutionId))) {
 				logger.info("VDYP Job {} already processed by another thread, skipping", jobExecutionId);
 				return;
 			}
@@ -158,7 +159,7 @@ public class PartitionedJobExecutionListener implements JobExecutionListener {
 	/**
 	 * Merges all VDYP partition output files into a single file.
 	 */
-	private void mergePartitionFiles(int partitionCount, Long jobExecutionId, String outputDirectory) throws Exception {
+	private void mergePartitionFiles(int partitionCount, Long jobExecutionId, String outputDirectory) throws IOException {
 		String filePrefix = batchProperties.getOutput().getFilePrefix();
 		if (filePrefix == null) {
 			throw new IllegalStateException("batch.output.file-prefix must be configured in application.properties");

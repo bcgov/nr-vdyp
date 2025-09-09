@@ -8,7 +8,6 @@ import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.partition.PartitionHandler;
 import org.springframework.batch.core.partition.StepExecutionSplitter;
 import org.springframework.batch.core.partition.support.TaskExecutorPartitionHandler;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -27,17 +26,20 @@ public class DynamicPartitionHandler implements PartitionHandler {
 
 	private static final Logger logger = LoggerFactory.getLogger(DynamicPartitionHandler.class);
 
-	@Autowired
-	private TaskExecutor taskExecutor;
+	private final TaskExecutor taskExecutor;
+	private final Step workerStep;
+	private final DynamicPartitioner dynamicPartitioner;
+	private final BatchProperties batchProperties;
 
-	@Autowired
-	private Step workerStep;
-
-	@Autowired
-	private DynamicPartitioner dynamicPartitioner;
-
-	@Autowired
-	private BatchProperties batchProperties;
+	public DynamicPartitionHandler(
+			TaskExecutor taskExecutor, Step workerStep, DynamicPartitioner dynamicPartitioner,
+			BatchProperties batchProperties
+	) {
+		this.taskExecutor = taskExecutor;
+		this.workerStep = workerStep;
+		this.dynamicPartitioner = dynamicPartitioner;
+		this.batchProperties = batchProperties;
+	}
 
 	@Override
 	@NonNull

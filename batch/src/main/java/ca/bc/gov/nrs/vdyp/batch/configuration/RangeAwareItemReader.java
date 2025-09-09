@@ -193,9 +193,9 @@ public class RangeAwareItemReader implements ItemReader<BatchRecord>, ItemStream
 				// Continue to next record if not in range or invalid
 
 			} catch (FlatFileParseException e) {
-				handleSkipEvent(e, "VDYP_FILE_PARSE_ERROR", (long) currentLine);
+				handleSkipEvent(e, "VDYP_FILE_PARSE_ERROR", currentLine);
 			} catch (Exception e) {
-				handleSkipEvent(e, "VDYP_READER_ERROR", (long) currentLine);
+				handleSkipEvent(e, "VDYP_READER_ERROR", currentLine);
 			}
 		}
 	}
@@ -273,7 +273,7 @@ public class RangeAwareItemReader implements ItemReader<BatchRecord>, ItemStream
 	/**
 	 * Validate record data quality and handle data-related skip events.
 	 */
-	private void validateVdypRecordData(BatchRecord batchRecord) throws Exception {
+	private void validateVdypRecordData(BatchRecord batchRecord) throws IllegalArgumentException {
 		Long recordId = batchRecord.getId();
 
 		if (batchRecord.getData() == null || batchRecord.getData().trim().isEmpty()) {

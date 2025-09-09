@@ -27,8 +27,6 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 
 	// Partition context information
 	private String partitionName = "unknown";
-	private long startLine = 0;
-	private long endLine = 0;
 	private Long jobExecutionId;
 
 	// Track records that have been successfully retried
@@ -51,8 +49,8 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 	public void beforeStep(StepExecution stepExecution) {
 		this.jobExecutionId = stepExecution.getJobExecutionId();
 		this.partitionName = stepExecution.getExecutionContext().getString("partitionName", "unknown");
-		this.startLine = stepExecution.getExecutionContext().getLong("startLine", 0);
-		this.endLine = stepExecution.getExecutionContext().getLong("endLine", 0);
+		long startLine = stepExecution.getExecutionContext().getLong("startLine", 0);
+		long endLine = stepExecution.getExecutionContext().getLong("endLine", 0);
 
 		// Initialize partition metrics
 		if (metricsCollector != null) {
@@ -203,12 +201,12 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 	 * Reclassifies and throws exceptions for proper Spring Batch handling.
 	 */
 	private void reclassifyAndThrowException(Exception e, Long recordId) throws IOException, IllegalArgumentException {
-		if (e instanceof IOException) {
-			throw (IOException) e;
+		if (e instanceof IOException ioException) {
+			throw ioException;
 		}
 
-		if (e instanceof IllegalArgumentException) {
-			throw (IllegalArgumentException) e;
+		if (e instanceof IllegalArgumentException illegalArgException) {
+			throw illegalArgException;
 		}
 
 		if (e instanceof RuntimeException && isTransientError(e)) {
@@ -264,12 +262,10 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 			throw new IOException("Processing interrupted for record ID " + batchRecord.getId(), e);
 		}
 
-		String result = String.format(
+		return String.format(
 				"PROJECTED[P:%s,L:%s,Data:%s]", polygonId != null ? polygonId : "N/A",
 				layerId != null ? layerId : "N/A",
 				data != null && data.length() > 10 ? data.substring(0, 10) + "..." : data
 		);
-
-		return result;
 	}
 }

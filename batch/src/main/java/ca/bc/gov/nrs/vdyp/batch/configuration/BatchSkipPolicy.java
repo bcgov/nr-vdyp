@@ -9,7 +9,6 @@ import org.springframework.batch.core.annotation.BeforeStep;
 import org.springframework.batch.core.step.skip.SkipLimitExceededException;
 import org.springframework.batch.core.step.skip.SkipPolicy;
 import org.springframework.batch.item.file.FlatFileParseException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.validation.BindException;
 import org.springframework.batch.core.scope.context.StepSynchronizationManager;
@@ -25,14 +24,14 @@ public class BatchSkipPolicy implements SkipPolicy {
 
 	private static final String UNKNOWN = "unknown";
 
-	@Autowired
-	private BatchMetricsCollector metricsCollector;
+	private final BatchMetricsCollector metricsCollector;
 
 	// Thread-safe storage for record data before skip processing
 	private static final ConcurrentHashMap<String, BatchRecord> recordDataCache = new ConcurrentHashMap<>();
 
-	public BatchSkipPolicy(long maxSkipCount) {
+	public BatchSkipPolicy(long maxSkipCount, BatchMetricsCollector metricsCollector) {
 		this.maxSkipCount = maxSkipCount;
+		this.metricsCollector = metricsCollector;
 	}
 
 	@BeforeStep
@@ -44,14 +43,14 @@ public class BatchSkipPolicy implements SkipPolicy {
 	@Override
 	public boolean shouldSkip(@NonNull Throwable t, long skipCount) throws SkipLimitExceededException {
 		validateSkipLimit(skipCount, t);
-		
+
 		boolean shouldSkip = isSkippableException(t);
 		logSkipDecision(t, shouldSkip, skipCount);
-		
+
 		if (shouldSkip) {
 			processSkippableException(t);
 		}
-		
+
 		return shouldSkip;
 	}
 
@@ -63,15 +62,15 @@ public class BatchSkipPolicy implements SkipPolicy {
 
 	private void logSkipDecision(Throwable t, boolean shouldSkip, long skipCount) {
 		logger.info(
-			"[VDYP Skip Policy] Exception: {}, Skippable: {}, Current Skipped count: {}",
-			t.getClass().getSimpleName(), shouldSkip, skipCount
+				"[VDYP Skip Policy] Exception: {}, Skippable: {}, Current Skipped count: {}",
+				t.getClass().getSimpleName(), shouldSkip, skipCount
 		);
 	}
 
 	private void processSkippableException(Throwable t) {
 		SkipContext skipContext = createSkipContext(t);
 		ExecutionContext executionContext = getCurrentExecutionContext();
-		
+
 		recordSkipMetrics(skipContext, executionContext);
 		logSkipDetails(t, executionContext.currentPartitionName);
 	}
@@ -80,53 +79,43 @@ public class BatchSkipPolicy implements SkipPolicy {
 		Long recordId = extractRecordId(t);
 		BatchRecord batchRecord = extractRecord(t);
 		Long lineNumber = extractLineNumber(t);
-		
+
 		return new SkipContext(recordId, batchRecord, lineNumber, t);
 	}
 
 	private ExecutionContext getCurrentExecutionContext() {
 		Long currentJobExecutionId = jobExecutionId;
 		String currentPartitionName = partitionName;
-		
+
 		try {
 			var stepContext = StepSynchronizationManager.getContext();
 			if (stepContext != null) {
 				StepExecution currentStepExecution = stepContext.getStepExecution();
-				if (currentStepExecution != null) {
-					currentJobExecutionId = updateJobExecutionId(currentStepExecution, currentJobExecutionId);
-					currentPartitionName = updatePartitionName(currentStepExecution, currentPartitionName);
-				}
+				currentJobExecutionId = updateJobExecutionId(currentStepExecution, currentJobExecutionId);
+				currentPartitionName = updatePartitionName(currentStepExecution, currentPartitionName);
 			}
 		} catch (Exception e) {
 			logger.warn("[VDYP Skip Policy] Warning: Could not access step context: {}", e.getMessage());
 		}
-		
+
 		return new ExecutionContext(currentJobExecutionId, currentPartitionName);
 	}
 
 	private Long updateJobExecutionId(StepExecution stepExecution, Long currentJobExecutionId) {
-		Long retrievedJobId = stepExecution.getJobExecutionId();
-		return retrievedJobId != null ? retrievedJobId : currentJobExecutionId;
+		return stepExecution.getJobExecutionId();
 	}
 
 	private String updatePartitionName(StepExecution stepExecution, String currentPartitionName) {
 		String retrievedPartitionName = stepExecution.getExecutionContext().getString("partitionName", UNKNOWN);
-		if (retrievedPartitionName != null) {
-			partitionName = retrievedPartitionName;
-			return retrievedPartitionName;
-		}
-		return currentPartitionName;
+		partitionName = retrievedPartitionName;
+		return retrievedPartitionName;
 	}
 
 	private void recordSkipMetrics(SkipContext skipContext, ExecutionContext executionContext) {
 		if (metricsCollector != null && executionContext.currentJobExecutionId != null) {
 			metricsCollector.recordSkip(
-				executionContext.currentJobExecutionId, 
-				skipContext.recordId, 
-				skipContext.batchRecord, 
-				skipContext.throwable, 
-				executionContext.currentPartitionName, 
-				skipContext.lineNumber
+					executionContext.currentJobExecutionId, skipContext.recordId, skipContext.batchRecord,
+					skipContext.throwable, executionContext.currentPartitionName, skipContext.lineNumber
 			);
 		}
 	}
@@ -138,8 +127,7 @@ public class BatchSkipPolicy implements SkipPolicy {
 
 	private String buildErrorMessage(Throwable t) {
 		String errorMessage = "Skipping VDYP record due to error: " + t.getMessage();
-		if (t instanceof FlatFileParseException) {
-			FlatFileParseException ffpe = (FlatFileParseException) t;
+		if (t instanceof FlatFileParseException ffpe) {
 			errorMessage += String.format(" [Line: %d, Input: %s]", ffpe.getLineNumber(), ffpe.getInput());
 		}
 		return errorMessage;
@@ -150,7 +138,7 @@ public class BatchSkipPolicy implements SkipPolicy {
 		final BatchRecord batchRecord;
 		final Long lineNumber;
 		final Throwable throwable;
-		
+
 		SkipContext(Long recordId, BatchRecord batchRecord, Long lineNumber, Throwable throwable) {
 			this.recordId = recordId;
 			this.batchRecord = batchRecord;
@@ -162,7 +150,7 @@ public class BatchSkipPolicy implements SkipPolicy {
 	private static class ExecutionContext {
 		final Long currentJobExecutionId;
 		final String currentPartitionName;
-		
+
 		ExecutionContext(Long jobExecutionId, String partitionName) {
 			this.currentJobExecutionId = jobExecutionId;
 			this.currentPartitionName = partitionName;
@@ -205,7 +193,7 @@ public class BatchSkipPolicy implements SkipPolicy {
 			try {
 				String message = t.getMessage();
 				int idIndex = message.indexOf("ID ") + 3;
-				String idStr = message.substring(idIndex).split("[^0-9]")[0];
+				String idStr = message.substring(idIndex).split("\\D")[0];
 				return Long.parseLong(idStr);
 			} catch (Exception e) {
 				// Unable to extract ID
@@ -273,7 +261,4 @@ public class BatchSkipPolicy implements SkipPolicy {
 		return null;
 	}
 
-	public void setMetricsCollector(BatchMetricsCollector metricsCollector) {
-		this.metricsCollector = metricsCollector;
-	}
 }

@@ -7,6 +7,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.batch.core.launch.JobLauncher;
+import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException;
+import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException;
+import org.springframework.batch.core.repository.JobRestartException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -411,7 +414,8 @@ public class BatchController {
 	/**
 	 * Executes the batch job with given parameters.
 	 */
-	private JobExecution executeJob(BatchJobRequest request, long startTime) throws Exception {
+	private JobExecution executeJob(BatchJobRequest request, long startTime) throws JobExecutionAlreadyRunningException,
+			JobRestartException, JobInstanceAlreadyCompleteException, JobParametersInvalidException {
 		JobParameters jobParameters = buildJobParameters(request, startTime);
 		return jobLauncher.run(partitionedJob, jobParameters);
 	}

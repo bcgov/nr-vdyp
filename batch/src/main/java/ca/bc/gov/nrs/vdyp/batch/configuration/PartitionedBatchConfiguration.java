@@ -39,15 +39,15 @@ public class PartitionedBatchConfiguration {
 
 	private static final Logger logger = LoggerFactory.getLogger(PartitionedBatchConfiguration.class);
 
-	@Autowired
-	private JobRepository jobRepository;
+	private final JobRepository jobRepository;
+	private final BatchMetricsCollector metricsCollector;
+	private final BatchProperties batchProperties;
 
-
-	@Autowired
-	private BatchMetricsCollector metricsCollector;
-
-	@Autowired
-	private BatchProperties batchProperties;
+	public PartitionedBatchConfiguration(JobRepository jobRepository, BatchMetricsCollector metricsCollector, BatchProperties batchProperties) {
+		this.jobRepository = jobRepository;
+		this.metricsCollector = metricsCollector;
+		this.batchProperties = batchProperties;
+	}
 
 	private static final String UNKNOWN = "unknown";
 
@@ -99,9 +99,7 @@ public class PartitionedBatchConfiguration {
 			throw new IllegalStateException("No max skip count specified in job parameters or properties. ");
 		}
 
-		BatchSkipPolicy policy = new BatchSkipPolicy(maxSkipCount);
-		policy.setMetricsCollector(metricsCollector);
-		return policy;
+		return new BatchSkipPolicy(maxSkipCount, metricsCollector);
 	}
 
 	/**
@@ -146,14 +144,14 @@ public class PartitionedBatchConfiguration {
 	}
 
 	@Bean
-	public DynamicPartitionHandler dynamicPartitionHandler() {
-		return new DynamicPartitionHandler();
+	public DynamicPartitionHandler dynamicPartitionHandler(TaskExecutor taskExecutor, Step workerStep, DynamicPartitioner dynamicPartitioner, BatchProperties batchProperties) {
+		return new DynamicPartitionHandler(taskExecutor, workerStep, dynamicPartitioner, batchProperties);
 	}
 
 	@Bean
-	public Step masterStep() {
-		return new StepBuilder("masterStep", jobRepository).partitioner("workerStep", dynamicPartitioner())
-				.partitionHandler(dynamicPartitionHandler()).build();
+	public Step masterStep(TaskExecutor taskExecutor, Step workerStep, DynamicPartitioner dynamicPartitioner, DynamicPartitionHandler dynamicPartitionHandler) {
+		return new StepBuilder("masterStep", jobRepository).partitioner("workerStep", dynamicPartitioner)
+				.partitionHandler(dynamicPartitionHandler).build();
 	}
 
 	/**
@@ -216,9 +214,9 @@ public class PartitionedBatchConfiguration {
 	 */
 	@Bean
 	@ConditionalOnProperty(name = "batch.job.auto-create", havingValue = "true", matchIfMissing = false)
-	public Job partitionedJob(PartitionedJobExecutionListener jobExecutionListener) {
+	public Job partitionedJob(PartitionedJobExecutionListener jobExecutionListener, Step masterStep) {
 		return new JobBuilder("VdypPartitionedJob", jobRepository).incrementer(new RunIdIncrementer())
-				.start(masterStep()).listener(new JobExecutionListener() {
+				.start(masterStep).listener(new JobExecutionListener() {
 					@Override
 					public void beforeJob(@NonNull JobExecution jobExecution) {
 						// Initialize job metrics
@@ -308,12 +306,10 @@ public class PartitionedBatchConfiguration {
 			w.write(csvHeader);
 		});
 		writer.setLineAggregator(item -> {
-			String line = item.getId() + ","
+			return item.getId() + ","
 					+ (item.getData() != null ? "\"" + item.getData().replace("\"", "\"\"") + "\"" : "") + ","
 					+ (item.getPolygonId() != null ? item.getPolygonId() : "") + ","
 					+ (item.getLayerId() != null ? item.getLayerId() : "") + "," + "PROCESSED";
-
-			return line;
 		});
 
 		logger.info("[{}] VDYP Writer configured for output path: {}", actualPartitionName, partitionOutputPath);
