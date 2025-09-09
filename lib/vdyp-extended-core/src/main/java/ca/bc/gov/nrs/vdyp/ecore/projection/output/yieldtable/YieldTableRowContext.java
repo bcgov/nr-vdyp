@@ -316,13 +316,13 @@ class YieldTableRowContext {
 			return;
 		}
 
-		if (/* case 1 ageSupplied && */ !yearSupplied) {
+		if (/* case 1 */ !yearSupplied) {
 			this.ageAtStartYear = startAge;
 			this.ageAtEndYear = endAge;
 
 			this.yearAtStartAge = startAge + yearToAgeDifference;
 			this.yearAtEndAge = endAge + yearToAgeDifference;
-		} else if (/* case 2 yearSupplied && */ !ageSupplied) {
+		} else if (/* case 2 */ !ageSupplied) {
 			this.yearAtStartAge = startYear;
 			this.yearAtEndAge = endYear;
 
@@ -371,7 +371,7 @@ class YieldTableRowContext {
 			int range2Start;
 			int range2End;
 
-			/* case 1 */
+			/* case 1 Year and age are distinct date ranges (year first) */
 			if (yearRangeEndYear < ageRangeStartYear) {
 				range1Start = yearRangeStartYear;
 				range1End = yearRangeEndYear;
@@ -380,7 +380,7 @@ class YieldTableRowContext {
 				range2End = ageRangeEndYear;
 			}
 
-			/* case 13 */
+			/* case 13 ear and age are distinct date ranges (age first) */
 			else if (yearRangeStartYear > ageRangeEndYear) {
 				range1Start = ageRangeStartYear;
 				range1End = ageRangeEndYear;
@@ -389,7 +389,10 @@ class YieldTableRowContext {
 				range2End = yearRangeEndYear;
 			}
 
-			/* cases 2, 3, 4, 6, 7 */
+			/*
+			 * cases 2, 3, 4, 6, 7 years range and age range represent two overlapping ranges with year starting and
+			 * ending first
+			 */
 			else if (yearRangeStartYear <= ageRangeStartYear && yearRangeEndYear <= ageRangeEndYear) {
 				range1Start = yearRangeStartYear;
 				range1End = ageRangeEndYear;
@@ -398,8 +401,8 @@ class YieldTableRowContext {
 				range2End = yearRangeEndYear;
 			}
 
-			/* cases 5, 8 */
-			else if (yearRangeStartYear <= ageRangeStartYear /* && yearRangeEndYear > ageRangeEndYear */) {
+			/* cases 5, 8 age range represents a distinct date range internal to year range */
+			else if (yearRangeStartYear <= ageRangeStartYear) {
 				range1Start = yearRangeStartYear;
 				range1End = yearRangeEndYear;
 
@@ -407,8 +410,8 @@ class YieldTableRowContext {
 				range2End = ageRangeEndYear;
 			}
 
-			/* cases 9, 10 */
-			else if (/* yearRangeStartYear > ageRangeStartYear && */ yearRangeEndYear <= ageRangeEndYear) {
+			/* cases 9, 10 year range represents a distinct date range internal to age range */
+			else if (yearRangeEndYear <= ageRangeEndYear) {
 				range1Start = ageRangeStartYear;
 				range1End = ageRangeEndYear;
 
@@ -416,8 +419,11 @@ class YieldTableRowContext {
 				range2End = yearRangeEndYear;
 			}
 
-			/* cases 11, 12 */
-			else /* if (yearRangeStartYear <= ageRangeEndYear && yearRangeEndYear > ageRangeEndYear) */ {
+			/*
+			 * cases 11, 12 years range and age range represent two overlapping ranges with age starting and ending
+			 * first
+			 */
+			else {
 				range1Start = ageRangeStartYear;
 				range1End = yearRangeEndYear;
 
