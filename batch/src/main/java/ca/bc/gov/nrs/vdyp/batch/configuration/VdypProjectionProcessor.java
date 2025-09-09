@@ -159,49 +159,66 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 			throws IOException, IllegalArgumentException {
 		try {
 			String result = performVdypProjection(batchRecord);
-
-			// Validate the projection result
-			if (result == null || result.trim().isEmpty()) {
-				// This might be a transient issue - throw IOException for retry
-				throw new IOException(
-						String.format("VDYP projection returned empty result for record ID %d", batchRecord.getId())
-				);
-			}
-
-			return result;
-
+			return validateProjectionResult(result, batchRecord.getId());
 		} catch (Exception e) {
-			// Record metrics for processing failure
-			if (metricsCollector != null && jobExecutionId != null) {
-				if (e instanceof IOException || (e instanceof RuntimeException && isTransientError(e))) {
-					// This will be retried - record retry attempt
-					metricsCollector.recordRetryAttempt(
-							jobExecutionId, batchRecord.getId(), batchRecord, 1, e, false, partitionName
-					);
-				} else {
-					// This will be skipped - record skip
-					metricsCollector
-							.recordSkip(jobExecutionId, batchRecord.getId(), batchRecord, e, partitionName, null);
-				}
-			}
+			handleProjectionException(e, batchRecord);
+			reclassifyAndThrowException(e, batchRecord.getId());
+			return null;
+		}
+	}
 
-			// Classify the error type for proper handling
-			if (e instanceof IOException) {
-				// Network, file system, or transient processing errors - retryable
-				throw e;
-			} else if (e instanceof IllegalArgumentException) {
-				// Data validation or business rule violations - skippable
-				throw e;
-			} else if (e instanceof RuntimeException && isTransientError(e)) {
-				// Convert transient runtime exceptions to IOException for retry
-				throw new IOException("Transient error during VDYP projection for record ID " + batchRecord.getId(), e);
-			} else {
-				// Unknown errors should be treated as data quality issues and skipped
-				throw new IllegalArgumentException(
-						"VDYP projection failed for record ID " + batchRecord.getId() + ": " + e.getMessage(), e
+	/**
+	 * Validates the projection result and throws IOException if empty.
+	 */
+	private String validateProjectionResult(String result, Long recordId) throws IOException {
+		if (result == null || result.trim().isEmpty()) {
+			throw new IOException(String.format("VDYP projection returned empty result for record ID %d", recordId));
+		}
+		return result;
+	}
+
+	/**
+	 * Handles exception by recording appropriate metrics.
+	 */
+	private void handleProjectionException(Exception e, BatchRecord batchRecord) {
+		if (metricsCollector != null && jobExecutionId != null) {
+			if (isRetryableException(e)) {
+				metricsCollector.recordRetryAttempt(
+						jobExecutionId, batchRecord.getId(), batchRecord, 1, e, false, partitionName
 				);
+			} else {
+				metricsCollector.recordSkip(jobExecutionId, batchRecord.getId(), batchRecord, e, partitionName, null);
 			}
 		}
+	}
+
+	/**
+	 * Determines if an exception should be retried.
+	 */
+	private boolean isRetryableException(Exception e) {
+		return e instanceof IOException || (e instanceof RuntimeException && isTransientError(e));
+	}
+
+	/**
+	 * Reclassifies and throws exceptions for proper Spring Batch handling.
+	 */
+	private void reclassifyAndThrowException(Exception e, Long recordId) throws IOException, IllegalArgumentException {
+		if (e instanceof IOException) {
+			throw (IOException) e;
+		}
+
+		if (e instanceof IllegalArgumentException) {
+			throw (IllegalArgumentException) e;
+		}
+
+		if (e instanceof RuntimeException && isTransientError(e)) {
+			throw new IOException("Transient error during VDYP projection for record ID " + recordId, e);
+		}
+
+		// Unknown errors treated as data quality issues
+		throw new IllegalArgumentException(
+				"VDYP projection failed for record ID " + recordId + ": " + e.getMessage(), e
+		);
 	}
 
 	/**
@@ -211,10 +228,22 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 		String message = e.getMessage() != null ? e.getMessage().toLowerCase() : "";
 		String className = e.getClass().getSimpleName().toLowerCase();
 
-		// Common patterns for transient errors
+		return hasTransientMessagePattern(message) || hasTransientClassNamePattern(className);
+	}
+
+	/**
+	 * Checks if error message contains transient error patterns.
+	 */
+	private boolean hasTransientMessagePattern(String message) {
 		return message.contains("timeout") || message.contains("connection") || message.contains("network")
-				|| message.contains("temporary") || message.contains("unavailable") || className.contains("timeout")
-				|| className.contains("connection");
+				|| message.contains("temporary") || message.contains("unavailable");
+	}
+
+	/**
+	 * Checks if class name contains transient error patterns.
+	 */
+	private boolean hasTransientClassNamePattern(String className) {
+		return className.contains("timeout") || className.contains("connection");
 	}
 
 	/**

@@ -22,6 +22,11 @@ public class DynamicPartitioner implements Partitioner {
 
 	private static final Logger logger = LoggerFactory.getLogger(DynamicPartitioner.class);
 
+	private static final String START_LINE = "startLine";
+	private static final String END_LINE = "endLine";
+	private static final String PARTITION_NAME = "partitionName";
+	private static final String PARTITION_0 = "partition0";
+
 	// Input resource will be set dynamically during execution
 	private Resource inputResource;
 
@@ -39,10 +44,10 @@ public class DynamicPartitioner implements Partitioner {
 			logger.warn("[VDYP Partitioner] Warning: Input resource not set. Using default single partition.");
 			// Create single empty partition
 			ExecutionContext context = new ExecutionContext();
-			context.putLong("startLine", 2);
-			context.putLong("endLine", 2);
-			context.putString("partitionName", "partition0");
-			partitions.put("partition0", context);
+			context.putLong(START_LINE, 2);
+			context.putLong(END_LINE, 2);
+			context.putString(PARTITION_NAME, PARTITION_0);
+			partitions.put(PARTITION_0, context);
 			return partitions;
 		}
 
@@ -53,10 +58,10 @@ public class DynamicPartitioner implements Partitioner {
 			logger.warn("[VDYP Partitioner] Warning: No records found in CSV file. Using single partition.");
 			// Fallback: create single partition
 			ExecutionContext context = new ExecutionContext();
-			context.putLong("startLine", 2); // Skip header (line 1)
-			context.putLong("endLine", 2);
-			context.putString("partitionName", "partition0");
-			partitions.put("partition0", context);
+			context.putLong(START_LINE, 2); // Skip header (line 1)
+			context.putLong(END_LINE, 2);
+			context.putString(PARTITION_NAME, PARTITION_0);
+			partitions.put(PARTITION_0, context);
 			return partitions;
 		}
 
@@ -80,9 +85,9 @@ public class DynamicPartitioner implements Partitioner {
 			long currentEndLine = currentStartLine + recordsInThisPartition - 1;
 
 			// Set partition parameters - using line-based ranges
-			context.putLong("startLine", currentStartLine);
-			context.putLong("endLine", currentEndLine);
-			context.putString("partitionName", "partition" + i);
+			context.putLong(START_LINE, currentStartLine);
+			context.putLong(END_LINE, currentEndLine);
+			context.putString(PARTITION_NAME, "partition" + i);
 
 			partitions.put("partition" + i, context);
 

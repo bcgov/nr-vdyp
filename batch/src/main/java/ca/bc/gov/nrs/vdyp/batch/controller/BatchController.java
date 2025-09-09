@@ -28,6 +28,8 @@ public class BatchController {
 	private static final String JOB_END_TIME = "endTime";
 	private static final String JOB_TIMESTAMP = "timestamp";
 	private static final String JOB_EXIT_STATUS = "exitStatus";
+	private static final String JOB_TYPE = "jobType";
+	private static final String NOTE = "note";
 
 	@Autowired
 	private JobLauncher jobLauncher;
@@ -51,70 +53,21 @@ public class BatchController {
 	public ResponseEntity<Map<String, Object>> startBatchJob(@RequestBody(required = false) BatchJobRequest request) {
 		try {
 			long startTime = System.currentTimeMillis();
-
-			logger.info("=== VDYP Batch Job Start Request ===");
-			if (request != null) {
-				String sanitizedInputPath = request.getInputFilePath() != null
-						? request.getInputFilePath().replaceAll("[\n\r]", "_") : null;
-				String sanitizedOutputPath = request.getOutputFilePath() != null
-						? request.getOutputFilePath().replaceAll("[\n\r]", "_") : null;
-				logger.info(
-						"Request details - inputFilePath: {}, outputFilePath: {}, partitionSize: {}, maxRetryAttempts: {}, retryBackoffPeriod: {}, maxSkipCount: {}",
-						sanitizedInputPath, sanitizedOutputPath, request.getPartitionSize(),
-						request.getMaxRetryAttempts(), request.getRetryBackoffPeriod(), request.getMaxSkipCount()
-				);
-			}
+			logRequestDetails(request);
 
 			Map<String, Object> response = new HashMap<>();
 
 			if (partitionedJob != null) {
-				JobParametersBuilder parametersBuilder = new JobParametersBuilder().addLong("timestamp", startTime)
-						.addString("jobType", "vdyp-projection");
-
-				// Add request parameters to job parameters
-				if (request != null) {
-					if (request.getInputFilePath() != null) {
-						parametersBuilder.addString("inputFilePath", request.getInputFilePath());
-					}
-					if (request.getOutputFilePath() != null) {
-						parametersBuilder.addString("outputFilePath", request.getOutputFilePath());
-					}
-					if (request.getPartitionSize() != null) {
-						parametersBuilder.addLong("partitionSize", request.getPartitionSize());
-					}
-					if (request.getMaxRetryAttempts() != null) {
-						parametersBuilder.addLong("maxRetryAttempts", request.getMaxRetryAttempts().longValue());
-					}
-					if (request.getRetryBackoffPeriod() != null) {
-						parametersBuilder.addLong("retryBackoffPeriod", request.getRetryBackoffPeriod());
-					}
-					if (request.getMaxSkipCount() != null) {
-						parametersBuilder.addLong("maxSkipCount", request.getMaxSkipCount().longValue());
-					}
-				}
-
-				JobParameters jobParameters = parametersBuilder.toJobParameters();
-				JobExecution jobExecution = jobLauncher.run(partitionedJob, jobParameters);
-
-				response.put(JOB_EXECUTION_ID, jobExecution.getId());
-				response.put(JOB_NAME, jobExecution.getJobInstance().getJobName());
-				response.put(JOB_STATUS, jobExecution.getStatus().toString());
-				response.put(JOB_START_TIME, jobExecution.getStartTime());
-				response.put(JOB_MESSAGE, "VDYP Batch job started successfully");
+				JobExecution jobExecution = executeJob(request, startTime);
+				buildSuccessResponse(response, jobExecution);
 			} else {
-				response.put(JOB_MESSAGE, "VDYP Batch job not available - Job auto-creation is disabled");
-				response.put(JOB_TIMESTAMP, startTime);
-				response.put(JOB_STATUS, "JOB_NOT_AVAILABLE");
-				response.put("note", "Set 'batch.job.auto-create=true' to enable job creation");
+				buildJobNotAvailableResponse(response, startTime);
 			}
 
 			return ResponseEntity.ok(response);
 
 		} catch (Exception e) {
-			Map<String, Object> errorResponse = new HashMap<>();
-			errorResponse.put(JOB_ERROR, "Failed to start batch job");
-			errorResponse.put(JOB_MESSAGE, e.getMessage());
-			return ResponseEntity.internalServerError().body(errorResponse);
+			return buildErrorResponse(e);
 		}
 	}
 
@@ -432,6 +385,106 @@ public class BatchController {
 		);
 	}
 
+	/**
+	 * Logs request details with sanitized paths.
+	 */
+	private void logRequestDetails(BatchJobRequest request) {
+		logger.info("=== VDYP Batch Job Start Request ===");
+		if (request != null) {
+			String sanitizedInputPath = sanitizePathForLogging(request.getInputFilePath());
+			String sanitizedOutputPath = sanitizePathForLogging(request.getOutputFilePath());
+			logger.info(
+					"Request details - inputFilePath: {}, outputFilePath: {}, partitionSize: {}, maxRetryAttempts: {}, retryBackoffPeriod: {}, maxSkipCount: {}",
+					sanitizedInputPath, sanitizedOutputPath, request.getPartitionSize(), request.getMaxRetryAttempts(),
+					request.getRetryBackoffPeriod(), request.getMaxSkipCount()
+			);
+		}
+	}
+
+	/**
+	 * Sanitizes file paths for safe logging.
+	 */
+	private String sanitizePathForLogging(String path) {
+		return path != null ? path.replaceAll("[\n\r]", "_") : null;
+	}
+
+	/**
+	 * Executes the batch job with given parameters.
+	 */
+	private JobExecution executeJob(BatchJobRequest request, long startTime) throws Exception {
+		JobParameters jobParameters = buildJobParameters(request, startTime);
+		return jobLauncher.run(partitionedJob, jobParameters);
+	}
+
+	/**
+	 * Builds job parameters from request and start time.
+	 */
+	private JobParameters buildJobParameters(BatchJobRequest request, long startTime) {
+		JobParametersBuilder parametersBuilder = new JobParametersBuilder().addLong(JOB_TIMESTAMP, startTime)
+				.addString(JOB_TYPE, "vdyp-projection");
+
+		if (request != null) {
+			addRequestParametersToBuilder(parametersBuilder, request);
+		}
+
+		return parametersBuilder.toJobParameters();
+	}
+
+	/**
+	 * Adds request parameters to the job parameters builder.
+	 */
+	private void addRequestParametersToBuilder(JobParametersBuilder builder, BatchJobRequest request) {
+		if (request.getInputFilePath() != null) {
+			builder.addString("inputFilePath", request.getInputFilePath());
+		}
+		if (request.getOutputFilePath() != null) {
+			builder.addString("outputFilePath", request.getOutputFilePath());
+		}
+		if (request.getPartitionSize() != null) {
+			builder.addLong("partitionSize", request.getPartitionSize());
+		}
+		if (request.getMaxRetryAttempts() != null) {
+			builder.addLong("maxRetryAttempts", request.getMaxRetryAttempts().longValue());
+		}
+		if (request.getRetryBackoffPeriod() != null) {
+			builder.addLong("retryBackoffPeriod", request.getRetryBackoffPeriod());
+		}
+		if (request.getMaxSkipCount() != null) {
+			builder.addLong("maxSkipCount", request.getMaxSkipCount().longValue());
+		}
+	}
+
+	/**
+	 * Builds successful job execution response.
+	 */
+	private void buildSuccessResponse(Map<String, Object> response, JobExecution jobExecution) {
+		response.put(JOB_EXECUTION_ID, jobExecution.getId());
+		response.put(JOB_NAME, jobExecution.getJobInstance().getJobName());
+		response.put(JOB_STATUS, jobExecution.getStatus().toString());
+		response.put(JOB_START_TIME, jobExecution.getStartTime());
+		response.put(JOB_MESSAGE, "VDYP Batch job started successfully");
+	}
+
+	/**
+	 * Builds response when job is not available.
+	 */
+	private void buildJobNotAvailableResponse(Map<String, Object> response, long startTime) {
+		response.put(JOB_MESSAGE, "VDYP Batch job not available - Job auto-creation is disabled");
+		response.put(JOB_TIMESTAMP, startTime);
+		response.put(JOB_STATUS, "JOB_NOT_AVAILABLE");
+		response.put(NOTE, "Set 'batch.job.auto-create=true' to enable job creation");
+	}
+
+	/**
+	 * Builds error response for exceptions.
+	 */
+	private ResponseEntity<Map<String, Object>> buildErrorResponse(Exception e) {
+		Map<String, Object> errorResponse = new HashMap<>();
+		errorResponse.put(JOB_ERROR, "Failed to start batch job");
+		errorResponse.put(JOB_MESSAGE, e.getMessage());
+		return ResponseEntity.internalServerError().body(errorResponse);
+	}
+
 	private static class BatchStatistics {
 		int totalJobs = 0;
 		int completedJobs = 0;
@@ -459,7 +512,7 @@ public class BatchController {
 						"/api/batch/statistics", "/api/batch/health"
 				)
 		);
-		response.put("timestamp", System.currentTimeMillis());
+		response.put(JOB_TIMESTAMP, System.currentTimeMillis());
 		return ResponseEntity.ok(response);
 	}
 }

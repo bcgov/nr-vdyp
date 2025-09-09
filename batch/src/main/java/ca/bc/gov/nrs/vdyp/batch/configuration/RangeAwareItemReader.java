@@ -49,6 +49,8 @@ public class RangeAwareItemReader implements ItemReader<BatchRecord>, ItemStream
 	@Autowired
 	private BatchProperties batchProperties;
 
+	private static final String UNKNOWN = "unknown";
+
 	// Skip tracking and statistics
 	private final AtomicLong totalSkipsInReader = new AtomicLong(0);
 	private final ConcurrentHashMap<String, AtomicLong> skipReasonCounts = new ConcurrentHashMap<>();
@@ -70,7 +72,7 @@ public class RangeAwareItemReader implements ItemReader<BatchRecord>, ItemStream
 	public void beforeStep(StepExecution stepExecution) {
 		this.startLine = stepExecution.getExecutionContext().getLong("startLine", 2);
 		this.endLine = stepExecution.getExecutionContext().getLong("endLine", Long.MAX_VALUE);
-		this.partitionName = stepExecution.getExecutionContext().getString("partitionName", "unknown");
+		this.partitionName = stepExecution.getExecutionContext().getString("partitionName", UNKNOWN);
 		this.jobExecutionId = stepExecution.getJobExecutionId();
 
 		// Initialize current line tracker
@@ -168,56 +170,76 @@ public class RangeAwareItemReader implements ItemReader<BatchRecord>, ItemStream
 			return null;
 		}
 
-		BatchRecord batchRecord;
+		return readNextValidRecord();
+	}
 
+	/**
+	 * Reads the next valid record within the partition range.
+	 */
+	private BatchRecord readNextValidRecord() throws Exception {
 		while (true) {
 			try {
-				batchRecord = delegate.read();
-				currentLine++; // Track current line position
+				BatchRecord batchRecord = delegate.read();
+				currentLine++;
 
 				if (batchRecord == null) {
-					logger.info("[{}] End of VDYP file reached at line {}", partitionName, currentLine - 1);
-					rangeExhausted = true;
-					logFinalStatistics();
-					return null;
+					return handleEndOfFile();
 				}
 
-				// Check if haven't reached start line yet
-				if (currentLine < startLine) {
-					skippedCount++;
-					continue;
+				BatchRecord processedRecord = processRecordWithinRange(batchRecord);
+				if (processedRecord != null) {
+					return processedRecord;
 				}
-
-				// Check if passed end line
-				if (currentLine > endLine) {
-					if (!rangeExhausted) {
-						rangeExhausted = true;
-						logger.info(
-								"[{}] Reached end of VDYP partition line range at line {}. Stopping reading.",
-								partitionName, currentLine
-						);
-						logFinalStatistics();
-					}
-					return null;
-				}
-
-				// within line range - validate and process data record
-				BatchRecord processedRecord = processVdypRecord(batchRecord);
-
-				if (processedRecord == null) {
-					continue; // Continue reading next record (validation issues)
-				}
-
-				return processedRecord;
+				// Continue to next record if not in range or invalid
 
 			} catch (FlatFileParseException e) {
 				handleSkipEvent(e, "VDYP_FILE_PARSE_ERROR", (long) currentLine);
-				continue;
 			} catch (Exception e) {
 				handleSkipEvent(e, "VDYP_READER_ERROR", (long) currentLine);
-				continue;
 			}
 		}
+	}
+
+	/**
+	 * Handles end of file scenario.
+	 */
+	private BatchRecord handleEndOfFile() {
+		logger.info("[{}] End of VDYP file reached at line {}", partitionName, currentLine - 1);
+		rangeExhausted = true;
+		logFinalStatistics();
+		return null;
+	}
+
+	/**
+	 * Processes a record checking if it's within the partition range.
+	 */
+	private BatchRecord processRecordWithinRange(BatchRecord batchRecord) throws Exception {
+		if (currentLine < startLine) {
+			skippedCount++;
+			return null; // Not in range yet
+		}
+
+		if (currentLine > endLine) {
+			return handleEndOfRange();
+		}
+
+		// Within range - validate and process
+		return processVdypRecord(batchRecord);
+	}
+
+	/**
+	 * Handles when passed the end of the partition range.
+	 */
+	private BatchRecord handleEndOfRange() {
+		if (!rangeExhausted) {
+			rangeExhausted = true;
+			logger.info(
+					"[{}] Reached end of VDYP partition line range at line {}. Stopping reading.", partitionName,
+					currentLine
+			);
+			logFinalStatistics();
+		}
+		return null;
 	}
 
 	/**
@@ -289,7 +311,7 @@ public class RangeAwareItemReader implements ItemReader<BatchRecord>, ItemStream
 
 		logger.warn(
 				"[{}] VDYP Skip event: {} at line {} - {}", partitionName, skipReason,
-				lineNumber != null ? lineNumber.toString() : "unknown", exception.getMessage()
+				lineNumber != null ? lineNumber.toString() : UNKNOWN, exception.getMessage()
 		);
 	}
 
@@ -315,7 +337,7 @@ public class RangeAwareItemReader implements ItemReader<BatchRecord>, ItemStream
 
 		logger.warn(
 				"[{}] VDYP Data quality skip: {} for record ID {} - {}", partitionName, skipReason,
-				batchRecord != null ? batchRecord.getId() : "unknown", description
+				batchRecord != null ? batchRecord.getId() : UNKNOWN, description
 		);
 	}
 

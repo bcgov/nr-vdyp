@@ -23,6 +23,8 @@ public class BatchSkipPolicy implements SkipPolicy {
 	private Long jobExecutionId;
 	private String partitionName;
 
+	private static final String UNKNOWN = "unknown";
+
 	@Autowired
 	private BatchMetricsCollector metricsCollector;
 
@@ -36,71 +38,135 @@ public class BatchSkipPolicy implements SkipPolicy {
 	@BeforeStep
 	public void beforeStep(StepExecution stepExecution) {
 		this.jobExecutionId = stepExecution.getJobExecutionId();
-		this.partitionName = stepExecution.getExecutionContext().getString("partitionName", "unknown");
+		this.partitionName = stepExecution.getExecutionContext().getString("partitionName", UNKNOWN);
 	}
 
 	@Override
 	public boolean shouldSkip(@NonNull Throwable t, long skipCount) throws SkipLimitExceededException {
-		// Exceeding the maximum number of skips throws an exception
+		validateSkipLimit(skipCount, t);
+		
+		boolean shouldSkip = isSkippableException(t);
+		logSkipDecision(t, shouldSkip, skipCount);
+		
+		if (shouldSkip) {
+			processSkippableException(t);
+		}
+		
+		return shouldSkip;
+	}
+
+	private void validateSkipLimit(long skipCount, Throwable t) throws SkipLimitExceededException {
 		if (skipCount >= maxSkipCount) {
 			throw new SkipLimitExceededException((int) maxSkipCount, t);
 		}
+	}
 
-		// Determine if this exception is skippable
-		boolean shouldSkip = isSkippableException(t);
-
+	private void logSkipDecision(Throwable t, boolean shouldSkip, long skipCount) {
 		logger.info(
-				"[VDYP Skip Policy] Exception: {}, Skippable: {}, Current Skipped count: {}",
-				t.getClass().getSimpleName(), shouldSkip, skipCount
+			"[VDYP Skip Policy] Exception: {}, Skippable: {}, Current Skipped count: {}",
+			t.getClass().getSimpleName(), shouldSkip, skipCount
 		);
+	}
 
-		if (shouldSkip) {
-			// Extract record information if possible
-			Long recordId = extractRecordId(t);
-			BatchRecord batchRecord = extractRecord(t);
-			Long lineNumber = extractLineNumber(t);
+	private void processSkippableException(Throwable t) {
+		SkipContext skipContext = createSkipContext(t);
+		ExecutionContext executionContext = getCurrentExecutionContext();
+		
+		recordSkipMetrics(skipContext, executionContext);
+		logSkipDetails(t, executionContext.currentPartitionName);
+	}
 
-			// Get current step execution context safely
-			Long currentJobExecutionId = jobExecutionId;
-			String currentPartitionName = partitionName;
+	private SkipContext createSkipContext(Throwable t) {
+		Long recordId = extractRecordId(t);
+		BatchRecord batchRecord = extractRecord(t);
+		Long lineNumber = extractLineNumber(t);
+		
+		return new SkipContext(recordId, batchRecord, lineNumber, t);
+	}
 
-			try {
-				var skipContext = StepSynchronizationManager.getContext();
-				if (skipContext != null) {
-					StepExecution currentStepExecution = skipContext.getStepExecution();
-					if (currentStepExecution != null) {
-						Long retrievedJobId = currentStepExecution.getJobExecutionId();
-						if (retrievedJobId != null) {
-							currentJobExecutionId = retrievedJobId;
-						}
-						String retrievedPartitionName = currentStepExecution.getExecutionContext()
-								.getString("partitionName", "unknown");
-						if (retrievedPartitionName != null) {
-							currentPartitionName = retrievedPartitionName;
-							partitionName = currentPartitionName;
-						}
-					}
+	private ExecutionContext getCurrentExecutionContext() {
+		Long currentJobExecutionId = jobExecutionId;
+		String currentPartitionName = partitionName;
+		
+		try {
+			var stepContext = StepSynchronizationManager.getContext();
+			if (stepContext != null) {
+				StepExecution currentStepExecution = stepContext.getStepExecution();
+				if (currentStepExecution != null) {
+					currentJobExecutionId = updateJobExecutionId(currentStepExecution, currentJobExecutionId);
+					currentPartitionName = updatePartitionName(currentStepExecution, currentPartitionName);
 				}
-			} catch (Exception e) {
-				logger.warn("[VDYP Skip Policy] Warning: Could not access step context: {}", e.getMessage());
 			}
-
-			// Record the skip in metrics
-			if (metricsCollector != null && currentJobExecutionId != null) {
-				metricsCollector
-						.recordSkip(currentJobExecutionId, recordId, batchRecord, t, currentPartitionName, lineNumber);
-			}
-
-			// Log detailed skip information
-			String errorMessage = "Skipping VDYP record due to error: " + t.getMessage();
-			if (t instanceof FlatFileParseException) {
-				FlatFileParseException ffpe = (FlatFileParseException) t;
-				errorMessage += String.format(" [Line: %d, Input: %s]", ffpe.getLineNumber(), ffpe.getInput());
-			}
-			logger.info("[{}] {}", partitionName, errorMessage);
+		} catch (Exception e) {
+			logger.warn("[VDYP Skip Policy] Warning: Could not access step context: {}", e.getMessage());
 		}
+		
+		return new ExecutionContext(currentJobExecutionId, currentPartitionName);
+	}
 
-		return shouldSkip;
+	private Long updateJobExecutionId(StepExecution stepExecution, Long currentJobExecutionId) {
+		Long retrievedJobId = stepExecution.getJobExecutionId();
+		return retrievedJobId != null ? retrievedJobId : currentJobExecutionId;
+	}
+
+	private String updatePartitionName(StepExecution stepExecution, String currentPartitionName) {
+		String retrievedPartitionName = stepExecution.getExecutionContext().getString("partitionName", UNKNOWN);
+		if (retrievedPartitionName != null) {
+			partitionName = retrievedPartitionName;
+			return retrievedPartitionName;
+		}
+		return currentPartitionName;
+	}
+
+	private void recordSkipMetrics(SkipContext skipContext, ExecutionContext executionContext) {
+		if (metricsCollector != null && executionContext.currentJobExecutionId != null) {
+			metricsCollector.recordSkip(
+				executionContext.currentJobExecutionId, 
+				skipContext.recordId, 
+				skipContext.batchRecord, 
+				skipContext.throwable, 
+				executionContext.currentPartitionName, 
+				skipContext.lineNumber
+			);
+		}
+	}
+
+	private void logSkipDetails(Throwable t, String currentPartitionName) {
+		String errorMessage = buildErrorMessage(t);
+		logger.info("[{}] {}", currentPartitionName, errorMessage);
+	}
+
+	private String buildErrorMessage(Throwable t) {
+		String errorMessage = "Skipping VDYP record due to error: " + t.getMessage();
+		if (t instanceof FlatFileParseException) {
+			FlatFileParseException ffpe = (FlatFileParseException) t;
+			errorMessage += String.format(" [Line: %d, Input: %s]", ffpe.getLineNumber(), ffpe.getInput());
+		}
+		return errorMessage;
+	}
+
+	private static class SkipContext {
+		final Long recordId;
+		final BatchRecord batchRecord;
+		final Long lineNumber;
+		final Throwable throwable;
+		
+		SkipContext(Long recordId, BatchRecord batchRecord, Long lineNumber, Throwable throwable) {
+			this.recordId = recordId;
+			this.batchRecord = batchRecord;
+			this.lineNumber = lineNumber;
+			this.throwable = throwable;
+		}
+	}
+
+	private static class ExecutionContext {
+		final Long currentJobExecutionId;
+		final String currentPartitionName;
+		
+		ExecutionContext(Long jobExecutionId, String partitionName) {
+			this.currentJobExecutionId = jobExecutionId;
+			this.currentPartitionName = partitionName;
+		}
 	}
 
 	/**

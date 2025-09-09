@@ -42,17 +42,14 @@ public class PartitionedBatchConfiguration {
 	@Autowired
 	private JobRepository jobRepository;
 
-	@Autowired
-	private PlatformTransactionManager transactionManager;
-
-	@Autowired
-	private PartitionedJobExecutionListener jobExecutionListener;
 
 	@Autowired
 	private BatchMetricsCollector metricsCollector;
 
 	@Autowired
 	private BatchProperties batchProperties;
+
+	private static final String UNKNOWN = "unknown";
 
 	@Bean
 	@StepScope
@@ -163,7 +160,9 @@ public class PartitionedBatchConfiguration {
 	 * Worker step with metrics collection
 	 */
 	@Bean
-	public Step workerStep(BatchRetryPolicy retryPolicy, BatchSkipPolicy skipPolicy) {
+	public Step workerStep(
+			BatchRetryPolicy retryPolicy, BatchSkipPolicy skipPolicy, PlatformTransactionManager transactionManager
+	) {
 		int chunkSize = batchProperties.getPartitioning().getChunkSize();
 		if (chunkSize <= 0) {
 			throw new IllegalStateException(
@@ -177,8 +176,7 @@ public class PartitionedBatchConfiguration {
 				.retryPolicy(retryPolicy).skipPolicy(skipPolicy).listener(new StepExecutionListener() {
 					@Override
 					public void beforeStep(@NonNull StepExecution stepExecution) {
-						String partitionName = stepExecution.getExecutionContext()
-								.getString("partitionName", "unknown");
+						String partitionName = stepExecution.getExecutionContext().getString("partitionName", UNKNOWN);
 						long startLine = stepExecution.getExecutionContext().getLong("startLine", 0);
 						long endLine = stepExecution.getExecutionContext().getLong("endLine", 0);
 						Long jobExecutionId = stepExecution.getJobExecutionId();
@@ -193,8 +191,7 @@ public class PartitionedBatchConfiguration {
 
 					@Override
 					public ExitStatus afterStep(@NonNull StepExecution stepExecution) {
-						String partitionName = stepExecution.getExecutionContext()
-								.getString("partitionName", "unknown");
+						String partitionName = stepExecution.getExecutionContext().getString("partitionName", UNKNOWN);
 						Long jobExecutionId = stepExecution.getJobExecutionId();
 
 						// Complete partition metrics
@@ -219,7 +216,7 @@ public class PartitionedBatchConfiguration {
 	 */
 	@Bean
 	@ConditionalOnProperty(name = "batch.job.auto-create", havingValue = "true", matchIfMissing = false)
-	public Job partitionedJob() {
+	public Job partitionedJob(PartitionedJobExecutionListener jobExecutionListener) {
 		return new JobBuilder("VdypPartitionedJob", jobRepository).incrementer(new RunIdIncrementer())
 				.start(masterStep()).listener(new JobExecutionListener() {
 					@Override
@@ -274,7 +271,7 @@ public class PartitionedBatchConfiguration {
 			@Value("#{jobParameters['outputFilePath']}") String outputFilePath
 	) {
 
-		String actualPartitionName = partitionName != null ? partitionName : "unknown";
+		String actualPartitionName = partitionName != null ? partitionName : UNKNOWN;
 
 		String actualOutputDirectory = outputFilePath;
 		if (actualOutputDirectory == null) {
