@@ -248,4 +248,10 @@ backend/src/test/resources/test-data/hcsv/44grpa/polyids.txt
 #local docker enviornment files
 .env.*
 .env
+
+#RStudio and R files
 .Rproj.user
+.Rdata
+.Rhistory
+R/VDYPinR_1.0/VDYPinR/man/*
+R/VDYPinR_1.0/VDYPinR/inst/doc/*
