@@ -141,4 +141,43 @@ export class FileUploadValidator extends ValidationBase {
     )
     return { isValid, details, expected: CSVHEADERS.LAYER_HEADERS }
   }
+
+  private async getFileHeaders(file: File): Promise<string[]> {
+    const reader = new FileReader()
+    const fileContent = await new Promise<string>((resolve) => {
+      reader.onload = () => resolve(reader.result as string)
+      reader.readAsText(file)
+    })
+    return fileContent
+      .split('\n')[0]
+      .split(',')
+      .map((h) => h.trim())
+  }
+
+  async validateDuplicateColumns(file: File): Promise<{
+    isValid: boolean
+    duplicates: string[]
+  }> {
+    const headers = await this.getFileHeaders(file)
+    const seen = new Set<string>()
+    const duplicates: string[] = []
+    const duplicateTracker = new Set<string>()
+
+    headers.forEach((header) => {
+      const lowerCaseHeader = header.toLowerCase()
+      if (seen.has(lowerCaseHeader)) {
+        if (!duplicateTracker.has(lowerCaseHeader)) {
+          duplicates.push(header)
+          duplicateTracker.add(lowerCaseHeader)
+        }
+      } else {
+        seen.add(lowerCaseHeader)
+      }
+    })
+
+    return {
+      isValid: duplicates.length === 0,
+      duplicates,
+    }
+  }
 }

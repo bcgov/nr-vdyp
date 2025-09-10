@@ -7,6 +7,8 @@ import {
   validateFiles,
   validatePolygonHeader,
   validateLayerHeader,
+  validatePolygonDuplicateColumns,
+  validateLayerDuplicateColumns,
 } from '@/validation/fileUploadValidation'
 import { CONSTANTS, CSVHEADERS } from '@/constants'
 
@@ -206,6 +208,80 @@ describe('File Upload Validation Unit Tests', () => {
       const result = await validateLayerHeader(file)
       expect(result.isValid).to.be.false
       expect(result.details.mismatches.length).to.be.greaterThan(0)
+    })
+  })
+
+  context('validatePolygonDuplicateColumns', () => {
+    it('should return true for a polygon file with no duplicate columns', async () => {
+      const validHeader = 'COL1,COL2,COL3,COL4'
+      const file = createFile(validHeader, 'polygon.csv', 'text/csv')
+      const result = await validatePolygonDuplicateColumns(file)
+      expect(result.isValid).to.be.true
+      expect(result.duplicates).to.deep.equal([])
+    })
+
+    it('should return false for a polygon file with multiple duplicate columns', async () => {
+      const duplicateHeader = 'COL1,COL2,COL1,COL3,COL2,COL4'
+      const file = createFile(duplicateHeader, 'polygon.csv', 'text/csv')
+      const result = await validatePolygonDuplicateColumns(file)
+      expect(result.isValid).to.be.false
+      expect(result.duplicates).to.include('COL1')
+      expect(result.duplicates).to.include('COL2')
+      expect(result.duplicates.length).to.equal(2)
+    })
+
+    it('should handle empty columns and whitespace correctly', async () => {
+      const duplicateHeader = 'COL1, COL2 ,COL1,COL3'
+      const file = createFile(duplicateHeader, 'polygon.csv', 'text/csv')
+      const result = await validatePolygonDuplicateColumns(file)
+      expect(result.isValid).to.be.false
+      expect(result.duplicates).to.include('COL1')
+    })
+
+    it('should detect case-insensitive duplicate columns', async () => {
+      const duplicateHeader = 'POLYGON_NUMBER,polygon_number,OTHER_COL'
+      const file = createFile(duplicateHeader, 'polygon.csv', 'text/csv')
+      const result = await validatePolygonDuplicateColumns(file)
+      expect(result.isValid).to.be.false
+      expect(result.duplicates).to.have.length(1)
+      expect(result.duplicates[0]).to.equal('polygon_number')
+    })
+  })
+
+  context('validateLayerDuplicateColumns', () => {
+    it('should return true for a layer file with no duplicate columns', async () => {
+      const validHeader = 'LAYER1,LAYER2,LAYER3,LAYER4'
+      const file = createFile(validHeader, 'layer.csv', 'text/csv')
+      const result = await validateLayerDuplicateColumns(file)
+      expect(result.isValid).to.be.true
+      expect(result.duplicates).to.deep.equal([])
+    })
+
+    it('should return false for a layer file with multiple duplicate columns', async () => {
+      const duplicateHeader = 'LAYER1,LAYER2,LAYER1,LAYER3,LAYER2,LAYER4'
+      const file = createFile(duplicateHeader, 'layer.csv', 'text/csv')
+      const result = await validateLayerDuplicateColumns(file)
+      expect(result.isValid).to.be.false
+      expect(result.duplicates).to.include('LAYER1')
+      expect(result.duplicates).to.include('LAYER2')
+      expect(result.duplicates.length).to.equal(2)
+    })
+
+    it('should handle empty columns and whitespace correctly', async () => {
+      const duplicateHeader = 'LAYER1, LAYER2 ,LAYER1,LAYER3'
+      const file = createFile(duplicateHeader, 'layer.csv', 'text/csv')
+      const result = await validateLayerDuplicateColumns(file)
+      expect(result.isValid).to.be.false
+      expect(result.duplicates).to.include('LAYER1')
+    })
+
+    it('should detect case-insensitive duplicate columns', async () => {
+      const duplicateHeader = 'LAYER_ID,layer_id,OTHER_LAYER'
+      const file = createFile(duplicateHeader, 'layer.csv', 'text/csv')
+      const result = await validateLayerDuplicateColumns(file)
+      expect(result.isValid).to.be.false
+      expect(result.duplicates).to.have.length(1)
+      expect(result.duplicates[0]).to.equal('layer_id')
     })
   })
 })

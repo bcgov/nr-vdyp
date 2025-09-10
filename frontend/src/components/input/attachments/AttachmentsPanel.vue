@@ -155,6 +155,32 @@ const validateFiles = async (): Promise<boolean> => {
   let message = ''
   const MAX_DISPLAY_ERR_ITEMS = 2
 
+  // Polygon file duplicate column validation
+  if (fileUploadStore.polygonFile) {
+    const polygonDuplicateResult = await fileUploadValidation.validatePolygonDuplicateColumns(
+      fileUploadStore.polygonFile,
+    )
+    if (!polygonDuplicateResult.isValid) {
+      message = MESSAGE.FILE_UPLOAD_ERR.POLYGON_FILE_DUPLICATE_COLUMNS
+      if (polygonDuplicateResult.duplicates.length > 0) {
+        message += '\n\nDuplicate columns found:\n' +
+          formatErrColumnList(
+            polygonDuplicateResult.duplicates,
+            MAX_DISPLAY_ERR_ITEMS,
+            'duplicate',
+          )
+      }
+      messageDialog.value = {
+        dialog: true,
+        title: MESSAGE.MSG_DIALOG_TITLE.POLYGON_FILE_DUPLICATE_COLUMNS,
+        message,
+        btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+        dialogWidth: 500,
+      }
+      return false
+    }
+  }
+
   // Polygon file header validation with details
   if (fileUploadStore.polygonFile) {
     const polygonResult = await fileUploadValidation.validatePolygonHeader(
@@ -192,6 +218,32 @@ const validateFiles = async (): Promise<boolean> => {
       messageDialog.value = {
         dialog: true,
         title: MESSAGE.MSG_DIALOG_TITLE.POLYGON_FILE_HEADER_MISMATCH,
+        message,
+        btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
+        dialogWidth: 500,
+      }
+      return false
+    }
+  }
+
+  // Layer file duplicate column validation
+  if (fileUploadStore.layerFile) {
+    const layerDuplicateResult = await fileUploadValidation.validateLayerDuplicateColumns(
+      fileUploadStore.layerFile,
+    )
+    if (!layerDuplicateResult.isValid) {
+      message = MESSAGE.FILE_UPLOAD_ERR.LAYER_FILE_DUPLICATE_COLUMNS
+      if (layerDuplicateResult.duplicates.length > 0) {
+        message += '\n\nDuplicate columns found:\n' +
+          formatErrColumnList(
+            layerDuplicateResult.duplicates,
+            MAX_DISPLAY_ERR_ITEMS,
+            'duplicate',
+          )
+      }
+      messageDialog.value = {
+        dialog: true,
+        title: MESSAGE.MSG_DIALOG_TITLE.LAYER_FILE_DUPLICATE_COLUMNS,
         message,
         btnLabel: CONSTANTS.BUTTON_LABEL.CONT_EDIT,
         dialogWidth: 500,
