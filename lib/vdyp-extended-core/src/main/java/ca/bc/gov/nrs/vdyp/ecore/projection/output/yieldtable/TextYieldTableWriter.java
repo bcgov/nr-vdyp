@@ -6,16 +6,19 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Map;
 import java.util.Optional;
 
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.YieldTableGenerationException;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters.ExecutionOption;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.UtilizationClassSet;
 import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionContext;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.LayerReportingInfo;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon;
 import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.YieldTableRowBean.MultiFieldPrefixes;
 import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.YieldTableRowBean.MultiFieldSuffixes;
 import ca.bc.gov.nrs.vdyp.ecore.utils.Utils;
+import ca.bc.gov.nrs.vdyp.si32.vdyp.SP0Name;
 
 class TextYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean> {
 
@@ -68,6 +71,35 @@ class TextYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean>
 	}
 
 	@Override
+	void writeHeader() throws YieldTableGenerationException {
+
+		doWrite("VDYP7 Console Version:             8.0\n");
+		doWrite("VDYP7 Extended Core DLL Version:   8.0\n");
+		doWrite("VDYP7CORE DLL Version:             8.0\n");
+		doWrite("Supporting Calc Library Version:   8.0\n");
+		doWrite("VRIADJST Calc DLL Version:         8.0\n");
+		doWrite("VDYPBACK Calc DLL Version:         8.0\n");
+		doWrite("FIPSTART Calc DLL Version:         8.0\n");
+		doWrite("VDYP7 Calc DLL Version:            8.0\n");
+		doWrite("VRISTART Calc DLL Version:         8.0\n");
+		doWrite("Calc DLL I/O Support Version:      8.0\n");
+		doWrite("VDYP7 Low Level I/O DLL Version:   8.0\n");
+		doWrite("VDYP SI Wrapper Version:           8.0\n");
+		doWrite("SINDEX Version:                    8.0\n");
+		doWrite("Batch Parameters:\n");
+		doWrite("Project Age Range:\n");
+		doWrite("Start Age:     %4d\n", context.getParams().getAgeStart());
+		doWrite("End Age:       %4d\n", context.getParams().getAgeEnd());
+		doWrite("Start Year:    %4d\n", context.getParams().getYearStart());
+		doWrite("End Year:      %4d\n", context.getParams().getYearEnd());
+		doWrite("Increment:     %4d\n", context.getParams().getAgeIncrement());
+		for (Map.Entry<SP0Name, UtilizationClassSet> utilPair : context.getParams().getUtils().entrySet()) {
+			doWrite("%s:     %s\n", utilPair.getKey().getText(), utilPair.getValue().getValue());
+		}
+		doWrite("\n");
+	}
+
+	@Override
 	public void writePolygonTableHeader(
 			Polygon polygon, Optional<LayerReportingInfo> layerReportingInfo, boolean doGenerateDetailedTableHeader,
 			Integer yieldTableCount
@@ -101,14 +133,14 @@ class TextYieldTableWriter extends YieldTableWriter<TextYieldTableRowValuesBean>
 				doWrite("   (Rcrd ID: %d)", reportingInfo.getFeatureId());
 			}
 
-			doWrite("\n");
 		}
+		doWrite("\n");
 		if (params.containsOption(ExecutionOption.DO_INCLUDE_COLUMN_HEADERS_IN_YIELD_TABLE)) {
 
 			String projectionMode = "";
 			String projectionModeLine = "";
 			if (isCurrentlyWritingCategory(YieldTable.Category.PROJECTION_MODE)) {
-				projectionMode = "Mode";
+				projectionMode = " Mode";
 				projectionModeLine = "----";
 			}
 

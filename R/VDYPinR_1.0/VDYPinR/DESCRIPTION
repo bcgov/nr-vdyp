@@ -1,0 +1,23 @@
+Package: VDYPinR
+Title: Happy VDYPinR
+Version: 1.1
+Authors@R: 
+    c(person(given = "Yong",
+             family = "Luo",
+             role = c("aut", "cre"),
+             email = "yong.luo@gov.bc.ca"),
+      person(given = "Province of British Columbia",
+             role = "cph"))
+Description: Running VDYP7 (And VDYP8) in R.
+License: Apache License (== 2.0) | file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.3
+Imports: data.table, parallel, openxlsx, fs, jsonlite, httr2, curl
+Suggests: knitr, rmarkdown, testthat
+VignetteBuilder: knitr
+NeedsCompilation: no
+Packaged: 2023-10-05 18:01:36 UTC; yluo
+Author: Yong Luo [aut, cre],
+  Province of British Columbia [cph]
+Maintainer: Yong Luo <yong.luo@gov.bc.ca>
