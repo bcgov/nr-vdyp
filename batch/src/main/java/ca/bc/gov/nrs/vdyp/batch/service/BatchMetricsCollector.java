@@ -67,8 +67,8 @@ public class BatchMetricsCollector {
 				partitionMetrics.setRecordsWritten((int) writeCount);
 				partitionMetrics.setExitCode(exitCode);
 				logger.info(
-						"[{}] Completed partition metrics for job {}, written: {}, exitCode: {}", partitionName, jobExecutionId,
-						writeCount, exitCode
+						"[{}] Completed partition metrics for job {}, written: {}, exitCode: {}", partitionName,
+						jobExecutionId, writeCount, exitCode
 				);
 			}
 		}
@@ -114,8 +114,8 @@ public class BatchMetricsCollector {
 			String errorMessage = error != null ? error.getMessage() : "No error message";
 
 			BatchMetrics.RetryDetail retryDetail = new BatchMetrics.RetryDetail(
-					recordId, batchRecord != null ? batchRecord.toString() : "null", attemptNumber, errorType, errorMessage,
-					successful, partitionName
+					recordId, batchRecord != null ? batchRecord.toString() : "null", attemptNumber, errorType,
+					errorMessage, successful, partitionName
 			);
 
 			metrics.getRetryDetails().add(retryDetail);

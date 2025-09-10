@@ -47,6 +47,7 @@ nb-configuration.xml
 # Visual Studio Code
 .vscode/
 launch.json
+*.code-workspace
 
 # OSX
 .DS_Store

@@ -178,9 +178,10 @@ public class PartitionedBatchConfiguration {
 		}
 
 		return new StepBuilder("workerStep", jobRepository)
-				.<BatchRecord, BatchRecord>chunk(chunkSize, transactionManager).reader(partitionReader(metricsCollector, batchProperties))
-				.processor(vdypProjectionProcessor(retryPolicy, metricsCollector)).writer(partitionWriter(null, null)).faultTolerant()
-				.retryPolicy(retryPolicy).skipPolicy(skipPolicy).listener(new StepExecutionListener() {
+				.<BatchRecord, BatchRecord>chunk(chunkSize, transactionManager)
+				.reader(partitionReader(metricsCollector, batchProperties))
+				.processor(vdypProjectionProcessor(retryPolicy, metricsCollector)).writer(partitionWriter(null, null))
+				.faultTolerant().retryPolicy(retryPolicy).skipPolicy(skipPolicy).listener(new StepExecutionListener() {
 					@Override
 					public void beforeStep(@NonNull StepExecution stepExecution) {
 						String partitionName = stepExecution.getExecutionContext().getString("partitionName", UNKNOWN);
@@ -267,7 +268,8 @@ public class PartitionedBatchConfiguration {
 
 	@Bean
 	@StepScope
-	public RangeAwareItemReader partitionReader(BatchMetricsCollector metricsCollector, BatchProperties batchProperties) {
+	public RangeAwareItemReader
+			partitionReader(BatchMetricsCollector metricsCollector, BatchProperties batchProperties) {
 		return new RangeAwareItemReader(null, metricsCollector, batchProperties);
 	}
 
@@ -299,7 +301,8 @@ public class PartitionedBatchConfiguration {
 			throw new IllegalStateException("batch.output.csv-header must be configured in application.properties");
 		}
 
-		String partitionOutputPath = actualOutputDirectory + File.separator + filePrefix + "_" + actualPartitionName + ".csv";
+		String partitionOutputPath = actualOutputDirectory + File.separator + filePrefix + "_" + actualPartitionName
+				+ ".csv";
 
 		try {
 			Files.createDirectories(Paths.get(actualOutputDirectory));
@@ -314,10 +317,12 @@ public class PartitionedBatchConfiguration {
 			logger.info("[{}] VDYP Writer: Writing header to file {}", actualPartitionName, partitionOutputPath);
 			w.write(csvHeader);
 		});
-		writer.setLineAggregator(item -> item.getId() + ","
-				+ (item.getData() != null ? "\"" + item.getData().replace("\"", "\"\"") + "\"" : "") + ","
-				+ (item.getPolygonId() != null ? item.getPolygonId() : "") + ","
-				+ (item.getLayerId() != null ? item.getLayerId() : "") + "," + "PROCESSED");
+		writer.setLineAggregator(
+				item -> item.getId() + ","
+						+ (item.getData() != null ? "\"" + item.getData().replace("\"", "\"\"") + "\"" : "") + ","
+						+ (item.getPolygonId() != null ? item.getPolygonId() : "") + ","
+						+ (item.getLayerId() != null ? item.getLayerId() : "") + "," + "PROCESSED"
+		);
 
 		logger.info("[{}] VDYP Writer configured for output path: {}", actualPartitionName, partitionOutputPath);
 
@@ -326,7 +331,8 @@ public class PartitionedBatchConfiguration {
 
 	@Bean
 	@StepScope
-	public VdypProjectionProcessor vdypProjectionProcessor(BatchRetryPolicy retryPolicy, BatchMetricsCollector metricsCollector) {
+	public VdypProjectionProcessor
+			vdypProjectionProcessor(BatchRetryPolicy retryPolicy, BatchMetricsCollector metricsCollector) {
 		return new VdypProjectionProcessor(retryPolicy, metricsCollector);
 	}
 }

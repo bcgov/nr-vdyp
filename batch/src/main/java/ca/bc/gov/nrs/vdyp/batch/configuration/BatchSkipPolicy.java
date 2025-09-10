@@ -260,5 +260,4 @@ public class BatchSkipPolicy implements SkipPolicy {
 		}
 		return null;
 	}
-
 }

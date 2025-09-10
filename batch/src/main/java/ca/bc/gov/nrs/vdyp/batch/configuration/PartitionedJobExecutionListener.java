@@ -197,7 +197,7 @@ public class PartitionedJobExecutionListener implements JobExecutionListener {
 				if (Files.exists(Paths.get(partitionFile))) {
 					try (Stream<String> lines = Files.lines(Paths.get(partitionFile))) {
 						List<String> partitionLinesList = lines.skip(1).toList();
-						
+
 						for (String line : partitionLinesList) {
 							try {
 								writer.write(line);

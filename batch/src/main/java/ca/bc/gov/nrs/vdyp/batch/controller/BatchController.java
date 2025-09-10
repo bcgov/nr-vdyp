@@ -38,7 +38,9 @@ public class BatchController {
 	private final JobExplorer jobExplorer;
 	private final BatchMetricsCollector metricsCollector;
 
-	public BatchController(JobLauncher jobLauncher, Job partitionedJob, JobExplorer jobExplorer, BatchMetricsCollector metricsCollector) {
+	public BatchController(
+			JobLauncher jobLauncher, Job partitionedJob, JobExplorer jobExplorer, BatchMetricsCollector metricsCollector
+	) {
 		this.jobLauncher = jobLauncher;
 		this.partitionedJob = partitionedJob;
 		this.jobExplorer = jobExplorer;

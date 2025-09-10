@@ -55,7 +55,9 @@ public class RangeAwareItemReader implements ItemReader<BatchRecord>, ItemStream
 
 	private Resource inputResource;
 
-	public RangeAwareItemReader(Resource resource, BatchMetricsCollector metricsCollector, BatchProperties batchProperties) {
+	public RangeAwareItemReader(
+			Resource resource, BatchMetricsCollector metricsCollector, BatchProperties batchProperties
+	) {
 		this.inputResource = resource;
 		this.metricsCollector = metricsCollector;
 		this.batchProperties = batchProperties;
