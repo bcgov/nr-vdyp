@@ -3,6 +3,7 @@ import { createVuetify } from 'vuetify'
 import 'vuetify/styles'
 import ReportConfiguration from './ReportConfiguration.vue'
 import { useModelParameterStore } from '@/stores/modelParameterStore'
+import { useFileUploadStore } from '@/stores/fileUploadStore'
 import { CONSTANTS, DEFAULTS } from '@/constants'
 import { useAppStore } from '@/stores/appStore'
 import { createPinia, setActivePinia } from 'pinia'
@@ -446,5 +447,114 @@ describe('ReportConfiguration.vue', () => {
     cy.contains('span.text-h7', 'Minimum DBH Limit by Species Group').should(
       'not.exist',
     )
+  })
+
+  describe('File Upload Mode', () => {
+    beforeEach(() => {
+      const appStore = useAppStore()
+      const fileUploadStore = useFileUploadStore()
+      
+      // Set app to file upload mode
+      appStore.modelSelection = CONSTANTS.MODEL_SELECTION.FILE_UPLOAD
+      
+      // Initialize file upload store
+      fileUploadStore.setDefaultValues()
+    })
+
+    it('renders File Upload Minimum DBH Limit by Species Group when in File Upload mode', () => {
+      mount(ReportConfiguration, {
+        props: {
+          ...props,
+          isModelParametersMode: false,
+        },
+        global: {
+          plugins: [vuetify],
+        },
+      })
+
+      cy.contains('span.text-h7', 'Minimum DBH Limit by Species Group').should(
+        'be.visible',
+      )
+      
+      // Should show 16 species groups (all species)
+      cy.get('.v-slider', { timeout: 6000 }).should('have.length', 16)
+      cy.get('.v-slider').should('be.visible')
+      cy.get('.v-slider').should('not.have.class', 'v-slider--disabled')
+    })
+
+    it('updates sliders when projection type changes from Volume to CFO Biomass', () => {
+      mount(ReportConfiguration, {
+        props: {
+          ...props,
+          isModelParametersMode: false,
+          projectionType: CONSTANTS.PROJECTION_TYPE.VOLUME,
+        },
+        global: {
+          plugins: [vuetify],
+        },
+      })
+
+      // Initially all sliders should be enabled for Volume projection
+      cy.get('.v-slider').should('not.have.class', 'v-slider--disabled')
+
+      // Change projection type to CFO Biomass
+      cy.get('.v-select').click()
+      cy.get('.v-list-item')
+        .contains(CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS)
+        .click({ force: true })
+
+      // Now sliders should be disabled (grayed-out) for CFO Biomass
+      cy.get('.v-slider').should('have.class', 'v-slider--disabled')
+    })
+
+    it('disables File Upload sliders when projection type is CFO Biomass', () => {
+      mount(ReportConfiguration, {
+        props: {
+          ...props,
+          isModelParametersMode: false,
+          projectionType: CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS,
+        },
+        global: {
+          plugins: [vuetify],
+        },
+      })
+
+      // Sliders should be disabled for CFO Biomass projection
+      cy.get('.v-slider').should('have.class', 'v-slider--disabled')
+    })
+
+    it('enables File Upload sliders when projection type is Volume', () => {
+      mount(ReportConfiguration, {
+        props: {
+          ...props,
+          isModelParametersMode: false,
+          projectionType: CONSTANTS.PROJECTION_TYPE.VOLUME,
+        },
+        global: {
+          plugins: [vuetify],
+        },
+      })
+
+      // Sliders should be enabled for Volume projection
+      cy.get('.v-slider').should('not.have.class', 'v-slider--disabled')
+    })
+
+    it('does not show File Upload sliders when not in File Upload mode', () => {
+      const appStore = useAppStore()
+      appStore.modelSelection = CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS
+
+      mount(ReportConfiguration, {
+        props: {
+          ...props,
+          isModelParametersMode: false,
+        },
+        global: {
+          plugins: [vuetify],
+        },
+      })
+
+      // Should not show File Upload specific sliders when not in file upload mode
+      cy.get('.v-slider').should('not.exist')
+    })
   })
 })

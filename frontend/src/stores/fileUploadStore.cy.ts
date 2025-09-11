@@ -2,7 +2,8 @@
 
 import { setActivePinia, createPinia } from 'pinia'
 import { useFileUploadStore } from '@/stores/fileUploadStore'
-import { CONSTANTS, DEFAULTS } from '@/constants'
+import { BIZCONSTANTS, CONSTANTS, DEFAULTS } from '@/constants'
+import { UtilizationClassSetEnum } from '@/services/vdyp-api/models/utilization-class-set-enum'
 
 describe('FileUploadStore Unit Tests', () => {
   let store: ReturnType<typeof useFileUploadStore>
@@ -106,6 +107,9 @@ describe('FileUploadStore Unit Tests', () => {
       DEFAULTS.DEFAULT_VALUES.PROJECTION_TYPE,
     )
     expect(store.reportTitle).to.equal(DEFAULTS.DEFAULT_VALUES.REPORT_TITLE)
+    
+    // Check that species groups are initialized
+    expect(store.fileUploadSpeciesGroup).to.have.length(16)
   })
 
   it('should update year range properties correctly', () => {
@@ -218,5 +222,129 @@ describe('FileUploadStore Unit Tests', () => {
     store.layerFile = null
     expect(store.polygonFile).to.be.null
     expect(store.layerFile).to.be.null
+  })
+
+  describe('Species Groups Functionality', () => {
+    beforeEach(() => {
+      store.setDefaultValues()
+    })
+
+    it('should initialize species groups with correct default values', () => {
+      expect(store.fileUploadSpeciesGroup).to.have.length(16)
+      expect(store.fileUploadSpeciesGroup).to.deep.equal(
+        BIZCONSTANTS.SPECIES_GROUPS.map((group) => ({
+          group,
+          minimumDBHLimit: DEFAULTS.SPECIES_GROUP_VOLUME_UTILIZATION_MAP[group],
+        }))
+      )
+    })
+
+    it('should initialize species groups when initializeSpeciesGroups is called', () => {
+      // Clear species groups
+      store.fileUploadSpeciesGroup.length = 0
+      expect(store.fileUploadSpeciesGroup).to.have.length(0)
+
+      // Initialize species groups
+      store.initializeSpeciesGroups()
+      expect(store.fileUploadSpeciesGroup).to.have.length(16)
+
+      // Check each species group has correct default values
+      store.fileUploadSpeciesGroup.forEach((group) => {
+        expect(BIZCONSTANTS.SPECIES_GROUPS).to.include(group.group)
+        expect(group.minimumDBHLimit).to.equal(
+          DEFAULTS.SPECIES_GROUP_VOLUME_UTILIZATION_MAP[group.group]
+        )
+      })
+    })
+
+    it('should update species groups for Volume projection type', () => {
+      store.updateSpeciesGroupsForProjectionType(CONSTANTS.PROJECTION_TYPE.VOLUME)
+
+      store.fileUploadSpeciesGroup.forEach((group) => {
+        expect(group.minimumDBHLimit).to.equal(
+          DEFAULTS.SPECIES_GROUP_VOLUME_UTILIZATION_MAP[group.group]
+        )
+      })
+    })
+
+    it('should update species groups for CFO Biomass projection type', () => {
+      store.updateSpeciesGroupsForProjectionType(CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS)
+
+      store.fileUploadSpeciesGroup.forEach((group) => {
+        expect(group.minimumDBHLimit).to.equal(
+          DEFAULTS.SPECIES_GROUP_CFO_BIOMASS_UTILIZATION_MAP[group.group]
+        )
+      })
+    })
+
+    it('should handle null projection type and default to Volume', () => {
+      store.updateSpeciesGroupsForProjectionType(null)
+
+      store.fileUploadSpeciesGroup.forEach((group) => {
+        expect(group.minimumDBHLimit).to.equal(
+          DEFAULTS.SPECIES_GROUP_VOLUME_UTILIZATION_MAP[group.group]
+        )
+      })
+    })
+
+    it('should contain all expected species groups', () => {
+      const expectedSpeciesGroups = ['AC', 'AT', 'B', 'C', 'D', 'E', 'F', 'H', 'L', 'MB', 'PA', 'PL', 'PW', 'PY', 'S', 'Y']
+      
+      expect(store.fileUploadSpeciesGroup).to.have.length(expectedSpeciesGroups.length)
+      
+      const actualGroups = store.fileUploadSpeciesGroup.map(sg => sg.group)
+      expectedSpeciesGroups.forEach(expectedGroup => {
+        expect(actualGroups).to.include(expectedGroup)
+      })
+    })
+
+    it('should have correct default utilization values for Volume projection', () => {
+      // All should default to 7.5+ for Volume projection
+      store.fileUploadSpeciesGroup.forEach((group) => {
+        expect(group.minimumDBHLimit).to.equal(UtilizationClassSetEnum._75)
+      })
+    })
+
+    it('should have correct utilization values for CFO Biomass projection', () => {
+      store.updateSpeciesGroupsForProjectionType(CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS)
+
+      // Check specific values for CFO Biomass
+      const expectedValues = {
+        'AC': UtilizationClassSetEnum._125,
+        'AT': UtilizationClassSetEnum._125,
+        'B': UtilizationClassSetEnum._175,
+        'C': UtilizationClassSetEnum._175,
+        'D': UtilizationClassSetEnum._125,
+        'E': UtilizationClassSetEnum._125,
+        'F': UtilizationClassSetEnum._175,
+        'H': UtilizationClassSetEnum._175,
+        'L': UtilizationClassSetEnum._125,
+        'MB': UtilizationClassSetEnum._125,
+        'PA': UtilizationClassSetEnum._125,
+        'PL': UtilizationClassSetEnum._125,
+        'PW': UtilizationClassSetEnum._125,
+        'PY': UtilizationClassSetEnum._125,
+        'S': UtilizationClassSetEnum._175,
+        'Y': UtilizationClassSetEnum._175,
+      }
+
+      store.fileUploadSpeciesGroup.forEach((group) => {
+        expect(group.minimumDBHLimit).to.equal(expectedValues[group.group as keyof typeof expectedValues])
+      })
+    })
+
+    it('should maintain species group structure after projection type changes', () => {
+      const originalGroups = store.fileUploadSpeciesGroup.map(sg => sg.group)
+      
+      // Change to CFO Biomass
+      store.updateSpeciesGroupsForProjectionType(CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS)
+      let currentGroups = store.fileUploadSpeciesGroup.map(sg => sg.group)
+      expect(currentGroups).to.deep.equal(originalGroups)
+      
+      // Change back to Volume
+      store.updateSpeciesGroupsForProjectionType(CONSTANTS.PROJECTION_TYPE.VOLUME)
+      currentGroups = store.fileUploadSpeciesGroup.map(sg => sg.group)
+      expect(currentGroups).to.deep.equal(originalGroups)
+    })
   })
 })
