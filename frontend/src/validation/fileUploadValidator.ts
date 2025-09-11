@@ -78,15 +78,7 @@ export class FileUploadValidator extends ValidationBase {
     isValid: boolean
     details: { missing: string[]; extra: string[]; mismatches: string[] }
   }> {
-    const reader = new FileReader()
-    const fileContent = await new Promise<string>((resolve) => {
-      reader.onload = () => resolve(reader.result as string)
-      reader.readAsText(file)
-    })
-    const actualHeaders = fileContent
-      .split('\n')[0]
-      .split(',')
-      .map((h) => h.trim())
+    const actualHeaders = await this.getFileHeaders(file)
 
     const missing: string[] = []
     const extra: string[] = []
@@ -140,5 +132,78 @@ export class FileUploadValidator extends ValidationBase {
       CSVHEADERS.LAYER_HEADERS,
     )
     return { isValid, details, expected: CSVHEADERS.LAYER_HEADERS }
+  }
+
+  private async getFileHeaders(file: File): Promise<string[]> {
+    const reader = new FileReader()
+    const fileContent = await new Promise<string>((resolve) => {
+      reader.onload = () => resolve(reader.result as string)
+      reader.readAsText(file)
+    })
+    
+    const headerLine = fileContent.split('\n')[0]
+    return this.parseCSVHeader(headerLine)
+  }
+
+  private parseCSVHeader(headerLine: string): string[] {
+    const headers: string[] = []
+    let current = ''
+    let inQuotes = false
+    let quoteChar = ''
+    
+    for (let i = 0; i < headerLine.length; i++) {
+      const char = headerLine[i]
+      
+      if (!inQuotes && (char === '"' || char === "'")) {
+        // Start of quoted field
+        inQuotes = true
+        quoteChar = char
+      } else if (inQuotes && char === quoteChar) {
+        // End of quoted field
+        inQuotes = false
+        quoteChar = ''
+      } else if (!inQuotes && char === ',') {
+        // Field separator
+        headers.push(current.trim())
+        current = ''
+      } else {
+        // Regular character
+        current += char
+      }
+    }
+    
+    // Add the last field
+    if (current.length > 0 || headers.length > 0) {
+      headers.push(current.trim())
+    }
+    
+    return headers
+  }
+
+  async validateDuplicateColumns(file: File): Promise<{
+    isValid: boolean
+    duplicates: string[]
+  }> {
+    const headers = await this.getFileHeaders(file)
+    const seen = new Set<string>()
+    const duplicates: string[] = []
+    const duplicateTracker = new Set<string>()
+
+    headers.forEach((header) => {
+      const lowerCaseHeader = header.toLowerCase()
+      if (seen.has(lowerCaseHeader)) {
+        if (!duplicateTracker.has(lowerCaseHeader)) {
+          duplicates.push(header)
+          duplicateTracker.add(lowerCaseHeader)
+        }
+      } else {
+        seen.add(lowerCaseHeader)
+      }
+    })
+
+    return {
+      isValid: duplicates.length === 0,
+      duplicates,
+    }
   }
 }

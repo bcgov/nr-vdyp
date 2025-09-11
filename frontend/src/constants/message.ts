@@ -54,6 +54,8 @@ export const MSG_DIALOG_TITLE = Object.freeze({
   INVALID_FILE: 'Invalid File!',
   POLYGON_FILE_HEADER_MISMATCH: 'Polygon File Header Mismatch!',
   LAYER_FILE_HEADER_MISMATCH: 'Layer File Header Mismatch!',
+  POLYGON_FILE_DUPLICATE_COLUMNS: 'Polygon File Duplicate Columns!',
+  LAYER_FILE_DUPLICATE_COLUMNS: 'Layer File Duplicate Columns!',
 })
 
 export const MDL_PRM_INPUT_HINT = Object.freeze({
@@ -118,6 +120,10 @@ export const FILE_UPLOAD_ERR = Object.freeze({
     'The uploaded Layer file is not in CSV format. Please upload a valid CSV file.',
   POLYGON_FILE_NOT_CSV_FORMAT:
     'The uploaded Polygon file is not in CSV format. Please upload a valid CSV file.',
+  POLYGON_FILE_DUPLICATE_COLUMNS:
+    'The Polygon file contains duplicate column names. Each column must have a unique name. Please fix the file and try again.',
+  LAYER_FILE_DUPLICATE_COLUMNS:
+    'The Layer file contains duplicate column names. Each column must have a unique name. Please fix the file and try again.',
   RPT_VLD_REQUIRED_FIELDS_AGE:
     'All required fields (Starting Age, Finishing Age, Increment) must be filled.',
   RPT_VLD_REQUIRED_FIELDS_YEAR:

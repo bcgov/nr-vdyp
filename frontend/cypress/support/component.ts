@@ -66,3 +66,12 @@ declare global {
 }
 
 Cypress.Commands.add('mountWithVuetify', mountWithVuetify)
+
+// Global error handling for Vuetify scroll strategy issues during Vite optimization
+Cypress.on('uncaught:exception', (err) => {
+  if (err.message.includes("Cannot read properties of undefined (reading 'classList')") ||
+      err.message.includes('blockScrollStrategy')) {
+    return false
+  }
+  return true
+})

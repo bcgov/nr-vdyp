@@ -101,3 +101,11 @@ export const validatePolygonHeader = async (file: File) => {
 export const validateLayerHeader = async (file: File) => {
   return fileUploadValidator.validateLayerHeader(file)
 }
+
+export const validatePolygonDuplicateColumns = async (file: File) => {
+  return fileUploadValidator.validateDuplicateColumns(file)
+}
+
+export const validateLayerDuplicateColumns = async (file: File) => {
+  return fileUploadValidator.validateDuplicateColumns(file)
+}
