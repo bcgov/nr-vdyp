@@ -3,6 +3,9 @@ package ca.bc.gov.nrs.vdyp.batch.configuration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.batch.core.JobExecution;
@@ -12,6 +15,8 @@ import org.springframework.batch.core.Step;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.partition.StepExecutionSplitter;
 import org.springframework.core.task.TaskExecutor;
+
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -127,10 +132,11 @@ class DynamicPartitionHandlerTest {
 		verify(batchProperties, atLeastOnce()).getInput();
 	}
 
-	@Test
-	void testHandle_withClasspathResource_createsClassPathResource() {
-		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, 2L)
-				.addString(INPUT_FILE_PATH_PARAM, CLASSPATH_INPUT_PATH).toJobParameters();
+	@ParameterizedTest
+	@MethodSource("provideInputResourcePaths")
+	void testHandle_withDifferentInputPaths_createsAppropriateResource(String inputPath, long partitionSize) {
+		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, partitionSize)
+				.addString(INPUT_FILE_PATH_PARAM, inputPath).toJobParameters();
 
 		setupBasicMocks(jobParameters);
 		when(batchProperties.getPartitioning()).thenReturn(partitioning);
@@ -142,19 +148,11 @@ class DynamicPartitionHandlerTest {
 		verify(dynamicPartitioner).setInputResource(any());
 	}
 
-	@Test
-	void testHandle_withFileSystemResource_createsFileSystemResource() {
-		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, 3L)
-				.addString(INPUT_FILE_PATH_PARAM, "/absolute/path/to/input.csv").toJobParameters();
-
-		setupBasicMocks(jobParameters);
-		when(batchProperties.getPartitioning()).thenReturn(partitioning);
-
-		assertDoesNotThrow(() -> {
-			dynamicPartitionHandler.handle(stepSplitter, masterStepExecution);
-		});
-
-		verify(dynamicPartitioner).setInputResource(any());
+	static Stream<Arguments> provideInputResourcePaths() {
+		return Stream.of(
+				Arguments.of(CLASSPATH_INPUT_PATH, 2L), Arguments.of("/absolute/path/to/input.csv", 3L),
+				Arguments.of("classpath:test/data/nested/input.csv", 1L), Arguments.of("relative/path/input.csv", 1L)
+		);
 	}
 
 	@Test
@@ -191,71 +189,55 @@ class DynamicPartitionHandlerTest {
 		verify(batchProperties, atLeastOnce()).getInput();
 	}
 
-	@Test
-	void testHandle_emptyInputFilePathInJobParameters_usesBatchProperties() {
-		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, 2L)
-				.addString(INPUT_FILE_PATH_PARAM, "").toJobParameters();
+	@ParameterizedTest
+	@MethodSource("provideInputPathValidationCases")
+	void testHandle_inputPathValidation(
+			String jobParamPath, String propertiesPath, boolean shouldThrow, String testDescription
+	) {
+		JobParametersBuilder builder = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, 2L);
+		if (jobParamPath != null) {
+			builder.addString(INPUT_FILE_PATH_PARAM, jobParamPath);
+		}
+		JobParameters jobParameters = builder.toJobParameters();
 
 		setupBasicMocks(jobParameters);
-		when(batchProperties.getPartitioning()).thenReturn(partitioning);
-		when(batchProperties.getInput()).thenReturn(input);
-		when(input.getFilePath()).thenReturn(TEST_PROPERTIES_INPUT_PATH);
+		
+		if (shouldThrow) {
+			when(batchProperties.getInput()).thenReturn(input);
+			when(input.getFilePath()).thenReturn(propertiesPath);
+			
+			IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
+				dynamicPartitionHandler.handle(stepSplitter, masterStepExecution);
+			}, testDescription);
+			assertTrue(exception.getMessage().contains(NO_INPUT_FILE_MESSAGE), testDescription);
+		} else {
+			when(batchProperties.getPartitioning()).thenReturn(partitioning);
+			when(batchProperties.getInput()).thenReturn(input);
+			when(input.getFilePath()).thenReturn(propertiesPath);
+			
+			assertDoesNotThrow(() -> {
+				dynamicPartitionHandler.handle(stepSplitter, masterStepExecution);
+			}, testDescription);
 
-		assertDoesNotThrow(() -> {
-			dynamicPartitionHandler.handle(stepSplitter, masterStepExecution);
-		});
-
-		verify(batchProperties, atLeastOnce()).getInput();
-		verify(input).getFilePath();
+			verify(batchProperties, atLeastOnce()).getInput();
+			verify(input).getFilePath();
+		}
 	}
 
-	@Test
-	void testHandle_whitespaceInputFilePathInJobParameters_usesBatchProperties() {
-		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, 2L)
-				.addString(INPUT_FILE_PATH_PARAM, "   ").toJobParameters();
-
-		setupBasicMocks(jobParameters);
-		when(batchProperties.getPartitioning()).thenReturn(partitioning);
-		when(batchProperties.getInput()).thenReturn(input);
-		when(input.getFilePath()).thenReturn(TEST_PROPERTIES_INPUT_PATH);
-
-		assertDoesNotThrow(() -> {
-			dynamicPartitionHandler.handle(stepSplitter, masterStepExecution);
-		});
-
-		verify(batchProperties, atLeastOnce()).getInput();
-		verify(input).getFilePath();
-	}
-
-	@Test
-	void testHandle_emptyInputFilePathInProperties_throwsException() {
-		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, 2L)
-				.addString(INPUT_FILE_PATH_PARAM, "").toJobParameters();
-
-		setupBasicMocks(jobParameters);
-		when(batchProperties.getInput()).thenReturn(input);
-		when(input.getFilePath()).thenReturn(""); // Empty in properties too
-
-		IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
-			dynamicPartitionHandler.handle(stepSplitter, masterStepExecution);
-		});
-
-		assertTrue(exception.getMessage().contains(NO_INPUT_FILE_MESSAGE));
-	}
-
-	@Test
-	void testHandle_whitespaceInputFilePathInProperties_throwsException() {
-		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, 2L).toJobParameters();
-
-		setupBasicMocks(jobParameters);
-		when(batchProperties.getInput()).thenReturn(input);
-		when(input.getFilePath()).thenReturn("   "); // Whitespace in properties
-
-		IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
-			dynamicPartitionHandler.handle(stepSplitter, masterStepExecution);
-		});
-
-		assertTrue(exception.getMessage().contains(NO_INPUT_FILE_MESSAGE));
+	static Stream<Arguments> provideInputPathValidationCases() {
+		return Stream.of(
+				Arguments.of(
+						"", TEST_PROPERTIES_INPUT_PATH, false,
+						"Empty input path in job parameters should use batch properties"
+				),
+				Arguments.of(
+						"   ", TEST_PROPERTIES_INPUT_PATH, false,
+						"Whitespace input path in job parameters should use batch properties"
+				),
+				Arguments.of(
+						"", "", true, "Empty input path in both job parameters and properties should throw exception"
+				), Arguments.of(null, "   ", true, "Whitespace input path in properties should throw exception")
+		);
 	}
 
 	@Test
@@ -337,21 +319,6 @@ class DynamicPartitionHandlerTest {
 	}
 
 	@Test
-	void testHandle_classpathResourceWithSubpath_handlesCorrectly() {
-		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, 1L)
-				.addString(INPUT_FILE_PATH_PARAM, "classpath:test/data/nested/input.csv").toJobParameters();
-
-		setupBasicMocks(jobParameters);
-		when(batchProperties.getPartitioning()).thenReturn(partitioning);
-
-		assertDoesNotThrow(() -> {
-			dynamicPartitionHandler.handle(stepSplitter, masterStepExecution);
-		});
-
-		verify(dynamicPartitioner).setInputResource(any());
-	}
-
-	@Test
 	void testHandle_maximumParameters_allPathsExercised() {
 		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, 8L)
 				.addLong(CHUNK_SIZE_PARAM, 200L).addString(INPUT_FILE_PATH_PARAM, "/test/complete-params.csv")
@@ -367,21 +334,6 @@ class DynamicPartitionHandlerTest {
 
 		verify(dynamicPartitioner).setInputResource(any());
 		verify(batchProperties, atLeastOnce()).getPartitioning();
-	}
-
-	@Test
-	void testHandle_edgeCaseInputPath_relativeFileSystemPath() {
-		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, 1L)
-				.addString(INPUT_FILE_PATH_PARAM, "relative/path/input.csv").toJobParameters();
-
-		setupBasicMocks(jobParameters);
-		when(batchProperties.getPartitioning()).thenReturn(partitioning);
-
-		assertDoesNotThrow(() -> {
-			dynamicPartitionHandler.handle(stepSplitter, masterStepExecution);
-		});
-
-		verify(dynamicPartitioner).setInputResource(any());
 	}
 
 	@Test

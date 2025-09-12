@@ -49,20 +49,17 @@ public class BatchMetrics {
 	 * Retry detail information
 	 */
 	public static record RetryDetail(
-			Long recordId,
-			String recordData,
-			int attemptNumber,
-			String errorType,
-			String errorMessage,
-			LocalDateTime timestamp,
-			boolean successful,
-			String partitionName
+			Long recordId, String recordData, int attemptNumber, String errorType, String errorMessage,
+			LocalDateTime timestamp, boolean successful, String partitionName
 	) {
 		public RetryDetail(
 				Long recordId, String recordData, int attemptNumber, String errorType, String errorMessage,
 				boolean successful, String partitionName
 		) {
-			this(recordId, recordData, attemptNumber, errorType, errorMessage, LocalDateTime.now(), successful, partitionName);
+			this(
+					recordId, recordData, attemptNumber, errorType, errorMessage, LocalDateTime.now(), successful,
+					partitionName
+			);
 		}
 	}
 
@@ -70,13 +67,8 @@ public class BatchMetrics {
 	 * Skip detail information
 	 */
 	public static record SkipDetail(
-			Long recordId,
-			String recordData,
-			String errorType,
-			String errorMessage,
-			LocalDateTime timestamp,
-			String partitionName,
-			Long lineNumber
+			Long recordId, String recordData, String errorType, String errorMessage, LocalDateTime timestamp,
+			String partitionName, Long lineNumber
 	) {
 		public SkipDetail(
 				Long recordId, String recordData, String errorType, String errorMessage, String partitionName,

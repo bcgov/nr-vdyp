@@ -95,7 +95,8 @@ class VdypProjectionProcessorTest {
 	@ParameterizedTest
 	@MethodSource("provideInvalidRecords")
 	void testProcess_ValidationErrors_ThrowIllegalArgumentException(
-			String testName, String data, String polygonId, String layerId) {
+			String testName, String data, String polygonId, String layerId
+	) {
 		processor.beforeStep(stepExecution);
 
 		BatchRecord batchRecord = new BatchRecord();
@@ -117,7 +118,8 @@ class VdypProjectionProcessorTest {
 				Arguments.of("PolygonId too long", "test-data", "x".repeat(51), "layer1"),
 				Arguments.of("Empty data field", "   ", "polygon1", "layer1"),
 				Arguments.of("Empty polygonId", "test-data", "   ", "layer1"),
-				Arguments.of("Empty layerId", "test-data", "polygon1", "   "));
+				Arguments.of("Empty layerId", "test-data", "polygon1", "   ")
+		);
 	}
 
 	@Test
@@ -167,8 +169,8 @@ class VdypProjectionProcessorTest {
 	}
 
 	@Test
-	void testProcess_RetrySuccessScenario_RemovesFromRetriedRecords() throws IOException, IllegalArgumentException,
-			IllegalAccessException, NoSuchFieldException {
+	void testProcess_RetrySuccessScenario_RemovesFromRetriedRecords()
+			throws IOException, IllegalArgumentException, IllegalAccessException, NoSuchFieldException {
 		processor.beforeStep(stepExecution);
 
 		// Use reflection to access the static retriedRecords field and add an entry
@@ -211,8 +213,7 @@ class VdypProjectionProcessorTest {
 	}
 
 	@Test
-	void testProcess_EmptyProjectionResult_ThrowsIOException()
-			throws NoSuchMethodException {
+	void testProcess_EmptyProjectionResult_ThrowsIOException() throws NoSuchMethodException {
 		// Test validateProjectionResult method directly with empty string
 		processor.beforeStep(stepExecution);
 
@@ -258,7 +259,8 @@ class VdypProjectionProcessorTest {
 					public String toString() {
 						return "ConnectionException";
 					}
-				}));
+				})
+		);
 	}
 
 	@Test
@@ -446,8 +448,8 @@ class VdypProjectionProcessorTest {
 		return Stream.of(
 				Arguments.of("Null result throws IOException", null, true, null),
 				Arguments.of("Empty result throws IOException", "   ", true, null),
-				Arguments.of("Valid result returns result", "Valid projection result", false,
-						"Valid projection result"));
+				Arguments.of("Valid result returns result", "Valid projection result", false, "Valid projection result")
+		);
 	}
 
 	private void invokeReclassifyMethod(java.lang.reflect.Method method, Exception exception, Long recordId)

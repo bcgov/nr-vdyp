@@ -250,7 +250,8 @@ class RangeAwareItemReaderTest {
 
 		Resource invalidResource = new FileSystemResource(invalidFile.toFile());
 		RangeAwareItemReader invalidReader = new RangeAwareItemReader(
-				invalidResource, metricsCollector, batchProperties);
+				invalidResource, metricsCollector, batchProperties
+		);
 
 		// Update mock to return the invalid file path
 		BatchProperties.Input input = mock(BatchProperties.Input.class);
