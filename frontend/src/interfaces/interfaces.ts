@@ -44,6 +44,11 @@ export interface SpeciesGroup {
   minimumDBHLimit?: UtilizationClassSetEnum
 }
 
+export interface FileUploadSpeciesGroup {
+  group: string
+  minimumDBHLimit: UtilizationClassSetEnum
+}
+
 export interface Tab {
   label: string
   component: string | object // Component name or an actual component

@@ -1,5 +1,6 @@
 import { useFileUploadStore } from '@/stores/fileUploadStore'
 import { CONSTANTS } from '@/constants'
+import type { FileUploadSpeciesGroup } from '@/interfaces/interfaces'
 import {
   OutputFormatEnum,
   ExecutionOptionsEnum,
@@ -10,6 +11,7 @@ import {
   type Parameters,
 } from '@/services/vdyp-api'
 import { projectionHcsvPost } from '@/services/apiActions'
+import type { UtilizationParameter } from '@/services/vdyp-api/models/utilization-parameter'
 import { addExecutionOptionsFromMappings } from '@/utils/util'
 
 /**
@@ -163,6 +165,13 @@ export const getFormData = (
     excludedDebugOptions: excludedDebugOptions,
     combineAgeYearRange: CombineAgeYearRangeEnum.Intersect,
     metadataToOutput: MetadataToOutputEnum.VERSION,
+    utils: fileUploadStore.fileUploadSpeciesGroup.map(
+      (sg: FileUploadSpeciesGroup) =>
+        ({
+          speciesName: sg.group,
+          utilizationClass: sg.minimumDBHLimit,
+        }) as UtilizationParameter,
+    ),
   }
 
   const formData = new FormData()

@@ -94,6 +94,9 @@ export const CFS_BIOMASS_SPECIES_GROUP_UTILIZATION_MAP: {
   Y: UtilizationClassSetEnum._175,
 }
 
+// All 16 Species Groups
+export const SPECIES_GROUPS = ['AC', 'AT', 'B', 'C', 'D', 'E', 'F', 'H', 'L', 'MB', 'PA', 'PL', 'PW', 'PY', 'S', 'Y'] as const
+
 export const CONIFEROUS_SPECIES = new Set([
   'B',
   'BA',
