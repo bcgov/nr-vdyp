@@ -556,13 +556,15 @@ public class YieldTable implements Closeable {
 						// calling obtain stand yield is slight overkill here but it is the least code duplication
 						// there is a fiar bit of boiler plate to access a specifics stand information
 						for (Stand sp0 : primaryLayer.getSp0sAsSupplied()) {
-							LayerYields yield = obtainStandYield(
-									rowContext, polygonProjectionsByYear, primaryLayer, sp0,
-									rowContext.getCurrentTableAge()
-							);
-							if (yield.bYieldsPredicted() && yield.isDominantSp0()) {
-								dominantSpeciesCode = yield.sp0Name();
-								break; // exit at the first dominant species found
+							if (sp0 != null) {
+								LayerYields yield = obtainStandYield(
+										rowContext, polygonProjectionsByYear, primaryLayer, sp0,
+										rowContext.getCurrentTableAge()
+								);
+								if (yield.bYieldsPredicted() && yield.isDominantSp0()) {
+									dominantSpeciesCode = yield.sp0Name();
+									break; // exit at the first dominant species found
+								}
 							}
 						}
 					}
@@ -1451,12 +1453,17 @@ public class YieldTable implements Closeable {
 	private LayerYields getYields(
 			int calendarYear, UtilizationClassSet ucReportingLevel, VdypSpecies projectedSp0,
 			VdypUtilizationHolder entity
-	) {
+	) throws StandYieldCalculationException {
 
 		double totalAge = Vdyp7Constants.EMPTY_DECIMAL;
 		double dominantHeight = Vdyp7Constants.EMPTY_DECIMAL;
 		double siteIndex = Vdyp7Constants.EMPTY_DECIMAL;
 		int siteCurve = Vdyp7Constants.EMPTY_INT;
+		if (projectedSp0 == null || entity == null) {
+			throw new StandYieldCalculationException(
+					new IllegalArgumentException("Cannot calculate yields with a null primary Species")
+			);
+		}
 		boolean isDominantSpecies = projectedSp0.getSite().isPresent();
 
 		if (isDominantSpecies) {
