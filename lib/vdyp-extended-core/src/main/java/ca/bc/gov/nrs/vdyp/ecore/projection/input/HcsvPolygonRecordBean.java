@@ -104,19 +104,19 @@ public class HcsvPolygonRecordBean {
 	private String tsaNumber;
 
 	// { "SHRUB_HEIGHT", csvFldType_SINGLE, 4, 1, "", TRUE }
-	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "SHRUB_HEIGHT")
 	@CsvBindByPosition(position = 8)
 	private String shrubHeight;
 
 	// { "SHRUB_CROWN_CLOSURE", csvFldType_SHORT, 3, 0, "", TRUE }
-	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "SHRUB_CROWN_CLOSURE")
 	@CsvBindByPosition(position = 9)
 	private String shrubCrownClosure;
 
 	// { "SHRUB_COVER_PATTERN", csvFldType_CHAR, 10, 0, "", TRUE }
-	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "SHRUB_COVER_PATTERN")
 	@CsvBindByPosition(position = 10)
 	private String shrubCoverPattern;
@@ -128,19 +128,19 @@ public class HcsvPolygonRecordBean {
 	private String herbCoverTypeCode;
 
 	// { "HERB_COVER_PCT", csvFldType_SHORT, 3, 0, "", TRUE }
-	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "HERB_COVER_PCT")
 	@CsvBindByPosition(position = 12)
 	private String herbCoverPercent;
 
 	// { "HERB_COVER_PATTERN", csvFldType_CHAR, 10, 0, "", TRUE }
-	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "HERB_COVER_PATTERN_CODE")
 	@CsvBindByPosition(position = 13)
 	private String herbCoverPatternCode;
 
 	// { "BRYOID_COVER_PCT", csvFldType_SHORT, 3, 0, "", TRUE }
-	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "BRYOID_COVER_PCT")
 	@CsvBindByPosition(position = 14)
 	private String bryoidCoverPercent;
@@ -221,7 +221,7 @@ public class HcsvPolygonRecordBean {
 	private String yearOfDeath;
 
 	// { "STOCKABILITY_DEAD", csvFldType_SINGLE, 4, 1, "", TRUE }
-	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "PCT_DEAD")
 	@CsvBindByPosition(position = 27)
 	private String percentDead;
@@ -233,13 +233,13 @@ public class HcsvPolygonRecordBean {
 	private String nonVegCoverType1;
 
 	// { "NON_VEG_COVER_PCT_1", csvFldType_SHORT, 3, 0, "", TRUE }
-	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "NON_VEG_COVER_PCT_1")
 	@CsvBindByPosition(position = 29)
 	private String nonVegCoverPercent1;
 
 	// { "NON_VEG_COVER_PATTERN_1", csvFldType_CHAR, 10, 0, "", TRUE }
-	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "NON_VEG_COVER_PATTERN_1")
 	@CsvBindByPosition(position = 30)
 	private String nonVegCoverPattern1;
@@ -251,13 +251,13 @@ public class HcsvPolygonRecordBean {
 	private String nonVegCoverType2;
 
 	// { "NON_VEG_COVER_PCT_2", csvFldType_SHORT, 3, 0, "", TRUE }
-	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "NON_VEG_COVER_PCT_2")
 	@CsvBindByPosition(position = 32)
 	private String nonVegCoverPercent2;
 
 	// { "NON_VEG_COVER_PATTERN_2", csvFldType_CHAR, 10, 0, "", TRUE }
-	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "NON_VEG_COVER_PATTERN_2")
 	@CsvBindByPosition(position = 33)
 	private String nonVegCoverPattern2;
@@ -269,13 +269,13 @@ public class HcsvPolygonRecordBean {
 	private String nonVegCoverType3;
 
 	// { "NON_VEG_COVER_PCT_3", csvFldType_SHORT, 3, 0, "", TRUE }
-	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "NON_VEG_COVER_PCT_3")
 	@CsvBindByPosition(position = 35)
 	private String nonVegCoverPercent3;
 
 	// { "NON_VEG_COVER_PATTERN_3", csvFldType_CHAR, 10, 0, "", TRUE }
-	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "NON_VEG_COVER_PATTERN_3")
 	@CsvBindByPosition(position = 36)
 	private String nonVegCoverPattern3;
@@ -287,7 +287,7 @@ public class HcsvPolygonRecordBean {
 	private String landCoverClassCode1;
 
 	// { "LAND_COVER_CLASS_PCT_1", csvFldType_SHORT, 3, 0, "", TRUE }
-	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "LAND_COVER_PCT_1")
 	@CsvBindByPosition(position = 38)
 	private String landCoverPercent1;
@@ -299,7 +299,7 @@ public class HcsvPolygonRecordBean {
 	private String landCoverClassCode2;
 
 	// { "LAND_COVER_CLASS_PCT_2", csvFldType_SHORT, 3, 0, "", TRUE }
-	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "LAND_COVER_PCT_2")
 	@CsvBindByPosition(position = 40)
 	private String landCoverPercent2;
@@ -311,7 +311,7 @@ public class HcsvPolygonRecordBean {
 	private String landCoverClassCode3;
 
 	// { "LAND_COVER_CLASS_PCT_3", csvFldType_SHORT, 3, 0, "", TRUE }
-	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
+	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
 	@CsvBindByName(column = "LAND_COVER_PCT_3")
 	@CsvBindByPosition(position = 42)
 	private String landCoverPercent3;
