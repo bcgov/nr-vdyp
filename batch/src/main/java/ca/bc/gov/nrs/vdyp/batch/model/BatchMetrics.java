@@ -48,174 +48,41 @@ public class BatchMetrics {
 	/**
 	 * Retry detail information
 	 */
-	public static class RetryDetail {
-		private Long recordId;
-		private String recordData;
-		private int attemptNumber;
-		private String errorType;
-		private String errorMessage;
-		private LocalDateTime timestamp;
-		private boolean successful;
-		private String partitionName;
-
+	public static record RetryDetail(
+			Long recordId,
+			String recordData,
+			int attemptNumber,
+			String errorType,
+			String errorMessage,
+			LocalDateTime timestamp,
+			boolean successful,
+			String partitionName
+	) {
 		public RetryDetail(
 				Long recordId, String recordData, int attemptNumber, String errorType, String errorMessage,
 				boolean successful, String partitionName
 		) {
-			this.recordId = recordId;
-			this.recordData = recordData;
-			this.attemptNumber = attemptNumber;
-			this.errorType = errorType;
-			this.errorMessage = errorMessage;
-			this.timestamp = LocalDateTime.now();
-			this.successful = successful;
-			this.partitionName = partitionName;
-		}
-
-		public Long getRecordId() {
-			return recordId;
-		}
-
-		public void setRecordId(Long recordId) {
-			this.recordId = recordId;
-		}
-
-		public String getRecordData() {
-			return recordData;
-		}
-
-		public void setRecordData(String recordData) {
-			this.recordData = recordData;
-		}
-
-		public int getAttemptNumber() {
-			return attemptNumber;
-		}
-
-		public void setAttemptNumber(int attemptNumber) {
-			this.attemptNumber = attemptNumber;
-		}
-
-		public String getErrorType() {
-			return errorType;
-		}
-
-		public void setErrorType(String errorType) {
-			this.errorType = errorType;
-		}
-
-		public String getErrorMessage() {
-			return errorMessage;
-		}
-
-		public void setErrorMessage(String errorMessage) {
-			this.errorMessage = errorMessage;
-		}
-
-		public LocalDateTime getTimestamp() {
-			return timestamp;
-		}
-
-		public void setTimestamp(LocalDateTime timestamp) {
-			this.timestamp = timestamp;
-		}
-
-		public boolean isSuccessful() {
-			return successful;
-		}
-
-		public void setSuccessful(boolean successful) {
-			this.successful = successful;
-		}
-
-		public String getPartitionName() {
-			return partitionName;
-		}
-
-		public void setPartitionName(String partitionName) {
-			this.partitionName = partitionName;
+			this(recordId, recordData, attemptNumber, errorType, errorMessage, LocalDateTime.now(), successful, partitionName);
 		}
 	}
 
 	/**
 	 * Skip detail information
 	 */
-	public static class SkipDetail {
-		private Long recordId;
-		private String recordData;
-		private String errorType;
-		private String errorMessage;
-		private LocalDateTime timestamp;
-		private String partitionName;
-		private Long lineNumber;
-
+	public static record SkipDetail(
+			Long recordId,
+			String recordData,
+			String errorType,
+			String errorMessage,
+			LocalDateTime timestamp,
+			String partitionName,
+			Long lineNumber
+	) {
 		public SkipDetail(
 				Long recordId, String recordData, String errorType, String errorMessage, String partitionName,
 				Long lineNumber
 		) {
-			this.recordId = recordId;
-			this.recordData = recordData;
-			this.errorType = errorType;
-			this.errorMessage = errorMessage;
-			this.timestamp = LocalDateTime.now();
-			this.partitionName = partitionName;
-			this.lineNumber = lineNumber;
-		}
-
-		public Long getRecordId() {
-			return recordId;
-		}
-
-		public void setRecordId(Long recordId) {
-			this.recordId = recordId;
-		}
-
-		public String getRecordData() {
-			return recordData;
-		}
-
-		public void setRecordData(String recordData) {
-			this.recordData = recordData;
-		}
-
-		public String getErrorType() {
-			return errorType;
-		}
-
-		public void setErrorType(String errorType) {
-			this.errorType = errorType;
-		}
-
-		public String getErrorMessage() {
-			return errorMessage;
-		}
-
-		public void setErrorMessage(String errorMessage) {
-			this.errorMessage = errorMessage;
-		}
-
-		public LocalDateTime getTimestamp() {
-			return timestamp;
-		}
-
-		public void setTimestamp(LocalDateTime timestamp) {
-			this.timestamp = timestamp;
-		}
-
-		public String getPartitionName() {
-			return partitionName;
-		}
-
-		public void setPartitionName(String partitionName) {
-			this.partitionName = partitionName;
-		}
-
-		public Long getLineNumber() {
-			return lineNumber;
-		}
-
-		public void setLineNumber(Long lineNumber) {
-			this.lineNumber = lineNumber;
+			this(recordId, recordData, errorType, errorMessage, LocalDateTime.now(), partitionName, lineNumber);
 		}
 	}
 

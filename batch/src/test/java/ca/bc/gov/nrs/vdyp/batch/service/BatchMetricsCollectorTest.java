@@ -173,14 +173,14 @@ class BatchMetricsCollectorTest {
 
 		assertEquals(1, metrics.getRetryDetails().size());
 		BatchMetrics.RetryDetail retryDetail = metrics.getRetryDetails().get(0);
-		assertEquals(recordId, retryDetail.getRecordId());
-		assertEquals(batchRecord.toString(), retryDetail.getRecordData());
-		assertEquals(attemptNumber, retryDetail.getAttemptNumber());
-		assertEquals("RuntimeException", retryDetail.getErrorType());
-		assertEquals("Test error", retryDetail.getErrorMessage());
-		assertTrue(retryDetail.isSuccessful());
-		assertEquals(PARTITION_NAME, retryDetail.getPartitionName());
-		assertNotNull(retryDetail.getTimestamp());
+		assertEquals(recordId, retryDetail.recordId());
+		assertEquals(batchRecord.toString(), retryDetail.recordData());
+		assertEquals(attemptNumber, retryDetail.attemptNumber());
+		assertEquals("RuntimeException", retryDetail.errorType());
+		assertEquals("Test error", retryDetail.errorMessage());
+		assertTrue(retryDetail.successful());
+		assertEquals(PARTITION_NAME, retryDetail.partitionName());
+		assertNotNull(retryDetail.timestamp());
 	}
 
 	@Test
@@ -201,9 +201,9 @@ class BatchMetricsCollectorTest {
 		assertEquals(1, metrics.getFailedRetries());
 
 		BatchMetrics.RetryDetail retryDetail = metrics.getRetryDetails().get(0);
-		assertEquals("IllegalArgumentException", retryDetail.getErrorType());
-		assertEquals("Invalid argument", retryDetail.getErrorMessage());
-		assertFalse(retryDetail.isSuccessful());
+		assertEquals("IllegalArgumentException", retryDetail.errorType());
+		assertEquals("Invalid argument", retryDetail.errorMessage());
+		assertFalse(retryDetail.successful());
 	}
 
 	@Test
@@ -218,7 +218,7 @@ class BatchMetricsCollectorTest {
 
 		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
 		BatchMetrics.RetryDetail retryDetail = metrics.getRetryDetails().get(0);
-		assertEquals("null", retryDetail.getRecordData());
+		assertEquals("null", retryDetail.recordData());
 	}
 
 	@Test
@@ -233,8 +233,8 @@ class BatchMetricsCollectorTest {
 
 		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
 		BatchMetrics.RetryDetail retryDetail = metrics.getRetryDetails().get(0);
-		assertEquals("Unknown", retryDetail.getErrorType());
-		assertEquals("No error message", retryDetail.getErrorMessage());
+		assertEquals("Unknown", retryDetail.errorType());
+		assertEquals("No error message", retryDetail.errorMessage());
 	}
 
 	@Test
@@ -268,13 +268,13 @@ class BatchMetricsCollectorTest {
 
 		assertEquals(1, metrics.getSkipDetails().size());
 		BatchMetrics.SkipDetail skipDetail = metrics.getSkipDetails().get(0);
-		assertEquals(recordId, skipDetail.getRecordId());
-		assertEquals(batchRecord.toString(), skipDetail.getRecordData());
-		assertEquals("IllegalStateException", skipDetail.getErrorType());
-		assertEquals("Invalid state", skipDetail.getErrorMessage());
-		assertEquals(PARTITION_NAME, skipDetail.getPartitionName());
-		assertEquals(lineNumber, skipDetail.getLineNumber());
-		assertNotNull(skipDetail.getTimestamp());
+		assertEquals(recordId, skipDetail.recordId());
+		assertEquals(batchRecord.toString(), skipDetail.recordData());
+		assertEquals("IllegalStateException", skipDetail.errorType());
+		assertEquals("Invalid state", skipDetail.errorMessage());
+		assertEquals(PARTITION_NAME, skipDetail.partitionName());
+		assertEquals(lineNumber, skipDetail.lineNumber());
+		assertNotNull(skipDetail.timestamp());
 	}
 
 	@Test
@@ -306,7 +306,7 @@ class BatchMetricsCollectorTest {
 
 		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
 		BatchMetrics.SkipDetail skipDetail = metrics.getSkipDetails().get(0);
-		assertEquals("null", skipDetail.getRecordData());
+		assertEquals("null", skipDetail.recordData());
 	}
 
 	@Test
@@ -320,8 +320,8 @@ class BatchMetricsCollectorTest {
 
 		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
 		BatchMetrics.SkipDetail skipDetail = metrics.getSkipDetails().get(0);
-		assertEquals("Unknown", skipDetail.getErrorType());
-		assertEquals("No error message", skipDetail.getErrorMessage());
+		assertEquals("Unknown", skipDetail.errorType());
+		assertEquals("No error message", skipDetail.errorMessage());
 		assertEquals(Integer.valueOf(1), metrics.getSkipReasonCount().get("Unknown"));
 	}
 
