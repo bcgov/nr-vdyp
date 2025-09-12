@@ -1,0 +1,38 @@
+[
+  {
+    "name": "ca.bc.gov.nrs.vdyp.batch.model.BatchRecord",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.batch.controller.BatchJobRequest",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics$RetryDetail",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics$SkipDetail",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics$PartitionMetrics",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  }
+]

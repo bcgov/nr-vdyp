@@ -1,0 +1,46 @@
+{
+  "resources": {
+    "includes": [
+      {
+        "pattern": "\\Qapplication.properties\\E"
+      },
+      {
+        "pattern": "\\Qapplication-*.properties\\E"
+      },
+      {
+        "pattern": "\\Qapplication.yml\\E"
+      },
+      {
+        "pattern": "\\Qapplication-*.yml\\E"
+      },
+      {
+        "pattern": "\\QMETA-INF/spring.factories\\E"
+      },
+      {
+        "pattern": "\\Qorg/springframework/batch/core/schema-h2.sql\\E"
+      },
+      {
+        "pattern": "\\Qorg/springframework/batch/core/schema-drop-h2.sql\\E"
+      },
+      {
+        "pattern": "\\Qschema-h2.sql\\E"
+      },
+      {
+        "pattern": "\\Qschema-drop-h2.sql\\E"
+      },
+      {
+        "pattern": "\\Qinput.csv\\E"
+      },
+      {
+        "pattern": "\\QMETA-INF/native-image/reflect-config.json\\E"
+      },
+      {
+        "pattern": "\\QMETA-INF/native-image/jni-config.json\\E"
+      },
+      {
+        "pattern": "\\QMETA-INF/native-image/resource-config.json\\E"
+      }
+    ]
+  },
+  "bundles": []
+}

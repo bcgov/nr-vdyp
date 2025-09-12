@@ -33,6 +33,7 @@
 		<module>lib</module>
 		<module>buildtools</module>
 		<module>backend</module>
+		<module>batch</module>
 		<module>vdyp-test-oracle</module>
 	</modules>
 
