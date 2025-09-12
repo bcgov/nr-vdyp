@@ -1,0 +1,58 @@
+{
+    "properties": [
+        {
+            "name": "batch.input.file.path",
+            "type": "java.lang.String",
+            "description": "Path to the input VDYP CSV file for forest data processing",
+            "defaultValue": "classpath:input.csv"
+        },
+        {
+            "name": "batch.output.file.path",
+            "type": "java.lang.String",
+            "description": "Path to the output VDYP projection results CSV file",
+            "defaultValue": "${user.home}/vdyp/output.csv"
+        },
+        {
+            "name": "batch.output.directory.default",
+            "type": "java.lang.String",
+            "description": "Default output directory for VDYP batch processing partition files",
+            "defaultValue": "C:/temp"
+        },
+        {
+            "name": "batch.partitioning.enabled",
+            "type": "java.lang.Boolean",
+            "description": "Enable or disable VDYP partitioning for parallel forest data processing",
+            "defaultValue": true
+        },
+        {
+            "name": "batch.partitioning.grid.size",
+            "type": "java.lang.Integer",
+            "description": "Number of partitions for parallel VDYP projection processing",
+            "defaultValue": 4
+        },
+        {
+            "name": "batch.partitioning.chunk.size",
+            "type": "java.lang.Integer",
+            "description": "Number of VDYP forest records processed in each chunk",
+            "defaultValue": 1000
+        },
+        {
+            "name": "batch.retry.max.attempts",
+            "type": "java.lang.Integer",
+            "description": "Maximum number of retry attempts for VDYP projection failures",
+            "defaultValue": 3
+        },
+        {
+            "name": "batch.retry.backoff.period",
+            "type": "java.lang.Long",
+            "description": "Backoff period in milliseconds between VDYP projection retries",
+            "defaultValue": 100
+        },
+        {
+            "name": "batch.skip.max.count",
+            "type": "java.lang.Integer",
+            "description": "Maximum number of VDYP forest records that can be skipped due to errors",
+            "defaultValue": 10
+        }
+    ]
+}

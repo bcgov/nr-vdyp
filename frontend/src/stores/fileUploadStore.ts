@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { CONSTANTS, DEFAULTS } from '@/constants'
+import { BIZCONSTANTS, CONSTANTS, DEFAULTS } from '@/constants'
 import type { FileUploadPanelName, PanelState } from '@/types/types'
+import type { FileUploadSpeciesGroup } from '@/interfaces/interfaces'
 
 export const useFileUploadStore = defineStore('fileUploadStore', () => {
   // panel open
@@ -94,6 +95,34 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
   const projectionType = ref<string | null>(null)
   const reportTitle = ref<string | null>(null)
 
+  // species groups for utilization levels
+  const fileUploadSpeciesGroup = ref<FileUploadSpeciesGroup[]>([])
+
+  // initialize species groups with all 16 species
+  const initializeSpeciesGroups = () => {
+    fileUploadSpeciesGroup.value = BIZCONSTANTS.SPECIES_GROUPS.map((group) => ({
+      group,
+      minimumDBHLimit: DEFAULTS.SPECIES_GROUP_VOLUME_UTILIZATION_MAP[group],
+    }))
+  }
+
+  // update species groups based on projection type
+  const updateSpeciesGroupsForProjectionType = (type: string | null) => {
+    if (type === CONSTANTS.PROJECTION_TYPE.CFS_BIOMASS) {
+      // CFO Biomass: use specific values
+      fileUploadSpeciesGroup.value.forEach((group) => {
+        group.minimumDBHLimit =
+          DEFAULTS.SPECIES_GROUP_CFO_BIOMASS_UTILIZATION_MAP[group.group]
+      })
+    } else {
+      // Volume: use default values
+      fileUploadSpeciesGroup.value.forEach((group) => {
+        group.minimumDBHLimit =
+          DEFAULTS.SPECIES_GROUP_VOLUME_UTILIZATION_MAP[group.group]
+      })
+    }
+  }
+
   // attachments
   const polygonFile = ref<File | null>(null)
   const layerFile = ref<File | null>(null)
@@ -114,6 +143,9 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
     isPolygonIDEnabled.value = DEFAULTS.DEFAULT_VALUES.IS_POLYGON_ID_ENABLED
     projectionType.value = DEFAULTS.DEFAULT_VALUES.PROJECTION_TYPE
     reportTitle.value = DEFAULTS.DEFAULT_VALUES.REPORT_TITLE
+
+    // initialize species groups
+    initializeSpeciesGroups()
   }
 
   return {
@@ -146,6 +178,10 @@ export const useFileUploadStore = defineStore('fileUploadStore', () => {
     specificYear,
     projectionType,
     reportTitle,
+    // species groups
+    fileUploadSpeciesGroup,
+    initializeSpeciesGroups,
+    updateSpeciesGroupsForProjectionType,
     // attachments
     polygonFile,
     layerFile,

@@ -611,17 +611,17 @@ describe('ReportInfoPanel.vue', () => {
     ).should('be.disabled')
   })
 
-  it('passes isModelParametersMode prop correctly', () => {
+  it('passes isModelParametersMode prop correctly - model parameter mode', () => {
     mountComponent({}, CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS)
     cy.contains('span.text-h7', 'Minimum DBH Limit by Species Group').should(
       'be.visible',
     )
   })
 
-  it('passes isModelParametersMode prop correctly', () => {
+  it('passes isModelParametersMode prop correctly - file upload mode', () => {
     mountComponent({}, CONSTANTS.MODEL_SELECTION.FILE_UPLOAD)
     cy.contains('span.text-h7', 'Minimum DBH Limit by Species Group').should(
-      'not.exist',
+      'be.visible',
     )
   })
 })
