@@ -10,6 +10,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.item.ExecutionContext;
+import org.springframework.batch.item.ItemStreamException;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 
@@ -151,7 +152,7 @@ class RangeAwareItemReaderTest {
 	}
 
 	@Test
-	void testRead_WithinRange() throws Exception {
+	void testRead_WithinRange() throws ItemStreamException {
 		rangeAwareItemReader.beforeStep(stepExecution);
 
 		BatchRecord batchRecord = rangeAwareItemReader.read();
@@ -208,7 +209,7 @@ class RangeAwareItemReaderTest {
 	}
 
 	@Test
-	void testRead_BeyondEndLine_ReturnsNull() throws Exception {
+	void testRead_BeyondEndLine_ReturnsNull() throws ItemStreamException {
 		// Set up separate execution context for this test
 		ExecutionContext limitedContext = mock(ExecutionContext.class);
 		when(limitedContext.getLong("startLine", 2)).thenReturn(2L);
@@ -237,7 +238,7 @@ class RangeAwareItemReaderTest {
 	}
 
 	@Test
-	void testRead_WithInvalidData_HandlesGracefully() throws Exception {
+	void testRead_WithInvalidData_HandlesGracefully() throws IOException, ItemStreamException {
 		// Create CSV with invalid data
 		Path invalidFile = tempDir.resolve("invalid.csv");
 		Files.write(invalidFile, """
@@ -249,8 +250,7 @@ class RangeAwareItemReaderTest {
 
 		Resource invalidResource = new FileSystemResource(invalidFile.toFile());
 		RangeAwareItemReader invalidReader = new RangeAwareItemReader(
-				invalidResource, metricsCollector, batchProperties
-		);
+				invalidResource, metricsCollector, batchProperties);
 
 		// Update mock to return the invalid file path
 		BatchProperties.Input input = mock(BatchProperties.Input.class);
@@ -266,7 +266,7 @@ class RangeAwareItemReaderTest {
 	}
 
 	@Test
-	void testRead_WithNullIdRecord_HandlesGracefully() throws Exception {
+	void testRead_WithNullIdRecord_HandlesGracefully() throws IOException, ItemStreamException {
 		// Create CSV with null ID
 		Path nullIdFile = tempDir.resolve("nullid.csv");
 		Files.write(nullIdFile, """
@@ -292,7 +292,7 @@ class RangeAwareItemReaderTest {
 	}
 
 	@Test
-	void testRead_MultipleRecords_ProcessesCorrectly() throws Exception {
+	void testRead_MultipleRecords_ProcessesCorrectly() throws ItemStreamException {
 		rangeAwareItemReader.beforeStep(stepExecution);
 
 		// Read multiple records within range
@@ -314,7 +314,7 @@ class RangeAwareItemReaderTest {
 	}
 
 	@Test
-	void testSkipStatistics_TrackingWorks() throws Exception {
+	void testSkipStatistics_TrackingWorks() throws IOException, ItemStreamException {
 		// Create file with parsing errors
 		Path errorFile = tempDir.resolve("error.csv");
 		Files.write(errorFile, """
@@ -350,7 +350,7 @@ class RangeAwareItemReaderTest {
 	}
 
 	@Test
-	void testProcessedCount_IncrementsCorrectly() throws Exception {
+	void testProcessedCount_IncrementsCorrectly() throws ItemStreamException {
 		rangeAwareItemReader.beforeStep(stepExecution);
 
 		assertEquals(0L, rangeAwareItemReader.getTotalProcessed());
@@ -363,7 +363,7 @@ class RangeAwareItemReaderTest {
 	}
 
 	@Test
-	void testRead_WithoutOpen_AutoOpens() throws Exception {
+	void testRead_WithoutOpen_AutoOpens() throws ItemStreamException {
 		rangeAwareItemReader.beforeStep(stepExecution);
 
 		// Don't manually call open()
@@ -393,7 +393,7 @@ class RangeAwareItemReaderTest {
 	}
 
 	@Test
-	void testClose_WithSkipStatistics() throws Exception {
+	void testClose_WithSkipStatistics() throws IOException {
 		// Create file that will generate skips
 		Path skipFile = tempDir.resolve("skip.csv");
 		Files.write(skipFile, """
@@ -419,7 +419,7 @@ class RangeAwareItemReaderTest {
 	}
 
 	@Test
-	void testHandleEndOfRange_LogsCorrectly() throws Exception {
+	void testHandleEndOfRange_LogsCorrectly() throws ItemStreamException {
 		// Set very small range
 		ExecutionContext smallRangeContext = mock(ExecutionContext.class);
 		when(smallRangeContext.getLong("startLine", 2)).thenReturn(2L);
@@ -442,7 +442,7 @@ class RangeAwareItemReaderTest {
 	}
 
 	@Test
-	void testRead_WithNullMetricsCollector_WorksCorrectly() throws Exception {
+	void testRead_WithNullMetricsCollector_WorksCorrectly() throws ItemStreamException {
 		// Create reader with null metrics collector
 		RangeAwareItemReader nullMetricsReader = new RangeAwareItemReader(testResource, null, batchProperties);
 

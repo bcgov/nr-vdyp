@@ -11,6 +11,8 @@ import org.springframework.batch.core.*;
 import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException;
+import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException;
+import org.springframework.batch.core.repository.JobRestartException;
 import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDateTime;
@@ -60,7 +62,8 @@ class BatchControllerTest {
 	}
 
 	@Test
-	void testStartBatchJob_WithValidJob_ReturnsSuccess() throws Exception {
+	void testStartBatchJob_WithValidJob_ReturnsSuccess() throws JobExecutionAlreadyRunningException,
+			JobRestartException, JobInstanceAlreadyCompleteException, JobParametersInvalidException {
 		BatchJobRequest request = new BatchJobRequest();
 		request.setInputFilePath("/test/input.csv");
 		request.setOutputFilePath("/test/output");
@@ -84,7 +87,8 @@ class BatchControllerTest {
 	}
 
 	@Test
-	void testStartBatchJob_WithNullRequest_ReturnsSuccess() throws Exception {
+	void testStartBatchJob_WithNullRequest_ReturnsSuccess() throws JobExecutionAlreadyRunningException,
+			JobRestartException, JobInstanceAlreadyCompleteException, JobParametersInvalidException {
 		when(jobExecution.getId()).thenReturn(1L);
 		when(jobExecution.getJobInstance()).thenReturn(jobInstance);
 		when(jobInstance.getJobName()).thenReturn("testJob");
@@ -110,7 +114,8 @@ class BatchControllerTest {
 	}
 
 	@Test
-	void testStartBatchJob_JobLauncherThrowsException_ReturnsError() throws Exception {
+	void testStartBatchJob_JobLauncherThrowsException_ReturnsError() throws JobExecutionAlreadyRunningException,
+			JobRestartException, JobInstanceAlreadyCompleteException, JobParametersInvalidException {
 		BatchJobRequest request = new BatchJobRequest();
 		when(jobLauncher.run(any(), any())).thenThrow(new JobExecutionAlreadyRunningException("Job already running"));
 
@@ -293,7 +298,8 @@ class BatchControllerTest {
 	}
 
 	@Test
-	void testStartBatchJob_WithAllRequestParameters_SetsAllParameters() throws Exception {
+	void testStartBatchJob_WithAllRequestParameters_SetsAllParameters() throws JobExecutionAlreadyRunningException,
+			JobRestartException, JobInstanceAlreadyCompleteException, JobParametersInvalidException {
 		BatchJobRequest request = new BatchJobRequest();
 		request.setInputFilePath("/test/input.csv");
 		request.setOutputFilePath("/test/output");

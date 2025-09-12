@@ -76,7 +76,7 @@ class DynamicPartitionHandlerTest {
 	}
 
 	@Test
-	void testHandle_withJobParametersComplete_success() throws Exception {
+	void testHandle_withJobParametersComplete_success() {
 		// Setup job parameters
 		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, DEFAULT_PARTITION_SIZE)
 				.addLong(CHUNK_SIZE_PARAM, DEFAULT_CHUNK_SIZE).addString(INPUT_FILE_PATH_PARAM, TEST_INPUT_PATH)
@@ -107,7 +107,7 @@ class DynamicPartitionHandlerTest {
 	}
 
 	@Test
-	void testHandle_withJobParametersPartial_usesBatchProperties() throws Exception {
+	void testHandle_withJobParametersPartial_usesBatchProperties() {
 		// Setup job parameters with only some values
 		JobParameters jobParameters = new JobParametersBuilder().addLong(CHUNK_SIZE_PARAM, DEFAULT_CHUNK_SIZE)
 				.toJobParameters();
@@ -128,7 +128,7 @@ class DynamicPartitionHandlerTest {
 	}
 
 	@Test
-	void testHandle_withClasspathResource_createsClassPathResource() throws Exception {
+	void testHandle_withClasspathResource_createsClassPathResource() {
 		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, 2L)
 				.addString(INPUT_FILE_PATH_PARAM, CLASSPATH_INPUT_PATH).toJobParameters();
 
@@ -143,7 +143,7 @@ class DynamicPartitionHandlerTest {
 	}
 
 	@Test
-	void testHandle_withFileSystemResource_createsFileSystemResource() throws Exception {
+	void testHandle_withFileSystemResource_createsFileSystemResource() {
 		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, 3L)
 				.addString(INPUT_FILE_PATH_PARAM, "/absolute/path/to/input.csv").toJobParameters();
 
@@ -158,7 +158,7 @@ class DynamicPartitionHandlerTest {
 	}
 
 	@Test
-	void testHandle_noPartitionSizeInJobParametersOrProperties_throwsException() throws Exception {
+	void testHandle_noPartitionSizeInJobParametersOrProperties_throwsException() {
 		JobParameters jobParameters = new JobParametersBuilder().addString(INPUT_FILE_PATH_PARAM, TEST_INPUT_PATH)
 				.toJobParameters();
 
@@ -175,7 +175,7 @@ class DynamicPartitionHandlerTest {
 	}
 
 	@Test
-	void testHandle_noInputFilePathInJobParametersOrProperties_throwsException() throws Exception {
+	void testHandle_noInputFilePathInJobParametersOrProperties_throwsException() {
 		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, DEFAULT_PARTITION_SIZE)
 				.toJobParameters();
 
@@ -192,7 +192,7 @@ class DynamicPartitionHandlerTest {
 	}
 
 	@Test
-	void testHandle_emptyInputFilePathInJobParameters_usesBatchProperties() throws Exception {
+	void testHandle_emptyInputFilePathInJobParameters_usesBatchProperties() {
 		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, 2L)
 				.addString(INPUT_FILE_PATH_PARAM, "").toJobParameters();
 
@@ -210,7 +210,7 @@ class DynamicPartitionHandlerTest {
 	}
 
 	@Test
-	void testHandle_whitespaceInputFilePathInJobParameters_usesBatchProperties() throws Exception {
+	void testHandle_whitespaceInputFilePathInJobParameters_usesBatchProperties() {
 		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, 2L)
 				.addString(INPUT_FILE_PATH_PARAM, "   ").toJobParameters();
 
@@ -228,7 +228,7 @@ class DynamicPartitionHandlerTest {
 	}
 
 	@Test
-	void testHandle_emptyInputFilePathInProperties_throwsException() throws Exception {
+	void testHandle_emptyInputFilePathInProperties_throwsException() {
 		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, 2L)
 				.addString(INPUT_FILE_PATH_PARAM, "").toJobParameters();
 
@@ -244,7 +244,7 @@ class DynamicPartitionHandlerTest {
 	}
 
 	@Test
-	void testHandle_whitespaceInputFilePathInProperties_throwsException() throws Exception {
+	void testHandle_whitespaceInputFilePathInProperties_throwsException() {
 		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, 2L).toJobParameters();
 
 		setupBasicMocks(jobParameters);
@@ -259,7 +259,7 @@ class DynamicPartitionHandlerTest {
 	}
 
 	@Test
-	void testHandle_nullPartitionSizeButValidPropertiesGridSize_success() throws Exception {
+	void testHandle_nullPartitionSizeButValidPropertiesGridSize_success() {
 		JobParameters jobParameters = new JobParametersBuilder().addString(INPUT_FILE_PATH_PARAM, TEST_INPUT_PATH)
 				.toJobParameters();
 
@@ -276,7 +276,7 @@ class DynamicPartitionHandlerTest {
 	}
 
 	@Test
-	void testHandle_zeroPartitionSizeInJobParameters_usesBatchProperties() throws Exception {
+	void testHandle_zeroPartitionSizeInJobParameters_usesBatchProperties() {
 		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, 0L)
 				.addString(INPUT_FILE_PATH_PARAM, TEST_INPUT_PATH).toJobParameters();
 
@@ -290,7 +290,7 @@ class DynamicPartitionHandlerTest {
 	}
 
 	@Test
-	void testHandle_negativePartitionSizeInJobParameters_throwsException() throws Exception {
+	void testHandle_negativePartitionSizeInJobParameters_throwsException() {
 		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, -1L)
 				.addString(INPUT_FILE_PATH_PARAM, TEST_INPUT_PATH).toJobParameters();
 
@@ -305,7 +305,7 @@ class DynamicPartitionHandlerTest {
 	}
 
 	@Test
-	void testHandle_withChunkSizeLogging_logsChunkSize() throws Exception {
+	void testHandle_withChunkSizeLogging_logsChunkSize() {
 		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, 2L)
 				.addLong(CHUNK_SIZE_PARAM, 150L).addString(INPUT_FILE_PATH_PARAM, TEST_INPUT_PATH).toJobParameters();
 
@@ -321,7 +321,7 @@ class DynamicPartitionHandlerTest {
 	}
 
 	@Test
-	void testHandle_withoutChunkSize_skipsChunkSizeLogging() throws Exception {
+	void testHandle_withoutChunkSize_skipsChunkSizeLogging() {
 		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, 2L)
 				.addString(INPUT_FILE_PATH_PARAM, TEST_INPUT_PATH).toJobParameters();
 
@@ -337,7 +337,7 @@ class DynamicPartitionHandlerTest {
 	}
 
 	@Test
-	void testHandle_classpathResourceWithSubpath_handlesCorrectly() throws Exception {
+	void testHandle_classpathResourceWithSubpath_handlesCorrectly() {
 		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, 1L)
 				.addString(INPUT_FILE_PATH_PARAM, "classpath:test/data/nested/input.csv").toJobParameters();
 
@@ -352,7 +352,7 @@ class DynamicPartitionHandlerTest {
 	}
 
 	@Test
-	void testHandle_maximumParameters_allPathsExercised() throws Exception {
+	void testHandle_maximumParameters_allPathsExercised() {
 		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, 8L)
 				.addLong(CHUNK_SIZE_PARAM, 200L).addString(INPUT_FILE_PATH_PARAM, "/test/complete-params.csv")
 				.addString("outputFilePath", "/test/output").toJobParameters();
@@ -370,7 +370,7 @@ class DynamicPartitionHandlerTest {
 	}
 
 	@Test
-	void testHandle_edgeCaseInputPath_relativeFileSystemPath() throws Exception {
+	void testHandle_edgeCaseInputPath_relativeFileSystemPath() {
 		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, 1L)
 				.addString(INPUT_FILE_PATH_PARAM, "relative/path/input.csv").toJobParameters();
 
@@ -385,7 +385,7 @@ class DynamicPartitionHandlerTest {
 	}
 
 	@Test
-	void testHandle_stepSplitterAndMasterStepExecutionInteraction_success() throws Exception {
+	void testHandle_stepSplitterAndMasterStepExecutionInteraction_success() {
 		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, 2L)
 				.addString(INPUT_FILE_PATH_PARAM, TEST_INPUT_PATH).toJobParameters();
 

@@ -15,6 +15,7 @@ import org.springframework.batch.item.ExecutionContext;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -78,7 +79,7 @@ class VdypProjectionProcessorTest {
 	}
 
 	@Test
-	void testProcess_ValidRecord_ReturnsProcessedRecord() throws Exception {
+	void testProcess_ValidRecord_ReturnsProcessedRecord() throws IOException, IllegalArgumentException {
 		processor.beforeStep(stepExecution);
 
 		BatchRecord batchRecord = createValidBatchRecord();
@@ -94,8 +95,7 @@ class VdypProjectionProcessorTest {
 	@ParameterizedTest
 	@MethodSource("provideInvalidRecords")
 	void testProcess_ValidationErrors_ThrowIllegalArgumentException(
-			String testName, String data, String polygonId, String layerId
-	) {
+			String testName, String data, String polygonId, String layerId) {
 		processor.beforeStep(stepExecution);
 
 		BatchRecord batchRecord = new BatchRecord();
@@ -117,12 +117,12 @@ class VdypProjectionProcessorTest {
 				Arguments.of("PolygonId too long", "test-data", "x".repeat(51), "layer1"),
 				Arguments.of("Empty data field", "   ", "polygon1", "layer1"),
 				Arguments.of("Empty polygonId", "test-data", "   ", "layer1"),
-				Arguments.of("Empty layerId", "test-data", "polygon1", "   ")
-		);
+				Arguments.of("Empty layerId", "test-data", "polygon1", "   "));
 	}
 
 	@Test
-	void testProcess_ValidRecordWithNullRetryPolicy_ProcessesSuccessfully() throws Exception {
+	void testProcess_ValidRecordWithNullRetryPolicy_ProcessesSuccessfully()
+			throws IOException, IllegalArgumentException {
 		processor = new VdypProjectionProcessor(null, metricsCollector);
 		ReflectionTestUtils.setField(processor, "maxDataLength", 50000);
 		ReflectionTestUtils.setField(processor, "minPolygonIdLength", 1);
@@ -138,7 +138,8 @@ class VdypProjectionProcessorTest {
 	}
 
 	@Test
-	void testProcess_ValidRecordWithNullMetricsCollector_ProcessesSuccessfully() throws Exception {
+	void testProcess_ValidRecordWithNullMetricsCollector_ProcessesSuccessfully()
+			throws IOException, IllegalArgumentException {
 		processor = new VdypProjectionProcessor(retryPolicy, null);
 		ReflectionTestUtils.setField(processor, "maxDataLength", 50000);
 		ReflectionTestUtils.setField(processor, "minPolygonIdLength", 1);
@@ -166,7 +167,8 @@ class VdypProjectionProcessorTest {
 	}
 
 	@Test
-	void testProcess_RetrySuccessScenario_RemovesFromRetriedRecords() throws Exception {
+	void testProcess_RetrySuccessScenario_RemovesFromRetriedRecords() throws IOException, IllegalArgumentException,
+			IllegalAccessException, NoSuchFieldException {
 		processor.beforeStep(stepExecution);
 
 		// Use reflection to access the static retriedRecords field and add an entry
@@ -194,7 +196,7 @@ class VdypProjectionProcessorTest {
 		// Create a processor that will be interrupted
 		VdypProjectionProcessor interruptedProcessor = new VdypProjectionProcessor(retryPolicy, metricsCollector) {
 			@Override
-			public BatchRecord process(BatchRecord batchRecord) throws Exception {
+			public BatchRecord process(BatchRecord batchRecord) throws IOException, IllegalArgumentException {
 				Thread.currentThread().interrupt();
 				return super.process(batchRecord);
 			}
@@ -209,7 +211,8 @@ class VdypProjectionProcessorTest {
 	}
 
 	@Test
-	void testProcess_EmptyProjectionResult_ThrowsIOException() throws Exception {
+	void testProcess_EmptyProjectionResult_ThrowsIOException()
+			throws NoSuchMethodException {
 		// Test validateProjectionResult method directly with empty string
 		processor.beforeStep(stepExecution);
 
@@ -226,7 +229,8 @@ class VdypProjectionProcessorTest {
 
 	@ParameterizedTest
 	@MethodSource("provideTransientErrors")
-	void testIsTransientError_VariousExceptions_ReturnsTrue(Exception exception) throws Exception {
+	void testIsTransientError_VariousExceptions_ReturnsTrue(Exception exception)
+			throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
 		processor.beforeStep(stepExecution);
 
 		// Test using reflection to access private method
@@ -254,12 +258,12 @@ class VdypProjectionProcessorTest {
 					public String toString() {
 						return "ConnectionException";
 					}
-				})
-		);
+				}));
 	}
 
 	@Test
-	void testIsTransientError_NonTransientError_ReturnsFalse() throws Exception {
+	void testIsTransientError_NonTransientError_ReturnsFalse()
+			throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
 		processor.beforeStep(stepExecution);
 
 		java.lang.reflect.Method isTransientErrorMethod = processor.getClass()
@@ -273,7 +277,7 @@ class VdypProjectionProcessorTest {
 	}
 
 	@Test
-	void testReclassifyAndThrowException_IOException_RethrowsIOException() throws Exception {
+	void testReclassifyAndThrowException_IOException_RethrowsIOException() throws NoSuchMethodException {
 		processor.beforeStep(stepExecution);
 
 		java.lang.reflect.Method reclassifyMethod = processor.getClass()
@@ -289,7 +293,8 @@ class VdypProjectionProcessorTest {
 	}
 
 	@Test
-	void testReclassifyAndThrowException_IllegalArgumentException_RethrowsIllegalArgumentException() throws Exception {
+	void testReclassifyAndThrowException_IllegalArgumentException_RethrowsIllegalArgumentException()
+			throws NoSuchMethodException {
 		processor.beforeStep(stepExecution);
 
 		java.lang.reflect.Method reclassifyMethod = processor.getClass()
@@ -305,7 +310,7 @@ class VdypProjectionProcessorTest {
 	}
 
 	@Test
-	void testReclassifyAndThrowException_TransientRuntimeException_ThrowsIOException() throws Exception {
+	void testReclassifyAndThrowException_TransientRuntimeException_ThrowsIOException() throws NoSuchMethodException {
 		processor.beforeStep(stepExecution);
 
 		java.lang.reflect.Method reclassifyMethod = processor.getClass()
@@ -321,7 +326,8 @@ class VdypProjectionProcessorTest {
 	}
 
 	@Test
-	void testReclassifyAndThrowException_UnknownException_ThrowsIllegalArgumentException() throws Exception {
+	void testReclassifyAndThrowException_UnknownException_ThrowsIllegalArgumentException()
+			throws NoSuchMethodException {
 		processor.beforeStep(stepExecution);
 
 		java.lang.reflect.Method reclassifyMethod = processor.getClass()
@@ -337,7 +343,8 @@ class VdypProjectionProcessorTest {
 	}
 
 	@Test
-	void testIsRetryableException_IOExceptions_ReturnsTrue() throws Exception {
+	void testIsRetryableException_IOExceptions_ReturnsTrue()
+			throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
 		processor.beforeStep(stepExecution);
 
 		java.lang.reflect.Method isRetryableMethod = processor.getClass()
@@ -351,7 +358,8 @@ class VdypProjectionProcessorTest {
 	}
 
 	@Test
-	void testIsRetryableException_TransientRuntimeException_ReturnsTrue() throws Exception {
+	void testIsRetryableException_TransientRuntimeException_ReturnsTrue()
+			throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
 		processor.beforeStep(stepExecution);
 
 		java.lang.reflect.Method isRetryableMethod = processor.getClass()
@@ -365,7 +373,8 @@ class VdypProjectionProcessorTest {
 	}
 
 	@Test
-	void testIsRetryableException_NonTransientRuntimeException_ReturnsFalse() throws Exception {
+	void testIsRetryableException_NonTransientRuntimeException_ReturnsFalse()
+			throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
 		processor.beforeStep(stepExecution);
 
 		java.lang.reflect.Method isRetryableMethod = processor.getClass()
@@ -379,7 +388,8 @@ class VdypProjectionProcessorTest {
 	}
 
 	@Test
-	void testHandleProjectionException_RetryableException_RecordsRetryAttempt() throws Exception {
+	void testHandleProjectionException_RetryableException_RecordsRetryAttempt()
+			throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
 		processor.beforeStep(stepExecution);
 
 		java.lang.reflect.Method handleExceptionMethod = processor.getClass()
@@ -396,7 +406,8 @@ class VdypProjectionProcessorTest {
 	}
 
 	@Test
-	void testHandleProjectionException_NonRetryableException_RecordsSkip() throws Exception {
+	void testHandleProjectionException_NonRetryableException_RecordsSkip()
+			throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
 		processor.beforeStep(stepExecution);
 
 		java.lang.reflect.Method handleExceptionMethod = processor.getClass()
@@ -414,7 +425,7 @@ class VdypProjectionProcessorTest {
 	@ParameterizedTest
 	@MethodSource("provideValidationResults")
 	void testValidateProjectionResult(String testName, String input, boolean shouldThrow, String expectedResult)
-			throws Exception {
+			throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
 		processor.beforeStep(stepExecution);
 
 		java.lang.reflect.Method validateMethod = processor.getClass()
@@ -435,8 +446,8 @@ class VdypProjectionProcessorTest {
 		return Stream.of(
 				Arguments.of("Null result throws IOException", null, true, null),
 				Arguments.of("Empty result throws IOException", "   ", true, null),
-				Arguments.of("Valid result returns result", "Valid projection result", false, "Valid projection result")
-		);
+				Arguments.of("Valid result returns result", "Valid projection result", false,
+						"Valid projection result"));
 	}
 
 	private void invokeReclassifyMethod(java.lang.reflect.Method method, Exception exception, Long recordId)
