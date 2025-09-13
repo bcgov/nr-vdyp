@@ -83,12 +83,12 @@ public class HcsvLayerRecordBean {
 	private String targetVdyp7LayerCode;
 
 	// { "LAYER_STOCKABILITY", csvFldType_SINGLE, 5, 1, "", TRUE },
-	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 6)
 	private String layerStockability;
 
 	// { "LAYER_RANK_CD", csvFldType_CHAR, 38, 0, "", TRUE },
-	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 7)
 	private String forestCoverRankCode;
 
@@ -103,22 +103,22 @@ public class HcsvLayerRecordBean {
 	private String estimatedSiteIndexSpeciesCode;
 
 	// { "EST_SITE_INDEX", csvFldType_SINGLE, 5, 1, "", TRUE },
-	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 10)
 	private String estimatedSiteIndex;
 
 	// { "CROWN_CLOSURE", csvFldType_SHORT, 3, 0, "", TRUE },
-	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 11)
 	private String crownClosure;
 
 	// { "BASAL_AREA", csvFldType_SINGLE, 10, 6, "", TRUE },
-	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 12)
 	private String basalArea;
 
 	// { "STEMS_PER_HA", csvFldType_SINGLE, 8, 0, "", TRUE },
-	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 13)
 	private String stemsPerHectare;
 
@@ -138,7 +138,7 @@ public class HcsvLayerRecordBean {
 	private String speciesCode2;
 
 	// { "SPECIES_PCT_2", csvFldType_SINGLE, 5, 2, "", TRUE },
-	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 17)
 	private String speciesPercent2;
 
@@ -148,7 +148,7 @@ public class HcsvLayerRecordBean {
 	private String speciesCode3;
 
 	// { "SPECIES_PCT_3", csvFldType_SINGLE, 5, 2, "", TRUE },
-	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 19)
 	private String speciesPercent3;
 
@@ -158,7 +158,7 @@ public class HcsvLayerRecordBean {
 	private String speciesCode4;
 
 	// { "SPECIES_PCT_4", csvFldType_SINGLE, 5, 2, "", TRUE },
-	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 21)
 	private String speciesPercent4;
 
@@ -168,7 +168,7 @@ public class HcsvLayerRecordBean {
 	private String speciesCode5;
 
 	// { "SPECIES_PCT_5", csvFldType_SINGLE, 5, 2, "", TRUE },
-	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 23)
 	private String speciesPercent5;
 
@@ -178,7 +178,7 @@ public class HcsvLayerRecordBean {
 	private String speciesCode6;
 
 	// { "SPECIES_PCT_6", csvFldType_SINGLE, 5, 2, "", TRUE },
-	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 25)
 	private String speciesPercent6;
 
@@ -193,52 +193,52 @@ public class HcsvLayerRecordBean {
 	private String estimatedHeightSpp1;
 
 	// { "EST_AGE_SPP2", csvFldType_SHORT, 4, 0, "", TRUE },
-	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 28)
 	private String estimatedAgeSpp2;
 
 	// { "EST_HEIGHT_SPP2", csvFldType_SINGLE, 5, 1, "", TRUE },
-	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 29)
 	private String estimatedHeightSpp2;
 
 	// { "ADJUSTMENT_IND", csvFldType_CHAR, 1, 0, "", TRUE },
-	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 30)
 	private String adjustmentIndicatorInd;
 
 	// { "ADJ_LOREY_HEIGHT", csvFldType_SINGLE, 9, 5, "", TRUE },
-	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 31)
 	private String loreyHeight75Adjustment;
 
 	// { "ADJ_BASAL_AREA_125", csvFldType_SINGLE, 10, 6, "", TRUE },
-	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 32)
 	private String basalArea125Adjustment;
 
 	// { "ADJ_VOL_PER_HA_75", csvFldType_SINGLE, 9, 5, "", TRUE },
-	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 33)
 	private String wholeStemVolumePerHectare75Adjustment;
 
 	// { "ADJ_VOL_PER_HA_125", csvFldType_SINGLE, 9, 5, "", TRUE },
-	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 34)
 	private String wholeStemVolumePerHectare125Adjustment;
 
 	// { "ADJ_CLOSE_UTIL_VOL_125", csvFldType_SINGLE, 9, 5, "", TRUE },
-	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 35)
 	private String closeUtilizationVolumePerHectare125Adjustment;
 
 	// { "ADJ_CLOSE_UTIL_DECAY_VOL_125", csvFldType_SINGLE, 9, 5, "", TRUE },
-	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 36)
 	private String closeUtilizationVolumeLessDecayPerHectare125Adjustment;
 
 	// { "ADJ_CLOSE_UTIL_WASTE_VOL_125", csvFldType_SINGLE, 9, 5, "", TRUE }
-	@PreAssignmentProcessor(processor = ConvertEmptyOrBlankStringsToNull.class)
+	@PreAssignmentProcessor(processor = NAEmptyOrBlankStringsToNull.class)
 	@CsvBindByPosition(position = 37)
 	private String closeUtilizationVolumeLessDecayAndWastagePerHectare125Adjustment;
 

@@ -27,6 +27,7 @@ import ca.bc.gov.nrs.vdyp.ecore.model.v1.UtilizationParameter;
 import ca.bc.gov.nrs.vdyp.ecore.projection.ValidatedParameters;
 import ca.bc.gov.nrs.vdyp.ecore.projection.input.HcsvLayerRecordBean;
 import ca.bc.gov.nrs.vdyp.ecore.projection.input.HcsvPolygonRecordBean;
+import ca.bc.gov.nrs.vdyp.ecore.projection.input.NAEmptyOrBlankStringsToNull;
 import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.CSVYieldTableRowValuesBean;
 import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.DCSVYieldTableRecordBean;
 import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.PLOTSYYieldTableRecordBean;
@@ -56,6 +57,7 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 				ValidatedParameters.class, //
 				HcsvPolygonRecordBean.class, //
 				HcsvLayerRecordBean.class, //
+				NAEmptyOrBlankStringsToNull.class, //
 				CSVYieldTableRowValuesBean.class, //
 				DCSVYieldTableRecordBean.class, //
 				PLOTSYYieldTableRecordBean.class, //

@@ -38,7 +38,6 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.model.Vdyp7Constants;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProjectionTypeCode;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ReturnCode;
 import ca.bc.gov.nrs.vdyp.ecore.utils.Utils;
-import ca.bc.gov.nrs.vdyp.exceptions.FailedToGrowYoungStandException;
 import ca.bc.gov.nrs.vdyp.exceptions.LayerMissingException;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
@@ -556,14 +555,14 @@ public class YieldTable implements Closeable {
 						// calling obtain stand yield is slight overkill here but it is the least code duplication
 						// there is a fiar bit of boiler plate to access a specifics stand information
 						for (Stand sp0 : primaryLayer.getSp0sAsSupplied()) {
-							LayerYields yield = obtainStandYield(
-									rowContext, polygonProjectionsByYear, primaryLayer, sp0,
-									rowContext.getCurrentTableAge()
-							);
-							if (yield.bYieldsPredicted() && yield.isDominantSp0()) {
-								dominantSpeciesCode = yield.sp0Name();
-								break; // exit at the first dominant species found
-							}
+								LayerYields yield = obtainStandYield(
+										rowContext, polygonProjectionsByYear, primaryLayer, sp0,
+										rowContext.getCurrentTableAge()
+								);
+								if (yield.bYieldsPredicted() && yield.isDominantSp0()) {
+									dominantSpeciesCode = yield.sp0Name();
+									break; // exit at the first dominant species found
+								}
 						}
 					}
 					if (dominantSpeciesCode != null) {
@@ -1396,10 +1395,10 @@ public class YieldTable implements Closeable {
 		var initialProcessingResult = rowContext.getPolygonProjectionState()
 				.getProcessingResults(ProjectionStageCode.Initial, projectionType);
 
-		if (layerType != null
-				&& initialProcessingResult.map(r -> r instanceof FailedToGrowYoungStandException).orElse(false)) {
-			throw new StandYieldCalculationException(new FailedToGrowYoungStandException());
-		}
+		// if (layerType != null
+		// && initialProcessingResult.map(r -> r instanceof FailedToGrowYoungStandException).orElse(false)) {
+		// throw new StandYieldCalculationException(new FailedToGrowYoungStandException());
+		// }
 
 		// vdyp7core_requestyeardata
 		var projectedPolygon = polygonProjectionsByYear.get(calendarYear);
@@ -1451,12 +1450,17 @@ public class YieldTable implements Closeable {
 	private LayerYields getYields(
 			int calendarYear, UtilizationClassSet ucReportingLevel, VdypSpecies projectedSp0,
 			VdypUtilizationHolder entity
-	) {
+	) throws StandYieldCalculationException {
 
 		double totalAge = Vdyp7Constants.EMPTY_DECIMAL;
 		double dominantHeight = Vdyp7Constants.EMPTY_DECIMAL;
 		double siteIndex = Vdyp7Constants.EMPTY_DECIMAL;
 		int siteCurve = Vdyp7Constants.EMPTY_INT;
+		if (projectedSp0 == null || entity == null) {
+			throw new StandYieldCalculationException(
+					new IllegalArgumentException("Cannot calculate yields with a null primary Species")
+			);
+		}
 		boolean isDominantSpecies = projectedSp0.getSite().isPresent();
 
 		if (isDominantSpecies) {
