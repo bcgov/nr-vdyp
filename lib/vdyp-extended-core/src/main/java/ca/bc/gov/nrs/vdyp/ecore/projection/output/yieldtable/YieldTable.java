@@ -556,13 +556,16 @@ public class YieldTable implements Closeable {
 						// calling obtain stand yield is slight overkill here but it is the least code duplication
 						// there is a fiar bit of boiler plate to access a specifics stand information
 						for (Stand sp0 : primaryLayer.getSp0sAsSupplied()) {
-							LayerYields yield = obtainStandYield(
-									rowContext, polygonProjectionsByYear, primaryLayer, sp0,
-									rowContext.getCurrentTableAge()
-							);
-							if (yield.bYieldsPredicted() && yield.isDominantSp0()) {
-								dominantSpeciesCode = yield.sp0Name();
-								break; // exit at the first dominant species found
+							if (sp0 != null) {
+								LayerYields yield = obtainStandYield(
+										rowContext, polygonProjectionsByYear, primaryLayer, sp0,
+										rowContext.getCurrentTableAge()
+								);
+								if (yield.bYieldsPredicted() && yield.isDominantSp0()) {
+									dominantSpeciesCode = yield.sp0Name();
+									break; // exit at the first dominant species found
+								}
+
 							}
 						}
 					}
@@ -1448,10 +1451,15 @@ public class YieldTable implements Closeable {
 		return layerYields;
 	}
 
-	private LayerYields getYields(
+	LayerYields getYields(
 			int calendarYear, UtilizationClassSet ucReportingLevel, VdypSpecies projectedSp0,
 			VdypUtilizationHolder entity
-	) {
+	) throws StandYieldCalculationException {
+		if (projectedSp0 == null || entity == null) {
+			throw new StandYieldCalculationException(
+					new IllegalArgumentException("Cannot calculate yields with a null primary Species")
+			);
+		}
 
 		double totalAge = Vdyp7Constants.EMPTY_DECIMAL;
 		double dominantHeight = Vdyp7Constants.EMPTY_DECIMAL;

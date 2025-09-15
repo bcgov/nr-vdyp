@@ -29,7 +29,7 @@ class HcsvPolygonStreamTest {
 	Parameters p;
 	ProjectionContext context;
 	final String hcsvPolygonFileContents = POLYGON_CSV_HEADER_LINE + "\n"
-			+ "13919428,093C090,94833422,DQU,UNK,UNK,V,UNK,0.6,10,3,HE,35,8,,MS,14,50.0,1.000,,V,T,U,TC,SP,2013,2013,60.0,,,,,,,,,,TC,100,,,,";
+			+ "13919428,093C090,94833422,DQU,UNK,UNK,V,UNK,0.6,10,3,HE,35,8,,MS,14,50.0,1.000,,V,T,U,TC,SP,2013,2013,60.0,NA,,,,,,,,,TC,100,,,,";
 	String layerFileHeader = LAYER_CSV_HEADER_LINE + "\n";
 	String defaultLayerPrefix = "13919428,14321067,093C090,94833422,";
 
