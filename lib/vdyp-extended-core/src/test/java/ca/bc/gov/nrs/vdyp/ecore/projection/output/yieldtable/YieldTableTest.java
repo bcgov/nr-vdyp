@@ -6,7 +6,6 @@ import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.greaterThan;
-import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -31,6 +30,7 @@ import ca.bc.gov.nrs.api.helpers.ResultYieldTable;
 import ca.bc.gov.nrs.api.helpers.TestHelper;
 import ca.bc.gov.nrs.api.helpers.TestProjectionResultsReader;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.AbstractProjectionRequestException;
+import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.StandYieldCalculationException;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.UtilizationClassSet;
@@ -43,6 +43,8 @@ import ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon;
 import ca.bc.gov.nrs.vdyp.ecore.projection.model.enumerations.ProjectionTypeCode;
 import ca.bc.gov.nrs.vdyp.ecore.utils.FileHelper;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParser;
+import ca.bc.gov.nrs.vdyp.model.LayerType;
+import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.test.TestUtils;
 import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
 
@@ -946,4 +948,33 @@ class YieldTableTest {
 		assertThat(content, containsString("Additional Stand Attributes:"));
 	}
 
+	@Test
+	void testGetYieldsNullsp0() throws AbstractProjectionRequestException {
+		var parameters = testHelper.addSelectedOptions(new Parameters().ageStart(0).ageEnd(100));
+
+		var context = new ProjectionContext(ProjectionRequestKind.HCSV, TEST_PROJECTION_ID, parameters, false);
+
+		var yieldTable = YieldTable.of(context);
+
+		assertThrows(
+				StandYieldCalculationException.class,
+				() -> yieldTable.getYields(2020, UtilizationClassSet._7_5, null, null)
+		);
+	}
+
+	@Test
+	void testGetYieldsNullEntity() throws AbstractProjectionRequestException {
+		var parameters = testHelper.addSelectedOptions(new Parameters().ageStart(0).ageEnd(100));
+
+		var context = new ProjectionContext(ProjectionRequestKind.HCSV, TEST_PROJECTION_ID, parameters, false);
+
+		var yieldTable = YieldTable.of(context);
+		VdypSpecies species = new VdypSpecies.Builder().genus("PL", 1).polygonIdentifier("12345689", 2020)
+				.layerType(LayerType.PRIMARY).build();
+
+		assertThrows(
+				StandYieldCalculationException.class,
+				() -> yieldTable.getYields(2020, UtilizationClassSet._7_5, species, null)
+		);
+	}
 }

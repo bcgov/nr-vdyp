@@ -1451,20 +1451,20 @@ public class YieldTable implements Closeable {
 		return layerYields;
 	}
 
-	private LayerYields getYields(
+	LayerYields getYields(
 			int calendarYear, UtilizationClassSet ucReportingLevel, VdypSpecies projectedSp0,
 			VdypUtilizationHolder entity
 	) throws StandYieldCalculationException {
-
-		double totalAge = Vdyp7Constants.EMPTY_DECIMAL;
-		double dominantHeight = Vdyp7Constants.EMPTY_DECIMAL;
-		double siteIndex = Vdyp7Constants.EMPTY_DECIMAL;
-		int siteCurve = Vdyp7Constants.EMPTY_INT;
 		if (projectedSp0 == null || entity == null) {
 			throw new StandYieldCalculationException(
 					new IllegalArgumentException("Cannot calculate yields with a null primary Species")
 			);
 		}
+
+		double totalAge = Vdyp7Constants.EMPTY_DECIMAL;
+		double dominantHeight = Vdyp7Constants.EMPTY_DECIMAL;
+		double siteIndex = Vdyp7Constants.EMPTY_DECIMAL;
+		int siteCurve = Vdyp7Constants.EMPTY_INT;
 		boolean isDominantSpecies = projectedSp0.getSite().isPresent();
 
 		if (isDominantSpecies) {
