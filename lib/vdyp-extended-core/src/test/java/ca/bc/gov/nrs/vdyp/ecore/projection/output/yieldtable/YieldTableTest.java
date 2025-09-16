@@ -7,6 +7,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -853,7 +854,8 @@ class YieldTableTest {
 								Parameters.ExecutionOption.REPORT_INCLUDE_ND_WAST_BRKG_VOLUME, //
 								Parameters.ExecutionOption.REPORT_INCLUDE_CULMINATION_VALUES, //
 								Parameters.ExecutionOption.REPORT_INCLUDE_VOLUME_MAI,
-								Parameters.ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE
+								Parameters.ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE,
+								Parameters.ExecutionOption.DO_INCLUDE_SPECIES_PROJECTION
 						),
 						"My Testing VDYP Yield Table Report that is longer than 80 characters so that it will be wrapped in the output"
 				),
@@ -946,6 +948,21 @@ class YieldTableTest {
 		assertThat(content, containsString("Species Parameters..."));
 		assertThat(content, containsString("Site Index Curves Used..."));
 		assertThat(content, containsString("Additional Stand Attributes:"));
+		if (options.contains(Parameters.ExecutionOption.DO_INCLUDE_SPECIES_PROJECTION)) {
+			assertThat(
+					content,
+					containsString("WARN: By Species values are only visible in the CSV version of the Yield Table")
+			);
+		} else {
+			assertThat(
+					content,
+					not(
+							containsString(
+									"WARN: By Species values are only visible in the CSV version of the Yield Table"
+							)
+					)
+			);
+		}
 	}
 
 	@Test

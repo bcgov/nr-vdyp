@@ -537,6 +537,10 @@ class FullReportYieldTableWriter extends YieldTableWriter<TextYieldTableRowValue
 	private void writeNotes() throws YieldTableGenerationException {
 		// WHERE ARE THE NOTES STORED? DO WE STORE THEM?
 		doWrite("\n");
+
+		if (context.getParams().containsOption(ExecutionOption.DO_INCLUDE_SPECIES_PROJECTION)) {
+			doWrite("%s\n", "WARN: By Species values are only visible in the CSV version of the Yield Table");
+		}
 		List<PolygonMessage> messages = lastPolygonForTrailer.getMessages();
 		for (PolygonMessage message : messages) {
 			doWrite("%s\n", message.getSimpleMessageText());
