@@ -95,7 +95,24 @@ export const CFS_BIOMASS_SPECIES_GROUP_UTILIZATION_MAP: {
 }
 
 // All 16 Species Groups
-export const SPECIES_GROUPS = ['AC', 'AT', 'B', 'C', 'D', 'E', 'F', 'H', 'L', 'MB', 'PA', 'PL', 'PW', 'PY', 'S', 'Y'] as const
+export const SPECIES_GROUPS = [
+  'AC',
+  'AT',
+  'B',
+  'C',
+  'D',
+  'E',
+  'F',
+  'H',
+  'L',
+  'MB',
+  'PA',
+  'PL',
+  'PW',
+  'PY',
+  'S',
+  'Y',
+] as const
 
 export const CONIFEROUS_SPECIES = new Set([
   'B',
@@ -139,6 +156,9 @@ export const INVENTORY_CODES = {
   FIP: 'F',
   VRI: 'V',
 } as const
+
+export const SECONDARY_SPECIES_AGE = 50 as const
+export const SECONDARY_SPECIES_HEIGHT = '15.00' as const
 
 export const BCLCS_LEVEL1_THRESHOLD = 5 as const
 export const BCLCS_LEVEL1_VEG = 'V' as const // Vegetated
