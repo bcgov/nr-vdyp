@@ -330,8 +330,8 @@ const createLayerData = (
     ...speciesRow, // Species codes and percentages (6 pairs)
     modelParameterStore.spzAge, // EST_AGE_SPP1
     modelParameterStore.spzHeight, // EST_HEIGHT_SPP1
-    '', // EST_AGE_SPP2
-    '', // EST_HEIGHT_SPP2
+    BIZCONSTANTS.SECONDARY_SPECIES_AGE, // EST_AGE_SPP2
+    BIZCONSTANTS.SECONDARY_SPECIES_HEIGHT, // EST_HEIGHT_SPP2
     '', // ADJ_IND
     '', // LOREY_HEIGHT_75
     '', // BASAL_AREA_125
