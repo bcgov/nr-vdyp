@@ -1,5 +1,7 @@
 package ca.bc.gov.nrs.vdyp.forward;
 
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.asFloat;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.controlMapHasEntry;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -9,10 +11,13 @@ import java.util.List;
 import java.util.Map;
 
 import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
+import ca.bc.gov.nrs.vdyp.common.Utils;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
 import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
@@ -22,8 +27,10 @@ import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.UtilizationVector;
 import ca.bc.gov.nrs.vdyp.model.VdypEntity;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
+import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.VdypUtilizationHolder;
+import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
 
 class BankTest {
 
@@ -118,6 +125,170 @@ class BankTest {
 		Bank ppsCopy = bank.copy();
 
 		verifyBankMatchesLayer(ppsCopy, pLayer);
+	}
+
+	@Nested
+	class ComputeYearsAtBreastHeight {
+
+		@Test
+		void testExistsInModel() throws ProcessingException {
+
+			ForwardDataStreamReader reader = new ForwardDataStreamReader(controlMap);
+
+			var polygon = VdypPolygon.build(pb -> {
+				pb.polygonIdentifier("Blah", 2025);
+				pb.percentAvailable(90f);
+				pb.biogeoclimaticZone(Utils.getBec("CDF", controlMap));
+				pb.forestInventoryZone("");
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.PRIMARY);
+
+					lb.addSpecies(sb -> {
+						sb.genus("H", controlMap);
+
+						sb.addSite(ib -> {
+							// These intentionally do not add together
+							ib.yearsAtBreastHeight(242f);
+							ib.yearsToBreastHeight(6f);
+							ib.ageTotal(250f);
+							ib.height(20f);
+						});
+					});
+				});
+			});
+
+			VdypLayer pLayer = polygon.getLayers().get(LayerType.PRIMARY);
+			assertThat(pLayer, notNullValue());
+
+			Bank bank = new Bank(pLayer, polygon.getBiogeoclimaticZone(), s -> true);
+
+			assertThat(bank.yearsAtBreastHeight[1], closeTo(242f)); // uses the provided value rather than computing
+																	// from YTBH and total
+		}
+
+		@Test
+		void testComputed() throws ProcessingException {
+
+			ForwardDataStreamReader reader = new ForwardDataStreamReader(controlMap);
+
+			var polygon = VdypPolygon.build(pb -> {
+				pb.polygonIdentifier("Blah", 2025);
+				pb.percentAvailable(90f);
+				pb.biogeoclimaticZone(Utils.getBec("CDF", controlMap));
+				pb.forestInventoryZone("");
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.PRIMARY);
+
+					lb.addSpecies(sb -> {
+						sb.genus("H", controlMap);
+
+						sb.addSite(ib -> {
+							ib.yearsToBreastHeight(6f);
+							ib.ageTotal(250f);
+							ib.height(20f);
+						});
+					});
+				});
+			});
+
+			VdypLayer pLayer = polygon.getLayers().get(LayerType.PRIMARY);
+			assertThat(pLayer, notNullValue());
+
+			Bank bank = new Bank(pLayer, polygon.getBiogeoclimaticZone(), s -> true);
+
+			assertThat(bank.yearsAtBreastHeight[1], closeTo(244f)); // Computes from YTBH and total
+		}
+
+		@Test
+		void testMissingTotal() throws ProcessingException {
+
+			ForwardDataStreamReader reader = new ForwardDataStreamReader(controlMap);
+
+			var polygon = VdypPolygon.build(pb -> {
+				pb.polygonIdentifier("Blah", 2025);
+				pb.percentAvailable(90f);
+				pb.biogeoclimaticZone(Utils.getBec("CDF", controlMap));
+				pb.forestInventoryZone("");
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.PRIMARY);
+
+					lb.addSpecies(sb -> {
+						sb.genus("H", controlMap);
+
+						sb.addSite(ib -> {
+							ib.yearsToBreastHeight(6f);
+							ib.height(20f);
+						});
+					});
+				});
+			});
+
+			VdypLayer pLayer = polygon.getLayers().get(LayerType.PRIMARY);
+			assertThat(pLayer, notNullValue());
+
+			Bank bank = new Bank(pLayer, polygon.getBiogeoclimaticZone(), s -> true);
+
+			assertThat(bank.yearsAtBreastHeight[1], asFloat(notANumber()));
+		}
+
+		@Test
+		void testMissingYTBH() throws ProcessingException {
+
+			ForwardDataStreamReader reader = new ForwardDataStreamReader(controlMap);
+
+			var polygon = VdypPolygon.build(pb -> {
+				pb.polygonIdentifier("Blah", 2025);
+				pb.percentAvailable(90f);
+				pb.biogeoclimaticZone(Utils.getBec("CDF", controlMap));
+				pb.forestInventoryZone("");
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.PRIMARY);
+
+					lb.addSpecies(sb -> {
+						sb.genus("H", controlMap);
+
+						sb.addSite(ib -> {
+							ib.ageTotal(250f);
+							ib.height(20f);
+						});
+					});
+				});
+			});
+
+			VdypLayer pLayer = polygon.getLayers().get(LayerType.PRIMARY);
+			assertThat(pLayer, notNullValue());
+
+			Bank bank = new Bank(pLayer, polygon.getBiogeoclimaticZone(), s -> true);
+
+			assertThat(bank.yearsAtBreastHeight[1], asFloat(notANumber()));
+		}
+
+		@Test
+		void testMissingSite() throws ProcessingException {
+
+			ForwardDataStreamReader reader = new ForwardDataStreamReader(controlMap);
+
+			var polygon = VdypPolygon.build(pb -> {
+				pb.polygonIdentifier("Blah", 2025);
+				pb.percentAvailable(90f);
+				pb.biogeoclimaticZone(Utils.getBec("CDF", controlMap));
+				pb.forestInventoryZone("");
+				pb.addLayer(lb -> {
+					lb.layerType(LayerType.PRIMARY);
+
+					lb.addSpecies(sb -> {
+						sb.genus("H", controlMap);
+					});
+				});
+			});
+
+			VdypLayer pLayer = polygon.getLayers().get(LayerType.PRIMARY);
+			assertThat(pLayer, notNullValue());
+
+			Bank bank = new Bank(pLayer, polygon.getBiogeoclimaticZone(), s -> true);
+
+			assertThat(bank.yearsAtBreastHeight[1], asFloat(notANumber()));
+		}
 	}
 
 	@Test

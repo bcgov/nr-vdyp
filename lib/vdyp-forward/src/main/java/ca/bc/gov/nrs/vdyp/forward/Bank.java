@@ -197,7 +197,7 @@ class Bank {
 			ageTotals[index] = s.getAgeTotal().orElse(VdypEntity.MISSING_FLOAT_VALUE);
 			yearsToBreastHeight[index] = s.getYearsToBreastHeight().orElse(VdypEntity.MISSING_FLOAT_VALUE);
 			yearsAtBreastHeight[index] = s.getYearsAtBreastHeight().orElse(VdypEntity.MISSING_FLOAT_VALUE);
-			if (yearsAtBreastHeight[index] == VdypEntity.MISSING_FLOAT_VALUE) {
+			if (Float.isNaN(yearsAtBreastHeight[index])) {
 				if (ageTotals[index] != VdypEntity.MISSING_FLOAT_VALUE
 						&& yearsToBreastHeight[index] != VdypEntity.MISSING_FLOAT_VALUE) {
 					yearsAtBreastHeight[index] = ageTotals[index] - yearsToBreastHeight[index];
