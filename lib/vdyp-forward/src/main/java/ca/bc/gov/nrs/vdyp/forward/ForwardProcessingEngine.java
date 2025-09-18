@@ -281,7 +281,8 @@ public class ForwardProcessingEngine {
 		if (lastStepInclusive.gt(ExecutionStep.SET_COMPATIBILITY_VARIABLES)) {
 			int startingYear = fps.getCurrentStartingYear();
 
-			int iyrcur = startingYear; // represents the value of the current year as it would be in VDYP 7 to aid in parallel debugging.
+			int iyrcur = startingYear; // represents the value of the current year as it would be in VDYP 7 to aid in
+										// parallel debugging.
 
 			boolean doRecalculateGroupsPriorToOutput = fps.fcm.getDebugSettings()
 					.getValue(ForwardDebugSettings.Vars.SPECIES_DYNAMICS_1) != 1 && plps.getNSpecies() > 1;
@@ -292,7 +293,8 @@ public class ForwardProcessingEngine {
 			// Write out the staring year with no growth
 			writeCurrentPolygon(startingYear, startingYear, stoppingYearInclusive);
 
-			int currentYear = startingYear + 1; // Note that this is NOT the same as iyrcur in vdyp7  That will often be 1 less than this
+			int currentYear = startingYear + 1; // Note that this is NOT the same as iyrcur in vdyp7 That will often be
+												// 1 less than this
 
 			// Loop for all but the first year.
 			while (currentYear <= stoppingYearInclusive) {
@@ -351,7 +353,9 @@ public class ForwardProcessingEngine {
 
 		assert lastStepInclusive.ge(ExecutionStep.GROW_1_LAYER_DHDELTA);
 
-		int iyrcur = currentYear - 1; // represents the value of the current year as it would be in VDYP 7 to aid in parallel debugging.  For most of this method it will be 1 less than the actual current year.
+		int iyrcur = currentYear - 1; // represents the value of the current year as it would be in VDYP 7 to aid in
+										// parallel debugging. For most of this method it will be 1 less than the actual
+										// current year.
 
 		Bank bank = lps.getBank();
 
@@ -613,7 +617,7 @@ public class ForwardProcessingEngine {
 		// (13) Update the running values.
 
 		lps.updatePrimarySpeciesDetailsAfterGrowth(dhEnd);
-		iyrcur += 1; // In VDYP 7 the current year doesn't get set until here  
+		iyrcur += 1; // In VDYP 7 the current year doesn't get set until here
 
 		for (int i : lps.getIndices()) {
 			if (i == lps.getPrimarySpeciesIndex()) {

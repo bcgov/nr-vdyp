@@ -89,8 +89,8 @@ class Hcsv_Vdyp7_Comparison_Test {
 		parameters.ageStart(0).ageEnd(250).ageIncrement(25);
 
 		// Included to generate JSON text of parameters as needed
-		//		ObjectMapper mapper = new ObjectMapper();
-		//		String serializedParametersText = mapper.writeValueAsString(parameters);
+		// ObjectMapper mapper = new ObjectMapper();
+		// String serializedParametersText = mapper.writeValueAsString(parameters);
 
 		InputStream zipInputStream = given().basePath(TestHelper.ROOT_PATH).when() //
 				.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
@@ -177,38 +177,27 @@ class Hcsv_Vdyp7_Comparison_Test {
 		try (
 				InputStream paramStream = MainTest.class.getResourceAsStream("v-record-test-08-noback/input/parms.txt");
 				InputStreamReader reader = new InputStreamReader(paramStream);
-				BufferedReader bufReader = new BufferedReader(reader);
-				var lines = bufReader.lines();
+				BufferedReader bufReader = new BufferedReader(reader); var lines = bufReader.lines();
 		) {
 			ParamsReader.parseParameters(paramMap, lines);
 			ParamsReader.parseParameters(parameters, paramMap);
 		}
 
 		// Included to generate JSON text of parameters as needed
-		//		ObjectMapper mapper = new ObjectMapper();
-		//		String serializedParametersText = mapper.writeValueAsString(parameters);
+		// ObjectMapper mapper = new ObjectMapper();
+		// String serializedParametersText = mapper.writeValueAsString(parameters);
 
 		try (
-				InputStream polyStream = MainTest.class.getResourceAsStream(
-						"v-record-test-08-noback/input/VDYP7_INPUT_POLY.csv"
-				);
-				InputStream layerStream = MainTest.class.getResourceAsStream(
-						"v-record-test-08-noback/input/VDYP7_INPUT_LAYER.csv"
-				);
+				InputStream polyStream = MainTest.class
+						.getResourceAsStream("v-record-test-08-noback/input/VDYP7_INPUT_POLY.csv");
+				InputStream layerStream = MainTest.class
+						.getResourceAsStream("v-record-test-08-noback/input/VDYP7_INPUT_LAYER.csv");
 		) {
 
 			InputStream zipInputStream = given().basePath(TestHelper.ROOT_PATH).when() //
 					.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
-					.multiPart(
-							ParameterNames.HCSV_POLYGON_INPUT_DATA,
-							"VDYP7_INPUT_POLY.csv",
-							polyStream
-					) //
-					.multiPart(
-							ParameterNames.HCSV_LAYERS_INPUT_DATA,
-							"VDYP7_INPUT_LAYER.csv",
-							layerStream
-					) //
+					.multiPart(ParameterNames.HCSV_POLYGON_INPUT_DATA, "VDYP7_INPUT_POLY.csv", polyStream) //
+					.multiPart(ParameterNames.HCSV_LAYERS_INPUT_DATA, "VDYP7_INPUT_LAYER.csv", layerStream) //
 					.post("/projection/hcsv?trialRun=false") //
 					.then().statusCode(201) //
 					.and().contentType("application/octet-stream") //

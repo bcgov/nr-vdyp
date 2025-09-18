@@ -841,11 +841,12 @@ public class VdypMatchers {
 
 			@Override
 			protected boolean matchesSafely(Float[] item, Description mismatchDescription) {
-				if(item.length != values.length) {
-					mismatchDescription.appendText("was ").appendValue(item.length).appendText(" long instead of ").appendValue(values.length);
+				if (item.length != values.length) {
+					mismatchDescription.appendText("was ").appendValue(item.length).appendText(" long instead of ")
+							.appendValue(values.length);
 					return false;
 				}
-				for(int i = 0; i<item.length; i++) {
+				for (int i = 0; i < item.length; i++) {
 					final float expected = values[i];
 					final float actual = item[i];
 					final Matcher<Float> subMatcher;
@@ -856,7 +857,7 @@ public class VdypMatchers {
 					} else {
 						subMatcher = equalTo(expected);
 					}
-					if(!subMatcher.matches(actual)) {
+					if (!subMatcher.matches(actual)) {
 						mismatchDescription.appendText("item ").appendValue(i).appendText(" ");
 						subMatcher.describeMismatch(actual, mismatchDescription);
 						return false;
