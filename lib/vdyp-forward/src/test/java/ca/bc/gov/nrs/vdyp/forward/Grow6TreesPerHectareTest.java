@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.forward;
 
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
@@ -21,6 +22,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
 import ca.bc.gov.nrs.vdyp.model.UtilizationClass;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
+import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
 
 class Grow6TreesPerHectareTest {
 
@@ -62,6 +64,6 @@ class Grow6TreesPerHectareTest {
 		var calculatedLayerTph = lps.getBank().treesPerHectare[0][UtilizationClass.ALL.ordinal()];
 
 		// VDYP7 value is 594.113811
-		assertThat(calculatedLayerTph, is(594.1138f));
+		assertThat(calculatedLayerTph, closeTo(594.1138f));
 	}
 }

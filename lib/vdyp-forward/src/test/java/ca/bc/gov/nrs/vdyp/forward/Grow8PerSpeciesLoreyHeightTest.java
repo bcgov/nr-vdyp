@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.forward;
 
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
@@ -64,7 +65,7 @@ class Grow8PerSpeciesLoreyHeightTest {
 		var calculatedLayerDq = lps.getBank().quadMeanDiameters[0][UtilizationClass.ALL.ordinal()];
 
 		// VDYP7 value is 31.3084507
-		assertThat(calculatedLayerDq, is(31.308355f));
+		assertThat(calculatedLayerDq, closeTo(31.308355f));
 	}
 
 	@Test
@@ -83,6 +84,6 @@ class Grow8PerSpeciesLoreyHeightTest {
 		var calculatedLayerDq = lps.getBank().quadMeanDiameters[0][UtilizationClass.ALL.ordinal()];
 
 		// VDYP7 value is 31.3084507
-		assertThat(calculatedLayerDq, is(31.308355f));
+		assertThat(calculatedLayerDq, closeTo(31.308355f));
 	}
 }
