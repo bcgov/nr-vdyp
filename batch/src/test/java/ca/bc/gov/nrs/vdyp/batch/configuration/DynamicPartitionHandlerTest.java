@@ -201,11 +201,11 @@ class DynamicPartitionHandlerTest {
 		JobParameters jobParameters = builder.toJobParameters();
 
 		setupBasicMocks(jobParameters);
-		
+
 		if (shouldThrow) {
 			when(batchProperties.getInput()).thenReturn(input);
 			when(input.getFilePath()).thenReturn(propertiesPath);
-			
+
 			IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
 				dynamicPartitionHandler.handle(stepSplitter, masterStepExecution);
 			}, testDescription);
@@ -214,7 +214,7 @@ class DynamicPartitionHandlerTest {
 			when(batchProperties.getPartitioning()).thenReturn(partitioning);
 			when(batchProperties.getInput()).thenReturn(input);
 			when(input.getFilePath()).thenReturn(propertiesPath);
-			
+
 			assertDoesNotThrow(() -> {
 				dynamicPartitionHandler.handle(stepSplitter, masterStepExecution);
 			}, testDescription);

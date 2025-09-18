@@ -20,6 +20,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
+import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
 
 class Grow9PercentagesOfForestedLand {
 
@@ -61,7 +62,7 @@ class Grow9PercentagesOfForestedLand {
 		// VDYP7 value is 0.892216682f, 11.5443392f, 64.3765259f, 13.3774729f, 9.80944252f
 		assertThat(
 				ForwardTestUtils.toFloatArray(lps.getBank().percentagesOfForestedLand),
-				is(arrayContaining(0.0f, 0.8967212f, 11.230113f, 65.214325f, 12.930618f, 9.728219f))
+				is(VdypMatchers.arrayCloseTo(0.0f, 0.8967212f, 11.230113f, 65.214325f, 12.930618f, 9.728219f))
 		);
 	}
 }
