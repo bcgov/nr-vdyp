@@ -1,6 +1,9 @@
 package ca.bc.gov.nrs.vdyp.backend.endpoints.v1;
 
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.emptyString;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -112,7 +115,7 @@ class Hcsv_Vdyp7_Comparison_Test {
 		ZipEntry entry1 = zipFile.getNextEntry();
 		assertEquals("YieldTable.csv", entry1.getName());
 		String vdyp8YieldTableContent = new String(testHelper.readZipEntry(zipFile, entry1));
-		assertTrue(vdyp8YieldTableContent.length() > 0);
+		assertThat(vdyp8YieldTableContent, not(emptyString()));
 
 		var vdyp8YieldTable = new ResultYieldTable(vdyp8YieldTableContent);
 
@@ -208,7 +211,7 @@ class Hcsv_Vdyp7_Comparison_Test {
 			ZipEntry entry1 = zipFile.getNextEntry();
 			assertEquals("YieldTable.csv", entry1.getName());
 			String vdyp8YieldTableContent = new String(testHelper.readZipEntry(zipFile, entry1));
-			assertTrue(vdyp8YieldTableContent.length() > 0);
+			assertThat(vdyp8YieldTableContent, not(emptyString()));
 
 			var vdyp8YieldTable = new ResultYieldTable(vdyp8YieldTableContent);
 			vdyp8YieldTable.get("2423088").get("1").get("2113").get("PRJ_LOREY_HT"); // 31.7994 but should be 32.4588

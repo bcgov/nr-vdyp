@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.hamcrest.Matcher;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -30,7 +29,6 @@ import ca.bc.gov.nrs.vdyp.model.VdypLayer;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
 import ca.bc.gov.nrs.vdyp.model.VdypSpecies;
 import ca.bc.gov.nrs.vdyp.model.VdypUtilizationHolder;
-import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
 
 class BankTest {
 
@@ -133,8 +131,6 @@ class BankTest {
 		@Test
 		void testExistsInModel() throws ProcessingException {
 
-			ForwardDataStreamReader reader = new ForwardDataStreamReader(controlMap);
-
 			var polygon = VdypPolygon.build(pb -> {
 				pb.polygonIdentifier("Blah", 2025);
 				pb.percentAvailable(90f);
@@ -169,8 +165,6 @@ class BankTest {
 		@Test
 		void testComputed() throws ProcessingException {
 
-			ForwardDataStreamReader reader = new ForwardDataStreamReader(controlMap);
-
 			var polygon = VdypPolygon.build(pb -> {
 				pb.polygonIdentifier("Blah", 2025);
 				pb.percentAvailable(90f);
@@ -202,8 +196,6 @@ class BankTest {
 		@Test
 		void testMissingTotal() throws ProcessingException {
 
-			ForwardDataStreamReader reader = new ForwardDataStreamReader(controlMap);
-
 			var polygon = VdypPolygon.build(pb -> {
 				pb.polygonIdentifier("Blah", 2025);
 				pb.percentAvailable(90f);
@@ -234,8 +226,6 @@ class BankTest {
 		@Test
 		void testMissingYTBH() throws ProcessingException {
 
-			ForwardDataStreamReader reader = new ForwardDataStreamReader(controlMap);
-
 			var polygon = VdypPolygon.build(pb -> {
 				pb.polygonIdentifier("Blah", 2025);
 				pb.percentAvailable(90f);
@@ -265,8 +255,6 @@ class BankTest {
 
 		@Test
 		void testMissingSite() throws ProcessingException {
-
-			ForwardDataStreamReader reader = new ForwardDataStreamReader(controlMap);
 
 			var polygon = VdypPolygon.build(pb -> {
 				pb.polygonIdentifier("Blah", 2025);
