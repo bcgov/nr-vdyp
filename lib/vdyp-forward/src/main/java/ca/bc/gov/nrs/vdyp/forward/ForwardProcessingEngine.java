@@ -281,7 +281,7 @@ public class ForwardProcessingEngine {
 		if (lastStepInclusive.gt(ExecutionStep.SET_COMPATIBILITY_VARIABLES)) {
 			int startingYear = fps.getCurrentStartingYear();
 
-			writeCurrentPolygon(startingYear, startingYear, stoppingYearInclusive);
+			int iyrcur = startingYear; // represents the value of the current year as it would be in VDYP 7 to aid in parallel debugging.
 
 			boolean doRecalculateGroupsPriorToOutput = fps.fcm.getDebugSettings()
 					.getValue(ForwardDebugSettings.Vars.SPECIES_DYNAMICS_1) != 1 && plps.getNSpecies() > 1;
@@ -289,7 +289,12 @@ public class ForwardProcessingEngine {
 			boolean doRecalculateGroups = fps.fcm.getForwardControlVariables()
 					.getControlVariable(ControlVariable.UPDATE_DURING_GROWTH_6) >= 1;
 
-			int currentYear = startingYear + 1;
+			// Write out the staring year with no growth
+			writeCurrentPolygon(startingYear, startingYear, stoppingYearInclusive);
+
+			int currentYear = startingYear + 1; // Note that this is NOT the same as iyrcur in vdyp7  That will often be 1 less than this
+
+			// Loop for all but the first year.
 			while (currentYear <= stoppingYearInclusive) {
 
 				logger.info(
@@ -297,6 +302,8 @@ public class ForwardProcessingEngine {
 				);
 
 				grow(plps, currentYear, veteranLayer, lastStepInclusive);
+
+				iyrcur += 1; // Would have been incremented in the above method
 
 				// Some unit tests require only some of the grow steps to be executed (and, by
 				// implication, only for the first growth year.) If this is the case, stop
@@ -344,6 +351,8 @@ public class ForwardProcessingEngine {
 
 		assert lastStepInclusive.ge(ExecutionStep.GROW_1_LAYER_DHDELTA);
 
+		int iyrcur = currentYear - 1; // represents the value of the current year as it would be in VDYP 7 to aid in parallel debugging.  For most of this method it will be 1 less than the actual current year.
+
 		Bank bank = lps.getBank();
 
 		float dhStart = lps.getPrimarySpeciesDominantHeight();
@@ -371,6 +380,7 @@ public class ForwardProcessingEngine {
 		float tphStart = bank.treesPerHectare[0][UC_ALL_INDEX];
 		float lhStart = bank.loreyHeights[0][UC_ALL_INDEX];
 
+		// GB = EMP111A(...)
 		float baDelta = calculateBasalAreaDelta(pspYabhStart, dhStart, baStart, veteranLayerBasalArea, dhDelta);
 
 		writeCheckpoint(currentYear);
@@ -381,6 +391,7 @@ public class ForwardProcessingEngine {
 		// (3) Calculate change in quad-mean-diameter (layer)
 
 		Reference<Boolean> wasDqGrowthLimitApplied = new Reference<>();
+		// GHD = EMP117A(...)
 		float dqDelta = calculateQuadMeanDiameterDelta(
 				pspYabhStart, baStart, dhStart, dqStart, veteranLayerBasalArea, veteranLayerBasalArea, dhDelta,
 				wasDqGrowthLimitApplied
@@ -602,6 +613,7 @@ public class ForwardProcessingEngine {
 		// (13) Update the running values.
 
 		lps.updatePrimarySpeciesDetailsAfterGrowth(dhEnd);
+		iyrcur += 1; // In VDYP 7 the current year doesn't get set until here  
 
 		for (int i : lps.getIndices()) {
 			if (i == lps.getPrimarySpeciesIndex()) {
