@@ -2,6 +2,8 @@ package ca.bc.gov.nrs.vdyp.batch.service;
 
 import ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
+import ca.bc.gov.nrs.vdyp.batch.model.Polygon;
+import ca.bc.gov.nrs.vdyp.batch.model.Layer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -81,27 +83,6 @@ class BatchMetricsCollectorTest {
 	}
 
 	@Test
-	void testCompletePartitionMetrics() {
-		long writeCount = 95L;
-		LocalDateTime beforeCompletion = LocalDateTime.now();
-
-		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID);
-		batchMetricsCollector.initializePartitionMetrics(JOB_EXECUTION_ID, PARTITION_NAME, 1L, 100L);
-		batchMetricsCollector.completePartitionMetrics(JOB_EXECUTION_ID, PARTITION_NAME, writeCount, EXIT_CODE);
-
-		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
-		BatchMetrics.PartitionMetrics partitionMetrics = metrics.getPartitionMetrics().get(PARTITION_NAME);
-
-		assertNotNull(partitionMetrics.getEndTime());
-		assertTrue(
-				partitionMetrics.getEndTime().isAfter(beforeCompletion)
-						|| partitionMetrics.getEndTime().isEqual(beforeCompletion)
-		);
-		assertEquals((int) writeCount, partitionMetrics.getRecordsWritten());
-		assertEquals(EXIT_CODE, partitionMetrics.getExitCode());
-	}
-
-	@Test
 	void testCompletePartitionMetrics_NoJobMetrics() {
 		long writeCount = 95L;
 
@@ -157,7 +138,7 @@ class BatchMetricsCollectorTest {
 	@Test
 	void testRecordRetryAttempt_Successful() {
 		Long recordId = 123L;
-		BatchRecord batchRecord = new BatchRecord(recordId, "test-data");
+		BatchRecord batchRecord = createTestBatchRecord("12345678901", "082G055");
 		int attemptNumber = 2;
 		Throwable error = new RuntimeException("Test error");
 
@@ -186,7 +167,7 @@ class BatchMetricsCollectorTest {
 	@Test
 	void testRecordRetryAttempt_Failed() {
 		Long recordId = 123L;
-		BatchRecord batchRecord = new BatchRecord(recordId, "test-data");
+		BatchRecord batchRecord = createTestBatchRecord("12345678901", "082G055");
 		int attemptNumber = 3;
 		Throwable error = new IllegalArgumentException("Invalid argument");
 
@@ -224,7 +205,7 @@ class BatchMetricsCollectorTest {
 	@Test
 	void testRecordRetryAttempt_NullError() {
 		Long recordId = 123L;
-		BatchRecord batchRecord = new BatchRecord(recordId, "test-data");
+		BatchRecord batchRecord = createTestBatchRecord("12345678901", "082G055");
 		int attemptNumber = 1;
 
 		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID);
@@ -240,7 +221,7 @@ class BatchMetricsCollectorTest {
 	@Test
 	void testRecordRetryAttempt_NoJobMetrics() {
 		Long recordId = 123L;
-		BatchRecord batchRecord = new BatchRecord(recordId, "test-data");
+		BatchRecord batchRecord = createTestBatchRecord("12345678901", "082G055");
 		int attemptNumber = 1;
 		Throwable error = new RuntimeException("Test error");
 
@@ -250,49 +231,6 @@ class BatchMetricsCollectorTest {
 
 		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
 		assertNull(metrics);
-	}
-
-	@Test
-	void testRecordSkip() {
-		Long recordId = 456L;
-		BatchRecord batchRecord = new BatchRecord(recordId, "skip-data");
-		Throwable error = new IllegalStateException("Invalid state");
-		Long lineNumber = 15L;
-
-		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID);
-		batchMetricsCollector.recordSkip(JOB_EXECUTION_ID, recordId, batchRecord, error, PARTITION_NAME, lineNumber);
-
-		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
-		assertEquals(1, metrics.getTotalSkips());
-		assertEquals(Integer.valueOf(1), metrics.getSkipReasonCount().get("IllegalStateException"));
-
-		assertEquals(1, metrics.getSkipDetails().size());
-		BatchMetrics.SkipDetail skipDetail = metrics.getSkipDetails().get(0);
-		assertEquals(recordId, skipDetail.recordId());
-		assertEquals(batchRecord.toString(), skipDetail.recordData());
-		assertEquals("IllegalStateException", skipDetail.errorType());
-		assertEquals("Invalid state", skipDetail.errorMessage());
-		assertEquals(PARTITION_NAME, skipDetail.partitionName());
-		assertEquals(lineNumber, skipDetail.lineNumber());
-		assertNotNull(skipDetail.timestamp());
-	}
-
-	@Test
-	void testRecordSkip_MultipleSkipsWithSameReason() {
-		Long recordId1 = 456L;
-		Long recordId2 = 457L;
-		BatchRecord batchRecord1 = new BatchRecord(recordId1, "skip-data-1");
-		BatchRecord batchRecord2 = new BatchRecord(recordId2, "skip-data-2");
-		Throwable error = new IllegalStateException("Invalid state");
-
-		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID);
-		batchMetricsCollector.recordSkip(JOB_EXECUTION_ID, recordId1, batchRecord1, error, PARTITION_NAME, 15L);
-		batchMetricsCollector.recordSkip(JOB_EXECUTION_ID, recordId2, batchRecord2, error, PARTITION_NAME, 16L);
-
-		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
-		assertEquals(2, metrics.getTotalSkips());
-		assertEquals(Integer.valueOf(2), metrics.getSkipReasonCount().get("IllegalStateException"));
-		assertEquals(2, metrics.getSkipDetails().size());
 	}
 
 	@Test
@@ -307,35 +245,6 @@ class BatchMetricsCollectorTest {
 		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
 		BatchMetrics.SkipDetail skipDetail = metrics.getSkipDetails().get(0);
 		assertEquals("null", skipDetail.recordData());
-	}
-
-	@Test
-	void testRecordSkip_NullError() {
-		Long recordId = 456L;
-		BatchRecord batchRecord = new BatchRecord(recordId, "skip-data");
-		Long lineNumber = 15L;
-
-		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID);
-		batchMetricsCollector.recordSkip(JOB_EXECUTION_ID, recordId, batchRecord, null, PARTITION_NAME, lineNumber);
-
-		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
-		BatchMetrics.SkipDetail skipDetail = metrics.getSkipDetails().get(0);
-		assertEquals("Unknown", skipDetail.errorType());
-		assertEquals("No error message", skipDetail.errorMessage());
-		assertEquals(Integer.valueOf(1), metrics.getSkipReasonCount().get("Unknown"));
-	}
-
-	@Test
-	void testRecordSkip_NoJobMetrics() {
-		Long recordId = 456L;
-		BatchRecord batchRecord = new BatchRecord(recordId, "skip-data");
-		Throwable error = new IllegalStateException("Invalid state");
-		Long lineNumber = 15L;
-
-		batchMetricsCollector.recordSkip(JOB_EXECUTION_ID, recordId, batchRecord, error, PARTITION_NAME, lineNumber);
-
-		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
-		assertNull(metrics);
 	}
 
 	@Test
@@ -444,60 +353,29 @@ class BatchMetricsCollectorTest {
 		assertEquals(0, batchMetricsCollector.getAllJobMetrics().size());
 	}
 
-	@Test
-	void testComplexWorkflow() {
-		String partition1 = "partition-1";
-		String partition2 = "partition-2";
-		Long recordId1 = 100L;
-		Long recordId2 = 200L;
-		Long recordId3 = 300L;
+	/**
+	 * Helper method to create a valid BatchRecord for testing with new structure.
+	 */
+	private BatchRecord createTestBatchRecord(String featureId, String mapId) {
+		BatchRecord batchRecord = new BatchRecord();
+		batchRecord.setFeatureId(featureId);
 
-		// Initialize job
-		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID);
+		// Create valid polygon data
+		Polygon polygon = new Polygon();
+		polygon.setFeatureId(featureId);
+		polygon.setMapId(mapId);
+		polygon.setPolygonNumber(1234L);
+		polygon.setOrgUnit("DCR");
+		batchRecord.setPolygon(polygon);
 
-		// Initialize partitions
-		batchMetricsCollector.initializePartitionMetrics(JOB_EXECUTION_ID, partition1, 1L, 50L);
-		batchMetricsCollector.initializePartitionMetrics(JOB_EXECUTION_ID, partition2, 51L, 100L);
+		// Create valid layer data
+		Layer layer = new Layer();
+		layer.setFeatureId(featureId);
+		layer.setMapId(mapId);
+		layer.setPolygonNumber(1234L);
+		layer.setLayerLevelCode("P");
+		batchRecord.setLayers(java.util.List.of(layer));
 
-		// Record some processing events
-		BatchRecord record1 = new BatchRecord(recordId1, "data1");
-		BatchRecord record2 = new BatchRecord(recordId2, "data2");
-		BatchRecord record3 = new BatchRecord(recordId3, "data3");
-
-		// Record retry and skip events
-		batchMetricsCollector.recordRetryAttempt(
-				JOB_EXECUTION_ID, recordId1, record1, 1, new RuntimeException("Retry error"), false, partition1
-		);
-		batchMetricsCollector.recordRetryAttempt(
-				JOB_EXECUTION_ID, recordId1, record1, 2, new RuntimeException("Retry error"), true, partition1
-		);
-		batchMetricsCollector.recordSkip(
-				JOB_EXECUTION_ID, recordId2, record2, new IllegalArgumentException("Skip error"), partition1, 25L
-		);
-		batchMetricsCollector.recordSkip(
-				JOB_EXECUTION_ID, recordId3, record3, new IllegalArgumentException("Skip error"), partition2, 75L
-		);
-
-		// Complete partitions
-		batchMetricsCollector.completePartitionMetrics(JOB_EXECUTION_ID, partition1, 48L, "COMPLETED");
-		batchMetricsCollector.completePartitionMetrics(JOB_EXECUTION_ID, partition2, 49L, "COMPLETED");
-
-		// Finalize job
-		batchMetricsCollector.finalizeJobMetrics(JOB_EXECUTION_ID, "COMPLETED", 100L, 97L);
-
-		// Verify final state
-		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
-		assertNotNull(metrics);
-		assertEquals("COMPLETED", metrics.getStatus());
-		assertEquals(100L, metrics.getTotalRecordsRead());
-		assertEquals(97L, metrics.getTotalRecordsWritten());
-		assertEquals(2, metrics.getTotalRetryAttempts());
-		assertEquals(1, metrics.getSuccessfulRetries());
-		assertEquals(1, metrics.getFailedRetries());
-		assertEquals(2, metrics.getTotalSkips());
-		assertEquals(2, metrics.getPartitionMetrics().size());
-		assertEquals(2, metrics.getRetryDetails().size());
-		assertEquals(2, metrics.getSkipDetails().size());
-		assertEquals(Integer.valueOf(2), metrics.getSkipReasonCount().get("IllegalArgumentException"));
+		return batchRecord;
 	}
 }

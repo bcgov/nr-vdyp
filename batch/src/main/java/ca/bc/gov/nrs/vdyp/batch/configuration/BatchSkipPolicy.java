@@ -215,9 +215,9 @@ public class BatchSkipPolicy implements SkipPolicy {
 				return cachedRecord;
 			}
 
-			// Fallback: create a basic record with the extracted ID for tracking
+			// Fallback: create a basic record with the extracted recordId as featureId for tracking
 			BatchRecord batchRecord = new BatchRecord();
-			batchRecord.setId(recordId);
+			batchRecord.setFeatureId(String.valueOf(recordId));
 			return batchRecord;
 		}
 		return null;

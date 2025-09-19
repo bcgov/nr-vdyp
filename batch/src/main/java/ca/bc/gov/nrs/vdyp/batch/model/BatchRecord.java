@@ -1,69 +1,51 @@
 package ca.bc.gov.nrs.vdyp.batch.model;
 
+import java.util.List;
+
 /**
- * Simple record model for batch processing. This can be extended to match specific VDYP data formats.
+ * VDYP-specific batch record model representing a complete polygon entity for VDYP projection.
+ *
+ * This model implements the FEATURE_ID-based processing strategy where each BatchRecord contains exactly one polygon
+ * plus ALL its associated layers as a complete, atomic processing unit.
  */
 public class BatchRecord {
 
-	private Long id;
-	private String data;
-	private String polygonId;
-	private String layerId;
+	private String featureId; // business key
+	private Polygon polygon;
+	private List<Layer> layers;
 	private String projectionResult;
 
 	public BatchRecord() {
 	}
 
-	public BatchRecord(Long id, String data) {
-		this.id = id;
-		this.data = data;
+	public BatchRecord(String featureId, Polygon polygon, List<Layer> layers) {
+		this.featureId = featureId;
+		this.polygon = polygon;
+		this.layers = layers;
 	}
 
-	public BatchRecord(Long id, String data, String polygonId, String layerId) {
-		this.id = id;
-		this.data = data;
-		this.polygonId = polygonId;
-		this.layerId = layerId;
+	public String getFeatureId() {
+		return featureId;
 	}
 
-	public BatchRecord(Long id, String data, String polygonId, String layerId, String projectionResult) {
-		this.id = id;
-		this.data = data;
-		this.polygonId = polygonId;
-		this.layerId = layerId;
-		this.projectionResult = projectionResult;
+	public void setFeatureId(String featureId) {
+		this.featureId = featureId;
 	}
 
-	public Long getId() {
-		return id;
+	public Polygon getPolygon() {
+		return polygon;
 	}
 
-	public void setId(Long id) {
-		this.id = id;
+	public void setPolygon(Polygon polygon) {
+		this.polygon = polygon;
 	}
 
-	public String getData() {
-		return data;
+	public List<Layer> getLayers() {
+		return layers;
 	}
 
-	public void setData(String data) {
-		this.data = data;
-	}
-
-	public String getPolygonId() {
-		return polygonId;
-	}
-
-	public void setPolygonId(String polygonId) {
-		this.polygonId = polygonId;
-	}
-
-	public String getLayerId() {
-		return layerId;
-	}
-
-	public void setLayerId(String layerId) {
-		this.layerId = layerId;
+	public void setLayers(List<Layer> layers) {
+		this.layers = layers;
 	}
 
 	public String getProjectionResult() {
@@ -76,7 +58,7 @@ public class BatchRecord {
 
 	@Override
 	public String toString() {
-		return "BatchRecord{" + "id=" + id + ", data='" + data + '\'' + ", polygonId='" + polygonId + '\''
-				+ ", layerId='" + layerId + '\'' + ", projectionResult='" + projectionResult + '\'' + '}';
+		return "BatchRecord{" + "featureId='" + featureId + '\'' + ", polygon=" + polygon + ", layerCount="
+				+ (layers != null ? layers.size() : 0) + ", projectionResult='" + projectionResult + '\'' + '}';
 	}
 }

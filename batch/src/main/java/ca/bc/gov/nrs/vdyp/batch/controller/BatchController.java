@@ -288,128 +288,17 @@ public class BatchController {
 	}
 
 	/**
-	 * Get aggregated batch processing statistics and system overview.
-	 *
-	 * @return ResponseEntity containing overall system statistics and metrics
-	 */
-	@GetMapping("/statistics")
-	public ResponseEntity<Map<String, Object>> getBatchStatistics() {
-		try {
-			List<String> jobNames = jobExplorer.getJobNames();
-			BatchStatistics statistics = collectBatchStatistics(jobNames);
-			Map<String, Object> response = buildStatisticsResponse(statistics, jobNames);
-			return ResponseEntity.ok(response);
-		} catch (Exception e) {
-			Map<String, Object> errorResponse = new HashMap<>();
-			errorResponse.put(JOB_ERROR, "Failed to retrieve batch statistics");
-			errorResponse.put(JOB_MESSAGE, e.getMessage());
-			return ResponseEntity.internalServerError().body(errorResponse);
-		}
-	}
-
-	private BatchStatistics collectBatchStatistics(List<String> jobNames) {
-		BatchStatistics statistics = new BatchStatistics();
-
-		for (String jobName : jobNames) {
-			List<JobInstance> jobInstances = jobExplorer.getJobInstances(jobName, 0, 1000);
-			for (JobInstance jobInstance : jobInstances) {
-				List<JobExecution> jobExecutions = jobExplorer.getJobExecutions(jobInstance);
-				for (JobExecution jobExecution : jobExecutions) {
-					processJobExecution(jobExecution, statistics);
-				}
-			}
-		}
-
-		return statistics;
-	}
-
-	private void processJobExecution(JobExecution jobExecution, BatchStatistics statistics) {
-		statistics.totalJobs++;
-
-		BatchStatus status = jobExecution.getStatus();
-		if (status == BatchStatus.COMPLETED) {
-			statistics.completedJobs++;
-		} else if (status == BatchStatus.FAILED) {
-			statistics.failedJobs++;
-		} else if (status == BatchStatus.STARTED || status == BatchStatus.STARTING) {
-			statistics.runningJobs++;
-		}
-
-		processStepExecutions(jobExecution, statistics);
-		processJobMetrics(jobExecution, statistics);
-	}
-
-	private void processStepExecutions(JobExecution jobExecution, BatchStatistics statistics) {
-		for (StepExecution stepExecution : jobExecution.getStepExecutions()) {
-			statistics.totalRecordsProcessed += stepExecution.getWriteCount();
-			statistics.totalSkippedRecords += stepExecution.getSkipCount();
-		}
-	}
-
-	private void processJobMetrics(JobExecution jobExecution, BatchStatistics statistics) {
-		BatchMetrics metrics = metricsCollector.getJobMetrics(jobExecution.getId());
-		if (metrics != null) {
-			statistics.totalRetryAttempts += metrics.getTotalRetryAttempts();
-		}
-	}
-
-	private Map<String, Object> buildStatisticsResponse(BatchStatistics statistics, List<String> jobNames) {
-		Map<String, Object> response = new HashMap<>();
-
-		response.put("systemOverview", buildSystemOverview(statistics));
-		response.put("processingStatistics", buildProcessingStatistics(statistics));
-		response.put("availableJobTypes", jobNames);
-		response.put(JOB_TIMESTAMP, System.currentTimeMillis());
-		response.put("serviceCapabilities", buildServiceCapabilities());
-
-		return response;
-	}
-
-	private Map<String, Object> buildSystemOverview(BatchStatistics statistics) {
-		return Map.of(
-				"totalJobs", statistics.totalJobs, "completedJobs", statistics.completedJobs, "failedJobs",
-				statistics.failedJobs, "runningJobs", statistics.runningJobs, "successRate",
-				statistics.totalJobs > 0 ? (double) statistics.completedJobs / statistics.totalJobs * 100 : 0.0
-		);
-	}
-
-	private Map<String, Object> buildProcessingStatistics(BatchStatistics statistics) {
-		return Map.of(
-				"totalRecordsProcessed", statistics.totalRecordsProcessed, "totalRetryAttempts",
-				statistics.totalRetryAttempts, "totalSkippedRecords", statistics.totalSkippedRecords,
-				"averageRecordsPerJob",
-				statistics.totalJobs > 0 ? statistics.totalRecordsProcessed / statistics.totalJobs : 0
-		);
-	}
-
-	private Map<String, Object> buildServiceCapabilities() {
-		return Map.of(
-				"partitioningEnabled", true, "retryPolicyEnabled", true, "skipPolicyEnabled", true,
-				"metricsCollectionEnabled", true, "vdypIntegrationReady", false, "nativeImageSupport", true
-		);
-	}
-
-	/**
 	 * Logs request details with sanitized paths.
 	 */
 	private void logRequestDetails(BatchJobRequest request) {
 		logger.info("=== VDYP Batch Job Start Request ===");
 		if (request != null) {
-			String sanitizedInputPath = sanitizePathForLogging(request.getInputFilePath());
-			String sanitizedOutputPath = sanitizePathForLogging(request.getOutputFilePath());
 			logger.info(
-					"Request details - inputFilePath: {}, outputFilePath: {}, partitionSize: {}, maxRetryAttempts: {}, retryBackoffPeriod: {}, maxSkipCount: {}",
-					sanitizedInputPath, sanitizedOutputPath, request.getPartitionSize(), request.getMaxRetryAttempts(),
-					request.getRetryBackoffPeriod(), request.getMaxSkipCount()
+					"Request details - partitionSize: {}, maxRetryAttempts: {}, retryBackoffPeriod: {}, maxSkipCount: {}",
+					request.getPartitionSize(), request.getMaxRetryAttempts(), request.getRetryBackoffPeriod(),
+					request.getMaxSkipCount()
 			);
 		}
-	}
-
-	/**
-	 * Sanitizes file paths for safe logging.
-	 */
-	private String sanitizePathForLogging(String path) {
-		return path != null ? path.replaceAll("[\n\r]", "_") : null;
 	}
 
 	/**
@@ -439,12 +328,6 @@ public class BatchController {
 	 * Adds request parameters to the job parameters builder.
 	 */
 	private void addRequestParametersToBuilder(JobParametersBuilder builder, BatchJobRequest request) {
-		if (request.getInputFilePath() != null) {
-			builder.addString("inputFilePath", request.getInputFilePath());
-		}
-		if (request.getOutputFilePath() != null) {
-			builder.addString("outputFilePath", request.getOutputFilePath());
-		}
 		if (request.getPartitionSize() != null) {
 			builder.addLong("partitionSize", request.getPartitionSize());
 		}
@@ -490,16 +373,6 @@ public class BatchController {
 		return ResponseEntity.internalServerError().body(errorResponse);
 	}
 
-	private static class BatchStatistics {
-		int totalJobs = 0;
-		int completedJobs = 0;
-		int failedJobs = 0;
-		int runningJobs = 0;
-		long totalRecordsProcessed = 0L;
-		long totalRetryAttempts = 0L;
-		long totalSkippedRecords = 0L;
-	}
-
 	/**
 	 * Service health check endpoint for monitoring and load balancer integration.
 	 *
@@ -514,7 +387,7 @@ public class BatchController {
 				"availableEndpoints",
 				Arrays.asList(
 						"/api/batch/start", "/api/batch/status/{id}", "/api/batch/metrics/{id}", "/api/batch/jobs",
-						"/api/batch/statistics", "/api/batch/health"
+						"/api/batch/health"
 				)
 		);
 		response.put(JOB_TIMESTAMP, System.currentTimeMillis());

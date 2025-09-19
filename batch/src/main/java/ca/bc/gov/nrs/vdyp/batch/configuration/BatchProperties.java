@@ -12,14 +12,13 @@ import org.springframework.stereotype.Component;
 public class BatchProperties {
 
 	private Job job = new Job();
-	private Input input = new Input();
 	private Output output = new Output();
 	private Partitioning partitioning = new Partitioning();
 	private ThreadPool threadPool = new ThreadPool();
 	private Validation validation = new Validation();
-	private Error error = new Error();
 	private Retry retry = new Retry();
 	private Skip skip = new Skip();
+	private Vdyp vdyp = new Vdyp();
 
 	public static class Job {
 		private boolean autoCreate = true;
@@ -33,22 +32,8 @@ public class BatchProperties {
 		}
 	}
 
-	public static class Input {
-		private String filePath;
-
-		public String getFilePath() {
-			return filePath;
-		}
-
-		public void setFilePath(String filePath) {
-			this.filePath = filePath;
-		}
-	}
-
 	public static class Output {
 		private Directory directory = new Directory();
-		private String filePrefix;
-		private String csvHeader;
 
 		public static class Directory {
 			private String defaultPath;
@@ -70,35 +55,10 @@ public class BatchProperties {
 			this.directory = directory;
 		}
 
-		public String getFilePrefix() {
-			return filePrefix;
-		}
-
-		public void setFilePrefix(String filePrefix) {
-			this.filePrefix = filePrefix;
-		}
-
-		public String getCsvHeader() {
-			return csvHeader;
-		}
-
-		public void setCsvHeader(String csvHeader) {
-			this.csvHeader = csvHeader;
-		}
 	}
 
 	public static class Partitioning {
-		private boolean enabled = true;
 		private int gridSize;
-		private int chunkSize;
-
-		public boolean isEnabled() {
-			return enabled;
-		}
-
-		public void setEnabled(boolean enabled) {
-			this.enabled = enabled;
-		}
 
 		public int getGridSize() {
 			return gridSize;
@@ -106,14 +66,6 @@ public class BatchProperties {
 
 		public void setGridSize(int gridSize) {
 			this.gridSize = gridSize;
-		}
-
-		public int getChunkSize() {
-			return chunkSize;
-		}
-
-		public void setChunkSize(int chunkSize) {
-			this.chunkSize = chunkSize;
 		}
 	}
 
@@ -198,27 +150,6 @@ public class BatchProperties {
 		}
 	}
 
-	public static class Error {
-		private String transientPatterns;
-		private int maxConsecutiveFailures;
-
-		public String getTransientPatterns() {
-			return transientPatterns;
-		}
-
-		public void setTransientPatterns(String transientPatterns) {
-			this.transientPatterns = transientPatterns;
-		}
-
-		public int getMaxConsecutiveFailures() {
-			return maxConsecutiveFailures;
-		}
-
-		public void setMaxConsecutiveFailures(int maxConsecutiveFailures) {
-			this.maxConsecutiveFailures = maxConsecutiveFailures;
-		}
-	}
-
 	public static class Skip {
 		private int maxCount;
 
@@ -231,20 +162,54 @@ public class BatchProperties {
 		}
 	}
 
+	public static class Vdyp {
+		private Projection projection = new Projection();
+
+		public static class Projection {
+			private String polygonFile;
+			private String layerFile;
+			private String parametersFile;
+
+			public String getPolygonFile() {
+				return polygonFile;
+			}
+
+			public void setPolygonFile(String polygonFile) {
+				this.polygonFile = polygonFile;
+			}
+
+			public String getLayerFile() {
+				return layerFile;
+			}
+
+			public void setLayerFile(String layerFile) {
+				this.layerFile = layerFile;
+			}
+
+			public String getParametersFile() {
+				return parametersFile;
+			}
+
+			public void setParametersFile(String parametersFile) {
+				this.parametersFile = parametersFile;
+			}
+		}
+
+		public Projection getProjection() {
+			return projection;
+		}
+
+		public void setProjection(Projection projection) {
+			this.projection = projection;
+		}
+	}
+
 	public Job getJob() {
 		return job;
 	}
 
 	public void setJob(Job job) {
 		this.job = job;
-	}
-
-	public Input getInput() {
-		return input;
-	}
-
-	public void setInput(Input input) {
-		this.input = input;
 	}
 
 	public Output getOutput() {
@@ -287,19 +252,19 @@ public class BatchProperties {
 		this.validation = validation;
 	}
 
-	public Error getError() {
-		return error;
-	}
-
-	public void setError(Error error) {
-		this.error = error;
-	}
-
 	public Skip getSkip() {
 		return skip;
 	}
 
 	public void setSkip(Skip skip) {
 		this.skip = skip;
+	}
+
+	public Vdyp getVdyp() {
+		return vdyp;
+	}
+
+	public void setVdyp(Vdyp vdyp) {
+		this.vdyp = vdyp;
 	}
 }

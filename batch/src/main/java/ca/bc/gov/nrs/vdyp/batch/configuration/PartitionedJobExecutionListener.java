@@ -7,15 +7,9 @@ import org.springframework.batch.core.JobExecutionListener;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Stream;
-import java.util.List;
 
 /**
  * Job execution listener for partitioned VDYP batch job.
@@ -45,7 +39,6 @@ public class PartitionedJobExecutionListener implements JobExecutionListener {
 		logger.info("VDYP PARTITIONED JOB STARTING");
 
 		Long partitionSize = jobExecution.getJobParameters().getLong("partitionSize");
-		Long chunkSize = jobExecution.getJobParameters().getLong("chunkSize");
 
 		int actualPartitionSize;
 		if (partitionSize != null) {
@@ -54,23 +47,10 @@ public class PartitionedJobExecutionListener implements JobExecutionListener {
 			actualPartitionSize = batchProperties.getPartitioning().getGridSize();
 		} else {
 			throw new IllegalStateException(
-					"batch.partitioning.grid-size must be configured in application.properties"
-			);
-		}
-
-		int actualChunkSize;
-		if (chunkSize != null) {
-			actualChunkSize = chunkSize.intValue();
-		} else if (batchProperties.getPartitioning().getChunkSize() > 0) {
-			actualChunkSize = batchProperties.getPartitioning().getChunkSize();
-		} else {
-			throw new IllegalStateException(
-					"batch.partitioning.chunk-size must be configured in application.properties"
-			);
+					"batch.partitioning.grid-size must be configured in application.properties");
 		}
 
 		logger.info("VDYP Grid Size: {}", actualPartitionSize);
-		logger.info("VDYP Chunk Size: {}", actualChunkSize);
 		logger.info("Expected Partitions: {}", actualPartitionSize);
 		logger.info("Job Execution ID: {}", jobExecution.getId());
 		logger.info(separator);
@@ -114,36 +94,8 @@ public class PartitionedJobExecutionListener implements JobExecutionListener {
 				logger.warn("Duration: Unable to calculate (missing time information)");
 			}
 
-			// Merge partition files
-			try {
-				Long partitionSize = jobExecution.getJobParameters().getLong("partitionSize");
-				String outputDirectory = jobExecution.getJobParameters().getString("outputFilePath");
-
-				String actualOutputDirectory = outputDirectory;
-				if (actualOutputDirectory == null) {
-					actualOutputDirectory = batchProperties.getOutput().getDirectory().getDefaultPath();
-				}
-				if (actualOutputDirectory == null) {
-					actualOutputDirectory = System.getProperty("java.io.tmpdir");
-					logger.warn(
-							"No output directory specified, using system temp directory: {}", actualOutputDirectory
-					);
-				}
-
-				int actualPartitionSize;
-				if (partitionSize != null) {
-					actualPartitionSize = partitionSize.intValue();
-				} else if (batchProperties.getPartitioning().getGridSize() > 0) {
-					actualPartitionSize = batchProperties.getPartitioning().getGridSize();
-				} else {
-					throw new IllegalStateException(
-							"batch.partitioning.grid-size must be configured in application.properties"
-					);
-				}
-				mergePartitionFiles(actualPartitionSize, jobExecutionId, actualOutputDirectory);
-			} catch (Exception e) {
-				logger.error("Failed to merge VDYP partition files: {}", e.getMessage(), e);
-			}
+			// Note: Partition file merging has been disabled as results are now aggregated
+			// through the ResultAggregationService in the post-processing step
 
 			logger.info(separator);
 		}
@@ -157,78 +109,6 @@ public class PartitionedJobExecutionListener implements JobExecutionListener {
 	private void cleanupOldJobTracker(Long currentJobId) {
 		if (jobCompletionTracker.size() > 10) {
 			jobCompletionTracker.entrySet().removeIf(entry -> entry.getKey() < currentJobId - 5);
-		}
-	}
-
-	/**
-	 * Merges all VDYP partition output files into a single file.
-	 */
-	private void mergePartitionFiles(int partitionCount, Long jobExecutionId, String outputDirectory)
-			throws IOException {
-		String filePrefix = batchProperties.getOutput().getFilePrefix();
-		if (filePrefix == null) {
-			throw new IllegalStateException("batch.output.file-prefix must be configured in application.properties");
-		}
-
-		String csvHeader = batchProperties.getOutput().getCsvHeader();
-		if (csvHeader == null || csvHeader.trim().isEmpty()) {
-			throw new IllegalStateException("batch.output.csv-header must be configured in application.properties");
-		}
-
-		String finalOutputPath = outputDirectory + File.separator + filePrefix + "_merged.csv";
-
-		// Add job execution ID to avoid conflicts in concurrent executions
-		String tempMergeFile = outputDirectory + File.separator + filePrefix + "_merged_temp_" + jobExecutionId
-				+ ".csv";
-
-		logger.info("Starting VDYP file merge for {} partitions...", partitionCount);
-
-		try (java.io.BufferedWriter writer = Files.newBufferedWriter(Paths.get(tempMergeFile))) {
-			// Write VDYP header
-			writer.write(csvHeader);
-			writer.newLine();
-
-			int mergedFiles = 0;
-			long totalLines = 0;
-
-			// Merge partition files
-			for (int i = 0; i < partitionCount; i++) {
-				String partitionFile = outputDirectory + File.separator + filePrefix + "_partition" + i + ".csv";
-				if (Files.exists(Paths.get(partitionFile))) {
-					try (Stream<String> lines = Files.lines(Paths.get(partitionFile))) {
-						List<String> partitionLinesList = lines.skip(1).toList();
-
-						for (String line : partitionLinesList) {
-							try {
-								writer.write(line);
-								writer.newLine();
-							} catch (Exception e) {
-								logger.error("Error writing VDYP line: {}", e.getMessage());
-							}
-						}
-
-						long partitionLines = partitionLinesList.size();
-						totalLines += partitionLines;
-						mergedFiles++;
-						logger.info("Merged VDYP partition file: {} ({} records)", partitionFile, partitionLines);
-					}
-				} else {
-					logger.warn("VDYP partition file not found: {}", partitionFile);
-				}
-			}
-
-			logger.info("Merged {} VDYP partition files with total {} data records", mergedFiles, totalLines);
-		}
-
-		// Atomically move temp file to final location
-		Files.move(
-				Paths.get(tempMergeFile), Paths.get(finalOutputPath), java.nio.file.StandardCopyOption.REPLACE_EXISTING
-		);
-
-		logger.info("Final merged VDYP output created: {}", finalOutputPath);
-		try (Stream<String> lines = Files.lines(Paths.get(finalOutputPath))) {
-			long lineCount = lines.count();
-			logger.info("Total lines in merged VDYP file: {} (including header)", lineCount);
 		}
 	}
 }

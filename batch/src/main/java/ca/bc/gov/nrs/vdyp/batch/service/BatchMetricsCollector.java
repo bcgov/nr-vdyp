@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.vdyp.batch.service;
 
 import ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;

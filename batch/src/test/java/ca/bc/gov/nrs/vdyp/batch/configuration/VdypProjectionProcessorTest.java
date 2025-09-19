@@ -1,7 +1,10 @@
 package ca.bc.gov.nrs.vdyp.batch.configuration;
 
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
+import ca.bc.gov.nrs.vdyp.batch.model.Polygon;
+import ca.bc.gov.nrs.vdyp.batch.model.Layer;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
+import ca.bc.gov.nrs.vdyp.batch.service.VdypProjectionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,6 +24,7 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
@@ -35,6 +39,9 @@ class VdypProjectionProcessorTest {
 	private BatchMetricsCollector metricsCollector;
 
 	@Mock
+	private VdypProjectionService vdypProjectionService;
+
+	@Mock
 	private StepExecution stepExecution;
 
 	@Mock
@@ -44,7 +51,7 @@ class VdypProjectionProcessorTest {
 
 	@BeforeEach
 	void setUp() {
-		processor = new VdypProjectionProcessor(retryPolicy, metricsCollector);
+		processor = new VdypProjectionProcessor(retryPolicy, metricsCollector, vdypProjectionService);
 
 		// Set validation thresholds using reflection
 		ReflectionTestUtils.setField(processor, "maxDataLength", 50000);
@@ -79,8 +86,12 @@ class VdypProjectionProcessorTest {
 	}
 
 	@Test
-	void testProcess_ValidRecord_ReturnsProcessedRecord() throws IOException, IllegalArgumentException {
+	void testProcess_ValidRecord_ReturnsProcessedRecord() throws Exception {
 		processor.beforeStep(stepExecution);
+
+		// Mock VdypProjectionService to return a test result
+		when(vdypProjectionService.performProjectionForRecord(any(BatchRecord.class), anyString()))
+				.thenReturn("Test projection result");
 
 		BatchRecord batchRecord = createValidBatchRecord();
 
@@ -88,48 +99,73 @@ class VdypProjectionProcessorTest {
 
 		assertNotNull(result);
 		assertNotNull(result.getProjectionResult());
-		assertTrue(result.getProjectionResult().startsWith("PROJECTED["));
-		verify(retryPolicy).registerRecord(1L, batchRecord);
+		assertEquals("Test projection result", result.getProjectionResult());
+		verify(retryPolicy).registerRecord(anyLong(), eq(batchRecord));
 	}
 
 	@ParameterizedTest
 	@MethodSource("provideInvalidRecords")
 	void testProcess_ValidationErrors_ThrowIllegalArgumentException(
-			String testName, String data, String polygonId, String layerId
+			String testName, String data, String featureId, String layerId
 	) {
 		processor.beforeStep(stepExecution);
 
 		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setId(1L);
-		batchRecord.setData(data);
-		batchRecord.setPolygonId(polygonId);
-		batchRecord.setLayerId(layerId);
+		batchRecord.setFeatureId(featureId);
+
+		// Only create polygon/layers if featureId is valid
+		if (featureId != null && !featureId.trim().isEmpty()) {
+			if (testName.contains("Missing polygon data")) {
+				// Don't set polygon data
+				batchRecord.setPolygon(null);
+			} else if (testName.contains("Missing layer data")) {
+				// Set polygon but no layers
+				Polygon polygon = new Polygon();
+				polygon.setFeatureId(featureId);
+				polygon.setMapId("082G055");
+				polygon.setPolygonNumber(1234L);
+				batchRecord.setPolygon(polygon);
+				batchRecord.setLayers(null);
+			} else {
+				// Create valid data structures
+				Polygon polygon = new Polygon();
+				polygon.setFeatureId(featureId);
+				polygon.setMapId("082G055");
+				polygon.setPolygonNumber(1234L);
+				batchRecord.setPolygon(polygon);
+
+				Layer layer = new Layer();
+				layer.setFeatureId(featureId);
+				layer.setMapId("082G055");
+				layer.setPolygonNumber(1234L);
+				batchRecord.setLayers(java.util.List.of(layer));
+			}
+		}
 
 		assertThrows(IllegalArgumentException.class, () -> processor.process(batchRecord), testName);
 	}
 
 	static Stream<Arguments> provideInvalidRecords() {
 		return Stream.of(
-				Arguments.of("Missing data field", null, "polygon1", "layer1"),
-				Arguments.of("Missing polygonId field", "test-data", null, "layer1"),
-				Arguments.of("Missing layerId field", "test-data", "polygon1", null),
-				Arguments.of("Data too long", "x".repeat(50001), "polygon1", "layer1"),
-				Arguments.of("PolygonId too short", "test-data", "", "layer1"),
-				Arguments.of("PolygonId too long", "test-data", "x".repeat(51), "layer1"),
-				Arguments.of("Empty data field", "   ", "polygon1", "layer1"),
-				Arguments.of("Empty polygonId", "test-data", "   ", "layer1"),
-				Arguments.of("Empty layerId", "test-data", "polygon1", "   ")
+				Arguments.of("Missing Feature ID", null, null, null),
+				Arguments.of("Missing Feature ID field", "test-data", null, "layer1"),
+				Arguments.of("Empty Feature ID", "test-data", "   ", "layer1"),
+				Arguments.of("Missing polygon data", "test-data", "12345678901", "layer1"),
+				Arguments.of("Missing layer data", "test-data", "12345678901", "layer1")
 		);
 	}
 
 	@Test
-	void testProcess_ValidRecordWithNullRetryPolicy_ProcessesSuccessfully()
-			throws IOException, IllegalArgumentException {
-		processor = new VdypProjectionProcessor(null, metricsCollector);
+	void testProcess_ValidRecordWithNullRetryPolicy_ProcessesSuccessfully() throws Exception {
+		processor = new VdypProjectionProcessor(null, metricsCollector, vdypProjectionService);
 		ReflectionTestUtils.setField(processor, "maxDataLength", 50000);
 		ReflectionTestUtils.setField(processor, "minPolygonIdLength", 1);
 		ReflectionTestUtils.setField(processor, "maxPolygonIdLength", 50);
 		processor.beforeStep(stepExecution);
+
+		// Mock VdypProjectionService to return a test result
+		when(vdypProjectionService.performProjectionForRecord(any(BatchRecord.class), anyString()))
+				.thenReturn("Test projection result");
 
 		BatchRecord batchRecord = createValidBatchRecord();
 
@@ -137,16 +173,20 @@ class VdypProjectionProcessorTest {
 
 		assertNotNull(result);
 		assertNotNull(result.getProjectionResult());
+		assertEquals("Test projection result", result.getProjectionResult());
 	}
 
 	@Test
-	void testProcess_ValidRecordWithNullMetricsCollector_ProcessesSuccessfully()
-			throws IOException, IllegalArgumentException {
-		processor = new VdypProjectionProcessor(retryPolicy, null);
+	void testProcess_ValidRecordWithNullMetricsCollector_ProcessesSuccessfully() throws Exception {
+		processor = new VdypProjectionProcessor(retryPolicy, null, vdypProjectionService);
 		ReflectionTestUtils.setField(processor, "maxDataLength", 50000);
 		ReflectionTestUtils.setField(processor, "minPolygonIdLength", 1);
 		ReflectionTestUtils.setField(processor, "maxPolygonIdLength", 50);
 		processor.beforeStep(stepExecution);
+
+		// Mock VdypProjectionService to return a test result
+		when(vdypProjectionService.performProjectionForRecord(any(BatchRecord.class), anyString()))
+				.thenReturn("Test projection result");
 
 		BatchRecord batchRecord = createValidBatchRecord();
 
@@ -154,11 +194,12 @@ class VdypProjectionProcessorTest {
 
 		assertNotNull(result);
 		assertNotNull(result.getProjectionResult());
+		assertEquals("Test projection result", result.getProjectionResult());
 	}
 
 	@Test
 	void testBeforeStep_WithNullMetricsCollector_DoesNotThrowException() {
-		processor = new VdypProjectionProcessor(retryPolicy, null);
+		processor = new VdypProjectionProcessor(retryPolicy, null, vdypProjectionService);
 
 		processor.beforeStep(stepExecution);
 
@@ -169,23 +210,26 @@ class VdypProjectionProcessorTest {
 	}
 
 	@Test
-	void testProcess_RetrySuccessScenario_RemovesFromRetriedRecords()
-			throws IOException, IllegalArgumentException, IllegalAccessException, NoSuchFieldException {
+	void testProcess_RetrySuccessScenario_RemovesFromRetriedRecords() throws Exception {
 		processor.beforeStep(stepExecution);
+
+		// Mock VdypProjectionService to return a test result
+		when(vdypProjectionService.performProjectionForRecord(any(BatchRecord.class), anyString()))
+				.thenReturn("Test projection result");
 
 		// Use reflection to access the static retriedRecords field and add an entry
 		java.lang.reflect.Field retriedRecordsField = processor.getClass().getDeclaredField("retriedRecords");
 		retriedRecordsField.setAccessible(true);
 		@SuppressWarnings("unchecked")
 		Set<String> retriedRecords = (Set<String>) retriedRecordsField.get(null);
-		retriedRecords.add("test-partition_1");
+		retriedRecords.add("test-partition_12345678901");
 
 		BatchRecord batchRecord = createValidBatchRecord();
 
 		BatchRecord result = processor.process(batchRecord);
 
 		assertNotNull(result);
-		verify(retryPolicy).onRetrySuccess(1L, batchRecord);
+		verify(retryPolicy).onRetrySuccess(anyLong(), eq(batchRecord));
 
 		// Clean up
 		retriedRecords.clear();
@@ -196,7 +240,9 @@ class VdypProjectionProcessorTest {
 		processor.beforeStep(stepExecution);
 
 		// Create a processor that will be interrupted
-		VdypProjectionProcessor interruptedProcessor = new VdypProjectionProcessor(retryPolicy, metricsCollector) {
+		VdypProjectionProcessor interruptedProcessor = new VdypProjectionProcessor(
+				retryPolicy, metricsCollector, vdypProjectionService
+		) {
 			@Override
 			public BatchRecord process(BatchRecord batchRecord) throws IOException, IllegalArgumentException {
 				Thread.currentThread().interrupt();
@@ -218,12 +264,12 @@ class VdypProjectionProcessorTest {
 		processor.beforeStep(stepExecution);
 
 		java.lang.reflect.Method validateMethod = processor.getClass()
-				.getDeclaredMethod("validateProjectionResult", String.class, Long.class);
+				.getDeclaredMethod("validateProjectionResult", String.class, String.class);
 		validateMethod.setAccessible(true);
 
 		// Test empty string
 		IOException thrown = assertThrows(IOException.class, () -> {
-			invokeValidationMethod(validateMethod, "", 1L);
+			invokeValidationMethod(validateMethod, "", "12345678901");
 		});
 		assertTrue(thrown.getMessage().contains("VDYP projection returned empty result"));
 	}
@@ -283,13 +329,13 @@ class VdypProjectionProcessorTest {
 		processor.beforeStep(stepExecution);
 
 		java.lang.reflect.Method reclassifyMethod = processor.getClass()
-				.getDeclaredMethod("reclassifyAndThrowException", Exception.class, Long.class);
+				.getDeclaredMethod("reclassifyAndThrowException", Exception.class, String.class);
 		reclassifyMethod.setAccessible(true);
 
 		IOException ioException = new IOException("Original IO error");
 
 		IOException thrown = assertThrows(IOException.class, () -> {
-			invokeReclassifyMethod(reclassifyMethod, ioException, 1L);
+			invokeReclassifyMethod(reclassifyMethod, ioException, "12345678901");
 		});
 		assertEquals("Original IO error", thrown.getMessage());
 	}
@@ -300,13 +346,13 @@ class VdypProjectionProcessorTest {
 		processor.beforeStep(stepExecution);
 
 		java.lang.reflect.Method reclassifyMethod = processor.getClass()
-				.getDeclaredMethod("reclassifyAndThrowException", Exception.class, Long.class);
+				.getDeclaredMethod("reclassifyAndThrowException", Exception.class, String.class);
 		reclassifyMethod.setAccessible(true);
 
 		IllegalArgumentException illegalArgException = new IllegalArgumentException("Invalid argument");
 
 		IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
-			invokeReclassifyMethod(reclassifyMethod, illegalArgException, 1L);
+			invokeReclassifyMethod(reclassifyMethod, illegalArgException, "12345678901");
 		});
 		assertEquals("Invalid argument", thrown.getMessage());
 	}
@@ -316,15 +362,15 @@ class VdypProjectionProcessorTest {
 		processor.beforeStep(stepExecution);
 
 		java.lang.reflect.Method reclassifyMethod = processor.getClass()
-				.getDeclaredMethod("reclassifyAndThrowException", Exception.class, Long.class);
+				.getDeclaredMethod("reclassifyAndThrowException", Exception.class, String.class);
 		reclassifyMethod.setAccessible(true);
 
 		RuntimeException transientException = new RuntimeException("Connection timeout");
 
 		IOException thrown = assertThrows(IOException.class, () -> {
-			invokeReclassifyMethod(reclassifyMethod, transientException, 1L);
+			invokeReclassifyMethod(reclassifyMethod, transientException, "12345678901");
 		});
-		assertTrue(thrown.getMessage().contains("Transient error during VDYP projection for record ID 1"));
+		assertTrue(thrown.getMessage().contains("Transient error during VDYP projection for Feature ID"));
 	}
 
 	@Test
@@ -333,15 +379,15 @@ class VdypProjectionProcessorTest {
 		processor.beforeStep(stepExecution);
 
 		java.lang.reflect.Method reclassifyMethod = processor.getClass()
-				.getDeclaredMethod("reclassifyAndThrowException", Exception.class, Long.class);
+				.getDeclaredMethod("reclassifyAndThrowException", Exception.class, String.class);
 		reclassifyMethod.setAccessible(true);
 
 		Exception unknownException = new Exception("Unknown error");
 
 		IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
-			invokeReclassifyMethod(reclassifyMethod, unknownException, 1L);
+			invokeReclassifyMethod(reclassifyMethod, unknownException, "12345678901");
 		});
-		assertTrue(thrown.getMessage().contains("VDYP projection failed for record ID 1"));
+		assertTrue(thrown.getMessage().contains("VDYP projection failed for Feature ID"));
 	}
 
 	@Test
@@ -403,8 +449,9 @@ class VdypProjectionProcessorTest {
 
 		handleExceptionMethod.invoke(processor, retryableException, batchRecord);
 
-		verify(metricsCollector)
-				.recordRetryAttempt(1L, 1L, batchRecord, 1, retryableException, false, "test-partition");
+		verify(metricsCollector).recordRetryAttempt(
+				eq(1L), anyLong(), eq(batchRecord), eq(1), eq(retryableException), eq(false), eq("test-partition")
+		);
 	}
 
 	@Test
@@ -421,7 +468,9 @@ class VdypProjectionProcessorTest {
 
 		handleExceptionMethod.invoke(processor, nonRetryableException, batchRecord);
 
-		verify(metricsCollector).recordSkip(1L, 1L, batchRecord, nonRetryableException, "test-partition", null);
+		verify(metricsCollector).recordSkip(
+				eq(1L), anyLong(), eq(batchRecord), eq(nonRetryableException), eq("test-partition"), isNull()
+		);
 	}
 
 	@ParameterizedTest
@@ -431,15 +480,15 @@ class VdypProjectionProcessorTest {
 		processor.beforeStep(stepExecution);
 
 		java.lang.reflect.Method validateMethod = processor.getClass()
-				.getDeclaredMethod("validateProjectionResult", String.class, Long.class);
+				.getDeclaredMethod("validateProjectionResult", String.class, String.class);
 		validateMethod.setAccessible(true);
 
 		if (shouldThrow) {
 			assertThrows(IOException.class, () -> {
-				invokeValidationMethod(validateMethod, input, 1L);
+				invokeValidationMethod(validateMethod, input, "12345678901");
 			}, testName);
 		} else {
-			String result = (String) validateMethod.invoke(processor, input, 1L);
+			String result = (String) validateMethod.invoke(processor, input, "12345678901");
 			assertEquals(expectedResult, result, testName);
 		}
 	}
@@ -452,19 +501,19 @@ class VdypProjectionProcessorTest {
 		);
 	}
 
-	private void invokeReclassifyMethod(java.lang.reflect.Method method, Exception exception, Long recordId)
+	private void invokeReclassifyMethod(java.lang.reflect.Method method, Exception exception, String featureId)
 			throws Exception {
 		try {
-			method.invoke(processor, exception, recordId);
+			method.invoke(processor, exception, featureId);
 		} catch (java.lang.reflect.InvocationTargetException e) {
 			throw (Exception) e.getCause();
 		}
 	}
 
-	private String invokeValidationMethod(java.lang.reflect.Method method, String input, Long recordId)
+	private String invokeValidationMethod(java.lang.reflect.Method method, String input, String featureId)
 			throws Exception {
 		try {
-			return (String) method.invoke(processor, input, recordId);
+			return (String) method.invoke(processor, input, featureId);
 		} catch (java.lang.reflect.InvocationTargetException e) {
 			throw (Exception) e.getCause();
 		}
@@ -472,10 +521,24 @@ class VdypProjectionProcessorTest {
 
 	private BatchRecord createValidBatchRecord() {
 		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setId(1L);
-		batchRecord.setData("test-vdyp-data");
-		batchRecord.setPolygonId("polygon1");
-		batchRecord.setLayerId("layer1");
+		batchRecord.setFeatureId("12345678901"); // Realistic 11-digit Feature ID
+
+		// Create valid polygon data
+		Polygon polygon = new Polygon();
+		polygon.setFeatureId("12345678901");
+		polygon.setMapId("082G055");
+		polygon.setPolygonNumber(1234L);
+		polygon.setOrgUnit("DCR");
+		batchRecord.setPolygon(polygon);
+
+		// Create valid layer data
+		Layer layer = new Layer();
+		layer.setFeatureId("12345678901");
+		layer.setMapId("082G055");
+		layer.setPolygonNumber(1234L);
+		layer.setLayerLevelCode("P");
+		batchRecord.setLayers(java.util.List.of(layer));
+
 		return batchRecord;
 	}
 }
