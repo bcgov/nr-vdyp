@@ -8,7 +8,7 @@
       @download="handleDownload"
       @downloadrawresult="handleDownloadRawResult"
     />
-    <ReportingOutput :data="data" />
+    <ReportingOutput :data="data" :tabname="tabname" />
   </v-container>
 </template>
 
@@ -118,5 +118,6 @@ const handlePrint = () => {
   printReport(downloadData.value)
 }
 </script>
-
-<style scoped></style>
+<style scoped>
+/** */
+</style>

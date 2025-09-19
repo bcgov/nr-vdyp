@@ -325,6 +325,16 @@
                 @update:model-value="handleSpecificYearInput"
               ></v-text-field>
             </v-col>
+            <v-col class="col-space-3" />
+            <v-col cols="2" class="ml-2" style="padding-left: 0px;">
+              <v-checkbox
+                v-model="localIncSecondaryHeight"
+                label="Secondary Species Height"
+                hide-details
+                :disabled="isincSecondaryHeightDeactivated"
+                data-testid="inc-secondary-height"
+              ></v-checkbox>
+            </v-col>
           </v-row>
         </template>
       </v-col>
@@ -890,7 +900,7 @@ const isReferenceYearDeactivated = computed(() => {
 const isincSecondaryHeightDeactivated = computed(() => {
   return (
     props.isDisabled ||
-    modelParameterStore.derivedBy === CONSTANTS.DERIVED_BY.VOLUME
+    (appStore.modelSelection === CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS && modelParameterStore.derivedBy === CONSTANTS.DERIVED_BY.VOLUME)
   )
 })
 const isSpecificYearDeactivated = computed(() => {
@@ -956,4 +966,6 @@ const updateFileUploadMinDBH = (index: number, value: number) => {
   }
 }
 </script>
-<style scoped />
+<style scoped>
+/** */
+</style>
