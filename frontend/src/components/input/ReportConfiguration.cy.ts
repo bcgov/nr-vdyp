@@ -104,7 +104,7 @@ describe('ReportConfiguration.vue', () => {
     cy.get('input[id="specificYear"]').should('exist')
     cy.get(
       '[data-testid="inc-secondary-height"] input[type="checkbox"]',
-    ).should('not.exist')
+    ).should('exist')
     cy.get('.v-select').find('input').should('have.value', props.projectionType)
 
     cy.get('input[id="reportTitle"]').should('have.value', props.reportTitle)
@@ -149,7 +149,7 @@ describe('ReportConfiguration.vue', () => {
     cy.get('input[id="specificYear"]').should('have.value', '')
     cy.get(
       '[data-testid="inc-secondary-height"] input[type="checkbox"]',
-    ).should('not.exist')
+    ).should('exist')
     cy.get('.v-select').find('input').should('have.value', props.projectionType)
 
     cy.get('input[id="reportTitle"]').should('have.value', props.reportTitle)
