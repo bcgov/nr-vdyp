@@ -35,6 +35,7 @@ jobs:
           LICENSE_PLATE: 'c50504'
           #Vault path is different for prod than all other environments
           #VAULT_RESOURCE: ${{ inputs.ENVIRONMENT_NAME == 'prod' && 'prod' || 'nonprod'  }}
+          NAMESPACE: ${{ secrets.oc_namespace }}
           ENV: ${{ inputs.ENVIRONMENT_NAME }}
           DB_STORAGE: ${{ vars.DB_STORAGE }}
           DB_MAX_CPU: ${{ vars.DB_MAX_CPU }}

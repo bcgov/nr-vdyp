@@ -1,0 +1,17 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: vdyp-liquibase-config-#{ENV}#
+  namespace: '#{NAMESPACE}#'
+  managedFields:
+    - manager: Mozilla
+      operation: Update
+      apiVersion: v1
+      time: '2024-04-15T22:11:17Z'
+      fieldsType: FieldsV1
+  labels:
+    app: nr-vdyp-#{ENV}#
+    project: nr-vdyp-#{ENV}#
+immutable: false
+data:
+  LIQUIBASE_COMMAND_URL: jdbc:postgresql://crunchy-postgres-#{ENV}#-pgbouncer.#{NAMESPACE}#.svc.cluster.local/vdyp
