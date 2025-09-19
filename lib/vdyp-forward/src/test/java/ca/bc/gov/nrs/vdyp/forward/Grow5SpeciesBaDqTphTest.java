@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.forward;
 
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.arrayCloseTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.io.IOException;
@@ -76,20 +77,20 @@ class Grow5SpeciesBaDqTphTest {
 				// Results from VDYP7:
 				// Matchers.arrayContaining(45.7382965f, 0.410145015f, 5.13646269f, 29.8279209f, 5.91424417f,
 				// 4.44952154f)
-				Matchers.arrayContaining(45.738297f, 0.41014498f, 5.136462f, 29.827923f, 5.914244f, 4.4495215f)
+				arrayCloseTo(45.738297f, 0.41014498f, 5.136462f, 29.827923f, 5.914244f, 4.4495215f)
 		);
 		assertThat(
 				slice(lps.getBank().treesPerHectare, UtilizationClass.ALL),
 				// Results from VDYP7:
 				// Matchers.arrayContaining(594.113831f, 5.14728308f, 84.0494843f, 286.714783f, 167.523376f,
 				// 50.6789017f)
-				Matchers.arrayContaining(594.1138f, 5.1511745f, 84.04451f, 286.7145f, 167.52345f, 50.680126f)
+				arrayCloseTo(594.1138f, 5.1511745f, 84.04451f, 286.7145f, 167.52345f, 50.680126f)
 		);
 		assertThat(
 				slice(lps.getBank().quadMeanDiameters, UtilizationClass.ALL),
 				// Results from VDYP7:
 				// Matchers.arrayContaining(31.3083534f, 31.8518562f, 27.8945656f, 36.3949814f, 21.201519f, 33.4347534f)
-				Matchers.arrayContaining(31.308353f, 31.83982f, 27.89539f, 36.395f, 21.201513f, 33.43435f)
+				arrayCloseTo(31.308353f, 31.83982f, 27.89539f, 36.395f, 21.201513f, 33.43435f)
 		);
 	}
 
@@ -126,20 +127,20 @@ class Grow5SpeciesBaDqTphTest {
 				// Results from VDYP7:
 				// Matchers.arrayContaining(45.7382965f, 0.410145015f, 5.13646269f, 29.8279209f, 5.91424417f,
 				// 4.44952154f)
-				Matchers.arrayContaining(45.738297f, 0.410145f, 5.1364627f, 29.827923f, 5.9142447f, 4.449522f)
+				arrayCloseTo(45.738297f, 0.410145f, 5.1364627f, 29.827923f, 5.9142447f, 4.449522f)
 		);
 		assertThat(
 				slice(lps.getBank().treesPerHectare, UtilizationClass.ALL),
 				// Results from VDYP7:
 				// Matchers.arrayContaining(594.113831f, 5.15917826f, 83.2853012f, 287.107758f, 167.558533f,
 				// 51.0030174f)
-				Matchers.arrayContaining(594.1138f, 5.1591783f, 83.2853f, 287.10776f, 167.55853f, 51.003017f)
+				arrayCloseTo(594.1138f, 5.1591783f, 83.2853f, 287.10776f, 167.55853f, 51.003017f)
 		);
 		assertThat(
 				slice(lps.getBank().quadMeanDiameters, UtilizationClass.ALL),
 				// Results from VDYP7:
 				// Matchers.arrayContaining(31.3083534f, 31.8151169f, 28.0222473f, 36.3700676f, 21.199295f, 33.3283463f)
-				Matchers.arrayContaining(31.308353f, 31.815115f, 28.022247f, 36.370068f, 21.199295f, 33.32835f)
+				arrayCloseTo(31.308353f, 31.815115f, 28.022247f, 36.370068f, 21.199295f, 33.32835f)
 		);
 	}
 
@@ -162,20 +163,20 @@ class Grow5SpeciesBaDqTphTest {
 				slice(lps.getBank().basalAreas, UtilizationClass.ALL),
 				// Results from VDYP7:
 				// Matchers.arrayContaining(45.7382965f, 0.40808472f, 5.28018427f, 29.444725f, 6.11862803f, 4.48667192f)
-				Matchers.arrayContaining(45.738297f, 0.40698987f, 5.096949f, 29.598463f, 5.8687477f, 4.4152927f)
+				arrayCloseTo(45.738297f, 0.40698987f, 5.096949f, 29.598463f, 5.8687477f, 4.4152927f)
 		);
 		assertThat(
 				slice(lps.getBank().treesPerHectare, UtilizationClass.ALL),
 				// Results from VDYP7:
 				// Matchers.arrayContaining(594.113831f, 5.07865763f, 82.9379883f, 288.292511f, 167.419479f,
 				// 50.3814774f)
-				Matchers.arrayContaining(594.1138f, 5.222222f, 84.303024f, 290.61615f, 169.60605f, 51.62626f)
+				arrayCloseTo(594.1138f, 5.222222f, 84.303024f, 290.61615f, 169.60605f, 51.62626f)
 		);
 		assertThat(
 				slice(lps.getBank().quadMeanDiameters, UtilizationClass.ALL),
 				// Results from VDYP7:
 				// Matchers.arrayContaining(31.3083534f, 31.985693f, 28.4710083f, 36.0613632f, 21.5714378f, 33.6729965f)
-				Matchers.arrayContaining(31.308353f, 31.500628f, 27.745249f, 36.01055f, 20.989742f, 32.9989f)
+				arrayCloseTo(31.308353f, 31.500628f, 27.745249f, 36.01055f, 20.989742f, 32.9989f)
 		);
 	}
 }

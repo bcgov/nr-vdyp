@@ -830,4 +830,41 @@ public class VdypMatchers {
 
 		};
 	}
+
+	public static Matcher<Float[]> arrayCloseTo(float... values) {
+		return new TypeSafeDiagnosingMatcher<Float[]>() {
+
+			@Override
+			public void describeTo(Description description) {
+				description.appendValueList("[", ",", "]", values);
+			}
+
+			@Override
+			protected boolean matchesSafely(Float[] item, Description mismatchDescription) {
+				if (item.length != values.length) {
+					mismatchDescription.appendText("was ").appendValue(item.length).appendText(" long instead of ")
+							.appendValue(values.length);
+					return false;
+				}
+				for (int i = 0; i < item.length; i++) {
+					final float expected = values[i];
+					final float actual = item[i];
+					final Matcher<Float> subMatcher;
+					if (Float.isFinite(expected)) {
+						subMatcher = closeTo(expected);
+					} else if (Float.isNaN(expected)) {
+						subMatcher = asFloat(Matchers.notANumber());
+					} else {
+						subMatcher = equalTo(expected);
+					}
+					if (!subMatcher.matches(actual)) {
+						mismatchDescription.appendText("item ").appendValue(i).appendText(" ");
+						subMatcher.describeMismatch(actual, mismatchDescription);
+						return false;
+					}
+				}
+				return true;
+			}
+		};
+	}
 }

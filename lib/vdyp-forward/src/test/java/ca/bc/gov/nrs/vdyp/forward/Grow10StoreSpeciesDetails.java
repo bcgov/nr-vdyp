@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.forward;
 
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.arrayCloseTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
@@ -20,6 +21,7 @@ import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
+import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
 
 class Grow10StoreSpeciesDetails {
 
@@ -60,22 +62,22 @@ class Grow10StoreSpeciesDetails {
 		Bank bank = fpe.fps.getPrimaryLayerProcessingState().getBank();
 		assertThat(
 				ForwardTestUtils.toFloatArray(bank.dominantHeights),
-				is(arrayContaining(0.0f, Float.NaN, Float.NaN, 35.47338f, Float.NaN, Float.NaN))
+				is(arrayCloseTo(0.0f, Float.NaN, Float.NaN, 35.47338f, Float.NaN, Float.NaN))
 		);
 		// VDYP7 reports [], -9, -9, 35, -9, -9)
 		assertThat(
 				ForwardTestUtils.toFloatArray(bank.ageTotals),
-				is(arrayContaining(0.0f, Float.NaN, Float.NaN, 56.0f, Float.NaN, Float.NaN))
+				is(arrayCloseTo(0.0f, Float.NaN, Float.NaN, 56.0f, Float.NaN, Float.NaN))
 		);
 		// VDYP7 reports [], -9, -9, 56, -9, -9)
 		assertThat(
 				ForwardTestUtils.toFloatArray(bank.siteIndices),
-				is(arrayContaining(35.0f, Float.NaN, Float.NaN, 35.0f, Float.NaN, Float.NaN))
+				is(arrayCloseTo(35.0f, Float.NaN, Float.NaN, 35.0f, Float.NaN, Float.NaN))
 		);
 		// VDYP7 reports [], -9, -9, 55, -9, -9)
 		assertThat(
 				ForwardTestUtils.toFloatArray(bank.yearsAtBreastHeight),
-				is(arrayContaining(0.0f, Float.NaN, Float.NaN, 55.0f, Float.NaN, Float.NaN))
+				is(arrayCloseTo(0.0f, Float.NaN, Float.NaN, 55.0f, Float.NaN, Float.NaN))
 		);
 	}
 }

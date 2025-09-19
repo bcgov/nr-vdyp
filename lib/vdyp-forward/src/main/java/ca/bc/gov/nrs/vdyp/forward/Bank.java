@@ -196,11 +196,10 @@ class Bank {
 			dominantHeights[index] = s.getHeight().orElse(VdypEntity.MISSING_FLOAT_VALUE);
 			ageTotals[index] = s.getAgeTotal().orElse(VdypEntity.MISSING_FLOAT_VALUE);
 			yearsToBreastHeight[index] = s.getYearsToBreastHeight().orElse(VdypEntity.MISSING_FLOAT_VALUE);
-			if (ageTotals[index] != VdypEntity.MISSING_FLOAT_VALUE
+			yearsAtBreastHeight[index] = s.getYearsAtBreastHeight().orElse(VdypEntity.MISSING_FLOAT_VALUE);
+			if (Float.isNaN(yearsAtBreastHeight[index]) && ageTotals[index] != VdypEntity.MISSING_FLOAT_VALUE
 					&& yearsToBreastHeight[index] != VdypEntity.MISSING_FLOAT_VALUE) {
 				yearsAtBreastHeight[index] = ageTotals[index] - yearsToBreastHeight[index];
-			} else {
-				yearsAtBreastHeight[index] = VdypEntity.MISSING_FLOAT_VALUE;
 			}
 			siteCurveNumbers[index] = s.getSiteCurveNumber().orElse(VdypEntity.MISSING_INTEGER_VALUE);
 			// percentForestedLand is output-only and so not assigned here.

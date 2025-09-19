@@ -18,30 +18,6 @@ spec:
       labels:
         {{- include "coms.labels" . | nindent 8 }}
     spec:
-      initContainers:
-        - name: wait-for-postgres
-          # any image with `pg_isready` will do—Bitnami’s Postgres cli image is handy
-          image: bitnami/postgresql:latest
-          command:
-            - sh
-            - -c
-            - |
-              echo "⏳ Waiting for Postgres at $DB_HOST:$DB_PORT…"
-              until pg_isready -h "$DB_HOST" -p "$DB_PORT" -U "DB_USERNAME"; do
-                sleep 2
-              done
-              echo "✅ Postgres is ready!"
-          envFrom:
-            - secretRef:
-                name: {{ .Release.Name }}
-          env:
-            - name: DB_PORT
-              value: "5432"
-            - name: DB_HOST
-              value: {{$host}}
-            - name: DB_USERNAME
-              value: {{.Values.coms.env.DB_USERNAME }}
-
       containers:
         - name: {{ include "coms.fullname" . }}
           image: "{{ .Values.coms.image.repository }}:{{ .Values.coms.image.tag }}"
