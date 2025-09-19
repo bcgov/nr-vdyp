@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.vdyp.batch.configuration;
 
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
+import ca.bc.gov.nrs.vdyp.batch.service.VdypProjectionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.StepExecution;
@@ -20,6 +21,7 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 
 	private final BatchRetryPolicy retryPolicy;
 	private final BatchMetricsCollector metricsCollector;
+	private final VdypProjectionService vdypProjectionService;
 
 	// Partition context information
 	private String partitionName = "unknown";
@@ -38,9 +40,13 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 	@Value("${batch.validation.max-polygon-id-length:50}")
 	private int maxPolygonIdLength;
 
-	public VdypProjectionProcessor(BatchRetryPolicy retryPolicy, BatchMetricsCollector metricsCollector) {
+	public VdypProjectionProcessor(
+			BatchRetryPolicy retryPolicy, BatchMetricsCollector metricsCollector,
+			VdypProjectionService vdypProjectionService
+	) {
 		this.retryPolicy = retryPolicy;
 		this.metricsCollector = metricsCollector;
+		this.vdypProjectionService = vdypProjectionService;
 	}
 
 	/**
@@ -78,11 +84,12 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 	 */
 	@Override
 	public BatchRecord process(@NonNull BatchRecord batchRecord) throws IOException, IllegalArgumentException {
-		Long recordId = batchRecord.getId();
+		String featureId = batchRecord.getFeatureId();
 
-		// Register record with retry policy for tracking
-		if (retryPolicy != null) {
-			retryPolicy.registerRecord(recordId, batchRecord);
+		// Register record with retry policy for tracking (using featureId hash as
+		// featureId)
+		if (retryPolicy != null && featureId != null) {
+			retryPolicy.registerRecord((long) featureId.hashCode(), batchRecord);
 		}
 
 		// Validate record data quality - throws IllegalArgumentException for skippable
@@ -96,13 +103,16 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 		batchRecord.setProjectionResult(projectionResult);
 
 		// Check if this record was previously retried and notify success
-		String retryKey = partitionName + "_" + recordId;
-		if (retryPolicy != null && retriedRecords.contains(retryKey)) {
-			retryPolicy.onRetrySuccess(recordId, batchRecord);
-			retriedRecords.remove(retryKey);
-			logger.info(
-					"[{}] VDYP Retry success recorded for job {} record ID {}", partitionName, jobExecutionId, recordId
-			);
+		if (featureId != null) {
+			String retryKey = partitionName + "_" + featureId;
+			if (retryPolicy != null && retriedRecords.contains(retryKey)) {
+				retryPolicy.onRetrySuccess((long) featureId.hashCode(), batchRecord);
+				retriedRecords.remove(retryKey);
+				logger.info(
+						"[{}] VDYP Retry success recorded for job {} Feature ID {}", partitionName, jobExecutionId,
+						featureId
+				);
+			}
 		}
 
 		return batchRecord;
@@ -113,39 +123,37 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 	 * that should be skipped.
 	 */
 	private void validateRecordForProcessing(BatchRecord batchRecord) throws IllegalArgumentException {
-		Long recordId = batchRecord.getId();
+		String featureId = batchRecord.getFeatureId();
 
 		// Validate required fields
-		if (batchRecord.getData() == null || batchRecord.getData().trim().isEmpty()) {
+		if (batchRecord.getFeatureId() == null || batchRecord.getFeatureId().trim().isEmpty()) {
 			throw new IllegalArgumentException(
-					String.format("Missing required VDYP data field for record ID %d", recordId)
+					String.format("Missing required VDYP feature ID for Feature ID %s", featureId)
 			);
 		}
 
-		if (batchRecord.getPolygonId() == null || batchRecord.getPolygonId().trim().isEmpty()) {
-			throw new IllegalArgumentException(String.format("Missing required polygon ID for record ID %d", recordId));
-		}
-
-		if (batchRecord.getLayerId() == null || batchRecord.getLayerId().trim().isEmpty()) {
-			throw new IllegalArgumentException(String.format("Missing required layer ID for record ID %d", recordId));
-		}
-
-		// Validate data lengths and formats
-		if (batchRecord.getData().length() > maxDataLength) {
+		if (batchRecord.getPolygon() == null) {
 			throw new IllegalArgumentException(
-					String.format(
-							"VDYP data field too long for record ID %d (length: %d, max: %d)", recordId,
-							batchRecord.getData().length(), maxDataLength
-					)
+					String.format("Missing required polygon data for Feature ID %s", featureId)
 			);
 		}
 
-		String polygonId = batchRecord.getPolygonId();
-		if (polygonId.length() < minPolygonIdLength || polygonId.length() > maxPolygonIdLength) {
+		if (batchRecord.getLayers() == null || batchRecord.getLayers().isEmpty()) {
 			throw new IllegalArgumentException(
-					String.format(
-							"Invalid polygon ID length for record ID %d (length: %d)", recordId, polygonId.length()
-					)
+					String.format("Missing required layer data for Feature ID %s", featureId)
+			);
+		}
+
+		// Validate polygon data
+		if (batchRecord.getPolygon().getMapId() == null || batchRecord.getPolygon().getMapId().trim().isEmpty()) {
+			throw new IllegalArgumentException(
+					String.format("Missing required map ID in polygon data for Feature ID %s", featureId)
+			);
+		}
+
+		if (batchRecord.getPolygon().getPolygonNumber() == null) {
+			throw new IllegalArgumentException(
+					String.format("Missing required polygon number for Feature ID %s", featureId)
 			);
 		}
 	}
@@ -159,10 +167,10 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 			throws IOException, IllegalArgumentException {
 		try {
 			String result = performVdypProjection(batchRecord);
-			return validateProjectionResult(result, batchRecord.getId());
+			return validateProjectionResult(result, batchRecord.getFeatureId());
 		} catch (Exception e) {
 			handleProjectionException(e, batchRecord);
-			reclassifyAndThrowException(e, batchRecord.getId());
+			reclassifyAndThrowException(e, batchRecord.getFeatureId());
 			return null;
 		}
 	}
@@ -170,9 +178,9 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 	/**
 	 * Validates the projection result and throws IOException if empty.
 	 */
-	private String validateProjectionResult(String result, Long recordId) throws IOException {
+	private String validateProjectionResult(String result, String featureId) throws IOException {
 		if (result == null || result.trim().isEmpty()) {
-			throw new IOException(String.format("VDYP projection returned empty result for record ID %d", recordId));
+			throw new IOException(String.format("VDYP projection returned empty result for Feature ID %s", featureId));
 		}
 		return result;
 	}
@@ -182,12 +190,14 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 	 */
 	private void handleProjectionException(Exception e, BatchRecord batchRecord) {
 		if (metricsCollector != null && jobExecutionId != null) {
+			String featureId = batchRecord.getFeatureId();
+			long recordIdHash = featureId != null ? (long) featureId.hashCode() : 0L;
+
 			if (isRetryableException(e)) {
-				metricsCollector.recordRetryAttempt(
-						jobExecutionId, batchRecord.getId(), batchRecord, 1, e, false, partitionName
-				);
+				metricsCollector
+						.recordRetryAttempt(jobExecutionId, recordIdHash, batchRecord, 1, e, false, partitionName);
 			} else {
-				metricsCollector.recordSkip(jobExecutionId, batchRecord.getId(), batchRecord, e, partitionName, null);
+				metricsCollector.recordSkip(jobExecutionId, recordIdHash, batchRecord, e, partitionName, null);
 			}
 		}
 	}
@@ -202,7 +212,8 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 	/**
 	 * Reclassifies and throws exceptions for proper Spring Batch handling.
 	 */
-	private void reclassifyAndThrowException(Exception e, Long recordId) throws IOException, IllegalArgumentException {
+	private void reclassifyAndThrowException(Exception e, String featureId)
+			throws IOException, IllegalArgumentException {
 		if (e instanceof IOException ioException) {
 			throw ioException;
 		}
@@ -212,12 +223,12 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 		}
 
 		if (e instanceof RuntimeException && isTransientError(e)) {
-			throw new IOException("Transient error during VDYP projection for record ID " + recordId, e);
+			throw new IOException("Transient error during VDYP projection for Feature ID " + featureId, e);
 		}
 
 		// Unknown errors treated as data quality issues
 		throw new IllegalArgumentException(
-				"VDYP projection failed for record ID " + recordId + ": " + e.getMessage(), e
+				"VDYP projection failed for Feature ID " + featureId + ": " + e.getMessage(), e
 		);
 	}
 
@@ -247,27 +258,61 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 	}
 
 	/**
-	 * This is a placeholder implementation that will be replaced with actual VDYP extended core service calls.
+	 * Performs actual VDYP projection using the extended core library.
 	 *
 	 * @param batchRecord The VDYP record containing polygon and layer information
 	 * @return Projection result string
 	 */
 	private String performVdypProjection(BatchRecord batchRecord) throws IOException {
-		String polygonId = batchRecord.getPolygonId();
-		String layerId = batchRecord.getLayerId();
-		String data = batchRecord.getData();
+		String featureId = batchRecord.getFeatureId();
+		String mapId = batchRecord.getPolygon().getMapId();
+		Long polygonNumber = batchRecord.getPolygon().getPolygonNumber();
 
 		try {
-			Thread.sleep(10); // Minimal delay to simulate processing
-		} catch (InterruptedException e) {
-			Thread.currentThread().interrupt();
-			throw new IOException("Processing interrupted for record ID " + batchRecord.getId(), e);
-		}
+			logger.debug(
+					"[{}] Starting VDYP projection for Feature ID {} (Map: {}, Polygon: {})", partitionName, featureId,
+					mapId, polygonNumber
+			);
 
-		return String.format(
-				"PROJECTED[P:%s,L:%s,Data:%s]", polygonId != null ? polygonId : "N/A",
-				layerId != null ? layerId : "N/A",
-				data != null && data.length() > 10 ? data.substring(0, 10) + "..." : data
+			// Call the actual VDYP projection service for this specific record and
+			// partition
+			String projectionResult = vdypProjectionService.performProjectionForRecord(batchRecord, partitionName);
+
+			logger.debug(
+					"[{}] Completed VDYP projection for Feature ID {} - Result: {}", partitionName,
+					batchRecord.getFeatureId(), projectionResult
+			);
+
+			return projectionResult;
+
+		} catch (Exception e) {
+			// Handle projection failure with enhanced context and wrap as IOException
+			throw handleProjectionFailure(featureId, mapId, polygonNumber, e);
+		}
+	}
+
+	/**
+	 * Handles VDYP projection failures by logging with enhanced context and creating appropriate IOException.
+	 *
+	 * @param batchRecord   The batch record being processed
+	 * @param featureId     The feature ID being processed
+	 * @param mapId         The map ID being processed
+	 * @param polygonNumber The polygon number being processed
+	 * @param cause         The original exception that caused the failure
+	 * @return IOException with enhanced context for retry logic
+	 */
+	private IOException handleProjectionFailure(String featureId, String mapId, Long polygonNumber, Exception cause) {
+		// Create enhanced contextual message
+		String contextualMessage = String.format(
+				"[%s] VDYP projection failed for Feature ID %s (Map: %s, Polygon: %s). Exception type: %s, Root cause: %s",
+				partitionName, featureId, mapId, polygonNumber, cause.getClass().getSimpleName(),
+				cause.getMessage() != null ? cause.getMessage() : "No error message available"
 		);
+
+		// Log the failure with full context and stack trace
+		logger.error(contextualMessage, cause);
+
+		// Return IOException with enhanced context for retry logic
+		return new IOException(contextualMessage, cause);
 	}
 }

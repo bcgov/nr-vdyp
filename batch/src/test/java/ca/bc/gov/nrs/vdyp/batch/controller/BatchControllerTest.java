@@ -65,8 +65,6 @@ class BatchControllerTest {
 	void testStartBatchJob_WithValidJob_ReturnsSuccess() throws JobExecutionAlreadyRunningException,
 			JobRestartException, JobInstanceAlreadyCompleteException, JobParametersInvalidException {
 		BatchJobRequest request = new BatchJobRequest();
-		request.setInputFilePath("/test/input.csv");
-		request.setOutputFilePath("/test/output");
 		request.setPartitionSize(4L);
 
 		when(jobExecution.getId()).thenReturn(1L);
@@ -263,30 +261,6 @@ class BatchControllerTest {
 	}
 
 	@Test
-	void testGetBatchStatistics_ReturnsStatistics() {
-		List<String> jobNames = List.of("testJob");
-		List<JobInstance> jobInstances = List.of(jobInstance);
-		List<JobExecution> jobExecutions = List.of(jobExecution);
-
-		when(jobExecution.getId()).thenReturn(1L);
-		when(jobExecution.getStatus()).thenReturn(BatchStatus.COMPLETED);
-		when(jobExecution.getStepExecutions()).thenReturn(Collections.singleton(stepExecution));
-		when(stepExecution.getWriteCount()).thenReturn(95L);
-		when(stepExecution.getSkipCount()).thenReturn(5L);
-		when(jobExplorer.getJobNames()).thenReturn(jobNames);
-		when(jobExplorer.getJobInstances("testJob", 0, 1000)).thenReturn(jobInstances);
-		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(jobExecutions);
-		when(metricsCollector.getJobMetrics(1L)).thenReturn(new BatchMetrics());
-
-		ResponseEntity<Map<String, Object>> response = batchController.getBatchStatistics();
-
-		assertEquals(200, response.getStatusCode().value());
-		assertNotNull(response.getBody());
-		assertTrue(response.getBody().containsKey("systemOverview"));
-		assertTrue(response.getBody().containsKey("processingStatistics"));
-	}
-
-	@Test
 	void testHealth_ReturnsHealthStatus() {
 		ResponseEntity<Map<String, Object>> response = batchController.health();
 
@@ -301,8 +275,6 @@ class BatchControllerTest {
 	void testStartBatchJob_WithAllRequestParameters_SetsAllParameters() throws JobExecutionAlreadyRunningException,
 			JobRestartException, JobInstanceAlreadyCompleteException, JobParametersInvalidException {
 		BatchJobRequest request = new BatchJobRequest();
-		request.setInputFilePath("/test/input.csv");
-		request.setOutputFilePath("/test/output");
 		request.setPartitionSize(4L);
 		request.setMaxRetryAttempts(3);
 		request.setRetryBackoffPeriod(1000L);

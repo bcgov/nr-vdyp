@@ -10,144 +10,234 @@ import org.springframework.lang.NonNull;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
- * Dynamic partitioner for VDYP batch processing that divides CSV file processing by record position ranges.
+ * FEATURE_ID-based partitioner for VDYP batch processing.
  *
- * This partitioner determines the total record count and creates partitions based on sequential record positions.
+ * This partitioner implements the FEATURE_ID-based partitioning strategy that ensures each partition contains complete
+ * polygon data (1 polygon + all associated layers).
+ *
+ * Partitioning Strategy: - Reads polygon CSV to extract unique FEATURE_IDs - Distributes FEATURE_ID ranges across
+ * partitions using simple sizing (explicit partitionSize or default grid-size) - Each worker gets assigned specific
+ * FEATURE_IDs and processes complete Polygon objects
  */
 public class DynamicPartitioner implements Partitioner {
 
 	private static final Logger logger = LoggerFactory.getLogger(DynamicPartitioner.class);
 
-	private static final String START_LINE = "startLine";
-	private static final String END_LINE = "endLine";
+	private static final String FEATURE_ID_RANGE_START = "featureIdRangeStart";
+	private static final String FEATURE_ID_RANGE_END = "featureIdRangeEnd";
+	private static final String ASSIGNED_FEATURE_IDS = "assignedFeatureIds";
 	private static final String PARTITION_NAME = "partitionName";
 	private static final String PARTITION_0 = "partition0";
 
-	// Input resource will be set dynamically during execution
-	private Resource inputResource;
+	private Resource polygonResource;
 
-	public void setInputResource(Resource inputResource) {
-		this.inputResource = inputResource;
+	public void setPolygonResource(Resource polygonResource) {
+		this.polygonResource = polygonResource;
 	}
 
+	/**
+	 * Creates partitions based on unique FEATURE_IDs from polygon CSV file. Each partition contains complete polygon
+	 * data (polygon + all associated layers).
+	 *
+	 * @param gridSize Number of partitions to create
+	 * @return Map of partition execution contexts with assigned FEATURE_IDs
+	 */
 	@Override
 	@NonNull
 	public Map<String, ExecutionContext> partition(int gridSize) {
 		Map<String, ExecutionContext> partitions = new HashMap<>();
 
-		// Check if input resource is available
-		if (inputResource == null) {
-			logger.warn("[VDYP Partitioner] Warning: Input resource not set. Using default single partition.");
+		// Check if polygon resource is available
+		if (polygonResource == null) {
+			logger.warn(
+					"[VDYP FEATURE_ID Partitioner] Warning: Polygon resource not set. Using default single partition."
+			);
 			// Create single empty partition
 			ExecutionContext context = new ExecutionContext();
-			context.putLong(START_LINE, 2);
-			context.putLong(END_LINE, 2);
+			context.putString(ASSIGNED_FEATURE_IDS, "");
 			context.putString(PARTITION_NAME, PARTITION_0);
 			partitions.put(PARTITION_0, context);
 			return partitions;
 		}
 
-		// Calculate total record count by reading the actual CSV file
-		long totalRecords = calculateTotalRecords();
+		// Extract unique FEATURE_IDs from polygon CSV
+		List<Long> uniqueFeatureIds = extractUniqueFeatureIds();
 
-		if (totalRecords <= 0) {
-			logger.warn("[VDYP Partitioner] Warning: No records found in CSV file. Using single partition.");
+		if (uniqueFeatureIds.isEmpty()) {
+			logger.warn(
+					"[VDYP FEATURE_ID Partitioner] Warning: No FEATURE_IDs found in polygon CSV file. Using single partition."
+			);
 			// Fallback: create single partition
 			ExecutionContext context = new ExecutionContext();
-			context.putLong(START_LINE, 2); // Skip header (line 1)
-			context.putLong(END_LINE, 2);
+			context.putString(ASSIGNED_FEATURE_IDS, "");
 			context.putString(PARTITION_NAME, PARTITION_0);
 			partitions.put(PARTITION_0, context);
 			return partitions;
 		}
 
-		// Divide records by position, not by ID values
-		long recordsPerPartition = totalRecords / gridSize;
-		long remainder = totalRecords % gridSize;
+		// SIMPLE PARTITION SIZING: Use provided partitionSize or default grid size
+		int actualGridSize = gridSize;
 
-		long currentStartLine = 2; // Start after header (line 1)
+		logger.info(
+				"[VDYP FEATURE_ID Partitioner] Using partition size: {}, FEATURE_IDs: {}", actualGridSize,
+				uniqueFeatureIds.size()
+		);
 
-		for (int i = 0; i < gridSize; i++) {
+		// Sort FEATURE_IDs for consistent partitioning
+		Collections.sort(uniqueFeatureIds);
+
+		// Divide FEATURE_IDs across partitions
+		int totalFeatureIds = uniqueFeatureIds.size();
+		int featureIdsPerPartition = Math.max(1, totalFeatureIds / actualGridSize);
+		int remainder = totalFeatureIds % actualGridSize;
+
+		int currentIndex = 0;
+
+		for (int i = 0; i < actualGridSize && currentIndex < totalFeatureIds; i++) {
 			ExecutionContext context = new ExecutionContext();
 
-			// Calculate line range for this partition
-			long recordsInThisPartition = recordsPerPartition;
+			// Calculate FEATURE_ID range for this partition
+			int featureIdsInThisPartition = featureIdsPerPartition;
 
-			// Add remainder to the last partition
-			if (i == gridSize - 1) {
-				recordsInThisPartition += remainder;
+			// Add remainder to the last partitions
+			if (i < remainder) {
+				featureIdsInThisPartition++;
 			}
 
-			long currentEndLine = currentStartLine + recordsInThisPartition - 1;
+			int endIndex = Math.min(currentIndex + featureIdsInThisPartition, totalFeatureIds);
 
-			// Set partition parameters - using line-based ranges
-			context.putLong(START_LINE, currentStartLine);
-			context.putLong(END_LINE, currentEndLine);
+			List<Long> assignedFeatureIds = uniqueFeatureIds.subList(currentIndex, endIndex);
+
+			// Convert to comma-separated string for easy parsing
+			String featureIdList = assignedFeatureIds.stream().map(String::valueOf).reduce((a, b) -> a + "," + b)
+					.orElse("");
+
+			// Set partition parameters - using FEATURE_ID assignments
+			context.putString(ASSIGNED_FEATURE_IDS, featureIdList);
 			context.putString(PARTITION_NAME, "partition" + i);
+
+			// For backward compatibility, also set range bounds
+			if (!assignedFeatureIds.isEmpty()) {
+				context.putLong(FEATURE_ID_RANGE_START, assignedFeatureIds.get(0));
+				context.putLong(FEATURE_ID_RANGE_END, assignedFeatureIds.get(assignedFeatureIds.size() - 1));
+			}
 
 			partitions.put("partition" + i, context);
 
 			logger.info(
-					"VDYP partition{} created: lines {}-{} ({} records)", i, currentStartLine, currentEndLine,
-					recordsInThisPartition
+					"VDYP partition{} created: FEATURE_IDs [{}] ({} polygons)", i, featureIdList,
+					assignedFeatureIds.size()
 			);
 
-			currentStartLine = currentEndLine + 1;
+			currentIndex = endIndex;
 		}
 
 		logger.info(
-				"VDYP total partitions: {}, covering {} records (lines 2-{})", gridSize, totalRecords,
-				currentStartLine - 1
+				"FEATURE_ID-based partitioner created {} partitions for {} unique FEATURE_IDs", partitions.size(),
+				totalFeatureIds
 		);
 
 		return partitions;
 	}
 
 	/**
-	 * Calculate total record count by reading the VDYP CSV file and counting data lines.
+	 * Extract unique FEATURE_IDs from the polygon CSV file.
 	 *
-	 * This method counts the number of data records (excluding header) for position-based partitioning of VDYP data.
-	 *
-	 * @return Total number of data records
+	 * @return Sorted list of unique FEATURE_IDs found in polygon CSV
 	 */
-	private long calculateTotalRecords() {
-		logger.info("[VDYP Partitioner] Calculating total records from VDYP CSV file...");
+	private List<Long> extractUniqueFeatureIds() {
+		logger.info("[VDYP FEATURE_ID Partitioner] Extracting unique FEATURE_IDs from polygon CSV...");
 
-		try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputResource.getInputStream()))) {
-			String line;
-			long recordCount = 0;
-			int lineNumber = 0;
-
-			// Skip header line
-			String headerLine = reader.readLine();
-			if (headerLine != null) {
-				lineNumber = 1;
-				logger.info("[VDYP Partitioner] Header: {}", headerLine);
+		try (BufferedReader reader = new BufferedReader(new InputStreamReader(polygonResource.getInputStream()))) {
+			// Validate header
+			if (!validateHeader(reader)) {
+				return new ArrayList<>();
 			}
 
-			// Count data records
-			while ( (line = reader.readLine()) != null) {
-				lineNumber++;
+			// Extract FEATURE_IDs from data rows
+			Set<Long> uniqueFeatureIds = extractFeatureIdsFromDataRows(reader);
 
-				if (!line.trim().isEmpty()) {
-					recordCount++;
-				}
-			}
+			logger.info("[VDYP FEATURE_ID Partitioner] Extracted {} unique FEATURE_IDs", uniqueFeatureIds.size());
 
-			logger.info("[VDYP Partitioner] CSV Analysis Complete:");
-			logger.info("  - Total lines in file: {}", lineNumber);
-			logger.info("  - VDYP data records found: {}", recordCount);
-			logger.info("  - Using position-based partitioning for efficient parallel VDYP processing");
-
-			return recordCount;
+			return new ArrayList<>(uniqueFeatureIds);
 
 		} catch (IOException e) {
-			logger.error("[VDYP Partitioner] Error reading CSV file: {}", e.getMessage(), e);
-			return 0;
+			logger.error("[VDYP FEATURE_ID Partitioner] Error reading polygon CSV file", e);
+			return new ArrayList<>();
+		}
+	}
+
+	/**
+	 * Validates the CSV header and checks for FEATURE_ID column.
+	 *
+	 * @param reader BufferedReader for the CSV file
+	 * @return true if header is valid, false otherwise
+	 * @throws IOException if reading fails
+	 */
+	private boolean validateHeader(BufferedReader reader) throws IOException {
+		String headerLine = reader.readLine();
+		if (headerLine == null) {
+			logger.error("[VDYP FEATURE_ID Partitioner] No header found in CSV file");
+			return false;
+		}
+
+		logger.debug("[VDYP FEATURE_ID Partitioner] Header: {}", headerLine);
+
+		if (!headerLine.toUpperCase().contains("FEATURE_ID")) {
+			logger.error("[VDYP FEATURE_ID Partitioner] FEATURE_ID column not found in header: {}", headerLine);
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Extracts FEATURE_IDs from data rows in the CSV file.
+	 *
+	 * @param reader BufferedReader for the CSV file
+	 * @return Set of unique FEATURE_IDs
+	 * @throws IOException if reading fails
+	 */
+	private Set<Long> extractFeatureIdsFromDataRows(BufferedReader reader) throws IOException {
+		Set<Long> uniqueFeatureIds = new HashSet<>();
+		String line;
+		int lineNumber = 1; // Start from 1 since header was already read
+
+		while ( (line = reader.readLine()) != null) {
+			lineNumber++;
+			processDataLine(line, lineNumber, uniqueFeatureIds);
+		}
+
+		return uniqueFeatureIds;
+	}
+
+	/**
+	 * Processes a single data line to extract FEATURE_ID.
+	 *
+	 * @param line             The CSV line to process
+	 * @param lineNumber       Current line number for logging
+	 * @param uniqueFeatureIds Set to add the extracted FEATURE_ID to
+	 */
+	private void processDataLine(String line, int lineNumber, Set<Long> uniqueFeatureIds) {
+		if (line.trim().isEmpty()) {
+			return;
+		}
+
+		try {
+			String[] columns = line.split(",");
+			if (columns.length > 0) {
+				String featureIdStr = columns[0].trim();
+				if (!featureIdStr.isEmpty()) {
+					Long featureId = Long.parseLong(featureIdStr);
+					uniqueFeatureIds.add(featureId);
+					logger.debug("[VDYP FEATURE_ID Partitioner] Found FEATURE_ID: {}", featureId);
+				}
+			}
+		} catch (NumberFormatException e) {
+			logger.warn("[VDYP FEATURE_ID Partitioner] Invalid FEATURE_ID at line {}: {}", lineNumber, line);
 		}
 	}
 }

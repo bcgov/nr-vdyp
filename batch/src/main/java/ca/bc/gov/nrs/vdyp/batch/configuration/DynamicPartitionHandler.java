@@ -17,10 +17,13 @@ import org.springframework.lang.NonNull;
 import java.util.Collection;
 
 /**
- * Dynamic partition handler for VDYP batch processing that adjusts grid size based on job parameters.
+ * FEATURE_ID-based dynamic partition handler for VDYP batch processing.
+ *
+ * This handler manages the FEATURE_ID-based partitioning strategy, setting up polygon and layer resources for the
+ * DynamicPartitioner to ensure complete polygon data integrity across all partitions.
  *
  * This handler manages the parallel execution of VDYP processing partitions, allowing runtime configuration of
- * partition count.
+ * partition count while maintaining FEATURE_ID-based data integrity.
  */
 public class DynamicPartitionHandler implements PartitionHandler {
 
@@ -49,8 +52,6 @@ public class DynamicPartitionHandler implements PartitionHandler {
 		// Get dynamic parameters from job parameters
 		JobParameters jobParameters = masterStepExecution.getJobExecution().getJobParameters();
 		Long partitionSize = jobParameters.getLong("partitionSize");
-		Long chunkSize = jobParameters.getLong("chunkSize");
-		String inputFilePath = jobParameters.getString("inputFilePath");
 
 		// Get grid size
 		int actualGridSize;
@@ -62,34 +63,25 @@ public class DynamicPartitionHandler implements PartitionHandler {
 			throw new IllegalStateException("No grid size specified in job parameters or properties. ");
 		}
 
-		// Get input file path
-		String actualInputFilePath = inputFilePath;
-		if (actualInputFilePath == null || actualInputFilePath.trim().isEmpty()) {
-			actualInputFilePath = batchProperties.getInput().getFilePath();
-		}
-		if (actualInputFilePath == null || actualInputFilePath.trim().isEmpty()) {
-			throw new IllegalStateException("No input file path specified in job parameters or properties. ");
-		}
+		// Create polygon resource for FEATURE_ID-based partitioning
+		String polygonFilePath = batchProperties.getVdyp().getProjection().getPolygonFile();
 
-		// Create input resource from file path
-		Resource inputResource;
-		if (actualInputFilePath.startsWith("classpath:")) {
-			inputResource = new ClassPathResource(actualInputFilePath.substring(10));
+		Resource polygonResource;
+		if (polygonFilePath.startsWith("classpath:")) {
+			polygonResource = new ClassPathResource(polygonFilePath.substring(10));
 		} else {
-			inputResource = new FileSystemResource(actualInputFilePath);
+			polygonResource = new FileSystemResource(polygonFilePath);
 		}
 
-		dynamicPartitioner.setInputResource(inputResource);
-		logger.info("[VDYP Partition Handler] Using input file: {}", actualInputFilePath);
+		// Set polygon resource for FEATURE_ID-based partitioning
+		dynamicPartitioner.setPolygonResource(polygonResource);
+
+		logger.info("[VDYP FEATURE_ID Partition Handler] Using polygon file: {}", polygonFilePath);
 
 		logger.info(
-				"VDYP dynamic partitioning: Using {} partitions (requested: {}, from properties: {})", actualGridSize,
-				partitionSize, batchProperties.getPartitioning().getGridSize()
+				"VDYP FEATURE_ID-based partitioning: Using {} partitions (requested: {}, from properties: {})",
+				actualGridSize, partitionSize, batchProperties.getPartitioning().getGridSize()
 		);
-
-		if (chunkSize != null) {
-			logger.info("VDYP dynamic chunk size: Requested {}", chunkSize.intValue());
-		}
 
 		// Create and configure TaskExecutorPartitionHandler with dynamic grid size
 		TaskExecutorPartitionHandler handler = new TaskExecutorPartitionHandler();

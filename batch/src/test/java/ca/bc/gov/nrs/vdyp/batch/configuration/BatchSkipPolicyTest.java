@@ -130,9 +130,9 @@ class BatchSkipPolicyTest {
 	@Test
 	void testCacheRecordData_DoesNotThrow() {
 		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setId(123L);
+		batchRecord.setFeatureId("1145678901");
 
-		assertDoesNotThrow(() -> BatchSkipPolicy.cacheRecordData(123L, batchRecord, "test-thread"));
+		assertDoesNotThrow(() -> BatchSkipPolicy.cacheRecordData(1145678901L, batchRecord, "test-thread"));
 	}
 
 	@Test
@@ -143,8 +143,8 @@ class BatchSkipPolicyTest {
 	}
 
 	@ParameterizedTest
-	@MethodSource("provideRecordIdExtractionTests")
-	void testRecordIdExtraction_VariousScenarios_HandlesGracefully(
+	@MethodSource("provideFeatureIdExtractionTests")
+	void testFeatureIdExtraction_VariousScenarios_HandlesGracefully(
 			String testName, RuntimeException exception, boolean expectedSkippable
 	) throws SkipLimitExceededException {
 		boolean result = batchSkipPolicy.shouldSkip(exception, 1);
@@ -152,27 +152,27 @@ class BatchSkipPolicyTest {
 		assertEquals(expectedSkippable, result, testName);
 	}
 
-	static Stream<Arguments> provideRecordIdExtractionTests() {
+	static Stream<Arguments> provideFeatureIdExtractionTests() {
 		return Stream.of(
 				Arguments.of(
-						"Valid ID in message should be extractable",
-						new RuntimeException("Error processing record ID 123 - invalid data format"), true
+						"Valid Feature ID in message should be extractable",
+						new RuntimeException("Error processing Feature ID 1145678902 - invalid data format"), true
 				),
 				Arguments.of(
-						"No ID in message should handle gracefully",
-						new RuntimeException("No ID in this message - malformed data"), true
+						"No Feature ID in message should handle gracefully",
+						new RuntimeException("No Feature ID in this message - malformed data"), true
 				),
 				Arguments.of(
-						"Malformed ID should handle gracefully",
-						new RuntimeException("Error with ID abc123 - invalid format"), true
+						"Malformed Feature ID should handle gracefully",
+						new RuntimeException("Error with Feature ID abc123 - invalid format"), true
 				),
 				Arguments.of(
-						"Non-FlatFile exception with record ID should use fallback",
-						new RuntimeException("Error with record ID 25 - invalid data format"), true
+						"Non-FlatFile exception with Feature ID should use fallback",
+						new RuntimeException("Error with Feature ID 1245678903 - invalid data format"), true
 				),
 				Arguments.of(
-						"Zero record ID should be handled gracefully",
-						new RuntimeException("Error with record ID 0 - format issue"), true
+						"Zero Feature ID should be handled gracefully",
+						new RuntimeException("Error with Feature ID 0 - format issue"), true
 				)
 		);
 	}
@@ -189,21 +189,20 @@ class BatchSkipPolicyTest {
 	@Test
 	void testCacheRecordData_WithNullValues_HandlesGracefully() {
 		assertDoesNotThrow(() -> BatchSkipPolicy.cacheRecordData(null, null, "thread1"));
-		assertDoesNotThrow(() -> BatchSkipPolicy.cacheRecordData(123L, null, "thread1"));
+		assertDoesNotThrow(() -> BatchSkipPolicy.cacheRecordData(1345678904L, null, "thread1"));
 		assertDoesNotThrow(() -> BatchSkipPolicy.cacheRecordData(null, new BatchRecord(), "thread1"));
 	}
 
 	@Test
 	void testCacheRecordData_AndRetrieval_WorksCorrectly() throws SkipLimitExceededException {
 		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setId(456L);
-		batchRecord.setData("test data");
+		batchRecord.setFeatureId("1445678905");
 
 		// Cache the record
-		BatchSkipPolicy.cacheRecordData(456L, batchRecord, Thread.currentThread().getName());
+		BatchSkipPolicy.cacheRecordData(1445678905L, batchRecord, Thread.currentThread().getName());
 
-		// Create an exception with record ID that should retrieve the cached record
-		RuntimeException exception = new RuntimeException("Error processing record ID 456 - invalid format");
+		// Create an exception with Feature ID that should retrieve the cached record
+		RuntimeException exception = new RuntimeException("Error processing Feature ID 1445678905 - invalid format");
 
 		boolean result = batchSkipPolicy.shouldSkip(exception, 1);
 
@@ -293,13 +292,12 @@ class BatchSkipPolicyTest {
 	@Test
 	void testExtractRecord_WithCachedRecord_ReturnsCachedData() throws SkipLimitExceededException {
 		BatchRecord cachedRecord = new BatchRecord();
-		cachedRecord.setId(789L);
-		cachedRecord.setData("cached test data");
+		cachedRecord.setFeatureId("1545678906");
 
 		// Cache the record first
-		BatchSkipPolicy.cacheRecordData(789L, cachedRecord, Thread.currentThread().getName());
+		BatchSkipPolicy.cacheRecordData(1545678906L, cachedRecord, Thread.currentThread().getName());
 
-		RuntimeException exception = new RuntimeException("Error processing record ID 789 - invalid format");
+		RuntimeException exception = new RuntimeException("Error processing Feature ID 1545678906 - invalid format");
 
 		boolean result = batchSkipPolicy.shouldSkip(exception, 1);
 
@@ -308,7 +306,7 @@ class BatchSkipPolicyTest {
 
 	@Test
 	void testExtractRecord_WithoutCachedRecord_CreatesBasicRecord() throws SkipLimitExceededException {
-		RuntimeException exception = new RuntimeException("Error processing record ID 999 - malformed data");
+		RuntimeException exception = new RuntimeException("Error processing Feature ID 1645678907 - malformed data");
 
 		boolean result = batchSkipPolicy.shouldSkip(exception, 1);
 
