@@ -119,10 +119,10 @@ pgmonitor:
       memory: 128Mi
 
 coms_db:
-    user: ~
-    name: ~
+    user: #{COMS_DB_USER}#
+    name: #{COMS_DB_NAME}#
 
 batch_db:
-    user: ~
-    name: ~
+    user: #{BATCH_DB_USER}#
+    name: #{BATCH_DB_NAME}#
 
