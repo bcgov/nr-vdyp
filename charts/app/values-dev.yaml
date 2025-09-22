@@ -331,6 +331,7 @@ backup:
 
 coms:
   enabled: true
+  db_secret: crunchy-postgres-dev-pguser-coms
   image:
     repository: ghcr.io/bcgov/common-object-management-service
     tag: ~
@@ -358,11 +359,6 @@ coms:
     BASICAUTH_ENABLED: ~
     BASICAUTH_USERNAME: ~
     BASICAUTH_PASSWORD: ~
-    DB_HOST: ~
-    DB_PORT: "5432"
-    DB_USERNAME: ~
-    DB_PASSWORD: ~
-    DB_DATABASE: ~
 
   batch:
     enabled: true
