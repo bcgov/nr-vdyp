@@ -54,12 +54,12 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.coms.db_secret }}
-                  key: pgbouncer-port
+                  key: port
             - name: DB_HOST
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.coms.db_secret }}
-                  key: pgbouncer-host
+                  key: host
             - name: DB_NAME
               valueFrom:
                 secretKeyRef:
