@@ -42,8 +42,7 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 
 	public VdypProjectionProcessor(
 			BatchRetryPolicy retryPolicy, BatchMetricsCollector metricsCollector,
-			VdypProjectionService vdypProjectionService
-	) {
+			VdypProjectionService vdypProjectionService) {
 		this.retryPolicy = retryPolicy;
 		this.metricsCollector = metricsCollector;
 		this.vdypProjectionService = vdypProjectionService;
@@ -66,21 +65,25 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 
 		logger.info(
 				"[{}] VDYP Projection Processor initialized for job {} range {}-{}", partitionName, jobExecutionId,
-				startLine, endLine
-		);
+				startLine, endLine);
 	}
 
 	/**
 	 * Process a single record
 	 *
-	 * Processing flow: 1. Register record with retry policy for tracking 2. Validate record data quality (throws
-	 * IllegalArgumentException for skippable issues) 3. Perform projection processing with proper error handling 4.
-	 * Record retry success if this record was previously retried
+	 * Processing flow:
+	 * 1. Register record with retry policy for tracking
+	 * 2. Validate record data quality (throws IllegalArgumentException for
+	 * skippable issues)
+	 * 3. Perform projection processing with proper error handling
+	 * 4. Record retry success if this record was previously retried
 	 *
-	 * @param record The data record to process
+	 * @param batchRecord The data record to process
 	 * @return The processed record with projection results
-	 * @throws IOException              for retryable errors (network, timeout, transient issues)
-	 * @throws IllegalArgumentException for skippable errors (data validation failures)
+	 * @throws IOException              for retryable errors (network, timeout,
+	 *                                  transient issues)
+	 * @throws IllegalArgumentException for skippable errors (data validation
+	 *                                  failures)
 	 */
 	@Override
 	public BatchRecord process(@NonNull BatchRecord batchRecord) throws IOException, IllegalArgumentException {
@@ -110,8 +113,7 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 				retriedRecords.remove(retryKey);
 				logger.info(
 						"[{}] VDYP Retry success recorded for job {} Feature ID {}", partitionName, jobExecutionId,
-						featureId
-				);
+						featureId);
 			}
 		}
 
@@ -119,7 +121,8 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 	}
 
 	/**
-	 * Validate record data quality for production processing. Throws IllegalArgumentException for data quality issues
+	 * Validate record data quality for production processing. Throws
+	 * IllegalArgumentException for data quality issues
 	 * that should be skipped.
 	 */
 	private void validateRecordForProcessing(BatchRecord batchRecord) throws IllegalArgumentException {
@@ -128,40 +131,36 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 		// Validate required fields
 		if (batchRecord.getFeatureId() == null || batchRecord.getFeatureId().trim().isEmpty()) {
 			throw new IllegalArgumentException(
-					String.format("Missing required VDYP feature ID for Feature ID %s", featureId)
-			);
+					String.format("Missing required VDYP feature ID for Feature ID %s", featureId));
 		}
 
 		if (batchRecord.getPolygon() == null) {
 			throw new IllegalArgumentException(
-					String.format("Missing required polygon data for Feature ID %s", featureId)
-			);
+					String.format("Missing required polygon data for Feature ID %s", featureId));
 		}
 
 		if (batchRecord.getLayers() == null || batchRecord.getLayers().isEmpty()) {
 			throw new IllegalArgumentException(
-					String.format("Missing required layer data for Feature ID %s", featureId)
-			);
+					String.format("Missing required layer data for Feature ID %s", featureId));
 		}
 
 		// Validate polygon data
 		if (batchRecord.getPolygon().getMapId() == null || batchRecord.getPolygon().getMapId().trim().isEmpty()) {
 			throw new IllegalArgumentException(
-					String.format("Missing required map ID in polygon data for Feature ID %s", featureId)
-			);
+					String.format("Missing required map ID in polygon data for Feature ID %s", featureId));
 		}
 
 		if (batchRecord.getPolygon().getPolygonNumber() == null) {
 			throw new IllegalArgumentException(
-					String.format("Missing required polygon number for Feature ID %s", featureId)
-			);
+					String.format("Missing required polygon number for Feature ID %s", featureId));
 		}
 	}
 
 	/**
 	 * Perform VDYP projection processing with proper error handling.
 	 *
-	 * This method handles both retryable errors (IOException) and non-retryable validation errors.
+	 * This method handles both retryable errors (IOException) and non-retryable
+	 * validation errors.
 	 */
 	private String performVdypProjectionWithErrorHandling(BatchRecord batchRecord)
 			throws IOException, IllegalArgumentException {
@@ -228,12 +227,12 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 
 		// Unknown errors treated as data quality issues
 		throw new IllegalArgumentException(
-				"VDYP projection failed for Feature ID " + featureId + ": " + e.getMessage(), e
-		);
+				"VDYP projection failed for Feature ID " + featureId + ": " + e.getMessage(), e);
 	}
 
 	/**
-	 * Determine if a runtime exception represents a transient error that should be retried.
+	 * Determine if a runtime exception represents a transient error that should be
+	 * retried.
 	 */
 	private boolean isTransientError(Exception e) {
 		String message = e.getMessage() != null ? e.getMessage().toLowerCase() : "";
@@ -271,8 +270,7 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 		try {
 			logger.debug(
 					"[{}] Starting VDYP projection for Feature ID {} (Map: {}, Polygon: {})", partitionName, featureId,
-					mapId, polygonNumber
-			);
+					mapId, polygonNumber);
 
 			// Call the actual VDYP projection service for this specific record and
 			// partition
@@ -280,8 +278,7 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 
 			logger.debug(
 					"[{}] Completed VDYP projection for Feature ID {} - Result: {}", partitionName,
-					batchRecord.getFeatureId(), projectionResult
-			);
+					batchRecord.getFeatureId(), projectionResult);
 
 			return projectionResult;
 
@@ -292,9 +289,9 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 	}
 
 	/**
-	 * Handles VDYP projection failures by logging with enhanced context and creating appropriate IOException.
+	 * Handles VDYP projection failures by logging with enhanced context and
+	 * creating appropriate IOException.
 	 *
-	 * @param batchRecord   The batch record being processed
 	 * @param featureId     The feature ID being processed
 	 * @param mapId         The map ID being processed
 	 * @param polygonNumber The polygon number being processed
@@ -306,8 +303,7 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 		String contextualMessage = String.format(
 				"[%s] VDYP projection failed for Feature ID %s (Map: %s, Polygon: %s). Exception type: %s, Root cause: %s",
 				partitionName, featureId, mapId, polygonNumber, cause.getClass().getSimpleName(),
-				cause.getMessage() != null ? cause.getMessage() : "No error message available"
-		);
+				cause.getMessage() != null ? cause.getMessage() : "No error message available");
 
 		// Log the failure with full context and stack trace
 		logger.error(contextualMessage, cause);

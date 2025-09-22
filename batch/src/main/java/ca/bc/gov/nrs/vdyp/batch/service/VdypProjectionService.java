@@ -64,8 +64,7 @@ public class VdypProjectionService {
 		String parametersFilePath = batchProperties.getVdyp().getProjection().getParametersFile();
 		if (parametersFilePath == null || parametersFilePath.trim().isEmpty()) {
 			throw new IllegalStateException(
-					"batch.vdyp.projection.parameters-file must be configured in application.properties"
-			);
+					"batch.vdyp.projection.parameters-file must be configured in application.properties");
 		}
 		ClassPathResource parametersResource = new ClassPathResource(parametersFilePath.replace("classpath:", ""));
 		try (InputStream parametersStream = parametersResource.getInputStream()) {
@@ -74,43 +73,43 @@ public class VdypProjectionService {
 	}
 
 	/**
-	 * Creates input streams from a complete BatchRecord containing polygon + all layers.
+	 * Creates input streams from a complete BatchRecord containing polygon + all
+	 * layers.
 	 *
-	 * This method converts the complete polygon data from BatchRecord into the HCSV format input streams required by
+	 * This method converts the complete polygon data from BatchRecord into the HCSV
+	 * format input streams required by
 	 * the VDYP extended-core projection engine.
 	 *
-	 * @param record Complete BatchRecord with polygon + all layers
+	 * @param batchRecord Complete BatchRecord with polygon + all layers
 	 * @return Map of input streams for VDYP projection
 	 * @throws IOException if stream creation fails
 	 */
-	private Map<String, InputStream> createInputStreamsFromBatchRecord(BatchRecord record) throws IOException {
+	private Map<String, InputStream> createInputStreamsFromBatchRecord(BatchRecord batchRecord) {
 		Map<String, InputStream> inputStreams = new HashMap<>();
 
 		// Create polygon CSV content
 		StringBuilder polygonCsv = new StringBuilder();
 		polygonCsv.append(getPolygonCsvHeader()).append("\n");
-		polygonCsv.append(polygonDataToCsvLine(record.getPolygon())).append("\n");
+		polygonCsv.append(polygonDataToCsvLine(batchRecord.getPolygon())).append("\n");
 
 		// Create layer CSV content
 		StringBuilder layerCsv = new StringBuilder();
 		layerCsv.append(getLayerCsvHeader()).append("\n");
-		if (record.getLayers() != null) {
-			for (var layerData : record.getLayers()) {
+		if (batchRecord.getLayers() != null) {
+			for (var layerData : batchRecord.getLayers()) {
 				layerCsv.append(layerDataToCsvLine(layerData)).append("\n");
 			}
 		}
 
 		// Convert to input streams
 		inputStreams.put(
-				ParameterNames.HCSV_POLYGON_INPUT_DATA, new ByteArrayInputStream(polygonCsv.toString().getBytes())
-		);
+				ParameterNames.HCSV_POLYGON_INPUT_DATA, new ByteArrayInputStream(polygonCsv.toString().getBytes()));
 		inputStreams
 				.put(ParameterNames.HCSV_LAYERS_INPUT_DATA, new ByteArrayInputStream(layerCsv.toString().getBytes()));
 
 		logger.debug(
 				"Created input streams for FEATURE_ID {}: polygon (1 record), layers ({} records)",
-				record.getFeatureId(), record.getLayers() != null ? record.getLayers().size() : 0
-		);
+				batchRecord.getFeatureId(), batchRecord.getLayers() != null ? batchRecord.getLayers().size() : 0);
 
 		return inputStreams;
 	}
@@ -168,8 +167,7 @@ public class VdypProjectionService {
 				nvl(polygonData.getNonVegCoverPattern3()), nvl(polygonData.getLandCoverClassCd1()),
 				nvl(polygonData.getLandCoverPct1()), nvl(polygonData.getLandCoverClassCd2()),
 				nvl(polygonData.getLandCoverPct2()), nvl(polygonData.getLandCoverClassCd3()),
-				nvl(polygonData.getLandCoverPct3())
-		);
+				nvl(polygonData.getLandCoverPct3()));
 	}
 
 	/**
@@ -190,8 +188,7 @@ public class VdypProjectionService {
 				nvl(layerData.getEstAgeSpp1()), nvl(layerData.getEstHeightSpp1()), nvl(layerData.getEstAgeSpp2()),
 				nvl(layerData.getEstHeightSpp2()), nvl(layerData.getAdjInd()), nvl(layerData.getLoreyHeight75()),
 				nvl(layerData.getBasalArea125()), nvl(layerData.getWsVolPerHa75()), nvl(layerData.getWsVolPerHa125()),
-				nvl(layerData.getCuVolPerHa125()), nvl(layerData.getDVolPerHa125()), nvl(layerData.getDwVolPerHa125())
-		);
+				nvl(layerData.getCuVolPerHa125()), nvl(layerData.getDVolPerHa125()), nvl(layerData.getDwVolPerHa125()));
 	}
 
 	/**
@@ -207,26 +204,28 @@ public class VdypProjectionService {
 	private String buildProjectionId(String partitionName, String featureId) {
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss_SSSS");
 		return String.format(
-				"batch-projection-%s-feature-%s-%s", partitionName, featureId, formatter.format(LocalDateTime.now())
-		);
+				"batch-projection-%s-feature-%s-%s", partitionName, featureId, formatter.format(LocalDateTime.now()));
 	}
 
 	/**
-	 * Performs VDYP projection for a complete BatchRecord containing one polygon + all its layers.
+	 * Performs VDYP projection for a complete BatchRecord containing one polygon +
+	 * all its layers.
 	 *
-	 * This method implements the FEATURE_ID-based processing strategy where each BatchRecord contains a complete
+	 * This method implements the FEATURE_ID-based processing strategy where each
+	 * BatchRecord contains a complete
 	 * polygon entity (1 polygon + all associated layers).
 	 *
-	 * @param record        Complete BatchRecord with polygon + all layers for one FEATURE_ID
+	 * @param batchRecord   Complete BatchRecord with polygon + all layers for one
+	 *                      FEATURE_ID
 	 * @param partitionName Partition identifier for logging and output organization
 	 * @return Projection result summary
 	 * @throws Exception if projection fails
 	 */
-	public String performProjectionForRecord(BatchRecord record, String partitionName) throws Exception {
+	public String performProjectionForRecord(BatchRecord batchRecord, String partitionName) throws IOException {
 		logger.debug(
-				"Starting VDYP projection for complete polygon FEATURE_ID {} in partition {}", record.getFeatureId(),
-				partitionName
-		);
+				"Starting VDYP projection for complete polygon FEATURE_ID {} in partition {}",
+				batchRecord.getFeatureId(),
+				partitionName);
 
 		try {
 			// Create partition-specific output directory
@@ -236,36 +235,32 @@ public class VdypProjectionService {
 			Parameters parameters = loadParameters();
 
 			// Create input streams from the complete BatchRecord data
-			Map<String, InputStream> inputStreams = createInputStreamsFromBatchRecord(record);
+			Map<String, InputStream> inputStreams = createInputStreamsFromBatchRecord(batchRecord);
 
-			String projectionId = buildProjectionId(partitionName, record.getFeatureId());
+			String projectionId = buildProjectionId(partitionName, batchRecord.getFeatureId());
 
 			try (
 					ProjectionRunner runner = new ProjectionRunner(
-							ProjectionRequestKind.HCSV, projectionId, parameters, false
-					)
-			) {
+							ProjectionRequestKind.HCSV, projectionId, parameters, false)) {
 
 				logger.debug(
 						"Running HCSV projection {} for complete polygon FEATURE_ID {}", projectionId,
-						record.getFeatureId()
-				);
+						batchRecord.getFeatureId());
 
 				// Run the projection on the complete polygon data
 				runner.run(inputStreams);
 
 				// Store intermediate results (no ZIP generation)
-				storeIntermediateResults(runner, partitionOutputDir, projectionId, record.getFeatureId());
+				storeIntermediateResults(runner, partitionOutputDir, projectionId, batchRecord.getFeatureId());
 
 				String result = String.format(
 						"Projection completed for FEATURE_ID %s in partition %s. Polygon: 1, Layers: %d, Results stored",
-						record.getFeatureId(), partitionName, record.getLayers() != null ? record.getLayers().size() : 0
-				);
+						batchRecord.getFeatureId(), partitionName,
+						batchRecord.getLayers() != null ? batchRecord.getLayers().size() : 0);
 
 				logger.debug(
 						"VDYP projection completed for FEATURE_ID {} in partition {}. Intermediate results stored",
-						record.getFeatureId(), partitionName
-				);
+						batchRecord.getFeatureId(), partitionName);
 
 				return result;
 
@@ -277,16 +272,32 @@ public class VdypProjectionService {
 			}
 
 		} catch (AbstractProjectionRequestException e) {
-			logger.error(
-					"VDYP projection failed for FEATURE_ID {} in partition {}: {}", record.getFeatureId(),
-					partitionName, e.getMessage()
-			);
-			throw new IOException(
-					"VDYP projection failed for FEATURE_ID " + record.getFeatureId() + " in partition " + partitionName
-							+ ": " + e.getMessage(),
-					e
-			);
+			throw handleProjectionFailure(batchRecord, partitionName, e);
 		}
+	}
+
+	/**
+	 * Handles VDYP projection failures by logging with context and creating
+	 * IOException.
+	 *
+	 * @param batchRecord   The batch record being processed
+	 * @param partitionName The partition name being processed
+	 * @param cause         The original exception that caused the failure
+	 * @return IOException with context for retry logic
+	 */
+	private IOException handleProjectionFailure(BatchRecord batchRecord, String partitionName, Exception cause) {
+		String contextualMessage = String.format(
+				"VDYP projection failed for FEATURE_ID %s in partition %s (Map: %s, Polygon: %s). Exception type: %s, Root cause: %s",
+				batchRecord.getFeatureId(),
+				partitionName,
+				batchRecord.getPolygon() != null ? batchRecord.getPolygon().getMapId() : "N/A",
+				batchRecord.getPolygon() != null ? batchRecord.getPolygon().getPolygonNumber() : "N/A",
+				cause.getClass().getSimpleName(),
+				cause.getMessage() != null ? cause.getMessage() : "No error message available");
+
+		logger.error(contextualMessage, cause);
+
+		return new IOException(contextualMessage, cause);
 	}
 
 	/**
@@ -301,7 +312,8 @@ public class VdypProjectionService {
 	}
 
 	/**
-	 * Stores intermediate projection results for later aggregation. This method saves all projection outputs (yield
+	 * Stores intermediate projection results for later aggregation. This method
+	 * saves all projection outputs (yield
 	 * tables, logs) directly to partition directories for simple structure.
 	 *
 	 * @param runner             ProjectionRunner containing the results
@@ -311,8 +323,8 @@ public class VdypProjectionService {
 	 * @throws IOException if storing results fails
 	 */
 	private void storeIntermediateResults(
-			ProjectionRunner runner, Path partitionOutputDir, String projectionId, String featureId
-	) throws IOException {
+			ProjectionRunner runner, Path partitionOutputDir, String projectionId, String featureId)
+			throws IOException {
 
 		logger.debug("Storing intermediate results for projection {} (FEATURE_ID: {})", projectionId, featureId);
 
@@ -325,12 +337,12 @@ public class VdypProjectionService {
 
 		logger.debug(
 				"Successfully stored intermediate results for projection {} (FEATURE_ID: {}) in {}", projectionId,
-				featureId, partitionOutputDir
-		);
+				featureId, partitionOutputDir);
 	}
 
 	/**
-	 * Stores yield tables from the projection runner directly in partition directory.
+	 * Stores yield tables from the projection runner directly in partition
+	 * directory.
 	 */
 	private void storeYieldTables(ProjectionRunner runner, Path partitionDir, String featureId) throws IOException {
 		for (YieldTable yieldTable : runner.getContext().getYieldTables()) {
@@ -347,7 +359,8 @@ public class VdypProjectionService {
 	}
 
 	/**
-	 * Stores log files from the projection runner directly in partition directory if logging is enabled.
+	 * Stores log files from the projection runner directly in partition directory
+	 * if logging is enabled.
 	 */
 	private void storeLogs(ProjectionRunner runner, Path partitionDir, String featureId) throws IOException {
 		// Store progress log if enabled
