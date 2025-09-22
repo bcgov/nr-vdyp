@@ -3,6 +3,9 @@ kind: PostgresCluster
 metadata:
   name: {{ template "crunchy-postgres.fullname" . }}
   labels: {{ include "crunchy-postgres.labels" . | nindent 4 }}
+  annotations:
+    postgres-operator.crunchydata.com/autoCreateUserSchema: "true"
+
 spec:
   metadata:
     labels: {{ include "crunchy-postgres.labels" . | nindent 6 }}
@@ -89,6 +92,14 @@ spec:
     - name: postgres
       databases:
         - {{ template "crunchy-postgres.fullname" . }}
+    - name: {{ .Values.coms_db.user }}
+      databases:
+        - {{ .Values.coms_db.name  }}
+      options: 'NOSUPERUSER'
+    - name: {{ .Values.batch_db.user }}
+      databases:
+        - {{ .Values.batch_db.name }}
+      options: 'NOSUPERUSER'
   
   backups:
     pgbackrest:
