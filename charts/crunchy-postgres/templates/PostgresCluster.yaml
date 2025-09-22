@@ -95,11 +95,12 @@ spec:
     - name: {{ .Values.coms_db.user }}
       databases:
         - {{ .Values.coms_db.name  }}
-      options: 'NOSUPERUSER'
+      options: 'LOGIN NOSUPERUSER INHERIT NOCREATEDB NOCREATEROLE NOREPLICATION'
+
     - name: {{ .Values.batch_db.user }}
       databases:
         - {{ .Values.batch_db.name }}
-      options: 'NOSUPERUSER'
+      options: 'LOGIN NOSUPERUSER INHERIT NOCREATEDB NOCREATEROLE NOREPLICATION'
   
   backups:
     pgbackrest:
