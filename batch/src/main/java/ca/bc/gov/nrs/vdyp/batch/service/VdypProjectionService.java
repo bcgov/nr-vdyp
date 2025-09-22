@@ -10,8 +10,10 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,18 +22,21 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.opencsv.bean.CsvBindByName;
+import com.opencsv.bean.CsvBindByPosition;
 
-import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
-import ca.bc.gov.nrs.vdyp.batch.model.Polygon;
-import ca.bc.gov.nrs.vdyp.batch.model.Layer;
 import ca.bc.gov.nrs.vdyp.batch.configuration.BatchProperties;
-
+import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
+import ca.bc.gov.nrs.vdyp.batch.model.Layer;
+import ca.bc.gov.nrs.vdyp.batch.model.Polygon;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.AbstractProjectionRequestException;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters.ExecutionOption;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind;
 import ca.bc.gov.nrs.vdyp.ecore.projection.PolygonProjectionRunner;
 import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionRunner;
+import ca.bc.gov.nrs.vdyp.ecore.projection.input.HcsvLayerRecordBean;
+import ca.bc.gov.nrs.vdyp.ecore.projection.input.HcsvPolygonRecordBean;
 import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.YieldTable;
 import ca.bc.gov.nrs.vdyp.ecore.utils.ParameterNames;
 import ca.bc.gov.nrs.vdyp.ecore.utils.Utils;
@@ -77,8 +82,7 @@ public class VdypProjectionService {
 	 * layers.
 	 *
 	 * This method converts the complete polygon data from BatchRecord into the HCSV
-	 * format input streams required by
-	 * the VDYP extended-core projection engine.
+	 * format input streams required by the VDYP extended-core projection engine.
 	 *
 	 * @param batchRecord Complete BatchRecord with polygon + all layers
 	 * @return Map of input streams for VDYP projection
@@ -118,28 +122,33 @@ public class VdypProjectionService {
 	 * Get polygon CSV header for HCSV format.
 	 */
 	private String getPolygonCsvHeader() {
-		return "FEATURE_ID,MAP_ID,POLYGON_NUMBER,ORG_UNIT,TSA_NAME,TFL_NAME,INVENTORY_STANDARD_CODE,TSA_NUMBER,"
-				+ "SHRUB_HEIGHT,SHRUB_CROWN_CLOSURE,SHRUB_COVER_PATTERN,HERB_COVER_TYPE_CODE,HERB_COVER_PCT,"
-				+ "HERB_COVER_PATTERN_CODE,BRYOID_COVER_PCT,BEC_ZONE_CODE,CFS_ECOZONE,PRE_DISTURBANCE_STOCKABILITY,"
-				+ "YIELD_FACTOR,NON_PRODUCTIVE_DESCRIPTOR_CD,BCLCS_LEVEL1_CODE,BCLCS_LEVEL2_CODE,BCLCS_LEVEL3_CODE,"
-				+ "BCLCS_LEVEL4_CODE,BCLCS_LEVEL5_CODE,PHOTO_ESTIMATION_BASE_YEAR,REFERENCE_YEAR,PCT_DEAD,"
-				+ "NON_VEG_COVER_TYPE_1,NON_VEG_COVER_PCT_1,NON_VEG_COVER_PATTERN_1,NON_VEG_COVER_TYPE_2,"
-				+ "NON_VEG_COVER_PCT_2,NON_VEG_COVER_PATTERN_2,NON_VEG_COVER_TYPE_3,NON_VEG_COVER_PCT_3,"
-				+ "NON_VEG_COVER_PATTERN_3,LAND_COVER_CLASS_CD_1,LAND_COVER_PCT_1,LAND_COVER_CLASS_CD_2,"
-				+ "LAND_COVER_PCT_2,LAND_COVER_CLASS_CD_3,LAND_COVER_PCT_3";
+		return extractCsvHeaderFromRecordBean(HcsvPolygonRecordBean.class);
 	}
 
 	/**
 	 * Get layer CSV header for HCSV format.
 	 */
 	private String getLayerCsvHeader() {
-		return "FEATURE_ID,TREE_COVER_LAYER_ESTIMATED_ID,MAP_ID,POLYGON_NUMBER,LAYER_LEVEL_CODE,VDYP7_LAYER_CD,"
-				+ "LAYER_STOCKABILITY,FOREST_COVER_RANK_CODE,NON_FOREST_DESCRIPTOR_CODE,EST_SITE_INDEX_SPECIES_CD,"
-				+ "ESTIMATED_SITE_INDEX,CROWN_CLOSURE,BASAL_AREA_75,STEMS_PER_HA_75,SPECIES_CD_1,SPECIES_PCT_1,"
-				+ "SPECIES_CD_2,SPECIES_PCT_2,SPECIES_CD_3,SPECIES_PCT_3,SPECIES_CD_4,SPECIES_PCT_4,SPECIES_CD_5,"
-				+ "SPECIES_PCT_5,SPECIES_CD_6,SPECIES_PCT_6,EST_AGE_SPP1,EST_HEIGHT_SPP1,EST_AGE_SPP2,"
-				+ "EST_HEIGHT_SPP2,ADJ_IND,LOREY_HEIGHT_75,BASAL_AREA_125,WS_VOL_PER_HA_75,WS_VOL_PER_HA_125,"
-				+ "CU_VOL_PER_HA_125,D_VOL_PER_HA_125,DW_VOL_PER_HA_125";
+		return extractCsvHeaderFromRecordBean(HcsvLayerRecordBean.class);
+	}
+
+	/**
+	 * Extract CSV header from record bean class by reading @CsvBindByName
+	 * annotations.
+	 */
+	private String extractCsvHeaderFromRecordBean(Class<?> recordBeanClass) {
+		return Arrays.stream(recordBeanClass.getDeclaredFields())
+				.filter(field -> field.isAnnotationPresent(CsvBindByName.class))
+				.sorted((f1, f2) -> {
+					var pos1 = f1.getAnnotation(CsvBindByPosition.class);
+					var pos2 = f2.getAnnotation(CsvBindByPosition.class);
+					if (pos1 != null && pos2 != null) {
+						return Integer.compare(pos1.position(), pos2.position());
+					}
+					return f1.getName().compareTo(f2.getName());
+				})
+				.map(field -> field.getAnnotation(CsvBindByName.class).column())
+				.collect(Collectors.joining(","));
 	}
 
 	/**
