@@ -20,7 +20,7 @@ spec:
   {{ end }}
   postgresVersion: {{ .Values.postgresVersion }}
   databaseInitSQL:
-      name: {{ include crunchy-postgres-#{ENV}# . }}-init-sql
+      name: {{ .Values.fullnameOverride }}-init-sql
       key: init.sql
 
   {{ if .Values.pgmonitor.enabled }}
