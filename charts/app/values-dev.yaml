@@ -127,48 +127,6 @@ frontend:
     VITE_SSO_REDIRECT_URI: ~
     VITE_API_URL: ~
 
-bitnami-pg:
-  enabled: false
-  image:
-    registry: ghcr.io
-    repository: bcgov/nr-containers/bitnami/postgresql
-    tag: 15.8.0
-  auth:
-    existingSecret: '{{ .Release.Name }}'
-    username: ~
-    database: ~
-  shmVolume:
-    enabled: false
-  backup:
-    enabled: false
-    cronjob:
-      containerSecurityContext: { }
-      podSecurityContext:
-        enabled: false
-      storage:
-        size: 200Mi
-  primary:
-    persistence:
-      enabled: true
-      storageClass: netapp-block-standard
-      accessModes:
-        - ReadWriteOnce
-      size: 100Mi
-    containerSecurityContext:
-      enabled: false
-    podSecurityContext:
-      enabled: false
-    initdb:
-      scriptsSecret: '{{ .Release.Name }}-initdb-scripts'
-
-    resources:
-      requests:
-        cpu: 50m
-        memory: 150Mi
-      limits:
-        cpu: 150m
-        memory: 250Mi
-
 backup:
   enabled: true
   pvc:
