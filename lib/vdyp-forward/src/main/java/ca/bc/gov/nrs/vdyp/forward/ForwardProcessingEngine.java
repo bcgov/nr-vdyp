@@ -359,14 +359,15 @@ public class ForwardProcessingEngine {
 
 		Bank bank = lps.getBank();
 
-		float dhStart = lps.getPrimarySpeciesDominantHeight();
-		int pspSiteCurveNumber = lps.getSiteCurveNumber(lps.getPrimarySpeciesIndex());
-		float pspSiteIndex = lps.getPrimarySpeciesSiteIndex();
-		float pspYtbhStart = lps.getPrimarySpeciesAgeToBreastHeight();
-		float pspYabhStart = lps.getPrimarySpeciesAgeAtBreastHeight();
+		float dhStart = lps.getPrimarySpeciesDominantHeight(); // L1COM6/HD
+		int pspSiteCurveNumber = lps.getSiteCurveNumber(lps.getPrimarySpeciesIndex()); //INXSC/INXSCV(0,1)
+		float pspSiteIndex = lps.getPrimarySpeciesSiteIndex(); // L1COM6/SI
+		float pspYtbhStart = lps.getPrimarySpeciesAgeToBreastHeight(); // L1COM6/YTBHP
+		float pspYabhStart = lps.getPrimarySpeciesAgeAtBreastHeight(); // L1COM6/AGEBHP
 
 		// (1) Calculate change in dominant height (layer)
 
+		// HDGROW( HD, INXSCV(0,1), SI, YTBHP, GHD, IER)
 		float dhDelta = calculateDominantHeightDelta(dhStart, pspSiteCurveNumber, pspSiteIndex, pspYtbhStart);
 
 		writeCheckpoint(currentYear);
@@ -379,10 +380,10 @@ public class ForwardProcessingEngine {
 		final Optional<Float> veteranLayerBasalArea = veteranLayer
 				.flatMap((l) -> Optional.of(l.getBaseAreaByUtilization().get(UtilizationClass.ALL)));
 
-		float dqStart = bank.quadMeanDiameters[0][UC_ALL_INDEX];
-		float baStart = bank.basalAreas[0][UC_ALL_INDEX];
-		float tphStart = bank.treesPerHectare[0][UC_ALL_INDEX];
-		float lhStart = bank.loreyHeights[0][UC_ALL_INDEX];
+		float dqStart = bank.quadMeanDiameters[0][UC_ALL_INDEX]; // DQ_OLD = DQ(0,0)
+		float baStart = bank.basalAreas[0][UC_ALL_INDEX]; // BA_OLD = BA(0,0)
+		float tphStart = bank.treesPerHectare[0][UC_ALL_INDEX]; // TPH_OLD = BA(0,0)
+		float lhStart = bank.loreyHeights[0][UC_ALL_INDEX]; // HL_OLD = BA(0,0)
 
 		// GB = EMP111A(...)
 		float baDelta = calculateBasalAreaDelta(pspYabhStart, dhStart, baStart, veteranLayerBasalArea, dhDelta);
@@ -424,11 +425,11 @@ public class ForwardProcessingEngine {
 		float pspLhStart = bank.loreyHeights[lps.getPrimarySpeciesIndex()][UC_ALL_INDEX];
 		float pspTphStart = bank.treesPerHectare[lps.getPrimarySpeciesIndex()][UC_ALL_INDEX];
 
-		float dhEnd = dhStart + dhDelta;
-		float dqEnd = dqStart + dqDelta;
-		float baEnd = baStart + baDelta;
-		float tphEnd = BaseAreaTreeDensityDiameter.treesPerHectare(baEnd, dqEnd);
-		float tphMultiplier = tphEnd / tphStart;
+		float dhEnd = dhStart + dhDelta; // HDNEW = HD + GHD
+		float dqEnd = dqStart + dqDelta; // DQ(0,0) = DQ(0,0) + GDQ
+		float baEnd = baStart + baDelta; // DQ(0,0) = DQ(0,0) + GDQ
+		float tphEnd = BaseAreaTreeDensityDiameter.treesPerHectare(baEnd, dqEnd); // TPHNEW = FT_BD(BA(0,0), DQ(0,0))
+		float tphMultiplier = tphEnd / tphStart; // TPHMULT = TPHNEW / TPH(0,0)
 
 		bank.quadMeanDiameters[0][UC_ALL_INDEX] = dqEnd;
 		bank.basalAreas[0][UC_ALL_INDEX] = baEnd;
@@ -555,6 +556,7 @@ public class ForwardProcessingEngine {
 
 		// (8) Calculate per-species Lorey heights, uc All
 
+		// GRSPHL
 		float pspTphEnd = bank.treesPerHectare[lps.getPrimarySpeciesIndex()][UC_ALL_INDEX];
 		growLoreyHeights(lps, dhStart, dhEnd, pspTphStart, pspTphEnd, pspLhStart);
 
@@ -568,6 +570,7 @@ public class ForwardProcessingEngine {
 
 		// (9) Calculate basal area percentages per species, uc UC_ALL_INDEX
 		for (int i : bank.getIndices()) {
+			// PCTL1(i) = 100*BA(i,0)/BA(0,0)
 			bank.percentagesOfForestedLand[i] = 100.0f * bank.basalAreas[i][UC_ALL_INDEX]
 					/ bank.basalAreas[0][UC_ALL_INDEX];
 		}
