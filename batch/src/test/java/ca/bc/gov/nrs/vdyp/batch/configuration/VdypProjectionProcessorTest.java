@@ -5,6 +5,7 @@ import ca.bc.gov.nrs.vdyp.batch.model.Polygon;
 import ca.bc.gov.nrs.vdyp.batch.model.Layer;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.service.VdypProjectionService;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,6 +15,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.batch.core.StepExecution;
+import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -42,7 +44,13 @@ class VdypProjectionProcessorTest {
 	private VdypProjectionService vdypProjectionService;
 
 	@Mock
+	private Parameters parameters;
+
+	@Mock
 	private StepExecution stepExecution;
+
+	@Mock
+	private JobParameters jobParameters;
 
 	@Mock
 	private ExecutionContext executionContext;
@@ -67,6 +75,8 @@ class VdypProjectionProcessorTest {
 		when(executionContext.getLong("startLine", 0)).thenReturn(1L);
 		when(executionContext.getLong("endLine", 0)).thenReturn(100L);
 		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
+		when(stepExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobParameters.getString("projectionParametersJson")).thenReturn("{\"selectedExecutionOptions\": []}");
 	}
 
 	@Test
@@ -90,7 +100,7 @@ class VdypProjectionProcessorTest {
 		processor.beforeStep(stepExecution);
 
 		// Mock VdypProjectionService to return a test result
-		when(vdypProjectionService.performProjectionForRecord(any(BatchRecord.class), anyString()))
+		when(vdypProjectionService.performProjectionForRecord(any(BatchRecord.class), anyString(), any(Parameters.class)))
 				.thenReturn("Test projection result");
 
 		BatchRecord batchRecord = createValidBatchRecord();
@@ -164,7 +174,7 @@ class VdypProjectionProcessorTest {
 		processor.beforeStep(stepExecution);
 
 		// Mock VdypProjectionService to return a test result
-		when(vdypProjectionService.performProjectionForRecord(any(BatchRecord.class), anyString()))
+		when(vdypProjectionService.performProjectionForRecord(any(BatchRecord.class), anyString(), any(Parameters.class)))
 				.thenReturn("Test projection result");
 
 		BatchRecord batchRecord = createValidBatchRecord();
@@ -185,7 +195,7 @@ class VdypProjectionProcessorTest {
 		processor.beforeStep(stepExecution);
 
 		// Mock VdypProjectionService to return a test result
-		when(vdypProjectionService.performProjectionForRecord(any(BatchRecord.class), anyString()))
+		when(vdypProjectionService.performProjectionForRecord(any(BatchRecord.class), anyString(), any(Parameters.class)))
 				.thenReturn("Test projection result");
 
 		BatchRecord batchRecord = createValidBatchRecord();
@@ -214,7 +224,7 @@ class VdypProjectionProcessorTest {
 		processor.beforeStep(stepExecution);
 
 		// Mock VdypProjectionService to return a test result
-		when(vdypProjectionService.performProjectionForRecord(any(BatchRecord.class), anyString()))
+		when(vdypProjectionService.performProjectionForRecord(any(BatchRecord.class), anyString(), any(Parameters.class)))
 				.thenReturn("Test projection result");
 
 		// Use reflection to access the static retriedRecords field and add an entry

@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.vdyp.batch.controller;
 
 import ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -64,8 +65,7 @@ class BatchControllerTest {
 	@Test
 	void testStartBatchJob_WithValidJob_ReturnsSuccess() throws JobExecutionAlreadyRunningException,
 			JobRestartException, JobInstanceAlreadyCompleteException, JobParametersInvalidException {
-		BatchJobRequest request = new BatchJobRequest();
-		request.setPartitionSize(4L);
+		BatchJobRequest request = createValidBatchJobRequest();
 
 		when(jobExecution.getId()).thenReturn(1L);
 		when(jobExecution.getJobInstance()).thenReturn(jobInstance);
@@ -85,19 +85,12 @@ class BatchControllerTest {
 	}
 
 	@Test
-	void testStartBatchJob_WithNullRequest_ReturnsSuccess() throws JobExecutionAlreadyRunningException,
-			JobRestartException, JobInstanceAlreadyCompleteException, JobParametersInvalidException {
-		when(jobExecution.getId()).thenReturn(1L);
-		when(jobExecution.getJobInstance()).thenReturn(jobInstance);
-		when(jobInstance.getJobName()).thenReturn("testJob");
-		when(jobExecution.getStatus()).thenReturn(BatchStatus.STARTED);
-		when(jobExecution.getStartTime()).thenReturn(LocalDateTime.now());
-		when(jobLauncher.run(eq(partitionedJob), any(JobParameters.class))).thenReturn(jobExecution);
-
+	void testStartBatchJob_WithNullRequest_ReturnsBadRequest() {
 		ResponseEntity<Map<String, Object>> response = batchController.startBatchJob(null);
 
-		assertEquals(200, response.getStatusCode().value());
+		assertEquals(400, response.getStatusCode().value());
 		assertNotNull(response.getBody());
+		assertTrue(response.getBody().containsKey("error"));
 	}
 
 	@Test
@@ -114,7 +107,7 @@ class BatchControllerTest {
 	@Test
 	void testStartBatchJob_JobLauncherThrowsException_ReturnsError() throws JobExecutionAlreadyRunningException,
 			JobRestartException, JobInstanceAlreadyCompleteException, JobParametersInvalidException {
-		BatchJobRequest request = new BatchJobRequest();
+		BatchJobRequest request = createValidBatchJobRequest();
 		when(jobLauncher.run(any(), any())).thenThrow(new JobExecutionAlreadyRunningException("Job already running"));
 
 		ResponseEntity<Map<String, Object>> response = batchController.startBatchJob(request);
@@ -274,8 +267,7 @@ class BatchControllerTest {
 	@Test
 	void testStartBatchJob_WithAllRequestParameters_SetsAllParameters() throws JobExecutionAlreadyRunningException,
 			JobRestartException, JobInstanceAlreadyCompleteException, JobParametersInvalidException {
-		BatchJobRequest request = new BatchJobRequest();
-		request.setPartitionSize(4L);
+		BatchJobRequest request = createValidBatchJobRequest();
 		request.setMaxRetryAttempts(3);
 		request.setRetryBackoffPeriod(1000L);
 		request.setMaxSkipCount(10);
@@ -293,5 +285,19 @@ class BatchControllerTest {
 		assertNotNull(response.getBody());
 
 		verify(jobLauncher).run(eq(partitionedJob), any(JobParameters.class));
+	}
+
+	/**
+	 * Helper method to create a valid BatchJobRequest with required Parameters
+	 */
+	private BatchJobRequest createValidBatchJobRequest() {
+		BatchJobRequest request = new BatchJobRequest();
+		request.setPartitionSize(4L);
+		
+		// Create a minimal valid Parameters object
+		Parameters parameters = new Parameters();
+		request.setParameters(parameters);
+		
+		return request;
 	}
 }

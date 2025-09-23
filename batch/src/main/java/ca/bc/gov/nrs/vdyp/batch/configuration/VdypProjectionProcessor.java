@@ -3,6 +3,7 @@ package ca.bc.gov.nrs.vdyp.batch.configuration;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.service.VdypProjectionService;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.StepExecution;
@@ -10,6 +11,8 @@ import org.springframework.batch.core.annotation.BeforeStep;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.lang.NonNull;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import java.io.IOException;
 import java.util.Set;
@@ -22,10 +25,12 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 	private final BatchRetryPolicy retryPolicy;
 	private final BatchMetricsCollector metricsCollector;
 	private final VdypProjectionService vdypProjectionService;
+	private final ObjectMapper objectMapper = new ObjectMapper();
 
 	// Partition context information
 	private String partitionName = "unknown";
 	private Long jobExecutionId;
+	private Parameters projectionParameters;
 
 	// Track records that have been successfully retried
 	private static final Set<String> retriedRecords = ConcurrentHashMap.newKeySet();
@@ -57,6 +62,28 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 		this.partitionName = stepExecution.getExecutionContext().getString("partitionName", "unknown");
 		long startLine = stepExecution.getExecutionContext().getLong("startLine", 0);
 		long endLine = stepExecution.getExecutionContext().getLong("endLine", 0);
+
+		// Get projection parameters from job parameters (serialized as JSON)
+		String parametersJson = stepExecution.getJobParameters().getString("projectionParametersJson");
+		
+		if (parametersJson == null || parametersJson.trim().isEmpty()) {
+			throw new IllegalStateException(
+					"VDYP projection parameters not found in job parameters. Parameters must be provided in BatchJobRequest.");
+		}
+
+		try {
+			this.projectionParameters = objectMapper.readValue(parametersJson, Parameters.class);
+			
+			// Debug logging - confirm parameters were deserialized correctly
+			logger.info("[{}] VDYP Projection Processor - Successfully loaded parameters with {} selected execution options", 
+				partitionName, 
+				this.projectionParameters.getSelectedExecutionOptions() != null ? 
+					this.projectionParameters.getSelectedExecutionOptions().size() : 0);
+			
+		} catch (JsonProcessingException e) {
+			throw new IllegalStateException(
+					"Failed to deserialize VDYP projection parameters from job parameters: " + e.getMessage(), e);
+		}
 
 		// Initialize partition metrics
 		if (metricsCollector != null) {
@@ -273,8 +300,9 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 					mapId, polygonNumber);
 
 			// Call the actual VDYP projection service for this specific record and
-			// partition
-			String projectionResult = vdypProjectionService.performProjectionForRecord(batchRecord, partitionName);
+			// partition, passing the job-level parameters
+			String projectionResult = vdypProjectionService.performProjectionForRecord(batchRecord, partitionName,
+					projectionParameters);
 
 			logger.debug(
 					"[{}] Completed VDYP projection for Feature ID {} - Result: {}", partitionName,

@@ -4,8 +4,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 /**
- * Configuration properties for VDYP batch processing. This class handles all custom batch.* properties to eliminate
- * unknown property warnings.
+ * Configuration properties for VDYP batch processing. This class handles all
+ * custom batch.* properties to eliminate unknown property warnings.
  */
 @Component
 @ConfigurationProperties(prefix = "batch")
@@ -168,7 +168,6 @@ public class BatchProperties {
 		public static class Projection {
 			private String polygonFile;
 			private String layerFile;
-			private String parametersFile;
 
 			public String getPolygonFile() {
 				return polygonFile;
@@ -184,14 +183,6 @@ public class BatchProperties {
 
 			public void setLayerFile(String layerFile) {
 				this.layerFile = layerFile;
-			}
-
-			public String getParametersFile() {
-				return parametersFile;
-			}
-
-			public void setParametersFile(String parametersFile) {
-				this.parametersFile = parametersFile;
 			}
 		}
 

@@ -16,6 +16,13 @@ import org.springframework.web.bind.annotation.*;
 import java.time.Duration;
 import java.util.*;
 
+import org.springframework.http.MediaType;
+import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.ProjectionRequestValidationException;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessage;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessageKind;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 @RestController
 @RequestMapping("/api/batch")
 public class BatchController {
@@ -37,10 +44,11 @@ public class BatchController {
 	private final Job partitionedJob;
 	private final JobExplorer jobExplorer;
 	private final BatchMetricsCollector metricsCollector;
+	private final ObjectMapper objectMapper = new ObjectMapper();
 
 	public BatchController(
-			JobLauncher jobLauncher, Job partitionedJob, JobExplorer jobExplorer, BatchMetricsCollector metricsCollector
-	) {
+			JobLauncher jobLauncher, Job partitionedJob, JobExplorer jobExplorer,
+			BatchMetricsCollector metricsCollector) {
 		this.jobLauncher = jobLauncher;
 		this.partitionedJob = partitionedJob;
 		this.jobExplorer = jobExplorer;
@@ -53,7 +61,7 @@ public class BatchController {
 	 * @param request Optional configuration parameters for the batch job
 	 * @return ResponseEntity containing job execution details and metrics endpoint
 	 */
-	@PostMapping("/start")
+	@PostMapping(value = "/start", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Map<String, Object>> startBatchJob(@RequestBody(required = false) BatchJobRequest request) {
 		try {
 			long startTime = System.currentTimeMillis();
@@ -70,6 +78,10 @@ public class BatchController {
 
 			return ResponseEntity.ok(response);
 
+		} catch (ProjectionRequestValidationException e) {
+			return ResponseEntity.badRequest()
+					.header("content-type", "application/json")
+					.body(createValidationErrorResponse(e));
 		} catch (Exception e) {
 			return buildErrorResponse(e);
 		}
@@ -79,9 +91,10 @@ public class BatchController {
 	 * Get current job execution status with step-level details.
 	 *
 	 * @param jobExecutionId The unique identifier of the job execution
-	 * @return ResponseEntity containing job status and step details or 404 if not found
+	 * @return ResponseEntity containing job status and step details or 404 if not
+	 *         found
 	 */
-	@GetMapping("/status/{jobExecutionId}")
+	@GetMapping(value = "/status/{jobExecutionId}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Map<String, Object>> getJobStatus(@PathVariable Long jobExecutionId) {
 		try {
 			JobExecution jobExecution = jobExplorer.getJobExecution(jobExecutionId);
@@ -109,12 +122,13 @@ public class BatchController {
 	}
 
 	/**
-	 * Get detailed job metrics including partition-level data, retry/skip statistics.
+	 * Get detailed job metrics including partition-level data, retry/skip
+	 * statistics.
 	 *
 	 * @param jobExecutionId The unique identifier of the job execution
 	 * @return ResponseEntity containing job metrics or 404 if not found
 	 */
-	@GetMapping("/metrics/{jobExecutionId}")
+	@GetMapping(value = "/metrics/{jobExecutionId}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Map<String, Object>> getJobMetrics(@PathVariable Long jobExecutionId) {
 		try {
 			JobExecution jobExecution = jobExplorer.getJobExecution(jobExecutionId);
@@ -174,7 +188,7 @@ public class BatchController {
 	 * @param limit Optional limit for number of jobs to return (default: 50)
 	 * @return ResponseEntity containing list of job instances and executions
 	 */
-	@GetMapping("/jobs")
+	@GetMapping(value = "/jobs", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Map<String, Object>> listJobs(@RequestParam(defaultValue = "50") int limit) {
 		try {
 			List<String> jobNames = jobExplorer.getJobNames();
@@ -294,10 +308,9 @@ public class BatchController {
 		logger.info("=== VDYP Batch Job Start Request ===");
 		if (request != null) {
 			logger.info(
-					"Request details - partitionSize: {}, maxRetryAttempts: {}, retryBackoffPeriod: {}, maxSkipCount: {}",
+					"Request details - partitionSize: {}, maxRetryAttempts: {}, retryBackoffPeriod: {}, maxSkipCount: {}, parameters: {}",
 					request.getPartitionSize(), request.getMaxRetryAttempts(), request.getRetryBackoffPeriod(),
-					request.getMaxSkipCount()
-			);
+					request.getMaxSkipCount(), request.getParameters() != null ? "provided" : "null");
 		}
 	}
 
@@ -305,20 +318,53 @@ public class BatchController {
 	 * Executes the batch job with given parameters.
 	 */
 	private JobExecution executeJob(BatchJobRequest request, long startTime) throws JobExecutionAlreadyRunningException,
-			JobRestartException, JobInstanceAlreadyCompleteException, JobParametersInvalidException {
+			JobRestartException, JobInstanceAlreadyCompleteException, JobParametersInvalidException,
+			ProjectionRequestValidationException {
+
+		if (request == null || request.getParameters() == null) {
+			throw new ProjectionRequestValidationException(List.of(
+					new ValidationMessage(ValidationMessageKind.GENERIC,
+							"VDYP projection parameters are required but not provided in the request")));
+		}
+
+		try {
+			String serializedParametersText = objectMapper.writerWithDefaultPrettyPrinter()
+					.writeValueAsString(request.getParameters());
+			logger.info("VDYP Batch - Received Parameters JSON:\n{}", serializedParametersText);
+		} catch (JsonProcessingException e) {
+			logger.warn("VDYP Batch: unable to log parameters JSON", e);
+		}
+
 		JobParameters jobParameters = buildJobParameters(request, startTime);
-		return jobLauncher.run(partitionedJob, jobParameters);
+
+		// Start the job
+		JobExecution jobExecution = jobLauncher.run(partitionedJob, jobParameters);
+
+		logger.info("Started VDYP batch job {} with projection parameters", jobExecution.getId());
+
+		return jobExecution;
 	}
 
 	/**
 	 * Builds job parameters from request and start time.
 	 */
-	private JobParameters buildJobParameters(BatchJobRequest request, long startTime) {
+	private JobParameters buildJobParameters(BatchJobRequest request, long startTime)
+			throws ProjectionRequestValidationException {
 		JobParametersBuilder parametersBuilder = new JobParametersBuilder().addLong(JOB_TIMESTAMP, startTime)
 				.addString(JOB_TYPE, "vdyp-projection");
 
 		if (request != null) {
 			addRequestParametersToBuilder(parametersBuilder, request);
+
+			// Serialize Parameters object to JSON and add to job parameters
+			try {
+				String parametersJson = objectMapper.writeValueAsString(request.getParameters());
+				parametersBuilder.addString("projectionParametersJson", parametersJson);
+			} catch (JsonProcessingException e) {
+				throw new ProjectionRequestValidationException(List.of(
+						new ValidationMessage(ValidationMessageKind.GENERIC,
+								"Failed to serialize projection parameters: " + e.getMessage())));
+			}
 		}
 
 		return parametersBuilder.toJobParameters();
@@ -364,12 +410,23 @@ public class BatchController {
 	}
 
 	/**
+	 * Creates validation error response following backend patterns.
+	 */
+	private Map<String, Object> createValidationErrorResponse(ProjectionRequestValidationException e) {
+		Map<String, Object> errorResponse = new HashMap<>();
+		errorResponse.put("validationMessages", e.getValidationMessages());
+		errorResponse.put(JOB_ERROR, "Validation failed");
+		errorResponse.put(JOB_MESSAGE, "Request validation failed - check validation messages for details");
+		return errorResponse;
+	}
+
+	/**
 	 * Builds error response for exceptions.
 	 */
 	private ResponseEntity<Map<String, Object>> buildErrorResponse(Exception e) {
 		Map<String, Object> errorResponse = new HashMap<>();
 		errorResponse.put(JOB_ERROR, "Failed to start batch job");
-		errorResponse.put(JOB_MESSAGE, e.getMessage());
+		errorResponse.put(JOB_MESSAGE, e.getMessage() == null ? "unknown reason" : e.getMessage());
 		return ResponseEntity.internalServerError().body(errorResponse);
 	}
 
@@ -378,7 +435,7 @@ public class BatchController {
 	 *
 	 * @return ResponseEntity containing service health status and feature list
 	 */
-	@GetMapping("/health")
+	@GetMapping(value = "/health", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Map<String, Object>> health() {
 		Map<String, Object> response = new HashMap<>();
 		response.put(JOB_STATUS, "UP");
@@ -387,9 +444,7 @@ public class BatchController {
 				"availableEndpoints",
 				Arrays.asList(
 						"/api/batch/start", "/api/batch/status/{id}", "/api/batch/metrics/{id}", "/api/batch/jobs",
-						"/api/batch/health"
-				)
-		);
+						"/api/batch/health"));
 		response.put(JOB_TIMESTAMP, System.currentTimeMillis());
 		return ResponseEntity.ok(response);
 	}

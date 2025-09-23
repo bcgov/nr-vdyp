@@ -1,10 +1,8 @@
 package ca.bc.gov.nrs.vdyp.batch.service;
 
-import ca.bc.gov.nrs.vdyp.batch.configuration.BatchProperties;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
 import ca.bc.gov.nrs.vdyp.batch.model.Layer;
 import ca.bc.gov.nrs.vdyp.batch.model.Polygon;
-import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters.ExecutionOption;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters.OutputFormat;
 import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionRunner;
@@ -16,7 +14,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -37,15 +34,6 @@ import static org.mockito.ArgumentMatchers.any;
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class VdypProjectionServiceTest {
-
-	@Mock
-	private BatchProperties batchProperties;
-
-	@Mock
-	private BatchProperties.Vdyp vdypProperties;
-
-	@Mock
-	private BatchProperties.Vdyp.Projection projectionProperties;
 
 	@Mock
 	private ProjectionRunner projectionRunner;
@@ -71,7 +59,6 @@ class VdypProjectionServiceTest {
 	@Mock
 	private InputStream errorStream;
 
-	@InjectMocks
 	private VdypProjectionService vdypProjectionService;
 
 	@TempDir
@@ -82,19 +69,8 @@ class VdypProjectionServiceTest {
 
 	@BeforeEach
 	void setUp() {
+		vdypProjectionService = new VdypProjectionService();
 		ReflectionTestUtils.setField(vdypProjectionService, "outputBasePath", tempDir.toString());
-		when(batchProperties.getVdyp()).thenReturn(vdypProperties);
-		when(vdypProperties.getProjection()).thenReturn(projectionProperties);
-	}
-
-	@Test
-	void testLoadParameters_EmptyParametersFile() {
-		when(projectionProperties.getParametersFile()).thenReturn("");
-
-		IllegalStateException exception = assertThrows(IllegalStateException.class,
-				() -> ReflectionTestUtils.invokeMethod(vdypProjectionService, "loadParameters"));
-
-		assertTrue(exception.getMessage().contains("batch.vdyp.projection.parameters-file must be configured"));
 	}
 
 	@Test
@@ -206,43 +182,6 @@ class VdypProjectionServiceTest {
 	}
 
 	@Test
-	void testPerformProjectionForRecord_ParametersNotConfigured() {
-		BatchRecord batchRecord = createTestBatchRecord();
-		when(projectionProperties.getParametersFile()).thenReturn(null);
-
-		Exception exception = assertThrows(
-				Exception.class, () -> vdypProjectionService.performProjectionForRecord(batchRecord, PARTITION_NAME)
-		);
-
-		assertTrue(
-				exception.getMessage().contains("batch.vdyp.projection.parameters-file must be configured") || exception
-						.getCause().getMessage().contains("batch.vdyp.projection.parameters-file must be configured")
-		);
-	}
-
-	@Test
-	void testLoadParameters_Success() {
-		when(projectionProperties.getParametersFile()).thenReturn("classpath:parameters.json");
-
-		try {
-			Parameters result = (Parameters) ReflectionTestUtils.invokeMethod(vdypProjectionService, "loadParameters");
-			assertNotNull(result);
-		} catch (Exception e) {
-			assertNotNull(e);
-		}
-	}
-
-	@Test
-	void testLoadParameters_WhitespaceParametersFile() {
-		when(projectionProperties.getParametersFile()).thenReturn("   ");
-
-		IllegalStateException exception = assertThrows(IllegalStateException.class,
-				() -> ReflectionTestUtils.invokeMethod(vdypProjectionService, "loadParameters"));
-
-		assertTrue(exception.getMessage().contains("batch.vdyp.projection.parameters-file must be configured"));
-	}
-
-	@Test
 	void testCreateInputStreamsFromBatchRecord_WithNullLayers() {
 		BatchRecord batchRecord = createTestBatchRecord();
 		batchRecord.setLayers(null);
@@ -292,8 +231,7 @@ class VdypProjectionServiceTest {
 
 		ReflectionTestUtils.invokeMethod(
 				vdypProjectionService, "storeIntermediateResults", projectionRunner, partitionDir, "test-projection",
-				FEATURE_ID
-		);
+				FEATURE_ID);
 
 		verify(projectionRunner, atLeastOnce()).getContext();
 	}
@@ -409,18 +347,6 @@ class VdypProjectionServiceTest {
 	}
 
 	@Test
-	void testPerformProjectionForRecord_InvalidParametersFile() {
-		BatchRecord batchRecord = createTestBatchRecord();
-		when(projectionProperties.getParametersFile()).thenReturn("classpath:nonexistent.json");
-
-		Exception exception = assertThrows(
-				Exception.class, () -> vdypProjectionService.performProjectionForRecord(batchRecord, PARTITION_NAME)
-		);
-
-		assertNotNull(exception);
-	}
-
-	@Test
 	void testCreatePartitionOutputDir_CreatesNestedDirectories() {
 		String nestedPartitionName = "nested-partition-test";
 
@@ -461,16 +387,6 @@ class VdypProjectionServiceTest {
 		assertTrue(csvLine.contains("100.0"));
 		assertTrue(csvLine.contains("50"));
 		assertTrue(csvLine.contains("25.5"));
-	}
-
-	@Test
-	void testLoadParameters_InvalidFileThrowsException() {
-		when(projectionProperties.getParametersFile()).thenReturn("classpath:invalid-file.json");
-
-		Exception exception = assertThrows(Exception.class,
-				() -> ReflectionTestUtils.invokeMethod(vdypProjectionService, "loadParameters"));
-
-		assertNotNull(exception);
 	}
 
 	@Test

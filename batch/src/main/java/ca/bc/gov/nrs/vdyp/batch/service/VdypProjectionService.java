@@ -18,14 +18,11 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencsv.bean.CsvBindByName;
 import com.opencsv.bean.CsvBindByPosition;
 
-import ca.bc.gov.nrs.vdyp.batch.configuration.BatchProperties;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
 import ca.bc.gov.nrs.vdyp.batch.model.Layer;
 import ca.bc.gov.nrs.vdyp.batch.model.Polygon;
@@ -46,9 +43,6 @@ public class VdypProjectionService {
 
 	private static final Logger logger = LoggerFactory.getLogger(VdypProjectionService.class);
 
-	private final ObjectMapper objectMapper;
-
-	private final BatchProperties batchProperties;
 
 	@Value("${batch.output.directory.default-path}")
 	private String outputBasePath;
@@ -57,24 +51,8 @@ public class VdypProjectionService {
 		PolygonProjectionRunner.initializeSiteIndexCurves();
 	}
 
-	public VdypProjectionService(BatchProperties batchProperties) {
-		this.objectMapper = new ObjectMapper();
-		this.batchProperties = batchProperties;
-	}
-
-	/**
-	 * Loads parameters from the configured parameters file
-	 */
-	private Parameters loadParameters() throws IOException {
-		String parametersFilePath = batchProperties.getVdyp().getProjection().getParametersFile();
-		if (parametersFilePath == null || parametersFilePath.trim().isEmpty()) {
-			throw new IllegalStateException(
-					"batch.vdyp.projection.parameters-file must be configured in application.properties");
-		}
-		ClassPathResource parametersResource = new ClassPathResource(parametersFilePath.replace("classpath:", ""));
-		try (InputStream parametersStream = parametersResource.getInputStream()) {
-			return objectMapper.readValue(parametersStream, Parameters.class);
-		}
+	public VdypProjectionService() {
+		// Default constructor - no initialization required
 	}
 
 	/**
@@ -227,10 +205,12 @@ public class VdypProjectionService {
 	 * @param batchRecord   Complete BatchRecord with polygon + all layers for one
 	 *                      FEATURE_ID
 	 * @param partitionName Partition identifier for logging and output organization
+	 * @param parameters    VDYP projection parameters
 	 * @return Projection result summary
 	 * @throws Exception if projection fails
 	 */
-	public String performProjectionForRecord(BatchRecord batchRecord, String partitionName) throws IOException {
+	public String performProjectionForRecord(BatchRecord batchRecord, String partitionName, Parameters parameters)
+			throws IOException {
 		logger.debug(
 				"Starting VDYP projection for complete polygon FEATURE_ID {} in partition {}",
 				batchRecord.getFeatureId(),
@@ -239,9 +219,6 @@ public class VdypProjectionService {
 		try {
 			// Create partition-specific output directory
 			Path partitionOutputDir = createPartitionOutputDir(partitionName);
-
-			// Load parameters from configuration file
-			Parameters parameters = loadParameters();
 
 			// Create input streams from the complete BatchRecord data
 			Map<String, InputStream> inputStreams = createInputStreamsFromBatchRecord(batchRecord);
