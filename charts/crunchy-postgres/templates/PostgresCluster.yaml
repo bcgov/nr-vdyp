@@ -19,6 +19,9 @@ spec:
   postGISVersion: {{ .Values.postGISVersion | quote }}
   {{ end }}
   postgresVersion: {{ .Values.postgresVersion }}
+  databaseInitSQL:
+      name: {{ include crunchy-postgres-#{ENV}# . }}-init-sql
+      key: init.sql
 
   {{ if .Values.pgmonitor.enabled }}
 
@@ -101,7 +104,7 @@ spec:
       databases:
         - {{ .Values.batch_db.name }}
       options: 'LOGIN NOSUPERUSER INHERIT NOCREATEDB NOCREATEROLE NOREPLICATION'
-  
+
   backups:
     pgbackrest:
       {{ if .Values.pgBackRest.image }}
