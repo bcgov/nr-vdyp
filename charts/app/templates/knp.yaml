@@ -68,7 +68,6 @@ spec:
   podSelector:
     matchLabels:
       app.kubernetes.io/name: {{ .Values.global.databaseAlias}}
-      app.kubernetes.io/instance: {{ .Release.Name }}
   ingress:
     - ports:
         - protocol: TCP
@@ -77,6 +76,28 @@ spec:
         - podSelector:
             matchLabels:
               app.kubernetes.io/name: backend
+              app.kubernetes.io/instance: {{ .Release.Name }}
+  policyTypes:
+    - Ingress
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ .Release.Name }}-allow-coms-to-db
+  labels: {{- include "selectorLabels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Values.global.databaseAlias}}
+  ingress:
+    - ports:
+        - protocol: TCP
+          port: 5432
+      from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: coms
               app.kubernetes.io/instance: {{ .Release.Name }}
   policyTypes:
     - Ingress
@@ -103,3 +124,5 @@ spec:
               app.kubernetes.io/instance: {{ .Release.Name }}
   policyTypes:
     - Ingress
+
+
