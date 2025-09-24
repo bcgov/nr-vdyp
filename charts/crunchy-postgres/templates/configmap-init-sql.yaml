@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.fullnameOverride }}-init-sql
+  labels:
+    app.kubernetes.io/name: {{ .Values.fullnameOverride }}
+    helm.sh/chart: {{ .Values.fullnameOverride }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+data:
+  init.sql: |
+    \set ON_ERROR_STOP on
+    \c {{.Values.coms_db.name}}
+
+    -- Allow access to public schema for coms user managed by crunchy 
+    GRANT USAGE ON SCHEMA public TO {{.Values.coms_db.user}};
+    GRANT CREATE ON SCHEMA public TO {{.Values.coms_db.user}};
+
+    -- sensible defaults for future objects
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public
+      GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO {{.Values.coms_db.user}};
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public
+      GRANT USAGE, SELECT ON SEQUENCES TO {{.Values.coms_db.user}};

@@ -3,7 +3,7 @@ fullnameOverride: crunchy-postgres-#{ENV}#
 crunchyImage: # it's not necessary to specify an image as the images specified in the Crunchy Postgres Operator will be pulled by default
 #crunchyImage: artifacts.developer.gov.bc.ca/bcgov-docker-local/crunchy-postgres-gis:ubi8-15.2-3.3-0 # use this image for POSTGIS
 postgresVersion: 17
-postGISVersion: '3.3' # use this version of POSTGIS. both crunchyImage and this property needs to have valid values for POSTGIS to be enabled.
+#postGISVersion: '3.3' # use this version of POSTGIS. both crunchyImage and this property needs to have valid values for POSTGIS to be enabled.
 imagePullPolicy: IfNotPresent
 #Set this to true for OpenShift deployments to avoid incompatible securityContext values
 openshift: true
@@ -117,3 +117,12 @@ pgmonitor:
     limits:
       cpu: 50m
       memory: 128Mi
+
+coms_db:
+    user: #{COMS_DB_USER}#
+    name: #{COMS_DB_NAME}#
+
+batch_db:
+    user: #{BATCH_DB_USER}#
+    name: #{BATCH_DB_NAME}#
+

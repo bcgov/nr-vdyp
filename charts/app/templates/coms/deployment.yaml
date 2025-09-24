@@ -51,18 +51,30 @@ spec:
             - name: BASICAUTH_PASSWORD
               value: {{ .Values.coms.env.BASICAUTH_PASSWORD | quote }}
             - name: DB_PORT
-              value: "5432"
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.coms.db_secret }}
+                  key: port
             - name: DB_HOST
-              value: {{$host}}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.coms.db_secret }}
+                  key: host
             - name: DB_NAME
-              value: {{.Values.coms.env.DB_DATABASE }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.coms.db_secret }}
+                  key: dbname
             - name: DB_USERNAME
-              value: {{.Values.coms.env.DB_USERNAME }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.coms.db_secret }}
+                  key: user
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Release.Name }}
-                  key: COMS_DB_PASSWORD
+                  name: {{ .Values.coms.db_secret }}
+                  key: password
             - name: KC_ENABLED
               value: {{ .Values.coms.env.KC_ENABLED | quote }}
             - name: KC_PUBLICKEY
