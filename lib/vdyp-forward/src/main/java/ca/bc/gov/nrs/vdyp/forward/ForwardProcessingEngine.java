@@ -360,7 +360,7 @@ public class ForwardProcessingEngine {
 		Bank bank = lps.getBank();
 
 		float dhStart = lps.getPrimarySpeciesDominantHeight(); // L1COM6/HD
-		int pspSiteCurveNumber = lps.getSiteCurveNumber(lps.getPrimarySpeciesIndex()); //INXSC/INXSCV(0,1)
+		int pspSiteCurveNumber = lps.getSiteCurveNumber(lps.getPrimarySpeciesIndex()); // INXSC/INXSCV(0,1)
 		float pspSiteIndex = lps.getPrimarySpeciesSiteIndex(); // L1COM6/SI
 		float pspYtbhStart = lps.getPrimarySpeciesAgeToBreastHeight(); // L1COM6/YTBHP
 		float pspYabhStart = lps.getPrimarySpeciesAgeAtBreastHeight(); // L1COM6/AGEBHP
