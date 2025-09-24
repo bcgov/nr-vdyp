@@ -503,7 +503,7 @@ public class ForwardProcessingEngine {
 			// Calculate the basal area, trees-per-hectare and quad-mean-diameter for all
 			// species in the polygon (UC All)
 
-			if (debugSetting1Value == 1 || bank.getNSpecies() == 1) {
+			if (debugSetting1Value == 1 || bank.getNSpecies() == 1 || (baDelta == 0.0 && dqDelta == 0.0)) {
 
 				// (5b) This is the NO SPECIES DYNAMICS section
 				growUsingNoSpeciesDynamics(baChangeRate, tphMultiplier);
