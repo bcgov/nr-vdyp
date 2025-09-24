@@ -556,6 +556,7 @@ public class ForwardProcessingEngine {
 
 		// (8) Calculate per-species Lorey heights, uc All
 
+		// GRSPHL
 		float pspTphEnd = bank.treesPerHectare[lps.getPrimarySpeciesIndex()][UC_ALL_INDEX];
 		growLoreyHeights(lps, dhStart, dhEnd, pspTphStart, pspTphEnd, pspLhStart);
 
@@ -569,6 +570,7 @@ public class ForwardProcessingEngine {
 
 		// (9) Calculate basal area percentages per species, uc UC_ALL_INDEX
 		for (int i : bank.getIndices()) {
+			// PCTL1(i) = 100*BA(i,0)/BA(0,0)
 			bank.percentagesOfForestedLand[i] = 100.0f * bank.basalAreas[i][UC_ALL_INDEX]
 					/ bank.basalAreas[0][UC_ALL_INDEX];
 		}
