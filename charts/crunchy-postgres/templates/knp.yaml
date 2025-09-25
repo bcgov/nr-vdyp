@@ -1,0 +1,28 @@
+---
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: allow-same-namespace
+spec:
+  podSelector: {}
+  ingress:
+  - from:
+    - podSelector: {}
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ .Release.Name }}-openshift-ingress-to-crunchy
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Values.fullnameOverride }}
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              network.openshift.io/policy-group: ingress
+  policyTypes:
+    - Ingress
+
