@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import org.springframework.web.multipart.MultipartFile;
+import ca.bc.gov.nrs.vdyp.batch.util.Utils;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -33,8 +34,8 @@ public class StreamingCsvPartitioner {
 		logger.info("Starting streaming CSV partitioning with grid size: {}", gridSize);
 		if (logger.isInfoEnabled()) {
 			logger.info("Processing files: polygon={} ({} bytes), layer={} ({} bytes)",
-					sanitizeFilename(polygonFile.getOriginalFilename()), polygonFile.getSize(),
-					sanitizeFilename(layerFile.getOriginalFilename()), layerFile.getSize());
+					Utils.sanitizeForLogging(polygonFile.getOriginalFilename()), polygonFile.getSize(),
+					Utils.sanitizeForLogging(layerFile.getOriginalFilename()), layerFile.getSize());
 		}
 
 		if (!Files.exists(baseOutputDir)) {
@@ -208,24 +209,4 @@ public class StreamingCsvPartitioner {
 		}
 	}
 
-	/**
-	 * Sanitizes filename for safe logging
-	 * Removes control characters, line breaks, and limits length.
-	 */
-	private String sanitizeFilename(String filename) {
-		if (filename == null) {
-			return "null";
-		}
-
-		// Remove control characters and line breaks, limit length
-		String sanitized = filename.replaceAll("[\\x00-\\x1f\\x7f-\\x9f]", "")
-				.trim();
-
-		// Limit length to prevent log flooding
-		if (sanitized.length() > 100) {
-			sanitized = sanitized.substring(0, 97) + "...";
-		}
-
-		return sanitized.isEmpty() ? "empty" : sanitized;
-	}
 }

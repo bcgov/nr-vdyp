@@ -36,6 +36,7 @@ import org.springframework.web.multipart.MultipartFile;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.service.StreamingCsvPartitioner;
+import ca.bc.gov.nrs.vdyp.batch.util.Utils;
 import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.ProjectionRequestValidationException;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessage;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessageKind;
@@ -259,34 +260,13 @@ public class BatchController {
 			Long partitionSize, String parametersJson) {
 		if (logger.isInfoEnabled()) {
 			logger.info("=== VDYP Batch Job File Upload Request ===");
-			logger.info("Polygon file: {} ({} bytes)", sanitizeFilename(polygonFile.getOriginalFilename()),
+			logger.info("Polygon file: {} ({} bytes)", Utils.sanitizeForLogging(polygonFile.getOriginalFilename()),
 					polygonFile.getSize());
-			logger.info("Layer file: {} ({} bytes)", sanitizeFilename(layerFile.getOriginalFilename()),
+			logger.info("Layer file: {} ({} bytes)", Utils.sanitizeForLogging(layerFile.getOriginalFilename()),
 					layerFile.getSize());
 			logger.info("Partition size: {}", partitionSize);
 			logger.info("Parameters provided: {}", parametersJson != null ? "yes" : "no");
 		}
-	}
-
-	/**
-	 * Sanitizes user-provided filename for safe logging
-	 * Removes control characters, line breaks, and limits length.
-	 */
-	private String sanitizeFilename(String filename) {
-		if (filename == null) {
-			return "null";
-		}
-
-		// Remove control characters and line breaks, limit length
-		String sanitized = filename.replaceAll("[\\x00-\\x1f\\x7f-\\x9f]", "")
-				.trim();
-
-		// Limit length to prevent log flooding
-		if (sanitized.length() > 100) {
-			sanitized = sanitized.substring(0, 97) + "...";
-		}
-
-		return sanitized.isEmpty() ? "empty" : sanitized;
 	}
 
 	private JobExecution executeJob(MultipartFile polygonFile, MultipartFile layerFile,
@@ -305,8 +285,8 @@ public class BatchController {
 			// Debug logging
 			if (logger.isInfoEnabled()) {
 				logger.info("Processing files: polygon={}, layer={}, partitionSize={}",
-						sanitizeFilename(polygonFile.getOriginalFilename()), 
-						sanitizeFilename(layerFile.getOriginalFilename()), partitionSize);
+						Utils.sanitizeForLogging(polygonFile.getOriginalFilename()),
+						Utils.sanitizeForLogging(layerFile.getOriginalFilename()), partitionSize);
 				logger.info("Parameters JSON length: {}", parametersJson.length());
 			}
 			logger.debug("Parameters JSON content: {}", parametersJson);
@@ -335,8 +315,8 @@ public class BatchController {
 
 			if (logger.isInfoEnabled()) {
 				logger.info("Started VDYP batch job {} with uploaded files - Polygons: {}, Layers: {}",
-						jobExecution.getId(), sanitizeFilename(polygonFile.getOriginalFilename()), 
-						sanitizeFilename(layerFile.getOriginalFilename()));
+						jobExecution.getId(), Utils.sanitizeForLogging(polygonFile.getOriginalFilename()),
+						Utils.sanitizeForLogging(layerFile.getOriginalFilename()));
 			}
 
 			return jobExecution;
