@@ -8,23 +8,11 @@ import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.partition.PartitionHandler;
 import org.springframework.batch.core.partition.StepExecutionSplitter;
 import org.springframework.batch.core.partition.support.TaskExecutorPartitionHandler;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.lang.NonNull;
 
 import java.util.Collection;
 
-/**
- * FEATURE_ID-based dynamic partition handler for VDYP batch processing.
- *
- * This handler manages the FEATURE_ID-based partitioning strategy, setting up polygon and layer resources for the
- * DynamicPartitioner to ensure complete polygon data integrity across all partitions.
- *
- * This handler manages the parallel execution of VDYP processing partitions, allowing runtime configuration of
- * partition count while maintaining FEATURE_ID-based data integrity.
- */
 public class DynamicPartitionHandler implements PartitionHandler {
 
 	private static final Logger logger = LoggerFactory.getLogger(DynamicPartitionHandler.class);
@@ -36,8 +24,7 @@ public class DynamicPartitionHandler implements PartitionHandler {
 
 	public DynamicPartitionHandler(
 			TaskExecutor taskExecutor, Step workerStep, DynamicPartitioner dynamicPartitioner,
-			BatchProperties batchProperties
-	) {
+			BatchProperties batchProperties) {
 		this.taskExecutor = taskExecutor;
 		this.workerStep = workerStep;
 		this.dynamicPartitioner = dynamicPartitioner;
@@ -46,9 +33,9 @@ public class DynamicPartitionHandler implements PartitionHandler {
 
 	@Override
 	@NonNull
-	public Collection<StepExecution>
-			handle(@NonNull StepExecutionSplitter stepSplitter, @NonNull StepExecution masterStepExecution)
-					throws Exception {
+	public Collection<StepExecution> handle(@NonNull StepExecutionSplitter stepSplitter,
+			@NonNull StepExecution masterStepExecution)
+			throws Exception {
 		// Get dynamic parameters from job parameters
 		JobParameters jobParameters = masterStepExecution.getJobExecution().getJobParameters();
 		Long partitionSize = jobParameters.getLong("partitionSize");
@@ -63,25 +50,18 @@ public class DynamicPartitionHandler implements PartitionHandler {
 			throw new IllegalStateException("No grid size specified in job parameters or properties. ");
 		}
 
-		// Create polygon resource for FEATURE_ID-based partitioning
-		String polygonFilePath = batchProperties.getVdyp().getProjection().getPolygonFile();
-
-		Resource polygonResource;
-		if (polygonFilePath.startsWith("classpath:")) {
-			polygonResource = new ClassPathResource(polygonFilePath.substring(10));
+		// Set partition base directory for uploaded CSV files
+		String partitionBaseDir = jobParameters.getString("partitionBaseDir");
+		if (partitionBaseDir != null) {
+			dynamicPartitioner.setPartitionBaseDir(partitionBaseDir);
+			logger.info("[VDYP Uploaded File Partition Handler] Using partition base directory: {}", partitionBaseDir);
 		} else {
-			polygonResource = new FileSystemResource(polygonFilePath);
+			logger.warn("[VDYP Uploaded File Partition Handler] No partition base directory found in job parameters");
 		}
-
-		// Set polygon resource for FEATURE_ID-based partitioning
-		dynamicPartitioner.setPolygonResource(polygonResource);
-
-		logger.info("[VDYP FEATURE_ID Partition Handler] Using polygon file: {}", polygonFilePath);
 
 		logger.info(
 				"VDYP FEATURE_ID-based partitioning: Using {} partitions (requested: {}, from properties: {})",
-				actualGridSize, partitionSize, batchProperties.getPartitioning().getGridSize()
-		);
+				actualGridSize, partitionSize, batchProperties.getPartitioning().getGridSize());
 
 		// Create and configure TaskExecutorPartitionHandler with dynamic grid size
 		TaskExecutorPartitionHandler handler = new TaskExecutorPartitionHandler();

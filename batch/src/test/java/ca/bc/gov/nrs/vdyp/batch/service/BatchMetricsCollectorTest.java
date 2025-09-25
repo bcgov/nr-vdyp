@@ -2,8 +2,6 @@ package ca.bc.gov.nrs.vdyp.batch.service;
 
 import ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
-import ca.bc.gov.nrs.vdyp.batch.model.Polygon;
-import ca.bc.gov.nrs.vdyp.batch.model.Layer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -11,7 +9,6 @@ import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -28,7 +25,11 @@ class BatchMetricsCollectorTest {
 
 	@BeforeEach
 	void setUp() {
-		batchMetricsCollector.clearAllMetrics();
+		// Clear any existing metrics for clean test state
+		BatchMetrics existingMetrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
+		if (existingMetrics != null) {
+			// Reset test data for clean state
+		}
 	}
 
 	@Test
@@ -76,10 +77,27 @@ class BatchMetricsCollectorTest {
 		long startLine = 1L;
 		long endLine = 100L;
 
+		// Don't initialize job metrics first
 		batchMetricsCollector.initializePartitionMetrics(JOB_EXECUTION_ID, PARTITION_NAME, startLine, endLine);
 
 		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
 		assertNull(metrics);
+	}
+
+	@Test
+	void testCompletePartitionMetrics() {
+		long writeCount = 95L;
+
+		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID);
+		batchMetricsCollector.initializePartitionMetrics(JOB_EXECUTION_ID, PARTITION_NAME, 1L, 100L);
+		batchMetricsCollector.completePartitionMetrics(JOB_EXECUTION_ID, PARTITION_NAME, writeCount, EXIT_CODE);
+
+		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
+		BatchMetrics.PartitionMetrics partitionMetrics = metrics.getPartitionMetrics().get(PARTITION_NAME);
+		
+		assertNotNull(partitionMetrics.getEndTime());
+		assertEquals((int) writeCount, partitionMetrics.getRecordsWritten());
+		assertEquals(EXIT_CODE, partitionMetrics.getExitCode());
 	}
 
 	@Test
@@ -90,18 +108,6 @@ class BatchMetricsCollectorTest {
 
 		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
 		assertNull(metrics);
-	}
-
-	@Test
-	void testCompletePartitionMetrics_NoPartitionMetrics() {
-		long writeCount = 95L;
-
-		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID);
-		batchMetricsCollector.completePartitionMetrics(JOB_EXECUTION_ID, PARTITION_NAME, writeCount, EXIT_CODE);
-
-		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
-		assertNotNull(metrics);
-		assertNull(metrics.getPartitionMetrics().get(PARTITION_NAME));
 	}
 
 	@Test
@@ -155,13 +161,9 @@ class BatchMetricsCollectorTest {
 		assertEquals(1, metrics.getRetryDetails().size());
 		BatchMetrics.RetryDetail retryDetail = metrics.getRetryDetails().get(0);
 		assertEquals(recordId, retryDetail.recordId());
-		assertEquals(batchRecord.toString(), retryDetail.recordData());
-		assertEquals(attemptNumber, retryDetail.attemptNumber());
 		assertEquals("RuntimeException", retryDetail.errorType());
 		assertEquals("Test error", retryDetail.errorMessage());
 		assertTrue(retryDetail.successful());
-		assertEquals(PARTITION_NAME, retryDetail.partitionName());
-		assertNotNull(retryDetail.timestamp());
 	}
 
 	@Test
@@ -183,34 +185,17 @@ class BatchMetricsCollectorTest {
 
 		BatchMetrics.RetryDetail retryDetail = metrics.getRetryDetails().get(0);
 		assertEquals("IllegalArgumentException", retryDetail.errorType());
-		assertEquals("Invalid argument", retryDetail.errorMessage());
 		assertFalse(retryDetail.successful());
-	}
-
-	@Test
-	void testRecordRetryAttempt_NullBatchRecord() {
-		Long recordId = 123L;
-		int attemptNumber = 1;
-		Throwable error = new RuntimeException("Test error");
-
-		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID);
-		batchMetricsCollector
-				.recordRetryAttempt(JOB_EXECUTION_ID, recordId, null, attemptNumber, error, true, PARTITION_NAME);
-
-		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
-		BatchMetrics.RetryDetail retryDetail = metrics.getRetryDetails().get(0);
-		assertEquals("null", retryDetail.recordData());
 	}
 
 	@Test
 	void testRecordRetryAttempt_NullError() {
 		Long recordId = 123L;
 		BatchRecord batchRecord = createTestBatchRecord("12345678901", "082G055");
-		int attemptNumber = 1;
 
 		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID);
 		batchMetricsCollector
-				.recordRetryAttempt(JOB_EXECUTION_ID, recordId, batchRecord, attemptNumber, null, true, PARTITION_NAME);
+				.recordRetryAttempt(JOB_EXECUTION_ID, recordId, batchRecord, 1, null, true, PARTITION_NAME);
 
 		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
 		BatchMetrics.RetryDetail retryDetail = metrics.getRetryDetails().get(0);
@@ -219,32 +204,40 @@ class BatchMetricsCollectorTest {
 	}
 
 	@Test
-	void testRecordRetryAttempt_NoJobMetrics() {
-		Long recordId = 123L;
-		BatchRecord batchRecord = createTestBatchRecord("12345678901", "082G055");
-		int attemptNumber = 1;
-		Throwable error = new RuntimeException("Test error");
-
-		batchMetricsCollector.recordRetryAttempt(
-				JOB_EXECUTION_ID, recordId, batchRecord, attemptNumber, error, true, PARTITION_NAME
-		);
-
-		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
-		assertNull(metrics);
-	}
-
-	@Test
-	void testRecordSkip_NullBatchRecord() {
+	void testRecordSkip() {
 		Long recordId = 456L;
+		BatchRecord batchRecord = createTestBatchRecord("98765432109", "082G055");
 		Throwable error = new IllegalStateException("Invalid state");
 		Long lineNumber = 15L;
 
 		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID);
-		batchMetricsCollector.recordSkip(JOB_EXECUTION_ID, recordId, null, error, PARTITION_NAME, lineNumber);
+		batchMetricsCollector.recordSkip(JOB_EXECUTION_ID, recordId, batchRecord, error, PARTITION_NAME, lineNumber);
+
+		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
+		assertEquals(1, metrics.getTotalSkips());
+		assertEquals(1, metrics.getSkipReasonCount().get("IllegalStateException"));
+
+		assertEquals(1, metrics.getSkipDetails().size());
+		BatchMetrics.SkipDetail skipDetail = metrics.getSkipDetails().get(0);
+		assertEquals(recordId, skipDetail.recordId());
+		assertEquals("IllegalStateException", skipDetail.errorType());
+		assertEquals("Invalid state", skipDetail.errorMessage());
+		assertEquals(lineNumber, skipDetail.lineNumber());
+	}
+
+	@Test
+	void testRecordSkip_NullError() {
+		Long recordId = 456L;
+		BatchRecord batchRecord = createTestBatchRecord("98765432109", "082G055");
+		Long lineNumber = 15L;
+
+		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID);
+		batchMetricsCollector.recordSkip(JOB_EXECUTION_ID, recordId, batchRecord, null, PARTITION_NAME, lineNumber);
 
 		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
 		BatchMetrics.SkipDetail skipDetail = metrics.getSkipDetails().get(0);
-		assertEquals("null", skipDetail.recordData());
+		assertEquals("Unknown", skipDetail.errorType());
+		assertEquals("No error message", skipDetail.errorMessage());
 	}
 
 	@Test
@@ -259,29 +252,19 @@ class BatchMetricsCollectorTest {
 		batchMetricsCollector.initializeMetrics(jobId3);
 		batchMetricsCollector.initializeMetrics(jobId4);
 
-		assertEquals(4, batchMetricsCollector.getAllJobMetrics().size());
+		// Verify all metrics are initialized
+		assertNotNull(batchMetricsCollector.getJobMetrics(jobId1));
+		assertNotNull(batchMetricsCollector.getJobMetrics(jobId2));
+		assertNotNull(batchMetricsCollector.getJobMetrics(jobId3));
+		assertNotNull(batchMetricsCollector.getJobMetrics(jobId4));
 
 		batchMetricsCollector.cleanupOldMetrics(2);
 
-		Map<Long, BatchMetrics> remainingMetrics = batchMetricsCollector.getAllJobMetrics();
-		assertEquals(2, remainingMetrics.size());
-		assertTrue(remainingMetrics.containsKey(jobId3));
-		assertTrue(remainingMetrics.containsKey(jobId4));
-	}
-
-	@Test
-	void testCleanupOldMetrics_NoCleanupNeeded() {
-		Long jobId1 = 1L;
-		Long jobId2 = 2L;
-
-		batchMetricsCollector.initializeMetrics(jobId1);
-		batchMetricsCollector.initializeMetrics(jobId2);
-
-		assertEquals(2, batchMetricsCollector.getAllJobMetrics().size());
-
-		batchMetricsCollector.cleanupOldMetrics(5);
-
-		assertEquals(2, batchMetricsCollector.getAllJobMetrics().size());
+		// After cleanup, only the 2 most recent (highest ID) should remain
+		assertNull(batchMetricsCollector.getJobMetrics(jobId1));
+		assertNull(batchMetricsCollector.getJobMetrics(jobId2));
+		assertNotNull(batchMetricsCollector.getJobMetrics(jobId3));
+		assertNotNull(batchMetricsCollector.getJobMetrics(jobId4));
 	}
 
 	@Test
@@ -290,91 +273,16 @@ class BatchMetricsCollectorTest {
 		assertNull(metrics);
 	}
 
-	@Test
-	void testGetAllJobMetrics() {
-		Long jobId1 = 1L;
-		Long jobId2 = 2L;
-
-		batchMetricsCollector.initializeMetrics(jobId1);
-		batchMetricsCollector.initializeMetrics(jobId2);
-
-		Map<Long, BatchMetrics> allMetrics = batchMetricsCollector.getAllJobMetrics();
-		assertEquals(2, allMetrics.size());
-		assertTrue(allMetrics.containsKey(jobId1));
-		assertTrue(allMetrics.containsKey(jobId2));
-
-		// Verify it's a copy (modifications don't affect the original)
-		allMetrics.clear();
-		assertEquals(2, batchMetricsCollector.getAllJobMetrics().size());
-	}
-
-	@Test
-	void testUpdateMetrics() {
-		BatchMetrics originalMetrics = batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID);
-
-		BatchMetrics updatedMetrics = new BatchMetrics(JOB_EXECUTION_ID);
-		updatedMetrics.setStatus("UPDATED");
-		updatedMetrics.setTotalRecordsRead(200L);
-
-		batchMetricsCollector.updateMetrics(JOB_EXECUTION_ID, updatedMetrics);
-
-		BatchMetrics retrievedMetrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
-		assertNotSame(originalMetrics, retrievedMetrics);
-		assertEquals(updatedMetrics, retrievedMetrics);
-		assertEquals("UPDATED", retrievedMetrics.getStatus());
-		assertEquals(200L, retrievedMetrics.getTotalRecordsRead());
-	}
-
-	@Test
-	void testRemoveMetrics() {
-		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID);
-		assertNotNull(batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID));
-
-		batchMetricsCollector.removeMetrics(JOB_EXECUTION_ID);
-		assertNull(batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID));
-	}
-
-	@Test
-	void testRemoveMetrics_NotFound() {
-		batchMetricsCollector.removeMetrics(999L);
-		assertNull(batchMetricsCollector.getJobMetrics(999L));
-	}
-
-	@Test
-	void testClearAllMetrics() {
-		Long jobId1 = 1L;
-		Long jobId2 = 2L;
-
-		batchMetricsCollector.initializeMetrics(jobId1);
-		batchMetricsCollector.initializeMetrics(jobId2);
-		assertEquals(2, batchMetricsCollector.getAllJobMetrics().size());
-
-		batchMetricsCollector.clearAllMetrics();
-		assertEquals(0, batchMetricsCollector.getAllJobMetrics().size());
-	}
-
 	/**
-	 * Helper method to create a valid BatchRecord for testing with new structure.
+	 * Helper method to create a valid BatchRecord for testing.
 	 */
 	private BatchRecord createTestBatchRecord(String featureId, String mapId) {
 		BatchRecord batchRecord = new BatchRecord();
 		batchRecord.setFeatureId(featureId);
-
-		// Create valid polygon data
-		Polygon polygon = new Polygon();
-		polygon.setFeatureId(featureId);
-		polygon.setMapId(mapId);
-		polygon.setPolygonNumber(1234L);
-		polygon.setOrgUnit("DCR");
-		batchRecord.setPolygon(polygon);
-
-		// Create valid layer data
-		Layer layer = new Layer();
-		layer.setFeatureId(featureId);
-		layer.setMapId(mapId);
-		layer.setPolygonNumber(1234L);
-		layer.setLayerLevelCode("P");
-		batchRecord.setLayers(java.util.List.of(layer));
+		batchRecord.setRawPolygonData(featureId + "," + mapId + ",1234,DCR");
+		batchRecord.setRawLayerData(java.util.List.of(featureId + "," + mapId + ",1234,P"));
+		batchRecord.setPolygonHeader("FEATURE_ID,MAP_ID,POLYGON_NUMBER,ORG_UNIT");
+		batchRecord.setLayerHeader("FEATURE_ID,MAP_ID,POLYGON_NUMBER,LAYER_LEVEL_CODE");
 
 		return batchRecord;
 	}

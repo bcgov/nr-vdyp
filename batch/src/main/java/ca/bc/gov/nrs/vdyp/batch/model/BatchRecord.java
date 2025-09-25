@@ -2,27 +2,16 @@ package ca.bc.gov.nrs.vdyp.batch.model;
 
 import java.util.List;
 
-/**
- * VDYP-specific batch record model representing a complete polygon entity for VDYP projection.
- *
- * This model implements the FEATURE_ID-based processing strategy where each BatchRecord contains exactly one polygon
- * plus ALL its associated layers as a complete, atomic processing unit.
- */
 public class BatchRecord {
 
 	private String featureId; // business key
-	private Polygon polygon;
-	private List<Layer> layers;
-	private String projectionResult;
 
-	public BatchRecord() {
-	}
+	private String rawPolygonData;
+	private List<String> rawLayerData;
+	private String polygonHeader;
+	private String layerHeader;
 
-	public BatchRecord(String featureId, Polygon polygon, List<Layer> layers) {
-		this.featureId = featureId;
-		this.polygon = polygon;
-		this.layers = layers;
-	}
+	private String partitionName;
 
 	public String getFeatureId() {
 		return featureId;
@@ -32,33 +21,55 @@ public class BatchRecord {
 		this.featureId = featureId;
 	}
 
-	public Polygon getPolygon() {
-		return polygon;
+	public String getRawPolygonData() {
+		return rawPolygonData;
 	}
 
-	public void setPolygon(Polygon polygon) {
-		this.polygon = polygon;
+	public void setRawPolygonData(String rawPolygonData) {
+		this.rawPolygonData = rawPolygonData;
 	}
 
-	public List<Layer> getLayers() {
-		return layers;
+	public List<String> getRawLayerData() {
+		return rawLayerData;
 	}
 
-	public void setLayers(List<Layer> layers) {
-		this.layers = layers;
+	public void setRawLayerData(List<String> rawLayerData) {
+		this.rawLayerData = rawLayerData;
 	}
 
-	public String getProjectionResult() {
-		return projectionResult;
+	public String getPolygonHeader() {
+		return polygonHeader;
 	}
 
-	public void setProjectionResult(String projectionResult) {
-		this.projectionResult = projectionResult;
+	public void setPolygonHeader(String polygonHeader) {
+		this.polygonHeader = polygonHeader;
+	}
+
+	public String getLayerHeader() {
+		return layerHeader;
+	}
+
+	public void setLayerHeader(String layerHeader) {
+		this.layerHeader = layerHeader;
+	}
+
+	public String getPartitionName() {
+		return partitionName;
+	}
+
+	public void setPartitionName(String partitionName) {
+		this.partitionName = partitionName;
 	}
 
 	@Override
 	public String toString() {
-		return "BatchRecord{" + "featureId='" + featureId + '\'' + ", polygon=" + polygon + ", layerCount="
-				+ (layers != null ? layers.size() : 0) + ", projectionResult='" + projectionResult + '\'' + '}';
+		return "BatchRecord{" +
+				"featureId='" + featureId + '\'' +
+				", rawPolygonData='" + rawPolygonData + '\'' +
+				", rawLayerData=" + rawLayerData +
+				", polygonHeader='" + polygonHeader + '\'' +
+				", layerHeader='" + layerHeader + '\'' +
+				", partitionName='" + partitionName + '\'' +
+				'}';
 	}
 }

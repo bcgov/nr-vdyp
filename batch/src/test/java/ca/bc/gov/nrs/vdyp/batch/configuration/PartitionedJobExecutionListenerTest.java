@@ -148,8 +148,6 @@ class PartitionedJobExecutionListenerTest {
 
 		assertDoesNotThrow(() -> listener.afterJob(jobExecution));
 
-		// Current implementation doesn't access output.getDirectory() since file merging is disabled
-		// Results are now aggregated by ResultAggregationService in post-processing step
 		verify(jobExecution, atLeastOnce()).getId();
 	}
 
@@ -215,8 +213,6 @@ class PartitionedJobExecutionListenerTest {
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
 		when(batchProperties.getPartitioning()).thenReturn(partitioning);
 		when(batchProperties.getOutput()).thenReturn(output);
-		// Current BatchProperties.Output only has directory configuration
-		// Remove references to non-existent getFilePrefix() and getCsvHeader() methods
 
 		BatchProperties.Output.Directory directory = mock(BatchProperties.Output.Directory.class);
 		when(output.getDirectory()).thenReturn(directory);

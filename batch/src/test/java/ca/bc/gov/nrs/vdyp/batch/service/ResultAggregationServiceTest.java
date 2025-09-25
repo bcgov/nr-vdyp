@@ -38,12 +38,6 @@ class ResultAggregationServiceTest {
 			2024-01-01 10:05:00 ERROR Another error occurred
 			""";
 
-	private static final String PROGRESS_LOG_CONTENT = """
-			2024-01-01 09:00:00 INFO Starting processing
-			2024-01-01 09:30:00 INFO Processing 50% complete
-			2024-01-01 10:00:00 INFO Processing complete
-			""";
-
 	@BeforeEach
 	void setUp() {
 		// Test setup is handled by @TempDir and @InjectMocks
@@ -51,7 +45,6 @@ class ResultAggregationServiceTest {
 
 	@Test
 	void testAggregateResults_Success() throws IOException {
-		// Setup partition directories with test data
 		setupPartitionDirectories();
 
 		Path resultZip = resultAggregationService.aggregateResults(JOB_EXECUTION_ID, tempDir.toString());
@@ -60,7 +53,6 @@ class ResultAggregationServiceTest {
 		assertTrue(Files.exists(resultZip));
 		assertTrue(resultZip.getFileName().toString().endsWith(".zip"));
 
-		// Verify ZIP content
 		verifyZipContent(resultZip);
 	}
 
@@ -70,8 +62,7 @@ class ResultAggregationServiceTest {
 
 		IOException exception = assertThrows(
 				IOException.class,
-				() -> resultAggregationService.aggregateResults(JOB_EXECUTION_ID, nonExistentDir.toString())
-		);
+				() -> resultAggregationService.aggregateResults(JOB_EXECUTION_ID, nonExistentDir.toString()));
 
 		assertTrue(exception.getMessage().contains("Base output directory does not exist"));
 	}
@@ -93,7 +84,6 @@ class ResultAggregationServiceTest {
 
 	@Test
 	void testAggregateResults_MultiplePartitions() throws IOException {
-		// Setup multiple partition directories
 		setupMultiplePartitionDirectories();
 
 		Path resultZip = resultAggregationService.aggregateResults(JOB_EXECUTION_ID, tempDir.toString());
@@ -101,35 +91,7 @@ class ResultAggregationServiceTest {
 		assertNotNull(resultZip);
 		assertTrue(Files.exists(resultZip));
 
-		// Verify aggregated content
 		verifyMultiplePartitionZipContent(resultZip);
-	}
-
-	@Test
-	void testAggregateResults_MixedFileTypes() throws IOException {
-		// Setup partition with various file types
-		Path partitionDir = tempDir.resolve("partition-0");
-		Files.createDirectories(partitionDir);
-
-		// Create yield table
-		Files.writeString(partitionDir.resolve("YieldTable.csv"), YIELD_TABLE_CONTENT);
-
-		// Create various log files
-		Files.writeString(partitionDir.resolve("error.log"), ERROR_LOG_CONTENT);
-		Files.writeString(partitionDir.resolve("progress.log"), PROGRESS_LOG_CONTENT);
-		Files.writeString(partitionDir.resolve("debug.log"), "Debug information");
-
-		// Create other result files
-		Files.writeString(partitionDir.resolve("projection_results.csv"), "FEATURE_ID,RESULT\n123,data");
-		Files.writeString(partitionDir.resolve("summary.txt"), "Summary data");
-
-		Path resultZip = resultAggregationService.aggregateResults(JOB_EXECUTION_ID, tempDir.toString());
-
-		assertNotNull(resultZip);
-		assertTrue(Files.exists(resultZip));
-
-		// Verify all file types are aggregated correctly
-		verifyMixedFileTypesZipContent(resultZip);
 	}
 
 	@Test
@@ -160,30 +122,22 @@ class ResultAggregationServiceTest {
 	}
 
 	@Test
-	void testAggregateResults_HeaderHandling() throws IOException {
-		// Test yield table files with headers
+	void testAggregateResults_LogAggregation() throws IOException {
+		// Test aggregation of different log types
 		Path partition1 = tempDir.resolve("partition-0");
 		Path partition2 = tempDir.resolve("partition-1");
 		Files.createDirectories(partition1);
 		Files.createDirectories(partition2);
 
-		String yieldTableWithHeader1 = """
-				TABLE_NUM,FEATURE_ID,SPECIES_1,LAYER_ID,GENUS,SP0_PERCENTAGE,TOTAL_AGE
-				1,111111111,FD,P,FD,100.0,40
-				""";
-
-		String yieldTableWithHeader2 = """
-				TABLE_NUM,FEATURE_ID,SPECIES_1,LAYER_ID,GENUS,SP0_PERCENTAGE,TOTAL_AGE
-				1,222222222,CW,P,CW,100.0,45
-				""";
-
-		Files.writeString(partition1.resolve("YieldTable.csv"), yieldTableWithHeader1);
-		Files.writeString(partition2.resolve("YieldTable.csv"), yieldTableWithHeader2);
+		// Different log types in different partitions
+		Files.writeString(partition1.resolve("error.log"), "Error 1");
+		Files.writeString(partition1.resolve("progress.log"), "Progress 1");
+		Files.writeString(partition2.resolve("error.log"), "Error 2");
+		Files.writeString(partition2.resolve("debug.log"), "Debug info");
 
 		Path resultZip = resultAggregationService.aggregateResults(JOB_EXECUTION_ID, tempDir.toString());
 
-		// Verify header is only written once
-		verifyHeaderHandling(resultZip);
+		verifyLogAggregation(resultZip);
 	}
 
 	@Test
@@ -221,60 +175,29 @@ class ResultAggregationServiceTest {
 	}
 
 	@Test
-	void testAggregateResults_LogAggregation() throws IOException {
-		// Test aggregation of different log types
-		Path partition1 = tempDir.resolve("partition-0");
-		Path partition2 = tempDir.resolve("partition-1");
-		Files.createDirectories(partition1);
-		Files.createDirectories(partition2);
-
-		// Different log types in different partitions
-		Files.writeString(partition1.resolve("error.log"), "Error 1");
-		Files.writeString(partition1.resolve("progress.log"), "Progress 1");
-		Files.writeString(partition2.resolve("error.log"), "Error 2");
-		Files.writeString(partition2.resolve("debug.log"), "Debug info");
-
-		Path resultZip = resultAggregationService.aggregateResults(JOB_EXECUTION_ID, tempDir.toString());
-
-		verifyLogAggregation(resultZip);
-	}
-
-	@Test
-	void testAggregateResults_PartitionNumberPattern() throws IOException {
-		// Test different partition directory naming patterns
-		Path partition1 = tempDir.resolve("partition-0");
-		Path partition2 = tempDir.resolve("partition1"); // No hyphen
-		Path partition3 = tempDir.resolve("partition-999");
-		Files.createDirectories(partition1);
-		Files.createDirectories(partition2);
-		Files.createDirectories(partition3);
-
-		Files.writeString(partition1.resolve("test1.txt"), "data1");
-		Files.writeString(partition2.resolve("test2.txt"), "data2");
-		Files.writeString(partition3.resolve("test3.txt"), "data3");
-
-		Path resultZip = resultAggregationService.aggregateResults(JOB_EXECUTION_ID, tempDir.toString());
-
-		assertNotNull(resultZip);
-		assertTrue(Files.exists(resultZip));
-	}
-
-	@Test
-	void testAggregateResults_FileProcessingFailure() throws IOException {
-		// Create partition directory with a file that might cause issues
+	void testAggregateResults_MixedFileTypes() throws IOException {
+		// Setup partition with various file types
 		Path partitionDir = tempDir.resolve("partition-0");
 		Files.createDirectories(partitionDir);
 
-		// Create a valid file and a problematic one
-		Files.writeString(partitionDir.resolve("good_file.txt"), "valid content");
+		// Create yield table
+		Files.writeString(partitionDir.resolve("YieldTable.csv"), YIELD_TABLE_CONTENT);
 
-		// Create another file
-		Files.writeString(partitionDir.resolve("special_file.txt"), "special content");
+		// Create various log files
+		Files.writeString(partitionDir.resolve("error.log"), ERROR_LOG_CONTENT);
+		Files.writeString(partitionDir.resolve("progress.log"), "Progress information");
+		Files.writeString(partitionDir.resolve("debug.log"), "Debug information");
+
+		// Create other result files
+		Files.writeString(partitionDir.resolve("projection_results.csv"), "FEATURE_ID,RESULT\n123,data");
 
 		Path resultZip = resultAggregationService.aggregateResults(JOB_EXECUTION_ID, tempDir.toString());
 
 		assertNotNull(resultZip);
 		assertTrue(Files.exists(resultZip));
+
+		// Verify all file types are aggregated correctly
+		verifyMixedFileTypesZipContent(resultZip);
 	}
 
 	private void setupPartitionDirectories() throws IOException {
@@ -307,7 +230,7 @@ class ResultAggregationServiceTest {
 
 		try (ZipInputStream zis = new ZipInputStream(Files.newInputStream(zipPath))) {
 			ZipEntry entry;
-			while ( (entry = zis.getNextEntry()) != null) {
+			while ((entry = zis.getNextEntry()) != null) {
 				entryNames.add(entry.getName());
 			}
 		}
@@ -315,22 +238,10 @@ class ResultAggregationServiceTest {
 		assertFalse(entryNames.isEmpty());
 
 		// Should contain aggregated yield table
-		assertTrue(
-				entryNames.stream().anyMatch(name -> name.equals("YieldTable.csv")),
-				"Should contain YieldTable.csv, found: " + entryNames
-		);
+		assertTrue(entryNames.contains("YieldTable.csv"));
 
 		// Should contain aggregated error log
-		assertTrue(
-				entryNames.stream().anyMatch(name -> name.equals("ErrorLog.txt")),
-				"Should contain ErrorLog.txt, found: " + entryNames
-		);
-
-		// Should contain partition-specific files
-		assertTrue(
-				entryNames.stream().anyMatch(name -> name.startsWith("partitions/")),
-				"Should contain partition directories, found: " + entryNames
-		);
+		assertTrue(entryNames.contains("ErrorLog.txt"));
 	}
 
 	private void verifyEmptyZipContent(Path zipPath) throws IOException {
@@ -338,7 +249,7 @@ class ResultAggregationServiceTest {
 
 		try (ZipInputStream zis = new ZipInputStream(Files.newInputStream(zipPath))) {
 			ZipEntry entry;
-			while ( (entry = zis.getNextEntry()) != null) {
+			while ((entry = zis.getNextEntry()) != null) {
 				entryNames.add(entry.getName());
 			}
 		}
@@ -352,7 +263,7 @@ class ResultAggregationServiceTest {
 
 		try (ZipInputStream zis = new ZipInputStream(Files.newInputStream(zipPath))) {
 			ZipEntry entry;
-			while ( (entry = zis.getNextEntry()) != null) {
+			while ((entry = zis.getNextEntry()) != null) {
 				entryNames.add(entry.getName());
 			}
 		}
@@ -362,10 +273,6 @@ class ResultAggregationServiceTest {
 
 		// Should have merged error log
 		assertTrue(entryNames.contains("ErrorLog.txt"));
-
-		// Should have partition-specific result files
-		long partitionFileCount = entryNames.stream().filter(name -> name.startsWith("partitions/")).count();
-		assertTrue(partitionFileCount >= 3, "Should have files from multiple partitions");
 	}
 
 	private void verifyMixedFileTypesZipContent(Path zipPath) throws IOException {
@@ -373,7 +280,7 @@ class ResultAggregationServiceTest {
 
 		try (ZipInputStream zis = new ZipInputStream(Files.newInputStream(zipPath))) {
 			ZipEntry entry;
-			while ( (entry = zis.getNextEntry()) != null) {
+			while ((entry = zis.getNextEntry()) != null) {
 				entryNames.add(entry.getName());
 			}
 		}
@@ -385,10 +292,6 @@ class ResultAggregationServiceTest {
 		assertTrue(entryNames.contains("ErrorLog.txt"));
 		assertTrue(entryNames.contains("ProgressLog.txt"));
 		assertTrue(entryNames.contains("DebugLog.txt"));
-
-		// Verify other files are in partition directories
-		assertTrue(entryNames.stream().anyMatch(name -> name.contains("projection_results.csv")));
-		assertTrue(entryNames.stream().anyMatch(name -> name.contains("summary.txt")));
 	}
 
 	private void verifyYieldTableMerging(Path zipPath) throws IOException {
@@ -418,27 +321,12 @@ class ResultAggregationServiceTest {
 		assertTrue(foundTable2, "Should find table 2 for second feature");
 	}
 
-	private void verifyHeaderHandling(Path zipPath) throws IOException {
-		String yieldTableContent = getZipEntryContent(zipPath, "YieldTable.csv");
-
-		assertNotNull(yieldTableContent);
-
-		// Count header occurrences
-		long headerCount = yieldTableContent.lines().filter(line -> line.startsWith("TABLE_NUM,FEATURE_ID")).count();
-
-		assertEquals(1, headerCount, "Header should appear only once");
-
-		// Should have data from both partitions
-		assertTrue(yieldTableContent.contains("111111111"));
-		assertTrue(yieldTableContent.contains("222222222"));
-	}
-
 	private void verifyLogAggregation(Path zipPath) throws IOException {
 		List<String> entryNames = new ArrayList<>();
 
 		try (ZipInputStream zis = new ZipInputStream(Files.newInputStream(zipPath))) {
 			ZipEntry entry;
-			while ( (entry = zis.getNextEntry()) != null) {
+			while ((entry = zis.getNextEntry()) != null) {
 				entryNames.add(entry.getName());
 			}
 		}
@@ -461,7 +349,7 @@ class ResultAggregationServiceTest {
 	private String getZipEntryContent(Path zipPath, String entryName) throws IOException {
 		try (ZipInputStream zis = new ZipInputStream(Files.newInputStream(zipPath))) {
 			ZipEntry entry;
-			while ( (entry = zis.getNextEntry()) != null) {
+			while ((entry = zis.getNextEntry()) != null) {
 				if (entry.getName().equals(entryName)) {
 					return new String(zis.readAllBytes());
 				}

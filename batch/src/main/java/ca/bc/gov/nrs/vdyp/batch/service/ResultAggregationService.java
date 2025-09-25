@@ -23,7 +23,6 @@ import java.util.zip.ZipOutputStream;
  * 2.Merge yield tables and logs by type
  * 3.Create single consolidated ZIP file
  * 4.Clean up intermediate files
- * 
  */
 @Service
 public class ResultAggregationService {
@@ -84,7 +83,6 @@ public class ResultAggregationService {
 		try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(finalZipPath))) {
 			aggregateYieldTables(organizedPartitionDirs, zipOut);
 			aggregateLogs(organizedPartitionDirs, zipOut);
-			aggregateProjectionResults(organizedPartitionDirs, zipOut);
 
 			logger.info("Successfully created consolidated ZIP file: {}", finalZipPath);
 		}
@@ -258,8 +256,7 @@ public class ResultAggregationService {
 
 	/**
 	 * Assigns TABLE_NUM based on polygon/layer combination. Each unique FEATURE_ID
-	 * + LAYER_ID combination gets a unique
-	 * TABLE_NUM.
+	 * + LAYER_ID combination gets a unique TABLE_NUM.
 	 *
 	 * @param line                     The CSV line to process
 	 * @param polygonLayerTableNumbers Map tracking TABLE_NUM for each polygon/layer
@@ -392,51 +389,6 @@ public class ResultAggregationService {
 
 		zipOut.closeEntry();
 		logger.debug("Merged {} log files into: {}", logPaths.size(), mergedLogFileName);
-	}
-
-	/**
-	 * Aggregates projection result files from all partitions.
-	 */
-	private void aggregateProjectionResults(List<Path> partitionDirs, ZipOutputStream zipOut) throws IOException {
-		logger.info("Aggregating projection result files from {} partitions", partitionDirs.size());
-
-		for (Path partitionDir : partitionDirs) {
-			String partitionName = extractPartitionName(partitionDir);
-
-			try (Stream<Path> files = Files.walk(partitionDir)) {
-				files.filter(Files::isRegularFile).filter(file -> !isYieldTableFile(file.getFileName().toString()))
-						.filter(file -> !isLogFile(file.getFileName().toString())).forEach(file -> {
-							try {
-								addFileToZip(file, partitionName, zipOut);
-							} catch (IOException e) {
-								logger.warn("Failed to add file {} to ZIP: {}", file, e.getMessage());
-							}
-						});
-			}
-		}
-	}
-
-	/**
-	 * Adds a file to the ZIP with partition-specific path.
-	 */
-	private void addFileToZip(Path file, String partitionName, ZipOutputStream zipOut) throws IOException {
-		String zipEntryName = String.format("partitions/%s/%s", partitionName, file.getFileName().toString());
-
-		ZipEntry zipEntry = new ZipEntry(zipEntryName);
-		zipOut.putNextEntry(zipEntry);
-		Files.copy(file, zipOut);
-		zipOut.closeEntry();
-	}
-
-	/**
-	 * Extracts partition name from path.
-	 */
-	private String extractPartitionName(Path path) {
-		String fileName = path.getFileName().toString();
-		if (fileName.startsWith(PARTITION_PREFIX)) {
-			return fileName.substring(PARTITION_PREFIX.length());
-		}
-		return fileName;
 	}
 
 	/**

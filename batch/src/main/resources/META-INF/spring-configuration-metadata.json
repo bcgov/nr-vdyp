@@ -1,24 +1,6 @@
 {
     "properties": [
         {
-            "name": "batch.vdyp.projection.polygon-file",
-            "type": "java.lang.String",
-            "description": "Path to the polygon CSV file for VDYP projection processing",
-            "defaultValue": "classpath:VDYP7_INPUT_POLY.csv"
-        },
-        {
-            "name": "batch.vdyp.projection.layer-file",
-            "type": "java.lang.String",
-            "description": "Path to the layer CSV file for VDYP projection processing",
-            "defaultValue": "classpath:VDYP7_INPUT_LAYER.csv"
-        },
-        {
-            "name": "batch.vdyp.projection.parameters-file",
-            "type": "java.lang.String",
-            "description": "Path to the parameters JSON file for VDYP projection configuration",
-            "defaultValue": "classpath:parameters.json"
-        },
-        {
             "name": "batch.output.file.path",
             "type": "java.lang.String",
             "description": "Path to the output VDYP projection results CSV file",

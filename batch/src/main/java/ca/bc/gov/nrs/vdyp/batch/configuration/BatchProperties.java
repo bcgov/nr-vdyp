@@ -12,13 +12,14 @@ import org.springframework.stereotype.Component;
 public class BatchProperties {
 
 	private Job job = new Job();
+	private Input input = new Input();
 	private Output output = new Output();
 	private Partitioning partitioning = new Partitioning();
 	private ThreadPool threadPool = new ThreadPool();
 	private Validation validation = new Validation();
 	private Retry retry = new Retry();
 	private Skip skip = new Skip();
-	private Vdyp vdyp = new Vdyp();
+	private Reader reader = new Reader();
 
 	public static class Job {
 		private boolean autoCreate = true;
@@ -30,6 +31,31 @@ public class BatchProperties {
 		public void setAutoCreate(boolean autoCreate) {
 			this.autoCreate = autoCreate;
 		}
+	}
+
+	public static class Input {
+		private Directory directory = new Directory();
+
+		public static class Directory {
+			private String defaultPath;
+
+			public String getDefaultPath() {
+				return defaultPath;
+			}
+
+			public void setDefaultPath(String defaultPath) {
+				this.defaultPath = defaultPath;
+			}
+		}
+
+		public Directory getDirectory() {
+			return directory;
+		}
+
+		public void setDirectory(Directory directory) {
+			this.directory = directory;
+		}
+
 	}
 
 	public static class Output {
@@ -54,7 +80,6 @@ public class BatchProperties {
 		public void setDirectory(Directory directory) {
 			this.directory = directory;
 		}
-
 	}
 
 	public static class Partitioning {
@@ -162,36 +187,15 @@ public class BatchProperties {
 		}
 	}
 
-	public static class Vdyp {
-		private Projection projection = new Projection();
+	public static class Reader {
+		private int chunkSize = 10;
 
-		public static class Projection {
-			private String polygonFile;
-			private String layerFile;
-
-			public String getPolygonFile() {
-				return polygonFile;
-			}
-
-			public void setPolygonFile(String polygonFile) {
-				this.polygonFile = polygonFile;
-			}
-
-			public String getLayerFile() {
-				return layerFile;
-			}
-
-			public void setLayerFile(String layerFile) {
-				this.layerFile = layerFile;
-			}
+		public int getChunkSize() {
+			return chunkSize;
 		}
 
-		public Projection getProjection() {
-			return projection;
-		}
-
-		public void setProjection(Projection projection) {
-			this.projection = projection;
+		public void setChunkSize(int chunkSize) {
+			this.chunkSize = chunkSize;
 		}
 	}
 
@@ -201,6 +205,14 @@ public class BatchProperties {
 
 	public void setJob(Job job) {
 		this.job = job;
+	}
+
+	public Input getInput() {
+		return input;
+	}
+
+	public void setInput(Input input) {
+		this.input = input;
 	}
 
 	public Output getOutput() {
@@ -251,11 +263,12 @@ public class BatchProperties {
 		this.skip = skip;
 	}
 
-	public Vdyp getVdyp() {
-		return vdyp;
+	public Reader getReader() {
+		return reader;
 	}
 
-	public void setVdyp(Vdyp vdyp) {
-		this.vdyp = vdyp;
+	public void setReader(Reader reader) {
+		this.reader = reader;
 	}
+
 }

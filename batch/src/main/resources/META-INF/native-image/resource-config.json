@@ -29,15 +29,6 @@
         "pattern": "\\Qschema-drop-h2.sql\\E"
       },
       {
-        "pattern": "\\QVDYP7_INPUT_LAYER.csv\\E"
-      },
-      {
-        "pattern": "\\QVDYP7_INPUT_POLY.csv\\E"
-      },
-      {
-        "pattern": "\\Qparameters.json\\E"
-      },
-      {
         "pattern": "\\QMETA-INF/native-image/reflect-config.json\\E"
       },
       {
