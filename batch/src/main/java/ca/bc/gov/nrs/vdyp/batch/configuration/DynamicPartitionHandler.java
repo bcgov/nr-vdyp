@@ -8,20 +8,11 @@ import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.partition.PartitionHandler;
 import org.springframework.batch.core.partition.StepExecutionSplitter;
 import org.springframework.batch.core.partition.support.TaskExecutorPartitionHandler;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.lang.NonNull;
 
 import java.util.Collection;
 
-/**
- * Dynamic partition handler for VDYP batch processing that adjusts grid size based on job parameters.
- *
- * This handler manages the parallel execution of VDYP processing partitions, allowing runtime configuration of
- * partition count.
- */
 public class DynamicPartitionHandler implements PartitionHandler {
 
 	private static final Logger logger = LoggerFactory.getLogger(DynamicPartitionHandler.class);
@@ -33,8 +24,7 @@ public class DynamicPartitionHandler implements PartitionHandler {
 
 	public DynamicPartitionHandler(
 			TaskExecutor taskExecutor, Step workerStep, DynamicPartitioner dynamicPartitioner,
-			BatchProperties batchProperties
-	) {
+			BatchProperties batchProperties) {
 		this.taskExecutor = taskExecutor;
 		this.workerStep = workerStep;
 		this.dynamicPartitioner = dynamicPartitioner;
@@ -43,14 +33,12 @@ public class DynamicPartitionHandler implements PartitionHandler {
 
 	@Override
 	@NonNull
-	public Collection<StepExecution>
-			handle(@NonNull StepExecutionSplitter stepSplitter, @NonNull StepExecution masterStepExecution)
-					throws Exception {
+	public Collection<StepExecution> handle(@NonNull StepExecutionSplitter stepSplitter,
+			@NonNull StepExecution masterStepExecution)
+			throws Exception {
 		// Get dynamic parameters from job parameters
 		JobParameters jobParameters = masterStepExecution.getJobExecution().getJobParameters();
 		Long partitionSize = jobParameters.getLong("partitionSize");
-		Long chunkSize = jobParameters.getLong("chunkSize");
-		String inputFilePath = jobParameters.getString("inputFilePath");
 
 		// Get grid size
 		int actualGridSize;
@@ -62,34 +50,18 @@ public class DynamicPartitionHandler implements PartitionHandler {
 			throw new IllegalStateException("No grid size specified in job parameters or properties. ");
 		}
 
-		// Get input file path
-		String actualInputFilePath = inputFilePath;
-		if (actualInputFilePath == null || actualInputFilePath.trim().isEmpty()) {
-			actualInputFilePath = batchProperties.getInput().getFilePath();
-		}
-		if (actualInputFilePath == null || actualInputFilePath.trim().isEmpty()) {
-			throw new IllegalStateException("No input file path specified in job parameters or properties. ");
-		}
-
-		// Create input resource from file path
-		Resource inputResource;
-		if (actualInputFilePath.startsWith("classpath:")) {
-			inputResource = new ClassPathResource(actualInputFilePath.substring(10));
+		// Set partition base directory for uploaded CSV files
+		String partitionBaseDir = jobParameters.getString("partitionBaseDir");
+		if (partitionBaseDir != null) {
+			dynamicPartitioner.setPartitionBaseDir(partitionBaseDir);
+			logger.info("[VDYP Uploaded File Partition Handler] Using partition base directory: {}", partitionBaseDir);
 		} else {
-			inputResource = new FileSystemResource(actualInputFilePath);
+			logger.warn("[VDYP Uploaded File Partition Handler] No partition base directory found in job parameters");
 		}
-
-		dynamicPartitioner.setInputResource(inputResource);
-		logger.info("[VDYP Partition Handler] Using input file: {}", actualInputFilePath);
 
 		logger.info(
-				"VDYP dynamic partitioning: Using {} partitions (requested: {}, from properties: {})", actualGridSize,
-				partitionSize, batchProperties.getPartitioning().getGridSize()
-		);
-
-		if (chunkSize != null) {
-			logger.info("VDYP dynamic chunk size: Requested {}", chunkSize.intValue());
-		}
+				"VDYP FEATURE_ID-based partitioning: Using {} partitions (requested: {}, from properties: {})",
+				actualGridSize, partitionSize, batchProperties.getPartitioning().getGridSize());
 
 		// Create and configure TaskExecutorPartitionHandler with dynamic grid size
 		TaskExecutorPartitionHandler handler = new TaskExecutorPartitionHandler();

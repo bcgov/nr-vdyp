@@ -29,9 +29,6 @@
         "pattern": "\\Qschema-drop-h2.sql\\E"
       },
       {
-        "pattern": "\\Qinput.csv\\E"
-      },
-      {
         "pattern": "\\QMETA-INF/native-image/reflect-config.json\\E"
       },
       {

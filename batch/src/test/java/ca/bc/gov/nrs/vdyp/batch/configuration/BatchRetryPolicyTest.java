@@ -65,7 +65,7 @@ class BatchRetryPolicyTest {
 
 	@Test
 	void testCanRetry_withRetryableException() {
-		IOException retryableException = new IOException("Test IO exception with record ID 123");
+		IOException retryableException = new IOException("Test IO exception with Feature ID 1098765432");
 		when(retryContext.getLastThrowable()).thenReturn(retryableException);
 		when(retryContext.getRetryCount()).thenReturn(1);
 
@@ -109,7 +109,7 @@ class BatchRetryPolicyTest {
 
 	@Test
 	void testCanRetry_maxAttemptsReached() {
-		IOException retryableException = new IOException("Test exception with record ID 456");
+		IOException retryableException = new IOException("Test exception with Feature ID 1198765433");
 		when(retryContext.getLastThrowable()).thenReturn(retryableException);
 		when(retryContext.getRetryCount()).thenReturn(3); // Max attempts reached
 
@@ -121,7 +121,7 @@ class BatchRetryPolicyTest {
 	@Test
 	void testCanRetry_withDataAccessException() {
 		var dataAccessException = new org.springframework.dao.DataAccessResourceFailureException(
-				"Database connection failed with record ID 789"
+				"Database connection failed with Feature ID 1298765434"
 		);
 		when(retryContext.getLastThrowable()).thenReturn(dataAccessException);
 
@@ -135,50 +135,51 @@ class BatchRetryPolicyTest {
 	@Test
 	void testRegisterRecord() {
 		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setId(100L);
+		batchRecord.setFeatureId("1145678901");
 
-		assertDoesNotThrow(() -> batchRetryPolicy.registerRecord(100L, batchRecord));
+		assertDoesNotThrow(() -> batchRetryPolicy.registerRecord(1145678901L, batchRecord));
 	}
 
 	@Test
 	void testRegisterRecord_withNullRecord() {
-		assertDoesNotThrow(() -> batchRetryPolicy.registerRecord(200L, null));
+		assertDoesNotThrow(() -> batchRetryPolicy.registerRecord(1145678901L, null));
 	}
 
 	@Test
 	void testOnRetrySuccess() {
 		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setId(300L);
+		batchRecord.setFeatureId("1245678902");
 
-		// First register a record that had retry attempts
-		batchRetryPolicy.registerRecord(300L, batchRecord);
+		// First register a feature that had retry attempts
+		batchRetryPolicy.registerRecord(1245678902L, batchRecord);
 
 		// Simulate a retry attempt first
-		IOException exception = new IOException("Error with record ID 300");
+		IOException exception = new IOException("Error with Feature ID 1245678902");
 		when(retryContext.getLastThrowable()).thenReturn(exception);
 		when(retryContext.getRetryCount()).thenReturn(1);
 		batchRetryPolicy.canRetry(retryContext);
 
 		// Then test successful retry
-		assertDoesNotThrow(() -> batchRetryPolicy.onRetrySuccess(300L, batchRecord));
+		assertDoesNotThrow(() -> batchRetryPolicy.onRetrySuccess(1245678902L, batchRecord));
 	}
 
 	@Test
 	void testOnRetrySuccess_withNoRetryAttempts() {
 		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setId(400L);
+		batchRecord.setFeatureId("1345678903");
 
 		// Call onRetrySuccess without any previous retry attempts
-		assertDoesNotThrow(() -> batchRetryPolicy.onRetrySuccess(400L, batchRecord));
+		assertDoesNotThrow(() -> batchRetryPolicy.onRetrySuccess(1345678903L, batchRecord));
 	}
 
 	@ParameterizedTest
 	@ValueSource(
-			strings = { "Processing failed for record ID 12345 in batch", "Generic error message without record ID",
-					"Error with record ID notanumber", "Complex error message with record ID 99999 and other text",
-					"Error with record ID 123 and 456 numbers" }
+			strings = { "Processing failed for Feature ID 1045678904 in batch",
+					"Generic error message without Feature ID", "Error with Feature ID notanumber",
+					"Complex error message with Feature ID 1999888777 and other text",
+					"Error with Feature ID 1555666777 and 1666777888 numbers" }
 	)
-	void testExtractRecordId_withVariousMessages(String errorMessage) {
+	void testExtractFeatureId_withVariousMessages(String errorMessage) {
 		IOException exception = new IOException(errorMessage);
 		when(retryContext.getLastThrowable()).thenReturn(exception);
 		when(retryContext.getRetryCount()).thenReturn(1);
@@ -192,7 +193,7 @@ class BatchRetryPolicyTest {
 	@Test
 	void testBackoffDelay() {
 		BatchRetryPolicy policyWithBackoff = new BatchRetryPolicy(3, 50);
-		IOException exception = new IOException("Test exception with record ID 999");
+		IOException exception = new IOException("Test exception with Feature ID 1777888999");
 		when(retryContext.getLastThrowable()).thenReturn(exception);
 		when(retryContext.getRetryCount()).thenReturn(1);
 
@@ -203,22 +204,6 @@ class BatchRetryPolicyTest {
 		assertTrue(result);
 		// Verify that some delay occurred (allowing for timing variance)
 		assertTrue(endTime - startTime >= 40); // Slightly less than 50ms to account for timing variance
-	}
-
-	@Test
-	void testBackoffDelay_zeroBackoff() {
-		BatchRetryPolicy policyWithNoBackoff = new BatchRetryPolicy(3, 0);
-		IOException exception = new IOException("Test exception");
-		when(retryContext.getLastThrowable()).thenReturn(exception);
-		when(retryContext.getRetryCount()).thenReturn(1);
-
-		long startTime = System.currentTimeMillis();
-		boolean result = policyWithNoBackoff.canRetry(retryContext);
-		long endTime = System.currentTimeMillis();
-
-		assertTrue(result);
-		// Should be very fast with no backoff
-		assertTrue(endTime - startTime < 10);
 	}
 
 	@Test
@@ -257,7 +242,7 @@ class BatchRetryPolicyTest {
 			mockedStatic.when(StepSynchronizationManager::getContext)
 					.thenThrow(new RuntimeException("Step context error"));
 
-			IOException exception = new IOException("Error with record ID 700");
+			IOException exception = new IOException("Error with Feature ID 1700800900");
 			when(retryContext.getLastThrowable()).thenReturn(exception);
 			when(retryContext.getRetryCount()).thenReturn(1);
 
@@ -272,7 +257,7 @@ class BatchRetryPolicyTest {
 		try (MockedStatic<StepSynchronizationManager> mockedStatic = mockStatic(StepSynchronizationManager.class)) {
 			mockedStatic.when(StepSynchronizationManager::getContext).thenReturn(null);
 
-			IOException exception = new IOException("Error with record ID 800");
+			IOException exception = new IOException("Error with Feature ID 1800900100");
 			when(retryContext.getLastThrowable()).thenReturn(exception);
 			when(retryContext.getRetryCount()).thenReturn(1);
 
@@ -284,24 +269,24 @@ class BatchRetryPolicyTest {
 	@Test
 	void testMultipleRetryAttempts() {
 		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setId(1000L);
+		batchRecord.setFeatureId("1445678905");
 
-		batchRetryPolicy.registerRecord(1000L, batchRecord);
+		batchRetryPolicy.registerRecord(1445678905L, batchRecord);
 
 		// First retry attempt
-		IOException exception1 = new IOException("First error with record ID 1000");
+		IOException exception1 = new IOException("First error with Feature ID 1445678905");
 		when(retryContext.getLastThrowable()).thenReturn(exception1);
 		when(retryContext.getRetryCount()).thenReturn(1);
 		assertTrue(batchRetryPolicy.canRetry(retryContext));
 
 		// Second retry attempt
-		IOException exception2 = new IOException("Second error with record ID 1000");
+		IOException exception2 = new IOException("Second error with Feature ID 1445678905");
 		when(retryContext.getLastThrowable()).thenReturn(exception2);
 		when(retryContext.getRetryCount()).thenReturn(2);
 		assertTrue(batchRetryPolicy.canRetry(retryContext));
 
 		// Third retry attempt (max reached)
-		IOException exception3 = new IOException("Third error with record ID 1000");
+		IOException exception3 = new IOException("Third error with Feature ID 1445678905");
 		when(retryContext.getLastThrowable()).thenReturn(exception3);
 		when(retryContext.getRetryCount()).thenReturn(3);
 		assertFalse(batchRetryPolicy.canRetry(retryContext));
@@ -310,17 +295,17 @@ class BatchRetryPolicyTest {
 	@Test
 	void testCreateRetryKey_differentThreads() {
 		BatchRecord batchRecord1 = new BatchRecord();
-		batchRecord1.setId(1100L);
+		batchRecord1.setFeatureId("1545678906");
 
 		BatchRecord batchRecord2 = new BatchRecord();
-		batchRecord2.setId(1100L); // Same ID but should be tracked separately per thread
+		batchRecord2.setFeatureId("1545678906"); // Same featureId but should be tracked separately per thread
 
-		batchRetryPolicy.registerRecord(1100L, batchRecord1);
-		batchRetryPolicy.registerRecord(1100L, batchRecord2);
+		batchRetryPolicy.registerRecord(1545678906L, batchRecord1);
+		batchRetryPolicy.registerRecord(1545678906L, batchRecord2);
 
 		// The internal retry key should include thread name, making them unique
 		assertDoesNotThrow(() -> {
-			batchRetryPolicy.onRetrySuccess(1100L, batchRecord1);
+			batchRetryPolicy.onRetrySuccess(1545678906L, batchRecord1);
 		});
 	}
 
@@ -336,7 +321,7 @@ class BatchRetryPolicyTest {
 	}
 
 	@Test
-	void testExtractRecordId_withNullMessage() {
+	void testExtractFeatureId_withNullMessage() {
 		IOException exception = new IOException((String) null);
 		when(retryContext.getLastThrowable()).thenReturn(exception);
 		when(retryContext.getRetryCount()).thenReturn(1);

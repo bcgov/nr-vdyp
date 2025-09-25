@@ -4,8 +4,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 /**
- * Configuration properties for VDYP batch processing. This class handles all custom batch.* properties to eliminate
- * unknown property warnings.
+ * Configuration properties for VDYP batch processing. This class handles all
+ * custom batch.* properties to eliminate unknown property warnings.
  */
 @Component
 @ConfigurationProperties(prefix = "batch")
@@ -17,9 +17,9 @@ public class BatchProperties {
 	private Partitioning partitioning = new Partitioning();
 	private ThreadPool threadPool = new ThreadPool();
 	private Validation validation = new Validation();
-	private Error error = new Error();
 	private Retry retry = new Retry();
 	private Skip skip = new Skip();
+	private Reader reader = new Reader();
 
 	public static class Job {
 		private boolean autoCreate = true;
@@ -34,21 +34,7 @@ public class BatchProperties {
 	}
 
 	public static class Input {
-		private String filePath;
-
-		public String getFilePath() {
-			return filePath;
-		}
-
-		public void setFilePath(String filePath) {
-			this.filePath = filePath;
-		}
-	}
-
-	public static class Output {
 		private Directory directory = new Directory();
-		private String filePrefix;
-		private String csvHeader;
 
 		public static class Directory {
 			private String defaultPath;
@@ -70,35 +56,34 @@ public class BatchProperties {
 			this.directory = directory;
 		}
 
-		public String getFilePrefix() {
-			return filePrefix;
+	}
+
+	public static class Output {
+		private Directory directory = new Directory();
+
+		public static class Directory {
+			private String defaultPath;
+
+			public String getDefaultPath() {
+				return defaultPath;
+			}
+
+			public void setDefaultPath(String defaultPath) {
+				this.defaultPath = defaultPath;
+			}
 		}
 
-		public void setFilePrefix(String filePrefix) {
-			this.filePrefix = filePrefix;
+		public Directory getDirectory() {
+			return directory;
 		}
 
-		public String getCsvHeader() {
-			return csvHeader;
-		}
-
-		public void setCsvHeader(String csvHeader) {
-			this.csvHeader = csvHeader;
+		public void setDirectory(Directory directory) {
+			this.directory = directory;
 		}
 	}
 
 	public static class Partitioning {
-		private boolean enabled = true;
 		private int gridSize;
-		private int chunkSize;
-
-		public boolean isEnabled() {
-			return enabled;
-		}
-
-		public void setEnabled(boolean enabled) {
-			this.enabled = enabled;
-		}
 
 		public int getGridSize() {
 			return gridSize;
@@ -106,14 +91,6 @@ public class BatchProperties {
 
 		public void setGridSize(int gridSize) {
 			this.gridSize = gridSize;
-		}
-
-		public int getChunkSize() {
-			return chunkSize;
-		}
-
-		public void setChunkSize(int chunkSize) {
-			this.chunkSize = chunkSize;
 		}
 	}
 
@@ -198,27 +175,6 @@ public class BatchProperties {
 		}
 	}
 
-	public static class Error {
-		private String transientPatterns;
-		private int maxConsecutiveFailures;
-
-		public String getTransientPatterns() {
-			return transientPatterns;
-		}
-
-		public void setTransientPatterns(String transientPatterns) {
-			this.transientPatterns = transientPatterns;
-		}
-
-		public int getMaxConsecutiveFailures() {
-			return maxConsecutiveFailures;
-		}
-
-		public void setMaxConsecutiveFailures(int maxConsecutiveFailures) {
-			this.maxConsecutiveFailures = maxConsecutiveFailures;
-		}
-	}
-
 	public static class Skip {
 		private int maxCount;
 
@@ -228,6 +184,18 @@ public class BatchProperties {
 
 		public void setMaxCount(int maxCount) {
 			this.maxCount = maxCount;
+		}
+	}
+
+	public static class Reader {
+		private int chunkSize = 10;
+
+		public int getChunkSize() {
+			return chunkSize;
+		}
+
+		public void setChunkSize(int chunkSize) {
+			this.chunkSize = chunkSize;
 		}
 	}
 
@@ -287,14 +255,6 @@ public class BatchProperties {
 		this.validation = validation;
 	}
 
-	public Error getError() {
-		return error;
-	}
-
-	public void setError(Error error) {
-		this.error = error;
-	}
-
 	public Skip getSkip() {
 		return skip;
 	}
@@ -302,4 +262,13 @@ public class BatchProperties {
 	public void setSkip(Skip skip) {
 		this.skip = skip;
 	}
+
+	public Reader getReader() {
+		return reader;
+	}
+
+	public void setReader(Reader reader) {
+		this.reader = reader;
+	}
+
 }

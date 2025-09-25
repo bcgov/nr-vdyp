@@ -1,51 +1,22 @@
 package ca.bc.gov.nrs.vdyp.batch.controller;
 
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.NotNull;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 
 public class BatchJobRequest {
-
-	@Size(max = 500, message = "Input file path must not exceed 500 characters")
-	private String inputFilePath;
-
-	@Size(max = 500, message = "Output directory path must not exceed 500 characters")
-	private String outputFilePath;
 
 	@Min(value = 1, message = "Partition size must be at least 1")
 	private Long partitionSize;
 
-	@Min(value = 1, message = "Max retry attempts must be at least 1")
-	private Integer maxRetryAttempts;
-
-	@Min(value = 1, message = "Retry backoff period must be at least 1ms")
-	private Long retryBackoffPeriod;
-
-	@Min(value = 1, message = "Max skip count must be at least 1")
-	private Integer maxSkipCount;
+	@NotNull(message = "VDYP projection parameters are required")
+	private Parameters parameters;
 
 	public BatchJobRequest() {
 	}
 
-	public BatchJobRequest(String inputFilePath, String outputFilePath, Long partitionSize) {
-		this.inputFilePath = inputFilePath;
-		this.outputFilePath = outputFilePath;
+	public BatchJobRequest(Long partitionSize) {
 		this.partitionSize = partitionSize;
-	}
-
-	public String getInputFilePath() {
-		return inputFilePath;
-	}
-
-	public void setInputFilePath(String inputFilePath) {
-		this.inputFilePath = inputFilePath;
-	}
-
-	public String getOutputFilePath() {
-		return outputFilePath;
-	}
-
-	public void setOutputFilePath(String outputFilePath) {
-		this.outputFilePath = outputFilePath;
 	}
 
 	public Long getPartitionSize() {
@@ -56,34 +27,18 @@ public class BatchJobRequest {
 		this.partitionSize = partitionSize;
 	}
 
-	public Integer getMaxRetryAttempts() {
-		return maxRetryAttempts;
+
+	public Parameters getParameters() {
+		return parameters;
 	}
 
-	public void setMaxRetryAttempts(Integer maxRetryAttempts) {
-		this.maxRetryAttempts = maxRetryAttempts;
-	}
-
-	public Long getRetryBackoffPeriod() {
-		return retryBackoffPeriod;
-	}
-
-	public void setRetryBackoffPeriod(Long retryBackoffPeriod) {
-		this.retryBackoffPeriod = retryBackoffPeriod;
-	}
-
-	public Integer getMaxSkipCount() {
-		return maxSkipCount;
-	}
-
-	public void setMaxSkipCount(Integer maxSkipCount) {
-		this.maxSkipCount = maxSkipCount;
+	public void setParameters(Parameters parameters) {
+		this.parameters = parameters;
 	}
 
 	@Override
 	public String toString() {
-		return "BatchJobRequest{" + "inputFilePath='" + inputFilePath + '\'' + ", outputFilePath='" + outputFilePath
-				+ '\'' + ", partitionSize=" + partitionSize + ", maxRetryAttempts=" + maxRetryAttempts
-				+ ", retryBackoffPeriod=" + retryBackoffPeriod + ", maxSkipCount=" + maxSkipCount + '}';
+		return "BatchJobRequest{" + "partitionSize=" + partitionSize
+				+ ", parameters=" + (parameters != null ? "provided" : "null") + '}';
 	}
 }

@@ -25,18 +25,12 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class DynamicPartitionHandlerTest {
 
-	// Test constants
-	private static final String TEST_INPUT_PATH = "/test/input.csv";
-	private static final String TEST_BATCH_INPUT_PATH = "/test/batch-input.csv";
-	private static final String TEST_PROPERTIES_INPUT_PATH = "/test/properties-input.csv";
-	private static final String CLASSPATH_INPUT_PATH = "classpath:test-data/input.csv";
 	private static final String NO_GRID_SIZE_MESSAGE = "No grid size specified";
-	private static final String NO_INPUT_FILE_MESSAGE = "No input file path specified";
 	private static final String PARTITION_SIZE_PARAM = "partitionSize";
 	private static final String CHUNK_SIZE_PARAM = "chunkSize";
-	private static final String INPUT_FILE_PATH_PARAM = "inputFilePath";
+	private static final String TEST_PARTITION_BASE_DIR = "/tmp/test";
 	private static final long DEFAULT_PARTITION_SIZE = 4L;
-	private static final long DEFAULT_CHUNK_SIZE = 100L;
+	private static final long DEFAULT_CHUNK_SIZE = 1000L;
 	private static final int DEFAULT_GRID_SIZE = 4;
 
 	@Mock
@@ -55,9 +49,6 @@ class DynamicPartitionHandlerTest {
 	private BatchProperties.Partitioning partitioning;
 
 	@Mock
-	private BatchProperties.Input input;
-
-	@Mock
 	private StepExecutionSplitter stepSplitter;
 
 	@Mock
@@ -71,8 +62,7 @@ class DynamicPartitionHandlerTest {
 	@BeforeEach
 	void setUp() {
 		dynamicPartitionHandler = new DynamicPartitionHandler(
-				taskExecutor, workerStep, dynamicPartitioner, batchProperties
-		);
+				taskExecutor, workerStep, dynamicPartitioner, batchProperties);
 	}
 
 	@Test
@@ -82,10 +72,9 @@ class DynamicPartitionHandlerTest {
 
 	@Test
 	void testHandle_withJobParametersComplete_success() {
-		// Setup job parameters
-		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, DEFAULT_PARTITION_SIZE)
-				.addLong(CHUNK_SIZE_PARAM, DEFAULT_CHUNK_SIZE).addString(INPUT_FILE_PATH_PARAM, TEST_INPUT_PATH)
-				.toJobParameters();
+		// Setup job parameters with partition base directory
+		JobParameters jobParameters = createJobParametersWithPartitionBaseDir(DEFAULT_PARTITION_SIZE,
+				DEFAULT_CHUNK_SIZE);
 
 		setupBasicMocks(jobParameters);
 
@@ -96,7 +85,7 @@ class DynamicPartitionHandlerTest {
 		// Test the parameter extraction and validation logic
 		assertDoesNotThrow(() -> dynamicPartitionHandler.handle(stepSplitter, masterStepExecution));
 
-		verify(dynamicPartitioner).setInputResource(any());
+		verify(dynamicPartitioner).setPartitionBaseDir(any());
 		verify(masterStepExecution, atLeastOnce()).getJobExecution();
 		verify(jobExecution, atLeastOnce()).getJobParameters();
 	}
@@ -111,32 +100,43 @@ class DynamicPartitionHandlerTest {
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
 	}
 
+	/**
+	 * Helper method to create job parameters with partition base directory
+	 */
+	private JobParameters createJobParametersWithPartitionBaseDir(Long partitionSize, Long chunkSize) {
+		JobParametersBuilder builder = new JobParametersBuilder()
+				.addString("partitionBaseDir", TEST_PARTITION_BASE_DIR);
+		if (partitionSize != null) {
+			builder.addLong(PARTITION_SIZE_PARAM, partitionSize);
+		}
+		if (chunkSize != null) {
+			builder.addLong(CHUNK_SIZE_PARAM, chunkSize);
+		}
+		return builder.toJobParameters();
+	}
+
 	@Test
 	void testHandle_withJobParametersPartial_usesBatchProperties() {
-		// Setup job parameters with only some values
-		JobParameters jobParameters = new JobParametersBuilder().addLong(CHUNK_SIZE_PARAM, DEFAULT_CHUNK_SIZE)
-				.toJobParameters();
+		// Setup job parameters with only some values (no partitionSize)
+		JobParameters jobParameters = createJobParametersWithPartitionBaseDir(null, DEFAULT_CHUNK_SIZE);
 
 		setupBasicMocks(jobParameters);
 		when(batchProperties.getPartitioning()).thenReturn(partitioning);
-		when(batchProperties.getInput()).thenReturn(input);
 		when(partitioning.getGridSize()).thenReturn(DEFAULT_GRID_SIZE);
-		when(input.getFilePath()).thenReturn(TEST_BATCH_INPUT_PATH);
 
 		assertDoesNotThrow(() -> {
 			dynamicPartitionHandler.handle(stepSplitter, masterStepExecution);
 		});
 
-		verify(dynamicPartitioner).setInputResource(any());
+		verify(dynamicPartitioner).setPartitionBaseDir(any());
 		verify(batchProperties, atLeastOnce()).getPartitioning();
-		verify(batchProperties, atLeastOnce()).getInput();
 	}
 
 	@ParameterizedTest
-	@MethodSource("provideInputResourcePaths")
-	void testHandle_withDifferentInputPaths_createsAppropriateResource(String inputPath, long partitionSize) {
-		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, partitionSize)
-				.addString(INPUT_FILE_PATH_PARAM, inputPath).toJobParameters();
+	@MethodSource("providePartitionBaseDirPaths")
+	void testHandle_withDifferentPartitionBaseDirs_createsAppropriateResource(String partitionBaseDir,
+			long partitionSize) {
+		JobParameters jobParameters = createJobParametersWithPartitionBaseDir(partitionSize, null);
 
 		setupBasicMocks(jobParameters);
 		when(batchProperties.getPartitioning()).thenReturn(partitioning);
@@ -145,22 +145,22 @@ class DynamicPartitionHandlerTest {
 			dynamicPartitionHandler.handle(stepSplitter, masterStepExecution);
 		});
 
-		verify(dynamicPartitioner).setInputResource(any());
+		verify(dynamicPartitioner).setPartitionBaseDir(any());
 	}
 
-	static Stream<Arguments> provideInputResourcePaths() {
+	static Stream<Arguments> providePartitionBaseDirPaths() {
 		return Stream.of(
-				Arguments.of(CLASSPATH_INPUT_PATH, 2L), Arguments.of("/absolute/path/to/input.csv", 3L),
-				Arguments.of("classpath:test/data/nested/input.csv", 1L), Arguments.of("relative/path/input.csv", 1L)
-		);
+				Arguments.of("/tmp/test1", 2L), Arguments.of("/tmp/test2", 3L),
+				Arguments.of("/tmp/test3", 1L),
+				Arguments.of("/tmp/test4", 1L));
 	}
 
 	@Test
 	void testHandle_noPartitionSizeInJobParametersOrProperties_throwsException() {
-		JobParameters jobParameters = new JobParametersBuilder().addString(INPUT_FILE_PATH_PARAM, TEST_INPUT_PATH)
-				.toJobParameters();
+		JobParameters jobParameters = new JobParametersBuilder().toJobParameters();
 
 		setupBasicMocks(jobParameters);
+		// Don't setup partition dir mocks since exception is thrown before they're used
 		when(batchProperties.getPartitioning()).thenReturn(partitioning);
 		when(partitioning.getGridSize()).thenReturn(0); // No grid size in properties either
 
@@ -173,77 +173,55 @@ class DynamicPartitionHandlerTest {
 	}
 
 	@Test
-	void testHandle_noInputFilePathInJobParametersOrProperties_throwsException() {
+	void testHandle_validConfiguration_success() {
 		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, DEFAULT_PARTITION_SIZE)
 				.toJobParameters();
 
 		setupBasicMocks(jobParameters);
-		when(batchProperties.getInput()).thenReturn(input);
-		when(input.getFilePath()).thenReturn(null); // No file path in properties
+		when(batchProperties.getPartitioning()).thenReturn(partitioning);
 
-		IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
+		// This test should succeed since the DynamicPartitionHandler doesn't need
+		// polygon file paths
+		assertDoesNotThrow(() -> {
 			dynamicPartitionHandler.handle(stepSplitter, masterStepExecution);
 		});
 
-		assertTrue(exception.getMessage().contains(NO_INPUT_FILE_MESSAGE));
-		verify(batchProperties, atLeastOnce()).getInput();
+		verify(batchProperties, atLeastOnce()).getPartitioning();
 	}
 
 	@ParameterizedTest
-	@MethodSource("provideInputPathValidationCases")
-	void testHandle_inputPathValidation(
-			String jobParamPath, String propertiesPath, boolean shouldThrow, String testDescription
-	) {
-		JobParametersBuilder builder = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, 2L);
-		if (jobParamPath != null) {
-			builder.addString(INPUT_FILE_PATH_PARAM, jobParamPath);
-		}
-		JobParameters jobParameters = builder.toJobParameters();
+	@MethodSource("providePartitionBaseDirValidationCases")
+	void testHandle_partitionBaseDirValidation(String partitionBaseDir, boolean shouldThrow, String testDescription) {
+		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, 2L).toJobParameters();
 
 		setupBasicMocks(jobParameters);
 
 		if (shouldThrow) {
-			when(batchProperties.getInput()).thenReturn(input);
-			when(input.getFilePath()).thenReturn(propertiesPath);
-
-			IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
+			assertThrows(Exception.class, () -> {
 				dynamicPartitionHandler.handle(stepSplitter, masterStepExecution);
 			}, testDescription);
-			assertTrue(exception.getMessage().contains(NO_INPUT_FILE_MESSAGE), testDescription);
 		} else {
 			when(batchProperties.getPartitioning()).thenReturn(partitioning);
-			when(batchProperties.getInput()).thenReturn(input);
-			when(input.getFilePath()).thenReturn(propertiesPath);
 
 			assertDoesNotThrow(() -> {
 				dynamicPartitionHandler.handle(stepSplitter, masterStepExecution);
 			}, testDescription);
 
-			verify(batchProperties, atLeastOnce()).getInput();
-			verify(input).getFilePath();
+			verify(batchProperties, atLeastOnce()).getPartitioning();
 		}
 	}
 
-	static Stream<Arguments> provideInputPathValidationCases() {
+	static Stream<Arguments> providePartitionBaseDirValidationCases() {
 		return Stream.of(
-				Arguments.of(
-						"", TEST_PROPERTIES_INPUT_PATH, false,
-						"Empty input path in job parameters should use batch properties"
-				),
-				Arguments.of(
-						"   ", TEST_PROPERTIES_INPUT_PATH, false,
-						"Whitespace input path in job parameters should use batch properties"
-				),
-				Arguments.of(
-						"", "", true, "Empty input path in both job parameters and properties should throw exception"
-				), Arguments.of(null, "   ", true, "Whitespace input path in properties should throw exception")
-		);
+				Arguments.of("/tmp/test1", false, "Valid partition base directory should succeed"),
+				Arguments.of("/tmp/test2", false, "Valid partition base directory should succeed"),
+				Arguments.of(null, false, "Null partition base directory should still succeed"),
+				Arguments.of("", false, "Empty partition base directory should still succeed"));
 	}
 
 	@Test
 	void testHandle_nullPartitionSizeButValidPropertiesGridSize_success() {
-		JobParameters jobParameters = new JobParametersBuilder().addString(INPUT_FILE_PATH_PARAM, TEST_INPUT_PATH)
-				.toJobParameters();
+		JobParameters jobParameters = new JobParametersBuilder().toJobParameters();
 
 		setupBasicMocks(jobParameters);
 		when(batchProperties.getPartitioning()).thenReturn(partitioning);
@@ -259,8 +237,7 @@ class DynamicPartitionHandlerTest {
 
 	@Test
 	void testHandle_zeroPartitionSizeInJobParameters_usesBatchProperties() {
-		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, 0L)
-				.addString(INPUT_FILE_PATH_PARAM, TEST_INPUT_PATH).toJobParameters();
+		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, 0L).toJobParameters();
 
 		setupBasicMocks(jobParameters);
 		when(batchProperties.getPartitioning()).thenReturn(partitioning);
@@ -273,8 +250,7 @@ class DynamicPartitionHandlerTest {
 
 	@Test
 	void testHandle_negativePartitionSizeInJobParameters_throwsException() {
-		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, -1L)
-				.addString(INPUT_FILE_PATH_PARAM, TEST_INPUT_PATH).toJobParameters();
+		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, -1L).toJobParameters();
 
 		setupBasicMocks(jobParameters);
 		when(batchProperties.getPartitioning()).thenReturn(partitioning);
@@ -287,9 +263,9 @@ class DynamicPartitionHandlerTest {
 	}
 
 	@Test
-	void testHandle_withChunkSizeLogging_logsChunkSize() {
+	void testHandle_withChunkSizeParameter_processesSuccessfully() {
 		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, 2L)
-				.addLong(CHUNK_SIZE_PARAM, 150L).addString(INPUT_FILE_PATH_PARAM, TEST_INPUT_PATH).toJobParameters();
+				.addLong(CHUNK_SIZE_PARAM, 150L).toJobParameters();
 
 		setupBasicMocks(jobParameters);
 		when(batchProperties.getPartitioning()).thenReturn(partitioning);
@@ -298,14 +274,13 @@ class DynamicPartitionHandlerTest {
 			dynamicPartitionHandler.handle(stepSplitter, masterStepExecution);
 		});
 
-		// This test verifies that chunk size logging path is exercised
+		// This test verifies that chunk size parameter is processed successfully
 		verify(jobExecution, atLeastOnce()).getJobParameters();
 	}
 
 	@Test
-	void testHandle_withoutChunkSize_skipsChunkSizeLogging() {
-		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, 2L)
-				.addString(INPUT_FILE_PATH_PARAM, TEST_INPUT_PATH).toJobParameters();
+	void testHandle_withoutChunkSize_processesSuccessfully() {
+		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, 2L).toJobParameters();
 
 		setupBasicMocks(jobParameters);
 		when(batchProperties.getPartitioning()).thenReturn(partitioning);
@@ -314,15 +289,18 @@ class DynamicPartitionHandlerTest {
 			dynamicPartitionHandler.handle(stepSplitter, masterStepExecution);
 		});
 
-		// This test verifies that the null chunk size path is exercised
+		// This test verifies that the handler works without chunk size parameter
 		verify(jobExecution, atLeastOnce()).getJobParameters();
 	}
 
 	@Test
 	void testHandle_maximumParameters_allPathsExercised() {
-		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, 8L)
-				.addLong(CHUNK_SIZE_PARAM, 200L).addString(INPUT_FILE_PATH_PARAM, "/test/complete-params.csv")
-				.addString("outputFilePath", "/test/output").toJobParameters();
+		JobParameters jobParameters = new JobParametersBuilder()
+				.addString("partitionBaseDir", TEST_PARTITION_BASE_DIR)
+				.addLong(PARTITION_SIZE_PARAM, 8L)
+				.addLong(CHUNK_SIZE_PARAM, 200L)
+				.addString("outputFilePath", "/data/forestry/output/vdyp_results")
+				.toJobParameters();
 
 		setupBasicMocks(jobParameters);
 		when(batchProperties.getPartitioning()).thenReturn(partitioning);
@@ -332,14 +310,13 @@ class DynamicPartitionHandlerTest {
 			dynamicPartitionHandler.handle(stepSplitter, masterStepExecution);
 		});
 
-		verify(dynamicPartitioner).setInputResource(any());
+		verify(dynamicPartitioner).setPartitionBaseDir(any());
 		verify(batchProperties, atLeastOnce()).getPartitioning();
 	}
 
 	@Test
 	void testHandle_stepSplitterAndMasterStepExecutionInteraction_success() {
-		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, 2L)
-				.addString(INPUT_FILE_PATH_PARAM, TEST_INPUT_PATH).toJobParameters();
+		JobParameters jobParameters = createJobParametersWithPartitionBaseDir(2L, null);
 
 		setupBasicMocks(jobParameters);
 		when(batchProperties.getPartitioning()).thenReturn(partitioning);
@@ -351,6 +328,6 @@ class DynamicPartitionHandlerTest {
 		});
 
 		verify(masterStepExecution, atLeastOnce()).getJobExecution();
-		verify(dynamicPartitioner).setInputResource(any());
+		verify(dynamicPartitioner).setPartitionBaseDir(any());
 	}
 }
