@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.exceptions.ProcessingException;
+import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.Change;
 import ca.bc.gov.nrs.vdyp.forward.ForwardProcessingEngine.ExecutionStep;
 import ca.bc.gov.nrs.vdyp.forward.model.ForwardDebugSettings.Vars;
 import ca.bc.gov.nrs.vdyp.forward.test.ForwardTestUtils;
@@ -68,7 +69,9 @@ class Grow5SpeciesBaDqTphTest {
 		float[] lhAtStart = new float[] { 30.9723663f, 36.7552986f, 22.9584007f, 33.7439995f, 22.7703991f,
 				32.0125008f };
 
-		fpe.growUsingPartialSpeciesDynamics(baStart, baDelta, dqStart, dqDelta, tphStart, lhAtStart);
+		fpe.growUsingPartialSpeciesDynamics(
+				Change.delta(baStart, baDelta), Change.delta(dqStart, dqDelta), tphStart, lhAtStart
+		);
 
 		// Results are stored in bank.basalAreas[1..nSpecies]
 
