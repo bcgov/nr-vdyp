@@ -71,7 +71,7 @@ class VdypProjectionServiceTest {
 	}
 
 	@Test
-	void testPerformProjectionForChunk_Success() throws Exception {
+	void testPerformProjectionForChunk_Success() {
 		List<BatchRecord> batchRecords = createTestBatchRecords(2);
 
 		// Test that we can create combined input streams (core functionality)
@@ -104,7 +104,7 @@ class VdypProjectionServiceTest {
 	}
 
 	@Test
-	void testPerformProjectionForChunk_ProjectionFailure() throws Exception {
+	void testPerformProjectionForChunk_ProjectionFailure() {
 		List<BatchRecord> batchRecords = createTestBatchRecords(1);
 		Exception cause = new RuntimeException("Test failure");
 
@@ -120,7 +120,7 @@ class VdypProjectionServiceTest {
 	}
 
 	@Test
-	void testCreatePartitionOutputDir() throws Exception {
+	void testCreatePartitionOutputDir() {
 		Path outputDir = (Path) ReflectionTestUtils
 				.invokeMethod(vdypProjectionService, "createPartitionOutputDir", PARTITION_NAME);
 
@@ -130,30 +130,7 @@ class VdypProjectionServiceTest {
 	}
 
 	@Test
-	void testCreateCombinedInputStreamsFromChunk() throws Exception {
-		List<BatchRecord> batchRecords = createTestBatchRecords(2);
-
-		@SuppressWarnings("unchecked")
-		Map<String, InputStream> streams = (Map<String, InputStream>) ReflectionTestUtils
-				.invokeMethod(vdypProjectionService, "createCombinedInputStreamsFromChunk", batchRecords);
-
-		assertNotNull(streams);
-		assertEquals(2, streams.size());
-		assertTrue(streams.containsKey("HCSV-Polygon"));
-		assertTrue(streams.containsKey("HCSV-Layers"));
-
-		// Close streams
-		streams.values().forEach(stream -> {
-			try {
-				stream.close();
-			} catch (Exception e) {
-				/* ignore */
-			}
-		});
-	}
-
-	@Test
-	void testCreateCombinedInputStreamsFromChunk_EmptyList() throws Exception {
+	void testCreateCombinedInputStreamsFromChunk_EmptyList() {
 		List<BatchRecord> emptyRecords = new ArrayList<>();
 
 		Exception exception = assertThrows(Exception.class,
@@ -164,7 +141,7 @@ class VdypProjectionServiceTest {
 	}
 
 	@Test
-	void testCreateCombinedInputStreamsFromRawData() throws Exception {
+	void testCreateCombinedInputStreamsFromRawData() {
 		List<BatchRecord> batchRecords = createTestBatchRecords(2);
 
 		@SuppressWarnings("unchecked")
@@ -187,7 +164,7 @@ class VdypProjectionServiceTest {
 	}
 
 	@Test
-	void testBuildChunkProjectionId() throws Exception {
+	void testBuildChunkProjectionId() {
 		String projectionId = (String) ReflectionTestUtils
 				.invokeMethod(vdypProjectionService, "buildChunkProjectionId", PARTITION_NAME, 5);
 
@@ -258,7 +235,7 @@ class VdypProjectionServiceTest {
 	}
 
 	@Test
-	void testHandleChunkProjectionFailure() throws Exception {
+	void testHandleChunkProjectionFailure() {
 		List<BatchRecord> batchRecords = createTestBatchRecords(3);
 		Exception cause = new RuntimeException("Test failure");
 
@@ -273,7 +250,7 @@ class VdypProjectionServiceTest {
 	}
 
 	@Test
-	void testHandleChunkProjectionFailure_ManyRecords() throws Exception {
+	void testHandleChunkProjectionFailure_ManyRecords() {
 		List<BatchRecord> batchRecords = createTestBatchRecords(7);
 		Exception cause = new RuntimeException("Test failure");
 

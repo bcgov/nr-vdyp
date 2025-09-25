@@ -31,9 +31,11 @@ public class StreamingCsvPartitioner {
 			int gridSize, Path baseOutputDir) throws IOException {
 
 		logger.info("Starting streaming CSV partitioning with grid size: {}", gridSize);
-		logger.info("Processing files: polygon={} ({} bytes), layer={} ({} bytes)",
-				polygonFile.getOriginalFilename(), polygonFile.getSize(),
-				layerFile.getOriginalFilename(), layerFile.getSize());
+		if (logger.isInfoEnabled()) {
+			logger.info("Processing files: polygon={} ({} bytes), layer={} ({} bytes)",
+					sanitizeFilename(polygonFile.getOriginalFilename()), polygonFile.getSize(),
+					sanitizeFilename(layerFile.getOriginalFilename()), layerFile.getSize());
+		}
 
 		if (!Files.exists(baseOutputDir)) {
 			Files.createDirectories(baseOutputDir);
@@ -204,5 +206,26 @@ public class StreamingCsvPartitioner {
 		public Path getPartitionDir(int partitionIndex) {
 			return baseOutputDir.resolve("partition" + partitionIndex);
 		}
+	}
+
+	/**
+	 * Sanitizes filename for safe logging
+	 * Removes control characters, line breaks, and limits length.
+	 */
+	private String sanitizeFilename(String filename) {
+		if (filename == null) {
+			return "null";
+		}
+
+		// Remove control characters and line breaks, limit length
+		String sanitized = filename.replaceAll("[\\x00-\\x1f\\x7f-\\x9f]", "")
+				.trim();
+
+		// Limit length to prevent log flooding
+		if (sanitized.length() > 100) {
+			sanitized = sanitized.substring(0, 97) + "...";
+		}
+
+		return sanitized.isEmpty() ? "empty" : sanitized;
 	}
 }

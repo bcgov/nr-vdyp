@@ -262,7 +262,7 @@ class BatchControllerTest {
 	}
 
 	@Test
-	void testStartBatchJobWithFiles_WithNullPartitionedJob_ReturnsJobNotAvailable() throws Exception {
+	void testStartBatchJobWithFiles_WithNullPartitionedJob_ReturnsJobNotAvailable() {
 		// Create controller with null job
 		BatchController controllerWithNullJob = new BatchController(jobLauncher, null, jobExplorer, metricsCollector,
 				csvPartitioner);
@@ -296,13 +296,13 @@ class BatchControllerTest {
 		assertTrue(response.getBody().containsKey("validationMessages"));
 	}
 
-	@Test 
+	@Test
 	void testListJobs_WithJobInstances_ReturnsJobsList() {
 		when(jobExplorer.getJobNames()).thenReturn(List.of("testJob"));
 		when(jobExplorer.getJobInstances("testJob", 0, 50)).thenReturn(List.of(jobInstance));
 		when(jobInstance.getId()).thenReturn(1L);
 		when(jobExplorer.getJobExecutions(jobInstance)).thenReturn(List.of(jobExecution));
-		
+
 		when(jobExecution.getId()).thenReturn(1L);
 		when(jobExecution.getStatus()).thenReturn(BatchStatus.COMPLETED);
 		when(jobExecution.getExitStatus()).thenReturn(ExitStatus.COMPLETED);
@@ -310,7 +310,7 @@ class BatchControllerTest {
 		when(jobExecution.getEndTime()).thenReturn(LocalDateTime.now());
 		when(jobExecution.getCreateTime()).thenReturn(LocalDateTime.now());
 		when(jobExecution.getStepExecutions()).thenReturn(List.of(stepExecution));
-		
+
 		when(stepExecution.getStepName()).thenReturn("testStep");
 		when(stepExecution.getStatus()).thenReturn(BatchStatus.COMPLETED);
 		when(stepExecution.getReadCount()).thenReturn(100L);

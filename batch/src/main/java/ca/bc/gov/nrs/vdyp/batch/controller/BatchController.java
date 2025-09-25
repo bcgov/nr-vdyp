@@ -257,11 +257,36 @@ public class BatchController {
 
 	private void logRequestDetails(MultipartFile polygonFile, MultipartFile layerFile,
 			Long partitionSize, String parametersJson) {
-		logger.info("=== VDYP Batch Job File Upload Request ===");
-		logger.info("Polygon file: {} ({} bytes)", polygonFile.getOriginalFilename(), polygonFile.getSize());
-		logger.info("Layer file: {} ({} bytes)", layerFile.getOriginalFilename(), layerFile.getSize());
-		logger.info("Partition size: {}", partitionSize);
-		logger.info("Parameters provided: {}", parametersJson != null ? "yes" : "no");
+		if (logger.isInfoEnabled()) {
+			logger.info("=== VDYP Batch Job File Upload Request ===");
+			logger.info("Polygon file: {} ({} bytes)", sanitizeFilename(polygonFile.getOriginalFilename()),
+					polygonFile.getSize());
+			logger.info("Layer file: {} ({} bytes)", sanitizeFilename(layerFile.getOriginalFilename()),
+					layerFile.getSize());
+			logger.info("Partition size: {}", partitionSize);
+			logger.info("Parameters provided: {}", parametersJson != null ? "yes" : "no");
+		}
+	}
+
+	/**
+	 * Sanitizes user-provided filename for safe logging
+	 * Removes control characters, line breaks, and limits length.
+	 */
+	private String sanitizeFilename(String filename) {
+		if (filename == null) {
+			return "null";
+		}
+
+		// Remove control characters and line breaks, limit length
+		String sanitized = filename.replaceAll("[\\x00-\\x1f\\x7f-\\x9f]", "")
+				.trim();
+
+		// Limit length to prevent log flooding
+		if (sanitized.length() > 100) {
+			sanitized = sanitized.substring(0, 97) + "...";
+		}
+
+		return sanitized.isEmpty() ? "empty" : sanitized;
 	}
 
 	private JobExecution executeJob(MultipartFile polygonFile, MultipartFile layerFile,
@@ -278,9 +303,12 @@ public class BatchController {
 
 		try {
 			// Debug logging
-			logger.info("Processing files: polygon={}, layer={}, partitionSize={}",
-					polygonFile.getOriginalFilename(), layerFile.getOriginalFilename(), partitionSize);
-			logger.info("Parameters JSON length: {}", parametersJson.length());
+			if (logger.isInfoEnabled()) {
+				logger.info("Processing files: polygon={}, layer={}, partitionSize={}",
+						sanitizeFilename(polygonFile.getOriginalFilename()), 
+						sanitizeFilename(layerFile.getOriginalFilename()), partitionSize);
+				logger.info("Parameters JSON length: {}", parametersJson.length());
+			}
 			logger.debug("Parameters JSON content: {}", parametersJson);
 
 			// Create partition directory for input CSV files in configured input directory
@@ -305,8 +333,11 @@ public class BatchController {
 			// Start the job
 			JobExecution jobExecution = jobLauncher.run(partitionedJob, jobParameters);
 
-			logger.info("Started VDYP batch job {} with uploaded files - Polygons: {}, Layers: {}",
-					jobExecution.getId(), polygonFile.getOriginalFilename(), layerFile.getOriginalFilename());
+			if (logger.isInfoEnabled()) {
+				logger.info("Started VDYP batch job {} with uploaded files - Polygons: {}, Layers: {}",
+						jobExecution.getId(), sanitizeFilename(polygonFile.getOriginalFilename()), 
+						sanitizeFilename(layerFile.getOriginalFilename()));
+			}
 
 			return jobExecution;
 
