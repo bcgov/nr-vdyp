@@ -133,16 +133,22 @@
             <plugin>
                 <groupId>net.revelc.code.formatter</groupId>
                 <artifactId>formatter-maven-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
                 <executions>
                     <execution>
-                        <goals>
-                            <goal>format</goal>
-                        </goals>
-                        <configuration>
-                            <configFile>../buildtools/src/main/resources/eclipse/formatter.xml</configFile>
-                        </configuration>
+                        <id>default</id>
+                        <phase>none</phase>
                     </execution>
                 </executions>
+                <dependencies>
+                  <dependency>
+                    <groupId>ca.bc.gov.nrs.vdyp</groupId>
+                    <artifactId>vdyp-buildtools</artifactId>
+                    <version>${project.version}</version>
+                  </dependency>
+                </dependencies>
             </plugin>
 
             <plugin>

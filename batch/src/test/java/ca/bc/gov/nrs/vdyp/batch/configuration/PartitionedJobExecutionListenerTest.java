@@ -78,12 +78,10 @@ class PartitionedJobExecutionListenerTest {
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
 		when(batchProperties.getPartitioning()).thenReturn(partitioning);
 		when(partitioning.getGridSize()).thenReturn(4);
-		when(partitioning.getChunkSize()).thenReturn(100);
 
 		assertDoesNotThrow(() -> listener.beforeJob(jobExecution));
 
 		verify(partitioning, atLeastOnce()).getGridSize();
-		verify(partitioning, atLeastOnce()).getChunkSize();
 	}
 
 	@Test
@@ -98,15 +96,16 @@ class PartitionedJobExecutionListenerTest {
 	}
 
 	@Test
-	void testBeforeJob_MissingChunkSize_ThrowsException() {
+	void testBeforeJob_ValidPartitionSize_Success() {
 		JobParameters jobParameters = new JobParametersBuilder().addLong("partitionSize", 4L).toJobParameters();
 		when(jobExecution.getId()).thenReturn(1L);
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
 		when(batchProperties.getPartitioning()).thenReturn(partitioning);
 		when(partitioning.getGridSize()).thenReturn(4);
-		when(partitioning.getChunkSize()).thenReturn(0);
 
-		assertThrows(IllegalStateException.class, () -> listener.beforeJob(jobExecution));
+		// Should succeed since partitionSize is provided
+		assertDoesNotThrow(() -> listener.beforeJob(jobExecution));
+		verify(jobExecution, atLeastOnce()).getId();
 	}
 
 	@Test
@@ -149,31 +148,35 @@ class PartitionedJobExecutionListenerTest {
 
 		assertDoesNotThrow(() -> listener.afterJob(jobExecution));
 
-		verify(output).getFilePrefix();
-		verify(output).getCsvHeader();
+		verify(jobExecution, atLeastOnce()).getId();
 	}
 
 	@Test
-	void testAfterJob_MissingFilePrefix_ThrowsException() {
+	void testAfterJob_WithNullDirectory_HandlesGracefully() {
 		setupAfterJobMocks();
 		setupJobExecutionBasicMocks();
-		when(output.getFilePrefix()).thenReturn(null);
+		// Test with null directory path
+		when(output.getDirectory()).thenReturn(mock(BatchProperties.Output.Directory.class));
+		when(output.getDirectory().getDefaultPath()).thenReturn(null);
 
 		listener.beforeJob(jobExecution);
 
-		// Should not throw during afterJob, but during file merging
+		// Should not throw during afterJob processing
 		assertDoesNotThrow(() -> listener.afterJob(jobExecution));
 	}
 
 	@Test
-	void testAfterJob_MissingCsvHeader_ThrowsException() {
+	void testAfterJob_WithValidDirectory_Success() {
 		setupAfterJobMocks();
 		setupJobExecutionBasicMocks();
-		when(output.getCsvHeader()).thenReturn(null);
+		// Test with valid directory
+		when(output.getDirectory()).thenReturn(mock(BatchProperties.Output.Directory.class));
+		when(output.getDirectory().getDefaultPath()).thenReturn(tempDir.toString());
 
 		listener.beforeJob(jobExecution);
 
 		assertDoesNotThrow(() -> listener.afterJob(jobExecution));
+		verify(output, atLeastOnce()).getDirectory();
 	}
 
 	@Test
@@ -209,10 +212,7 @@ class PartitionedJobExecutionListenerTest {
 
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
 		when(batchProperties.getPartitioning()).thenReturn(partitioning);
-		when(partitioning.getChunkSize()).thenReturn(100);
 		when(batchProperties.getOutput()).thenReturn(output);
-		when(output.getFilePrefix()).thenReturn("test");
-		when(output.getCsvHeader()).thenReturn("id,data,polygonId,layerId,status");
 
 		BatchProperties.Output.Directory directory = mock(BatchProperties.Output.Directory.class);
 		when(output.getDirectory()).thenReturn(directory);

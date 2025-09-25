@@ -1,12 +1,6 @@
 {
     "properties": [
         {
-            "name": "batch.input.file.path",
-            "type": "java.lang.String",
-            "description": "Path to the input VDYP CSV file for forest data processing",
-            "defaultValue": "classpath:input.csv"
-        },
-        {
             "name": "batch.output.file.path",
             "type": "java.lang.String",
             "description": "Path to the output VDYP projection results CSV file",

@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.vdyp.batch.service;
 
 import ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -50,8 +51,7 @@ public class BatchMetricsCollector {
 			metrics.getPartitionMetrics().put(partitionName, partitionMetrics);
 			logger.info(
 					"[{}] Initialized partition metrics for job {}, lines {}-{}", partitionName, jobExecutionId,
-					startLine, endLine
-			);
+					startLine, endLine);
 		}
 	}
 
@@ -68,8 +68,7 @@ public class BatchMetricsCollector {
 				partitionMetrics.setExitCode(exitCode);
 				logger.info(
 						"[{}] Completed partition metrics for job {}, written: {}, exitCode: {}", partitionName,
-						jobExecutionId, writeCount, exitCode
-				);
+						jobExecutionId, writeCount, exitCode);
 			}
 		}
 	}
@@ -87,8 +86,7 @@ public class BatchMetricsCollector {
 			metrics.setTotalRecordsProcessed(totalWritten);
 			logger.info(
 					"Finalized job {} metrics: status={}, read={}, written={}", jobExecutionId, status, totalRead,
-					totalWritten
-			);
+					totalWritten);
 		}
 	}
 
@@ -97,8 +95,7 @@ public class BatchMetricsCollector {
 	 */
 	public void recordRetryAttempt(
 			Long jobExecutionId, Long recordId, BatchRecord batchRecord, int attemptNumber, Throwable error,
-			boolean successful, String partitionName
-	) {
+			boolean successful, String partitionName) {
 		BatchMetrics metrics = getJobMetrics(jobExecutionId);
 		if (metrics != null) {
 			metrics.setTotalRetryAttempts(metrics.getTotalRetryAttempts() + 1);
@@ -115,8 +112,7 @@ public class BatchMetricsCollector {
 
 			BatchMetrics.RetryDetail retryDetail = new BatchMetrics.RetryDetail(
 					recordId, batchRecord != null ? batchRecord.toString() : "null", attemptNumber, errorType,
-					errorMessage, successful, partitionName
-			);
+					errorMessage, successful, partitionName);
 
 			metrics.getRetryDetails().add(retryDetail);
 		}
@@ -127,8 +123,7 @@ public class BatchMetricsCollector {
 	 */
 	public void recordSkip(
 			Long jobExecutionId, Long recordId, BatchRecord batchRecord, Throwable error, String partitionName,
-			Long lineNumber
-	) {
+			Long lineNumber) {
 		BatchMetrics metrics = getJobMetrics(jobExecutionId);
 		if (metrics != null) {
 			metrics.setTotalSkips(metrics.getTotalSkips() + 1);
@@ -142,8 +137,7 @@ public class BatchMetricsCollector {
 			String recordData = batchRecord != null ? batchRecord.toString() : "null";
 
 			BatchMetrics.SkipDetail skipDetail = new BatchMetrics.SkipDetail(
-					recordId, recordData, errorType, errorMessage, partitionName, lineNumber
-			);
+					recordId, recordData, errorType, errorMessage, partitionName, lineNumber);
 
 			metrics.getSkipDetails().add(skipDetail);
 		}
@@ -168,40 +162,5 @@ public class BatchMetricsCollector {
 	 */
 	public BatchMetrics getJobMetrics(Long jobExecutionId) {
 		return jobMetricsMap.get(jobExecutionId);
-	}
-
-	/**
-	 * Get all job metrics.
-	 *
-	 * @return Map of all job metrics keyed by job execution ID
-	 */
-	public Map<Long, BatchMetrics> getAllJobMetrics() {
-		return new ConcurrentHashMap<>(jobMetricsMap);
-	}
-
-	/**
-	 * Update metrics for a job execution.
-	 *
-	 * @param jobExecutionId The job execution ID
-	 * @param metrics        The updated metrics
-	 */
-	public void updateMetrics(Long jobExecutionId, BatchMetrics metrics) {
-		jobMetricsMap.put(jobExecutionId, metrics);
-	}
-
-	/**
-	 * Remove metrics for a completed job (cleanup).
-	 *
-	 * @param jobExecutionId The job execution ID
-	 */
-	public void removeMetrics(Long jobExecutionId) {
-		jobMetricsMap.remove(jobExecutionId);
-	}
-
-	/**
-	 * Clear all metrics (for testing or maintenance).
-	 */
-	public void clearAllMetrics() {
-		jobMetricsMap.clear();
 	}
 }

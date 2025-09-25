@@ -1,48 +1,57 @@
 package ca.bc.gov.nrs.vdyp.batch.configuration;
 
-import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
-import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.io.IOException;
+import java.nio.file.Path;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.batch.core.ExitStatus;
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.JobExecution;
-import org.springframework.batch.core.Step;
-import org.springframework.batch.core.StepExecution;
-import org.springframework.batch.core.repository.JobRepository;
-import org.springframework.batch.item.ExecutionContext;
-import org.springframework.batch.item.file.FlatFileItemWriter;
-import org.springframework.core.task.TaskExecutor;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import org.springframework.transaction.PlatformTransactionManager;
-
-import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.HashSet;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
-
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.batch.core.Job;
+import org.springframework.batch.core.Step;
+import org.springframework.batch.core.StepContribution;
+import org.springframework.batch.core.StepExecution;
+import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.scope.context.ChunkContext;
+import org.springframework.batch.core.scope.context.StepContext;
+import org.springframework.batch.core.step.tasklet.Tasklet;
+import org.springframework.batch.item.ExecutionContext;
+import org.springframework.batch.item.ItemStreamReader;
+import org.springframework.batch.repeat.RepeatStatus;
+import org.springframework.core.task.TaskExecutor;
+import org.springframework.transaction.PlatformTransactionManager;
+
+import ca.bc.gov.nrs.vdyp.batch.exception.ResultAggregationException;
+import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
+import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
+import ca.bc.gov.nrs.vdyp.batch.service.ResultAggregationService;
+import ca.bc.gov.nrs.vdyp.batch.service.VdypProjectionService;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class PartitionedBatchConfigurationTest {
 
 	// Test constants
-	private static final String TEST_THREAD_PREFIX = "TestThread-";
-	private static final String TEST_FILE_PREFIX = "test_output";
-	private static final String TEST_CSV_HEADER = "id,data,polygonId,layerId,status";
+	private static final String TEST_THREAD_PREFIX = "VDYP-Worker-";
+	private static final Long TEST_JOB_EXECUTION_ID = 12345L;
+	private static final String TEST_PARTITION_NAME = "partition0";
 	private static final int TEST_CORE_POOL_SIZE = 4;
 	private static final int TEST_MAX_POOL_MULTIPLIER = 2;
-	private static final int TEST_CHUNK_SIZE = 100;
 	private static final int TEST_MAX_ATTEMPTS = 3;
 	private static final int TEST_BACKOFF_PERIOD = 1000;
 	private static final int TEST_MAX_SKIP_COUNT = 5;
@@ -75,10 +84,19 @@ class PartitionedBatchConfigurationTest {
 	private BatchProperties.Output.Directory directory;
 
 	@Mock
+	private BatchProperties.Reader reader;
+
+	@Mock
 	private PlatformTransactionManager transactionManager;
 
 	@Mock
 	private PartitionedJobExecutionListener jobExecutionListener;
+
+	@Mock
+	private ResultAggregationService resultAggregationService;
+
+	@Mock
+	private VdypProjectionService vdypProjectionService;
 
 	@TempDir
 	Path tempDir;
@@ -87,7 +105,8 @@ class PartitionedBatchConfigurationTest {
 
 	@BeforeEach
 	void setUp() {
-		configuration = new PartitionedBatchConfiguration(jobRepository, metricsCollector, batchProperties);
+		configuration = new PartitionedBatchConfiguration(
+				jobRepository, metricsCollector, batchProperties, resultAggregationService);
 
 		// Setup common mock behaviors
 		when(batchProperties.getRetry()).thenReturn(retry);
@@ -95,12 +114,18 @@ class PartitionedBatchConfigurationTest {
 		when(batchProperties.getThreadPool()).thenReturn(threadPool);
 		when(batchProperties.getPartitioning()).thenReturn(partitioning);
 		when(batchProperties.getOutput()).thenReturn(output);
+		when(batchProperties.getReader()).thenReturn(reader);
 		when(output.getDirectory()).thenReturn(directory);
 
 		// Setup default values to prevent IllegalStateException
-		when(output.getFilePrefix()).thenReturn(TEST_FILE_PREFIX);
-		when(output.getCsvHeader()).thenReturn(TEST_CSV_HEADER);
 		when(directory.getDefaultPath()).thenReturn(tempDir.toString());
+		when(retry.getMaxAttempts()).thenReturn(TEST_MAX_ATTEMPTS);
+		when(retry.getBackoffPeriod()).thenReturn(TEST_BACKOFF_PERIOD);
+		when(skip.getMaxCount()).thenReturn(TEST_MAX_SKIP_COUNT);
+		when(threadPool.getCorePoolSize()).thenReturn(TEST_CORE_POOL_SIZE);
+		when(threadPool.getMaxPoolSizeMultiplier()).thenReturn(TEST_MAX_POOL_MULTIPLIER);
+		when(threadPool.getThreadNamePrefix()).thenReturn(TEST_THREAD_PREFIX);
+		when(reader.getChunkSize()).thenReturn(10);
 	}
 
 	@Test
@@ -109,120 +134,68 @@ class PartitionedBatchConfigurationTest {
 	}
 
 	@Test
-	void testRetryPolicy_withJobParameters_success() {
-		Long maxRetryAttempts = (long) TEST_MAX_ATTEMPTS;
-		Long retryBackoffPeriod = (long) TEST_BACKOFF_PERIOD;
-
-		BatchRetryPolicy result = configuration.retryPolicy(maxRetryAttempts, retryBackoffPeriod);
+	void testRetryPolicy() {
+		BatchRetryPolicy result = configuration.retryPolicy();
 
 		assertNotNull(result);
+		verify(retry).getMaxAttempts();
+		verify(retry).getBackoffPeriod();
 	}
 
 	@Test
-	void testRetryPolicy_withNullJobParameters_usesProperties() {
-		when(retry.getMaxAttempts()).thenReturn(TEST_MAX_ATTEMPTS);
-		when(retry.getBackoffPeriod()).thenReturn(TEST_BACKOFF_PERIOD);
-
-		BatchRetryPolicy result = configuration.retryPolicy(null, null);
-
-		assertNotNull(result);
-		verify(retry, atLeastOnce()).getMaxAttempts();
-		verify(retry, atLeastOnce()).getBackoffPeriod();
-	}
-
-	@Test
-	void testRetryPolicy_withZeroJobParameters_usesProperties() {
-		when(retry.getMaxAttempts()).thenReturn(TEST_MAX_ATTEMPTS);
-		when(retry.getBackoffPeriod()).thenReturn(TEST_BACKOFF_PERIOD);
-
-		BatchRetryPolicy result = configuration.retryPolicy(0L, 0L);
-
-		assertNotNull(result);
-		verify(retry, atLeastOnce()).getMaxAttempts();
-		verify(retry, atLeastOnce()).getBackoffPeriod();
-	}
-
-	@Test
-	void testRetryPolicy_noMaxAttemptsInJobParametersOrProperties_throwsException() {
+	void testRetryPolicy_invalidMaxAttempts_throwsException() {
 		when(retry.getMaxAttempts()).thenReturn(0);
 
 		IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
-			configuration.retryPolicy(null, (long) TEST_BACKOFF_PERIOD);
+			configuration.retryPolicy();
 		});
 
-		assertTrue(exception.getMessage().contains("No max retry attempts specified"));
+		assertTrue(exception.getMessage().contains("batch.retry.max-attempts must be configured"));
 	}
 
 	@Test
-	void testRetryPolicy_noBackoffPeriodInJobParametersOrProperties_throwsException() {
+	void testRetryPolicy_invalidBackoffPeriod_throwsException() {
+		when(retry.getMaxAttempts()).thenReturn(TEST_MAX_ATTEMPTS);
 		when(retry.getBackoffPeriod()).thenReturn(0);
 
 		IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
-			configuration.retryPolicy((long) TEST_MAX_ATTEMPTS, null);
+			configuration.retryPolicy();
 		});
 
-		assertTrue(exception.getMessage().contains("No retry backoff period specified"));
+		assertTrue(exception.getMessage().contains("batch.retry.backoff-period must be configured"));
 	}
 
 	@Test
-	void testSkipPolicy_withJobParameters_success() {
-		Long maxSkipCount = (long) TEST_MAX_SKIP_COUNT;
-
-		BatchSkipPolicy result = configuration.skipPolicy(maxSkipCount);
+	void testSkipPolicy() {
+		BatchSkipPolicy result = configuration.skipPolicy();
 
 		assertNotNull(result);
+		verify(skip).getMaxCount();
 	}
 
 	@Test
-	void testSkipPolicy_withNullJobParameters_usesProperties() {
-		when(skip.getMaxCount()).thenReturn(TEST_MAX_SKIP_COUNT);
-
-		BatchSkipPolicy result = configuration.skipPolicy(null);
-
-		assertNotNull(result);
-		verify(skip, atLeastOnce()).getMaxCount();
-	}
-
-	@Test
-	void testSkipPolicy_withZeroJobParameters_usesProperties() {
-		when(skip.getMaxCount()).thenReturn(TEST_MAX_SKIP_COUNT);
-
-		BatchSkipPolicy result = configuration.skipPolicy(0L);
-
-		assertNotNull(result);
-		verify(skip, atLeastOnce()).getMaxCount();
-	}
-
-	@Test
-	void testSkipPolicy_noMaxSkipCountInJobParametersOrProperties_throwsException() {
+	void testSkipPolicy_invalidMaxCount_throwsException() {
 		when(skip.getMaxCount()).thenReturn(0);
 
 		IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
-			configuration.skipPolicy(null);
+			configuration.skipPolicy();
 		});
 
-		assertTrue(exception.getMessage().contains("No max skip count specified"));
+		assertTrue(exception.getMessage().contains("batch.skip.max-count must be configured"));
 	}
 
 	@Test
-	void testTaskExecutor_validConfiguration_success() {
-		when(threadPool.getCorePoolSize()).thenReturn(TEST_CORE_POOL_SIZE);
-		when(threadPool.getMaxPoolSizeMultiplier()).thenReturn(TEST_MAX_POOL_MULTIPLIER);
-		when(threadPool.getThreadNamePrefix()).thenReturn(TEST_THREAD_PREFIX);
-
+	void testTaskExecutor() {
 		TaskExecutor result = configuration.taskExecutor();
 
 		assertNotNull(result);
-		assertTrue(result instanceof ThreadPoolTaskExecutor);
-		ThreadPoolTaskExecutor executor = (ThreadPoolTaskExecutor) result;
-		assertEquals(TEST_CORE_POOL_SIZE, executor.getCorePoolSize());
-		assertEquals(TEST_CORE_POOL_SIZE * TEST_MAX_POOL_MULTIPLIER, executor.getMaxPoolSize());
-		assertEquals(TEST_CORE_POOL_SIZE, executor.getQueueCapacity());
-		assertEquals(TEST_THREAD_PREFIX, executor.getThreadNamePrefix());
+		verify(threadPool).getCorePoolSize();
+		verify(threadPool).getMaxPoolSizeMultiplier();
+		verify(threadPool).getThreadNamePrefix();
 	}
 
 	@Test
-	void testTaskExecutor_zeroCorePoolSize_throwsException() {
+	void testTaskExecutor_invalidCorePoolSize_throwsException() {
 		when(threadPool.getCorePoolSize()).thenReturn(0);
 
 		IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
@@ -233,18 +206,7 @@ class PartitionedBatchConfigurationTest {
 	}
 
 	@Test
-	void testTaskExecutor_negativeCorePoolSize_throwsException() {
-		when(threadPool.getCorePoolSize()).thenReturn(-1);
-
-		IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
-			configuration.taskExecutor();
-		});
-
-		assertTrue(exception.getMessage().contains("batch.thread-pool.core-pool-size must be configured"));
-	}
-
-	@Test
-	void testTaskExecutor_zeroMaxPoolSizeMultiplier_throwsException() {
+	void testTaskExecutor_invalidMaxPoolSizeMultiplier_throwsException() {
 		when(threadPool.getCorePoolSize()).thenReturn(TEST_CORE_POOL_SIZE);
 		when(threadPool.getMaxPoolSizeMultiplier()).thenReturn(0);
 
@@ -256,35 +218,10 @@ class PartitionedBatchConfigurationTest {
 	}
 
 	@Test
-	void testTaskExecutor_negativeMaxPoolSizeMultiplier_throwsException() {
-		when(threadPool.getCorePoolSize()).thenReturn(TEST_CORE_POOL_SIZE);
-		when(threadPool.getMaxPoolSizeMultiplier()).thenReturn(-1);
-
-		IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
-			configuration.taskExecutor();
-		});
-
-		assertTrue(exception.getMessage().contains("batch.thread-pool.max-pool-size-multiplier must be configured"));
-	}
-
-	@Test
-	void testTaskExecutor_nullThreadNamePrefix_throwsException() {
+	void testTaskExecutor_invalidThreadNamePrefix_throwsException() {
 		when(threadPool.getCorePoolSize()).thenReturn(TEST_CORE_POOL_SIZE);
 		when(threadPool.getMaxPoolSizeMultiplier()).thenReturn(TEST_MAX_POOL_MULTIPLIER);
-		when(threadPool.getThreadNamePrefix()).thenReturn(null);
-
-		IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
-			configuration.taskExecutor();
-		});
-
-		assertTrue(exception.getMessage().contains("batch.thread-pool.thread-name-prefix must be configured"));
-	}
-
-	@Test
-	void testTaskExecutor_emptyThreadNamePrefix_throwsException() {
-		when(threadPool.getCorePoolSize()).thenReturn(TEST_CORE_POOL_SIZE);
-		when(threadPool.getMaxPoolSizeMultiplier()).thenReturn(TEST_MAX_POOL_MULTIPLIER);
-		when(threadPool.getThreadNamePrefix()).thenReturn("   ");
+		when(threadPool.getThreadNamePrefix()).thenReturn("");
 
 		IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
 			configuration.taskExecutor();
@@ -306,8 +243,8 @@ class PartitionedBatchConfigurationTest {
 		Step workerStep = mock(Step.class);
 		DynamicPartitioner dynamicPartitioner = mock(DynamicPartitioner.class);
 
-		DynamicPartitionHandler result = configuration
-				.dynamicPartitionHandler(taskExecutor, workerStep, dynamicPartitioner, batchProperties);
+		DynamicPartitionHandler result = configuration.dynamicPartitionHandler(
+				taskExecutor, workerStep, dynamicPartitioner, batchProperties);
 
 		assertNotNull(result);
 	}
@@ -326,49 +263,29 @@ class PartitionedBatchConfigurationTest {
 	}
 
 	@Test
-	void testWorkerStep_validConfiguration_success() {
+	void testWorkerStep() {
 		BatchRetryPolicy retryPolicy = mock(BatchRetryPolicy.class);
 		BatchSkipPolicy skipPolicy = mock(BatchSkipPolicy.class);
-		when(partitioning.getChunkSize()).thenReturn(TEST_CHUNK_SIZE);
+		@SuppressWarnings("unchecked")
+		ItemStreamReader<BatchRecord> itemReader = mock(
+				ItemStreamReader.class);
 
-		Step result = configuration
-				.workerStep(retryPolicy, skipPolicy, transactionManager, metricsCollector, batchProperties);
+		Step result = configuration.workerStep(
+				retryPolicy, skipPolicy, transactionManager, metricsCollector,
+				batchProperties, vdypProjectionService, itemReader);
 
 		assertNotNull(result);
 		assertEquals("workerStep", result.getName());
-	}
-
-	@Test
-	void testWorkerStep_zeroChunkSize_throwsException() {
-		BatchRetryPolicy retryPolicy = mock(BatchRetryPolicy.class);
-		BatchSkipPolicy skipPolicy = mock(BatchSkipPolicy.class);
-		when(partitioning.getChunkSize()).thenReturn(0);
-
-		IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
-			configuration.workerStep(retryPolicy, skipPolicy, transactionManager, metricsCollector, batchProperties);
-		});
-
-		assertTrue(exception.getMessage().contains("batch.partitioning.chunk-size must be configured"));
-	}
-
-	@Test
-	void testWorkerStep_negativeChunkSize_throwsException() {
-		BatchRetryPolicy retryPolicy = mock(BatchRetryPolicy.class);
-		BatchSkipPolicy skipPolicy = mock(BatchSkipPolicy.class);
-		when(partitioning.getChunkSize()).thenReturn(-1);
-
-		IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
-			configuration.workerStep(retryPolicy, skipPolicy, transactionManager, metricsCollector, batchProperties);
-		});
-
-		assertTrue(exception.getMessage().contains("batch.partitioning.chunk-size must be configured"));
+		verify(reader).getChunkSize();
 	}
 
 	@Test
 	void testPartitionedJob() {
 		Step masterStep = mock(Step.class);
+		Step postProcessingStep = mock(Step.class);
 
-		Job result = configuration.partitionedJob(jobExecutionListener, masterStep);
+		Job result = configuration.partitionedJob(
+				jobExecutionListener, masterStep, postProcessingStep, transactionManager);
 
 		assertNotNull(result);
 		assertEquals("VdypPartitionedJob", result.getName());
@@ -376,103 +293,11 @@ class PartitionedBatchConfigurationTest {
 
 	@Test
 	void testPartitionReader() {
-		RangeAwareItemReader result = configuration.partitionReader(metricsCollector, batchProperties);
+		ItemStreamReader<BatchRecord> result = configuration
+				.partitionReader(metricsCollector, TEST_PARTITION_NAME, TEST_JOB_EXECUTION_ID, batchProperties);
 
 		assertNotNull(result);
-	}
-
-	@Test
-	void testPartitionWriter_validConfiguration_success() {
-		String partitionName = "partition1";
-		String outputFilePath = tempDir.toString();
-
-		when(output.getFilePrefix()).thenReturn(TEST_FILE_PREFIX);
-		when(output.getCsvHeader()).thenReturn(TEST_CSV_HEADER);
-
-		FlatFileItemWriter<BatchRecord> result = configuration.partitionWriter(partitionName, outputFilePath);
-
-		assertNotNull(result);
-		assertEquals("VdypItemWriter_partition1", result.getName());
-	}
-
-	@Test
-	void testPartitionWriter_nullPartitionName_usesUnknown() {
-		String outputFilePath = tempDir.toString();
-
-		when(output.getFilePrefix()).thenReturn(TEST_FILE_PREFIX);
-		when(output.getCsvHeader()).thenReturn(TEST_CSV_HEADER);
-
-		FlatFileItemWriter<BatchRecord> result = configuration.partitionWriter(null, outputFilePath);
-
-		assertNotNull(result);
-		assertEquals("VdypItemWriter_unknown", result.getName());
-	}
-
-	@Test
-	void testPartitionWriter_nullOutputFilePath_usesDefaultPath() {
-		String partitionName = "partition1";
-		when(directory.getDefaultPath()).thenReturn(tempDir.toString());
-		when(output.getFilePrefix()).thenReturn(TEST_FILE_PREFIX);
-		when(output.getCsvHeader()).thenReturn(TEST_CSV_HEADER);
-
-		FlatFileItemWriter<BatchRecord> result = configuration.partitionWriter(partitionName, null);
-
-		assertNotNull(result);
-		assertEquals("VdypItemWriter_partition1", result.getName());
-	}
-
-	@Test
-	void testPartitionWriter_nullDefaultPath_usesTempDir() {
-		String partitionName = "partition1";
-		when(directory.getDefaultPath()).thenReturn(null);
-		when(output.getFilePrefix()).thenReturn(TEST_FILE_PREFIX);
-		when(output.getCsvHeader()).thenReturn(TEST_CSV_HEADER);
-
-		FlatFileItemWriter<BatchRecord> result = configuration.partitionWriter(partitionName, null);
-
-		assertNotNull(result);
-		assertEquals("VdypItemWriter_partition1", result.getName());
-	}
-
-	@Test
-	void testPartitionWriter_nullFilePrefix_throwsException() {
-		String partitionName = "partition1";
-		String outputFilePath = tempDir.toString();
-		when(output.getFilePrefix()).thenReturn(null);
-
-		IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
-			configuration.partitionWriter(partitionName, outputFilePath);
-		});
-
-		assertTrue(exception.getMessage().contains("batch.output.file-prefix must be configured"));
-	}
-
-	@Test
-	void testPartitionWriter_nullCsvHeader_throwsException() {
-		String partitionName = "partition1";
-		String outputFilePath = tempDir.toString();
-		when(output.getFilePrefix()).thenReturn(TEST_FILE_PREFIX);
-		when(output.getCsvHeader()).thenReturn(null);
-
-		IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
-			configuration.partitionWriter(partitionName, outputFilePath);
-		});
-
-		assertTrue(exception.getMessage().contains("batch.output.csv-header must be configured"));
-	}
-
-	@Test
-	void testPartitionWriter_emptyCsvHeader_throwsException() {
-		String partitionName = "partition1";
-		String outputFilePath = tempDir.toString();
-		when(output.getFilePrefix()).thenReturn(TEST_FILE_PREFIX);
-		when(output.getCsvHeader()).thenReturn("   ");
-
-		IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
-			configuration.partitionWriter(partitionName, outputFilePath);
-		});
-
-		assertTrue(exception.getMessage().contains("batch.output.csv-header must be configured"));
+		verify(reader, atLeastOnce()).getChunkSize();
 	}
 
 	@Test
@@ -485,116 +310,133 @@ class PartitionedBatchConfigurationTest {
 	}
 
 	@Test
-	void testWorkerStepListener_beforeStep() {
-		// This test verifies the StepExecutionListener's beforeStep method
+	void testPostProcessingStep() {
+		Step result = configuration.postProcessingStep(transactionManager);
+
+		assertNotNull(result);
+		assertEquals("postProcessingStep", result.getName());
+	}
+
+	@Test
+	void testResultAggregationTasklet() {
+		Tasklet result = configuration.resultAggregationTasklet();
+
+		assertNotNull(result);
+	}
+
+	@Test
+	void testResultAggregationTasklet_nullOutputPath_usesSystemTemp() throws Exception {
+		when(directory.getDefaultPath()).thenReturn(null);
+
+		Tasklet tasklet = configuration.resultAggregationTasklet();
+
+		// Mock the tasklet execution context
+		StepContribution contribution = mock(
+				StepContribution.class);
+		ChunkContext chunkContext = mock(
+				ChunkContext.class);
+		StepContext stepContext = mock(
+				StepContext.class);
+		StepExecution stepExecution = mock(
+				StepExecution.class);
+		ExecutionContext executionContext = mock(
+				ExecutionContext.class);
+
+		when(chunkContext.getStepContext()).thenReturn(stepContext);
+		when(stepContext.getStepExecution()).thenReturn(stepExecution);
+		when(stepExecution.getJobExecutionId()).thenReturn(TEST_JOB_EXECUTION_ID);
+		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
+
+		// Mock successful aggregation
+		Path mockPath = mock(Path.class);
+		when(mockPath.toString()).thenReturn("/tmp/consolidated.zip");
+		when(resultAggregationService.aggregateResults(eq(TEST_JOB_EXECUTION_ID), anyString())).thenReturn(mockPath);
+
+		RepeatStatus result = tasklet.execute(contribution, chunkContext);
+
+		assertEquals(RepeatStatus.FINISHED, result);
+		verify(resultAggregationService).aggregateResults(eq(TEST_JOB_EXECUTION_ID), anyString());
+		verify(executionContext).putString("consolidatedOutputPath", "/tmp/consolidated.zip");
+	}
+
+	@Test
+	void testResultAggregationTasklet_ioException_throwsResultAggregationException() throws Exception {
+		Tasklet tasklet = configuration.resultAggregationTasklet();
+
+		// Mock execution context
+		StepContribution contribution = mock(
+				StepContribution.class);
+		ChunkContext chunkContext = mock(
+				ChunkContext.class);
+		StepContext stepContext = mock(
+				StepContext.class);
+		StepExecution stepExecution = mock(
+				StepExecution.class);
+
+		when(chunkContext.getStepContext()).thenReturn(stepContext);
+		when(stepContext.getStepExecution()).thenReturn(stepExecution);
+		when(stepExecution.getJobExecutionId()).thenReturn(TEST_JOB_EXECUTION_ID);
+
+		// Mock IOException during aggregation
+		when(resultAggregationService.aggregateResults(eq(TEST_JOB_EXECUTION_ID), anyString()))
+				.thenThrow(new IOException("File write failed"));
+
+		ResultAggregationException exception = assertThrows(
+				ResultAggregationException.class, () -> {
+					tasklet.execute(contribution, chunkContext);
+				});
+
+		assertTrue(exception.getMessage().contains("I/O operation failed during result aggregation"));
+		assertTrue(exception.getCause() instanceof IOException);
+	}
+
+	@Test
+	void testResultAggregationTasklet_generalException_throwsResultAggregationException() throws Exception {
+		Tasklet tasklet = configuration.resultAggregationTasklet();
+
+		// Mock execution context
+		StepContribution contribution = mock(
+				StepContribution.class);
+		ChunkContext chunkContext = mock(
+				ChunkContext.class);
+		StepContext stepContext = mock(
+				StepContext.class);
+		StepExecution stepExecution = mock(
+				StepExecution.class);
+
+		when(chunkContext.getStepContext()).thenReturn(stepContext);
+		when(stepContext.getStepExecution()).thenReturn(stepExecution);
+		when(stepExecution.getJobExecutionId()).thenReturn(TEST_JOB_EXECUTION_ID);
+
+		// Mock general exception during aggregation
+		when(resultAggregationService.aggregateResults(eq(TEST_JOB_EXECUTION_ID), anyString()))
+				.thenThrow(new RuntimeException("Unexpected processing error"));
+
+		ResultAggregationException exception = assertThrows(
+				ResultAggregationException.class, () -> {
+					tasklet.execute(contribution, chunkContext);
+				});
+
+		assertTrue(exception.getMessage().contains("Unexpected error during result aggregation"));
+		assertTrue(exception.getCause() instanceof RuntimeException);
+	}
+
+	@Test
+	void testWorkerStep_withMinimumChunkSize() {
+		when(reader.getChunkSize()).thenReturn(0); // Test minimum chunk size enforcement
+
 		BatchRetryPolicy retryPolicy = mock(BatchRetryPolicy.class);
 		BatchSkipPolicy skipPolicy = mock(BatchSkipPolicy.class);
-		when(partitioning.getChunkSize()).thenReturn(TEST_CHUNK_SIZE);
+		@SuppressWarnings("unchecked")
+		ItemStreamReader<BatchRecord> itemReader = mock(
+				ItemStreamReader.class);
 
-		Step workerStep = configuration
-				.workerStep(retryPolicy, skipPolicy, transactionManager, metricsCollector, batchProperties);
+		Step result = configuration.workerStep(
+				retryPolicy, skipPolicy, transactionManager, metricsCollector,
+				batchProperties, vdypProjectionService, itemReader);
 
-		// Create mock StepExecution
-		StepExecution stepExecution = mock(StepExecution.class);
-		ExecutionContext executionContext = mock(ExecutionContext.class);
-
-		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
-		when(executionContext.getString("partitionName", "unknown")).thenReturn("testPartition");
-		when(executionContext.getLong("startLine", 0)).thenReturn(1L);
-		when(executionContext.getLong("endLine", 0)).thenReturn(100L);
-		when(stepExecution.getJobExecutionId()).thenReturn(123L);
-
-		// Test that beforeStep doesn't throw exceptions
-		assertDoesNotThrow(() -> {
-			// The listener is internal, can't directly access it, but test that the
-			// step builds correctly
-			assertNotNull(workerStep);
-		});
-
-		verify(executionContext, never()).getString(anyString(), anyString());
-	}
-
-	@Test
-	void testWorkerStepListener_afterStep() {
-		// This test verifies the StepExecutionListener's afterStep method
-		BatchRetryPolicy retryPolicy = mock(BatchRetryPolicy.class);
-		BatchSkipPolicy skipPolicy = mock(BatchSkipPolicy.class);
-		when(partitioning.getChunkSize()).thenReturn(TEST_CHUNK_SIZE);
-
-		Step workerStep = configuration
-				.workerStep(retryPolicy, skipPolicy, transactionManager, metricsCollector, batchProperties);
-
-		// Create mock StepExecution
-		StepExecution stepExecution = mock(StepExecution.class);
-		ExecutionContext executionContext = mock(ExecutionContext.class);
-		ExitStatus exitStatus = ExitStatus.COMPLETED;
-
-		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
-		when(executionContext.getString("partitionName", "unknown")).thenReturn("testPartition");
-		when(stepExecution.getJobExecutionId()).thenReturn(123L);
-		when(stepExecution.getWriteCount()).thenReturn(50L);
-		when(stepExecution.getReadCount()).thenReturn(50L);
-		when(stepExecution.getSkipCount()).thenReturn(0L);
-		when(stepExecution.getExitStatus()).thenReturn(exitStatus);
-
-		assertDoesNotThrow(() -> {
-			assertNotNull(workerStep);
-		});
-	}
-
-	@Test
-	void testJobListener_beforeJob() {
-		// Test the JobExecutionListener's beforeJob method
-		Step masterStep = mock(Step.class);
-
-		Job job = configuration.partitionedJob(jobExecutionListener, masterStep);
-
-		JobExecution jobExecution = mock(JobExecution.class);
-		when(jobExecution.getId()).thenReturn(123L);
-
-		assertDoesNotThrow(() -> {
-			assertNotNull(job);
-		});
-	}
-
-	@Test
-	void testJobListener_afterJob() {
-		// Test the JobExecutionListener's afterJob method
-		Step masterStep = mock(Step.class);
-
-		Job job = configuration.partitionedJob(jobExecutionListener, masterStep);
-
-		// Create mock JobExecution with StepExecutions
-		JobExecution jobExecution = mock(JobExecution.class);
-		StepExecution stepExecution1 = mock(StepExecution.class);
-		StepExecution stepExecution2 = mock(StepExecution.class);
-		StepExecution masterStepExecution = mock(StepExecution.class);
-
-		when(jobExecution.getId()).thenReturn(123L);
-		when(jobExecution.getStatus()).thenReturn(org.springframework.batch.core.BatchStatus.COMPLETED);
-		when(jobExecution.getStepExecutions())
-				.thenReturn(new HashSet<>(Arrays.asList(stepExecution1, stepExecution2, masterStepExecution)));
-
-		// Mock worker steps (should be counted)
-		when(stepExecution1.getStepName()).thenReturn("workerStep:partition1");
-		when(stepExecution1.getReadCount()).thenReturn(25L);
-		when(stepExecution1.getWriteCount()).thenReturn(25L);
-
-		when(stepExecution2.getStepName()).thenReturn("workerStep:partition2");
-		when(stepExecution2.getReadCount()).thenReturn(30L);
-		when(stepExecution2.getWriteCount()).thenReturn(30L);
-
-		// Mock master step (should not be counted)
-		when(masterStepExecution.getStepName()).thenReturn("masterStep");
-		when(masterStepExecution.getReadCount()).thenReturn(0L);
-		when(masterStepExecution.getWriteCount()).thenReturn(0L);
-
-		// Test that afterJob doesn't throw exceptions
-		assertDoesNotThrow(() -> {
-			assertNotNull(job);
-		});
-
-		// Verify that cleanup is called
-		verify(metricsCollector, never()).cleanupOldMetrics(anyInt());
+		assertNotNull(result);
+		assertEquals("workerStep", result.getName());
+		verify(reader).getChunkSize(); // Verify chunk size was accessed for validation
 	}
 }

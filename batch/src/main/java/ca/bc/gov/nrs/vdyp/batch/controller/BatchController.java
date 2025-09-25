@@ -1,20 +1,45 @@
 package ca.bc.gov.nrs.vdyp.batch.controller;
 
-import ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics;
-import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.batch.core.*;
+import org.springframework.batch.core.Job;
+import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.JobInstance;
+import org.springframework.batch.core.JobParameters;
+import org.springframework.batch.core.JobParametersBuilder;
+import org.springframework.batch.core.JobParametersInvalidException;
 import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException;
 import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException;
 import org.springframework.batch.core.repository.JobRestartException;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.time.Duration;
-import java.util.*;
+import ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics;
+import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
+import ca.bc.gov.nrs.vdyp.batch.service.StreamingCsvPartitioner;
+import ca.bc.gov.nrs.vdyp.batch.util.Utils;
+import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.ProjectionRequestValidationException;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessage;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.ValidationMessageKind;
 
 @RestController
 @RequestMapping("/api/batch")
@@ -37,32 +62,49 @@ public class BatchController {
 	private final Job partitionedJob;
 	private final JobExplorer jobExplorer;
 	private final BatchMetricsCollector metricsCollector;
+	private final StreamingCsvPartitioner csvPartitioner;
+
+	@Value("${batch.input.directory.default-path}")
+	private String inputBasePath;
+
+	@Value("${batch.output.directory.default-path}")
+	private String outputBasePath;
 
 	public BatchController(
-			JobLauncher jobLauncher, Job partitionedJob, JobExplorer jobExplorer, BatchMetricsCollector metricsCollector
-	) {
+			JobLauncher jobLauncher, Job partitionedJob, JobExplorer jobExplorer,
+			BatchMetricsCollector metricsCollector, StreamingCsvPartitioner csvPartitioner) {
 		this.jobLauncher = jobLauncher;
 		this.partitionedJob = partitionedJob;
 		this.jobExplorer = jobExplorer;
 		this.metricsCollector = metricsCollector;
+		this.csvPartitioner = csvPartitioner;
 	}
 
 	/**
-	 * Start a new batch job execution with configuration options.
+	 * Start a new batch job execution with uploaded CSV files.
 	 *
-	 * @param request Optional configuration parameters for the batch job
+	 * @param polygonFile    CSV file containing polygon data
+	 * @param layerFile      CSV file containing layer data
+	 * @param partitionSize  Number of partitions (optional, default from config)
+	 * @param parametersJson JSON string containing VDYP projection parameters
 	 * @return ResponseEntity containing job execution details and metrics endpoint
 	 */
-	@PostMapping("/start")
-	public ResponseEntity<Map<String, Object>> startBatchJob(@RequestBody(required = false) BatchJobRequest request) {
+	@PostMapping(value = "/start", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<Map<String, Object>> startBatchJobWithFiles(
+			@RequestParam("polygonFile") MultipartFile polygonFile,
+			@RequestParam("layerFile") MultipartFile layerFile,
+			@RequestParam(value = "partitionSize", required = false) Long partitionSize,
+			@RequestParam("parameters") String parametersJson) {
+
 		try {
 			long startTime = System.currentTimeMillis();
-			logRequestDetails(request);
+			logRequestDetails(polygonFile, layerFile, partitionSize, parametersJson);
 
 			Map<String, Object> response = new HashMap<>();
 
 			if (partitionedJob != null) {
-				JobExecution jobExecution = executeJob(request, startTime);
+				JobExecution jobExecution = executeJob(polygonFile, layerFile, partitionSize, parametersJson,
+						startTime);
 				buildSuccessResponse(response, jobExecution);
 			} else {
 				buildJobNotAvailableResponse(response, startTime);
@@ -70,6 +112,10 @@ public class BatchController {
 
 			return ResponseEntity.ok(response);
 
+		} catch (ProjectionRequestValidationException e) {
+			return ResponseEntity.badRequest()
+					.header("content-type", "application/json")
+					.body(createValidationErrorResponse(e));
 		} catch (Exception e) {
 			return buildErrorResponse(e);
 		}
@@ -79,9 +125,10 @@ public class BatchController {
 	 * Get current job execution status with step-level details.
 	 *
 	 * @param jobExecutionId The unique identifier of the job execution
-	 * @return ResponseEntity containing job status and step details or 404 if not found
+	 * @return ResponseEntity containing job status and step details or 404 if not
+	 *         found
 	 */
-	@GetMapping("/status/{jobExecutionId}")
+	@GetMapping(value = "/status/{jobExecutionId}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Map<String, Object>> getJobStatus(@PathVariable Long jobExecutionId) {
 		try {
 			JobExecution jobExecution = jobExplorer.getJobExecution(jobExecutionId);
@@ -109,12 +156,13 @@ public class BatchController {
 	}
 
 	/**
-	 * Get detailed job metrics including partition-level data, retry/skip statistics.
+	 * Get detailed job metrics including partition-level data, retry/skip
+	 * statistics.
 	 *
 	 * @param jobExecutionId The unique identifier of the job execution
 	 * @return ResponseEntity containing job metrics or 404 if not found
 	 */
-	@GetMapping("/metrics/{jobExecutionId}")
+	@GetMapping(value = "/metrics/{jobExecutionId}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Map<String, Object>> getJobMetrics(@PathVariable Long jobExecutionId) {
 		try {
 			JobExecution jobExecution = jobExplorer.getJobExecution(jobExecutionId);
@@ -174,7 +222,7 @@ public class BatchController {
 	 * @param limit Optional limit for number of jobs to return (default: 50)
 	 * @return ResponseEntity containing list of job instances and executions
 	 */
-	@GetMapping("/jobs")
+	@GetMapping(value = "/jobs", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Map<String, Object>> listJobs(@RequestParam(defaultValue = "50") int limit) {
 		try {
 			List<String> jobNames = jobExplorer.getJobNames();
@@ -187,6 +235,150 @@ public class BatchController {
 			errorResponse.put(JOB_MESSAGE, e.getMessage());
 			return ResponseEntity.internalServerError().body(errorResponse);
 		}
+	}
+
+	/**
+	 * Service health check endpoint for monitoring and load balancer integration.
+	 *
+	 * @return ResponseEntity containing service health status and feature list
+	 */
+	@GetMapping(value = "/health", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<Map<String, Object>> health() {
+		Map<String, Object> response = new HashMap<>();
+		response.put(JOB_STATUS, "UP");
+		response.put("service", "VDYP Batch Processing Service");
+		response.put(
+				"availableEndpoints",
+				Arrays.asList(
+						"/api/batch/start", "/api/batch/status/{id}", "/api/batch/metrics/{id}", "/api/batch/jobs",
+						"/api/batch/health"));
+		response.put(JOB_TIMESTAMP, System.currentTimeMillis());
+		return ResponseEntity.ok(response);
+	}
+
+	private void logRequestDetails(MultipartFile polygonFile, MultipartFile layerFile,
+			Long partitionSize, String parametersJson) {
+		if (logger.isInfoEnabled()) {
+			logger.info("=== VDYP Batch Job File Upload Request ===");
+			logger.info("Polygon file: {} ({} bytes)", Utils.sanitizeForLogging(polygonFile.getOriginalFilename()),
+					polygonFile.getSize());
+			logger.info("Layer file: {} ({} bytes)", Utils.sanitizeForLogging(layerFile.getOriginalFilename()),
+					layerFile.getSize());
+			logger.info("Partition size: {}", partitionSize);
+			logger.info("Parameters provided: {}", parametersJson != null ? "yes" : "no");
+		}
+	}
+
+	private JobExecution executeJob(MultipartFile polygonFile, MultipartFile layerFile,
+			Long partitionSize, String parametersJson, long startTime)
+			throws JobExecutionAlreadyRunningException, JobRestartException,
+			JobInstanceAlreadyCompleteException, JobParametersInvalidException, ProjectionRequestValidationException {
+
+		// Validate parameters
+		if (parametersJson == null || parametersJson.trim().isEmpty()) {
+			throw new ProjectionRequestValidationException(List.of(
+					new ValidationMessage(ValidationMessageKind.GENERIC,
+							"VDYP projection parameters are required but not provided in the request")));
+		}
+
+		try {
+			// Debug logging
+			if (logger.isInfoEnabled()) {
+				logger.info("Processing files: polygon={}, layer={}, partitionSize={}",
+						Utils.sanitizeForLogging(polygonFile.getOriginalFilename()),
+						Utils.sanitizeForLogging(layerFile.getOriginalFilename()), partitionSize);
+				logger.info("Parameters JSON length: {}", parametersJson.length());
+			}
+			logger.debug("Parameters JSON content: {}", parametersJson);
+
+			// Create partition directory for input CSV files in configured input directory
+			Path baseInputDir = Paths.get(inputBasePath);
+			Path partitionDir = baseInputDir.resolve("vdyp-batch-" + startTime);
+			logger.info("Using input partition directory: {}", partitionDir);
+			logger.info("Output results will be stored in: {}", outputBasePath);
+
+			// Partition CSV files using streaming approach
+			logger.info("Starting CSV partitioning...");
+			StreamingCsvPartitioner.PartitionResult partitionResult = csvPartitioner.partitionCsvFiles(
+					polygonFile, layerFile,
+					partitionSize != null ? partitionSize.intValue() : 4, // default grid size
+					partitionDir);
+
+			logger.info("CSV files partitioned successfully. Partitions: {}, Total FEATURE_IDs: {}",
+					partitionResult.getGridSize(), partitionResult.getTotalFeatureIds());
+
+			// Build job parameters
+			JobParameters jobParameters = buildJobParameters(partitionResult, parametersJson, startTime, partitionSize);
+
+			// Start the job
+			JobExecution jobExecution = jobLauncher.run(partitionedJob, jobParameters);
+
+			if (logger.isInfoEnabled()) {
+				logger.info("Started VDYP batch job {} with uploaded files - Polygons: {}, Layers: {}",
+						jobExecution.getId(), Utils.sanitizeForLogging(polygonFile.getOriginalFilename()),
+						Utils.sanitizeForLogging(layerFile.getOriginalFilename()));
+			}
+
+			return jobExecution;
+
+		} catch (Exception e) {
+			logger.error("Failed to process uploaded CSV files", e);
+
+			String errorMessage = e.getMessage() != null ? e.getMessage()
+					: "Unknown error (" + e.getClass().getSimpleName() + ")";
+
+			throw new ProjectionRequestValidationException(List.of(
+					new ValidationMessage(ValidationMessageKind.GENERIC,
+							"Failed to process uploaded CSV files: " + errorMessage)));
+		}
+	}
+
+	private JobParameters buildJobParameters(StreamingCsvPartitioner.PartitionResult partitionResult,
+			String parametersJson, long startTime, Long partitionSize) {
+
+		JobParametersBuilder parametersBuilder = new JobParametersBuilder()
+				.addLong(JOB_TIMESTAMP, startTime)
+				.addString(JOB_TYPE, "vdyp-projection-files")
+				.addString("partitionBaseDir", partitionResult.getBaseOutputDir().toString())
+				.addLong("gridSize", (long) partitionResult.getGridSize())
+				.addString("projectionParametersJson", parametersJson);
+
+		// Add partitionSize if provided
+		if (partitionSize != null) {
+			parametersBuilder.addLong("partitionSize", partitionSize);
+		}
+
+		return parametersBuilder.toJobParameters();
+	}
+
+	private void buildSuccessResponse(Map<String, Object> response, JobExecution jobExecution) {
+		response.put(JOB_EXECUTION_ID, jobExecution.getId());
+		response.put(JOB_NAME, jobExecution.getJobInstance().getJobName());
+		response.put(JOB_STATUS, jobExecution.getStatus().toString());
+		response.put(JOB_START_TIME, jobExecution.getStartTime());
+		response.put(JOB_MESSAGE, "VDYP Batch job started successfully");
+	}
+
+	private void buildJobNotAvailableResponse(Map<String, Object> response, long startTime) {
+		response.put(JOB_MESSAGE, "VDYP Batch job not available - Job auto-creation is disabled");
+		response.put(JOB_TIMESTAMP, startTime);
+		response.put(JOB_STATUS, "JOB_NOT_AVAILABLE");
+		response.put(NOTE, "Set 'batch.job.auto-create=true' to enable job creation");
+	}
+
+	private Map<String, Object> createValidationErrorResponse(ProjectionRequestValidationException e) {
+		Map<String, Object> errorResponse = new HashMap<>();
+		errorResponse.put("validationMessages", e.getValidationMessages());
+		errorResponse.put(JOB_ERROR, "Validation failed");
+		errorResponse.put(JOB_MESSAGE, "Request validation failed - check validation messages for details");
+		return errorResponse;
+	}
+
+	private ResponseEntity<Map<String, Object>> buildErrorResponse(Exception e) {
+		Map<String, Object> errorResponse = new HashMap<>();
+		errorResponse.put(JOB_ERROR, "Failed to start batch job");
+		errorResponse.put(JOB_MESSAGE, e.getMessage() == null ? "unknown reason" : e.getMessage());
+		return ResponseEntity.internalServerError().body(errorResponse);
 	}
 
 	private List<Map<String, Object>> collectJobsList(List<String> jobNames, int limit) {
@@ -285,239 +477,5 @@ public class BatchController {
 				count++;
 			}
 		}
-	}
-
-	/**
-	 * Get aggregated batch processing statistics and system overview.
-	 *
-	 * @return ResponseEntity containing overall system statistics and metrics
-	 */
-	@GetMapping("/statistics")
-	public ResponseEntity<Map<String, Object>> getBatchStatistics() {
-		try {
-			List<String> jobNames = jobExplorer.getJobNames();
-			BatchStatistics statistics = collectBatchStatistics(jobNames);
-			Map<String, Object> response = buildStatisticsResponse(statistics, jobNames);
-			return ResponseEntity.ok(response);
-		} catch (Exception e) {
-			Map<String, Object> errorResponse = new HashMap<>();
-			errorResponse.put(JOB_ERROR, "Failed to retrieve batch statistics");
-			errorResponse.put(JOB_MESSAGE, e.getMessage());
-			return ResponseEntity.internalServerError().body(errorResponse);
-		}
-	}
-
-	private BatchStatistics collectBatchStatistics(List<String> jobNames) {
-		BatchStatistics statistics = new BatchStatistics();
-
-		for (String jobName : jobNames) {
-			List<JobInstance> jobInstances = jobExplorer.getJobInstances(jobName, 0, 1000);
-			for (JobInstance jobInstance : jobInstances) {
-				List<JobExecution> jobExecutions = jobExplorer.getJobExecutions(jobInstance);
-				for (JobExecution jobExecution : jobExecutions) {
-					processJobExecution(jobExecution, statistics);
-				}
-			}
-		}
-
-		return statistics;
-	}
-
-	private void processJobExecution(JobExecution jobExecution, BatchStatistics statistics) {
-		statistics.totalJobs++;
-
-		BatchStatus status = jobExecution.getStatus();
-		if (status == BatchStatus.COMPLETED) {
-			statistics.completedJobs++;
-		} else if (status == BatchStatus.FAILED) {
-			statistics.failedJobs++;
-		} else if (status == BatchStatus.STARTED || status == BatchStatus.STARTING) {
-			statistics.runningJobs++;
-		}
-
-		processStepExecutions(jobExecution, statistics);
-		processJobMetrics(jobExecution, statistics);
-	}
-
-	private void processStepExecutions(JobExecution jobExecution, BatchStatistics statistics) {
-		for (StepExecution stepExecution : jobExecution.getStepExecutions()) {
-			statistics.totalRecordsProcessed += stepExecution.getWriteCount();
-			statistics.totalSkippedRecords += stepExecution.getSkipCount();
-		}
-	}
-
-	private void processJobMetrics(JobExecution jobExecution, BatchStatistics statistics) {
-		BatchMetrics metrics = metricsCollector.getJobMetrics(jobExecution.getId());
-		if (metrics != null) {
-			statistics.totalRetryAttempts += metrics.getTotalRetryAttempts();
-		}
-	}
-
-	private Map<String, Object> buildStatisticsResponse(BatchStatistics statistics, List<String> jobNames) {
-		Map<String, Object> response = new HashMap<>();
-
-		response.put("systemOverview", buildSystemOverview(statistics));
-		response.put("processingStatistics", buildProcessingStatistics(statistics));
-		response.put("availableJobTypes", jobNames);
-		response.put(JOB_TIMESTAMP, System.currentTimeMillis());
-		response.put("serviceCapabilities", buildServiceCapabilities());
-
-		return response;
-	}
-
-	private Map<String, Object> buildSystemOverview(BatchStatistics statistics) {
-		return Map.of(
-				"totalJobs", statistics.totalJobs, "completedJobs", statistics.completedJobs, "failedJobs",
-				statistics.failedJobs, "runningJobs", statistics.runningJobs, "successRate",
-				statistics.totalJobs > 0 ? (double) statistics.completedJobs / statistics.totalJobs * 100 : 0.0
-		);
-	}
-
-	private Map<String, Object> buildProcessingStatistics(BatchStatistics statistics) {
-		return Map.of(
-				"totalRecordsProcessed", statistics.totalRecordsProcessed, "totalRetryAttempts",
-				statistics.totalRetryAttempts, "totalSkippedRecords", statistics.totalSkippedRecords,
-				"averageRecordsPerJob",
-				statistics.totalJobs > 0 ? statistics.totalRecordsProcessed / statistics.totalJobs : 0
-		);
-	}
-
-	private Map<String, Object> buildServiceCapabilities() {
-		return Map.of(
-				"partitioningEnabled", true, "retryPolicyEnabled", true, "skipPolicyEnabled", true,
-				"metricsCollectionEnabled", true, "vdypIntegrationReady", false, "nativeImageSupport", true
-		);
-	}
-
-	/**
-	 * Logs request details with sanitized paths.
-	 */
-	private void logRequestDetails(BatchJobRequest request) {
-		logger.info("=== VDYP Batch Job Start Request ===");
-		if (request != null) {
-			String sanitizedInputPath = sanitizePathForLogging(request.getInputFilePath());
-			String sanitizedOutputPath = sanitizePathForLogging(request.getOutputFilePath());
-			logger.info(
-					"Request details - inputFilePath: {}, outputFilePath: {}, partitionSize: {}, maxRetryAttempts: {}, retryBackoffPeriod: {}, maxSkipCount: {}",
-					sanitizedInputPath, sanitizedOutputPath, request.getPartitionSize(), request.getMaxRetryAttempts(),
-					request.getRetryBackoffPeriod(), request.getMaxSkipCount()
-			);
-		}
-	}
-
-	/**
-	 * Sanitizes file paths for safe logging.
-	 */
-	private String sanitizePathForLogging(String path) {
-		return path != null ? path.replaceAll("[\n\r]", "_") : null;
-	}
-
-	/**
-	 * Executes the batch job with given parameters.
-	 */
-	private JobExecution executeJob(BatchJobRequest request, long startTime) throws JobExecutionAlreadyRunningException,
-			JobRestartException, JobInstanceAlreadyCompleteException, JobParametersInvalidException {
-		JobParameters jobParameters = buildJobParameters(request, startTime);
-		return jobLauncher.run(partitionedJob, jobParameters);
-	}
-
-	/**
-	 * Builds job parameters from request and start time.
-	 */
-	private JobParameters buildJobParameters(BatchJobRequest request, long startTime) {
-		JobParametersBuilder parametersBuilder = new JobParametersBuilder().addLong(JOB_TIMESTAMP, startTime)
-				.addString(JOB_TYPE, "vdyp-projection");
-
-		if (request != null) {
-			addRequestParametersToBuilder(parametersBuilder, request);
-		}
-
-		return parametersBuilder.toJobParameters();
-	}
-
-	/**
-	 * Adds request parameters to the job parameters builder.
-	 */
-	private void addRequestParametersToBuilder(JobParametersBuilder builder, BatchJobRequest request) {
-		if (request.getInputFilePath() != null) {
-			builder.addString("inputFilePath", request.getInputFilePath());
-		}
-		if (request.getOutputFilePath() != null) {
-			builder.addString("outputFilePath", request.getOutputFilePath());
-		}
-		if (request.getPartitionSize() != null) {
-			builder.addLong("partitionSize", request.getPartitionSize());
-		}
-		if (request.getMaxRetryAttempts() != null) {
-			builder.addLong("maxRetryAttempts", request.getMaxRetryAttempts().longValue());
-		}
-		if (request.getRetryBackoffPeriod() != null) {
-			builder.addLong("retryBackoffPeriod", request.getRetryBackoffPeriod());
-		}
-		if (request.getMaxSkipCount() != null) {
-			builder.addLong("maxSkipCount", request.getMaxSkipCount().longValue());
-		}
-	}
-
-	/**
-	 * Builds successful job execution response.
-	 */
-	private void buildSuccessResponse(Map<String, Object> response, JobExecution jobExecution) {
-		response.put(JOB_EXECUTION_ID, jobExecution.getId());
-		response.put(JOB_NAME, jobExecution.getJobInstance().getJobName());
-		response.put(JOB_STATUS, jobExecution.getStatus().toString());
-		response.put(JOB_START_TIME, jobExecution.getStartTime());
-		response.put(JOB_MESSAGE, "VDYP Batch job started successfully");
-	}
-
-	/**
-	 * Builds response when job is not available.
-	 */
-	private void buildJobNotAvailableResponse(Map<String, Object> response, long startTime) {
-		response.put(JOB_MESSAGE, "VDYP Batch job not available - Job auto-creation is disabled");
-		response.put(JOB_TIMESTAMP, startTime);
-		response.put(JOB_STATUS, "JOB_NOT_AVAILABLE");
-		response.put(NOTE, "Set 'batch.job.auto-create=true' to enable job creation");
-	}
-
-	/**
-	 * Builds error response for exceptions.
-	 */
-	private ResponseEntity<Map<String, Object>> buildErrorResponse(Exception e) {
-		Map<String, Object> errorResponse = new HashMap<>();
-		errorResponse.put(JOB_ERROR, "Failed to start batch job");
-		errorResponse.put(JOB_MESSAGE, e.getMessage());
-		return ResponseEntity.internalServerError().body(errorResponse);
-	}
-
-	private static class BatchStatistics {
-		int totalJobs = 0;
-		int completedJobs = 0;
-		int failedJobs = 0;
-		int runningJobs = 0;
-		long totalRecordsProcessed = 0L;
-		long totalRetryAttempts = 0L;
-		long totalSkippedRecords = 0L;
-	}
-
-	/**
-	 * Service health check endpoint for monitoring and load balancer integration.
-	 *
-	 * @return ResponseEntity containing service health status and feature list
-	 */
-	@GetMapping("/health")
-	public ResponseEntity<Map<String, Object>> health() {
-		Map<String, Object> response = new HashMap<>();
-		response.put(JOB_STATUS, "UP");
-		response.put("service", "VDYP Batch Processing Service");
-		response.put(
-				"availableEndpoints",
-				Arrays.asList(
-						"/api/batch/start", "/api/batch/status/{id}", "/api/batch/metrics/{id}", "/api/batch/jobs",
-						"/api/batch/statistics", "/api/batch/health"
-				)
-		);
-		response.put(JOB_TIMESTAMP, System.currentTimeMillis());
-		return ResponseEntity.ok(response);
 	}
 }
