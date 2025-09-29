@@ -87,7 +87,8 @@ class Hcsv_Vdyp7_Comparison_Test {
 				Parameters.ExecutionOption.DO_INCLUDE_PROJECTION_FILES, //
 				Parameters.ExecutionOption.FORWARD_GROW_ENABLED, //
 				Parameters.ExecutionOption.DO_INCLUDE_SPECIES_PROJECTION, //
-				Parameters.ExecutionOption.DO_INCLUDE_POLYGON_RECORD_ID_IN_YIELD_TABLE
+				Parameters.ExecutionOption.DO_INCLUDE_POLYGON_RECORD_ID_IN_YIELD_TABLE, //
+				Parameters.ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE
 		);
 		parameters.ageStart(0).ageEnd(250).ageIncrement(25);
 
