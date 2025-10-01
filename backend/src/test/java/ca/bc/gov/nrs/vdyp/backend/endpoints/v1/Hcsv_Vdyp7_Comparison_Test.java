@@ -169,7 +169,7 @@ class Hcsv_Vdyp7_Comparison_Test {
 	static final Pattern IGNORE_COLUMNS = Pattern
 			.compile("PRJ_TPH|PRJ_LOREY_HT|PRJ_DIAMETER|PRJ_BA|PRJ_(SP\\d_)?VOL_(?:D|DW|DWB|CU|WS)");
 	static final Pattern IGNORE_COLUMNS_EXCEPT_LH = Pattern
-			.compile("PRJ_TPH|PRJ_DIAMETER|PRJ_BA|PRJ_(SP\\d_)?VOL_(?:D|DW|DWB|CU|WS)");
+			.compile("PRJ_TPH|PRJ_DIAMETER|PRJ_BA|PRJ_SCND_HT|PRJ_(SP\\d_)?VOL_(?:D|DW|DWB|CU|WS)");
 
 	@Test
 	void test604() throws IOException, ResourceParseException {
