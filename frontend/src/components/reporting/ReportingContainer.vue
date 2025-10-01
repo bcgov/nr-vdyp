@@ -65,6 +65,17 @@ const downloadData = computed(() => {
   else return data.value
 })
 
+const printData = computed(() => {
+  if (props.tabname === CONSTANTS.REPORTING_TAB.MODEL_REPORT) {
+    if (appStore.modelSelection === CONSTANTS.MODEL_SELECTION.INPUT_MODEL_PARAMETERS) {
+        return [...projectionStore.txtYieldLines]
+    } else {
+        return [...projectionStore.csvYieldLines]
+    }
+  }
+  else return data.value
+})
+
 const rawResults = computed(() => {
   if (props.tabname === CONSTANTS.REPORTING_TAB.MODEL_REPORT) {
     return projectionStore.rawResultZipFile
@@ -115,7 +126,7 @@ const handleDownloadRawResult = () => {
 }
 
 const handlePrint = () => {
-  printReport(downloadData.value)
+  printReport(printData.value)
 }
 </script>
 <style scoped>
