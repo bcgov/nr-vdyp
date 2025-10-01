@@ -177,7 +177,7 @@ class Grow5SpeciesBaDqTphTest {
 				// Results from VDYP7:
 				arrayCloseTo(45.7382965f, 0.40808472f, 5.28018427f, 29.444725f, 6.11862803f, 4.48667192f)
 		);
-		// TODO fix these tests
+		// TODO fix these tests See VDYP-808
 		// assertThat(
 		// slice(lps.getBank().treesPerHectare, UtilizationClass.ALL),
 		// // Results from VDYP7:
