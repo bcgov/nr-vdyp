@@ -127,7 +127,7 @@ class ForwardProcessingEngineTest {
 		}
 
 		@Test
-		void testPartialFailTwoSpeciesNoGrowth() throws ProcessingException {
+		void testPartialFailTwoSpeciesNoGrowthDQ() throws ProcessingException {
 
 			var layer = VdypLayer.build(lb -> {
 				lb.polygonIdentifier("Test", 2020);
@@ -143,6 +143,53 @@ class ForwardProcessingEngineTest {
 
 			var dh = Change.delta(35.3f, 0.17338027f);
 			var dq = Change.delta(30.998875f, 0.0f); // No Growth
+			var ba = Change.delta(45.386444f, 0.1f); // No Growth
+			var tph = Change.range(601.3737f, 594.1138f);
+
+			fpe.growLoreyHeights(
+					EasyMock.same(lps), EasyMock.eq(dh.start(), 0.01f), EasyMock.eq(dh.end(), 0.01f),
+					EasyMock.eq(400f, 0.01f), EasyMock.eq(395.17108f, 0.01f), EasyMock.eq(31.0f, 0.01f)
+			);
+			EasyMock.expectLastCall().once();
+
+			EasyMock.expect(
+					fpe.growUsingPartialSpeciesDynamics(
+							EasyMock.same(ba), EasyMock.same(dq), EasyMock.eq(tph.start(), 0.01f), EasyMock.anyObject()
+					)
+			).andReturn(false).once(); // No Growth will result in failure
+
+			// Leads to no dynamics method being used
+			fpe.growUsingNoSpeciesDynamics(
+					EasyMock.eq(0.002f, 0.001f), // No Growth
+					EasyMock.eq(tph.factor(), 0.01f)
+			);
+			EasyMock.expectLastCall().once();
+
+			em.replay();
+
+			// Dynamics mode 2, Partial
+			fpe.growSpecies(lps, 2025, ExecutionStep.ALL, bank, dh, dq, ba, tph, 30.0f, 31.0f, 400f, 2);
+
+			em.verify();
+		}
+
+		@Test
+		void testPartialFailTwoSpeciesNoGrowthBA() throws ProcessingException {
+
+			var layer = VdypLayer.build(lb -> {
+				lb.polygonIdentifier("Test", 2020);
+				lb.layerType(LayerType.PRIMARY);
+				lb.addSpecies(sb -> {
+					sb.genus("H", controlMap);
+				});
+				lb.addSpecies(sb -> {
+					sb.genus("S", controlMap);
+				});
+			});
+			Bank bank = new Bank(layer, null, x -> true);
+
+			var dh = Change.delta(35.3f, 0.17338027f);
+			var dq = Change.delta(30.998875f, 0.1f); // No Growth
 			var ba = Change.delta(45.386444f, 0.0f); // No Growth
 			var tph = Change.range(601.3737f, 594.1138f);
 

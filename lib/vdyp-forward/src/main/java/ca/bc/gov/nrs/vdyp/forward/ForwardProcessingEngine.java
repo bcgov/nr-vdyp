@@ -686,7 +686,7 @@ public class ForwardProcessingEngine {
 			// species in the polygon (UC All)
 
 			if (debugSetting1Value == 1 || bank.getNSpecies() == 1
-					|| (basalArea.delta() == 0.0 && quadMeanDiameter.delta() == 0.0)) {
+					|| (basalArea.delta() == 0.0 || quadMeanDiameter.delta() == 0.0)) {
 
 				// (5b) This is the NO SPECIES DYNAMICS section
 				growUsingNoSpeciesDynamics(basalArea.rate(), tph.factor());
