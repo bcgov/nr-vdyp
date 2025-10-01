@@ -21,7 +21,6 @@ import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParseException;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
 import ca.bc.gov.nrs.vdyp.model.VdypLayer;
-import ca.bc.gov.nrs.vdyp.test.TestUtils;
 
 class ForwardProcessingEngineTest {
 
@@ -36,7 +35,6 @@ class ForwardProcessingEngineTest {
 		void setup() throws IOException, ResourceParseException, ValueParseException {
 			var parser = new ForwardControlParser();
 			controlMap = ForwardTestUtils.parse(parser, "VDYP.CTR");
-			Map<String, Object> controlMap = TestUtils.loadControlMap();
 			controlMap.put(ControlKey.VTROL.name(), new ForwardControlVariables(new Integer[] {}));
 			em = EasyMock.createControl();
 			fpe = EasyMock.partialMockBuilder(ForwardProcessingEngine.class).addMockedMethod("growLoreyHeights")

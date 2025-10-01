@@ -416,8 +416,6 @@ public class ForwardProcessingEngine {
 			baDelta = Math.min(baDelta, baEndMax - baStart);
 		}
 
-		float baChangeRate = baDelta / baStart;
-
 		// (4) Begin storing computed results - dq, ba and tph for the layer
 
 		// Cache some values for calculations below.
@@ -429,7 +427,6 @@ public class ForwardProcessingEngine {
 		float dqEnd = dqStart + dqDelta; // DQ(0,0) = DQ(0,0) + GDQ
 		float baEnd = baStart + baDelta; // DQ(0,0) = DQ(0,0) + GDQ
 		float tphEnd = BaseAreaTreeDensityDiameter.treesPerHectare(baEnd, dqEnd); // TPHNEW = FT_BD(BA(0,0), DQ(0,0))
-		float tphMultiplier = tphEnd / tphStart; // TPHMULT = TPHNEW / TPH(0,0)
 
 		bank.quadMeanDiameters[0][UC_ALL_INDEX] = dqEnd;
 		bank.basalAreas[0][UC_ALL_INDEX] = baEnd;
