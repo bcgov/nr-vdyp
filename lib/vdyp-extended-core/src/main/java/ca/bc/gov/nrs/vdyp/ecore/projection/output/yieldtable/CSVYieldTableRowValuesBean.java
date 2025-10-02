@@ -190,6 +190,7 @@ public class CSVYieldTableRowValuesBean implements YieldTableRowBean {
 //  { "(PRJ_SCND_HT)"(,                    csvFldType_SINGLE,  9, 5, "", TRUE },  /* csvYldTbl_ProjectionScndHt             */)
 	@CsvBindByName(column = "PRJ_SCND_HT")
 	@CsvBindByPosition(position = 23)
+	@OptionalField(category = YieldTable.Category.SECONDARY_HEIGHT)
 	private String secondaryHeight;
 
 //  { "(PRJ_LOREY_HT)"(,                   csvFldType_SINGLE,  9, 5, "", TRUE },  /* csvYldTbl_ProjectionLoreyHt            */)

@@ -99,6 +99,10 @@ export const buildExecutionOptions = (
       flag: fileUploadStore.isReferenceYearEnabled,
       option: ExecutionOptionsEnum.DoForceReferenceYearInclusionInYieldTables,
     },
+    {
+      flag: fileUploadStore.incSecondaryHeight,
+      option: ExecutionOptionsEnum.DoIncludeSecondarySpeciesDominantHeightInYieldTable,
+    },
   ]
 
   addExecutionOptionsFromMappings(

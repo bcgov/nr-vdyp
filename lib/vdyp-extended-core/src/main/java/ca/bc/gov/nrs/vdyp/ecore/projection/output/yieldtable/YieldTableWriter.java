@@ -315,6 +315,11 @@ abstract class YieldTableWriter<T extends YieldTableRowBean> implements Closeabl
 		if (params.containsOption(Parameters.ExecutionOption.DO_INCLUDE_POLYGON_RECORD_ID_IN_YIELD_TABLE)) {
 			currentCategories.add(YieldTable.Category.POLYGON_ID);
 		}
+		if (params.containsOption(
+				Parameters.ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE
+		)) {
+			currentCategories.add(YieldTable.Category.SECONDARY_HEIGHT);
+		}
 	}
 
 	public boolean isCurrentlyWritingCategory(YieldTable.Category category) {

@@ -382,6 +382,9 @@ class YieldTableTest {
 		var resultYieldTable = new ResultYieldTable(new String(yieldTable.getAsStream().readAllBytes()));
 		assertTrue(resultYieldTable.containsKey("13919428"));
 		assertTrue(resultYieldTable.get("13919428").containsKey("1"));
+
+		var yieldTableRow = resultYieldTable.get("13919428").get("1").get("2025");
+		assertTrue(yieldTableRow.containsKey("PRJ_SCND_HT"));
 	}
 
 	@Test
@@ -459,8 +462,8 @@ class YieldTableTest {
 				Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES, //
 				Parameters.ExecutionOption.DO_INCLUDE_POLYGON_RECORD_ID_IN_YIELD_TABLE, //
 				Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER, //
-				Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_POLYGON
-		);
+				Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_POLYGON, //
+				Parameters.ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE);
 		parameters.setYearStart(2025);
 		parameters.setYearEnd(2030);
 
