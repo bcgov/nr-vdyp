@@ -1497,9 +1497,8 @@ public class ForwardProcessingEngine {
 		var logBaProportionEnd = logBaProportionStart + logBaDeltaProportion;
 		var baProportionEnd = FloatMath.exp(logBaProportionEnd) / (1.0f + FloatMath.exp(logBaProportionEnd));
 
-		var spDeltaBa = baProportionEnd * basalArea.end() - spBaStart;
+		return baProportionEnd * basalArea.end() - spBaStart;
 
-		return spDeltaBa;
 	}
 
 	/**
