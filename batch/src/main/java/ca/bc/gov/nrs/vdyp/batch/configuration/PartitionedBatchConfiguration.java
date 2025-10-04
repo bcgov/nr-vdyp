@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.vdyp.batch.configuration;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Collectors;
 
@@ -280,6 +281,17 @@ public class PartitionedBatchConfiguration {
 						.putString("consolidatedOutputPath", consolidatedZip.toString());
 
 				logger.info("Result aggregation completed successfully. Consolidated output: {}", consolidatedZip);
+
+				// Validate zip file before cleanup
+				if (resultAggregationService.validateConsolidatedZip(consolidatedZip)) {
+					// Clean up interim partition directories after successful zip creation and validation
+					Path jobBasePath = Paths.get(jobBaseDir);
+					resultAggregationService.cleanupPartitionDirectories(jobBasePath);
+
+					logger.info("Interim partition directories cleanup completed for job: {}", jobExecutionId);
+				} else {
+					logger.warn("Consolidated ZIP file validation failed. Skipping cleanup to preserve interim files for debugging.");
+				}
 
 				return RepeatStatus.FINISHED;
 

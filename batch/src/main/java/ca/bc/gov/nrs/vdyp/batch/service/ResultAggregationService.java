@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
 import org.slf4j.Logger;
@@ -502,5 +504,122 @@ public class ResultAggregationService {
 
 		logger.info("Created empty result ZIP: {}", zipPath);
 		return zipPath;
+	}
+
+	/**
+	 * Cleans up interim partition directories after successful zip creation.
+	 * Deletes input-partition and output-partition directories and their contents.
+	 */
+	public void cleanupPartitionDirectories(Path jobBasePath) throws IOException {
+		logger.info("Starting cleanup of partition directories in: {}", jobBasePath);
+
+		if (!Files.exists(jobBasePath) || !Files.isDirectory(jobBasePath)) {
+			logger.warn("Job base directory does not exist or is not a directory: {}", jobBasePath);
+			return;
+		}
+
+		int deletedDirs = 0;
+
+		// Find and delete all input-partition and output-partition directories
+		try (Stream<Path> files = Files.list(jobBasePath)) {
+			List<Path> partitionDirs = files.filter(Files::isDirectory).filter(dir -> {
+				String dirName = dir.getFileName().toString();
+				return dirName.startsWith(BatchConstants.Partition.INPUT_FOLDER_NAME_PREFIX)
+						|| dirName.startsWith(BatchConstants.Partition.OUTPUT_FOLDER_NAME_PREFIX);
+			}).toList();
+
+			for (Path partitionDir : partitionDirs) {
+				try {
+					deleteDirectoryRecursively(partitionDir);
+					deletedDirs++;
+					logger.debug("Deleted partition directory: {}", partitionDir.getFileName());
+				} catch (IOException e) {
+					logger.error("Failed to delete partition directory: {} - {}", partitionDir, e.getMessage(), e);
+					// Continue with other directories even if one fails
+				}
+			}
+		}
+
+		logger.info("Cleanup completed. Deleted {} partition directories", deletedDirs);
+	}
+
+	/**
+	 * Recursively deletes a directory and all its contents.
+	 */
+	private void deleteDirectoryRecursively(Path directory) throws IOException {
+		if (!Files.exists(directory)) {
+			return;
+		}
+
+		try (Stream<Path> walk = Files.walk(directory)) {
+			walk.sorted(Comparator.reverseOrder()).forEach(path -> {
+				try {
+					Files.delete(path);
+					logger.trace("Deleted: {}", path);
+				} catch (IOException e) {
+					logger.warn("Failed to delete: {} - {}", path, e.getMessage());
+				}
+			});
+		}
+	}
+
+	/**
+	 * Validates the consolidated ZIP file to ensure it was created successfully
+	 * and contains valid content before cleanup of interim files.
+	 */
+	public boolean validateConsolidatedZip(Path zipPath) {
+		logger.info("Validating consolidated ZIP file: {}", zipPath);
+
+		// Check if file exists
+		if (!Files.exists(zipPath)) {
+			logger.error("ZIP file does not exist: {}", zipPath);
+			return false;
+		}
+
+		// Check if file is not empty
+		long fileSize;
+		try {
+			fileSize = Files.size(zipPath);
+			if (fileSize == 0) {
+				logger.error("ZIP file is empty: {}", zipPath);
+				return false;
+			}
+			logger.debug("ZIP file size: {} bytes", fileSize);
+		} catch (IOException e) {
+			logger.error("Failed to get ZIP file size: {} - {}", zipPath, e.getMessage(), e);
+			return false;
+		}
+
+		// Validate ZIP structure and required content
+		try (ZipFile zipFile = new ZipFile(zipPath.toFile())) {
+			// Check if YieldTable.csv exists
+			ZipEntry yieldTableEntry = zipFile.getEntry(BatchConstants.File.YIELD_TABLE_FILENAME);
+			if (yieldTableEntry == null) {
+				logger.error("ZIP file does not contain required file: {}", BatchConstants.File.YIELD_TABLE_FILENAME);
+				return false;
+			}
+
+			// Validate YieldTable.csv size
+			long yieldTableSize = yieldTableEntry.getSize();
+			logger.debug("YieldTable.csv size: {} bytes", yieldTableSize);
+
+			final long MIN_YIELD_TABLE_SIZE = 1024; // 1 KB
+			if (yieldTableSize < MIN_YIELD_TABLE_SIZE) {
+				logger.error("YieldTable.csv is too small (size: {} bytes), minimum required: {} bytes",
+						yieldTableSize, MIN_YIELD_TABLE_SIZE);
+				return false;
+			}
+
+			logger.info("ZIP file validation successful: {} (size: {} bytes, entries: {}, YieldTable.csv: {} bytes)",
+					zipPath, fileSize, zipFile.size(), yieldTableSize);
+			return true;
+
+		} catch (ZipException e) {
+			logger.error("ZIP file is corrupted or invalid: {} - {}", zipPath, e.getMessage(), e);
+			return false;
+		} catch (IOException e) {
+			logger.error("Failed to validate ZIP file: {} - {}", zipPath, e.getMessage(), e);
+			return false;
+		}
 	}
 }
