@@ -9,47 +9,42 @@ import org.springframework.batch.core.partition.support.Partitioner;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.lang.NonNull;
 
+import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
+
 public class DynamicPartitioner implements Partitioner {
 
 	private static final Logger logger = LoggerFactory.getLogger(DynamicPartitioner.class);
 
-	private static final String PARTITION_NAME = "partitionName";
-	private static final String PARTITION_BASE_DIR = "partitionBaseDir";
-	private static final String ASSIGNED_FEATURE_IDS = "assignedFeatureIds";
+	private String jobBaseDir;
 
-	private String partitionBaseDir;
-
-	public void setPartitionBaseDir(String partitionBaseDir) {
-		this.partitionBaseDir = partitionBaseDir;
+	public void setJobBaseDir(String jobBaseDir) {
+		this.jobBaseDir = jobBaseDir;
 	}
 
-	/**
-	 * @param gridSize Number of partitions to create
-	 * @return Map of partition execution contexts for existing partitions
-	 */
 	@Override
 	@NonNull
-	public Map<String, ExecutionContext> partition(int gridSize) {
+	public Map<String, ExecutionContext> partition(int partitionSize) {
 		Map<String, ExecutionContext> partitions = new HashMap<>();
 
 		logger.info(
 				"[VDYP Uploaded File Partitioner] Creating execution contexts for {} uploaded file partitions",
-				gridSize);
+				partitionSize);
 
 		// Create execution contexts for existing partition directories
-		for (int i = 0; i < gridSize; i++) {
+		for (int i = 0; i < partitionSize; i++) {
 			ExecutionContext context = new ExecutionContext();
 
-			// Set partition parameters
-			context.putString(PARTITION_NAME, "partition" + i);
-			if (partitionBaseDir != null) {
-				context.putString(PARTITION_BASE_DIR, partitionBaseDir);
+			String partitionName = BatchConstants.Partition.PREFIX + i;
+
+			context.putString(BatchConstants.Partition.NAME, partitionName);
+			if (jobBaseDir != null) {
+				context.putString(BatchConstants.Job.BASE_DIR, jobBaseDir);
 			}
 
 			// Set empty FEATURE_IDs since they're already distributed in partition files
-			context.putString(ASSIGNED_FEATURE_IDS, "");
+			context.putString(BatchConstants.Partition.ASSIGNED_FEATURE_IDS, "");
 
-			partitions.put("partition" + i, context);
+			partitions.put(partitionName, context);
 
 			logger.info(
 					"VDYP partition{} execution context created for uploaded partition directory", i);

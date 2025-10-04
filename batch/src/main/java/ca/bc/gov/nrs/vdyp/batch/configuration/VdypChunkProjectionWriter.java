@@ -18,6 +18,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.service.VdypProjectionService;
+import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 
 /**
@@ -35,9 +36,10 @@ public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepE
 	private final ObjectMapper objectMapper = new ObjectMapper();
 
 	// Step execution context
-	private String partitionName = "unknown";
+	private String partitionName = BatchConstants.Common.UNKNOWN;
 	private Long jobExecutionId;
 	private Parameters projectionParameters;
+	private String jobBaseDir;
 
 	public VdypChunkProjectionWriter(VdypProjectionService vdypProjectionService,
 			BatchMetricsCollector metricsCollector) {
@@ -47,30 +49,18 @@ public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepE
 
 	@Override
 	public void beforeStep(StepExecution stepExecution) {
-		logger.info("[{}] VdypChunkProjectionWriter.beforeStep() called", partitionName);
 		this.jobExecutionId = stepExecution.getJobExecutionId();
-		this.partitionName = stepExecution.getExecutionContext().getString("partitionName", "unknown");
+		this.partitionName = stepExecution.getExecutionContext().getString(BatchConstants.Partition.NAME,
+				BatchConstants.Common.UNKNOWN);
+		this.jobBaseDir = stepExecution.getJobParameters().getString(BatchConstants.Job.BASE_DIR);
 
-		// Debug: Log all available job parameters
-		logger.debug("[{}] Available job parameters: {}", partitionName,
-				stepExecution.getJobParameters().getParameters().keySet());
+		logger.info("[{}] VdypChunkProjectionWriter.beforeStep() called", partitionName);
 
-		// Get projection parameters from job parameters (serialized as JSON)
-		String parametersJson = stepExecution.getJobParameters().getString("projectionParametersJson");
-
-		logger.debug("[{}] Retrieved projectionParametersJson: {} (length: {})",
-				partitionName, parametersJson != null ? "not null" : "null",
-				parametersJson != null ? parametersJson.length() : 0);
-
-		if (parametersJson == null || parametersJson.trim().isEmpty()) {
-			logger.error("[{}] VDYP projection parameters not found in job parameters. Available parameters: {}",
-					partitionName, stepExecution.getJobParameters().getParameters());
-			throw new IllegalStateException(
-					"VDYP projection parameters not found in job parameters. Parameters must be provided in BatchJobRequest.");
-		}
+		String projectionParametersJson = stepExecution.getJobParameters()
+				.getString(BatchConstants.Projection.PARAMETERS_JSON);
 
 		try {
-			this.projectionParameters = objectMapper.readValue(parametersJson, Parameters.class);
+			this.projectionParameters = objectMapper.readValue(projectionParametersJson, Parameters.class);
 			logger.info("[{}] VdypChunkProjectionWriter initialized with projection parameters. Parameters null: {}",
 					partitionName, this.projectionParameters == null);
 
@@ -82,42 +72,36 @@ public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepE
 								: "null");
 			} else {
 				logger.error("[{}] Projection parameters deserialized to null from JSON: {}",
-						partitionName, parametersJson);
+						partitionName, projectionParametersJson);
 				throw new IllegalStateException("Deserialized projection parameters are null");
 			}
 		} catch (JsonProcessingException jsonException) {
 			throw handleParameterDeserializationFailure(
-					parametersJson, jsonException, "JSON parsing failed during parameter deserialization");
+					projectionParametersJson, jsonException, "JSON parsing failed during parameter deserialization");
 		} catch (Exception generalException) {
 			throw handleParameterDeserializationFailure(
-					parametersJson, generalException, "Unexpected error during parameter deserialization");
+					projectionParametersJson, generalException, "Unexpected error during parameter deserialization");
 		}
 	}
 
 	@Override
 	public ExitStatus afterStep(StepExecution stepExecution) {
-		logger.info("[{}] VdypChunkProjectionWriter.afterStep() called", partitionName);
+		logger.info("[{}] VdypChunkProjectionWriter.afterStep() called", this.partitionName);
 		return stepExecution.getExitStatus();
 	}
 
 	@Override
 	public void write(@NonNull Chunk<? extends BatchRecord> chunk) throws Exception {
 		if (chunk.isEmpty()) {
-			logger.debug("[{}] Empty chunk received, skipping", partitionName);
+			logger.debug("[{}] Empty chunk received, skipping", this.partitionName);
 			return;
 		}
 
 		List<BatchRecord> batchRecords = chunk.getItems().stream()
 				.collect(Collectors.toList());
 
-		// Get actual partition name from the first BatchRecord if available
-		String actualPartitionName = partitionName;
-		if (!batchRecords.isEmpty() && batchRecords.get(0).getPartitionName() != null) {
-			actualPartitionName = batchRecords.get(0).getPartitionName();
-		}
-
 		logger.info("[{}] Processing chunk of {} records using VdypProjectionService",
-				actualPartitionName, batchRecords.size());
+				this.partitionName, batchRecords.size());
 
 		try {
 			// Validate projection parameters before processing
@@ -128,20 +112,20 @@ public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepE
 
 			// Perform chunk-based projection
 			String chunkResult = vdypProjectionService.performProjectionForChunk(
-					batchRecords, actualPartitionName, projectionParameters);
+					batchRecords, this.partitionName, this.projectionParameters, this.jobExecutionId, this.jobBaseDir);
 
 			// Record metrics for successful chunk processing
-			recordChunkMetrics(batchRecords, actualPartitionName, true, null);
+			recordChunkMetrics(batchRecords, this.partitionName, true, null);
 
 			logger.info("[{}] Successfully processed chunk of {} records. Result: {}",
-					actualPartitionName, batchRecords.size(), chunkResult);
+					this.partitionName, batchRecords.size(), chunkResult);
 
 		} catch (RuntimeException runtimeException) {
 			throw handleChunkProcessingFailure(
-					batchRecords, actualPartitionName, runtimeException, "Runtime error during chunk processing");
+					batchRecords, this.partitionName, runtimeException, "Runtime error during chunk processing");
 		} catch (Exception generalException) {
 			throw handleChunkProcessingFailure(
-					batchRecords, actualPartitionName, generalException, "Unexpected error during chunk processing");
+					batchRecords, this.partitionName, generalException, "Unexpected error during chunk processing");
 		}
 	}
 
@@ -186,7 +170,7 @@ public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepE
 				partitionName, errorDescription,
 				parametersJson != null ? parametersJson.length() : 0,
 				cause.getClass().getSimpleName(),
-				cause.getMessage() != null ? cause.getMessage() : "No error message available");
+				cause.getMessage() != null ? cause.getMessage() : BatchConstants.ErrorMessage.NO_ERROR_MESSAGE);
 
 		// Log the failure with full context
 		logger.error(contextualMessage, cause);
@@ -206,7 +190,7 @@ public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepE
 				"[%s] %s. Chunk size: %d, Exception type: %s, Root cause: %s",
 				actualPartitionName, errorDescription, batchRecords.size(),
 				cause.getClass().getSimpleName(),
-				cause.getMessage() != null ? cause.getMessage() : "No error message available");
+				cause.getMessage() != null ? cause.getMessage() : BatchConstants.ErrorMessage.NO_ERROR_MESSAGE);
 
 		// Log the failure with full context
 		logger.error(contextualMessage, cause);

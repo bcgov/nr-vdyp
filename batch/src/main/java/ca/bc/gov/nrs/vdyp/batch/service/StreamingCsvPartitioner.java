@@ -1,59 +1,68 @@
 package ca.bc.gov.nrs.vdyp.batch.service;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-
-import org.springframework.web.multipart.MultipartFile;
-import ca.bc.gov.nrs.vdyp.batch.util.Utils;
-
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
+
+import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
 /**
- * Streaming CSV partitioner that partitions CSV files by FEATURE_ID without
- * parsing the entire CSV into objects.
+ * Streaming CSV partitioner that partitions CSV files by FEATURE_ID.
+ * Creates separate CSV files for each partition containing only the data for
+ * that partition's assigned FEATURE_IDs.
  */
 @Component
 public class StreamingCsvPartitioner {
 
 	private static final Logger logger = LoggerFactory.getLogger(StreamingCsvPartitioner.class);
 
-	/**
-	 * Partition CSV files by FEATURE_ID using line-based processing.
-	 * Creates separate CSV files for each partition containing only the data
-	 * for that partition's assigned FEATURE_IDs.
-	 */
-	public PartitionResult partitionCsvFiles(MultipartFile polygonFile, MultipartFile layerFile,
-			int gridSize, Path baseOutputDir) throws IOException {
+	public int partitionCsvFiles(MultipartFile polygonFile, MultipartFile layerFile,
+			Integer partitionSize, Path jobBaseDir) throws IOException {
 
-		logger.info("Starting streaming CSV partitioning with grid size: {}", gridSize);
-		if (logger.isInfoEnabled()) {
-			logger.info("Processing files: polygon={} ({} bytes), layer={} ({} bytes)",
-					Utils.sanitizeForLogging(polygonFile.getOriginalFilename()), polygonFile.getSize(),
-					Utils.sanitizeForLogging(layerFile.getOriginalFilename()), layerFile.getSize());
+		// Validate parameters
+		if (polygonFile == null) {
+			throw new IllegalArgumentException("Polygon file cannot be null");
 		}
-
-		if (!Files.exists(baseOutputDir)) {
-			Files.createDirectories(baseOutputDir);
+		if (layerFile == null) {
+			throw new IllegalArgumentException("Layer file cannot be null");
+		}
+		if (partitionSize == null) {
+			throw new IllegalArgumentException("Partition size cannot be null");
+		}
+		if (partitionSize <= 0) {
+			throw new IllegalArgumentException("Partition size must be positive, got: " + partitionSize);
+		}
+		if (jobBaseDir == null) {
+			throw new IllegalArgumentException("Job base directory cannot be null");
 		}
 
 		// Step 1: Scan and partition polygon CSV
 		Map<Long, Integer> featureIdToPartition = new HashMap<>();
 		String polygonHeader = null;
+		Map<Integer, PrintWriter> polygonWriters = null;
 
-		try (BufferedReader polygonReader = new BufferedReader(new InputStreamReader(polygonFile.getInputStream()))) {
+		try (BufferedReader polygonReader = new BufferedReader(
+				new InputStreamReader(polygonFile.getInputStream(), StandardCharsets.UTF_8))) {
 			polygonHeader = polygonReader.readLine(); // Read header
 			if (polygonHeader == null) {
 				throw new IOException("Polygon CSV file is empty or has no header");
 			}
 
-			Map<Integer, PrintWriter> polygonWriters = createPartitionWriters(baseOutputDir, "polygons.csv",
-					polygonHeader, gridSize);
+			polygonWriters = createPartitionWriters(jobBaseDir,
+					BatchConstants.Partition.INPUT_POLYGON_FILE_NAME,
+					polygonHeader, partitionSize);
 
 			String line;
 			int partitionIndex = 0;
@@ -61,7 +70,7 @@ public class StreamingCsvPartitioner {
 				Long featureId = extractFeatureId(line);
 				if (featureId != null) {
 					// Determine partition for this FEATURE_ID
-					int partition = partitionIndex % gridSize;
+					int partition = partitionIndex % partitionSize;
 					featureIdToPartition.put(featureId, partition);
 
 					// Write to the appropriate partition file
@@ -70,7 +79,7 @@ public class StreamingCsvPartitioner {
 					partitionIndex++;
 				}
 			}
-
+		} finally {
 			closeWriters(polygonWriters);
 		}
 
@@ -80,13 +89,15 @@ public class StreamingCsvPartitioner {
 		String layerHeader = null;
 		Map<Integer, PrintWriter> layerWriters = null;
 
-		try (BufferedReader layerReader = new BufferedReader(new InputStreamReader(layerFile.getInputStream()))) {
+		try (BufferedReader layerReader = new BufferedReader(
+				new InputStreamReader(layerFile.getInputStream(), StandardCharsets.UTF_8))) {
 			layerHeader = layerReader.readLine(); // Read header
 			if (layerHeader == null) {
 				throw new IOException("Layer CSV file is empty or has no header");
 			}
 
-			layerWriters = createPartitionWriters(baseOutputDir, "layers.csv", layerHeader, gridSize);
+			layerWriters = createPartitionWriters(jobBaseDir, BatchConstants.Partition.INPUT_LAYER_FILE_NAME,
+					layerHeader, partitionSize);
 
 			String line;
 			while ((line = layerReader.readLine()) != null) {
@@ -96,19 +107,11 @@ public class StreamingCsvPartitioner {
 					layerWriters.get(partition).println(line);
 				}
 			}
-
+		} finally {
 			closeWriters(layerWriters);
 		}
 
-		// Step 3: Calculate partition statistics
-		Map<Integer, Long> partitionCounts = new ConcurrentHashMap<>();
-		for (Map.Entry<Long, Integer> entry : featureIdToPartition.entrySet()) {
-			partitionCounts.merge(entry.getValue(), 1L, Long::sum);
-		}
-
-		logger.info("Partitioning completed. Partition distribution: {}", partitionCounts);
-
-		return new PartitionResult(baseOutputDir, gridSize, partitionCounts, featureIdToPartition.size());
+		return featureIdToPartition.size();
 	}
 
 	/**
@@ -139,30 +142,50 @@ public class StreamingCsvPartitioner {
 	 * Create PrintWriters for each partition.
 	 */
 	private Map<Integer, PrintWriter> createPartitionWriters(Path baseDir, String filename,
-			String header, int gridSize) throws IOException {
+			String header, Integer partitionSize) throws IOException {
+
+		// Validate parameters (defensive programming)
+		if (baseDir == null) {
+			throw new IllegalArgumentException("Base directory cannot be null");
+		}
+		if (filename == null || filename.isBlank()) {
+			throw new IllegalArgumentException("Filename cannot be null or blank");
+		}
+		if (header == null) {
+			throw new IllegalArgumentException("Header cannot be null");
+		}
+		if (partitionSize == null || partitionSize <= 0) {
+			throw new IllegalArgumentException("Partition size must be positive, got: " + partitionSize);
+		}
 
 		Map<Integer, PrintWriter> writers = new HashMap<>();
 
-		for (int i = 0; i < gridSize; i++) {
-			Path partitionDir = baseDir.resolve("partition" + i);
-			Files.createDirectories(partitionDir);
+		try {
+			for (int i = 0; i < partitionSize; i++) {
+				Path partitionDir = baseDir.resolve(BatchConstants.Partition.INPUT_FOLDER_NAME_PREFIX + i);
+				Files.createDirectories(partitionDir);
 
-			Path csvFile = partitionDir.resolve(filename);
-			PrintWriter writer = new PrintWriter(new FileWriter(csvFile.toFile()));
-			writer.println(header); // Write header first
-			writers.put(i, writer);
+				Path csvFile = partitionDir.resolve(filename);
+				BufferedWriter bufferedWriter = Files.newBufferedWriter(csvFile, StandardCharsets.UTF_8);
+				PrintWriter writer = new PrintWriter(bufferedWriter, false);
+				writer.println(header); // Write header first
+				writers.put(i, writer);
+			}
+			return writers;
+		} catch (IOException e) {
+			closeWriters(writers);
+			throw e;
 		}
-
-		return writers;
 	}
 
 	/**
-	 * Close all writers safely.
+	 * Close all writers, flushing buffers before closing.
 	 */
 	private void closeWriters(Map<Integer, PrintWriter> writers) {
 		if (writers != null) {
 			for (PrintWriter writer : writers.values()) {
 				try {
+					writer.flush();
 					writer.close();
 				} catch (Exception e) {
 					logger.warn("Error closing writer", e);
@@ -170,43 +193,4 @@ public class StreamingCsvPartitioner {
 			}
 		}
 	}
-
-	/**
-	 * Result object containing partitioning information.
-	 */
-	public static class PartitionResult {
-		private final Path baseOutputDir;
-		private final int gridSize;
-		private final Map<Integer, Long> partitionCounts;
-		private final int totalFeatureIds;
-
-		public PartitionResult(Path baseOutputDir, int gridSize, Map<Integer, Long> partitionCounts,
-				int totalFeatureIds) {
-			this.baseOutputDir = baseOutputDir;
-			this.gridSize = gridSize;
-			this.partitionCounts = partitionCounts;
-			this.totalFeatureIds = totalFeatureIds;
-		}
-
-		public Path getBaseOutputDir() {
-			return baseOutputDir;
-		}
-
-		public int getGridSize() {
-			return gridSize;
-		}
-
-		public Map<Integer, Long> getPartitionCounts() {
-			return partitionCounts;
-		}
-
-		public int getTotalFeatureIds() {
-			return totalFeatureIds;
-		}
-
-		public Path getPartitionDir(int partitionIndex) {
-			return baseOutputDir.resolve("partition" + partitionIndex);
-		}
-	}
-
 }

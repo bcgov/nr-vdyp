@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.vdyp.batch.configuration;
 
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
+import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.StepExecution;
@@ -22,7 +23,7 @@ public class BatchSkipPolicy implements SkipPolicy {
 	private Long jobExecutionId;
 	private String partitionName;
 
-	private static final String UNKNOWN = "unknown";
+	// Constants moved to BatchConstants.Common
 
 	private final BatchMetricsCollector metricsCollector;
 
@@ -37,7 +38,8 @@ public class BatchSkipPolicy implements SkipPolicy {
 	@BeforeStep
 	public void beforeStep(StepExecution stepExecution) {
 		this.jobExecutionId = stepExecution.getJobExecutionId();
-		this.partitionName = stepExecution.getExecutionContext().getString("partitionName", UNKNOWN);
+		this.partitionName = stepExecution.getExecutionContext().getString(BatchConstants.Partition.NAME,
+				BatchConstants.Common.UNKNOWN);
 	}
 
 	@Override
@@ -63,8 +65,7 @@ public class BatchSkipPolicy implements SkipPolicy {
 	private void logSkipDecision(Throwable t, boolean shouldSkip, long skipCount) {
 		logger.info(
 				"[VDYP Skip Policy] Exception: {}, Skippable: {}, Current Skipped count: {}",
-				t.getClass().getSimpleName(), shouldSkip, skipCount
-		);
+				t.getClass().getSimpleName(), shouldSkip, skipCount);
 	}
 
 	private void processSkippableException(Throwable t) {
@@ -106,7 +107,8 @@ public class BatchSkipPolicy implements SkipPolicy {
 	}
 
 	private String updatePartitionName(StepExecution stepExecution) {
-		String retrievedPartitionName = stepExecution.getExecutionContext().getString("partitionName", UNKNOWN);
+		String retrievedPartitionName = stepExecution.getExecutionContext().getString(BatchConstants.Partition.NAME,
+				BatchConstants.Common.UNKNOWN);
 		partitionName = retrievedPartitionName;
 		return retrievedPartitionName;
 	}
@@ -115,8 +117,7 @@ public class BatchSkipPolicy implements SkipPolicy {
 		if (metricsCollector != null && executionContext.currentJobExecutionId != null) {
 			metricsCollector.recordSkip(
 					executionContext.currentJobExecutionId, skipContext.recordId, skipContext.batchRecord,
-					skipContext.throwable, executionContext.currentPartitionName, skipContext.lineNumber
-			);
+					skipContext.throwable, executionContext.currentPartitionName, skipContext.lineNumber);
 		}
 	}
 
@@ -215,7 +216,8 @@ public class BatchSkipPolicy implements SkipPolicy {
 				return cachedRecord;
 			}
 
-			// Fallback: create a basic record with the extracted recordId as featureId for tracking
+			// Fallback: create a basic record with the extracted recordId as featureId for
+			// tracking
 			BatchRecord batchRecord = new BatchRecord();
 			batchRecord.setFeatureId(String.valueOf(recordId));
 			return batchRecord;

@@ -1,88 +1,84 @@
 package ca.bc.gov.nrs.vdyp.batch.service;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-
 import java.io.IOException;
-import java.nio.file.*;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import ca.bc.gov.nrs.vdyp.batch.exception.BatchException;
+import ca.bc.gov.nrs.vdyp.batch.exception.BatchIOException;
+import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
+
 /**
  * Service responsible for aggregating VDYP projection results from all
  * partitions into a single consolidated output ZIP file.
- *
- * This service implements the proper batch processing pattern:
- * 1.Collect intermediate results from all partitions
- * 2.Merge yield tables and logs by type
- * 3.Create single consolidated ZIP file
- * 4.Clean up intermediate files
  */
 @Service
 public class ResultAggregationService {
 
 	private static final Logger logger = LoggerFactory.getLogger(ResultAggregationService.class);
-	private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss");
-	private static final String PARTITION_PREFIX = "partition-";
-	private static final String YIELD_TABLE_TYPE = "YieldTable";
-	private static final String YIELD_TABLE_FILENAME = "YieldTable.csv";
 
 	/**
-	 * Aggregates all partition results into a single consolidated ZIP file with
-	 * job-specific organization.
-	 *
-	 * @param jobExecutionId The job execution ID for result organization
-	 * @param baseOutputPath Base output directory containing partition results
+	 * Aggregates all partition results into a single consolidated ZIP file within
+	 * the job directory.
+	 * 
 	 * @return Path to the consolidated ZIP file
-	 * @throws IOException if aggregation fails
 	 */
-	public Path aggregateResults(Long jobExecutionId, String baseOutputPath) throws IOException {
-		logger.info("Starting result aggregation for job execution: {}", jobExecutionId);
+	public Path aggregateResultsFromJobDir(Long jobExecutionId, String jobBaseDir, String jobTimestamp)
+			throws IOException {
+		logger.info("Starting result aggregation for job execution: {} from job directory: {}", jobExecutionId,
+				jobBaseDir);
 
-		Path baseDir = Paths.get(baseOutputPath);
-		if (!Files.exists(baseDir)) {
-			throw new IOException("Base output directory does not exist: " + baseOutputPath);
+		if (jobBaseDir == null || jobBaseDir.trim().isEmpty()) {
+			throw new IllegalArgumentException("Job base directory cannot be null or empty");
 		}
 
-		// Create job-specific directory structure
-		String jobDirName = String.format("vdyp-output-%s", DATE_TIME_FORMATTER.format(LocalDateTime.now()));
-		Path jobSpecificDir = baseDir.resolve(jobDirName);
-		Files.createDirectories(jobSpecificDir);
+		if (jobTimestamp == null || jobTimestamp.trim().isEmpty()) {
+			throw new IllegalArgumentException("Job timestamp cannot be null or empty");
+		}
 
-		logger.info("Created job-specific directory: {}", jobSpecificDir);
+		Path jobBasePath = Paths.get(jobBaseDir);
+		if (!Files.exists(jobBasePath)) {
+			throw new IOException("Job base directory does not exist: " + jobBaseDir);
+		}
 
-		// Collect all partition directories from base directory
-		List<Path> partitionDirs = findPartitionDirectories(baseDir);
-		logger.info("Found {} partition directories to aggregate", partitionDirs.size());
+		if (!Files.isDirectory(jobBasePath)) {
+			throw new IOException("Job base path is not a directory: " + jobBaseDir);
+		}
 
-		if (partitionDirs.isEmpty()) {
-			logger.warn("No partition directories found for aggregation");
-			String finalZipFileName = String
-					.format("vdyp-output-%s.zip", DATE_TIME_FORMATTER.format(LocalDateTime.now()));
-			Path finalZipPath = jobSpecificDir.resolve(finalZipFileName);
+		logger.info("Using job base directory: {}", jobBasePath);
+
+		// Collect all partition output directories from job-specific directory
+		List<Path> partitionOutputDirs = findPartitionOutputDirectories(jobBasePath);
+		logger.info("Found {} partition output directories to aggregate", partitionOutputDirs.size());
+
+		// Create final ZIP file using same timestamp as job base directory
+		String finalZipFileName = String.format("vdyp-output-%s.zip", jobTimestamp);
+		Path finalZipPath = jobBasePath.resolve(finalZipFileName);
+
+		if (partitionOutputDirs.isEmpty()) {
+			logger.warn("No partition output directories found for aggregation");
 			return createEmptyResultZip(finalZipPath);
 		}
 
-		// Organize partition files in job-specific directory
-		organizePartitionFiles(partitionDirs, jobSpecificDir);
-
-		// Create final ZIP file in job-specific directory
-		String finalZipFileName = String.format("vdyp-output-%s.zip", DATE_TIME_FORMATTER.format(LocalDateTime.now()));
-		Path finalZipPath = jobSpecificDir.resolve(finalZipFileName);
-
-		// Get organized partition directories for aggregation
-		List<Path> organizedPartitionDirs = findPartitionDirectories(jobSpecificDir);
-
 		// Aggregate results
 		try (ZipOutputStream zipOut = new ZipOutputStream(Files.newOutputStream(finalZipPath))) {
-			aggregateYieldTables(organizedPartitionDirs, zipOut);
-			aggregateLogs(organizedPartitionDirs, zipOut);
+			aggregateYieldTables(partitionOutputDirs, zipOut);
+			aggregateLogs(partitionOutputDirs, zipOut);
 
 			logger.info("Successfully created consolidated ZIP file: {}", finalZipPath);
 		}
@@ -91,25 +87,26 @@ public class ResultAggregationService {
 	}
 
 	/**
-	 * Finds all partition directories in the base output directory.
+	 * Finds all partition output directories in the job base directory.
 	 */
-	private List<Path> findPartitionDirectories(Path baseDir) throws IOException {
+	private List<Path> findPartitionOutputDirectories(Path jobBasePath) throws IOException {
 		List<Path> partitionDirs = new ArrayList<>();
 
-		logger.info("Searching for partition directories in: {}", baseDir);
+		logger.info("Searching for partition output directories in: {}", jobBasePath);
 
 		// List all items in base directory for debugging
-		try (Stream<Path> allItems = Files.list(baseDir)) {
+		try (Stream<Path> allItems = Files.list(jobBasePath)) {
 			allItems.forEach(
-					item -> logger.info("Found item: {} (isDirectory: {})", item.getFileName(),
+					item -> logger.debug("Found item: {} (isDirectory: {})", item.getFileName(),
 							Files.isDirectory(item)));
 		}
 
-		try (Stream<Path> files = Files.list(baseDir)) {
+		try (Stream<Path> files = Files.list(jobBasePath)) {
 			files.filter(Files::isDirectory).filter(dir -> {
 				String dirName = dir.getFileName().toString();
-				boolean matches = dirName.startsWith(PARTITION_PREFIX) || dirName.matches("partition\\d+");
-				logger.info("Directory {} matches partition pattern: {}", dirName, matches);
+				boolean matches = dirName.startsWith(BatchConstants.Partition.OUTPUT_FOLDER_NAME_PREFIX)
+						|| dirName.matches(BatchConstants.Partition.OUTPUT_FOLDER_NAME_PREFIX + "\\d+");
+				logger.debug("Directory {} matches output partition pattern: {}", dirName, matches);
 				return matches;
 			}).forEach(partitionDirs::add);
 		}
@@ -118,6 +115,10 @@ public class ResultAggregationService {
 				"Found {} partition directories: {}", partitionDirs.size(),
 				partitionDirs.stream().map(p -> p.getFileName().toString()).toList());
 
+		// Sort partition directories by name to ensure consistent processing order.
+		// This is critical for TABLE_NUM assignment in yield tables,
+		// as TABLE_NUM is assigned sequentially based on the order in which
+		// polygon/layer combinations are encountered during partition aggregation.
 		partitionDirs.sort(Comparator.comparing(path -> path.getFileName().toString()));
 		return partitionDirs;
 	}
@@ -125,14 +126,18 @@ public class ResultAggregationService {
 	/**
 	 * Aggregates yield tables from all partitions, merging tables of the same type.
 	 */
-	private void aggregateYieldTables(List<Path> partitionDirs, ZipOutputStream zipOut) throws IOException {
-		logger.info("Aggregating yield tables from {} partitions", partitionDirs.size());
+	private void aggregateYieldTables(List<Path> partitionOutputDirs, ZipOutputStream zipOut) throws IOException {
+		logger.info("Aggregating yield tables from {} partitions", partitionOutputDirs.size());
 
 		Map<String, List<Path>> yieldTablesByType = new HashMap<>();
 
 		// Collect all yield tables by type
-		for (Path partitionDir : partitionDirs) {
-			collectYieldTablesFromPartition(partitionDir, yieldTablesByType);
+		for (Path partitionOutputDir : partitionOutputDirs) {
+			collectYieldTablesFromPartition(partitionOutputDir, yieldTablesByType);
+		}
+
+		if (yieldTablesByType.isEmpty()) {
+			logger.warn("No yield tables found in any partition directory");
 		}
 
 		// Merge and add to ZIP
@@ -148,13 +153,21 @@ public class ResultAggregationService {
 	}
 
 	/**
-	 * Collects yield table files from a partition directory.
+	 * Collects yield table files from a partition output directory.
 	 */
-	private void collectYieldTablesFromPartition(Path partitionDir, Map<String, List<Path>> yieldTablesByType)
+	private void collectYieldTablesFromPartition(Path partitionOutputDir, Map<String, List<Path>> yieldTablesByType)
 			throws IOException {
-		try (Stream<Path> files = Files.walk(partitionDir)) {
+		if (!isValidPartitionDirectory(partitionOutputDir)) {
+			return;
+		}
+
+		try (Stream<Path> files = Files.walk(partitionOutputDir)) {
 			files.filter(Files::isRegularFile).filter(file -> isYieldTableFile(file.getFileName().toString())).forEach(
-					file -> yieldTablesByType.computeIfAbsent(YIELD_TABLE_TYPE, k -> new ArrayList<>()).add(file));
+					file -> yieldTablesByType
+							.computeIfAbsent(BatchConstants.File.YIELD_TABLE_TYPE, k -> new ArrayList<>()).add(file));
+		} catch (IOException e) {
+			throw BatchIOException.handleDirectoryWalkFailure(
+					partitionOutputDir, e, "Error walking directory tree for yield tables", logger);
 		}
 	}
 
@@ -163,8 +176,7 @@ public class ResultAggregationService {
 	 */
 	private boolean isYieldTableFile(String fileName) {
 		String lowerName = fileName.toLowerCase();
-		// Check if it's explicitly a yield table file, but exclude log files
-		return (lowerName.contains("yield") || lowerName.endsWith(".ytb")) && !isLogFile(fileName);
+		return (lowerName.contains("yield")) && !isLogFile(fileName);
 	}
 
 	/**
@@ -172,20 +184,20 @@ public class ResultAggregationService {
 	 * Assigns TABLE_NUM based on polygon/layer combinations.
 	 */
 	private void mergeYieldTables(List<Path> tablePaths, ZipOutputStream zipOut) throws IOException {
-		ZipEntry zipEntry = new ZipEntry(YIELD_TABLE_FILENAME);
+		ZipEntry zipEntry = new ZipEntry(BatchConstants.File.YIELD_TABLE_FILENAME);
 		zipOut.putNextEntry(zipEntry);
 
-		Map<String, Integer> polygonLayerTableNumbers = new HashMap<>();
+		TableNumberAssigner tableNumberAssigner = new TableNumberAssigner();
 		boolean isFirstFile = true;
 
 		for (Path tablePath : tablePaths) {
-			isFirstFile = processYieldTableFile(tablePath, zipOut, polygonLayerTableNumbers, isFirstFile);
+			isFirstFile = processYieldTableFile(tablePath, zipOut, tableNumberAssigner, isFirstFile);
 		}
 
 		zipOut.closeEntry();
 		logger.debug(
 				"Merged {} files into yield table: {} with {} unique polygon/layer combinations", tablePaths.size(),
-				YIELD_TABLE_FILENAME, polygonLayerTableNumbers.size());
+				BatchConstants.File.YIELD_TABLE_FILENAME, tableNumberAssigner.getUniqueCount());
 	}
 
 	/**
@@ -193,16 +205,29 @@ public class ResultAggregationService {
 	 * stream.
 	 */
 	private boolean processYieldTableFile(
-			Path tablePath, ZipOutputStream zipOut, Map<String, Integer> polygonLayerTableNumbers, boolean isFirstFile)
+			Path tablePath, ZipOutputStream zipOut, TableNumberAssigner tableNumberAssigner, boolean isFirstFile)
 			throws IOException {
-		try (Stream<String> lines = Files.lines(tablePath)) {
+		if (!Files.exists(tablePath)) {
+			logger.warn("Yield table file does not exist: {}", tablePath);
+			return isFirstFile;
+		}
+
+		if (!Files.isReadable(tablePath)) {
+			logger.warn("Yield table file is not readable: {}", tablePath);
+			return isFirstFile;
+		}
+
+		try (Stream<String> lines = Files.lines(tablePath, StandardCharsets.UTF_8)) {
 			Iterator<String> lineIterator = lines.iterator();
 
 			if (lineIterator.hasNext()) {
-				isFirstFile = processFirstLine(lineIterator.next(), zipOut, polygonLayerTableNumbers, isFirstFile);
+				isFirstFile = processFirstLine(lineIterator.next(), zipOut, tableNumberAssigner, isFirstFile);
 			}
 
-			processRemainingLines(lineIterator, zipOut, polygonLayerTableNumbers);
+			processRemainingLines(lineIterator, zipOut, tableNumberAssigner);
+		} catch (IOException e) {
+			throw BatchIOException.handleFileReadFailure(
+					tablePath, e, "Error reading yield table file", logger);
 		}
 		return false; // After processing first file, subsequent files are not first
 	}
@@ -211,7 +236,7 @@ public class ResultAggregationService {
 	 * Processes the first line of a yield table file (header or data line).
 	 */
 	private boolean processFirstLine(
-			String firstLine, ZipOutputStream zipOut, Map<String, Integer> polygonLayerTableNumbers,
+			String firstLine, ZipOutputStream zipOut, TableNumberAssigner tableNumberAssigner,
 			boolean isFirstFile) throws IOException {
 		if (isHeaderLine(firstLine)) {
 			if (isFirstFile) {
@@ -220,7 +245,7 @@ public class ResultAggregationService {
 			return false; // Header processed, subsequent files are not first
 		} else {
 			// Not a header, this is a data line - process it
-			processDataLine(firstLine, zipOut, polygonLayerTableNumbers);
+			processDataLine(firstLine, zipOut, tableNumberAssigner);
 			return isFirstFile; // Keep first file status for data-only files
 		}
 	}
@@ -229,19 +254,19 @@ public class ResultAggregationService {
 	 * Processes the remaining data lines from a yield table file.
 	 */
 	private void processRemainingLines(
-			Iterator<String> lineIterator, ZipOutputStream zipOut, Map<String, Integer> polygonLayerTableNumbers)
+			Iterator<String> lineIterator, ZipOutputStream zipOut, TableNumberAssigner tableNumberAssigner)
 			throws IOException {
 		while (lineIterator.hasNext()) {
-			processDataLine(lineIterator.next(), zipOut, polygonLayerTableNumbers);
+			processDataLine(lineIterator.next(), zipOut, tableNumberAssigner);
 		}
 	}
 
 	/**
 	 * Processes a single data line and writes it to the ZIP output stream.
 	 */
-	private void processDataLine(String line, ZipOutputStream zipOut, Map<String, Integer> polygonLayerTableNumbers)
+	private void processDataLine(String line, ZipOutputStream zipOut, TableNumberAssigner tableNumberAssigner)
 			throws IOException {
-		String processedLine = assignTableNumber(line, polygonLayerTableNumbers);
+		String processedLine = tableNumberAssigner.assignTableNumber(line);
 		if (processedLine != null) {
 			writeLineToZip(processedLine, zipOut);
 		}
@@ -251,71 +276,107 @@ public class ResultAggregationService {
 	 * Writes a line to the ZIP output stream with proper line separator.
 	 */
 	private void writeLineToZip(String line, ZipOutputStream zipOut) throws IOException {
-		zipOut.write((line + System.lineSeparator()).getBytes());
+		zipOut.write((line + System.lineSeparator()).getBytes(StandardCharsets.UTF_8));
 	}
 
-	/**
-	 * Assigns TABLE_NUM based on polygon/layer combination. Each unique FEATURE_ID
-	 * + LAYER_ID combination gets a unique TABLE_NUM.
-	 *
-	 * @param line                     The CSV line to process
-	 * @param polygonLayerTableNumbers Map tracking TABLE_NUM for each polygon/layer
-	 *                                 combination
-	 * @return The processed line with correct TABLE_NUM, or null if line should be
-	 *         skipped
-	 */
-	private String assignTableNumber(String line, Map<String, Integer> polygonLayerTableNumbers) {
-		if (line == null || line.trim().isEmpty()) {
-			return line;
+	private class TableNumberAssigner {
+		private final Map<String, Integer> polygonLayerTableNumbers = new HashMap<>();
+		private int nextTableNum = 1;
+
+		/**
+		 * Assigns TABLE_NUM based on polygon/layer combination.
+		 *
+		 * @param line The CSV line to process
+		 * @return The processed line with correct TABLE_NUM, or null if line should be
+		 *         skipped
+		 */
+		public String assignTableNumber(String line) {
+			if (line == null || line.trim().isEmpty()) {
+				return line;
+			}
+
+			// Split the line by comma
+			String[] columns = line.split(",", -1);
+
+			if (columns.length < 6) {
+				// Not enough columns, return as-is
+				return line;
+			}
+
+			// Extract FEATURE_ID (column 1) and LAYER_ID (column 5) based on CSV structure
+			String featureId = columns.length > 1 ? columns[1].trim() : "";
+			String layerId = columns.length > 5 ? columns[5].trim() : "";
+
+			if (featureId.isEmpty()) {
+				// No FEATURE_ID, skip this line
+				logger.warn("Skipping line with missing FEATURE_ID: {}", line);
+				return null;
+			}
+
+			// Create unique key for polygon/layer combination
+			String polygonLayerKey = featureId + "_" + layerId;
+
+			// Get or assign TABLE_NUM for this polygon/layer combination
+			Integer tableNum = polygonLayerTableNumbers.computeIfAbsent(polygonLayerKey, key -> {
+				// Check for overflow before assigning
+				if (nextTableNum >= Integer.MAX_VALUE - 1) {
+					logger.error("TABLE_NUM overflow detected. Current count: {}", polygonLayerTableNumbers.size());
+					throw new IllegalStateException(
+							"TABLE_NUM exceeded maximum value. Too many polygon/layer combinations.");
+				}
+
+				int assigned = nextTableNum++;
+				logger.debug(
+						"Assigned TABLE_NUM {} to polygon/layer combination: FEATURE_ID={}, LAYER_ID={}",
+						assigned, featureId, layerId);
+				return assigned;
+			});
+
+			// Replace TABLE_NUM (first column) with the assigned number
+			columns[0] = String.valueOf(tableNum);
+
+			// Rejoin the columns
+			return String.join(",", columns);
 		}
 
-		// Split the line by comma
-		String[] columns = line.split(",", -1);
-
-		if (columns.length < 6) {
-			// Not enough columns, return as-is
-			return line;
+		/**
+		 * Gets the number of unique polygon/layer combinations processed.
+		 */
+		public int getUniqueCount() {
+			return polygonLayerTableNumbers.size();
 		}
-
-		// Extract FEATURE_ID (column 1) and LAYER_ID (column 5) based on CSV structure
-		String featureId = columns.length > 1 ? columns[1].trim() : "";
-		String layerId = columns.length > 5 ? columns[5].trim() : "";
-
-		if (featureId.isEmpty()) {
-			// No FEATURE_ID, skip this line
-			logger.warn("Skipping line with missing FEATURE_ID: {}", line);
-			return null;
-		}
-
-		// Create unique key for polygon/layer combination
-		String polygonLayerKey = featureId + "_" + layerId;
-
-		// Get or assign TABLE_NUM for this polygon/layer combination
-		Integer tableNum = polygonLayerTableNumbers.get(polygonLayerKey);
-		if (tableNum == null) {
-			// New polygon/layer combination, assign next available table number
-			tableNum = polygonLayerTableNumbers.isEmpty() ? 1
-					: polygonLayerTableNumbers.values().stream().mapToInt(Integer::intValue).max().orElse(0) + 1;
-			polygonLayerTableNumbers.put(polygonLayerKey, tableNum);
-			logger.debug(
-					"Assigned TABLE_NUM {} to polygon/layer combination: FEATURE_ID={}, LAYER_ID={}", tableNum,
-					featureId, layerId);
-		}
-
-		// Replace TABLE_NUM (first column) with the assigned number
-		columns[0] = String.valueOf(tableNum);
-
-		// Rejoin the columns
-		return String.join(",", columns);
 	}
 
 	/**
 	 * Determines if a line is a header line.
 	 */
 	private boolean isHeaderLine(String line) {
+		if (line == null || line.trim().isEmpty()) {
+			return true; // Treat empty lines as headers (skip them)
+		}
+
 		String upperLine = line.toUpperCase();
-		return upperLine.contains("FEATURE") || upperLine.contains("POLYGON") || upperLine.contains("LAYER")
-				|| upperLine.contains("SPECIES") || upperLine.startsWith("#") || upperLine.trim().isEmpty();
+		// check if it starts with header keywords
+		return upperLine.startsWith("TABLE") || upperLine.startsWith("FEATURE")
+				|| upperLine.startsWith("POLYGON") || upperLine.contains("LAYER_ID")
+				|| upperLine.contains("SPECIES_CODE");
+	}
+
+	/**
+	 * Validates if a partition directory is valid for processing.
+	 */
+	private boolean isValidPartitionDirectory(Path partitionDir) {
+		if (partitionDir == null || !Files.exists(partitionDir)) {
+			logger.warn("Partition directory does not exist or is null: {}", partitionDir);
+			return false;
+		}
+
+		if (!Files.isDirectory(partitionDir)) {
+			logger.warn("Partition path is not a directory: {}", partitionDir);
+			return false;
+		}
+
+		return true;
 	}
 
 	/**
@@ -326,16 +387,10 @@ public class ResultAggregationService {
 
 		Map<String, List<Path>> logsByType = new HashMap<>();
 
-		// Collect all log files by type
-		for (Path partitionDir : partitionDirs) {
-			try (Stream<Path> files = Files.walk(partitionDir)) {
-				files.filter(Files::isRegularFile).filter(file -> isLogFile(file.getFileName().toString()))
-						.forEach(file -> {
-							String logType = extractLogType(file.getFileName().toString());
-							logsByType.computeIfAbsent(logType, k -> new ArrayList<>()).add(file);
-						});
-			}
-		}
+		// Filter valid directories first, then collect log files
+		partitionDirs.stream()
+				.filter(this::isValidPartitionDirectory)
+				.forEach(partitionDir -> collectLogFilesFromPartition(partitionDir, logsByType));
 
 		// Merge and add to ZIP
 		for (Map.Entry<String, List<Path>> entry : logsByType.entrySet()) {
@@ -348,6 +403,24 @@ public class ResultAggregationService {
 		}
 
 		logger.info("Aggregated {} different types of log files", logsByType.size());
+	}
+
+	/**
+	 * Collects log files from a single partition directory.
+	 */
+	private void collectLogFilesFromPartition(Path partitionDir, Map<String, List<Path>> logsByType) {
+		try (Stream<Path> files = Files.walk(partitionDir)) {
+			files.filter(Files::isRegularFile)
+					.filter(file -> isLogFile(file.getFileName().toString()))
+					.forEach(file -> {
+						String logType = extractLogType(file.getFileName().toString());
+						logsByType.computeIfAbsent(logType, k -> new ArrayList<>()).add(file);
+					});
+		} catch (IOException e) {
+			IOException wrappedException = BatchIOException.handleDirectoryWalkFailure(
+					partitionDir, e, "Error walking directory tree for log files", logger);
+			throw new BatchException("Failed to collect log files from partition", wrappedException);
+		}
 	}
 
 	/**
@@ -364,12 +437,16 @@ public class ResultAggregationService {
 	 */
 	private String extractLogType(String fileName) {
 		String lowerName = fileName.toLowerCase();
-		if (lowerName.contains("error"))
+		if (lowerName.contains("error")) {
 			return "Error";
-		if (lowerName.contains("progress"))
+		}
+		if (lowerName.contains("progress")) {
 			return "Progress";
-		if (lowerName.contains("debug"))
+		}
+		if (lowerName.contains("debug")) {
 			return "Debug";
+		}
+
 		return "General";
 	}
 
@@ -382,13 +459,28 @@ public class ResultAggregationService {
 		ZipEntry zipEntry = new ZipEntry(mergedLogFileName);
 		zipOut.putNextEntry(zipEntry);
 
+		int totalFiles = logPaths.size();
+		int failedFiles = 0;
+
 		for (Path logPath : logPaths) {
-			Files.copy(logPath, zipOut);
-			zipOut.write("\n".getBytes());
+			try {
+				Files.copy(logPath, zipOut);
+				zipOut.write("\n".getBytes(StandardCharsets.UTF_8));
+			} catch (IOException e) {
+				failedFiles++;
+				logger.warn("Failed to copy log file to ZIP: {} (error: {})", logPath, e.getMessage());
+			}
 		}
 
 		zipOut.closeEntry();
-		logger.debug("Merged {} log files into: {}", logPaths.size(), mergedLogFileName);
+
+		int successFiles = totalFiles - failedFiles;
+		if (failedFiles > 0) {
+			logger.warn("Merged {} log files into: {} (success: {}, failed: {})",
+					totalFiles, mergedLogFileName, successFiles, failedFiles);
+		} else {
+			logger.debug("Merged {} log files into: {}", totalFiles, mergedLogFileName);
+		}
 	}
 
 	/**
@@ -404,112 +496,11 @@ public class ResultAggregationService {
 					No results were generated from this batch job.
 					This may indicate that no polygons were successfully processed.
 					""";
-			zipOut.write(readme.getBytes());
+			zipOut.write(readme.getBytes(StandardCharsets.UTF_8));
 			zipOut.closeEntry();
 		}
 
 		logger.info("Created empty result ZIP: {}", zipPath);
 		return zipPath;
-	}
-
-	/**
-	 * Organizes partition files into job-specific directory structure. Creates
-	 * partition-0, partition-1, etc. subdirectories within the job directory.
-	 */
-	private void organizePartitionFiles(List<Path> partitionDirs, Path jobSpecificDir) throws IOException {
-		logger.info(
-				"Organizing partition files from {} partitions into job directory: {}", partitionDirs.size(),
-				jobSpecificDir);
-
-		// Log all partition directories found
-		if (logger.isInfoEnabled()) {
-			for (int i = 0; i < partitionDirs.size(); i++) {
-				Path partitionDir = partitionDirs.get(i);
-				logger.info(
-						"Partition {} found: full path = {}, filename = {}", i, partitionDir,
-						partitionDir.getFileName());
-			}
-		}
-
-		for (int i = 0; i < partitionDirs.size(); i++) {
-			Path sourcePartitionDir = partitionDirs.get(i);
-			String originalDirName = sourcePartitionDir.getFileName().toString();
-
-			// Create organized partition directory with sequential naming
-			String organizedDirName = PARTITION_PREFIX + i;
-			Path targetPartitionDir = jobSpecificDir.resolve(organizedDirName);
-			Files.createDirectories(targetPartitionDir);
-
-			logger.info("Organizing partition {}: source = {} -> target = {}", i, originalDirName, organizedDirName);
-
-			// Copy all files from source partition directory to organized target
-			try (Stream<Path> files = Files.walk(sourcePartitionDir)) {
-				files.filter(Files::isRegularFile).forEach(file -> {
-					try {
-						Path targetFile = targetPartitionDir.resolve(file.getFileName());
-						Files.copy(file, targetFile, StandardCopyOption.REPLACE_EXISTING);
-						logger.debug("Organized file: {} -> {}", file.getFileName(), targetFile);
-					} catch (IOException e) {
-						logger.warn("Failed to organize file {}: {}", file, e.getMessage());
-					}
-				});
-			}
-
-			logger.info("Organized partition {} files to {}", i, targetPartitionDir);
-		}
-
-		// Clean up original partition directories after organizing
-		cleanupIntermediateFiles(partitionDirs);
-
-		logger.info("All partition files organized in job directory: {}", jobSpecificDir);
-	}
-
-	/**
-	 * Cleans up intermediate partition directories and files.
-	 */
-	private void cleanupIntermediateFiles(List<Path> partitionDirs) {
-		logger.info("Cleaning up {} intermediate partition directories", partitionDirs.size());
-
-		for (Path partitionDir : partitionDirs) {
-			try {
-				// Only clean up if the directory still exists and is not within a job-specific
-				// directory
-				if (Files.exists(partitionDir) && !isWithinJobSpecificDirectory(partitionDir)) {
-					deleteDirectoryRecursively(partitionDir);
-					logger.debug("Cleaned up intermediate partition directory: {}", partitionDir);
-				}
-			} catch (IOException e) {
-				logger.warn("Failed to clean up partition directory {}: {}", partitionDir, e.getMessage());
-			}
-		}
-	}
-
-	/**
-	 * Checks if a directory is within a job-specific directory (should not be
-	 * cleaned up).
-	 */
-	private boolean isWithinJobSpecificDirectory(Path partitionDir) {
-		String parentDirName = partitionDir.getParent() != null ? partitionDir.getParent().getFileName().toString()
-				: "";
-		return parentDirName.startsWith("vdyp-output-");
-	}
-
-	/**
-	 * Recursively deletes a directory and all its contents.
-	 */
-	private void deleteDirectoryRecursively(Path directory) throws IOException {
-		Files.walkFileTree(directory, new SimpleFileVisitor<Path>() {
-			@Override
-			public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-				Files.delete(file);
-				return FileVisitResult.CONTINUE;
-			}
-
-			@Override
-			public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-				Files.delete(dir);
-				return FileVisitResult.CONTINUE;
-			}
-		});
 	}
 }

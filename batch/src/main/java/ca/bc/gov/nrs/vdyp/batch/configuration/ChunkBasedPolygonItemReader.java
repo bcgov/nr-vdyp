@@ -1,31 +1,32 @@
 package ca.bc.gov.nrs.vdyp.batch.configuration;
 
-import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
-import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.batch.item.ExecutionContext;
-import org.springframework.batch.item.ItemStreamException;
-import org.springframework.lang.NonNull;
-import org.springframework.batch.item.ItemStreamReader;
-
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.batch.item.ExecutionContext;
+import org.springframework.batch.item.ItemStreamException;
+import org.springframework.batch.item.ItemStreamReader;
+import org.springframework.lang.NonNull;
+
+import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
+import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
+import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
 /**
- * Memory-efficient ItemReader that processes polygon data in configurable chunks.
- * 
- * This reader implements chunked processing to handle large datasets efficiently:
- * - Reads polygon and layer CSV files in memory-bounded chunks
- * - Groups data by FEATURE_ID for complete polygon processing
- * - Stores raw CSV data to minimize memory usage and parsing overhead
- * - Supports lazy loading with configurable chunk sizes
+ * ItemReader that processes polygon in chunks to handle large datasets
  */
 public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord> {
 
@@ -56,10 +57,10 @@ public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord
 
 	public ChunkBasedPolygonItemReader(String partitionName, BatchMetricsCollector metricsCollector,
 			Long jobExecutionId, int chunkSize) {
-		this.partitionName = partitionName != null ? partitionName : "unknown";
+		this.partitionName = partitionName != null ? partitionName : BatchConstants.Common.UNKNOWN;
 		this.metricsCollector = metricsCollector;
 		this.jobExecutionId = jobExecutionId;
-		this.chunkSize = Math.max(chunkSize, 1); // Ensure minimum chunk size of 1
+		this.chunkSize = Math.max(chunkSize, 1);
 	}
 
 	@Override
@@ -73,7 +74,8 @@ public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord
 		}
 
 		String polygonLine = chunkIterator.next();
-		logPolygonProcessing(polygonLine);
+		logger.debug("[{}] Processing polygon line from chunk: {}", partitionName,
+				polygonLine.length() > 100 ? polygonLine.substring(0, 100) + "..." : polygonLine);
 
 		try {
 			return processPolygonLine(polygonLine);
@@ -88,12 +90,12 @@ public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord
 
 		try {
 			// Get partition directory from job parameters
-			String partitionBaseDir = executionContext.getString("partitionBaseDir");
-			if (partitionBaseDir.trim().isEmpty()) {
-				throw new ItemStreamException("partitionBaseDir not found or empty in ExecutionContext");
+			String jobBaseDir = executionContext.getString(BatchConstants.Job.BASE_DIR);
+			if (jobBaseDir.trim().isEmpty()) {
+				throw new ItemStreamException("jobBaseDir not found or empty in ExecutionContext");
 			}
 
-			partitionDir = Paths.get(partitionBaseDir, partitionName);
+			partitionDir = Paths.get(jobBaseDir, BatchConstants.Partition.INPUT_PREFIX + "-" + partitionName);
 			if (!Files.exists(partitionDir)) {
 				throw new ItemStreamException("Partition directory does not exist: " + partitionDir);
 			}
@@ -135,8 +137,8 @@ public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord
 	 * Initialize BufferedReaders for polygon and layer files.
 	 */
 	private void initializeReaders() throws IOException {
-		Path polygonFile = partitionDir.resolve("polygons.csv");
-		Path layerFile = partitionDir.resolve("layers.csv");
+		Path polygonFile = partitionDir.resolve(BatchConstants.Partition.INPUT_POLYGON_FILE_NAME);
+		Path layerFile = partitionDir.resolve(BatchConstants.Partition.INPUT_LAYER_FILE_NAME);
 
 		if (!Files.exists(polygonFile)) {
 			throw new IOException("Polygon file not found: " + polygonFile);
@@ -163,7 +165,7 @@ public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord
 	}
 
 	/**
-	 * Load next chunk of polygon data and associated layers.
+	 * Load next chunk of polygon and associated layers.
 	 * 
 	 * @return true if chunk was loaded, false if no more data
 	 */
@@ -189,7 +191,7 @@ public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord
 		}
 
 		if (currentChunk.isEmpty()) {
-			logger.debug("[{}] No more polygon data to load", partitionName);
+			logger.debug("[{}] No more polygon to load", partitionName);
 			return false;
 		}
 
@@ -215,7 +217,8 @@ public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord
 
 		// Reset layer reader to beginning (after header)
 		layerReader.close();
-		Path layerFile = partitionDir.resolve("layers.csv");
+
+		Path layerFile = partitionDir.resolve(BatchConstants.Partition.INPUT_LAYER_FILE_NAME);
 		layerReader = new BufferedReader(new FileReader(layerFile.toFile()));
 		String header = layerReader.readLine(); // Skip header
 		if (header == null) {
@@ -287,7 +290,7 @@ public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord
 				"[%s] %s. Partition: %s, Job execution: %s, Chunk size: %d, Exception type: %s, Root cause: %s",
 				partitionName, errorDescription, partitionName, jobExecutionId, chunkSize,
 				cause.getClass().getSimpleName(),
-				cause.getMessage() != null ? cause.getMessage() : "No error message available");
+				cause.getMessage() != null ? cause.getMessage() : BatchConstants.ErrorMessage.NO_ERROR_MESSAGE);
 
 		logger.error(contextualMessage, cause);
 
@@ -306,14 +309,6 @@ public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord
 			return false;
 		}
 		return true;
-	}
-
-	/**
-	 * Log polygon processing details.
-	 */
-	private void logPolygonProcessing(String polygonLine) {
-		logger.debug("[{}] Processing polygon line from chunk: {}", partitionName,
-				polygonLine.length() > 100 ? polygonLine.substring(0, 100) + "..." : polygonLine);
 	}
 
 	/**

@@ -1,10 +1,10 @@
 package ca.bc.gov.nrs.vdyp.batch.configuration;
 
-import ca.bc.gov.nrs.vdyp.batch.exception.ResultAggregationException;
-import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
-import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
-import ca.bc.gov.nrs.vdyp.batch.service.ResultAggregationService;
-import ca.bc.gov.nrs.vdyp.batch.service.VdypProjectionService;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.stream.Collectors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.ExitStatus;
@@ -20,6 +20,7 @@ import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.core.step.tasklet.Tasklet;
+import org.springframework.batch.item.ItemStreamReader;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -30,10 +31,12 @@ import org.springframework.lang.NonNull;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.stream.Collectors;
+import ca.bc.gov.nrs.vdyp.batch.exception.ResultAggregationException;
+import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
+import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
+import ca.bc.gov.nrs.vdyp.batch.service.ResultAggregationService;
+import ca.bc.gov.nrs.vdyp.batch.service.VdypProjectionService;
+import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
 @Configuration
 public class PartitionedBatchConfiguration {
@@ -54,42 +57,20 @@ public class PartitionedBatchConfiguration {
 		this.resultAggregationService = resultAggregationService;
 	}
 
-	private static final String UNKNOWN = "unknown";
-
 	@Bean
 	@StepScope
 	public BatchRetryPolicy retryPolicy() {
-		// Get retry configuration from application.properties
 		int maxAttempts = batchProperties.getRetry().getMaxAttempts();
-		if (maxAttempts <= 0) {
-			throw new IllegalStateException(
-					"batch.retry.max-attempts must be configured with a positive value in application.properties");
-		}
-
 		int backoffPeriod = batchProperties.getRetry().getBackoffPeriod();
-		if (backoffPeriod <= 0) {
-			throw new IllegalStateException(
-					"batch.retry.backoff-period must be configured with a positive value in application.properties");
-		}
-
 		BatchRetryPolicy policy = new BatchRetryPolicy(maxAttempts, backoffPeriod);
 		policy.setMetricsCollector(metricsCollector);
 		return policy;
 	}
 
-	/**
-	 * Batch Skip policy with metrics - configuration from application.properties
-	 */
 	@Bean
 	@StepScope
 	public BatchSkipPolicy skipPolicy() {
-		// Get skip configuration from application.properties
 		int maxSkipCount = batchProperties.getSkip().getMaxCount();
-		if (maxSkipCount <= 0) {
-			throw new IllegalStateException(
-					"batch.skip.max-count must be configured with a positive value in application.properties");
-		}
-
 		return new BatchSkipPolicy(maxSkipCount, metricsCollector);
 	}
 
@@ -99,29 +80,15 @@ public class PartitionedBatchConfiguration {
 	@Bean
 	public TaskExecutor taskExecutor() {
 		int corePoolSize = batchProperties.getThreadPool().getCorePoolSize();
-		if (corePoolSize <= 0) {
-			throw new IllegalStateException(
-					"batch.thread-pool.core-pool-size must be configured with a positive value in application.properties");
-		}
-
 		int maxPoolSizeMultiplier = batchProperties.getThreadPool().getMaxPoolSizeMultiplier();
-		if (maxPoolSizeMultiplier <= 0) {
-			throw new IllegalStateException(
-					"batch.thread-pool.max-pool-size-multiplier must be configured with a positive value in application.properties");
-		}
-
 		String threadNamePrefix = batchProperties.getThreadPool().getThreadNamePrefix();
-		if (threadNamePrefix == null || threadNamePrefix.trim().isEmpty()) {
-			throw new IllegalStateException(
-					"batch.thread-pool.thread-name-prefix must be configured in application.properties");
-		}
 
 		ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
 		executor.setCorePoolSize(corePoolSize);
 		executor.setMaxPoolSize(corePoolSize * maxPoolSizeMultiplier);
 		executor.setQueueCapacity(corePoolSize);
 		executor.setThreadNamePrefix(threadNamePrefix);
-		executor.setRejectedExecutionHandler(new java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy());
+		executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
 		executor.initialize();
 		return executor;
 	}
@@ -154,38 +121,38 @@ public class PartitionedBatchConfiguration {
 			BatchRetryPolicy retryPolicy, BatchSkipPolicy skipPolicy, PlatformTransactionManager transactionManager,
 			BatchMetricsCollector metricsCollector, BatchProperties batchProperties,
 			VdypProjectionService vdypProjectionService,
-			org.springframework.batch.item.ItemStreamReader<BatchRecord> partitionReader) {
+			ItemStreamReader<BatchRecord> partitionReader,
+			VdypChunkProjectionWriter partitionWriter) {
 
-		int chunkSize = Math.max(batchProperties.getReader().getChunkSize(), 1);
+		int chunkSize = Math.max(batchProperties.getReader().getDefaultChunkSize(), 1);
 		logger.info("Worker step configured with chunk size: {}", chunkSize);
-
-		VdypChunkProjectionWriter writer = new VdypChunkProjectionWriter(vdypProjectionService, metricsCollector);
 
 		return new StepBuilder("workerStep", jobRepository)
 				.<BatchRecord, BatchRecord>chunk(chunkSize, transactionManager)
 				.reader(partitionReader)
 				.processor(vdypProjectionProcessor(retryPolicy, metricsCollector))
-				.writer(writer)
-				.listener(writer) // Add writer as step listener
+				.writer(partitionWriter)
+				.listener(partitionWriter) // Add writer as step listener
 				.faultTolerant().retryPolicy(retryPolicy).skipPolicy(skipPolicy)
 				.listener(new StepExecutionListener() {
 					@Override
 					public void beforeStep(@NonNull StepExecution stepExecution) {
-						String partitionName = stepExecution.getExecutionContext().getString("partitionName", UNKNOWN);
-						long startLine = stepExecution.getExecutionContext().getLong("startLine", 0);
-						long endLine = stepExecution.getExecutionContext().getLong("endLine", 0);
+						String partitionName = stepExecution.getExecutionContext().getString(
+								BatchConstants.Partition.NAME,
+								BatchConstants.Common.UNKNOWN);
+
 						Long jobExecutionId = stepExecution.getJobExecutionId();
 
-						// Initialize partition metrics using line ranges as ID ranges
-						metricsCollector.initializePartitionMetrics(jobExecutionId, partitionName, startLine, endLine);
+						metricsCollector.initializePartitionMetrics(jobExecutionId, partitionName);
 
-						logger.info(
-								"[{}] VDYP Worker step starting for range {}-{}", partitionName, startLine, endLine);
+						logger.info("[{}] VDYP Worker step starting", partitionName);
 					}
 
 					@Override
 					public ExitStatus afterStep(@NonNull StepExecution stepExecution) {
-						String partitionName = stepExecution.getExecutionContext().getString("partitionName", UNKNOWN);
+						String partitionName = stepExecution.getExecutionContext().getString(
+								BatchConstants.Partition.NAME,
+								BatchConstants.Common.UNKNOWN);
 						Long jobExecutionId = stepExecution.getJobExecutionId();
 
 						// Complete partition metrics
@@ -217,7 +184,7 @@ public class PartitionedBatchConfiguration {
 					@Override
 					public void beforeJob(@NonNull JobExecution jobExecution) {
 						// Initialize job metrics
-						metricsCollector.initializeJobMetrics(jobExecution.getId());
+						metricsCollector.initializeMetrics(jobExecution.getId());
 						jobExecutionListener.beforeJob(jobExecution);
 						logger.info("=== VDYP Batch Job Starting ===");
 					}
@@ -251,16 +218,16 @@ public class PartitionedBatchConfiguration {
 
 	@Bean
 	@StepScope
-	public org.springframework.batch.item.ItemStreamReader<BatchRecord> partitionReader(
+	public ItemStreamReader<BatchRecord> partitionReader(
 			BatchMetricsCollector metricsCollector,
 			@Value("#{stepExecutionContext['partitionName']}") String partitionName,
 			@Value("#{stepExecution.jobExecutionId}") Long jobExecutionId,
 			BatchProperties batchProperties) {
 
 		logger.info("[{}] Using ChunkBasedPolygonItemReader with chunk size: {}",
-				partitionName, batchProperties.getReader().getChunkSize());
+				partitionName, batchProperties.getReader().getDefaultChunkSize());
 		return new ChunkBasedPolygonItemReader(partitionName, metricsCollector, jobExecutionId,
-				batchProperties.getReader().getChunkSize());
+				batchProperties.getReader().getDefaultChunkSize());
 	}
 
 	@Bean
@@ -268,6 +235,14 @@ public class PartitionedBatchConfiguration {
 	public VdypProjectionProcessor vdypProjectionProcessor(
 			BatchRetryPolicy retryPolicy, BatchMetricsCollector metricsCollector) {
 		return new VdypProjectionProcessor(retryPolicy, metricsCollector);
+	}
+
+	@Bean
+	@StepScope
+	public VdypChunkProjectionWriter partitionWriter(
+			VdypProjectionService vdypProjectionService,
+			BatchMetricsCollector metricsCollector) {
+		return new VdypChunkProjectionWriter(vdypProjectionService, metricsCollector);
 	}
 
 	/**
@@ -290,21 +265,17 @@ public class PartitionedBatchConfiguration {
 	public Tasklet resultAggregationTasklet() {
 		return (contribution, chunkContext) -> {
 			Long jobExecutionId = chunkContext.getStepContext().getStepExecution().getJobExecutionId();
-			String baseOutputPath = batchProperties.getOutput().getDirectory().getDefaultPath();
-
-			if (baseOutputPath == null) {
-				baseOutputPath = System.getProperty("java.io.tmpdir");
-				logger.warn("No output directory configured, using system temp directory: {}", baseOutputPath);
-			}
-
 			logger.info(
-					"Starting result aggregation for job execution: {} from path: {}", jobExecutionId, baseOutputPath);
-
+					"Starting result aggregation for job execution: {}", jobExecutionId);
 			try {
-				// Aggregate all partition results into consolidated ZIP
-				Path consolidatedZip = resultAggregationService.aggregateResults(jobExecutionId, baseOutputPath);
+				JobExecution jobExecution = chunkContext.getStepContext().getStepExecution().getJobExecution();
 
-				// Store the final ZIP path in the execution context for potential retrieval
+				String jobTimestamp = jobExecution.getJobParameters().getString(BatchConstants.Job.TIMESTAMP);
+				String jobBaseDir = jobExecution.getJobParameters().getString(BatchConstants.Job.BASE_DIR);
+
+				Path consolidatedZip = resultAggregationService.aggregateResultsFromJobDir(jobExecutionId, jobBaseDir,
+						jobTimestamp);
+
 				chunkContext.getStepContext().getStepExecution().getExecutionContext()
 						.putString("consolidatedOutputPath", consolidatedZip.toString());
 
@@ -313,66 +284,27 @@ public class PartitionedBatchConfiguration {
 				return RepeatStatus.FINISHED;
 
 			} catch (IOException ioException) {
-				// Handle I/O specific failures: perform cleanup and wrap with enhanced context
 				throw handleResultAggregationFailure(
-						jobExecutionId, baseOutputPath, ioException, "I/O operation failed during result aggregation");
+						jobExecutionId, ioException,
+						"I/O operation failed during result aggregation");
 			} catch (Exception generalException) {
-				// Handle all other failures: perform cleanup and wrap with enhanced context
 				throw handleResultAggregationFailure(
-						jobExecutionId, baseOutputPath, generalException, "Unexpected error during result aggregation");
+						jobExecutionId, generalException,
+						"Unexpected error during result aggregation");
 			}
 		};
 	}
 
-	/**
-	 * Handles result aggregation failures by performing cleanup, logging, and
-	 * creating appropriate exception.
-	 */
 	private ResultAggregationException handleResultAggregationFailure(
-			Long jobExecutionId, String baseOutputPath, Exception cause, String errorDescription) {
-		// Perform cleanup of partial aggregation results
-		performAggregationCleanup(jobExecutionId, baseOutputPath);
-
+			Long jobExecutionId, Exception cause, String errorDescription) {
 		String contextualMessage = String.format(
-				"%s for job execution: %d, Output path: %s, Exception type: %s, Root cause: %s", errorDescription,
-				jobExecutionId, baseOutputPath, cause.getClass().getSimpleName(),
-				cause.getMessage() != null ? cause.getMessage() : "No error message available");
+				"%s for job execution: %d, Exception type: %s, Root cause: %s",
+				errorDescription,
+				jobExecutionId, cause.getClass().getSimpleName(),
+				cause.getMessage() != null ? cause.getMessage() : BatchConstants.ErrorMessage.NO_ERROR_MESSAGE);
 
-		// Log the failure with full context
 		logger.error(contextualMessage, cause);
 
 		return new ResultAggregationException(contextualMessage, cause);
-	}
-
-	/**
-	 * Performs cleanup of partial aggregation results when aggregation fails. This
-	 * method safely handles cleanup without throwing exceptions.
-	 *
-	 * @param jobExecutionId The job execution ID for context
-	 * @param baseOutputPath The base output path where cleanup should occur
-	 */
-	private void performAggregationCleanup(Long jobExecutionId, String baseOutputPath) {
-		try {
-			// Attempt to clean up any partial files created during aggregation
-			java.nio.file.Path outputDir = java.nio.file.Paths.get(baseOutputPath);
-			if (Files.exists(outputDir)) {
-				// Clean up temporary files related to this job execution
-				String jobPrefix = "job_" + jobExecutionId;
-				try (java.util.stream.Stream<java.nio.file.Path> pathStream = Files.list(outputDir)) {
-					pathStream.filter(path -> path.getFileName().toString().startsWith(jobPrefix)).forEach(path -> {
-						try {
-							Files.deleteIfExists(path);
-							logger.debug("Cleaned up partial aggregation file: {}", path);
-						} catch (Exception cleanupException) {
-							logger.warn("Failed to cleanup file: {}", path, cleanupException);
-						}
-					});
-				}
-			}
-		} catch (Exception cleanupException) {
-			// Log cleanup failure but don't throw exception to avoid masking original error
-			logger.warn(
-					"Failed to perform aggregation cleanup for job execution: {}", jobExecutionId, cleanupException);
-		}
 	}
 }
