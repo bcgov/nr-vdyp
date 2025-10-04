@@ -87,7 +87,8 @@ class Hcsv_Vdyp7_Comparison_Test {
 				Parameters.ExecutionOption.DO_INCLUDE_PROJECTION_FILES, //
 				Parameters.ExecutionOption.FORWARD_GROW_ENABLED, //
 				Parameters.ExecutionOption.DO_INCLUDE_SPECIES_PROJECTION, //
-				Parameters.ExecutionOption.DO_INCLUDE_POLYGON_RECORD_ID_IN_YIELD_TABLE
+				Parameters.ExecutionOption.DO_INCLUDE_POLYGON_RECORD_ID_IN_YIELD_TABLE, //
+				Parameters.ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE
 		);
 		parameters.ageStart(0).ageEnd(250).ageIncrement(25);
 
@@ -165,10 +166,12 @@ class Hcsv_Vdyp7_Comparison_Test {
 	}
 
 	// FIXME VDYP-604 Remove these once VDYP-604 is fixed.
+	// PRJ_SCND_HT was included in IGNORE_COLUMNS_EXCEPT_LH due to VDYP-804 and is
+	// unrelated to VDYP-604.
 	static final Pattern IGNORE_COLUMNS = Pattern
 			.compile("PRJ_TPH|PRJ_LOREY_HT|PRJ_DIAMETER|PRJ_BA|PRJ_(SP\\d_)?VOL_(?:D|DW|DWB|CU|WS)");
 	static final Pattern IGNORE_COLUMNS_EXCEPT_LH = Pattern
-			.compile("PRJ_TPH|PRJ_DIAMETER|PRJ_BA|PRJ_(SP\\d_)?VOL_(?:D|DW|DWB|CU|WS)");
+			.compile("PRJ_TPH|PRJ_DIAMETER|PRJ_BA|PRJ_SCND_HT|PRJ_(SP\\d_)?VOL_(?:D|DW|DWB|CU|WS)");
 
 	@Test
 	void test604() throws IOException, ResourceParseException {
