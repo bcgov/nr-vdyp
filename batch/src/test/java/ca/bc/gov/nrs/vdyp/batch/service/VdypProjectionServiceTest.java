@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -430,6 +431,71 @@ class VdypProjectionServiceTest {
 		String message = exception.getMessage();
 		assertTrue(message.contains("6 records"));
 		assertTrue(message.contains("and 1 more"));
+	}
+
+	@Test
+	void testStoreDebugLog_CreatesEmptyFile() throws Exception {
+		String projectionId = "test-projection-123";
+		List<BatchRecord> batchRecords = createValidBatchRecords(2);
+
+		Method storeDebugLogMethod = VdypProjectionService.class.getDeclaredMethod(
+				"storeDebugLog", Path.class, String.class, List.class);
+		storeDebugLogMethod.setAccessible(true);
+
+		storeDebugLogMethod.invoke(vdypProjectionService, tempDir, projectionId, batchRecords);
+
+		String expectedFileName = String.format("YieldTables_%s_DebugLog.txt", projectionId);
+		Path debugLogPath = tempDir.resolve(expectedFileName);
+
+		assertTrue(Files.exists(debugLogPath), "Debug log file should be created");
+		assertTrue(Files.isRegularFile(debugLogPath), "Debug log should be a regular file");
+		assertEquals(0, Files.size(debugLogPath), "Debug log file should be empty");
+	}
+
+	@Test
+	void testStoreDebugLog_OverwritesExistingFile() throws Exception {
+		String projectionId = "test-projection-456";
+		List<BatchRecord> batchRecords = createValidBatchRecords(1);
+
+		String debugLogFileName = String.format("YieldTables_%s_DebugLog.txt", projectionId);
+		Path debugLogPath = tempDir.resolve(debugLogFileName);
+		Files.writeString(debugLogPath, "This is existing content that should be overwritten");
+
+		assertTrue(Files.size(debugLogPath) > 0, "File should have content before test");
+
+		Method storeDebugLogMethod = VdypProjectionService.class.getDeclaredMethod(
+				"storeDebugLog", Path.class, String.class, List.class);
+		storeDebugLogMethod.setAccessible(true);
+
+		storeDebugLogMethod.invoke(vdypProjectionService, tempDir, projectionId, batchRecords);
+
+		assertTrue(Files.exists(debugLogPath), "Debug log file should exist");
+		assertEquals(0, Files.size(debugLogPath), "Debug log file should be empty after overwrite");
+	}
+
+	@Test
+	void testStoreDebugLog_WithDifferentProjectionIds() throws Exception {
+		List<BatchRecord> batchRecords = createValidBatchRecords(1);
+		String[] projectionIds = {
+				"batch-1-partition0-projection-HCSV-2025_10_02_14_06_43_4933",
+				"batch-99-partition5-projection-DCSV-2025_12_31_23_59_59_9999",
+				"simple-id"
+		};
+
+		Method storeDebugLogMethod = VdypProjectionService.class.getDeclaredMethod(
+				"storeDebugLog", Path.class, String.class, List.class);
+		storeDebugLogMethod.setAccessible(true);
+
+		for (String projectionId : projectionIds) {
+			storeDebugLogMethod.invoke(vdypProjectionService, tempDir, projectionId, batchRecords);
+
+			String expectedFileName = String.format("YieldTables_%s_DebugLog.txt", projectionId);
+			Path debugLogPath = tempDir.resolve(expectedFileName);
+
+			assertTrue(Files.exists(debugLogPath),
+					"Debug log should be created for projection ID: " + projectionId);
+			assertEquals(0, Files.size(debugLogPath), "File should be empty");
+		}
 	}
 
 	private List<BatchRecord> createValidBatchRecords(int count) {

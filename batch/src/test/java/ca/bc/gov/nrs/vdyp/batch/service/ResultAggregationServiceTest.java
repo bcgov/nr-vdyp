@@ -377,19 +377,19 @@ class ResultAggregationServiceTest {
 
 	@Test
 	void testAggregateResults_NullJobTimestamp() {
+		String tempDirPath = tempDir.toString();
 		IllegalArgumentException exception = assertThrows(
 				IllegalArgumentException.class,
-				() -> resultAggregationService.aggregateResultsFromJobDir(JOB_EXECUTION_ID, tempDir.toString(), null));
-
+				() -> resultAggregationService.aggregateResultsFromJobDir(JOB_EXECUTION_ID, tempDirPath, null));
 		assertTrue(exception.getMessage().contains("Job timestamp cannot be null"));
 	}
 
 	@Test
 	void testAggregateResults_EmptyJobTimestamp() {
+		String tempDirPath = tempDir.toString();
 		IllegalArgumentException exception = assertThrows(
 				IllegalArgumentException.class,
-				() -> resultAggregationService.aggregateResultsFromJobDir(JOB_EXECUTION_ID, tempDir.toString(), "  "));
-
+				() -> resultAggregationService.aggregateResultsFromJobDir(JOB_EXECUTION_ID, tempDirPath, " "));
 		assertTrue(exception.getMessage().contains("Job timestamp cannot be null"));
 	}
 
