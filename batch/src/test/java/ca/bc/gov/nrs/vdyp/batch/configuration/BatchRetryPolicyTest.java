@@ -13,6 +13,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -170,8 +173,6 @@ class BatchRetryPolicyTest {
 		when(retryContext.getRetryCount()).thenReturn(1);
 		policyWithJobId.canRetry(retryContext);
 
-		// Test successful retry - this should trigger recordSuccessfulRetry and
-		// logSuccessfulRetry
 		assertDoesNotThrow(() -> policyWithJobId.onRetrySuccess(1245678902L, batchRecord));
 
 		verify(metricsCollector).recordRetryAttempt(100L, 1245678902L, batchRecord, 2, null, true, "partition0");
@@ -588,6 +589,14 @@ class BatchRetryPolicyTest {
 		boolean result = batchRetryPolicy.canRetry(retryContext);
 
 		assertTrue(result);
+	}
+
+	@Test
+	void testExtractRecordId_NullErrorMessage() throws Exception {
+		Method extractRecordIdMethod = BatchRetryPolicy.class.getDeclaredMethod("extractRecordId", String.class);
+		extractRecordIdMethod.setAccessible(true);
+		Long result = (Long) extractRecordIdMethod.invoke(batchRetryPolicy, (String) null);
+		assertEquals(-1L, result, "Should return -1L for null errorMessage");
 	}
 
 	@Test

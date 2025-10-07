@@ -1,27 +1,37 @@
 package ca.bc.gov.nrs.vdyp.batch.service;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.InjectMocks;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-import java.util.List;
-import java.util.ArrayList;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchIOException;
 import ca.bc.gov.nrs.vdyp.batch.exception.ResultAggregationException;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
 class ResultAggregationServiceTest {
@@ -1013,5 +1023,43 @@ class ResultAggregationServiceTest {
 
 		assertEquals(cause, exception.getCause());
 		assertNotNull(exception.getMessage());
+	}
+
+	@Test
+	void testCollectYieldTablesFromPartition_IOException() throws Exception {
+		Path partitionDir = tempDir.resolve("output-partition-0");
+		Files.createDirectories(partitionDir);
+
+		try (MockedStatic<Files> mockedFiles = Mockito.mockStatic(Files.class, Mockito.CALLS_REAL_METHODS)) {
+			mockedFiles.when(() -> Files.walk(partitionDir))
+					.thenThrow(new IOException("Mocked directory walk failure"));
+
+			Map<String, List<Path>> yieldTablesByType = new HashMap<>();
+
+			Method collectYieldTablesMethod = ResultAggregationService.class.getDeclaredMethod(
+					"collectYieldTablesFromPartition", Path.class, Map.class);
+			collectYieldTablesMethod.setAccessible(true);
+
+			Exception exception = assertThrows(
+					Exception.class,
+					() -> collectYieldTablesMethod.invoke(resultAggregationService, partitionDir, yieldTablesByType),
+					"Expected Exception when Files.walk fails");
+
+			Throwable actualException = exception.getCause();
+			assertNotNull(actualException, "Exception cause should not be null");
+
+			String exceptionMessage = actualException.getMessage();
+			assertNotNull(exceptionMessage, "Exception message should not be null");
+			assertTrue(exceptionMessage.contains("Error walking directory tree for yield tables"),
+					"Exception message should contain error description");
+			assertTrue(exceptionMessage.contains(partitionDir.toString()),
+					"Exception message should contain directory path");
+			assertTrue(exceptionMessage.contains("Mocked directory walk failure"),
+					"Exception message should contain cause message");
+			assertTrue(actualException.getCause() instanceof IOException,
+					"Cause should be the original IOException");
+
+			assertTrue(yieldTablesByType.isEmpty(), "yieldTablesByType should remain empty");
+		}
 	}
 }

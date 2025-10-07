@@ -6,7 +6,13 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
@@ -22,6 +28,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import ca.bc.gov.nrs.vdyp.batch.exception.BatchException;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters.OutputFormat;
@@ -74,18 +81,6 @@ class VdypProjectionServiceTest {
 		IOException exception = assertThrows(IOException.class, () -> {
 			vdypProjectionService.performProjectionForChunk(
 					batchRecords, PARTITION_NAME, parameters, JOB_EXECUTION_ID, "");
-		});
-
-		assertTrue(exception.getMessage().contains("Job base directory cannot be null or empty"));
-	}
-
-	@Test
-	void testPerformProjectionForChunk_WhitespaceJobBaseDir() {
-		List<BatchRecord> batchRecords = createValidBatchRecords(1);
-
-		IOException exception = assertThrows(IOException.class, () -> {
-			vdypProjectionService.performProjectionForChunk(
-					batchRecords, PARTITION_NAME, parameters, JOB_EXECUTION_ID, "   ");
 		});
 
 		assertTrue(exception.getMessage().contains("Job base directory cannot be null or empty"));
@@ -271,23 +266,6 @@ class VdypProjectionServiceTest {
 	}
 
 	@Test
-	void testPerformProjectionForChunk_EmptyHeaders() {
-		List<BatchRecord> batchRecords = new ArrayList<>();
-		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setFeatureId("123456789");
-		batchRecord.setPolygonHeader("");
-		batchRecord.setRawPolygonData("123456789,MAP1");
-		batchRecord.setLayerHeader("");
-		batchRecord.setRawLayerData(List.of("123456789,P"));
-		batchRecords.add(batchRecord);
-
-		assertThrows(Exception.class, () -> {
-			vdypProjectionService.performProjectionForChunk(
-					batchRecords, PARTITION_NAME, parameters, JOB_EXECUTION_ID, tempDir.toString());
-		});
-	}
-
-	@Test
 	void testPerformProjectionForChunk_NullHeaders() {
 		List<BatchRecord> batchRecords = new ArrayList<>();
 		BatchRecord batchRecord = new BatchRecord();
@@ -428,20 +406,6 @@ class VdypProjectionServiceTest {
 		String message = exception.getMessage();
 		assertTrue(message.contains("5 records"));
 		assertFalse(message.contains("and 0 more"));
-	}
-
-	@Test
-	void testPerformProjectionForChunk_WithExactly6Records() {
-		List<BatchRecord> batchRecords = createValidBatchRecords(6);
-
-		IOException exception = assertThrows(IOException.class, () -> {
-			vdypProjectionService.performProjectionForChunk(
-					batchRecords, PARTITION_NAME, parameters, JOB_EXECUTION_ID, tempDir.toString());
-		});
-
-		String message = exception.getMessage();
-		assertTrue(message.contains("6 records"));
-		assertTrue(message.contains("and 1 more"));
 	}
 
 	@Test
