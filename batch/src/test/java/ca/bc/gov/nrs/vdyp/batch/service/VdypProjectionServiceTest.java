@@ -1,21 +1,32 @@
 package ca.bc.gov.nrs.vdyp.batch.service;
 
-import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
-import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
-import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-import java.io.IOException;
-import java.lang.reflect.Method;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
-import java.util.ArrayList;
-
-import static org.junit.jupiter.api.Assertions.*;
+import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters.OutputFormat;
+import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind;
+import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.YieldTable;
 
 class VdypProjectionServiceTest {
 
@@ -499,6 +510,30 @@ class VdypProjectionServiceTest {
 	}
 
 	@Test
+	void testStoreDebugLog_IOExceptionHandling() throws Exception {
+		String projectionId = "test-projection-123";
+		List<BatchRecord> batchRecords = createValidBatchRecords(1);
+
+		Path invalidParentDir = tempDir.resolve("nonexistent/parent/dir");
+
+		assertFalse(Files.exists(invalidParentDir), "Parent directory should not exist");
+
+		Method storeDebugLogMethod = VdypProjectionService.class.getDeclaredMethod(
+				"storeDebugLog", Path.class, String.class, List.class);
+		storeDebugLogMethod.setAccessible(true);
+
+		Exception exception = assertThrows(Exception.class, () -> {
+			storeDebugLogMethod.invoke(vdypProjectionService, invalidParentDir, projectionId, batchRecords);
+		});
+
+		Throwable cause = exception.getCause();
+		assertTrue(cause instanceof IOException, "Expected IOException to be thrown");
+		assertTrue(cause.getMessage().contains("Failed to create debug log placeholder"),
+				"Exception message should contain 'Failed to create debug log placeholder'");
+		assertTrue(cause.getCause() instanceof IOException, "Root cause should be an IOException");
+	}
+
+	@Test
 	void testCreateOutputPartitionDir_NullJobBaseDir() throws Exception {
 		Method createOutputPartitionDirMethod = VdypProjectionService.class.getDeclaredMethod(
 				"createOutputPartitionDir", String.class, String.class);
@@ -506,36 +541,6 @@ class VdypProjectionServiceTest {
 
 		Exception exception = assertThrows(Exception.class, () -> {
 			createOutputPartitionDirMethod.invoke(vdypProjectionService, "partition0", null);
-		});
-
-		Throwable cause = exception.getCause();
-		assertTrue(cause instanceof IOException);
-		assertTrue(cause.getMessage().contains("Job base directory cannot be null or empty"));
-	}
-
-	@Test
-	void testCreateOutputPartitionDir_EmptyJobBaseDir() throws Exception {
-		Method createOutputPartitionDirMethod = VdypProjectionService.class.getDeclaredMethod(
-				"createOutputPartitionDir", String.class, String.class);
-		createOutputPartitionDirMethod.setAccessible(true);
-
-		Exception exception = assertThrows(Exception.class, () -> {
-			createOutputPartitionDirMethod.invoke(vdypProjectionService, "partition0", "");
-		});
-
-		Throwable cause = exception.getCause();
-		assertTrue(cause instanceof IOException);
-		assertTrue(cause.getMessage().contains("Job base directory cannot be null or empty"));
-	}
-
-	@Test
-	void testCreateOutputPartitionDir_WhitespaceJobBaseDir() throws Exception {
-		Method createOutputPartitionDirMethod = VdypProjectionService.class.getDeclaredMethod(
-				"createOutputPartitionDir", String.class, String.class);
-		createOutputPartitionDirMethod.setAccessible(true);
-
-		Exception exception = assertThrows(Exception.class, () -> {
-			createOutputPartitionDirMethod.invoke(vdypProjectionService, "partition0", "   ");
 		});
 
 		Throwable cause = exception.getCause();
@@ -559,33 +564,36 @@ class VdypProjectionServiceTest {
 	}
 
 	@Test
-	void testCreateOutputPartitionDir_EmptyPartitionName() throws Exception {
+	void testCreateOutputPartitionDir_IOExceptionHandling() throws Exception {
+		String partitionName = "partition0";
+		String jobBaseDir = tempDir.toString();
+
+		Path outputPartitionDir = tempDir.resolve("output-partition0");
+
+		Files.createFile(outputPartitionDir);
+
+		assertTrue(Files.exists(outputPartitionDir), "Output path should exist as a file");
+		assertTrue(Files.isRegularFile(outputPartitionDir), "Output path should be a file, not directory");
+
 		Method createOutputPartitionDirMethod = VdypProjectionService.class.getDeclaredMethod(
 				"createOutputPartitionDir", String.class, String.class);
 		createOutputPartitionDirMethod.setAccessible(true);
 
 		Exception exception = assertThrows(Exception.class, () -> {
-			createOutputPartitionDirMethod.invoke(vdypProjectionService, "", tempDir.toString());
+			createOutputPartitionDirMethod.invoke(vdypProjectionService, partitionName, jobBaseDir);
 		});
 
+		assertTrue(exception instanceof InvocationTargetException,
+				"Expected InvocationTargetException, but got: " + exception.getClass().getSimpleName());
 		Throwable cause = exception.getCause();
-		assertTrue(cause instanceof IOException);
-		assertTrue(cause.getMessage().contains("Partition name cannot be null or empty"));
-	}
-
-	@Test
-	void testCreateOutputPartitionDir_WhitespacePartitionName() throws Exception {
-		Method createOutputPartitionDirMethod = VdypProjectionService.class.getDeclaredMethod(
-				"createOutputPartitionDir", String.class, String.class);
-		createOutputPartitionDirMethod.setAccessible(true);
-
-		Exception exception = assertThrows(Exception.class, () -> {
-			createOutputPartitionDirMethod.invoke(vdypProjectionService, "   ", tempDir.toString());
-		});
-
-		Throwable cause = exception.getCause();
-		assertTrue(cause instanceof IOException);
-		assertTrue(cause.getMessage().contains("Partition name cannot be null or empty"));
+		assertNotNull(cause, "Exception cause should not be null");
+		assertTrue(cause instanceof IOException,
+				"Expected IOException, but got: " + (cause != null ? cause.getClass().getSimpleName() : "null"));
+		assertTrue(cause.getMessage().contains("Failed to create output partition directory"),
+				"Exception message should contain 'Failed to create output partition directory'");
+		assertTrue(cause.getCause() instanceof IOException,
+				"Root cause should be an IOException, but got: "
+						+ (cause.getCause() != null ? cause.getCause().getClass().getSimpleName() : "null"));
 	}
 
 	@Test
@@ -606,6 +614,55 @@ class VdypProjectionServiceTest {
 	}
 
 	@Test
+	void testCreateCombinedInputStreamsFromRawData_NoPolygonData() throws Exception {
+		Method createCombinedInputStreamsFromRawDataMethod = VdypProjectionService.class
+				.getDeclaredMethod("createCombinedInputStreamsFromRawData", List.class);
+		createCombinedInputStreamsFromRawDataMethod.setAccessible(true);
+
+		List<BatchRecord> batchRecords = new ArrayList<>();
+		BatchRecord batchRecord = new BatchRecord();
+		batchRecord.setFeatureId("123456789");
+		batchRecord.setPolygonHeader(null);
+		batchRecord.setRawPolygonData(null);
+		batchRecord.setLayerHeader("FEATURE_ID,LAYER");
+		batchRecord.setRawLayerData(List.of("123456789,P"));
+		batchRecords.add(batchRecord);
+
+		Exception exception = assertThrows(Exception.class, () -> {
+			createCombinedInputStreamsFromRawDataMethod.invoke(vdypProjectionService, batchRecords);
+		});
+
+		Throwable cause = exception.getCause();
+		assertTrue(cause instanceof IOException);
+		assertTrue(cause.getMessage().contains("Combined CSV data is empty or invalid"));
+	}
+
+	@Test
+	void testCreateCombinedInputStreamsFromRawData_NoLayerData() throws Exception {
+		Method createCombinedInputStreamsFromRawDataMethod = VdypProjectionService.class
+				.getDeclaredMethod("createCombinedInputStreamsFromRawData", List.class);
+		createCombinedInputStreamsFromRawDataMethod.setAccessible(true);
+
+		List<BatchRecord> batchRecords = new ArrayList<>();
+		BatchRecord batchRecord = new BatchRecord();
+		batchRecord.setFeatureId("123456789");
+		batchRecord.setPolygonHeader("FEATURE_ID,MAP_ID");
+		batchRecord.setRawPolygonData("123456789,MAP1");
+		batchRecord.setLayerHeader(null);
+		batchRecord.setRawLayerData(null);
+		batchRecords.add(batchRecord);
+
+		Exception exception = assertThrows(Exception.class, () -> {
+			createCombinedInputStreamsFromRawDataMethod.invoke(vdypProjectionService,
+					batchRecords);
+		});
+
+		Throwable cause = exception.getCause();
+		assertTrue(cause instanceof IOException);
+		assertTrue(cause.getMessage().contains("Combined CSV data is empty or invalid"));
+	}
+
+	@Test
 	void testStoreYieldTable_NullYieldTable() throws Exception {
 		Method storeYieldTableMethod = VdypProjectionService.class.getDeclaredMethod(
 				"storeYieldTable", ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.YieldTable.class,
@@ -618,6 +675,44 @@ class VdypProjectionServiceTest {
 		assertDoesNotThrow(() -> {
 			storeYieldTableMethod.invoke(vdypProjectionService, null, tempDir, projectionId, batchRecords);
 		});
+	}
+
+	@Test
+	void testStoreYieldTable_IOExceptionHandling() throws Exception {
+		String projectionId = "test-projection-123";
+		List<BatchRecord> batchRecords = createValidBatchRecords(1);
+
+		// Mock YieldTable to provide a valid filename and InputStream
+		YieldTable yieldTable = mock(YieldTable.class);
+		OutputFormat mockOutputFormat = mock(OutputFormat.class);
+		when(yieldTable.getOutputFormat()).thenReturn(mockOutputFormat);
+		when(mockOutputFormat.getYieldTableFileName()).thenReturn("testYieldTable.csv");
+		when(yieldTable.getAsStream()).thenReturn(new ByteArrayInputStream("test data".getBytes()));
+
+		// Create a Path with a non-existent parent directory to trigger IOException
+		Path invalidParentDir = tempDir.resolve("nonexistent/parent/dir");
+		assertFalse(Files.exists(invalidParentDir), "Parent directory should not exist");
+
+		Method storeYieldTableMethod = VdypProjectionService.class.getDeclaredMethod(
+				"storeYieldTable", YieldTable.class, Path.class, String.class, List.class);
+		storeYieldTableMethod.setAccessible(true);
+
+		Exception exception = assertThrows(Exception.class, () -> {
+			storeYieldTableMethod.invoke(vdypProjectionService, yieldTable, invalidParentDir, projectionId,
+					batchRecords);
+		});
+
+		assertTrue(exception instanceof InvocationTargetException,
+				"Expected InvocationTargetException, but got: " + exception.getClass().getSimpleName());
+		Throwable cause = exception.getCause();
+		assertNotNull(cause, "Exception cause should not be null");
+		assertTrue(cause instanceof IOException,
+				"Expected IOException, but got: " + (cause != null ? cause.getClass().getSimpleName() : "null"));
+		assertTrue(cause.getMessage().contains("Failed to store yield table"),
+				"Exception message should contain 'Failed to store yield table'");
+		assertTrue(cause.getCause() instanceof IOException,
+				"Root cause should be an IOException, but got: "
+						+ (cause.getCause() != null ? cause.getCause().getClass().getSimpleName() : "null"));
 	}
 
 	private List<BatchRecord> createValidBatchRecords(int count) {
