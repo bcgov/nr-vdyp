@@ -599,7 +599,10 @@ public class ResultAggregationService {
 				return false;
 			}
 
-			// Validate YieldTable.csv size
+			if (!validateZipEntry(yieldTableEntry, BatchConstants.File.YIELD_TABLE_FILENAME)) {
+				return false;
+			}
+
 			long yieldTableSize = yieldTableEntry.getSize();
 			logger.debug("YieldTable.csv size: {} bytes", yieldTableSize);
 
@@ -621,5 +624,26 @@ public class ResultAggregationService {
 			logger.error("Failed to validate ZIP file: {} - {}", zipPath, e.getMessage(), e);
 			return false;
 		}
+	}
+
+	private boolean validateZipEntry(ZipEntry entry, String entryName) {
+		final long MAX_UNCOMPRESSED_SIZE = 500L * 1024 * 1024; // 500 MB
+
+		long uncompressedSize = entry.getSize();
+
+		// Check for unknown size
+		if (uncompressedSize < 0) {
+			logger.error("ZIP entry {} has unknown uncompressed size (potential security risk)", entryName);
+			return false;
+		}
+
+		// Check maximum uncompressed size
+		if (uncompressedSize > MAX_UNCOMPRESSED_SIZE) {
+			logger.error("ZIP entry {} exceeds maximum uncompressed size: {} bytes (max: {} bytes)",
+					entryName, uncompressedSize, MAX_UNCOMPRESSED_SIZE);
+			return false;
+		}
+
+		return true;
 	}
 }

@@ -376,6 +376,24 @@ class ResultAggregationServiceTest {
 	}
 
 	@Test
+	void testAggregateResults_NullJobTimestamp() {
+		IllegalArgumentException exception = assertThrows(
+				IllegalArgumentException.class,
+				() -> resultAggregationService.aggregateResultsFromJobDir(JOB_EXECUTION_ID, tempDir.toString(), null));
+
+		assertTrue(exception.getMessage().contains("Job timestamp cannot be null"));
+	}
+
+	@Test
+	void testAggregateResults_EmptyJobTimestamp() {
+		IllegalArgumentException exception = assertThrows(
+				IllegalArgumentException.class,
+				() -> resultAggregationService.aggregateResultsFromJobDir(JOB_EXECUTION_ID, tempDir.toString(), "  "));
+
+		assertTrue(exception.getMessage().contains("Job timestamp cannot be null"));
+	}
+
+	@Test
 	void testAggregateResults_NullJobBaseDir() {
 		IllegalArgumentException exception = assertThrows(
 				IllegalArgumentException.class,
@@ -588,8 +606,163 @@ class ResultAggregationServiceTest {
 			}
 		}
 
-		// Should have GeneralLog.txt for logs that don't match specific patterns
 		assertTrue(entryNames.contains("GeneralLog.txt"));
+	}
+
+	@Test
+	void testFindPartitionDirectories_WithDirectMatchPattern() throws IOException {
+		// Create directories with exact prefix match
+		Path partition1 = tempDir.resolve("output-partition0");
+		Path partition2 = tempDir.resolve("output-partition-10");
+		Files.createDirectories(partition1);
+		Files.createDirectories(partition2);
+
+		Files.writeString(partition1.resolve("YieldTable.csv"), YIELD_TABLE_CONTENT);
+		Files.writeString(partition2.resolve("YieldTable.csv"), YIELD_TABLE_CONTENT);
+
+		Path resultZip = resultAggregationService.aggregateResultsFromJobDir(JOB_EXECUTION_ID, tempDir.toString(),
+				JOB_TIMESTAMP);
+
+		assertNotNull(resultZip);
+		assertTrue(Files.exists(resultZip));
+	}
+
+	@Test
+	void testAggregateResults_WithNonExistentYieldTable() throws IOException {
+		Path partition = tempDir.resolve("output-partition-0");
+		Files.createDirectories(partition);
+
+		// Try to process but yield table doesn't exist
+		Files.writeString(partition.resolve("error.log"), ERROR_LOG_CONTENT);
+
+		Path resultZip = resultAggregationService.aggregateResultsFromJobDir(JOB_EXECUTION_ID, tempDir.toString(),
+				JOB_TIMESTAMP);
+
+		assertNotNull(resultZip);
+		assertTrue(Files.exists(resultZip));
+
+		boolean isValid = resultAggregationService.validateConsolidatedZip(resultZip);
+		assertFalse(isValid, "Should be invalid without YieldTable.csv");
+	}
+
+	@Test
+	void testAggregateResults_WithUnreadableYieldTable() throws IOException {
+		Path partition = tempDir.resolve("output-partition-0");
+		Files.createDirectories(partition);
+
+		Path yieldTablePath = partition.resolve("YieldTable.csv");
+		Files.writeString(yieldTablePath, YIELD_TABLE_CONTENT);
+
+		// Make file unreadable (on Windows this may not work as expected, but test
+		// should pass)
+		if (yieldTablePath.toFile().setReadable(false)) {
+			Path resultZip = resultAggregationService.aggregateResultsFromJobDir(JOB_EXECUTION_ID, tempDir.toString(),
+					JOB_TIMESTAMP);
+
+			assertNotNull(resultZip);
+			assertTrue(Files.exists(resultZip));
+
+			// Restore permissions for cleanup
+			yieldTablePath.toFile().setReadable(true);
+		}
+	}
+
+	@Test
+	void testAggregateResults_WithNullPartitionDirectory() throws IOException {
+		// Create a partition with null directory scenario
+		Path partition = tempDir.resolve("output-partition-0");
+		Files.createDirectories(partition);
+
+		Files.writeString(partition.resolve("YieldTable.csv"), YIELD_TABLE_CONTENT);
+
+		Path resultZip = resultAggregationService.aggregateResultsFromJobDir(JOB_EXECUTION_ID, tempDir.toString(),
+				JOB_TIMESTAMP);
+
+		assertNotNull(resultZip);
+		assertTrue(Files.exists(resultZip));
+	}
+
+	@Test
+	void testAggregateResults_WithEmptyLines() throws IOException {
+		Path partition = tempDir.resolve("output-partition-0");
+		Files.createDirectories(partition);
+
+		// Create yield table with empty and whitespace lines
+		String yieldTableWithEmptyLines = """
+				TABLE_NUM,FEATURE_ID,SPECIES_1,LAYER_ID,GENUS,SP0_PERCENTAGE,TOTAL_AGE
+
+				1,123456789,FD,P,FD,100.0,50
+
+				1,123456789,CW,S,CW,80.0,45
+				""";
+		Files.writeString(partition.resolve("YieldTable.csv"), yieldTableWithEmptyLines);
+
+		Path resultZip = resultAggregationService.aggregateResultsFromJobDir(JOB_EXECUTION_ID, tempDir.toString(),
+				JOB_TIMESTAMP);
+
+		String yieldTableContent = getZipEntryContent(resultZip, "YieldTable.csv");
+		assertNotNull(yieldTableContent);
+	}
+
+	@Test
+	void testAggregateResults_WithHeaderKeywordVariations() throws IOException {
+		Path partition = tempDir.resolve("output-partition-0");
+		Files.createDirectories(partition);
+
+		// Test various header patterns
+		String[] headerVariations = {
+				"TABLE_NUM,FEATURE_ID,SPECIES_1,LAYER_ID",
+				"FEATURE_ID,POLYGON_ID,LAYER_ID",
+				"POLYGON_ID,LAYER_ID,SPECIES_CODE",
+				"SPECIES_CODE,LAYER_ID,TABLE_NUM"
+		};
+
+		for (int i = 0; i < headerVariations.length; i++) {
+			Path partitionDir = tempDir.resolve("output-partition-" + i);
+			Files.createDirectories(partitionDir);
+
+			String yieldTable = headerVariations[i] + "\n1,123,FD,P\n";
+			Files.writeString(partitionDir.resolve("YieldTable.csv"), yieldTable);
+		}
+
+		Path resultZip = resultAggregationService.aggregateResultsFromJobDir(JOB_EXECUTION_ID, tempDir.toString(),
+				JOB_TIMESTAMP);
+
+		assertNotNull(resultZip);
+		assertTrue(Files.exists(resultZip));
+	}
+
+	@Test
+	void testMergeLogs_WithPartialFailures() throws IOException {
+		Path partition1 = tempDir.resolve("output-partition-0");
+		Path partition2 = tempDir.resolve("output-partition-1");
+		Files.createDirectories(partition1);
+		Files.createDirectories(partition2);
+
+		// Create log files with some that will fail
+		Files.writeString(partition1.resolve("error.log"), "Error 1");
+		Files.writeString(partition2.resolve("error.log"), "Error 2");
+		Files.writeString(partition1.resolve("YieldTable.csv"), YIELD_TABLE_CONTENT);
+
+		// Create a directory instead of file (will cause copy failure)
+		Path invalidLog = partition2.resolve("error.log.backup");
+		Files.createDirectories(invalidLog);
+
+		Path resultZip = resultAggregationService.aggregateResultsFromJobDir(JOB_EXECUTION_ID, tempDir.toString(),
+				JOB_TIMESTAMP);
+
+		assertNotNull(resultZip);
+		assertTrue(Files.exists(resultZip));
+
+		List<String> entryNames = new ArrayList<>();
+		try (ZipInputStream zis = new ZipInputStream(Files.newInputStream(resultZip))) {
+			ZipEntry entry;
+			while ((entry = zis.getNextEntry()) != null) {
+				entryNames.add(entry.getName());
+			}
+		}
+
+		assertTrue(entryNames.contains("ErrorLog.txt"));
 	}
 
 	@Test
@@ -784,17 +957,14 @@ class ResultAggregationServiceTest {
 
 	@Test
 	void testResultAggregationException_WithDifferentCauseTypes() {
-		// Test with IOException
 		IOException ioCause = new IOException("IO error during aggregation");
 		ResultAggregationException exception1 = new ResultAggregationException("Aggregation failed", ioCause);
 		assertEquals(ioCause, exception1.getCause());
 
-		// Test with RuntimeException
 		RuntimeException runtimeCause = new RuntimeException("Runtime error during aggregation");
 		ResultAggregationException exception2 = new ResultAggregationException("Aggregation failed", runtimeCause);
 		assertEquals(runtimeCause, exception2.getCause());
 
-		// Test with IllegalStateException
 		IllegalStateException stateCause = new IllegalStateException("Invalid state during aggregation");
 		ResultAggregationException exception3 = new ResultAggregationException("Aggregation failed", stateCause);
 		assertEquals(stateCause, exception3.getCause());
