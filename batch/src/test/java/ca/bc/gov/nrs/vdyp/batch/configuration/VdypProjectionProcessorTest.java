@@ -76,9 +76,7 @@ class VdypProjectionProcessorTest {
 
 		verify(stepExecution).getJobExecutionId();
 		verify(executionContext).getString("partitionName", "unknown");
-		verify(executionContext).getLong("startLine", 0);
-		verify(executionContext).getLong("endLine", 0);
-		verify(metricsCollector).initializePartitionMetrics(1L, "test-partition", 1, 100);
+		verify(metricsCollector).initializePartitionMetrics(1L, "test-partition");
 	}
 
 	@Test
@@ -149,9 +147,8 @@ class VdypProjectionProcessorTest {
 
 		verify(stepExecution).getJobExecutionId();
 		verify(executionContext).getString("partitionName", "unknown");
-		verify(executionContext).getLong("startLine", 0);
-		verify(executionContext).getLong("endLine", 0);
 		// No metrics collector calls should be made
+		// beforeStep doesn't call getLong for startLine/endLine
 	}
 
 	private BatchRecord createValidBatchRecord() {

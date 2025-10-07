@@ -23,14 +23,14 @@ class DynamicPartitionerTest {
 	}
 
 	@Test
-	void testSetPartitionBaseDir() {
+	void testSetJobBaseDir() {
 		String baseDir = "/test/path";
-		assertDoesNotThrow(() -> dynamicPartitioner.setPartitionBaseDir(baseDir));
+		assertDoesNotThrow(() -> dynamicPartitioner.setJobBaseDir(baseDir));
 	}
 
 	@Test
-	void testSetPartitionBaseDir_WithNull() {
-		assertDoesNotThrow(() -> dynamicPartitioner.setPartitionBaseDir(null));
+	void testSetJobBaseDir_WithNull() {
+		assertDoesNotThrow(() -> dynamicPartitioner.setJobBaseDir(null));
 	}
 
 	@Test
@@ -43,7 +43,7 @@ class DynamicPartitionerTest {
 		ExecutionContext context = partitions.get("partition0");
 		assertEquals("partition0", context.getString("partitionName"));
 		assertEquals("", context.getString("assignedFeatureIds"));
-		assertFalse(context.containsKey("partitionBaseDir"));
+		assertFalse(context.containsKey("jobBaseDir"));
 	}
 
 	@Test
@@ -63,9 +63,9 @@ class DynamicPartitionerTest {
 	}
 
 	@Test
-	void testPartition_WithPartitionBaseDir() {
+	void testPartition_WithJobBaseDir() {
 		String baseDir = "/test/partition/path";
-		dynamicPartitioner.setPartitionBaseDir(baseDir);
+		dynamicPartitioner.setJobBaseDir(baseDir);
 
 		Map<String, ExecutionContext> partitions = dynamicPartitioner.partition(2);
 
@@ -73,12 +73,12 @@ class DynamicPartitionerTest {
 
 		ExecutionContext context0 = partitions.get("partition0");
 		assertEquals("partition0", context0.getString("partitionName"));
-		assertEquals(baseDir, context0.getString("partitionBaseDir"));
+		assertEquals(baseDir, context0.getString("jobBaseDir"));
 		assertEquals("", context0.getString("assignedFeatureIds"));
 
 		ExecutionContext context1 = partitions.get("partition1");
 		assertEquals("partition1", context1.getString("partitionName"));
-		assertEquals(baseDir, context1.getString("partitionBaseDir"));
+		assertEquals(baseDir, context1.getString("jobBaseDir"));
 		assertEquals("", context1.getString("assignedFeatureIds"));
 	}
 
@@ -130,7 +130,7 @@ class DynamicPartitionerTest {
 	@Test
 	void testPartition_WithBaseDirAndMultiplePartitions() {
 		String baseDir = "/upload/test";
-		dynamicPartitioner.setPartitionBaseDir(baseDir);
+		dynamicPartitioner.setJobBaseDir(baseDir);
 
 		Map<String, ExecutionContext> partitions = dynamicPartitioner.partition(3);
 
@@ -139,7 +139,7 @@ class DynamicPartitionerTest {
 		// Verify all partitions have the base directory set
 		for (int i = 0; i < 3; i++) {
 			ExecutionContext context = partitions.get("partition" + i);
-			assertEquals(baseDir, context.getString("partitionBaseDir"));
+			assertEquals(baseDir, context.getString("jobBaseDir"));
 			assertEquals("partition" + i, context.getString("partitionName"));
 			assertEquals("", context.getString("assignedFeatureIds"));
 		}

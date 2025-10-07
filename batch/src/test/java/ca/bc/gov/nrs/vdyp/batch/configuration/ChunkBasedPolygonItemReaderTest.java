@@ -51,16 +51,16 @@ class ChunkBasedPolygonItemReaderTest {
 
 	@Test
 	void testOpenWithEmptyPartitionBaseDir() {
-		executionContext.putString("partitionBaseDir", "");
+		executionContext.putString("jobBaseDir", "");
 
 		ItemStreamException exception = assertThrows(ItemStreamException.class,
 				() -> reader.open(executionContext));
-		assertTrue(exception.getMessage().contains("partitionBaseDir not found or empty"));
+		assertTrue(exception.getMessage().contains("jobBaseDir not found or empty"));
 	}
 
 	@Test
 	void testOpenWithNonExistentPartitionDir() {
-		executionContext.putString("partitionBaseDir", tempDir.toString());
+		executionContext.putString("jobBaseDir", tempDir.toString());
 
 		ItemStreamException exception = assertThrows(ItemStreamException.class,
 				() -> reader.open(executionContext));
@@ -69,9 +69,9 @@ class ChunkBasedPolygonItemReaderTest {
 
 	@Test
 	void testOpenWithMissingPolygonFile() throws IOException {
-		Path partitionDir = tempDir.resolve("test-partition");
+		Path partitionDir = tempDir.resolve("input-test-partition");
 		Files.createDirectories(partitionDir);
-		executionContext.putString("partitionBaseDir", tempDir.toString());
+		executionContext.putString("jobBaseDir", tempDir.toString());
 
 		ItemStreamException exception = assertThrows(ItemStreamException.class,
 				() -> reader.open(executionContext));
@@ -80,10 +80,10 @@ class ChunkBasedPolygonItemReaderTest {
 
 	@Test
 	void testOpenWithEmptyPolygonFile() throws IOException {
-		Path partitionDir = tempDir.resolve("test-partition");
+		Path partitionDir = tempDir.resolve("input-test-partition");
 		Files.createDirectories(partitionDir);
 		Files.createFile(partitionDir.resolve("polygons.csv")); // Empty file
-		executionContext.putString("partitionBaseDir", tempDir.toString());
+		executionContext.putString("jobBaseDir", tempDir.toString());
 
 		ItemStreamException exception = assertThrows(ItemStreamException.class,
 				() -> reader.open(executionContext));
@@ -126,7 +126,7 @@ class ChunkBasedPolygonItemReaderTest {
 
 	@Test
 	void testReadWithEmptyFeatureId() throws Exception {
-		Path partitionDir = tempDir.resolve("test-partition");
+		Path partitionDir = tempDir.resolve("input-test-partition");
 		Files.createDirectories(partitionDir);
 
 		// Create polygon file with empty FEATURE_ID (leading whitespace to simulate
@@ -138,7 +138,7 @@ class ChunkBasedPolygonItemReaderTest {
 		String layerContent = "FEATURE_ID,LAYER_DATA\n456,layer1\n";
 		Files.write(partitionDir.resolve("layers.csv"), layerContent.getBytes());
 
-		executionContext.putString("partitionBaseDir", tempDir.toString());
+		executionContext.putString("jobBaseDir", tempDir.toString());
 
 		reader.open(executionContext);
 
@@ -152,14 +152,14 @@ class ChunkBasedPolygonItemReaderTest {
 
 	@Test
 	void testReadWithNoLayerFile() throws Exception {
-		Path partitionDir = tempDir.resolve("test-partition");
+		Path partitionDir = tempDir.resolve("input-test-partition");
 		Files.createDirectories(partitionDir);
 
 		// Create polygon file only
 		String polygonContent = "FEATURE_ID,DATA\n123,data1\n456,data2\n";
 		Files.write(partitionDir.resolve("polygons.csv"), polygonContent.getBytes());
 
-		executionContext.putString("partitionBaseDir", tempDir.toString());
+		executionContext.putString("jobBaseDir", tempDir.toString());
 
 		reader.open(executionContext);
 
@@ -173,7 +173,7 @@ class ChunkBasedPolygonItemReaderTest {
 
 	@Test
 	void testReadWithLayerFileButNoHeader() throws Exception {
-		Path partitionDir = tempDir.resolve("test-partition");
+		Path partitionDir = tempDir.resolve("input-test-partition");
 		Files.createDirectories(partitionDir);
 
 		// Create polygon file
@@ -183,7 +183,7 @@ class ChunkBasedPolygonItemReaderTest {
 		// Create empty layer file (no header)
 		Files.createFile(partitionDir.resolve("layers.csv"));
 
-		executionContext.putString("partitionBaseDir", tempDir.toString());
+		executionContext.putString("jobBaseDir", tempDir.toString());
 
 		reader.open(executionContext);
 
@@ -237,17 +237,17 @@ class ChunkBasedPolygonItemReaderTest {
 		// Test with null metricsCollector
 		ChunkBasedPolygonItemReader readerWithoutMetrics = new ChunkBasedPolygonItemReader("test", null, 123L, 2);
 
-		Path partitionDir = tempDir.resolve("test");
+		Path partitionDir = tempDir.resolve("input-test");
 		Files.createDirectories(partitionDir);
 
 		// Create polygon file with invalid data that will cause exception
 		String polygonContent = "FEATURE_ID,DATA\n123,data1\n";
 		Files.write(partitionDir.resolve("polygons.csv"), polygonContent.getBytes());
 
-		executionContext.putString("partitionBaseDir", tempDir.toString());
+		executionContext.putString("jobBaseDir", tempDir.toString());
 		readerWithoutMetrics.open(executionContext);
 
-		// Should handle null metricsCollector gracefully
+		// Should handle null metricsCollector
 		BatchRecord batchRecord = readerWithoutMetrics.read();
 		assertNotNull(batchRecord);
 
@@ -258,7 +258,7 @@ class ChunkBasedPolygonItemReaderTest {
 	void testRecordSkipMetricsWithInvalidFeatureId() throws Exception {
 		doNothing().when(metricsCollector).recordSkip(anyLong(), any(), any(), any(), anyString(), any());
 
-		Path partitionDir = tempDir.resolve("test-partition");
+		Path partitionDir = tempDir.resolve("input-test-partition");
 		Files.createDirectories(partitionDir);
 
 		// Create polygon file with non-numeric FEATURE_ID that can still be processed
@@ -266,7 +266,7 @@ class ChunkBasedPolygonItemReaderTest {
 		String polygonContent = "FEATURE_ID,DATA\nabc,data1\n";
 		Files.write(partitionDir.resolve("polygons.csv"), polygonContent.getBytes());
 
-		executionContext.putString("partitionBaseDir", tempDir.toString());
+		executionContext.putString("jobBaseDir", tempDir.toString());
 
 		reader.open(executionContext);
 
@@ -293,7 +293,7 @@ class ChunkBasedPolygonItemReaderTest {
 	}
 
 	private void setupValidTestFiles() throws IOException {
-		Path partitionDir = tempDir.resolve("test-partition");
+		Path partitionDir = tempDir.resolve("input-test-partition");
 		Files.createDirectories(partitionDir);
 
 		// Create polygon file
@@ -304,6 +304,6 @@ class ChunkBasedPolygonItemReaderTest {
 		String layerContent = "FEATURE_ID,LAYER_DATA\n123,layer1\n456,layer2\n";
 		Files.write(partitionDir.resolve("layers.csv"), layerContent.getBytes());
 
-		executionContext.putString("partitionBaseDir", tempDir.toString());
+		executionContext.putString("jobBaseDir", tempDir.toString());
 	}
 }

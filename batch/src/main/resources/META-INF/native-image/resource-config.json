@@ -17,6 +17,9 @@
         "pattern": "\\QMETA-INF/spring.factories\\E"
       },
       {
+        "pattern": "\\QMETA-INF/spring-configuration-metadata.json\\E"
+      },
+      {
         "pattern": "\\Qorg/springframework/batch/core/schema-h2.sql\\E"
       },
       {
@@ -36,6 +39,9 @@
       },
       {
         "pattern": "\\QMETA-INF/native-image/resource-config.json\\E"
+      },
+      {
+        "pattern": "\\Qca/bc/gov/nrs/vdyp/batch/.*\\E"
       }
     ]
   },

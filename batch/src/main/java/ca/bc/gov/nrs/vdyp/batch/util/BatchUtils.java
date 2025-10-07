@@ -20,10 +20,6 @@ public final class BatchUtils {
 		return dateTimeFormatterForFilenames.format(LocalDateTime.now());
 	}
 
-	public static String formatJobTimestamp(LocalDateTime dateTime) {
-		return dateTimeFormatterForFilenames.format(dateTime);
-	}
-
 	/**
 	 * Sanitizes provided filename for safe logging
 	 * Removes control characters, line breaks, and limits length.
