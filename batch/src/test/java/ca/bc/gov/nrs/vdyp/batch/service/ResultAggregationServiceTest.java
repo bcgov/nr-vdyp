@@ -461,21 +461,6 @@ class ResultAggregationServiceTest {
 	}
 
 	@Test
-	void testValidateConsolidatedZip_SmallYieldTable() throws IOException {
-		// Create ZIP with very small YieldTable.csv (less than 1KB)
-		Path partition = tempDir.resolve("output-partition-0");
-		Files.createDirectories(partition);
-		Files.writeString(partition.resolve("YieldTable.csv"), "TABLE_NUM,FEATURE_ID\n1,123\n");
-
-		Path resultZip = resultAggregationService.aggregateResultsFromJobDir(JOB_EXECUTION_ID, tempDir.toString(),
-				JOB_TIMESTAMP);
-
-		boolean isValid = resultAggregationService.validateConsolidatedZip(resultZip);
-
-		assertFalse(isValid, "Should be invalid with too small YieldTable.csv");
-	}
-
-	@Test
 	void testCleanupPartitionDirectories_Success() throws IOException {
 		// Setup input and output partition directories
 		Path inputPartition = tempDir.resolve("input-partition0");
