@@ -6,12 +6,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.zip.ZipInputStream;
 
 import org.hamcrest.Matchers;
@@ -146,15 +148,20 @@ class ITDataDriven extends BaseDataBasedIntegrationTest {
 	 * @param p2
 	 * @return
 	 */
-	static Pattern eitherRegexp(Pattern p1, Pattern p2) {
-		return Pattern.compile("(?:" + p1.toString() + ")|(?:" + p2.toString() + ")");
+	static Pattern eitherRegexp(Pattern... patterns) {
+		return Pattern
+				.compile(Arrays.stream(patterns).map(p -> "(?:" + p.toString() + ")").collect(Collectors.joining("|")));
 	}
 
 	// FIXME VDYP-604 Remove these once VDYP-604 is fixed.
+	// PRJ_SCND_HT was included in IGNORE_COLUMNS_EXCEPT_LH due to VDYP-804 and is
+	// unrelated to VDYP-604.
+	static final Pattern BASE_804_AFFECTED = Pattern.compile("PRJ_SCND_HT");
 	static final Pattern BASE_604_AFFECTED = Pattern.compile("PRJ_TPH|PRJ_DIAMETER|PRJ_BA");
 	static final Pattern VOLUME_604_AFFECTED = Pattern.compile("PRJ_(SP\\d_)?VOL_(?:D|DW|DWB|CU|WS)");
 
-	static final Predicate<String> IGNORE_COLUMNS = eitherRegexp(BASE_604_AFFECTED, VOLUME_604_AFFECTED)
-			.asMatchPredicate();
+	static final Predicate<String> IGNORE_COLUMNS = eitherRegexp(
+			BASE_804_AFFECTED, BASE_604_AFFECTED, VOLUME_604_AFFECTED
+	).asMatchPredicate();
 
 }
