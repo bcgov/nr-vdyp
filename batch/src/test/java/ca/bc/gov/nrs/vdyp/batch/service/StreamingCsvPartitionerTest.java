@@ -9,6 +9,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -279,14 +280,206 @@ class StreamingCsvPartitionerTest {
 
 	@Test
 	void testPartitionCsvFiles_NullJobBaseDir() {
-		MockMultipartFile polygonFile = new MockMultipartFile("polygonFile", "polygon.csv", "text/csv", POLYGON_CSV_CONTENT.getBytes());
-		MockMultipartFile layerFile = new MockMultipartFile("layerFile", "layer.csv", "text/csv", LAYER_CSV_CONTENT.getBytes());
+		MockMultipartFile polygonFile = new MockMultipartFile("polygonFile", "polygon.csv", "text/csv",
+				POLYGON_CSV_CONTENT.getBytes());
+		MockMultipartFile layerFile = new MockMultipartFile("layerFile", "layer.csv", "text/csv",
+				LAYER_CSV_CONTENT.getBytes());
 
 		IllegalArgumentException exception = assertThrows(
 				IllegalArgumentException.class,
-				() -> streamingCsvPartitioner.partitionCsvFiles(polygonFile, layerFile, 2, null)
-		);
+				() -> streamingCsvPartitioner.partitionCsvFiles(polygonFile, layerFile, 2, null));
 
 		assertTrue(exception.getMessage().contains("Job base directory cannot be null"));
+	}
+
+	@Test
+	void testExtractFeatureId_NullCsvLine() throws Exception {
+		Method extractFeatureIdMethod = StreamingCsvPartitioner.class.getDeclaredMethod(
+				"extractFeatureId", String.class);
+		extractFeatureIdMethod.setAccessible(true);
+
+		Long result = (Long) extractFeatureIdMethod.invoke(streamingCsvPartitioner, (String) null);
+
+		assertNull(result, "Null CSV line should return null");
+	}
+
+	@Test
+	void testExtractFeatureId_WhitespaceCsvLine() throws Exception {
+		Method extractFeatureIdMethod = StreamingCsvPartitioner.class.getDeclaredMethod(
+				"extractFeatureId", String.class);
+		extractFeatureIdMethod.setAccessible(true);
+
+		Long result = (Long) extractFeatureIdMethod.invoke(streamingCsvPartitioner, "   ");
+
+		assertNull(result, "Whitespace-only CSV line should return null");
+	}
+
+	@Test
+	void testExtractFeatureId_TabsAndSpaces() throws Exception {
+		Method extractFeatureIdMethod = StreamingCsvPartitioner.class.getDeclaredMethod(
+				"extractFeatureId", String.class);
+		extractFeatureIdMethod.setAccessible(true);
+
+		Long result = (Long) extractFeatureIdMethod.invoke(streamingCsvPartitioner, "\t  \t");
+
+		assertNull(result, "Tabs and spaces only should return null");
+	}
+
+	@Test
+	void testCreatePartitionWriters_NullBaseDir() throws Exception {
+		Method createPartitionWritersMethod = StreamingCsvPartitioner.class.getDeclaredMethod(
+				"createPartitionWriters", Path.class, String.class, String.class, Integer.class);
+		createPartitionWritersMethod.setAccessible(true);
+
+		Exception exception = assertThrows(Exception.class, () -> {
+			createPartitionWritersMethod.invoke(streamingCsvPartitioner, null, "test.csv", "HEADER", 2);
+		});
+
+		Throwable cause = exception.getCause();
+		assertTrue(cause instanceof IllegalArgumentException);
+		assertTrue(cause.getMessage().contains("Base directory cannot be null"));
+	}
+
+	@Test
+	void testCreatePartitionWriters_EmptyFilename() throws Exception {
+		Method createPartitionWritersMethod = StreamingCsvPartitioner.class.getDeclaredMethod(
+				"createPartitionWriters", Path.class, String.class, String.class, Integer.class);
+		createPartitionWritersMethod.setAccessible(true);
+
+		Exception exception = assertThrows(Exception.class, () -> {
+			createPartitionWritersMethod.invoke(streamingCsvPartitioner, tempDir, "", "HEADER", 2);
+		});
+
+		Throwable cause = exception.getCause();
+		assertTrue(cause instanceof IllegalArgumentException);
+		assertTrue(cause.getMessage().contains("Filename cannot be null or blank"));
+	}
+
+	@Test
+	void testCreatePartitionWriters_NullHeader() throws Exception {
+		Method createPartitionWritersMethod = StreamingCsvPartitioner.class.getDeclaredMethod(
+				"createPartitionWriters", Path.class, String.class, String.class, Integer.class);
+		createPartitionWritersMethod.setAccessible(true);
+
+		Exception exception = assertThrows(Exception.class, () -> {
+			createPartitionWritersMethod.invoke(streamingCsvPartitioner, tempDir, "test.csv", null, 2);
+		});
+
+		Throwable cause = exception.getCause();
+		assertTrue(cause instanceof IllegalArgumentException);
+		assertTrue(cause.getMessage().contains("Header cannot be null"));
+	}
+
+	@Test
+	void testCreatePartitionWriters_NullPartitionSize() throws Exception {
+		Method createPartitionWritersMethod = StreamingCsvPartitioner.class.getDeclaredMethod(
+				"createPartitionWriters", Path.class, String.class, String.class, Integer.class);
+		createPartitionWritersMethod.setAccessible(true);
+
+		Exception exception = assertThrows(Exception.class, () -> {
+			createPartitionWritersMethod.invoke(streamingCsvPartitioner, tempDir, "test.csv", "HEADER", null);
+		});
+
+		Throwable cause = exception.getCause();
+		assertTrue(cause instanceof IllegalArgumentException);
+		assertTrue(cause.getMessage().contains("Partition size must be positive"));
+	}
+
+	@Test
+	void testCreatePartitionWriters_ZeroPartitionSize() throws Exception {
+		Method createPartitionWritersMethod = StreamingCsvPartitioner.class.getDeclaredMethod(
+				"createPartitionWriters", Path.class, String.class, String.class, Integer.class);
+		createPartitionWritersMethod.setAccessible(true);
+
+		Exception exception = assertThrows(Exception.class, () -> {
+			createPartitionWritersMethod.invoke(streamingCsvPartitioner, tempDir, "test.csv", "HEADER", 0);
+		});
+
+		Throwable cause = exception.getCause();
+		assertTrue(cause instanceof IllegalArgumentException);
+		assertTrue(cause.getMessage().contains("Partition size must be positive"));
+		assertTrue(cause.getMessage().contains("got: 0"));
+	}
+
+	@Test
+	void testCreatePartitionWriters_NegativePartitionSize() throws Exception {
+		Method createPartitionWritersMethod = StreamingCsvPartitioner.class.getDeclaredMethod(
+				"createPartitionWriters", Path.class, String.class, String.class, Integer.class);
+		createPartitionWritersMethod.setAccessible(true);
+
+		Exception exception = assertThrows(Exception.class, () -> {
+			createPartitionWritersMethod.invoke(streamingCsvPartitioner, tempDir, "test.csv", "HEADER", -5);
+		});
+
+		Throwable cause = exception.getCause();
+		assertTrue(cause instanceof IllegalArgumentException);
+		assertTrue(cause.getMessage().contains("Partition size must be positive"));
+		assertTrue(cause.getMessage().contains("got: -5"));
+	}
+
+	@Test
+	void testPartitionCsvFiles_WithEmptyLinesInPolygonFile() throws IOException {
+		String polygonWithEmptyLines = """
+				FEATURE_ID,MAP_ID,POLYGON_NUMBER,ORG_UNIT
+				123456789,082G055,1234,DCR
+
+				987654321,082G055,5678,DCR
+
+				111222333,082G055,9999,DCR
+				""";
+
+		String layerCsv = """
+				FEATURE_ID,MAP_ID,POLYGON_NUMBER,LAYER_LEVEL_CODE
+				123456789,082G055,1234,P
+				987654321,082G055,5678,P
+				111222333,082G055,9999,P
+				""";
+
+		MockMultipartFile polygonFile = new MockMultipartFile("polygonFile", "polygon.csv", "text/csv",
+				polygonWithEmptyLines.getBytes());
+		MockMultipartFile layerFile = new MockMultipartFile("layerFile", "layer.csv", "text/csv", layerCsv.getBytes());
+
+		int totalFeatureIds = streamingCsvPartitioner.partitionCsvFiles(
+				polygonFile, layerFile, 2, tempDir);
+
+		// Empty lines should be skipped
+		assertEquals(3, totalFeatureIds);
+	}
+
+	@Test
+	void testPartitionCsvFiles_WithEmptyLinesInLayerFile() throws IOException {
+		String polygonCsv = """
+				FEATURE_ID,MAP_ID,POLYGON_NUMBER,ORG_UNIT
+				123456789,082G055,1234,DCR
+				987654321,082G055,5678,DCR
+				""";
+
+		String layerWithEmptyLines = """
+				FEATURE_ID,MAP_ID,POLYGON_NUMBER,LAYER_LEVEL_CODE
+				123456789,082G055,1234,P
+
+				987654321,082G055,5678,P
+
+				""";
+
+		MockMultipartFile polygonFile = new MockMultipartFile("polygonFile", "polygon.csv", "text/csv",
+				polygonCsv.getBytes());
+		MockMultipartFile layerFile = new MockMultipartFile("layerFile", "layer.csv", "text/csv",
+				layerWithEmptyLines.getBytes());
+
+		int totalFeatureIds = streamingCsvPartitioner.partitionCsvFiles(
+				polygonFile, layerFile, 2, tempDir);
+
+		// Should process successfully, empty lines in layer file are skipped
+		assertEquals(2, totalFeatureIds);
+
+		// Verify layer files were created
+		Path partition0LayerFile = tempDir.resolve("input-partition0").resolve("layers.csv");
+		assertTrue(Files.exists(partition0LayerFile));
+
+		String content = Files.readString(partition0LayerFile);
+		// Should contain header and one valid line (empty lines skipped)
+		long lineCount = content.lines().count();
+		assertEquals(2, lineCount); // header + 1 data line
 	}
 }

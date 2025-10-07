@@ -498,6 +498,128 @@ class VdypProjectionServiceTest {
 		}
 	}
 
+	@Test
+	void testCreateOutputPartitionDir_NullJobBaseDir() throws Exception {
+		Method createOutputPartitionDirMethod = VdypProjectionService.class.getDeclaredMethod(
+				"createOutputPartitionDir", String.class, String.class);
+		createOutputPartitionDirMethod.setAccessible(true);
+
+		Exception exception = assertThrows(Exception.class, () -> {
+			createOutputPartitionDirMethod.invoke(vdypProjectionService, "partition0", null);
+		});
+
+		Throwable cause = exception.getCause();
+		assertTrue(cause instanceof IOException);
+		assertTrue(cause.getMessage().contains("Job base directory cannot be null or empty"));
+	}
+
+	@Test
+	void testCreateOutputPartitionDir_EmptyJobBaseDir() throws Exception {
+		Method createOutputPartitionDirMethod = VdypProjectionService.class.getDeclaredMethod(
+				"createOutputPartitionDir", String.class, String.class);
+		createOutputPartitionDirMethod.setAccessible(true);
+
+		Exception exception = assertThrows(Exception.class, () -> {
+			createOutputPartitionDirMethod.invoke(vdypProjectionService, "partition0", "");
+		});
+
+		Throwable cause = exception.getCause();
+		assertTrue(cause instanceof IOException);
+		assertTrue(cause.getMessage().contains("Job base directory cannot be null or empty"));
+	}
+
+	@Test
+	void testCreateOutputPartitionDir_WhitespaceJobBaseDir() throws Exception {
+		Method createOutputPartitionDirMethod = VdypProjectionService.class.getDeclaredMethod(
+				"createOutputPartitionDir", String.class, String.class);
+		createOutputPartitionDirMethod.setAccessible(true);
+
+		Exception exception = assertThrows(Exception.class, () -> {
+			createOutputPartitionDirMethod.invoke(vdypProjectionService, "partition0", "   ");
+		});
+
+		Throwable cause = exception.getCause();
+		assertTrue(cause instanceof IOException);
+		assertTrue(cause.getMessage().contains("Job base directory cannot be null or empty"));
+	}
+
+	@Test
+	void testCreateOutputPartitionDir_NullPartitionName() throws Exception {
+		Method createOutputPartitionDirMethod = VdypProjectionService.class.getDeclaredMethod(
+				"createOutputPartitionDir", String.class, String.class);
+		createOutputPartitionDirMethod.setAccessible(true);
+
+		Exception exception = assertThrows(Exception.class, () -> {
+			createOutputPartitionDirMethod.invoke(vdypProjectionService, null, tempDir.toString());
+		});
+
+		Throwable cause = exception.getCause();
+		assertTrue(cause instanceof IOException);
+		assertTrue(cause.getMessage().contains("Partition name cannot be null or empty"));
+	}
+
+	@Test
+	void testCreateOutputPartitionDir_EmptyPartitionName() throws Exception {
+		Method createOutputPartitionDirMethod = VdypProjectionService.class.getDeclaredMethod(
+				"createOutputPartitionDir", String.class, String.class);
+		createOutputPartitionDirMethod.setAccessible(true);
+
+		Exception exception = assertThrows(Exception.class, () -> {
+			createOutputPartitionDirMethod.invoke(vdypProjectionService, "", tempDir.toString());
+		});
+
+		Throwable cause = exception.getCause();
+		assertTrue(cause instanceof IOException);
+		assertTrue(cause.getMessage().contains("Partition name cannot be null or empty"));
+	}
+
+	@Test
+	void testCreateOutputPartitionDir_WhitespacePartitionName() throws Exception {
+		Method createOutputPartitionDirMethod = VdypProjectionService.class.getDeclaredMethod(
+				"createOutputPartitionDir", String.class, String.class);
+		createOutputPartitionDirMethod.setAccessible(true);
+
+		Exception exception = assertThrows(Exception.class, () -> {
+			createOutputPartitionDirMethod.invoke(vdypProjectionService, "   ", tempDir.toString());
+		});
+
+		Throwable cause = exception.getCause();
+		assertTrue(cause instanceof IOException);
+		assertTrue(cause.getMessage().contains("Partition name cannot be null or empty"));
+	}
+
+	@Test
+	void testCreateCombinedInputStreamsFromChunk_EmptyRecords() throws Exception {
+		Method createCombinedInputStreamsFromChunkMethod = VdypProjectionService.class.getDeclaredMethod(
+				"createCombinedInputStreamsFromChunk", List.class);
+		createCombinedInputStreamsFromChunkMethod.setAccessible(true);
+
+		List<BatchRecord> emptyRecords = new ArrayList<>();
+
+		Exception exception = assertThrows(Exception.class, () -> {
+			createCombinedInputStreamsFromChunkMethod.invoke(vdypProjectionService, emptyRecords);
+		});
+
+		Throwable cause = exception.getCause();
+		assertTrue(cause instanceof IOException);
+		assertTrue(cause.getMessage().contains("Cannot create input streams from empty chunk"));
+	}
+
+	@Test
+	void testStoreYieldTable_NullYieldTable() throws Exception {
+		Method storeYieldTableMethod = VdypProjectionService.class.getDeclaredMethod(
+				"storeYieldTable", ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.YieldTable.class,
+				Path.class, String.class, List.class);
+		storeYieldTableMethod.setAccessible(true);
+
+		List<BatchRecord> batchRecords = createValidBatchRecords(1);
+		String projectionId = "test-projection";
+
+		assertDoesNotThrow(() -> {
+			storeYieldTableMethod.invoke(vdypProjectionService, null, tempDir, projectionId, batchRecords);
+		});
+	}
+
 	private List<BatchRecord> createValidBatchRecords(int count) {
 		List<BatchRecord> records = new ArrayList<>();
 		String[] featureIds = { "100000000", "200000000", "300000000", "400000000", "500000000",
