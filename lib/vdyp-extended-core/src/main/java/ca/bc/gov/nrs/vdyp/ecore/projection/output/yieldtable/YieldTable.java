@@ -1485,13 +1485,14 @@ public class YieldTable implements Closeable {
 		var cuVolumeLessDecayWastageBreakage = ucReportingLevel
 				.sumOf(entity.getCloseUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization());
 
+		var basalArea = ucReportingLevel.sumOf(entity.getBaseAreaByUtilization());
 		var basalArea75cmPlus = UtilizationClassSet._7_5.sumOf(entity.getBaseAreaByUtilization());
 		var basalArea125cmPlus = UtilizationClassSet._12_5.sumOf(entity.getBaseAreaByUtilization());
 
 		double diameter;
 		if (basalArea75cmPlus > 0 && treesPerHectare > 0) {
 			diameter = BaseAreaTreeDensityDiameter.quadMeanDiameter(
-					Double.valueOf(basalArea75cmPlus).floatValue(), Double.valueOf(treesPerHectare).floatValue()
+					Double.valueOf(basalArea).floatValue(), Double.valueOf(treesPerHectare).floatValue()
 			);
 		} else {
 			diameter = Vdyp7Constants.EMPTY_DECIMAL;

@@ -1,5 +1,7 @@
 package ca.bc.gov.nrs.vdyp.backend.endpoints.v1;
 
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.hasSpecificEntry;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.emptyString;
@@ -22,6 +24,7 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,6 +40,7 @@ import ca.bc.gov.nrs.vdyp.ecore.utils.FileHelper;
 import ca.bc.gov.nrs.vdyp.ecore.utils.ParameterNames;
 import ca.bc.gov.nrs.vdyp.integration_tests.MainTest;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
+import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.RestAssured;
 import io.restassured.config.HttpClientConfig;
@@ -174,7 +178,7 @@ class Hcsv_Vdyp7_Comparison_Test {
 			.compile("PRJ_TPH|PRJ_DIAMETER|PRJ_BA|PRJ_SCND_HT|PRJ_(SP\\d_)?VOL_(?:D|DW|DWB|CU|WS)");
 
 	@Test
-	void test604() throws IOException, ResourceParseException {
+	void test755() throws IOException, ResourceParseException {
 
 		logger.info("Starting test604");
 
@@ -218,6 +222,61 @@ class Hcsv_Vdyp7_Comparison_Test {
 
 			var vdyp8YieldTable = new ResultYieldTable(vdyp8YieldTableContent);
 			vdyp8YieldTable.get("2423088").get("1").get("2113").get("PRJ_LOREY_HT"); // 31.7994 but should be 32.4588
+		}
+	}
+
+	@Test
+	void test604() throws IOException, ResourceParseException {
+
+		logger.info("Starting test604");
+
+		Map<String, List<String>> paramMap = new HashMap<>();
+		var parameters = new Parameters();
+		try (
+				InputStream paramStream = MainTest.class.getResourceAsStream("f-record-test-01-noback/input/parms.txt");
+				InputStreamReader reader = new InputStreamReader(paramStream);
+				BufferedReader bufReader = new BufferedReader(reader); var lines = bufReader.lines();
+		) {
+			ParamsReader.parseParameters(paramMap, lines);
+			ParamsReader.parseParameters(parameters, paramMap);
+		}
+
+		// Included to generate JSON text of parameters as needed
+		// ObjectMapper mapper = new ObjectMapper();
+		// String serializedParametersText = mapper.writeValueAsString(parameters);
+
+		try (
+				InputStream polyStream = MainTest.class
+						.getResourceAsStream("f-record-test-01-noback/input/VDYP7_INPUT_POLY.csv");
+				InputStream layerStream = MainTest.class
+						.getResourceAsStream("f-record-test-01-noback/input/VDYP7_INPUT_LAYER.csv");
+		) {
+
+			InputStream zipInputStream = given().basePath(TestHelper.ROOT_PATH).when() //
+					.multiPart(ParameterNames.PROJECTION_PARAMETERS, parameters, MediaType.APPLICATION_JSON) //
+					.multiPart(ParameterNames.HCSV_POLYGON_INPUT_DATA, "VDYP7_INPUT_POLY.csv", polyStream) //
+					.multiPart(ParameterNames.HCSV_LAYERS_INPUT_DATA, "VDYP7_INPUT_LAYER.csv", layerStream) //
+					.post("/projection/hcsv?trialRun=false") //
+					.then().statusCode(201) //
+					.and().contentType("application/octet-stream") //
+					.and().header("content-disposition", Matchers.startsWith("attachment;filename=\"vdyp-output-")) //
+					.extract().body().asInputStream();
+
+			ZipInputStream zipFile = new ZipInputStream(zipInputStream);
+			ZipEntry entry1 = zipFile.getNextEntry();
+			assertEquals("YieldTable.csv", entry1.getName());
+			String vdyp8YieldTableContent = new String(testHelper.readZipEntry(zipFile, entry1));
+			assertThat(vdyp8YieldTableContent, not(emptyString()));
+
+			var vdyp8YieldTable = new ResultYieldTable(vdyp8YieldTableContent);
+			
+			assertThat(
+					vdyp8YieldTable, (Matcher) hasSpecificEntry(
+							"1816115", hasSpecificEntry(
+									"1", hasSpecificEntry("2103", hasSpecificEntry("PRJ_DIAMETER", closeTo(33.32)))
+							)
+					)
+			);
 		}
 	}
 }
