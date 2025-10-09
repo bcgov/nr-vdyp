@@ -76,9 +76,7 @@ class VdypProjectionProcessorTest {
 
 		verify(stepExecution).getJobExecutionId();
 		verify(executionContext).getString("partitionName", "unknown");
-		verify(executionContext).getLong("startLine", 0);
-		verify(executionContext).getLong("endLine", 0);
-		verify(metricsCollector).initializePartitionMetrics(1L, "test-partition", 1, 100);
+		verify(metricsCollector).initializePartitionMetrics(1L, "test-partition");
 	}
 
 	@Test
@@ -105,9 +103,7 @@ class VdypProjectionProcessorTest {
 	}
 
 	static Stream<Arguments> provideInvalidRecords() {
-		return Stream.of(
-				Arguments.of("Missing Feature ID", (String) null),
-				Arguments.of("Empty Feature ID", "   "));
+		return Stream.of(Arguments.of("Missing Feature ID", (String) null), Arguments.of("Empty Feature ID", "   "));
 	}
 
 	@Test
@@ -149,9 +145,8 @@ class VdypProjectionProcessorTest {
 
 		verify(stepExecution).getJobExecutionId();
 		verify(executionContext).getString("partitionName", "unknown");
-		verify(executionContext).getLong("startLine", 0);
-		verify(executionContext).getLong("endLine", 0);
 		// No metrics collector calls should be made
+		// beforeStep doesn't call getLong for startLine/endLine
 	}
 
 	private BatchRecord createValidBatchRecord() {

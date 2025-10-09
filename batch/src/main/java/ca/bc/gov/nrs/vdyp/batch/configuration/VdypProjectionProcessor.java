@@ -2,6 +2,8 @@ package ca.bc.gov.nrs.vdyp.batch.configuration;
 
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
+import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.StepExecution;
@@ -20,7 +22,7 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 	private final BatchMetricsCollector metricsCollector;
 
 	// Partition context information
-	private String partitionName = "unknown";
+	private String partitionName = BatchConstants.Common.UNKNOWN;
 
 	// Validation thresholds
 	@Value("${batch.validation.max-data-length:50000}")
@@ -32,8 +34,7 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 	@Value("${batch.validation.max-polygon-id-length:50}")
 	private int maxPolygonIdLength;
 
-	public VdypProjectionProcessor(
-			BatchRetryPolicy retryPolicy, BatchMetricsCollector metricsCollector) {
+	public VdypProjectionProcessor(BatchRetryPolicy retryPolicy, BatchMetricsCollector metricsCollector) {
 		this.retryPolicy = retryPolicy;
 		this.metricsCollector = metricsCollector;
 	}
@@ -44,18 +45,14 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 	@BeforeStep
 	public void beforeStep(StepExecution stepExecution) {
 		Long jobExecutionId = stepExecution.getJobExecutionId();
-		this.partitionName = stepExecution.getExecutionContext().getString("partitionName", "unknown");
-		long startLine = stepExecution.getExecutionContext().getLong("startLine", 0);
-		long endLine = stepExecution.getExecutionContext().getLong("endLine", 0);
+		this.partitionName = stepExecution.getExecutionContext()
+				.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN);
 
-		// Initialize partition metrics
 		if (metricsCollector != null) {
-			metricsCollector.initializePartitionMetrics(jobExecutionId, partitionName, startLine, endLine);
+			metricsCollector.initializePartitionMetrics(jobExecutionId, partitionName);
 		}
 
-		logger.info(
-				"[{}] VDYP Projection Processor initialized for job {} range {}-{} (Pass-through for chunk processing)",
-				partitionName, jobExecutionId, startLine, endLine);
+		logger.info("[{}] VDYP Projection Processor initialized for job {}", partitionName, jobExecutionId);
 	}
 
 	@Override

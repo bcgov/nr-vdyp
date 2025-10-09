@@ -144,7 +144,7 @@ class BatchSkipPolicyTest {
 
 	@ParameterizedTest
 	@MethodSource("provideFeatureIdExtractionTests")
-	void testFeatureIdExtraction_VariousScenarios_HandlesGracefully(
+	void testFeatureIdExtraction_VariousScenarios_Handles(
 			String testName, RuntimeException exception, boolean expectedSkippable
 	) throws SkipLimitExceededException {
 		boolean result = batchSkipPolicy.shouldSkip(exception, 1);
@@ -159,11 +159,11 @@ class BatchSkipPolicyTest {
 						new RuntimeException("Error processing Feature ID 1145678902 - invalid data format"), true
 				),
 				Arguments.of(
-						"No Feature ID in message should handle gracefully",
+						"No Feature ID in message should handle",
 						new RuntimeException("No Feature ID in this message - malformed data"), true
 				),
 				Arguments.of(
-						"Malformed Feature ID should handle gracefully",
+						"Malformed Feature ID should handle",
 						new RuntimeException("Error with Feature ID abc123 - invalid format"), true
 				),
 				Arguments.of(
@@ -171,7 +171,7 @@ class BatchSkipPolicyTest {
 						new RuntimeException("Error with Feature ID 1245678903 - invalid data format"), true
 				),
 				Arguments.of(
-						"Zero Feature ID should be handled gracefully",
+						"Zero Feature ID should be handled",
 						new RuntimeException("Error with Feature ID 0 - format issue"), true
 				)
 		);
@@ -187,7 +187,7 @@ class BatchSkipPolicyTest {
 	}
 
 	@Test
-	void testCacheRecordData_WithNullValues_HandlesGracefully() {
+	void testCacheRecordData_WithNullValues_Handles() {
 		assertDoesNotThrow(() -> BatchSkipPolicy.cacheRecordData(null, null, "thread1"));
 		assertDoesNotThrow(() -> BatchSkipPolicy.cacheRecordData(1345678904L, null, "thread1"));
 		assertDoesNotThrow(() -> BatchSkipPolicy.cacheRecordData(null, new BatchRecord(), "thread1"));
@@ -260,7 +260,7 @@ class BatchSkipPolicyTest {
 	}
 
 	@Test
-	void testShouldSkip_WithStepSynchronizationManagerException_HandlesGracefully() throws SkipLimitExceededException {
+	void testShouldSkip_WithStepSynchronizationManagerException_Handles() throws SkipLimitExceededException {
 		// Mock StepSynchronizationManager to throw exception
 		try (MockedStatic<StepSynchronizationManager> mockedManager = mockStatic(StepSynchronizationManager.class)) {
 			mockedManager.when(StepSynchronizationManager::getContext).thenThrow(new RuntimeException("Context error"));
@@ -294,7 +294,6 @@ class BatchSkipPolicyTest {
 		BatchRecord cachedRecord = new BatchRecord();
 		cachedRecord.setFeatureId("1545678906");
 
-		// Cache the record first
 		BatchSkipPolicy.cacheRecordData(1545678906L, cachedRecord, Thread.currentThread().getName());
 
 		RuntimeException exception = new RuntimeException("Error processing Feature ID 1545678906 - invalid format");
