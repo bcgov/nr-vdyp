@@ -1,52 +1,118 @@
 {
     "properties": [
         {
-            "name": "batch.output.file.path",
+            "name": "batch.root-directory",
             "type": "java.lang.String",
-            "description": "Path to the output VDYP projection results CSV file",
-            "defaultValue": "${user.home}/vdyp/output.csv"
+            "description": "Root directory for VDYP batch job processing and partition files",
+            "defaultValue": "${user.home}/vdyp"
         },
         {
-            "name": "batch.output.directory.default",
-            "type": "java.lang.String",
-            "description": "Default output directory for VDYP batch processing partition files",
-            "defaultValue": "C:/temp"
-        },
-        {
-            "name": "batch.partitioning.enabled",
+            "name": "batch.job.auto-create",
             "type": "java.lang.Boolean",
-            "description": "Enable or disable VDYP partitioning for parallel forest data processing",
+            "description": "Enable automatic creation of batch job directories",
             "defaultValue": true
         },
         {
-            "name": "batch.partitioning.grid.size",
+            "name": "batch.job.base-folder-prefix",
+            "type": "java.lang.String",
+            "description": "Prefix for batch job base folder names",
+            "defaultValue": "vdyp-job"
+        },
+        {
+            "name": "batch.partition.default-partition-size",
             "type": "java.lang.Integer",
-            "description": "Number of partitions for parallel VDYP projection processing",
+            "description": "Default number of partitions for parallel VDYP projection processing",
             "defaultValue": 4
         },
         {
-            "name": "batch.partitioning.chunk.size",
-            "type": "java.lang.Integer",
-            "description": "Number of VDYP forest records processed in each chunk",
-            "defaultValue": 1000
+            "name": "batch.partition.input-polygon-file-name",
+            "type": "java.lang.String",
+            "description": "Name of the polygon input CSV file in partition directories",
+            "defaultValue": "partition_polygon.csv"
         },
         {
-            "name": "batch.retry.max.attempts",
+            "name": "batch.partition.input-layer-file-name",
+            "type": "java.lang.String",
+            "description": "Name of the layer input CSV file in partition directories",
+            "defaultValue": "partition_layer.csv"
+        },
+        {
+            "name": "batch.partition.input-folder-name-prefix",
+            "type": "java.lang.String",
+            "description": "Prefix for partition input folder names",
+            "defaultValue": "input-partition"
+        },
+        {
+            "name": "batch.partition.output-folder-name-prefix",
+            "type": "java.lang.String",
+            "description": "Prefix for partition output folder names",
+            "defaultValue": "output-partition"
+        },
+        {
+            "name": "batch.partition.name-prefix",
+            "type": "java.lang.String",
+            "description": "Prefix for partition step names",
+            "defaultValue": "partition"
+        },
+        {
+            "name": "batch.reader.default-chunk-size",
+            "type": "java.lang.Integer",
+            "description": "Default number of FEATURE_IDs processed per chunk in ChunkBasedPolygonItemReader",
+            "defaultValue": 10
+        },
+        {
+            "name": "batch.thread-pool.core-pool-size",
+            "type": "java.lang.Integer",
+            "description": "Core pool size for batch partition processing thread pool",
+            "defaultValue": 4
+        },
+        {
+            "name": "batch.thread-pool.max-pool-size-multiplier",
+            "type": "java.lang.Integer",
+            "description": "Multiplier for maximum thread pool size (max = core-pool-size * multiplier)",
+            "defaultValue": 2
+        },
+        {
+            "name": "batch.thread-pool.thread-name-prefix",
+            "type": "java.lang.String",
+            "description": "Prefix for batch processing thread names",
+            "defaultValue": "vdyp-batch-partition-"
+        },
+        {
+            "name": "batch.retry.max-attempts",
             "type": "java.lang.Integer",
             "description": "Maximum number of retry attempts for VDYP projection failures",
             "defaultValue": 3
         },
         {
-            "name": "batch.retry.backoff.period",
-            "type": "java.lang.Long",
+            "name": "batch.retry.backoff-period",
+            "type": "java.lang.Integer",
             "description": "Backoff period in milliseconds between VDYP projection retries",
             "defaultValue": 100
         },
         {
-            "name": "batch.skip.max.count",
+            "name": "batch.skip.max-count",
             "type": "java.lang.Integer",
             "description": "Maximum number of VDYP forest records that can be skipped due to errors",
-            "defaultValue": 10
+            "defaultValue": 2000
+        },
+        {
+            "name": "batch.validation.max-data-length",
+            "type": "java.lang.Integer",
+            "description": "Maximum allowed length for VDYP input data fields",
+            "defaultValue": 50000
+        },
+        {
+            "name": "batch.validation.min-polygon-id-length",
+            "type": "java.lang.Integer",
+            "description": "Minimum allowed length for polygon FEATURE_ID",
+            "defaultValue": 1
+        },
+        {
+            "name": "batch.validation.max-polygon-id-length",
+            "type": "java.lang.Integer",
+            "description": "Maximum allowed length for polygon FEATURE_ID",
+            "defaultValue": 50
         }
     ]
 }

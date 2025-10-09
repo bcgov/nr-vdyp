@@ -25,5 +25,26 @@
   },
   {
     "name": "ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics"
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.batch.configuration.BatchProperties"
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.batch.exception.BatchException"
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.batch.exception.BatchIOException"
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.batch.exception.ResultAggregationException"
+  },
+  {
+    "name": "org.springframework.web.multipart.MultipartFile"
+  },
+  {
+    "name": "com.fasterxml.jackson.databind.ObjectMapper"
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters"
   }
 ]

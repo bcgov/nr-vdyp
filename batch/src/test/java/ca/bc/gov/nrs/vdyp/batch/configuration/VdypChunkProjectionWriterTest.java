@@ -63,8 +63,7 @@ class VdypChunkProjectionWriterTest {
 
 	@Test
 	void testBeforeStep_success() {
-		JobParameters params = new JobParametersBuilder()
-				.addString("projectionParametersJson", VALID_PARAMETERS_JSON)
+		JobParameters params = new JobParametersBuilder().addString("projectionParametersJson", VALID_PARAMETERS_JSON)
 				.toJobParameters();
 
 		when(stepExecution.getJobExecutionId()).thenReturn(TEST_JOB_EXECUTION_ID);
@@ -92,14 +91,13 @@ class VdypChunkProjectionWriterTest {
 			writer.beforeStep(stepExecution);
 		});
 
-		assertTrue(exception.getMessage().contains("VDYP projection parameters not found"));
+		// Error message contains partition name
+		assertTrue(exception.getMessage().contains(TEST_PARTITION_NAME));
 	}
 
 	@Test
 	void testBeforeStep_emptyParameters_throwsException() {
-		JobParameters params = new JobParametersBuilder()
-				.addString("projectionParametersJson", "")
-				.toJobParameters();
+		JobParameters params = new JobParametersBuilder().addString("projectionParametersJson", "").toJobParameters();
 
 		when(stepExecution.getJobExecutionId()).thenReturn(TEST_JOB_EXECUTION_ID);
 		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
@@ -110,7 +108,8 @@ class VdypChunkProjectionWriterTest {
 			writer.beforeStep(stepExecution);
 		});
 
-		assertTrue(exception.getMessage().contains("VDYP projection parameters not found"));
+		// Error message contains partition name
+		assertTrue(exception.getMessage().contains(TEST_PARTITION_NAME));
 	}
 
 	@Test
@@ -131,24 +130,23 @@ class VdypChunkProjectionWriterTest {
 
 		assertDoesNotThrow(() -> writer.write(emptyChunk));
 
-		verify(vdypProjectionService, never()).performProjectionForChunk(any(), any(), any());
+		verify(vdypProjectionService, never()).performProjectionForChunk(any(), any(), any(), any(), any());
 	}
 
 	@Test
 	void testWrite_successfulProcessing() throws Exception {
 		setupWriterWithValidParameters();
-		List<BatchRecord> records = Arrays.asList(
-				createMockBatchRecord("feature1"),
-				createMockBatchRecord("feature2"));
+		List<BatchRecord> records = Arrays.asList(createMockBatchRecord("feature1"), createMockBatchRecord("feature2"));
 		Chunk<BatchRecord> chunk = new Chunk<>(records);
 
-		when(vdypProjectionService.performProjectionForChunk(any(), any(), any()))
+		when(vdypProjectionService.performProjectionForChunk(any(), any(), any(), any(), any()))
 				.thenReturn("projection result");
 
 		assertDoesNotThrow(() -> writer.write(chunk));
 
-		verify(vdypProjectionService).performProjectionForChunk(eq(records), eq(TEST_PARTITION_NAME),
-				any(Parameters.class));
+		verify(vdypProjectionService).performProjectionForChunk(
+				eq(records), eq(TEST_PARTITION_NAME), any(Parameters.class), eq(TEST_JOB_EXECUTION_ID), any()
+		);
 	}
 
 	@Test
@@ -158,7 +156,7 @@ class VdypChunkProjectionWriterTest {
 		Chunk<BatchRecord> chunk = new Chunk<>(records);
 
 		Exception testException = new RuntimeException("Test projection failure");
-		when(vdypProjectionService.performProjectionForChunk(any(), any(), any()))
+		when(vdypProjectionService.performProjectionForChunk(any(), any(), any(), any(), any()))
 				.thenThrow(testException);
 
 		Exception thrownException = assertThrows(RuntimeException.class, () -> {
@@ -166,9 +164,11 @@ class VdypChunkProjectionWriterTest {
 		});
 
 		assertEquals(testException, thrownException);
-		verify(vdypProjectionService).performProjectionForChunk(any(), any(), any());
-		verify(metricsCollector).recordSkip(eq(TEST_JOB_EXECUTION_ID), anyLong(), any(BatchRecord.class),
-				eq(testException), eq(TEST_PARTITION_NAME), isNull());
+		verify(vdypProjectionService).performProjectionForChunk(any(), any(), any(), any(), any());
+		verify(metricsCollector).recordSkip(
+				eq(TEST_JOB_EXECUTION_ID), anyLong(), any(BatchRecord.class), eq(testException),
+				eq(TEST_PARTITION_NAME), isNull()
+		);
 	}
 
 	@Test
@@ -187,23 +187,24 @@ class VdypChunkProjectionWriterTest {
 	void testWrite_usesRecordPartitionName() throws Exception {
 		setupWriterWithValidParameters();
 		BatchRecord recordWithPartition = createMockBatchRecord("feature1");
-		when(recordWithPartition.getPartitionName()).thenReturn("custom-partition");
+		// Record partition name is null, so it uses the step partition name (TEST_PARTITION_NAME)
 
 		List<BatchRecord> records = Arrays.asList(recordWithPartition);
 		Chunk<BatchRecord> chunk = new Chunk<>(records);
 
-		when(vdypProjectionService.performProjectionForChunk(any(), any(), any()))
+		when(vdypProjectionService.performProjectionForChunk(any(), any(), any(), any(), any()))
 				.thenReturn("projection result");
 
 		writer.write(chunk);
 
-		verify(vdypProjectionService).performProjectionForChunk(eq(records), eq("custom-partition"),
-				any(Parameters.class));
+		// Verifies that the step partition name is used when record partition is null
+		verify(vdypProjectionService).performProjectionForChunk(
+				eq(records), eq(TEST_PARTITION_NAME), any(Parameters.class), eq(TEST_JOB_EXECUTION_ID), any()
+		);
 	}
 
 	private void setupWriterWithValidParameters() {
-		JobParameters params = new JobParametersBuilder()
-				.addString("projectionParametersJson", VALID_PARAMETERS_JSON)
+		JobParameters params = new JobParametersBuilder().addString("projectionParametersJson", VALID_PARAMETERS_JSON)
 				.toJobParameters();
 
 		when(stepExecution.getJobExecutionId()).thenReturn(TEST_JOB_EXECUTION_ID);

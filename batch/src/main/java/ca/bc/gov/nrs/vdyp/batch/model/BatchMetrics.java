@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Batch job execution metrics and detailed error information for batch processing.
@@ -16,24 +18,24 @@ public class BatchMetrics {
 	private LocalDateTime endTime;
 	private String status;
 
-	// Retry metrics
-	private int totalRetryAttempts = 0;
-	private int successfulRetries = 0;
-	private int failedRetries = 0;
-	private List<RetryDetail> retryDetails = new ArrayList<>();
+	// Retry metrics - thread-safe counters
+	private final AtomicInteger totalRetryAttempts = new AtomicInteger(0);
+	private final AtomicInteger successfulRetries = new AtomicInteger(0);
+	private final AtomicInteger failedRetries = new AtomicInteger(0);
+	private final List<RetryDetail> retryDetails = new ArrayList<>();
 
-	// Skip metrics
-	private int totalSkips = 0;
-	private Map<String, Integer> skipReasonCount = new ConcurrentHashMap<>();
-	private List<SkipDetail> skipDetails = new ArrayList<>();
+	// Skip metrics - thread-safe counters
+	private final AtomicInteger totalSkips = new AtomicInteger(0);
+	private final Map<String, Integer> skipReasonCount = new ConcurrentHashMap<>();
+	private final List<SkipDetail> skipDetails = new ArrayList<>();
 
 	// Partition metrics
-	private Map<String, PartitionMetrics> partitionMetrics = new ConcurrentHashMap<>();
+	private final Map<String, PartitionMetrics> partitionMetrics = new ConcurrentHashMap<>();
 
-	// Processing statistics
-	private long totalRecordsProcessed = 0;
-	private long totalRecordsRead = 0;
-	private long totalRecordsWritten = 0;
+	// Processing statistics - thread-safe counters
+	private final AtomicLong totalRecordsProcessed = new AtomicLong(0);
+	private final AtomicLong totalRecordsRead = new AtomicLong(0);
+	private final AtomicLong totalRecordsWritten = new AtomicLong(0);
 	private double averageProcessingTime = 0.0;
 
 	public BatchMetrics() {
@@ -83,9 +85,9 @@ public class BatchMetrics {
 	 */
 	public static class PartitionMetrics {
 		private String partitionName;
-		private int recordsProcessed = 0;
-		private int recordsRead = 0;
-		private int recordsWritten = 0;
+		private long recordsProcessed = 0;
+		private long recordsRead = 0;
+		private long recordsWritten = 0;
 		private int retryCount = 0;
 		private int skipCount = 0;
 		private LocalDateTime startTime;
@@ -105,27 +107,27 @@ public class BatchMetrics {
 			this.partitionName = partitionName;
 		}
 
-		public int getRecordsProcessed() {
+		public long getRecordsProcessed() {
 			return recordsProcessed;
 		}
 
-		public void setRecordsProcessed(int recordsProcessed) {
+		public void setRecordsProcessed(long recordsProcessed) {
 			this.recordsProcessed = recordsProcessed;
 		}
 
-		public int getRecordsRead() {
+		public long getRecordsRead() {
 			return recordsRead;
 		}
 
-		public void setRecordsRead(int recordsRead) {
+		public void setRecordsRead(long recordsRead) {
 			this.recordsRead = recordsRead;
 		}
 
-		public int getRecordsWritten() {
+		public long getRecordsWritten() {
 			return recordsWritten;
 		}
 
-		public void setRecordsWritten(int recordsWritten) {
+		public void setRecordsWritten(long recordsWritten) {
 			this.recordsWritten = recordsWritten;
 		}
 
@@ -203,27 +205,39 @@ public class BatchMetrics {
 	}
 
 	public int getTotalRetryAttempts() {
-		return totalRetryAttempts;
+		return totalRetryAttempts.get();
 	}
 
 	public void setTotalRetryAttempts(int totalRetryAttempts) {
-		this.totalRetryAttempts = totalRetryAttempts;
+		this.totalRetryAttempts.set(totalRetryAttempts);
+	}
+
+	public int incrementRetryAttempts() {
+		return totalRetryAttempts.incrementAndGet();
 	}
 
 	public int getSuccessfulRetries() {
-		return successfulRetries;
+		return successfulRetries.get();
 	}
 
 	public void setSuccessfulRetries(int successfulRetries) {
-		this.successfulRetries = successfulRetries;
+		this.successfulRetries.set(successfulRetries);
+	}
+
+	public int incrementSuccessfulRetries() {
+		return successfulRetries.incrementAndGet();
 	}
 
 	public int getFailedRetries() {
-		return failedRetries;
+		return failedRetries.get();
 	}
 
 	public void setFailedRetries(int failedRetries) {
-		this.failedRetries = failedRetries;
+		this.failedRetries.set(failedRetries);
+	}
+
+	public int incrementFailedRetries() {
+		return failedRetries.incrementAndGet();
 	}
 
 	public List<RetryDetail> getRetryDetails() {
@@ -231,15 +245,22 @@ public class BatchMetrics {
 	}
 
 	public void setRetryDetails(List<RetryDetail> retryDetails) {
-		this.retryDetails = retryDetails;
+		this.retryDetails.clear();
+		if (retryDetails != null) {
+			this.retryDetails.addAll(retryDetails);
+		}
 	}
 
 	public int getTotalSkips() {
-		return totalSkips;
+		return totalSkips.get();
 	}
 
 	public void setTotalSkips(int totalSkips) {
-		this.totalSkips = totalSkips;
+		this.totalSkips.set(totalSkips);
+	}
+
+	public int incrementSkips() {
+		return totalSkips.incrementAndGet();
 	}
 
 	public Map<String, Integer> getSkipReasonCount() {
@@ -247,7 +268,10 @@ public class BatchMetrics {
 	}
 
 	public void setSkipReasonCount(Map<String, Integer> skipReasonCount) {
-		this.skipReasonCount = skipReasonCount;
+		this.skipReasonCount.clear();
+		if (skipReasonCount != null) {
+			this.skipReasonCount.putAll(skipReasonCount);
+		}
 	}
 
 	public List<SkipDetail> getSkipDetails() {
@@ -255,7 +279,10 @@ public class BatchMetrics {
 	}
 
 	public void setSkipDetails(List<SkipDetail> skipDetails) {
-		this.skipDetails = skipDetails;
+		this.skipDetails.clear();
+		if (skipDetails != null) {
+			this.skipDetails.addAll(skipDetails);
+		}
 	}
 
 	public Map<String, PartitionMetrics> getPartitionMetrics() {
@@ -263,31 +290,34 @@ public class BatchMetrics {
 	}
 
 	public void setPartitionMetrics(Map<String, PartitionMetrics> partitionMetrics) {
-		this.partitionMetrics = partitionMetrics;
+		this.partitionMetrics.clear();
+		if (partitionMetrics != null) {
+			this.partitionMetrics.putAll(partitionMetrics);
+		}
 	}
 
 	public long getTotalRecordsProcessed() {
-		return totalRecordsProcessed;
+		return totalRecordsProcessed.get();
 	}
 
 	public void setTotalRecordsProcessed(long totalRecordsProcessed) {
-		this.totalRecordsProcessed = totalRecordsProcessed;
+		this.totalRecordsProcessed.set(totalRecordsProcessed);
 	}
 
 	public long getTotalRecordsRead() {
-		return totalRecordsRead;
+		return totalRecordsRead.get();
 	}
 
 	public void setTotalRecordsRead(long totalRecordsRead) {
-		this.totalRecordsRead = totalRecordsRead;
+		this.totalRecordsRead.set(totalRecordsRead);
 	}
 
 	public long getTotalRecordsWritten() {
-		return totalRecordsWritten;
+		return totalRecordsWritten.get();
 	}
 
 	public void setTotalRecordsWritten(long totalRecordsWritten) {
-		this.totalRecordsWritten = totalRecordsWritten;
+		this.totalRecordsWritten.set(totalRecordsWritten);
 	}
 
 	public double getAverageProcessingTime() {
