@@ -8,6 +8,7 @@ import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,7 +32,21 @@ public class StreamingCsvPartitioner {
 	public int partitionCsvFiles(MultipartFile polygonFile, MultipartFile layerFile,
 			Integer partitionSize, Path jobBaseDir) throws IOException {
 
-		// Validate parameters
+		validateParameters(polygonFile, layerFile, partitionSize, jobBaseDir);
+
+		int totalFeatureIds = countTotalFeatureIds(polygonFile);
+		int[] partitionSizes = calculatePartitionSizes(totalFeatureIds, partitionSize);
+
+		Map<Long, Integer> featureIdToPartition = partitionPolygonFile(
+				polygonFile, partitionSize, partitionSizes, jobBaseDir);
+
+		partitionLayerFile(layerFile, partitionSize, jobBaseDir, featureIdToPartition);
+
+		return featureIdToPartition.size();
+	}
+
+	private void validateParameters(MultipartFile polygonFile, MultipartFile layerFile,
+			Integer partitionSize, Path jobBaseDir) {
 		if (polygonFile == null) {
 			throw new IllegalArgumentException("Polygon file cannot be null");
 		}
@@ -47,71 +62,141 @@ public class StreamingCsvPartitioner {
 		if (jobBaseDir == null) {
 			throw new IllegalArgumentException("Job base directory cannot be null");
 		}
+	}
 
-		// Step 1: Scan and partition polygon CSV
-		Map<Long, Integer> featureIdToPartition = new HashMap<>();
-		String polygonHeader = null;
-		Map<Integer, PrintWriter> polygonWriters = null;
-
-		try (BufferedReader polygonReader = new BufferedReader(
+	private int countTotalFeatureIds(MultipartFile polygonFile) throws IOException {
+		int count = 0;
+		try (BufferedReader reader = new BufferedReader(
 				new InputStreamReader(polygonFile.getInputStream(), StandardCharsets.UTF_8))) {
-			polygonHeader = polygonReader.readLine(); // Read header
-			if (polygonHeader == null) {
+			String header = reader.readLine(); // Skip header
+			if (header == null) {
+				return 0;
+			}
+			String line;
+			while ((line = reader.readLine()) != null) {
+				if (extractFeatureId(line) != null) {
+					count++;
+				}
+			}
+		}
+		return count;
+	}
+
+	/**
+	 * Calculate partition sizes for balanced distribution.
+	 *
+	 * @return array where index = partition number, value = number of records for that partition
+	 */
+	private int[] calculatePartitionSizes(int totalFeatureIds, int partitionSize) {
+		int[] partitionSizes = new int[partitionSize];
+		int chunkSize = totalFeatureIds / partitionSize;
+		int remainder = totalFeatureIds % partitionSize;
+
+		// First 'remainder' partitions get chunkSize + 1
+		// Remaining partitions get chunkSize
+		for (int i = 0; i < partitionSize; i++) {
+			partitionSizes[i] = (i < remainder) ? chunkSize + 1 : chunkSize;
+		}
+
+		if (logger.isInfoEnabled()) {
+			logger.info("Total FEATURE_IDs: {}, Partition size: {}, Base chunk size: {}, Remainder: {}, Partition sizes: {}",
+					totalFeatureIds, partitionSize, chunkSize, remainder, Arrays.toString(partitionSizes));
+		}
+		return partitionSizes;
+	}
+
+	private Map<Long, Integer> partitionPolygonFile(MultipartFile polygonFile,
+			int partitionSize, int[] partitionSizes, Path jobBaseDir) throws IOException {
+
+		Map<Long, Integer> featureIdToPartition = new HashMap<>();
+
+		try (BufferedReader reader = new BufferedReader(
+				new InputStreamReader(polygonFile.getInputStream(), StandardCharsets.UTF_8))) {
+
+			String header = reader.readLine();
+			if (header == null) {
 				throw new IOException("Polygon CSV file is empty or has no header");
 			}
 
-			polygonWriters = createPartitionWriters(jobBaseDir,
-					BatchConstants.Partition.INPUT_POLYGON_FILE_NAME,
-					polygonHeader, partitionSize);
+			Map<Integer, PrintWriter> writers = createPartitionWriters(jobBaseDir,
+					BatchConstants.Partition.INPUT_POLYGON_FILE_NAME, header, partitionSize);
 
-			String line;
-			int partitionIndex = 0;
-			while ((line = polygonReader.readLine()) != null) {
-				Long featureId = extractFeatureId(line);
-				if (featureId != null) {
-					// Determine partition for this FEATURE_ID
-					int partition = partitionIndex % partitionSize;
-					featureIdToPartition.put(featureId, partition);
-
-					// Write to the appropriate partition file
-					polygonWriters.get(partition).println(line);
-
-					partitionIndex++;
-				}
+			try {
+				processPolygonRecords(reader, writers, featureIdToPartition, partitionSizes);
+			} finally {
+				closeWriters(writers);
 			}
-		} finally {
-			closeWriters(polygonWriters);
 		}
 
 		logger.info("Processed and partitioned {} FEATURE_IDs", featureIdToPartition.size());
+		return featureIdToPartition;
+	}
 
-		// Step 2: Process layer CSV
-		String layerHeader = null;
-		Map<Integer, PrintWriter> layerWriters = null;
+	/**
+	 * Reads exact number of records for each partition in sequence.
+	 */
+	private void processPolygonRecords(BufferedReader reader, Map<Integer, PrintWriter> writers,
+			Map<Long, Integer> featureIdToPartition, int[] partitionSizes) throws IOException {
 
-		try (BufferedReader layerReader = new BufferedReader(
+		String line;
+		int currentPartition = 0;
+		int recordsInCurrentPartition = 0;
+
+		while ((line = reader.readLine()) != null) {
+			Long featureId = extractFeatureId(line);
+			if (featureId != null) {
+				// Write to current partition
+				featureIdToPartition.put(featureId, currentPartition);
+				writers.get(currentPartition).println(line);
+				recordsInCurrentPartition++;
+
+				// Check if current partition is full, move to next
+				if (recordsInCurrentPartition >= partitionSizes[currentPartition]) {
+					currentPartition++;
+					recordsInCurrentPartition = 0;
+
+					// Safety check: don't exceed partition bounds
+					if (currentPartition >= partitionSizes.length) {
+						currentPartition = partitionSizes.length - 1;
+					}
+				}
+			}
+		}
+	}
+
+	private void partitionLayerFile(MultipartFile layerFile, int partitionSize, Path jobBaseDir,
+			Map<Long, Integer> featureIdToPartition) throws IOException {
+
+		try (BufferedReader reader = new BufferedReader(
 				new InputStreamReader(layerFile.getInputStream(), StandardCharsets.UTF_8))) {
-			layerHeader = layerReader.readLine(); // Read header
-			if (layerHeader == null) {
+
+			String header = reader.readLine();
+			if (header == null) {
 				throw new IOException("Layer CSV file is empty or has no header");
 			}
 
-			layerWriters = createPartitionWriters(jobBaseDir, BatchConstants.Partition.INPUT_LAYER_FILE_NAME,
-					layerHeader, partitionSize);
+			Map<Integer, PrintWriter> writers = createPartitionWriters(jobBaseDir,
+					BatchConstants.Partition.INPUT_LAYER_FILE_NAME, header, partitionSize);
 
-			String line;
-			while ((line = layerReader.readLine()) != null) {
-				Long featureId = extractFeatureId(line);
-				if (featureId != null && featureIdToPartition.containsKey(featureId)) {
-					int partition = featureIdToPartition.get(featureId);
-					layerWriters.get(partition).println(line);
-				}
+			try {
+				processLayerRecords(reader, writers, featureIdToPartition);
+			} finally {
+				closeWriters(writers);
 			}
-		} finally {
-			closeWriters(layerWriters);
 		}
+	}
 
-		return featureIdToPartition.size();
+	private void processLayerRecords(BufferedReader reader, Map<Integer, PrintWriter> writers,
+			Map<Long, Integer> featureIdToPartition) throws IOException {
+
+		String line;
+		while ((line = reader.readLine()) != null) {
+			Long featureId = extractFeatureId(line);
+			if (featureId != null && featureIdToPartition.containsKey(featureId)) {
+				int partition = featureIdToPartition.get(featureId);
+				writers.get(partition).println(line);
+			}
+		}
 	}
 
 	/**
@@ -144,7 +229,6 @@ public class StreamingCsvPartitioner {
 	private Map<Integer, PrintWriter> createPartitionWriters(Path baseDir, String filename,
 			String header, Integer partitionSize) throws IOException {
 
-		// Validate parameters (defensive programming)
 		if (baseDir == null) {
 			throw new IllegalArgumentException("Base directory cannot be null");
 		}
