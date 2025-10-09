@@ -19,17 +19,17 @@ import org.springframework.web.multipart.MultipartFile;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
 /**
- * Streaming CSV partitioner that partitions CSV files by FEATURE_ID.
- * Creates separate CSV files for each partition containing only the data for
- * that partition's assigned FEATURE_IDs.
+ * Streaming CSV partitioner that partitions CSV files by FEATURE_ID. Creates separate CSV files for each partition
+ * containing only the data for that partition's assigned FEATURE_IDs.
  */
 @Component
 public class StreamingCsvPartitioner {
 
 	private static final Logger logger = LoggerFactory.getLogger(StreamingCsvPartitioner.class);
 
-	public int partitionCsvFiles(MultipartFile polygonFile, MultipartFile layerFile,
-			Integer partitionSize, Path jobBaseDir) throws IOException {
+	public int partitionCsvFiles(
+			MultipartFile polygonFile, MultipartFile layerFile, Integer partitionSize, Path jobBaseDir
+	) throws IOException {
 
 		// Validate parameters
 		if (polygonFile == null) {
@@ -53,20 +53,23 @@ public class StreamingCsvPartitioner {
 		String polygonHeader = null;
 		Map<Integer, PrintWriter> polygonWriters = null;
 
-		try (BufferedReader polygonReader = new BufferedReader(
-				new InputStreamReader(polygonFile.getInputStream(), StandardCharsets.UTF_8))) {
+		try (
+				BufferedReader polygonReader = new BufferedReader(
+						new InputStreamReader(polygonFile.getInputStream(), StandardCharsets.UTF_8)
+				)
+		) {
 			polygonHeader = polygonReader.readLine(); // Read header
 			if (polygonHeader == null) {
 				throw new IOException("Polygon CSV file is empty or has no header");
 			}
 
-			polygonWriters = createPartitionWriters(jobBaseDir,
-					BatchConstants.Partition.INPUT_POLYGON_FILE_NAME,
-					polygonHeader, partitionSize);
+			polygonWriters = createPartitionWriters(
+					jobBaseDir, BatchConstants.Partition.INPUT_POLYGON_FILE_NAME, polygonHeader, partitionSize
+			);
 
 			String line;
 			int partitionIndex = 0;
-			while ((line = polygonReader.readLine()) != null) {
+			while ( (line = polygonReader.readLine()) != null) {
 				Long featureId = extractFeatureId(line);
 				if (featureId != null) {
 					// Determine partition for this FEATURE_ID
@@ -89,18 +92,22 @@ public class StreamingCsvPartitioner {
 		String layerHeader = null;
 		Map<Integer, PrintWriter> layerWriters = null;
 
-		try (BufferedReader layerReader = new BufferedReader(
-				new InputStreamReader(layerFile.getInputStream(), StandardCharsets.UTF_8))) {
+		try (
+				BufferedReader layerReader = new BufferedReader(
+						new InputStreamReader(layerFile.getInputStream(), StandardCharsets.UTF_8)
+				)
+		) {
 			layerHeader = layerReader.readLine(); // Read header
 			if (layerHeader == null) {
 				throw new IOException("Layer CSV file is empty or has no header");
 			}
 
-			layerWriters = createPartitionWriters(jobBaseDir, BatchConstants.Partition.INPUT_LAYER_FILE_NAME,
-					layerHeader, partitionSize);
+			layerWriters = createPartitionWriters(
+					jobBaseDir, BatchConstants.Partition.INPUT_LAYER_FILE_NAME, layerHeader, partitionSize
+			);
 
 			String line;
-			while ((line = layerReader.readLine()) != null) {
+			while ( (line = layerReader.readLine()) != null) {
 				Long featureId = extractFeatureId(line);
 				if (featureId != null && featureIdToPartition.containsKey(featureId)) {
 					int partition = featureIdToPartition.get(featureId);
@@ -141,8 +148,9 @@ public class StreamingCsvPartitioner {
 	/**
 	 * Create PrintWriters for each partition.
 	 */
-	private Map<Integer, PrintWriter> createPartitionWriters(Path baseDir, String filename,
-			String header, Integer partitionSize) throws IOException {
+	private Map<Integer, PrintWriter>
+			createPartitionWriters(Path baseDir, String filename, String header, Integer partitionSize)
+					throws IOException {
 
 		// Validate parameters (defensive programming)
 		if (baseDir == null) {

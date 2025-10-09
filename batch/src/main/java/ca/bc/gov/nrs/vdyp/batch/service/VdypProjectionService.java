@@ -47,8 +47,8 @@ public class VdypProjectionService {
 	}
 
 	// ex) batch-1-partition0-projection-HCSV-2025_10_02_14_06_43_4933
-	public static String buildBatchProjectionId(Long jobExecutionId, String partitionName,
-			ProjectionRequestKind projectionKind) {
+	public static String
+			buildBatchProjectionId(Long jobExecutionId, String partitionName, ProjectionRequestKind projectionKind) {
 		StringBuilder sb = new StringBuilder("batch-");
 		sb.append(jobExecutionId).append("-");
 		sb.append(partitionName).append("-");
@@ -58,18 +58,20 @@ public class VdypProjectionService {
 	}
 
 	/**
-	 * Performs VDYP projection for multiple BatchRecords in a chunk.
-	 * This method processes a collection of complete polygons by
-	 * creating combined input streams and running a single projection operation.
+	 * Performs VDYP projection for multiple BatchRecords in a chunk. This method processes a collection of complete
+	 * polygons by creating combined input streams and running a single projection operation.
 	 *
 	 * @param batchRecords Collection of BatchRecords to process together
+	 *
 	 * @return Projection result summary for the entire chunk
 	 */
-	public String performProjectionForChunk(List<BatchRecord> batchRecords, String partitionName,
-			Parameters projectionParameters, Long jobExecutionId, String jobBaseDir)
-			throws IOException {
-		logger.info("Starting VDYP projection for chunk of {} records in partition {}",
-				batchRecords.size(), partitionName);
+	public String performProjectionForChunk(
+			List<BatchRecord> batchRecords, String partitionName, Parameters projectionParameters, Long jobExecutionId,
+			String jobBaseDir
+	) throws IOException {
+		logger.info(
+				"Starting VDYP projection for chunk of {} records in partition {}", batchRecords.size(), partitionName
+		);
 
 		if (batchRecords.isEmpty()) {
 			return "No records to process in chunk";
@@ -82,14 +84,20 @@ public class VdypProjectionService {
 			// Create combined input streams from all BatchRecords in the chunk
 			inputStreams = createCombinedInputStreamsFromChunk(batchRecords);
 
-			String batchProjectionId = buildBatchProjectionId(jobExecutionId, partitionName,
-					ProjectionRequestKind.HCSV);
+			String batchProjectionId = buildBatchProjectionId(
+					jobExecutionId, partitionName, ProjectionRequestKind.HCSV
+			);
 
-			try (ProjectionRunner runner = new ProjectionRunner(
-					ProjectionRequestKind.HCSV, batchProjectionId, projectionParameters, false)) {
+			try (
+					ProjectionRunner runner = new ProjectionRunner(
+							ProjectionRequestKind.HCSV, batchProjectionId, projectionParameters, false
+					)
+			) {
 
-				logger.info("Running HCSV projection {} for chunk of {} records in partition {}",
-						batchProjectionId, batchRecords.size(), partitionName);
+				logger.info(
+						"Running HCSV projection {} for chunk of {} records in partition {}", batchProjectionId,
+						batchRecords.size(), partitionName
+				);
 
 				// Run the projection on the combined chunk data
 				runner.run(inputStreams);
@@ -99,11 +107,13 @@ public class VdypProjectionService {
 
 				String result = String.format(
 						"Chunk projection completed for %d records in partition %s. Results stored",
-						batchRecords.size(), partitionName);
+						batchRecords.size(), partitionName
+				);
 
 				logger.info(
 						"VDYP chunk projection completed for {} records in partition {}. Intermediate results stored",
-						batchRecords.size(), partitionName);
+						batchRecords.size(), partitionName
+				);
 
 				return result;
 
@@ -115,7 +125,8 @@ public class VdypProjectionService {
 			throw e;
 		} catch (Exception e) {
 			throw BatchException.handleProjectionFailure(
-					partitionName, batchRecords.size(), e, "Unexpected error during chunk projection", logger);
+					partitionName, batchRecords.size(), e, "Unexpected error during chunk projection", logger
+			);
 		} finally {
 			if (inputStreams != null) {
 				for (var entry : inputStreams.entrySet()) {
@@ -126,8 +137,7 @@ public class VdypProjectionService {
 	}
 
 	/**
-	 * Creates a partition-specific output directory within the existing
-	 * job-specific parent folder
+	 * Creates a partition-specific output directory within the existing job-specific parent folder
 	 */
 	private Path createOutputPartitionDir(String partitionName, String jobBaseDir) throws IOException {
 		if (jobBaseDir == null || jobBaseDir.trim().isEmpty()) {
@@ -142,8 +152,9 @@ public class VdypProjectionService {
 		// Convert input-partition name to output-partition name
 		// inputPartitionName format: "input-partition0" -> "output-partition0"
 		String inputPartitionName = BatchConstants.Partition.INPUT_PREFIX + "-" + partitionName;
-		String outputPartitionName = inputPartitionName.replace(BatchConstants.Partition.INPUT_FOLDER_NAME_PREFIX,
-				BatchConstants.Partition.OUTPUT_FOLDER_NAME_PREFIX);
+		String outputPartitionName = inputPartitionName.replace(
+				BatchConstants.Partition.INPUT_FOLDER_NAME_PREFIX, BatchConstants.Partition.OUTPUT_FOLDER_NAME_PREFIX
+		);
 
 		Path outputPartitionDir = jobBasePath.resolve(outputPartitionName);
 
@@ -152,19 +163,21 @@ public class VdypProjectionService {
 		} catch (IOException e) {
 			throw BatchIOException.handleIOException(
 					outputPartitionDir, e,
-					String.format("Failed to create output partition directory (job folder: %s)", jobBasePath),
-					logger);
+					String.format("Failed to create output partition directory (job folder: %s)", jobBasePath), logger
+			);
 		}
 
-		logger.info("Created output partition directory: {} for input partition: {} within job folder: {}",
-				outputPartitionName, inputPartitionName, jobBasePath.getFileName());
+		logger.info(
+				"Created output partition directory: {} for input partition: {} within job folder: {}",
+				outputPartitionName, inputPartitionName, jobBasePath.getFileName()
+		);
 
 		return outputPartitionDir;
 	}
 
 	/**
-	 * Creates combined input streams from all BatchRecords in a chunk.
-	 * This method combines all polygon and layer data into unified streams.
+	 * Creates combined input streams from all BatchRecords in a chunk. This method combines all polygon and layer data
+	 * into unified streams.
 	 */
 	private Map<String, InputStream> createCombinedInputStreamsFromChunk(List<BatchRecord> batchRecords)
 			throws IOException {
@@ -212,33 +225,35 @@ public class VdypProjectionService {
 
 		// Validate - meaningful data
 		if (polygonCsv.isEmpty() || layerCsv.isEmpty()) {
-			throw new IOException(String.format(
-					"Combined CSV data is empty or invalid (Polygon: %d bytes, Layer: %d bytes)",
-					polygonCsv.length(), layerCsv.length()));
+			throw new IOException(
+					String.format(
+							"Combined CSV data is empty or invalid (Polygon: %d bytes, Layer: %d bytes)",
+							polygonCsv.length(), layerCsv.length()
+					)
+			);
 		}
 
 		// Create input streams
-		inputStreams.put(ParameterNames.HCSV_POLYGON_INPUT_DATA,
-				new ByteArrayInputStream(polygonCsv.toString().getBytes()));
-		inputStreams.put(ParameterNames.HCSV_LAYERS_INPUT_DATA,
-				new ByteArrayInputStream(layerCsv.toString().getBytes()));
+		inputStreams.put(
+				ParameterNames.HCSV_POLYGON_INPUT_DATA, new ByteArrayInputStream(polygonCsv.toString().getBytes())
+		);
+		inputStreams
+				.put(ParameterNames.HCSV_LAYERS_INPUT_DATA, new ByteArrayInputStream(layerCsv.toString().getBytes()));
 
 		logger.debug(
 				"Created combined input streams from raw CSV data for chunk of {} records (Polygon: {} bytes, Layers: {} bytes)",
-				batchRecords.size(), polygonCsv.length(), layerCsv.length());
+				batchRecords.size(), polygonCsv.length(), layerCsv.length()
+		);
 
 		return inputStreams;
 	}
 
 	/**
-	 * Handles VDYP chunk projection failures by logging with context and creating
-	 * IOException.
+	 * Handles VDYP chunk projection failures by logging with context and creating IOException.
 	 */
-	private IOException handleChunkProjectionFailure(List<BatchRecord> batchRecords, String partitionName,
-			Exception cause) {
-		String featureIds = batchRecords.stream()
-				.map(BatchRecord::getFeatureId)
-				.limit(5) // Show first 5 feature IDs
+	private IOException
+			handleChunkProjectionFailure(List<BatchRecord> batchRecords, String partitionName, Exception cause) {
+		String featureIds = batchRecords.stream().map(BatchRecord::getFeatureId).limit(5) // Show first 5 feature IDs
 				.collect(Collectors.joining(", "));
 
 		if (batchRecords.size() > 5) {
@@ -247,11 +262,9 @@ public class VdypProjectionService {
 
 		String contextualMessage = String.format(
 				"VDYP chunk projection failed for %d records in partition %s (FEATURE_IDs: %s). Exception type: %s, Root cause: %s",
-				batchRecords.size(),
-				partitionName,
-				featureIds,
-				cause.getClass().getSimpleName(),
-				cause.getMessage() != null ? cause.getMessage() : BatchConstants.ErrorMessage.NO_ERROR_MESSAGE);
+				batchRecords.size(), partitionName, featureIds, cause.getClass().getSimpleName(),
+				cause.getMessage() != null ? cause.getMessage() : BatchConstants.ErrorMessage.NO_ERROR_MESSAGE
+		);
 
 		logger.error(contextualMessage, cause);
 
@@ -262,27 +275,29 @@ public class VdypProjectionService {
 	 * Stores intermediate results for all records in a chunk.
 	 */
 	private void storeChunkIntermediateResults(
-			ProjectionRunner runner, Path partitionOutputDir, String projectionId,
-			List<BatchRecord> batchRecords)
-			throws IOException {
+			ProjectionRunner runner, Path partitionOutputDir, String projectionId, List<BatchRecord> batchRecords
+	) throws IOException {
 
-		logger.debug("Storing intermediate results for chunk projection {} ({} records)", projectionId,
-				batchRecords.size());
+		logger.debug(
+				"Storing intermediate results for chunk projection {} ({} records)", projectionId, batchRecords.size()
+		);
 
 		storeChunkYieldTables(runner, partitionOutputDir, projectionId, batchRecords);
 
 		storeChunkLogs(runner, partitionOutputDir, projectionId, batchRecords);
 
 		logger.debug(
-				"Successfully stored intermediate results for chunk projection {} ({} records) in {}",
-				projectionId, batchRecords.size(), partitionOutputDir);
+				"Successfully stored intermediate results for chunk projection {} ({} records) in {}", projectionId,
+				batchRecords.size(), partitionOutputDir
+		);
 	}
 
 	/**
 	 * Stores yield tables from chunk projection.
 	 */
-	private void storeChunkYieldTables(ProjectionRunner runner, Path partitionDir, String projectionId,
-			List<BatchRecord> batchRecords) throws IOException {
+	private void storeChunkYieldTables(
+			ProjectionRunner runner, Path partitionDir, String projectionId, List<BatchRecord> batchRecords
+	) throws IOException {
 		if (runner == null || runner.getContext() == null) {
 			logger.warn("Cannot store yield tables: ProjectionRunner or context is null");
 			return;
@@ -302,8 +317,9 @@ public class VdypProjectionService {
 	/**
 	 * Stores a single yield table file.
 	 */
-	private void storeYieldTable(YieldTable yieldTable, Path partitionDir, String projectionId,
-			List<BatchRecord> batchRecords) throws IOException {
+	private void storeYieldTable(
+			YieldTable yieldTable, Path partitionDir, String projectionId, List<BatchRecord> batchRecords
+	) throws IOException {
 		if (yieldTable == null) {
 			logger.warn("Skipping null yield table in projection {}", projectionId);
 			return;
@@ -322,16 +338,16 @@ public class VdypProjectionService {
 			Files.copy(yieldTableStream, yieldTablePath, StandardCopyOption.REPLACE_EXISTING);
 			logger.trace("Stored chunk yield table: {} for {} records", prefixedFileName, batchRecords.size());
 		} catch (IOException e) {
-			throw BatchIOException.handleFileCopyFailure(
-					yieldTablePath, e, "Failed to store yield table", logger);
+			throw BatchIOException.handleFileCopyFailure(yieldTablePath, e, "Failed to store yield table", logger);
 		}
 	}
 
 	/**
 	 * Stores log files from chunk projection.
 	 */
-	private void storeChunkLogs(ProjectionRunner runner, Path partitionDir, String projectionId,
-			List<BatchRecord> batchRecords) throws IOException {
+	private void storeChunkLogs(
+			ProjectionRunner runner, Path partitionDir, String projectionId, List<BatchRecord> batchRecords
+	) throws IOException {
 		if (runner == null || runner.getContext() == null || runner.getContext().getParams() == null) {
 			logger.warn("Cannot store logs: ProjectionRunner, context, or params is null");
 			return;
@@ -355,8 +371,9 @@ public class VdypProjectionService {
 		}
 	}
 
-	private void storeProgressLog(ProjectionRunner runner, Path partitionDir, String projectionId,
-			List<BatchRecord> batchRecords) throws IOException {
+	private void storeProgressLog(
+			ProjectionRunner runner, Path partitionDir, String projectionId, List<BatchRecord> batchRecords
+	) throws IOException {
 		String progressLogFileName = String.format("YieldTables_%s_ProgressLog.txt", projectionId);
 		Path progressLogPath = partitionDir.resolve(progressLogFileName);
 
@@ -368,13 +385,13 @@ public class VdypProjectionService {
 				logger.warn("Progress stream is null, skipping progress log: {}", progressLogFileName);
 			}
 		} catch (IOException e) {
-			throw BatchIOException.handleFileWriteFailure(
-					progressLogPath, e, "Failed to store progress log", logger);
+			throw BatchIOException.handleFileWriteFailure(progressLogPath, e, "Failed to store progress log", logger);
 		}
 	}
 
-	private void storeErrorLog(ProjectionRunner runner, Path partitionDir, String projectionId,
-			List<BatchRecord> batchRecords) throws IOException {
+	private void storeErrorLog(
+			ProjectionRunner runner, Path partitionDir, String projectionId, List<BatchRecord> batchRecords
+	) throws IOException {
 		String errorLogFileName = String.format("YieldTables_%s_ErrorLog.txt", projectionId);
 		Path errorLogPath = partitionDir.resolve(errorLogFileName);
 
@@ -386,8 +403,7 @@ public class VdypProjectionService {
 				logger.warn("Error stream is null, skipping error log: {}", errorLogFileName);
 			}
 		} catch (IOException e) {
-			throw BatchIOException.handleFileWriteFailure(
-					errorLogPath, e, "Failed to store error log", logger);
+			throw BatchIOException.handleFileWriteFailure(errorLogPath, e, "Failed to store error log", logger);
 		}
 	}
 
@@ -398,11 +414,12 @@ public class VdypProjectionService {
 
 		try {
 			Files.write(debugLogPath, new byte[0], StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-			logger.trace("Created chunk debug log placeholder: {} for {} records", debugLogFileName,
-					batchRecords.size());
+			logger.trace(
+					"Created chunk debug log placeholder: {} for {} records", debugLogFileName, batchRecords.size()
+			);
 		} catch (IOException e) {
-			throw BatchIOException.handleFileWriteFailure(
-					debugLogPath, e, "Failed to create debug log placeholder", logger);
+			throw BatchIOException
+					.handleFileWriteFailure(debugLogPath, e, "Failed to create debug log placeholder", logger);
 		}
 	}
 }

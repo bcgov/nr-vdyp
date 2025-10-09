@@ -101,7 +101,8 @@ class PartitionedBatchConfigurationTest {
 	@BeforeEach
 	void setUp() {
 		configuration = new PartitionedBatchConfiguration(
-				jobRepository, metricsCollector, batchProperties, resultAggregationService);
+				jobRepository, metricsCollector, batchProperties, resultAggregationService
+		);
 
 		// Setup common mock behaviors
 		when(batchProperties.getRetry()).thenReturn(retry);
@@ -166,8 +167,8 @@ class PartitionedBatchConfigurationTest {
 		Step workerStep = mock(Step.class);
 		DynamicPartitioner dynamicPartitioner = mock(DynamicPartitioner.class);
 
-		DynamicPartitionHandler result = configuration.dynamicPartitionHandler(
-				taskExecutor, workerStep, dynamicPartitioner, batchProperties);
+		DynamicPartitionHandler result = configuration
+				.dynamicPartitionHandler(taskExecutor, workerStep, dynamicPartitioner, batchProperties);
 
 		assertNotNull(result);
 	}
@@ -190,13 +191,13 @@ class PartitionedBatchConfigurationTest {
 		BatchRetryPolicy retryPolicy = mock(BatchRetryPolicy.class);
 		BatchSkipPolicy skipPolicy = mock(BatchSkipPolicy.class);
 		@SuppressWarnings("unchecked")
-		ItemStreamReader<BatchRecord> itemReader = mock(
-				ItemStreamReader.class);
+		ItemStreamReader<BatchRecord> itemReader = mock(ItemStreamReader.class);
 		VdypChunkProjectionWriter partitionWriter = mock(VdypChunkProjectionWriter.class);
 
 		Step result = configuration.workerStep(
-				retryPolicy, skipPolicy, transactionManager, metricsCollector,
-				batchProperties, vdypProjectionService, itemReader, partitionWriter);
+				retryPolicy, skipPolicy, transactionManager, metricsCollector, batchProperties, vdypProjectionService,
+				itemReader, partitionWriter
+		);
 
 		assertNotNull(result);
 		assertEquals("workerStep", result.getName());
@@ -208,8 +209,8 @@ class PartitionedBatchConfigurationTest {
 		Step masterStep = mock(Step.class);
 		Step postProcessingStep = mock(Step.class);
 
-		Job result = configuration.partitionedJob(
-				jobExecutionListener, masterStep, postProcessingStep, transactionManager);
+		Job result = configuration
+				.partitionedJob(jobExecutionListener, masterStep, postProcessingStep, transactionManager);
 
 		assertNotNull(result);
 		assertEquals("VdypPartitionedJob", result.getName());
@@ -259,9 +260,11 @@ class PartitionedBatchConfigurationTest {
 		StepExecution stepExecution = mock(StepExecution.class);
 		ExecutionContext executionContext = mock(ExecutionContext.class);
 		org.springframework.batch.core.JobExecution jobExecution = mock(
-				org.springframework.batch.core.JobExecution.class);
+				org.springframework.batch.core.JobExecution.class
+		);
 		org.springframework.batch.core.JobParameters jobParameters = mock(
-				org.springframework.batch.core.JobParameters.class);
+				org.springframework.batch.core.JobParameters.class
+		);
 
 		when(chunkContext.getStepContext()).thenReturn(stepContext);
 		when(stepContext.getStepExecution()).thenReturn(stepExecution);
@@ -281,8 +284,8 @@ class PartitionedBatchConfigurationTest {
 		RepeatStatus result = tasklet.execute(contribution, chunkContext);
 
 		assertEquals(RepeatStatus.FINISHED, result);
-		verify(resultAggregationService).aggregateResultsFromJobDir(eq(TEST_JOB_EXECUTION_ID), anyString(),
-				anyString());
+		verify(resultAggregationService)
+				.aggregateResultsFromJobDir(eq(TEST_JOB_EXECUTION_ID), anyString(), anyString());
 		verify(executionContext).putString("consolidatedOutputPath", "/tmp/consolidated.zip");
 	}
 
@@ -324,9 +327,11 @@ class PartitionedBatchConfigurationTest {
 		StepExecution stepExecution = mock(StepExecution.class);
 		ExecutionContext executionContext = mock(ExecutionContext.class);
 		org.springframework.batch.core.JobExecution jobExecution = mock(
-				org.springframework.batch.core.JobExecution.class);
+				org.springframework.batch.core.JobExecution.class
+		);
 		org.springframework.batch.core.JobParameters jobParameters = mock(
-				org.springframework.batch.core.JobParameters.class);
+				org.springframework.batch.core.JobParameters.class
+		);
 
 		when(chunkContext.getStepContext()).thenReturn(stepContext);
 		when(stepContext.getStepExecution()).thenReturn(stepExecution);
@@ -362,9 +367,11 @@ class PartitionedBatchConfigurationTest {
 		StepExecution stepExecution = mock(StepExecution.class);
 		ExecutionContext executionContext = mock(ExecutionContext.class);
 		org.springframework.batch.core.JobExecution jobExecution = mock(
-				org.springframework.batch.core.JobExecution.class);
+				org.springframework.batch.core.JobExecution.class
+		);
 		org.springframework.batch.core.JobParameters jobParameters = mock(
-				org.springframework.batch.core.JobParameters.class);
+				org.springframework.batch.core.JobParameters.class
+		);
 
 		when(chunkContext.getStepContext()).thenReturn(stepContext);
 		when(stepContext.getStepExecution()).thenReturn(stepExecution);
@@ -400,9 +407,11 @@ class PartitionedBatchConfigurationTest {
 		StepContext stepContext = mock(StepContext.class);
 		StepExecution stepExecution = mock(StepExecution.class);
 		org.springframework.batch.core.JobExecution jobExecution = mock(
-				org.springframework.batch.core.JobExecution.class);
+				org.springframework.batch.core.JobExecution.class
+		);
 		org.springframework.batch.core.JobParameters jobParameters = mock(
-				org.springframework.batch.core.JobParameters.class);
+				org.springframework.batch.core.JobParameters.class
+		);
 
 		when(chunkContext.getStepContext()).thenReturn(stepContext);
 		when(stepContext.getStepExecution()).thenReturn(stepExecution);
@@ -419,7 +428,8 @@ class PartitionedBatchConfigurationTest {
 
 		Exception exception = org.junit.jupiter.api.Assertions.assertThrows(
 				ca.bc.gov.nrs.vdyp.batch.exception.ResultAggregationException.class,
-				() -> tasklet.execute(contribution, chunkContext));
+				() -> tasklet.execute(contribution, chunkContext)
+		);
 
 		org.junit.jupiter.api.Assertions.assertTrue(exception.getMessage().contains("I/O operation failed"));
 		org.junit.jupiter.api.Assertions.assertTrue(exception.getMessage().contains("Test IO error"));
@@ -435,9 +445,11 @@ class PartitionedBatchConfigurationTest {
 		StepContext stepContext = mock(StepContext.class);
 		StepExecution stepExecution = mock(StepExecution.class);
 		org.springframework.batch.core.JobExecution jobExecution = mock(
-				org.springframework.batch.core.JobExecution.class);
+				org.springframework.batch.core.JobExecution.class
+		);
 		org.springframework.batch.core.JobParameters jobParameters = mock(
-				org.springframework.batch.core.JobParameters.class);
+				org.springframework.batch.core.JobParameters.class
+		);
 
 		when(chunkContext.getStepContext()).thenReturn(stepContext);
 		when(stepContext.getStepExecution()).thenReturn(stepExecution);
@@ -454,7 +466,8 @@ class PartitionedBatchConfigurationTest {
 
 		Exception exception = org.junit.jupiter.api.Assertions.assertThrows(
 				ca.bc.gov.nrs.vdyp.batch.exception.ResultAggregationException.class,
-				() -> tasklet.execute(contribution, chunkContext));
+				() -> tasklet.execute(contribution, chunkContext)
+		);
 
 		org.junit.jupiter.api.Assertions.assertTrue(exception.getMessage().contains("Unexpected error"));
 		org.junit.jupiter.api.Assertions.assertTrue(exception.getMessage().contains("Test runtime error"));
@@ -470,9 +483,11 @@ class PartitionedBatchConfigurationTest {
 		StepContext stepContext = mock(StepContext.class);
 		StepExecution stepExecution = mock(StepExecution.class);
 		org.springframework.batch.core.JobExecution jobExecution = mock(
-				org.springframework.batch.core.JobExecution.class);
+				org.springframework.batch.core.JobExecution.class
+		);
 		org.springframework.batch.core.JobParameters jobParameters = mock(
-				org.springframework.batch.core.JobParameters.class);
+				org.springframework.batch.core.JobParameters.class
+		);
 
 		when(chunkContext.getStepContext()).thenReturn(stepContext);
 		when(stepContext.getStepExecution()).thenReturn(stepExecution);
@@ -489,7 +504,8 @@ class PartitionedBatchConfigurationTest {
 
 		Exception exception = org.junit.jupiter.api.Assertions.assertThrows(
 				ca.bc.gov.nrs.vdyp.batch.exception.ResultAggregationException.class,
-				() -> tasklet.execute(contribution, chunkContext));
+				() -> tasklet.execute(contribution, chunkContext)
+		);
 
 		org.junit.jupiter.api.Assertions.assertTrue(exception.getMessage().contains("Unexpected error"));
 		// Should handle null message
@@ -505,8 +521,9 @@ class PartitionedBatchConfigurationTest {
 		VdypChunkProjectionWriter partitionWriter = mock(VdypChunkProjectionWriter.class);
 
 		Step workerStep = configuration.workerStep(
-				retryPolicy, skipPolicy, transactionManager, metricsCollector,
-				batchProperties, vdypProjectionService, itemReader, partitionWriter);
+				retryPolicy, skipPolicy, transactionManager, metricsCollector, batchProperties, vdypProjectionService,
+				itemReader, partitionWriter
+		);
 
 		// Create mock StepExecution to test the listener
 		StepExecution stepExecution = mock(StepExecution.class);
@@ -530,8 +547,9 @@ class PartitionedBatchConfigurationTest {
 		VdypChunkProjectionWriter partitionWriter = mock(VdypChunkProjectionWriter.class);
 
 		Step workerStep = configuration.workerStep(
-				retryPolicy, skipPolicy, transactionManager, metricsCollector,
-				batchProperties, vdypProjectionService, itemReader, partitionWriter);
+				retryPolicy, skipPolicy, transactionManager, metricsCollector, batchProperties, vdypProjectionService,
+				itemReader, partitionWriter
+		);
 
 		// Create mock StepExecution to test the listener
 		StepExecution stepExecution = mock(StepExecution.class);
@@ -556,8 +574,8 @@ class PartitionedBatchConfigurationTest {
 		Step masterStep = mock(Step.class);
 		Step postProcessingStep = mock(Step.class);
 
-		Job job = configuration.partitionedJob(
-				jobExecutionListener, masterStep, postProcessingStep, transactionManager);
+		Job job = configuration
+				.partitionedJob(jobExecutionListener, masterStep, postProcessingStep, transactionManager);
 
 		assertNotNull(job);
 		assertEquals("VdypPartitionedJob", job.getName());

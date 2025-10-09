@@ -28,7 +28,8 @@ public class DynamicPartitioner implements Partitioner {
 
 		logger.info(
 				"[VDYP Uploaded File Partitioner] Creating execution contexts for {} uploaded file partitions",
-				partitionSize);
+				partitionSize
+		);
 
 		// Create execution contexts for existing partition directories
 		for (int i = 0; i < partitionSize; i++) {
@@ -46,12 +47,12 @@ public class DynamicPartitioner implements Partitioner {
 
 			partitions.put(partitionName, context);
 
-			logger.info(
-					"VDYP partition{} execution context created for uploaded partition directory", i);
+			logger.info("VDYP partition{} execution context created for uploaded partition directory", i);
 		}
 
 		logger.info(
-				"Uploaded file partitioner created {} execution contexts for uploaded partitions", partitions.size());
+				"Uploaded file partitioner created {} execution contexts for uploaded partitions", partitions.size()
+		);
 
 		return partitions;
 	}

@@ -103,9 +103,7 @@ class VdypProjectionProcessorTest {
 	}
 
 	static Stream<Arguments> provideInvalidRecords() {
-		return Stream.of(
-				Arguments.of("Missing Feature ID", (String) null),
-				Arguments.of("Empty Feature ID", "   "));
+		return Stream.of(Arguments.of("Missing Feature ID", (String) null), Arguments.of("Empty Feature ID", "   "));
 	}
 
 	@Test

@@ -53,8 +53,7 @@ class ChunkBasedPolygonItemReaderTest {
 	void testOpenWithEmptyPartitionBaseDir() {
 		executionContext.putString("jobBaseDir", "");
 
-		ItemStreamException exception = assertThrows(ItemStreamException.class,
-				() -> reader.open(executionContext));
+		ItemStreamException exception = assertThrows(ItemStreamException.class, () -> reader.open(executionContext));
 		assertTrue(exception.getMessage().contains("jobBaseDir not found or empty"));
 	}
 
@@ -62,8 +61,7 @@ class ChunkBasedPolygonItemReaderTest {
 	void testOpenWithNonExistentPartitionDir() {
 		executionContext.putString("jobBaseDir", tempDir.toString());
 
-		ItemStreamException exception = assertThrows(ItemStreamException.class,
-				() -> reader.open(executionContext));
+		ItemStreamException exception = assertThrows(ItemStreamException.class, () -> reader.open(executionContext));
 		assertTrue(exception.getMessage().contains("Partition directory does not exist"));
 	}
 
@@ -73,8 +71,7 @@ class ChunkBasedPolygonItemReaderTest {
 		Files.createDirectories(partitionDir);
 		executionContext.putString("jobBaseDir", tempDir.toString());
 
-		ItemStreamException exception = assertThrows(ItemStreamException.class,
-				() -> reader.open(executionContext));
+		ItemStreamException exception = assertThrows(ItemStreamException.class, () -> reader.open(executionContext));
 		assertTrue(exception.getMessage().contains("Polygon file not found"));
 	}
 
@@ -85,8 +82,7 @@ class ChunkBasedPolygonItemReaderTest {
 		Files.createFile(partitionDir.resolve("polygons.csv")); // Empty file
 		executionContext.putString("jobBaseDir", tempDir.toString());
 
-		ItemStreamException exception = assertThrows(ItemStreamException.class,
-				() -> reader.open(executionContext));
+		ItemStreamException exception = assertThrows(ItemStreamException.class, () -> reader.open(executionContext));
 		assertTrue(exception.getMessage().contains("Polygon file is empty or has no header"));
 	}
 

@@ -21,16 +21,14 @@ public final class BatchUtils {
 	}
 
 	/**
-	 * Sanitizes provided filename for safe logging
-	 * Removes control characters, line breaks, and limits length.
+	 * Sanitizes provided filename for safe logging Removes control characters, line breaks, and limits length.
 	 */
 	public static String sanitizeForLogging(String filename) {
 		if (filename == null) {
 			return "null";
 		}
 
-		String sanitized = filename.replaceAll("[\\x00-\\x1f\\x7f-\\x9f]", "")
-				.trim();
+		String sanitized = filename.replaceAll("[\\x00-\\x1f\\x7f-\\x9f]", "").trim();
 
 		if (sanitized.length() > 100) {
 			sanitized = sanitized.substring(0, 97) + "...";

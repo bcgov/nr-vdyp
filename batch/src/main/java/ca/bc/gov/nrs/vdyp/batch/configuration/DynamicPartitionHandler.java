@@ -26,7 +26,8 @@ public class DynamicPartitionHandler implements PartitionHandler {
 
 	public DynamicPartitionHandler(
 			TaskExecutor taskExecutor, Step workerStep, DynamicPartitioner dynamicPartitioner,
-			BatchProperties batchProperties) {
+			BatchProperties batchProperties
+	) {
 		this.taskExecutor = taskExecutor;
 		this.workerStep = workerStep;
 		this.dynamicPartitioner = dynamicPartitioner;
@@ -35,9 +36,9 @@ public class DynamicPartitionHandler implements PartitionHandler {
 
 	@Override
 	@NonNull
-	public Collection<StepExecution> handle(@NonNull StepExecutionSplitter stepSplitter,
-			@NonNull StepExecution masterStepExecution)
-			throws Exception {
+	public Collection<StepExecution>
+			handle(@NonNull StepExecutionSplitter stepSplitter, @NonNull StepExecution masterStepExecution)
+					throws Exception {
 
 		JobParameters jobParameters = masterStepExecution.getJobExecution().getJobParameters();
 		Long partitionSize = jobParameters.getLong(BatchConstants.Partition.SIZE);

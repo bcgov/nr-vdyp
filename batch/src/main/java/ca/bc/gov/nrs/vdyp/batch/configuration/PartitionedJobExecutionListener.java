@@ -49,7 +49,8 @@ public class PartitionedJobExecutionListener implements JobExecutionListener {
 			actualPartitionSize = batchProperties.getPartition().getDefaultPartitionSize();
 		} else {
 			throw new IllegalStateException(
-					"batch.partition.default-partition-size must be configured in application.properties");
+					"batch.partition.default-partition-size must be configured in application.properties"
+			);
 		}
 
 		logger.info("VDYP Grid Size: {}", actualPartitionSize);

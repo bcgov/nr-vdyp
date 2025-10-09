@@ -26,6 +26,7 @@ public class BatchMetricsCollector {
 	 * Initialize metrics for a new job execution.
 	 *
 	 * @param jobExecutionId The job execution ID
+	 *
 	 * @return The initialized BatchMetrics instance
 	 */
 	public BatchMetrics initializeMetrics(Long jobExecutionId) {
@@ -63,15 +64,15 @@ public class BatchMetricsCollector {
 			BatchMetrics.PartitionMetrics partitionMetrics = new BatchMetrics.PartitionMetrics(partitionName);
 			partitionMetrics.setStartTime(LocalDateTime.now());
 			metrics.getPartitionMetrics().put(partitionName, partitionMetrics);
-			logger.info(
-					"[{}] Initialized partition metrics for job {}", partitionName, jobExecutionId);
+			logger.info("[{}] Initialized partition metrics for job {}", partitionName, jobExecutionId);
 		} catch (BatchException e) {
 			throw e;
 		} catch (Exception e) {
 			throw new BatchException(
 					"Failed to initialize partition metrics for partition: " + partitionName + " in job: "
 							+ jobExecutionId,
-					e);
+					e
+			);
 		}
 	}
 
@@ -95,7 +96,8 @@ public class BatchMetricsCollector {
 			BatchMetrics.PartitionMetrics partitionMetrics = metrics.getPartitionMetrics().get(partitionName);
 			if (partitionMetrics == null) {
 				throw new BatchException(
-						"No partition metrics found for partition: " + partitionName + " in job: " + jobExecutionId);
+						"No partition metrics found for partition: " + partitionName + " in job: " + jobExecutionId
+				);
 			}
 
 			partitionMetrics.setEndTime(LocalDateTime.now());
@@ -103,14 +105,16 @@ public class BatchMetricsCollector {
 			partitionMetrics.setExitCode(exitCode);
 			logger.info(
 					"[{}] Completed partition metrics for job {}, written: {}, exitCode: {}", partitionName,
-					jobExecutionId, writeCount, exitCode);
+					jobExecutionId, writeCount, exitCode
+			);
 		} catch (BatchException e) {
 			throw e;
 		} catch (Exception e) {
 			throw new BatchException(
 					"Failed to complete partition metrics for partition: " + partitionName + " in job: "
 							+ jobExecutionId,
-					e);
+					e
+			);
 		}
 	}
 
@@ -135,7 +139,8 @@ public class BatchMetricsCollector {
 			metrics.setTotalRecordsProcessed(totalWritten);
 			logger.info(
 					"Finalized job {} metrics: status={}, read={}, written={}", jobExecutionId, status, totalRead,
-					totalWritten);
+					totalWritten
+			);
 		} catch (BatchException e) {
 			throw e;
 		} catch (Exception e) {
@@ -148,7 +153,8 @@ public class BatchMetricsCollector {
 	 */
 	public void recordRetryAttempt(
 			Long jobExecutionId, Long recordId, BatchRecord batchRecord, int attemptNumber, Throwable error,
-			boolean successful, String partitionName) {
+			boolean successful, String partitionName
+	) {
 		if (jobExecutionId == null) {
 			throw new BatchException("Job execution ID cannot be null");
 		}
@@ -174,7 +180,8 @@ public class BatchMetricsCollector {
 
 			BatchMetrics.RetryDetail retryDetail = new BatchMetrics.RetryDetail(
 					recordId, batchRecord != null ? batchRecord.toString() : "null", attemptNumber, errorType,
-					errorMessage, successful, partitionName);
+					errorMessage, successful, partitionName
+			);
 
 			synchronized (metrics.getRetryDetails()) {
 				metrics.getRetryDetails().add(retryDetail);
@@ -191,7 +198,8 @@ public class BatchMetricsCollector {
 	 */
 	public void recordSkip(
 			Long jobExecutionId, Long recordId, BatchRecord batchRecord, Throwable error, String partitionName,
-			Long lineNumber) {
+			Long lineNumber
+	) {
 		if (jobExecutionId == null) {
 			throw new BatchException("Job execution ID cannot be null");
 		}
@@ -214,7 +222,8 @@ public class BatchMetricsCollector {
 			String recordData = batchRecord != null ? batchRecord.toString() : "null";
 
 			BatchMetrics.SkipDetail skipDetail = new BatchMetrics.SkipDetail(
-					recordId, recordData, errorType, errorMessage, partitionName, lineNumber);
+					recordId, recordData, errorType, errorMessage, partitionName, lineNumber
+			);
 
 			synchronized (metrics.getSkipDetails()) {
 				metrics.getSkipDetails().add(skipDetail);
@@ -250,6 +259,7 @@ public class BatchMetricsCollector {
 	 * Get metrics for a specific job execution.
 	 *
 	 * @param jobExecutionId The job execution ID
+	 *
 	 * @return BatchMetrics instance or null if not found
 	 */
 	public BatchMetrics getJobMetrics(Long jobExecutionId) {

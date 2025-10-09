@@ -22,10 +22,9 @@ import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 
 /**
- * Chunk-based ItemWriter that processes multiple BatchRecords together for
- * improved performance. This writer implements the efficient chunk-based
- * projection strategy where multiple FEATURE_IDs are processed in a single VDYP
- * projection operation.
+ * Chunk-based ItemWriter that processes multiple BatchRecords together for improved performance. This writer implements
+ * the efficient chunk-based projection strategy where multiple FEATURE_IDs are processed in a single VDYP projection
+ * operation.
  */
 public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepExecutionListener {
 
@@ -41,8 +40,9 @@ public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepE
 	private Parameters projectionParameters;
 	private String jobBaseDir;
 
-	public VdypChunkProjectionWriter(VdypProjectionService vdypProjectionService,
-			BatchMetricsCollector metricsCollector) {
+	public VdypChunkProjectionWriter(
+			VdypProjectionService vdypProjectionService, BatchMetricsCollector metricsCollector
+	) {
 		this.vdypProjectionService = vdypProjectionService;
 		this.metricsCollector = metricsCollector;
 	}
@@ -50,8 +50,8 @@ public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepE
 	@Override
 	public void beforeStep(StepExecution stepExecution) {
 		this.jobExecutionId = stepExecution.getJobExecutionId();
-		this.partitionName = stepExecution.getExecutionContext().getString(BatchConstants.Partition.NAME,
-				BatchConstants.Common.UNKNOWN);
+		this.partitionName = stepExecution.getExecutionContext()
+				.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN);
 		this.jobBaseDir = stepExecution.getJobParameters().getString(BatchConstants.Job.BASE_DIR);
 
 		logger.info("[{}] VdypChunkProjectionWriter.beforeStep() called", partitionName);
@@ -61,26 +61,32 @@ public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepE
 
 		try {
 			this.projectionParameters = objectMapper.readValue(projectionParametersJson, Parameters.class);
-			logger.info("[{}] VdypChunkProjectionWriter initialized with projection parameters. Parameters null: {}",
-					partitionName, this.projectionParameters == null);
+			logger.info(
+					"[{}] VdypChunkProjectionWriter initialized with projection parameters. Parameters null: {}",
+					partitionName, this.projectionParameters == null
+			);
 
 			if (this.projectionParameters != null) {
-				logger.debug("[{}] Projection parameters loaded successfully: selectedExecutionOptions={}",
-						partitionName,
+				logger.debug(
+						"[{}] Projection parameters loaded successfully: selectedExecutionOptions={}", partitionName,
 						this.projectionParameters.getSelectedExecutionOptions() != null
-								? this.projectionParameters.getSelectedExecutionOptions().size()
-								: "null");
+								? this.projectionParameters.getSelectedExecutionOptions().size() : "null"
+				);
 			} else {
-				logger.error("[{}] Projection parameters deserialized to null from JSON: {}",
-						partitionName, projectionParametersJson);
+				logger.error(
+						"[{}] Projection parameters deserialized to null from JSON: {}", partitionName,
+						projectionParametersJson
+				);
 				throw new IllegalStateException("Deserialized projection parameters are null");
 			}
 		} catch (JsonProcessingException jsonException) {
 			throw handleParameterDeserializationFailure(
-					projectionParametersJson, jsonException, "JSON parsing failed during parameter deserialization");
+					projectionParametersJson, jsonException, "JSON parsing failed during parameter deserialization"
+			);
 		} catch (Exception generalException) {
 			throw handleParameterDeserializationFailure(
-					projectionParametersJson, generalException, "Unexpected error during parameter deserialization");
+					projectionParametersJson, generalException, "Unexpected error during parameter deserialization"
+			);
 		}
 	}
 
@@ -97,80 +103,90 @@ public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepE
 			return;
 		}
 
-		List<BatchRecord> batchRecords = chunk.getItems().stream()
-				.collect(Collectors.toList());
+		List<BatchRecord> batchRecords = chunk.getItems().stream().collect(Collectors.toList());
 
-		logger.info("[{}] Processing chunk of {} records using VdypProjectionService",
-				this.partitionName, batchRecords.size());
+		logger.info(
+				"[{}] Processing chunk of {} records using VdypProjectionService", this.partitionName,
+				batchRecords.size()
+		);
 
 		try {
 			// Validate projection parameters before processing
 			if (projectionParameters == null) {
 				throw new IllegalStateException(
-						"VDYP projection parameters are null. Cannot perform chunk projection.");
+						"VDYP projection parameters are null. Cannot perform chunk projection."
+				);
 			}
 
 			// Perform chunk-based projection
 			String chunkResult = vdypProjectionService.performProjectionForChunk(
-					batchRecords, this.partitionName, this.projectionParameters, this.jobExecutionId, this.jobBaseDir);
+					batchRecords, this.partitionName, this.projectionParameters, this.jobExecutionId, this.jobBaseDir
+			);
 
 			// Record metrics for successful chunk processing
 			recordChunkMetrics(batchRecords, this.partitionName, true, null);
 
-			logger.info("[{}] Successfully processed chunk of {} records. Result: {}",
-					this.partitionName, batchRecords.size(), chunkResult);
+			logger.info(
+					"[{}] Successfully processed chunk of {} records. Result: {}", this.partitionName,
+					batchRecords.size(), chunkResult
+			);
 
 		} catch (RuntimeException runtimeException) {
 			throw handleChunkProcessingFailure(
-					batchRecords, this.partitionName, runtimeException, "Runtime error during chunk processing");
+					batchRecords, this.partitionName, runtimeException, "Runtime error during chunk processing"
+			);
 		} catch (Exception generalException) {
 			throw handleChunkProcessingFailure(
-					batchRecords, this.partitionName, generalException, "Unexpected error during chunk processing");
+					batchRecords, this.partitionName, generalException, "Unexpected error during chunk processing"
+			);
 		}
 	}
 
 	/**
 	 * Records metrics for chunk processing results.
 	 */
-	private void recordChunkMetrics(List<BatchRecord> batchRecords, String actualPartitionName, boolean success,
-			Exception error) {
+	private void recordChunkMetrics(
+			List<BatchRecord> batchRecords, String actualPartitionName, boolean success, Exception error
+	) {
 		if (metricsCollector != null && jobExecutionId != null) {
 			for (BatchRecord batchRecord : batchRecords) {
 				try {
 					Long recordIdHash = batchRecord.getFeatureId() != null
-							? (long) batchRecord.getFeatureId().hashCode()
-							: 0L;
+							? (long) batchRecord.getFeatureId().hashCode() : 0L;
 
 					if (success) {
 						// Record successful processing
-						logger.trace("[{}] Recording successful processing for FEATURE_ID: {}",
-								actualPartitionName, batchRecord.getFeatureId());
+						logger.trace(
+								"[{}] Recording successful processing for FEATURE_ID: {}", actualPartitionName,
+								batchRecord.getFeatureId()
+						);
 					} else {
 						// Record processing failure
-						metricsCollector.recordSkip(jobExecutionId, recordIdHash, batchRecord,
-								error, actualPartitionName, null);
+						metricsCollector.recordSkip(
+								jobExecutionId, recordIdHash, batchRecord, error, actualPartitionName, null
+						);
 					}
 				} catch (Exception metricsException) {
-					logger.warn("[{}] Failed to record metrics for FEATURE_ID: {} - {}",
-							actualPartitionName, batchRecord.getFeatureId(), metricsException.getMessage());
+					logger.warn(
+							"[{}] Failed to record metrics for FEATURE_ID: {} - {}", actualPartitionName,
+							batchRecord.getFeatureId(), metricsException.getMessage()
+					);
 				}
 			}
 		}
 	}
 
 	/**
-	 * Handles parameter deserialization failures by logging and creating
-	 * appropriate exception.
+	 * Handles parameter deserialization failures by logging and creating appropriate exception.
 	 */
-	private IllegalStateException handleParameterDeserializationFailure(
-			String parametersJson, Exception cause, String errorDescription) {
+	private IllegalStateException
+			handleParameterDeserializationFailure(String parametersJson, Exception cause, String errorDescription) {
 		// Create enhanced contextual message
 		String contextualMessage = String.format(
-				"[%s] %s. JSON length: %d, Exception type: %s, Root cause: %s",
-				partitionName, errorDescription,
-				parametersJson != null ? parametersJson.length() : 0,
-				cause.getClass().getSimpleName(),
-				cause.getMessage() != null ? cause.getMessage() : BatchConstants.ErrorMessage.NO_ERROR_MESSAGE);
+				"[%s] %s. JSON length: %d, Exception type: %s, Root cause: %s", partitionName, errorDescription,
+				parametersJson != null ? parametersJson.length() : 0, cause.getClass().getSimpleName(),
+				cause.getMessage() != null ? cause.getMessage() : BatchConstants.ErrorMessage.NO_ERROR_MESSAGE
+		);
 
 		// Log the failure with full context
 		logger.error(contextualMessage, cause);
@@ -179,18 +195,18 @@ public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepE
 	}
 
 	/**
-	 * Handles chunk processing failures by logging, recording metrics, and creating
-	 * appropriate exception.
+	 * Handles chunk processing failures by logging, recording metrics, and creating appropriate exception.
 	 */
 	private RuntimeException handleChunkProcessingFailure(
-			java.util.List<BatchRecord> batchRecords, String actualPartitionName,
-			Exception cause, String errorDescription) {
+			java.util.List<BatchRecord> batchRecords, String actualPartitionName, Exception cause,
+			String errorDescription
+	) {
 		// Create enhanced contextual message
 		String contextualMessage = String.format(
-				"[%s] %s. Chunk size: %d, Exception type: %s, Root cause: %s",
-				actualPartitionName, errorDescription, batchRecords.size(),
-				cause.getClass().getSimpleName(),
-				cause.getMessage() != null ? cause.getMessage() : BatchConstants.ErrorMessage.NO_ERROR_MESSAGE);
+				"[%s] %s. Chunk size: %d, Exception type: %s, Root cause: %s", actualPartitionName, errorDescription,
+				batchRecords.size(), cause.getClass().getSimpleName(),
+				cause.getMessage() != null ? cause.getMessage() : BatchConstants.ErrorMessage.NO_ERROR_MESSAGE
+		);
 
 		// Log the failure with full context
 		logger.error(contextualMessage, cause);

@@ -13,8 +13,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -134,7 +132,8 @@ class BatchRetryPolicyTest {
 	@Test
 	void testCanRetry_WithDataAccessException() {
 		var dataAccessException = new DataAccessResourceFailureException(
-				"Database connection failed with record ID 1298765434");
+				"Database connection failed with record ID 1298765434"
+		);
 		when(retryContext.getLastThrowable()).thenReturn(dataAccessException);
 
 		boolean result = batchRetryPolicy.canRetry(retryContext);
@@ -187,11 +186,9 @@ class BatchRetryPolicyTest {
 	}
 
 	@ParameterizedTest
-	@ValueSource(strings = {
-			"Error with record ID notanumber",
-			"Generic error message without record ID",
-			"record ID "
-	})
+	@ValueSource(
+			strings = { "Error with record ID notanumber", "Generic error message without record ID", "record ID " }
+	)
 	@NullSource
 	void testExtractRecordId_VariousEdgeCases(String errorMessage) {
 		IOException exception = new IOException(errorMessage);
@@ -513,8 +510,7 @@ class BatchRetryPolicyTest {
 
 		policyWithJobId.onRetrySuccess(2000000003L, batchRecord);
 
-		verify(metricsCollector).recordRetryAttempt(300L, 2000000003L, batchRecord, 2, null, true,
-				"partition-success");
+		verify(metricsCollector).recordRetryAttempt(300L, 2000000003L, batchRecord, 2, null, true, "partition-success");
 	}
 
 	@Test

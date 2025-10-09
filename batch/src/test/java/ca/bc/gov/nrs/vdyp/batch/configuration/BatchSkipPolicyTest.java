@@ -56,31 +56,37 @@ class BatchSkipPolicyTest {
 		return Stream.of(
 				Arguments.of(
 						"FlatFileParseException should be skippable",
-						new FlatFileParseException("Parse error", "invalid line")),
-				Arguments.of("BindException should be skippable", new BindException(new Object(), "test")),
+						new FlatFileParseException("Parse error", "invalid line")
+				), Arguments.of("BindException should be skippable", new BindException(new Object(), "test")),
 				Arguments.of(
-						"IllegalArgumentException should be skippable",
-						new IllegalArgumentException("Invalid argument")),
-				Arguments.of("NullPointerException should be skippable", new NullPointerException("Null pointer")),
+						"IllegalArgumentException should be skippable", new IllegalArgumentException("Invalid argument")
+				), Arguments.of("NullPointerException should be skippable", new NullPointerException("Null pointer")),
 				Arguments.of("NumberFormatException should be skippable", new NumberFormatException("Invalid number")),
 				Arguments.of(
 						"RuntimeException with 'invalid' should be skippable",
-						new RuntimeException("Invalid data format")),
+						new RuntimeException("Invalid data format")
+				),
 				Arguments.of(
 						"RuntimeException with 'malformed' should be skippable",
-						new RuntimeException("Data is malformed")),
+						new RuntimeException("Data is malformed")
+				),
 				Arguments.of(
 						"RuntimeException with 'corrupt' should be skippable",
-						new RuntimeException("File appears to be corrupt")),
+						new RuntimeException("File appears to be corrupt")
+				),
 				Arguments.of(
 						"RuntimeException with 'missing' should be skippable",
-						new RuntimeException("Required field is missing")),
+						new RuntimeException("Required field is missing")
+				),
 				Arguments.of(
 						"RuntimeException with 'empty' should be skippable",
-						new RuntimeException("Field cannot be empty")),
+						new RuntimeException("Field cannot be empty")
+				),
 				Arguments.of(
 						"RuntimeException with 'format' should be skippable",
-						new RuntimeException("Unexpected format encountered")));
+						new RuntimeException("Unexpected format encountered")
+				)
+		);
 	}
 
 	@ParameterizedTest
@@ -96,9 +102,10 @@ class BatchSkipPolicyTest {
 		return Stream.of(
 				Arguments.of(
 						"RuntimeException without transient message should not be skippable",
-						new RuntimeException("Some other error")),
-				Arguments.of("RuntimeException with null message should not be skippable", new RuntimeException()),
-				Arguments.of("Generic Exception should not be skippable", new Exception("Generic exception")));
+						new RuntimeException("Some other error")
+				), Arguments.of("RuntimeException with null message should not be skippable", new RuntimeException()),
+				Arguments.of("Generic Exception should not be skippable", new Exception("Generic exception"))
+		);
 	}
 
 	@Test
@@ -138,7 +145,8 @@ class BatchSkipPolicyTest {
 	@ParameterizedTest
 	@MethodSource("provideFeatureIdExtractionTests")
 	void testFeatureIdExtraction_VariousScenarios_Handles(
-			String testName, RuntimeException exception, boolean expectedSkippable) throws SkipLimitExceededException {
+			String testName, RuntimeException exception, boolean expectedSkippable
+	) throws SkipLimitExceededException {
 		boolean result = batchSkipPolicy.shouldSkip(exception, 1);
 
 		assertEquals(expectedSkippable, result, testName);
@@ -148,19 +156,25 @@ class BatchSkipPolicyTest {
 		return Stream.of(
 				Arguments.of(
 						"Valid Feature ID in message should be extractable",
-						new RuntimeException("Error processing Feature ID 1145678902 - invalid data format"), true),
+						new RuntimeException("Error processing Feature ID 1145678902 - invalid data format"), true
+				),
 				Arguments.of(
 						"No Feature ID in message should handle",
-						new RuntimeException("No Feature ID in this message - malformed data"), true),
+						new RuntimeException("No Feature ID in this message - malformed data"), true
+				),
 				Arguments.of(
 						"Malformed Feature ID should handle",
-						new RuntimeException("Error with Feature ID abc123 - invalid format"), true),
+						new RuntimeException("Error with Feature ID abc123 - invalid format"), true
+				),
 				Arguments.of(
 						"Non-FlatFile exception with Feature ID should use fallback",
-						new RuntimeException("Error with Feature ID 1245678903 - invalid data format"), true),
+						new RuntimeException("Error with Feature ID 1245678903 - invalid data format"), true
+				),
 				Arguments.of(
 						"Zero Feature ID should be handled",
-						new RuntimeException("Error with Feature ID 0 - format issue"), true));
+						new RuntimeException("Error with Feature ID 0 - format issue"), true
+				)
+		);
 	}
 
 	@Test
@@ -280,7 +294,6 @@ class BatchSkipPolicyTest {
 		BatchRecord cachedRecord = new BatchRecord();
 		cachedRecord.setFeatureId("1545678906");
 
-		// Cache the record first
 		BatchSkipPolicy.cacheRecordData(1545678906L, cachedRecord, Thread.currentThread().getName());
 
 		RuntimeException exception = new RuntimeException("Error processing Feature ID 1545678906 - invalid format");

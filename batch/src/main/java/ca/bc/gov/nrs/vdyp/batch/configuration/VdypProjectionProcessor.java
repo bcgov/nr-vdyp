@@ -34,8 +34,7 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 	@Value("${batch.validation.max-polygon-id-length:50}")
 	private int maxPolygonIdLength;
 
-	public VdypProjectionProcessor(
-			BatchRetryPolicy retryPolicy, BatchMetricsCollector metricsCollector) {
+	public VdypProjectionProcessor(BatchRetryPolicy retryPolicy, BatchMetricsCollector metricsCollector) {
 		this.retryPolicy = retryPolicy;
 		this.metricsCollector = metricsCollector;
 	}
@@ -46,16 +45,14 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 	@BeforeStep
 	public void beforeStep(StepExecution stepExecution) {
 		Long jobExecutionId = stepExecution.getJobExecutionId();
-		this.partitionName = stepExecution.getExecutionContext().getString(BatchConstants.Partition.NAME,
-				BatchConstants.Common.UNKNOWN);
+		this.partitionName = stepExecution.getExecutionContext()
+				.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN);
 
 		if (metricsCollector != null) {
 			metricsCollector.initializePartitionMetrics(jobExecutionId, partitionName);
 		}
 
-		logger.info(
-				"[{}] VDYP Projection Processor initialized for job {}",
-				partitionName, jobExecutionId);
+		logger.info("[{}] VDYP Projection Processor initialized for job {}", partitionName, jobExecutionId);
 	}
 
 	@Override

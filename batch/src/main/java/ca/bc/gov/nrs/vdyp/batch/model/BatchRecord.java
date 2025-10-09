@@ -63,13 +63,8 @@ public class BatchRecord {
 
 	@Override
 	public String toString() {
-		return "BatchRecord{" +
-				"featureId='" + featureId + '\'' +
-				", rawPolygonData='" + rawPolygonData + '\'' +
-				", rawLayerData=" + rawLayerData +
-				", polygonHeader='" + polygonHeader + '\'' +
-				", layerHeader='" + layerHeader + '\'' +
-				", partitionName='" + partitionName + '\'' +
-				'}';
+		return "BatchRecord{" + "featureId='" + featureId + '\'' + ", rawPolygonData='" + rawPolygonData + '\''
+				+ ", rawLayerData=" + rawLayerData + ", polygonHeader='" + polygonHeader + '\'' + ", layerHeader='"
+				+ layerHeader + '\'' + ", partitionName='" + partitionName + '\'' + '}';
 	}
 }

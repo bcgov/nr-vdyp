@@ -61,7 +61,8 @@ public class BatchController {
 
 	public BatchController(
 			JobLauncher jobLauncher, Job partitionedJob, JobExplorer jobExplorer,
-			BatchMetricsCollector metricsCollector, StreamingCsvPartitioner csvPartitioner) {
+			BatchMetricsCollector metricsCollector, StreamingCsvPartitioner csvPartitioner
+	) {
 		this.jobLauncher = jobLauncher;
 		this.partitionedJob = partitionedJob;
 		this.jobExplorer = jobExplorer;
@@ -72,12 +73,14 @@ public class BatchController {
 	/**
 	 * Start a new batch job execution
 	 */
-	@PostMapping(value = "/start", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	@PostMapping(
+			value = "/start", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE
+	)
 	public ResponseEntity<Map<String, Object>> startBatchJobWithFiles(
-			@RequestParam("polygonFile") MultipartFile polygonFile,
-			@RequestParam("layerFile") MultipartFile layerFile,
+			@RequestParam("polygonFile") MultipartFile polygonFile, @RequestParam("layerFile") MultipartFile layerFile,
 			@RequestParam(value = "partitionSize", required = false) Integer partitionSize,
-			@RequestParam("parameters") String projectionParametersJson) {
+			@RequestParam("parameters") String projectionParametersJson
+	) {
 
 		try {
 			logRequestDetails(polygonFile, layerFile, partitionSize, projectionParametersJson);
@@ -94,8 +97,7 @@ public class BatchController {
 			return ResponseEntity.ok(response);
 
 		} catch (ProjectionRequestValidationException e) {
-			return ResponseEntity.badRequest()
-					.header("content-type", "application/json")
+			return ResponseEntity.badRequest().header("content-type", "application/json")
 					.body(createValidationErrorResponse(e));
 		} catch (Exception e) {
 			return buildErrorResponse(e);
@@ -111,33 +113,45 @@ public class BatchController {
 				"availableEndpoints",
 				Arrays.asList(
 						"/api/batch/start", "/api/batch/status/{id}", "/api/batch/metrics/{id}", "/api/batch/jobs",
-						"/api/batch/health"));
+						"/api/batch/health"
+				)
+		);
 		response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
 		return ResponseEntity.ok(response);
 	}
 
-	private void logRequestDetails(MultipartFile polygonFile, MultipartFile layerFile,
-			Integer partitionSize, String parametersJson) {
+	private void logRequestDetails(
+			MultipartFile polygonFile, MultipartFile layerFile, Integer partitionSize, String parametersJson
+	) {
 		if (logger.isInfoEnabled()) {
 			logger.info("=== VDYP Batch Job Request ===");
-			logger.info("Polygon file: {} ({} bytes)", BatchUtils.sanitizeForLogging(polygonFile.getOriginalFilename()),
-					polygonFile.getSize());
-			logger.info("Layer file: {} ({} bytes)", BatchUtils.sanitizeForLogging(layerFile.getOriginalFilename()),
-					layerFile.getSize());
+			logger.info(
+					"Polygon file: {} ({} bytes)", BatchUtils.sanitizeForLogging(polygonFile.getOriginalFilename()),
+					polygonFile.getSize()
+			);
+			logger.info(
+					"Layer file: {} ({} bytes)", BatchUtils.sanitizeForLogging(layerFile.getOriginalFilename()),
+					layerFile.getSize()
+			);
 			logger.info("Partition size: {}", partitionSize);
 			logger.info("Parameters provided: {}", parametersJson != null ? "yes" : "no");
 		}
 	}
 
-	private JobExecution executeJob(MultipartFile polygonFile, MultipartFile layerFile,
-			Integer partitionSize, String projectionParametersJson)
-			throws JobExecutionAlreadyRunningException, JobRestartException,
-			JobInstanceAlreadyCompleteException, JobParametersInvalidException, ProjectionRequestValidationException {
+	private JobExecution executeJob(
+			MultipartFile polygonFile, MultipartFile layerFile, Integer partitionSize, String projectionParametersJson
+	) throws JobExecutionAlreadyRunningException, JobRestartException, JobInstanceAlreadyCompleteException,
+			JobParametersInvalidException, ProjectionRequestValidationException {
 
 		if (projectionParametersJson == null || projectionParametersJson.trim().isEmpty()) {
-			throw new ProjectionRequestValidationException(List.of(
-					new ValidationMessage(ValidationMessageKind.GENERIC,
-							"VDYP projection parameters are required but not provided in the request")));
+			throw new ProjectionRequestValidationException(
+					List.of(
+							new ValidationMessage(
+									ValidationMessageKind.GENERIC,
+									"VDYP projection parameters are required but not provided in the request"
+							)
+					)
+			);
 		}
 
 		try {
@@ -150,34 +164,38 @@ public class BatchController {
 
 			String jobTimestamp = BatchUtils.createJobTimestamp();
 
-			String jobBaseFolderName = BatchUtils.createJobFolderName(BatchConstants.Job.BASE_FOLDER_PREFIX,
-					jobTimestamp);
+			String jobBaseFolderName = BatchUtils
+					.createJobFolderName(BatchConstants.Job.BASE_FOLDER_PREFIX, jobTimestamp);
 			Path jobBaseDir = batchRootDir.resolve(jobBaseFolderName);
 			Files.createDirectories(jobBaseDir);
 			logger.info("Created job base directory: {}", jobBaseDir);
 
 			Integer actualPartitionSize = partitionSize != null ? partitionSize : defaultParitionSize;
-			logger.info("Actual using {} partitions (requested: {}, from properties: {})",
-					actualPartitionSize, partitionSize, defaultParitionSize);
+			logger.info(
+					"Actual using {} partitions (requested: {}, from properties: {})", actualPartitionSize,
+					partitionSize, defaultParitionSize
+			);
 
 			// Partition CSV files using streaming approach BEFORE starting the job
 			logger.info("Starting CSV partitioning...");
-			int featureIdToPartitionSize = csvPartitioner.partitionCsvFiles(
-					polygonFile, layerFile,
-					actualPartitionSize,
-					jobBaseDir);
+			int featureIdToPartitionSize = csvPartitioner
+					.partitionCsvFiles(polygonFile, layerFile, actualPartitionSize, jobBaseDir);
 
-			logger.info("CSV files partitioned successfully. Partitions: {}, Total FEATURE_IDs: {}",
-					actualPartitionSize, featureIdToPartitionSize);
+			logger.info(
+					"CSV files partitioned successfully. Partitions: {}, Total FEATURE_IDs: {}", actualPartitionSize,
+					featureIdToPartitionSize
+			);
 
 			// Now start the job with the partition directory included in parameters
-			JobParameters jobParameters = buildJobParameters(projectionParametersJson, actualPartitionSize,
-					jobTimestamp, jobBaseDir.toString());
+			JobParameters jobParameters = buildJobParameters(
+					projectionParametersJson, actualPartitionSize, jobTimestamp, jobBaseDir.toString()
+			);
 			JobExecution jobExecution = jobLauncher.run(partitionedJob, jobParameters);
 
-			logger.info("Started job! execution ID: {}, directory: {}, partitions: {}", jobExecution.getId(),
-					jobBaseDir,
-					actualPartitionSize);
+			logger.info(
+					"Started job! execution ID: {}, directory: {}, partitions: {}", jobExecution.getId(), jobBaseDir,
+					actualPartitionSize
+			);
 
 			return jobExecution;
 
@@ -187,15 +205,20 @@ public class BatchController {
 			String errorMessage = e.getMessage() != null ? e.getMessage()
 					: "Unknown error (" + e.getClass().getSimpleName() + ")";
 
-			throw new ProjectionRequestValidationException(List.of(
-					new ValidationMessage(ValidationMessageKind.GENERIC,
-							"Failed to process uploaded CSV files: " + errorMessage)));
+			throw new ProjectionRequestValidationException(
+					List.of(
+							new ValidationMessage(
+									ValidationMessageKind.GENERIC,
+									"Failed to process uploaded CSV files: " + errorMessage
+							)
+					)
+			);
 		}
 	}
 
-	private JobParameters buildJobParameters(String projectionParametersJson, Integer partitionSize,
-			String jobTimestamp,
-			String jobBaseDir) {
+	private JobParameters buildJobParameters(
+			String projectionParametersJson, Integer partitionSize, String jobTimestamp, String jobBaseDir
+	) {
 
 		JobParametersBuilder parametersBuilder = new JobParametersBuilder()
 				.addString(BatchConstants.Projection.PARAMETERS_JSON, projectionParametersJson)
@@ -224,8 +247,8 @@ public class BatchController {
 		Map<String, Object> errorResponse = new HashMap<>();
 		errorResponse.put("validationMessages", e.getValidationMessages());
 		errorResponse.put(BatchConstants.Job.ERROR, "Validation failed");
-		errorResponse.put(BatchConstants.Job.MESSAGE,
-				"Request validation failed - check validation messages for details");
+		errorResponse
+				.put(BatchConstants.Job.MESSAGE, "Request validation failed - check validation messages for details");
 		return errorResponse;
 	}
 

@@ -61,7 +61,8 @@ class DynamicPartitionHandlerTest {
 	@BeforeEach
 	void setUp() {
 		dynamicPartitionHandler = new DynamicPartitionHandler(
-				taskExecutor, workerStep, dynamicPartitioner, batchProperties);
+				taskExecutor, workerStep, dynamicPartitioner, batchProperties
+		);
 	}
 
 	@Test
@@ -72,8 +73,7 @@ class DynamicPartitionHandlerTest {
 	@Test
 	void testHandle_withJobParametersComplete_success() {
 		// Setup job parameters with job base directory
-		JobParameters jobParameters = createJobParametersWithJobBaseDir(DEFAULT_PARTITION_SIZE,
-				DEFAULT_CHUNK_SIZE);
+		JobParameters jobParameters = createJobParametersWithJobBaseDir(DEFAULT_PARTITION_SIZE, DEFAULT_CHUNK_SIZE);
 
 		setupBasicMocks(jobParameters);
 
@@ -99,8 +99,7 @@ class DynamicPartitionHandlerTest {
 	 * Helper method to create job parameters with job base directory
 	 */
 	private JobParameters createJobParametersWithJobBaseDir(Long partitionSize, Long chunkSize) {
-		JobParametersBuilder builder = new JobParametersBuilder()
-				.addString("jobBaseDir", TEST_JOB_BASE_DIR);
+		JobParametersBuilder builder = new JobParametersBuilder().addString("jobBaseDir", TEST_JOB_BASE_DIR);
 		if (partitionSize != null) {
 			builder.addLong(PARTITION_SIZE_PARAM, partitionSize);
 		}
@@ -129,12 +128,9 @@ class DynamicPartitionHandlerTest {
 
 	@ParameterizedTest
 	@MethodSource("providePartitionBaseDirPaths")
-	void testHandle_withDifferentPartitionBaseDirs_createsAppropriateResource(String jobBaseDir,
-			long partitionSize) {
-		JobParameters jobParameters = new JobParametersBuilder()
-				.addString("jobBaseDir", jobBaseDir)
-				.addLong(PARTITION_SIZE_PARAM, partitionSize)
-				.toJobParameters();
+	void testHandle_withDifferentPartitionBaseDirs_createsAppropriateResource(String jobBaseDir, long partitionSize) {
+		JobParameters jobParameters = new JobParametersBuilder().addString("jobBaseDir", jobBaseDir)
+				.addLong(PARTITION_SIZE_PARAM, partitionSize).toJobParameters();
 
 		setupBasicMocks(jobParameters);
 
@@ -147,10 +143,9 @@ class DynamicPartitionHandlerTest {
 
 	static Stream<Arguments> providePartitionBaseDirPaths() {
 		return Stream.of(
-				Arguments.of("/tmp/test1", 2L),
-				Arguments.of("/tmp/test2", 3L),
-				Arguments.of("/tmp/test3", 1L),
-				Arguments.of("/tmp/test4", 1L));
+				Arguments.of("/tmp/test1", 2L), Arguments.of("/tmp/test2", 3L), Arguments.of("/tmp/test3", 1L),
+				Arguments.of("/tmp/test4", 1L)
+		);
 	}
 
 	@Test
@@ -171,8 +166,7 @@ class DynamicPartitionHandlerTest {
 
 	@Test
 	void testHandle_validConfiguration_success() {
-		JobParameters jobParameters = new JobParametersBuilder()
-				.addLong(PARTITION_SIZE_PARAM, DEFAULT_PARTITION_SIZE)
+		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, DEFAULT_PARTITION_SIZE)
 				.toJobParameters();
 
 		setupBasicMocks(jobParameters);
@@ -189,8 +183,7 @@ class DynamicPartitionHandlerTest {
 	@ParameterizedTest
 	@MethodSource("providePartitionBaseDirValidationCases")
 	void testHandle_partitionBaseDirValidation(String jobBaseDir, boolean shouldThrow, String testDescription) {
-		JobParametersBuilder builder = new JobParametersBuilder()
-				.addLong(PARTITION_SIZE_PARAM, 2L);
+		JobParametersBuilder builder = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, 2L);
 
 		if (jobBaseDir != null) {
 			builder.addString("jobBaseDir", jobBaseDir);
@@ -221,7 +214,8 @@ class DynamicPartitionHandlerTest {
 				Arguments.of("/tmp/test1", false, "Valid job base directory should succeed"),
 				Arguments.of("/tmp/test2", false, "Valid job base directory should succeed"),
 				Arguments.of(null, false, "Null job base directory should still succeed"),
-				Arguments.of("", false, "Empty job base directory should still succeed"));
+				Arguments.of("", false, "Empty job base directory should still succeed")
+		);
 	}
 
 	@Test
@@ -242,9 +236,7 @@ class DynamicPartitionHandlerTest {
 
 	@Test
 	void testHandle_zeroPartitionSizeInJobParameters_succeeds() {
-		JobParameters jobParameters = new JobParametersBuilder()
-				.addLong(PARTITION_SIZE_PARAM, 0L)
-				.toJobParameters();
+		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, 0L).toJobParameters();
 
 		setupBasicMocks(jobParameters);
 
@@ -256,9 +248,7 @@ class DynamicPartitionHandlerTest {
 
 	@Test
 	void testHandle_negativePartitionSizeInJobParameters_throwsException() {
-		JobParameters jobParameters = new JobParametersBuilder()
-				.addLong(PARTITION_SIZE_PARAM, -1L)
-				.toJobParameters();
+		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, -1L).toJobParameters();
 
 		setupBasicMocks(jobParameters);
 
@@ -270,10 +260,8 @@ class DynamicPartitionHandlerTest {
 
 	@Test
 	void testHandle_withChunkSizeParameter_processesSuccessfully() {
-		JobParameters jobParameters = new JobParametersBuilder()
-				.addLong(PARTITION_SIZE_PARAM, 2L)
-				.addLong(CHUNK_SIZE_PARAM, 150L)
-				.toJobParameters();
+		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, 2L)
+				.addLong(CHUNK_SIZE_PARAM, 150L).toJobParameters();
 
 		setupBasicMocks(jobParameters);
 
@@ -287,9 +275,7 @@ class DynamicPartitionHandlerTest {
 
 	@Test
 	void testHandle_withoutChunkSize_processesSuccessfully() {
-		JobParameters jobParameters = new JobParametersBuilder()
-				.addLong(PARTITION_SIZE_PARAM, 2L)
-				.toJobParameters();
+		JobParameters jobParameters = new JobParametersBuilder().addLong(PARTITION_SIZE_PARAM, 2L).toJobParameters();
 
 		setupBasicMocks(jobParameters);
 
@@ -303,12 +289,9 @@ class DynamicPartitionHandlerTest {
 
 	@Test
 	void testHandle_maximumParameters_allPathsExercised() {
-		JobParameters jobParameters = new JobParametersBuilder()
-				.addString("jobBaseDir", TEST_JOB_BASE_DIR)
-				.addLong(PARTITION_SIZE_PARAM, 8L)
-				.addLong(CHUNK_SIZE_PARAM, 200L)
-				.addString("outputFilePath", "/data/forestry/output/vdyp_results")
-				.toJobParameters();
+		JobParameters jobParameters = new JobParametersBuilder().addString("jobBaseDir", TEST_JOB_BASE_DIR)
+				.addLong(PARTITION_SIZE_PARAM, 8L).addLong(CHUNK_SIZE_PARAM, 200L)
+				.addString("outputFilePath", "/data/forestry/output/vdyp_results").toJobParameters();
 
 		setupBasicMocks(jobParameters);
 
