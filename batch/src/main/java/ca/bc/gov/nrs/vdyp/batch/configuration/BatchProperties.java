@@ -48,6 +48,7 @@ public class BatchProperties {
 		private String inputFolderNamePrefix;
 		private String outputFolderNamePrefix;
 		private String namePrefix;
+		private Integer minValidFileSize;
 
 		public Integer getDefaultPartitionSize() {
 			return defaultPartitionSize;
@@ -96,6 +97,14 @@ public class BatchProperties {
 		public void setNamePrefix(String namePrefix) {
 			this.namePrefix = namePrefix;
 		}
+
+		public Integer getMinValidFileSize() {
+			return minValidFileSize;
+		}
+
+		public void setMinValidFileSize(Integer minValidFileSize) {
+			this.minValidFileSize = minValidFileSize;
+		}		
 	}
 
 	public static class Retry {

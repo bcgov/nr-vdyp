@@ -19,6 +19,7 @@ import java.util.zip.ZipOutputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchException;
@@ -33,6 +34,9 @@ import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 public class ResultAggregationService {
 
 	private static final Logger logger = LoggerFactory.getLogger(ResultAggregationService.class);
+
+	@Value("${batch.partition.min-valid-file-size}")
+	private int minValidFileSize;
 
 	/**
 	 * Aggregates all partition results into a single consolidated ZIP file within
@@ -147,7 +151,7 @@ public class ResultAggregationService {
 			List<Path> tablePaths = entry.getValue();
 
 			if (!tablePaths.isEmpty()) {
-				mergeYieldTables(tablePaths, zipOut);
+				mergeYieldTables(tablePaths, zipOut, partitionOutputDirs);
 			}
 		}
 
@@ -185,18 +189,45 @@ public class ResultAggregationService {
 	 * Merges multiple yield tables of the same type into a single file in the ZIP.
 	 * Assigns TABLE_NUM based on polygon/layer combinations.
 	 */
-	private void mergeYieldTables(List<Path> tablePaths, ZipOutputStream zipOut) throws IOException {
+	private void mergeYieldTables(List<Path> tablePaths, ZipOutputStream zipOut, List<Path> partitionOutputDirs)
+			throws IOException {
 		ZipEntry zipEntry = new ZipEntry(BatchConstants.File.YIELD_TABLE_FILENAME);
 		zipOut.putNextEntry(zipEntry);
 
 		TableNumberAssigner tableNumberAssigner = new TableNumberAssigner();
 		boolean isFirstFile = true;
+		boolean headerWritten = false;
 
 		for (Path tablePath : tablePaths) {
-			isFirstFile = processYieldTableFile(tablePath, zipOut, tableNumberAssigner, isFirstFile);
+			ProcessYieldTableResult result = processYieldTableFile(
+					tablePath, zipOut, tableNumberAssigner, isFirstFile);
+
+			// Update isFirstFile status for next iteration
+			// (if current file had content, next file is no longer first)
+			isFirstFile = result.isFirstFile();
+
+			// Track if a header was written
+			if (result.getHeader() != null) {
+				headerWritten = true;
+			}
+		}
+
+		// If no header was written, try to find and write one from partition directories
+		logger.debug("Header written status: {}", headerWritten);
+		if (!headerWritten) {
+			// No header written during processing - try to recover header from partition files
+			logger.info("No header was written during processing. Attempting header recovery from partitions.");
+			String recoveredHeader = searchForValidHeaderInPartitions(partitionOutputDirs);
+			if (recoveredHeader != null) {
+				logger.info("Recovered header from partition directories and writing to YieldTable.csv");
+				writeLineToZip(recoveredHeader, zipOut);
+			} else {
+				logger.warn("No valid header found in any partition directory. YieldTable.csv will have no header.");
+			}
 		}
 
 		zipOut.closeEntry();
+
 		logger.debug(
 				"Merged {} files into yield table: {} with {} unique polygon/layer combinations", tablePaths.size(),
 				BatchConstants.File.YIELD_TABLE_FILENAME, tableNumberAssigner.getUniqueCount());
@@ -206,24 +237,30 @@ public class ResultAggregationService {
 	 * Processes a single yield table file and writes its content to the ZIP output
 	 * stream.
 	 */
-	private boolean processYieldTableFile(
+	private ProcessYieldTableResult processYieldTableFile(
 			Path tablePath, ZipOutputStream zipOut, TableNumberAssigner tableNumberAssigner, boolean isFirstFile)
 			throws IOException {
 		if (!Files.exists(tablePath)) {
 			logger.warn("Yield table file does not exist: {}", tablePath);
-			return isFirstFile;
+			return new ProcessYieldTableResult(isFirstFile, null);
 		}
 
 		if (!Files.isReadable(tablePath)) {
 			logger.warn("Yield table file is not readable: {}", tablePath);
-			return isFirstFile;
+			return new ProcessYieldTableResult(isFirstFile, null);
 		}
+
+		String capturedHeader = null;
+		boolean updatedIsFirstFile = isFirstFile;
 
 		try (Stream<String> lines = Files.lines(tablePath, StandardCharsets.UTF_8)) {
 			Iterator<String> lineIterator = lines.iterator();
 
 			if (lineIterator.hasNext()) {
-				isFirstFile = processFirstLine(lineIterator.next(), zipOut, tableNumberAssigner, isFirstFile);
+				ProcessFirstLineResult firstLineResult = processFirstLine(
+						lineIterator.next(), zipOut, tableNumberAssigner, isFirstFile);
+				capturedHeader = firstLineResult.getHeader();
+				updatedIsFirstFile = firstLineResult.isFirstFile();
 			}
 
 			processRemainingLines(lineIterator, zipOut, tableNumberAssigner);
@@ -231,24 +268,25 @@ public class ResultAggregationService {
 			throw BatchIOException.handleFileReadFailure(
 					tablePath, e, "Error reading yield table file", logger);
 		}
-		return false; // After processing first file, subsequent files are not first
+		// Return updated isFirstFile status (false only if we actually processed content)
+		return new ProcessYieldTableResult(updatedIsFirstFile, capturedHeader);
 	}
 
 	/**
 	 * Processes the first line of a yield table file (header or data line).
 	 */
-	private boolean processFirstLine(
+	private ProcessFirstLineResult processFirstLine(
 			String firstLine, ZipOutputStream zipOut, TableNumberAssigner tableNumberAssigner,
 			boolean isFirstFile) throws IOException {
 		if (isHeaderLine(firstLine)) {
 			if (isFirstFile) {
 				writeLineToZip(firstLine, zipOut);
 			}
-			return false; // Header processed, subsequent files are not first
+			return new ProcessFirstLineResult(false, firstLine); // Header processed, return it
 		} else {
 			// Not a header, this is a data line - process it
 			processDataLine(firstLine, zipOut, tableNumberAssigner);
-			return isFirstFile; // Keep first file status for data-only files
+			return new ProcessFirstLineResult(isFirstFile, null); // Keep first file status for data-only files
 		}
 	}
 
@@ -279,6 +317,110 @@ public class ResultAggregationService {
 	 */
 	private void writeLineToZip(String line, ZipOutputStream zipOut) throws IOException {
 		zipOut.write((line + System.lineSeparator()).getBytes(StandardCharsets.UTF_8));
+	}
+
+	/**
+	 * Searches partition directories for a valid yield table header.
+	 * Return immediately when first valid header is found.
+	 */
+	private String searchForValidHeaderInPartitions(List<Path> partitionOutputDirs) throws IOException {
+		logger.debug("Searching for valid header with min file size: {} bytes", minValidFileSize);
+
+		for (Path partitionDir : partitionOutputDirs) {
+			if (!isValidPartitionDirectory(partitionDir)) {
+				continue;
+			}
+
+			try (Stream<Path> files = Files.walk(partitionDir)) {
+				// Find first file that meets all criteria and has a valid header
+				String header = files
+						.filter(Files::isRegularFile)
+						.filter(file -> isYieldTableFile(file.getFileName().toString()))
+						.filter(file -> {
+							try {
+								return Files.size(file) >= minValidFileSize;
+							} catch (IOException e) {
+								logger.warn("Failed to get size of file: {}", file, e);
+								return false;
+							}
+						})
+						.map(file -> {
+							String extractedHeader = extractHeaderFromFile(file);
+							if (extractedHeader != null) {
+								logger.info("Found valid header in file: {}", file.getFileName());
+							}
+							return extractedHeader;
+						})
+						.filter(h -> h != null)
+						.findFirst()
+						.orElse(null);
+
+				if (header != null) {
+					return header;
+				}
+			} catch (IOException e) {
+				logger.warn("Error searching partition directory for header: {}", partitionDir, e);
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Extracts header from a yield table file if it exists and is valid.
+	 */
+	private String extractHeaderFromFile(Path filePath) {
+		try (Stream<String> lines = Files.lines(filePath, StandardCharsets.UTF_8)) {
+			String firstLine = lines.findFirst().orElse(null);
+			if (firstLine != null && isHeaderLine(firstLine)) {
+				return firstLine;
+			}
+		} catch (IOException e) {
+			logger.debug("Failed to read file for header extraction: {}", filePath, e);
+		}
+		return null;
+	}
+
+	/**
+	 * Result of processing a yield table file.
+	 */
+	private static class ProcessYieldTableResult {
+		private final boolean isFirstFile;
+		private final String header;
+
+		public ProcessYieldTableResult(boolean isFirstFile, String header) {
+			this.isFirstFile = isFirstFile;
+			this.header = header;
+		}
+
+		public boolean isFirstFile() {
+			return isFirstFile;
+		}
+
+		public String getHeader() {
+			return header;
+		}
+	}
+
+	/**
+	 * Result of processing the first line of a yield table file.
+	 */
+	private static class ProcessFirstLineResult {
+		private final boolean isFirstFile;
+		private final String header;
+
+		public ProcessFirstLineResult(boolean isFirstFile, String header) {
+			this.isFirstFile = isFirstFile;
+			this.header = header;
+		}
+
+		public boolean isFirstFile() {
+			return isFirstFile;
+		}
+
+		public String getHeader() {
+			return header;
+		}
 	}
 
 	private class TableNumberAssigner {
