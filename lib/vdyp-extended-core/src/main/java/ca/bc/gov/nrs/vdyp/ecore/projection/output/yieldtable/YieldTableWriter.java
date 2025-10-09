@@ -320,6 +320,9 @@ abstract class YieldTableWriter<T extends YieldTableRowBean> implements Closeabl
 		)) {
 			currentCategories.add(YieldTable.Category.SECONDARY_HEIGHT);
 		}
+		if (!params.containsOption(Parameters.ExecutionOption.DO_ENABLE_PROJECTION_REPORT)) {
+			currentCategories.add(YieldTable.Category.FILE_UPLOAD_METADATA);
+		}
 	}
 
 	public boolean isCurrentlyWritingCategory(YieldTable.Category category) {
