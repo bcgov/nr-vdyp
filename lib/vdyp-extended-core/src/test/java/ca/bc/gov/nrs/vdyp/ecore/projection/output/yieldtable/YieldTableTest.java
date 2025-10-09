@@ -995,7 +995,8 @@ class YieldTableTest {
 
 		assertThrows(
 				StandYieldCalculationException.class,
-				() -> yieldTable.getYields(2020, UtilizationClassSet._7_5, species, null));
+				() -> yieldTable.getYields(2020, UtilizationClassSet._7_5, species, null)
+		);
 	}
 
 	@Test
@@ -1008,7 +1009,8 @@ class YieldTableTest {
 				Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES, //
 				Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER, //
 				Parameters.ExecutionOption.DO_INCLUDE_POLYGON_RECORD_ID_IN_YIELD_TABLE, //
-				Parameters.ExecutionOption.DO_INCLUDE_FILE_HEADER);
+				Parameters.ExecutionOption.DO_INCLUDE_FILE_HEADER
+		);
 		parameters.setYearStart(2025);
 		parameters.setYearEnd(2030);
 		parameters.setOutputFormat(Parameters.OutputFormat.CSV_YIELD_TABLE);
@@ -1018,11 +1020,13 @@ class YieldTableTest {
 		var polygonInputStream = TestUtils.makeInputStream(
 				//
 				POLYGON_CSV_HEADER_LINE,
-				"13919428,093C090,94833422,DQU,UNK,UNK,V,UNK,0.6,10,3,HE,35,8,,MS,14,50.0,1.000,NP,V,T,U,TC,SP,2013,2013,60.0,,,,,,,,,,TC,100,,,,");
+				"13919428,093C090,94833422,DQU,UNK,UNK,V,UNK,0.6,10,3,HE,35,8,,MS,14,50.0,1.000,NP,V,T,U,TC,SP,2013,2013,60.0,,,,,,,,,,TC,100,,,,"
+		);
 		var layersInputStream = TestUtils.makeInputStream(
 				//
 				LAYER_CSV_HEADER_LINE,
-				"13919428,14321066,093C090,94833422,1,P,,1,,,,20,10.000010,300,PLI,60.00,SX,40.00,,,,,,,,,180,18.00,180,23.00,,,,,,,,");
+				"13919428,14321066,093C090,94833422,1,P,,1,,,,20,10.000010,300,PLI,60.00,SX,40.00,,,,,,,,,180,18.00,180,23.00,,,,,,,,"
+		);
 
 		var polygonStream = new HcsvPolygonStream(context, polygonInputStream, layersInputStream);
 
@@ -1044,7 +1048,8 @@ class YieldTableTest {
 			var vdypUtilizationsStream = Files.newInputStream(vdypUtilizationsStreamFile);
 
 			ProjectionResultsReader forwardReader = new TestProjectionResultsReader(
-					testHelper, vdypPolygonStream, vdypSpeciesStream, vdypUtilizationsStream);
+					testHelper, vdypPolygonStream, vdypSpeciesStream, vdypUtilizationsStream
+			);
 			ProjectionResultsReader backReader = new NullProjectionResultsReader();
 
 			var projectionResults = ProjectionResultsBuilder
@@ -1054,7 +1059,8 @@ class YieldTableTest {
 				var layer = layerReportingInfo.getLayer();
 				if (state.layerWasProjected(layer)) {
 					yieldTable.generateYieldTableForPolygonLayer(
-							polygon, projectionResults, state, layerReportingInfo, false);
+							polygon, projectionResults, state, layerReportingInfo, false
+					);
 				}
 			}
 		} finally {
@@ -1084,7 +1090,8 @@ class YieldTableTest {
 				Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES, //
 				Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER, //
 				Parameters.ExecutionOption.DO_ENABLE_PROJECTION_REPORT, // This triggers Input Model Parameters mode
-				Parameters.ExecutionOption.DO_INCLUDE_FILE_HEADER);
+				Parameters.ExecutionOption.DO_INCLUDE_FILE_HEADER
+		);
 		parameters.setYearStart(2025);
 		parameters.setYearEnd(2030);
 		parameters.setOutputFormat(Parameters.OutputFormat.CSV_YIELD_TABLE);
@@ -1094,11 +1101,13 @@ class YieldTableTest {
 		var polygonInputStream = TestUtils.makeInputStream(
 				//
 				POLYGON_CSV_HEADER_LINE,
-				"13919428,093C090,94833422,DQU,UNK,UNK,V,UNK,0.6,10,3,HE,35,8,,MS,14,50.0,1.000,NP,V,T,U,TC,SP,2013,2013,60.0,,,,,,,,,,TC,100,,,,");
+				"13919428,093C090,94833422,DQU,UNK,UNK,V,UNK,0.6,10,3,HE,35,8,,MS,14,50.0,1.000,NP,V,T,U,TC,SP,2013,2013,60.0,,,,,,,,,,TC,100,,,,"
+		);
 		var layersInputStream = TestUtils.makeInputStream(
 				//
 				LAYER_CSV_HEADER_LINE,
-				"13919428,14321066,093C090,94833422,1,P,,1,,,,20,10.000010,300,PLI,60.00,SX,40.00,,,,,,,,,180,18.00,180,23.00,,,,,,,,");
+				"13919428,14321066,093C090,94833422,1,P,,1,,,,20,10.000010,300,PLI,60.00,SX,40.00,,,,,,,,,180,18.00,180,23.00,,,,,,,,"
+		);
 
 		var polygonStream = new HcsvPolygonStream(context, polygonInputStream, layersInputStream);
 
@@ -1120,7 +1129,8 @@ class YieldTableTest {
 			var vdypUtilizationsStream = Files.newInputStream(vdypUtilizationsStreamFile);
 
 			ProjectionResultsReader forwardReader = new TestProjectionResultsReader(
-					testHelper, vdypPolygonStream, vdypSpeciesStream, vdypUtilizationsStream);
+					testHelper, vdypPolygonStream, vdypSpeciesStream, vdypUtilizationsStream
+			);
 			ProjectionResultsReader backReader = new NullProjectionResultsReader();
 
 			var projectionResults = ProjectionResultsBuilder
@@ -1130,7 +1140,8 @@ class YieldTableTest {
 				var layer = layerReportingInfo.getLayer();
 				if (state.layerWasProjected(layer)) {
 					yieldTable.generateYieldTableForPolygonLayer(
-							polygon, projectionResults, state, layerReportingInfo, false);
+							polygon, projectionResults, state, layerReportingInfo, false
+					);
 				}
 			}
 		} finally {
