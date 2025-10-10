@@ -4,8 +4,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 /**
- * Configuration properties for VDYP batch processing. This class handles all
- * custom batch.* properties to eliminate unknown property warnings.
+ * Configuration properties for VDYP batch processing. This class handles all custom batch.* properties to eliminate
+ * unknown property warnings.
  */
 @Component
 @ConfigurationProperties(prefix = "batch")

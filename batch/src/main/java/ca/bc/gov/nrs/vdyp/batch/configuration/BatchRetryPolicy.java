@@ -46,7 +46,8 @@ public class BatchRetryPolicy extends SimpleRetryPolicy {
 	@BeforeStep
 	public void beforeStep(StepExecution stepExecution) {
 		this.jobExecutionId = stepExecution.getJobExecutionId();
-		this.partitionName = stepExecution.getExecutionContext().getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN);
+		this.partitionName = stepExecution.getExecutionContext()
+				.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN);
 	}
 
 	private static Map<Class<? extends Throwable>, Boolean> createRetryableExceptions() {
@@ -81,8 +82,8 @@ public class BatchRetryPolicy extends SimpleRetryPolicy {
 		}
 	}
 
-	private void processRetryableException(Throwable lastThrowable, Long recordId, String retryKey,
-			RetryContext context) {
+	private void
+			processRetryableException(Throwable lastThrowable, Long recordId, String retryKey, RetryContext context) {
 		RetryInfo retryInfo = updateRetryInfo(retryKey, recordId, lastThrowable);
 		ExecutionContext executionContext = getCurrentExecutionContext();
 
@@ -97,7 +98,8 @@ public class BatchRetryPolicy extends SimpleRetryPolicy {
 	private void processNonRetryableException(Throwable lastThrowable) {
 		logger.info(
 				"[VDYP Retry Policy] Non-retryable exception: {} - {} (will be skipped)",
-				lastThrowable.getClass().getSimpleName(), lastThrowable.getMessage());
+				lastThrowable.getClass().getSimpleName(), lastThrowable.getMessage()
+		);
 	}
 
 	private RetryInfo updateRetryInfo(String retryKey, Long recordId, Throwable lastThrowable) {
@@ -108,7 +110,8 @@ public class BatchRetryPolicy extends SimpleRetryPolicy {
 
 		logger.debug(
 				"[VDYP Retry Policy] canRetry called: true, Exception: {}, Retry count: {}",
-				lastThrowable.getClass().getSimpleName(), retryInfo.attemptCount);
+				lastThrowable.getClass().getSimpleName(), retryInfo.attemptCount
+		);
 
 		return retryInfo;
 	}
@@ -122,7 +125,8 @@ public class BatchRetryPolicy extends SimpleRetryPolicy {
 			if (stepContext != null) {
 				StepExecution currentStepExecution = stepContext.getStepExecution();
 				currentJobExecutionId = currentStepExecution.getJobExecutionId();
-				currentPartitionName = currentStepExecution.getExecutionContext().getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN);
+				currentPartitionName = currentStepExecution.getExecutionContext()
+						.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN);
 			}
 		} catch (Exception e) {
 			logger.warn("[VDYP Retry Policy] Warning: Could not access step context in canRetry: {}", e.getMessage());
@@ -135,7 +139,8 @@ public class BatchRetryPolicy extends SimpleRetryPolicy {
 		if (metricsCollector != null && executionContext.currentJobExecutionId != null) {
 			metricsCollector.recordRetryAttempt(
 					executionContext.currentJobExecutionId, retryInfo.recordId, retryInfo.batchRecord,
-					retryInfo.attemptCount, lastThrowable, false, executionContext.currentPartitionName);
+					retryInfo.attemptCount, lastThrowable, false, executionContext.currentPartitionName
+			);
 		}
 	}
 
@@ -144,7 +149,8 @@ public class BatchRetryPolicy extends SimpleRetryPolicy {
 				"[{}] VDYP Retry attempt {} of {} for record ID {} (stored: {}). Error: {} - {}", partitionName,
 				retryInfo.attemptCount, getMaxAttempts(), recordId,
 				retryInfo.recordId != null ? retryInfo.recordId : -1, lastThrowable.getClass().getSimpleName(),
-				retryInfo.lastError != null ? retryInfo.lastError.getMessage() : "No stored error");
+				retryInfo.lastError != null ? retryInfo.lastError.getMessage() : "No stored error"
+		);
 	}
 
 	private boolean isMaxAttemptsReached(RetryContext context) {
@@ -155,7 +161,8 @@ public class BatchRetryPolicy extends SimpleRetryPolicy {
 		retryInfo.successful = false;
 		logger.warn(
 				"[{}] Max retry attempts reached for record ID {}. Giving up. Final status: {}", partitionName,
-				recordId, retryInfo.successful ? "Success" : "Failed");
+				recordId, retryInfo.successful ? "Success" : "Failed"
+		);
 		retryInfoMap.remove(retryKey);
 	}
 
@@ -205,18 +212,21 @@ public class BatchRetryPolicy extends SimpleRetryPolicy {
 	}
 
 	private void recordSuccessfulRetry(
-			RetryInfo retryInfo, Long recordId, BatchRecord batchRecord, ExecutionContext executionContext) {
+			RetryInfo retryInfo, Long recordId, BatchRecord batchRecord, ExecutionContext executionContext
+	) {
 		if (metricsCollector != null && executionContext.currentJobExecutionId != null) {
 			metricsCollector.recordRetryAttempt(
 					executionContext.currentJobExecutionId, recordId, batchRecord, retryInfo.attemptCount, null, true,
-					executionContext.currentPartitionName);
+					executionContext.currentPartitionName
+			);
 		}
 	}
 
 	private void logSuccessfulRetry(Long recordId, int attemptCount, String partitionName) {
 		logger.info(
 				"[{}] VDYP Record ID {} successfully processed after {} retry attempt(s)", partitionName, recordId,
-				attemptCount);
+				attemptCount
+		);
 	}
 
 	private String createRetryKey(Long recordId) {
@@ -226,8 +236,7 @@ public class BatchRetryPolicy extends SimpleRetryPolicy {
 	/**
 	 * Extract record ID from error message for retry tracking.
 	 *
-	 * Parses error messages to find record IDs when they follow the pattern "...
-	 * record ID <number> ...". Used to link
+	 * Parses error messages to find record IDs when they follow the pattern "... record ID <number> ...". Used to link
 	 * retry attempts to specific records.
 	 */
 	private Long extractRecordId(String errorMessage) {

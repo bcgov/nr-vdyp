@@ -38,8 +38,8 @@ public class BatchSkipPolicy implements SkipPolicy {
 	@BeforeStep
 	public void beforeStep(StepExecution stepExecution) {
 		this.jobExecutionId = stepExecution.getJobExecutionId();
-		this.partitionName = stepExecution.getExecutionContext().getString(BatchConstants.Partition.NAME,
-				BatchConstants.Common.UNKNOWN);
+		this.partitionName = stepExecution.getExecutionContext()
+				.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN);
 	}
 
 	@Override
@@ -65,7 +65,8 @@ public class BatchSkipPolicy implements SkipPolicy {
 	private void logSkipDecision(Throwable t, boolean shouldSkip, long skipCount) {
 		logger.info(
 				"[VDYP Skip Policy] Exception: {}, Skippable: {}, Current Skipped count: {}",
-				t.getClass().getSimpleName(), shouldSkip, skipCount);
+				t.getClass().getSimpleName(), shouldSkip, skipCount
+		);
 	}
 
 	private void processSkippableException(Throwable t) {
@@ -107,8 +108,8 @@ public class BatchSkipPolicy implements SkipPolicy {
 	}
 
 	private String updatePartitionName(StepExecution stepExecution) {
-		String retrievedPartitionName = stepExecution.getExecutionContext().getString(BatchConstants.Partition.NAME,
-				BatchConstants.Common.UNKNOWN);
+		String retrievedPartitionName = stepExecution.getExecutionContext()
+				.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN);
 		partitionName = retrievedPartitionName;
 		return retrievedPartitionName;
 	}
@@ -117,7 +118,8 @@ public class BatchSkipPolicy implements SkipPolicy {
 		if (metricsCollector != null && executionContext.currentJobExecutionId != null) {
 			metricsCollector.recordSkip(
 					executionContext.currentJobExecutionId, skipContext.recordId, skipContext.batchRecord,
-					skipContext.throwable, executionContext.currentPartitionName, skipContext.lineNumber);
+					skipContext.throwable, executionContext.currentPartitionName, skipContext.lineNumber
+			);
 		}
 	}
 

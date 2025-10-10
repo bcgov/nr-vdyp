@@ -49,11 +49,14 @@ class StreamingCsvPartitionerTest {
 
 	@Test
 	void testPartitionCsvFiles_Success() throws IOException {
-		MockMultipartFile polygonFile = new MockMultipartFile("polygonFile", "polygon.csv", "text/csv", POLYGON_CSV_CONTENT.getBytes());
-		MockMultipartFile layerFile = new MockMultipartFile("layerFile", "layer.csv", "text/csv", LAYER_CSV_CONTENT.getBytes());
+		MockMultipartFile polygonFile = new MockMultipartFile(
+				"polygonFile", "polygon.csv", "text/csv", POLYGON_CSV_CONTENT.getBytes()
+		);
+		MockMultipartFile layerFile = new MockMultipartFile(
+				"layerFile", "layer.csv", "text/csv", LAYER_CSV_CONTENT.getBytes()
+		);
 
-		int totalFeatureIds = streamingCsvPartitioner.partitionCsvFiles(
-				polygonFile, layerFile, 2, tempDir);
+		int totalFeatureIds = streamingCsvPartitioner.partitionCsvFiles(polygonFile, layerFile, 2, tempDir);
 
 		assertEquals(4, totalFeatureIds);
 
@@ -368,8 +371,12 @@ class StreamingCsvPartitionerTest {
 
 	@Test
 	void testPartitionCsvFiles_EmptyPolygonFile() {
-		MockMultipartFile emptyPolygonFile = new MockMultipartFile("polygonFile", "polygon.csv", "text/csv", "".getBytes());
-		MockMultipartFile layerFile = new MockMultipartFile("layerFile", "layer.csv", "text/csv", LAYER_CSV_CONTENT.getBytes());
+		MockMultipartFile emptyPolygonFile = new MockMultipartFile(
+				"polygonFile", "polygon.csv", "text/csv", "".getBytes()
+		);
+		MockMultipartFile layerFile = new MockMultipartFile(
+				"layerFile", "layer.csv", "text/csv", LAYER_CSV_CONTENT.getBytes()
+		);
 
 		IOException exception = assertThrows(
 				IOException.class,
@@ -381,7 +388,9 @@ class StreamingCsvPartitionerTest {
 
 	@Test
 	void testPartitionCsvFiles_EmptyLayerFile() {
-		MockMultipartFile polygonFile = new MockMultipartFile("polygonFile", "polygon.csv", "text/csv", POLYGON_CSV_CONTENT.getBytes());
+		MockMultipartFile polygonFile = new MockMultipartFile(
+				"polygonFile", "polygon.csv", "text/csv", POLYGON_CSV_CONTENT.getBytes()
+		);
 		MockMultipartFile emptyLayerFile = new MockMultipartFile("layerFile", "layer.csv", "text/csv", "".getBytes());
 
 		IOException exception = assertThrows(
@@ -397,11 +406,14 @@ class StreamingCsvPartitionerTest {
 		String headerOnlyPolygon = "FEATURE_ID,MAP_ID,POLYGON_NUMBER,ORG_UNIT\n";
 		String headerOnlyLayer = "FEATURE_ID,MAP_ID,POLYGON_NUMBER,LAYER_LEVEL_CODE\n";
 
-		MockMultipartFile polygonFile = new MockMultipartFile("polygonFile", "polygon.csv", "text/csv", headerOnlyPolygon.getBytes());
-		MockMultipartFile layerFile = new MockMultipartFile("layerFile", "layer.csv", "text/csv", headerOnlyLayer.getBytes());
+		MockMultipartFile polygonFile = new MockMultipartFile(
+				"polygonFile", "polygon.csv", "text/csv", headerOnlyPolygon.getBytes()
+		);
+		MockMultipartFile layerFile = new MockMultipartFile(
+				"layerFile", "layer.csv", "text/csv", headerOnlyLayer.getBytes()
+		);
 
-		int totalFeatureIds = streamingCsvPartitioner.partitionCsvFiles(
-				polygonFile, layerFile, 2, tempDir);
+		int totalFeatureIds = streamingCsvPartitioner.partitionCsvFiles(polygonFile, layerFile, 2, tempDir);
 
 		assertEquals(0, totalFeatureIds);
 	}
@@ -420,11 +432,14 @@ class StreamingCsvPartitionerTest {
 				987654321,082G055,9999,P
 				""";
 
-		MockMultipartFile polygonFile = new MockMultipartFile("polygonFile", "polygon.csv", "text/csv", invalidPolygonCsv.getBytes());
-		MockMultipartFile layerFile = new MockMultipartFile("layerFile", "layer.csv", "text/csv", validLayerCsv.getBytes());
+		MockMultipartFile polygonFile = new MockMultipartFile(
+				"polygonFile", "polygon.csv", "text/csv", invalidPolygonCsv.getBytes()
+		);
+		MockMultipartFile layerFile = new MockMultipartFile(
+				"layerFile", "layer.csv", "text/csv", validLayerCsv.getBytes()
+		);
 
-		int totalFeatureIds = streamingCsvPartitioner.partitionCsvFiles(
-				polygonFile, layerFile, 2, tempDir);
+		int totalFeatureIds = streamingCsvPartitioner.partitionCsvFiles(polygonFile, layerFile, 2, tempDir);
 
 		// Only valid feature ID should be processed
 		assertEquals(1, totalFeatureIds);
@@ -432,11 +447,14 @@ class StreamingCsvPartitionerTest {
 
 	@Test
 	void testPartitionCsvFiles_SinglePartition() throws IOException {
-		MockMultipartFile polygonFile = new MockMultipartFile("polygonFile", "polygon.csv", "text/csv", POLYGON_CSV_CONTENT.getBytes());
-		MockMultipartFile layerFile = new MockMultipartFile("layerFile", "layer.csv", "text/csv", LAYER_CSV_CONTENT.getBytes());
+		MockMultipartFile polygonFile = new MockMultipartFile(
+				"polygonFile", "polygon.csv", "text/csv", POLYGON_CSV_CONTENT.getBytes()
+		);
+		MockMultipartFile layerFile = new MockMultipartFile(
+				"layerFile", "layer.csv", "text/csv", LAYER_CSV_CONTENT.getBytes()
+		);
 
-		int totalFeatureIds = streamingCsvPartitioner.partitionCsvFiles(
-				polygonFile, layerFile, 1, tempDir);
+		int totalFeatureIds = streamingCsvPartitioner.partitionCsvFiles(polygonFile, layerFile, 1, tempDir);
 
 		assertEquals(4, totalFeatureIds);
 
@@ -449,11 +467,14 @@ class StreamingCsvPartitionerTest {
 	void testPartitionCsvFiles_NonExistentOutputDirectory() throws IOException {
 		Path nonExistentDir = tempDir.resolve("non-existent");
 
-		MockMultipartFile polygonFile = new MockMultipartFile("polygonFile", "polygon.csv", "text/csv", POLYGON_CSV_CONTENT.getBytes());
-		MockMultipartFile layerFile = new MockMultipartFile("layerFile", "layer.csv", "text/csv", LAYER_CSV_CONTENT.getBytes());
+		MockMultipartFile polygonFile = new MockMultipartFile(
+				"polygonFile", "polygon.csv", "text/csv", POLYGON_CSV_CONTENT.getBytes()
+		);
+		MockMultipartFile layerFile = new MockMultipartFile(
+				"layerFile", "layer.csv", "text/csv", LAYER_CSV_CONTENT.getBytes()
+		);
 
-		int totalFeatureIds = streamingCsvPartitioner.partitionCsvFiles(
-				polygonFile, layerFile, 2, nonExistentDir);
+		int totalFeatureIds = streamingCsvPartitioner.partitionCsvFiles(polygonFile, layerFile, 2, nonExistentDir);
 
 		assertEquals(4, totalFeatureIds);
 		// Directory should be created automatically
@@ -474,11 +495,14 @@ class StreamingCsvPartitionerTest {
 				987654321
 				""";
 
-		MockMultipartFile polygonFile = new MockMultipartFile("polygonFile", "polygon.csv", "text/csv", singleFieldPolygon.getBytes());
-		MockMultipartFile layerFile = new MockMultipartFile("layerFile", "layer.csv", "text/csv", correspondingLayer.getBytes());
+		MockMultipartFile polygonFile = new MockMultipartFile(
+				"polygonFile", "polygon.csv", "text/csv", singleFieldPolygon.getBytes()
+		);
+		MockMultipartFile layerFile = new MockMultipartFile(
+				"layerFile", "layer.csv", "text/csv", correspondingLayer.getBytes()
+		);
 
-		int totalFeatureIds = streamingCsvPartitioner.partitionCsvFiles(
-				polygonFile, layerFile, 2, tempDir);
+		int totalFeatureIds = streamingCsvPartitioner.partitionCsvFiles(polygonFile, layerFile, 2, tempDir);
 
 		assertEquals(2, totalFeatureIds);
 	}
@@ -496,11 +520,14 @@ class StreamingCsvPartitionerTest {
 				888888888,082G055,8888,P
 				""";
 
-		MockMultipartFile polygonFile = new MockMultipartFile("polygonFile", "polygon.csv", "text/csv", polygonCsvContent.getBytes());
-		MockMultipartFile layerFile = new MockMultipartFile("layerFile", "layer.csv", "text/csv", layerCsvContent.getBytes());
+		MockMultipartFile polygonFile = new MockMultipartFile(
+				"polygonFile", "polygon.csv", "text/csv", polygonCsvContent.getBytes()
+		);
+		MockMultipartFile layerFile = new MockMultipartFile(
+				"layerFile", "layer.csv", "text/csv", layerCsvContent.getBytes()
+		);
 
-		int totalFeatureIds = streamingCsvPartitioner.partitionCsvFiles(
-				polygonFile, layerFile, 2, tempDir);
+		int totalFeatureIds = streamingCsvPartitioner.partitionCsvFiles(polygonFile, layerFile, 2, tempDir);
 
 		assertEquals(1, totalFeatureIds); // Only one polygon feature ID processed
 
@@ -515,7 +542,9 @@ class StreamingCsvPartitionerTest {
 
 	@Test
 	void testPartitionCsvFiles_NullPolygonFile() {
-		MockMultipartFile layerFile = new MockMultipartFile("layerFile", "layer.csv", "text/csv", LAYER_CSV_CONTENT.getBytes());
+		MockMultipartFile layerFile = new MockMultipartFile(
+				"layerFile", "layer.csv", "text/csv", LAYER_CSV_CONTENT.getBytes()
+		);
 
 		IllegalArgumentException exception = assertThrows(
 				IllegalArgumentException.class,
@@ -527,7 +556,9 @@ class StreamingCsvPartitionerTest {
 
 	@Test
 	void testPartitionCsvFiles_NullLayerFile() {
-		MockMultipartFile polygonFile = new MockMultipartFile("polygonFile", "polygon.csv", "text/csv", POLYGON_CSV_CONTENT.getBytes());
+		MockMultipartFile polygonFile = new MockMultipartFile(
+				"polygonFile", "polygon.csv", "text/csv", POLYGON_CSV_CONTENT.getBytes()
+		);
 
 		IllegalArgumentException exception = assertThrows(
 				IllegalArgumentException.class,
@@ -539,8 +570,12 @@ class StreamingCsvPartitionerTest {
 
 	@Test
 	void testPartitionCsvFiles_NullPartitionSize() {
-		MockMultipartFile polygonFile = new MockMultipartFile("polygonFile", "polygon.csv", "text/csv", POLYGON_CSV_CONTENT.getBytes());
-		MockMultipartFile layerFile = new MockMultipartFile("layerFile", "layer.csv", "text/csv", LAYER_CSV_CONTENT.getBytes());
+		MockMultipartFile polygonFile = new MockMultipartFile(
+				"polygonFile", "polygon.csv", "text/csv", POLYGON_CSV_CONTENT.getBytes()
+		);
+		MockMultipartFile layerFile = new MockMultipartFile(
+				"layerFile", "layer.csv", "text/csv", LAYER_CSV_CONTENT.getBytes()
+		);
 
 		IllegalArgumentException exception = assertThrows(
 				IllegalArgumentException.class,
@@ -552,8 +587,12 @@ class StreamingCsvPartitionerTest {
 
 	@Test
 	void testPartitionCsvFiles_ZeroPartitionSize() {
-		MockMultipartFile polygonFile = new MockMultipartFile("polygonFile", "polygon.csv", "text/csv", POLYGON_CSV_CONTENT.getBytes());
-		MockMultipartFile layerFile = new MockMultipartFile("layerFile", "layer.csv", "text/csv", LAYER_CSV_CONTENT.getBytes());
+		MockMultipartFile polygonFile = new MockMultipartFile(
+				"polygonFile", "polygon.csv", "text/csv", POLYGON_CSV_CONTENT.getBytes()
+		);
+		MockMultipartFile layerFile = new MockMultipartFile(
+				"layerFile", "layer.csv", "text/csv", LAYER_CSV_CONTENT.getBytes()
+		);
 
 		IllegalArgumentException exception = assertThrows(
 				IllegalArgumentException.class,
@@ -565,8 +604,12 @@ class StreamingCsvPartitionerTest {
 
 	@Test
 	void testPartitionCsvFiles_NegativePartitionSize() {
-		MockMultipartFile polygonFile = new MockMultipartFile("polygonFile", "polygon.csv", "text/csv", POLYGON_CSV_CONTENT.getBytes());
-		MockMultipartFile layerFile = new MockMultipartFile("layerFile", "layer.csv", "text/csv", LAYER_CSV_CONTENT.getBytes());
+		MockMultipartFile polygonFile = new MockMultipartFile(
+				"polygonFile", "polygon.csv", "text/csv", POLYGON_CSV_CONTENT.getBytes()
+		);
+		MockMultipartFile layerFile = new MockMultipartFile(
+				"layerFile", "layer.csv", "text/csv", LAYER_CSV_CONTENT.getBytes()
+		);
 
 		IllegalArgumentException exception = assertThrows(
 				IllegalArgumentException.class,
@@ -578,22 +621,25 @@ class StreamingCsvPartitionerTest {
 
 	@Test
 	void testPartitionCsvFiles_NullJobBaseDir() {
-		MockMultipartFile polygonFile = new MockMultipartFile("polygonFile", "polygon.csv", "text/csv",
-				POLYGON_CSV_CONTENT.getBytes());
-		MockMultipartFile layerFile = new MockMultipartFile("layerFile", "layer.csv", "text/csv",
-				LAYER_CSV_CONTENT.getBytes());
+		MockMultipartFile polygonFile = new MockMultipartFile(
+				"polygonFile", "polygon.csv", "text/csv", POLYGON_CSV_CONTENT.getBytes()
+		);
+		MockMultipartFile layerFile = new MockMultipartFile(
+				"layerFile", "layer.csv", "text/csv", LAYER_CSV_CONTENT.getBytes()
+		);
 
 		IllegalArgumentException exception = assertThrows(
 				IllegalArgumentException.class,
-				() -> streamingCsvPartitioner.partitionCsvFiles(polygonFile, layerFile, 2, null));
+				() -> streamingCsvPartitioner.partitionCsvFiles(polygonFile, layerFile, 2, null)
+		);
 
 		assertTrue(exception.getMessage().contains("Job base directory cannot be null"));
 	}
 
 	@Test
 	void testExtractFeatureId_NullCsvLine() throws Exception {
-		Method extractFeatureIdMethod = StreamingCsvPartitioner.class.getDeclaredMethod(
-				"extractFeatureId", String.class);
+		Method extractFeatureIdMethod = StreamingCsvPartitioner.class
+				.getDeclaredMethod("extractFeatureId", String.class);
 		extractFeatureIdMethod.setAccessible(true);
 
 		Long result = (Long) extractFeatureIdMethod.invoke(streamingCsvPartitioner, (String) null);
@@ -603,8 +649,8 @@ class StreamingCsvPartitionerTest {
 
 	@Test
 	void testExtractFeatureId_WhitespaceCsvLine() throws Exception {
-		Method extractFeatureIdMethod = StreamingCsvPartitioner.class.getDeclaredMethod(
-				"extractFeatureId", String.class);
+		Method extractFeatureIdMethod = StreamingCsvPartitioner.class
+				.getDeclaredMethod("extractFeatureId", String.class);
 		extractFeatureIdMethod.setAccessible(true);
 
 		Long result = (Long) extractFeatureIdMethod.invoke(streamingCsvPartitioner, "   ");
@@ -614,8 +660,8 @@ class StreamingCsvPartitionerTest {
 
 	@Test
 	void testExtractFeatureId_TabsAndSpaces() throws Exception {
-		Method extractFeatureIdMethod = StreamingCsvPartitioner.class.getDeclaredMethod(
-				"extractFeatureId", String.class);
+		Method extractFeatureIdMethod = StreamingCsvPartitioner.class
+				.getDeclaredMethod("extractFeatureId", String.class);
 		extractFeatureIdMethod.setAccessible(true);
 
 		Long result = (Long) extractFeatureIdMethod.invoke(streamingCsvPartitioner, "\t  \t");
@@ -625,8 +671,8 @@ class StreamingCsvPartitionerTest {
 
 	@Test
 	void testCreatePartitionWriters_NullBaseDir() throws Exception {
-		Method createPartitionWritersMethod = StreamingCsvPartitioner.class.getDeclaredMethod(
-				"createPartitionWriters", Path.class, String.class, String.class, Integer.class);
+		Method createPartitionWritersMethod = StreamingCsvPartitioner.class
+				.getDeclaredMethod("createPartitionWriters", Path.class, String.class, String.class, Integer.class);
 		createPartitionWritersMethod.setAccessible(true);
 
 		Exception exception = assertThrows(Exception.class, () -> {
@@ -640,8 +686,8 @@ class StreamingCsvPartitionerTest {
 
 	@Test
 	void testCreatePartitionWriters_EmptyFilename() throws Exception {
-		Method createPartitionWritersMethod = StreamingCsvPartitioner.class.getDeclaredMethod(
-				"createPartitionWriters", Path.class, String.class, String.class, Integer.class);
+		Method createPartitionWritersMethod = StreamingCsvPartitioner.class
+				.getDeclaredMethod("createPartitionWriters", Path.class, String.class, String.class, Integer.class);
 		createPartitionWritersMethod.setAccessible(true);
 
 		Exception exception = assertThrows(Exception.class, () -> {
@@ -655,8 +701,8 @@ class StreamingCsvPartitionerTest {
 
 	@Test
 	void testCreatePartitionWriters_NullHeader() throws Exception {
-		Method createPartitionWritersMethod = StreamingCsvPartitioner.class.getDeclaredMethod(
-				"createPartitionWriters", Path.class, String.class, String.class, Integer.class);
+		Method createPartitionWritersMethod = StreamingCsvPartitioner.class
+				.getDeclaredMethod("createPartitionWriters", Path.class, String.class, String.class, Integer.class);
 		createPartitionWritersMethod.setAccessible(true);
 
 		Exception exception = assertThrows(Exception.class, () -> {
@@ -670,8 +716,8 @@ class StreamingCsvPartitionerTest {
 
 	@Test
 	void testCreatePartitionWriters_NullPartitionSize() throws Exception {
-		Method createPartitionWritersMethod = StreamingCsvPartitioner.class.getDeclaredMethod(
-				"createPartitionWriters", Path.class, String.class, String.class, Integer.class);
+		Method createPartitionWritersMethod = StreamingCsvPartitioner.class
+				.getDeclaredMethod("createPartitionWriters", Path.class, String.class, String.class, Integer.class);
 		createPartitionWritersMethod.setAccessible(true);
 
 		Exception exception = assertThrows(Exception.class, () -> {
@@ -685,8 +731,8 @@ class StreamingCsvPartitionerTest {
 
 	@Test
 	void testCreatePartitionWriters_ZeroPartitionSize() throws Exception {
-		Method createPartitionWritersMethod = StreamingCsvPartitioner.class.getDeclaredMethod(
-				"createPartitionWriters", Path.class, String.class, String.class, Integer.class);
+		Method createPartitionWritersMethod = StreamingCsvPartitioner.class
+				.getDeclaredMethod("createPartitionWriters", Path.class, String.class, String.class, Integer.class);
 		createPartitionWritersMethod.setAccessible(true);
 
 		Exception exception = assertThrows(Exception.class, () -> {
@@ -701,8 +747,8 @@ class StreamingCsvPartitionerTest {
 
 	@Test
 	void testCreatePartitionWriters_NegativePartitionSize() throws Exception {
-		Method createPartitionWritersMethod = StreamingCsvPartitioner.class.getDeclaredMethod(
-				"createPartitionWriters", Path.class, String.class, String.class, Integer.class);
+		Method createPartitionWritersMethod = StreamingCsvPartitioner.class
+				.getDeclaredMethod("createPartitionWriters", Path.class, String.class, String.class, Integer.class);
 		createPartitionWritersMethod.setAccessible(true);
 
 		Exception exception = assertThrows(Exception.class, () -> {
@@ -733,12 +779,12 @@ class StreamingCsvPartitionerTest {
 				111222333,082G055,9999,P
 				""";
 
-		MockMultipartFile polygonFile = new MockMultipartFile("polygonFile", "polygon.csv", "text/csv",
-				polygonWithEmptyLines.getBytes());
+		MockMultipartFile polygonFile = new MockMultipartFile(
+				"polygonFile", "polygon.csv", "text/csv", polygonWithEmptyLines.getBytes()
+		);
 		MockMultipartFile layerFile = new MockMultipartFile("layerFile", "layer.csv", "text/csv", layerCsv.getBytes());
 
-		int totalFeatureIds = streamingCsvPartitioner.partitionCsvFiles(
-				polygonFile, layerFile, 2, tempDir);
+		int totalFeatureIds = streamingCsvPartitioner.partitionCsvFiles(polygonFile, layerFile, 2, tempDir);
 
 		// Empty lines should be skipped
 		assertEquals(3, totalFeatureIds);
@@ -760,13 +806,14 @@ class StreamingCsvPartitionerTest {
 
 				""";
 
-		MockMultipartFile polygonFile = new MockMultipartFile("polygonFile", "polygon.csv", "text/csv",
-				polygonCsv.getBytes());
-		MockMultipartFile layerFile = new MockMultipartFile("layerFile", "layer.csv", "text/csv",
-				layerWithEmptyLines.getBytes());
+		MockMultipartFile polygonFile = new MockMultipartFile(
+				"polygonFile", "polygon.csv", "text/csv", polygonCsv.getBytes()
+		);
+		MockMultipartFile layerFile = new MockMultipartFile(
+				"layerFile", "layer.csv", "text/csv", layerWithEmptyLines.getBytes()
+		);
 
-		int totalFeatureIds = streamingCsvPartitioner.partitionCsvFiles(
-				polygonFile, layerFile, 2, tempDir);
+		int totalFeatureIds = streamingCsvPartitioner.partitionCsvFiles(polygonFile, layerFile, 2, tempDir);
 
 		// Should process successfully, empty lines in layer file are skipped
 		assertEquals(2, totalFeatureIds);

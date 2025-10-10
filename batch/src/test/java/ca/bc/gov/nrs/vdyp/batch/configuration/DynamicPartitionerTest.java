@@ -118,10 +118,10 @@ class DynamicPartitionerTest {
 
 		for (String key : partitions1.keySet()) {
 			assertTrue(partitions2.containsKey(key));
-			
+
 			ExecutionContext context1 = partitions1.get(key);
 			ExecutionContext context2 = partitions2.get(key);
-			
+
 			assertEquals(context1.getString("partitionName"), context2.getString("partitionName"));
 			assertEquals(context1.getString("assignedFeatureIds"), context2.getString("assignedFeatureIds"));
 		}

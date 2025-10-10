@@ -51,7 +51,8 @@ public class PartitionedBatchConfiguration {
 
 	public PartitionedBatchConfiguration(
 			JobRepository jobRepository, BatchMetricsCollector metricsCollector, BatchProperties batchProperties,
-			ResultAggregationService resultAggregationService) {
+			ResultAggregationService resultAggregationService
+	) {
 		this.jobRepository = jobRepository;
 		this.metricsCollector = metricsCollector;
 		this.batchProperties = batchProperties;
@@ -102,14 +103,16 @@ public class PartitionedBatchConfiguration {
 	@Bean
 	public DynamicPartitionHandler dynamicPartitionHandler(
 			TaskExecutor taskExecutor, Step workerStep, DynamicPartitioner dynamicPartitioner,
-			BatchProperties batchProperties) {
+			BatchProperties batchProperties
+	) {
 		return new DynamicPartitionHandler(taskExecutor, workerStep, dynamicPartitioner, batchProperties);
 	}
 
 	@Bean
 	public Step masterStep(
 			TaskExecutor taskExecutor, Step workerStep, DynamicPartitioner dynamicPartitioner,
-			DynamicPartitionHandler dynamicPartitionHandler) {
+			DynamicPartitionHandler dynamicPartitionHandler
+	) {
 		return new StepBuilder("masterStep", jobRepository).partitioner("workerStep", dynamicPartitioner)
 				.partitionHandler(dynamicPartitionHandler).build();
 	}
@@ -121,26 +124,22 @@ public class PartitionedBatchConfiguration {
 	public Step workerStep(
 			BatchRetryPolicy retryPolicy, BatchSkipPolicy skipPolicy, PlatformTransactionManager transactionManager,
 			BatchMetricsCollector metricsCollector, BatchProperties batchProperties,
-			VdypProjectionService vdypProjectionService,
-			ItemStreamReader<BatchRecord> partitionReader,
-			VdypChunkProjectionWriter partitionWriter) {
+			VdypProjectionService vdypProjectionService, ItemStreamReader<BatchRecord> partitionReader,
+			VdypChunkProjectionWriter partitionWriter
+	) {
 
 		int chunkSize = Math.max(batchProperties.getReader().getDefaultChunkSize(), 1);
 		logger.info("Worker step configured with chunk size: {}", chunkSize);
 
 		return new StepBuilder("workerStep", jobRepository)
-				.<BatchRecord, BatchRecord>chunk(chunkSize, transactionManager)
-				.reader(partitionReader)
-				.processor(vdypProjectionProcessor(retryPolicy, metricsCollector))
-				.writer(partitionWriter)
+				.<BatchRecord, BatchRecord>chunk(chunkSize, transactionManager).reader(partitionReader)
+				.processor(vdypProjectionProcessor(retryPolicy, metricsCollector)).writer(partitionWriter)
 				.listener(partitionWriter) // Add writer as step listener
-				.faultTolerant().retryPolicy(retryPolicy).skipPolicy(skipPolicy)
-				.listener(new StepExecutionListener() {
+				.faultTolerant().retryPolicy(retryPolicy).skipPolicy(skipPolicy).listener(new StepExecutionListener() {
 					@Override
 					public void beforeStep(@NonNull StepExecution stepExecution) {
-						String partitionName = stepExecution.getExecutionContext().getString(
-								BatchConstants.Partition.NAME,
-								BatchConstants.Common.UNKNOWN);
+						String partitionName = stepExecution.getExecutionContext()
+								.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN);
 
 						Long jobExecutionId = stepExecution.getJobExecutionId();
 
@@ -151,20 +150,21 @@ public class PartitionedBatchConfiguration {
 
 					@Override
 					public ExitStatus afterStep(@NonNull StepExecution stepExecution) {
-						String partitionName = stepExecution.getExecutionContext().getString(
-								BatchConstants.Partition.NAME,
-								BatchConstants.Common.UNKNOWN);
+						String partitionName = stepExecution.getExecutionContext()
+								.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN);
 						Long jobExecutionId = stepExecution.getJobExecutionId();
 
 						// Complete partition metrics
 						metricsCollector.completePartitionMetrics(
 								jobExecutionId, partitionName, stepExecution.getWriteCount(),
-								stepExecution.getExitStatus().getExitCode());
+								stepExecution.getExitStatus().getExitCode()
+						);
 
 						logger.info(
 								"[{}] VDYP Worker step completed. Read: {}, Written: {}, Skipped: {}", partitionName,
 								stepExecution.getReadCount(), stepExecution.getWriteCount(),
-								stepExecution.getSkipCount());
+								stepExecution.getSkipCount()
+						);
 
 						return stepExecution.getExitStatus();
 					}
@@ -172,14 +172,14 @@ public class PartitionedBatchConfiguration {
 	}
 
 	/**
-	 * VDYP Batch Job with metrics initialization Only created when explicitly
-	 * enabled via property
+	 * VDYP Batch Job with metrics initialization Only created when explicitly enabled via property
 	 */
 	@Bean
 	@ConditionalOnProperty(name = "batch.job.auto-create", havingValue = "true", matchIfMissing = false)
 	public Job partitionedJob(
 			PartitionedJobExecutionListener jobExecutionListener, Step masterStep, Step postProcessingStep,
-			PlatformTransactionManager transactionManager) {
+			PlatformTransactionManager transactionManager
+	) {
 		return new JobBuilder("VdypPartitionedJob", jobRepository).incrementer(new RunIdIncrementer()).start(masterStep)
 				.next(postProcessingStep).listener(new JobExecutionListener() {
 					@Override
@@ -203,10 +203,12 @@ public class PartitionedBatchConfiguration {
 						logger.debug(
 								"[VDYP Metrics Debug] Job {} - All steps: [{}]", jobExecution.getId(),
 								jobExecution.getStepExecutions().stream().map(StepExecution::getStepName)
-										.collect(Collectors.joining(", ")));
+										.collect(Collectors.joining(", "))
+						);
 
 						metricsCollector.finalizeJobMetrics(
-								jobExecution.getId(), jobExecution.getStatus().toString(), totalRead, totalWritten);
+								jobExecution.getId(), jobExecution.getStatus().toString(), totalRead, totalWritten
+						);
 
 						jobExecutionListener.afterJob(jobExecution);
 
@@ -222,34 +224,35 @@ public class PartitionedBatchConfiguration {
 	public ItemStreamReader<BatchRecord> partitionReader(
 			BatchMetricsCollector metricsCollector,
 			@Value("#{stepExecutionContext['partitionName']}") String partitionName,
-			@Value("#{stepExecution.jobExecutionId}") Long jobExecutionId,
-			BatchProperties batchProperties) {
+			@Value("#{stepExecution.jobExecutionId}") Long jobExecutionId, BatchProperties batchProperties
+	) {
 
-		logger.info("[{}] Using ChunkBasedPolygonItemReader with chunk size: {}",
-				partitionName, batchProperties.getReader().getDefaultChunkSize());
-		return new ChunkBasedPolygonItemReader(partitionName, metricsCollector, jobExecutionId,
-				batchProperties.getReader().getDefaultChunkSize());
+		logger.info(
+				"[{}] Using ChunkBasedPolygonItemReader with chunk size: {}", partitionName,
+				batchProperties.getReader().getDefaultChunkSize()
+		);
+		return new ChunkBasedPolygonItemReader(
+				partitionName, metricsCollector, jobExecutionId, batchProperties.getReader().getDefaultChunkSize()
+		);
 	}
 
 	@Bean
 	@StepScope
-	public VdypProjectionProcessor vdypProjectionProcessor(
-			BatchRetryPolicy retryPolicy, BatchMetricsCollector metricsCollector) {
+	public VdypProjectionProcessor
+			vdypProjectionProcessor(BatchRetryPolicy retryPolicy, BatchMetricsCollector metricsCollector) {
 		return new VdypProjectionProcessor(retryPolicy, metricsCollector);
 	}
 
 	@Bean
 	@StepScope
-	public VdypChunkProjectionWriter partitionWriter(
-			VdypProjectionService vdypProjectionService,
-			BatchMetricsCollector metricsCollector) {
+	public VdypChunkProjectionWriter
+			partitionWriter(VdypProjectionService vdypProjectionService, BatchMetricsCollector metricsCollector) {
 		return new VdypChunkProjectionWriter(vdypProjectionService, metricsCollector);
 	}
 
 	/**
-	 * Post-processing step that aggregates results from all partitions into a
-	 * single consolidated ZIP file. This step runs after all worker partitions have
-	 * completed successfully.
+	 * Post-processing step that aggregates results from all partitions into a single consolidated ZIP file. This step
+	 * runs after all worker partitions have completed successfully.
 	 */
 	@Bean
 	public Step postProcessingStep(PlatformTransactionManager transactionManager) {
@@ -258,24 +261,23 @@ public class PartitionedBatchConfiguration {
 	}
 
 	/**
-	 * Tasklet that performs result aggregation by collecting all partition results
-	 * and creating a single consolidated output ZIP file.
+	 * Tasklet that performs result aggregation by collecting all partition results and creating a single consolidated
+	 * output ZIP file.
 	 */
 	@Bean
 	@StepScope
 	public Tasklet resultAggregationTasklet() {
 		return (contribution, chunkContext) -> {
 			Long jobExecutionId = chunkContext.getStepContext().getStepExecution().getJobExecutionId();
-			logger.info(
-					"Starting result aggregation for job execution: {}", jobExecutionId);
+			logger.info("Starting result aggregation for job execution: {}", jobExecutionId);
 			try {
 				JobExecution jobExecution = chunkContext.getStepContext().getStepExecution().getJobExecution();
 
 				String jobTimestamp = jobExecution.getJobParameters().getString(BatchConstants.Job.TIMESTAMP);
 				String jobBaseDir = jobExecution.getJobParameters().getString(BatchConstants.Job.BASE_DIR);
 
-				Path consolidatedZip = resultAggregationService.aggregateResultsFromJobDir(jobExecutionId, jobBaseDir,
-						jobTimestamp);
+				Path consolidatedZip = resultAggregationService
+						.aggregateResultsFromJobDir(jobExecutionId, jobBaseDir, jobTimestamp);
 
 				chunkContext.getStepContext().getStepExecution().getExecutionContext()
 						.putString("consolidatedOutputPath", consolidatedZip.toString());
@@ -290,30 +292,32 @@ public class PartitionedBatchConfiguration {
 
 					logger.info("Interim partition directories cleanup completed for job: {}", jobExecutionId);
 				} else {
-					logger.warn("Consolidated ZIP file validation failed. Skipping cleanup to preserve interim files for debugging.");
+					logger.warn(
+							"Consolidated ZIP file validation failed. Skipping cleanup to preserve interim files for debugging."
+					);
 				}
 
 				return RepeatStatus.FINISHED;
 
 			} catch (IOException ioException) {
 				throw handleResultAggregationFailure(
-						jobExecutionId, ioException,
-						"I/O operation failed during result aggregation");
+						jobExecutionId, ioException, "I/O operation failed during result aggregation"
+				);
 			} catch (Exception generalException) {
 				throw handleResultAggregationFailure(
-						jobExecutionId, generalException,
-						"Unexpected error during result aggregation");
+						jobExecutionId, generalException, "Unexpected error during result aggregation"
+				);
 			}
 		};
 	}
 
-	private ResultAggregationException handleResultAggregationFailure(
-			Long jobExecutionId, Exception cause, String errorDescription) {
+	private ResultAggregationException
+			handleResultAggregationFailure(Long jobExecutionId, Exception cause, String errorDescription) {
 		String contextualMessage = String.format(
-				"%s for job execution: %d, Exception type: %s, Root cause: %s",
-				errorDescription,
-				jobExecutionId, cause.getClass().getSimpleName(),
-				cause.getMessage() != null ? cause.getMessage() : BatchConstants.ErrorMessage.NO_ERROR_MESSAGE);
+				"%s for job execution: %d, Exception type: %s, Root cause: %s", errorDescription, jobExecutionId,
+				cause.getClass().getSimpleName(),
+				cause.getMessage() != null ? cause.getMessage() : BatchConstants.ErrorMessage.NO_ERROR_MESSAGE
+		);
 
 		logger.error(contextualMessage, cause);
 

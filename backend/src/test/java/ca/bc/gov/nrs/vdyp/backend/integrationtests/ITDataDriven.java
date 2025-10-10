@@ -151,7 +151,7 @@ class ITDataDriven extends BaseDataBasedIntegrationTest {
 	}
 
 	// FIXME VDYP-604 Remove these once VDYP-604 is fixed.
-	static final Pattern BASE_604_AFFECTED = Pattern.compile("PRJ_TPH|PRJ_LOREY_HT|PRJ_DIAMETER|PRJ_BA");
+	static final Pattern BASE_604_AFFECTED = Pattern.compile("PRJ_TPH|PRJ_DIAMETER|PRJ_BA");
 	static final Pattern VOLUME_604_AFFECTED = Pattern.compile("PRJ_(SP\\d_)?VOL_(?:D|DW|DWB|CU|WS)");
 
 	static final Predicate<String> IGNORE_COLUMNS = eitherRegexp(BASE_604_AFFECTED, VOLUME_604_AFFECTED)

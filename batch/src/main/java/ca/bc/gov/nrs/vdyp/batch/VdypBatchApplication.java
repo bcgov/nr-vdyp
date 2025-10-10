@@ -24,8 +24,7 @@ public class VdypBatchApplication {
 	}
 
 	/**
-	 * This method is called once when the application is fully started and ready.
-	 * Using ApplicationReadyEvent ensures
+	 * This method is called once when the application is fully started and ready. Using ApplicationReadyEvent ensures
 	 * the startup message is shown only once, not on every batch job execution.
 	 */
 	@EventListener(ApplicationReadyEvent.class)
