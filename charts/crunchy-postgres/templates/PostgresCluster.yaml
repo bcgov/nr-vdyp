@@ -105,6 +105,11 @@ spec:
         - {{ .Values.batch_db.name }}
       options: 'LOGIN NOSUPERUSER INHERIT NOCREATEDB NOCREATEROLE NOREPLICATION'
 
+    - name: {{ .Values.vdyp_db.user }}
+      databases:
+        - {{ .Values.vdyp_db.name }}
+      options: 'LOGIN NOSUPERUSER INHERIT NOCREATEDB CREATEROLE NOREPLICATION'
+
   backups:
     pgbackrest:
       {{ if .Values.pgBackRest.image }}

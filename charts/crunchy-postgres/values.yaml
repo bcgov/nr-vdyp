@@ -126,3 +126,7 @@ batch_db:
     user: #{BATCH_DB_USER}#
     name: #{BATCH_DB_NAME}#
 
+vdyp_db:
+    user: #{VDYP_DB_USER}#
+    name: #{VDYP_DB_NAME}#
+
