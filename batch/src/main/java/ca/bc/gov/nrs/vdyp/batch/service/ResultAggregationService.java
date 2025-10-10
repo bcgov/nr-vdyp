@@ -582,13 +582,13 @@ public class ResultAggregationService {
 	private String extractLogType(String fileName) {
 		String lowerName = fileName.toLowerCase();
 		if (lowerName.contains("error")) {
-			return "Error";
+			return BatchConstants.File.LOG_TYPE_ERROR;
 		}
 		if (lowerName.contains("progress")) {
-			return "Progress";
+			return BatchConstants.File.LOG_TYPE_PROGRESS;
 		}
 		if (lowerName.contains("debug")) {
-			return "Debug";
+			return BatchConstants.File.LOG_TYPE_DEBUG;
 		}
 
 		return "General";
@@ -609,7 +609,8 @@ public class ResultAggregationService {
 		for (Path logPath : logPaths) {
 			try {
 				Files.copy(logPath, zipOut);
-				zipOut.write("\n".getBytes(StandardCharsets.UTF_8));
+				if (!BatchConstants.File.LOG_TYPE_ERROR.equals(logType))
+					zipOut.write("\n".getBytes(StandardCharsets.UTF_8));
 			} catch (IOException e) {
 				failedFiles++;
 				logger.warn("Failed to copy log file to ZIP: {} (error: {})", logPath, e.getMessage());
