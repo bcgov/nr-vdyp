@@ -217,6 +217,11 @@ public class VdypProjectionService {
 					polygonCsv.length(), layerCsv.length()));
 		}
 
+		// Add trailing empty line to match original file structure
+		// This is critical for extended-core to correctly detect end of file
+		polygonCsv.append("\n");
+		layerCsv.append("\n");
+
 		// Create input streams
 		inputStreams.put(ParameterNames.HCSV_POLYGON_INPUT_DATA,
 				new ByteArrayInputStream(polygonCsv.toString().getBytes()));
