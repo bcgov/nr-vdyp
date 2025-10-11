@@ -141,21 +141,14 @@ public class StreamingCsvPartitioner {
 		String line;
 		int currentPartition = 0;
 		int recordsInCurrentPartition = 0;
-		int skippedCount = 0;
 
-		while ((line = reader.readLine()) != null) {
+		while ( (line = reader.readLine()) != null) {
 			Long featureId = extractFeatureId(line);
 			if (featureId != null) {
-				if (!isValidCsvLine(line)) {
-					logger.warn("Skipping invalid polygon line (FEATURE_ID={}). Line does not start with a digit: {}",
-							featureId, line);
-					skippedCount++;
-					continue; // Skip this line, do NOT add to featureIdToPartition
-				}
-
 				// Write to current partition
 				featureIdToPartition.put(featureId, currentPartition);
-				writers.get(currentPartition).println(line);
+				String sanitizedLine = sanitizeCsvLine(line);
+				writers.get(currentPartition).println(sanitizedLine);
 				recordsInCurrentPartition++;
 
 				// Check if current partition is full, move to next
@@ -170,25 +163,26 @@ public class StreamingCsvPartitioner {
 				}
 			}
 		}
-
-		if (skippedCount > 0) {
-			logger.warn("Total polygon lines skipped due to validation failure: {}", skippedCount);
-		}
 	}
 
-	private void partitionLayerFile(MultipartFile layerFile, int partitionSize, Path jobBaseDir,
-			Map<Long, Integer> featureIdToPartition) throws IOException {
+	private void partitionLayerFile(
+			MultipartFile layerFile, int partitionSize, Path jobBaseDir, Map<Long, Integer> featureIdToPartition
+	) throws IOException {
 
-		try (BufferedReader reader = new BufferedReader(
-				new InputStreamReader(layerFile.getInputStream(), StandardCharsets.UTF_8))) {
+		try (
+				BufferedReader reader = new BufferedReader(
+						new InputStreamReader(layerFile.getInputStream(), StandardCharsets.UTF_8)
+				)
+		) {
 
 			String header = reader.readLine();
 			if (header == null) {
 				throw new IOException("Layer CSV file is empty or has no header");
 			}
 
-			Map<Integer, PrintWriter> writers = createPartitionWriters(jobBaseDir,
-					BatchConstants.Partition.INPUT_LAYER_FILE_NAME, header, partitionSize);
+			Map<Integer, PrintWriter> writers = createPartitionWriters(
+					jobBaseDir, BatchConstants.Partition.INPUT_LAYER_FILE_NAME, header, partitionSize
+			);
 
 			try {
 				processLayerRecords(reader, writers, featureIdToPartition);
@@ -198,43 +192,67 @@ public class StreamingCsvPartitioner {
 		}
 	}
 
-	private void processLayerRecords(BufferedReader reader, Map<Integer, PrintWriter> writers,
-			Map<Long, Integer> featureIdToPartition) throws IOException {
+	private void processLayerRecords(
+			BufferedReader reader, Map<Integer, PrintWriter> writers, Map<Long, Integer> featureIdToPartition
+	) throws IOException {
 
 		String line;
-		int skippedCount = 0;
-
-		while ((line = reader.readLine()) != null) {
+		while ( (line = reader.readLine()) != null) {
 			Long featureId = extractFeatureId(line);
 			if (featureId != null && featureIdToPartition.containsKey(featureId)) {
-				if (!isValidCsvLine(line)) {
-					logger.warn("Skipping invalid layer line (FEATURE_ID={}). Line does not start with a digit: {}",
-							featureId, line);
-					skippedCount++;
-					continue; // Skip this line
-				}
-
 				int partition = featureIdToPartition.get(featureId);
-				writers.get(partition).println(line);
+				String sanitizedLine = sanitizeCsvLine(line);
+				writers.get(partition).println(sanitizedLine);
 			}
-		}
-
-		if (skippedCount > 0) {
-			logger.warn("Total layer lines skipped due to validation failure: {}", skippedCount);
 		}
 	}
 
 	/**
-	 * Since FEATURE_ID is the first column and must be numeric, valid data lines
-	 * always start with a digit.
+	 * Sanitize CSV line to prevent CSV injection attacks
 	 */
-	private boolean isValidCsvLine(String csvLine) {
+	private String sanitizeCsvLine(String csvLine) {
 		if (csvLine == null || csvLine.isEmpty()) {
-			return false;
+			return csvLine;
 		}
 
 		char firstChar = csvLine.charAt(0);
-		return firstChar >= '0' && firstChar <= '9';
+
+		if (firstChar >= '0' && firstChar <= '9') {
+			return csvLine; // Valid FEATURE_ID
+		}
+
+		// First character is not a digit, potentially dangerous
+		// Apply full sanitization for security
+		return sanitizeCsvLineFull(csvLine);
+	}
+
+	/**
+	 * Full CSV line sanitization for suspicious or malformed data. Prevents formulas and other potentially dangerous
+	 * content from being interpreted.
+	 */
+	private String sanitizeCsvLineFull(String csvLine) {
+		// Check if line starts with potentially dangerous characters
+		// that could be interpreted as formulas in spreadsheet applications
+		char firstChar = csvLine.charAt(0);
+		if (firstChar == '=' || firstChar == '+' || firstChar == '-' || firstChar == '@' || firstChar == '\t'
+				|| firstChar == '\r') {
+			// Prepend with single quote to neutralize formula interpretation
+			return "'" + csvLine;
+		}
+
+		// Additional sanitization: remove any control characters except for allowed ones
+		// Allow: comma (CSV delimiter), newline characters handled by readLine
+		StringBuilder sanitized = new StringBuilder(csvLine.length());
+		for (int i = 0; i < csvLine.length(); i++) {
+			char c = csvLine.charAt(i);
+			// Allow printable ASCII characters (32-126) and tab, or non-ASCII characters (>= 128)
+			if ( (c >= 32 && c <= 126) || c == '\t' || c >= 128) {
+				sanitized.append(c);
+			}
+			// Skip control characters (0-31 except tab) and DEL (127)
+		}
+
+		return sanitized.toString();
 	}
 
 	/**
