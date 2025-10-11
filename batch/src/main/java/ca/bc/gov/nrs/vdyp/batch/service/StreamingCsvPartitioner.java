@@ -141,10 +141,18 @@ public class StreamingCsvPartitioner {
 		String line;
 		int currentPartition = 0;
 		int recordsInCurrentPartition = 0;
+		int skippedCount = 0;
 
 		while ((line = reader.readLine()) != null) {
 			Long featureId = extractFeatureId(line);
 			if (featureId != null) {
+				if (!isValidCsvLine(line)) {
+					logger.warn("Skipping invalid polygon line (FEATURE_ID={}). Line does not start with a digit: {}",
+							featureId, line);
+					skippedCount++;
+					continue; // Skip this line, do NOT add to featureIdToPartition
+				}
+
 				// Write to current partition
 				featureIdToPartition.put(featureId, currentPartition);
 				writers.get(currentPartition).println(line);
@@ -161,6 +169,10 @@ public class StreamingCsvPartitioner {
 					}
 				}
 			}
+		}
+
+		if (skippedCount > 0) {
+			logger.warn("Total polygon lines skipped due to validation failure: {}", skippedCount);
 		}
 	}
 
@@ -190,13 +202,39 @@ public class StreamingCsvPartitioner {
 			Map<Long, Integer> featureIdToPartition) throws IOException {
 
 		String line;
+		int skippedCount = 0;
+
 		while ((line = reader.readLine()) != null) {
 			Long featureId = extractFeatureId(line);
 			if (featureId != null && featureIdToPartition.containsKey(featureId)) {
+				if (!isValidCsvLine(line)) {
+					logger.warn("Skipping invalid layer line (FEATURE_ID={}). Line does not start with a digit: {}",
+							featureId, line);
+					skippedCount++;
+					continue; // Skip this line
+				}
+
 				int partition = featureIdToPartition.get(featureId);
 				writers.get(partition).println(line);
 			}
 		}
+
+		if (skippedCount > 0) {
+			logger.warn("Total layer lines skipped due to validation failure: {}", skippedCount);
+		}
+	}
+
+	/**
+	 * Since FEATURE_ID is the first column and must be numeric, valid data lines
+	 * always start with a digit.
+	 */
+	private boolean isValidCsvLine(String csvLine) {
+		if (csvLine == null || csvLine.isEmpty()) {
+			return false;
+		}
+
+		char firstChar = csvLine.charAt(0);
+		return firstChar >= '0' && firstChar <= '9';
 	}
 
 	/**
