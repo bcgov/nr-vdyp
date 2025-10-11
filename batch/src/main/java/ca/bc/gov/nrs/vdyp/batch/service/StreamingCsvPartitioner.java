@@ -135,6 +135,7 @@ public class StreamingCsvPartitioner {
 	/**
 	 * Reads exact number of records for each partition in sequence.
 	 */
+	@SuppressWarnings("javasecurity:S5131") // False positive: CSV file writing to internal storage, not HTTP response
 	private void processPolygonRecords(BufferedReader reader, Map<Integer, PrintWriter> writers,
 			Map<Long, Integer> featureIdToPartition, int[] partitionSizes) throws IOException {
 
@@ -192,6 +193,7 @@ public class StreamingCsvPartitioner {
 		}
 	}
 
+	@SuppressWarnings("javasecurity:S5131") // False positive: CSV file writing to internal storage, not HTTP response
 	private void processLayerRecords(
 			BufferedReader reader, Map<Integer, PrintWriter> writers, Map<Long, Integer> featureIdToPartition
 	) throws IOException {
