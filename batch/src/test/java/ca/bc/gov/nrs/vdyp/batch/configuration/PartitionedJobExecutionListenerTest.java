@@ -31,10 +31,7 @@ class PartitionedJobExecutionListenerTest {
 	private BatchProperties batchProperties;
 
 	@Mock
-	private BatchProperties.Partitioning partitioning;
-
-	@Mock
-	private BatchProperties.Output output;
+	private BatchProperties.Partition partition;
 
 	@Mock
 	private JobExecution jobExecution;
@@ -76,12 +73,12 @@ class PartitionedJobExecutionListenerTest {
 		JobParameters jobParameters = new JobParametersBuilder().toJobParameters();
 		when(jobExecution.getId()).thenReturn(1L);
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
-		when(batchProperties.getPartitioning()).thenReturn(partitioning);
-		when(partitioning.getGridSize()).thenReturn(4);
+		when(batchProperties.getPartition()).thenReturn(partition);
+		when(partition.getDefaultPartitionSize()).thenReturn(4);
 
 		assertDoesNotThrow(() -> listener.beforeJob(jobExecution));
 
-		verify(partitioning, atLeastOnce()).getGridSize();
+		verify(partition, atLeastOnce()).getDefaultPartitionSize();
 	}
 
 	@Test
@@ -89,9 +86,10 @@ class PartitionedJobExecutionListenerTest {
 		JobParameters jobParameters = new JobParametersBuilder().toJobParameters();
 		when(jobExecution.getId()).thenReturn(1L);
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
-		when(batchProperties.getPartitioning()).thenReturn(partitioning);
-		when(partitioning.getGridSize()).thenReturn(0);
+		when(batchProperties.getPartition()).thenReturn(partition);
+		when(partition.getDefaultPartitionSize()).thenReturn(0);
 
+		// 0 partition size when no job parameter is provided throws exception
 		assertThrows(IllegalStateException.class, () -> listener.beforeJob(jobExecution));
 	}
 
@@ -100,8 +98,8 @@ class PartitionedJobExecutionListenerTest {
 		JobParameters jobParameters = new JobParametersBuilder().addLong("partitionSize", 4L).toJobParameters();
 		when(jobExecution.getId()).thenReturn(1L);
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
-		when(batchProperties.getPartitioning()).thenReturn(partitioning);
-		when(partitioning.getGridSize()).thenReturn(4);
+		when(batchProperties.getPartition()).thenReturn(partition);
+		when(partition.getDefaultPartitionSize()).thenReturn(4);
 
 		// Should succeed since partitionSize is provided
 		assertDoesNotThrow(() -> listener.beforeJob(jobExecution));
@@ -152,12 +150,11 @@ class PartitionedJobExecutionListenerTest {
 	}
 
 	@Test
-	void testAfterJob_WithNullDirectory_HandlesGracefully() {
+	void testAfterJob_WithNullDirectory_Handles() {
 		setupAfterJobMocks();
 		setupJobExecutionBasicMocks();
 		// Test with null directory path
-		when(output.getDirectory()).thenReturn(mock(BatchProperties.Output.Directory.class));
-		when(output.getDirectory().getDefaultPath()).thenReturn(null);
+		when(batchProperties.getRootDirectory()).thenReturn(null);
 
 		listener.beforeJob(jobExecution);
 
@@ -169,14 +166,12 @@ class PartitionedJobExecutionListenerTest {
 	void testAfterJob_WithValidDirectory_Success() {
 		setupAfterJobMocks();
 		setupJobExecutionBasicMocks();
-		// Test with valid directory
-		when(output.getDirectory()).thenReturn(mock(BatchProperties.Output.Directory.class));
-		when(output.getDirectory().getDefaultPath()).thenReturn(tempDir.toString());
 
 		listener.beforeJob(jobExecution);
 
 		assertDoesNotThrow(() -> listener.afterJob(jobExecution));
-		verify(output, atLeastOnce()).getDirectory();
+		// afterJob doesn't directly call getRootDirectory
+		verify(jobExecution, atLeastOnce()).getId();
 	}
 
 	@Test
@@ -188,8 +183,7 @@ class PartitionedJobExecutionListenerTest {
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
 
 		// No output directory specified
-		when(output.getDirectory()).thenReturn(mock(BatchProperties.Output.Directory.class));
-		when(output.getDirectory().getDefaultPath()).thenReturn(null);
+		when(batchProperties.getRootDirectory()).thenReturn(null);
 
 		listener.beforeJob(jobExecution);
 
@@ -211,12 +205,8 @@ class PartitionedJobExecutionListenerTest {
 				.addString("outputFilePath", tempDir.toString()).toJobParameters();
 
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
-		when(batchProperties.getPartitioning()).thenReturn(partitioning);
-		when(batchProperties.getOutput()).thenReturn(output);
-
-		BatchProperties.Output.Directory directory = mock(BatchProperties.Output.Directory.class);
-		when(output.getDirectory()).thenReturn(directory);
-		when(directory.getDefaultPath()).thenReturn(tempDir.toString());
+		when(batchProperties.getPartition()).thenReturn(partition);
+		when(batchProperties.getRootDirectory()).thenReturn(tempDir.toString());
 	}
 
 	private void setupAfterJobMocksWithFileOperations() throws IOException {
@@ -239,7 +229,7 @@ class PartitionedJobExecutionListenerTest {
 	}
 
 	@Test
-	void testAfterJob_UnexpectedJobId_HandlesGracefully() {
+	void testAfterJob_UnexpectedJobId_Handles() {
 		// Test with a job execution that wasn't tracked in beforeJob
 		JobExecution untracked = mock(JobExecution.class);
 		when(untracked.getId()).thenReturn(999L);

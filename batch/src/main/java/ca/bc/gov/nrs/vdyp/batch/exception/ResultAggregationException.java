@@ -1,6 +1,6 @@
 package ca.bc.gov.nrs.vdyp.batch.exception;
 
-public class ResultAggregationException extends RuntimeException {
+public class ResultAggregationException extends BatchException {
 
 	public ResultAggregationException(String message) {
 		super(message);

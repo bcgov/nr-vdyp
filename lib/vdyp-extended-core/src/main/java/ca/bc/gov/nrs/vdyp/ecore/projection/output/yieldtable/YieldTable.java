@@ -52,7 +52,7 @@ public class YieldTable implements Closeable {
 
 	public enum Category {
 		LAYER_MOFVOLUMES, LAYER_MOFBIOMASS, SPECIES_MOFVOLUME, SPECIES_MOFBIOMASS, CFSBIOMASS, PROJECTION_MODE,
-		POLYGON_ID, NONE
+		POLYGON_ID, SECONDARY_HEIGHT, FILE_UPLOAD_METADATA, NONE
 	}
 
 	private static final Logger logger = LoggerFactory.getLogger(YieldTable.class);

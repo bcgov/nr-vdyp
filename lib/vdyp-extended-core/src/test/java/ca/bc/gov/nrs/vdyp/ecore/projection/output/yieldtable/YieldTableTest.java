@@ -382,6 +382,9 @@ class YieldTableTest {
 		var resultYieldTable = new ResultYieldTable(new String(yieldTable.getAsStream().readAllBytes()));
 		assertTrue(resultYieldTable.containsKey("13919428"));
 		assertTrue(resultYieldTable.get("13919428").containsKey("1"));
+
+		var yieldTableRow = resultYieldTable.get("13919428").get("1").get("2025");
+		assertTrue(yieldTableRow.containsKey("PRJ_SCND_HT"));
 	}
 
 	@Test
@@ -459,7 +462,8 @@ class YieldTableTest {
 				Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES, //
 				Parameters.ExecutionOption.DO_INCLUDE_POLYGON_RECORD_ID_IN_YIELD_TABLE, //
 				Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER, //
-				Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_POLYGON
+				Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_POLYGON, //
+				Parameters.ExecutionOption.DO_INCLUDE_SECONDARY_SPECIES_DOMINANT_HEIGHT_IN_YIELD_TABLE
 		);
 		parameters.setYearStart(2025);
 		parameters.setYearEnd(2030);
@@ -993,5 +997,169 @@ class YieldTableTest {
 				StandYieldCalculationException.class,
 				() -> yieldTable.getYields(2020, UtilizationClassSet._7_5, species, null)
 		);
+	}
+
+	@Test
+	void testCSVYieldTableFileUploadMode_IncludesMetadataColumns()
+			throws AbstractProjectionRequestException, IOException {
+
+		// File Upload mode: DO_ENABLE_PROJECTION_REPORT is NOT included
+		var parameters = testHelper.addSelectedOptions(
+				new Parameters(), //
+				Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES, //
+				Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER, //
+				Parameters.ExecutionOption.DO_INCLUDE_POLYGON_RECORD_ID_IN_YIELD_TABLE, //
+				Parameters.ExecutionOption.DO_INCLUDE_FILE_HEADER
+		);
+		parameters.setYearStart(2025);
+		parameters.setYearEnd(2030);
+		parameters.setOutputFormat(Parameters.OutputFormat.CSV_YIELD_TABLE);
+
+		var context = new ProjectionContext(ProjectionRequestKind.HCSV, TEST_PROJECTION_ID, parameters, false);
+
+		var polygonInputStream = TestUtils.makeInputStream(
+				//
+				POLYGON_CSV_HEADER_LINE,
+				"13919428,093C090,94833422,DQU,UNK,UNK,V,UNK,0.6,10,3,HE,35,8,,MS,14,50.0,1.000,NP,V,T,U,TC,SP,2013,2013,60.0,,,,,,,,,,TC,100,,,,"
+		);
+		var layersInputStream = TestUtils.makeInputStream(
+				//
+				LAYER_CSV_HEADER_LINE,
+				"13919428,14321066,093C090,94833422,1,P,,1,,,,20,10.000010,300,PLI,60.00,SX,40.00,,,,,,,,,180,18.00,180,23.00,,,,,,,,"
+		);
+
+		var polygonStream = new HcsvPolygonStream(context, polygonInputStream, layersInputStream);
+
+		var polygon = polygonStream.getNextPolygon();
+
+		var yieldTable = YieldTable.of(context);
+		try {
+			yieldTable.startGeneration();
+
+			var state = new PolygonProjectionState();
+			state.setProcessingResults(ProjectionStageCode.Initial, ProjectionTypeCode.PRIMARY, Optional.empty());
+			state.setProcessingResults(ProjectionStageCode.Forward, ProjectionTypeCode.PRIMARY, Optional.empty());
+
+			var vdypPolygonStreamFile = testHelper.getResourceFile(relativeResourcePath, "vp_grow.dat");
+			var vdypPolygonStream = Files.newInputStream(vdypPolygonStreamFile);
+			var vdypSpeciesStreamFile = testHelper.getResourceFile(relativeResourcePath, "vs_grow.dat");
+			var vdypSpeciesStream = Files.newInputStream(vdypSpeciesStreamFile);
+			var vdypUtilizationsStreamFile = testHelper.getResourceFile(relativeResourcePath, "vu_grow.dat");
+			var vdypUtilizationsStream = Files.newInputStream(vdypUtilizationsStreamFile);
+
+			ProjectionResultsReader forwardReader = new TestProjectionResultsReader(
+					testHelper, vdypPolygonStream, vdypSpeciesStream, vdypUtilizationsStream
+			);
+			ProjectionResultsReader backReader = new NullProjectionResultsReader();
+
+			var projectionResults = ProjectionResultsBuilder
+					.read(polygon, state, ProjectionTypeCode.PRIMARY, forwardReader, backReader);
+
+			for (var layerReportingInfo : polygon.getReportingInfo().getLayerReportingInfos().values()) {
+				var layer = layerReportingInfo.getLayer();
+				if (state.layerWasProjected(layer)) {
+					yieldTable.generateYieldTableForPolygonLayer(
+							polygon, projectionResults, state, layerReportingInfo, false
+					);
+				}
+			}
+		} finally {
+			yieldTable.endGeneration();
+			yieldTable.close();
+		}
+
+		var content = new String(yieldTable.getAsStream().readAllBytes());
+
+		// Verify that File Upload mode includes all 6 metadata columns
+		assertThat(content, containsString("TABLE_NUM"));
+		assertThat(content, containsString("FEATURE_ID"));
+		assertThat(content, containsString("DISTRICT"));
+		assertThat(content, containsString("MAP_ID"));
+		assertThat(content, containsString("POLYGON_ID"));
+		assertThat(content, containsString("LAYER_ID"));
+		assertThat(content, containsString("PROJECTION_YEAR"));
+	}
+
+	@Test
+	void testCSVYieldTableInputModelParametersMode_ExcludesMetadataColumns()
+			throws AbstractProjectionRequestException, IOException {
+
+		// Input Model Parameters mode: DO_ENABLE_PROJECTION_REPORT is included
+		var parameters = testHelper.addSelectedOptions(
+				new Parameters(), //
+				Parameters.ExecutionOption.DO_INCLUDE_PROJECTED_MOF_VOLUMES, //
+				Parameters.ExecutionOption.DO_SUMMARIZE_PROJECTION_BY_LAYER, //
+				Parameters.ExecutionOption.DO_ENABLE_PROJECTION_REPORT, // This triggers Input Model Parameters mode
+				Parameters.ExecutionOption.DO_INCLUDE_FILE_HEADER
+		);
+		parameters.setYearStart(2025);
+		parameters.setYearEnd(2030);
+		parameters.setOutputFormat(Parameters.OutputFormat.CSV_YIELD_TABLE);
+
+		var context = new ProjectionContext(ProjectionRequestKind.HCSV, TEST_PROJECTION_ID, parameters, false);
+
+		var polygonInputStream = TestUtils.makeInputStream(
+				//
+				POLYGON_CSV_HEADER_LINE,
+				"13919428,093C090,94833422,DQU,UNK,UNK,V,UNK,0.6,10,3,HE,35,8,,MS,14,50.0,1.000,NP,V,T,U,TC,SP,2013,2013,60.0,,,,,,,,,,TC,100,,,,"
+		);
+		var layersInputStream = TestUtils.makeInputStream(
+				//
+				LAYER_CSV_HEADER_LINE,
+				"13919428,14321066,093C090,94833422,1,P,,1,,,,20,10.000010,300,PLI,60.00,SX,40.00,,,,,,,,,180,18.00,180,23.00,,,,,,,,"
+		);
+
+		var polygonStream = new HcsvPolygonStream(context, polygonInputStream, layersInputStream);
+
+		var polygon = polygonStream.getNextPolygon();
+
+		var yieldTable = YieldTable.of(context);
+		try {
+			yieldTable.startGeneration();
+
+			var state = new PolygonProjectionState();
+			state.setProcessingResults(ProjectionStageCode.Initial, ProjectionTypeCode.PRIMARY, Optional.empty());
+			state.setProcessingResults(ProjectionStageCode.Forward, ProjectionTypeCode.PRIMARY, Optional.empty());
+
+			var vdypPolygonStreamFile = testHelper.getResourceFile(relativeResourcePath, "vp_grow.dat");
+			var vdypPolygonStream = Files.newInputStream(vdypPolygonStreamFile);
+			var vdypSpeciesStreamFile = testHelper.getResourceFile(relativeResourcePath, "vs_grow.dat");
+			var vdypSpeciesStream = Files.newInputStream(vdypSpeciesStreamFile);
+			var vdypUtilizationsStreamFile = testHelper.getResourceFile(relativeResourcePath, "vu_grow.dat");
+			var vdypUtilizationsStream = Files.newInputStream(vdypUtilizationsStreamFile);
+
+			ProjectionResultsReader forwardReader = new TestProjectionResultsReader(
+					testHelper, vdypPolygonStream, vdypSpeciesStream, vdypUtilizationsStream
+			);
+			ProjectionResultsReader backReader = new NullProjectionResultsReader();
+
+			var projectionResults = ProjectionResultsBuilder
+					.read(polygon, state, ProjectionTypeCode.PRIMARY, forwardReader, backReader);
+
+			for (var layerReportingInfo : polygon.getReportingInfo().getLayerReportingInfos().values()) {
+				var layer = layerReportingInfo.getLayer();
+				if (state.layerWasProjected(layer)) {
+					yieldTable.generateYieldTableForPolygonLayer(
+							polygon, projectionResults, state, layerReportingInfo, false
+					);
+				}
+			}
+		} finally {
+			yieldTable.endGeneration();
+			yieldTable.close();
+		}
+
+		var content = new String(yieldTable.getAsStream().readAllBytes());
+
+		// Verify that Input Model Parameters mode EXCLUDES the 6 metadata columns
+		assertThat(content, not(containsString("TABLE_NUM")));
+		assertThat(content, not(containsString("FEATURE_ID")));
+		assertThat(content, not(containsString("DISTRICT")));
+		assertThat(content, not(containsString("MAP_ID")));
+		assertThat(content, not(containsString("LAYER_ID")));
+		assertThat(content, not(containsString("PROJECTION_YEAR")));
+
+		assertThat(content, containsString("PRJ_TOTAL_AGE"));
+		assertThat(content, containsString("SPECIES_1_CODE"));
 	}
 }
