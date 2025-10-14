@@ -107,7 +107,7 @@
             "sqlFile":{
               "dbms":"postgresql",
               "endDelimiter":";",
-              "path":"scripts/01_00_00/00/ddl/roles/vdyp.ddl.create_roles.sql",
+              "path": "scripts/01_00_00/00/ddl/roles/test.ddl.create_roles.sql",
               "relativeToChangelogFile": true
             }
           },
@@ -115,7 +115,7 @@
             "sqlFile":{
               "dbms":"postgresql",
               "endDelimiter":";",
-              "path":"scripts/01_00_00/00/ddl/roles/vdyp.ddl.create_login_proxy_vdyp_rest.sql",
+              "path": "scripts/01_00_00/00/ddl/roles/app-vdyp.ddl.create_login_proxy_vdyp_rest.sql",
               "relativeToChangelogFile": true
             }
           },
@@ -123,7 +123,7 @@
             "sqlFile":{
               "dbms":"postgresql",
               "endDelimiter":";",
-              "path":"scripts/01_00_00/00/ddl/grants/app_nrs_vdyp.ddl.apply_grants.sql",
+              "path": "scripts/01_00_00/00/ddl/grants/app-vdyp.ddl.apply_grants.sql",
               "relativeToChangelogFile": true
             }
           }
