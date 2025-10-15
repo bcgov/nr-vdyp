@@ -35,6 +35,14 @@
             "sqlFile": {
               "dbms": "postgresql",
               "endDelimiter": ";",
+              "path": "scripts/01_00_00/00/ddl/tables/app-vdyp.file_mapping.sql",
+              "relativeToChangelogFile": true
+            }
+          },
+          {
+            "sqlFile": {
+              "dbms": "postgresql",
+              "endDelimiter": ";",
               "path": "scripts/01_00_00/00/ddl/tables/app-vdyp.projection_file_set.sql",
               "relativeToChangelogFile": true
             }
@@ -75,30 +83,6 @@
             "sqlFile": {
               "dbms": "postgresql",
               "endDelimiter": ";",
-              "path": "scripts/01_00_00/00/ddl/tables/app-vdyp.file_mapping.sql",
-              "relativeToChangelogFile": true
-            }
-          },
-          {
-            "sqlFile": {
-              "dbms": "postgresql",
-              "endDelimiter": ";",
-              "path": "scripts/01_00_00/00/ddl/tables/app-vdyp.projection_batch_mapping.sql",
-              "relativeToChangelogFile": true
-            }
-          },
-          {
-            "sqlFile": {
-              "dbms": "postgresql",
-              "endDelimiter": ";",
-              "path": "scripts/01_00_00/00/ddl/tables/app-vdyp.projection_batch_mapping.sql",
-              "relativeToChangelogFile": true
-            }
-          },
-          {
-            "sqlFile": {
-              "dbms": "postgresql",
-              "endDelimiter": ";",
               "path": "scripts/01_00_00/00/ddl/tables/app-vdyp.projection_batch_mapping.sql",
               "relativeToChangelogFile": true
             }
@@ -107,7 +91,7 @@
             "sqlFile":{
               "dbms":"postgresql",
               "endDelimiter":";",
-              "path": "scripts/01_00_00/00/ddl/roles/test.ddl.create_roles.sql",
+              "path": "scripts/01_00_00/00/ddl/roles/app-vdyp.ddl.create_roles.sql",
               "relativeToChangelogFile": true
             }
           },
