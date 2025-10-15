@@ -27,8 +27,8 @@ import ca.bc.gov.nrs.vdyp.batch.exception.BatchIOException;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
 /**
- * Service responsible for aggregating VDYP projection results from all
- * partitions into a single consolidated output ZIP file.
+ * Service responsible for aggregating VDYP projection results from all partitions into a single consolidated output ZIP
+ * file.
  */
 @Service
 public class ResultAggregationService {
@@ -39,15 +39,15 @@ public class ResultAggregationService {
 	private int minValidFileSize;
 
 	/**
-	 * Aggregates all partition results into a single consolidated ZIP file within
-	 * the job directory.
-	 * 
+	 * Aggregates all partition results into a single consolidated ZIP file within the job directory.
+	 *
 	 * @return Path to the consolidated ZIP file
 	 */
 	public Path aggregateResultsFromJobDir(Long jobExecutionId, String jobBaseDir, String jobTimestamp)
 			throws IOException {
-		logger.info("Starting result aggregation for job execution: {} from job directory: {}", jobExecutionId,
-				jobBaseDir);
+		logger.info(
+				"Starting result aggregation for job execution: {} from job directory: {}", jobExecutionId, jobBaseDir
+		);
 
 		if (jobBaseDir == null || jobBaseDir.trim().isEmpty()) {
 			throw new IllegalArgumentException("Job base directory cannot be null or empty");
@@ -103,8 +103,9 @@ public class ResultAggregationService {
 		// List all items in base directory for debugging
 		try (Stream<Path> allItems = Files.list(jobBasePath)) {
 			allItems.forEach(
-					item -> logger.debug("Found item: {} (isDirectory: {})", item.getFileName(),
-							Files.isDirectory(item)));
+					item -> logger
+							.debug("Found item: {} (isDirectory: {})", item.getFileName(), Files.isDirectory(item))
+			);
 		}
 
 		try (Stream<Path> files = Files.list(jobBasePath)) {
@@ -119,7 +120,8 @@ public class ResultAggregationService {
 
 		logger.info(
 				"Found {} partition directories: {}", partitionDirs.size(),
-				partitionDirs.stream().map(p -> p.getFileName().toString()).toList());
+				partitionDirs.stream().map(p -> p.getFileName().toString()).toList()
+		);
 
 		// Sort partition directories by name to ensure consistent processing order.
 		// This is critical for TABLE_NUM assignment in yield tables,
@@ -170,10 +172,12 @@ public class ResultAggregationService {
 		try (Stream<Path> files = Files.walk(partitionOutputDir)) {
 			files.filter(Files::isRegularFile).filter(file -> isYieldTableFile(file.getFileName().toString())).forEach(
 					file -> yieldTablesByType
-							.computeIfAbsent(BatchConstants.File.YIELD_TABLE_TYPE, k -> new ArrayList<>()).add(file));
+							.computeIfAbsent(BatchConstants.File.YIELD_TABLE_TYPE, k -> new ArrayList<>()).add(file)
+			);
 		} catch (IOException e) {
 			throw BatchIOException.handleDirectoryWalkFailure(
-					partitionOutputDir, e, "Error walking directory tree for yield tables", logger);
+					partitionOutputDir, e, "Error walking directory tree for yield tables", logger
+			);
 		}
 	}
 
@@ -186,8 +190,8 @@ public class ResultAggregationService {
 	}
 
 	/**
-	 * Merges multiple yield tables of the same type into a single file in the ZIP.
-	 * Assigns TABLE_NUM based on polygon/layer combinations.
+	 * Merges multiple yield tables of the same type into a single file in the ZIP. Assigns TABLE_NUM based on
+	 * polygon/layer combinations.
 	 */
 	private void mergeYieldTables(List<Path> tablePaths, ZipOutputStream zipOut, List<Path> partitionOutputDirs)
 			throws IOException {
@@ -199,8 +203,7 @@ public class ResultAggregationService {
 		boolean headerWritten = false;
 
 		for (Path tablePath : tablePaths) {
-			ProcessYieldTableResult result = processYieldTableFile(
-					tablePath, zipOut, tableNumberAssigner, isFirstFile);
+			ProcessYieldTableResult result = processYieldTableFile(tablePath, zipOut, tableNumberAssigner, isFirstFile);
 
 			// Update isFirstFile status for next iteration
 			// (if current file had content, next file is no longer first)
@@ -230,16 +233,16 @@ public class ResultAggregationService {
 
 		logger.debug(
 				"Merged {} files into yield table: {} with {} unique polygon/layer combinations", tablePaths.size(),
-				BatchConstants.File.YIELD_TABLE_FILENAME, tableNumberAssigner.getUniqueCount());
+				BatchConstants.File.YIELD_TABLE_FILENAME, tableNumberAssigner.getUniqueCount()
+		);
 	}
 
 	/**
-	 * Processes a single yield table file and writes its content to the ZIP output
-	 * stream.
+	 * Processes a single yield table file and writes its content to the ZIP output stream.
 	 */
 	private ProcessYieldTableResult processYieldTableFile(
-			Path tablePath, ZipOutputStream zipOut, TableNumberAssigner tableNumberAssigner, boolean isFirstFile)
-			throws IOException {
+			Path tablePath, ZipOutputStream zipOut, TableNumberAssigner tableNumberAssigner, boolean isFirstFile
+	) throws IOException {
 		if (!Files.exists(tablePath)) {
 			logger.warn("Yield table file does not exist: {}", tablePath);
 			return new ProcessYieldTableResult(isFirstFile, null);
@@ -258,15 +261,15 @@ public class ResultAggregationService {
 
 			if (lineIterator.hasNext()) {
 				ProcessFirstLineResult firstLineResult = processFirstLine(
-						lineIterator.next(), zipOut, tableNumberAssigner, isFirstFile);
+						lineIterator.next(), zipOut, tableNumberAssigner, isFirstFile
+				);
 				capturedHeader = firstLineResult.getHeader();
 				updatedIsFirstFile = firstLineResult.isFirstFile();
 			}
 
 			processRemainingLines(lineIterator, zipOut, tableNumberAssigner);
 		} catch (IOException e) {
-			throw BatchIOException.handleFileReadFailure(
-					tablePath, e, "Error reading yield table file", logger);
+			throw BatchIOException.handleFileReadFailure(tablePath, e, "Error reading yield table file", logger);
 		}
 		// Return updated isFirstFile status (false only if we actually processed content)
 		return new ProcessYieldTableResult(updatedIsFirstFile, capturedHeader);
@@ -276,8 +279,8 @@ public class ResultAggregationService {
 	 * Processes the first line of a yield table file (header or data line).
 	 */
 	private ProcessFirstLineResult processFirstLine(
-			String firstLine, ZipOutputStream zipOut, TableNumberAssigner tableNumberAssigner,
-			boolean isFirstFile) throws IOException {
+			String firstLine, ZipOutputStream zipOut, TableNumberAssigner tableNumberAssigner, boolean isFirstFile
+	) throws IOException {
 		if (isHeaderLine(firstLine)) {
 			if (isFirstFile) {
 				writeLineToZip(firstLine, zipOut);
@@ -294,8 +297,8 @@ public class ResultAggregationService {
 	 * Processes the remaining data lines from a yield table file.
 	 */
 	private void processRemainingLines(
-			Iterator<String> lineIterator, ZipOutputStream zipOut, TableNumberAssigner tableNumberAssigner)
-			throws IOException {
+			Iterator<String> lineIterator, ZipOutputStream zipOut, TableNumberAssigner tableNumberAssigner
+	) throws IOException {
 		while (lineIterator.hasNext()) {
 			processDataLine(lineIterator.next(), zipOut, tableNumberAssigner);
 		}
@@ -316,12 +319,12 @@ public class ResultAggregationService {
 	 * Writes a line to the ZIP output stream with proper line separator.
 	 */
 	private void writeLineToZip(String line, ZipOutputStream zipOut) throws IOException {
-		zipOut.write((line + System.lineSeparator()).getBytes(StandardCharsets.UTF_8));
+		zipOut.write( (line + System.lineSeparator()).getBytes(StandardCharsets.UTF_8));
 	}
 
 	/**
-	 * Searches partition directories for a valid yield table header.
-	 * Return immediately when first valid header is found.
+	 * Searches partition directories for a valid yield table header. Return immediately when first valid header is
+	 * found.
 	 */
 	private String searchForValidHeaderInPartitions(List<Path> partitionOutputDirs) throws IOException {
 		logger.debug("Searching for valid header with min file size: {} bytes", minValidFileSize);
@@ -333,27 +336,21 @@ public class ResultAggregationService {
 
 			try (Stream<Path> files = Files.walk(partitionDir)) {
 				// Find first file that meets all criteria and has a valid header
-				String header = files
-						.filter(Files::isRegularFile)
-						.filter(file -> isYieldTableFile(file.getFileName().toString()))
-						.filter(file -> {
+				String header = files.filter(Files::isRegularFile)
+						.filter(file -> isYieldTableFile(file.getFileName().toString())).filter(file -> {
 							try {
 								return Files.size(file) >= minValidFileSize;
 							} catch (IOException e) {
 								logger.warn("Failed to get size of file: {}", file, e);
 								return false;
 							}
-						})
-						.map(file -> {
+						}).map(file -> {
 							String extractedHeader = extractHeaderFromFile(file);
 							if (extractedHeader != null) {
 								logger.info("Found valid header in file: {}", file.getFileName());
 							}
 							return extractedHeader;
-						})
-						.filter(h -> h != null)
-						.findFirst()
-						.orElse(null);
+						}).filter(h -> h != null).findFirst().orElse(null);
 
 				if (header != null) {
 					return header;
@@ -431,8 +428,7 @@ public class ResultAggregationService {
 		 * Assigns TABLE_NUM based on polygon/layer combination.
 		 *
 		 * @param line The CSV line to process
-		 * @return The processed line with correct TABLE_NUM, or null if line should be
-		 *         skipped
+		 * @return The processed line with correct TABLE_NUM, or null if line should be skipped
 		 */
 		public String assignTableNumber(String line) {
 			if (line == null || line.trim().isEmpty()) {
@@ -466,13 +462,15 @@ public class ResultAggregationService {
 				if (nextTableNum >= Integer.MAX_VALUE - 1) {
 					logger.error("TABLE_NUM overflow detected. Current count: {}", polygonLayerTableNumbers.size());
 					throw new IllegalStateException(
-							"TABLE_NUM exceeded maximum value. Too many polygon/layer combinations.");
+							"TABLE_NUM exceeded maximum value. Too many polygon/layer combinations."
+					);
 				}
 
 				int assigned = nextTableNum++;
 				logger.debug(
-						"Assigned TABLE_NUM {} to polygon/layer combination: FEATURE_ID={}, LAYER_ID={}",
-						assigned, featureId, layerId);
+						"Assigned TABLE_NUM {} to polygon/layer combination: FEATURE_ID={}, LAYER_ID={}", assigned,
+						featureId, layerId
+				);
 				return assigned;
 			});
 
@@ -501,9 +499,8 @@ public class ResultAggregationService {
 
 		String upperLine = line.toUpperCase();
 		// check if it starts with header keywords
-		return upperLine.startsWith("TABLE") || upperLine.startsWith("FEATURE")
-				|| upperLine.startsWith("POLYGON") || upperLine.contains("LAYER_ID")
-				|| upperLine.contains("SPECIES_CODE");
+		return upperLine.startsWith("TABLE") || upperLine.startsWith("FEATURE") || upperLine.startsWith("POLYGON")
+				|| upperLine.contains("LAYER_ID") || upperLine.contains("SPECIES_CODE");
 	}
 
 	/**
@@ -532,8 +529,7 @@ public class ResultAggregationService {
 		Map<String, List<Path>> logsByType = new HashMap<>();
 
 		// Filter valid directories first, then collect log files
-		partitionDirs.stream()
-				.filter(this::isValidPartitionDirectory)
+		partitionDirs.stream().filter(this::isValidPartitionDirectory)
 				.forEach(partitionDir -> collectLogFilesFromPartition(partitionDir, logsByType));
 
 		// Merge and add to ZIP
@@ -554,15 +550,14 @@ public class ResultAggregationService {
 	 */
 	private void collectLogFilesFromPartition(Path partitionDir, Map<String, List<Path>> logsByType) {
 		try (Stream<Path> files = Files.walk(partitionDir)) {
-			files.filter(Files::isRegularFile)
-					.filter(file -> isLogFile(file.getFileName().toString()))
+			files.filter(Files::isRegularFile).filter(file -> isLogFile(file.getFileName().toString()))
 					.forEach(file -> {
 						String logType = extractLogType(file.getFileName().toString());
 						logsByType.computeIfAbsent(logType, k -> new ArrayList<>()).add(file);
 					});
 		} catch (IOException e) {
-			IOException wrappedException = BatchIOException.handleDirectoryWalkFailure(
-					partitionDir, e, "Error walking directory tree for log files", logger);
+			IOException wrappedException = BatchIOException
+					.handleDirectoryWalkFailure(partitionDir, e, "Error walking directory tree for log files", logger);
 			throw new BatchException("Failed to collect log files from partition", wrappedException);
 		}
 	}
@@ -621,8 +616,10 @@ public class ResultAggregationService {
 
 		int successFiles = totalFiles - failedFiles;
 		if (failedFiles > 0) {
-			logger.warn("Merged {} log files into: {} (success: {}, failed: {})",
-					totalFiles, mergedLogFileName, successFiles, failedFiles);
+			logger.warn(
+					"Merged {} log files into: {} (success: {}, failed: {})", totalFiles, mergedLogFileName,
+					successFiles, failedFiles
+			);
 		} else {
 			logger.debug("Merged {} log files into: {}", totalFiles, mergedLogFileName);
 		}
@@ -650,8 +647,8 @@ public class ResultAggregationService {
 	}
 
 	/**
-	 * Cleans up interim partition directories after successful zip creation.
-	 * Deletes input-partition and output-partition directories and their contents.
+	 * Cleans up interim partition directories after successful zip creation. Deletes input-partition and
+	 * output-partition directories and their contents.
 	 */
 	public void cleanupPartitionDirectories(Path jobBasePath) throws IOException {
 		logger.info("Starting cleanup of partition directories in: {}", jobBasePath);
@@ -707,8 +704,8 @@ public class ResultAggregationService {
 	}
 
 	/**
-	 * Validates the consolidated ZIP file to ensure it was created successfully
-	 * and contains valid content before cleanup of interim files.
+	 * Validates the consolidated ZIP file to ensure it was created successfully and contains valid content before
+	 * cleanup of interim files.
 	 */
 	public boolean validateConsolidatedZip(Path zipPath) {
 		logger.info("Validating consolidated ZIP file: {}", zipPath);
@@ -742,8 +739,10 @@ public class ResultAggregationService {
 				return false;
 			}
 
-			logger.info("ZIP file validation successful: {} (size: {} bytes, entries: {})",
-					zipPath, fileSize, zipFile.size());
+			logger.info(
+					"ZIP file validation successful: {} (size: {} bytes, entries: {})", zipPath, fileSize,
+					zipFile.size()
+			);
 			return true;
 
 		} catch (ZipException e) {

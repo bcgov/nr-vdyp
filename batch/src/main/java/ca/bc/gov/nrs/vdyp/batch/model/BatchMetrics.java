@@ -51,17 +51,13 @@ public class BatchMetrics {
 	 * Retry detail information
 	 */
 	public static record RetryDetail(
-			Long recordId, String recordData, int attemptNumber, String errorType, String errorMessage,
-			LocalDateTime timestamp, boolean successful, String partitionName
+			int attemptNumber, String errorType, String errorMessage, LocalDateTime timestamp, boolean successful,
+			String partitionName
 	) {
 		public RetryDetail(
-				Long recordId, String recordData, int attemptNumber, String errorType, String errorMessage,
-				boolean successful, String partitionName
+				int attemptNumber, String errorType, String errorMessage, boolean successful, String partitionName
 		) {
-			this(
-					recordId, recordData, attemptNumber, errorType, errorMessage, LocalDateTime.now(), successful,
-					partitionName
-			);
+			this(attemptNumber, errorType, errorMessage, LocalDateTime.now(), successful, partitionName);
 		}
 	}
 

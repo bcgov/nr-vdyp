@@ -60,19 +60,19 @@ public class PartitionedBatchConfiguration {
 	}
 
 	@Bean
-	@StepScope
 	public BatchRetryPolicy retryPolicy() {
 		int maxAttempts = batchProperties.getRetry().getMaxAttempts();
 		int backoffPeriod = batchProperties.getRetry().getBackoffPeriod();
+		logger.info("Creating BatchRetryPolicy with maxAttempts={}, backoffPeriod={}", maxAttempts, backoffPeriod);
 		BatchRetryPolicy policy = new BatchRetryPolicy(maxAttempts, backoffPeriod);
 		policy.setMetricsCollector(metricsCollector);
 		return policy;
 	}
 
 	@Bean
-	@StepScope
 	public BatchSkipPolicy skipPolicy() {
 		int maxSkipCount = batchProperties.getSkip().getMaxCount();
+		logger.info("Creating BatchSkipPolicy with maxSkipCount={}", maxSkipCount);
 		return new BatchSkipPolicy(maxSkipCount, metricsCollector);
 	}
 
@@ -133,9 +133,9 @@ public class PartitionedBatchConfiguration {
 
 		return new StepBuilder("workerStep", jobRepository)
 				.<BatchRecord, BatchRecord>chunk(chunkSize, transactionManager).reader(partitionReader)
-				.processor(vdypProjectionProcessor(retryPolicy, metricsCollector)).writer(partitionWriter)
-				.listener(partitionWriter) // Add writer as step listener
-				.faultTolerant().retryPolicy(retryPolicy).skipPolicy(skipPolicy).listener(new StepExecutionListener() {
+				.processor(vdypProjectionProcessor(metricsCollector)).writer(partitionWriter).listener(partitionWriter)
+				.listener(retryPolicy).listener(skipPolicy).faultTolerant().retryPolicy(retryPolicy)
+				.skipPolicy(skipPolicy).listener(new StepExecutionListener() {
 					@Override
 					public void beforeStep(@NonNull StepExecution stepExecution) {
 						String partitionName = stepExecution.getExecutionContext()
@@ -238,9 +238,8 @@ public class PartitionedBatchConfiguration {
 
 	@Bean
 	@StepScope
-	public VdypProjectionProcessor
-			vdypProjectionProcessor(BatchRetryPolicy retryPolicy, BatchMetricsCollector metricsCollector) {
-		return new VdypProjectionProcessor(retryPolicy, metricsCollector);
+	public VdypProjectionProcessor vdypProjectionProcessor(BatchMetricsCollector metricsCollector) {
+		return new VdypProjectionProcessor(metricsCollector);
 	}
 
 	@Bean

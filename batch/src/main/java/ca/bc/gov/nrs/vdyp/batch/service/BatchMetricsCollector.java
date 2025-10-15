@@ -152,8 +152,7 @@ public class BatchMetricsCollector {
 	 * Record a retry attempt.
 	 */
 	public void recordRetryAttempt(
-			Long jobExecutionId, Long recordId, BatchRecord batchRecord, int attemptNumber, Throwable error,
-			boolean successful, String partitionName
+			Long jobExecutionId, int attemptNumber, Throwable error, boolean successful, String partitionName
 	) {
 		if (jobExecutionId == null) {
 			throw new BatchException("Job execution ID cannot be null");
@@ -179,8 +178,7 @@ public class BatchMetricsCollector {
 			String errorMessage = error != null ? error.getMessage() : "No error message";
 
 			BatchMetrics.RetryDetail retryDetail = new BatchMetrics.RetryDetail(
-					recordId, batchRecord != null ? batchRecord.toString() : "null", attemptNumber, errorType,
-					errorMessage, successful, partitionName
+					attemptNumber, errorType, errorMessage, successful, partitionName
 			);
 
 			synchronized (metrics.getRetryDetails()) {

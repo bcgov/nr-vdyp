@@ -20,17 +20,17 @@ import org.springframework.web.multipart.MultipartFile;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
 /**
- * Streaming CSV partitioner that partitions CSV files by FEATURE_ID.
- * Creates separate CSV files for each partition containing only the data for
- * that partition's assigned FEATURE_IDs.
+ * Streaming CSV partitioner that partitions CSV files by FEATURE_ID. Creates separate CSV files for each partition
+ * containing only the data for that partition's assigned FEATURE_IDs.
  */
 @Component
 public class StreamingCsvPartitioner {
 
 	private static final Logger logger = LoggerFactory.getLogger(StreamingCsvPartitioner.class);
 
-	public int partitionCsvFiles(MultipartFile polygonFile, MultipartFile layerFile,
-			Integer partitionSize, Path jobBaseDir) throws IOException {
+	public int partitionCsvFiles(
+			MultipartFile polygonFile, MultipartFile layerFile, Integer partitionSize, Path jobBaseDir
+	) throws IOException {
 
 		validateParameters(polygonFile, layerFile, partitionSize, jobBaseDir);
 
@@ -38,15 +38,17 @@ public class StreamingCsvPartitioner {
 		int[] partitionSizes = calculatePartitionSizes(totalFeatureIds, partitionSize);
 
 		Map<Long, Integer> featureIdToPartition = partitionPolygonFile(
-				polygonFile, partitionSize, partitionSizes, jobBaseDir);
+				polygonFile, partitionSize, partitionSizes, jobBaseDir
+		);
 
 		partitionLayerFile(layerFile, partitionSize, jobBaseDir, featureIdToPartition);
 
 		return featureIdToPartition.size();
 	}
 
-	private void validateParameters(MultipartFile polygonFile, MultipartFile layerFile,
-			Integer partitionSize, Path jobBaseDir) {
+	private void validateParameters(
+			MultipartFile polygonFile, MultipartFile layerFile, Integer partitionSize, Path jobBaseDir
+	) {
 		if (polygonFile == null) {
 			throw new IllegalArgumentException("Polygon file cannot be null");
 		}
@@ -66,14 +68,17 @@ public class StreamingCsvPartitioner {
 
 	private int countTotalFeatureIds(MultipartFile polygonFile) throws IOException {
 		int count = 0;
-		try (BufferedReader reader = new BufferedReader(
-				new InputStreamReader(polygonFile.getInputStream(), StandardCharsets.UTF_8))) {
+		try (
+				BufferedReader reader = new BufferedReader(
+						new InputStreamReader(polygonFile.getInputStream(), StandardCharsets.UTF_8)
+				)
+		) {
 			String header = reader.readLine(); // Skip header
 			if (header == null) {
 				return 0;
 			}
 			String line;
-			while ((line = reader.readLine()) != null) {
+			while ( (line = reader.readLine()) != null) {
 				if (extractFeatureId(line) != null) {
 					count++;
 				}
@@ -99,27 +104,34 @@ public class StreamingCsvPartitioner {
 		}
 
 		if (logger.isInfoEnabled()) {
-			logger.info("Total FEATURE_IDs: {}, Partition size: {}, Base chunk size: {}, Remainder: {}, Partition sizes: {}",
-					totalFeatureIds, partitionSize, chunkSize, remainder, Arrays.toString(partitionSizes));
+			logger.info(
+					"Total FEATURE_IDs: {}, Partition size: {}, Base chunk size: {}, Remainder: {}, Partition sizes: {}",
+					totalFeatureIds, partitionSize, chunkSize, remainder, Arrays.toString(partitionSizes)
+			);
 		}
 		return partitionSizes;
 	}
 
-	private Map<Long, Integer> partitionPolygonFile(MultipartFile polygonFile,
-			int partitionSize, int[] partitionSizes, Path jobBaseDir) throws IOException {
+	private Map<Long, Integer>
+			partitionPolygonFile(MultipartFile polygonFile, int partitionSize, int[] partitionSizes, Path jobBaseDir)
+					throws IOException {
 
 		Map<Long, Integer> featureIdToPartition = new HashMap<>();
 
-		try (BufferedReader reader = new BufferedReader(
-				new InputStreamReader(polygonFile.getInputStream(), StandardCharsets.UTF_8))) {
+		try (
+				BufferedReader reader = new BufferedReader(
+						new InputStreamReader(polygonFile.getInputStream(), StandardCharsets.UTF_8)
+				)
+		) {
 
 			String header = reader.readLine();
 			if (header == null) {
 				throw new IOException("Polygon CSV file is empty or has no header");
 			}
 
-			Map<Integer, PrintWriter> writers = createPartitionWriters(jobBaseDir,
-					BatchConstants.Partition.INPUT_POLYGON_FILE_NAME, header, partitionSize);
+			Map<Integer, PrintWriter> writers = createPartitionWriters(
+					jobBaseDir, BatchConstants.Partition.INPUT_POLYGON_FILE_NAME, header, partitionSize
+			);
 
 			try {
 				processPolygonRecords(reader, writers, featureIdToPartition, partitionSizes);
@@ -136,8 +148,10 @@ public class StreamingCsvPartitioner {
 	 * Reads exact number of records for each partition in sequence.
 	 */
 	@SuppressWarnings("javasecurity:S5131") // False positive: CSV file writing to internal storage, not HTTP response
-	private void processPolygonRecords(BufferedReader reader, Map<Integer, PrintWriter> writers,
-			Map<Long, Integer> featureIdToPartition, int[] partitionSizes) throws IOException {
+	private void processPolygonRecords(
+			BufferedReader reader, Map<Integer, PrintWriter> writers, Map<Long, Integer> featureIdToPartition,
+			int[] partitionSizes
+	) throws IOException {
 
 		String line;
 		int currentPartition = 0;
@@ -148,8 +162,7 @@ public class StreamingCsvPartitioner {
 			if (featureId != null) {
 				// Write to current partition
 				featureIdToPartition.put(featureId, currentPartition);
-				String sanitizedLine = sanitizeCsvLine(line);
-				writers.get(currentPartition).println(sanitizedLine);
+				writers.get(currentPartition).println(line);
 				recordsInCurrentPartition++;
 
 				// Check if current partition is full, move to next
@@ -203,58 +216,9 @@ public class StreamingCsvPartitioner {
 			Long featureId = extractFeatureId(line);
 			if (featureId != null && featureIdToPartition.containsKey(featureId)) {
 				int partition = featureIdToPartition.get(featureId);
-				String sanitizedLine = sanitizeCsvLine(line);
-				writers.get(partition).println(sanitizedLine);
+				writers.get(partition).println(line);
 			}
 		}
-	}
-
-	/**
-	 * Sanitize CSV line to prevent CSV injection attacks
-	 */
-	private String sanitizeCsvLine(String csvLine) {
-		if (csvLine == null || csvLine.isEmpty()) {
-			return csvLine;
-		}
-
-		char firstChar = csvLine.charAt(0);
-
-		if (firstChar >= '0' && firstChar <= '9') {
-			return csvLine; // Valid FEATURE_ID
-		}
-
-		// First character is not a digit, potentially dangerous
-		// Apply full sanitization for security
-		return sanitizeCsvLineFull(csvLine);
-	}
-
-	/**
-	 * Full CSV line sanitization for suspicious or malformed data. Prevents formulas and other potentially dangerous
-	 * content from being interpreted.
-	 */
-	private String sanitizeCsvLineFull(String csvLine) {
-		// Check if line starts with potentially dangerous characters
-		// that could be interpreted as formulas in spreadsheet applications
-		char firstChar = csvLine.charAt(0);
-		if (firstChar == '=' || firstChar == '+' || firstChar == '-' || firstChar == '@' || firstChar == '\t'
-				|| firstChar == '\r') {
-			// Prepend with single quote to neutralize formula interpretation
-			return "'" + csvLine;
-		}
-
-		// Additional sanitization: remove any control characters except for allowed ones
-		// Allow: comma (CSV delimiter), newline characters handled by readLine
-		StringBuilder sanitized = new StringBuilder(csvLine.length());
-		for (int i = 0; i < csvLine.length(); i++) {
-			char c = csvLine.charAt(i);
-			// Allow printable ASCII characters (32-126) and tab, or non-ASCII characters (>= 128)
-			if ( (c >= 32 && c <= 126) || c == '\t' || c >= 128) {
-				sanitized.append(c);
-			}
-			// Skip control characters (0-31 except tab) and DEL (127)
-		}
-
-		return sanitized.toString();
 	}
 
 	/**
@@ -284,8 +248,9 @@ public class StreamingCsvPartitioner {
 	/**
 	 * Create PrintWriters for each partition.
 	 */
-	private Map<Integer, PrintWriter> createPartitionWriters(Path baseDir, String filename,
-			String header, Integer partitionSize) throws IOException {
+	private Map<Integer, PrintWriter>
+			createPartitionWriters(Path baseDir, String filename, String header, Integer partitionSize)
+					throws IOException {
 
 		if (baseDir == null) {
 			throw new IllegalArgumentException("Base directory cannot be null");
