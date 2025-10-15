@@ -6,15 +6,15 @@ image:
 # Where your Crunchy cluster is
 crunchy:
   # PGO creates a Secret named like: <cluster>-pguser-<dbname>
-  pguserSecretName: crunchy-postgres-#ENV#-pguser-#VDYP_ADMIN_USER#
+  pguserSecretName: crunchy-postgres-#{ENV}#-pguser-#{VDYP_ADMIN_USER}#
   # Point at primary service for DDL. If you must use PgBouncer, set it here and ensure session pooling.
-  host: crunchy-postgres-#ENV#-primary.default.svc.cluster.local
+  host: crunchy-postgres-#{ENV}#-primary.default.svc.cluster.local
   port: 5432
   database: #VDYP_DB_NAME#
 
 liquibase:
-  defaultSchema: "#VDYP_ADMIN_USER#"   # quote in changelog when needed
-  searchPath: "#VDYP_ADMIN_USER#,public"
+  defaultSchema: "#{VDYP_ADMIN_USER}#"   # quote in changelog when needed
+  searchPath: "#{VDYP_ADMIN_USER}#,public"
   logLevel: info
   command: "update"           # or "status", "updateSql" for dry-run
   extraArgs: []               # e.g., ["--rollback-on-error=true"]

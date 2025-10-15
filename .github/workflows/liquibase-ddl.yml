@@ -88,6 +88,7 @@ jobs:
           NAMESPACE: ${{ secrets.oc_namespace }}
           ENV: ${{ inputs.ENVIRONMENT_NAME }}
           VDYP_DB_USER: ${{ vars.VDYP_DB_ROLE}}
+          VDYP_ADMIN_USER: ${{ vars.VDYP_DB_ROLE}}
           VDYP_DB_NAME: ${{ vars.VDYP_DB_DATABASE}}
 
       - name: install helm
