@@ -283,16 +283,23 @@ public class PartitionedBatchConfiguration {
 
 				logger.info("Result aggregation completed successfully. Consolidated output: {}", consolidatedZip);
 
-				// Validate zip file before cleanup
-				if (resultAggregationService.validateConsolidatedZip(consolidatedZip)) {
-					// Clean up interim partition directories after successful zip creation and validation
-					Path jobBasePath = Paths.get(jobBaseDir);
-					resultAggregationService.cleanupPartitionDirectories(jobBasePath);
+				// Clean up interim partition directories after successful zip creation and validation
+				if (batchProperties.getPartition().getInterimDirsCleanupEnabled()) {
+					if (resultAggregationService.validateConsolidatedZip(consolidatedZip)) {
 
-					logger.info("Interim partition directories cleanup completed for job: {}", jobExecutionId);
+						Path jobBasePath = Paths.get(jobBaseDir);
+						resultAggregationService.cleanupPartitionDirectories(jobBasePath);
+
+						logger.info("Interim partition directories cleanup completed for job: {}", jobExecutionId);
+					} else {
+						logger.warn(
+								"Consolidated ZIP file validation failed. Skipping cleanup to preserve interim files for debugging."
+						);
+					}
 				} else {
-					logger.warn(
-							"Consolidated ZIP file validation failed. Skipping cleanup to preserve interim files for debugging."
+					logger.info(
+							"Cleanup is disabled. Skipping cleanup of interim partition directories for job: {}",
+							jobExecutionId
 					);
 				}
 
