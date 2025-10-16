@@ -64,7 +64,7 @@ spec:
               echo "Running Liquibase {{ .Values.liquibase.command }}..."
               liquibase \
                 --log-level={{ .Values.liquibase.logLevel }} \
-                --url="${LIQUIBASE_URI}" \
+                --url="${LIQUIBASE_URI}&currentSchema=%22app-vdyp%22" \
                 {{- range .Values.liquibase.extraArgs }}
                 {{ . }} \
                 {{- end }}
