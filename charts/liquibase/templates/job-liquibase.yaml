@@ -29,25 +29,42 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.crunchy.pguserSecretName }}
                   key: password
+            - name: LIQUIBASE_URI
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.crunchy.pguserSecretName }}
+                  key: jdbc-uri
+            - name: LIQUIBASE_DBNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.crunchy.pguserSecretName }}
+                  key: dbname
+            - name: LIQUIBASE_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.crunchy.pguserSecretName }}
+                  key: port
+            - name: LIQUIBASE_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.crunchy.pguserSecretName }}
+                  key: host
           command: ["/bin/sh","-c"]
           args:
             - |
               export PGPASSWORD="${LIQUIBASE_PASSWORD}"
-              echo "Waiting for PostgreSQL at {{ .Values.crunchy.host }}:{{ .Values.crunchy.port }}..."
+              echo "Waiting for PostgreSQL at ${LIQUIBASE_HOST}:${LIQUIBASE_PORT}..."
               for i in $(seq 1 60); do
-                if /usr/bin/env pg_isready -h {{ .Values.crunchy.host }} -p {{ .Values.crunchy.port }} -d {{ .Values.crunchy.database }} >/dev/null 2>&1; then
+                if /usr/bin/env pg_isready -h ${LIQUIBASE_HOST} -p ${LIQUIBASE_PORT} -d ${LIQUIBASE_DBNAME} >/dev/null 2>&1; then
                   break
                 fi
                 sleep 2
               done
-
-              # Build JDBC URL; add options you need (sslmode, options= -c search_path=..., etc.)
-              JDBC_URL="jdbc:postgresql://{{ .Values.crunchy.host }}:{{ .Values.crunchy.port }}/{{ .Values.crunchy.database }}?sslmode=disable"
-
+              
               echo "Running Liquibase {{ .Values.liquibase.command }}..."
               liquibase \
                 --log-level={{ .Values.liquibase.logLevel }} \
-                --url="${JDBC_URL}" \
+                --url="${LIQUIBASE_URI}" \
                 --defaultSchemaName={{ .Values.liquibase.defaultSchema | quote }} \
                 --searchPath={{ .Values.liquibase.searchPath | quote }} \
                 {{- range .Values.liquibase.extraArgs }}
