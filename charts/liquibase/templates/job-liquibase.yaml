@@ -14,7 +14,7 @@ spec:
     spec:
       restartPolicy: Never
       containers:
-        - name: liquibase
+        - name: vdyp-liquibase-#{ENV}#
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
