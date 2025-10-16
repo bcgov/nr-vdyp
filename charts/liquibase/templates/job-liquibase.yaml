@@ -32,7 +32,6 @@ spec:
           command: ["/bin/sh","-c"]
           args:
             - |
-              set -euo pipefail
               export PGPASSWORD="${LIQUIBASE_PASSWORD}"
               echo "Waiting for PostgreSQL at {{ .Values.crunchy.host }}:{{ .Values.crunchy.port }}..."
               for i in $(seq 1 60); do
