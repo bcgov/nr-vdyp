@@ -65,8 +65,6 @@ spec:
               liquibase \
                 --log-level={{ .Values.liquibase.logLevel }} \
                 --url="${LIQUIBASE_URI}" \
-                --defaultSchemaName={{ .Values.liquibase.defaultSchema | quote }} \
-                --object-quoting-strategy=QUOTE_ALL_OBJECTS \
                 {{- range .Values.liquibase.extraArgs }}
                 {{ . }} \
                 {{- end }}
