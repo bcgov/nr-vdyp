@@ -49,23 +49,13 @@ spec:
               liquibase \
                 --log-level={{ .Values.liquibase.logLevel }} \
                 --url="${JDBC_URL}" \
-                --username="${LIQUIBASE_USERNAME}" \
-                --password="${LIQUIBASE_PASSWORD}" \
                 --defaultSchemaName={{ .Values.liquibase.defaultSchema | quote }} \
                 --searchPath={{ .Values.liquibase.searchPath | quote }} \
-                --changelog-file={{ .Values.liquibase.changelogFile }} \
                 {{- range .Values.liquibase.extraArgs }}
                 {{ . }} \
                 {{- end }}
                 {{ .Values.liquibase.command }}
 
-          volumeMounts:
-            - name: changelog
-              mountPath: /liquibase
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
 
-      volumes:
-        - name: changelog
-          configMap:
-            name: {{ include "liquibase.fullname" . }}-changelog
