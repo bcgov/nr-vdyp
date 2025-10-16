@@ -1,7 +1,9 @@
 {
   "databaseChangeLog": [
+    {
+      "objectQuotingStrategy": "QUOTE_ALL_OBJECTS"
+    },
      {
-      "objectQuotingStrategy": "QUOTE_ALL_OBJECTS" ,
       "changeSet": {
         "id": "01_00_00_00",
         "author": "pminter",

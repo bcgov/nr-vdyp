@@ -66,7 +66,6 @@ spec:
                 --log-level={{ .Values.liquibase.logLevel }} \
                 --url="${LIQUIBASE_URI}" \
                 --defaultSchemaName={{ .Values.liquibase.defaultSchema | quote }} \
-                --searchPath={{ .Values.liquibase.searchPath | quote }} \
                 {{- range .Values.liquibase.extraArgs }}
                 {{ . }} \
                 {{- end }}
