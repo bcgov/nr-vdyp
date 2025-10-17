@@ -19,32 +19,32 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
             # Pull credentials from the PGO-created secret
-            - name: LIQUIBASE_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.crunchy.pguserSecretName }}
-                  key: user
-            - name: LIQUIBASE_PASSWORD
+            - name: ENV_DB_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.crunchy.pguserSecretName }}
                   key: password
-            - name: LIQUIBASE_URI
+            - name: ENV_DB_URI
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.crunchy.pguserSecretName }}
                   key: jdbc-uri
-            - name: LIQUIBASE_DBNAME
+            - name: ENV_DB_DBNAME
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.crunchy.pguserSecretName }}
                   key: dbname
-            - name: LIQUIBASE_PORT
+            - name: ENV_DB_PORT
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.crunchy.pguserSecretName }}
                   key: port
-            - name: LIQUIBASE_HOST
+            - name: ENV_DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.crunchy.pguserSecretName }}
+                  key: host
+            - name: ENV_DB_HOST
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.crunchy.pguserSecretName }}
@@ -52,10 +52,10 @@ spec:
           command: ["/bin/sh","-c"]
           args:
             - |
-              export PGPASSWORD="${LIQUIBASE_PASSWORD}"
-              echo "Waiting for PostgreSQL at ${LIQUIBASE_HOST}:${LIQUIBASE_PORT}..."
+              export PGPASSWORD="${ENV_DB_PASSWORD}"
+              echo "Waiting for PostgreSQL at ${ENV_DB_HOST}:${ENV_DB_PORT}..."
               for i in $(seq 1 60); do
-                if /usr/bin/env pg_isready -h ${LIQUIBASE_HOST} -p ${LIQUIBASE_PORT} -d ${LIQUIBASE_DBNAME} >/dev/null 2>&1; then
+                if /usr/bin/env pg_isready -h ${ENV_DB_HOST} -p ${ENV_DB_PORT} -d ${ENV_DB_DBNAME} >/dev/null 2>&1; then
                   break
                 fi
                 sleep 2
@@ -64,7 +64,7 @@ spec:
               echo "Running Liquibase {{ .Values.liquibase.command }}..."
               liquibase \
                 --log-level={{ .Values.liquibase.logLevel }} \
-                --url="${LIQUIBASE_URI}&currentSchema=%22app-vdyp%22" \
+                --url="${ENV_DB_URI}&currentSchema=%22app-vdyp%22" \
                 {{- range .Values.liquibase.extraArgs }}
                 {{ . }} \
                 {{- end }}

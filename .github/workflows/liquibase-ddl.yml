@@ -90,6 +90,7 @@ jobs:
           VDYP_DB_USER: ${{ vars.VDYP_DB_ROLE}}
           VDYP_ADMIN_USER: ${{ vars.VDYP_DB_ROLE}}
           VDYP_DB_NAME: ${{ vars.VDYP_DB_DATABASE}}
+          POSTGRESQL_VDYP_PROXY_PASSWORD: ${{ secrets.VDYP_DB_PROXY_PASSWORD}}
 
       - name: install helm
         run: |

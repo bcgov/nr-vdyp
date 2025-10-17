@@ -102,7 +102,9 @@
               "dbms":"postgresql",
               "endDelimiter":";",
               "path": "scripts/01_00_00/00/ddl/roles/app-vdyp.ddl.create_login_proxy_vdyp_rest.sql",
-              "relativeToChangelogFile": true
+              "relativeToChangelogFile": true,
+              "splitStatements": false,
+              "expandExpressions": true
             }
           },
           {
