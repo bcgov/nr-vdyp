@@ -49,6 +49,11 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.crunchy.pguserSecretName }}
                   key: host
+            - name: VDYP_DB_PROXY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: vdyp-liquibase-#{ENV}#-pguser-vdyp-proxy-password
+                  key: host
           command: ["/bin/sh","-c"]
           args:
             - |
@@ -68,7 +73,8 @@ spec:
                 {{- range .Values.liquibase.extraArgs }}
                 {{ . }} \
                 {{- end }}
-                {{ .Values.liquibase.command }}
+                {{ .Values.liquibase.command }} \
+                -DVDYP_DB_PROXY_PASSWORD=${VDYP_DB_PROXY_PASSWORD}
 
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
