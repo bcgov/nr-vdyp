@@ -1,7 +1,7 @@
 services:
 
   db:
-    image: postgres:14
+    image: postgres:17
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_DB_USER}
@@ -35,7 +35,8 @@ services:
         "--url=jdbc:postgresql://db:5432/${VDYP_DB_DATABASE}?user=${VDYP_DB_USER}&password=${VDYP_DB_PASSWORD}&currentSchema=%22app-vdyp%22",
         "--changelog-file=vdyp-changelog.json",
         "--searchPath=/liquibase/changelog",
-        "update"
+        "update",
+        "-DVDYP_DB_PROXY_PASSWORD=${VDYP_DB_PROXY_PASSWORD}"
       ]
 
   coms:

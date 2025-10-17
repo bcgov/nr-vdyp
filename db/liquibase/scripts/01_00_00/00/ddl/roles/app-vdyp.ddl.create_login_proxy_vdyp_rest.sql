@@ -1,14 +1,23 @@
+--liquibase formatted sql
 -- Role: "proxy_vdyp_rest"
 -- DROP ROLE "proxy_vdyp_rest";
-
-CREATE ROLE "proxy_vdyp_rest" WITH
-  LOGIN
-  NOSUPERUSER
-  INHERIT
-  NOCREATEDB
-  NOCREATEROLE
-  NOREPLICATION
-  PASSWORD '${POSTGRES_PROXY_USER_PASSWORD}';
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'proxy_vdyp_rest') THEN
+        -- Use EXECUTE + format to safely literal-quote the password
+        EXECUTE format(
+            'CREATE ROLE %I WITH LOGIN NOSUPERUSER INHERIT NOCREATEDB NOCREATEROLE NOREPLICATION PASSWORD %L',
+            'proxy_vdyp_rest',
+            '${VDYP_DB_PROXY_PASSWORD}'
+        );
+    ELSE
+        EXECUTE format(
+            'ALTER ROLE %I WITH LOGIN NOSUPERUSER INHERIT NOCREATEDB NOCREATEROLE NOREPLICATION PASSWORD %L',
+            'proxy_vdyp_rest',
+            '${VDYP_DB_PROXY_PASSWORD}'
+        );
+   END IF;
+END$$;
   
 ALTER ROLE proxy_vdyp_rest SET search_path TO "app-vdyp";
 
