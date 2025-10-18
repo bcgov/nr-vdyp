@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchException;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchIOException;
+import ca.bc.gov.nrs.vdyp.batch.exception.ProjectionNullPointerException;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
@@ -119,6 +120,10 @@ public class VdypProjectionService {
 
 			}
 
+		} catch (NullPointerException npe) {
+			throw ProjectionNullPointerException.handleProjectionNullPointer(
+					npe, batchRecords, partitionName, logger
+			);
 		} catch (AbstractProjectionRequestException e) {
 			throw handleChunkProjectionFailure(batchRecords, partitionName, e);
 		} catch (IOException e) {
