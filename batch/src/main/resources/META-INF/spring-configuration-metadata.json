@@ -25,6 +25,12 @@
             "defaultValue": 4
         },
         {
+            "name": "batch.partition.min-valid-file-size",
+            "type": "java.lang.Integer",
+            "description": "Minimum valid file size",
+            "defaultValue": 1024
+        },				
+        {
             "name": "batch.partition.input-polygon-file-name",
             "type": "java.lang.String",
             "description": "Name of the polygon input CSV file in partition directories",

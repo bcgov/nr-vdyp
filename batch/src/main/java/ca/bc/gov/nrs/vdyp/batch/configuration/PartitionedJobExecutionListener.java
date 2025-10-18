@@ -92,13 +92,13 @@ public class PartitionedJobExecutionListener implements JobExecutionListener {
 			if (startTime != null && endTime != null) {
 				Duration duration = Duration.between(startTime, endTime);
 				long millis = duration.toMillis();
-				logger.info("Duration: {}ms", millis);
+				long minutes = millis / (60 * 1000);
+				long seconds = (millis % (60 * 1000)) / 1000;
+				long remainingMillis = millis % 1000;
+				logger.info("Duration: {}m {}s {}ms", minutes, seconds, remainingMillis);
 			} else {
 				logger.warn("Duration: Unable to calculate (missing time information)");
 			}
-
-			// Note: Partition file merging has been disabled as results are now aggregated
-			// through the ResultAggregationService in the post-processing step
 
 			logger.info(separator);
 		}

@@ -36,6 +36,9 @@ public final class BatchConstants {
 	public static final class File {
 		public static final String YIELD_TABLE_TYPE = "YieldTable";
 		public static final String YIELD_TABLE_FILENAME = "YieldTable.csv";
+		public static final String LOG_TYPE_DEBUG = "Debug";
+		public static final String LOG_TYPE_ERROR = "Error";
+		public static final String LOG_TYPE_PROGRESS = "Progress";
 
 		private File() {
 		}

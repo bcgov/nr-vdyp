@@ -18,7 +18,6 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 
 	private static final Logger logger = LoggerFactory.getLogger(VdypProjectionProcessor.class);
 
-	private final BatchRetryPolicy retryPolicy;
 	private final BatchMetricsCollector metricsCollector;
 
 	// Partition context information
@@ -34,8 +33,7 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 	@Value("${batch.validation.max-polygon-id-length:50}")
 	private int maxPolygonIdLength;
 
-	public VdypProjectionProcessor(BatchRetryPolicy retryPolicy, BatchMetricsCollector metricsCollector) {
-		this.retryPolicy = retryPolicy;
+	public VdypProjectionProcessor(BatchMetricsCollector metricsCollector) {
 		this.metricsCollector = metricsCollector;
 	}
 
@@ -58,10 +56,6 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 	@Override
 	public BatchRecord process(@NonNull BatchRecord batchRecord) throws IOException, IllegalArgumentException {
 		String featureId = batchRecord.getFeatureId();
-
-		if (retryPolicy != null && featureId != null) {
-			retryPolicy.registerRecord((long) featureId.hashCode(), batchRecord);
-		}
 
 		// Basic validation only - projection happens in ItemWriter for chunk processing
 		if (featureId == null || featureId.trim().isEmpty()) {
