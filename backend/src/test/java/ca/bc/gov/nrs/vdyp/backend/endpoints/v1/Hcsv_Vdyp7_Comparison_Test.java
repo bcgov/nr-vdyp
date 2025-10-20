@@ -269,10 +269,12 @@ class Hcsv_Vdyp7_Comparison_Test {
 			assertThat(vdyp8YieldTableContent, not(emptyString()));
 
 			var vdyp8YieldTable = new ResultYieldTable(vdyp8YieldTableContent);
-			
+
 			assertThat(
-					vdyp8YieldTable, (Matcher) hasSpecificEntry(
-							"1816115", hasSpecificEntry(
+					vdyp8YieldTable,
+					(Matcher) hasSpecificEntry(
+							"1816115",
+							hasSpecificEntry(
 									"1", hasSpecificEntry("2103", hasSpecificEntry("PRJ_DIAMETER", closeTo(33.32)))
 							)
 					)
