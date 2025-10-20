@@ -104,6 +104,10 @@ public class VdypPolygon extends BaseVdypPolygon<VdypLayer, Float, VdypSpecies, 
 		public void targetYear(Optional<Integer> targetYear) {
 			this.targetYear = targetYear;
 		}
+
+		public void targetYear(int targetYear) {
+			this.targetYear(Optional.of(targetYear));
+		}
 	}
 
 	public void setTargetYear(int year) {
