@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -157,4 +158,26 @@ public class MatrixMapImpl<T> implements MatrixMap<T> {
 	public boolean hasM(Object... params) {
 		return this.getIndexSafe(params).isPresent();
 	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + Arrays.deepHashCode(matrix);
+		result = prime * result + Objects.hash(maps);
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		MatrixMapImpl other = (MatrixMapImpl) obj;
+		return Objects.equals(maps, other.maps) && Arrays.deepEquals(matrix, other.matrix);
+	}
+
 }
