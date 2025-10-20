@@ -421,29 +421,33 @@ public class VdypLayer extends BaseVdypLayer<VdypSpecies, VdypSite> implements V
 	@Override
 	public void dumpState(Appendable output, int indent) throws IOException {
 		super.dumpState(output, indent);
-		var indentString = "\t".repeat(indent + 1);
-		output.append(indentString).append("empiricalRelationshipParameterIndex = ")
-				.append(empiricalRelationshipParameterIndex.toString()).append("\n");
-		output.append(indentString).append("primarySp0 = ").append(primarySp0.toString()).append("\n");
 
-		output.append(indentString).append("baseAreaByUtilization = ").append(baseAreaByUtilization.toString())
-				.append("\n");
-		output.append(indentString).append("loreyHeightByUtilization = ").append(loreyHeightByUtilization.toString())
-				.append("\n");
-		output.append(indentString).append("quadraticMeanDiameterByUtilization = ")
-				.append(quadraticMeanDiameterByUtilization.toString()).append("\n");
-		output.append(indentString).append("treesPerHectareByUtilization = ")
-				.append(treesPerHectareByUtilization.toString()).append("\n");
-		output.append(indentString).append("wholeStemVolumeByUtilization = ")
-				.append(wholeStemVolumeByUtilization.toString()).append("\n");
-		output.append(indentString).append("closeUtilizationVolumeByUtilization = ")
-				.append(closeUtilizationVolumeByUtilization.toString()).append("\n");
-		output.append(indentString).append("closeUtilizationVolumeNetOfDecayByUtilization = ")
-				.append(closeUtilizationVolumeNetOfDecayByUtilization.toString()).append("\n");
-		output.append(indentString).append("closeUtilizationVolumeNetOfDecayAndWasteByUtilization = ")
-				.append(closeUtilizationVolumeNetOfDecayAndWasteByUtilization.toString()).append("\n");
-		output.append(indentString).append("closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization = ")
-				.append(closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization.toString()).append("\n");
+		Dumpable.writeProperty(
+				output, indent + 1, "empiricalRelationshipParameterIndex", empiricalRelationshipParameterIndex
+		);
+		Dumpable.writeProperty(output, indent + 1, "primarySp0", primarySp0);
+		Dumpable.writeProperty(output, indent + 1, "baseAreaByUtilization", baseAreaByUtilization);
+		Dumpable.writeProperty(output, indent + 1, "loreyHeightByUtilization", loreyHeightByUtilization);
+		Dumpable.writeProperty(
+				output, indent + 1, "quadraticMeanDiameterByUtilization", quadraticMeanDiameterByUtilization
+		);
+		Dumpable.writeProperty(output, indent + 1, "treesPerHectareByUtilization", treesPerHectareByUtilization);
+		Dumpable.writeProperty(output, indent + 1, "wholeStemVolumeByUtilization", wholeStemVolumeByUtilization);
+		Dumpable.writeProperty(
+				output, indent + 1, "closeUtilizationVolumeByUtilization", closeUtilizationVolumeByUtilization
+		);
+		Dumpable.writeProperty(
+				output, indent + 1, "closeUtilizationVolumeNetOfDecayByUtilization",
+				closeUtilizationVolumeNetOfDecayByUtilization
+		);
+		Dumpable.writeProperty(
+				output, indent + 1, "closeUtilizationVolumeNetOfDecayAndWasteByUtilization",
+				closeUtilizationVolumeNetOfDecayAndWasteByUtilization
+		);
+		Dumpable.writeProperty(
+				output, indent + 1, "closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization",
+				closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization
+		);
 
 	}
 

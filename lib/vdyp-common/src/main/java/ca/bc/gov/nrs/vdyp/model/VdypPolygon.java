@@ -127,7 +127,6 @@ public class VdypPolygon extends BaseVdypPolygon<VdypLayer, Float, VdypSpecies, 
 	@Override
 	public void dumpState(Appendable output, int indent) throws IOException {
 		super.dumpState(output, indent);
-		var indentString = "\t".repeat(indent + 1);
-		output.append(indentString).append("targetYear = ").append(targetYear.toString()).append("\n");
+		Dumpable.writeProperty(output, indent + 1, "targetYear", targetYear);
 	}
 }

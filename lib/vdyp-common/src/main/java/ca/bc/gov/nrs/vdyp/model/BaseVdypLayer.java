@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 
 import ca.bc.gov.nrs.vdyp.common.Computed;
 
-public abstract class BaseVdypLayer<S extends BaseVdypSpecies<I>, I extends BaseVdypSite> {
+public abstract class BaseVdypLayer<S extends BaseVdypSpecies<I>, I extends BaseVdypSite> implements Dumpable {
 
 	private final PolygonIdentifier polygonIdentifier;
 	private final LayerType layerType;
@@ -264,21 +264,14 @@ public abstract class BaseVdypLayer<S extends BaseVdypSpecies<I>, I extends Base
 		}
 	}
 
+	@Override
 	public void dumpState(Appendable output, int indent) throws IOException {
-		var indentString = "\t".repeat(indent + 1);
 
-		output.append("\t".repeat(indent)).append(this.getClass().getSimpleName()).append(" (").append(this.toString())
-				.append("\n");
+		Dumpable.writeHeader(output, indent, this.getClass(), this.toString());
 
-		output.append(indentString).append("inventoryTypeGroup = ").append(inventoryTypeGroup.toString()).append("\n");
+		Dumpable.writeProperty(output, indent + 1, "inventoryTypeGroup", inventoryTypeGroup);
 
-		if (!speciesBySp0.isEmpty()) {
-			for (var layer : speciesBySp0.values()) {
-				layer.dumpState(output, indent + 2);
-			}
-		} else {
-			output.append("\t".repeat(indent + 2)).append("None").append("\n");
-		}
+		Dumpable.writeChildren(output, indent + 1, "layers", this.speciesBySp0.values());
 
 	}
 }

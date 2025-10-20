@@ -14,7 +14,8 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public abstract class BaseVdypPolygon<L extends BaseVdypLayer<SP, SI>, PA, SP extends BaseVdypSpecies<SI>, SI extends BaseVdypSite> {
+public abstract class BaseVdypPolygon<L extends BaseVdypLayer<SP, SI>, PA, SP extends BaseVdypSpecies<SI>, SI extends BaseVdypSite>
+		implements Dumpable {
 
 	private PolygonIdentifier polygonIdentifier; // FIP_P/POLYDESC
 	private PA percentAvailable; // FIP_P2/PCTFLAND
@@ -307,28 +308,18 @@ public abstract class BaseVdypPolygon<L extends BaseVdypLayer<SP, SI>, PA, SP ex
 
 	}
 
-	void dumpState(Appendable output, int indent) throws IOException {
-		var indentString = "\t".repeat(indent + 1);
+	@Override
+	public void dumpState(Appendable output, int indent) throws IOException {
 
-		output.append("\t".repeat(indent)).append(this.getClass().getSimpleName()).append(" (").append(this.toString())
-				.append("\n");
+		Dumpable.writeHeader(output, indent, this.getClass(), this.toString());
 
-		output.append(indentString).append("percentAvailable = ").append(percentAvailable.toString()).append("\n");
-		output.append(indentString).append("biogeoclimaticZone = ").append(biogeoclimaticZone.toString()).append("\n");
-		output.append(indentString).append("forestInventoryZone = ").append(forestInventoryZone.toString())
-				.append("\n");
-		output.append(indentString).append("mode = ").append(mode.toString()).append("\n");
-		output.append(indentString).append("inventoryTypeGroup = ").append(inventoryTypeGroup.toString()).append("\n");
+		Dumpable.writeProperty(output, indent + 1, "percentAvailable", percentAvailable);
+		Dumpable.writeProperty(output, indent + 1, "biogeoclimaticZone", biogeoclimaticZone);
+		Dumpable.writeProperty(output, indent + 1, "forestInventoryZone", forestInventoryZone);
+		Dumpable.writeProperty(output, indent + 1, "mode", mode);
+		Dumpable.writeProperty(output, indent + 1, "inventoryTypeGroup", inventoryTypeGroup);
 
-		output.append(indentString).append("layers:").append("\n");
-
-		if (!layers.isEmpty()) {
-			for (var layer : layers.values()) {
-				layer.dumpState(output, indent + 2);
-			}
-		} else {
-			output.append("\t".repeat(indent + 2)).append("None").append("\n");
-		}
+		Dumpable.writeChildren(output, indent + 1, "layers", this.getLayers().values());
 
 	}
 }

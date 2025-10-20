@@ -8,7 +8,7 @@ import java.util.Optional;
 import ca.bc.gov.nrs.vdyp.common.Computed;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 
-public abstract class BaseVdypSite {
+public abstract class BaseVdypSite implements Dumpable {
 
 	private final PolygonIdentifier polygonIdentifier;
 	private final LayerType layerType;
@@ -264,21 +264,18 @@ public abstract class BaseVdypSite {
 
 	}
 
+	@Override
 	public void dumpState(Appendable output, int indent) throws IOException {
-		var indentString = "\t".repeat(indent + 1);
 
-		output.append("\t".repeat(indent)).append(this.getClass().getSimpleName()).append(" (").append(this.toString())
-				.append("\n");
+		Dumpable.writeHeader(output, indent, this.getClass(), this.toString());
 
-		output.append(indentString).append("siteGenus = ").append(this.siteGenus.toString()).append("%\n");
-		output.append(indentString).append("siteCurveNumber = ").append(this.siteCurveNumber.toString()).append("\n");
-		output.append(indentString).append("siteIndex = ").append(this.siteIndex.toString()).append("\n");
-		output.append(indentString).append("ageTotal = ").append(this.ageTotal.toString()).append("\n");
-		output.append(indentString).append("height = ").append(this.height.toString()).append("\n");
-		output.append(indentString).append("yearsToBreastHeight = ").append(this.yearsToBreastHeight.toString())
-				.append("\n");
-		output.append(indentString).append("yearsAtBreastHeight = ").append(this.yearsAtBreastHeight.toString())
-				.append("\n");
+		Dumpable.writeProperty(output, indent + 1, "siteGenus", siteGenus);
+		Dumpable.writeProperty(output, indent + 1, "siteCurveNumber", siteCurveNumber);
+		Dumpable.writeProperty(output, indent + 1, "siteIndex", siteIndex);
+		Dumpable.writeProperty(output, indent + 1, "ageTotal", ageTotal);
+		Dumpable.writeProperty(output, indent + 1, "height", height);
+		Dumpable.writeProperty(output, indent + 1, "yearsToBreastHeight", yearsToBreastHeight);
+		Dumpable.writeProperty(output, indent + 1, "yearsAtBreastHeight", yearsAtBreastHeight);
 
 	}
 

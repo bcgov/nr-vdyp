@@ -14,7 +14,7 @@ import ca.bc.gov.nrs.vdyp.application.InitializationIncompleteException;
 import ca.bc.gov.nrs.vdyp.common.Computed;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.GenusDefinitionParser;
 
-public abstract class BaseVdypSpecies<I extends BaseVdypSite> {
+public abstract class BaseVdypSpecies<I extends BaseVdypSite> implements Dumpable {
 	private final PolygonIdentifier polygonIdentifier; // FIP_P/POLYDESC
 
 	// This is also represents the distinction between data stored in
@@ -345,28 +345,19 @@ public abstract class BaseVdypSpecies<I extends BaseVdypSite> {
 		protected abstract I buildSite(Consumer<IB> config);
 	}
 
+	@Override
 	public void dumpState(Appendable output, int indent) throws IOException {
-		var indentString = "\t".repeat(indent + 1);
 
-		output.append("\t".repeat(indent)).append(this.getClass().getSimpleName()).append(" (").append(this.toString())
-				.append("\n");
+		Dumpable.writeHeader(output, indent, this.getClass(), this.toString());
 
-		output.append(indentString).append("genus = ").append(genus.toString()).append("\n");
-		output.append(indentString).append("genusIndex = ").append(Integer.toString(this.genusIndex)).append("\n");
+		Dumpable.writeProperty(output, indent + 1, "genus", genus);
+		Dumpable.writeProperty(output, indent + 1, "genusIndex", genusIndex);
+		Dumpable.writeProperty(output, indent + 1, "percentGenus", percentGenus);
+		Dumpable.writeProperty(output, indent + 1, "fractionGenus", fractionGenus);
+		Dumpable.writeProperty(output, indent + 1, "sp64DistributionSet", sp64DistributionSet);
 
-		output.append(indentString).append("percentGenus = ").append(this.percentGenus.toString()).append("%\n");
-		output.append(indentString).append("fractionGenus = ").append(this.fractionGenus.toString()).append("\n");
+		Dumpable.writeChild(output, indent + 1, "site", this.site);
 
-		output.append(indentString).append("sp64DistributionSet = ").append(this.sp64DistributionSet.toString())
-				.append("\n");
-
-		output.append(indentString).append("site:").append("\n");
-
-		if (site.isPresent()) {
-			site.get().dumpState(output, indent + 2);
-		} else {
-			output.append("\t".repeat(indent + 2)).append("None").append("\n");
-		}
 	}
 
 }

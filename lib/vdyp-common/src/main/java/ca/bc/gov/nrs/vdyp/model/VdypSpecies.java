@@ -491,37 +491,38 @@ public class VdypSpecies extends BaseVdypSpecies<VdypSite> implements VdypUtiliz
 	@Override
 	public void dumpState(Appendable output, int indent) throws IOException {
 		super.dumpState(output, indent);
-		var indentString = "\t".repeat(indent + 1);
 
-		output.append(indentString).append("volumeGroup = ").append(volumeGroup.toString()).append("\n");
-		output.append(indentString).append("decayGroup = ").append(decayGroup.toString()).append("\n");
-		output.append(indentString).append("breakageGroup = ").append(breakageGroup.toString()).append("\n");
+		Dumpable.writeProperty(output, indent + 1, "volumeGroup", volumeGroup);
+		Dumpable.writeProperty(output, indent + 1, "decayGroup", decayGroup);
+		Dumpable.writeProperty(output, indent + 1, "breakageGroup", breakageGroup);
 
-		output.append(indentString).append("baseAreaByUtilization = ").append(baseAreaByUtilization.toString())
-				.append("\n");
-		output.append(indentString).append("loreyHeightByUtilization = ").append(loreyHeightByUtilization.toString())
-				.append("\n");
-		output.append(indentString).append("quadraticMeanDiameterByUtilization = ")
-				.append(quadraticMeanDiameterByUtilization.toString()).append("\n");
-		output.append(indentString).append("treesPerHectareByUtilization = ")
-				.append(treesPerHectareByUtilization.toString()).append("\n");
-		output.append(indentString).append("wholeStemVolumeByUtilization = ")
-				.append(wholeStemVolumeByUtilization.toString()).append("\n");
-		output.append(indentString).append("closeUtilizationVolumeByUtilization = ")
-				.append(closeUtilizationVolumeByUtilization.toString()).append("\n");
-		output.append(indentString).append("closeUtilizationVolumeNetOfDecayByUtilization = ")
-				.append(closeUtilizationVolumeNetOfDecayByUtilization.toString()).append("\n");
-		output.append(indentString).append("closeUtilizationVolumeNetOfDecayAndWasteByUtilization = ")
-				.append(closeUtilizationVolumeNetOfDecayAndWasteByUtilization.toString()).append("\n");
-		output.append(indentString).append("closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization = ")
-				.append(closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization.toString()).append("\n");
+		Dumpable.writeProperty(output, indent + 1, "baseAreaByUtilization", baseAreaByUtilization);
+		Dumpable.writeProperty(output, indent + 1, "loreyHeightByUtilization", loreyHeightByUtilization);
+		Dumpable.writeProperty(
+				output, indent + 1, "quadraticMeanDiameterByUtilization", quadraticMeanDiameterByUtilization
+		);
+		Dumpable.writeProperty(output, indent + 1, "treesPerHectareByUtilization", treesPerHectareByUtilization);
+		Dumpable.writeProperty(output, indent + 1, "wholeStemVolumeByUtilization", wholeStemVolumeByUtilization);
+		Dumpable.writeProperty(
+				output, indent + 1, "closeUtilizationVolumeByUtilization", closeUtilizationVolumeByUtilization
+		);
+		Dumpable.writeProperty(
+				output, indent + 1, "closeUtilizationVolumeNetOfDecayByUtilization",
+				closeUtilizationVolumeNetOfDecayByUtilization
+		);
+		Dumpable.writeProperty(
+				output, indent + 1, "closeUtilizationVolumeNetOfDecayAndWasteByUtilization",
+				closeUtilizationVolumeNetOfDecayAndWasteByUtilization
+		);
+		Dumpable.writeProperty(
+				output, indent + 1, "closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization",
+				closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization
+		);
 
-		output.append(indentString).append("cvVolume = ").append(cvVolume.toString()).append("\n");
-		output.append(indentString).append("cvBasalArea = ").append(cvBasalArea.toString()).append("\n");
-		output.append(indentString).append("cvQuadraticMeanDiameter = ").append(cvQuadraticMeanDiameter.toString())
-				.append("\n");
-		output.append(indentString).append("cvPrimaryLayerSmall = ").append(cvPrimaryLayerSmall.toString())
-				.append("\n");
+		Dumpable.writeProperty(output, indent + 1, "cvVolume", cvVolume);
+		Dumpable.writeProperty(output, indent + 1, "cvBasalArea", cvBasalArea);
+		Dumpable.writeProperty(output, indent + 1, "cvQuadraticMeanDiameter", cvQuadraticMeanDiameter);
+		Dumpable.writeProperty(output, indent + 1, "cvPrimaryLayerSmall", cvPrimaryLayerSmall);
 
 	}
 }
