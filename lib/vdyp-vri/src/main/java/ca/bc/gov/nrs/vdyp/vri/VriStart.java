@@ -1191,7 +1191,10 @@ public class VriStart extends VdypStartApplication<VriPolygon, VriLayer, VriSpec
 
 	@Override
 	protected VriSpecies copySpecies(VriSpecies toCopy, Consumer<Builder<VriSpecies, VriSite, ?>> config) {
-		return VriSpecies.build(builder -> builder.copy(toCopy));
+		return VriSpecies.build(builder -> {
+			builder.copy(toCopy);
+			config.accept(builder);
+		});
 	}
 
 	static record Increase(float dominantHeight, float ageIncrease) {
