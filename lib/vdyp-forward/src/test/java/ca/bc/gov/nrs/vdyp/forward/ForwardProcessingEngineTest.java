@@ -150,6 +150,8 @@ class ForwardProcessingEngineTest {
 							ib.siteIndex(18.33f);
 							ib.siteCurveNumber(96);
 
+							ib.height(21f);
+
 							ib.ageTotal(70f);
 							ib.yearsAtBreastHeight(61.1f);
 							ib.yearsToBreastHeight(9.4f);
