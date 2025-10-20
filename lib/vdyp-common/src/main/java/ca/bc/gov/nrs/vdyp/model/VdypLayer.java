@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.model;
 
+import java.io.IOException;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -416,4 +417,34 @@ public class VdypLayer extends BaseVdypLayer<VdypSpecies, VdypSite> implements V
 			return super.copySpecies(toCopy, config);
 		}
 	}
+
+	@Override
+	public void dumpState(Appendable output, int indent) throws IOException {
+		super.dumpState(output, indent);
+		var indentString = "\t".repeat(indent + 1);
+		output.append(indentString).append("empiricalRelationshipParameterIndex = ")
+				.append(empiricalRelationshipParameterIndex.toString()).append("\n");
+		output.append(indentString).append("primarySp0 = ").append(primarySp0.toString()).append("\n");
+
+		output.append(indentString).append("baseAreaByUtilization = ").append(baseAreaByUtilization.toString())
+				.append("\n");
+		output.append(indentString).append("loreyHeightByUtilization = ").append(loreyHeightByUtilization.toString())
+				.append("\n");
+		output.append(indentString).append("quadraticMeanDiameterByUtilization = ")
+				.append(quadraticMeanDiameterByUtilization.toString()).append("\n");
+		output.append(indentString).append("treesPerHectareByUtilization = ")
+				.append(treesPerHectareByUtilization.toString()).append("\n");
+		output.append(indentString).append("wholeStemVolumeByUtilization = ")
+				.append(wholeStemVolumeByUtilization.toString()).append("\n");
+		output.append(indentString).append("closeUtilizationVolumeByUtilization = ")
+				.append(closeUtilizationVolumeByUtilization.toString()).append("\n");
+		output.append(indentString).append("closeUtilizationVolumeNetOfDecayByUtilization = ")
+				.append(closeUtilizationVolumeNetOfDecayByUtilization.toString()).append("\n");
+		output.append(indentString).append("closeUtilizationVolumeNetOfDecayAndWasteByUtilization = ")
+				.append(closeUtilizationVolumeNetOfDecayAndWasteByUtilization.toString()).append("\n");
+		output.append(indentString).append("closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization = ")
+				.append(closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization.toString()).append("\n");
+
+	}
+
 }

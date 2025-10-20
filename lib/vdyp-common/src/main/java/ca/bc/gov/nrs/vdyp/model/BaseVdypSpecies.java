@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.model;
 
+import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -342,6 +343,30 @@ public abstract class BaseVdypSpecies<I extends BaseVdypSite> {
 		}
 
 		protected abstract I buildSite(Consumer<IB> config);
+	}
+
+	public void dumpState(Appendable output, int indent) throws IOException {
+		var indentString = "\t".repeat(indent + 1);
+
+		output.append("\t".repeat(indent)).append(this.getClass().getSimpleName()).append(" (").append(this.toString())
+				.append("\n");
+
+		output.append(indentString).append("genus = ").append(genus.toString()).append("\n");
+		output.append(indentString).append("genusIndex = ").append(Integer.toString(this.genusIndex)).append("\n");
+
+		output.append(indentString).append("percentGenus = ").append(this.percentGenus.toString()).append("%\n");
+		output.append(indentString).append("fractionGenus = ").append(this.fractionGenus.toString()).append("\n");
+
+		output.append(indentString).append("sp64DistributionSet = ").append(this.sp64DistributionSet.toString())
+				.append("\n");
+
+		output.append(indentString).append("site:").append("\n");
+
+		if (site.isPresent()) {
+			site.get().dumpState(output, indent + 2);
+		} else {
+			output.append("\t".repeat(indent + 2)).append("None").append("\n");
+		}
 	}
 
 }

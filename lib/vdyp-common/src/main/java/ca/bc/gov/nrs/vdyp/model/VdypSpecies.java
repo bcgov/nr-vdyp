@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.model;
 
+import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.Collection;
 import java.util.Map;
@@ -485,5 +486,42 @@ public class VdypSpecies extends BaseVdypSpecies<VdypSite> implements VdypUtiliz
 			this.breakageGroup = Optional.of(i);
 			return this;
 		}
+	}
+
+	@Override
+	public void dumpState(Appendable output, int indent) throws IOException {
+		super.dumpState(output, indent);
+		var indentString = "\t".repeat(indent + 1);
+
+		output.append(indentString).append("volumeGroup = ").append(volumeGroup.toString()).append("\n");
+		output.append(indentString).append("decayGroup = ").append(decayGroup.toString()).append("\n");
+		output.append(indentString).append("breakageGroup = ").append(breakageGroup.toString()).append("\n");
+
+		output.append(indentString).append("baseAreaByUtilization = ").append(baseAreaByUtilization.toString())
+				.append("\n");
+		output.append(indentString).append("loreyHeightByUtilization = ").append(loreyHeightByUtilization.toString())
+				.append("\n");
+		output.append(indentString).append("quadraticMeanDiameterByUtilization = ")
+				.append(quadraticMeanDiameterByUtilization.toString()).append("\n");
+		output.append(indentString).append("treesPerHectareByUtilization = ")
+				.append(treesPerHectareByUtilization.toString()).append("\n");
+		output.append(indentString).append("wholeStemVolumeByUtilization = ")
+				.append(wholeStemVolumeByUtilization.toString()).append("\n");
+		output.append(indentString).append("closeUtilizationVolumeByUtilization = ")
+				.append(closeUtilizationVolumeByUtilization.toString()).append("\n");
+		output.append(indentString).append("closeUtilizationVolumeNetOfDecayByUtilization = ")
+				.append(closeUtilizationVolumeNetOfDecayByUtilization.toString()).append("\n");
+		output.append(indentString).append("closeUtilizationVolumeNetOfDecayAndWasteByUtilization = ")
+				.append(closeUtilizationVolumeNetOfDecayAndWasteByUtilization.toString()).append("\n");
+		output.append(indentString).append("closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization = ")
+				.append(closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization.toString()).append("\n");
+
+		output.append(indentString).append("cvVolume = ").append(cvVolume.toString()).append("\n");
+		output.append(indentString).append("cvBasalArea = ").append(cvBasalArea.toString()).append("\n");
+		output.append(indentString).append("cvQuadraticMeanDiameter = ").append(cvQuadraticMeanDiameter.toString())
+				.append("\n");
+		output.append(indentString).append("cvPrimaryLayerSmall = ").append(cvPrimaryLayerSmall.toString())
+				.append("\n");
+
 	}
 }

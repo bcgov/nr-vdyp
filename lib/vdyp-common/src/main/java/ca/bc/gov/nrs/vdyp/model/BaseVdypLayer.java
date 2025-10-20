@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.model;
 
+import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.Collection;
 import java.util.Collections;
@@ -261,5 +262,23 @@ public abstract class BaseVdypLayer<S extends BaseVdypSpecies<I>, I extends Base
 					layerType.map(Object::toString).orElse("N/A") //
 			);
 		}
+	}
+
+	public void dumpState(Appendable output, int indent) throws IOException {
+		var indentString = "\t".repeat(indent + 1);
+
+		output.append("\t".repeat(indent)).append(this.getClass().getSimpleName()).append(" (").append(this.toString())
+				.append("\n");
+
+		output.append(indentString).append("inventoryTypeGroup = ").append(inventoryTypeGroup.toString()).append("\n");
+
+		if (!speciesBySp0.isEmpty()) {
+			for (var layer : speciesBySp0.values()) {
+				layer.dumpState(output, indent + 2);
+			}
+		} else {
+			output.append("\t".repeat(indent + 2)).append("None").append("\n");
+		}
+
 	}
 }

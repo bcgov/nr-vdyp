@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.model;
 
+import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.Collection;
 import java.util.EnumMap;
@@ -302,6 +303,31 @@ public abstract class BaseVdypPolygon<L extends BaseVdypLayer<SP, SI>, PA, SP ex
 					"Polygon {0}", //
 					polygonIdentifier.map(Object::toString).orElse("N/A") //
 			);
+		}
+
+	}
+
+	void dumpState(Appendable output, int indent) throws IOException {
+		var indentString = "\t".repeat(indent + 1);
+
+		output.append("\t".repeat(indent)).append(this.getClass().getSimpleName()).append(" (").append(this.toString())
+				.append("\n");
+
+		output.append(indentString).append("percentAvailable = ").append(percentAvailable.toString()).append("\n");
+		output.append(indentString).append("biogeoclimaticZone = ").append(biogeoclimaticZone.toString()).append("\n");
+		output.append(indentString).append("forestInventoryZone = ").append(forestInventoryZone.toString())
+				.append("\n");
+		output.append(indentString).append("mode = ").append(mode.toString()).append("\n");
+		output.append(indentString).append("inventoryTypeGroup = ").append(inventoryTypeGroup.toString()).append("\n");
+
+		output.append(indentString).append("layers:").append("\n");
+
+		if (!layers.isEmpty()) {
+			for (var layer : layers.values()) {
+				layer.dumpState(output, indent + 2);
+			}
+		} else {
+			output.append("\t".repeat(indent + 2)).append("None").append("\n");
 		}
 
 	}
