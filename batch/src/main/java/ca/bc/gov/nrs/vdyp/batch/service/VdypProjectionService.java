@@ -116,9 +116,7 @@ public class VdypProjectionService {
 			}
 
 		} catch (NullPointerException npe) {
-			throw ProjectionNullPointerException.handleProjectionNullPointer(
-					npe, batchRecords, partitionName, logger
-			);
+			throw ProjectionNullPointerException.handleProjectionNullPointer(npe, batchRecords, partitionName, logger);
 		} catch (AbstractProjectionRequestException e) {
 			throw handleChunkProjectionFailure(batchRecords, partitionName, e);
 		} catch (IOException e) {

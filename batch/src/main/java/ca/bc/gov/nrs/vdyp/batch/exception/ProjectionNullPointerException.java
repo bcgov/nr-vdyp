@@ -9,8 +9,7 @@ import org.slf4j.Logger;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
 
 /**
- * Handling for NPE from ProjectionRunner.run()
- * - ex) when polygon object is null due to data quality issues
+ * Handling for NPE from ProjectionRunner.run() - ex) when polygon object is null due to data quality issues
  */
 public class ProjectionNullPointerException extends IOException {
 
@@ -20,8 +19,9 @@ public class ProjectionNullPointerException extends IOException {
 	private final int recordCount;
 	private final List<String> featureIds;
 
-	public ProjectionNullPointerException(String message, NullPointerException cause,
-			String partitionName, int recordCount, List<String> featureIds) {
+	public ProjectionNullPointerException(
+			String message, NullPointerException cause, String partitionName, int recordCount, List<String> featureIds
+	) {
 		super(message, cause);
 		this.partitionName = partitionName;
 		this.recordCount = recordCount;
@@ -41,18 +41,11 @@ public class ProjectionNullPointerException extends IOException {
 	}
 
 	public static ProjectionNullPointerException handleProjectionNullPointer(
-			NullPointerException npe,
-			List<BatchRecord> batchRecords,
-			String partitionName,
-			Logger logger
+			NullPointerException npe, List<BatchRecord> batchRecords, String partitionName, Logger logger
 	) {
-		List<String> featureIds = batchRecords.stream()
-			.map(BatchRecord::getFeatureId)
-			.toList();
+		List<String> featureIds = batchRecords.stream().map(BatchRecord::getFeatureId).toList();
 
-		String featureIdsPreview = featureIds.stream()
-			.limit(10)
-			.collect(Collectors.joining(", "));
+		String featureIdsPreview = featureIds.stream().limit(10).collect(Collectors.joining(", "));
 
 		if (featureIds.size() > 10) {
 			featureIdsPreview += String.format(" ... and %d more", featureIds.size() - 10);
@@ -60,13 +53,9 @@ public class ProjectionNullPointerException extends IOException {
 
 		String npeMessage = npe.getMessage() != null ? npe.getMessage() : "No message";
 		String contextualMessage = String.format(
-			"NullPointerException in projection " +
-			"Partition: %s, Records: %d, NPE message: %s. " +
-			"FEATURE_IDs in chunk: [%s]",
-			partitionName,
-			batchRecords.size(),
-			npeMessage,
-			featureIdsPreview
+				"NullPointerException in projection " + "Partition: %s, Records: %d, NPE message: %s. "
+						+ "FEATURE_IDs in chunk: [%s]",
+				partitionName, batchRecords.size(), npeMessage, featureIdsPreview
 		);
 
 		logger.error(contextualMessage);
@@ -74,11 +63,7 @@ public class ProjectionNullPointerException extends IOException {
 		logger.debug("All FEATURE_IDs in failed chunk ({}): {}", featureIds.size(), featureIds);
 
 		return new ProjectionNullPointerException(
-			contextualMessage,
-			npe,
-			partitionName,
-			batchRecords.size(),
-			featureIds
+				contextualMessage, npe, partitionName, batchRecords.size(), featureIds
 		);
 	}
 }

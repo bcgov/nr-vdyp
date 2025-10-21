@@ -143,8 +143,8 @@ public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord
 	}
 
 	/**
-	 * Initialize BufferedReaders for polygon and layer files. 
-	 * Pre-load all layer data once during initialization to avoid repeated file I/O.
+	 * Initialize BufferedReaders for polygon and layer files. Pre-load all layer data once during initialization to
+	 * avoid repeated file I/O.
 	 */
 	private void initializeReaders() throws IOException {
 		Path polygonFile = partitionDir.resolve(BatchConstants.Partition.INPUT_POLYGON_FILE_NAME);
@@ -240,8 +240,7 @@ public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord
 	}
 
 	/**
-	 * Load layers associated with FEATURE_IDs in current chunk. 
-	 * Lookup from pre-loaded memory map instead of file I/O.
+	 * Load layers associated with FEATURE_IDs in current chunk. Lookup from pre-loaded memory map instead of file I/O.
 	 */
 	private void loadLayersForCurrentChunk() {
 		if (currentChunkFeatureIds.isEmpty()) {
