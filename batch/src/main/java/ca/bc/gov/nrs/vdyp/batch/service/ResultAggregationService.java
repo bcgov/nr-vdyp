@@ -435,22 +435,45 @@ public class ResultAggregationService {
 				return line;
 			}
 
-			// Split the line by comma
-			String[] columns = line.split(",", -1);
-
-			if (columns.length < 6) {
-				// Not enough columns, return as-is
-				return line;
+			// Fast path: Extract only the columns we need using indexOf()
+			// CSV structure: "TABLE_NUM","FEATURE_ID","DISTRICT","MAP_ID","POLYGON_ID","LAYER_ID",...
+			int firstComma = line.indexOf(',');
+			if (firstComma == -1) {
+				return line; // No commas, return as-is
 			}
 
-			// Extract FEATURE_ID (column 1) and LAYER_ID (column 5) based on CSV structure
-			String featureId = columns.length > 1 ? columns[1].trim() : "";
-			String layerId = columns.length > 5 ? columns[5].trim() : "";
+			int secondComma = line.indexOf(',', firstComma + 1);
+			if (secondComma == -1) {
+				return line; // Not enough columns
+			}
+
+			// Extract FEATURE_ID (column 1) - between first and second comma
+			String featureId = line.substring(firstComma + 1, secondComma).trim();
 
 			if (featureId.isEmpty()) {
 				// No FEATURE_ID, skip this line
 				logger.warn("Skipping line with missing FEATURE_ID: {}", line);
 				return null;
+			}
+
+			// Extract LAYER_ID (column 5) - need to find 5th comma
+			int commaIndex = secondComma;
+			for (int i = 0; i < 3; i++) {
+				commaIndex = line.indexOf(',', commaIndex + 1);
+				if (commaIndex == -1) {
+					// Not enough columns for LAYER_ID
+					return line;
+				}
+			}
+
+			int sixthComma = line.indexOf(',', commaIndex + 1);
+			String layerId;
+			if (sixthComma == -1) {
+				// LAYER_ID is the last column
+				layerId = line.substring(commaIndex + 1).trim();
+			} else {
+				// LAYER_ID is between 5th and 6th comma
+				layerId = line.substring(commaIndex + 1, sixthComma).trim();
 			}
 
 			// Create unique key for polygon/layer combination
@@ -474,11 +497,7 @@ public class ResultAggregationService {
 				return assigned;
 			});
 
-			// Replace TABLE_NUM (first column) with the assigned number
-			columns[0] = String.valueOf(tableNum);
-
-			// Rejoin the columns
-			return String.join(",", columns);
+			return tableNum + line.substring(firstComma);
 		}
 
 		/**

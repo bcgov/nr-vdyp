@@ -251,8 +251,9 @@ public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord
 		for (String featureId : currentChunkFeatureIds) {
 			List<String> layers = allLayersByFeatureId.get(featureId);
 			if (layers != null && !layers.isEmpty()) {
-				// Create a new list to avoid sharing references
-				currentChunkLayers.put(featureId, new ArrayList<>(layers));
+				// Share reference directly (safe because allLayersByFeatureId is read-only
+				// after initialization and cleared only during close())
+				currentChunkLayers.put(featureId, layers);
 			}
 		}
 
