@@ -181,9 +181,7 @@ public class BatchMetricsCollector {
 					attemptNumber, errorType, errorMessage, successful, partitionName
 			);
 
-			synchronized (metrics.getRetryDetails()) {
-				metrics.getRetryDetails().add(retryDetail);
-			}
+			metrics.getRetryDetails().add(retryDetail);
 		} catch (BatchException e) {
 			throw e;
 		} catch (Exception e) {
@@ -223,9 +221,7 @@ public class BatchMetricsCollector {
 					recordId, recordData, errorType, errorMessage, partitionName, lineNumber
 			);
 
-			synchronized (metrics.getSkipDetails()) {
-				metrics.getSkipDetails().add(skipDetail);
-			}
+			metrics.getSkipDetails().add(skipDetail);
 		} catch (BatchException e) {
 			throw e;
 		} catch (Exception e) {
