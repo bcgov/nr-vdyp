@@ -94,11 +94,12 @@ class StreamingCsvPartitionerTest {
 				15725037,082G055,2222,P
 				""";
 
-		MockMultipartFile polygonFile = new MockMultipartFile("polygonFile", "polygon.csv", "text/csv", polygonCsv.getBytes());
+		MockMultipartFile polygonFile = new MockMultipartFile(
+				"polygonFile", "polygon.csv", "text/csv", polygonCsv.getBytes()
+		);
 		MockMultipartFile layerFile = new MockMultipartFile("layerFile", "layer.csv", "text/csv", layerCsv.getBytes());
 
-		int totalFeatureIds = streamingCsvPartitioner.partitionCsvFiles(
-				polygonFile, layerFile, 2, tempDir);
+		int totalFeatureIds = streamingCsvPartitioner.partitionCsvFiles(polygonFile, layerFile, 2, tempDir);
 
 		assertEquals(5, totalFeatureIds);
 
@@ -120,12 +121,14 @@ class StreamingCsvPartitionerTest {
 		// Verify layers follow the same partitioning
 		Path partition0Layer = tempDir.resolve("input-partition0").resolve("layers.csv");
 		String partition0LayerContent = Files.readString(partition0Layer);
-		long partition0LayerCount = partition0LayerContent.lines().filter(line -> !line.startsWith("FEATURE_ID")).count();
+		long partition0LayerCount = partition0LayerContent.lines().filter(line -> !line.startsWith("FEATURE_ID"))
+				.count();
 		assertEquals(3, partition0LayerCount, "Partition 0 should have 3 layer records");
 
 		Path partition1Layer = tempDir.resolve("input-partition1").resolve("layers.csv");
 		String partition1LayerContent = Files.readString(partition1Layer);
-		long partition1LayerCount = partition1LayerContent.lines().filter(line -> !line.startsWith("FEATURE_ID")).count();
+		long partition1LayerCount = partition1LayerContent.lines().filter(line -> !line.startsWith("FEATURE_ID"))
+				.count();
 		assertEquals(2, partition1LayerCount, "Partition 1 should have 2 layer records");
 	}
 
@@ -162,11 +165,12 @@ class StreamingCsvPartitionerTest {
 				15725219,082G055,7777,P
 				""";
 
-		MockMultipartFile polygonFile = new MockMultipartFile("polygonFile", "polygon.csv", "text/csv", polygonCsv.getBytes());
+		MockMultipartFile polygonFile = new MockMultipartFile(
+				"polygonFile", "polygon.csv", "text/csv", polygonCsv.getBytes()
+		);
 		MockMultipartFile layerFile = new MockMultipartFile("layerFile", "layer.csv", "text/csv", layerCsv.getBytes());
 
-		int totalFeatureIds = streamingCsvPartitioner.partitionCsvFiles(
-				polygonFile, layerFile, 3, tempDir);
+		int totalFeatureIds = streamingCsvPartitioner.partitionCsvFiles(polygonFile, layerFile, 3, tempDir);
 
 		assertEquals(10, totalFeatureIds);
 
@@ -248,11 +252,12 @@ class StreamingCsvPartitionerTest {
 				100011,082G055,8888,P
 				""";
 
-		MockMultipartFile polygonFile = new MockMultipartFile("polygonFile", "polygon.csv", "text/csv", polygonCsv.getBytes());
+		MockMultipartFile polygonFile = new MockMultipartFile(
+				"polygonFile", "polygon.csv", "text/csv", polygonCsv.getBytes()
+		);
 		MockMultipartFile layerFile = new MockMultipartFile("layerFile", "layer.csv", "text/csv", layerCsv.getBytes());
 
-		int totalFeatureIds = streamingCsvPartitioner.partitionCsvFiles(
-				polygonFile, layerFile, 3, tempDir);
+		int totalFeatureIds = streamingCsvPartitioner.partitionCsvFiles(polygonFile, layerFile, 3, tempDir);
 
 		assertEquals(11, totalFeatureIds);
 
@@ -328,11 +333,12 @@ class StreamingCsvPartitionerTest {
 				200015,082G055,1212,P
 				""";
 
-		MockMultipartFile polygonFile = new MockMultipartFile("polygonFile", "polygon.csv", "text/csv", polygonCsv.getBytes());
+		MockMultipartFile polygonFile = new MockMultipartFile(
+				"polygonFile", "polygon.csv", "text/csv", polygonCsv.getBytes()
+		);
 		MockMultipartFile layerFile = new MockMultipartFile("layerFile", "layer.csv", "text/csv", layerCsv.getBytes());
 
-		int totalFeatureIds = streamingCsvPartitioner.partitionCsvFiles(
-				polygonFile, layerFile, 4, tempDir);
+		int totalFeatureIds = streamingCsvPartitioner.partitionCsvFiles(polygonFile, layerFile, 4, tempDir);
 
 		assertEquals(15, totalFeatureIds);
 

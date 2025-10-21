@@ -1094,8 +1094,8 @@ class ResultAggregationServiceTest {
 				""";
 		Files.writeString(partition1.resolve("YieldTable.csv"), validYieldTable);
 
-		Path resultZip = resultAggregationService.aggregateResultsFromJobDir(JOB_EXECUTION_ID, tempDir.toString(),
-				JOB_TIMESTAMP);
+		Path resultZip = resultAggregationService
+				.aggregateResultsFromJobDir(JOB_EXECUTION_ID, tempDir.toString(), JOB_TIMESTAMP);
 
 		assertNotNull(resultZip);
 		assertTrue(Files.exists(resultZip));
@@ -1124,8 +1124,8 @@ class ResultAggregationServiceTest {
 		Files.writeString(partition0.resolve("YieldTable.csv"), "");
 		Files.writeString(partition1.resolve("YieldTable.csv"), "");
 
-		Path resultZip = resultAggregationService.aggregateResultsFromJobDir(JOB_EXECUTION_ID, tempDir.toString(),
-				JOB_TIMESTAMP);
+		Path resultZip = resultAggregationService
+				.aggregateResultsFromJobDir(JOB_EXECUTION_ID, tempDir.toString(), JOB_TIMESTAMP);
 
 		assertNotNull(resultZip);
 		assertTrue(Files.exists(resultZip));
@@ -1157,8 +1157,8 @@ class ResultAggregationServiceTest {
 				""";
 		Files.writeString(partition1.resolve("YieldTable.csv"), validYieldTable);
 
-		Path resultZip = resultAggregationService.aggregateResultsFromJobDir(JOB_EXECUTION_ID, tempDir.toString(),
-				JOB_TIMESTAMP);
+		Path resultZip = resultAggregationService
+				.aggregateResultsFromJobDir(JOB_EXECUTION_ID, tempDir.toString(), JOB_TIMESTAMP);
 
 		assertNotNull(resultZip);
 		assertTrue(Files.exists(resultZip));
@@ -1199,8 +1199,8 @@ class ResultAggregationServiceTest {
 				""";
 		Files.writeString(partition1.resolve("YieldTable.csv"), validYieldTable);
 
-		Path resultZip = resultAggregationService.aggregateResultsFromJobDir(JOB_EXECUTION_ID, tempDir.toString(),
-				JOB_TIMESTAMP);
+		Path resultZip = resultAggregationService
+				.aggregateResultsFromJobDir(JOB_EXECUTION_ID, tempDir.toString(), JOB_TIMESTAMP);
 
 		assertNotNull(resultZip);
 		assertTrue(Files.exists(resultZip));

@@ -227,9 +227,7 @@ class PartitionedBatchConfigurationTest {
 
 	@Test
 	void testVdypProjectionProcessor() {
-		BatchRetryPolicy retryPolicy = mock(BatchRetryPolicy.class);
-
-		VdypProjectionProcessor result = configuration.vdypProjectionProcessor(retryPolicy, metricsCollector);
+		VdypProjectionProcessor result = configuration.vdypProjectionProcessor(metricsCollector);
 
 		assertNotNull(result);
 	}
