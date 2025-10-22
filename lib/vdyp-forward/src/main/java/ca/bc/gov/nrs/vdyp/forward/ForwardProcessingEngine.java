@@ -3410,7 +3410,7 @@ public class ForwardProcessingEngine {
 			int primarySpeciesIndex = bank.speciesIndices[highestPercentageIndex];
 			int basalAreaGroup3 = defaultEquationGroups[primarySpeciesIndex];
 			if (Region.INTERIOR.equals(bank.getBecZone().getRegion())
-					&& exceptedSpeciesIndicies.contains(primarySpeciesIndex)) {
+					&& exceptedSpeciesIndicies.contains(basalAreaGroup3)) {
 				basalAreaGroup3 += 20;
 			}
 
