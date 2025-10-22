@@ -1840,11 +1840,11 @@ public class ForwardProcessingEngine {
 
 		int debugSetting6Value = fps.fcm.getDebugSettings().getValue(ForwardDebugSettings.Vars.DQ_GROWTH_MODEL_6);
 
-		var growthFaitDetails = fps.fcm.getQuadMeanDiameterGrowthFiatDetails().get(becZone.getRegion());
+		var growthFiatDetails = fps.fcm.getQuadMeanDiameterGrowthFiatDetails().get(becZone.getRegion());
 
 		Optional<Float> dqGrowthFiat = Optional.empty();
 		if (debugSetting6Value != 1) {
-			var convergenceCoefficient = growthFaitDetails.calculateCoefficient(pspYabhStart);
+			var convergenceCoefficient = growthFiatDetails.calculateCoefficient(pspYabhStart);
 
 			float adjust = -convergenceCoefficient * (dqStart - dqYieldStart);
 			dqGrowthFiat = Optional.of(dqYieldGrowth + adjust);
@@ -1872,12 +1872,12 @@ public class ForwardProcessingEngine {
 
 		case 2: {
 			float empiricalProportion = 1.0f;
-			if (pspYabhStart >= growthFaitDetails.getMixedCoefficient(1)) {
+			if (pspYabhStart >= growthFiatDetails.getMixedCoefficient(1)) {
 				empiricalProportion = 0.0f;
-			} else if (pspYabhStart > growthFaitDetails.getMixedCoefficient(0)) {
-				float t1 = pspYabhStart - growthFaitDetails.getMixedCoefficient(0);
-				float t2 = growthFaitDetails.getMixedCoefficient(1) - growthFaitDetails.getMixedCoefficient(0);
-				float t3 = growthFaitDetails.getMixedCoefficient(2);
+			} else if (pspYabhStart > growthFiatDetails.getMixedCoefficient(0)) {
+				float t1 = pspYabhStart - growthFiatDetails.getMixedCoefficient(0);
+				float t2 = growthFiatDetails.getMixedCoefficient(1) - growthFiatDetails.getMixedCoefficient(0);
+				float t3 = growthFiatDetails.getMixedCoefficient(2);
 				empiricalProportion = 1.0f - FloatMath.pow(t1 / t2, t3);
 			}
 			dqGrowth = empiricalProportion * dqGrowthEmpirical.orElseThrow()
