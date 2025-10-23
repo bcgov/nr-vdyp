@@ -7,8 +7,9 @@ import ca.bc.gov.nrs.vdyp.backend.data.models.FileMappingModel;
 
 public class FileMappingResourceAssembler {
 
+	ProjectionFileSetResourceAssembler pfsra;
 	public FileMappingResourceAssembler() {
-
+		pfsra = new ProjectionFileSetResourceAssembler();
 	}
 
 	public FileMappingModel toModel(FileMappingEntity entity) {
@@ -19,6 +20,10 @@ public class FileMappingResourceAssembler {
 		FileMappingModel model = new FileMappingModel();
 		model.setFileMappingGUID(entity.getFileMappingGUID() == null ? null : entity.getFileMappingGUID().toString());
 		model.setComsObjectGUID(entity.getComsObjectGUID() == null ? null : entity.getComsObjectGUID().toString());
+		model.setProjectionFileSetModel(
+				entity.getProjectionFileSet() == null ? null : pfsra.toEntity(entity.getProjectionFileSet())
+		);
+
 		return model;
 	}
 
@@ -32,6 +37,9 @@ public class FileMappingResourceAssembler {
 				model.getFileMappingGUID() == null ? null : UUID.fromString(model.getFileMappingGUID())
 		);
 		entity.setComsObjectGUID(model.getComsObjectGUID() == null ? null : UUID.fromString(model.getComsObjectGUID()));
+		entity.setProjectionFileSet(
+				model.getProjectionFileSetModel() == null ? null : pfsra.toModel(model.getProjectionFileSetModel())
+		);
 		return entity;
 	}
 }
