@@ -13,6 +13,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -30,6 +32,10 @@ public class FileMappingEntity extends PanacheEntityBase implements Auditable {
 	@UuidGenerator
 	@Column(nullable = false, updatable = false, length = 36)
 	private UUID fileMappingGUID;
+
+	@ManyToOne
+	@JoinColumn(referencedColumnName = "projection_file_set_guid", name = "projection_file_set_guid")
+	private ProjectionFileSetEntity projectionFileSet;
 
 	@NotNull
 	@Column(nullable = false, updatable = true, length = 36)
