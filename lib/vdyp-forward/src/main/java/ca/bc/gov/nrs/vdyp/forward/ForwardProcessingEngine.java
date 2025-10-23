@@ -1808,6 +1808,7 @@ public class ForwardProcessingEngine {
 
 		var dqYieldCoefficients = fps.fcm.getQuadMeanDiameterYieldCoefficients();
 		var decayBecZoneAlias = becZone.getDecayBec().getAlias();
+
 		Coefficients coefficientsWeightedBySpeciesAndDecayBec = Coefficients.empty(6, 0);
 		for (int i = 0; i < 6; i++) {
 			float sum = 0.0f;

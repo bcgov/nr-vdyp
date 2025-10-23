@@ -143,7 +143,7 @@ class ForwardProcessingEngineTest {
 						sb.volumeGroup(33);
 
 						sb.percentGenus(0.6f); // TODO Seems wrong should be 60f
-						//sb.percentGenus(60f);
+						// sb.percentGenus(60f);
 
 						sb.addSite(ib -> {
 							ib.siteIndex(18.33f);
@@ -190,7 +190,7 @@ class ForwardProcessingEngineTest {
 						sb.volumeGroup(46);
 
 						sb.percentGenus(0.4f); // TODO Seems wrong should be 40f
-						//sb.percentGenus(40f);
+						// sb.percentGenus(40f);
 
 						sb.sp64DistributionSet(new Sp64DistributionSet(4, List.of())); // TODO this seems wrong, may
 																						// need to fix parser
@@ -228,26 +228,32 @@ class ForwardProcessingEngineTest {
 
 			// FIXME, these are wrong, testing that we have replicated the bug
 			assertThat(
-					outputMap.get(1964).getLayers().get(LayerType.PRIMARY), hasProperty(
-							"treesPerHectareByUtilization", VdypMatchers.utilization(
-									7.94f / fraction, 797.00f / fraction, 266.44f / fraction,
-									230.44f / fraction, 159.06f / fraction, 141.06f / fraction
+					outputMap.get(1964).getLayers().get(LayerType.PRIMARY),
+					hasProperty(
+							"treesPerHectareByUtilization",
+							VdypMatchers.utilization(
+									7.94f / fraction, 797.00f / fraction, 266.44f / fraction, 230.44f / fraction,
+									159.06f / fraction, 141.06f / fraction
 							)
 					)
 			);
 			assertThat(
-					outputMap.get(1965).getLayers().get(LayerType.PRIMARY), hasProperty(
-							"treesPerHectareByUtilization", VdypMatchers.utilization(
-									5.25f / fraction, 792.77f / fraction, 259.98f / fraction,
-									227.69f / fraction, 159.95f / fraction, 145.15f / fraction
+					outputMap.get(1965).getLayers().get(LayerType.PRIMARY),
+					hasProperty(
+							"treesPerHectareByUtilization",
+							VdypMatchers.utilization(
+									5.25f / fraction, 792.77f / fraction, 259.98f / fraction, 227.69f / fraction,
+									159.95f / fraction, 145.15f / fraction
 							)
 					)
 			);
 			assertThat(
-					outputMap.get(2023).getLayers().get(LayerType.PRIMARY), hasProperty(
-							"treesPerHectareByUtilization", VdypMatchers.utilization(
-									0.2f / fraction, 541.28f / fraction, 72.51f / fraction,
-									70.72f / fraction, 96.53f / fraction, 301.52f / fraction
+					outputMap.get(2023).getLayers().get(LayerType.PRIMARY),
+					hasProperty(
+							"treesPerHectareByUtilization",
+							VdypMatchers.utilization(
+									0.2f / fraction, 541.28f / fraction, 72.51f / fraction, 70.72f / fraction,
+									96.53f / fraction, 301.52f / fraction
 							)
 					)
 			);
