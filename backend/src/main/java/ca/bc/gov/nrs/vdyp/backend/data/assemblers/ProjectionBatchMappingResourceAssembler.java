@@ -10,14 +10,17 @@ public class ProjectionBatchMappingResourceAssembler {
 
 	}
 
-	public ProjectionBatchMappingEntity tpEntity(ProjectionBatchMappingModel model) {
+	public ProjectionBatchMappingEntity toEntity(ProjectionBatchMappingModel model) {
 		if (model == null) {
 			return null;
 		}
 
 		ProjectionBatchMappingEntity entity = new ProjectionBatchMappingEntity();
-		entity.setProjectionBatchMappingGUID(UUID.fromString(model.getProjectionBatchMappingGUID()));
-		entity.setBatchJobGUID(UUID.fromString(model.getBatchJobGUID()));
+		entity.setProjectionBatchMappingGUID(
+				model.getProjectionBatchMappingGUID() == null ? null
+						: UUID.fromString(model.getProjectionBatchMappingGUID())
+		);
+		entity.setBatchJobGUID(model.getBatchJobGUID() == null ? null : UUID.fromString(model.getBatchJobGUID()));
 		return entity;
 	}
 
@@ -27,8 +30,11 @@ public class ProjectionBatchMappingResourceAssembler {
 		}
 
 		ProjectionBatchMappingModel model = new ProjectionBatchMappingModel();
-		model.setProjectionBatchMappingGUID(entity.getProjectionBatchMappingGUID().toString());
-		model.setBatchJobGUID(entity.getBatchJobGUID().toString());
+		model.setProjectionBatchMappingGUID(
+				entity.getProjectionBatchMappingGUID() == null ? null
+						: entity.getProjectionBatchMappingGUID().toString()
+		);
+		model.setBatchJobGUID(entity.getBatchJobGUID() == null ? null : entity.getBatchJobGUID().toString());
 		return model;
 	}
 }

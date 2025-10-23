@@ -17,8 +17,8 @@ public class FileMappingResourceAssembler {
 		}
 
 		FileMappingModel model = new FileMappingModel();
-		model.setFileMappingGUID(entity.getFileMappingGUID().toString());
-		model.setComsObjectGUID(entity.getComsObjectGUID().toString());
+		model.setFileMappingGUID(entity.getFileMappingGUID() == null ? null : entity.getFileMappingGUID().toString());
+		model.setComsObjectGUID(entity.getComsObjectGUID() == null ? null : entity.getComsObjectGUID().toString());
 		return model;
 	}
 
@@ -28,8 +28,10 @@ public class FileMappingResourceAssembler {
 		}
 
 		FileMappingEntity entity = new FileMappingEntity();
-		entity.setFileMappingGUID(UUID.fromString(model.getFileMappingGUID()));
-		entity.setComsObjectGUID(UUID.fromString(model.getComsObjectGUID()));
+		entity.setFileMappingGUID(
+				model.getFileMappingGUID() == null ? null : UUID.fromString(model.getFileMappingGUID())
+		);
+		entity.setComsObjectGUID(model.getComsObjectGUID() == null ? null : UUID.fromString(model.getComsObjectGUID()));
 		return entity;
 	}
 }
