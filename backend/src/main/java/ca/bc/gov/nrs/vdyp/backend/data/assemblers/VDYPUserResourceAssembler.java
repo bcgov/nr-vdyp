@@ -19,8 +19,8 @@ public class VDYPUserResourceAssembler {
 		}
 
 		VDYPUserEntity entity = new VDYPUserEntity();
-		entity.setVdypUserGUID(UUID.fromString(model.getVdypUserGUID()));
-		entity.setOidcGUID(UUID.fromString(model.getOidcGUID()));
+		entity.setVdypUserGUID(model.getVdypUserGUID() == null ? null : UUID.fromString(model.getVdypUserGUID()));
+		entity.setOidcGUID(model.getOidcGUID() == null ? null : UUID.fromString(model.getOidcGUID()));
 		entity.setUserTypeCode(utra.toEntity(model.getUserTypeCode()));
 		entity.setFirstName(model.getFirstName());
 		entity.setLastName(model.getLastName());
@@ -33,8 +33,8 @@ public class VDYPUserResourceAssembler {
 			return null;
 		}
 		VDYPUserModel model = new VDYPUserModel();
-		model.setVdypUserGUID(entity.getVdypUserGUID().toString());
-		model.setOidcGUID(entity.getOidcGUID().toString());
+		model.setVdypUserGUID(entity.getVdypUserGUID() == null ? null : entity.getVdypUserGUID().toString());
+		model.setOidcGUID(entity.getOidcGUID() == null ? null : entity.getOidcGUID().toString());
 		model.setUserTypeCode(utra.toModel(entity.getUserTypeCode()));
 		model.setFirstName(entity.getFirstName());
 		model.setLastName(entity.getLastName());

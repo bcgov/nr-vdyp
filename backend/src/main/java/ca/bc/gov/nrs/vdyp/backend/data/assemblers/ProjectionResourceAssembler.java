@@ -7,13 +7,13 @@ import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionModel;
 
 public class ProjectionResourceAssembler {
 
-	FileMappingResourceAssembler fmra;
+	ProjectionFileSetResourceAssembler pfsra;
 	CalculationEngineResourceAssembler cera;
 	VDYPUserResourceAssembler vura;
 	ProjectionStatusCodeResourceAssembler pscra;
 
 	public ProjectionResourceAssembler() {
-		fmra = new FileMappingResourceAssembler();
+		pfsra = new ProjectionFileSetResourceAssembler();
 		cera = new CalculationEngineResourceAssembler();
 		vura = new VDYPUserResourceAssembler();
 		pscra = new ProjectionStatusCodeResourceAssembler();
@@ -27,9 +27,9 @@ public class ProjectionResourceAssembler {
 		ProjectionEntity entity = new ProjectionEntity();
 		entity.setProjectionGUID(UUID.fromString(model.getProjectionGUID()));
 		entity.setProjectionParameters(model.getProjectionParameters());
-		entity.setPolygonFileMapping(fmra.toEntity(model.getPolygonFileMapping()));
-		entity.setLayerFileMapping(fmra.toEntity(model.getLayerFileMapping()));
-		entity.setResultFileMapping(fmra.toEntity(model.getResultFileMapping()));
+		entity.setPolygonFileSet(pfsra.toEntity(model.getPolygonFileSet()));
+		entity.setLayerFileSet(pfsra.toEntity(model.getLayerFileSet()));
+		entity.setResultFileSet(pfsra.toEntity(model.getResultFileSet()));
 		entity.setCalculationEngineCode(cera.toEntity(model.getCalculationEngineCode()));
 		entity.setStartDate(model.getStartDate());
 		entity.setEndDate(model.getEndDate());
@@ -45,9 +45,9 @@ public class ProjectionResourceAssembler {
 		ProjectionModel model = new ProjectionModel();
 		model.setProjectionGUID(entity.getProjectionGUID().toString());
 		model.setProjectionParameters(entity.getProjectionParameters());
-		model.setPolygonFileMapping(fmra.toModel(entity.getPolygonFileMapping()));
-		model.setLayerFileMapping(fmra.toModel(entity.getLayerFileMapping()));
-		model.setResultFileMapping(fmra.toModel(entity.getResultFileMapping()));
+		model.setPolygonFileSet(pfsra.toModel(entity.getPolygonFileSet()));
+		model.setLayerFileSet(pfsra.toModel(entity.getLayerFileSet()));
+		model.setResultFileSet(pfsra.toModel(entity.getResultFileSet()));
 		model.setCalculationEngineCode(cera.toModel(entity.getCalculationEngineCode()));
 		model.setStartDate(entity.getStartDate());
 		model.setEndDate(entity.getEndDate());

@@ -39,16 +39,16 @@ public class ProjectionEntity extends PanacheEntityBase implements Auditable {
 	private VDYPUserEntity ownerUser;
 
 	@ManyToOne(fetch = FetchType.EAGER)
-	@JoinColumn(name = "POLYGON_file_mapping_guid", referencedColumnName = "file_mapping_guid")
-	private FileMappingEntity polygonFileMapping;
+	@JoinColumn(name = "POLYGON_projection_file_set_guid", referencedColumnName = "projection_file_set_guid")
+	private ProjectionFileSetEntity polygonFileSet;
 
 	@ManyToOne(fetch = FetchType.EAGER)
-	@JoinColumn(name = "LAYER_file_mapping_guid", referencedColumnName = "file_mapping_guid")
-	private FileMappingEntity layerFileMapping;
+	@JoinColumn(name = "LAYER_projection_file_set_guid", referencedColumnName = "projection_file_set_guid")
+	private ProjectionFileSetEntity layerFileSet;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "RESULT_file_mapping_guid", referencedColumnName = "file_mapping_guid")
-	private FileMappingEntity resultFileMapping;
+	@JoinColumn(name = "RESULT_projection_file_set_guid", referencedColumnName = "projection_file_set_guid")
+	private ProjectionFileSetEntity resultFileSet;
 
 	@Column(length = 4000)
 	private String projectionParameters;

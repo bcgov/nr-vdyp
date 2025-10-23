@@ -13,7 +13,7 @@ public class ProjectionFileSetResourceAssembler {
 		fstcra = new FileSetTypeCodeResourceAssembler();
 	}
 
-	public ProjectionFileSetEntity toModel(ProjectionFileSetModel model) {
+	public ProjectionFileSetEntity toEntity(ProjectionFileSetModel model) {
 		if (model == null) {
 			return null;
 		}
@@ -24,7 +24,7 @@ public class ProjectionFileSetResourceAssembler {
 		return entity;
 	}
 
-	public ProjectionFileSetModel toEntity(ProjectionFileSetEntity entity) {
+	public ProjectionFileSetModel toModel(ProjectionFileSetEntity entity) {
 		if (entity == null) {
 			return null;
 		}

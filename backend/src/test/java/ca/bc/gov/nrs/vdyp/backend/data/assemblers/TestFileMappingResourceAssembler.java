@@ -11,7 +11,10 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import ca.bc.gov.nrs.vdyp.backend.data.entities.FileMappingEntity;
+import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionFileSetEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.FileMappingModel;
+import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionFileSetModel;
+import lombok.Builder;
 
 public class TestFileMappingResourceAssembler {
 	@Test
@@ -22,16 +25,18 @@ public class TestFileMappingResourceAssembler {
 
 	static Stream<Arguments> modelEntityData() {
 		return Stream.of(
-				Arguments.of(UUID.randomUUID(), UUID.randomUUID()), Arguments.of(null, UUID.randomUUID()),
-				Arguments.of(UUID.randomUUID(), null)
+				Arguments.of(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID()),
+				Arguments.of(null, UUID.randomUUID(), UUID.randomUUID()),
+				Arguments.of(UUID.randomUUID(), null, UUID.randomUUID()),
+				Arguments.of(UUID.randomUUID(), UUID.randomUUID(), null)
 		);
 	}
 
 	@ParameterizedTest
 	@MethodSource("modelEntityData")
-	void testEntityToModel(UUID fileMapping, UUID comsObjectId) {
-		FileMappingTestData data = FileMappingTestData.builder().withFileMappingGuid(fileMapping)
-				.withCOMSGuid(comsObjectId);
+	void testEntityToModel(UUID fileMapping, UUID comsObjectId, UUID projectionFileSetUUID) {
+		FileMappingTestData data = FileMappingTestData.builder().fileMappingUUID(fileMapping)
+				.comsObjectUUID(comsObjectId).projectionFileSetUUID(projectionFileSetUUID).build();
 
 		FileMappingModel model = data.buildModel();
 		FileMappingEntity entity = data.buildEntity();
@@ -43,9 +48,9 @@ public class TestFileMappingResourceAssembler {
 
 	@ParameterizedTest
 	@MethodSource("modelEntityData")
-	void testModelToEntity(UUID fileMapping, UUID comsObjectId) {
-		FileMappingTestData data = FileMappingTestData.builder().withFileMappingGuid(fileMapping)
-				.withCOMSGuid(comsObjectId);
+	void testModelToEntity(UUID fileMapping, UUID comsObjectId, UUID projectionFileSetUUID) {
+		FileMappingTestData data = FileMappingTestData.builder().fileMappingUUID(fileMapping)
+				.comsObjectUUID(comsObjectId).projectionFileSetUUID(projectionFileSetUUID).build();
 
 		FileMappingModel model = data.buildModel();
 		FileMappingEntity entity = data.buildEntity();
@@ -55,28 +60,21 @@ public class TestFileMappingResourceAssembler {
 
 	}
 
+	@Builder
 	private static final class FileMappingTestData {
 		private UUID fileMappingUUID = null;
 		private UUID comsObjectUUID = null;
-
-		public static FileMappingTestData builder() {
-			return new FileMappingTestData();
-		}
-
-		public FileMappingTestData withFileMappingGuid(UUID fileMappingUUID) {
-			this.fileMappingUUID = fileMappingUUID;
-			return this;
-		}
-
-		public FileMappingTestData withCOMSGuid(UUID comsObjectUUID) {
-			this.comsObjectUUID = comsObjectUUID;
-			return this;
-		}
+		private UUID projectionFileSetUUID = null;
 
 		public FileMappingEntity buildEntity() {
 			FileMappingEntity data = new FileMappingEntity();
 			data.setFileMappingGUID(fileMappingUUID);
 			data.setComsObjectGUID(comsObjectUUID);
+			if (projectionFileSetUUID != null) {
+				var projectionFileSet = new ProjectionFileSetEntity();
+				projectionFileSet.setProjectionFileSetGUID(projectionFileSetUUID);
+				data.setProjectionFileSet(projectionFileSet);
+			}
 			return data;
 		}
 
@@ -84,6 +82,11 @@ public class TestFileMappingResourceAssembler {
 			FileMappingModel data = new FileMappingModel();
 			data.setFileMappingGUID(fileMappingUUID == null ? null : fileMappingUUID.toString());
 			data.setComsObjectGUID(comsObjectUUID == null ? null : comsObjectUUID.toString());
+			if (projectionFileSetUUID != null) {
+				var projectionFileSet = new ProjectionFileSetModel();
+				projectionFileSet.setProjectionFileSetGUID(projectionFileSetUUID.toString());
+				data.setProjectionFileSet(projectionFileSet);
+			}
 			return data;
 		}
 	}

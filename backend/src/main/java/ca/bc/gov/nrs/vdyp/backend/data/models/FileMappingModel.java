@@ -5,6 +5,6 @@ import lombok.Data;
 @Data
 public class FileMappingModel {
 	private String fileMappingGUID;
-	private ProjectionFileSetModel projectionFileSetModel;
+	private ProjectionFileSetModel projectionFileSet;
 	private String comsObjectGUID;
 }

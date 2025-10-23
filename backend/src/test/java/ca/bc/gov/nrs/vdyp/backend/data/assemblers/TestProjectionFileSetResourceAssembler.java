@@ -12,6 +12,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionFileSetEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionFileSetModel;
+import lombok.Builder;
 
 public class TestProjectionFileSetResourceAssembler {
 
@@ -23,16 +24,15 @@ public class TestProjectionFileSetResourceAssembler {
 
 	static Stream<Arguments> modelEntityData() {
 		return Stream.of(
-				Arguments.of(UUID.randomUUID(), UUID.randomUUID()), Arguments.of(null, UUID.randomUUID()),
-				Arguments.of(UUID.randomUUID(), null)
+				Arguments.of(UUID.randomUUID(), "Test File Set Name")
 		);
 	}
 
 	@ParameterizedTest
 	@MethodSource("modelEntityData")
-	void testEntityToModel(UUID fileMapping, UUID batchJobId) {
-		TestProjectionFileSetResourceAssembler.ProjectionFileSetTestData data = TestProjectionFileSetResourceAssembler.ProjectionFileSetTestData
-				.builder().withProjectionFileSetGuid(fileMapping).withCOMSGuid(batchJobId);
+	void testEntityToModel(UUID fileMapping, String fileSetName) {
+		ProjectionFileSetTestData data = ProjectionFileSetTestData.builder().fileMappingUUID(fileMapping)
+				.fileSetName(fileSetName).build();
 
 		ProjectionFileSetModel model = data.buildModel();
 		ProjectionFileSetEntity entity = data.buildEntity();
@@ -44,9 +44,9 @@ public class TestProjectionFileSetResourceAssembler {
 
 	@ParameterizedTest
 	@MethodSource("modelEntityData")
-	void testModelToEntity(UUID fileMapping, UUID batchJobId) {
-		TestProjectionFileSetResourceAssembler.ProjectionFileSetTestData data = TestProjectionFileSetResourceAssembler.ProjectionFileSetTestData
-				.builder().withProjectionFileSetGuid(fileMapping).withCOMSGuid(batchJobId);
+	void testModelToEntity(UUID fileMapping, String fileSetName) {
+		ProjectionFileSetTestData data = ProjectionFileSetTestData.builder().fileMappingUUID(fileMapping)
+				.fileSetName(fileSetName).build();
 
 		ProjectionFileSetModel model = data.buildModel();
 		ProjectionFileSetEntity entity = data.buildEntity();
@@ -56,19 +56,10 @@ public class TestProjectionFileSetResourceAssembler {
 
 	}
 
+	@Builder
 	private static final class ProjectionFileSetTestData {
 		private UUID fileMappingUUID = null;
 		private String fileSetName = null;
-
-		public static TestProjectionFileSetResourceAssembler.ProjectionFileSetTestData builder() {
-			return new TestProjectionFileSetResourceAssembler.ProjectionFileSetTestData();
-		}
-
-		public TestProjectionFileSetResourceAssembler.ProjectionFileSetTestData
-				withProjectionFileSetGuid(UUID fileMappingUUID) {
-			this.fileMappingUUID = fileMappingUUID;
-			return this;
-		}
 
 		public ProjectionFileSetEntity buildEntity() {
 			ProjectionFileSetEntity data = new ProjectionFileSetEntity();

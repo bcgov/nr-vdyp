@@ -8,9 +8,9 @@ import lombok.Data;
 public class ProjectionModel {
 	private String projectionGUID;
 	private VDYPUserModel ownerUser;
-	private FileMappingModel polygonFileMapping;
-	private FileMappingModel layerFileMapping;
-	private FileMappingModel resultFileMapping;
+	private ProjectionFileSetModel polygonFileSet;
+	private ProjectionFileSetModel layerFileSet;
+	private ProjectionFileSetModel resultFileSet;
 	private String projectionParameters;
 	private OffsetDateTime startDate;
 	private OffsetDateTime endDate;

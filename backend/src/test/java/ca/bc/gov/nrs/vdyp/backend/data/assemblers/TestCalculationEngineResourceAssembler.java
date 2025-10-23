@@ -11,6 +11,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import ca.bc.gov.nrs.vdyp.backend.data.entities.CalculationEngineCodeEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.CalculationEngineCodeModel;
+import lombok.Builder;
 
 public class TestCalculationEngineResourceAssembler {
 	@Test
@@ -30,8 +31,8 @@ public class TestCalculationEngineResourceAssembler {
 	@ParameterizedTest
 	@MethodSource("modelEntityData")
 	void testEntityToModel(String code, String description, Integer displayOrder) {
-		CalculationEngineTestData data = CalculationEngineTestData.builder().withCode(code).withDescription(description)
-				.withDisplayOrder(displayOrder);
+		CalculationEngineTestData data = CalculationEngineTestData.builder().code(code).description(description)
+				.displayOrder(displayOrder).build();
 
 		CalculationEngineCodeModel model = data.buildModel();
 		CalculationEngineCodeEntity entity = data.buildEntity();
@@ -44,8 +45,8 @@ public class TestCalculationEngineResourceAssembler {
 	@ParameterizedTest
 	@MethodSource("modelEntityData")
 	void testModelToEntity(String code, String description, Integer displayOrder) {
-		CalculationEngineTestData data = CalculationEngineTestData.builder().withCode(code).withDescription(description)
-				.withDisplayOrder(displayOrder);
+		CalculationEngineTestData data = CalculationEngineTestData.builder().code(code).description(description)
+				.displayOrder(displayOrder).build();
 
 		CalculationEngineCodeModel model = data.buildModel();
 		CalculationEngineCodeEntity entity = data.buildEntity();
@@ -55,29 +56,11 @@ public class TestCalculationEngineResourceAssembler {
 
 	}
 
+	@Builder
 	private static final class CalculationEngineTestData {
 		private String code = null;
 		private String description;
 		private Integer displayOrder;
-
-		public static CalculationEngineTestData builder() {
-			return new CalculationEngineTestData();
-		}
-
-		public CalculationEngineTestData withCode(String code) {
-			this.code = code;
-			return this;
-		}
-
-		public CalculationEngineTestData withDescription(String description) {
-			this.description = description;
-			return this;
-		}
-
-		public CalculationEngineTestData withDisplayOrder(Integer displayOrder) {
-			this.displayOrder = displayOrder;
-			return this;
-		}
 
 		public CalculationEngineCodeEntity buildEntity() {
 			CalculationEngineCodeEntity data = new CalculationEngineCodeEntity();
