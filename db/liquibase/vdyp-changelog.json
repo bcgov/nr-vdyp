@@ -37,7 +37,7 @@
             "sqlFile": {
               "dbms": "postgresql",
               "endDelimiter": ";",
-              "path": "scripts/01_00_00/00/ddl/tables/app-vdyp.file_mapping.sql",
+              "path": "scripts/01_00_00/00/ddl/tables/app-vdyp.projection_file_set.sql",
               "relativeToChangelogFile": true
             }
           },
@@ -45,7 +45,7 @@
             "sqlFile": {
               "dbms": "postgresql",
               "endDelimiter": ";",
-              "path": "scripts/01_00_00/00/ddl/tables/app-vdyp.projection_file_set.sql",
+              "path": "scripts/01_00_00/00/ddl/tables/app-vdyp.file_mapping.sql",
               "relativeToChangelogFile": true
             }
           },
