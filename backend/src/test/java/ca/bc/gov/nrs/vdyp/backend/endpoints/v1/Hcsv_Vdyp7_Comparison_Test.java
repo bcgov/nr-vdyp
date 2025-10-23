@@ -40,6 +40,7 @@ import ca.bc.gov.nrs.vdyp.ecore.utils.FileHelper;
 import ca.bc.gov.nrs.vdyp.ecore.utils.ParameterNames;
 import ca.bc.gov.nrs.vdyp.integration_tests.MainTest;
 import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
+import ca.bc.gov.nrs.vdyp.io.parse.value.ValueParser;
 import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.RestAssured;
@@ -226,7 +227,7 @@ class Hcsv_Vdyp7_Comparison_Test {
 	}
 
 	@Test
-	void test604() throws IOException, ResourceParseException {
+	void test812() throws IOException, ResourceParseException {
 
 		logger.info("Starting test604");
 
@@ -275,7 +276,20 @@ class Hcsv_Vdyp7_Comparison_Test {
 					(Matcher) hasSpecificEntry(
 							"1816115",
 							hasSpecificEntry(
-									"1", hasSpecificEntry("2103", hasSpecificEntry("PRJ_DIAMETER", closeTo(33.32)))
+									"1", hasSpecificEntry(
+											"2103", Matchers.allOf(
+													hasSpecificEntry(
+															"PRJ_DIAMETER", VdypMatchers.parseAs(
+																	closeTo(33.32f, 0.02f), ValueParser.FLOAT
+															)
+													),
+													hasSpecificEntry(
+															"PRJ_TPH", VdypMatchers.parseAs(
+																	closeTo(397.13f, 0.02f), ValueParser.FLOAT
+															)
+													)
+											)
+									)
 							)
 					)
 			);
