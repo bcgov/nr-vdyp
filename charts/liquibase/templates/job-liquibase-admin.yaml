@@ -62,6 +62,7 @@ spec:
               
               echo "Running Liquibase {{ .Values.liquibase.command }}..."
               liquibase \
+                --changelog-file=postgres-changelog.json \
                 --log-level={{ .Values.liquibase.logLevel }} \
                 --url="${ENV_DB_URI}" \
                 {{- range .Values.liquibase.extraArgs }}

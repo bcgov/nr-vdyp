@@ -67,6 +67,7 @@ spec:
               
               echo "Running Liquibase {{ .Values.liquibase.command }}..."
               liquibase \
+                --changelog-file=vdyp-changelog.json \
                 --log-level={{ .Values.liquibase.logLevel }} \
                 --url="${ENV_DB_URI}&currentSchema=%22app-vdyp%22" \
                 {{- range .Values.liquibase.extraArgs }}
