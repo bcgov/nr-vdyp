@@ -7,11 +7,11 @@ image:
 crunchy:
   # PGO creates a Secret named like: <cluster>-pguser-<dbname>
   pguserSecretName: crunchy-postgres-#{ENV}#-pguser-#{VDYP_ADMIN_USER}#
+  adminSecretName: crunchy-postgres-#{ENV}#-pguser-#{POSTGRES_ADMIN_USER}#
   # Point at primary service for DDL. If you must use PgBouncer, set it here and ensure session pooling.
   host: crunchy-postgres-#{ENV}#-primary.default.svc.cluster.local
   port: 5432
   database: #VDYP_DB_NAME#
-  proxyUserPassword: #{POSTGRESQL_VDYP_PROXY_PASSWORD}#
 
 liquibase:
   defaultSchema: "#{VDYP_ADMIN_USER}#"   # quote in changelog when needed
