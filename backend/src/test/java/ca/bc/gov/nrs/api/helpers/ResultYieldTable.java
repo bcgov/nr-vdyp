@@ -72,7 +72,7 @@ public class ResultYieldTable extends HashMap<String, Map<String, Map<String, Ma
 
 	static <T> void assertKeysetEquals(Set<T> expected, Set<T> actual, Predicate<T> ignore, String message) {
 		var expectedFiltered = expected.stream().filter(x -> !ignore.test(x)).collect(Collectors.toSet());
-		var actualFiltered = expected.stream().filter(x -> !ignore.test(x)).collect(Collectors.toSet());
+		var actualFiltered = actual.stream().filter(x -> !ignore.test(x)).collect(Collectors.toSet());
 		assertEquals(expectedFiltered, actualFiltered, message);
 	}
 
