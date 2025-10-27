@@ -1,7 +1,7 @@
 image:
   repository: ghcr.io/bcgov/vdyp-liquibase
   tag: latest
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
 
 # Where your Crunchy cluster is
 crunchy:
