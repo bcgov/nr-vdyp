@@ -102,7 +102,7 @@ spec:
     - name: {{ .Values.vdyp_db.user }}
       databases:
         - {{ .Values.vdyp_db.name }}
-    - name: {{ .Values.vdyp_proxy_db.user }}
+    - name: {{ .Values.vdyp_db.proxy_user }}
 
   backups:
     pgbackrest:
