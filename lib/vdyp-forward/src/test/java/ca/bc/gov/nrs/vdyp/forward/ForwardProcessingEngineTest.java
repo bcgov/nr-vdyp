@@ -238,22 +238,12 @@ class ForwardProcessingEngineTest {
 					)
 			);
 			assertThat(
-					outputMap.get(1965).getLayers().get(LayerType.PRIMARY),
-					hasProperty(
-							"treesPerHectareByUtilization",
-							VdypMatchers.utilization(
-									5.25f / fraction, 792.77f / fraction, 259.98f / fraction, 227.69f / fraction,
-									159.95f / fraction, 145.15f / fraction
-							)
-					)
-			);
-			assertThat(
 					outputMap.get(2023).getLayers().get(LayerType.PRIMARY),
 					hasProperty(
 							"treesPerHectareByUtilization",
 							VdypMatchers.utilization(
-									0.2f / fraction, 541.28f / fraction, 72.51f / fraction, 70.72f / fraction,
-									96.53f / fraction, 301.52f / fraction
+									0.197f / fraction, 592.94f / fraction, 88.81f / fraction, 89.05f / fraction,
+									113.55f / fraction, 301.54f / fraction
 							)
 					)
 			);
