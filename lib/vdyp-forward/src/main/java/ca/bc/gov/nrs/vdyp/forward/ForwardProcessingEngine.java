@@ -281,6 +281,7 @@ public class ForwardProcessingEngine {
 		if (lastStepInclusive.gt(ExecutionStep.SET_COMPATIBILITY_VARIABLES)) {
 			int startingYear = fps.getCurrentStartingYear();
 
+			@SuppressWarnings("unused")
 			int iyrcur = startingYear; // represents the value of the current year as it would be in VDYP 7 to aid in
 										// parallel debugging.
 
@@ -353,6 +354,7 @@ public class ForwardProcessingEngine {
 
 		assert lastStepInclusive.ge(ExecutionStep.GROW_1_LAYER_DHDELTA);
 
+		@SuppressWarnings("unused")
 		int iyrcur = currentYear - 1; // represents the value of the current year as it would be in VDYP 7 to aid in
 										// parallel debugging. For most of this method it will be 1 less than the actual
 										// current year.
