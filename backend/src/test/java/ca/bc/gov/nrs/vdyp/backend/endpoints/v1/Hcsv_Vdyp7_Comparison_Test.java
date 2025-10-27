@@ -276,17 +276,19 @@ class Hcsv_Vdyp7_Comparison_Test {
 					(Matcher) hasSpecificEntry(
 							"1816115",
 							hasSpecificEntry(
-									"1", hasSpecificEntry(
-											"2103", Matchers.allOf(
+									"1",
+									hasSpecificEntry(
+											"2103",
+											Matchers.allOf(
 													hasSpecificEntry(
-															"PRJ_DIAMETER", VdypMatchers.parseAs(
-																	closeTo(33.32f, 0.02f), ValueParser.FLOAT
-															)
+															"PRJ_DIAMETER",
+															VdypMatchers
+																	.parseAs(closeTo(33.32f, 0.02f), ValueParser.FLOAT)
 													),
 													hasSpecificEntry(
-															"PRJ_TPH", VdypMatchers.parseAs(
-																	closeTo(397.13f, 0.02f), ValueParser.FLOAT
-															)
+															"PRJ_TPH",
+															VdypMatchers
+																	.parseAs(closeTo(397.13f, 0.02f), ValueParser.FLOAT)
 													)
 											)
 									)
