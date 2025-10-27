@@ -55,28 +55,55 @@ class DumpableTest {
 
 		Dumpable.writeHeader(out, 0, TestDumpable.class, "This is a Test");
 
-		assertThat(out.toString(), equalTo("TestDumpable (This is a Test)\n"));
+		assertThat(out.toString(), equalTo("""
+				TestDumpable (This is a Test)
+				"""));
 
 		out = new StringBuilder();
 
 		Dumpable.writeHeader(out, 1, TestDumpable.class, "This is a Test");
 
-		assertThat(out.toString(), equalTo("  TestDumpable (This is a Test)\n"));
+		assertThat(out.toString(), equalTo("""
+				  TestDumpable (This is a Test)
+				"""));
 	}
 
 	@Test
-	void testWriteProperty() throws IOException {
+	void testWritePropertyString() throws IOException {
 		Appendable out = new StringBuilder();
 
 		Dumpable.writeProperty(out, 0, "testProperty", "This is a Test");
 
-		assertThat(out.toString(), equalTo("testProperty = This is a Test\n"));
+		assertThat(out.toString(), equalTo("""
+				testProperty = "This is a Test"
+				"""));
 
 		out = new StringBuilder();
 
 		Dumpable.writeProperty(out, 1, "testProperty", "This is a Test");
 
-		assertThat(out.toString(), equalTo("  testProperty = This is a Test\n"));
+		assertThat(out.toString(), equalTo("""
+				  testProperty = "This is a Test"
+				"""));
+	}
+
+	@Test
+	void testWritePropertyNonString() throws IOException {
+		Appendable out = new StringBuilder();
+
+		Dumpable.writeProperty(out, 0, "testProperty", 1);
+
+		assertThat(out.toString(), equalTo("""
+				testProperty = 1
+				"""));
+
+		out = new StringBuilder();
+
+		Dumpable.writeProperty(out, 1, "testProperty", 1);
+
+		assertThat(out.toString(), equalTo("""
+				  testProperty = 1
+				"""));
 	}
 
 	@Test
@@ -85,13 +112,19 @@ class DumpableTest {
 
 		Dumpable.writeChildren(out, 0, "children", List.of());
 
-		assertThat(out.toString(), equalTo("children:\n  N/A\n"));
+		assertThat(out.toString(), equalTo("""
+				children:
+				  N/A
+				"""));
 
 		out = new StringBuilder();
 
 		Dumpable.writeChildren(out, 1, "children", List.of());
 
-		assertThat(out.toString(), equalTo("  children:\n    N/A\n"));
+		assertThat(out.toString(), equalTo("""
+				  children:
+				    N/A
+				"""));
 
 	}
 
@@ -101,18 +134,21 @@ class DumpableTest {
 
 		Dumpable.writeChildren(out, 0, "children", List.of(new TestDumpableChild(1)));
 
-		assertThat(
-				out.toString(), equalTo("children:\n  TestDumpableChild (This is a Test 1)\n    property = value1\n")
-		);
+		assertThat(out.toString(), equalTo("""
+				children:
+				  TestDumpableChild (This is a Test 1)
+				    property = "value1"
+				"""));
 
 		out = new StringBuilder();
 
 		Dumpable.writeChildren(out, 1, "children", List.of(new TestDumpableChild(1)));
 
-		assertThat(
-				out.toString(),
-				equalTo("  children:\n    TestDumpableChild (This is a Test 1)\n      property = value1\n")
-		);
+		assertThat(out.toString(), equalTo("""
+				  children:
+				    TestDumpableChild (This is a Test 1)
+				      property = "value1"
+				"""));
 
 	}
 
@@ -122,23 +158,25 @@ class DumpableTest {
 
 		Dumpable.writeChildren(out, 0, "children", List.of(new TestDumpableChild(1), new TestDumpableChild(2)));
 
-		assertThat(
-				out.toString(),
-				equalTo(
-						"children:\n  TestDumpableChild (This is a Test 1)\n    property = value1\n  TestDumpableChild (This is a Test 2)\n    property = value2\n"
-				)
-		);
+		assertThat(out.toString(), equalTo("""
+				children:
+				  TestDumpableChild (This is a Test 1)
+				    property = "value1"
+				  TestDumpableChild (This is a Test 2)
+				    property = "value2"
+				"""));
 
 		out = new StringBuilder();
 
 		Dumpable.writeChildren(out, 1, "children", List.of(new TestDumpableChild(1), new TestDumpableChild(2)));
 
-		assertThat(
-				out.toString(),
-				equalTo(
-						"  children:\n    TestDumpableChild (This is a Test 1)\n      property = value1\n    TestDumpableChild (This is a Test 2)\n      property = value2\n"
-				)
-		);
+		assertThat(out.toString(), equalTo("""
+				  children:
+				    TestDumpableChild (This is a Test 1)
+				      property = "value1"
+				    TestDumpableChild (This is a Test 2)
+				      property = "value2"
+				"""));
 
 	}
 
@@ -148,13 +186,19 @@ class DumpableTest {
 
 		Dumpable.writeChild(out, 0, "child", Optional.empty());
 
-		assertThat(out.toString(), equalTo("child:\n  N/A\n"));
+		assertThat(out.toString(), equalTo("""
+				child:
+				  N/A
+				"""));
 
 		out = new StringBuilder();
 
 		Dumpable.writeChild(out, 1, "child", Optional.empty());
 
-		assertThat(out.toString(), equalTo("  child:\n    N/A\n"));
+		assertThat(out.toString(), equalTo("""
+				  child:
+				    N/A
+				"""));
 
 	}
 
@@ -164,15 +208,21 @@ class DumpableTest {
 
 		Dumpable.writeChild(out, 0, "child", Optional.of(new TestDumpableChild(1)));
 
-		assertThat(out.toString(), equalTo("child:\n  TestDumpableChild (This is a Test 1)\n    property = value1\n"));
+		assertThat(out.toString(), equalTo("""
+				child:
+				  TestDumpableChild (This is a Test 1)
+				    property = "value1"
+				"""));
 
 		out = new StringBuilder();
 
 		Dumpable.writeChild(out, 1, "child", Optional.of(new TestDumpableChild(1)));
 
-		assertThat(
-				out.toString(), equalTo("  child:\n    TestDumpableChild (This is a Test 1)\n      property = value1\n")
-		);
+		assertThat(out.toString(), equalTo("""
+				  child:
+				    TestDumpableChild (This is a Test 1)
+				      property = "value1"
+				"""));
 
 	}
 
@@ -183,7 +233,10 @@ class DumpableTest {
 		var unit = new TestDumpable(1);
 		unit.dumpState(out);
 
-		assertThat(out.toString(), equalTo("TestDumpable (This is a Test 1)\n  property = value1\n"));
+		assertThat(out.toString(), equalTo("""
+				TestDumpable (This is a Test 1)
+				  property = "value1"
+				"""));
 	}
 
 }

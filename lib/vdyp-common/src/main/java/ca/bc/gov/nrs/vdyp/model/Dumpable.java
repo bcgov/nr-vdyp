@@ -19,6 +19,11 @@ public interface Dumpable {
 	}
 
 	static void writeProperty(Appendable output, int indent, String name, Object value) throws IOException {
+		if (value instanceof String) {
+			value = "\"" + value + "\"";
+		} else {
+			value = value.toString();
+		}
 		output.append(indentString(indent)).append(name).append(" = ").append(value.toString()).append("\n");
 	}
 
