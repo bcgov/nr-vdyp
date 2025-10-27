@@ -49,7 +49,7 @@ jobs:
           BATCH_DB_USER: ${{ vars.BATCH_DB_ROLE}}
           BATCH_DB_NAME: ${{ vars.BATCH_DB_DATABASE}}
           VDYP_DB_USER: ${{ vars.VDYP_DB_ROLE}}
-          VDYP_DB_PROXY_USER: ${{ vars.VDYP_PROXY_DB_ROLE}}
+          VDYP_PROXY_DB_USER: ${{ vars.VDYP_PROXY_DB_ROLE}}
           VDYP_DB_NAME: ${{ vars.VDYP_DB_DATABASE}}
           #S3_ENVIRONMENT: ${{ inputs.ENVIRONMENT_NAME == 'dev' && 'dev'  || (inputs.ENVIRONMENT_NAME == 'test' && 'tst' || (inputs.ENVIRONMENT_NAME == 'prod' && 'prd' || inputs.ENVIRONMENT_NAME)) }}
 
