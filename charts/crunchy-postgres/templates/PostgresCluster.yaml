@@ -88,27 +88,21 @@ spec:
                     postgres-operator.crunchydata.com/instance-set: {{ .Values.instances.name }}-ha
   
   users:
-    - name: {{ template "crunchy-postgres.fullname" . }}
-      databases:
-        - {{ template "crunchy-postgres.fullname" . }}
-      options: "CREATEROLE"
     - name: postgres
       databases:
         - {{ template "crunchy-postgres.fullname" . }}
     - name: {{ .Values.coms_db.user }}
       databases:
         - {{ .Values.coms_db.name  }}
-      options: 'LOGIN NOSUPERUSER INHERIT NOCREATEDB NOCREATEROLE NOREPLICATION'
 
     - name: {{ .Values.batch_db.user }}
       databases:
         - {{ .Values.batch_db.name }}
-      options: 'LOGIN NOSUPERUSER INHERIT NOCREATEDB NOCREATEROLE NOREPLICATION'
 
     - name: {{ .Values.vdyp_db.user }}
       databases:
         - {{ .Values.vdyp_db.name }}
-      options: 'LOGIN NOSUPERUSER INHERIT NOCREATEDB CREATEROLE NOREPLICATION'
+    - name: {{ .Values.vdyp_proxy_db.user }}
 
   backups:
     pgbackrest:
