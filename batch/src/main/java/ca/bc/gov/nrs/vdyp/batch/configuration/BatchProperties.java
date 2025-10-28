@@ -4,25 +4,25 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 /**
- * Configuration properties for VDYP batch processing. This class handles all
- * custom batch.* properties to eliminate unknown property warnings.
+ * Configuration properties for VDYP batch processing. This class handles all custom batch.* properties to eliminate
+ * unknown property warnings.
  */
 @Component
 @ConfigurationProperties(prefix = "batch")
 public class BatchProperties {
 
 	private Job job = new Job();
-	private Input input = new Input();
-	private Output output = new Output();
-	private Partitioning partitioning = new Partitioning();
+	private Partition partition = new Partition();
 	private ThreadPool threadPool = new ThreadPool();
 	private Validation validation = new Validation();
 	private Retry retry = new Retry();
 	private Skip skip = new Skip();
 	private Reader reader = new Reader();
+	private String rootDirectory;
 
 	public static class Job {
 		private boolean autoCreate = true;
+		private String baseFolderPrefix;
 
 		public boolean isAutoCreate() {
 			return autoCreate;
@@ -31,66 +31,70 @@ public class BatchProperties {
 		public void setAutoCreate(boolean autoCreate) {
 			this.autoCreate = autoCreate;
 		}
-	}
 
-	public static class Input {
-		private Directory directory = new Directory();
-
-		public static class Directory {
-			private String defaultPath;
-
-			public String getDefaultPath() {
-				return defaultPath;
-			}
-
-			public void setDefaultPath(String defaultPath) {
-				this.defaultPath = defaultPath;
-			}
+		public String getBaseFolderPrefix() {
+			return baseFolderPrefix;
 		}
 
-		public Directory getDirectory() {
-			return directory;
-		}
-
-		public void setDirectory(Directory directory) {
-			this.directory = directory;
-		}
-
-	}
-
-	public static class Output {
-		private Directory directory = new Directory();
-
-		public static class Directory {
-			private String defaultPath;
-
-			public String getDefaultPath() {
-				return defaultPath;
-			}
-
-			public void setDefaultPath(String defaultPath) {
-				this.defaultPath = defaultPath;
-			}
-		}
-
-		public Directory getDirectory() {
-			return directory;
-		}
-
-		public void setDirectory(Directory directory) {
-			this.directory = directory;
+		public void setBaseFolderPrefix(String baseFolderPrefix) {
+			this.baseFolderPrefix = baseFolderPrefix;
 		}
 	}
 
-	public static class Partitioning {
-		private int gridSize;
+	public static class Partition {
+		private Integer defaultPartitionSize;
+		private String inputPolygonFileName;
+		private String inputLayerFileName;
+		private String inputFolderNamePrefix;
+		private String outputFolderNamePrefix;
+		private String namePrefix;
 
-		public int getGridSize() {
-			return gridSize;
+		public Integer getDefaultPartitionSize() {
+			return defaultPartitionSize;
 		}
 
-		public void setGridSize(int gridSize) {
-			this.gridSize = gridSize;
+		public void setDefaultPartitionSize(Integer defaultPartitionSize) {
+			this.defaultPartitionSize = defaultPartitionSize;
+		}
+
+		public String getInputPolygonFileName() {
+			return inputPolygonFileName;
+		}
+
+		public void setInputPolygonFileName(String inputPolygonFileName) {
+			this.inputPolygonFileName = inputPolygonFileName;
+		}
+
+		public String getInputLayerFileName() {
+			return inputLayerFileName;
+		}
+
+		public void setInputLayerFileName(String inputLayerFileName) {
+			this.inputLayerFileName = inputLayerFileName;
+		}
+
+		public String getInputFolderNamePrefix() {
+			return inputFolderNamePrefix;
+		}
+
+		public void setInputFolderNamePrefix(String inputFolderNamePrefix) {
+			this.inputFolderNamePrefix = inputFolderNamePrefix;
+		}
+
+		public String getOutputFolderNamePrefix() {
+			return outputFolderNamePrefix;
+		}
+
+		public void setOutputFolderNamePrefix(String outputFolderNamePrefix) {
+			this.outputFolderNamePrefix = outputFolderNamePrefix;
+		}
+
+		public String getNamePrefix() {
+			return namePrefix;
+		}
+
+		public void setNamePrefix(String namePrefix) {
+			this.namePrefix = namePrefix;
 		}
 	}
 
@@ -188,14 +192,14 @@ public class BatchProperties {
 	}
 
 	public static class Reader {
-		private int chunkSize = 10;
+		private Integer defaultChunkSize;
 
-		public int getChunkSize() {
-			return chunkSize;
+		public Integer getDefaultChunkSize() {
+			return defaultChunkSize;
 		}
 
-		public void setChunkSize(int chunkSize) {
-			this.chunkSize = chunkSize;
+		public void setDefaultChunkSize(Integer defaultChunkSize) {
+			this.defaultChunkSize = defaultChunkSize;
 		}
 	}
 
@@ -207,28 +211,12 @@ public class BatchProperties {
 		this.job = job;
 	}
 
-	public Input getInput() {
-		return input;
+	public Partition getPartition() {
+		return partition;
 	}
 
-	public void setInput(Input input) {
-		this.input = input;
-	}
-
-	public Output getOutput() {
-		return output;
-	}
-
-	public void setOutput(Output output) {
-		this.output = output;
-	}
-
-	public Partitioning getPartitioning() {
-		return partitioning;
-	}
-
-	public void setPartitioning(Partitioning partitioning) {
-		this.partitioning = partitioning;
+	public void setPartition(Partition partition) {
+		this.partition = partition;
 	}
 
 	public Retry getRetry() {
@@ -271,4 +259,11 @@ public class BatchProperties {
 		this.reader = reader;
 	}
 
+	public String getRootDirectory() {
+		return rootDirectory;
+	}
+
+	public void setRootDirectory(String rootDirectory) {
+		this.rootDirectory = rootDirectory;
+	}
 }

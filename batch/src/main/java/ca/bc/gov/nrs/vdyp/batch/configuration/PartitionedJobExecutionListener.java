@@ -7,6 +7,8 @@ import org.springframework.batch.core.JobExecutionListener;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
+import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
+
 import java.time.LocalDateTime;
 import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;
@@ -38,16 +40,17 @@ public class PartitionedJobExecutionListener implements JobExecutionListener {
 		logger.info(separator);
 		logger.info("VDYP PARTITIONED JOB STARTING");
 
-		Long partitionSize = jobExecution.getJobParameters().getLong("partitionSize");
+		Long partitionSize = jobExecution.getJobParameters().getLong(BatchConstants.Partition.SIZE);
 
 		int actualPartitionSize;
 		if (partitionSize != null) {
 			actualPartitionSize = partitionSize.intValue();
-		} else if (batchProperties.getPartitioning().getGridSize() > 0) {
-			actualPartitionSize = batchProperties.getPartitioning().getGridSize();
+		} else if (batchProperties.getPartition().getDefaultPartitionSize() > 0) {
+			actualPartitionSize = batchProperties.getPartition().getDefaultPartitionSize();
 		} else {
 			throw new IllegalStateException(
-					"batch.partitioning.grid-size must be configured in application.properties");
+					"batch.partition.default-partition-size must be configured in application.properties"
+			);
 		}
 
 		logger.info("VDYP Grid Size: {}", actualPartitionSize);

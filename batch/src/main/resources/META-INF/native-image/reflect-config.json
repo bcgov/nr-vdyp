@@ -6,12 +6,6 @@
     "allDeclaredConstructors": true
   },
   {
-    "name": "ca.bc.gov.nrs.vdyp.batch.controller.BatchJobRequest",
-    "allDeclaredFields": true,
-    "allDeclaredMethods": true,
-    "allDeclaredConstructors": true
-  },
-  {
     "name": "ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics",
     "allDeclaredFields": true,
     "allDeclaredMethods": true,
@@ -31,6 +25,162 @@
   },
   {
     "name": "ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics$PartitionMetrics",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.batch.configuration.BatchProperties",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.batch.configuration.BatchProperties$Job",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.batch.configuration.BatchProperties$Partition",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.batch.configuration.BatchProperties$Retry",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.batch.configuration.BatchProperties$ThreadPool",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.batch.configuration.BatchProperties$Validation",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.batch.configuration.BatchProperties$Skip",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.batch.configuration.BatchProperties$Reader",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.batch.configuration.ChunkBasedPolygonItemReader",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.batch.configuration.VdypChunkProjectionWriter",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.batch.configuration.VdypProjectionProcessor",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.batch.configuration.DynamicPartitioner",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.batch.configuration.DynamicPartitionHandler",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.batch.configuration.BatchRetryPolicy",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.batch.configuration.BatchSkipPolicy",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.batch.configuration.PartitionedJobExecutionListener",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.batch.exception.BatchException",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.batch.exception.BatchIOException",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.batch.exception.ResultAggregationException",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.batch.service.VdypProjectionService",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.batch.service.ResultAggregationService",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.batch.service.StreamingCsvPartitioner",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.batch.controller.BatchController",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.springframework.web.multipart.MultipartFile",
     "allDeclaredFields": true,
     "allDeclaredMethods": true,
     "allDeclaredConstructors": true

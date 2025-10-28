@@ -74,21 +74,25 @@ public class CSVYieldTableRowValuesBean implements YieldTableRowBean {
 //  { "(TABLE_NUM)"(,                      csvFldType_LONG,   10, 0, "", TRUE },  /* csvYldTbl_TblNum                       */)
 	@CsvBindByName(column = "TABLE_NUM")
 	@CsvBindByPosition(position = 0)
+	@OptionalField(category = YieldTable.Category.FILE_UPLOAD_METADATA)
 	private String tableNumber;
 
 //  { "(FEATURE_ID)"(,                     csvFldType_CHAR,   38, 0, "", TRUE },  /* csvYldTbl_FeatureID                    */)
 	@CsvBindByName(column = "FEATURE_ID")
 	@CsvBindByPosition(position = 1)
+	@OptionalField(category = YieldTable.Category.FILE_UPLOAD_METADATA)
 	private String featureId;
 
 //  { "(DISTRICT)"(,                       csvFldType_CHAR,    3, 0, "", TRUE },  /* csvYldTbl_District                     */)
 	@CsvBindByName(column = "DISTRICT")
 	@CsvBindByPosition(position = 2)
+	@OptionalField(category = YieldTable.Category.FILE_UPLOAD_METADATA)
 	private String district;
 
 //  { "(MAP_ID)"(,                         csvFldType_CHAR,    9, 0, "", TRUE },  /* csvYldTbl_MapID                        */)
 	@CsvBindByName(column = "MAP_ID")
 	@CsvBindByPosition(position = 3)
+	@OptionalField(category = YieldTable.Category.FILE_UPLOAD_METADATA)
 	private String mapId;
 
 //  { "(POLYGON_ID)"(,                     csvFldType_LONG,   10, 0, "", TRUE },  /* csvYldTbl_PolygonID                    */)
@@ -100,11 +104,13 @@ public class CSVYieldTableRowValuesBean implements YieldTableRowBean {
 //  { "(LAYER_ID)"(,                       csvFldType_CHAR,    1, 0, "", TRUE },  /* csvYldTbl_LayerID                      */)
 	@CsvBindByName(column = "LAYER_ID")
 	@CsvBindByPosition(position = 5)
+	@OptionalField(category = YieldTable.Category.FILE_UPLOAD_METADATA)
 	private String layerId;
 
 //  { "(PROJECTION_YEAR)"(,                csvFldType_SHORT,   4, 0, "", TRUE },  /* csvYldTbl_ProjectionYear               */)
 	@CsvBindByName(column = "PROJECTION_YEAR")
 	@CsvBindByPosition(position = 6)
+	@OptionalField(category = YieldTable.Category.FILE_UPLOAD_METADATA)
 	private String projectionYear;
 
 //  { "(PRJ_TOTAL_AGE)"(,                  csvFldType_SHORT,   4, 0, "", TRUE },  /* csvYldTbl_ProjectionTotalAge           */)

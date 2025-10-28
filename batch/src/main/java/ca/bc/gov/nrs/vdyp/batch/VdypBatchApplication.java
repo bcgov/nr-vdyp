@@ -8,11 +8,10 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
-import ca.bc.gov.nrs.vdyp.batch.controller.BatchJobRequest;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics;
 
 @SpringBootApplication
-@RegisterReflectionForBinding({ BatchRecord.class, BatchJobRequest.class, BatchMetrics.class })
+@RegisterReflectionForBinding({ BatchRecord.class, BatchMetrics.class })
 public class VdypBatchApplication {
 	private static final Logger logger = LoggerFactory.getLogger(VdypBatchApplication.class);
 
@@ -25,8 +24,7 @@ public class VdypBatchApplication {
 	}
 
 	/**
-	 * This method is called once when the application is fully started and ready.
-	 * Using ApplicationReadyEvent ensures
+	 * This method is called once when the application is fully started and ready. Using ApplicationReadyEvent ensures
 	 * the startup message is shown only once, not on every batch job execution.
 	 */
 	@EventListener(ApplicationReadyEvent.class)

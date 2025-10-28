@@ -11,6 +11,8 @@ import org.springframework.batch.core.partition.support.TaskExecutorPartitionHan
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.lang.NonNull;
 
+import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
+
 import java.util.Collection;
 
 public class DynamicPartitionHandler implements PartitionHandler {
@@ -24,7 +26,8 @@ public class DynamicPartitionHandler implements PartitionHandler {
 
 	public DynamicPartitionHandler(
 			TaskExecutor taskExecutor, Step workerStep, DynamicPartitioner dynamicPartitioner,
-			BatchProperties batchProperties) {
+			BatchProperties batchProperties
+	) {
 		this.taskExecutor = taskExecutor;
 		this.workerStep = workerStep;
 		this.dynamicPartitioner = dynamicPartitioner;
@@ -33,35 +36,30 @@ public class DynamicPartitionHandler implements PartitionHandler {
 
 	@Override
 	@NonNull
-	public Collection<StepExecution> handle(@NonNull StepExecutionSplitter stepSplitter,
-			@NonNull StepExecution masterStepExecution)
-			throws Exception {
-		// Get dynamic parameters from job parameters
-		JobParameters jobParameters = masterStepExecution.getJobExecution().getJobParameters();
-		Long partitionSize = jobParameters.getLong("partitionSize");
+	public Collection<StepExecution>
+			handle(@NonNull StepExecutionSplitter stepSplitter, @NonNull StepExecution masterStepExecution)
+					throws Exception {
 
-		// Get grid size
+		JobParameters jobParameters = masterStepExecution.getJobExecution().getJobParameters();
+		Long partitionSize = jobParameters.getLong(BatchConstants.Partition.SIZE);
+
 		int actualGridSize;
 		if (partitionSize != null) {
 			actualGridSize = partitionSize.intValue();
-		} else if (batchProperties.getPartitioning().getGridSize() > 0) {
-			actualGridSize = batchProperties.getPartitioning().getGridSize();
 		} else {
-			throw new IllegalStateException("No grid size specified in job parameters or properties. ");
+			actualGridSize = batchProperties.getPartition().getDefaultPartitionSize();
 		}
 
+		logger.info("VDYP FEATURE_ID-based partitioning: Using {} partitions", actualGridSize);
+
 		// Set partition base directory for uploaded CSV files
-		String partitionBaseDir = jobParameters.getString("partitionBaseDir");
-		if (partitionBaseDir != null) {
-			dynamicPartitioner.setPartitionBaseDir(partitionBaseDir);
-			logger.info("[VDYP Uploaded File Partition Handler] Using partition base directory: {}", partitionBaseDir);
+		String jobBaseDir = jobParameters.getString(BatchConstants.Job.BASE_DIR);
+		if (jobBaseDir != null) {
+			dynamicPartitioner.setJobBaseDir(jobBaseDir);
+			logger.info("[VDYP Uploaded File Partition Handler] Using partition base directory: {}", jobBaseDir);
 		} else {
 			logger.warn("[VDYP Uploaded File Partition Handler] No partition base directory found in job parameters");
 		}
-
-		logger.info(
-				"VDYP FEATURE_ID-based partitioning: Using {} partitions (requested: {}, from properties: {})",
-				actualGridSize, partitionSize, batchProperties.getPartitioning().getGridSize());
 
 		// Create and configure TaskExecutorPartitionHandler with dynamic grid size
 		TaskExecutorPartitionHandler handler = new TaskExecutorPartitionHandler();

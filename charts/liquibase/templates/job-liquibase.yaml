@@ -1,0 +1,71 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "liquibase.fullname" . }}
+  labels:
+    {{- include "liquibase.labels" . | nindent 4 }}
+spec:
+  backoffLimit: {{ .Values.job.backoffLimit }}
+  ttlSecondsAfterFinished: {{ .Values.job.ttlSecondsAfterFinished }}
+  template:
+    metadata:
+      labels:
+        {{- include "liquibase.selectorLabels" . | nindent 8 }}
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: liquibase
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            # Pull credentials from the PGO-created secret
+            - name: LIQUIBASE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.crunchy.pguserSecretName }}
+                  key: user
+            - name: LIQUIBASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.crunchy.pguserSecretName }}
+                  key: password
+          command: ["/bin/sh","-c"]
+          args:
+            - |
+              set -euo pipefail
+              export PGPASSWORD="${LIQUIBASE_PASSWORD}"
+              echo "Waiting for PostgreSQL at {{ .Values.crunchy.host }}:{{ .Values.crunchy.port }}..."
+              for i in $(seq 1 60); do
+                if /usr/bin/env pg_isready -h {{ .Values.crunchy.host }} -p {{ .Values.crunchy.port }} -d {{ .Values.crunchy.database }} >/dev/null 2>&1; then
+                  break
+                fi
+                sleep 2
+              done
+
+              # Build JDBC URL; add options you need (sslmode, options= -c search_path=..., etc.)
+              JDBC_URL="jdbc:postgresql://{{ .Values.crunchy.host }}:{{ .Values.crunchy.port }}/{{ .Values.crunchy.database }}?sslmode=disable"
+
+              echo "Running Liquibase {{ .Values.liquibase.command }}..."
+              liquibase \
+                --log-level={{ .Values.liquibase.logLevel }} \
+                --url="${JDBC_URL}" \
+                --username="${LIQUIBASE_USERNAME}" \
+                --password="${LIQUIBASE_PASSWORD}" \
+                --defaultSchemaName={{ .Values.liquibase.defaultSchema | quote }} \
+                --searchPath={{ .Values.liquibase.searchPath | quote }} \
+                --changelog-file={{ .Values.liquibase.changelogFile }} \
+                {{- range .Values.liquibase.extraArgs }}
+                {{ . }} \
+                {{- end }}
+                {{ .Values.liquibase.command }}
+
+          volumeMounts:
+            - name: changelog
+              mountPath: /liquibase
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+
+      volumes:
+        - name: changelog
+          configMap:
+            name: {{ include "liquibase.fullname" . }}-changelog

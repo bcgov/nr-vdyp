@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.vdyp.batch.configuration;
 
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
+import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.StepExecution;
@@ -25,9 +26,6 @@ public class BatchRetryPolicy extends SimpleRetryPolicy {
 	private String partitionName;
 	private transient BatchMetricsCollector metricsCollector;
 
-	private static final String UNKNOWN = "unknown";
-	private static final String PARTITION_NAME = "partitionName";
-
 	// Thread-safe retry state tracking
 	private final ConcurrentHashMap<String, RetryInfo> retryInfoMap = new ConcurrentHashMap<>();
 
@@ -48,7 +46,8 @@ public class BatchRetryPolicy extends SimpleRetryPolicy {
 	@BeforeStep
 	public void beforeStep(StepExecution stepExecution) {
 		this.jobExecutionId = stepExecution.getJobExecutionId();
-		this.partitionName = stepExecution.getExecutionContext().getString(PARTITION_NAME, UNKNOWN);
+		this.partitionName = stepExecution.getExecutionContext()
+				.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN);
 	}
 
 	private static Map<Class<? extends Throwable>, Boolean> createRetryableExceptions() {
@@ -126,7 +125,8 @@ public class BatchRetryPolicy extends SimpleRetryPolicy {
 			if (stepContext != null) {
 				StepExecution currentStepExecution = stepContext.getStepExecution();
 				currentJobExecutionId = currentStepExecution.getJobExecutionId();
-				currentPartitionName = currentStepExecution.getExecutionContext().getString(PARTITION_NAME, UNKNOWN);
+				currentPartitionName = currentStepExecution.getExecutionContext()
+						.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN);
 			}
 		} catch (Exception e) {
 			logger.warn("[VDYP Retry Policy] Warning: Could not access step context in canRetry: {}", e.getMessage());

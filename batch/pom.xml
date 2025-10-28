@@ -133,13 +133,14 @@
             <plugin>
                 <groupId>net.revelc.code.formatter</groupId>
                 <artifactId>formatter-maven-plugin</artifactId>
-                <configuration>
-                    <skip>true</skip>
-                </configuration>
                 <executions>
                     <execution>
-                        <id>default</id>
-                        <phase>none</phase>
+                        <goals>
+                            <goal>format</goal>
+                        </goals>
+                        <configuration>
+                            <configFile>eclipse/formatter.xml</configFile>
+                        </configuration>
                     </execution>
                 </executions>
                 <dependencies>
