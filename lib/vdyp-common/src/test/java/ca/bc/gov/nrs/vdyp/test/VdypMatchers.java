@@ -712,7 +712,9 @@ public class VdypMatchers {
 				var result = true;
 
 				if (rowValues.length != fields.length) {
-					mismatchDescription.appendText("given csv row does not have " + fields.length + " fields");
+					mismatchDescription.appendText("given csv row ").appendValueList("[", ", ", "]", fields)
+							.appendText(" has ").appendValue(rowValues.length).appendText(" fields rather than ")
+							.appendValue(fields.length);
 					result = false;
 				} else {
 					var mismatches = new ArrayList<String>();
