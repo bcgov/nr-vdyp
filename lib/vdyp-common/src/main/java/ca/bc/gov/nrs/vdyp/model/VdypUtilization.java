@@ -34,7 +34,7 @@ public class VdypUtilization implements VdypEntity {
 	private VdypSpecies parent;
 
 	public VdypUtilization(
-			PolygonIdentifier polygonId, LayerType layerType, Integer genusIndex, Optional<String> genus,
+			PolygonIdentifier polygonId, LayerType layerType, int genusIndex, Optional<String> genus,
 			UtilizationClass ucIndex, float basalArea, float liveTreesPerHectare, float loreyHeight,
 			float wholeStemVolume, float closeUtilizationVolume, float cuVolumeMinusDecay,
 			float cuVolumeMinusDecayWastage, float cuVolumeMinusDecayWastageBreakage, float quadraticMeanDiameterAtBH
