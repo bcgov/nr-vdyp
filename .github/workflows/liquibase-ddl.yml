@@ -28,6 +28,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -38,7 +40,7 @@ jobs:
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
         with:
-          registry: ${{ vars.REGISTRY }}
+          registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
@@ -46,7 +48,7 @@ jobs:
         id: meta_pr
         uses: docker/metadata-action@v5
         with:
-          images: ${{ vars.REGISTRY}}/${{ github.repository_owner }}/vdyp-liquibase
+          images: ghcr.io/${{ github.repository_owner }}/vdyp-liquibase
           tags: |
             type=schedule
             type=raw,value=${{ github.base_ref }}
@@ -88,7 +90,9 @@ jobs:
           NAMESPACE: ${{ secrets.oc_namespace }}
           ENV: ${{ inputs.ENVIRONMENT_NAME }}
           VDYP_DB_USER: ${{ vars.VDYP_DB_ROLE}}
+          VDYP_ADMIN_USER: ${{ vars.VDYP_DB_ROLE}}
           VDYP_DB_NAME: ${{ vars.VDYP_DB_DATABASE}}
+          POSTGRES_ADMIN_USER: postgres
 
       - name: install helm
         run: |

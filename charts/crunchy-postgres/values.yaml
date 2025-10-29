@@ -128,5 +128,6 @@ batch_db:
 
 vdyp_db:
     user: #{VDYP_DB_USER}#
+    proxy_user: #{VDYP_PROXY_DB_USER}#
     name: #{VDYP_DB_NAME}#
 

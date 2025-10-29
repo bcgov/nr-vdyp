@@ -16,8 +16,8 @@ EOSQL
 psql -U postgres <<-EOSQL
   CREATE DATABASE vdyp;
   CREATE USER "app-vdyp" WITH ENCRYPTED PASSWORD 'password';
-  ALTER USER "app-vdyp" CREATEROLE;
   GRANT ALL PRIVILEGES ON DATABASE vdyp TO "app-vdyp";
+  CREATE USER "proxy-vdyp-rest" WITH ENCRYPTED PASSWORD 'password';
 EOSQL
 
 psql -v ON_ERROR_STOP=1 -U postgres -d vdyp <<-EOSQL
