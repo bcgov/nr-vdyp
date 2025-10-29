@@ -161,7 +161,7 @@ class ITDataDriven extends BaseDataBasedIntegrationTest {
 	// PRJ_SCND_HT was included in IGNORE_COLUMNS_EXCEPT_LH due to VDYP-804 and is
 	// unrelated to VDYP-604.
 	static final Pattern BASE_804_AFFECTED = Pattern.compile("PRJ_SCND_HT");
-	static final Pattern BASE_604_AFFECTED = Pattern.compile("PRJ_TPH|PRJ_BA");
+	static final Pattern BASE_604_AFFECTED = Pattern.compile("PRJ_BA");
 	static final Pattern VOLUME_604_AFFECTED = Pattern.compile("PRJ_(SP\\d_)?VOL_(?:D|DW|DWB|CU|WS)");
 
 	static final Predicate<String> IGNORE_COLUMNS = eitherRegexp(
