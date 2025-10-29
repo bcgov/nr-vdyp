@@ -269,6 +269,10 @@ class ForwardProcessorEndToEndTest {
 			ratio = 0.0f;
 		} else {
 			ratio = Math.abs(f7 / f8) - 1.0f;
+			// Treat being within 1/10,000 as being equal
+			if (ratio <= 0.0001f) {
+				nEquals += 1;
+			}
 		}
 		if (ratio <= 0.01f) {
 			nWithin1Percent += 1;
