@@ -21,7 +21,7 @@ import lombok.Setter;
 @Setter
 public class ProjectionStatusCodeEntity extends PanacheEntityBase implements Auditable {
 	@Id
-	@Column(length = 10, nullable = false)
+	@Column(name = "projection_status_code", length = 10, nullable = false)
 	private String projectionStatusCode;
 
 	@Column(length = 100, nullable = false)

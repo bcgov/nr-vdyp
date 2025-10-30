@@ -82,7 +82,6 @@ public class TestProjectionBatchMappingResourceAssembler {
 		private Integer warningCount;
 		private Integer errorCount;
 
-
 		public ProjectionBatchMappingEntity buildEntity() {
 			ProjectionBatchMappingEntity data = new ProjectionBatchMappingEntity();
 			data.setProjectionBatchMappingGUID(projectionBatchMappingUUID);

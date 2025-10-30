@@ -30,7 +30,7 @@ public class VDYPUserEntity extends PanacheEntityBase implements Auditable {
 	@NotNull
 	@GeneratedValue
 	@UuidGenerator
-	@Column(nullable = false, updatable = false, length = 36)
+	@Column(name = "vdyp_user_guid", nullable = false, updatable = false, length = 36)
 	private UUID vdypUserGUID;
 
 	@NotNull

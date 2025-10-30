@@ -21,7 +21,7 @@ import lombok.Setter;
 @Setter
 public class FileSetTypeCodeEntity extends PanacheEntityBase implements Auditable {
 	@Id
-	@Column(length = 10, nullable = false)
+	@Column(name = "file_set_type_code", length = 10, nullable = false)
 	private String fileSetTypeCode;
 
 	@Column(length = 100, nullable = false)

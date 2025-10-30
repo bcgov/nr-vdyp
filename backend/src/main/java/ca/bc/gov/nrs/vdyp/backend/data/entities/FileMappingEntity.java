@@ -30,7 +30,7 @@ public class FileMappingEntity extends PanacheEntityBase implements Auditable {
 	@NotNull
 	@GeneratedValue
 	@UuidGenerator
-	@Column(nullable = false, updatable = false, length = 36)
+	@Column(name = "file_mapping_guid", nullable = false, updatable = false, length = 36)
 	private UUID fileMappingGUID;
 
 	@ManyToOne

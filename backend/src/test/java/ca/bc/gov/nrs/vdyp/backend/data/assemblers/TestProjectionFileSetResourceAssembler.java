@@ -23,9 +23,7 @@ public class TestProjectionFileSetResourceAssembler {
 	}
 
 	static Stream<Arguments> modelEntityData() {
-		return Stream.of(
-				Arguments.of(UUID.randomUUID(), "Test File Set Name")
-		);
+		return Stream.of(Arguments.of(UUID.randomUUID(), "Test File Set Name"));
 	}
 
 	@ParameterizedTest

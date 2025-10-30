@@ -8,6 +8,7 @@ import ca.bc.gov.nrs.vdyp.backend.data.models.FileMappingModel;
 public class FileMappingResourceAssembler {
 
 	ProjectionFileSetResourceAssembler pfsra;
+
 	public FileMappingResourceAssembler() {
 		pfsra = new ProjectionFileSetResourceAssembler();
 	}

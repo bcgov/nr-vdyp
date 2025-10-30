@@ -31,7 +31,7 @@ public class ProjectionEntity extends PanacheEntityBase implements Auditable {
 	@Id
 	@GeneratedValue
 	@UuidGenerator
-	@Column(nullable = false, updatable = false, columnDefinition = "uuid")
+	@Column(name = "projection_guid", nullable = false, updatable = false, columnDefinition = "uuid")
 	private UUID projectionGUID;
 
 	@ManyToOne(fetch = FetchType.EAGER)
@@ -56,11 +56,11 @@ public class ProjectionEntity extends PanacheEntityBase implements Auditable {
 	private OffsetDateTime endDate;
 
 	@ManyToOne(fetch = FetchType.EAGER)
-	@JoinColumn(referencedColumnName = "calculation_engine_code_guid")
+	@JoinColumn(referencedColumnName = "calculation_engine_code")
 	private CalculationEngineCodeEntity calculationEngineCode;
 
 	@ManyToOne(fetch = FetchType.EAGER)
-	@JoinColumn(referencedColumnName = "projection_status_code_guid")
+	@JoinColumn(referencedColumnName = "projection_status_code")
 	private ProjectionStatusCodeEntity projectionStatusCode;
 
 	@NotNull

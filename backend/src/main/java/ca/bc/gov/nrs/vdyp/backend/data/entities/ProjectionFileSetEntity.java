@@ -27,7 +27,7 @@ import lombok.Setter;
 public class ProjectionFileSetEntity extends PanacheEntityBase implements Auditable {
 	@Id
 	@GeneratedValue
-	@Column(nullable = false, updatable = false, columnDefinition = "uuid")
+	@Column(name = "projection_file_set_guid", nullable = false, updatable = false, columnDefinition = "uuid")
 	private UUID projectionFileSetGUID;
 
 	@ManyToOne(fetch = FetchType.EAGER)

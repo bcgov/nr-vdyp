@@ -21,7 +21,7 @@ import lombok.Setter;
 @Setter
 public class UserTypeCodeEntity extends PanacheEntityBase implements Auditable {
 	@Id
-	@Column(length = 10, nullable = false)
+	@Column(name = "user_type_code", length = 10, nullable = false)
 	private String userTypeCode;
 
 	@Column(length = 100, nullable = false)

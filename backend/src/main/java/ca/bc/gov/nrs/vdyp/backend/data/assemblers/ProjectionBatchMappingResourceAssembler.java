@@ -7,6 +7,7 @@ import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionBatchMappingModel;
 
 public class ProjectionBatchMappingResourceAssembler {
 	ProjectionResourceAssembler pra;
+
 	public ProjectionBatchMappingResourceAssembler() {
 		pra = new ProjectionResourceAssembler();
 	}

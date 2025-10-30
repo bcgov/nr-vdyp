@@ -30,7 +30,7 @@ public class ProjectionBatchMappingEntity extends PanacheEntityBase implements A
 	@Id
 	@GeneratedValue
 	@UuidGenerator
-	@Column(nullable = false, updatable = false, columnDefinition = "uuid")
+	@Column(name = "projection_batch_mapping_guid", nullable = false, updatable = false, columnDefinition = "uuid")
 	private UUID projectionBatchMappingGUID;
 
 	@Column(columnDefinition = "uuid")

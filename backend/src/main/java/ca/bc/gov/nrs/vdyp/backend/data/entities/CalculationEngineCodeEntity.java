@@ -21,7 +21,7 @@ import lombok.Setter;
 @Setter
 public class CalculationEngineCodeEntity extends PanacheEntityBase implements Auditable {
 	@Id
-	@Column(length = 10, nullable = false)
+	@Column(name = "calculation_engine_code", length = 10, nullable = false)
 	private String calculationEngineCode;
 
 	@Column(length = 100, nullable = false)
