@@ -10,7 +10,6 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
@@ -106,7 +105,7 @@ class BatchRetryPolicyTest {
 
 		assertTrue(result);
 		verify(retryContext, atLeast(1)).getLastThrowable();
-		verify(metricsCollector).recordRetryAttempt(eq(100L), eq(1), eq(retryableException), eq(false), eq("partition0"));
+		verify(metricsCollector).recordRetryAttempt(100L, 1, retryableException, false, "partition0");
 	}
 
 	@Test
@@ -164,7 +163,7 @@ class BatchRetryPolicyTest {
 		boolean result = batchRetryPolicy.canRetry(retryContext);
 
 		assertTrue(result);
-		verify(metricsCollector).recordRetryAttempt(eq(100L), eq(1), eq(transientException), eq(false), eq("partition0"));
+		verify(metricsCollector).recordRetryAttempt(100L, 1, transientException, false, "partition0");
 	}
 
 	@Test
@@ -255,7 +254,7 @@ class BatchRetryPolicyTest {
 
 		batchRetryPolicy.canRetry(retryContext);
 
-		verify(metricsCollector).recordRetryAttempt(eq(999L), eq(1), eq(exception), eq(false), eq("partition5"));
+		verify(metricsCollector).recordRetryAttempt(999L, 1, exception, false, "partition5");
 	}
 
 	@Test
@@ -284,8 +283,7 @@ class BatchRetryPolicyTest {
 			boolean result = batchRetryPolicy.canRetry(retryContext);
 
 			assertTrue(result);
-			verify(metricsCollector)
-					.recordRetryAttempt(eq(777L), eq(1), eq(exception), eq(false), eq("partition99-current"));
+			verify(metricsCollector).recordRetryAttempt(777L, 1, exception, false, "partition99-current");
 		}
 	}
 
@@ -307,7 +305,7 @@ class BatchRetryPolicyTest {
 			boolean result = batchRetryPolicy.canRetry(retryContext);
 
 			assertTrue(result);
-			verify(metricsCollector).recordRetryAttempt(eq(100L), eq(1), eq(exception), eq(false), eq("partition0"));
+			verify(metricsCollector).recordRetryAttempt(100L, 1, exception, false, "partition0");
 		}
 	}
 
@@ -330,7 +328,7 @@ class BatchRetryPolicyTest {
 			boolean result = batchRetryPolicy.canRetry(retryContext);
 
 			assertTrue(result);
-			verify(metricsCollector).recordRetryAttempt(eq(100L), eq(1), eq(exception), eq(false), eq("partition0"));
+			verify(metricsCollector).recordRetryAttempt(100L, 1, exception, false, "partition0");
 		}
 	}
 
@@ -507,7 +505,7 @@ class BatchRetryPolicyTest {
 		boolean result = batchRetryPolicy.canRetry(retryContext);
 
 		assertTrue(result);
-		verify(metricsCollector).recordRetryAttempt(eq(100L), eq(1), eq(exception), eq(false), eq("partition-initial"));
+		verify(metricsCollector).recordRetryAttempt(100L, 1, exception, false, "partition-initial");
 	}
 
 	@Test
@@ -529,7 +527,6 @@ class BatchRetryPolicyTest {
 		boolean result = policyNoPartition.canRetry(retryContext);
 
 		assertTrue(result);
-		verify(metricsCollector)
-				.recordRetryAttempt(eq(100L), eq(1), eq(exception), eq(false), eq(BatchConstants.Common.UNKNOWN));
+		verify(metricsCollector).recordRetryAttempt(100L, 1, exception, false, BatchConstants.Common.UNKNOWN);
 	}
 }
