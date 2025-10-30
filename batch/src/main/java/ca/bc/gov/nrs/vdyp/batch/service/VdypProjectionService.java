@@ -28,6 +28,7 @@ import ca.bc.gov.nrs.vdyp.ecore.api.v1.exceptions.AbstractProjectionRequestExcep
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.Parameters.ExecutionOption;
 import ca.bc.gov.nrs.vdyp.ecore.model.v1.ProjectionRequestKind;
+import ca.bc.gov.nrs.vdyp.ecore.projection.PolygonProjectionRunner;
 import ca.bc.gov.nrs.vdyp.ecore.projection.ProjectionRunner;
 import ca.bc.gov.nrs.vdyp.ecore.projection.ValidatedParameters;
 import ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable.YieldTable;
@@ -41,6 +42,10 @@ import ca.bc.gov.nrs.vdyp.ecore.utils.Utils;
 public class VdypProjectionService {
 
 	private static final Logger logger = LoggerFactory.getLogger(VdypProjectionService.class);
+
+	static {
+		PolygonProjectionRunner.initializeSiteIndexCurves();
+	}
 
 	// ex) batch-1-partition0-projection-HCSV-2025_10_02_14_06_43_4933
 	public static String
