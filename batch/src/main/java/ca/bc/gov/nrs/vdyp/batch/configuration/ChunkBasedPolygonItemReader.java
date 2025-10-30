@@ -44,9 +44,6 @@ public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord
 	private String polygonHeader;
 	private String layerHeader;
 
-	// Pre-loaded layer data (loaded once during initialization)
-	private Map<String, List<String>> allLayersByFeatureId = new HashMap<>();
-
 	// Chunk processing state
 	private List<String> currentChunk;
 	private Iterator<String> chunkIterator;
@@ -137,14 +134,12 @@ public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord
 		closeReader(layerReader, "layer");
 
 		clearChunkData();
-		clearPreLoadedLayerData();
 
 		readerOpened = false;
 	}
 
 	/**
-	 * Initialize BufferedReaders for polygon and layer files. Pre-load all layer data once during initialization to
-	 * avoid repeated file I/O.
+	 * Initialize BufferedReaders for polygon and layer files.
 	 */
 	private void initializeReaders() throws IOException {
 		Path polygonFile = partitionDir.resolve(BatchConstants.Partition.INPUT_POLYGON_FILE_NAME);
@@ -161,36 +156,18 @@ public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord
 			throw new IOException("Polygon file is empty or has no header");
 		}
 
-		// Pre-load all layer data once (optimization to avoid repeated file scans)
+		// Initialize layer reader and read header (if file exists)
 		if (Files.exists(layerFile)) {
-			try (BufferedReader tempLayerReader = new BufferedReader(new FileReader(layerFile.toFile()))) {
-				layerHeader = tempLayerReader.readLine();
-
-				String line;
-				int layerLineCount = 0;
-				while ( (line = tempLayerReader.readLine()) != null) {
-					if (!line.trim().isEmpty()) {
-						String featureId = extractFeatureIdFromLine(line);
-						if (featureId != null) {
-							allLayersByFeatureId.computeIfAbsent(featureId, k -> new ArrayList<>()).add(line);
-							layerLineCount++;
-						}
-					}
-				}
-
-				logger.info(
-						"[{}] Pre-loaded {} layer lines for {} FEATURE_IDs from partition layer file", partitionName,
-						layerLineCount, allLayersByFeatureId.size()
-				);
-			}
+			layerReader = new BufferedReader(new FileReader(layerFile.toFile()));
+			layerHeader = layerReader.readLine();
 		} else {
 			logger.warn("[{}] Layer file does not exist: {}", partitionName, layerFile);
 			layerHeader = ""; // Empty header for missing layer file
 		}
 
 		logger.info(
-				"[{}] Initialized readers - Polygon header: present, Layer header present: {}, Pre-loaded layers: {}",
-				partitionName, layerHeader != null, allLayersByFeatureId.size()
+				"[{}] Initialized readers - Polygon header: present, Layer header present: {}", partitionName,
+				layerHeader != null
 		);
 	}
 
@@ -240,25 +217,35 @@ public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord
 	}
 
 	/**
-	 * Load layers associated with FEATURE_IDs in current chunk. Lookup from pre-loaded memory map instead of file I/O.
+	 * Load layers associated with FEATURE_IDs in current chunk.
 	 */
-	private void loadLayersForCurrentChunk() {
-		if (currentChunkFeatureIds.isEmpty()) {
+	private void loadLayersForCurrentChunk() throws IOException {
+		if (layerReader == null || currentChunkFeatureIds.isEmpty()) {
 			return;
 		}
 
-		for (String featureId : currentChunkFeatureIds) {
-			List<String> layers = allLayersByFeatureId.get(featureId);
-			if (layers != null && !layers.isEmpty()) {
-				// Share reference directly (safe because allLayersByFeatureId is read-only
-				// after initialization and cleared only during close())
-				currentChunkLayers.put(featureId, layers);
+		// Reset layer reader to beginning (after header)
+		layerReader.close();
+
+		Path layerFile = partitionDir.resolve(BatchConstants.Partition.INPUT_LAYER_FILE_NAME);
+		layerReader = new BufferedReader(new FileReader(layerFile.toFile()));
+		String header = layerReader.readLine(); // Skip header
+		if (header == null) {
+			logger.warn("[{}] Layer file has no header", partitionName);
+		}
+
+		String line;
+		while ( (line = layerReader.readLine()) != null) {
+			if (!line.trim().isEmpty()) {
+				String featureId = extractFeatureIdFromLine(line);
+				if (featureId != null && currentChunkFeatureIds.contains(featureId)) {
+					currentChunkLayers.computeIfAbsent(featureId, k -> new ArrayList<>()).add(line);
+				}
 			}
 		}
 
 		logger.debug(
-				"[{}] Loaded layers for {} FEATURE_IDs in current chunk from pre-loaded map", partitionName,
-				currentChunkLayers.size()
+				"[{}] Loaded layers for {} FEATURE_IDs in current chunk", partitionName, currentChunkLayers.size()
 		);
 	}
 
@@ -289,6 +276,9 @@ public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord
 		return commaIndex > 0 ? line.substring(0, commaIndex).trim() : line.trim();
 	}
 
+	/**
+	 * Close a BufferedReader safely.
+	 */
 	private void closeReader(BufferedReader reader, String readerType) {
 		if (reader != null) {
 			try {
@@ -300,14 +290,9 @@ public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord
 		}
 	}
 
-	private void clearPreLoadedLayerData() {
-		if (allLayersByFeatureId != null) {
-			int featureIdCount = allLayersByFeatureId.size();
-			allLayersByFeatureId.clear();
-			logger.debug("[{}] Cleared pre-loaded layer data for {} FEATURE_IDs", partitionName, featureIdCount);
-		}
-	}
-
+	/**
+	 * Handle reader initialization failures
+	 */
 	private ItemStreamException handleReaderInitializationFailure(Exception cause, String errorDescription) {
 		performReaderCleanupAfterFailure();
 
@@ -351,6 +336,9 @@ public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord
 		return createBatchRecord(polygonLine, featureId);
 	}
 
+	/**
+	 * Create a BatchRecord from polygon line and feature ID.
+	 */
 	private BatchRecord createBatchRecord(String polygonLine, String featureId) {
 		List<String> layerLines = currentChunkLayers.getOrDefault(featureId, new ArrayList<>());
 
