@@ -1,0 +1,28 @@
+{
+  "databaseChangeLog": [
+    {
+      "objectQuotingStrategy": "QUOTE_ALL_OBJECTS"
+    },
+     {
+      "changeSet": {
+        "id": "01_00_00_00",
+        "author": "pminter",
+        "tagDatabase": { "tag" : "version_01_00_00_00" },
+        "changes": [
+          {
+            "sqlFile":{
+              "dbms":"postgresql",
+              "endDelimiter":";",
+              "path": "scripts/01_00_00/00/ddl/roles/postgres.ddl.create_roles.sql",
+              "relativeToChangelogFile": true
+            }
+          }
+        ],
+        "rollback": [
+            { "sql": "DROP ROLE app_vdyp_custodian" },
+            { "sql": "DROP ROLE app_vdyp_rest_proxy" }
+        ]
+      }
+    }
+   ] 
+}

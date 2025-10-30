@@ -265,9 +265,9 @@ public class ForwardDataStreamReader {
 		return primarySpecies.get(0);
 	}
 
-	private void calculateSpeciesCoverage(VdypSpecies s, Map<UtilizationClass, VdypUtilization> defaultUtilization) {
+	static void calculateSpeciesCoverage(VdypSpecies s, Map<UtilizationClass, VdypUtilization> defaultUtilization) {
 
-		float speciesCoverage = s.getBaseAreaByUtilization().get(UtilizationClass.ALL)
+		float speciesCoverage = 100f * s.getBaseAreaByUtilization().get(UtilizationClass.ALL)
 				/ defaultUtilization.get(UtilizationClass.ALL).getBasalArea();
 
 		s.setPercentGenus(speciesCoverage);

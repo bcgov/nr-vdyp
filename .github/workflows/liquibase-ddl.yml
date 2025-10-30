@@ -28,6 +28,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -90,7 +92,7 @@ jobs:
           VDYP_DB_USER: ${{ vars.VDYP_DB_ROLE}}
           VDYP_ADMIN_USER: ${{ vars.VDYP_DB_ROLE}}
           VDYP_DB_NAME: ${{ vars.VDYP_DB_DATABASE}}
-          POSTGRESQL_VDYP_PROXY_PASSWORD: ${{ secrets.VDYP_DB_PROXY_PASSWORD}}
+          POSTGRES_ADMIN_USER: postgres
 
       - name: install helm
         run: |
