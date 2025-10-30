@@ -3,22 +3,29 @@ package ca.bc.gov.nrs.vdyp.ecore.projection.output.yieldtable;
 import static ca.bc.gov.nrs.vdyp.test.TestUtils.LAYER_CSV_HEADER_LINE;
 import static ca.bc.gov.nrs.vdyp.test.TestUtils.POLYGON_CSV_HEADER_LINE;
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
+import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.recordHasProperty;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import org.hamcrest.FeatureMatcher;
+import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -997,6 +1004,90 @@ class YieldTableTest {
 				StandYieldCalculationException.class,
 				() -> yieldTable.getYields(2020, UtilizationClassSet._7_5, species, null)
 		);
+	}
+
+	@Test
+	void testGetYieldsSpeciesUC75() throws AbstractProjectionRequestException {
+		var parameters = testHelper.addSelectedOptions(new Parameters().ageStart(0).ageEnd(100));
+
+		var context = new ProjectionContext(ProjectionRequestKind.HCSV, TEST_PROJECTION_ID, parameters, false);
+
+		var yieldTable = YieldTable.of(context);
+
+		VdypSpecies species = VdypSpecies.build(sb -> {
+			sb.genus("PL", 1);
+			sb.polygonIdentifier("12345689", 2020);
+			sb.layerType(LayerType.PRIMARY);
+
+			sb.percentGenus(100f);
+
+			sb.loreyHeight(7.7875f, 18.0594f);
+
+			sb.baseArea(0.021361446f, /* 14.962049f, */ 2.1693978f, 3.157458f, 3.080265f, 6.554928f);
+			sb.quadMeanDiameter(5.902309f, 17.314062f, 10.060733f, 15.029455f, 20.035698f, 30.987747f);
+			sb.treesPerHectare(7.807229f, /* 635.482f, */ 272.89157f, 177.9759f, 97.69879f, 86.915665f);
+
+			sb.wholeStemVolume(0.07903615f, /* 99.580246f, */ 9.413856f, 18.730844f, 21.876747f, 49.558796f);
+			sb.closeUtilizationVolumeByUtilization(
+					0.0f, /* 77.24904f, */ 0.06674699f, 12.073013f, 18.811207f, 46.298073f
+			);
+			sb.closeUtilizationVolumeNetOfDecayByUtilization(
+					0.0f, /* 76.662056f, */ 0.066385545f, 12.01494f, 18.71253f, 45.868195f
+			);
+			sb.closeUtilizationVolumeNetOfDecayAndWasteByUtilization(
+					0.0f, /* 76.4747f, */ 0.06626506f, 12.000121f, 18.680603f, 45.727592f
+			);
+			sb.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(
+					0.0f, /* 74.87422f, */ 0.06493976f, 11.758675f, 18.304459f, 44.746147f
+			);
+		});
+
+		var result = yieldTable.getYields(2020, UtilizationClassSet._7_5, species, species);
+		assertThat(result, recordHasProperty("basalArea75cm", Matchers.closeTo(14.9620, 0.014)));
+		assertThat(result, recordHasProperty("basalArea125cm", Matchers.closeTo(12.7926, 0.012)));
+		assertThat(result, recordHasProperty("diameter", Matchers.closeTo(17.3141, 0.017)));
+	}
+
+	@Test
+	void testGetYieldsSpeciesUC125() throws AbstractProjectionRequestException {
+		var parameters = testHelper.addSelectedOptions(new Parameters().ageStart(0).ageEnd(100));
+
+		var context = new ProjectionContext(ProjectionRequestKind.HCSV, TEST_PROJECTION_ID, parameters, false);
+
+		var yieldTable = YieldTable.of(context);
+
+		VdypSpecies species = VdypSpecies.build(sb -> {
+			sb.genus("PL", 1);
+			sb.polygonIdentifier("12345689", 2020);
+			sb.layerType(LayerType.PRIMARY);
+
+			sb.percentGenus(100f);
+
+			sb.loreyHeight(7.7875f, 18.0594f);
+
+			sb.baseArea(0.021361446f, /* 14.962049f, */ 2.1693978f, 3.157458f, 3.080265f, 6.554928f);
+			sb.quadMeanDiameter(5.902309f, 17.314062f, 10.060733f, 15.029455f, 20.035698f, 30.987747f);
+			sb.treesPerHectare(7.807229f, /* 635.482f, */ 272.89157f, 177.9759f, 97.69879f, 86.915665f);
+
+			sb.wholeStemVolume(0.07903615f, /* 99.580246f, */ 9.413856f, 18.730844f, 21.876747f, 49.558796f);
+			sb.closeUtilizationVolumeByUtilization(
+					0.0f, /* 77.24904f, */ 0.06674699f, 12.073013f, 18.811207f, 46.298073f
+			);
+			sb.closeUtilizationVolumeNetOfDecayByUtilization(
+					0.0f, /* 76.662056f, */ 0.066385545f, 12.01494f, 18.71253f, 45.868195f
+			);
+			sb.closeUtilizationVolumeNetOfDecayAndWasteByUtilization(
+					0.0f, /* 76.4747f, */ 0.06626506f, 12.000121f, 18.680603f, 45.727592f
+			);
+			sb.closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization(
+					0.0f, /* 74.87422f, */ 0.06493976f, 11.758675f, 18.304459f, 44.746147f
+			);
+		});
+
+		var result = yieldTable.getYields(2020, UtilizationClassSet._12_5, species, species);
+		assertThat(result, recordHasProperty("basalArea75cm", Matchers.closeTo(14.9620, 0.014)));
+		assertThat(result, recordHasProperty("basalArea125cm", Matchers.closeTo(12.7926, 0.012)));
+		assertThat(result, recordHasProperty("diameter", Matchers.closeTo(21.1947, 0.021)));
 	}
 
 	@Test

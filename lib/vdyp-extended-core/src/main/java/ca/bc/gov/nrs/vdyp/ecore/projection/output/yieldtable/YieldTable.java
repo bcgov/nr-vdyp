@@ -1490,7 +1490,7 @@ public class YieldTable implements Closeable {
 		var basalArea125cmPlus = UtilizationClassSet._12_5.sumOf(entity.getBaseAreaByUtilization());
 
 		double diameter;
-		if (basalArea75cmPlus > 0 && treesPerHectare > 0) {
+		if (basalArea > 0 && treesPerHectare > 0) {
 			diameter = BaseAreaTreeDensityDiameter.quadMeanDiameter(
 					Double.valueOf(basalArea).floatValue(), Double.valueOf(treesPerHectare).floatValue()
 			);

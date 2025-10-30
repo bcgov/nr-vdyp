@@ -4,6 +4,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -16,6 +17,7 @@ import java.util.function.Function;
 
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
+import org.hamcrest.FeatureMatcher;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.hamcrest.StringDescription;
@@ -167,6 +169,10 @@ public class VdypMatchers {
 	}
 
 	/**
+	 * Stopgap until Hamcrest 3.1 or 4.0 which will provide optional matchers
+	 *
+	 * https://github.com/hamcrest/JavaHamcrest/pull/421
+	 *
 	 * Matches an Optional if it is not present
 	 *
 	 * @param <T>
@@ -866,6 +872,30 @@ public class VdypMatchers {
 					}
 				}
 				return true;
+			}
+		};
+	}
+
+	/**
+	 * Stopgap until Hamcrest 3.1 or 4.0 which will support hasProperty on Record types
+	 *
+	 * https://github.com/hamcrest/JavaHamcrest/issues/252
+	 */
+	public static <R extends Record, P> Matcher<R> recordHasProperty(String property, Matcher<P> subMatcher) {
+		return new FeatureMatcher<R, P>(subMatcher, "has property " + property, property) {
+
+			@SuppressWarnings("unchecked")
+			@Override
+			protected P featureValueOf(R actual) {
+				try {
+					return (P) actual.getClass().getMethod(property).invoke(actual);
+				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
+						| NoSuchMethodException | SecurityException e) {
+					fail(e); // Not ideal but it works. Alternative was implementing a lot more matcher boilerplate from
+								// scratch
+					return null;
+				}
+
 			}
 		};
 	}
