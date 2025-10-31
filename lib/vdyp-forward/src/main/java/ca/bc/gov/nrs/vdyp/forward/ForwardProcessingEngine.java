@@ -281,6 +281,7 @@ public class ForwardProcessingEngine {
 		if (lastStepInclusive.gt(ExecutionStep.SET_COMPATIBILITY_VARIABLES)) {
 			int startingYear = fps.getCurrentStartingYear();
 
+			@SuppressWarnings("unused")
 			int iyrcur = startingYear; // represents the value of the current year as it would be in VDYP 7 to aid in
 										// parallel debugging.
 
@@ -353,6 +354,7 @@ public class ForwardProcessingEngine {
 
 		assert lastStepInclusive.ge(ExecutionStep.GROW_1_LAYER_DHDELTA);
 
+		@SuppressWarnings("unused")
 		int iyrcur = currentYear - 1; // represents the value of the current year as it would be in VDYP 7 to aid in
 										// parallel debugging. For most of this method it will be 1 less than the actual
 										// current year.
@@ -1808,6 +1810,7 @@ public class ForwardProcessingEngine {
 
 		var dqYieldCoefficients = fps.fcm.getQuadMeanDiameterYieldCoefficients();
 		var decayBecZoneAlias = becZone.getDecayBec().getAlias();
+
 		Coefficients coefficientsWeightedBySpeciesAndDecayBec = Coefficients.empty(6, 0);
 		for (int i = 0; i < 6; i++) {
 			float sum = 0.0f;
@@ -1840,11 +1843,11 @@ public class ForwardProcessingEngine {
 
 		int debugSetting6Value = fps.fcm.getDebugSettings().getValue(ForwardDebugSettings.Vars.DQ_GROWTH_MODEL_6);
 
-		var growthFaitDetails = fps.fcm.getQuadMeanDiameterGrowthFiatDetails().get(becZone.getRegion());
+		var growthFiatDetails = fps.fcm.getQuadMeanDiameterGrowthFiatDetails().get(becZone.getRegion());
 
 		Optional<Float> dqGrowthFiat = Optional.empty();
 		if (debugSetting6Value != 1) {
-			var convergenceCoefficient = growthFaitDetails.calculateCoefficient(pspYabhStart);
+			var convergenceCoefficient = growthFiatDetails.calculateCoefficient(pspYabhStart);
 
 			float adjust = -convergenceCoefficient * (dqStart - dqYieldStart);
 			dqGrowthFiat = Optional.of(dqYieldGrowth + adjust);
@@ -1872,12 +1875,12 @@ public class ForwardProcessingEngine {
 
 		case 2: {
 			float empiricalProportion = 1.0f;
-			if (pspYabhStart >= growthFaitDetails.getMixedCoefficient(1)) {
+			if (pspYabhStart >= growthFiatDetails.getMixedCoefficient(1)) {
 				empiricalProportion = 0.0f;
-			} else if (pspYabhStart > growthFaitDetails.getMixedCoefficient(0)) {
-				float t1 = pspYabhStart - growthFaitDetails.getMixedCoefficient(0);
-				float t2 = growthFaitDetails.getMixedCoefficient(1) - growthFaitDetails.getMixedCoefficient(0);
-				float t3 = growthFaitDetails.getMixedCoefficient(2);
+			} else if (pspYabhStart > growthFiatDetails.getMixedCoefficient(0)) {
+				float t1 = pspYabhStart - growthFiatDetails.getMixedCoefficient(0);
+				float t2 = growthFiatDetails.getMixedCoefficient(1) - growthFiatDetails.getMixedCoefficient(0);
+				float t3 = growthFiatDetails.getMixedCoefficient(2);
 				empiricalProportion = 1.0f - FloatMath.pow(t1 / t2, t3);
 			}
 			dqGrowth = empiricalProportion * dqGrowthEmpirical.orElseThrow()
@@ -3410,7 +3413,7 @@ public class ForwardProcessingEngine {
 			int primarySpeciesIndex = bank.speciesIndices[highestPercentageIndex];
 			int basalAreaGroup3 = defaultEquationGroups[primarySpeciesIndex];
 			if (Region.INTERIOR.equals(bank.getBecZone().getRegion())
-					&& exceptedSpeciesIndicies.contains(primarySpeciesIndex)) {
+					&& exceptedSpeciesIndicies.contains(basalAreaGroup3)) {
 				basalAreaGroup3 += 20;
 			}
 

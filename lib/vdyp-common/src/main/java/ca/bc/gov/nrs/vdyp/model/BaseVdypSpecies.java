@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.model;
 
+import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -13,7 +14,7 @@ import ca.bc.gov.nrs.vdyp.application.InitializationIncompleteException;
 import ca.bc.gov.nrs.vdyp.common.Computed;
 import ca.bc.gov.nrs.vdyp.io.parse.coe.GenusDefinitionParser;
 
-public abstract class BaseVdypSpecies<I extends BaseVdypSite> {
+public abstract class BaseVdypSpecies<I extends BaseVdypSite> implements Dumpable {
 	private final PolygonIdentifier polygonIdentifier; // FIP_P/POLYDESC
 
 	// This is also represents the distinction between data stored in
@@ -342,6 +343,21 @@ public abstract class BaseVdypSpecies<I extends BaseVdypSite> {
 		}
 
 		protected abstract I buildSite(Consumer<IB> config);
+	}
+
+	@Override
+	public void dumpState(Appendable output, int indent) throws IOException {
+
+		Dumpable.writeHeader(output, indent, this.getClass(), this.toString());
+
+		Dumpable.writeProperty(output, indent + 1, "genus", genus);
+		Dumpable.writeProperty(output, indent + 1, "genusIndex", genusIndex);
+		Dumpable.writeProperty(output, indent + 1, "percentGenus", percentGenus);
+		Dumpable.writeProperty(output, indent + 1, "fractionGenus", fractionGenus);
+		Dumpable.writeProperty(output, indent + 1, "sp64DistributionSet", sp64DistributionSet);
+
+		Dumpable.writeChild(output, indent + 1, "site", this.site);
+
 	}
 
 }

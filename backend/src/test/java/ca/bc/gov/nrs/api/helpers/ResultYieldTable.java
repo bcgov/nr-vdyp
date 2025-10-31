@@ -11,6 +11,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
+
+import org.checkerframework.checker.units.qual.t;
 
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
@@ -67,6 +70,12 @@ public class ResultYieldTable extends HashMap<String, Map<String, Map<String, Ma
 		compareWithTolerance(expectedTable, actualTable, tolerance, hasKey -> false);
 	}
 
+	static <T> void assertKeysetEquals(Set<T> expected, Set<T> actual, Predicate<T> ignore, String message) {
+		var expectedFiltered = expected.stream().filter(x -> !ignore.test(x)).collect(Collectors.toSet());
+		var actualFiltered = actual.stream().filter(x -> !ignore.test(x)).collect(Collectors.toSet());
+		assertEquals(expectedFiltered, actualFiltered, message);
+	}
+
 	public static void compareWithTolerance(
 			ResultYieldTable expectedTable, ResultYieldTable actualTable, double tolerance,
 			Predicate<String> ignoredFields
@@ -78,8 +87,8 @@ public class ResultYieldTable extends HashMap<String, Map<String, Map<String, Ma
 			var expectedFeature = featureEntry.getValue();
 			var actualFeature = actualTable.get(featureEntry.getKey());
 			var featureId = featureEntry.getKey();
-			assertEquals(
-					expectedFeature.keySet(), actualFeature.keySet(),
+			assertKeysetEquals(
+					expectedFeature.keySet(), actualFeature.keySet(), ignoredFields,
 					"Layer IDs for " + featureId + " don't match expected"
 			);
 
@@ -87,16 +96,18 @@ public class ResultYieldTable extends HashMap<String, Map<String, Map<String, Ma
 				var expectedLayer = layerEntry.getValue();
 				var actualLayer = actualFeature.get(layerEntry.getKey());
 				var layerId = featureId + ":" + layerEntry.getKey();
-				assertEquals(
-						expectedLayer.keySet(), actualLayer.keySet(), "Years  for " + layerId + " don't match expected"
+				assertKeysetEquals(
+						expectedLayer.keySet(), actualLayer.keySet(), ignoredFields,
+						"Years  for " + layerId + " don't match expected"
 				);
 
 				for (var rowEntry : expectedLayer.entrySet()) {
 					var expectedRow = rowEntry.getValue();
 					var actualRow = actualLayer.get(rowEntry.getKey());
 					var yearId = layerId + ":" + rowEntry.getKey();
-					assertEquals(
-							expectedRow.keySet(), actualRow.keySet(), "Fields for " + yearId + " don't match expected"
+					assertKeysetEquals(
+							expectedRow.keySet(), actualRow.keySet(), ignoredFields,
+							"Fields for " + yearId + " don't match expected"
 					);
 
 					for (var field : expectedRow.entrySet()) {
