@@ -13,7 +13,7 @@ COPY ./pom.xml ./pom.xml
 RUN chmod +x buildtools/mvnw && chmod +x ${CONTEXT}/mvnw && ./buildtools/mvnw clean install -N --batch-mode
 RUN cd buildtools && ./mvnw clean install --batch-mode -DskipTests && cd ..
 RUN cd lib && ./mvnw clean install --batch-mode -DskipTests && cd ..
-RUN cd ${CONTEXT} && ./mvnw clean package --batch-mode -DskipTests -Pnative -X
+RUN cd ${CONTEXT} && ./mvnw clean package --batch-mode -DskipTests -Pnative
 
 # "A base image to run Quarkus native application using UBI Micro"
 FROM quay.io/quarkus/quarkus-micro-image:2.0
