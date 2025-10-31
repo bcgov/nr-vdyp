@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.backend.data.models;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 import lombok.Data;
@@ -8,7 +9,7 @@ import lombok.Data;
 public class ProjectionStatusCodeModel {
 	public String projectionStatusCode;
 	public String description;
-	public Integer displayOrder;
+	public BigDecimal displayOrder;
 	public Date effectiveDate;
 	public Date expiryDate;
 }

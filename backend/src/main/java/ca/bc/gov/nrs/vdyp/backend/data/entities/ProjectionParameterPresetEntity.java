@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.backend.data.entities;
 
-import java.util.Date;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.UUID;
 
 import org.hibernate.annotations.UuidGenerator;
@@ -35,18 +36,18 @@ public class ProjectionParameterPresetEntity extends PanacheEntityBase implement
 	private UUID projectionParameterPresetGUID;
 
 	@ManyToOne(fetch = FetchType.EAGER, optional = false)
-	@JoinColumn(name = "vdyp_user_guid")
+	@JoinColumn(name = "vdyp_user_guid", referencedColumnName = "vdyp_user_guid", nullable = false)
 	private VDYPUserEntity ownerUser;
 
 	@Column(name = "preset_name", length = 4000)
 	private String presetName;
 
-	@Column(name = "preset_parameters", length = 4000)
+	@Column(name = "projection_parameters_json", length = 4000)
 	private String presetParameters;
 
 	@NotNull
-	@Column(name = "revision_count", columnDefinition = "numeric(10) default '0'")
-	private Integer revisionCount;
+	@Column(name = "revision_count", length = 64, nullable = false)
+	private BigDecimal revisionCount;
 
 	@NotNull
 	@Column(name = "create_user", length = 64, nullable = false)
@@ -54,7 +55,7 @@ public class ProjectionParameterPresetEntity extends PanacheEntityBase implement
 
 	@NotNull
 	@Column(name = "create_date", nullable = false)
-	private Date createDate;
+	private LocalDate createDate;
 
 	@NotNull
 	@Column(name = "update_user", length = 64, nullable = false)
@@ -62,11 +63,11 @@ public class ProjectionParameterPresetEntity extends PanacheEntityBase implement
 
 	@NotNull
 	@Column(name = "update_date", nullable = false)
-	private Date updateDate;
+	private LocalDate updateDate;
 
 	@Override
 	public void incrementRevisionCount() {
-		this.revisionCount++;
+		this.revisionCount = this.revisionCount.add(BigDecimal.ONE);
 	}
 
 	@Override
@@ -75,7 +76,7 @@ public class ProjectionParameterPresetEntity extends PanacheEntityBase implement
 	}
 
 	@Override
-	public void setCreatedDate(Date date) {
+	public void setCreatedDate(LocalDate date) {
 		this.createDate = date;
 	}
 
@@ -85,9 +86,8 @@ public class ProjectionParameterPresetEntity extends PanacheEntityBase implement
 	}
 
 	@Override
-	public void setLastModifiedDate(Date date) {
+	public void setLastModifiedDate(LocalDate date) {
 		this.updateDate = date;
-
 	}
 
 }

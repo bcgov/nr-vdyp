@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.backend.data.models;
 
-import java.util.Date;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 
 import lombok.Data;
 
@@ -8,7 +9,7 @@ import lombok.Data;
 public class UserTypeCodeModel {
 	private String userTypeCode;
 	private String description;
-	private Integer displayOrder;
-	private Date effectiveDate;
-	private Date expiryDate;
+	private BigDecimal displayOrder;
+	private LocalDate effectiveDate;
+	private LocalDate expiryDate;
 }

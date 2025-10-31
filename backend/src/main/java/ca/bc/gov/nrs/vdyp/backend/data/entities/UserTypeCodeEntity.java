@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.backend.data.entities;
 
-import java.util.Date;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 
 import ca.bc.gov.nrs.vdyp.backend.data.AuditListener;
 import ca.bc.gov.nrs.vdyp.backend.data.Auditable;
@@ -24,21 +25,23 @@ public class UserTypeCodeEntity extends PanacheEntityBase implements Auditable {
 	@Column(name = "user_type_code", length = 10, nullable = false)
 	private String userTypeCode;
 
-	@Column(length = 100, nullable = false)
+	@Column(name = "description", length = 100, nullable = false)
 	private String description;
 
-	@Column(length = 3)
-	private Integer displayOrder;
+	@Column(name = "display_order", length = 3)
+	private BigDecimal displayOrder;
 
 	@NotNull
-	private Date effectiveDate;
+	@Column(name = "effective_date")
+	private LocalDate effectiveDate;
 
 	@NotNull
-	private Date expiryDate;
+	@Column(name = "expiry_date")
+	private LocalDate expiryDate;
 
 	@NotNull
-	@Column(name = "revision_count", columnDefinition = "numeric(10) default '0'")
-	private Integer revisionCount;
+	@Column(name = "revision_count", length = 64, nullable = false)
+	private BigDecimal revisionCount;
 
 	@NotNull
 	@Column(name = "create_user", length = 64, nullable = false)
@@ -46,7 +49,7 @@ public class UserTypeCodeEntity extends PanacheEntityBase implements Auditable {
 
 	@NotNull
 	@Column(name = "create_date", nullable = false)
-	private Date createDate;
+	private LocalDate createDate;
 
 	@NotNull
 	@Column(name = "update_user", length = 64, nullable = false)
@@ -54,11 +57,11 @@ public class UserTypeCodeEntity extends PanacheEntityBase implements Auditable {
 
 	@NotNull
 	@Column(name = "update_date", nullable = false)
-	private Date updateDate;
+	private LocalDate updateDate;
 
 	@Override
 	public void incrementRevisionCount() {
-		this.revisionCount++;
+		this.revisionCount = this.revisionCount.add(BigDecimal.ONE);
 	}
 
 	@Override
@@ -67,7 +70,7 @@ public class UserTypeCodeEntity extends PanacheEntityBase implements Auditable {
 	}
 
 	@Override
-	public void setCreatedDate(Date date) {
+	public void setCreatedDate(LocalDate date) {
 		this.createDate = date;
 	}
 
@@ -77,7 +80,7 @@ public class UserTypeCodeEntity extends PanacheEntityBase implements Auditable {
 	}
 
 	@Override
-	public void setLastModifiedDate(Date date) {
+	public void setLastModifiedDate(LocalDate date) {
 		this.updateDate = date;
 	}
 

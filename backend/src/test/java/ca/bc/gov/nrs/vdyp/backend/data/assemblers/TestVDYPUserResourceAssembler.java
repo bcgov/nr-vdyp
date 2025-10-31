@@ -24,12 +24,12 @@ public class TestVDYPUserResourceAssembler {
 	}
 
 	static Stream<Arguments> modelEntityData() {
-		return Stream.of(Arguments.of(UUID.randomUUID(), UUID.randomUUID(), "ADMIN", "John", "Doe"));
+		return Stream.of(Arguments.of(UUID.randomUUID(), "TestingID", "ADMIN", "John", "Doe"));
 	}
 
 	@ParameterizedTest
 	@MethodSource("modelEntityData")
-	void testEntityToModel(UUID userId, UUID oidcId, String userTypeCode, String firstName, String lastName) {
+	void testEntityToModel(UUID userId, String oidcId, String userTypeCode, String firstName, String lastName) {
 		VDYPUserTestData data = VDYPUserTestData.builder().userId(userId).oidcId(oidcId).userTypeCode(userTypeCode)
 				.firstName(firstName).lastName(lastName).build();
 
@@ -43,7 +43,7 @@ public class TestVDYPUserResourceAssembler {
 
 	@ParameterizedTest
 	@MethodSource("modelEntityData")
-	void testModelToEntity(UUID userId, UUID oidcId, String userTypeCode, String firstName, String lastName) {
+	void testModelToEntity(UUID userId, String oidcId, String userTypeCode, String firstName, String lastName) {
 		VDYPUserTestData data = VDYPUserTestData.builder().userId(userId).oidcId(oidcId).userTypeCode(userTypeCode)
 				.firstName(firstName).lastName(lastName).build();
 
@@ -58,7 +58,7 @@ public class TestVDYPUserResourceAssembler {
 	@Builder
 	private static final class VDYPUserTestData {
 		private UUID userId;
-		private UUID oidcId;
+		private String oidcId;
 		private String userTypeCode;
 		private String firstName;
 		private String lastName;
@@ -81,8 +81,7 @@ public class TestVDYPUserResourceAssembler {
 			VDYPUserModel data = new VDYPUserModel();
 			if (userId != null)
 				data.setVdypUserGUID(userId.toString());
-			if (oidcId != null)
-				data.setOidcGUID(oidcId.toString());
+			data.setOidcGUID(oidcId);
 			if (userTypeCode != null) {
 				UserTypeCodeModel codeData = new UserTypeCodeModel();
 				codeData.setUserTypeCode(userTypeCode);

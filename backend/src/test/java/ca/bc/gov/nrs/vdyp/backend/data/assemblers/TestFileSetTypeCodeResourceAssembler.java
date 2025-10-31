@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.vdyp.backend.data.assemblers;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
+import java.math.BigDecimal;
 import java.util.stream.Stream;
 
 import org.junit.Test;
@@ -21,15 +22,16 @@ public class TestFileSetTypeCodeResourceAssembler {
 
 	static Stream<Arguments> modelEntityData() {
 		return Stream.of(
-				Arguments.of("Test", "Test Description", 1), Arguments.of(null, null, null),
-				Arguments.of(null, "Test Description", 1), Arguments.of("Test", null, 1),
-				Arguments.of("Test", "Test Description", null), Arguments.of("OVERLYLONGCODE", "Test Description", 1)
+				Arguments.of("Test", "Test Description", BigDecimal.ONE), Arguments.of(null, null, null),
+				Arguments.of(null, "Test Description", BigDecimal.ONE), Arguments.of("Test", null, BigDecimal.ONE),
+				Arguments.of("Test", "Test Description", null),
+				Arguments.of("OVERLYLONGCODE", "Test Description", BigDecimal.ONE)
 		);
 	}
 
 	@ParameterizedTest
 	@MethodSource("modelEntityData")
-	void testEntityToModel(String code, String description, Integer displayOrder) {
+	void testEntityToModel(String code, String description, BigDecimal displayOrder) {
 		TestFileSetTypeCodeResourceAssembler.FileSetTypeCodeTestData data = TestFileSetTypeCodeResourceAssembler.FileSetTypeCodeTestData
 				.builder().withCode(code).withDescription(description).withDisplayOrder(displayOrder);
 
@@ -43,7 +45,7 @@ public class TestFileSetTypeCodeResourceAssembler {
 
 	@ParameterizedTest
 	@MethodSource("modelEntityData")
-	void testModelToEntity(String code, String description, Integer displayOrder) {
+	void testModelToEntity(String code, String description, BigDecimal displayOrder) {
 		TestFileSetTypeCodeResourceAssembler.FileSetTypeCodeTestData data = TestFileSetTypeCodeResourceAssembler.FileSetTypeCodeTestData
 				.builder().withCode(code).withDescription(description).withDisplayOrder(displayOrder);
 
@@ -58,7 +60,7 @@ public class TestFileSetTypeCodeResourceAssembler {
 	private static final class FileSetTypeCodeTestData {
 		private String code = null;
 		private String description;
-		private Integer displayOrder;
+		private BigDecimal displayOrder;
 
 		public static TestFileSetTypeCodeResourceAssembler.FileSetTypeCodeTestData builder() {
 			return new TestFileSetTypeCodeResourceAssembler.FileSetTypeCodeTestData();
@@ -74,7 +76,7 @@ public class TestFileSetTypeCodeResourceAssembler {
 			return this;
 		}
 
-		public TestFileSetTypeCodeResourceAssembler.FileSetTypeCodeTestData withDisplayOrder(Integer displayOrder) {
+		public TestFileSetTypeCodeResourceAssembler.FileSetTypeCodeTestData withDisplayOrder(BigDecimal displayOrder) {
 			this.displayOrder = displayOrder;
 			return this;
 		}

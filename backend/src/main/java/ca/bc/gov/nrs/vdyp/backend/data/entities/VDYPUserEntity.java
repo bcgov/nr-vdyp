@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.backend.data.entities;
 
-import java.util.Date;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.UUID;
 
 import org.hibernate.annotations.UuidGenerator;
@@ -35,40 +36,41 @@ public class VDYPUserEntity extends PanacheEntityBase implements Auditable {
 
 	@NotNull
 	@Column(name = "oidc_id", nullable = false, updatable = true, length = 36)
-	private UUID oidcGUID;
+	private String oidcGUID;
 
 	@ManyToOne
 	@JoinColumn(name = "user_type_code", referencedColumnName = "user_type_code", nullable = false, updatable = true)
 	private UserTypeCodeEntity userTypeCode;
 
-	@Column(length = 50)
+	@Column(name = "first_name", length = 50)
 	private String firstName;
 
-	@Column(length = 50)
+	@Column(name = "last_name", length = 50)
 	private String lastName;
 
 	@NotNull
-	private Integer revisionCount;
+	@Column(name = "revision_count", length = 64, nullable = false)
+	private BigDecimal revisionCount;
 
 	@NotNull
-	@Column(length = 64, nullable = false)
+	@Column(name = "create_user", length = 64, nullable = false)
 	private String createUser;
 
 	@NotNull
-	@Column(nullable = false)
-	private Date createDate;
+	@Column(name = "create_date", nullable = false)
+	private LocalDate createDate;
 
 	@NotNull
-	@Column(length = 64, nullable = false)
+	@Column(name = "update_user", length = 64, nullable = false)
 	private String updateUser;
 
 	@NotNull
-	@Column(nullable = false)
-	private Date updateDate;
+	@Column(name = "update_date", nullable = false)
+	private LocalDate updateDate;
 
 	@Override
 	public void incrementRevisionCount() {
-		this.revisionCount++;
+		this.revisionCount = this.revisionCount.add(BigDecimal.ONE);
 	}
 
 	@Override
@@ -77,7 +79,7 @@ public class VDYPUserEntity extends PanacheEntityBase implements Auditable {
 	}
 
 	@Override
-	public void setCreatedDate(Date date) {
+	public void setCreatedDate(LocalDate date) {
 		this.createDate = date;
 	}
 
@@ -87,7 +89,8 @@ public class VDYPUserEntity extends PanacheEntityBase implements Auditable {
 	}
 
 	@Override
-	public void setLastModifiedDate(Date date) {
+	public void setLastModifiedDate(LocalDate date) {
 		this.updateDate = date;
 	}
+
 }

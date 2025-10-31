@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.backend.data.entities;
 
-import java.util.Date;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.UUID;
 
 import ca.bc.gov.nrs.vdyp.backend.data.AuditListener;
@@ -31,34 +32,35 @@ public class ProjectionFileSetEntity extends PanacheEntityBase implements Audita
 	private UUID projectionFileSetGUID;
 
 	@ManyToOne(fetch = FetchType.EAGER)
-	@JoinColumn(referencedColumnName = "file_set_type_code")
+	@JoinColumn(name = "file_set_type_code", referencedColumnName = "file_set_type_code")
 	private FileSetTypeCodeEntity fileSetTypeCode;
 
-	@Column(length = 4000)
+	@Column(name = "file_set_name", length = 4000)
 	private String fileSetName;
 
 	@NotNull
-	private Integer revisionCount;
+	@Column(name = "revision_count", length = 64, nullable = false)
+	private BigDecimal revisionCount;
 
 	@NotNull
-	@Column(length = 64, nullable = false)
+	@Column(name = "create_user", length = 64, nullable = false)
 	private String createUser;
 
 	@NotNull
-	@Column(nullable = false)
-	private Date createDate;
+	@Column(name = "create_date", nullable = false)
+	private LocalDate createDate;
 
 	@NotNull
-	@Column(length = 64, nullable = false)
+	@Column(name = "update_user", length = 64, nullable = false)
 	private String updateUser;
 
 	@NotNull
-	@Column(nullable = false)
-	private Date updateDate;
+	@Column(name = "update_date", nullable = false)
+	private LocalDate updateDate;
 
 	@Override
 	public void incrementRevisionCount() {
-		this.revisionCount++;
+		this.revisionCount = this.revisionCount.add(BigDecimal.ONE);
 	}
 
 	@Override
@@ -67,7 +69,7 @@ public class ProjectionFileSetEntity extends PanacheEntityBase implements Audita
 	}
 
 	@Override
-	public void setCreatedDate(Date date) {
+	public void setCreatedDate(LocalDate date) {
 		this.createDate = date;
 	}
 
@@ -77,9 +79,8 @@ public class ProjectionFileSetEntity extends PanacheEntityBase implements Audita
 	}
 
 	@Override
-	public void setLastModifiedDate(Date date) {
+	public void setLastModifiedDate(LocalDate date) {
 		this.updateDate = date;
-
 	}
 
 }

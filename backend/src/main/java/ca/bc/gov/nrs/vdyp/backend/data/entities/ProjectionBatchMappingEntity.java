@@ -1,6 +1,7 @@
 package ca.bc.gov.nrs.vdyp.backend.data.entities;
 
-import java.util.Date;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.UUID;
 
 import org.hibernate.annotations.UuidGenerator;
@@ -33,40 +34,45 @@ public class ProjectionBatchMappingEntity extends PanacheEntityBase implements A
 	@Column(name = "projection_batch_mapping_guid", nullable = false, updatable = false, columnDefinition = "uuid")
 	private UUID projectionBatchMappingGUID;
 
-	@Column(columnDefinition = "uuid")
+	@Column(name = "batch_job_guid", columnDefinition = "uuid")
 	private UUID batchJobGUID;
 
 	@OneToOne
 	@JoinColumn(name = "projection_guid", referencedColumnName = "projection_guid")
 	private ProjectionEntity projection;
 
+	@Column(name = "partition_count")
 	private Integer partitionCount;
+	@Column(name = "completed_partition_count")
 	private Integer completedPartitionCount;
+	@Column(name = "error_count")
 	private Integer errorCount;
+	@Column(name = "warning_count")
 	private Integer warningCount;
 
 	@NotNull
-	private Integer revisionCount;
+	@Column(name = "revision_count", length = 64, nullable = false)
+	private BigDecimal revisionCount;
 
 	@NotNull
-	@Column(length = 64, nullable = false)
+	@Column(name = "create_user", length = 64, nullable = false)
 	private String createUser;
 
 	@NotNull
-	@Column(nullable = false)
-	private Date createDate;
+	@Column(name = "create_date", nullable = false)
+	private LocalDate createDate;
 
 	@NotNull
-	@Column(length = 64, nullable = false)
+	@Column(name = "update_user", length = 64, nullable = false)
 	private String updateUser;
 
 	@NotNull
-	@Column(nullable = false)
-	private Date updateDate;
+	@Column(name = "update_date", nullable = false)
+	private LocalDate updateDate;
 
 	@Override
 	public void incrementRevisionCount() {
-		this.revisionCount++;
+		this.revisionCount = this.revisionCount.add(BigDecimal.ONE);
 	}
 
 	@Override
@@ -75,7 +81,7 @@ public class ProjectionBatchMappingEntity extends PanacheEntityBase implements A
 	}
 
 	@Override
-	public void setCreatedDate(Date date) {
+	public void setCreatedDate(LocalDate date) {
 		this.createDate = date;
 	}
 
@@ -85,7 +91,7 @@ public class ProjectionBatchMappingEntity extends PanacheEntityBase implements A
 	}
 
 	@Override
-	public void setLastModifiedDate(Date date) {
+	public void setLastModifiedDate(LocalDate date) {
 		this.updateDate = date;
 	}
 

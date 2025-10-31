@@ -1,7 +1,8 @@
 package ca.bc.gov.nrs.vdyp.backend.data.entities;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.util.Date;
 import java.util.UUID;
 
 import org.hibernate.annotations.UuidGenerator;
@@ -50,41 +51,44 @@ public class ProjectionEntity extends PanacheEntityBase implements Auditable {
 	@JoinColumn(name = "RESULT_projection_file_set_guid", referencedColumnName = "projection_file_set_guid")
 	private ProjectionFileSetEntity resultFileSet;
 
-	@Column(length = 4000)
+	@Column(name = "projection_parameters_json", length = 4000)
 	private String projectionParameters;
+	@Column(name = "start_date")
 	private OffsetDateTime startDate;
+	@Column(name = "end_date")
 	private OffsetDateTime endDate;
 
 	@ManyToOne(fetch = FetchType.EAGER)
-	@JoinColumn(referencedColumnName = "calculation_engine_code")
+	@JoinColumn(name = "calculation_engine_code", referencedColumnName = "calculation_engine_code")
 	private CalculationEngineCodeEntity calculationEngineCode;
 
 	@ManyToOne(fetch = FetchType.EAGER)
-	@JoinColumn(referencedColumnName = "projection_status_code")
+	@JoinColumn(name = "projection_status_code", referencedColumnName = "projection_status_code")
 	private ProjectionStatusCodeEntity projectionStatusCode;
 
 	@NotNull
-	private Integer revisionCount;
+	@Column(name = "revision_count", length = 64, nullable = false)
+	private BigDecimal revisionCount;
 
 	@NotNull
-	@Column(length = 64, nullable = false)
+	@Column(name = "create_user", length = 64, nullable = false)
 	private String createUser;
 
 	@NotNull
-	@Column(nullable = false)
-	private Date createDate;
+	@Column(name = "create_date", nullable = false)
+	private LocalDate createDate;
 
 	@NotNull
-	@Column(length = 64, nullable = false)
+	@Column(name = "update_user", length = 64, nullable = false)
 	private String updateUser;
 
 	@NotNull
-	@Column(nullable = false)
-	private Date updateDate;
+	@Column(name = "update_date", nullable = false)
+	private LocalDate updateDate;
 
 	@Override
 	public void incrementRevisionCount() {
-		this.revisionCount++;
+		this.revisionCount = this.revisionCount.add(BigDecimal.ONE);
 	}
 
 	@Override
@@ -93,7 +97,7 @@ public class ProjectionEntity extends PanacheEntityBase implements Auditable {
 	}
 
 	@Override
-	public void setCreatedDate(Date date) {
+	public void setCreatedDate(LocalDate date) {
 		this.createDate = date;
 	}
 
@@ -103,7 +107,7 @@ public class ProjectionEntity extends PanacheEntityBase implements Auditable {
 	}
 
 	@Override
-	public void setLastModifiedDate(Date date) {
+	public void setLastModifiedDate(LocalDate date) {
 		this.updateDate = date;
 	}
 

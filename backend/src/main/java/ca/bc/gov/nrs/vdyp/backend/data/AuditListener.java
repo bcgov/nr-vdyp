@@ -1,6 +1,6 @@
 package ca.bc.gov.nrs.vdyp.backend.data;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 import jakarta.inject.Singleton;
 import jakarta.persistence.PrePersist;
@@ -12,7 +12,7 @@ public class AuditListener {
 	@PrePersist
 	public void beforeInsert(Object entity) {
 		if (entity instanceof Auditable auditable) {
-			auditable.setCreatedDate(new Date());
+			auditable.setCreatedDate(LocalDate.now());
 			auditable.setCreatedBy(currentUser());
 		}
 	}
@@ -20,7 +20,7 @@ public class AuditListener {
 	@PreUpdate
 	public void beforeUpdate(Object entity) {
 		if (entity instanceof Auditable auditable) {
-			auditable.setLastModifiedDate(new Date());
+			auditable.setLastModifiedDate(LocalDate.now());
 			auditable.setLastModifiedBy(currentUser());
 			auditable.incrementRevisionCount();
 		}
