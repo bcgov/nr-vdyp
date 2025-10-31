@@ -263,6 +263,28 @@
 					<artifactId>jacoco-maven-plugin</artifactId>
 					<version>0.8.9</version>
 				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-javadoc-plugin</artifactId>
+					<version>3.6.3</version>
+					<configuration>
+						<encoding>UTF-8</encoding>
+						<source>${maven.compiler.source}</source>
+						<doclint>none</doclint>
+						<doctitle>${project.name} ${project.version} API</doctitle>
+						<windowtitle>${project.name} API</windowtitle>
+						<!-- <excludePackageNames>com.example.internal.*</excludePackageNames> -->
+					</configuration>
+					<executions>
+						<execution>
+							<id>aggregate-javadoc</id>
+							<phase>prepare-package</phase>
+							<goals>
+								<goal>aggregate</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
 			</plugins>
 		</pluginManagement>
 
