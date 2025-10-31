@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.model;
 
+import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.Collection;
 import java.util.Map;
@@ -485,5 +486,43 @@ public class VdypSpecies extends BaseVdypSpecies<VdypSite> implements VdypUtiliz
 			this.breakageGroup = Optional.of(i);
 			return this;
 		}
+	}
+
+	@Override
+	public void dumpState(Appendable output, int indent) throws IOException {
+		super.dumpState(output, indent);
+
+		Dumpable.writeProperty(output, indent + 1, "volumeGroup", volumeGroup);
+		Dumpable.writeProperty(output, indent + 1, "decayGroup", decayGroup);
+		Dumpable.writeProperty(output, indent + 1, "breakageGroup", breakageGroup);
+
+		Dumpable.writeProperty(output, indent + 1, "baseAreaByUtilization", baseAreaByUtilization);
+		Dumpable.writeProperty(output, indent + 1, "loreyHeightByUtilization", loreyHeightByUtilization);
+		Dumpable.writeProperty(
+				output, indent + 1, "quadraticMeanDiameterByUtilization", quadraticMeanDiameterByUtilization
+		);
+		Dumpable.writeProperty(output, indent + 1, "treesPerHectareByUtilization", treesPerHectareByUtilization);
+		Dumpable.writeProperty(output, indent + 1, "wholeStemVolumeByUtilization", wholeStemVolumeByUtilization);
+		Dumpable.writeProperty(
+				output, indent + 1, "closeUtilizationVolumeByUtilization", closeUtilizationVolumeByUtilization
+		);
+		Dumpable.writeProperty(
+				output, indent + 1, "closeUtilizationVolumeNetOfDecayByUtilization",
+				closeUtilizationVolumeNetOfDecayByUtilization
+		);
+		Dumpable.writeProperty(
+				output, indent + 1, "closeUtilizationVolumeNetOfDecayAndWasteByUtilization",
+				closeUtilizationVolumeNetOfDecayAndWasteByUtilization
+		);
+		Dumpable.writeProperty(
+				output, indent + 1, "closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization",
+				closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization
+		);
+
+		Dumpable.writeProperty(output, indent + 1, "cvVolume", cvVolume);
+		Dumpable.writeProperty(output, indent + 1, "cvBasalArea", cvBasalArea);
+		Dumpable.writeProperty(output, indent + 1, "cvQuadraticMeanDiameter", cvQuadraticMeanDiameter);
+		Dumpable.writeProperty(output, indent + 1, "cvPrimaryLayerSmall", cvPrimaryLayerSmall);
+
 	}
 }

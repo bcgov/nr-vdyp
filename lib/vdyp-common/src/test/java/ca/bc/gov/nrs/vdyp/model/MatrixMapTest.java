@@ -8,14 +8,21 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class MatrixMapTest {
 
@@ -206,5 +213,127 @@ class MatrixMapTest {
 		assertThat(map.getM("a", 2), notPresent());
 		assertThat(map.getM("b", 1), notPresent());
 		assertThat(map.getM("b", 2), present(is('Y')));
+	}
+
+	@Nested
+	class EqualityAndHash {
+
+		enum Dim1 {
+			D1_A(1), D1_B(2), D1_C(4);
+
+			public final int i;
+
+			private Dim1(int i) {
+				this.i = i;
+			}
+
+		}
+
+		enum Dim2 {
+			D2_A(8), D2_B(16), D2_C(32);
+
+			public final int i;
+
+			private Dim2(int i) {
+				this.i = i;
+			}
+		}
+
+		enum Dim3 {
+			D3_A(64), D3_B(128), D3_C(256);
+
+			public final int i;
+
+			private Dim3(int i) {
+				this.i = i;
+			}
+		}
+
+		private static List<Arguments> testData() {
+
+			List<Arguments> result = new LinkedList<>();
+
+			var obj = new MatrixMap2Impl<Dim1, Dim2, Integer>(
+					EnumSet.allOf(Dim1.class), EnumSet.allOf(Dim2.class), (k1, k2) -> k1.i + k2.i
+			);
+			result.add(Arguments.of(obj, obj, true));
+			result.add(
+					Arguments.of(
+							new MatrixMap2Impl<Dim1, Dim2, Integer>(
+									EnumSet.allOf(Dim1.class), EnumSet.allOf(Dim2.class), (k1, k2) -> k1.i + k2.i
+							),
+							new MatrixMap2Impl<Dim1, Dim2, Integer>(
+									EnumSet.allOf(Dim1.class), EnumSet.allOf(Dim2.class), (k1, k2) -> k1.i + k2.i
+							), true
+					)
+			);
+			result.add(
+					Arguments.of(
+							new MatrixMap2Impl<Dim1, Dim2, Integer>(
+									EnumSet.allOf(Dim1.class), EnumSet.of(Dim2.D2_A, Dim2.D2_C), (k1, k2) -> k1.i + k2.i
+							),
+							new MatrixMap2Impl<Dim1, Dim2, Integer>(
+									EnumSet.allOf(Dim1.class), EnumSet.allOf(Dim2.class), (k1, k2) -> k1.i + k2.i
+							), false
+					)
+			);
+			result.add(
+					Arguments.of(
+							new MatrixMap2Impl<Dim1, Dim2, Integer>(
+									EnumSet.allOf(Dim1.class), EnumSet.allOf(Dim2.class),
+									(k1, k2) -> k1 == Dim1.D1_A && k2 == Dim2.D2_A ? 0 : k1.i + k2.i
+							),
+							new MatrixMap2Impl<Dim1, Dim2, Integer>(
+									EnumSet.allOf(Dim1.class), EnumSet.allOf(Dim2.class), (k1, k2) -> k1.i + k2.i
+							), false
+					)
+			);
+			result.add(
+					Arguments.of(
+							new MatrixMap2Impl<Dim1, Dim3, Integer>(
+									EnumSet.allOf(Dim1.class), EnumSet.allOf(Dim3.class), (k1, k2) -> k1.i + k2.i / 8
+							),
+							new MatrixMap2Impl<Dim1, Dim2, Integer>(
+									EnumSet.allOf(Dim1.class), EnumSet.allOf(Dim2.class), (k1, k2) -> k1.i + k2.i
+							), false
+					)
+			);
+
+			return result;
+
+		}
+
+		@Test
+		void testEqualsNull() {
+			var unit = new MatrixMap2Impl<Dim1, Dim2, Integer>(
+					EnumSet.allOf(Dim1.class), EnumSet.allOf(Dim2.class), (k1, k2) -> k1.i + k2.i
+			);
+			assertThat(unit.equals(null), is(false));
+		}
+
+		@Test
+		void testEqualsDifferentClass() {
+			var unit = new MatrixMap2Impl<Dim1, Dim2, Integer>(
+					EnumSet.allOf(Dim1.class), EnumSet.allOf(Dim2.class), (k1, k2) -> k1.i + k2.i
+			);
+			assertThat(unit.equals("This is not a matrix map"), is(false));
+		}
+
+		@ParameterizedTest
+		@MethodSource("testData")
+		void testEquals(MatrixMap<?> map1, MatrixMap<?> map2, boolean equal) {
+			assertThat(map1.equals(map2), is(equal));
+			assertThat(map2.equals(map1), is(equal));
+		}
+
+		@ParameterizedTest
+		@MethodSource("testData")
+		void testHashCode(MatrixMap<?> map1, MatrixMap<?> map2, boolean equal) {
+			if (equal) {
+				assertThat(map1.hashCode(), equalTo(map2.hashCode()));
+			} else {
+				assertThat(map1.hashCode(), not(equalTo(map2.hashCode())));
+			}
+		}
 	}
 }

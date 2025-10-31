@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.model;
 
+import java.io.IOException;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -416,4 +417,38 @@ public class VdypLayer extends BaseVdypLayer<VdypSpecies, VdypSite> implements V
 			return super.copySpecies(toCopy, config);
 		}
 	}
+
+	@Override
+	public void dumpState(Appendable output, int indent) throws IOException {
+		super.dumpState(output, indent);
+
+		Dumpable.writeProperty(
+				output, indent + 1, "empiricalRelationshipParameterIndex", empiricalRelationshipParameterIndex
+		);
+		Dumpable.writeProperty(output, indent + 1, "primarySp0", primarySp0);
+		Dumpable.writeProperty(output, indent + 1, "baseAreaByUtilization", baseAreaByUtilization);
+		Dumpable.writeProperty(output, indent + 1, "loreyHeightByUtilization", loreyHeightByUtilization);
+		Dumpable.writeProperty(
+				output, indent + 1, "quadraticMeanDiameterByUtilization", quadraticMeanDiameterByUtilization
+		);
+		Dumpable.writeProperty(output, indent + 1, "treesPerHectareByUtilization", treesPerHectareByUtilization);
+		Dumpable.writeProperty(output, indent + 1, "wholeStemVolumeByUtilization", wholeStemVolumeByUtilization);
+		Dumpable.writeProperty(
+				output, indent + 1, "closeUtilizationVolumeByUtilization", closeUtilizationVolumeByUtilization
+		);
+		Dumpable.writeProperty(
+				output, indent + 1, "closeUtilizationVolumeNetOfDecayByUtilization",
+				closeUtilizationVolumeNetOfDecayByUtilization
+		);
+		Dumpable.writeProperty(
+				output, indent + 1, "closeUtilizationVolumeNetOfDecayAndWasteByUtilization",
+				closeUtilizationVolumeNetOfDecayAndWasteByUtilization
+		);
+		Dumpable.writeProperty(
+				output, indent + 1, "closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization",
+				closeUtilizationVolumeNetOfDecayWasteAndBreakageByUtilization
+		);
+
+	}
+
 }

@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.model;
 
+import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.Collection;
 import java.util.Optional;
@@ -7,7 +8,7 @@ import java.util.Optional;
 import ca.bc.gov.nrs.vdyp.common.Computed;
 import ca.bc.gov.nrs.vdyp.common.Utils;
 
-public abstract class BaseVdypSite {
+public abstract class BaseVdypSite implements Dumpable {
 
 	private final PolygonIdentifier polygonIdentifier;
 	private final LayerType layerType;
@@ -260,6 +261,21 @@ public abstract class BaseVdypSite {
 					siteGenus.map(Object::toString).orElse("N/A")//
 			);
 		}
+
+	}
+
+	@Override
+	public void dumpState(Appendable output, int indent) throws IOException {
+
+		Dumpable.writeHeader(output, indent, this.getClass(), this.toString());
+
+		Dumpable.writeProperty(output, indent + 1, "siteGenus", siteGenus);
+		Dumpable.writeProperty(output, indent + 1, "siteCurveNumber", siteCurveNumber);
+		Dumpable.writeProperty(output, indent + 1, "siteIndex", siteIndex);
+		Dumpable.writeProperty(output, indent + 1, "ageTotal", ageTotal);
+		Dumpable.writeProperty(output, indent + 1, "height", height);
+		Dumpable.writeProperty(output, indent + 1, "yearsToBreastHeight", yearsToBreastHeight);
+		Dumpable.writeProperty(output, indent + 1, "yearsAtBreastHeight", yearsAtBreastHeight);
 
 	}
 

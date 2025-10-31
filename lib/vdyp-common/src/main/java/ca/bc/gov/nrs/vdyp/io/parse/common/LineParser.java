@@ -29,6 +29,7 @@ public class LineParser {
 	private List<LineParserSegment> segments = new ArrayList<>();
 	public static final Charset charset = StandardCharsets.US_ASCII;
 	public static final String LINE_NUMBER_KEY = "_PARSER_LINE_NUMBER";
+	public static final String LINE_KEY = "_PARSER_LINE";
 
 	private abstract static class LineParserSegment {
 		int length;
@@ -309,6 +310,7 @@ public class LineParser {
 				var entry = parse(segments, control);
 
 				entry.put(LINE_NUMBER_KEY, lineNumber);
+				entry.put(LINE_KEY, line);
 
 				return entry;
 			} catch (ValueParseException ex) {

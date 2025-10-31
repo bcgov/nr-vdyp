@@ -21,7 +21,6 @@ import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.model.PolygonIdentifier;
 import ca.bc.gov.nrs.vdyp.model.VdypPolygon;
-import ca.bc.gov.nrs.vdyp.test.VdypMatchers;
 
 class Grow10StoreSpeciesDetails {
 

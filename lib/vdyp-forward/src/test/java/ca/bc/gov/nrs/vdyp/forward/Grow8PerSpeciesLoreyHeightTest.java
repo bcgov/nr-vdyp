@@ -2,7 +2,6 @@ package ca.bc.gov.nrs.vdyp.forward;
 
 import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.closeTo;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
 
 import java.io.IOException;
 import java.util.Map;
