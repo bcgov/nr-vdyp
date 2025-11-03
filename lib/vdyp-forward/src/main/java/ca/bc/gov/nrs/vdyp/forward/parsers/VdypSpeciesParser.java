@@ -30,8 +30,8 @@ public class VdypSpeciesParser implements ControlMapValueReplacer<Object, String
 
 	private static final String DESCRIPTION = "DESCRIPTION"; // POLYDESC
 	private static final String LAYER_TYPE = "LAYER_TYPE"; // LAYERG
-	private static final String GENUS_INDEX = "SPECIES_INDEX"; // ISP
-	private static final String GENUS = "SPECIES"; // SP0
+	private static final String SPECIES_GROUP_INDEX = "SPECIES_INDEX"; // ISP
+	private static final String SPECIES_GROUP = "SPECIES"; // SP0
 
 	private static final String SPECIES_0 = "SPECIES_0"; // SP640
 	private static final String PERCENT_SPECIES_0 = "PERCENT_SPECIES_0"; // PCT0
@@ -72,9 +72,9 @@ public class VdypSpeciesParser implements ControlMapValueReplacer<Object, String
 							)
 					) //
 					.space(1) //
-					.value(2, GENUS_INDEX, ValueParser.INTEGER) //
+					.value(2, SPECIES_GROUP_INDEX, ValueParser.INTEGER) //
 					.space(1) //
-					.value(2, GENUS, ControlledValueParser.optional(ControlledValueParser.GENUS)) //
+					.value(2, SPECIES_GROUP, ControlledValueParser.optional(ControlledValueParser.GENUS)) //
 					.space(1) //
 					.value(3, SPECIES_0, ControlledValueParser.optional(ControlledValueParser.SPECIES))
 					.value(5, PERCENT_SPECIES_0, ControlledValueParser.optional(ValueParser.PERCENTAGE))
@@ -94,7 +94,7 @@ public class VdypSpeciesParser implements ControlMapValueReplacer<Object, String
 
 			var is = fileResolver.resolveForInput(fileName);
 
-			var genusDefinitionMap = (GenusDefinitionMap) controlMap.get(ControlKey.SP0_DEF.name());
+			var speciesGroupDefinitionMap = (GenusDefinitionMap) controlMap.get(ControlKey.SP0_DEF.name());
 
 			var delegateStream = new AbstractStreamingParser<ValueOrMarker<Optional<VdypSpecies>, EndOfRecord>>(
 					is, lineParser, controlMap
@@ -110,16 +110,16 @@ public class VdypSpeciesParser implements ControlMapValueReplacer<Object, String
 						var builder = new ValueOrMarker.Builder<Optional<LayerType>, EndOfRecord>();
 						layerType = builder.marker(EndOfRecord.END_OF_RECORD);
 					}
-					var genusIndex = (Integer) entry.get(GENUS_INDEX);
-					var optionalGenus = (Optional<String>) entry.get(GENUS);
-					var genusNameText0 = (Optional<String>) entry.get(SPECIES_0);
-					var percentGenus0 = (Optional<Float>) entry.get(PERCENT_SPECIES_0);
-					var genusNameText1 = (Optional<String>) entry.get(SPECIES_1);
-					var percentGenus1 = (Optional<Float>) entry.get(PERCENT_SPECIES_1);
-					var genusNameText2 = (Optional<String>) entry.get(SPECIES_2);
-					var percentGenus2 = (Optional<Float>) entry.get(PERCENT_SPECIES_2);
-					var genusNameText3 = (Optional<String>) entry.get(SPECIES_3);
-					var percentGenus3 = (Optional<Float>) entry.get(PERCENT_SPECIES_3);
+					var speciesGroupIndex = (Integer) entry.get(SPECIES_GROUP_INDEX);
+					var optionalSpeciesGroup = (Optional<String>) entry.get(SPECIES_GROUP);
+					var speciesNameText0 = (Optional<String>) entry.get(SPECIES_0);
+					var percentSpecies0 = (Optional<Float>) entry.get(PERCENT_SPECIES_0);
+					var speciesNameText1 = (Optional<String>) entry.get(SPECIES_1);
+					var percentSpecies1 = (Optional<Float>) entry.get(PERCENT_SPECIES_1);
+					var speciesNameText2 = (Optional<String>) entry.get(SPECIES_2);
+					var percentSpecies2 = (Optional<Float>) entry.get(PERCENT_SPECIES_2);
+					var speciesNameText3 = (Optional<String>) entry.get(SPECIES_3);
+					var percentSpecies3 = (Optional<Float>) entry.get(PERCENT_SPECIES_3);
 					var siteIndex = (Float) (entry.get(SITE_INDEX));
 					var dominantHeight = (Float) (entry.get(DOMINANT_HEIGHT));
 					var totalAge = (Float) (entry.get(TOTAL_AGE));
@@ -152,7 +152,8 @@ public class VdypSpeciesParser implements ControlMapValueReplacer<Object, String
 
 						Sp64DistributionSet speciesDistributionSet = new Sp64DistributionSet(4, gdList);
 
-						var genus = optionalGenus.orElse(genusDefinitionMap.getByIndex(genusIndex).getAlias());
+						var speciesGroup = optionalSpeciesGroup
+								.orElse(speciesGroupDefinitionMap.getByIndex(speciesGroupIndex).getAlias());
 
 						var iTotalAge = totalAge;
 						var iYearsToBreastHeight = yearsToBreastHeight;
@@ -175,7 +176,7 @@ public class VdypSpeciesParser implements ControlMapValueReplacer<Object, String
 							speciesBuilder.sp64DistributionSet(speciesDistributionSet);
 							speciesBuilder.polygonIdentifier(polygonId);
 							speciesBuilder.layerType(lt);
-							speciesBuilder.genus(genus, controlMap);
+							speciesBuilder.genus(speciesGroup, controlMap);
 
 							if (isPrimarySpecies.isPresent() && isPrimarySpecies.get() == true) {
 								speciesBuilder.addSite(siteBuilder -> {
@@ -184,7 +185,7 @@ public class VdypSpeciesParser implements ControlMapValueReplacer<Object, String
 									siteBuilder.polygonIdentifier(polygonId);
 									siteBuilder.siteCurveNumber(siteCurveNumber);
 									siteBuilder.layerType(lt);
-									siteBuilder.siteGenus(genus);
+									siteBuilder.siteGenus(speciesGroup);
 									siteBuilder.siteIndex(siteIndex);
 									siteBuilder.yearsToBreastHeight(inferredYearsToBreastHeight);
 									if (inferYearsAtBreastHeight) {
