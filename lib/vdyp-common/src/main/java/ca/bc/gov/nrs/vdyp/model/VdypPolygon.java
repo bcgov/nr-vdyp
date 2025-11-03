@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.model;
 
+import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -104,6 +105,10 @@ public class VdypPolygon extends BaseVdypPolygon<VdypLayer, Float, VdypSpecies, 
 		public void targetYear(Optional<Integer> targetYear) {
 			this.targetYear = targetYear;
 		}
+
+		public void targetYear(int targetYear) {
+			this.targetYear(Optional.of(targetYear));
+		}
 	}
 
 	public void setTargetYear(int year) {
@@ -117,5 +122,11 @@ public class VdypPolygon extends BaseVdypPolygon<VdypLayer, Float, VdypSpecies, 
 		} else {
 			this.targetYear = Optional.of(year);
 		}
+	}
+
+	@Override
+	public void dumpState(Appendable output, int indent) throws IOException {
+		super.dumpState(output, indent);
+		Dumpable.writeProperty(output, indent + 1, "targetYear", targetYear);
 	}
 }

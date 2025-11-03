@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.model;
 
+import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.Collection;
 import java.util.EnumMap;
@@ -13,7 +14,8 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public abstract class BaseVdypPolygon<L extends BaseVdypLayer<SP, SI>, PA, SP extends BaseVdypSpecies<SI>, SI extends BaseVdypSite> {
+public abstract class BaseVdypPolygon<L extends BaseVdypLayer<SP, SI>, PA, SP extends BaseVdypSpecies<SI>, SI extends BaseVdypSite>
+		implements Dumpable {
 
 	private PolygonIdentifier polygonIdentifier; // FIP_P/POLYDESC
 	private PA percentAvailable; // FIP_P2/PCTFLAND
@@ -303,6 +305,21 @@ public abstract class BaseVdypPolygon<L extends BaseVdypLayer<SP, SI>, PA, SP ex
 					polygonIdentifier.map(Object::toString).orElse("N/A") //
 			);
 		}
+
+	}
+
+	@Override
+	public void dumpState(Appendable output, int indent) throws IOException {
+
+		Dumpable.writeHeader(output, indent, this.getClass(), this.toString());
+
+		Dumpable.writeProperty(output, indent + 1, "percentAvailable", percentAvailable);
+		Dumpable.writeProperty(output, indent + 1, "biogeoclimaticZone", biogeoclimaticZone);
+		Dumpable.writeProperty(output, indent + 1, "forestInventoryZone", forestInventoryZone);
+		Dumpable.writeProperty(output, indent + 1, "mode", mode);
+		Dumpable.writeProperty(output, indent + 1, "inventoryTypeGroup", inventoryTypeGroup);
+
+		Dumpable.writeChildren(output, indent + 1, "layers", this.getLayers().values());
 
 	}
 }

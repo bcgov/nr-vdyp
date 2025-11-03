@@ -1,5 +1,6 @@
 package ca.bc.gov.nrs.vdyp.model;
 
+import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.Collection;
 import java.util.Collections;
@@ -16,7 +17,7 @@ import java.util.stream.Collectors;
 
 import ca.bc.gov.nrs.vdyp.common.Computed;
 
-public abstract class BaseVdypLayer<S extends BaseVdypSpecies<I>, I extends BaseVdypSite> {
+public abstract class BaseVdypLayer<S extends BaseVdypSpecies<I>, I extends BaseVdypSite> implements Dumpable {
 
 	private final PolygonIdentifier polygonIdentifier;
 	private final LayerType layerType;
@@ -261,5 +262,16 @@ public abstract class BaseVdypLayer<S extends BaseVdypSpecies<I>, I extends Base
 					layerType.map(Object::toString).orElse("N/A") //
 			);
 		}
+	}
+
+	@Override
+	public void dumpState(Appendable output, int indent) throws IOException {
+
+		Dumpable.writeHeader(output, indent, this.getClass(), this.toString());
+
+		Dumpable.writeProperty(output, indent + 1, "inventoryTypeGroup", inventoryTypeGroup);
+
+		Dumpable.writeChildren(output, indent + 1, "layers", this.speciesBySp0.values());
+
 	}
 }

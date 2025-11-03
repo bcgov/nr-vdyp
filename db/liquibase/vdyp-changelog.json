@@ -1,0 +1,116 @@
+{
+  "databaseChangeLog": [
+    {
+      "objectQuotingStrategy": "QUOTE_ALL_OBJECTS"
+    },
+     {
+      "changeSet": {
+        "id": "01_00_00_00",
+        "author": "pminter",
+        "tagDatabase": { "tag" : "version_01_00_00_00" },
+        "changes": [
+          {
+            "sqlFile": {
+              "dbms": "postgresql",
+              "endDelimiter": ";",
+              "path": "scripts/01_00_00/00/ddl/tables/app-vdyp.file_set_type_code.sql",
+              "relativeToChangelogFile": true
+            }
+          },
+          {
+            "sqlFile": {
+              "dbms": "postgresql",
+              "endDelimiter": ";",
+              "path": "scripts/01_00_00/00/ddl/tables/app-vdyp.user_type_code.sql",
+              "relativeToChangelogFile": true
+            }
+          },
+          {
+            "sqlFile": {
+              "dbms": "postgresql",
+              "endDelimiter": ";",
+              "path": "scripts/01_00_00/00/ddl/tables/app-vdyp.vdyp_user.sql",
+              "relativeToChangelogFile": true
+            }
+          },
+          {
+            "sqlFile": {
+              "dbms": "postgresql",
+              "endDelimiter": ";",
+              "path": "scripts/01_00_00/00/ddl/tables/app-vdyp.projection_file_set.sql",
+              "relativeToChangelogFile": true
+            }
+          },
+          {
+            "sqlFile": {
+              "dbms": "postgresql",
+              "endDelimiter": ";",
+              "path": "scripts/01_00_00/00/ddl/tables/app-vdyp.file_mapping.sql",
+              "relativeToChangelogFile": true
+            }
+          },
+          {
+            "sqlFile": {
+              "dbms": "postgresql",
+              "endDelimiter": ";",
+              "path": "scripts/01_00_00/00/ddl/tables/app-vdyp.projection_status_code.sql",
+              "relativeToChangelogFile": true
+            }
+          },
+          {
+            "sqlFile": {
+              "dbms": "postgresql",
+              "endDelimiter": ";",
+              "path": "scripts/01_00_00/00/ddl/tables/app-vdyp.calculation_engine_code.sql",
+              "relativeToChangelogFile": true
+            }
+          },
+          {
+            "sqlFile": {
+              "dbms": "postgresql",
+              "endDelimiter": ";",
+              "path": "scripts/01_00_00/00/ddl/tables/app-vdyp.projection_param_preset.sql",
+              "relativeToChangelogFile": true
+            }
+          },
+          {
+            "sqlFile": {
+              "dbms": "postgresql",
+              "endDelimiter": ";",
+              "path": "scripts/01_00_00/00/ddl/tables/app-vdyp.projection.sql",
+              "relativeToChangelogFile": true
+            }
+          },
+          {
+            "sqlFile": {
+              "dbms": "postgresql",
+              "endDelimiter": ";",
+              "path": "scripts/01_00_00/00/ddl/tables/app-vdyp.projection_batch_mapping.sql",
+              "relativeToChangelogFile": true
+            }
+          },
+          {
+            "sqlFile":{
+              "dbms":"postgresql",
+              "endDelimiter":";",
+              "path": "scripts/01_00_00/00/ddl/grants/app-vdyp.ddl.apply_grants.sql",
+              "relativeToChangelogFile": true
+            }
+          }
+        ],
+        "rollback": [
+            { "sql": "DROP TABLE \"app-vdyp\".projection_batch_mapping" },
+            { "sql": "DROP TABLE \"app-vdyp\".file_mapping" },
+            { "sql": "DROP TABLE \"app-vdyp\".projection" },
+            { "sql": "DROP TABLE \"app-vdyp\".projection_param_preset" },
+            { "sql": "DROP TABLE \"app-vdyp\".calculation_engine_code" },
+            { "sql": "DROP TABLE \"app-vdyp\".projection_status_code" },
+            { "sql": "DROP TABLE \"app-vdyp\".projection_file_set" },
+            { "sql": "DROP TABLE \"app-vdyp\".vdyp_user" },
+            { "sql": "DROP TABLE \"app-vdyp\".user_type_code" },
+            { "sql": "DROP TABLE \"app-vdyp\".file_set_type_code" }
+        ]
+      }
+    }
+   ] 
+}

@@ -1,12 +1,12 @@
 services:
 
   db:
-    image: postgres:14
+    image: postgres:17
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${VDYP_DB_USER}
-      POSTGRES_PASSWORD: ${VDYP_DB_PASSWORD}
-      POSTGRES_DB: ${VDYP_DB_DATABASE}
+      POSTGRES_USER: ${POSTGRES_DB_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_DB_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB_DATABASE}
     volumes:
       # your init scripts (e.g. 1-schema.sql, 2-seed.sh) live here
       - ./initdb:/docker-entrypoint-initdb.d
@@ -14,9 +14,49 @@ services:
       - db_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB} -h 127.0.0.1 -p 5432" ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # migrate vdyp database on startup
+  postgres-liquibase:
+    depends_on:
+      db:
+        condition: service_healthy        # wait for DB readiness
+    build:
+      context: ./db/liquibase
+      dockerfile: Dockerfile
+    command:
+      [
+        "--url=jdbc:postgresql://db:5432/${POSTGRES_DB_DATABASE}?user=${POSTGRES_DB_USER}&password=${POSTGRES_DB_PASSWORD}",
+        "--changelog-file=postgres-changelog.json",
+        "--searchPath=/liquibase/",
+        "update"
+      ]
+
+  # migrate vdyp database on startup
+  vdyp-liquibase:
+    depends_on:
+      postgres-liquibase:
+        condition: service_completed_successfully        # wait for DB readiness
+    build:
+      context: ./db/liquibase
+      dockerfile: Dockerfile
+    command:
+      [
+        "--url=jdbc:postgresql://db:5432/${VDYP_DB_DATABASE}?user=${VDYP_DB_USER}&password=${VDYP_DB_PASSWORD}&currentSchema=%22app-vdyp%22",
+        "--changelog-file=vdyp-changelog.json",
+        "--searchPath=/liquibase/",
+        "update"
+      ]
 
   coms:
     image: ghcr.io/bcgov/common-object-management-service:${COMS_TAG:-latest}
+    depends_on:
+      db:
+        condition: service_healthy        # wait for DB readiness
     ports:
       - "3000:3000"
     entrypoint:
@@ -41,9 +81,9 @@ services:
       # DB connection
       DB_HOST: db
       DB_PORT: 5432
-      DB_USERNAME: ${VDYP_DB_USER}
-      DB_PASSWORD: ${VDYP_DB_PASSWORD}
-      DB_DATABASE: ${VDYP_DB_DATABASE}
+      DB_USERNAME: ${COMS_DB_USER}
+      DB_PASSWORD: ${COMS_DB_PASSWORD}
+      DB_DATABASE: ${COMS_DB_DATABASE}
 
       KC_ENABLED: "true"
       KC_PUBLICKEY: ${COMS_KEYCLOAK_PUBLICKEY}
@@ -51,6 +91,9 @@ services:
       KC_SERVERURL: ${COMS_KEYCLOAK_SERVER_URL}
 
   vdyp-backend:
+    depends_on:
+      vdyp-liquibase:
+        condition: service_completed_successfully        # wait for DB migrations
     build:
       context: ./
       dockerfile: ./backend/Dockerfile

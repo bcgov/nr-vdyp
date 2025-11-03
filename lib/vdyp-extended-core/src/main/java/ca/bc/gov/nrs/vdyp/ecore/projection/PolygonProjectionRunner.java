@@ -8,9 +8,7 @@ import java.nio.file.Path;
 import java.text.MessageFormat;
 import java.time.LocalDate;
 import java.util.EnumMap;
-import java.util.EnumSet;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
@@ -53,7 +51,6 @@ import ca.bc.gov.nrs.vdyp.exceptions.TotalAgeLowException;
 import ca.bc.gov.nrs.vdyp.exceptions.UnsupportedModeException;
 import ca.bc.gov.nrs.vdyp.math.VdypMath;
 import ca.bc.gov.nrs.vdyp.si32.enumerations.SpeciesRegion;
-import ca.bc.gov.nrs.vdyp.si32.vdyp.SpeciesTable;
 import ca.bc.gov.nrs.vdyp.si32.vdyp.VdypMethods;
 
 /**
@@ -108,7 +105,7 @@ public class PolygonProjectionRunner {
 		return new PolygonProjectionRunner(polygon, context, componentRunner);
 	}
 
-	static final Map<SiteIndexEquation, SiteIndexEquation> CURVES_TO_REMAP = new EnumMap(SiteIndexEquation.class);
+	static final Map<SiteIndexEquation, SiteIndexEquation> CURVES_TO_REMAP = new EnumMap<>(SiteIndexEquation.class);
 
 	static {
 		CURVES_TO_REMAP.put(SiteIndexEquation.SI_ACB_HUANG, SiteIndexEquation.SI_SW_GOUDIE_NATAC);
