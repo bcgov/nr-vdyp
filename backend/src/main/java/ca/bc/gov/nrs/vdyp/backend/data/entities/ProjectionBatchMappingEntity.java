@@ -42,5 +42,4 @@ public class ProjectionBatchMappingEntity extends AuditableEntity {
 	@Column(name = "warning_count")
 	private Integer warningCount;
 
-
 }

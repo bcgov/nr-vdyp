@@ -48,6 +48,31 @@ spec:
               value: "service"
             - name: QUARKUS_OIDC_CREDENTIALS_SECRET
               value: ""
+            - name: VDYP_DB_PROXY_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.backend.env.VDYP_PROXY_DB_SECRET_NAME }}
+                  key: user
+            - name: VDYP_DB_PROXY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.backend.env.VDYP_PROXY_DB_SECRET_NAME }}
+                  key: password
+            - name: VDYP_DB_PROXY_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.backend.env.VDYP_PROXY_DB_SECRET_NAME }}
+                  key: host
+            - name: VDYP_DB_PROXY_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.backend.env.VDYP_PROXY_DB_SECRET_NAME }}
+                  key: port
+            - name: VDYP_DB_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.backend.env.VDYP_DB_SECRET_NAME }}
+                  key: dbname
           ports:
             - name: http
               containerPort: {{ .Values.backend.service.targetPort }}

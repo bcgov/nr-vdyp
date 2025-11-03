@@ -4,10 +4,8 @@ import java.util.UUID;
 
 import org.hibernate.annotations.UuidGenerator;
 
-import ca.bc.gov.nrs.vdyp.backend.data.AuditListener;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -18,7 +16,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@EntityListeners(AuditListener.class)
 @Table(name = "file_mapping")
 @Getter
 @Setter
@@ -37,6 +34,5 @@ public class FileMappingEntity extends AuditableEntity {
 	@NotNull
 	@Column(name = "coms_object_guid", nullable = false, updatable = true, length = 36)
 	private UUID comsObjectGUID;
-
 
 }

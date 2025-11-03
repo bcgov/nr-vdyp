@@ -30,5 +30,4 @@ public class ProjectionFileSetEntity extends AuditableEntity {
 	@Column(name = "file_set_name", length = 4000)
 	private String fileSetName;
 
-
 }

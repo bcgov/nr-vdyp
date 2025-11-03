@@ -34,5 +34,4 @@ public class ProjectionStatusCodeEntity extends AuditableEntity {
 	@Column(name = "expiry_date")
 	private LocalDate expiryDate;
 
-
 }

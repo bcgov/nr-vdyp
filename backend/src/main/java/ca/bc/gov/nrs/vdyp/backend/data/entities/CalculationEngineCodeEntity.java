@@ -34,6 +34,4 @@ public class CalculationEngineCodeEntity extends AuditableEntity {
 	@Column(name = "expiry_date")
 	private LocalDate expiryDate;
 
-
-
 }

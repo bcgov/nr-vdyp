@@ -38,5 +38,4 @@ public class ProjectionParameterPresetEntity extends AuditableEntity {
 	@Column(name = "projection_parameters_json", length = 4000)
 	private String presetParameters;
 
-
 }
