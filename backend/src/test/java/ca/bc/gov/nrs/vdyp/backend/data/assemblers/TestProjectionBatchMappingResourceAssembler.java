@@ -5,7 +5,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import java.util.UUID;
 import java.util.stream.Stream;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -16,7 +16,7 @@ import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionBatchMappingModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionModel;
 import lombok.Builder;
 
-public class TestProjectionBatchMappingResourceAssembler {
+class TestProjectionBatchMappingResourceAssembler {
 	@Test
 	public void testNull() {
 		assertThat(new ProjectionBatchMappingResourceAssembler().toEntity(null)).isNull();

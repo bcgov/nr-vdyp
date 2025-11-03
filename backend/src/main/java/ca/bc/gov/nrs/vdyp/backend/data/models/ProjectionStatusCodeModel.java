@@ -7,9 +7,9 @@ import lombok.Data;
 
 @Data
 public class ProjectionStatusCodeModel {
-	public String projectionStatusCode;
-	public String description;
-	public BigDecimal displayOrder;
-	public Date effectiveDate;
-	public Date expiryDate;
+	private String projectionStatusCode;
+	private String description;
+	private BigDecimal displayOrder;
+	private Date effectiveDate;
+	private Date expiryDate;
 }

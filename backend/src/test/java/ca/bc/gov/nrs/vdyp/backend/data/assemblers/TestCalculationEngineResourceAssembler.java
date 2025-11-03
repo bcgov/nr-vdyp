@@ -5,7 +5,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import java.math.BigDecimal;
 import java.util.stream.Stream;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -14,9 +14,9 @@ import ca.bc.gov.nrs.vdyp.backend.data.entities.CalculationEngineCodeEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.CalculationEngineCodeModel;
 import lombok.Builder;
 
-public class TestCalculationEngineResourceAssembler {
+class TestCalculationEngineResourceAssembler {
 	@Test
-	public void testNull() {
+	void testNull() {
 		assertThat(new CalculationEngineResourceAssembler().toEntity(null)).isNull();
 		assertThat(new CalculationEngineResourceAssembler().toModel(null)).isNull();
 	}
@@ -59,7 +59,7 @@ public class TestCalculationEngineResourceAssembler {
 	}
 
 	@Builder
-	private static final class CalculationEngineTestData {
+	static final class CalculationEngineTestData {
 		private String code = null;
 		private String description;
 		private BigDecimal displayOrder;

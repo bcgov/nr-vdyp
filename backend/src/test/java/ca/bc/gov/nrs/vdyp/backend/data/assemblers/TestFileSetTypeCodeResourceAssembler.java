@@ -5,7 +5,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import java.math.BigDecimal;
 import java.util.stream.Stream;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -13,7 +13,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import ca.bc.gov.nrs.vdyp.backend.data.entities.FileSetTypeCodeEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.FileSetTypeCodeModel;
 
-public class TestFileSetTypeCodeResourceAssembler {
+class TestFileSetTypeCodeResourceAssembler {
 	@Test
 	public void testNull() {
 		assertThat(new FileSetTypeCodeResourceAssembler().toEntity(null)).isNull();

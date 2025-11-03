@@ -6,7 +6,7 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 import java.util.stream.Stream;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -19,7 +19,7 @@ import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionModel;
 import ca.bc.gov.nrs.vdyp.backend.data.models.VDYPUserModel;
 import lombok.Builder;
 
-public class TestProjectionResourceAssembler {
+class TestProjectionResourceAssembler {
 	@Test
 	public void testNull() {
 		assertThat(new ProjectionResourceAssembler().toEntity(null)).isNull();
