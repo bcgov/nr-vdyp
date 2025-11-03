@@ -15,7 +15,7 @@ import lombok.Setter;
 @Table(name = "projection_status_code")
 @Getter
 @Setter
-public class ProjectionStatusCodeEntity extends AuditableEntity {
+public class ProjectionStatusCodeEntity extends CodeTableEntity {
 	@Id
 	@Column(name = "projection_status_code", length = 10, nullable = false)
 	private String projectionStatusCode;

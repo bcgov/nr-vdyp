@@ -15,7 +15,7 @@ import lombok.Setter;
 @Table(name = "file_set_type_code")
 @Getter
 @Setter
-public class FileSetTypeCodeEntity extends AuditableEntity {
+public class FileSetTypeCodeEntity extends CodeTableEntity {
 	@Id
 	@Column(name = "file_set_type_code", length = 10, nullable = false)
 	private String fileSetTypeCode;
