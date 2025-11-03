@@ -4,6 +4,7 @@ import static ca.bc.gov.nrs.vdyp.test.VdypMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.Test;
 
 import ca.bc.gov.nrs.vdyp.common.ControlKey;
 import ca.bc.gov.nrs.vdyp.forward.parsers.VdypSpeciesParser;
+import ca.bc.gov.nrs.vdyp.io.parse.common.ResourceParseException;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParser;
 import ca.bc.gov.nrs.vdyp.io.parse.streaming.StreamingParserFactory;
 import ca.bc.gov.nrs.vdyp.model.LayerType;
@@ -122,10 +124,10 @@ class ForwardSpeciesParserTest {
 				"test.dat",
 				TestUtils.makeInputStream(
 						"01002 S000002 00     1970 P 15 S  S  100.0     0.0     0.0     0.0 -9.00 -9.00  -9.0  -9.0  -9.0 0 -9", //
-						"01002 S000002 00     1970 V  3 B  B   50.0 S  50.0     0.0     0.0 -9.00 -9.00  -9.0  -9.0  -9.0", //
+						"01002 S000002 00     1970 V  3 B  B   50.0 BA 50.0     0.0     0.0 -9.00 -9.00  -9.0  -9.0  -9.0", //
 						"01002 S000002 00     1970", //
 						"01002 S000003 00     1970 P 15 S  S  100.0     0.0     0.0     0.0 -9.00 -9.00  -9.0  -9.0  -9.0 0 -9", //
-						"01002 S000003 00     1970 V  3 B  B   50.0 S  50.0     0.0     0.0 -9.00 -9.00  -9.0  -9.0  -9.0", //
+						"01002 S000003 00     1970 V  3 B  B   50.0 BA 50.0     0.0     0.0 -9.00 -9.00  -9.0  -9.0  -9.0", //
 						"01002 S000003 00     1970" //
 				)
 		);
@@ -163,9 +165,9 @@ class ForwardSpeciesParserTest {
 		var fileResolver = TestUtils.fileResolverContext(
 				"test.dat",
 				TestUtils.makeInputStream(
-						"01002 S000002 00     1970 P 15 S  S  100.0     0.0     0.0     0.0 -9.00 -9.00  20.0  12.0  -9.0 0 -9", //
-						"01002 S000002 00     1970 V  3 B  B   50.0 S  50.0     0.0     0.0 -9.00 -9.00  -9.0   8.0   4.0", //
-						"01002 S000002 00     1970 V  5 L  L   50.0 S  25.0 AC 15.0 B  10.0 -9.00 -9.00  14.0  -9.0   6.0 1", //
+						"01002 S000002 00     1970 P 15 L  L  100.0     0.0     0.0     0.0 -9.00 -9.00  20.0  12.0  -9.0 0 -9", //
+						"01002 S000002 00     1970 V  3 B  B   50.0 BL 50.0     0.0     0.0 -9.00 -9.00  -9.0   8.0   4.0", //
+						"01002 S000002 00     1970 V  5 S  S   50.0 SX 25.0 SB 15.0 SE 10.0 -9.00 -9.00  14.0  -9.0   6.0 1", //
 						"01002 S000002 00     1970" //
 				)
 		);
@@ -204,7 +206,7 @@ class ForwardSpeciesParserTest {
 														hasEntry(
 																is(2),
 																allOf(
-																		hasProperty("genusAlias", is("S")),
+																		hasProperty("genusAlias", is("BL")),
 																		hasProperty("percentage", is(50.0f))
 																)
 														)
@@ -221,28 +223,28 @@ class ForwardSpeciesParserTest {
 														hasEntry(
 																is(1),
 																allOf(
-																		hasProperty("genusAlias", is("L")),
+																		hasProperty("genusAlias", is("S")),
 																		hasProperty("percentage", is(50.0f))
 																)
 														),
 														hasEntry(
 																is(2),
 																allOf(
-																		hasProperty("genusAlias", is("S")),
+																		hasProperty("genusAlias", is("SX")),
 																		hasProperty("percentage", is(25.0f))
 																)
 														),
 														hasEntry(
 																is(3),
 																allOf(
-																		hasProperty("genusAlias", is("AC")),
+																		hasProperty("genusAlias", is("SB")),
 																		hasProperty("percentage", is(15.0f))
 																)
 														),
 														hasEntry(
 																is(4),
 																allOf(
-																		hasProperty("genusAlias", is("B")),
+																		hasProperty("genusAlias", is("SE")),
 																		hasProperty("percentage", is(10.0f))
 																)
 														)
@@ -285,7 +287,7 @@ class ForwardSpeciesParserTest {
 				"test.dat",
 				TestUtils.makeInputStream(
 						"01002 S000002 00     1970 P 15 S  S  100.0     0.0     0.0     0.0 14.50 -9.00  -9.0  -9.0  -9.0 1 -9", //
-						"01002 S000002 00     1970 V  3 B  B   50.0 S  50.0     0.0     0.0 -9.00 -9.00  -9.0  -9.0  -9.0", //
+						"01002 S000002 00     1970 V  3 B  B   50.0 BL 50.0     0.0     0.0 -9.00 -9.00  -9.0  -9.0  -9.0", //
 						"01002 S000002 00     1970" //
 				)
 		);
@@ -365,7 +367,7 @@ class ForwardSpeciesParserTest {
 																is(2),
 																allOf(
 																		hasProperty("index", is(2)),
-																		hasProperty("genusAlias", is("S")),
+																		hasProperty("genusAlias", is("BL")),
 																		hasProperty("percentage", is(50.0f))
 																)
 														)
@@ -378,4 +380,5 @@ class ForwardSpeciesParserTest {
 
 		assertEmpty(stream);
 	}
+
 }
