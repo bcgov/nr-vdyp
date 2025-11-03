@@ -36,40 +36,27 @@ public abstract class AuditableEntity extends PanacheEntityBase {
 	@Column(name = "update_date", nullable = false)
 	private LocalDate updateDate;
 
-	public void incrementRevisionCount() {
-		this.revisionCount = revisionCount.add(BigDecimal.ONE);
-	}
-
-	public void setCreatedBy(String createUser) {
-		this.createUser = createUser;
-	}
-
-	public void setCreatedDate(LocalDate date) {
-		this.createDate = date;
-	}
-
-	public void setLastModifiedBy(String user) {
-		this.updateUser = user;
-	}
-
-	public void setLastModifiedDate(LocalDate date) {
-		this.updateDate = date;
-	}
-
 	private String currentUser() {
 		return "system";
 	}
 
+	private void incrementRevisionCount() {
+		if (this.revisionCount == null) {
+			this.revisionCount = BigDecimal.ZERO;
+		}
+		this.revisionCount = this.revisionCount.add(BigDecimal.ONE);
+	}
+
 	@PrePersist
 	public void beforeInsert() {
-		setCreatedDate(LocalDate.now());
-		setCreatedBy(currentUser());
+		setCreateDate(LocalDate.now());
+		setCreateUser(currentUser());
 	}
 
 	@PreUpdate
 	public void beforeUpdate() {
-		setLastModifiedDate(LocalDate.now());
-		setLastModifiedBy(currentUser());
+		setUpdateDate(LocalDate.now());
+		setUpdateUser(currentUser());
 		incrementRevisionCount();
 	}
 }
