@@ -4,10 +4,6 @@ import ca.bc.gov.nrs.vdyp.backend.data.entities.ProjectionStatusCodeEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.ProjectionStatusCodeModel;
 
 public class ProjectionStatusCodeResourceAssembler {
-	public ProjectionStatusCodeResourceAssembler() {
-
-	}
-
 	public ProjectionStatusCodeEntity toEntity(ProjectionStatusCodeModel model) {
 		if (model == null) {
 			return null;

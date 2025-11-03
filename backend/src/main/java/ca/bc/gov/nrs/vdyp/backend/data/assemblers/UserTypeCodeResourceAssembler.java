@@ -4,8 +4,6 @@ import ca.bc.gov.nrs.vdyp.backend.data.entities.UserTypeCodeEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.UserTypeCodeModel;
 
 public class UserTypeCodeResourceAssembler {
-	public UserTypeCodeResourceAssembler() {
-	}
 
 	public UserTypeCodeEntity toEntity(UserTypeCodeModel model) {
 		if (model == null) {

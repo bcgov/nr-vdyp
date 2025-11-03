@@ -4,9 +4,6 @@ import ca.bc.gov.nrs.vdyp.backend.data.entities.CalculationEngineCodeEntity;
 import ca.bc.gov.nrs.vdyp.backend.data.models.CalculationEngineCodeModel;
 
 public class CalculationEngineResourceAssembler {
-	public CalculationEngineResourceAssembler() {
-	}
-
 	public CalculationEngineCodeEntity toEntity(CalculationEngineCodeModel model) {
 		if (model == null) {
 			return null;
