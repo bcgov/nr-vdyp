@@ -43,10 +43,11 @@ public class ResultAggregationService {
 	 *
 	 * @return Path to the consolidated ZIP file
 	 */
-	public Path aggregateResultsFromJobDir(Long jobExecutionId, String jobBaseDir, String jobTimestamp)
+	public Path aggregateResultsFromJobDir(Long jobExecutionId, String jobGuid, String jobBaseDir, String jobTimestamp)
 			throws IOException {
 		logger.info(
-				"Starting result aggregation for job execution: {} from job directory: {}", jobExecutionId, jobBaseDir
+				"[Guid: {}] Starting result aggregation for job execution: {} from job directory: {}", jobGuid,
+				jobExecutionId, jobBaseDir
 		);
 
 		if (jobBaseDir == null || jobBaseDir.trim().isEmpty()) {
@@ -72,8 +73,8 @@ public class ResultAggregationService {
 		List<Path> partitionOutputDirs = findPartitionOutputDirectories(jobBasePath);
 		logger.info("Found {} partition output directories to aggregate", partitionOutputDirs.size());
 
-		// Create final ZIP file using same timestamp as job base directory
-		String finalZipFileName = String.format("vdyp-output-%s.zip", jobTimestamp);
+		// Create final ZIP file using same jobGuid as job base directory
+		String finalZipFileName = String.format("vdyp-output-%s.zip", jobGuid);
 		Path finalZipPath = jobBasePath.resolve(finalZipFileName);
 
 		if (partitionOutputDirs.isEmpty()) {

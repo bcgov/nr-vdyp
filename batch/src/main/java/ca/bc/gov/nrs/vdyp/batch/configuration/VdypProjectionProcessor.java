@@ -21,6 +21,8 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 	private final BatchMetricsCollector metricsCollector;
 
 	// Partition context information
+	private Long jobExecutionId;
+	private String jobGuid;
 	private String partitionName = BatchConstants.Common.UNKNOWN;
 
 	// Validation thresholds
@@ -42,15 +44,19 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 	 */
 	@BeforeStep
 	public void beforeStep(StepExecution stepExecution) {
-		Long jobExecutionId = stepExecution.getJobExecutionId();
+		this.jobExecutionId = stepExecution.getJobExecutionId();
+		this.jobGuid = stepExecution.getJobExecution().getJobParameters().getString(BatchConstants.Job.GUID);
 		this.partitionName = stepExecution.getExecutionContext()
 				.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN);
 
 		if (metricsCollector != null) {
-			metricsCollector.initializePartitionMetrics(jobExecutionId, partitionName);
+			metricsCollector.initializePartitionMetrics(jobExecutionId, jobGuid, partitionName);
 		}
 
-		logger.info("[{}] VDYP Projection Processor initialized for job {}", partitionName, jobExecutionId);
+		logger.info(
+				"[Guid: {}, Partition: {}] VDYP Projection Processor initialized for job {}", jobGuid, partitionName,
+				jobExecutionId
+		);
 	}
 
 	@Override
@@ -62,7 +68,10 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 			throw new IllegalArgumentException("FEATURE_ID is null or empty");
 		}
 
-		logger.debug("[{}] Prepared record for chunk processing: FEATURE_ID {}", partitionName, featureId);
+		logger.debug(
+				"[Guid: {}, ExeId: {} Partition: {}] Prepared record for chunk processing: FEATURE_ID {}", jobGuid,
+				jobExecutionId, partitionName, featureId
+		);
 
 		return batchRecord;
 	}

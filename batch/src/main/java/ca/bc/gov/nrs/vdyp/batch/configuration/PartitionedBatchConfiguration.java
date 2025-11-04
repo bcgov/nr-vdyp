@@ -36,6 +36,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import ca.bc.gov.nrs.vdyp.batch.exception.ResultAggregationException;
+import ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.service.ResultAggregationService;
@@ -155,10 +156,15 @@ public class PartitionedBatchConfiguration {
 								.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN);
 
 						Long jobExecutionId = stepExecution.getJobExecutionId();
+						String jobGuid = stepExecution.getJobExecution().getJobParameters()
+								.getString(BatchConstants.Job.GUID);
 
-						metricsCollector.initializePartitionMetrics(jobExecutionId, partitionName);
+						metricsCollector.initializePartitionMetrics(jobExecutionId, jobGuid, partitionName);
 
-						logger.info("[{}] VDYP Worker step starting", partitionName);
+						logger.info(
+								"[{}] [GUID: {}] VDYP Worker step starting for job execution ID: {}", partitionName,
+								jobGuid, jobExecutionId
+						);
 					}
 
 					@Override
@@ -166,17 +172,19 @@ public class PartitionedBatchConfiguration {
 						String partitionName = stepExecution.getExecutionContext()
 								.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN);
 						Long jobExecutionId = stepExecution.getJobExecutionId();
+						String jobGuid = stepExecution.getJobExecution().getJobParameters()
+								.getString(BatchConstants.Job.GUID);
 
 						// Complete partition metrics
 						metricsCollector.completePartitionMetrics(
-								jobExecutionId, partitionName, stepExecution.getWriteCount(),
+								jobExecutionId, jobGuid, partitionName, stepExecution.getWriteCount(),
 								stepExecution.getExitStatus().getExitCode()
 						);
 
 						logger.info(
-								"[{}] VDYP Worker step completed. Read: {}, Written: {}, Skipped: {}", partitionName,
-								stepExecution.getReadCount(), stepExecution.getWriteCount(),
-								stepExecution.getSkipCount()
+								"[{}] [GUID: {}] VDYP Worker step completed for job execution ID: {}. Read: {}, Written: {}, Skipped: {}",
+								partitionName, jobGuid, jobExecutionId, stepExecution.getReadCount(),
+								stepExecution.getWriteCount(), stepExecution.getSkipCount()
 						);
 
 						return stepExecution.getExitStatus();
@@ -198,13 +206,19 @@ public class PartitionedBatchConfiguration {
 					@Override
 					public void beforeJob(@NonNull JobExecution jobExecution) {
 						// Initialize job metrics
-						metricsCollector.initializeMetrics(jobExecution.getId());
+						String jobGuid = jobExecution.getJobParameters().getString(BatchConstants.Job.GUID);
+						metricsCollector.initializeMetrics(jobExecution.getId(), jobGuid);
+						logger.info(
+								"[GUID: {}] === VDYP Batch Job Starting === Execution ID: {}", jobGuid,
+								jobExecution.getId()
+						);
 						jobExecutionListener.beforeJob(jobExecution);
-						logger.info("=== VDYP Batch Job Starting ===");
 					}
 
 					@Override
 					public void afterJob(@NonNull JobExecution jobExecution) {
+						String jobGuid = jobExecution.getJobParameters().getString(BatchConstants.Job.GUID);
+
 						// Finalize job metrics - only count worker steps (partitioned steps)
 						long totalRead = jobExecution.getStepExecutions().stream()
 								.filter(stepExecution -> stepExecution.getStepName().startsWith("workerStep:"))
@@ -214,13 +228,15 @@ public class PartitionedBatchConfiguration {
 								.mapToLong(StepExecution::getWriteCount).sum();
 
 						logger.debug(
-								"[VDYP Metrics Debug] Job {} - All steps: [{}]", jobExecution.getId(),
+								"[GUID: {}] [VDYP Metrics Debug] Job execution ID: {} - All steps: [{}]", jobGuid,
+								jobExecution.getId(),
 								jobExecution.getStepExecutions().stream().map(StepExecution::getStepName)
 										.collect(Collectors.joining(", "))
 						);
 
 						metricsCollector.finalizeJobMetrics(
-								jobExecution.getId(), jobExecution.getStatus().toString(), totalRead, totalWritten
+								jobExecution.getId(), jobGuid, jobExecution.getStatus().toString(), totalRead,
+								totalWritten
 						);
 
 						jobExecutionListener.afterJob(jobExecution);
@@ -234,21 +250,24 @@ public class PartitionedBatchConfiguration {
 									Path jobBasePath = Paths.get(jobBaseDir);
 									resultAggregationService.cleanupPartitionDirectories(jobBasePath);
 									logger.info(
-											"Job {} was stopped. Interim partition directories cleanup completed",
-											jobExecution.getId()
+											"[GUID: {}] Job execution ID: {} was stopped. Interim partition directories cleanup completed",
+											jobGuid, jobExecution.getId()
 									);
 								}
 							} catch (Exception e) {
 								logger.warn(
-										"Failed to cleanup interim directories for stopped job {}: {}",
-										jobExecution.getId(), e.getMessage()
+										"[GUID: {}] Failed to cleanup interim directories for stopped job execution ID: {}: {}",
+										jobGuid, jobExecution.getId(), e.getMessage()
 								);
 							}
 						}
 
 						metricsCollector.cleanupOldMetrics(20);
 
-						logger.info("=== VDYP Batch Job Completed ===");
+						logger.info(
+								"[GUID: {}] === VDYP Batch Job Completed === Execution ID: {}", jobGuid,
+								jobExecution.getId()
+						);
 					}
 				}).build();
 	}
@@ -260,13 +279,15 @@ public class PartitionedBatchConfiguration {
 			@Value("#{stepExecutionContext['partitionName']}") String partitionName,
 			@Value("#{stepExecution.jobExecutionId}") Long jobExecutionId, BatchProperties batchProperties
 	) {
-
+		BatchMetrics metrics = metricsCollector.getJobMetrics(jobExecutionId);
+		String jobGuid = metrics.getJobGuid();
 		logger.info(
-				"[{}] Using ChunkBasedPolygonItemReader with chunk size: {}", partitionName,
-				batchProperties.getReader().getDefaultChunkSize()
+				"[GUID: {}, Execution ID: {}, Partition: {}] Using ChunkBasedPolygonItemReader with chunk size: {}",
+				jobGuid, jobExecutionId, partitionName, batchProperties.getReader().getDefaultChunkSize()
 		);
 		return new ChunkBasedPolygonItemReader(
-				partitionName, metricsCollector, jobExecutionId, batchProperties.getReader().getDefaultChunkSize()
+				partitionName, metricsCollector, jobExecutionId, jobGuid,
+				batchProperties.getReader().getDefaultChunkSize()
 		);
 	}
 
@@ -302,7 +323,9 @@ public class PartitionedBatchConfiguration {
 	public Tasklet resultAggregationTasklet() {
 		return (contribution, chunkContext) -> {
 			Long jobExecutionId = chunkContext.getStepContext().getStepExecution().getJobExecutionId();
-			logger.info("Starting result aggregation for job execution: {}", jobExecutionId);
+			String jobGuid = chunkContext.getStepContext().getStepExecution().getJobExecution().getJobParameters()
+					.getString(BatchConstants.Job.GUID);
+			logger.info("[GUID: {}] Starting result aggregation for job execution: {}", jobGuid, jobExecutionId);
 			try {
 				JobExecution jobExecution = chunkContext.getStepContext().getStepExecution().getJobExecution();
 
@@ -310,12 +333,15 @@ public class PartitionedBatchConfiguration {
 				String jobBaseDir = jobExecution.getJobParameters().getString(BatchConstants.Job.BASE_DIR);
 
 				Path consolidatedZip = resultAggregationService
-						.aggregateResultsFromJobDir(jobExecutionId, jobBaseDir, jobTimestamp);
+						.aggregateResultsFromJobDir(jobExecutionId, jobGuid, jobBaseDir, jobTimestamp);
 
 				chunkContext.getStepContext().getStepExecution().getExecutionContext()
 						.putString("consolidatedOutputPath", consolidatedZip.toString());
 
-				logger.info("Result aggregation completed successfully. Consolidated output: {}", consolidatedZip);
+				logger.info(
+						"[GUID: {}] Result aggregation completed successfully for job execution: {}. Consolidated output: {}",
+						jobGuid, jobExecutionId, consolidatedZip
+				);
 
 				// Clean up interim partition directories after successful zip creation and validation
 				if (batchProperties.getPartition().getInterimDirsCleanupEnabled()) {
@@ -324,16 +350,20 @@ public class PartitionedBatchConfiguration {
 						Path jobBasePath = Paths.get(jobBaseDir);
 						resultAggregationService.cleanupPartitionDirectories(jobBasePath);
 
-						logger.info("Interim partition directories cleanup completed for job: {}", jobExecutionId);
+						logger.info(
+								"[GUID: {}] Interim partition directories cleanup completed for job: {}", jobGuid,
+								jobExecutionId
+						);
 					} else {
 						logger.warn(
-								"Consolidated ZIP file validation failed. Skipping cleanup to preserve interim files for debugging."
+								"[GUID: {}] Consolidated ZIP file validation failed for job: {}. Skipping cleanup to preserve interim files for debugging.",
+								jobGuid, jobExecutionId
 						);
 					}
 				} else {
 					logger.info(
-							"Cleanup is disabled. Skipping cleanup of interim partition directories for job: {}",
-							jobExecutionId
+							"[GUID: {}] Cleanup is disabled. Skipping cleanup of interim partition directories for job: {}",
+							jobGuid, jobExecutionId
 					);
 				}
 
@@ -341,21 +371,22 @@ public class PartitionedBatchConfiguration {
 
 			} catch (IOException ioException) {
 				throw handleResultAggregationFailure(
-						jobExecutionId, ioException, "I/O operation failed during result aggregation"
+						jobExecutionId, jobGuid, ioException, "I/O operation failed during result aggregation"
 				);
 			} catch (Exception generalException) {
 				throw handleResultAggregationFailure(
-						jobExecutionId, generalException, "Unexpected error during result aggregation"
+						jobExecutionId, jobGuid, generalException, "Unexpected error during result aggregation"
 				);
 			}
 		};
 	}
 
-	private ResultAggregationException
-			handleResultAggregationFailure(Long jobExecutionId, Exception cause, String errorDescription) {
+	private ResultAggregationException handleResultAggregationFailure(
+			Long jobExecutionId, String jobGuid, Exception cause, String errorDescription
+	) {
 		String contextualMessage = String.format(
-				"%s for job execution: %d, Exception type: %s, Root cause: %s", errorDescription, jobExecutionId,
-				cause.getClass().getSimpleName(),
+				"%s for job execution: %d [GUID: %s], Exception type: %s, Root cause: %s", errorDescription,
+				jobExecutionId, jobGuid, cause.getClass().getSimpleName(),
 				cause.getMessage() != null ? cause.getMessage() : BatchConstants.ErrorMessage.NO_ERROR_MESSAGE
 		);
 

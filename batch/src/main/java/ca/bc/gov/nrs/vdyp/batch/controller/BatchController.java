@@ -35,6 +35,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.batch.core.JobInstance;
 
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.service.StreamingCsvPartitioner;
@@ -55,7 +56,6 @@ public class BatchController {
 	private final StreamingCsvPartitioner csvPartitioner;
 	private final JobOperator jobOperator;
 
-	@SuppressWarnings("unused")
 	private final JobExplorer jobExplorer;
 	@SuppressWarnings("unused")
 	private final BatchMetricsCollector metricsCollector;
@@ -112,20 +112,24 @@ public class BatchController {
 		}
 	}
 
-	/**
-	 * Stop a running batch job execution.
-	 */
-	@PostMapping(value = "/stop/{executionId}", produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<Map<String, Object>> stopBatchJob(@PathVariable Long executionId) {
+	@PostMapping(value = "/stop/{jobGuid}", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<Map<String, Object>> stopBatchJob(@PathVariable String jobGuid) {
 		Map<String, Object> response = new HashMap<>();
+		Long executionId = null;
 
 		try {
-			logger.info("Attempting to stop job execution ID: {}", executionId);
+			logger.info("Attempting to stop job with GUID: {}", jobGuid);
+
+			JobExecution jobExecution = findJobExecutionByGuid(jobGuid);
+			executionId = jobExecution.getId();
+
+			logger.info("[GUID: {}] Found JobExecution ID: {}, attempting to stop...", jobGuid, executionId);
 
 			// Stop the job execution - this sends a stop signal to the running job
 			boolean stopped = jobOperator.stop(executionId);
 
 			if (stopped) {
+				response.put(BatchConstants.Job.GUID, jobGuid);
 				response.put(BatchConstants.Job.EXECUTION_ID, executionId);
 				response.put(BatchConstants.Job.STATUS, "STOP_REQUESTED");
 				response.put(
@@ -134,20 +138,24 @@ public class BatchController {
 				);
 				response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
 
-				logger.info("Stop request sent successfully for job execution ID: {}", executionId);
+				logger.info("[GUID: {}] Stop request sent successfully for JobExecution ID: {}", jobGuid, executionId);
 				return ResponseEntity.ok(response);
 			} else {
+				response.put(BatchConstants.Job.GUID, jobGuid);
 				response.put(BatchConstants.Job.EXECUTION_ID, executionId);
 				response.put(BatchConstants.Job.STATUS, "STOP_FAILED");
 				response.put(BatchConstants.Job.MESSAGE, "Job execution could not be stopped. It may not be running.");
 				response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
 
-				logger.warn("Failed to stop job execution ID: {}. Job may not be running.", executionId);
+				logger.warn(
+						"[GUID: {}] Failed to stop JobExecution ID: {}. Job may not be running.", jobGuid, executionId
+				);
 				return ResponseEntity.badRequest().body(response);
 			}
 
 		} catch (JobExecutionNotRunningException e) {
 			// Job is already stopping or has stopped - this is not an error, just inform the user
+			response.put(BatchConstants.Job.GUID, jobGuid);
 			response.put(BatchConstants.Job.EXECUTION_ID, executionId);
 			response.put(BatchConstants.Job.STATUS, "ALREADY_STOPPING");
 			response.put(
@@ -157,25 +165,27 @@ public class BatchController {
 			);
 			response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
 
-			logger.info("Job execution ID {} is already stopping or stopped", executionId);
+			logger.info("[GUID: {}] Job is already stopping or stopped", jobGuid);
 			// Return 202 Accepted - the stop request was already accepted and is being processed
 			return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
 
 		} catch (NoSuchJobExecutionException e) {
-			response.put(BatchConstants.Job.EXECUTION_ID, executionId);
+			response.put(BatchConstants.Job.GUID, jobGuid);
 			response.put(BatchConstants.Job.ERROR, "Job execution not found");
 			response.put(
 					BatchConstants.Job.MESSAGE,
-					"No job execution found with ID: " + executionId + ". "
-							+ "Please verify the execution ID is correct."
+					"No job execution found with GUID: " + jobGuid + ". " + "Please verify the GUID is correct."
 			);
 			response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
 
-			logger.error("Job execution not found with ID: {}", executionId);
+			logger.error("Job execution not found with GUID: {}", jobGuid);
 			return ResponseEntity.status(404).body(response);
 
 		} catch (Exception e) {
-			response.put(BatchConstants.Job.EXECUTION_ID, executionId);
+			response.put(BatchConstants.Job.GUID, jobGuid);
+			if (executionId != null) {
+				response.put(BatchConstants.Job.EXECUTION_ID, executionId);
+			}
 			response.put(BatchConstants.Job.ERROR, "Failed to stop job execution");
 			response.put(
 					BatchConstants.Job.MESSAGE,
@@ -184,7 +194,7 @@ public class BatchController {
 			);
 			response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
 
-			logger.error("Error stopping job execution ID: {}", executionId, e);
+			logger.error("[GUID: {}] Error stopping job execution: {}", jobGuid, e.getMessage(), e);
 			return ResponseEntity.internalServerError().body(response);
 		}
 	}
@@ -195,7 +205,8 @@ public class BatchController {
 		response.put(BatchConstants.Job.STATUS, "UP");
 		response.put("service", "VDYP Batch Processing Service");
 		response.put(
-				"availableEndpoints", Arrays.asList("/api/batch/start", "/api/batch/stop/{id}", "/api/batch/health")
+				"availableEndpoints",
+				Arrays.asList("/api/batch/start", "/api/batch/stop/{jobGuid}", "/api/batch/health")
 		);
 		response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
 		return ResponseEntity.ok(response);
@@ -243,39 +254,39 @@ public class BatchController {
 				logger.info("Created batch root directory: {}", batchRootDir);
 			}
 
+			String jobGuid = BatchUtils.createJobGuid();
 			String jobTimestamp = BatchUtils.createJobTimestamp();
 
-			String jobBaseFolderName = BatchUtils
-					.createJobFolderName(BatchConstants.Job.BASE_FOLDER_PREFIX, jobTimestamp);
+			String jobBaseFolderName = BatchUtils.createJobFolderName(BatchConstants.Job.BASE_FOLDER_PREFIX, jobGuid);
 			Path jobBaseDir = batchRootDir.resolve(jobBaseFolderName);
 			Files.createDirectories(jobBaseDir);
-			logger.info("Created job base directory: {}", jobBaseDir);
+			logger.info("Created job base directory: {} (GUID: {})", jobBaseDir, jobGuid);
 
 			Integer actualPartitionSize = partitionSize != null ? partitionSize : defaultParitionSize;
 			logger.info(
-					"Actual using {} partitions (requested: {}, from properties: {})", actualPartitionSize,
-					partitionSize, defaultParitionSize
+					"[GUID: {}] Actual using {} partitions (requested: {}, from properties: {})", jobGuid,
+					actualPartitionSize, partitionSize, defaultParitionSize
 			);
 
 			// Partition CSV files using streaming approach BEFORE starting the job
-			logger.info("Starting CSV partitioning...");
+			logger.info("[GUID: {}] Starting CSV partitioning...", jobGuid);
 			int featureIdToPartitionSize = csvPartitioner
 					.partitionCsvFiles(polygonFile, layerFile, actualPartitionSize, jobBaseDir);
 
 			logger.info(
-					"CSV files partitioned successfully. Partitions: {}, Total FEATURE_IDs: {}", actualPartitionSize,
-					featureIdToPartitionSize
+					"[GUID: {}] CSV files partitioned successfully. Partitions: {}, Total FEATURE_IDs: {}", jobGuid,
+					actualPartitionSize, featureIdToPartitionSize
 			);
 
 			// Now start the job with the partition directory included in parameters
 			JobParameters jobParameters = buildJobParameters(
-					projectionParametersJson, actualPartitionSize, jobTimestamp, jobBaseDir.toString()
+					projectionParametersJson, actualPartitionSize, jobGuid, jobTimestamp, jobBaseDir.toString()
 			);
 			JobExecution jobExecution = jobLauncher.run(partitionedJob, jobParameters);
 
 			logger.info(
-					"Started job! execution ID: {}, directory: {}, partitions: {}", jobExecution.getId(), jobBaseDir,
-					actualPartitionSize
+					"[GUID: {}] Started job! Execution ID: {}, Directory: {}, Partitions: {}", jobGuid,
+					jobExecution.getId(), jobBaseDir, actualPartitionSize
 			);
 
 			return jobExecution;
@@ -298,10 +309,11 @@ public class BatchController {
 	}
 
 	private JobParameters buildJobParameters(
-			String projectionParametersJson, Integer partitionSize, String jobTimestamp, String jobBaseDir
+			String projectionParametersJson, Integer partitionSize, String jobGuid, String jobTimestamp,
+			String jobBaseDir
 	) {
 
-		JobParametersBuilder parametersBuilder = new JobParametersBuilder()
+		JobParametersBuilder parametersBuilder = new JobParametersBuilder().addString(BatchConstants.Job.GUID, jobGuid)
 				.addString(BatchConstants.Projection.PARAMETERS_JSON, projectionParametersJson)
 				.addString(BatchConstants.Job.TIMESTAMP, jobTimestamp)
 				.addString(BatchConstants.Job.BASE_DIR, jobBaseDir)
@@ -311,6 +323,9 @@ public class BatchController {
 	}
 
 	private void buildSuccessResponse(Map<String, Object> response, JobExecution jobExecution) {
+		String jobGuid = jobExecution.getJobParameters().getString(BatchConstants.Job.GUID);
+
+		response.put(BatchConstants.Job.GUID, jobGuid);
 		response.put(BatchConstants.Job.EXECUTION_ID, jobExecution.getId());
 		response.put(BatchConstants.Job.NAME, jobExecution.getJobInstance().getJobName());
 		response.put(BatchConstants.Job.STATUS, jobExecution.getStatus().toString());
@@ -345,5 +360,26 @@ public class BatchController {
 		errorResponse.put(BatchConstants.Job.ERROR, "Failed to start batch job");
 		errorResponse.put(BatchConstants.Job.MESSAGE, e.getMessage() == null ? "unknown reason" : e.getMessage());
 		return ResponseEntity.internalServerError().body(errorResponse);
+	}
+
+	private JobExecution findJobExecutionByGuid(String jobGuid) throws NoSuchJobExecutionException {
+		List<String> jobNames = jobExplorer.getJobNames();
+
+		for (String jobName : jobNames) {
+			List<JobInstance> jobInstances = jobExplorer.getJobInstances(jobName, 0, 1000);
+
+			for (JobInstance jobInstance : jobInstances) {
+				List<JobExecution> jobExecutions = jobExplorer.getJobExecutions(jobInstance);
+
+				for (JobExecution execution : jobExecutions) {
+					String executionGuid = execution.getJobParameters().getString(BatchConstants.Job.GUID);
+					if (jobGuid.equals(executionGuid)) {
+						return execution;
+					}
+				}
+			}
+		}
+
+		throw new NoSuchJobExecutionException("No job execution found with GUID: " + jobGuid);
 	}
 }
