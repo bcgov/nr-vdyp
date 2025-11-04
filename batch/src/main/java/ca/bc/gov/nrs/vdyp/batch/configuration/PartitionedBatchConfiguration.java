@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobExecution;
@@ -17,7 +18,9 @@ import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.StepExecutionListener;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.builder.JobBuilder;
+import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
+import org.springframework.batch.core.launch.support.TaskExecutorJobLauncher;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.core.step.tasklet.Tasklet;
@@ -57,6 +60,16 @@ public class PartitionedBatchConfiguration {
 		this.metricsCollector = metricsCollector;
 		this.batchProperties = batchProperties;
 		this.resultAggregationService = resultAggregationService;
+	}
+
+	@Bean(name = "asyncJobLauncher")
+	public JobLauncher asyncJobLauncher(TaskExecutor taskExecutor) throws Exception {
+		TaskExecutorJobLauncher jobLauncher = new TaskExecutorJobLauncher();
+		jobLauncher.setJobRepository(jobRepository);
+		jobLauncher.setTaskExecutor(taskExecutor);
+		jobLauncher.afterPropertiesSet();
+		logger.info("Asynchronous JobLauncher created successfully");
+		return jobLauncher;
 	}
 
 	@Bean
@@ -211,6 +224,27 @@ public class PartitionedBatchConfiguration {
 						);
 
 						jobExecutionListener.afterJob(jobExecution);
+
+						if (jobExecution.getStatus() == BatchStatus.STOPPED
+								&& batchProperties.getPartition().getInterimDirsCleanupEnabled()) {
+							try {
+								String jobBaseDir = jobExecution.getJobParameters()
+										.getString(BatchConstants.Job.BASE_DIR);
+								if (jobBaseDir != null) {
+									Path jobBasePath = Paths.get(jobBaseDir);
+									resultAggregationService.cleanupPartitionDirectories(jobBasePath);
+									logger.info(
+											"Job {} was stopped. Interim partition directories cleanup completed",
+											jobExecution.getId()
+									);
+								}
+							} catch (Exception e) {
+								logger.warn(
+										"Failed to cleanup interim directories for stopped job {}: {}",
+										jobExecution.getId(), e.getMessage()
+								);
+							}
+						}
 
 						metricsCollector.cleanupOldMetrics(20);
 

@@ -16,14 +16,20 @@ import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.JobParametersInvalidException;
 import org.springframework.batch.core.explore.JobExplorer;
+import org.springframework.batch.core.launch.JobExecutionNotRunningException;
 import org.springframework.batch.core.launch.JobLauncher;
+import org.springframework.batch.core.launch.JobOperator;
+import org.springframework.batch.core.launch.NoSuchJobExecutionException;
 import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException;
 import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException;
 import org.springframework.batch.core.repository.JobRestartException;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -47,6 +53,7 @@ public class BatchController {
 	private final JobLauncher jobLauncher;
 	private final Job partitionedJob;
 	private final StreamingCsvPartitioner csvPartitioner;
+	private final JobOperator jobOperator;
 
 	@SuppressWarnings("unused")
 	private final JobExplorer jobExplorer;
@@ -60,14 +67,15 @@ public class BatchController {
 	private Integer defaultParitionSize;
 
 	public BatchController(
-			JobLauncher jobLauncher, Job partitionedJob, JobExplorer jobExplorer,
-			BatchMetricsCollector metricsCollector, StreamingCsvPartitioner csvPartitioner
+			@Qualifier("asyncJobLauncher") JobLauncher jobLauncher, Job partitionedJob, JobExplorer jobExplorer,
+			BatchMetricsCollector metricsCollector, StreamingCsvPartitioner csvPartitioner, JobOperator jobOperator
 	) {
 		this.jobLauncher = jobLauncher;
 		this.partitionedJob = partitionedJob;
 		this.jobExplorer = jobExplorer;
 		this.metricsCollector = metricsCollector;
 		this.csvPartitioner = csvPartitioner;
+		this.jobOperator = jobOperator;
 	}
 
 	/**
@@ -104,17 +112,90 @@ public class BatchController {
 		}
 	}
 
+	/**
+	 * Stop a running batch job execution.
+	 */
+	@PostMapping(value = "/stop/{executionId}", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<Map<String, Object>> stopBatchJob(@PathVariable Long executionId) {
+		Map<String, Object> response = new HashMap<>();
+
+		try {
+			logger.info("Attempting to stop job execution ID: {}", executionId);
+
+			// Stop the job execution - this sends a stop signal to the running job
+			boolean stopped = jobOperator.stop(executionId);
+
+			if (stopped) {
+				response.put(BatchConstants.Job.EXECUTION_ID, executionId);
+				response.put(BatchConstants.Job.STATUS, "STOP_REQUESTED");
+				response.put(
+						BatchConstants.Job.MESSAGE,
+						"Stop request sent successfully. Job will stop after completing current chunk."
+				);
+				response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
+
+				logger.info("Stop request sent successfully for job execution ID: {}", executionId);
+				return ResponseEntity.ok(response);
+			} else {
+				response.put(BatchConstants.Job.EXECUTION_ID, executionId);
+				response.put(BatchConstants.Job.STATUS, "STOP_FAILED");
+				response.put(BatchConstants.Job.MESSAGE, "Job execution could not be stopped. It may not be running.");
+				response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
+
+				logger.warn("Failed to stop job execution ID: {}. Job may not be running.", executionId);
+				return ResponseEntity.badRequest().body(response);
+			}
+
+		} catch (JobExecutionNotRunningException e) {
+			// Job is already stopping or has stopped - this is not an error, just inform the user
+			response.put(BatchConstants.Job.EXECUTION_ID, executionId);
+			response.put(BatchConstants.Job.STATUS, "ALREADY_STOPPING");
+			response.put(
+					BatchConstants.Job.MESSAGE,
+					"Job is already in the process of stopping or has already been stopped. "
+							+ "Please check job status for current state."
+			);
+			response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
+
+			logger.info("Job execution ID {} is already stopping or stopped", executionId);
+			// Return 202 Accepted - the stop request was already accepted and is being processed
+			return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
+
+		} catch (NoSuchJobExecutionException e) {
+			response.put(BatchConstants.Job.EXECUTION_ID, executionId);
+			response.put(BatchConstants.Job.ERROR, "Job execution not found");
+			response.put(
+					BatchConstants.Job.MESSAGE,
+					"No job execution found with ID: " + executionId + ". "
+							+ "Please verify the execution ID is correct."
+			);
+			response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
+
+			logger.error("Job execution not found with ID: {}", executionId);
+			return ResponseEntity.status(404).body(response);
+
+		} catch (Exception e) {
+			response.put(BatchConstants.Job.EXECUTION_ID, executionId);
+			response.put(BatchConstants.Job.ERROR, "Failed to stop job execution");
+			response.put(
+					BatchConstants.Job.MESSAGE,
+					"An error occurred while stopping the job: "
+							+ (e.getMessage() != null ? e.getMessage() : "Unknown error")
+			);
+			response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
+
+			logger.error("Error stopping job execution ID: {}", executionId, e);
+			return ResponseEntity.internalServerError().body(response);
+		}
+	}
+
 	@GetMapping(value = "/health", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Map<String, Object>> health() {
 		Map<String, Object> response = new HashMap<>();
 		response.put(BatchConstants.Job.STATUS, "UP");
 		response.put("service", "VDYP Batch Processing Service");
 		response.put(
-				"availableEndpoints",
-				Arrays.asList(
-						"/api/batch/start", "/api/batch/status/{id}", "/api/batch/metrics/{id}", "/api/batch/jobs",
-						"/api/batch/health"
-				)
+				"availableEndpoints", Arrays.asList("/api/batch/start", "/api/batch/stop/{id}", "/api/batch/health")
 		);
 		response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
 		return ResponseEntity.ok(response);
@@ -233,7 +314,14 @@ public class BatchController {
 		response.put(BatchConstants.Job.EXECUTION_ID, jobExecution.getId());
 		response.put(BatchConstants.Job.NAME, jobExecution.getJobInstance().getJobName());
 		response.put(BatchConstants.Job.STATUS, jobExecution.getStatus().toString());
-		response.put(BatchConstants.Job.START_TIME, jobExecution.getStartTime());
+
+		if (jobExecution.getStartTime() != null) {
+			response.put(BatchConstants.Job.START_TIME, jobExecution.getStartTime());
+		} else {
+			response.put(BatchConstants.Job.START_TIME, java.time.LocalDateTime.now());
+		}
+
+		response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
 		response.put(BatchConstants.Job.MESSAGE, "VDYP Batch job started successfully");
 	}
 
