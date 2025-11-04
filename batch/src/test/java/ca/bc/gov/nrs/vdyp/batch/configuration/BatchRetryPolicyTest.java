@@ -1,19 +1,23 @@
 package ca.bc.gov.nrs.vdyp.batch.configuration;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,9 +33,9 @@ import org.springframework.batch.core.scope.context.StepContext;
 import org.springframework.batch.core.scope.context.StepSynchronizationManager;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.dao.DataAccessResourceFailureException;
+import org.springframework.dao.TransientDataAccessException;
 import org.springframework.retry.RetryContext;
 
-import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
@@ -62,7 +66,6 @@ class BatchRetryPolicyTest {
 	void testConstructor() {
 		BatchRetryPolicy policy = new BatchRetryPolicy(5, 200);
 		assertNotNull(policy);
-		assertEquals(5, policy.getMaxAttempts());
 	}
 
 	@Test
@@ -88,7 +91,13 @@ class BatchRetryPolicyTest {
 
 	@Test
 	void testCanRetry_WithRetryableException() {
-		IOException retryableException = new IOException("Test IO exception with record ID 1098765432");
+		when(stepExecution.getJobExecutionId()).thenReturn(100L);
+		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
+		when(executionContext.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN))
+				.thenReturn("partition0");
+		batchRetryPolicy.beforeStep(stepExecution);
+
+		IOException retryableException = new IOException("Test IO exception");
 		when(retryContext.getLastThrowable()).thenReturn(retryableException);
 		when(retryContext.getRetryCount()).thenReturn(1);
 
@@ -96,16 +105,19 @@ class BatchRetryPolicyTest {
 
 		assertTrue(result);
 		verify(retryContext, atLeast(1)).getLastThrowable();
+		verify(metricsCollector).recordRetryAttempt(100L, 1, retryableException, false, "partition0");
 	}
 
 	@Test
 	void testCanRetry_WithNonRetryableException() {
 		RuntimeException nonRetryableException = new RuntimeException("Test runtime exception");
 		when(retryContext.getLastThrowable()).thenReturn(nonRetryableException);
+		when(retryContext.getRetryCount()).thenReturn(1);
 
 		boolean result = batchRetryPolicy.canRetry(retryContext);
 
 		assertFalse(result);
+		verify(metricsCollector, never()).recordRetryAttempt(anyLong(), anyInt(), any(), anyBoolean(), anyString());
 	}
 
 	@Test
@@ -120,7 +132,13 @@ class BatchRetryPolicyTest {
 
 	@Test
 	void testCanRetry_MaxAttemptsReached() {
-		IOException retryableException = new IOException("Test exception with record ID 1198765433");
+		when(stepExecution.getJobExecutionId()).thenReturn(100L);
+		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
+		when(executionContext.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN))
+				.thenReturn("partition0");
+		batchRetryPolicy.beforeStep(stepExecution);
+
+		IOException retryableException = new IOException("Test exception");
 		when(retryContext.getLastThrowable()).thenReturn(retryableException);
 		when(retryContext.getRetryCount()).thenReturn(3);
 
@@ -130,11 +148,29 @@ class BatchRetryPolicyTest {
 	}
 
 	@Test
-	void testCanRetry_WithDataAccessException() {
-		var dataAccessException = new DataAccessResourceFailureException(
-				"Database connection failed with record ID 1298765434"
-		);
+	void testCanRetry_WithTransientDataAccessException() {
+		when(stepExecution.getJobExecutionId()).thenReturn(100L);
+		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
+		when(executionContext.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN))
+				.thenReturn("partition0");
+		batchRetryPolicy.beforeStep(stepExecution);
+
+		var transientException = new TransientDataAccessException("Database temporarily unavailable") {
+		};
+		when(retryContext.getLastThrowable()).thenReturn(transientException);
+		when(retryContext.getRetryCount()).thenReturn(1);
+
+		boolean result = batchRetryPolicy.canRetry(retryContext);
+
+		assertTrue(result);
+		verify(metricsCollector).recordRetryAttempt(100L, 1, transientException, false, "partition0");
+	}
+
+	@Test
+	void testCanRetry_WithNonTransientDataAccessException() {
+		var dataAccessException = new DataAccessResourceFailureException("Database connection failed permanently");
 		when(retryContext.getLastThrowable()).thenReturn(dataAccessException);
+		when(retryContext.getRetryCount()).thenReturn(1);
 
 		boolean result = batchRetryPolicy.canRetry(retryContext);
 
@@ -142,68 +178,17 @@ class BatchRetryPolicyTest {
 	}
 
 	@Test
-	void testRegisterRecord() {
-		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setFeatureId("1145678901");
-
-		assertDoesNotThrow(() -> batchRetryPolicy.registerRecord(1145678901L, batchRecord));
-	}
-
-	@Test
-	void testOnRetrySuccess_WithPreviousAttempts() {
-		BatchRetryPolicy policyWithJobId = new BatchRetryPolicy(3, 0);
-		policyWithJobId.setMetricsCollector(metricsCollector);
-
-		// Setup StepExecution
+	void testBackoffDelay_Applied() {
 		when(stepExecution.getJobExecutionId()).thenReturn(100L);
 		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
 		when(executionContext.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN))
 				.thenReturn("partition0");
-		policyWithJobId.beforeStep(stepExecution);
 
-		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setFeatureId("1245678902");
-
-		// Register and simulate retry
-		policyWithJobId.registerRecord(1245678902L, batchRecord);
-
-		IOException exception = new IOException("Error with record ID 1245678902");
-		when(retryContext.getLastThrowable()).thenReturn(exception);
-		when(retryContext.getRetryCount()).thenReturn(1);
-		policyWithJobId.canRetry(retryContext);
-
-		assertDoesNotThrow(() -> policyWithJobId.onRetrySuccess(1245678902L, batchRecord));
-
-		verify(metricsCollector).recordRetryAttempt(100L, 1245678902L, batchRecord, 2, null, true, "partition0");
-	}
-
-	@Test
-	void testOnRetrySuccess_WithNoRetryAttempts() {
-		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setFeatureId("1345678903");
-
-		assertDoesNotThrow(() -> batchRetryPolicy.onRetrySuccess(1345678903L, batchRecord));
-	}
-
-	@ParameterizedTest
-	@ValueSource(
-			strings = { "Error with record ID notanumber", "Generic error message without record ID", "record ID " }
-	)
-	@NullSource
-	void testExtractRecordId_VariousEdgeCases(String errorMessage) {
-		IOException exception = new IOException(errorMessage);
-		when(retryContext.getLastThrowable()).thenReturn(exception);
-		when(retryContext.getRetryCount()).thenReturn(1);
-
-		boolean result = batchRetryPolicy.canRetry(retryContext);
-
-		assertTrue(result);
-	}
-
-	@Test
-	void testBackoffDelay_Applied() {
 		BatchRetryPolicy policyWithBackoff = new BatchRetryPolicy(3, 50);
-		IOException exception = new IOException("Test exception with record ID 1777888999");
+		policyWithBackoff.setMetricsCollector(metricsCollector);
+		policyWithBackoff.beforeStep(stepExecution);
+
+		IOException exception = new IOException("Test exception");
 		when(retryContext.getLastThrowable()).thenReturn(exception);
 		when(retryContext.getRetryCount()).thenReturn(1);
 
@@ -220,6 +205,7 @@ class BatchRetryPolicyTest {
 		BatchRetryPolicy policyWithBackoff = new BatchRetryPolicy(3, 100);
 		RuntimeException exception = new RuntimeException("Non-retryable");
 		when(retryContext.getLastThrowable()).thenReturn(exception);
+		when(retryContext.getRetryCount()).thenReturn(1);
 
 		long startTime = System.currentTimeMillis();
 		boolean result = policyWithBackoff.canRetry(retryContext);
@@ -231,7 +217,15 @@ class BatchRetryPolicyTest {
 
 	@Test
 	void testBackoffDelay_InterruptedHandling() {
+		when(stepExecution.getJobExecutionId()).thenReturn(100L);
+		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
+		when(executionContext.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN))
+				.thenReturn("partition0");
+
 		BatchRetryPolicy policyWithBackoff = new BatchRetryPolicy(3, 100);
+		policyWithBackoff.setMetricsCollector(metricsCollector);
+		policyWithBackoff.beforeStep(stepExecution);
+
 		IOException exception = new IOException("Test exception");
 		when(retryContext.getLastThrowable()).thenReturn(exception);
 		when(retryContext.getRetryCount()).thenReturn(1);
@@ -248,58 +242,19 @@ class BatchRetryPolicyTest {
 
 	@Test
 	void testRecordRetryAttempt_WithMetricsCollector() {
-		BatchRetryPolicy policyWithJobId = new BatchRetryPolicy(3, 0);
-		policyWithJobId.setMetricsCollector(metricsCollector);
-
 		when(stepExecution.getJobExecutionId()).thenReturn(999L);
 		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
 		when(executionContext.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN))
 				.thenReturn("partition5");
-		policyWithJobId.beforeStep(stepExecution);
+		batchRetryPolicy.beforeStep(stepExecution);
 
-		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setFeatureId("1555666777");
-		policyWithJobId.registerRecord(1555666777L, batchRecord);
-
-		IOException exception = new IOException("Error with record ID 1555666777");
+		IOException exception = new IOException("Test exception");
 		when(retryContext.getLastThrowable()).thenReturn(exception);
 		when(retryContext.getRetryCount()).thenReturn(1);
 
-		policyWithJobId.canRetry(retryContext);
+		batchRetryPolicy.canRetry(retryContext);
 
-		verify(metricsCollector).recordRetryAttempt(999L, 1555666777L, batchRecord, 1, exception, false, "partition5");
-	}
-
-	@Test
-	void testHandleMaxAttemptsReached_TriggersCleanup() {
-		BatchRetryPolicy policyWithJobId = new BatchRetryPolicy(2, 0);
-		policyWithJobId.setMetricsCollector(metricsCollector);
-
-		when(stepExecution.getJobExecutionId()).thenReturn(500L);
-		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
-		when(executionContext.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN))
-				.thenReturn("partition1");
-		policyWithJobId.beforeStep(stepExecution);
-
-		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setFeatureId("1234567890");
-		policyWithJobId.registerRecord(1234567890L, batchRecord);
-
-		// First attempt
-		IOException exception1 = new IOException("Error with record ID 1234567890");
-		when(retryContext.getLastThrowable()).thenReturn(exception1);
-		when(retryContext.getRetryCount()).thenReturn(1);
-		assertTrue(policyWithJobId.canRetry(retryContext));
-
-		// Second attempt - max reached
-		IOException exception2 = new IOException("Error with record ID 1234567890 again");
-		when(retryContext.getLastThrowable()).thenReturn(exception2);
-		when(retryContext.getRetryCount()).thenReturn(2);
-		assertFalse(policyWithJobId.canRetry(retryContext));
-
-		// Verify that retryInfo was cleaned up
-		// Subsequent success should not trigger metrics
-		policyWithJobId.onRetrySuccess(1234567890L, batchRecord);
+		verify(metricsCollector).recordRetryAttempt(999L, 1, exception, false, "partition5");
 	}
 
 	@Test
@@ -309,48 +264,71 @@ class BatchRetryPolicyTest {
 			StepExecution currentStepExecution = mock(StepExecution.class);
 			ExecutionContext currentExecutionContext = mock(ExecutionContext.class);
 
+			when(stepExecution.getJobExecutionId()).thenReturn(777L);
+			when(stepExecution.getExecutionContext()).thenReturn(executionContext);
+			when(executionContext.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN))
+					.thenReturn("partition99");
+			batchRetryPolicy.beforeStep(stepExecution);
+
 			mockedStatic.when(StepSynchronizationManager::getContext).thenReturn(stepContext);
 			when(stepContext.getStepExecution()).thenReturn(currentStepExecution);
-			when(currentStepExecution.getJobExecutionId()).thenReturn(777L);
 			when(currentStepExecution.getExecutionContext()).thenReturn(currentExecutionContext);
-			when(currentExecutionContext.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN))
-					.thenReturn("partition99");
+			when(currentExecutionContext.getString(BatchConstants.Partition.NAME, "partition99"))
+					.thenReturn("partition99-current");
 
-			IOException exception = new IOException("Error with record ID 1800900100");
+			IOException exception = new IOException("Test exception");
 			when(retryContext.getLastThrowable()).thenReturn(exception);
 			when(retryContext.getRetryCount()).thenReturn(1);
 
 			boolean result = batchRetryPolicy.canRetry(retryContext);
+
 			assertTrue(result);
+			verify(metricsCollector).recordRetryAttempt(777L, 1, exception, false, "partition99-current");
 		}
 	}
 
 	@Test
 	void testGetCurrentExecutionContext_WithNullStepContext() {
 		try (MockedStatic<StepSynchronizationManager> mockedStatic = mockStatic(StepSynchronizationManager.class)) {
+			when(stepExecution.getJobExecutionId()).thenReturn(100L);
+			when(stepExecution.getExecutionContext()).thenReturn(executionContext);
+			when(executionContext.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN))
+					.thenReturn("partition0");
+			batchRetryPolicy.beforeStep(stepExecution);
+
 			mockedStatic.when(StepSynchronizationManager::getContext).thenReturn(null);
 
-			IOException exception = new IOException("Error with record ID 1800900100");
+			IOException exception = new IOException("Test exception");
 			when(retryContext.getLastThrowable()).thenReturn(exception);
 			when(retryContext.getRetryCount()).thenReturn(1);
 
 			boolean result = batchRetryPolicy.canRetry(retryContext);
+
 			assertTrue(result);
+			verify(metricsCollector).recordRetryAttempt(100L, 1, exception, false, "partition0");
 		}
 	}
 
 	@Test
 	void testGetCurrentExecutionContext_WithException() {
 		try (MockedStatic<StepSynchronizationManager> mockedStatic = mockStatic(StepSynchronizationManager.class)) {
+			when(stepExecution.getJobExecutionId()).thenReturn(100L);
+			when(stepExecution.getExecutionContext()).thenReturn(executionContext);
+			when(executionContext.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN))
+					.thenReturn("partition0");
+			batchRetryPolicy.beforeStep(stepExecution);
+
 			mockedStatic.when(StepSynchronizationManager::getContext)
 					.thenThrow(new RuntimeException("Step context error"));
 
-			IOException exception = new IOException("Error with record ID 1700800900");
+			IOException exception = new IOException("Test exception");
 			when(retryContext.getLastThrowable()).thenReturn(exception);
 			when(retryContext.getRetryCount()).thenReturn(1);
 
 			boolean result = batchRetryPolicy.canRetry(retryContext);
+
 			assertTrue(result);
+			verify(metricsCollector).recordRetryAttempt(100L, 1, exception, false, "partition0");
 		}
 	}
 
@@ -367,44 +345,29 @@ class BatchRetryPolicyTest {
 
 	@Test
 	void testMultipleRetryAttempts() {
-		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setFeatureId("1445678905");
-
-		batchRetryPolicy.registerRecord(1445678905L, batchRecord);
+		when(stepExecution.getJobExecutionId()).thenReturn(100L);
+		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
+		when(executionContext.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN))
+				.thenReturn("partition0");
+		batchRetryPolicy.beforeStep(stepExecution);
 
 		// First retry attempt
-		IOException exception1 = new IOException("First error with record ID 1445678905");
+		IOException exception1 = new IOException("First error");
 		when(retryContext.getLastThrowable()).thenReturn(exception1);
 		when(retryContext.getRetryCount()).thenReturn(1);
 		assertTrue(batchRetryPolicy.canRetry(retryContext));
 
 		// Second retry attempt
-		IOException exception2 = new IOException("Second error with record ID 1445678905");
+		IOException exception2 = new IOException("Second error");
 		when(retryContext.getLastThrowable()).thenReturn(exception2);
 		when(retryContext.getRetryCount()).thenReturn(2);
 		assertTrue(batchRetryPolicy.canRetry(retryContext));
 
 		// Third retry attempt (max reached)
-		IOException exception3 = new IOException("Third error with record ID 1445678905");
+		IOException exception3 = new IOException("Third error");
 		when(retryContext.getLastThrowable()).thenReturn(exception3);
 		when(retryContext.getRetryCount()).thenReturn(3);
 		assertFalse(batchRetryPolicy.canRetry(retryContext));
-	}
-
-	@Test
-	void testLogRetryAttempt_WithNullLastError() {
-		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setFeatureId("1666777888");
-		batchRetryPolicy.registerRecord(1666777888L, batchRecord);
-
-		// First attempt with null stored error
-		IOException exception = new IOException("New error with record ID 1666777888");
-		when(retryContext.getLastThrowable()).thenReturn(exception);
-		when(retryContext.getRetryCount()).thenReturn(1);
-
-		boolean result = batchRetryPolicy.canRetry(retryContext);
-
-		assertTrue(result);
 	}
 
 	@Test
@@ -422,95 +385,27 @@ class BatchRetryPolicyTest {
 	}
 
 	@Test
-	void testIsMaxAttemptsReached_ExactlyAtMaxAttempts() {
-		BatchRetryPolicy policyWithJobId = new BatchRetryPolicy(3, 0);
-		policyWithJobId.setMetricsCollector(metricsCollector);
-
+	void testMaxAttemptsReached_LogsError() {
 		when(stepExecution.getJobExecutionId()).thenReturn(100L);
 		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
 		when(executionContext.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN))
 				.thenReturn("partition0");
-		policyWithJobId.beforeStep(stepExecution);
 
-		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setFeatureId("2000000001");
-		policyWithJobId.registerRecord(2000000001L, batchRecord);
-
-		// Attempt 1
-		IOException exception1 = new IOException("Error with record ID 2000000001");
-		when(retryContext.getLastThrowable()).thenReturn(exception1);
-		when(retryContext.getRetryCount()).thenReturn(1);
-		assertTrue(policyWithJobId.canRetry(retryContext));
-
-		// Attempt 2
-		IOException exception2 = new IOException("Error with record ID 2000000001");
-		when(retryContext.getLastThrowable()).thenReturn(exception2);
-		when(retryContext.getRetryCount()).thenReturn(2);
-		assertTrue(policyWithJobId.canRetry(retryContext));
-
-		// Attempt 3 - exactly at max attempts (getRetryCount() >= getMaxAttempts())
-		IOException exception3 = new IOException("Error with record ID 2000000001");
-		when(retryContext.getLastThrowable()).thenReturn(exception3);
-		when(retryContext.getRetryCount()).thenReturn(3);
-		boolean canRetry = policyWithJobId.canRetry(retryContext);
-
-		// Should return false because max attempts reached
-		assertFalse(canRetry);
-	}
-
-	@Test
-	void testHandleMaxAttemptsReached_LogsFinalStatusFailed() {
 		BatchRetryPolicy policyWithJobId = new BatchRetryPolicy(2, 0);
 		policyWithJobId.setMetricsCollector(metricsCollector);
-
-		when(stepExecution.getJobExecutionId()).thenReturn(200L);
-		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
-		when(executionContext.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN))
-				.thenReturn("partition-test");
 		policyWithJobId.beforeStep(stepExecution);
 
-		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setFeatureId("2000000002");
-		policyWithJobId.registerRecord(2000000002L, batchRecord);
-
-		IOException exception1 = new IOException("Error with record ID 2000000002");
+		// First attempt
+		IOException exception1 = new IOException("Error attempt 1");
 		when(retryContext.getLastThrowable()).thenReturn(exception1);
 		when(retryContext.getRetryCount()).thenReturn(1);
 		assertTrue(policyWithJobId.canRetry(retryContext));
 
-		IOException exception2 = new IOException("Error with record ID 2000000002");
+		// Second attempt - max reached
+		IOException exception2 = new IOException("Error attempt 2");
 		when(retryContext.getLastThrowable()).thenReturn(exception2);
 		when(retryContext.getRetryCount()).thenReturn(2);
-		boolean canRetry = policyWithJobId.canRetry(retryContext);
-
-		assertFalse(canRetry);
-
-		policyWithJobId.onRetrySuccess(2000000002L, batchRecord);
-	}
-
-	@Test
-	void testOnRetrySuccess_WithAttemptCountGreaterThanZero() {
-		BatchRetryPolicy policyWithJobId = new BatchRetryPolicy(3, 0);
-		policyWithJobId.setMetricsCollector(metricsCollector);
-
-		when(stepExecution.getJobExecutionId()).thenReturn(300L);
-		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
-		when(executionContext.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN))
-				.thenReturn("partition-success");
-		policyWithJobId.beforeStep(stepExecution);
-
-		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setFeatureId("2000000003");
-		policyWithJobId.registerRecord(2000000003L, batchRecord);
-
-		IOException exception = new IOException("Error with record ID 2000000003");
-		when(retryContext.getLastThrowable()).thenReturn(exception);
-		when(retryContext.getRetryCount()).thenReturn(1);
-		policyWithJobId.canRetry(retryContext);
-
-		policyWithJobId.onRetrySuccess(2000000003L, batchRecord);
-
-		verify(metricsCollector).recordRetryAttempt(300L, 2000000003L, batchRecord, 2, null, true, "partition-success");
+		assertFalse(policyWithJobId.canRetry(retryContext));
 	}
 
 	@Test
@@ -523,17 +418,14 @@ class BatchRetryPolicyTest {
 				.thenReturn("partition-no-metrics");
 		policyWithoutMetrics.beforeStep(stepExecution);
 
-		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setFeatureId("2000000004");
-		policyWithoutMetrics.registerRecord(2000000004L, batchRecord);
-
-		IOException exception = new IOException("Error with record ID 2000000004");
+		IOException exception = new IOException("Test exception");
 		when(retryContext.getLastThrowable()).thenReturn(exception);
 		when(retryContext.getRetryCount()).thenReturn(1);
 
 		boolean result = policyWithoutMetrics.canRetry(retryContext);
 
 		assertTrue(result);
+		// No metrics collector interaction expected
 	}
 
 	@Test
@@ -541,22 +433,30 @@ class BatchRetryPolicyTest {
 		BatchRetryPolicy policyWithMetrics = new BatchRetryPolicy(3, 0);
 		policyWithMetrics.setMetricsCollector(metricsCollector);
 
-		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setFeatureId("2000000005");
-		policyWithMetrics.registerRecord(2000000005L, batchRecord);
+		// Don't call beforeStep - jobExecutionId will be null
 
-		IOException exception = new IOException("Error with record ID 2000000005");
+		IOException exception = new IOException("Test exception");
 		when(retryContext.getLastThrowable()).thenReturn(exception);
 		when(retryContext.getRetryCount()).thenReturn(1);
 
 		boolean result = policyWithMetrics.canRetry(retryContext);
 
 		assertTrue(result);
+		// No metrics collector interaction expected when jobExecutionId is null
+		verify(metricsCollector, never()).recordRetryAttempt(anyLong(), anyInt(), any(), anyBoolean(), anyString());
 	}
 
-	@Test
-	void testExtractRecordId_WithNullErrorMessage() {
-		IOException exception = new IOException((String) null);
+	@ParameterizedTest
+	@ValueSource(strings = { "Generic error message", "Another error" })
+	@NullSource
+	void testCanRetry_WithVariousErrorMessages(String errorMessage) {
+		when(stepExecution.getJobExecutionId()).thenReturn(100L);
+		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
+		when(executionContext.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN))
+				.thenReturn("partition0");
+		batchRetryPolicy.beforeStep(stepExecution);
+
+		IOException exception = new IOException(errorMessage);
 		when(retryContext.getLastThrowable()).thenReturn(exception);
 		when(retryContext.getRetryCount()).thenReturn(1);
 
@@ -566,43 +466,67 @@ class BatchRetryPolicyTest {
 	}
 
 	@Test
-	void testExtractRecordId_WithEmptyTokens() {
-		IOException exception = new IOException("Error: record ID ");
+	void testBackoffDelay_ZeroPeriod() {
+		when(stepExecution.getJobExecutionId()).thenReturn(100L);
+		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
+		when(executionContext.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN))
+				.thenReturn("partition0");
+
+		BatchRetryPolicy policyNoBackoff = new BatchRetryPolicy(3, 0);
+		policyNoBackoff.setMetricsCollector(metricsCollector);
+		policyNoBackoff.beforeStep(stepExecution);
+
+		IOException exception = new IOException("Test exception");
+		when(retryContext.getLastThrowable()).thenReturn(exception);
+		when(retryContext.getRetryCount()).thenReturn(1);
+
+		long startTime = System.currentTimeMillis();
+		boolean result = policyNoBackoff.canRetry(retryContext);
+		long endTime = System.currentTimeMillis();
+
+		assertTrue(result);
+		assertTrue(endTime - startTime < 50); // Should be immediate with no backoff
+	}
+
+	@Test
+	void testGetCurrentPartitionName_WithNoStepContext() {
+		// Setup initial partition name
+		when(stepExecution.getJobExecutionId()).thenReturn(100L);
+		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
+		when(executionContext.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN))
+				.thenReturn("partition-initial");
+		batchRetryPolicy.beforeStep(stepExecution);
+
+		// No StepSynchronizationManager setup - should use stored partition name
+		IOException exception = new IOException("Test exception");
 		when(retryContext.getLastThrowable()).thenReturn(exception);
 		when(retryContext.getRetryCount()).thenReturn(1);
 
 		boolean result = batchRetryPolicy.canRetry(retryContext);
 
 		assertTrue(result);
+		verify(metricsCollector).recordRetryAttempt(100L, 1, exception, false, "partition-initial");
 	}
 
 	@Test
-	void testExtractRecordId_WithValidTokens() {
-		IOException exception = new IOException("Processing failed for record ID 987654321 in partition 5");
+	void testGetCurrentPartitionName_WithUnknownDefault() {
+		BatchRetryPolicy policyNoPartition = new BatchRetryPolicy(3, 0);
+		policyNoPartition.setMetricsCollector(metricsCollector);
+
+		// Setup without partition name (will use UNKNOWN)
+		when(stepExecution.getJobExecutionId()).thenReturn(100L);
+		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
+		when(executionContext.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN))
+				.thenReturn(BatchConstants.Common.UNKNOWN);
+		policyNoPartition.beforeStep(stepExecution);
+
+		IOException exception = new IOException("Test exception");
 		when(retryContext.getLastThrowable()).thenReturn(exception);
 		when(retryContext.getRetryCount()).thenReturn(1);
 
-		boolean result = batchRetryPolicy.canRetry(retryContext);
+		boolean result = policyNoPartition.canRetry(retryContext);
 
 		assertTrue(result);
-	}
-
-	@Test
-	void testExtractRecordId_NullErrorMessage() throws Exception {
-		Method extractRecordIdMethod = BatchRetryPolicy.class.getDeclaredMethod("extractRecordId", String.class);
-		extractRecordIdMethod.setAccessible(true);
-		Long result = (Long) extractRecordIdMethod.invoke(batchRetryPolicy, (String) null);
-		assertEquals(-1L, result, "Should return -1L for null errorMessage");
-	}
-
-	@Test
-	void testProcessThrowableWithNullMessage() {
-		IOException exceptionWithNullMessage = new IOException((String) null);
-		when(retryContext.getLastThrowable()).thenReturn(exceptionWithNullMessage);
-		when(retryContext.getRetryCount()).thenReturn(1);
-
-		boolean result = batchRetryPolicy.canRetry(retryContext);
-
-		assertTrue(result);
+		verify(metricsCollector).recordRetryAttempt(100L, 1, exception, false, BatchConstants.Common.UNKNOWN);
 	}
 }

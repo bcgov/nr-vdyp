@@ -227,9 +227,7 @@ class PartitionedBatchConfigurationTest {
 
 	@Test
 	void testVdypProjectionProcessor() {
-		BatchRetryPolicy retryPolicy = mock(BatchRetryPolicy.class);
-
-		VdypProjectionProcessor result = configuration.vdypProjectionProcessor(retryPolicy, metricsCollector);
+		VdypProjectionProcessor result = configuration.vdypProjectionProcessor(metricsCollector);
 
 		assertNotNull(result);
 	}
@@ -318,6 +316,8 @@ class PartitionedBatchConfigurationTest {
 
 	@Test
 	void testResultAggregationTasklet_withValidation() throws Exception {
+		when(partition.getInterimDirsCleanupEnabled()).thenReturn(true);
+
 		Tasklet tasklet = configuration.resultAggregationTasklet();
 
 		// Mock the tasklet execution context
@@ -358,6 +358,8 @@ class PartitionedBatchConfigurationTest {
 
 	@Test
 	void testResultAggregationTasklet_validationFailed() throws Exception {
+		when(partition.getInterimDirsCleanupEnabled()).thenReturn(true);
+
 		Tasklet tasklet = configuration.resultAggregationTasklet();
 
 		// Mock the tasklet execution context

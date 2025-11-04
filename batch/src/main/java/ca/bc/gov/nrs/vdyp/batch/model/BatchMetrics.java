@@ -1,10 +1,11 @@
 package ca.bc.gov.nrs.vdyp.batch.model;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -18,16 +19,16 @@ public class BatchMetrics {
 	private LocalDateTime endTime;
 	private String status;
 
-	// Retry metrics - thread-safe counters
+	// Retry metrics - thread-safe counters and lock-free queue
 	private final AtomicInteger totalRetryAttempts = new AtomicInteger(0);
 	private final AtomicInteger successfulRetries = new AtomicInteger(0);
 	private final AtomicInteger failedRetries = new AtomicInteger(0);
-	private final List<RetryDetail> retryDetails = new ArrayList<>();
+	private final Queue<RetryDetail> retryDetails = new ConcurrentLinkedQueue<>();
 
-	// Skip metrics - thread-safe counters
+	// Skip metrics - thread-safe counters and lock-free queue
 	private final AtomicInteger totalSkips = new AtomicInteger(0);
 	private final Map<String, Integer> skipReasonCount = new ConcurrentHashMap<>();
-	private final List<SkipDetail> skipDetails = new ArrayList<>();
+	private final Queue<SkipDetail> skipDetails = new ConcurrentLinkedQueue<>();
 
 	// Partition metrics
 	private final Map<String, PartitionMetrics> partitionMetrics = new ConcurrentHashMap<>();
@@ -51,17 +52,13 @@ public class BatchMetrics {
 	 * Retry detail information
 	 */
 	public static record RetryDetail(
-			Long recordId, String recordData, int attemptNumber, String errorType, String errorMessage,
-			LocalDateTime timestamp, boolean successful, String partitionName
+			int attemptNumber, String errorType, String errorMessage, LocalDateTime timestamp, boolean successful,
+			String partitionName
 	) {
 		public RetryDetail(
-				Long recordId, String recordData, int attemptNumber, String errorType, String errorMessage,
-				boolean successful, String partitionName
+				int attemptNumber, String errorType, String errorMessage, boolean successful, String partitionName
 		) {
-			this(
-					recordId, recordData, attemptNumber, errorType, errorMessage, LocalDateTime.now(), successful,
-					partitionName
-			);
+			this(attemptNumber, errorType, errorMessage, LocalDateTime.now(), successful, partitionName);
 		}
 	}
 
@@ -240,7 +237,7 @@ public class BatchMetrics {
 		return failedRetries.incrementAndGet();
 	}
 
-	public List<RetryDetail> getRetryDetails() {
+	public Queue<RetryDetail> getRetryDetails() {
 		return retryDetails;
 	}
 
@@ -249,6 +246,13 @@ public class BatchMetrics {
 		if (retryDetails != null) {
 			this.retryDetails.addAll(retryDetails);
 		}
+	}
+
+	/**
+	 * Get retry details as a list for JSON serialization compatibility.
+	 */
+	public List<RetryDetail> getRetryDetailsList() {
+		return new java.util.ArrayList<>(retryDetails);
 	}
 
 	public int getTotalSkips() {
@@ -274,7 +278,7 @@ public class BatchMetrics {
 		}
 	}
 
-	public List<SkipDetail> getSkipDetails() {
+	public Queue<SkipDetail> getSkipDetails() {
 		return skipDetails;
 	}
 
@@ -283,6 +287,13 @@ public class BatchMetrics {
 		if (skipDetails != null) {
 			this.skipDetails.addAll(skipDetails);
 		}
+	}
+
+	/**
+	 * Get skip details as a list for JSON serialization compatibility.
+	 */
+	public List<SkipDetail> getSkipDetailsList() {
+		return new java.util.ArrayList<>(skipDetails);
 	}
 
 	public Map<String, PartitionMetrics> getPartitionMetrics() {

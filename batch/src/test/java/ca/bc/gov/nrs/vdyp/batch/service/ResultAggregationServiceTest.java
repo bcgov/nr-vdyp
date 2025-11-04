@@ -1072,4 +1072,144 @@ class ResultAggregationServiceTest {
 			assertTrue(yieldTablesByType.isEmpty(), "yieldTablesByType should remain empty");
 		}
 	}
+
+	@Test
+	void testAggregateResults_FirstPartitionEmptyYieldTable_HeaderRecovery() throws IOException {
+		// Scenario: First partition has empty yield table (projection failed)
+		// Second partition has valid yield table with header
+		// Expected: Header should be recovered from second partition
+
+		Path partition0 = tempDir.resolve("output-partition-0");
+		Path partition1 = tempDir.resolve("output-partition-1");
+		Files.createDirectories(partition0);
+		Files.createDirectories(partition1);
+
+		// First partition: empty yield table (simulates projection failure for all records in chunk)
+		Files.writeString(partition0.resolve("YieldTable.csv"), "");
+
+		// Second partition: valid yield table with header and data
+		String validYieldTable = """
+				TABLE_NUM,FEATURE_ID,SPECIES_1,LAYER_ID,GENUS,SP0_PERCENTAGE,TOTAL_AGE
+				1,222222222,FD,P,FD,100.0,50
+				""";
+		Files.writeString(partition1.resolve("YieldTable.csv"), validYieldTable);
+
+		Path resultZip = resultAggregationService
+				.aggregateResultsFromJobDir(JOB_EXECUTION_ID, tempDir.toString(), JOB_TIMESTAMP);
+
+		assertNotNull(resultZip);
+		assertTrue(Files.exists(resultZip));
+
+		// Verify that the final YieldTable.csv has header
+		String yieldTableContent = getZipEntryContent(resultZip, "YieldTable.csv");
+		assertNotNull(yieldTableContent, "YieldTable.csv should exist in ZIP");
+
+		// Should contain header from second partition
+		assertTrue(yieldTableContent.contains("TABLE_NUM"), "Should contain TABLE_NUM header");
+		assertTrue(yieldTableContent.contains("FEATURE_ID"), "Should contain FEATURE_ID header");
+		assertTrue(yieldTableContent.contains("222222222"), "Should contain data from second partition");
+	}
+
+	@Test
+	void testAggregateResults_AllPartitionsEmptyYieldTable_NoHeaderRecovery() throws IOException {
+		// Scenario: All partitions have empty yield tables (all projections failed)
+		// Expected: Final YieldTable.csv will have no header (no valid header to recover)
+
+		Path partition0 = tempDir.resolve("output-partition-0");
+		Path partition1 = tempDir.resolve("output-partition-1");
+		Files.createDirectories(partition0);
+		Files.createDirectories(partition1);
+
+		// Both partitions: empty yield tables
+		Files.writeString(partition0.resolve("YieldTable.csv"), "");
+		Files.writeString(partition1.resolve("YieldTable.csv"), "");
+
+		Path resultZip = resultAggregationService
+				.aggregateResultsFromJobDir(JOB_EXECUTION_ID, tempDir.toString(), JOB_TIMESTAMP);
+
+		assertNotNull(resultZip);
+		assertTrue(Files.exists(resultZip));
+
+		// Verify that the final YieldTable.csv exists but may be empty or have no header
+		String yieldTableContent = getZipEntryContent(resultZip, "YieldTable.csv");
+		assertNotNull(yieldTableContent, "YieldTable.csv should exist in ZIP even if empty");
+	}
+
+	@Test
+	void testAggregateResults_FirstPartitionNoHeader_SecondPartitionWithHeader() throws IOException {
+		// Scenario: First partition has data but no header (unusual case)
+		// Second partition has header and data
+		// Expected: Header from second partition should be recovered
+
+		Path partition0 = tempDir.resolve("output-partition-0");
+		Path partition1 = tempDir.resolve("output-partition-1");
+		Files.createDirectories(partition0);
+		Files.createDirectories(partition1);
+
+		// First partition: data only, no header
+		String dataOnly = "1,111111111,FD,P,FD,100.0,40\n";
+		Files.writeString(partition0.resolve("YieldTable.csv"), dataOnly);
+
+		// Second partition: header and data
+		String validYieldTable = """
+				TABLE_NUM,FEATURE_ID,SPECIES_1,LAYER_ID,GENUS,SP0_PERCENTAGE,TOTAL_AGE
+				1,222222222,CW,P,CW,90.0,45
+				""";
+		Files.writeString(partition1.resolve("YieldTable.csv"), validYieldTable);
+
+		Path resultZip = resultAggregationService
+				.aggregateResultsFromJobDir(JOB_EXECUTION_ID, tempDir.toString(), JOB_TIMESTAMP);
+
+		assertNotNull(resultZip);
+		assertTrue(Files.exists(resultZip));
+
+		// Verify that the final YieldTable.csv has header
+		String yieldTableContent = getZipEntryContent(resultZip, "YieldTable.csv");
+		assertNotNull(yieldTableContent);
+
+		// Should have data from first partition (no header written initially)
+		assertTrue(yieldTableContent.contains("111111111"), "Should contain data from first partition");
+
+		// Should have header from second partition
+		assertTrue(yieldTableContent.contains("TABLE_NUM"), "Should contain header");
+
+		// Should have data from second partition
+		assertTrue(yieldTableContent.contains("222222222"), "Should contain data from second partition");
+	}
+
+	@Test
+	void testAggregateResults_SmallInvalidFile_NotUsedForHeaderRecovery() throws IOException {
+		// Scenario: First partition has small empty file (< 1 KB)
+		// Second partition has large valid file with header
+		// Expected: Small file should be ignored, header recovered from larger file
+
+		Path partition0 = tempDir.resolve("output-partition-0");
+		Path partition1 = tempDir.resolve("output-partition-1");
+		Files.createDirectories(partition0);
+		Files.createDirectories(partition1);
+
+		// First partition: very small file (below MIN_FILE_SIZE threshold of 1 KB)
+		Files.writeString(partition0.resolve("YieldTable.csv"), "small");
+
+		// Second partition: large valid file with header
+		String validYieldTable = """
+				TABLE_NUM,FEATURE_ID,SPECIES_1,LAYER_ID,GENUS,SP0_PERCENTAGE,TOTAL_AGE
+				1,333333333,FD,P,FD,100.0,50
+				1,333333333,CW,S,CW,80.0,45
+				""";
+		Files.writeString(partition1.resolve("YieldTable.csv"), validYieldTable);
+
+		Path resultZip = resultAggregationService
+				.aggregateResultsFromJobDir(JOB_EXECUTION_ID, tempDir.toString(), JOB_TIMESTAMP);
+
+		assertNotNull(resultZip);
+		assertTrue(Files.exists(resultZip));
+
+		String yieldTableContent = getZipEntryContent(resultZip, "YieldTable.csv");
+		assertNotNull(yieldTableContent);
+
+		// Should contain header from valid partition
+		assertTrue(yieldTableContent.contains("TABLE_NUM"), "Should contain header");
+		assertTrue(yieldTableContent.contains("333333333"), "Should contain data");
+	}
 }

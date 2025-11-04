@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchException;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchIOException;
+import ca.bc.gov.nrs.vdyp.batch.exception.ProjectionNullPointerException;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchUtils;
@@ -119,6 +120,8 @@ public class VdypProjectionService {
 
 			}
 
+		} catch (NullPointerException npe) {
+			throw ProjectionNullPointerException.handleProjectionNullPointer(npe, batchRecords, partitionName, logger);
 		} catch (AbstractProjectionRequestException e) {
 			throw handleChunkProjectionFailure(batchRecords, partitionName, e);
 		} catch (IOException e) {
@@ -232,6 +235,11 @@ public class VdypProjectionService {
 					)
 			);
 		}
+
+		// Add trailing empty line to match original file structure
+		// This is critical for extended-core to correctly detect end of file
+		polygonCsv.append("\n");
+		layerCsv.append("\n");
 
 		// Create input streams
 		inputStreams.put(

@@ -99,16 +99,11 @@ class BatchMetricsCollectorTest {
 
 	@Test
 	void testRecordRetryAttempt() {
-		Long recordId = 123L;
-		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setFeatureId("12345678901");
 		int attemptNumber = 2;
 		Throwable error = new RuntimeException("Test error");
 
 		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID);
-		batchMetricsCollector.recordRetryAttempt(
-				JOB_EXECUTION_ID, recordId, batchRecord, attemptNumber, error, true, PARTITION_NAME
-		);
+		batchMetricsCollector.recordRetryAttempt(JOB_EXECUTION_ID, attemptNumber, error, true, PARTITION_NAME);
 
 		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
 		assertEquals(1, metrics.getTotalRetryAttempts());
@@ -116,8 +111,9 @@ class BatchMetricsCollectorTest {
 		assertEquals(0, metrics.getFailedRetries());
 
 		assertEquals(1, metrics.getRetryDetails().size());
-		BatchMetrics.RetryDetail retryDetail = metrics.getRetryDetails().get(0);
-		assertEquals(recordId, retryDetail.recordId());
+		BatchMetrics.RetryDetail retryDetail = metrics.getRetryDetails().peek();
+		assertNotNull(retryDetail);
+		assertEquals(attemptNumber, retryDetail.attemptNumber());
 		assertEquals("RuntimeException", retryDetail.errorType());
 		assertEquals("Test error", retryDetail.errorMessage());
 		assertTrue(retryDetail.successful());
@@ -139,7 +135,8 @@ class BatchMetricsCollectorTest {
 		assertEquals(1, metrics.getSkipReasonCount().get("IllegalStateException"));
 
 		assertEquals(1, metrics.getSkipDetails().size());
-		BatchMetrics.SkipDetail skipDetail = metrics.getSkipDetails().get(0);
+		BatchMetrics.SkipDetail skipDetail = metrics.getSkipDetails().peek();
+		assertNotNull(skipDetail);
 		assertEquals(recordId, skipDetail.recordId());
 		assertEquals("IllegalStateException", skipDetail.errorType());
 		assertEquals("Invalid state", skipDetail.errorMessage());
@@ -303,38 +300,18 @@ class BatchMetricsCollectorTest {
 
 	@Test
 	void testRecordRetryAttempt_NullError() {
-		Long recordId = 123L;
-		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setFeatureId("12345678901");
-
 		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID);
-		batchMetricsCollector
-				.recordRetryAttempt(JOB_EXECUTION_ID, recordId, batchRecord, 1, null, false, PARTITION_NAME);
+		batchMetricsCollector.recordRetryAttempt(JOB_EXECUTION_ID, 1, null, false, PARTITION_NAME);
 
 		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
 		assertEquals(1, metrics.getTotalRetryAttempts());
 		assertEquals(0, metrics.getSuccessfulRetries());
 		assertEquals(1, metrics.getFailedRetries());
 
-		BatchMetrics.RetryDetail retryDetail = metrics.getRetryDetails().get(0);
+		BatchMetrics.RetryDetail retryDetail = metrics.getRetryDetails().peek();
+		assertNotNull(retryDetail);
 		assertEquals("Unknown", retryDetail.errorType());
 		assertEquals("No error message", retryDetail.errorMessage());
-	}
-
-	@Test
-	void testRecordRetryAttempt_NullBatchRecord() {
-		Long recordId = 123L;
-
-		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID);
-		batchMetricsCollector.recordRetryAttempt(
-				JOB_EXECUTION_ID, recordId, null, 1, new RuntimeException("test"), true, PARTITION_NAME
-		);
-
-		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
-		assertEquals(1, metrics.getTotalRetryAttempts());
-
-		BatchMetrics.RetryDetail retryDetail = metrics.getRetryDetails().get(0);
-		assertEquals("null", retryDetail.recordData());
 	}
 
 	@Test
@@ -349,7 +326,8 @@ class BatchMetricsCollectorTest {
 		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
 		assertEquals(1, metrics.getTotalSkips());
 
-		BatchMetrics.SkipDetail skipDetail = metrics.getSkipDetails().get(0);
+		BatchMetrics.SkipDetail skipDetail = metrics.getSkipDetails().peek();
+		assertNotNull(skipDetail);
 		assertEquals("Unknown", skipDetail.errorType());
 		assertEquals("No error message", skipDetail.errorMessage());
 	}
@@ -365,7 +343,8 @@ class BatchMetricsCollectorTest {
 		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
 		assertEquals(1, metrics.getTotalSkips());
 
-		BatchMetrics.SkipDetail skipDetail = metrics.getSkipDetails().get(0);
+		BatchMetrics.SkipDetail skipDetail = metrics.getSkipDetails().peek();
+		assertNotNull(skipDetail);
 		assertEquals("null", skipDetail.recordData());
 	}
 
@@ -409,23 +388,19 @@ class BatchMetricsCollectorTest {
 
 	@Test
 	void testRecordRetryAttempt_Failed() {
-		Long recordId = 123L;
-		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setFeatureId("12345678901");
 		int attemptNumber = 3;
 		Throwable error = new IllegalArgumentException("Invalid argument");
 
 		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID);
-		batchMetricsCollector.recordRetryAttempt(
-				JOB_EXECUTION_ID, recordId, batchRecord, attemptNumber, error, false, PARTITION_NAME
-		);
+		batchMetricsCollector.recordRetryAttempt(JOB_EXECUTION_ID, attemptNumber, error, false, PARTITION_NAME);
 
 		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
 		assertEquals(1, metrics.getTotalRetryAttempts());
 		assertEquals(0, metrics.getSuccessfulRetries());
 		assertEquals(1, metrics.getFailedRetries());
 
-		BatchMetrics.RetryDetail retryDetail = metrics.getRetryDetails().get(0);
+		BatchMetrics.RetryDetail retryDetail = metrics.getRetryDetails().peek();
+		assertNotNull(retryDetail);
 		assertEquals("IllegalArgumentException", retryDetail.errorType());
 		assertFalse(retryDetail.successful());
 	}
@@ -727,21 +702,17 @@ class BatchMetricsCollectorTest {
 		BatchMetrics metrics = new BatchMetrics();
 
 		List<BatchMetrics.RetryDetail> retryDetails = new ArrayList<>();
-		retryDetails
-				.add(new BatchMetrics.RetryDetail(1L, "data1", 1, "RuntimeException", "Error 1", true, "partition-1"));
-		retryDetails.add(
-				new BatchMetrics.RetryDetail(2L, "data2", 2, "IllegalStateException", "Error 2", false, "partition-2")
-		);
+		retryDetails.add(new BatchMetrics.RetryDetail(1, "RuntimeException", "Error 1", true, "partition-1"));
+		retryDetails.add(new BatchMetrics.RetryDetail(2, "IllegalStateException", "Error 2", false, "partition-2"));
 
 		metrics.setRetryDetails(retryDetails);
 
 		assertEquals(2, metrics.getRetryDetails().size());
-		assertEquals(1L, metrics.getRetryDetails().get(0).recordId());
-		assertEquals("data1", metrics.getRetryDetails().get(0).recordData());
-		assertEquals(1, metrics.getRetryDetails().get(0).attemptNumber());
-		assertEquals("RuntimeException", metrics.getRetryDetails().get(0).errorType());
-		assertTrue(metrics.getRetryDetails().get(0).successful());
-		assertEquals("partition-1", metrics.getRetryDetails().get(0).partitionName());
+		List<BatchMetrics.RetryDetail> detailsList = new ArrayList<>(metrics.getRetryDetails());
+		assertEquals(1, detailsList.get(0).attemptNumber());
+		assertEquals("RuntimeException", detailsList.get(0).errorType());
+		assertTrue(detailsList.get(0).successful());
+		assertEquals("partition-1", detailsList.get(0).partitionName());
 
 		metrics.setRetryDetails(null);
 		assertTrue(metrics.getRetryDetails().isEmpty());
@@ -764,12 +735,13 @@ class BatchMetricsCollectorTest {
 		metrics.setSkipDetails(skipDetails);
 
 		assertEquals(2, metrics.getSkipDetails().size());
-		assertEquals(1L, metrics.getSkipDetails().get(0).recordId());
-		assertEquals("skip-data1", metrics.getSkipDetails().get(0).recordData());
-		assertEquals("RuntimeException", metrics.getSkipDetails().get(0).errorType());
-		assertEquals("Skip error 1", metrics.getSkipDetails().get(0).errorMessage());
-		assertEquals("partition-1", metrics.getSkipDetails().get(0).partitionName());
-		assertEquals(10L, metrics.getSkipDetails().get(0).lineNumber());
+		List<BatchMetrics.SkipDetail> detailsList = new ArrayList<>(metrics.getSkipDetails());
+		assertEquals(1L, detailsList.get(0).recordId());
+		assertEquals("skip-data1", detailsList.get(0).recordData());
+		assertEquals("RuntimeException", detailsList.get(0).errorType());
+		assertEquals("Skip error 1", detailsList.get(0).errorMessage());
+		assertEquals("partition-1", detailsList.get(0).partitionName());
+		assertEquals(10L, detailsList.get(0).lineNumber());
 
 		metrics.setSkipDetails(null);
 		assertTrue(metrics.getSkipDetails().isEmpty());
@@ -873,11 +845,9 @@ class BatchMetricsCollectorTest {
 	void testBatchMetrics_RetryDetail_WithTimestamp() {
 		LocalDateTime timestamp = LocalDateTime.now();
 		BatchMetrics.RetryDetail retryDetail = new BatchMetrics.RetryDetail(
-				123L, "test-data", 2, "TestException", "Test error message", timestamp, true, "partition-test"
+				2, "TestException", "Test error message", timestamp, true, "partition-test"
 		);
 
-		assertEquals(123L, retryDetail.recordId());
-		assertEquals("test-data", retryDetail.recordData());
 		assertEquals(2, retryDetail.attemptNumber());
 		assertEquals("TestException", retryDetail.errorType());
 		assertEquals("Test error message", retryDetail.errorMessage());
@@ -889,11 +859,9 @@ class BatchMetricsCollectorTest {
 	@Test
 	void testBatchMetrics_RetryDetail_WithoutTimestamp() {
 		BatchMetrics.RetryDetail retryDetail = new BatchMetrics.RetryDetail(
-				456L, "data-456", 3, "AnotherException", "Another error", false, "partition-2"
+				3, "AnotherException", "Another error", false, "partition-2"
 		);
 
-		assertEquals(456L, retryDetail.recordId());
-		assertEquals("data-456", retryDetail.recordData());
 		assertEquals(3, retryDetail.attemptNumber());
 		assertEquals("AnotherException", retryDetail.errorType());
 		assertEquals("Another error", retryDetail.errorMessage());
@@ -1075,15 +1043,11 @@ class BatchMetricsCollectorTest {
 
 	@Test
 	void testRecordRetryAttempt_WithNullJobExecutionId_ThrowsException() {
-		Long recordId = 123L;
-		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setFeatureId("12345678901");
 		Throwable error = new RuntimeException("Test error");
 
 		Exception exception = assertThrows(
 				BatchException.class,
-				() -> batchMetricsCollector
-						.recordRetryAttempt(null, recordId, batchRecord, 1, error, true, PARTITION_NAME)
+				() -> batchMetricsCollector.recordRetryAttempt(null, 1, error, true, PARTITION_NAME)
 		);
 
 		assertTrue(exception.getMessage().contains("Job execution ID cannot be null"));
@@ -1092,15 +1056,11 @@ class BatchMetricsCollectorTest {
 	@Test
 	void testRecordRetryAttempt_WithNoMetricsFound_ThrowsException() {
 		Long nonExistentJobId = 999L;
-		Long recordId = 123L;
-		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setFeatureId("12345678901");
 		Throwable error = new RuntimeException("Test error");
 
 		Exception exception = assertThrows(
 				BatchException.class,
-				() -> batchMetricsCollector
-						.recordRetryAttempt(nonExistentJobId, recordId, batchRecord, 1, error, true, PARTITION_NAME)
+				() -> batchMetricsCollector.recordRetryAttempt(nonExistentJobId, 1, error, true, PARTITION_NAME)
 		);
 
 		assertTrue(exception.getMessage().contains("No metrics found for job execution ID: " + nonExistentJobId));
@@ -1148,17 +1108,12 @@ class BatchMetricsCollectorTest {
 	void testRecordRetryAttempt_ExceptionHandling() {
 		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID);
 
-		Long recordId = Long.MAX_VALUE;
-		BatchRecord batchRecord = new BatchRecord();
-		batchRecord.setFeatureId("12345678901");
-
 		String longMessage = "Error message: " + "x".repeat(100000);
 		Throwable error = new RuntimeException(longMessage);
 
 		assertDoesNotThrow(
-				() -> batchMetricsCollector.recordRetryAttempt(
-						JOB_EXECUTION_ID, recordId, batchRecord, Integer.MAX_VALUE, error, true, PARTITION_NAME
-				)
+				() -> batchMetricsCollector
+						.recordRetryAttempt(JOB_EXECUTION_ID, Integer.MAX_VALUE, error, true, PARTITION_NAME)
 		);
 	}
 
