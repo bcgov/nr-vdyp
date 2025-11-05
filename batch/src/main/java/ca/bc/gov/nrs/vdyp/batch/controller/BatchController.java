@@ -118,12 +118,15 @@ public class BatchController {
 		Long executionId = null;
 
 		try {
-			logger.info("Attempting to stop job with GUID: {}", jobGuid);
-
+			if (logger.isInfoEnabled()) {
+				logger.info("Attempting to stop job with GUID: {}", jobGuid);
+			}
 			JobExecution jobExecution = findJobExecutionByGuid(jobGuid);
 			executionId = jobExecution.getId();
 
-			logger.info("[GUID: {}] Found JobExecution ID: {}, attempting to stop...", jobGuid, executionId);
+			if (logger.isInfoEnabled()) {
+				logger.info("[GUID: {}] Found JobExecution ID: {}, attempting to stop...", jobGuid, executionId);
+			}	
 
 			// Stop the job execution - this sends a stop signal to the running job
 			boolean stopped = jobOperator.stop(executionId);
@@ -138,7 +141,10 @@ public class BatchController {
 				);
 				response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
 
-				logger.info("[GUID: {}] Stop request sent successfully for JobExecution ID: {}", jobGuid, executionId);
+				if (logger.isInfoEnabled()) {
+					logger.info("[GUID: {}] Stop request sent successfully for JobExecution ID: {}", jobGuid, executionId);
+				}
+
 				return ResponseEntity.ok(response);
 			} else {
 				response.put(BatchConstants.Job.GUID, jobGuid);
@@ -147,9 +153,11 @@ public class BatchController {
 				response.put(BatchConstants.Job.MESSAGE, "Job execution could not be stopped. It may not be running.");
 				response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
 
-				logger.warn(
-						"[GUID: {}] Failed to stop JobExecution ID: {}. Job may not be running.", jobGuid, executionId
-				);
+				if (logger.isWarnEnabled()) {
+					logger.warn(
+							"[GUID: {}] Failed to stop JobExecution ID: {}. Job may not be running.", jobGuid, executionId
+					);
+				}
 				return ResponseEntity.badRequest().body(response);
 			}
 
@@ -204,12 +212,16 @@ public class BatchController {
 		Map<String, Object> response = new HashMap<>();
 
 		try {
-			logger.info("Getting status for job with GUID: {}", jobGuid);
+			if (logger.isInfoEnabled()) {
+				logger.info("Getting status for job with GUID: {}", jobGuid);
+			}
 
 			JobExecution jobExecution = findJobExecutionByGuid(jobGuid);
 			Long executionId = jobExecution.getId();
 
-			logger.info("[GUID: {}] Found JobExecution ID: {}", jobGuid, executionId);
+			if (logger.isInfoEnabled()) {
+				logger.info("[GUID: {}] Found JobExecution ID: {}", jobGuid, executionId);
+			}
 
 			boolean isRunning = jobExecution.getStatus().isRunning();
 
@@ -241,10 +253,12 @@ public class BatchController {
 
 			response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
 
-			logger.info(
-					"[GUID: {}] Job status: {}, Running: {}, Total Partitions: {}, Completed Partitions: {}", jobGuid,
-					jobExecution.getStatus(), isRunning, totalPartitions, completedPartitions
-			);
+			if (logger.isInfoEnabled()) {
+				logger.info(
+						"[GUID: {}] Job status: {}, Running: {}, Total Partitions: {}, Completed Partitions: {}", jobGuid,
+						jobExecution.getStatus(), isRunning, totalPartitions, completedPartitions
+				);
+			}
 
 			return ResponseEntity.ok(response);
 

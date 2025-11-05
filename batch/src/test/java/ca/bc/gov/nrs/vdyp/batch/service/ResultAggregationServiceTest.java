@@ -79,12 +79,11 @@ class ResultAggregationServiceTest {
 	@Test
 	void testAggregateResults_BaseDirectoryNotExists() {
 		Path nonExistentDir = tempDir.resolve("non-existent");
+		String nonExistentPath = nonExistentDir.toString();
 
 		BatchConfigurationException exception = assertThrows(
 				BatchConfigurationException.class,
-				() -> resultAggregationService.aggregateResultsFromJobDir(
-						JOB_EXECUTION_ID, JOB_GUID, nonExistentDir.toString(), JOB_TIMESTAMP
-				)
+				() -> aggregateResultsFromJobDir(nonExistentPath)
 		);
 
 		assertTrue(
@@ -437,14 +436,20 @@ class ResultAggregationServiceTest {
 		// Create a file instead of directory
 		Path filePath = tempDir.resolve("not-a-directory.txt");
 		Files.writeString(filePath, "test");
+		String filePathString = filePath.toString();
 
 		BatchConfigurationException exception = assertThrows(
 				BatchConfigurationException.class,
-				() -> resultAggregationService
-						.aggregateResultsFromJobDir(JOB_EXECUTION_ID, JOB_GUID, filePath.toString(), JOB_TIMESTAMP)
+				() -> aggregateResultsFromJobDir(filePathString)
 		);
 
 		assertTrue(exception.getMessage().contains("not a directory"));
+	}
+
+	private Path aggregateResultsFromJobDir(String directoryPath) throws IOException {
+		return resultAggregationService.aggregateResultsFromJobDir(
+				JOB_EXECUTION_ID, JOB_GUID, directoryPath, JOB_TIMESTAMP
+		);
 	}
 
 	@Test
