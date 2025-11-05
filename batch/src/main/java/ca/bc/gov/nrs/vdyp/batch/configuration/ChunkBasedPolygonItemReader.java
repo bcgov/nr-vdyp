@@ -21,6 +21,8 @@ import org.springframework.batch.item.ItemStreamException;
 import org.springframework.batch.item.ItemStreamReader;
 import org.springframework.lang.NonNull;
 
+import ca.bc.gov.nrs.vdyp.batch.exception.BatchConfigurationException;
+import ca.bc.gov.nrs.vdyp.batch.exception.BatchDataValidationException;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
@@ -159,14 +161,14 @@ public class ChunkBasedPolygonItemReader implements ItemStreamReader<BatchRecord
 		Path layerFile = partitionDir.resolve(BatchConstants.Partition.INPUT_LAYER_FILE_NAME);
 
 		if (!Files.exists(polygonFile)) {
-			throw new IOException("Polygon file not found: " + polygonFile);
+			throw new BatchConfigurationException("Polygon file not found: " + polygonFile);
 		}
 
 		// Initialize polygon reader and read header
 		polygonReader = new BufferedReader(new FileReader(polygonFile.toFile()));
 		polygonHeader = polygonReader.readLine();
 		if (polygonHeader == null) {
-			throw new IOException("Polygon file is empty or has no header");
+			throw new BatchDataValidationException("Polygon file is empty or has no header");
 		}
 
 		// Initialize layer reader and read header (if file exists)

@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
+import ca.bc.gov.nrs.vdyp.batch.exception.BatchDataValidationException;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
 
 /**
@@ -126,7 +127,7 @@ public class StreamingCsvPartitioner {
 
 			String header = reader.readLine();
 			if (header == null) {
-				throw new IOException("Polygon CSV file is empty or has no header");
+				throw new BatchDataValidationException("Polygon CSV file is empty or has no header");
 			}
 
 			Map<Integer, PrintWriter> writers = createPartitionWriters(
@@ -191,7 +192,7 @@ public class StreamingCsvPartitioner {
 
 			String header = reader.readLine();
 			if (header == null) {
-				throw new IOException("Layer CSV file is empty or has no header");
+				throw new BatchDataValidationException("Layer CSV file is empty or has no header");
 			}
 
 			Map<Integer, PrintWriter> writers = createPartitionWriters(

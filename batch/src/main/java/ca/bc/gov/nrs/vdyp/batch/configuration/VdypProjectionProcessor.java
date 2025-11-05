@@ -12,8 +12,6 @@ import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.lang.NonNull;
 
-import java.io.IOException;
-
 public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, BatchRecord> {
 
 	private static final Logger logger = LoggerFactory.getLogger(VdypProjectionProcessor.class);
@@ -60,7 +58,7 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 	}
 
 	@Override
-	public BatchRecord process(@NonNull BatchRecord batchRecord) throws IOException, IllegalArgumentException {
+	public BatchRecord process(@NonNull BatchRecord batchRecord) throws IllegalArgumentException {
 		String featureId = batchRecord.getFeatureId();
 
 		// Basic validation only - projection happens in ItemWriter for chunk processing

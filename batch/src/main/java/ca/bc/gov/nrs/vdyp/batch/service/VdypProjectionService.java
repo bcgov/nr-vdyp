@@ -18,6 +18,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import ca.bc.gov.nrs.vdyp.batch.exception.BatchConfigurationException;
+import ca.bc.gov.nrs.vdyp.batch.exception.BatchDataValidationException;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchException;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchIOException;
 import ca.bc.gov.nrs.vdyp.batch.exception.ProjectionNullPointerException;
@@ -150,10 +152,10 @@ public class VdypProjectionService {
 	private Path createOutputPartitionDir(Long jobExecutionId, String jobGuid, String partitionName, String jobBaseDir)
 			throws IOException {
 		if (jobBaseDir == null || jobBaseDir.trim().isEmpty()) {
-			throw new IOException("Job base directory cannot be null or empty");
+			throw new BatchConfigurationException("Job base directory cannot be null or empty");
 		}
 		if (partitionName == null || partitionName.trim().isEmpty()) {
-			throw new IOException("Partition name cannot be null or empty");
+			throw new BatchConfigurationException("Partition name cannot be null or empty");
 		}
 
 		Path jobBasePath = Paths.get(jobBaseDir);
@@ -191,11 +193,10 @@ public class VdypProjectionService {
 	 * Creates combined input streams from all BatchRecords in a chunk. This method combines all polygon and layer data
 	 * into unified streams.
 	 */
-	private Map<String, InputStream> createCombinedInputStreamsFromChunk(List<BatchRecord> batchRecords)
-			throws IOException {
+	private Map<String, InputStream> createCombinedInputStreamsFromChunk(List<BatchRecord> batchRecords) {
 
 		if (batchRecords.isEmpty()) {
-			throw new IOException("Cannot create input streams from empty chunk");
+			throw new BatchDataValidationException("Cannot create input streams from empty chunk");
 		}
 
 		return createCombinedInputStreamsFromRawData(batchRecords);
@@ -204,8 +205,7 @@ public class VdypProjectionService {
 	/**
 	 * Creates combined input streams from raw CSV data in BatchRecords.
 	 */
-	private Map<String, InputStream> createCombinedInputStreamsFromRawData(List<BatchRecord> batchRecords)
-			throws IOException {
+	private Map<String, InputStream> createCombinedInputStreamsFromRawData(List<BatchRecord> batchRecords) {
 		Map<String, InputStream> inputStreams = new HashMap<>();
 
 		StringBuilder polygonCsv = new StringBuilder();
@@ -237,7 +237,7 @@ public class VdypProjectionService {
 
 		// Validate - meaningful data
 		if (polygonCsv.isEmpty() || layerCsv.isEmpty()) {
-			throw new IOException(
+			throw new BatchDataValidationException(
 					String.format(
 							"Combined CSV data is empty or invalid (Polygon: %d bytes, Layer: %d bytes)",
 							polygonCsv.length(), layerCsv.length()
