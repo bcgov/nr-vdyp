@@ -11,6 +11,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.step.skip.SkipLimitExceededException;
 import org.springframework.batch.item.ExecutionContext;
@@ -36,7 +38,15 @@ class BatchSkipPolicyTest {
 	@Mock
 	private ExecutionContext executionContext;
 
+	@Mock
+	private JobExecution jobExecution;
+
+	@Mock
+	private JobParameters jobParameters;
+
 	private BatchSkipPolicy batchSkipPolicy;
+
+	private static final String TEST_JOB_GUID = "test-job-guid-123";
 
 	@BeforeEach
 	void setUp() {
@@ -118,12 +128,16 @@ class BatchSkipPolicyTest {
 	@Test
 	void testBeforeStep_SetsJobExecutionId() {
 		when(stepExecution.getJobExecutionId()).thenReturn(1L);
+		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
 		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
 		when(executionContext.getString("partitionName", "unknown")).thenReturn("partition1");
 
 		batchSkipPolicy.beforeStep(stepExecution);
 
 		verify(stepExecution).getJobExecutionId();
+		verify(stepExecution).getJobExecution();
 		verify(executionContext).getString("partitionName", "unknown");
 	}
 
@@ -222,6 +236,9 @@ class BatchSkipPolicyTest {
 	void testShouldSkip_ProcessesSkippableExceptionPath_WithMetrics() throws SkipLimitExceededException {
 		// Set up step execution for metrics
 		when(stepExecution.getJobExecutionId()).thenReturn(100L);
+		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
 		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
 		when(executionContext.getString("partitionName", "unknown")).thenReturn("test-partition");
 
@@ -239,12 +256,17 @@ class BatchSkipPolicyTest {
 		StepContext stepContext = mock(StepContext.class);
 		StepExecution currentStepExecution = mock(StepExecution.class);
 		ExecutionContext currentExecutionContext = mock(ExecutionContext.class);
+		JobExecution currentJobExecution = mock(JobExecution.class);
+		JobParameters currentJobParameters = mock(JobParameters.class);
 
 		// Mock StepSynchronizationManager
 		try (MockedStatic<StepSynchronizationManager> mockedManager = mockStatic(StepSynchronizationManager.class)) {
 			mockedManager.when(StepSynchronizationManager::getContext).thenReturn(stepContext);
 			when(stepContext.getStepExecution()).thenReturn(currentStepExecution);
 			when(currentStepExecution.getJobExecutionId()).thenReturn(200L);
+			when(currentStepExecution.getJobExecution()).thenReturn(currentJobExecution);
+			when(currentJobExecution.getJobParameters()).thenReturn(currentJobParameters);
+			when(currentJobParameters.getString("jobGuid")).thenReturn("dynamic-job-guid");
 			when(currentStepExecution.getExecutionContext()).thenReturn(currentExecutionContext);
 			when(currentExecutionContext.getString("partitionName", "unknown")).thenReturn("dynamic-partition");
 
@@ -277,6 +299,9 @@ class BatchSkipPolicyTest {
 	void testShouldSkip_WithNullMetricsCollector_DoesNotFail() throws SkipLimitExceededException {
 		BatchSkipPolicy policyWithNullMetrics = new BatchSkipPolicy(5L, null);
 		when(stepExecution.getJobExecutionId()).thenReturn(300L);
+		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
 		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
 		when(executionContext.getString("partitionName", "unknown")).thenReturn("null-metrics-partition");
 

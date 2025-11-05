@@ -22,8 +22,10 @@ import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobInstance;
+import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.batch.core.launch.JobLauncher;
+import org.springframework.batch.core.launch.JobOperator;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -56,15 +58,23 @@ class BatchControllerTest {
 	@Mock
 	private JobInstance jobInstance;
 
+	@Mock
+	private JobOperator jobOperator;
+
+	@Mock
+	private JobParameters jobParameters;
+
 	private BatchController batchController;
 
 	@BeforeEach
 	void setUp() {
 		batchController = new BatchController(
-				jobLauncher, partitionedJob, jobExplorer, metricsCollector, csvPartitioner
+				jobLauncher, partitionedJob, jobExplorer, metricsCollector, csvPartitioner, jobOperator
 		);
-		// Set @Value annotated fields using reflection for unit testing
-		ReflectionTestUtils.setField(batchController, "batchRootDirectory", "/tmp/batch");
+
+		// Use system temp directory for cross-platform compatibility
+		String tempDir = System.getProperty("java.io.tmpdir");
+		ReflectionTestUtils.setField(batchController, "batchRootDirectory", tempDir);
 		ReflectionTestUtils.setField(batchController, "defaultParitionSize", 4);
 	}
 
@@ -100,6 +110,8 @@ class BatchControllerTest {
 		when(jobExecution.getJobInstance()).thenReturn(jobInstance);
 		when(jobInstance.getJobName()).thenReturn("testJob");
 		when(jobExecution.getStartTime()).thenReturn(LocalDateTime.now());
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobParameters.getString("jobGuid")).thenReturn("test-guid");
 		when(jobLauncher.run(any(), any())).thenReturn(jobExecution);
 
 		ResponseEntity<Map<String, Object>> response = batchController
@@ -145,8 +157,9 @@ class BatchControllerTest {
 	void testStartBatchJobWithFiles_WithNullPartitionedJob_ReturnsJobNotAvailable() {
 		// Create controller with null job
 		BatchController controllerWithNullJob = new BatchController(
-				jobLauncher, null, jobExplorer, metricsCollector, csvPartitioner
+				jobLauncher, null, jobExplorer, metricsCollector, csvPartitioner, jobOperator
 		);
+
 		ReflectionTestUtils.setField(controllerWithNullJob, "batchRootDirectory", "/tmp/batch");
 		ReflectionTestUtils.setField(controllerWithNullJob, "defaultParitionSize", 4);
 
@@ -199,6 +212,8 @@ class BatchControllerTest {
 		when(jobExecution.getJobInstance()).thenReturn(jobInstance);
 		when(jobInstance.getJobName()).thenReturn("testJob");
 		when(jobExecution.getStartTime()).thenReturn(LocalDateTime.now());
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobParameters.getString("jobGuid")).thenReturn("test-guid");
 		when(jobLauncher.run(any(), any())).thenReturn(jobExecution);
 
 		// Call without partition size to use default

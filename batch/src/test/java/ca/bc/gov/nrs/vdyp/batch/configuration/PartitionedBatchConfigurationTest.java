@@ -49,6 +49,7 @@ class PartitionedBatchConfigurationTest {
 
 	// Test constants
 	private static final String TEST_THREAD_PREFIX = "VDYP-Worker-";
+	private static final String TEST_JOB_GUID = "7c26643a-50cb-497e-a539-afac6966ecea";
 	private static final Long TEST_JOB_EXECUTION_ID = 12345L;
 	private static final String TEST_PARTITION_NAME = "partition0";
 	private static final int TEST_CORE_POOL_SIZE = 4;
@@ -218,6 +219,12 @@ class PartitionedBatchConfigurationTest {
 
 	@Test
 	void testPartitionReader() {
+		ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics mockMetrics = mock(
+				ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics.class
+		);
+		when(mockMetrics.getJobGuid()).thenReturn(TEST_JOB_GUID);
+		when(metricsCollector.getJobMetrics(TEST_JOB_EXECUTION_ID)).thenReturn(mockMetrics);
+
 		ItemStreamReader<BatchRecord> result = configuration
 				.partitionReader(metricsCollector, TEST_PARTITION_NAME, TEST_JOB_EXECUTION_ID, batchProperties);
 
@@ -269,21 +276,26 @@ class PartitionedBatchConfigurationTest {
 		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
 		when(jobExecution.getId()).thenReturn(TEST_JOB_EXECUTION_ID);
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
-		when(jobParameters.getString(anyString())).thenReturn("test-timestamp");
+		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
+		when(jobParameters.getString("jobTimestamp")).thenReturn("test-timestamp");
+		when(jobParameters.getString("jobBaseDir")).thenReturn(tempDir.toString());
 		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
 		when(stepExecution.getJobExecutionId()).thenReturn(TEST_JOB_EXECUTION_ID);
 
 		// Mock successful aggregation
 		Path mockPath = mock(Path.class);
 		when(mockPath.toString()).thenReturn("/tmp/consolidated.zip");
-		when(resultAggregationService.aggregateResultsFromJobDir(eq(TEST_JOB_EXECUTION_ID), anyString(), anyString()))
-				.thenReturn(mockPath);
+		when(
+				resultAggregationService.aggregateResultsFromJobDir(
+						eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), anyString(), anyString()
+				)
+		).thenReturn(mockPath);
 
 		RepeatStatus result = tasklet.execute(contribution, chunkContext);
 
 		assertEquals(RepeatStatus.FINISHED, result);
 		verify(resultAggregationService)
-				.aggregateResultsFromJobDir(eq(TEST_JOB_EXECUTION_ID), anyString(), anyString());
+				.aggregateResultsFromJobDir(eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), anyString(), anyString());
 		verify(executionContext).putString("consolidatedOutputPath", "/tmp/consolidated.zip");
 	}
 
@@ -338,6 +350,7 @@ class PartitionedBatchConfigurationTest {
 		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
 		when(jobExecution.getId()).thenReturn(TEST_JOB_EXECUTION_ID);
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
 		when(jobParameters.getString("jobTimestamp")).thenReturn("test-timestamp");
 		when(jobParameters.getString("jobBaseDir")).thenReturn(tempDir.toString());
 		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
@@ -345,7 +358,7 @@ class PartitionedBatchConfigurationTest {
 
 		// Mock successful aggregation and validation
 		Path mockPath = tempDir.resolve("consolidated.zip");
-		when(resultAggregationService.aggregateResultsFromJobDir(eq(TEST_JOB_EXECUTION_ID), anyString(), anyString()))
+		when(resultAggregationService.aggregateResultsFromJobDir(eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), anyString(), anyString()))
 				.thenReturn(mockPath);
 		when(resultAggregationService.validateConsolidatedZip(mockPath)).thenReturn(true);
 
@@ -380,6 +393,7 @@ class PartitionedBatchConfigurationTest {
 		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
 		when(jobExecution.getId()).thenReturn(TEST_JOB_EXECUTION_ID);
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
 		when(jobParameters.getString("jobTimestamp")).thenReturn("test-timestamp");
 		when(jobParameters.getString("jobBaseDir")).thenReturn(tempDir.toString());
 		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
@@ -387,7 +401,7 @@ class PartitionedBatchConfigurationTest {
 
 		// Mock successful aggregation but failed validation
 		Path mockPath = tempDir.resolve("consolidated.zip");
-		when(resultAggregationService.aggregateResultsFromJobDir(eq(TEST_JOB_EXECUTION_ID), anyString(), anyString()))
+		when(resultAggregationService.aggregateResultsFromJobDir(eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), anyString(), anyString()))
 				.thenReturn(mockPath);
 		when(resultAggregationService.validateConsolidatedZip(mockPath)).thenReturn(false);
 
@@ -420,13 +434,17 @@ class PartitionedBatchConfigurationTest {
 		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
 		when(jobExecution.getId()).thenReturn(TEST_JOB_EXECUTION_ID);
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
 		when(jobParameters.getString("jobTimestamp")).thenReturn("test-timestamp");
 		when(jobParameters.getString("jobBaseDir")).thenReturn(tempDir.toString());
 		when(stepExecution.getJobExecutionId()).thenReturn(TEST_JOB_EXECUTION_ID);
 
 		// Mock IOException during aggregation
-		when(resultAggregationService.aggregateResultsFromJobDir(eq(TEST_JOB_EXECUTION_ID), anyString(), anyString()))
-				.thenThrow(new java.io.IOException("Test IO error"));
+		when(
+				resultAggregationService.aggregateResultsFromJobDir(
+						eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), anyString(), anyString()
+				)
+		).thenThrow(new java.io.IOException("Test IO error"));
 
 		Exception exception = org.junit.jupiter.api.Assertions.assertThrows(
 				ca.bc.gov.nrs.vdyp.batch.exception.ResultAggregationException.class,
@@ -458,13 +476,17 @@ class PartitionedBatchConfigurationTest {
 		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
 		when(jobExecution.getId()).thenReturn(TEST_JOB_EXECUTION_ID);
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
 		when(jobParameters.getString("jobTimestamp")).thenReturn("test-timestamp");
 		when(jobParameters.getString("jobBaseDir")).thenReturn(tempDir.toString());
 		when(stepExecution.getJobExecutionId()).thenReturn(TEST_JOB_EXECUTION_ID);
 
 		// Mock general exception during aggregation
-		when(resultAggregationService.aggregateResultsFromJobDir(eq(TEST_JOB_EXECUTION_ID), anyString(), anyString()))
-				.thenThrow(new RuntimeException("Test runtime error"));
+		when(
+				resultAggregationService.aggregateResultsFromJobDir(
+						eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), anyString(), anyString()
+				)
+		).thenThrow(new RuntimeException("Test runtime error"));
 
 		Exception exception = org.junit.jupiter.api.Assertions.assertThrows(
 				ca.bc.gov.nrs.vdyp.batch.exception.ResultAggregationException.class,
@@ -496,13 +518,17 @@ class PartitionedBatchConfigurationTest {
 		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
 		when(jobExecution.getId()).thenReturn(TEST_JOB_EXECUTION_ID);
 		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
 		when(jobParameters.getString("jobTimestamp")).thenReturn("test-timestamp");
 		when(jobParameters.getString("jobBaseDir")).thenReturn(tempDir.toString());
 		when(stepExecution.getJobExecutionId()).thenReturn(TEST_JOB_EXECUTION_ID);
 
 		// Mock exception with null message
-		when(resultAggregationService.aggregateResultsFromJobDir(eq(TEST_JOB_EXECUTION_ID), anyString(), anyString()))
-				.thenThrow(new RuntimeException((String) null));
+		when(
+				resultAggregationService.aggregateResultsFromJobDir(
+						eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), anyString(), anyString()
+				)
+		).thenThrow(new RuntimeException((String) null));
 
 		Exception exception = org.junit.jupiter.api.Assertions.assertThrows(
 				ca.bc.gov.nrs.vdyp.batch.exception.ResultAggregationException.class,

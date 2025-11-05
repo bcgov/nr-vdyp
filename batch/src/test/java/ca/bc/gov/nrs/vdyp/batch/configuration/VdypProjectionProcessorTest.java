@@ -18,6 +18,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -38,7 +40,15 @@ class VdypProjectionProcessorTest {
 	@Mock
 	private ExecutionContext executionContext;
 
+	@Mock
+	private JobExecution jobExecution;
+
+	@Mock
+	private JobParameters jobParameters;
+
 	private VdypProjectionProcessor processor;
+
+	private static final String JOB_GUID = "7c26643a-50cb-497e-a539-afac6966ecea";
 
 	@BeforeEach
 	void setUp() {
@@ -54,6 +64,9 @@ class VdypProjectionProcessorTest {
 
 	private void setupStepExecution() {
 		when(stepExecution.getJobExecutionId()).thenReturn(1L);
+		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobParameters.getString("jobGuid")).thenReturn(JOB_GUID);
 		when(executionContext.getString("partitionName", "unknown")).thenReturn("test-partition");
 		when(executionContext.getLong("startLine", 0)).thenReturn(1L);
 		when(executionContext.getLong("endLine", 0)).thenReturn(100L);
@@ -70,8 +83,12 @@ class VdypProjectionProcessorTest {
 		processor.beforeStep(stepExecution);
 
 		verify(stepExecution).getJobExecutionId();
+		verify(stepExecution).getJobExecution();
+		verify(jobExecution).getJobParameters();
+		verify(jobParameters).getString("jobGuid");
+		verify(stepExecution).getExecutionContext();
 		verify(executionContext).getString("partitionName", "unknown");
-		verify(metricsCollector).initializePartitionMetrics(1L, "test-partition");
+		verify(metricsCollector).initializePartitionMetrics(1L, JOB_GUID, "test-partition");
 	}
 
 	@Test
