@@ -46,7 +46,7 @@ public class ResultAggregationService {
 	public Path aggregateResultsFromJobDir(Long jobExecutionId, String jobGuid, String jobBaseDir, String jobTimestamp)
 			throws IOException {
 		logger.info(
-				"[Guid: {}] Starting result aggregation for job execution: {} from job directory: {}", jobGuid,
+				"[GUID: {}] Starting result aggregation for job execution: {} from job directory: {}", jobGuid,
 				jobExecutionId, jobBaseDir
 		);
 

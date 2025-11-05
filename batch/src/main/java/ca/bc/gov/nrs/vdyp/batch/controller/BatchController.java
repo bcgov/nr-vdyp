@@ -199,6 +199,82 @@ public class BatchController {
 		}
 	}
 
+	@GetMapping(value = "/status/{jobGuid}", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<Map<String, Object>> getJobStatus(@PathVariable String jobGuid) {
+		Map<String, Object> response = new HashMap<>();
+
+		try {
+			logger.info("Getting status for job with GUID: {}", jobGuid);
+
+			JobExecution jobExecution = findJobExecutionByGuid(jobGuid);
+			Long executionId = jobExecution.getId();
+
+			logger.info("[GUID: {}] Found JobExecution ID: {}", jobGuid, executionId);
+
+			boolean isRunning = jobExecution.getStatus().isRunning();
+
+			// Count total partitions and completed partitions
+			long totalPartitions = jobExecution.getStepExecutions().stream()
+					.filter(stepExecution -> stepExecution.getStepName().startsWith("workerStep:")).count();
+
+			long completedPartitions = jobExecution.getStepExecutions().stream()
+					.filter(stepExecution -> stepExecution.getStepName().startsWith("workerStep:"))
+					.filter(
+							stepExecution -> stepExecution.getStatus().isUnsuccessful()
+									|| stepExecution.getStatus() == org.springframework.batch.core.BatchStatus.COMPLETED
+					).count();
+
+			response.put(BatchConstants.Job.GUID, jobGuid);
+			response.put(BatchConstants.Job.EXECUTION_ID, executionId);
+			response.put(BatchConstants.Job.NAME, jobExecution.getJobInstance().getJobName());
+			response.put(BatchConstants.Job.STATUS, jobExecution.getStatus().toString());
+			response.put("isRunning", isRunning);
+			response.put("totalPartitions", totalPartitions);
+			response.put("completedPartitions", completedPartitions);
+
+			if (jobExecution.getStartTime() != null) {
+				response.put(BatchConstants.Job.START_TIME, jobExecution.getStartTime());
+			}
+			if (jobExecution.getEndTime() != null) {
+				response.put("endTime", jobExecution.getEndTime());
+			}
+
+			response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
+
+			logger.info(
+					"[GUID: {}] Job status: {}, Running: {}, Total Partitions: {}, Completed Partitions: {}", jobGuid,
+					jobExecution.getStatus(), isRunning, totalPartitions, completedPartitions
+			);
+
+			return ResponseEntity.ok(response);
+
+		} catch (NoSuchJobExecutionException e) {
+			response.put(BatchConstants.Job.GUID, jobGuid);
+			response.put(BatchConstants.Job.ERROR, "Job execution not found");
+			response.put(
+					BatchConstants.Job.MESSAGE,
+					"No job execution found with GUID: " + jobGuid + ". " + "Please verify the GUID is correct."
+			);
+			response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
+
+			logger.error("Job execution not found with GUID: {}", jobGuid);
+			return ResponseEntity.status(404).body(response);
+
+		} catch (Exception e) {
+			response.put(BatchConstants.Job.GUID, jobGuid);
+			response.put(BatchConstants.Job.ERROR, "Failed to get job status");
+			response.put(
+					BatchConstants.Job.MESSAGE,
+					"An error occurred while retrieving job status: "
+							+ (e.getMessage() != null ? e.getMessage() : "Unknown error")
+			);
+			response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
+
+			logger.error("[GUID: {}] Error getting job status: {}", jobGuid, e.getMessage(), e);
+			return ResponseEntity.internalServerError().body(response);
+		}
+	}
+
 	@GetMapping(value = "/health", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Map<String, Object>> health() {
 		Map<String, Object> response = new HashMap<>();
@@ -206,7 +282,10 @@ public class BatchController {
 		response.put("service", "VDYP Batch Processing Service");
 		response.put(
 				"availableEndpoints",
-				Arrays.asList("/api/batch/start", "/api/batch/stop/{jobGuid}", "/api/batch/health")
+				Arrays.asList(
+						"/api/batch/start", "/api/batch/stop/{jobGuid}", "/api/batch/status/{jobGuid}",
+						"/api/batch/health"
+				)
 		);
 		response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
 		return ResponseEntity.ok(response);

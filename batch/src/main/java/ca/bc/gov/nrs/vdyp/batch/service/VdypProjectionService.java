@@ -73,7 +73,7 @@ public class VdypProjectionService {
 			String jobGuid, String jobBaseDir
 	) throws IOException {
 		logger.info(
-				"[Guid: {}, ExeId: {}] Starting VDYP projection for chunk of {} records in partition {}", jobGuid,
+				"[GUID: {}, EXEID: {}] Starting VDYP projection for chunk of {} records in partition {}", jobGuid,
 				jobExecutionId, batchRecords.size(), partitionName
 		);
 
@@ -99,7 +99,7 @@ public class VdypProjectionService {
 			) {
 
 				logger.info(
-						"[Guid: {}, ExeId: {}] Running HCSV projection {} for chunk of {} records in partition {}",
+						"[GUID: {}, EXEID: {}] Running HCSV projection {} for chunk of {} records in partition {}",
 						jobGuid, jobExecutionId, batchProjectionId, batchRecords.size(), partitionName
 				);
 
@@ -115,7 +115,7 @@ public class VdypProjectionService {
 				);
 
 				logger.info(
-						"[Guid: {}, ExeId: {}] VDYP chunk projection completed for {} records in partition {}. Intermediate results stored",
+						"[GUID: {}, EXEID: {}] VDYP chunk projection completed for {} records in partition {}. Intermediate results stored",
 						jobGuid, jobExecutionId, batchRecords.size(), partitionName
 				);
 
@@ -147,7 +147,8 @@ public class VdypProjectionService {
 	/**
 	 * Creates a partition-specific output directory within the existing job-specific parent folder
 	 */
-	private Path createOutputPartitionDir(Long jobExecutionId, String jobGuid, String partitionName, String jobBaseDir) throws IOException {
+	private Path createOutputPartitionDir(Long jobExecutionId, String jobGuid, String partitionName, String jobBaseDir)
+			throws IOException {
 		if (jobBaseDir == null || jobBaseDir.trim().isEmpty()) {
 			throw new IOException("Job base directory cannot be null or empty");
 		}
@@ -171,12 +172,15 @@ public class VdypProjectionService {
 		} catch (IOException e) {
 			throw BatchIOException.handleIOException(
 					outputPartitionDir, e,
-					String.format("[Guid: %s, ExeId: %d] Failed to create output partition directory (job folder: %s)", jobGuid, jobExecutionId, jobBasePath), logger
+					String.format(
+							"[GUID: %s, EXEID: %d] Failed to create output partition directory (job folder: %s)",
+							jobGuid, jobExecutionId, jobBasePath
+					), logger
 			);
 		}
 
 		logger.info(
-				"[Guid: {}, ExeId: {}] Created output partition directory: {} for input partition: {} within job folder: {}",
+				"[GUID: {}, EXEID: {}] Created output partition directory: {} for input partition: {} within job folder: {}",
 				jobGuid, jobExecutionId, outputPartitionName, inputPartitionName, jobBasePath.getFileName()
 		);
 

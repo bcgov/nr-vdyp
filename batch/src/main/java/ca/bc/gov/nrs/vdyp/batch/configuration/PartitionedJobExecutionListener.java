@@ -70,7 +70,7 @@ public class PartitionedJobExecutionListener implements JobExecutionListener {
 		Boolean alreadyProcessed = jobCompletionTracker.get(jobExecutionId);
 		if (alreadyProcessed == null || alreadyProcessed) {
 			logger.info(
-					"[Guid: {}] VDYP Job {} already processed or not tracked, skipping afterJob processing", jobGuid,
+					"[GUID: {}] VDYP Job {} already processed or not tracked, skipping afterJob processing", jobGuid,
 					jobExecutionId
 			);
 			return;
@@ -81,7 +81,7 @@ public class PartitionedJobExecutionListener implements JobExecutionListener {
 			// Double-check after acquiring lock
 			if (Boolean.TRUE.equals(jobCompletionTracker.get(jobExecutionId))) {
 				logger.info(
-						"[Guid: {}] VDYP Job {} already processed by another thread, skipping", jobGuid, jobExecutionId
+						"[GUID: {}] VDYP Job {} already processed by another thread, skipping", jobGuid, jobExecutionId
 				);
 				return;
 			}

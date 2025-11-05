@@ -54,7 +54,7 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 		}
 
 		logger.info(
-				"[Guid: {}, Partition: {}] VDYP Projection Processor initialized for job {}", jobGuid, partitionName,
+				"[GUID: {}, Partition: {}] VDYP Projection Processor initialized for job {}", jobGuid, partitionName,
 				jobExecutionId
 		);
 	}
@@ -69,7 +69,7 @@ public class VdypProjectionProcessor implements ItemProcessor<BatchRecord, Batch
 		}
 
 		logger.debug(
-				"[Guid: {}, ExeId: {} Partition: {}] Prepared record for chunk processing: FEATURE_ID {}", jobGuid,
+				"[GUID: {}, EXEID: {} Partition: {}] Prepared record for chunk processing: FEATURE_ID {}", jobGuid,
 				jobExecutionId, partitionName, featureId
 		);
 

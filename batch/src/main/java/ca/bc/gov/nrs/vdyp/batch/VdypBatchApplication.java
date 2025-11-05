@@ -35,6 +35,7 @@ public class VdypBatchApplication {
 		logger.info("API Endpoints:");
 		logger.info("  POST   /api/batch/start           - Start batch job");
 		logger.info("  POST   /api/batch/stop/{{jobGuid}}     - Stop batch job");
+		logger.info("  POST   /api/batch/status/{{jobGuid}}     - Query job status");
 		logger.info("  GET    /api/batch/health          - Health check");
 		logger.info(separator);
 	}

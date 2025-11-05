@@ -57,7 +57,7 @@ public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepE
 		this.jobBaseDir = stepExecution.getJobParameters().getString(BatchConstants.Job.BASE_DIR);
 
 		logger.info(
-				"[Guid: {}, ExeId: {}, Partition: {}] VdypChunkProjectionWriter.beforeStep() called", jobGuid,
+				"[GUID: {}, EXEID: {}, Partition: {}] VdypChunkProjectionWriter.beforeStep() called", jobGuid,
 				jobExecutionId, partitionName
 		);
 
@@ -67,20 +67,20 @@ public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepE
 		try {
 			this.projectionParameters = objectMapper.readValue(projectionParametersJson, Parameters.class);
 			logger.info(
-					"[Guid: {}, ExeId: {}, Partition: {}] VdypChunkProjectionWriter initialized with projection parameters. Parameters null: {}",
+					"[GUID: {}, EXEID: {}, Partition: {}] VdypChunkProjectionWriter initialized with projection parameters. Parameters null: {}",
 					jobGuid, jobExecutionId, partitionName, this.projectionParameters == null
 			);
 
 			if (this.projectionParameters != null) {
 				logger.debug(
-						"[Guid: {}, ExeId: {}, Partition: {}] Projection parameters loaded successfully: selectedExecutionOptions={}",
+						"[GUID: {}, EXEID: {}, Partition: {}] Projection parameters loaded successfully: selectedExecutionOptions={}",
 						jobGuid, jobExecutionId, partitionName,
 						this.projectionParameters.getSelectedExecutionOptions() != null
 								? this.projectionParameters.getSelectedExecutionOptions().size() : "null"
 				);
 			} else {
 				logger.error(
-						"[Guid: {}, ExeId: {}, Partition: {}] Projection parameters deserialized to null from JSON: {}",
+						"[GUID: {}, EXEID: {}, Partition: {}] Projection parameters deserialized to null from JSON: {}",
 						jobGuid, jobExecutionId, partitionName, projectionParametersJson
 				);
 				throw new IllegalStateException("Deserialized projection parameters are null");
@@ -99,7 +99,7 @@ public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepE
 	@Override
 	public ExitStatus afterStep(StepExecution stepExecution) {
 		logger.info(
-				"[Guid: {}, ExeId: {}, Partition: {}] VdypChunkProjectionWriter.afterStep() called", this.jobGuid,
+				"[GUID: {}, EXEID: {}, Partition: {}] VdypChunkProjectionWriter.afterStep() called", this.jobGuid,
 				this.jobExecutionId, this.partitionName
 		);
 		return stepExecution.getExitStatus();
@@ -109,7 +109,7 @@ public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepE
 	public void write(@NonNull Chunk<? extends BatchRecord> chunk) throws Exception {
 		if (chunk.isEmpty()) {
 			logger.debug(
-					"[Guid: {}, ExeId: {}, Partition: {}] Empty chunk received, skipping", this.jobGuid,
+					"[GUID: {}, EXEID: {}, Partition: {}] Empty chunk received, skipping", this.jobGuid,
 					this.jobExecutionId, this.partitionName
 			);
 			return;
@@ -118,7 +118,7 @@ public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepE
 		List<BatchRecord> batchRecords = chunk.getItems().stream().collect(Collectors.toList());
 
 		logger.info(
-				"[Guid: {}, ExeId: {}, Partition: {}] Processing chunk of {} records using VdypProjectionService",
+				"[GUID: {}, EXEID: {}, Partition: {}] Processing chunk of {} records using VdypProjectionService",
 				this.jobGuid, this.jobExecutionId, this.partitionName, batchRecords.size()
 		);
 
@@ -140,7 +140,7 @@ public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepE
 			recordChunkMetrics(batchRecords, this.partitionName, true, null);
 
 			logger.info(
-					"[Guid: {}, ExeId: {}, Partition: {}] Successfully processed chunk of {} records. Result: {}",
+					"[GUID: {}, EXEID: {}, Partition: {}] Successfully processed chunk of {} records. Result: {}",
 					this.jobGuid, this.jobExecutionId, this.partitionName, batchRecords.size(), chunkResult
 			);
 
@@ -172,7 +172,7 @@ public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepE
 					if (success) {
 						// Record successful processing
 						logger.trace(
-								"[Guid: {}, ExeId: {}, Partition: {}] Recording successful processing for FEATURE_ID: {}",
+								"[GUID: {}, EXEID: {}, Partition: {}] Recording successful processing for FEATURE_ID: {}",
 								jobGuid, jobExecutionId, actualPartitionName, batchRecord.getFeatureId()
 						);
 					} else {
@@ -183,7 +183,7 @@ public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepE
 					}
 				} catch (Exception metricsException) {
 					logger.warn(
-							"[Guid: {}, ExeId: {}, Partition: {}] Failed to record metrics for FEATURE_ID: {} - {}",
+							"[GUID: {}, EXEID: {}, Partition: {}] Failed to record metrics for FEATURE_ID: {} - {}",
 							jobGuid, jobExecutionId, actualPartitionName, batchRecord.getFeatureId(),
 							metricsException.getMessage()
 					);
@@ -199,7 +199,7 @@ public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepE
 			handleParameterDeserializationFailure(String parametersJson, Exception cause, String errorDescription) {
 		// Create enhanced contextual message
 		String contextualMessage = String.format(
-				"[Guid: %s, ExeId: %d, Partition: %s] %s. JSON length: %d, Exception type: %s, Root cause: %s", jobGuid,
+				"[GUID: %s, EXEID: %d, Partition: %s] %s. JSON length: %d, Exception type: %s, Root cause: %s", jobGuid,
 				jobExecutionId, partitionName, errorDescription, parametersJson != null ? parametersJson.length() : 0,
 				cause.getClass().getSimpleName(),
 				cause.getMessage() != null ? cause.getMessage() : BatchConstants.ErrorMessage.NO_ERROR_MESSAGE
@@ -220,7 +220,7 @@ public class VdypChunkProjectionWriter implements ItemWriter<BatchRecord>, StepE
 	) {
 		// Create enhanced contextual message
 		String contextualMessage = String.format(
-				"[Guid: %s, ExeId: %d, Partition: %s] %s. Chunk size: %d, Exception type: %s, Root cause: %s", jobGuid,
+				"[GUID: %s, EXEID: %d, Partition: %s] %s. Chunk size: %d, Exception type: %s, Root cause: %s", jobGuid,
 				jobExecutionId, actualPartitionName, errorDescription, batchRecords.size(),
 				cause.getClass().getSimpleName(),
 				cause.getMessage() != null ? cause.getMessage() : BatchConstants.ErrorMessage.NO_ERROR_MESSAGE
