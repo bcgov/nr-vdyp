@@ -33,9 +33,7 @@ class VdypBatchApplicationTest {
 
 			VdypBatchApplication.main(args);
 
-			springApplicationMock.verify(
-					() -> SpringApplication.run(VdypBatchApplication.class, args)
-			);
+			springApplicationMock.verify(() -> SpringApplication.run(VdypBatchApplication.class, args));
 		}
 	}
 
@@ -46,9 +44,7 @@ class VdypBatchApplicationTest {
 
 			VdypBatchApplication.main(emptyArgs);
 
-			springApplicationMock.verify(
-					() -> SpringApplication.run(VdypBatchApplication.class, emptyArgs)
-			);
+			springApplicationMock.verify(() -> SpringApplication.run(VdypBatchApplication.class, emptyArgs));
 		}
 	}
 
@@ -59,9 +55,7 @@ class VdypBatchApplicationTest {
 
 			VdypBatchApplication.main(multipleArgs);
 
-			springApplicationMock.verify(
-					() -> SpringApplication.run(VdypBatchApplication.class, multipleArgs)
-			);
+			springApplicationMock.verify(() -> SpringApplication.run(VdypBatchApplication.class, multipleArgs));
 		}
 	}
 
@@ -94,8 +88,7 @@ class VdypBatchApplicationTest {
 	void testOnApplicationReady_LogsStartupMessage(CapturedOutput output) {
 		VdypBatchApplication application = new VdypBatchApplication();
 
-		Logger logger = (Logger) LoggerFactory
-				.getLogger(VdypBatchApplication.class);
+		Logger logger = (Logger) LoggerFactory.getLogger(VdypBatchApplication.class);
 		ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
 		listAppender.start();
 		logger.addAppender(listAppender);
@@ -132,8 +125,7 @@ class VdypBatchApplicationTest {
 	void testOnApplicationReady_LogsAllEndpoints() {
 		VdypBatchApplication application = new VdypBatchApplication();
 
-		Logger logger = (Logger) LoggerFactory
-				.getLogger(VdypBatchApplication.class);
+		Logger logger = (Logger) LoggerFactory.getLogger(VdypBatchApplication.class);
 		ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
 		listAppender.start();
 		logger.addAppender(listAppender);
@@ -158,8 +150,7 @@ class VdypBatchApplicationTest {
 	void testOnApplicationReady_LogsAtInfoLevel() {
 		VdypBatchApplication application = new VdypBatchApplication();
 
-		Logger logger = (Logger) LoggerFactory
-				.getLogger(VdypBatchApplication.class);
+		Logger logger = (Logger) LoggerFactory.getLogger(VdypBatchApplication.class);
 		ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
 		listAppender.start();
 		logger.addAppender(listAppender);
@@ -167,11 +158,7 @@ class VdypBatchApplicationTest {
 		application.onApplicationReady();
 
 		for (ILoggingEvent event : listAppender.list) {
-			assertEquals(
-					Level.INFO,
-					event.getLevel(),
-					"All startup messages should be logged at INFO level"
-			);
+			assertEquals(Level.INFO, event.getLevel(), "All startup messages should be logged at INFO level");
 		}
 
 		logger.detachAppender(listAppender);
@@ -191,16 +178,12 @@ class VdypBatchApplicationTest {
 	@Test
 	void testApplicationAnnotations() {
 		assertTrue(
-				VdypBatchApplication.class.isAnnotationPresent(
-						SpringBootApplication.class
-				),
+				VdypBatchApplication.class.isAnnotationPresent(SpringBootApplication.class),
 				"Should have @SpringBootApplication annotation"
 		);
 
 		assertTrue(
-				VdypBatchApplication.class.isAnnotationPresent(
-						RegisterReflectionForBinding.class
-				),
+				VdypBatchApplication.class.isAnnotationPresent(RegisterReflectionForBinding.class),
 				"Should have @RegisterReflectionForBinding annotation"
 		);
 	}
@@ -213,8 +196,7 @@ class VdypBatchApplicationTest {
 				"onApplicationReady should have @EventListener annotation"
 		);
 
-		EventListener annotation = method
-				.getAnnotation(EventListener.class);
+		EventListener annotation = method.getAnnotation(EventListener.class);
 		assertNotNull(annotation, "EventListener annotation should not be null");
 	}
 }

@@ -266,12 +266,8 @@ class PartitionedBatchConfigurationTest {
 		StepContext stepContext = mock(StepContext.class);
 		StepExecution stepExecution = mock(StepExecution.class);
 		ExecutionContext executionContext = mock(ExecutionContext.class);
-		JobExecution jobExecution = mock(
-				JobExecution.class
-		);
-		JobParameters jobParameters = mock(
-				JobParameters.class
-		);
+		JobExecution jobExecution = mock(JobExecution.class);
+		JobParameters jobParameters = mock(JobParameters.class);
 
 		when(chunkContext.getStepContext()).thenReturn(stepContext);
 		when(stepContext.getStepExecution()).thenReturn(stepExecution);
@@ -432,10 +428,8 @@ class PartitionedBatchConfigurationTest {
 				)
 		).thenThrow(new IOException("Test IO error"));
 
-		Exception exception = Assertions.assertThrows(
-				ResultAggregationException.class,
-				() -> tasklet.execute(contribution, chunkContext)
-		);
+		Exception exception = Assertions
+				.assertThrows(ResultAggregationException.class, () -> tasklet.execute(contribution, chunkContext));
 
 		Assertions.assertTrue(exception.getMessage().contains("I/O operation failed"));
 		Assertions.assertTrue(exception.getMessage().contains("Test IO error"));
@@ -468,10 +462,8 @@ class PartitionedBatchConfigurationTest {
 				)
 		).thenThrow(new RuntimeException("Test runtime error"));
 
-		Exception exception = Assertions.assertThrows(
-				ResultAggregationException.class,
-				() -> tasklet.execute(contribution, chunkContext)
-		);
+		Exception exception = Assertions
+				.assertThrows(ResultAggregationException.class, () -> tasklet.execute(contribution, chunkContext));
 
 		Assertions.assertTrue(exception.getMessage().contains("Unexpected error"));
 		Assertions.assertTrue(exception.getMessage().contains("Test runtime error"));
@@ -498,15 +490,14 @@ class PartitionedBatchConfigurationTest {
 		when(jobParameters.getString("jobBaseDir")).thenReturn(tempDir.toString());
 		when(stepExecution.getJobExecutionId()).thenReturn(TEST_JOB_EXECUTION_ID);
 
-		when(resultAggregationService.aggregateResultsFromJobDir(
+		when(
+				resultAggregationService.aggregateResultsFromJobDir(
 						eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), anyString(), anyString()
 				)
 		).thenThrow(new RuntimeException((String) null));
 
-		Exception exception = Assertions.assertThrows(
-				ResultAggregationException.class,
-				() -> tasklet.execute(contribution, chunkContext)
-		);
+		Exception exception = Assertions
+				.assertThrows(ResultAggregationException.class, () -> tasklet.execute(contribution, chunkContext));
 
 		Assertions.assertTrue(exception.getMessage().contains("Unexpected error"));
 		Assertions.assertNotNull(exception.getMessage());
@@ -894,7 +885,7 @@ class PartitionedBatchConfigurationTest {
 				.partitionedJob(jobExecutionListener, masterStep, postProcessingStep, transactionManager);
 
 		JobExecution jobExecution = mock(JobExecution.class);
-		JobParameters jobParameters = mock(JobParameters.class	);
+		JobParameters jobParameters = mock(JobParameters.class);
 		java.util.Set<StepExecution> stepExecutions = new java.util.HashSet<>();
 		StepExecution step1 = mock(StepExecution.class);
 		StepExecution step2 = mock(StepExecution.class);
@@ -1099,13 +1090,10 @@ class PartitionedBatchConfigurationTest {
 		when(stepExecution.getJobExecutionId()).thenReturn(TEST_JOB_EXECUTION_ID);
 
 		when(
-				resultAggregationService.aggregateResultsFromJobDir(
-						eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), eq(null), anyString()
-				)
+				resultAggregationService
+						.aggregateResultsFromJobDir(eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), eq(null), anyString())
 		).thenThrow(new NullPointerException("jobBaseDir cannot be null"));
 
-		Assertions.assertThrows(ResultAggregationException.class,
-				() -> tasklet.execute(contribution, chunkContext)
-		);
+		Assertions.assertThrows(ResultAggregationException.class, () -> tasklet.execute(contribution, chunkContext));
 	}
 }

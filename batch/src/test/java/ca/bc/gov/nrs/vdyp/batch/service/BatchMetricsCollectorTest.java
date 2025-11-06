@@ -5,6 +5,8 @@ import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchException;
@@ -200,38 +202,39 @@ class BatchMetricsCollectorTest {
 		assertTrue(exception.getMessage().contains("Job execution ID cannot be null"));
 	}
 
-	@Test
-	void testInitializePartitionMetrics_NullJobExecutionId() {
+	@ParameterizedTest
+	@CsvSource(
+		{ "true, false, false, false, Job execution ID cannot be null",
+				"false, true, false, false, Partition name cannot be null or blank",
+				"false, false, true, false, Partition name cannot be null or blank",
+				"false, false, false, true, Partition name cannot be null or blank" }
+	)
+	void testInitializePartitionMetrics_InvalidParameters(
+			boolean useNullJobId, boolean useNullPartition, boolean useBlankPartition, boolean useEmptyPartition,
+			String expectedMessage
+	) {
+		if (!useNullJobId) {
+			batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID, JOB_GUID);
+		}
+
+		Long jobId = useNullJobId ? null : JOB_EXECUTION_ID;
+		String partitionName;
+		if (useNullPartition) {
+			partitionName = null;
+		} else if (useBlankPartition) {
+			partitionName = "   ";
+		} else if (useEmptyPartition) {
+			partitionName = "";
+		} else {
+			partitionName = PARTITION_NAME;
+		}
+
 		Exception exception = assertThrows(
 				BatchException.class,
-				() -> batchMetricsCollector.initializePartitionMetrics(null, JOB_GUID, PARTITION_NAME)
+				() -> batchMetricsCollector.initializePartitionMetrics(jobId, JOB_GUID, partitionName)
 		);
 
-		assertTrue(exception.getMessage().contains("Job execution ID cannot be null"));
-	}
-
-	@Test
-	void testInitializePartitionMetrics_NullPartitionName() {
-		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID, JOB_GUID);
-
-		Exception exception = assertThrows(
-				BatchException.class,
-				() -> batchMetricsCollector.initializePartitionMetrics(JOB_EXECUTION_ID, JOB_GUID, null)
-		);
-
-		assertTrue(exception.getMessage().contains("Partition name cannot be null or blank"));
-	}
-
-	@Test
-	void testInitializePartitionMetrics_BlankPartitionName() {
-		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID, JOB_GUID);
-
-		Exception exception = assertThrows(
-				BatchException.class,
-				() -> batchMetricsCollector.initializePartitionMetrics(JOB_EXECUTION_ID, JOB_GUID, "   ")
-		);
-
-		assertTrue(exception.getMessage().contains("Partition name cannot be null or blank"));
+		assertTrue(exception.getMessage().contains(expectedMessage));
 	}
 
 	@Test
@@ -244,26 +247,39 @@ class BatchMetricsCollectorTest {
 		assertTrue(exception.getMessage().contains("No metrics found for job execution ID"));
 	}
 
-	@Test
-	void testCompletePartitionMetrics_NullJobExecutionId() {
+	@ParameterizedTest
+	@CsvSource(
+		{ "true, false, false, false, Job execution ID cannot be null",
+				"false, true, false, false, Partition name cannot be null or blank",
+				"false, false, true, false, Partition name cannot be null or blank",
+				"false, false, false, true, Partition name cannot be null or blank" }
+	)
+	void testCompletePartitionMetrics_InvalidParameters(
+			boolean useNullJobId, boolean useNullPartition, boolean useBlankPartition, boolean useEmptyPartition,
+			String expectedMessage
+	) {
+		if (!useNullJobId) {
+			batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID, JOB_GUID);
+		}
+
+		Long jobId = useNullJobId ? null : JOB_EXECUTION_ID;
+		String partitionName;
+		if (useNullPartition) {
+			partitionName = null;
+		} else if (useBlankPartition) {
+			partitionName = "  ";
+		} else if (useEmptyPartition) {
+			partitionName = "";
+		} else {
+			partitionName = PARTITION_NAME;
+		}
+
 		Exception exception = assertThrows(
 				BatchException.class,
-				() -> batchMetricsCollector.completePartitionMetrics(null, JOB_GUID, PARTITION_NAME, 100L, EXIT_CODE)
+				() -> batchMetricsCollector.completePartitionMetrics(jobId, JOB_GUID, partitionName, 100L, EXIT_CODE)
 		);
 
-		assertTrue(exception.getMessage().contains("Job execution ID cannot be null"));
-	}
-
-	@Test
-	void testCompletePartitionMetrics_NullPartitionName() {
-		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID, JOB_GUID);
-
-		Exception exception = assertThrows(
-				BatchException.class,
-				() -> batchMetricsCollector.completePartitionMetrics(JOB_EXECUTION_ID, JOB_GUID, null, 100L, EXIT_CODE)
-		);
-
-		assertTrue(exception.getMessage().contains("Partition name cannot be null or blank"));
+		assertTrue(exception.getMessage().contains(expectedMessage));
 	}
 
 	@Test
@@ -1158,31 +1174,19 @@ class BatchMetricsCollectorTest {
 		assertNotNull(batchMetricsCollector.getJobMetrics(3L));
 	}
 
-	@Test
-	void testInitializeMetrics_NullJobGuid() {
+	@ParameterizedTest
+	@CsvSource(
+		{ "null, Job GUID cannot be null or blank", "'   ', Job GUID cannot be null or blank",
+				"'', Job GUID cannot be null or blank" }
+	)
+	void testInitializeMetrics_InvalidJobGuid(String jobGuid, String expectedMessage) {
+		String actualJobGuid = "null".equals(jobGuid) ? null : jobGuid;
+
 		Exception exception = assertThrows(
-				BatchException.class, () -> batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID, null)
+				BatchException.class, () -> batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID, actualJobGuid)
 		);
 
-		assertTrue(exception.getMessage().contains("Job GUID cannot be null or blank"));
-	}
-
-	@Test
-	void testInitializeMetrics_BlankJobGuid() {
-		Exception exception = assertThrows(
-				BatchException.class, () -> batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID, "   ")
-		);
-
-		assertTrue(exception.getMessage().contains("Job GUID cannot be null or blank"));
-	}
-
-	@Test
-	void testInitializeMetrics_EmptyJobGuid() {
-		Exception exception = assertThrows(
-				BatchException.class, () -> batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID, "")
-		);
-
-		assertTrue(exception.getMessage().contains("Job GUID cannot be null or blank"));
+		assertTrue(exception.getMessage().contains(expectedMessage));
 	}
 
 	@Test
@@ -1209,7 +1213,8 @@ class BatchMetricsCollectorTest {
 	void testCompletePartitionMetrics_NullJobGuid() {
 		Exception exception = assertThrows(
 				BatchException.class,
-				() -> batchMetricsCollector.completePartitionMetrics(JOB_EXECUTION_ID, null, PARTITION_NAME, 100L, EXIT_CODE)
+				() -> batchMetricsCollector
+						.completePartitionMetrics(JOB_EXECUTION_ID, null, PARTITION_NAME, 100L, EXIT_CODE)
 		);
 
 		assertTrue(exception.getMessage().contains("Job GUID cannot be null or blank"));
@@ -1219,22 +1224,11 @@ class BatchMetricsCollectorTest {
 	void testCompletePartitionMetrics_BlankJobGuid() {
 		Exception exception = assertThrows(
 				BatchException.class,
-				() -> batchMetricsCollector.completePartitionMetrics(JOB_EXECUTION_ID, "  ", PARTITION_NAME, 100L, EXIT_CODE)
+				() -> batchMetricsCollector
+						.completePartitionMetrics(JOB_EXECUTION_ID, "  ", PARTITION_NAME, 100L, EXIT_CODE)
 		);
 
 		assertTrue(exception.getMessage().contains("Job GUID cannot be null or blank"));
-	}
-
-	@Test
-	void testCompletePartitionMetrics_BlankPartitionName() {
-		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID, JOB_GUID);
-
-		Exception exception = assertThrows(
-				BatchException.class,
-				() -> batchMetricsCollector.completePartitionMetrics(JOB_EXECUTION_ID, JOB_GUID, "  ", 100L, EXIT_CODE)
-		);
-
-		assertTrue(exception.getMessage().contains("Partition name cannot be null or blank"));
 	}
 
 	@Test
@@ -1290,7 +1284,8 @@ class BatchMetricsCollectorTest {
 
 		Exception exception = assertThrows(
 				BatchException.class,
-				() -> batchMetricsCollector.recordSkip(JOB_EXECUTION_ID, null, recordId, batchRecord, error, PARTITION_NAME, 10L)
+				() -> batchMetricsCollector
+						.recordSkip(JOB_EXECUTION_ID, null, recordId, batchRecord, error, PARTITION_NAME, 10L)
 		);
 
 		assertTrue(exception.getMessage().contains("Job GUID cannot be null or blank"));
@@ -1305,7 +1300,8 @@ class BatchMetricsCollectorTest {
 
 		Exception exception = assertThrows(
 				BatchException.class,
-				() -> batchMetricsCollector.recordSkip(JOB_EXECUTION_ID, "  ", recordId, batchRecord, error, PARTITION_NAME, 10L)
+				() -> batchMetricsCollector
+						.recordSkip(JOB_EXECUTION_ID, "  ", recordId, batchRecord, error, PARTITION_NAME, 10L)
 		);
 
 		assertTrue(exception.getMessage().contains("Job GUID cannot be null or blank"));
@@ -1321,30 +1317,6 @@ class BatchMetricsCollectorTest {
 
 		assertNotNull(metrics);
 		assertEquals(JOB_EXECUTION_ID, metrics.getJobExecutionId());
-	}
-
-	@Test
-	void testInitializePartitionMetrics_WithEmptyPartitionName() {
-		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID, JOB_GUID);
-
-		Exception exception = assertThrows(
-				BatchException.class,
-				() -> batchMetricsCollector.initializePartitionMetrics(JOB_EXECUTION_ID, JOB_GUID, "")
-		);
-
-		assertTrue(exception.getMessage().contains("Partition name cannot be null or blank"));
-	}
-
-	@Test
-	void testCompletePartitionMetrics_WithEmptyPartitionName() {
-		batchMetricsCollector.initializeMetrics(JOB_EXECUTION_ID, JOB_GUID);
-
-		Exception exception = assertThrows(
-				BatchException.class,
-				() -> batchMetricsCollector.completePartitionMetrics(JOB_EXECUTION_ID, JOB_GUID, "", 100L, EXIT_CODE)
-		);
-
-		assertTrue(exception.getMessage().contains("Partition name cannot be null or blank"));
 	}
 
 	@Test
@@ -1410,9 +1382,8 @@ class BatchMetricsCollectorTest {
 		for (int i = 0; i < 5; i++) {
 			String partitionName = "partition-" + i;
 			batchMetricsCollector.initializePartitionMetrics(JOB_EXECUTION_ID, JOB_GUID, partitionName);
-			batchMetricsCollector.completePartitionMetrics(
-					JOB_EXECUTION_ID, JOB_GUID, partitionName, (long) (i * 100), "COMPLETED"
-			);
+			batchMetricsCollector
+					.completePartitionMetrics(JOB_EXECUTION_ID, JOB_GUID, partitionName, (long) (i * 100), "COMPLETED");
 		}
 
 		BatchMetrics metrics = batchMetricsCollector.getJobMetrics(JOB_EXECUTION_ID);
@@ -1502,7 +1473,10 @@ class BatchMetricsCollectorTest {
 		batchMetricsCollector.finalizeJobMetrics(JOB_EXECUTION_ID, JOB_GUID, "COMPLETED", 100L, 95L);
 
 		assertNotNull(metrics.getEndTime());
-		assertTrue(metrics.getEndTime().isAfter(metrics.getStartTime()) || metrics.getEndTime().isEqual(metrics.getStartTime()));
+		assertTrue(
+				metrics.getEndTime().isAfter(metrics.getStartTime())
+						|| metrics.getEndTime().isEqual(metrics.getStartTime())
+		);
 	}
 
 	@Test

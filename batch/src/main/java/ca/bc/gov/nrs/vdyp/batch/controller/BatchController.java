@@ -116,19 +116,17 @@ public class BatchController {
 	public ResponseEntity<Map<String, Object>> stopBatchJob(@PathVariable String jobGuid) {
 		Map<String, Object> response = new HashMap<>();
 		Long executionId = null;
+		String sanitizedGuid = BatchUtils.sanitizeForLogging(jobGuid);
 
 		try {
 			if (logger.isInfoEnabled()) {
-				logger.info("Attempting to stop job with GUID: {}", BatchUtils.sanitizeForLogging(jobGuid));
+				logger.info("Attempting to stop job with GUID: {}", sanitizedGuid);
 			}
 			JobExecution jobExecution = findJobExecutionByGuid(jobGuid);
 			executionId = jobExecution.getId();
 
 			if (logger.isInfoEnabled()) {
-				logger.info(
-						"[GUID: {}] Found JobExecution ID: {}, attempting to stop...",
-						BatchUtils.sanitizeForLogging(jobGuid), executionId
-				);
+				logger.info("[GUID: {}] Found JobExecution ID: {}, attempting to stop...", sanitizedGuid, executionId);
 			}
 
 			// Stop the job execution - this sends a stop signal to the running job
@@ -146,8 +144,8 @@ public class BatchController {
 
 				if (logger.isInfoEnabled()) {
 					logger.info(
-							"[GUID: {}] Stop request sent successfully for JobExecution ID: {}",
-							BatchUtils.sanitizeForLogging(jobGuid), executionId
+							"[GUID: {}] Stop request sent successfully for JobExecution ID: {}", sanitizedGuid,
+							executionId
 					);
 				}
 
@@ -161,8 +159,8 @@ public class BatchController {
 
 				if (logger.isWarnEnabled()) {
 					logger.warn(
-							"[GUID: {}] Failed to stop JobExecution ID: {}. Job may not be running.",
-							BatchUtils.sanitizeForLogging(jobGuid), executionId
+							"[GUID: {}] Failed to stop JobExecution ID: {}. Job may not be running.", sanitizedGuid,
+							executionId
 					);
 				}
 				return ResponseEntity.badRequest().body(response);
@@ -180,7 +178,7 @@ public class BatchController {
 			);
 			response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
 
-			logger.info("[GUID: {}] Job is already stopping or stopped", BatchUtils.sanitizeForLogging(jobGuid));
+			logger.info("[GUID: {}] Job is already stopping or stopped", sanitizedGuid);
 			// Return 202 Accepted - the stop request was already accepted and is being processed
 			return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
 
@@ -193,7 +191,7 @@ public class BatchController {
 			);
 			response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
 
-			logger.error("Job execution not found with GUID: {}", BatchUtils.sanitizeForLogging(jobGuid));
+			logger.error("Job execution not found with GUID: {}", sanitizedGuid);
 			return ResponseEntity.status(404).body(response);
 
 		} catch (Exception e) {
@@ -209,10 +207,7 @@ public class BatchController {
 			);
 			response.put(BatchConstants.Common.TIMESTAMP, System.currentTimeMillis());
 
-			logger.error(
-					"[GUID: {}] Error stopping job execution: {}", BatchUtils.sanitizeForLogging(jobGuid),
-					e.getMessage(), e
-			);
+			logger.error("[GUID: {}] Error stopping job execution: {}", sanitizedGuid, e.getMessage(), e);
 			return ResponseEntity.internalServerError().body(response);
 		}
 	}
@@ -364,28 +359,27 @@ public class BatchController {
 
 			String jobGuid = BatchUtils.createJobGuid();
 			String jobTimestamp = BatchUtils.createJobTimestamp();
+			String sanitizedGuid = BatchUtils.sanitizeForLogging(jobGuid);
 
 			String jobBaseFolderName = BatchUtils.createJobFolderName(BatchConstants.Job.BASE_FOLDER_PREFIX, jobGuid);
 			Path jobBaseDir = batchRootDir.resolve(jobBaseFolderName);
 			Files.createDirectories(jobBaseDir);
-			logger.info(
-					"Created job base directory: {} (GUID: {})", jobBaseDir, BatchUtils.sanitizeForLogging(jobGuid)
-			);
+			logger.info("Created job base directory: {} (GUID: {})", jobBaseDir, sanitizedGuid);
 
 			Integer actualPartitionSize = partitionSize != null ? partitionSize : defaultParitionSize;
 			logger.info(
-					"[GUID: {}] Actual using {} partitions (requested: {}, from properties: {})",
-					BatchUtils.sanitizeForLogging(jobGuid), actualPartitionSize, partitionSize, defaultParitionSize
+					"[GUID: {}] Actual using {} partitions (requested: {}, from properties: {})", sanitizedGuid,
+					actualPartitionSize, partitionSize, defaultParitionSize
 			);
 
 			// Partition CSV files using streaming approach BEFORE starting the job
-			logger.info("[GUID: {}] Starting CSV partitioning...", BatchUtils.sanitizeForLogging(jobGuid));
+			logger.info("[GUID: {}] Starting CSV partitioning...", sanitizedGuid);
 			int featureIdToPartitionSize = csvPartitioner
 					.partitionCsvFiles(polygonFile, layerFile, actualPartitionSize, jobBaseDir);
 
 			logger.info(
 					"[GUID: {}] CSV files partitioned successfully. Partitions: {}, Total FEATURE_IDs: {}",
-					BatchUtils.sanitizeForLogging(jobGuid), actualPartitionSize, featureIdToPartitionSize
+					sanitizedGuid, actualPartitionSize, featureIdToPartitionSize
 			);
 
 			// Now start the job with the partition directory included in parameters
@@ -395,8 +389,8 @@ public class BatchController {
 			JobExecution jobExecution = jobLauncher.run(partitionedJob, jobParameters);
 
 			logger.info(
-					"[GUID: {}] Started job! Execution ID: {}, Directory: {}, Partitions: {}",
-					BatchUtils.sanitizeForLogging(jobGuid), jobExecution.getId(), jobBaseDir, actualPartitionSize
+					"[GUID: {}] Started job! Execution ID: {}, Directory: {}, Partitions: {}", sanitizedGuid,
+					jobExecution.getId(), jobBaseDir, actualPartitionSize
 			);
 
 			return jobExecution;
