@@ -13,8 +13,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
 import java.nio.file.Path;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,9 +27,12 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.Job;
+import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.StepExecution;
+import org.springframework.batch.core.launch.support.TaskExecutorJobLauncher;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.scope.context.StepContext;
@@ -38,6 +43,8 @@ import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
 
+import ca.bc.gov.nrs.vdyp.batch.exception.ResultAggregationException;
+import ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics;
 import ca.bc.gov.nrs.vdyp.batch.model.BatchRecord;
 import ca.bc.gov.nrs.vdyp.batch.service.BatchMetricsCollector;
 import ca.bc.gov.nrs.vdyp.batch.service.ResultAggregationService;
@@ -105,7 +112,6 @@ class PartitionedBatchConfigurationTest {
 				jobRepository, metricsCollector, batchProperties, resultAggregationService
 		);
 
-		// Setup common mock behaviors
 		when(batchProperties.getRetry()).thenReturn(retry);
 		when(batchProperties.getSkip()).thenReturn(skip);
 		when(batchProperties.getThreadPool()).thenReturn(threadPool);
@@ -113,7 +119,6 @@ class PartitionedBatchConfigurationTest {
 		when(batchProperties.getReader()).thenReturn(reader);
 		when(batchProperties.getRootDirectory()).thenReturn(tempDir.toString());
 
-		// Setup default values
 		when(retry.getMaxAttempts()).thenReturn(TEST_MAX_ATTEMPTS);
 		when(retry.getBackoffPeriod()).thenReturn(TEST_BACKOFF_PERIOD);
 		when(skip.getMaxCount()).thenReturn(TEST_MAX_SKIP_COUNT);
@@ -219,9 +224,7 @@ class PartitionedBatchConfigurationTest {
 
 	@Test
 	void testPartitionReader() {
-		ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics mockMetrics = mock(
-				ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics.class
-		);
+		BatchMetrics mockMetrics = mock(BatchMetrics.class);
 		when(mockMetrics.getJobGuid()).thenReturn(TEST_JOB_GUID);
 		when(metricsCollector.getJobMetrics(TEST_JOB_EXECUTION_ID)).thenReturn(mockMetrics);
 
@@ -258,17 +261,16 @@ class PartitionedBatchConfigurationTest {
 	void testResultAggregationTasklet_successfulExecution() throws Exception {
 		Tasklet tasklet = configuration.resultAggregationTasklet();
 
-		// Mock the tasklet execution context
 		StepContribution contribution = mock(StepContribution.class);
 		ChunkContext chunkContext = mock(ChunkContext.class);
 		StepContext stepContext = mock(StepContext.class);
 		StepExecution stepExecution = mock(StepExecution.class);
 		ExecutionContext executionContext = mock(ExecutionContext.class);
-		org.springframework.batch.core.JobExecution jobExecution = mock(
-				org.springframework.batch.core.JobExecution.class
+		JobExecution jobExecution = mock(
+				JobExecution.class
 		);
-		org.springframework.batch.core.JobParameters jobParameters = mock(
-				org.springframework.batch.core.JobParameters.class
+		JobParameters jobParameters = mock(
+				JobParameters.class
 		);
 
 		when(chunkContext.getStepContext()).thenReturn(stepContext);
@@ -282,7 +284,6 @@ class PartitionedBatchConfigurationTest {
 		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
 		when(stepExecution.getJobExecutionId()).thenReturn(TEST_JOB_EXECUTION_ID);
 
-		// Mock successful aggregation
 		Path mockPath = mock(Path.class);
 		when(mockPath.toString()).thenReturn("/tmp/consolidated.zip");
 		when(
@@ -301,7 +302,7 @@ class PartitionedBatchConfigurationTest {
 
 	@Test
 	void testWorkerStep_withMinimumChunkSize() {
-		when(reader.getDefaultChunkSize()).thenReturn(0); // Test minimum chunk size enforcement
+		when(reader.getDefaultChunkSize()).thenReturn(0);
 
 		BatchRetryPolicy retryPolicy = mock(BatchRetryPolicy.class);
 		BatchSkipPolicy skipPolicy = mock(BatchSkipPolicy.class);
@@ -316,7 +317,7 @@ class PartitionedBatchConfigurationTest {
 
 		assertNotNull(result);
 		assertEquals("workerStep", result.getName());
-		verify(reader).getDefaultChunkSize(); // Verify chunk size was accessed for validation
+		verify(reader).getDefaultChunkSize();
 	}
 
 	@Test
@@ -332,18 +333,13 @@ class PartitionedBatchConfigurationTest {
 
 		Tasklet tasklet = configuration.resultAggregationTasklet();
 
-		// Mock the tasklet execution context
 		StepContribution contribution = mock(StepContribution.class);
 		ChunkContext chunkContext = mock(ChunkContext.class);
 		StepContext stepContext = mock(StepContext.class);
 		StepExecution stepExecution = mock(StepExecution.class);
 		ExecutionContext executionContext = mock(ExecutionContext.class);
-		org.springframework.batch.core.JobExecution jobExecution = mock(
-				org.springframework.batch.core.JobExecution.class
-		);
-		org.springframework.batch.core.JobParameters jobParameters = mock(
-				org.springframework.batch.core.JobParameters.class
-		);
+		JobExecution jobExecution = mock(JobExecution.class);
+		JobParameters jobParameters = mock(JobParameters.class);
 
 		when(chunkContext.getStepContext()).thenReturn(stepContext);
 		when(stepContext.getStepExecution()).thenReturn(stepExecution);
@@ -356,7 +352,6 @@ class PartitionedBatchConfigurationTest {
 		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
 		when(stepExecution.getJobExecutionId()).thenReturn(TEST_JOB_EXECUTION_ID);
 
-		// Mock successful aggregation and validation
 		Path mockPath = tempDir.resolve("consolidated.zip");
 		when(resultAggregationService.aggregateResultsFromJobDir(eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), anyString(), anyString()))
 				.thenReturn(mockPath);
@@ -375,17 +370,16 @@ class PartitionedBatchConfigurationTest {
 
 		Tasklet tasklet = configuration.resultAggregationTasklet();
 
-		// Mock the tasklet execution context
 		StepContribution contribution = mock(StepContribution.class);
 		ChunkContext chunkContext = mock(ChunkContext.class);
 		StepContext stepContext = mock(StepContext.class);
 		StepExecution stepExecution = mock(StepExecution.class);
 		ExecutionContext executionContext = mock(ExecutionContext.class);
-		org.springframework.batch.core.JobExecution jobExecution = mock(
-				org.springframework.batch.core.JobExecution.class
+		JobExecution jobExecution = mock(
+				JobExecution.class
 		);
-		org.springframework.batch.core.JobParameters jobParameters = mock(
-				org.springframework.batch.core.JobParameters.class
+		JobParameters jobParameters = mock(
+				JobParameters.class
 		);
 
 		when(chunkContext.getStepContext()).thenReturn(stepContext);
@@ -399,7 +393,6 @@ class PartitionedBatchConfigurationTest {
 		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
 		when(stepExecution.getJobExecutionId()).thenReturn(TEST_JOB_EXECUTION_ID);
 
-		// Mock successful aggregation but failed validation
 		Path mockPath = tempDir.resolve("consolidated.zip");
 		when(resultAggregationService.aggregateResultsFromJobDir(eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), anyString(), anyString()))
 				.thenReturn(mockPath);
@@ -409,7 +402,6 @@ class PartitionedBatchConfigurationTest {
 
 		assertEquals(RepeatStatus.FINISHED, result);
 		verify(resultAggregationService).validateConsolidatedZip(mockPath);
-		// Cleanup should NOT be called when validation fails
 		verify(resultAggregationService, org.mockito.Mockito.never()).cleanupPartitionDirectories(any());
 	}
 
@@ -417,17 +409,12 @@ class PartitionedBatchConfigurationTest {
 	void testResultAggregationTasklet_ioException() throws Exception {
 		Tasklet tasklet = configuration.resultAggregationTasklet();
 
-		// Mock the tasklet execution context
 		StepContribution contribution = mock(StepContribution.class);
 		ChunkContext chunkContext = mock(ChunkContext.class);
 		StepContext stepContext = mock(StepContext.class);
 		StepExecution stepExecution = mock(StepExecution.class);
-		org.springframework.batch.core.JobExecution jobExecution = mock(
-				org.springframework.batch.core.JobExecution.class
-		);
-		org.springframework.batch.core.JobParameters jobParameters = mock(
-				org.springframework.batch.core.JobParameters.class
-		);
+		JobExecution jobExecution = mock(JobExecution.class);
+		org.springframework.batch.core.JobParameters jobParameters = mock(JobParameters.class);
 
 		when(chunkContext.getStepContext()).thenReturn(stepContext);
 		when(stepContext.getStepExecution()).thenReturn(stepExecution);
@@ -439,37 +426,31 @@ class PartitionedBatchConfigurationTest {
 		when(jobParameters.getString("jobBaseDir")).thenReturn(tempDir.toString());
 		when(stepExecution.getJobExecutionId()).thenReturn(TEST_JOB_EXECUTION_ID);
 
-		// Mock IOException during aggregation
 		when(
 				resultAggregationService.aggregateResultsFromJobDir(
 						eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), anyString(), anyString()
 				)
-		).thenThrow(new java.io.IOException("Test IO error"));
+		).thenThrow(new IOException("Test IO error"));
 
-		Exception exception = org.junit.jupiter.api.Assertions.assertThrows(
-				ca.bc.gov.nrs.vdyp.batch.exception.ResultAggregationException.class,
+		Exception exception = Assertions.assertThrows(
+				ResultAggregationException.class,
 				() -> tasklet.execute(contribution, chunkContext)
 		);
 
-		org.junit.jupiter.api.Assertions.assertTrue(exception.getMessage().contains("I/O operation failed"));
-		org.junit.jupiter.api.Assertions.assertTrue(exception.getMessage().contains("Test IO error"));
+		Assertions.assertTrue(exception.getMessage().contains("I/O operation failed"));
+		Assertions.assertTrue(exception.getMessage().contains("Test IO error"));
 	}
 
 	@Test
 	void testResultAggregationTasklet_generalException() throws Exception {
 		Tasklet tasklet = configuration.resultAggregationTasklet();
 
-		// Mock the tasklet execution context
 		StepContribution contribution = mock(StepContribution.class);
 		ChunkContext chunkContext = mock(ChunkContext.class);
 		StepContext stepContext = mock(StepContext.class);
 		StepExecution stepExecution = mock(StepExecution.class);
-		org.springframework.batch.core.JobExecution jobExecution = mock(
-				org.springframework.batch.core.JobExecution.class
-		);
-		org.springframework.batch.core.JobParameters jobParameters = mock(
-				org.springframework.batch.core.JobParameters.class
-		);
+		JobExecution jobExecution = mock(JobExecution.class);
+		JobParameters jobParameters = mock(JobParameters.class);
 
 		when(chunkContext.getStepContext()).thenReturn(stepContext);
 		when(stepContext.getStepExecution()).thenReturn(stepExecution);
@@ -481,37 +462,31 @@ class PartitionedBatchConfigurationTest {
 		when(jobParameters.getString("jobBaseDir")).thenReturn(tempDir.toString());
 		when(stepExecution.getJobExecutionId()).thenReturn(TEST_JOB_EXECUTION_ID);
 
-		// Mock general exception during aggregation
 		when(
 				resultAggregationService.aggregateResultsFromJobDir(
 						eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), anyString(), anyString()
 				)
 		).thenThrow(new RuntimeException("Test runtime error"));
 
-		Exception exception = org.junit.jupiter.api.Assertions.assertThrows(
-				ca.bc.gov.nrs.vdyp.batch.exception.ResultAggregationException.class,
+		Exception exception = Assertions.assertThrows(
+				ResultAggregationException.class,
 				() -> tasklet.execute(contribution, chunkContext)
 		);
 
-		org.junit.jupiter.api.Assertions.assertTrue(exception.getMessage().contains("Unexpected error"));
-		org.junit.jupiter.api.Assertions.assertTrue(exception.getMessage().contains("Test runtime error"));
+		Assertions.assertTrue(exception.getMessage().contains("Unexpected error"));
+		Assertions.assertTrue(exception.getMessage().contains("Test runtime error"));
 	}
 
 	@Test
 	void testResultAggregationTasklet_exceptionWithNullMessage() throws Exception {
 		Tasklet tasklet = configuration.resultAggregationTasklet();
 
-		// Mock the tasklet execution context
 		StepContribution contribution = mock(StepContribution.class);
 		ChunkContext chunkContext = mock(ChunkContext.class);
 		StepContext stepContext = mock(StepContext.class);
 		StepExecution stepExecution = mock(StepExecution.class);
-		org.springframework.batch.core.JobExecution jobExecution = mock(
-				org.springframework.batch.core.JobExecution.class
-		);
-		org.springframework.batch.core.JobParameters jobParameters = mock(
-				org.springframework.batch.core.JobParameters.class
-		);
+		JobExecution jobExecution = mock(JobExecution.class);
+		JobParameters jobParameters = mock(JobParameters.class);
 
 		when(chunkContext.getStepContext()).thenReturn(stepContext);
 		when(stepContext.getStepExecution()).thenReturn(stepExecution);
@@ -523,21 +498,18 @@ class PartitionedBatchConfigurationTest {
 		when(jobParameters.getString("jobBaseDir")).thenReturn(tempDir.toString());
 		when(stepExecution.getJobExecutionId()).thenReturn(TEST_JOB_EXECUTION_ID);
 
-		// Mock exception with null message
-		when(
-				resultAggregationService.aggregateResultsFromJobDir(
+		when(resultAggregationService.aggregateResultsFromJobDir(
 						eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), anyString(), anyString()
 				)
 		).thenThrow(new RuntimeException((String) null));
 
-		Exception exception = org.junit.jupiter.api.Assertions.assertThrows(
-				ca.bc.gov.nrs.vdyp.batch.exception.ResultAggregationException.class,
+		Exception exception = Assertions.assertThrows(
+				ResultAggregationException.class,
 				() -> tasklet.execute(contribution, chunkContext)
 		);
 
-		org.junit.jupiter.api.Assertions.assertTrue(exception.getMessage().contains("Unexpected error"));
-		// Should handle null message
-		org.junit.jupiter.api.Assertions.assertNotNull(exception.getMessage());
+		Assertions.assertTrue(exception.getMessage().contains("Unexpected error"));
+		Assertions.assertNotNull(exception.getMessage());
 	}
 
 	@Test
@@ -553,7 +525,6 @@ class PartitionedBatchConfigurationTest {
 				itemReader, partitionWriter
 		);
 
-		// Create mock StepExecution to test the listener
 		StepExecution stepExecution = mock(StepExecution.class);
 		ExecutionContext executionContext = mock(ExecutionContext.class);
 
@@ -561,7 +532,6 @@ class PartitionedBatchConfigurationTest {
 		when(executionContext.getString(eq("partitionName"), anyString())).thenReturn(TEST_PARTITION_NAME);
 		when(stepExecution.getJobExecutionId()).thenReturn(TEST_JOB_EXECUTION_ID);
 
-		// Execute beforeStep through reflection to test the listener logic
 		assertNotNull(workerStep);
 		verify(reader).getDefaultChunkSize();
 	}
@@ -579,7 +549,6 @@ class PartitionedBatchConfigurationTest {
 				itemReader, partitionWriter
 		);
 
-		// Create mock StepExecution to test the listener
 		StepExecution stepExecution = mock(StepExecution.class);
 		ExecutionContext executionContext = mock(ExecutionContext.class);
 		ExitStatus exitStatus = ExitStatus.COMPLETED;
@@ -592,7 +561,6 @@ class PartitionedBatchConfigurationTest {
 		when(stepExecution.getSkipCount()).thenReturn(0L);
 		when(stepExecution.getExitStatus()).thenReturn(exitStatus);
 
-		// Verify the step was created successfully
 		assertNotNull(workerStep);
 		assertEquals("workerStep", workerStep.getName());
 	}
@@ -607,14 +575,10 @@ class PartitionedBatchConfigurationTest {
 
 		assertNotNull(job);
 		assertEquals("VdypPartitionedJob", job.getName());
-
-		// Verify the job is properly configured with incrementer
-		// The listeners are tested indirectly through job execution
 	}
 
 	@Test
 	void testWorkerStep_chunkSizeCalculation() {
-		// Test chunk size enforcement - values less than 1 should become 1
 		when(reader.getDefaultChunkSize()).thenReturn(-5);
 
 		BatchRetryPolicy retryPolicy = mock(BatchRetryPolicy.class);
@@ -629,13 +593,11 @@ class PartitionedBatchConfigurationTest {
 
 		assertNotNull(result);
 		assertEquals("workerStep", result.getName());
-		// Chunk size should be enforced to minimum of 1
 		verify(reader).getDefaultChunkSize();
 	}
 
 	@Test
 	void testWorkerStep_withLargeChunkSize() {
-		// Test with large chunk size
 		when(reader.getDefaultChunkSize()).thenReturn(1000);
 
 		BatchRetryPolicy retryPolicy = mock(BatchRetryPolicy.class);
@@ -671,14 +633,11 @@ class PartitionedBatchConfigurationTest {
 		BatchProperties props = new BatchProperties();
 		BatchProperties.Job job = props.getJob();
 
-		// Test default value
 		assertTrue(job.isAutoCreate());
 
-		// Test setter
 		job.setAutoCreate(false);
 		assertFalse(job.isAutoCreate());
 
-		// Test base folder prefix
 		assertNull(job.getBaseFolderPrefix());
 		job.setBaseFolderPrefix("vdyp-batch");
 		assertEquals("vdyp-batch", job.getBaseFolderPrefix());
@@ -793,7 +752,6 @@ class PartitionedBatchConfigurationTest {
 	void testBatchProperties_AllNullableFields() {
 		BatchProperties props = new BatchProperties();
 
-		// These should be null initially
 		assertNull(props.getRootDirectory());
 		assertNull(props.getJob().getBaseFolderPrefix());
 		assertNull(props.getPartition().getDefaultPartitionSize());
@@ -810,7 +768,6 @@ class PartitionedBatchConfigurationTest {
 	void testBatchProperties_CompleteConfiguration() {
 		BatchProperties props = new BatchProperties();
 
-		// Configure all properties
 		props.setRootDirectory("/data/vdyp");
 
 		props.getJob().setAutoCreate(true);
@@ -838,7 +795,6 @@ class PartitionedBatchConfigurationTest {
 
 		props.getReader().setDefaultChunkSize(100);
 
-		// Verify all configurations
 		assertEquals("/data/vdyp", props.getRootDirectory());
 		assertTrue(props.getJob().isAutoCreate());
 		assertEquals("vdyp-job", props.getJob().getBaseFolderPrefix());
@@ -858,5 +814,298 @@ class PartitionedBatchConfigurationTest {
 		assertEquals(25, props.getValidation().getMaxPolygonIdLength());
 		assertEquals(200, props.getSkip().getMaxCount());
 		assertEquals(100, props.getReader().getDefaultChunkSize());
+	}
+
+	@Test
+	void testAsyncJobLauncher() throws Exception {
+		TaskExecutor taskExecutor = mock(TaskExecutor.class);
+
+		org.springframework.batch.core.launch.JobLauncher result = configuration.asyncJobLauncher(taskExecutor);
+
+		assertNotNull(result);
+		assertTrue(result instanceof TaskExecutorJobLauncher);
+	}
+
+	@Test
+	void testResultAggregationTasklet_cleanupDisabled() throws Exception {
+		when(partition.getInterimDirsCleanupEnabled()).thenReturn(false);
+
+		Tasklet tasklet = configuration.resultAggregationTasklet();
+
+		StepContribution contribution = mock(StepContribution.class);
+		ChunkContext chunkContext = mock(ChunkContext.class);
+		StepContext stepContext = mock(StepContext.class);
+		StepExecution stepExecution = mock(StepExecution.class);
+		ExecutionContext executionContext = mock(ExecutionContext.class);
+		JobExecution jobExecution = mock(JobExecution.class);
+		JobParameters jobParameters = mock(JobParameters.class);
+
+		when(chunkContext.getStepContext()).thenReturn(stepContext);
+		when(stepContext.getStepExecution()).thenReturn(stepExecution);
+		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
+		when(jobExecution.getId()).thenReturn(TEST_JOB_EXECUTION_ID);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
+		when(jobParameters.getString("jobTimestamp")).thenReturn("test-timestamp");
+		when(jobParameters.getString("jobBaseDir")).thenReturn(tempDir.toString());
+		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
+		when(stepExecution.getJobExecutionId()).thenReturn(TEST_JOB_EXECUTION_ID);
+
+		Path mockPath = tempDir.resolve("consolidated.zip");
+		when(
+				resultAggregationService.aggregateResultsFromJobDir(
+						eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), anyString(), anyString()
+				)
+		).thenReturn(mockPath);
+
+		RepeatStatus result = tasklet.execute(contribution, chunkContext);
+
+		assertEquals(RepeatStatus.FINISHED, result);
+
+		verify(resultAggregationService, org.mockito.Mockito.never()).cleanupPartitionDirectories(any());
+		verify(resultAggregationService, org.mockito.Mockito.never()).validateConsolidatedZip(any());
+	}
+
+	@Test
+	void testPartitionedJob_beforeJobCallback() {
+		Step masterStep = mock(Step.class);
+		Step postProcessingStep = mock(Step.class);
+
+		Job job = configuration
+				.partitionedJob(jobExecutionListener, masterStep, postProcessingStep, transactionManager);
+
+		JobExecution jobExecution = mock(JobExecution.class);
+		JobParameters jobParameters = mock(JobParameters.class);
+
+		when(jobExecution.getId()).thenReturn(TEST_JOB_EXECUTION_ID);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
+
+		assertNotNull(job);
+		assertEquals("VdypPartitionedJob", job.getName());
+	}
+
+	@Test
+	void testPartitionedJob_afterJobCallback_withCompletedStatus() {
+		Step masterStep = mock(Step.class);
+		Step postProcessingStep = mock(Step.class);
+
+		Job job = configuration
+				.partitionedJob(jobExecutionListener, masterStep, postProcessingStep, transactionManager);
+
+		JobExecution jobExecution = mock(JobExecution.class);
+		JobParameters jobParameters = mock(JobParameters.class	);
+		java.util.Set<StepExecution> stepExecutions = new java.util.HashSet<>();
+		StepExecution step1 = mock(StepExecution.class);
+		StepExecution step2 = mock(StepExecution.class);
+
+		when(step1.getStepName()).thenReturn("workerStep:partition0");
+		when(step2.getStepName()).thenReturn("workerStep:partition1");
+		when(step1.getReadCount()).thenReturn(50L);
+		when(step2.getReadCount()).thenReturn(75L);
+		when(step1.getWriteCount()).thenReturn(48L);
+		when(step2.getWriteCount()).thenReturn(73L);
+
+		stepExecutions.add(step1);
+		stepExecutions.add(step2);
+
+		when(jobExecution.getId()).thenReturn(TEST_JOB_EXECUTION_ID);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
+		when(jobExecution.getStatus()).thenReturn(org.springframework.batch.core.BatchStatus.COMPLETED);
+		when(jobExecution.getStepExecutions()).thenReturn(stepExecutions);
+
+		assertNotNull(job);
+		assertEquals("VdypPartitionedJob", job.getName());
+	}
+
+	@Test
+	void testPartitionedJob_afterJobCallback_withStoppedStatus_cleanupEnabled() {
+		when(partition.getInterimDirsCleanupEnabled()).thenReturn(true);
+
+		Step masterStep = mock(Step.class);
+		Step postProcessingStep = mock(Step.class);
+
+		Job job = configuration
+				.partitionedJob(jobExecutionListener, masterStep, postProcessingStep, transactionManager);
+
+		JobExecution jobExecution = mock(JobExecution.class);
+		JobParameters jobParameters = mock(JobParameters.class);
+		java.util.Set<StepExecution> stepExecutions = new java.util.HashSet<>();
+		StepExecution step1 = mock(StepExecution.class);
+
+		when(step1.getStepName()).thenReturn("workerStep:partition0");
+		when(step1.getReadCount()).thenReturn(50L);
+		when(step1.getWriteCount()).thenReturn(48L);
+
+		stepExecutions.add(step1);
+
+		when(jobExecution.getId()).thenReturn(TEST_JOB_EXECUTION_ID);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
+		when(jobParameters.getString("jobBaseDir")).thenReturn(tempDir.toString());
+		when(jobExecution.getStatus()).thenReturn(org.springframework.batch.core.BatchStatus.STOPPED);
+		when(jobExecution.getStepExecutions()).thenReturn(stepExecutions);
+
+		assertNotNull(job);
+		assertEquals("VdypPartitionedJob", job.getName());
+	}
+
+	@Test
+	void testPartitionedJob_afterJobCallback_withStoppedStatus_cleanupException() {
+		when(partition.getInterimDirsCleanupEnabled()).thenReturn(true);
+
+		Step masterStep = mock(Step.class);
+		Step postProcessingStep = mock(Step.class);
+
+		Job job = configuration
+				.partitionedJob(jobExecutionListener, masterStep, postProcessingStep, transactionManager);
+
+		JobExecution jobExecution = mock(JobExecution.class);
+		JobParameters jobParameters = mock(JobParameters.class);
+		java.util.Set<StepExecution> stepExecutions = new java.util.HashSet<>();
+
+		when(jobExecution.getId()).thenReturn(TEST_JOB_EXECUTION_ID);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
+		when(jobParameters.getString("jobBaseDir")).thenReturn(tempDir.toString());
+		when(jobExecution.getStatus()).thenReturn(org.springframework.batch.core.BatchStatus.STOPPED);
+		when(jobExecution.getStepExecutions()).thenReturn(stepExecutions);
+
+		assertNotNull(job);
+		assertEquals("VdypPartitionedJob", job.getName());
+	}
+
+	@Test
+	void testPartitionedJob_afterJobCallback_withNullJobBaseDir() {
+		when(partition.getInterimDirsCleanupEnabled()).thenReturn(true);
+
+		Step masterStep = mock(Step.class);
+		Step postProcessingStep = mock(Step.class);
+
+		Job job = configuration
+				.partitionedJob(jobExecutionListener, masterStep, postProcessingStep, transactionManager);
+
+		JobExecution jobExecution = mock(JobExecution.class);
+		JobParameters jobParameters = mock(JobParameters.class
+		);
+		java.util.Set<StepExecution> stepExecutions = new java.util.HashSet<>();
+
+		when(jobExecution.getId()).thenReturn(TEST_JOB_EXECUTION_ID);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
+		when(jobParameters.getString("jobBaseDir")).thenReturn(null);
+		when(jobExecution.getStatus()).thenReturn(org.springframework.batch.core.BatchStatus.STOPPED);
+		when(jobExecution.getStepExecutions()).thenReturn(stepExecutions);
+
+		assertNotNull(job);
+		assertEquals("VdypPartitionedJob", job.getName());
+	}
+
+	@Test
+	void testWorkerStep_beforeStep_withUnknownPartitionName() {
+		BatchRetryPolicy retryPolicy = mock(BatchRetryPolicy.class);
+		BatchSkipPolicy skipPolicy = mock(BatchSkipPolicy.class);
+		@SuppressWarnings("unchecked")
+		ItemStreamReader<BatchRecord> itemReader = mock(ItemStreamReader.class);
+		VdypChunkProjectionWriter partitionWriter = mock(VdypChunkProjectionWriter.class);
+
+		Step workerStep = configuration.workerStep(
+				retryPolicy, skipPolicy, transactionManager, metricsCollector, batchProperties, vdypProjectionService,
+				itemReader, partitionWriter
+		);
+
+		StepExecution stepExecution = mock(StepExecution.class);
+		ExecutionContext executionContext = mock(ExecutionContext.class);
+		JobExecution jobExecution = mock(JobExecution.class);
+		JobParameters jobParameters = mock(JobParameters.class);
+
+		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
+		when(executionContext.getString(eq("partitionName"), anyString())).thenReturn("UNKNOWN");
+		when(stepExecution.getJobExecutionId()).thenReturn(TEST_JOB_EXECUTION_ID);
+		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
+
+		assertNotNull(workerStep);
+		assertEquals("workerStep", workerStep.getName());
+	}
+
+	@Test
+	void testWorkerStep_afterStep_withFailedStatus() {
+		BatchRetryPolicy retryPolicy = mock(BatchRetryPolicy.class);
+		BatchSkipPolicy skipPolicy = mock(BatchSkipPolicy.class);
+		@SuppressWarnings("unchecked")
+		ItemStreamReader<BatchRecord> itemReader = mock(ItemStreamReader.class);
+		VdypChunkProjectionWriter partitionWriter = mock(VdypChunkProjectionWriter.class);
+
+		Step workerStep = configuration.workerStep(
+				retryPolicy, skipPolicy, transactionManager, metricsCollector, batchProperties, vdypProjectionService,
+				itemReader, partitionWriter
+		);
+
+		StepExecution stepExecution = mock(StepExecution.class);
+		ExecutionContext executionContext = mock(ExecutionContext.class);
+		ExitStatus exitStatus = ExitStatus.FAILED;
+		JobExecution jobExecution = mock(JobExecution.class);
+		JobParameters jobParameters = mock(JobParameters.class);
+
+		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
+		when(executionContext.getString(eq("partitionName"), anyString())).thenReturn(TEST_PARTITION_NAME);
+		when(stepExecution.getJobExecutionId()).thenReturn(TEST_JOB_EXECUTION_ID);
+		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
+		when(stepExecution.getWriteCount()).thenReturn(50L);
+		when(stepExecution.getReadCount()).thenReturn(100L);
+		when(stepExecution.getSkipCount()).thenReturn(50L);
+		when(stepExecution.getExitStatus()).thenReturn(exitStatus);
+
+		assertNotNull(workerStep);
+		assertEquals("workerStep", workerStep.getName());
+	}
+
+	@Test
+	void testBatchProperties_PartitionConfiguration() {
+		BatchProperties props = new BatchProperties();
+		BatchProperties.Partition partitionConfig = props.getPartition();
+
+		partitionConfig.setInterimDirsCleanupEnabled(true);
+		assertTrue(partitionConfig.getInterimDirsCleanupEnabled());
+
+		partitionConfig.setInterimDirsCleanupEnabled(false);
+		assertFalse(partitionConfig.getInterimDirsCleanupEnabled());
+	}
+
+	@Test
+	void testResultAggregationTasklet_withNullJobBaseDirParameter() throws Exception {
+		Tasklet tasklet = configuration.resultAggregationTasklet();
+
+		StepContribution contribution = mock(StepContribution.class);
+		ChunkContext chunkContext = mock(ChunkContext.class);
+		StepContext stepContext = mock(StepContext.class);
+		StepExecution stepExecution = mock(StepExecution.class);
+		JobExecution jobExecution = mock(JobExecution.class);
+		JobParameters jobParameters = mock(JobParameters.class);
+
+		when(chunkContext.getStepContext()).thenReturn(stepContext);
+		when(stepContext.getStepExecution()).thenReturn(stepExecution);
+		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
+		when(jobExecution.getId()).thenReturn(TEST_JOB_EXECUTION_ID);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobParameters.getString("jobGuid")).thenReturn(TEST_JOB_GUID);
+		when(jobParameters.getString("jobTimestamp")).thenReturn("test-timestamp");
+		when(jobParameters.getString("jobBaseDir")).thenReturn(null);
+		when(stepExecution.getJobExecutionId()).thenReturn(TEST_JOB_EXECUTION_ID);
+
+		when(
+				resultAggregationService.aggregateResultsFromJobDir(
+						eq(TEST_JOB_EXECUTION_ID), eq(TEST_JOB_GUID), eq(null), anyString()
+				)
+		).thenThrow(new NullPointerException("jobBaseDir cannot be null"));
+
+		Assertions.assertThrows(ResultAggregationException.class,
+				() -> tasklet.execute(contribution, chunkContext)
+		);
 	}
 }
