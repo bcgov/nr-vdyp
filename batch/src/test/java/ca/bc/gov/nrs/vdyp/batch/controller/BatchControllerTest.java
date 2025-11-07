@@ -257,6 +257,7 @@ class BatchControllerTest {
 
 		assertEquals(200, response.getStatusCode().value());
 		assertTrue(response.getBody().containsKey("startTime"));
+		assertTrue(response.getBody().containsKey("jobGuid"));
 	}
 
 	@Test

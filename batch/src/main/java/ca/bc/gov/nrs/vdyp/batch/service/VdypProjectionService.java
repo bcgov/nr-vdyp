@@ -49,14 +49,12 @@ public class VdypProjectionService {
 		PolygonProjectionRunner.initializeSiteIndexCurves();
 	}
 
-	// ex) batch-1-partition5-5c63703b-3809-442b-af33-8cd9058d91e7-projection-HCSV-2025_11_04_15_35_33_9595
-	public static String buildBatchProjectionId(
-			Long jobExecutionId, String jobGuid, String partitionName, ProjectionRequestKind projectionKind
-	) {
+	// ex) batch-1-partition0-projection-HCSV-2025_10_02_14_06_43_4933
+	public static String
+			buildBatchProjectionId(Long jobExecutionId, String partitionName, ProjectionRequestKind projectionKind) {
 		StringBuilder sb = new StringBuilder("batch-");
 		sb.append(jobExecutionId).append("-");
 		sb.append(partitionName).append("-");
-		sb.append(jobGuid).append("-");
 		sb.append("projection-").append(projectionKind).append("-");
 		sb.append(BatchUtils.dateTimeFormatterForFilenames.format(LocalDateTime.now()));
 		return sb.toString();
@@ -85,13 +83,13 @@ public class VdypProjectionService {
 
 		Map<String, InputStream> inputStreams = null;
 		try {
-			Path outputPartitionDir = createOutputPartitionDir(jobExecutionId, jobGuid, partitionName, jobBaseDir);
+			Path outputPartitionDir = createOutputPartitionDir(jobExecutionId, partitionName, jobBaseDir);
 
 			// Create combined input streams from all BatchRecords in the chunk
 			inputStreams = createCombinedInputStreamsFromChunk(batchRecords);
 
 			String batchProjectionId = buildBatchProjectionId(
-					jobExecutionId, jobGuid, partitionName, ProjectionRequestKind.HCSV
+					jobExecutionId, partitionName, ProjectionRequestKind.HCSV
 			);
 
 			try (
@@ -149,7 +147,7 @@ public class VdypProjectionService {
 	/**
 	 * Creates a partition-specific output directory within the existing job-specific parent folder
 	 */
-	private Path createOutputPartitionDir(Long jobExecutionId, String jobGuid, String partitionName, String jobBaseDir)
+	private Path createOutputPartitionDir(Long jobExecutionId, String partitionName, String jobBaseDir)
 			throws IOException {
 		if (jobBaseDir == null || jobBaseDir.trim().isEmpty()) {
 			throw new BatchConfigurationException("Job base directory cannot be null or empty");
@@ -175,15 +173,15 @@ public class VdypProjectionService {
 			throw BatchIOException.handleIOException(
 					outputPartitionDir, e,
 					String.format(
-							"[GUID: %s, EXEID: %d] Failed to create output partition directory (job folder: %s)",
-							jobGuid, jobExecutionId, jobBasePath
+							"[EXEID: %d] Failed to create output partition directory (job folder: %s)", jobExecutionId,
+							jobBasePath
 					), logger
 			);
 		}
 
 		logger.info(
-				"[GUID: {}, EXEID: {}] Created output partition directory: {} for input partition: {} within job folder: {}",
-				jobGuid, jobExecutionId, outputPartitionName, inputPartitionName, jobBasePath.getFileName()
+				"[EXEID: {}] Created output partition directory: {} for input partition: {} within job folder: {}",
+				jobExecutionId, outputPartitionName, inputPartitionName, jobBasePath.getFileName()
 		);
 
 		return outputPartitionDir;

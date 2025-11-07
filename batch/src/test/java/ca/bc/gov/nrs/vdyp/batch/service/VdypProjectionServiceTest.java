@@ -234,12 +234,11 @@ class VdypProjectionServiceTest {
 	@Test
 	void testBuildBatchProjectionId_HCSV() {
 		String projectionId = VdypProjectionService
-				.buildBatchProjectionId(JOB_EXECUTION_ID, JOB_GUID, PARTITION_NAME, ProjectionRequestKind.HCSV);
+				.buildBatchProjectionId(JOB_EXECUTION_ID, PARTITION_NAME, ProjectionRequestKind.HCSV);
 
 		assertNotNull(projectionId);
 		assertTrue(projectionId.contains("batch-1"));
 		assertTrue(projectionId.contains("partition0"));
-		assertTrue(projectionId.contains(JOB_GUID));
 		assertTrue(projectionId.contains("projection-HCSV"));
 		assertTrue(projectionId.matches(".*\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{4}$"));
 	}
@@ -247,40 +246,36 @@ class VdypProjectionServiceTest {
 	@Test
 	void testBuildBatchProjectionId_DCSV() {
 		String projectionId = VdypProjectionService
-				.buildBatchProjectionId(123L, JOB_GUID, "partition99", ProjectionRequestKind.DCSV);
+				.buildBatchProjectionId(123L, "partition99", ProjectionRequestKind.DCSV);
 
 		assertTrue(projectionId.contains("batch-123"));
 		assertTrue(projectionId.contains("partition99"));
-		assertTrue(projectionId.contains(JOB_GUID));
 		assertTrue(projectionId.contains("projection-DCSV"));
 	}
 
 	@Test
 	void testBuildBatchProjectionId_SCSV() {
 		String projectionId = VdypProjectionService
-				.buildBatchProjectionId(456L, JOB_GUID, "partition10", ProjectionRequestKind.SCSV);
+				.buildBatchProjectionId(456L, "partition10", ProjectionRequestKind.SCSV);
 
 		assertTrue(projectionId.contains("batch-456"));
 		assertTrue(projectionId.contains("partition10"));
-		assertTrue(projectionId.contains(JOB_GUID));
 		assertTrue(projectionId.contains("projection-SCSV"));
 	}
 
 	@Test
 	void testBuildBatchProjectionId_TimestampFormat() {
-		String id1 = VdypProjectionService.buildBatchProjectionId(1L, JOB_GUID, "p0", ProjectionRequestKind.HCSV);
-		String id2 = VdypProjectionService.buildBatchProjectionId(1L, JOB_GUID, "p0", ProjectionRequestKind.HCSV);
+		String id1 = VdypProjectionService.buildBatchProjectionId(1L, "p0", ProjectionRequestKind.HCSV);
+		String id2 = VdypProjectionService.buildBatchProjectionId(1L, "p0", ProjectionRequestKind.HCSV);
 
 		// Both should have valid timestamp format and include jobGuid
 		assertTrue(id1.contains("batch-1"));
 		assertTrue(id1.contains("p0"));
-		assertTrue(id1.contains(JOB_GUID));
 		assertTrue(id1.contains("projection-HCSV"));
 		assertTrue(id1.matches(".*\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{4}$"));
 
 		assertTrue(id2.contains("batch-1"));
 		assertTrue(id2.contains("p0"));
-		assertTrue(id2.contains(JOB_GUID));
 		assertTrue(id2.contains("projection-HCSV"));
 		assertTrue(id2.matches(".*\\d{4}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{2}_\\d{4}$"));
 	}
@@ -398,7 +393,7 @@ class VdypProjectionServiceTest {
 
 		for (long jobId : jobIds) {
 			String projectionId = VdypProjectionService
-					.buildBatchProjectionId(jobId, JOB_GUID, PARTITION_NAME, ProjectionRequestKind.HCSV);
+					.buildBatchProjectionId(jobId, PARTITION_NAME, ProjectionRequestKind.HCSV);
 
 			assertTrue(projectionId.contains("batch-" + jobId));
 		}
@@ -526,12 +521,11 @@ class VdypProjectionServiceTest {
 	@Test
 	void testCreateOutputPartitionDir_NullJobBaseDir() throws Exception {
 		Method createOutputPartitionDirMethod = VdypProjectionService.class
-				.getDeclaredMethod("createOutputPartitionDir", Long.class, String.class, String.class, String.class);
+				.getDeclaredMethod("createOutputPartitionDir", Long.class, String.class, String.class);
 		createOutputPartitionDirMethod.setAccessible(true);
 
 		Exception exception = assertThrows(Exception.class, () -> {
-			createOutputPartitionDirMethod
-					.invoke(vdypProjectionService, JOB_EXECUTION_ID, JOB_GUID, "partition0", null);
+			createOutputPartitionDirMethod.invoke(vdypProjectionService, JOB_EXECUTION_ID, "partition0", null);
 		});
 
 		Throwable cause = exception.getCause();
@@ -542,12 +536,11 @@ class VdypProjectionServiceTest {
 	@Test
 	void testCreateOutputPartitionDir_NullPartitionName() throws Exception {
 		Method createOutputPartitionDirMethod = VdypProjectionService.class
-				.getDeclaredMethod("createOutputPartitionDir", Long.class, String.class, String.class, String.class);
+				.getDeclaredMethod("createOutputPartitionDir", Long.class, String.class, String.class);
 		createOutputPartitionDirMethod.setAccessible(true);
 
 		Exception exception = assertThrows(Exception.class, () -> {
-			createOutputPartitionDirMethod
-					.invoke(vdypProjectionService, JOB_EXECUTION_ID, JOB_GUID, null, tempDir.toString());
+			createOutputPartitionDirMethod.invoke(vdypProjectionService, JOB_EXECUTION_ID, null, tempDir.toString());
 		});
 
 		Throwable cause = exception.getCause();
@@ -568,12 +561,11 @@ class VdypProjectionServiceTest {
 		assertTrue(Files.isRegularFile(outputPartitionDir), "Output path should be a file, not directory");
 
 		Method createOutputPartitionDirMethod = VdypProjectionService.class
-				.getDeclaredMethod("createOutputPartitionDir", Long.class, String.class, String.class, String.class);
+				.getDeclaredMethod("createOutputPartitionDir", Long.class, String.class, String.class);
 		createOutputPartitionDirMethod.setAccessible(true);
 
 		Exception exception = assertThrows(Exception.class, () -> {
-			createOutputPartitionDirMethod
-					.invoke(vdypProjectionService, JOB_EXECUTION_ID, JOB_GUID, partitionName, jobBaseDir);
+			createOutputPartitionDirMethod.invoke(vdypProjectionService, JOB_EXECUTION_ID, partitionName, jobBaseDir);
 		});
 
 		assertTrue(
