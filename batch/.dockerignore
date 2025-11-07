@@ -1,0 +1,71 @@
+# Batch Module Docker Ignore File
+# Exclude files and directories that are not needed in the Docker build context
+
+# Target directories (build artifacts)
+**/target/
+**/build/
+
+# IDE files
+**/.idea/
+**/.vscode/
+**/.settings/
+**/.project
+**/.classpath
+**/.factorypath
+**/.springBeans
+*.iml
+
+# OS files
+.DS_Store
+Thumbs.db
+**/*~
+
+# Log files
+*.log
+**/logs/
+**/*.log.*
+
+# Test files (we skip tests in Docker build)
+**/src/test/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+docs/
+
+# Local development files
+*.local
+.env
+.env.local
+
+# Maven wrapper JAR is needed for mvnw script execution
+.mvn/wrapper/maven-wrapper.jar
+
+# Temporary files
+*.tmp
+*.swp
+*.swo
+*~
+*.bak
+*.orig
+
+# Node modules (if any)
+**/node_modules/
+
+# Frontend (not needed for batch build)
+frontend/
+
+# Backend (not needed for batch build)
+backend/
+
+# Other modules not needed
+vdyp-test-oracle/
+
+# Batch-specific exclusions
+batch/logs/
+batch/batch-debug.log
+batch/target/

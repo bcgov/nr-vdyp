@@ -1,0 +1,17 @@
+<configuration>
+  <!-- Console-only logging for containerized batch processing -->
+  <!-- File logging disabled to avoid permission issues in Docker -->
+
+  <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>%-4relative [%thread] %-5level %logger{35}: %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <logger name="ca.bc.gov.nrs.vdyp.batch" level="INFO" />
+  <logger name="ca.bc.gov.nrs.vdyp" level="INFO" />
+
+  <root level="INFO">
+    <appender-ref ref="stdout" />
+  </root>
+</configuration>
