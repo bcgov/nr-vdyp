@@ -15,17 +15,30 @@ public class ProjectionNullPointerException extends IOException {
 
 	private static final long serialVersionUID = 1L;
 
+	private final String jobGuid;
+	private final Long jobExecutionId;
 	private final String partitionName;
 	private final int recordCount;
 	private final List<String> featureIds;
 
 	public ProjectionNullPointerException(
-			String message, NullPointerException cause, String partitionName, int recordCount, List<String> featureIds
+			String message, NullPointerException cause, String jobGuid, Long jobExecutionId, String partitionName,
+			int recordCount, List<String> featureIds
 	) {
 		super(message, cause);
+		this.jobGuid = jobGuid;
+		this.jobExecutionId = jobExecutionId;
 		this.partitionName = partitionName;
 		this.recordCount = recordCount;
 		this.featureIds = featureIds;
+	}
+
+	public String getJobGuid() {
+		return jobGuid;
+	}
+
+	public Long getJobExecutionId() {
+		return jobExecutionId;
 	}
 
 	public String getPartitionName() {
@@ -41,7 +54,8 @@ public class ProjectionNullPointerException extends IOException {
 	}
 
 	public static ProjectionNullPointerException handleProjectionNullPointer(
-			NullPointerException npe, List<BatchRecord> batchRecords, String partitionName, Logger logger
+			NullPointerException npe, List<BatchRecord> batchRecords, Long jobExecutionId, String jobGuid,
+			String partitionName, Logger logger
 	) {
 		List<String> featureIds = batchRecords.stream().map(BatchRecord::getFeatureId).toList();
 
@@ -53,9 +67,10 @@ public class ProjectionNullPointerException extends IOException {
 
 		String npeMessage = npe.getMessage() != null ? npe.getMessage() : "No message";
 		String contextualMessage = String.format(
-				"NullPointerException in projection " + "Partition: %s, Records: %d, NPE message: %s. "
+				"NullPointerException in projection "
+						+ "JobGuid: %s, JobExeId: %d, Partition: %s, Records: %d, NPE message: %s. "
 						+ "FEATURE_IDs in chunk: [%s]",
-				partitionName, batchRecords.size(), npeMessage, featureIdsPreview
+				jobGuid, jobExecutionId, partitionName, batchRecords.size(), npeMessage, featureIdsPreview
 		);
 
 		logger.error(contextualMessage);
@@ -63,7 +78,7 @@ public class ProjectionNullPointerException extends IOException {
 		logger.debug("All FEATURE_IDs in failed chunk ({}): {}", featureIds.size(), featureIds);
 
 		return new ProjectionNullPointerException(
-				contextualMessage, npe, partitionName, batchRecords.size(), featureIds
+				contextualMessage, npe, jobGuid, jobExecutionId, partitionName, batchRecords.size(), featureIds
 		);
 	}
 }

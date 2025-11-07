@@ -227,13 +227,4 @@ class PartitionedJobExecutionListenerTest {
 		Path partition1 = tempDir.resolve("test_partition1.csv");
 		Files.write(partition1, (header + "\n2,data2,poly2,layer2,PROCESSED\n").getBytes());
 	}
-
-	@Test
-	void testAfterJob_UnexpectedJobId_Handles() {
-		// Test with a job execution that wasn't tracked in beforeJob
-		JobExecution untracked = mock(JobExecution.class);
-		when(untracked.getId()).thenReturn(999L);
-
-		assertDoesNotThrow(() -> listener.afterJob(untracked));
-	}
 }

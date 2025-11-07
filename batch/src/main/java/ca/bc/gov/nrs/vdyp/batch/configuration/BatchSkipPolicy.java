@@ -22,6 +22,7 @@ public class BatchSkipPolicy implements SkipPolicy {
 
 	private final long maxSkipCount;
 	private Long jobExecutionId;
+	private String jobGuid;
 	private String partitionName;
 
 	private final BatchMetricsCollector metricsCollector;
@@ -37,6 +38,7 @@ public class BatchSkipPolicy implements SkipPolicy {
 	@BeforeStep
 	public void beforeStep(StepExecution stepExecution) {
 		this.jobExecutionId = stepExecution.getJobExecutionId();
+		this.jobGuid = stepExecution.getJobExecution().getJobParameters().getString(BatchConstants.Job.GUID);
 		this.partitionName = stepExecution.getExecutionContext()
 				.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN);
 	}
@@ -86,6 +88,7 @@ public class BatchSkipPolicy implements SkipPolicy {
 
 	private ExecutionContext getCurrentExecutionContext() {
 		Long currentJobExecutionId = jobExecutionId;
+		String currentJobGuid = jobGuid;
 		String currentPartitionName = partitionName;
 
 		try {
@@ -93,17 +96,22 @@ public class BatchSkipPolicy implements SkipPolicy {
 			if (stepContext != null) {
 				StepExecution currentStepExecution = stepContext.getStepExecution();
 				currentJobExecutionId = updateJobExecutionId(currentStepExecution);
+				currentJobGuid = updateJobGuid(currentStepExecution);
 				currentPartitionName = updatePartitionName(currentStepExecution);
 			}
 		} catch (Exception e) {
 			logger.warn("[VDYP Skip Policy] Warning: Could not access step context: {}", e.getMessage());
 		}
 
-		return new ExecutionContext(currentJobExecutionId, currentPartitionName);
+		return new ExecutionContext(currentJobExecutionId, currentJobGuid, currentPartitionName);
 	}
 
 	private Long updateJobExecutionId(StepExecution stepExecution) {
 		return stepExecution.getJobExecutionId();
+	}
+
+	private String updateJobGuid(StepExecution stepExecution) {
+		return stepExecution.getJobExecution().getJobParameters().getString(BatchConstants.Job.GUID);
 	}
 
 	private String updatePartitionName(StepExecution stepExecution) {
@@ -116,8 +124,9 @@ public class BatchSkipPolicy implements SkipPolicy {
 	private void recordSkipMetrics(SkipContext skipContext, ExecutionContext executionContext) {
 		if (metricsCollector != null && executionContext.currentJobExecutionId != null) {
 			metricsCollector.recordSkip(
-					executionContext.currentJobExecutionId, skipContext.recordId, skipContext.batchRecord,
-					skipContext.throwable, executionContext.currentPartitionName, skipContext.lineNumber
+					executionContext.currentJobExecutionId, executionContext.currentJobGuid, skipContext.recordId,
+					skipContext.batchRecord, skipContext.throwable, executionContext.currentPartitionName,
+					skipContext.lineNumber
 			);
 		}
 	}
@@ -151,10 +160,12 @@ public class BatchSkipPolicy implements SkipPolicy {
 
 	private static class ExecutionContext {
 		final Long currentJobExecutionId;
+		final String currentJobGuid;
 		final String currentPartitionName;
 
-		ExecutionContext(Long jobExecutionId, String partitionName) {
+		ExecutionContext(Long jobExecutionId, String jobGuid, String partitionName) {
 			this.currentJobExecutionId = jobExecutionId;
+			this.currentJobGuid = jobGuid;
 			this.currentPartitionName = partitionName;
 		}
 	}

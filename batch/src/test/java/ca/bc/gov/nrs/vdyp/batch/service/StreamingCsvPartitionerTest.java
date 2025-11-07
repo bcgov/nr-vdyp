@@ -8,6 +8,8 @@ import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
 
+import ca.bc.gov.nrs.vdyp.batch.exception.BatchDataValidationException;
+
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
@@ -384,8 +386,8 @@ class StreamingCsvPartitionerTest {
 				"layerFile", "layer.csv", "text/csv", LAYER_CSV_CONTENT.getBytes()
 		);
 
-		IOException exception = assertThrows(
-				IOException.class,
+		BatchDataValidationException exception = assertThrows(
+				BatchDataValidationException.class,
 				() -> streamingCsvPartitioner.partitionCsvFiles(emptyPolygonFile, layerFile, 2, tempDir)
 		);
 
@@ -399,8 +401,8 @@ class StreamingCsvPartitionerTest {
 		);
 		MockMultipartFile emptyLayerFile = new MockMultipartFile("layerFile", "layer.csv", "text/csv", "".getBytes());
 
-		IOException exception = assertThrows(
-				IOException.class,
+		BatchDataValidationException exception = assertThrows(
+				BatchDataValidationException.class,
 				() -> streamingCsvPartitioner.partitionCsvFiles(polygonFile, emptyLayerFile, 2, tempDir)
 		);
 

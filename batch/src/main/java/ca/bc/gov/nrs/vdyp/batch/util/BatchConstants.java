@@ -4,6 +4,7 @@ public final class BatchConstants {
 
 	public static final class Job {
 		public static final String EXECUTION_ID = "jobExecutionId";
+		public static final String GUID = "jobGuid";
 		public static final String NAME = "jobName";
 		public static final String STATUS = "status";
 		public static final String MESSAGE = "message";

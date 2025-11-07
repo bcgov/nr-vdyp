@@ -25,6 +25,7 @@ public class BatchRetryPolicy extends SimpleRetryPolicy {
 
 	private final long backOffPeriod;
 	private Long jobExecutionId;
+	private String jobGuid;
 	private String partitionName;
 	private transient BatchMetricsCollector metricsCollector;
 
@@ -36,6 +37,7 @@ public class BatchRetryPolicy extends SimpleRetryPolicy {
 	@BeforeStep
 	public void beforeStep(StepExecution stepExecution) {
 		this.jobExecutionId = stepExecution.getJobExecutionId();
+		this.jobGuid = stepExecution.getJobExecution().getJobParameters().getString(BatchConstants.Job.GUID);
 		this.partitionName = stepExecution.getExecutionContext()
 				.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN);
 	}
@@ -98,9 +100,10 @@ public class BatchRetryPolicy extends SimpleRetryPolicy {
 
 	private void
 			recordRetryMetric(Throwable throwable, int attemptCount, boolean successful, String currentPartitionName) {
-		if (metricsCollector != null && jobExecutionId != null) {
-			metricsCollector
-					.recordRetryAttempt(jobExecutionId, attemptCount, throwable, successful, currentPartitionName);
+		if (metricsCollector != null && jobExecutionId != null && jobGuid != null) {
+			metricsCollector.recordRetryAttempt(
+					jobExecutionId, jobGuid, attemptCount, throwable, successful, currentPartitionName
+			);
 		}
 	}
 
