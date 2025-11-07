@@ -361,7 +361,8 @@ public class BatchController {
 			String jobTimestamp = BatchUtils.createJobTimestamp();
 			String sanitizedGuid = BatchUtils.sanitizeForLogging(jobGuid);
 
-			String jobBaseFolderName = BatchUtils.createJobFolderName(BatchConstants.Job.BASE_FOLDER_PREFIX, jobGuid);
+			String jobBaseFolderName = BatchUtils
+					.createJobFolderName(BatchConstants.Job.BASE_FOLDER_PREFIX, jobTimestamp);
 			Path jobBaseDir = batchRootDir.resolve(jobBaseFolderName);
 			Files.createDirectories(jobBaseDir);
 			logger.info("Created job base directory: {} (GUID: {})", jobBaseDir, sanitizedGuid);
