@@ -226,7 +226,7 @@ coms:
 #-- the components of the application, batch.
 batch:
   #-- enable or disable batch
-  enabled: true
+  enabled: false
   #-- the deployment strategy, can be "Recreate" or "RollingUpdate"
   deploymentStrategy: Recreate
   #-- autoscaling for the component. it is optional and is an object.
