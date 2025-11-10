@@ -27,7 +27,8 @@ spec:
       {{- if .Values.batch.podSecurityContext }}
       securityContext:
         {{- toYaml .Values.batch.podSecurityContext | nindent 12 }}
-      {{- end }}    
+      {{- end }}
+      terminationGracePeriodSeconds: 300  # 5min
       containers:
         - name: {{ include "batch.fullname" . }}
           {{- if .Values.batch.securityContext }}

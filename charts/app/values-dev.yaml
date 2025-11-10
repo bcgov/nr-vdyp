@@ -228,7 +228,7 @@ batch:
   #-- enable or disable batch
   enabled: true
   #-- the deployment strategy, can be "Recreate" or "RollingUpdate"
-  deploymentStrategy: Recreate
+  deploymentStrategy: RollingUpdate
   #-- autoscaling for the component. it is optional and is an object.
   autoscaling:
     #-- enable or disable autoscaling.
