@@ -11,6 +11,7 @@ on:
       - main
     paths:
       - "backend/**"
+      - "batch/**"
       - "charts/**"
       - "frontend/**"
       - "lib/**"
@@ -19,6 +20,7 @@ on:
   pull_request:
     paths:
       - "backend/**"
+      - "batch/**"
       - "charts/**"
       - "frontend/**"
       - "lib/**"
@@ -38,7 +40,7 @@ jobs:
       pr: ${{ steps.pr.outputs.pr }}
     strategy:
       matrix:
-        package: [backend, frontend]
+        package: [backend, frontend, batch]
     timeout-minutes: 10
     steps:
       - name: Checkout code

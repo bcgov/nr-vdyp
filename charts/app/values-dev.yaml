@@ -223,10 +223,10 @@ coms:
     BASICAUTH_USERNAME: ~
     BASICAUTH_PASSWORD: ~
 
-#-- the components of the application, batch.
+#-- the batch processing component
 batch:
   #-- enable or disable batch
-  enabled: false
+  enabled: true
   #-- the deployment strategy, can be "Recreate" or "RollingUpdate"
   deploymentStrategy: Recreate
   #-- autoscaling for the component. it is optional and is an object.
