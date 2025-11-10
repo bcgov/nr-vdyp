@@ -245,6 +245,9 @@ batch:
     type: ClusterIP
     port: 80 # this is the service port, where it will be exposed internal to the namespace.
     targetPort: 8081 # this is container port where app listens on
+  #-- route configuration for external access (dev only for debugging)
+  route:
+    enabled: true
   env:
     SPRING_PROFILES_ACTIVE: "dev"
     BATCH_DB_USER: ~
