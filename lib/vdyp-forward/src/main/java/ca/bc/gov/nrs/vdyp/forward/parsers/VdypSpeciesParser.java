@@ -177,24 +177,22 @@ public class VdypSpeciesParser implements ControlMapValueReplacer<Object, String
 							speciesBuilder.polygonIdentifier(polygonId);
 							speciesBuilder.layerType(lt);
 							speciesBuilder.genus(speciesGroup, controlMap);
-
-							if (isPrimarySpecies.isPresent() && isPrimarySpecies.get() == true) {
-								speciesBuilder.addSite(siteBuilder -> {
-									siteBuilder.ageTotal(inferredTotalAge);
-									siteBuilder.height(dominantHeight);
-									siteBuilder.polygonIdentifier(polygonId);
-									siteBuilder.siteCurveNumber(siteCurveNumber);
-									siteBuilder.layerType(lt);
-									siteBuilder.siteGenus(speciesGroup);
-									siteBuilder.siteIndex(siteIndex);
-									siteBuilder.yearsToBreastHeight(inferredYearsToBreastHeight);
-									if (inferYearsAtBreastHeight) {
-										siteBuilder.yearsAtBreastHeightAuto();
-									} else {
-										siteBuilder.yearsAtBreastHeight(yearsAtBreastHeight);
-									}
-								});
-							}
+							speciesBuilder.isPrimary(isPrimarySpecies.orElse(false));
+							speciesBuilder.addSite(siteBuilder -> {
+								siteBuilder.ageTotal(inferredTotalAge);
+								siteBuilder.height(dominantHeight);
+								siteBuilder.polygonIdentifier(polygonId);
+								siteBuilder.siteCurveNumber(siteCurveNumber);
+								siteBuilder.layerType(lt);
+								siteBuilder.siteGenus(speciesGroup);
+								siteBuilder.siteIndex(siteIndex);
+								siteBuilder.yearsToBreastHeight(inferredYearsToBreastHeight);
+								if (inferYearsAtBreastHeight) {
+									siteBuilder.yearsAtBreastHeightAuto();
+								} else {
+									siteBuilder.yearsAtBreastHeight(yearsAtBreastHeight);
+								}
+							});
 						});
 					})), builder::marker);
 				}

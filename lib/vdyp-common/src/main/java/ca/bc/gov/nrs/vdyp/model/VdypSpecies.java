@@ -27,6 +27,7 @@ public class VdypSpecies extends BaseVdypSpecies<VdypSite> implements VdypUtiliz
 	private Optional<Integer> volumeGroup;
 	private Optional<Integer> decayGroup;
 	private Optional<Integer> breakageGroup;
+	private Optional<Boolean> isPrimary;
 
 	// Compatibility Variables
 
@@ -38,12 +39,14 @@ public class VdypSpecies extends BaseVdypSpecies<VdypSite> implements VdypUtiliz
 	public VdypSpecies(
 			PolygonIdentifier polygonIdentifier, LayerType layer, String genus, int genusIndex,
 			Optional<Float> percentGenus, Sp64DistributionSet sp64DistributionSet, Optional<VdypSite> site,
-			Optional<Integer> volumeGroup, Optional<Integer> decayGroup, Optional<Integer> breakageGroup
+			Optional<Integer> volumeGroup, Optional<Integer> decayGroup, Optional<Integer> breakageGroup,
+			Optional<Boolean> isPrimary
 	) {
 		super(polygonIdentifier, layer, genus, genusIndex, percentGenus, sp64DistributionSet, site);
 		this.volumeGroup = volumeGroup;
 		this.decayGroup = decayGroup;
 		this.breakageGroup = breakageGroup;
+		this.isPrimary = isPrimary;
 	}
 
 	/**
@@ -120,6 +123,14 @@ public class VdypSpecies extends BaseVdypSpecies<VdypSite> implements VdypUtiliz
 		}
 
 		this.breakageGroup = Optional.of(breakageGroup);
+	}
+
+	public boolean getIsPrimary() {
+		return isPrimary.orElse(false);
+	}
+
+	public void setIsPrimary(boolean isPrimary) {
+		this.isPrimary = Optional.of(isPrimary);
 	}
 
 	@Override
@@ -285,6 +296,7 @@ public class VdypSpecies extends BaseVdypSpecies<VdypSite> implements VdypUtiliz
 		protected Optional<Integer> volumeGroup = Optional.empty();
 		protected Optional<Integer> decayGroup = Optional.empty();
 		protected Optional<Integer> breakageGroup = Optional.empty();
+		protected Optional<Boolean> isPrimary = Optional.empty();
 
 		protected UtilizationVector loreyHeight = VdypUtilizationHolder.emptyLoreyHeightUtilization();
 
@@ -458,7 +470,8 @@ public class VdypSpecies extends BaseVdypSpecies<VdypSite> implements VdypUtiliz
 					site, //
 					volumeGroup, //
 					decayGroup, //
-					breakageGroup //
+					breakageGroup, //
+					isPrimary
 			);
 		}
 
@@ -484,6 +497,11 @@ public class VdypSpecies extends BaseVdypSpecies<VdypSite> implements VdypUtiliz
 
 		public Builder breakageGroup(int i) {
 			this.breakageGroup = Optional.of(i);
+			return this;
+		}
+
+		public Builder isPrimary(boolean isPrimary) {
+			this.isPrimary = Optional.of(isPrimary);
 			return this;
 		}
 	}

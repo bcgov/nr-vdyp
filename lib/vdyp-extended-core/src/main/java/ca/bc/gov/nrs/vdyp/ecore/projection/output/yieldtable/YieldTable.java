@@ -1465,9 +1465,9 @@ public class YieldTable implements Closeable {
 		double dominantHeight = Vdyp7Constants.EMPTY_DECIMAL;
 		double siteIndex = Vdyp7Constants.EMPTY_DECIMAL;
 		int siteCurve = Vdyp7Constants.EMPTY_INT;
-		boolean isDominantSpecies = projectedSp0.getSite().isPresent();
+		boolean isDominantSpecies = projectedSp0.getIsPrimary();
 
-		if (isDominantSpecies) {
+		if (projectedSp0.getSite().isPresent()) {
 			var site = projectedSp0.getSite().get();
 
 			totalAge = site.getAgeTotal().map(v -> v.doubleValue()).orElse(null);
