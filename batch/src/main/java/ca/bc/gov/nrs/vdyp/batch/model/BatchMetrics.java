@@ -15,6 +15,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class BatchMetrics {
 
 	private Long jobExecutionId;
+	private String jobGuid;
 	private LocalDateTime startTime;
 	private LocalDateTime endTime;
 	private String status;
@@ -44,6 +45,13 @@ public class BatchMetrics {
 
 	public BatchMetrics(Long jobExecutionId) {
 		this.jobExecutionId = jobExecutionId;
+		this.startTime = LocalDateTime.now();
+		this.status = "STARTING";
+	}
+
+	public BatchMetrics(Long jobExecutionId, String jobGuid) {
+		this.jobExecutionId = jobExecutionId;
+		this.jobGuid = jobGuid;
 		this.startTime = LocalDateTime.now();
 		this.status = "STARTING";
 	}
@@ -175,6 +183,14 @@ public class BatchMetrics {
 
 	public void setJobExecutionId(Long jobExecutionId) {
 		this.jobExecutionId = jobExecutionId;
+	}
+
+	public String getJobGuid() {
+		return jobGuid;
+	}
+
+	public void setJobGuid(String jobGuid) {
+		this.jobGuid = jobGuid;
 	}
 
 	public LocalDateTime getStartTime() {

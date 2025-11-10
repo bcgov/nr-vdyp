@@ -33,15 +33,13 @@ public class BatchException extends RuntimeException {
 	}
 
 	public static BatchException handleProjectionFailure(
-			String partitionName, int recordCount, Exception cause, String errorDescription, Logger logger
+			String jobGuid, Long jobExecutionId, String partitionName, int recordCount, Exception cause,
+			String errorDescription, Logger logger
 	) {
-		String context = String.format("partition=%s, records=%d", partitionName, recordCount);
-		return handleException(context, cause, errorDescription, logger);
-	}
-
-	public static BatchException
-			handleBatchProcessingFailure(Long jobExecutionId, Exception cause, String errorDescription, Logger logger) {
-		String context = String.format("jobExecutionId=%d", jobExecutionId);
+		String context = String.format(
+				"jobGuid=%s, jobExecutionId=%d, partition=%s, records=%d", jobGuid, jobExecutionId, partitionName,
+				recordCount
+		);
 		return handleException(context, cause, errorDescription, logger);
 	}
 }

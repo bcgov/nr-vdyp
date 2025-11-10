@@ -28,6 +28,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.scope.context.StepContext;
 import org.springframework.batch.core.scope.context.StepSynchronizationManager;
@@ -54,7 +56,15 @@ class BatchRetryPolicyTest {
 	@Mock
 	private ExecutionContext executionContext;
 
+	@Mock
+	private JobExecution jobExecution;
+
+	@Mock
+	private JobParameters jobParameters;
+
 	private BatchRetryPolicy batchRetryPolicy;
+
+	private static final String JOB_GUID = "test-job-guid-123";
 
 	@BeforeEach
 	void setUp() {
@@ -71,6 +81,9 @@ class BatchRetryPolicyTest {
 	@Test
 	void testBeforeStep_Success() {
 		when(stepExecution.getJobExecutionId()).thenReturn(123L);
+		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(JOB_GUID);
 		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
 		when(executionContext.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN))
 				.thenReturn("partition0");
@@ -78,12 +91,16 @@ class BatchRetryPolicyTest {
 		assertDoesNotThrow(() -> batchRetryPolicy.beforeStep(stepExecution));
 
 		verify(stepExecution).getJobExecutionId();
+		verify(stepExecution).getJobExecution();
 		verify(stepExecution).getExecutionContext();
 	}
 
 	@Test
 	void testBeforeStep_WithNullExecutionContext() {
 		when(stepExecution.getJobExecutionId()).thenReturn(123L);
+		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(JOB_GUID);
 		when(stepExecution.getExecutionContext()).thenReturn(null);
 
 		assertThrows(NullPointerException.class, () -> batchRetryPolicy.beforeStep(stepExecution));
@@ -92,6 +109,9 @@ class BatchRetryPolicyTest {
 	@Test
 	void testCanRetry_WithRetryableException() {
 		when(stepExecution.getJobExecutionId()).thenReturn(100L);
+		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(JOB_GUID);
 		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
 		when(executionContext.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN))
 				.thenReturn("partition0");
@@ -105,7 +125,7 @@ class BatchRetryPolicyTest {
 
 		assertTrue(result);
 		verify(retryContext, atLeast(1)).getLastThrowable();
-		verify(metricsCollector).recordRetryAttempt(100L, 1, retryableException, false, "partition0");
+		verify(metricsCollector).recordRetryAttempt(100L, JOB_GUID, 1, retryableException, false, "partition0");
 	}
 
 	@Test
@@ -117,7 +137,8 @@ class BatchRetryPolicyTest {
 		boolean result = batchRetryPolicy.canRetry(retryContext);
 
 		assertFalse(result);
-		verify(metricsCollector, never()).recordRetryAttempt(anyLong(), anyInt(), any(), anyBoolean(), anyString());
+		verify(metricsCollector, never())
+				.recordRetryAttempt(anyLong(), any(), anyInt(), any(), anyBoolean(), anyString());
 	}
 
 	@Test
@@ -133,6 +154,9 @@ class BatchRetryPolicyTest {
 	@Test
 	void testCanRetry_MaxAttemptsReached() {
 		when(stepExecution.getJobExecutionId()).thenReturn(100L);
+		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(JOB_GUID);
 		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
 		when(executionContext.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN))
 				.thenReturn("partition0");
@@ -150,6 +174,9 @@ class BatchRetryPolicyTest {
 	@Test
 	void testCanRetry_WithTransientDataAccessException() {
 		when(stepExecution.getJobExecutionId()).thenReturn(100L);
+		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(JOB_GUID);
 		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
 		when(executionContext.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN))
 				.thenReturn("partition0");
@@ -163,7 +190,7 @@ class BatchRetryPolicyTest {
 		boolean result = batchRetryPolicy.canRetry(retryContext);
 
 		assertTrue(result);
-		verify(metricsCollector).recordRetryAttempt(100L, 1, transientException, false, "partition0");
+		verify(metricsCollector).recordRetryAttempt(100L, JOB_GUID, 1, transientException, false, "partition0");
 	}
 
 	@Test
@@ -180,6 +207,9 @@ class BatchRetryPolicyTest {
 	@Test
 	void testBackoffDelay_Applied() {
 		when(stepExecution.getJobExecutionId()).thenReturn(100L);
+		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(JOB_GUID);
 		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
 		when(executionContext.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN))
 				.thenReturn("partition0");
@@ -218,6 +248,9 @@ class BatchRetryPolicyTest {
 	@Test
 	void testBackoffDelay_InterruptedHandling() {
 		when(stepExecution.getJobExecutionId()).thenReturn(100L);
+		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(JOB_GUID);
 		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
 		when(executionContext.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN))
 				.thenReturn("partition0");
@@ -243,6 +276,9 @@ class BatchRetryPolicyTest {
 	@Test
 	void testRecordRetryAttempt_WithMetricsCollector() {
 		when(stepExecution.getJobExecutionId()).thenReturn(999L);
+		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(JOB_GUID);
 		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
 		when(executionContext.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN))
 				.thenReturn("partition5");
@@ -254,7 +290,7 @@ class BatchRetryPolicyTest {
 
 		batchRetryPolicy.canRetry(retryContext);
 
-		verify(metricsCollector).recordRetryAttempt(999L, 1, exception, false, "partition5");
+		verify(metricsCollector).recordRetryAttempt(999L, JOB_GUID, 1, exception, false, "partition5");
 	}
 
 	@Test
@@ -265,6 +301,9 @@ class BatchRetryPolicyTest {
 			ExecutionContext currentExecutionContext = mock(ExecutionContext.class);
 
 			when(stepExecution.getJobExecutionId()).thenReturn(777L);
+			when(stepExecution.getJobExecution()).thenReturn(jobExecution);
+			when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+			when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(JOB_GUID);
 			when(stepExecution.getExecutionContext()).thenReturn(executionContext);
 			when(executionContext.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN))
 					.thenReturn("partition99");
@@ -283,7 +322,7 @@ class BatchRetryPolicyTest {
 			boolean result = batchRetryPolicy.canRetry(retryContext);
 
 			assertTrue(result);
-			verify(metricsCollector).recordRetryAttempt(777L, 1, exception, false, "partition99-current");
+			verify(metricsCollector).recordRetryAttempt(777L, JOB_GUID, 1, exception, false, "partition99-current");
 		}
 	}
 
@@ -291,6 +330,9 @@ class BatchRetryPolicyTest {
 	void testGetCurrentExecutionContext_WithNullStepContext() {
 		try (MockedStatic<StepSynchronizationManager> mockedStatic = mockStatic(StepSynchronizationManager.class)) {
 			when(stepExecution.getJobExecutionId()).thenReturn(100L);
+			when(stepExecution.getJobExecution()).thenReturn(jobExecution);
+			when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+			when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(JOB_GUID);
 			when(stepExecution.getExecutionContext()).thenReturn(executionContext);
 			when(executionContext.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN))
 					.thenReturn("partition0");
@@ -305,7 +347,7 @@ class BatchRetryPolicyTest {
 			boolean result = batchRetryPolicy.canRetry(retryContext);
 
 			assertTrue(result);
-			verify(metricsCollector).recordRetryAttempt(100L, 1, exception, false, "partition0");
+			verify(metricsCollector).recordRetryAttempt(100L, JOB_GUID, 1, exception, false, "partition0");
 		}
 	}
 
@@ -313,6 +355,9 @@ class BatchRetryPolicyTest {
 	void testGetCurrentExecutionContext_WithException() {
 		try (MockedStatic<StepSynchronizationManager> mockedStatic = mockStatic(StepSynchronizationManager.class)) {
 			when(stepExecution.getJobExecutionId()).thenReturn(100L);
+			when(stepExecution.getJobExecution()).thenReturn(jobExecution);
+			when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+			when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(JOB_GUID);
 			when(stepExecution.getExecutionContext()).thenReturn(executionContext);
 			when(executionContext.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN))
 					.thenReturn("partition0");
@@ -328,7 +373,7 @@ class BatchRetryPolicyTest {
 			boolean result = batchRetryPolicy.canRetry(retryContext);
 
 			assertTrue(result);
-			verify(metricsCollector).recordRetryAttempt(100L, 1, exception, false, "partition0");
+			verify(metricsCollector).recordRetryAttempt(100L, JOB_GUID, 1, exception, false, "partition0");
 		}
 	}
 
@@ -346,6 +391,9 @@ class BatchRetryPolicyTest {
 	@Test
 	void testMultipleRetryAttempts() {
 		when(stepExecution.getJobExecutionId()).thenReturn(100L);
+		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(JOB_GUID);
 		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
 		when(executionContext.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN))
 				.thenReturn("partition0");
@@ -387,6 +435,9 @@ class BatchRetryPolicyTest {
 	@Test
 	void testMaxAttemptsReached_LogsError() {
 		when(stepExecution.getJobExecutionId()).thenReturn(100L);
+		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(JOB_GUID);
 		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
 		when(executionContext.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN))
 				.thenReturn("partition0");
@@ -413,6 +464,9 @@ class BatchRetryPolicyTest {
 		BatchRetryPolicy policyWithoutMetrics = new BatchRetryPolicy(3, 0);
 
 		when(stepExecution.getJobExecutionId()).thenReturn(400L);
+		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(JOB_GUID);
 		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
 		when(executionContext.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN))
 				.thenReturn("partition-no-metrics");
@@ -443,7 +497,8 @@ class BatchRetryPolicyTest {
 
 		assertTrue(result);
 		// No metrics collector interaction expected when jobExecutionId is null
-		verify(metricsCollector, never()).recordRetryAttempt(anyLong(), anyInt(), any(), anyBoolean(), anyString());
+		verify(metricsCollector, never())
+				.recordRetryAttempt(anyLong(), any(), anyInt(), any(), anyBoolean(), anyString());
 	}
 
 	@ParameterizedTest
@@ -451,6 +506,9 @@ class BatchRetryPolicyTest {
 	@NullSource
 	void testCanRetry_WithVariousErrorMessages(String errorMessage) {
 		when(stepExecution.getJobExecutionId()).thenReturn(100L);
+		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(JOB_GUID);
 		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
 		when(executionContext.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN))
 				.thenReturn("partition0");
@@ -468,6 +526,9 @@ class BatchRetryPolicyTest {
 	@Test
 	void testBackoffDelay_ZeroPeriod() {
 		when(stepExecution.getJobExecutionId()).thenReturn(100L);
+		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(JOB_GUID);
 		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
 		when(executionContext.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN))
 				.thenReturn("partition0");
@@ -492,6 +553,9 @@ class BatchRetryPolicyTest {
 	void testGetCurrentPartitionName_WithNoStepContext() {
 		// Setup initial partition name
 		when(stepExecution.getJobExecutionId()).thenReturn(100L);
+		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(JOB_GUID);
 		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
 		when(executionContext.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN))
 				.thenReturn("partition-initial");
@@ -505,7 +569,7 @@ class BatchRetryPolicyTest {
 		boolean result = batchRetryPolicy.canRetry(retryContext);
 
 		assertTrue(result);
-		verify(metricsCollector).recordRetryAttempt(100L, 1, exception, false, "partition-initial");
+		verify(metricsCollector).recordRetryAttempt(100L, JOB_GUID, 1, exception, false, "partition-initial");
 	}
 
 	@Test
@@ -515,6 +579,9 @@ class BatchRetryPolicyTest {
 
 		// Setup without partition name (will use UNKNOWN)
 		when(stepExecution.getJobExecutionId()).thenReturn(100L);
+		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
+		when(jobExecution.getJobParameters()).thenReturn(jobParameters);
+		when(jobParameters.getString(BatchConstants.Job.GUID)).thenReturn(JOB_GUID);
 		when(stepExecution.getExecutionContext()).thenReturn(executionContext);
 		when(executionContext.getString(BatchConstants.Partition.NAME, BatchConstants.Common.UNKNOWN))
 				.thenReturn(BatchConstants.Common.UNKNOWN);
@@ -527,6 +594,6 @@ class BatchRetryPolicyTest {
 		boolean result = policyNoPartition.canRetry(retryContext);
 
 		assertTrue(result);
-		verify(metricsCollector).recordRetryAttempt(100L, 1, exception, false, BatchConstants.Common.UNKNOWN);
+		verify(metricsCollector).recordRetryAttempt(100L, JOB_GUID, 1, exception, false, BatchConstants.Common.UNKNOWN);
 	}
 }

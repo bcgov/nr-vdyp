@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import ca.bc.gov.nrs.vdyp.batch.exception.BatchConfigurationException;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchException;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchIOException;
 import ca.bc.gov.nrs.vdyp.batch.util.BatchConstants;
@@ -43,10 +44,11 @@ public class ResultAggregationService {
 	 *
 	 * @return Path to the consolidated ZIP file
 	 */
-	public Path aggregateResultsFromJobDir(Long jobExecutionId, String jobBaseDir, String jobTimestamp)
+	public Path aggregateResultsFromJobDir(Long jobExecutionId, String jobGuid, String jobBaseDir, String jobTimestamp)
 			throws IOException {
 		logger.info(
-				"Starting result aggregation for job execution: {} from job directory: {}", jobExecutionId, jobBaseDir
+				"[GUID: {}] Starting result aggregation for job execution: {} from job directory: {}", jobGuid,
+				jobExecutionId, jobBaseDir
 		);
 
 		if (jobBaseDir == null || jobBaseDir.trim().isEmpty()) {
@@ -59,11 +61,11 @@ public class ResultAggregationService {
 
 		Path jobBasePath = Paths.get(jobBaseDir);
 		if (!Files.exists(jobBasePath)) {
-			throw new IOException("Job base directory does not exist: " + jobBaseDir);
+			throw new BatchConfigurationException("Job base directory does not exist: " + jobBaseDir);
 		}
 
 		if (!Files.isDirectory(jobBasePath)) {
-			throw new IOException("Job base path is not a directory: " + jobBaseDir);
+			throw new BatchConfigurationException("Job base path is not a directory: " + jobBaseDir);
 		}
 
 		logger.info("Using job base directory: {}", jobBasePath);

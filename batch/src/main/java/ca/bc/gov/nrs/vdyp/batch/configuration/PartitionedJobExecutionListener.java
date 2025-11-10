@@ -41,6 +41,7 @@ public class PartitionedJobExecutionListener implements JobExecutionListener {
 		logger.info("VDYP PARTITIONED JOB STARTING");
 
 		Long partitionSize = jobExecution.getJobParameters().getLong(BatchConstants.Partition.SIZE);
+		String jobGuid = jobExecution.getJobParameters().getString(BatchConstants.Job.GUID);
 
 		int actualPartitionSize;
 		if (partitionSize != null) {
@@ -56,17 +57,22 @@ public class PartitionedJobExecutionListener implements JobExecutionListener {
 		logger.info("VDYP Grid Size: {}", actualPartitionSize);
 		logger.info("Expected Partitions: {}", actualPartitionSize);
 		logger.info("Job Execution ID: {}", jobExecution.getId());
+		logger.info("Job GUID: {}", jobGuid);
 		logger.info(separator);
 	}
 
 	@Override
 	public void afterJob(@NonNull JobExecution jobExecution) {
 		Long jobExecutionId = jobExecution.getId();
+		String jobGuid = jobExecution.getJobParameters().getString(BatchConstants.Job.GUID);
 
 		// Check if this specific job execution has already been processed
 		Boolean alreadyProcessed = jobCompletionTracker.get(jobExecutionId);
 		if (alreadyProcessed == null || alreadyProcessed) {
-			logger.info("VDYP Job {} already processed or not tracked, skipping afterJob processing", jobExecutionId);
+			logger.info(
+					"[GUID: {}] VDYP Job {} already processed or not tracked, skipping afterJob processing", jobGuid,
+					jobExecutionId
+			);
 			return;
 		}
 
@@ -74,7 +80,9 @@ public class PartitionedJobExecutionListener implements JobExecutionListener {
 		synchronized (lock) {
 			// Double-check after acquiring lock
 			if (Boolean.TRUE.equals(jobCompletionTracker.get(jobExecutionId))) {
-				logger.info("VDYP Job {} already processed by another thread, skipping", jobExecutionId);
+				logger.info(
+						"[GUID: {}] VDYP Job {} already processed by another thread, skipping", jobGuid, jobExecutionId
+				);
 				return;
 			}
 
@@ -84,6 +92,7 @@ public class PartitionedJobExecutionListener implements JobExecutionListener {
 			String separator = "============================================================";
 			logger.info(separator);
 			logger.info("VDYP PARTITIONED JOB COMPLETED");
+			logger.info("Job GUID: {}", jobGuid);
 			logger.info("Job Execution ID: {}", jobExecutionId);
 			logger.info("Status: {}", jobExecution.getStatus());
 

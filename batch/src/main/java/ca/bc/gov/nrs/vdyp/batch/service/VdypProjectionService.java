@@ -18,6 +18,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import ca.bc.gov.nrs.vdyp.batch.exception.BatchConfigurationException;
+import ca.bc.gov.nrs.vdyp.batch.exception.BatchDataValidationException;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchException;
 import ca.bc.gov.nrs.vdyp.batch.exception.BatchIOException;
 import ca.bc.gov.nrs.vdyp.batch.exception.ProjectionNullPointerException;
@@ -68,10 +70,11 @@ public class VdypProjectionService {
 	 */
 	public String performProjectionForChunk(
 			List<BatchRecord> batchRecords, String partitionName, Parameters projectionParameters, Long jobExecutionId,
-			String jobBaseDir
+			String jobGuid, String jobBaseDir
 	) throws IOException {
 		logger.info(
-				"Starting VDYP projection for chunk of {} records in partition {}", batchRecords.size(), partitionName
+				"[GUID: {}, EXEID: {}] Starting VDYP projection for chunk of {} records in partition {}", jobGuid,
+				jobExecutionId, batchRecords.size(), partitionName
 		);
 
 		if (batchRecords.isEmpty()) {
@@ -80,7 +83,7 @@ public class VdypProjectionService {
 
 		Map<String, InputStream> inputStreams = null;
 		try {
-			Path outputPartitionDir = createOutputPartitionDir(partitionName, jobBaseDir);
+			Path outputPartitionDir = createOutputPartitionDir(jobExecutionId, partitionName, jobBaseDir);
 
 			// Create combined input streams from all BatchRecords in the chunk
 			inputStreams = createCombinedInputStreamsFromChunk(batchRecords);
@@ -96,8 +99,8 @@ public class VdypProjectionService {
 			) {
 
 				logger.info(
-						"Running HCSV projection {} for chunk of {} records in partition {}", batchProjectionId,
-						batchRecords.size(), partitionName
+						"[GUID: {}, EXEID: {}] Running HCSV projection {} for chunk of {} records in partition {}",
+						jobGuid, jobExecutionId, batchProjectionId, batchRecords.size(), partitionName
 				);
 
 				// Run the projection on the combined chunk data
@@ -112,8 +115,8 @@ public class VdypProjectionService {
 				);
 
 				logger.info(
-						"VDYP chunk projection completed for {} records in partition {}. Intermediate results stored",
-						batchRecords.size(), partitionName
+						"[GUID: {}, EXEID: {}] VDYP chunk projection completed for {} records in partition {}. Intermediate results stored",
+						jobGuid, jobExecutionId, batchRecords.size(), partitionName
 				);
 
 				return result;
@@ -121,14 +124,16 @@ public class VdypProjectionService {
 			}
 
 		} catch (NullPointerException npe) {
-			throw ProjectionNullPointerException.handleProjectionNullPointer(npe, batchRecords, partitionName, logger);
+			throw ProjectionNullPointerException
+					.handleProjectionNullPointer(npe, batchRecords, jobExecutionId, jobGuid, partitionName, logger);
 		} catch (AbstractProjectionRequestException e) {
 			throw handleChunkProjectionFailure(batchRecords, partitionName, e);
 		} catch (IOException e) {
 			throw e;
 		} catch (Exception e) {
 			throw BatchException.handleProjectionFailure(
-					partitionName, batchRecords.size(), e, "Unexpected error during chunk projection", logger
+					jobGuid, jobExecutionId, partitionName, batchRecords.size(), e,
+					"Unexpected error during chunk projection", logger
 			);
 		} finally {
 			if (inputStreams != null) {
@@ -142,12 +147,13 @@ public class VdypProjectionService {
 	/**
 	 * Creates a partition-specific output directory within the existing job-specific parent folder
 	 */
-	private Path createOutputPartitionDir(String partitionName, String jobBaseDir) throws IOException {
+	private Path createOutputPartitionDir(Long jobExecutionId, String partitionName, String jobBaseDir)
+			throws IOException {
 		if (jobBaseDir == null || jobBaseDir.trim().isEmpty()) {
-			throw new IOException("Job base directory cannot be null or empty");
+			throw new BatchConfigurationException("Job base directory cannot be null or empty");
 		}
 		if (partitionName == null || partitionName.trim().isEmpty()) {
-			throw new IOException("Partition name cannot be null or empty");
+			throw new BatchConfigurationException("Partition name cannot be null or empty");
 		}
 
 		Path jobBasePath = Paths.get(jobBaseDir);
@@ -166,13 +172,16 @@ public class VdypProjectionService {
 		} catch (IOException e) {
 			throw BatchIOException.handleIOException(
 					outputPartitionDir, e,
-					String.format("Failed to create output partition directory (job folder: %s)", jobBasePath), logger
+					String.format(
+							"[EXEID: %d] Failed to create output partition directory (job folder: %s)", jobExecutionId,
+							jobBasePath
+					), logger
 			);
 		}
 
 		logger.info(
-				"Created output partition directory: {} for input partition: {} within job folder: {}",
-				outputPartitionName, inputPartitionName, jobBasePath.getFileName()
+				"[EXEID: {}] Created output partition directory: {} for input partition: {} within job folder: {}",
+				jobExecutionId, outputPartitionName, inputPartitionName, jobBasePath.getFileName()
 		);
 
 		return outputPartitionDir;
@@ -182,11 +191,10 @@ public class VdypProjectionService {
 	 * Creates combined input streams from all BatchRecords in a chunk. This method combines all polygon and layer data
 	 * into unified streams.
 	 */
-	private Map<String, InputStream> createCombinedInputStreamsFromChunk(List<BatchRecord> batchRecords)
-			throws IOException {
+	private Map<String, InputStream> createCombinedInputStreamsFromChunk(List<BatchRecord> batchRecords) {
 
 		if (batchRecords.isEmpty()) {
-			throw new IOException("Cannot create input streams from empty chunk");
+			throw new BatchDataValidationException("Cannot create input streams from empty chunk");
 		}
 
 		return createCombinedInputStreamsFromRawData(batchRecords);
@@ -195,8 +203,7 @@ public class VdypProjectionService {
 	/**
 	 * Creates combined input streams from raw CSV data in BatchRecords.
 	 */
-	private Map<String, InputStream> createCombinedInputStreamsFromRawData(List<BatchRecord> batchRecords)
-			throws IOException {
+	private Map<String, InputStream> createCombinedInputStreamsFromRawData(List<BatchRecord> batchRecords) {
 		Map<String, InputStream> inputStreams = new HashMap<>();
 
 		StringBuilder polygonCsv = new StringBuilder();
@@ -228,7 +235,7 @@ public class VdypProjectionService {
 
 		// Validate - meaningful data
 		if (polygonCsv.isEmpty() || layerCsv.isEmpty()) {
-			throw new IOException(
+			throw new BatchDataValidationException(
 					String.format(
 							"Combined CSV data is empty or invalid (Polygon: %d bytes, Layer: %d bytes)",
 							polygonCsv.length(), layerCsv.length()
