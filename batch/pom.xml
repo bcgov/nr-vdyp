@@ -11,6 +11,8 @@
     <name>Variable Density Yield Project - Batch</name>
     <properties>
         <spring-boot.version>3.5.5</spring-boot.version>
+        <!-- Default: enable Spring Boot repackaging (JVM mode) -->
+        <skipSpringBootRepackage>false</skipSpringBootRepackage>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -160,6 +162,8 @@
                     <mainClass>ca.bc.gov.nrs.vdyp.batch.VdypBatchApplication</mainClass>
                     <addResources>true</addResources>
                     <fork>true</fork>
+                    <!-- Skip repackaging when building native image -->
+                    <skip>${skipSpringBootRepackage}</skip>
                 </configuration>
                 <executions>
                     <execution>
@@ -235,23 +239,12 @@
     <profiles>
         <profile>
             <id>native</id>
+            <properties>
+                <!-- Disable Spring Boot repackaging for native builds -->
+                <skipSpringBootRepackage>true</skipSpringBootRepackage>
+            </properties>
             <build>
                 <plugins>
-                    <!-- Skip Spring Boot repackaging for native builds -->
-                    <plugin>
-                        <groupId>org.springframework.boot</groupId>
-                        <artifactId>spring-boot-maven-plugin</artifactId>
-                        <version>${spring-boot.version}</version>
-                        <executions>
-                            <execution>
-                                <id>repackage</id>
-                                <configuration>
-                                    <skip>true</skip>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-
                     <!-- GraalVM Native Image plugin -->
                     <plugin>
                         <groupId>org.graalvm.buildtools</groupId>
