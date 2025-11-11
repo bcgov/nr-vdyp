@@ -93,7 +93,7 @@ jobs:
         if: steps.check_build.outputs.should_build == 'true'
         uses: bcgov-nr/action-builder-ghcr@v2.2.0
         with:
-          keep_versions: 50
+          keep_versions: ${{ matrix.package == 'batch' && '0' || '50' }}
           package: ${{ matrix.package }}
           tag: ${{ steps.pr.outputs.pr }}
           tag_fallback: latest
