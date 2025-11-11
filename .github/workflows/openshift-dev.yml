@@ -89,20 +89,8 @@ jobs:
         id: pr
         uses: bcgov-nr/action-get-pr@v0.0.1
 
-      - name: Build and Tag Packages with pr number (batch - first time)
-        if: steps.check_build.outputs.should_build == 'true' && matrix.package == 'batch'
-        run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-          docker build \
-            --build-arg BUILD_NUMBER=${{ github.run_number }} \
-            --build-arg APP_VERSION=${{ steps.get_app_version.outputs.APP_VERSION }} \
-            -t ghcr.io/${{ github.repository }}/batch:${{ steps.pr.outputs.pr }} \
-            -f ./batch/Dockerfile \
-            .
-          docker push ghcr.io/${{ github.repository }}/batch:${{ steps.pr.outputs.pr }}
-
-      - name: Build and Tag Packages with pr number (backend/frontend)
-        if: steps.check_build.outputs.should_build == 'true' && matrix.package != 'batch'
+      - name: Build and Tag Packages with pr number
+        if: steps.check_build.outputs.should_build == 'true'
         uses: bcgov-nr/action-builder-ghcr@v2.2.0
         with:
           keep_versions: 50
