@@ -42,6 +42,18 @@
       },
       {
         "pattern": "\\Qca/bc/gov/nrs/vdyp/batch/.*\\E"
+      },
+      {
+        "pattern": "\\Qtemplate/coe/.*\\.dat\\E"
+      },
+      {
+        "pattern": "\\Qca/bc/gov/nrs/vdyp/ecore/.*\\E"
+      },
+      {
+        "pattern": "\\Qorg/h2/util/.*\\E"
+      },
+      {
+        "pattern": "\\Qorg/springframework/batch/core/.*\\E"
       }
     ]
   },

@@ -3,31 +3,36 @@
     "name": "ca.bc.gov.nrs.vdyp.batch.model.BatchRecord",
     "allDeclaredFields": true,
     "allDeclaredMethods": true,
-    "allDeclaredConstructors": true
+    "allDeclaredConstructors": true,
+    "unsafeAllocated": true
   },
   {
     "name": "ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics",
     "allDeclaredFields": true,
     "allDeclaredMethods": true,
-    "allDeclaredConstructors": true
+    "allDeclaredConstructors": true,
+    "unsafeAllocated": true
   },
   {
     "name": "ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics$RetryDetail",
     "allDeclaredFields": true,
     "allDeclaredMethods": true,
-    "allDeclaredConstructors": true
+    "allDeclaredConstructors": true,
+    "unsafeAllocated": true
   },
   {
     "name": "ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics$SkipDetail",
     "allDeclaredFields": true,
     "allDeclaredMethods": true,
-    "allDeclaredConstructors": true
+    "allDeclaredConstructors": true,
+    "unsafeAllocated": true
   },
   {
     "name": "ca.bc.gov.nrs.vdyp.batch.model.BatchMetrics$PartitionMetrics",
     "allDeclaredFields": true,
     "allDeclaredMethods": true,
-    "allDeclaredConstructors": true
+    "allDeclaredConstructors": true,
+    "unsafeAllocated": true
   },
   {
     "name": "ca.bc.gov.nrs.vdyp.batch.configuration.BatchProperties",
@@ -181,6 +186,135 @@
   },
   {
     "name": "org.springframework.web.multipart.MultipartFile",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.model.Polygon",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.model.Layer",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.model.Species",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.model.Stand",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.model.SiteSpecies",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.model.ProjectionParameters",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.model.PolygonMessage",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.model.LayerAdjustments",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "ca.bc.gov.nrs.vdyp.ecore.projection.model.History",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "unsafeAllocated": true
+  },
+  {
+    "name": "org.springframework.batch.core.repository.dao.JdbcJobInstanceDao",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.springframework.batch.core.repository.dao.JdbcJobExecutionDao",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.springframework.batch.core.repository.dao.JdbcStepExecutionDao",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.springframework.batch.core.repository.dao.JdbcExecutionContextDao",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.springframework.batch.core.step.tasklet.TaskletStep",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.springframework.batch.core.partition.support.PartitionStep",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.springframework.batch.core.step.item.ChunkOrientedTasklet",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.springframework.batch.item.support.CompositeItemWriter",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.h2.Driver",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.zaxxer.hikari.HikariDataSource",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.zaxxer.hikari.HikariConfig",
     "allDeclaredFields": true,
     "allDeclaredMethods": true,
     "allDeclaredConstructors": true
