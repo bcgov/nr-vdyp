@@ -43,8 +43,17 @@ RUN ./buildtools/mvnw clean install -N --batch-mode && \
 # ===========================
 # Stage 2: Runtime Stage (Minimal Container)
 # ===========================
-# Use minimal base image for running native executable
-FROM gcr.io/distroless/base-debian12:nonroot
+# Use Oracle Linux Slim with GraalVM native libraries
+# This image includes necessary shared libraries (libz, glibc, etc.) for native executables
+FROM container-registry.oracle.com/os/oraclelinux:9-slim
+
+# Install only essential runtime dependencies
+RUN microdnf install -y zlib glibc-langpack-en && \
+    microdnf clean all && \
+    rm -rf /var/cache/yum
+
+# Create non-root user for security
+RUN useradd -r -u 1001 -g 0 appuser
 
 # Set working directory
 WORKDIR /app
@@ -56,13 +65,18 @@ ARG CONTEXT="batch"
 # Native Maven Plugin creates vdyp-batch executable (no .jar extension)
 COPY --from=build /project/${CONTEXT}/target/vdyp-batch /app/vdyp-batch
 
+# Set ownership and permissions
+RUN chown -R 1001:0 /app && \
+    chmod +x /app/vdyp-batch && \
+    chmod -R g=u /app
+
+# Switch to non-root user
+USER 1001
+
 # Expose port 8081 (Spring Boot batch service port)
 EXPOSE 8081
 
-# Note: Distroless image doesn't have shell or wget for HEALTHCHECK
-# Health checks will be handled by Kubernetes liveness/readiness probes
-
 # Run the native executable
 # - Native image doesn't need JVM, runs as standalone binary
-# - Distroless runs as non-root user by default
+# - Runs as non-root user (1001)
 ENTRYPOINT ["/app/vdyp-batch"]
