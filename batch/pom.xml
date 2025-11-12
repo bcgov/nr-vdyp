@@ -245,6 +245,21 @@
             </properties>
             <build>
                 <plugins>
+                    <!-- Spring Boot AOT plugin for Native Image support -->
+                    <plugin>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-maven-plugin</artifactId>
+                        <version>${spring-boot.version}</version>
+                        <executions>
+                            <execution>
+                                <id>process-aot</id>
+                                <goals>
+                                    <goal>process-aot</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
                     <!-- GraalVM Native Image plugin -->
                     <plugin>
                         <groupId>org.graalvm.buildtools</groupId>
@@ -258,6 +273,9 @@
                                 <phase>package</phase>
                             </execution>
                         </executions>
+                        <configuration>
+                            <classesDirectory>${project.build.outputDirectory}</classesDirectory>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>

@@ -47,13 +47,11 @@ RUN ./buildtools/mvnw clean install -N --batch-mode && \
 # This image includes necessary shared libraries (libz, glibc, etc.) for native executables
 FROM container-registry.oracle.com/os/oraclelinux:9-slim
 
-# Install only essential runtime dependencies
+# Install only essential runtime dependencies and create non-root user
 RUN microdnf install -y zlib glibc-langpack-en && \
     microdnf clean all && \
-    rm -rf /var/cache/yum
-
-# Create non-root user for security
-RUN useradd -r -u 1001 -g 0 appuser
+    rm -rf /var/cache/yum && \
+    useradd -r -u 1001 -g 0 appuser
 
 # Set working directory
 WORKDIR /app
