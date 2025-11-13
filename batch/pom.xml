@@ -264,23 +264,27 @@
                         </configuration>
                     </plugin>
 
-                    <!-- Compile AOT-generated sources -->
+                    <!-- Copy AOT-generated classes to target/classes before native-image build -->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-compiler-plugin</artifactId>
-                        <version>3.11.0</version>
+                        <artifactId>maven-resources-plugin</artifactId>
+                        <version>3.3.1</version>
                         <executions>
                             <execution>
-                                <id>compile-aot</id>
+                                <id>copy-aot-classes</id>
                                 <phase>prepare-package</phase>
                                 <goals>
-                                    <goal>compile</goal>
+                                    <goal>copy-resources</goal>
                                 </goals>
                                 <configuration>
-                                    <compileSourceRoots>
-                                        <compileSourceRoot>${project.build.directory}/spring-aot/main/sources</compileSourceRoot>
-                                    </compileSourceRoots>
                                     <outputDirectory>${project.build.outputDirectory}</outputDirectory>
+                                    <overwrite>true</overwrite>
+                                    <resources>
+                                        <resource>
+                                            <directory>${project.build.directory}/spring-aot/main/classes</directory>
+                                            <filtering>false</filtering>
+                                        </resource>
+                                    </resources>
                                 </configuration>
                             </execution>
                         </executions>
